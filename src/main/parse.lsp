@@ -36,10 +36,10 @@
 ;;; This is slightly inelegant in that the size of the array is set.
 ;;; Vertices are integers, not atoms.
 
-(defvar *parse-unifs* 0)
-(defvar *parse-fails* 0)
-(defvar *check-paths-successes* 0)
-(defvar *check-paths-fails* 0)
+(defvar *executed-tasks* 0)
+(defvar *successful-tasks* 0)
+(defvar *contemplated-tasks* 0)
+(defvar *filtered-tasks* 0)
 
 (defvar *cached-orth-str-list* nil)
 
@@ -132,22 +132,23 @@
 ;;; Entry point to this group of functions is parse which is passed the
 ;;; sentence as a list of strings and is called from the top level
 
-(defun parse (user-input)
-   (cond ((> (length user-input) *chart-limit*)
-         (format t "Can't parse this length of sentence~%") nil)
+(defun parse (user-input &optional (show-parse-p t))
+   (cond
+      ((> (length user-input) *chart-limit*)
+         (error "Sentence ~A too long" user-input))
       (t
          (let ((*safe-not-to-copy-p* t)
-               (*parse-unifs* 0) (*parse-fails* 0) (*check-paths-successes* 0)
-               (*check-paths-fails* 0))
+               (*executed-tasks* 0) (*successful-tasks* 0)
+               (*contemplated-tasks* 0) (*filtered-tasks* 0))
             (clear-chart)
             #+powerpc(setq aa 0 bb 0 cc 0 dd 0 ee 0 ff 0 gg 0 hh 0 ii 0 jj 0)
             (add-morphs-to-morphs user-input)
             (add-words-to-chart)
             (setf *parse-record*
                (find-spanning-edges 0 (length user-input)))
-            (show-parse)
-            (values *parse-unifs* *parse-fails* *check-paths-successes*
-               *check-paths-fails*)))))
+            (when show-parse-p (show-parse))
+            (values *executed-tasks* *successful-tasks* *contemplated-tasks*
+               *filtered-tasks*)))))
 
 (defun add-morphs-to-morphs (user-input)
    (let ((current 0))
@@ -529,25 +530,23 @@
    ;; succeed, create a new edge (for the mother), record its dag and associated
    ;; information, add this to the chart, and invoke the same process
    ;; recursively.
+   (incf *contemplated-tasks*)
    (if (restrictors-compatible-p
           (car rule-restricted-list) (edge-dag-restricted (car child-fs-list)))
-      (progn
-         (incf *check-paths-successes*)
-         (if (cdr rule-restricted-list)
-            (let ((entry (aref *chart* left-vertex)))
-               (when entry
-                  (dolist (configuration (chart-entry-configurations entry))
-                     (apply-grammar-rule
-                        rule
-                        (cdr rule-restricted-list)
-                        (chart-configuration-begin configuration)
-                        right-vertex
-                        (cons (chart-configuration-edge configuration) 
-                              child-fs-list)))))
-            ;; we've got all the bits
-            (apply-immediate-grammar-rule rule left-vertex 
-                                          right-vertex child-fs-list)))
-      (incf *check-paths-fails*)))
+      (if (cdr rule-restricted-list)
+         (let ((entry (aref *chart* left-vertex)))
+            (when entry
+               (dolist (configuration (chart-entry-configurations entry))
+                  (apply-grammar-rule rule
+                     (cdr rule-restricted-list)
+                     (chart-configuration-begin configuration)
+                     right-vertex
+                     (cons (chart-configuration-edge configuration) 
+                        child-fs-list)))))
+         ;; we've got all the bits
+         (apply-immediate-grammar-rule rule left-vertex right-vertex
+            child-fs-list))
+      (incf *filtered-tasks*)))
 
 
 (defparameter *debugging* nil)
@@ -583,85 +582,76 @@
 
 
 (defun evaluate-unifications (rule child-fs-list &optional nu-orth child-edges)
-   ;; modified for YADU
-   ;; 
-   ;; An additional optional argument is given. This is the
-   ;; new orthography if the unification relates to a morphological
-   ;; process. If it is present, it is inserted in the resulting fs.
-   ;;  The actual process of unification 
+   ;; An additional optional argument is given. This is the new orthography if the
+   ;; unification relates to a morphological process. If it is present, it is
+   ;; inserted in the resulting fs
    (let*
       ((current-tdfs (rule-full-fs rule))
        (rule-daughter-order (cdr (rule-order rule)))
        (rule-apply-order (rule-daughters-apply-order rule))
        (n 0)
        (new-orth-fs (if nu-orth (get-orth-tdfs nu-orth))))
-       ;; shouldn't do this here because we may not need it
+       ;; shouldn't strictly do this here because we may not need it
        ;; but otherwise we get a nested unification context error
-     ;; - cache the values for a word, so it's not reconstructed 
-     ;; only wasted if the morphology is wrong
-      (with-unification-context (ignore)
+       ;; - cache the values for a word, so it's not reconstructed 
+       ;; only wasted if the morphology is wrong
+       (with-unification-context (ignore)
          (dolist (rule-feat rule-apply-order)
             (cond
                ((eql (incf n) 1))
                ((x-restrict-and-compatible-p
                    (if (listp rule-feat)
                       (x-existing-dag-at-end-of 
-                       (tdfs-indef current-tdfs) rule-feat)
+                         (tdfs-indef current-tdfs) rule-feat)
                       (x-get-dag-value (tdfs-indef current-tdfs) rule-feat))
                    (edge-dag-restricted
-                      (nth (position rule-feat rule-daughter-order) 
-                           child-edges)))
-                  (incf *check-paths-successes*))
-               (t
-                  (incf *check-paths-fails*)
+                      (nth (position rule-feat rule-daughter-order :test #'eq) 
+                           child-edges))))
+               (t (incf *filtered-tasks*)
                   (return-from evaluate-unifications nil)))
-            (incf *parse-unifs*)
-           (unless
-               (setf current-tdfs
-                 (yadu current-tdfs
-                       (create-temp-parsing-tdfs
-                        (nth 
-                         (position rule-feat rule-daughter-order) 
-                         child-fs-list)
-                        rule-feat)))
-               (incf *parse-fails*)
+            (incf *executed-tasks*)
+            (if (setq current-tdfs
+                   (yadu current-tdfs
+                      (create-temp-parsing-tdfs
+                         (nth (position rule-feat rule-daughter-order :test #'eq) 
+                              child-fs-list)
+                         rule-feat)))
+               (incf *successful-tasks*)
                (return-from evaluate-unifications nil)))
          ;; if (car (rule-order rule)) is NIL - tdfs-at-end-of
          ;; will return the entire structure
          (let ((result (tdfs-at-end-of (car (rule-order rule)) current-tdfs)))
            (when new-orth-fs
-             (setf result
-               (yadu result new-orth-fs))) 
+             (setq result (yadu result new-orth-fs))) 
            (when result
-               ;; delete arcs just holding constituents' feature 
-               ;; structures - before copying
-               ;; otherwise their copies would be thrown away immediately
-               ;; we have to check whether any of the deleted dags 
-               ;; contain a cycle -
-               ;; if so then the whole rule application should fail
+             ;; delete arcs just holding constituents' feature structures - before
+             ;; copying otherwise their copies would be thrown away immediately
+             ;; we have to check whether any of the deleted dags contain a cycle
+             ;; - if so then the whole rule application should fail
              (let* ((real-dag (deref-dag (tdfs-indef result)))
                     (new (clone-dag real-dag))
                     (arcs-to-check nil))
                (flet ((member-with-cyclic-check (arc)
                         (when (member (dag-arc-attribute arc) 
-                                      *deleted-daughter-features*)
+                                      *deleted-daughter-features* :test #'eq)
                           (push arc arcs-to-check)
                           t)))
                  (setf (dag-arcs new)
-                   (remove-if #'member-with-cyclic-check (dag-arcs new)))
+                    (remove-if #'member-with-cyclic-check (dag-arcs new)))
                  (setf (dag-comp-arcs new)
-                   (remove-if #'member-with-cyclic-check 
-                              (dag-comp-arcs new)))
-                 ;; take advantage of the fact that removed 
-                 ;; arcs might share structure
-                 ;; by checking them all at once
-                 (if (cyclic-dag-p (make-dag :type *toptype* 
-                                             :arcs arcs-to-check))
-                     (progn (incf *parse-fails*) nil)
-                   (progn
-                     ;; (setf (dag-copy new) 'copy)
-                     (setf (dag-forward real-dag) new)
-                     (copy-tdfs-elements result))))))))))
+                    (remove-if #'member-with-cyclic-check (dag-comp-arcs new)))
+                 ;; take advantage of the fact that removed arcs might
+                 ;; share structure by checking them all at once
+                 (let ((res
+                         (and
+                            (not (cyclic-dag-p
+                                    (make-dag :type *toptype* 
+                                              :arcs arcs-to-check)))
+                            (setf (dag-forward real-dag) new)
+                            (copy-tdfs-elements result))))
+                     (or res
+                        ;; charge copy failure to last successful unification
+                        (progn (decf *successful-tasks*) nil))))))))))
 
 
 (defun create-temp-parsing-tdfs (tdfs flist)
@@ -788,7 +778,7 @@
 
 ;;; Parsing sentences from file
 
-(defun parse-sentences (&optional input-file parse-file result-file)
+(defun parse-sentences (&optional input-file parse-file result-file run-file)
    (unless input-file 
       (setq input-file (ask-user-for-existing-pathname "Sentence file?")))
    (when
@@ -800,7 +790,8 @@
             (cond
                ((eq line 'eof))
                ((eql (count #\@ line) 11) ; must be 12 fields in tsdb input
-                  (parse-tsdb-sentences1 istream line parse-file result-file))
+                  (parse-tsdb-sentences1
+                     istream line parse-file result-file run-file))
                (t
                   (batch-parse-sentences istream line parse-file)))))))
 
@@ -813,7 +804,7 @@
          (start-time (get-universal-time)))
      (unless output-file (return-from batch-parse-sentences nil))
      (with-open-file (ostream output-file :direction :output
-                              :if-exists :supersede :if-does-not-exist :create)
+                      :if-exists :supersede :if-does-not-exist :create)
         (loop
            (when (eql raw-sentence 'eof) (return))
            (format ostream "~A~%" raw-sentence)
@@ -821,32 +812,17 @@
            (let ((sentence (string-trim '(#\Space #\Tab) raw-sentence)))
               (unless (equal sentence "")
                  (let ((user-input 
-                        (split-into-words 
-                         (preprocess-sentence-string sentence))))
-                    (cond
-                       ((> (length user-input) *chart-limit*)
-                          (format ostream 
-                                  "~%can't parse this length of sentence") 
-                          (finish-output ostream)
-                          nil)
-                       (t
-                          (let ((*safe-not-to-copy-p* t)
-                                (*parse-unifs* 0) (*parse-fails* 0))
-                             (clear-chart)
-                             #+powerpc(setq aa 0 bb 0 cc 0 dd 0 ee 0 ff 0 gg 0 hh 0 ii 0 jj 0)
-                             (add-morphs-to-morphs user-input)
-                             (add-words-to-chart)
-                             (setf *parse-record*
-                                (find-spanning-edges 0 (length user-input)))
-                             (when (fboundp *do-something-with-parse*)
-                                (funcall *do-something-with-parse*))
-                             (let ((n (length *parse-record*)))
-                                (format ostream "  ~R parse~:[s~;~] found~%" 
-                                        n (= n 1)))
-                             (finish-output ostream)))))))
+                         (split-into-words 
+                            (preprocess-sentence-string sentence))))
+                    (parse user-input nil)
+                    (when (fboundp *do-something-with-parse*)
+                       (funcall *do-something-with-parse*))
+                    (let ((n (length *parse-record*)))
+                       (format ostream "  ~R parse~:[s~;~] found~%" n (= n 1))
+                       (finish-output ostream)))))
            (setq raw-sentence (read-line istream nil 'eof)))
         (format ostream "Total elapsed time: ~A secs~%" 
-                (- (get-universal-time) start-time)))))
+           (- (get-universal-time) start-time)))))
 
 
 ;;; extracting a list of lexical entries used in a parse

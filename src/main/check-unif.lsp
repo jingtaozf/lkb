@@ -19,12 +19,13 @@
 #|
 (with-check-path-list-collection "Macintosh HD:lkb99-expt:big:grammar:lkb:checkpaths1.lsp"
    (parse-tsdb-sentences "Macintosh HD:lkb99-expt:big:itemsamp30"
-      "Macintosh HD:lkb99-expt:big:parsesamp30" "Macintosh HD:lkb99-expt:big:resultsamp30"))
+      "Macintosh HD:lkb99-expt:big:parsesamp30" "Macintosh HD:lkb99-expt:big:resultsamp30"
+      "Macintosh HD:lkb99-expt:big:runsamp30"))
 
 (with-check-path-list-collection "Macintosh HD:lkb99-expt:big:grammar:lkb:checkpaths1.lsp"
-   (parse '("Devito" "manages" "a" "programmer" "Abrams" "interviewed" "and" "Browne" "hired")))
+   (parse '("Devito" "manages" "a" "programmer" "Abrams" "interviewed" "and" "Browne" "hired") nil))
 
-(with-check-path-list-collection "Macintosh HD:lkb99-expt:data:mrs_grammar:checkpaths1.lsp"
+(with-check-path-list-collection "Macintosh HD:lkb99-expt:big:grammar:lkb:checkpaths1.lsp"
    (chart-generate input-sem lex-entry-alts))
 |#
 
