@@ -51,7 +51,9 @@
    in irregs.tab - for PAGE compatability")
 
 (def-lkb-parameter *sense-unif-fn* nil)
-  
+
+(def-lkb-parameter *gc-before-reload* nil)
+
 ;;; Parsing
 
 (def-lkb-parameter *maximum-number-of-edges* 3000)

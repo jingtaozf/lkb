@@ -77,7 +77,7 @@
    (clear-type-cache)
    (clear-feature-table)
    (clear-expanded-lex)
-#+(and :allegro :lingo) (when *type-reload-p* (gc t))
+#+:allegro (when (and *gc-before-reload* *type-reload-p*) (gc t))
    (setf *type-reload-p* t))
      
 

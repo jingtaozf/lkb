@@ -810,10 +810,11 @@
 (defun batch-parse-sentences (istream raw-sentence parse-file &optional access-fn)
   (let* ((output-file 
             (or parse-file (ask-user-for-new-pathname "Output file?")))
-         (start-time (get-universal-time)))
+         (start-time (get-internal-run-time)))
      (unless output-file (return-from batch-parse-sentences nil))
      (with-open-file (ostream output-file :direction :output
                       :if-exists :supersede :if-does-not-exist :create)
+       (format t "~%Parsing test file")
         (loop
            (when (eql raw-sentence 'eof) (return))
            (let ((interim-sentence (if access-fn (apply access-fn (list raw-sentence))
@@ -831,9 +832,11 @@
                    (let ((n (length *parse-record*)))
                      (format ostream "  ~R parse~:[s~;~] found~%" n (= n 1))
                      (finish-output ostream)))))
-             (setq raw-sentence (read-line istream nil 'eof)))
-           (format ostream "Total elapsed time: ~A secs~%" 
-                   (- (get-universal-time) start-time))))))
+             (setq raw-sentence (read-line istream nil 'eof))))
+        (format ostream "Total elapsed time: ~A msecs~%" 
+                (- (get-internal-run-time) start-time))
+        (format t "~%Batch parse complete")
+        (lkb-beep))))
 
 
 ;;; extracting a list of lexical entries used in a parse

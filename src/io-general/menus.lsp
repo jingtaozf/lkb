@@ -44,7 +44,6 @@
 		      ;; tidy
 		      cl-user::clear-non-parents
 		      ;; output
-		      cl-user::dump-lkb 
 		      cl-user::output-type-file 
                       cl-user::output-display-settings
                       cl-user::load-display-settings

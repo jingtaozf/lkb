@@ -216,14 +216,15 @@
            (setf (type-constraint-mark type-entry) nil)          
            (setf (type-local-constraint type-entry) nil)))
   (unmark-type-table)  
-  #+(and :allegro :lingo) (gc t) ; try and force it to reclaim space before we refill it
+  #+:allegro (when *gc-before-reload* (gc t))
+                ;; try and force it to reclaim space before we refill it
   (format t "~%Expanding constraints")
   (when (expand-and-inherit-constraints)
     (format t "~%Making constraints well formed")
     (when (strongly-type-constraints)
        ;;; YADU --- extra expansion stage
        ;;; earlier stages are unchanged
-      (format t "~%Expanding defaults") 
+;      (format t "~%Expanding defaults") 
       (when (expand-type-hierarchy-defaults)
         (format t "~%Type file checked successfully")
         t))))
