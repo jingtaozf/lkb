@@ -223,6 +223,12 @@
               (mrs::output-mrs1 mrs 'mrs::html stream)
               (format stream "</td>~%")
             do (format stream "</tr>"))))
+     ((or (null error) (equal error ""))
+      (format
+       stream 
+       "<div id=error>~
+        <p>No analysis was found for your input. Is it grammatical?</p>~%~
+        </div>~%"))
      ((integerp error)
       (format
        stream 
@@ -244,7 +250,7 @@
        stream 
        "<div id=error>~
         The parser encountered an (unexpected) error: ~
-        &lsquo;~a~&rsquo;~%</div>~%"
+        &lsquo;~a&rsquo;~%</div>~%"
        error)))
     (format 
      stream 
