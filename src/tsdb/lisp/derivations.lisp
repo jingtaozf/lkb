@@ -27,7 +27,6 @@
   `(when (integerp (first ,derivation))
      (first ,derivation)))
 
-
 (defmacro derivation-root (derivation)
   `(if (integerp (first ,derivation)) 
      (second ,derivation)
@@ -202,8 +201,10 @@
                               (not (string= derivation "")))
                          (read-from-string derivation)))))
       (when derivation
-        (catch :fail
-          (reconstruct-derivation derivation dagp))))))
+        (if (numberp (first derivation))
+          (catch :fail
+            (reconstruct-derivation derivation dagp))
+          (reconstruct-cfg-derivation derivation))))))
 
 (defun reconstruct-derivation (derivation &optional (dagp t))
   (let* ((root (derivation-root derivation))
@@ -286,6 +287,43 @@
     (when (and *reconstruct-cache* edge)
       (setf (gethash id *reconstruct-cache*) edge))
     edge))
+
+;;;
+;;; interface function for RASP: given a RASP derivation tree, create (LKB)
+;;; edge structures from it, so we can draw and compare trees. 
+;;;
+;;; _fix_me_
+;;; it is beginning to look like a separate Redwoods package (with it own edge
+;;; structure, tree drawing, and comparison routines) would be cleaner at some
+;;; point; right now, LKB, [incr tsdb()], and Redwoods code mutually depend on
+;;; each other.                                                (14-aug-03; oe)
+;;;
+#+:lkb
+(defun reconstruct-cfg-derivation (derivation &key (start 0) (id 0))
+  (let* ((root (if (consp derivation) (first derivation) derivation))
+         (children (when (consp derivation) (rest derivation))))
+    (if (null children)
+      (lkb::make-edge :id id :category root 
+                      :from start :to (+ start 1)
+                      :leaves (let* ((string (string root))
+                                     (break (position 
+                                             #\_ string 
+                                             :from-end t :test #'char=)))
+                                (list (subseq string 0 break))))
+      
+      (let ((edges
+             (loop
+                 for i from (+ id 1)
+                 for child in children
+                 for edge = (reconstruct-cfg-derivation
+                             child :start start :id i)
+                 then (reconstruct-cfg-derivation
+                       child :start (lkb::edge-to edge) :id i)
+                 collect edge)))
+        (lkb::make-edge :id id :category root :children edges
+                        :leaves (loop
+                                    for edge in edges
+                                    append (lkb::edge-leaves edge)))))))
 
 (defun qtree (derivation &key (stream t))
   (let ((root (derivation-root derivation))

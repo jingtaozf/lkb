@@ -824,7 +824,7 @@
       (let ((tdfs (when (smember dagp '(:word t))
                     (copy-tdfs-completely 
                      (lex-entry-full-fs (get-lex-entry-from-id name)))))
-            (ids (list (lex-entry-sense-id instance))))
+            (ids (list (lex-entry-id instance))))
         (make-edge :id id :category (and tdfs (indef-type-of-tdfs tdfs))
                    :rule form :leaves (list form) :lex-ids ids
                    :dag tdfs :from start :to end)))))
