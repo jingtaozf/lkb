@@ -72,6 +72,7 @@ int tsdb_init_history(Tsdb* status) {
     past[i] = bar;
   } /* for */
   _history_position = -1;
+  return 1;
 } /* tsdb_init_history() */
 
 void tsdb_free_history(Tsdb_history* h) {
