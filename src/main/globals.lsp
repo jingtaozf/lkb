@@ -85,6 +85,11 @@
 
 (def-lkb-parameter *chart-limit* 100)
 
+(def-lkb-parameter *bracketing-p* nil
+  "If set, the input may contain a partial bracketing which
+   will be respected (currently not with the active parser)"
+  :user)
+
 (def-lkb-parameter *mother-feature* 0
    "The feature giving the mother in a grammar rule")
 

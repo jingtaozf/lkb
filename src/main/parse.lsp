@@ -1,11 +1,9 @@
-;; Copyright Ann Copestake 1992-1998
+;; Copyright Ann Copestake 1992-2000
 ;;; All Rights Reserved.
 ;;; No use or redistribution without permission.
 ;;; 
 
 (in-package :lkb)
-
-;;; Port to MCL - moved dialect specific display stuff to parseout.lsp
 
 ;;; This file implements the chart parser.
 ;;; A rule is applied in a standard fashion (see below). In case a mother node
@@ -19,8 +17,6 @@
 ;;; continues.
 ;;;      The chart itself is kept and can be displayed by the top level
 ;;; commands.
-;;; Control strategy is purely bottom up, left corner and not the world's most
-;;; efficient.
 
 ;;; The chart structure
 ;;;
@@ -77,11 +73,11 @@
                     (&key id category rule dag odag 
                           (dag-restricted (restrict-fs (tdfs-indef dag)))
                           leaves lex-ids parents children morph-history 
-                          spelling-change 
+                          spelling-change from to
                           #+:packing packed #+:packing equivalent 
                           #+:packing frozen)))
    id category rule dag odag dag-restricted leaves lex-ids
-   parents children morph-history spelling-change 
+   parents children morph-history spelling-change from to
    #+:packing packed #+:packing equivalent #+:packing frozen)
 
 (defstruct
@@ -274,7 +270,9 @@
 
 (defparameter *show-parse-p* t)
 
-(defun parse (user-input &optional (show-parse-p *show-parse-p*) 
+(defvar *brackets-list* nil)
+
+(defun parse (bracketed-input &optional (show-parse-p *show-parse-p*) 
                                    (first-only-p *first-only-p*))
   
   (when (and first-only-p (greater-than-binary-p))
@@ -282,56 +280,62 @@
 Setting *first-only-p* to nil")
     (setf *first-only-p* nil)
     (setf first-only-p nil))
-  (if (> (length user-input) *chart-limit*)
-      (error "Sentence ~A too long - ~A words maximum (*chart-limit*)" 
-             user-input *chart-limit*)
-    (let ((*executed-tasks* 0) (*successful-tasks* 0)
-	  (*contemplated-tasks* 0) (*filtered-tasks* 0)
-          (*parser-rules* (get-matching-rules nil nil))
-          (*parser-lexical-rules* (get-matching-lex-rules nil))
-          (*lexical-entries-used* nil)
-          (*minimal-vertex* 0)
-          (*maximal-vertex* (length user-input))
-          ;;
-          ;; shadow global variable to allow best-first mode to decrement for
-          ;; each result found; eliminates need for additional result count.
-          ;;                                              (22-jan-00  -  oe)
-          ;;
-          (*first-only-p*
-           (cond
-            ((null first-only-p) nil)
-            ((and (numberp first-only-p) (zerop first-only-p)) nil)
-            ((numberp first-only-p) first-only-p)
-            (t 1))))
-          (declare (special *minimal-vertex* *maximal-vertex*))
-      (with-parser-lock ()
-	(flush-heap *agenda*)
-	(clear-chart)
-	(setf *cached-category-abbs* nil)
-        (setf *parse-record* nil)
-        (setf *parse-times* (list (get-internal-run-time)))
-	#+powerpc(setq aa 0 bb 0 cc 0 dd 0 ee 0 ff 0 gg 0 hh 0 ii 0 jj 0)
-	(let ((*safe-not-to-copy-p* t))
-	  (add-morphs-to-morphs user-input)
-          (catch :best-first
-            (add-words-to-chart (and first-only-p (null *active-parsing-p*)
-                                     (cons 0 (length user-input))))
-            (if *active-parsing-p*
-              (complete-chart)
-              (loop 
-                  until (empty-heap *agenda*)
-                  do (funcall (heap-extract-max *agenda*)))))
-          (unless first-only-p
+  (when *bracketing-p* (setf *active-parsing-p* nil))
+  (multiple-value-bind (user-input brackets-list)
+      (if *bracketing-p*
+          (initialise-bracket-list bracketed-input)
+          (values bracketed-input nil))
+    (if (> (length user-input) *chart-limit*)
+        (error "Sentence ~A too long - ~A words maximum (*chart-limit*)" 
+               user-input *chart-limit*)
+      (let ((*brackets-list* brackets-list)
+            (*executed-tasks* 0) (*successful-tasks* 0)
+            (*contemplated-tasks* 0) (*filtered-tasks* 0)
+            (*parser-rules* (get-matching-rules nil nil))
+            (*parser-lexical-rules* (get-matching-lex-rules nil))
+            (*lexical-entries-used* nil)
+            (*minimal-vertex* 0)
+            (*maximal-vertex* (length user-input))
             ;;
-            ;; best-first (passive or active mode) has already done this
-            ;; incrementally in the parse loop
+            ;; shadow global variable to allow best-first mode to decrement for
+            ;; each result found; eliminates need for additional result count.
+            ;;                                              (22-jan-00  -  oe)
             ;;
-            (setf *parse-record* 
-              (find-spanning-edges 0 (length user-input)))))
-        (push (get-internal-run-time) *parse-times*))
+            (*first-only-p*
+             (cond
+              ((null first-only-p) nil)
+              ((and (numberp first-only-p) (zerop first-only-p)) nil)
+              ((numberp first-only-p) first-only-p)
+              (t 1))))
+        (declare (special *minimal-vertex* *maximal-vertex*))
+        (with-parser-lock ()
+          (flush-heap *agenda*)
+          (clear-chart)
+          (setf *cached-category-abbs* nil)
+          (setf *parse-record* nil)
+          (setf *parse-times* (list (get-internal-run-time)))
+          #+powerpc(setq aa 0 bb 0 cc 0 dd 0 ee 0 ff 0 gg 0 hh 0 ii 0 jj 0)
+          (let ((*safe-not-to-copy-p* t))
+            (add-morphs-to-morphs user-input)
+            (catch :best-first
+              (add-words-to-chart (and first-only-p (null *active-parsing-p*)
+                                       (cons 0 (length user-input))))
+              (if *active-parsing-p*
+                  (complete-chart)
+                (loop 
+                    until (empty-heap *agenda*)
+                    do (funcall (heap-extract-max *agenda*)))))
+            (unless first-only-p
+              ;;
+              ;; best-first (passive or active mode) has already done this
+              ;; incrementally in the parse loop
+              ;;
+              (setf *parse-record* 
+                (find-spanning-edges 0 (length user-input)))))
+          (push (get-internal-run-time) *parse-times*))
 	(when show-parse-p (show-parse))
 	(values *executed-tasks* *successful-tasks* 
-                *contemplated-tasks* *filtered-tasks*))))
+                *contemplated-tasks* *filtered-tasks*)))))
 
 
 (defun add-morphs-to-morphs (user-input)
@@ -424,7 +428,8 @@ Setting *first-only-p* to nil")
       (let* ((lex-ids (mrecord-lex-ids mrec))
              (sense (mrecord-fs mrec))
              (history (mrecord-history mrec))
-             (edge (construct-lex-edge sense history local-word lex-ids)))
+             (edge (construct-lex-edge sense history local-word lex-ids
+                                       (- right-vertex 1) right-vertex)))
         (if *active-parsing-p*
           (let ((configuration (make-chart-configuration
                                 :begin (- right-vertex 1) :end right-vertex
@@ -437,7 +442,7 @@ Setting *first-only-p* to nil")
     ;; strings found
     (values word-senses multi-results)))
 
-(defun construct-lex-edge (sense history word lex-ids)
+(defun construct-lex-edge (sense history word lex-ids from to)
   #+ignore (format t "~%Construct word ~A" word)
   (make-edge :id (next-edge) 
              :category (indef-type-of-tdfs sense) 
@@ -447,9 +452,12 @@ Setting *first-only-p* to nil")
              :dag sense
              :leaves (list word)
              :lex-ids lex-ids
-             :morph-history (construct-morph-history word lex-ids history)
+             :morph-history (construct-morph-history word lex-ids 
+                                                     history from to)
              :spelling-change (when history 
-				(mhistory-new-spelling (car history)))))
+				(mhistory-new-spelling (car history)))
+             :from from
+             :to to))
 
 (defun get-senses (stem-string)
   (let* (#+:ignore (*safe-not-to-copy-p* nil))
@@ -519,7 +527,8 @@ Setting *first-only-p* to nil")
 	  (let* ((sense (mrecord-fs mrec))
                  (lex-ids (mrecord-lex-ids mrec))
                  (history (mrecord-history mrec))
-                 (edge (construct-lex-edge sense history word lex-ids)))
+                 (edge (construct-lex-edge sense history word lex-ids
+                                           left-vertex right-vertex)))
             (if *active-parsing-p*
               (let ((configuration (make-chart-configuration
                                     :begin left-vertex :end right-vertex
@@ -626,14 +635,15 @@ Setting *first-only-p* to nil")
 					       expanded-entry))))))))))))
 
 
-(defun construct-morph-history (word lex-ids history)
+(defun construct-morph-history (word lex-ids history from to)
   ;; the rule on an edge refers `back' i.e. to the way it was constructed, so
   ;; when this is called, the rule and the new spelling (if any) of the
   ;; current-record have already been put into an edge
   (when history
     (let* ((current-record (car history))
 	   (fs (mhistory-fs current-record))
-	   (new-edge (construct-lex-edge fs (cdr history) word lex-ids)))
+	   (new-edge (construct-lex-edge fs (cdr history) word lex-ids
+                                         from to)))
       (push new-edge *morph-records*)
       new-edge)))
     
@@ -869,40 +879,48 @@ Setting *first-only-p* to nil")
 				     child-edge-list f backwardp)
   ;; attempt to apply a grammar rule when we have all the parts which match
   ;; its daughter categories
-  #+:pdebug
-  (format
-   t
-   "~&try-immediate-grammar-rule(): `~(~a~) <-- ~{~d~^ ~} [~d -- ~d]"
-   (rule-id rule) (loop for e in  child-edge-list collect (edge-id e))
-   left-vertex right-vertex)
-  (let ((child-edge-list-reversed (reverse child-edge-list)))
-    (multiple-value-bind (unification-result first-failed-p)
-        (evaluate-unifications rule (mapcar #'edge-dag 
-                                            child-edge-list-reversed)
-                               nil child-edge-list-reversed backwardp)
-      (if unification-result
-	  (let* ((edge-list
+  (when (or (null *brackets-list*)
+            (consistent-bracketing-p (mapcar #'(lambda (edge)
+                                                 (cons (edge-from edge)
+                                                       (edge-to edge)))
+                                             child-edge-list)
+                                    *brackets-list*)) 
+    #+:pdebug
+    (format
+     t
+     "~&try-immediate-grammar-rule(): `~(~a~) <-- ~{~d~^ ~} [~d -- ~d]"
+     (rule-id rule) (loop for e in  child-edge-list collect (edge-id e))
+     left-vertex right-vertex)
+    (let ((child-edge-list-reversed (reverse child-edge-list)))
+      (multiple-value-bind (unification-result first-failed-p)
+          (evaluate-unifications rule (mapcar #'edge-dag 
+                                              child-edge-list-reversed)
+                                 nil child-edge-list-reversed backwardp)
+        (if unification-result
+            (let* ((edge-list
                     (if backwardp child-edge-list child-edge-list-reversed))
-                 (new-edge 
-		  (make-edge :id (next-edge)
-			     :category (indef-type-of-tdfs unification-result)
-			     :rule rule
-			     :children edge-list
-			     :dag unification-result
-			     :lex-ids (mapcan
-				       #'(lambda (child)
-					   (copy-list (edge-lex-ids child)))
-				       edge-list)
-			     :leaves (mapcan
-                                      #'(lambda (child)
-                                          (copy-list (edge-leaves child)))
-                                      edge-list))))
-	    #+pdebug (format t " ... success.~%")
-	    (activate-context left-vertex new-edge right-vertex f)
-            t)
-        (progn
-	  #+pdebug (format t " ... ~:[fail~;throw~].~%" first-failed-p)
-          (if first-failed-p nil t))))))
+                   (new-edge 
+                    (make-edge :id (next-edge)
+                               :category (indef-type-of-tdfs unification-result)
+                               :rule rule
+                               :children edge-list
+                               :dag unification-result
+                               :lex-ids (mapcan
+                                         #'(lambda (child)
+                                             (copy-list (edge-lex-ids child)))
+                                         edge-list)
+                               :leaves (mapcan
+                                        #'(lambda (child)
+                                            (copy-list (edge-leaves child)))
+                                        edge-list)
+                               :from left-vertex
+                               :to right-vertex)))
+              #+pdebug (format t " ... success.~%")
+              (activate-context left-vertex new-edge right-vertex f)
+              t)
+          (progn
+            #+pdebug (format t " ... ~:[fail~;throw~].~%" first-failed-p)
+            (if first-failed-p nil t)))))))
 
 
 (defun evaluate-unifications (rule child-fs-list 
@@ -1078,7 +1096,9 @@ Setting *first-only-p* to nil")
                                                (chart-configuration-edge item))
                                      :leaves
                                      (edge-leaves 
-                                      (chart-configuration-edge item)))))
+                                      (chart-configuration-edge item))
+                                     :from start-vertex
+                                     :to end-vertex)))
                      (add-to-chart start-vertex
                                    new-edge
                                    end-vertex

@@ -1119,6 +1119,7 @@
 
 (defun inherit-default-constraints (node type-entry local-tdfs)
 ;;;  (collect-tails node (tdfs-indef local-tdfs))
+  (declare (ignore node))
   (let ((current-tail (tdfs-tail local-tdfs)))
     (for parent in (type-parents type-entry)
          do

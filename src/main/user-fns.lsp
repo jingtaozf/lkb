@@ -28,6 +28,13 @@
                  (t
                   (setf in-word nil)
                   (push #\space result-chars))))
+               ((and *bracketing-p*
+                     (or (eql next-char #\() 
+                         (eql next-char #\))))
+                (setf in-word nil)
+                (push #\space result-chars)
+                (push next-char result-chars)
+                (push #\space result-chars))
                ((not (alphanumeric-or-extended-p next-char)) 
                 (setf in-word nil)
                 (push #\space result-chars))

@@ -109,20 +109,21 @@
 ;;;; Morphology
 
 
-(defun batch-check-morphology nil
+(defun batch-check-morphology (&optional plus-ids)
   ;;; generates all morphological forms
   (for psort in *ordered-lex-list*
        do
-       (gen-all-morphs psort (get-psort-entry psort))))   
+       (gen-all-morphs psort (get-psort-entry psort) plus-ids)))   
 
-(defun gen-all-morphs (id entry)
+(defun gen-all-morphs (id entry &optional plus-ids)
   (when entry
     (setf *number-of-applications* 0)
-    (try-all-morph-rules (list (lex-or-psort-full-fs entry)))
+    (try-all-morph-rules (list (lex-or-psort-full-fs entry))
+                         (if plus-ids id))
     (unexpand-psort *lexicon* id)))
     
 
-(defun try-all-morph-rules (entries)
+(defun try-all-morph-rules (entries &optional id)
    (incf *number-of-applications*)
    (when (> *number-of-applications* *maximal-lex-rule-applications*)
       (error "~%Probable circular lexical rule"))
@@ -146,7 +147,9 @@
                               (evaluate-unifications rule
                                                      (list entry)
                                                      new-morph))))
-                    (when (and result new-morph) (format t "~%~A" new-morph))
+                    (when (and result new-morph) 
+                      (format t "~%~A" new-morph)
+                      (when id (format t " ~A" id)))
                     result)))))
       (if transformed-entries
           (try-all-morph-rules transformed-entries))))

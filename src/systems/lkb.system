@@ -122,6 +122,7 @@
                (:file "rules")        ; grammar and lexical rules
 	       (:file "parse")        ; chart parser
 	       (:file "active")       ; experimental key-driven (active) parser
+               (:file "brackets")     ; partial bracketing constraints
                (:file "morph")        ; morphographemics
                (:file "check-unif"))) ; for efficiency 
 
