@@ -134,6 +134,8 @@
                (:file "psql-emacs")   ; Postgres-Emacs interface
                #+:psql  
                (:file "psql-mwe")     ; Postgres MWE extensions
+               #+:psql  
+               (:file "semi")         ; SEM-I DB
                #+:psql
                (:file "lexport")      ; export of lexicon to file/db
                (:file "rules")        ; grammar and lexical rules

@@ -1308,14 +1308,24 @@
   (clear-scratch-lex)
   (lkb-beep))
 
-(defun command-commit-scratch (&rest rest)
+(defun command-commit-scratch nil
   (format t "~%Committing scratch entries")
   (commit-scratch-lex)
   (lkb-beep))
 
-(defun command-show-scratch (&rest rest)
+(defun command-show-scratch nil
   (format t "~%Contents of scratch: ~a"
 	  (mapcar #'(lambda (x) (cdr (first x))) (show-scratch *psql-lexicon*)))
+  (lkb-beep))
+
+(defun command-generate-semi nil
+  (format t "~%Generating SEM-I. See files ~asemi.*" *postgres-user-temp-dir*)
+  (let ((obj-semi-main-filename (format nil "~asemi.obj.main" *postgres-user-temp-dir*))
+	(obj-semi-args-filename (format nil "~asemi.obj.args" *postgres-user-temp-dir*)))
+    (format *postgres-debug-stream* "~%(dumping obj_semi_main to file ~a)" obj-semi-main-filename)
+    (dump-obj-semi-main  obj-semi-main-filename)
+    (format *postgres-debug-stream* "~%(dumping obj_semi_args to file ~a)" obj-semi-args-filename)
+    (dump-obj-semi-args  obj-semi-args-filename))
   (lkb-beep))
 
 ;;;

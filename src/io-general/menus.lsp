@@ -41,9 +41,6 @@
 		      lkb::toggle-rmrs
                       lkb::toggle-rmrs-xml
                       ;; lexical db
-                      ;lkb::load-cdb-lexicon-from-script
-                      ;lkb::load-psql-lexicon-from-script
-                      ;lkb::export-lexicon
                       lkb::command-merge-into-psql-lexicon
                       lkb::command-dump-psql-lexicon
                       lkb::command-export-lexicon-to-tdl
@@ -52,6 +49,7 @@
                       lkb::command-commit-scratch		      
                       lkb::command-show-scratch		      
                       lkb::command-set-filter-psql-lexicon		      
+                      lkb::command-generate-semi		      
                       ;; generate
                       lkb::show-gen-result
                       lkb::show-generator-input
@@ -352,6 +350,11 @@
                   #+:psql
                   (make-menu-item :name "Clear scratch"
                                   :value 'command-clear-scratch
+                                  ;:available-p :always
+				  )
+                  #+:psql
+                  (make-menu-item :name "Generate SEM-I"
+                                  :value 'command-generate-semi
                                   ;:available-p :always
 				  )
                   )
