@@ -215,7 +215,9 @@ at this point).
         (if matching
             (if (hash-table-p matching)
                 (if parameter-str
-                    (gethash parameter-str matching)
+                    (or
+                     (gethash parameter-str matching)
+                     (gethash (string-upcase (string parameter-str)) matching))
                   (progn 
                     (cerror "~%return all relations"  
                             "~%parameterized rel ~A without parameter string"

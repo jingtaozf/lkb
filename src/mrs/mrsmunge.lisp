@@ -489,11 +489,19 @@
 
 (defun match-var-extras (value1 value2 bindings)
   (if (and (var-p value1) (var-p value2))
-      (let ((extra1 (var-extra value1))
+      (let ((type1 (var-type value1))
+            (type2 (var-type value2))
+            (extra1 (var-extra value1))
             (extra2 (var-extra value2)))
+        (and
+         (if (and type1 type2 
+                  (is-valid-type type1) 
+                  (is-valid-type type2))
+             (compatible-types type1 type2)
+           t)
         (if (and extra1 extra2)
             (compatible-extra-vals extra1 extra2 bindings)
-            t))
+            t)))
       t))
 
 

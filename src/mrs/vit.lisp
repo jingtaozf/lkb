@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.12  1999/11/25 01:14:00  aac
+;; improvements to vit to mrs conversion
+;;
 ;; Revision 1.11  1999/11/12 00:21:19  aac
 ;; added reader for turns, allow for transfer variables
 ;;
@@ -312,10 +315,20 @@
     (setf whatever (read istream))
     (check-for #\, istream)
     (read-p-comment istream)
-    (setf input (read-quoted-stuff istream))
+    (let ((next-char (peek-char t istream nil 'eof)))
+      (if (eql next-char #\') 
+          (setf input (read-quoted-stuff istream))
+        (setf input (read istream))))
+    (format t "~%~A" input)
     (check-for #\, istream)
     (read-p-comment istream)
-    (setf vit (read-vit istream))
+    (let ((next-char (peek-char t istream nil 'eof)))
+      (if (eql next-char #\v) 
+          (setf vit (read-vit istream))
+        (progn
+          (read istream) ; for no_transfer case
+          (setf vit nil)
+          (check-for #\) istream))))
     (read-p-comment istream)
     (check-for #\. istream)
     (read-p-comment istream)
