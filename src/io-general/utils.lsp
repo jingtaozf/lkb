@@ -145,6 +145,23 @@
             (preprocess-sentence-string 
              (string-trim '(#\space #\tab #\newline) sentence))))))
 
+;;; look up words directly (taken from ../tty/tty.lsp)
+(defun show-word-aux-tty (word-string exp-p)
+  (let* ((orth-list (if word-string 
+                        (split-into-words (string-upcase word-string))))
+         (lex-entries (if orth-list (get-lex-entry (car orth-list)))))
+                                        ; entries indexed by all elements
+    (loop for word-entry in lex-entries
+        do
+          (when (equal (mapcar #'string-upcase (lex-entry-orth word-entry))
+                       orth-list)
+            (if exp-p
+                (display-fs (lex-entry-full-fs word-entry) 
+                            (format nil "~(~A~) - ~A - expanded" word-string
+                                    (lex-entry-id word-entry))
+                            (lex-entry-id word-entry))
+              (display-unexpanded-lex-entry word-string word-entry
+                                            (lex-entry-id word-entry)))))))
 
 ;;; following is defined in MCL
 #-:mcl
