@@ -1,5 +1,5 @@
 ROOT = /eo/e7/apache/htdocs/src
-WROOT = c:/src
+WROOT = m:/src
 DATE = `date "+%Y-%m-%d"`
 TARGET = /usr/local/apache/htdocs/lingo/ftp
  
