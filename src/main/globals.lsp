@@ -100,6 +100,11 @@
   "a type which specifies the type of any valid parse" 
   :user)
 
+(def-lkb-parameter *fragment-start-symbols* nil
+  "a list of types (or instances) which specify the type of a valid derivation
+   in fragment parsing or generation mode" 
+  :user)
+
 (def-lkb-parameter *non-idiom-root* nil
   "an fs id which specifies a structure which prevents idioms")
 
