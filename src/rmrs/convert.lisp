@@ -430,6 +430,7 @@ Errors won't be devastating anyway ...
 
 
 (defun convert-rmrs-main-arg (var pred semi-entries)
+  (declare (ignore semi-entries))
   ;;; FIX - ARG0 assumption
   (make-fvpair :feature (cond ((equal pred "prpstn_m_rel")
 			       (vsym "MARG"))
@@ -437,6 +438,7 @@ Errors won't be devastating anyway ...
 	       :value (convert-rmrs-to-mrs-variable var)))
 
 (defun deparsonify (rarg semi-entries)
+  (declare (ignore semi-entries))
   (make-fvpair :feature (vsym (rmrs-arg-arg-type rarg))
 	       :value 
 	       (let ((val (rmrs-arg-val rarg)))
