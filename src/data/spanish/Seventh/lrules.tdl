@@ -19,17 +19,31 @@ arg_real-principle-spr-NE := word+arg_real &
 		  ARG-ST < #spr . #comps > ] > ].
 :end :instance.
 
+;;;changed 06/21
+
 :begin :instance.
 arg_real-principle-spr-empty := word+arg_real &
-[ SYN #syn,
+[ SYN #syn & [ SPR < > ],
   SEM #sem,
-  ARG-ST #comps,
+  ARG-ST < #comps >,
 
   ARGS < word & [ SYN #syn & [ SPR <  >,
 			       COMPS #comps ],
 		  SEM #sem,
 		  ARG-ST #comps] > ].
 :end :instance.
+
+;:begin :instance.
+;arg_real-principle-spr-empty := word+arg_real &
+;[ SYN #syn,
+;  SEM #sem,
+;  ARG-ST #comps,
+;
+;  ARGS < word & [ SYN #syn & [ SPR <  >,
+;			       COMPS #comps ],
+;		  SEM #sem,
+;		  ARG-ST #comps] > ].
+;:end :instance.
 
 
 

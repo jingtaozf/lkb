@@ -160,7 +160,7 @@ Julieta_1 := pn-lxm &
 Roma_1 := pn-lxm &
 [ ORTH <! "Roma" !>,
   SYN [ HEAD [ AGR [ GEND fem] ] ],
-  SEM [ RESTR <! [ NAME 'Rome ] !> ] ].
+  SEM [ RESTR <! [ NAME 'Roma ] !> ] ].
 :end :instance.
 
 ; <<>>
@@ -170,15 +170,6 @@ Milano_1 := pn-lxm &
 [ ORTH <! "Milano" !>,
   SYN [ HEAD [ AGR [ GEND fem] ] ],
   SEM [ RESTR <! [ NAME 'Milan ] !> ] ].
-:end :instance.
-
-; <<>>
-
-:begin :instance.
-Moscow_1 := pn-lxm &
-[ ORTH <! "Moscow" !>,
-  SYN [ HEAD [ AGR [ GEND fem] ] ],
-  SEM [ RESTR <! [ NAME 'Moscow ] !> ] ].
 :end :instance.
 
 ; <<>>
@@ -279,7 +270,7 @@ nosotros_1 := pron-lxm &
 [ ORTH <! "nosotros" !>,
   SYN [ HEAD noun & [ AGR 1plurmasc,
 		      CASE nom ] ],
-  SEM [ RESTR <! [RELN r_speakers] !> ]].
+  SEM [ RESTR <! [RELN r_male_speakers] !> ]].
 :end :instance.
 
 ; <<>>
@@ -289,7 +280,7 @@ nosotras_1 := pron-lxm &
 [ ORTH <! "nosotras" !>,
   SYN [ HEAD noun & [ AGR 1plurfem,
 		      CASE nom ] ],
-  SEM [ RESTR <! [RELN r_speakers] !> ]].
+  SEM [ RESTR <! [RELN r_female_speakers] !> ]].
 :end :instance.
 
 ; <<>>
@@ -299,7 +290,7 @@ vosotros_1 := pron-lxm &
 [ ORTH <! "vosotros" !>,
   SYN [ HEAD noun & [ AGR 2plurmasc,
 		      CASE nom ] ],
-  SEM [ RESTR <! [RELN r_listeners] !> ]].
+  SEM [ RESTR <! [RELN r_male_listeners] !> ]].
 :end :instance.
 
 ; <<>>
@@ -309,7 +300,7 @@ vosotras_1 := pron-lxm &
 [ ORTH <! "vosotras" !>,
   SYN [ HEAD noun & [ AGR 2plurfem ,
 		      CASE nom ] ],
-  SEM [ RESTR <! [RELN r_listeners] !> ]].
+  SEM [ RESTR <! [RELN r_female_listeners] !> ]].
 :end :instance.
 
 ; <<>>
@@ -319,7 +310,7 @@ ellos_1 := pron-lxm &
 [ ORTH <! "ellos" !>,
   SYN [ HEAD noun & [ AGR 3plurmasc,
 		      CASE nom ] ],
-  SEM [ RESTR <! [RELN r_malegroup] !> ]].
+  SEM [ RESTR <! [RELN r_male_group] !> ]].
 :end :instance.
 
 ; <<>>
@@ -329,7 +320,7 @@ ellas_1 := pron-lxm &
 [ ORTH <! "ellas" !>,
   SYN [ HEAD noun & [ AGR 3plurfem,
 		      CASE nom ] ],
-  SEM [ RESTR <! [RELN r_femalegroup] !> ]].
+  SEM [ RESTR <! [RELN r_female_group] !> ]].
 :end :instance.
 
 ; ; <<>>
@@ -361,25 +352,17 @@ el_1 := def_det-lxm &
 [ ORTH <! "el" !>,
   SYN [ HEAD [ AGR [ GEND masc,
                      NUM sing ] ] ],
-  SEM [ RESTR <! [ RELN r_the ] !> ] ].
+  SEM [ RESTR <! [ RELN r_el ] !> ] ].
 :end :instance.
 
-;:begin :instance.
-;el_1 := det-lxm & 
-;[ ORTH <! "el" !>,
-;  SYN [ HEAD [ AGR [ GEND masc,
-;                     NUM sing ] ] ] ].
-;:end :instance.
-
 ; ; <<>>
-
 
 :begin :instance.
 la_1 := def_det-lxm & 
 [ ORTH <! "la" !>,
   SYN [ HEAD [ AGR [ GEND fem,
                      NUM sing ] ] ],
-  SEM [ RESTR <! [RELN r_the ] !> ] ].
+  SEM [ RESTR <! [RELN r_el ] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -390,7 +373,7 @@ los_1 := def_det-lxm &
 [ ORTH <! "los" !>,
   SYN [ HEAD [ AGR [ GEND masc,
                      NUM plur ] ] ],
-  SEM [ RESTR <! [RELN r_the ] !> ] ].
+  SEM [ RESTR <! [RELN r_el ] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -400,7 +383,7 @@ las_1 := def_det-lxm &
 [ ORTH <! "las" !>,
   SYN [ HEAD [ AGR [ GEND fem,
                      NUM plur ] ] ],
-  SEM [ RESTR <! [RELN r_the ] !> ] ].
+  SEM [ RESTR <! [RELN r_el ] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -411,7 +394,7 @@ un_1 := indef_det-lxm &
 [ ORTH <! "un" !>,
   SYN [ HEAD [ AGR [ GEND masc,
                      NUM sing ] ] ],
-  SEM [ RESTR <! [RELN r_a ] !> ] ].
+  SEM [ RESTR <! [RELN r_un ] !> ] ].
 :end :instance.
 
 ;:begin :instance.
@@ -428,7 +411,7 @@ una_1 := indef_det-lxm &
 [ ORTH <! "una" !>,
   SYN [ HEAD [ AGR [ GEND fem,
                      NUM sing ] ] ],
-  SEM [ RESTR <! [RELN r_a ] !> ] ].
+  SEM [ RESTR <! [RELN r_un ] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -439,7 +422,7 @@ unos_1 := indef_det-lxm &
 [ ORTH <! "unos" !>,
   SYN [ HEAD [ AGR [ GEND masc,
                      NUM plur ] ] ],
-  SEM [ RESTR <! [RELN r_a ] !> ] ].
+  SEM [ RESTR <! [RELN r_un ] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -449,7 +432,7 @@ unas_1 := indef_det-lxm &
 [ ORTH <! "unas" !>,
   SYN [ HEAD [ AGR [ GEND fem,
                      NUM plur ] ] ],
-  SEM [ RESTR <! [RELN r_a ] !> ] ].
+  SEM [ RESTR <! [RELN r_un ] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -462,7 +445,7 @@ unas_1 := indef_det-lxm &
 mi_1 := poss_det-lxm & 
 [ ORTH <! "mi" !>,
   SYN [ HEAD [ AGR [ NUM sing ] ] ],
-  SEM [ RESTR <! [ RELN r_my,
+  SEM [ RESTR <! [ RELN r_mi,
                    POSS 1sg ] !> ] ].
 :end :instance.
 
@@ -472,7 +455,7 @@ mi_1 := poss_det-lxm &
 mis_1 := poss_det-lxm & 
 [ ORTH <! "mis" !>,
   SYN [ HEAD [ AGR [ NUM plur ] ] ],
-  SEM [ RESTR <! [ RELN r_my,
+  SEM [ RESTR <! [ RELN r_mi,
                    POSS 1sg ] !> ] ].
 :end :instance.
 
@@ -482,7 +465,7 @@ mis_1 := poss_det-lxm &
 tu_1 := poss_det-lxm & 
 [ ORTH <! "tu" !>,
   SYN [ HEAD [ AGR [ NUM sing ] ] ],
-  SEM [ RESTR <! [ RELN r_your,
+  SEM [ RESTR <! [ RELN r_tu,
                    POSS 2sg ] !> ] ].
 :end :instance.
 
@@ -492,33 +475,20 @@ tu_1 := poss_det-lxm &
 tus_1 := poss_det-lxm & 
 [ ORTH <! "tus" !>,
   SYN [ HEAD [ AGR [ NUM plur ] ] ],
-  SEM [ RESTR <! [ RELN r_your,
+  SEM [ RESTR <! [ RELN r_tu,
                    POSS 2sg ] !> ] ].
 :end :instance.
 
 ; ; <<>>
 
+;;;changed 06/21
+
+
 :begin :instance.
 su_1 := poss_det-lxm & 
 [ ORTH <! "su" !>,
   SYN [ HEAD [ AGR [ NUM sing ] ] ],
-  SEM [ RESTR <! [ RELN r_his,
-                   POSS 3sgorpl ] !> ] ].
-:end :instance.
-
-:begin :instance.
-su_2 := poss_det-lxm & 
-[ ORTH <! "su" !>,
-  SYN [ HEAD [ AGR [ NUM sing ] ] ],
-  SEM [ RESTR <! [ RELN r_her,
-                   POSS 3sgorpl ] !> ] ].
-:end :instance.
-
-:begin :instance.
-su_3 := poss_det-lxm & 
-[ ORTH <! "su" !>,
-  SYN [ HEAD [ AGR [ NUM sing ] ] ],
-  SEM [ RESTR <! [ RELN r_their,
+  SEM [ RESTR <! [ RELN r_su,
                    POSS 3sgorpl ] !> ] ].
 :end :instance.
 
@@ -528,25 +498,61 @@ su_3 := poss_det-lxm &
 sus_1 := poss_det-lxm & 
 [ ORTH <! "sus" !>,
   SYN [ HEAD [ AGR [ NUM plur ] ] ],
-  SEM [ RESTR <! [ RELN r_his,
+  SEM [ RESTR <! [ RELN r_su,
                    POSS 3sgorpl ] !> ] ].
 :end :instance.
 
-:begin :instance.
-sus_2 := poss_det-lxm & 
-[ ORTH <! "sus" !>,
-  SYN [ HEAD [ AGR [ NUM plur ] ] ],
-  SEM [ RESTR <! [ RELN r_her,
-                   POSS 3sgorpl ] !> ] ].
-:end :instance.
+; ; <<>>
 
-:begin :instance.
-sus_3 := poss_det-lxm & 
-[ ORTH <! "sus" !>,
-  SYN [ HEAD [ AGR [ NUM plur ] ] ],
-  SEM [ RESTR <! [ RELN r_their,
-                   POSS 3sgorpl ] !> ] ].
-:end :instance.
+;:begin :instance.
+;su_1 := poss_det-lxm & 
+;[ ORTH <! "su" !>,
+;  SYN [ HEAD [ AGR [ NUM sing ] ] ],
+;  SEM [ RESTR <! [ RELN r_his,
+;                   POSS 3sgorpl ] !> ] ].
+;:end :instance.
+
+;:begin :instance.
+;su_2 := poss_det-lxm & 
+;[ ORTH <! "su" !>,
+;  SYN [ HEAD [ AGR [ NUM sing ] ] ],
+;  SEM [ RESTR <! [ RELN r_her,
+;                   POSS 3sgorpl ] !> ] ].
+;:end :instance.
+
+;:begin :instance.
+;su_3 := poss_det-lxm & 
+;[ ORTH <! "su" !>,
+;  SYN [ HEAD [ AGR [ NUM sing ] ] ],
+;  SEM [ RESTR <! [ RELN r_their,
+;                   POSS 3sgorpl ] !> ] ].
+;:end :instance.
+
+; ; <<>>
+
+;:begin :instance.
+;sus_1 := poss_det-lxm & 
+;[ ORTH <! "sus" !>,
+;  SYN [ HEAD [ AGR [ NUM plur ] ] ],
+;  SEM [ RESTR <! [ RELN r_his,
+;                   POSS 3sgorpl ] !> ] ].
+;:end :instance.
+
+;:begin :instance.
+;sus_2 := poss_det-lxm & 
+;[ ORTH <! "sus" !>,
+;  SYN [ HEAD [ AGR [ NUM plur ] ] ],
+;  SEM [ RESTR <! [ RELN r_her,
+;                   POSS 3sgorpl ] !> ] ].
+;:end :instance.
+
+;:begin :instance.
+;sus_3 := poss_det-lxm & 
+;[ ORTH <! "sus" !>,
+;  SYN [ HEAD [ AGR [ NUM plur ] ] ],
+;  SEM [ RESTR <! [ RELN r_their,
+;                   POSS 3sgorpl ] !> ] ].
+;:end :instance.
 
 ; ; <<>>
 
@@ -555,7 +561,7 @@ nuestro_1 := poss_det-lxm &
 [ ORTH <! "nuestro" !>,
   SYN [ HEAD [ AGR [ NUM sing,
 		     GEND masc ] ] ],
-  SEM [ RESTR <! [ RELN r_our,
+  SEM [ RESTR <! [ RELN r_nuestro,
                    POSS 1pl ] !> ] ].
 :end :instance.
 
@@ -566,7 +572,7 @@ nuestra_1 := poss_det-lxm &
 [ ORTH <! "nuestra" !>,
   SYN [ HEAD [ AGR [ NUM sing,
 		     GEND fem ] ] ],
-  SEM [ RESTR <! [ RELN r_our,
+  SEM [ RESTR <! [ RELN r_nuestro,
                    POSS 1pl ] !> ] ].
 :end :instance.
 
@@ -577,7 +583,7 @@ nuestros_1 := poss_det-lxm &
 [ ORTH <! "nuestros" !>,
   SYN [ HEAD [ AGR [ NUM sing,
 		     GEND masc ] ] ],
-  SEM [ RESTR <! [ RELN r_our,
+  SEM [ RESTR <! [ RELN r_nuestro,
                    POSS 1pl ] !> ] ].
 :end :instance.
 
@@ -588,7 +594,7 @@ nuestras_1 := poss_det-lxm &
 [ ORTH <! "nuestras" !>,
   SYN [ HEAD [ AGR [ NUM sing,
 		     GEND fem ] ] ],
-  SEM [ RESTR <! [ RELN r_our,
+  SEM [ RESTR <! [ RELN r_nuestro,
                    POSS 1pl ] !> ] ].
 :end :instance.
 
@@ -600,7 +606,7 @@ vuestro_1 := poss_det-lxm &
 [ ORTH <! "vuestro" !>,
   SYN [ HEAD [ AGR [ NUM sing,
 		     GEND masc ] ] ],
-  SEM [ RESTR <! [ RELN r_your,
+  SEM [ RESTR <! [ RELN r_vuestro,
                    POSS 2pl ] !> ] ].
 :end :instance.
 
@@ -611,7 +617,7 @@ vuestra_1 := poss_det-lxm &
 [ ORTH <! "vuestra" !>,
   SYN [ HEAD [ AGR [ NUM sing,
 		     GEND fem ] ] ],
-  SEM [ RESTR <! [ RELN r_your,
+  SEM [ RESTR <! [ RELN r_vuestro,
                    POSS 2pl ] !> ] ].
 :end :instance.
 
@@ -622,7 +628,7 @@ vuestros_1 := poss_det-lxm &
 [ ORTH <! "vuestros" !>,
   SYN [ HEAD [ AGR [ NUM sing,
 		     GEND masc ] ] ],
-  SEM [ RESTR <! [ RELN r_your,
+  SEM [ RESTR <! [ RELN r_vuestro,
                    POSS 2pl ] !> ] ].
 :end :instance.
 
@@ -633,7 +639,7 @@ vuestras_1 := poss_det-lxm &
 [ ORTH <! "vuestras" !>,
   SYN [ HEAD [ AGR [ NUM plur,
 		     GEND fem ] ] ],
-  SEM [ RESTR <! [ RELN r_your,
+  SEM [ RESTR <! [ RELN r_vuestro,
                    POSS 2pl ] !> ] ].
 :end :instance.
 
@@ -645,8 +651,8 @@ vuestras_1 := poss_det-lxm &
 :begin :instance.
 y_1 := conj-lxm &
 [ ORTH <! "y" !>,
-  SYN [ HEAD [ FORM f_and ] ],
-  SEM [ RESTR <! [ RELN r_and ] !> ] ].
+  SYN [ HEAD [ FORM f_y ] ],
+  SEM [ RESTR <! [ RELN r_y ] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -657,15 +663,21 @@ y_1 := conj-lxm &
 :begin :instance.
 ser_1 := stv-lxm &
 [ ORTH <! "ser" !>,
-  SEM [ RESTR <! [ RELN r_be ] !> ] ]. 
+  SEM [ RESTR <! [ RELN r_ser ] !> ] ]. 
 
-
-;; added 11/09/99 for testing purposes
+; ; <<>>
 
 :begin :instance.
 amar_1 := stv-lxm &
 [ ORTH <! "amar" !>,
-  SEM [ RESTR <! [ RELN r_love] !> ] ].
+  SEM [ RESTR <! [ RELN r_amar] !> ] ].
+:end :instance.
+; ; <<>>
+
+:begin :instance.
+cruzar_1 := stv-lxm &
+[ ORTH <! "cruzar" !>,
+  SEM [ RESTR <! [ RELN r_cruzar] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -675,15 +687,15 @@ amar_1 := stv-lxm &
 :begin :instance.
 estar_1 := piv-lxm &
 [ ORTH <! "estar" !>,
-  SEM [ RESTR <! [ RELN r_be ] !> ] ].
+  SEM [ RESTR <! [ RELN r_estar ] !> ] ].
 :end :instance.
 
 ; ; <<>>
 
 :begin :instance.
-estar_2 := iv-lxm &
+estar_2 := ger_auxv-lxm &
 [ ORTH <! "estar" !>,
-  SEM [ RESTR <! [ RELN r_be ] !> ] ].
+  SEM [ RESTR <! [ RELN r_estar ] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -691,16 +703,36 @@ estar_2 := iv-lxm &
 :begin :instance.
 dar_1 := dtv-lxm &
 [ ORTH <! "dar" !>,
-  SEM [ RESTR <! [ RELN r_give] !> ] ].
+  SEM [ RESTR <! [ RELN r_dar] !> ] ].
 :end :instance.
 
 ; ; <<>>
 
+;;;this one is for "continuar su mission en la tierra"
+
+:begin :instance.
+continuar_1 := stv-lxm &
+[ ORTH <! "continuar" !>,
+  SEM [ RESTR <! [ RELN r_continuar] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+;;;this one is for "continuar vivendo aqui".
+;;;"continuar a vivir aqui" still needs to be implemented
+
+:begin :instance.
+continuar_2 := srv-lxm &
+[ ORTH <! "continuar" !>,
+  SEM [ RESTR <! [ RELN r_continuar] !> ] ].
+:end :instance.
+
+; ; <<>>
 
 :begin :instance.
 comer_1 := iv-lxm &
 [ ORTH <! "comer" !>,
-  SEM [ RESTR <! [ RELN r_eat] !> ] ].
+  SEM [ RESTR <! [ RELN r_comer] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -708,7 +740,23 @@ comer_1 := iv-lxm &
 :begin :instance.
 comer_2 := stv-lxm &
 [ ORTH <! "comer" !>,
-  SEM [ RESTR <! [ RELN r_eat] !> ] ].
+  SEM [ RESTR <! [ RELN r_comer] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+tener_1 := stv-lxm &
+[ ORTH <! "tener" !>,
+  SEM [ RESTR <! [ RELN r_tener] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+hacer_1 := stv-lxm &
+[ ORTH <! "hacer" !>,
+  SEM [ RESTR <! [ RELN r_hacer] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -716,7 +764,7 @@ comer_2 := stv-lxm &
 :begin :instance.
 vivir_1 := piv-lxm &
 [ ORTH <! "vivir" !>,
-  SEM [ RESTR <! [ RELN r_live] !> ] ].
+  SEM [ RESTR <! [ RELN r_vivir] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -724,7 +772,7 @@ vivir_1 := piv-lxm &
 :begin :instance.
 dormir_1 := iv-lxm &
 [ ORTH <! "dormir" !>,
-  SEM [ RESTR <! [ RELN r_sleep] !> ] ].
+  SEM [ RESTR <! [ RELN r_dormir] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -732,7 +780,15 @@ dormir_1 := iv-lxm &
 :begin :instance.
 mentir_1 := iv-lxm &
 [ ORTH <! "mentir" !>,
-  SEM [ RESTR <! [ RELN r_lie] !> ] ].
+  SEM [ RESTR <! [ RELN r_mentir] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+escribir_1 := stv-lxm &
+[ ORTH <! "escribir" !>,
+  SEM [ RESTR <! [ RELN r_escribir] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -742,15 +798,7 @@ mentir_1 := iv-lxm &
 :begin :instance.
 servir_1 := piv-lxm &
 [ ORTH <! "servir" !>,
-  SEM [ RESTR <! [ RELN r_serve] !> ] ].
-:end :instance.
-
-; ; <<>>
-
-:begin :instance.
-ir_1 := piv-lxm &
-[ ORTH <! "mentir" !>,
-  SEM [ RESTR <! [ RELN r_lie] !> ] ].
+  SEM [ RESTR <! [ RELN r_servir] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -758,7 +806,7 @@ ir_1 := piv-lxm &
 :begin :instance.
 ir_1 := piv-lxm &
 [ ORTH <! "ir" !>,
-  SEM [ RESTR <! [ RELN r_go] !> ] ].
+  SEM [ RESTR <! [ RELN r_ir] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -766,15 +814,34 @@ ir_1 := piv-lxm &
 ;;;implemented 03/29 for "hay un niño en la casa".
 ;;;probably better to implement as unique form "hay",
 ;;;since only 3sing.
+;;;changed to hay 06/22.
+;;;changed 06/23.
+;;;changed 06/28.
+
+
+;:begin :instance.
+;hay_1 := no-subj-stv-lxm & 
+;[ ORTH <! "hay" !>,
+;  SYN [ HEAD [ FORM fin ] ],
+;  SEM [ RESTR [ LIST < [ RELN r_t-overlap] . < [ RELN r_hay ] > > ] ] ].
+;:end :instance.
 
 :begin :instance.
-haver_1 := no-subj-stv-lxm &
-[ ORTH <! "haver" !>,
-  SEM [ RESTR <! [ RELN r_be] !> ] ].
+hay_1 := no-subj-stv-lxm & 
+[ ORTH <! "hayer" !>,
+  SYN [ HEAD [ FORM fin ] ],
+  SEM [ RESTR <! [ RELN r_hay ] !> ] ].
 :end :instance.
 
 ; ; <<>>
 
+:begin :instance.
+haber_1 := perf_auxv-lxm &
+[ ORTH <! "haber" !>,
+  SEM [ RESTR <! [ RELN r_haber ] !> ] ].
+:end :instance.
+
+; ; <<>>
 
 
 ;;; NOUNS (cn-lxm´s)
@@ -784,7 +851,7 @@ haver_1 := no-subj-stv-lxm &
 chico_1 := cn-lxm &
 [ ORTH <! "chico" !>,
   SYN [ HEAD [ AGR [ GEND masc ] ] ],
-  SEM [ RESTR <! [ RELN r_boy] !> ] ].
+  SEM [ RESTR <! [ RELN r_chico] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -793,7 +860,7 @@ chico_1 := cn-lxm &
 chica_1 := cn-lxm &
 [ ORTH <! "chica" !>,
   SYN [ HEAD [ AGR [ GEND fem ] ] ],
-  SEM [ RESTR <! [ RELN r_girl] !> ] ].
+  SEM [ RESTR <! [ RELN r_chica] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -802,7 +869,7 @@ chica_1 := cn-lxm &
 abuelo_1 := cn-lxm &
 [ ORTH <! "abuelo" !>,
   SYN [ HEAD [ AGR [ GEND masc ] ] ],
-  SEM [ RESTR <! [ RELN r_grandfather] !> ] ].
+  SEM [ RESTR <! [ RELN r_abuelo] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -811,7 +878,7 @@ abuelo_1 := cn-lxm &
 abuela_1 := cn-lxm &
 [ ORTH <! "abuela" !>,
   SYN [ HEAD [ AGR [ GEND fem ] ] ],
-  SEM [ RESTR <! [ RELN r_grandmother ] !> ] ].
+  SEM [ RESTR <! [ RELN r_abuela ] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -827,7 +894,7 @@ gato_1 := cn-lxm &
 [ ORTH <! "gato" !>,
   SYN [ HEAD [ AGR [ GEND masc,
                      MORPHGEND true ] ] ],
-  SEM [ RESTR <! [ RELN r_cat ] !> ] ].
+  SEM [ RESTR <! [ RELN r_gato ] !> ] ].
 :end :instance.
 
  ; <<>>
@@ -837,7 +904,7 @@ gata_1 := cn-lxm &
 [ ORTH <! "gata" !>,
   SYN [ HEAD [ AGR [ GEND fem,
                      MORPHGEND true ] ] ],
-  SEM [ RESTR <! [ RELN r_cat ] !> ] ].
+  SEM [ RESTR <! [ RELN r_gato ] !> ] ].
 :end :instance.
 
  ; <<>>
@@ -847,7 +914,7 @@ perro_1 := cn-lxm &
 [ ORTH <! "perro" !>,
   SYN [ HEAD [ AGR [ GEND masc,
                      MORPHGEND true ] ] ],
-  SEM [ RESTR <! [ RELN r_dog ] !> ] ].
+  SEM [ RESTR <! [ RELN r_perro ] !> ] ].
 :end :instance.
 
  ; <<>>
@@ -857,7 +924,7 @@ perra_1 := cn-lxm &
 [ ORTH <! "perra" !>,
   SYN [ HEAD [ AGR [ GEND fem,
                      MORPHGEND true ] ] ],
-  SEM [ RESTR <! [ RELN r_dog ] !> ] ].
+  SEM [ RESTR <! [ RELN r_perro ] !> ] ].
 :end :instance.
 
  ; <<>>
@@ -877,7 +944,25 @@ perra_1 := cn-lxm &
 manzana_1 := cn-lxm &
 [ ORTH <! "manzana" !>,
   SYN [ HEAD [ AGR [ GEND fem ] ] ],
-  SEM [ RESTR <! [ RELN r_apple] !> ] ].
+  SEM [ RESTR <! [ RELN r_manzana] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+manzano_1 := cn-lxm &
+[ ORTH <! "manzano" !>,
+  SYN [ HEAD [ AGR [ GEND masc ] ] ],
+  SEM [ RESTR <! [ RELN r_manzano] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+banana_1 := cn-lxm &
+[ ORTH <! "banana" !>,
+  SYN [ HEAD [ AGR [ GEND fem ] ] ],
+  SEM [ RESTR <! [ RELN r_banana] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -886,7 +971,7 @@ manzana_1 := cn-lxm &
 mesa_1 := cn-lxm &
 [ ORTH <! "mesa" !>,
   SYN [ HEAD [ AGR [ GEND fem ] ] ],
-  SEM [ RESTR <! [ RELN r_table] !> ] ].
+  SEM [ RESTR <! [ RELN r_mesa] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -896,7 +981,7 @@ mesa_1 := cn-lxm &
 corbata_1 := cn-lxm &
 [ ORTH <! "corbata" !>,
   SYN [ HEAD [ AGR [ GEND fem ] ] ],
-  SEM [ RESTR <! [ RELN r_tie] !> ] ].
+  SEM [ RESTR <! [ RELN r_corbata] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -906,7 +991,7 @@ corbata_1 := cn-lxm &
 vestido_1 := cn-lxm &
 [ ORTH <! "vestido" !>,
   SYN [ HEAD [ AGR [ GEND masc ] ] ],
-  SEM [ RESTR <! [ RELN r_dress] !> ] ].
+  SEM [ RESTR <! [ RELN r_vestido] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -915,7 +1000,7 @@ vestido_1 := cn-lxm &
 libro_1 := cn-lxm &
 [ ORTH <! "libro" !>,
   SYN [ HEAD [ AGR [ GEND masc ] ] ],
-  SEM [ RESTR <! [ RELN r_book] !> ] ].
+  SEM [ RESTR <! [ RELN r_libro] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -925,7 +1010,7 @@ libro_1 := cn-lxm &
 revista_1 := cn-lxm &
 [ ORTH <! "revista" !>,
   SYN [ HEAD [ AGR [ GEND fem ] ] ],
-  SEM [ RESTR <! [ RELN r_magazine] !> ] ].
+  SEM [ RESTR <! [ RELN r_revista] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -934,7 +1019,7 @@ revista_1 := cn-lxm &
 casa_1 := cn-lxm &
 [ ORTH <! "casa" !>,
   SYN [ HEAD [ AGR [ GEND fem ] ] ],
-  SEM [ RESTR <! [ RELN r_house] !> ] ].
+  SEM [ RESTR <! [ RELN r_casa] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -944,7 +1029,7 @@ casa_1 := cn-lxm &
 jardín_1 := cn-lxm &
 [ ORTH <! "jardín" !>,
   SYN [ HEAD [ AGR [ GEND masc ] ] ],
-  SEM [ RESTR <! [ RELN r_garden] !> ] ].
+  SEM [ RESTR <! [ RELN r_jardín] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -954,7 +1039,7 @@ jardín_1 := cn-lxm &
 jardin_1 := cn-lxm &
 [ ORTH <! "jardin" !>,
   SYN [ HEAD [ AGR [ GEND masc ] ] ],
-  SEM [ RESTR <! [ RELN r_garden] !> ] ].
+  SEM [ RESTR <! [ RELN r_jardín] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -963,7 +1048,7 @@ jardin_1 := cn-lxm &
 unicornio_1 := cn-lxm &
 [ ORTH <! "unicornio" !>,
   SYN [ HEAD [ AGR [ GEND masc ] ] ],
-  SEM [ RESTR <! [ RELN r_unicorn] !> ] ].
+  SEM [ RESTR <! [ RELN r_unicornio] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -972,7 +1057,7 @@ unicornio_1 := cn-lxm &
 universidad_1 := cn-lxm &
 [ ORTH <! "universidad" !>,
   SYN [ HEAD [ AGR [ GEND fem ] ] ],
-  SEM [ RESTR <! [ RELN r_university] !> ] ].
+  SEM [ RESTR <! [ RELN r_universidad] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -981,7 +1066,7 @@ universidad_1 := cn-lxm &
 avión_1 := cn-lxm &
 [ ORTH <! "avión" !>,
   SYN [ HEAD [ AGR [ GEND masc ] ] ],
-  SEM [ RESTR <! [ RELN r_airplane] !> ] ].
+  SEM [ RESTR <! [ RELN r_avión] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -992,7 +1077,7 @@ avión_1 := cn-lxm &
 :begin :instance.
 estudiante_1 := cn-lxm &
 [ ORTH <! "estudiante" !>,
-  SEM [ RESTR <! [ RELN r_student] !> ] ].
+  SEM [ RESTR <! [ RELN r_estudiante] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -1000,7 +1085,7 @@ estudiante_1 := cn-lxm &
 :begin :instance.
 pianista_1 := cn-lxm &
 [ ORTH <! "pianista" !>,
-  SEM [ RESTR <! [ RELN r_pianist] !> ] ].
+  SEM [ RESTR <! [ RELN r_pianista] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -1009,7 +1094,7 @@ pianista_1 := cn-lxm &
 :begin :instance.
 artista_1 := cn-lxm &
 [ ORTH <! "artista" !>,
-  SEM [ RESTR <! [ RELN r_artist] !> ] ].
+  SEM [ RESTR <! [ RELN r_artista] !> ] ].
 :end :instance.
 
 ; ; <<>>
@@ -1021,7 +1106,7 @@ artista_1 := cn-lxm &
 pan_1 := mn-lxm &
 [ ORTH <! "pan" !>,
   SYN [ HEAD [ AGR [ GEND masc ] ] ],
-  SEM [ RESTR <! [ RELN r_bread ] !> ] ].
+  SEM [ RESTR <! [ RELN r_pan ] !> ] ].
 :end :instance.
 
 ;;; ; <<>> ----- PREPOSITIONS -----
@@ -1031,7 +1116,7 @@ pan_1 := mn-lxm &
 :begin :instance.
 en_1 := mkp-lxm &
 [ ORTH <! "en" !>,
-  SYN [ HEAD [ FORM f_in ] ] ].
+  SYN [ HEAD [ FORM f_en ] ] ].
 :end :instance.
 
 ; ; <<>>
@@ -1039,7 +1124,7 @@ en_1 := mkp-lxm &
 :begin :instance.
 en_2 := vpdp-lxm &
 [ ORTH <! "en" !>,
-  SYN [ HEAD [ FORM f_in ] ] ].
+  SYN [ HEAD [ FORM f_en ] ] ].
 :end :instance.
 
 ; ; <<>>
@@ -1047,7 +1132,15 @@ en_2 := vpdp-lxm &
 :begin :instance.
 nel_1 := masc-vpdp-lxm &
 [ ORTH <! "nel" !>,
-  SYN [ HEAD [ FORM f_in ] ] ].
+  SYN [ HEAD [ FORM f_en ] ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+nel_2 := masc-mkp-lxm &
+[ ORTH <! "nel" !>,
+  SYN [ HEAD [ FORM f_en ] ] ].
 :end :instance.
 
 ; ; <<>>
@@ -1055,7 +1148,15 @@ nel_1 := masc-vpdp-lxm &
 :begin :instance.
 a_1 := mkp-lxm &
 [ ORTH <! "a" !>,
-  SYN [ HEAD [ FORM f_to ] ] ].
+  SYN [ HEAD [ FORM f_a ] ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+al_1 := masc-mkp-lxm &
+[ ORTH <! "al" !>,
+  SYN [ HEAD [ FORM f_a ] ] ].
 :end :instance.
 
 ; ; <<>>
@@ -1066,7 +1167,7 @@ a_1 := mkp-lxm &
 :begin :instance.
 con_1 := mkp-lxm &
 [ ORTH <! "con" !>,
-  SYN [ HEAD [ FORM f_with ] ] ].
+  SYN [ HEAD [ FORM f_con ] ] ].
 :end :instance.
 
 ; ; <<>>
@@ -1077,7 +1178,7 @@ con_1 := mkp-lxm &
 :begin :instance.
 con_2 := pdp-lxm &
 [ ORTH <! "con" !>,
-  SYN [ HEAD [ FORM f_with ] ] ].
+  SYN [ HEAD [ FORM f_con ] ] ].
 :end :instance.
 
 ; ; <<>>
@@ -1087,7 +1188,7 @@ con_2 := pdp-lxm &
 :begin :instance.
 de_1 := npdp-lxm &
 [ ORTH <!  "de" !>,
-  SYN [ HEAD [ FORM f_of ] ] ].
+  SYN [ HEAD [ FORM f_de ] ] ].
 :end :instance.
 
 ; ; <<>>
@@ -1095,7 +1196,7 @@ de_1 := npdp-lxm &
 :begin :instance.
 del_1 := masc-npdp-lxm &
 [ ORTH <!  "del" !>,
-  SYN [ HEAD [ FORM f_of ] ] ].
+  SYN [ HEAD [ FORM f_de ] ] ].
 :end :instance.
 
 ; ; <<>>

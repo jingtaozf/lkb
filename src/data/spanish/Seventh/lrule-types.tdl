@@ -38,7 +38,7 @@ pres-verb-lex-rule := lrule & word &
 [ SYN #syn,
   SEM [ MODE #mode,
 	INDEX #1,
-	RESTR [ LIST < [RELN r_t-overlap,
+	RESTR [ LIST < [ RELN r_t-overlap,
 			 ARG1 #1,
 			 ARG2 now] . #restr >,
                 LAST #semlast ]],
@@ -49,8 +49,39 @@ pres-verb-lex-rule := lrule & word &
                                    LAST #semlast ]],
 		     ARG-ST #arg-st ] > ].
 
+;;;changed 06/26
 
+pret-verb-lex-rule := lrule & word &
+[ SYN #syn,
+  SEM [ MODE #mode,
+	INDEX #1,
+	RESTR [ LIST < [RELN r_t-precede,
+	           	 ASPECT completed,
+			 ARG1 #1,
+			 ARG2 now] . #restr >,
+                LAST #semlast ]],
+  ARG-ST #arg-st,
+  ARGS < lexeme & [  SYN #syn,
+		     SEM [ MODE #mode,
+			   RESTR [ LIST #restr,
+                                   LAST #semlast ]],
+		     ARG-ST #arg-st ] > ].
 
+imperf-verb-lex-rule := lrule & word &
+[ SYN #syn,
+  SEM [ MODE #mode,
+	INDEX #1,
+	RESTR [ LIST < [RELN r_t-precede,
+	                 ASPECT not_completed,
+			 ARG1 #1,
+			 ARG2 now] . #restr >,
+                LAST #semlast ]],
+  ARG-ST #arg-st,
+  ARGS < lexeme & [  SYN #syn,
+		     SEM [ MODE #mode,
+			   RESTR [ LIST #restr,
+                                   LAST #semlast ]],
+		     ARG-ST #arg-st ] > ].
 
 
 ;;; <<>> NOMINAL LEXICAL TYPES
@@ -95,77 +126,104 @@ inf-verb := affix &
 [ SYN [ HEAD verb & [ FORM inf,
 		      PRED false ] ] ].
 
+;;;changed 06/27
+
 pres-verb := affix &
 [ SYN [ HEAD verb & [ FORM fin,
 		      PRED false ] ] ].
+
+;;;added 06-27
+
+pret-verb := affix &
+[ SYN [ HEAD verb & [ FORM fin,
+		      PRED false ] ] ].
+
+imperf-verb := affix &
+[ SYN [ HEAD verb & [ FORM fin,
+		      PRED false ] ] ].
+
+;;;added 06/22
+
+gerundive-verb := affix &
+[ SYN [ HEAD verb & [ FORM ger,
+		      PRED true ] ] ].
+
+
+past-part-verb := affix &
+[ SYN [ HEAD verb & [ FORM perf,
+		      PRED false ] ] ].
+
+
+;;;changed 06/27 (SEM)
 
 1st-sing-verb := affix &
 [ SYN [ HEAD verb & [ FORM fin,
 		      PRED false] ],
   ARG-ST < [ SYN [ HEAD [ CASE nom,
-			  AGR 1sing & [PER 1st,
-				       NUM sing ] ] ] ], ... > ].
+	                  AGR 1sing & #1 & [ PER 1st,
+				             NUM sing ] ] ],
+             SEM [ INDEX #1 ] ], ... >,
+  SEM [ RESTR <! act_pred & [ ACT #1 ] !> ] ].
 
-;;; added 02/08
 
 2nd-sing-verb := affix &
 [ SYN [ HEAD verb & [ FORM fin,
 		      PRED false] ],
   ARG-ST < [ SYN [ HEAD [ CASE nom,
-			  AGR 2sing ] ] ], ... > ].
+			  AGR #1 & 2sing ] ], 
+             SEM [ INDEX #1 ] ], ... >,
+  SEM [ RESTR <! act_pred & [ ACT #1 ] !> ] ].
+
 
 ;;; changed 05/17 - AGR 3sing added
 ;;; rearranged 06/16
+;;; SEM changed 06/27
 
 3rd-sing-verb := affix &  
 [ SYN [ HEAD verb & [ FORM fin,
 		      PRED false ] ],
   ARG-ST < [ SYN [ HEAD [ CASE nom,
-			  AGR 3sing ] ] ], ... > ]. 
+			  AGR #1 & 3sing ] ], 
+             SEM [ INDEX #1 ] ], ... >,
+  SEM [ RESTR <! act_pred & [ ACT #1 ] !> ] ].
 
 
 ;3rd-sing-verb := affix &  
 ;[ SYN [ HEAD verb & [ FORM fin,
 ;		      PRED false ] ] ]. 
 
-3rd-sing-masc-verb := 3rd-sing-verb &
-[ ARG-ST < [ SYN [ HEAD [  AGR [ GEND masc ] ] ] ], ... > ]. 
-
-3rd-sing-fem-verb := 3rd-sing-verb &
-[ ARG-ST < [ SYN [ HEAD [ AGR [ GEND fem ] ] ] ], ... > ]. 
-
 ;3rd-sing-masc-verb := 3rd-sing-verb &
-;[ ARG-ST < [ SYN [ HEAD [ CASE nom,
-;			  AGR 3singmasc ] ] ], ... > ]. 
+;[ ARG-ST < [ SYN [ HEAD [  AGR [ GEND masc ] ] ] ], ... > ]. 
 
 ;3rd-sing-fem-verb := 3rd-sing-verb &
-;[ ARG-ST < [ SYN [ HEAD [ CASE nom,
-;			  AGR 3singfem ] ] ], ... > ]. 
+;[ ARG-ST < [ SYN [ HEAD [ AGR [ GEND fem ] ] ] ], ... > ]. 
 
-;3rd-sing-verb := affix &  
-;[ SYN [ HEAD verb & [ FORM fin,
-;		      PRED false ] ],
-;  ARG-ST < [ SYN [ HEAD [ CASE nom,
-;			  AGR 3sing ] ] ], ... > ]. 
 
 1st-plur-verb := affix &
 [ SYN [ HEAD verb & [ FORM fin,
 		      PRED false] ],
   ARG-ST < [ SYN [ HEAD [ CASE nom,
-			  AGR 1plur ] ] ], ... > ].
+			  AGR #1 & 1plur ] ], 
+             SEM [ INDEX #1 ] ], ... >,
+  SEM [ RESTR <! act_pred & [ ACT #1 ] !> ] ].
+
 
 2nd-plur-verb := affix &
 [ SYN [ HEAD verb & [ FORM fin,
 		      PRED false] ],
   ARG-ST < [ SYN [ HEAD [ CASE nom,
-			  AGR 2plur ] ] ], ... > ].
+			  AGR #1 & 2plur ] ],
+             SEM [ INDEX #1 ] ], ... >,
+  SEM [ RESTR <! act_pred & [ ACT #1 ] !> ] ].
+
 
 3rd-plur-verb := affix &  
 [ SYN [ HEAD verb & [ FORM fin,
 		      PRED false ] ],
   ARG-ST < [ SYN [ HEAD [ CASE nom,
-			  AGR 3plur ] ] ], ... > ]. 
-
+			  AGR #1 & 3plur ] ], 
+             SEM [ INDEX #1 ] ], ... >,
+  SEM [ RESTR <! act_pred & [ ACT #1 ] !> ] ].
 
 ;;;should there be a distinction between 3sing and the others?
 ;;;pro-drop of third person sing seems to be more restrictive.

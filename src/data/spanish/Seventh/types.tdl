@@ -51,9 +51,16 @@ sem-struc := feat-struc &
 ;  RESTR list-of-predications ].
 
 
+;;;changed 06/26
+
 predication := feat-struc &
 [ RELN reln,
+  ASPECT aspect,
   SIT  sit-index ].
+
+;predication := feat-struc &
+;[ RELN reln,
+;   SIT  sit-index ].
 
 ;;; instloc is needed solely for generation
 
@@ -67,6 +74,12 @@ index := feat-struc &
      null-index :< index.
 
 
+;;;added 06/26:
+
+aspect := *value*.
+
+     completed :< aspect.
+     not_completed :< aspect.
 
 ;;; <<<---- POS's ---->>>
 
@@ -110,21 +123,23 @@ form :< *value*.
 ;Verbs
    inf    :< form.
    fin    :< form.
+   ger    :< form.
+   perf   :< form.
 
 ;Prepositions
-   f_to   :< form.
-   f_in   :< form.
-   f_with :< form.
-   f_of   :< form.
-   f_for  :< form.
-   f_by   :< form.
+   f_para   :< form.
+   f_en   :< form.
+   f_con :< form.
+   f_de   :< form.
+   f_a :< form.
+   
    
 ;Adverbs
-   f_not  :< form.
+   f_no  :< form.
 
 ;Conjuctions
-   f_and  :< form.
-;   f_but  :< form.
+   f_y  :< form.
+;   f_mas  :< form.
 
 
 
@@ -133,7 +148,9 @@ form :< *value*.
 
 ;;;altered 12/07 for el/la pianista --> 3singmasc 3singfem added
 ;;;changed 04/24 for pal, dal, etc...
+;;;changed 06/22`
 
+#|
 3singmasc := agr-cat &
  [ PER 3rd,
    NUM sing, 
@@ -189,9 +206,9 @@ non3singmasc := agr-cat &
 
 3plurfem := 3plur &
  [ GEND  fem ].
+|#
 
-
-#|
+;;;this is the "more conservative" agreement
 
 3sing := agr-cat &
     [ PER 3rd,
@@ -244,7 +261,8 @@ non3singmasc := agr-cat &
 3plurfem := 3plur &
  [ GEND /l fem ].
 
-|#
+
+
 ;;; changed 08/02
 
 per :< *value*.
@@ -264,6 +282,7 @@ num :< *value*.
 gend :< *value*.
    masc :< gend.
    fem :< gend.
+
 
 #|
 ;;; added 01/21:
@@ -290,6 +309,7 @@ gend :< *value*.
 ;   fem  :< gend.
 ;   masc :< gend.
 ;   neut :< gend.
+
 |#
 
 ;;;this will be necessary for the objective pronouns
@@ -325,7 +345,24 @@ npdp-lxm := pdp-lxm &
 vpdp-lxm := pdp-lxm & 
  [ SYN [ HEAD [ MOD < [SYN [HEAD verb ] ] > ] ] ].
 
+
+;;;these are for the contracted prepositions nel, pal, al, etc...
 ;;;changed 04/24.
+;;;changed 06/23.
+
+;masc-pdp-lxm := prep-lxm &
+; [ SYN [ HEAD [ MOD < [SYN [HEAD norv,
+;                            SPR < [ ] > ] ] > ] ],
+;   ARG-ST < [ SYN NP ], 
+;	    [ SYN N & [ HEAD [ AGR 3singmasc ] ] ] > ].
+
+;masc-pdp-lxm := prep-lxm &
+; [ SYN [ HEAD [ MOD < [SYN [HEAD norv,
+;                            SPR < [ ] > ] ] > ],
+;	 SPR < [ ] > ],
+;   ARG-ST < [ SYN NP ], 
+;	    [ SYN N & [ HEAD [ AGR 3singmasc ] ] ] > ].
+
 
 masc-pdp-lxm := prep-lxm &
  [ SYN [ HEAD [ MOD < [SYN [HEAD norv ] ] > ],
@@ -349,6 +386,13 @@ mkp-lxm := prep-lxm &
 	 SPR < > ],
    ARG-ST < #1 & [ SYN NP ] > ].
 
+;;;changed 06/26
+
+masc-mkp-lxm := prep-lxm &  
+ [ SYN [ HEAD [ MOD < >,
+		P-OBJ < #1 > ],
+	 SPR < > ],
+   ARG-ST < #1 & [ SYN N & [ HEAD [ AGR 3singmasc ] ] ] > ].
 
 
 adv-lxm := const-lxm & modifier-sem &
@@ -386,11 +430,11 @@ det-lxm := const-lxm & det-sem &
 
 def_det-lxm := det-lxm &
  [ SEM [ DEF true,
-         RESTR /l <! [ RELN r_the ] !> ] ].
+         RESTR /l <! [ RELN r_el ] !> ] ].
 
 indef_det-lxm := det-lxm &
  [ SEM [ DEF false,
-         RESTR <! [ RELN r_a ] !> ] ].
+         RESTR <! [ RELN r_un ] !> ] ].
 
 poss_det-lxm := det-lxm & poss_det-sem.
 
@@ -509,8 +553,8 @@ NP-acc := NP &
 NP-nom := NP &
 [ HEAD [CASE nom] ].
 
-NP-non3singmasc := NP &
- [ HEAD noun & [ AGR non3singmasc ] ].
+;NP-non3singmasc := NP &
+; [ HEAD noun & [ AGR non3singmasc ] ].
 
 N := gram-cat & 
 [ HEAD noun,
@@ -557,14 +601,22 @@ PP := gram-cat &
 ;;; <<>> ----- VERB LEXEME TYPES  -----
 
 ;;; changed for "hay", 03/29
-;;;semantics...?
+;;; changed 06/21
 
 verbal-lxm := infl-lxm & verb-sem & 
- [ SYN [ HEAD verb & [ NEG false, AUX /l false ] ],
-   ARG-ST < [ SYN /l NP ], ...  > ].
+ [ SYN [ HEAD verb & [ NEG false, AUX /l false ] ] ].
+
+;verbal-lxm := infl-lxm & verb-sem & 
+; [ SYN [ HEAD verb & [ NEG false, AUX /l false ] ],
+;   ARG-ST < [ SYN /l NP ], ...  > ].
+
 
 verb-lxm := verbal-lxm &
- [ SYN [ SPR  < [ ] > ] ].
+ [ SYN [ SPR  < [ ] > ],
+   ARG-ST < [ SYN /l NP ], ...  > ].
+
+;verb-lxm := verbal-lxm &
+; [ SYN [ SPR  < [ ] > ] ].
 
 no-subj-verb-lxm := verbal-lxm &
  [ SYN [ SPR  < > ] ].
@@ -578,7 +630,7 @@ piv-lxm := verb-lxm & piv-sem &
 tv-lxm := verb-lxm &
  [ ARG-ST < [ ], [SYN /l NP-acc ], ... > ].
 
-no-subj-stv-lxm := no-subj-verb-lxm & 
+no-subj-stv-lxm := no-subj-verb-lxm & no-subj-stv-sem &
  [ ARG-ST < [ ] > ]. 
 
 stv-lxm := tv-lxm & stv-sem &
@@ -586,11 +638,36 @@ stv-lxm := tv-lxm & stv-sem &
 
 
 ;;;changed 02/09 
+;;;chabged 06/23
 dtv-lxm := tv-lxm & dtv-sem &
- [ ARG-ST < [ ], [ ], [ SYN PP & [HEAD [P-OBJ <[SYN NP]> ] ] ] > ].
+ [ ARG-ST < [ ], [ ], [ SYN PP ] > ].
+
+;dtv-lxm := tv-lxm & dtv-sem &
+; [ ARG-ST < [ ], [ ], [ SYN PP & [HEAD [P-OBJ <[SYN NP]> ] ] ] > ].
 
 
-;;;define types for raising and control verbs
+;;;define here types for raising and control verbs
+;;;changed 06/22: list in SPR 
+;;;(will not account for no-subj-verb)
+
+;;;subject-raising verb
+srv-lxm := verb-lxm & srv-sem &
+[ ARG-ST < #1 ,  [SYN [ SPR < #1 > ] ] > ]. 
+
+
+;;;auxiliaries
+auxv-lxm := srv-lxm &
+[ SYN [ HEAD verb & [ AUX true ] ] ].
+
+perf_auxv-lxm := auxv-lxm &
+[ SYN [ HEAD verb & [ AUX true ] ],
+  ARG-ST < [ ], [ SYN [ HEAD verb & [FORM perf ] ] ] > ].
+
+ger_auxv-lxm := auxv-lxm &
+[ SYN [ HEAD verb & [ AUX true ] ],
+  ARG-ST < [ ], [ SYN [ HEAD verb & [FORM ger ] ] ] > ].
+
+
 
 
 ;;; <<<---- TYPES INHERITING FROM SYNSEM-STRUC/LEXICAL RULE DEFINITIONS ---->>>

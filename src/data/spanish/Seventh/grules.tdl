@@ -32,6 +32,7 @@ head-complement-rule-none := unary-COMPS-rule &
 	     COMPS < > ] ] ].
 :end :instance.
 
+
 :begin :instance.
 head-complement-rule-1 := binary-COMPS-rule & 
  [ SYN [ SPR #spr,  
@@ -68,27 +69,31 @@ head-complement-rule-1 := binary-COMPS-rule &
 ;;;this one is for PP's
 ;;;SPR changed for "hay" 03/29
 ;;;two rules specified - one with empty specifier 03/31
+;;; default on SPR 06/21
 
 :begin :instance.
-e-head-adjunct-rule := birule-headfirst &
- [ SYN [ SPR < > ],
-   H #1 & [ SYN [ SPR < > ] ],
-   NH1 [ SYN [ HEAD [ MOD < #1 > ] ] ] ].
-:end :instance.
-
-
-:begin :instance.
-ne-head-adjunct-rule := birule-headfirst &
- [ SYN [ SPR < #spr > ],
-   H #1 & [ SYN [ SPR < #spr > ] ],
+head-adjunct-rule := birule-headfirst &
+ [ SYN [ SPR  #spr ],
+   H #1 & [ SYN [ SPR  #spr ] ],
    NH1 [ SYN [ HEAD [ MOD < #1 > ] ] ] ].
 :end :instance.
 
 ;:begin :instance.
-;head-adjunct-rule := birule-headfirst &
-; [ H #1, 
+;e-head-adjunct-rule := birule-headfirst &
+; [ SYN [ SPR < > ],
+;   H #1 & [ SYN [ SPR < > ] ],
 ;   NH1 [ SYN [ HEAD [ MOD < #1 > ] ] ] ].
 ;:end :instance.
+
+
+;:begin :instance.
+;ne-head-adjunct-rule := birule-headfirst &
+; [ SYN [ SPR < #spr > ],
+;   H #1 & [ SYN [ SPR < #spr > ] ],
+;   NH1 [ SYN [ HEAD [ MOD < #1 > ] ] ] ].
+;:end :instance.
+
+
 
 ;:begin :instance.
 ;e-spec-head-adjunct-rule := head-adjunct-rule &
