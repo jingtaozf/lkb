@@ -1,0 +1,161 @@
+\documentclass[11pt]{article}
+\usepackage{gb4e}
+\usepackage{avm}
+\setlength{\evensidemargin}{0in}
+\setlength{\oddsidemargin}{0in}
+\setlength{\textwidth}{6.5in}
+\setlength{\topmargin}{-0.5in}
+\setlength{\textheight}{9in}
+%\pagestyle{empty}
+\parindent=0pt
+
+\begin{document}
+\begin{center}
+\textbf{Advanced Grammar Engineering using HPSG: DAY 3}\\
+ESSLLI 2000
+\end{center}
+
+\smallskip
+\noindent\textbf{Background}\\
+Here are some possible translations of the English sentences from Day
+2$\frac12$:
+\begin{exe}
+\ex
+\begin{xlist}
+\ex \^Cu \^sia onklino konis mian patrinon?\\
+`Did her aunt know my mother?'
+\ex Lia saneco malboni\^gis.\\
+`His health has deteriorated.'
+\ex La knaboj anka\v{u} povas lerni malfacilajn lingvojn en la lernejo.\\
+`The boys can also learn difficult languages at school.'
+\ex La mona\^hoj beligis la pre\^gejon.\\
+The monks adorned the church.
+\ex \^Cu via patrino volas dormigi la knabojn\\
+`Does your mother want to put the boys to sleep?'
+\end{xlist}
+\end{exe}
+If these don't make sense to you, let one of us know. 
+
+Before you start today's exercise, check out a small partial grammar of
+Esperanto:
+\begin{verbatim}
+cvs checkout esperanto
+\end{verbatim}
+This grammar should look very familiar---it is very much like the English
+grammar you started out with on Monday. The lexicon has been replaced with an
+inventory of Esperanto roots, things have been set up for the more complex
+nominal morphology, and a couple of rules have been added. Also, to make
+typing easier, letters which have accents in standard Esperanto orthography
+are written as double letters for the purposes of this grammar.  So, that
+means \emph{\^cu} is written \texttt{ccu} and \emph{anka\v{u}} is written
+\texttt{ankauu}. Take a minute to get familiar with the grammar and figure out 
+how it all works.
+
+One thing to pay special attention to is different type of lexical rules.
+For English, we had a distinction between derivational rules which mapped
+lexemes to lexemes, and inflectional rules which mapped lexemes to words.
+This general plan will work for Esperanto verbs as well, since while they may
+have several derivational affixes (added by lexeme to lexeme rules), they only
+have one inflectional affix (added by a lexeme to word rule).  For Esperanto
+nouns and adjectives, though, the situation is more complicated.  A noun like
+\emph{knabojn} `boys (\textsc{acc})' consists of a root \emph{knab} plus three 
+inflectional endings \emph{o}, \emph{j}, and \emph{n}.  To handle this we need 
+to add new kinds of lexical rules that we'll call lexeme to stem, stem to
+theme, and theme to word lexical rules.  Every noun and adjective lexeme has
+to go through each of these layers before it can become a word:
+\begin{center}
+\begin{tabular}{lcl}
+knab (lexeme) + o & = & knabo (stem)\\
+knabo (stem) + j & = & knaboj (theme)\\
+knaboj (theme) + n & = & knabojn (word)
+\end{tabular}
+\end{center}
+In addition, nouns and adjectives, like verbs, can undergo derivational
+(lexeme to lexeme) rules, adding even more complexity:
+\begin{center}
+\begin{tabular}{lcl}
+knab (lexeme) + in & = & knabin (lexeme)\\
+knabin (lexeme) + o & = & knabino (stem)\\
+knabino (stem) + j & = & knabinoj (theme)\\
+knabinoj (theme) + n & = & knabinojn (word)
+\end{tabular}
+\end{center}
+As in the English grammar, we control which rule can apply to which form
+using a set of lexical types. Play around with this a little to see how it
+works, but keep in mind that not all the lexical rules are in place yet.  Some 
+of them you'll be adding in the following exercises.
+
+\smallskip
+\noindent\textbf{Exercises}
+\begin{enumerate}
+\item One linguistic device that plays an important role in Esperanto but
+almost none in English is case marking.  Nouns which function as a direct
+object take the accusative suffix \emph{-n}, and adjectives and possessive
+determiners agree in both case and number with the noun they modify.
+\begin{enumerate}
+\item Add a feature \textsc{case} to \emph{nominal} which takes a feature
+structure of type \emph{case} as its value.  Add \emph{nom} and \emph{acc} as 
+subtypes of \emph{case}.  
+\item Add constraints to the relevant lexeme types to enforce case assignment.
+Verbs select for a nominative specifier and (if transitive) an accusative
+complement, and prepositions select for a nominative complement.
+\item Add case agreement constraints so that determiners and adjectives agree
+with the noun in case as well as number.
+\item Add the lexical rules for case marking.  Since the case marker comes
+last in the word, case marking rules are theme to word lexical rules.  The
+grammar you checked out has a lexical rule \emph{no-case-word-rule} in
+\texttt{inflr.tdl} and a corresponding type \emph{no-case-word} in
+\texttt{types.tdl}.  This rule maps any theme to a word without adding a case
+ending.  Delete this rule (it's just a placeholder so you can load the
+grammar), and add the correct lexical rules which map a theme to either a
+nominative word or an accusative word, with the appropriate ending.  You will
+probably need two rules, one for each case.
+\item Check your work by parsing the sentences in \texttt{case.items}.
+\end{enumerate}
+\item Next you need to add the possessive determiners.  Esperanto possessives
+are tricky because syntactically they behave like determiners, but
+morphologically they behave like adjectives.
+\begin{enumerate}
+\item Create a subtype of \emph{det} called \emph{poss}.  Since the
+inflectional rules for adjectives will have to apply to either adjectives or
+possessives, add \emph{adj-or-poss} as a subtype of \emph{nominal} and make 
+both \emph{adj} and \emph{poss} inherit from it.
+\item Modify \emph{adj-stem} so that the \emph{adj-stem-rule} will apply to 
+both adjectives and possessives.
+\item Add a lexeme type for possessive determiners.
+\item Add new lexical entries for the possessive forms of the pronouns in
+\texttt{lexicon.tdl}. (Or, if you are feeling ambitious, set up a lexical rule 
+to derive possessives from pronouns, or to derive pronouns from possessives.)
+\item Check that your modifications have had the desired effect by parsing the 
+examples in \texttt{poss.items}.
+\end{enumerate}
+\item Esperanto also has a number of lexeme to lexeme lexical rules.  Some,
+like \emph{mal-} prefix rule, map a lexeme to a lexeme of the same category,
+but with a different meaning.  Others, like the \emph{-igg} suffix rule, map a 
+lexeme of one category to a lexeme of a different category.  Following the
+example of the \emph{neg-adj-rule} and the \emph{inchoative-verb-rule}, add
+lexical rules for the suffixes \emph{-in}, \emph{-ej}, \emph{-ec}, and
+\emph{-ig}. You may find it easer to add two separate rules for \emph{-ig},
+one mapping adjectives to verbs and one mapping verbs to verbs.  Test your
+results with \texttt{endings.items}.
+\item Infinitives (like \emph{lerni} `to learn') are verb forms, but
+infinitive phrases (like \emph{lerni la esparantan lingvon} `to learn the
+Esperanto language') are a lot like noun phrases in that they can be the
+subject or object of a verb.  Add a lexeme to word lexical rule for
+infinitives which forms a noun word from a verb lexeme.  The \textsc{head}
+value of the output should be \emph{noun}, but the \textsc{comps} value should 
+be the same as the underlying verb and the \emph{spr} value should be empty.
+Test your results with \texttt{inf.items}.
+\item Add new lexeme types and lexical entries for the particles \emph{\^cu},
+\emph{ne}, and \emph{anka\v{u}}.  These particles should combine with the
+phrases they attach to via the head-complement rule.  Make a set of test items
+to verify your analysis.
+\item Finally, try parsing the sentences from last night's exercise in
+\texttt{hard.items}.  Does everything work?  If not, try to figure out what's
+going wrong.  If so, then great: you've now got a fairly wide coverage
+syntactic grammar of Esperanto.  All that's left to do is add semantics.  (If
+you have time today, see how far you can get with it.  Otherwise, that's maybe
+a project to come back to on some snowy February afternoon.)
+\end{enumerate}
+\end{document}
+

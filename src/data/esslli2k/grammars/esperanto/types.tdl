@@ -1,0 +1,181 @@
+feat-struc := *top*.
+
+syn-struc := feat-struc & 
+[ HEAD pos,
+  SPR *list*,
+  COMPS *list*, 
+  ARGS *list* ].
+
+pernum := feat-struc.
+sg := pernum.
+pl := pernum.
+
+pos := feat-struc & 
+       [ MOD *list* ].
+
+nominal := pos &
+[ AGR pernum ].
+
+noun := nominal & [MOD <>].
+verb := pos & [MOD <>].
+det := nominal & [MOD <>].
+prep := pos & [MOD < [ SPR < syn-struc >] >].
+conj := pos & [MOD < [ HEAD verb, SPR < >, COMPS < >] >].
+adj := nominal & [ MOD < [ HEAD noun, SPR < syn-struc > ] > ].
+
+;;;
+;;; rule types
+;;;
+
+phrase := syn-struc &
+[ COMPS <> ].
+
+head-initial := phrase &
+[ HEAD #head,
+  ARGS < [ HEAD #head ] ... > ].
+
+head-final := phrase &
+[ HEAD #head,
+  ARGS < syn-struc, [ HEAD #head ] > ].
+
+;;;
+;;; lexical types
+;;;
+
+lex-item := syn-struc &
+[ ORTH string ].
+
+const-lex-rule := lex-item &
+[ HEAD #head,
+  SPR #spr,
+  COMPS #comps,
+  ARGS < [ HEAD #head,
+           SPR #spr,
+           COMPS #comps ] > ].
+
+const-orth-rule := lex-item &
+[ ORTH #1,
+  ARGS < [ ORTH #1 ] > ].
+
+;; Lexeme types
+
+lexeme := lex-item.
+
+const-lxm := lexeme.
+
+det-lxm := const-lxm & 
+[ HEAD det,
+  SPR < >,
+  COMPS < > ].
+
+noun-lxm := lexeme &
+[ HEAD noun & [ AGR #agr ],
+  SPR < [ HEAD det & [ AGR #agr ] ] >,
+  COMPS < > ].
+
+pronoun-lxm := theme &
+[ HEAD noun,
+  SPR < >,
+  COMPS < > ].
+
+adj-lxm := lexeme &
+[ HEAD adj & [ AGR #agr,
+               MOD < [ HEAD.AGR #agr ] > ],
+  SPR < >,
+  COMPS < > ].
+
+verb-lxm := lexeme &
+[ HEAD verb,
+  SPR < phrase & [ HEAD noun,
+                   SPR < > ] > ].
+
+intrans-verb := verb-lxm & 
+[ COMPS < > ].
+
+trans-verb := verb-lxm & 
+[ COMPS < phrase & [ HEAD noun, SPR <> ] > ].
+
+be-verb := verb-lxm & 
+[ COMPS < phrase & [ HEAD nominal ] > ].
+
+prep-lxm := const-lxm & 
+[ HEAD prep,
+  SPR < >,
+  COMPS < phrase & [ HEAD noun, SPR < > ] > ].
+
+conj-lxm := const-lxm & 
+[ HEAD conj,
+  SPR < >,
+  COMPS < phrase & [ HEAD verb, SPR < >, COMPS < > ] > ].
+
+;; lexeme -> stem rules
+
+stem := const-lex-rule &
+[ ARGS < lexeme > ].
+
+adj-stem := stem &
+[ ARGS < [ HEAD adj ] > ].
+
+noun-stem := stem &
+[ ARGS < [ HEAD noun ] > ].
+
+;; stem -> theme rules
+
+theme := const-lex-rule &
+[ ARGS < stem > ].
+
+singular-theme := theme & const-orth-rule & 
+[ ARGS < [ HEAD.AGR sg ] > ].
+
+plural-theme := theme &
+[ ARGS < [ HEAD.AGR pl ] > ].
+
+;; theme -> word rules
+
+word := lex-item.
+
+infl-word := word & const-lex-rule.
+
+no-case-word := infl-word & const-orth-rule &
+[ ARGS < theme > ].
+
+;; lexeme -> word rules
+
+const-word := infl-word & const-orth-rule &
+[ ARGS < const-lxm > ].
+
+verb-form := infl-word &
+ [ ARGS < verb-lxm > ].
+
+pres-verb := verb-form.
+past-verb := verb-form.
+
+;; lexeme -> lexeme rules
+
+neg-adj := adj-lxm & 
+[ ARGS < lexeme & [ HEAD adj ] > ].
+
+inchoative-verb := intrans-verb & 
+[ ARGS < lexeme & [ HEAD adj ] > ].
+
+;;;
+;;; some (pseudo) built-in data types
+;;;
+
+string := *top*.
+
+*list* := *top*.
+
+*ne-list* := *list* &
+ [ FIRST *top*,
+   REST *list* ].
+
+*null* := *list*.
+
+;;;
+;;; types for node labels used in tree display
+;;;
+
+label :=  syn-struc &
+[ LABEL-NAME string ].
+

@@ -1,0 +1,122 @@
+\documentclass[10pt]{article}
+\setlength{\evensidemargin}{0in}
+\setlength{\oddsidemargin}{0in}
+\setlength{\textwidth}{6.5in}
+\setlength{\topmargin}{-0.5in}
+\setlength{\textheight}{9in}
+\pagestyle{empty}
+\parindent=0pt
+
+\begin{document}
+\begin{center}
+\textbf{Advanced Grammar Engineering using HPSG: DAY 4}\\
+ESSLLI 2000
+\end{center}
+
+\medskip
+\textbf{Goals}
+\begin{enumerate}
+  \item Extend the English grammar to cover some long-distance dependencies.
+  \item Explore a binary-branching variant of the syntactic rules.
+\end{enumerate}
+
+\medskip
+\textbf{Background}
+
+Like many languages, English has constructions where at least one of the
+syntactic arguments of a predicate does not show up right beside its
+predicate, but somewhere farther away.  One class of these constructions
+is called {\it long-distance dependencies}, illustrated by the following
+examples:
+\begin{enumerate}
+  \item {\it That cat, the dog wanted me to give to the aardvark.}
+  \item {\it Examples like this, I'm sure nobody ever really says.}
+\end{enumerate}
+These long-distance dependencies are discussed in more detail in Chapter
+15 of the Sag and Wasow textbook; for today's exercise, it will be enough
+to remember that a sentence-initial phrase like {\it that cat} can be
+analyzed as providing the {\it filler} for a {\it gap} (a missing argument)
+somewhere later in the sentence.
+
+\medskip
+\textbf{Exercises}
+\begin{enumerate}
+\item If you wish to continue with your English grammar from Tuesday, feel
+free to do so.  But you can also begin today's exercise by checking out a
+new version of the grammar which includes semantics:\\
+
+        \verb|  cvs checkout grammar7|\\
+
+Prepare the basic machinery for handling long-distance dependencies.
+Our approach will be to remove a complement from the COMPS list
+of a predicate using a new syntactic rule, store it for awhile in a GAP 
+attribute, and then retrieve it at the top of the phrase structure tree 
+using a new syntactic rule.  
+
+\item First, in the file ``types.tdl'' add the feature GAP to the type {\it
+syn-struc}, and make its value be of type {\it *dlist*}, for reasons that will
+become clear in a moment.  Then consider the two types of {\it syn-struc}; we
+will assume that all lexical items have an empty GAP list.  Make this so.
+
+\item Phrases may contain a gap, and that gap might come from any of the
+daughters of a phrase, so we use the same difference-list mechanism to collect
+up these values that we used for ORTH and RELS earlier in the week.  Add a
+subtype of the type {\it unary-rule} called {\it unary-rule-passgap} which
+makes the phrase's GAP be unified with the GAP of its only daughter, and add a
+subtype of the type {\it binary-rule} called {\it binary-rule-passgap} which
+appends the GAP values of its two daughters.  Finally, directly modify the
+type {\it ternary-rule} to append the GAP value of its three daughters.
+Modify the types {\it unary-head-initial} and {\it binary-head-initial} to
+inherit from these new types, and add a subtype of {\it binary-head-final}
+which does too.
+
+\item Still in the file ``types.tdl'', add two new rule types {\it
+unary-head-initial-startgap} and {\it binary-head-initial-startgap} which have
+a non-empty GAP whose single element is a {\it syn-struc}.  Since this
+is where we introduce the missing argument, and we assume that only one gap
+per sentence is needed, all of the ARGS values should have an empty
+GAP value.  (Recall that you can use the notation ``$<$! !$>$'' for an empty
+difference-list.)
+
+\item Now move to the file ``rules.tdl'' and modify the rule {\it
+head-specifier-rule} to inherit from the type {\it binary-head-final-passgap}
+- the rest of the existing rules can stay the same, since we've built the
+gap-passing machinery into their types.  
+
+\item Still in ``rules.tdl'', add a new unary rule which inherits from the
+type {\it unary-head-initial-startgap}, and which identifies the single
+complement of its daughter with the single element in the GAP list of the 
+mother.
+
+\item Finally, add a new rule called {\it head-filler-rule} of type {\it
+binary-head-final} whose first daughter is identified with the single value of
+the GAP attribute on the second daughter.  This is the rule that will combine,
+for example, {\it that cat} with {\it the dog chased} to build {\it That cat
+the dog chased.} Save your files, then reload the grammar, and check that you
+can parse the example {\it That cat the dog chased.}  If not, make the
+required repairs, until you can parse this example.
+
+\item Now consider the example {\it That dog the cat gave to the aardvark.}
+You will have to add another rule to ``rules.tdl'', this one a binary rule
+that inherits from the other gap-starting type that we created above.  And
+you may need another binary rule to handle {\it To that cat the dog gave
+the aardvark.}  Once these are parsing, try testing your analysis on the
+batch file ``gap.items''.  You may want to add an additional constraint
+to the {\it head-modifier-rule} which prevents modifiers from having a
+non-empty GAP value.  You will also discover that you need to add a
+constraint to the definition of {\it start-symbol} in the file ``roots.tdl''.
+
+\item {\bf [Advanced]} Introducing three new grammar rules that do almost the
+same thing (putting an argument into GAP) is rather unsatisfying.  Try
+reworking the syntactic rules so that complements are always picked up one at
+a time, and then see if you can cover all of the data in ``gap.items'' using
+only one gap-starting rule.
+
+\end{enumerate}
+\end{document}
+
+
+
+
+
+

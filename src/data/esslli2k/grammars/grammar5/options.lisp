@@ -1,0 +1,13 @@
+;;; Automatically generated file - do not edit!
+(defparameter LKB::*DIALOG-FONT-SIZE* '12)
+(defparameter LKB::*DISPLAY-TYPE-HIERARCHY-ON-LOAD* 'T)
+(defparameter LKB::*FIRST-ONLY-P* 'NIL)
+(defparameter LKB::*FS-TITLE-FONT-SIZE* '12)
+(defparameter LKB::*FS-TYPE-FONT-SIZE* '12)
+(defparameter LKB::*GEN-FIRST-ONLY-P* 'NIL)
+(defparameter LKB::*MAXIMUM-NUMBER-OF-EDGES* '5000)
+(defparameter LKB::*PARSE-TREE-FONT-SIZE* '12)
+(defparameter LKB::*SHOW-LEX-RULES* 'T)
+(defparameter LKB::*SHOW-MORPHOLOGY* 'T)
+(defparameter LKB::*START-SYMBOL* '(LKB::ROOT))
+(defparameter LKB::*TYPE-TREE-FONT-SIZE* '12)

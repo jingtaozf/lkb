@@ -1,0 +1,20 @@
+(defparameter *grammar-version* "Day 6 (final)")
+(lkb-load-lisp (this-directory) "globals.lsp")
+(lkb-load-lisp (this-directory) "user-fns.lsp")
+(lkb-load-lisp (this-directory) "mrsglobals.lsp")
+(read-tdl-type-files-aux
+     (list (lkb-pathname (this-directory) "types.tdl")))
+(read-tdl-lex-file-aux 
+     (lkb-pathname (this-directory) "lexicon.tdl"))
+(read-morph-file-aux (lkb-pathname (this-directory) "inflr.tdl"))
+(batch-check-lexicon)
+(read-tdl-grammar-file-aux 
+     (lkb-pathname (this-directory) "rules.tdl"))
+(read-tdl-lex-rule-file-aux (lkb-pathname (this-directory) "lrules.tdl"))
+(read-tdl-parse-node-file-aux 
+          (lkb-pathname (this-directory) "parse-nodes.tdl"))
+(read-tdl-psort-file-aux 
+  (lkb-pathname (this-directory) "roots.tdl"))
+
+(index-for-generator)
+

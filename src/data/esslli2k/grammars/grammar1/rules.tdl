@@ -1,0 +1,46 @@
+head-complement-rule-0 := phrase & 
+[ HEAD #0,
+  SPR #a,
+  COMPS < >,   
+
+  ARGS < word & 
+         [ HEAD #0,
+           SPR #a, 
+           COMPS < > ] >  ].
+
+
+head-complement-rule-1 := phrase &
+[ HEAD #0,
+  SPR #a, 
+  COMPS < >,   
+
+  ARGS < word & 
+         [ HEAD #0,
+           SPR #a, 
+           COMPS < #1 & [ SPR < > ] > ],  #1 >  ].
+
+
+head-complement-rule-2 := phrase &
+[ HEAD #0,
+  SPR #a, 
+  COMPS < >,   
+
+  ARGS < word & 
+         [ HEAD #0,
+           SPR #a, 
+           COMPS < #1, #2 & [ SPR < > ] > ],  #1, #2 >  ].
+
+
+head-specifier-rule := phrase &
+[ HEAD #0,
+  SPR < >,
+  COMPS #a,
+  ARGS < phrase & 
+         #1 & [ SPR < > ],   phrase & 
+                             [ HEAD #0,
+                               SPR < #1 >,
+                               COMPS #a ] > ]. 
+
+
+
+

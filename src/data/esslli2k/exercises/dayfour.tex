@@ -1,0 +1,137 @@
+\documentclass[10pt]{article}
+\setlength{\evensidemargin}{0in}
+\setlength{\oddsidemargin}{0in}
+\setlength{\textwidth}{6.5in}
+\setlength{\topmargin}{-0.5in}
+\setlength{\textheight}{9in}
+\pagestyle{empty}
+\parindent=0pt
+
+\begin{document}
+\begin{center}
+\textbf{An Introduction to Grammar Engineering using HPSG: DAY 4}\\
+ESSLLI 2000
+\end{center}
+
+\medskip
+\textbf{Goals:}
+\begin{enumerate}
+\item Examine the nature of rules and their interaction with processing.
+\item Complete the generalization of the lexicon using types.
+\item Introduce lexical rules into the grammar.
+\end{enumerate}
+
+\smallskip
+\textbf{Exercises:}
+\begin{enumerate}
+\item If you have already added modification to your grammar so that the
+desired results are produced for the batch test file ``mods.item'', then
+you can keep your current grammar for today's exercises.  But if you have
+not yet completed your work on modification, please check out an updated
+version for today's exercises by typing the following command in the ``xterm''
+window:
+\begin{verbatim}
+		cvs checkout grammar4
+\end{verbatim}
+
+\item Types provide us with a useful tool for expressing generalizations
+and eliminating redundancy.  Yesterday we introduced additional types to 
+capture the Head Feature Principle in the definitions of the grammar rules,
+and today we will carry this idea into the lexicon.  You may have already 
+started this work yesterday, but today you should try to eliminate all 
+redundancy from the lexical entries in the file ``lexicon.tdl''.  
+\begin{enumerate}
+\item Introduce subtypes of the type {\it word} for nouns, determiners, 
+and verbs, adding any constraints which are true for all instances of each
+type:
+\begin{verbatim}
+		noun-word := word & [ ... ].
+		det-word := word & [ ... ].
+		verb-word := word & [ ... ].
+		prep-word := word & [ ... ].
+\end{verbatim}
+
+\item Introduce subtypes of the noun-word type for singular and plural nouns,
+and do the same for determiners.
+\item Introduce subtypes of the verb-word type whose instances select for
+third-singular or non-third-singular subjects for present-tense verbs, and 
+an additional subtype of the verb-word type for past-tense verbs.
+\item Introduce subtypes of the verb-word type to distinguish intransitives, 
+transitives, and the two types of ditransitive verbs.
+\item Take advantage of the notion of multiple inheritance to introduce 
+lexical types in the file ``types.tdl'' for the verbs in the 
+file ``lexicon.tdl'', making use of types from each of these two sets of 
+subtypes of the verb-word type.  Remember that the syntax for defining 
+multiple inheritance here is as follows:
+\begin{verbatim}
+		X := Y & Z & [A b].
+\end{verbatim}
+This definition says that the type X is a subtype of both Y and Z, and X
+introduces the feature A with value b.  Note that lexical entries in the
+file ``lexicon.tdl'' can only inherit from a single type, so any multiple
+inheritance that you introduce must be defined in the file ``types.tdl''.
+
+\item Modify your entries in the file ``lexicon.tdl'' to make use of these
+new types. When you are finished with this exercise, each of the definitions in
+your ``lexicon.tdl'' file should consist of the name of the lexical entry, 
+the name of its lexical type, and the orthography.  Everything else should
+be defined in the ``types.tdl'' file.  Here is a sample ideal entry:
+\begin{verbatim}
+dog := noun-word-3sing &
+[ ORTH "dog" ].
+\end{verbatim}
+
+\end{enumerate}
+
+\item The type hierarchy allows us to capture a number of generalizations
+in the grammar, but we need another mechanism in order to represent the
+similarities among morphologically related words which have distinct 
+syntactic properties.  We introduce the notion of a lexical rule, which 
+derives a new word from an existing word.  For today's exercise, we will 
+capture the relationship between the two varieties of the verb {\it gave} 
+which appear in the following two examples: 
+
+{\it That dog gave the cat to those dogs.\\
+That dog gave those dogs the cat.}
+
+\begin{enumerate}
+\item If you are continuing with your grammar from yesterday, then do
+the following, to pick up some additional machinery needed for the exercise:
+\begin{verbatim}
+		cd grammar2
+		cvs update
+\end{verbatim}
+If you are using grammar3, then you already have this additional machinery.
+
+\item Move the {\sc args} attribute from {\it phrase} to a higher type which 
+includes both words and phrases.
+
+\item Open the empty file ``lrules.tdl'' and add a new type which has the
+following structure:
+\begin{verbatim}
+dative-shift-lrule := word &
+[ HEAD ...,
+  SPR ...,
+  COMPS ...,
+  ARGS < word & [ ... ] > ].
+\end{verbatim}
+\item Fill in any necessary constraints for each attribute, so that the rule 
+takes as its single argument a ditransitive verb with two NP complements, and
+produces a ditransitive verb with an NP complement and a PP complement.  You
+should replace the type {\it word} in the {\sc args} attribute of this rule 
+with the name of the type you chose for the ditransitive verb with two NP 
+complements.
+\item Remove your hand-built lexical entry for the NP-PP version of {\it gave}
+from the file ``lexicon.tdl'' since you now have a fine lexical rule which
+produces this entry for you.
+
+\end{enumerate}
+
+\item {\bf Optional exercise:} Extend the treatment of modification to
+admit examples like {\it The large dog barks.}  You will have to add a new
+{\it pos} type for adjectives, a lexical entry for {\it large}, and a new
+grammar rule which allows modifiers to precede their heads.  Try to avoid
+redundancy as much as possible.
+\end{enumerate}
+
+\end{document}

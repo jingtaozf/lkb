@@ -1,0 +1,46 @@
+feat-struc := *top*.
+
+syn-struc := feat-struc & 
+[ HEAD pos,
+  SPR *list*,
+  COMPS *list* ].
+
+pernum := feat-struc.
+3sing := pernum.
+non-3sing := pernum.
+
+pos := feat-struc & 
+       [ AGR pernum,
+         MOD *list* ].
+
+noun := pos & [MOD <>].
+verb := pos & [MOD <>].
+det := pos & [MOD <>].
+prep := pos & [MOD < [COMPS <>, 
+		      SPR < syn-struc >] >].
+
+phrase := syn-struc &
+[ ARGS *list* ].
+
+word := syn-struc &
+[ ORTH string ].
+
+
+root := phrase &
+[ HEAD verb,
+  SPR < >,
+  COMPS < > ].
+
+
+;;;;;;;;;;;;;;;;;;;;;;;
+
+
+string := *top*.
+
+*list* := *top*.
+
+*ne-list* := *list* &
+ [ FIRST *top*,
+   REST *list* ].
+
+*null* := *list*.

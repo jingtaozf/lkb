@@ -1,0 +1,142 @@
+feat-struc := *top*.
+
+syn-struc := feat-struc & 
+[ HEAD pos,
+  SPR *list*,
+  COMPS *list*,
+  ARGS *list* ].
+
+pernum := feat-struc.
+3sing := pernum.
+non-3sing := pernum.
+
+
+;;;;;;;;;;;;;;;;;;;
+;;; PARTS OF SPEECH
+
+pos := feat-struc & 
+       [ MOD *list* ].
+
+nominal := pos & 
+	   [ AGR pernum ].
+noun := nominal & noun-or-verb & [MOD < >].
+det := nominal & [MOD < >].
+
+noun-or-verb := pos.
+verb := noun-or-verb & [MOD < >].
+prep := pos & [MOD < [HEAD noun-or-verb,
+                      COMPS < >, 
+		      SPR < phrase >] >].
+adv := pos & [MOD < [HEAD verb,
+                     COMPS < >, 
+	             SPR < phrase >] >].
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; PHRASE AND WORD TYPES
+
+word := syn-struc &
+[ ORTH string ].
+
+noun-word := word &
+[ HEAD noun & [AGR #1],
+  SPR < phrase & [HEAD det & [AGR #1]] >,
+  COMPS < > ].
+
+noun-word-3sing := noun-word &
+[ HEAD [ AGR 3sing ] ].
+
+noun-word-non-3sing := noun-word &
+[ HEAD [ AGR non-3sing ] ].
+
+det-word := word &
+[ HEAD det,
+  SPR < >,
+  COMPS < > ].
+
+det-word-3sing := det-word &
+[ HEAD [ AGR 3sing ] ].
+
+det-word-non-3sing := det-word &
+[ HEAD [ AGR non-3sing ] ].
+
+prep-word := word &
+[ HEAD prep,
+  SPR < >,
+  COMPS < phrase & [HEAD noun] > ].
+
+verb-word := word &
+[ HEAD verb,
+  SPR < phrase & [HEAD noun,
+		  SPR < >,
+		  COMPS < >] >, 
+  COMPS < ... > ].
+
+pres-3sing := verb-word &
+[ SPR < [HEAD [ AGR 3sing ]] > ].
+
+pres-non-3sing := verb-word &
+[ SPR < [HEAD [ AGR non-3sing ]] > ].
+
+
+intrans-verb := verb-word &
+[ COMPS < > ].
+
+pres-3sing-iv := pres-3sing & intrans-verb.
+pres-non-3sing-iv := pres-non-3sing & intrans-verb.
+
+trans-verb := verb-word &
+[ COMPS < phrase & [HEAD noun,
+		    SPR < >,
+		    COMPS < >] > ].
+
+ditrans-verb := verb-word &
+[ COMPS < phrase & [HEAD noun,
+		    SPR < >,
+		    COMPS < >],  phrase > ].
+
+dtv-np-np := ditrans-verb &
+[ COMPS < phrase, phrase & [HEAD noun,
+	               	    SPR < >,
+			    COMPS < >] > ].
+
+dtv-np-pp := ditrans-verb &
+[ COMPS < phrase, phrase & [HEAD prep,
+			    SPR < >,
+			    COMPS < >] > ].
+
+
+
+phrase := syn-struc &
+[ COMPS < > ].
+
+head-initial := phrase &
+[ HEAD #head,
+  ARGS < [ HEAD #head ], ... > ].
+
+head-final := phrase &
+[ HEAD #head,
+  ARGS < syn-struc, [ HEAD #head ] > ].
+
+root := head-final &
+[ HEAD verb,
+  SPR < >,
+  COMPS < > ].
+
+
+;;;;;;;;;;;;;;;;;;;;;;;
+
+
+string := *top*.
+
+*list* := *top*.
+
+*ne-list* := *list* &
+ [ FIRST *top*,
+   REST *list* ].
+
+*null* := *list*.
+
+
+
+

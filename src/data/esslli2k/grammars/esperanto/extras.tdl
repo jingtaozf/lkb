@@ -1,0 +1,21 @@
+;;;
+;;; difference list types
+;;;
+
+*dlist* := *top* &
+[ LIST *list*,
+  LAST *list* ].
+
+*null-dlist* := *dlist* &
+[ LIST #last,
+  LAST #last ].
+
+*ne-dlist* := *dlist* &
+[LIST *ne-list* ].
+
+;;;
+;;; types for node labels used in tree display
+;;;
+
+label :=  syn-struc &
+[ LABEL-NAME string ].

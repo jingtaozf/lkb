@@ -1,0 +1,3 @@
+dative-shift-lrule := ditranspp-verb &
+[ SEM.KEY #key,
+  ARGS < ditransnp-verb & [ SEM.KEY #key ] >].

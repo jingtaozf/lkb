@@ -1,0 +1,143 @@
+\documentclass[10pt]{article}
+\setlength{\evensidemargin}{0in}
+\setlength{\oddsidemargin}{0in}
+\setlength{\textwidth}{6.5in}
+\setlength{\topmargin}{-0.5in}
+\setlength{\textheight}{9in}
+\pagestyle{empty}
+\parindent=0pt
+
+\begin{document}
+\begin{center}
+\textbf{An Introduction to Grammar Engineering using HPSG: DAY 1}\\
+ESSLLI 2000
+\end{center}
+
+\medskip
+\textbf{Goals:}
+\begin{enumerate}
+\item Become familiar with the LKB grammar development system.
+\item Learn to extend a grammar by adding lexical entries.
+\item Expand the grammar to deal with a ditransitive verb.
+\item Expand the grammar to add prepositional phrase arguments.
+% head modifier rule - if anyone looks like they're getting bored!
+\end{enumerate}
+
+\smallskip
+\textbf{Exercises:}
+\begin{enumerate}
+\item Bring up
+the LKB and load grammar1:
+\begin{enumerate}
+\item Checkout a copy of grammar1 by {\tt cvs checkout grammar1} in 
+an xterm window. 
+\item Start emacs and in the Emacs window:
+\par\texttt{<Esc> x lkb}
+\item Load the grammar by selecting \textsf{Load / Complete
+grammar} in the 
+``Lkb Top'' window, then double-clicking on the directory ``grammar1'' and on the
+file ``script''.  Reassuring messages will appear in the ``Lkb Top'' window,
+and a window will pop up showing you the type hierarchy for this small
+grammar.
+\end{enumerate}
+\item Test the system by parsing the sentence {\it the cat chased the dog}:
+\begin{enumerate}
+\item With the mouse in the ``Lkb Top'' window, click on the button
+\textsf{Parse}. 
+\item Click on the menu item \textsf{Parse input\ldots}.
+\item Type in the sentence {\it the cat chased the dog} replacing
+the existing contents of the window.
+\item Click on the
+button \textsf{OK}.
+\end{enumerate}
+The system will parse the sentence and pop up a window containing a little 
+parse tree for the single analysis of this sentence.  Click on the parse
+tree to get a menu which allows you to enlarge it and look at the nodes.
+\item Try the simple batch parsing mechanism:
+\begin{enumerate}
+\item In the ``Lkb Top'' window, click on the button \textsf{Parse} and
+then on the menu item \textsf{Batch parse\ldots}, which will pop up a window
+asking you for the file to be processed.
+\item Click on the file ``test.items'' in your grammar directory. then hit
+the button \textsf{OK}.  This will pop up a new window asking you for the name
+of the file where the results of the batch run will be stored.
+\item Enter the name ``test.results'' and hit the \textsf{OK} button.
+The system will print the message \texttt{Parsing test file} in the 
+{\tt *common-lisp*} emacs buffer when it starts, and will print the message \texttt{Finished test
+file} when it is done.
+\item Open the file ``test.results'' from emacs
+and inspect the parsing results.
+\end{enumerate}
+\item Add a lexical entry for another animal noun of your choice:
+\begin{enumerate}
+\item In the Emacs window, open the file ``lexicon.tdl'' for editing
+(see the emacs handout)
+\item In the lexicon.tdl buffer that you get, copy the five lines that
+define the lexical entry for \textbf{dog} and modify your copy to make the
+value of \textsc{orth} appropriate for another animal.
+\item Save the changed version of the file.
+\end{enumerate}
+\item Reload the grammar and test the effect of your addition:
+\begin{enumerate}
+\item In the ``Lkb Top'' window, select \textsf{Load / Reload
+grammar}.
+\item Parse the sentence {\it the cat chased the
+$\langle\mbox{your-animal}\rangle$}
+\item Add this sentence to the test.items file and rerun the batch
+check.
+\end{enumerate}
+\item Investigate the grammar in order to get an intuitive idea 
+of how it works (formal details
+will be discussed later).  In particular, look at the following sentences and 
+try and decide why they do or do not parse:
+\begin{itemize}
+\item the cat barks
+\item the cat chased
+\item cat barks
+\item the cat bark
+\item bark
+\end{itemize}
+Note that the parse chart will be available even if the sentence didn't parse,
+and you can click on the nodes in that to display feature structures.
+Notice that the grammar is parsing some sentences incorrectly
+(overgeneration)
+and failing to parse some sentences that should parse (undergeneration).
+\item The rule that is needed for ditransitives is in the grammar,
+but there are no lexical entries that utilize it.  Add an entry for {\it gave} which takes two noun phrase
+complements (i.e., the entry you would need to parse {\it that dog gave the cat the $\langle\mbox{your-animal}\rangle$}). 
+\begin{enumerate}
+\item Copy the entry for {\it chased} in lexicon.tdl
+\item Replace the orthography value as before.
+\item Add an extra element to the COMPS list, which will be a duplicate of the
+one that is already there.  Note: lists are delimited by
+{\tt <} and {\tt >} and that elements on lists are
+separated by commas.
+\item Test by parsing {\it that dog gave the cat the $\langle\mbox{your-animal}\rangle$}.  Also test for overgeneration by confirming that you cannot
+parse {\it that dog gave the cat}.  
+\item Add appropriate sentences to test.items
+\end{enumerate}
+\item Add a new type and two new lexical entries 
+in order to parse
+{\it that dog gave the cat to the $\langle\mbox{your-animal}\rangle$}
+\begin{enumerate}
+\item Add the type {\bf prep} as
+a new subtype of the type {\bf pos} to the file types.tdl, by copying 
+the type description for {\bf noun} and replacing {\bf noun} with {\bf prep}. 
+\item Add a lexical entry for the preposition {\it to}.  This should be similar
+to the entry for {\it chased} in that {\it to} will take a single noun
+phrase complement, but the value for HEAD should be {\bf prep} and the
+value of SPR should be the empty list (i.e., {\tt <>}).
+\item Add another lexical entry for {\it gave}.  You can copy your existing entry for {\it gave} but
+you will need to use
+a different identifier (i.e., the thing to the left of the \verb!:=!), e.g., 
+\verb!gave_2!.  You also need to change the second element in
+COMPS to make this entry require a PP (we won't bother about
+making sure it's a {\it to}-PP yet).
+\item Add several test items, both grammatical and ungrammatical,
+to the file ``test.items'' which will allow you to check the
+correctness of your additions to the grammar.   
+\item Run the batch parsing utility again on the file ``test.items'', and
+examine the results.
+\item Celebrate as appropriate.
+ \end{enumerate}\end{enumerate}
+\end{document}

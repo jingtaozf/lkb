@@ -1,0 +1,43 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; 
+;;; SYNTACTIC THEORY by Sag and Wasow -- Textbook Grammar 
+;;; implementation by Chris Callison-Burch & Scott Guffey
+;;;
+;;; parse-nodes.tdl
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+s-label := label & 
+[ HEAD verb, SPR <>, COMPS <>,
+  LABEL-NAME "S" ].
+
+vp-label := label & 
+[ HEAD verb, SPR < [] >, COMPS <>,
+  LABEL-NAME "VP" ].
+
+v-label := label & 
+[ HEAD verb,
+  LABEL-NAME "V" ].
+
+np-label := label & 
+[ HEAD noun, SPR <>, COMPS <>,
+  LABEL-NAME "NP" ].
+
+n-label := label & 
+[ HEAD noun, SPR < [] >,
+  LABEL-NAME "N" ].
+
+det-label := label & 
+[ HEAD det,
+  LABEL-NAME "Det" ].
+
+pp-label := label & 
+[ HEAD prep, SPR <>, COMPS <>,
+  LABEL-NAME "NP" ].
+
+p-label := label & 
+[ HEAD prep,
+  LABEL-NAME "P" ].
+
+
+

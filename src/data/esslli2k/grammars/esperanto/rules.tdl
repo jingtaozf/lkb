@@ -1,0 +1,61 @@
+head-complement-rule-0 := head-initial & 
+[ SPR #spr,
+  ARGS < word & 
+         [ SPR #spr, 
+           COMPS < > ] >  ].
+
+
+head-complement-rule-1 := head-initial &
+[ SPR #spr, 
+  ARGS < word & 
+         [ SPR #spr, 
+           COMPS < #1 > ],
+         #1 >  ].
+
+
+head-complement-rule-2 := head-initial &
+[ SPR #spr, 
+  ARGS < word & 
+         [ SPR #spr, 
+           COMPS < #1, #2> ],  
+         #1, #2 > ].
+
+
+head-specifier-rule := head-final &
+[ SPR < >,
+  COMPS #comps,
+  ARGS < phrase & #1,
+         phrase & 
+         [ SPR < #1 >,
+           COMPS #comps ] > ]. 
+
+head-modifier-rule := head-initial &
+[ SPR #spr,
+  COMPS #comps,
+  ARGS < phrase & #hdtr &
+         [ SPR #spr,
+           COMPS #comps ],
+         phrase & 
+         [HEAD [MOD < #hdtr > ]] > ].
+
+head-adj-rule := head-final &
+[ SPR #spr,
+  COMPS #comps,
+  ARGS < phrase & 
+         [ HEAD adj & [ MOD < #hdtr > ] ],
+         phrase & #hdtr &
+         [ SPR #spr,
+           COMPS #comps ] > ].
+
+bare-plural := head-initial &
+[ HEAD noun,
+  SPR < >,
+  ARGS < phrase & 
+         [ SPR < [] >,
+           COMPS < > ] > ].
+
+
+
+
+
+

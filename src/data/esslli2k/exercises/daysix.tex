@@ -1,0 +1,379 @@
+\documentclass[10pt]{article}
+\input{avm}
+\setlength{\evensidemargin}{0in}
+\setlength{\oddsidemargin}{0in}
+\setlength{\textwidth}{6.5in}
+\setlength{\topmargin}{-0.5in}
+\setlength{\textheight}{9in}
+\pagestyle{empty}
+\parindent=0pt
+
+\begin{document}
+\begin{center}
+\textbf{Advanced Grammar Engineering using HPSG: DAYS 1 \& 2}\\
+ESSLLI 2000
+\end{center}
+
+\medskip
+\textbf{Goals}
+\begin{enumerate}
+  \item Become familiar with the LKB grammar development environment.
+  \item Perform list concatenation using difference lists.
+  \item Add semantics to lexicon entries and rules.
+  \item Use LKB generator to identify overgeneration in the grammar.
+\end{enumerate}
+
+\smallskip
+\textbf{Preparation}
+\begin{itemize}
+  \item []
+        There are two ways to obtain a starting grammar for this week;
+        both require the following first step.  Participants of the
+        introductory couse who have a {\em working\/} version of their
+        grammar {\em including\/} lexical and inflectional rules can
+        preserve their current types, lexicon, and rules files by
+        applying the optional second and third steps below.
+  \item [(i)]
+        Retrieve a complete new grammar from the CVS version control
+        system; in the {\em xterm\/} window type:\\
+        \verb|  cvs checkout grammar6|\\
+        This creates a new subdirectory `{\tt grammar6}' which contains
+        a complete LKB grammar.
+  \item []
+        {\em Those of you who completed lexical and inflectional rules
+        last week and want to preserve their grammars, perform steps
+        (ii) and (iii) below; all others, go straight into the
+        Exercises section.}
+  \item [(ii)]
+        Copy the files `{\tt types.tdl}', `{\tt lexicon.tdl}', 
+        `{\tt rules.tdl}', `{\tt lrules.tdl}', and `{\tt inflr.tdl}'
+        from your latest grammar into the `{\tt grammar6}' directory,
+        e.g.:\\
+        \verb|  cd grammar6|\\
+        \verb|  cp ../grammar5/*.tdl .|\\
+        Where you may need to substitute the correct directory name that
+        contains your latest working grammar for `{\tt grammar5}'.
+  \item [(iii)]
+        Include the contents of the file `{\tt extras.tdl}' at the end
+        of your own `{\tt types.tdl}' file.
+        Move the attribute \att{ORTH} from \type{lex-item} to
+        \type{syn-struc} and change its value from \type{string} to
+        \type{*dlist*}.
+        In the lexicon, replace all occurences of \att{ORTH} with the
+        path to the first element of the new orthography difference
+        list: \att{ORTH.LIST.FIRST} (a shorthand path notation).
+        Make sure you can still load and run the resulting grammar
+        before you move on.
+\end{itemize}
+
+\smallskip
+\textbf{Exercises}
+\begin{enumerate}
+  \item The typed feature structure formalism that is implemented in
+        the LKB (and similar systems) excludes relational constraints
+        (like {\tt append()} or {\tt reverse()} of lists).  However,
+        the {\em difference list\/} encoding in feature structures
+        allows us to achieve list concatenation using pure
+        unification.  A difference list is an open-ended list that is
+        embedded into a container structure providing a `pointer' to
+        the end of the list, e.g.\\
+        \centerline{%
+        \rlap{\tag{A}}\tavm{\mbox{*dlist*}$\,$}{
+          \av{LIST}{\rlap{\tag{1}}\tavm{\mbox{*ne-list*}$\,$}{%
+            \av{FIRST}{"foo"}\av{REST}{\tag{2}*list*}}}
+          \av{LAST}{\tag{2}}}\hspace{1cm}
+        \rlap{\tag{B}}\tavm{\mbox{*dlist*}$\,$}{
+          \av{LIST}{\rlap{\tag{3}}\tavm{\mbox{*ne-list*}$\,$}{%
+            \av{FIRST}{"bar"}\av{REST}{\tag{4}*list*}}}
+          \av{LAST}{\tag{4}}}}\\
+        Now, using the \att{LAST} pointer of difference list \tag{A} we
+        can append \tag{A} and \tag{B} by (i) unifying the front of
+        \tag{B} (i.e.\ the value of its \att{LIST} feature) into the
+        tail of \tag{A} (its \att{LAST} value) and (ii) using the tail
+        of difference list \tag{B} as the new tail for the result of
+        the concatenation (see Section~4.8.2 in the on-line LKB manual).
+  \item []
+        The goal of this exercise is to pass up the \att{ORTH} values
+        from words to phrases and use list concatenation to determine
+        the value of \att{ORTH} at each phrase.  The top (`S') node
+        in a complete analysis of a sentence should have as its
+        \att{ORTH} value a difference list that contains all words of
+        the sentence, preferably in the right order.
+        \begin{itemize}
+          \item [(a)]
+                Make sure \att{ORTH} is an appropriate feature for the
+                type \type{syn-struc} and is constrained to be of type
+                \type{*dlist*} (see the preparatory instructions
+                above); also, make sure that all lexical entries
+                provide their orthography as the value of the feature
+                path \att{ORTH.LIST.FIRST}.
+          \item [(b)]
+                The general constraint on \att{ORTH} (viz.\
+                \type{*dlist*}) allows arbitrary-length lists.  For the
+                list concatenation to work, it is essential that the
+                \att{LAST} pointer in each difference list is correctly
+                bound to the list position following the last element,
+                i.e.\ for an empty list \att{LIST} and \att{LAST} need
+                to be co-indexed, while for a singleton (one-element)
+                list, \att{LAST} has to point to the same value as
+                \att{LIST.REST}.
+                Ensure that all lexical entries will have properly
+                terminated singleton lists as their \att{ORTH} value by
+                adding the appropriate constraint to \type{lex-item}
+                (those who have started from our `grammar6' get this
+                step for free). 
+          \item [(c)]
+                Each rule will be required to concatenate the
+                \att{ORTH} values of all daughters to the rule and make
+                the resulting list the \att{ORTH} value on the mother.
+                To avoid duplication of the append operation in the
+                `{\tt rules.tdl}' file, introduce types
+                \type{unary-rule}, \type{binary-rule}, and
+                \type{ternary-rule} that inherit from \type{phrase} and
+                perform the concatenation of \att{ORTH} values.
+          \item [(d)]
+                In order to have one specific type for each actual rule
+                in the `{\tt rules.tdl}' file, we need to
+                cross-multiply the three types accounting for rule
+                arity with the \type{head-initial} vs.\
+                \type{head-final} distinction introduced last week.
+                Use multiple inheritance to create types
+                \type{unary-head-initial-rule},
+                \type{binary-head-initial-rule}, and
+                \type{ternary-head-initial-rule}, as well as
+                \type{binary-head-final-rule}; for the time being, we
+                have exactly one head-final rule in our
+                grammar.
+%          \item [(e)]
+%                The type that our grammar uses as a `start symbol' is
+%                called \type{root} and resides in `{\tt types.tdl}'. 
+%                Based on this type, the LKB system validates each
+%                complete analysis of an input string to unify with the
+%                constraints on this type, thus checking for
+%                `sentence-hood' (currently, only specifier-saturated
+%                verbal projections are accepted as sentences).
+%                Make sure that he \type{root} type can unify with an
+%                appliation of the specifier$\,$--$\,$head rule which in
+%                our grammar derives sentences (see (f) below).
+          \item [(e)]
+                Rework the file `{\tt rules.tdl}' to use the new, more
+                specific rule types, as appropriate.
+                Reload the grammar and check correctness by parsing a
+                few sentences interactively and verifying that the
+                \att{ORTH} value on `S' nodes contains all the words
+                that contribute to the sentence.
+                Run the `Batch parse' machinery on the `{\tt
+                test.items}' file and validate the results.
+        \end{itemize}
+  \item Our approach to adding semantics to the grammar builds on list
+        concatenation as the basic operation of composition.  Semantic
+        relations are introduced by lexical entries and successively
+        combined as words are combined with other words (or phrases) to
+        form larger phrases.
+        We will use a type \type{relation} to capture the basic
+        units of semantics that are associated with words, and subtypes
+        \type{arg1-relation}, \type{arg1-2-relation}, and
+        \type{arg1-2-3-relation} for predicates of corresponding arity:\\
+        \centerline{
+        \tavm{relation$\,$}{\av{PRED}{string}\av{ARG0}{index}}$\,$,
+        \tavm{arg1-relation$\,$}{\av{PRED}{string}
+                                 \av{ARG0}{index}
+                                 \av{ARG1}{index}}\hspace{2ex}
+        $\cdots$%\hspace{2ex}
+        \tavm{arg1-2-3-relation$\,$}{\av{PRED}{string}
+                                 \av{ARG0}{index}
+                                 \av{ARG1}{index}
+                                 \av{ARG2}{index}
+                                 \av{ARG3}{index}}\hspace{2ex}}\\
+        \begin{itemize}
+          \item [(a)]
+                Add atomic types \type{index} with subtypes
+                \type{object} and \type{event}, which we will use to
+                represent variables in role assignment.
+          \item [(b)]
+                Add the types \type{relation} through
+                \type{arg1-2-3-relation} (as shown above) below 
+                \type{feat-struc}.
+        \end{itemize}
+  \item []
+        To associate semantics with words and phrases, we need another
+        type that will serve as the value of a new \att{SEM} attribute
+        in \type{syn-struc}:\\
+        \verb|  |%
+        \tavm{semantics$\,$}{\av{INDEX}{index}
+                            \av{KEY}{relation}
+                            \av{RELS}{*dlist*}}\\
+        Roughly speaking, the \att{INDEX} attribute corresponds to the
+        external variable that is available for binding, the \att{KEY}
+        attribute points to the distinguished relation that is used for
+        semantic selection (typically contributed by the semantic head;
+        see the MRS paper in the course reader), and the \att{RELS}
+        attribute holds a list of relations (see below).
+        For the lexical entries `dog' and `chase', respectively, we want
+        the following semantics (as the value of their \att{SEM}
+        feature):\\ 
+         \tavm{semantics$\,$}{%
+           \av{INDEX}{\tag{1}object}
+           \av{KEY}{\rlap{\tag{2}}\tavm{\mbox{relation}$\,$}{%
+             \av{PRED}{"dog\_rel"}
+             \av{ARG0}{\tag{1}}}}
+            \av{RELS}{\avm{%
+              \av{LIST}{\avm{\av{FIRST}{\tag{2}}\av{REST}{\tag{3}}}}
+              \av{LAST}{\tag{3}}}}}
+         \tavm{semantics$\,$}{%
+           \av{INDEX}{\tag{4}event}
+           \av{KEY}{\rlap{\tag{5}}1\tavm{\mbox{arg1-2-relation}$\,$}{%
+             \av{PRED}{"chase\_rel"}
+             \av{ARG0}{\tag{4}}
+             \av{ARG1}{index}
+             \av{ARG2}{index}}}
+            \av{RELS}{\avm{%
+              \av{LIST}{\avm{\av{FIRST}{\tag{5}}\av{REST}{\tag{6}}}}
+              \av{LAST}{\tag{6}}}}}\\
+        \begin{itemize}
+          \item [(a)]
+                Introduce the type \type{semantics}, add the feature
+                \att{SEM} to \type{syn-struc}, and constrain its value
+                to \type{semantics}.
+          \item [(b)]
+                Enrich the \type{lexeme} type to reflect that (i)
+                lexical items have a singleton \att{RELS} list, (ii)
+                the \att{KEY} relation corresponds to the first (and
+                only) element in \att{RELS}, and (iii) the \att{INDEX}
+                is the \att{ARG0} of the \att{KEY}.
+          \item [(c)]
+                Enrich the types \type{det-lxm}, \type{noun-lxm}, and
+                \type{verb-lxm} (or their equivalents) to constrain the
+                semantic \att{INDEX} to be of type \type{object} (for
+                determiners and nouns) and \type{event} (for verbs),
+                respectively.
+          \item [(d)]
+                Add a unique relation, as the value of
+                \att{SEM.KEY.PRED}, to each entry in the lexicon.
+                Reload the grammar and use the `View -- Lex Entry' menu
+                command to inspect the lexical entries for `dog' and
+                `chase', making sure they look as specified above.
+        \end{itemize}
+  \item []
+        Roughly similar to \att{ORTH}, each phrase will accumulate the
+        semantic contributions from each of its daughters and use list
+        concatenation in building up the \att{RELS} value; while
+        technically we use a list for this purpose, the order of
+        elements in \att{RELS} is actually irrelevant:\ we are using a
+        list to represent a bag (or multi-set) of objects.
+        Add the principles of semantic composition:
+        \begin{itemize}
+          \item [(a)]
+                While unary rules simply pass up the entire \att{SEM}
+                value from the daughter to the mother, binary and
+                ternary rules apply difference list concatenation to
+                the \att{SEM.RELS} values.
+          \item [(b)]
+                In each phrase, the \att{INDEX} and \att{KEY} values
+                are contributed by the semantic head; for our grammar,
+                the semantic head equals the syntactic head in all
+                constructions: add appropriate co-indexation of
+                \att{INDEX} and \att{KEY} to the \type{head-initial}
+                and \type{head-final} types.
+          \item [(c)]
+                Inflectional rules are subtypes of \type{word} but
+                behave much like unary rules; add the passing up of the
+                \att{SEM} value from the daughter to that of the mother
+                on the type \type{word}.
+          \item [(d)]
+                Reload the grammar, eliminate remaining errors (if
+                any), and make sure that (i) coverage remains unchanged
+                and (ii) the \att{RELS} value on `S' nodes contains the
+                relations of all words in the input sentence.
+        \end{itemize}
+  \item []
+        What remains to be achieved is the linking of syntactic
+        arguments to semantic roles.  We will use the \att{INDEX} value
+        of arguments (often called the {\em index\/}) to make this
+        linking explicit. 
+        This requires enriching the types for all lexemes that take
+        arguments (i.e.\ have non-empty \att{SPR} or \att{COMPS} lists;
+        likewise for non-empty \att{MOD} values on modifiers)
+        to co-index the \att{INDEX} value of each argument with exactly
+        one role in the relation of the functor (the semantic head).
+        \begin{itemize}
+          \item [(a)]
+                Nouns identify the \att{INDEX} of their specifier with
+                their own \att{INDEX} (also their \att{ARG0}).
+          \item [(b)]
+                All verbs identify the \att{INDEX} of their specifier
+                with their \att{ARG1} role; in addition, transitive
+                verbs identify the \att{INDEX} of their complement with
+                their \att{ARG2}; analogously, ditransitive verbs map
+                their complements to \att{ARG2} and \att{ARG3}.
+          \item [(c)]
+                Prepositions are special (and our current analysis is
+                arguable anyway): they identify the \att{INDEX} of the
+                \type{syn-struc} selected for by \att{MOD} with their
+                own \att{INDEX}, and map the \att{INDEX} of their
+                complement to \att{ARG1}.
+          \item [(d)]
+                Reload the grammar, make sure everything works, and
+                admire the beauty of semantic composition.  Make sure
+                to verify that in sentences like `the dog barks', `the
+                cat gave that dog those aardvarks', or `the cat barked near
+                those dogs' the following well-formedness conditions
+                hold in the semantics: (i) all indexes are specialized to
+                either \type{event} or \type{object}, (ii) determiner
+                and noun in each noun phrase share the same \att{ARG0}
+                variable, (iii) all roles in a verbal relation are
+                bound to the indexes of the corresponding arguments,
+                and (iv) the \att{ARG0} of a prepositional phrase 
+                {\em modifier\/} is bound to the \att{ARG0} of the
+                \type{event} or \type{object} being modified.
+        \end{itemize}
+  \item The LKB provides facilities to read out a semantic formula from
+        a feature structure, print it in various formats, perform
+        (limited) semantic inference, or generate from it.  Because our
+        semantics is (currently) very shallow, however, only a subset
+        of this functionality can be used meaningfully.
+  \item []
+        From the tree summary display (the window showing tiny trees),
+        execute the commands `MRS' and `Indexed MRS' to see a readable
+        form of the semantics produced by your grammar.
+  \item 
+        The LKB comprises a chart-based generator that, given a
+        suitable semantic formula, can generate all sentences (i.e.\
+        strings) that correspond to this semantics.  
+        For the generator to work, we need to make a final extension to
+        our grammar:
+        \begin{itemize}
+          \item [(a)]
+                For generator-internal purposes, the generator requires
+                \att{INDEX} values to have one appropriate feature,
+                \att{INSTLOC}, whose value is of type \type{instloc}.
+                Add the atomic type \type{instloc} (as a subtype of
+                \type{*top*}) and enrich the type definition for
+                \type{index}.  Reload the grammar.
+          \item [(b)]
+                To get full access to the LKB generation component,
+                execute the `Options -- Expand Menu' command.  Then, to
+                make the lexicon accessible to the generator, execute
+                `Generator -- Index'; if there are warnings or errors
+                at this stage, revisit your grammar.
+                In order for the indexing to happen at load time, edit
+                the file `{\tt script}' in your grammar directory which
+                is the load file for the grammar.  Towards the
+                end of the file, uncomment the line 
+                {\tt (index-for-generator)} by removing all semicolons.
+        \end{itemize}
+        \item []
+        Once indexing is complete, from the tree summary display
+        explore the output of the `Generate' 
+        command for various sentences; this is a short-cut command for
+        extracting the indexed semantics from a feature structure and
+        using that as the input for the generator.
+        At this point, generating from the semantics of `the aardvark
+        barks' should return four sentences:\ investigate the reasons
+        for this overgeneration, identify the missing bits of
+        information, and speculate about resolving this issue.
+\end{enumerate}
+\end{document}
+
+
+

@@ -1,0 +1,146 @@
+feat-struc := *top*.
+
+syn-struc := feat-struc & 
+[ ORTH *dlist*,
+  HEAD pos,
+  SPR *list*,
+  COMPS *list*, 
+  ARGS *list* ].
+
+pernum := feat-struc.
+3sing := pernum.
+non-3sing := pernum.
+
+pos := feat-struc & 
+       [ MOD *list* ].
+
+nominal := pos &
+       [ AGR pernum ].
+
+noun := nominal & [MOD <>].
+verb := pos & [MOD <>].
+det := nominal & [MOD <>].
+prep := pos & [MOD < [ SPR < syn-struc >] >].
+
+phrase := syn-struc &
+[ COMPS <> ].
+
+head-initial := phrase &
+[ HEAD #head,
+  ARGS < [ HEAD #head ], ... > ].
+
+head-final := phrase &
+[ HEAD #head,
+  ARGS < syn-struc, [ HEAD #head ] > ].
+
+root := head-final &
+[ HEAD verb,
+  SPR < > ].
+
+lex-item := syn-struc &
+[ ORTH [ LIST [ REST #rest ], LAST #rest ] ].
+
+lexeme := lex-item.
+
+const-lxm := lexeme.
+
+word := lex-item &
+[ HEAD #head,
+  SPR #spr,
+  COMPS #comps,
+  ARGS < lexeme &
+         [ HEAD #head,
+           SPR #spr,
+           COMPS #comps ] > ].
+
+det-lxm := const-lxm &
+[ HEAD det,
+  SPR < >,
+  COMPS < > ].
+
+sg-det-lxm := det-lxm &
+[ HEAD [ AGR 3sing ]].
+
+pl-det-lxm := det-lxm &
+[ HEAD [ AGR non-3sing ]].
+
+noun-lxm := lexeme &
+[ HEAD noun & [AGR #agr],
+  SPR < [HEAD det & [AGR #agr]] >,
+  COMPS < > ].
+
+noun-form := word &
+ [ ARGS < noun-lxm > ].
+
+sing-noun := noun-form &
+[ HEAD.AGR 3sing ].
+
+plur-noun := noun-form &
+[ HEAD.AGR non-3sing ].
+
+verb-lxm := lexeme &
+[ HEAD verb,
+  SPR < phrase & [HEAD noun, SPR <>] > ].
+
+verb-form := word &
+ [ ARGS < verb-lxm > ].
+
+past-verb := verb-form.
+
+sing-verb := verb-form &
+[ SPR < [HEAD.AGR 3sing ] > ].
+
+plur-verb := verb-form &
+[ SPR < [HEAD.AGR non-3sing ] > ].
+
+intrans-verb := verb-lxm &
+[ COMPS <> ].
+
+trans-verb := verb-lxm &
+[ COMPS < phrase & [HEAD noun, SPR <>] > ].
+
+ditranspp-verb := verb-lxm &
+[ COMPS < phrase & [HEAD noun, SPR <>],
+          phrase & [HEAD prep, SPR <>] > ].
+
+ditransnp-verb := verb-lxm &
+[ COMPS < phrase & [HEAD noun, SPR <>],
+          phrase & [HEAD noun, SPR <>] > ].
+
+prep-lxm := const-lxm &
+[ HEAD prep,
+  SPR < >,
+  COMPS < phrase & [HEAD noun, SPR <>] > ].
+
+;;;
+;;; some (pseudo) built-in data types
+;;;
+
+string := *top*.
+
+*list* := *top*.
+
+*ne-list* := *list* &
+ [ FIRST *top*,
+   REST *list* ].
+
+*null* := *list*.
+
+*dlist* := *top* &
+[ LIST *list*,
+  LAST *list* ].
+
+*null-dlist* := *dlist* &
+[ LIST #last,
+  LAST #last ].
+
+*ne-dlist* := *dlist* &
+[LIST *ne-list* ].
+
+;;;
+;;; types for node labels used in tree display
+;;;
+
+label :=  syn-struc &
+[ LABEL-NAME string ].
+

@@ -1,0 +1,130 @@
+\documentclass[10pt]{article}
+\setlength{\evensidemargin}{0in}
+\setlength{\oddsidemargin}{0in}
+\setlength{\textwidth}{6.5in}
+\setlength{\topmargin}{-0.5in}
+\setlength{\textheight}{9in}
+\pagestyle{empty}
+\parindent=0pt
+
+\begin{document}
+\begin{center}
+\textbf{An Introduction to Grammar Engineering using HPSG: DAY 5}\\
+ESSLLI 2000
+\end{center}
+
+\medskip
+\textbf{Goals:}
+\begin{enumerate}
+\item Add a lexical rule
+\item Rework the grammar to make the lexeme / word distinction and
+add inflection.
+\end{enumerate}
+
+\smallskip
+\textbf{Exercise A:}
+Add the dative lexical rule, according to the instructions in yesterday's 
+handout.\\
+\textbf{Exercise B:}
+Rework the grammar in order to make the distinction between 
+lexemes and words and to
+add inflection in order 
+to remove redundancy in the lexicon.  Following the Sag and Wasow textbook, we will
+make every entry in the lexicon a subtype of lexeme, but require that the
+grammar rules operate on structures which are subtypes of word (as with the current grammar).  This means that every lexical entry will have to be converted from
+lexeme to word via a rule.  Some of these rules (plural etc) have morphological
+effect.
+
+This exercise involves a considerable amount of rearrangement 
+of the grammar files.  This is, unfortunately, something
+that grammar engineers end up doing quite often in real life.
+Take things step-by-step, and make backup copies of your files.
+You can do this by executing a {\tt cp -r} command in the xterm
+window --- e.g.,
+\begin{verbatim}
+cp -r <mygrammar> <mygrammar>-bk1
+\end{verbatim}
+
+\begin{enumerate}
+\item Add the top level lexeme / word distinction.   
+We do this by distinguishing between two types, {\bf word} and {\bf lexeme}
+which inherit from a new type {\bf lex-item}.  The feature ORTH
+is introduced on {\bf lex-item}.  The type {\bf word}
+will be a supertype of all the lexeme-to-word rules.  The structures you
+need are given below.
+\begin{verbatim}
+lex-item := syn-struc &
+[ ORTH string ].
+
+lexeme := lex-item.
+
+word := lex-item &
+[ HEAD #1,
+  SPR #2,
+  COMPS #3,
+  ARGS < lexeme &
+         [ HEAD #1,
+           SPR #2,
+           COMPS #3 ]
+         > ].
+\end{verbatim}
+\item The old types {\bf verb-word} etc had constraints which 
+should belong to lexemes under our new view of the world.
+Add subtypes of {\bf lexeme} for {\bf verb-lxm}, 
+{\bf noun-lxm} etc, which use the constraints
+from the old {\bf verb-word}, {\bf noun-word} etc.
+Make {\bf det-lxm} and {\bf prep-lxm}
+both inherit from a type {\bf const-lxm}, defined as follows:
+\begin{verbatim}
+const-lxm := lexeme.
+\end{verbatim}
+\item Add types {\bf noun-form} and {\bf verb-form} which inherit from type
+{\bf word}.  These are effectively supertypes
+of inflectional rules: their ARGS value should be constrained to
+be of the corresponding lexeme type. 
+\item  The old type {\bf verb-word}
+was a supertype of two sorts of information which are 
+inconsistent on our new view.
+Modify your type file in order to
+split the types that were a subtype of {\bf verb-word}
+between those which are appropriate for lexemes
+and those which are to do with inflections.  For instance, your 
+type for transitive verbs will be a subtype of {\bf verb-lxm}
+while your type for past verbs will be a subtype of {\bf verb-form}.
+You should remove all types which inherit from both
+the inflectional types and the lexeme types: 
+their place will be taken by lexical
+rules.
+Similarly, redistribute all the types which inherit from 
+{\bf noun-word} etc.
+Notice that the types which inherit from {\bf word} are now effectively
+defining different inflectional rules.
+\item Modify your lexicon.tdl file:
+\begin{enumerate}
+\item Remove all entries which
+are not morphologically equivalent to
+base forms (e.g., {\it dogs} etc).  If your file has {\it gave}
+but not {\it give}, replace the entry for {\it gave} with one for {\it give}.
+\item Change the types on the remaining entries so they are all
+subtypes of lexeme appropriate for the entry.  Your file should
+now consist of base forms with just base orthography and a single type.
+\end{enumerate}
+\item The dative shift rule is now a lexeme-to-lexeme rule, so you will need
+to edit lrules.tdl appropriately.
+Your rules.tdl file should stay unchanged.
+\item At this point you should have a grammar which loads but does not parse anything, because we have not yet added any inflectional rules.  Check
+that the grammar loads correctly before proceeding to the next step.
+\item 
+\begin{verbatim}
+cvs update
+\end{verbatim}
+We have given you an
+inflr.tdl file which defines the actual inflectional rules.
+Please do not worry about the lines beginning with \%, these are just instructions to the orthographemic component.  The only change you will need to make to
+inflr.tdl is to replace the types {\bf past-verb}, {\bf plur-verb},
+{\bf sing-verb}, {\bf plur-noun} and {\bf sing-noun} with the types that
+you have already defined (i.e., those types which are now subtypes of
+{\bf verb-form} and {\bf noun-form}).
+\item Check to ensure that your grammar's coverage remains the same.
+\end{enumerate}
+\end{document}

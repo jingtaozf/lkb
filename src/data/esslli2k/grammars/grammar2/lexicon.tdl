@@ -1,0 +1,87 @@
+the := word &
+[ ORTH "the",
+  HEAD det,
+  SPR < >,
+  COMPS < > ].
+
+that := word &
+[ ORTH "that",
+  HEAD det,
+  SPR < >,
+  COMPS < > ].
+
+those := word &
+[ ORTH "those",
+  HEAD det,
+  SPR < >,
+  COMPS < > ].
+
+aardvark := word &
+[ ORTH "aardvark",
+  HEAD noun,
+  SPR < [HEAD det] >,
+  COMPS < > ].
+
+aardvarks := word &
+[ ORTH "aardvarks",
+  HEAD noun,
+  SPR < [HEAD det] >,
+  COMPS < > ].
+
+dog := word &
+[ ORTH "dog",
+  HEAD noun,
+  SPR < [HEAD det] >,
+  COMPS < > ].
+
+dogs := word &
+[ ORTH "dogs",
+  HEAD noun,
+  SPR < [HEAD det] >,
+  COMPS < >  ].
+
+cat := word &
+[ ORTH "cat",
+  HEAD noun,
+  SPR < [HEAD det] >,
+  COMPS < > ].
+
+
+barks := word &
+[ ORTH "barks",
+  HEAD verb,
+  SPR < [HEAD noun] >,
+  COMPS < > ].
+
+bark := word &
+[ ORTH "bark",
+  HEAD verb,
+  SPR < [HEAD noun] >,
+  COMPS < > ].
+
+chased := word &
+[ ORTH "chased",
+  HEAD verb,
+  SPR < [HEAD noun] >,
+  COMPS < phrase & [HEAD noun] > ].
+
+to := word &
+[ ORTH "to",
+  HEAD prep,
+  SPR < >,
+  COMPS < phrase & [HEAD noun] > ].
+
+gave := word &
+[ ORTH "gave",
+  HEAD verb,
+  SPR < [HEAD noun] >,
+  COMPS < phrase & [HEAD noun], phrase & [HEAD noun] > ].
+
+gave2 := word &
+[ ORTH "gave",
+  HEAD verb,
+  SPR < [HEAD noun] >,
+  COMPS < phrase & [HEAD noun], phrase & [HEAD prep] > ].
+
+
+

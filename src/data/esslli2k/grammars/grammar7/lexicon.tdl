@@ -1,0 +1,43 @@
+the := det-lxm &
+[ ORTH.LIST.FIRST "the",
+  SEM.KEY.PRED "the_rel" ].
+
+that := sg-det-lxm &
+[ ORTH.LIST.FIRST "that",
+  SEM.KEY.PRED "that_rel" ].
+
+those := pl-det-lxm &
+[ ORTH.LIST.FIRST "those",
+  SEM.KEY.PRED "those_rel" ].
+
+aardvark := noun-lxm &
+[ ORTH.LIST.FIRST "aardvark",
+  SEM.KEY.PRED "aardvark_rel" ].
+
+dog := noun-lxm &
+[ ORTH.LIST.FIRST "dog",
+  SEM.KEY.PRED "dog_rel" ].
+
+cat := noun-lxm &
+[ ORTH.LIST.FIRST "cat",
+  SEM.KEY.PRED "cat_rel" ].
+
+bark := intrans-verb &
+[ ORTH.LIST.FIRST "bark",
+  SEM.KEY.PRED "bark_rel" ].
+
+chase := trans-verb &
+[ ORTH.LIST.FIRST "chase",
+  SEM.KEY.PRED "chase_rel" ].
+
+to := prep-lxm &
+[ ORTH.LIST.FIRST "to",
+  SEM.KEY.PRED "to_rel" ].
+
+near := prep-lxm &
+[ ORTH.LIST.FIRST "near",
+  SEM.KEY.PRED "near_rel" ].
+
+give := ditransnp-verb &
+[ ORTH.LIST.FIRST "give",
+  SEM.KEY.PRED "give_rel" ].

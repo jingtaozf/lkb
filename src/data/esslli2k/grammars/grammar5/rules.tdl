@@ -1,0 +1,52 @@
+head-complement-rule-0 := head-initial & 
+[ SPR #a,
+  COMPS < >,   
+  ARGS < word & 
+         [ SPR #a, 
+           COMPS < > ] >  ].
+
+
+head-complement-rule-1 := head-initial &
+[ SPR #a, 
+  COMPS < >,   
+  ARGS < word & 
+         [ SPR #a, 
+           COMPS < #1 & [ SPR < > ] > ],   
+         #1 >  ].
+
+
+head-complement-rule-2 := head-initial &
+[ SPR #a, 
+  COMPS < >,   
+  ARGS < word & 
+         [ SPR #a, 
+           COMPS < #1 & [ SPR < > ], #2 & [ SPR < > ] > ],  
+         #1, 
+         #2 >  ].
+
+
+head-specifier-rule := head-final &
+[ SPR < >,
+  COMPS #a,
+  ARGS < phrase & 
+         #1 & [ SPR < > ],
+        
+	 phrase & 
+         [ SPR < #1 >,
+           COMPS #a ] > ]. 
+
+head-modifier-rule := head-initial &
+[ SPR #spr,
+  COMPS #comps,
+
+  ARGS < phrase & #hdtr &
+         [ SPR #spr,
+           COMPS #comps ],     
+
+	 phrase & 
+         [ HEAD [MOD < #hdtr > ]] > ].
+
+
+
+
+

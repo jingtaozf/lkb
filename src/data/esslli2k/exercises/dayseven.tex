@@ -1,0 +1,116 @@
+\documentclass[11pt]{article}
+\usepackage{gb4e}
+\setlength{\evensidemargin}{0in}
+\setlength{\oddsidemargin}{0in}
+\setlength{\textwidth}{6.5in}
+\setlength{\topmargin}{-0.5in}
+\setlength{\textheight}{9in}
+%\pagestyle{empty}
+%\parindent=0pt
+
+\begin{document}
+\begin{center}
+\textbf{Advanced Grammar Engineering using HPSG: DAY 2$\frac12$}\\
+ESSLLI 2000
+\end{center}
+
+\smallskip
+\noindent\textbf{Exercises}
+
+Esperanto is an artificial language created by the Polish
+oculist L.L.~Zamenhof in the nineteenth century. Zamenhof designed the
+language to have a very simple and regular morphology, on the theory that war
+and pestilence were caused by irregular verbs. While his dream of world peace
+has not been achieved, his language has turned out to be very useful for
+constructing problem sets in introductory linguistics classes.
+
+For tomorrow's in-class exercise, you will be applying the grammar engineering
+techniques you have mastered for English to a small grammar of Esperanto.  To
+get ready for that, try out this pencil-and-paper exercise tonight. Based on the
+sentences in (1), write a small English-Esperanto morpheme dictionary, and use
+it to translate the English sentences in (2) into Esperanto.  You won't need to
+turn in your results, but working through this will give you a feel for the
+language and you will find the Esperanto grammar easier to follow tomorrow.
+\begin{exe}
+\ex
+\begin{xlist}
+\ex
+La alta knabo malsani\^gis.\\
+`The tall boy fell ill.'
+\ex 
+\^Cu li grandigis la grandecon de la dormejo?\\
+`Did he increase the size of the dormitory?'
+\ex Anka\v{u} malaltaj knabinoj povas esti belaj.\\
+`Short girls, too, can be beautiful.'
+\ex Mia patro estas sana \^car li ne trinkas vinon.\\
+`My father is healthy because he doesnt drink wine.'
+\ex
+La bonaj mona\^hinoj volis pre\^gi en la pre\^gejo.\\
+`The good nuns wanted to pray in church.'
+\ex Lerni la esparantan lingvon estas facila.\\
+`It's easy to learn Esperanto.'
+\ex Mi vidis \^sian onklon en la trinkejo.\\
+`I saw her uncle in the bar.'
+\ex La beleco de la lingvo estas \^gia facileco.\\
+`The beauty of the language is its simplicity.'
+\ex \^Cu vi konas miajn onklojn?\\
+`Do you know my uncles?'
+\end{xlist}
+\ex
+\begin{xlist}
+\ex Did her aunt know my mother?
+%\^Cu \^sia onklino konis mian patrinon?
+\ex His health has deteriorated.
+%Lia saneco malgrandi\^gis.
+\ex The boys can also learn difficult languages at school.
+%Anka\v{u} knaboj povas lerni malfacilajn lingvojn en la lernejo. 
+\ex The monks adorned the church.
+%La mona\^hoj beligis la pre\^gejon.
+\ex Does your mother want to put the boys to sleep?
+%\^Cu via patrino volas dormigi la knabojn
+\end{xlist}
+\end{exe}
+The first step in analyzing a new language like this is to figure out which
+words in Esperanto match up to which words in the English translations. Look
+for sentences with the same or related words in the English translation, and
+then look for words which look similar in the corresponding Esperanto
+sentences.  In this case, it's pretty easy, since Esperanto's syntax is almost
+exactly the same as that of English (Zamenhof didn't have a lot of
+imagination).  To take the first sentence as an example, we can break it down
+like this:
+\begin{center}
+\begin{tabular}{|l|l|l|l|}
+\hline
+La & alta & knabo & malsani\^gis.\\
+\hline
+The & tall & boy & fell ill\\
+\hline
+\end{tabular}
+\end{center}
+Once you have a good idea what the rules for constructing sentences are, look
+for patterns across individual words.  Find words with similar meanings or
+similar grammatical functions, and see if there are common elements in their
+spellings. Keep in mind that Esperanto has no irregular morphology, so stems
+and endings always have exactly one spelling.  Working from the first example
+again, you might notice that adjectives often end in \emph{a} and nouns often
+end in \emph{o}, so these would be good candidates for adjective and noun
+endings. You might also notice a similarity between \emph{malsani\^gis} `fell
+ill' and \emph{malaltaj} `short' in example (1c), \emph{sana} `healthy' in
+(1d), and \emph{volis} `wanted' in example (1e).  From this you might guess
+that the structure of this word is:
+\begin{center}
+\begin{tabular}{rcl}
+\begin{tabular}{|l|l|l|l|}
+\hline
+mal & san & i\^g & is\\
+\hline
+not & healthy & become & past\\
+\hline
+\end{tabular}  & = & became not healthy
+\end{tabular}
+\end{center}
+Continue in the same way with all the words, and you will collect an inventory
+of morphemes that you can use to construct the new words you need to translate
+the sentences in (2).
+ 
+\end{document}

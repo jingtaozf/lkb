@@ -1,0 +1,109 @@
+\documentclass[10pt]{article}
+\setlength{\evensidemargin}{0in}
+\setlength{\oddsidemargin}{0in}
+\setlength{\textwidth}{6.5in}
+\setlength{\topmargin}{-0.5in}
+\setlength{\textheight}{9in}
+\pagestyle{empty}
+\parindent=0pt
+
+\begin{document}
+\begin{center}
+\textbf{An Introduction to Grammar Engineering using HPSG: DAY 2}\\
+ESSLLI 2000
+\end{center}
+
+\medskip
+\textbf{Goals:}
+\begin{enumerate}
+\item Learn about typed feature structures and unification.
+\item Expand the grammar to capture agreement constraints.
+\item Expand the grammar to provide an analysis of modification.
+\end{enumerate}
+
+\smallskip
+\textbf{Exercises:}
+\begin{enumerate}
+\item Bring up
+the LKB and load grammar2:
+\begin{enumerate}
+\item Check out a copy of grammar2 by typing {\tt cvs checkout grammar2} in 
+an xterm window. 
+\item Start emacs and in the Emacs window:
+\par\texttt{<Esc> x lkb}
+\item Load the grammar by selecting \textsf{Load / Complete
+grammar} in the 
+``Lkb Top'' window, then double-clicking on the directory ``grammar2'' and on the
+file ``script''. 
+\end{enumerate}
+\item Test the grammar by parsing the sentence {\it The cat gave that dog to 
+those dogs.}
+\item Extend the grammar to capture subject-verb agreement, admitting e.g.
+{\it The dog barks.} but not {\it *The dogs barks.}.  We will introduce 
+constraints on the {\sc spr} attribute of lexical entries requiring that the
+person-number properties match between head and specifier.  Rather than using
+separate features for number and person, we will use types that combine both
+properties, allowing a more direct encoding of English inflectional morphology.
+\begin{enumerate}
+\item Add this small type hierarchy to the file types.tdl, making {\it pernum}
+a subtype of {\it feat-struc}:
+\begin{verbatim}
+                          			pernum
+                           /    \
+                       3sing   non-3sing
+\end{verbatim}
+\item Also in the file types.tdl, add the feature {\sc agr} to the type 
+{\it pos}, with its value constrained to be of the type {\it pernum} that you 
+just added. 
+\item In the file lexicon.tdl, add the appropriate constraint to each verb,
+restricting the {\sc agr} value of its {\sc spr}.
+\item Also in the file lexicon.tdl, add the correct {\sc agr} value to each
+noun.
+\item Save your changes, then reload the grammar, apply the batch test with
+the file ``agr.items'', examine your results, and make any necessary 
+corrections.
+\end{enumerate}
+
+\item Extend your analysis to cope with determiner-noun agreement, admitting
+e.g. {\it These dogs bark.} but not {\it These dog barks.}.
+
+\begin{enumerate}
+\item In the file lexicon.tdl, modify each noun's lexical entry by adding
+the appropriate constraint on the {\sc agr} value of its {\sc spr}.
+\item Also in lexicon.tdl, add the correct {\it agr} value to each determiner.
+\item Check your revised grammar again using the file ``agr.items'', and make
+any necessary corrections.  
+\item Add some additional test examples to this file with varied combinations
+of mismatch in agreement among determiners, nouns, and verbs.  Then run the
+batch test and examine the results.
+\end{enumerate}
+
+\vspace{.5in}
+
+\item Extend the grammar to provide an analysis of modification, admitting
+sentences like {\it The dog barks near the cat.}  We introduce a new head 
+feature {\sc mod} and a new syntactic rule for modifiers, and we make use 
+of the notion of underspecification.
+\begin{enumerate}
+\item In the file types.tdl, add the feature {\sc mod} to the definition of
+the type {\it pos}, with its value constrained to be of *list*, the same
+type as for the attribute {\sc spr}.
+\item Also in types.tdl, assign an appropriate value for {\sc mod} to each
+of the subtypes of {\it pos}.
+\item In the file rules.tdl, add a new rule ``head-modifier'' rule somewhat
+similar to the head-specifier rule, but with the modifier daughter constraining
+the head daughter.
+\item In the file lexicon.tdl, add a lexical entry for the preposition 
+{\it near}.
+\item Save your changes, then test your revised grammar using the file ``mod.items''.  Examine the results, and make any necessary corrections.
+\item If your analysis does not already admit examples like {\it The dog near 
+the cat barks.}, modify your grammar appropriately.
+\item If your analysis provides two parses for the sentence {\it The dog barks near the cat}, modify your grammar to eliminate one of the two parses, then run
+the batch parse again with the file ``mod.items'', and examine the results.
+\item Add additional sentences to the file ``mod.items'', and notice what 
+happens to the number of analyses as you add prepositional phrase modifiers 
+within a single sentence.
+ \end{enumerate}
+
+ \end{enumerate}
+\end{document}

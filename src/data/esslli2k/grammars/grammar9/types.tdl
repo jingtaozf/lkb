@@ -1,0 +1,241 @@
+feat-struc := *top*.
+
+syn-struc := feat-struc & 
+[ ORTH *dlist*,
+  HEAD pos,
+  SPR *list*,
+  COMPS *list*, 
+  SEM semantics,
+  GAP *dlist*,
+  ARGS *list* ].
+
+pernum := feat-struc.
+3sing := pernum.
+non-3sing := pernum.
+
+pos := feat-struc & [ MOD *list* ].
+
+nominal := pos & [ AGR pernum ].
+
+noun := nominal & [MOD <>].
+verb := pos & [MOD <>].
+det := nominal & [MOD <>].
+prep := pos & [MOD < [ SPR < syn-struc >] >].
+
+semantics := feat-struc &
+[ INDEX index,
+  KEY relation,
+  RELS *dlist* ].
+
+instloc := *top*.
+index := *top* & [ INSTLOC instloc ].
+event := index.
+object := index.
+
+relation := feat-struc &
+[ PRED string,
+  ARG0 index ].
+
+arg1-relation := relation & [ ARG1 index ].
+arg1-2-relation := arg1-relation & [ ARG2 index ].
+arg1-2-3-relation := arg1-2-relation & [ ARG3 index ].
+
+phrase := syn-struc &
+[ COMPS <> ].
+
+unary-rule := phrase &
+[ ORTH #orth,
+  SEM #cont,
+  ARGS < [ ORTH #orth, SEM #cont ] > ].
+
+unary-rule-passgap := unary-rule &
+[ GAP #gap,
+  ARGS < [ GAP #gap ] > ].
+
+binary-rule := phrase &
+[ ORTH [LIST #ofront, LAST #otail],
+  SEM.RELS [LIST #cfront, LAST #ctail ],
+  ARGS < [ ORTH [LIST #ofront, LAST #omiddle ],
+           SEM.RELS [LIST #cfront, LAST #cmiddle ] ],
+         [ ORTH [LIST #omiddle, LAST #otail ],
+           SEM.RELS [LIST #cmiddle, LAST #ctail ] ] > ].
+
+binary-rule-passgap := binary-rule &
+[ GAP [LIST #gfront, LAST #gtail ],
+  ARGS < [ GAP [LIST #gfront, LAST #gmiddle ] ],
+         [ GAP [LIST #gmiddle, LAST #gtail ] ] > ].
+
+ternary-rule := phrase &
+[ ORTH [LIST #ofront, LAST #otail],
+  SEM.RELS [LIST #cfront, LAST #ctail ],
+  GAP [ LIST #gfront,
+	LAST #gtail ],
+  ARGS < [ ORTH [LIST #ofront, LAST #omiddle1 ],
+           SEM.RELS [LIST #cfront, LAST #cmiddle1 ],
+           GAP [LIST #gfront, LAST #gmiddle1 ] ],
+         [ ORTH [LIST #omiddle1, LAST #omiddle2 ],
+           SEM.RELS [LIST #cmiddle1, LAST #cmiddle2 ],
+           GAP [LIST #gmiddle1, LAST #gmiddle2 ] ],
+         [ ORTH [LIST #omiddle2, LAST #otail ],
+           SEM.RELS [LIST #cmiddle2, LAST #ctail ],
+           GAP [LIST #gmiddle2, LAST #gtail ] ] > ].
+
+head-initial := phrase &
+[ HEAD #head,
+  SEM [ INDEX #index, 
+        KEY #key ],
+  ARGS < [ HEAD #head,
+           SEM [ INDEX #index,
+                 KEY #key ] ], ... > ].
+
+unary-head-initial := unary-rule-passgap & head-initial.
+unary-head-initial-startgap := unary-rule & head-initial &
+[ GAP <! syn-struc !>,
+  ARGS < [ GAP <! !> ] > ].
+binary-head-initial := binary-rule-passgap & head-initial.
+binary-head-initial-startgap := binary-rule & head-initial &
+[ GAP <! syn-struc !>,
+  ARGS < [ GAP <! !> ], [ GAP <! !> ] > ].
+ternary-head-initial := ternary-rule & head-initial.
+
+binary-head-final := binary-rule &
+[ HEAD #head,
+  SEM [ INDEX #index, 
+        KEY #key ],
+  ARGS < syn-struc, [ HEAD #head,
+                      SEM [ INDEX #index, 
+                            KEY #key ] ] > ].
+
+binary-head-final-passgap := binary-head-final & binary-rule-passgap.
+
+root := binary-head-final &
+[ HEAD verb,
+  SPR < > ].
+
+lex-item := syn-struc &
+[ ORTH [ LIST [ REST #rest ], LAST #rest ],
+  GAP <! !> ].
+
+lexeme := lex-item &
+[ SEM [ INDEX #index,
+        KEY #key & [ARG0 #index],
+        RELS <! #key !> ] ].
+
+const-lxm := lexeme.
+
+word := lex-item &
+[ HEAD #head,
+  SPR #spr,
+  COMPS #comps,
+  SEM #cont,
+  ARGS < lexeme &
+         [ HEAD #head,
+           SPR #spr,
+           COMPS #comps,
+           SEM #cont ] > ].
+
+det-lxm := const-lxm &
+[ HEAD det,
+  SPR < >,
+  COMPS < >,
+  SEM [ INDEX object ] ].
+
+sg-det-lxm := det-lxm &
+[ HEAD [ AGR 3sing ]].
+
+pl-det-lxm := det-lxm &
+[ HEAD [ AGR non-3sing ]].
+
+noun-lxm := lexeme &
+[ HEAD noun & [AGR #agr],
+  SPR < [HEAD det & [AGR #agr],
+         SEM.INDEX #index ] >,
+  COMPS < >,
+  SEM [ INDEX object & #index ] ].
+
+noun-form := word &
+ [ ARGS < noun-lxm > ].
+
+sing-noun := noun-form &
+[ HEAD.AGR 3sing ].
+
+plur-noun := noun-form &
+[ HEAD.AGR non-3sing ].
+
+verb-lxm := lexeme &
+[ HEAD verb,
+  SPR < phrase & [HEAD noun, SPR <>] >,
+  SEM [ INDEX event ] ].
+
+verb-form := word &
+ [ ARGS < verb-lxm > ].
+
+past-verb := verb-form.
+
+sing-verb := verb-form &
+[ SPR < [HEAD.AGR 3sing ] > ].
+
+plur-verb := verb-form &
+[ SPR < [HEAD.AGR non-3sing ] > ].
+
+intrans-verb := verb-lxm &
+[ SPR < [SEM.INDEX #arg1] >,
+  COMPS <>,
+  SEM [KEY arg1-relation & [ARG1 #arg1]]].
+
+trans-verb := verb-lxm &
+[ SPR < [SEM.INDEX #arg1] >,
+  COMPS < phrase & [HEAD noun, SPR <>, SEM.INDEX #arg2] >,
+  SEM [KEY arg1-2-relation & [ARG1 #arg1, ARG2 #arg2]]].
+
+ditranspp-verb := verb-lxm &
+[ SPR < [SEM.INDEX #arg1] >,
+  COMPS < phrase & [HEAD noun, SPR <>, SEM.INDEX #arg2],
+          phrase & [HEAD prep, SPR <>, SEM.INDEX #arg3] >,
+  SEM [KEY arg1-2-3-relation & [ARG1 #arg1, ARG2 #arg2, ARG3 #arg3]]].
+
+ditransnp-verb := verb-lxm &
+[ SPR < [SEM.INDEX #arg1] >,
+  COMPS < phrase & [HEAD noun, SPR <>, SEM.INDEX #arg2],
+          phrase & [HEAD noun, SPR <>, SEM.INDEX #arg3] >,
+  SEM [KEY arg1-2-3-relation & [ARG1 #arg1, ARG2 #arg2, ARG3 #arg3]]].
+
+prep-lxm := const-lxm &
+[ HEAD prep & [MOD < [SEM.INDEX #index] > ],
+  SPR <>,
+  COMPS < phrase & [HEAD noun, SPR <>, SEM.INDEX #arg1] >,
+  SEM [INDEX #index, KEY arg1-relation & [ARG1 #arg1]] ].
+
+;;;
+;;; some built-in data types
+;;;
+
+string := *top*.
+
+*list* := *top*.
+
+*ne-list* := *list* &
+ [ FIRST *top*,
+   REST *list* ].
+
+*null* := *list*.
+
+*dlist* := *top* &
+[ LIST *list*,
+  LAST *list* ].
+
+*null-dlist* := *dlist* &
+[ LIST #last,
+  LAST #last ].
+
+*ne-dlist* := *dlist* &
+[LIST *ne-list* ].
+
+;;;
+;;; types for node labels used in tree display
+;;;
+
+label :=  syn-struc &
+[ LABEL-NAME string ].
+
+

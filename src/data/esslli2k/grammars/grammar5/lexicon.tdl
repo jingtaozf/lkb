@@ -1,0 +1,72 @@
+;;; <<<  Determiners  >>> 
+
+the := det-word &
+[ ORTH "the" ].
+
+that := det-word-3sing &
+[ ORTH "that" ].
+
+those := det-word-non-3sing &
+[ ORTH "those" ].
+
+
+;;; <<<  Nouns  >>> 
+
+aardvark := noun-word-3sing &
+[ ORTH "aardvark" ].
+
+aardvarks := noun-word-non-3sing &
+[ ORTH "aardvarks" ].
+
+dog := noun-word-3sing &
+[ ORTH "dog" ].
+
+dogs := noun-word-non-3sing &
+[ ORTH "dogs" ].
+
+cat := noun-word-3sing &
+[ ORTH "cat" ].
+
+cats := noun-word-non-3sing &
+[ ORTH "cats" ].
+
+
+;;; <<<  Verbs  >>> 
+
+barks := pres-3sing-iv &
+[ ORTH "barks" ].
+
+bark := pres-non-3sing-iv &
+[ ORTH "bark" ].
+
+chased :=trans-verb &
+[ ORTH "chased" ].
+
+gave := dtv-np-np &
+[ ORTH "gave" ].
+
+gave2 := dtv-np-pp &
+[ ORTH "gave" ].
+
+
+
+;;; <<<  Perpositions  >>>
+
+
+to := prep-word &
+[ ORTH "to" ].
+
+near := prep-word &
+[ ORTH "near" ].
+
+
+
+
+
+
+
+
+
+
+
+

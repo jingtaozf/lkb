@@ -1,0 +1,38 @@
+feat-struc := *top*.
+
+syn-struc := feat-struc & 
+[ HEAD pos,
+  SPR *list*,
+  COMPS *list* ].
+
+pos := feat-struc.
+noun := pos.
+verb := pos.
+det := pos.
+
+
+phrase := syn-struc &
+[ ARGS *list* ].
+
+word := syn-struc &
+[ ORTH string ].
+
+
+root := phrase &
+[ HEAD verb,
+  SPR < >,
+  COMPS < > ].
+
+
+;;;;;;;;;;;;;;;;;;;;;;;
+
+
+string := *top*.
+
+*list* := *top*.
+
+*ne-list* := *list* &
+ [ FIRST *top*,
+   REST *list* ].
+
+*null* := *list*.

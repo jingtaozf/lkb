@@ -1,0 +1,110 @@
+;; Adjectives
+
+esperant := adj-lxm &
+[ ORTH "esperant" ].
+
+alt := adj-lxm &
+[ ORTH "alt" ].
+
+bel := adj-lxm &
+[ ORTH "bel" ].
+
+bon := adj-lxm &
+[ ORTH "bon" ].
+
+facil := adj-lxm &
+[ ORTH "facil" ].
+
+grand := adj-lxm &
+[ ORTH "grand" ].
+
+san := adj-lxm &
+[ ORTH "san" ].
+
+;; Pronouns
+
+mi := pronoun-lxm &
+[ ORTH "mi" ].
+
+ni := pronoun-lxm &
+[ ORTH "ni" ].
+
+vi := pronoun-lxm &
+[ ORTH "vi" ].
+
+ssi := pronoun-lxm &
+[ ORTH "ssi" ].
+
+ggi := pronoun-lxm &
+[ ORTH "ggi" ].
+
+li := pronoun-lxm &
+[ ORTH "li" ].
+
+ili := pronoun-lxm &
+[ ORTH "ili" ].
+
+;; Nouns
+
+knab := noun-lxm &
+[ ORTH "knab" ].
+
+lingv := noun-lxm &
+[ ORTH "lingv" ].
+
+monahh := noun-lxm &
+[ ORTH "monahh" ].
+
+onkl := noun-lxm &
+[ ORTH "onkl" ].
+
+patr := noun-lxm &
+[ ORTH "patr" ].
+
+vin := noun-lxm &
+[ ORTH "vin" ].
+
+;; Verbs
+
+est := be-verb &
+[ ORTH "est" ].
+
+dorm := intrans-verb &
+[ ORTH "dorm" ].
+
+kon := trans-verb &
+[ ORTH "kon" ].
+
+pregg := intrans-verb &
+[ ORTH "pregg" ].
+
+trink := trans-verb &
+[ ORTH "trink" ].
+
+lern := trans-verb &
+[ ORTH "lern" ].
+
+pov := trans-verb &
+[ ORTH "pov" ].
+
+vid := trans-verb &
+[ ORTH "vid" ].
+
+vol := trans-verb &
+[ ORTH "vol" ].
+
+;; Misc
+
+la := det-lxm &
+[ ORTH "la" ].
+
+de := prep-lxm &
+[ ORTH "de",
+  HEAD.MOD < [ HEAD noun ] > ].
+
+en := prep-lxm &
+[ ORTH "en" ].
+
+ccar := conj-lxm &
+[ ORTH "ccar" ].
+

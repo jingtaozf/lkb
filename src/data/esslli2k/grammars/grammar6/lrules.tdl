@@ -1,0 +1,2 @@
+dative-shift-lrule := ditranspp-verb &
+[ ARGS < ditransnp-verb  >].

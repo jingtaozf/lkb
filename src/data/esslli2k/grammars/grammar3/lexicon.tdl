@@ -1,0 +1,100 @@
+the := word &
+[ ORTH "the",
+  HEAD det,
+  SPR < >,
+  COMPS < > ].
+
+that := word &
+[ ORTH "that",
+  HEAD det & [AGR 3sing],
+  SPR < >,
+  COMPS < > ].
+
+those := word &
+[ ORTH "those",
+  HEAD det & [AGR non-3sing],
+  SPR < >,
+  COMPS < > ].
+
+aardvark := word &
+[ ORTH "aardvark",
+  HEAD noun & [AGR 3sing],
+  SPR < [HEAD det & [AGR 3sing]] >,
+  COMPS < > ].
+
+aardvarks := word &
+[ ORTH "aardvarks",
+  HEAD noun & [AGR non-3sing],
+  SPR < [HEAD det & [AGR non-3sing]] >,
+  COMPS < > ].
+
+dog := word &
+[ ORTH "dog",
+  HEAD noun & [AGR 3sing],
+  SPR < [HEAD det & [AGR 3sing]] >,
+  COMPS < > ].
+
+dogs := word &
+[ ORTH "dogs",
+  HEAD noun & [AGR non-3sing],
+  SPR < [HEAD det & [AGR non-3sing]] >,
+  COMPS < >  ].
+
+cat := word &
+[ ORTH "cat",
+  HEAD noun & [AGR 3sing],
+  SPR < [HEAD det & [AGR 3sing]] >,
+  COMPS < > ].
+
+cats := word &
+[ ORTH "cats",
+  HEAD noun & [AGR non-3sing],
+  SPR < [HEAD det & [AGR non-3sing]] >,
+  COMPS < >  ].
+
+barks := word &
+[ ORTH "barks",
+  HEAD verb,
+  SPR < [HEAD noun & [AGR 3sing]] >,
+  COMPS < > ].
+
+bark := word &
+[ ORTH "bark",
+  HEAD verb,
+  SPR < [HEAD noun & [AGR non-3sing]] >,
+  COMPS < > ].
+
+chased := word &
+[ ORTH "chased",
+  HEAD verb,
+  SPR < [HEAD noun] >,
+  COMPS < phrase & [ HEAD noun ] > ].
+
+to := word &
+[ ORTH "to",
+  HEAD prep,
+  SPR < >,
+  COMPS < phrase & [HEAD noun] > ].
+
+near := word &
+[ ORTH "near",
+  HEAD prep,
+  SPR < >,
+  COMPS < phrase & [HEAD noun] > ].
+
+
+gave := word &
+[ ORTH "gave",
+  HEAD verb,
+  SPR < [HEAD noun] >,
+  COMPS < phrase & [HEAD noun ],
+          phrase & [HEAD noun ] > ].
+
+gave2 := word &
+[ ORTH "gave",
+  HEAD verb,
+  SPR < [HEAD noun] >,
+  COMPS < phrase & [HEAD noun], phrase & [HEAD prep] > ].
+
+
+

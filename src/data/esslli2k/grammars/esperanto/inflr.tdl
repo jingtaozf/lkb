@@ -1,0 +1,49 @@
+
+;; lexeme -> stem rules
+
+noun-stem-rule :=
+%suffix (* o)
+noun-stem.
+
+adj-stem-rule :=
+%suffix (* a)
+adj-stem.
+
+;; stem -> theme rules
+
+singular-theme-rule := 
+singular-theme.
+
+plural-theme-rule :=
+%suffix (* j)
+plural-theme.
+
+;; theme -> word rules
+
+no-case-word-rule := 
+no-case-word.
+
+;; lexeme -> word rules
+
+const-word-rule := 
+const-word.
+
+pres-verb-irule :=
+%suffix (* as)
+pres-verb.
+
+past-verb-irule :=
+%suffix (* is)
+past-verb.
+
+;; lexeme -> lexeme rules
+
+neg-adj-rule :=
+%prefix (* mal)
+neg-adj.
+
+inchoative-verb-rule :=
+%suffix (* igg)
+inchoative-verb.
+
+

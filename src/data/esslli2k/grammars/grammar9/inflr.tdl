@@ -1,0 +1,33 @@
+%(letter-set (!c bdfglmnprstz))
+%(letter-set (!s abcdefghijklmnopqrtuvwxyz))
+%(letter-set (!a abcdefghijklmnopqrstuvwxyz))
+%(letter-set (!t bcdfghjklmnpqrstvwxz))
+%(letter-set (!v aeiou))
+
+past-v_irule :=
+%suffix (* ed) (!ty !tied) (e ed) (!t!v!c !t!v!c!ced) (give gave)
+past-verb. 
+
+non3sg-v_irule :=
+plur-verb &
+[ ORTH #1,
+  ARGS < [ ORTH #1 ] > ].
+
+3sg-v_irule :=
+%suffix (!s !ss) (!ss !ssses) (ss sses)
+ sing-verb.
+
+pl-noun_irule := 
+%suffix (!s !ss) (!ss !ssses) (ss sses)
+plur-noun.
+
+sg-noun_irule := 
+sing-noun &
+[ ORTH #1,
+  ARGS < [ ORTH #1 ] > ].
+
+const-pump :=
+word &
+[ ORTH #1,
+  ARGS < const-lxm  & [ ORTH #1 ] > ].
+

@@ -1,0 +1,115 @@
+\documentclass[10pt]{article}
+\setlength{\evensidemargin}{0in}
+\setlength{\oddsidemargin}{0in}
+\setlength{\textwidth}{6.5in}
+\setlength{\topmargin}{-0.5in}
+\setlength{\textheight}{9in}
+\pagestyle{empty}
+\parindent=0pt
+
+\begin{document}
+\begin{center}
+\textbf{An Introduction to Grammar Engineering using HPSG: DAY 3}\\
+ESSLLI 2000
+\end{center}
+
+\medskip
+\textbf{Goals:}
+\begin{enumerate}
+\item Learn more about typed feature structures and unification.
+\item Finish treatment of modification.
+\item Improve analysis of agreement
+\item Capture generalizations in lexicon and rules
+\end{enumerate}
+
+\smallskip
+\textbf{Exercises:}
+\begin{enumerate}
+\item Extend the grammar to provide an analysis of modification, admitting
+sentences like \emph{The dog barks near the cat}.  We introduce a new head
+feature \textsc{mod} and a new syntactic rule for modifiers, and we make use
+of the notion of underspecification.
+
+\item The constraints we added yesterday to enforce subject-verb and
+determiner-noun agreement get the facts pretty much right, but from a grammar
+engineering point of view leave a lot to be desired. 
+
+\begin{itemize}
+\item Since the feature \textsc{agr} is introduced on the type \emph{pos}, all 
+kinds of words will have an agreement feature.  However, in English only
+determiners and nouns have agreement information.  Unused features
+unnecessarily increase the size of the grammar and can make errors more
+difficult to track down. Modify your grammar so that the feature \textsc{agr}
+only appears on \emph{det} and \emph{noun}, and not on \emph{verb} or
+\emph{prep}.  To do this, you will need to add a new type,
+\emph{agr-pos}, which is a subtype of \emph{pos} and a supertype of \emph{det} 
+and \emph{noun}. Be sure to check your work using the batch parse mechanism.
+
+\item The intuition behind determiner-noun agreement is that the \textsc{agr}
+value of the noun must be the same as that of its specifier.  In our grammar,
+though, the \textsc{agr} value of the noun and the \textsc{agr} value of the
+specifier are stipulated separately.  Use re-entrancies to eliminate this
+redundancy and capture the generalization underlying agreement. Again, verify
+your changes by parsing your test sentences.
+
+In case the syntax of re-entrancies in TDL is still confusing, here's an
+example:
+\begin{verbatim}
+x := y &
+  [ F #1 & z,
+    G #1 ].
+\end{verbatim}
+This definition means that the value of the feautre \textsc{f} is \emph{z},
+and the value of the feature \textsc{g} is the same as that of the feature
+\textsc{f}. 
+\end{itemize}
+
+\item Those of you who are familiar with HPSG may be wondering why there is no
+Head Feature Principle in the grammar. Even if you aren't, you may have
+noticed that in each rule the \textsc{head} value of the whole phrase is
+always the same as the \textsc{head} value of one of the \textsc{arg}s. The
+argument which contributes the \textsc{head} value to the whole phrase is
+known as the \emph{head} of the phrase. For some kinds of phrases, the head
+daughter is the first daughter, and for some it's the last daughter. Rearrange
+the hierarchy of rules to capture this distinction between head initial
+phrases and head final phrases.
+\begin{itemize} 
+\item In \texttt{types.tdl}, add three new types:
+\begin{verbatim}
+head-initial := phrase &
+ [ HEAD #head,
+   ARGS < [ HEAD #head ] ...> ].
+head-final := phrase &
+ [ HEAD #head,
+   ARGS < syn-struc, [ HEAD #head ] > ].
+root-hf := root & head-final.
+\end{verbatim}
+(We will have more to say about the types \emph{root} and \emph{root-hf} later
+in the course.)
+\item Modify the rules in \texttt{rules.tdl} to inherit from these new types.
+For example, the \emph{head-complement-rule-0} should look like:
+\begin{verbatim}
+head-complement-rule-0 := head-initial & 
+[ SPR #a,
+  COMPS < >,   
+  ARGS < word & 
+         [ SPR #a, 
+           COMPS < > ] >  ].
+\end{verbatim}
+We call this rule head initial, even though it has only one daughter, since
+the other head complement rules are also head initial.  Head final rules, like
+the \emph{head-specifier-rule}, should inherit from \emph{head-final}.  The
+feature \textsc{head} should not have to be mentioned in \texttt{rules.tdl} at
+all.
+\end{itemize}
+\item Using the same strategy, find and eliminate more redundant
+specifications in the grammar.  Improve the organization of the type hierarchy
+to make it easier to add new words that are similar to words already in the
+lexicon. As a place to start, take a look at the lexical entries for nouns,
+and note that the same information is stated again and again in each entry.
+State those generalizations as constraints on a new type, \emph{noun-word},
+which every noun lexical entry inherits from. As you work, use the batch parse
+facility to make sure none of your modifications have damaged the coverage of
+the grammar.
+\end{enumerate}
+\end{document}
