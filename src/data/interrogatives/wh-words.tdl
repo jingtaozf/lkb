@@ -42,6 +42,16 @@ inter_whose-unfoc :=  wh-poss-det-lxm-unfoc &
 inter_whose-foc :=  wh-poss-det-lxm-foc &
 [ ORTH <! "whose" !> ].
 
+;;;JTB 10/17/01 - Ok, here's a problem.  These how's want their
+;;;specified things to be adjectives with soas, but now we're assuming
+;;;that attributive adjs have scope-objs.  What if I took the extent
+;;;coidentification to the adjective instead, and attribs can do one
+;;;thing and preds can do another?  That won't work because the extent
+;;;thing is a rel property and not really refered to by adjs.  I'd
+;;;have to create two types of adjectives outright, gradable and
+;;;non-gradable.  This ruins the whole semantic distinction bit about
+;;;these determiners.
+
 inter_how-unfoc :=  wh-det-lxm-unfoc &
 [ ORTH <! "how" !>,
   SS.LOC [ CAT.HEAD [ DEG true, 
@@ -61,11 +71,6 @@ inter_what-unfoc :=  wh-det-lxm-unfoc &
 
 inter_what-foc :=  wh-det-lxm-foc &
 [ ORTH <! "what" !> ].
-
-big_0 := adj-lxm &
-[ ORTH <! "big" !>,
-  SS.LOC.CAT [ HEAD.DEG true,
-               SPR < [ LOC.CAT.HEAD.DEG true ] > ] ].
 
 ;a_0 := det-lxm &
 ;[ ORTH <! "a" !>,

@@ -1,7 +1,50 @@
+(defun preprocess-sentence-string (string)
+  (loop
+      with padding = 128
+      with length = (+ (length string) padding)
+      with result = (make-array length
+				:element-type 'character
+				:adjustable nil :fill-pointer 0)
+      with space = t
+      for c across string
+		   ;;
+		   ;; add treatment for punctuation here
+		   ;;
+      when (punctuation-p c) do
+	(unless space (vector-push #\Space result))
+	(vector-push c result)
+      else when (or (member c '(#\Space #\Newline #\Tab))
+		    (not (alphanumeric-or-extended-p c))) do
+	(when space (incf padding))
+	(unless space
+	  (vector-push #\Space result)
+	  (setf space :space))
+      else do
+	   (vector-push c result)
+	   (setf space nil)
+      finally
+	(when (and (eq space :space) (not (zerop (fill-pointer result))))
+	  (decf (fill-pointer result)))
+	(return result)))
+
+(defun punctuation-p (char)
+  (member char '(#\! #\? #\.)))
+
+(defun alphanumeric-or-extended-p (char)
+  (and (graphic-char-p char)
+       (not (member char '(#\space #\! #\" #\& #\' #\(
+			   #\) #\* #\+ #\, #\- #\. #\/ #\: #\;
+			   #\< #\= #\> #\? #\@ #\[ #\\ #\] #\^
+			   #\_ #\` #\{ #\| #\} #\~)))))
+
+;#\ideographic_full_stop #\fullwidth_question_mark 
+;			   #\horizontal_ellipsis #\fullwidth_full_stop
+;			   #\fullwidth_comma)))))
+
 ;;;A little fn to display the parses feature structure
 
 (defun show-parse-fs nil
-          (loop for parse in *parse-record*
+  (loop for parse in *parse-record*
                do
                (let* ((fs (mrs::get-parse-fs parse))
                      (sem-struct

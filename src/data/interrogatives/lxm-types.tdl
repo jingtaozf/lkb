@@ -16,79 +16,13 @@
 ;;;JTB 07/18/01 - Trying to ditch all pumping rules.  Here eliminating
 ;;;phrase restrictions on COMPS and SUBJ and SPR of VPs.
 
-;;;JTB 07/19/01 - Added default restriction on P-STORE to see if this
-;;;prevents useless rule appliation.
+;;;JTB 08/18/01 - Removed ANA false restriction on verbs 
 
-;;;JTB 07/23/01 - These are a couple of hacks just to make the way
-;;;Chris does copulas generalized.
-
-;;;JTB 07/29/01 - This type is for things like "be" and "to" which are
-;;;non-inflected and do subject raising (like auxiliaries) while
-;;;inheriting soas.  It skims amalgamation and unifies the subject's
-;;;cat and cont values and the cont.nucl value of the higher and lower
-;;;verbs, and amalgamates everything else.  The difference between
-;;;this and normal amalg is that it takes the quants list from the soa
-;;;rather than the Q-STORE and amalgamates the subject onto that.
-
-non-infl-vb-comp := inflected-lexeme+amalg &
-[ SS [ LOC [ CONT [ NUCL /l #nucl,
-                    QUANTS [ LIST #qlist1,
-                             LAST #qlist_last ] ],
-             CAT [ SUBJ < #subj & [ LOC.CAT.HEAD.PRED false ] >,
-                   SPR < >,
-                   COMPS < #comp > ],
-             Q-STORE <! !>,
-             P-STORE [ LIST #plist1, 
-                       LAST #plist_last ] ],
-       SLASH [ LIST #slash1, 
-               LAST #slash_last ], 
-       WH [ LIST #wh1, 
-            LAST #wh_last ] ],
-  ARG-ST < #subj & [ LOC [ CAT.HEAD.PRED false,
-                           Q-STORE [ LIST #qlist1,
-                                     LAST #qlist2 ],
-                           P-STORE [ LIST #plist1, 
-                                     LAST #plist2 ] ],
-                     SLASH [ LIST #slash1, 
-                             LAST #slash2 ],
-                     WH [ LIST #wh1, 
-                          LAST #wh2 ] ],
-           #comp & [ LOC [ CONT [ NUCL /l #nucl,
-                                  QUANTS [ LIST #qlist2,
-                                           LAST #qlist_last ] ],
-                           P-STORE [ LIST #plist2, 
-                                     LAST #plist_last ] ],
-                     SLASH [ LIST #slash2, 
-                             LAST #slash_last ],
-                     WH [ LIST #wh2, 
-                          LAST #wh_last ] ] > ].
-
-copula := non-infl-vb-comp &
-[ SS.LOC.CAT.COMPS < [ LOC.CAT.HEAD.PRED true ] >,
-  DTRS < auxv-lxm > ].
-
-fin_copula := copula & 
-[ SS.LOC.CAT.HEAD.FORM fin,
-  SS.LOC.CONT r-soa,
-  ARG-ST < [ LOC.CAT.HEAD.CASE nom ], synsem > ].
-
-do-lexeme := non-infl-vb-comp &
-[ SS.LOC.CAT [ HEAD verb & [ PRED false ],
-               SUBJ < [ LOC.CAT.HEAD.CASE nom ] >,
-               COMPS < [ LOC.CAT [ HEAD.FORM base,
-                                   COMPS < > ] ] > ],
-  DTRS < auxv-lxm > ].
-
-do-lxm-unfoc := do-lexeme &
-[ SS.LOC.CAT.HEAD [ AUX true,
-                    FORM fin ] ].
-
-do-lxm-foc := do-lexeme &
-[ SS.LOC.CAT.HEAD.FORM fin ].
+;;;JTB 08/20/01 - Added hard POL false constraint, only way to get a
+;;;POL true is via lexical rule.
 
 v-lxm := lexeme & 
- [ SS [ LOC [ CAT [ HEAD verb & [ NEG false,
-                                  ANA false],
+ [ SS [ LOC [ CAT [ HEAD verb,
                     SPR < >,
 	            SUBJ < [ LOC.CAT [ HEAD noun,
                                        SPR < >,
@@ -98,23 +32,18 @@ v-lxm := lexeme &
         WH <! !> ] ].
 
 non-auxv-lxm:= v-lxm &
-[ SS.LOC [ CAT [ HEAD verb & [ INV false, 
-                               AUX false ] ] ] ].
+[ SS.LOC.CAT.HEAD [ INV false,
+                    POL false, 
+                    AUX false ] ].
 
-;;;JTB 07/14/01 - stopped coidentifying SUBJs and starting doing the
-;;;locals fo the SUBJS, and insist that SLASH of complement be empty.
-
-auxv-lxm := v-lxm & s-rais. 
-
-;;;JTB 07/014/01 - original definition but without #1 & P-STORE <! !> in COMP
-;auxv-lxm := v-lxm & 
-;[ SS.LOC.CAT [ SUBJ < #1 >,
-;               ARG-ST < #1, [ LOC.CAT [ SUBJ < #1  >, 
-;                                        COMPS < > ] ] > ] ].
+auxv-lxm := v-lxm & s-rais &
+[ SS.LOC.CAT.HEAD [ POL /l false,
+                    FORM /l fin ] ].
 
 ;;;JTB 07/18/01 - Trying to ditch all pumping rules.  Here eliminating
 ;;;phrase restrictions on COMPS and SUBJ and SPR of VPs.
 
+#|
 dummy-auxv-lxm :=  v-lxm & 
 [ ARG-ST < [ LOC.CAT.HEAD [ AGR expl-index & [ PERNUM 1or3sg ] ] ],
              #1 & [ LOC.CAT  [ HEAD noun,
@@ -122,16 +51,18 @@ dummy-auxv-lxm :=  v-lxm &
                   [ LOC.CAT [ HEAD [ PRED true ],
                                      SUBJ < #1 >,
                                      COMPS < > ] ] > ].
+|#
 ;;; NOUN LEXEME DEFINITIONS 
 
 ;;;JTB 07/19/01 - Noun semantics is now a scope-obj.  The
 ;;;determiner/pumping rule/specific lexical entry will determine
 ;;;whether it's a quant or a param.
 
+;;;JTB 08/18/01 - Removed constraint [ AGR /l ref-index ].
+
 n-lxm := lexeme &
  [ SS.LOC [ CAT [ HEAD noun & [ FORM /l normal, 
 	        	        ANA /l false,
-                                AGR /l ref-index,
                                 MOD /l < > ],
                   SUBJ /l < >,
                   SPR /l < >,
@@ -155,8 +86,8 @@ pron-lxm := n-lxm & no-args &
 ;;;phrase restrictions on COMPS and SUBJ and SPR.
 
 cn-lxm := n-lxm &
- [ SS.LOC.CAT [ HEAD.AGR.PERNUM #agr,
-	        SPR < [ LOC [ CAT [ HEAD det & [ AGR.PERNUM #agr,
+ [ SS.LOC.CAT [ HEAD.AGR #agr,
+	        SPR < [ LOC [ CAT [ HEAD det & [ AGR #agr,
                                                  COUNT /l true ],
                                     SPR < > ] ] ] > ],
    SS.LOC.CONT [ INDEX #index, RESTR < [ PROP.SOA.NUCL.INSTANCE #index ] > ] ].
@@ -167,7 +98,7 @@ cn-lxm := n-lxm &
 tr-cn-lxm := cn-lxm & str-tr & prep-arg.
 
 pn-lxm := n-lxm &
- [ SS [ LOC [ CAT.HEAD [ PRED false, AGR.PERNUM 3sg ],
+ [ SS [ LOC [ CAT.HEAD [ PRED false, AGR 3sg ],
               CONT param,
               Q-STORE <! !>,
               P-STORE <! !> ],
@@ -201,18 +132,18 @@ gen-poss-det-lxm := det-lxm &
 [ SS [ LOC [ CAT [ HEAD.SPEC [ INDEX #index,
                                RESTR #restr1 ] ],
              CONT #cont,
-             Q-STORE <! #cont & the-rel & [ INDEX #index,
-                                            RESTR [ FIRST.PROP.SOA.NUCL poss-rel &
-                                                          [ POSS-ED #index ], 
-                                                    REST #restr1 ] ] !>,
+             Q-STORE <! #cont & 
+                        the-rel & 
+                        [ INDEX #index,
+                          RESTR [ FIRST.PROP.SOA.NUCL poss-rel &
+                                                      [ POSS-ED #index ], 
+                                  REST #restr1 ] ] !>,
              P-STORE <! !> ],
        WH <! !> ],
   ARG-ST < > ].
 
 ;;;JTB 07/18/01 - Trying to ditch all pumping rules.  Here eliminating
 ;;;phrase restrictions on COMPS and SUBJ and SPR.
-
-;;;JTB 07/22/01 - Semantics????
 
 p-lxm := const-lxm &
  [ SS.LOC [ CAT [ HEAD prep,
@@ -242,6 +173,8 @@ pdp-lxm := p-lxm &
                                             P-STORE <! !> ] ] > ], 
               CONT soa & [ NUCL.ARG #index ] ] ] ].
 
+;;;JTB 08/18/01 - Comp?  Complementizer?
+
 comp-lxm := const-lxm &
  [ SS [ LOC.CAT [ HEAD comp,
                   SUBJ < >, 
@@ -249,15 +182,11 @@ comp-lxm := const-lxm &
         WH <! !> ] ].
 
 
-;;; CCB - this is just a quick definiton.  Needs to be fixed.
-
-;;;JTB - 07/23/01 - We're going to derive ADJs from a simpler
-;;;definition so we can get both attributive and predicative.
-;;;Consequently, we'll lose the MOD values and stuff and derive all of
-;;;the necessary stuff via lexical rules.  And at present, we'll only
-;;;worry about predicative ones.  Furthermore, all ADJs will have
-;;;specifiers and we'll lose then with a bare-adj rule like with
-;;;nouns.
+;;;JTB 08/18/01 - Adjectives will be lexically specified to be
+;;;predicative and the non-predicative ones will be derived via
+;;;lexical rule at the morphological phase.  They will all, by
+;;;default, have SPR values as well although these may be ditched by
+;;;pumping rule.
 
 adj-lxm := const-lxm &
  [ SS.LOC [ CAT [ HEAD adj & [ PRED true,
@@ -273,11 +202,21 @@ adj-lxm := const-lxm &
             Q-STORE <! !> ] ].
 
 ;;; CCB - this is just a quick definiton.  Needs to be fixed.
+
 adv-lxm := const-lxm &
- [ SS.LOC.CAT [ HEAD adv,
-                SUBJ < >,
-                SPR < >,
-                COMPS < > ] ].
+ [ SS.LOC [ CAT [ HEAD adv,
+                  SUBJ < >,
+                  SPR < >,
+                  COMPS < > ],
+            CONT soa ] ].
+
+pol-adv-lxm := adv-lxm & 
+[ SS [ SLASH <! !>,
+       WH <! !>,
+       LOC [ CAT.HEAD.MOD < >,
+             Q-STORE <! !>,
+             P-STORE <! !> ] ] ].
+
 
 ;;; <<< >>> ARGUMENT SELECTION
 
@@ -335,9 +274,6 @@ scv := non-auxv-lxm & s-con.
 srv := non-auxv-lxm & s-rais.
 
 ; PP-argument (prep-arg)
-
-;;;JTB 07/18/01 - Trying to ditch all pumping rules.  Here eliminating
-;;;phrase restrictions on COMPS and SUBJ and SPR.
 
 prep-arg := lexeme &
 [ ARG-ST < [ LOC.CAT.HEAD.PRED /l false ], 
@@ -410,7 +346,6 @@ dtv := non-auxv-lxm & dt-arg.
 ; PP-transitive-verb (ptv)
 ptv := non-auxv-lxm & ptv-arg.
 
-
 ;;; <<>> Adjective Lexeme types.
 
 ; strict-intransitive-adjective (sia)
@@ -441,7 +376,7 @@ wh-lxm:=inflected-lexeme+amalg &
   ARG-ST < >,        
   DTRS < inflected-lexeme > ].
 
-;;;Exclamative vs. non-exclamative
+;;;Exclamative vs. non-exclamative.  All exclamatives are determiners.
 
 wh-lxm-nexcl:=wh-lxm &
 [ SS.LOC.CONT #1 & param,
@@ -453,10 +388,11 @@ wh-lxm-excl:=wh-lxm & wh-det-lxm &
 
 ;;; Noun vs. determiner vs. possessive determiner wh-lxms
 
+;;;JTB 08/18/01 - Removed constraint [ AGR ref-index ]
+
 wh-n-lxm:=wh-lxm &
 [ SS.LOC.CAT.HEAD noun & [ FORM normal,
 	        	   ANA false,
-                           AGR ref-index,
                            MOD < > ],
   SS.LOC.CONT [ INDEX #index,
                 RESTR < [ PROP.SOA.NUCL.ARG #index ] > ],
@@ -504,8 +440,10 @@ wh-poss-det-lxm-foc := wh-poss-det-lxm & wh-lxm-foc.
 wh-poss-det-lxm-unfoc := wh-poss-det-lxm & wh-lxm-unfoc.
 
 ;;;JTB 07/20/01 - Put these here for now.  These are supertypes of
-;;;amalgamation rules.  Now split between soa and scope-obj, although
-;;;complementizers don't get amalgamated anymore.
+;;;amalgamation rules.  Now split between soa and scope-obj since
+;;;things with scope-objects do different things with their Q-STORE
+;;;amalg (namely, determiners introduce quantifiers and thus do extra
+;;;stitching, although complementizers don't get amalgamated anymore.
 
 inflected-lexeme+amalg-0 := inflected-lexeme+amalg &
 [ SS [ SLASH <! !>,
@@ -592,20 +530,14 @@ inflected-lexeme+amalg-4 := inflected-lexeme+amalg &
 ;;;JTB - generalized inflectional rules.  I'll add to this some stuff
 ;;;about predicative vs. non-predicative.
 
-
-;const-lxm_infl := inflected-lexeme & 
-;[ ORTH #orth,
-;  DTRS < const-lxm & [ ORTH #orth,
-;                       NEEDS-AFFIX false ] > ].
-
-;sg-cn-lxm-infl := sing-noun_infl.
-;pl-cn-lxm-infl := plur-common-noun_infl.
-
-
-const-lxm_infl := inflected-lexeme & 
+const-lxm_infl := inflected-lexeme &
 [ ORTH #orth,
   DTRS < const-lxm & [ ORTH #orth,
                        NEEDS-AFFIX false ] > ].
+
+;;;JTB 08/18/01 - These rules turn predicative elements (preps, adjs)
+;;;into non-predicative ones.  Nouns are handled phrasally so that
+;;;composition with quantifiers can happen first.
 
 attrib-prep-lxm_infl := attrib-lxm_infl &
 [ SS.LOC.CAT.HEAD prep, 
@@ -616,6 +548,11 @@ attrib-adj-lxm_infl := attrib-lxm_infl &
   SS.LOC.CONT.NUCL.ARG /l #index, 
   DTRS < adj-lxm > ].
 
+;;;JTB 10/17/01 - Changing attrib things so that their content is a
+;;;fucking scop-obj so that we can make them the semantic head of
+;;;their hd-mod-phs.  This will allow us to do constituent negation
+;;;with the same rule, with it acting as the semantic head.
+
 attrib-lxm_infl := const-lxm_infl & 
 [ SS.LOC [ CAT [ HEAD [ PRED false,
                         MOD < [ LOC [ CAT.HEAD noun,
@@ -625,31 +562,262 @@ attrib-lxm_infl := const-lxm_infl &
            CONT.NUCL.ARG #index ],
   DTRS < [ SS.LOC.CAT.HEAD.PRED true ] > ].
 
-;;;JTB 07/24/01 - Do this with the semantics for now but check with
-;;;Ivan eventually.
+;;; <<< AUXILIARY SYSTEM >>>
 
-;pred-lxm := inflected-lexeme &
-;[ SS.LOC [ CAT [ HEAD.PRED true,
-;                 SUBJ < synsem > ],
-;           CONT soa ] ].
+;;; JTB 09/02/01 - Auxiliaries: I'm going to partially adopt Warner
+;;; (2000) in this approach.  He does everything in the type
+;;; hierarchy.  I'll still use lexical rules to generate negated forms,
+;;; but I'll use the type heirarchy to define all the types of negated and
+;;; non-negated auxiliaries that show up.
 
-;non-pred-lxm := inflected-lexeme &
-;[ SS.LOC.CAT [ HEAD.PRED false,
-;               SUBJ < > ] ].
+;;;Four frames
 
-;pred-n-lxm := pred-lxm &
-;[ SS.LOC [ CAT [ HEAD.PRED true,
-;                 SUBJ < synsem & [ LOC [ CONT.INDEX #index,
-;                                         Q-STORE <! !>,
-;                                         P-STORE <! !> ],
-;                                   SLASH <! !> ] > ],
-;           CONT soa & [ NUCL.INSTANCE #index ] & #soa ],
-;  DTRS < n-lxm & [ SS.LOC.CONT.RESTR < [ PROP.SOA #soa ] > ] > ].
+neg-scoping := auxv-lxm.
+modality := auxv-lxm.
+vacuity := auxv-lxm.
+contraction := auxv-lxm.
 
-;non-pred-n-lxm := inflected-lexeme &
-;[ SS.LOC.CAT [ HEAD.PRED false,
-;               SUBJ < > ],
-;  DTRS < n-lxm > ].
+;;;Two scopings
 
-;;;
+wide-scope-lxm := neg-scoping.
+narrow-scope-lxm := neg-scoping.
 
+;;;Two contractions
+
+nt-aux-lxm := contraction.
+non-nt-aux-lxm := contraction.
+
+;;; Two modalities.  Default on base requirement for modal complements
+;;; only because of "ought to V" and "used to V", which might be
+;;; lexical items (cf ??"Ought obviously to go" and ??"used obviously
+;;; to go", also "Ought not go to the store", ??"Ought not to go to
+;;; the store" and ?"Used not to go".  Not sure about these, maybe two
+;;; of each: non-aux "ought" that takes an infinitival complement and
+;;; aux "ought" that takes a base complement.  Also "Ought he go?"
+;;; vs. *"Ought he to go?".  "Ought" could be [AUX -] except "He OUGHT
+;;; to go".
+
+non-modal-aux-lxm := modality.
+modal-aux-lxm := modality &
+[ SS.LOC.CAT.HEAD.FORM fin,
+  ARG-ST < [ LOC.CAT.HEAD.CASE nom ], [ LOC.CAT.HEAD.FORM /l base ] > ].
+
+;;; Two semantic types.  Vacuous have no semantics, contentful do.
+;;; The vacuous guys will ARP and amalg here, except for quantifiers which
+;;; will be taken care of when negation is.
+
+vacuous-aux-lxm := vacuity &
+[ SS [ LOC [ CAT [ SUBJ < #subj >,
+                   SPR < >,
+                   COMPS < #comp > ],
+             Q-STORE <! !>,
+             P-STORE [ LIST #plist1, 
+                       LAST #plist_last ] ],
+       SLASH [ LIST #slash1, 
+               LAST #slash_last ],
+       WH [ LIST #wh1,
+            LAST #wh_last ] ],
+  ARG-ST < #subj & [ LOC [ CAT.HEAD.PRED false,
+                           P-STORE [ LIST #plist1, 
+                                     LAST #plist2 ] ],
+                     SLASH [ LIST #slash1, 
+                             LAST #slash2 ],
+                     WH [ LIST #wh1, 
+                          LAST #wh2 ] ],
+           #comp & [ LOC [ P-STORE [ LIST #plist2, 
+                                     LAST #plist_last ] ],
+                     SLASH [ LIST #slash2, 
+                             LAST #slash_last ],
+                     WH [ LIST #wh2, 
+                          LAST #wh_last ] ] > ].
+
+cont-aux-lxm := vacuity.
+
+;;;Subtypes:
+;;;[Scope and Contraction]:
+
+nt-wide-scope-lxm := wide-scope-lxm & nt-aux-lxm &
+[ SS.LOC.CONT.NUCL neg-rel ].
+
+nt-narrow-scope-lxm := narrow-scope-lxm & nt-aux-lxm &
+[ SS.LOC.CONT.NUCL.SOA-ARG.NUCL neg-rel ].
+
+non-nt-wide-scope-lxm := wide-scope-lxm & non-nt-aux-lxm.
+non-nt-narrow-scope-lxm := narrow-scope-lxm & non-nt-aux-lxm.
+
+;;;[Vacuity and Contraction]:
+
+cont-nt-lxm := cont-aux-lxm & nt-aux-lxm &
+[ SS.LOC.CONT.NUCL.SOA-ARG.NUCL.SOA-ARG #cont,
+  ARG-ST < synsem, [ LOC.CONT #cont ] > ].
+
+vacuous-nt-lxm := vacuous-aux-lxm & nt-aux-lxm &
+[ SS.LOC.CONT [ QUANTS #quants,
+                NUCL.SOA-ARG #cont ],
+  ARG-ST < [ LOC.Q-STORE #quants ], 
+           [ LOC.CONT #cont ] > ].
+
+cont-non-nt-lxm := cont-aux-lxm & non-nt-aux-lxm.
+vacuous-non-nt-lxm := vacuous-aux-lxm & non-nt-aux-lxm.
+
+;;;[Scope and Contraction] and [Vacuity and Contraction]:
+
+cont-nt-wide-scope-lxm := nt-wide-scope-lxm & cont-nt-lxm.
+vacuous-nt-wide-scope-lxm := nt-wide-scope-lxm & vacuous-nt-lxm.
+cont-nt-narrow-scope-lxm := nt-narrow-scope-lxm & cont-nt-lxm.
+;;;No vacuous-narrow combos.
+
+cont-non-nt-wide-scope-lxm := non-nt-wide-scope-lxm & cont-non-nt-lxm  &
+[ SS.LOC.CONT.NUCL.SOA-ARG #cont,
+  ARG-ST < synsem, [ LOC.CONT #cont ] > ].
+
+vacuous-non-nt-wide-scope-lxm := non-nt-wide-scope-lxm & vacuous-non-nt-lxm  &
+[ SS.LOC.CONT.NUCL #nucl,
+  ARG-ST < synsem, [ LOC.CONT.NUCL #nucl ] > ].
+
+cont-non-nt-narrow-scope-lxm := non-nt-narrow-scope-lxm & cont-non-nt-lxm.
+;;;No vacuous-narrow combos.
+
+;;; Maximal types (Just add modality):
+
+wide-scope-modal-lxm := modal-aux-lxm & cont-non-nt-wide-scope-lxm.
+narrow-scope-modal-lxm := modal-aux-lxm & cont-non-nt-narrow-scope-lxm.
+nt-wide-scope-modal-lxm := modal-aux-lxm & cont-nt-wide-scope-lxm.
+nt-narrow-scope-modal-lxm := modal-aux-lxm & cont-nt-narrow-scope-lxm.
+;;;No vacuous modals.
+
+;;;Helper Auxiliaries:
+
+cont-wide-scope-aux-lxm := non-modal-aux-lxm & cont-non-nt-wide-scope-lxm. 
+cont-nt-wide-scope-aux-lxm := non-modal-aux-lxm & cont-nt-wide-scope-lxm.
+vacuous-wide-scope-aux-lxm := non-modal-aux-lxm & vacuous-non-nt-wide-scope-lxm.
+vacuous-nt-wide-scope-aux-lxm := non-modal-aux-lxm & vacuous-nt-wide-scope-lxm.
+;;;No narrow helpers.
+
+;;; Copula and "do" auxiliaries.
+
+copula := vacuous-aux-lxm &
+[ ARG-ST < synsem, [ LOC.CAT.HEAD.PRED true ] > ].
+
+fin-copula := copula & 
+[ SS.LOC.CONT r-soa,
+  ARG-ST < [ LOC.CAT.HEAD.CASE nom ], synsem > ].
+
+non-nt-fin-copula := fin-copula & vacuous-wide-scope-aux-lxm.
+nt-fin-copula := fin-copula & vacuous-nt-wide-scope-aux-lxm.
+
+non-fin-copula := copula & vacuous-wide-scope-aux-lxm.
+
+do-lexeme := vacuous-wide-scope-aux-lxm &
+[ SS.LOC.CAT [ HEAD.PRED false ],
+  ARG-ST < [ LOC.CAT.HEAD.CASE nom ], [ LOC.CAT [ HEAD.FORM base, 
+                                                  COMPS < > ] ] >,
+  DTRS < auxv-lxm > ].
+
+do-lxm-unfoc := do-lexeme &
+[ SS.LOC.CAT.HEAD [ AUX true ] ].
+
+do-lxm-foc := do-lexeme &
+[ SS.LOC.CAT.HEAD [ POL true ] ].
+
+have-lxm := cont-wide-scope-aux-lxm &
+[ SS.LOC.CONT.NUCL completed-rel,
+  ARG-ST < synsem, [ LOC.CAT.HEAD.FORM pfp ] > ].
+
+nt-have-lxm := cont-nt-wide-scope-aux-lxm &
+[ SS.LOC.CONT.NUCL.SOA-ARG.NUCL completed-rel,
+  ARG-ST < synsem, [ LOC.CAT.HEAD.FORM pfp ] > ].
+
+;;; Lexical rules to handle auxiliaries.  While everyone else is
+;;; inflecting, these guys get negation or not.  The rules are pretty
+;;; specialized.  Contentful auxiliaries will become
+;;; inflected-lexemes, vacuous ones will become inflected-lexeme+amalg
+;;; since they do NOT amalg the normal way but inherit their verbal
+;;; complement's quants.  This is complicated by the presence of not,
+;;; so care is taken to make sure it's all right.  Assuming
+;;; (currently) surface order scoping of quants and not, modulo scoping.
+
+;;; Base type for contentful polar lexemes.
+
+polar-lexeme := inflected-lexeme & 
+[ SS.LOC [ CAT [ HEAD [ AUX true,
+                        POL true ] ] ],
+  ARG-ST < #1, pol-ss & [ LOC.CAT.HEAD adv,
+                          LOC.CONT.NUCL pol-rel ], #2 >,
+  DTRS < [ SS.LOC [ CAT [ HEAD [ AUX true,
+                                 POL false ] ] ],
+           ARG-ST < #1, #2 > ] > ].
+
+;;; Base type for vacuous polar lexemes.
+
+polar-lexeme+amalg := inflected-lexeme+amalg & 
+[ SS.LOC [ CAT [ HEAD [ AUX true,
+                        POL true ],
+                 SUBJ < #1 >,
+                 COMPS < #pol, #2 > ] ],
+  ARG-ST < #1, #pol & pol-ss & [ LOC.CAT.HEAD adv,
+                          LOC.CONT.NUCL pol-rel ], #2 >,
+  DTRS < [ SS.LOC [ CAT [ HEAD [ AUX true,
+                                 POL false ] ] ],
+           ARG-ST < #1, #2 > ] > ].
+
+;;; Polar wide scoping contentful non-contracted lexemes.  Just negate
+;;; the semantics of the daughter basically
+
+wide-polar-lexeme := polar-lexeme &
+[ SS.LOC.CONT.NUCL #pol-rel & [ SOA-ARG #a-soa ],
+  ARG-ST < synsem, [ LOC.CONT.NUCL #pol-rel ], synsem >,
+  DTRS < cont-non-nt-wide-scope-lxm & [ SS.LOC.CONT #a-soa ] > ].
+
+;;; Non-polar wide scoping contentful non-contracted lexemes.  Just
+;;; move up the heirarchy no sweat.
+
+wide-non-pol-lexeme := inflected-lexeme &
+[ DTRS < cont-non-nt-wide-scope-lxm > ].
+
+;;; Polar narrow scoping contentful non-contracted lexemes.  Fix the
+;;; (unfixed) semantics as AUX(NOT(COMP(...))).
+
+narrow-polar-lexeme := polar-lexeme &
+[ SS.LOC.CONT #a-soa & [ NUCL.SOA-ARG.NUCL #pol-rel & 
+                          [ SOA-ARG #c-soa ] ],
+  ARG-ST < synsem, [ LOC.CONT.NUCL #pol-rel ], [ LOC.CONT #c-soa ] >,
+  DTRS < cont-non-nt-narrow-scope-lxm & [ SS.LOC.CONT #a-soa ] > ].
+
+;;; Non-polar narrow scoping contentful non-contracted lexemes.  Fix
+;;; the (unfixed) semantics as AUX(COMP(...)).
+
+narrow-non-pol-aux-lexeme := inflected-lexeme &
+[ SS.LOC.CONT #cont & [ NUCL.SOA-ARG #c-soa ],
+  ARG-ST < synsem, [ LOC.CONT #c-soa ] >,
+  DTRS < cont-non-nt-narrow-scope-lxm & [ SS.LOC.CONT #cont ] > ].
+
+;;; ALL contracted lexemes are fixed up just fine, so just move them
+;;; to the next level.
+
+nt-lexeme := inflected-lexeme &
+[ DTRS < nt-aux-lxm > ].
+
+;;; Polar wide scoping vacuous non-contracted lexemes.  Put subj
+;;; quants above the not and comp quants below, and fix semantics as
+;;; NOT(COMP(...)).
+
+wide-vacuous-polar-lexeme := polar-lexeme+amalg &
+[ SS.LOC.CONT [ QUANTS #quants,
+                NUCL #pol-rel & [ SOA-ARG #a-soa ] ],
+  ARG-ST < [ LOC.Q-STORE #quants ], 
+           [ LOC.CONT.NUCL #pol-rel ], 
+           [ LOC.CONT #a-soa ] >,
+  DTRS < vacuous-non-nt-wide-scope-lxm > ].
+
+;;; Non-polar wide scoping vacuous non-contracted lexemes.  Amalgamate
+;;; the quants as usual and do nothing else.
+
+wide-vacuous-non-polar-lexeme := inflected-lexeme+amalg &
+[ SS.LOC.CONT [ QUANTS [ LIST #qlist1,
+                         LAST #qlist_last ] ],
+  ARG-ST < [ LOC.Q-STORE [ LIST #qlist1,
+                           LAST #qlist2 ] ], 
+           [ LOC.CONT.QUANTS [ LIST #qlist2,
+                               LAST #qlist_last ] ] >,
+  DTRS < vacuous-non-nt-wide-scope-lxm > ].

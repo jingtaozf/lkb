@@ -1,58 +1,245 @@
-#| I'm not longer treating the variation in auxilaries' forms as exections to the lexical rules; they're now all specified in the lexicon as inflected-lexemes.
+;;; CCB - Needs the idosyncratic information that not outscopes the
+;;; content of won't's compliment.  See pg.24 of the English Aux paper.
 
-can 3RD-SING-VERB can
-would 3RD-SING-VERB would
-could 3RD-SING-VERB could
-should 3RD-SING-VERB should
-must 3RD-SING-VERB must
-will 3RD-SING-VERB will
-|#
+;;; I removed [ FORM fin ] because it excludes won't from the
+;;; pol-int-cl consturction, since inter-cl specifies that the verb be [
+;;; FORM inf ].
+
+;;; I added [ CASE nom ] to SUBJ, and [ PRED false ] to HEAD.
+
+;;; Wide Scope Auxiliaries
+
+will_1 := wide-scope-modal-lxm &
+[ ORTH <! "will" !>,
+  SS.LOC.CONT.NUCL will-rel ].
+
+wont_0 := nt-wide-scope-modal-lxm &
+[ ORTH <! "wont" !>,
+  SS.LOC.CONT.NUCL.SOA-ARG.NUCL will-rel ].
+
+would_0 := wide-scope-modal-lxm &
+[ ORTH <! "would" !>,
+  SS.LOC.CONT.NUCL would-rel ].
+
+wouldnt_0 := nt-wide-scope-modal-lxm &
+[ ORTH <! "wouldnt" !>,
+  SS.LOC.CONT.NUCL.AUST-ARG-SOA.NUCL would-rel ].
+
+can_0 :=  wide-scope-modal-lxm &
+[ ORTH <! "can" !>,
+  SS.LOC.CONT.NUCL can-rel ].
+
+cant_0 :=  nt-wide-scope-modal-lxm &
+[ ORTH <! "cant" !>,
+  SS.LOC.CONT.NUCL.SOA-ARG.NUCL can-rel ].
+
+cannot_0 := nt-wide-scope-modal-lxm &
+[ ORTH <! "cannot" !>,
+  SS.LOC.CONT.NUCL.SOA-ARG.NUCL can-rel ].
+
+could_0 := wide-scope-modal-lxm &
+[ ORTH <! "could" !>,
+  SS.LOC.CONT.NUCL could-rel ].
+
+couldnt_0 := nt-wide-scope-modal-lxm &
+[ ORTH <! "couldnt" !>,
+  SS.LOC.CONT.NUCL.SOA-ARG.NUCL could-rel ].
+
+dare_0 := wide-scope-modal-lxm &
+[ ORTH <! "dare" !>,
+  SS.LOC.CONT.NUCL dare-rel ].
+
+;;; No contracted on "dare", at least not for me.
+
+may_0 := wide-scope-modal-lxm &
+[ ORTH <! "may" !>,
+  SS.LOC.CONT.NUCL may-permit-rel & [ PERMITTED #index],
+  ARG-ST < [ LOC.CONT.INDEX #index ], synsem > ].
+
+;;; Narrow Scope
+
+better := narrow-scope-modal-lxm &
+[ ORTH <! "better" !>,
+  SS.LOC.CAT.HEAD.INV false,
+  SS.LOC.CONT.NUCL better-rel ].
+
+best := narrow-scope-modal-lxm &
+[ ORTH <! "best" !>,
+  SS.LOC.CAT.HEAD.INV false,
+  SS.LOC.CONT.NUCL better-rel ].
+
+may_1 := narrow-scope-modal-lxm &
+[ ORTH <! "may" !>,
+  SS.LOC.CONT.NUCL may-epist-rel ].
+
+might_0 := narrow-scope-modal-lxm &
+[ ORTH <! "might" !>,
+  SS.LOC.CONT.NUCL might-epist-rel ].
+
+mightnt_0 := nt-narrow-scope-modal-lxm &
+[ ORTH <! "mightnt" !>,
+  SS.LOC.CAT.HEAD.INV false,
+  SS.LOC.CONT.NUCL might-epist-rel ].
+
+mightnt_1 := nt-wide-scope-modal-lxm &
+[ ORTH <! "mightnt" !>,
+  SS.LOC.CAT.HEAD.INV true,
+  SS.LOC.CONT.NUCL.SOA-ARG.NUCL might-epist-rel ].
+
+must_0 := narrow-scope-modal-lxm &
+[ ORTH <! "must" !>,
+  SS.LOC.CONT.NUCL must-rel ].
+
+mustnt_0 := nt-narrow-scope-modal-lxm &
+[ ORTH <! "mustnt" !>,
+  SS.LOC.CONT.NUCL must-rel ].
+
+;;;OUGHT?
+
+shall_0 := narrow-scope-modal-lxm &
+[ ORTH <! "shall" !>,
+  SS.LOC.CAT.HEAD.INV false,
+  SS.LOC.CONT.NUCL shall-fut-rel ].
+
+shall_1 := narrow-scope-modal-lxm &
+[ ORTH <! "shall" !>,
+  SS.LOC.CAT.HEAD.INV true,
+  SS.LOC.CONT.NUCL shall-permit-rel & [ PERMITTED #index ],
+  ARG-ST < [ LOC.CONT.INDEX #index ], synsem > ].
+
+shant_0 := nt-narrow-scope-modal-lxm &
+[ ORTH <! "shant" !>,
+  SS.LOC.CAT.HEAD.INV false,
+  SS.LOC.CONT.NUCL shall-fut-rel ].
+
+shant_1 := nt-narrow-scope-modal-lxm &
+[ ORTH <! "shant" !>,
+  SS.LOC.CAT.HEAD.INV true,
+  SS.LOC.CONT.NUCL shall-permit-rel & [ PERMITTED #index ],
+  ARG-ST < [ LOC.CONT.INDEX #index ], synsem >  ].
+
+should_0 := narrow-scope-modal-lxm &
+[ ORTH <! "should" !>,
+  SS.LOC.CONT.NUCL should-rel ].
+
+shouldnt_0 := nt-narrow-scope-modal-lxm &
+[ ORTH <! "shouldnt" !>,
+  SS.LOC.CONT.NUCL should-rel ].
+
+;;; Helper Auxiliaries
+
+have_0 :=  have-lxm &
+[ ORTH <! "have" !>,
+  SS.LOC.CAT.HEAD.FORM fin,
+  ARG-ST < [ LOC.CAT.HEAD.AGR non-3sg], synsem > ].
+
+has_0 :=  have-lxm &
+[ ORTH <! "has" !>,
+  SS.LOC.CAT.HEAD.FORM fin,
+  ARG-ST < [ LOC.CAT.HEAD.AGR 3sg], synsem > ].
+
+had_0 :=  have-lxm &
+[ ORTH <! "had" !>,
+  SS.LOC.CAT.HEAD.FORM fin ].
+
+have_2 := have-lxm &
+[ ORTH <! "have" !>,
+  SS.LOC.CAT.HEAD.FORM inf ].
+
+have_3 := have-lxm &
+[ ORTH <! "have" !>,
+  SS.LOC.CAT.HEAD.FORM base ].
+
+havent_0 :=  nt-have-lxm &
+[ ORTH <! "havent" !>,
+  SS.LOC.CAT.HEAD.FORM fin,
+  ARG-ST < [ LOC.CAT.HEAD.AGR non-3sg], synsem > ].
+
+hasnt_0 :=  nt-have-lxm &
+[ ORTH <! "hasnt" !>,
+  SS.LOC.CAT.HEAD.FORM fin,
+  ARG-ST < [ LOC.CAT.HEAD.AGR 3sg], synsem > ].
+
+hadnt_0 :=  nt-have-lxm &
+[ ORTH <! "hadnt" !>,
+  SS.LOC.CAT.HEAD.FORM fin ].
 
 ;;;JTB 07/2/01 - Going to generalize this stuff a bit.
-
 ;;; <<< >>> LEXICAL ENTRIES FOR THE COPULA
 
-
-will_1 := auxv-lxm &
-[ ORTH <! "will" !>,
-  SS.LOC.CONT [ NUCL will-rel ],
-  SS.LOC.CAT.HEAD.FORM fin,
-  SS.LOC.CAT.COMPS < [ LOC.CAT.HEAD.FORM base ] > ].
-
-be_0 := copula &
+be_0 := non-fin-copula &
 [ ORTH <! "be" !>,
   SS.LOC.CAT.HEAD.FORM base ].
 
-being_0 := copula &
+be_1 := non-fin-copula &
+[ ORTH <! "be" !>,
+  SS.LOC.CAT.HEAD.FORM inf ].
+
+;;; JTB 10/23/01 - I'm going to restrict "being" to taking only
+;;; non-verbal complements (ie, predicative NP and Adj).  We have no
+;;; passives and I want to avoid iteration a la *"being being being bad"
+
+being_0 := non-fin-copula &
 [ ORTH <! "being" !>,
-  SS.LOC.CAT.HEAD [ FORM prp,
-                    PRED true ] ].
+  SS.LOC.CAT [ HEAD [ AUX false,
+                      FORM prp,
+                      PRED true ] ],
+  ARG-ST < synsem, [ LOC.CAT.HEAD nonverbal ] > ].
 
-been_0 := copula &
+;;; This will be for passive voice later:
+;being_1 := non-fin-copula &
+;[ ORTH <! "being" !>,
+;  SS.LOC.CAT [ HEAD [ AUX false,
+;                      FORM prp,
+;                      PRED true ] ] ].
+
+been_0 := non-fin-copula &
 [ ORTH <! "been" !>,
-  SS.LOC.CAT.HEAD [ FORM pfp ] ].
+  SS.LOC.CAT.HEAD.FORM pfp ].
 
-;;; CCB - the following finite forms need tense information.
-
-am_0 := fin_copula &
+am_0 := non-nt-fin-copula &
 [ ORTH <! "am" !>,
-  ARG-ST < [ LOC.CAT.HEAD.AGR.PERNUM 1sg ], synsem > ].
+  ARG-ST < [ LOC.CAT.HEAD.AGR 1sg ], synsem > ].
 
-are_0 := fin_copula &
+are_0 := non-nt-fin-copula &
 [ ORTH <! "are" !>,
-  ARG-ST < [ LOC.CAT.HEAD.AGR.PERNUM non-1sg ], synsem > ].
+  ARG-ST < [ LOC.CAT.HEAD.AGR non-1sg ], synsem > ].
 
-is_0 := fin_copula &
+is_0 := non-nt-fin-copula &
 [ ORTH <! "is" !>,
-  ARG-ST < [ LOC.CAT.HEAD.AGR.PERNUM 3sg ], synsem > ].
+  ARG-ST < [ LOC.CAT.HEAD.AGR 3sg ], synsem > ].
 
-was_0 := fin_copula &
+was_0 := non-nt-fin-copula &
 [ ORTH <! "was" !>,
-  ARG-ST < [ LOC.CAT.HEAD.AGR.PERNUM 1or3sg ], synsem > ].
+  ARG-ST < [ LOC.CAT.HEAD.AGR 1or3sg ], synsem > ].
 
-were_0 := fin_copula &
+were_0 := non-nt-fin-copula &
 [ ORTH <! "were" !>,
-  ARG-ST < [ LOC.CAT.HEAD.AGR.PERNUM non-1sg ], synsem > ].
+  ARG-ST < [ LOC.CAT.HEAD.AGR non-1sg ], synsem > ].
+
+aint_0 := nt-fin-copula &
+[ ORTH <! "aint" !> ].
+
+arent_0 := nt-fin-copula &
+[ ORTH <! "arent" !>,
+  ARG-ST < [ LOC.CAT.HEAD.AGR non-1sg ], synsem > ].
+
+arent_1 := nt-fin-copula &
+[ ORTH <! "arent" !>,
+  SS.LOC.CAT.HEAD.INV true,
+  ARG-ST < [ LOC.CAT.HEAD.AGR 1sg ], synsem > ].
+
+isnt_0 := nt-fin-copula &
+[ ORTH <! "isnt" !>,
+  ARG-ST < [ LOC.CAT.HEAD.AGR 3sg ], synsem > ].
+
+wasnt_0 := nt-fin-copula &
+[ ORTH <! "wasnt" !>,
+  ARG-ST < [ LOC.CAT.HEAD.AGR 1or3sg ], synsem > ].
+
+werent_0 := nt-fin-copula &
+[ ORTH <! "werent" !>,
+  ARG-ST < [ LOC.CAT.HEAD.AGR non-1sg ], synsem > ].
 
 ;;; <<< >>> Dummy subject "be".  This case is for sentences like
 ;;;"There was a unicorn in the garden." where there is non-referential.
@@ -85,41 +272,73 @@ dummy-were_0 := inflected-lexeme &
 
 ;;; The Auxilary "do", including unfocused "do" and focused "dó".
 
+;;;Old accented ones.
 focused-did_0 := do-lxm-foc &
 [ ORTH <! "DÍD" !> ].
 
+focused-do_0 := do-lxm-foc &
+[ ORTH <! "DÓ" !>,
+  SS.LOC.CAT.SUBJ < [ LOC.CAT.HEAD.AGR non-3sg ] > ].
+
+;;;Ambiguous focused.
+
+focused-do_1 := do-lxm-foc &
+[ ORTH <! "do" !>,
+  SS.LOC.CAT.SUBJ < [ LOC.CAT.HEAD.AGR non-3sg ] > ].
+
 focused-did_1 := do-lxm-foc &
 [ ORTH <! "did" !> ].
+
+focused-does_1 := do-lxm-foc &
+[ ORTH <! "does" !>,
+  SS.LOC.CAT.SUBJ < [ LOC.CAT.HEAD.AGR 3sg ] > ].
+
+;;;Ambiguous unfocused.
+
+unfocused-do_0 := do-lxm-unfoc &
+[ ORTH <! "do" !>,
+  SS.LOC.CAT.HEAD.AUX true,
+  SS.LOC.CAT.SUBJ < [ LOC.CAT.HEAD.AGR non-3sg ] > ].
 
 unfocused-did_0 := do-lxm-unfoc &
 [ ORTH <! "did" !>,
   SS.LOC.CAT.HEAD.AUX true ].
 
-focused-do_0 := do-lxm-foc &
-[ ORTH <! "DÓ" !>,
-  SS.LOC.CAT.SUBJ < [ LOC.CAT.HEAD.AGR.PERNUM non-3sg ] > ].
-
-focused-do_1 := do-lxm-foc &
-[ ORTH <! "do" !>,
-  SS.LOC.CAT.SUBJ < [ LOC.CAT.HEAD.AGR.PERNUM non-3sg ] > ].
-
-unfocused-do_0 := do-lxm-unfoc &
-[ ORTH <! "do" !>,
-  SS.LOC.CAT.HEAD.AUX true,
-  SS.LOC.CAT.SUBJ < [ LOC.CAT.HEAD.AGR.PERNUM non-3sg ] > ].
-
-focused-does_0 := do-lxm-foc &
-[ ORTH <! "DÓES" !>,
-  SS.LOC.CAT.SUBJ < [ LOC.CAT.HEAD.AGR.PERNUM 3sg ] > ].
-
-focused-does_1 := do-lxm-foc &
-[ ORTH <! "does" !>,
-  SS.LOC.CAT.SUBJ < [ LOC.CAT.HEAD.AGR.PERNUM 3sg ] > ].
-
 unfocused-does_0 := do-lxm-unfoc &
 [ ORTH <! "does" !>,
   SS.LOC.CAT.HEAD.AUX true,
-  SS.LOC.CAT.SUBJ < [ LOC.CAT.HEAD.AGR.PERNUM 3sg ] > ].
+  SS.LOC.CAT.SUBJ < [ LOC.CAT.HEAD.AGR 3sg ] > ].
+
+;;;Unambiguous focused.
+
+focused-do_2 := do-lxm-foc &
+[ ORTH <! "dof" !>,
+  SS.LOC.CAT.SUBJ < [ LOC.CAT.HEAD.AGR non-3sg ] > ].
+
+focused-did_2 := do-lxm-foc &
+[ ORTH <! "didf" !> ].
+
+focused-does_2 := do-lxm-foc &
+[ ORTH <! "doesf" !>,
+  SS.LOC.CAT.SUBJ < [ LOC.CAT.HEAD.AGR 3sg ] > ].
+
+;;;Unmbiguous unfocused.
+
+unfocused-do_2 := do-lxm-unfoc &
+[ ORTH <! "dou" !>,
+  SS.LOC.CAT.HEAD.AUX true,
+  SS.LOC.CAT.SUBJ < [ LOC.CAT.HEAD.AGR non-3sg ] > ].
+
+unfocused-did_2 := do-lxm-unfoc &
+[ ORTH <! "didu" !>,
+  SS.LOC.CAT.HEAD.AUX true ].
+
+unfocused-does_2 := do-lxm-unfoc &
+[ ORTH <! "doesu" !>,
+  SS.LOC.CAT.HEAD.AUX true,
+  SS.LOC.CAT.SUBJ < [ LOC.CAT.HEAD.AGR 3sg ] > ].
+
+;;;Non-finite
 
 doing_0 := do-lexeme &
 [ ORTH <! "doing" !>,
@@ -137,74 +356,25 @@ do_3 := do-lexeme &
 [ ORTH <! "do" !>,
   SS.LOC.CAT.HEAD.FORM base ].
 
-;;; CCB - Needs the idosyncratic infromation that not outscopes the
-;;;content of won't's compliment.  See pg.24 of the English Aux paper.
+;;; JTB 08/31/01 - Polar adverbials.  These need more constraints,
+;;; since they don't all beheave the same (e.g., *Could John too/so go
+;;; to the store).
 
-;;; I removed [ FORM fin ] because it excludes won't from the
-;;;pol-int-cl consturction, since inter-cl specifies that the verb be [
-;;;FORM inf ].
+;;; CCB - not_0 shouldn't be specified by FORM as it is in the Ling120
+;;; textbook, but instead by a relation in the semantics.  Fix that
+;;; once you figure out the semantic types.  JTB 08/21/01 - For now,
+;;; let's assume a soa of a certain type and the verb will sort out
+;;; the semantics when the ADV is inserted.
 
-;;; I added [ CASE nom ] to SUBJ, and [ PRED false ] to HEAD.
-
-wont_0 := inflected-lexeme &
-[ ORTH <! "wont" !>,
-  SS.LOC.CAT [ HEAD [ NEG true ],
-               SUBJ < [ LOC.CAT.HEAD.CASE nom ] >,
-               COMPS < [ LOC.CAT [ HEAD [ FORM base ],
-                                    COMPS < > ] ] > ],
-  DTRS < auxv-lxm > ].
-
-
-
-;;; Definition for can_0, and wont_0 taken from "Rules and Exceptions
-;;;in the English Auxiliary System," Sag 2000.
-
-;can_0 :=  inflected-lexeme &
-;[ ORTH <! "can" !>,
-;  SS.LOC.CAT.HEAD [ FORM fin ],
-;  ARG-ST < synsem, [ LOC.CAT [ HEAD verb & [FORM base ] ] ] >,
-;  DTRS < auxv-lxm > ].
-
-;;;JTB 07/29/01 - Made this another aux/modal like "to" and "be" by
-;;;inheriting from the non-infl-vb-comp (which needs a better name) to
-;;;do the raising properly.  Also added epistemic semantics.
-
-can_0 :=  non-infl-vb-comp &
-[ ORTH <! "can" !>,
-  SS.LOC.CAT.HEAD [ FORM fin ],
-  SS.LOC.CONT.NUCL can-rel & [ POSSIBLE.SOA #cont ],
-  ARG-ST < synsem, [ LOC.CAT [ HEAD verb & [FORM base ] ],
-                     LOC.CONT #cont ] >,
-  DTRS < auxv-lxm > ].
-
-;;; CCB - not_0 shouldn't be specified by FORM as it is in the Ling120 textbook, but instead by a relation in the semantics.  Fix that once you figure out the semantic types.
-
-not_0 := adv-lxm &
+not_0 := pol-adv-lxm &
 [ ORTH <! "not" !>,
-  SS.LOC.CAT.HEAD [ FORM f_not,
-                    MOD < [ LOC.CAT.HEAD verb & [ FORM nonfin ] ] > ] ].
+  SS.LOC.CONT.NUCL neg-rel ].
 
-could_0 := non-infl-vb-comp &
-[ ORTH <! "could" !>,
-  ARG-ST < synsem, [ LOC.CAT [ HEAD verb & [FORM inf] ] ] >,
-  DTRS < auxv-lxm > ].
+too_0 := pol-adv-lxm &
+[ ORTH <! "too" !>,
+  SS.LOC.CONT.NUCL pos-rel ].
 
-;have_0a :=  auxv-lxm &
-;[ ORTH <! "have" !>,
-;  SS.LOC.CAT.HEAD [ FORM fin ],
-;  ARG-ST < [ ], [ LOC.CAT [ HEAD verb & [FORM pfp] ] ] >,
-;  DTRS < auxv-lxm > ].
+so_0 := pol-adv-lxm &
+[ ORTH <! "so" !>,
+  SS.LOC.CONT.NUCL pos-rel ].
 
-have_0 :=  inflected-lexeme &
-[ ORTH <! "have" !>,
-  SS.LOC.CAT.HEAD [ FORM fin ],
-  ARG-ST < synsem, [ LOC.CAT [ HEAD verb & [FORM pfp] ] ] >,
-  DTRS < auxv-lxm > ].
-
-
-;;;JTB - multiply defined, 
-;;;have_0 :=  inflected-lexeme &
-;;;[ ORTH <! "have" !>,
-;;;  SS.LOC.CAT [ HEAD [ FORM fin ],
-;;;               ARG-ST < synsem, [ LOC.CAT [ HEAD verb & [FORM pfp] ] ] > ],
-;;;  DTRS < auxv-lxm > ].

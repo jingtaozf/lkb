@@ -27,13 +27,13 @@ sing-noun_infl_rule := inflected-lexeme &
 [ ORTH #orth,
   DTRS < n-lxm & [ NEEDS-AFFIX false,
                    ORTH #orth,
-                   SS.LOC.CAT [ HEAD noun & [ AGR.PERNUM 3sg ] ] ] > ].
+                   SS.LOC.CAT [ HEAD noun & [ AGR 3sg ] ] ] > ].
 
 plur-common-noun_infl_rule :=
 %suffix (!s !ss) (!ss !ssses) (ss sses) (!ty !ties) (ch ches) (sh shes) (x xes) (z zes)
 inflected-lexeme &
 [ DTRS < n-lxm & [ NEEDS-AFFIX true,
-                   SS.LOC.CAT [ HEAD noun & [ AGR.PERNUM 3pl ] ] ] > ].
+                   SS.LOC.CAT [ HEAD noun & [ AGR 3pl ] ] ] > ].
 
 ;;; <<< >>> ENGLISH VERBAL INFLECTION
 
@@ -43,94 +43,91 @@ inflected-lexeme &
 ;                               RESTR <! t-overlap(#1, NOW) !>]
 
 
+;;; JTB 09/13/01 - I did a bad, bad thing.  I've restricted all
+;;; inflectional rules on verbs to only apply to non-aux verbs.  This
+;;; is to prevent sending auxiliaries through the lexeme to word
+;;; process.  They are lexically specified to have all of their amalg,
+;;; ARP, and other stuff, in addition to having a set of inflectional
+;;; rules to negate or not negate them and fix their semantics.  This
+;;; is a suspicious hack but is necessary to get narrow scoping auxen
+;;; right.
+
 3rd-sing-verb_infl_rule := 
 %suffix (!s !ss) (!ss !ssses) (ss sses) (!ty !ties) (ch ches) (sh shes) (x xes) (z zes) 
 inflected-lexeme &
-[ DTRS < v-lxm & [ NEEDS-AFFIX true,
-                   SS.LOC [ CAT [ HEAD verb & [ FORM fin,
-		                                PRED false ],
-                                  SUBJ < [ LOC.CAT.HEAD [ AGR.PERNUM 3sg,
-                                                           CASE nom ] ] > ],
-                            CONT r-soa ] ] > ].
-
-
+[ DTRS < non-auxv-lxm & [ NEEDS-AFFIX true,
+                          SS.LOC [ CAT [ HEAD verb & [ FORM fin,
+                                                       PRED false ],
+                                         SUBJ < [ LOC.CAT.HEAD [ AGR 3sg,
+                                                                 CASE nom ] ] > ],
+                                   CONT r-soa ] ] > ].
 
 non-3rd-sing-verb_infl_rule := 
 inflected-lexeme &
 [ ORTH #orth,
-  DTRS < v-lxm & [ NEEDS-AFFIX false,
-                   ORTH #orth,
-                   SS.LOC [ CAT [ HEAD verb & [ FORM fin,
-		                                PRED false ],
-                                  SUBJ < [ LOC.CAT.HEAD [ AGR.PERNUM non-3sg,
-                                                           CASE nom ] ] > ],
-                            CONT r-soa ] ] > ].
+  DTRS < non-auxv-lxm & [ NEEDS-AFFIX false,
+                          ORTH #orth,
+                          SS.LOC [ CAT [ HEAD verb & [ FORM fin,
+		                                       PRED false ],
+                                         SUBJ < [ LOC.CAT.HEAD [ AGR non-3sg,
+                                                                 CASE nom ] ] > ],
+                                   CONT r-soa ] ] > ].
 
-
-
-;;; CCB - getting a subjective parse for "I wonder who Sandy loved?" so turned it off for Ivan's demo.
-;;; CCB - re-adding it for "I insist that Sandy leave". 
+;;; CCB - getting a subjective parse for "I wonder who Sandy loved?"
+;;; so turned it off for Ivan's demo.  CCB - re-adding it for "I
+;;; insist that Sandy leave".
 
 
 ;;; CCB - shoud the subjuncitve be PRED true or false?
-subjunctive+imperitive-verb_infl_rule := 
+subjunctive+imperative-verb_infl_rule := 
 inflected-lexeme &
 [ ORTH #orth,
-  DTRS < v-lxm & [ NEEDS-AFFIX false,
-                   ORTH #orth,               
-                   SS.LOC [ CAT [ HEAD verb & [ FORM fin,
-                                                IC false,
-		                                PRED false ],
-                                  SUBJ < [ LOC.CAT.HEAD.CASE nom ] > ],
-                            CONT i-soa ] ] > ].
-
-
+  DTRS < non-auxv-lxm & [ NEEDS-AFFIX false,
+                          ORTH #orth,
+                          SS.LOC [ CAT [ HEAD verb & [ FORM fin,
+		                                       PRED false ],
+                                         SUBJ < [ LOC.CAT.HEAD.CASE nom,
+                                                  LOC.CAT.HEAD.AGR 2per ] > ],
+                                   CONT i-soa ] ] > ].
 
 past-verb_infl_rule := 
 %suffix (* ed) (!ty !tied) (e ed) (!t!v!c !t!v!c!ced) 
 inflected-lexeme &
-[ DTRS < v-lxm & [ NEEDS-AFFIX true,
-                   SS.LOC [ CAT [ HEAD verb & [ FORM fin,
-		                                PRED false ],
-                                  SUBJ < [ LOC.CAT.HEAD.CASE nom ] > ],
-                            CONT r-soa ] ] > ].
-
+[ DTRS < non-auxv-lxm & [ NEEDS-AFFIX true,
+                          SS.LOC [ CAT [ HEAD verb & [ FORM fin,
+                                                       PRED false ],
+                                         SUBJ < [ LOC.CAT.HEAD.CASE nom ] > ],
+                                  CONT r-soa ] ] > ].
 
 present-participle-verb_infl_rule := 
 %suffix (!t!v!c !t!v!c!cing) (* ing) (e ing) (ee eeing) (ie ying)
 inflected-lexeme &
-[ DTRS < v-lxm & [ NEEDS-AFFIX true,
-                   SS [ LOC.CAT.HEAD verb & [ FORM prp,
-                                              PRED true ] ] ] > ].
-
-
+[ DTRS < non-auxv-lxm & [ NEEDS-AFFIX true,
+                          SS [ LOC.CAT.HEAD verb & [ FORM prp,
+                                                     PRED true ] ] ] > ].
 
 perfect-participle-verb_infl_rule := 
 %suffix (* ed) (!ty !tied) (e ed) (!t!v!c !t!v!c!ced) 
 inflected-lexeme &
-[ DTRS < v-lxm & [ NEEDS-AFFIX true,
-                   SS [ LOC.CAT.HEAD verb & [ FORM pfp,
-                                              PRED false ] ] ] > ].
-
-
+[ DTRS < non-auxv-lxm & [ NEEDS-AFFIX true,
+                          SS [ LOC.CAT.HEAD verb & [ FORM pfp,
+                                                     PRED false ] ] ] > ].
 
 inf-verb_infl_rule :=
 inflected-lexeme &
 [ ORTH #orth,
-  DTRS < v-lxm & [ NEEDS-AFFIX false,
-                   ORTH #orth,
-                   SS [ LOC.CAT.HEAD verb & [ FORM inf,
-		                              PRED false ] ] ] > ].
- 
+  DTRS < non-auxv-lxm & [ NEEDS-AFFIX false,
+                          ORTH #orth,
+                          SS [ LOC.CAT.HEAD verb & [ FORM inf,
+		                                     PRED false ] ] ] > ].
 
 base-verb_infl_rule :=
 inflected-lexeme &
 [ ORTH #orth,
-  DTRS < v-lxm & [ NEEDS-AFFIX false,
-                   ORTH #orth,
-                   SS [ LOC.CAT.HEAD verb & [ FORM base,
-                                              PRED false ] ] ] > ].
-
+  DTRS < non-auxv-lxm & [ NEEDS-AFFIX false,
+                          ORTH #orth,
+                          SS [ LOC.CAT.HEAD verb & [ FORM base,
+                                                     PRED false ] ] ] > ].
 
 ;;; CCB - when the semantics for negation is added, the rule should
 ;;;actually be two rules, one for wide scope negation, the other for
@@ -148,46 +145,17 @@ inflected-lexeme &
 ;;;of neg must be an adv.
 
 ;;;JTB - 07/29/01 - This is not working now because it's an
-;;;inflected-lexeme and most AUX's have been moved beyond that lexically
-;;;to account for their subject-raising effects by sais hack.
+;;;inflected-lexeme and most AUX's have been moved beyond that
+;;;lexically to account for their subject-raising effects by sais
+;;;hack.
 
-#|
-negation-lexical-rule :=
-inflected-lexeme+amalg &
-[ SS.LOC.CAT [ HEAD [ AUX true,
-                      NEG true,
-                      INV false ],
-               SPR < >,
-               SUBJ < #1 >,
-               COMPS < neg-ss & #neg & [ LOC.CAT.HEAD adv & [FORM f_not ] ], 
-                       #2 > ],
-  ARG-ST < #1, #neg, #2 >, 
-  DTRS < non-infl-vb-comp & [ NEEDS-AFFIX false,
-                              SS.LOC.CAT [ HEAD [ AUX true,
-                                                  NEG false ],
-                                           SPR < >,
-                                           SUBJ < #1 >,
-                                           COMPS < #2 > ], 
-                              ARG-ST < #1, #2 > ] > ].
-
-negation-lexical-rule-2 :=
-inflected-lexeme+amalg &
-[ SS.LOC.CAT [ HEAD [ AUX true,
-                      NEG true,
-                      INV false ],
-               SPR < >,
-               SUBJ < #1 >,
-               COMPS < #neg & neg-ss & [ LOC.CAT.HEAD adv & [FORM f_not ] ], 
-                       #2, #3 > ],
-  ARG-ST < #1, #neg, #2, #3 >,
-  DTRS < non-infl-vb-comp & [ NEEDS-AFFIX false,
-                              SS.LOC.CAT [ HEAD [ AUX true,
-                                                  NEG false ],
-                                           SPR < >,
-                                           SUBJ < #1 >,
-                                           COMPS < #2, #3 > ],
-                              ARG-ST < #1, #2, #3 > ] > ].
-|#
+wide-polar-lexical-rule := wide-polar-lexeme.
+narrow-polar-lexical-rule := narrow-polar-lexeme.
+wide-non-pol-lexical-rule := wide-non-pol-lexeme.
+narrow-non-pol-lexical-rule := narrow-non-pol-aux-lexeme.
+nt-lexical-rule := nt-lexeme.
+wide-vacuous-polar-rule := wide-vacuous-polar-lexeme.
+wide-vacuous-non-polar-rule := wide-vacuous-non-polar-lexeme.
 
 ;;; <<< >>> Argument Realization Principle
 
@@ -206,14 +174,12 @@ ARP-no-args := inflected-lexeme+ARP &
   ARG-ST < >,
   DTRS < inflected-lexeme > ].
 
-
 ARP-comps-only := inflected-lexeme+ARP &
 [ SS.LOC.CAT [ SPR < >,
                SUBJ < >,
                COMPS #comps & ne-list ],
   ARG-ST #comps & [ REST list-of-synsems-wh-none ],
   DTRS < inflected-lexeme > ].
-
 
 ARP-spr+comps := inflected-lexeme+ARP &
 [ SS.LOC.CAT [ SPR < #spr >,
@@ -277,6 +243,15 @@ amalg-1-lrule := inflected-lexeme+amalg-1 &
   SS.LOC.Q-STORE <! !>,
   ARG-ST < [ LOC.Q-STORE #quants] > ].
 
+;;; JTB 09/15/01 - I am temporarily bifurcating these rules into those
+;;; that do and don't take verbal arguments (i.e., those with SOAs).
+;;; Those that do will have quantifiers in their QUANTS lists rather
+;;; than in their Q-STORES, so we want to do a slightly different type
+;;; of amalgamation.  This may go if we decide to leave quantifiers at
+;;; lower levels once they hit the quants list (I think that is
+;;; actually the way we wanted it to go.  In fact, why don't I comment
+;;; those new rules out until I can verify this.
+
 amalg-2-lrule := inflected-lexeme+amalg-2 &
 [ SS.LOC.CONT soa & [QUANTS [ LIST #quants1,
                               LAST #quants_last ] ],
@@ -292,6 +267,24 @@ amalg-3-lrule := inflected-lexeme+amalg-3 &
   ARG-ST < [ LOC.Q-STORE [ LIST #quants1,
                            LAST #quants2 ] ], [ LOC.Q-STORE [ LIST #quants2,
                                                               LAST #quants3 ] ],  [ LOC.Q-STORE [ LIST #quants3, LAST #quants_last ] ] > ].
+
+
+;v-comp-amalg-2-lrule := inflected-lexeme+amalg-2 &
+;[ SS.LOC.CONT soa & [QUANTS [ LIST #quants1,
+;                              LAST #quants_last ] ],
+;  SS.LOC.Q-STORE <! !>,
+;  ARG-ST < [ LOC.Q-STORE [ LIST #quants1,
+;                           LAST #quants2 ] ], [ LOC.CONT.QUANTS [ LIST #quants2,
+;                                                              LAST #quants_last ] ] > ].
+
+;v-comp-amalg-3-lrule := inflected-lexeme+amalg-3 &
+;[ SS.LOC.CONT soa & [QUANTS [ LIST #quants1,
+;                              LAST #quants_last ] ],
+;  SS.LOC.Q-STORE <! !>,
+;  ARG-ST < [ LOC.Q-STORE [ LIST #quants1,
+;                           LAST #quants2 ] ], [ LOC.Q-STORE [ LIST #quants2,
+;                                                              LAST #quants3 ] ],  [ LOC.CONT.QUANTS [ LIST #quants3, LAST #quants_last ] ] > ].
+
 
 amalg-4-lrule := inflected-lexeme+amalg-4 &
 [ SS.LOC.CONT soa & [QUANTS [ LIST #quants1,

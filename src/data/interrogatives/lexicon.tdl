@@ -1,3 +1,37 @@
+dot := punctuation & 
+[ ORTH <! "." !>,
+  SS.LOC.CONT proposition ].
+
+q-mark := punctuation &
+[ ORTH <! "?" !>,
+  SS.LOC.CONT question ].
+
+bang_1 := punctuation &
+[ ORTH <! "!" !>,
+  SS.LOC.CONT fact ].
+
+bang_2 := punctuation &
+[ ORTH <! "!" !>,
+  SS.LOC.CONT outcome ].
+
+not_1 := adv-lxm &
+[ ORTH <! "not" !>,
+  SS.LOC [ CAT.HEAD.MOD < [ LOC.CAT.HEAD verb & [ FORM nonfin ],
+                            LOC.CONT #cont & pos-soa ] >,
+           CONT neg-soa & [ NUCL.SOA-ARG #cont ] ] ].
+
+;not_1 := adv-lxm &
+;[ ORTH <! "not" !>,
+;  SS.LOC [ CAT.HEAD.SPEC < [ LOC.CAT.HEAD verb & [ FORM nonfin ],
+;                             LOC.CONT #cont ] >,
+;           CONT neg-soa & [ NUCL.SOA-ARG #cont ] ] ].
+
+;not_1 := adv-lxm &
+;[ ORTH <! "not" !>,
+;  SS.LOC [ CAT.HEAD.SPEC < [ LOC.CAT.HEAD verb & [ FORM nonfin ],
+;                             LOC.CONT #cont ] >,
+;           CONT neg-soa & [ NUCL.SOA-ARG #cont ] ] ].
+
 ;;;JTB - 07/18/01 Trying to eliminate all reference to phrase and
 ;;;phrase-cat argument structure stuff so we don't need to pump to
 ;;;phrases.
@@ -5,19 +39,18 @@
 ;;;JTB 07/20/01 - Making 's inherit from determiner so it can act
 ;;;like one.
 
-;;;JTB 07/22/01 - This entry is fucked.
-
 the-possessive := det-lxm & 
 [ ORTH <! "s" !>,
   SS [ LOC [ CAT [ SPR < #spr >,
                    HEAD.SPEC [ INDEX #index,
                                RESTR #restr1 ] ],
              CONT #cont,
-             Q-STORE [ LIST [ FIRST the-rel & [ INDEX #index,
-                                                RESTR [ FIRST.PROP.SOA.NUCL poss-rel &
-                                                                [ POSS-ER #ind2,
-                                                                  POSS-ED #index ], 
-                                                        REST #restr1 ] ],
+             Q-STORE [ LIST [ FIRST the-rel & 
+                                    [ INDEX #index,
+                                      RESTR [ FIRST.PROP.SOA.NUCL poss-rel &
+                                                       [ POSS-ER #ind2,
+                                                         POSS-ED #index ], 
+                                              REST #restr1 ] ],
                               REST #qlist ],
                        LAST #qlast ],
              P-STORE #pstore ],
@@ -36,7 +69,6 @@ and_1 := word &
                SPR < >,
                SUBJ < >,
                COMPS < > ] ].
-
 
 
 ;;; The definition for whether_0 and if_0 are taken from the
@@ -69,6 +101,8 @@ if_0 := comp-lxm &
                    CONT #1 ] ] > ].
 
 
+;;;JTB 08/19/0 - Removed INF from comps to ditch feature.
+
 ;;; CCB - 5/17/00 - Changed the content of that_0 to be austinian
 ;;;rather than proposition, so that it would work with outcomes - "I
 ;;;insist that Sandy leave".
@@ -76,13 +110,11 @@ if_0 := comp-lxm &
 that_0 := comp-lxm &
 [ ORTH <! "that" !>,
   SS.LOC [ CAT [ HEAD comp & [ IC false,
-                               INF false,
                                FORM #2 ],
                  SUBJ < > ],
            CONT #1 & austinian ],
   SS.WH <! !>,
-  ARG-ST <  [ LOC [ CAT [ HEAD verb & [ INF false,
-                                        INV false,
+  ARG-ST <  [ LOC [ CAT [ HEAD verb & [ INV false,
                                         FORM #2 ],
                           SUBJ < >,
                           COMPS < > ],
@@ -95,21 +127,17 @@ that_0 := comp-lxm &
 for_0 := comp-lxm & 
 [ ORTH <! "for" !>,
   SS.LOC [ CAT [ HEAD comp & [ IC false,
-                               INF true,
                                FORM #4 & base ],
                  SUBJ < > ],
             CONT outcome & [ SOA #1 ] ],
-  ARG-ST < [ LOC #2 ],  [ LOC [ CAT [ HEAD verbal & [ INF true,
-                                                      FORM #4 ],
+  ARG-ST < [ LOC #2 ],  [ LOC [ CAT [ HEAD verbal & [ FORM #4 ],
                                       SUBJ < [ LOC #2 ] > ],
                                 CONT #1 ] ] > ].
 
-
-to_0 := non-infl-vb-comp &
+to_0 := vacuous-wide-scope-aux-lxm &
 [ ORTH <! "to" !>,
   SS.LOC [ CAT [ HEAD verb & [ FORM inf ] ] ],
-  ARG-ST < synsem,  [ LOC [ CAT [ HEAD verb & [ FORM base ] ] ] ] >,
-  DTRS < srv > ].                                     
+  ARG-ST < synsem, [ LOC [ CAT [ HEAD verb & [ FORM base ] ] ] ] > ].
 
 believe_0 := v-lxm &
 [ ORTH <! "believe" !>,
@@ -171,6 +199,14 @@ insist_0 := v-lxm &
 
 ;;;JTB 07/29/01 - Problem: the unexpressed subject.  What to do with
 ;;;it?  That's weird.  Needs a quantifier at least.
+
+;;;JTB 08/18/01 - Ever have one of those experiences when you got
+;;;really, really bombed the night before and then you wake up
+;;;extremely hungover and stumble into your living room and the place
+;;;is completely and utterly trashed and you're just standing there in
+;;;disbelief thinking to yourself, "Jesus, what the hell happened here
+;;;last night?"  That's pretty much how I feel looking at this entry
+;;;for "easy," especially when compared to the one below it.
 
 easy_0 := inflected-lexeme+amalg &
 [ ORTH <! "easy" !>,
@@ -265,9 +301,10 @@ sonata_1 := cn-lxm &
 
 picture_0 := tr-cn-lxm &
 [ ORTH <! "picture" !>,
-  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_picture ] >,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_picture & [ PICTURE-OF #index ] ] >,
   SS.LOC.CAT.COMPS < [ LOC.CAT [ HEAD prep & [ PRED false ],
-                                 COMPS < > ] ] >  ].
+                                 COMPS < > ],
+                       LOC.CONT.INDEX #index ] >  ].
 see_0 := stv &
 [ ORTH <! "see" !>,
   SS.LOC.CONT [ NUCL see-rel & [ OBSERVER #1,
@@ -276,13 +313,13 @@ see_0 := stv &
 
 a_1 := non-wh-det-lxm &
 [ ORTH <! "a" !>,
-  SS.LOC.CAT.HEAD.AGR.PERNUM 3sg,
+  SS.LOC.CAT.HEAD.AGR 3sg,
   SS.LOC.CONT some-rel,
   ARG-ST < > ].
 
 a_2 := det-lxm &
 [ ORTH <! "a" !>,
-  SS [ LOC [ CAT [ HEAD [ AGR.PERNUM 3sg,
+  SS [ LOC [ CAT [ HEAD [ AGR 3sg,
                           SPEC [ INDEX #index,
                                  RESTR #restr ] ],
                    SPR < #spr > ],
@@ -306,17 +343,17 @@ a_2 := det-lxm &
 ;;;JTB - changed wh-none to <! !> which should be the same thing, yes?
 these_1 := non-wh-det-lxm &
 [ ORTH <! "these" !>,
-  SS.LOC.CAT.HEAD.AGR.PERNUM 3pl,
+  SS.LOC.CAT.HEAD.AGR 3pl,
   SS.LOC.CONT this-rel ].
 
 this_1 := non-wh-det-lxm &
 [ ORTH <! "this" !>,
-  SS.LOC.CAT.HEAD.AGR.PERNUM 3sg,
+  SS.LOC.CAT.HEAD.AGR 3sg,
   SS.LOC.CONT this-rel ].
 
 every_1 := non-wh-det-lxm &
 [ ORTH <! "every" !>,
-  SS.LOC.CAT.HEAD.AGR.PERNUM 3sg,
+  SS.LOC.CAT.HEAD.AGR 3sg,
   SS.LOC.CONT every-rel ].
 
 some_1 := non-wh-det-lxm &
@@ -333,14 +370,14 @@ some_1 := non-wh-det-lxm &
 i_0 := inflected-lexeme &
 [ ORTH <! "i" !>,
   SS.LOC.CONT.INDEX speaker,
-  SS.LOC.CAT.HEAD [ AGR.PERNUM 1sg,
+  SS.LOC.CAT.HEAD [ AGR 1sg,
                     CASE nom ],
   DTRS < pron-lxm > ].
 
 me_0 := inflected-lexeme &
 [ ORTH <! "me" !>,
   SS.LOC.CONT.INDEX speaker,
-  SS.LOC.CAT.HEAD [ AGR.PERNUM 1sg,
+  SS.LOC.CAT.HEAD [ AGR 1sg,
                     CASE acc ],
   DTRS < pron-lxm > ].
 
@@ -348,7 +385,7 @@ me_0 := inflected-lexeme &
 myself_0 := inflected-lexeme &
 [ ORTH <! "myself" !>,
   SS.LOC.CONT.INDEX speaker,
-  SS.LOC.CAT.HEAD [ AGR.PERNUM 1sg,
+  SS.LOC.CAT.HEAD [ AGR 1sg,
                     CASE acc,
                     ANA true ],
   DTRS < pron-lxm > ].
@@ -356,14 +393,14 @@ myself_0 := inflected-lexeme &
 you_0 := inflected-lexeme &
 [ ORTH <! "you" !>,
   SS.LOC.CONT.INDEX listener,
-  SS.LOC.CAT.HEAD [ AGR.PERNUM 2per ],
+  SS.LOC.CAT.HEAD [ AGR 2per ],
   DTRS < pron-lxm > ].
 
 
 yourself_0 := inflected-lexeme &
 [ ORTH <! "yourself" !>,
   SS.LOC.CONT.INDEX listener,
-  SS.LOC.CAT.HEAD [ AGR.PERNUM 2per,
+  SS.LOC.CAT.HEAD [ AGR 2per,
                     CASE acc,
                     ANA true ],
   DTRS < pron-lxm > ].
@@ -372,7 +409,7 @@ yourself_0 := inflected-lexeme &
 she_0 := inflected-lexeme &
 [ ORTH <! "she" !>,
   SS.LOC.CONT.INDEX her,
-  SS.LOC.CAT.HEAD [ AGR.PERNUM 3sg & [ GEND fem ],
+  SS.LOC.CAT.HEAD [ AGR 3sg & [ GEND fem ],
                     CASE nom ],
   DTRS < pron-lxm > ].
 
@@ -380,15 +417,14 @@ she_0 := inflected-lexeme &
 her_0 := inflected-lexeme &
 [ ORTH <! "her" !>,
   SS.LOC.CONT.INDEX her,
-  SS.LOC.CAT.HEAD [ AGR.PERNUM 3sg & [ GEND fem ],
+  SS.LOC.CAT.HEAD [ AGR 3sg & [ GEND fem ],
                     CASE acc ],
   DTRS < pron-lxm > ].
-
 
 herself_0 := inflected-lexeme &
 [ ORTH <! "herself" !>,
   SS.LOC.CONT.INDEX her,
-  SS.LOC.CAT.HEAD [ AGR.PERNUM 3sg & [ GEND fem ],
+  SS.LOC.CAT.HEAD [ AGR 3sg & [ GEND fem ],
                     CASE acc,
                     ANA true ],
   DTRS < pron-lxm > ].
@@ -397,15 +433,14 @@ herself_0 := inflected-lexeme &
 he_0 := inflected-lexeme &
 [ ORTH <! "he" !>,
   SS.LOC.CONT.INDEX him,
-  SS.LOC.CAT.HEAD [ AGR.PERNUM 3sg & [ GEND masc ],
+  SS.LOC.CAT.HEAD [ AGR 3sg & [ GEND masc ],
                     CASE nom ],
   DTRS < pron-lxm > ].
-
 
 him_0 := inflected-lexeme &
 [ ORTH <! "him" !>,
   SS.LOC.CONT.INDEX him,
-  SS.LOC.CAT.HEAD [ AGR.PERNUM 3sg & [ GEND masc ],
+  SS.LOC.CAT.HEAD [ AGR 3sg & [ GEND masc ],
                     CASE acc ],
   DTRS < pron-lxm > ].
 
@@ -413,40 +448,37 @@ him_0 := inflected-lexeme &
 himself_0 := inflected-lexeme &
 [ ORTH <! "himself" !>,
   SS.LOC.CONT.INDEX him,
-  SS.LOC.CAT.HEAD [ AGR.PERNUM 3sg & [ GEND masc ],
+  SS.LOC.CAT.HEAD [ AGR 3sg & [ GEND masc ],
                     CASE acc,
                     ANA true ],
   DTRS < pron-lxm > ].
 
-
 it_0 := inflected-lexeme &
 [ ORTH <! "it" !>,
   SS.LOC.CONT.INDEX it,
-  SS.LOC.CAT.HEAD [ AGR.PERNUM 3sg & [ GEND neut ] ],
+  SS.LOC.CAT.HEAD [ AGR 3sg & [ GEND neut ] ],
   DTRS < pron-lxm > ].
 
 
 itself_0 := inflected-lexeme &
 [ ORTH <! "itself" !>,
   SS.LOC.CONT.INDEX it,
-  SS.LOC.CAT.HEAD [ AGR.PERNUM 3sg & [ GEND neut ],
+  SS.LOC.CAT.HEAD [ AGR 3sg & [ GEND neut ],
                     CASE acc,
                     ANA true ],
   DTRS < pron-lxm > ].
 
-
 we_0 := inflected-lexeme &
 [ ORTH <! "we" !>,
   SS.LOC.CONT.INDEX us,
-  SS.LOC.CAT.HEAD [ AGR.PERNUM 1pl,
+  SS.LOC.CAT.HEAD [ AGR 1pl,
                     CASE nom ],
   DTRS < pron-lxm > ].
-
 
 us_0 := inflected-lexeme &
 [ ORTH <! "us" !>,
   SS.LOC.CONT.INDEX us,
-  SS.LOC.CAT.HEAD [ AGR.PERNUM 1pl,
+  SS.LOC.CAT.HEAD [ AGR 1pl,
                     CASE acc ],
   DTRS < pron-lxm > ].
 
@@ -454,40 +486,1995 @@ us_0 := inflected-lexeme &
 ourselves_0 := inflected-lexeme &
 [ ORTH <! "ourselves" !>,
   SS.LOC.CONT.INDEX us,
-  SS.LOC.CAT.HEAD [ AGR.PERNUM 1pl,
+  SS.LOC.CAT.HEAD [ AGR 1pl,
                     CASE acc,
                     ANA true ],
   DTRS < pron-lxm > ].
-
-
 
 they_0 := inflected-lexeme &
 [ ORTH <! "they" !>,
   SS.LOC.CONT.INDEX them,
-  SS.LOC.CAT.HEAD [ AGR.PERNUM 3pl,
+  SS.LOC.CAT.HEAD [ AGR 3pl,
                     CASE nom ],
   DTRS < pron-lxm > ].
-
 
 them_0 := inflected-lexeme &
 [ ORTH <! "them" !>,
   SS.LOC.CONT.INDEX them,
-  SS.LOC.CAT.HEAD [ AGR.PERNUM 3pl,
+  SS.LOC.CAT.HEAD [ AGR 3pl,
                     CASE acc ],
   DTRS < pron-lxm > ].
-
 
 themselves_0 := inflected-lexeme &
 [ ORTH <! "themselves" !>,
   SS.LOC.CONT.INDEX them,
-  SS.LOC.CAT.HEAD [ AGR.PERNUM 3pl,
+  SS.LOC.CAT.HEAD [ AGR 3pl,
                     CASE acc,
                     ANA true ],
   DTRS < pron-lxm > ].
 
+;;;JTB 08/18/01 - The following are the lexical entries from Chris'
+;;;textbook grammar, originally created by a script and heavily
+;;;modified by me.  These were formerly the content of lexicon.out,
+;;;but I want one lexicon file.
+
+Kim_1 := pn-lxm &
+[ ORTH <! "Kim" !>,
+  SS.LOC.CONT.INDEX r_Kim ].
+
+Sandy_1 := pn-lxm &
+[ ORTH <! "Sandy" !>,
+  SS.LOC.CONT.INDEX r_Sandy ].
+
+Pat_1a := pn-lxm &
+[ ORTH <! "Pat" !>,
+  SS.LOC.CONT.INDEX r_Pat ].
+
+Chris_1 := pn-lxm &
+[ ORTH <! "Chris" !>,
+  SS.LOC.CONT.INDEX r_Chris ].
+
+Carrie_1 := pn-lxm &
+[ ORTH <! "Carrie" !>,
+  SS.LOC.CONT.INDEX r_Carrie ].
+
+Fido_1 := pn-lxm &
+[ ORTH <! "Fido" !>,
+  SS.LOC.CONT.INDEX r_Fido ].
+
+Leslie_1 := pn-lxm &
+[ ORTH <! "Leslie" !>,
+  SS.LOC.CONT.INDEX r_Leslie ].
+
+Lou_1 := pn-lxm &
+[ ORTH <! "Lou" !>,
+  SS.LOC.CONT.INDEX r_Lou ].
+
+Dana_1 := pn-lxm &
+[ ORTH <! "Dana" !>,
+  SS.LOC.CONT.INDEX r_Dana ].
+
+Lynn_1 := pn-lxm &
+[ ORTH <! "Lynn" !>,
+  SS.LOC.CONT.INDEX r_Lynn ].
+
+Lee_1 := pn-lxm &
+[ ORTH <! "Lee" !>,
+  SS.LOC.CONT.INDEX r_Lee ].
+
+the_1 := non-wh-det-lxm &
+[ ORTH <! "the" !>,
+  SS.LOC.CONT the-rel ].
+
+my_1 := gen-poss-det-lxm &
+[ ORTH <! "my" !>,
+  SS.LOC.CONT.RESTR.FIRST.PROP.SOA.NUCL [ POSS-ER speaker ] ].
+
+your_1 := gen-poss-det-lxm &
+[ ORTH <! "your" !>,
+  SS.LOC.CONT.RESTR.FIRST.PROP.SOA.NUCL [ POSS-ER listener ]  ].
+
+his_1 := gen-poss-det-lxm &
+[ ORTH <! "his" !>,
+  SS.LOC.CONT.RESTR.FIRST.PROP.SOA.NUCL [ POSS-ER him ]  ].
+
+her_1 := gen-poss-det-lxm &
+[ ORTH <! "her" !>,
+  SS.LOC.CONT.RESTR.FIRST.PROP.SOA.NUCL [ POSS-ER her ]  ].
+
+its_1 := gen-poss-det-lxm &
+[ ORTH <! "its" !>,
+  SS.LOC.CONT.RESTR.FIRST.PROP.SOA.NUCL [ POSS-ER it ]  ].
+
+our_1 := gen-poss-det-lxm &
+[ ORTH <! "our" !>,
+  SS.LOC.CONT.RESTR.FIRST.PROP.SOA.NUCL [ POSS-ER us ] ].
+
+their_1 := gen-poss-det-lxm &
+[ ORTH <! "their" !>,
+  SS.LOC.CONT.RESTR.FIRST.PROP.SOA.NUCL [ POSS-ER them ]  ].
+
+at_1 := mkp-lxm &
+[ ORTH <! "at" !>,
+  SS.LOC.CAT.HEAD.FORM at ].
+
+to_1 := pdp-lxm &
+[ ORTH <! "to" !>,
+  SS.LOC.CAT.COMPS < [ LOC.CONT.INDEX #index ] >,
+  SS.LOC.CONT.NUCL to-rel & [ TO #index ] ].
+
+to_2 := mkp-lxm &
+[ ORTH <! "to" !>,
+  SS.LOC.CAT.HEAD.FORM to ].
+
+about_1 := pdp-lxm &
+[ ORTH <! "about" !>,
+  SS.LOC.CAT.COMPS < [ LOC.CONT.INDEX #index ] >,
+  SS.LOC.CONT.NUCL about-rel & [ ABOUT #index ] ].
+
+about_2 := mkp-lxm &
+[ ORTH <! "about" !>,
+  SS.LOC.CAT.HEAD.FORM about ].
+
+on_1 := pdp-lxm &
+[ ORTH <! "on" !>,
+  SS.LOC.CAT.COMPS < [ LOC.CONT.INDEX #index ] >,
+  SS.LOC.CONT.NUCL on-rel & [ ON #index ] ].
+
+on_2 := mkp-lxm &
+[ ORTH <! "on" !>,
+  SS.LOC.CAT.HEAD.FORM on ].
+
+in_1 := pdp-lxm &
+[ ORTH <! "in" !>,
+  SS.LOC.CAT.COMPS < [ LOC.CONT.INDEX #index ] >,
+  SS.LOC.CONT.NUCL in-rel & [ IN #index ] ].
+
+in_2 := mkp-lxm &
+[ ORTH <! "in" !>,
+  SS.LOC.CAT.HEAD.FORM in ].
+
+with_1 := pdp-lxm &
+[ ORTH <! "with" !>,
+  SS.LOC.CAT.COMPS < [ LOC.CONT.INDEX #index ] >,
+  SS.LOC.CONT.NUCL with-rel & [ WITH #index ] ].
+
+with_2 := mkp-lxm &
+[ ORTH <! "with" !>,
+  SS.LOC.CAT.HEAD.FORM with ].
+
+of_1 := mkp-lxm &
+[ ORTH <! "of" !>,
+  SS.LOC.CAT.HEAD.FORM of ].
+
+;of_2 := pdp-lxm &
+;[ ORTH <! "of" !>,
+;  SS.LOC.CAT.COMPS < [ LOC.CONT.INDEX #index ] >,
+;  SS.LOC.CONT.NUCL of-rel & [ OF #index ] ].
+
+for_1 := pdp-lxm &
+[ ORTH <! "for" !>,
+  SS.LOC.CAT.COMPS < [ LOC.CONT.INDEX #index ] >,
+  SS.LOC.CONT.NUCL for-rel & [ FOR #index ] ].
+
+for_2 := mkp-lxm &
+[ ORTH <! "for" !>,
+  SS.LOC.CAT.HEAD.FORM for ].
+
+by_1 := pdp-lxm &
+[ ORTH <! "by" !>,
+  SS.LOC.CAT.COMPS < [ LOC.CONT.INDEX #index ] >,
+  SS.LOC.CONT.NUCL by-rel & [ BY #index ] ].
+
+around_1 := pdp-lxm &
+[ ORTH <! "around" !>,
+  SS.LOC.CAT.COMPS < [ LOC.CONT.INDEX #index ] >,
+  SS.LOC.CONT.NUCL around-rel & [ AROUND #index ] ].
+
+around_2 := mkp-lxm &
+[ ORTH <! "around" !>,
+  SS.LOC.CAT.HEAD.FORM around ].
+
+angry_1 := adj-lxm &
+[ ORTH <! "angry" !>,
+  SS.LOC.CONT.NUCL angry-rel ].
+
+available_1 := adj-lxm &
+[ ORTH <! "available" !>,
+  SS.LOC.CONT.NUCL available-rel ].
+
+big_0 := adj-lxm &
+[ ORTH <! "big" !>,
+  SS.LOC.CONT.NUCL big-rel ].
+
+black_1 := adj-lxm &
+[ ORTH <! "black" !>,
+  SS.LOC.CONT.NUCL black-rel ].
+
+broken_1 := adj-lxm &
+[ ORTH <! "broken" !>,
+  SS.LOC.CONT.NUCL broken-rel ].
+
+brown_1 := adj-lxm &
+[ ORTH <! "brown" !>,
+  SS.LOC.CONT.NUCL brown-rel ].
+
+eager_1 := adj-lxm &
+[ ORTH <! "eager" !>,
+  SS.LOC.CONT.NUCL eager-rel ].
+
+expensive_1 := adj-lxm &
+[ ORTH <! "expensive" !>,
+  SS.LOC.CONT.NUCL expensive-rel ].
+
+fat_1 := adj-lxm &
+[ ORTH <! "fat" !>,
+  SS.LOC.CONT.NUCL fat-rel ].
+
+funny_1 := adj-lxm &
+[ ORTH <! "funny" !>,
+  SS.LOC.CONT.NUCL funny-rel ].
+
+german_1 := adj-lxm &
+[ ORTH <! "german" !>,
+  SS.LOC.CONT.NUCL german-rel ].
+
+hard_1 := adj-lxm &
+[ ORTH <! "hard" !>,
+  SS.LOC.CONT.NUCL hard-rel ].
+
+happy_1 := adj-lxm &
+[ ORTH <! "happy" !>,
+  SS.LOC.CONT.NUCL happy-rel ].
+
+kind_1 := adj-lxm &
+[ ORTH <! "kind" !>,
+  SS.LOC.CONT.NUCL kind-rel ].
+
+likely_1 := adj-lxm &
+[ ORTH <! "likely" !>,
+  SS.LOC.CONT.NUCL likely-rel ].
+
+large_1 := adj-lxm &
+[ ORTH <! "large" !>,
+  SS.LOC.CONT.NUCL large-rel ].
+
+magnificent_1 := adj-lxm &
+[ ORTH <! "magnificent" !>,
+  SS.LOC.CONT.NUCL magnificent-rel ].
+
+obvious_1 := adj-lxm &
+[ ORTH <! "obvious" !>,
+  SS.LOC.CONT.NUCL obvious-rel ].
+
+offended_1 := adj-lxm &
+[ ORTH <! "offended" !>,
+  SS.LOC.CONT.NUCL offended-rel ].
+
+optional_1 := adj-lxm &
+[ ORTH <! "optional" !>,
+  SS.LOC.CONT.NUCL optional-rel ].
+
+new_1 := adj-lxm &
+[ ORTH <! "new" !>,
+  SS.LOC.CONT.NUCL new-rel ].
+
+noisy_1 := adj-lxm &
+[ ORTH <! "noisy" !>,
+  SS.LOC.CONT.NUCL noisy-rel ].
+
+unfair_1 := adj-lxm &
+[ ORTH <! "unfair" !>,
+  SS.LOC.CONT.NUCL unfair-rel ].
+
+undocumented_1 := adj-lxm &
+[ ORTH <! "undocumented" !>,
+  SS.LOC.CONT.NUCL undocumented-rel ].
+
+age_1 := siv &
+[ ORTH <! "age" !>,
+  SS.LOC.CONT [ NUCL age-rel & [ AGER #index ] ], 
+  ARG-ST < synsem & [ LOC.CONT.INDEX #index ] > ].
+
+bark_1 := siv &
+[ ORTH <! "bark" !>,
+  SS.LOC.CONT [ NUCL bark-rel & [ BARKER #index ] ], 
+  ARG-ST < [ LOC.CONT.INDEX #index ] > ].
+
+#|
+believe_2 := siv &
+[ ORTH <! "believe" !>,
+  SS.LOC.CONT [ NUCL believe-rel & [ BELIEVER #index ] ], 
+  ARG-ST < [ LOC.CONT.INDEX #index ] > ].
+|#
+
+die_1 := siv &
+[ ORTH <! "die" !>,
+  SS.LOC.CONT [ NUCL die-rel & [ DECEASED #index ] ], 
+  ARG-ST < [ LOC.CONT.INDEX #index ] > ].
+
+dine_1 := siv &
+[ ORTH <! "dine" !>,
+  SS.LOC.CONT [ NUCL dine-rel & [ DINER #index ] ], 
+  ARG-ST < [ LOC.CONT.INDEX #index ] > ].
+
+disappear_1 := siv &
+[ ORTH <! "disappear" !>,
+  SS.LOC.CONT [ NUCL disappear-rel & [ DISAPPEARER #index ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index ] > ].
+
+drive_1 := siv &
+[ ORTH <! "drive" !>,
+  SS.LOC.CONT [ NUCL drive-rel & [ DRIVER #index ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index ] > ].
+
+eat_1 := siv &
+[ ORTH <! "eat" !>,
+  SS.LOC.CONT [ NUCL eat-rel & [ EATER #index ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index ] > ].
+
+explode_1 := siv &
+[ ORTH <! "explode" !>,
+  SS.LOC.CONT [ NUCL explode-rel & [ EXPLODER #index ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index ] > ].
+
+fall_1 := siv &
+[ ORTH <! "fall" !>,
+  SS.LOC.CONT [ NUCL fall-rel & [ FALLEN #index ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index ] > ].
+
+fly_1 := siv &
+[ ORTH <! "fly" !>,
+  SS.LOC.CONT [ NUCL fly-rel & [ FLIER #index ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index ] > ].
+
+float_1 := siv &
+[ ORTH <! "float" !>,
+  SS.LOC.CONT [ NUCL float-rel & [ FLOATER #index ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index ] > ].
+
+go_0 := siv &
+[ ORTH <! "go" !>,
+  SS.LOC.CONT [ NUCL go-rel & [ GOER #index ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index ] > ].
+
+gather_1 := siv &
+[ ORTH <! "gather" !>,
+  SS.LOC.CONT [ NUCL gather-rel & [ GATHERER #index ] ],
+  ARG-ST < synsem & [ LOC.CONT.INDEX #index,
+                      LOC.CAT.HEAD.AGR pl ] > ].
+
+laugh_1 := siv &
+[ ORTH <! "laugh" !>,
+  SS.LOC.CONT [ NUCL laugh-rel & [ LAUGHER #index ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index ] > ].
+
+leave_1 := siv &
+[ ORTH <! "leave" !>,
+  SS.LOC.CONT [ NUCL leave-rel & [ LEAVER #index ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index ] > ].
+
+lie_1 := siv &
+[ ORTH <! "lie" !>,
+  SS.LOC.CONT [ NUCL lie-rel & [ LIAR #index ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index ] > ].
+
+live_1 := siv &
+[ ORTH <! "live" !>,
+  SS.LOC.CONT [ NUCL live-rel & [ LIVER #index ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index ] > ].
+
+run_1 := siv &
+[ ORTH <! "run" !>,
+  SS.LOC.CONT [ NUCL run-rel & [ RUNNER #index ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index ] > ].
+
+sank_1 := siv &
+[ ORTH <! "sank" !>,
+  SS.LOC.CONT [ NUCL sank-rel & [ SUNK #index ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index ] > ].
+
+sit_1 := siv &
+[ ORTH <! "sit" !>,
+  SS.LOC.CONT [ NUCL sit-rel & [ SITTER #index ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index ] > ].
+
+scream_1 := siv &
+[ ORTH <! "scream" !>,
+  SS.LOC.CONT [ NUCL scream-rel & [ SCREAMER #index ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index ] > ].
+
+sing_1 := siv &
+[ ORTH <! "sing" !>,
+  SS.LOC.CONT [ NUCL sing-rel & [ SINGER #index ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index ] > ].
+
+skate_1 := siv &
+[ ORTH <! "skate" !>,
+  SS.LOC.CONT [ NUCL skate-rel & [ SKATER #index ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index ] > ].
+
+sleep_1 :=  siv &
+[ ORTH <! "sleep" !>,
+  SS.LOC.CONT [ NUCL sleep-rel & [ SLEEPER #index ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index ] > ].
+
+sneeze_1 := siv &
+[ ORTH <! "sneeze" !>,
+  SS.LOC.CONT [ NUCL sneeze-rel & [ SNEEZER #index ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index ] > ].
+
+speak_1 := siv &
+[ ORTH <! "speak" !>,
+  SS.LOC.CONT [ NUCL speak-rel & [ SPEAKER #index ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index ] > ].
+
+suck_1 := siv &
+[ ORTH <! "suck" !>,
+  SS.LOC.CONT [ NUCL suck-rel & [ LOSER #index ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index ] > ].
+
+talk_1 := siv &
+[ ORTH <! "talk" !>,
+  SS.LOC.CONT [ NUCL talk-rel & [ TALKER #index ] ], 
+  ARG-ST < [ LOC.CONT.INDEX #index ] > ].
+
+tapdance_1 := siv &
+[ ORTH <! "tapdance" !>,
+  SS.LOC.CONT [ NUCL tapdance-rel & [ TAPDANCER #index ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index ] > ].
+
+visit_1 := siv &
+[ ORTH <! "visit" !>,
+  SS.LOC.CONT [ NUCL visit-rel & [ VISITOR #index ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index ] > ].
+
+vote_1 := siv &
+[ ORTH <! "vote" !>,
+  SS.LOC.CONT [ NUCL vote-rel & [ VOTER #index ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index ] > ].
+
+win_1 := siv &
+[ ORTH <! "win" !>,
+  SS.LOC.CONT [ NUCL win-rel & [ WINNER #index ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index ] > ].
+
+yell_1 := siv &
+[ ORTH <! "yell" !>,
+  SS.LOC.CONT [ NUCL yell-rel & [ YELLER #index ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index ] > ].
+
+ask_1 := piv &
+[ ORTH <! "ask" !>,
+  SS.LOC.CONT [ NUCL ask-rel4 & [ ASKER #ind1, 
+                                  ASKED-FOR #ind2 ] ],
+  SS.LOC.CAT.COMPS < [ LOC.CAT.HEAD.FORM for ] >,
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+campaign_1 := piv &
+[ ORTH <! "campaign" !>,
+  SS.LOC.CONT [ NUCL campaign-rel & [ CAMPAIGNER #ind1, 
+                                      CAMPAIGNED-FOR #ind2 ] ],
+  SS.LOC.CAT.COMPS < [ LOC.CAT.HEAD.FORM for ] >,
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+come_1 := piv &
+[ ORTH <! "come" !>,
+  SS.LOC.CONT [ NUCL come-rel & [ COMER #ind1, COME-TO #ind2 ] ],
+  SS.LOC.CAT.COMPS < [ LOC.CAT.HEAD.FORM to ] >,
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+#|
+fit_1 := piv &
+[ ORTH <! "fit" !>,
+  SS.LOC.CONT [ NUCL fit-rel & [ #ind1, #ind2 ] ],
+  SS.LOC.CAT.COMPS < [ LOC.CAT.HEAD.FORM in ] >,
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+|#
+
+go_1 := piv &
+[ ORTH <! "go" !>,
+  SS.LOC.CONT [ NUCL go-rel & [ GOER #ind1, GO-LOC #ind2 ] ],
+  SS.LOC.CAT.COMPS < [ LOC.CAT.HEAD.FORM loc ] >, 
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+lie_2 := piv &
+[ ORTH <! "lie" !>,
+  SS.LOC.CONT [ NUCL lie-rel2 & [ LIAR #ind1, LIED-TO #ind2 ] ],
+  SS.LOC.CAT.COMPS < [ LOC.CAT.HEAD.FORM to ] >,
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+look_1 := piv &
+[ ORTH <! "look" !>,
+  SS.LOC.CONT [ NUCL look-rel & [ LOOKER #ind1, LOOKED-AT #ind2 ] ],
+  SS.LOC.CAT.COMPS < [ LOC.CAT.HEAD.FORM at ] >,
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+rely_1 := piv &
+[ ORTH <! "rely" !>,
+  SS.LOC.CONT [ NUCL rely-rel & [ RELIER #ind1, RELIED-ON #ind2 ] ],
+  SS.LOC.CAT.COMPS < [ LOC.CAT.HEAD.FORM on ] >,
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+talk_2 := piv &
+[ ORTH <! "talk" !>,
+  SS.LOC.CONT [ NUCL talk-rel2 & [ TALKER #ind1, TALKED-TO #ind2 ] ],
+  SS.LOC.CAT.COMPS < [ LOC.CAT.HEAD.FORM to ] >,
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+talk_3 := piv &
+[ ORTH <! "talk" !>,
+  SS.LOC.CONT [ NUCL talk-rel3 & [ TALKER #ind1, TALKED-ABOUT #ind2 ] ],
+  SS.LOC.CAT.COMPS < [ LOC.CAT.HEAD.FORM about ] >,
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+speak_2 := piv &
+[ ORTH <! "speak" !>,
+  SS.LOC.CONT [ NUCL speak-rel2 & [ SPEAKER #ind1, SPOKEN-TO #ind2 ] ],
+  SS.LOC.CAT.COMPS < [ LOC.CAT.HEAD.FORM to ] >,
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+tug_1 := piv &
+[ ORTH <! "tug" !>,
+  SS.LOC.CONT [ NUCL tug-rel & [ TUGGER #ind1, TUGGED-ON #ind2 ] ],
+  SS.LOC.CAT.COMPS < [ LOC.CAT.HEAD.FORM on ] >,
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+#|
+visit_2 := piv &
+[ ORTH <! "visit" !>,
+  SS.LOC.CONT [ NUCL visit-rel & [ #ind1, #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+|#
+
+vote_2 := piv &
+[ ORTH <! "vote" !>,
+  SS.LOC.CONT [ NUCL vote-rel & [ VOTER #ind1, VOTED-FOR #ind2 ] ],
+  SS.LOC.CAT.COMPS < [ LOC.CAT.HEAD.FORM for ] >, 
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+hope_1 := ctv &
+[ ORTH <! "hope" !>,
+  ARG-ST < synsem, synsem > ].
+
+say_1 := ctv &
+[ ORTH <! "say" !>,
+  ARG-ST < synsem, synsem > ].
+
+suspect_1 := ctv &
+[ ORTH <! "suspect" !>,
+  ARG-ST < synsem, synsem > ].
+
+discover_1 := ctv &
+[ ORTH <! "discover" !>,
+  ARG-ST < synsem, synsem > ].
+
+#|
+believe_2 := ctv &
+[ ORTH <! "believe" !>,
+  ARG-ST < synsem, synsem > ].
+|#
+
+learn_1 := ctv &
+[ ORTH <! "learn" !>,
+  ARG-ST < synsem, synsem > ].
+
+;see_1 := ctv &
+;[ ORTH <! "see" !>,
+;  ARG-ST < synsem, synsem > ].
+
+admire_1 := stv &
+[ ORTH <! "admire" !>,
+  SS.LOC.CONT [ NUCL admire-rel & [ ADMIRER #ind1, ADMIREE #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+affect_1 := stv &
+[ ORTH <! "affect" !>,
+  SS.LOC.CONT [ NUCL affect-rel & [ AFFECTER #ind1, AFFECTED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+annoy_1 := stv &
+[ ORTH <! "annoy" !>,
+  SS.LOC.CONT [ NUCL annoy-rel & [ ANNOYER #ind1, ANNOYED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+arrest_1 := stv &
+[ ORTH <! "arrest" !>,
+  SS.LOC.CONT [ NUCL arrest-rel & [ ARRESTER #ind1, ARRESTED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+ask_2 := stv &
+[ ORTH <! "ask" !>,
+  SS.LOC.CONT [ NUCL ask-rel3 & [ ASKER #ind1, ASKED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+avoid_1 := stv &
+[ ORTH <! "avoid" !>,
+  SS.LOC.CONT [ NUCL avoid-rel & [ AVOIDER #ind1, AVOIDED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+bite_1 := stv &
+[ ORTH <! "bite" !>,
+  SS.LOC.CONT [ NUCL bite-rel & [ BITER #ind1, BITTEN #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+bare_1 := stv &
+[ ORTH <! "bare" !>,
+  SS.LOC.CONT [ NUCL bare-rel & [ BARER #ind1, BARED #ind2 ] ], 
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+brake_1 := stv &
+[ ORTH <! "brake" !>,
+  SS.LOC.CONT [ NUCL broke-rel & [ BREAKER #ind1, BROKEN #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+cause_1 := stv &
+[ ORTH <! "cause" !>,
+  SS.LOC.CONT [ NUCL cause-rel & [ CAUSER #ind1, CAUSED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
 
 
+cark_1 := stv &
+[ ORTH <! "cark" !>,
+  SS.LOC.CONT [ NUCL cark-rel & [ CARKER #ind1, CARKED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
 
+chase_1 := stv &
+[ ORTH <! "chase" !>,
+  SS.LOC.CONT [ NUCL chase-rel & [ CHASER #ind1, CHASED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+close_1 := stv &
+[ ORTH <! "close" !>,
+  SS.LOC.CONT [ NUCL close-rel & [ CLOSER #ind1, CLOSED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+consider_1 := stv &
+[ ORTH <! "consider" !>,
+  SS.LOC.CONT [ NUCL consider-rel & [ CONSIDERER #ind1, CONSIDERED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+consume_1 := stv &
+[ ORTH <! "consume" !>,
+  SS.LOC.CONT [ NUCL consume-rel & [ CONSUMER #ind1, CONSUMED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+cross_1 := stv &
+[ ORTH <! "cross" !>,
+  SS.LOC.CONT [ NUCL cross-rel & [ CROSSER #ind1, CROSSED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+cut_1 := stv &
+[ ORTH <! "cut" !>,
+  SS.LOC.CONT [ NUCL cut-rel & [ CUTTER #ind1, CUT #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+determine_1 := stv &
+[ ORTH <! "determine" !>,
+  SS.LOC.CONT [ NUCL determine-rel & [ DETERMINER #ind1, DETERMINED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+devour_1 := stv &
+[ ORTH <! "devour" !>,
+  SS.LOC.CONT [ NUCL devour-rel & [ DEVOURER #ind1, DEVOURED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+deny_1 := stv &
+[ ORTH <! "deny" !>,
+  SS.LOC.CONT [ NUCL deny-rel & [ DENIER #ind1, DENIED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+discover_2 := stv &
+[ ORTH <! "discover" !>,
+  SS.LOC.CONT [ NUCL discover-rel & [ DISCOVERER #ind1, DISCOVERED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+display_1 := stv &
+[ ORTH <! "display" !>,
+  SS.LOC.CONT [ NUCL display-rel & [ DISPLAYER #ind1, DISPLAYED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+draw_1 := stv &
+[ ORTH <! "draw" !>,
+  SS.LOC.CONT [ NUCL draw-rel & [ DRAWER #ind1, DRAWN #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+dread_1 := stv &
+[ ORTH <! "dread" !>,
+  SS.LOC.CONT [ NUCL dread-rel & [ DREADER #ind1, DREADED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+drive_2 := stv &
+[ ORTH <! "drive" !>,
+  SS.LOC.CONT [ NUCL drive-rel2 & [ DRIVER #ind1, DRIVEN #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+eat_2 := stv &
+[ ORTH <! "eat" !>,
+  SS.LOC.CONT [ NUCL eat-rel2 & [ EATER #ind1, EATEN #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+elect_1 := stv &
+[ ORTH <! "elect" !>,
+  SS.LOC.CONT [ NUCL elect-rel & [ ELECTOR #ind1, ELECTED #ind2 ] ], 
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+enjoy_1 := stv &
+[ ORTH <! "enjoy" !>,
+  SS.LOC.CONT [ NUCL enjoy-rel & [ ENJOYER #ind1, ENJOYED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+examine_1 := stv &
+[ ORTH <! "examine" !>,
+  SS.LOC.CONT [ NUCL examine-rel & [ EXAMINER #ind1, EXAMINED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+exploit_1 := stv &
+[ ORTH <! "exploit" !>,
+  SS.LOC.CONT [ NUCL exploit-rel & [ EXPLOITER #ind1, EXPLOITED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+find_1 := stv &
+[ ORTH <! "find" !>,
+  SS.LOC.CONT [ NUCL find-rel & [ FINDER #ind1, FOUND #ind2 ] ], 
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+finish_1 := stv &
+[ ORTH <! "finish" !>,
+  SS.LOC.CONT [ NUCL finish-rel & [ FINISHER #ind1, FINISHED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+fix_1 := stv &
+[ ORTH <! "fix" !>,
+  SS.LOC.CONT [ NUCL fix-rel & [ FIXER #ind1, FIXED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+fill_1 := stv &
+[ ORTH <! "fill" !>,
+  SS.LOC.CONT [ NUCL fill-rel & [ FILLER #ind1, FILLED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+fly_2 := stv &
+[ ORTH <! "fly" !>,
+  SS.LOC.CONT [ NUCL fly-rel2 & [ FLIER #ind1, FLOWN #ind2 ] ], 
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+follow_1 := stv &
+[ ORTH <! "follow" !>,
+  SS.LOC.CONT [ NUCL follow-rel & [ FOLLOWER #ind1, FOLLOWED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+gather_2 := stv &
+[ ORTH <! "gather" !>,
+  SS.LOC.CONT [ NUCL gather-rel2 & [ GATHERER #ind1, GATHERED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+get_1 := stv &
+[ ORTH <! "get" !>,
+  SS.LOC.CONT [ NUCL get-rel & [ GETTER #ind1, GOTTEN #ind2 ] ], 
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+halve_1 := stv &
+[ ORTH <! "halve" !>,
+  SS.LOC.CONT [ NUCL halve-rel & [ HALVER #ind1, HALVED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+hate_1 := stv &
+[ ORTH <! "hate" !>,
+  SS.LOC.CONT [ NUCL hate-rel & [ HATER #ind1, HATED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+have_1 := stv &
+[ ORTH <! "have" !>,
+  SS.LOC.CONT [ NUCL poss-rel & [ POSS-ER #ind1, POSS-ED #ind2 ] ], 
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+help_1 := stv &
+[ ORTH <! "help" !>,
+  SS.LOC.CONT [ NUCL help-rel & [ HELPER #ind1, HELPED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+hit_1 := stv &
+[ ORTH <! "hit" !>,
+  SS.LOC.CONT [ NUCL hit-rel & [ HITTER #ind1, HIT #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+improve_1 := stv &
+[ ORTH <! "improve" !>,
+  SS.LOC.CONT [ NUCL improve-rel & [ IMPROVER #ind1, IMPROVED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+involve_1 := stv &
+[ ORTH <! "involve" !>,
+  SS.LOC.CONT [ NUCL involve-rel & [ INVOLVER #ind1, INVOLVED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+know_1 := stv &
+[ ORTH <! "know" !>,
+  SS.LOC.CONT [ NUCL know-rel & [ KNOWER #ind1, KNOWN #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+kick_1 := stv &
+[ ORTH <! "kick" !>,
+  SS.LOC.CONT [ NUCL kick-rel & [ KICKER #ind1, KICKED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+leave_2 := stv &
+[ ORTH <! "leave" !>,
+  SS.LOC.CONT [ NUCL leave-rel2 & [ LEAVER #ind1, LEFT #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+like_1 := stv &
+[ ORTH <! "like" !>,
+  SS.LOC.CONT [ NUCL like-rel & [ LIKER #ind1, LIKED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+list_1 := stv &
+[ ORTH <! "list" !>,
+  SS.LOC.CONT [ NUCL list-rel & [ LISTER #ind1, LISTED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+lock_1 := stv &
+[ ORTH <! "lock" !>,
+  SS.LOC.CONT [ NUCL lock-rel & [ LOCKER #ind1, LOCKED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+love_1 := stv &
+[ ORTH <! "love" !>,
+  SS.LOC.CONT [ NUCL love-rel & [ LOVER #ind1, LOVED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+read_1 := stv &
+[ ORTH <! "read" !>,
+  SS.LOC.CONT [ NUCL read-rel & [ READER #ind1, READ #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+meet_1 := stv &
+[ ORTH <! "meet" !>,
+  SS.LOC.CONT [ NUCL meet-rel & [ MEETER #ind1, MET #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+observe_1 := stv &
+[ ORTH <! "observe" !>,
+  SS.LOC.CONT [ NUCL observe-rel & [ OBSERVER #ind1, OBSERVED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+pat_1 := stv &
+[ ORTH <! "pat" !>,
+  SS.LOC.CONT [ NUCL pat_v-rel & [ PATTER #ind1, PATTED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+paint_1 := stv &
+[ ORTH <! "paint" !>,
+  SS.LOC.CONT [ NUCL paint-rel & [ PAINTER #ind1, PAINTED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+pet_1 := stv &
+[ ORTH <! "pet" !>,
+  SS.LOC.CONT [ NUCL pet-rel & [ PETTER #ind1, PETTED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+phone_1 := stv &
+[ ORTH <! "phone" !>,
+  SS.LOC.CONT [ NUCL phone-rel & [ PHONER #ind1, PHONED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+present_1 := stv &
+[ ORTH <! "present" !>,
+  SS.LOC.CONT [ NUCL present-rel & [ PRESENTER #ind1, PRESENTED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+protect_1 := stv &
+[ ORTH <! "protect" !>,
+  SS.LOC.CONT [ NUCL protect-rel & [ PROTECTER #ind1, PROTECTED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+question_1 := stv &
+[ ORTH <! "question" !>,
+  SS.LOC.CONT [ NUCL question-rel & [ QUESTIONER #ind1, QUESTIONED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+race_1 := stv &
+[ ORTH <! "race" !>,
+  SS.LOC.CONT [ NUCL race-rel & [ RACER #ind1, RACED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+rake_1 := stv &
+[ ORTH <! "rake" !>,
+  SS.LOC.CONT [ NUCL rake-rel & [ RAKER #ind1, RAKED #ind2 ] ], 
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+represent_1 := stv &
+[ ORTH <! "represent" !>,
+  SS.LOC.CONT [ NUCL represent-rel & [ REPRESENTER #ind1, 
+                                       REPRESENTED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+respect_1 := stv &
+[ ORTH <! "respect" !>,
+  SS.LOC.CONT [ NUCL respect-rel & [ RESPECTER #ind1, RESPECTED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+sing_2 := stv &
+[ ORTH <! "sing" !>,
+  SS.LOC.CONT [ NUCL sing-rel & [ SINGER #ind1, SONG #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+solve_1 := stv &
+[ ORTH <! "solve" !>,
+  SS.LOC.CONT [ NUCL solve-rel & [ SOLVER #ind1, SOLVED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+spot_1 := stv &
+[ ORTH <! "spot" !>,
+  SS.LOC.CONT [ NUCL spot-rel & [ SPOTTER #ind1, SPOTTED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+spray_1 := stv &
+[ ORTH <! "spray" !>,
+  SS.LOC.CONT [ NUCL spray-rel & [ SPRAYER #ind1, SPRAYED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+suck_2 := stv &
+[ ORTH <! "suck" !>,
+  SS.LOC.CONT [ NUCL suck-rel2 & [ SUCKER #ind1, SUCKED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+supervise_1 := stv &
+[ ORTH <! "supervise" !>,
+  SS.LOC.CONT [ NUCL supervise-rel & [ SUPERVISOR #ind1, SUPERVISED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+take_1 := stv &
+[ ORTH <! "take" !>,
+  SS.LOC.CONT [ NUCL take-rel & [ TAKER #ind1, TAKEN #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+taste_1 := stv &
+[ ORTH <! "taste" !>,
+  SS.LOC.CONT [ NUCL taste-rel & [ TASTER #ind1, TASTED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+target_1 := stv &
+[ ORTH <! "target" !>,
+  SS.LOC.CONT [ NUCL target-rel & [ TARGETER #ind1, TARGETED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+tell_1 := stv &
+[ ORTH <! "tell" !>,
+  SS.LOC.CONT [ NUCL tell-rel & [ TELLER #ind1, TOLD #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+trick_1 := stv &
+[ ORTH <! "trick" !>,
+  SS.LOC.CONT [ NUCL trick-rel & [ TRICKER #ind1, TRICKED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+turn_1 := stv &
+[ ORTH <! "turn" !>,
+  SS.LOC.CONT [ NUCL turn-rel & [ TURNER #ind1, TURNED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+upset_1 := stv &
+[ ORTH <! "upset" !>,
+  SS.LOC.CONT [ NUCL upset-rel & [ UPSETER #ind1, UPSET #ind2 ] ], 
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+visit_3 := stv &
+[ ORTH <! "visit" !>,
+  SS.LOC.CONT [ NUCL visit-rel & [ VISITOR #ind1, VISITED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+watch_1 := stv &
+[ ORTH <! "watch" !>,
+  SS.LOC.CONT [ NUCL watch-rel & [ WATCHER #ind1, WATCHED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+win_2 := stv &
+[ ORTH <! "win" !>,
+  SS.LOC.CONT [ NUCL win-rel & [ WINNER #ind1, WON #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+bring_1 := dtv &
+[ ORTH <! "bring" !>,
+  SS.LOC.CONT [ NUCL bring-rel & [ BRINGER #ind1, 
+                                   BROUGHT-TO #ind2, 
+                                   BROUGHT #ind3 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], 
+           [ LOC.CONT.INDEX #ind2 ], 
+           [ LOC.CONT.INDEX #ind3 ] > ].
+
+donate_1 := dtv &
+[ ORTH <! "donate" !>,
+  SS.LOC.CONT [ NUCL donate-rel & [ DONATER #ind1, 
+                                    DONATED-TO #ind2, 
+                                    DONATED #ind3 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], 
+           [ LOC.CONT.INDEX #ind2 ], 
+           [ LOC.CONT.INDEX #ind3 ] > ].
+
+hand_1 := dtv &
+[ ORTH <! "hand" !>,
+  SS.LOC.CONT [ NUCL hand-rel & [ HANDER #ind1, 
+                                  HANDED-TO #ind2, 
+                                  HANDED #ind3 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], 
+           [ LOC.CONT.INDEX #ind2 ], 
+           [ LOC.CONT.INDEX #ind3 ] > ].
+
+give_1 := dtv &
+[ ORTH <! "give" !>,
+  SS.LOC.CONT [ NUCL give-rel & [ GIVER #ind1, 
+                                  GIVEN-TO #ind2, 
+                                  GIVEN #ind3 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], 
+           [ LOC.CONT.INDEX #ind2 ], 
+           [ LOC.CONT.INDEX #ind3 ] > ].
+
+tell_2 := dtv &
+[ ORTH <! "tell" !>,
+  SS.LOC.CONT [ NUCL tell-rel & [ TELLER #ind1, 
+                                  TOLD-TO #ind2, 
+                                  TOLD #ind3 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], 
+           [ LOC.CONT.INDEX #ind2 ], 
+           [ LOC.CONT.INDEX #ind3 ] > ].
+
+ask_3 := ptv &
+[ ORTH <! "ask" !>,
+  SS.LOC.CONT [ NUCL ask-rel5 & [ ASKER #ind1, 
+                                  ASKED #ind2, 
+                                  ASKED-FOR #ind3 ] ],
+  SS.LOC.CAT.COMPS < synsem, [ LOC.CAT.HEAD.FORM for ] >,
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], 
+           [ LOC.CONT.INDEX #ind2 ], 
+           [ LOC.CONT.INDEX #ind3 ] > ].
+
+bring_2 := ptv &
+[ ORTH <! "bring" !>,
+  SS.LOC.CONT [ NUCL bring-rel & [ BRINGER #ind1, 
+                                   BROUGHT #ind2, 
+                                   BROUGHT-TO #ind3 ] ],
+  SS.LOC.CAT.COMPS < synsem, [ LOC.CAT.HEAD.FORM to ] >,
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], 
+           [ LOC.CONT.INDEX #ind2 ], 
+           [ LOC.CONT.INDEX #ind3 ] > ].
+
+hand_2 := ptv &
+[ ORTH <! "hand" !>,
+  SS.LOC.CONT [ NUCL hand-rel & [ HANDER #ind1, 
+                                  HANDED #ind2, 
+                                  HANDED-TO #ind3 ] ],
+  SS.LOC.CAT.COMPS < synsem, [ LOC.CAT.HEAD.FORM to ] >,
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], 
+           [ LOC.CONT.INDEX #ind2 ], 
+           [ LOC.CONT.INDEX #ind3 ] > ].
+
+#|
+determine_2 := dtv &
+[ ORTH <! "determine" !>,
+  SS.LOC.CONT [ NUCL determine-rel & [ #ind1, #ind2, #ind3 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ], [ LOC.CONT.INDEX #ind3 ] > ].
+|#
+
+donate_2 := ptv &
+[ ORTH <! "donate" !>,
+  SS.LOC.CONT [ NUCL donate-rel & [ DONATER #ind1, 
+                                    DONATED #ind2, 
+                                    DONATED-TO #ind3 ] ],
+  SS.LOC.CAT.COMPS < synsem, [ LOC.CAT.HEAD.FORM to ] >,
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], 
+           [ LOC.CONT.INDEX #ind2 ], 
+           [ LOC.CONT.INDEX #ind3 ] > ].
+
+move_1 := ptv &
+[ ORTH <! "move" !>,
+  SS.LOC.CONT [ NUCL move-rel & [ MOVER #ind1, 
+                                  MOVED #ind2, 
+                                  MOVED-TO #ind3 ] ],
+  SS.LOC.CAT.COMPS < synsem, [ LOC.CAT.HEAD.FORM to ] >,
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], 
+           [ LOC.CONT.INDEX #ind2 ], 
+           [ LOC.CONT.INDEX #ind3 ] > ].
+
+put_1 := ptv &
+[ ORTH <! "put" !>,
+  SS.LOC.CONT [ NUCL put-rel & [ PUTTER #ind1, 
+                                 PUT #ind2, 
+                                 PUT-LOC #ind3 ] ],
+  SS.LOC.CAT.COMPS < synsem, [ LOC.CAT.HEAD.FORM loc ] >,
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], 
+           [ LOC.CONT.INDEX #ind2 ], 
+           [ LOC.CONT.INDEX #ind3 ] > ].
+
+spray_2 := ptv &
+[ ORTH <! "spray" !>,
+  SS.LOC.CONT [ NUCL spray-rel2 & [ SPRAYER #ind1, 
+                                    SPRAYED #ind2, 
+                                    SPRAYED-LOC #ind3 ] ],
+  SS.LOC.CAT.COMPS < synsem, [ LOC.CAT.HEAD.FORM loc ] >,
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], 
+           [ LOC.CONT.INDEX #ind2 ], 
+           [ LOC.CONT.INDEX #ind3 ] > ].
+
+tell_3 := ptv &
+[ ORTH <! "tell" !>,
+  SS.LOC.CONT [ NUCL tell-rel & [ TELLER #ind1, 
+                                  TOLD #ind2, 
+                                  TOLD-TO #ind3 ] ],
+  SS.LOC.CAT.COMPS < synsem, [ LOC.CAT.HEAD.FORM to ] >,
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], 
+           [ LOC.CONT.INDEX #ind2 ], 
+           [ LOC.CONT.INDEX #ind3 ] > ].
+
+take_2 := ptv &
+[ ORTH <! "take" !>,
+  SS.LOC.CONT [ NUCL take-rel2 & [ TAKER #ind1, 
+                                  TAKEN #ind2, 
+                                   TAKEN-TO #ind3 ] ],
+  SS.LOC.CAT.COMPS < synsem, [ LOC.CAT.HEAD.FORM to ] >,
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], 
+           [ LOC.CONT.INDEX #ind2 ], 
+           [ LOC.CONT.INDEX #ind3 ] > ].
+
+wrap_1 := ptv &
+[ ORTH <! "wrap" !>,
+  SS.LOC.CONT [ NUCL wrap-rel & [ WRAPPER #ind1, 
+                                  WRAPPED #ind2, 
+                                  WRAPPED-AROUND #ind3 ] ],
+  SS.LOC.CAT.COMPS < synsem, [ LOC.CAT.HEAD.FORM around ] >,
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], 
+           [ LOC.CONT.INDEX #ind2 ], 
+           [ LOC.CONT.INDEX #ind3 ] > ].
+
+give_2 := ptv &
+[ ORTH <! "give" !>,
+  SS.LOC.CONT [ NUCL give-rel & [ GIVER #ind1, 
+                                  GIVEN #ind2, 
+                                  GIVEN-TO #ind3 ] ],
+  SS.LOC.CAT.COMPS < synsem, [ LOC.CAT.HEAD.FORM to ] >,
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], 
+           [ LOC.CONT.INDEX #ind2 ], 
+           [ LOC.CONT.INDEX #ind3 ] > ].
+
+continue_1 := srv &
+[ ORTH <! "continue" !>,
+  SS.LOC.CONT [ NUCL continue-rel & [ CONT-ACTION.SOA #soa ] ],
+  ARG-ST < synsem, [ LOC.CONT #soa ] > ].
+
+appear_1 := srv &
+[ ORTH <! "appear" !>,
+  SS.LOC.CONT [ NUCL appear-rel & [ APPARENT-ACTION.SOA #soa ] ],
+  ARG-ST < synsem, [ LOC.CONT #soa ] > ].
+
+;appeal_1 := scv &
+;[ ORTH <! "appeal" !>,
+;  SS.LOC.CONT [ NUCL appeal-rel & [ APPEALER #index1, 
+;                                    APPEALED-TO #index2, 
+;                                    APPEALED-ACTION.SOA #soa ] ],
+;  ARG-ST < [ LOC.CONT.INDEX #index1], 
+;           [ LOC.CONT.INDEX #index2 ], 
+;           [ LOC.CONT #soa ] > ].
+
+try_1 := scv &
+[ ORTH <! "try" !>,
+  SS.LOC.CONT [ NUCL try-rel & [ TRIER #index, ATTEMPTED-ACTION.SOA #soa ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index], [ LOC.CONT #soa ] > ].
+
+;;;expect_1 := orv &
+;;;[ ORTH <! "expect" !>,
+;;;  ARG-ST < [ LOC.CONT.INDEX #index], [ LOC.CONT.SOA #soa ] > ].
+
+;;;persuade_1 := ocv &
+;;;[ ORTH <! "persuade" !>,
+;;;  ARG-ST < [ LOC.CONT.INDEX #index], [ LOC.CONT.SOA #soa ] > ].
+
+abbie_1 := cn-lxm &
+[ ORTH <! "abbie" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_abbie ] > ].
+
+accusation_1 := cn-lxm &
+[ ORTH <! "accusation" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_accusation ] > ].
+
+advantage_1 := cn-lxm &
+[ ORTH <! "advantage" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_advantage ] > ].
+
+age_2 := cn-lxm &
+[ ORTH <! "age" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_age ] > ].
+
+album_1 := cn-lxm &
+[ ORTH <! "album" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_album ] > ].
+
+alps_1 := cn-lxm &
+[ ORTH <! "alps" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_alps ] > ].
+
+andes_1 := cn-lxm &
+[ ORTH <! "andes" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_andes ] > ].
+
+animal_1 := cn-lxm &
+[ ORTH <! "animal" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_animal ] > ].
+
+answer_1 := cn-lxm &
+[ ORTH <! "answer" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_answer ] > ].
+
+apple_1 := cn-lxm &
+[ ORTH <! "apple" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_apple ] > ].
+
+arrow_1 := cn-lxm &
+[ ORTH <! "arrow" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_arrow ] > ].
+
+;;;JTB 07/07/01 the following definition may be better as it makes 
+;;;arrow a param and thus compatible with things wanting indices.
+
+;;;arrow_1 := cn-lxm &
+;;;[ ORTH <! "arrow" !>,
+;;;  SS.LOC.CONT.INDEX r_arrow ] > ].
+
+artist_1 := cn-lxm &
+[ ORTH <! "artist" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_artist ] > ].
+
+assignment_1 := cn-lxm &
+[ ORTH <! "assignment" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_assignment ] > ].
+
+associate_1 := cn-lxm &
+[ ORTH <! "associate" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_associate ] > ].
+
+astronomer_1 := cn-lxm &
+[ ORTH <! "astronomer" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_astronomer ] > ].
+
+atom_1 := cn-lxm &
+[ ORTH <! "atom" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_atom ] > ].
+
+audience_1 := cn-lxm &
+[ ORTH <! "audience" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_audience ] > ].
+
+auxiliary_1 := cn-lxm &
+[ ORTH <! "auxiliary" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_auxiliary ] > ].
+
+baby_1 := cn-lxm &
+[ ORTH <! "baby" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_baby ] > ].
+
+back_1 := cn-lxm &
+[ ORTH <! "back" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_back ] > ].
+
+bagel_1 := cn-lxm &
+[ ORTH <! "bagel" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_bagel ] > ].
+
+bark_2 := cn-lxm &
+[ ORTH <! "bark" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_bark ] > ].
+
+barn_1 := cn-lxm &
+[ ORTH <! "barn" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_barn ] > ].
+
+beer_1 := cn-lxm &
+[ ORTH <! "beer" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_beer ] > ].
+
+belief_1 := cn-lxm &
+[ ORTH <! "belief" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_belief ] > ].
+
+bicycle_1 := cn-lxm &
+[ ORTH <! "bicycle" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_bicycle ] > ].
+
+bird_1 := cn-lxm &
+[ ORTH <! "bird" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_bird ] > ].
+
+bit_1 := cn-lxm &
+[ ORTH <! "bit" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_bit ] > ].
+
+blanket_1 := cn-lxm &
+[ ORTH <! "blanket" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_blanket ] > ].
+
+blues_1 := cn-lxm &
+[ ORTH <! "blues" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_blues ] > ].
+
+boat_1 := cn-lxm &
+[ ORTH <! "boat" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_boat ] > ].
+
+book_1 := cn-lxm &
+[ ORTH <! "book" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_book ] > ].
+
+building_1 := cn-lxm &
+[ ORTH <! "building" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_building ] > ].
+
+campaign_2 := cn-lxm &
+[ ORTH <! "campaign" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_campaign ] > ].
+
+cancer_1 := cn-lxm &
+[ ORTH <! "cancer" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_cancer ] > ].
+
+candidate_1 := cn-lxm &
+[ ORTH <! "candidate" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_candidate ] > ].
+
+captain_1 := cn-lxm &
+[ ORTH <! "captain" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_captain ] > ].
+
+car_1 := cn-lxm &
+[ ORTH <! "car" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_car ] > ].
+
+cardinal_1 := cn-lxm &
+[ ORTH <! "cardinal" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_cardinal ] > ].
+
+cat_1 := cn-lxm &
+[ ORTH <! "cat" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_cat ] > ].
+
+cause_2 := cn-lxm &
+[ ORTH <! "cause" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_cause ] > ].
+
+chair_1 := cn-lxm &
+[ ORTH <! "chair" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_chair ] > ].
+
+cheetah_1 := cn-lxm &
+[ ORTH <! "cheetah" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_cheetah ] > ].
+
+child_1 := cn-lxm &
+[ ORTH <! "child" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_child ] > ].
+
+city_1 := cn-lxm &
+[ ORTH <! "city" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_city ] > ].
+
+class_1 := cn-lxm &
+[ ORTH <! "class" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_class ] > ].
+
+cloud_1 := cn-lxm &
+[ ORTH <! "cloud" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_cloud ] > ].
+
+clue_1 := cn-lxm &
+[ ORTH <! "clue" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_clue ] > ].
+
+coast_1 := cn-lxm &
+[ ORTH <! "coast" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_coast ] > ].
+
+conflict_1 := cn-lxm &
+[ ORTH <! "conflict" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_conflict ] > ].
+
+council_1 := cn-lxm &
+[ ORTH <! "council" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_council ] > ].
+
+cousin_1 := cn-lxm &
+[ ORTH <! "cousin" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_cousin ] > ].
+
+customer_1 := cn-lxm &
+[ ORTH <! "customer" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_customer ] > ].
+
+day_1 := cn-lxm &
+[ ORTH <! "day" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_day ] > ].
+
+dealer_1 := cn-lxm &
+[ ORTH <! "dealer" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_dealer ] > ].
+
+dealership_1 := cn-lxm &
+[ ORTH <! "dealership" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_dealership ] > ].
+
+defendant_1 := cn-lxm &
+[ ORTH <! "defendant" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_defendant ] > ].
+
+difference_1 := cn-lxm &
+[ ORTH <! "difference" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_difference ] > ].
+
+dinner_1 := cn-lxm &
+[ ORTH <! "dinner" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_dinner ] > ].
+
+disease_1 := cn-lxm &
+[ ORTH <! "disease" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_disease ] > ].
+
+doctor_1 := cn-lxm &
+[ ORTH <! "doctor" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_doctor ] > ].
+
+dog_1 := cn-lxm &
+[ ORTH <! "dog" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_dog ] > ].
+
+drug_1 := cn-lxm &
+[ ORTH <! "drug" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_drug ] > ].
+
+duck_1 := cn-lxm &
+[ ORTH <! "duck" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_duck ] > ].
+
+earthquake_1 := cn-lxm &
+[ ORTH <! "earthquake" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_earthquake ] > ].
+
+east_1 := cn-lxm &
+[ ORTH <! "east" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_east ] > ].
+
+exam_1 := cn-lxm &
+[ ORTH <! "exam" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_exam ] > ].
+
+evidence_1 := cn-lxm &
+[ ORTH <! "evidence" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_evidence ] > ].
+
+fbi_1 := cn-lxm &
+[ ORTH <! "fbi" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_fbi ] > ].
+
+felon_1 := cn-lxm &
+[ ORTH <! "felon" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_felon ] > ].
+
+fever_1 := cn-lxm &
+[ ORTH <! "fever" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_fever ] > ].
+
+flower_1 := cn-lxm &
+[ ORTH <! "flower" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_flower ] > ].
+
+flour_1 := cn-lxm &
+[ ORTH <! "flour" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_flour ] > ].
+
+food_1 := cn-lxm &
+[ ORTH <! "food" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_food ] > ].
+
+fool_1 := cn-lxm &
+[ ORTH <! "fool" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_fool ] > ].
+
+form_1 := cn-lxm &
+[ ORTH <! "form" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_form ] > ].
+
+friend_1 := cn-lxm &
+[ ORTH <! "friend" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_friend ] > ].
+
+game_1 := cn-lxm &
+[ ORTH <! "game" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_game ] > ].
+
+garden_1 := cn-lxm &
+[ ORTH <! "garden" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_garden ] > ].
+
+garlic_1 := cn-lxm &
+[ ORTH <! "garlic" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_garlic ] > ].
+
+gas_1 := cn-lxm &
+[ ORTH <! "gas" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_gas ] > ].
+
+gathering_1 := cn-lxm &
+[ ORTH <! "gathering" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_gathering ] > ].
+
+german_2 := cn-lxm &
+[ ORTH <! "german" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_german ] > ].
+
+guest_1 := cn-lxm &
+[ ORTH <! "guest" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_guest ] > ].
+
+hand_3 := cn-lxm &
+[ ORTH <! "hand" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_hand ] > ].
+
+head_1 := cn-lxm &
+[ ORTH <! "head" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_head ] > ].
+
+horse_1 := cn-lxm &
+[ ORTH <! "horse" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_horse ] > ].
+
+hospital_1 := cn-lxm &
+[ ORTH <! "hospital" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_hospital ] > ].
+
+ice-cream_1 := cn-lxm &
+[ ORTH <! "ice", "cream" !>, 
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_ice_cream ] > ].
+
+idea_1 := cn-lxm &
+[ ORTH <! "idea" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_idea ] > ].
+
+improvement_1 := cn-lxm &
+[ ORTH <! "improvement" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_improvement ] > ].
+
+innocent_1 := cn-lxm &
+[ ORTH <! "innocent" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_innocent ] > ].
+
+judge_1 := cn-lxm &
+[ ORTH <! "judge" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_judge ] > ].
+
+jury_1 := cn-lxm &
+[ ORTH <! "jury" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_jury ] > ].
+
+kind_2 := cn-lxm &
+[ ORTH <! "kind" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_kind ] > ].
+
+language_1 := cn-lxm &
+[ ORTH <! "language" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_language ] > ].
+
+leaf_1 := cn-lxm &
+[ ORTH <! "leaf" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_leaf ] > ].
+
+leg_1 := cn-lxm &
+[ ORTH <! "leg" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_leg ] > ].
+
+letter_1 := cn-lxm &
+[ ORTH <! "letter" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_letter ] > ].
+
+library_1 := cn-lxm &
+[ ORTH <! "library" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_library ] > ].
+
+life_1 := cn-lxm &
+[ ORTH <! "life" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_life ] > ].
+
+light_1 := cn-lxm &
+[ ORTH <! "light" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_light ] > ].
+
+linguist_1 := cn-lxm &
+[ ORTH <! "linguist" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_linguist ] > ].
+
+list_2 := cn-lxm &
+[ ORTH <! "list" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_list ] > ].
+
+logic_1 := cn-lxm &
+[ ORTH <! "logic" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_logic ] > ].
+
+lunch_1 := cn-lxm &
+[ ORTH <! "lunch" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_lunch ] > ].
+
+mailbox_1 := cn-lxm &
+[ ORTH <! "mailbox" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_mailbox ] > ].
+
+martini_1 := cn-lxm &
+[ ORTH <! "martini" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_martini ] > ].
+
+master_1 := cn-lxm &
+[ ORTH <! "master" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_master ] > ].
+
+meal_1 := cn-lxm &
+[ ORTH <! "meal" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_meal ] > ].
+
+meeting_1 := cn-lxm &
+[ ORTH <! "meeting" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_meeting ] > ].
+
+man_1 := cn-lxm &
+[ ORTH <! "man" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_man ] > ].
+
+monster_1 := cn-lxm &
+[ ORTH <! "monster" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_monster ] > ].
+
+mother_1 := cn-lxm &
+[ ORTH <! "mother" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_mother ] > ].
+
+movie_1 := cn-lxm &
+[ ORTH <! "movie" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_movie ] > ].
+
+museum_1 := cn-lxm &
+[ ORTH <! "museum" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_museum ] > ].
+
+napkin_1 := cn-lxm &
+[ ORTH <! "napkin" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_napkin ] > ].
+
+neighborhood_1 := cn-lxm &
+[ ORTH <! "neighborhood" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_neighborhood ] > ].
+
+nephew_1 := cn-lxm &
+[ ORTH <! "nephew" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_nephew ] > ].
+
+night_1 := cn-lxm &
+[ ORTH <! "night" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_night ] > ].
+
+note_1 := cn-lxm &
+[ ORTH <! "note" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_note ] > ].
+
+opportunity_1 := cn-lxm &
+[ ORTH <! "opportunity" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_opportunity ] > ].
+
+painting_1 := cn-lxm &
+[ ORTH <! "painting" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_painting ] > ].
+
+park_1 := cn-lxm &
+[ ORTH <! "park" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_park ] > ].
+
+participant_1 := cn-lxm &
+[ ORTH <! "participant" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_participant ] > ].
+
+past_1 := cn-lxm &
+[ ORTH <! "past" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_past ] > ].
+
+patient_1 := cn-lxm &
+[ ORTH <! "patient" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_patient ] > ].
+
+pencil_1 := cn-lxm &
+[ ORTH <! "pencil" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_pencil ] > ].
+
+person_1 := cn-lxm &
+[ ORTH <! "person" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_person ] > ].
+
+phone_2 := cn-lxm &
+[ ORTH <! "phone" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_phone ] > ].
+
+picture_2 := cn-lxm &
+[ ORTH <! "picture" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_picture ] > ].
+
+police_1 := cn-lxm &
+[ ORTH <! "police" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_police ] > ].
+
+present_2 := cn-lxm &
+[ ORTH <! "present" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_present ] > ].
+
+price_1 := cn-lxm &
+[ ORTH <! "price" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_price ] > ].
+
+problem_1 := cn-lxm &
+[ ORTH <! "problem" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_problem ] > ].
+
+protester_1 := cn-lxm &
+[ ORTH <! "protester" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_protester ] > ].
+
+question_2 := cn-lxm &
+[ ORTH <! "question" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_question ] > ].
+
+race_2 := cn-lxm &
+[ ORTH <! "race" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_race ] > ].
+
+rain_1 := cn-lxm &
+[ ORTH <! "rain" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_rain ] > ].
+
+rake_2 := cn-lxm &
+[ ORTH <! "rake" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_rake ] > ].
+
+ravioli_1 := cn-lxm &
+[ ORTH <! "ravioli" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_ravioli ] > ].
+
+relative_1 := cn-lxm &
+[ ORTH <! "relative" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_relative ] > ].
+
+riot_1 := cn-lxm &
+[ ORTH <! "riot" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_riot ] > ].
+
+river_1 := cn-lxm &
+[ ORTH <! "river" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_river ] > ].
+
+roof_1 := cn-lxm &
+[ ORTH <! "roof" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_roof ] > ].
+
+room_1 := cn-lxm &
+[ ORTH <! "room" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_room ] > ].
+
+run_2 := cn-lxm &
+[ ORTH <! "run" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_run ] > ].
+
+scream_2 := cn-lxm &
+[ ORTH <! "scream" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_scream ] > ].
+
+seat_1 := cn-lxm &
+[ ORTH <! "seat" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_seat ] > ].
+
+senora_1 := cn-lxm &
+[ ORTH <! "senora" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_senora ] > ].
+
+sentence_1 := cn-lxm &
+[ ORTH <! "sentence" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_sentence ] > ].
+
+series_1 := cn-lxm &
+[ ORTH <! "series" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_series ] > ].
+
+shepherd_1 := cn-lxm &
+[ ORTH <! "shepherd" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_shepherd ] > ].
+
+song_1 := cn-lxm &
+[ ORTH <! "song" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_song ] > ].
+
+skate_2 := cn-lxm &
+[ ORTH <! "skate" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_skate ] > ].
+
+sneeze_2 := cn-lxm &
+[ ORTH <! "sneeze" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_sneeze ] > ].
+
+spot_2 := cn-lxm &
+[ ORTH <! "spot" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_spot ] > ].
+
+storm_1 := cn-lxm &
+[ ORTH <! "storm" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_storm ] > ].
+
+storm_cloud_1 := cn-lxm &
+[ ORTH <! "storm", "cloud" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_storm_cloud ] > ].
+
+student_1 := cn-lxm &
+[ ORTH <! "student" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_student ] > ].
+
+table_1 := cn-lxm &
+[ ORTH <! "table" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_table ] > ].
+
+tabs_1 := cn-lxm &
+[ ORTH <! "tabs" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_tabs ] > ].
+
+tail_1 := cn-lxm &
+[ ORTH <! "tail" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_tail ] > ].
+
+tale_1 := cn-lxm &
+[ ORTH <! "tale" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_tale ] > ].
+
+talk_4 := cn-lxm &
+[ ORTH <! "talk" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_talk ] > ].
+
+teacher_1 := cn-lxm &
+[ ORTH <! "teacher" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_teacher ] > ].
+
+team_1 := cn-lxm &
+[ ORTH <! "team" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_team ] > ].
+
+telescope_1 := cn-lxm &
+[ ORTH <! "telescope" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_telescope ] > ].
+
+television_1 := cn-lxm &
+[ ORTH <! "television" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_television ] > ].
+
+theorem_1 := cn-lxm &
+[ ORTH <! "theorem" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_theorem ] > ].
+
+thief_1 := cn-lxm &
+[ ORTH <! "thief" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_thief ] > ].
+
+thing_1 := cn-lxm &
+[ ORTH <! "thing" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_thing ] > ].
+
+thrill_1 := cn-lxm &
+[ ORTH <! "thrill" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_thrill ] > ].
+
+time_1 := cn-lxm &
+[ ORTH <! "time" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_time ] > ].
+
+town_1 := cn-lxm &
+[ ORTH <! "town" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_town ] > ].
+
+toy_1 := cn-lxm &
+[ ORTH <! "toy" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_toy ] > ].
+
+trash_1 := cn-lxm &
+[ ORTH <! "trash" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_trash ] > ].
+
+trick_2 := cn-lxm &
+[ ORTH <! "trick" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_trick ] > ].
+
+trouble_1 := cn-lxm &
+[ ORTH <! "trouble" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_trouble ] > ].
+
+tug_2 := cn-lxm &
+[ ORTH <! "tug" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_tug ] > ].
+
+tv_1 := cn-lxm &
+[ ORTH <! "tv" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_tv ] > ].
+
+twin_1 := cn-lxm &
+[ ORTH <! "twin" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_twin ] > ].
+
+type_1 := cn-lxm &
+[ ORTH <! "type" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_type ] > ].
+
+umbrella_1 := cn-lxm &
+[ ORTH <! "umbrella" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_umbrella ] > ].
+
+unicorn_1 := cn-lxm &
+[ ORTH <! "unicorn" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_unicorn ] > ].
+
+verb_1 := cn-lxm &
+[ ORTH <! "verb" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_verb ] > ].
+
+vote_3 := cn-lxm &
+[ ORTH <! "vote" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_vote ] > ].
+
+voter_1 := cn-lxm &
+[ ORTH <! "voter" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_voter ] > ].
+
+water_1 := cn-lxm &
+[ ORTH <! "water" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_water ] > ].
+
+window_1 := cn-lxm &
+[ ORTH <! "window" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_window ] > ].
+
+wine_1 := cn-lxm &
+[ ORTH <! "wine" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_wine ] > ].
+
+witness_1 := cn-lxm &
+[ ORTH <! "witness" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_witness ] > ].
+
+woman_1 := cn-lxm &
+[ ORTH <! "woman" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_woman ] > ].
+
+work_1 := cn-lxm &
+[ ORTH <! "work" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_work ] > ].
+
+worm_1 := cn-lxm &
+[ ORTH <! "worm" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_worm ] > ].
+
+brother_1 := cn-lxm &
+[ ORTH <! "brother" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_brother ] > ].
+
+father_1 := cn-lxm &
+[ ORTH <! "father" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_father ] > ].
+
+sister_1 := cn-lxm &
+[ ORTH <! "sister" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_sister ] > ].
+
+aunt_1 := cn-lxm &
+[ ORTH <! "aunt" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_aunt ] > ].
+
+uncle_1 := cn-lxm &
+[ ORTH <! "uncle" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_uncle ] > ].
 
 
 

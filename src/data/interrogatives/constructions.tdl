@@ -1,6 +1,18 @@
 ;;; <<< >>> Maximal Subtypes of Phrase
 
-;;;JTB 07/17/01 - Slowly removing all unary constructions.  No more pumping.
+;;; JTB 09/21/01 - Punctuation
+
+question-punct-ph := punct-ph & inter-cl & binary-construction.
+
+dot-punct-ph := punct-ph & core-cl & binary-construction &
+[ HD-DTR [ SS.LOC.CONT proposition ] ].
+
+bang-punct-ph-1 := punct-ph & excl-cl & binary-construction.
+
+bang-punct-ph-2 := punct-ph & core-cl & binary-construction &
+[ HD-DTR [ SS.LOC.CONT outcome ] ].
+
+;;; Non-clausal phrases
 
 ;ncl-hd-comps-ph-0 := non-clause & hd-comp-ph-0 & unary-construction.
 ncl-hd-comps-ph-1 := non-clause & hd-comp-ph-1 & binary-construction.
@@ -11,7 +23,7 @@ ncl-vb-ph-1 := non-clause & vb-ph-1 & binary-construction.
 ncl-vb-ph-2 := non-clause & vb-ph-2 & ternary-construction.
 ncl-vb-ph-3 := non-clause & vb-ph-3 & quaternary-construction.
 
-;ncl-ellip-vp-0 := non-clause & ellip-vp-0 & unary-construction.
+ncl-ellip-vp-0 := non-clause & ellip-vp-0 & unary-construction.
 ncl-ellip-vp-1 := non-clause & ellip-vp-1 & binary-construction.
 ;ncl-ellip-vp-2 := non-clause & ellip-vp-2 & ternary-construction.
 
@@ -62,9 +74,9 @@ decl-ns-cl := decl-cl & hd-only-ph & unary-construction &
 
 
 
-;;; CCB - An earlier draft of the Basic Interrogative Constructions chapter called what I am calling "PARAMS" "INDICIES", I think that my change fits within the new semantics chapter, but better check on it.
-
-;;;JTB - 07/13/01 changed <! !> to *e-list-of-params*.
+;;; CCB - An earlier draft of the Basic Interrogative Constructions
+;;;chapter called what I am calling "PARAMS" "INDICIES", I think that my
+;;;change fits within the new semantics chapter, but better check on it.
 
 pol-int-cl := canon-int-cl & sai-ph &
 [ SS.LOC.CONT [ PARAMS <! !>,
@@ -75,7 +87,6 @@ pol-int-cl-0 := pol-int-cl & sai-ph-0 & binary-construction.
 pol-int-cl-1 := pol-int-cl & sai-ph-1 & ternary-construction.
 pol-int-cl-2 := pol-int-cl & sai-ph-2 & quaternary-construction.
 
-;;;JTB - 07/13/01 changed <! !> to *e-list-of-scope-objs*.
 ;;;JTB/IAS - 07/14/01 added SS.P-STORE empty on first daughter (the bagel)
 
 ; topicalized-clause (top-cl)
@@ -93,7 +104,14 @@ top-cl := hd-fill-ph & core-cl & binary-construction &
 ;;; JTB - 07/29/01 Restricted inv-excl-cl to not allow P-STOREs in complements.
 
 ; inverted-exclamative-clause (inv-excl-cl)
-inv-excl-cl := excl-cl & sai-ph-1 & ternary-construction &
+inv-excl-cl-1 := excl-cl & sai-ph-1 & ternary-construction &
+[ SS.LOC.CONT.PROP.SOA #1,
+  HD-DTR.SS.LOC [ P-STORE <! !>,
+                  CAT.HEAD.IC true, 
+                  CONT #1 ] ].
+
+; inverted-exclamative-clause (inv-excl-cl)
+inv-excl-cl-0 := excl-cl & sai-ph-0 & binary-construction &
 [ SS.LOC.CONT.PROP.SOA #1,
   HD-DTR.SS.LOC [ P-STORE <! !>,
                   CAT.HEAD.IC true, 
@@ -173,28 +191,28 @@ dir-is-int-cl := is-int-cl & unary-construction &
 [ SS.LOC.CONT [ PROP #1,
                 REPRISABLE false],
   SS.SLASH <! !>,
-  HD-DTR.SS.LOC.CONT #1 ].
-
-;;;JTB - 07/13/01 changed <! !> to
-;;;*e-list-of-locals*,*e-list-of-scope-objs*.
+  HD-DTR.SS.LOC.CONT #1 & [ REPRISABLE true ] ].
 
 ;;;JTB 07/19/01 - Constrainted P-STORE to be empty since it really ought
 ;;;to be for bare plurals.  Should solve some parsing problems.
+
+;;;JTB 10/22/01 - Why?? do we want this guy to be P-STORE empty?  What
+;;;about "I admired pictures of WHO?"
 
 ; bare-plural-np (bare-pl-np)
 bare-pl-np := hd-only-ph & unary-construction &
 [ SS.LOC [ CAT.SPR < >,
            CONT [ INDEX #index,
                   RESTR #restr ] ],
-  HD-DTR.SS.LOC [ CAT [ HEAD noun & [ AGR.PERNUM 3pl ],
+  HD-DTR.SS.LOC [ CAT [ HEAD noun & [ AGR 3pl ],
                         SPR < [ LOC [ CAT.HEAD det,
                                       CONT #cont & genr-rel & [ INDEX #index,
                                                                 RESTR #restr ],
                                       Q-STORE <! #cont !>,
                                       P-STORE <! !> ],
                                 SLASH <! !>,
-                                WH <! !> ] > ],
-                  P-STORE <! !> ] ].
+                                WH <! !> ] > ] ] ].
+;                  P-STORE <! !> ] ].
 
 ; bare-adj
 bare-adj-ph := hd-only-ph & unary-construction &
@@ -211,12 +229,12 @@ bare-adj-ph := hd-only-ph & unary-construction &
                                 WH <! !> ] > ],
                   P-STORE <! !> ] ].
 
-;;;JTB 07/25/01 - This is conflicting with the constraint on copula
-;;;that it's comp's soa and it's soa be the same.  It conflicts
-;;;because the QUANTS values for each may be different (one
-;;;amalgamates the subject, the other doesn't).  So what if, instead,
-;;;we inherit the Q-STORE as normal and let it amalg naturally into
-;;;the quant of the SOA?
+;;; JTB 07/25/01 - This is conflicting with the constraint on copula
+;;; that its comp's soa and its soa be the same.  It conflicts
+;;; because the QUANTS values for each may be different (one
+;;; amalgamates the subject, the other doesn't).  So what if, instead,
+;;; we inherit the Q-STORE as normal and let it amalg naturally into
+;;; the quant of the SOA?
 
 pred-ph:= hd-ph & unary-construction &  
 [ SS [ LOC [ CAT [ HEAD #head & noun & [ PRED true ],
@@ -271,6 +289,10 @@ quaternary-construction := phrase &
          [ ORTH [ LIST #third,
                   LAST #forth ] ], [ ORTH [ LIST #forth,
                                             LAST #last ] ] > ].
+
+
+
+
 
 
 

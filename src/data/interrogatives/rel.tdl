@@ -1,21 +1,51 @@
+;;;This file contains relations
+
+;;;Illocutionary relations
+
+illoc-rel := rel &
+[ MSG-ARG message,
+  ILLOCUTIONER index ].
+
+assert-rel := illoc-rel &
+[ MSG-ARG proposition ].
+
+ask-rel := illoc-rel &
+[ MSG-ARG question ].
+
+order-rel := illoc-rel &
+[ MSG-ARG outcome ].
+
+exclaim-rel := illoc-rel &
+[ MSG-ARG fact ].
+
+;;;Quantifier relations
 the-rel:=quant-rel.
 some-rel:=quant-rel.
 every-rel:=quant-rel.
 these-rel:=quant-rel.
 this-rel:=quant-rel.
 
+;;;Generic relation, for generics
 genr-rel:=quant-rel.
 
+;;;Exclamative relation
+unusual-rel := quant-rel.
+
+;;;Possesssion
 poss-rel:=rel &
 [ POSS-ER index,
   POSS-ED index ].
 
-cn-rel:=rel & 
-[ INSTANCE index ].
+;;;JTB 07/22/01 - This is woefully inadequate.  Maybe cn's should
+;;;inherit from this type as well?
+
+arg-rel := rel &
+[ ARG index ].
 
 person-rel := arg-rel.
-
 thing-rel := arg-rel.
+
+;;;Pronouns
 
 him := index.
 her := index.
@@ -26,25 +56,7 @@ speaker := index.
 listener := index.
 prev-speaker := index.
 
-see-rel := observe-rel.
-
-wonder-rel := rel &
-[ WONDERER index,
-  WONDERED question ].
-
-;;;JTB 07/22/01 - This is woefully inadequate:
-
-arg-rel := rel &
-[ ARG index ].
-
-adj-rel := arg-rel.
-
-gradable-adj-rel := adj-rel &
-[ EXTENT index ].
-
-be-rel := rel &
-[ ARG1 index,
-  ARG2 index ].
+;;;Prepositions
 
 to-rel := arg-rel &
 [ TO index ].
@@ -73,15 +85,24 @@ by-rel := arg-rel &
 around-rel := arg-rel &
 [ AROUND index ].
 
+;;;Adjectival relations.  Two types, gradable and non-gradable (adj-rel)
+
+adj-rel := arg-rel.
+
+gradable-adj-rel := adj-rel &
+[ EXTENT index ].
+
 happy-rel := gradable-adj-rel.
 angry-rel := gradable-adj-rel.
 tall-rel := gradable-adj-rel.
 available-rel := adj-rel.
+big-rel := gradable-adj-rel.
 black-rel := gradable-adj-rel.
 broken-rel := gradable-adj-rel.
 brown-rel := gradable-adj-rel.
 eager-rel := gradable-adj-rel.
 expensive-rel := gradable-adj-rel.
+fat-rel := gradable-adj-rel.
 funny-rel := gradable-adj-rel.
 german-rel := adj-rel.
 hard-rel := gradable-adj-rel.
@@ -96,12 +117,15 @@ noisy-rel := gradable-adj-rel.
 unfair-rel := gradable-adj-rel.
 undocumented-rel := adj-rel.
 magnificent-rel := gradable-adj-rel.
-
 easy-rel := gradable-adj-rel &
 [ EASY-TO proposition ].
 
+;;;What "the hell" introduces
+
 emphasis-rel := rel &
 [ EMPH-BY index ].
+
+;;;Proper nouns
 
 r_Kim := index.
 r_Sandy := index.
@@ -115,120 +139,236 @@ r_Dana := index.
 r_Lynn := index.
 r_Lee := index.
 
-can-rel := rel & 
-[ POSSIBLE proposition ].
+;;;Adverb relationships
 
-could-rel := rel.
-will-rel := rel.
+pol-rel := aux-rel.
 
-age-rel := rel & 
+neg-rel := pol-rel.
+pos-rel := pol-rel.
+
+;;;Verbal relationships
+
+see-rel := observe-rel.
+
+wonder-rel := rel &
+[ WONDERER index,
+  WONDERED question ].
+
+epist-rel := aux-rel.
+oblig-rel := aux-rel & 
+[ OBLIGED index ].
+dynam-rel := aux-rel.
+fut-rel := aux-rel.
+
+permit-rel := aux-rel &
+[ PERMITTED index ].
+
+;;; Helper auxiliaries
+
+completed-rel := aux-rel.
+
+be-rel := rel &
+[ ARG1 index,
+  ARG2 index ].
+
+aux-rel := rel &
+[ SOA-ARG soa ].
+
+;;; Non-philosophical modals -- use for now until I can figure out
+;;; what the other meanings are really for.
+
+can-rel := aux-rel.
+could-rel := aux-rel.
+may-rel := aux-rel.
+would-rel := aux-rel.
+will-rel := aux-rel.
+dare-rel := aux-rel.
+must-rel := aux-rel.
+ought-rel := aux-rel.
+should-rel := aux-rel.
+need-rel := aux-rel.
+shall-rel := aux-rel.
+better-rel := aux-rel.
+
+;;; Deontic auxiliaries
+
+can-oblig-rel := oblig-rel.
+could-oblig-rel := oblig-rel.
+may-oblig-rel := oblig-rel.
+would-oblig-rel := oblig-rel.
+will-oblig-rel := oblig-rel.
+dare-oblig-rel := oblig-rel.
+must-oblig-rel := oblig-rel.
+ought-oblig-rel := oblig-rel.
+should-oblig-rel := oblig-rel.
+need-oblig-rel := oblig-rel.
+shall-oblig-rel := oblig-rel.
+might-oblig-rel := oblig-rel.
+
+can-permit-rel := permit-rel.
+could-permit-rel := permit-rel.
+may-permit-rel := permit-rel.
+would-permit-rel := permit-rel.
+will-permit-rel := permit-rel.
+dare-permit-rel := permit-rel.
+must-permit-rel := permit-rel.
+ought-permit-rel := permit-rel.
+should-permit-rel := permit-rel.
+need-permit-rel := permit-rel.
+shall-permit-rel := permit-rel.
+might-permit-rel := permit-rel.
+
+;;; Epistemic auxiliaries
+
+can-epist-rel := epist-rel.
+could-epist-rel := epist-rel.
+may-epist-rel := epist-rel.
+would-epist-rel := epist-rel.
+will-epist-rel := epist-rel.
+dare-epist-rel := epist-rel.
+must-epist-rel := epist-rel.
+ought-epist-rel := epist-rel.
+should-epist-rel := epist-rel.
+need-epist-rel := epist-rel.
+shall-epist-rel := epist-rel.
+might-epist-rel := epist-rel.
+
+;;; Dynamic Auxiliaries
+
+can-dynam-rel := dynam-rel.
+could-dynam-rel := dynam-rel.
+may-dynam-rel := dynam-rel.
+would-dynam-rel := dynam-rel.
+will-dynam-rel := dynam-rel.
+dare-dynam-rel := dynam-rel.
+must-dynam-rel := dynam-rel.
+ought-dynam-rel := dynam-rel.
+should-dynam-rel := dynam-rel.
+need-dynam-rel := dynam-rel.
+shall-dynam-rel := dynam-rel.
+might-dynam-rel := dynam-rel.
+
+;;; Futurate Auxiliaries
+
+shall-fut-rel := fut-rel.
+will-fut-rel := fut-rel.
+
+;;; Relations related to verbs.
+
+v-rel := rel.
+
+;;; For elliptical VPs
+
+prev-rel := v-rel.
+
+age-rel := v-rel & 
 [ AGER index ].
 
-bark-rel := rel &
+bark-rel := v-rel &
 [ BARKER index ].
 
-believe-rel := rel &
+believe-rel := v-rel &
 [ BELIEVER index,
   BELIEVED proposition ].
 
-die-rel := rel &
+die-rel := v-rel &
 [ DECEASED index ].
 
-dine-rel := rel &
+dine-rel := v-rel &
 [ DINER index ].
 
-disappear-rel := rel &
+disappear-rel := v-rel &
 [ DISAPPEARER index ].
 
-drive-rel := rel & 
+drive-rel := v-rel & 
 [ DRIVER index ].
 
 drive-rel2 := drive-rel & 
 [ DRIVEN index ].
 
-eat-rel := rel & 
+eat-rel := v-rel & 
 [ EATER index ].
 
 eat-rel2 := eat-rel & 
 [ EATEN index ].
 
-explode-rel := rel & 
+explode-rel := v-rel & 
 [ EXPLODER index ].
 
-fall-rel := rel & 
+fall-rel := v-rel & 
 [ FALLEN index ].
 
-fly-rel := rel & 
+fly-rel := v-rel & 
 [ FLIER index ].
 
 fly-rel2 := fly-rel &
 [ FLOWN index ].
 
-float-rel := rel & 
+float-rel := v-rel & 
 [ FLOATER index ].
 
-gather-rel := rel & 
+gather-rel := v-rel & 
 [ GATHERER index ].
 
 gather-rel2 := gather-rel &
 [ GATHERED index ].
 
-laugh-rel := rel & 
+laugh-rel := v-rel & 
 [ LAUGHER index ].
 
-leave-rel := rel & 
+leave-rel := v-rel & 
 [ LEAVER index ].
 
 leave-rel2 := leave-rel & 
 [ LEFT index ].
 
-lie-rel := rel & 
+lie-rel := v-rel & 
 [ LIAR index ].
 
 lie-rel2 := lie-rel & 
 [ LIED-TO index ].
 
-live-rel := rel & 
+live-rel := v-rel & 
 [ LIVER index ].
 
-run-rel := rel & 
+run-rel := v-rel & 
 [ RUNNER index ].
 
-sank-rel := rel & 
+sank-rel := v-rel & 
 [ SUNK index ].
 
-sit-rel := rel & 
+sit-rel := v-rel & 
 [ SITTER index ].
 
-scream-rel := rel & 
+scream-rel := v-rel & 
 [ SCREAMER index ].
 
-sing-rel := rel & 
+sing-rel := v-rel & 
 [ SINGER index ].
 
 sing-rel2 := sing-rel & 
 [ SONG index ].
 
-skate-rel := rel & 
+skate-rel := v-rel & 
 [ SKATER index ].
 
-sneeze-rel := rel & 
+sneeze-rel := v-rel & 
 [ SNEEZER index ].
 
-speak-rel := rel & 
+speak-rel := v-rel & 
 [ SPEAKER index ].
 
 speak-rel2 := speak-rel & 
 [ SPOKEN-TO index ].
 
-suck-rel := rel & 
+suck-rel := v-rel & 
 [ LOSER index ].
 
-suck-rel2 := rel &
+suck-rel2 := v-rel &
 [ SUCKER index,
   SUCKED index ].
 
-talk-rel := rel & 
+talk-rel := v-rel & 
 [ TALKER index ].
 
 talk-rel2 := talk-rel & 
@@ -237,25 +377,25 @@ talk-rel2 := talk-rel &
 talk-rel3 := talk-rel & 
 [ TALKED-ABOUT index ].
 
-tapdance-rel := rel & 
+tapdance-rel := v-rel & 
 [ TAPDANCER index ].
 
-visit-rel := rel & 
+visit-rel := v-rel & 
 [ VISITOR index ].
 
 visit-rel2 := visit-rel &
 [ VISITED index ].
 
-win-rel := rel & 
+win-rel := v-rel & 
 [ WINNER index ].
 
 win-rel2 := win-rel &
 [ WON index ].
 
-yell-rel := rel & 
+yell-rel := v-rel & 
 [ YELLER index ].
 
-ask-rel2 := rel & 
+ask-rel2 := v-rel & 
 [ ASKER index ].
 
 ask-rel3 := ask-rel2 & 
@@ -266,225 +406,233 @@ ask-rel4 := ask-rel2 &
 
 ask-rel5 := ask-rel3 & ask-rel4.
 
-campaign-rel := rel & 
+campaign-rel := v-rel & 
 [ CAMPAIGNER index,
   CAMPAIGNED-FOR INDEX ].
 
-come-rel := rel & 
+come-rel := v-rel & 
 [ COMER index,
   COME-TO index ].
 
 #|
-fit-rel := rel & 
+fit-rel := v-rel & 
 [ FITTER index,
   FIT-LOC ].
 |#
 
-go-rel := rel & 
+go-rel := v-rel & 
 [ GOER index,
   GO-LOC index ].
 
-look-rel := rel & 
+look-rel := v-rel & 
 [ LOOKER index,
   LOOKED-AT index ].
 
-rely-rel := rel & 
+rely-rel := v-rel & 
 [ RELIER index,
   RELIED-ON index ].
 
-admire-rel := rel & 
+admire-rel := v-rel & 
 [ ADMIRER index,
   ADMIREE index ].
 
-affect-rel := rel & 
+affect-rel := v-rel & 
 [ AFFECTER index,
   AFFECTED index ].
 
-annoy-rel := rel & 
+annoy-rel := v-rel & 
 [ ANNOYER index,
   ANNOYED index ].
 
-arrest-rel := rel & 
+arrest-rel := v-rel & 
 [ ARRESTER index,
   ARRESTED index ].
 
-avoid-rel := rel & 
+avoid-rel := v-rel & 
 [ AVOIDER index,
   AVOIDED index ].
 
-bite-rel := rel & [ BITER index, BITTEN index ].
+bite-rel := v-rel & [ BITER index, BITTEN index ].
 
-bare-rel := rel & [ BARER index, BARED index ].
+bare-rel := v-rel & [ BARER index, BARED index ].
 
-broke-rel := rel & [ BREAKER index, BROKEN index ].
+broke-rel := v-rel & [ BREAKER index, BROKEN index ].
 
-cause-rel := rel & [ CAUSER index, CAUSED index ].
+cause-rel := v-rel & [ CAUSER index, CAUSED index ].
 
-cark-rel := rel & [ CARKER index, CARKED index ].
+cark-rel := v-rel & [ CARKER index, CARKED index ].
 
-chase-rel := rel & [ CHASER index, CHASED index ].
+chase-rel := v-rel & [ CHASER index, CHASED index ].
 
-close-rel := rel & [ CLOSER index, CLOSED index ].
+close-rel := v-rel & [ CLOSER index, CLOSED index ].
 
-consider-rel := rel & [ CONSIDERER index, CONSIDERED index ].
+consider-rel := v-rel & [ CONSIDERER index, CONSIDERED index ].
 
-consume-rel := rel & [ CONSUMER index, CONSUMED index ].
+consume-rel := v-rel & [ CONSUMER index, CONSUMED index ].
 
-cross-rel := rel & [ CROSSER index, CROSSED index ].
+cross-rel := v-rel & [ CROSSER index, CROSSED index ].
 
-cut-rel := rel & [ CUTTER index, CUT index ].
+cut-rel := v-rel & [ CUTTER index, CUT index ].
 
-determine-rel := rel & [ DETERMINER index, DETERMINED index ].
+determine-rel := v-rel & [ DETERMINER index, DETERMINED index ].
 
-devour-rel := rel & [ DEVOURER index, DEVOURED index ].
+devour-rel := v-rel & [ DEVOURER index, DEVOURED index ].
 
-deny-rel := rel & [ DENIER index, DENIED index ].
+deny-rel := v-rel & [ DENIER index, DENIED index ].
 
-discover-rel := rel & [ DISCOVERER index, DISCOVERED index ].
+discover-rel := v-rel & [ DISCOVERER index, DISCOVERED index ].
 
-display-rel := rel & [ DISPLAYER index, DISPLAYED index ].
+display-rel := v-rel & [ DISPLAYER index, DISPLAYED index ].
 
-draw-rel := rel & [ DRAWER index, DRAWN index ].
+draw-rel := v-rel & [ DRAWER index, DRAWN index ].
 
-dread-rel := rel & [ DREADER index, DREADED index ].
+dread-rel := v-rel & [ DREADER index, DREADED index ].
 
-elect-rel := rel & [ ELECTOR index, ELECTED index ].
+elect-rel := v-rel & [ ELECTOR index, ELECTED index ].
 
-enjoy-rel := rel & [ ENJOYER index, ENJOYED index ].
+enjoy-rel := v-rel & [ ENJOYER index, ENJOYED index ].
 
-examine-rel := rel & [ EXAMINER index, EXAMINED index ].
+examine-rel := v-rel & [ EXAMINER index, EXAMINED index ].
 
-exploit-rel := rel & [ EXPLOITER index, EXPLOITED index ].
+exploit-rel := v-rel & [ EXPLOITER index, EXPLOITED index ].
 
-find-rel := rel & [ FINDER index, FOUND index ].
+find-rel := v-rel & [ FINDER index, FOUND index ].
 
-finish-rel := rel & [ FINISHER index, FINISHED index ].
+finish-rel := v-rel & [ FINISHER index, FINISHED index ].
 
-fix-rel := rel & [ FIXER index, FIXED index ].
+fix-rel := v-rel & [ FIXER index, FIXED index ].
 
-fill-rel := rel & [ FILLER index, FILLED index ].
+fill-rel := v-rel & [ FILLER index, FILLED index ].
 
-follow-rel := rel & [ FOLLOWER index, FOLLOWED index ].
+follow-rel := v-rel & [ FOLLOWER index, FOLLOWED index ].
 
-get-rel := rel & [ GETTER index, GOTTEN index ].
+get-rel := v-rel & [ GETTER index, GOTTEN index ].
 
-halve-rel := rel & [ HALVER index, HALVED index ].
+halve-rel := v-rel & [ HALVER index, HALVED index ].
 
-hate-rel := rel & [ HATER index, HATED index ].
+hate-rel := v-rel & [ HATER index, HATED index ].
 
-have-rel := rel & [ HAVER index, POSSESSED index ].
+have-rel := v-rel & [ HAVER index, POSSESSED index ].
 
-help-rel := rel & [ HELPER index, HELPED index ].
+help-rel := v-rel & [ HELPER index, HELPED index ].
 
-hit-rel := rel & [ HITTER index, HIT index ].
+hit-rel := v-rel & [ HITTER index, HIT index ].
 
-improve-rel := rel & [ IMPROVER index, IMPROVED index ].
+improve-rel := v-rel & [ IMPROVER index, IMPROVED index ].
 
-involve-rel := rel & [ INVOLVER index, INVOLVED index ].
+involve-rel := v-rel & [ INVOLVER index, INVOLVED index ].
 
-know-rel := rel & [ KNOWER index, KNOWN index ].
+know-rel := v-rel & [ KNOWER index, KNOWN index ].
 
-kick-rel := rel & [ KICKER index, KICKED index ].
+kick-rel := v-rel & [ KICKER index, KICKED index ].
 
-like-rel := rel & [ LIKER index, LIKED index ].
+like-rel := v-rel & [ LIKER index, LIKED index ].
 
-list-rel := rel & [ LISTER index, LISTED index ].
+list-rel := v-rel & [ LISTER index, LISTED index ].
 
-lock-rel := rel & [ LOCKER index, LOCKED index ].
+lock-rel := v-rel & [ LOCKER index, LOCKED index ].
 
-love-rel := rel & [ LOVER index, LOVED index ].
+love-rel := v-rel & [ LOVER index, LOVED index ].
 
-meet-rel := rel & [ MEETER index, MET index ].
+meet-rel := v-rel & [ MEETER index, MET index ].
 
-observe-rel := rel & [ OBSERVER index, OBSERVED index ].
+observe-rel := v-rel & [ OBSERVER index, OBSERVED index ].
 
-paint-rel := rel & [ PAINTER index, PAINTED index ].
+paint-rel := v-rel & [ PAINTER index, PAINTED index ].
 
 #|
-person-rel2 := rel & [ index, index ].
+person-rel2 := v-rel & [ index, index ].
 |#
 
-pet-rel := rel & [ PETTER index, PETTED index ].
+pet-rel := v-rel & [ PETTER index, PETTED index ].
 
-phone-rel := rel & [ PHONER index, PHONED index ].
+phone-rel := v-rel & [ PHONER index, PHONED index ].
 
-play-rel := rel & [ PLAYER index, PLAYED index, PLAYED-ON index ].
+play-rel := v-rel & [ PLAYER index, PLAYED index, PLAYED-ON index ].
 
-please-rel := rel & [ PLEASER index, PLEASED index ].
+please-rel := v-rel & [ PLEASER index, PLEASED index ].
 
-present-rel := rel & [ PRESENTER index, PRESENTED index ].
+present-rel := v-rel & [ PRESENTER index, PRESENTED index ].
 
-protect-rel := rel & [ PROTECTER index, PROTECTED index ].
+protect-rel := v-rel & [ PROTECTER index, PROTECTED index ].
 
-question-rel := rel & [ QUESTIONER index, QUESTIONED index ].
+question-rel := v-rel & [ QUESTIONER index, QUESTIONED index ].
 
-race-rel := rel & [ RACER index, RACED index ].
+race-rel := v-rel & [ RACER index, RACED index ].
 
-rake-rel := rel & [ RAKER index, RAKED index ].
+rake-rel := v-rel & [ RAKER index, RAKED index ].
 
-read-rel := rel & [ READER index, READ index ].
+read-rel := v-rel & [ READER index, READ index ].
 
-represent-rel := rel & [ REPRESENTER index, REPRESENTED index ].
+represent-rel := v-rel & [ REPRESENTER index, REPRESENTED index ].
 
-respect-rel := rel & [ RESPECTER index, RESPECTED index ].
+respect-rel := v-rel & [ RESPECTER index, RESPECTED index ].
 
-sleep-rel := rel & [ SLEEPER index ].
+sleep-rel := v-rel & [ SLEEPER index ].
 
-solve-rel := rel & [ SOLVER index, SOLVED index ].
+solve-rel := v-rel & [ SOLVER index, SOLVED index ].
 
-spot-rel := rel & [ SPOTTER index, SPOTTED index ].
+spot-rel := v-rel & [ SPOTTER index, SPOTTED index ].
 
-spray-rel := rel & [ SPRAYER index, SPRAYED index ].
+spray-rel := v-rel & [ SPRAYER index, SPRAYED index ].
 
 spray-rel2 := spray-rel & [ SPRAYED-LOC index ].
 
-supervise-rel := rel & [ SUPERVISOR index, SUPERVISED index ].
+supervise-rel := v-rel & [ SUPERVISOR index, SUPERVISED index ].
 
-take-rel := rel & [ TAKER index, TAKEN index ].
+take-rel := v-rel & [ TAKER index, TAKEN index ].
 
 take-rel2 := take-rel & [ TAKEN-TO index ].
 
-taste-rel := rel & [ TASTER index, TASTED index ].
+taste-rel := v-rel & [ TASTER index, TASTED index ].
 
-target-rel := rel & [ TARGETER index, TARGETED index ].
+target-rel := v-rel & [ TARGETER index, TARGETED index ].
 
-turn-rel := rel & [ TURNER index, TURNED index ].
+turn-rel := v-rel & [ TURNER index, TURNED index ].
 
-upset-rel := rel & [ UPSETER index, UPSET index ].
+upset-rel := v-rel & [ UPSETER index, UPSET index ].
 
-watch-rel := rel & [ WATCHER index, WATCHED index ].
+watch-rel := v-rel & [ WATCHER index, WATCHED index ].
 
-bring-rel := rel & [ BRINGER index, BROUGHT index, BROUGHT-TO index ].
+bring-rel := v-rel & [ BRINGER index, BROUGHT index, BROUGHT-TO index ].
 
-donate-rel := rel & [ DONATER index, DONATED index, DONATED-TO index ].
+donate-rel := v-rel & [ DONATER index, DONATED index, DONATED-TO index ].
 
-hand-rel := rel & [ HANDER index, HANDED index, HANDED-TO index ].
+hand-rel := v-rel & [ HANDER index, HANDED index, HANDED-TO index ].
 
-give-rel := rel & [ GIVER index, GIVEN index, GIVEN-TO index ].
+give-rel := v-rel & [ GIVER index, GIVEN index, GIVEN-TO index ].
 
-tell-rel := rel & [ TELLER index, TOLD index, TOLD-TO index ].
+tell-rel := v-rel & [ TELLER index, TOLD index, TOLD-TO index ].
 
-move-rel := rel & [ MOVER index, MOVED index, MOVED-TO index ].
+move-rel := v-rel & [ MOVER index, MOVED index, MOVED-TO index ].
 
-put-rel := rel & [ PUTTER index, PUT index, PUT-LOC index ].
+put-rel := v-rel & [ PUTTER index, PUT index, PUT-LOC index ].
 
-wrap-rel := rel & [ WRAPPER index, WRAPPED index, WRAPPED-AROUND index ].
+wrap-rel := v-rel & [ WRAPPER index, WRAPPED index, WRAPPED-AROUND index ].
 
-continue-rel := rel & [ CONTINUER index, CONT-ACTION proposition ].
+;;;These two are for subj-raising verbs
 
-appear-rel := rel & [ APPEARER index, APPARENT-ACTION proposition ].
+continue-rel := v-rel & [ CONT-ACTION proposition ].
 
-appeal-rel := rel & [ APPEALER index, APPEALED-ACTION proposition ].
+appear-rel := v-rel & [ APPARENT-ACTION proposition ].
 
-try-rel := rel & [ TRIER index, ATTEMPTED-ACTION proposition ].
+;;;These are control
 
-tug-rel := rel & [ TUGGER index, TUGGED-ON index ].
+appeal-rel := v-rel & [ APPEALER index, APPEALED-TO index, APPEALED-ACTION proposition ].
 
-pat_v-rel := rel & [ PATTER index, PATTED index ].
+try-rel := v-rel & [ TRIER index, ATTEMPTED-ACTION proposition ].
 
-trick-rel := rel & [ TRICKER index, TRICKED index ].
+tug-rel := v-rel & [ TUGGER index, TUGGED-ON index ].
 
-vote-rel := rel & [ VOTER index, VOTED-FOR index ].
+pat_v-rel := v-rel & [ PATTER index, PATTED index ].
+
+trick-rel := v-rel & [ TRICKER index, TRICKED index ].
+
+vote-rel := v-rel & [ VOTER index, VOTED-FOR index ].
+
+;;;Common nouns
+cn-rel:=rel & 
+[ INSTANCE index ].
 
 r_aunt := cn-rel.
 r_abbie := cn-rel.
@@ -495,6 +643,7 @@ r_alps := cn-rel.
 r_andes := cn-rel.
 r_animal := cn-rel.
 r_answer := cn-rel.
+r_apple := cn-rel.
 r_arrow := cn-rel.
 r_artist := cn-rel.
 r_assignment := cn-rel.
@@ -611,7 +760,10 @@ r_past := cn-rel.
 r_patient := cn-rel.
 r_pat_v := cn-rel.  ;;;JTB - 06/27/01 - added this
 r_pencil := cn-rel.
-r_picture := cn-rel.
+
+r_picture := cn-rel &
+[ PICTURE-OF index ].
+
 r_police := cn-rel.
 r_price := cn-rel.
 r_problem := cn-rel.

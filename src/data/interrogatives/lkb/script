@@ -21,8 +21,7 @@
 (read-tdl-lex-file-aux 
      (list (lkb-pathname (parent-directory) "lexicon.tdl")
            (lkb-pathname (parent-directory) "wh-words.tdl")
-           (lkb-pathname (parent-directory) "auxiliaries.tdl")
-           (lkb-pathname (parent-directory) "lexicon.out")))
+           (lkb-pathname (parent-directory) "auxiliaries.tdl")))
 (read-tdl-parse-node-file-aux 
           (lkb-pathname (parent-directory) "parse-nodes.tdl"))
 (read-tdl-psort-file-aux 

@@ -1,32 +1,36 @@
-Who did Sandy see?
-*Who Sandy saw?
+Interrogatives:
+---------------
+
+Who did Sandy see? 
+*Who Sandy saw?  
 Who did Sandy think she saw?
 I wonder who Sandy saw.
 *I wonder who did Sandy see.
 Who saw Kim?
 *Who did see Kim?
+Who can see Kim?
 Who DÍD see Kim?
-Who saw WHÁT?
-Who gave WHÁT to WHÓM?
-What did WHÓ give to WHÓM?  --- Careful about these two
-To whom did WHÓ give WHÁT?  --- 
-Who wondered who saw WHÁT?
+Who saw WHÁT? 
+Who gave WHÁT to WHÓM? --Not sure if ditransitives tractable now.
+What did WHÓ give to WHÓM?  -- "
+To whom did WHÓ give WHÁT?  -- "
+Who wondered who saw WHÁT? -- "
 Who the hell left?
 *Kim read WHÁT the hell?
 *Who saw WHÁT the hell?
 Kim saw WHÓ? 
-Who wondered what WHÓ saw?
+Who wondered what WHÓ saw? -- Deeply ambiguous, check it out
+*Who wondered what did who see?
 Who saw WHÁT?
-Who wondered what WHÓ saw?
 Kim is angry? 
 Is Kim angry?
 I wonder what annoyed them.
 I wonder whose cousin they saw.
 How angry they are!
-What a fool Kim is!
+What a fool Kim is! -- Is the semantics ok on this guy?
 *What a fool is kim!
 How big a book it is!
-How big a book is it?
+How big a book is it? -- Issues
 I wonder whose cousin's friend's mother's uncle ate the bagel.
 I wonder whose cousin's friend's mother's uncle ate which bagel.
 I wonder how angry Kim is.
@@ -36,6 +40,14 @@ I wonder whose friend's pictures (of Sandy) Pat likes.
 *I wonder pictures of Pat they were admiring.
 *I wonder pictures of whom they were admiring.
 I wonder who the hell's pictures they were admiring.
+?I wonder whose the hell pictures they were admiring.
+
+Nice paradigm:
+They were admiring pictures of who?
+*Pictures of who they were admiring?
+They were admiring whose pictures?
+Whose pictures were they admiring?
+
 *They were admiring pictures of who the hell?
 *Pictures of how big a book they can see!
 *Pictures of what a cat they drew!
@@ -44,11 +56,119 @@ I wonder how big a fool he can be.
 I wonder to whom they gave books.
 I wonder to whose friends they gave books.
 To how big a child they gave books!
-To how big a child's party they gave books!  -- Wrong semantics?
+To how big a child's class they gave books!
+
+Nice paradigm:
 *I wonder about what this book is.
-*I wonder in how big a class they were
+*I wonder in how big a class they were.
 I wonder how big a class they were in.
 I wonder what this book is about.
+
 I wonder how happy Sandy is.
 How happy is Sandy?
 Sandy is how happy?
+
+Auxiliaries:
+------------
+
+Normal:
+*Kim did see the dog.
+Kim DID see the dog.
+Kim can eat apples.
+Kim has eaten apples.
+Kim would eat apples.
+
+Finite Negation:
+Kim did not see the dog.
+Kim can not eat apples.
+Kim has not eaten apples.
+Kim has not not eaten apples.
+*Kim has not not not eaten apples.
+*Kim likes not the dog.
+Kim would not.
+Kim can not.
+Kim may not.
+
+Inversion:
+Has kim eaten apples?
+Has kim not eaten apples?
+*Has not kim eaten apples?
+Did kim not eat apples? -- Note focused do but not do-foc and fin neg.
+DID kim not eat apples?
+*Left Kim?
+*Left not Kim?
+*Left Kim not?
+
+Contraction:
+Kim shouldnt eat apples.
+Kim couldnt have eaten apples.
+Kim hasnt seen a dog.
+Hasnt Kim seen a dog?
+
+VP-Ellipses:
+Sandy is.
+Sandy is not.
+Sandy couldnt.
+
+Affirmatives (problems with this):
+Kim should SO eat apples.
+Kim did TOO eat apples.
+Kim can SO see the dog.
+
+Constituent negation:
+Kim appears not to have left.
+Kim appears to not have left.
+Kim appears to have not left.
+*Kim appears to have not not left.
+*Kim appears to have left not.
+*Kim appears not to not have not not left.
+Kim has not appeared not to eat apples.
+*Kim not left.
+*Kim has appeared to like not Sandy.
+I asked him to not leave.
+*Kim has not not.
+Kim appears to not.
+
+Idiosyncracies:
+*I aren't leaving.
+Aren't I leaving.
+
+Wide scope:
+I would not like the apple.
+I will not like apples.
+
+Narrow:
+I should not like apples.
+I shall not like apples.
+
+Variation in meaning:
+I shall leave.
+Shall I leave?
+
+Variation in scope:
+Kim mightnt leave.
+Mightnt Kim leave?
+
+Scope ambiguity:
+I may not leave.
+
+Do:
+*Kim did leave.
+Kim DID leave.
+Kim did not leave.
+Did kim not leave?
+Kim did SO leave.
+Kim did.
+Does Kim like dogs?
+Does Kim like dogs!
+
+Stacking:
+*Kim must will leave.
+*Sandy is mighting leave.
+*Kim has willed gone to the class.
+*Kim is having left.
+*Kim is being being a dog.
+
+Don't have:
+Coordination and tag sentences
+Obviously and always and other such modifiers.

@@ -17,12 +17,16 @@
 
 sem-obj := feat-struc.
 
-;;; CCB - 4/23/00 - removed RESTR from sem-obj, because it doesn't seem to come into play with any significance in the analysis.
+;;; CCB - 4/23/00 - removed RESTR from sem-obj, because it doesn't
+;;;seem to come into play with any significance in the analysis.
+
 ;;;[ RESTR *list-of-facts* ].
 
 ;;;JTB - 7/16/01 - adding the REPRISABLE feature to prevent recursion
 ;;;on base case reprise rule and on direct-in-situ, as per discussions
 ;;;with Ivan.  For the record I'm not happy with this solution but ok.
+
+;;;JTB - 9/26/01 - Changing REPRISABLE to rule out dir-is-int as well.
 
 ;;;JTB 07/19/01 - Making semantics fit G&S Chapter 3.
 
@@ -42,41 +46,14 @@ proposition := austinian &
 outcome := austinian & 
 [ SOA i-soa ].
 
-;;;JTB - 07/16/01 - REPRISABLE will default to true but false for
-;;;reprises and direct in-situ.
+;;;JTB - 09/26/01 - REPRISABLE will be underspecified and construction
+;;;types will set it.
 
 fact := prop-constr.
 
 question := prop-constr &
-[ PARAMS *list-of-params*, 
-  REPRISABLE /l true ].
+[ PARAMS *list-of-params* ].
 
-illoc-rel := rel &
-[ MSG-ARG message,
-  ILLOCUTIONER index ].
-
-assert-rel := illoc-rel &
-[ MSG-ARG proposition ].
-
-ask-rel := illoc-rel &
-[ MSG-ARG question ].
-
-order-rel := illoc-rel &
-[ MSG-ARG outcome ].
-
-exclaim-rel := illoc-rel &
-[ MSG-ARG fact ].
-
-unusual-rel := quant-rel.
-
-;;; CCB - 5/17/00 - removed quants from the semantics to try to
-;;;simplify things for the KB application.  Had to comment out the
-;;;wh-exclamative-clause from constructions.tdl as a result, but I hadn't
-;;;been playing with that much anyway.
-
-;;;JTB - 07/19/01 - Put them back in, but I'm not going to touch them
-;;;right now.  This is just to make the thing look like the book.
- 
 soa := sem-obj &
 [ QUANTS *list-of-quants*,
   NUCL rel ].
@@ -88,14 +65,22 @@ i-soa := soa &
 
 pos-soa := soa.
 
-qf-pos-soa := pos-soa &
-[ QUANTS.LIST.FIRST pquant-rel  ].
+;qf-pos-soa := pos-soa &
+;[ QUANTS.LIST.FIRST pquant-rel  ].
 
-qf-fr-pos-soa := pos-soa & 
-[ QUANTS <! !> ].
+;qf-fr-pos-soa := pos-soa & 
+;[ QUANTS <! !> ].
+
+;neg-soa := soa &
+;[ QUANTS.LIST.FIRST nquant-rel ].
 
 neg-soa := soa &
-[ QUANTS.LIST.FIRST nquant-rel ].
+[ NUCL neg-rel ].
+
+neg-r-soa := r-soa & neg-soa.
+pos-r-soa := r-soa & pos-soa.
+neg-i-soa := i-soa & neg-soa.
+pos-i-soa := i-soa & pos-soa.
 
 rel := sem-obj.
 
@@ -114,7 +99,6 @@ mode-cat :< *value*.
    ref  :< mode-cat.
    null-mode :< mode-cat.
 
-
 null-sem := sem-obj.
 
 scope-obj := sem-obj &
@@ -131,10 +115,8 @@ param := scope-obj &
 
 sit := feat-struc.
 
-reln := feat-struc.
-
-index := sem-obj &
-[ PERNUM agr-cat ].
+index := sem-obj.
+; & [ PERNUM agr-cat ].
 
 ;;; <<< >>> LIST TYPES
 
@@ -169,14 +151,6 @@ ne-list-of-propositions := list-of-propositions & ne-list &
   REST list-of-propositions ].
 
 e-list-of-propositions := list-of-propositions & e-list.
-
-list-of-relns := *list*.
-
-ne-list-of-relns := list-of-relns & ne-list &
-[ FIRST reln,
-  REST list-of-relns ].
-
-e-list-of-relns := list-of-relns & e-list.
 
 list-of-facts := *list*.
 
@@ -224,16 +198,9 @@ e-list-of-facts := list-of-facts & e-list.
 [ LIST list-of-quants,
   LAST list-of-quants ].
 
-
-
 *list-of-propositions* := *diff-list* &
 [ LIST list-of-propositions,
   LAST list-of-propositions ].
-
-
-*list-of-relns* := *diff-list* &
-[ LIST list-of-relns,
-  LAST list-of-relns ].
 
 *list-of-facts* := *diff-list* &
 [ LIST list-of-facts,

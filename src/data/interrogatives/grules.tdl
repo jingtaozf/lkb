@@ -1,6 +1,11 @@
 ;;; This file lets the LKB know which constructions it should treat as
 ;;; grammar rules.
 
+question-punct-rule := question-punct-ph.
+dot-punct-rule := dot-punct-ph.
+bang-punct-rule-1 := bang-punct-ph-1.
+bang-punct-rule-2 := bang-punct-ph-2.
+
 ;;;JTB 07/18/01 - Why not a bare plurals rule?
 
 bare-pl-rule-0 := bare-pl-np.
@@ -25,8 +30,8 @@ ncl-vb-rule-3 := ncl-vb-ph-3.
 ;;; JTB 07/29/01 - Removing elliptical shit because we never talked
 ;;; about it and I don't want it interfering.
 
-;ellip-vp-rule-0 := ncl-ellip-vp-0.
-;ellip-vp-rule-1 := ncl-ellip-vp-1.
+ellip-vp-rule-0 := ncl-ellip-vp-0.
+ellip-vp-rule-1 := ncl-ellip-vp-1.
 
 cp-cl-rule-1 := cp-cl-1.
 cp-cl-rule-2 := cp-cl-2.
@@ -52,7 +57,8 @@ decl-ns-pro-rule := decl-ns-cl &
 
 top-cl-rule := top-cl. 
 
-inv-excl-rule := inv-excl-cl.
+inv-excl-rule-0 := inv-excl-cl-0.
+inv-excl-rule-1 := inv-excl-cl-1.
 
 wh-excl-rule-0 := wh-excl-cl & 
 [ SS.LOC [ P-STORE <! !> ],
@@ -79,7 +85,14 @@ wh-excl-rule-7 := wh-excl-cl &
   DTRS < [SS.WH <! #3 !> ], [ SS.LOC.P-STORE <! #1, #2, #3 !> ] > ].
 
 post-hd-mod-rule := post-hd-mod-ph.
-pre-hd-mod-rule := pre-hd-mod-ph.
+
+;;;Splitting pre head modification into two types, one for things with
+;;;scope-objs and one for things with soas.
+
+;pre-hd-mod-rule := pre-hd-mod-ph.
+
+pre-hd-adj-mod-rule := pre-hd-adj-mod-ph.
+pre-hd-adv-mod-rule := pre-hd-adv-mod-ph.
 
 ;coordination-rule := coordination-word.
 ;coordination-rule-2 := coordination-phrase.
