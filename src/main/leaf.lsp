@@ -146,11 +146,13 @@
 		      (write-to-string type-def))))
 
 (defmethod eval-possible-leaf-type ((leaf-db cdb-leaf-database) type)
-  (when (and type (preload-leaf-type leaf-db type))
+  (unless (get-type-entry type)
+    (when type 
+      (preload-leaf-type leaf-db type))
     (let ((type-entry (get-type-entry type)))
       (when type-entry
-        (when (leaf-type-p type-entry)
-          (unless (leaf-type-expanded-p type-entry)
+	(when (leaf-type-p type-entry)
+	  (unless (leaf-type-expanded-p type-entry)
 	    (add-in-leaf-type-entry type-entry)))))))
 
 (defun preload-leaf-type (leaf-db type)
