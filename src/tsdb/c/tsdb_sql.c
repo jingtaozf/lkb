@@ -30,7 +30,7 @@ int tsdb_drop_table(Tsdb_value *table) {
   if((infp = tsdb_find_relations_file("r")) != NULL) {
 
     if((outfp = fopen(TSDB_TEMPORARY_FILE,"w")) == NULL) {
-      fprintf(stderr,"Cannot create: %s\n", TSDB_TEMPORARY_FILE);
+      fprintf(TSDB_ERROR_STREAM,"Cannot create: %s\n", TSDB_TEMPORARY_FILE);
       return(TSDB_TMPFILE);
     } /* if */
     
@@ -102,7 +102,7 @@ int tsdb_alter_table(Tsdb_value *table, Tsdb_field **fields) {
   if((input = tsdb_find_relations_file("r")) != NULL) {
   
     if((output = fopen(TSDB_TEMPORARY_FILE, "w")) == NULL) {
-      fprintf(stderr,"Cannot create: %s\n", TSDB_TEMPORARY_FILE);
+      fprintf(TSDB_ERROR_STREAM,"Cannot create: %s\n", TSDB_TEMPORARY_FILE);
       return(TSDB_TMPFILE);
     } /* if */
 
@@ -181,7 +181,7 @@ int tsdb_insert(Tsdb_value *table,
       for(num_attributes = 0; attribute_list[num_attributes] != NULL;
           num_attributes++);
       if(num_attributes != num_values) {
-        fprintf(stderr, "tsdb: incompatible list sizes.\n");
+        fprintf(TSDB_ERROR_STREAM, "tsdb: incompatible list sizes.\n");
         return(TSDB_INCOMPAT_SIZES);
       } /* if */
     } /* if */
@@ -229,7 +229,7 @@ int tsdb_insert(Tsdb_value *table,
         tsdb_insert_into_selection(selection, &foo[0]);
       } /* if */
       else {
-        fprintf(stderr, "segementation fault: core well and truly dumped.\n");
+        fprintf(TSDB_ERROR_STREAM, "segementation fault: core well and truly dumped.\n");
       } /* else */
     } /* if */
     else {
@@ -238,9 +238,9 @@ int tsdb_insert(Tsdb_value *table,
   } /* if */
   else {
     if(really_verbose_mode)
-      fprintf(stderr, "Never fucking heard of %s.\n", table->value.identifier);
+      fprintf(TSDB_ERROR_STREAM, "Never fucking heard of %s.\n", table->value.identifier);
     else
-      fprintf(stderr, "tsdb: unknown relation %s.\n", table->value.identifier);
+      fprintf(TSDB_ERROR_STREAM, "tsdb: unknown relation %s.\n", table->value.identifier);
     return(TSDB_NO_SUCH_RELATION);
   } /* else */
 
@@ -302,7 +302,7 @@ int tsdb_delete(Tsdb_value *table, Tsdb_node *condition) {
     selection = tsdb_complex_select(condition,wanted);
     if ((selection->n_relations!=1) ||
         (strcmp(relation->name,selection->relations[0]->name))){
-      fprintf(stderr,"Wrong Specification of attributes!\n");
+      fprintf(TSDB_ERROR_STREAM,"Wrong Specification of attributes!\n");
       return(TSDB_NO_SUCH_RELATION);
     }
     /* now perform the hard deletion of tuples */
@@ -396,6 +396,8 @@ Tsdb_selection* tsdb_complex_select(Tsdb_node *node,Tsdb_relation ** wanted)
 Tsdb_selection* tsdb_join_one_relation(Tsdb_selection* selection,
                                        Tsdb_relation** relations)
 {
+  /* Try to join on of the relations to selection */
+  /* Does it have to be joinable???? */
   int i,smallest=-1,smallest_joinable=-1;
   int s=INT_MAX,sj=INT_MAX,j=INT_MAX;
   Tsdb_selection *table;
@@ -414,8 +416,10 @@ Tsdb_selection* tsdb_join_one_relation(Tsdb_selection* selection,
     selection = tsdb_join(selection,
                           tsdb_find_table(relations[smallest_joinable]));
   else
-    selection = tsdb_join(selection,tsdb_find_table(relations[smallest]));
-  
+    if (smallest != -1 )
+      selection = tsdb_join(selection,tsdb_find_table(relations[smallest]));
+    else
+      selection = tsdb_join(selection,tsdb_find_table(relations[0]));
   return(selection);
 } /* tsdb_join_one_relation */
 
@@ -437,8 +441,8 @@ int tsdb_complex_retrieve(Tsdb_value **relation_list,
   FILE *output;
   char **attributes = NULL;
   Tsdb_relation **a_relations, **relations, *rel;
-  int s_attributes = 10, i, j, k, r;
-  Tsdb_selection *selection;
+  int s_attributes = 10, i, j, k,r,kaerb=0;
+  Tsdb_selection *selection=NULL;
 
   /* 
      1. find out about attributes in conditions, transform expression
@@ -451,9 +455,9 @@ int tsdb_complex_retrieve(Tsdb_value **relation_list,
 
   if (conditions) {
 #if defined(DEBUG) && defined(TOM)
-    tsdb_tree_print(conditions, TSDB_DEFAULT_STREAM);
+    tsdb_tree_print(conditions, tsdb_debug_stream);
     tsdb_check_not(conditions);
-    tsdb_tree_print(conditions, TSDB_DEFAULT_STREAM);
+    tsdb_tree_print(conditions, tsdb_debug_stream);
 #endif
     attributes = (char **)malloc(s_attributes * sizeof(char *));
     if (!attributes) {
@@ -462,35 +466,50 @@ int tsdb_complex_retrieve(Tsdb_value **relation_list,
     attributes[0] = NULL;
     attributes
       = tsdb_condition_attributes(conditions, attributes, &s_attributes);
-  } /* if */
+  } /* if conditions */
   
-  if (relation_list)  /* check relations */
+  if (relation_list)  /* check relations */ {
+    kaerb = 0;
     for(r=0;relation_list[r];r++) {
-      if (!tsdb_is_relation(relation_list[r])) 
-        return(-1);
+      if (!tsdb_is_relation(relation_list[r])) {
+        fprintf(TSDB_ERROR_STREAM,"Unkown Relation %s\n",
+                 relation_list[r]->value.string);
+        kaerb = 1;
+      } /* if */
     } /* for */
+    if (kaerb)
+      return -1;
+  } /* if */
   else
     r = tsdb_n_relations();
  
- if (attribute_list) /* check attributes */
+ if (attribute_list) /* check attributes */{
+   kaerb = 0;
    for(i = 0; attribute_list[i]; i++) {
-     if (!tsdb_is_attribute(attribute_list[i]))
-       return(-1);
+     if (!tsdb_is_attribute(attribute_list[i])) {
+       fprintf(TSDB_ERROR_STREAM,"Unknown Attribute %s\n",
+               attribute_list[i]->value.string);
+       kaerb = 1;
+     } /* if */
    } /* for */
+   if (kaerb)
+     return -1;
+ } /* if */
 
-  selection = tsdb_complex_select(conditions, NULL);
+  if (conditions)
+    selection = tsdb_complex_select(conditions, NULL);
   /* now join with relations that aren't in */
 
 #if defined(DEBUG) && defined(TOM)
-  fprintf(TSDB_DEFAULT_STREAM,"printing selection\n");
-  tsdb_print_selection(selection,TSDB_DEFAULT_STREAM);
+  fprintf(tsdb_debug_stream,"printing selection\n");
+  tsdb_print_selection(selection,tsdb_debug_stream);
 #endif
   
   for(i = 0; relation_list && relation_list[i]; i++) ;
   for(j = 0; attribute_list && attribute_list[j]; j++) ;
   
   relations = (Tsdb_relation **)malloc(sizeof(Tsdb_relation *) * (i + j + 1));
-  relations[i + j] = NULL;
+  memset(relations,'\0',sizeof(Tsdb_relation*)*(i + j +1));
   
   /* check from relations */
   for (i=0;attribute_list && attribute_list[i];i++) {
@@ -499,7 +518,10 @@ int tsdb_complex_retrieve(Tsdb_value **relation_list,
       a_relations = tsdb_attribute_relations(attribute_list[i]);
       for (j=0;a_relations[j];j++) {
         if (!tsdb_relation_in_selection(selection,a_relations[j]->name)!=-1) {
-          selection = tsdb_join_one_relation(selection,a_relations);
+          if (selection==NULL)
+            selection = tsdb_find_table(a_relations[0]);
+          else
+            selection = tsdb_join_one_relation(selection,a_relations);
           a_relations[i+1]=NULL;
         }
       } /* for */
@@ -541,12 +563,12 @@ void tsdb_project(Tsdb_selection *selection,Tsdb_value **attributes,FILE* stream
     kaerb = FALSE; /* not found */
     r[k] = -1;
 #if defined(DEBUG) && defined(TOM)
-    fprintf(stream,"Looking for Attribute %s \n",attributes[k]->value.string);
+    fprintf(tsdb_debug_stream,"Looking for Attribute %s \n",attributes[k]->value.string);
 #endif    
     for (i=0;!kaerb && i<selection->n_relations;i++) {
       relation = selection->relations[i];
 #if defined(DEBUG) && defined(TOM)
-      fprintf(stream,"in relation: %s\n",selection->relations[i]->name);
+      fprintf(tsdb_debug_stream,"in relation: %s\n",selection->relations[i]->name);
 #endif
       fields = selection->relations[i]->fields;
       for (j=0; !kaerb && j<relation->n_fields; j++) {
@@ -568,17 +590,16 @@ void tsdb_project(Tsdb_selection *selection,Tsdb_value **attributes,FILE* stream
 
 #if defined(DEBUG) && defined(TOM)
   for (i=0;i<selection->n_key_lists;i++) {
-    fprintf(stream," Key list %ld\n",i);
+    fprintf(tsdb_debug_stream," Key list %ld\n",i);
   } /* for */
 #endif
 
   relation = selection->relations[n=0];
 
-#if defined(DEBUG) && defined(TOM)
+/* #if defined(DEBUG) && defined(TOM)
   for (i=0,offset=0;i<selection->n_key_lists;i++,offset++) {
-#else
+#else */
    for (i=0,offset=0;i<1;i++,offset++) {
-#endif
     if (offset == relation->n_keys) {
       offset = 0;
       relation = selection->relations[++n];
@@ -586,11 +607,11 @@ void tsdb_project(Tsdb_selection *selection,Tsdb_value **attributes,FILE* stream
 
 #if defined(DEBUG) && defined(TOM)
     if (!selection->key_lists[i]) {
-      fprintf(stream," Key list %s is empty\n",
+      fprintf(tsdb_debug_stream," Key list %s is empty\n",
               relation->fields[relation->keys[offset]]);
     }
     else
-      fprintf(stream,"Key list %s\n",relation->fields[relation->keys[offset]]);
+      fprintf(tsdb_debug_stream,"Key list %s\n",relation->fields[relation->keys[offset]]);
 #endif
 
     for (list = selection->key_lists[i]; list!=NULL; list=list->next) {
@@ -873,8 +894,9 @@ Tsdb_relation ***tsdb_real_join_path(Tsdb_relation **guess,
     for(i = 0;
         i < length && !tsdb_relations_are_equal(*relations, guess[i]);
         i++);
-    if(i == length &&
-       tsdb_are_joinable(*relations, source)) {
+    if(i == length 
+       /* relations is NOT on the path */
+       && tsdb_are_joinable(*relations, source)) {
       if(length < 2 ||
          (foo = tsdb_join_key(guess[length - 2], guess[length - 1])) != NULL &&
          (bar = tsdb_join_key(guess[length - 1], *relations)) != NULL &&
@@ -889,7 +911,8 @@ Tsdb_relation ***tsdb_real_join_path(Tsdb_relation **guess,
       } /* if */
     } /* if */
   } /* for */
-
+  
+  /* All neighbours of source that are not on the path are found */
 #if defined(DEBUG) && defined(JOIN_PATH)
   fprintf(tsdb_debug_stream,
           "real_join_path(): neighbours: %s",
@@ -910,16 +933,17 @@ Tsdb_relation ***tsdb_real_join_path(Tsdb_relation **guess,
       else {
         successes =
           (Tsdb_relation ***)realloc(successes,
-                                      (n_successes + 2) * 
-                                      sizeof(Tsdb_relation**));
+                                     (n_successes + 2) * 
+                                     sizeof(Tsdb_relation**));
       } /* else */
-      successes[n_successes] =
-        (Tsdb_relation **)malloc((length + 2) * sizeof(Tsdb_relation *));
+      successes[n_successes]=(Tsdb_relation **)malloc((length + 2) * 
+                                                      sizeof(Tsdb_relation *));
       memcpy(successes[n_successes], guess, length * sizeof(Tsdb_relation *));
       successes[n_successes][length] = target;
       successes[n_successes][length + 1] = (Tsdb_relation *)NULL;
       successes[++n_successes] = (Tsdb_relation **)NULL;
       maximum = length + 1;
+
 #if defined(DEBUG) && defined(JOIN_PATH)
       fprintf(tsdb_debug_stream, "real_join_path(): successes: ");
       tsdb_print_join_path(successes[n_successes - 1], tsdb_debug_stream);
@@ -948,12 +972,6 @@ Tsdb_relation ***tsdb_real_join_path(Tsdb_relation **guess,
                sizeof(Tsdb_relation **) * (n + 1));
         n_successes += n;
         free(paths);
-      } /* if */
-      if(length >= 2 && foo != NULL) {
-        free(foo);
-      } /* if */
-      if(length >= 2 && bar != NULL) {
-        free(bar);
       } /* if */
     } /* else */
   } /* for */
