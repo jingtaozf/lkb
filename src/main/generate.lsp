@@ -694,25 +694,25 @@
 ;; (((r1 r2) e1 e2) ((r3 r4) e3)) (((r1) e4 e5 e6) ((r2 r3 r4) e5)) )
 
 (defun gen-chart-mod-edge-partitions (rels edges)
-  (let ((cache (make-hash-table :test #'equal)))
+  (let ((cache nil))
     ;; Find subsets of rels that are covered by some edge in edges
     (dolist (e edges)
-      (let ((rels-covered (g-edge-rels-covered e)))
+      (let ((rels-covered (sort (copy-list (g-edge-rels-covered e))
+				#'string<
+				:key #'mrs::rel-sort)))
 	(when (gen-chart-subset-p rels-covered rels)
-	  (pushnew e (gethash rels-covered cache)))))
+	  (let ((entry (assoc rels-covered cache :test #'equal)))
+	    (if entry 
+		(pushnew e (cdr entry))
+	      (push (cons rels-covered (list e)) cache))))))
     ;; Collect all the subsets, and compute the partitions of rels that can be
     ;; constructed out of them
-    (let ((subsets nil))
-      (maphash #'(lambda (x y) 
-		   (declare (ignore y))
-		   (push x subsets))
-	       cache)
-      (mapcar #'(lambda (p)
-		  (mapcar #'(lambda (s)
-			      (append (list s)
-				      (gethash s cache)))
-			  p))
-	      (make-partitions nil subsets rels)))))
+    (mapcar #'(lambda (p)
+		(mapcar #'(lambda (s)
+			    (append (list s)
+				    (cdr (assoc s cache :test #'equal))))
+			p))
+	    (make-partitions nil (mapcar #'car cache) rels))))
 
 (defun make-partitions (partition rest set)
   (if (is-partition-p partition set)
