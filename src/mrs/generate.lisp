@@ -20,6 +20,7 @@
 (defparameter *gen-adjunction-debug* nil)
 (defparameter *gen-equality-debug* nil)
 
+(defvar *bypass-equality-check* nil)
 
 ;;; Utility functions for initialising and building daughters and leaves
 ;;; fields in active chart edges
@@ -93,23 +94,6 @@
        ;;    do
        ;;    (format t "~%Id ~A, Lexical rules ~:A" (mrs::found-lex-lex-id lex)
        ;;       (mrs::found-lex-rule-list lex)))
-       #+ignore
-       (setq lex-orderings
-         (mapcar
-            #'(lambda (ordering)
-                (mapcar
-                   #'(lambda (id)
-                       (remove-if-not #'(lambda (x) (eq x id)) found-lex-list
-                                      :key #'mrs::found-lex-lex-id))
-                   ordering))
-            '((together out))
-            ;;'((maybe_adv1 so_adv1) (maybe_adv1 together back_vp_adv))
-            ;;'((manager_n1 by_p) (abrams project_n1))
-            ;;'((EVERY PROGRAMMER_N1 BE_C_WAS INTERVIEW_V1 BY_P THE MANAGER_N1 WHO2 
-            ;;    HAD_AUX) (HAD_AUX WORK_V1 ON A-DET PROJECT_N1 WITH_P ABRAMS))
-            ))
-       #+ignore
-       (setq vv (list input-sem filtered grules lex-orderings))
        (if filtered
           (chart-generate input-sem filtered grules lex-orderings)
           (progn
@@ -290,8 +274,9 @@
 ;;           (display-fs sem-fs "semstructure"))
 ;;        (when *sem-debugging*
 ;;           (mrs::output-mrs input-sem 'mrs::simple)
-;;           (mrs::output-mrs mrs 'mrs::simple))  
-         (mrs::mrs-equalp mrs input-sem nil *debugging*)))))
+         ;;           (mrs::output-mrs mrs 'mrs::simple))  
+         (or *bypass-equality-check*
+             (mrs::mrs-equalp mrs input-sem nil *debugging*))))))
 
 
 (defun gen-chart-root-edges (edge start-symbols)
