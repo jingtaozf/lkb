@@ -114,6 +114,7 @@
        #+:page 
        (:file "page-interface")
        (:file "derivations")
+       #+:lkb
        (:file "tnt-interface")
        #+(and :lkb :allegro :clim)
        (:file "redwoods")
