@@ -1,0 +1,134 @@
+\BOOKMARK {chapter.1}{Introduction}{}
+\BOOKMARK {section.1.1}{A brief introduction to the LKB system}{chapter.1}
+\BOOKMARK {section.1.2}{This manual}{chapter.1}
+\BOOKMARK {section.1.3}{Some history}{chapter.1}
+\BOOKMARK {section.1.4}{Acknowledgments}{chapter.1}
+\BOOKMARK {chapter.2}{Installing and running the system}{}
+\BOOKMARK {section.2.1}{Hardware and software requirements}{chapter.2}
+\BOOKMARK {section.2.2}{Downloading the LKB}{chapter.2}
+\BOOKMARK {subsection.2.2.1}{Downloading source files}{section.2.2}
+\BOOKMARK {subsection.2.2.2}{Downloading an image}{section.2.2}
+\BOOKMARK {subsection.2.2.3}{Getting a local copy of the LKB at CSLI}{section.2.2}
+\BOOKMARK {section.2.3}{Compiling the source files and making an image}{chapter.2}
+\BOOKMARK {subsection.2.3.1}{Allegro Common Lisp and CLIM (ACL/CLIM)}{section.2.3}
+\BOOKMARK {subsection.2.3.2}{Macintosh Common Lisp (MCL)}{section.2.3}
+\BOOKMARK {section.2.4}{Running the LKB from compiled files}{chapter.2}
+\BOOKMARK {subsection.2.4.1}{ACL/CLIM with emacs}{section.2.4}
+\BOOKMARK {subsection.2.4.2}{ACL/CLIM without emacs}{section.2.4}
+\BOOKMARK {subsection.2.4.3}{MCL}{section.2.4}
+\BOOKMARK {section.2.5}{Running the LKB from a saved image}{chapter.2}
+\BOOKMARK {subsection.2.5.1}{ACL/CLIM from emacs}{section.2.5}
+\BOOKMARK {subsection.2.5.2}{ACL/CLIM without emacs}{section.2.5}
+\BOOKMARK {subsection.2.5.3}{Macintosh}{section.2.5}
+\BOOKMARK {section.2.6}{Problems}{chapter.2}
+\BOOKMARK {chapter.3}{A first session}{}
+\BOOKMARK {section.3.1}{The LKB top menu}{chapter.3}
+\BOOKMARK {section.3.2}{Loading a grammar}{chapter.3}
+\BOOKMARK {section.3.3}{Examining feature structures and types}{chapter.3}
+\BOOKMARK {subsection.3.3.1}{The type hierarchy window}{section.3.3}
+\BOOKMARK {subsection.3.3.2}{The View commands}{section.3.3}
+\BOOKMARK {section.3.4}{Parsing}{chapter.3}
+\BOOKMARK {section.3.5}{Adding a lexical entry}{chapter.3}
+\BOOKMARK {section.3.6}{Adding a type}{chapter.3}
+\BOOKMARK {section.3.7}{Next steps}{chapter.3}
+\BOOKMARK {chapter.4}{Feature structures and types in the LKB system}{}
+\BOOKMARK {section.4.1}{Untyped feature structures}{chapter.4}
+\BOOKMARK {subsection.4.1.1}{Subsumption}{section.4.1}
+\BOOKMARK {subsection.4.1.2}{Unification}{section.4.1}
+\BOOKMARK {subsection.4.1.3}{Generalisation}{section.4.1}
+\BOOKMARK {section.4.2}{Typed feature structures}{chapter.4}
+\BOOKMARK {subsection.4.2.1}{The type hierarchy}{section.4.2}
+\BOOKMARK {subsection.4.2.2}{Typed feature structures}{section.4.2}
+\BOOKMARK {subsection.4.2.3}{Constraints}{section.4.2}
+\BOOKMARK {subsection.4.2.4}{Unification and well-formedness}{section.4.2}
+\BOOKMARK {section.4.3}{Description language}{chapter.4}
+\BOOKMARK {subsection.4.3.1}{Syntax of type descriptions}{section.4.3}
+\BOOKMARK {subsection.4.3.2}{Syntax of type descriptions}{section.4.3}
+\BOOKMARK {subsection.4.3.3}{Lexical entries}{section.4.3}
+\BOOKMARK {subsection.4.3.4}{Rules}{section.4.3}
+\BOOKMARK {subsection.4.3.5}{Morphological rules}{section.4.3}
+\BOOKMARK {subsection.4.3.6}{Lists and difference lists}{section.4.3}
+\BOOKMARK {subsection.4.3.7}{Parameterized templates}{section.4.3}
+\BOOKMARK {subsection.4.3.8}{Semantics of typed feature structure descriptions}{section.4.3}
+\BOOKMARK {section.4.4}{A note about disjunction and negation}{chapter.4}
+\BOOKMARK {chapter.5}{LKB source files}{}
+\BOOKMARK {section.5.1}{The script file}{chapter.5}
+\BOOKMARK {section.5.2}{Types and type files}{chapter.5}
+\BOOKMARK {subsection.5.2.1}{Syntactic well-formedness}{section.5.2}
+\BOOKMARK {subsection.5.2.2}{Conditions on the type hierarchy}{section.5.2}
+\BOOKMARK {subsection.5.2.3}{Uniqueness of greatest lower bound}{section.5.2}
+\BOOKMARK {subsection.5.2.4}{Constraints}{section.5.2}
+\BOOKMARK {section.5.3}{Lexical entries}{chapter.5}
+\BOOKMARK {section.5.4}{Grammar rules}{chapter.5}
+\BOOKMARK {section.5.5}{Lexical and morphological rules}{chapter.5}
+\BOOKMARK {section.5.6}{Irregular morphology}{chapter.5}
+\BOOKMARK {section.5.7}{Rule application during parsing}{chapter.5}
+\BOOKMARK {section.5.8}{Root file}{chapter.5}
+\BOOKMARK {section.5.9}{Parse tree node labels}{chapter.5}
+\BOOKMARK {subsection.5.9.1}{Original version}{section.5.9}
+\BOOKMARK {subsection.5.9.2}{PAGE emulation version}{section.5.9}
+\BOOKMARK {section.5.10}{Ancillary files}{chapter.5}
+\BOOKMARK {subsection.5.10.1}{Globals}{section.5.10}
+\BOOKMARK {subsection.5.10.2}{User preferences}{section.5.10}
+\BOOKMARK {subsection.5.10.3}{User defined functions}{section.5.10}
+\BOOKMARK {chapter.6}{LKB user interface}{}
+\BOOKMARK {section.6.1}{Top level commands}{chapter.6}
+\BOOKMARK {subsection.6.1.1}{Quit}{section.6.1}
+\BOOKMARK {subsection.6.1.2}{Load}{section.6.1}
+\BOOKMARK {subsection.6.1.3}{View}{section.6.1}
+\BOOKMARK {subsection.6.1.4}{Parse}{section.6.1}
+\BOOKMARK {subsection.6.1.5}{Tests}{section.6.1}
+\BOOKMARK {subsection.6.1.6}{Debug}{section.6.1}
+\BOOKMARK {subsection.6.1.7}{Options}{section.6.1}
+\BOOKMARK {subsection.6.1.8}{Generation*}{section.6.1}
+\BOOKMARK {subsection.6.1.9}{Tidy up*}{section.6.1}
+\BOOKMARK {subsection.6.1.10}{Output*}{section.6.1}
+\BOOKMARK {section.6.2}{Type hierarchy display}{chapter.6}
+\BOOKMARK {section.6.3}{Feature structure display}{chapter.6}
+\BOOKMARK {subsection.6.3.1}{Unification checks}{section.6.3}
+\BOOKMARK {section.6.4}{Parse output display}{chapter.6}
+\BOOKMARK {section.6.5}{Parse tree display}{chapter.6}
+\BOOKMARK {section.6.6}{Chart display}{chapter.6}
+\BOOKMARK {chapter.7}{Advanced features}{}
+\BOOKMARK {section.7.1}{Defining a new grammar}{chapter.7}
+\BOOKMARK {section.7.2}{Script files}{chapter.7}
+\BOOKMARK {subsection.7.2.1}{Loading functions}{section.7.2}
+\BOOKMARK {subsection.7.2.2}{Utility functions}{section.7.2}
+\BOOKMARK {section.7.3}{Check paths}{chapter.7}
+\BOOKMARK {section.7.4}{Multiword lexemes}{chapter.7}
+\BOOKMARK {section.7.5}{Parse ordering}{chapter.7}
+\BOOKMARK {section.7.6}{Character sets}{chapter.7}
+\BOOKMARK {subsection.7.6.1}{MCL}{section.7.6}
+\BOOKMARK {subsection.7.6.2}{ACL/CLIM on Unix}{section.7.6}
+\BOOKMARK {section.7.7}{Cached lexicon}{chapter.7}
+\BOOKMARK {section.7.8}{Leaf types}{chapter.7}
+\BOOKMARK {section.7.9}{Emacs interface}{chapter.7}
+\BOOKMARK {section.7.10}{YADU}{chapter.7}
+\BOOKMARK {section.7.11}{MRS}{chapter.7}
+\BOOKMARK {section.7.12}{Generation}{chapter.7}
+\BOOKMARK {section.7.13}{TSDB}{chapter.7}
+\BOOKMARK {chapter.A}{The tty interface}{}
+\BOOKMARK {section.A.1}{What is the tty mode?}{chapter.A}
+\BOOKMARK {section.A.2}{Loading the LKB in tty mode}{chapter.A}
+\BOOKMARK {section.A.3}{Loading grammars}{chapter.A}
+\BOOKMARK {section.A.4}{View commands}{chapter.A}
+\BOOKMARK {section.A.5}{Parsing}{chapter.A}
+\BOOKMARK {section.A.6}{Links}{chapter.A}
+\BOOKMARK {section.A.7}{Generation}{chapter.A}
+\BOOKMARK {section.A.8}{Miscellaneous}{chapter.A}
+\BOOKMARK {chapter.B}{Path syntax}{}
+\BOOKMARK {section.B.1}{Type descriptions}{chapter.B}
+\BOOKMARK {section.B.2}{Instance descriptions}{chapter.B}
+\BOOKMARK {chapter.C}{Details of system parameters}{}
+\BOOKMARK {section.C.1}{Grammar independent global variables}{chapter.C}
+\BOOKMARK {subsection.C.1.1}{System files}{section.C.1}
+\BOOKMARK {subsection.C.1.2}{System behaviour}{section.C.1}
+\BOOKMARK {subsection.C.1.3}{Display parameters}{section.C.1}
+\BOOKMARK {subsection.C.1.4}{Parse tree node labels}{section.C.1}
+\BOOKMARK {subsection.C.1.5}{Languages}{section.C.1}
+\BOOKMARK {subsection.C.1.6}{Defaults}{section.C.1}
+\BOOKMARK {section.C.2}{Grammar specific parameters}{chapter.C}
+\BOOKMARK {subsection.C.2.1}{Type hierarchy}{section.C.2}
+\BOOKMARK {subsection.C.2.2}{Orthography and lists}{section.C.2}
+\BOOKMARK {subsection.C.2.3}{Morphology and parsing}{section.C.2}
+\BOOKMARK {section.C.3}{User definable functions}{chapter.C}

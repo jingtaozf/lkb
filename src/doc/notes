@@ -1,0 +1,26 @@
+I have tried to
+
+\usepackage{times}
+
+but there are missing fonts
+
+for PDF hyperlinks I am using
+
+\usepackage[dvips]{hyperref}
+
+this works on eon and eoan, but not on turing apparently
+
+To construct pdf
+
+LaTeX as normal
+dvips -Ptype1 -file newdoc.dvi > newdoc.ps
+distill newdoc.ps (on turing, or eoan, accidentally ...)
+web files are on ~aac/WWW
+
+
+Remaining (known) problems
+
+Generally missing stuff is indicated by FIX (either as LaTeX comment,
+or visible in the text).
+
+Downloading and installation instructions have lacuna.
