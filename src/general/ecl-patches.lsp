@@ -2,7 +2,8 @@
 
 (in-package "COMMON-LISP-USER")
 
-#+(and :unix :i686) (pushnew :linux *features*)
+#+(and :unix (or :i386 :i686 :pentium3 :pentium4 :athlon))
+(pushnew :linux *features*)
 (pushnew :cltl2 *features*)
 
 ;;;
@@ -99,8 +100,10 @@
 
 (defvar %binary-dir-name% 
   (or
-   #+(and (or :i686 :pentium4) :linux) ".lecl"
-   #+(and (or :i686 :pentium4) (not :unix)) ".wecl"
+   #+(and (or :i386 :i686 :pentium3 :pentium4 :athlon) :linux)
+   ".lecl"
+   #+(and (or :i386 :i686 :pentium3 :pentium4 :athlon) (not :unix))
+   ".wecl"
    ".ecl"))
 
 ;;;
@@ -109,11 +112,11 @@
 ;;; accordingly (6-feb-96 -- oe@csli)
 ;;;
 (defvar %system-binaries%
-  #+(and (or :i386 :i686 :pentium3 :pentium4) :unix) "linux.x86.32"
-  #+(and (not (or :i386 :i686 :pentium3 :pentium4)) :unix) "ppc.x86.32"
-  #+(and (or :i386 :i686 :pentium3 :pentium4) (not :unix)) "windows"
-  #-(or (or :i386 :i686 :pentium3 :pentium4) 
-        (and (not (or :i386 :i686 :pentium3 :pentium4)) :unix))
+  #+(and (or :i386 :i686 :pentium3 :pentium4 :athlon) :unix) "linux.x86.32"
+  #+(and (not (or :i386 :i686 :pentium3 :pentium4 :athlon)) :unix) "ppc.x86.32"
+  #+(and (or :i386 :i686 :pentium3 :pentium4 :athlon) (not :unix)) "windows"
+  #-(or (or :i386 :i686 :pentium3 :pentium4 :athlon) 
+        (and (not (or :i386 :i686 :pentium3 :pentium4 :athlon)) :unix))
   (error "~&loadup: unable to determine system type; see file ~
           `ecl-patches.lisp'.~%"))
 
