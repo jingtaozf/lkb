@@ -196,7 +196,7 @@ Tsdb_field **tsdb_field_array_append(Tsdb_field **, Tsdb_field *);
 
 BYTE tsdb_value_compare(Tsdb_value *, Tsdb_value *);
 BYTE tsdb_tuple_compare(Tsdb_tuple *, Tsdb_tuple *);
-BOOL tsdb_value_substring(Tsdb_value *, Tsdb_value *);
+BOOL tsdb_value_match(Tsdb_value *, Tsdb_value *,void *);
 
 FILE* tsdb_open_pager();
 FILE* tsdb_open_debug();
@@ -268,6 +268,7 @@ int* tsdb_relation_match(Tsdb_selection *, Tsdb_selection *);
 Tsdb_relation *tsdb_create_relation(void);
 void tsdb_free_relation(Tsdb_relation*);
 Tsdb_selection *tsdb_create_selection(int, int);
+Tsdb_selection *tsdb_copy_selection(Tsdb_selection*);
 Tsdb_selection *tsdb_find_table(Tsdb_relation *);
 Tsdb_selection *tsdb_find_tables(Tsdb_relation**);
 Tsdb_selection *tsdb_read_table(Tsdb_relation *, Tsdb_node *);
