@@ -1,4 +1,3 @@
-DROP TABLE erg;
 CREATE TABLE erg (
   id INTEGER,
   name VARCHAR(95),
@@ -66,7 +65,6 @@ ON erg (orthography);
 CREATE UNIQUE INDEX primarykey
 ON erg (name,version); 
 
-DROP TABLE ergd;
 CREATE TABLE ergd (
   slot VARCHAR(50),
   field VARCHAR(50),
@@ -90,39 +88,39 @@ INSERT INTO ergd VALUES ( 'unifs', 'alt2key', '(synsem local keys alt2key)', 'sy
 INSERT INTO ergd VALUES ( 'unifs', 'compkey', '(synsem lkeys --compkey)', 'symbol' );
 INSERT INTO ergd VALUES ( 'unifs', 'ocompkey', '(synsem lkeys --ocompkey)', 'symbol' );
 
-DROP VIEW max_version;
 CREATE VIEW max_version 
 	AS SELECT erg.name AS "key", max(erg."version") AS max 
 	FROM erg
 	WHERE erg.flags=1 
 	GROUP BY erg.name;
 
-DROP VIEW erg_max_version;
 CREATE VIEW erg_max_version 
 	AS SELECT erg.* 
 	FROM (erg JOIN max_version ON 
 	(((erg.name = max_version."key") AND (erg."version" = max_version.max))));
 
-DROP FUNCTION orthography_set();
-CREATE FUNCTION orthography_set () RETURNS SETOF text 
-	AS 'SELECT DISTINCT orthography FROM erg_max_version' LANGUAGE SQL;
+CREATE TABLE ergq (
+  fn VARCHAR(50),
+  arity int,
+  sql_code VARCHAR(255),
+PRIMARY KEY (fn)
+);
 
-DROP FUNCTION psort_id_set();
-CREATE FUNCTION psort_id_set() RETURNS SETOF text 
-	AS 'SELECT DISTINCT name FROM erg_max_version' LANGUAGE SQL;
+INSERT INTO ergq VALUES ( 'orthography-set', 0, 'SELECT DISTINCT orthography FROM erg_max_version' );
+INSERT INTO ergq VALUES ( 'psort-id-set', 0, 'SELECT DISTINCT name FROM erg_max_version');
+INSERT INTO ergq VALUES ( 'lookup-word', 1, 'SELECT name FROM erg_max_version WHERE orthkey = $0' );
+INSERT INTO ergq VALUES ( 'next-version', 1, 'SELECT 1 + max(version) FROM erg WHERE name = $0');
+INSERT INTO ergq VALUES ( 'next-id', 0, 'SELECT 1 + max(id) FROM erg');
+INSERT INTO ergq VALUES ( 'retrieve-entries', 2, 'SELECT $0 FROM erg_max_version WHERE name IN (SELECT name FROM erg_max_version WHERE orthkey = $1)' );
 
-DROP FUNCTION lookup_word(text);
-CREATE FUNCTION lookup_word (text) RETURNS SETOF text 
-	AS 'SELECT name FROM erg_max_version WHERE orthkey = $1;' LANGUAGE SQL;
+CREATE TABLE ergqa (
+  fn VARCHAR(50),
+  arg int,
+  type VARCHAR(50),
+PRIMARY KEY (fn,arg)
+);
 
-DROP FUNCTION next_version(text);
-CREATE FUNCTION next_version (text) RETURNS int 
-	AS 'SELECT 1 + max(version) FROM erg WHERE name = $1;' LANGUAGE SQL;
-
-DROP FUNCTION next_id();
-CREATE FUNCTION next_id () RETURNS int 
-	AS 'SELECT 1 + max(id) FROM erg;' LANGUAGE SQL;
-
-DROP FUNCTION retrieve_entries(text);
-CREATE FUNCTION retrieve_entries (text) RETURNS SETOF erg_max_version 
-	AS 'SELECT * FROM erg_max_version WHERE name IN (SELECT lookup_word($1));' LANGUAGE SQL;
+INSERT INTO ergqa VALUES ( 'lookup-word', 0, 'text' );
+INSERT INTO ergqa VALUES ( 'next-version', 0, 'text');
+INSERT INTO ergqa VALUES ( 'retrieve-entries', 0, 'select-list' );
+INSERT INTO ergqa VALUES ( 'retrieve-entries', 1, 'text' );

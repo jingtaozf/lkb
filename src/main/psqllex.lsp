@@ -76,6 +76,7 @@
 	(format *trace-output* 
 		"~%WARNING: PostgreSQL server version is ~a. Please upgrade to version 7.3 or above." (server-version lexicon)))
       (make-field-map-slot lexicon)
+      (retrieve-fn-defns lexicon)
       (when *psql-lexicon* (clear-lex *psql-lexicon*))
       (setf *psql-lexicon* lexicon)
       (cond
@@ -132,7 +133,10 @@
 
 (defclass psql-database (sql-database)
   ((connection :initform nil :accessor connection :initarg connection)
-   (server-version :initform nil :accessor server-version)))
+   (server-version :initform nil :accessor server-version)
+   (fns :initform nil :accessor fns)
+   )
+  )
 
 (defclass psql-lex-database (psql-database external-lex-database)
   ())
@@ -183,7 +187,8 @@
   (setf (dbname lexicon) nil)
   (setf (host lexicon) nil)
   (setf (user lexicon) nil)
-  (setf (password lexicon) nil))
+  (setf (password lexicon) nil)
+  (setf (fns lexicon) nil)) ;:todo: unbind function
 
 ;;;
 ;;; --- psql-database methods
@@ -354,12 +359,27 @@
   (let ((stream (make-string-input-stream str)))
     (read stream nil nil)))
 
-(defun symb-2-str (symb)
+(defun non-null-symb-2-str (symb)
   (if symb
-      (let ((stream (make-string-output-stream)))
-	(format stream "~a" symb)
-	(string-downcase (get-output-stream-string stream)))
-    nil))
+      (symb-2-str symb)))
+  
+(defun symb-2-str (symb)
+  (cond
+   ((null symb) "")
+   ((not (numberp symb)) (string-downcase (string symb)))
+   (t (num-2-str symb))))
+    
+
+(defun num-2-str (num)
+  (let ((stream (make-string-output-stream)))
+    (format stream "~a" num)
+    (get-output-stream-string stream)))
+
+(defun char-2-symb (c)
+  (str-2-symb (string c)))
+
+(defun get-val (field record)
+  (cdr (assoc field record :test #'equal)))
 
 ;;;
 ;;;
@@ -394,36 +414,24 @@
 ;; --- psql-lex-database methods
 ;;;
 
-(defmethod lookup-word-OLD ((lexicon psql-lex-database) orth &key (cache t))
-  (declare (ignore cache))
-  (if (connection lexicon)
-      (let* (
-	     (orthstr (string-downcase (sql-escape-string orth)))
-	     (sql-str (format 
-		       nil 
-		       "SELECT lookup_word('~a');"
-		       orthstr))
-	     (query-res (run-query 
-			 lexicon 
-			 (make-instance 'sql-query :sql-string sql-str))))
-	(mapcar #'str-to-symbol-format (mapcar #'car (records query-res))))))
-
 (defmethod lookup-word ((lexicon psql-lex-database) orth &key (cache t))
   (declare (ignore cache))
   (if (connection lexicon)
       (let* (
 	     (orthstr (string-downcase (sql-escape-string orth)))
-	     (sql-str 
-	      (cond
-	       ((string< (server-version lexicon) "7.3")
-		(format nil "SELECT ~a FROM erg_max_version WHERE name IN (SELECT lookup_word('~a'));" 
-			(make-requested-fields lexicon)
-			orthstr))
-	       (t (format 
-		   nil 
-		   "SELECT ~a FROM retrieve_entries('~a');"
-		   (make-requested-fields lexicon)
-		   orthstr))))
+	     ;:todo: select subset of columns
+	     (sql-str (sql-retrieve-entries lexicon (make-requested-fields lexicon) orthstr))
+					;(sql-str 
+	     ; (cond
+	     ;  ((string< (server-version lexicon) "7.3")
+		;(format nil "SELECT ~a FROM erg_max_version WHERE name IN (SELECT lookup_word('~a'));" 
+		;	(make-requested-fields lexicon)
+		;	orthstr))
+	       ;(t (format 
+		;   nil 
+		;   "SELECT ~a FROM retrieve_entries('~a');"
+		;   (make-requested-fields lexicon)
+		;   orthstr))))
 	     (query-res (run-query 
 			 lexicon 
 			 (make-instance 'sql-query :sql-string sql-str)))
@@ -461,10 +469,12 @@
 ;;; return "ad" and "hoc" separately, rather than just "ad hoc"; (done)
 ;;; fix_me: inefficient implementation
 (defmethod lex-words ((lexicon psql-lex-database))
-  (let* ((sql-str (format 
-                   nil 
-                   "SELECT orthography_set();" 
-		   ))
+  (let* (
+	 (sql-str (sql-orthography-set lexicon))
+	 ;(sql-str (format 
+         ;          nil 
+         ;          "SELECT orthography_set();" 
+		;   ))
          (query-res (run-query 
                      lexicon 
                      (make-instance 'sql-query :sql-string sql-str))))
@@ -475,9 +485,11 @@
     ))
 
 (defmethod collect-psort-ids ((lexicon psql-lex-database))
-  (let* ((sql-str (format 
-                   nil 
-                   "SELECT psort_id_set();"))
+  (let* (
+	 (sql-str (sql-psort-id-set lexicon))
+	 ;(sql-str (format 
+         ;          nil 
+         ;          "SELECT psort_id_set();"))
           (query-res (run-query 
                      lexicon 
                      (make-instance 'sql-query :sql-string sql-str))))
@@ -486,11 +498,13 @@
 
 ;;; todo: DB fn instead
 (defmethod retrieve-record ((lexicon psql-lex-database) id)
-  (let* ((sql-str (format nil "SELECT ~a FROM ~a WHERE ~a='~a';" 
-			  (make-requested-fields lexicon)
-			  "erg_max_version"
-			  (second (assoc :id (fields-map lexicon)))
-			  (symbol-to-str-format id)))
+  (let* (
+	 (sql-str (sql-retrieve-entries lexicon (symbol-to-str-format id)))
+	 ;(sql-str (format nil "SELECT ~a FROM ~a WHERE ~a='~a';" 
+		;	  (make-requested-fields lexicon)
+			;  "erg_max_version"
+			 ; (second (assoc :id (fields-map lexicon)))
+			 ; (symbol-to-str-format id)))
 	 (query-res (run-query 
 		     lexicon 
 		     (make-instance 'sql-query :sql-string sql-str)))
@@ -531,8 +545,7 @@
               for slot-value-list = 
 		(work-out-value 
                                 slot-key slot-type 
-                                (cdr (assoc slot-field query-res 
-                                               :test #'equal)))		
+                                (get-val slot-field query-res))		
                                ;; if empty third argument (ie. path), 
                                ;; then add (:key "field")
 	      when slot-value-list
@@ -626,16 +639,16 @@
 		 (if alt2key 1 0) (if compkey 1 0) (if ocompkey 1 0)))
        (psql-le
 	(make-instance 'psql-lex-entry
-	 :name (symb-2-str name)
-	 :type (symb-2-str (extract-type-from-unifications constraint))
+	 :name (non-null-symb-2-str name)
+	 :type (non-null-symb-2-str (extract-type-from-unifications constraint))
 	 :orthography stem		;list
 	 :orthkey (first stem)
-	 :keyrel (symb-2-str keyrel)
-	 :altkey (symb-2-str altkey)
-	 :alt2key (symb-2-str alt2key)
-	 :keytag (symb-2-str keytag)
-	 :compkey (symb-2-str compkey)
-	 :ocompkey (symb-2-str ocompkey)
+	 :keyrel (non-null-symb-2-str keyrel)
+	 :altkey (non-null-symb-2-str altkey)
+	 :alt2key (non-null-symb-2-str alt2key)
+	 :keytag (non-null-symb-2-str keytag)
+	 :compkey (non-null-symb-2-str compkey)
+	 :ocompkey (non-null-symb-2-str ocompkey)
 	 :userid *current-user*
 	 :country *current-country*
 	 :lang *current-lang*
@@ -728,7 +741,9 @@
     
 ;;; calls DB fn
 (defmethod next-id ((lexicon psql-lex-database))
-  (let* ((sql-str (format nil "SELECT next_id();"))
+  (let* (
+	 (sql-str (sql-next-id lexicon))
+	 ;(sql-str (format nil "SELECT next_id();"))
 	 (res (caar (records (run-query 
                      *psql-lexicon* 
                      (make-instance 'sql-query :sql-string sql-str))))))
@@ -736,13 +751,137 @@
 
 ;;; calls DB fn
 (defmethod next-version (id (lexicon psql-lex-database))
-  (let* ((sql-str (format nil 
-			  "SELECT next_version('~a');"
-			  (string-downcase id)))
+  (let* (
+	 (sql-str (sql-next-version lexicon (string-downcase id)))
+	 ;(sql-str (format nil 
+		;	  "SELECT next_version('~a');"
+		;	  (string-downcase id)))
 	 (res (caar (records (run-query 
                      *psql-lexicon* 
                      (make-instance 'sql-query :sql-string sql-str))))))
     (str-2-num res)))
+
+(defmethod fn ((lexicon psql-lex-database) fn-name &rest rest)
+  (eval (append (list (cdr (assoc fn-name (fns lexicon)))) rest)))
+  
+(defmethod sql-next-id ((lexicon psql-lex-database))
+  (fn lexicon 'next-id))
+
+(defmethod sql-next-version ((lexicon psql-lex-database) id)
+  (fn lexicon 'next-version id))
+
+(defmethod sql-orthography-set ((lexicon psql-lex-database))
+  (fn lexicon 'orthography-set))
+
+(defmethod sql-psort-id-set ((lexicon psql-lex-database))
+  (fn lexicon 'psort-id-set))
+
+(defmethod sql-lookup-word ((lexicon psql-lex-database) word)
+  (fn lexicon 'lookup-word word))
+
+(defmethod sql-retrieve-entries ((lexicon psql-lex-database) select-list word)
+  (fn lexicon 'retrieve-entries select-list word))
+
+(defmethod retrieve-fn-defns ((lexicon psql-lex-database))
+  (let* ((sql-str (format nil "SELECT * FROM ergq;"))
+	 (records (make-column-map-record (run-query 
+                     lexicon 
+                     (make-instance 'sql-query :sql-string sql-str)))))
+    (loop
+      for record in records
+	do
+	  (retrieve-fn-defn lexicon record))))
+
+(defmethod retrieve-fn-defn ((lexicon psql-lex-database) record)
+  (let* ((fn (get-val "fn" record))
+	 (arity (str-2-num (get-val"arity" record)))
+	 (sql-code (get-val "sql_code" record))
+	 (sql-str (format nil "SELECT * FROM ergqa WHERE fn='~a';" fn))
+	 (ergqa-records 
+	  (make-column-map-record 
+	   (run-query 
+	    lexicon 
+	    (make-instance 'sql-query :sql-string sql-str))))
+	 (type-list 
+	  (mapcar #'(lambda (record) 
+		      (cons 
+		       (str-2-num (get-val "arg" record))
+		       (str-2-symb (get-val "type" record))))
+		  ergqa-records)))
+    (unless (= arity (length type-list))
+      (error "wrong number of argument defns"))
+    (push (cons (str-2-symb fn) 
+		(make-db-access-fn fn sql-code type-list))
+	  (fns lexicon))))
+
+(defun make-db-access-fn (str-fn-name-in str type-list)
+  (let* (
+	 (fn-name (new-fn-name (concatenate 'string "sql-query-string-" (string str-fn-name-in))))
+	 (tmp (prepare-db-access-fn str type-list))
+	 (format-cmd (append '(format nil) (car tmp)))
+	 (args (cdr tmp))
+	 (fn-defn (list 'defun fn-name args format-cmd))
+	 )
+    (print fn-defn)
+    (eval fn-defn)))
+
+(defun new-fn-name (str)
+  (loop
+      with i = 0
+      with fn-name
+      do
+	(setf fn-name (str-2-symb (concatenate 'string str (num-2-str i))))
+	(unless (fboundp fn-name)
+	  (return fn-name))
+	(setf i (1+ i))))
+	
+(defun prepare-db-access-fn (str type-list)
+  (let ((stream (make-string-output-stream))
+	(args)
+	(arg-vars '(a b c d e f g h i j))
+	(arity (length type-list))
+	)
+  (loop
+      with max = (1- (length str))
+      for i from 0 to max
+      with max-arg = -1
+      and arg
+      and type
+      do
+	(setf c (aref str i))
+	(cond 
+	 ((eq c #\~)
+	  (format stream "~~~~"))
+	 ((eq c #\\)
+	  (if (= i max)
+	      (error "invalid string ('\\' cannot be string final)"))
+	  (format stream "~a" (aref str (1+ i)))
+	  (setf i (1+ i)))
+	 ((eq c #\$)
+	  (if (= i max)
+	      (error "invalid string ('$' cannot be string final)"))
+	  (unless (numberp (char-2-symb (aref str (1+ i))))
+	    (error "invalid string ('$' can only preceed a digit)"))
+	  (setf arg (char-2-symb (aref str (1+ i))))
+	  (if (> arg (1- arity))
+	      (error "too many arguments"))
+	  (setf max-arg (max max-arg arg))
+	  (setf type (cdr (assoc arg type-list)))
+	  (cond
+	   ((equal type 'text)
+	    (format stream "'~~a'"))
+	   ((equal type 'int)
+	    (format stream "~~a"))
+	   ((equal type 'select-list)
+	    (format stream "~~a"))
+	   (t
+	    (error "unknown type: ~a" type)))
+	  (push (nth arg arg-vars) args)
+	  (setf i (1+ i)))
+	 (t
+	  (format stream "~a" (aref str i)))))
+  (cons (cons (get-output-stream-string stream) (reverse args)) 
+	(subseq arg-vars 0 arity))))
 
 ;;;
 ;;; --- psql-lex-entry methods and funtions
@@ -765,3 +904,9 @@
       as j = (position char string :start i)
       collect (subseq string i j)
       while j))
+
+(defun time-parse (str)
+  (time
+   (parse
+    (split-into-words 
+     (preprocess-sentence-string str)))))
