@@ -1,5 +1,16 @@
 (in-package :tsdb)
 
+;;;
+;;; ToDo
+;;;
+;;; - confidence menu
+;;; - `Reset' buttom: re-instantiate original, preset state
+;;; - reorder trees: active at top
+;;; - pairwise comparison of trees
+;;; - highlighting of discriminats on tree select
+;;; - highlighting of trees on discriminant select
+;;;
+
 
 (defun browse-trees (&optional (data *tsdb-data*)
                      &key (condition *statistics-select-condition*)
@@ -90,8 +101,8 @@
            (items (analyze data :thorough '(:derivation) :condition condition))
            (item (and (null (rest items)) (first items)))
            (parse-id (get-field :parse-id item))
-           (trees (select '("parse-id" "result-id" "version" 
-                            "confidence" "t-author" "t-end")
+           (trees (select '("parse-id" "t-version" "t-active"
+                            "t-confidence" "t-author" "t-end")
                           '(:integer :integer :integer
                             :integer :string :date)
                           "tree" 
@@ -100,12 +111,12 @@
                           :sort :parse-id))
            (version (loop
                         for tree in trees
-                        maximize (get-field :version tree)))
+                        maximize (get-field :t-version tree)))
            (trees (loop
                       for tree in trees
-                      when (eq version (get-field :version tree))
+                      when (eq version (get-field :t-version tree))
                       collect tree))
-           (history (let* ((foo (get-field :confidence (first trees)))
+           (history (let* ((foo (get-field :t-confidence (first trees)))
                            (confidence 
                             (if (and (integerp foo) (>= foo 0) (<= foo 3))
                               (aref #("zero" "low" "fair" "high") foo)
@@ -122,11 +133,9 @@
            (edges (loop
                       with edges
                       for result in results
-                      for id = (get-field :result-id result)
                       for derivation = (get-field :derivation result)
                       do
                         (let ((edge (and derivation (reconstruct derivation))))
-                          (setf (lkb::edge-id edge) id)
                           (push edge edges))
                       finally (return (nreverse edges))))
            (discriminants (reconstruct-discrimininants data parse-id version))
@@ -146,30 +155,25 @@
       (let* ((decisions (lkb::compare-frame-decisions frame))
              (status (lkb::decision-type (first decisions))))
         (when (eq status :save)
-          (loop
-              with tops = (lkb::compare-frame-in-parses frame)
-              with version = (if version (incf version) 1)
-              for top in tops
-              for edge = (get top 'lkb::edge-record)
-              for result-id = (lkb::edge-id edge)
-              for confidence = 0
-              for t-author = (current-user)
-              for t-start = (let* ((start (first (last decisions)))
-                                   (start (when (lkb::decision-p start)
-                                            (lkb::decision-time start))))
-                              (if start 
-                                (decode-time start :long t)
-                                (current-time :long t)))
-              for t-end = (let* ((end (first decisions))
-                                 (end (when (lkb::decision-p end)
-                                        (lkb::decision-time end))))
-                            (if end 
-                              (decode-time end :long t)
-                              (current-time :long t)))
-              do
-                (write-tree data parse-id result-id version confidence
-                            t-author t-start t-end "" 
-                            :cache cache))
+          (let* ((version (if version (incf version) 1))
+                 (active (length (lkb::compare-frame-in-parses frame)))
+                 (confidence 0)
+                 (t-author (current-user))
+                 (t-start (let* ((start (first (last decisions)))
+                                 (start (when (lkb::decision-p start)
+                                          (lkb::decision-time start))))
+                            (if start 
+                              (decode-time start :long t)
+                              (current-time :long t))))
+                 (t-end (let* ((end (first decisions))
+                               (end (when (lkb::decision-p end)
+                                      (lkb::decision-time end))))
+                          (if end 
+                            (decode-time end :long t)
+                            (current-time :long t)))))
+            (write-tree data parse-id version active confidence
+                        t-author t-start t-end "" 
+                        :cache cache))
           (loop
               with version = (or version 1)
               for discriminant in (lkb::compare-frame-discrs frame)

@@ -704,7 +704,7 @@
       (call-tsdb query language :cache cache)))) 
 
 (defun write-tree (data
-                   parse-id result-id version confidence
+                   parse-id version active confidence
                    t-author t-start t-end t-comment
                    &key cache)
   (let* ((*print-circle* nil)
@@ -715,8 +715,8 @@
       (let ((stream (get-field :tree cache))
             (ofs *tsdb-ofs*))
         (write parse-id :stream stream) (write-char ofs stream)
-        (write result-id :stream stream) (write-char ofs stream)
         (write version :stream stream) (write-char ofs stream)
+        (write active :stream stream) (write-char ofs stream)
         (write confidence :stream stream) (write-char ofs stream)
         (write-string t-author stream) (write-char ofs stream)
         (write-string t-start stream) (write-char ofs stream)
@@ -728,7 +728,7 @@
       (let ((query (format
                     nil
                     "insert into tree values ~d ~d ~d ~d ~s ~a ~a ~s"
-                    parse-id result-id version confidence
+                    parse-id version active confidence
                     t-author t-start t-end t-comment)))
         (call-tsdb query data :cache cache)))))
 

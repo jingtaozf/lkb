@@ -225,6 +225,7 @@
 	   :accessor compare-frame-discrs)
    (preset :initform nil :accessor compare-frame-preset)
    (decisions :initform nil :accessor compare-frame-decisions)
+   (confidence :initform nil :accessor compare-frame-confidence)
    (trees :initform nil
 	  :accessor compare-frame-trees)
    (in :initform nil
@@ -353,6 +354,17 @@
     (recompute-in-and-out frame)
     (update-trees frame))) 
 
+(define-compare-frame-command (com-confidence :menu "Confidence")
+    ()
+  (clim:with-application-frame (frame)
+    (let ((command (clim:menu-choose
+                    '(("High" :value 3 :active t)
+                      ("Fair" :value 2 :active t)
+                      ("Low" :value 1 :active t)
+                      ("Zero" :value 0 :active t)))))
+      (when command
+        (setf (compare-frame-confidence frame) command)))))
+
 (defun type-tree (tree)
   (let ((edge-record (get tree 'edge-record)))
     (cons (if edge-record
@@ -420,16 +432,23 @@
 	(terpri stream))))
   (update-trees window))
 
-(defun propagate-discriminants (frame top)
+(defun propagate-discriminants (frame top toggle)
+  (setf *top* top)
   (loop
       for discriminant in (compare-frame-discrs frame)
-      when (member top (discr-in discriminant) :test #'eq)
+      when (or (and toggle (member top (discr-in discriminant) :test #'eq))
+               (and (null toggle)
+                    (eq top (first (discr-out discriminant)))
+                    (null (rest (discr-out discriminant)))))
       do
         (when (null (discr-toggle discriminant))
           (setf (discr-toggle discriminant) :unknown)
           (setf (discr-time discriminant) (get-universal-time)))
         (setf (discr-state discriminant) t)
-      when (member top (discr-out discriminant) :test #'eq)
+      when (or (and toggle (member top (discr-out discriminant) :test #'eq))
+               (and (null toggle)
+                    (eq top (first (discr-in discriminant)))
+                    (null (rest (discr-in discriminant)))))
       do
         (when (eq (discr-toggle discriminant) t)
           (setf (discr-toggle discriminant) :unknown)
@@ -442,7 +461,10 @@
   (let ((command (clim:menu-choose
 		  '(("Yes" :value yes :active t)
                     ("No" :value no :active t)
-		    ("Show tree" :value show)))))
+		    ("Enlarged Tree" :value show)
+                    ("MRS" :value mrs)
+                    ("Indexed MRS" :value mrs)
+                    ("Scoped MRS" :value mrs)))))
     (when command
       (handler-case
 	  (ecase command
@@ -450,13 +472,13 @@
              (record-decision 
               (make-decision :type :select :value (ptree-top tree)))
 	     (clim:with-application-frame (frame)
-               ;;
-               ;; _fix_me_
-               ;; determine proper way of propagating discriminants: toggle
-               ;; all discriminants for this tree on, overwrite negative toggle
-               ;; where necessary, then set status of all others to negative.
-               ;;
-               (propagate-discriminants frame (ptree-top tree))
+               (propagate-discriminants frame (ptree-top tree) t)
+	       (update-trees frame)))
+	    (no
+             (record-decision 
+              (make-decision :type :drop :value (ptree-top tree)))
+	     (clim:with-application-frame (frame)
+               (propagate-discriminants frame (ptree-top tree) nil)
 	       (update-trees frame)))
 	    (show 
              (clim:with-application-frame (frame)
