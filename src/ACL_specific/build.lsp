@@ -1,5 +1,6 @@
-;;; Copyright (c) 1998-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
-;;; see licence.txt for conditions
+;;; Copyright (c) 1998--2002
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see `licence.txt' for conditions.
 
 
 (in-package :common-lisp-user)
@@ -53,6 +54,3 @@
       (tpl:setq-default *package* (find-package :lkb))
       (let ((*package* (find-package "CLIM-USER")))
 	(clim-user::set-up-lkb-interaction :core))))
-
-;;(sys:write-codevectors "/tmp/lkb.cvr")
-
