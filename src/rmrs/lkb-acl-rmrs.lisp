@@ -354,18 +354,18 @@
 ("The dog arrived barking." . 1)))
 
 
-(defun compare-eg (egnum)
+(defun compare-eg (egnum strpos-p)
   (let* ((eg (nth (- egnum 1)
 		  *rmrs-test-suite*))
 	 (input (car eg))
 	 (parse-number (cdr eg))
-	(rasp-mrs 
+	(rasp-rmrs 
 	 (nth (- egnum 1)
 	      (mrs::read-rmrs-file "semtest.rmrs" :rasp)))
-	 (erg-mrs
+	 (erg-rmrs
 	  (rmrs-for-sentence input parse-number)))
-    (dolist (comparison-record (mrs::compare-rmrs erg-mrs rasp-mrs t input))
-      (show-mrs-rmrs-compare-window erg-mrs rasp-mrs 
+    (dolist (comparison-record (mrs::compare-rmrs erg-rmrs rasp-rmrs strpos-p))
+      (show-mrs-rmrs-compare-window erg-rmrs rasp-rmrs 
 				    comparison-record input))))
 
 #|
@@ -396,7 +396,9 @@
       ("The cat chased the cat." 1 "The cat chased the cat." 1)
       ("The cat chased the cat." 1 "The cat chased the dog." 1)
       ("The dog chased the cat." 1 "The cat chased the dog." 1)
-      ("The big dog chased the cat." 1 "The big cat chased the dog." 1)))
+      ("The big dog chased the cat." 1 "The big cat chased the dog." 1)
+      ("The cat barked." 1 "The dog barked." 1)
+      ("The fat cat barked." 1 "The fat dog barked." 1)))
 
 
 (defun test-eg (egnum same-source-p)

@@ -158,8 +158,7 @@ because snore and sleep don't have matching ARGs.
 ;;; weighted match case for e.g. QA, since otherwise this
 ;;; might be too expensive computationally
 
-(defun compare-rmrs (rmrs1 rmrs2 same-source-p input-string)
-  (declare (ignore input-string))
+(defun compare-rmrs (rmrs1 rmrs2 same-source-p)
   ;;; returns a list of comparison records
   (unless (and (rmrs-p rmrs1) (rmrs-p rmrs2))
     (error "Arguments to compare-rmrs are not valid RMRSs"))

@@ -160,6 +160,14 @@ others have `XML'
 
 (progn
 (setf *xml-word-p* t)
+(simple-process-rasp-file2 
+ (make-pathname 
+   :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
+   :name "semtest.rasp")
+ "semtest.rmrs" nil))
+
+(progn
+(setf *xml-word-p* t)
 (simple-process-rasp-file 
  (make-pathname 
    :device "d"
@@ -192,6 +200,17 @@ others have `XML'
  (read-rmrs-tag-templates 
   (make-pathname :device "d"
 		 :directory "/lingo/lkb/src/rmrs/annlt-test/"
+		 :name "lex14.1.rmrs"))
+ (rmrs-from-file ifile ofile xml-p))
+
+(defun simple-process-rasp-file2 (ifile ofile xml-p)
+ (clear-rule-record)
+ (read-rmrs-grammar 
+  (make-pathname 
+   :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
+   :name "gram14.1.rmrs"))
+ (read-rmrs-tag-templates 
+  (make-pathname :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
 		 :name "lex14.1.rmrs"))
   (rmrs-from-file ifile ofile xml-p))
 
@@ -674,7 +693,7 @@ Simple qa code.
 	     (let* ((a-rmrs (qa-struct-rmrs qa-struct))
 		    (original (qa-struct-str qa-struct))
 		    (comparison-records 
-		     (compare-rmrs q-rmrs a-rmrs nil "Foo")))
+		     (compare-rmrs q-rmrs a-rmrs nil)))
 	       (when comparison-records
 		 (let
 		     ((score (qa-score (car comparison-records)))
