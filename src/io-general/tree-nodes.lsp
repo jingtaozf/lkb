@@ -8,9 +8,23 @@
 
 (defun show-gen-result nil
    (if *gen-record*
-      (for edge in *gen-record*
-         do
-         (display-parse-tree edge nil))
+      (draw-active-list
+         (sort
+            (mapcar
+               #'(lambda (edge)
+                   (cons (format nil "~{~A~^ ~}" (g-edge-leaves edge))
+                      edge))
+               *gen-record*)
+            #'string-lessp :key #'car)
+         "Generated Sentences"
+         (list
+            (cons "Feature structure"
+               #'(lambda (edge)
+                   (display-fs (g-edge-dag edge)
+                      (format nil "Edge ~A G - Tree FS" (g-edge-id edge)))))
+            (cons "Edge"
+               #'(lambda (edge)
+                   (display-parse-tree edge nil)))))
       (format t "~%No strings generated")))
 
 #|     
