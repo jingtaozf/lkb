@@ -155,11 +155,7 @@ movenavtxt( Math.min(AT.w_x-AT.boxwidth-margin , Math.max(2,xoff))+getpagescroll
 if(!mousefollow)AT.oktomove=false;
 }}
 
-if(AT.ns4)document.captureEvents(Event.MOUSEMOVE);
-
-document.onmousemove=moveobj;
-
-window.onload=function(){
+function atInitialize() {
   AT.navtxt=(AT.ns4)? document.layers['navtxt'] : (AT.ie4)? document.all['navtxt'] : (AT.w3c)? document.getElementById('navtxt') : null;
   getboxwidth();
   getboxheight();
@@ -168,7 +164,15 @@ window.onload=function(){
   if((AT.w3c || AT.ie4) && centertext)AT.navtxt.style.textAlign="center";
   if(AT.w3c)AT.navtxt.style.padding='4px';
   if(AT.ie4 || AT.ie5 && dofade)AT.navtxt.style.filter="alpha(opacity=0)";
-  }
+} // atInitialize()
+
+if(AT.ns4)document.captureEvents(Event.MOUSEMOVE);
+
+document.onmousemove=moveobj;
+
+window.onload = function() {
+  atInitialize();
+}
 
 window.onresize=getwindowdims;
 
