@@ -165,13 +165,35 @@
           (make-point prompt-width button-height)
           prompt
           nil)
-       (make-dialog-item
-          (if (eq init :check-box) 'check-box-dialog-item 'editable-text-dialog-item)
-          (make-point (+ spacing prompt-width spacing) 
-             (+ spacing (* (1- count) (+ spacing button-height))))
-          (make-point value-width button-height)
-          (if (eq init :check-box) nil init)
-          nil)))
+       (let ((top-left
+                (make-point (+ spacing prompt-width spacing) 
+                   (+ spacing (* (1- count) (+ spacing button-height))))))
+          (cond
+             ((eq init :check-box)
+                (make-dialog-item 'check-box-dialog-item
+                   top-left
+                   (make-point value-width button-height)
+                   nil))
+             ((and (consp init) (eq (car init) :typein-menu))
+                (make-dialog-item 'typein-menu
+                   top-left
+                   (make-point value-width (+ button-height 3))
+                   (cadr init)
+                   nil
+                   :menu-position :right
+                   :menu-items
+                   (mapcar
+                      #'(lambda (s)
+                          (make-instance 'typein-menu-item                
+                             :menu-item-title s))
+                      (cdr init))))
+             (t
+                (make-dialog-item 'editable-text-dialog-item
+                   top-left
+                   (make-point value-width button-height)
+                   init
+                   nil))))))
+
 
 (defun ask-for-strings-dialog (title prompt-init-items prompt-width
                                      value-width button-width button-height spacing font)
@@ -206,21 +228,26 @@
                                     (setf return-values :cancel)
                                     (window-close (view-container item))))
              (make-dialog-item 'default-button-dialog-item
-                               (make-point
-                                  (- window-width (+ spacing button-width))
-                                  (- window-height (+ spacing button-height)))
-                               (make-point button-width button-height)
-                               "OK"
-                               #'(lambda (item) 
-                                   (setf return-values 
-                                         (for d-item in (cddr (dialog-items request-dialog))
-                                              nconc 
-                                              (cond
-                                                 ((typep d-item 'editable-text-dialog-item)
-                                                    (list (dialog-item-text d-item)))
-                                                 ((typep d-item 'check-box-dialog-item)
-                                                    (list (check-box-checked-p d-item))))))
-                                   (window-close (view-container item))))
+                (make-point
+                   (- window-width (+ spacing button-width))
+                   (- window-height (+ spacing button-height)))
+                (make-point button-width button-height)
+                "OK"
+                #'(lambda (item) 
+                    (dotimes (n (length (view-subviews request-dialog)))
+                       (when (> n 1) ; skip the two buttons
+                          (let ((d-item (aref (view-subviews request-dialog) n)))
+                             (setq return-values 
+                                (nconc return-values
+                                   (cond
+                                      ((typep d-item 'editable-text-dialog-item)
+                                         (list (dialog-item-text d-item)))
+                                      ((typep d-item 'typein-menu)
+                                         (list (dialog-item-text
+                                                (ccl::typein-editable-text d-item))))
+                                      ((typep d-item 'check-box-dialog-item)
+                                         (list (check-box-checked-p d-item)))))))))
+                    (window-close (view-container item))))
              prompt-init-items)))
     (let ((loop-return 
            (loop (event-dispatch)          
