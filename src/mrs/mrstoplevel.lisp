@@ -63,12 +63,15 @@
 
 #-tty
 (defun show-gen-chart (&optional all-p) 
-   (let ((root (make-symbol "")))
-     (setf (get root 'root) t)
-     (create-gen-chart-pointers root all-p)
-      (draw-chart-lattice root
-         (format nil "Generator Chart (~A edges)" (if all-p "all" "inactive")))
-      root))
+   (if *gen-chart*
+      (let ((root (make-symbol "")))
+         (setf (get root 'root) t)
+         (create-gen-chart-pointers root all-p)
+         (draw-chart-lattice root
+            (format nil "Generator Chart (~A edges)" (if all-p "all" "inactive")))
+         root)
+      (lkb-beep)))
+      
 
 
 (defun create-gen-chart-pointers (root all-p)
