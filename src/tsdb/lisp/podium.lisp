@@ -201,6 +201,7 @@
                       (format nil "updating `~a' status ..." data)
                       "obtaining tsdb(1) database list ...")))
               (status :text message)
+              (purge-profile-cache (or data :all))
               (unless (and data index)
                 (send-to-podium "catch {unset test_suites}" :wait t))
               (let ((dbs (with-output-to-string (stream)

@@ -44,8 +44,6 @@ proc tsdb_file {action {index -1}} {
     }; # if
   } elseif {$action == "reread"} {
     if {[verify_ts_selection]} {return 1};
-    set command "(purge \"$globals(data)\")";
-    send_to_lisp :event $command;
     update_ts_list update $globals(data);
   } elseif {$action == "purge"} {
     if {[verify_ts_selection]} {return 1};

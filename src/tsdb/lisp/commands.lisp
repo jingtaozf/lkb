@@ -501,65 +501,67 @@
   
   (case action
     (:list
-     (if (null *pvm-cpus*)
-       (format
-        stream
-        "~atsdb(): no active PVM clients.~%~%"
-        prefix)
-       (loop 
-           for cpu in (sort 
-                       (copy-list *pvm-cpus*) #'string< 
-                       :key #'(lambda (cpu) 
-                                (let ((class (cpu-class cpu)))
-                                  (symbol-name
-                                   (typecase class
-                                     (cons (first class))
-                                     (t class))))))
+     (loop 
+             for cpu in (sort 
+                         (copy-list *pvm-cpus*) #'string< 
+                         :key #'(lambda (cpu) 
+                                  (let ((class (cpu-class cpu)))
+                                    (symbol-name
+                                     (typecase class
+                                       (cons (first class))
+                                       (t class))))))
 
-           for host = (cpu-host cpu)
-           for spawn = (cpu-spawn cpu)
-           for options = (cpu-options cpu)
-           for class = (cpu-class cpu)
-           do
-             (case format
-               (:ascii
-                (format
-                 stream
-                 "~&~%~a- `~(~:[~a~;~{~a~^ | ~}~]~)' (`~a');~%~
-                  ~a  command: `~a';~%~
-                  ~a  options: `~{~a~^ ~}';~%~%"
-                 prefix (consp class) class host
-                 prefix spawn
-                 prefix options))))))
+             for host = (cpu-host cpu)
+             for spawn = (cpu-spawn cpu)
+             for options = (cpu-options cpu)
+             for class = (cpu-class cpu)
+             do
+               (case format
+                 (:ascii
+                  (format
+                   stream
+                   "~&~%~a- `~(~:[~a~;~{~a~^ | ~}~]~)' (`~a');~%~
+                    ~a  command: `~a';~%~
+                    ~a  options: `~{~a~^ ~}';~%~%"
+                   prefix (consp class) class host
+                   prefix spawn
+                   prefix options)))))
     (:kill
      (format stream "~atsdb(): performing full PVM reset ..." prefix)
      (pvm_quit)
-     (sleep 2)
+     (sleep 1)
+     (setf *pvm-clients* nil)
      (format stream " done; no active PVM clients.~%~%"))
     (:active
-     (loop 
-         for client in (sort 
-                        (copy-list *pvm-clients*) #'string<
-                        :key #'(lambda (client) 
-                                 (cpu-host (client-cpu client))))
-         for cpu = (client-cpu client)
-         for host = (cpu-host cpu)
-         for spawn = (cpu-spawn cpu)
-         for task = (client-task client)
-         for tid = (get-field :tid task)
-         for pid = (get-field :pid task)
-         for status = (client-status client)
-         for protocol = (client-protocol client)
-         finally (format t "~%")
-         do
-           (format
-               stream
-               "~&~%~a- `~(~a~)' (pid: ~a --- tid: <~a>);~%~
-                ~a  command: `~a';~%~
-                ~a  status: ~(~a~) --- protocol: ~(~a~);~%"
-               prefix host pid tid
-               prefix spawn
-               prefix status protocol)))))
+     (if (null *pvm-clients*)
+       (format
+        stream
+        "~atsdb(): no active PVM clients ~
+         (you could always try `(tsdb :help :cpu)').~%~%"
+        prefix)
+       (loop 
+           for client in (sort 
+                          (copy-list *pvm-clients*) #'string<
+                          :key #'(lambda (client) 
+                                   (cpu-host (client-cpu client))))
+           for cpu = (client-cpu client)
+           for host = (cpu-host cpu)
+           for spawn = (cpu-spawn cpu)
+           for task = (client-task client)
+           for tid = (get-field :tid task)
+           for pid = (get-field :pid task)
+           for status = (client-status client)
+           for protocol = (client-protocol client)
+           finally (format t "~%")
+           do
+             (format
+                 stream
+                 "~&~%~a- `~(~a~)' (pid: ~a --- tid: <~a>);~%~
+                  ~a  command: `~a';~%~
+                  ~a  status: ~(~a~) --- protocol: ~(~a~);~%"
+                 prefix host pid tid
+                 prefix spawn
+                 prefix status protocol))))))
 
 (defun tsdb-do-schema (data &key (stream *tsdb-io*) (format :tcl))
   

@@ -615,7 +615,7 @@
                          (string-upcase instance)
                          instance)
                        :common-lisp-user))
-         (instance (get-psort-entry name)))
+         (instance (ignore-errors (get-psort-entry name))))
     (when instance 
       (let ((tdfs (lex-or-psort-full-fs instance))
             (id (lex-or-psort-sense-id instance)))

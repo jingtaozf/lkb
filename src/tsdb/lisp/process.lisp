@@ -887,7 +887,7 @@
       (typecase result
         (null nil)
         (string result)
-        (t (format nil "~a" result))))))
+        (t (write-to-string result :escape t))))))
 
 (defun result-hook (result)
   (loop

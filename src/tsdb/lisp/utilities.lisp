@@ -88,6 +88,14 @@
   (when (eq code :all) (setf (gc-statistics :efficiency) nil))
   *tsdb-gc-statistics*)
 
+(defun find-function (description)
+  (ignore-errors
+   (typecase description
+     (null nil)
+     (string (find-function (read-from-string description)))
+     (symbol (symbol-function description))
+     (function description))))
+
 (defun remove-and-insert-punctuation (string)
   (let* ((string (remove #\, string))
          (string (remove #\; string))

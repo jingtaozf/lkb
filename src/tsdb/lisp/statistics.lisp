@@ -129,9 +129,11 @@
   #-:oe
   nil)
 
-(defparameter *statistics-predicates* (make-hash-table))
-
 (defparameter *statistics-readers* (make-hash-table))
+
+(defparameter *statistics-predicates* (make-hash-table))
+
+(defparameter *statistics-browsers* (make-hash-table))
 
 (defun latexify-string (string)
   (if (and (stringp string) (>= (length string) 1))
@@ -142,16 +144,28 @@
             'string (string prefix) (latexify-string (subseq string 1)))))
     string))
 
-(defun find-attribute-predicate (attribute)
-  (let* ((name (if (stringp attribute) (string-upcase attribute) attribute))
-         (attribute (intern name :keyword)))
-    (or (gethash attribute *statistics-predicates*) 
-        #'(lambda (old new) (not (equal old new))))))
-
 (defun find-attribute-reader (attribute)
-  (let* ((name (if (stringp attribute) (string-upcase attribute) attribute))
+  (let* ((name (if (stringp attribute) 
+                 (string-upcase attribute)
+                  attribute))
          (attribute (intern name :keyword)))
-    (gethash attribute *statistics-readers*) ))
+    (find-function (gethash attribute *statistics-readers*))))
+
+(defun find-attribute-predicate (attribute)
+  (let* ((name (if (stringp attribute) 
+                 (string-upcase attribute) 
+                 attribute))
+         (attribute (intern name :keyword))
+         (predicate (gethash attribute *statistics-predicates*))
+         (function (find-function predicate)))
+    (or function #'(lambda (old new) (not (equal old new))))))
+
+(defun find-attribute-browser (attribute)
+  (let* ((name (if (stringp attribute) 
+                 (string-upcase attribute) 
+                 attribute))
+         (attribute (intern name :keyword)))
+    (find-function (gethash attribute *statistics-browsers*))))
 
 (defun find-attribute-label (attribute)
   (case attribute
@@ -265,7 +279,7 @@
         ;; _fix_me_
         ;; projecting :string fields that contain the field separator (`@') of
         ;; tsdb(1) breaks when used in conjuction with a `report' format (as is
-        ;; the case in our current select() implementation.  therefore, sort the
+        ;; the case in our current select() implementation.  hence, sort the
         ;; `error' field to the back where it happens not to break :-{.
         ;;                                                 (22-nov-99  -  oe)
         (let* ((pfields (nreverse pfields))
@@ -1163,7 +1177,8 @@
          (compare (if (atom compare) (list compare) compare))
          (thorough (intersection '(:derivation :mrs) compare))
          (compare (set-difference compare thorough :test #'equal))
-         (predicates (map 'list #'find-attribute-predicate compare))
+         (predicates 
+          (loop for field in compare collect (find-attribute-predicate field)))
          (compares (length compare))
          (oitems
           (if (stringp olanguage) 
@@ -1463,42 +1478,51 @@
     (case action
       (:browse
        (let* ((clashes (get :value tag))
-              (stream (and clashes (create-output-stream file append))))
+              (field (get :field tag))
+              (browser (find-attribute-browser field))
+              (stream (and clashes (null browser)
+                           (create-output-stream file append))))
          (when clashes
            (case format
              (:tcl
-              (when *statistics-tcl-formats* 
-                (format stream *statistics-tcl-formats*))
-              (format
-               stream
-               "layout col def -m1 5 -r 2 -m2 5 -c black -j center~%~
-                layout row def -m1 5 -r 1 -m2 5 -c black -j center~%~
-                layout row 0 -m1 5 -r 2 -m2 5 -c black -j center~%")
+              (when stream
+                (when *statistics-tcl-formats*
+                  (format stream *statistics-tcl-formats*))
+                (format
+                 stream
+                 "layout col def -m1 5 -r 2 -m2 5 -c black -j center~%~
+                  layout row def -m1 5 -r 1 -m2 5 -c black -j center~%~
+                  layout row 0 -m1 5 -r 2 -m2 5 -c black -j center~%"))
               (loop
                   with *print-pretty* = nil
+                  with *print-case* = :downcase
                   for clash in clashes
                   for i from 1
-                  for ntag = (intern (gensym "") :keyword)
-                  do
+                  for ntag = (unless browser (intern (gensym "") :keyword))
+                  when browser do
+                    (funcall browser clash)
+                  else do
                     (setf (get :i-id ntag) (get :i-id tag))
                     (setf (get :i-input ntag) (get :i-input tag))
                     (setf (get :source ntag) (get :source tag))
-                    (setf (get :derivation ntag) clash)
+                    (setf (get :value ntag) clash)
                     (format
                      stream
                      "cell ~d 1 -contents {~s} -format title ~
                       -action reconstruct -tag ~a~%"
                      i clash ntag)
                   finally
-                    (format
-                     stream
-                     "layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%"
-                     i))))
-           (when (or (stringp file) (stringp append)) (close stream)))))
+                    (when stream
+                      (format
+                       stream
+                       "layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%"
+                       i)))))
+           (when (and stream (or (stringp file) (stringp append)))
+             (close stream)))))
       (:reconstruct
        (let* ((i-id (get :i-id tag))
               (i-input (get :i-input tag))
-              (derivation (get :derivation tag))
+              (derivation (get :value tag))
               (derivation (if (stringp derivation) 
                             (read-from-string derivation) 
                             derivation)))

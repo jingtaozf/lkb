@@ -114,7 +114,8 @@
         (reconstruct derivation)
       (cond
        (failure
-        (let ((*package* (find-package :tsdb)))
+        (let ((*package* (find-package :tsdb))
+              (*print-case* :downcase))
           (format
            t
            "~&~%(~d) `~a'~%~%  ~s~%~%"
