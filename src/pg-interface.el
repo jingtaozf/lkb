@@ -144,7 +144,6 @@
 ;;;
 
 (defvar *lexdb-read-only* '(:version :userid :modstamp))
-;;;(defvar *lexdb-record-features* '(:name :type :orthography :keyrel :keytag :altkey :altkeytag :alt2key :compkey :ocompkey :lang :country :dialect :domains :genres :register :confidence :comments :exemplars :flags :version :userid :modstamp))
 (defvar *lexdb-record-features* '(:name :type :orthography :keyrel :keytag :altkey :altkeytag :alt2key :compkey :ocompkey :source :lang :country :dialect :domains :genres :register :confidence :comments :exemplars :flags :version :userid :modstamp))
 (defvar *lexdb-minibuffer-max* 80)
 (defvar *lexdb-active-id-ring* nil)
@@ -172,7 +171,11 @@
 ;; unusual return values cause system to hang...
 (defun cle-eval (str)
   (condition-case descr
-	 (fi:eval-in-lisp "(let ((x %s)) (if (eval (cons 'or (mapcar #'(lambda (y) (typep x y)) '%s))) x '!!!unhandled-type!!!))" 
+	 (fi:eval-in-lisp "(let* ((x %s))
+  (if (eval 
+       (cons 'or 
+	     (mapcar #'(lambda (y) (typep x y)) '%s)))
+      x '!!!unhandled-type!!!))" 
 			  str *cle-handled-types*)
       (error (princ (format "%s" descr))
 	     (sit-for 4))))
@@ -626,10 +629,11 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 ;;;
 
 (defun cle-eval-lexdb (fn-name &rest fn-args)
-  (cle-eval 
-   (format "(and (fboundp 'lexdb-fn) (lkb::lexdb-fn '%s %s))"
-			fn-name
-			(mapconcat #'cle-force-str fn-args " "))))
+  (let ((fi:package "lkb"))
+    (cle-eval 
+     (format "(and (fboundp 'lexdb-fn) (lexdb-fn '%s %s))"
+	     fn-name
+	     (mapconcat #'cle-force-str fn-args " ")))))
 
 (defun cle-force-str (x)
   (if (stringp x)
