@@ -772,6 +772,7 @@
                        sum (count-nodes edge :mark mark :chartp chartp
                                         :packingp packingp)))
          (packings (if packingp
+                     #+:packing
                      (+ (loop
                             for edge in (edge-packed edge)
                             sum (count-nodes edge :mark mark 
@@ -782,6 +783,8 @@
                             sum (count-nodes edge :mark mark 
                                              :packingp packingp
                                              :ignorep t :chartp chartp)))
+                     #-:packing
+                     0
                      0)))
     (+ current children packings)))
 
