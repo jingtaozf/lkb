@@ -220,6 +220,7 @@
         (multiple-value-bind (result condition)
             (ignore-errors (read-from-string output t nil :end status))
           (when (and (null result) condition *pvm-debug-p*)
+            (format t "pvm_poll(): read `~a'.~%" output)
             (format
              t
              "~&pvm_poll(): error `~a'.~%" condition))
