@@ -549,7 +549,7 @@ void tsdb_parse_options(int argc, char **argv) {
         break;
 #ifdef ALEP
       case TSDB_TX_OPTION:
-        tsdb.status |= TSDB_TX_OUTPUT;
+        tsdb.status |= (TSDB_TX_OUTPUT | TSDB_PROLOG_ESCAPE_OUTPUT);
         break;
 #endif
       } /* switch */

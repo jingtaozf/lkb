@@ -254,7 +254,16 @@ char* tsdb_sprint_value(Tsdb_value *value ) {
       result = strdup(value->value.identifier);
       break;
     case TSDB_STRING:
+#ifdef ALEP
+      if(tsdb.status & TSDB_PROLOG_ESCAPE_OUTPUT) {
+        result = tsdb_prolog_escape_string(value->value.string);
+      } /* if */
+      else {
+        result = strdup(value->value.string);
+      } /* else */
+#else
       result = strdup(value->value.string);
+#endif
       break;
     case TSDB_DATE:
       result = tsdb_canonical_date(value->value.date);
@@ -1294,7 +1303,7 @@ int tsdb_write_table(Tsdb_selection* selection) {
 |*      module: tsdb_write_table()
 |*     version: 
 |*  written by: tom fettig, dfki saarbruecken
-|* last update: 29-jul-96
+|* last update: 7-aug-96
 |*  updated by: oe, coli saarbruecken
 |*****************************************************************************|
 |*
@@ -1333,14 +1342,16 @@ int tsdb_write_table(Tsdb_selection* selection) {
     tsdb_restore_data_file(selection->relations[0]->name, foo);
 #ifdef DEBUG
     fprintf(tsdb_debug_stream,
-            "write_table(): reverting data file for `%s' to backup.\n",
+            "write_table(): reverted data file for `%s' from backup.\n",
             selection->relations[0]->name);
     fflush(tsdb_debug_stream);
 #endif
     return(TSDB_WRITE_FILE_ERROR);
   } /* if */
   else {
-    remove(foo);
+    if(!(tsdb.status & TSDB_BACKUP_DATA_FILES)) {
+      remove(foo);
+    } /* if */
     return(TSDB_OK);
   } /* else */
 

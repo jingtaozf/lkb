@@ -473,7 +473,7 @@ void sigsegv_server(int signal) {
  
   } /* if */
   fflush(tsdb_debug_stream);
-  tsdb_close_debug(tsdb_debug_stream);
+  fclose(tsdb_debug_stream);
 #endif
   sleep(1);
   abort();
@@ -832,7 +832,7 @@ int tsdb_alep_client(char *query) {
     return(TSDB_SOCKET_IO_ERROR);
   } /* if */
   if((status = tsdb_client_clear_stream(client, TRUE))) {
-    close(client);
+    tsdb_client_close(client);
     tsdb_free(command);
     return(status);
   } /* if */
@@ -847,7 +847,7 @@ int tsdb_alep_client(char *query) {
     return(TSDB_SOCKET_IO_ERROR);
   } /* if */
   if((status = tsdb_client_clear_stream(client, TRUE))) {
-    close(client);
+    tsdb_client_close(client);
     tsdb_free(command);
     return(status);
   } /* if */
@@ -875,33 +875,18 @@ int tsdb_alep_client(char *query) {
               "alep_client(): database mismatch (`%s').\n",
               foo);
       fflush(tsdb_error_stream);
-      (void)sprintf(command, "quit.\n");
-      if(tsdb_socket_write(client, command) != strlen(command)) {
-        fprintf(tsdb_error_stream,
-                "alep_client(): incomplete write on server socket.\n");
-        fflush(tsdb_error_stream);
-        tsdb_free(command);
-        close(client);
-        return(TSDB_SOCKET_IO_ERROR);
-      } /* if */
+      tsdb_client_close(client);
       tsdb_free(command);
-      close(client);
       return(TSDB_SERVER_HOME_MISMATCH);
     } /* if */
+  } /* if */
+  else if(foo == NULL) {
+    
   } /* if */
 
   if(tsdb.status & TSDB_STATUS) {
     status = tsdb_obtain_server_status(client);
-    (void)sprintf(command, "quit.\n");
-    if(tsdb_socket_write(client, command) != strlen(command)) {
-      fprintf(tsdb_error_stream,
-              "alep_client(): incomplete write on server socket.\n");
-      fflush(tsdb_error_stream);
-      tsdb_free(command);
-      close(client);
-      return(TSDB_SOCKET_IO_ERROR);
-    } /* if */
-    close(client);
+    tsdb_client_close(client);
     tsdb_free(command);
     return(((status & TSDB_LOCK) ? TSDB_LOCK_ERROR : TSDB_OK));
   } /* if */
@@ -933,19 +918,12 @@ int tsdb_alep_client(char *query) {
     return(TSDB_SOCKET_IO_ERROR);
   } /* if */
   if((status = tsdb_client_clear_stream(client, FALSE))) {
-    close(client);
+    tsdb_client_close(client);
     tsdb_free(command);
     return(status);
   } /* if */
 
-  (void)sprintf(command, "quit.\n");
-  if(tsdb_socket_write(client, command) != strlen(command)) {
-    fprintf(tsdb_error_stream,
-            "alep_client(): incomplete write on server socket.\n");
-    fflush(tsdb_error_stream);
-    return(TSDB_SOCKET_IO_ERROR);
-  } /* if */
-  close(client);
+  tsdb_client_close(client);
   tsdb_free(command);
   return(TSDB_OK);
 
@@ -991,6 +969,10 @@ int tsdb_obtain_server_status(int client) {
       } /* if */
     } /* if */
   } /* if */
+
+  fprintf(tsdb_error_stream,
+          "obtain_server_status(): incomplete or invalid data from server.\n");
+  fflush(tsdb_error_stream);
   return(TSDB_SOCKET_IO_ERROR);
 
 } /* tsdb_obtain_server_status() */
@@ -1042,7 +1024,10 @@ char *tsdb_obtain_server_home(int client) {
       } /* if */
     } /* if */
   } /* if */
-  
+
+  fprintf(tsdb_error_stream,
+          "obtain_server_home(): incomplete or invalid data from server.\n");
+  fflush(tsdb_error_stream);
   tsdb.errno = TSDB_SOCKET_IO_ERROR;
   return((char *)NULL);
 
@@ -1128,3 +1113,30 @@ int tsdb_client_clear_stream(int stream, BOOL sink) {
   } /* if */
 
 } /* tsdb_client_clear_stream() */
+
+int tsdb_client_close(int stream) {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_client_close()
+|*     version: 
+|*  written by: oe, dfki saarbruecken
+|* last update: 29-jul-96
+|*  updated by: oe, coli saarbruecken
+|*****************************************************************************|
+|* 
+\*****************************************************************************/
+
+  char command[] = "quit.\n";
+
+  if(tsdb_socket_write(stream, command) != strlen(command)) {
+    fprintf(tsdb_error_stream,
+            "alep_client_close(): incomplete write on server socket.\n");
+    fflush(tsdb_error_stream);
+    close(stream);
+    return(TSDB_SOCKET_IO_ERROR);
+  } /* if */
+  close(stream);
+  return(TSDB_OK);
+
+} /* tsdb_client_close() */

@@ -39,13 +39,18 @@
 #define TSDB_TSDB_CLIENT 64
 #define TSDB_STATUS 128
 #define TSDB_LOCK 256
+#define TSDB_BACKUP_DATA_FILES 512
 #ifdef ALEP
 #  define TSDB_TX_OUTPUT 1024
+#  define TSDB_PROLOG_ESCAPE_OUTPUT 2048
 #endif
 
 #ifdef ALEP
 #  define TSDB_INITIAL_STATUS \
-     (TSDB_UNIQUELY_PROJECT | TSDB_IMPLICIT_COMMIT | TSDB_CLIENT_MODE)
+     (TSDB_UNIQUELY_PROJECT \
+      | TSDB_IMPLICIT_COMMIT \
+      | TSDB_CLIENT_MODE \
+      | TSDB_BACKUP_DATA_FILES)
 #else
 #  define TSDB_INITIAL_STATUS (TSDB_UNIQUELY_PROJECT)
 #endif
@@ -450,6 +455,8 @@ char *tsdb_expand_file(char *, char *);
 char *tsdb_user(void);
 char *tsdb_canonical_date(char *);
 int *tsdb_parse_date(char *);
+char *tsdb_normalize_string(char *);
+char *tsdb_prolog_escape_string(char *);
 
 Tsdb_node **tsdb_linearize_conditions(Tsdb_node *);
 
@@ -527,6 +534,7 @@ int tsdb_socket_readline(int, char *, int);
 int tsdb_obtain_server_status(int);
 char *tsdb_obtain_server_home(int);
 int tsdb_client_clear_stream(int, BOOL);
+int tsdb_client_close(int);
 #ifdef ALEP
 int tsdb_alep_client(char *);
 #endif

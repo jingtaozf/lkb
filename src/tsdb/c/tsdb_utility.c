@@ -3008,6 +3008,17 @@ int *tsdb_parse_date(char *date) {
 
 char *tsdb_normalize_string(char *string) {
 
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_normalize_string()
+|*     version: 
+|*  written by: oe, coli saarbruecken
+|* last update: 6-aug-96
+|*  updated by: oe, coli saarbruecken
+|*****************************************************************************|
+|* 
+\*****************************************************************************/
+
   char *foo, *bar;
   int i, j;
 
@@ -3025,3 +3036,39 @@ char *tsdb_normalize_string(char *string) {
   return(bar);
 
 } /* tsdb_normalize_string() */
+
+char *tsdb_prolog_escape_string(char *string) {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_prolog_escape_string()
+|*     version: 
+|*  written by: oe, coli saarbruecken
+|* last update: 6-aug-96
+|*  updated by: oe, coli saarbruecken
+|*****************************************************************************|
+|* 
+\*****************************************************************************/
+
+  char *foo;
+  int i, j;
+
+  for(i = 0, foo = string;
+      foo != NULL && *foo && (foo = strchr(foo, '\'')) != NULL;
+      i++, foo++);
+  if(i) {
+    foo = (char *)malloc(strlen(string) + i + 1);
+    for(i = j = 0; string[i]; i++, j++) {
+      if(string[i] == '\'') {
+        foo[j++] = '\'';
+      } /* if */
+      foo[j] = string[i];
+    } /* for */
+    foo[j] = (char)0;
+    return(foo);
+  } /* if */
+  else {
+    return(strdup(string));
+  } /* else */
+
+} /* tsdb_prolog_escape_string() */

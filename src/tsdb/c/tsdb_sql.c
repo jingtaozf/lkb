@@ -1301,9 +1301,7 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
   Tsdb_selection *selection = NULL, *temp, *history = NULL;
   Tsdb_history *foo;
   FILE *output;
-  BOOL from_find = FALSE,
-  history_retrieve = FALSE,
-  extend_history = FALSE;
+  BOOL from_find = FALSE, history_retrieve = FALSE, extend_history = FALSE;
 
   /* 
      1. find out about attributes in conditions, transform expression
@@ -1314,17 +1312,26 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
      
      */
 
-#ifdef ALEP
+#if defined(ALEP)
   if(tsdb.status & TSDB_TX_OUTPUT) {
+    /* _hack_
+     * free(3)ing .attribute_list. for Linux (at least) gives us a core(5)
+     * that refuses debugging (gdb(1) complains about missing register
+     * information.  what shall we do?  after all, it is only 1:30 h in the
+     * morning; but without a working debugger ... |:-{.
+     *                                             (6-aug-96  -  oe@coling)
+     */
+#ifdef A_BETTER_WORLD
     tsdb_free_tsdb_values(attribute_list);
     tsdb_free(attribute_list);
+#endif
     attribute_list = (Tsdb_value **)malloc(4 * sizeof(Tsdb_value *));
     attribute_list[0] = tsdb_identifier("i-id");
     attribute_list[1] = tsdb_identifier("i-input");
     attribute_list[2] = tsdb_identifier("i-comment");
     attribute_list[3] = (Tsdb_value *)NULL;
     tsdb_free(report);
-    report = TSDB_TX_FORMAT;
+    report = strdup(TSDB_TX_FORMAT);
   } /* if */
 #endif
 
@@ -1674,9 +1681,9 @@ void tsdb_project(Tsdb_selection *selection,
   if(tsdb.status & TSDB_UNIQUELY_PROJECT) {
     n = tsdb_uniq_projection(projection,n);
   } /* if */
-  tsdb_print_projection(projection, n,format, stream);
+  tsdb_print_projection(projection, n, format, stream);
   if (output=tsdb_open_result()) {
-    tsdb_print_projection(projection,n,format, output);
+    tsdb_print_projection(projection, n, format, output);
     fclose(output);
   } /* if */
   tsdb_free_char_array(projection,n);
