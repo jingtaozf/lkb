@@ -16,7 +16,7 @@ proc tsdb_file {action {index -1}} {
     set aold "$globals(home)$old";
     if {[file exists $aold]} {
       set anew [string range $aold 0 [string last $globals(slash) $aold]];
-      if {![input "rename to:" $anew $globals(home) directory]} {
+      if {![input "rename to:" $anew $globals(home) profile]} {
         set anew $globals(input);
         set new [string_strip $globals(home) $anew];
         if {[file exists $anew]} {
@@ -93,15 +93,16 @@ proc tsdb_import {code} {
   global globals;
 
   if {$code == "items"} {
-    if {![input "item file:" [pwd]]} {
+    if {![input "item file:" [pwd] "" import]} {
       set source $globals(input);
       if {![file isfile $source] || ![file readable $source]} {
         tsdb_beep;
         status "invalid file name `$source'" 10;
         return;
       }; # if
+      history_add import $source;
 
-      if {![input "new database:" "" $globals(home) directory]} {
+      if {![input "new database:" "" $globals(home) profile]} {
         set atarget $globals(input);
         set target [string_strip $globals(home) $atarget];
         if {$target == ""} {
@@ -122,6 +123,7 @@ proc tsdb_import {code} {
           return;
         }; # if
 
+        history_add profile $target;
         set command "(import :items \"$source\" \"$target\")";
         send_to_lisp :event $command;
       }; # if
@@ -135,8 +137,9 @@ proc tsdb_import {code} {
         status "invalid tsdb(1) database `$source'" 10;
         return;
       }; # if
+      history_add directory $source;
 
-      if {![input "new database:" "" $globals(home) directory]} {
+      if {![input "new database:" "" $globals(home) profile]} {
         set atarget $globals(input);
         set target [string_strip $globals(home) $atarget];
         if {$target == ""} {
@@ -157,6 +160,7 @@ proc tsdb_import {code} {
           return;
         }; # if
 
+        history_add profile $target;
         set command "(import :database \"$source\" \"$target\")";
         send_to_lisp :event $command;
       }; # if
@@ -234,12 +238,18 @@ proc tsdb_update {{name complete}} {
     send_to_lisp :event $command;
   }; # if
 
+  if {$name == "complete" || $name == "division"} {
+    set globals(division,wellformed) 1;
+    update_condition_cascade wellformed division;
+  }; # if
+
   if {$name == "complete" || $name == "condition"} {
-    update_condition_cascade null;
+    update_condition_cascade null condition;
   }; # if
 
   if {$name == "complete" || $name == "phenomena"} {
-    update_phenomena_cascade reset;
+    update_phenomena_cascade reset division;
+    update_phenomena_cascade reset condition;
   }; # if
 
 }; # tsdb_update()
@@ -342,7 +352,7 @@ proc tsdb_browse {code {condition ""} {globalp 1} {profile ""}} {
       set relations "(\"phenomenon\")";
     }
     runs {
-      set attributes "(\"run-id\" \"comment\" \"platform\" \"application\" \"grammar\" \"avms\" \"sorts\" \"templates\" \"lexicon\" \"lrules\" \"rules\" \"user\" \"host\" \"start\" \"end\" \"items\" \"status\")";
+      set attributes "(\"run-id\" \"r-comment\" \"platform\" \"application\" \"grammar\" \"avms\" \"sorts\" \"templates\" \"lexicon\" \"lrules\" \"rules\" \"user\" \"host\" \"start\" \"end\" \"items\" \"status\")";
       set relations "(\"run\")";
       set condition "";
     }
@@ -578,7 +588,9 @@ proc tsdb_graph {{code "graph"}} {
   set command "($code \"$globals(data)\" :dimension $globals(graph,by)";
   if {$code != "chart"} {
     set command "$command :attributes $globals(graph_values)";
-  }; # if
+  } elseif {$globals(division) != ""} {
+    set command "$command :division \"$globals(division)\"";
+  }; # else
   if {$globals(graph_size) != ""} {
     set command "$command :aggregate $globals(graph_size)";
   }; # if
@@ -599,7 +611,12 @@ proc tsdb_graph {{code "graph"}} {
   }; # if
 
   if {$code == "chart"} {
-    set command "$command :title \"Aggregate Size (Number of Test Items)\"";
+    if {$globals(division) != ""} {
+      set command \
+        "$command :title \"Aggregate Size (divided by `$globals(division)')\"";
+    } else {
+      set command "$command :title \"Aggregate Size\"";
+    }; # else
   } else {
     switch $globals(graph,values) {
       tasks {
@@ -667,33 +684,6 @@ proc tsdb_compare_in_detail {} {
   set show "";
   set compare "";
 
-  if {$compare_in_detail(phenomena,all)} {
-    set condition ""
-  } else {
-    foreach i [lsort [array names phenomena]] {
-      if {$compare_in_detail(phenomena,$phenomena($i))} {
-        if {[info exists condition]} {
-          set condition "$condition or p-name ~ `$phenomena($i)'";
-        } else {
-          set condition "p-name ~ `$phenomena($i)'";
-        }; # else
-      }; # if
-    }; # foreach
-    if {![info exists condition]} {
-      tsdb_beep;
-      set message "no active phenomena for detailed comparison"
-      status "$message; make up your mind ..." 5
-      return
-    }; # if
-  }; # else
-
-  if {$globals(condition) != ""} {
-    if {$condition != ""} {
-      set condition [lispify_string "($condition) and $globals(condition)"];
-    } else {
-      set condition $globals(condition);
-    }; # else
-  }; # if
   #
   # _fix_me_
   # this is rather awkward; presumably a global list for these attributes
@@ -711,10 +701,9 @@ proc tsdb_compare_in_detail {} {
     }; # if
   }; # foreach
 
-  set command [format "(detail \"%s\" \"%s\" :condition \"%s\" \
-                          :show (%s) :compare (%s))" \
+  set command [format "(detail \"%s\" \"%s\" :show (%s) :compare (%s))" \
                       $compare_in_detail(source) $globals(data) \
-                      $condition $show $compare];
+                      $show $compare];
   send_to_lisp :event $command;
  
 }; # tsdb_compare_in_detail()

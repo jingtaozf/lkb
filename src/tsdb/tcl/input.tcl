@@ -23,7 +23,7 @@ proc input {prompt {default ""} {base ""} {mode ""}} {
   } elseif {$mode == "from"} {
     bind $entry <Tab> [list select_completion $entry $mode]
     set file 0;
-  } elseif {$mode == "where" || $mode == "condition"} {
+  } elseif {$mode == "where" || $mode == "condition" || $mode == "division" } {
     bind $entry <Tab> [list select_completion $entry $mode]
     set file 0;
   } else {
@@ -101,18 +101,18 @@ proc input {prompt {default ""} {base ""} {mode ""}} {
 }; # input()
 
 
-proc condition_input {{prompt "where"} {default ""}} {
+proc condition_input {{prompt "where"} {default ""} {context "condition"}} {
 
   global globals;
 
-  if {![set status [input $prompt $default "" condition]]} {
+  if {![set status [input $prompt $default "" $context]]} {
     if {$globals(input) == ""} {
-      update_condition_cascade null;
+      update_condition_cascade null $context;
     } else {
-      history_add condition $globals(input);
-      update_condition_cascade null;
-      set globals(condition,0) 1;
-      update_condition_cascade 0;
+      history_add $context $globals(input);
+      update_condition_cascade null $context;
+      set globals($context,0) 1;
+      update_condition_cascade 0 $context;
     }; # else
   }; # if
 
@@ -523,7 +523,7 @@ proc complete {prefix {completions ""} {mode ""}} {
     set completions $foo;
   }; # else
 
-  if {$mode == "directory"} {
+  if {$mode == "directory" || $mode == "profile"} {
     set foo {};
     foreach item $completions {
       if {[file isdirectory $item]} {

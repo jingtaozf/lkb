@@ -31,7 +31,7 @@
 
 (defparameter *import-difficulty* 1)
 
-(defparameter *import-category* "")
+(defparameter *import-category* "S")
 
 (defun do-import-database (source target &key absolute meter)
   

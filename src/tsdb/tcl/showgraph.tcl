@@ -357,7 +357,7 @@ proc make_graph {graph scatterp} {
 
     ## Create new elements in 'graph'
 
-    foreach index [array names element] {
+    foreach index [lsort -decreasing [array names element]] {
 	eval $graph element create $index $element($index)
     }
 

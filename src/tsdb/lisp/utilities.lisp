@@ -30,7 +30,7 @@
 
 (defun install-gc-strategy (gc &key (verbosity *tsdb-gc-verbosity*)
                                     (tenure *tsdb-tenure-p*)
-                                    verbose)
+                                    burst verbose)
 
   #+:allegro
   (let ((environment (pairlis '(:print :stats :verbose :auto-step)
@@ -56,7 +56,7 @@
           disabling tenure; global garbage collection ..."))
       #-(version>= 5 0)
       (busy :gc :start)
-      (excl:gc :tenure)
+      (excl:gc (if burst :mark-for-tenure :tenure))
       #-(version>= 5 0)
       (busy :gc :end)
       (setf *tsdb-tenured-bytes* 0)

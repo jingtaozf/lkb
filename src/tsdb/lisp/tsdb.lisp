@@ -43,7 +43,8 @@
   (unless action (setf *tsdb-initialized-p* t)))
 
 (defun call-tsdb (query language
-                  &key redirection cache absolute unique quiet ro)
+                  &key (format :string)
+                       cache absolute unique quiet ro)
   (if *tsdb-server-mode-p*
     #+:server (call-tsdbd query language) #-:server nil
     (if cache
@@ -68,7 +69,7 @@
              (query (if (equal (elt query (- (length query) 1)) #\.)
                       (subseq query 0 (- (length query) 1))
                       query))
-             (output (when (eq redirection :output)
+             (output (when (eq format :file)
                        (format
                         nil "/tmp/.tsdb.data.~a.~a.~a"
                         user (current-pid) 
@@ -105,7 +106,7 @@
                 (loop
                     with i = 0
                     do
-                      (sleep 0.1)
+                      (sleep 0.5)
                       (multiple-value-setq (status epid) (sys:os-wait t pid))
                       (when (null epid) (incf i))
                     while (and (< i 100) (not status))
@@ -120,21 +121,36 @@
                   (delete-file file))
                 output))
             #-:allegro
-            (error "call-tsdb(): cannot process :output redirection; ~
+            (error "call-tsdb(): cannot process :file output format; ~
                     see `tsdb.lisp'.")
-            (let ((result (make-array
-                           4096
-                           :element-type 'character
-                           :adjustable t             
-                           :fill-pointer 0)))
-              (do ((c (read-char stream nil :eof) (read-char stream nil :eof)))
-                  ((equal c :eof))
-                (vector-push-extend c result 1024))
-              (close stream)
-              #+:allegro (sys:os-wait nil pid)
-              (unless *tsdb-debug-mode-p*
-                (delete-file file))
-              result)))))))
+            (case format
+              (:string
+               (let ((result (make-array
+                              32768
+                              :element-type 'character
+                              :adjustable t             
+                              :fill-pointer 0)))
+                 (loop
+                     for c = (read-char stream nil :eof)
+                     until (eq c :eof)
+                     do
+                       (vector-push-extend c result 32768))
+                 (close stream)
+                 #+:allegro (sys:os-wait nil pid)
+                 (unless *tsdb-debug-mode-p*
+                   (delete-file file))
+                 result))
+              (:lisp
+               (let ((result (loop
+                                 for form = (read stream nil :eof)
+                                 until (eq form :eof)
+                                 collect form)))
+                 (close stream)
+                 #+:allegro 
+                 (loop until (sys:os-wait nil pid))
+                 (unless *tsdb-debug-mode-p*
+                   (delete-file file))
+                 result)))))))))
 
 (defun create-cache (data &key (protocol :cooked) (verbose t) schema)
   (if (eq protocol :raw)

@@ -5,11 +5,11 @@ exec /coli/apps/tcl+tk/bin/wish++ "$0" "$@"
 #
 # facilitate stand-alone debugging for `oe'
 #
-if {![info exists itsdbroot]} {
+if {![info exists itsdb_root]} {
   set itsdb_root [expr {[info exists env(HOSTNAME)] 
                         && ![string first "mv" $env(HOSTNAME)]
                         ? "/home/oe/src/itsdb" 
-                        : "/home/oe/src/lkb"}];
+                        : "/proj/perform/itsdb"}];
 }; # if
 #
 # import BLT library (for `table' and `graph' widgets)
@@ -97,18 +97,23 @@ set globals(abort) 0;
 set globals(idle_colours) {yellow orange red violet blue green};
 set globals(special_menues) {
   .menu.analyze.menu.values
+  .menu.analyze.menu.division
+  .menu.analyze.menu.phenomena
   .menu.analyze.menu.rvalues
-  .menu.options.menu.condition
-  .menu.options.menu.phenomena
-  .menu.detail.menu.phenomena
   .menu.detail.menu.decoration
   .menu.detail.menu.intersection
+  .menu.options.menu.condition
+  .menu.options.menu.phenomena
   .menu.options.menu.switches
 }; # globals(special_menues)
+set globals(division) "";
+set globals(division,null) 1;
+set globals(division,size) 0;
 set globals(condition) "";
 set globals(condition,null) 1;
 set globals(condition,size) 0;
-set globals(phenomena,all) 1;
+set globals(phenomena,division,all) 1;
+set globals(phenomena,condition,all) 1;
 set globals(overwrite) 1;
 set globals(autoload_vocabulary) 1;
 set globals(logscale) 0;
@@ -134,7 +139,6 @@ set globals(attributes) {};
 # determine defaults for (display) options local to the podium(1) universe
 #
 set compare_in_detail(source) "";
-set compare_in_detail(phenomena,all) 1;
 set compare_in_detail(show,i-input) 1;
 set compare_in_detail(compare,all) {
   words readings first total aedges pedges rpedges gcs error derivation mrs
@@ -258,6 +262,8 @@ proc main {} {
     -menu .menu.file.menu.import
   .menu.file.menu add command -label "Export" \
     -command {tsdb_file export} -state disabled
+  .menu.file.menu add command -label "Tenure" \
+    -command {tsdb_file tenure} -state disabled
   .menu.file.menu add separator
   .menu.file.menu add command -label "Close" -command tsdb_close 
   .menu.file.menu add command -label "Quit" -command tsdb_quit
@@ -302,22 +308,6 @@ proc main {} {
     -label "Errors" -command {tsdb_browse errors ""}
   .menu.browse.menu add separator
   .menu.browse.menu add command -label "Custom Query" -command "tsdb_select"
-
-  menu .menu.browse.menu.items -tearoff 0
-  .menu.browse.menu.items add command -label "All Test Items" \
-      -command {tsdb_browse items ""}
-   menu .menu.browse.menu.phenomena -tearoff 0
-  .menu.browse.menu.phenomena add command -label "All Phenomena" \
-      -command {tsdb_browse phenomena ""}
-  menu .menu.browse.menu.parses -tearoff 0
-  .menu.browse.menu.parses add command -label "All Parses" \
-      -command {tsdb_browse parses ""}
-  menu .menu.browse.menu.results -tearoff 0
-  .menu.browse.menu.results add command -label "All Results" \
-      -command {tsdb_browse results ""}
-  menu .menu.browse.menu.errors -tearoff 0
-  .menu.browse.menu.errors add command -label "All Errors" \
-      -command {tsdb_browse errors ""}
 
   #
   # `Process' menu (and embedded cascades)
@@ -365,6 +355,16 @@ proc main {} {
   .menu.analyze.menu add command \
           -label "Graph Parameters" \
           -command graph_parameter_input
+  .menu.analyze.menu add separator
+  .menu.analyze.menu add cascade \
+          -label "Chart Divison" \
+          -menu .menu.analyze.menu.division;
+  .menu.analyze.menu add cascade \
+          -label "Chart Phenomena" \
+          -menu .menu.analyze.menu.phenomena;
+  .menu.analyze.menu add command \
+          -label "New Division" \
+          -command "condition_input where \"\" division";
   .menu.analyze.menu add separator
   .menu.analyze.menu add command \
           -label "Rule Table" \
@@ -499,6 +499,9 @@ proc main {} {
       -command {update_graph_cascade failures};
   }; # if
 
+  menu .menu.analyze.menu.division -tearoff 0
+  menu .menu.analyze.menu.phenomena -tearoff 0
+
   menu .menu.analyze.menu.rvalues -tearoff 0
   .menu.analyze.menu.rvalues add checkbutton \
     -label "Active Chart Items (`actives')" \
@@ -535,18 +538,13 @@ proc main {} {
   .menu.detail.menu add command -label "Compare" \
     -command tsdb_compare_in_detail
   .menu.detail.menu add separator
-  .menu.detail.menu add cascade -label "Source Database" \
-    -menu .menu.detail.menu.compare
-  .menu.detail.menu add cascade -label "Phenomena" \
-    -menu .menu.detail.menu.phenomena
   .menu.detail.menu add cascade -label "Decoration" \
     -menu .menu.detail.menu.decoration
   .menu.detail.menu add cascade -label "Intersection" \
     -menu .menu.detail.menu.intersection
-
-  menu .menu.detail.menu.phenomena -tearoff 0
-  .menu.detail.menu.phenomena add checkbutton -label "All Phenomena" \
-    -variable compare_in_detail(phenomena,all)
+  .menu.detail.menu add separator
+  .menu.detail.menu add cascade -label "Source Database" \
+    -menu .menu.detail.menu.compare
 
   menu .menu.detail.menu.decoration -tearoff 0
   .menu.detail.menu.decoration add checkbutton -label "i-wf" \

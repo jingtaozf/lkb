@@ -22,6 +22,7 @@
 (((:path . "tub") (:content . "Esprit Corpus Data (TU Berlin)"))
  ((:path . "german") (:content . "TSNLP Test Suite (DFKI)"))
  ((:path . "vm") (:content . "VerbMobil Reference Dialogue"))
+ ((:path . "diet") (:content . "DiET version of TSNLP Test Suite"))
  ((:path . "vmd") (:content . "VerbMobil Development Data"))
  ((:path . "babel") (:content . "Babel Test Suite")))
 

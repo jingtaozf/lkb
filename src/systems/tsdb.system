@@ -136,6 +136,7 @@
        (:file "goodies")
        (:file "table")
        (:file "showtable")
+       (:file "nshowtable")
        (:file "showgraph")
        (:file "utilities")
        (:file "commands")

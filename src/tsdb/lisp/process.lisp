@@ -127,7 +127,7 @@
           (status :text pmessage)
           (meter :value (get-field :start pmeter)))
         (when (and burst runs)
-          (install-gc-strategy nil :tenure nil :verbose verbose))
+          (install-gc-strategy nil :tenure nil :burst t :verbose verbose))
         
         (unwind-protect
             (ignore-errors
@@ -466,7 +466,7 @@
 
     (format 
      stream 
-     "(~a) `~:[*~;~]~a' ~:[~;:~]~:[~;=~][~a]"
+     "(~a) `~:[*~;~]~a' ~:[~;:~]~:[~;=~][~@[~a~]]"
      i-id (= i-wf 1) i-input 
      (eq gc :local)  (eq gc :global) edges)
     (force-output stream)))

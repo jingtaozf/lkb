@@ -99,16 +99,14 @@
                "select ~a~@[from ~a~]~@[where ~a ~]report ~s"
                sattributes relations condition report))
              (result (call-tsdb query language :absolute absolute
-                                :redirection :output :unique unique
+                                :format :lisp :unique unique
                                 :quiet quiet :ro ro))
              data)
         (when rmeter (meter :value (get-field :end rmeter)))
-        (when (and (stringp result) (probe-file result))
-          (with-open-file (stream result)
-            (do ((line (read stream nil) (read stream nil)))
-                ((null line))
-              (push (pairlis keys line) data)))
-          (unless *tsdb-debug-mode-p* (delete-file result)))
+        (loop
+            for line in result
+            do (push (pairlis keys line) data))
+
         (when dmeter (meter :value (get-field :end dmeter)))
         (when status
           (status :text (format nil "retrieving `~a' data ... done" language)

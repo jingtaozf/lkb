@@ -4,8 +4,9 @@
 {.menu.file.menu Purge}                 purge all test run data from current database
 {.menu.file.menu Delete}                delete current database
 {.menu.file.menu Create}                create new database from test suite skeleton
-{.menu.file.menu Close}                 close all tsdb(1) client windows
-{.menu.file.menu Quit}                  quit from tsdb(1) podium (only, why would you?)
+{.menu.file.menu Import}                import ASCII test item file or tsdb(1) database into new database
+{.menu.file.menu Close}                 close all [incr tsdb()] client windows
+{.menu.file.menu Quit}                  quit from [incr tsdb()] podium (only, why would you?)
 
 #
 # `Browse' menu (and embedded cascades)
@@ -19,44 +20,56 @@
 {.menu.browse.menu Parses}              browse (selected) fields from `parse' relation
 {.menu.browse.menu Results}             browse (selected) fields from `result' relation       
 {.menu.browse.menu Errors}              browse (selected) fields from `error' relation      
-{.menu.browse.menu Condition}           impose TSQL condition on data selection; view current condition
 {.menu.browse.menu Custom Query}        compose and submit custom TSQL query to current test suite database
 #
 # `Process' menu (and embedded cascades)
 #
-.menu.process                   load test suite vocabulary; start and control batch processing (a test run)
+.menu.process                           load test suite vocabulary; start and control batch processing (a test run)
+{.menu.process.menu All Items}          process all test items from current database
+{.menu.process.menu Positive Items}     process grammatical test items from current database
+{.menu.process.menu Negative Items}     process ungrammatical test items from current database
+{.menu.process.menu TSQL Condition}     process test items from current database that satisfy the TSQL condition
+{.menu.process.menu Vocabulary}         process test suite vocabulary; report lexical coverage
 
 #
 # `Analyze' menu (and embedded cascades)
 #
-.menu.analyze                   summarize or graph competence and performance profiles for current database
+.menu.analyze                           summarize or graph competence and performance profiles for current database
+
 #
 # `Compare' menu (and embedded cascades)
 #
 
-.menu.compare                   compare competence or performance profiles across test runs (i.e. databases)
+.menu.compare                           compare competence or performance profiles across test runs (i.e. databases)
+
 # 
 # `Detail' menu (and embedded cascades)
 #
-.menu.detail                    compare test runs on per-item basis; select attributes for intersection and decoration
+.menu.detail                            compare test runs on per-item basis; select attributes for intersection and decoration
+{.menu.detail.menu Compare}             compute and display detail comparison
+{.menu.detail.menu Source Database}     select (g)old standard database to compare to
+{.menu.detail.menu Phenomena}           select phenomena to restrict comparison to subset from both databases
+{.menu.detail.menu Decoration}          select attributes (with common values in both databases) to decorate display
+{.menu.detail.menu Intersection}        select attrbutes for intersection: display pairs of test items with at least one mismatch
 
 # 
 # `Options' menu (and embedded cascades)
 #
-.menu.options                   set tsdb(1) directories and options; restrict data set (TSQL condition); change aggregation parameters
-{.menu.options.menu Database Root}   (view or) change base directory for tsdb(1) database directory tree
-{.menu.options.menu Skeleton Root}   (view or) change directory containing tsdb(1) database skeletons
-{.menu.options.menu Update}                update tsdb(1) podium status
-{.menu.options.menu TSQL Condition}  select TSQL condition to restrict browsing, analysis, and comparison to subset from current data
-{.menu.options.menu New Condition}   input and active new TSQL (see above)
-{.menu.options.menu Aggregate By}    select dimension (attribute) used in aggregation (class organization) in analysis and comparsion
+.menu.options                           set [incr tsdb()] directories and options; restrict data set (TSQL condition); change aggregation parameters
+{.menu.options.menu Database Root}      (view or) change base directory for [incr tsdb()] database directory tree
+{.menu.options.menu Skeleton Root}      (view or) change directory containing [incr tsdb()] database skeletons
+{.menu.options.menu Update}             update [incr tsdb()] podium status
+{.menu.options.menu TSQL Condition}     select TSQL condition to restrict browsing, analysis, and comparison to subset from current data
+{.menu.options.menu Phenomena}          select phenomena to restrict browsing, analysis, and comparison to subset from current data
+{.menu.options.menu New Condition}      input and activate new TSQL condition (see above)
+{.menu.options.menu Aggregate By}       select dimension (attribute) used in aggregation (class organization) in analysis and comparsion
 {.menu.options.menu Aggregation Parameters}  (view or) change aggregation parameters: aggregate width, minimum size, lower and upper bounds
-{.menu.options.menu Switches}        (view or) change various processing, memory management, and display switches
+{.menu.options.menu Switches}           (view or) change various processing, memory management, and display switches
 
 #
 # `Help' menu (and embedded cascades)
 #
-.menu.help                      if only someone provided some help |:-{
+.menu.help                              if only someone provided some help |:-{
 
 #
 # aggregation parameter pane

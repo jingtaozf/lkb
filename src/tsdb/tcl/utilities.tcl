@@ -177,201 +177,233 @@ proc update_source_database {index} {
 }; # update_source_database()
 
 
-proc update_condition_cascade {{active ""}} {
+proc update_condition_cascade {{active ""} {context "condition"}} {
 
   global globals phenomena;
 
-  if {$active == "phenomena"} {
-    set globals(condition,null) $globals(phenomena,all);
-  } elseif {[regexp {^[0-9]+$} $active]} {
-    set globals(condition,null) 0;
+  if {[regexp {^[0-9]+$} $active]} {
+    set globals($context,null) 0;
   } elseif {$active == "wellformed"} {
-    set globals(condition,null) 0;
-    set globals(condition,illformed) 0;
+    set globals($context,null) 0;
+    set globals($context,illformed) 0;
   } elseif {$active == "illformed"} {
-    set globals(condition,null) 0;
-    set globals(condition,wellformed) 0;
+    set globals($context,null) 0;
+    set globals($context,wellformed) 0;
   } elseif {$active == "analyzed"} {
-    set globals(condition,null) 0;
-    set globals(condition,unanalyzed) 0;
+    set globals($context,null) 0;
+    set globals($context,unanalyzed) 0;
   } elseif {$active == "unanalyzed"} {
-    set globals(condition,null) 0;
-    set globals(condition,analyzed) 0;
+    set globals($context,null) 0;
+    set globals($context,analyzed) 0;
   } elseif {$active == "unproblematic"} {
-    set globals(condition,null) 0;
-  } elseif {$active == "null" || $globals(condition,null)} {
-    set globals(condition,null) 1;
+    set globals($context,null) 0;
+  } elseif {$active == "null" || 
+            ($active != "phenomena" && $globals($context,null))} {
+    set globals($context,null) 1;
     foreach i {wellformed illformed analyzed unanalyzed unproblematic} {
-      set globals(condition,$i) 0;
+      set globals($context,$i) 0;
     }; # foreach
-    for {set i 0} {$i < $globals(condition,size)} {incr i} {
-      set globals(condition,$i) 0;
+    for {set i 0} {$i < $globals($context,size)} {incr i} {
+      set globals($context,$i) 0;
     }; # for
-    update_phenomena_cascade all;
+    update_phenomena_cascade all $context;
   }; # if
   
+  if {$active != "null"} {
+    set globals($context,null) 1;
+    if {!$globals(phenomena,$context,all)} {
+      set globals($context,null) 0;
+    } else {
+      foreach i {wellformed illformed analyzed unanalyzed unproblematic} {
+        if {[info exists globals($context,$i)] && $globals($context,$i)} {
+          set globals($context,null) 0;
+        }; # if
+      }; # foreach
+      for {set i 0} {$i < $globals($context,size)} {incr i} {
+        if {[info exists globals($context,$i)] && $globals($context,$i)} {
+          set globals($context,null) 0;
+        }; # if
+      }; # for
+    }; # else
+  }; # if
+
   if {$active != "phenomena"} {
     #
     # construct cascade of checkbuttons; bottom is .n. (5) most recent history
     # entries for the condition class.
     #
-    if {[.menu.options.menu.condition index end] != "none"} {
-      .menu.options.menu.condition delete 0 end;
+    if {$context == "condition"} {
+      set menu .menu.options.menu.condition;
+    } else {
+      set menu .menu.analyze.menu.division;
+    }; # else
+
+    if {[$menu index end] != "none"} {
+      $menu delete 0 end;
     }; # if
-    .menu.options.menu.condition add checkbutton \
+    $menu add checkbutton \
       -label "No Condition" \
-      -variable globals(condition,null) \
-      -command {update_condition_cascade null};
-    .menu.options.menu.condition add checkbutton \
+      -variable globals($context,null) \
+      -command "update_condition_cascade null $context";
+    $menu add checkbutton \
       -label "Phenomena Selection" \
       -offvalue 1 -onvalue 0 -state disabled \
-      -variable globals(phenomena,all) \
-      -command {update_phenomena_cascade};
-    .menu.options.menu.condition add separator
+      -variable globals(phenomena,$context,all) \
+      -command "update_phenomena_cascade \"\" $context";
+    $menu add separator
 
-    .menu.options.menu.condition add checkbutton \
+    $menu add checkbutton \
       -label "Wellformed (`i-wf = 1')" \
-      -variable globals(condition,wellformed) \
-      -command {update_condition_cascade wellformed};
-    .menu.options.menu.condition add checkbutton \
+      -variable globals($context,wellformed) \
+      -command "update_condition_cascade wellformed $context";
+    $menu add checkbutton \
       -label "Illformed (`i-wf = 0')" \
-      -variable globals(condition,illformed) \
-      -command {update_condition_cascade illformed};
-    .menu.options.menu.condition add checkbutton \
+      -variable globals($context,illformed) \
+      -command "update_condition_cascade illformed $context";
+    $menu add checkbutton \
       -label "Analyzed (`readings > 0')" \
-      -variable globals(condition,analyzed) \
-      -command {update_condition_cascade analyzed};
-    .menu.options.menu.condition add checkbutton \
+      -variable globals($context,analyzed) \
+      -command "update_condition_cascade analyzed $context";
+    $menu add checkbutton \
       -label "Unanalyzed (`readings = 0')" \
-      -variable globals(condition,unanalyzed) \
-      -command {update_condition_cascade unanalyzed};
-    .menu.options.menu.condition add checkbutton \
+      -variable globals($context,unanalyzed) \
+      -command "update_condition_cascade unanalyzed $context";
+    $menu add checkbutton \
       -label "Unproblematic (`readings != -1')" \
-      -variable globals(condition,unproblematic) \
-      -command {update_condition_cascade unproblematic};
+      -variable globals($context,unproblematic) \
+      -command "update_condition_cascade unproblematic $context";
 
-    history_move condition end 1;
+    history_move $context end 1;
     for {set i 0} {$i < 10} {incr i} {
-      if {[set condition [history_move condition 1 1]] == ""} {
+      if {[set condition [history_move $context 1 1]] == ""} {
         break;
       }; # if
       if {!$i} {
-        .menu.options.menu.condition add separator
+        $menu add separator
       }; # if
-      .menu.options.menu.condition add checkbutton \
-        -label "`$condition'" -variable globals(condition,$i) \
-        -command [list update_condition_cascade $i];
+      $menu add checkbutton \
+        -label "`$condition'" -variable globals($context,$i) \
+        -command "update_condition_cascade $i $context";
     }; # for
-    set globals(condition,size) $i;
-    history_move condition end 1;
+    set globals($context,size) $i;
+    history_move $context end 1;
   }; # if
 
   #
   # determine current TSQL condition: conjunctively concatenate all active
   # restrictions.
   #
-  set globals(condition) "";
+  set globals($context) "";
   set disjunctionp 0;
-  if {!$globals(phenomena,all)} {
+  if {!$globals(phenomena,$context,all)} {
     foreach i [lsort -integer [array names phenomena]] {
-      if {$globals(phenomena,$i)} {
+      if {$globals(phenomena,$context,$i)} {
         set condition [lispify_string "(p-name ~ `$phenomena($i)')"];
-        if {$globals(condition) == ""} {
-          set globals(condition) $condition;
+        if {$globals($context) == ""} {
+          set globals($context) $condition;
         } else {
           set disjunctionp 1;
-          set globals(condition) \
-            "$globals(condition) or $condition";
+          set globals($context) \
+            "$globals($context) or $condition";
         }; # else
       }; # if
     }; # foreach
     if {$disjunctionp} {
-      set globals(condition) "($globals(condition))";
+      set globals($context) "($globals($context))";
     }; # if
   }; # if
-  if {!$globals(condition,null)} {
+  if {!$globals($context,null)} {
 
-    if {$globals(condition,wellformed)} {
-      if {$globals(condition) == ""} {
-        set globals(condition) [lispify_string "(i-wf = 1)"];
+    if {$globals($context,wellformed)} {
+      if {$globals($context) == ""} {
+        set globals($context) [lispify_string "(i-wf = 1)"];
       } else {
-        set globals(condition) \
-          "$globals(condition) and [lispify_string "(i-wf = 1)"]";
+        set globals($context) \
+          "$globals($context) and [lispify_string "(i-wf = 1)"]";
       }; # else
     }; # if
 
-    if {$globals(condition,illformed)} {
-      if {$globals(condition) == ""} {
-        set globals(condition) [lispify_string "(i-wf = 0)"];
+    if {$globals($context,illformed)} {
+      if {$globals($context) == ""} {
+        set globals($context) [lispify_string "(i-wf = 0)"];
       } else {
-        set globals(condition) \
-          "$globals(condition) and [lispify_string "(i-wf = 0)"]";
+        set globals($context) \
+          "$globals($context) and [lispify_string "(i-wf = 0)"]";
       }; # else
     }; # if
 
-    if {$globals(condition,analyzed)} {
-      if {$globals(condition) == ""} {
-        set globals(condition) [lispify_string "(readings > 0)"];
+    if {$globals($context,analyzed)} {
+      if {$globals($context) == ""} {
+        set globals($context) [lispify_string "(readings > 0)"];
       } else {
-        set globals(condition) \
-          "$globals(condition) and [lispify_string "(readings > 0)"]";
+        set globals($context) \
+          "$globals($context) and [lispify_string "(readings > 0)"]";
       }; # else
     }; # if
 
-    if {$globals(condition,unanalyzed)} {
-      if {$globals(condition) == ""} {
-        set globals(condition) [lispify_string "(readings = 0)"];
+    if {$globals($context,unanalyzed)} {
+      if {$globals($context) == ""} {
+        set globals($context) [lispify_string "(readings = 0)"];
       } else {
-        set globals(condition) \
-          "$globals(condition) and [lispify_string "(readings = 0)"]";
+        set globals($context) \
+          "$globals($context) and [lispify_string "(readings = 0)"]";
       }; # else
     }; # if
 
-    if {$globals(condition,unproblematic)} {
-      if {$globals(condition) == ""} {
-        set globals(condition) [lispify_string "(readings != -1)"];
+    if {$globals($context,unproblematic)} {
+      if {$globals($context) == ""} {
+        set globals($context) [lispify_string "(readings != -1)"];
       } else {
-        set globals(condition) \
-          "$globals(condition) and [lispify_string "(readings != -1)"]";
+        set globals($context) \
+          "$globals($context) and [lispify_string "(readings != -1)"]";
       }; # else
     }; # if
 
-    history_move condition end 1;
-    for {set i 0} {$i < $globals(condition,size)} {incr i} {
+    history_move $context end 1;
+    for {set i 0} {$i < $globals($context,size)} {incr i} {
 
-      set condition [history_move condition 1];
-      if {$globals(condition,$i)} {
-        if {$globals(condition) == ""} {
-          set globals(condition) "([lispify_string $condition])";
+      set condition [history_move $context 1];
+      if {$globals($context,$i)} {
+        if {$globals($context) == ""} {
+          set globals($context) "([lispify_string $condition])";
         } else {
-          set globals(condition) \
-            "$globals(condition) and ([lispify_string $condition])";
+          set globals($context) \
+            "$globals($context) and ([lispify_string $condition])";
         }; # else
       }; # if
     }; # for
   }; # if
 
-  tsdb_set "*statistics-select-condition*" "\"$globals(condition)\"";
-  history_move condition end 1;
+  if {$context == "condition"} {
+    tsdb_set "*statistics-select-condition*" "\"$globals(condition)\"";
+  }; # if  
+  history_move $context end 1;
 
 }; # update_condition_cascade()
 
 
-proc update_phenomena_cascade {{code ""}} {
+proc update_phenomena_cascade {{code ""} {context "condition"}} {
 
   global globals phenomena;
 
+  if {$context == "condition"} {
+    set menu .menu.options.menu.phenomena;
+  } else {
+    set menu .menu.analyze.menu.phenomena;
+  }; # else
+
   if {[regexp {^[0-9]+$} $code]} {
-    set globals(phenomena,all) 1;
+    set globals(phenomena,$context,all) 1;
     foreach i [lsort -integer [array names phenomena]] {
-      if {$globals(phenomena,$i)} {
-        set globals(phenomena,all) 0;
+      if {$globals(phenomena,$context,$i)} {
+        set globals(phenomena,$context,all) 0;
       }; # if
     }; # foreach
-  } elseif {$code == "all" || $code == "reset" || $globals(phenomena,all)} {
-    set globals(phenomena,all) 1;
+  } elseif {$code == "all" || $code == "reset" 
+            || $globals(phenomena,$context,all)} {
+    set globals(phenomena,$context,all) 1;
     foreach i [lsort -integer [array names phenomena]] {
-      set globals(phenomena,$i) 0;
+      set globals(phenomena,$context,$i) 0;
     }; # foreach
   }; # else
 
@@ -379,26 +411,26 @@ proc update_phenomena_cascade {{code ""}} {
     #
     # construct cascade of checkbuttons, one per phenomenon.
     #
-    if {[.menu.options.menu.phenomena index end] != "none"} {
-      .menu.options.menu.phenomena delete 0 end;
+    if {[$menu index end] != "none"} {
+      $menu delete 0 end;
     }; # if
-    .menu.options.menu.phenomena add checkbutton \
+    $menu add checkbutton \
       -label "All Phenomena" \
-      -variable globals(phenomena,all) \
-      -command {update_phenomena_cascade all};
+      -variable globals(phenomena,$context,all) \
+      -command "update_phenomena_cascade all $context";
 
     if {[array names phenomena] != ""} {
-      .menu.options.menu.phenomena add separator;
+      $menu add separator;
     }; # if
     foreach i [lsort -integer [array names phenomena]] {
-      .menu.options.menu.phenomena add checkbutton \
-        -variable globals(phenomena,$i) \
+      $menu add checkbutton \
+        -variable globals(phenomena,$context,$i) \
         -label "$phenomena($i)" \
-        -command "update_phenomena_cascade $i";
+        -command "update_phenomena_cascade $i $context";
     }; # foreach
   }; # if
 
-  update_condition_cascade phenomena;
+  update_condition_cascade phenomena $context;
 
 }; # update_phenomena_cascade()
 

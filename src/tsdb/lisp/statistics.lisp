@@ -2291,11 +2291,13 @@
 (defmacro shift (value range offset)
   `(if (zerop ,offset)
      ,value
-     (let* ((increment (random (* ,range ,offset 2)))
+     (let* ((shift (* ,range ,offset 2))
+            (increment (if (zerop shift) 0 (random shift)))
             (delta (- (* ,range ,offset) increment)))
        (+ ,value delta))))
 
 (defun graph (data &key (condition *statistics-select-condition*)
+                        division
                         file (format :tcl)
                         (dimension :words)
                         (aggregate 1) (threshold 5) lower upper
@@ -2310,6 +2312,11 @@
          (granularity (profile-granularity data))
          (nattributes (length attributes))
          (scatterp (and scatterp (= nattributes 1)))
+         (division (if (or (null condition) (null division))
+                         (unless (equal division "") division)
+                         (format nil "(~a) and (~a)" condition division)))
+         (ameter (if division (madjust / meter 2) meter))
+         (dmeter (if division (madjust + ameter (mduration ameter)) nil))
          (aggregates 
           (aggregate data 
                      :condition condition :dimension dimension 
@@ -2317,17 +2324,36 @@
                      :lower lower :upper upper :extras extras
                      :restrictor #'(lambda (foo)
                                      (eql (get-field :readings foo) -1))
-                     :format format :meter meter))
+                     :format format :meter ameter))
          (saggregates (when (and attributes aggregates)
                         (summarize-performance-parameters 
                          aggregates :extras extras
                          :format (profile-granularity data))))
+         (daggregates
+          (when (and (null attributes) division)
+            (let ((daggregates
+                   (aggregate 
+                    data :condition division :dimension dimension 
+                    :aggregate aggregate :threshold threshold
+                    :lower lower :upper upper :extras extras
+                    :restrictor #'(lambda (foo) 
+                                    (eql (get-field :readings foo) -1))
+                    :format format :meter dmeter)))
+              (loop
+                  for aggregate in aggregates
+                  for key = (first aggregate)
+                  for label = (second aggregate)
+                  for match = (find key daggregates :key #'first)
+                  collect (cons key (cons label (rest (rest match))))))))
          (values (make-array (list nattributes)))
          (points (make-array (list nattributes)))
          (units (nreverse (map 'list #'first aggregates)))
          (frequencies (map 'list 
                         #'(lambda (foo) (length (rest (rest foo))))
                         aggregates))
+         (dfrequencies (loop
+                           for aggregate in daggregates
+                           collect (length (rest (rest aggregate)))))
          (xmin (if units (apply #'min units) 0))
          (xmax (if units (apply #'max units) 42))
          ymin ymax lsymbols llabels)
@@ -2497,7 +2523,8 @@
             (if attributes xmin (- xmin 1)) (if attributes xmax (+ xmax 1))
             ymin ymax
             xtitle
-            xmin xmax xdivision
+            (if attributes xmin (- xmin 1)) (if attributes xmax (+ xmax 1)) 
+            xdivision
             ytics
             title)
            (format
@@ -2586,19 +2613,40 @@
          (format 
           stream 
           "data y ~a~%~
-           element e -xdata x -ydata y -relief flat~%"
-          (list2tcl (nreverse frequencies) :format "~d")))
+           element e -xdata x -ydata y ~
+           -relief ~:[flat~;solid -bd 1 -fg white~]~%"
+          (list2tcl (nreverse frequencies) :format "~d") dfrequencies)
+         (when dfrequencies
+           (format 
+            stream 
+            "data yy ~a~%~
+           element ee -xdata x -ydata yy -relief flat~%"
+            (list2tcl (nreverse dfrequencies) :format "~d"))))
         (:latex
-         (format
-          stream
-          "  \\setbars breadth <0mm> baseline at y = 0~%  ~
-             \\linethickness=\\breadth~%  \\plot~%")
-         (loop
-             for x in units
-             for y in (nreverse frequencies)
-             do
-               (format stream "~10d ~8d~%" x y))
-         (format stream "  /~%"))))
+         (let ((breadth (/ *statistics-plot-width* (* (- xmax xmin) 1.2))))
+           (when dfrequencies
+             (format
+              stream
+              "  \\setbars breadth <0mm> baseline at y = 0~%  ~
+               \\linethickness=~,4fmm~%  \\plot~%"
+              breadth)
+             (loop
+                 for x in units
+                 for y in (nreverse dfrequencies)
+                 do
+                   (format stream "~10d ~8d~%" x y))
+             (format stream "  /~%"))
+           (format
+            stream
+            "  \\setbars breadth <~:[0mm~*~;~,4fmm~]> baseline at y = 0~%  ~
+               \\linethickness=~:[\\breadth~;0.25pt~]~%  \\plot~%"
+            dfrequencies breadth dfrequencies)
+           (loop
+               for x in units
+               for y in (nreverse frequencies)
+               do
+                 (format stream "~10d ~8d~%" x y))
+           (format stream "  /~%")))))
     (case format
       (:tcl
        (if attributes

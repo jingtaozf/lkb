@@ -114,6 +114,14 @@
   ;;
   (setf excl::stream-buffer-size 8192)
   ;;
+  ;; exercise Allegro scheduler at least once per minute; we hope this may work
+  ;; around Allegro bug [spr19158]; ultimately, of course, we expect Franz to
+  ;; come up with an actual fix.                        (21-may-00  -  oe)
+  ;;
+  (flet ((exercise-scheduler () (loop (sleep 60))))
+    (mp:process-run-function '(:name "scheduler work-out [spr19158]")
+                             #'exercise-scheduler))
+  ;;
   ;; ensure that podium(1) process (talking to wish(1)) terminates gracefully;
   ;; apparently, the EOF that wish(1) should see once the lisp stream is gone,
   ;; is insufficient to make it exit.
@@ -124,3 +132,5 @@
                  (when (and *tsdb-wish-process*
                             (eq (first excl:arglist) *tsdb-wish-process*))
                    (ignore-errors (shutdown-podium))))))
+
+
