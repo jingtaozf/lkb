@@ -309,36 +309,35 @@ at this point).
 
 
 (defun apply-instantiated-lexical-rules (entries rules)
-   ;;; similar to try-all-lexical-rules,
-   ;;; but rule list is given, because rules may have instantiated semantics
-   ;;; entries are pairs with list of rules applied plus result
-   (incf *number-of-lrule-applications*)
-   (when (> *number-of-lrule-applications* 
-            cl-user::*maximal-lex-rule-applications*)
-      (error "~%Probable circular lexical rule"))
-   (let ((transformed-entries 
-            (for entry in entries
-               append
-               (for rule in rules
-                  filter
-                  (let* ((spelling-rule-p 
-                          (cl-user::spelling-change-rule-p rule))
-                         (new-morph 
-                              (if spelling-rule-p
-                                  (cl-user::construct-new-morph entry rule)))
-                         (result
-                          (if (or (not spelling-rule-p) new-morph)
-                              ; allow morphographemics to block generation
-                              (cl-user::evaluate-unifications rule
-                                                     (list (cdr entry))
-                                                     new-morph))))
-                     (if result 
-                        (cons 
-                           (cons rule (car entry))
-                              result)))))))
-      (if transformed-entries
-         (append transformed-entries
-            (apply-instantiated-lexical-rules transformed-entries rules)))))
+  ;; similar to try-all-lexical-rules, but rule list is given, because rules
+  ;; may have instantiated semantics.  entries are pairs with list of rules
+  ;; applied plus result
+  (incf *number-of-lrule-applications*)
+  (when (> *number-of-lrule-applications* 
+	   cl-user::*maximal-lex-rule-applications*)
+    (error "~%Probable circular lexical rule"))
+  (let ((transformed-entries 
+	 (loop for entry in entries
+	     append
+	       (let* ((fs (cdr entry))
+		      (fs-restricted (cl-user::restrict-fs (tdfs-indef fs))))
+		 (for rule in rules
+		      filter
+		      (let* ((spelling-rule-p 
+			      (cl-user::spelling-change-rule-p rule))
+			     (new-morph 
+			      (when spelling-rule-p
+				(cl-user::construct-new-morph entry rule)))
+			     (result
+			      (when (or (not spelling-rule-p) new-morph)
+				;; allow morphographemics to block generation
+				(cl-user::apply-morph-rule 
+				 rule fs fs-restricted new-morph))))
+			(when result 
+			  (cons (cons rule (car entry)) result))))))))
+    (when transformed-entries
+      (append transformed-entries
+	      (apply-instantiated-lexical-rules transformed-entries rules)))))
 
 (defun instantiate-semantic-indices (lex-id lex-e base-fs main-rels)
 ;;; produces found-lex structures
@@ -349,68 +348,75 @@ at this point).
   (apply-rels-to-base lex-id base-fs main-rels 
                            *main-semantics-path*))
 
-    
-
 (defun apply-rels-to-base (lex-id base-fs rel-list path)
-  (for rel-sequence in (create-all-rel-sequences rel-list)
-       filter
-       ;;; needs fixing
-       ;;; unnecessary expense since we repeat this on the same rels for 
-       ;;; multiple ids
-       (let ((new-fs (create-liszt-fs-from-rels 
-                       rel-sequence
-                       path)))
-         (if new-fs 
-             (cl-user::with-unification-context (base-fs)
-               (if (yadu base-fs new-fs)
-                   (if lex-id
-                       (make-found-lex 
-                        :lex-id lex-id
-                        :inst-fs (cl-user::copy-tdfs-elements base-fs)
-                        :main-rels rel-sequence)
-                     ; if null lex-id assume it's a rule
-                     (cons
-                      (cl-user::copy-tdfs-elements base-fs)
-                      rel-sequence))))
-           (cerror "Ignore this entry/rule" 
-                                "~%Problem in create-liszt-fs-from-rels")))))
-                      
+  (loop for rel-sequence in (create-all-rel-sequences rel-list)
+      when
+       ;; needs fixing - unnecessary expense since we repeat this on the same
+       ;; rels for multiple ids
+	(let ((new-fs (create-liszt-fs-from-rels rel-sequence path)))
+	  (if new-fs 
+	      (let ((result (yadu base-fs new-fs)))
+		(if result
+		    (if lex-id
+			(make-found-lex 
+			 :lex-id lex-id
+			 :inst-fs result
+			 :main-rels rel-sequence)
+		      ;; if null lex-id assume it's a rule
+		      (cons result rel-sequence))))
+	    (cerror "Ignore this entry/rule" 
+		    "~%Problem in create-liszt-fs-from-rels")))
+	collect it))
 
 (defun create-all-rel-sequences (rels)
   ;;; we have an ordered list of lists
   ;;; e.g. ((a b) (c) (d e)) and want to
   ;;; generate (a c d) (a c e) (b c d) (b c e)
   (if (null rels)
-    nil
-    (for rel in (car rels)
-         append
-         (let ((combinations (create-all-rel-sequences (cdr rels))))
-           (if combinations
-             (for combination in combinations
-                  collect
-                  (cons rel combination))
-             (list (list rel)))))))
+      nil
+    (loop for rel in (car rels)
+	nconc
+	  (let ((combinations (create-all-rel-sequences (cdr rels))))
+	    (if combinations
+		(loop for combination in combinations
+		    collect (cons rel combination))
+	      (list (list rel)))))))
 
          
+(defvar *fs-cache* nil)
 
+(defun match-rels (a b)
+  (and (equal (second a)
+	      (second b))
+       (loop for x in (first a)
+	   for y in (first b)
+	   always (eq x y))))
+  
 (defun create-liszt-fs-from-rels (rels sem-path)
-  ;;; inverse direction to mrsoutput functions,
-  ;;; here we're creating a FS from a Lisp structure
-  (let ((path-list nil)
-        (current-path sem-path))
-    (for rel in rels
-         do
-         (let ((first-path (append current-path *first-path*)))
-           (for unif in (create-unifs-for-rel rel first-path)
-                do
-                (push unif path-list))
-           (setf current-path (append current-path *rest-path*))))
-    (let ((fs (process-unifications path-list)))
-      (if fs 
-          (let*
-              ((wffs (create-wffs fs))
-               (tdfs (if wffs (construct-tdfs wffs nil nil))))
-            tdfs)))))
+  ;; inverse direction to mrsoutput functions, here we're creating a FS from a
+  ;; Lisp structure
+  (let ((hit (member (list rels sem-path) *fs-cache* :test #'match-rels
+		     :key #'first)))
+    (if hit
+	(second (first hit))
+      (let* ((cl-user::*safe-not-to-copy-p* nil)
+	     (path-list nil)
+	     (current-path sem-path)
+	     (result
+	      (progn
+		(loop for rel in rels
+		    do
+		      (let ((first-path (append current-path *first-path*)))
+			(loop for unif in (create-unifs-for-rel rel first-path)
+			    do
+			      (push unif path-list))
+			(setf current-path (append current-path *rest-path*))))
+		(let* ((fs (process-unifications path-list))
+		       (wffs (when fs (create-wffs fs)))
+		       (tdfs (when wffs (construct-tdfs wffs nil nil))))
+		  tdfs))))
+	(push (list (list rels sem-path) result) *fs-cache*)
+	result))))
 
 
 (defun create-unifs-for-rel (rel-str path)
