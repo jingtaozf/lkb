@@ -16,11 +16,37 @@
 ;;; Top level functions
 ;;;
 ;;; "Load"
-;;; all in various input files
+;;;
+;;; "Type file"              read-type-file           typeinput.lsp
+;;; "Checked type file"      read-checked-type-file   typeinput.lsp
+;;; "Compiled type file"     read-compiled-type-file  typeinput.lsp
+;;; "Lexicon file"           read-lex-file            lexinput.lsp
+
+;;; Speed
+;;; "Everything"             all-speed-items
+;;; "Cache edges"            toggle-edge-caches            parse.lsp
+;;; "Type compatability"      set-up-type-cache        type.lsp
+
+(defun all-speed-items nil
+  (set-up-type-cache)  
+  (do-edge-caches))
+
+;;; "Convert"
 
 ;;; "View"
 ;;;
-;;; "Type spec" show-type-spec
+;;; "Type hierarchy" show-type-tree
+(defun show-type-tree nil
+   (let ((*last-type-name* *toptype*))
+      (declare (special *last-type-name*))
+      (multiple-value-bind (type show-all-p)
+             (ask-user-for-type nil '("Show all types?" . :check-box))
+         (when type
+            (let ((type-entry (get-type-entry type)))
+               (when type-entry 
+                  (create-type-hierarchy-tree type nil show-all-p)))))))
+
+;;; "Type definition" show-type-spec
 (defun show-type-spec nil
    (let* ((type (ask-user-for-type))
          (type-entry (if type (get-type-entry type))))
@@ -31,6 +57,20 @@
                "~(~A~)  - definition" 
                type)
             (type-parents type-entry)))))
+
+;;; "Expanded type" show-type                  
+(defun show-type-indef nil
+  (let* ((type (ask-user-for-type))
+        (type-entry (if type (get-type-entry type))))
+      (when type-entry 
+         (display-type-in-tree type)
+         (if (type-constraint type-entry)
+            (display-fs (type-constraint type-entry) 
+            (format nil 
+               "~(~A~) - TDFS" 
+               type))
+            (format t "~%No constraint for type ~A" type)))))
+
 
 ;;; "Expanded type" show-type                  
 (defun show-type nil
@@ -45,7 +85,6 @@
                type))
             (format t "~%No tdfs for type ~A" type)))))
 
-;;; "Type hierarchy" show-type-hierarchy
 ;;; "Word entries" show-words
 
 (defun show-words nil
@@ -76,6 +115,16 @@
             (display-fs (lex-or-psort-full-fs lex-entry) 
                      (format nil "~(~A~) - expanded" lex)))))
          
+;;; "Unlinked entry" 'show-unlinked-lex
+;;; only relevant for BC96 style lrules and linking
+         
+(defun show-unlinked-lex nil
+  (let* ((lex (ask-user-for-lex))
+        (lex-entry (if lex (get-psort-entry lex))))
+      (when lex-entry 
+            (display-fs (lex-or-psort-interim-fs lex-entry) 
+                     (format nil "~(~A~) - unlinked" lex)))))
+
 
 (defun show-lex-def nil
    (let* ((lex (ask-user-for-lex))
@@ -111,29 +160,70 @@
             (display-fs (rule-full-fs rule-entry) 
                      (format nil "~(~A~)" (rule-id rule-entry)))))) 
 
+(defun show-bc96lex-rule nil
+  (let* ((rule-entry (ask-user-for-lexical-rule)))
+      (when rule-entry 
+            (display-lrule-window 
+               (lrule-input-tdfs rule-entry) 
+               (lrule-output-tdfs rule-entry)
+               (format nil "~(~A~)" (lrule-name rule-entry))))))
 
 (defparameter *last-lex-id* nil)
         
+(defun show-tlinks nil 
+   (let* ((*last-lex-id* (or *last-lex-id* 'love_1))
+         (lex (ask-user-for-lex)))
+      (when lex
+         (let
+         ((target-language 
+            (if (lkb-y-or-n-p "Specify target language")
+            (apply #'ask-user-for-multiple-choice "Translate to"
+               *possible-languages*))))
+         (let ((tlinks
+            (if target-language
+               (find-tlinks-by-language lex target-language)
+               (find-tlinks lex))))
+            (cond 
+               (tlinks
+                  (for tlink in tlinks
+                     do
+                  (display-fs (tlink-full-fs tlink)
+                     (format nil "~A ~A ~A ~A" 
+                        (tlink-psort1 tlink)
+                        (tlink-lang1 tlink)
+                        (tlink-psort2 tlink)
+                        (tlink-lang2 tlink)))))
+               (t (format t 
+                     "~%No appropriate tlink found"))))))))
 
+(defun show-tlink-rules nil 
+   (for tlink-rule in (get-tlink-rules)
+      do
+      (display-fs (tlink-rule-full-fs tlink-rule)
+         (format nil "~A ~A" 
+            (tlink-rule-rule1 tlink-rule)
+            (tlink-rule-rule2 tlink-rule)))))
+ 
         
 ;;; 
 ;;; View utilities
 (defparameter *last-type-name* 'cat)
 
-(defun ask-user-for-type (&optional qstring)
-   (let ((possible-type-name
+(defun ask-user-for-type (&optional qstring check-box-spec)
+   (let ((res
             (ask-for-lisp-movable "Current Interaction" 
-               (if qstring
-                  `((,qstring . ,*last-type-name*))  
-                  `(("Type?" . ,*last-type-name*))) 150)))
-      (when possible-type-name
-         (let* ((type (car possible-type-name))
-               (type-entry (get-type-entry type)))
+               `((,(or qstring "Type?") . ,*last-type-name*)
+                 ,@(if check-box-spec `(,check-box-spec)))
+               150)))
+      (when res
+         (let* ((type (car res))
+                (show-all-p (cadr res))
+                (type-entry (get-type-entry type)))
             (unless type-entry
                (format t "~%Type ~A is not defined" type)
-               (setf type (ask-user-for-type)))
+               (setf type (ask-user-for-type qstring check-box-spec)))
             (setf *last-type-name* type)
-            type))))
+            (values type show-all-p)))))
 
 
 ;;; display-fs is in outputfs.lsp
@@ -229,6 +319,43 @@
             lex-string))))
 
 
+;;; Add
+;;;
+;;; "Leaf Type" add-type
+;;; "Lex or psort entry" add-lex
+
+;;; "Edit"
+;;; 
+;;; "Type" edit-type
+
+;;; "Inherit display settings" inherit-display-settings
+
+(defun inherit-display-settings nil
+   (let ((type (ask-user-for-type)))
+      (when type
+         (inherit-display type nil))))
+         
+(defun inherit-display (type current-paths)
+   (let* ((type-record (get-type-entry type))
+         (shrunk-paths 
+            (union
+               (display-dag1 (type-constraint type-record) 'shrunk t)
+               current-paths :test #'equal)))
+      (when shrunk-paths
+         (for path in shrunk-paths
+            do
+            (set-dag-display-value 
+               (type-constraint type-record)
+               path :shrink)))
+      (unless (type-enumerated-p type-record)
+         (for daughter in (type-daughters type-record)
+            do
+            (inherit-display daughter shrunk-paths)))))
+
+
+
+;;; "Lex or psort entry" edit-lex
+
 ;;; Lexical rule application
 
 
@@ -277,6 +404,28 @@
                            "~%Lexical rule application failed")))))))))
 
 
+(defun apply-bc96-lex nil
+   (let* ((lex (ask-user-for-lex))
+         (lex-entry (if lex (get-psort-entry lex)))
+         (lex-entry-fs
+            (if lex-entry (lex-or-psort-interim-fs lex-entry))))
+      (when lex-entry-fs 
+         (let 
+            ((lex-rule (ask-user-for-lexical-rule)))
+            (when lex-rule
+               (let 
+                  ((result
+                     (link-and-incorp
+                        (apply-lrule lex-rule lex-entry-fs)
+                        (lrule-name lex-rule))))
+                  (cond (result
+                        (display-fs result
+                           (format nil "~(~A~) + ~A" 
+                              lex (lrule-name lex-rule))))
+                     (t (format t 
+                           "~%Lexical rule application failed")))))))))
+
+
 (defparameter *number-of-applications* 0)
 
 (defun apply-lex-rules nil
@@ -298,6 +447,50 @@
                (t (format t 
                      "~%No applicable lexical rules")))))))
 
+
+(defun apply-bc96-lex-rules nil
+   (let* ((lex (ask-user-for-lex))
+         (lex-entry (if lex (get-psort-entry lex)))
+         (lex-entry-fs
+            (if lex-entry (lex-or-psort-interim-fs lex-entry))))
+      (when lex-entry-fs 
+         (setf *number-of-applications* 0)
+         (let ((result-list
+                  (apply-all-lexical-rules 
+                     (list lex-entry-fs))))
+            (cond (result-list
+                  (for result in result-list
+                     do
+                     (display-fs result
+                        (format nil "~(~A~)" 
+                           lex))))
+               (t (format t 
+                     "~%No applicable lexical rules")))))))
+
+;;; tlink application
+
+(defun apply-tlink nil
+   (let* ((lex (ask-user-for-lex))
+         (target-language 
+            (if lex
+            (apply #'ask-user-for-multiple-choice "Translate to"
+               *possible-languages*)))
+         (lex-entry (if lex (get-psort-entry lex)))
+         (lex-entry-fs
+            (if lex-entry (lex-or-psort-full-fs lex-entry))))
+      (when lex-entry-fs 
+         (let ((result
+            (translate-feature-structure-temp
+                     lex-entry-fs lex target-language)))
+            (cond 
+               (result
+                  (for fs in result
+                     do
+                  (display-fs fs
+                     (format nil "~(~A~) in ~A" 
+                        lex target-language))))
+               (t (format t 
+                     "~%No appropriate tlink found")))))))
 
 
 
@@ -334,7 +527,27 @@
       (push (coerce (nreverse current-word) 'string) current-sentence)
       (nreverse current-sentence)))
 
+;;; "Map"
+;;;
+;;; "Define languages"       map-define-language     mapping.lsp
+;;; "Select source entries"  select-psorts-to-link   mapping.lsp
+;;; "Select Bilingual"       map-select-bilingual    mapping.lsp
+;;; "Perform mapping"        map-do-map              mapping.lsp
 
+
+;;; "Index"
+;;;
+;;; "Index & check"    index-do-index     lexbatch.lsp
+;;; "Load indices"     read-indices       lexbatch.lsp
+;;; "Save indices"     save-indices       lexbatch.lsp
+
+
+;;; "Clear"            clear-non-parents  lex.lsp
+
+
+
+;;; "Output"
+;;;
 
 #|
 ;;; "Type file" output-type-file
@@ -366,6 +579,134 @@
                do
                (output-types daughter ostream)))))))
 |#
+
+;;; "Compiled type file" output-compiled-type-file  typeinput.lsp
+;;; "Display settings"
+
+#|
+
+(defun output-display-settings nil
+   (let ((output-file 
+            (ask-user-for-new-pathname "Output type display settings to?")))
+      (with-open-file (ostream output-file :direction :output)
+         (output-type-display *toptype* ostream)
+         (unmark-type-table))))
+         
+(defun output-type-display (type ostream)
+   (let ((type-record (get-type-entry type)))
+      (unless (seen-node-p type-record) 
+         (mark-node-seen type-record)
+         (let ((shrunk-paths 
+                  (display-dag1 (type-constraint type-record) 'shrunk t)))
+            ;; doesn't print anything!
+            (when shrunk-paths
+               (format ostream 
+                  "~%(~A ~%~{~A~%~})" type shrunk-paths)))
+         (unless (type-enumerated-p type-record)
+            (for daughter in (type-daughters type-record)
+               do
+               (output-type-display daughter ostream))))))
+|#
+
+
+;;; "Lexicon file" output-lexicon-file 
+(defun output-lexicon-file nil
+   (let ((output-file 
+            (ask-user-for-new-pathname 
+               "Output machine readable lexicon file to?")))
+      (with-open-file (ostream output-file :direction :output)
+            (output-quick-lexicon ostream))))
+   
+;;; Constraints
+;;;             (make-menu-item :name "Constraints"
+;;;                :value (open-top-level-menu
+;;;                   (list
+;;;                      (make-menu-item :name "Resolve psort"
+;;;                         :value #'do-resolve-psort)
+;;;                      (make-menu-item :name "Parse"
+;;;                         :value #'do-constraint-parse)
+;;;                      (make-menu-item :name "Translate"
+;;;                         :value #'do-translation)))
+;;;                :available-p nil)
+
+(defun do-resolve-psort nil
+  (let* ((lex (ask-user-for-psort))
+        (lex-entry (if lex (get-psort-entry lex))))
+      (when lex-entry 
+            (resolve-psort lex))))
+   
+(defun do-constraint-parse nil
+   (let* ((sentence 
+            (ask-for-strings-movable "Current Interaction" 
+               `(("Sentence" . ,*last-parse*)) 400))
+         (language
+                  (apply #'ask-user-for-multiple-choice 
+                     "Language" 
+                     (cons *current-language*
+                        (remove *current-language*
+                           *possible-languages*)))))
+      (when sentence
+         (setf *last-parse* (car sentence))                        
+         (constraint-parse (split-into-words (car sentence)) language))))
+
+(defun do-translation nil
+   (let* ((sentence 
+            (ask-for-strings-movable "Current Interaction" 
+               `(("SL string" . ,*last-parse*)) 400))
+         (source-language
+                  (apply #'ask-user-for-multiple-choice 
+                     "Source language" 
+                     (cons *current-language*
+                        (remove *current-language*
+                           *possible-languages*)))))
+      (when sentence
+         (setf *last-parse* (car sentence))
+         (let ((target-language
+                  (apply #'ask-user-for-multiple-choice 
+                     "Target language"
+                        (remove source-language
+                           *possible-languages*)))) 
+            (set-type-of-signs)                
+            (translate (split-into-words (car sentence)) source-language
+               target-language)))))
+
+(defun do-translate-psort nil   
+   (let* ((psort (ask-user-for-psort))
+         (psort-entry (if psort (get-psort-value psort))))
+      (when psort-entry 
+         (let* ((source-language
+                  (apply #'ask-user-for-multiple-choice 
+                     "Source language" 
+                     (cons *current-language*
+                        (remove *current-language*
+                           *possible-languages*))))
+               (target-language
+                  (apply #'ask-user-for-multiple-choice 
+                     "Target language"
+                     (remove source-language
+                        *possible-languages*))))
+            (set-type-of-osign)
+            (translate-psort psort-entry source-language
+               target-language)))))
+   
+
+(defun set-type-of-signs nil
+   (when
+      (lkb-y-or-n-p "Set input and output types?")
+      (let ((itype (ask-user-for-type "Source sign type?")))
+         (if itype
+            (setf *type-of-isign* itype)))
+      (let ((otype (ask-user-for-type "Target sign type?")))
+         (if otype
+            (setf *type-of-osign* otype)))))
+
+
+(defun set-type-of-osign nil
+   (when
+      (lkb-y-or-n-p "Set output type?")
+      (let ((otype (ask-user-for-type "Target sign type?")))
+         (if otype
+            (setf *type-of-osign* otype)))))
 
 
 
