@@ -71,6 +71,11 @@
   feature
   value)
 
+;;;
+;;; _fix_me_
+;;; is `handle-var' still used, actually?  at least the MRS extracted from an
+;;; LKB parse result no longer have any, it seems.              (9-sep-03; oe)
+;;;
 (defstruct (handle-var (:include var)))
 
 (defstruct (grammar-var (:include var)))
@@ -94,20 +99,13 @@
 ;;; the mapping from the ERG (currently in lkbmrs.lisp)
 ;;; adds d, t, v and c
 
-(defun var-name (var)
+(defun var-string (var)
   ;;; always constructed from the type and the id
   ;;; FIX - should be renamed to avoid confusion
   ;;; when dependencies code is changed
   (unless (var-p var)
     (error "var expected ~A found" var))
-  (format nil "~A~A" (var-type var)
-	  (var-id var)))
-
-(defun handle-var-name (var)
-  ;;; FIX - remove when dependencies.lisp is changed
-  (unless (handle-var-p var)
-    (error "var expected ~A found" var))
-  (format nil "~A~A" (var-type var)
+  (format nil "~(~A~)~A" (var-type var)
 	  (var-id var)))
 
 ;;; variable generator - moved from mrsoutput because it could
@@ -723,16 +721,18 @@ higher and lower are handle-variables
     (with-open-file (stream file-name :direction :output)
       (output-mrs1 mrs-instance device stream))
     (output-mrs1 mrs-instance device t)))
-  
-(defun output-mrs1 (mrs-instance device stream)
-  (def-print-operations device 0 stream)
-  (initialize-display-structure *mrs-display-structure* mrs-instance)
-  (cond ((psoa-p mrs-instance)
-         (mrs-output-start-fn *mrs-display-structure*)
-         (print-psoa mrs-instance)
-         (mrs-output-end-fn *mrs-display-structure*)
-         (mrs-output-max-width-fn *mrs-display-structure*))
-        (t (mrs-output-error-fn *mrs-display-structure* mrs-instance))))
+
+(let ((lock #+:allegro (mp:make-process-lock) #-:allegro nil))
+  (defun output-mrs1 (mrs-instance device stream)
+    (#+:allegro mp:with-process-lock #+:allegro (lock) #-:allegro progn
+      (def-print-operations device 0 stream)
+      (initialize-display-structure *mrs-display-structure* mrs-instance)
+      (cond ((psoa-p mrs-instance)
+             (mrs-output-start-fn *mrs-display-structure*)
+             (print-psoa mrs-instance)
+             (mrs-output-end-fn *mrs-display-structure*)
+             (mrs-output-max-width-fn *mrs-display-structure*))
+            (t (mrs-output-error-fn *mrs-display-structure* mrs-instance))))))
 
 (defparameter *already-seen-vars* nil)
 
@@ -740,7 +740,7 @@ higher and lower are handle-variables
   (if var
       (if connected-p
           (get-bound-var-value var)
-        (var-name var))))
+        (var-string var))))
 
 (defun print-psoa (psoa &optional connected-p)
   (setf *already-seen-vars* nil)

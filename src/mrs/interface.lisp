@@ -146,11 +146,12 @@
                                (length (make-scoped-mrs mrs-struct))))))))
 
 (defun read-mrs-from-string (string)
-  (let ((*package* (find-package :lkb)))
-    (ignore-errors 
-     (with-input-from-string (stream string)
-       (read-mrs stream)))))
-
+  (let ((*package* (find-package :lkb))
+        (mrs (ignore-errors 
+              (with-input-from-string (stream string)
+                (read-mrs stream)))))
+    (when (psoa-p mrs) mrs)))
+    
 (defun read-mrs-from-file (file)
   (when (probe-file file)
     (#+:debug progn #-:debug ignore-errors 
@@ -170,12 +171,46 @@
      (apply #'mrs-equalp mrs1 mrs2 '(t nil))
      (equal mrs1 mrs2))))
 
+(defparameter *mrs-default-display* :simple)
+
 (defun browse-mrs (mrs &optional title)
   (ignore-errors
-   (let ((browser (fboundp (find-symbol "SHOW-MRS-WINDOW" :lkb))))
+   (let ((browser 
+          (fboundp 
+           (case *mrs-default-display*
+             (:simple (find-symbol "SHOW-MRS-WINDOW" :lkb))
+             (:scoped (find-symbol "SHOW-MRS-SCOPED-WINDOW" :lkb))
+             (:eds (find-symbol "SHOW-MRS-DEPENDENCIES-WINDOW" :lkb))))))
+         
      (if (functionp browser)
        (apply browser (list nil mrs title))
        (output-mrs mrs 'simple)))))
+
+;;;
+;;; a couple of RMRS interface functions (mostly) for [incr tsdb()]; we started
+;;; this collection in `rmrs/interface.lisp', but the ECL -- PET linking would
+;;; be unhappy about duplicate file names, for a silly reason.
+;;;
+
+(defun rasp-semantix-hook (derivation)
+  (let* ((*package* (find-package :mrs))
+         (derivation (read-from-string derivation nil nil)))
+    (ignore-errors
+     (with-output-to-string (stream)
+       (construct-sem-for-tree derivation stream)))))
+
+#+:xml
+(defun read-rmrs-from-string (string)
+  (let ((*package* (find-package :mrs)))
+    (ignore-errors 
+     (read-rmrs (first (xml:parse-xml string))))))
+
+(defun browse-rmrs (rmrs &optional title)
+  (ignore-errors
+   (let ((browser (fboundp (find-symbol "SHOW-MRS-RMRS-WINDOW" :lkb))))
+     (if (functionp browser)
+       (apply browser (list nil :rmrs rmrs :title title))
+       (output-rmrs rmrs 'compact)))))
 
 #|
 

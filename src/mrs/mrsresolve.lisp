@@ -454,7 +454,7 @@ printing routines -  convenient to make this global to keep printing generic")
           (progn
             (unless *giving-demo-p*
               (format t "~%Free variables in MRS: ~A" 
-                      (remove-duplicates (mapcar #'var-name free-variables)
+                      (remove-duplicates (mapcar #'var-string free-variables)
                                          :test #'equal)))
             nil)
 ;;; variables must be bound by quantifiers unless they are in relations
@@ -980,9 +980,9 @@ or modulo some number of quantifiers
   (when (var-p var)
     (let ((new-binding (assoc (get-var-num var) *canonical-bindings*)))
       (if new-binding
-          (concatenate 'string (subseq (var-name var) 0 1)
+          (concatenate 'string (subseq (var-string var) 0 1)
                        (format nil "~A" (cdr new-binding))) 
-        (var-name var)))))
+        (var-string var)))))
 
 
 

@@ -26,15 +26,13 @@
 (defparameter *eds-bleached-relations*
   (list (vsym "SELECTED_REL") (vsym "DEG_REL")))
 
-(defparameter %eds-eds% nil)
-
 (defparameter %eds-variable-counter% 0)
 
-(defparameter %eds-symbol-table% nil)
+(defparameter %eds-symbol-table% (make-hash-table))
 
-(defparameter %eds-representatives-table% nil)
+(defparameter %eds-representatives-table% (make-hash-table :test #'equal))
 
-(defparameter %eds-equivalences% nil)
+(defparameter %eds-equivalences% (make-hash-table :test #'equal))
 
 (defparameter %eds-relevant-features% 
   '("ARG" "ARG1" "ARG2" "ARG3" "ARG4" "BV" "SOA"
@@ -114,26 +112,24 @@
   (when (psoa-p psoa)
     (loop
         with index = (psoa-index psoa)
-        with name = (when (var-p index) (var-name index))
+        with name = (when (var-p index) (var-string index))
         with hcons = (psoa-h-cons psoa)
-        with %eds-eds% = (make-eds :top name :hcons hcons)
-        with %eds-symbol-table% = (make-hash-table)
-        with %eds-representatives-table% = (make-hash-table :test #'equal)
-        with %eds-equivalences% = (make-hash-table :test #'equal)
-        with %eds-variable-counter% = 0
+        with eds = (make-eds :top name :hcons hcons)
+        initially (ed-reset)
         for relation in (psoa-liszt psoa)
         for ed = (ed-convert-relation relation)
-        when ed do (push ed (eds-relations %eds-eds%))
+        when ed do (push ed (eds-relations eds))
         finally
-          (setf (eds-relations %eds-eds%)
-            (nreverse (eds-relations %eds-eds%)))
-          (ed-bleach-eds %eds-eds%)
-          (ed-augment-eds %eds-eds%)
-          (return %eds-eds%))))
+          (setf (eds-relations eds)
+            (nreverse (eds-relations eds)))
+          (ed-bleach-eds eds)
+          (ed-augment-eds eds)
+          (ed-reset)
+          (return eds))))
 
 (defun ed-convert-relation (relation)
   (let* ((handle (let ((handle (rel-handel relation)))
-                   (when (handle-var-p handle) (handle-var-name handle))))
+                   (when (ed-handle-p handle) (var-string handle))))
          (id (ed-find-identifier relation))
          (predicate (string (rel-pred relation)))
          (predicate (remove-right-sequence 
@@ -162,7 +158,7 @@
                         thereis 
                           (when (member (fvpair-feature fvpair) soa :test #'eq)
                             (fvpair-value fvpair)))))
-          (when (handle-var-p soa)
+          (when (ed-handle-p soa)
             (setf (gethash handle %eds-equivalences%) soa))
           (setf (ed-type ed) :message))
       when (ed-quantifier-p ed) do (setf (ed-type ed) :quantifier)
@@ -183,7 +179,8 @@
                             thereis 
                               (when (eq (fvpair-feature fvpair) key)
                                 (fvpair-value fvpair)))
-            for representative = (and value (ed-find-representative value))
+            for representative = (when value 
+                                   (ed-find-representative eds value))
             when representative do
               (push (cons (if (eq key old) (vsym "CARG") key) representative)
                     (ed-arguments ed)))
@@ -203,26 +200,26 @@
                    (eq feature (vsym "C-ARG")))
           do (setf instance (fvpair-value fvpair)))
       (let* ((name (or
-                    (and instance (var-p instance) (var-name instance))
-                    (and event (var-p event) (var-name event))
+                    (and instance (var-p instance) (var-string instance))
+                    (and event (var-p event) (var-string event))
                     (format nil "_~d" (incf %eds-variable-counter%)))))
         (setf (gethash relation %eds-symbol-table%) name)))))
 
-(defun ed-find-representative (variable &optional (selectp t))
+(defun ed-find-representative (eds variable &optional (selectp t))
   (or (gethash (cons variable selectp) %eds-representatives-table%)
       (setf (gethash (cons variable selectp) %eds-representatives-table%)
         (cond
-         ((handle-var-p variable)
+         ((ed-handle-p variable)
           (loop
               with alternate = (ed-variable-equivalence variable)
-              with name = (handle-var-name (or alternate variable))
-              with qeq = (ed-hcons-qeq name)
-              for ed in (eds-relations %eds-eds%)
+              with name = (var-string (or alternate variable))
+              with qeq = (ed-hcons-qeq eds name)
+              for ed in (eds-relations eds)
               for handle = (ed-handle ed)
               when (and (not (ed-bleached-p ed))
                         (or (equal name handle) 
-                            (and (handle-var-p qeq) 
-                                 (equal (handle-var-name qeq) handle))))
+                            (and (ed-handle-p qeq) 
+                                 (equal (var-string qeq) handle))))
               collect ed
               into candidates
               finally 
@@ -232,7 +229,7 @@
                       (first candidates)
                       (ed-select-representative
                        (append
-                        (when (handle-var-p qeq)
+                        (when (ed-handle-p qeq)
                           (ed-find-representative qeq nil))
                         (when (var-p alternate)
                           (ed-find-representative alternate nil))
@@ -240,10 +237,10 @@
                     candidates))))
          ((var-p variable)
           (loop
-              with foo = (var-name variable)
+              with foo = (var-string variable)
               with name = (let ((bar (ed-variable-equivalence foo)))
-                            (if  bar (handle-var-name bar) foo))
-              for ed in (eds-relations %eds-eds%)
+                            (if  bar (var-string bar) foo))
+              for ed in (eds-relations eds)
               for id = (unless (or (ed-bleached-p ed)
                                    (ed-quantifier-p ed))
                          (ed-id ed))
@@ -281,27 +278,31 @@
                            when (loop
                                     for fvpair in flist
                                     for value = (fvpair-value fvpair)
-                                    thereis (and (var-p value)
-                                                 (equal (var-name value) id)))
+                                    thereis (when (var-p value)
+                                              (equal (var-string value) id)))
                            collect referrer)
        when referrers collect (cons (length referrers) ed) into candidates
        finally
          (return (rest (first (sort candidates #'> :key #'first)))))
    (first eds)))
 
-(defun ed-hcons-qeq (handle)
+(defun ed-handle-p (variable)
+  (when (var-p variable)
+    (or (handle-var-p variable) (string-equal (var-type variable) "h"))))
+
+(defun ed-hcons-qeq (eds handle)
   (loop
-      with name = (if (stringp handle) handle (when (handle-var-p handle)
-                                                (handle-var-name handle)))
-      for hcons in (eds-hcons %eds-eds%)
+      with name = (if (stringp handle) handle (when (ed-handle-p handle)
+                                                (var-string handle)))
+      for hcons in (eds-hcons eds)
       for scarg = (when (eq (hcons-relation hcons) (vsym "QEQ"))
-                    (handle-var-name (hcons-scarg hcons)))
+                    (var-string (hcons-scarg hcons)))
       thereis 
         (when (equal name scarg) (hcons-outscpd hcons))))
 
 (defun ed-variable-equivalence (variable)
   (if (var-p variable)
-    (gethash (var-name variable) %eds-equivalences%)
+    (gethash (var-string variable) %eds-equivalences%)
     (gethash variable %eds-equivalences%)))
 
 (defun ed-quantifier-p (ed)
@@ -423,3 +424,9 @@
                                "~a~@[(~a)~]"
                                (ed-predicate value) (ed-carg value))))
                 (list functor role argument)))))
+
+(defun ed-reset ()
+  (setf %eds-variable-counter% 0)
+  (clrhash %eds-symbol-table%)
+  (clrhash %eds-representatives-table%)
+  (clrhash %eds-equivalences%))
