@@ -9,17 +9,21 @@
 ;;; Postgres interface
 ;;;
 
-(defun dump-psql-lexicon (filename)
+(defun dump-psql-lexicon (filename &key tdl)
   (when
       (catch 'pg:sql-error
 	(progn
 	  (get-postgres-temp-filename)
+	  (format t "~%(dumping LexDB)")
+	  (force-output)
 	  (let* ((revision-filename 
 		  (namestring (pathname (format nil "~a.tsv" filename))))
 		 (defn-filename 
 		     (namestring (pathname (format nil "~a.dfn" filename))))
 		 (fld-filename 
 		     (namestring (pathname (format nil "~a.fld" filename))))
+		 (tdl-filename 
+		     (namestring (pathname (format nil "~a.~a.tdl" filename (get-filter *psql-lexicon*)))))
 		 (pg-files 
 		  (string-2-str-list-on-spc
 		   (caar (sql-fn-get-raw-records *psql-lexicon* :dump_db))
@@ -36,6 +40,10 @@
 	    (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
 							 pg-fld
 							 fld-filename))
+	    (when tdl
+	      (format t "~%(exporting filtered LexDB to TDL file ~a)" tdl-filename)
+	      (force-output)
+	      (export-to-tdl-to-file *psql-lexicon* tdl-filename))
 	    nil)))
     (format t "~%Dump aborted...")))
 

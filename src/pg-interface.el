@@ -22,7 +22,7 @@
 (define-widget 'editable-field-fixed-size 'default
   "An editable text field."
   :convert-widget 'widget-value-convert-widget
-  :keymap widget-field-keymap
+  :keymap 'widget-field-keymap
   :format "%v"
   :help-echo "M-TAB: complete field; RET: enter value"
   :value ""
@@ -255,7 +255,7 @@
     (define-key map "\M-n" 'lexdb-advance-id)
     (define-key map "\M-s" 'lexdb-search-field-val)
     (define-key map "\t" 'lexdb-complete-field)
-    (setq lexdb-mode-map (append map widget-field-keymap))))
+    (setq lexdb-mode-map (append map 'widget-field-keymap))))
 
 (defun lexdb-mode ()
   "Major mode for LexDB

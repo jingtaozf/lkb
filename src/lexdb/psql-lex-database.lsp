@@ -54,7 +54,7 @@
 
 ;;; (used to index for generator)
 (defmethod lex-words ((lexicon psql-lex-database))
-  (let* ((orth-raw-mapping (assoc :orth (fields-map *lexicon*)))
+  (let* ((orth-raw-mapping (assoc :orth (fields-map lexicon)))
 	 (orth-raw-value-mapping (fourth orth-raw-mapping))
 	 (raw-orth-field (second orth-raw-mapping))
 	 (values 
@@ -330,12 +330,10 @@
 (defmethod make-field-map-slot ((lexicon psql-lex-database))
   "stores the mapping of fields to lex-entry structure slots"
   (setf (fields lexicon) (get-fields lexicon))
-  ;(make-mneum-f-slot lexicon)
   (setf (fields-map lexicon)
     (sort
      (mapcar #'(lambda (x) 
 		 (list (str-2-keyword (first x))
-		       ;(str-2-keyword (mneum-2-f lexicon (second x)))
 		       (str-2-keyword (second x))
 		       (third x)
 		       (2-symb-or-list (fourth x))))
@@ -377,14 +375,14 @@
 		   (list field-str (sql-like-text val-str))
 		 (list field-str)))
 	 (records
-	  (sql-fn-get-raw-records *psql-lexicon*
+	  (sql-fn-get-raw-records lexicon
 				  sql-fn
 				  :args args)))
     (mapcar #'car records)))
   
 (defmethod complete ((lexicon psql-lex-database) field-kw val-str)
   (mapcar #'car 
-	  (sql-fn-get-raw-records *psql-lexicon* 
+	  (sql-fn-get-raw-records lexicon 
 				  :complete 
 				  :args (list (symb-2-str field-kw)
 					      (sql-like-text val-str)))))
@@ -410,7 +408,6 @@
   (set-version psql-le lexicon) 
   (if *postgres-export-timestamp* 
       (set-val psql-le :modstamp *postgres-export-timestamp*))
-;  (let* ((symb-list (copy-list *postgres-record-features*))
   (let* ((symb-list (copy-list (fields lexicon)))
 	 (symb-list (remove :name symb-list))
 	 (symb-list (remove-duplicates symb-list))
@@ -526,22 +523,22 @@
 			  :recurse nil
 			  :new-instance t) output-lexicon))
    (collect-psort-ids lexicon :recurse nil))
-  (build-lex-aux *psql-lexicon*))
+  (build-lex-aux output-lexicon))
 
 (defmethod export-to-tdl ((lexicon lex-database) stream)
-  (when (typep *lexicon* 'psql-lex-database)
+  (when (typep lexicon 'psql-lex-database)
     (format t "~%(caching all lexical records)")
-    (cache-all-lex-records *lexicon*)
+    (cache-all-lex-records lexicon)
     (format t "~%(caching complete)"))
   (mapc
    #'(lambda (id)
        (format stream "~a" (to-tdl (read-psort lexicon id
 					       :new-instance t)))
        (unexpand-psort lexicon id))
-   (collect-psort-ids lexicon))
-  (when (typep *lexicon* 'psql-lex-database)
+   (sort (collect-psort-ids lexicon) #'(lambda (x y) (string< (2-str x) (2-str y)))))
+  (when (typep lexicon 'psql-lex-database)
     (format t "~%(emptying cache)")
-    (empty-cache *lexicon*)))
+    (empty-cache lexicon)))
 
 (defmethod export-to-tdl-to-file ((lexicon lex-database) filename)
   (setf filename (namestring (pathname filename)))
@@ -562,7 +559,6 @@
   (declare (ignore in-isolation delete))
   (with-slots (lexdb-version semi) lexicon
     (setf lexdb-version nil)
-    ;(setf semi nil)
     (if (next-method-p) (call-next-method))))
 
 (defmethod open-lex ((lexicon psql-lex-database) &key name parameters)
@@ -580,21 +576,16 @@
       (format t "~%Connected as user ~a" user)
       (format t "~%Opening ~a" dbname)
       (unless (string>= server-version "7.3")
-	(error *trace-output* 
-	       "PostgreSQL server version is ~a. Please upgrade to version 7.4 or above." 
-	       server-version))
+	(error *lexdb-message-old-server* server-version "7.4.x"))
       (cond
        ((not (stringp lexdb-version))
 	(error "Unable to determine LexDB version"))
        ((string> (compat-version lexdb-version)
 		 *psql-lexdb-compat-version*)
-	(error "Your LexDB version (~a) is incompatible with this LKB version (requires v. ~ax).
- Try obtaining a more recent LKB binary." lexdb-version *psql-lexdb-compat-version*))
+	(error *lexdb-message-old-lkb* lexdb-version *psql-lexdb-compat-version*))
        ((string< (compat-version lexdb-version)
 		 *psql-lexdb-compat-version*)
-       (error "Your LexDB version (~a) is incompatible with this LKB version (requires v. ~ax).
- You must load updated setup files.
- See http://www.cl.cam.ac.uk/~~bmw20/DT/initialize-db.html" lexdb-version *psql-lexdb-compat-version*)))
+       (error *lexdb-message-old-lexdb* lexdb-version *psql-lexdb-compat-version*)))
       (make-field-map-slot lexicon)
       (initialize-userschema lexicon)
       (setf (name lexicon) name)
@@ -616,8 +607,7 @@
 	   "vacuum full analyze current_grammar")))
     (format t "~%~%Please wait: vacuuming private table")
     (force-output)
-    (run-command lexicon command)
-    (lkb-beep)))
+    (run-command lexicon command)))
 
 (defmethod vacuum-public-revision ((lexicon psql-lex-database) &key verbose)
   (with-slots (dbname host port) lexicon
@@ -627,7 +617,6 @@
 		:port port
 		:user (sql-fn-get-val lexicon 
 				      :db_owner)))
-;		:user (raw-get-val lexicon "SELECT db_owner()")))
 	  (command
 	   (if verbose
 	       "vacuum full analyze verbose public.revision"    
@@ -663,7 +652,6 @@
 
 (defmethod build-lex ((lexicon psql-lex-database))
   (build-lex-aux lexicon)
-  ;(if (semi lexicon)   
   (cond
    ((null (semi lexicon))
     nil)

@@ -133,13 +133,14 @@
     lexicon))
 
 (defun close-scratch-lex nil
-  (let ((lexicon *psql-lexicon*))
+  (let* ((lexicon *psql-lexicon*)
+	(filter (get-filter lexicon)))
     (sql-fn-get-records lexicon 
 			:clear_scratch)
     (reconnect lexicon) ;; work around server bug
     (sql-fn-get-records lexicon 
 			:initialize_current_grammar 
-			:args (list (get-filter *psql-lexicon*)))))
+			:args (list filter))))
 
 (defun commit-scratch-lex nil
   (sql-fn-get-val *psql-lexicon* 

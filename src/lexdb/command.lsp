@@ -20,6 +20,7 @@
 	      (dbname *psql-lexicon*))
       (force-output)
       (time (merge-into-psql-lexicon *psql-lexicon* filename))
+      (format t " ...done")
       (lkb-beep))))
 
 (defun command-dump-psql-lexicon (&rest rest)
@@ -34,7 +35,8 @@
 	      (dbname *psql-lexicon*) 
 	      filename)
       (force-output)
-      (time (dump-psql-lexicon filename))
+      (time (dump-psql-lexicon filename :tdl *lexdb-dump-tdl*))
+      (format t " ...done")
       (lkb-beep))))
   
 (defun command-export-lexicon-to-tdl (&rest rest)
@@ -45,7 +47,7 @@
       (force-output)
       (time 
        (export-lexicon-to-tdl :file filename))
-      (format t "~%Export complete")
+      (format t " ...done")
       (lkb-beep))))
   
 (defun command-set-filter-psql-lexicon (&rest rest)
@@ -55,6 +57,7 @@
     (error "please initialize PSQL lexicon"))
   (time
    (apply 'set-filter-psql-lexicon rest))
+  (format t " ...done")
   (lkb-beep))
 
 (defun command-clear-scratch nil
@@ -68,6 +71,7 @@
     (when (> count-priv 0)
       (time
        (close-scratch-lex)))
+    (format t " ...done")
     (lkb-beep)))
 
 (defun command-commit-scratch nil
@@ -82,6 +86,7 @@
     (when (> count-priv 0)
       (time
        (commit-scratch-lex)))
+    (format t " ...done")
     (lkb-beep)))
 
 (defun command-show-scratch nil
@@ -96,6 +101,7 @@
     (format t "~%~%Contents of scratch (~a entries): ~a"
 	    (length scratch)
 	    scratch)
+    (format t " ...done")
     (lkb-beep)))
 
 (defun command-index-new-lex-entries nil
@@ -107,6 +113,7 @@
   (force-output)
   (time
    (index-new-lex-entries *lexicon*))
+  (format t " ...done")
   (lkb-beep))
 
 (defun command-vacuum-current-grammar nil
@@ -115,7 +122,9 @@
 	   (connection *psql-lexicon*))
     (error "please initialize PSQL lexicon"))
   (time
-   (vacuum-current-grammar *psql-lexicon*)))
+   (vacuum-current-grammar *psql-lexicon*))
+  (format t " ...done")
+  (lkb-beep)  )
 
 (defun command-vacuum-public-revision nil
   (unless (and
@@ -124,6 +133,7 @@
     (error "please initialize PSQL lexicon"))
   (time
    (vacuum-public-revision *psql-lexicon*))
+  (format t " ...done")
   (lkb-beep))
 
 (defun command-load-tdl-to-scratch (&rest rest)
@@ -136,6 +146,7 @@
       (setf filename (format nil "~a.tdl" filename))
       (format t "~%~%Please wait: importing TDL entries")
       (load-tdl-from-scratch filename)
+      (format t " ...done")
       (lkb-beep))))
 
 (defun get-filename (rest &key (ending "") existing)
