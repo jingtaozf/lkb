@@ -43,6 +43,8 @@
 #define TSDB_START_TIMER 0
 #define TSDB_MAX_TIMERS 20
 
+#define TSDB_SERVER_OPTION 0
+
 #ifndef TSDB_PSEUDO_USER
 #  define TSDB_PSEUDO_USER "TSDB@tsdb"
 #endif
@@ -176,6 +178,8 @@ typedef struct tsdb_selection {
   extern int really_verbose_mode;
 #endif
 
+void tsdb_parse_options(int, char **);
+void tsdb_usage(void);
 int tsdb_parse(char *);
 int tsdb_getchar(void);
 BOOL tsdb_verify_selection(Tsdb_selection *);
