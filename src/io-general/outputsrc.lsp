@@ -181,7 +181,7 @@
 
 ;;;
 ;;; generate full-form table for PET.  ann, i hope you will forgive me: this
-;;; hard-wires the current LinGO set-up where no (non-inflectional) rules apply
+;;; hard-wires the current LinGO set-up, where no non-inflectional rules apply
 ;;; before inflection.  thus, we save a large number of rule applications and
 ;;; an even larger number of copies (of intermediate structures).  i believe
 ;;; once we return to a sane morphology, it should be feasible to compile out
@@ -195,7 +195,7 @@
   ;;
   ;; filter out `unk-' VerbMobil default lexical entries (25-mar-00  -  oe)
   ;;
-  (unless (string= form "")
+  (unless (or (null form) (string= form ""))
     (format
      stream
      "  {\"~(~a~)\", ~(~s~), NULL, ~:[NULL~*~;\"~(~a~)\"~], ~d, ~d},~%"
