@@ -121,7 +121,7 @@
 (defun index-simple-semantics-record (rel-name id)
   (let ((rel-value (gethash rel-name *relation-index*)))
     (if (or (null rel-value) (consp rel-value))
-        (pushnew id (gethash rel-name *relation-index*))
+        (pushnew id (gethash rel-name *relation-index*) :test #'eq)
       (progn (warn "~%Ignoring entry ~A - Existing value of ~A in *relation-index* isn't a cons" id rel-name)
              nil))))
 
