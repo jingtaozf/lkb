@@ -11,19 +11,6 @@
 (defmacro get-rel-handel-num (rel)
   `(get-var-num (rel-handel ,rel)))
 
-
-(defmacro is-handel-var (var)
-    ;;; test is whether the type is "h"
-  `(and (var-p ,var)
-       (equal (var-type ,var) "h")))
-
-
-(defmacro nonquantified-var-p (var)
-  ;;; true if the type is anything other than x
-  `(and (var-p ,var)
-	(not (equal (var-type ,var) "x"))))
-
-
 ;;; Following three are wrappers for get-full-handel-args-with-features
 
 (defmacro get-handel-args (rel)
@@ -97,10 +84,11 @@
   
    
 (defun is-quant-rel (rel)
-  ;;; test is presence of a feature called BV or membership
+  ;;; test is presence of a feature or the scope or membership
   ;;; of *quant-rel-types*
   ;;; But also avoid including any "quantifiers" which are top-level rels,
   ;;; possibly including "the" (_def_rel) and demonstratives
+  ;;; FIX - needs cleanup - use _q as definitional?
   (and
    (if *quant-rel-types*
        (member (rel-pred rel) *quant-rel-types* 
@@ -118,8 +106,8 @@
   (member rel *quant-list* :test #'eq))
 
 (defun get-bv-value (rel)
-  ;;; returns the integer value of the variable corresponding to the
-  ;;; feature BV
+  ;;; returns the integer value of the variable corresponding to 
+  ;;; a specified feature (originally BV, now ARG0 in Matrix etc)
   ;;; assumes that there is only one such feature and 
   ;;; that its value is a var 
   (dolist (fvpair (rel-flist  rel))
@@ -133,7 +121,7 @@
 (defun find-unbound-vars (rels quant-rels)
   ;;; this is just called once, as part of the preprocessing of the
   ;;; MRS structure.
-  ;;; It takes a list of rels which are quantifiers (i.e. have a BV feature)
+  ;;; It takes a list of rels which are quantifiers 
   ;;; and another list of rels, and returns a list of the 
   ;;; variables in that list (as integers) which are not bound by the
   ;;; quant-rels and which do not occur as variables in
@@ -207,7 +195,7 @@
   ;;; collects all the variables from a rel which have to be bound
   ;;; off by some other rel: i.e. variables other than events,
   ;;; handels, and unspecified arguments
-  ;;; which are not the values of a BV feature
+  ;;; which are not the values of *bv-feature*
   ;;; proper name  and pronoun rels act as implicit quantifiers themselves
   ;;; so that variables which are introduced by such rels are 
   ;;; calculated initially and stored in the global variable
