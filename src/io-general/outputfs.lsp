@@ -408,9 +408,9 @@
         (move-to-x-y stream stored-x stored-y)
         (move-to-x-y stream indentation (current-position-y stream)))
      (store-fs-record-data-label stream rpath)
-     (let ((output-label (make-output-label label)))
-        (write-string output-label stream)
-        (write-string ": " stream))
+     (let ((output-label (concatenate 'string (symbol-name label)
+				      ": ")))
+        (write-string output-label stream))
      (setf max-width (max (current-position-x stream) max-width))
      (setf indentation (current-position-x stream))))
 
@@ -900,74 +900,72 @@ for PAGE and LiLFeS")
 
 
 (defun print-dag (dag-instance depth rpath)
-   (let* ((real-dag (follow-pointers dag-instance)))
-      (multiple-value-bind (dont-display-p stored-flag stored-pointer
-                             stored-label-pos)
-          (fs-output-no-need-to-display *display-structure* rpath)
-         (unless dont-display-p
-            (let
-             ((new-rpath (cons (type-of-fs real-dag) rpath))
-              (flag-value (or stored-flag (dag-visit real-dag))))
-             (declare (dynamic-extent new-rpath))
-             (fs-output-record-start *display-structure* rpath
-              flag-value *reentrancy-pointer*)
-             (cond 
-                   ((equal flag-value 'double)
-                    (setf (dag-visit real-dag)
-                          (or stored-pointer *reentrancy-pointer*))
-                    (incf *reentrancy-pointer*)
-                    (fs-output-reentrant-value-fn *display-structure*
-                     (dag-visit real-dag))                  
-                    (print-dag-aux real-dag depth new-rpath stored-label-pos)
-                    (fs-output-reentrant-value-endfn *display-structure*))
-                   ((equal flag-value 'single)
-                    (print-dag-aux real-dag depth new-rpath stored-label-pos))
-                   (t (fs-output-reentrant-fn *display-structure* 
-                        flag-value)))
-             (fs-output-record-end *display-structure* rpath))))))
+  (let* ((real-dag (deref-dag dag-instance)))
+    (multiple-value-bind (dont-display-p stored-flag stored-pointer
+			  stored-label-pos)
+	(fs-output-no-need-to-display *display-structure* rpath)
+      (unless dont-display-p
+	(let ((new-rpath (cons (type-of-fs real-dag) rpath))
+	      (flag-value (or stored-flag (dag-visit real-dag))))
+	  (declare (dynamic-extent new-rpath))
+	  (fs-output-record-start *display-structure* rpath
+				  flag-value *reentrancy-pointer*)
+	  (cond 
+	   ((eq flag-value 'double)
+	    (setf (dag-visit real-dag)
+	      (or stored-pointer *reentrancy-pointer*))
+	    (incf *reentrancy-pointer*)
+	    (fs-output-reentrant-value-fn *display-structure*
+					  (dag-visit real-dag))  
+	    (print-dag-aux real-dag depth new-rpath stored-label-pos)
+	    (fs-output-reentrant-value-endfn *display-structure*))
+	   ((eq flag-value 'single)
+	    (print-dag-aux real-dag depth new-rpath stored-label-pos))
+	   (t (fs-output-reentrant-fn *display-structure* 
+				      flag-value)))
+	  (fs-output-record-end *display-structure* rpath))))))
   
 (defun print-dag-aux (real-dag depth rpath stored-label-pos)
-   (cond 
-      ((is-atomic real-dag) 
-         (fs-output-atomic-fn *display-structure*
-            (type-of-fs real-dag)))
-      ((and (fs-output-shrinks *display-structure*) ; really should test for
-                                                    ; shrunk-fn method being defined
-          ;; shrink it if it is locally specified as shrunk, or it's globally
-          ;; specified and not overriden locally
-          (or (member real-dag *shrunk-local-dags* :test #'eq)
-              (and (find rpath *shrunk-types* :test #'print-dag-shrunk-match-p)
-                 (not (member real-dag *not-shrunk-local-dags* :test #'eq)))))
-         (fs-output-shrunk-fn *display-structure*
-            (dag-type real-dag)))
-      (t 
-         (let* 
-            ((type (if *no-type* *toptype* (type-of-fs real-dag)))
-             (labels (top-level-features-of real-dag))
-             (start-x nil) (start-y nil))
-            (setf *no-type* nil)
-            (if labels
-               (progn
-                  (fs-output-start-fs *display-structure* 
-                     type depth labels)
-                  (for label in (canonical-order type labels)
-                     do
-                    (when stored-label-pos
-                         (setf start-x (caar stored-label-pos))
-                         (setf start-y (cdar stored-label-pos))
-                         (setf stored-label-pos 
-                               (cdr stored-label-pos)))
-                    (fs-output-label-fn *display-structure*
-                        label depth start-x start-y (cdr rpath))
-                     (let ((new-rpath (cons label rpath)))
-                        (declare (dynamic-extent new-rpath))
-                        (print-dag (get-dag-value real-dag label) 
-                          (+ 1 depth) new-rpath)))
-                  (fs-output-end-fs *display-structure*
-                     (null labels)))
-               (fs-output-atomic-fn *display-structure*
-                  (list type))))))           
-   (setf *no-type* nil))
+  (cond 
+   ((is-atomic real-dag) 
+    (fs-output-atomic-fn *display-structure* (type-of-fs real-dag)))
+   ((and (fs-output-shrinks *display-structure*) 
+	 ;; shrink it if it is locally specified as shrunk, or it's
+	 ;; globally specified and not overriden locally (really
+	 ;; should test for shrunk-fn method being defined first)
+	 (or (member real-dag *shrunk-local-dags* :test #'eq)
+	     (and (find rpath *shrunk-types* :test #'print-dag-shrunk-match-p)
+		  (not (member real-dag *not-shrunk-local-dags* :test #'eq)))))
+    (fs-output-shrunk-fn *display-structure* (dag-type real-dag)))
+   (t 
+    (let* ((type (if *no-type* 
+		     *toptype*
+		   (type-of-fs real-dag)))
+	   (labels (top-level-features-of real-dag))
+	   (start-x nil)
+	   (start-y nil))
+      (setf *no-type* nil)
+      (if labels
+	  (progn
+	    (fs-output-start-fs *display-structure* type depth labels)
+	    (loop for label in (canonical-order type labels)
+		do
+		  (when stored-label-pos
+		    (setf start-x (caar stored-label-pos))
+		    (setf start-y (cdar stored-label-pos))
+		    (setf stored-label-pos 
+		      (cdr stored-label-pos)))
+		  (fs-output-label-fn *display-structure*
+				      label depth start-x start-y (cdr rpath))
+		  (let ((new-rpath (cons label rpath)))
+		    (declare (dynamic-extent new-rpath))
+		    (print-dag (get-dag-value real-dag label) 
+			       (+ 1 depth) new-rpath)))
+	    (fs-output-end-fs *display-structure*
+			      (null labels)))
+	(fs-output-atomic-fn *display-structure*
+			     (list type))))))           
+  (setf *no-type* nil))
 
 (defun print-dag-shrunk-match-p (x y)
    ;; x is an alternating list of types and features representing the current place
