@@ -176,21 +176,25 @@
    (selected :initform nil
 	     :accessor frame-selected)))
 
+(defparameter *lkb-frame-lock* (mp:make-process-lock))
+
 ;; Register frames of each class when they are created
 
 (defmethod clim:run-frame-top-level :before ((frame lkb-frame) &key)
-  (push frame (getf (class-frames frame) (class-of frame))))
+  (mp:with-process-lock (*lkb-frame-lock*)
+    (push frame (getf (class-frames frame) (class-of frame)))))
 
 ;; Find and raise the most recently created frame of a given class
 
 (defun reuse-frame (class)
   (let ((frame (clim:find-application-frame class :create nil :activate nil)))
     (when frame
-      (let ((latest (car (getf (class-frames frame) (find-class class)))))
-	(when latest
-	  (clim:enable-frame latest)
-	  (clim:raise-frame latest)
-	  latest)))))
+      (mp:with-process-lock (*lkb-frame-lock*)
+	(let ((latest (car (getf (class-frames frame) (find-class class)))))
+	  (when latest
+	    (clim:enable-frame latest)
+	    (clim:raise-frame latest)
+	    latest))))))
 
 ;; Add a [Close] button
 
@@ -198,21 +202,23 @@
     ()
   (clim:with-application-frame (frame)
     (unhighlight-objects frame)
-    (setf (getf (class-frames frame) (class-of frame))
-      (delete frame (getf (class-frames frame) (class-of frame))))
+    (mp:with-process-lock (*lkb-frame-lock*)
+      (setf (getf (class-frames frame) (class-of frame))
+	(delete frame (getf (class-frames frame) (class-of frame)))))
     (clim:frame-exit frame)))
 
 ;; Add a [Close All] button
 
 (define-lkb-frame-command (com-close-all-frame :menu "Close All") 
     ()
-  (clim:with-application-frame (frame)
-    (dolist (f (getf (class-frames frame) (class-of frame)))
-      ;; Make sure we close ourself last
-      (unless (eq f frame)
-	(clim:execute-frame-command f '(com-close-frame))))
-    (clim:execute-frame-command frame '(com-close-frame))))
-
+  (mp:with-process-lock (*lkb-frame-lock*)
+    (clim:with-application-frame (frame)
+      (dolist (f (getf (class-frames frame) (class-of frame)))
+	;; Make sure we close ourself last
+	(unless (eq f frame)
+	  (clim:execute-frame-command f '(com-close-frame))))
+      (clim:execute-frame-command frame '(com-close-frame)))))
+  
 ;; Add a [Print] button
 
 #+(and :ignore (and :allegro (not (version>= 5 0))))
