@@ -991,7 +991,7 @@
                  "~%No constraint found for ~A" fs-type))
        ((progn
           (setq real-dag (retype-dag real-dag fs-type))
-          (unify-wffs real-dag constraint t)))
+          (unify-wffs real-dag constraint type-name)))
        (t (format t
              "~%Error in ~A:~%  Unification with constraint of ~A failed at path ~:A"
              (or type-name "unknown") fs-type (reverse features-so-far))
