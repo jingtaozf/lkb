@@ -132,8 +132,8 @@
 
 
 (defmethod user-read-only-p ((lexicon psql-lex-database))
-  (or (string= "t" (fn-get-val lexicon ''user-read-only-p))
-      (string= "T" (fn-get-val lexicon ''user-read-only-p))))
+  (or (string= "t" (fn-get-val lexicon ''user-read-only-p (user lexicon)))
+      (string= "T" (fn-get-val lexicon ''user-read-only-p (user lexicon)))))
 
 (defmethod dump-db ((lexicon psql-lex-database) revision-filename defn-filename)  
     (fn-get-records lexicon ''dump-db revision-filename defn-filename))
