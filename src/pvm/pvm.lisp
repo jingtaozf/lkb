@@ -248,20 +248,23 @@
              t 
              "pvm-poll(): rejecting over-sized message (~d)~%"
              (+ status 4096)))
-          (setf size (+ status 4096)))
-        ;;
-        ;; _fix_me_
-        ;; we would want to free the old .output. array here; apparently, the
-        ;; way recommended in the 5.0.1 documentation --- viz. aclfree() plus 
-        ;; lispval-other-to-address() --- is unavailable because the latter
-        ;; function does not exist :-{.                     (16-feb-00  -  oe)
-        ;;
-        ;; it seems, ACL 6.0 has lispval-other-to-address().   (13-sep-01; oe)
-        ;;
-        (when (integerp output) (excl:aclfree output))
-        (let ((new (make-array 
-                    (+ size 1) :element-type 'character :allocation :static)))
-          (setf output #-:ics new #+:ics (excl:lispval-other-to-address new)))
+          (let ((new (make-array 
+                      (+ status 4096) :element-type 'character 
+                      :allocation :static)))
+            ;;
+            ;; _fix_me_
+            ;; we would want to free the old .output. array here; apparently, 
+            ;; the way recommended in the 5.0.1 documentation---viz. aclfree()
+            ;; plus lispval-other-to-address()---is unavailable because the
+            ;; latter function does not exist :-{.             (16-feb-00; oe)
+            ;;
+            ;; it seems, ACL 6.0 now has lispval-other-to-address(). 
+            ;;                                                 (13-sep-01; oe)
+            ;;
+            (when (integerp output) (excl:aclfree output))
+            (setf output 
+              #-:ics new #+:ics (excl:lispval-other-to-address new))
+            (setf size (array-total-size output))))
         (let ((status (pvm_collect output size)))
           (if (< status 0)
             :error

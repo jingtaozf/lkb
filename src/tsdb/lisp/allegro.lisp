@@ -72,7 +72,7 @@
             ;; parameter to overflow the fixnum range.  email to `bugs@franz'
             ;; sent today.                                   (22-jan-00  -  oe)
             ;;
-            #+:edelweiss
+            #+:null
             (when (and (integerp *tsdb-scavenge-limit*)
                        (>= new *tsdb-scavenge-limit*))
               (let ((*print-readably* nil)
@@ -98,7 +98,7 @@
                     (format 
                      stream
                      "~&gc-after-hook(): ~d bytes were tenured; ~
-                      triggering global gc().~%"
+                      triggering immediate global gc().~%"
                      *tsdb-tenured-bytes*))
                   (excl:gc t)
                   (setf global-gc-p nil)

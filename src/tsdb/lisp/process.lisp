@@ -140,7 +140,7 @@
           (install-gc-strategy nil :tenure nil :burst t :verbose verbose))
         
         (unwind-protect
-            (ignore-errors
+            (#-:debug ignore-errors #+:debug progn
              (catch :break
                (loop
                    with result = nil
@@ -188,7 +188,7 @@
                               (interrupt (get-field :interrupt status)))
                          (when result
                            (setf result 
-                             (enrich-result result :verbose verbose)))
+                             (enrich-result result item :verbose verbose)))
                          (when (and item result)
                            (when verbose
                              (print-item item 
@@ -249,7 +249,8 @@
                            (when client (setf (client-status client) :error))
                            (nconc run `((:end . ,end)))))
                         ((consp result)
-                         (setf result (enrich-result result :verbose verbose))
+                         (setf result 
+                           (enrich-result result item :verbose verbose))
                          (when verbose
                            (print-result result :stream stream))
                          (unless interactive
@@ -265,7 +266,7 @@
            :cache cache :interactive interactive 
            :stream stream :interrupt interrupt)
           (when cache (flush-cache cache :verbose verbose))
-          (unless interactive (format stream "~&~%"))
+          (unless interactive (format stream "~&"))
           (when meter
             (if abort
               (status :text (format nil "~a interrupt" pmessage) :duration 5)
@@ -381,7 +382,7 @@
                                       (list (get-field :run-id run) 
                                             (get-field :parse-id item) i-id))
                              content))
-                    (result (enrich-result result)))
+                    (result (enrich-result result item)))
                (when status (status :text status))
                (setf (get-field :items run) nitems)
                (setf (get-field :user run) user)
@@ -470,7 +471,7 @@
                                   (list (get-field :run-id run) 
                                         (get-field :parse-id item) i-id))
                          content)
-              for result = (enrich-result bar)
+              for result = (enrich-result bar item)
               do
                 (incf nitems) (incf i-id) (incf parse-id)
                 (when increment (meter-advance increment))
@@ -1020,8 +1021,21 @@
       when (interrupt-p interrupt) do (return (acons :interrupt t nil))))
 
 
-(defun enrich-result (result &key verbose)
+(defun enrich-result (result item &key verbose)
   (declare (ignore verbose))
+  
+  ;;
+  ;; in case the result returned from a client is defective (e.g. in case the
+  ;; PVM buffer could not be read because of array size limitations :-{), fix
+  ;; up .result. with information from .item.
+  ;;
+  (when (null (get-field :i-id result))
+    (nconc result (acons :i-id (get-field :i-id item) nil)))
+  (when (null (get-field :parse-id result))
+    (nconc result (acons :parse-id (get-field :parse-id item) nil)))
+  (when (null (get-field :run-id result))
+    (nconc result (acons :run-id (get-field :run-id item) nil)))
+  
   (let* ((readings (get-field :readings result))
          #+:null
          (results (get-field :results result)))
