@@ -699,7 +699,7 @@ or modulo some number of quantifiers
 (defun fresh-create-scoped-structures  (top-handel bvs bindings rels 
                                         scoping-handels pending-qeq 
                                         scoped-p scoping-rels)
-  (if rels      ;; fail since a handel arg won't be satisfied
+  (if rels      ;; otherwise fail since a handel arg won't be satisfied
    (progn
     (setf pending-qeq 
       (determine-new-pending top-handel bindings pending-qeq scoped-p))
@@ -728,7 +728,7 @@ or modulo some number of quantifiers
             (for rel in rels filter 
                  (if (eql (get-rel-handel-num rel) top-handel) rel))))
       (if (if pending-qeq 
-              (and (not top-rels) 
+              (and  (or (not top-rels) *alex-mode*) 
                    (or possible-quant-top-rels pending-top-rels))
             ;; if we've got a pending-qeq, there can be no
             ;; known top-rels (maybe iffy?) and there must
@@ -751,7 +751,11 @@ or modulo some number of quantifiers
                 (ordered-set-difference rels sisters)
                 (ordered-insert top-handel scoping-handels)
                 (bindings-and-sisters-pending-qeq rel-comb-and-bindings)
-                scoping-rels))))))))
+                scoping-rels)))
+        (when *debug-scoping*
+          (format t "~%Failure: ~%top-rels ~A~%pending-qeq  ~A~%" 
+                  top-rels pending-qeq)
+          nil))))))
 
 (defun ordered-set-difference (lst to-go)
   ;; set-difference doesn't guarantee the order of results
@@ -813,16 +817,18 @@ or modulo some number of quantifiers
   ;;; we either need all the possible pending
   ;;; or all the combinations of possible-quants
   (if pending-qeq
+      ;;; unless we're in alex-mode, there can be no known-top-rels
+      ;;; if there is a pending-qeq
       (let ((pendingless (set-difference other-possibles pending)))
         (append
          (if pending  
              (new-bindings-and-sisters pendingless 
-                                       (list pending) 
+                                       (list (append pending known-top-rels))
                                        top-handel bindings pending-qeq nil))
          (if possible-quants
              (for res in
                   (new-bindings-and-sisters 
-                   pendingless (list nil)
+                   pendingless (list known-top-rels)
                    top-handel bindings nil pending-qeq)
                   filter
                   (if (intersection possible-quants 
