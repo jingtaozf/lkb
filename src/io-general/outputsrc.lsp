@@ -116,6 +116,7 @@
                      (if lex-entry
                        (lex-or-psort-full-fs (get-psort-entry lex-name))
                        (error "Entry for ~A not found" lex-name)))
+                    (stem (lex-or-psort-orth lex-entry))
                     (result-list
                      (cons (cons nil lex-entry-fs)
                            (try-all-lexical-rules 
@@ -134,7 +135,7 @@
                                                          lex-name idno))
                         (:lilfes 
                          (output-derived-instance-as-lilfes 
-                          orth fs ostream id derivation))
+                          orth fs ostream id stem derivation))
                         (:ebl
                          (output-for-ebl orth fs ostream (car result-pair)
                                          lex-name lex-entry-fs))

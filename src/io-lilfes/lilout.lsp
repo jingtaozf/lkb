@@ -44,13 +44,15 @@ Parse nodes need to be added so we can understand the display.
       dir
     (concatenate 'string dir "/")))
 
-(defun parse-test-suite-for-lilfes nil
+(defun parse-test-suite-for-lilfes (&optional (input "~/tmp/test-sentences")
+                                              output)
   ;;; start off with a cleanly loaded grammar, then
   (setf *unify-debug-cycles* t)
   (setf *first-only-p* nil)
-;  (parse-sentences "~aac/grammar/test-sentences" t))
-  (parse-sentences "~/tmp/test-sentences" t))  ;; by yusuke  May. 20
-  
+  (if (and (find-package "TSDB") (find-symbol "TSDB" :tsdb)
+           (fboundp (find-symbol "TSDB" :tsdb)))
+    (funcall (fboundp (find-symbol "TSDB" :tsdb)) :process input)
+    (parse-sentences input output)))  
 
 (defun output-all-for-lilfes (&optional dir)
   (setf dir (cond (dir (get-directory-name dir))
@@ -279,16 +281,20 @@ Parse nodes need to be added so we can understand the display.
         (when result (copy-tdfs-elements result))))
     tdfs))
 
-(defun output-derived-instance-as-lilfes (string fs stream 
-                                          &optional id derivation)
+(defun output-derived-instance-as-lilfes (form fs stream 
+                                          &optional id stem derivation)
   (let* ((identifier (and id (make-tdfs :indef (make-dag :type (list id)))))
          (enhanced 
           (if identifier (enhance-tdfs fs *lexical-id-path* identifier) fs))
          (dag (tdfs-indef enhanced)))
     ;; assume no defaults
-    (when (and id derivation)
-      (format stream "~%% ~(~a~): ~{~(~a~)~^ ~}~%" id derivation))
-    (format stream "~%lexical_entry(\"~A\", " (string-downcase string))
+    (if (and id stem derivation)
+      (format 
+       stream 
+       "~&~%compiled_lexical_entry(~
+        \"~(~a~)\", \"~(~a~)\", [~{~(~s~)~^ ~}], \"~{~(~a~)~^ ~}\", "
+       id form stem derivation)
+      (format stream "~%lexical_entry(\"~A\", " (string-downcase form)))
     (display-dag1 dag 'lilfes stream)
     (format stream ").~%")))
 
