@@ -55,7 +55,7 @@
   ;;; also defined for PAGE
   (type-of-fs fs))
 
-(defun create-type (type)
+(defun base-create-type (type)
   ;;; also defined for PAGE
   (if (listp type)
       (car type)

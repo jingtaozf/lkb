@@ -20,7 +20,7 @@
 ;; Changed create-type to convert string values to symbols, since VIT checker 
 ;; does not like string value for attribute CONST-VALUE in numerals etc.
 
-(defun create-type (type)
+(defun base-create-type (type)
   (if (and (consp type) (eq (first type) :atom))
       (if (stringp (second type))
 	  (read-from-string (second type))

@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.20  1999/06/04 21:27:48  danf
+;; WK updates and tsdb fixes
+;;
 ;; Revision 1.19  1999/06/02 23:42:52  aac
 ;; predicting null semantics
 ;;
@@ -462,9 +465,10 @@
              (pred (assoc (car *rel-name-path*)
                           label-list))
              (rel nil))
-        (setf rel (make-rel :sort (create-type (if pred 
-                                                   (fs-type (rest pred))
-                                                 (fs-type fs)))
+        (setf rel (make-rel :sort
+                             (create-type (if pred 
+                                              (fs-type (rest pred))
+                                            (fs-type fs)))
                             :handel (if handel-pair
                                         (create-variable
                                          (cdr handel-pair)
@@ -501,6 +505,25 @@
         (setf (rel-flist rel) (reverse (rel-flist rel)))
         rel)))
 
+(defun create-type (sort)
+  ;;; base-create-type is the LKB/PAGE specific function
+  (horrible-hack-3 (base-create-type sort)))
+
+(defun horrible-hack-3 (sort)
+  ;;; this hack would not be necessary if the grammar used
+  ;;; a persistent default.  It converts a type of the form
+  ;;; Xrel_a into Xrel.  This is needed for preposition
+  ;;; fragments because abstract relations get removed
+  ;;; by munging rules.  This would be cleaner if someone would
+  ;;; define the PAGE interface consistently - as it is, we have to
+  ;;; rely on the typographic convention
+  (let* ((str (string sort))
+         (start-pos (- (length str) 6)))
+    (if (and (> start-pos 0)
+             (string-equal (subseq str start-pos) "_rel_a"))
+        (intern (subseq str 0 (+ start-pos 4)))
+        sort)))
+
 (defun feat-sort-func (fvp1 fvp2)
   (let* ((feat1 (if (fvpair-p fvp1) 
                     (fvpair-feature fvp1)
@@ -514,12 +537,6 @@
       (unless (member feat2 *feat-priority-list*)
               (string-lessp feat1 feat2)))))
 
-#|                                    
-(defun create-type (type)
-  (if (and (consp type) (eq (first type) :atom))
-      (second type)
-    type))
-|#
 
 (defun create-word-identifier (id gen)
   (if id

@@ -418,6 +418,7 @@
               (format t "~%Premunged form")
               (output-mrs mrs-psoa 'indexed)
               (format t "~%Unscoped form")
+              (output-mrs mrsstruct 'simple)
               (output-mrs mrsstruct 'indexed)
             ;;; then try and find sets of bindings which will give a fully scoped 
             ;;; structure, and output the results
