@@ -241,8 +241,7 @@
                        for field = (get-field key item)
                        for i-id = (get-field :i-id item)
                        for j from 1 by 1
-                       when (and (integerp field) (not (= field -1)))
-                       do 
+                       when (and (integerp field) (not (= field -1))) do 
                          (incf (aref totals (- j 1)) field)
                        do
                          (if (and i-id (eq key :i-input))
@@ -267,6 +266,7 @@
                             "cell ~d ~d -contents ~:[{~a}~;~:d~] ~
                              -format data~%"
                             i j (integerp field) (tcl-escape-braces field)))
+                       finally
                          (when (zerop (mod (- i 1) 10))
                            (format
                             stream

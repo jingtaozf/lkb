@@ -252,7 +252,7 @@
                      (send-to-podium 
                       (format 
                        nil 
-                       "input {create:} {~a} {~a} directory" 
+                       "profile_input {create:} {~a} {~a} directory" 
                        path *tsdb-home*)
                       :wait t))
                    (path (when (and (eq (first return) :ok)

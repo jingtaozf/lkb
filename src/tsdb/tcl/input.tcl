@@ -123,6 +123,40 @@ proc condition_input {{prompt "where"} {default ""} {context "condition"}} {
 }; # condition_input()
 
 
+proc profile_input {prompt {default ""} {base ""} {context "directory"}} {
+
+  global globals;
+
+  if {![set status [input $prompt $default $base $context]]} {
+    if {$globals(input) != ""} {
+      set atarget $globals(input);
+      set target [string_strip $base $atarget];
+      if {$target == ""} {
+        tsdb_beep;
+        status "invalid name for target database" 10;
+        return -1;
+      }; # if
+      if {[file exists $atarget]} {
+        tsdb_beep;
+        status "database `$target' already exists" 10;
+        return -1;
+      }; # if
+      set parent \
+        [string range $atarget 0 [string last $globals(slash) $atarget]];
+      if {[catch {file mkdir $parent}]} {
+        tsdb_beep;
+        status "error creating parent directory `$parent'" 10;
+        return -1;
+      }; # if
+      history_add $context $target;
+    }; # if
+  }; # if
+
+  return $status;
+
+}; # profile_input()
+
+
 proc aggregate_input {{set 1}} {
 
   global globals;

@@ -125,7 +125,7 @@ set globals(condition,null) 1;
 set globals(condition,size) 0;
 set globals(phenomena,condition,all) 1;
 set globals(overwrite) 1;
-set globals(autoload_vocabulary) 1;
+set globals(autoload_vocabulary) 0;
 set globals(logscale) 0;
 set globals(selection) -1;
 set globals(input) "";
