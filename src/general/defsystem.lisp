@@ -10,7 +10,7 @@
 ;;; Though home-grown, the syntax was inspired by fond memories of the
 ;;; defsystem facility on Symbolics 3600's. The exhaustive lists of
 ;;; filename extensions for various lisps and the idea to have one
-;;; "operate-on-system" function instead of separate "compile-system"
+;;; "operate-on-system" function instead of separate "compile-sysem"
 ;;; and "load-system" functions were taken from Xerox Corp.'s PCL 
 ;;; system.
 
@@ -1996,7 +1996,7 @@ D
                                (execute-finally-do *execute-finally-do*))
   (unwind-protect
       ;; Protect the undribble.
-      (progn
+      (with-compilation-unit nil
 	(when dribble (dribble dribble))
 	(when test (setq verbose t))
 	(when (null force);; defaults

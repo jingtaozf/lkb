@@ -2,11 +2,11 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;        file: loadup.lisp
-;;;      module: DISCO loadup environment
+;;;      module: unified LKB and PAGE loadup environment
 ;;;     version: 2.1 -- 26-jul-1994
 ;;;  written by: bernd kiefer, dfki saarbruecken
-;;; last update: 26-jul-1994
-;;;  updated by: oe, dfki saarbruecken
+;;; last update: 14-aug-98
+;;;  updated by: oe, csli stanford
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; author            | date        | modification
 ;;; ------------------|-------------|------------------------------------------
@@ -35,8 +35,6 @@
 (defparameter sys-home (cons #-:lucid :absolute #+:lucid :root %sys-home%))
 
 (defparameter general-dir (append sys-home '("src" "general")))
-
-;; (unless (find :disco-loadup *features*))
 
 ;;;
 ;;; load several patches together with the the cmu version of defpackage() for
@@ -77,7 +75,3 @@
 
 (reset-module-status)
 (reset-system-paths)
-
-(pushnew :lkb *features*)
-
-
