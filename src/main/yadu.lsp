@@ -44,7 +44,7 @@
 
 
 (defstruct tail-element
-           path-rep spec persistence)
+           path-rep spec persistence cached-tfs)
 
 
 ;;; path-rep assumes we have atomic fs tails - this simplifies
@@ -73,17 +73,17 @@
   (make-tdfs :indef indef :tail nil))
 
 ;;; Copying functions
+;;; these leave def empty and the cached-tdfs in the tail
+;;; elements is also left alone
+
 
 (defun copy-tdfs-elements (old-tdfs)
-  ;; nothing destructive now happens to tail-elements
   (incf *copies*)
   (let ((indef (copy-dag (tdfs-indef old-tdfs))))
     (when indef
       (make-tdfs :indef indef
-                 :tail 
-                 (for element in (tdfs-tail old-tdfs)
-                      collect
-                      element)))))
+                 :tail (copy-tdfs-tails old-tdfs)))))
+
 
 (defun copy-tdfs-completely (old-tdfs)
   ;; nothing destructive now happens to tail-elements
@@ -91,14 +91,22 @@
   (let ((indef (copy-dag-completely (tdfs-indef old-tdfs))))
     (when indef
       (make-tdfs :indef indef
-                 :tail (copy-list (tdfs-tail old-tdfs))))))
+                 :tail (copy-tdfs-tails old-tdfs)))))
 
 #+:packing
 (defun copy-tdfs-partially (old)
   (let ((dag (copy-dag-partially (tdfs-indef old))))
     (when dag
       (make-tdfs :indef dag
-                 :tail (copy-list (tdfs-tail old))))))
+                 :tail (copy-tdfs-tails old)))))
+
+(defun copy-tdfs-tails (tdfs)
+  ;;; copies the list, removes the cached structures
+  ;;; because these can be regenerated if necessary
+  (for tail-element in (tdfs-tail tdfs)
+       collect
+       (setf (tail-element-cached-tfs tail-element) nil)
+       tail-element))
 
 ;;; Utility
 
@@ -121,6 +129,8 @@
 
 
 (defun yadu-general-merge-tails (tail1 tail2 indef)
+  (add-cached-tfs-to-tail tail1)
+  (add-cached-tfs-to-tail tail2)
   (cond ((and tail1 tail2)
          (merge-tails tail1 tail2 indef))
         (tail1 
@@ -129,6 +139,15 @@
          (filter-tail tail2 indef))
         (t nil)))
 
+
+(defun add-cached-tfs-to-tail (tail)
+  ;;; called when we need to make sure we have all the
+  ;;; cached structures
+  (for tail-element in tail
+       do
+       (unless (tail-element-cached-tfs tail-element)
+         (setf (tail-element-cached-tfs tail-element) 
+           (dagify (tail-element-path-rep tail-element))))))
 
 ;;; YADU
 ;;; given two TDFS TDFS1 = I1/T1 and TDFS2 = I2/T2
@@ -163,13 +182,14 @@
   (let ((indef (tdfs-indef tdfs))
          (tail (tdfs-tail tdfs)))
     (if tail
-        (or (tdfs-def tdfs) ; result cached
-            (let* ((partition (partition-tail tail nil))
-                   (def-fs
-                     (generalise-set 
-                      (yadu-unify (list indef) partition))))
-              (setf (tdfs-def tdfs) def-fs)
-              def-fs))
+        (or (tdfs-def tdfs)             ; result cached
+            (progn (add-cached-tfs-to-tail tail)
+                   (let* ((partition (partition-tail tail nil))
+                          (def-fs
+                              (generalise-set 
+                               (yadu-unify (list indef) partition))))
+                     (setf (tdfs-def tdfs) def-fs)
+                     def-fs)))
       indef)))
 
 
@@ -227,7 +247,7 @@
 	    do
 	      (if (loop for rem-element in unpartitioned
 		      never (more-specific-p rem-element tail-element))
-		  (push (tail-element-path-rep tail-element) mu-next)
+		  (push (tail-element-cached-tfs tail-element) mu-next)
 		(push tail-element next-unpartitioned)))
 	(partition-tail next-unpartitioned (cons mu-next partitioned)))
     (nreverse partitioned)))
@@ -252,10 +272,10 @@
 (defun merge-tails (tail1 tail2 indef-fs)
    (remove-if 
       #'(lambda (tail-element)
-          (let ((tail-atfs (tail-element-path-rep tail-element)))
-             (or (atomic-dag-subsumes-p tail-atfs indef-fs)
+          (let ((tail-atfs (tail-element-cached-tfs tail-element)))
+             (or (dag-subsumes-p tail-atfs indef-fs)
                  (not
-		  (atomic-unifiable-dags-p tail-atfs indef-fs)))))
+		  (unifiable-wffs-p tail-atfs indef-fs)))))
       (union-tails tail1 tail2)))
 
 (defun filter-tail (tail indef-fs)
@@ -263,55 +283,9 @@
   ;;; stuff that's incompatible with the indefeasible structure
   (for tail-element in tail
        filter
-       (let ((tail-atfs (tail-element-path-rep tail-element)))
-         (if (atomic-unifiable-dags-p tail-atfs indef-fs)
+       (let ((tail-atfs (tail-element-cached-tfs tail-element)))
+         (if (unifiable-wffs-p tail-atfs indef-fs)
              tail-element))))
-
-(defun atomic-dag-subsumes-p (atomic-fs fs)
-  (if (yadu-pv-p atomic-fs)
-      (let* ((path (yadu-pv-path atomic-fs))
-             (value (yadu-pv-value atomic-fs))
-             (fs-at-end-of (existing-dag-at-end-of fs 
-                                      (path-typed-feature-list path))))
-        (and fs-at-end-of
-             (subsume-types value
-                            (type-of-fs fs-at-end-of))))
-    (let* ((paths (yadu-pp-paths atomic-fs))
-           (fs1 (existing-dag-at-end-of fs
-                                        (path-typed-feature-list
-                                         (car paths)))))
-      (and fs1
-           (for path in (cdr paths)
-                all-satisfy
-                (eq fs1
-                    (existing-dag-at-end-of fs 
-                                            (path-typed-feature-list path))))))))
-
-(defun atomic-unifiable-dags-p (atomic-fs indef-fs)
-  (if *within-unification-context-p*
-      (if (yadu-pv-p atomic-fs)
-	  (unify-paths (yadu-pv-path atomic-fs)
-		       indef-fs
-		       (make-u-value 
-			:types (yadu-pv-value atomic-fs))
-		       nil)
-	(let* ((paths (yadu-pp-paths atomic-fs))
-	       (initial-path (car paths))
-	       (ok nil))
-	  (dolist (path2 (cdr paths))
-	    (setf ok
-	      (unify-paths initial-path       
-			   indef-fs
-			   path2
-			   indef-fs))
-	    (unless ok
-	      (return)))
-	  ok))
-    (with-unification-context (indef-fs)
-      (atomic-unifiable-dags-p atomic-fs indef-fs))))
-
-
-
 
 (defun union-tails (tail1 tail2)
    (when (> (length tail2) (length tail1))
@@ -339,21 +313,11 @@
    (sort (union p1 p2) 
       #'string<))
                   
-
 (defun equal-tail-elements (el1 el2)
-   (and (equalp (tail-element-spec el1) (tail-element-spec el2))
-      (let ((pr1 (tail-element-path-rep el1))
-            (pr2 (tail-element-path-rep el2)))
-         (or (and (yadu-pp-p pr1) (yadu-pp-p pr2)
-               (or (equalp (yadu-pp-paths pr1) (yadu-pp-paths pr2))
-                  (equalp (yadu-pp-paths pr1) 
-                     (reverse (yadu-pp-paths pr2)))))
-            (and (yadu-pv-p pr1) (yadu-pv-p pr2)
-               (equalp (yadu-pv-path pr1) (yadu-pv-path pr2))
-               (equalp (yadu-pv-value pr1) (yadu-pv-value pr2)))))))
+  (and (equalp (tail-element-spec el1) (tail-element-spec el2))
+       (dag-equal-p (tail-element-cached-tfs el1)
+                    (tail-element-cached-tfs el2))))
 
-
-;;; Adding and removing features from tails for rule application
 
 (defun add-path-to-tail (path tail-element)
   (let* ((p-rep (tail-element-path-rep tail-element))
@@ -453,7 +417,7 @@
 	;; assign each constraint a bit position
 	(loop for def in defaults
 	    and pos upfrom 0
-	    collect (cons (dagify def) pos))))
+	    collect (cons def pos))))
 
 (defun carp-unify (fixed-fs def-fs-set check-ind-defs-p)
   ;; def-fs-set is using path representation 
@@ -463,7 +427,7 @@
     (setf def-fs-set 
       (for fs in def-fs-set
            filter
-           (when (atomic-unifiable-dags-p fs fixed-fs)
+           (when (unifiable-wffs-p fs fixed-fs)
 	     fs))))
   ;; we improve matters by chucking out structures which were incompatible
   ;; with the fixed-fs when check-ind-defs-p is true - if it isn't, we're
@@ -511,7 +475,7 @@
   (when (null *success*)
     (error "This shouldn't happen!"))
   *success*)
-  
+
 (defun unify-combinations (fixed-fs start combo state) 
   (unless (= start (1- (length combo)))
     (let ((v (copy-seq combo)))
@@ -533,9 +497,10 @@
 		(let ((unif-result (unify-in fixed-fs combo state)))
 		  (cond (unif-result
 			 (push unif-result *success*)
-			 (push combo (successes state)))
-			(t (unify-combinations fixed-fs pos combo state))))
-		(setf (sbit combo pos) 1)))))))
+			 (push (copy-seq combo) (successes state)))
+			(t (unify-combinations fixed-fs pos combo state)))))
+	      (setf (sbit combo pos) 1))))))
+
 
 ;; Try unifying a set of constraints (represented as a bit vector) into a
 ;; feature structure.  If successful, return the resulting feature structure.
@@ -678,8 +643,6 @@
       (yadu-convert-dag-to-atfs def-dag nil specificity indef persistence)
       *atfs*))
 
-
-
 (defun yadu-convert-dag-to-atfs (dag-instance path-so-far spec indef-dag
       persistence)
    (let* ((real-dag (follow-pointers dag-instance))
@@ -689,14 +652,10 @@
       (for stored-path in (dag-visit real-dag)
          do
          (unless (and real-indef 
-               (member stored-path (dag-visit real-indef)))
-            (push 
-             (make-tail-element :spec spec 
-                  :path-rep 
-                  (make-yadu-pp :paths 
-                     (list current-path stored-path))
-                  :persistence (list persistence))
-               *atfs*)))
+                      (member stored-path (dag-visit real-indef)))
+           (save-if-new-tail (make-yadu-pp :paths 
+                                           (list current-path stored-path))
+                             spec persistence)))
       (push current-path (dag-visit real-dag))
       (when real-indef
          (push current-path (dag-visit real-indef)))
@@ -704,67 +663,60 @@
          (let ((val (type-of-fs real-dag)))
             (unless 
                (and real-indef (is-atomic real-indef)
-                  (equalp (type-of-fs real-indef) val))
-               (push 
-                (make-tail-element :spec spec 
-                     :path-rep 
-                     (make-yadu-pv :path current-path :value val)
-                     :persistence (list persistence))
-                  *atfs*)))
+                    (equalp (type-of-fs real-indef) val))
+              (save-if-new-tail 
+               (make-yadu-pv :path current-path :value val) 
+               spec persistence)))
          (progn
             (let ((type (dag-type real-dag)))
                (unless 
                   (and real-indef 
-                     (eql (dag-type real-indef) type))
-                  (push 
-                     (make-tail-element :spec spec 
-                        :path-rep 
-                        (make-yadu-pv :path current-path :value (list type))
-                        :persistence (list persistence))
-                        *atfs*)))
+                       (eql (dag-type real-indef) type))
+                 (save-if-new-tail 
+                  (make-yadu-pv :path current-path :value (list type))
+                  spec persistence)))
             (for label in (top-level-features-of real-dag)
                do
                (yadu-convert-dag-to-atfs (get-dag-value real-dag label)
                   (cons label path-so-far) spec
                   (if indef-dag (get-dag-value indef-dag label))
                   persistence))))))
+      
+(defun save-if-new-tail (path-rep spec persistence)
+  (let ((fs-rep (dagify path-rep)))
+    (unless (member fs-rep 
+                    *atfs* 
+                    :test 
+                    #'(lambda (atfs listmember) 
+                        (dag-equal-p atfs
+                                     (tail-element-cached-tfs 
+                                      listmember))))
+      (push 
+       (make-tail-element :spec spec 
+                          :path-rep path-rep
+                          :cached-tfs fs-rep
+                          :persistence (list persistence))
+                *atfs*))))
 
-#|
 (defun dagify (atomic-fs)
   (let ((dag (create-dag)))
     (create-wffs
      (with-unification-context (dag)
        (if (yadu-pv-p atomic-fs)
-	   (unify-paths (yadu-pv-path atomic-fs)
-			dag
-			(make-u-value :types (yadu-pv-value atomic-fs))
-			dag)
-	 (let* ((paths (yadu-pp-paths atomic-fs))
-		(initial-path (car paths)))
-	   (dolist (path2 (cdr paths))
-	     (unify-paths initial-path       
-			  dag
-			  path2
-			  dag))))
+           (let ((type (yadu-pv-value atomic-fs)))
+             (unify-paths (yadu-pv-path atomic-fs)
+                          dag
+                          (make-u-value :types 
+                                        (if (listp type) type (list type)))
+                          dag))
+         (let* ((paths (yadu-pp-paths atomic-fs))
+                (initial-path (car paths)))
+           (dolist (path2 (cdr paths))
+             (unify-paths initial-path       
+                          dag
+                          path2
+                          dag))))
        (copy-dag dag)))))
-|#
-
-(defun dagify (atomic-fs)
-  (let ((dag (create-dag)))
-    (with-unification-context (dag)
-      (if (yadu-pv-p atomic-fs)
-	  (unify-paths (yadu-pv-path atomic-fs)
-		       dag
-		       (make-u-value :types (yadu-pv-value atomic-fs))
-		       dag)
-	(let* ((paths (yadu-pp-paths atomic-fs))
-	       (initial-path (car paths)))
-	  (dolist (path2 (cdr paths))
-	    (unify-paths initial-path       
-			 dag
-			 path2
-			 dag))))
-      (copy-dag dag))))
 
 
 
