@@ -25,9 +25,17 @@
   (format
    nil 
    "exec ~a -p"
+   #-:darwin
    (namestring (make-pathname :directory (pathname-directory make::bin-dir)
-                              :name "yzlui"))))
-
+                              :name "yzlui"))
+   #+:darwin
+   (namestring
+    (make-pathname 
+     :directory (pathname-directory
+		 (dir-append
+		  make::bin-dir '(:relative "yzlui.app" "Contents" "MacOS")))
+     :name "yzlui"))))
+   
 (defparameter *lui-hidden-features*
   '(ARG ARG0 ARG1 ARG2 ARG3 ARG4
     MARG L-INDEX R-INDEX L-HNDL R-HNDL L-HANDEL R-HANDEL 

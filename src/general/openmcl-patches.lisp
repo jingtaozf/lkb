@@ -55,11 +55,13 @@
 
 (defparameter %binary-dir-name% 
   (or
-   #+:powerpc ".pfsl"
+   #+(and :powerpc :linux) ".pfsl"
+   #+(and :powerpc :darwin) ".mfsl"
    ".masl"))
 
 (defparameter %system-binaries% 
-  #+:powerpc "linux.ppc.32")
+  #+(and :powerpc :linux) "linux.ppc.32"
+  #+(and :powerpc :darwin) "macos.ppc.32")
 
 ;;;
 ;;; the Allegro CL style run-shell-command() (since acl is home sweet home):
