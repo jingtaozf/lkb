@@ -22,6 +22,8 @@
 
 (defparameter *redwoods-trees-hook* nil)
 
+(defparameter *redwoods-record-void-discriminants-p* nil)
+
 (defparameter %redwoods-increment% 100)
 
 (defparameter %model% nil)
@@ -627,7 +629,8 @@
                              (if time
                                (decode-time time :long :tsdb)
                                (current-time :long :tsdb)))
-                unless (= state 5)
+                unless (and (null *redwoods-record-void-discriminants-p*)
+                            (= state 5))
                 do
                   (write-decision data 
                                   (pairlis '(:parse-id :t-version 
