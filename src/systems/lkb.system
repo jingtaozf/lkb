@@ -90,6 +90,7 @@
 	      :components
 	      (#-tty(:file "menus")      ; top level menus for varying 
                                          ; configurations
+               (:file "async")	; utilities for doing asynchronous I/O
                (:file "outputfs")   ; feature structure display
                (:file "outputtdfs") ; default fs display
                (:file "outputsrc") ; outputting machine readable

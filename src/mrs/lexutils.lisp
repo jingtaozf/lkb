@@ -23,22 +23,26 @@
     (error "~%No entry found for top semantics type ~A" 
            mrs::*top-semantics-type*))
    (let ((ids nil))
-      ;; because of multiple lexical entries, an id may be indexed by
+     ;; because of multiple lexical entries, an id may be indexed by
       ;; multiple orthographies
      (dolist (word (lex-words *lexicon*))
        (dolist (inst (lookup-word *lexicon* word :cache nil))
 	 (pushnew inst ids :test #'eq)))
-     (dolist (id ids)
-       (let* ((entry (read-psort *lexicon* id :cache nil))
-	      (lex-id (lex-or-psort-id entry)))
-	 (expand-psort-entry entry)
-	 (let ((new-fs (lex-or-psort-full-fs entry)))
-	   (if new-fs
-	       (mrs::extract-lexical-relations entry)
-	     (format t "~%No feature structure for ~A" lex-id))))
-       (unexpand-psort *lexicon* id))
+     (process-queue
+      #'(lambda ()
+	  (let ((id (pop ids)))
+	    (if id
+		(read-psort *lexicon* id :cache nil)
+	      :eof)))
+      #'(lambda (entry)
+	  (expand-psort-entry entry)
+	  (let ((new-fs (lex-or-psort-full-fs entry)))
+	    (if new-fs
+		(mrs::extract-lexical-relations entry)
+	      (format t "~%No feature structure for ~A" 
+		      (lex-or-psort-id entry))))
+	  (unexpand-psort *lexicon* (lex-or-psort-id entry))))
      (setf *batch-mode* nil)))
-
 
 (defun get-compatible-rels (reltype)
   (let* ((type-entry (get-type-entry reltype))
