@@ -1,15 +1,16 @@
-;;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
-;;; see licence.txt for conditions
+;;; Copyright (c) 1991--2002
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see licence.txt for conditions.
 
 
 (in-package :lkb)
 
 ;; RPM - the default print-object method for structures in ACL uses format
 ;; extensively and is much too slow to use to build up the templex file.  This
-;; replacement is a lot faster, but doesn't do any error checking and so it
+;; replacement is a lot faster, but doesn't do any error checking and so is
 ;; potentially risky.
 
-#+allegro
+#+:allegro
 (defmethod common-lisp:print-object ((instance structure-object) stream)
   (let ((class (class-name (class-of instance))))
     (write-string "#S(" stream)

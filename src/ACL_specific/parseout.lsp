@@ -1,6 +1,6 @@
-;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
-;;; see licence.txt for conditions
-
+;;; Copyright (c) 1991--2002
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see `licence.txt' for conditions.
 
 ;;; ACL version
 
