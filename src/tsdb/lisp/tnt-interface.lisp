@@ -173,10 +173,11 @@
 	 (format 
 	  stream
 	  "%% TnT data from LinGO Redwoods (~a by ~a)~%~
-           %% ~d active tree~p (of ~d) for item # ~d~%~
-           %% ~a~%"
+           %% ~d active tree~p (of ~d) for item # ~d (`~a')~%~
+           %% ~a~d"
           (current-time) (current-user)
-	  (length active) (length active) (length results) i-id input)
+	  (length active) (length active) (length results) i-id data
+          input)
 	 (loop
              with *package* = (find-package lkb::*lkb-package*)
              for result in results

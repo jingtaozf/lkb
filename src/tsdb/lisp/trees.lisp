@@ -617,7 +617,7 @@
                "~d (~d); derivation:~%~a~%~d (~d); MRS string:~%~a~%~%"
                id i foo id i bar))))
 
-(defun kristina (data &key condition path)
+(defun kristina (data &key condition path prefix)
   
   (loop
       with target = (or path 
@@ -659,7 +659,10 @@
          (if version "all" (length results))
          (length active) (length results) i-id)
 
-        (with-open-file (stream (format nil "~a/~d" target i-id)
+        (with-open-file (stream (format 
+                                 nil 
+                                 "~a/~@[~a.~]~d" 
+                                 target prefix i-id)
                          :direction :output
                          :if-exists :supersede :if-does-not-exist :create)
           (format 
@@ -699,3 +702,9 @@
                 (lkb::display-dag1 dag 'lkb::tdl stream)
                 (format stream "~%")
                 (format stream "~c~%" #\page)))))
+
+
+
+
+
+
