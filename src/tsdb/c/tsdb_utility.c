@@ -108,9 +108,9 @@ BOOL tsdb_value_match(Tsdb_value *foo, Tsdb_value *bar,void* bar_pat) {
            fprintf(tsdb_error_stream,"Regex Error: %s \n",a);
            fflush(tsdb_error_stream);
          }
-         answer = FALSE;
+         return 3;
        } /* if */
-     }
+     } /* else */
      answer = regexec(pattern,foo->value.string,0,NULL,0);
      if (answer!=0) {
        answer = FALSE;
