@@ -509,7 +509,7 @@
 56005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@atsuko\syy.com@9-7-2003
 56006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@atsuko\syy.com@9-7-2003
 56007@unknown@formal@none@1@EH@Message-ID: <1043735857\smv.stanford.edu>@-1@-1@@atsuko\syy.com@9-7-2003
-56008@unknown@formal@none@1@XP@Wrong item has arrived.@1@4@@atsuko\syy.com@9-7-2003
+56008@unknown@formal@none@1@S@Wrong item has arrived.@0@4@@atsuko\syy.com@9-7-2003
 56009@unknown@formal@none@1@S@What do I do with this?@1@6@@atsuko\syy.com@9-7-2003
 57001@unknown@formal@none@1@EH@From atsuko Mon Jan 27 22:37:37 PST 2003@-1@-1@@atsuko\syy.com@9-7-2003
 57002@unknown@formal@none@1@EH@From: atsuko\syy.com@-1@-1@@atsuko\syy.com@9-7-2003
@@ -518,7 +518,8 @@
 57005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@atsuko\syy.com@9-7-2003
 57006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@atsuko\syy.com@9-7-2003
 57007@unknown@formal@none@1@EH@Message-ID: <1043735857\smv.stanford.edu>@-1@-1@@atsuko\syy.com@9-7-2003
-57008@unknown@formal@none@1@S@The product I ordered is damaged. What do I do with this?@1@12@@atsuko\syy.com@9-7-2003
+57008@unknown@formal@none@1@S@The product I ordered is damaged.@1@6@@atsuko\syy.com@9-7-2003
+57009@unknown@formal@none@1@S@What do I do with this?@1@6@@atsuko\syy.com@9-7-2003
 58001@unknown@formal@none@1@EH@From atsuko Mon Jan 27 22:37:37 PST 2003@-1@-1@@atsuko\syy.com@9-7-2003
 58002@unknown@formal@none@1@EH@From: atsuko\syy.com@-1@-1@@atsuko\syy.com@9-7-2003
 58003@unknown@formal@none@1@EH@Subject: ProductReturn # 58000@-1@-1@@atsuko\syy.com@9-7-2003
@@ -607,7 +608,7 @@
 66008@unknown@formal@none@1@@Dear Customer service:@0@3@@atsuko\syy.com@9-7-2003
 66009@unknown@formal@none@1@S@The product which I ordered from you is not as expected.@1@11@@atsuko\syy.com@9-7-2003
 66010@unknown@formal@none@1@S@I would like to return this.@1@6@@atsuko\syy.com@9-7-2003
-66011@unknown@formal@none@1@S@Could you advise me what should I do now?@1@9@@atsuko\syy.com@9-7-2003
+66011@unknown@formal@none@1@S@Could you advise me what should I do now?@0@9@@atsuko\syy.com@9-7-2003
 67001@unknown@formal@none@1@EH@From atsuko Mon Jan 27 22:37:37 PST 2003@-1@-1@@atsuko\syy.com@9-7-2003
 67002@unknown@formal@none@1@EH@From: atsuko\syy.com@-1@-1@@atsuko\syy.com@9-7-2003
 67003@unknown@formal@none@1@EH@Subject: ProductReturn # 67000@-1@-1@@atsuko\syy.com@9-7-2003
@@ -625,7 +626,7 @@
 68006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@atsuko\syy.com@9-7-2003
 68007@unknown@formal@none@1@EH@Message-ID: <1043735857\smv.stanford.edu>@-1@-1@@atsuko\syy.com@9-7-2003
 68008@unknown@formal@none@1@@I will send back IBM laptop computer.@0@7@@atsuko\syy.com@9-7-2003
-68009@unknown@formal@none@1@S@Please let me know what should I do now.@1@9@@atsuko\syy.com@9-7-2003
+68009@unknown@formal@none@1@S@Please let me know what should I do now.@0@9@@atsuko\syy.com@9-7-2003
 69001@unknown@formal@none@1@EH@From atsuko Mon Jan 27 22:37:37 PST 2003@-1@-1@@atsuko\syy.com@9-7-2003
 69002@unknown@formal@none@1@EH@From: atsuko\syy.com@-1@-1@@atsuko\syy.com@9-7-2003
 69003@unknown@formal@none@1@EH@Subject: ProductReturn # 69000@-1@-1@@atsuko\syy.com@9-7-2003
@@ -687,7 +688,7 @@
 75005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@atsuko\syy.com@9-7-2003
 75006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@atsuko\syy.com@9-7-2003
 75007@unknown@formal@none@1@EH@Message-ID: <1043735857\smv.stanford.edu>@-1@-1@@atsuko\syy.com@9-7-2003
-75008@unknown@formal@none@1@S@I placed on order by mail on September 24 and received two shipments.@1@13@@atsuko\syy.com@9-7-2003
+75008@unknown@formal@none@1@S@I placed on order by mail on September 24 and received two shipments.@0@13@@atsuko\syy.com@9-7-2003
 75009@unknown@formal@none@1@S@I will return the second package to you if you refund the price and postage.@1@15@@atsuko\syy.com@9-7-2003
 76001@unknown@formal@none@1@EH@From atsuko Mon Jan 27 22:37:37 PST 2003@-1@-1@@atsuko\syy.com@9-7-2003
 76002@unknown@formal@none@1@EH@From: atsuko\syy.com@-1@-1@@atsuko\syy.com@9-7-2003
@@ -705,7 +706,7 @@
 77006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@atsuko\syy.com@9-7-2003
 77007@unknown@formal@none@1@EH@Message-ID: <1043735857\smv.stanford.edu>@-1@-1@@atsuko\syy.com@9-7-2003
 77008@unknown@formal@none@1@S@I received the wrong items.@1@5@@atsuko\syy.com@9-7-2003
-77009@unknown@formal@none@1@S@Please let me know what should I do with it.@1@10@@atsuko\syy.com@9-7-2003
+77009@unknown@formal@none@1@S@Please let me know what should I do with it.@0@10@@atsuko\syy.com@9-7-2003
 78001@unknown@formal@none@1@EH@From atsuko Mon Jan 27 22:37:37 PST 2003@-1@-1@@atsuko\syy.com@9-7-2003
 78002@unknown@formal@none@1@EH@From: atsuko\syy.com@-1@-1@@atsuko\syy.com@9-7-2003
 78003@unknown@formal@none@1@EH@Subject: ProductReturn # 78000@-1@-1@@atsuko\syy.com@9-7-2003
@@ -760,7 +761,7 @@
 83007@unknown@formal@none@1@EH@Message-ID: <1043735857\smv.stanford.edu>@-1@-1@@atsuko\syy.com@9-7-2003
 83008@unknown@formal@none@1@@Dear Sir,@0@2@@atsuko\syy.com@9-7-2003
 83009@unknown@formal@none@1@S@the merchandise I received on 6th July is damaged.@1@9@@atsuko\syy.com@9-7-2003
-83010@unknown@formal@none@1@S@Please let me know what should I do with it.@1@10@@atsuko\syy.com@9-7-2003
+83010@unknown@formal@none@1@S@Please let me know what should I do with it.@0@10@@atsuko\syy.com@9-7-2003
 84001@unknown@formal@none@1@EH@From atsuko Mon Jan 27 22:37:37 PST 2003@-1@-1@@atsuko\syy.com@9-7-2003
 84002@unknown@formal@none@1@EH@From: atsuko\syy.com@-1@-1@@atsuko\syy.com@9-7-2003
 84003@unknown@formal@none@1@EH@Subject: ProductReturn # 84000@-1@-1@@atsuko\syy.com@9-7-2003
@@ -834,7 +835,7 @@
 91005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@atsuko\syy.com@9-7-2003
 91006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@atsuko\syy.com@9-7-2003
 91007@unknown@formal@none@1@EH@Message-ID: <1043735857\smv.stanford.edu>@-1@-1@@atsuko\syy.com@9-7-2003
-91008@unknown@formal@none@1@S@I would like to return wrong item for my order.@1@10@@atsuko\syy.com@9-7-2003
+91008@unknown@formal@none@1@S@I would like to return wrong item for my order.@0@10@@atsuko\syy.com@9-7-2003
 91009@unknown@formal@none@1@S@Please let me know how to send it back to you.@1@11@@atsuko\syy.com@9-7-2003
 92001@unknown@formal@none@1@EH@From atsuko Mon Jan 27 22:37:37 PST 2003@-1@-1@@atsuko\syy.com@9-7-2003
 92002@unknown@formal@none@1@EH@From: atsuko\syy.com@-1@-1@@atsuko\syy.com@9-7-2003
@@ -1050,7 +1051,7 @@
 115005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@atsuko\syy.com@9-7-2003
 115006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@atsuko\syy.com@9-7-2003
 115007@unknown@formal@none@1@EH@Message-ID: <1043735857\smv.stanford.edu>@-1@-1@@atsuko\syy.com@9-7-2003
-115008@unknown@formal@none@1@S@I will return the goods which is not as I expected to you.@1@13@@atsuko\syy.com@9-7-2003
+115008@unknown@formal@none@1@S@I will return the goods which is not as I expected to you.@0@13@@atsuko\syy.com@9-7-2003
 115009@unknown@formal@none@1@S@I need the instruction about returning goods to you.@1@9@@atsuko\syy.com@9-7-2003
 116001@unknown@formal@none@1@EH@From atsuko Mon Jan 27 22:37:37 PST 2003@-1@-1@@atsuko\syy.com@9-7-2003
 116002@unknown@formal@none@1@EH@From: atsuko\syy.com@-1@-1@@atsuko\syy.com@9-7-2003
@@ -1210,7 +1211,7 @@
 133006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@ben\syy.com@9-7-2003
 133007@unknown@formal@none@1@EH@Message-ID: <1043735857\smv.stanford.edu>@-1@-1@@ben\syy.com@9-7-2003
 133008@unknown@formal@none@1@S@Yo!@1@1@@ben\syy.com@9-7-2003
-133009@unknown@formal@none@1@S@That cool radar detector gear don't work so good -@1@10@@ben\syy.com@9-7-2003
+133009@unknown@formal@none@1@S@That cool radar detector gear don't work so good -@0@10@@ben\syy.com@9-7-2003
 133010@unknown@formal@none@1@XP@got a ticket man!@1@4@@ben\syy.com@9-7-2003
 133011@unknown@formal@none@1@S@I want my money back, dude.@1@6@@ben\syy.com@9-7-2003
 134001@unknown@formal@none@1@EH@From ben Mon Jan 27 22:37:37 PST 2003@-1@-1@@ben\syy.com@9-7-2003
@@ -1290,7 +1291,7 @@
 141007@unknown@formal@none@1@EH@Message-ID: <1043735857\smv.stanford.edu>@-1@-1@@ben\syy.com@9-7-2003
 141008@unknown@formal@none@1@XP@Lasrt month I bought a camcorder from you.@1@8@@ben\syy.com@9-7-2003
 141009@unknown@formal@none@1@S@It worked fine for 2 weeks then went dead.@1@9@@ben\syy.com@9-7-2003
-141010@unknown@formal@none@1@S@Would it be possible for you to exchange this items for me at your local store, even though I bought it on the internet?@1@24@@ben\syy.com@9-7-2003
+141010@unknown@formal@none@1@S@Would it be possible for you to exchange this items for me at your local store, even though I bought it on the internet?@0@24@@ben\syy.com@9-7-2003
 142001@unknown@formal@none@1@EH@From ben Mon Jan 27 22:37:37 PST 2003@-1@-1@@ben\syy.com@9-7-2003
 142002@unknown@formal@none@1@EH@From: ben\syy.com@-1@-1@@ben\syy.com@9-7-2003
 142003@unknown@formal@none@1@EH@Subject: ProductReturn # 142000@-1@-1@@ben\syy.com@9-7-2003
@@ -1335,7 +1336,7 @@
 146005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@ben\syy.com@9-7-2003
 146006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@ben\syy.com@9-7-2003
 146007@unknown@formal@none@1@EH@Message-ID: <1043735857\smv.stanford.edu>@-1@-1@@ben\syy.com@9-7-2003
-146008@unknown@formal@none@1@XP@No longer need new computer.@1@5@@ben\syy.com@9-7-2003
+146008@unknown@formal@none@1@XP@No longer need new computer.@0@5@@ben\syy.com@9-7-2003
 146009@unknown@formal@none@1@S@Pls send return shipping l,abel.@1@5@@ben\syy.com@9-7-2003
 147001@unknown@formal@none@1@EH@From ben Mon Jan 27 22:37:37 PST 2003@-1@-1@@ben\syy.com@9-7-2003
 147002@unknown@formal@none@1@EH@From: ben\syy.com@-1@-1@@ben\syy.com@9-7-2003
@@ -1407,8 +1408,9 @@
 154006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@brian\syy.com@9-7-2003
 154007@unknown@formal@none@1@EH@Message-ID: <1043735857\smv.stanford.edu>@-1@-1@@brian\syy.com@9-7-2003
 154008@unknown@formal@none@1@S@I purchased a Sony Camcorder 3 weeks ago.@1@8@@brian\syy.com@9-7-2003
-154009@unknown@formal@none@1@S@It doesn't work properly (the sound doesn't record).@1@8@@brian\syy.com@9-7-2003
-154010@unknown@formal@none@1@S@Do I need to do anything special to return it?@1@10@@brian\syy.com@9-7-2003
+154009@unknown@formal@none@1@S@It doesn't work properly.@1@4@@brian\syy.com@9-7-2003
+154010@unknown@formal@none@1@S@(the sound doesn't record)@1@4@@brian\syy.com@9-7-2003
+154011@unknown@formal@none@1@S@Do I need to do anything special to return it?@1@10@@brian\syy.com@9-7-2003
 155001@unknown@formal@none@1@EH@From brian Mon Jan 27 22:37:37 PST 2003@-1@-1@@brian\syy.com@9-7-2003
 155002@unknown@formal@none@1@EH@From: brian\syy.com@-1@-1@@brian\syy.com@9-7-2003
 155003@unknown@formal@none@1@EH@Subject: ProductReturn # 155000@-1@-1@@brian\syy.com@9-7-2003
@@ -1807,7 +1809,7 @@
 197007@unknown@formal@none@1@EH@Message-ID: <1043735857\smv.stanford.edu>@-1@-1@@bruce\syy.com@9-7-2003
 197008@unknown@formal@none@1@XP@order #10250.@1@2@@bruce\syy.com@9-7-2003
 197009@unknown@formal@none@1@XP@damaged sony 123456 digital camera.@1@5@@bruce\syy.com@9-7-2003
-197010@unknown@formal@none@1@S@please send RMA.@1@3@@bruce\syy.com@9-7-2003
+197010@unknown@formal@none@1@S@please send RMA.@0@3@@bruce\syy.com@9-7-2003
 198001@unknown@formal@none@1@EH@From bruce Mon Jan 27 22:37:37 PST 2003@-1@-1@@bruce\syy.com@9-7-2003
 198002@unknown@formal@none@1@EH@From: bruce\syy.com@-1@-1@@bruce\syy.com@9-7-2003
 198003@unknown@formal@none@1@EH@Subject: ProductReturn # 198000@-1@-1@@bruce\syy.com@9-7-2003
@@ -1941,7 +1943,7 @@
 212005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@cherie\syy.com@9-7-2003
 212006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@cherie\syy.com@9-7-2003
 212007@unknown@formal@none@1@EH@Message-ID: <1043735857\smv.stanford.edu>@-1@-1@@cherie\syy.com@9-7-2003
-212008@unknown@formal@none@1@S@I am returning your stinking digital camera on the grounds that it does not do what the add says it was supposed to do.@1@24@@cherie\syy.com@9-7-2003
+212008@unknown@formal@none@1@S@I am returning your stinking digital camera on the grounds that it does not do what the add says it was supposed to do.@0@24@@cherie\syy.com@9-7-2003
 213001@unknown@formal@none@1@EH@From cherie Mon Jan 27 22:37:37 PST 2003@-1@-1@@cherie\syy.com@9-7-2003
 213002@unknown@formal@none@1@EH@From: cherie\syy.com@-1@-1@@cherie\syy.com@9-7-2003
 213003@unknown@formal@none@1@EH@Subject: ProductReturn # 213000@-1@-1@@cherie\syy.com@9-7-2003
@@ -2421,7 +2423,7 @@
 268005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@cherie\syy.com@9-7-2003
 268006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@cherie\syy.com@9-7-2003
 268007@unknown@formal@none@1@EH@Message-ID: <1043735857\smv.stanford.edu>@-1@-1@@cherie\syy.com@9-7-2003
-268008@unknown@formal@none@1@S@the dvd player i ordered from your website is not what i expected, an i would like to return it if possible.@1@22@@cherie\syy.com@9-7-2003
+268008@unknown@formal@none@1@S@the dvd player i ordered from your website is not what i expected, an i would like to return it if possible.@0@22@@cherie\syy.com@9-7-2003
 268009@unknown@formal@none@1@S@please inform me of the procedure.@1@6@@cherie\syy.com@9-7-2003
 268010@unknown@formal@none@1@S@thank you.@1@2@@cherie\syy.com@9-7-2003
 269001@unknown@formal@none@1@EH@From cherie Mon Jan 27 22:37:37 PST 2003@-1@-1@@cherie\syy.com@9-7-2003
@@ -2439,7 +2441,7 @@
 270005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@cherie\syy.com@9-7-2003
 270006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@cherie\syy.com@9-7-2003
 270007@unknown@formal@none@1@EH@Message-ID: <1043735857\smv.stanford.edu>@-1@-1@@cherie\syy.com@9-7-2003
-270008@unknown@formal@none@1@S@what do need to do to get a refund on an item i ordered through your website?@1@17@@cherie\syy.com@9-7-2003
+270008@unknown@formal@none@1@S@what do need to do to get a refund on an item i ordered through your website?@0@17@@cherie\syy.com@9-7-2003
 271001@unknown@formal@none@1@EH@From cherie Mon Jan 27 22:37:37 PST 2003@-1@-1@@cherie\syy.com@9-7-2003
 271002@unknown@formal@none@1@EH@From: cherie\syy.com@-1@-1@@cherie\syy.com@9-7-2003
 271003@unknown@formal@none@1@EH@Subject: ProductReturn # 271000@-1@-1@@cherie\syy.com@9-7-2003
@@ -3003,7 +3005,7 @@
 339005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@dan\syy.com@9-7-2003
 339006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@dan\syy.com@9-7-2003
 339007@unknown@formal@none@1@EH@Message-ID: <1043735858\smv.stanford.edu>@-1@-1@@dan\syy.com@9-7-2003
-339008@unknown@formal@none@1@XP@No want cell phone.@1@4@@dan\syy.com@9-7-2003
+339008@unknown@formal@none@1@XP@No want cell phone.@0@4@@dan\syy.com@9-7-2003
 339009@unknown@formal@none@1@XP@Returning.@1@1@@dan\syy.com@9-7-2003
 340001@unknown@formal@none@1@EH@From dan Mon Jan 27 22:37:38 PST 2003@-1@-1@@dan\syy.com@9-7-2003
 340002@unknown@formal@none@1@EH@From: dan\syy.com@-1@-1@@dan\syy.com@9-7-2003
@@ -3809,7 +3811,7 @@
 431005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@julia\syy.com@9-7-2003
 431006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@julia\syy.com@9-7-2003
 431007@unknown@formal@none@1@EH@Message-ID: <1043735858\smv.stanford.edu>@-1@-1@@julia\syy.com@9-7-2003
-431008@unknown@formal@none@1@S@How do I sent the stuff back?@1@7@@julia\syy.com@9-7-2003
+431008@unknown@formal@none@1@S@How do I sent the stuff back?@0@7@@julia\syy.com@9-7-2003
 431009@unknown@formal@none@1@S@I don't want it anymore.@1@5@@julia\syy.com@9-7-2003
 432001@unknown@formal@none@1@EH@From julia Mon Jan 27 22:37:38 PST 2003@-1@-1@@julia\syy.com@9-7-2003
 432002@unknown@formal@none@1@EH@From: julia\syy.com@-1@-1@@julia\syy.com@9-7-2003
@@ -3906,7 +3908,7 @@
 443005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@julia\syy.com@9-7-2003
 443006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@julia\syy.com@9-7-2003
 443007@unknown@formal@none@1@EH@Message-ID: <1043735858\smv.stanford.edu>@-1@-1@@julia\syy.com@9-7-2003
-443008@unknown@formal@none@1@S@Is there a too late to return my order thing?@1@10@@julia\syy.com@9-7-2003
+443008@unknown@formal@none@1@S@Is there a too late to return my order thing?@0@10@@julia\syy.com@9-7-2003
 444001@unknown@formal@none@1@EH@From julia Mon Jan 27 22:37:38 PST 2003@-1@-1@@julia\syy.com@9-7-2003
 444002@unknown@formal@none@1@EH@From: julia\syy.com@-1@-1@@julia\syy.com@9-7-2003
 444003@unknown@formal@none@1@EH@Subject: ProductReturn # 444000@-1@-1@@julia\syy.com@9-7-2003
@@ -4774,8 +4776,8 @@
 543006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@monique\syy.com@9-7-2003
 543007@unknown@formal@none@1@EH@Message-ID: <1043735858\smv.stanford.edu>@-1@-1@@monique\syy.com@9-7-2003
 543008@unknown@formal@none@1@S@I found your product too hard to use and the instructions didn't help at all.@1@15@@monique\syy.com@9-7-2003
-543009@unknown@formal@none@1@S@Therefore I'd like to return@1@5@@monique\syy.com@9-7-2003
-543010@unknown@formal@none@1@S@it. Please me instructions on how to return.@1@8@@monique\syy.com@9-7-2003
+543009@unknown@formal@none@1@S@Therefore I'd like to return it@1@6@@monique\syy.com@9-7-2003
+543010@unknown@formal@none@1@S@Please me instructions on how to return.@1@7@@monique\syy.com@9-7-2003
 544001@unknown@formal@none@1@EH@From monique Mon Jan 27 22:37:38 PST 2003@-1@-1@@monique\syy.com@9-7-2003
 544002@unknown@formal@none@1@EH@From: monique\syy.com@-1@-1@@monique\syy.com@9-7-2003
 544003@unknown@formal@none@1@EH@Subject: ProductReturn # 544000@-1@-1@@monique\syy.com@9-7-2003
@@ -4975,8 +4977,9 @@
 565005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@oe\syy.com@9-7-2003
 565006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@oe\syy.com@9-7-2003
 565007@unknown@formal@none@1@EH@Message-ID: <1043735858\smv.stanford.edu>@-1@-1@@oe\syy.com@9-7-2003
-565008@unknown@formal@none@1@S@when i recieved my order # 12345 today, half of the items are the wrong colour (i wanted the cell phone in blue and the camera in silver; you got that wrong).@1@32@@oe\syy.com@9-7-2003
-565009@unknown@formal@none@1@S@how do i best return those items?@1@7@@oe\syy.com@9-7-2003
+565008@unknown@formal@none@1@S@when i recieved my order # 12345 today, half of the items are the wrong colour@1@16@@oe\syy.com@9-7-2003
+565009@unknown@formal@none@1@S@(i wanted the cell phone in blue and the camera in silver; you got that wrong).@1@16@@oe\syy.com@9-7-2003
+565010@unknown@formal@none@1@S@how do i best return those items?@1@7@@oe\syy.com@9-7-2003
 566001@unknown@formal@none@1@EH@From oe Mon Jan 27 22:37:38 PST 2003@-1@-1@@oe\syy.com@9-7-2003
 566002@unknown@formal@none@1@EH@From: oe\syy.com@-1@-1@@oe\syy.com@9-7-2003
 566003@unknown@formal@none@1@EH@Subject: ProductReturn # 566000@-1@-1@@oe\syy.com@9-7-2003
@@ -5028,8 +5031,8 @@
 571006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@oe\syy.com@9-7-2003
 571007@unknown@formal@none@1@EH@Message-ID: <1043735858\smv.stanford.edu>@-1@-1@@oe\syy.com@9-7-2003
 571008@unknown@formal@none@1@S@i am about to send the Motorola StarTac back to you.@1@11@@oe\syy.com@9-7-2003
-571009@unknown@formal@none@1@S@the menues are just to hard to navigate, and the display is impossible to read.@1@15@@oe\syy.com@9-7-2003
-571010@unknown@formal@none@1@S@also, battery live is terrible.@1@5@@oe\syy.com@9-7-2003
+571009@unknown@formal@none@1@S@the menues are just to hard to navigate, and the display is impossible to read.@0@15@@oe\syy.com@9-7-2003
+571010@unknown@formal@none@1@S@also, battery live is terrible.@0@5@@oe\syy.com@9-7-2003
 572001@unknown@formal@none@1@EH@From oe Mon Jan 27 22:37:38 PST 2003@-1@-1@@oe\syy.com@9-7-2003
 572002@unknown@formal@none@1@EH@From: oe\syy.com@-1@-1@@oe\syy.com@9-7-2003
 572003@unknown@formal@none@1@EH@Subject: ProductReturn # 572000@-1@-1@@oe\syy.com@9-7-2003
@@ -5155,7 +5158,8 @@
 586005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@remy\syy.com@9-7-2003
 586006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@remy\syy.com@9-7-2003
 586007@unknown@formal@none@1@EH@Message-ID: <1043735858\smv.stanford.edu>@-1@-1@@remy\syy.com@9-7-2003
-586008@unknown@formal@none@1@S@The camcorder you sent me doesn't work. How do I return it?@1@12@@remy\syy.com@9-7-2003
+586008@unknown@formal@none@1@S@The camcorder you sent me doesn't work.@1@7@@remy\syy.com@9-7-2003
+586009@unknown@formal@none@1@S@How do I return it?@1@5@@remy\syy.com@9-7-2003
 587001@unknown@formal@none@1@EH@From remy Mon Jan 27 22:37:38 PST 2003@-1@-1@@remy\syy.com@9-7-2003
 587002@unknown@formal@none@1@EH@From: remy\syy.com@-1@-1@@remy\syy.com@9-7-2003
 587003@unknown@formal@none@1@EH@Subject: ProductReturn # 587000@-1@-1@@remy\syy.com@9-7-2003
@@ -5163,7 +5167,8 @@
 587005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@remy\syy.com@9-7-2003
 587006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@remy\syy.com@9-7-2003
 587007@unknown@formal@none@1@EH@Message-ID: <1043735858\smv.stanford.edu>@-1@-1@@remy\syy.com@9-7-2003
-587008@unknown@formal@none@1@S@The camcorder you sent me doesn't work. I want to return it.@1@12@@remy\syy.com@9-7-2003
+587008@unknown@formal@none@1@S@The camcorder you sent me doesn't work@1@7@@remy\syy.com@9-7-2003
+587009@unknown@formal@none@1@S@I want to return it.@1@5@@remy\syy.com@9-7-2003
 588001@unknown@formal@none@1@EH@From remy Mon Jan 27 22:37:38 PST 2003@-1@-1@@remy\syy.com@9-7-2003
 588002@unknown@formal@none@1@EH@From: remy\syy.com@-1@-1@@remy\syy.com@9-7-2003
 588003@unknown@formal@none@1@EH@Subject: ProductReturn # 588000@-1@-1@@remy\syy.com@9-7-2003
@@ -5196,7 +5201,8 @@
 591005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@remy\syy.com@9-7-2003
 591006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@remy\syy.com@9-7-2003
 591007@unknown@formal@none@1@EH@Message-ID: <1043735858\smv.stanford.edu>@-1@-1@@remy\syy.com@9-7-2003
-591008@unknown@formal@none@1@S@That computer you sent me was DOA. How do I send it back to you.@1@15@@remy\syy.com@9-7-2003
+591008@unknown@formal@none@1@S@That computer you sent me was DOA.@1@7@@remy\syy.com@9-7-2003
+591009@unknown@formal@none@1@S@How do I send it back to you.@1@8@@remy\syy.com@9-7-2003
 592001@unknown@formal@none@1@EH@From remy Mon Jan 27 22:37:38 PST 2003@-1@-1@@remy\syy.com@9-7-2003
 592002@unknown@formal@none@1@EH@From: remy\syy.com@-1@-1@@remy\syy.com@9-7-2003
 592003@unknown@formal@none@1@EH@Subject: ProductReturn # 592000@-1@-1@@remy\syy.com@9-7-2003
@@ -5370,7 +5376,7 @@
 611006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@stefan\syy.com@9-7-2003
 611007@unknown@formal@none@1@EH@Message-ID: <1043735858\smv.stanford.edu>@-1@-1@@stefan\syy.com@9-7-2003
 611008@unknown@formal@none@1@S@The raider detector you sent me is a piece of crap.@1@11@@stefan\syy.com@9-7-2003
-611009@unknown@formal@none@1@S@How can I sent it back and get a refund?@1@10@@stefan\syy.com@9-7-2003
+611009@unknown@formal@none@1@S@How can I sent it back and get a refund?@0@10@@stefan\syy.com@9-7-2003
 612001@unknown@formal@none@1@EH@From stefan Mon Jan 27 22:37:39 PST 2003@-1@-1@@stefan\syy.com@9-7-2003
 612002@unknown@formal@none@1@EH@From: stefan\syy.com@-1@-1@@stefan\syy.com@9-7-2003
 612003@unknown@formal@none@1@EH@Subject: ProductReturn # 612000@-1@-1@@stefan\syy.com@9-7-2003
@@ -5848,7 +5854,7 @@
 667006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@stefan\syy.com@9-7-2003
 667007@unknown@formal@none@1@EH@Message-ID: <1043735859\smv.stanford.edu>@-1@-1@@stefan\syy.com@9-7-2003
 667008@unknown@formal@none@1@S@Do you have a refund policy?@1@6@@stefan\syy.com@9-7-2003
-667009@unknown@formal@none@1@S@Cause I need to send back that radar detector.@1@9@@stefan\syy.com@9-7-2003
+667009@unknown@formal@none@1@XP@Cause I need to send back that radar detector.@1@9@@stefan\syy.com@9-7-2003
 668001@unknown@formal@none@1@EH@From stefan Mon Jan 27 22:37:39 PST 2003@-1@-1@@stefan\syy.com@9-7-2003
 668002@unknown@formal@none@1@EH@From: stefan\syy.com@-1@-1@@stefan\syy.com@9-7-2003
 668003@unknown@formal@none@1@EH@Subject: ProductReturn # 668000@-1@-1@@stefan\syy.com@9-7-2003
@@ -5892,7 +5898,7 @@
 672007@unknown@formal@none@1@EH@Message-ID: <1043735859\smv.stanford.edu>@-1@-1@@stefan\syy.com@9-7-2003
 672008@unknown@formal@none@1@S@I ordered a radar detector from you last month.@1@9@@stefan\syy.com@9-7-2003
 672009@unknown@formal@none@1@S@It was a gift for my brother.@1@7@@stefan\syy.com@9-7-2003
-672010@unknown@formal@none@1@S@Turns out he doesn't like it, though.@1@7@@stefan\syy.com@9-7-2003
+672010@unknown@formal@none@1@XP@Turns out he doesn't like it, though.@1@7@@stefan\syy.com@9-7-2003
 672011@unknown@formal@none@1@S@Can I return it and get a credit?@1@8@@stefan\syy.com@9-7-2003
 673001@unknown@formal@none@1@EH@From stefan Mon Jan 27 22:37:39 PST 2003@-1@-1@@stefan\syy.com@9-7-2003
 673002@unknown@formal@none@1@EH@From: stefan\syy.com@-1@-1@@stefan\syy.com@9-7-2003
@@ -5921,7 +5927,7 @@
 675005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@stefan\syy.com@9-7-2003
 675006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@stefan\syy.com@9-7-2003
 675007@unknown@formal@none@1@EH@Message-ID: <1043735859\smv.stanford.edu>@-1@-1@@stefan\syy.com@9-7-2003
-675008@unknown@formal@none@1@S@How to send back defective product?@1@6@@stefan\syy.com@9-7-2003
+675008@unknown@formal@none@1@S@How to send back defective product?@0@6@@stefan\syy.com@9-7-2003
 676001@unknown@formal@none@1@EH@From stefan Mon Jan 27 22:37:39 PST 2003@-1@-1@@stefan\syy.com@9-7-2003
 676002@unknown@formal@none@1@EH@From: stefan\syy.com@-1@-1@@stefan\syy.com@9-7-2003
 676003@unknown@formal@none@1@EH@Subject: ProductReturn # 676000@-1@-1@@stefan\syy.com@9-7-2003

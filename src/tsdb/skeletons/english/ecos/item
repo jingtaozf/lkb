@@ -606,7 +606,7 @@
 73006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@ali\syy.com@4-2-2003
 73007@unknown@formal@none@1@EH@Message-ID: <1043735851\smv.stanford.edu>@-1@-1@@ali\syy.com@4-2-2003
 73008@unknown@formal@none@1@S@I checked the FedEX tracking number you sent me.@1@9@@ali\syy.com@4-2-2003
-73009@unknown@formal@none@1@S@FED EX say it is an invalid number.@1@8@@ali\syy.com@4-2-2003
+73009@unknown@formal@none@1@S@FED EX say it is an invalid number.@0@8@@ali\syy.com@4-2-2003
 74001@unknown@formal@none@1@EH@From ali Mon Jan 27 22:37:31 PST 2003@-1@-1@@ali\syy.com@4-2-2003
 74002@unknown@formal@none@1@EH@From: ali\syy.com@-1@-1@@ali\syy.com@4-2-2003
 74003@unknown@formal@none@1@EH@Subject: OrderStatus # 74000@-1@-1@@ali\syy.com@4-2-2003
@@ -916,7 +916,7 @@
 104005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@amel\syy.com@4-2-2003
 104006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@amel\syy.com@4-2-2003
 104007@unknown@formal@none@1@EH@Message-ID: <1043735851\smv.stanford.edu>@-1@-1@@amel\syy.com@4-2-2003
-104008@unknown@formal@none@1@S@Hi, how come you charged my account but still I haven't received my package.@1@14@@amel\syy.com@4-2-2003
+104008@unknown@formal@none@1@S@Hi, how come you charged my account but still I haven't received my package.@0@14@@amel\syy.com@4-2-2003
 104009@unknown@formal@none@1@S@Please check it out immediately, and let me know.@1@9@@amel\syy.com@4-2-2003
 105001@unknown@formal@none@1@EH@From amel Mon Jan 27 22:37:31 PST 2003@-1@-1@@amel\syy.com@4-2-2003
 105002@unknown@formal@none@1@EH@From: amel\syy.com@-1@-1@@amel\syy.com@4-2-2003
@@ -936,7 +936,7 @@
 106005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@amel\syy.com@4-2-2003
 106006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@amel\syy.com@4-2-2003
 106007@unknown@formal@none@1@EH@Message-ID: <1043735851\smv.stanford.edu>@-1@-1@@amel\syy.com@4-2-2003
-106008@unknown@formal@none@1@S@I've been checking my mailbox everyday for the last 2 weeks, and nothing!!!@1@13@@amel\syy.com@4-2-2003
+106008@unknown@formal@none@1@S@I've been checking my mailbox everyday for the last 2 weeks, and nothing!!!@0@13@@amel\syy.com@4-2-2003
 106009@unknown@formal@none@1@S@Please make some effort in finding my order status.@1@9@@amel\syy.com@4-2-2003
 106010@unknown@formal@none@1@S@It is order#76523@1@3@@amel\syy.com@4-2-2003
 107001@unknown@formal@none@1@EH@From amel Mon Jan 27 22:37:31 PST 2003@-1@-1@@amel\syy.com@4-2-2003
@@ -1003,7 +1003,8 @@
 113005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@amel\syy.com@4-2-2003
 113006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@amel\syy.com@4-2-2003
 113007@unknown@formal@none@1@EH@Message-ID: <1043735851\smv.stanford.edu>@-1@-1@@amel\syy.com@4-2-2003
-113008@unknown@formal@none@1@S@Hi Y'all, where do you think my package is at this very moment?@1@13@@amel\syy.com@4-2-2003
+113008@unknown@formal@none@1@XP@Hi Y'all@1@2@@amel\syy.com@4-2-2003
+113009@unknown@formal@none@1@S@where do you think my package is at this very moment?@1@11@@amel\syy.com@4-2-2003
 114001@unknown@formal@none@1@EH@From amel Mon Jan 27 22:37:31 PST 2003@-1@-1@@amel\syy.com@4-2-2003
 114002@unknown@formal@none@1@EH@From: amel\syy.com@-1@-1@@amel\syy.com@4-2-2003
 114003@unknown@formal@none@1@EH@Subject: OrderStatus # 114000@-1@-1@@amel\syy.com@4-2-2003
@@ -1469,9 +1470,10 @@
 163005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@atsuko\syy.com@4-2-2003
 163006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@atsuko\syy.com@4-2-2003
 163007@unknown@formal@none@1@EH@Message-ID: <1043735852\smv.stanford.edu>@-1@-1@@atsuko\syy.com@4-2-2003
-163008@unknown@formal@none@1@S@Dear Sirs, my name is Taro Yamada and my account No. is 44432215.@1@13@@atsuko\syy.com@4-2-2003
-163009@unknown@formal@none@1@S@I ordered VAIO GR150K last week, but I have not received any information about my order scheduled for delivery by now.@1@21@@atsuko\syy.com@4-2-2003
-163010@unknown@formal@none@1@S@Is there any inconvenience in my order?@1@7@@atsuko\syy.com@4-2-2003
+163008@unknown@formal@none@1@XP@Dear Sirs@1@2@@atsuko\syy.com@4-2-2003
+163009@unknown@formal@none@1@S@my name is Taro Yamada and my account No. is 44432215.@1@11@@atsuko\syy.com@4-2-2003
+163010@unknown@formal@none@1@S@I ordered VAIO GR150K last week, but I have not received any information about my order scheduled for delivery by now.@0@21@@atsuko\syy.com@4-2-2003
+163011@unknown@formal@none@1@S@Is there any inconvenience in my order?@1@7@@atsuko\syy.com@4-2-2003
 164001@unknown@formal@none@1@EH@From atsuko Mon Jan 27 22:37:32 PST 2003@-1@-1@@atsuko\syy.com@4-2-2003
 164002@unknown@formal@none@1@EH@From: atsuko\syy.com@-1@-1@@atsuko\syy.com@4-2-2003
 164003@unknown@formal@none@1@EH@Subject: OrderStatus # 164000@-1@-1@@atsuko\syy.com@4-2-2003
@@ -1479,8 +1481,9 @@
 164005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@atsuko\syy.com@4-2-2003
 164006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@atsuko\syy.com@4-2-2003
 164007@unknown@formal@none@1@EH@Message-ID: <1043735852\smv.stanford.edu>@-1@-1@@atsuko\syy.com@4-2-2003
-164008@unknown@formal@none@1@S@Ladies and Gentlemen, I (23461363) made an order for 2 laptop computers from you last week, but I have received no information about my order.@1@25@@atsuko\syy.com@4-2-2003
-164009@unknown@formal@none@1@S@Your kind and best attention to this matter will be highly appreciated.@1@12@@atsuko\syy.com@4-2-2003
+164008@unknown@formal@none@1@XP@Ladies and Gentlemen@1@3@@atsuko\syy.com@4-2-2003
+164009@unknown@formal@none@1@S@I (23461363) made an order for 2 laptop computers from you last week, but I have received no information about my order.@1@22@@atsuko\syy.com@4-2-2003
+164010@unknown@formal@none@1@S@Your kind and best attention to this matter will be highly appreciated.@1@12@@atsuko\syy.com@4-2-2003
 165001@unknown@formal@none@1@EH@From atsuko Mon Jan 27 22:37:32 PST 2003@-1@-1@@atsuko\syy.com@4-2-2003
 165002@unknown@formal@none@1@EH@From: atsuko\syy.com@-1@-1@@atsuko\syy.com@4-2-2003
 165003@unknown@formal@none@1@EH@Subject: OrderStatus # 165000@-1@-1@@atsuko\syy.com@4-2-2003
@@ -1488,9 +1491,10 @@
 165005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@atsuko\syy.com@4-2-2003
 165006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@atsuko\syy.com@4-2-2003
 165007@unknown@formal@none@1@EH@Message-ID: <1043735852\smv.stanford.edu>@-1@-1@@atsuko\syy.com@4-2-2003
-165008@unknown@formal@none@1@@Dear Sir/madam, I ordered for Nokia 8310 in this web site last week.@0@13@@atsuko\syy.com@4-2-2003
-165009@unknown@formal@none@1@S@There is no response for my order.@1@7@@atsuko\syy.com@4-2-2003
-165010@unknown@formal@none@1@S@Is there any defective point in my order?@1@8@@atsuko\syy.com@4-2-2003
+165008@unknown@formal@none@1@XP@Dear Sir/madam@1@2@@atsuko\syy.com@4-2-2003
+165009@unknown@formal@none@1@@I ordered for Nokia 8310 in this web site last week.@0@11@@atsuko\syy.com@4-2-2003
+165010@unknown@formal@none@1@S@There is no response for my order.@1@7@@atsuko\syy.com@4-2-2003
+165011@unknown@formal@none@1@S@Is there any defective point in my order?@1@8@@atsuko\syy.com@4-2-2003
 166001@unknown@formal@none@1@EH@From atsuko Mon Jan 27 22:37:32 PST 2003@-1@-1@@atsuko\syy.com@4-2-2003
 166002@unknown@formal@none@1@EH@From: atsuko\syy.com@-1@-1@@atsuko\syy.com@4-2-2003
 166003@unknown@formal@none@1@EH@Subject: OrderStatus # 166000@-1@-1@@atsuko\syy.com@4-2-2003
@@ -1498,9 +1502,10 @@
 166005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@atsuko\syy.com@4-2-2003
 166006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@atsuko\syy.com@4-2-2003
 166007@unknown@formal@none@1@EH@Message-ID: <1043735852\smv.stanford.edu>@-1@-1@@atsuko\syy.com@4-2-2003
-166008@unknown@formal@none@1@S@Ladies and Gentlemen: I ordered SONY CLIE last week by your web site.@1@13@@atsuko\syy.com@4-2-2003
-166009@unknown@formal@none@1@@Because I have no response from you now, so I suspect whether I made some mistakes in my order.@0@19@@atsuko\syy.com@4-2-2003
-166010@unknown@formal@none@1@S@It would be very much appreciated if you would write me back whether my order is correctly accepted or not.@1@20@@atsuko\syy.com@4-2-2003
+166008@unknown@formal@none@1@XP@Ladies and Gentlemen@1@3@@atsuko\syy.com@4-2-2003
+166009@unknown@formal@none@1@S@I ordered SONY CLIE last week by your web site.@0@10@@atsuko\syy.com@4-2-2003
+166010@unknown@formal@none@1@@Because I have no response from you now, so I suspect whether I made some mistakes in my order.@0@19@@atsuko\syy.com@4-2-2003
+166011@unknown@formal@none@1@S@It would be very much appreciated if you would write me back whether my order is correctly accepted or not.@1@20@@atsuko\syy.com@4-2-2003
 167001@unknown@formal@none@1@EH@From atsuko Mon Jan 27 22:37:32 PST 2003@-1@-1@@atsuko\syy.com@4-2-2003
 167002@unknown@formal@none@1@EH@From: atsuko\syy.com@-1@-1@@atsuko\syy.com@4-2-2003
 167003@unknown@formal@none@1@EH@Subject: OrderStatus # 167000@-1@-1@@atsuko\syy.com@4-2-2003
@@ -1508,9 +1513,10 @@
 167005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@atsuko\syy.com@4-2-2003
 167006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@atsuko\syy.com@4-2-2003
 167007@unknown@formal@none@1@EH@Message-ID: <1043735852\smv.stanford.edu>@-1@-1@@atsuko\syy.com@4-2-2003
-167008@unknown@formal@none@1@S@Dear Sir or Madam:I received the confirmation of my order yesterday, but I could not find the date of shipping in it.@1@22@@atsuko\syy.com@4-2-2003
-167009@unknown@formal@none@1@@I would be very much appreciated if you would tell me how long will it take for delivery.@0@18@@atsuko\syy.com@4-2-2003
-167010@unknown@formal@none@1@S@Thank you.@1@2@@atsuko\syy.com@4-2-2003
+167008@unknown@formal@none@1@XP@Dear Sir or Madam@1@4@@atsuko\syy.com@4-2-2003
+167009@unknown@formal@none@1@S@I received the confirmation of my order yesterday, but I could not find the date of shipping in it.@1@18@@atsuko\syy.com@4-2-2003
+167010@unknown@formal@none@1@@I would be very much appreciated if you would tell me how long will it take for delivery.@0@18@@atsuko\syy.com@4-2-2003
+167011@unknown@formal@none@1@S@Thank you.@1@2@@atsuko\syy.com@4-2-2003
 168001@unknown@formal@none@1@EH@From atsuko Mon Jan 27 22:37:32 PST 2003@-1@-1@@atsuko\syy.com@4-2-2003
 168002@unknown@formal@none@1@EH@From: atsuko\syy.com@-1@-1@@atsuko\syy.com@4-2-2003
 168003@unknown@formal@none@1@EH@Subject: OrderStatus # 168000@-1@-1@@atsuko\syy.com@4-2-2003
@@ -1518,7 +1524,7 @@
 168005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@atsuko\syy.com@4-2-2003
 168006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@atsuko\syy.com@4-2-2003
 168007@unknown@formal@none@1@EH@Message-ID: <1043735852\smv.stanford.edu>@-1@-1@@atsuko\syy.com@4-2-2003
-168008@unknown@formal@none@1@S@I ordered SONY CLIE last week.@1@6@@atsuko\syy.com@4-2-2003
+168008@unknown@formal@none@1@S@I ordered SONY CLIE last week.@0@6@@atsuko\syy.com@4-2-2003
 168009@unknown@formal@none@1@S@Is my order correctly accepted?@1@5@@atsuko\syy.com@4-2-2003
 169001@unknown@formal@none@1@EH@From atsuko Mon Jan 27 22:37:32 PST 2003@-1@-1@@atsuko\syy.com@4-2-2003
 169002@unknown@formal@none@1@EH@From: atsuko\syy.com@-1@-1@@atsuko\syy.com@4-2-2003
@@ -1544,9 +1550,10 @@
 171005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@atsuko\syy.com@4-2-2003
 171006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@atsuko\syy.com@4-2-2003
 171007@unknown@formal@none@1@EH@Message-ID: <1043735852\smv.stanford.edu>@-1@-1@@atsuko\syy.com@4-2-2003
-171008@unknown@formal@none@1@XP@Dear Sir or Madam:Regarding shipping article.@1@6@@atsuko\syy.com@4-2-2003
-171009@unknown@formal@none@1@@According to your confirmation my order would be arrived yesterday(10/12/2001), but I have not received it.@0@16@@atsuko\syy.com@4-2-2003
-171010@unknown@formal@none@1@S@Could you please tell me the reason for a delay in delivery and when the next delivery date is?@1@19@@atsuko\syy.com@4-2-2003
+171008@unknown@formal@none@1@XP@Dear Sir or Madam@1@4@@atsuko\syy.com@4-2-2003
+171009@unknown@formal@none@1@XP@Regarding shipping article.@0@3@@atsuko\syy.com@4-2-2003
+171010@unknown@formal@none@1@@According to your confirmation my order would be arrived yesterday(10/12/2001), but I have not received it.@0@16@@atsuko\syy.com@4-2-2003
+171011@unknown@formal@none@1@S@Could you please tell me the reason for a delay in delivery and when the next delivery date is?@1@19@@atsuko\syy.com@4-2-2003
 172001@unknown@formal@none@1@EH@From atsuko Mon Jan 27 22:37:32 PST 2003@-1@-1@@atsuko\syy.com@4-2-2003
 172002@unknown@formal@none@1@EH@From: atsuko\syy.com@-1@-1@@atsuko\syy.com@4-2-2003
 172003@unknown@formal@none@1@EH@Subject: OrderStatus # 172000@-1@-1@@atsuko\syy.com@4-2-2003
@@ -1583,9 +1590,10 @@
 175005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@atsuko\syy.com@4-2-2003
 175006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@atsuko\syy.com@4-2-2003
 175007@unknown@formal@none@1@EH@Message-ID: <1043735852\smv.stanford.edu>@-1@-1@@atsuko\syy.com@4-2-2003
-175008@unknown@formal@none@1@S@Dear Sirs:On 10th September of this year I ordered IBM ThinkPad 1200 but have still not received any information about my order scheduled for delivery.@1@25@@atsuko\syy.com@4-2-2003
-175009@unknown@formal@none@1@S@Could you please check the status of my order?@1@9@@atsuko\syy.com@4-2-2003
-175010@unknown@formal@none@1@S@Your early reply would be greatly appriciated.@1@7@@atsuko\syy.com@4-2-2003
+175008@unknown@formal@none@1@XP@Dear Sirs@1@2@@atsuko\syy.com@4-2-2003
+175009@unknown@formal@none@1@S@On 10th September of this year I ordered IBM ThinkPad 1200 but have still not received any information about my order scheduled for delivery.@0@23@@atsuko\syy.com@4-2-2003
+175010@unknown@formal@none@1@S@Could you please check the status of my order?@1@9@@atsuko\syy.com@4-2-2003
+175011@unknown@formal@none@1@S@Your early reply would be greatly appriciated.@1@7@@atsuko\syy.com@4-2-2003
 176001@unknown@formal@none@1@EH@From atsuko Mon Jan 27 22:37:32 PST 2003@-1@-1@@atsuko\syy.com@4-2-2003
 176002@unknown@formal@none@1@EH@From: atsuko\syy.com@-1@-1@@atsuko\syy.com@4-2-2003
 176003@unknown@formal@none@1@EH@Subject: OrderStatus # 176000@-1@-1@@atsuko\syy.com@4-2-2003
@@ -1593,8 +1601,9 @@
 176005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@atsuko\syy.com@4-2-2003
 176006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@atsuko\syy.com@4-2-2003
 176007@unknown@formal@none@1@EH@Message-ID: <1043735852\smv.stanford.edu>@-1@-1@@atsuko\syy.com@4-2-2003
-176008@unknown@formal@none@1@S@Dear Sirs:The goods I ordered on September 10 have still not arrived.@1@12@@atsuko\syy.com@4-2-2003
-176009@unknown@formal@none@1@S@Please let me know the status of my order as soon as possible.@1@13@@atsuko\syy.com@4-2-2003
+176008@unknown@formal@none@1@XP@Dear Sirs@1@2@@atsuko\syy.com@4-2-2003
+176009@unknown@formal@none@1@S@The goods I ordered on September 10 have still not arrived.@1@10@@atsuko\syy.com@4-2-2003
+176010@unknown@formal@none@1@S@Please let me know the status of my order as soon as possible.@1@13@@atsuko\syy.com@4-2-2003
 177001@unknown@formal@none@1@EH@From atsuko Mon Jan 27 22:37:32 PST 2003@-1@-1@@atsuko\syy.com@4-2-2003
 177002@unknown@formal@none@1@EH@From: atsuko\syy.com@-1@-1@@atsuko\syy.com@4-2-2003
 177003@unknown@formal@none@1@EH@Subject: OrderStatus # 177000@-1@-1@@atsuko\syy.com@4-2-2003
@@ -1602,9 +1611,10 @@
 177005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@atsuko\syy.com@4-2-2003
 177006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@atsuko\syy.com@4-2-2003
 177007@unknown@formal@none@1@EH@Message-ID: <1043735852\smv.stanford.edu>@-1@-1@@atsuko\syy.com@4-2-2003
-177008@unknown@formal@none@1@S@Dear Sirs: What I ordered on September 12th on this web site has still not arrived.@1@16@@atsuko\syy.com@4-2-2003
-177009@unknown@formal@none@1@S@It would be very much appriciated if you would explain the reason for the delay in my order.@1@18@@atsuko\syy.com@4-2-2003
-177010@unknown@formal@none@1@S@Thank you.@1@2@@atsuko\syy.com@4-2-2003
+177008@unknown@formal@none@1@XP@Dear Sirs@1@2@@atsuko\syy.com@4-2-2003
+177009@unknown@formal@none@1@S@What I ordered on September 12th on this web site has still not arrived.@1@14@@atsuko\syy.com@4-2-2003
+177010@unknown@formal@none@1@S@It would be very much appriciated if you would explain the reason for the delay in my order.@1@18@@atsuko\syy.com@4-2-2003
+177011@unknown@formal@none@1@S@Thank you.@1@2@@atsuko\syy.com@4-2-2003
 178001@unknown@formal@none@1@EH@From atsuko Mon Jan 27 22:37:32 PST 2003@-1@-1@@atsuko\syy.com@4-2-2003
 178002@unknown@formal@none@1@EH@From: atsuko\syy.com@-1@-1@@atsuko\syy.com@4-2-2003
 178003@unknown@formal@none@1@EH@Subject: OrderStatus # 178000@-1@-1@@atsuko\syy.com@4-2-2003
@@ -1622,9 +1632,10 @@
 179005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@atsuko\syy.com@4-2-2003
 179006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@atsuko\syy.com@4-2-2003
 179007@unknown@formal@none@1@EH@Message-ID: <1043735852\smv.stanford.edu>@-1@-1@@atsuko\syy.com@4-2-2003
-179008@unknown@formal@none@1@@Dear Sirs:I ordered SONY's laptop computer last month but I still not received it.@0@14@@atsuko\syy.com@4-2-2003
-179009@unknown@formal@none@1@S@If there are any more delays, I will have to cancel my order.@1@13@@atsuko\syy.com@4-2-2003
-179010@unknown@formal@none@1@S@Please let me know the status of my order as soon as possible.@1@13@@atsuko\syy.com@4-2-2003
+179008@unknown@formal@none@1@XP@Dear Sirs@1@2@@atsuko\syy.com@4-2-2003
+179009@unknown@formal@none@1@@I ordered SONY's laptop computer last month but I still not received it.@0@12@@atsuko\syy.com@4-2-2003
+179010@unknown@formal@none@1@S@If there are any more delays, I will have to cancel my order.@1@13@@atsuko\syy.com@4-2-2003
+179011@unknown@formal@none@1@S@Please let me know the status of my order as soon as possible.@1@13@@atsuko\syy.com@4-2-2003
 180001@unknown@formal@none@1@EH@From atsuko Mon Jan 27 22:37:32 PST 2003@-1@-1@@atsuko\syy.com@4-2-2003
 180002@unknown@formal@none@1@EH@From: atsuko\syy.com@-1@-1@@atsuko\syy.com@4-2-2003
 180003@unknown@formal@none@1@EH@Subject: OrderStatus # 180000@-1@-1@@atsuko\syy.com@4-2-2003
@@ -1641,8 +1652,9 @@
 181005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@atsuko\syy.com@4-2-2003
 181006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@atsuko\syy.com@4-2-2003
 181007@unknown@formal@none@1@EH@Message-ID: <1043735852\smv.stanford.edu>@-1@-1@@atsuko\syy.com@4-2-2003
-181008@unknown@formal@none@1@S@Dear Customer Service:I would like to find out the shipping status for my order.@1@14@@atsuko\syy.com@4-2-2003
-181009@unknown@formal@none@1@S@Thank you in advance for your early response.@1@8@@atsuko\syy.com@4-2-2003
+181008@unknown@formal@none@1@XP@Dear Customer Service@1@3@@atsuko\syy.com@4-2-2003
+181009@unknown@formal@none@1@S@I would like to find out the shipping status for my order.@1@12@@atsuko\syy.com@4-2-2003
+181010@unknown@formal@none@1@S@Thank you in advance for your early response.@1@8@@atsuko\syy.com@4-2-2003
 182001@unknown@formal@none@1@EH@From atsuko Mon Jan 27 22:37:32 PST 2003@-1@-1@@atsuko\syy.com@4-2-2003
 182002@unknown@formal@none@1@EH@From: atsuko\syy.com@-1@-1@@atsuko\syy.com@4-2-2003
 182003@unknown@formal@none@1@EH@Subject: OrderStatus # 182000@-1@-1@@atsuko\syy.com@4-2-2003
@@ -1650,9 +1662,10 @@
 182005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@atsuko\syy.com@4-2-2003
 182006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@atsuko\syy.com@4-2-2003
 182007@unknown@formal@none@1@EH@Message-ID: <1043735852\smv.stanford.edu>@-1@-1@@atsuko\syy.com@4-2-2003
-182008@unknown@formal@none@1@S@Dear Customer Service:I ordered the NOKIAIA3330 from you and have received notice from your customer service that this product has been shipped on 10th September.@1@25@@atsuko\syy.com@4-2-2003
-182009@unknown@formal@none@1@S@But I have not received it yet.@1@7@@atsuko\syy.com@4-2-2003
-182010@unknown@formal@none@1@S@Is there a tracking or shipping number that would let me find the location of the shipment.@1@17@@atsuko\syy.com@4-2-2003
+182008@unknown@formal@none@1@XP@Dear Customer Service@1@3@@atsuko\syy.com@4-2-2003
+182009@unknown@formal@none@1@S@I ordered the NOKIAIA3330 from you and have received notice from your customer service that this product has been shipped on 10th September.@1@22@@atsuko\syy.com@4-2-2003
+182010@unknown@formal@none@1@S@But I have not received it yet.@1@7@@atsuko\syy.com@4-2-2003
+182011@unknown@formal@none@1@S@Is there a tracking or shipping number that would let me find the location of the shipment.@1@17@@atsuko\syy.com@4-2-2003
 183001@unknown@formal@none@1@EH@From atsuko Mon Jan 27 22:37:32 PST 2003@-1@-1@@atsuko\syy.com@4-2-2003
 183002@unknown@formal@none@1@EH@From: atsuko\syy.com@-1@-1@@atsuko\syy.com@4-2-2003
 183003@unknown@formal@none@1@EH@Subject: OrderStatus # 183000@-1@-1@@atsuko\syy.com@4-2-2003
@@ -1660,7 +1673,8 @@
 183005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@atsuko\syy.com@4-2-2003
 183006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@atsuko\syy.com@4-2-2003
 183007@unknown@formal@none@1@EH@Message-ID: <1043735852\smv.stanford.edu>@-1@-1@@atsuko\syy.com@4-2-2003
-183008@unknown@formal@none@1@S@Dear Customer Service:I would like to find out if you received my order I made earlier today.@1@17@@atsuko\syy.com@4-2-2003
+183008@unknown@formal@none@1@XP@Dear Customer Service@1@3@@atsuko\syy.com@4-2-2003
+183009@unknown@formal@none@1@S@I would like to find out if you received my order I made earlier today.@1@14@@atsuko\syy.com@4-2-2003
 184001@unknown@formal@none@1@EH@From atsuko Mon Jan 27 22:37:32 PST 2003@-1@-1@@atsuko\syy.com@4-2-2003
 184002@unknown@formal@none@1@EH@From: atsuko\syy.com@-1@-1@@atsuko\syy.com@4-2-2003
 184003@unknown@formal@none@1@EH@Subject: OrderStatus # 184000@-1@-1@@atsuko\syy.com@4-2-2003
@@ -1668,8 +1682,9 @@
 184005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@atsuko\syy.com@4-2-2003
 184006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@atsuko\syy.com@4-2-2003
 184007@unknown@formal@none@1@EH@Message-ID: <1043735852\smv.stanford.edu>@-1@-1@@atsuko\syy.com@4-2-2003
-184008@unknown@formal@none@1@S@Dear Customer Service:After I received the confirmation mail from you, I realized I made a mistake in the address that I sent you.@1@23@@atsuko\syy.com@4-2-2003
-184009@unknown@formal@none@1@S@My correct shipping address is 4-23-19 Imagawa Suginami-ku, Tokyo JAPAN.@1@10@@atsuko\syy.com@4-2-2003
+184008@unknown@formal@none@1@XP@Dear Customer Service@1@3@@atsuko\syy.com@4-2-2003
+184009@unknown@formal@none@1@S@After I received the confirmation mail from you, I realized I made a mistake in the address that I sent you.@1@20@@atsuko\syy.com@4-2-2003
+184010@unknown@formal@none@1@S@My correct shipping address is 4-23-19 Imagawa Suginami-ku, Tokyo JAPAN.@1@10@@atsuko\syy.com@4-2-2003
 185001@unknown@formal@none@1@EH@From atsuko Mon Jan 27 22:37:32 PST 2003@-1@-1@@atsuko\syy.com@4-2-2003
 185002@unknown@formal@none@1@EH@From: atsuko\syy.com@-1@-1@@atsuko\syy.com@4-2-2003
 185003@unknown@formal@none@1@EH@Subject: OrderStatus # 185000@-1@-1@@atsuko\syy.com@4-2-2003
@@ -1771,8 +1786,9 @@
 196005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@atsuko\syy.com@4-2-2003
 196006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@atsuko\syy.com@4-2-2003
 196007@unknown@formal@none@1@EH@Message-ID: <1043735852\smv.stanford.edu>@-1@-1@@atsuko\syy.com@4-2-2003
-196008@unknown@formal@none@1@S@Dear Sirs, I sent in an order for the canon degital camera (IXYDIGITAL300) last week but I have no confirmation from you.@1@22@@atsuko\syy.com@4-2-2003
-196009@unknown@formal@none@1@S@Could you please check if my order is correctly accepted or not.@1@12@@atsuko\syy.com@4-2-2003
+196008@unknown@formal@none@1@XP@Dear Sirs@1@2@@atsuko\syy.com@4-2-2003
+196009@unknown@formal@none@1@S@I sent in an order for the canon degital camera (IXYDIGITAL300) last week but I have no confirmation from you.@1@20@@atsuko\syy.com@4-2-2003
+196010@unknown@formal@none@1@S@Could you please check if my order is correctly accepted or not.@1@12@@atsuko\syy.com@4-2-2003
 197001@unknown@formal@none@1@EH@From atsuko Mon Jan 27 22:37:32 PST 2003@-1@-1@@atsuko\syy.com@4-2-2003
 197002@unknown@formal@none@1@EH@From: atsuko\syy.com@-1@-1@@atsuko\syy.com@4-2-2003
 197003@unknown@formal@none@1@EH@Subject: OrderStatus # 197000@-1@-1@@atsuko\syy.com@4-2-2003
@@ -1780,9 +1796,10 @@
 197005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@atsuko\syy.com@4-2-2003
 197006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@atsuko\syy.com@4-2-2003
 197007@unknown@formal@none@1@EH@Message-ID: <1043735852\smv.stanford.edu>@-1@-1@@atsuko\syy.com@4-2-2003
-197008@unknown@formal@none@1@S@Dear Sirs, I ordered 3 SIEMEN's cell phones on this web site on 20th Sep.@1@15@@atsuko\syy.com@4-2-2003
-197009@unknown@formal@none@1@S@But I have not received anything so far.@1@8@@atsuko\syy.com@4-2-2003
-197010@unknown@formal@none@1@S@Plaese investigate when and how you shipped my order and let me know the parcel number.@1@16@@atsuko\syy.com@4-2-2003
+197008@unknown@formal@none@1@XP@Dear Sirs@1@2@@atsuko\syy.com@4-2-2003
+197009@unknown@formal@none@1@S@I ordered 3 SIEMEN's cell phones on this web site on 20th Sep.@1@13@@atsuko\syy.com@4-2-2003
+197010@unknown@formal@none@1@S@But I have not received anything so far.@1@8@@atsuko\syy.com@4-2-2003
+197011@unknown@formal@none@1@S@Plaese investigate when and how you shipped my order and let me know the parcel number.@1@16@@atsuko\syy.com@4-2-2003
 198001@unknown@formal@none@1@EH@From atsuko Mon Jan 27 22:37:32 PST 2003@-1@-1@@atsuko\syy.com@4-2-2003
 198002@unknown@formal@none@1@EH@From: atsuko\syy.com@-1@-1@@atsuko\syy.com@4-2-2003
 198003@unknown@formal@none@1@EH@Subject: OrderStatus # 198000@-1@-1@@atsuko\syy.com@4-2-2003
@@ -1850,8 +1867,9 @@
 205005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@atsuko\syy.com@4-2-2003
 205006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@atsuko\syy.com@4-2-2003
 205007@unknown@formal@none@1@EH@Message-ID: <1043735852\smv.stanford.edu>@-1@-1@@atsuko\syy.com@4-2-2003
-205008@unknown@formal@none@1@S@Dear Sirs, I would like to find out if you received my order last week.@1@15@@atsuko\syy.com@4-2-2003
-205009@unknown@formal@none@1@@Order No.:36721 Thank you.@0@4@@atsuko\syy.com@4-2-2003
+205008@unknown@formal@none@1@XP@Dear Sirs@1@2@@atsuko\syy.com@4-2-2003
+205009@unknown@formal@none@1@S@I would like to find out if you received my order last week.@1@13@@atsuko\syy.com@4-2-2003
+205010@unknown@formal@none@1@@Order No.:36721 Thank you.@0@4@@atsuko\syy.com@4-2-2003
 206001@unknown@formal@none@1@EH@From atsuko Mon Jan 27 22:37:32 PST 2003@-1@-1@@atsuko\syy.com@4-2-2003
 206002@unknown@formal@none@1@EH@From: atsuko\syy.com@-1@-1@@atsuko\syy.com@4-2-2003
 206003@unknown@formal@none@1@EH@Subject: OrderStatus # 206000@-1@-1@@atsuko\syy.com@4-2-2003
@@ -1906,7 +1924,7 @@
 211005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@atsuko\syy.com@4-2-2003
 211006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@atsuko\syy.com@4-2-2003
 211007@unknown@formal@none@1@EH@Message-ID: <1043735852\smv.stanford.edu>@-1@-1@@atsuko\syy.com@4-2-2003
-211008@unknown@formal@none@1@S@I ordered Dell Latitude CPXPIII500 at your site on 5th October, and the product will be shipped by USPS.@1@19@@atsuko\syy.com@4-2-2003
+211008@unknown@formal@none@1@S@I ordered Dell Latitude CPXPIII500 at your site on 5th October, and the product will be shipped by USPS.@0@19@@atsuko\syy.com@4-2-2003
 211009@unknown@formal@none@1@@Is it possible for you to ship the product by USPC with tracking number?@0@14@@atsuko\syy.com@4-2-2003
 211010@unknown@formal@none@1@@I am willing to pay an additional shipping charge for USPS with tracking number up to 10 dollars.@0@18@@atsuko\syy.com@4-2-2003
 212001@unknown@formal@none@1@EH@From atsuko Mon Jan 27 22:37:32 PST 2003@-1@-1@@atsuko\syy.com@4-2-2003
@@ -1978,8 +1996,9 @@
 219005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@atsuko\syy.com@4-2-2003
 219006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@atsuko\syy.com@4-2-2003
 219007@unknown@formal@none@1@EH@Message-ID: <1043735852\smv.stanford.edu>@-1@-1@@atsuko\syy.com@4-2-2003
-219008@unknown@formal@none@1@S@Dear Sirs, I have still not received my order.@1@9@@atsuko\syy.com@4-2-2003
-219009@unknown@formal@none@1@S@It would be very much appriciated if you would tell me the status of my order.@1@16@@atsuko\syy.com@4-2-2003
+219008@unknown@formal@none@1@XP@Dear Sirs@1@2@@atsuko\syy.com@4-2-2003
+219009@unknown@formal@none@1@S@I have still not received my order.@1@7@@atsuko\syy.com@4-2-2003
+219010@unknown@formal@none@1@S@It would be very much appriciated if you would tell me the status of my order.@1@16@@atsuko\syy.com@4-2-2003
 220001@unknown@formal@none@1@EH@From atsuko Mon Jan 27 22:37:32 PST 2003@-1@-1@@atsuko\syy.com@4-2-2003
 220002@unknown@formal@none@1@EH@From: atsuko\syy.com@-1@-1@@atsuko\syy.com@4-2-2003
 220003@unknown@formal@none@1@EH@Subject: OrderStatus # 220000@-1@-1@@atsuko\syy.com@4-2-2003
@@ -2226,7 +2245,7 @@
 248006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@ben\syy.com@4-2-2003
 248007@unknown@formal@none@1@EH@Message-ID: <1043735852\smv.stanford.edu>@-1@-1@@ben\syy.com@4-2-2003
 248008@unknown@formal@none@1@S@I've lost my order number.@1@5@@ben\syy.com@4-2-2003
-248009@unknown@formal@none@1@XP@Name Sandy Smith, IMB Thinkpad.@1@5@@ben\syy.com@4-2-2003
+248009@unknown@formal@none@1@XP@Name Sandy Smith, IMB Thinkpad.@0@5@@ben\syy.com@4-2-2003
 248010@unknown@formal@none@1@S@Thanks!@1@1@@ben\syy.com@4-2-2003
 249001@unknown@formal@none@1@EH@From ben Mon Jan 27 22:37:32 PST 2003@-1@-1@@ben\syy.com@4-2-2003
 249002@unknown@formal@none@1@EH@From: ben\syy.com@-1@-1@@ben\syy.com@4-2-2003
@@ -2420,9 +2439,10 @@
 269005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@ben\syy.com@4-2-2003
 269006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@ben\syy.com@4-2-2003
 269007@unknown@formal@none@1@EH@Message-ID: <1043735852\smv.stanford.edu>@-1@-1@@ben\syy.com@4-2-2003
-269008@unknown@formal@none@1@S@Dear Sir, I am inquiring concerning my order (number 12345) which should have arrive today.@1@15@@ben\syy.com@4-2-2003
-269009@unknown@formal@none@1@S@When should I expect its arrival?@1@6@@ben\syy.com@4-2-2003
-269010@unknown@formal@none@1@XP@Sincerely, Sandy@1@2@@ben\syy.com@4-2-2003
+269008@unknown@formal@none@1@XP@Dear Sir@1@2@@ben\syy.com@4-2-2003
+269009@unknown@formal@none@1@S@I am inquiring concerning my order (number 12345) which should have arrive today.@0@13@@ben\syy.com@4-2-2003
+269010@unknown@formal@none@1@S@When should I expect its arrival?@1@6@@ben\syy.com@4-2-2003
+269011@unknown@formal@none@1@XP@Sincerely, Sandy@1@2@@ben\syy.com@4-2-2003
 270001@unknown@formal@none@1@EH@From ben Mon Jan 27 22:37:32 PST 2003@-1@-1@@ben\syy.com@4-2-2003
 270002@unknown@formal@none@1@EH@From: ben\syy.com@-1@-1@@ben\syy.com@4-2-2003
 270003@unknown@formal@none@1@EH@Subject: OrderStatus # 270000@-1@-1@@ben\syy.com@4-2-2003
@@ -2743,7 +2763,8 @@
 307006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@brian\syy.com@4-2-2003
 307007@unknown@formal@none@1@EH@Message-ID: <1043735852\smv.stanford.edu>@-1@-1@@brian\syy.com@4-2-2003
 307008@unknown@formal@none@1@XP@NOT RECEIVED -@1@3@@brian\syy.com@4-2-2003
-307009@unknown@formal@none@1@XP@Order: 12345 Customer: 12345678@1@4@@brian\syy.com@4-2-2003
+307009@unknown@formal@none@1@XP@Order: 12345@1@4@@brian\syy.com@4-2-2003
+307010@unknown@formal@none@1@XP@Customer: 12345678@1@4@@brian\syy.com@4-2-2003
 308001@unknown@formal@none@1@EH@From brian Mon Jan 27 22:37:32 PST 2003@-1@-1@@brian\syy.com@4-2-2003
 308002@unknown@formal@none@1@EH@From: brian\syy.com@-1@-1@@brian\syy.com@4-2-2003
 308003@unknown@formal@none@1@EH@Subject: OrderStatus # 308000@-1@-1@@brian\syy.com@4-2-2003
@@ -3213,7 +3234,7 @@
 360005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@bruce\syy.com@4-2-2003
 360006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@bruce\syy.com@4-2-2003
 360007@unknown@formal@none@1@EH@Message-ID: <1043735852\smv.stanford.edu>@-1@-1@@bruce\syy.com@4-2-2003
-360008@unknown@formal@none@1@S@Whats the status of my laptop?@1@6@@bruce\syy.com@4-2-2003
+360008@unknown@formal@none@1@S@Whats the status of my laptop?@0@6@@bruce\syy.com@4-2-2003
 360009@unknown@formal@none@1@XP@(order 10249)@1@2@@bruce\syy.com@4-2-2003
 361001@unknown@formal@none@1@EH@From bruce Mon Jan 27 22:37:32 PST 2003@-1@-1@@bruce\syy.com@4-2-2003
 361002@unknown@formal@none@1@EH@From: bruce\syy.com@-1@-1@@bruce\syy.com@4-2-2003
@@ -3259,7 +3280,7 @@
 365007@unknown@formal@none@1@EH@Message-ID: <1043735852\smv.stanford.edu>@-1@-1@@bruce\syy.com@4-2-2003
 365008@unknown@formal@none@1@S@What's wrong with you guys?@1@5@@bruce\syy.com@4-2-2003
 365009@unknown@formal@none@1@S@My order should be here NOW!@1@6@@bruce\syy.com@4-2-2003
-365010@unknown@formal@none@1@S@Whats' going on?@1@3@@bruce\syy.com@4-2-2003
+365010@unknown@formal@none@1@S@Whats' going on?@0@3@@bruce\syy.com@4-2-2003
 366001@unknown@formal@none@1@EH@From bruce Mon Jan 27 22:37:32 PST 2003@-1@-1@@bruce\syy.com@4-2-2003
 366002@unknown@formal@none@1@EH@From: bruce\syy.com@-1@-1@@bruce\syy.com@4-2-2003
 366003@unknown@formal@none@1@EH@Subject: OrderStatus # 366000@-1@-1@@bruce\syy.com@4-2-2003
@@ -3431,7 +3452,7 @@
 385005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@bruce\syy.com@4-2-2003
 385006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@bruce\syy.com@4-2-2003
 385007@unknown@formal@none@1@EH@Message-ID: <1043735852\smv.stanford.edu>@-1@-1@@bruce\syy.com@4-2-2003
-385008@unknown@formal@none@1@S@Will someone contact me about the status fo my order?@1@10@@bruce\syy.com@4-2-2003
+385008@unknown@formal@none@1@S@Will someone contact me about the status fo my order?@0@10@@bruce\syy.com@4-2-2003
 385009@unknown@formal@none@1@XP@(order # 10250)@1@3@@bruce\syy.com@4-2-2003
 386001@unknown@formal@none@1@EH@From bruce Mon Jan 27 22:37:32 PST 2003@-1@-1@@bruce\syy.com@4-2-2003
 386002@unknown@formal@none@1@EH@From: bruce\syy.com@-1@-1@@bruce\syy.com@4-2-2003
@@ -3658,7 +3679,7 @@
 411005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@cherie\syy.com@4-2-2003
 411006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@cherie\syy.com@4-2-2003
 411007@unknown@formal@none@1@EH@Message-ID: <1043735852\smv.stanford.edu>@-1@-1@@cherie\syy.com@4-2-2003
-411008@unknown@formal@none@1@S@What can you tell my about my order: 54324?@1@9@@cherie\syy.com@4-2-2003
+411008@unknown@formal@none@1@S@What can you tell my about my order: 54324?@0@9@@cherie\syy.com@4-2-2003
 411009@unknown@formal@none@1@S@I placed it two weeks ago, and am wondering if it is going to take much longer to arrive.@1@19@@cherie\syy.com@4-2-2003
 412001@unknown@formal@none@1@EH@From cherie Mon Jan 27 22:37:32 PST 2003@-1@-1@@cherie\syy.com@4-2-2003
 412002@unknown@formal@none@1@EH@From: cherie\syy.com@-1@-1@@cherie\syy.com@4-2-2003
@@ -3702,7 +3723,7 @@
 416006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@cherie\syy.com@4-2-2003
 416007@unknown@formal@none@1@EH@Message-ID: <1043735852\smv.stanford.edu>@-1@-1@@cherie\syy.com@4-2-2003
 416008@unknown@formal@none@1@S@I need to know when my TV will arrive.@1@9@@cherie\syy.com@4-2-2003
-416009@unknown@formal@none@1@S@Please tell me what it's status is.@1@7@@cherie\syy.com@4-2-2003
+416009@unknown@formal@none@1@S@Please tell me what it's status is.@0@7@@cherie\syy.com@4-2-2003
 417001@unknown@formal@none@1@EH@From cherie Mon Jan 27 22:37:32 PST 2003@-1@-1@@cherie\syy.com@4-2-2003
 417002@unknown@formal@none@1@EH@From: cherie\syy.com@-1@-1@@cherie\syy.com@4-2-2003
 417003@unknown@formal@none@1@EH@Subject: OrderStatus # 417000@-1@-1@@cherie\syy.com@4-2-2003
@@ -3721,7 +3742,7 @@
 418007@unknown@formal@none@1@EH@Message-ID: <1043735852\smv.stanford.edu>@-1@-1@@cherie\syy.com@4-2-2003
 418008@unknown@formal@none@1@S@When is my TV going to get here.@1@8@@cherie\syy.com@4-2-2003
 418009@unknown@formal@none@1@S@I can't just sit in the dark for the rest of my life.@1@13@@cherie\syy.com@4-2-2003
-418010@unknown@formal@none@1@S@My roommate tells me I need to get off my bike and pay attention to wha't going on in the world.@1@21@@cherie\syy.com@4-2-2003
+418010@unknown@formal@none@1@S@My roommate tells me I need to get off my bike and pay attention to wha't going on in the world.@0@21@@cherie\syy.com@4-2-2003
 418011@unknown@formal@none@1@S@Please advise.@1@2@@cherie\syy.com@4-2-2003
 419001@unknown@formal@none@1@EH@From cherie Mon Jan 27 22:37:32 PST 2003@-1@-1@@cherie\syy.com@4-2-2003
 419002@unknown@formal@none@1@EH@From: cherie\syy.com@-1@-1@@cherie\syy.com@4-2-2003
@@ -3883,7 +3904,7 @@
 435007@unknown@formal@none@1@EH@Message-ID: <1043735852\smv.stanford.edu>@-1@-1@@dick\syy.com@4-2-2003
 435008@unknown@formal@none@1@S@Where's the order I've been expecting from you for the last week or so?@1@14@@dick\syy.com@4-2-2003
 435009@unknown@formal@none@1@S@It's very late.@1@3@@dick\syy.com@4-2-2003
-435010@unknown@formal@none@1@S@Can you check it's status?@1@5@@dick\syy.com@4-2-2003
+435010@unknown@formal@none@1@S@Can you check it's status?@0@5@@dick\syy.com@4-2-2003
 436001@unknown@formal@none@1@EH@From dick Mon Jan 27 22:37:32 PST 2003@-1@-1@@dick\syy.com@4-2-2003
 436002@unknown@formal@none@1@EH@From: dick\syy.com@-1@-1@@dick\syy.com@4-2-2003
 436003@unknown@formal@none@1@EH@Subject: OrderStatus # 436000@-1@-1@@dick\syy.com@4-2-2003
@@ -4828,7 +4849,7 @@
 540006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@emily\syy.com@4-2-2003
 540007@unknown@formal@none@1@EH@Message-ID: <1043735853\smv.stanford.edu>@-1@-1@@emily\syy.com@4-2-2003
 540008@unknown@formal@none@1@S@Last week I placed two consecutive orders, the first for a radar detector (#12345) and the second for a palm pilot (#12346).@1@22@@emily\syy.com@4-2-2003
-540009@unknown@formal@none@1@S@The latter has arrived but not th former.@1@8@@emily\syy.com@4-2-2003
+540009@unknown@formal@none@1@S@The latter has arrived but not th former.@0@8@@emily\syy.com@4-2-2003
 540010@unknown@formal@none@1@S@When can I expect it?@1@5@@emily\syy.com@4-2-2003
 541001@unknown@formal@none@1@EH@From emily Mon Jan 27 22:37:33 PST 2003@-1@-1@@emily\syy.com@4-2-2003
 541002@unknown@formal@none@1@EH@From: emily\syy.com@-1@-1@@emily\syy.com@4-2-2003
@@ -4987,7 +5008,7 @@
 558005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@emily\syy.com@4-2-2003
 558006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@emily\syy.com@4-2-2003
 558007@unknown@formal@none@1@EH@Message-ID: <1043735853\smv.stanford.edu>@-1@-1@@emily\syy.com@4-2-2003
-558008@unknown@formal@none@1@S@What is the delay between placing an order and being able to check it's status?@1@15@@emily\syy.com@4-2-2003
+558008@unknown@formal@none@1@S@What is the delay between placing an order and being able to check it's status?@0@15@@emily\syy.com@4-2-2003
 558009@unknown@formal@none@1@S@The order I'm concerned about is #12345.@1@7@@emily\syy.com@4-2-2003
 559001@unknown@formal@none@1@EH@From emily Mon Jan 27 22:37:33 PST 2003@-1@-1@@emily\syy.com@4-2-2003
 559002@unknown@formal@none@1@EH@From: emily\syy.com@-1@-1@@emily\syy.com@4-2-2003
@@ -5023,7 +5044,7 @@
 562006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@emily\syy.com@4-2-2003
 562007@unknown@formal@none@1@EH@Message-ID: <1043735853\smv.stanford.edu>@-1@-1@@emily\syy.com@4-2-2003
 562008@unknown@formal@none@1@S@How many days will it take you to process my order for a Micron desktop?@1@15@@emily\syy.com@4-2-2003
-562009@unknown@formal@none@1@S@I entered order #12345 three days ago, but it's status doesn't seem to have changed.@1@15@@emily\syy.com@4-2-2003
+562009@unknown@formal@none@1@S@I entered order #12345 three days ago, but it's status doesn't seem to have changed.@0@15@@emily\syy.com@4-2-2003
 563001@unknown@formal@none@1@EH@From emily Mon Jan 27 22:37:33 PST 2003@-1@-1@@emily\syy.com@4-2-2003
 563002@unknown@formal@none@1@EH@From: emily\syy.com@-1@-1@@emily\syy.com@4-2-2003
 563003@unknown@formal@none@1@EH@Subject: OrderStatus # 563000@-1@-1@@emily\syy.com@4-2-2003
@@ -5076,7 +5097,8 @@
 568005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@emily\syy.com@4-2-2003
 568006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@emily\syy.com@4-2-2003
 568007@unknown@formal@none@1@EH@Message-ID: <1043735853\smv.stanford.edu>@-1@-1@@emily\syy.com@4-2-2003
-568008@unknown@formal@none@1@XP@Order #12345: when did it ship?@1@6@@emily\syy.com@4-2-2003
+568008@unknown@formal@none@1@XP@Order #12345@1@3@@emily\syy.com@4-2-2003
+568009@unknown@formal@none@1@S@when did it ship?@1@4@@emily\syy.com@4-2-2003
 569001@unknown@formal@none@1@EH@From emily Mon Jan 27 22:37:33 PST 2003@-1@-1@@emily\syy.com@4-2-2003
 569002@unknown@formal@none@1@EH@From: emily\syy.com@-1@-1@@emily\syy.com@4-2-2003
 569003@unknown@formal@none@1@EH@Subject: OrderStatus # 569000@-1@-1@@emily\syy.com@4-2-2003
@@ -5599,7 +5621,7 @@
 631005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@karin\syy.com@4-2-2003
 631006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@karin\syy.com@4-2-2003
 631007@unknown@formal@none@1@EH@Message-ID: <1043735853\smv.stanford.edu>@-1@-1@@karin\syy.com@4-2-2003
-631008@unknown@formal@none@1@S@get me confirmation on order 40923, sony vaio laptop.@1@9@@karin\syy.com@4-2-2003
+631008@unknown@formal@none@1@S@get me confirmation on order 40923, sony vaio laptop.@0@9@@karin\syy.com@4-2-2003
 632001@unknown@formal@none@1@EH@From karin Mon Jan 27 22:37:33 PST 2003@-1@-1@@karin\syy.com@4-2-2003
 632002@unknown@formal@none@1@EH@From: karin\syy.com@-1@-1@@karin\syy.com@4-2-2003
 632003@unknown@formal@none@1@EH@Subject: OrderStatus # 632000@-1@-1@@karin\syy.com@4-2-2003
@@ -5728,7 +5750,7 @@
 646005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@karin\syy.com@4-2-2003
 646006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@karin\syy.com@4-2-2003
 646007@unknown@formal@none@1@EH@Message-ID: <1043735853\smv.stanford.edu>@-1@-1@@karin\syy.com@4-2-2003
-646008@unknown@formal@none@1@S@get me the status of order 48390, kodak dc4800 and sony vaio laptop@1@13@@karin\syy.com@4-2-2003
+646008@unknown@formal@none@1@S@get me the status of order 48390, kodak dc4800 and sony vaio laptop@0@13@@karin\syy.com@4-2-2003
 647001@unknown@formal@none@1@EH@From karin Mon Jan 27 22:37:33 PST 2003@-1@-1@@karin\syy.com@4-2-2003
 647002@unknown@formal@none@1@EH@From: karin\syy.com@-1@-1@@karin\syy.com@4-2-2003
 647003@unknown@formal@none@1@EH@Subject: OrderStatus # 647000@-1@-1@@karin\syy.com@4-2-2003
@@ -6062,10 +6084,11 @@
 683005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@monique\syy.com@4-2-2003
 683006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@monique\syy.com@4-2-2003
 683007@unknown@formal@none@1@EH@Message-ID: <1043735853\smv.stanford.edu>@-1@-1@@monique\syy.com@4-2-2003
-683008@unknown@formal@none@1@S@Dear Sirs: I'd like to inquire into the status of an order I placed last week.@1@16@@monique\syy.com@4-2-2003
-683009@unknown@formal@none@1@S@For your information the order number is 12345.@1@8@@monique\syy.com@4-2-2003
-683010@unknown@formal@none@1@S@It is for a cellphone.@1@5@@monique\syy.com@4-2-2003
-683011@unknown@formal@none@1@S@Thank you for looking into this and I look forward to hearing from you.@1@14@@monique\syy.com@4-2-2003
+683008@unknown@formal@none@1@XP@Dear Sirs@1@2@@monique\syy.com@4-2-2003
+683009@unknown@formal@none@1@S@I'd like to inquire into the status of an order I placed last week.@1@14@@monique\syy.com@4-2-2003
+683010@unknown@formal@none@1@S@For your information the order number is 12345.@1@8@@monique\syy.com@4-2-2003
+683011@unknown@formal@none@1@S@It is for a cellphone.@1@5@@monique\syy.com@4-2-2003
+683012@unknown@formal@none@1@S@Thank you for looking into this and I look forward to hearing from you.@1@14@@monique\syy.com@4-2-2003
 684001@unknown@formal@none@1@EH@From monique Mon Jan 27 22:37:33 PST 2003@-1@-1@@monique\syy.com@4-2-2003
 684002@unknown@formal@none@1@EH@From: monique\syy.com@-1@-1@@monique\syy.com@4-2-2003
 684003@unknown@formal@none@1@EH@Subject: OrderStatus # 684000@-1@-1@@monique\syy.com@4-2-2003
@@ -6276,7 +6299,7 @@
 706005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@monique\syy.com@4-2-2003
 706006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@monique\syy.com@4-2-2003
 706007@unknown@formal@none@1@EH@Message-ID: <1043735853\smv.stanford.edu>@-1@-1@@monique\syy.com@4-2-2003
-706008@unknown@formal@none@1@S@whats the state of my order?@1@6@@monique\syy.com@4-2-2003
+706008@unknown@formal@none@1@S@whats the state of my order?@0@6@@monique\syy.com@4-2-2003
 706009@unknown@formal@none@1@XP@filled?@1@1@@monique\syy.com@4-2-2003
 706010@unknown@formal@none@1@XP@shipped?@1@1@@monique\syy.com@4-2-2003
 706011@unknown@formal@none@1@XP@on back order?@1@3@@monique\syy.com@4-2-2003
@@ -6692,7 +6715,8 @@
 751005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@monique\syy.com@4-2-2003
 751006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@monique\syy.com@4-2-2003
 751007@unknown@formal@none@1@EH@Message-ID: <1043735854\smv.stanford.edu>@-1@-1@@monique\syy.com@4-2-2003
-751008@unknown@formal@none@1@XP@Any update on my order -- the # is 121212.@1@10@@monique\syy.com@4-2-2003
+751008@unknown@formal@none@1@XP@Any update on my order@1@5@@monique\syy.com@4-2-2003
+751009@unknown@formal@none@1@S@the # is 121212.@1@4@@monique\syy.com@4-2-2003
 752001@unknown@formal@none@1@EH@From oe Mon Jan 27 22:37:34 PST 2003@-1@-1@@monique\syy.com@4-2-2003
 752002@unknown@formal@none@1@EH@From: oe\syy.com@-1@-1@@oe\syy.com@4-2-2003
 752003@unknown@formal@none@1@EH@Subject: OrderStatus # 752000@-1@-1@@oe\syy.com@4-2-2003
@@ -6780,7 +6804,8 @@
 761005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@oe\syy.com@4-2-2003
 761006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@oe\syy.com@4-2-2003
 761007@unknown@formal@none@1@EH@Message-ID: <1043735854\smv.stanford.edu>@-1@-1@@oe\syy.com@4-2-2003
-761008@unknown@formal@none@1@S@please explain why i have not recieved my cell phone (order number is 12345).@1@14@@oe\syy.com@4-2-2003
+761008@unknown@formal@none@1@S@please explain why i have not recieved my cell phone.@1@10@@oe\syy.com@4-2-2003
+761009@unknown@formal@none@1@S@(order number is 12345)@0@4@@oe\syy.com@4-2-2003
 762001@unknown@formal@none@1@EH@From oe Mon Jan 27 22:37:34 PST 2003@-1@-1@@oe\syy.com@4-2-2003
 762002@unknown@formal@none@1@EH@From: oe\syy.com@-1@-1@@oe\syy.com@4-2-2003
 762003@unknown@formal@none@1@EH@Subject: OrderStatus # 762000@-1@-1@@oe\syy.com@4-2-2003
@@ -6825,7 +6850,7 @@
 766007@unknown@formal@none@1@EH@Message-ID: <1043735854\smv.stanford.edu>@-1@-1@@oe\syy.com@4-2-2003
 766008@unknown@formal@none@1@S@do you actually have the S40 in stock?@1@8@@oe\syy.com@4-2-2003
 766009@unknown@formal@none@1@S@my order #12345 still hasn't been shipped.@1@7@@oe\syy.com@4-2-2003
-766010@unknown@formal@none@1@S@this is according to you on-line tracking system.@1@8@@oe\syy.com@4-2-2003
+766010@unknown@formal@none@1@S@this is according to you on-line tracking system.@0@8@@oe\syy.com@4-2-2003
 767001@unknown@formal@none@1@EH@From oe Mon Jan 27 22:37:34 PST 2003@-1@-1@@oe\syy.com@4-2-2003
 767002@unknown@formal@none@1@EH@From: oe\syy.com@-1@-1@@oe\syy.com@4-2-2003
 767003@unknown@formal@none@1@EH@Subject: OrderStatus # 767000@-1@-1@@oe\syy.com@4-2-2003
@@ -7094,7 +7119,8 @@
 798005@unknown@formal@none@1@EH@Content-Type: text/plain; charset=iso-8859-1@-1@-1@@oe\syy.com@4-2-2003
 798006@unknown@formal@none@1@EH@Content-Transfer-Encoding: 8bit@-1@-1@@oe\syy.com@4-2-2003
 798007@unknown@formal@none@1@EH@Message-ID: <1043735854\smv.stanford.edu>@-1@-1@@oe\syy.com@4-2-2003
-798008@unknown@formal@none@1@XP@order #12345: where is it?@1@5@@oe\syy.com@4-2-2003
+798008@unknown@formal@none@1@XP@order #12345@1@3@@oe\syy.com@4-2-2003
+798009@unknown@formal@none@1@S@where is it?@1@3@@oe\syy.com@4-2-2003
 799001@unknown@formal@none@1@EH@From oe Mon Jan 27 22:37:34 PST 2003@-1@-1@@oe\syy.com@4-2-2003
 799002@unknown@formal@none@1@EH@From: oe\syy.com@-1@-1@@oe\syy.com@4-2-2003
 799003@unknown@formal@none@1@EH@Subject: OrderStatus # 799000@-1@-1@@oe\syy.com@4-2-2003
@@ -7279,7 +7305,8 @@
 820007@unknown@formal@none@1@EH@Message-ID: <1043735854\smv.stanford.edu>@-1@-1@@oe\syy.com@4-2-2003
 820008@unknown@formal@none@1@S@do you guys have computers?@1@5@@oe\syy.com@4-2-2003
 820009@unknown@formal@none@1@S@i would appreciate up-to-date information on my order status.@1@9@@oe\syy.com@4-2-2003
-820010@unknown@formal@none@1@S@your vagueness about its status really sucks (pardon the language).@1@10@@oe\syy.com@4-2-2003
+820010@unknown@formal@none@1@S@your vagueness about its status really sucks.@1@7@@oe\syy.com@4-2-2003
+820011@unknown@formal@none@1@S@(pardon the language)@1@3@@oe\syy.com@4-2-2003
 821001@unknown@formal@none@1@EH@From oe Mon Jan 27 22:37:34 PST 2003@-1@-1@@oe\syy.com@4-2-2003
 821002@unknown@formal@none@1@EH@From: oe\syy.com@-1@-1@@oe\syy.com@4-2-2003
 821003@unknown@formal@none@1@EH@Subject: OrderStatus # 821000@-1@-1@@oe\syy.com@4-2-2003
@@ -7353,7 +7380,7 @@
 829007@unknown@formal@none@1@EH@Message-ID: <1043735854\smv.stanford.edu>@-1@-1@@remy\syy.com@4-2-2003
 829008@unknown@formal@none@1@S@I made an order three weeks ago.@1@7@@remy\syy.com@4-2-2003
 829009@unknown@formal@none@1@S@Where is it?@1@3@@remy\syy.com@4-2-2003
-829010@unknown@formal@none@1@S@It's number is 10250.@1@4@@remy\syy.com@4-2-2003
+829010@unknown@formal@none@1@S@It's number is 10250.@0@4@@remy\syy.com@4-2-2003
 830001@unknown@formal@none@1@EH@From remy Mon Jan 27 22:37:34 PST 2003@-1@-1@@remy\syy.com@4-2-2003
 830002@unknown@formal@none@1@EH@From: remy\syy.com@-1@-1@@remy\syy.com@4-2-2003
 830003@unknown@formal@none@1@EH@Subject: OrderStatus # 830000@-1@-1@@remy\syy.com@4-2-2003
