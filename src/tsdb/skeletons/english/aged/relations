@@ -182,7 +182,7 @@ tree:
 
 decision:
   parse-id :integer :key
-  version :integer
+  t-version :integer
   d-state :integer
   d-type :integer
   d-key :string
@@ -193,12 +193,12 @@ decision:
 
 preference:
   parse-id :integer :key
-  version :integer
+  t-version :integer
   result-id :integer
 
 update:
   parse-id :integer :key
-  version :integer
+  t-version :integer
   u-matches :integer
   u-mismatches :integer
   u-new :integer
