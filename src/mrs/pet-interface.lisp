@@ -20,8 +20,8 @@
   #+:debug
   (format t "vsym(): `~a'.~%" string)
   ;;
-  ;; mediate between PET-internal conventions for atomic types (i.e.
-  ;; |'foo| and |"foo"|) and MRS conventions; a little clumsy ... :-{.
+  ;; mediate between PET-internal conventions for atomic types (i.e. |'foo| 
+  ;; and |"foo"|) and MRS conventions; a little clumsy ... :-{.
   ;;
   (let ((n (length string)))
     (cond

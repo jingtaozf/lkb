@@ -47,7 +47,7 @@
 (defun fs-arcs (fs)
   ;;
   ;; given a feature structure, return an association list containing feature
-  ;; -- value (aka feature structure) pairs, e.g.
+  ;; -- value (aka feature structure) pairs, e.g. (for the LKB)
   ;;
   ;;   ((LBL . #D[handle ...]) (WLINK . #D[*cons* ...]) (PRED . #D[*top* ...])
   ;;    (ARG0 . #D[event ...]) (ARG1 . #D[ref-ind ...]))
