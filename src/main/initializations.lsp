@@ -37,6 +37,9 @@
 #+:sbcl
 (sb-ext:unlock-package :common-lisp)
 
+#+:ecl
+(si::package-lock "CL" nil)
+
 ;;; not used in LKB code but required by some grammar loading stuff
 (defparameter *grammar-directory* nil)
 

@@ -183,8 +183,8 @@
        (if (psoa-p psoa)
          (let* ((mode 
                  (typecase mode
-                   (symbol (intern (string-upcase (symbol-name mode)) 
-                                   *mrs-package*))
+                   (symbol 
+                    (intern (string-upcase (symbol-name mode)) *mrs-package*))
                    (string (intern (string-upcase mode) *mrs-package*))))
                 (result  
                  (with-output-to-string (stream)

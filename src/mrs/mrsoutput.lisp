@@ -310,8 +310,14 @@ duplicate variables")
         (assoc (car *rel-handel-path*)
                label-list))))
 
-#+:lkb
+;;;
+;;; we need a (vanilla) version of this even in non-LKB universes, e.g. for the
+;;; use of the MRS code stand-alone with ECL (PET) and the XLE.
+;;;                                                            (21-feb-05; oe)
 (defun extract-original-string-from-rel-fs (fs)
+  #-:lkb
+  (declare (ignore fs))
+  #+:lkb
   (if lkb::*recording-word*
       (let* ((label-list (fs-arcs fs))
              (origstr-fs
@@ -321,8 +327,7 @@ duplicate variables")
             (let ((fs-type (fs-type origstr-fs)))
               (if (stringp fs-type)
                   fs-type))))))
-
-
+  
 (defun extract-cfrom-from-rel-fs (fs)
   (let ((label-list (fs-arcs fs)))
     (if *rel-cfrom-feature*

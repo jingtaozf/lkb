@@ -21,6 +21,13 @@
 (setf *filename-extensions* (cons "lsp" "fas"))
 
 ;;;
+;;; to avoid (bogus, i think) redefinition warning for print-object() method
+;;; _extensions_.                                              (21-feb-05; oe)
+;;;
+#+:ecl
+(si::package-lock "CL" nil)
+
+;;;
 ;;; we use ECL primarily for embedded Lisp in PET; add some support for library
 ;;; creation.
 ;;;

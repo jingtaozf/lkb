@@ -2,6 +2,16 @@
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `licence.txt' for conditions.
 
+
+;;;
+;;; to avoid (bogus, i think) redefinition warning for print-object() method
+;;; _extensions_.                                              (21-feb-05; oe)
+;;;
+#+:ecl
+(eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
+	   #-:ansi-eval-when (load eval compile)
+  (si::package-lock "CL" nil))
+
 (in-package :mrs)
 
 (ffi:defentry pet_type_to_code (:object) (:int pet_type_to_code))
