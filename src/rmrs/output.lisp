@@ -243,7 +243,7 @@ for gram.dtd and tag.dtd
 (defmethod rmrs-output-start-fn ((rmrsout compact) cfrom cto)
   (declare (ignore cfrom cto))
   (with-slots (stream) rmrsout
-    (format stream "")))
+    (format stream "~%")))
 
 (defmethod rmrs-output-end-fn ((rmrsout compact))
   (with-slots (stream) rmrsout
@@ -313,7 +313,7 @@ for gram.dtd and tag.dtd
 
 (defmethod rmrs-output-ingroup-start ((rmrsout compact))
   (with-slots (stream) rmrsout
-    (format stream "ing(")))
+    (format stream "ING(")))
 
 (defmethod rmrs-output-ingroup-next ((rmrsout compact))
   (with-slots (stream) rmrsout
@@ -321,7 +321,7 @@ for gram.dtd and tag.dtd
 
 (defmethod rmrs-output-end-ingroup ((rmrsout compact))
   (with-slots (stream) rmrsout
-    (format stream ") ")))
+    (format stream ")~%")))
 
 ;;; methods for semstructs
 

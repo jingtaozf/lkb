@@ -74,14 +74,14 @@
           (multiple-value-bind (ep rmrs-args in-group label-list)
             (parsonify-rel rel labels)
             (push ep new-lzt)
-            (setf new-args (append rmrs-args new-args))
-            (if in-group
-                (setf new-in-groups (cons in-group new-in-groups)))
+            (setf new-args (append new-args rmrs-args))
+            (when in-group
+                (push in-group new-in-groups))
             (setf labels label-list)))
     (make-rmrs   :top-h (psoa-top-h mrs)
                  :h-cons (psoa-h-cons mrs)
-                 :liszt new-lzt
-                 :in-groups new-in-groups
+                 :liszt (nreverse new-lzt)
+                 :in-groups (nreverse new-in-groups)
                  :rmrs-args new-args)))
 
 
