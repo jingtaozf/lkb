@@ -2,26 +2,27 @@
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `licence.txt' for conditions.
 
-
 (in-package :lkb)
 
 
-;;; structure definitions are in parse.lsp since also used in interface
+;;; Control parameters
+
+(defparameter *gen-packing-p* t)
+(defparameter *gen-filtering-p* t)
+(defparameter *bypass-equality-check* nil)
+
+(defparameter *gen-scoring-hook* nil)
+(defparameter *gen-filtering-debug* nil)
+(defparameter *gen-adjunction-debug* nil)
+(defparameter *gen-equality-debug* nil)
+
 
 (defvar *gen-chart* nil)
 (defvar *gen-record* nil)
 (defvar *gen-rel-indexes* nil)
-(defvar *non-intersective-rules* nil)
 (defvar *lexemes-allowed-orderings* nil)
-
-(defparameter *gen-scoring-hook* nil)
-
-(defparameter *generator-input* nil)
-(defparameter *gen-adjunction-debug* nil)
-(defparameter *gen-equality-debug* nil)
-
-(defvar *bypass-equality-check* nil)
-(defvar *gen-packing-p* nil)
+(defvar *generator-input* nil)
+(defvar *non-intersective-rules* nil)
 
 (defparameter %generator-lexical-items% nil)
 (defparameter %generator-unknown-eps% nil)
@@ -84,6 +85,85 @@
               ;; this ordering constraint can't contain another set of
               ;; lexemes matching left, so go on and try next constraint
               (return-from nil))))))
+
+
+;;; Find semantic variables in a dag that are externally visible. For
+;;; reentrant dags this does unnecessary work, but this doesn't show
+;;; in profiling, so there's no need to complicate things.
+;;; No point in collecting variables if *gen-filtering-p* is false.
+
+(defun collect-semantic-variables-in-fs (tdfs)
+   ;; look at the end of every instloc for an instantiated string and extract
+   ;; its number as an integer
+   (labels
+      ((sem-vars-in-dag (dag vars)
+          (let ((d (existing-dag-at-end-of dag mrs::*instloc-path*)))
+             (if (and d (stringp (dag-type d)))
+                (let* ((type-name (dag-type d))
+                       (s (position-if #'digit-char-p type-name))
+                       (e (and s (position-if-not #'digit-char-p type-name :start s))))
+                      (when s
+                         (pushnew
+                            (parse-integer type-name
+                               :start s :end (or e (length type-name)))
+                            vars)))
+                (dolist (arc (dag-arcs dag))
+                   (setq vars (sem-vars-in-dag (dag-arc-value arc) vars))))
+             vars)))
+      (if *gen-filtering-p*
+         (sem-vars-in-dag (tdfs-indef tdfs) nil)
+         nil)))
+
+#|
+(defun collect-semantic-variables-in-fs (tdfs)
+   ;; only look for variables in expected places - this puts constraints on
+   ;; the grammar which if not satisfied can lead to strings not being
+   ;; generated
+   (flet
+      ((sem-vars-at-end-of (dag path vars)
+          (when path
+             (let ((d (existing-dag-at-end-of dag (append path '(instloc))))) ; ***
+                (when (and d (stringp (dag-type d)))
+                   (let* ((type-name (dag-type d))
+                          (s (position-if #'digit-char-p type-name))
+                          (e (and s (position-if-not #'digit-char-p type-name :start s))))
+                      (when s
+                         (pushnew
+                            (parse-integer type-name
+                               :start s :end (or e (length type-name)))
+                            vars))))))
+          vars))
+      (if *gen-filtering-p*
+         (let ((vars nil))
+            (when mrs::*initial-semantics-path*
+               (let ((d (existing-dag-at-end-of
+                            (tdfs-indef tdfs) mrs::*initial-semantics-path*)))
+                  (when d
+                     (setq vars
+                        (sem-vars-at-end-of d mrs::*psoa-top-h-path*
+                           (sem-vars-at-end-of d mrs::*psoa-index-path*
+                              (sem-vars-at-end-of d mrs::*psoa-xarg-path* vars)))))))
+            (when mrs::*slash-semantics-path*
+               (let ((d (existing-dag-at-end-of
+                            (tdfs-indef tdfs) mrs::*slash-semantics-path*)))
+                  (when d
+                     (setq vars
+                        (sem-vars-at-end-of d mrs::*psoa-top-h-path*
+                           (sem-vars-at-end-of d mrs::*psoa-index-path*
+                              (sem-vars-at-end-of d mrs::*psoa-xarg-path* vars)))))))
+            vars)
+         nil)))
+|#
+
+
+(defun merge-new-inaccessible (new-accessible old-accessible old-inaccessible)
+   ;; compute new inaccessible list to include variables that used to be
+   ;; accessible but are no longer in the accessible set
+   (if *gen-filtering-p*
+      (union
+         (set-difference old-accessible new-accessible)
+         old-inaccessible)
+      nil))
 
 
 ;;;
@@ -260,11 +340,23 @@
 
 (defun chart-generate (input-sem input-rels found-lex-items possible-grules
                        *lexemes-allowed-orderings* *gen-rel-indexes*
-                       &optional (*gen-first-only-p* *gen-first-only-p*))
+                       &optional (*gen-first-only-p* *gen-first-only-p*)
+                       &aux (*intersective-rule-names* *intersective-rule-names*))
+
+   (cond
+     (*intersective-rule-names*
+        (when *gen-filtering-p*
+           (format t
+"~%Warning: intersective rules and variable accessibility filtering are incompatible ~
+ - temporarily ignoring intersective rules")
+           (force-output t)
+           (setq *intersective-rule-names* nil))) ; temporary since new binding above
+     ((not *gen-filtering-p*)
+        (format t "~%Warning: filtering off and no intersective rules specified")
+        (force-output t)))
 
   (setq %generator-lexical-items% found-lex-items)
-  (unless *intersective-rule-names*
-    (format t "~%Warning: no intersective rules defined") (force-output t))
+ 
   (let ((*safe-not-to-copy-p* t)
         (*filtered-tasks* 0) (*executed-tasks* 0) (*successful-tasks* 0) 
         (*unifications* 0) (*copies* 0) 
@@ -282,7 +374,7 @@
           possible-grules))
         tgc tcpu conses symbols others (consistent nil) (partial nil))
     
-    (with-parser-lock ()
+   (with-parser-lock ()
       (clear-gen-chart)
       (setf *cached-category-abbs* nil)
       (when *gen-packing-p* (reset-packings))
@@ -312,6 +404,8 @@
                    (setf (g-edge-dag edge) (copy-tdfs-partially lex-entry-fs)))
                  (setf (g-edge-dag-restricted edge)
                    (restrict-fs (tdfs-indef (g-edge-dag edge))))
+                 (setf (g-edge-accessible edge)
+                   (collect-semantic-variables-in-fs (g-edge-dag edge)))
                  (incf *copies*)        ; each lex entry will be a copy
                  (with-agenda (when *gen-first-only-p* 
                                 (if *gen-scoring-hook*
@@ -458,10 +552,7 @@
 ;;              (mrs::output-mrs input-sem 'mrs::simple)
 ;;              (mrs::output-mrs mrs 'mrs::simple))  
              (mrs::mrs-equalp 
-	      (if (eq *bypass-equality-check* :eqqeqs)
-		  (mrs::equate-all-qeqs mrs) 
-		mrs)
-	      input-sem nil *debugging* 
+              mrs input-sem nil *debugging* 
               (not (eq *bypass-equality-check* :filter))))))))
 
 
@@ -476,7 +567,9 @@
                (let ((unif 
                        (yadu tdfs (g-edge-dag edge))))
                   (if unif
-                      (let ((new-edge
+                      (let*
+                         ((accessible (collect-semantic-variables-in-fs unif))
+                          (new-edge
                              (make-g-edge :id (next-edge)
                                           :category (indef-type-of-tdfs unif)
                                           :rule 'root
@@ -488,7 +581,12 @@
                                           :children (list edge)
                                           :leaves (g-edge-leaves edge)
                                           :lex-ids (g-edge-lex-ids edge)
-                                          :lexemes (g-edge-lexemes edge))))
+                                          :lexemes (g-edge-lexemes edge)
+                                          :accessible accessible
+                                          :inaccessible
+                                          (merge-new-inaccessible accessible
+                                             (g-edge-accessible edge)
+                                             (g-edge-inaccessible edge)))))
                         (gen-chart-add-with-index new-edge)
                         (list new-edge)))))))))
 
@@ -627,6 +725,7 @@
   ;; assume that all relations supplied in lexical entries and rules
   ;; are relevant to input-sem, i.e. that if we've generated an edge
   ;; it won't contain any relations that aren't in input-sem
+  (unless edge (return-from gen-chart-add-inactive nil))
   (let ((index (gen-chart-add-with-index edge)))
     ;; no index, so not entered into the chart
     (unless index (return-from gen-chart-add-inactive nil))
@@ -709,20 +808,17 @@
                   :leaves
                   (gen-make-list-and-insert
                      ndaughters (g-edge-leaves edge) (1+ head-index))
-                  :lexemes (g-edge-lexemes edge))
+                  :lexemes (g-edge-lexemes edge)
+                  :accessible (g-edge-accessible edge)
+                  :inaccessible (g-edge-inaccessible edge))
                chart-index)))))
 
 
 (defun gen-chart-test-active (inact act input-sem input-rels &optional one-off-p)
   ;; can extend active edge with inactive? First check to make sure new edge
   ;; would not use any relation from initial lexical items more than once.
-  ;; Assumption here that rels are eq between alternative lexical items
   (when (and
            (or one-off-p ; intersection guaranteed to be OK if one-off-p
-               ;; should probably do the rule compatibility test before this
-               ;; since it's cheaper - alternatively might help
-               ;; longer sentences to change intersection test on lists to
-               ;; and-ing of bit vectors since symbolic values not used
                (gen-chart-set-disjoint-p
                   (g-edge-rels-covered act) (g-edge-rels-covered inact)))
            (if (car (g-edge-children act)) ; looking for inact on right (left done)
@@ -771,7 +867,9 @@
                        (g-edge-leaves act) (g-edge-leaves inact) next-index)
                      :lexemes
                      (append (g-edge-lexemes act) (g-edge-lexemes inact))
-                     :mod-index (g-edge-mod-index act))))
+                     :mod-index (g-edge-mod-index act)
+                     :accessible (union (g-edge-accessible act) (g-edge-accessible inact))
+                     :inaccessible (union (g-edge-inaccessible act) (g-edge-inaccessible inact)))))
                (if one-off-p new-act
                  ;; (ERB 2003-10-22) There originally wasn't any reference to
                  ;; the agenda here, but I'm not getting my hands on all of the
@@ -795,18 +893,47 @@
             (gen-chart-test-active e act input-sem input-rels)))
       ;; have ended up completing an active edge - forming a complete constituent
       (gen-chart-add-inactive
-         (gen-chart-finish-active act) input-sem input-rels)))
+         (gen-chart-finish-active act input-sem) input-sem input-rels)))
 
 
-(defun gen-chart-finish-active (act)
+(defun gen-chart-finish-active (e input-sem)
    ;; turn active into an inactive edge
-   (setf (g-edge-category act) (indef-type-of-tdfs (g-edge-dag act)))
-   (setf (g-edge-res act) nil)
-   (setf (g-edge-lex-ids act)
-      (apply #'append (g-edge-lex-ids act)))
-   (setf (g-edge-leaves act)
-      (apply #'append (g-edge-leaves act)))
-   act)
+   (setf (g-edge-category e) (indef-type-of-tdfs (g-edge-dag e)))
+   (setf (g-edge-res e) nil)
+   (setf (g-edge-lex-ids e)
+      (apply #'append (g-edge-lex-ids e)))
+   (setf (g-edge-leaves e)
+      (apply #'append (g-edge-leaves e)))
+   (let ((old-accessible (g-edge-accessible e)))
+      (setf (g-edge-accessible e)
+         (collect-semantic-variables-in-fs (g-edge-dag e)))
+      (setf (g-edge-inaccessible e)
+         (merge-new-inaccessible
+            (g-edge-accessible e) old-accessible (g-edge-inaccessible e))))
+   (when *gen-filtering-p*
+      (dolist (rel (mrs::psoa-liszt input-sem))
+         (unless (logbitp (getf *gen-rel-indexes* rel) (g-edge-rels-covered e))
+            ;; rel in input semantics not covered by this edge - now check the
+            ;; rel's handle and its other non-ignorable variables against the edge's
+            ;; inaccessible set
+            (when (member (mrs::var-id (mrs::rel-handel rel)) (g-edge-inaccessible e))
+               (when *gen-filtering-debug*
+                  (format t
+"~&Filtering edge ~A on non-covered rel ~A needing inaccessible variable ~A~%"
+                     (g-edge-id e) (mrs::rel-pred rel) (mrs::var-id (mrs::rel-handel rel)))
+                  (print-gen-chart-edge e t nil))
+               (return-from gen-chart-finish-active nil))
+            (dolist (fp (mrs::rel-flist rel))
+               (when (and (mrs::var-p (mrs::fvpair-value fp))
+                          (not (member (mrs::fvpair-feature fp) mrs::*scoping-ignored-roles*))
+                          (member (mrs::var-id (mrs::fvpair-value fp)) (g-edge-inaccessible e)))
+                  (when *gen-filtering-debug*
+                     (format t
+"~&Filtering edge ~A on non-covered rel ~A needing inaccessible variable ~A~%"
+                        (g-edge-id e) (mrs::rel-pred rel) (mrs::var-id (mrs::fvpair-value fp)))
+                     (print-gen-chart-edge e t nil))
+                  (return-from gen-chart-finish-active nil))))))
+   e)
 
 
 ;;; Unification routines, entered only through gen-chart-try-unification
@@ -1101,34 +1228,64 @@
          (progn (incf *filtered-tasks*) nil))))
 
 
+;;; Print out summary of strings in generator chart - (print-gen-summary)
+
+(defun print-gen-summary (&key (stream t))
+   (format stream "~&------~%")
+   (let ((leaves nil))
+      (dolist (entry *gen-chart*)
+         (dolist (e (cddr entry))
+            (pushnew (g-edge-leaves e) leaves :test #'equal)
+            (dolist (p (g-edge-equivalent e))
+               (pushnew (g-edge-leaves p) leaves :test #'equal)
+            (dolist (p (g-edge-packed e))
+               (pushnew (g-edge-leaves p) leaves :test #'equal)))))
+      (dolist (s
+                (sort leaves
+                   ;; on length, and then lexicographically case-insensitive
+                   #'(lambda (x y)
+                       (if (eql (length x) (length y))
+                          (loop for a in x for b in y do
+                             (unless (string-equal a b) (return (string-lessp a b))))
+                          (< (length x) (length y))))))
+         (format stream "~A~%" s))
+      (format stream "~%")))
+
+
 ;;; Print out contents of generator chart (tty output) - (print-gen-chart)
 
 (defun print-gen-chart (&key concise (stream t))
-   (flet ((print-edge (e stream concise)
-            (format stream "[~A] ~A~A ~30,5T=> (~{~:A~^ ~})  [~{~A~^ ~}]~%"
-               (g-edge-id e)
-               (if (rule-p (g-edge-rule e)) (rule-id (g-edge-rule e))
-                   (if concise (first (edge-lex-ids e)) (g-edge-rule e)))
-               (if (g-edge-needed e)
-                  (format nil " / ~{~A~^ ~}" (g-edge-needed e))
-                  "")
-               (g-edge-leaves e)
-               (mapcan
-                  #'(lambda (x) (if x (list (g-edge-id x))))
-                  (g-edge-children e)))))
-      (format stream "~&------~%")
-      (dolist (entry (reverse *gen-chart*)) ; order in which originally created
-         (format stream "~%Vertex ~(~A~):~%" (car entry))
-         (dolist (e (sort (append (cadr entry) (copy-list (cddr entry))) #'<
-                          :key #'edge-id))
-            (print-edge e stream concise)
-            (dolist (p (g-edge-equivalent e))
-               (format stream " = packed ")
-               (print-edge p stream concise)
-            (dolist (p (g-edge-packed e))
-               (format stream " > packed ")
-               (print-edge p stream concise)))))
-      (format stream "~%")))
+   (format stream "~&------~%")
+   (dolist (entry (reverse *gen-chart*)) ; order in which originally created
+      (format stream "~%Vertex ~(~A~):~%" (car entry))
+      (dolist (e (sort (append (cadr entry) (copy-list (cddr entry))) #'<
+                       :key #'edge-id))
+         (print-gen-chart-edge e stream concise)
+         (dolist (p (g-edge-equivalent e))
+            (format stream " = packed ")
+            (print-gen-chart-edge p stream concise)
+         (dolist (p (g-edge-packed e))
+            (format stream " > packed ")
+            (print-gen-chart-edge p stream concise)))))
+   (format stream "~%"))
+
+(defun print-gen-chart-edge (e stream concise)
+   (format stream "[~A] ~A~A ~35,5T=> (~{~:A~^ ~}) ~A [~{~A~^ ~}]~%"
+      (g-edge-id e)
+      (if (rule-p (g-edge-rule e)) (rule-id (g-edge-rule e))
+         (if concise (first (g-edge-lex-ids e)) (g-edge-rule e)))
+      (if (g-edge-needed e)
+         (format nil " / ~{~A~^ ~}" (g-edge-needed e))
+         "")
+      (g-edge-leaves e)
+      (if *gen-filtering-p*
+         (format nil " a~:A-i~:A "
+            (sort (copy-list (g-edge-accessible e)) #'<)
+            (sort (copy-list (g-edge-inaccessible e)) #'<))
+         "")
+      (mapcan
+         #'(lambda (x) (if x (list (g-edge-id x))))
+         (g-edge-children e))))
 
 
 (defun print-generator-lookup-summary (lex-items grules)
@@ -1163,5 +1320,6 @@
                nil)
               #-:gen-index *toptype*
               (mapcar #'mrs::rel-pred (mrs::found-rule-main-rels grule))))))
+
 
 ;;; End of file

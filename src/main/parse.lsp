@@ -147,10 +147,10 @@
     ;; better generalize all of this, maybe encapsulate state variables.
     ;;                                                       (16-dec-03; oe)
     (when (> (incf %edge-allowance%) 50000)
-      (error "edge allowance overrun (~a)" *edge-id*)))
+      (error "~%Edge allowance overrun (~a)" *edge-id*)))
   (when (> *edge-id* (+ *maximum-number-of-edges* %edge-allowance%))
-    (error "~%Probable runaway rule: parse/generate aborted 
-             (see documentation of *maximum-number-of-edges*)"))
+    (error "~%Probable runaway rule: parse/generate aborted ~
+            (see documentation for *maximum-number-of-edges*)"))
   (incf *edge-id*))
 
 (defvar *morphs* (make-array (list *chart-limit*) :initial-element nil))
@@ -218,8 +218,8 @@
 (defun heap-insert (a key value)
   (incf (heap-size a))
   (when (>= (heap-size a)  (array-dimension a 0))
-    (error "~%Too many pending tasks, probable runaway rule: parse/generate aborted 
-             (see documentation of *maximum-number-of-tasks*)"))
+    (error "~%Too many pending tasks, probable runaway rule: parse/generate aborted ~
+            (see documentation for *maximum-number-of-tasks*)"))
   (loop 
       with i = (heap-size a)
       while (and (> i 1)
@@ -231,7 +231,7 @@
 
 (defun heap-extract-max (a)
   (when (< (heap-size a) 1)
-    (error "This shouldn't happen!  Something's wrong with the parser."))
+    (error "~%This shouldn't happen!  Something's wrong with the parser."))
   (let ((max (shiftf (fast-aref a 1) (fast-aref a (heap-size a)))))
     (decf (heap-size a))
     (heapify a 1)
@@ -241,7 +241,7 @@
 
 (defun heap-extract-max-full (a)
   (when (< (heap-size a) 1)
-    (error "This shouldn't happen!  Something's wrong with the parser."))
+    (error "~%This shouldn't happen!  Something's wrong with the parser."))
   (let ((max (shiftf (fast-aref a 1) (fast-aref a (heap-size a)))))
     (decf (heap-size a))
     (heapify a 1)
@@ -360,7 +360,8 @@
           (values bracketed-input nil))
       
       (when (> (length user-input) *chart-limit*)
-        (error "Sentence `~a' too long - ~A words maximum (*chart-limit*)" 
+        (error "~%Sentence `~a' too long - ~A words maximum ~
+                (see documentation for *chart-limit*)" 
                user-input *chart-limit*))
 
       (let ((*brackets-list* brackets-list)
@@ -1387,12 +1388,12 @@
    (when
       (and input-file
          (or (probe-file input-file)
-            (error "Input file ~A does not exist" input-file)))
+            (error "~%Input file `~a' does not exist" input-file)))
       (with-open-file (istream input-file :direction :input)
          (when (eq output-file 'unspec)
             (setq output-file (ask-user-for-new-pathname "Output file?"))
             (when (equal input-file output-file)
-              (error "Attempt to overwrite input file `~a'" input-file))
+              (error "~%Attempt to overwrite input file `~a'" input-file))
             (unless output-file (return-from parse-sentences)))
          (let ((line (read-line istream nil 'eof)))
             (if (and output-file (not (eq output-file t)))
@@ -1476,10 +1477,10 @@
                            (funcall *do-something-with-parse*)))
                        #-:gdebug
                        (storage-condition (condition)
-                       (format t "~%Memory allocation problem: ~A caused by ~A~%" condition user-input)) 
+                       (format t "Memory allocation problem: ~A caused by ~A~%" condition user-input)) 
                        #-:gdebug
                        (error (condition)
-                              (format t  "~%Error: ~A caused by ~A~%" condition user-input)))
+                              (format t  "Error: ~A caused by ~A~%" condition user-input)))
                    (unless (fboundp *do-something-with-parse*)
                      ;; if we're doing something else, 
                      ;; let that function control the output
@@ -1571,5 +1572,7 @@
    index
    lexemes ; non-ordered set of found-lex structures
    mod-index ; 0-based index to modifier under an intersective rule instantiation
+   accessible ; indices accessible in this edge
+   inaccessible ; indices accessible in edges used to derive this edge but which no longer are
    )
 
