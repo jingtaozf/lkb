@@ -562,6 +562,7 @@ at this point).
    :daughters-apply-order 
    (cl-user::rule-daughters-apply-order rule)
    :order (cl-user::rule-order rule)
+   :rhs (cl-user::rule-rhs rule)
    :daughters-order-reversed
    (cl-user::rule-daughters-order-reversed rule)
    :apply-filter
