@@ -937,6 +937,7 @@
          (or (null version) (> (length active) 1))
          (length results))
 
+        #+:null
         (lkb::release-temporary-storage
          (loop
              for edge being each hash-value in *reconstruct-cache*
