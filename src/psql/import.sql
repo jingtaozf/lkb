@@ -58,5 +58,6 @@ CREATE INDEX public_revision_name_modstamp ON public.revision (name, modstamp);
 
 \i embedded-code.sql
 \i mwe.sql
+\i semi.sql
 \i defn.sql
 
