@@ -64,3 +64,10 @@
 			  ''complete 
 			  (symb-2-str field-kw)
 			  val-str)))
+
+(defmethod new-entries ((lexicon psql-lex-database))
+  (let ((res (get-raw-records 
+	      lexicon 
+	      "SELECT userid, version, name FROM revision_new")))
+    (cons (columns res)
+	  (records res))))

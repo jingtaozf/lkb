@@ -147,7 +147,7 @@
 (defvar *lexdb-record-features* '(:name :type :orthography :keyrel :keytag :altkey :altkeytag :alt2key :compkey :ocompkey :lang :country :dialect :domains :genres :register :confidence :comments :exemplars :flags :version :userid :modstamp))
 (defvar *lexdb-minibuffer-max* 80)
 (defvar *lexdb-active-id-ring* nil)
-
+(defvar *new-entries-buffer* "*new-entries*")
 ;;;
 ;;; buffer local vbles
 ;;;
@@ -334,8 +334,24 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
     (find-file filename)))    
 
 (defun lexdb-view-merge-add-aux nil
-  (let ((filename "~/tmp/lexdb.new_entries"))
-    (find-file filename)))    
+  (let ((buffer *new-entries-buffer*))
+    (if (get-buffer buffer)
+	(kill-buffer buffer))
+    (with-current-buffer (get-buffer-create buffer)
+      (lexdb-mode)
+      (apply
+       #'insert 
+       (mapcar 
+	#'(lambda (x)
+	     'bold
+	     (format "%s:%s\t%s\n"
+		     (nth 0 x)
+		     (nth 1 x)
+		     (nth 2 x)
+	     ))
+	(cdr 
+	 (cle-new-entries)))))
+    (switch-to-buffer buffer)))
 
 (defun lexdb-commit-record-aux (buffer)
   (lexdb-update-record-from-buffer buffer)
@@ -665,3 +681,6 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (cle-eval-lexdb 'complete
 		 field-kw
 		 val-str))
+
+(defun cle-new-entries nil
+  (cle-eval-lexdb 'new-entries))
