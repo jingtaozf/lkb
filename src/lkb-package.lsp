@@ -1,10 +1,11 @@
-;;; Copyright (c) 1998-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
-;;; see licence.txt for conditions
+;;; Copyright (c) 1998-2003
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see `licence.txt' for conditions.
 
 (in-package :common-lisp-user)
 
 (defpackage :lkb 
-  (:use :common-lisp :make #+mcl :ccl) 
+  (:use :common-lisp #-:ecl :make #+mcl :ccl) 
   (:export
   "READ-SCRIPT-FILE-AUX" "RELOAD-SCRIPT-FILE" "READ-TYPE-PATCH-FILES"
   "RELOAD-LEAF-FILES" "RELOAD-LEX-FILES" "RELOAD-GRAMMAR-RULES"

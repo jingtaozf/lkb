@@ -25,7 +25,7 @@
 (setf (ext:package-lock "LISP") nil)
 
 (defpackage :mrs 
-  (:use #+:lkb :lkb :common-lisp :make)
+  (:use #+:lkb :lkb :common-lisp #-:ecl :make)
   (:export
    "PSOA-TOP-H" "PSOA-INDEX" "PSOA-LISZT" "PSOA-H-CONS"
    "REL-SORT" "REL-HANDEL" "REL-FLIST" "REL-EXTRA"
