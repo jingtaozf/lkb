@@ -45,7 +45,7 @@ update:
 	  cvs commit -m "" build; \
 	)
 
-all: lkb erg matrix spanish itsdb
+all: lkb erg spanish itsdb # matrix
 
 windows: lkb_windows
 
