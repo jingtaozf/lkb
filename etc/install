@@ -118,8 +118,12 @@ cd ${DELPHINHOME}
 for i in lkb_data.tgz lkb_${os}.tgz lkb_source.tgz; do
   echo -n "install: \`${i}' ...";
   ( cd Archives; ${WGET} http://lingo.stanford.edu/ftp/latest/${i}; )
-  ( cd lkb; ${GUNZIP} ${DELPHINHOME}/Archives/${i} | ${TAR}; )
-  echo " done.";
+  if [ -f Archives/${i} ]; then
+    ( cd lkb; ${GUNZIP} ${DELPHINHOME}/Archives/${i} | ${TAR}; )
+    echo " done.";
+  else
+    echo " missing.";
+  fi
   if [ -f ${DELPHINHOME}/lkb/etc/lkb ]; then
     [ -f ${DELPHINHOME}/bin/lkb ] && ${RM} ${DELPHINHOME}/bin/lkb;
     ${LN} ${DELPHINHOME}/lkb/etc/lkb ${DELPHINHOME}/bin/lkb;
