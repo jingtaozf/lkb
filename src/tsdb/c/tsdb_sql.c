@@ -254,6 +254,27 @@ void tsdb_set(Tsdb_value *variable, Tsdb_value *value) {
       } /* else */
     } /* else */
   } /* if */
+  else if  (!strncmp(variable->value.identifier,"tsdb_uniquely_project",22)
+            || !strncmp(variable->value.identifier, "uniquely-project", 12)) {
+    if (value->type != TSDB_STRING) {
+      fprintf(tsdb_error_stream, 
+              "set: invalid type for uniquely-project: use (on/off)\n");
+      fflush(tsdb_error_stream);
+    }
+    else {
+      if (!strcmp(value->value.string,"on")) {
+        tsdb.status |=  TSDB_UNIQUELY_PROJECT;
+      } /* if */
+      else if (!strcmp(value->value.string,"off")) {
+        tsdb.status &= !TSDB_UNIQUELY_PROJECT;
+      } /* if */
+      else {
+        fprintf(tsdb_error_stream, 
+                "set: invalid value for uniquely-project: use (on/off)\n");
+        fflush(tsdb_error_stream);
+      } /* else */
+    } /* else*/
+  } /* if */
   else {
     fprintf(tsdb_error_stream,
             "set(): unknown variable `%s'.\n", variable->value.identifier);
@@ -624,24 +645,39 @@ Tsdb_selection* tsdb_tree_select(Tsdb_node* node,
       dekoriere Baum mit Wahrheitswerten
       laufe bottom-up den Baum ab und kombiniere Werte
      */
-  Tsdb_tuple** the_tuples;
+
   Tsdb_key_list* list;
-  int i;
+  int i,j=0;
 
 
-  tsdb_prepare_tree(node);
+  tsdb_prepare_tree(node,selection);
   
   list = selection->key_lists[0];
   
-  for (i=0;i<selection->length;i++) {
+  for (i=0;i<selection->length && list;i++) {
+#ifdef DTOM
+    tsdb_print_tuples(list->tuples,TSDB_DEFAULT_STREAM);
+#endif
     if (!tsdb_verify_tuple(node,list->tuples)) {
       list->tuples[0]=NULL;
+      j++;
+#ifdef DTOM
+      fprintf(TSDB_DEFAULT_STREAM," NOT!!!");
+#endif
     } /* if */
-    list=list->next;
+#ifdef DTOM
+    fprintf(TSDB_DEFAULT_STREAM,"\n");
+#endif
+   list=list->next;
   } /* for */
-  
+
+#ifdef TOM
+    fprintf(TSDB_DEFAULT_STREAM,"to delete: %d\n",j);
+#endif
   selection = tsdb_clean_selection(selection,NULL);
-  
+#ifdef TOM
+/*  tsdb_print_selection(selection,TSDB_DEFAULT_STREAM);*/
+#endif
   return selection;
 } /* tsdb_tree_select() */
 
@@ -654,6 +690,13 @@ Tsdb_selection* tsdb_complex_select(Tsdb_node *node,
   Tsdb_relation *node_relation,**all_relations;
   int i,j;
   BOOL kaerb;
+
+  
+  if (history && (tsdb_selection_tree(node,history))) {
+    result = tsdb_copy_selection(history);
+    tsdb_tree_select(node,result);
+    return result;
+  } /* if */
 
   if (node->node->type==TSDB_CONNECTIVE) {
     switch (node->node->value.connective) {
@@ -894,13 +937,14 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
 |* updated to understand report strings, history and so on...
 \*****************************************************************************/
 
-  FILE *output;
   char **attributes = NULL;
   Tsdb_relation **a_relations;
   int s_attributes = 10, i, j, r,kaerb=0;
   Tsdb_selection *selection=NULL,*temp,*history=NULL;
   Tsdb_history *foo;
-  BOOL from_find=FALSE;
+  BOOL from_find=FALSE,
+  history_retrieve=FALSE,
+  extend_history=FALSE;
 
   /* 
      1. find out about attributes in conditions, transform expression
@@ -911,6 +955,17 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
      
      */
 
+  if ((relation_list) && (relation_list[0]->type==TSDB_INTEGER)) {
+    foo = tsdb_get_history(relation_list[0]->value.integer);
+    if (foo==NULL) {
+      fprintf(tsdb_error_stream,"retrieve(): no history item %d.\n",
+              relation_list[0]->value.integer);
+      return NULL;
+    } /* if */
+    history = foo->result;
+    history_retrieve = TRUE;
+  } /* if */
+  
   if (conditions) {
 #if defined(DEBUG) && defined(TOM)
     tsdb_tree_print(conditions, tsdb_debug_stream);
@@ -926,79 +981,97 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
     memset(attributes,'\0',s_attributes*sizeof(char*));
     attributes
       = tsdb_condition_attributes(conditions, attributes, &s_attributes);
+    /* attribute check is done in tsdb_condition_attributes!! */
     if (!attributes) 
       return(NULL);
   } /* if conditions */
   
-  if (relation_list)  /* check relations */ {
-    if (relation_list[0]->type==TSDB_INTEGER) {
-      foo = tsdb_get_history(relation_list[0]->value.integer);
-      if (foo==NULL) {
-        fprintf(tsdb_error_stream,"retrieve(): no history item %d.\n",
-                relation_list[0]->value.integer);
-        return NULL;
+  if (attribute_list) /* check explicit attribute names! */{
+    kaerb = 0;
+    for(i = 0; attribute_list[i]; i++) {
+      if (!tsdb_is_attribute(attribute_list[i])) {
+        fprintf(tsdb_error_stream,
+                "complex_retrieve(): unknown attribute `%s'.\n",
+                attribute_list[i]->value.string);
+        kaerb = 1;
       } /* if */
-      history = tsdb_copy_selection(foo->result);
-      history = tsdb_tree_select(conditions,history);
-      relation_list = NULL;
-      /* principle of history:
-         if any attribute specified in either conditions or attribute_list
-         is contained in a relation in history, use history instead.
-         Only attributes which are not represented in history lead to
-         joining with new relations. */
+      else if (history_retrieve && 
+               (!tsdb_attribute_in_selection(history,
+                                             attribute_list[i]->value.string))){
+        extend_history = TRUE;
+      } /* else */
+    } /* for */
+    if (kaerb) {
+      if (attributes)
+        free(attributes);
+      return((Tsdb_selection *)NULL);
     }
-    else {
-      kaerb = 0;
-      for(r=0;relation_list[r];r++) {
-        if (!tsdb_is_relation(relation_list[r])) {
-          fprintf(tsdb_error_stream,
-                  "complex_retrieve(): unkown relation `%s'.\n",
-                  relation_list[r]->value.string);
-          kaerb = 1;
-        } /* if */
-      } /* for */
-      if (kaerb) {
-        if (attributes)
-          free(attributes);
-        return((Tsdb_selection *)NULL);
-      } /* if */
-    } /* else */ 
   } /* if */
+  
+  if (relation_list && !history )  /* check relation names! */ {
+    kaerb = 0;
+    for(r=0;relation_list[r];r++) {
+      if (!tsdb_is_relation(relation_list[r])) {
+        fprintf(tsdb_error_stream,
+                "complex_retrieve(): unkown relation `%s'.\n",
+                relation_list[r]->value.string);
+        kaerb = 1;
+      } /* if */
+    } /* for */
+    if (kaerb) {
+      if (attributes)
+        free(attributes);
+      return((Tsdb_selection *)NULL);
+    } /* if */
+  } /* else */ 
   else
     r = tsdb_n_relations();
- 
- if (attribute_list) /* check attributes */{
-   kaerb = 0;
-   for(i = 0; attribute_list[i]; i++) {
-     if (!tsdb_is_attribute(attribute_list[i])) {
-       fprintf(tsdb_error_stream,
-               "complex_retrieve(): unknown attribute `%s'.\n",
-               attribute_list[i]->value.string);
-       kaerb = 1;
-     } /* if */
-   } /* for */
-   if (kaerb) {
-     if (attributes)
-       free(attributes);
-     return((Tsdb_selection *)NULL);
-   }
- } /* if */
+  
 
   if (conditions) {
-    selection = tsdb_complex_select(conditions, relation_list,history);
+    if (history_retrieve)
+      selection = tsdb_complex_select(conditions,NULL,history);
+    else
+      selection = tsdb_complex_select(conditions, relation_list,NULL);
     if (!selection) {
       return((Tsdb_selection *)NULL);
     }
-  }
-  /* now join with relations that aren't in */
+  } /* if */
+  else  /* no conditions!! */
+    if (history_retrieve) {
+      selection = tsdb_copy_selection(history);
+    } /* if */
   
+  /* selection is our result!! */
+  
+  if (relation_list && !history_retrieve) {
+    for(r = 0; relation_list && relation_list[r]; r++) ;
+    a_relations = (Tsdb_relation **)malloc((r+1)*sizeof(Tsdb_relation*));
+    for (i=0;i<r;i++) {
+      a_relations[i] = tsdb_find_relation(relation_list[i]->value.string);
+    } /* for */
+    a_relations[i] = NULL;
+    temp = tsdb_add_relations(selection,a_relations);
+    if (!temp) {
+      return((Tsdb_selection *)NULL);
+    }
+    if (temp!=selection) {
+      if (selection) 
+        tsdb_free_selection(selection);
+      selection = temp;
+    } /* if */
+    free(a_relations);
+    a_relations = NULL; 
+  } /* if */
+
 #if defined(DEBUG) && defined(TOM) && defined(CRAZY)
   fprintf(tsdb_debug_stream,"printing selection\n");
   tsdb_print_selection(selection,tsdb_debug_stream);
 #endif
   
   for(i = 0; relation_list && relation_list[i]; i++) ;
-
+#ifdef OLD
+  /* now join with relations so that all attributes are in */
   if (!attribute_list) { /* '*' for attribute list */
     if (relation_list) {
       a_relations = (Tsdb_relation **)malloc((r+1)*sizeof(Tsdb_relation*));
@@ -1019,16 +1092,15 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
       a_relations = NULL;
     } /* if relation_list */
   } /* if attribute_list */
-  else { /* else */
+#endif
+
+  if (attribute_list) { /* else */
     j=0;
     for(;attribute_list && attribute_list[j]; j++) ;
     /* check from relations */
     for (i=0;attribute_list && attribute_list[i];i++) {
-      if ((!tsdb_attribute_in_selection(selection,
-                                       attribute_list[i]->value.identifier))
-          && 
-          (!tsdb_attribute_in_selection(history,
-                                       attribute_list[i]->value.identifier))) {
+      if (!tsdb_attribute_in_selection(selection,
+                                       attribute_list[i]->value.identifier)) {
         a_relations = tsdb_attribute_relations(attribute_list[i]);
         for (j=0;a_relations[j];j++) {
           if (tsdb_relation_in_selection(selection,a_relations[j]->name) 
@@ -1062,12 +1134,6 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
   if (attributes)
     free(attributes);
 
-  if (history) {
-    if (selection)
-      selection = tsdb_join(selection,history);
-    else
-      selection = tsdb_copy_selection(history);
-  }
   /* now check the attributes for projections */
   tsdb_project(selection, attribute_list, report,(FILE *)NULL);
   return(selection);
@@ -1080,11 +1146,10 @@ void tsdb_project(Tsdb_selection *selection,
                   FILE* stream)
 {
   /* print attributes in order */
-  int i, j, k,h,l,m, n, n_attributes,sum_attr=0, offset;
+  int i, j, k,h,l,m, n, n_attributes,sum_attr=0;
   Tsdb_relation *relation;
   Tsdb_key_list *list;
   char **fields,**projection;
-  static char *buf=NULL;
 
   int *r, *f;
   BOOL kaerb;
