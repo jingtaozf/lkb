@@ -181,7 +181,7 @@ lkb_solaris:
 	  ${TAR} Svczf /tmp/lkb_solaris.tgz \
               --exclude=".nfs*" \
 	      solaris; \
-	  /usr/pubsw/scp /tmp/lkb_solaris.tgz oe@lingo:${TARGET}/${DATE}; \
+	  /usr/pubsw/bin/scp /tmp/lkb_solaris.tgz oe@lingo:${TARGET}/${DATE}; \
 	)
 
 lkb_windows:
@@ -295,7 +295,8 @@ itsdb_solaris:
 	      bin/solaris/pvmd3 bin/solaris/pvm \
 	      src/pvm/solaris/*.so src/tsdb/solaris/*.so \
 	      src/.s6cl/pvm src/.s6cl/tsdb; \
-	  /usr/pubsw/bin/scp /tmp/itsdb_solaris.tgz oe@lingo:${TARGET}/${DATE}; \
+	  /usr/pubsw/bin/scp /tmp/itsdb_solaris.tgz \
+	    oe@lingo.stanford.edu:${TARGET}/${DATE}; \
 	)
 
 itsdb_libraries:
