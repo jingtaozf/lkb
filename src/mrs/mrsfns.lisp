@@ -40,7 +40,7 @@
 		    (output-scoped-mrs mrs-struct :stream stream))))))))
 
 (defun count-scopes (parse)
- (format nil "~A" (length (make-scoped-mrs (car (extract-mrs (list parse) t))))))
+ (format nil "~A" (length (make-scoped-mrs (extract-mrs parse t)))))
 
 #|
 (defun expand-tsdb-results (result-file dest-file &optional (vitp nil))
