@@ -106,9 +106,6 @@
        (:file "mrstoplevel")))      
      
 
-     #+:nil
-;;; need to uncomment stuff in lexinput.lsp
-;;; for this to work
      (:module "idioms"
       :source-pathname "mrs"
       :binary-pathname "mrs"
