@@ -7,9 +7,9 @@ exec /coli/apps/tcl+tk/bin/wish++ "$0" "$@"
 #
 if {![info exists itsdb_root]} {
   set itsdb_root [expr {[info exists env(HOSTNAME)] 
-                        && ![string first "mv" $env(HOSTNAME)]
+                        && ![string first "cp" $env(HOSTNAME)]
                         ? "/home/oe/src/itsdb" 
-                        : "/proj/perform/itsdb"}];
+                        : "/home/oe/src/itsdb"}];
 }; # if
 #
 # import BLT library (for `table' and `graph' widgets)
@@ -102,6 +102,7 @@ set globals(special_menues) {
   .menu.analyze.menu.rvalues
   .menu.detail.menu.decoration
   .menu.detail.menu.intersection
+  .menu.detail.menu.options
   .menu.options.menu.condition
   .menu.options.menu.phenomena
   .menu.options.menu.switches
@@ -109,10 +110,10 @@ set globals(special_menues) {
 set globals(division) "";
 set globals(division,null) 1;
 set globals(division,size) 0;
+set globals(phenomena,division,all) 1;
 set globals(condition) "";
 set globals(condition,null) 1;
 set globals(condition,size) 0;
-set globals(phenomena,division,all) 1;
 set globals(phenomena,condition,all) 1;
 set globals(overwrite) 1;
 set globals(autoload_vocabulary) 1;
@@ -141,7 +142,8 @@ set globals(attributes) {};
 set compare_in_detail(source) "";
 set compare_in_detail(show,i-input) 1;
 set compare_in_detail(compare,all) {
-  words readings first total aedges pedges rpedges gcs error derivation mrs
+  words readings first total aedges pedges rpedges gcs error 
+  derivation mrs tree
 }; # compare_in_detail(compare,all)
 foreach attribute $compare_in_detail(compare,all) {
   set compare_in_detail(compare,$attribute) 0;
@@ -161,7 +163,12 @@ source "$globals(podium_home)commands.tcl";
 source "$globals(podium_home)input.tcl";
 source "$globals(podium_home)balloon.tcl";
 source "$globals(podium_home)copyleft.tcl";
-
+if {[info exists globals(yy_p)] && $globals(yy_p)
+    || $globals(user) == "oe"} {
+  if {[file exists "$globals(podium_home)yy.tcl"]} {
+    source "$globals(podium_home)yy.tcl";
+  }; # if
+}; #if
 #
 # log activity to trace file (for debugging)
 #
@@ -307,6 +314,8 @@ proc main {} {
   .menu.browse.menu add command \
       -label "Results" -command {tsdb_browse results ""}
   .menu.browse.menu add command \
+      -label "Trees" -command {tsdb_browse trees ""}
+  .menu.browse.menu add command \
     -label "Errors" -command {tsdb_browse errors ""}
   .menu.browse.menu add separator
   .menu.browse.menu add command -label "Custom Query" -command "tsdb_select"
@@ -326,6 +335,8 @@ proc main {} {
   .menu.process.menu add separator
   .menu.process.menu add command -label "Vocabulary" \
       -command {tsdb_browse_vocabulary 1}
+  .menu.process.menu add separator;
+  .menu.process.menu add command -label "Passive Mode" -command {tsdb_capture};
 
   #
   # `Analyze' menu (and embedded cascades)
@@ -342,6 +353,16 @@ proc main {} {
   .menu.analyze.menu add command \
           -label "Processor" -command {analyze_performance parser}
   .menu.analyze.menu add separator
+  .menu.analyze.menu add cascade \
+          -label "Divison" \
+          -menu .menu.analyze.menu.division;
+  .menu.analyze.menu add cascade \
+          -label "Phenomena" \
+          -menu .menu.analyze.menu.phenomena;
+  .menu.analyze.menu add command \
+          -label "New Division" \
+          -command "condition_input where \"\" division";
+  .menu.analyze.menu add separator
   .menu.analyze.menu add command \
           -label "Show Graph" \
           -command tsdb_graph;
@@ -357,16 +378,6 @@ proc main {} {
   .menu.analyze.menu add command \
           -label "Graph Parameters" \
           -command graph_parameter_input
-  .menu.analyze.menu add separator
-  .menu.analyze.menu add cascade \
-          -label "Chart Divison" \
-          -menu .menu.analyze.menu.division;
-  .menu.analyze.menu add cascade \
-          -label "Chart Phenomena" \
-          -menu .menu.analyze.menu.phenomena;
-  .menu.analyze.menu add command \
-          -label "New Division" \
-          -command "condition_input where \"\" division";
   .menu.analyze.menu add separator
   .menu.analyze.menu add command \
           -label "Rule Table" \
@@ -547,6 +558,9 @@ proc main {} {
   .menu.detail.menu add separator
   .menu.detail.menu add cascade -label "Source Database" \
     -menu .menu.detail.menu.compare
+  .menu.detail.menu add separator
+  .menu.detail.menu add cascade -label "Switches" \
+    -menu .menu.detail.menu.switches
 
   menu .menu.detail.menu.decoration -tearoff 0
   .menu.detail.menu.decoration add checkbutton -label "i-wf" \
@@ -561,7 +575,14 @@ proc main {} {
     .menu.detail.menu.intersection add checkbutton -label $attribute \
       -variable compare_in_detail(compare,$attribute)
   }; # foreach
+
   menu .menu.detail.menu.compare -tearoff 0
+
+  menu .menu.detail.menu.switches -tearoff 0
+  .menu.detail.menu.switches add checkbutton \
+    -label "Sloppy Alignment" \
+    -variable compare_in_detail(options,sloppy_alignment) \
+    -command {tsdb_set detail_sloppy_alignment_p};
 
   #
   # `Options' menu (and embedded cascades)
@@ -715,15 +736,19 @@ proc main {} {
     -variable globals(exclude_tgc_p) \
     -command {tsdb_set exclude_tgc_p}; 
   .menu.options.menu.switches add checkbutton \
-    -label "Analogy Aggregation" \
-    -variable globals(analogy_aggregation_p) \
-    -command {tsdb_set analogy_aggregation_p}; 
-  .menu.options.menu.switches add checkbutton \
     -label "Scatter Plots" \
     -variable globals(graph,scatterp);
   .menu.options.menu.switches add checkbutton \
     -label "Logarithmic Scales" \
     -variable globals(logscale);
+  .menu.options.menu.switches add checkbutton \
+    -label "Analogy Aggregation" \
+    -variable globals(analogy_aggregation_p) \
+    -command {tsdb_set analogy_aggregation_p}; 
+  .menu.options.menu.switches add checkbutton \
+    -label "Sloppy Alignment" \
+    -variable compare_in_detail(options,sloppy_alignment) \
+    -command {tsdb_set detail_sloppy_alignment_p};
   if {$globals(user) == "oe"} {
     .menu.options.menu.switches add checkbutton \
       -label "Custom Fields" \
@@ -746,7 +771,7 @@ proc main {} {
   tk_menuBar .menu .menu.file .menu.analyze .menu.help
   focus .menu
 
-  frame .body -width 19.1c -height 4c
+  frame .body -width 19.1c -height 5c
   pack .body -side top -expand yes -fill y;
 
   #
@@ -827,7 +852,7 @@ proc main {} {
   # body of tsdb(1) podium: a scrolled multi-column listbox
   #
   tixScrolledHList .list -width 19c -scrollbar "auto +y" \
-          -options { hlist.columns 5 hlist.height 5 \
+          -options { hlist.columns 5 hlist.height 8 \
                      hlist.header true hlist.itemtype text
                      hlist.background white };
   set list [.list subwidget hlist];
@@ -927,6 +952,9 @@ proc main {} {
   set globals(graph,tcpu) 1;
   update_graph_cascade tcpu;
 
+  if {[info procs yy_initialize] != ""} {
+    yy_initialize;
+  }; # if
   #
   # the .list geometry somehow only propagates when we run the event loop :-(.
   #

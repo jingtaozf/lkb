@@ -87,7 +87,8 @@
       set globals(write_syntax_chart_p) ~:[0~;1~]~%~
       set globals(write_lexicon_chart_p) ~:[0~;1~]~%~
       set globals(gc_p) ~(~a~)~%~
-      set globals(tenure_p) ~:[0~;1~]~%"
+      set globals(tenure_p) ~:[0~;1~]~%~
+      set globals(yy_p) ~:[0~;1~]~%"
      *tsdb-version*
      (current-application)
      *tsdb-podium-home* 
@@ -106,7 +107,8 @@
      *tsdb-rule-statistics-p*
      *tsdb-write-syntax-chart-p* *tsdb-write-lexicon-chart-p*
      *tsdb-gc-p*
-     *tsdb-tenure-p*)
+     *tsdb-tenure-p*
+     #-:yy nil #+:yy t)
     (tsdb-do-phenomena :stream *tsdb-wish-stream*)
     (format *tsdb-wish-stream* "source \"~a\"~%" *tsdb-podium*)
     (format *tsdb-wish-stream* 
@@ -231,7 +233,7 @@
            (create
             (busy :action :release)
             (let* ((data (first arguments))
-                   (path (suggest-test-run-directory data))
+                   (path (suggest-test-run-directory (or data "capture")))
                    (return 
                      (send-to-podium 
                       (format 
@@ -247,6 +249,7 @@
                                     :wait t)))
                              (when (eq (first return) :ok) 
                                (second return))))))
+              (busy)
               (when path
                 (let* ((path (string-right-trim (list *tsdb-slash*) path))
                        (parent (when (find *tsdb-slash* path)
@@ -295,14 +298,29 @@
                            (format nil "unable to create `~a'" parent)))
                       (beep)
                       (status :text message :duration 10)))))))
-           
+
+           (capture
+            (let* ((data (first arguments))
+                   (interrupt (install-interrupt-handler)))
+              (apply #'tsdb-do-listen 
+                     data
+                     (append (list :interrupt interrupt :status t)
+                             (rest arguments)))
+              (sleep 1)
+              (send-to-podium (format 
+                               nil 
+                               "update_ts_list update ~a"
+                               data)
+                              :wait t)
+              (delete-interrupt-handler interrupt)))
+
            (import
             (let* ((type (intern (first arguments) :keyword))
                    (source (second arguments))
                    (target (third arguments))
                    (arguments (rest (rest (rest arguments))))
-                   (imeter (make-meter 0 0.8))
-                   (umeter (make-meter 0.8 1))
+                   (imeter (make-meter 0 0.95))
+                   (umeter (make-meter 0.95 1))
                    (message (format
                              nil
                              "importing ~a `~a' ..."
@@ -364,6 +382,25 @@
                    (format nil "update_ts_list add ~a" (first new))
                    :wait t)))))
            
+           (export
+            (let* ((type (intern (first arguments) :keyword))
+                   (source (second arguments))
+                   (target (third arguments))
+                   (arguments (rest (rest (rest arguments))))
+                   (message (format
+                             nil
+                             "exporting `~a' as `~a' ..."
+                             source target))
+                   (meter (make-meter 0 1)))
+              (status :text message)
+              (case type
+                (:yy
+                 (apply #'yy-export-results
+                        (append (list source :directory target)
+                                arguments
+                                (list :meter meter)))))
+              (status :text (format nil "~a done" message) :duration 5)))
+           
            (purge
             (let* ((action (third arguments)))
               (apply #'purge-test-run arguments)
@@ -407,7 +444,7 @@
                                          (list data 
                                                :file file :format :tcl 
                                                :sort t
-                                               :status t
+                                               :quiet t :status t
                                                :meter (make-meter 0 1))))))
               (cond
                ((zerop items)
@@ -485,13 +522,14 @@
                   (when (and *statistics-select-condition*
                              (not (equal *statistics-select-condition* "")))
                     *statistics-select-condition*))
+                 (division (find-key-argument :division arguments))
                  (title 
                   (format 
                    nil 
                    "tsdb(1) `~a' ~
                     ~[Overgeneration~;Coverage~;Performance~] Profile~
-                    ~@[ [~a]~]"
-                     data code condition))
+                    ~@[ @ `~a'~]~@[ [~a]~]"
+                     data code condition division))
                  (message "computing table layout and geometry ..."))
             (apply (symbol-function action)
                    (append arguments 
@@ -738,33 +776,39 @@
                            "tsdb(1) `~a' Results~@[ [~a]~]"
                            data condition))
                    (message "computing table layout and geometry ..."))
-              (apply #'browse-results
-                     (append arguments
-                             (list :file file :format :tcl :meter meter)))
-              (status :text message)
-              (let ((return 
-                      (send-to-podium 
-                       (format 
-                        nil 
-                        "showtable ~s \".~(~a~)\" {~a} {~a}" 
-                        file (gensym "") data title)
-                       :wait t)))
-                (cond
-                 ((and (equal (first return) :ok) 
-                       (equal (first (second return)) :table))
-                  (push (append (second return)
-                                (pairlis 
-                                 '(:file 
-                                   :command)
-                                 (list file
-                                       (append (rest arguments)
-                                               (list :file file)))))
-                        *tsdb-podium-windows*)
-                  (status :text (format nil "~a done" message) :duration 2))
-                 (t
-                  (status :text (format nil "~a abort" message) 
-                          :duration 2))))))
-           
+              (when (apply #'browse-results
+                           (append arguments
+                                   (list :file file :format :tcl 
+                                         :meter meter)))
+                (status :text message)
+                (let ((return 
+                        (send-to-podium 
+                         (format 
+                          nil 
+                          "showtable ~s \".~(~a~)\" {~a} {~a}" 
+                          file (gensym "") data title)
+                         :wait t)))
+                  (cond
+                   ((and (equal (first return) :ok) 
+                         (equal (first (second return)) :table))
+                    (push (append (second return)
+                                  (pairlis 
+                                   '(:file 
+                                     :command)
+                                   (list file
+                                         (append (rest arguments)
+                                                 (list :file file)))))
+                          *tsdb-podium-windows*)
+                    (status :text (format nil "~a done" message) :duration 2))
+                   (t
+                    (status :text (format nil "~a abort" message) 
+                            :duration 2)))))))
+
+           (trees
+            (let* ((meter (make-meter 0 1)))
+              (apply #'browse-trees
+                     (append arguments (list :meter meter)))))
+
            (latex
             (status :text "generating LaTeX output ...")
             (let* ((window (find-podium-window (second command)))

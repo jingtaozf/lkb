@@ -253,11 +253,11 @@ proc aggregate_input {{set 1}} {
     raise .status.aggregate;
   }; # bind
   bind .status.aggregate.ethreshold <Shift-Up> {
-    entry_incr .status.aggregate.ethreshold 10 1 "" size;
+    entry_incr .status.aggregate.ethreshold 10 1 "" threshold;
     raise .status.aggregate;
   }; # bind
   bind .status.aggregate.ethreshold <Shift-Down> {
-    entry_incr .status.aggregate.ethreshold -10 1 "" size;
+    entry_incr .status.aggregate.ethreshold -10 1 "" threshold;
     raise .status.aggregate;
   }; # bind
   bind .status.aggregate.ethreshold <Control-Down> \
@@ -278,11 +278,11 @@ proc aggregate_input {{set 1}} {
     raise .status.aggregate;
   }; # bind
   bind .status.aggregate.elower <Shift-Up> {
-    entry_incr .status.aggregate.elower 10 1 "" size;
+    entry_incr .status.aggregate.elower 10 1 "" lower;
     raise .status.aggregate;
   }; # bind
   bind .status.aggregate.elower <Shift-Down> {
-    entry_incr .status.aggregate.elower -10 1 "" size;
+    entry_incr .status.aggregate.elower -10 1 "" lower;
     raise .status.aggregate;
   }; # bind
   bind .status.aggregate.elower <Control-Down> \
@@ -303,11 +303,11 @@ proc aggregate_input {{set 1}} {
     raise .status.aggregate;
   }; # bind
   bind .status.aggregate.eupper <Shift-Up> {
-    entry_incr .status.aggregate.eupper 10 1 "" size;
+    entry_incr .status.aggregate.eupper 10 1 "" upper;
     raise .status.aggregate;
   }; # bind
   bind .status.aggregate.eupper <Shift-Down> {
-    entry_incr .status.aggregate.eupper -10 1 "" size;
+    entry_incr .status.aggregate.eupper -10 1 "" upper;
     raise .status.aggregate;
   }; # bind
   bind .status.aggregate.eupper <Control-Down> \

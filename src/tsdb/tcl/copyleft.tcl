@@ -25,7 +25,8 @@ proc copyleft {action} {
         -text "$globals(name)  -  version $globals(version)"
       frame $copyleft.zero -bg $bg -height 5
       label $copyleft.first -bg $bg -fg grey -font $small \
-        -text "Copyleft (c) 1995 - 2000 by Stephan Oepen (oe@coli.uni-sb.de) \
+        -text "Copyleft (c) 1995 - 2001 \
+               by Stephan Oepen (oe@csli.stanford.edu) \
                -  All Rights Reserved"
       frame $copyleft.second -bg $bg -height 8
       label $copyleft.third -bg $bg -fg green -font [concat $normalsize] \

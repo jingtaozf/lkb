@@ -1,4 +1,4 @@
-;;; Copyright John Carroll 1998 All Rights Reserved.
+;;; Copyright John Carroll, Stephan Oepen 1998--2001 All Rights Reserved.
 ;;; No use or redistribution without permission.
 ;;; 
 
@@ -10,9 +10,9 @@
 ;;; has been made public ... sigh.                         (22-aug-99  -  oe)
 ;;;
 
-#+:LKB-V5.3
+#+:lkb-v5.3
 (in-package :lkb)
-#-:LKB-V5.3
+#-:lkb-v5.3
 (in-package :cl-user)
 
 (defparameter *lkb-package* 

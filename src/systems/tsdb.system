@@ -104,10 +104,13 @@
        (:file "server")
        (:file "statistics")
        (:file "podium")
+       (:file "trees")
        #+:allegro
        (:file "allegro")
        #+:allegro
        (:file "gc")
+       #+:yy
+       (:file "yy")
        #+:page 
        (:file "page-interface")
        (:file "derivations")))

@@ -85,10 +85,18 @@
 
 (defparameter *statistics-aggregate-upper* nil)
 
-(defparameter *statistics-analogy-aggregation-p* t)
+(defparameter *statistics-detail-sloppy-alignment-p* nil)
+
+(defparameter *statistics-detail-alignment-bracket* 50)
+
+(defparameter *statistics-analogy-aggregation-p* nil)
 
 (defparameter *statistics-aggregate-maximum* 
   (min 20000 array-total-size-limit))
+
+(defparameter *statistics-result-filter* nil)
+
+(defparameter *statistics-critical-line-threshold* 500)
 
 (defparameter *statistics-plot-width* 150)
 
@@ -241,6 +249,8 @@
 
 (defun analyze (language &key condition meter message thorough extras)
 
+  (declare (optimize (speed 3) (safety 0) (space 0)))
+
   (let* ((message (when message
                     (format nil "retrieving `~a' data ..." language)))
          (extras (and extras t))
@@ -284,7 +294,7 @@
         ;;                                                 (22-nov-99  -  oe)
         (let* ((pfields (nreverse pfields))
                (ptypes (nreverse ptypes))
-               (pmeter (and meter (madjust * meter (if  0.4 0.5))))
+               (pmeter (and meter (madjust * meter (if thorough 0.4 0.5))))
                (imeter (when meter
                          (madjust + (madjust * meter (if thorough 0.1 0.25)) 
                                   (mduration pmeter))))
@@ -670,6 +680,79 @@
         finally
           (when meter (meter :value (get-field :end meter))))))
 
+(defun summarize-competence-parameters-by-division (items division
+                                                    &key restrictor)
+  
+  (loop
+      with titems = 0 with trestricted = 0
+      with tilength = 0 with twords = 0 with tlstasks = 0
+      with treadings = 0 with tresults = 0
+      with tierrors = 0 with tderrors = 0
+      with result
+      for iaggregate in items
+      for idata = (rest (rest iaggregate))
+      for daggregate in division
+      for ddata = (rest (rest daggregate))
+      for ridata = (if restrictor (remove-if restrictor idata) idata)
+      for rddata = (if restrictor (remove-if restrictor ddata) ddata)
+      for items = (length idata)
+      for restricted = (length ridata)
+      for ilength = 0 for words = 0 for lstasks = 0
+      for readings = 0
+      for results = (length rddata)
+      for ierrors = 0 for derrors = 0
+      do
+        (loop
+            for tuple in ridata do
+              (incf ilength (get-field :i-length tuple))
+            when (minus-one-p (get-field :readings tuple)) do (incf ierrors)
+            else do
+              (incf words (get-field :words tuple))
+              (incf lstasks (get-field+ :l-stasks tuple 0)))
+        (loop
+            for tuple in rddata
+            when (minus-one-p (get-field :readings tuple)) do (incf derrors)
+            else do
+              (incf readings (get-field :readings tuple)))
+        (push (cons (first iaggregate)
+                    (pairlis '(:items :restricted 
+                               :i-length 
+                               :words 
+                               :l-stasks 
+                               :lambiguity 
+                               :analyses 
+                               :results :ierrors :derrors)
+                             (list items restricted 
+                                   (divide ilength restricted)
+                                   (divide words (- restricted ierrors))
+                                   (divide lstasks (- restricted ierrors))
+                                   (divide words ilength)
+                                   (divide readings (- results derrors))
+                                   results ierrors derrors)))
+              result)
+        (incf titems items) (incf trestricted restricted)
+        (incf tilength ilength) (incf twords words) (incf tlstasks lstasks)
+        (incf treadings readings) (incf tresults results)
+        (incf tierrors ierrors) (incf tderrors derrors)
+      finally
+        (push (cons :total 
+                    (pairlis '(:items :restricted
+                               :i-length
+                               :words 
+                               :l-stasks
+                               :lambiguity
+                               :analyses
+                               :results :ierrors :derrors)
+                             (list titems trestricted
+                                   (divide tilength trestricted)
+                                   (divide twords (- trestricted tierrors))
+                                   (divide tlstasks (- trestricted tierrors))
+                                   (divide twords tilength)
+                                   (divide treadings (- tresults tderrors))
+                                   tresults tierrors tderrors)))
+              result)
+        (return (delete :all result :key #'first))))
+
 (defun summarize-competence-parameters (items
                                         &key restrictor)
 
@@ -740,19 +823,34 @@
 
 (defun analyze-competence (&optional (language *tsdb-data*)
                            &key (condition *statistics-select-condition*)
-                                (wf 1) file append (format :latex)
+                                (wf 1) division file append (format :latex)
                                 restrictor meter)
   (declare (ignore restrictor))
 
-  (let* ((items (if (stringp language) 
+  (let* ((stream (create-output-stream file append))
+         (division (unless (or (null division) (equal division ""))
+                     (if (or (null condition) (equal condition ""))
+                       division
+                       (format nil "(~a) and (~a)" condition division))))
+         (imeter (if division (madjust * meter 0.5) meter))
+         (dmeter (when division 
+                   (madjust + (madjust * meter 0.5) (mduration imeter))))
+         (items (if (stringp language) 
                   (analyze-aggregates language :condition condition
-                                      :meter meter :format format) 
+                                      :meter imeter :format format) 
                   language))
-         (stream (create-output-stream file append))
+         (ditems (when (and division (stringp language))
+                   (analyze-aggregates language :condition division
+                                       :meter dmeter :format format)))
+         
          (averages 
-          (summarize-competence-parameters 
-           items :restrictor #'(lambda (foo) 
-                                 (not (= (get-field :i-wf foo) wf)))))
+          (if ditems
+            (summarize-competence-parameters-by-division 
+             items ditems :restrictor #'(lambda (foo) 
+                                          (not (= (get-field :i-wf foo) wf))))
+            (summarize-competence-parameters 
+             items :restrictor #'(lambda (foo) 
+                                   (not (= (get-field :i-wf foo) wf))))))
          (naggregates (- (length averages) 1))
          (ncolumns 8)
          (alabel (if (eq *statistics-aggregate-dimension* :phenomena)
@@ -800,7 +898,7 @@
         (+ naggregates 1) (+ naggregates 2))
        (format
         stream
-        "cell 1 1 -contents ~a -format title~%~
+        "cell 1 1 -contents {~a} -format title~%~
          cell 1 2 -contents \"total\\nitems\\n#\" -format title~%~
          cell 1 3 -contents \"~a\\nitems\\n#\" -format title~%~
          cell 1 4 -contents \"word\\nstring\\n\\330\" -format title~%~
@@ -809,15 +907,14 @@
          cell 1 7 -contents \"total\\nresults\\n#\" -format title~%~
          cell 1 8 -contents \"overall\\ncoverage\\n%\" -format title~%~%"
         alabel (if (= wf 1) "positive" "negative"))))
-    (do* ((items items (rest items))
-          (i 2 (1+ i))
-          (phenomenon (first items) (first items)))
-        ((null items))
-      (let* ((data (rest (assoc (first phenomenon) averages))))
-        (when data
+    (loop
+        for aggregate in items
+        for i from 2
+        for data = (rest (assoc (first aggregate) averages))
+        when data do
           (let* ((name (if (equal format :latex)
-                         (latexify-string (second phenomenon))
-                         (second phenomenon)))
+                         (latexify-string (second aggregate))
+                         (second aggregate)))
                  (items (get-field :items data))
                  (restricted (get-field :restricted data))
                  (length (get-field :i-length data))
@@ -825,7 +922,7 @@
                  (analyses (get-field :analyses data))
                  (results (get-field :results data))
                  (coverage (if (zerop restricted)
-                             100
+                             0
                              (float (* 100 (/ results restricted))))))
             (case format
               (:latex
@@ -836,7 +933,7 @@
               (:tcl
                (format
                 stream
-                "cell ~d 1 -contents \"~a\" -format aggregate~%~
+                "cell ~d 1 -contents {~a} -format aggregate~%~
                  cell ~d 2 -contents ~d -format data~%~
                  cell ~d 3 -contents ~d -format data~%~
                  cell ~d 4 -contents ~,2f -format data~%~
@@ -851,7 +948,8 @@
                 i words
                 i analyses
                 i results
-                i coverage)))))))
+                i coverage)))))
+    
     (let* ((data (rest (assoc :total averages)))
            (name "Total")
            (items (get-field :items data))
@@ -879,7 +977,7 @@
         (:tcl
          (format
             stream
-            "cell ~d 1 -contents \"~a\" -format total~%~
+            "cell ~d 1 -contents {~a} -format total~%~
              cell ~d 2 -contents ~d -format total~%~
              cell ~d 3 -contents ~d -format total~%~
              cell ~d 4 -contents ~,2f -format total~%~
@@ -988,11 +1086,11 @@
            (+ naggregates 2) (+ naggregates 3))
           (format
            stream
-           "cell 1 1 -contents ~a -format title~%~
-            region 1 1 2 1 -contents ~a -format title ~
+           "cell 1 1 -contents {~a} -format title~%~
+            region 1 1 2 1 -contents {~a} -format title ~
               -hor_justify left -ver_justify center~%~
-            region 1 2 1 5 -contents ~s -format title -hor_justify center~%~
-            region 1 6 1 9 -contents ~s -format title -hor_justify center~%"
+            region 1 2 1 5 -contents {~a} -format title -hor_justify center~%~
+            region 1 6 1 9 -contents {~a} -format title -hor_justify center~%"
            alabel alabel olabel nlabel)
           (do ((labels '("lexical\\n\\330" "parser\\n\\330" 
                          "in\\n\\330" "out\\n\\330"
@@ -1056,7 +1154,7 @@
              (:tcl
               (format
                stream
-               "cell ~d 1 -contents ~s -format aggregate~%~
+               "cell ~d 1 -contents {~a} -format aggregate~%~
                 cell ~d 2 -contents ~,2f -format data~%~
                 cell ~d 3 -contents ~,2f -format data~%~
                 cell ~d 4 -contents ~,1f -format data~%~
@@ -1118,7 +1216,7 @@
            (:tcl
             (format
              stream
-             "cell ~d 1 -contents ~s -format total~%~
+             "cell ~d 1 -contents {~a} -format total~%~
               cell ~d 2 -contents ~,2f -format total~%~
               cell ~d 3 -contents ~,2f -format total~%~
               cell ~d 4 -contents ~,1f -format total~%~
@@ -1149,21 +1247,24 @@
                         collect (get-field field result))
       for nvalues = (loop for result in nresults 
                         collect (get-field field result))
+      for common = nil
       for oplus = (loop
                       for ovalue in ovalues
                       unless (member ovalue nvalues :test-not predicate)
                       collect ovalue
+                      else do (push ovalue common)
                       do 
                         (setf nvalues
                           (delete ovalue nvalues 
                                   :count 1 :test-not predicate)))
 
-      collect (cons oplus nvalues)))
+      collect (list oplus common nvalues)))
 
 (defun compare-in-detail (olanguage nlanguage
                           &key (condition *statistics-select-condition*)
                                (show '(:i-input :i-wf))
                                (compare '(:words :readings))
+                               (sloppyp *statistics-detail-sloppy-alignment-p*)
                                (format :tcl)
                                (olabel "(g)old") 
                                (nlabel "new")
@@ -1171,11 +1272,10 @@
 
   (let* ((ometer (madjust / meter 2))
          (nmeter (madjust + ometer (mduration ometer)))
-         (show (if (atom show) (list show) (delete :i-id show)))
-         (show (cons :i-id show))
-         (shows (length show))
+         (show (delete :i-id (if (atom show) (list show) show)))
+         (shows (+ (length show) (if sloppyp 2 1)))
          (compare (if (atom compare) (list compare) compare))
-         (thorough (nreverse (intersection '(:derivation :mrs) compare)))
+         (thorough (nreverse (intersection '(:derivation :mrs :tree) compare)))
          (compare (set-difference compare thorough :test #'equal))
          (predicates 
           (loop for field in compare collect (find-attribute-predicate field)))
@@ -1201,7 +1301,7 @@
     (case format
       (:tcl
        ;;
-       ;; get the table header printed out: number of columns, justification,
+       ;; get the table header printed: number of columns, justification,
        ;; and labels depend on the attributes asked for.
        ;;
        (when *statistics-tcl-formats* 
@@ -1211,13 +1311,28 @@
         "layout col def -m1 5 -r 1 -m2 5 -c black -j right~%~
          layout row def -m1 5 -r 0 -m2 5 -c black -j center~%~
          layout col 0 -m1 5 -r 2 -m2 5 -c black -j right~%~
-         layout col 1 -m1 5 -r 2 -m2 5 -c black -j right~%~
+         layout col ~d -m1 5 -r 2 -m2 5 -c black -j right~%~
          layout col ~d -m1 5 -r 2 -m2 5 -c black -j right~%~
          layout row 0 -m1 5 -r 2 -m2 5 -c black -j center~%~
-         layout row 2 -m1 5 -r 2 -m2 5 -c black -j center~%~
-         cell 1 1 -contents {i-id} -format title~%~
-         region 1 1 2 1 -contents {i-id} -format title -hor_justify center~%"
-        shows)
+         layout row 2 -m1 5 -r 2 -m2 5 -c black -j center~%"
+        (if sloppyp 2 1) shows)
+       (if sloppyp
+         (format
+          stream
+          "cell 1 1 -contents {<} -format title~%~
+           region 1 1 1 2 -contents {i-id} ~
+             -format title -hor_justify center~%~
+           cell 2 1 -contents {<} -format title~%~
+           region 2 1 2 1 -contents {<} ~
+             -format title -hor_justify center~%~
+           cell 2 2 -contents {>} -format title~%~
+           region 2 2 2 2 -contents {>} ~
+             -format title -hor_justify center~%")
+         (format
+          stream
+          "cell 1 1 -contents {i-id} -format title~%~
+           region 1 1 2 1 -contents {i-id} ~
+             -format title -hor_justify center~%"))
        (unless (zerop compares)
          (format
           stream
@@ -1232,7 +1347,7 @@
           (+ shows compares 1) (+ shows compares compares) nlabel))
           
        (do ((show show (rest show))
-            (i 1 (+ i 1)))
+            (i (if sloppyp 3 2) (+ i 1)))
            ((null show))
          (let ((justification (case (first show)
                                 (:i-input "left")
@@ -1244,8 +1359,8 @@
               i (null (rest show)) justification)))
          (format
           stream
-          "cell 1 ~d -contents \"~(~a~)\" -format title~%~
-           region 1 ~d 2 ~d -contents \"~(~a~)\" -format title ~
+          "cell 1 ~d -contents {~(~a~)} -format title~%~
+           region 1 ~d 2 ~d -contents {~(~a~)} -format title ~
              -hor_justify center~%"
            i (first show) i i (first show)))
        (do ((compare (append compare compare) (rest compare))
@@ -1260,36 +1375,37 @@
               i (null (rest compare)) justification)))
          (format
           stream
-          "cell 2 ~d -contents \"~(~a~)\" -format title~%~
-           region 2 ~d 2 ~d -contents \"~(~a~)\" -format title ~
+          "cell 2 ~d -contents {~(~a~)} -format title~%~
+           region 2 ~d 2 ~d -contents {~(~a~)} -format title ~
              -hor_justify center~%"
           i (first compare)
           i i (first compare)))
        
        (loop
            for field in thorough
-           for i from (+ shows compares compares 1) by 2
+           for i from (+ shows compares compares 1) by 3
            do
              (format
               stream
-              "region 1 ~d 1 ~d -contents \"~(~a~)\" -format title ~
+              "region 1 ~d 1 ~d -contents {~(~a~)} -format title ~
                -hor_justify center~%"
-              i (+ i 1) field)
+              i (+ i 2) field)
              (format
               stream
-              "cell 2 ~d -contents \"~(~a~)\" -format title~%~
-               cell 2 ~d -contents \"~(~a~)\" -format title~%"
-              i olabel (+ i 1) nlabel)
-           finally
+              "cell 2 ~d -contents {~(~a~)} -format title~%~
+               cell 2 ~d -contents {~(~a~)} -format title~%~
+               cell 2 ~d -contents {~(~a~)} -format title~%"
+              i "<" (+ i 1) "=" (+ i 2) ">")
              (format
               stream
               "layout col ~d -m1 5 -r 2 -m2 5 -c black -j right~%"
               (+ i 2)))))
     
     ;;
-    ;; my first attempt at loop()ing (if bernd knew |:-) (28-jul-98 - oe@csli)
+    ;; my first loop() (if bernd knew |:-) (28-jul-98 - oe@csli)
     ;;
     (loop
+        with ooffset = 0 with noffset = 0
         with row = 3
         with separator = 1
         when (= (- row 2) (* separator 10))
@@ -1316,11 +1432,15 @@
                  (ni-id (get-field :i-id nitem))
                  (oshow (map 'list 
                           #'(lambda (attribute)
-                              (get-field attribute oitem))
+                              (or (when (eq attribute :i-input)
+                                    (get-field :o-input oitem))
+                                  (get-field attribute oitem)))
                           show))
                  (nshow (map 'list 
                           #'(lambda (attribute)
-                              (get-field attribute nitem))
+                              (or (when (eq attribute :i-input)
+                                    (get-field :o-input nitem))
+                                  (get-field attribute nitem)))
                           show))
                  (ocompare (map 'list 
                              #'(lambda (attribute)
@@ -1330,19 +1450,61 @@
                              #'(lambda (attribute)
                                  (get-field attribute nitem))
                              compare))
-                 clashes)
+                 clashes) 
+            #+:cdebug
+            (format
+             t
+             "[~d ~d] (~d ~a) (~d ~a)"
+             ooffset noffset
+             oi-id (or (get-field :o-input oitem) (get-field :i-input oitem))
+             ni-id (or (get-field :o-input nitem) (get-field :i-input nitem)))
+            ;;
+            ;; in `align' mode: when necessary, determine distance to cloesest
+            ;; alignment point (identical :i-input values); if there is none,
+            ;; output all remaining items from `old' first, then `new'.
+            ;;
+            (when (and sloppyp 
+                       (or (and (null ooffset) (null noffset))
+                           (and ooffset (zerop ooffset)
+                                noffset (zerop noffset)
+                                (not (equal oshow nshow)))))
+              (setf ooffset 
+                (loop
+                    with oi-input = (get-field :i-input oitem)
+                    for nitem in nitems
+                    for ni-input = (get-field :i-input nitem)
+                    for i from 0 to *statistics-detail-alignment-bracket*
+                    thereis (and (equal oi-input ni-input) i)))
+              (setf noffset 
+                (loop
+                    with ni-input = (get-field :i-input nitem)
+                    for oitem in oitems
+                    for oi-input = (get-field :i-input oitem)
+                    for i from 0 to *statistics-detail-alignment-bracket*
+                    thereis (and (equal oi-input ni-input) i)))
+              (if (and ooffset noffset)
+                (if (< ooffset noffset)
+                  (setf noffset nil)
+                  (setf ooffset nil))
+                (when (and (null ooffset) (null noffset))
+                  (setf ooffset 1)
+                  (setf noffset 1))))
+            #+:cdebug 
+            (format t " --- [~d ~d]~%" ooffset noffset)
+
 
             (cond 
-             ((and (eql oi-id ni-id)
-                   (equal oshow nshow))
+             ((if sloppyp 
+                (and ooffset (zerop ooffset) noffset (zerop noffset))
+                (and (eql oi-id ni-id) (equal oshow nshow)))
               ;;
-              ;; two items of same identifier have equal values for all .show.
-              ;; attributes (as they should |:-)
+              ;; two items of same identifier have equal values for all 
+              ;; .show. attributes (as they should |:-)
               ;;
               (setf clashes (intersect-results oitem nitem thorough))
-              (when (or (some #'(lambda (clash)
-                                  (or (first clash) (rest clash)))
-                              clashes)
+              (when (or (loop
+                            for clash in clashes
+                            thereis (or (first clash) (third clash)))
                         (loop
                             for predicate in predicates 
                             for ovalue in ocompare
@@ -1352,125 +1514,212 @@
                             finally (return nil)))
                 (case format
                   (:tcl
-                   (do ((show show (rest show))
-                        (oshow oshow (rest oshow))
-                        (j 1 (+ j 1)))
-                       ((null oshow))
-                     (if (and (eq (first show) :i-input) (stringp olanguage))
-                       (format
-                        stream
-                        "cell ~d ~d -contents ~s ~
-                         -format data -key ~d -source {~a}~%"
-                        row j (first oshow) oi-id olanguage)
-                       (format
-                        stream
-                        "cell ~d ~d -contents ~s -format data~%"
-                        row j (first oshow))))
-                   (do ((acompare (append ocompare ncompare) (rest acompare))
-                        (j (+ shows 1) (+ j 1)))
-                       ((null acompare))
+                   (format
+                    stream
+                    "cell ~d 1 -contents {~a} -format data~%"
+                    row oi-id)
+                   (when sloppyp
                      (format
                       stream
-                      "cell ~d ~d -contents ~s -format data~%"
-                      row j (first acompare)))
+                      "cell ~d 2 -contents {~a} -format data~%"
+                      row ni-id))
                    (loop
-                       for j from (+ shows compares compares 1) by 2
+                       for j from (if sloppyp 3 2)
+                       for key in show for value in oshow
+                       when (and (eq key :i-input) (stringp olanguage)) do
+                         (format
+                          stream
+                          "cell ~d ~d -contents {~a} ~
+                             -format data -key ~d -source {~a}~%"
+                          row j (tcl-escape-braces value) oi-id olanguage)
+                       else do
+                         (format
+                          stream
+                          "cell ~d ~d -contents {~a} -format data~%"
+                          row j (tcl-escape-braces value)))
+                   (loop
+                       for value in (append ocompare ncompare)
+                       for j from (+ shows 1)
+                       do
+                         (format
+                          stream
+                          "cell ~d ~d -contents {~a} -format data~%"
+                          row j (tcl-escape-braces value)))
+                   (loop
+                       for j from (+ shows compares compares 1) by 3
                        for field in thorough
-                       for (oclash . nclash) in clashes
+                       for (oclash common nclash) in clashes
                        for otag = (intern (gensym "") :keyword)
+                       for ctag = (intern (gensym "") :keyword)
                        for ntag = (intern (gensym "") :keyword)
                        do
                          ;;
                          ;; _fix_me_
                          ;; this creates a potential memory leak: as soon as
-                         ;; the window for this table is destroyed, there will
-                         ;; be no further reference to the (tag) symbols used
-                         ;; to store data on the lisp side.  yet, the values
-                         ;; associated with the symbol properties will never
-                         ;; become unbound.                   (11-mar-99)
+                         ;; the window for this table is destroyed, there 
+                         ;; will be no further reference to the (tag) 
+                         ;; symbols used to store data on the lisp side.  
+                         ;; yet, the values associated with the symbol 
+                         ;; properties will never become unbound.
+                         ;;                        (11-mar-99  - oe@csli)
                          ;;
                          (setf (get :source otag) olanguage)
                          (setf (get :contrast otag) nlanguage)
                          (setf (get :i-id otag) oi-id)
-                         (setf (get :i-input otag) (get-field :i-input oitem))
+                         (setf (get :i-input otag) 
+                           (or (get-field :o-input oitem)
+                               (get-field :i-input oitem)))
                          (setf (get :field otag) field)
                          (setf (get :value otag) oclash)
+                         (setf (get :source ctag) nlanguage)
+                         (setf (get :contrast ctag) olanguage)
+                         (setf (get :i-id ctag) ni-id)
+                         (setf (get :i-input ctag)
+                           (or (get-field :o-input nitem)
+                               (get-field :i-input nitem)))
+                         (setf (get :field ctag) field)
+                         (setf (get :value ctag) common)
                          (setf (get :source ntag) nlanguage)
                          (setf (get :contrast ntag) olanguage)
                          (setf (get :i-id ntag) ni-id)
-                         (setf (get :i-input ntag) (get-field :i-input nitem))
+                         (setf (get :i-input ntag)
+                           (or (get-field :o-input nitem)
+                               (get-field :i-input nitem)))
                          (setf (get :field ntag) field)
                          (setf (get :value ntag) nclash)
                          (format
                           stream
-                          "cell ~d ~d -contents ~s -format data ~
+                          "cell ~d ~d -contents ~d -format data ~
                            -action browse -tag ~a~%~
-                           cell ~d ~d -contents ~s -format data ~
+                           cell ~d ~d -contents ~d -format data ~
+                           -action browse -tag ~a~%~
+                           cell ~d ~d -contents ~d -format data ~
                            -action browse -tag ~a~%"
                           row j (length oclash) otag
-                          row (+ j 1) (length nclash) ntag))))
+                          row (+ j 1) (length common) ctag
+                          row (+ j 2) (length nclash) ntag))))
                 (incf row))
               (pop oitems)
               (pop nitems))
-             ((or (null ni-id) (and oi-id (<= oi-id ni-id)))
+             ((if sloppyp
+                (or (null ni-id) (and noffset (> noffset 0)))
+                (or (null ni-id) (and oi-id (<= oi-id ni-id))))
               ;;
-              ;; if .oi-id. is less or equal (which it should not) to .ni-id.
-              ;; output .compare. values for `old' item and continue
+              ;; if .oi-id. is less or equal (which it should not) to 
+              ;; .ni-id. output .compare. values for `old' item and continue
               ;;
+              (setf clashes (intersect-results oitem nil thorough))
               (case format
                 (:tcl
-                 (do ((show show (rest show))
-                      (oshow oshow (rest oshow))
-                      (j 1 (+ j 1)))
-                     ((null oshow))
-                   (if (and (eq (first show) :i-input) (stringp olanguage))
-                     (format
-                      stream
-                      "cell ~d ~d -contents ~s ~
-                       -format data -key ~d -source {~a}~%"
-                      row j (first oshow) oi-id olanguage)
-                     (format
-                      stream
-                      "cell ~d ~d -contents ~s -format data~%"
-                      row j (first oshow))))
-                 (do ((ocompare ocompare (rest ocompare))
-                      (j (+ shows 1) (+ j 1)))
-                     ((null ocompare))
-                   (format
-                    stream
-                    "cell ~d ~d -contents ~s -format data~%"
-                    row j (first ocompare)))))
+                 (format
+                  stream
+                  "cell ~d ~d -contents {~a} -format data~%"
+                  row 1 oi-id)
+                 (loop
+                     for j from (if sloppyp 3 2)
+                     for key in show for value in oshow
+                     do
+                       (if (and (eq key :i-input) (stringp olanguage))
+                         (format
+                          stream
+                          "cell ~d ~d -contents {~a} ~
+                           -format data -key ~d -source {~a}~%"
+                          row j (tcl-escape-braces value) oi-id olanguage)
+                         (format
+                          stream
+                          "cell ~d ~d -contents {~a} -format data~%"
+                          row j (tcl-escape-braces value))))
+                 (loop
+                     for value in ocompare for j from (+ shows 1)
+                     do
+                       (format
+                        stream
+                        "cell ~d ~d -contents {~a} -format data~%"
+                        row j (tcl-escape-braces value)))
+                 (loop
+                     for j from (+ shows compares compares 1) by 3
+                     for field in thorough
+                     for (oclash common nclash) in clashes
+                     for otag = (intern (gensym "") :keyword)
+                     do
+                       (setf nclash nclash)
+                       (setf common common)
+                       (setf (get :source otag) olanguage)
+                       (setf (get :contrast otag) nlanguage)
+                       (setf (get :i-id otag) oi-id)
+                       (setf (get :i-input otag)
+                         (or (get-field :o-input oitem)
+                             (get-field :i-input oitem)))
+                       (setf (get :field otag) field)
+                       (setf (get :value otag) oclash)
+                       (format
+                        stream
+                        "cell ~d ~d -contents ~d -format data ~
+                         -action browse -tag ~a~%"
+                        row j (length oclash) otag))))
               (pop oitems)
+              (when noffset 
+                (when (and (zerop (decf noffset)) (null ooffset))
+                  (setf ooffset 0)))
               (incf row))
              (t
               ;;
               ;; otherwise (.ni-id. is less than .oi-id.) output .compare.
               ;; values for it and leave `old' item to next iteration
               ;;
+              (setf clashes (intersect-results nil nitem thorough))
               (case format
                 (:tcl
-                 (do ((show show (rest show))
-                      (nshow nshow (rest nshow))
-                      (j 1 (+ j 1)))
-                     ((null nshow))
-                   (if (and (eq (first show) :i-input) (string nlanguage))
-                     (format
-                      stream
-                      "cell ~d ~d -contents ~s ~
-                       -format data -key ~d -source {~a}~%"
-                      row j (first nshow) ni-id nlanguage)
-                     (format
-                      stream
-                      "cell ~d ~d -contents ~s -format data~%"
-                      row j (first nshow))))
-                 (do ((ncompare ncompare (rest ncompare))
-                      (j (+ shows compares 1) (+ j 1)))
-                     ((null ncompare))
-                   (format
-                    stream
-                    "cell ~d ~d -contents ~s -format data~%"
-                    row j (first ncompare)))))
+                 (format
+                  stream
+                  "cell ~d ~d -contents {~a} -format data~%"
+                  row (if sloppyp 2 1) ni-id)
+                 (loop
+                     for j from (if sloppyp 3 2)
+                     for key in show for value in nshow
+                     do
+                       (if (and (eq key :i-input) (string nlanguage))
+                         (format
+                          stream
+                          "cell ~d ~d -contents {~a} ~
+                           -format data -key ~d -source {~a}~%"
+                          row j (tcl-escape-braces value) ni-id nlanguage)
+                         (format
+                          stream
+                          "cell ~d ~d -contents {~a} -format data~%"
+                          row j (tcl-escape-braces value))))
+                 (loop
+                     for value in ncompare for j from (+ shows compares 1)
+                     do
+                       (format
+                        stream
+                        "cell ~d ~d -contents {~a} -format data~%"
+                        row j (tcl-escape-braces value)))
+                 (loop
+                     for j from (+ shows compares compares 1) by 3
+                     for field in thorough
+                     for (oclash common nclash) in clashes
+                     for ntag = (intern (gensym "") :keyword)
+                     do
+                       (setf oclash oclash)
+                       (setf common common)
+                       (setf (get :source ntag) nlanguage)
+                       (setf (get :contrast ntag) olanguage)
+                       (setf (get :i-id ntag) ni-id)
+                       (setf (get :i-input ntag)
+                         (or (get-field :o-input nitem)
+                             (get-field :i-input nitem)))
+                       (setf (get :field ntag) field)
+                       (setf (get :value ntag) nclash)
+                       (format
+                        stream
+                        "cell ~d ~d -contents ~d -format data ~
+                         -action browse -tag ~a~%"
+                        row (+ j 2) (length nclash) ntag))))
               (pop nitems)
+              (when ooffset 
+                (when (and (zerop (decf ooffset)) (null noffset))
+                  (setf noffset 0)))
               (incf row)))))
     
     (when (or (stringp file) (stringp append)) (close stream))))
@@ -1480,17 +1729,44 @@
                             (format :tcl)
                             file append meter)
 
-  (let* ((thorough '(:derivation :mrs))
+  (declare (optimize (speed 3) (safety 0) (space 0)))
+
+  (let* ((thorough '(:derivation :mrs :tree))
+         (condition (if condition
+                      (concatenate 'string "(readings >= 1) && " condition)
+                      "readings >= 1"))
          (items
           (if (stringp data) 
             (analyze data 
                      :condition condition :thorough thorough
                      :meter meter :message t)
             data))
+         (message (format nil "generating `~a' result view ..." data))
          (stream (create-output-stream file append))
          (items (sort (copy-seq items) 
                       #'< :key #'(lambda (foo) (get-field :i-id foo)))))
+
+    (when (functionp *statistics-result-filter*)
+      (setf items
+        (loop
+            for item in items
+            for result = (funcall *statistics-result-filter* item)
+            when result collect result)))
     
+    (when meter
+      (when (> (length items) *statistics-critical-line-threshold*)
+        (send-to-podium "tsdb_beep" :wait t)
+        (let* ((prompt (format
+                        nil
+                        "yes-or-no-p {table generation may be slow ~
+                         (~d items); continue}"
+                        (length items)))
+               (result (send-to-podium prompt :wait t)))
+          (when (and (eq (first result) :ok) (not (= (second result) 1)))
+            (when (or (stringp file) (stringp append)) (close stream))
+            (return-from browse-results nil))))
+      (status :text message)
+      (meter :value 0))
     (case format
       (:tcl
        (when *statistics-tcl-formats* 
@@ -1501,7 +1777,7 @@
          layout row def -m1 5 -r 0 -m2 5 -c black -j center~%~
          layout col 0 -m1 5 -r 2 -m2 5 -c black -j center~%~
          layout col 2 -m1 5 -r 2 -m2 5 -c black -j left~%~
-         layout col 5 -m1 5 -r 2 -m2 5 -c black -j center~%~
+         layout col 6 -m1 5 -r 2 -m2 5 -c black -j center~%~
          layout row 0 -m1 5 -r 2 -m2 5 -c black -j center~%~
          layout row 1 -m1 5 -r 2 -m2 5 -c black -j center~%~
          layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%~
@@ -1509,16 +1785,35 @@
          cell 1 2 -contents {i-input} -format title~%~
          cell 1 3 -contents {readings} -format title~%~
          cell 1 4 -contents {derivation} -format title~%~
-         cell 1 5 -contents {mrs} -format title~%"
+         cell 1 5 -contents {mrs} -format title~%
+         cell 1 6 -contents {tree} -format title~%"
         (+ (length items) 1))))
     (loop
+        with increment = (and meter (/ 1 (if items (length items) 1)))
         with separator = 1
+        with indices = (loop
+                           with indices
+                           for field in '(:i-id :i-input :o-input 
+                                          :readings :results)
+                           for i from 0
+                           do
+                             (setf (getf indices field) i)
+                           finally (return indices))
         for row from 2 by 1
         for item in items
-        for i-id = (get-field :i-id item)
-        for i-input = (get-field :i-input item)
-        for readings = (get-field :readings item)
-        for results = (get-field :results item)
+        for values = (loop
+                         with values = (make-array 5)
+                         for pair in item
+                         for key = (first pair)
+                         when (getf indices key) do
+                           (setf (aref values (getf indices key)) (rest pair))
+                         finally (return values))
+          
+        for i-id = (aref values (getf indices :i-id))
+        for i-input = (aref values (getf indices :i-input))
+        for o-input = (aref values (getf indices :o-input))
+        for readings = (aref values (getf indices :readings))
+        for results = (aref values (getf indices :results))
         for derivations = (loop
                               for result in results
                               for derivation = (get-field :derivation result)
@@ -1527,8 +1822,14 @@
                        for result in results
                        for mrs = (get-field :mrs result)
                        when (and mrs (not (equal mrs ""))) collect mrs)
+        for trees = (loop
+                        for result in results
+                        for tree = (get-field :tree result)
+                        when (and tree (not (equal tree ""))) collect tree)
+        for otag = (intern (gensym "") :keyword)
         for dtag = (intern (gensym "") :keyword)
         for mtag = (intern (gensym "") :keyword)
+        for ttag = (intern (gensym "") :keyword)
         when (= (- row 1) (* separator 10))
         do 
           (case format
@@ -1539,44 +1840,57 @@
               row)))
           (incf separator)
         do
+          (when increment (meter-advance increment))
           ;; _fix_me_ this creates a potential memory leak: as soon as the
           ;; window for this table is destroyed, there will be no further
           ;; reference to the (tag) symbols used to store data on the lisp
           ;; side.  yet, the values associated with the symbol properties will
           ;; never become unbound.                              (11-apr-00)
           ;;
+          (setf (get :source otag) data)
+          (setf (get :i-id otag) i-id)
+          (setf (get :i-input otag) o-input)
+          (setf (get :field otag) :o-input)
+          (setf (get :value otag) i-input)
           (setf (get :source dtag) data)
           (setf (get :i-id dtag) i-id)
-          (setf (get :i-input dtag) i-input)
+          (setf (get :i-input dtag) o-input)
           (setf (get :field dtag) :derivation)
           (setf (get :value dtag) derivations)
           (setf (get :source mtag) data)
           (setf (get :i-id mtag) i-id)
-          (setf (get :i-input mtag) i-input)
+          (setf (get :i-input mtag) o-input)
           (setf (get :field mtag) :mrs)
           (setf (get :value mtag) mrss)
+          (setf (get :source ttag) data)
+          (setf (get :i-id ttag) i-id)
+          (setf (get :i-input ttag) o-input)
+          (setf (get :field ttag) :tree)
+          (setf (get :value ttag) trees)
           (case format
             (:tcl
              (format stream "cell ~d 1 -contents {~a} -format data~%" row i-id)
              (if (stringp data)
                (format 
                 stream
-                "cell ~d 2 -contents {~a} -format data -key ~d -source {~a}~%"
-                row i-input i-id data)
+                "cell ~d 2 -contents {~a} -format data -key ~d -source {~a}~
+                      ~:[~*~; -action browse -stag ~a~]~%"
+                row (tcl-escape-braces (or o-input i-input)) i-id data 
+                o-input otag)
                (format 
                 stream
                 "cell ~d 2 -contents {~a} -format data~%"
-                row i-input))
+                row (tcl-escape-braces (or o-input i-input))))
              (format
               stream
               "cell ~d 3 -contents {~a} -format data~%~
-               cell ~d 4 -contents {~a} -format data ~
-                 -action browse -tag ~a~%~
-               cell ~d 5 -contents {~a} -format data -action browse -tag ~a~%"
+               cell ~d 4 -contents {~a} -format data -action browse -tag ~a~%~
+               cell ~d 5 -contents {~a} -format data -action browse -tag ~a~%~
+               cell ~d 6 -contents {~a} -format data -action browse -tag ~a~%"
               row readings
               row (length derivations) dtag
-              row (length mrss) mtag)))
-          
+              row (length mrss) mtag
+              row (length trees) ttag)))
         finally
           (case format
             (:tcl
@@ -1584,8 +1898,12 @@
               stream
               "layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%"
               (- row 1)))))
-    
-    (when (or (stringp file) (stringp append)) (close stream))))
+    (when meter
+      (status :text (format nil "~a done" message) :duration 10)
+      (meter :value 1))
+
+    (when (or (stringp file) (stringp append)) (close stream))
+    (length items)))
 
 (defun execute-tag (action tag &key (format :tcl) file append)
 
@@ -1610,30 +1928,36 @@
                  "layout col def -m1 5 -r 2 -m2 5 -c black -j center~%~
                   layout row def -m1 5 -r 1 -m2 5 -c black -j center~%~
                   layout row 0 -m1 5 -r 2 -m2 5 -c black -j center~%"))
-              (loop
-                  with *print-pretty* = nil
-                  with *print-case* = :downcase
-                  for clash in clashes
-                  for i from 1
-                  for ntag = (unless browser (intern (gensym "") :keyword))
-                  when browser do
-                    (funcall browser clash i-input)
-                  else do
-                    (setf (get :i-id ntag) (get :i-id tag))
-                    (setf (get :i-input ntag) (get :i-input tag))
-                    (setf (get :source ntag) (get :source tag))
-                    (setf (get :value ntag) clash)
-                    (format
-                     stream
-                     "cell ~d 1 -contents {~s} -format title ~
-                      -action reconstruct -tag ~a~%"
-                     i clash ntag)
-                  finally
-                    (when stream
+              (if (stringp clashes)
+                (format
+                 stream
+                 "cell 1 1 -contents {~a} -format title~%~
+                  layout row 2 -m1 5 -r 2 -m2 5 -c black -j center~%"
+                 clashes)
+                (loop
+                    with *print-pretty* = nil
+                    with *print-case* = :downcase
+                    for clash in clashes
+                    for i from 1
+                    for ntag = (unless browser (intern (gensym "") :keyword))
+                    when browser do
+                      (funcall browser clash i-input)
+                    else do
+                      (setf (get :i-id ntag) (get :i-id tag))
+                      (setf (get :i-input ntag) (get :i-input tag))
+                      (setf (get :source ntag) (get :source tag))
+                      (setf (get :value ntag) clash)
                       (format
                        stream
-                       "layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%"
-                       i)))))
+                       "cell ~d 1 -contents {~a} -format title ~
+                             -action reconstruct -tag ~a~%"
+                       i (tcl-escape-braces clash) ntag)
+                    finally
+                      (when stream
+                        (format
+                         stream
+                         "layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%"
+                         i))))))
            (when (and stream (or (stringp file) (stringp append)))
              (close stream)))))
       (:reconstruct
@@ -1884,7 +2208,7 @@
                  (:performance
                   (format
                    stream
-                   "cell ~d 1 -contents \"~a\" -format aggregate~%~
+                   "cell ~d 1 -contents {~a} -format aggregate~%~
                     cell ~d 2 -contents ~d -format data~%~
                     cell ~d 3 -contents ~d -format data~%~
                     cell ~d 4 -contents ~:[{-}~*~;~,1f~] -format data~%~
@@ -1917,7 +2241,7 @@
                  (:parser
                   (format
                    stream
-                   "cell ~d 1 -contents \"~a\" -format aggregate~%~
+                   "cell ~d 1 -contents {~a} -format aggregate~%~
                     cell ~d 2 -contents ~d -format data~%~
                     cell ~d 3 -contents ~,1f -format data~%~
                     cell ~d 4 -contents ~,1f -format data~%~
@@ -1979,7 +2303,7 @@
            (:performance
             (format
              stream
-             "cell ~d 1 -contents \"~a\" -format total~%~
+             "cell ~d 1 -contents {~a} -format total~%~
               cell ~d 2 -contents ~d -format total~%~
               cell ~d 3 -contents ~d -format total~%~
               cell ~d 4 -contents ~:[{-}~*~;~,1f~] -format total~%~
@@ -2012,7 +2336,7 @@
            (:parser
             (format
              stream
-             "cell ~d 1 -contents \"~a\" -format aggregate~%~
+             "cell ~d 1 -contents {~a} -format aggregate~%~
               cell ~d 2 -contents ~d -format data~%~
               cell ~d 3 -contents ~,1f -format data~%~
               cell ~d 4 -contents ~,1f -format data~%~
@@ -2034,7 +2358,7 @@
              (+ naggregates 2)  rpedges)
             (format
              stream
-             "cell ~d 1 -contents \"~a\" -format aggregate~%~
+             "cell ~d 1 -contents {~a} -format aggregate~%~
               cell ~d 2 -contents ~d -format data~%~
               cell ~d 3 -contents ~,1f -format data~%~
               cell ~d 4 -contents ~,1f -format data~%~
@@ -2056,7 +2380,7 @@
              (+ naggregates 3)  (divide rpedges tcpu))
             (format
              stream
-             "cell ~d 1 -contents \"~a\" -format aggregate~%~
+             "cell ~d 1 -contents {~a} -format aggregate~%~
               cell ~d 2 -contents ~d -format data~%~
               cell ~d 3 -contents ~,1f -format data~%~
               cell ~d 4 -contents ~,1f -format data~%~
@@ -2163,12 +2487,12 @@
            (+ naggregates 2) (+ naggregates 3))
           (format
            stream
-           "cell 1 1 -contents ~a -format title~%~
-            region 1 1 2 1 -contents ~a -format title ~
+           "cell 1 1 -contents {~a} -format title~%~
+            region 1 1 2 1 -contents {~a} -format title ~
               -hor_justify left -ver_justify center~%~
-            region 1 2 1 4 -contents ~s -format title -hor_justify center~%~
-            region 1 5 1 7 -contents ~s -format title -hor_justify center~%~
-            region 1 8 1 10 -contents ~s -format title -hor_justify center~%"
+            region 1 2 1 4 -contents {~a} -format title -hor_justify center~%~
+            region 1 5 1 7 -contents {~a} -format title -hor_justify center~%~
+            region 1 8 1 10 -contents {~a} -format title -hor_justify center~%"
            alabel alabel olabel nlabel clabel)
           (do ((labels '("tasks\\n\\330" "time\\n\\330" "space\\n\\330"
                          "tasks\\n\\330" "time\\n\\330" "space\\n\\330"
@@ -2216,7 +2540,7 @@
              (:tcl
               (format
                stream
-               "cell ~d 1 -contents ~s -format aggregate~%~
+               "cell ~d 1 -contents {~a} -format aggregate~%~
                 cell ~d 2 -contents ~d -format data~%~
                 cell ~d 3 -contents ~,2f -format data~%~
                 cell ~d 4 -contents ~d -format data~%~
@@ -2264,7 +2588,7 @@
            (:tcl
             (format
              stream
-             "cell ~d 1 -contents ~s -format total~%~
+             "cell ~d 1 -contents {~a} -format total~%~
               cell ~d 2 -contents ~d -format total~%~
               cell ~d 3 -contents ~,2f -format total~%~
               cell ~d 4 -contents ~d -format total~%~
@@ -2770,7 +3094,7 @@
              do
                (format 
                 stream 
-                "cell 1 ~d -contents \"~(~a~)\" -format title~%"
+                "cell 1 ~d -contents {~(~a~)} -format title~%"
                 i attribute))
          (loop
              for rule in rules
@@ -2783,7 +3107,7 @@
              do
                (format 
                 stream 
-                "cell ~d ~d -contents \"~a\" -format data~%"
+                "cell ~d ~d -contents {~a} -format data~%"
                 i 1 (second rule))
                (loop
                    for attribute in attributes
@@ -2795,7 +3119,7 @@
                    do
                      (format 
                       stream 
-                      "cell ~d ~d -contents \"~a\" -format data~%"
+                      "cell ~d ~d -contents {~a} -format data~%"
                       i j value))
              finally
                (format 
@@ -2808,7 +3132,7 @@
                    do
                      (format
                       stream
-                      "cell ~d ~d -contents \"~a\" -format total~%"
+                      "cell ~d ~d -contents {~a} -format total~%"
                       (+ i 1) j (get-field attribute totals))))))
       (force-output stream)
       (when file (close stream))

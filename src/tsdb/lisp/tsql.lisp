@@ -54,10 +54,11 @@
                                          :key #'first :test #'string=)))
                         (cond
                          (field (push (second field) types))
-                         (t (format
-                             *tsdb-io*
-                             "~&select(): ignoring unknown attribute `~a'.~%"
-                             attribute)
+                         (t (unless quiet
+                              (format
+                               *tsdb-io*
+                               "~&select(): ignoring unknown attribute `~a'.~%"
+                               attribute))
                             (push attribute unknown)))))
                     (dolist (attribute unknown)
                       (setf attributes 
@@ -106,6 +107,15 @@
         (loop
             for line in result
             do (push (pairlis keys line) data))
+
+        (when (find-attribute-reader :i-input)
+          (loop
+              with reader = (find-attribute-reader :i-input)
+              for tuple in data
+              for value = (get-field :i-input tuple)
+              for new = (and value (funcall reader value))
+              when new do 
+                (setf (rest tuple) (acons :o-input new (rest tuple)))))
 
         (when dmeter (meter :value (get-field :end dmeter)))
         (when status
@@ -233,16 +243,27 @@
                          (incf (aref totals (- j 1)) field)
                        do
                          (if (and i-id (eq key :i-input))
+                           (let ((o-input (get-field :o-input item))
+                                 (tag (intern (gensym "") :keyword)))
+                             (when o-input
+                               (setf (get :source tag) language)
+                               (setf (get :i-id tag) i-id)
+                               (setf (get :i-input tag) o-input)
+                               (setf (get :field tag) :o-input)
+                               (setf (get :value tag) field))
+                             (format
+                              stream
+                              "cell ~d ~d -contents {~a} ~
+                               -format data -key ~d -source {~a}~
+                               ~:[~*~; -action browse -stag ~a~]~%"
+                              i j (tcl-escape-braces (or o-input field))
+                              i-id language
+                              field tag))
                            (format
                             stream
-                            "cell ~d ~d -contents ~s ~
-                             -format data -key ~d -source {~a}~%"
-                            i j field i-id language)
-                           (format
-                            stream
-                            "cell ~d ~d -contents ~:[~s~;~:d~] ~
+                            "cell ~d ~d -contents ~:[{~a}~;~:d~] ~
                              -format data~%"
-                            i j (integerp field) field))
+                            i j (integerp field) (tcl-escape-braces field)))
                          (when (zerop (mod (- i 1) 10))
                            (format
                             stream

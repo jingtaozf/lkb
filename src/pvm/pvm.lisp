@@ -286,6 +286,37 @@
 
 #+(version>= 5 0)
 (def-foreign-call 
+    (pvm_announce "pvm_announce")
+    ((class (* :char) string)
+     (version (* :char) string)
+     (user (* :char) string))
+  :returning :int)
+
+#-(version>= 5 0)
+(defforeign
+    'pvm_announce :entry-point "pvm_announce"
+    :arguments '(string string string)
+    :return-type :integer)
+
+#+(version>= 5 0)
+(def-foreign-call 
+    (pvm_delinfo "pvm_delinfo")
+    ((class (* :char) string)
+     (index :int integer)
+     (flags :int integer))
+  :returning :int)
+
+#-(version>= 5 0)
+(defforeign
+    'pvm_delinfo :entry-point "pvm_delinfo"
+    :arguments '(string integer integer)
+    :return-type :integer)
+
+(defun pvm_retract (class)
+  (pvm_delinfo class 0 0))
+
+#+(version>= 5 0)
+(def-foreign-call 
     (_pvm_task_info "pvm_task_info")
     ((tid :int integer)
      (file (* :char) string))
@@ -391,6 +422,3 @@
   (when (and interrupt (probe-file interrupt))
     (delete-file interrupt)
     t))
-
-
-

@@ -23,16 +23,24 @@
 (defparameter *derivations-ignore-leafs-p* t)
 
 (defmacro derivation-root (derivation)
-  `(first ,derivation))
+  `(if (integerp (first ,derivation)) 
+     (second ,derivation)
+     (first ,derivation)))
 
 (defmacro derivation-start (derivation)
-  `(second ,derivation))
+  `(if (integerp (first ,derivation)) 
+     (fourth ,derivation)
+     (third ,derivation)))
 
 (defmacro derivation-end (derivation)
-  `(third ,derivation))
+  `(if (integerp (first ,derivation)) 
+     (fifth ,derivation)
+     (fourth ,derivation)))
 
 (defmacro derivation-daughters (derivation)
-  `(rest (rest (rest ,derivation))))
+  `(if (integerp (first ,derivation))
+     (rest (rest (rest (rest (rest ,derivation)))))
+     (rest (rest (rest ,derivation)))))
 
 (defun derivation-depth (derivation)
   (if (null derivation)

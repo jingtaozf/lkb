@@ -435,12 +435,13 @@
                       (pathname-directory *tsdb-skeleton-directory*)
                       (pathname-directory 
                        (make-pathname :directory *tsdb-skeleton-directory*))))
+         (file (make-pathname :directory directory 
+                              :name *tsdb-skeleton-index*))
          (skeletons 
-          (with-open-file (stream (make-pathname :directory directory 
-                                                 :name *tsdb-skeleton-index*)
-                           :direction :input
-                           :if-does-not-exist :create)
-            (read stream nil nil)))
+          (when (probe-file file)
+            (with-open-file (stream file
+                             :direction :input :if-does-not-exist :create)
+              (read stream nil nil))))
          (skeletons 
           (sort skeletons #'string< 
                 :key #'(lambda (foo) (or (get-field :content foo) ""))))
@@ -608,9 +609,39 @@
                                (name (concatenate 'string name date)))
                           (find-tsdb-directory name))))
                     (find-tsdb-directory name)))
-             (skeleton (find-skeleton skeleton-name))
+             (skeleton (and skeleton-name (find-skeleton skeleton-name)))
              (old (when skeleton (find-skeleton-directory skeleton))))
         (cond
+         ((probe-file new)
+          (if stream
+            (format 
+             stream
+             "tsdb(): database `~a' already exists.~%"
+             (string-trim '(#\/) (string-strip *tsdb-home* new)))
+            5))
+         ((null skeleton-name)
+          (when meter (meter :value (get-field :start meter)))
+          (unless (purge-directory new)
+            (when (probe-file new) (delete-file new))
+            (mkdir new))
+          (let ((relations (make-pathname 
+                            :directory (namestring *tsdb-skeleton-directory*)
+                            :name *tsdb-relations-skeleton*))
+                (target (make-pathname :directory new :name "relations")))
+            (cp relations target))
+          (let ((imeter (madjust / meter 2)))
+            (when imeter (meter :value (get-field :end imeter)))
+            (select "i-id" :integer "item" nil new :absolute t)
+            (when (verify-tsdb-directory new :absolute t)
+              (setf *tsdb-data* 
+                (string-trim '(#\/) (string-strip *tsdb-home* new)))
+              (when meter (meter :value (get-field :end meter)))
+              (if stream
+                (format 
+                 stream
+                 "tsdb(): `~a' created as new default test suite.~%"
+                 *tsdb-data*)
+                0))))
          ((null skeleton)
           (if stream
             (format 
@@ -632,13 +663,7 @@
              "tsdb(): no skeleton directory `~a'.~%"
              old)
             4))
-         ((probe-file new)
-          (if stream
-            (format 
-             stream
-             "tsdb(): database `~a' already exists.~%"
-             (string-trim '(#\/) (string-strip *tsdb-home* new)))
-            5))
+         
          (t
           (when meter (meter :value (get-field :start meter)))
           (let ((status 

@@ -148,7 +148,7 @@
                    until (or (and (not burst) (null items))
                              (and burst (null busy) (null idle))
                              (and (null items) (null busy)))
-                   for i = (or parse-id 0) then (+ i 1)
+                   for i = (or parse-id 1) then (+ i 1)
                    for run = (if burst (first idle) (first runs))
                                                             
                    do
@@ -156,7 +156,7 @@
                        (format
                         stream
                         "do-process(): ~
-                         received external interrupt signal~
+                         external interrupt signal~
                          ~:[~*~; (~d active client~:p)~].~%"
                         busy (length busy))
                        (force-output stream)
@@ -183,7 +183,9 @@
                              (enrich-result result :verbose verbose)))
                          (when (and item result)
                            (when verbose
-                             (print-item item :stream stream :result result)
+                             (print-item item 
+                                         :stream stream :result result
+                                         :interactive interactive)
                              (print-result result :stream stream))
                            (unless interactive
                              (store-result data result :cache cache))
@@ -221,7 +223,8 @@
                                       :verbose verbose :stream stream)))
                      (when item
                        (when (and verbose (not burst))
-                         (print-item item :stream stream))
+                         (print-item item 
+                                     :stream stream :interactive interactive))
                        (setf result
                          (process-item item
                                        :trees-hook *tsdb-trees-hook* 
@@ -259,6 +262,222 @@
               (status :text (format nil "~a interrupt" pmessage) :duration 5)
               (status :text (format nil "~a done" pmessage) :duration 5))
             (meter :value (get-field :end meter))))))))
+
+(defun tsdb-do-listen (data
+                        &key comment overwrite
+                             (verbose *tsdb-verbose-processing-p*)
+                             (reset t)
+                             output
+                             (cache *tsdb-cache-database-writes-p*)
+                             (stream *tsdb-io*)
+                             (file (format 
+                                    nil 
+                                    "/tmp/pvm.debug.~a"
+                                    (current-user)))
+                             status interrupt)
+  
+  (initialize-tsdb)
+  (when reset                           
+    (pvm_quit)
+    (pvm_start :user (current-user))
+    (sleep 2)
+    (setf *pvm-master* (pvm_register file *pvm-debug-p*))
+    (setf *pvm-clients* nil))
+
+  (purge-profile-cache data)
+  (when overwrite (purge-test-run data :action :empty))
+
+  (let* ((stream (if output (create-output-stream output) stream))
+         (*tsdb-gc-message-p* nil)
+         (schema (read-database-schema data))
+         (cache (when cache (create-cache data 
+                                          :schema schema :verbose verbose 
+                                          :protocol cache)))
+         (*tsdb-trees-hook*
+          (ignore-errors
+           (typecase *tsdb-trees-hook*
+             (null nil)
+             (string (symbol-function 
+                      (read-from-string *tsdb-trees-hook*)))
+             (symbol (symbol-function *tsdb-trees-hook*))
+             (function *tsdb-trees-hook*))))
+         (*tsdb-semantix-hook*
+          (ignore-errors
+           (typecase *tsdb-semantix-hook*
+             (null nil)
+             (string (symbol-function 
+                      (read-from-string *tsdb-semantix-hook*)))
+             (symbol (symbol-function *tsdb-semantix-hook*))
+             (function *tsdb-semantix-hook*))))
+         (*tsdb-result-hook*
+          (typecase *tsdb-result-hook*
+            (null nil)
+            (string (symbol-function 
+                     (read-from-string *tsdb-result-hook*)))
+            (symbol (symbol-function *tsdb-result-hook*))
+            (function *tsdb-result-hook*)))
+         (i-id (largest-i-id data :verbose verbose))
+         (run-id (+ (largest-run-id data :verbose verbose) 1))
+         (parse-id (largest-parse-id run-id data :verbose verbose))
+         (run (pairlis (list :data :run-id :comment
+                             :user :host :os :start)
+                       (list data run-id comment
+                             nil nil nil (current-time :long t))))
+         (run (enrich-run run))
+         (mode "passive mode (<Control-G> to abort)")
+         (nitems 0)
+         (%accumlated-rule-statistics% nil))
+    (declare (special %accumlated-rule-statistics%))
+    
+    (when status
+      (status 
+       :text (format nil "entering ~a: listening for incoming data" mode)))
+  
+    (unwind-protect
+      (ignore-errors
+       (pvm::pvm_announce "itsdb" (current-tsdb) (current-user))
+       (loop
+           for message = (receive-item nitems
+                                       :interrupt interrupt 
+                                       :stream stream :verbose verbose)
+           while (and message (get-field :data message))
+           do
+             (incf nitems) (incf i-id) (incf parse-id)
+             (let* ((content (get-field :data message))
+                    (user (get-field :user content))
+                    (host (get-field :host content))
+                    (os (get-field :os content))
+                    (environment (get-field :run content))
+                    (status
+                     (format
+                      nil
+                      "passive mode (<Control-G> to abort): ~
+                       captured ~d item~:p from `~a@~a'"
+                      nitems user host))
+                    (i-input (get-field :i-input content))
+                    (o-input 
+                     (when (find-attribute-reader :i-input)
+                       (funcall (find-attribute-reader :i-input) i-input)))
+                    (i-length (get-field :i-length content))
+                    (item (pairlis '(:i-id :i-input :o-input 
+                                     :i-wf :i-length :i-origin)
+                                   (list i-id i-input o-input 
+                                         1 i-length "captured")))
+                    (item (enrich-item run item
+                                       :parse-id parse-id
+                                       :verbose verbose :stream stream))
+                    (result (append 
+                             (pairlis '(:run-id 
+                                        :parse-id :i-id)
+                                      (list (get-field :run-id run) 
+                                            parse-id i-id))
+                             content))
+                    (result (enrich-result result)))
+               (when status (status :text status))
+               (setf (get-field :items run) nitems)
+               (setf (get-field :user run) user)
+               (setf (get-field :host run) host)
+               (setf (get-field :os run) os)
+               (when (= nitems 1)
+                 (nconc run environment))
+               (print-item item :stream stream :result result)
+               (print-result result :stream stream)
+               ;;
+               ;; _fix_me_ create store-item() to go through the write .cache.
+               ;;
+               (insert data "item" (list item))
+               (store-result data result :cache cache)
+               (when (get-field :interrupt message) 
+                 (format
+                  stream
+                  "tsdb-do-listen(): external interrupt signal ~
+                   (captured ~d item~:p).~%"
+                  nitems)
+                 (return nil)))))
+
+      (let* ((user (get-field :user run))
+             (host (get-field :host run))
+             (status (format
+                      nil
+                      "leaving passive mode ~
+                       (captured ~d item~:p ~:[~2*~;from `~a@~a'~]) ..."
+                      nitems (and user host) user host))
+             pending abort)
+        (pvm::pvm_retract "itsdb")
+        (when status
+          (status :text status :duration 10) (meter :value 0))
+        (loop
+            for message = (receive-item nitems
+                                        :wait 2
+                                        :interrupt interrupt 
+                                        :stream stream :verbose verbose)
+            while message
+            when (get-field :interrupt message) do
+              (setf abort t)
+            else do (push (get-field :data message) pending))
+        (if abort
+          (when status
+            (beep)
+            (status :text (format
+                           nil
+                           "leaving passive mode: ~
+                            ignoring ~d item~:p ~:[~2*~;from `~a@~a'~]"
+                           nitems (and user host) user host)
+                    :duration 10)
+            (meter :value 1)
+            (sleep 0.5))
+          (loop
+              with npending = (length pending)
+              with increment = (unless (zerop npending)
+                                 (/ 1 npending))
+              initially
+                (setf status (format
+                              nil
+                              "leaving passive mode ~
+                               (~d item~:p pending ~
+                               ~:[~2*~;from `~a@~a'~]) ..."
+                              npending (and user host) user host))
+                (when status (status :text status) (meter :value 0))
+              finally
+                (when status 
+                  (status :text (format nil "~a done" status))
+                  (meter :value 1)
+                  (sleep 0.5))
+              for content in pending
+              for i-input = (get-field :i-input content)
+              for o-input = (when (find-attribute-reader :i-input)
+                              (funcall (find-attribute-reader :i-input) 
+                                       i-input))
+              for i-length = (get-field :i-length content)
+              for foo = (pairlis '(:i-id :i-input :o-input 
+                                   :i-wf :i-length :i-origin)
+                                 (list i-id i-input o-input 
+                                       1 i-length "captured"))
+              for item = (enrich-item run foo
+                                      :parse-id parse-id
+                                      :verbose verbose :stream stream)
+              for bar = (append 
+                         (pairlis '(:run-id :parse-id :i-id)
+                                  (list (get-field :run-id run) parse-id i-id))
+                         content)
+              for result = (enrich-result bar)
+              do
+                (incf nitems) (incf i-id) (incf parse-id)
+                (when increment (meter-advance increment))
+                (setf (get-field :items run) nitems)
+                (print-item item :stream stream :result result)
+                (print-result result :stream stream)
+                (insert data "item" (list item))
+                (store-result data result :cache cache))))
+
+      (let* ((run (append (pairlis '(:end :status)
+                                   (list (current-time :long t) :capture))
+                          run)))
+        (complete-runs 
+         data (list run)
+         :cache cache :stream stream :interrupt interrupt)
+        (when cache (flush-cache cache :verbose verbose))
+        (format stream "~&~%")))))
 
 (defun create-runs (data run-id &key comment 
                                      gc (tenure *tsdb-tenure-p*)
@@ -372,7 +591,7 @@
               (format
                stream
                "create-runs(): ~
-                received external interrupt signal.~%")
+                external interrupt signal.~%")
               (force-output stream)
               (return-from create-runs runs))))
     
@@ -449,10 +668,12 @@
                     (list run-id parse-id gc edges)) 
            item)))))))
 
-(defun print-item (item &key (stream *tsdb-io*) result)
+(defun print-item (item &key (stream *tsdb-io*) result interactive)
+  (declare (ignore interactive))
   
   (let* ((i-id (get-field :i-id item)) 
-         (i-input (get-field :i-input item))
+         (i-input (or (get-field :o-input item)
+                      (get-field :i-input item)))
          (i-wf (get-field :i-wf item))
          (gc (get-field :gc item))
          (edges (get-field :edges item))
@@ -506,7 +727,8 @@
     (let* ((run-id (get-field :run-id item))
            (parse-id (get-field :parse-id item))
            (i-id (get-field :i-id item)) 
-           (i-input (get-field :i-input item))
+           (i-input (or (and interactive (get-field :o-input item))
+                        (get-field :i-input item)))
            (gc (get-field :gc item))
            (edges (get-field :edges item))
            result i-load)
@@ -535,7 +757,7 @@
         (setf (get-field :gc item) :global)
         #+:allegro (excl:gc t)
         (when verbose
-          (print-item item :stream stream))
+          (print-item item :stream stream :interactive interactive))
         (gc-statistics-reset)
         (setf i-load #+:pvm (load_average) #-:pvm nil)
         (setf result (parse-item i-input :edges edges
@@ -692,13 +914,46 @@
           (format
            stream
            "process-queue(): ~
-            received external interrupt signal~
+            external interrupt signal~
             ~:[~*~; (~d active client~:p)~].~%"
            busy (length busy))
           (force-output stream))
         (return-from process-queue
           (pairlis '(:pending :interrupt)
                    (list pending t)))))
+
+
+(defun receive-item (nitems &key wait stream verbose interrupt)
+  (declare (ignore nitems))
+
+  (loop
+      for message = (pvm_poll -1 -1 1)
+      for i from 1
+      when (and (integerp wait) (>= i wait)) do (return nil)
+      when (message-p message) do
+        (when *pvm-debug-p*
+          (format t "~&receive-item(): got message:~% `~s'~%" message)
+          (force-output))
+        (let* ((tag (message-tag message))
+               (remote (message-remote message))
+               (content (message-content message)))
+
+          (cond
+           ((and (eql tag %pvm_lisp_message%)
+                 (eq (first content) :account)
+                 (eq (second content) :item-summary))
+            (return-from receive-item 
+              (pairlis '(:data :interrupt)
+                       (list (third content) (interrupt-p interrupt)))))
+           (t
+            (when verbose
+              (format
+               stream
+               "~&receive-item(): ~
+                ignoring unexpected message from <~d>.~%"
+               remote)
+              (force-output stream)))))
+      when (interrupt-p interrupt) do (return (acons :interrupt t nil))))
 
 
 (defun enrich-result (result &key verbose)
@@ -863,7 +1118,7 @@
             (format
              stream
              "complete-run(): ~
-              received external interrupt signal.~%")
+              external interrupt signal.~%")
             (force-output stream)
             (setf (client-status client) :interrupt)
             (acons :end (current-time :long t) nil))

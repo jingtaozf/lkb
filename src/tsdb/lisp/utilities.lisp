@@ -126,7 +126,7 @@
 (defun normalize-string (string &key escape)
   (if string
     (loop
-        with padding = 42
+        with padding = 128
         with length = (+ (length string) padding)
         with result = (make-array length
                                   :element-type 'character
@@ -140,9 +140,9 @@
         ;; files directly, we have to obey tsdb(1) escape conventions; thus,
         ;; the `@' --> `\s' translation should usually be deactivated.
         ;;                                              (26-aug-99  -  oe)
-        when (and escape (char= c *tsdb-ofs*)) do
+        when (and escape (or (char= c *tsdb-ofs*) (char= c #\\))) do
           (vector-push #\\ result)
-          (vector-push #\s result)
+          (vector-push (if (char= c *tsdb-ofs*) #\s #\\) result)
           (when (zerop (decf padding))
             (setf padding 42)
             (incf length padding)
@@ -183,6 +183,28 @@
         (concatenate 'string "\\\"" (tsdb-escape-quotes (subseq string 1)))
         (concatenate 
             'string (string prefix) (tsdb-escape-quotes (subseq string 1)))))
+    string))
+
+(defun tcl-escape-braces (string)
+  (if (and string (stringp string))
+    (loop
+        with padding = 128
+        with length = (+ (length string) padding)
+        with result = (make-array length
+                                  :element-type 'character
+                                  :adjustable nil :fill-pointer 0)
+        for c across string
+        when (or (char= c #\{) (char= c #\})) do
+          (vector-push #\\ result)
+          (vector-push c result)
+          (when (zerop (decf padding))
+            (setf padding 42)
+            (incf length padding)
+            (setf result (adjust-array result length)))
+        else do
+          (vector-push c result)
+        finally
+          (return result))
     string))
 
 (defun complement! (fn)
@@ -321,10 +343,15 @@
 
 (defun create-output-stream (file &optional append)
   (cond
-   ((or (stringp file) (stringp append))
-    (open (if (stringp append) append file)
+   ((or (stringp file) (pathnamep file))
+    (open file
           :direction :output 
-          :if-exists (if append :append :supersede)
+          :if-exists :supersede
+          :if-does-not-exist :create))
+   ((or (stringp append) (pathnamep append))
+    (open append
+          :direction :output 
+          :if-exists :append
           :if-does-not-exist :create))
    ((or file append) (or file append))
    (t *tsdb-io*)))
@@ -432,7 +459,16 @@
              (when (probe-file compressed)
                (delete-file compressed))
              (with-open-file (foo name :direction :output 
-                              :if-exists :supersede)))))))))
+                              :if-exists :supersede)))))
+        (:empty
+         (loop
+             with pattern = (make-pathname :directory directory :name :wild)
+             with files = (directory pattern)
+             for file in files
+             for name = (pathname-name file)
+             unless (equal name "relations") do
+               (with-open-file (foo file :direction :output 
+                                :if-exists :supersede))))))))
 
 (defun suggest-test-run-directory (skeleton)
   (let* ((grammar (current-grammar))

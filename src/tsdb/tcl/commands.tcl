@@ -3,12 +3,17 @@ proc tsdb_file {action {index -1}} {
   global globals skeletons;
 
   if {$action == "create"} {
-    set skeleton $skeletons($index);
-    if {$skeleton != ""} {
-      set globals(skeleton) [lindex $skeleton 0];
-      tsdb_set "*tsdb-default-skeleton*" "\"[lindex $skeleton 0]\"";
-      set command "(create \"[lindex $skeleton 0]\")";
+    if {$index == -1} {
+      set command "(create nil)";
       send_to_lisp :event $command;
+    } else {
+      set skeleton $skeletons($index);
+      if {$skeleton != ""} {
+        set globals(skeleton) [lindex $skeleton 0];
+        tsdb_set "*tsdb-default-skeleton*" "\"[lindex $skeleton 0]\"";
+        set command "(create \"[lindex $skeleton 0]\")";
+        send_to_lisp :event $command;
+      }; # else
     }; # if
   } elseif {$action == "rename"} {
     if {[verify_ts_selection]} {return 1};
@@ -240,8 +245,8 @@ proc tsdb_update {{name complete}} {
   }; # if
 
   if {$name == "complete" || $name == "division"} {
-    set globals(division,wellformed) 1;
-    update_condition_cascade wellformed division;
+    set globals(division,analyzed) 1;
+    update_condition_cascade analyzed division;
   }; # if
 
   if {$name == "complete" || $name == "condition"} {
@@ -333,6 +338,26 @@ proc tsdb_browse_vocabulary {{load 0}} {
 }; # tsdb_browse_vocabulary()
 
 
+proc tsdb_capture {} {
+
+  global globals test_suites;
+
+  if {[verify_ts_selection "" "write"]} {return 1};
+  set data $globals(data);
+  if {[input "comment:" "" "" comment]} {
+    return;
+  }; # if
+  history_add comment $globals(input);
+  set comment [lispify_string $globals(input)];
+  set command \
+    [format \
+     "(capture \"%s\" :comment \"%s\" :overwrite %s)" \
+      $data $comment [lispify_truth_value $globals(overwrite)]];
+  send_to_lisp :event $command 0 1;
+
+}; # tsdb_capture()
+
+
 proc tsdb_browse {code {condition ""} {globalp 1} {profile ""}} {
 
   global globals;
@@ -346,7 +371,7 @@ proc tsdb_browse {code {condition ""} {globalp 1} {profile ""}} {
 
   switch $code {
     items {
-      set attributes "(\"i-id\" \"i-input\" \"i-wf\" \"i-category\")";
+      set attributes "(\"i-id\" \"i-input\" \"i-length\" \"i-wf\" \"i-category\")";
       set relations "(\"item\")";
     }
     phenomena {
@@ -354,7 +379,7 @@ proc tsdb_browse {code {condition ""} {globalp 1} {profile ""}} {
       set relations "(\"phenomenon\")";
     }
     runs {
-      set attributes "(\"run-id\" \"r-comment\" \"platform\" \"application\" \"grammar\" \"avms\" \"sorts\" \"templates\" \"lexicon\" \"lrules\" \"rules\" \"user\" \"host\" \"start\" \"end\" \"items\" \"status\")";
+      set attributes "(\"run-id\" \"r-comment\" \"run-comment\" \"platform\" \"application\" \"grammar\" \"avms\" \"sorts\" \"templates\" \"lexicon\" \"lrules\" \"rules\" \"user\" \"host\" \"start\" \"end\" \"items\" \"status\")";
       set relations "(\"run\")";
       set condition "";
     }
@@ -364,6 +389,11 @@ proc tsdb_browse {code {condition ""} {globalp 1} {profile ""}} {
     }
     results {
       set command [format "(results \"%s\")" $profile];
+      send_to_lisp :event $command;
+      return 0;
+    }
+    trees {
+      set command [format "(trees \"%s\")" $profile];
       send_to_lisp :event $command;
       return 0;
     }
@@ -523,7 +553,11 @@ proc analyze_competence {code} {
   if {[verify_ts_selection]} {return 1};
 
   set command \
-      [format "(analyze-competence \"%s\" :wf %d)" $globals(data) $code];
+      [format "(analyze-competence \"%s\" :wf %d" $globals(data) $code];
+  if {$globals(division) != ""} {
+    set command "$command :division \"$globals(division)\"";
+  }; # if
+  set command "$command)";
   send_to_lisp :event $command;
 
 }; # analyze_competence()

@@ -35,8 +35,7 @@
       (when (and (or (null action) (member action '(:skeletons :all)))
                  (probe-file index))
         (setf *tsdb-skeletons* (with-open-file (stream index 
-                                                :direction :input
-                                                :if-does-not-exist :create)
+                                                :direction :input)
                                  (read stream nil nil))))
       (when (and (or (null action) (member action '(:cache :all))) cache)
         (load-cache :background background :name name :pattern pattern))))
@@ -265,6 +264,20 @@
              (force-output *tsdb-io*))
            c-id))
         (when (integerp c-id) (push c-id c-ids))))))
+
+(defun largest-i-id (&optional (data *tsdb-data*)
+                     &key (verbose t))     
+  (let* ((query "select i-id from item")
+         (result (call-tsdb query data))
+         (i-id 
+          (with-input-from-string (stream result)
+            (loop
+                for i-id = (read stream nil :eof)
+                until (equal i-id :eof)
+                maximize i-id))))
+    (when verbose
+      (format *tsdb-io* "~&largest-i-id(): largest `i-id' is ~a.~%" i-id))
+    i-id))
 
 (defun largest-run-id (&optional (data *tsdb-data*)
                        &key (verbose t))     

@@ -8,8 +8,11 @@ proc update_skeleton_list {} {
   foreach i [lsort -integer [array names skeletons]] {
     set item $skeletons($i);
     set label "[lindex $item 1] \[[lindex $item 2] items\]";
-    $menu add command -label $label -command [list tsdb_file create $i]
+    $menu add command -label $label -command [list tsdb_file create $i];
   }; # foreach
+  $menu add separator;
+  $menu add command -label "Null Test Suite Instance" \
+    -command "tsdb_file create -1";
 
   copyleft hide;
 
@@ -556,13 +559,18 @@ proc register_at_saabruecken {} {
 
 proc tsdb_set {variable {value ""}} {
 
-  global globals;
+  global globals compare_in_detail;
 
   if {$value == ""} {
     switch $variable {
       aggregate_dimension {
         set variable "*statistics-aggregate-dimension*";
         set value $globals(aggregate_dimension);
+      }
+      detail_sloppy_alignment_p {
+        set variable "*statistics-detail-sloppy-alignment-p*"
+        set value \
+          [lispify_truth_value $compare_in_detail(options,sloppy_alignment)];
       }
       exhaustive_p {
         set variable "*tsdb-exhaustive-p*"; 
@@ -630,7 +638,10 @@ proc tsdb_set {variable {value ""}} {
       *statistics-aggregate-size* -
       *statistics-aggregate-threshold* -
       *statistics-aggregate-lower* -
-      *statistics-aggregate-upper* {
+      *statistics-aggregate-upper* -
+      *yy-k2y-ra-threshold* -
+      *yy-rts-ra-threshold* -
+      *yy-k2y-rts-ra-ratio* {
         set value nil;
       }
       default {
@@ -662,9 +673,15 @@ proc verify_ts_selection {{code ""} {access "read"}} {
     }; # for
     if {![info exists index] || [lindex $test_suites($index) 1] != "rw"} {
       tsdb_beep;
-      status "database `$globals(data)' is write-protected (has `ro' status)" 5;
+      status \
+        "database `$globals(data)' is write-protected (has `ro' status)" 5;
       return 1;
     }; # fi
+    if {[lindex $test_suites($index) 3] > 0
+        && $globals(overwrite)
+        && [yes-or-no-p "overwrite non-empty `$globals(data)'"] != 1} {
+      return 1;
+    }; # if
   }; # fi
 
   if {$code != ""
@@ -724,12 +741,12 @@ proc entry_validate {entry {lower ""} {upper ""} {label ""}} {
       } else {
         set error [format "invalid (too large) value in entry field%s (%s)" \
                    [expr {$label != "" ? " `$label'" : ""}] \
-                   "should be less or equal $upper"];
+                   "must be less or equal $upper"];
       }; # else
     } else {
       set error [format "invalid (too small) value in entry field%s (%s)" \
                  [expr {$label != "" ? " `$label'" : ""}] \
-                 "should be greater or equal $lower"];
+                 "must be greater or equal $lower"];
     }; # else
   } else {
     set error [format "invalid (non-numeric) value in entry field%s" \

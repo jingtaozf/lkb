@@ -624,7 +624,18 @@ proc make_new_item {canvas row col optionarrayname {tags ""} } {
     if {[info exists o(key)] && [info exists o(source)]} {
 	$canvas bind $item <Double-Button> \
 	    [list tsdb_process selection $o(source) $o(key)];
+      if {[info exists o(action)] && [info exists o(stag)]} {
+        $canvas itemconfigure $item -fill tomato;
+      } else {
+        $canvas itemconfigure $item -fill red;
+      }; # else
     }; # if
+    if {[info exists o(action)] && [info exists o(stag)]} {
+      $canvas itemconfigure $item -fill red;
+      $canvas bind $item <Shift-Double-Button> \
+        [list tsdb_execute $o(action) $o(stag)];
+    }; # if
+
     if {[info exists o(action)] && [info exists o(tag)]} {
       $canvas itemconfigure $item -fill red;
       $canvas bind $item <Double-Button> \

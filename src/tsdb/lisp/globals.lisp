@@ -20,7 +20,7 @@
 
 (defparameter *tsdb-name* "[incr tsdb()]")
 
-(defparameter *tsdb-version* "1.7 (24-jun-00)")
+(defparameter *tsdb-version* "1.8 (17-jun-01)")
 
 (defparameter
   *tsdb-application*
@@ -36,8 +36,9 @@
 
 (defparameter 
   *tsdb-skeleton-directory* 
-  (namestring (dir-append (get-sources-dir "tsdb")
-                          '(:relative "tsdb" "skeletons" "english"))))
+  (namestring (dir-append 
+               (get-sources-dir "tsdb")
+               '(:relative "tsdb" "skeletons" #-:yy "english" #+:yy "yy"))))
 
 (defparameter *tsdb-data* "toy")
 
@@ -111,7 +112,8 @@
 
 (defparameter *tsdb-relations-skeleton* "Relations")
 
-(defparameter *tsdb-instance-template* "%g/%v/%t/%d/%s")
+(defparameter *tsdb-instance-template* 
+  #-:yy "%g/%v/%t/%d/%s" #+:yy "%g/%v/%t/%d/%s")
 
 (defparameter *tsdb-skeletons* nil)
 
