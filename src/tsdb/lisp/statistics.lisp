@@ -465,35 +465,38 @@
       for item in items
       for id = (get-field :parse-id item)
       for results = (get-field :results item)
-      for matches = (cond
-                     (golds
-                      (loop
-                          for gid = (get-field :parse-id (first golds))
-                          while (and gid (< gid id)) do (pop golds))
-                      (let* ((matches (loop
-                                          for foo = (first golds)
-                                          for gid = (get-field :parse-id foo)
-                                          while (and gid (= gid id)) 
-                                          collect (pop golds)))
-                             (version (loop
-                                          for foo in matches
-                                          for bar = (get-field :t-version foo)
-                                          maximize bar)))
+      for matches = (when id
+                      (cond
+                       (golds
                         (loop
-                            for foo in matches
-                            when (= (get-field :t-version foo) version)
-                            collect (nconc (acons :rank 1 nil) foo))))
-                     (scores
-                      (loop
-                          for sid = (get-field :parse-id (first scores))
-                          while (and sid (< sid id)) do (pop scores))
-                      (let ((matches (loop
-                                         for score = (first scores)
-                                         for sid = (get-field :parse-id score)
-                                         while (and sid (= sid id)) 
-                                         collect (pop scores))))
-                        (sort matches #'< :key (lambda (foo) 
-                                                 (get-field :rank foo))))))
+                            for gid = (get-field :parse-id (first golds))
+                            while (and gid (< gid id)) do (pop golds))
+                        (let* ((matches (loop
+                                            for foo = (first golds)
+                                            for gid = (get-field :parse-id foo)
+                                            while (and gid (= gid id)) 
+                                            collect (pop golds)))
+                               (version 
+                                (loop
+                                    for foo in matches
+                                    for bar = (get-field :t-version foo)
+                                    maximize bar)))
+                          (loop
+                              for foo in matches
+                              when (= (get-field :t-version foo) version)
+                              collect (nconc (acons :rank 1 nil) foo))))
+                       (scores
+                        (loop
+                            for sid = (get-field :parse-id (first scores))
+                            while (and sid (< sid id)) do (pop scores))
+                        (let ((matches 
+                               (loop
+                                   for score = (first scores)
+                                   for sid = (get-field :parse-id score)
+                                   while (and sid (= sid id)) 
+                                   collect (pop scores))))
+                          (sort matches #'< :key (lambda (foo) 
+                                                   (get-field :rank foo)))))))
       when matches do
         (loop
             for match in matches 
@@ -515,7 +518,8 @@
                               for result in results
                               for i from 1
                               collect (acons :rank i result))
-                          nil))))))
+                          nil)))))
+  (setf %items% items))
 
 (defun analyze-aggregates (language
                            &key condition phenomena extras trees

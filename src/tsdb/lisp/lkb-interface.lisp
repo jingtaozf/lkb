@@ -343,11 +343,14 @@
                     (list -1 (unless burst condition) error))))
      return)))
 
-
-
+;;;
+;;; ToDo
+;;; 
+;;; - more error reporting from inside of generate-from-mrs()
+;;; 
 
 (defun generate-item (mrs
-                      &key id string exhaustive trace
+                      &key id string exhaustive nanalyses trace
                            readings edges derivations semantix-hook trees-hook
                            burst (nderivations 0))
   (declare (ignore derivations string id trees-hook))
@@ -356,18 +359,18 @@
          (*maximum-number-of-edges* (if (or (null edges) (zerop edges))
                                       *maximum-number-of-edges*
                                       edges))
-         (*first-only-p* (unless exhaustive
-                           (if (integerp readings)
-                             readings
-                             (if (integerp *first-only-p*)
-                                *first-only-p*
-                               1))))
+         (*first-only-p* (if (integerp nanalyses)
+                           (unless (zerop nanalyses) nanalyses)
+                           (unless exhaustive
+                             (if (integerp readings)
+                               readings
+                               (if (integerp *first-only-p*)
+                                 *first-only-p*
+                                 1)))))
          (*do-something-with-parse* nil)
          (stream (make-string-output-stream))
          (*standard-output* 
-          (if trace
-            (make-broadcast-stream *standard-output* stream)
-            stream))
+          (if trace (make-broadcast-stream *standard-output* stream) stream))
          (*unifications* 0)
          (*copies* 0)
          (*subsumptions* 0)
