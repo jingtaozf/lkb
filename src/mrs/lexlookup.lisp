@@ -605,20 +605,16 @@ at this point).
    :def-unifs (lkb::rule-def-unifs rule)
    :full-fs new-fs
    #+:packing :rtdfs #+:packing (lkb::copy-tdfs-partially new-fs)
-   :daughters-restricted
-   (lkb::rule-daughters-restricted rule)
-   :daughters-restricted-reversed
+   :daughters-restricted (lkb::rule-daughters-restricted rule)
+   :daughters-restricted-reversed 
    (lkb::rule-daughters-restricted-reversed rule)
-   :daughters-apply-order 
-   (lkb::rule-daughters-apply-order rule)
+   :daughters-apply-order (lkb::rule-daughters-apply-order rule)
    :order (lkb::rule-order rule)
    :rhs (lkb::rule-rhs rule)
-   :daughters-order-reversed
-   (lkb::rule-daughters-order-reversed rule)
-   :apply-filter
-   (lkb::rule-apply-filter rule)
-   :apply-index
-   (lkb::rule-apply-index rule)
+   :daughters-order-reversed (lkb::rule-daughters-order-reversed rule)
+   :apply-filter (lkb::rule-apply-filter rule)
+   :apply-index (lkb::rule-apply-index rule)
+   :head (lkb::rule-head rule)
    :main-rels rels))
 
 

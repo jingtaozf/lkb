@@ -77,12 +77,12 @@
                           (dag-restricted (when dag
                                             (restrict-fs (tdfs-indef dag))))
                           leaves lex-ids parents children morph-history 
-                          spelling-change from to label
+                          spelling-change from to label head
                           foo bar baz
                           #+:packing packed #+:packing equivalent 
                           #+:packing frozen)))
    id score category rule dag odag dag-restricted leaves lex-ids
-   parents children morph-history spelling-change from to label
+   parents children morph-history spelling-change from to label head
    foo bar baz
    #+:packing packed #+:packing equivalent #+:packing frozen)
 

@@ -58,6 +58,10 @@
 
 (def-lkb-parameter *diff-list-last* 'last)
 
+(def-lkb-parameter *head-daugher-path* '(head-dtr))
+
+(def-lkb-parameter *head-path* '(synsem local cat head))
+
 (def-lkb-parameter *key-daughter-path* '(key-arg))
 
 (def-lkb-parameter *key-daughter-type* '+)

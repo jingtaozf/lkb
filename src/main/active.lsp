@@ -45,6 +45,8 @@
 
 (defparameter *hyper-activity-p* t)
 
+(defparameter *scoring-hook* nil)
+
 ;;;
 ;;; chart packing under (partial) subsumption is experimental; known problems
 ;;;
@@ -252,7 +254,9 @@
   #+:agenda
   (cond 
    ((or *first-only-p* *chart-dependencies*)
-    (heap-insert *agenda* priority passive))
+    (heap-insert *agenda* 
+                 (if *scoring-hook* (funcall *scoring-hook* passive) priority)
+                 passive))
    (t
     (fundamental4passive passive)))
   #-:agenda
@@ -262,14 +266,18 @@
   #+:agenda
   `(cond
     (*first-only-p*
-     (let ((priority (rule-priority ,rule)))
-       (heap-insert *agenda* priority (cons ,rule ,passive))))
+     (let* ((task (cons ,rule ,passive))
+            (priority (if *scoring-hook*
+                        (funcall *scoring-hook* task)
+                        (rule-priority ,rule))))
+       (heap-insert *agenda* priority task)))
     #+:priority
     (*chart-packing-p*
      (let* ((end (chart-configuration-end ,passive))
             (start (chart-configuration-begin ,passive))
             (priority (- end (/ start *maximal-vertex*))))
-       (heap-insert *agenda* priority (cons ,rule ,passive))))
+       (heap-insert 
+        *agenda* priority (cons ,rule ,passive))))
     (t
      (process-rule-and-passive (cons ,rule ,passive))))
   #-:agenda
@@ -281,8 +289,11 @@
   #+:agenda
   `(cond
     (*first-only-p*
-     (let ((priority (rule-priority ,arule)))
-       (heap-insert *agenda* priority (cons ,active ,passive))))
+     (let* ((task (cons ,active ,passive))
+            (priority (if *scoring-hook*
+                        (funcall *scoring-hook* task)
+                        (rule-priority ,arule))))
+       (heap-insert *agenda* priority task)))
     #+:priority
     (*chart-packing-p*
      (let* ((forwardp (active-chart-configuration-forwardp ,active))
@@ -400,6 +411,10 @@
 
   #+:adebug
   (print-trace :fundamental4passive passive)
+  
+  #+:null
+  (when *scoring-hook*
+    (setf (edge-score passive) (funcall *scoring-hook* passive)))
   
   (let* ((pedge (chart-configuration-edge passive))
          (prule (edge-rule pedge))

@@ -62,7 +62,8 @@
   rhs ;; list of indices into `order' --- for key-driven parsing
   daughters-order-reversed
   apply-filter
-  apply-index)
+  apply-index
+  head)
 
 ;;; order is an ordered list of the paths that get at mother and daughters
 ;;; e.g. 0 1 2
@@ -267,6 +268,31 @@
                                (cdr tail))))
               (cdr f-list))))
         ;;
+        ;; make several attempts to identify the (linguistic) head daughter
+        ;; (for use in Redwoods tree lexicalization, but potentially useful for
+        ;; other processing aspects).                         (29-nov-02; oe)
+        ;;
+        (let* ((daughters (rest (rule-order rule)))
+               (dag (tdfs-indef fs))
+               (daughter (existing-dag-at-end-of dag *head-daugher-path*))
+               (head (existing-dag-at-end-of dag *head-path*)))
+          (setf (rule-head rule)
+            (or (when daughter
+                  (loop
+                      for path in daughters
+                      for i from 0
+                      for foo = (existing-dag-at-end-of dag path)
+                      when (eq foo daughter) return i))
+                (when head
+                  (loop
+                      for path in daughters
+                      for i from 0
+                      for foo = (existing-dag-at-end-of dag path)
+                      for bar = (when foo
+                                  (existing-dag-at-end-of foo *head-path*))
+                      when (eq bar head) return i))
+                0)))
+        ;;
         ;; compute list of indices into `order' slot; these are used in
         ;; key-driven parsing (using the new (hyper-)active parser); there
         ;; seems to be some overlap with `daughters-apply-order' used in
@@ -298,25 +324,14 @@
               (loop for i from 0 to (- key 1) collect i)
               (loop for i from (+ key 1) to (- arity 1) collect i)))))
         #+:head-first
-        (let* ((daughters (rest (rule-order rule)))
-               (arity (length daughters))
-               (dag (tdfs-indef fs))
-               (head (existing-dag-at-end-of dag '(head-dtr)))
-               (key (or
-                     (when head
-                       (loop
-                           for path in daughters
-                           for i from 0
-                           for daughter = (existing-dag-at-end-of dag path)
-                           when (eq daughter head)
-                           return i))
-                     0)))
+        (let ((head (rule-head rule))
+              (arity (length (rest (rule-order rule)))))
           (setf (rule-rhs rule)
             (cons
-             key
+             head
              (nconc
-              (loop for i from 0 to (- key 1) collect i)
-              (loop for i from (+ key 1) to (- arity 1) collect i)))))
+              (loop for i from 0 to (- head 1) collect i)
+              (loop for i from (+ head 1) to (- arity 1) collect i)))))
         (setf (gethash id (if lexical-p *lexical-rules* *rules*)) rule)))))
 
 
