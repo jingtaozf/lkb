@@ -42,7 +42,8 @@
     nil
 
     :components
-    ((:module "agenda"
+    (#+:dfki
+     (:module "agenda"
       :source-pathname ""
       :source-extension ""
       :operation-form 
@@ -107,7 +108,8 @@
        #+:page 
        (:file "page-interface")
        (:file "derivations")))
-
+     
+     #+:dfki
      (:module "podium"
       :source-pathname "tcl"
       :source-extension "tcl"

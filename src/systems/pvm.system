@@ -32,6 +32,7 @@
      (:module "lisp"
       :source-pathname ""
       :binary-pathname ""
+      :source-extension "lisp"
       :components
       ((:file "pvm-package")
        #+(and :allegro (or :linux (and :sparc :svr4) :alpha))
