@@ -161,7 +161,6 @@ cvs update: Updating src/.nasl/tty
 cvs update: Updating src/.nasl/www
 cvs update: Updating src/ACL-CG_specific
 cvs update: Updating src/ACL_specific
-M src/ACL_specific/deliver.lsp
 cvs update: Updating src/MCL_specific
 cvs update: Updating src/data
 cvs update: Updating src/data/Dikran
@@ -359,7 +358,7 @@ cvs update: Updating src/www
 **********
 Checking in /eo/e7/apache/htdocs/src/lkb/src/version.lsp;
 /eo/e1/CVSROOT/newlkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.194; previous revision: 1.193
+new revision: 1.195; previous revision: 1.194
 done
 ( \
   cd /eo/e7/apache/htdocs/src/lkb; \
@@ -419,6 +418,7 @@ src/ACL_specific/misc.lsp
 src/ACL_specific/parseout.lsp
 src/ACL_specific/topmenu.lsp
 src/ACL_specific/tree.lsp
+src/ACL_specific/.#deliver.lsp.1.11
 src/MCL_specific/
 src/MCL_specific/activefs.lsp
 src/MCL_specific/chartout.lsp
@@ -1193,7 +1193,6 @@ src/data/itfs/g8gap/user-fns.lsp
 src/data/itfs/g8gap/user-prefs.lsp
 rm -f /eo/e7/apache/htdocs/src/.yes;
 rsh cypriot "cd /eo/e7/apache/htdocs/src/lkb && make lkb_linux_om@remote";
-make: *** Warning: File `Makefile' has modification time in the future (2002-11-27 07:48:24 > 2002-11-27 07:44:29)
 ( \
   echo "(load \"/eo/e7/apache/htdocs/src/lkb/src/general/loadup.lisp\")"; \
   echo "(load \"/eo/e7/apache/htdocs/src/lkb/src/ACL_specific/deliver.lsp\")"; \
@@ -1238,7 +1237,6 @@ Restart actions (select using :continue):
 CL-USER(3): EOF
 Really exit lisp [n]? 
 ; Exiting Lisp
-make: warning:  Clock skew detected.  Your build may be incomplete.
 ( \
   if [ ! -f /eo/e7/apache/htdocs/src/.yes ]; then exit 1; fi; \
   cd /eo/e7/apache/htdocs/src/lkb; \
