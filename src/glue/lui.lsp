@@ -66,7 +66,7 @@
     (let* ((socket (socket:make-socket :connect :passive :local-port port))
            (stream (socket:accept-connection socket :wait t))
            (address (socket:remote-host stream))
-           (host (socket:ipaddr-to-hostname address))
+           (host (and address (socket:ipaddr-to-hostname address)))
            (port (socket:remote-port stream)))
       (format
        t
