@@ -98,8 +98,17 @@
              (not
               (eql (fs-type root-value) *true-type*))))))
 
+
 (defparameter *named-nodes* nil
   "an alist so that if a feature structure representing a variable is shared, the same variable will be used each time it is encountered")
+
+;;
+;; in LOGON MT mode, we use MRS variables as meta-level variables in transfer
+;; rules, where the conversion code will have created variables before going
+;; into construct-mrs(); `standard' calls are not affected.    (27-jan-04; oe)
+;;
+(defun lookup-mtr-node (dag)
+  (rest (assoc dag *named-nodes*)))
 
 ;;; variables get unique names via the variable generator
 ;;; which can be passed as a parameter
@@ -257,7 +266,9 @@ duplicate variables")
                              (create-variable
                               (cdr handel-pair)
                               variable-generator)))
-             (pred (create-type (extract-pred-from-rel-fs fs)))
+             (pred (or (lookup-mtr-node 
+                        (extract-pred-from-rel-fs fs :rawp t))
+                       (create-type (extract-pred-from-rel-fs fs))))
              (fvps (extract-fvps-from-rel-fs fs variable-generator indexing-p))
              (parameter-strings (get-fvps-parameter-strings fvps))
 	     (cfrom (extract-cfrom-from-rel-fs fs))
@@ -311,11 +322,12 @@ duplicate variables")
 	  (or (extract-integer-from-fs-type cto-fs)
 	       -1)))))
 
-(defun extract-pred-from-rel-fs (rel-fs)
+(defun extract-pred-from-rel-fs (rel-fs &key rawp)
     (let* ((label-list (fs-arcs rel-fs))
            (pred (assoc (car *rel-name-path*)
                           label-list))
            (pred-type (if pred (fs-type (rest pred)))))
+      (when rawp (return-from extract-pred-from-rel-fs pred))
       ;;
       ;; _fix_me_
       ;; i believe this is too robust: in PRED-style mode, we should not end up
@@ -344,13 +356,14 @@ duplicate variables")
               collect 
                 (make-fvpair :feature feature
                              :value 
-                             (if (member feature *value-feats*)
-                                 (create-type (fs-type value))
-                               (if indexing-p
-                                   (create-indexing-variable value)   
-                                 (create-variable
-                                  value
-                                  variable-generator)))))))
+                             (or (lookup-mtr-node value)
+                                 (if (member feature *value-feats*)
+                                   (create-type (fs-type value))
+                                   (if indexing-p
+                                     (create-indexing-variable value)   
+                                     (create-variable
+                                      value
+                                      variable-generator))))))))
     (sort reduced-list #'feat-sort-func)))
 
 (defun create-type (sort)
