@@ -147,7 +147,8 @@
 	       (:file "clex")         ; constant lexical database 
                (:file "rules")        ; grammar and lexical rules
 	       (:file "parse")        ; chart parser
-	       (:file "active")       ; experimental key-driven (active) parser
+	       (:file "active")       ; key-driven (hyper-)active parser
+	       (:file "unpack")       ; exhaustive and selective unpacking
                (:file "brackets")     ; partial bracketing constraints
                (:file "morph")        ; morphographemics
                (:file "check-unif")   ; for efficiency 

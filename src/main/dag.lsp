@@ -1060,12 +1060,12 @@
 (defun copy-dag-partially1 (old path)
   (if (dag-visit old)
     (dag-visit old)
-    (let* ((type (if (and *packing-restrictor*
-                          (smember (first path) *packing-restrictor*))
+    (let* ((restrictp (when *packing-restrictor*
+                        (smember (first path) *packing-restrictor*)))
+           (type (if restrictp
                    (minimal-type-for (first path))
                    (dag-type old)))
-           (arcs (unless (and *packing-restrictor*
-                              (smember (first path) *packing-restrictor*))
+           (arcs (unless restrictp
                    (loop
                        for arc in (dag-arcs old)
                        for label = (dag-arc-attribute arc)

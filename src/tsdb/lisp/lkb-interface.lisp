@@ -13,13 +13,6 @@
   (or (find-package :lkb) (find-package :common-lisp-user)))
   
 ;;;
-;;; another instance of versioning kludges: yadu!() only comes in with the new
-;;; active parser in the current development version       (26-aug-99  -  oe)
-;;;
-(defmacro uday (tdfs1 tdfs2 path)
-  `(yadu ,tdfs1 (create-temp-parsing-tdfs ,tdfs2 ,path)))
-
-;;;
 ;;; _fix_me_
 ;;; even more: in the (current) MT set-up, the `mt' system tends to be loaded
 ;;; _after_ the [incr tsdb()] code.                          (1-nov-03; oe)
@@ -359,20 +352,14 @@
                       &key id string exhaustive nanalyses trace
                            edges derivations semantix-hook trees-hook
                            burst (nresults 0))
-  (declare (ignore derivations string id trees-hook)
+  (declare (ignore exhaustive derivations string id trees-hook)
            (special tsdb::*process-scope-generator-input-p*))
 
   (let* ((*package* *lkb-package*)
          (*maximum-number-of-edges* (if (or (null edges) (zerop edges))
                                       *maximum-number-of-edges*
                                       edges))
-         (*gen-first-only-p* (if exhaustive
-                               nil
-                               (if (integerp nanalyses)
-                                 (or (zerop nanalyses) nanalyses)
-                                 (if (integerp *gen-first-only-p*) 
-                                   *gen-first-only-p*
-                                   1))))
+         (*gen-first-only-p* nil)
          (*do-something-with-parse* nil)
          (stream (make-string-output-stream))
          (*standard-output* 
@@ -395,7 +382,7 @@
              (tsdb::time-a-funcall
               #'(lambda ()
                   (let (#+:pooling (*dag-recycling-p* (null trace)))
-                    (generate-from-mrs mrs :signal t)))
+                    (generate-from-mrs mrs :signal t :nanalyses nanalyses)))
               #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
                   (declare (ignore ignore))
                   (setf stop (get-internal-run-time))
@@ -1001,7 +988,7 @@
             for i from 0
             do
               (setf status i)
-              (setf result (uday result tdfs path))
+              (setf result (yadu! result tdfs path))
             finally
               (setf result (and result (restrict-and-copy-tdfs result))))))
     (if (or result (null dagp))
@@ -1039,7 +1026,7 @@
                     (rule-full-fs mrule)))
            (tdfs (when dagp (edge-dag preterminal)))
            (result (when (and rtdfs tdfs)
-                     (uday rtdfs tdfs '(args first))))
+                     (yadu! rtdfs tdfs '(args first))))
            (copy (and result (restrict-and-copy-tdfs result))))
       (if (or copy (null dagp))
         (make-edge :id id :category (and copy (indef-type-of-tdfs copy))

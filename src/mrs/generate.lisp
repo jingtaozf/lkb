@@ -227,16 +227,16 @@
 ;;; proper. Clear chart and analyses record before entry in case we don't make
 ;;; it into generation proper. Do it also in chart-generate since that is also
 ;;; an entry point
-(defun generate-from-mrs (mrs &key signal)
+(defun generate-from-mrs (mrs &key signal nanalyses)
   (if (mrs::fragmentp mrs)
     (mt::generate-from-fragmented-mrs mrs :signal signal)
-    (handler-case (generate-from-mrs-internal mrs)
+    (handler-case (generate-from-mrs-internal mrs :nanalyses nanalyses)
       (condition (condition)
         (if signal
           (error condition)
           (warn (format nil "~a" condition)))))))
 
-(defun generate-from-mrs-internal (input-sem)
+(defun generate-from-mrs-internal (input-sem &key nanalyses)
 
   ;; (ERB 2003-10-08) For aligned generation -- if we're in first only
   ;; mode, break up the tree in *parse-record* for reference by
@@ -319,7 +319,8 @@
               %rel-indexes rel-indexes %input-rels input-rels)
         
         (chart-generate
-         input-sem input-rels lex-items grules lex-orderings rel-indexes)))))
+         input-sem input-rels lex-items grules lex-orderings rel-indexes
+         *gen-first-only-p* :nanalyses nanalyses)))))
 
 
 (defun filter-generator-lexical-items (lex-items grules lex-orderings)
@@ -354,7 +355,8 @@
 
 (defun chart-generate (input-sem input-rels found-lex-items possible-grules
                        *lexemes-allowed-orderings* *gen-rel-indexes*
-                       &optional (*gen-first-only-p* *gen-first-only-p*))
+                       &optional (*gen-first-only-p* *gen-first-only-p*)
+                       &key nanalyses)
 
   (setq %generator-lexical-items% found-lex-items)
  
@@ -450,21 +452,28 @@
                                 (gen-chart-adjoin-modifiers 
                                  partial input-rels possible-grules))))
                       (complete
-                       (loop
-                           with unpackp = (or *gen-packing-p* 
-                                              (and *intersective-rule-names*
-                                                   partial))
-                           for edge in candidates
-                           when unpackp
-                           nconc
-                             (loop
-                                 for edge in (unpack-edge! nil edge)
-                                 when (gen-chart-check-covering 
-                                       edge input-rels)
-                                 collect edge)
-                           else when (gen-chart-check-covering 
-                                      edge input-rels)
-                           collect edge))
+                       (cond
+                        ((and *intersective-rule-names* partial)
+                         (loop
+                             for edge in candidates
+                             nconc
+                               (loop
+                                   for edge in (unpack-edge! edge)
+                                   when (gen-chart-check-covering
+                                         edge input-rels)
+                                   collect edge)))
+                        (*gen-packing-p*
+                         (selectively-unpack-edges
+                          (loop
+                              for edge in candidates
+                              when (gen-chart-check-covering edge input-rels)
+                              collect edge)
+                          nanalyses))
+                        (t
+                         (loop
+                             for edge in candidates
+                             when (gen-chart-check-covering edge input-rels)
+                             collect edge))))
                       (consistent
                        (loop
                            for edge in complete
@@ -739,7 +748,7 @@
                #'(lambda (u)
                    (and (gen-chart-check-covering u input-rels)
                         (gen-chart-check-compatible u input-sem)))
-               (if *gen-packing-p* (unpack-edge! nil edge) (list edge))))
+               (if *gen-packing-p* (unpack-edge! edge) (list edge))))
              (sentential (gen-filter-root-edges complete)))
         (when sentential
            (setq *gen-record* sentential)
@@ -1178,7 +1187,7 @@
                                     (list act)))))
                          (cdr entry)))))
             possible-grules))
-       ;; (mapcan #'(lambda (e) (unpack-edge! nil e)) intersective-edges)
+       ;; (mapcan #'(lambda (e) (unpack-edge! e)) intersective-edges)
        intersective-edges))
 
 

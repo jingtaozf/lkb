@@ -89,11 +89,11 @@
 				 -1))
                           string mrs
                           foo bar baz
-                          packed equivalent frozen adjuncts)))
+                          packed equivalent frozen adjuncts unpacking)))
    id score category rule dag odag dag-restricted leaves lex-ids
    parents children morph-history spelling-change orth-tdfs from to label head
    cfrom cto string mrs foo bar baz
-   packed equivalent frozen adjuncts)
+   packed equivalent frozen adjuncts unpacking)
 
 (defparameter *characterize-p* nil)
 
@@ -431,7 +431,7 @@
 
 (defun add-morphs-to-morphs (preprocessed-input)
   (if (consp (first preprocessed-input))
-      (sppp-setup-morphs preprocessed-input)
+    (sppp-setup-morphs preprocessed-input)
     (let ((current 0)
 	  (xml-p (chared-word-p (first preprocessed-input))))
       (dolist (token preprocessed-input)

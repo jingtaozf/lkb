@@ -211,7 +211,8 @@
      "~&[~a] browse-tree(): `~a' ~@[(~a) ~]--- item # ~a~%"
      (current-time :long :short) data gold i-id)
 
-    (let* ((*reconstruct-cache* (make-hash-table :test #'eql))
+    (let* ((lkb::*chart-packing-p* nil)
+           (*reconstruct-cache* (make-hash-table :test #'eql))
            (lkb::*tree-update-match-hook* #'update-match-p)
            (lkb::*tree-automatic-update-p* 
             (when gold lkb::*tree-automatic-update-p*))
@@ -1264,6 +1265,7 @@
                      nil 
                      "~a/~a"
                      (or path "/lingo/oe/tmp") (directory2file data))
+      with lkb::*chart-packing-p* = nil
       with *reconstruct-cache* = (make-hash-table :test #'eql)
       with items = (analyze data :thorough '(:derivation) :condition condition)
       with increment = (when (and meter items)
@@ -1432,6 +1434,7 @@
   
   (loop
       with stream = (open file :direction :output :if-exists :supersede)
+      with lkb::*chart-packing-p* = nil
       with *reconstruct-cache* = (make-hash-table :test #'eql)
       with items = (analyze data :thorough '(:derivation) 
                             :condition condition :readerp nil)
@@ -2931,6 +2934,7 @@
                                    result)
                             ranks)))
           (loop
+              with lkb::*chart-packing-p* = nil
               with *reconstruct-cache* = (make-hash-table :test #'eql)
               for result in results
               for id = (get-field :result-id result)

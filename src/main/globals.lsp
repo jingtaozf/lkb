@@ -78,7 +78,7 @@
 
 ;;; Parsing
 
-(defconstant *maximum-number-of-tasks* 200000
+(defparameter *maximum-number-of-tasks* 200000
   "limits the number of pending tasks on the agenda")
 
 (def-lkb-parameter *maximum-number-of-edges* 500 

@@ -50,14 +50,14 @@
 
 (defconstant *semi-x-type* "x")
 
-(defconstant *semi-fragment-left* (mrs::vsym "L-HNDL"))
+(defparameter *semi-fragment-left* (mrs::vsym "L-HNDL"))
 
-(defconstant *semi-fragment-right* (mrs::vsym "R-HNDL"))
+(defparameter *semi-fragment-right* (mrs::vsym "R-HNDL"))
 
-(defconstant *semi-punctuation-relations*
+(defparameter *semi-punctuation-relations*
   (list "comma_rel" "period_rel" "exclamation_point_rel" "question_mark_rel"
         (mrs::vsym "comma_rel") (mrs::vsym "period_rel")
         (mrs::vsym "exclamation_point_rel") (mrs::vsym "question_mark_rel")))
 
-(defconstant *semi-token-relations*
+(defparameter *semi-token-relations*
   (list "token_rel" (mrs::vsym "token_rel")))

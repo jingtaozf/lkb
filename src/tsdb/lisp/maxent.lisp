@@ -144,7 +144,7 @@
                              (eq (read stream nil nil) :mem))
                   (format t "read-mem(): invalid MEM prologue.~%")
                   (return-from read-mem))
-                (return model)
+                (return (setf %model% model))
               else when bodyp do
                 (unless (consp form)
                   (format t "read-mem(): invalid feature `~a'.~%" form)
@@ -426,7 +426,9 @@
 (defun edge-to-codes (edge model)
   (let* ((table (mem-table model))
          (root (edge-root edge))
-         (daughters (lkb::edge-children edge))
+         (daughters (or (lkb::edge-children edge)
+                        (let ((foo (lkb::edge-morph-history edge)))
+                          (and foo (list foo)))))
          (irulep (lkb::inflectional-rule-p root)))
     (cond
      ((and (eq (lkb::edge-foo edge) model) (consp (lkb::edge-bar edge)))
@@ -546,7 +548,9 @@
                 instance)))
     (t (error "edge-root(): unknown rule in edge ~a~%" edge))))
                 
-(defun mem-score-edge (edge model &key recursivep lm)
+(defun mem-score-edge (edge 
+                       &optional (model %model%) 
+                       &key recursivep lm)
   (if (and (not recursivep) 
            (eq (lkb::edge-foo edge) model) (numberp (lkb::edge-score edge)))
     (lkb::edge-score edge)
@@ -566,7 +570,9 @@
                sum (score-feature code model))
            score
            (loop
-               for edge in (lkb::edge-children edge)
+               for edge in (or (lkb::edge-children edge)
+                               (let ((foo (lkb::edge-morph-history edge)))
+                                 (and foo (list foo))))
                sum (mem-score-edge edge model :recursivep t)))))))
 
 (defun mem-item-enhancer (item)
@@ -626,6 +632,22 @@
              sum (mem-score-edge edge model))
          (mem-score-edge passive model))))
    (t -10)))
+
+(defun mem-score-configuration (edge daughters &optional (model %model%))
+  ;;
+  ;; _fix_me_
+  ;; there is too much duplication in various bits of feature extraction code;
+  ;; rework from scratch, one day.                             (30-dec-04; oe)
+  ;;
+  (let* ((table (mem-table model))
+         (roots (if daughters
+                  (loop
+                      for edge in daughters
+                      collect (edge-root edge))
+                  (lkb::edge-leaves edge)))
+         (feature (cons (edge-root edge) roots))
+         (code (symbol-to-code (cons 1 feature) table)))
+    (score-feature code model)))
 
 (defconstant e (exp 1d0))
 
