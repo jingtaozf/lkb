@@ -1,404 +1,406 @@
+<?xml version='1.0'?> <!DOCTYPE gram SYSTEM "/homes/aac10/lingo/newlkb/src/rmrs/gram.dtd" >
+<gram>
 <rule>
 <name>T/txt-ph1</name>
-<dtrs>S PUN</dtrs>
+<dtrs><dtr>S</dtr><dtr>PUN</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>T/txt-ph2</name>
-<dtrs>S PUN</dtrs>
+<dtrs><dtr>S</dtr><dtr>PUN</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>T/txt-sc1</name>
-<dtrs>S OPT OPT OPT OPT</dtrs>
+<dtrs><dtr>S</dtr><dtr>OPT</dtr><dtr>OPT</dtr><dtr>OPT</dtr><dtr>OPT</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>T/txt-cl-brack1</name>
-<dtrs>PUN1 S PUN2 PUN3</dtrs>
+<dtrs><dtr>PUN1</dtr><dtr>S</dtr><dtr>PUN2</dtr><dtr>PUN3</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>T/txt-cl-brack2</name>
-<dtrs>PUN1 S PUN2 PUN3</dtrs>
+<dtrs><dtr>PUN1</dtr><dtr>S</dtr><dtr>PUN2</dtr><dtr>PUN3</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>T/txt-cl-brack3</name>
-<dtrs>PUN1 S PUN2 PUN3</dtrs>
+<dtrs><dtr>PUN1</dtr><dtr>S</dtr><dtr>PUN2</dtr><dtr>PUN3</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>T/txt-cl-brack4</name>
-<dtrs>PUN1 S PUN2 PUN3</dtrs>
+<dtrs><dtr>PUN1</dtr><dtr>S</dtr><dtr>PUN2</dtr><dtr>PUN3</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>T/txt-cl-brack5</name>
-<dtrs>PUN1 S PUN2 PUN3</dtrs>
+<dtrs><dtr>PUN1</dtr><dtr>S</dtr><dtr>PUN2</dtr><dtr>PUN3</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>T/txt-sc2</name>
-<dtrs>S1 OPT* S2</dtrs>
+<dtrs><dtr>S1</dtr><dtr>OPT*</dtr><dtr>S2</dtr></dtrs>
 <head>S2</head>
 </rule>
 
 <rule>
 <name>T/txt-cl1</name>
-<dtrs>S OPT OPT PUN</dtrs>
+<dtrs><dtr>S</dtr><dtr>OPT</dtr><dtr>OPT</dtr><dtr>PUN</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>T/txt-cl2</name>
-<dtrs>S PUN1 PUN2</dtrs>
+<dtrs><dtr>S</dtr><dtr>PUN1</dtr><dtr>PUN2</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>T/txt-cl3</name>
-<dtrs>S PUN1 PUN2</dtrs>
+<dtrs><dtr>S</dtr><dtr>PUN1</dtr><dtr>PUN2</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>T/txt-cl4</name>
-<dtrs>S PUN1 PUN2</dtrs>
+<dtrs><dtr>S</dtr><dtr>PUN1</dtr><dtr>PUN2</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>T/txt-cl5</name>
-<dtrs>S PUN1 PUN2</dtrs>
+<dtrs><dtr>S</dtr><dtr>PUN1</dtr><dtr>PUN2</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>T/txt-cl6</name>
-<dtrs>S PUN1 PUN2</dtrs>
+<dtrs><dtr>S</dtr><dtr>PUN1</dtr><dtr>PUN2</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>T/txt-cl7</name>
-<dtrs>S PUN OPT</dtrs>
+<dtrs><dtr>S</dtr><dtr>PUN</dtr><dtr>OPT</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/s-quo</name>
-<dtrs>PUN1 S OPT OPT OPT OPT PUN2</dtrs>
+<dtrs><dtr>PUN1</dtr><dtr>S</dtr><dtr>OPT</dtr><dtr>OPT</dtr><dtr>OPT</dtr><dtr>OPT</dtr><dtr>PUN2</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>NP/np-quo</name>
-<dtrs>PUN1 OPT* OPT OPT* OPT OPT OPT OPT NP OPT OPT OPT PUN</dtrs>
+<dtrs><dtr>PUN1</dtr><dtr>OPT*</dtr><dtr>OPT</dtr><dtr>OPT*</dtr><dtr>OPT</dtr><dtr>OPT</dtr><dtr>OPT</dtr><dtr>OPT</dtr><dtr>NP</dtr><dtr>OPT</dtr><dtr>OPT</dtr><dtr>OPT</dtr><dtr>PUN</dtr></dtrs>
 <head>NP</head>
 </rule>
 
 <rule>
 <name>NP/npquo_s</name>
-<dtrs>NP OPT S</dtrs>
+<dtrs><dtr>NP</dtr><dtr>OPT</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>NP/squo_s</name>
-<dtrs>S1 OPT S2</dtrs>
+<dtrs><dtr>S1</dtr><dtr>OPT</dtr><dtr>S2</dtr></dtrs>
 <head>S2</head>
 </rule>
 
 <rule>
 <name>S/npqo_vp</name>
-<dtrs>NP PUN S</dtrs>
+<dtrs><dtr>NP</dtr><dtr>PUN</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/sqo_vp</name>
-<dtrs>S1 OPT S2</dtrs>
+<dtrs><dtr>S1</dtr><dtr>OPT</dtr><dtr>S2</dtr></dtrs>
 <head>S2</head>
 </rule>
 
 <rule>
 <name>N/qo_n</name>
-<dtrs>PUN1 N PUN2</dtrs>
+<dtrs><dtr>PUN1</dtr><dtr>N</dtr><dtr>PUN2</dtr></dtrs>
 <head>N</head>
 </rule>
 
 <rule>
 <name>A/qo_a</name>
-<dtrs>PUN1 A PUN2</dtrs>
+<dtrs><dtr>PUN1</dtr><dtr>A</dtr><dtr>PUN2</dtr></dtrs>
 <head>A</head>
 </rule>
   
 <rule>
 <name>V/qo_v</name>
-<dtrs>PUN1 V PUN2</dtrs>
+<dtrs><dtr>PUN1</dtr><dtr>V</dtr><dtr>PUN2</dtr></dtrs>
 <head>V</head>
-</rule>                                
+</rule>
 
 <rule>
 <name>T/npq</name>
-<dtrs>N PUN</dtrs>
+<dtrs><dtr>N</dtr><dtr>PUN</dtr></dtrs>
 <head>N</head>
 </rule>
 
 <rule>
 <name>T/npqcj</name>
-<dtrs>N PUN</dtrs>
+<dtrs><dtr>N</dtr><dtr>PUN</dtr></dtrs>
 <head>N</head>
 </rule>
 
 <rule>
 <name>Tcl/interj_c_s</name>
-<dtrs>IJ OPT* PUN S</dtrs>
+<dtrs><dtr>IJ</dtr><dtr>OPT*</dtr><dtr>PUN</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>Tcl/s_c_interj</name>
-<dtrs>S PUN IJ OPT*</dtrs>
+<dtrs><dtr>S</dtr><dtr>PUN</dtr><dtr>IJ</dtr><dtr>OPT*</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>Tcl/interj_d_s</name>
-<dtrs>IJ OPT* PUN S</dtrs>
+<dtrs><dtr>IJ</dtr><dtr>OPT*</dtr><dtr>PUN</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>Tcl/s_d_interj</name>
-<dtrs>S PUN IJ OPT*</dtrs>
+<dtrs><dtr>S</dtr><dtr>PUN</dtr><dtr>IJ</dtr><dtr>OPT*</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>T/s_leta</name>
-<dtrs>S TA</dtrs>
+<dtrs><dtr>S</dtr><dtr>TA</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>T/s_leta-cl</name>
-<dtrs>S TA</dtrs>
+<dtrs><dtr>S</dtr><dtr>TA</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>T/conj_lmta</name>
-<dtrs>CONJ TA</dtrs>
+<dtrs><dtr>CONJ</dtr><dtr>TA</dtr></dtrs>
 <head>CONJ</head>
 </rule>
 
 <rule>
 <name>T/comp_lmta</name>
-<dtrs>COMP TA</dtrs>
+<dtrs><dtr>COMP</dtr><dtr>TA</dtr></dtrs>
 <head>COMP</head>
 </rule>
 
 <rule>
 <name>T/prep_lmta</name>
-<dtrs>P TA</dtrs>
+<dtrs><dtr>P</dtr><dtr>TA</dtr></dtrs>
 <head>P</head>
 </rule>
 
 <rule>
 <name>T/auxv_lmta</name>
-<dtrs>AUX TA</dtrs>
+<dtrs><dtr>AUX</dtr><dtr>TA</dtr></dtrs>
 <head>AUX</head>
 </rule>
 
 <rule>
 <name>T/np_lmta</name>
-<dtrs>NP TA</dtrs>
+<dtrs><dtr>NP</dtr><dtr>TA</dtr></dtrs>
 <head>NP</head>
 </rule>
 
 <rule>
 <name>T/n1_lmta</name>
-<dtrs>N TA</dtrs>
+<dtrs><dtr>N</dtr><dtr>TA</dtr></dtrs>
 <head>N</head>
 </rule>
 
 <rule>
 <name>T/n_lmta-r</name>
-<dtrs>N TA</dtrs>
+<dtrs><dtr>N</dtr><dtr>TA</dtr></dtrs>
 <head>N</head>
 </rule>
 
 <rule>
 <name>T/v_lmta-r</name>
-<dtrs>V TA</dtrs>
+<dtrs><dtr>V</dtr><dtr>TA</dtr></dtrs>
 <head>V</head>
 </rule>
 
 <rule>
 <name>T/adv_lmta</name>
-<dtrs>ADV TA</dtrs>
+<dtrs><dtr>ADV</dtr><dtr>TA</dtr></dtrs>
 <head>ADV</head>
 </rule>
 
 <rule>
 <name>T/not_lmta</name>
-<dtrs>NOT TA</dtrs>
+<dtrs><dtr>NOT</dtr><dtr>TA</dtr></dtrs>
 <head>NOT</head>
 </rule>
 
 
 <rule>
 <name>T/rmta_n1</name>
-<dtrs>TA N</dtrs>
+<dtrs><dtr>TA</dtr><dtr>N</dtr></dtrs>
 <head>N</head>
 </rule>
 
 <rule>
 <name>T/rmta_a1</name>
-<dtrs>TA A</dtrs>
+<dtrs><dtr>TA</dtr><dtr>A</dtr></dtrs>
 <head>A</head>
 </rule>
 
 <rule>
 <name>T/rmta_s</name>
-<dtrs>TA OPT OPT A</dtrs>
+<dtrs><dtr>TA</dtr><dtr>OPT</dtr><dtr>OPT</dtr><dtr>A</dtr></dtrs>
 <head>A</head>
 </rule>
 
 <rule>
 <name>Taph/colon</name>
-<dtrs>PUN TPH</dtrs>
+<dtrs><dtr>PUN</dtr><dtr>TPH</dtr></dtrs>
 <head>TPH</head>
 </rule>
 
 <rule>
 <name>Taph/dash+</name>
-<dtrs>PUN1 TPH OPT OPT PUN2</dtrs>
+<dtrs><dtr>PUN1</dtr><dtr>TPH</dtr><dtr>OPT</dtr><dtr>OPT</dtr><dtr>PUN2</dtr></dtrs>
 <head>TPH</head>
 </rule>
 
 <rule>
 <name>Taph/dash-</name>
-<dtrs>PUN1 TPH</dtrs>
+<dtrs><dtr>PUN1</dtr><dtr>TPH</dtr></dtrs>
 <head>TPH</head>
 </rule>
 
 <rule>
 <name>Taph/comma+</name>
-<dtrs>PUN1 TPH PUN2 OPT</dtrs>
+<dtrs><dtr>PUN1</dtr><dtr>TPH</dtr><dtr>PUN2</dtr><dtr>OPT</dtr></dtrs>
 <head>TPH</head>
 </rule>
 
 <rule>
 <name>Taph/comma-b</name>
-<dtrs>TPH PUN</dtrs>
+<dtrs><dtr>TPH</dtr><dtr>PUN</dtr></dtrs>
 <head>TPH</head>
 </rule>
 
 <rule>
 <name>Taph/brack</name>
-<dtrs>PUN1 TPH PUN2</dtrs>
+<dtrs><dtr>PUN1</dtr><dtr>TPH</dtr><dtr>PUN2</dtr></dtrs>
 <head>TPH</head>
 </rule>
 
 <rule>
 <name>Tacl/colon1</name>
-<dtrs>PUN S</dtrs>
+<dtrs><dtr>PUN</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>Tacl/dash-</name>
-<dtrs>PUN S</dtrs>
+<dtrs><dtr>PUN</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>Tacl/dash+</name>
-<dtrs>PUN1 S OPT OPT OPT OPT PUN2</dtrs>
+<dtrs><dtr>PUN1</dtr><dtr>S</dtr><dtr>OPT</dtr><dtr>OPT</dtr><dtr>OPT</dtr><dtr>OPT</dtr><dtr>PUN2</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>Tacl/comma+</name>
-<dtrs>PUN1 S PUN2 OPT</dtrs>
+<dtrs><dtr>PUN1</dtr><dtr>S</dtr><dtr>PUN2</dtr><dtr>OPT</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>Tacl/comma+</name>
-<dtrs>PUN1 S PUN2</dtrs>
+<dtrs><dtr>PUN1</dtr><dtr>S</dtr><dtr>PUN2</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>Tacl/comma-e</name>
-<dtrs>PUN S</dtrs>
+<dtrs><dtr>PUN</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>Tacl/brack1</name>
-<dtrs>PUN1 S OPT OPT OPT OPT PUN2</dtrs>
+<dtrs><dtr>PUN1</dtr><dtr>S</dtr><dtr>OPT</dtr><dtr>OPT</dtr><dtr>OPT</dtr><dtr>OPT</dtr><dtr>PUN2</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>Tacl/brack2</name>
-<dtrs>PUN1 N TA PUN2</dtrs>
+<dtrs><dtr>PUN1</dtr><dtr>N</dtr><dtr>TA</dtr><dtr>PUN2</dtr></dtrs>
 <head>N</head>
 </rule>
 
 <rule>
 <name>Tph/np</name>
-<dtrs>OPT OPT* N</dtrs>
+<dtrs><dtr>OPT</dtr><dtr>OPT*</dtr><dtr>N</dtr></dtrs>
 <head>N</head>
 </rule>
 
 <rule>
 <name>Tph/n1</name>
-<dtrs>OPT OPT OPT* N</dtrs>
+<dtrs><dtr>OPT</dtr><dtr>OPT</dtr><dtr>OPT*</dtr><dtr>N</dtr></dtrs>
 <head>N</head>
 </rule>
 
 <rule>
 <name>Tph/pp</name>
-<dtrs>OPT OPT OPT* P</dtrs>
+<dtrs><dtr>OPT</dtr><dtr>OPT</dtr><dtr>OPT*</dtr><dtr>P</dtr></dtrs>
 <head>P</head>
 </rule>
 
 
 <rule>
 <name>Tph/a2</name>
-<dtrs>OPT OPT OPT* A</dtrs>
+<dtrs><dtr>OPT</dtr><dtr>OPT</dtr><dtr>OPT*</dtr><dtr>A</dtr></dtrs>
 <head>A</head>
 </rule>
 
 <rule>
 <name>Tph/vp</name>
-<dtrs>OPT* V</dtrs>
+<dtrs><dtr>OPT*</dtr><dtr>V</dtr></dtrs>
 <head>V</head>
 </rule>
 
 <rule>
 <name>PP/pp_pco</name>
-<dtrs>P PUN</dtrs>
+<dtrs><dtr>P</dtr><dtr>PUN</dtr></dtrs>
 <head>P</head>
 </rule>
 
 <rule>
 <name>AP/ap_pco</name>
-<dtrs>A PUN</dtrs>
+<dtrs><dtr>A</dtr><dtr>PUN</dtr></dtrs>
 <head>A</head>
 </rule>
 
@@ -406,1795 +408,1795 @@
 
 <rule>
 <name>S/pp_s</name>
-<dtrs>PP OPT S</dtrs>
+<dtrs><dtr>PP</dtr><dtr>OPT</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARGN</rargname><label>H</label><arg>U</arg></rarg>
+<rarg><rargname>ARGN</rargname><label>H</label><var>U</var></rarg>
 </semstruct>
-<eq>U PP.INDEX</eq>
+<equalities><rv>U</rv><dh><dtr>PP</dtr><he>INDEX</he></dh></equalities>
 </rule>
 
 <rule>
 <name>S/ppart_s-r</name>
-<dtrs>V OPT S</dtrs>
+<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARGN</rargname><label>H</label><arg>U</arg></rarg>
+<rarg><rargname>ARGN</rargname><label>H</label><var>U</var></rarg>
 </semstruct>
-<eq>U V.INDEX</eq>
+<equalities><rv>U</rv><dh><dtr>V</dtr><he>INDEX</he></dh></equalities>
 </rule>
 
 <rule>
 <name>S/ing_s-r</name>
-<dtrs>V OPT S</dtrs>
+<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARGN</rargname><label>H</label><arg>U</arg></rarg>
+<rarg><rargname>ARGN</rargname><label>H</label><var>U</var></rarg>
 </semstruct>
-<eq>U V.INDEX</eq>
+<equalities><rv>U</rv><dh><dtr>V</dtr><he>INDEX</he></dh></equalities>
 </rule>
 
 <rule>
 <name>S/np-nt-adv_s</name>
-<dtrs>N OPT S</dtrs>
+<dtrs><dtr>N</dtr><dtr>OPT</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARGN</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARGN</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X N.INDEX</eq>
+<equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
 </rule>
 
 <rule>
 <name>S/np-ms-adv_s</name>
-<dtrs>N OPT S</dtrs>
+<dtrs><dtr>N</dtr><dtr>OPT</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARGN</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARGN</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X N.INDEX</eq>
+<equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
 </rule>
 
 <rule>
 <name>S/adv_s</name>
-<dtrs>A OPT S</dtrs>
+<dtrs><dtr>A</dtr><dtr>OPT</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARGN</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARGN</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X A.INDEX</eq>
+<equalities><rv>X</rv><dh><dtr>A</dtr><he>INDEX</he></dh></equalities>
 </rule>
 
 <rule>
 <name>S/s_pco_pp</name>
-<dtrs>S PUN PP</dtrs>
+<dtrs><dtr>S</dtr><dtr>PUN</dtr><dtr>PP</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/s_pco_ppart</name>
-<dtrs>S PUN V</dtrs>
+<dtrs><dtr>S</dtr><dtr>PUN</dtr><dtr>V</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/s_pco_ing</name>
-<dtrs>S PUN V</dtrs>
+<dtrs><dtr>S</dtr><dtr>PUN</dtr><dtr>V</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/s_pco_np-nt-adv</name>
-<dtrs>S PUN N</dtrs>
+<dtrs><dtr>S</dtr><dtr>PUN</dtr><dtr>N</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/s_pco_np-ms-adv</name>
-<dtrs>S PUN N</dtrs>
+<dtrs><dtr>S</dtr><dtr>PUN</dtr><dtr>N</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/s_pco_adv</name>
-<dtrs>S PUN A</dtrs>
+<dtrs><dtr>S</dtr><dtr>PUN</dtr><dtr>A</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/s_pco_a1</name>
-<dtrs>S PUN A</dtrs>
+<dtrs><dtr>S</dtr><dtr>PUN</dtr><dtr>A</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/s_np-voc</name>
-<dtrs>S PUN N</dtrs>
+<dtrs><dtr>S</dtr><dtr>PUN</dtr><dtr>N</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/s_np-voc</name>
-<dtrs>S OPT N</dtrs>
+<dtrs><dtr>S</dtr><dtr>OPT</dtr><dtr>N</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/s_pco_np-voc1</name>
-<dtrs>S PUN N</dtrs>
+<dtrs><dtr>S</dtr><dtr>PUN</dtr><dtr>N</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/s_pco_np-voc2</name>
-<dtrs>S PUN N</dtrs>
+<dtrs><dtr>S</dtr><dtr>PUN</dtr><dtr>N</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/s_pco_np-r</name>
-<dtrs>S PUN N</dtrs>
+<dtrs><dtr>S</dtr><dtr>PUN</dtr><dtr>N</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/np-voc_pco_s1</name>
-<dtrs>N PUN S</dtrs>
+<dtrs><dtr>N</dtr><dtr>PUN</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/np-voc_pco_s3</name>
-<dtrs>N PUN S</dtrs>
+<dtrs><dtr>N</dtr><dtr>PUN</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/np-voc_pco_s3</name>
-<dtrs>N PUN S</dtrs>
+<dtrs><dtr>N</dtr><dtr>PUN</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/np_pco_s3-r</name>
-<dtrs>N PUN S</dtrs>
+<dtrs><dtr>N</dtr><dtr>PUN</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/np-wh_pco_s</name>
-<dtrs>N PUN S</dtrs>
+<dtrs><dtr>N</dtr><dtr>PUN</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/s_pco_np-wh</name>
-<dtrs>S PUN N</dtrs>
+<dtrs><dtr>S</dtr><dtr>PUN</dtr><dtr>N</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/s_np-refl</name>
-<dtrs>S OPT N</dtrs>
+<dtrs><dtr>S</dtr><dtr>OPT</dtr><dtr>N</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/np-refl_pco_s</name>
-<dtrs>N PUN S</dtrs>
+<dtrs><dtr>N</dtr><dtr>PUN</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/s_tag-qu</name>
-<dtrs>S PUN V OPT N PUN</dtrs>
+<dtrs><dtr>S</dtr><dtr>PUN</dtr><dtr>V</dtr><dtr>OPT</dtr><dtr>N</dtr><dtr>PUN</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/s_pco_vb_np-name</name>
-<dtrs>S PUN V N</dtrs>
+<dtrs><dtr>S</dtr><dtr>PUN</dtr><dtr>V</dtr><dtr>N</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/s_pco_vb_np-pro</name>
-<dtrs>S PUN V N</dtrs>
+<dtrs><dtr>S</dtr><dtr>PUN</dtr><dtr>V</dtr><dtr>N</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/s_ppart</name>
-<dtrs>S PUN V</dtrs>
+<dtrs><dtr>S</dtr><dtr>PUN</dtr><dtr>V</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/ppart_s</name>
-<dtrs>V PUN S</dtrs>
+<dtrs><dtr>V</dtr><dtr>PUN</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/np_vp</name>
-<dtrs>NP VP</dtrs>
+<dtrs><dtr>NP</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG1</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG1</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H VP.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>S/n1_vp</name>
-<dtrs>N VP</dtrs>
+<dtrs><dtr>N</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG1</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG1</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X N.INDEX</eq>
-<eq>H VP.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>S/np-poss_vp</name>
-<dtrs>NP VP</dtrs>
+<dtrs><dtr>NP</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG1</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG1</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H VP.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 
 <rule>
 <name>S/np_ing-r</name>
-<dtrs>NP VP</dtrs>
+<dtrs><dtr>NP</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG1</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG1</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H VP.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>S/n1_ing-r</name>
-<dtrs>N VP</dtrs>
+<dtrs><dtr>N</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG1</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG1</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X N.INDEX</eq>
-<eq>H VP.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>S/scomp_vp-r</name>
-<dtrs>CP S V</dtrs>
+<dtrs><dtr>CP</dtr><dtr>S</dtr><dtr>V</dtr></dtrs>
 <head>V</head>
 </rule>
 
 <rule>
 <name>S/s-ing_vp-r</name>
-<dtrs>S V</dtrs>
+<dtrs><dtr>S</dtr><dtr>V</dtr></dtrs>
 <head>V</head>
 </rule>
 
 <rule>
 <name>S/ing_vp-r</name>
-<dtrs>V1 V2</dtrs>
+<dtrs><dtr>V1</dtr><dtr>V2</dtr></dtrs>
 <head>V2</head>
 </rule>
 
 <rule>
 <name>S/inf_vp-r</name>
-<dtrs>V1 V2</dtrs>
+<dtrs><dtr>V1</dtr><dtr>V2</dtr></dtrs>
 <head>V2</head>
 </rule>
 
 <rule>
 <name>S/pp_vp-r</name>
-<dtrs>PP V2</dtrs>
+<dtrs><dtr>PP</dtr><dtr>V2</dtr></dtrs>
 <head>V2</head>
 </rule>
 
 
 <rule>
 <name>S/s_be_s-r</name>
-<dtrs>S1 V OPT S2</dtrs>
+<dtrs><dtr>S1</dtr><dtr>V</dtr><dtr>OPT</dtr><dtr>S2</dtr></dtrs>
 <head>S2</head>
 </rule>
 
 
 <rule>
 <name>S/s-wh_be_vp-r</name>
-<dtrs>S1 V VP</dtrs>
+<dtrs><dtr>S1</dtr><dtr>V</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>S/sai</name>
-<dtrs>V OPT S</dtrs>
+<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/sai-be1</name>
-<dtrs>V OPT NP1 OPT NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>NP1</dtr><dtr>OPT</dtr><dtr>NP2</dtr></dtrs>
 <head>NP2</head>
 </rule>
 
 <rule>
 <name>S/sai-be2</name>
-<dtrs>V OPT NP OPT PP</dtrs>
+<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>NP</dtr><dtr>OPT</dtr><dtr>PP</dtr></dtrs>
 <head>PP</head>
 </rule>
 
 <rule>
 <name>S/sai-be3</name>
-<dtrs>V OPT NP OPT AP</dtrs>
+<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>NP</dtr><dtr>OPT</dtr><dtr>AP</dtr></dtrs>
 <head>AP</head>
 </rule>
 
 <rule>
 <name>S/sai-be4</name>
-<dtrs>V OPT NP OPT PT</dtrs>
+<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>NP</dtr><dtr>OPT</dtr><dtr>PT</dtr></dtrs>
 <head>PT</head>
 </rule>
 
 <rule>
 <name>S/comp</name>
-<dtrs>CP S</dtrs>
+<dtrs><dtr>CP</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/np-wh_s-gap</name>
-<dtrs>NP S</dtrs>
+<dtrs><dtr>NP</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/np-wh_vp</name>
-<dtrs>NP VP</dtrs>
+<dtrs><dtr>NP</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>S/pp-wh_s</name>
-<dtrs>PP S</dtrs>
+<dtrs><dtr>PP</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/np-wh_np_aux-r</name>
-<dtrs>NP1 NP2 OPT V OPT</dtrs>
+<dtrs><dtr>NP1</dtr><dtr>NP2</dtr><dtr>OPT</dtr><dtr>V</dtr><dtr>OPT</dtr></dtrs>
 <head>V</head>
 </rule>
 
 <rule>
 <name>S/pp-wh_np_aux-r</name>
-<dtrs>PP NP OPT V OPT</dtrs>
+<dtrs><dtr>PP</dtr><dtr>NP</dtr><dtr>OPT</dtr><dtr>V</dtr><dtr>OPT</dtr></dtrs>
 <head>V</head>
 </rule>
 
 <rule>
 <name>S/what_pp-if</name>
-<dtrs>DT PP</dtrs>
+<dtrs><dtr>DT</dtr><dtr>PP</dtr></dtrs>
 <head>PP</head>
 </rule>
 
 <rule>
 <name>S/imp</name>
-<dtrs>VP</dtrs>
+<dtrs><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>S/cj-beg_s</name>
-<dtrs>CJ S</dtrs>
+<dtrs><dtr>CJ</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/s_s-coord</name>
-<dtrs>S1 OPT S2</dtrs>
+<dtrs><dtr>S1</dtr><dtr>OPT</dtr><dtr>S2</dtr></dtrs>
 <head>S1</head>
 </rule>
 
 <rule>
 <name>S/s_s-coord-r</name>
-<dtrs>S1 OPT S2</dtrs>
+<dtrs><dtr>S1</dtr><dtr>OPT</dtr><dtr>S2</dtr></dtrs>
 <head>S1</head>
 </rule>
 
 <rule>
 <name>S/cj-end_s</name>
-<dtrs>CJ S</dtrs>
+<dtrs><dtr>CJ</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/s_pco-cj</name>
-<dtrs>S PUN</dtrs>
+<dtrs><dtr>S</dtr><dtr>PUN</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/s_s-coord-pco</name>
-<dtrs>S1 OPT S2</dtrs>
+<dtrs><dtr>S1</dtr><dtr>OPT</dtr><dtr>S2</dtr></dtrs>
 <head>S1</head>
 </rule>
 
 <rule>
 <name>V/v_prt</name>
-<dtrs>V PT</dtrs>
+<dtrs><dtr>V</dtr><dtr>PT</dtr></dtrs>
 <head>V</head>
 </rule>
 
 <rule>
 <name>V1/v_n_of_np</name>
-<dtrs>V N P NP</dtrs>
+<dtrs><dtr>V</dtr><dtr>N</dtr><dtr>P</dtr><dtr>NP</dtr></dtrs>
 <head>V</head>
 </rule>
 
 
 <rule>
 <name>V1/v</name>
-<dtrs>V</dtrs>
+<dtrs><dtr>V</dtr></dtrs>
 <head>V</head>
 </rule>
 
 <rule>
 <name>V1/v_np</name>
-<dtrs>V NP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-pro</name>
-<dtrs>V NP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-name</name>
-<dtrs>V NP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-tit</name>
-<dtrs>V NP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-pl</name>
-<dtrs>V NP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-org</name>
-<dtrs>V NP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-refl</name>
-<dtrs>V NP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_n1</name>
-<dtrs>V N</dtrs>
+<dtrs><dtr>V</dtr><dtr>N</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X N.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_n1-tit</name>
-<dtrs>V N</dtrs>
+<dtrs><dtr>V</dtr><dtr>N</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X N.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-ms</name>
-<dtrs>V NP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-num</name>
-<dtrs>V NP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np_prt</name>
-<dtrs>V NP PT</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>PT</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_npro_prt</name>
-<dtrs>V NP PT</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>PT</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-name_prt</name>
-<dtrs>V NP PT</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>PT</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-tit_prt</name>
-<dtrs>V NP PT</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>PT</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-pl_prt</name>
-<dtrs>V NP PT</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>PT</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-org_prt</name>
-<dtrs>V NP PT</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>PT</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-refl_prt</name>
-<dtrs>V NP PT</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>PT</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_n1_prt</name>
-<dtrs>V N PT</dtrs>
+<dtrs><dtr>V</dtr><dtr>N</dtr><dtr>PT</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X N.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_n1-tit_prt</name>
-<dtrs>V N PT</dtrs>
+<dtrs><dtr>V</dtr><dtr>N</dtr><dtr>PT</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X N.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-ms_prt</name>
-<dtrs>V NP PT</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>PT</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-num_prt</name>
-<dtrs>V NP PT</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>PT</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_pp</name>
-<dtrs>V PP</dtrs>
+<dtrs><dtr>V</dtr><dtr>PP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARGN</rargname><label>H</label><arg>E1</arg></rarg>
+<rarg><rargname>ARGN</rargname><label>H</label><var>E1</var></rarg>
 </semstruct>
-<eq>E1 PP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>E1</rv><dh><dtr>PP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_pp-of</name>
-<dtrs>V PP</dtrs>
+<dtrs><dtr>V</dtr><dtr>PP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARGN</rargname><label>H</label><arg>E1</arg></rarg>
+<rarg><rargname>ARGN</rargname><label>H</label><var>E1</var></rarg>
 </semstruct>
-<eq>E1 PP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>E1</rv><dh><dtr>PP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_pp-wh</name>
-<dtrs>V PP</dtrs>
+<dtrs><dtr>V</dtr><dtr>PP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARGN</rargname><label>H</label><arg>E1</arg></rarg>
+<rarg><rargname>ARGN</rargname><label>H</label><var>E1</var></rarg>
 </semstruct>
-<eq>E1 PP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>E1</rv><dh><dtr>PP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_inf</name>
-<dtrs>V VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>VP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARGN</rargname><label>H</label><arg>E1</arg></rarg>
+<rarg><rargname>ARGN</rargname><label>H</label><var>E1</var></rarg>
 </semstruct>
-<eq>E1 VP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>E1</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_ing</name>
-<dtrs>V VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>VP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARGN</rargname><label>H</label><arg>E1</arg></rarg>
+<rarg><rargname>ARGN</rargname><label>H</label><var>E1</var></rarg>
 </semstruct>
-<eq>E1 VP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>E1</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_ing_pp</name>
-<dtrs>V VP PP</dtrs>
+<dtrs><dtr>V</dtr><dtr>VP</dtr><dtr>PP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARGN</rargname><label>H</label><arg>E1</arg></rarg>
+<rarg><rargname>ARGN</rargname><label>H</label><var>E1</var></rarg>
 </semstruct>
-<eq>E1 VP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>E1</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_pp_ing-hs-r</name>
-<dtrs>V PP VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>PP</dtr><dtr>VP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARGN</rargname><label>H</label><arg>E1</arg></rarg>
+<rarg><rargname>ARGN</rargname><label>H</label><var>E1</var></rarg>
 </semstruct>
-<eq>E1 VP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>E1</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 
 <rule>
 <name>V1/v_ppart</name>
-<dtrs>V VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>VP</dtr></dtrs>
 <head>V</head>
 </rule>
 
 <rule>
 <name>V1/v_bse</name>
-<dtrs>V VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>VP</dtr></dtrs>
 <head>V</head>
 </rule>
 
 <rule>
 <name>V1/v_s</name>
-<dtrs>V S</dtrs>
+<dtrs><dtr>V</dtr><dtr>S</dtr></dtrs>
 <head>V</head>
 </rule>
 
 <rule>
 <name>V1/v_tcl</name>
-<dtrs>V OPT S</dtrs>
+<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>S</dtr></dtrs>
 <head>V</head>
 </rule>
 
 <rule>
 <name>V1/v_tqo</name>
-<dtrs>V OPT S</dtrs>
+<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>S</dtr></dtrs>
 <head>V</head>
 </rule>
 
 <rule>
 <name>V1/v_np-qo</name>
-<dtrs>V NP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr></dtrs>
 <head>V</head>
 </rule>
 
 <rule>
 <name>V1/v_s-subjgap-r</name>
-<dtrs>V VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>VP</dtr></dtrs>
 <head>V</head>
 </rule>
 
 <rule>
 <name>V1/v_ap</name>
-<dtrs>V AP</dtrs>
+<dtrs><dtr>V</dtr><dtr>AP</dtr></dtrs>
 <head>V</head>
 </rule>
 
 <rule>
 <name>V1/v_np_np</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np_np-pl</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np_np-org</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np_np-name</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np_np-tit</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np_np-ms</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np_np-num</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_n1_np</name>
-<dtrs>V N NP</dtrs>
+<dtrs><dtr>V</dtr><dtr>N</dtr><dtr>NP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X N.INDEX</eq>
-<eq>Y NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-pro_np</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-pro_np-pl</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-pro_np-org</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-pro_np-name</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-pro_np-tit</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-pro_np-pro</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-pro_np-ms</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 
 <rule>
 <name>V1/v_np-pro_np-num</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-name_np</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-name_np-pl</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-name_np-org</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-name_np-name</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-name_np-tit</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-name_np-ms</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-name_np-num</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 
 <rule>
 <name>V1/v_np-pl_np</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-org_np</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-pl_np-pl-r</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-org_np-org-r</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-org_np-pl</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-pl_np-org</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-pl_np-nm</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-org_np-nm</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-pl_np-tit</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-org_np-tit</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 
 <rule>
 <name>V1/v_nporg_nptit</name>
 <comment>V1/v_np-org_np-tit</comment>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-pl_np-ms</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-org_np-ms</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-pl_np-num</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 
 <rule>
 <name>V1/v_np-org_np-num</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-refl_np</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-refl_np-pl</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-refl_np-name</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-refl_np-tit</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-refl_np-ms</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-refl_np-num</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np_prt_np</name>
-<dtrs>V NP1 PT NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>PT</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np_prt_np</name>
-<dtrs>V NP1 PT NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>PT</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np_prt_n1</name>
-<dtrs>V NP PT N</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>PT</dtr><dtr>N</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>Y N.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_n1_prt_np</name>
-<dtrs>V N PT NP</dtrs>
+<dtrs><dtr>V</dtr><dtr>N</dtr><dtr>PT</dtr><dtr>NP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X N.INDEX</eq>
-<eq>Y NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-pro_prt_np</name>
-<dtrs>V NP1 PT NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>PT</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-name_prt_np</name>
-<dtrs>V NP1 PT NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>PT</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-name_p_np</name>
 <comment>V1/v_np-name_prt_np</comment>
-<dtrs>V NP1 PT NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>PT</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-pl_prt_np</name>
-<dtrs>V NP1 PT NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>PT</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-org_prt_np</name>
-<dtrs>V NP1 PT NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>PT</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np-refl_prt_np</name>
-<dtrs>V NP1 PT NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>PT</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np_inf</name>
-<dtrs>V NP VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>VP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np_prt_inf</name>
-<dtrs>V NP PT VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>PT</dtr><dtr>VP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 
 <rule>
 <name>V1/v_np_ing</name>
-<dtrs>V NP VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>VP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np_ing_pp</name>
-<dtrs>V NP VP PP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>VP</dtr><dtr>PP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_poss_ing</name>
-<dtrs>V NP VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>VP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_poss_ing_pp</name>
-<dtrs>V NP VP PP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>VP</dtr><dtr>PP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np_prt_ing</name>
-<dtrs>V NP PRT VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>PRT</dtr><dtr>VP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np_pp</name>
-<dtrs>V NP PP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>PP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np_prt_pp</name>
-<dtrs>V NP PRT PP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>PRT</dtr><dtr>PP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np_ppof</name>
-<dtrs>V NP PP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>PP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_n1_pp</name>
-<dtrs>V N PP</dtrs>
+<dtrs><dtr>V</dtr><dtr>N</dtr><dtr>PP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X N.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_pp_np-hs-r</name>
-<dtrs>V PP NP</dtrs>
+<dtrs><dtr>V</dtr><dtr>PP</dtr><dtr>NP</dtr></dtrs>
 <head>V</head>
 </rule>
 
 <rule>
 <name>V1/v_np_pp-wh</name>
-<dtrs>V NP PP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>PP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_pp_pp</name>
-<dtrs>V PP1 PP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>PP1</dtr><dtr>PP2</dtr></dtrs>
 <head>V</head>
 </rule>
 
 <rule>
 <name>V1/v_pp_pp-wh</name>
-<dtrs>V PP1 PP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>PP1</dtr><dtr>PP2</dtr></dtrs>
 <head>V</head>
 </rule>
 
 <rule>
 <name>V1/v_pp_s</name>
-<dtrs>V PP S</dtrs>
+<dtrs><dtr>V</dtr><dtr>PP</dtr><dtr>S</dtr></dtrs>
 <head>V</head>
 </rule>
 
 <rule>
 <name>V1/v_pp_s-wh</name>
-<dtrs>V PP S</dtrs>
+<dtrs><dtr>V</dtr><dtr>PP</dtr><dtr>S</dtr></dtrs>
 <head>V</head>
 </rule>
 
 <rule>
 <name>V1/v_pp_np-wh</name>
-<dtrs>V PP NP</dtrs>
+<dtrs><dtr>V</dtr><dtr>PP</dtr><dtr>NP</dtr></dtrs>
 <head>V</head>
 </rule>
 
@@ -2202,762 +2204,765 @@
 <rule>
 <name>V1/v_pp_vp-wh</name>
 <comment>V1/v_pp_np-wh</comment>
-<dtrs>V PP NP</dtrs>
+<dtrs><dtr>V</dtr><dtr>PP</dtr><dtr>NP</dtr></dtrs>
 <head>V</head>
 </rule>
 
 
 <rule>
 <name>V1/v_pp_inf</name>
-<dtrs>V PP VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>PP</dtr><dtr>VP</dtr></dtrs>
 <head>V</head>
 </rule>
 
 <rule>
 <name>V1/v_pp_ap</name>
-<dtrs>V PP AP</dtrs>
+<dtrs><dtr>V</dtr><dtr>PP</dtr><dtr>AP</dtr></dtrs>
 <head>V</head>
 </rule>
 
 <rule>
 <name>V1/v_np_pp_pp</name>
-<dtrs>V NP PP1 PP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>PP1</dtr><dtr>PP2</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np_s</name>
-<dtrs>V NP S</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>S</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np_prt_s</name>
-<dtrs>V NP PRT S</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>PRT</dtr><dtr>S</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 
 <rule>
 <name>V1/v_np_p_s</name>
 <comment>V1/v_np_prt_s</comment>
-<dtrs>V NP PRT S</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>PRT</dtr><dtr>S</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 
 <rule>
 <name>V1/v_np_ap</name>
-<dtrs>V NP AP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>AP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/v_np_prt_ap</name>
-<dtrs>V NP PRT AP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>PRT</dtr><dtr>AP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 
 <rule>
 <name>V1/v_np_p_ap</name>
 <comment>V1/v_np_prt_ap</comment>
-<dtrs>V NP PRT AP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>PRT</dtr><dtr>AP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 
 <rule>
 <name>V1/v_np_np_s</name>
-<dtrs>V NP1 NP2 S</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr><dtr>S</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
-<rarg><rargname>ARG3</rargname><label>H</label><arg>Y</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
 </semstruct>
-<eq>X NP1.INDEX</eq>
-<eq>Y NP2.INDEX</eq>
-<eq>H V.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 
 
 <rule>
 <name>V1/adv_vp</name>
-<dtrs>ADV VP</dtrs>
+<dtrs><dtr>ADV</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>V1/vp_advp</name>
-<dtrs>VP ADV</dtrs>
+<dtrs><dtr>VP</dtr><dtr>ADV</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>V1/vp_pp</name>
-<dtrs>VP PP</dtrs>
+<dtrs><dtr>VP</dtr><dtr>PP</dtr></dtrs>
 <head>VP</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARGN</rargname><label>H</label><arg>E1</arg></rarg>
+<rarg><rargname>ARGN</rargname><label>H</label><var>E1</var></rarg>
 </semstruct>
-<eq>E1 PP.INDEX</eq>
-<eq>H VP.LABEL</eq>
+<equalities><rv>E1</rv><dh><dtr>PP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>V1/vp_np-nt-adv</name>
-<dtrs>VP NP</dtrs>
+<dtrs><dtr>VP</dtr><dtr>NP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>V1/vp_np-ms-adv</name>
-<dtrs>VP NP</dtrs>
+<dtrs><dtr>VP</dtr><dtr>NP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>V1/np-nt-adv_vp</name>
-<dtrs>NP VP</dtrs>
+<dtrs><dtr>NP</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>np-ms-adv_vp</name>
-<dtrs>NP VP</dtrs>
+<dtrs><dtr>NP</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>V1/vp_inf</name>
-<dtrs>VP1 VP2</dtrs>
+<dtrs><dtr>VP1</dtr><dtr>VP2</dtr></dtrs>
 <head>VP1</head>
 </rule>
 
 <rule>
 <name>V1/not_vp</name>
-<dtrs>NG VP</dtrs>
+<dtrs><dtr>NG</dtr><dtr>VP</dtr></dtrs>
 <head>NG</head>
 </rule>
 
 <rule>
 <name>V1/cj-beg_vp</name>
-<dtrs>CJ VP</dtrs>
+<dtrs><dtr>CJ</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>V1/vp_vp-coord</name>
-<dtrs>VP1 OPT VP2</dtrs>
+<dtrs><dtr>VP1</dtr><dtr>OPT</dtr><dtr>VP2</dtr></dtrs>
 <head>VP1</head>
 </rule>
 
 <rule>
 <name>V1/vp_vp-coord-r</name>
-<dtrs>VP1 OPT VP2</dtrs>
+<dtrs><dtr>VP1</dtr><dtr>OPT</dtr><dtr>VP2</dtr></dtrs>
 <head>VP1</head>
 </rule>
 
 
 <rule>
 <name>V1/cj-end_vp</name>
-<dtrs>CJ VP</dtrs>
+<dtrs><dtr>CJ</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>V1/vp_pco-cj</name>
-<dtrs>VP PUN</dtrs>
+<dtrs><dtr>VP</dtr><dtr>PUN</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>V1/vp_vp-coord-pco</name>
-<dtrs>VP1 VP2</dtrs>
+<dtrs><dtr>VP1</dtr><dtr>VP2</dtr></dtrs>
 <head>VP1</head>
 </rule>
 
 <rule>
 <name>V/cj-beg_v</name>
-<dtrs>CJ VP</dtrs>
+<dtrs><dtr>CJ</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>V/v_v-coord</name>
-<dtrs>V1 OPT V2</dtrs>
+<dtrs><dtr>V1</dtr><dtr>OPT</dtr><dtr>V2</dtr></dtrs>
 <head>V1</head>
 </rule>
 
 <rule>
 <name>V/v_v-coord-r</name>
-<dtrs>V1 OPT V2</dtrs>
+<dtrs><dtr>V1</dtr><dtr>OPT</dtr><dtr>V2</dtr></dtrs>
 <head>V1</head>
 </rule>
 
 <rule>
 <name>V/cj-end_v</name>
-<dtrs>CJ V</dtrs>
+<dtrs><dtr>CJ</dtr><dtr>V</dtr></dtrs>
 <head>V</head>
 </rule>
 
 <rule>
 <name>V/sl-end_v</name>
-<dtrs>PUN V</dtrs>
+<dtrs><dtr>PUN</dtr><dtr>V</dtr></dtrs>
 <head>V</head>
 </rule>
 
 
 <rule>
 <name>V1/be_ppart</name>
-<dtrs>V OPT VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>V1/be_past</name>
-<dtrs>V OPT VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>V1/be_ing</name>
-<dtrs>V OPT VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>V1/be_inf</name>
-<dtrs>V OPT VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>V1/be_pp</name>
-<dtrs>V OPT OPT VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>OPT</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>V1/be_prt</name>
-<dtrs>V OPT PT</dtrs>
+<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>PT</dtr></dtrs>
 <head>PT</head>
 </rule>
 
 
 <rule>
 <name>V1/be_ap</name>
-<dtrs>V OPT OPT AP</dtrs>
+<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>OPT</dtr><dtr>AP</dtr></dtrs>
 <head>AP</head>
 </rule>
 
 <rule>
 <name>V1/be_np</name>
-<dtrs>V OPT OPT NP OPT</dtrs>
+<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>OPT</dtr><dtr>NP</dtr><dtr>OPT</dtr></dtrs>
 <head>NP</head>
 </rule>
 
 <rule>
 <name>V1/be_n1</name>
-<dtrs>V OPT OPT N OPT</dtrs>
+<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>OPT</dtr><dtr>N</dtr><dtr>OPT</dtr></dtrs>
 <head>N</head>
 </rule>
 
 <rule>
 <name>V1/be_s</name>
-<dtrs>V S</dtrs>
+<dtrs><dtr>V</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>V1/be_ta</name>
-<dtrs>V Ta</dtrs>
+<dtrs><dtr>V</dtr><dtr>Ta</dtr></dtrs>
 <head>Ta</head>
 </rule>
 
 <rule>
 <name>V1/be_qo</name>
-<dtrs>V OPT VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>V1/be_ij</name>
-<dtrs>V OPT IJ OPT*</dtrs>
+<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>IJ</dtr><dtr>OPT*</dtr></dtrs>
 <head>IJ</head>
 </rule>
 
 <rule>
 <name>V1/be_pp_np-hs-r</name>
-<dtrs>V PP OPT NP OPT</dtrs>
+<dtrs><dtr>V</dtr><dtr>PP</dtr><dtr>OPT</dtr><dtr>NP</dtr><dtr>OPT</dtr></dtrs>
 <head>NP</head>
 </rule>
 
 <rule>
 <name>V1/be_adv_ppart</name>
-<dtrs>V NP VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>V1/be_adv_past</name>
-<dtrs>V NP VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>V1/be_adv_ing</name>
-<dtrs>V NP VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>V1/be_adv_inf</name>
-<dtrs>V NP VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>V1/be_adv_pp</name>
-<dtrs>V NP OPT PP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>OPT</dtr><dtr>PP</dtr></dtrs>
 <head>PP</head>
 </rule>
 
 <rule>
 <name>V1/be_adv_ap</name>
-<dtrs>V NP OPT AP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>OPT</dtr><dtr>AP</dtr></dtrs>
 <head>AP</head>
 </rule>
 
 
 <rule>
 <name>V1/be_adv_np</name>
-<dtrs>V NP1 OPT NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>OPT</dtr><dtr>NP2</dtr></dtrs>
 <head>NP2</head>
 </rule>
 
 <rule>
 <name>V1/be_adv_n1</name>
-<dtrs>V NP OPT N</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>OPT</dtr><dtr>N</dtr></dtrs>
 <head>N</head>
 </rule>
 
 <rule>
 <name>V1/do_bse</name>
-<dtrs>V OPT VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>V1/do_np</name>
-<dtrs>V OPT NP</dtrs>
+<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>NP</dtr></dtrs>
 <head>V</head>
 </rule>
 
 <rule>
 <name>V1/do_np_np</name>
-<dtrs>V OPT NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>V</head>
 </rule>
 
 <rule>
 <name>V1/do_np_pp</name>
-<dtrs>V OPT NP PP</dtrs>
+<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>NP</dtr><dtr>PP</dtr></dtrs>
 <head>V</head>
 </rule>
 
 <rule>
 <name>V1/do_pp</name>
-<dtrs>V PP</dtrs>
+<dtrs><dtr>V</dtr><dtr>PP</dtr></dtrs>
 <head>V</head>
 </rule>
 
 <rule>
 <name>V1/do_as</name>
-<dtrs>V PP</dtrs>
+<dtrs><dtr>V</dtr><dtr>PP</dtr></dtrs>
 <head>V</head>
 </rule>
 
 <rule>
 <name>V1/do_adv_bse</name>
-<dtrs>V NP VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>V1/to_bse</name>
-<dtrs>V OPT VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>V1/to_bse</name>
-<dtrs>V NP VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>V1/have_ppart</name>
-<dtrs>V OPT VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>V1/have_past</name>
-<dtrs>V OPT VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>V1/have_np_ppt</name>
-<dtrs>V OPT NP VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>NP</dtr><dtr>VP</dtr></dtrs>
 <head>V</head>
 </rule>
 
 <rule>
 <name>V1/have_np_bse</name>
-<dtrs>V OPT NP VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>NP</dtr><dtr>VP</dtr></dtrs>
 <head>V</head>
 </rule>
 
 <rule>
 <name>V1/have_np</name>
-<dtrs>V OPT NP</dtrs>
+<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>NP</dtr></dtrs>
 <head>V</head>
 </rule>
 
 <rule>
 <name>V1/have_n1</name>
-<dtrs>V OPT N1</dtrs>
+<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>N1</dtr></dtrs>
 <head>V</head>
 </rule>
 
 <rule>
 <name>V1/have_inf</name>
-<dtrs>V OPT VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>V1/have_adv_ppart</name>
-<dtrs>V NP VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>V1/have_adv_past</name>
-<dtrs>V NP VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>V1/have_adv_np_ppt</name>
-<dtrs>V NP1 NP2 VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>V1/have_adv_np_bse</name>
-<dtrs>V NP1 NP2 VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>V1/have_adv_np</name>
-<dtrs>V NP1 NP2</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP1</dtr><dtr>NP2</dtr></dtrs>
 <head>NP2</head>
 </rule>
 
 <rule>
 <name>V1/have_adv_n1</name>
-<dtrs>V NP N</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>N</dtr></dtrs>
 <head>N</head>
 </rule>
 
 <rule>
 <name>V1/have_adv_inf</name>
-<dtrs>V NP VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>V1/have_adver_bse</name>
-<dtrs>V A VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>A</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>V1/have_advest_bse</name>
-<dtrs>V A VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>A</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
+<!--
 ;;; systematic up to here
+-->
 
 <rule>
 <name>P1/p_s</name>
-<dtrs>P S</dtrs>
+<dtrs><dtr>P</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>N1/n_n1</name>
-<dtrs>N1 OPT N2</dtrs>
+<dtrs><dtr>N1</dtr><dtr>OPT</dtr><dtr>N2</dtr></dtrs>
 <head>N2</head>
 </rule>
 
 <rule>
 <name>N1/n1_pp1</name>
 <comment>this won't work properly without a external argument</comment>
-<dtrs>N PP</dtrs>
+<dtrs><dtr>N</dtr><dtr>PP</dtr></dtrs>
 <head>N</head>
 </rule>
 
 <rule>
 <name>N1/n_pp-of</name>
-<dtrs>N PP</dtrs>
+<dtrs><dtr>N</dtr><dtr>PP</dtr></dtrs>
 <head>N</head>
 </rule>
 
 <rule>
 <name>NP/np_np-coord</name>
-<dtrs>NP1 OPT NP2</dtrs>
+<dtrs><dtr>NP1</dtr><dtr>OPT</dtr><dtr>NP2</dtr></dtrs>
 <head>NP2</head>
 </rule>
 
 <rule>
 <name>A1/adv_a1</name>
-<dtrs>AP A</dtrs>
+<dtrs><dtr>AP</dtr><dtr>A</dtr></dtrs>
 <head>A</head>
 </rule>
 
 <rule>
 <name>N1/cj-end_n1</name>
-<dtrs>CJ N</dtrs>
+<dtrs><dtr>CJ</dtr><dtr>N</dtr></dtrs>
 <head>N</head>
 </rule>
 
 <rule>
 <name>V1/modal_bse</name>
-<dtrs>V OPT VP</dtrs>
+<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
 <rule>
 <name>N1/n_s</name>
-<dtrs>N S</dtrs>
+<dtrs><dtr>N</dtr><dtr>S</dtr></dtrs>
 <head>N</head>
 </rule>
 
 
 <rule>
 <name>NP/n1_name</name>
-<dtrs>OPT N</dtrs>
+<dtrs><dtr>OPT</dtr><dtr>N</dtr></dtrs>
 <head>N</head>
 </rule>
 
 <rule>
 <name>N1/n</name>
-<dtrs>N</dtrs>
+<dtrs><dtr>N</dtr></dtrs>
 <head>N</head>
 </rule>
 
 <rule>
 <name>N1/n-name_n1-name</name>
-<dtrs>N1 NM</dtrs>
+<dtrs><dtr>N1</dtr><dtr>NM</dtr></dtrs>
 <head>N1</head>
 <semstruct>
 <hook><index>X</index><label>H1</label></hook>
-<ing><ing-a>H1</ing-a><ing-b>H2</ing-b></ing>
+<ing><ing-a><var>H1</var></ing-a><ing-b><var>H2</var></ing-b></ing>
 </semstruct>
-<eq>NM.INDEX N1.INDEX</eq>
-<eq>X N1.INDEX</eq>
-<eq>H1 N1.LABEL</eq>
-<eq>H2 NM.LABEL</eq>
+<equalities><dh><dtr>NM</dtr><he>INDEX</he></dh><dh><dtr>N1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>X</rv><dh><dtr>N1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H1</rv><dh><dtr>N1</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H2</rv><dh><dtr>NM</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>N1/ap_n1/-</name>
-<dtrs>ADJ N</dtrs>
+<dtrs><dtr>ADJ</dtr><dtr>N</dtr></dtrs>
 <head>N</head>
 <semstruct>
 <hook><index>X</index><label>H2</label></hook>
-<ing><ing-a>H1</ing-a><ing-b>H2</ing-b></ing>
+<ing><ing-a><var>H1</var></ing-a><ing-b><var>H2</var></ing-b></ing>
 </semstruct>
-<eq>N.INDEX ADJ.INDEX</eq>
-<eq>X N.INDEX</eq>
-<eq>H1 ADJ.LABEL</eq>
-<eq>H2 N.LABEL</eq>
+<equalities><dh><dtr>N</dtr><he>INDEX</he></dh><dh><dtr>ADJ</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H1</rv><dh><dtr>ADJ</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H2</rv><dh><dtr>N</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>NP/det_n1</name>
-<dtrs>DET N</dtrs>
+<dtrs><dtr>DET</dtr><dtr>N</dtr></dtrs>
 <head>N</head>
-<eq>N.INDEX DET.INDEX</eq>
+<equalities><dh><dtr>N</dtr><he>INDEX</he></dh><dh><dtr>DET</dtr><he>INDEX</he></dh></equalities>
 </rule>
 
 <rule>
 <name>N1/np-num_n1</name>
-<dtrs>NP N</dtrs>
+<dtrs><dtr>NP</dtr><dtr>N</dtr></dtrs>
 <head>N</head>
 <semstruct>
 <hook><index>X</index><label>H2</label></hook>
-<ing><ing-a>H1</ing-a><ing-b>H2</ing-b></ing>
+<ing><ing-a><var>H1</var></ing-a><ing-b><var>H2</var></ing-b></ing>
 </semstruct>
-<eq>H1 NP.LABEL</eq>
-<eq>H2 N.LABEL</eq>
-<eq>X N.INDEX</eq>
-<eq>NP.INDEX N.INDEX</eq>
+<equalities><rv>H1</rv><dh><dtr>NP</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H2</rv><dh><dtr>N</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
+<equalities><dh><dtr>NP</dtr><he>INDEX</he></dh><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
 </rule>
 
 <rule>
 <name>NP/n1-pretit</name>
-<dtrs>N</dtrs>
+<dtrs><dtr>N</dtr></dtrs>
 <head>N</head>
 </rule>
 
 <rule>
 <name>NP/n1-pl</name>
-<dtrs>N</dtrs>
+<dtrs><dtr>N</dtr></dtrs>
 <head>N</head>
 </rule>
 
 <rule>
 <name>NP/num</name>
-<dtrs>N</dtrs>
+<dtrs><dtr>N</dtr></dtrs>
 <head>N</head>
 </rule>
 
 <rule>
 <name>N1/n-name_n1</name>
-<dtrs>N1 N2</dtrs>
+<dtrs><dtr>N1</dtr><dtr>N2</dtr></dtrs>
 <head>N2</head>
 <semstruct>
 <hook><index>X</index><label>H2</label></hook>
-<ing><ing-a>H1</ing-a><ing-b>H2</ing-b></ing>
+<ing><ing-a><var>H1</var></ing-a><ing-b><var>H2</var></ing-b></ing>
 </semstruct>
-<eq>H1 N1.LABEL</eq>
-<eq>H2 N2.LABEL</eq>
-<eq>X N2.INDEX</eq>
-<eq>N1.INDEX N2.INDEX</eq>
+<equalities><rv>H1</rv><dh><dtr>N1</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H2</rv><dh><dtr>N2</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>X</rv><dh><dtr>N2</dtr><he>INDEX</he></dh></equalities>
+<equalities><dh><dtr>N1</dtr><he>INDEX</he></dh><dh><dtr>N2</dtr><he>INDEX</he></dh></equalities>
 </rule>
 
 <rule>
 <name>NP/n1_n1-name</name>
-<dtrs>N1 NM</dtrs>
+<dtrs><dtr>N1</dtr><dtr>NM</dtr></dtrs>
 <head>N1</head>
 <semstruct>
 <hook><index>X</index><label>H1</label></hook>
-<ing><ing-a>H1</ing-a><ing-b>H2</ing-b></ing>
+<ing><ing-a><var>H1</var></ing-a><ing-b><var>H2</var></ing-b></ing>
 </semstruct>
-<eq>NM.INDEX N1.INDEX</eq>
-<eq>X N1.INDEX</eq>
-<eq>H1 N1.LABEL</eq>
-<eq>H2 NM.LABEL</eq>
+<equalities><dh><dtr>NM</dtr><he>INDEX</he></dh><dh><dtr>N1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>X</rv><dh><dtr>N1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H1</rv><dh><dtr>N1</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H2</rv><dh><dtr>NM</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>PP/adv_p1</name>
-<dtrs>ADV PP</dtrs>
+<dtrs><dtr>ADV</dtr><dtr>PP</dtr></dtrs>
 <head>PP</head>
 </rule>
 
 <rule>
 <name>P1/p_n1</name>
-<dtrs>P N</dtrs>
+<dtrs><dtr>P</dtr><dtr>N</dtr></dtrs>
 <head>P</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X N.INDEX</eq>
-<eq>H P.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>P</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>P1/p_np-name</name>
-<dtrs>P NP</dtrs>
+<dtrs><dtr>P</dtr><dtr>NP</dtr></dtrs>
 <head>P</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H P.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>P</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>P1/p_np</name>
-<dtrs>P NP</dtrs>
+<dtrs><dtr>P</dtr><dtr>NP</dtr></dtrs>
 <head>P</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
-<eq>X NP.INDEX</eq>
-<eq>H P.LABEL</eq>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>P</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
 <name>PP/p1</name>
-<dtrs>P1</dtrs>
+<dtrs><dtr>P1</dtr></dtrs>
 <head>P1</head>
 </rule>
 
 <rule>
 <name>AP/a1</name>
-<dtrs>A1</dtrs>
+<dtrs><dtr>A1</dtr></dtrs>
 <head>A1</head>
 </rule>
 
 <rule>
 <name>A1/a</name>
-<dtrs>A</dtrs>
+<dtrs><dtr>A</dtr></dtrs>
 <head>A</head>
 </rule>
+</gram>
