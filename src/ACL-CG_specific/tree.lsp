@@ -232,7 +232,9 @@
                    (let ((*last-type-name* (type-name type-entry)))
                       (declare (special *last-type-name*))
                       (multiple-value-bind (type show-all-p)
-                          (ask-user-for-type nil '("Show all types?" . :check-box))
+			  (ask-user-for-type nil 
+				 '(("Show all types?" . :check-box)
+				   ("Ignore 300 descendant limit" . :check-box)))
                          (when type
                             (let ((type-entry (get-type-entry type)))
                                (when type-entry 

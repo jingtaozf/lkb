@@ -10,8 +10,8 @@ produced by robust parsers of various types.
 |#
 
 ;;; the idea is that the RMRS code can either be used in an
-;;; LKB image, or standalone.  The load-comp.lisp file
-;;; itself is intended for the standalone case.  The
+;;; LKB image, or standalone.  This file
+;;; is intended for the standalone case.  The
 ;;; standalone.lisp file replicates some LKB stuff, including
 ;;; the MRS package definition
 ;;; But the standalone code won't convert MRSs to RMRSs
