@@ -432,45 +432,46 @@ printing routines -  convenient to make this global to keep printing generic")
     (make-hash-table :test #'equal))
 
 (defun make-scoped-mrs (mrsstruct)
-  (clear-scope-memos)
-  (setf *top-level-variables* nil)
-  (let* ((rels (psoa-liszt mrsstruct))
-         (hcons (psoa-h-cons mrsstruct))
-         (quant-rels (for rel in rels filter (if (is-quant-rel rel) rel)))
-         (implicit-existentials (find-unbound-vars rels quant-rels))
-; find-unbound-vars has the side effect of pushing variables which
-; are in pronoun or name rels into *top-level-variables* 
-         (free-variables (for var in implicit-existentials
-                               filter
-                               (if (not (nonquantified-var-p var))
-                                   var))))
-    (if free-variables
-        (progn
-          (unless *giving-demo-p*
-            (format t "~%Free variables in MRS: ~A" 
-                    (remove-duplicates (mapcar #'var-name free-variables)
-                                       :test #'equal)))
-          nil)
+  (when *rel-handel-path*
+    (clear-scope-memos)
+    (setf *top-level-variables* nil)
+    (let* ((rels (psoa-liszt mrsstruct))
+           (hcons (psoa-h-cons mrsstruct))
+           (quant-rels (for rel in rels filter (if (is-quant-rel rel) rel)))
+           (implicit-existentials (find-unbound-vars rels quant-rels))
+                                        ; find-unbound-vars has the side effect of pushing variables which
+                                        ; are in pronoun or name rels into *top-level-variables* 
+           (free-variables (for var in implicit-existentials
+                                filter
+                                (if (not (nonquantified-var-p var))
+                                    var))))
+      (if free-variables
+          (progn
+            (unless *giving-demo-p*
+              (format t "~%Free variables in MRS: ~A" 
+                      (remove-duplicates (mapcar #'var-name free-variables)
+                                         :test #'equal)))
+            nil)
 ;;; variables must be bound by quantifiers unless they are in relations
 ;;; which license implicit existential binding
-      (let ((top-handel (get-var-num (psoa-top-h mrsstruct))))
-        (setf *quant-rels* quant-rels)
-        (setf *scoping-calls* 0)
-        (setf *top-top* top-handel)
-        (setf *starting-rels* rels)
-        (clrhash *cached-scope-structures*)
-        (catch 'up
-          (for result in (create-scoped-structures top-handel nil 
-                                 (construct-initial-bindings 
-                                  (psoa-top-h mrsstruct) 
-                                  rels hcons)
-                                 rels nil nil nil nil)
-               filter
+        (let ((top-handel (get-var-num (psoa-top-h mrsstruct))))
+          (setf *quant-rels* quant-rels)
+          (setf *scoping-calls* 0)
+          (setf *top-top* top-handel)
+          (setf *starting-rels* rels)
+          (clrhash *cached-scope-structures*)
+          (catch 'up
+            (for result in (create-scoped-structures top-handel nil 
+                                                     (construct-initial-bindings 
+                                                      (psoa-top-h mrsstruct) 
+                                                      rels hcons)
+                                                     rels nil nil nil nil)
+                 filter
                ;;; the bindings slot of the result is a bindings set, the
                ;;; other-rels is a set of `left over' rels
                ;;; we don't want any of these at the top level
-               (unless (res-struct-other-rels result) 
-                 (res-struct-bindings result))))))))
+                 (unless (res-struct-other-rels result) 
+                   (res-struct-bindings result)))))))))
 
 (defstruct bindings-and-sisters
   bindings sisters pending-qeq)

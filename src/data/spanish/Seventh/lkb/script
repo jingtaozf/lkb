@@ -13,7 +13,7 @@
            (lkb-pathname (parent-directory) "grule-types.tdl")
            (lkb-pathname (parent-directory) "types.tdl"))
      (lkb-pathname (this-directory) "settings.lsp"))
-(read-cached-lex-if-available
+(read-tdl-lex-file-aux
      (lkb-pathname (parent-directory) "lexicon.tdl"))
 (read-tdl-grammar-file-aux 
 	(lkb-pathname (parent-directory) "grules.tdl"))

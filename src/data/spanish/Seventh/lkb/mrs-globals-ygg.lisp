@@ -21,6 +21,8 @@
 
 (defparameter *rel-name-path-only* t)
 
+(defparameter *rel-handel-path* nil)
+
 #|
 SEM [sem-struc
      MODE ref
@@ -37,12 +39,8 @@ SEM [sem-struc
 
 (defparameter *value-feats* `(,(vsym "NAME")))
 
-(defparameter *reln-feature* (vsym "RELN"))
-
-(defparameter *psoa-handel-path* `(,(vsym "FOO")))
-(defparameter *psoa-top-h-path* `(,(vsym "FOO")))
+(defparameter *psoa-top-h-path* nil)
 (defparameter *psoa-event-path* `(,(vsym "INDEX")))
 (defparameter *psoa-liszt-path* `(,(vsym "RESTR") ,(vsym "LIST")))
-(defparameter *psoa-rh-cons-path* `(,(vsym "FOO")))
-(defparameter *psoa-message-path* `(,(vsym "FOO")))
-(defparameter *psoa-wgliszt-path* `(,(vsym "FOO")))
+(defparameter *psoa-rh-cons-path* nil)
+

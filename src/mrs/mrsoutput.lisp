@@ -57,10 +57,12 @@
     (if *restart-variable-generator*
         (init-variable-generator)))
   (unless existing-variable-generator (setf *named-nodes* nil))
-  (let ((top-h-fs (path-value fs *psoa-top-h-path*))
+  (let ((top-h-fs (if *psoa-top-h-path*
+                      (path-value fs *psoa-top-h-path*)))
         (index-fs (path-value fs *psoa-index-path*))
         (liszt-fs (path-value fs *psoa-liszt-path*))
-        (h-cons-fs (path-value fs *psoa-rh-cons-path*)))
+        (h-cons-fs (if *psoa-rh-cons-path*
+                       (path-value fs *psoa-rh-cons-path*))))
     (make-psoa
      :top-h (create-variable top-h-fs
                              *variable-generator*)
@@ -184,8 +186,9 @@
 (defun create-rel-struct (fs variable-generator)
   (if (is-valid-fs fs)
       (let* ((label-list (fs-arcs fs))
-             (handel-pair (assoc (car *rel-handel-path*)
-                                 label-list))
+             (handel-pair (if *rel-handel-path*
+                              (assoc (car *rel-handel-path*)
+                                 label-list)))
              (pred (assoc (car *rel-name-path*)
                           label-list))
              (pred-type (if pred (fs-type (rest pred))))

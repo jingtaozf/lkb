@@ -117,8 +117,9 @@
     (format stream "[")))
 
 (defmethod mrs-output-top-h ((mrsout simple) handel-val)
-  (with-slots (stream) mrsout
-    (format stream " TOP: ~A" handel-val)))
+  (if handel-val
+      (with-slots (stream) mrsout
+        (format stream " TOP: ~A" handel-val))))
 
 (defmethod mrs-output-index ((mrsout simple) index-val)
   (with-slots (stream) mrsout
@@ -139,13 +140,15 @@
     (format stream "~S" atomic-value)))
 
 (defmethod mrs-output-start-rel ((mrsout simple) sort first-p)
+  (declare (ignore first-p))
   (with-slots (stream indentation) mrsout
-    (unless first-p (format stream "~%"))
+  (format stream "~%")
     (format stream "~VT[ ~A" indentation (string-downcase sort))))
 
 (defmethod mrs-output-rel-handel ((mrsout simple) handel)
-  (with-slots (stream indentation) mrsout
-    (format stream "~%~VT~A: ~A" (+ indentation 2) 'handel handel)))
+  (if handel
+      (with-slots (stream indentation) mrsout
+        (format stream "~%~VT~A: ~A" (+ indentation 2) 'handel handel))))
 
 (defmethod mrs-output-label-fn  ((mrsout simple) label)
   (with-slots (stream indentation) mrsout
@@ -199,8 +202,9 @@
   ())
 
 (defmethod mrs-output-start-rel ((mrsout active-t) sort first-p)
+  (declare (ignore first-p))
   (with-slots (stream indentation) mrsout
-    (unless first-p (format stream "~%"))
+    (format stream "~%")
     (format stream "~VT[ " indentation)
     (lkb::add-mrs-type-region stream sort)))
 
@@ -225,12 +229,13 @@
     (format stream "<")))
   
 (defmethod mrs-output-top-h ((mrsout indexed) handel-val)
-  (with-slots (stream) mrsout
-    (format stream "~A" handel-val)))
+  (if handel-val
+      (with-slots (stream) mrsout
+        (format stream "~A," handel-val))))
 
 (defmethod mrs-output-index ((mrsout indexed) index-val)
   (with-slots (stream) mrsout
-    (format stream ",~A" index-val)))
+    (format stream "~A" index-val)))
 
 (defmethod mrs-output-start-liszt ((mrsout indexed))
   (with-slots (stream) mrsout
@@ -250,11 +255,17 @@
     (unless first-p (format stream ",~%"))))
 
 (defmethod mrs-output-rel-handel ((mrsout indexed) handel)
-  (with-slots (stream temp-sort) mrsout  
-    (format stream "~A:~A(" 
-            handel (remove-right-sequence 
-                    *sem-relation-suffix* 
-                    (string-downcase temp-sort)))))
+  (if handel
+      (with-slots (stream temp-sort) mrsout  
+        (format stream "~A:~A(" 
+                handel (remove-right-sequence 
+                        *sem-relation-suffix* 
+                        (string-downcase temp-sort))))
+    (with-slots (stream temp-sort) mrsout  
+        (format stream "~A(" 
+                (remove-right-sequence 
+                        *sem-relation-suffix* 
+                        (string-downcase temp-sort))))))
 
 (defmethod mrs-output-label-fn  ((mrsout indexed) label)
   (declare (ignore label)) 
@@ -482,9 +493,10 @@ higher and lower are handle-variables
 (defparameter *already-seen-vars* nil)
 
 (defun find-var-name (var connected-p)
-  (if connected-p
-      (get-bound-var-value var)
-      (var-name var)))
+  (if var
+      (if connected-p
+          (get-bound-var-value var)
+        (var-name var))))
 
 (defun print-psoa (psoa &optional connected-p)
   (setf *already-seen-vars* nil)
@@ -521,7 +533,8 @@ higher and lower are handle-variables
                      value))))
           (mrs-output-end-rel *mrs-display-structure*)
           (setf first-rel nil)))
-    (mrs-output-end-liszt *mrs-display-structure*)
+  (mrs-output-end-liszt *mrs-display-structure*)
+  (when *rel-handel-path*
     (mrs-output-start-h-cons *mrs-display-structure*)
     (let ((first-hcons t))
       (loop for hcons in (psoa-h-cons psoa)
@@ -537,7 +550,7 @@ higher and lower are handle-variables
             (setf first-hcons nil)))
     ;; extra info can be ignored here because all handels
     ;; will have appeared elsewhere
-    (mrs-output-end-h-cons *mrs-display-structure*)
+    (mrs-output-end-h-cons *mrs-display-structure*))
     (mrs-output-end-psoa *mrs-display-structure*))
 
 (defun print-mrs-extra (var)
@@ -590,6 +603,26 @@ QEQ -> VARNAME RELNNAME VARNAME
 
 |#
 
+;;; the following is for the simplified MRS structures
+;;; where there are no handels or hcons
+
+#|
+
+MRS -> [ INDEX LISZT ]
+
+INDEX -> index: VAR
+
+LISZT -> liszt: < REL* >
+
+REL -> [ PREDNAME FEATPAIR* ]
+
+FEATPAIR -> FEATNAME: VAR | FEAT: CONSTNAME
+
+VAR -> VARNAME | VARNAME [ VARTYPE EXTRAPAIR* ]
+
+EXTRAPAIR -> PATHNAME: CONSTNAME
+
+|#
 
 (defun make-mrs-break-table nil 
   (lkb::define-break-characters '(#\< #\> #\:
@@ -632,12 +665,14 @@ QEQ -> VARNAME RELNNAME VARNAME
 (defun read-mrs (istream)
   (let ((*readtable* (make-mrs-break-table)))
 ;;;  MRS -> [ LTOP INDEX LISZT HCONS ]
+;;; or
+;;; MRS -> [ INDEX LISZT ]
     (setf *already-read-vars* nil)
     (mrs-check-for #\[ istream)
-    (let* ((ltop (read-mrs-ltop istream))
+    (let* ((ltop (if *rel-handel-path* (read-mrs-ltop istream)))
            (index (read-mrs-index istream))
            (liszt (read-mrs-liszt istream))
-           (hcons (read-mrs-hcons istream))
+           (hcons (if *rel-handel-path* (read-mrs-hcons istream)))
            (psoa
             (make-psoa :top-h ltop
                        :index index
@@ -703,17 +738,20 @@ QEQ -> VARNAME RELNNAME VARNAME
     cons))
 
 (defun read-mrs-rel (istream)
-;  REL -> [ PREDNAME handel: VAR FEATPAIR* ]
+;;;  REL -> [ PREDNAME handel: VAR FEATPAIR* ]
+;;; or
+;;; REL -> [ PREDNAMEFEATPAIR* ]
   (mrs-check-for #\[ istream)
   (let ((predname (read-mrs-atom istream)))
-    (mrs-check-for #\h istream)
-    (mrs-check-for #\a istream)
-    (mrs-check-for #\n istream)
-    (mrs-check-for #\d istream)
-    (mrs-check-for #\e istream)
-    (mrs-check-for #\l istream)
-    (mrs-check-for #\: istream)
-    (let ((hvar (read-mrs-var istream))
+    (when *rel-handel-path*
+      (mrs-check-for #\h istream)
+      (mrs-check-for #\a istream)
+      (mrs-check-for #\n istream)
+      (mrs-check-for #\d istream)
+      (mrs-check-for #\e istream)
+      (mrs-check-for #\l istream)
+      (mrs-check-for #\: istream))
+    (let ((hvar (if *rel-handel-path* (read-mrs-var istream)))
           (featpairs nil))
       (loop 
         (let ((next-char (peek-char t istream nil 'eof)))
@@ -829,15 +867,37 @@ QEQ -> VARNAME RELNNAME VARNAME
 
 |#
 
+;;; or in the simplified format
+
+#|
+
+MRS -> < INDEX, LISZT >
+
+INDEX -> VAR
+
+LISZT -> { } | { [REL,]* REL }
+
+REL -> PREDNAME([ARG,]* ARG)
+
+ARG -> VAR | STRING | CONSTNAME
+
+VAR -> VARNAME[:CONSTNAME]*
+
+|#
+
 (defun read-indexed-mrs (istream)
   (let ((*readtable* (make-mrs-break-table)))
 ;;; MRS -> < LTOP, INDEX, LISZT, HCONS >
+;;; or
+;;; MRS -> < INDEX, LISZT >
     (setf *already-read-vars* nil)
     (mrs-check-for #\< istream)
-    (let* ((ltop (read-mrs-indexed-ltop istream))
+    (let* ((ltop (if *rel-handel-path* 
+                     (read-mrs-indexed-ltop istream)))
            (index (read-mrs-indexed-index istream))
            (liszt (read-mrs-indexed-liszt istream))
-           (hcons (read-mrs-indexed-hcons istream))
+           (hcons (if *rel-handel-path*
+                      (read-mrs-indexed-hcons istream)))
            (psoa
             (make-psoa :top-h ltop
                        :index index
@@ -897,8 +957,12 @@ QEQ -> VARNAME RELNNAME VARNAME
 
 (defun read-mrs-indexed-rel (istream)
 ;;; REL -> VARNAME:PREDNAME([ARG,]* ARG)  
-  (let ((hvar (read-mrs-simple-var istream)))
-    (mrs-check-for #\: istream)
+;;; or
+;;; REL -> PREDNAME([ARG,]* ARG)
+  (let ((hvar (if *rel-handel-path* 
+                  (read-mrs-simple-var istream))))
+    (when *rel-handel-path*
+      (mrs-check-for #\: istream))
     (let ((predname (read-mrs-atom istream)))
       (mrs-check-for #\( istream)
       (let ((featpairs nil)
