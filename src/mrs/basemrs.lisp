@@ -1,4 +1,4 @@
-;;; Copyright (c) 1998--2003
+;;; Copyright (c) 1998--2004
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `licence.txt' for conditions.
 
@@ -241,7 +241,8 @@
     (with-slots (stream) mrsout
       (format stream " LTOP: ~(~a~)" handel-val))))
 
-(defmethod mrs-output-index ((mrsout simple) index-val)
+(defmethod mrs-output-index ((mrsout simple) index-val &optional properties)
+  (declare (ignore properties))
   (with-slots (stream indentation) mrsout
     (when index-val
       (format stream "~%~VT  INDEX: ~(~a~)" indentation index-val))))
@@ -251,7 +252,8 @@
     (format stream "~%~VT  RELS: <" indentation)
     (setf indentation (+ indentation 10))))
 
-(defmethod mrs-output-var-fn ((mrsout simple) var-string)
+(defmethod mrs-output-var-fn ((mrsout simple) var-string &optional properties)
+  (declare (ignore properties))
   (with-slots (stream) mrsout
     (format stream "~(~a~)" var-string)))
 
@@ -372,7 +374,8 @@
       (with-slots (stream) mrsout
         (format stream "~(~a~)," handel-val))))
 
-(defmethod mrs-output-index ((mrsout indexed) index-val)
+(defmethod mrs-output-index ((mrsout indexed) index-val &optional properties)
+  (declare (ignore properties))
   (with-slots (stream) mrsout
     (format stream "~(~a~)" index-val)))
 
@@ -380,7 +383,8 @@
   (with-slots (stream) mrsout
     (format stream ",~%{")))
 
-(defmethod mrs-output-var-fn ((mrsout indexed) var-string)
+(defmethod mrs-output-var-fn ((mrsout indexed) var-string &optional properties)
+  (declare (ignore properties))
   (with-slots (stream) mrsout
     (format stream "~(~a~)" (remove-variable-junk var-string))))
 
@@ -520,7 +524,8 @@ higher and lower are handle-variables
   (with-slots (stream) mrsout
     (format stream "~(~a~)" handel-val)))
 
-(defmethod mrs-output-index ((mrsout prolog) index-val)
+(defmethod mrs-output-index ((mrsout prolog) index-val &optional properties)
+  (declare (ignore properties))
   (with-slots (stream) mrsout
     (format stream ",~(~a~)" index-val)))
 
@@ -528,7 +533,8 @@ higher and lower are handle-variables
   (with-slots (stream) mrsout
     (format stream ",[")))
 
-(defmethod mrs-output-var-fn ((mrsout prolog) var-string)
+(defmethod mrs-output-var-fn ((mrsout prolog) var-string &optional properties)
+  (declare (ignore properties))
   (with-slots (stream) mrsout
     (format stream "~(~a~))" (remove-variable-junk var-string))))
 
@@ -605,6 +611,30 @@ higher and lower are handle-variables
 
 (defparameter *mrs-relations-per-row* 6)
 
+(defun mrs-variable-html (variable properties id class stream)
+  (let ((string (make-string-output-stream)))
+    (when properties
+      (format string "<table class=mrsProperties>")
+      (loop
+          for property in properties
+          do
+            (format 
+             string
+             "<tr><td class=mrsPropertyFeature>~a~
+                  <td class=mrsPropertyValue>~(~a~)</td></tr>"
+             (extrapair-feature property) (extrapair-value property)))
+      (format string "</table>"))
+    (format 
+     stream 
+     "<td class=~a>~%  ~
+      <div class=\"mrsVariable~a~:(~a~)\"~%       ~
+           onMouseOver=\"mrsVariableSelect('~a~:(~a~)', '~a')\"~%       ~
+           onMouseOut=\"mrsVariableUnselect('~a~:(~a~)')\">~(~a~)</div>~%~
+      </td>~%" 
+     class id variable id variable 
+     (get-output-stream-string string)
+     id variable variable)))
+  
 (defclass html (output-type) 
   ((id :initform 0)
    (nrels :initform nil)
@@ -633,28 +663,14 @@ higher and lower are handle-variables
 (defmethod mrs-output-top-h ((mrs html) handle)
   (when (and handle *rel-handel-path*)
     (with-slots (id stream) mrs
-      (format 
-       stream 
-       "<tr><td class=mrsFeatureTop>TOP</td>~%~
-        <td class=mrsValueTop>~%  ~
-        <div class=\"mrsVariable~a~:(~a~)\"~%       ~
-             onMouseOver=\"mrsVariableSelect('~a~:(~a~)')\"~%       ~
-             onMouseOut=\"mrsVariableUnselect('~a~:(~a~)')\">~(~a~)</div>~%~
-        </td>~%" 
-       id handle id handle id handle handle))))
+      (format stream "<tr><td class=mrsFeatureTop>TOP</td>~%")
+      (mrs-variable-html handle nil id "mrsValueTop" stream))))
 
-(defmethod mrs-output-index ((mrs html) index)
+(defmethod mrs-output-index ((mrs html) index &optional properties)
   (when index
     (with-slots (id stream) mrs
-      (format 
-       stream 
-       "<tr>~%<td class=mrsFeatureIndex>INDEX</td>~%~
-        <td class=mrsValueIndex>~%  ~
-        <div class=\"mrsVariable~a~:(~a~)\"~%       ~
-             onMouseOver=\"mrsVariableSelect('~a~:(~a~)')\"~%       ~
-             onMouseOut=\"mrsVariableUnselect('~a~:(~a~)')\">~(~a~)</div>~%~
-        </td>~%" 
-       id index id index id index index))))
+      (format stream "<tr>~%<td class=mrsFeatureIndex>INDEX</td>~%")
+      (mrs-variable-html index properties id "mrsFeatureIndex" stream))))
 
 (defmethod mrs-output-start-liszt ((mrs html))
   (with-slots (stream nrows) mrs
@@ -668,16 +684,9 @@ higher and lower are handle-variables
       <td><table class=mrsRelsContainer><tr>~%"
      nrows)))
 
-(defmethod mrs-output-var-fn ((mrs html) variable)
+(defmethod mrs-output-var-fn ((mrs html) variable &optional properties)
   (with-slots (id stream) mrs
-    (format 
-     stream 
-     "<td class=mrsValue>~%~
-      <div class=\"mrsVariable~a~:(~a~)\"~
-             onMouseOver=\"mrsVariableSelect('~a~:(~a~)')\"~
-             onMouseOut=\"mrsVariableUnselect('~a~:(~a~)')\">~(~a~)</div>~
-      </td>~%" 
-     id variable id variable id variable variable)))
+    (mrs-variable-html variable properties id "mrsValue" stream)))
 
 (defmethod mrs-output-atomic-fn ((mrs html) value)
   (with-slots (stream) mrs
@@ -701,14 +710,8 @@ higher and lower are handle-variables
 (defmethod mrs-output-rel-handel ((mrs html) handle)
   (when handle
     (with-slots (id stream) mrs
-      (format 
-       stream 
-       "      <tr><td class=mrsLabel>LBL</td><td class=mrsValue>~%
-        <div class=\"mrsVariable~a~:(~a~)\"~
-             onMouseOver=\"mrsVariableSelect('~a~:(~a~)')\"~
-             onMouseOut=\"mrsVariableUnselect('~a~:(~a~)')\">~
-               ~(~a~)</div></td>~%"
-       id handle id handle id handle handle))))
+      (format stream "      <tr><td class=mrsLabel>LBL</td>")
+      (mrs-variable-html handle nil id "mrsValue" stream))))
 
 (defmethod mrs-output-label-fn  ((mrs html) label)
   (with-slots (stream) mrs
@@ -753,11 +756,11 @@ higher and lower are handle-variables
     (format 
      stream 
      "<span class=\"mrsVariable~a~:(~a~)\"~
-            onMouseOver=\"mrsVariableSelect('~a~:(~a~)')\"~
+            onMouseOver=\"mrsVariableSelect('~a~:(~a~)', '')\"~
             onMouseOut=\"mrsVariableUnselect('~a~:(~a~)')\">~(~a~)</span> ~
       ~a ~
       <span class=\"mrsVariable~a~:(~a~)\"~
-            onMouseOver=\"mrsVariableSelect('~a~:(~a~)')\"~
+            onMouseOver=\"mrsVariableSelect('~a~:(~a~)', '')\"~
             onMouseOut=\"mrsVariableUnselect('~a~:(~a~)')\">~(~a~)</span>"
      id higher id higher id higher higher 
      relation 
@@ -792,7 +795,8 @@ higher and lower are handle-variables
     (with-slots (id stream) mrs
       (format stream "~a:" handle))))
 
-(defmethod mrs-output-index ((mrs debug) index)
+(defmethod mrs-output-index ((mrs debug) index &optional properties)
+  (declare (ignore properties))
   (when index
     (with-slots (id stream) mrs
       (format stream "~a:" index))))
@@ -801,8 +805,8 @@ higher and lower are handle-variables
   (with-slots (stream nrows) mrs
     (format stream "{")))
 
-(defmethod mrs-output-var-fn ((mrs debug) variable)
-  (declare (ignore variable)))
+(defmethod mrs-output-var-fn ((mrs debug) variable &optional properties)
+  (declare (ignore variable properties)))
 
 (defmethod mrs-output-atomic-fn ((mrs debug) value)
   (declare (ignore value)))
@@ -872,8 +876,8 @@ higher and lower are handle-variables
     (format stream "<var vid='~A'/>" handel-val)))
 
 
-(defmethod mrs-output-index ((mrsout mrs-xml) index-val)
-  (declare (ignore index-val))
+(defmethod mrs-output-index ((mrsout mrs-xml) index-val &optional properties)
+  (declare (ignore index-val properties))
   nil)
 
 (defmethod mrs-output-start-liszt ((mrsout mrs-xml))
@@ -887,7 +891,8 @@ higher and lower are handle-variables
 extras have to be sorted out later          
 |#
 
-(defmethod mrs-output-var-fn ((mrsout mrs-xml) var-string)
+(defmethod mrs-output-var-fn ((mrsout mrs-xml) var-string &optional properties)
+  (declare (ignore properties))
   (with-slots (stream) mrsout
     (format stream "<var vid='~A'/>" var-string)))
 
@@ -1036,7 +1041,8 @@ extras have to be sorted out later
                     (find-var-name (psoa-top-h psoa) connected-p))
   (print-mrs-extra (psoa-top-h psoa))
   (mrs-output-index *mrs-display-structure* 
-                    (find-var-name (psoa-index psoa) connected-p))
+                    (find-var-name (psoa-index psoa) connected-p)
+                    (and (psoa-index psoa) (var-extra (psoa-index psoa))))
   (print-mrs-extra (psoa-index psoa))
   (mrs-output-start-liszt *mrs-display-structure*)
   (let ((first-rel t))
@@ -1057,7 +1063,8 @@ extras have to be sorted out later
                       (progn
                         (mrs-output-var-fn 
                          *mrs-display-structure*
-                         (find-var-name value connected-p))
+                         (find-var-name value connected-p)
+                         (var-extra value))
                         (print-mrs-extra value))
                     (mrs-output-atomic-fn 
                      *mrs-display-structure*
