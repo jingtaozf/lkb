@@ -115,13 +115,15 @@
 	(let ((rule (edge-rule edge)))
 	  (values
 	   (format nil "~@[~A ~][~A] ~A"
-		   (get node 'chart-edge-span)
+		   (get node 'leaves)
 		   (edge-id edge)
 		   (tree-node-text-string (cond ((rule-p rule) (rule-id rule))
 						((g-edge-p edge) rule)
 						(t (edge-category edge)))))
 	   nil))
-      (values (tree-node-text-string node) t))))
+      (values (format nil "~A ~A"
+		      (get node 'leaves)
+		      (tree-node-text-string node)) t))))
 
 ;; Update the yield window when we are over an edge
 
@@ -151,8 +153,8 @@
     (with-slots (selected-words) frame
       (setf (chart-window-selected-edge frame) nil)
       (unhighlight-objects frame)
-      (if (member node selected-words :test #'equal)
-	  (setf selected-words (delete node selected-words :test #'equal))
+      (if (member node selected-words :test #'eq)
+	  (setf selected-words (delete node selected-words :test #'eq))
 	(push node selected-words))
       (highlight-words frame))))
 
@@ -164,9 +166,9 @@
 	 (objects (nconc
 		   (loop for edge in (chart-window-edges frame)
 		       when (and (subsetp words (edge-leaves edge) 
-					  :test #'equal)
+					  :test #'eq)
 				 (subsetp (edge-leaves edge) words 
-					  :test #'equal))
+					  :test #'eq))
 		       collect (find-object stream 
 					    #'(lambda (x) (eq x edge))))
 		   (loop for word in words

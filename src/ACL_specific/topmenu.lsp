@@ -368,7 +368,7 @@
   (unwind-protect
       (let ((*standard-output* *lkb-top-stream*)
 	    (*debug-io* *lkb-top-stream*)
-	    (*terminal-io* *lkb-top-stream*)
+	    ;; (*terminal-io* *lkb-top-stream*)
 	    (*standard-output* *lkb-top-stream*)
 	    (*standard-input* *lkb-top-stream*)
 	    (*error-output* *lkb-top-stream*)
