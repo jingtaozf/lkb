@@ -58,20 +58,21 @@
 ;;; Utility functions for initialising and building daughters and leaves
 ;;; fields in active chart edges
 
-(defun gen-make-list-and-insert (len item index)
+(defmacro gen-make-list-and-insert (len item index)
    ;; make list of length len and insert item at index (1-based)
-   (let ((lst (make-list len)))
-      (setf (nth (1- index) lst) item) lst))
+  `(let ((lst (make-list ,len)))
+     (setf (nth (1- ,index) lst) ,item) lst))
 
-(defun gen-copy-list-and-insert (lst item)
-   ;; replace first nil with item in top-level copy of lst
-   (substitute item nil lst :count 1))
+(defmacro gen-copy-list-and-insert (lst item)
+  ;; replace first nil with item in top-level copy of lst
+  `(substitute ,item nil ,lst :count 1))
 
 
 ;;; Functions on sets (of MRS relations)
 
 (defun gen-chart-set-intersection-p (lst1 lst2)
-   (dolist (x lst1 nil) (when (member x lst2 :test #'eq) (return t))))
+  (loop for x in lst1
+      thereis (member x lst2 :test #'eq)))
 
 (defun gen-chart-set-equal-p (lst1 lst2)
    (and
@@ -149,6 +150,7 @@
   ;; also an entry point so ensure chart is clear
   (clear-gen-chart) 
   (flush-heap *agenda*)
+  (setf mrs::*fs-cache* nil)
   ;;(when (> (length found-lex-items) 80)
   ;;   (format t "~%More than 80 initial lexical items - skipping")
   ;;   (return-from chart-generate nil))
@@ -298,7 +300,7 @@
 
 
 (defun gen-chart-root-edges (edge start-symbols)
-   ;; c.f. create-new-root-edges in parse.lsp
+  ;; c.f. create-new-root-edges in parse.lsp
    (for start-symbol in start-symbols        
        filter
        (let ((tdfs (get-tdfs-given-id 
@@ -413,9 +415,7 @@
 		 (when *intersective-rule-names*
 		   (gen-chart-adjoin-modifiers partial input-sem))))
 	(when *gen-record*
-	  (throw 'first t))
-	(when partial
-	  (format t "~&Warning: continuing after adjunction!"))))
+	  (throw 'first t))))
     ;; see if this new inactive edge can extend any existing active edges
     (mapc #'(lambda (e) 
 	      (with-agenda (when *gen-first-only-p* 
@@ -628,47 +628,46 @@
 ;;; to retrieve them from the chart
 
 (defun gen-chart-adjoin-modifiers (partial-edges input-sem)
-   (let ((*active-modifier-edges* nil)
-         (mod-candidate-edges (gen-chart-intersective-inactive-edges))
-         (cached-rels-edges (make-hash-table :test #'equal))
-         (res nil))
-      (declare (special *active-modifier-edges*))
+  (let ((*active-modifier-edges* nil)
+	(mod-candidate-edges (gen-chart-intersective-inactive-edges))
+	(res nil))
+    (declare (special *active-modifier-edges*))
+    (when *gen-adjunction-debug*
+      (format t "~%Candidate modifier edges ~:A" 
+	      (mapcar #'edge-id mod-candidate-edges)))
+    (dolist (partial partial-edges)
       (when *gen-adjunction-debug*
-         (format t "~%Candidate modifier edges ~:A" (mapcar #'edge-id mod-candidate-edges)))
-      (dolist (partial partial-edges)
-         (when *gen-adjunction-debug*
-            (format t "~&---~%Partial edge [~A] spanning ~:A" (g-edge-id partial)
-               (g-edge-leaves partial)))
-         (let ((missing-rels
-                (gen-chart-set-difference
-                 (mrs::psoa-liszt input-sem) 
-                 (g-edge-rels-covered partial))))
-            (when *gen-adjunction-debug*
-              (format t "~&Missing relations ~(~:A~)" 
-                      (mapcar #'mrs::rel-sort missing-rels)))
-            (dolist (mod-alt
-                      (gen-chart-mod-edge-partitions
-                         (list (car missing-rels)) (cdr missing-rels) (cdr missing-rels)
-                         mod-candidate-edges cached-rels-edges))
-               (when *gen-adjunction-debug*
-                  (format t "~&Relation partitions ~(~:A~)"
-                     (mapcar
-                        #'(lambda (rels-and-edges)
-                             (cons (mapcar #'mrs::rel-sort (car rels-and-edges))
-                                (mapcar #'g-edge-id (cdr rels-and-edges))))
-                        mod-alt)))
-               (setq mod-alt (gen-chart-create-active-mod-edges mod-alt))
-               (let* ((e-ms-list
-                        (gen-chart-try-modifiers (list* partial nil (mapcar #'cdr mod-alt))))
-                      (complete
-                        (gen-chart-find-complete-edges
-                           (mapcan
-                              #'(lambda (e-ms)
-                                  (if (find-if #'consp (cddr e-ms)) nil (list (car e-ms))))
-                              e-ms-list)
-                           input-sem)))
-                  (setq res (nconc complete res))))))
-      res))
+	(format t "~&---~%Partial edge [~A] spanning ~:A" (g-edge-id partial)
+		(g-edge-leaves partial)))
+      (let ((missing-rels
+	     (gen-chart-set-difference
+	      (mrs::psoa-liszt input-sem) 
+	      (g-edge-rels-covered partial))))
+	(when *gen-adjunction-debug*
+	  (format t "~&Missing relations ~(~:A~)" 
+		  (mapcar #'mrs::rel-sort missing-rels)))
+	(dolist (mod-alt
+		    (gen-chart-mod-edge-partitions missing-rels 
+						   mod-candidate-edges))
+	  (when *gen-adjunction-debug*
+	    (format t "~&Relation partitions ~(~:A~)"
+		    (mapcar
+		     #'(lambda (rels-and-edges)
+			 (cons (mapcar #'mrs::rel-sort (car rels-and-edges))
+			       (mapcar #'g-edge-id (cdr rels-and-edges))))
+		     mod-alt)))
+	  (setq mod-alt (gen-chart-create-active-mod-edges mod-alt))
+	  (let* ((e-ms-list
+		  (gen-chart-try-modifiers (list* partial nil (mapcar #'cdr mod-alt))))
+		 (complete
+		  (gen-chart-find-complete-edges
+		   (mapcan
+		    #'(lambda (e-ms)
+			(if (find-if #'consp (cddr e-ms)) nil (list (car e-ms))))
+		    e-ms-list)
+		   input-sem)))
+	    (setq res (nconc complete res))))))
+    res))
 
 
 (defun gen-chart-intersective-inactive-edges nil
@@ -685,6 +684,72 @@
 		 (intersective-modifier-dag-p (tdfs-indef (g-edge-dag e))))
 	  (push e res))))
     res))
+
+;; compute sets of partitions of input relations with each partition
+;; containing the set of modifier edges that cover those relations: e.g.  (
+;; (((r1 r2) e1 e2) ((r3 r4) e3)) (((r1) e4 e5 e6) ((r2 r3 r4) e5)) )
+
+(defparameter *partitions* nil)
+
+(defun is-partition-p (subsets set)
+  (let ((members (apply #'append subsets)))
+    (dolist (x members)
+      (unless (member x set :test #'eq)
+	(return-from is-partition-p nil)))
+    (dolist (x set)
+      (unless (member x members :test #'eq)
+	(return-from is-partition-p nil)))
+    t))
+
+(defun disjoint-p (set subsets)
+  (dolist (s subsets)
+    (dolist (x s)
+      (when (member x set :test #'eq)
+	(return-from disjoint-p nil))))
+  t)
+
+(defun make-partitions1 (partition rest set)
+  (loop for tail on rest
+      do (let* ((next (car tail))
+		(new-partition (if (disjoint-p next partition)
+				   (cons next partition)
+				 partition)))
+	   (cond ((is-partition-p new-partition set)
+		  (pushnew new-partition *partitions* 
+			   :test #'equal))
+		 ((cdr tail)
+		  (make-partitions1 new-partition (cdr tail) set))))))
+
+(defun make-partitions (subsets set)
+  (let ((*partitions* nil))
+    (make-partitions1 nil subsets set)
+    *partitions*))
+
+(defun gen-chart-mod-edge-partitions (rels edges)
+  (declare (ignore cached-rels-edges))
+  (let ((cache (make-hash-table :test #'equal)))
+    ;; Find subsets of rels that are covered by some edge in edges
+    (dolist (e edges)
+      (let ((rels-covered (g-edge-rels-covered e)))
+	(when (gen-chart-subset-p rels-covered rels)
+	  (pushnew e (gethash rels-covered cache)))))
+    ;; Collect all the subsets, and compute the partitions of rels that can be
+    ;; constructed out of them
+    (let ((subsets nil))
+      (maphash #'(lambda (x y) 
+		   (declare (ignore y))
+		   (push x subsets))
+	       cache)
+      (mapcar #'(lambda (p)
+		  (mapcar #'(lambda (s)
+			      (append (list s)
+				      (gethash s cache)))
+			  p))
+	      (make-partitions subsets rels)))))
+  
+  
+#|
+
 
 (defun gen-chart-mod-edge-partitions (rels next rest mod-candidate-edges 
 				      cached-rels-edges)
@@ -715,6 +780,7 @@
 					     mod-candidate-edges cached-rels-edges))
 	  next))
       (when rels-edges (list (list (cons rels rels-edges)))))))
+|#
 
 
 (defun gen-chart-create-active-mod-edges (mod-alt)
