@@ -629,41 +629,10 @@
 
 ;;--
 
-;(defun load-lexicon-from-script nil
-;  (unless
-;      (and (member :psql *features*)
-;	   (typep (catch 'abort (load-psql-lexicon-from-script)) 'psql-database))
-;    (load-cdb-lexicon-from-script)))
-
-;(defun load-cdb-lexicon-from-script nil
-;  ;;(format t "~%Loading lexicon")
-;  ;;(clear-lex *lexicon* :psorts-temp-file *psorts-temp-file* :no-delete t)
-;  ;;(load-cached-lexicon-if-available *lexicon*)
-;  (read-cached-lex-if-available *lex-file-list*)
-;  ;;(format t "~%Loading complete")
-;  )
-
 (defun load-psql-lexicon-from-script nil
-  ;;(format t "~%Loading lexicon")
-  (clear-lex *lexicon* 
-	     :psorts-temp-files (cons
-				 (make-pathname :name "templex"
-						:host (pathname-host (lkb-tmp-dir))
-						:device (pathname-device (lkb-tmp-dir))
-					      :directory (pathname-directory (lkb-tmp-dir))) 
-				 (make-pathname :name "templex-index"
-						:host (pathname-host (lkb-tmp-dir))
-						:device (pathname-device (lkb-tmp-dir))
-					      :directory (pathname-directory (lkb-tmp-dir)))) 
-	     :no-delete t)
-  (setf *psql-lexicon* (make-instance 'psql-lex-database))
-  (link (load-lex *psql-lexicon*) *lexicon*)
-  ;;(format t "~%Loading complete")
-  )
-
+  (clear-lex *lexicon* :no-delete t)
+  (initialize-psql-lexicon)
+  (setf *lexicon* *psql-lexicon*))
+  
 (defun get-keyword-val (keyword list)
   (second (member keyword list)))
-
-;;(defun load-lexicon (lexicon)
-;;  (declare (ignore lexicon))
-;;  (load-lexicon-from-script))

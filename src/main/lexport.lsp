@@ -851,7 +851,16 @@
   (export-lexicon-to-db :lexicon tmp-lex :output-lexicon *psql-lexicon*)
   (clear-lex tmp-lex)))
 
+;; assumes *lexicon* eq *psql-lexicon*
 (defun load-scratch-lex (&key filename)
-  (load-lex *lexicon* :filename filename)
-  (setf *scratch-tdl-file* filename))
+  (let ((lexicon (create-empty-cdb-lex)))
+    (link *psql-lexicon* lexicon)
+    (setf *lexicon* lexicon))
+    
+    (load-lex *lexicon* :filename filename)
+    (setf *scratch-tdl-file* filename))
 
+;(defun load-psql-lexicon-from-script nil
+;  (clear-lex *lexicon* :no-delete t)
+;  (initialize-psql-lexicon)
+;  (setf *lexicon* *psql-lexicon*))

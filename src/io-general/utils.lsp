@@ -214,6 +214,9 @@
     (clear-lex-load-files)
     (clear-rule-load-files)
     (clear-lex *lexicon* :no-delete t)                ;; doesn't delete temporary files
+    (unless 
+        (typep *lexicon* 'cdb-lex-database)
+      (setf *lexicon* (make-instance 'cdb-lex-database)))
     (reset-morph-var)
     (clear-grammar)              ;; should clear everything that might not be
     (clear-lex-rules)            ;; overridden, this should do for now    

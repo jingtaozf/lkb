@@ -94,24 +94,24 @@
     (format t "~%Root file reload complete")))
 
 (defun read-cached-lex-if-available (file-names)
-  ;; bmw 100903
-  (clear-lex *lexicon* 
-	     :psorts-temp-files (cons *psorts-temp-file* *psorts-temp-index-file*)
-	     :no-delete t)
   (unless (listp file-names) 
     (setf file-names (list file-names)))
   (setf *lex-file-list* file-names)
   (cond
-   ((null file-names)			;: no files
-    (clear-lex *lexicon*)
-    (setf *lexicon* (create-empty-cdb-lex)))
+   ((null file-names)                   ;: no files
+    (clear-lex *lexicon* 
+               :psorts-temp-files (cons *psorts-temp-file* *psorts-temp-index-file*)
+               :no-delete t)
+    (create-empty-cdb-lex-aux *lexicon*))
    ((not (check-load-names file-names 'lexical)) ;: files not found
     (cerror "Continue with script" "Lexicon file not found"))
-   (t					;: files found
+   (t                                   ;: files found
+    (clear-lex *lexicon* 
+               :psorts-temp-files (cons *psorts-temp-file* *psorts-temp-index-file*)
+               :no-delete t)
     (unless (read-cached-lex *lexicon* file-names)
       (let ((*syntax-error* nil))
 	(setf *ordered-lex-list* nil)
-	(clear-lex *lexicon*)        
 	(dolist (file-name file-names)
 	  (if (eql *lkb-system-version* :page)
 	      (let ((*lexicon-in* *lexicon*)) ;;ugly

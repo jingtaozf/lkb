@@ -71,18 +71,6 @@
 (defun open-psql-lex (&rest rest)
   (apply 'initialize-psql-lexicon rest))
 
-;;  (defvar *psql-lexicon-parameters*
-;;    '((:host "localhost")
-;;      (:db "lingo") (:table "erg")))
-
-;;(defun initialize-psql-lexicon (&key
-;;                                (db "lingo")
-;;                                (host "localhost")
-;;                                (table (or 
-;;					(and
-;;					 (typep *psql-lexicon* 'psql-database)
-;;					 (fields-tb *psql-lexicon*)) 
-;;					"erg")))
 (defun initialize-psql-lexicon (&key
                                 (db (extract-param :db *psql-lexicon-parameters*))
                                 (host (extract-param :host *psql-lexicon-parameters*))
@@ -91,17 +79,17 @@
     (error "please instantiate db+host+table in *psql-lexicon-parameters*"))
   (if (extract-param :user *psql-lexicon-parameters*)
       (setf *current-user* (extract-param :user *psql-lexicon-parameters*)))
-  (let* ((lexicon (make-instance 'psql-lex-database 
-                    :dbname db :host host
-                    :lex-tb table ;;unused 
-		    :fields-tb table)))
-    (initialize-lex lexicon)
-    (when *psql-lexicon* 
-      (mapcar #'(lambda (x) (link lexicon x))
-	      (part-of *psql-lexicon*))
-      (clear-lex *psql-lexicon*))
-    (setf *psql-lexicon* lexicon)
-    lexicon))
+  (let ((part-of))   
+    (if *psql-lexicon*
+        (setf part-of (part-of *psql-lexicon*))
+      (setf *psql-lexicon* (make-instance 'psql-lex-database)))
+    (setf (dbname *psql-lexicon*) db)
+    (setf (host *psql-lexicon*) host)
+    (setf (lex-tb *psql-lexicon*) table) ;;unused
+    (setf (fields-tb *psql-lexicon*) table)
+    (initialize-lex *psql-lexicon*)
+    (mapcar #'(lambda (x) (link *psql-lexicon* x)) part-of)
+    *psql-lexicon*))
 
 (defun extract-param (param param-list)
   (second (assoc param param-list)))
@@ -189,17 +177,6 @@
 ;;;
 ;;; --- psql-database methods
 ;;;
-
-;(defmethod load-lex ((lexicon psql-database) &rest rest)
-;  (declare (ignore rest))
-;  (cond
-;   ((typep (catch 'abort (setf lexicon (initialize-psql-lexicon))) 'psql-database)
-;    lexicon)
-;   (t
-;    (format t "~%... attempting to fall back to .tdl lexicon")
-;    (setf lexicon (make-instance 'cdb-lex-database))
-;    (load-cached-lexicon-if-available lexicon)
-;    lexicon)))
 
 (defmethod load-lex ((lexicon psql-database) &rest rest)
   (declare (ignore rest))
@@ -549,7 +526,11 @@
                                   :sql-string (format 
                                                nil 
                                                "SELECT slot,field,path,type FROM defn WHERE mode='~a';"
-                                               (fields-tb lexicon))))))))
+                                               (fields-tb lexicon)))))))
+  (if (null (fields-map lexicon))
+      (format t "~%WARNING: empty fields map in ~a mode ~a !!!" 
+              (dbname lexicon) (fields-tb lexicon)))
+  (fields-map lexicon))
 
 (defmethod make-psort-struct ((lexicon psql-lex-database) query-res)
   (let* ((strucslots 
@@ -1065,7 +1046,7 @@
 ;;;
 ;;; set (uninitialized) lexicon
 ;;;
-(unless *psql-lexicon* (setf *psql-lexicon* (make-instance 'psql-lex-database)))
+;(unless *psql-lexicon* (setf *psql-lexicon* (make-instance 'psql-lex-database)))
 
 
 ;;;
@@ -1121,9 +1102,10 @@
       (load-scratch-lex :filename filename)
       (lkb-beep))))
 
+;; assumes *psql-lexicon* part-of (scratch) *lexicon*
 (defun command-clear-scratch-lex nil
   (format t "~%Clearing scratch entries")
-  (clear-lex *lexicon* :in-isolation t)
+  (clear-lex *lexicon* :in-isolation t :no-delete t)
   (setf *scratch-tdl-file* nil)
   (lkb-beep))
 

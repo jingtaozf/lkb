@@ -26,17 +26,12 @@
 (defclass cdb-lex-database (lex-database)
   ((psort-db :initform nil :accessor psort-db)
    (orth-db :initform nil :accessor orth-db)
-   (psorts-temp-file :initform (make-pathname :name "templex"
-					      :host (pathname-host (lkb-tmp-dir))
-					      :device (pathname-device (lkb-tmp-dir))
-					      :directory 
-					      (pathname-directory (lkb-tmp-dir)))
-		     :accessor psorts-temp-file)
-   (psorts-temp-index-file :initform (make-pathname :name "templex-index" 
-						    :host (pathname-host (lkb-tmp-dir))
-						    :device (pathname-device (lkb-tmp-dir))
-						    :directory (pathname-directory (lkb-tmp-dir)))
-		     :accessor psorts-temp-index-file)
+   (psorts-temp-file :initform nil
+		     :accessor psorts-temp-file
+                     :initarg :psorts-temp-file)
+   (psorts-temp-index-file :initform nil
+                           :accessor psorts-temp-index-file
+                           :initarg :psorts-temp-index-file)
    (all-cdb-lex-dbs :allocation :class :initform nil :accessor all-cdb-lex-dbs)))
 
 (defmethod lookup-word ((lexicon cdb-lex-database) orth &key (cache t))
@@ -65,7 +60,6 @@
   (unless (psort-db lexicon)
     (setf (psort-db lexicon) 
       (cdb:open-read (psorts-temp-file lexicon))))
-;bmw
   (let ((res (cdb:all-keys (psort-db lexicon))))
     (unless (equal res '("NIL"))
       res)))
@@ -73,27 +67,29 @@
 (defmethod read-cached-lex ((lexicon cdb-lex-database) filenames)
   (with-slots (psorts-temp-file) lexicon
     (set-temporary-lexicon-filenames)
-  (when (up-to-date-p filenames
-		      (list psorts-temp-file 
-			    (psorts-temp-index-file lexicon)))
-    (format t "~%Reading in cached lexicon")
-    (clear-lex lexicon :no-delete t)
-    (when (handler-case 
-	      (progn
-		(setf (psort-db lexicon) 
-		  (cdb:open-read psorts-temp-file))
-		(setf (orth-db lexicon) 
-		  (cdb:open-read (psorts-temp-index-file lexicon)))
-		(unless (> (cdb:num-entries (psort-db lexicon)) 1) (error "cached lexicon empty"))
-		t)
-	    (error (condition)
-	      (format t "~%Error: ~A~%" condition)
-	      (delete-temporary-lexicon-files lexicon)
-	      nil))
-      (format t "~%Cached lexicon read")
-      (return-from read-cached-lex t)))
-  (format t "~%Cached lexicon missing or out-of-date: reading lexicon source files")
-  nil))
+    (when (up-to-date-p filenames
+                        (list psorts-temp-file 
+                              (psorts-temp-index-file lexicon)))
+      (format t "~%Reading in cached lexicon")
+      (clear-lex *lexicon* 
+                 :psorts-temp-files (cons *psorts-temp-file* *psorts-temp-index-file*)
+                 :no-delete t)
+      (when (handler-case 
+                (progn
+                  (setf (psort-db lexicon) 
+                    (cdb:open-read psorts-temp-file))
+                  (setf (orth-db lexicon) 
+                    (cdb:open-read (psorts-temp-index-file lexicon)))
+                  (unless (> (cdb:num-entries (psort-db lexicon)) 1) (error "no lexicon cached"))
+                  t)
+              (error (condition)
+                (format t "~%Error: ~A~%" condition)
+                (delete-temporary-lexicon-files lexicon)
+                nil))
+        (format t "~%Cached lexicon read")
+        (return-from read-cached-lex t)))
+    (format t "~%Cached lexicon missing or out-of-date: reading lexicon source files")
+    nil))
   
 (defmethod store-cached-lex ((lexicon cdb-lex-database))
   (cdb:close-write (psort-db lexicon))
@@ -136,21 +132,28 @@
 (defmethod clear-lex ((lexicon cdb-lex-database) &rest rest)
   (let* ((no-delete (get-keyword-val :no-delete rest))
 	 (psorts-temp-files (get-keyword-val :psorts-temp-files rest))
-	 (psorts-temp-file (car psorts-temp-files))
-	 (psorts-temp-index-file (cdr psorts-temp-files))
+         (new-psorts-temp-file)
+         (new-psorts-temp-index-file)
 	 (lexicon-size 0))
 
     ;; extract psorts-temp-file and psorts-temp-index-file
-    (if (and psorts-temp-file
-	     (not psorts-temp-index-file))
+    (if (and (car psorts-temp-files)
+	     (not (cdr psorts-temp-files)))
 	(error "both psorts-temp-file and psorts-temp-index-file must be specified"))
-    (unless psorts-temp-files 
-      (setf psorts-temp-file (psorts-temp-file lexicon))
-      (setf psorts-temp-index-file (psorts-temp-index-file lexicon)))
+    
+    ;; determine new temporary filenames
+    (cond
+     (psorts-temp-files
+       (setf new-psorts-temp-file (car psorts-temp-files))
+       (setf new-psorts-temp-index-file (cdr psorts-temp-files)))
+     (t
+      (setf new-psorts-temp-file (psorts-temp-file lexicon))
+      (setf new-psorts-temp-index-file (psorts-temp-index-file lexicon))))
       
     ;; close (old) temporary lexicon files
     (setf (psort-db lexicon) 
       (and
+       (psorts-temp-file lexicon)
        (probe-file (psorts-temp-file lexicon))
        (cdb:open-read (psorts-temp-file lexicon))))
     
@@ -166,21 +169,12 @@
 	(and 
 	     no-delete 
 	     (> lexicon-size 1))
-      (delete-temporary-lexicon-files lexicon)
-      ;;(setf (psorts-temp-file lexicon) nil)
-      ;;(setf (psorts-temp-index-file lexicon) nil)
-      )
+      (delete-temporary-lexicon-files lexicon))
     
-    ;; prepare (new) temporary lexicon filenames    
-    (setf (psorts-temp-file lexicon) psorts-temp-file)
-    (setf (psorts-temp-index-file lexicon) psorts-temp-index-file)
+    ;; set new temporary lexicon filenames    
+    (setf (psorts-temp-file lexicon) new-psorts-temp-file)
+    (setf (psorts-temp-index-file lexicon) new-psorts-temp-index-file)
     
-    ;; if files do not both exist create new ones
-    (unless
-	(and 
-	 (probe-file (psorts-temp-file lexicon))
-	 (probe-file (psorts-temp-index-file lexicon)))
-      (create-empty-cdb-lex-aux lexicon))
     lexicon))
 
 (defmethod initialize-lex ((lexicon cdb-lex-database) &key no-delete psorts-temp-files)
@@ -190,8 +184,6 @@
    :psorts-temp-files psorts-temp-files))
 
 (defmethod delete-temporary-lexicon-files ((lexicon cdb-lex-database))
-;;  (setf (all-cdb-lex-dbs lexicon)
-;;    (remove (psorts-temp-file lexicon) (all-cdb-lex-dbs lexicon) :key #'psorts-temp-file :test 'equal))
   (with-slots (psorts-temp-file psorts-temp-index-file) lexicon
     (when (and psorts-temp-file
 	       (probe-file psorts-temp-file))
@@ -199,12 +191,21 @@
     (when (and (psorts-temp-index-file lexicon)
 	       (probe-file (psorts-temp-index-file lexicon)))
       (delete-file (psorts-temp-index-file lexicon)))
-    ;;(setf (psorts-temp-file lexicon) nil)
-    ;;(setf (psorts-temp-index-file lexicon) nil)
     (cons psorts-temp-file psorts-temp-index-file)))
 
 (defun create-empty-cdb-lex nil
-  (create-empty-cdb-lex-aux (make-instance 'cdb-lex-database)))
+  (create-empty-cdb-lex-aux 
+   (make-instance 'cdb-lex-database
+     :psorts-temp-file (make-pathname :name "templex"
+                                      :host (pathname-host (lkb-tmp-dir))
+                                      :device (pathname-device (lkb-tmp-dir))
+                                      :directory 
+                                      (pathname-directory (lkb-tmp-dir)))
+     :psorts-temp-index-file (make-pathname :name "templex-index"
+                                            :host (pathname-host (lkb-tmp-dir))
+                                            :device (pathname-device (lkb-tmp-dir))
+                                            :directory 
+                                            (pathname-directory (lkb-tmp-dir))))))
 
 (defun create-empty-cdb-lex-aux (lexicon)
   (setf *ordered-lex-list* nil)
