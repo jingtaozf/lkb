@@ -20,7 +20,7 @@
 #include <dirent.h>
 #include <regex.h>
 
-#include <sys/timeb.h>
+#include <sys/times.h>
 #include <sys/param.h>
 #include <errno.h>
 extern int errno;
@@ -1159,15 +1159,23 @@ Tsdb_selection* tsdb_create_selection(int r, int k) {
 
 Tsdb_selection* tsdb_copy_selection(Tsdb_selection* source) {
   Tsdb_selection* target;
-  int i;
-  
+  int i,j;
+  Tsdb_key_list* foo,*bar;
+
   target = tsdb_create_selection(source->n_relations,source->n_key_lists);
   for(i = 0; i < source->n_relations; i++) {
     target->relations[i] = tsdb_copy_relation(source->relations[i]);
   } /* for*/
   
-  for (i=0;i<source->n_key_lists;i++) 
+  for (i=0;i<source->n_key_lists;i++) {
     target->key_lists[i] = tsdb_copy_key_list(source->key_lists[i]);
+    foo = target->key_lists[i];
+    bar = source->key_lists[i]->next;
+    for (j=1;j<source->length;foo=foo->next,bar= bar->next,j++) {
+      foo->next = tsdb_copy_key_list(bar);
+    } /* for */
+    foo->next = NULL;
+  } /* for */
   target->length = source->length;
 
   return(target);
@@ -1569,12 +1577,12 @@ float tsdb_timer(BYTE action) {
 |*
 \*****************************************************************************/
 
-  static struct timeb start[TSDB_MAX_TIMERS], stop[TSDB_MAX_TIMERS];
+  static struct tms start[TSDB_MAX_TIMERS], stop[TSDB_MAX_TIMERS];
   static BYTE n_timers = 0;
 
   if(action == TSDB_START_TIMER) {
-    if(ftime(&start[n_timers]) == -1) {
-      perror("tsdb_timer()");
+    if(times(&start[n_timers]) == -1) {
+      perror("timer()");
       return((float)-1);
     } /* if */
     n_timers++;
@@ -1586,12 +1594,13 @@ float tsdb_timer(BYTE action) {
               "timer(): timer # %d not running.\n", action);
       return((float)-1);
     } /* if */
-    if(ftime(&stop[--n_timers]) == -1) {
+    if(times(&stop[--n_timers]) == -1) {
       perror("tsdb_timer()");
       return((float)-1);
     } /* if */
-    return((stop[n_timers].time - start[n_timers].time)
-           + ((stop[n_timers].millitm - start[n_timers].millitm) * 0.001));
+    return(((stop[n_timers].tms_utime - start[n_timers].tms_utime)+
+           (stop[n_timers].tms_stime - start[n_timers].tms_stime))/60);
+
   } /* else */
 
 } /* tsdb_timer() */
