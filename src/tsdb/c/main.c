@@ -21,9 +21,9 @@
 
 #define TSDB_HISTORY_FILE ".tsdb_history"
 
-char tsdb_version[] = TSDB_VERSION;
-char tsdb_revision[] = "$Revision$";
-char tsdb_date[] = "$Date$";
+char _tsdb_version[] = TSDB_VERSION;
+char _tsdb_revision[] = "$Revision$";
+char _tsdb_date[] = "$Date$";
 
 char *tsdb_commands[] = {
   "create table",
@@ -331,9 +331,9 @@ void tsdb_parse_options(int argc, char **argv) {
       case TSDB_VERSION_OPTION:
         fprintf(tsdb_error_stream,
                 "tsdb(1) %s (%s) [%s] --- (c) oe@tsnlp.dfki.uni-sb.de.\n",
-                tsdb_version,
-                tsdb_rcs_strip(tsdb_revision, "Revision"),
-                tsdb_rcs_strip(tsdb_date, "Date"));
+                _tsdb_version,
+                tsdb_rcs_strip(_tsdb_revision, "Revision"),
+                tsdb_rcs_strip(_tsdb_date, "Date"));
         exit(0);
         break;
       } /* switch */

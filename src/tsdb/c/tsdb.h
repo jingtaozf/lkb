@@ -25,7 +25,7 @@ extern void free(void *);
 #  endif
 #endif
 
-#define TSDB_VERSION "0.0"
+#define TSDB_VERSION "0.1"
 
 #define TSDB_DEFAULT_STREAM stdout
 #define TSDB_ERROR_STREAM stderr
@@ -38,8 +38,10 @@ extern void free(void *);
 #define TSDB_INTEGER 1
 #define TSDB_IDENTIFIER 2
 #define TSDB_STRING 3
-#define TSDB_CONNECTIVE 4
-#define TSDB_OPERATOR 5
+#define TSDB_DATE 4
+#define TSDB_POSITION 5
+#define TSDB_CONNECTIVE 6
+#define TSDB_OPERATOR 7
 
 #define TSDB_VALUE_INCOMPATIBLE 0 
 #define TSDB_EQUAL 1
@@ -137,8 +139,8 @@ extern void free(void *);
 #  define TSDB_BACKUP_SUFFIX "~"
 #endif
 
-#ifndef DEFAULT_VALUE
-#  define DEFAULT_VALUE "null"
+#ifndef TSDB_DEFAULT_VALUE
+#  define TSDB_DEFAULT_VALUE ""
 #endif
 
 #ifndef TSDB_SERVER_PORT
@@ -161,6 +163,8 @@ typedef struct tsdb_value {
     int integer;
     char *identifier;
     char *string;
+    char *date;
+    char *position;
     BYTE connective;
     BYTE operator;
   } value;
@@ -257,12 +261,15 @@ BOOL tsdb_verify_selection(Tsdb_selection *);
 BOOL tsdb_key_list_not_copied(Tsdb_relation* ,int , Tsdb_key_list* );
 void tsdb_debug_join_path(Tsdb_value **, Tsdb_value**);
 void tsdb_debug_simple_join(Tsdb_value **, Tsdb_value**);
+void tsdb_debug_canonical_date(Tsdb_value **);
 char *tsdb_pseudo_user();
 float tsdb_timer(BYTE);
 
 Tsdb_value *tsdb_integer(int);
 Tsdb_value *tsdb_identifier(char *);
 Tsdb_value *tsdb_string(char *);
+Tsdb_value *tsdb_date(char *);
+Tsdb_value *tsdb_position(char *);
 Tsdb_value *tsdb_connective(BYTE);
 Tsdb_value *tsdb_operator(BYTE);
 Tsdb_value **tsdb_singleton_value_array(Tsdb_value *);
@@ -322,7 +329,7 @@ char** tsdb_all_relation_names();
 BOOL tsdb_attribute_in_relation(Tsdb_relation *,char *);
 BOOL tsdb_attribute_in_selection(Tsdb_selection *, char *);
 int tsdb_relation_in_selection(Tsdb_selection* ,char* );
-void tsdb_info_relations(void);
+void tsdb_info(Tsdb_value **);
 void tsdb_set(Tsdb_value *, Tsdb_value *);
 int tsdb_drop_table(Tsdb_value *);
 int tsdb_create_table(Tsdb_value *, Tsdb_field **);
@@ -340,6 +347,8 @@ FILE* tsdb_open_result();
 char *tsdb_rcs_strip(char *, char *);
 char *tsdb_expand_directory(char *, char *);
 char *tsdb_user(void);
+char *tsdb_canonical_date(char *);
+int *tsdb_parse_date(char *);
 
 Tsdb_node **tsdb_linearize_conditions(Tsdb_node *);
 

@@ -32,8 +32,7 @@
   Tsdb_field **tsdb_field_array;
 }
 
-%token 
-       Y_MATCH
+%token Y_MATCH
        Y_NOT_TILDA
        Y_TILDA
        Y_LESS
@@ -71,6 +70,7 @@
 
 %token <string> Y_IDENTIFIER
                 Y_STRING
+                Y_DATE
 
 %token <integer> Y_INTEGER
 
@@ -103,29 +103,29 @@
 %%
 
 y_query :
-  y_retrieval '.'
+  y_retrieval
 |
-  y_dropping '.'
+  y_dropping
 |
-  y_deletion '.'
+  y_deletion
 |
-  y_insertion '.'
+  y_insertion
 |
-  y_creation '.'
+  y_creation
 | 
-  y_altering '.'
+  y_altering
 |
-  y_info '.'
+  y_info
 |
-  y_set '.'
+  y_set
 |
-  y_exit '.'
+  y_exit
 | 
-  y_test '.'
+  y_test
 ;
 
 y_creation : 
-  Y_CREATE Y_TABLE y_table_name y_create_attribute_list { 
+  Y_CREATE Y_TABLE y_table_name y_create_attribute_list '.' { 
     if(!tsdb_is_relation($3)) {
       tsdb_create_table($3, $4); 
     } /* if */
@@ -136,17 +136,16 @@ y_creation :
 ;
 
 y_dropping : 
-  Y_DROP Y_TABLE y_table_name { 
-    *(char *)0 = 1;
+  Y_DROP Y_TABLE y_table_name '.' { 
     if(tsdb_is_relation($3)) 
       tsdb_drop_table($3); 
     else
-      fprintf(tsdb_error_stream, "\ttsdb: Table does not exist.\n");
+      fprintf(tsdb_error_stream, "tsdb: Table does not exist.\n");
   }
 ;
 
 y_altering : 
-  Y_ALTER Y_TABLE y_table_name Y_ADD y_create_attribute_list { 
+  Y_ALTER Y_TABLE y_table_name Y_ADD y_create_attribute_list '.' { 
     if(tsdb_is_relation($3)) 
       tsdb_alter_table($3, $5);
     else 
@@ -155,76 +154,76 @@ y_altering :
 ;
 
 y_insertion :
-  Y_INSERT Y_INTO y_table_name y_attribute_list Y_VALUES y_value_list {
+  Y_INSERT Y_INTO y_table_name y_attribute_list Y_VALUES y_value_list '.' {
     tsdb_insert($3, $4, $6);
   }
 | 
-  Y_INSERT Y_INTO y_table_name Y_VALUES y_value_list {
+  Y_INSERT Y_INTO y_table_name Y_VALUES y_value_list '.' {
     tsdb_insert($3, NULL, $5);
   }
 ;
 
 y_deletion :
-  Y_DELETE Y_FROM y_table_name {
+  Y_DELETE Y_FROM y_table_name '.' {
     tsdb_delete($3, (Tsdb_node *)NULL);
   }
 |
-  Y_DELETE Y_FROM y_table_name Y_WHERE y_condition {
+  Y_DELETE Y_FROM y_table_name Y_WHERE y_condition '.' {
     tsdb_delete($3, $5);
   }
 ;
 
 y_retrieval :
-  Y_RETRIEVE y_attribute_list {
+  Y_RETRIEVE y_attribute_list '.' {
     tsdb_complex_retrieve((Tsdb_value **)NULL, $2,
                           (Tsdb_node *)NULL, (char *)NULL);
   }
 |
-  Y_RETRIEVE y_attribute_list Y_WHERE y_condition {
+  Y_RETRIEVE y_attribute_list Y_WHERE y_condition '.' {
     tsdb_complex_retrieve((Tsdb_value **)NULL, $2, $4, (char *)NULL);
   }
 |
-  Y_RETRIEVE y_attribute_list Y_FROM y_attribute_list {
+  Y_RETRIEVE y_attribute_list Y_FROM y_attribute_list '.' {
     tsdb_complex_retrieve($4, $2, (Tsdb_node *)NULL, (char *)NULL);
   }
 |
-  Y_RETRIEVE y_attribute_list Y_FROM y_attribute_list Y_WHERE y_condition {
+  Y_RETRIEVE y_attribute_list Y_FROM y_attribute_list Y_WHERE y_condition '.' {
     tsdb_complex_retrieve($4, $2, $6, (char *)NULL);
   }
 |
-  Y_RETRIEVE y_attribute_list y_retrieve_report {
+  Y_RETRIEVE y_attribute_list y_retrieve_report '.' {
     tsdb_complex_retrieve((Tsdb_value **)NULL, $2, (Tsdb_node *)NULL, $3);
   }
 |
-  Y_RETRIEVE y_attribute_list Y_WHERE y_condition y_retrieve_report {
+  Y_RETRIEVE y_attribute_list Y_WHERE y_condition y_retrieve_report '.' {
     tsdb_complex_retrieve((Tsdb_value **)NULL, $2, $4, $5);
   }
 |
-  Y_RETRIEVE y_attribute_list Y_FROM y_attribute_list y_retrieve_report {
+  Y_RETRIEVE y_attribute_list Y_FROM y_attribute_list y_retrieve_report '.' {
     tsdb_complex_retrieve($4, $2, (Tsdb_node *)NULL, $5);
   }
 |
   Y_RETRIEVE y_attribute_list Y_FROM y_attribute_list
     Y_WHERE y_condition
-    y_retrieve_report {
+    y_retrieve_report '.' {
     tsdb_complex_retrieve($4, $2, $6, $7);
   }
 |
-  Y_RETRIEVE '*' Y_WHERE y_condition {
+  Y_RETRIEVE '*' Y_WHERE y_condition '.' {
     tsdb_complex_retrieve((Tsdb_value **)NULL, (Tsdb_value **)NULL,
                           $4, (char *)NULL);
   }
 |
-  Y_RETRIEVE '*' Y_FROM y_attribute_list {
+  Y_RETRIEVE '*' Y_FROM y_attribute_list '.' {
     tsdb_complex_retrieve($4, (Tsdb_value **)NULL,
                           (Tsdb_node *)NULL, (char *)NULL);
   }
 |
-  Y_RETRIEVE '*' Y_FROM y_attribute_list Y_WHERE y_condition {
+  Y_RETRIEVE '*' Y_FROM y_attribute_list Y_WHERE y_condition '.' {
     tsdb_complex_retrieve($4, (Tsdb_value **)NULL, $6, (char *)NULL);
   }
 |
-  Y_RETRIEVE y_attribute_list Y_FROM Y_INTEGER {
+  Y_RETRIEVE y_attribute_list Y_FROM Y_INTEGER '.' {
     Tsdb_value **from;
     from = (Tsdb_value **)malloc(2 * sizeof(Tsdb_value *));
     from[1] = tsdb_integer($4);
@@ -232,7 +231,7 @@ y_retrieval :
     tsdb_complex_retrieve(&from[0], $2, (Tsdb_node *)NULL, (char *)NULL);
   }
 |
-  Y_RETRIEVE y_attribute_list Y_FROM Y_INTEGER Y_WHERE y_condition {
+  Y_RETRIEVE y_attribute_list Y_FROM Y_INTEGER Y_WHERE y_condition '.' {
     Tsdb_value **from;
     from = (Tsdb_value **)malloc(2 * sizeof(Tsdb_value *));
     from[1] = tsdb_integer($4);
@@ -240,7 +239,7 @@ y_retrieval :
     tsdb_complex_retrieve(&from[0], $2, $6, (char *)NULL);
   }
 |
-  Y_RETRIEVE y_attribute_list Y_FROM Y_INTEGER y_retrieve_report {
+  Y_RETRIEVE y_attribute_list Y_FROM Y_INTEGER y_retrieve_report '.' {
     Tsdb_value **from;
     from = (Tsdb_value **)malloc(2 * sizeof(Tsdb_value *));
     from[1] = tsdb_integer($4);
@@ -250,7 +249,7 @@ y_retrieval :
 |
   Y_RETRIEVE y_attribute_list Y_FROM Y_INTEGER
     Y_WHERE y_condition
-    y_retrieve_report {
+    y_retrieve_report '.' {
     Tsdb_value **from;
     from = (Tsdb_value **)malloc(2 * sizeof(Tsdb_value *));
     from[1] = tsdb_integer($4);
@@ -258,7 +257,7 @@ y_retrieval :
     tsdb_complex_retrieve(&from[0], $2, $6, $7);
   }
 |
-  Y_RETRIEVE '*' Y_FROM Y_INTEGER {
+  Y_RETRIEVE '*' Y_FROM Y_INTEGER '.' {
     Tsdb_value **from;
     from = (Tsdb_value **)malloc(2 * sizeof(Tsdb_value *));
     from[1] = tsdb_integer($4);
@@ -267,7 +266,7 @@ y_retrieval :
                           (Tsdb_node *)NULL, (char *)NULL);
   }
 |
-  Y_RETRIEVE '*' Y_FROM Y_INTEGER Y_WHERE y_condition {
+  Y_RETRIEVE '*' Y_FROM Y_INTEGER Y_WHERE y_condition '.' {
     Tsdb_value **from;
     from = (Tsdb_value **)malloc(2 * sizeof(Tsdb_value *));
     from[1] = tsdb_integer($4);
@@ -283,8 +282,8 @@ y_retrieve_report :
 ;
 
 y_info :
-  Y_INFO Y_RELATIONS {
-    tsdb_info_relations();
+  Y_INFO y_attribute_list '.' {
+    tsdb_info($2);
   }
 ;
 
@@ -511,6 +510,10 @@ y_value :
   Y_INTEGER {
     $$ = tsdb_integer($1);
   }
+|
+  Y_DATE {
+    $$ = tsdb_date($1);
+  }
 ;
 
 y_attribute_value_list :
@@ -543,30 +546,30 @@ y_special :
   Y_SET {
     $$ = "set";
   }
-|
-  Y_RELATIONS {
-    $$ = "relations";
-  }
 ;
 
 y_set :
-  Y_SET y_attribute y_value {
+  Y_SET y_attribute y_value '.' {
     tsdb_set($2, $3);
   }
 ;
 
 y_test :
-  Y_TEST y_attribute_list Y_GREATER y_attribute_list {
+  Y_TEST y_attribute_list Y_GREATER y_attribute_list '.' {
     tsdb_debug_join_path($2, $4);
   }
 |
-  Y_TEST y_attribute_list '#' y_attribute_list {
+  Y_TEST y_attribute_list '#' y_attribute_list '.' {
     tsdb_debug_simple_join($2, $4);
+  }
+|
+  Y_TEST y_value_list '.' {
+    tsdb_debug_canonical_date($2);
   }
 ;
 
 y_exit : 
-  Y_QUIT {
+  Y_QUIT '.' {
     tsdb_quit();
   }
 ;

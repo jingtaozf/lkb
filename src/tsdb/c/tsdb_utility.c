@@ -36,7 +36,8 @@ extern int errno;
 
 BYTE tsdb_value_compare(Tsdb_value *foo, Tsdb_value *bar) {
 
-  int teresa;
+  int teresa, *date_1, *date_2, i;
+  BYTE result;
 
   if(foo->type == bar->type) {
     switch(foo->type) {
@@ -55,6 +56,59 @@ BYTE tsdb_value_compare(Tsdb_value *foo, Tsdb_value *bar) {
         return(TSDB_EQUAL);
       } /* if */
       return(teresa < 0 ? TSDB_LESS_THAN : TSDB_GREATER_THAN);
+      break;
+    case TSDB_DATE:
+      if((date_1 = tsdb_parse_date(foo->value.date)) == NULL) {
+        return(TSDB_VALUE_INCOMPATIBLE);
+      } /* if */
+      if((date_2 = tsdb_parse_date(bar->value.date)) == NULL) {
+        free(date_1);
+        return(TSDB_VALUE_INCOMPATIBLE);
+      } /* if */
+      for(i = 0;
+          i < 6
+          && (date_1[i] == date_2[i] || date_1[i] == -1 || date_2[i] == -1);
+          i++);
+      if(i == 6) {
+        free(date_1);
+        free(date_2);
+        return(TSDB_EQUAL);
+      } /* if */
+      result = TSDB_EQUAL;
+      if(date_1[2] < date_2[2]) {
+        result = TSDB_LESS_THAN;
+      } /* if */
+      else if(date_1[2] == date_2[2]) {
+        if(date_1[1] < date_2[1]) {
+          result = TSDB_LESS_THAN;
+        } /* if */
+        else if(date_1[1] == date_2[1]) {
+          if(date_1[0] != -1 && date_2[0] != -1 && date_1[0] < date_2[0]) {
+            result = TSDB_LESS_THAN;
+          } /* if */
+          else if(date_1[0] == date_2[0]) {
+            if(date_1[3] < date_2[3]) {
+              result = TSDB_LESS_THAN;
+            } /* if */
+            else if(date_1[3] == date_2[3]) {
+              if(date_1[4] < date_2[4]) {
+                result = TSDB_LESS_THAN;
+              } /* if */
+              else if(date_1[4] == date_2[4]) {
+                if(date_1[5] < date_2[5]) {
+                  result = TSDB_LESS_THAN;
+                } /* if */
+              } /* if */
+            } /* if */
+          } /* if */
+        } /* if */
+      } /* if */
+      if(result == TSDB_EQUAL) {
+        result = TSDB_GREATER_THAN;
+      } /* if */
+      free(date_1);
+      free(date_2);
+      return(result);
       break;
     default:
       fprintf(tsdb_error_stream,
@@ -1057,13 +1111,38 @@ Tsdb_value *tsdb_identifier(char *foo) {
   return(bar);
 
 } /* tsdb_identifier() */
-Tsdb_value *tsdb_string(char *foo) {
+
+Tsdb_value *tsdb_string(char *foo) {
 
   Tsdb_value *bar;
 
   bar = (Tsdb_value *)malloc(sizeof(Tsdb_value));
   bar->type = TSDB_STRING;
   bar->value.string = foo;
+
+  return(bar);
+
+} /* tsdb_string() */
+
+Tsdb_value *tsdb_date(char *foo) {
+
+  Tsdb_value *bar;
+
+  bar = (Tsdb_value *)malloc(sizeof(Tsdb_value));
+  bar->type = TSDB_DATE;
+  bar->value.date = foo;
+
+  return(bar);
+
+} /* tsdb_string() */
+
+Tsdb_value *tsdb_position(char *foo) {
+
+  Tsdb_value *bar;
+
+  bar = (Tsdb_value *)malloc(sizeof(Tsdb_value));
+  bar->type = TSDB_POSITION;
+  bar->value.position = foo;
 
   return(bar);
 
@@ -2209,3 +2288,234 @@ void tsdb_quit(void) {
   tsdb.status |= TSDB_QUIT;
 
 } /* tsdb_quit() */
+
+char *tsdb_canonical_date(char *date) {
+
+  int *numeric, position;
+  char *result;
+
+  if((numeric = tsdb_parse_date(date)) == NULL) {
+    return((char *)NULL);
+  } /* if */
+
+  result = (char *)malloc(21);
+
+  if(numeric[0] != -1) {
+    (void)sprintf(result, "%d-", numeric[0]);
+    position = (numeric[0] >= 10 ? 3 : 2);
+  } /* if */
+  else {
+    position = 0;
+  } /* else */
+  switch(numeric[1]) {
+    case 1:
+      (void)sprintf(&result[position], "jan-");
+      break;
+    case 2:
+      (void)sprintf(&result[position], "feb-");
+      break;
+    case 3:
+      (void)sprintf(&result[position], "mar-");
+      break;
+    case 4:
+      (void)sprintf(&result[position], "apr-");
+      break;
+    case 5:
+      (void)sprintf(&result[position], "may-");
+      break;
+    case 6:
+      (void)sprintf(&result[position], "jun-");
+      break;
+    case 7:
+      (void)sprintf(&result[position], "jul-");
+      break;
+    case 8:
+      (void)sprintf(&result[position], "aug-");
+      break;
+    case 9:
+      (void)sprintf(&result[position], "sep-");
+      break;
+    case 10:
+      (void)sprintf(&result[position], "oct-");
+      break;
+    case 11:
+      (void)sprintf(&result[position], "nov-");
+      break;
+    case 12:
+      (void)sprintf(&result[position], "dec-");
+      break;
+  } /* switch */
+
+  (void)sprintf(&result[position + 4], "%.4d", numeric[2]);
+
+  if(numeric[3] != -1) {
+    (void)sprintf(&result[position + 8]," %.2d:%.2d:%.2d",
+                numeric[3], numeric[4],
+                (numeric[5] != -1 ? numeric[5] : 0));
+    result[position + 17] = 0;
+  } /* if */
+  else {
+    result[position + 8] = 0;
+  } /* else */
+
+  free(numeric);
+  return(result);
+      
+} /* tsdb_canonical_date() */
+
+int *tsdb_parse_date(char *date) {
+
+  char *copy, *foo, *bar;
+  int *result, i, j;
+
+  if(date == NULL) {
+    return((int *)NULL);
+  } /* if */
+
+  for(foo = date, i = 1; (foo = strchr(foo, '-')) != NULL; i++, foo++);
+  for(foo = date; (foo = strchr(foo, '/')) != NULL; i++, foo++);
+  for(foo = date, j = 1; (foo = strchr(foo, ':')) != NULL; j++, foo++);
+  if(i < 2 || i > 3 || j < 1 || j > 3) {
+    fprintf(tsdb_error_stream,
+            "parse_date(): invalid date expression `%s'.\n", date);
+    fflush(tsdb_error_stream);
+    return((int *)NULL);
+  } /* if */
+
+  copy = (char *)malloc(strlen(date) + 2);
+  copy = strcpy(copy, date);
+  copy = strcat(copy, "@");
+  result = (int *)malloc(6 * sizeof(int));
+  if((foo = strchr(copy, '(')) != NULL) {
+    *foo = ' ';
+  } /* if */
+  if((foo = strchr(copy, ')')) != NULL) {
+    *foo = ' ';
+  } /* if */
+  if(i == 3) {
+    foo = strtok(copy, "-/");
+    result[0] = (int)strtol(foo, &bar, 10);
+    if(bar == foo || result[0] < 1 || result[0] > 31) {
+      fprintf(tsdb_error_stream,
+              "parse_date(): invalid date expression `%s'.\n", date);
+      fflush(tsdb_error_stream);
+      free(copy);
+      free(result);
+      return((int *)NULL);
+    } /* if */
+    foo = strtok((char *)NULL, "-/");
+  } /* if */
+  else {
+    result[0] = -1;
+    foo = strtok(copy, "-/");
+  } /* else */
+
+  if(!strncasecmp(foo, "jan", 3)) {
+    result[1] = 1;
+  } /* if */
+  else if(!strncasecmp(foo, "feb", 3)) {
+    result[1] = 2;
+  } /* if */
+  else if(!strncasecmp(foo, "mar", 3)) {
+    result[1] = 3;
+  } /* if */
+  else if(!strncasecmp(foo, "apr", 3)) {
+    result[1] = 4;
+  } /* if */
+  else if(!strncasecmp(foo, "may", 3)) {
+    result[1] = 5;
+  } /* if */
+  else if(!strncasecmp(foo, "jun", 3)) {
+    result[1] = 6;
+  } /* if */
+  else if(!strncasecmp(foo, "jul", 3)) {
+    result[1] = 7;
+  } /* if */
+  else if(!strncasecmp(foo, "aug", 3)) {
+    result[1] = 8;
+  } /* if */
+  else if(!strncasecmp(foo, "sep", 3)) {
+    result[1] = 9;
+  } /* if */
+  else if(!strncasecmp(foo, "oct", 3)) {
+    result[1] = 10;
+  } /* if */
+  else if(!strncasecmp(foo, "nov", 3)) {
+    result[1] = 11;
+  } /* if */
+  else if(!strncasecmp(foo, "dec", 3)) {
+    result[1] = 11;
+  } /* if */
+  else {
+    result[1] = strtol(foo, &bar, 10);
+    if(bar == foo || result[1] < 1 || result[1] > 12) {
+      fprintf(tsdb_error_stream,
+              "parse_date(): invalid date expression `%s'.\n", date);
+      fflush(tsdb_error_stream);
+      free(copy);
+      free(result);
+      return((int *)NULL);
+    } /* if */
+  } /* else */
+
+  foo = strtok((char *)NULL, " \t([@");
+  result[2] = strtol(foo, &bar, 10);
+  if(bar != foo && result[2] >= 1 && result[2] <= 99) {
+    result[2] += 1900;
+  } /* if */
+  if(bar == foo || result[2] < 1900 || result[2] > 1999) {
+    fprintf(tsdb_error_stream,
+            "parse_date(): invalid date expression `%s'.\n", date);
+    fflush(tsdb_error_stream);
+    free(copy);
+    free(result);
+    return((int *)NULL);
+  } /* if */
+
+  if(j == 1) {
+    result[3] = result[4] = result[5] = -1;
+    return(result);
+  } /* if */
+
+  foo = strtok((char *)NULL, ":");
+  result[3] = strtol(foo, &bar, 10);
+  if(bar == foo || result[3] < 0 || result[3] > 23) {
+    fprintf(tsdb_error_stream,
+            "parse_date(): invalid date expression `%s'.\n", date);
+    fflush(tsdb_error_stream);
+    free(copy);
+    free(result);
+    return((int *)NULL);
+  } /* if */
+
+  foo = strtok((char *)NULL, ":@");
+  result[4] = strtol(foo, &bar, 10);
+  if(bar == foo || result[4] < 0 || result[4] > 59) {
+    fprintf(tsdb_error_stream,
+            "parse_date(): invalid date expression `%s'.\n", date);
+    fflush(tsdb_error_stream);
+    free(copy);
+    free(result);
+    return((int *)NULL);
+  } /* if */
+
+  if(j == 3) {
+    foo = strtok((char *)NULL, "@");
+    result[5] = strtol(foo, &bar, 10);
+    if(bar == foo || result[5] < 0 || result[5] > 59) {
+      fprintf(tsdb_error_stream,
+              "parse_date(): invalid date expression `%s'.\n", date);
+      fflush(tsdb_error_stream);
+      free(copy);
+      free(result);
+      return((int *)NULL);
+    } /* if */
+  } /* if */
+  else {
+    result[5] = -1;
+  } /* else */
+
+  free(copy);
+  return(result);
+
+} /* tsdb_parse_date() */

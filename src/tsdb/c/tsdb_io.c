@@ -172,8 +172,16 @@ char* tsdb_sprint_value(Tsdb_value *value ) {
       sprintf(result, "%d", value->value.integer);
       break;
     case TSDB_IDENTIFIER:
-    case TSDB_STRING:
       result = strdup(value->value.identifier);
+      break;
+    case TSDB_STRING:
+      result = strdup(value->value.string);
+      break;
+    case TSDB_DATE:
+      result = tsdb_canonical_date(value->value.date);
+      break;
+    case TSDB_POSITION:
+      result = strdup(value->value.position);
       break;
     case TSDB_CONNECTIVE:
       switch(value->value.connective) {
@@ -189,10 +197,7 @@ char* tsdb_sprint_value(Tsdb_value *value ) {
         case TSDB_NOT_NOT:
           result = strdup(" ");
           break;
-        case TSDB_BRACE:
-          result = strdup("() ");
-          break;
-  } /* switch */
+      } /* switch */
       break;
     case TSDB_OPERATOR:
       switch(value->value.operator) {
@@ -226,9 +231,10 @@ char* tsdb_sprint_value(Tsdb_value *value ) {
       fprintf(tsdb_error_stream,
               "print_value(): unknown type: %d.\n", value->type);
       fflush(tsdb_error_stream);
-    } /* switch */
-  
+  } /* switch */
+
   return result;
+
 } /* tsdb_sprint_value() */
 
 
@@ -274,6 +280,7 @@ char* tsdb_sprint_key_list(Tsdb_key_list* list,int* r,int* f,
 
 /*--------------------------- print functions ------------------------------*/
 BOOL tsdb_print_value(Tsdb_value *value, FILE *stream) {
+  char *foo;
   int r;
 
   switch(value->type) {
@@ -285,6 +292,18 @@ BOOL tsdb_print_value(Tsdb_value *value, FILE *stream) {
       break;
     case TSDB_STRING:
       r=fprintf(stream, "%s", value->value.string);
+      break;
+    case TSDB_DATE:
+      if((foo = tsdb_canonical_date(value->value.date)) != NULL) {
+        r=fprintf(stream, "%s", foo);
+        free(foo);
+      } /* if */
+      else {
+        r = EOF;
+      } /* else */
+      break;
+    case TSDB_POSITION:
+      r=fprintf(stream, "%s", value->value.position);
       break;
     case TSDB_CONNECTIVE:
       switch(value->value.connective) {
@@ -300,10 +319,7 @@ BOOL tsdb_print_value(Tsdb_value *value, FILE *stream) {
         case TSDB_NOT_NOT:
           r=fprintf(stream, " ");
           break;
-        case TSDB_BRACE:
-          r=fprintf(stream, "() ");
-          break;
-  } /* switch */
+      } /* switch */
       break;
     case TSDB_OPERATOR:
       switch(value->value.operator) {
@@ -338,13 +354,13 @@ BOOL tsdb_print_value(Tsdb_value *value, FILE *stream) {
       fprintf(tsdb_error_stream,
               "print_value(): unknown type: %d.\n", value->type);
       fflush(tsdb_error_stream);
-    } /* switch */
+  } /* switch */
+
   fflush(stream);
   if (r==EOF)
     return FALSE;
   else 
     return TRUE;
-      
 } /* tsdb_print_value() */
 
 void tsdb_print_array(Tsdb_value **array, FILE *stream) {
@@ -454,9 +470,21 @@ void tsdb_print_relation(Tsdb_relation *relation, FILE *stream) {
   if(relation != NULL) {
     fprintf(stream, "%s:\n", relation->name);
     for(i = 0; i < relation->n_fields; i++) {
-      fprintf(stream, "  %s %s",
-              relation->fields[i],
-              (relation->types[i] == TSDB_STRING ? ":string" : ":integer"));
+      fprintf(stream, "  %s", relation->fields[i]);
+      switch(relation->types[i]) {
+        case TSDB_INTEGER:
+          fprintf(stream, " :integer");
+          break;
+        case TSDB_STRING:
+          fprintf(stream, " :string");
+          break;
+        case TSDB_DATE:
+          fprintf(stream, " :date");
+          break;
+        case TSDB_POSITION:
+          fprintf(stream, " :position");
+          break;
+      } /* switch */
       for(j = 0; j < relation->n_keys && i != relation->keys[j] ; j++);
       if(j != relation->n_keys) {
         fprintf(stream, " :key");
@@ -758,8 +786,20 @@ Tsdb_tuple *tsdb_read_tuple(Tsdb_relation *relation, FILE *input) {
         } /* else */
       } /* if */
       else {
-        value->type = TSDB_STRING;
-        value->value.string = strdup(field);
+        switch(relation->types[n]) {
+          case TSDB_STRING:
+            value->type = relation->types[n];
+            value->value.string = strdup(field);
+            break;
+          case TSDB_DATE:
+            value->type = relation->types[n];
+            value->value.date = strdup(field);
+            break;
+          case TSDB_POSITION:
+            value->type = relation->types[n];
+            value->value.position = strdup(field);
+            break;
+        } /* switch */
       } /* else */
       tuple->fields[n] = value;
     } /* for */
@@ -798,6 +838,14 @@ int tsdb_write_relations() {
         break;
       case TSDB_STRING:
         r=fputs(":string ",file);
+        if (r==EOF) return 0;
+        break;
+      case TSDB_DATE:
+        r=fputs(":date ",file);
+        if (r==EOF) return 0;
+        break;
+      case TSDB_POSITION:
+        r=fputs(":position ",file);
         if (r==EOF) return 0;
         break;
       } /* switch */
@@ -896,6 +944,12 @@ Tsdb_relation *tsdb_read_relation(FILE *input) {
       else {
         if(strstr(bar, "string") != NULL) { 
           relation->types[relation->n_fields] = TSDB_STRING;
+        } /* if */
+        else if(strstr(bar, "date") != NULL) { 
+          relation->types[relation->n_fields] = TSDB_DATE;
+        } /* if */
+        else if(strstr(bar, "position") != NULL) { 
+          relation->types[relation->n_fields] = TSDB_POSITION;
         } /* if */
         else {
           fprintf(tsdb_error_stream,
@@ -1093,6 +1147,7 @@ FILE* tsdb_open_result() {
     return((FILE *)NULL);
   } /* if */
 
+  (void)sprintf(&old[0], "%s%s", tsdb.result_path, tsdb.result_prefix);
   for(i = tsdb.max_results; i > 1; i--) {
     (void)sprintf(&new[0],
                   "%s%s%d", tsdb.result_path, tsdb.result_prefix, i);
@@ -1101,7 +1156,6 @@ FILE* tsdb_open_result() {
     (void)rename(old, new);
   } /* for */
   
-
   if((output = fopen(&old[0], "w")) == NULL) {
     fprintf(tsdb_error_stream,
             "open_result(): unable to create \%s'.\n", &old[0]);

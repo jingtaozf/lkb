@@ -300,3 +300,16 @@ void tsdb_debug_simple_join(Tsdb_value **attribute_list_1,
     } /* else */
   } /* if */
 } /* tsdb_debug_simple_join() */
+
+void tsdb_debug_canonical_date(Tsdb_value **dates) {
+
+  int i;
+
+  tsdb_print_value(dates[0], tsdb_default_stream);
+  for(i = 1; dates[i] != NULL; i++) {
+    fprintf(tsdb_default_stream, " --- ");
+    tsdb_print_value(dates[i], tsdb_default_stream);
+  } /* for */
+  fprintf(tsdb_default_stream, ".\n");
+  fflush(tsdb_default_stream);
+} /* tsdb_debug_canonical_date() */

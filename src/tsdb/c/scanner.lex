@@ -22,9 +22,10 @@
   n = (c == EOF ? YY_NULL : (string[0] = c, 1)); \
 } /* YY_INPUT() */
 
-int verbose_mode = FALSE;
 #if defined(DEBUG) && defined(SCANNER)
-  verbose_mode = TRUE;
+  static int verbose_mode = TRUE;
+#else
+  static int verbose_mode = FALSE;
 #endif
 
 %}
@@ -60,11 +61,19 @@ DIGIT [0-9]
 NUMBER [-+]?{DIGIT}+
 DELIMITER [ \t\n]
 WHITESPACE {DELIMITER}+
-QUOTE (\")
+QUOTE \"
 LETTER [a-zA-Z]
 SPECIAL [-_]
 IDENTIFIER {LETTER}({LETTER}|{DIGIT}|{SPECIAL})*
 STRING ({QUOTE}[^"]*{QUOTE})|`[^']*'
+TWENTYNINE (0?[1-9])|([12][0-9])
+THIRTY (0?[1-9])|([12][0-9])|(30)
+THIRTYONE (0?[1-9])|([12][0-9])|(3[01])
+YEAR (19)?{DIGIT}{DIGIT}
+HOUR (0?[0-9])|(1[0-9])|(2[0-3])
+MINUTE (0?[0-9])|([1-5][0-9])
+SECOND {MINUTE}
+TIME (\(|\[)?{HOUR}:{MINUTE}(:{SECOND})?(\)|\])?
 
 %%
 
@@ -185,13 +194,6 @@ STRING ({QUOTE}[^"]*{QUOTE})|`[^']*'
     fprintf(stderr, "VALUES\n");
   } /* if */
   return(Y_VALUES);
-}
-
-{r}{e}{l}{a}{t}{i}{o}{n}{s} {
-  if(verbose_mode) {
-    fprintf(stderr, "RELATIONS\n");
-  } /* if */
-  return(Y_RELATIONS);
 }
 
 {t}{e}{s}{t} {
@@ -324,14 +326,6 @@ STRING ({QUOTE}[^"]*{QUOTE})|`[^']*'
   return(Y_INTEGER);
 }
 
-{IDENTIFIER} {
-  if(verbose_mode) {
-    fprintf(stderr, "IDENTIFIER\n");
-  } /* if */
-  yylval.string = (char *)strdup(&yytext[0]);
-  return(Y_IDENTIFIER);
-}
-
 {STRING} {
   if(verbose_mode) {
     fprintf(stderr, "STRING\n");
@@ -339,6 +333,86 @@ STRING ({QUOTE}[^"]*{QUOTE})|`[^']*'
   yytext[strlen(&yytext[0]) - 1] = 0;
   yylval.string = (char *)strdup(&yytext[1]);
   return(Y_STRING);
+}
+
+({TWENTYNINE}[-/])?(({f}{e}{b})|(0?2))[-/]{YEAR}({WHITESPACE}{TIME})? {
+  if(verbose_mode) {
+    fprintf(stderr, "DATE\n");
+  } /* if */
+  yylval.string = tsdb_canonical_date(&yytext[0]);
+  return(Y_DATE);
+}
+
+({THIRTY}[-/])?(({a}{p}{r})|({j}{u}{n}))[-/]{YEAR}({WHITESPACE}{TIME})? {
+  if(verbose_mode) {
+    fprintf(stderr, "DATE\n");
+  } /* if */
+  yylval.string = tsdb_canonical_date(&yytext[0]);
+  return(Y_DATE);
+}
+
+({THIRTY}[-/])?(({s}{e}{p})|({n}{o}{v}))[-/]{YEAR}({WHITESPACE}{TIME})? {
+  if(verbose_mode) {
+    fprintf(stderr, "DATE\n");
+  } /* if */
+  yylval.string = tsdb_canonical_date(&yytext[0]);
+  return(Y_DATE);
+}
+
+({THIRTY}[-/])?((0?[46])|(09)|(11))[-/]{YEAR}({WHITESPACE}{TIME})? {
+  if(verbose_mode) {
+    fprintf(stderr, "DATE\n");
+  } /* if */
+  yylval.string = tsdb_canonical_date(&yytext[0]);
+  return(Y_DATE);
+}
+
+({THIRTYONE}[-/])?(({j}{a}{n})|({m}{a}{r}))[-/]{YEAR}({WHITESPACE}{TIME})? {
+  if(verbose_mode) {
+    fprintf(stderr, "DATE\n");
+  } /* if */
+  yylval.string = tsdb_canonical_date(&yytext[0]);
+  return(Y_DATE);
+}
+
+({THIRTYONE}[-/])?(({m}{a}{y})|({j}{u}{l}))[-/]{YEAR}({WHITESPACE}{TIME})? {
+  if(verbose_mode) {
+    fprintf(stderr, "DATE\n");
+  } /* if */
+  yylval.string = tsdb_canonical_date(&yytext[0]);
+  return(Y_DATE);
+}
+
+({THIRTYONE}[-/])?(({a}{u}{g})|({o}{c}{t}))[-/]{YEAR}({WHITESPACE}{TIME})? {
+  if(verbose_mode) {
+    fprintf(stderr, "DATE\n");
+  } /* if */
+  yylval.string = tsdb_canonical_date(&yytext[0]);
+  return(Y_DATE);
+}
+
+({THIRTYONE}[-/])?{d}{e}{c}[-/]{YEAR}({WHITESPACE}{TIME})? {
+  if(verbose_mode) {
+    fprintf(stderr, "DATE\n");
+  } /* if */
+  yylval.string = tsdb_canonical_date(&yytext[0]);
+  return(Y_DATE);
+}
+
+({THIRTYONE}[-/])?((0?[13578])|(10)|(12))[-/]{YEAR}({WHITESPACE}{TIME})? {
+  if(verbose_mode) {
+    fprintf(stderr, "DATE\n");
+  } /* if */
+  yylval.string = tsdb_canonical_date(&yytext[0]);
+  return(Y_DATE);
+}
+
+{IDENTIFIER} {
+  if(verbose_mode) {
+    fprintf(stderr, "IDENTIFIER\n");
+  } /* if */
+  yylval.string = (char *)strdup(&yytext[0]);
+  return(Y_IDENTIFIER);
 }
 
 . {

@@ -20,11 +20,11 @@
 #include "tsdb.h"
 #include "errors.h"
 
-void tsdb_info_relations(void) {
+void tsdb_info(Tsdb_value **value_list) {
 
 /*****************************************************************************\
 |*        file: 
-|*      module: tsdb_info_relations()
+|*      module: tsdb_info()
 |*     version: 
 |*  written by: oe, dfki saarbruecken
 |* last update: 
@@ -33,14 +33,87 @@ void tsdb_info_relations(void) {
 |*
 \*****************************************************************************/
 
-  int i;
+  int i, j;
+  BOOL match;
 
-  if(tsdb.relations != NULL) {
-    for(i = 0; tsdb.relations[i] != NULL; i++) {
-      tsdb_print_relation(tsdb.relations[i], tsdb_default_stream);
+  if(value_list != NULL) {
+    for(i = 0, match = FALSE; value_list[i] != NULL; i++, match = FALSE) {
+      switch(value_list[i]->type) {
+        case TSDB_IDENTIFIER:
+          if(!strcmp(value_list[i]->value.identifier, "relations")
+             || !strcmp(value_list[i]->value.identifier, "all")) {
+            if(tsdb.relations != NULL) {
+              for(j = 0; tsdb.relations[j] != NULL; j++) {
+                tsdb_print_relation(tsdb.relations[j], tsdb_default_stream);
+              } /* for */
+              fflush(tsdb_default_stream);
+            } /* if */
+            match = TRUE;
+          } /* if */
+          if(!strncmp(value_list[i]->value.identifier, "tsdb_home", 9)
+             || !strncmp(value_list[i]->value.identifier, "home", 4)) {
+            fprintf(tsdb_default_stream,
+                    "tsdb home: `%s'.\n", tsdb.home);
+            fflush(tsdb_default_stream);
+            match = TRUE;
+          } /* if */
+          if(!strncmp(value_list[i]->value.identifier, 
+                      "tsdb_relations_file", 19)
+             || !strncmp(value_list[i]->value.identifier, "relations-file", 14)
+             || !strcmp(value_list[i]->value.identifier, "all")) {
+            fprintf(tsdb_default_stream,
+                    "tsdb relations file: `%s'.\n", tsdb.relations_file);
+            fflush(tsdb_default_stream);
+            match = TRUE;
+          } /* if */
+          if(!strncmp(value_list[i]->value.identifier, "tsdb_data_path", 14)
+             || !strncmp(value_list[i]->value.identifier, "data-path", 9)
+             || !strcmp(value_list[i]->value.identifier, "all")) {
+            fprintf(tsdb_default_stream,
+                    "tsdb data path: `%s'.\n", tsdb.data_path);
+            fflush(tsdb_default_stream);
+            match = TRUE;
+          } /* if */
+          if(!strncmp(value_list[i]->value.identifier, "tsdb_result_path", 16)
+             || !strncmp(value_list[i]->value.identifier, "result-path", 11)
+             || !strcmp(value_list[i]->value.identifier, "all")) {
+            fprintf(tsdb_default_stream,
+                    "tsdb result path: `%s'.\n", tsdb.result_path);
+            fflush(tsdb_default_stream);
+            match = TRUE;
+          } /* if */
+          if(!strncmp(value_list[i]->value.identifier, 
+                      "tsdb_result_prefix", 18)
+             || !strncmp(value_list[i]->value.identifier, "result-prefix", 13)
+             || !strcmp(value_list[i]->value.identifier, "all")) {
+            fprintf(tsdb_default_stream,
+                    "tsdb result prefix: `%s'.\n", tsdb.result_prefix);
+            fflush(tsdb_default_stream);
+            match = TRUE;
+          } /* if */
+          if(!strncmp(value_list[i]->value.identifier, "tsdb_max_results", 16)
+             || !strncmp(value_list[i]->value.identifier, "max-results", 11)
+             || !strcmp(value_list[i]->value.identifier, "all")) {
+            fprintf(tsdb_default_stream,
+                    "tsdb maximum number of results: %d.\n",
+                    tsdb.max_results);
+            fflush(tsdb_default_stream);
+            match = TRUE;
+          } /* if */
+          if(!match) {
+            fprintf(tsdb_error_stream,
+                    "info(): invalid argument `%s'.\n",
+                    value_list[i]->value.identifier);
+            fflush(tsdb_error_stream);
+          } /* if */
+          break;
+        default:
+          fprintf(tsdb_error_stream, "info(): invalid argument entity.\n");
+          fflush(tsdb_error_stream);
+      } /* switch */
     } /* for */
   } /* if */
-} /* tsdb_info_relations() */
+} /* tsdb_info() */
 
 void tsdb_set(Tsdb_value *variable, Tsdb_value *value) {
 
@@ -55,8 +128,50 @@ void tsdb_set(Tsdb_value *variable, Tsdb_value *value) {
 |*
 \*****************************************************************************/
 
-  if(!strcmp(variable->value.identifier, "max-results")) {
 
+  if(!strncmp(variable->value.identifier, "tsdb_result_path", 16)
+     || !strncmp(variable->value.identifier, "result-path", 11)) {
+    if(value->type != TSDB_STRING) {
+      fprintf(tsdb_error_stream,
+              "set(): invalid (non-string) type for `result-path'.\n");
+      fflush(tsdb_error_stream);
+    } /* if */
+    else {
+      free(tsdb.result_path);
+      tsdb.result_path = tsdb_expand_directory((char *)NULL,
+                                               value->value.string);
+    } /* else */
+  } /* if */
+  else if(!strncmp(variable->value.identifier, "tsdb_result_prefix", 18)
+          || !strncmp(variable->value.identifier, "result-prefix", 31)) {
+    if(value->type != TSDB_STRING) {
+      fprintf(tsdb_error_stream,
+              "set(): invalid (non-string) type for `result-prefix'.\n");
+      fflush(tsdb_error_stream);
+    } /* if */
+    else {
+      free(tsdb.result_prefix);
+      tsdb.result_prefix = value->value.string;
+    } /* else */
+  } /* if */
+  else if(!strncmp(variable->value.identifier, "tsdb_max_results", 16)
+     || !strncmp(variable->value.identifier, "max-results", 11)) {
+    if(value->type != TSDB_INTEGER) {
+      fprintf(tsdb_error_stream,
+              "set(): invalid (non-integer) type for `max-results'.\n");
+      fflush(tsdb_error_stream);
+    } /* if */
+    else {
+      if(value->value.integer < 0) {
+        fprintf(tsdb_error_stream,
+                "set(): invalid value (%d) for `max-results'.\n",
+                value->value.integer);
+        fflush(tsdb_error_stream);
+      } /* if */
+      else {
+        tsdb.max_results = value->value.integer;
+      } /* else */
+    } /* else */
   } /* if */
   else {
     fprintf(tsdb_error_stream,
@@ -221,7 +336,7 @@ int tsdb_insert(Tsdb_value *table,
 
     if(attribute_list != NULL) {
       if(!tsdb_are_attributes(attribute_list, relation))
-          return(TSDB_NO_SUCH_ATTRIBUTE);
+        return(TSDB_NO_SUCH_ATTRIBUTE);
       for(n_attributes = 0; attribute_list[n_attributes] != NULL;
           n_attributes++);
       if(n_attributes != n_values) {
@@ -247,7 +362,7 @@ int tsdb_insert(Tsdb_value *table,
           } /* for */
           if(!success) {
             tuple->fields[n] = (Tsdb_value *)malloc(sizeof(Tsdb_value *));
-            tuple->fields[n]->value.string = strdup(DEFAULT_VALUE);
+            tuple->fields[n]->value.string = strdup(TSDB_DEFAULT_VALUE);
             tuple->fields[n]->type = TSDB_STRING;
           } /* if */
         } /* if */
@@ -258,7 +373,7 @@ int tsdb_insert(Tsdb_value *table,
           } /* if */
           else {
             tuple->fields[n] = (Tsdb_value *)malloc(sizeof(Tsdb_value *));
-            tuple->fields[n]->value.string = strdup(DEFAULT_VALUE);
+            tuple->fields[n]->value.string = strdup(TSDB_DEFAULT_VALUE);
             tuple->fields[n]->type = TSDB_STRING;
           } /* else */
         } /* else */
