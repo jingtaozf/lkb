@@ -208,7 +208,18 @@
 
 ;;; bindings is a list of assoc lists of variable numbers
 
+;;;
+;;; by default, include variable properties in equality comparison
+;;;
 (defparameter *mrs-equalp-properties-p* t)
+
+;;;
+;;; for better parameterization, allow the equality test to ignore a set of
+;;; (pseudo-)roles in each EP; make this list empty, by default, to preserve
+;;; original LKB behavior, but in LOGON we need LNK and PSV on this list (the
+;;; former, for now, while paul treats LNK as a plain role).
+;;;                                                            (25-nov-04; oe)
+(defparameter *mrs-equalp-ignored-roles* nil)
 
 (defun mrs-equalp (mrs1 mrs2 &optional syntactic-p noisy-p (propertyp t))
   #+:debug
@@ -284,7 +295,6 @@
                  (let ((new-bindings (copy-tree bindings)))
                    (mrs-relations-equal-p rel-alt1 rel-alt2
                                           syntactic-p noisy-p new-bindings))))))
-
 (defun mrs-relations-equal-p (rel1 rel2 syntactic-p noisy-p bindings)
   (if (equal (rel-pred rel1) (rel-pred rel2))
       (if (setf bindings 
@@ -294,8 +304,18 @@
                  (rel-handel rel1) 
                  (rel-handel rel2) syntactic-p bindings)
               bindings))
-          (let ((fv1 (rel-flist rel1))
-                (fv2 (rel-flist rel2)))
+          (let ((fv1 (loop
+                         for role in (rel-flist rel1)
+                         unless (lkb::smember
+                                 (fvpair-feature role) 
+                                 *mrs-equalp-ignored-roles*)
+                         collect role))
+                (fv2 (loop
+                         for role in (rel-flist rel2)
+                         unless (lkb::smember
+                                 (fvpair-feature role) 
+                                 *mrs-equalp-ignored-roles*)
+                         collect role)))
             (if (eql (length fv1) (length fv2))
                          ;;; assumes canonical feature ordering 
                 (if 
