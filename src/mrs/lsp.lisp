@@ -41,7 +41,7 @@
            (indexed (lkb::show-mrs-indexed-window nil psoa title))
            (prolog (lkb::show-mrs-prolog-window nil psoa title))
            (scoped (lkb::show-mrs-scoped-window nil psoa title))
-           (rmrs (lkb::show-mrs-rmrs-window nil psoa title))
+           (rmrs (lkb::show-mrs-rmrs-window nil :mrs psoa :title title))
            (dependencies (lkb::show-mrs-dependencies-window nil psoa title))
            (t (setf return lkb::%lsp-invalid-format%)))))
       (convert

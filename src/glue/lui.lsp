@@ -24,7 +24,7 @@
 (defparameter *lui-application*
   (format
    nil 
-   "exec ~a"
+   "exec ~a -p"
    (namestring (make-pathname :directory (pathname-directory make::bin-dir)
                               :name "yzlui"))))
 
@@ -64,6 +64,9 @@
                  (external-process-input-stream process)))))
                     
     (when foo (setf foo foo))
+    #+:allegro
+    (setf (stream-external-format %lui-stream%) 
+      (excl:find-external-format :utf-8))
     (format
      %lui-stream%
      "parameter list-type ~a~a~%~

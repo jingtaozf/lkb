@@ -141,17 +141,17 @@
     (setf (clim:frame-pretty-name mframe) (or title "Scoped MRS"))
     (clim:run-frame-top-level mframe)))
 
-(defun show-mrs-rmrs-window (edge &optional mrs title)
+(defun show-mrs-rmrs-window (edge &key mrs rmrs title)
   (mp:run-function "RMRS"
-   #'show-mrs-rmrs-window-really edge mrs title))
+   #'show-mrs-rmrs-window-really edge :mrs mrs :rmrs rmrs :title title))
   
-(defun show-mrs-rmrs-window-really (edge &optional mrs title)
+(defun show-mrs-rmrs-window-really (edge &key mrs rmrs title)
   (let ((mframe (clim:make-application-frame 'mrs-rmrs))
-        (mrsstruct (or mrs (mrs::extract-mrs edge))))
+        (mrsstruct (or mrs (when edge (mrs::extract-mrs edge)))))
     (setf (mrs-rmrs-mrsstruct mframe) 
       mrsstruct)
     (setf (mrs-rmrs-rmrs mframe) 
-      (mrs::mrs-to-rmrs mrsstruct))
+      (or rmrs (mrs::mrs-to-rmrs mrsstruct)))
     (setf (clim:frame-pretty-name mframe) (or title "Robust MRS"))
     (clim:run-frame-top-level mframe)))
 
@@ -208,11 +208,10 @@
 
 (defun show-mrs-rmrs (mframe stream &key max-width max-height)
   (declare (ignore max-width max-height))
-  (let ((mrsstruct (mrs-rmrs-mrsstruct mframe))
-        (rmrs (mrs-rmrs-rmrs mframe)))
-    (if (and mrsstruct rmrs)
-        (clim:with-text-style (stream (lkb-parse-tree-font))
-          (mrs::output-rmrs1 rmrs 'mrs::compact stream))
+  (let ((rmrs (mrs-rmrs-rmrs mframe)))
+    (if rmrs
+      (clim:with-text-style (stream (lkb-parse-tree-font))
+        (mrs::output-rmrs1 rmrs 'mrs::compact stream))
       (format stream "~%::: MRS structure could not be extracted~%"))))
 
 (defun show-mrs-dependencies (mframe stream &key max-width max-height)

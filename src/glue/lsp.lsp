@@ -409,7 +409,7 @@
                  (:scoped 
                   (show-mrs-scoped-window nil mrs title))
                  (:rmrs 
-                  (show-mrs-rmrs-window nil mrs title))
+                  (show-mrs-rmrs-window nil :mrs mrs :title title))
                  (:dependencies 
                   (show-mrs-dependencies-window nil mrs title)))))))))
 
