@@ -69,12 +69,12 @@
 
 (pushnew :lkb *features*)
 ;;;
-;;; include PSQL and LUI support code (both disable by default, though) on those
-;;; platforms where we support them
+;;; include PSQL and LUI support code (both disabled by default, though) on 
+;;; those platforms where we support them
 ;;;
 #+(and (version>= 6 0) :linux86)
 (pushnew :psql *features*)
-#+(and (version>= 6 0) :linux86)
+#+(and (version>= 6 0) (or :linux86 :solaris))
 (pushnew :lui *features*)
 
 (pushnew :mrs *features*)
@@ -91,4 +91,6 @@
 ;;;
 (setf *features* (delete :psql *features*))
 
-(setq excl:*restart-init-function* #'lkb::start-lkb)
+(setf excl:*restart-init-function* 
+  #'(lambda () (lkb::start-lkb t)))
+

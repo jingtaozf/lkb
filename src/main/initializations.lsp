@@ -140,7 +140,7 @@
     ""))
 
 
-(defun start-lkb ()
+(defun start-lkb (&optional runtimep)
 
   (let* ((lkbrc (dir-and-name (user-homedir-pathname) ".lkbrc")))
     (with-package (:lkb) (when (probe-file lkbrc) (load lkbrc))))
@@ -155,20 +155,22 @@
                 (find :slave *features*))
       
       ;;
-      ;; reset mk::bin-dir et al. according to current image location
+      ;; for runtime binaries, reset mk::bin-dir et al. according to current
+      ;; image location; assume standard runtime directory structure.
       ;;
-      (let* ((sys (truename (translate-logical-pathname "sys:")))
-	     (home (make-pathname 
-		    :directory (butlast (pathname-directory sys)))))
-	(setf mk::sys-home (merge-pathnames home sys))
-	(mk::reset-system-paths))
+      (when runtimep
+        (let* ((sys (truename (translate-logical-pathname "sys:")))
+               (home (make-pathname 
+                      :directory (butlast (pathname-directory sys)))))
+          (setf mk::sys-home (merge-pathnames home sys))
+          (mk::reset-system-paths)))
       
       #+:allegr
       (tpl:setq-default *package* 
         (find-package (if (system:getenv "SSP") :ssp :lkb)))
       
       #+:lui
-      (when (system:getenv "LUI") (lui-initialize t))
+      (when (system:getenv "LUI") (lui-initialize runtimep))
 
       ;;
       ;; in the following, the featurep() test makes sense, since our run-time
@@ -191,10 +193,3 @@
           (clim-user::set-up-lkb-interaction)
           #-:clim
           (lkb::set-up-lkb-interaction))))))
-
-
-
-
-
-
-
