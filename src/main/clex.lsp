@@ -70,7 +70,7 @@
 		      (write-to-string entry)))
   id)
 
-(defmethod read-psort ((lexicon cdb-lex-database) id)
+(defmethod read-psort ((lexicon cdb-lex-database) id &key (cache t))
   (unless (psort-db lexicon)
     (setf (psort-db lexicon) 
       (cdb:open-read *psorts-temp-file*)))
@@ -78,10 +78,12 @@
     (cond ((gethash id psorts))
 	  (t
 	   ;; In case multiple entries are returned, we take the last one
-	   (let ((entry (car (last (cdb:read-record (psort-db lexicon) 
-						    (string id))))))
-	     (when entry
-	       (setf (gethash id psorts) (read-from-string entry))))))))
+	   (let* ((rec (car (last (cdb:read-record (psort-db lexicon) 
+						   (string id)))))
+		  (entry (when rec (read-from-string rec))))
+	     (when (and entry cache)
+	       (setf (gethash id psorts) entry))
+	     entry)))))
 
 (defmethod clear-lex ((lexicon cdb-lex-database) &optional no-delete)
   (declare (ignore no-delete))

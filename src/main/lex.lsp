@@ -45,7 +45,7 @@
 
 (defgeneric store-temporary-psort (lexicon id entry))
 
-(defgeneric read-psort (lexicon id))
+(defgeneric read-psort (lexicon id &key (cache t)))
 
 (defgeneric unexpand-psort (lexicon id))
 
@@ -361,6 +361,38 @@
 ;;;  General lexicon methods
 ;;;
 
+(defgeneric lookup-word (lexicon orth &key (cache t)))
+
+(defgeneric lex-words (lexicon))
+
+(defgeneric lexicon-loaded-p (lexicon))
+
+(defgeneric read-cached-lex (lexicon filenames))
+
+(defgeneric store-cached-lex (lexicon))
+
+(defgeneric set-lexical-entry (lexicon orth id new-entry))
+
+(defgeneric clear-lex (lexicon &optional no-delete))
+
+(defgeneric collect-expanded-lex-ids (lexicon))
+
+(defgeneric store-psort (lexicon id entry &optional orth))
+
+(defgeneric store-temporary-psort (lexicon id entry))
+
+(defgeneric read-psort (lexicon id))
+
+(defgeneric unexpand-psort (lexicon id))
+
+(defgeneric collect-psort-ids (lexicon))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;;  General lexicon methods
+;;;
+
 (defmethod lookup-word :around ((lexicon lex-database) orth &key (cache t))
   (cond ((gethash orth (slot-value lexicon 'lexical-entries)))
 	(t 
@@ -392,7 +424,8 @@
 			  :id id
 			  :full-fs entry)))
 
-(defmethod read-psort :around ((lexicon lex-database) id)
+(defmethod read-psort :around ((lexicon lex-database) id &key (cache t))
+  (declare (ignore cache))
   (cond ((gethash id (slot-value lexicon 'temp-psorts)))
 	(t (call-next-method))))
 
@@ -537,7 +570,8 @@
 	(list orth current-file-end))))
   id)
 
-(defmethod read-psort ((lexicon simple-lex-database) id)
+(defmethod read-psort ((lexicon simple-lex-database) id &key (cache t))
+  (declare (ignore cache))
   (with-slots (psorts) lexicon
     (let ((hash-table-entry (gethash id psorts)))
       (when hash-table-entry

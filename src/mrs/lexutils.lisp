@@ -26,10 +26,10 @@
       ;; because of multiple lexical entries, an id may be indexed by
       ;; multiple orthographies
      (dolist (word (lex-words *lexicon*))
-       (dolist (inst (lookup-word *lexicon* word))
+       (dolist (inst (lookup-word *lexicon* word :cache nil))
 	 (pushnew inst ids :test #'eq)))
      (dolist (id ids)
-       (let* ((entry (read-psort *lexicon* id))
+       (let* ((entry (read-psort *lexicon* id :cache nil))
 	      (lex-id (lex-or-psort-id entry)))
 	 (expand-psort-entry entry)
 	 (let ((new-fs (lex-or-psort-full-fs entry)))
