@@ -19,4 +19,6 @@
 ;;; the list lexicographically before output.
 ;;;
 
-(((:path . "enkel") (:content . "Basic Development Test Suite")))
+(((:path . "enkel") (:content . "Basic Development Test Suite"))
+ ((:path . "bokmaal") (:content . "NorGram Development Test Suite"))
+ ((:path . "tur") (:content . "First LOGON Development Corpus")))
