@@ -152,6 +152,13 @@ STRING          {QUOTE}[^"]*{QUOTE}
   return(Y_WHERE);
 }
 
+{r}{e}{p}{o}{r}{t} {
+  if(verbose_mode) {
+    fprintf(stderr, "Report\n");
+  } /* if */
+  return(Y_REPORT);
+}
+
 {a}{d}{d} {
   if(verbose_mode) {
     fprintf(stderr, "Add\n");
