@@ -1,10 +1,17 @@
 ROOT = /eo/e7/apache/htdocs/src
 WROOT = c:/src
-DATE=`date "+%Y-%m-%d"`
-TARGET=/usr/local/apache/htdocs/lingo/ftp
+DATE = `date "+%Y-%m-%d"`
+TARGET = /usr/local/apache/htdocs/lingo/ftp
+ 
+LINKS = lkb_data.tgz lkb_linux_ml.tgz lkb_linux_om.tgz lkb_solaris.tgz \
+        lkb_source.tgz lkb_windows.tgz lkb_windows.zip \
+        itsdb_data.tgz itsdb_documentation.tgz itsdb_libraries.tgz \
+        itsdb_linux.tgz itsdb_solaris.tgz itsdb_source.tgz \
+        erg.tgz matrix.tgz spanish.tgz
 
 RM=rm
 MKDIR=mkdir
+LN=ln -s
 CVS=cvs
 TAR=tar
 MAKE=make
@@ -32,6 +39,14 @@ update:
 	)
 
 all: lkb erg matrix spanish itsdb
+
+#
+# link structure on CSLI LinGO ftp(1) site
+#
+links:
+	for i in ${LINKS}; do \
+	  ${LN} ${TARGET}/${DATE}/$${i} ${TARGET}; \
+	done
 
 #
 # LKB grammar development environment
