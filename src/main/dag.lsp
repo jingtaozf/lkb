@@ -331,23 +331,31 @@
              (prog1
 		 (catch '*fail*
                    (progn
-		     (unify1 dag1 dag2 nil)
-		     (when *unify-debug* (format t "~%Unification succeeded"))
-		     dag1))
-	       #+(and mcl powerpc)(incf bb (CCL::%HEAP-BYTES-ALLOCATED))
-	       ))
-    (with-unification-context (dag1) 
-      (when (unify-dags dag1 dag2) (copy-dag dag1)))))
+                     (unify1 dag1 dag2 nil)
+                     (when *unify-debug*
+                       (if (cyclic-dag-p dag1)
+                         (format t "~%Unification failed - cyclic result")
+                         (format t "~%Unification succeeded")))
+                     dag1))
+                #+(and mcl powerpc)(incf bb (CCL::%HEAP-BYTES-ALLOCATED))
+                ))
+     (with-unification-context (dag1) 
+       (when (unify-dags dag1 dag2) (copy-dag dag1)))))
 
 (defun unifiable-dags-p (dag1 dag2)
   (if *within-unification-context-p*
       (catch '*fail*
-	(progn
-	  (unify1 dag1 dag2 nil)
-	  (unless (cyclic-dag-p dag1)
-	    (when *unify-debug* (format t "~%Unification succeeded"))
-	    t)))
-    (with-unification-context (dag1) (unifiable-dags-p dag1 dag2))))
+         (progn
+            (unify1 dag1 dag2 nil)
+            (if (cyclic-dag-p dag1)
+                (progn 
+                  (when *unify-debug* 
+                    (format t "~%Unification failed - cyclic result"))
+                  nil)
+              (progn
+               (when *unify-debug* (format t "~%Unification succeeded"))
+               t))))
+      (with-unification-context (dag1) (unifiable-dags-p dag1 dag2))))
 
 ;;; This is the heart of the unification algorithm, and is based on Hideto
 ;;; Tomabechi's paper in the 1991 ACL proceedings.  We walk through the two
