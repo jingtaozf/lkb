@@ -1,4 +1,4 @@
-;;; Copyright (c) 1991-2002
+;;; Copyright (c) 1991-2003
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `licence.txt' for conditions.
 
@@ -81,11 +81,24 @@
                           (to (when (edge-p (first (last children)))
                                 (edge-to (first (last children)))))
                           label head
+			  (cfrom (if (edge-p (first children))
+				     (edge-cfrom (first children))
+				   -1))
+                          (cto (if (edge-p (first (last children)))
+				   (edge-cto (first (last children)))
+				 -1))
                           foo bar baz
+			  (tmp-hack
+			   (set-characterization dag
+						     cfrom
+						     cto))
+			  ;;; a nasty hack to make sure that cfrom
+			  ;;; and cto are set in the rels in dag
                           #+:packing packed #+:packing equivalent 
                           #+:packing frozen)))
    id score category rule dag odag dag-restricted leaves lex-ids
    parents children morph-history spelling-change orth-tdfs from to label head
+   cfrom cto
    foo bar baz
    #+:packing packed #+:packing equivalent #+:packing frozen)
 
@@ -136,7 +149,7 @@
 ;;; when we get to the rightmost element.
 
 (defstruct (morph-edge)
-   id word morph-results)
+   id word morph-results cfrom cto)
 
 ;;;
 
@@ -380,13 +393,31 @@
         (values *executed-tasks* *successful-tasks* 
                 *contemplated-tasks* *filtered-tasks*)))))
 
+(defstruct chared-word
+  word
+  cfrom
+  cto)
 
-(defun add-morphs-to-morphs (user-input)
-  (if (consp (first user-input))
-    (sppp-setup-morphs user-input)
-    (let ((current 0))
-      (dolist (base-word user-input)
-        (let* ((word (string-upcase base-word))
+(defun set-characterization (dag cfrom cto)
+  (declare (ignore dag cfrom cto)))
+
+(defun add-morphs-to-morphs (preprocessed-input)
+  (if (consp (first preprocessed-input))
+      (sppp-setup-morphs preprocessed-input)
+    (let ((current 0)
+	  (xml-p (chared-word-p (first preprocessed-input))))
+      (dolist (token preprocessed-input)
+        (let* ((base-word 
+		(if xml-p 
+		    (chared-word-word token)
+		  token))
+	       (word (string-upcase base-word))
+	       (cfrom (if xml-p
+			  (chared-word-cfrom token)
+			-1))
+	       (cto (if xml-p
+			  (chared-word-cto token)
+			-1))
                (new (+ current 1))
                 (morph-poss 
                  (union
@@ -419,7 +450,9 @@
             (setf (aref *morphs* current)
               (make-morph-edge :id current :word base-word 
                                :morph-results 
-                               (or morph-poss (list (list word)))))
+                               (or morph-poss (list (list word)))
+			       :cfrom cfrom
+			       :cto cto))
             (setf current new)))))))
 
 (defun add-words-to-chart (f)
@@ -437,7 +470,8 @@
          (multiple-value-bind (ind-results multi-strings)
 	     (add-word (morph-edge-word morph-poss)
 		       (morph-edge-morph-results morph-poss) current
-		       f)
+		       f (morph-edge-cfrom morph-poss)
+		       (morph-edge-cto morph-poss))
            (unless (or ind-results multi-strings)
              (setf (aref to-be-accounted-for current)
 	       (morph-edge-word morph-poss)))
@@ -454,7 +488,7 @@
                  (aref to-be-accounted-for y))))))
 
 
-(defun add-word (local-word morph-poss right-vertex f)
+(defun add-word (local-word morph-poss right-vertex f cfrom cto)
   ;; get-senses returns a list of conses of ids and dags corresponding to the
   ;; word senses - the type of the dag is used to do the indexing
   (let* ((multi-results (add-multi-words morph-poss right-vertex f))
@@ -488,7 +522,8 @@
              (sense (mrecord-fs mrec))
              (history (mrecord-history mrec))
              (edge (construct-lex-edge sense history local-word lex-ids
-                                       (- right-vertex 1) right-vertex)))
+                                       (- right-vertex 1) right-vertex
+				       cfrom cto)))
         (if *active-parsing-p*
           (let ((configuration (make-chart-configuration
                                 :begin (- right-vertex 1) :end right-vertex
@@ -501,7 +536,7 @@
     ;; strings found
     (values word-senses multi-results)))
 
-(defun construct-lex-edge (sense history word lex-ids from to)
+(defun construct-lex-edge (sense history word lex-ids from to cfrom cto)
   #+ignore (format t "~%Construct word ~A" word)
   (make-edge :id (next-edge) 
              :category (indef-type-of-tdfs sense) 
@@ -512,12 +547,14 @@
              :leaves (list word)
              :lex-ids lex-ids
              :morph-history (construct-morph-history word lex-ids 
-                                                     history from to)
+                                                     history from to cfrom cto)
              :spelling-change (when history 
 				(mhistory-new-spelling (car history)))
              :orth-tdfs (when history (mhistory-orth-tdfs (car history)))
              :from from
-             :to to))
+             :to to
+	     :cfrom cfrom
+	     :cto cto))
 
 (defun get-senses (stem-string)
   (let ((entries
@@ -591,7 +628,8 @@
                  (lex-ids (mrecord-lex-ids mrec))
                  (history (mrecord-history mrec))
                  (edge (construct-lex-edge sense history word lex-ids
-                                           left-vertex right-vertex)))
+                                           left-vertex right-vertex -1 -1)))
+	    ;;; FIX multiwords
             (if *active-parsing-p*
               (let ((configuration (make-chart-configuration
                                     :begin left-vertex :end right-vertex
@@ -698,7 +736,7 @@
 					       expanded-entry))))))))))))
 
 
-(defun construct-morph-history (word lex-ids history from to)
+(defun construct-morph-history (word lex-ids history from to cfrom cto)
   ;; the rule on an edge refers `back' i.e. to the way it was constructed, so
   ;; when this is called, the rule and the new spelling (if any) of the
   ;; current-record have already been put into an edge
@@ -706,7 +744,7 @@
     (let* ((current-record (car history))
 	   (fs (mhistory-fs current-record))
 	   (new-edge (construct-lex-edge fs (cdr history) word lex-ids
-                                         from to)))
+                                         from to cfrom cto)))
       (push new-edge *morph-records*)
       new-edge)))
     
@@ -997,7 +1035,7 @@
                                :category (indef-type-of-tdfs unification-result)
                                :rule rule
                                :children edge-list
-                               :dag unification-result
+                               :dag unification-result 
                                :lex-ids (mapcan
                                          #'(lambda (child)
                                              (copy-list (edge-lex-ids child)))
@@ -1006,8 +1044,8 @@
                                         #'(lambda (child)
                                             (copy-list (edge-leaves child)))
                                         edge-list)
-                               :from left-vertex
-                               :to right-vertex)))
+			       :from left-vertex
+			       :to right-vertex)))
               #+pdebug (format t " ... success.~%")
               (activate-context left-vertex new-edge right-vertex f)
               t)
