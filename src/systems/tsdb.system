@@ -24,10 +24,10 @@
     :binary-pathname (dir-append (get-binaries-dir "tsdb")
 				 '(:relative "tsdb"))
     :finally-do
-    #+(and :allegro (or :linux (and :sparc :svr4) :alpha))
+    #+(and (not :tty) :allegro (or :linux (and :sparc :svr4) :alpha))
     (when (system:getenv "DISPLAY") 
       (funcall (symbol-function (read-from-string "tsdb::tsdb")) :podium))
-    #-(and :allegro (or :linux (and :sparc :svr4) :alpha))
+    #-(and (not :tty) :allegro (or :linux (and :sparc :svr4) :alpha))
     nil
 
     :components
