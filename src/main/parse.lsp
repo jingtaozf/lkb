@@ -87,12 +87,12 @@
                           (cto (if (edge-p (first (last children)))
 				   (edge-cto (first (last children)))
 				 -1))
-                          mrs
+                          string mrs
                           foo bar baz
                           packed equivalent frozen adjuncts)))
    id score category rule dag odag dag-restricted leaves lex-ids
    parents children morph-history spelling-change orth-tdfs from to label head
-   cfrom cto mrs foo bar baz
+   cfrom cto string mrs foo bar baz
    packed equivalent frozen adjuncts)
 
 (defparameter *characterize-p* nil)

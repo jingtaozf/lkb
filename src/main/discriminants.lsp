@@ -29,6 +29,7 @@
   (let* ((n (if (edge-p (first edges)) 
               (+ (loop
                      for edge in edges
+                     when (numberp (edge-to edge))
                      maximize (edge-to edge))
                  1)
               0))
@@ -60,6 +61,7 @@
 			       (eq (discriminant-type discriminant) :type))
                       (nth start tags))
           when tag do (blaze-discriminant discriminant tag blaze)))
+    
     ;;
     ;; then, filter out discriminants that either (i) all parses have or (ii) 
     ;; are implied by other discriminants, based on `size' (i.e. span), for
@@ -86,6 +88,7 @@
                                              (discriminant-start bar)))
                                        (equal (discriminant-in bar) in)))))
           unless match collect foo))
+
     #+:null
     (format 
      t 
@@ -94,6 +97,7 @@
          for discriminant in %discriminants%
          when (discriminant-toggle discriminant) count 1)
      (length %discriminants%))
+
     ;;
     ;; compute out parses from in parses
     ;;
@@ -202,7 +206,8 @@
           for triple in triples
           for key = (format nil "~{~a~^ ~}" triple)
           do
-            (add-discriminant key nil :ed top nil nil)))))
+            (add-discriminant
+             key nil :ed top (edge-from edge) (edge-to edge))))))
 
 (defun add-discriminant (key value type top start end)
 
@@ -215,7 +220,7 @@
       ;; this used to be pushnew() and take a lot of time; for a given .top.,
       ;; it will be hard (though, unfortunately, possible in theory) to find
       ;; multiple equivalent (i.e. in terms of type, key, start, and end)
-      ;; discriminants that characterize that edge.  multiple occurances of the
+      ;; discriminants that characterize that edge; multiple occurrences of the
       ;; same unary rule at the same position (discharging several optional
       ;; complements, say) could be one such case, though.  however, for that
       ;; to work, we will need to elaborate the notions of discriminats already

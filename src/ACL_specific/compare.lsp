@@ -23,7 +23,9 @@
 
 (def-lkb-parameter *tree-comparison-threshold* 10000)
 
-(def-lkb-parameter *tree-display-threshold* 10)
+(def-lkb-parameter *tree-display-threshold* 20)
+
+(def-lkb-parameter *tree-display-view* :classic)
 
 (def-lkb-parameter *tree-display-trees-width* 530)
 
@@ -42,7 +44,7 @@
 
 (def-lkb-parameter *tree-update-match-hook* nil)
 
-(def-lkb-parameter *tree-save-on-reject-p* nil)
+(def-lkb-parameter *tree-save-on-reject-p* t)
 
 (def-lkb-parameter *tree-display-semantics-p* t)
 
@@ -57,7 +59,9 @@
   record
   ink)
 
-(defun compare-parses (&optional (edges *parse-record*))
+(defun compare-parses (&optional (edges *parse-record*)
+                       &key input mode view)
+
   (when (eq edges *parse-record*)
     ;;
     ;; fix up edges in chart: one fine day, we should really simplify the chart
@@ -83,9 +87,17 @@
                 (setf (edge-from edge) begin)
                 (setf (edge-to edge) end))))
   
-  (when edges (mp:run-function "Tree Comparison" #'compare edges)))
+  (when edges 
+    (mp:run-function "Tree Comparison"
+     #'(lambda ()
+         (let ((*tree-discriminants-mode* 
+                (or mode *tree-discriminants-mode*))
+               (*tree-display-view*
+                (or view *tree-display-view*)))
+           (compare edges :input input))))))
 
-(defun compare (edges &key (runp t))
+(defun compare (edges &key (runp t) input)
+                           
   (let ((frame (if runp
                  (clim:make-application-frame 'compare-frame)
                  (clim:make-application-frame 
@@ -94,9 +106,9 @@
     (setf %frame% frame)
     (setf (compare-frame-chart frame) *chart-generation-counter*)
     (setf (compare-frame-runp frame) runp)
-    (set-up-compare-frame frame edges)
+    (set-up-compare-frame frame edges :input input)
     (setf (clim:frame-pretty-name frame) 
-      (format nil "~a" (edge-leaves (first edges))))
+      (or input (format nil "~a" (edge-leaves (first edges)))))
     (when runp
       (funcall #'clim:run-frame-top-level frame))
     frame))
@@ -105,7 +117,7 @@
   (clim:run-frame-top-level frame))
 
 (defun set-up-compare-frame (frame edges 
-                             &key (runp (compare-frame-runp frame)))
+                             &key (runp (compare-frame-runp frame)) input)
 
   (setf *cached-category-abbs* nil)
 
@@ -163,7 +175,7 @@
   (setf (compare-frame-decisions frame) (list (make-decision :type :start)))
   (when (null (compare-frame-input frame))
     (setf (compare-frame-input frame) 
-      (format nil "~{~a~^ ~}" (edge-leaves (first edges)))))
+      (or input (format nil "~{~a~^ ~}" (edge-leaves (first edges))))))
 
   ;;
   ;; wrap each edge into a `ctree' structure, so that we can record additional
@@ -175,11 +187,12 @@
         with gold = (rest (assoc :result-id (second inspect)))
         for i from 1
         for edge in edges
-        for id = (if (compare-frame-derivations frame)
+        for id = (if (numberp (edge-foo edge))
                    (edge-foo edge)
                    i)
         for score = (edge-score edge)
-        for symbol = (when *tree-use-node-labels-p*
+        for symbol = (when (and *tree-use-node-labels-p*
+                                (eq (compare-frame-view frame) :classic))
                        (make-new-parse-tree edge 1 t))
         for flags = (when (and gold (= id gold)) (list :gold))
         for tree = (make-ctree :edge edge :id id 
@@ -210,18 +223,20 @@
   ;;
   ;; extract (minimal) set of elementary properties to discriminate analyses
   ;;
-  (setf (compare-frame-discriminants frame) 
-    (find-discriminants
-     edges
-     :mode (compare-frame-mode frame)
-     :tags (compare-frame-tags frame)))
-  #+:allegro
-  (when runp
-    (format
-     excl:*initial-terminal-io*
-     "~&[~a] set-up-compare-frame(): found ~a discriminant~p.~%"
-     (current-time :long :short) (length (compare-frame-discriminants frame)) 
-     (length (compare-frame-discriminants frame))))
+  (unless (compare-frame-exact frame)
+    (setf (compare-frame-discriminants frame) 
+      (find-discriminants
+       edges
+       :mode (compare-frame-mode frame)
+       :tags (compare-frame-tags frame)))
+    #+:allegro
+    (when runp
+      (format
+       excl:*initial-terminal-io*
+       "~&[~a] set-up-compare-frame(): found ~a discriminant~p.~%"
+       (current-time :long :short)
+       (length (compare-frame-discriminants frame)) 
+       (length (compare-frame-discriminants frame)))))
 
   ;;
   ;; preset discriminants from recorded decisions or gold decisions (during an
@@ -264,10 +279,20 @@
   ;;
   (when (compare-frame-exact frame)
     (setf (compare-frame-lead frame) nil)
+    #+:null
     (update-discriminants 
      (compare-frame-discriminants frame)
      (compare-frame-exact frame) t)
-    (recompute-in-and-out frame))
+    #+:null
+    (recompute-in-and-out frame)
+    (setf (compare-frame-in frame) nil)
+    (setf (compare-frame-out frame) nil)
+
+    (loop
+        for edge in (compare-frame-edges frame)
+        when (member edge (compare-frame-exact frame))
+        do (push edge (compare-frame-in frame))
+        else do (push edge (compare-frame-out frame))))
 
 
   ;;
@@ -377,6 +402,7 @@
    (gold :initform nil :accessor compare-frame-gold)
    (lead :initform nil :accessor compare-frame-lead)
    (mode :initform *tree-discriminants-mode* :accessor compare-frame-mode)
+   (view :initform *tree-display-view* :accessor compare-frame-view)
    (show :initform *tree-results-show* :accessor compare-frame-show)
    (discriminants :initform nil :accessor compare-frame-discriminants)
    (decisions :initform nil :accessor compare-frame-decisions)
@@ -651,6 +677,7 @@
 
   (setf (compare-frame-tstream frame) stream)
   (unless (and (integerp *tree-display-threshold*)
+               (eq (compare-frame-view frame) :classic)
                (> (length (compare-frame-trees frame)) 
                   *tree-display-threshold*))
     (clim:formatting-table (stream :x-spacing "X")
@@ -679,26 +706,31 @@
                               (stream :align-x :center :align-y :top)
                             (clim:with-output-as-presentation 
                                 (stream tree 'ctree :single-box t)
-                              (clim:format-graph-from-root
-                               (or (ctree-symbol tree)
-                                   (setf (ctree-symbol tree)
-                                     (make-new-parse-tree 
-                                      (ctree-edge tree) 1)))
-                               #'(lambda (node stream)
-                                   (multiple-value-bind (s bold-p) 
-                                       (get-string-for-edge node)
-                                     (clim:with-text-face
-                                         (stream (if bold-p :bold :roman))
-                                       (write-string s stream))))
-                               #'(lambda (node) (get node 'daughters))
-                               :graph-type :parse-tree
-                               :stream stream 
-                               :merge-duplicates nil
-                               :orientation :vertical
-                               :generation-separation 7
-                               :move-cursor t
-                               :within-generation-separation 7
-                               :center-nodes nil)))))
+                              (if (eq (compare-frame-view frame) :classic)
+                                (clim:format-graph-from-root
+                                 (or (ctree-symbol tree)
+                                     (setf (ctree-symbol tree)
+                                       (make-new-parse-tree 
+                                        (ctree-edge tree) 1)))
+                                 #'(lambda (node stream)
+                                     (multiple-value-bind (s bold-p) 
+                                         (get-string-for-edge node)
+                                       (clim:with-text-face
+                                           (stream (if bold-p :bold :roman))
+                                         (write-string s stream))))
+                                 #'(lambda (node) (get node 'daughters))
+                                 :graph-type :parse-tree
+                                 :stream stream 
+                                 :merge-duplicates nil
+                                 :orientation :vertical
+                                 :generation-separation 7
+                                 :move-cursor t
+                                 :within-generation-separation 7
+                                 :center-nodes nil)
+                                (let ((mrs (edge-mrs (ctree-edge tree))))
+                                  (when mrs
+                                    (mrs::ed-output-psoa
+                                     mrs :stream stream))))))))
                       (terpri stream)))))))
       (when (and (compare-frame-trees frame)
                  (null (rest (compare-frame-trees frame))))
@@ -796,30 +828,12 @@
                  (symbol (and (fboundp hook) (symbol-function hook)))
                  (string (ignore-errors 
                           (symbol-function (read-from-string hook))))))
-         (extract (when (find-package :mrs)
-                    (find-symbol "EXTRACT-MRS" :mrs)))
-         (extract (when (and extract (fboundp extract))
-                    (symbol-function extract)))
-         (tree (first (compare-frame-trees frame)))
-         (edge (ctree-edge tree))
-         (mrs (when extract (ignore-errors (funcall extract edge))))
-         (convert (when (find-package :mrs) 
-                    (find-symbol "ED-CONVERT-PSOA" :mrs)))
-         (convert (when (and convert (fboundp convert)) 
-                    (symbol-function convert)))
-         (eds (when (and mrs convert) (ignore-errors (funcall convert mrs))))
-         (predicate (when (find-package :mrs)
-                      (find-symbol "ED-SUSPICIOUS-P" :mrs)))
-         (predicate (when (and predicate (fboundp predicate))
-                      (symbol-function predicate)))
-         (extract (when (and (functionp hook) (find-package :mrs))
-                    (find-symbol "EXTRACT-MRS" :mrs)))
-         (extract (when (and extract (fboundp extract)) 
-                    (symbol-function extract)))
          (tree (first (compare-frame-trees frame)))
          (edge (ctree-edge tree))
          (mrs (or (edge-mrs edge)
-                  (when extract (ignore-errors (funcall extract edge))))))
+                  (ignore-errors (mrs::extract-mrs edge))))
+         (eds (when mrs (ignore-errors (mrs::ed-convert-psoa mrs)))))
+    
     (multiple-value-bind (result condition) 
         (when (functionp hook) (ignore-errors (funcall hook edge mrs)))
       (when condition
@@ -857,7 +871,7 @@
                          (format stream "~%~a" comment)))))))
             (when color (recolor-record record color))
             (clim:replay record stream)))
-        (when eds
+        (when (and eds (not (eq (compare-frame-view frame) :modern)))
           (clim:formatting-row (stream)
             (clim:formatting-cell (stream :align-x :center :align-y :top)
               (format stream " ")))
@@ -880,7 +894,7 @@
                              (format stream "~a" eds)))))))))
             (recolor-record 
              record
-             (let ((status (and predicate (funcall predicate eds)))
+             (let ((status (mrs::ed-suspicious-p eds))
                    (orange (or (clim:find-named-color
                                 "orange" (clim:frame-palette frame) 
                                 :errorp nil)
