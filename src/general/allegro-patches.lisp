@@ -25,7 +25,7 @@
 #+:allegro-v4.2 (pushnew :cltl2 *features*)
 #+:ansi-cl (pushnew :cltl2 *features*)
 
-#+(and :linux86 (not :linux))
+#+(and (:or :linux86 :linux86-64) (not :linux))
 (pushnew :linux *features*)
 
 ;;;
@@ -47,6 +47,7 @@
 
 (defvar %binary-dir-name% 
     (or
+     #+(and (version>= 6 0) :linux86-64 :clim) ".l64l"
      #+(and (version>= 6 0) :linux86 :clim) ".l6cl"
      #+(and (version>= 6 0) :linux86 (not :clim)) ".l6sl"
      #+(and (version>= 6 0) :sparc :clim) ".s6cl" 
@@ -76,6 +77,7 @@
 (defvar %system-binaries%
   #+:prism "hppa"
   #+:linux86 "linux"
+  #+:linux86-64 "linux"
   #+:sunos4 "sunos"
   #+(and :sun :svr4) "solaris"
   #+:alpha "osf"
