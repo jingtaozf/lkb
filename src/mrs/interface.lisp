@@ -22,16 +22,23 @@
     (setf *mrs-record*
       (extract-mrs edges))
     (if *mrs-to-vit*
-        (for mrs in *mrs-record*
+        (for mrs in *mrs-record* 
              do
+             (format t "~%~A~%" (user::parse-tree-structure (car edges)))
+             (setf edges (cdr edges))
              (mrs-to-vit-convert mrs t))
       (if *mrs-scoping*
           (for mrs in *mrs-record*
-             do
+             do             
+             (format t "~%~A~%" (user::parse-tree-structure (car edges)))
+             (setf edges (cdr edges))
              (check-mrs-struct mrs))
         (for mrs in *mrs-record*
-             do
+             do              
+             (format t "~%~A~%" (user::parse-tree-structure (car edges)))
+             (setf edges (cdr edges))
              (output-mrs mrs 'simple))))))
+
         
 
 #|
