@@ -2,6 +2,10 @@
 ;;;   Ann Copestake, Fabre Lambeau, Stephan Oepen, Ben Waldron;
 ;;;   see `licence.txt' for conditions.
 
+;;; modifications by bmw (aug-03)
+;;; - fixed code broken by *lexicon*-related changes
+;;; - elaboration of embedded sql code
+
 ;;; aac (aug-12-03)
 ;;; initialisation now sets to *lexicon* regardless 
 
@@ -57,8 +61,9 @@
 (defvar *current-country* nil)
 
 (defun open-psql-lex (&rest rest)
-  (set-temporary-lexicon-filenames)
-  (read-cached-lex-if-available nil)
+  ;; should no longer be required
+  ;;(set-temporary-lexicon-filenames)
+  ;;(read-cached-lex-if-available nil)
   (apply 'initialize-psql-lexicon rest))
 
 					;: set up connection
@@ -75,6 +80,7 @@
 					 (fields-tb *psql-lexicon*)) 
 					"erg")))
   
+  (format t "~%Connecting to lexical database ~a" db)
   (let* ((lexicon (make-instance 'psql-lex-database 
                     :dbname db :host host
                     :lex-tb table ;;unused 
@@ -98,7 +104,8 @@
       (fn-get-records lexicon 
 		      ''set-current-view 
 		      (get-filter *psql-lexicon*)
-		      (sql-embedded-str (get-filter *psql-lexicon*))
+		      ;(sql-embedded-str (get-filter *psql-lexicon*))
+		      (get-filter *psql-lexicon*)
 		      )
       ;(fn-get-records lexicon ''update-current-grammar)
       (fn-get-records lexicon ''initialize-current-grammar)
@@ -110,25 +117,6 @@
        (pg:db (connection lexicon)) (pg:error-message (connection lexicon)))))
     (setf *tmp-lexicon* nil)
     lexicon))
-
-;;;
-;;; obsolete (use clear-lex instead)
-;;;
-
-;(defun close-psql-lexicon (&optional (lexicon *psql-lexicon*))
-;  (when (eq (type-of lexicon) 'psql-lex-database)
-;    ;;
-;    ;; shut down connection to PostGreSQL server
-;    ;;
-;    (let ((connection (connection lexicon)))
-;      (when connection 
-;        (pg:finish connection)
-;        (setf (connection lexicon) nil)))
-;    ;; bmw:
-;    ;; unlink from list of secondary lexica
-;    ;;
-;    (unlink lexicon *lexicon*)
-;    ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -216,6 +204,13 @@
 ;;; --- psql-database methods
 ;;;
 
+(defmethod load-lexicon ((lexicon psql-database))
+  (unless (typep (catch 'abort (initialize-psql-lexicon)) 'psql-database)
+    (format t "~%... attempting to fall back to .tdl lexicon")
+    (setf *lexicon* (make-instance 'cdb-lex-database))
+    (load-lexicon *lexicon*)
+    ))
+
 (defmethod connect ((lexicon psql-database)) 
   (let ((user *current-user*))
     (cond
@@ -223,6 +218,8 @@
      (t
       (setf user (ask-user-for-x "Connect to PostgreSQL lexicon" 
 				 (cons "Username?" (or user "guest"))))
+      (unless user 
+	(throw 'abort 'connect))
       (when user
 	(setf *current-user* user)
 	(connect lexicon))))))
@@ -886,7 +883,7 @@
 	 (format-cmd (append '(format nil) (car tmp)))
 	 (args (cdr tmp))
 	 (fn-defn (list 'defun fn-name args format-cmd)))
-    ;(print format-cmd)
+    ;(print fn-defn)
     (eval fn-defn)))
 
 (defun new-fn-name (str)
@@ -933,20 +930,24 @@
 	  (setf type (cdr (assoc arg type-list)))
 	  (cond
 	   ((equal type 'text)
-	    (format stream "'~~a'"))
+	    (format stream "'~~a'")
+	    (push (list 'sql-embedded-text (nth arg arg-vars)) args))
 	   ((equal type 'int)
 	    (format stream "~~a"))
 	   ((equal type 'select-list)
-	    (format stream "~~a"))
+	    (format stream "~~a")
+	    (push (nth arg arg-vars) args))
 	   ((equal type 'value-list)
-	    (format stream "~~a"))
+	    (format stream "~~a")
+	    (push (nth arg arg-vars) args))
 	   ((equal type 'where-subcls)
-	    (format stream "~~a"))
-	   ((equal type 'embedded-str)
-	    (format stream "~~a"))
+	    (format stream "~~a")
+	    (push (nth arg arg-vars) args))
+	   ;((equal type 'embedded-str)
+	   ; (format stream "~~a"))
 	   (t
 	    (error "unknown type: ~a" type)))
-	  (push (nth arg arg-vars) args)
+	  ;(push (nth arg arg-vars) args)
 	  (setf i (1+ i)))
 	 (t
 	  (format stream "~a" (aref str i)))))
@@ -992,7 +993,8 @@
                          (cons "New filter?" (get-filter lexicon)))))
     (when filter
       (if (catch 'pg:sql-error 
-            (fn-get-records lexicon ''set-current-view filter (sql-embedded-str filter))
+            ;(fn-get-records lexicon ''set-current-view filter (sql-embedded-str filter))
+            (fn-get-records lexicon ''set-current-view filter filter)
             )
 	  (set-filter lexicon))
       ;(fn-get-records lexicon ''initialize-current-grammar)
@@ -1002,12 +1004,17 @@
   (set-filter *psql-lexicon*)
   (initialize-psql-lexicon))
 
-(defun sql-embedded-str (str)
+(defun sql-embedded-text (str)
   (cond
    ((equal str "")
     "")
    ((eq (char str 0) #\')
-    (format nil "''~a" (sql-embedded-str (subseq str 1))))
+    (format nil "''~a" (sql-embedded-text (subseq str 1))))
    (t
-    (format nil "~a~a" (char str 0) (sql-embedded-str (subseq str 1))))))
-    
+    (format nil "~a~a" (char str 0) (sql-embedded-text (subseq str 1))))))
+
+;;;
+;;; set (uninitialized) lexicon
+;;;
+(setf *lexicon* (make-instance 'psql-lex-database))
+
