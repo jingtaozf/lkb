@@ -63,6 +63,10 @@
 
 (in-package :lkb)
 
+(defvar *postgres-temp-filename* nil)
+(defvar *postgres-user-temp-dir* 
+    (make-pathname :directory (pathname-directory (lkb-tmp-dir))))
+
 (defvar *psql-db-version* "3.06")
 (defvar *psql-fns-version* "1.00")
 (defvar *psql-port-default* nil)

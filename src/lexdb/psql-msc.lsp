@@ -143,7 +143,7 @@
 	    :elt-path (cdr type)))
 	  (t
 	   (error "unhandled (list) type: ~a" (first type)))))
-       (T3 
+       (T
 	(error "unhandled type"))))))
 
 

@@ -150,6 +150,8 @@
                #+:mrs
                (:file "semi-db")      ; semi db interface
                (:file "lexport")      ; export lexicon in various formats
+               (:file "extract")      ; extract fields for export 
+               (:file "gentdl")       ; extract tdl for export
 	))  
 
      (:module "various io"
