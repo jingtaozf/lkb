@@ -23,7 +23,7 @@
 (defparameter *pvm-debug-p* nil)
 (defparameter *pvm-pending-events* nil)
 
-(defstruct cpu host spawn options architecture class threshold)
+(defstruct cpu host spawn options initialize architecture class threshold)
 (defstruct task tid task cpu form status)
 
 (defun make-tmp-file (prefix)

@@ -134,7 +134,8 @@
                              (print-item item :stream stream :result result)
                              (print-result result :stream stream))
                            (unless interactive
-                             (store-result data result :cache cache)))
+                             (store-result data result :cache cache))
+                           (when ready (incf (get-field :items ready))))
                          (when corpses
                            (loop
                                for corpse in corpses
@@ -165,23 +166,19 @@
                         ((eq result :ok))
                         ((eq result :error)
                          (setf runs (delete run runs)))
-                        ((listp result)
+                        ((consp result)
                          (when verbose
                            (print-result result :stream stream))
                          (unless interactive
-                           (store-result data result :cache cache)))))
+                           (store-result data result :cache cache))
+                         (incf (get-field :items run)))))
 
                      (when increment (meter-advance increment)))))
                      
           (when interactive
             (format *tsdb-io* "~&~a" (get-output-stream-string stream)))
-          (loop 
-              for run in runs
-              do
-                (complete-test-run data run 
-                                   :cache cache :interactive interactive))
+          (complete-test-runs data runs :cache cache :interactive interactive)
           (when cache (flush-cache cache :verbose verbose))
-
           (unless interactive (format stream "~&~%"))
           (if abort
             (status :text (format nil "~a interrupt" pmessage) :duration 5)  
@@ -300,11 +297,11 @@
          (start (current-time :long t))
          (run (pairlis (list :data :run-id :comment 
                              :platform :tsdb :grammar
-                             :user :host :os :start
+                             :user :host :os :start :items
                              :environment :gc-strategy :gc)
                        (list data run-id comment 
                              platform tsdb grammar
-                             user host os start
+                             user host os start 0
                              environment gc-strategy gc))))
     (append run (get-test-run-information))))
 
@@ -631,15 +628,39 @@
          data
          :cache cache)))))
 
-(defun complete-test-run (data run &key cache interactive)
+(defun complete-test-runs (data runs &key cache interactive)
+  (loop
+      for run in runs
+      for end = (complete-test-run run)
+      when (> (length run) 1)
+      do
+        (push (cons :end (or end (current-time :long t))) run)
+        (unless interactive (write-run run data :cache cache))))
+
+(defun complete-test-run (run)
   (when (> (length run) 1)
-    (let* ((end (current-time :long t))
-           (environment (get-field :environment run))
-           (gc-strategy (get-field :gc-strategy run)))
-      (push (cons :end end) run)
-      (unless interactive (write-run run data :cache cache))
-      (finalize-test-run environment)
-      (when gc-strategy (restore-gc-strategy gc-strategy)))))
+    (let ((environment (get-field :environment run))
+          (gc-strategy (get-field :gc-strategy run))
+          (task (get-field :task run)))
+      (cond
+       ((task-p task)
+        (let* ((tid (task-tid task))
+               (status (revaluate 
+                        tid 
+                        `(complete-test-run
+                          (quote ,(pairlis '(:environment :gc-strategy)
+                                           (list environment gc-strategy))))
+                        5
+                        :key :complete-test-run
+                        :verbose nil)))
+          (if (stringp status)
+            (setf (task-status task) :ready)
+            (setf (task-status task) :error))
+          status))
+       (t
+        (finalize-test-run environment)
+        (when gc-strategy (restore-gc-strategy gc-strategy))
+        (current-time :long t))))))
 
 (defun interrupt-p (interrupt)
   (when (and interrupt (probe-file interrupt))

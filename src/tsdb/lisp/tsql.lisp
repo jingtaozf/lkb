@@ -132,7 +132,8 @@
                             *tsdb-io*))
                   (width (length attributes))
                   (length (length data))
-                  (*print-circle* nil))
+                  (*print-circle* nil)
+                  (totals (make-array (length attributes) :initial-element 0)))
              (when *statistics-tcl-formats* 
                (format stream *statistics-tcl-formats*))
              (format
@@ -143,8 +144,9 @@
                layout row 0 -m1 5 -r 2 -m2 5 -c black -j center~%~
                layout row 1 -m1 5 -r 2 -m2 5 -c black -j center~%~
                layout col ~d -m1 5 -r 2 -m2 5 -c black -j left~%~
+               layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%~
                layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%"
-              width (+ length 1))
+              width (+ length 1) (+ length 2))
              (do ((types types (rest types))
                   (i 1 (+ i 1)))
                  ((null types))
@@ -163,35 +165,64 @@
                    -hor_justify center~%"
                 i (first attributes)
                 i i (first attributes)))
-             (do* ((data data (rest data))
-                   (item (first data) (first data))
-                   (i 2 (+ i 1)))
-                 ((null data))
-               (do* ((attributes attributes (rest attributes))
-                     (attribute (string-upcase (first attributes))
-                                (string-upcase (first attributes)))
-                     (attribute (intern attribute :keyword)
-                                (intern attribute :keyword))
-                     (field (get-field attribute item)
-                            (get-field attribute item))
-                     (key (get-field :i-id item) (get-field :i-id item))
-                     (j 1 (+ j 1)))
-                   ((null attributes))
-                 (if (and key (eq attribute :i-input))
+             (loop
+                 for item in data
+                 for i from 2 by 1
+                 do
+                   (loop
+                       for attribute in attributes
+                       for key = (intern (string-upcase attribute) :keyword)
+                       for field = (get-field key item)
+                       for i-id = (get-field :i-id item)
+                       for j from 1 by 1
+                       when (and (integerp field) (not (= field -1)))
+                       do 
+                         (incf (aref totals (- j 1)) field)
+                       do
+                         (if (and i-id (eq key :i-input))
+                           (format
+                            stream
+                            "cell ~d ~d -contents ~s ~
+                             -format data -key ~d -source {~a}~%"
+                            i j field i-id language)
+                           (format
+                            stream
+                            "cell ~d ~d -contents ~:[~s~;~:d~] ~
+                             -format data~%"
+                            i j (integerp field) field))
+                         (when (zerop (mod (- i 1) 10))
+                           (format
+                            stream
+                            "layout row ~d -m1 5 -r 2 -m2 5 ~
+                             -c black -j center~%"
+                            i))))
+             (loop
+                 for attribute in attributes
+                 for key = (intern (string-upcase attribute) :keyword)
+                 for type in types
+                 for i from 0 by 1
+                 for total = (aref totals i)
+                 when (member key *tsdb-id-attributes* :test #'eq)
+                 do
                    (format
                     stream
-                    "cell ~d ~d -contents ~s ~
-                     -format data -key ~d -source {~a}~%"
-                    i j field key language)
+                    "cell ~d ~d -contents ~:d -format total~%"
+                    (+ (length data) 2) (+ i 1) (length data))
+                 else when (and (eq type :integer)
+                                (not (member key 
+                                             *tsdb-coded-attributes* 
+                                             :test #'eq)))
+                 do
                    (format
                     stream
-                    "cell ~d ~d -contents ~:[~s~;~:d~] -format data~%"
-                    i j (integerp field) field)))
-               (when (zerop (mod (- i 1) 10))
-                 (format
-                  stream
-                  "layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%"
-                  i)))
+                    "cell ~d ~d -contents ~:d -format total~%"
+                    (+ (length data) 2) (+ i 1) total)
+                 else
+                 do
+                   (format
+                    stream
+                    "cell ~d ~d -contents \"-\" -format total~%"
+                    (+ (length data) 2) (+ i 1)))
              (force-output stream)
              (when file (close stream)))
            (length data)))))))

@@ -20,7 +20,7 @@
 
 (defparameter *tsdb-name* "[incr tsdb()]")
 
-(defparameter *tsdb-version* "1.5 (21-feb-99)")
+(defparameter *tsdb-version* "1.5 (22-feb-99)")
 
 (defparameter
   *tsdb-application*
@@ -108,10 +108,16 @@
 (defparameter *tsdb-global-gcs* 0)
 
 (defparameter *tsdb-profile-files*
-  (list "daughter" "edge" "parse" "result" "rule" "run"))
+  '("daughter" "edge" "parse" "result" "rule" "run"))
+
+(defparameter *tsdb-id-attributes*
+  '(:i-id :p-id :ip-id :s-id :run-id :parse-id :result-id))
+
+(defparameter *tsdb-coded-attributes*
+  '(:i-difficulty :i-wf :polarity))
 
 (defparameter *tsdb-tokens-to-ignore*
-  (list "." "(" ")" "!" "?" "-" "'" "[" "]" "`"))
+  '("." "(" ")" "!" "?" "-" "'" "[" "]" "`"))
 
 (defparameter *tsdb-slash* #\/)
 

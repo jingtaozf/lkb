@@ -120,7 +120,8 @@
 (defun initialize-test-run (&key interactive)
   (declare (special pg::*maximal-number-of-edges*))
   
-  (let* ((parser (pg::get-parser :syntax))
+  (let* ((storage (gensym ""))
+         (parser (pg::get-parser :syntax))
          (environment 
           (pairlis '(tdl::*verbose-reader-p*
                      tdl::*verbose-definition-p*
@@ -150,10 +151,12 @@
           #'get-informative-item-label)
         (setf (pg::parser-stat-rules parser) *tsdb-rule-statistics-p*)))
     (scanning::init-scanner)
-    environment))
+    (setf (get :environment storage) environment)
+    storage))
 
-(defun finalize-test-run (environment)
-  (let ((parser (pg::get-parser :syntax)))
+(defun finalize-test-run (storage)
+  (let ((parser (pg::get-parser :syntax))
+        (environment (get :environment storage)))
     (dolist (pair environment)
       (case (first pair)
         (pg::parser-stat-rules

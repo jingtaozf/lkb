@@ -109,13 +109,13 @@
                               :host (cpu-host cpu) 
                               :architecture (cpu-architecture cpu)))
       for task = (when (and (integerp tid) (> tid 0)) (tid-status tid))
-      unless task
+      when (and tid (null task))
       do
         (format
          *tsdb-io*
-         "initialize-cpus(): error initializing `~a' [~d].~%"
+         "initialize-cpus(): `~a' communication error [~d].~%"
          (cpu-host cpu) tid)
-      else 
+      when task
       do
         (push (make-task :tid tid :task task :cpu cpu :status :start)
               *pvm-tasks*))
