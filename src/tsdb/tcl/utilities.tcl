@@ -297,7 +297,7 @@ proc update_condition_cascade {{active ""} {context "condition"}} {
 
   set fields {wellformed illformed 
               analyzed ambiguous unanalyzed unproblematic
-              rejected resolved reduced unannotated};
+              rejected resolved reduced annotated unannotated};
 
   if {[regexp {^[0-9]+$} $active]} {
     set globals($context,null) 0;
@@ -325,22 +325,32 @@ proc update_condition_cascade {{active ""} {context "condition"}} {
     set globals($context,null) 0;
     set globals($context,resolved) 0;
     set globals($context,reduced) 0;
+    set globals($context,annotated) 0;
     set globals($context,unannotated) 0;
   } elseif {$active == "resolved"} {
     set globals($context,null) 0;
     set globals($context,rejected) 0;
     set globals($context,reduced) 0;
+    set globals($context,annotated) 0;
     set globals($context,unannotated) 0;
   } elseif {$active == "reduced"} {
     set globals($context,null) 0;
     set globals($context,rejected) 0;
     set globals($context,resolved) 0;
+    set globals($context,annotated) 0;
+    set globals($context,unannotated) 0;
+  } elseif {$active == "annotated"} {
+    set globals($context,null) 0;
+    set globals($context,rejected) 0;
+    set globals($context,resolved) 0;
+    set globals($context,reduced) 0;
     set globals($context,unannotated) 0;
   } elseif {$active == "unannotated"} {
     set globals($context,null) 0;
     set globals($context,rejected) 0;
     set globals($context,resolved) 0;
     set globals($context,reduced) 0;
+    set globals($context,annotated) 0;
   } elseif {$active == "null" || 
             ($active != "phenomena" && $globals($context,null))} {
     set globals($context,null) 1;
@@ -434,6 +444,10 @@ proc update_condition_cascade {{active ""} {context "condition"}} {
       -label "Reduced (`t-active > 1')" \
       -variable globals($context,reduced) \
       -command "update_condition_cascade reduced $context";
+    $menu add checkbutton \
+      -label "Annotated (`t-active >= 0')" \
+      -variable globals($context,annotated) \
+      -command "update_condition_cascade annotated $context";
     $menu add checkbutton \
       -label "Unannotated (`t-active = -1')" \
       -variable globals($context,unannotated) \
@@ -558,6 +572,15 @@ proc update_condition_cascade {{active ""} {context "condition"}} {
       } else {
         set globals($context) \
           "$globals($context) and [lispify_string "(t-active > 1)"]";
+      }; # else
+    }; # if
+
+    if {$globals($context,annotated)} {
+      if {$globals($context) == ""} {
+        set globals($context) [lispify_string "(t-active >= 0)"];
+      } else {
+        set globals($context) \
+          "$globals($context) and [lispify_string "(t-active >= 0)"]";
       }; # else
     }; # if
 
@@ -784,6 +807,7 @@ proc tsdb_set {variable {value ""}} {
 
   global globals compare_in_detail;
 
+  set package "nil";
   if {$value == ""} {
     switch $variable {
       aggregate_dimension {
@@ -852,6 +876,16 @@ proc tsdb_set {variable {value ""}} {
         set variable "*statistics-analogy-aggregation-p*";
         set value [lispify_truth_value $globals(analogy_aggregation_p)];
       }
+      automatic_update_p {
+        set variable "*tree-automatic-update-p*";
+        set package ":lkb";
+        set delay $globals(tree,delay);
+        if {$globals(tree,updatep) && [regexp {^[+-]?[0-9]+$} $delay]} {
+          set value $delay;
+        } else {
+          set value [lispify_truth_value 0];
+        }; # else
+      }
     }; # switch
   }; # if
 
@@ -872,7 +906,7 @@ proc tsdb_set {variable {value ""}} {
       }
     }; # switch
   }; # if
-  set command [format "(set %s %s)" $variable $value];
+  set command [format "(set %s %s %s)" $variable $value $package];
   send_to_lisp :event $command;
 
 }; # tsdb_set()

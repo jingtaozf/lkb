@@ -529,34 +529,37 @@
 ;;; need to explicitly reset all scratch slots.
 ;;;
 
-(defun release-temporary-storage ()
+(defun release-temporary-storage (&optional edges)
   (invalidate-marks)
   (invalidate-visit-marks)
   #+:pooling
   (reset-pools :compressp t)
-  (loop
-      for i from 0 to (- *chart-limit* 1)
-      for entry = (aref *chart* i 0)
-      when (chart-entry-p entry)
-      do
-        (loop
-            for configuration in (chart-entry-configurations entry)
-            for edge = (chart-configuration-edge configuration)
-            for odag = #+:packing (edge-odag edge) #-:packing nil
-            for tdfs = (if (dag-p odag) odag (edge-dag edge))
-            for dag = (tdfs-indef tdfs)
-            unless (safe-dag-p dag) do
-              (compress-dag dag)))
-  (loop 
-      for edge in *morph-records* do
-        (compress-dag (tdfs-indef (edge-dag edge))))
-  (clear-chart)
-  (when (and (fboundp (find-symbol "CLEAR-ACHART" *lkb-package*))
-             (let ((foo (find-symbol "*ACTIVE-PARSING-P*" *lkb-package*)))
-               (and foo (symbol-value foo))))
-    (funcall (fboundp (find-symbol "CLEAR-ACHART" *lkb-package*)))) 
-  (setf *cached-category-abbs* nil)
-  (setf *parse-times* nil)
+  (if edges
+    (loop
+        for edge in edges
+        for odag = #+:packing (edge-odag edge) #-:packing nil
+        for tdfs = (if (dag-p odag) odag (edge-dag edge))
+        for dag = (tdfs-indef tdfs)
+        unless (safe-dag-p dag) do (compress-dag dag))
+    (loop
+        for i from 0 to (- *chart-limit* 1)
+        for entry = (aref *chart* i 0)
+        when (chart-entry-p entry)
+        do
+          (loop
+              for configuration in (chart-entry-configurations entry)
+              for edge = (chart-configuration-edge configuration)
+              for odag = #+:packing (edge-odag edge) #-:packing nil
+              for tdfs = (if (dag-p odag) odag (edge-dag edge))
+              for dag = (tdfs-indef tdfs)
+              unless (safe-dag-p dag) do (compress-dag dag))
+        finally
+          (loop 
+              for edge in *morph-records* do
+                (compress-dag (tdfs-indef (edge-dag edge))))
+          (clear-chart)
+          (clear-achart)
+          (setf *parse-times* nil)))
   (loop
       for rule in (get-matching-lex-rules nil)
       for tdfs = #+:restrict

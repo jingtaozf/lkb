@@ -104,14 +104,20 @@ proc tsdb_file {action {index -1}} {
     }; # if
   } elseif {$action == "export"} {
     if {[verify_ts_selection]} {return 1};
-    if {![input "target directory:" "/tmp/redwoods" "" export]} {
+    if {![input "target directory:" "/tmp" "" export]} {
       set target $globals(input);
       if {[catch {file mkdir $target}]} {
         tsdb_beep;
         status "error creating target directory `$target'" 10;
         return 1;
       }; # if
-      set command "(export \"$globals(data)\" :path \"$target\")";
+      if {![file writable $target]} {
+        tsdb_beep;
+        status "target directory `$target' not writable" 10;
+        return 1;
+      }; # if
+      history_add directory $target;
+      set command "(export :redwoods \"$globals(data)\" \"$target\")";
       send_to_lisp :event $command;
     }; # if
   } elseif {$action == "delete"} {
@@ -299,6 +305,17 @@ proc tsdb_option {name} {
         set globals(maximal_number_of_derivations) $globals(integer,lvalue);
         tsdb_set "*tsdb-maximal-number-of-derivations*" \
                  $globals(maximal_number_of_derivations);
+      }; # if
+    }
+    delay {
+      if {![integer_input \
+              "delay for automatic update (seconds)" \
+              $globals(tree,delay)]} {
+        if {$globals(integer,lvalue) == ""} {
+          set globals(integer,lvalue) 0;
+        }; # if
+        set globals(tree,delay) $globals(integer,lvalue);
+        tsdb_set automatic_update_p;
       }; # if
     }
     beam {

@@ -123,7 +123,7 @@
             (:first (setf position 0))
             (:previous 
              (decf position offset))
-            ((:skip :null)
+            ((:skip :null :flag)
              (if (eq last :previous) (decf position) (incf position))
              (setf action last))
             ((:next :save) 
@@ -133,6 +133,8 @@
           (setf last action)
           (when (or (>= position nitems) (< position 0))
             (setf position nil))
+          (purge-profile-cache data)
+          (when gold (purge-profile-cache gold))
         when (interrupt-p interrupt) do
           (format 
            stream
@@ -174,6 +176,8 @@
 
     (let* ((*reconstruct-cache* (make-hash-table :test #'eql))
            (lkb::*tree-update-match-hook* #'update-match-p)
+           (lkb::*tree-automatic-update-p* 
+            (when gold lkb::*tree-automatic-update-p*))
            (condition (format nil "i-id = ~a" i-id))
            (items (analyze data :thorough '(:derivation) :condition condition))
            (item (and (null (rest items)) (first items)))
@@ -385,7 +389,6 @@
         (loop
             for decision in decisions
             do (write-decision strip decision :cache cache))
-        (purge-profile-cache data)
         (return-from browse-tree (acons :status :save nil)))
 
       (when (null edges)
@@ -411,8 +414,8 @@
       (setf (lkb::compare-frame-gversion frame) ghistory)
       (setf (lkb::compare-frame-gactive frame) gactive)
       (setf (lkb::compare-frame-gderivation frame) gderivation)
-      (when (and gactive greadings)
-        (setf (lkb::compare-frame-update frame)
+      (setf (lkb::compare-frame-update frame)
+        (when (and gactive greadings)
           (pairlis '(:parse-id :u-gin :u-gout)
                    (list parse-id gactive (- greadings gactive)))))
       
@@ -429,6 +432,18 @@
       (let* ((decisions (lkb::compare-frame-decisions frame))
              (status (lkb::decision-type (first decisions)))
              (recent (second decisions)))
+        
+        (when (and (eq status :flag) (null trees))
+          (let* ((user (current-user))
+                 (time (current-time :long :tsdb))
+                 (tree (pairlis '(:parse-id 
+                                  :t-version :t-active :t-confidence
+                                  :t-author :t-start :t-end :t-comment)
+                                (list parse-id 
+                                      0 -1 -1
+                                      user time time ""))))
+            (write-tree strip tree :cache cache)))
+
         (when (eq status :save)
           (let* ((version (if version (incf version) 1))
                  (edges (lkb::compare-frame-in frame))
@@ -513,6 +528,7 @@
                                                state type key value 
                                                start end time))
                                 :cache cache))
+          
           (let* ((update (lkb::compare-frame-update frame))
                  (discriminants (lkb::compare-frame-discriminants frame))
                  (decisions (loop
@@ -866,7 +882,9 @@
                id i foo id i mrs))))
 
 (defun export-trees (data &key (condition *statistics-select-condition*)
-                               path prefix)
+                               path prefix interrupt meter 
+                               (compressor "gzip -f -9")
+                               (stream *tsdb-io*))
   
   (loop
       with target = (format 
@@ -876,9 +894,17 @@
       with *reconstruct-cache* = (make-hash-table :test #'eql)
       with items = (analyze data :thorough '(:derivation) 
                             :condition condition)
+      with increment = (when (and meter items)
+                         (/ (- (get-field :end meter) (get-field :start meter))
+                            (length items) 1))
+      with gc-strategy = (install-gc-strategy 
+                          nil :tenure *tsdb-tenure-p* :burst t :verbose t)
+
+      initially
+        #+:allegro (ignore-errors (mkdir target))
+        (when meter (meter :value (get-field :start meter)))
       for item in items
       for input = (or (get-field :o-input item) (get-field :i-input item))
-      for i-id = (get-field :i-id item)
       for parse-id = (get-field :parse-id item)
       for results = (get-field :results item)
       for trees = (select '("t-active" "t-version") '(:integer :integer) 
@@ -900,94 +926,99 @@
                        (loop 
                            for bar in foo 
                            collect (get-field :result-id bar))))
-      initially 
-        #+:allegro (ignore-errors (mkdir target))
+      for file = (format nil "~a/~@[~a.~]~d" target prefix parse-id)
       do
         (format 
-         t 
-         "export-trees(): ~a active tree~:[~;s~] (of ~d) for item # ~d.~%" 
+         stream 
+         "[~a] export-trees(): [~a] ~a active tree~:[~;s~] (of ~d).~%" 
+         (current-time :long :short)
+         parse-id
          (if version (length active) "all")
          (or (null version) (> (length active) 1))
-         (length results) i-id)
+         (length results))
 
+        (lkb::release-temporary-storage
+         (loop
+             for edge being each hash-value in *reconstruct-cache*
+             collect edge))
         (clrhash *reconstruct-cache*)
-        (with-open-file (stream (format 
-                                 nil 
-                                 "~a/~@[~a.~]~d" 
-                                 target prefix i-id)
+        (excl:gc)
+        (with-open-file (stream file
                          :direction :output
                          :if-exists :supersede :if-does-not-exist :create)
           (format 
            stream
-           "[~d: ~a of ~d] `~a'~%~a~%"
-           i-id 
+           "[~d] (~a of ~d) `~a'~%~a~%"
+           parse-id 
            (if version (length active) "all")
            (length results) input #\page)
-          (loop
-              with *package* = (find-package lkb::*lkb-package*)
-	      with lkb::*deleted-daughter-features* = nil
-              for i from 1
-              for result in results
-              for id = (get-field :result-id result)
-              for derivation = (when (member id active :test #'eql)
-                                 (get-field :derivation result))
-              for edge = (and derivation (reconstruct derivation))
-              for tree = (and edge (lkb::parse-tree-structure edge))
-              for dag = (and edge (lkb::tdfs-indef (lkb::edge-dag edge)))
-              for mrs = (and edge (mrs::extract-mrs edge))
-              when dag do
-                (setf lkb::*cached-category-abbs* nil)
-                (when (or (eq *redwoods-export-values* :all)
-                          (smember :derivation *redwoods-export-values*))
-                  (format stream "~s~%~%" derivation))
-                (when (or (eq *redwoods-export-values* :all)
-                          (smember :tree *redwoods-export-values*))
-                  (if tree
-                    (format stream "~a~%" tree)
-                    (format stream "()~%")))
-                (when (or (eq *redwoods-export-values* :all)
-                          (smember :avm *redwoods-export-values*))
-                  (lkb::display-dag1 dag 'lkb::tdl stream)
-                  (format stream "~%~%"))
-                (when (or (eq *redwoods-export-values* :all)
-                          (smember :mrs *redwoods-export-values*))
-                  (mrs::output-mrs1 mrs 'mrs::simple stream))
-                (when (or (eq *redwoods-export-values* :all)
-                          (smember :dependencies *redwoods-export-values*))
-                  (mrs::mrs-output-psoa mrs :stream stream))
-                (format stream "~c~%" #\page))
-          (loop
-              with *package* = (find-package lkb::*lkb-package*)
-	      with lkb::*deleted-daughter-features* = nil
-              for result in results
-              for id = (get-field :result-id result)
-              for derivation = (unless (member id active :test #'eql)
-                                 (get-field :derivation result))
-              for edge = (and derivation (reconstruct derivation))
-              for tree = (and edge (lkb::parse-tree-structure edge))
-              for dag = (and edge (lkb::tdfs-indef (lkb::edge-dag edge)))
-              for mrs = (and edge (mrs::extract-mrs edge))
-              when dag do
-                (setf lkb::*cached-category-abbs* nil)
-                (when (or (eq *redwoods-export-values* :all)
-                          (smember :derivation *redwoods-export-values*))
-                  (format stream "~s~%~%" derivation))
-                (when (or (eq *redwoods-export-values* :all)
-                          (smember :tree *redwoods-export-values*))
-                  (if tree
-                    (format stream "~a~%" tree)
-                    (format stream "()~%")))
-                (when (or (eq *redwoods-export-values* :all)
-                          (smember :avm *redwoods-export-values*))
-                  (lkb::display-dag1 dag 'lkb::tdl stream)
-                  (format stream "~%~%"))
-                (when (or (eq *redwoods-export-values* :all)
-                          (smember :mrs *redwoods-export-values*))
-                  (mrs::output-mrs1 mrs 'mrs::simple stream))
-                (when (or (eq *redwoods-export-values* :all)
-                          (smember :dependencies *redwoods-export-values*))
-                  (mrs::mrs-output-psoa mrs :stream stream))
-                (format stream "~c~%" #\page)))))
+          (export-tree item active :stream stream)
+          (export-tree item active :complementp t :stream stream))
+        (when compressor
+          (let ((command (format nil "~a '~a'" compressor file)))
+            (run-process command :wait t)))
+        (when increment (meter-advance increment))
+      when (interrupt-p interrupt) do
+        (format 
+         stream
+         "[~a] export-trees(): external interrupt signal~%"
+         (current-time :long :short))
+        (force-output stream)
+        (return)
+      finally
+        (when meter (meter :value (get-field :end meter)))
+        (when gc-strategy (restore-gc-strategy gc-strategy))))
+
+(defun export-tree (item active &key complementp (stream *tsdb-io*))
+  (loop
+      with *package* = (find-package lkb::*lkb-package*)
+      with lkb::*deleted-daughter-features* = 
+        (if (or (eq *redwoods-export-values* :all)
+                (smember :avm *redwoods-export-values*))
+          nil
+          lkb::*deleted-daughter-features*)
+      with parse-id = (get-field :parse-id item)
+      with results = (get-field :results item)
+      for result in results
+      for result-id = (get-field :result-id result)
+      for derivation = (when (if complementp
+                               (not (member result-id active :test #'eql))
+                               (member result-id active :test #'eql))
+                         (get-field :derivation result))
+      for edge = (and derivation (reconstruct derivation))
+      for tree = (and edge (lkb::parse-tree-structure edge))
+      for dag = (and edge (lkb::tdfs-indef (lkb::edge-dag edge)))
+      for mrs = (and edge (mrs::extract-mrs edge))
+      when dag do
+        (format 
+         stream 
+         "[~d:~d] ~:[(inactive)~;(active)~]~%~%~%" 
+         parse-id result-id complementp)
+        (setf lkb::*cached-category-abbs* nil)
+        (when (or (eq *redwoods-export-values* :all)
+                  (smember :derivation *redwoods-export-values*))
+          (let ((*package* (find-package :tsdb)))
+            (format stream "~s~%~%~%" derivation)))
+        (when (or (eq *redwoods-export-values* :all)
+                  (smember :tree *redwoods-export-values*))
+          (if tree
+            (format stream "~a~%~%" tree)
+            (format stream "()~%~%")))
+        (when (or (eq *redwoods-export-values* :all)
+                  (smember :avm *redwoods-export-values*))
+          (lkb::display-dag1 dag 'lkb::tdl stream)
+          (format stream "~%~%"))
+        (when (or (eq *redwoods-export-values* :all)
+                  (smember :mrs *redwoods-export-values*))
+          (mrs::output-mrs1 mrs 'mrs::simple stream))
+        (when (or (eq *redwoods-export-values* :all)
+                  (smember :prolog *redwoods-export-values*))
+          (mrs::output-mrs1 mrs 'mrs::prolog stream)
+          (format stream "~%"))
+        (when (or (eq *redwoods-export-values* :all)
+                  (smember :dependencies *redwoods-export-values*))
+          (mrs::mrs-output-psoa mrs :stream stream))
+          (format stream "~c~%" #\page)))
 
 (defun semantic-equivalence (data &key condition (file "/tmp/equivalences"))
   
@@ -1401,7 +1432,7 @@
   
   (format
    stream
-   "~&[~a] rank-profile:() `~a' --> `~a'~%"
+   "~&[~a] rank-profile:() `~a' -->~%                            `~a'~%"
    (current-time :long :short) source target)
 
   (purge-test-run target :action :score)

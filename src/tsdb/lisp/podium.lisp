@@ -53,7 +53,10 @@
 
 (defun init-podium ()
   (shutdown-podium)
-  (let (foo)
+  (let* ((symbol (when (find-package :lkb)
+                   (find-symbol "*TREE-AUTOMATIC-UPDATE-P*" :lkb)))
+         (delay (when symbol (symbol-value symbol)))
+         foo)
     (setf *tsdb-podium-windows* nil)
     (setf %tsdb-podium-pending-events% nil)
     (multiple-value-setq (*tsdb-wish-stream* foo *tsdb-wish-pid*)
@@ -89,6 +92,8 @@
       set globals(write_lexicon_chart_p) ~:[0~;1~]~%~
       set globals(maximal_number_of_edges) ~d~%~
       set globals(maximal_number_of_derivations) ~d~%~
+      set globals(tree,updatep) ~:[0~;1~]~%~
+      set globals(tree,delay) ~a~%~
       set globals(gc_p) ~(~a~)~%~
       set globals(tenure_p) ~:[0~;1~]~%~%"
      *tsdb-version*
@@ -109,6 +114,7 @@
      *tsdb-rule-statistics-p*
      *tsdb-write-syntax-chart-p* *tsdb-write-lexicon-chart-p*
      *tsdb-maximal-number-of-edges* *tsdb-maximal-number-of-derivations*
+     delay (if (numberp delay) delay 0)
      *tsdb-gc-p*
      *tsdb-tenure-p*)
     (tsdb-do-phenomena :stream *tsdb-wish-stream*)
@@ -192,10 +198,14 @@
          (case action
 
            (set
-            (apply #'set arguments)
-            (when (eq (first arguments) '*tsdb-home*)
-              (setf *tsdb-profile-cache* 
-                (make-hash-table :size 42 :test #'equal))))
+            (let ((symbol (first arguments))
+                  (value (second arguments))
+                  (package (third arguments)))
+              (when (or (null package) (find-package package))
+                (set (intern symbol (or package :tsdb)) value))
+              (when (eq symbol '*tsdb-home*)
+                (setf *tsdb-profile-cache* 
+                  (make-hash-table :size 42 :test #'equal)))))
 
            (list
             (let* ((data (first arguments))
@@ -389,9 +399,10 @@
                    (source (second arguments))
                    (target (third arguments))
                    (arguments (rest (rest (rest arguments))))
+                   (interrupt (install-interrupt-handler))
                    (message (format
                              nil
-                             "exporting `~a' as `~a' ..."
+                             "exporting `~a' to `~a' ..."
                              source target))
                    (meter (make-meter 0 1)))
               (status :text message)
@@ -400,7 +411,12 @@
                  (apply #'yy-export-results
                         (append (list source :directory target)
                                 arguments
-                                (list :meter meter)))))
+                                (list :meter meter))))
+                (:redwoods
+                 (apply #'export-trees
+                        (append (list source :path target)
+                                arguments
+                                (list :meter meter :interrupt interrupt)))))
               (status :text (format nil "~a done" message) :duration 5)))
 
            (strip

@@ -301,7 +301,7 @@ proc main {} {
   .menu.file.menu add cascade -label "Import" \
     -menu .menu.file.menu.import
   .menu.file.menu add command -label "Export" \
-    -command {tsdb_file export} -state disabled
+    -command {tsdb_file export} -state disabled;
   .menu.file.menu add command -label "Tenure" \
     -command {tsdb_file tenure} -state disabled
   .menu.file.menu add separator
@@ -714,6 +714,7 @@ proc main {} {
     -label "Score" -command {tsdb_trees score};
   .menu.trees.menu add command \
     -label "Reset" -command {tsdb_file purge score};
+  .menu.trees.menu add separator;
   .menu.trees.menu add cascade \
     -label "Switches" -menu .menu.trees.menu.switches;
   .menu.trees.menu add cascade \
@@ -722,7 +723,7 @@ proc main {} {
   .menu.trees.menu add command \
     -label "Normalize" -command {tsdb_file strip};
   .menu.trees.menu add command \
-    -label "Export" -state disabled -command {tsdb_file export trees};
+    -label "Export" -command {tsdb_file export trees};
   .menu.trees.menu add command \
     -label "Clear-Cut" -command {tsdb_file purge trees};
 
@@ -733,6 +734,10 @@ proc main {} {
     -label "Update" -state disabled -command {};
 
   menu .menu.trees.menu.switches -tearoff 0;
+  .menu.trees.menu.switches add checkbutton \
+    -label "Automatic Update" \
+    -variable globals(tree,updatep) -command {tsdb_set automatic_update_p};
+  .menu.trees.menu.switches add separator;
   .menu.trees.menu.switches add radiobutton \
     -label "Maximum Entropy" \
     -variable globals(tree,model) -value :mem;
@@ -762,6 +767,9 @@ proc main {} {
     -variable globals(tree,loosep);
 
   menu .menu.trees.menu.variables -tearoff 0;
+  .menu.trees.menu.variables add command \
+    -label "Update Delay" -command {tsdb_option delay};
+  .menu.trees.menu.variables add separator;
   .menu.trees.menu.variables add command \
     -label "Cross Validation" -command {tsdb_option nfold};
   .menu.trees.menu.variables add command \

@@ -7,6 +7,8 @@
 (defparameter *pcfg-use-preterminal-types-p* t)
 
 (defparameter *pcfg-laplace-smoothing-p* t)
+
+(defparameter *pcfg-geometric-mean-p* nil)
 
 (defstruct (symbol-table 
             (:constructor make-symbol-table 
@@ -172,8 +174,8 @@
       when edges do
         (loop
             for edge in edges do
-              (edge-to-cfrs edge grammar)
-              (incf (cfg-samples grammar)))
+              (edge-to-cfrs edge grammar))
+        (incf (cfg-samples grammar))
       else do
         (format 
          stream
@@ -235,10 +237,10 @@
           (setf (lkb::edge-foo edge)
             (make-cfr :type type :lhs lhs :rhs rhs))))))))
 
-(defun pcfg-score-edge (edge grammar)
+(defun pcfg-score-edge (edge grammar &optional recursionp)
   
   (if (and (numberp (lkb::edge-score edge)) (eq (lkb::edge-foo edge) grammar))
-    (lkb::edge-score edge)
+    (values (lkb::edge-score edge) (lkb::edge-bar edge))
     (let* ((rule (edge-to-cfr edge grammar))
            (i (cfr-lhs rule))
            (match (if (eq (cfr-grammar rule) grammar)
@@ -255,12 +257,24 @@
                             (cfg-epsilon grammar)))))
       
       (setf (lkb::edge-foo edge) grammar)
-      (setf (lkb::edge-score edge)
-        (if (smember (cfr-type rule) '(:irule :word))
-          probability
-          (* probability
-             (loop
-                 with result = 1
-                 for daughter in (lkb::edge-children edge)
-                 do (setf result (* result (pcfg-score-edge daughter grammar)))
-                 finally  (return result))))))))
+      (multiple-value-bind (score count)
+          (if (smember (cfr-type rule) '(:irule :word))
+            (values probability 1)
+            (loop
+                with result = 1
+                with count = 1
+                for daughter in (lkb::edge-children edge)
+                do (multiple-value-bind (p n)
+                       (pcfg-score-edge daughter grammar t)
+                     (setf result (* result p))
+                     (incf count n))
+                finally 
+                  (let* ((probability (* probability result))
+                         (score (if (and *pcfg-geometric-mean-p*
+                                         (null recursionp))
+                                    (expt 10 (/ (log probability 10) count))
+                                  probability)))
+                    (return (values score count)))))
+        (setf (lkb::edge-score edge) score)
+        (setf (lkb::edge-bar edge) count)
+        (values score count)))))

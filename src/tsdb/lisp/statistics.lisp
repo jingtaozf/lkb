@@ -641,13 +641,10 @@
           (analyze-aggregates name))))))
 
 (defun purge-profile-cache (data)
-  (let ((end (unless (eq data :all) (length data))))
-    (maphash #'(lambda (key foo)
-                 (declare (ignore foo))
-                 (when (or (eq data :all) 
-                           (search data key :end2 (min end (length key))))
-                   (remhash key *tsdb-profile-cache*)))
-             *tsdb-profile-cache*)))
+  (loop
+      for key being each hash-key in *tsdb-profile-cache*
+      when (or (eq data :all) (search data key)) do
+        (remhash key *tsdb-profile-cache*)))
 
 (defun aggregate (&optional (language *tsdb-data*)
                   &key (condition nil)

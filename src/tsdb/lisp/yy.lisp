@@ -650,29 +650,6 @@
         finally (close index)))
   (when meter (meter :value (get-field :end meter))))
 
-(defun compute-parse-tree (edge)
-  (lkb::parse-tree-structure edge)
-  (cond
-   ((and (lkb::edge-morph-history edge) (lkb::edge-spelling-change edge))
-    (let* ((daughter (lkb::edge-morph-history edge))
-           (passivep (eq (lkb::rule-id (lkb::edge-rule edge)) 
-                         (intern :psp_verb_infl_rule lkb::*lkb-package*)))
-           (preterminal (lkb::edge-category daughter))
-           (label (format nil "~:[~;psp_~]~(~a~)" passivep preterminal)))
-      (list label (list (lkb::edge-rule daughter)))))
-   ((null (lkb::edge-children edge))
-    (list (format nil "~(~A~)" (lkb::edge-category edge))
-          (list (lkb::edge-rule edge))))
-   (t
-    (let* ((label (lkb::edge-label edge))
-           (children
-            (loop
-                for child in (lkb::edge-children edge)
-                for derivation = (compute-parse-tree child)
-                collect derivation))
-           (tree (nconc (list label) children)))
-      tree))))
-
 #+:null
 (eval-when #+:ansi-eval-when (:load-toplevel :execute)
 	   #-:ansi-eval-when (load eval)

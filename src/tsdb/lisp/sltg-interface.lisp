@@ -41,7 +41,7 @@
                    derivationp))
   
   (multiple-value-bind (return condition)
-   (progn;ignore-errors
+   (ignore-errors
     (let* ((*package* (find-package :lkb))
            (stream (make-string-output-stream))
            (chunk::*ebl-trace-stream* 
