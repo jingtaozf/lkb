@@ -40,10 +40,6 @@
  ((:path . "ecos") (:content . "Ecommerce Email (Order Status)"))
  ((:path . "ecoc") (:content . "Ecommerce Email (Order Cancellation)"))
  ((:path . "ecpr") (:content . "Ecommerce Email (Product Return)"))
+ ((:path . "trec9") (:content . "TREC QA Questions (Ninth Conference)"))
  ((:path . "hike") (:content . "LOGON First Development Corpus"))
  ((:path . "rondane") (:content . "LOGON Hiking Treebank (Rondane)")))
-
-
-
-
-
