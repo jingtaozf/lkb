@@ -58,6 +58,9 @@
                     mrsstruct)))))
   
 
+(defun remove-trailing-periods (sentence-string)
+  (string-right-trim '(#\Space #\.) sentence-string))
+
 
 (defun compare-mrs-struct (sentence mrs-struct stream &optional (comment t))
   (if mrs-struct
@@ -270,7 +273,7 @@
                                           syntactic-p noisy-p new-bindings))))))
 
 (defun mrs-relations-equal-p (rel1 rel2 syntactic-p noisy-p bindings)
-  (if (eql (rel-sort rel1) (rel-sort rel2))
+  (if (equal (rel-sort rel1) (rel-sort rel2))
       (if (setf bindings 
             (if 
                 (and (rel-handel rel1) (rel-handel rel2))
