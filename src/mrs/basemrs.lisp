@@ -1,6 +1,9 @@
 ;;; Copyright (c) 1998-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
 ;;; see licence.txt for conditions
 
+;;; WARNING: the variable-generation function and some structures are 
+;;; duplicated in rmrs/standalone.lisp
+
 (in-package "MRS")
 
 ;;; Reorganised MRS code -
@@ -14,11 +17,11 @@
 ;;; reentrancies have been replaced by variables.
 
 (defstruct (basemrs)
+  top-h
   liszt
   h-cons)
 
 (defstruct (psoa (:include basemrs))
-  top-h
   mode
   index
   info-s) ; information structure
@@ -37,6 +40,10 @@
                                         ; values
   extra)                                ; extra is a junk slot
                                         ; needed for the munging rules 
+
+(defstruct (char-rel (:include rel))
+  cfrom
+  cto)
 
 (defstruct (fvpair)
   feature
@@ -59,6 +66,9 @@
   value)
 
 (defstruct (handle-var (:include var)))
+
+(defstruct (grammar-var (:include var)))
+;;; a sort of placeholder variable
 
 (defstruct (hcons)
   relation
@@ -687,7 +697,7 @@ HCONS -> hcons: < QEQ* >
 
 REL -> [ PREDNAME handel: VAR FEATPAIR* ]
 
-FEATPAIR -> FEATNAME: VAR | FEAT: CONSTNAME
+FEATPAIR -> FEATNAME: VAR | CFEATNAME: CONSTNAME
 
 VAR -> VARNAME | VARNAME [ VARTYPE EXTRAPAIR* ]
 
@@ -711,7 +721,7 @@ LISZT -> liszt: < REL* >
 
 REL -> [ PREDNAME FEATPAIR* ]
 
-FEATPAIR -> FEATNAME: VAR | FEAT: CONSTNAME
+FEATPAIR -> FEATNAME: VAR | CFEATNAME: CONSTNAME
 
 VAR -> VARNAME | VARNAME [ VARTYPE EXTRAPAIR* ]
 
@@ -836,7 +846,7 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
 (defun read-mrs-rel (istream)
 ;;;  REL -> [ PREDNAME handel: VAR FEATPAIR* ]
 ;;; or
-;;; REL -> [ PREDNAMEFEATPAIR* ]
+;;; REL -> [ PREDNAME FEATPAIR* ]
   (mrs-check-for #\[ istream)
   (let* ((reltype (read-mrs-atom istream))
          (sort reltype))
@@ -860,7 +870,7 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
                 :flist (sort featpairs #'feat-sort-func)))))
           
 (defun read-mrs-featpair (istream)         
-  ;; FEATPAIR -> FEATNAME: VAR | FEAT: CONSTNAME
+  ;; FEATPAIR -> FEATNAME: VAR | CFEATNAME: CONSTNAME
   (let ((feature (read-mrs-atom istream)))
     (mrs-check-for #\: istream)
     (let ((val
