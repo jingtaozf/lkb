@@ -56,13 +56,19 @@
     (str-2-num res 0)))
 
 (defmethod get-records ((lexicon psql-lex-database) sql-string)
-  (make-column-map-record 
+  (make-column-map-record
+   (get-raw-records lexicon sql-string)))
+
+(defmethod get-raw-records ((lexicon psql-lex-database) sql-string)
    (run-query 
     lexicon 
-    (make-instance 'sql-query :sql-string sql-string))))
+    (make-instance 'sql-query :sql-string sql-string)))
 
 (defmethod fn-get-records ((lexicon psql-lex-database) fn-name &rest rest)
   (get-records lexicon (eval (append (list 'fn lexicon fn-name) rest))))
+
+(defmethod fn-get-raw-records ((lexicon psql-lex-database) fn-name &rest rest)
+  (get-raw-records lexicon (eval (append (list 'fn lexicon fn-name) rest))))
 
 (defmethod fn-get-record ((lexicon psql-lex-database) fn-name &rest rest)
   (let ((res (get-records lexicon (eval (append (list 'fn lexicon fn-name) rest)))))
