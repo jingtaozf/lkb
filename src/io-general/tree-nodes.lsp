@@ -518,7 +518,7 @@
       (setf (get edge-symbol 'edge-fs)
 	(if (rule-p rule)
 	    (reapply-rule rule dtrs)
-	  (tdfs-indef (edge-dag edge))))))
+	  (copy-dag-completely (tdfs-indef (edge-dag edge)))))))
   edge-symbol)
 
 (defun reapply-rule (rule daughters)
