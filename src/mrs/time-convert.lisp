@@ -220,15 +220,17 @@
                         (create-ctime-hour base-hour am-pm-value)))
           (direct-mins
            (when direct-rel-rels
-               (error "~%Minutes specified directly and indirectly: ~A"
+             (struggle-on-error 
+              "~%Minutes specified directly and indirectly: ~A"
                       nhrel))
            (when (cdr direct-mins)
-                 (error "~%Minutes specified more than one: ~A" nhrel))
+             (struggle-on-error 
+              "~%Minutes specified more than one: ~A" nhrel))
            (ctime-case3 handel inst 
                         (create-ctime-hour base-hour am-pm-value)
                         (car direct-mins)))
           ((cdr direct-rel-rels)
-                 (error "~%Past/to specified more than once: ~A"
+                 (struggle-on-error "~%Past/to specified more than once: ~A"
                       nhrel))
           (t
            (let* ((past-or-to-rel (car direct-rel-rels))
@@ -239,12 +241,13 @@
                    (if rel-minute-index
                        (get-coindexed-mins rel-minute-index minrels))))
                (unless indirect-minutes
-                       (error "~%No minute specification: ~A" nhrel))
+                       (struggle-on-error "~%No minute specification: ~A" nhrel))
                (when (cdr indirect-minutes)
-                 (error "~%Minutes specified more than once: ~A" nhrel))
+                 (struggle-on-error 
+                  "~%Minutes specified more than once: ~A" nhrel))
                (ctime-case4 handel inst base-hour am-pm-value
                             (rel-sort past-or-to-rel)
-                            (car indirect-minutes)))))))
+                            (or (car indirect-minutes) 0)))))))
 
 ;;;
 
@@ -264,12 +267,14 @@
                          (get-var-num index))
                   (rel-sort ampmrel)))))         
     (cond ((null ampmspecs) nil)
-          ((cdr ampmspecs) (error "~%Dual specification of AM and PM"))
+          ((cdr ampmspecs) 
+           (struggle-on-error "~%Dual specification of AM and PM"))
           ((am-rel-p (car ampmspecs))
            'am)
           ((pm-rel-p (car ampmspecs))
            'pm)
-          (t (error "~%Incorrect AM/PM rel sort: ~A" (car ampmspecs))))))
+          (t (struggle-on-error 
+              "~%Incorrect AM/PM rel sort: ~A" (car ampmspecs))))))
 
 (defun get-coindexed-rel-rels (index relrels)
   (for relrel in relrels
@@ -283,7 +288,7 @@
   (cond ((eql am-pm 'am) base-hour)
         ((eql am-pm 'pm) (+ 12 base-hour))
         ((null am-pm) (format nil "~A/~A" base-hour (+ 12 base-hour)))
-        (t (error "~%Unexpected value for am/pm: ~A" am-pm)))) 
+        (t (struggle-on-error "~%Unexpected value for am/pm: ~A" am-pm)))) 
 
 
 
@@ -307,7 +312,7 @@
                           (create-ctime-hour (- base-hour 1) 
                                              am-pm-value)
                           (- 60 minutes)))
-     (t (error "~%Problem with after/to specification"))))
+     (t (struggle-on-error "~%Problem with after/to specification"))))
  
                            
 (defun ctime-case6 (past-or-to-rel minrels)
@@ -319,9 +324,12 @@
                                           *rel-minute-feature*))
          (direct-mins (get-coindexed-mins rel-minute-index minrels)))           
     (unless direct-mins
-                       (error "~%No minute specification: ~A" past-or-to-rel))
+      (struggle-on-error "~%No minute specification: ~A" 
+                         past-or-to-rel)
+      (setf direct-mins '(0)))
     (when (cdr direct-mins)
-                 (error "~%Minutes specified more than once: ~A" past-or-to-rel))
+      (struggle-on-error 
+       "~%Minutes specified more than once: ~A" past-or-to-rel))
     (cond 
      ((past-rel-p past-or-to)
         (create-ctime-rel handel inst 
@@ -331,7 +339,7 @@
         (create-ctime-rel handel inst 
                           nil
                           (- 60 (car direct-mins))))
-     (t (error "~%Problem with after/to specification")))))
+     (t (struggle-on-error "~%Problem with after/to specification")))))
                 
 ;;;
 ;;; Heuristics for morning / afternoon etc

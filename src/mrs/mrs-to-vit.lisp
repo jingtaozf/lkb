@@ -309,6 +309,8 @@
               (mrs-to-vit mrsstruct)
             (setf *canonical-bindings* nil)
             (when standalone
+              (format t "~%Premunged form")
+              (output-mrs mrs-psoa 'indexed)
               (format t "~%Unscoped form")
               (output-mrs mrsstruct 'indexed)
             ;;; then try and find sets of bindings which will give a fully scoped 
@@ -689,8 +691,8 @@
          (lh-pair (if (and label (var-p label))
                       (find (cons id (var-id label)) labels :test #'equal)
                     (assoc id labels))))
-;   (unless lh-pair
-;     (cerror "Treat as label anyway" "Val ~A is supposed to be a label but is not on label list" val))
+    (unless lh-pair
+       (struggle-on-error "Treat as label anyway" "Val ~A is supposed to be a label but is not on label list" val))
    (if (member id groups)
        (let ((new-var (cond ((and label (rest lh-pair))
                              (intern (format nil "L~A" (rest lh-pair))))
@@ -939,8 +941,7 @@
   ;;; so far.  Then for each of these rels, find all their handel arguments
   ;;; add these to holes-so-far and recurse
   (if (member top-handel labels-so-far)
-      (progn (format t "Cyclic structure?")
-             nil)
+      (struggle-on-error "Reentrant structure?")
     (let ((top-rels 
            (for rel in rel-list
                 filter

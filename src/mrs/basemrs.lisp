@@ -491,8 +491,13 @@
   (mrs-output-end-psoa *mrs-display-structure*))
 
 
+;;; error messages
 
+(defparameter *giving-demo-p* t)
 
+(defun struggle-on-error (&rest rest)
+  (unless *giving-demo-p*
+    (apply #'error rest)))
 
 
 

@@ -100,40 +100,42 @@
     (let ((results
            (match-mrs-rule mrsstruct 
                            (mrs-munge-rule-input-spec rule))))
-      (dolist (result results)
+;;;      (when results
+;;;            (display-mrs-rule rule))
+      (dolist (result (remove-overlapping-psoas results))
         (setf mrsstruct
               (alter-mrs-struct mrsstruct result
                                 (mrs-munge-rule-output-spec 
-                                 rule))))))
+                                 rule)))
+;;;        (output-mrs mrsstruct 'indexed)
+        )))
   mrsstruct)
 
 
-#|
+(defun remove-overlapping-psoas (results)
+  (when results
+    (let ((ok nil)
+          (interim results))
+      (loop
+        (unless interim (return))
+        (let ((initial (car interim))
+                  (rest (cdr interim)))
+              (setf interim nil)
+              (for thing in rest
+                   do
+                   (if (overlapping-psoas initial thing)
+                       (unless *giving-demo-p*
+                         (cerror "Ignore extras" 
+                                 "~%Overlapping ambiguous results"))
+                     (push thing interim)))
+              (push initial ok)))
+      ok)))
 
-(defun munge-mrs-struct (mrsstruct rules)
-  ;;; takes an mrs structure and a set of rules
-  ;;; converts the mrs structure according to the rules, in order
-  ;;; i.e. the output of one rule may feed the input of another.
-  ;;; Rules are applied in order and are not applied recursively
-  (setf *original-variables* nil)
-  (let ((structures (list mrsstruct)))
-    (dolist (rule rules)
-      (setf structures
-            (for structure in structures
-                 append
-                 (let ((results
-                        (match-mrs-rule structure 
-                                        (mrs-munge-rule-input-spec rule))))
-                   (if results
-                       (for result in results
-                            filter
-                            (alter-mrs-struct structure result
-                                              (mrs-munge-rule-output-spec 
-                                               rule)))
-                     (list structure))))))
-    structures))
+(defun overlapping-psoas (res1 res2)
+  (intersection
+   (psoa-liszt (psoa-result-matching-psoa res1))
+   (psoa-liszt (psoa-result-matching-psoa res2))))
 
-|#
 
 (defun match-mrs-rule (mrs input-spec)
   ;;; first match top-h etc, if specified, in order to produce

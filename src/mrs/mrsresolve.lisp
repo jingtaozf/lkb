@@ -112,13 +112,13 @@
     (for rel in quant-rels
          do
          (let ((quant-var (get-bv-value rel)))
-;;; WK: removed code for VM-system: avoid generation of "errors           "
-;;;           (unless quant-var 
-;;;             (error "~%Rel ~A has an uninstantiated bound variable"
-;;;                    (rel-sort rel)))
-;;;           (when (member quant-var quant-vars)
-;;;             (error "~%Rel ~A has a duplicate bound variable"
-;;;                    (rel-sort rel)))
+           (unless quant-var 
+             (struggle-on-error 
+              "~%Rel ~A has an uninstantiated bound variable"
+                    (rel-sort rel)))
+           (when (member quant-var quant-vars)
+             (struggle-on-error "~%Rel ~A has a duplicate bound variable"
+                    (rel-sort rel)))
            (if quant-var
                (push quant-var quant-vars))))
     (remove-if #'(lambda (value)
@@ -283,10 +283,9 @@ printing routines -  convenient to make this global to keep printing generic")
     (for rel in rels
          do
          (let ((var (rel-handel rel)))
-;;; WK: removed code for VM: don't generate errors
-;;;           (unless (is-handel-var var)
-;;;             (error "~%Relation ~A has incorrect handel ~A"
-;;;                    (rel-sort rel) var))
+           (unless (is-handel-var var)
+             (struggle-on-error "~%Relation ~A has incorrect handel ~A"
+                                (rel-sort rel) var))
            (pushnew (get-var-num var) labels) 
            (for handel-var in (get-handel-args rel)
                 do
@@ -300,8 +299,8 @@ printing routines -  convenient to make this global to keep printing generic")
 
 (defun get-bindings-for-handel (handel bindings)
   (let ((hb (find handel bindings :key #'car)))
-;;;    (unless hb
-;;;      (error "Handel ~A not in bindings" handel))
+    (unless hb
+      (struggle-on-error "Handel ~A not in bindings" handel))
     (if hb
         (cdr hb))))
 
@@ -644,8 +643,10 @@ printing routines -  convenient to make this global to keep printing generic")
                         (if (eql 
                              (get-true-var-num (rel-handel rel)) 
                              top-handel)
-                          rel))))
-    (if top-rels 
+                            rel))))
+    (when (null (list-length top-rels))
+      (struggle-on-error "Circular LISZT passed to output-scoped-mrs"))
+    (if (and top-rels (list-length top-rels))
         (loop (output-scoped-rel (car top-rels) rel-list stream)
               (if (cdr top-rels)
                   (progn (format stream " /~A " #\\)

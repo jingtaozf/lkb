@@ -27,18 +27,18 @@
        (if (hcons-cands constr)
          (let ((left (get-var-num (hcons-scarg constr)))
                (candidates (mapcar #'get-var-num (hcons-cands constr))))
-;;; WK: removed for VM: don't generate errors
-;           (when (member left labels)
-;             (cerror "Struggle on"
-;              "Left member of is-one-of constraint ~A is a label"
-;                    left))
+           (when (member left labels)
+             (struggle-on-error 
+              "Left member of is-one-of constraint ~A is a label"
+                    left))
            (unless (member left holes)
              (pushnew left left-intvars))
            (for candidate in candidates
                 do
-;               (when (member candidate holes)
-;                 (error "Right element of is-one-of constraint ~A is a hole"
-;                   candidate))
+               (when (member candidate holes)
+                 (struggle-on-error 
+                  "Right element of is-one-of constraint ~A is a hole"
+                   candidate))
                (unless (member candidate labels)
                  (pushnew candidate right-intvars))) 
            (push (make-possible-binding :h1 left
@@ -47,25 +47,24 @@
                  is-one-ofs))
          (let ((left (get-var-num (hcons-scarg constr)))
                (right (get-var-num (hcons-outscpd constr))))
-;; WK: removed for VM:
-;;           (unless (and (member left labels)
-;;                        (member right labels))
-;;             (cerror "Struggle on"
-;;              "Outscopes pair ~A > ~A are not both labels" left right))
+;           (unless (and (member left labels)
+;                        (member right labels))
+;             (struggle-on-error 
+;              "Outscopes pair ~A > ~A are not both labels" left right))
            (push (make-outscopes :h1 left :h2 right)
                *outscopes*))))
-;;  (for left-intvar in left-intvars
-;;       do
-;;       (unless (member left-intvar right-intvars)
-;;          (cerror "Struggle on"
-;;                  "~A is not a hole and does not have a solution set"
-;;                 left-intvar)))
-;;  (for right-intvar in right-intvars
-;;       do
-;;       (unless (member right-intvar left-intvars)
-;;          (cerror "Struggle on"
-;;           "~A is not a label and is not an intermediate variable"
-;;                 right-intvar)))
+;  (for left-intvar in left-intvars
+;       do
+;       (unless (member left-intvar right-intvars)
+;         (struggle-on-error 
+;          "~A is not a hole and does not have a solution set"
+;          left-intvar)))
+  (for right-intvar in right-intvars
+       do
+       (unless (member right-intvar left-intvars)
+         (struggle-on-error 
+          "~A is not a label and is not an intermediate variable"
+          right-intvar)))
   (setf *is-one-ofs* (substitute-int-vars 
                       ; is-one-ofs
                       (combine-is-one-ofs is-one-ofs) 

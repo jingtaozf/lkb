@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.10  1998/09/09 01:58:09  aac
+;; mostly changes to mrs
+;;
 ;; Revision 1.9  1998/09/04 00:43:32  aac
 ;; merging WK's changes
 ;;
@@ -387,11 +390,6 @@
 
 (defun create-rel-struct (fs variable-generator)
   #-pagelite
-  (when (is-valid-fs fs)
-;    (if (is-disjunctive-fs fs)
-;        (setf fs (get-first-real-alter fs))
-    (SETQ fs (deref fs)))
-;  )
   (if (is-valid-fs fs)
       (let* ((label-list (fs-arcs fs))
              (handel-pair (assoc (car *rel-handel-path*)
@@ -400,9 +398,6 @@
              (pred (assoc (car *rel-name-path*)
                           label-list))
              (rel nil))
-;        (unless handel-pair
-;          (format t
-;                  "ERROR: Handel missing in MRS?"))
         (setf rel (make-rel :sort (create-type (if pred 
                                                    (fs-type (rest pred))
                                                  (fs-type fs)))
@@ -414,10 +409,10 @@
                                        (create-variable (cdr label-pair)
                                                         variable-generator))))
         (loop for feat-val in 
-	      (sort (remove pred 
-		      (remove handel-pair 
-			      (remove label-pair label-list)))
-		    #'feat-sort-func)
+              (sort (remove pred 
+                            (remove handel-pair 
+                                    (remove label-pair label-list)))
+                    #'feat-sort-func)
             do
               (when (or (not (boundp '*VM-arg-roles-only-p*))
                         (and *VM-arg-roles-only-p*
@@ -446,9 +441,8 @@
                                                    (cdr feat-val)
                                                    variable-generator)))
                                    (rel-flist rel))))))))
-	(setf (rel-flist rel) (reverse (rel-flist rel)))
-        rel)
-    ))
+        (setf (rel-flist rel) (reverse (rel-flist rel)))
+        rel)))
 
 (defun feat-sort-func (fvp1 fvp2)
   (let* ((feat1 (if (fvpair-p fvp1) 
