@@ -364,8 +364,24 @@ we assume that there will generally only be one feature
                 (make-semantics-record
                  :id id
                  :relations main-rels)))
+          (loop
+              with top = (let ((top (if *rel-name-path*
+                                      *top-pred-type*
+                                      *top-semantics-type*)))
+                           (and (is-valid-type top) top))
+              for rel in main-rels
+              for pred = (rel-pred rel)
+              when (or (null pred)
+                       (is-top-type pred)
+                       (and top (equal-or-subtype top pred)))
+              do
+                (format
+                 t 
+                 "~%Warning: ~A contains an underdetermined PRED (`~(~a~)')"
+                 id pred))
           (add-semantics-record id new-record)
-          (loop for rel in 
+          (loop
+              for rel in 
                 (find-index-rels
                  (loop for rel-record in main-rels
                      unless (rel-parameter-strings rel-record)

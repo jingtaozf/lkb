@@ -29,6 +29,14 @@
 ;;; a relation - if this path doesn't have a value, the type of the
 ;;; relation is used instead.  This is designed for the situation
 ;;; where some relations have PREDs and others don't.
+;;;
+;;; _fix_me_
+;;; the above contradicts the current behavior of extract-pred-from-rel-fs() in
+;;; `mrsoutput.lisp'; see comment there and resolve with ann.  (10-dec-03; oe)
+;;;
+
+(defparameter *top-pred-type* (vsym "PREDSORT")
+  "most general type under *rel-name-path*; typically not a good predicate")
 
 (defparameter *rel-handel-path*
     `(,(vsym "HANDEL"))
