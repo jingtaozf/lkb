@@ -270,6 +270,7 @@
 (defun unicode-check (p tokenbuf)
   (declare (ignorable tokenbuf) (optimize (speed 3) (safety 1)))
   ;; need no-OO check because external format support isn't completely done yet
+  #+allegro
   (when (not (typep p 'string-input-simple-stream))
     #+(version>= 6 0 pre-final 1)
     (let ((format (ignore-errors (excl:sniff-for-unicode p))))
