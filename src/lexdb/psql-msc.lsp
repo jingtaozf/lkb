@@ -8,6 +8,11 @@
 ;;; Miscellaneous functions
 ;;;
 
+(defun alist-val (feat alist &key test)
+  (if test
+      (cdr (assoc feat alist :test test))
+  (cdr (assoc feat alist))))
+
 (defun get-val (field record)
   (cdr (assoc field record :test #'equal)))
 
@@ -168,7 +173,7 @@
 
 (defun 2-symb-or-list (x)
   (if (and (stringp x) (eq (aref x 0) #\())
-      (work-out-value 'list x)
+      (work-out-rawlst x)
     (2-symb x)))
 
 (defun to-multi-csv-line (&key name base-name particle type keyrel)

@@ -14,10 +14,8 @@
     (error "please initialize PSQL lexicon"))
   (let ((filename (get-filename rest :ending ".tsv" :existing t)))
     (when filename
-      (format t 
-	      "~%~%Please wait: merging files ~a.* into lexical database ~a" 
-	      filename 
-	      (dbname *psql-lexicon*))
+      (format t "~%~%Please wait: merging files ~a.* into lexical database ~a" 
+	      filename (dbname *psql-lexicon*))
       (force-output)
       (time (merge-into-psql-lexicon *psql-lexicon* filename))
       (format t " ...done")
@@ -30,10 +28,8 @@
     (error "please initialize PSQL lexicon"))
   (let ((filename (get-filename rest :ending ".tsv" :existing nil)))
     (when filename
-      (format t 
-	      "~%~%Please wait: dumping lexical database ~a to files ~a.*" 
-	      (dbname *psql-lexicon*) 
-	      filename)
+      (format t "~%~%Please wait: dumping lexical database ~a to files ~a.*" 
+	      (dbname *psql-lexicon*) filename)
       (force-output)
       (time (dump-psql-lexicon filename :tdl *lexdb-dump-tdl*))
       (format t " ...done")
@@ -95,12 +91,10 @@
 	   (connection *psql-lexicon*))
     (error "please initialize PSQL lexicon"))
   (let ((scratch
-	 (mapcar 
-	  #'(lambda (x) (car x)) 
-	  (show-scratch *psql-lexicon*))))
+	 (mapcar #'(lambda (x) (car x)) 
+		 (show-scratch *psql-lexicon*))))
     (format t "~%~%Contents of scratch (~a entries): ~a"
-	    (length scratch)
-	    scratch)
+	    (length scratch) scratch)
     (format t " ...done")
     (lkb-beep)))
 
@@ -152,27 +146,20 @@
 (defun get-filename (rest &key (ending "") existing)
   (let* ((len-ending (length ending))
          (prompt (format nil "~a file?" ending))
-         (filename
-	 (cond
-	  ((= (length rest) 0)
-           (if existing
-               (ask-user-for-existing-pathname prompt)
-             (ask-user-for-new-pathname prompt)))
-	  ((= (length rest) 1)
-	   (first rest))
-	  (t
-	   (error "too many arguments")))))
+         (filename (cond
+		    ((= (length rest) 0)
+		     (if existing
+			 (ask-user-for-existing-pathname prompt)
+		       (ask-user-for-new-pathname prompt)))
+		    ((= (length rest) 1)
+		     (first rest))
+		    (t
+		     (error "too many arguments"))))
+	 (len-main (- (length filename) len-ending)))
     (cond
      ((and
-       (> (- (length filename) len-ending) 
-          0)
-       (equal (subseq filename 
-                      (- (length filename) 
-                         len-ending)) 
-              ending))
-      (subseq filename 
-              0 
-              (- (length filename)
-                 len-ending)))
+       (> len-main 0)
+       (equal (subseq filename len-main) ending))
+      (subseq filename 0 len-main))
      (t
       filename))))

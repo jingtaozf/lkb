@@ -9,48 +9,51 @@
 ;;;
 
 (defmethod lookup-word ((lexicon psql-lex-database) orth &key (cache t))
+  (with-slots (lexical-entries) lexicon
   (setf orth 
     (string-downcase orth))
-  (let ((hashed 
-	 (gethash 
-	  orth 
-	  (slot-value 
-	   lexicon 
-	   'lexical-entries))))
+  (let ((hashed (gethash orth lexical-entries)))
     (cond 
      (hashed
-      (if (eq hashed 
-	      :EMPTY)
-	  (setf hashed 
-	    nil))
-      hashed)
+      (if (eq hashed :EMPTY)
+	  (setf hashed nil)
+	hashed))
      (t 
-      (let ((value 
-	     (lookup-word-psql-lex-database lexicon orth)))
+      (let ((value (lookup-word-no-cache lexicon orth)))
 	;;if caching, add entry to cache...
 	(when cache
-	  (setf (gethash orth 
-			 (slot-value lexicon 
-				     'lexical-entries)) 
-	    (if value 
-		value 
-	      :EMPTY)))
-	value)))))
+	  (setf (gethash orth lexical-entries) 
+	    (if value value :EMPTY)))
+	value))))))
 
-(defun lookup-word-psql-lex-database (lexicon orth)
+(defmethod lookup-word-no-cache ((lexicon psql-lex-database) orth)
   (declare (ignore cache))
   (if (connection lexicon)
       (let* ((orthstr orth)
-	     (records
-	      (sql-fn-get-records lexicon 
-				  :retrieve_entries_by_orthkey
-				  :args (list (sql-like-text orthstr))
-				  :fields (make-requested-fields-as-list lexicon)))
-	      (ids 
-	       (lookup-word-aux 
-		records
-		lexicon)))
+	     (records (sql-fn-get-records lexicon 
+					  :retrieve_entries_by_orthkey 
+					  :args (list (sql-like-text orthstr)) 
+					  :fields (grammar-fields lexicon)))
+	      (ids (lookup-word-aux2 lexicon records)))
 	 ids)))
+
+(defmethod lookup-word-aux2 ((lexicon psql-lex-database) records)
+  (with-slots (psorts record-cache fields-map) lexicon
+    (let ((name-field (second (assoc :id fields-map))))
+    (loop
+	for record in records
+	for id = (str-2-symb  (alist-val name-field record :test #'equal))
+	do
+	  ;; cache values
+	  (unless (gethash id record-cache)
+	    (setf (gethash id record-cache) 
+	      record))
+	  (unless (gethash id psorts)
+	    (setf (gethash id psorts) 
+	      (make-psort-struct lexicon record)))
+	 collect id))))
+
+;
 
 ;;; (used to index for generator)
 (defmethod lex-words ((lexicon psql-lex-database))
@@ -66,6 +69,8 @@
 		       orth-raw-value-mapping
 		       x))))
      values)))
+
+;
 
 (defmethod collect-psort-ids ((lexicon psql-lex-database) &key (cache t) (recurse t))
   (declare (ignore recurse))
@@ -91,84 +96,85 @@
 	 (str-2-symb (car x)))
      query-res)))
 
-(defmethod retrieve-all-records ((lexicon psql-lex-database) &optional reqd-fields)
-  (unless (connection lexicon)
-    (format t "~%WARNING: no connection to psql-lex-database")
-    (return-from retrieve-all-records nil))
-  (sql-fn-get-records lexicon
-		      :retrieve_all_entries
-		      :fields reqd-fields))
+;
 
+(defmethod retrieve-all-records ((lexicon psql-lex-database) &optional reqd-fields)
+  (cond
+   ((connection lexicon)
+    (sql-fn-get-records lexicon
+			:retrieve_all_entries
+			:fields reqd-fields))
+   (t
+    (format t "~%WARNING: no connection to psql-lex-database"))))    
+    
 (defmethod retrieve-record ((lexicon psql-lex-database) id &key (cache t) reqd-fields)
   (with-slots (record-cache) lexicon
     (let ((hashed (gethash id record-cache)))
       (cond (hashed
-	     (unless (eq hashed 
-			 :EMPTY)
+	     (unless (eq hashed :EMPTY)
 	       hashed))
 	    (t
-	     (let* ((record 
-		     (retrieve-record-str 
-		      lexicon 
-		      (symb-2-str id) 
-		      reqd-fields)))
+	     (let* ((record (retrieve-record-no-cache lexicon id reqd-fields)))
 	       (when cache
 		 (setf (gethash id record-cache)
 		   (or record :EMPTY)))
 	       record))))))
 
-(defmethod retrieve-record-str 
-    ((lexicon psql-lex-database) id-str &optional reqd-fields)
-  (unless (connection lexicon)
-    (format t "~%WARNING: no connection to psql-lex-database")
-    (return-from retrieve-record-str nil))
-  (let ((column-records (sql-fn-get-records lexicon
-					     :retrieve_entry
-					     :fields reqd-fields
-					     :args (list (sql-like-text id-str)))))
-    (if (> (length column-records) 
-	   1)
-	(error (format nil "too many records returned"))
-      (first column-records))))
+(defmethod retrieve-record-no-cache ((lexicon psql-lex-database) id &optional reqd-fields)
+  (cond 
+   ((connection lexicon)
+    (let* ((id-str (symb-2-str id))
+	   (column-records (sql-fn-get-records lexicon
+					       :retrieve_entry
+					       :fields reqd-fields
+					       :args (list (sql-like-text id-str)))))
+      (if (> (length column-records) 1)
+	  (error (format nil "too many records returned"))
+	(first column-records))))
+   (t
+    (format t "~%WARNING: no connection to psql-lex-database"))))
 
-
-(defmethod retrieve-head-record-str ((lexicon psql-lex-database) id-str &optional reqd-fields)
-  (unless (connection lexicon)
-    (format t "~%WARNING: no connection to psql-lex-database")
-    (return-from retrieve-head-record-str nil))
-  (let ((records (sql-fn-get-records lexicon
-				     :retrieve_head_entry
-				     :fields reqd-fields
-				     :args (list (sql-like-text id-str)))))
-    
-    (if (> (length records) 
-	   1)
-	(error (format nil "too many records returned"))
-      (car records))))
+(defmethod retrieve-head-record ((lexicon psql-lex-database) id &optional reqd-fields)
+  (cond
+   ((connection lexicon)
+    (let* ((id-str (2-str id))
+	   (records (sql-fn-get-records lexicon
+					:retrieve_head_entry
+					:fields reqd-fields
+					:args (list (sql-like-text id-str)))))
+      
+      (if (> (length records) 
+	     1)
+	  (error (format nil "too many records returned"))
+	(car records))))
+   (t
+    (format t "~%WARNING: no connection to psql-lex-database"))))
 
 (defmethod id-to-tdl ((lexicon psql-lex-database) id)
   (to-tdl (read-psort lexicon id)))
 
 (defmethod grammar-fields ((lexicon psql-lex-database))
-  (remove-duplicates
-   (mapcar #'second (fields-map lexicon))))
+  (unless (fields-map lexicon)
+    (complain-no-fields-map lexicon)
+    (error "operation aborted"))
+  (remove-duplicates 
+   (mapcar #'cadr 
+	   (fields-map lexicon))
+   :test #'equal))
+
+;
 
 (defmethod read-psort ((lexicon psql-lex-database) id &key (cache t) (recurse t) (new-instance nil))
   (declare (ignore recurse))
   (with-slots (psorts) lexicon
-    (let ((hashed 
-	   (and (not new-instance)
-		(gethash id psorts))))
+    (let ((hashed (and (not new-instance) (gethash id psorts))))
       (cond (hashed
-	     (unless (eq hashed 
-			 :EMPTY)
-	       hashed))
+	     (unless (eq hashed :EMPTY) hashed))
 	    (t
 	     (let ((entry (read-psort-aux lexicon id :cache cache)))
 	       (when cache
 		 (setf (gethash id psorts)
-		   (or entry 
-		       :EMPTY)))
+		   (or entry :EMPTY)))
 	       entry))))))
 
 (defmethod read-psort-aux ((lexicon psql-lex-database) id &key (cache t))
@@ -176,7 +182,7 @@
     (let* ((record 
 	    (retrieve-record 
 	     lexicon id 
-	     :reqd-fields (make-requested-fields-as-list lexicon)
+	     :reqd-fields (grammar-fields lexicon)
 	     :cache cache)))
       (if record 
 	  (make-psort-struct lexicon record)))))
@@ -190,23 +196,17 @@
       ((strucslots 
 	(loop 
 	    for (slot-key slot-field slot-path slot-type) in (fields-map lexicon)
-	    for slot-value-list = 
-	      (work-out-value 
-	       slot-type 
-	       (get-val slot-field record)
-	       :path (work-out-value 
-		      'list 
-		      slot-path))
+	    for slot-value-list = (work-out-value slot-type 
+						  (get-val slot-field record)
+						  :path (work-out-rawlst slot-path))
 	    when slot-value-list
 	    append (mapcar 
-		    #'(lambda (x) 
-			(make-strucargs-aux slot-key x slot-path)) 
+		    #'(lambda (x) (make-strucargs-aux slot-key x slot-path)) 
 		    slot-value-list)))
        ;; groups slots with same key together in a list
        (strucargs 
 	(loop
-	    for unique-slot in (remove-duplicates 
-				(mapcar #'car strucslots))
+	    for unique-slot in (remove-duplicates (mapcar #'car strucslots))
 	    append
 	      (list unique-slot 
 		    (let ((values 
@@ -224,8 +224,7 @@
 	  ;; infl-pos is only relevant for multi-word entries
 	  (setf strucargs
 	    (append 
-	     (list :infl-pos
-		   (find-infl-pos nil orth-str nil))
+	     (list :infl-pos (find-infl-pos nil orth-str nil))
 	     strucargs))))
     strucargs))
 
@@ -290,10 +289,8 @@
     (sql-fn-get-val lexicon 
 		    :initialize_current_grammar 
 		    :args (list filter))
-
     (empty-cache lexicon)))
 
-;;;
 ;;;
 ;;; cache
 ;;;
@@ -306,7 +303,7 @@
 	 (setf (gethash (record-id record) record-cache) 
 	   record))
      (retrieve-all-records lexicon 
-			   (make-requested-fields-as-list lexicon)))))
+			   (grammar-fields lexicon)))))
 
 (defmethod cache-all-lex-records-orth ((lexicon psql-lex-database))
   (with-slots (record-cache lexical-entries) lexicon
@@ -325,28 +322,33 @@
 			  record-cache) 
 	     record) ))
      (retrieve-all-records lexicon 
-			   (make-requested-fields-as-list lexicon)))))
+			   (grammar-fields lexicon)))))
 
 (defmethod make-field-map-slot ((lexicon psql-lex-database))
   "stores the mapping of fields to lex-entry structure slots"
-  (setf (fields lexicon) (get-fields lexicon))
-  (setf (fields-map lexicon)
-    (sort
-     (mapcar #'(lambda (x) 
-		 (list (str-2-keyword (first x))
-		       (str-2-keyword (second x))
-		       (third x)
-		       (2-symb-or-list (fourth x))))
-	     (records (run-query lexicon 
-				 (make-instance 'sql-query
-				   :sql-string (format 
-						nil 
-						"SELECT slot,field,path,type FROM defn WHERE mode='~a';"
-						(fields-tb lexicon))))))
-     #'(lambda (x y) (declare (ignore y)) (eq (car x) :unifs))))
-    (if (null (fields-map lexicon))
+  (with-slots (fields-map fields) lexicon
+    (setf fields (get-fields lexicon))
+    (setf fields-map
+      (sort
+       (mapcar #'(lambda (x) 
+		   (let* ((slot (str-2-keyword (first x)))
+			  (field (str-2-keyword (second x)))
+			  (path (third x))
+			  (type2 (2-symb-or-list (fourth x)))
+			  (type (if (listp type2) type2 (list type2))))
+		     ;; correct any obsolete types
+		     (setf (car type)
+		       (or (cdr (assoc (car type) *field-map-type-mneum*))
+			   (car type)))
+		     (list slot field path type)))
+	       (records (run-query lexicon 
+				   (make-instance 'sql-query
+				     :sql-string (format nil "SELECT slot,field,path,type FROM defn WHERE mode='~a';"
+							 (fields-tb lexicon))))))
+       #'(lambda (x y) (declare (ignore y)) (eq (car x) :unifs))))
+    (if (null fields-map)
 	(complain-no-fields-map lexicon))
-    (fields-map lexicon))
+    fields-map))
 
 (defmethod complain-no-fields-map ((lexicon psql-lex-database))
   (format t "~%WARNING: No fields-map definitions available in LexDB ~a (mode='~a').
@@ -354,12 +356,14 @@
 	       (dbname lexicon) (fields-tb lexicon)))
 
 (defmethod get-internal-table-defn ((lexicon psql-lex-database))
-  (unless (string>= (server-version lexicon) "7.3")
-    (return-from get-internal-table-defn nil))
-  
-  (let* 
-      ((sql-str "SELECT attname, typname, atttypmod FROM pg_catalog.pg_attribute AS attribute JOIN (SELECT * FROM pg_catalog.pg_class WHERE relname='revision') AS class ON attribute.attrelid=class.relfilenode JOIN pg_catalog.pg_type AS type ON (type.typelem=attribute.atttypid);"))
-       (make-column-map-record (run-query lexicon (make-instance 'sql-query :sql-string sql-str)))))
+  (cond 
+   ((string>= (server-version lexicon) "7.3")
+    (if (string>= (lexdb-version lexicon)
+		  "3.31")
+	(sql-fn-get-records *lexicon* :return_field_info2 :args (list "public" "revision"))
+      (make-column-map-record (run-query lexicon (make-instance 'sql-query :sql-string "SELECT attname, typname, atttypmod FROM pg_catalog.pg_attribute AS attribute JOIN (SELECT * FROM pg_catalog.pg_class WHERE relname='revision') AS class ON attribute.attrelid=class.relfilenode JOIN pg_catalog.pg_type AS type ON (type.typelem=attribute.atttypid);")))))
+   (t
+    (error "PostgreSQL major version 7.3 or greater required"))))
 
 (defmethod get-field-size-map ((lexicon psql-lex-database))
   (mapcar 
@@ -396,6 +400,10 @@
 ;;;
 ;;; low-level
 ;;;
+
+(defmethod set-lex-entry-from-record ((lexicon psql-lex-database) fv-pairs)
+  (set-lex-entry lexicon
+		 (make-instance 'psql-lex-entry :fv-pairs fv-pairs)))
 
 ;;; insert lex entry into db
 (defmethod set-lex-entry ((lexicon psql-lex-database) (psql-le psql-lex-entry))
@@ -519,9 +527,8 @@
 (defmethod export-to-db ((lexicon lex-database) output-lexicon)
   (mapc
    #'(lambda (x) 
-       (to-db (read-psort lexicon x 
-			  :recurse nil
-			  :new-instance t) output-lexicon))
+       (to-db (read-psort lexicon x :recurse nil :new-instance t) 
+	      output-lexicon))
    (collect-psort-ids lexicon :recurse nil))
   (build-lex-aux output-lexicon))
 
@@ -532,10 +539,10 @@
     (format t "~%(caching complete)"))
   (mapc
    #'(lambda (id)
-       (format stream "~a" (to-tdl (read-psort lexicon id
-					       :new-instance t)))
+       (format stream "~a" (to-tdl (read-psort lexicon id :new-instance t)))
        (unexpand-psort lexicon id))
-   (sort (collect-psort-ids lexicon) #'(lambda (x y) (string< (2-str x) (2-str y)))))
+   (sort (collect-psort-ids lexicon) 
+	 #'(lambda (x y) (string< (2-str x) (2-str y)))))
   (when (typep lexicon 'psql-lex-database)
     (format t "~%(emptying cache)")
     (empty-cache lexicon)))
@@ -546,15 +553,6 @@
       (ostream filename :direction :output :if-exists :supersede)
     (export-to-tdl lexicon ostream)))
 
-(defmethod make-requested-fields-as-list ((lexicon psql-lex-database))
-  (unless (fields-map lexicon)
-    (complain-no-fields-map lexicon)
-    (error "operation aborted"))
-  (remove-duplicates 
-   (mapcar #'cadr 
-	   (fields-map lexicon))
-   :test #'equal))
-    
 (defmethod close-lex ((lexicon psql-lex-database) &key in-isolation delete)
   (declare (ignore in-isolation delete))
   (with-slots (lexdb-version semi) lexicon
@@ -563,12 +561,11 @@
 
 (defmethod open-lex ((lexicon psql-lex-database) &key name parameters)
   (declare (ignore parameters)) 
-  (with-slots (lexdb-version server-version dbname host user connection) lexicon
+  (with-slots (lexdb-version server-version dbname host user connection) 
+      lexicon
     (close-lex lexicon)    
     (format t "~%Connecting to lexical database ~a@~a:~a" 
-	    dbname
-	    host
-	    (true-port lexicon))
+	    dbname host (true-port lexicon))
     (force-output)
     (setf *postgres-tmp-lexicon* lexicon)
     (cond
@@ -592,8 +589,7 @@
       lexicon)
      (t
       (format t "~%unable to connect to ~s:~%  ~a" 
-	      (pg:db connection) 
-	      (pg:error-message connection))
+	      (pg:db connection) (pg:error-message connection))
       nil))))
 
 (defmethod initialize-lex ((lexicon psql-lex-database))
@@ -615,8 +611,7 @@
 		:dbname dbname
 		:host host
 		:port port
-		:user (sql-fn-get-val lexicon 
-				      :db_owner)))
+		:user (sql-fn-get-val lexicon :db_owner)))
 	  (command
 	   (if verbose
 	       "vacuum full analyze verbose public.revision"    
@@ -637,12 +632,10 @@
 ;;;
 
 (defmethod get-db-version ((lexicon psql-lex-database))
-  (sql-fn-get-val lexicon
-		  :lexdb_version))
+  (sql-fn-get-val lexicon :lexdb_version))
     
 (defmethod get-filter ((lexicon psql-lex-database))
-  (sql-fn-get-val lexicon
-		  :filter))
+  (sql-fn-get-val lexicon :filter))
 
 (defmethod next-version (id (lexicon psql-lex-database))
   (let* ((res (sql-fn-get-val lexicon 
@@ -665,7 +658,6 @@
     (index-grammar-rules))
    (t
     (format t "~%WARNING: no lexical entries indexed for generator")))
-    ;)
   lexicon)
 
 (defmethod build-lex-aux ((lexicon psql-lex-database))
@@ -678,13 +670,11 @@
    (t
     (format t "~%(user ~a has read-only privileges)" (user lexicon))))    
   (format t "~%(LexDB filter: ~a )" (get-filter lexicon))
-  (let ((size (sql-fn-get-val lexicon 
-			      :size_current_grammar)))
+  (let ((size (sql-fn-get-val lexicon :size_current_grammar)))
     (if (string= "0" size)
 	(format t "~%WARNING: 0 entries passed the LexDB filter" size)
       (format t "~%(active lexical entries: ~a )" size)))
   (empty-cache lexicon))
-
 
 ;;;
 ;;;
@@ -693,13 +683,11 @@
 (defmethod get-fields ((lexicon psql-lex-database))
   (mapcar 
    #'(lambda (x) (intern (string-upcase (car x)) :keyword))
-   (sql-fn-get-raw-records lexicon 
-			   :list_fields)))
+   (sql-fn-get-raw-records lexicon :list_fields)))
 
 (defmethod user-read-only-p ((lexicon psql-lex-database) user-str)
   (string= "t" 
-	   (sql-fn-get-val lexicon 
-				   :user_read_only_p 
+	   (sql-fn-get-val lexicon :user_read_only_p 
 				   :args (list user-str))))
 
 (defmethod show-scratch ((lexicon psql-lex-database))
@@ -708,8 +696,7 @@
 			  :fields (list :name :userid :version)))
 
 (defmethod scratch-records ((lexicon psql-lex-database))
-  (sql-fn-get-raw-records lexicon 
-			  :retrieve_private_revisions))
+  (sql-fn-get-raw-records lexicon :retrieve_private_revisions))
 
 (defmethod merge-into-db ((lexicon psql-lex-database) rev-filename)  
   (run-command-stdin lexicon 
@@ -719,22 +706,17 @@
 		     rev-filename)
   (let ((count-new
 	 (str-2-num
-	  (sql-fn-get-val lexicon
-			  :merge_into_db2))))
+	  (sql-fn-get-val lexicon :merge_into_db2))))
     (format t "~%(~a new entries)" count-new)
     (unless (equal 0 count-new)
       (vacuum-public-revision lexicon))
     count-new))
 
-(defmethod merge-defn ((lexicon psql-lex-database) 
-		       dfn-filename)  
+(defmethod merge-defn ((lexicon psql-lex-database) dfn-filename)  
   (when (catch 'pg:sql-error 
-	  (run-command lexicon 
-		       "CREATE TABLE temp_defn AS SELECT * FROM defn WHERE NULL;"))
-    (run-command lexicon 
-		 "DROP TABLE temp_defn")
-    (run-command lexicon 
-		 "CREATE TABLE temp_defn AS SELECT * FROM defn WHERE NULL ;"))
+	  (run-command lexicon "CREATE TABLE temp_defn AS SELECT * FROM defn WHERE NULL;"))
+    (run-command lexicon "DROP TABLE temp_defn")
+    (run-command lexicon "CREATE TABLE temp_defn AS SELECT * FROM defn WHERE NULL ;"))
   (run-command-stdin lexicon 
 		     "COPY temp_defn FROM stdin" 
 		     dfn-filename)
@@ -746,28 +728,24 @@
     count-new-dfn))
 
 (defmethod initialize-userschema ((lexicon psql-lex-database))
-  (sql-fn-get-val lexicon 
-		  :initialize_user_schema )
+  (sql-fn-get-val lexicon :initialize_user_schema )
   #+:mwe
   (if *postgres-mwe-enable*
       (mwe-initialize-userschema lexicon)))
 
 (defmethod semi-setup-pre ((lexicon psql-lex-database))  
-  (sql-fn-get-val lexicon 
-		  :semi_setup_pre))
+  (sql-fn-get-val lexicon :semi_setup_pre))
   
 (defmethod semi-setup-post ((lexicon psql-lex-database))  
-  (sql-fn-get-val lexicon 
-		  :semi_setup_post))
+  (sql-fn-get-val lexicon :semi_setup_post))
  
 (defmethod semi-up-to-date-p ((lexicon psql-lex-database))  
   (string= "t"
-	   (sql-fn-get-val lexicon
-			   :semi_up_to_date_p)))
+	   (sql-fn-get-val lexicon :semi_up_to_date_p)))
   
 (defmethod semi-out-of-date ((lexicon psql-lex-database))
   (with-slots (record-cache) lexicon
-    (let* ((reqd-fields (make-requested-fields-as-list lexicon))
+    (let* ((reqd-fields (grammar-fields lexicon))
 	   (records (sql-fn-get-records lexicon 
 					:semi_out_of_date
 					:fields reqd-fields))

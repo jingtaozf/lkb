@@ -69,6 +69,7 @@
     :retrieve_semi_frame
     :retrieve_semi_pred
     :retrieve_semi_var
+    :return_field_info2
     :semi_out_of_date
     :semi_setup_post
     :semi_setup_pre
@@ -86,6 +87,14 @@
 (defvar *lexdb-message-old-lkb* "Your LexDB version (~a) is incompatible with this LKB version (requires v. ~ax). Try obtaining a more recent LKB binary.")
 (defvar *lexdb-message-old-lexdb* "Your LexDB version (~a) is incompatible with this LKB version (requires v. ~ax). You must load updated setup files. See http://www.cl.cam.ac.uk/~~bmw20/DT/initialize-db.html")
 
+(defvar *field-map-type-mneum*
+    '((string . str)
+      (symbol . sym)
+      (string-list . str-rawlst)
+      (string-fs . str-lst)
+      (string-diff-fs . str-dlst)
+      (mixed-fs . lst)
+      (mixed-diff-fs . dlst)))
 
 ;;;
 ;;; class declarations
@@ -104,7 +113,6 @@
     :initform nil :accessor fields-tb :initarg :fields-tb)
    ;; a-list for mapping the lexicon-table fields to the psort-or-lex structure
    (fields-map :initform nil :accessor fields-map)
-   (mneum-f :initform nil :accessor mneum-f)
    (fields :initform nil :accessor fields)   
    ))
 

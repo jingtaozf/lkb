@@ -12,6 +12,7 @@
 ;;; MWE stuff
 ;;;
 
+#+:mwe
 (defmethod multi-p (&key name type)
   (cond
    ((equal (subseq type 0 10) "idiomatic-")
@@ -21,6 +22,7 @@
    (t
     nil)))
 
+#+:mwe
 (defun remove-sense-id-substr (name)
   (if (and (find #\_ name)
 	   (numberp
@@ -29,6 +31,7 @@
       (subseq name 0 (position #\_ name :from-end t))
     name))
 
+#+:mwe
 (defun multi-idiom-base-name (name-full)
   (let (( name (remove-sense-id-substr name-full)))
     (cond
@@ -38,6 +41,7 @@
       (format t "WARNING: cannot generate base name for idiom ~a~%" name-full)
       (format nil "UNKNOWN_BASE_~a" name)))))
 
+#+:mwe
 (defun multi-vpc-base-name (name-full)
   (let ((name (remove-sense-id-substr name-full)))
     (cond
@@ -76,100 +80,86 @@
         (extract-field2 x (first mapping) (third mapping) (fourth mapping))
       "")))
 	 
-(defun extract-field2 (x key path2 type)
-  (let* ((path (get-path path2)))
-    (extract-value-by-path x key path type)))
+(defun extract-field2 (x key path type)
+  (extract-value-by-path x key (get-path path) type))
+
+;;;
+
+(defun extract-rawlst-by-path (x key path)
+  (mixed-list-2-str (extract-raw-list x key path)))
+
+(defun extract-list-by-path (x key path)
+  (extract-raw-list x key path))
+
+(defun extract-mixed-by-path (x key path)
+  (encode-mixed-as-str (extract-atom-by-path x key path)))
+
+(defun extract-str-by-path (x key path)
+  (encode-string-as-str (extract-atom-by-path x key path)))
+
+(defun extract-sym-by-path (x key path)
+  (symb-2-str (extract-atom-by-path x key path)))
+
+(defun extract-mixed-rawlst-by-path (x key path)
+  (mixed-list-2-str (extract-raw-list x key path)))
+
+(defun extract-str-rawlst-by-path (x key path)
+  (str-list-2-str (extract-raw-list x key path)))
+
+(defun extract-str-lst-by-path (x key path)
+  (str-list-2-str (extract-fs-list x key path)))
+
+(defun extract-str-dlst-by-path (x key path)
+  (str-list-2-str (extract-fs-diff-list x key path)))
+
+(defun extract-lst-t-by-path (x key path &key e-path top)
+  (mixed-list-2-str
+   (extract-fs-list-complex x key path :e-path e-path :top top)))
+
+(defun extract-lst-by-path (x key path &key e-path)
+  (mixed-list-2-str
+   (extract-fs-list-complex x key path :e-path e-path)))
+   
+(defun extract-dlst-t-by-path (x key path &key e-path top)
+  (mixed-list-2-str 
+   (extract-fs-diff-list-complex x key path :e-path e-path :top top)))
+
+(defun extract-dlst-by-path (x key path &key e-path)
+  (mixed-list-2-str 
+   (extract-fs-diff-list-complex x key path :e-path e-path)))
 
 ;; see also work-out-value
-(defun extract-value-by-path (x key path type)
-  (case type
-    ;; todo: move LIST to separate fn
-    (rawlst
-     (mixed-list-2-str
-      (extract-raw-list x key path)))
-    
+(defun extract-value-by-path (x key path typel)
+  (case (first typel)
+    (rawlst 
+     (extract-rawlst-by-path x key path))
     (list
-     (extract-raw-list x key path))
-
-    (nil
-     (encode-mixed-as-str 
-      (extract-atom-by-path x key path)))
+     (extract-list-by-path x key path))
     (mixed
-     (encode-mixed-as-str 
-      (extract-atom-by-path x key path)))
-    
+     (extract-mixed-by-path x key path))
     (str
-     (encode-string-as-str
-      (extract-atom-by-path x key path)))
-    (string
-     (encode-string-as-str
-      (extract-atom-by-path x key path)))
-    
+     (extract-str-by-path x key path))
     (sym
-     (symb-2-str
-      (extract-atom-by-path x key path)))
-    (symbol
-     (symb-2-str
-      (extract-atom-by-path x key path)))
-    
+     (extract-sym-by-path x key path))
     (mixed-rawlst
-     (mixed-list-2-str
-      (extract-raw-list x key path)))
-    
+     (extract-mixed-rawlst-by-path x key path))   
     (str-rawlst
-     (str-list-2-str
-      (extract-raw-list x key path)))
-    (string-list
-     (str-list-2-str
-      (extract-raw-list x key path)))
-    
+     (extract-str-rawlst-by-path x key path))
     (str-lst
-     (str-list-2-str (extract-fs-list x key path)))
-    (string-fs
-     (str-list-2-str (extract-fs-list x key path)))
-    
+     (extract-str-lst-by-path x key path))
     (str-dlst
-     (str-list-2-str (extract-fs-diff-list x key path)))
-    (string-diff-fs
-     (str-list-2-str (extract-fs-diff-list x key path)))
-    
-    (T
-     (typecase type
-       (list
-	(case (first type)
-	  (lst-t
-	   (mixed-list-2-str 
-	    (extract-fs-list-complex x key path 
-				     :e-path (cddr type)
-				     :top (cadr type))))
-	  (lst
-	   (mixed-list-2-str 
-	    (extract-fs-list-complex x key path 
-				     :e-path (cdr type))))
-	  (mixed-fs
-	   (mixed-list-2-str 
-	    (extract-fs-list-complex x key path 
-				     :e-path (cdr type))))
-	  
-	  (dlst-t
-	   (mixed-list-2-str 
-	    (extract-fs-diff-list-complex x key path 
-					  :e-path (cddr type)
-					  :top (cadr type))))
-	  (dlst
-	   (mixed-list-2-str 
-	    (extract-fs-diff-list-complex x key path 
-					  :e-path (cdr type))))
-	  (mixed-diff-fs
-	   (mixed-list-2-str 
-	    (extract-fs-diff-list-complex x key path 
-					  :e-path (cdr type))))
-	  
-	  (t
-	   (error "unhandled complex type: ~a" (first type)))))
-       (T 
-	(error "unhandled type"))))))
-    
+     (extract-str-dlst-by-path x key path))
+    (lst-t
+     (extract-lst-t-by-path x key path :e-path (cddr typel) :top (second typel)))
+    (lst 
+     (extract-lst-by-path x key path :e-path (cdr typel)))	  
+    (dlst-t
+     (extract-dlst-t-by-path x key path :e-path (cddr typel) :top (second typel)))
+    (dlst
+     (extract-dlst-by-path x key path :e-path (cdr typel)))
+    (t
+     (error "~%unhandled field-map type: ~a" (first typel)))))
+
 (defun extract-raw-list (x key path)
   (if (eq key :unifs) (error "Cannot extract raw list from unifs. Use fs-list instead."))
   (if path (error "path must be null"))
@@ -200,12 +190,12 @@
 (defun extract-fs-list (x key path)
   (extract-fs-list-complex x key path))
 
-(defun extract-fs-list-complex (x key path &key e-path)
-  (let ((res (extract-fs-list-complex-aux 
-	       (copy-list (cdr (assoc key x))) 
-	       path
-	       nil
-	       :e-path e-path)))
+(defun extract-fs-list-complex (x key path &key e-path (top '*))
+  (let ((res (extract-fs-list-complex-aux (copy-list (cdr (assoc key x))) 
+					  path
+					  nil
+					  :e-path e-path
+					  :top top)))
     (cond
      ((listp res)
       (setf (cdr (assoc key x)) (cdr res))
@@ -213,10 +203,8 @@
      (t
       nil))))
 
-(defun extract-fs-list-complex-aux (unifs path o-list &key e-path
-							   (top '*))
-  (let* ((end-match (find path
-			  unifs
+(defun extract-fs-list-complex-aux (unifs path o-list &key e-path (top '*))
+  (let* ((end-match (find path unifs
 			  :key #'extract-key-from-unification
 			  :test #'equal))
 	 (first-match (find (append path (list 'first) e-path)
@@ -259,7 +247,7 @@
 (defun extract-fs-diff-list (x key path)
   (extract-fs-diff-list-complex x key path))
   
-(defun extract-fs-diff-list-complex (x key path &key e-path)
+(defun extract-fs-diff-list-complex (x key path &key e-path (top '*))
   (let* ((unifs (copy-list (cdr (assoc key x))))
 	 (last-match 
 	  (find (append path (list 'LAST))
@@ -277,7 +265,8 @@
 		(append path (list 'LIST))
 		nil
 		:last last-path
-		:e-path e-path))))
+		:e-path e-path
+		:top top))))
     (cond
      ((null last-path)
       nil)
@@ -287,10 +276,7 @@
       (setf (cdr (assoc key x)) (cdr res))
       (car res)))))
 
-(defun extract-fs-diff-list-complex-aux (unifs path o-list 
-					 &key last 
-					      e-path
-					      (top '*))
+(defun extract-fs-diff-list-complex-aux (unifs path o-list &key last e-path (top '*))
   (let* ((first-match (find (append path (list 'first) e-path)
 			    unifs
 			    :key #'extract-key-from-unification
@@ -337,7 +323,7 @@
    ((equal "" path-str)
     nil)
    ((stringp path-str)
-    (work-out-value 'list path-str))
+    (work-out-rawlst path-str))
    (t
     (error "unhandled value: ~a" path-str))))
 

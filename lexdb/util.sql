@@ -18,12 +18,32 @@ END;
 --
 --
 
-CREATE OR REPLACE FUNCTION public.define_type_text_text() RETURNS boolean AS '
+CREATE OR REPLACE FUNCTION public.define_type_text_2() RETURNS boolean AS '
 BEGIN
-	IF reln_exists(\'public\',\'text_text\') THEN
-		DROP TYPE public.text_text CASCADE;
+	IF reln_exists(\'public\',\'text_2\') THEN
+		DROP TYPE public.text_2 CASCADE;
 	END IF;
-	CREATE TYPE text_text AS (t1 text, t2 text);
+	CREATE TYPE text_2 AS (t1 text, t2 text);
+	RETURN true;
+END;
+' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.define_type_text_3() RETURNS boolean AS '
+BEGIN
+	IF reln_exists(\'public\',\'text_3\') THEN
+		DROP TYPE public.text_3 CASCADE;
+	END IF;
+	CREATE TYPE text_3 AS (t1 text, t2 text, t3 text);
+	RETURN true;
+END;
+' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.define_type_attname_typename_atttypmod() RETURNS boolean AS '
+BEGIN
+	IF reln_exists(\'public\',\'attname_typename_atttypmod\') THEN
+		DROP TYPE public.attname_typename_atttypmod CASCADE;
+	END IF;
+	CREATE TYPE attname_typename_atttypmod AS (attname name, typename name, atttypmod int);
 	RETURN true;
 END;
 ' LANGUAGE plpgsql;
@@ -32,7 +52,9 @@ END;
 --
 --
 
-SELECT public.define_type_text_text();
+SELECT public.define_type_text_2();
+SELECT public.define_type_text_3();
+SELECT public.define_type_attname_typename_atttypmod();
 
 --
 --
@@ -51,11 +73,15 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.return_field_info(text,text) RETURNS SETOF text_text AS '
+CREATE OR REPLACE FUNCTION public.return_field_info(text,text) RETURNS SETOF text_2 AS '
 SELECT a.attname::text as field, pg_catalog.format_type(a.atttypid, a.atttypmod) as type
 	FROM pg_catalog.pg_attribute a
 	WHERE a.attrelid = return_oid($1,$2) AND a.attnum > 0 AND NOT a.attisdropped
 	ORDER BY a.attnum
+' LANGUAGE sql;
+
+CREATE OR REPLACE FUNCTION public.return_field_info2(text,text) RETURNS SETOF attname_typename_atttypmod AS '
+	SELECT attname, typname, atttypmod FROM (SELECT attname, atttypmod, atttypid FROM pg_catalog.pg_attribute WHERE attrelid=return_oid($1,$2)) AS a JOIN pg_catalog.pg_type AS t ON (typelem=atttypid);
 ' LANGUAGE sql;
 
 

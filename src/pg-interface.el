@@ -10,7 +10,7 @@
 
 ;;; Add a PG menu to the emacs menu bar
 
-(defvar *lexdb-pg-interface-version* "2.02")
+(defvar *lexdb-pg-interface-version* "2.03")
 
 (require 'widget)
 
@@ -146,7 +146,6 @@
 ;;;
 
 (defvar *lexdb-record-features*)
-(defvar *lexdb-field-mask*)
 (defvar *lexdb-read-only*)
 (defvar *lexdb-hidden*)
 (defvar *lexdb-minibuffer-max*)
@@ -156,7 +155,7 @@
 (defvar *lexdb-slot-len*)
 
 (setf *lexdb-read-only* '(:version :userid :modstamp :orthkey))
-(setf *lexdb-hidden* '(:jlink :semclasses))
+(setf *lexdb-hidden* nil)
 (setf *lexdb-minibuffer-max* 80)
 (setf *lexdb-active-id-ring* nil)
 (setf *lexdb-new-entries-buffer* "*lexdb-merged*")
@@ -214,28 +213,28 @@
     (define-key map [menu-bar LexDB view-scratch]
       '(menu-item "View scratch" lexdb-view-scratch 
 		  :keys "M-vs"
-		  :enable (cle-eval-lexdb 'connection)))
+		  :enable (cle-connection)))
     (define-key map [menu-bar LexDB next-id]
       '(menu-item "Next id" lexdb-advance-id 
 		  :keys "M-n"
-		  :enable (cle-eval-lexdb 'connection)))
+		  :enable (cle-connection)))
     (define-key map [menu-bar LexDB search]
       '(menu-item "Search ids" lexdb-search-field-val 
 		  :keys "M-s"
-		  :enable (cle-eval-lexdb 'connection)))
+		  :enable (cle-connection)))
     (define-key map [menu-bar LexDB cross-ref]
       '(menu-item "Cross reference ids" lexdb-lookup 
 		  :keys "M-TAB"
-		  :enable (cle-eval-lexdb 'connection)))
+		  :enable (cle-connection)))
     (define-key map [menu-bar LexDB break] (lexdb-make-name-keymap "---"))
     (define-key map [menu-bar LexDB commit]
       '(menu-item "Commit" lexdb-commit-record 
 		  :keys "C-c"
-		  :enable (cle-eval-lexdb 'connection)))
+		  :enable (cle-connection)))
     (define-key map [menu-bar LexDB edit]
       '(menu-item "Edit" lexdb-load-record 
 		  :keys "C-l"
-		  :enable (cle-eval-lexdb 'connection)))))
+		  :enable (cle-connection)))))
 
 (add-hook 'lexdb-mode-hook 
 	  (function (lambda ()
@@ -279,7 +278,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 
 (defun lexdb-load-record (id)
   (interactive (list (l:completing-read-dyn "Lex Id: ")))
-  (unless (cle-eval-lexdb 'connection)
+  (unless (cle-connection)
     (error "no connection to LexDb"))
   (lexdb-load-record-aux id)
   ;;(beep)
@@ -287,7 +286,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 
 (defun lexdb-normalize-buffer (buffer)
   (interactive (list (format "%s" (current-buffer))))
-  (unless (cle-eval-lexdb 'connection)
+  (unless (cle-connection)
     (error "no connection to LexDb"))
   (lexdb-normalize-buffer-aux buffer)
   ;;(beep)
@@ -295,7 +294,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 
 (defun lexdb-commit-record (buffer)
   (interactive (list (format "%s" (current-buffer))))
-  (unless (cle-eval-lexdb 'connection)
+  (unless (cle-connection)
     (error "no connection to LexDb"))
   (if (lexdb-commit-record-aux buffer)
       (beep)))
@@ -377,7 +376,6 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 	(kill-buffer buffer))
     (with-current-buffer (get-buffer-create buffer)
       (lexdb-mode)
- 
       (insert (mapconcat 'identity
 			 (lexdb-collect-field-lines priv-recs *lexdb-record-features*)
 			 "\n")))
@@ -506,20 +504,13 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 (defun lexdb-retrieve-record (id)
   (let ((fields (cle-retrieve-record-fields id))
 	(sizes (cle-retrieve-record-sizes)))
-    (setf *lexdb-field-mask* (cle-retrieve-field-mask))
-    (setf *lexdb-record-features* (reverse 
-				   (set-difference
-				    (cle-retrieve-record-features)
-				    *lexdb-hidden*)))
+    (setf *lexdb-record-features* (set-difference (cle-retrieve-record-features) *lexdb-hidden*))
     (unless fields
       (princ (format "%s not found! " id))
       (setf fields (l:make-empty-record id)))
     (setf lexdb-tdl (or (cle-retrieve-tdl (cdr (assoc :name fields)))
 			""))
-    (setf lexdb-record
-	  (cons
-	   fields
-	   sizes))))
+    (setf lexdb-record (cons fields sizes))))
 
 (defun lexdb-store-record (record-in)
   (if (equal (cdr (assoc :name record-in))
@@ -529,7 +520,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   ;;(terpri)
   (cle-store-record record-in)
   (cle-empty-psql-cache)
-  (princ (format " record saved to lexdb %s. " (cle-dbname))))
+  (princ (format " revision saved to LexDB %s " (cle-dbname))))
 
 (defun lexdb-lookup-aux2 (field-kw val-str)
   (let ((ids (cle-lookup field-kw val-str)))
@@ -555,7 +546,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (interactive)
   (unless (and
 	   (cle-eval "(find-package :lkb)")
-	   (cle-eval-lexdb 'connection))
+	   (cle-connection))
     (if (not (cle-eval "(common-lisp-user::featurep :lkb)"))
 	(error "Please load the the LKB"))
     (if (not (cle-eval "(common-lisp-user::featurep :psql)"))
@@ -660,10 +651,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (field-display-str kw))
 
 (defun field-display-str (field-kw)
-  (let* ((name-str-all (symbol-name field-kw))
-	 (name-str (substring name-str-all 1)))
-    (or (car (rassoc (downcase name-str) *lexdb-field-mask*))
-	name-str)))
+  (substring (symbol-name field-kw) 1))
 
 (defun truncate-list (l n)
   (let ((out)
@@ -693,9 +681,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 	     (mapconcat #'cle-force-str fn-args " ")))))
 
 (defun cle-force-str (x)
-  (if (stringp x)
-      x
-    (format "%S" x)))
+  (if (stringp x) x (format "%S" x)))
 
 (defun cle-lisp-str (id)
   (format "\"%s\"" 
@@ -709,8 +695,11 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 (defun cle-lisp-symb (id)
   (format "'%s" id))
 
+(defun cle-lisp-list (list)
+  (format "'%S" list))
+
 (defun cle-retrieve-record-fields (id)
-  (cle-eval-lexdb 'retrieve-head-record-str (cle-lisp-str id)))
+  (cle-eval-lexdb 'retrieve-head-record (cle-lisp-symb id)))
 
 (defun cle-retrieve-tdl (id)
   (cle-eval-lexdb 'id-to-tdl (cle-lisp-symb id)))
@@ -718,24 +707,17 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 (defun cle-retrieve-record-sizes nil
    (cle-eval-lexdb 'get-field-size-map))
 
-(defun cle-retrieve-field-mask nil
-   (cle-eval-lexdb 'mneum-f))
-
 (defun cle-retrieve-record-features nil
    (cle-eval-lexdb 'fields))
 
 (defun cle-store-record (record-in)
-  (cle-eval-lexdb 'set-lex-entry 
-		  (format "(make-instance 'psql-lex-entry :fv-pairs '%S))" record-in)))
+  (cle-eval-lexdb 'set-lex-entry-from-record (cle-lisp-list record-in)))
 
 (defun cle-record-to-tdl (record-in)
-  (cle-eval-lexdb 'record-to-tdl (format "'%S" record-in)))
+  (cle-eval-lexdb 'record-to-tdl (cle-lisp-list record-in)))
 
 (defun cle-empty-psql-cache nil
   (cle-eval-lexdb 'empty-cache))
-
-(defun cle-initialize-psql nil
-  (cle-eval "(initialize-psql-lexicon)"))
 
 (defun cle-dbname nil
   (cle-eval-lexdb 'dbname))
@@ -744,9 +726,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (if (or (string= val-str "") (null val-str))
       (setf val-str nil)
     (setf val-str (cle-lisp-str val-str)))
-  (cle-eval-lexdb 'lookup
-		 field-kw
-		 val-str))
+  (cle-eval-lexdb 'lookup field-kw val-str))
   
 (defun cle-get-private-revisions ()
   (cle-eval-lexdb 'scratch-records))
@@ -755,9 +735,14 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (if (or (string= val-str "") (null val-str))
       (setf val-str (cle-lisp-str ""))
     (setf val-str (cle-lisp-str val-str)))
-  (cle-eval-lexdb 'complete
-		 field-kw
-		 val-str))
+  (cle-eval-lexdb 'complete field-kw val-str))
 
 (defun cle-new-entries nil
   (cle-eval-lexdb 'new-entries))
+
+(defun cle-connection nil
+  (cle-eval-lexdb 'connection))
+
+(defun cle-initialize-psql nil
+  (cle-eval "(initialize-psql-lexicon)"))
+

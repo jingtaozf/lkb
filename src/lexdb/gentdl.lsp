@@ -20,8 +20,7 @@
    (t (string-downcase (string symb)))))
     
 (defun pack-unifs (unifs)
-  (pack 
-   (unifs-2-list unifs)))
+  (pack (unifs-2-list unifs)))
 
 (defun unifs-2-list (unifs)
   (let ((c 0)
@@ -294,112 +293,94 @@
 (defun join-tdl (x &key (stream nil))
   (format stream "~a := ~a~%" (car x) (cdr x)))
 
+;;;
+
+(defun work-out-mixed (val)
+  (unless (equal val "")
+    (list (str-to-mixed val))))
+
+(defun work-out-str (val)
+  (unless (equal val "")
+    (list (str-to-string val))))
+
+(defun work-out-sym (val)
+  (unless (equal val "")
+    (list (str-2-symb val))))
+
+(defun work-out-mixed-rawlst (val)
+  (list (string-2-mxd-list-on-spc val)))
+
+(defun work-out-str-rawlst (val)
+  (list (string-2-str-list-on-spc val)))
+
+(defun work-out-rawlst (val)
+  (unless (equal val "")
+    (str-2-list val)))
+
+(defun work-out-str-lst (val)
+  (unless (equal val "")
+    (expand-string-list-to-fs-list
+     (string-2-str-list-on-spc val))))
+
+(defun work-out-str-dlst (val &key path)
+  (unless (equal val "")
+    (expand-string-list-to-fs-diff-list (string-2-str-list-on-spc val)
+					:path path)))
+
+(defun work-out-lst-t (val &key elt-path top)
+  (unless (equal val "")
+    (expand-string-list-to-fs-list-complex (string-2-mxd-list-on-spc val)
+					   :top top
+					   :elt-path elt-path))) 
+
+(defun work-out-lst(val &key elt-path)
+  (unless (equal val "")
+    (expand-string-list-to-fs-list-complex (string-2-mxd-list-on-spc val)
+					   :elt-path elt-path))) 
+
+(defun work-out-dlst-t (val &key elt-path top path)
+  (unless (equal val "")
+    (expand-string-list-to-fs-diff-list-complex (string-2-mxd-list-on-spc val)
+						:top top
+						:elt-path elt-path
+						:path path))) 
+
+(defun work-out-dlst (val &key elt-path path)
+  (unless (equal val "")
+    (expand-string-list-to-fs-diff-list-complex (string-2-mxd-list-on-spc val)
+						:elt-path elt-path
+						:path path))) 
 
 ;; see also extract-value-by-path
 ;;; returns _list_ of values of appropriate type
-(defun work-out-value (type value &key path)
-  (case type
-    (nil
-     (unless (equal value "")
-       (list (str-to-mixed value))))
+(defun work-out-value (typel val &key path)
+  (case (first typel)
     (mixed
-     (unless (equal value "")
-       (list (str-to-mixed value))))
-    
+     (work-out-mixed val))
     (str
-     (unless (equal value "")
-       (list (str-to-string value))))
-    (string
-     (unless (equal value "")
-       (list (str-to-string value))))
-
+     (work-out-str val))
     (sym
-     (unless (equal value "")
-       (list (str-2-symb value))))
-    (symbol 
-     (unless (equal value "")
-       (list (str-2-symb value))))
-
+     (work-out-sym val))
     (mixed-rawlst
-     (list (string-2-mxd-list-on-spc value)))
-
+     (work-out-mixed-rawlst val))
     (str-rawlst
-     (list (string-2-str-list-on-spc value)))
-    (string-list
-     (list (string-2-str-list-on-spc value)))
-    
-;    (rawlst
-;     (unless (equal value "")
-;       (str-2-list value) ))
-    (list 
-     (unless (equal value "")
-       (str-2-list value) ))
-    
+     (work-out-str-rawlst val))
+    (rawlst
+     (work-out-rawlst val))
     (str-lst
-     (unless (equal value "")
-       (expand-string-list-to-fs-list 
-	(string-2-str-list-on-spc value))))
-    (string-fs
-     (unless (equal value "")
-       (expand-string-list-to-fs-list 
-	(string-2-str-list-on-spc value))))
-    
+     (work-out-str-lst val))
     (str-dlst
-     (unless (equal value "")
-       (expand-string-list-to-fs-diff-list 
-	(string-2-str-list-on-spc value) :path path)))
-    (string-diff-fs
-     (unless (equal value "")
-       (expand-string-list-to-fs-diff-list 
-	(string-2-str-list-on-spc value) :path path)))
-    (T
-     (typecase type
-       (list
-	(case (first type)
-
-	  (lst-t
-	   (unless (equal value "")
-	     (expand-string-list-to-fs-list-complex 
-	      (string-2-mxd-list-on-spc value)
-	      :elt-path (cddr type)
-	      :top (cadr type))))
-
-	  (lst
-	   (unless (equal value "")
-	     (expand-string-list-to-fs-list-complex 
-	      (string-2-mxd-list-on-spc value)
-	      :elt-path (cdr type))))
-	  (mixed-fs
-	   (unless (equal value "")
-	     (expand-string-list-to-fs-list-complex 
-	      (string-2-mxd-list-on-spc value)
-	      :elt-path (cdr type))))
-
-	  (dlst-t
-	   (unless (equal value "")
-	     (expand-string-list-to-fs-diff-list-complex 
-	      (string-2-mxd-list-on-spc value)
-	      :path path
-	      :elt-path (cddr type)
-	      :top (cadr type))))
-
-	  (dlst
-	   (unless (equal value "")
-	     (expand-string-list-to-fs-diff-list-complex 
-	      (string-2-mxd-list-on-spc value)
-	      :path path
-	      :elt-path (cdr type))))
-	  (mixed-diff-fs
-	   (unless (equal value "")
-	     (expand-string-list-to-fs-diff-list-complex 
-	      (string-2-mxd-list-on-spc value)
-	      :path path
-	      :elt-path (cdr type))))
-	  (t
-	   (error "unhandled (list) type: ~a" (first type)))))
-       (T
-	(error "unhandled type"))))))
-
+     (work-out-str-dlst val :path path))     
+    (lst-t
+     (work-out-lst-t val :top (second typel) :elt-path (cddr typel)))
+    (lst
+     (work-out-lst val :elt-path (cdr typel)))
+    (dlst-t
+     (work-out-dlst-t val :top (second typel) :elt-path (cddr typel) :path path))
+    (dlst-t
+     (work-out-dlst val :elt-path (cdr typel) :path path))
+    (t
+     (error "~%unhandled field-map type: ~a" (first typel)))))
 
 (defun str-to-mixed (val-str)
   (let ((len (length val-str)))
@@ -422,7 +403,7 @@
 	(error "STRING val must be of form \\\"STR\\\""))
       (subseq val-str 1 (1- len)))
      (t
-      (error "bad format")))))
+      (error "invalid format")))))
 
 ;;; eg. ("w1" "w2") -> ((FIRST "w1") (REST FIRST "w2") (REST REST *NULL*)) 
 (defun expand-string-list-to-fs-list (string-list)
@@ -435,8 +416,7 @@
 		  (expand-string-list-to-fs-list (cdr string-list)))))))   
 
 ;;; eg. ("w1" "w2") (A B)-> ((FIRST A B "w1") (REST FIRST A B "w2") (REST REST *NULL*)) 
-(defun expand-string-list-to-fs-list-complex (string-list &key elt-path
-							       (top '*))
+(defun expand-string-list-to-fs-list-complex (string-list &key elt-path (top '*))
   (cond
    ((equal string-list nil) 
     (list (list *empty-list-type*)))
@@ -482,10 +462,7 @@
 							   :elt-path elt-path)))
 
 ;;; eg. ("w1" "w2") path (A B) -> ((FIRST A B "w1") (REST FIRST A B "w2") (REST REST path)) 
-(defun expand-string-list-to-fs-diff-list-complex-aux (string-list 
-						       &key path 
-							    elt-path
-							    (top '*))
+(defun expand-string-list-to-fs-diff-list-complex-aux (string-list &key path elt-path (top '*))
   (cond
    ((equal string-list nil) 
     (list 
