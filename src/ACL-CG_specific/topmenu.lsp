@@ -2,7 +2,7 @@
 ;;; No use or redistribution without permission.
 ;;; 
 
-(in-package :cl-user)
+(in-package :lkb)
 
 ;;; ACL-WIN port 
 
@@ -121,7 +121,7 @@
     (:big  (create-big-lkb-system-menu)))
    (if *lkb-exe-p* (make-lkb-top-frame)
       (make-lkb-top-menu))
-   (when cl-user::*current-grammar-load-file*
+   (when lkb::*current-grammar-load-file*
       (enable-type-interactions)))
 
 
@@ -195,7 +195,7 @@
     *lkb-real-menu*))
 
 (defun enable-mrs-interactions nil
-  (when cl-user::*mrs-loaded*
+  (when lkb::*mrs-loaded*
     (enable-defined-interactions 
      *lkb-real-menu*)))
      
@@ -207,7 +207,7 @@
       (let ((name (cg:name menu-item))
             (value (cg:value menu-item)))
         (when value
-          (when (or cl-user::*mrs-loaded* 
+          (when (or lkb::*mrs-loaded* 
                     (not (member name *lkb-menu-mrs-list*)))
             (setf (cg:available menu-item) t)
             (if (cg:menup value)

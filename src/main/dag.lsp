@@ -6,7 +6,7 @@
 ;;; CSLI, Stanford University
 ;;; No use or redistribution without permission.
 
-(in-package :cl-user)
+(in-package :lkb)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (export '(with-unification-context)))
@@ -1077,18 +1077,10 @@
 (defun copy-dag-partially1 (old path)
   (if (dag-visit old)
     (dag-visit old)
-    (let* ((type (if (eq (first path) 'cont) 'cont (dag-type old)))
-           (arcs (if (eq (first path) 'cont)
-                   (let ((message (unify-arcs-find-arc
-                                   'message 
-                                   (dag-arcs old) (dag-comp-arcs old)))
-                         (path (cons 'message path)))
-                     (declare (dynamic-extent path))
-                     (when message
-                       (list (make-dag-arc 
-                              :attribute 'message
-                              :value (copy-dag-partially1
-                                      (dag-arc-value message) path)))))
+    (let* ((type (if (eq (first path) *packing-restrictor*)
+                     (maximal-type-of (first path))
+                     (dag-type old)))
+           (arcs (unless (eq (first path) *packing-restrictor*)
                    (loop
                        for arc in (dag-arcs old)
                        for label = (dag-arc-attribute arc)

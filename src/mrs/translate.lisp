@@ -1,4 +1,4 @@
-(in-package :cl-user)
+(in-package :lkb)
 
 ;;; functions that allow for translation (using interlingua)
 ;;; and `translation'

@@ -6,7 +6,7 @@
 ;;; Pembroke Street
 ;;; Cambridge, UK
 
-(in-package :cl-user)
+(in-package :lkb)
 
 ;;; a series of functions to look after marking and unmarking of types
 

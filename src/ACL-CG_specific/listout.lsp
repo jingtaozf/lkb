@@ -4,7 +4,7 @@
 ;;; 
 ;;; version for Common Graphics
 
-(in-package :cl-user)
+(in-package :lkb)
 
 ;;; outputing active lists in a window - pass in an alist of string / data pairs,
 ;;; a window title, and an alist of menu command string / function pairs.

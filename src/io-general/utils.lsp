@@ -3,7 +3,7 @@
 
 ;;; Functions moved from io-paths/typeinput.lsp
 
-(in-package :cl-user)
+(in-package :lkb)
 
 (defun check-for (character istream name)
    (let ((next-char (peek-char t istream nil 'eof)))
@@ -166,22 +166,21 @@
 ;;; defined in globals
 
 (defun read-script-file-aux (file-name)
-  (when file-name
-    (let ( 
-          #+allegro (excl:*redefinition-warnings* nil)
-          #+mcl (*warn-if-redefine* nil)
-          #+mcl (ccl::*suppress-compiler-warnings* t)
-          (*syntax-error* nil))
-      (setf *current-grammar-load-file* file-name)
-      #-:tty
-      (enable-grammar-reload-interactions)
-    (clear-almost-everything)
-       (let ((*package* (find-package "CL-USER")))
-          (load file-name))
-    (lkb-beep)
-    (if *syntax-error*
+  (with-package (:lkb)
+    (when file-name
+      (let (#+allegro (excl:*redefinition-warnings* nil)
+            #+mcl (*warn-if-redefine* nil)
+            #+mcl (ccl::*suppress-compiler-warnings* t)
+            (*syntax-error* nil))
+        (setf *current-grammar-load-file* file-name)
+        #-:tty
+        (enable-grammar-reload-interactions)
+      (clear-almost-everything)
+      (load file-name)
+      (lkb-beep)
+      (if *syntax-error*
         (format t "~%WARNING: syntax error(s) - check messages")
-      (format t "~%Grammar input complete~%")))))
+        (format t "~%Grammar input complete~%"))))))
 
 
 

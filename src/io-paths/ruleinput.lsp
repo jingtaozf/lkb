@@ -3,7 +3,7 @@
 ;;; No use or redistribution without permission.
 ;;; 
 
-(in-package :cl-user)
+(in-package :lkb)
 
 ;;; April 1997 
 ;;; new file split off from old rules.lsp, in order to 

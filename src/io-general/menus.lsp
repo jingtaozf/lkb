@@ -1,60 +1,60 @@
 #+(and :allegro :clim)(in-package :clim-user)
-#-(and :allegro :clim)(in-package :cl-user)
+#-(and :allegro :clim)(in-package :lkb)
 #+:allegro
 (eval-when 
     (compile load eval)
-  (shadowing-import '(cl-user::read-script-file
-                      cl-user::reload-script-file
-                      cl-user::read-type-patch-files
-                      cl-user::reload-leaf-files
-                      cl-user::reload-lex-files
-                      cl-user::reload-grammar-rules
-                      cl-user::reload-lexical-rules
-                      cl-user::reload-template-files
-                      cl-user::reload-psort-files
+  (shadowing-import '(lkb::read-script-file
+                      lkb::reload-script-file
+                      lkb::read-type-patch-files
+                      lkb::reload-leaf-files
+                      lkb::reload-lex-files
+                      lkb::reload-grammar-rules
+                      lkb::reload-lexical-rules
+                      lkb::reload-template-files
+                      lkb::reload-psort-files
 		      ;; view
-		      cl-user::show-type-tree
-		      cl-user::show-type-spec 
-		      cl-user::show-type 
-		      cl-user::show-lex
-		      cl-user::show-words 
-		      cl-user::show-grammar-rule 
-		      cl-user::show-lex-rule 
+		      lkb::show-type-tree
+		      lkb::show-type-spec 
+		      lkb::show-type 
+		      lkb::show-lex
+		      lkb::show-words 
+		      lkb::show-grammar-rule 
+		      lkb::show-lex-rule 
                       ;; parse
                       #+:ltemplates
-                      cl-user::parse-with-preprocessor
-		      cl-user::show-parse 
-		      cl-user::show-chart 
-		      cl-user::compare-parses
+                      lkb::parse-with-preprocessor
+		      lkb::show-parse 
+		      lkb::show-chart 
+		      lkb::compare-parses
                       ;; mrs
-                      cl-user::read-mrs-rule-file
-                      cl-user::clear-mrs-rules
-                      cl-user::choose-mrs-output-level
+                      lkb::read-mrs-rule-file
+                      lkb::clear-mrs-rules
+                      lkb::choose-mrs-output-level
                       ;; generate
-                      cl-user::show-gen-result
-		      cl-user::show-gen-chart
-                      cl-user::index-for-generator
-                      cl-user::read-gen-rule-file
-                      cl-user::clear-gen-rules
-                      cl-user::index-for-generator
+                      lkb::show-gen-result
+		      lkb::show-gen-chart
+                      lkb::index-for-generator
+                      lkb::read-gen-rule-file
+                      lkb::clear-gen-rules
+                      lkb::index-for-generator
 		      ;; link
-		      cl-user::apply-lex 
-		      cl-user::apply-lex-rules 
+		      lkb::apply-lex 
+		      lkb::apply-lex-rules 
 		      ;; tidy
-		      cl-user::clear-non-parents
-                      cl-user::interactive-create-check-paths
+		      lkb::clear-non-parents
+                      lkb::interactive-create-check-paths
 		      ;; output
-		      cl-user::output-type-file 
-                      cl-user::output-display-settings
-                      cl-user::load-display-settings
-		      cl-user::*lkb-system-version*
+		      lkb::output-type-file 
+                      lkb::output-display-settings
+                      lkb::load-display-settings
+		      lkb::*lkb-system-version*
                       ;; debug
-                      cl-user::print-chart
-                      cl-user::print-gen-chart
-                      cl-user::batch-check-lexicon
+                      lkb::print-chart
+                      lkb::print-gen-chart
+                      lkb::batch-check-lexicon
 		      ;; options
-		      cl-user::get-parameters
-                      cl-user::find-type-from-features)))
+		      lkb::get-parameters
+                      lkb::find-type-from-features)))
 
 ;;; Menus moved to here from topmenu.lsp, since they can be
 ;;; treated as independent between ACL and MCL

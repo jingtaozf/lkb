@@ -1,4 +1,4 @@
-(in-package :cl-user)
+(in-package :lkb)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -80,6 +80,7 @@
 		      (write-to-string entry)))
   id)
 
+
 (defmethod read-psort ((lexicon cdb-lex-database) id &key (cache t))
   (unless (psort-db lexicon)
     (setf (psort-db lexicon) 
@@ -90,7 +91,8 @@
 	   ;; In case multiple entries are returned, we take the last one
 	   (let* ((rec (car (last (cdb:read-record (psort-db lexicon) 
 						   (string id)))))
-		  (entry (when rec (read-from-string rec))))
+		  (entry (when rec (with-package (:lkb) 
+                                     (read-from-string rec)))))
 	     (when (and entry cache)
 	       (setf (gethash id psorts) entry))
 	     entry)))))

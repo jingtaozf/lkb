@@ -7,7 +7,7 @@
 
 ;;; now requires basemrs.lisp for structures and printing
 ;;; requires mrsglobals.lisp for global variables for paths etc.
-(in-package "MRS")
+(in-package :mrs)
 
 (defun remove-trailing-periods (sentence-string)
   (string-right-trim '(#\Space #\.) sentence-string))
@@ -29,7 +29,7 @@
          ;; which controls whether the scoping code is run
          ;;
          ;; the synlabel mechanism, apparently, is no longer required; ann
-         ;; says she wants to look into this close sometime  (28-mar-00  -  oe)
+         ;; says she wants to look into this sometime  (28-mar-00  -  oe)
          ;;
          (synlabel #+:vm (get-category-label parse) nil)
          (sem-fs (path-value fs *initial-semantics-path*)))

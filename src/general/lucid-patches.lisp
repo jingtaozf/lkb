@@ -39,7 +39,7 @@
 (proclaim '(optimize (compilation-speed 3)))
 
 ;;;
-;;; Lucid 4.1 with CLIM 2.0 (beta) is totally belgiumed: `COMMON-LISP' and `LISP'
+;;; Lucid 4.1 with CLIM 2.0 (beta) is very confused: `COMMON-LISP' and `LISP'
 ;;; are separate packages; likewise for `COMMON-LISP-USER' and `USER'.  ---
 ;;; unfortunately deleting the (bogus) `LISP' package makes it really unhappy.
 ;;; 
@@ -47,7 +47,9 @@
 (eval-when (load eval compile)
   (when (not (equal (find-package "COMMON-LISP-USER") (find-package "USER")))
     (delete-package "USER")))
-(rename-package "COMMON-LISP-USER" "COMMON-LISP-USER" '("CL-USER" "USER"))
+
+(eval-when (load eval compile)
+  (rename-package "COMMON-LISP-USER" "COMMON-LISP-USER" '("CL-USER" "USER")))
 
 ;;;
 ;;; Lucid CL 4.0 has a defpackage() not affecting the compilation environment.
@@ -116,7 +118,7 @@
 (pushnew :no-loop-across *features*)
 
 ;;;
-;;; not quite true but makes defsystem() happy (2-may-96 -- oe@cl.dfki.uni-sb.de)
+;;; not quite true but makes defsystem() happy (2-may-96 -- oe@cl)
 ;;;
 #+(and :lcl4.1 :ansi-packages :hp-ux)
 (pushnew :cltl2 *features*)

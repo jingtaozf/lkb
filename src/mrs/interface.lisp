@@ -14,16 +14,16 @@
   (when (or *mrs-scoping*
             *mrs-output-p*)
     (unless stream
-      (setf stream cl-user::*lkb-background-stream*))
+      (setf stream lkb::*lkb-background-stream*))
     (unless edges (setf edges *parse-record*))
     (let ((*print-circle* nil))
       (for edge in edges 
            do
            (let ((mrs (extract-mrs edge)))
              (format stream "~%Edge number ~A" 
-                     (cl-user::edge-id edge))
+                     (lkb::edge-id edge))
              (format stream "~%~A~%" 
-                     (cl-user::parse-tree-structure edge))
+                     (lkb::parse-tree-structure edge))
              (treat-mrs mrs t stream))))))
 
 (defvar *mrs-debug* nil)
@@ -31,7 +31,7 @@
 (defvar *mrs-discourse* nil)
 
 (defun treat-mrs (mrs-struct simplep stream)
-  (format stream "~%~A " cl-user::*sentence*)
+  (format stream "~%~A " lkb::*sentence*)
   (setf *mrs-debug* mrs-struct)
   (cond (*mrs-scoping*
          (process-mrs-struct mrs-struct nil 10 simplep stream))
@@ -70,16 +70,16 @@
 ;;;
 
 #|
-(defparameter cl-user::*do-something-with-parse* 'mrs::batch-output-mrs)
+(defparameter lkb::*do-something-with-parse* 'mrs::batch-output-mrs)
 |#
 
 (defun batch-output-mrs nil
   ;;; to be called from LKB batch processing
-  (let ((sentence cl-user::*sentence*)
-        (ostream (if (and cl-user::*ostream* 
-                          (streamp cl-user::*ostream*) 
-                          (output-stream-p cl-user::*ostream*)) 
-                     cl-user::*ostream*  t)))
+  (let ((sentence lkb::*sentence*)
+        (ostream (if (and lkb::*ostream* 
+                          (streamp lkb::*ostream*) 
+                          (output-stream-p lkb::*ostream*)) 
+                     lkb::*ostream*  t)))
     (if *parse-record*
         (progn
           (format ostream "~%;;; MRS for: ~A " sentence)
@@ -142,7 +142,7 @@
 
 (defun browse-mrs (mrs &optional title)
   (ignore-errors
-   (let ((browser (fboundp (find-symbol "SHOW-MRS-WINDOW" :cl-user))))
+   (let ((browser (fboundp (find-symbol "SHOW-MRS-WINDOW" :lkb))))
      (if (functionp browser)
          (apply browser (list nil mrs title))
        (output-mrs mrs 'simple)))))

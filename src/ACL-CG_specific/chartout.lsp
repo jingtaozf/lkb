@@ -1,4 +1,4 @@
-(in-package :cl-user)
+(in-package :lkb)
 
 ;;; Functions below here are to replace functions
 ;;; which aren't defined yet

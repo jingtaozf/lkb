@@ -1,4 +1,4 @@
-(in-package "MRS")
+(in-package :mrs)
 
 ;;; Variant of the mrs extraction code for the LKB
 ;;; This redefines some functions used by PAGE
@@ -29,13 +29,13 @@
   ;;; ultimately, i believe.                                (28-mar-00  -  oe)
   ;;;
   #+:vm
-  (let ((edge-symbol (cl-user::make-new-parse-tree edge 1)))
-    (cl-user::get-string-for-edge edge-symbol))
+  (let ((edge-symbol (lkb::make-new-parse-tree edge 1)))
+    (lkb::get-string-for-edge edge-symbol))
   #-:vm
   (let ((dag (edge-dag edge)))
-    (cl-user::tree-node-text-string 
-     (or (and dag (cl-user::find-category-abb dag)) 
-         (cl-user::edge-category edge)))))
+    (lkb::tree-node-text-string 
+     (or (and dag (lkb::find-category-abb dag)) 
+         (lkb::edge-category edge)))))
 
 
 (defun output-parse-tree (tree stream)
@@ -45,9 +45,9 @@
 ;;; page version calls kh-parse-tree
 
 (defun get-last-sentence nil
-  cl-user::*sentence*)
+  lkb::*sentence*)
 ;; *last-parses* is not defined for tty version
-;;  (car CL-USER::*last-parses*))  
+;;  (car lkb::*last-parses*))  
 
 (defun deref (fs)
   ;;; just a guess, but can't do any harm ...
@@ -93,7 +93,7 @@
                                    (symbol-name real-type))))
       ;;; if there's a glbtype, and the user is Dan, be annoying
       (dotimes (n 5)
-        (cl-user::lkb-beep)
+        (lkb::lkb-beep)
         (format t "~%!!!!!!!!!!!!!!!!!!!!!!" real-type))
       (format t "~%GLBTYPE ~A in MRS" real-type)
       (dotimes (n 5)
@@ -106,7 +106,7 @@
 
 (defun is-top-type (val)
 ;;; also defined for PAGE
-  (eql CL-USER::*toptype* val))
+  (eql lkb::*toptype* val))
 
 (defun tdl-precedes (type1 type2)
   (or (equal type1 type2)
@@ -123,10 +123,10 @@
 (defun compatible-types (type1 type2)
   (if (and (null type1) (null type2))
       t ; *** fudge, since sometimes erroneously gets called with nil args
-      (cl-user::find-gcsubtype type1 type2)))
+      (lkb::find-gcsubtype type1 type2)))
 
 
 (defun is-valid-type (val)
-  (CL-USER::is-valid-type val))
+  (lkb::is-valid-type val))
 
 

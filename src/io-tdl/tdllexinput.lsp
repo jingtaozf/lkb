@@ -2,7 +2,7 @@
 ;;; No use or redistribution without permission.
 ;;;
 
-(in-package :cl-user)
+(in-package :lkb)
 
 ;;; Input from lexical entry and psort/template files
 ;;; in TDL format

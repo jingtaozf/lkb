@@ -10,7 +10,7 @@
 
 ;;; 1997 - merged with YADU version
 
-(in-package :user)
+(in-package :lkb)
 
 ;;; the main entry points are a series of functions with names like
 ;;; display-basic-fs

@@ -1,19 +1,13 @@
-(in-package "COMMON-LISP-USER")
+(in-package :common-lisp-user)
 
 (pushnew :mrs *features*)
 
-#+lkb
-(defpackage "MRS"
-  #+acl(:use "COMMON-LISP" "COMMON-LISP-USER" "USER")
-  #-acl(:use "COMMON-LISP" "COMMON-LISP-USER")
-  )
-
-(in-package "MRS")
-
-(eval-when (compile load eval)
-(export '(psoa-top-h psoa-index psoa-liszt psoa-h-cons
-          rel-sort rel-handel rel-flist rel-extra
-          fvpair-feature fvpair-value
-          var-name var-extra var-id
-          handle-var-name handle-var-extra handel-var-id
-          hcons-scarg hcons-outscpd hcons-relation)))
+(defpackage :mrs 
+  (:use :lkb :common-lisp :make)
+  (:export
+   "PSOA-TOP-H" "PSOA-INDEX" "PSOA-LISZT" "PSOA-H-CONS"
+   "REL-SORT" "REL-HANDEL" "REL-FLIST" "REL-EXTRA"
+   "FVPAIR-FEATURE" "FVPAIR-VALUE"
+   "VAR-NAME" "VAR-EXTRA" "VAR-ID"
+   "HANDLE-VAR-NAME" "HANDLE-VAR-EXTRA" "HANDEL-VAR-ID"
+   "HCONS-SCARG" "HCONS-OUTSCPD" "HCONS-RELATION"))

@@ -1,4 +1,4 @@
-(in-package :cl-user)
+(in-package :lkb)
 
 ;;; MRS related output functions to clean up MRS-less LKB
 

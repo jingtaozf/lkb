@@ -80,7 +80,7 @@
   (set-up-lkb-interaction))
 
 (defun shrink-lkb-menu nil
-  (setf cl-user::*lkb-menu-type* :core)
+  (setf lkb::*lkb-menu-type* :core)
   (set-up-lkb-interaction))
 
 (defun set-up-lkb-interaction (&optional system-type)
@@ -150,7 +150,7 @@
    (for submenu in *lkb-menu-disabled-list*
         do 
         (if 
-            (or cl-user::*mrs-loaded* (not (member submenu *lkb-menu-mrs-list*)))
+            (or lkb::*mrs-loaded* (not (member submenu *lkb-menu-mrs-list*)))
             (menu-item-enable submenu))))
 
 (defun disable-type-interactions nil
@@ -167,7 +167,7 @@
         (menu-item-enable submenu)))
 
 (defun enable-mrs-interactions nil
-  (when cl-user::*mrs-loaded*
+  (when lkb::*mrs-loaded*
     (dolist (submenu *lkb-menu-mrs-list*)
       (menu-item-enable submenu))))
 

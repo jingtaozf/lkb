@@ -1,4 +1,4 @@
-(in-package "COMMON-LISP-USER")
+(in-package :lkb)
 
 ;;; the following is just for the Windows version because we're trying
 ;;; to use the built-in project mechanism for that
@@ -32,8 +32,11 @@
 
 (import '(enable-type-interactions disable-type-interactions))
 
-#+(and :allegro :clim (not :mswindows)) (setq tk-silica::*use-clim-gc-cursor* t)
+#+(and :allegro :clim (not :mswindows)) 
+(setq tk-silica::*use-clim-gc-cursor* t)
 
-(defpackage "MRS" (:use "COMMON-LISP" "MAKE"))
-(defpackage "MAIN" (:use "COMMON-LISP" "MAKE"))
+(defmacro with-package ((package) &body body)
+  `(let ((*package* (find-package ,package)))
+     ,@body))
+
 

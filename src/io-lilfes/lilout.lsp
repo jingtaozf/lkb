@@ -1,4 +1,4 @@
-(in-package :cl-user)
+(in-package :lkb)
 
 #|
 to convert an LKB grammar

@@ -2,7 +2,7 @@
 ;;; No use or redistribution without permission.
 ;;; 
 
-(in-package :cl-user)
+(in-package :lkb)
 
 (defclass plob-lex-database (lex-database)
   ((initialized-p :initform nil)

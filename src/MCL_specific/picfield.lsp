@@ -26,7 +26,7 @@
   (setf (shrunk-p self) shrunk-p)
   (set-view-size self
                  (string-width (or item-display "") (view-font self))
-                 (+ (cl-user::font-ascent self) (cl-user::font-descent self))))
+                 (+ (font-ascent self) (font-descent self))))
 
 
 ;;; Annie wants not a triangle
@@ -38,7 +38,7 @@
   (erase-rect self (view-scroll-position self) (view-size self))
   (when (shrunk-p self)
     (frame-rect self (view-scroll-position self) (view-size self)))
-  (move-to self 0 (cl-user::font-ascent self))
+  (move-to self 0 (lkb::font-ascent self))
   (let* ((item-display (pop-up-menu-item-display self))
          (my-string (if (stringp item-display)
                       item-display

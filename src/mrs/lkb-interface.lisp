@@ -1,4 +1,4 @@
-(in-package :cl-user)
+(in-package :lkb)
 
 (eval-when (compile load eval)
 (export '(edge-dag follow-pointers existing-dag-at-end-of dag-p is-atomic
@@ -18,21 +18,13 @@
           make-pv-unif construct-tdfs create-wffs 
           process-unifications yadu)))
 
-#|
-; just to avoid errors because package is undefined
-(eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
-           #-:ansi-eval-when (load eval compile)
-  (unless (find-package "TREES")
-    (defpackage "TREES")))              ; used in acl-mrs.lisp
-|#
-
 #-excl (defpackage "EXCL")
 
-(in-package "MRS")
+(in-package :mrs)
 
 (defun vsym (str) 
   ;;; allow mrsglobals-eng file to be system independent
-  (intern (string-upcase str) "CL-USER"))
+  (intern (string-upcase str) :lkb))
 
 
 

@@ -2,7 +2,7 @@
 ;;; No use or redistribution without permission.
 ;;;
 
-(in-package :cl-user)
+(in-package :lkb)
 
 ;;;
 ;;; Leaf types - these functions are effectively simplified versions
@@ -177,7 +177,8 @@
 	  (when entry
 	    (pushnew type *type-names* :test #'eq)
 	    (pushnew type leaf-types :test #'eq)    
-	    (set-type-entry type (read-from-string entry))))))))
+	    (set-type-entry type 
+              (with-package (:lkb) (read-from-string entry)))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

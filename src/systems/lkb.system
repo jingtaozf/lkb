@@ -1,18 +1,7 @@
 ;;; -*- Mode: LISP; Package: MAKE -*-
 
-(in-package "MAKE")
+(in-package :make)
 
-;;;
-;;; the :lkb feature is there to allow add-on modules (like the MRS code and
-;;; [incr tsdb()]) to be conditionalized for various host platforms.  as it
-;;; stands, :lkb is already set in `src/general/loadup.lisp' as distributed
-;;; with the LKB (such that one can do, say, (load-system "mrs") to load MRS
-;;; plus LKB).  this is somewhat unfortunate in that [incr tsdb()] comes with
-;;; a generic version of `loadup.lisp' that allows using [incr tsdb()] in
-;;; standalone mode (as well as in conjunction with the LKB or PAGE).  so, we
-;;; have to distribute the [incr tsdb()] version separately and discourage
-;;; people to unpack it on top of the LKB source tree.  once the first release
-;;; is out, we should find a better solution here.        (22-aug-99  -  oe)
 ;;;
 ;;; the :tty feature, when set, disables all graphics.  the graphical user
 ;;; interface currently requires CLIM (typically using Allegro CL on Unix) or
@@ -26,6 +15,7 @@
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
            #-:ansi-eval-when (load eval compile)
   (pushnew :lkb *features*)
+  (pushnew :lkb-v5.3 *features*)         
   #+(or :cl-http (not (or :mcl :clim :common-graphics))) 
   (pushnew :tty *features*))
 
@@ -44,16 +34,16 @@
            #-:ansi-eval-when (load eval compile)
   (pushnew :ltemplates *features*)
   (pushnew :pooling *features*)
-  #+:oe (pushnew :packing *features*))
+  (pushnew :packing *features*))
 
 
 (defparameter *lisp-specific-directory*
-    #+(and :allegro :clim) "ACL_specific"
-    #+(and :allegro (not :clim) :tty) "ACL_specific"
-    #+(and :allegro :common-graphics (not :clim) (not :tty)) 
-    "ACL-CG_specific"
-    #+:mcl "MCL_specific"
-    #+(and (not :allegro) (not :mcl)) "")
+  (or
+   #+(and :allegro :clim) "ACL_specific"
+   #+(and :allegro (not :clim) :tty) "ACL_specific"
+   #+(and :allegro :common-graphics (not :clim) (not :tty)) "ACL-CG_specific"
+   #+:mcl "MCL_specific"
+   ""))
 
 (defsystem "lkb"
     :host (make-pathname :host cl-user::%sys-host%)   
@@ -67,21 +57,25 @@
     #+:allegro (setf excl:*enable-package-locked-errors* nil)
     #-:allegro nil
     :finally-do
-    #+(and :allegro :clim (not :tty))
-    (unless (and (boundp 'cl-user::*building-image-p*)
-		 cl-user::*building-image-p*)
-      (let ((*package* (find-package "CLIM-USER")))
-	(clim-user::set-up-lkb-interaction :core)))
-    #+(and :allegro :common-graphics (not :clim) (not :tty))
-    (unless (and (boundp 'cl-user::*building-image-p*)
-		 cl-user::*building-image-p*)
-	(cl-user::set-up-lkb-interaction :core))
-    #+(and :mcl (not :tty))
-    (cl-user::set-up-lkb-interaction :core)
-    #+tty nil
+    #+(and :allegro (not :tty) (or :clim :common-graphics :mcl))
+    (let ((building-image-p (find-symbol "*BUILDING-IMAGE-P*" :lkb)))
+      (unless (and building-image-p (boundp building-image-p)
+                   (symbol-value building-image-p))
+        (let ((*package* (find-package #+:clim :clim-user #-:clim :lkb)))
+          #+:clim
+          (clim-user::set-up-lkb-interaction :core)
+          #-:clim
+          (lkb::set-up-lkb-interaction :core))))
+    #-(and :allegro (not :tty) (or :clim :common-graphics :mcl))
+    nil
 
     :components
-    ((:module "version"
+    ((:module "package"
+              :source-pathname ""
+	      :binary-pathname ""
+	      :components
+	      ((:file "lkb-package")))
+     (:module "version"
               :source-pathname ""
 	      :binary-pathname ""
 	      :components

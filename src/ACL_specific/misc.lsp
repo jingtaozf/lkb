@@ -1,4 +1,4 @@
-(in-package :cl-user)
+(in-package :lkb)
 
 ;;; misc functions for compatability
 

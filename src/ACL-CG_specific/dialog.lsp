@@ -5,7 +5,7 @@
 ;;; Dialogs
 ;;; Some general purpose functions
 
-(in-package :cl-user)
+(in-package :lkb)
 
 (defun lkb-dialog-font nil
    (cg:make-font :roman ::arial 14 '(:bold)))

@@ -2,7 +2,7 @@
 ;;; Tools to help build a tree bank
 ;;;
 
-(in-package :user)
+(in-package :lkb)
 
 (def-lkb-parameter *preference-file* "~/grammar/parses.txt")
 

@@ -7,7 +7,7 @@
 ;;; July 1996 - cacheing glbs
 ;;; structure mod to allow glbs to be calculated 
 
-(in-package :cl-user)
+(in-package :lkb)
 
 ;;;
 ;;; generic assoc() and member() are mightier than is typically needed; supply
@@ -113,7 +113,8 @@
    (clear-leaf-types *leaf-types*)
    (clear-feature-table)
    (clear-expanded-lex)
-#+:allegro (when (and *gc-before-reload* *type-reload-p*) (gc t))
+   #+:allegro 
+   (when (and *gc-before-reload* *type-reload-p*) (excl:gc t))
    (setf *type-reload-p* t))
 
 (defun clear-types-for-patching-constraints nil
@@ -163,13 +164,14 @@
 
 ; instance-types added for MT removed for GLB stuff
 (defun instance-type-parent (name)
-   (locally
-      (declare (optimize (speed 3) (safety 0)) (inline symbolp symbol-name schar))
-      (and (symbolp name)
+  (locally
+      (declare (optimize (speed 3) (safety 0)) 
+               (inline symbolp symbol-name schar))
+    (and (symbolp name)
          ;; they start with % so we can quickly test without searching the
          ;; property list
          (eql (the character
-                 (schar (the simple-string (symbol-name (the symbol name))) 0))
+                (schar (the simple-string (symbol-name (the symbol name))) 0))
               #\%)
          (get name 'root-template))))
 

@@ -14,13 +14,13 @@
 
 (in-package :clim-user)
 
-(eval-when
- (compile load eval)
- (export '(*lkb-top-frame* *lkb-top-stream*
-           *last-directory*
-           set-up-lkb-interaction 
-	   enable-type-interactions disable-type-interactions))
-)
+(eval-when (compile load eval)
+  (setf *default-text-style*
+    (merge-text-styles '(:sans-serif nil nil) *default-text-style*))
+  (export '(*lkb-top-frame* *lkb-top-stream*
+            *last-directory*
+            set-up-lkb-interaction 
+            enable-type-interactions disable-type-interactions)))
 
 (defvar *lkb-menu-type* :core)
 
@@ -73,7 +73,7 @@
 		:available-p available-p)))
     (unless (or (eql available-p :always) 
                 (and (eql available-p :grammar-file)
-                     user::*current-grammar-load-file*))
+                     lkb::*current-grammar-load-file*))
       (push (intern (concatenate 'string "COM-" name))
             *lkb-menu-disabled-list*))
     (when (eql available-p :grammar-file)
@@ -191,7 +191,7 @@
     (set-up-clim-interaction)))
 
 (defun set-up-emacs-interaction ()
-  (cl-user::add-lkb-menu (construct-menu *lkb-menu*)))
+  (lkb::add-lkb-menu (construct-menu *lkb-menu*)))
 
 (defun set-up-clim-interaction ()
   ;; Flush old commands
@@ -281,9 +281,9 @@
     (setf *lkb-top-stream* (get-frame-pane *lkb-top-frame* 'display))
     ;; crude way of seeing whether this is being called when we already have a
     ;; grammar
-    (when user::*current-grammar-load-file*
+    (when lkb::*current-grammar-load-file*
       (enable-type-interactions))
-    (setf cl-user::*lkb-background-stream* background-stream)
+    (setf lkb::*lkb-background-stream* background-stream)
     (unwind-protect
         (run-frame-top-level frame)
       (when *complete-lisp-close*
@@ -294,19 +294,19 @@
   ;; Check if user really wants to do this.  By default, exit Lisp as
   ;; well. For stand-alone application, always exit Lisp as well.
   (if (lep:lep-is-running)
-      (let ((result (user::ask-user-for-multiple-choice "Really exit?" 
+      (let ((result (lkb::ask-user-for-multiple-choice "Really exit?" 
 							'Lisp 'LKB 'Cancel)))
         (cond ((eq result 'lkb) (frame-exit frame))
               ((eq result 'lisp) 
                (setf *complete-lisp-close* t)
                (frame-exit frame))
               (t nil)))
-    (when (user::lkb-y-or-n-p "Really exit the system?")
+    (when (lkb::lkb-y-or-n-p "Really exit the system?")
       (setf *complete-lisp-close* t)
       (frame-exit frame))))
 
 (defun restart-lkb-function nil
-  (user::read-psort-index-file)
+  (lkb::read-psort-index-file)
   (setf *last-directory* nil)
   (set-up-lkb-interaction))
 
@@ -317,11 +317,11 @@
   (set-up-lkb-interaction))
 
 (defun dump-lkb nil
-  (if common-lisp-user::*current-grammar-load-file*
-      (progn (cl-user::lkb-beep)
+  (if lkb::*current-grammar-load-file*
+      (progn (lkb::lkb-beep)
              (format t "~%Dump system will not work after a grammar has been loaded"))
     (let ((image-location 
-           (user::ask-user-for-new-pathname
+           (lkb::ask-user-for-new-pathname
             (format nil 
                     "File for image (local file advised)"))))
     (when image-location
@@ -341,14 +341,14 @@
                     image-type))))
       (setf excl:*restart-init-function* #'restart-lkb-window)
       (excl:dumplisp :name image-location)
-      (user::lkb-beep)
+      (lkb::lkb-beep)
       (format t "~%Image saved~%")
       nil))))
 
 (defun enable-type-interactions nil
   ;; it may only work from within the application frame
   (dolist (command *lkb-menu-disabled-list*)
-    (if (or cl-user::*mrs-loaded* (not (member command *lkb-menu-mrs-list*)))
+    (if (or lkb::*mrs-loaded* (not (member command *lkb-menu-mrs-list*)))
         (setf (command-enabled command *lkb-top-frame*) t))))
 
 (defun disable-type-interactions nil
@@ -363,7 +363,7 @@
     (setf (command-enabled command *lkb-top-frame*) t)))
 
 (defun enable-mrs-interactions nil
-  (when cl-user::*mrs-loaded*
+  (when lkb::*mrs-loaded*
     (dolist (command *lkb-menu-mrs-list*)
       (setf (command-enabled command *lkb-top-frame*) t))))
 
@@ -372,16 +372,16 @@
     
 (defun parse-sentences-batch nil
   ;;; for MCL this can just be parse-sentences
-  (mp:process-run-function "Batch parse" #'cl-user::parse-sentences))
+  (mp:process-run-function "Batch parse" #'lkb::parse-sentences))
 
 #|
 (defun do-parse-batch nil
   ;;; for MCL this can just be do-parse
-  (mp:process-run-function "Parse" #'cl-user::do-parse))
+  (mp:process-run-function "Parse" #'lkb::do-parse))
 |#
 
 (defun do-parse-batch nil
-  (cl-user::do-parse))
+  (lkb::do-parse))
 
 ;; Direct output to LKB window, if present
 

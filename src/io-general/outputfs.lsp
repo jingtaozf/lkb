@@ -2,7 +2,7 @@
 ;;; No use or redistribution without permission.
 ;;; 
 
-(in-package :cl-user)
+(in-package :lkb)
 
 ;;; Displaying FSs in a variety of ways
 ;;; Window functions are in activefs.lsp which is not 

@@ -1,4 +1,4 @@
-(in-package :cl-user)
+(in-package :lkb)
 
 ;;; Record source locations for things, and provide an interface to
 ;;; display sources in emacs

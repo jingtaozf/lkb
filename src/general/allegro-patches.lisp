@@ -5,7 +5,7 @@
 ;;;      module: PAGE patches to Allegro CL
 ;;;     version: 2.0 -- 4-jun-1994
 ;;;  written by: bernd kiefer, dfki saarbruecken
-;;; last update: 5-sep-96
+;;; last update: 2-jun-00
 ;;;  updated by: oe, coli saarbruecken
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; author            | date        | modification
@@ -15,7 +15,7 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "COMMON-LISP-USER")
+(in-package :common-lisp-user)
 
 ;;;
 ;;; correct some deficiencies in lispish self-consciousness
@@ -30,21 +30,26 @@
 ;;;
 
 #-:mk-defsystem
-(load (make-pathname :device %sys-device% :directory general-dir :name "defsystem"))
+(load 
+ (make-pathname :device %sys-device% :directory general-dir :name "defsystem"))
 
-;(load (make-pathname :directory general-dir :name "autozoom" :type "cl"))
+(in-package :make)
 
-(in-package "MAKE")
-
-(defvar %BINARY-DIR-NAME% 
-    (remove-if-not #'(lambda (x) (or (alphanumericp x) (member x '(#\- #\_))
-                                   #-:mswindows  (eql x #\.)))
-                  (substitute #\_ #\space 
-                   (concatenate 'string 
-                     #-:mswindows "."
-                     (or (machine-type) "") "-" 
-                     (or (software-type) "") "-"
-                     (or (lisp-implementation-version) "")))))
+(defvar %binary-dir-name% 
+    (or
+     #+(and :sparc :clim) ".sacl" #+(and :sparc (not :clim)) ".sasl"
+     #+(and :linux86 :clim) ".lacl" #+(and :linux86 (not :clim)) ".lasl"
+     #+(and :alpha :clim) ".aacl" #+(and :alpha (not :clim)) ".aasl"
+     #+(and :mswindows :clim) "wacl" #+(and :mswindows (not :clim)) "wasl"
+     (remove-if-not #'(lambda (x) 
+                        (or (alphanumericp x) 
+                            (member x '(#\- #\_ #-:mswindows #\.))))
+                    (substitute #\_ #\space 
+                                (concatenate 'string 
+                                  #-:mswindows "."
+                                  (or (machine-type) "") "-" 
+                                  (or (software-type) "") "-"
+                                  (or (lisp-implementation-version) ""))))))
 
 ;;;
 ;;; determine the system type (in terms of hardware and os) in order to set
@@ -59,7 +64,7 @@
   #+(and :sun :svr4) "solaris"
   #+:alpha "osf"
   #+:mswindows "mswindows"
-  #-(or :prism :sunos4 (and :sun :svr4) :alpha :linux86 :mswindows)
+  #-(or :prism :linux86 :sunos4 (and :sun :svr4) :alpha :mswindows)
   (error "~&loadup: unable to determine system type; see file ~
           `allegro-patches.lisp'.~%"))
 
@@ -68,7 +73,8 @@
     (shadowing-import
       '(make:defsystem make:undefsystem
         make:load-system make:compile-system make:clean-system)
-      "EXCL")))
+      :excl)))
 
 (defun run-process (&rest arguments)
   (apply #'excl:run-shell-command arguments))
+

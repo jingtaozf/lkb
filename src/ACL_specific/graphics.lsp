@@ -2,7 +2,7 @@
 ;;; CL dialect specific
 ;;; This version for Allegro CL - CLIM2
 
-(in-package :cl-user)
+(in-package :lkb)
 
 (eval-when
     (compile load eval)

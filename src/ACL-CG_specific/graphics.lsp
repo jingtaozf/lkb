@@ -1,4 +1,4 @@
-(in-package :cl-user)
+(in-package :lkb)
 
 ;;; the following is currently a no-op - it's
 ;;; defined for the CLIM version - 

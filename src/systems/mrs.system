@@ -1,22 +1,23 @@
 (in-package "MAKE")
 
-
 (defsystem "mrs"
-     :device (make-pathname :device cl-user::%sys-device%)
-    :source-pathname (get-sources-dir #+:lkb "lkb")
-    :binary-pathname (get-binaries-dir #+:lkb "lkb")
+    :device (make-pathname :device cl-user::%sys-device%)
+    :source-pathname (get-sources-dir "lkb")
+    :binary-pathname (get-binaries-dir "lkb")
     :source-extension "lisp"
-    :depends-on (#+:lkb "lkb")
+    :depends-on ("lkb")
+
     :finally-do
-    (progn
-      #+:lkb(setf cl-user::*mrs-loaded* t))
+    (when (and (find-package :lkb) (find-symbol "*MRS-LOADED*" :lkb))
+      (set (find-symbol "*MRS-LOADED*" :lkb) t))
+
     :components
     ((:module "core"
       :source-pathname "mrs"
       :binary-pathname "mrs"
       :components
       ((:file "mrs-package")
-       #+:lkb (:file "lkb-interface")   ; interface functions to LKB
+       (:file "lkb-interface")          ; interface functions to LKB
        (:file "mrsglobals")             ; have to redefine most of these, but
                                         ; this is mostly done 
 					; by mrsglobals-eng 
@@ -26,57 +27,57 @@
        (:file "interface")))
        ;; following two files needed for scoping - can be excluded
        ;; for generation
+
      (:module "scoping"
-       :source-pathname "mrs"
-       :binary-pathname "mrs"
+      :source-pathname "mrs"
+      :binary-pathname "mrs"
       :components
-       ((:file "mrsresolve")             ; resolving scope
-        (:file "mrscons")))               ; constraints on scope
+      ((:file "mrsresolve")             ; resolving scope
+       (:file "mrscons")))              ; constraints on scope
 
      (:module "munge"
-       :source-pathname "mrs"
-       :binary-pathname "mrs"
+      :source-pathname "mrs"
+      :binary-pathname "mrs"
       :components
-       (
-        (:file "cheapscope")             ; scope for fragments
+       ((:file "cheapscope")             ; scope for fragments
         (:file "mrsmunge")               ; manipulate MRS via rules
                                          ; currently for vitrifying - potential
                                          ; other uses
-       #+:lkb (:file "mrsruleinput")           ; creating rules for above
+        (:file "mrsruleinput")           ; creating rules for above
                                          ; requires LKB, but outputs compiled 
                                          ; rules which can be used without LKB
-       #+(and :lkb :allegro :clim (not :tty)) 
-              (:file "lkb-acl-mrs")      ; display etc in CLIM
-       #+(and :lkb :mcl (not :tty)) 
-              (:file "lkb-mcl-mrs")      ; display etc in MCL
-       #+:lkb (:file "lkbmrs")))          ; LKB specific - redefines
-                                        ; some functions
-     #+:lkb
+       #+(and :allegro :clim (not :tty)) 
+       (:file "lkb-acl-mrs")             ; display etc in CLIM
+       #+(and :mcl (not :tty)) 
+       (:file "lkb-mcl-mrs")             ; display etc in MCL
+       (:file "lkbmrs")))                ; LKB specific - redefines
+                                         ; some functions
      (:module "generator"
-       :source-pathname "mrs"
-       :binary-pathname "mrs"
+      :source-pathname "mrs"
+      :binary-pathname "mrs"
       :components
-       ((:file "generate")   ; chart generator (requires mrs)
-        (:file "spell")    ; for a/an
-        (:file "genbatch")
-        (:file "mrstoplevel")))      
-     #+:lkb
+      ((:file "generate")               ; chart generator (requires mrs)
+       (:file "spell")                  ; for a/an
+       (:file "genbatch")
+       (:file "mrstoplevel")))      
+
      (:module "generator-morph"
-       :source-pathname "mrs"
-       :binary-pathname "mrs"
+      :source-pathname "mrs"
+      :binary-pathname "mrs"
       :components
-       ((:file "lexutils")
-        (:file "lexindex")        ; LKB specific - indexing
-					; entries etc on semantics
-       (:file "lexlookup")           ; LKB specific - retrieving
-       (:file "genpredict")))   ; LKB specific - null semantics
+      ((:file "lexutils")
+       (:file "lexindex")               ; LKB specific - indexing
+                                        ; entries etc on semantics
+       (:file "lexlookup")              ; LKB specific - retrieving
+       (:file "genpredict")))           ; LKB specific - null semantics
+
      #+:nil
       (:module "extensions"
        :source-pathname "mrs"
        :binary-pathname "mrs"
-      :components
-       ((:file "translate")          ; crude interlingual translation
-                                     ; not working 
-        (:file "time-convert")))))     ; may be useful to have a version of
-                                     ; this for non-VM apps
-                                     ; currently VM specific
+       :components
+       ((:file "translate")             ; crude interlingual translation
+                                        ; not working 
+        (:file "time-convert")))))      ; may be useful to have a version of
+                                        ; this for non-VM apps
+                                        ; currently VM specific

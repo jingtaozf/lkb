@@ -28,7 +28,7 @@
     ((stream active-fs-pane)
      &optional box)
    (call-next-method stream box)
-   (cl-user::display-fs-main (parent stream) 
+   (lkb::display-fs-main (parent stream) 
     box))
 
 (defmethod mouse-right-down
@@ -45,7 +45,7 @@
                           (edit-fs-record-box record))
                 (return record)))))
       (when found
-         (cl-user::perform-view-fs-action window
+         (lkb::perform-view-fs-action window
             fs-record
             (edit-fs-record-path found) 
             (edit-fs-record-value found)
@@ -106,7 +106,7 @@
                           (parse-tree-record-box record))
                 (return record)))))
       (when found
-         (cl-user::perform-view-node-action window
+         (lkb::perform-view-node-action window
             (parse-tree-record-value found)))))
 
 (defun add-parse-tree-region-record (stream box edge-symbol)
@@ -165,7 +165,7 @@
                           (type-hier-record-box record))
                 (return record)))))
       (when found
-         (cl-user::perform-type-hier-node-action stream window
+         (lkb::perform-type-hier-node-action stream window
             (type-hier-record-node found)))))
 
 (defun add-type-hier-region-record (stream box node)
@@ -202,7 +202,7 @@
                           (active-list-record-box record))
                 (return record)))))
       (when found
-         (cl-user::perform-list-node-action window
+         (lkb::perform-list-node-action window
           (active-list-record-item found)
           (active-list-record-menu found)))))
 

@@ -43,9 +43,7 @@
 (in-package "MAKE")
 
 (defparameter %BINARY-DIR-NAME% 
-    ".masl"
-    )
+    ".masl")
 
 (defparameter %system-binaries%
-    "mac"
-    )
+    "mac")

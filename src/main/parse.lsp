@@ -3,7 +3,7 @@
 ;;; No use or redistribution without permission.
 ;;; 
 
-(in-package :cl-user)
+(in-package :lkb)
 
 ;;; Port to MCL - moved dialect specific display stuff to parseout.lsp
 

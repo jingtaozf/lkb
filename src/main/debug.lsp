@@ -1,4 +1,4 @@
-(in-package :cl-user)
+(in-package :lkb)
 
 (defun find-all-redundancies nil
   (dolist (type *type-names*)

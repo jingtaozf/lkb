@@ -6,7 +6,7 @@
 ;;; partly based on the version for Allegro 3.0.1 by
 ;;; Anthony Hull
  
-(in-package :cl-user)
+(in-package :lkb)
 
 ;;; following mentioned in graph.lsp - eventually to be defined
 ;;; in the right place

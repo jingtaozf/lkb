@@ -411,9 +411,9 @@ printing routines -  convenient to make this global to keep printing generic")
 
 
 #+lkb
-(cl-user::def-lkb-parameter *scoping-call-limit* 10000
+(lkb::def-lkb-parameter *scoping-call-limit* 10000
   "for MRS scoping machinery - maximum number of calls"
-  :user)
+  :lkb)
 
 #-lkb
 (defparameter *scoping-call-limit* 10000)

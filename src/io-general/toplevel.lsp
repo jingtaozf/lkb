@@ -2,7 +2,7 @@
 ;;; No use or redistribution without permission.
 ;;; 
 
-(in-package :cl-user)
+(in-package :lkb)
 
 ;;; Modified for YADU
 ;;;
@@ -25,10 +25,12 @@
 ;;; apart from
 
 (defun read-script-file nil
-  (let ((file-name 
-         (ask-user-for-existing-pathname "Script file?")))
-    (with-output-to-top ()
-      (read-script-file-aux file-name))))
+  (with-package (:lkb)
+    (let* (#+:allegro 
+           (excl:*libfasl* nil)
+           (file-name (ask-user-for-existing-pathname "Script file?")))
+      (with-output-to-top ()
+        (read-script-file-aux file-name)))))
 
 ;;; "View"
 ;;;

@@ -7,7 +7,7 @@
 ;;; Cambridge, UK
 ;;; and several other places ...
 
-(in-package :cl-user)
+(in-package :lkb)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (export '(yadu copy-tdfs-elements)))

@@ -1,4 +1,4 @@
-(in-package :cl-user)
+(in-package :lkb)
 
 ;;; MRS windows
 ;;;
@@ -69,6 +69,6 @@
 (defmethod mrs-output-start-h-cons ((mrsout prolog))
   (with-slots (stream) mrsout
     (format stream ",~%  hcons([")))
-(in-package :cl-user)
+(in-package :lkb)
 
 |#

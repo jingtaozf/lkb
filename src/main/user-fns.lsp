@@ -1,6 +1,6 @@
 ;;; User defined functions - from old globals file
 
-(in-package :cl-user)
+(in-package :lkb)
 
 (defun preprocess-sentence-string (str)
   ;; replace all punctuation by spaces

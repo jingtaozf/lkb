@@ -76,7 +76,7 @@
   (let ((returned-rels nil))
     (for reltype in reltype-list
          do
-         (for compatible-rel in (cl-user::get-compatible-rels reltype)
+         (for compatible-rel in (lkb::get-compatible-rels reltype)
               do
               (pushnew compatible-rel returned-rels :test #'eq)))
     (when (and *maximum-genindex-relations* 
@@ -225,9 +225,9 @@
                       nil))))))))
 
 (defun empty-diff-list-p (fs full-path oldfs)
-  (if (eql (car (last full-path)) cl-user::*diff-list-list*)
+  (if (eql (car (last full-path)) lkb::*diff-list-list*)
       (eq (path-value oldfs (append (butlast full-path) 
-                                    (list cl-user::*diff-list-last*)))
+                                    (list lkb::*diff-list-last*)))
           fs)))
                   
 (defun extract-relation-from-fs (fs id)

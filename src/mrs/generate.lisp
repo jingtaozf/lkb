@@ -3,7 +3,7 @@
 ;;;
 ;;; CSLI, Stanford University, USA
 
-(in-package :cl-user)
+(in-package :lkb)
 
 
 ;;; moved structures to parse.lsp since also used in interface

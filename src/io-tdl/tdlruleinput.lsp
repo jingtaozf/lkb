@@ -2,7 +2,7 @@
 ;;; No use or redistribution without permission.
 ;;;
 
-(in-package :cl-user)
+(in-package :lkb)
 
 ;;; Input from lexical rule and construction files
 ;;; in TDL format

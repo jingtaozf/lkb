@@ -2,7 +2,7 @@
 ;;; No use or redistribution without permission.
 ;;; 
 
-(in-package :cl-user)
+(in-package :lkb)
 
 ;;; tty interface functions to batch parsing - independent of tsdb functionality
 
@@ -15,7 +15,7 @@
 ;;;
 ;;;  parse-word is not used
 ;;;
-;;; they're in the cl-user package but also exported to the tsdb package
+;;; they're in the lkb package but also exported to the tsdb package
 
 #|
 parse:

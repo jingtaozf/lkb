@@ -1,4 +1,4 @@
-;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: COMMON-LISP-USER -*-
+;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: LKB -*-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;        file: active.lsp
@@ -15,7 +15,7 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package :common-lisp-user)
+(in-package :lkb)
 
 ;;;
 ;;; experimental active parser; tries to minimize changes to existing LKB code
@@ -84,8 +84,7 @@
 
 (defvar *active-edge-id* 0)
 (defvar *maximum-number-of-active-edges* nil)
-(declaim (type fixnum *active-edge-id* *maximum-number-of-active-edges*))
-
+(declaim (type fixnum *active-edge-id*))
 
 (defun next-active-edge ()
   (when (> (abs *active-edge-id*) 
@@ -302,9 +301,8 @@
          (preceding (actives-by-end begin))
          (following (actives-by-start end)))
     ;;
-    ;; add .passive. to chart (indexed by start and end vertex); .oldp is only
-    ;; used in initialization to prevent duplication of passive edges obtained
-    ;; from (regular) LKB lexical processing (array handling is awkward here).
+    ;; add .passive. to chart (indexed by start and end vertex); array handling
+    ;; is somewhat awkward here.
     ;;
     (if (aref *chart* end 0)
       (push passive (chart-entry-configurations (aref *chart* end 0)))
@@ -917,26 +915,3 @@
      (length *parse-record*))
    (tsdb::get-field :pedges (summarize-chart))
    (count-nodes (first *parse-record*) :packingp *chart-packing-p* :chartp t)))
-
-#+:test
-(let* ((results (select '("i-id" "i-input" "readings" "tcpu" "tgc" "comment")
-                        nil
-                        '("parse")
-                        nil
-                        *tsdb-data*)))
-  (loop
-      for tuple in results
-      for readings = (get-field :readings tuple)
-      for comment = (get-field :comment tuple)
-      for stream = (make-string-input-stream comment)
-      for extras = (unless (minus-one-p readings)
-                     (loop
-                         for field = (read stream nil nil)
-                         while field
-                         collect (cons (first field) 
-                                       (if (consp (rest field))
-                                         (second field)
-                                         (rest field)))
-                         finally (close stream)))
-      when extras
-      collect (nconc extras tuple)))

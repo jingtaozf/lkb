@@ -1,4 +1,4 @@
-(in-package :user)
+(in-package :common-lisp-user)
 
 (load (make-pathname 
        :directory (append (butlast (pathname-directory *load-truename*))

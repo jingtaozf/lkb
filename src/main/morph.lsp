@@ -6,7 +6,7 @@
 ;;; Pembroke Street
 ;;; Cambridge, UK
 
-(in-package :cl-user)
+(in-package :lkb)
 
 ;;; modified aac Dec 1994 to allow script to read in morphological data
 ;;;              Dec 1995 changed 'morph-rule to *morph-rule-type*
@@ -89,7 +89,7 @@
    (mapcar 
       #'(lambda (y) 
          (remove '* 
-            (mapcar #'(lambda (x) (intern (string x))) 
+            (mapcar #'(lambda (x) (intern (string x) :lkb)) 
                (coerce (string y) 'list))))
       list))
 
@@ -151,37 +151,38 @@
          (morph-file-read-aux filename ovwr))))
 
 (defun morph-file-read-aux (filename ovwr)
-   (when ovwr
+  (with-package (:lkb)
+    (when ovwr
       (reset-morph-var))
-   (with-open-file 
-      (istream filename
+    (with-open-file 
+        (istream filename
          :direction :input)
-     (format t "~%Loading morphological data from ~A" 
-             (pathname-name filename))
+      (format t "~%Loading morphological data from ~A" 
+              (pathname-name filename))
       (block outer
-         (loop
-            ;; Go through the file - ignore comments.
-            ;; If a percent sign occurs outside a rule,
-            ;; it must be a new letter set definition - 
-            ;; process it - failing that, process the 
-            ;; next rule.
-            (let ((next-char (peek-char t istream nil 'eof)))
-               (when (eql next-char 'eof) (return-from outer))
-               (if (eql next-char #\;)
-                  (read-line istream)
-                  (if (eql next-char #\%)
-                     (let* ((string-thing (read-line istream))
-                           (form (read-from-string string-thing 
-                                 nil 'eof :start 1)))
-                        (cond
-                           ((eql form 'eof) (error "~%Bad file"))
-                           ((not (listp form)) (error "~%Bad line"))
-                           ((eql (car form) 'letter-set)
-                              (setf *letter-set-list*
-                                 (letter-set-add form 
-                                    *letter-set-list*)))
-                           (t (error "~%Wrong type of command"))))          
-                     (morph-item-process istream))))))))
+        (loop
+          ;; Go through the file - ignore comments.
+          ;; If a percent sign occurs outside a rule,
+          ;; it must be a new letter set definition - 
+          ;; process it - failing that, process the 
+          ;; next rule.
+          (let ((next-char (peek-char t istream nil :eof)))
+            (when (eql next-char :eof) (return-from outer))
+            (if (eql next-char #\;)
+              (read-line istream)
+              (if (eql next-char #\%)
+                (let* ((string-thing (read-line istream))
+                       (form (read-from-string string-thing 
+                                               nil :eof :start 1)))
+                  (cond
+                   ((eql form :eof) (error "~%Bad file"))
+                   ((not (listp form)) (error "~%Bad line"))
+                   ((eql (car form) 'letter-set)
+                    (setf *letter-set-list*
+                      (letter-set-add form 
+                                      *letter-set-list*)))
+                   (t (error "~%Wrong type of command"))))          
+                (morph-item-process istream)))))))))
 
 
 
@@ -199,8 +200,8 @@
             (loop
                ;; Within each rule, if there is a set of percent marked
                ;; headers, add them as morphological rules.
-               (let ((next-char (peek-char t istream nil 'eof)))
-                  (when (eql next-char 'eof) 
+               (let ((next-char (peek-char t istream nil :eof)))
+                  (when (eql next-char :eof) 
                      (error "~%Incomplete rule definition for ~A" id))
                   (if (eql next-char #\;)
                      (read-line istream)
@@ -210,8 +211,8 @@
                            (loop
                               (multiple-value-bind (form end-value)
                                  (read-from-string string-thing nil 
-                                    'eof :start start-pos)
-                                 (when (eql form 'eof) (return))
+                                    :eof :start start-pos)
+                                 (when (eql form :eof) (return))
                                  (if 
                                     (and 
                                        (listp form) 
@@ -308,12 +309,12 @@
    (push
       (append 
          (last 
-            (mapcar #'(lambda (x) (intern (string x)))
+            (mapcar #'(lambda (x) (intern (string x) :lkb))
                (coerce 
                   (string (caadr new-rule)) 
                   'list)))
          (list
-            (mapcar #'(lambda (x) (intern (string x)))
+            (mapcar #'(lambda (x) (intern (string x) :lkb))
                (coerce 
                   (string (cadadr new-rule)) 
                   'list))))
@@ -460,7 +461,7 @@
 	((= index -1) result)
       (let ((val (aref string index)))
 	(when val
-	  (push (intern (string val)) result))))))
+	  (push (intern (string val) :lkb) result))))))
 
 (defun implode (list)
   (let* ((len (length list))

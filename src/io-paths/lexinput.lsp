@@ -8,7 +8,7 @@
 ;;; be read in by a single command.  Language must be specified within
 ;;; the FS.  Overwrite is no longer relevant.
 
-(in-package :cl-user)
+(in-package :lkb)
 
 ;;; Input from lexical entry and psort files
 

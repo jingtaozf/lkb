@@ -3,7 +3,7 @@
 ;;; modified for defaults 1995
 ;;; 
 
-(in-package :cl-user)
+(in-package :lkb)
 
 ;;; removed read-checked-type-file
 ;;; display-setting stuff is currently commented out

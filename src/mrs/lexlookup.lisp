@@ -46,7 +46,7 @@ at this point).
   rule-list
   main-rels)
 
-(defstruct (found-rule (:include cl-user::rule))
+(defstruct (found-rule (:include lkb::rule))
   ;;; the rule-fs is replaced by the instantiated version
   main-rels ; for grammar rules, these will be the things in ccont
   )
@@ -298,8 +298,8 @@ at this point).
   ;;; likely to weed out some entries without having to put
   ;;; more grammar specific stuff in the filtering code
   (let* ((lex-id (base-lex-lex-id lex-res))
-         (lex-e (cl-user::get-psort-entry lex-id))
-         (base-fs (cl-user::lex-or-psort-full-fs lex-e))
+         (lex-e (lkb::get-psort-entry lex-id))
+         (base-fs (lkb::lex-or-psort-full-fs lex-e))
          (new-found-lex-list 
           (instantiate-semantic-indices 
            lex-id lex-e base-fs 
@@ -332,7 +332,7 @@ at this point).
                        (push main-rel (found-lex-main-rels lr-str)))))
                  (setf (found-lex-inst-fs lr-str) (cdr pair))
                  (setf (found-lex-rule-list lr-str) 
-                   (mapcar #'cl-user::rule-id (car pair)))
+                   (mapcar #'lkb::rule-id (car pair)))
                  (if ok
                      lr-str))))))
 
@@ -343,24 +343,24 @@ at this point).
   ;; applied plus result
   (incf *number-of-lrule-applications*)
   (when (> *number-of-lrule-applications* 
-	   cl-user::*maximal-lex-rule-applications*)
+	   lkb::*maximal-lex-rule-applications*)
     (error "~%Probable circular lexical rule"))
   (let ((transformed-entries 
 	 (loop for entry in entries
 	     append
 	       (let* ((fs (cdr entry))
-		      (fs-restricted (cl-user::restrict-fs (tdfs-indef fs))))
+		      (fs-restricted (lkb::restrict-fs (tdfs-indef fs))))
 		 (for rule in rules
 		      filter
 		      (let* ((spelling-rule-p 
-			      (cl-user::spelling-change-rule-p rule))
+			      (lkb::spelling-change-rule-p rule))
 			     (new-morph 
 			      (when spelling-rule-p
-				(cl-user::construct-new-morph entry rule)))
+				(lkb::construct-new-morph entry rule)))
 			     (result
 			      (when (or (not spelling-rule-p) new-morph)
 				;; allow morphographemics to block generation
-				(cl-user::apply-morph-rule 
+				(lkb::apply-morph-rule 
 				 rule fs fs-restricted new-morph))))
 			(when result 
 			  (cons (cons rule (car entry)) result))))))))
@@ -384,7 +384,7 @@ at this point).
        ;; rels for multiple ids
 	(let ((new-fs (create-liszt-fs-from-rels rel-sequence path)))
 	  (if new-fs 
-	      (let* (; (cl-user::*unify-debug* t)
+	      (let* (; (lkb::*unify-debug* t)
                      (result (yadu base-fs new-fs)))
 		(if result
 		    (if lex-id
@@ -431,7 +431,7 @@ at this point).
 		do
 		  (push unif path-list))
 	    (setf current-path (append current-path *rest-path*))))
-    (let* (; (cl-user::*unify-debug* t)
+    (let* (; (lkb::*unify-debug* t)
            (fs (process-unifications path-list))
 	   (wffs (when fs (create-wffs fs)))
 	   (tdfs (when wffs (construct-tdfs wffs nil nil))))
@@ -453,7 +453,7 @@ at this point).
                     (cons
                      (make-pv-unif (append new-path *instloc-path*)
                                    (make-instance-type value))
-                     (CL-USER::make-mrs-unifs (var-extra value) new-path))
+                     (LKB::make-mrs-unifs (var-extra value) new-path))
                   (list (make-pv-unif new-path
                                       value)))))))
   (if handel-unif (cons handel-unif other-unifs)
@@ -471,7 +471,7 @@ at this point).
        (let* ((instance nil)
              (template *instloc-type*)
              (number (var-id var-struct)))
-         (setf (get template 'cl-user::last-number)
+         (setf (get template 'lkb::last-number)
                number)
          (setf instance
                (intern
@@ -480,8 +480,8 @@ at this point).
                               (string template)
                               (princ-to-string number))))
          (push instance
-               (get template 'cl-user::children))
-         (setf (get instance 'cl-user::root-template)
+               (get template 'lkb::children))
+         (setf (get instance 'lkb::root-template)
                template)
          instance))
 
@@ -496,13 +496,13 @@ at this point).
 ;;; result of all the lexical rule applications.
 
 (defun instantiate-null-semantic-items (input-sem lrules)
-  (let* ((real-ids (if cl-user::*gen-rule-list*
+  (let* ((real-ids (if lkb::*gen-rule-list*
                        (genpredict-mrs-struct input-sem 
-                                              cl-user::*gen-rule-list*)
+                                              lkb::*gen-rule-list*)
                      (if *null-semantics-hack-p*
                          (let ((found-list 
                                 (apply #'append 
-                                       (cl-user::retrieve-lex-from-parses))))
+                                       (lkb::retrieve-lex-from-parses))))
                            (for empty in *empty-semantics-lexical-entries*
                                 filter
                                 (if (member empty found-list)
@@ -511,10 +511,10 @@ at this point).
         (instantiated-sets
           (for lex-id in real-ids
                filter
-               (let ((lex-e (cl-user::get-psort-entry lex-id)))
+               (let ((lex-e (lkb::get-psort-entry lex-id)))
                  (if lex-e
                    (let*
-                      ((base-fs (cl-user::lex-or-psort-full-fs lex-e))
+                      ((base-fs (lkb::lex-or-psort-full-fs lex-e))
                        (new-found-str
                         (make-found-lex 
                          :lex-id lex-id :inst-fs base-fs)))
@@ -546,9 +546,9 @@ at this point).
    (for rule-record in (if lexicalp *contentful-lrs* *contentful-grs*)
         append
         (let ((rule (if lexicalp 
-                        (cl-user::get-lex-rule-entry 
+                        (lkb::get-lex-rule-entry 
                          (semantics-record-id rule-record))
-                      (cl-user::get-grammar-rule-entry 
+                      (lkb::get-grammar-rule-entry 
                        (semantics-record-id rule-record))))
               (main-rels
                (semantics-record-relations rule-record)))
@@ -565,40 +565,40 @@ at this point).
                         matching-rels))))
             (if rel-list
                 (for rel-comb-and-fs in 
-                     (apply-rels-to-base nil (cl-user::rule-full-fs rule)
+                     (apply-rels-to-base nil (lkb::rule-full-fs rule)
                                          rel-list *construction-semantics-path*)
                      collect
                      (make-new-found-rule rule (car rel-comb-and-fs)
                                           (cdr rel-comb-and-fs)))
               (if (null main-rels)
                   (list (make-new-found-rule 
-                         rule (cl-user::rule-full-fs rule)
+                         rule (lkb::rule-full-fs rule)
                          nil)))))))
   (if lexicalp *contentless-lrs* *contentless-grs*)))
 
 
 (defun make-new-found-rule (rule new-fs rels)
   (make-found-rule
-   :id (cl-user::rule-id rule)
-   :language (cl-user::rule-language rule)
-   :unifs (cl-user::rule-unifs rule)
-   :def-unifs (cl-user::rule-def-unifs rule)
+   :id (lkb::rule-id rule)
+   :language (lkb::rule-language rule)
+   :unifs (lkb::rule-unifs rule)
+   :def-unifs (lkb::rule-def-unifs rule)
    :full-fs new-fs
-   #+:packing :rtdfs #+:packing (common-lisp-user::copy-tdfs-partially new-fs)
+   #+:packing :rtdfs #+:packing (lkb::copy-tdfs-partially new-fs)
    :daughters-restricted
-   (cl-user::rule-daughters-restricted rule)
+   (lkb::rule-daughters-restricted rule)
    :daughters-restricted-reversed
-   (cl-user::rule-daughters-restricted-reversed rule)
+   (lkb::rule-daughters-restricted-reversed rule)
    :daughters-apply-order 
-   (cl-user::rule-daughters-apply-order rule)
-   :order (cl-user::rule-order rule)
-   :rhs (cl-user::rule-rhs rule)
+   (lkb::rule-daughters-apply-order rule)
+   :order (lkb::rule-order rule)
+   :rhs (lkb::rule-rhs rule)
    :daughters-order-reversed
-   (cl-user::rule-daughters-order-reversed rule)
+   (lkb::rule-daughters-order-reversed rule)
    :apply-filter
-   (cl-user::rule-apply-filter rule)
+   (lkb::rule-apply-filter rule)
    :apply-index
-   (cl-user::rule-apply-index rule)
+   (lkb::rule-apply-index rule)
    :main-rels rels))
 
 

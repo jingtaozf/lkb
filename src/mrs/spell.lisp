@@ -1,4 +1,4 @@
-(in-package "CL-USER")
+(in-package :lkb)
 
 (defun fix-spelling (string)
   (setf string (mapcar #'string-downcase string))

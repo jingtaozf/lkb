@@ -3,7 +3,7 @@
 ;;; No use or redistribution without permission.
 ;;; 
 
-(in-package :cl-user)
+(in-package :lkb)
 
 ;;; Feb 1998 - removed fairly useless indexing scheme
 ;;;            currently stubs for a better one, which will have to be implemented by

@@ -6,7 +6,7 @@
 ;;; Pembroke Street
 ;;; Cambridge, UK
 
-(in-package :user)
+(in-package :lkb)
 
 ;;; Most of the functions in here are implementation specific
 ;;; This has been extensively modified for MCL

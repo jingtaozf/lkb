@@ -15,13 +15,13 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "COMMON-LISP-USER")
+(in-package :common-lisp-user)
 
 ;;;
 ;;; set LKB version
 ;;;
 
-(defvar *lkb-version* "5.2")
+(defvar *lkb-version* "5.3")
 
 ;;; see also below - *features*
 
@@ -29,8 +29,6 @@
 (defparameter %sys-home%
   #-:mcl (rest (butlast (pathname-directory *load-truename*) 2))
   #+:mcl '("macintosh hd" "newlkb"))
-
-;;; #+mcl (defpackage :common-lisp-user (:nicknames :user :cl-user))
 
 (defparameter %sys-host%
   (pathname-host *load-truename*))
@@ -44,25 +42,22 @@
 
 (defparameter sys-home (make-pathname :host %sys-host%
                         :device %sys-device%
-                         :directory (cons #-:lucid :absolute 
-                                      #+:lucid :root %sys-home%)))
-;;; AAC - turned this into a pathname, so it can include the device
+                        :directory (cons #-:lucid :absolute 
+                                         #+:lucid :root %sys-home%)))
 
-(defparameter general-dir (append 
-                            (cons #-:lucid :absolute #+:lucid :root %sys-home%) 
-                            '("src" "general")))
+(defparameter general-dir 
+    (append 
+     (cons #-:lucid :absolute #+:lucid :root %sys-home%) 
+     '("src" "general")))
 
 ;;;
 ;;; load several patches together with the the cmu version of defpackage() for
 ;;; non-common lucid 4.x lisps (really widespread still in 1994 |:-{).
-;;;
 
 ;;;
-;;; the patches for ``belgianing lucid incompatibilities'' (bernd kiefer |:-) 
-;;; (censored by aac@csli ...) have
-;;; now moved into a file of their own ... rip (5-jun-1994 -- oe@csli)
-;;;
-;;; and the ones for allegro and mcl too... (4-jul-1994 -- bk@dfki)
+;;; analogously, we now have one patch file per Lisp environment that we know
+;;; of; although these files are somewhat smaller these days, it seems we still
+;;; require some small amount of vedor-specific tweaking (2-jun-00  -  oe)
 ;;;
 
 #+:cmu
@@ -96,28 +91,10 @@
  (make-pathname :host %sys-host% :device %sys-device%
    :directory general-dir :name "loadup-library"))
 
-(in-package "MAKE")
-
-#|
-(let ((dumping
-       (make-pathname :device cl-user::%sys-device% 
-         :directory general-dir :name "dump" :type "lisp")))
-  (when (probe-file dumping) (load dumping)))
-|#
+(in-package :make)
 
 (reset-module-status)
 (reset-system-paths)
-
-(pushnew :lkb *features*)
-(pushnew :lkb-v5.2 *features*)
-#+(or :cl-http (not (or :mcl :clim :common-graphics))) 
-   (pushnew :tty *features*)
-
-;;; graphics currently assumes mcl or clim,
-;;; with common graphics under development
-;;; do (pushnew :tty *features*) manually
-;;; if you want to use the tty version from mcl or acl/clim
-;;; for some reason
 
 
 

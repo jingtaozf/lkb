@@ -6,7 +6,7 @@
 ;;; Pembroke Street
 ;;; Cambridge, UK
 
-(in-package :cl-user)
+(in-package :lkb)
 
 ;; RPM - the default print-object method for structures in ACL uses format
 ;; extensively and is much too slow to use to build up the templex file.  This

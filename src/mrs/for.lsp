@@ -7,7 +7,7 @@
 ;;; Added in-stream (as in Procyon Common Lisp) AAC 9 April 1990
 ;;; Added on (as in Procyon Common Lisp) AAC 12 October 1993
 
-(in-package :cl-user)
+(in-package :lkb)
 
 (eval-when
  (compile load eval)
@@ -157,9 +157,11 @@
                    car-filter))
             `(,$body))
         ,$arg)
-       ,@(cond ((eq type 'do) `((declare (ignore ,$ans) #-cmu (ignore-if-unused ,$arg)))))
+       ,@(cond ((eq type 'do) `((declare (ignore ,$ans) #+:mcl (ignore-if-unused ,$arg)))))
                                         ; avoid compiler warnings AAC
                                         ; ignore-if-unused is MCL and ACL specific
+                                        ; in fact, it seems unknown in ACL 5.0.1
+                                        ; too (6-jun-00  -  oe)
        ,@(and 
            (member type '(all-satisfy none-satisfy)) 
            `((setq ,$ans t)))

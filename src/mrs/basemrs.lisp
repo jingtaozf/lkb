@@ -202,7 +202,7 @@
   (with-slots (stream indentation) mrsout
     (unless first-p (format stream "~%"))
     (format stream "~VT[ " indentation)
-    (cl-user::add-mrs-type-region stream sort)))
+    (lkb::add-mrs-type-region stream sort)))
 
 ;;; 
 ;;; indexed output-type class
@@ -592,7 +592,7 @@ QEQ -> VARNAME RELNNAME VARNAME
 
 
 (defun make-mrs-break-table nil 
-  (cl-user::define-break-characters '(#\< #\> #\:
+  (lkb::define-break-characters '(#\< #\> #\:
                                       #\[ #\] #\, #\{ #\})))
 
 (defun mrs-check-for (character istream)

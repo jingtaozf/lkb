@@ -11,7 +11,7 @@
 ;;;
 ;;; Rewritten for new unifier
 
-(in-package :cl-user)
+(in-package :lkb)
 
 ;;; generalisation, equality and subsumption of fs
 

@@ -6,7 +6,7 @@
         
 ;;; ACL version
 
-(in-package :cl-user)
+(in-package :lkb)
 
 ;; Dialect specific stuff
 

@@ -4,7 +4,7 @@
 ;;; 
 ;;; Ann Copestake
 
-(in-package :cl-user)
+(in-package :lkb)
 
 ;;; parse output functions which are not dialect specific
 
@@ -17,9 +17,11 @@
 	(dolist (edge *parse-record*)
 	  (display-parse-tree edge nil))
 	;; replace old tree display with new frame in ACL CLIM
-	;; FIX need to replicate in MCL and CG
-	(when (fboundp 'mrs::output-mrs-after-parse)
-	  (funcall 'mrs::output-mrs-after-parse *parse-record*)))
+        ;; FIX need to replicate in MCL and CG
+        (let ((hook (when (and (find-package :mrs) 
+                               (find-symbol "OUTPUT-MRS-AFTER-PARSE" :mrs))
+                      (fboundp (find-symbol "OUTPUT-MRS-AFTER-PARSE" :mrs)))))
+          (when hook (funcall hook *parse-record*))))
     (progn
       (lkb-beep)
       (format t "~%No parses found"))))

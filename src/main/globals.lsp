@@ -7,7 +7,7 @@
 ;;;
 ;;; All functions have now been moved to user-fns.lsp
 
-(in-package :cl-user)
+(in-package :lkb)
 
 ;;; Keep track of all parameters that get defined, so we can have a way to
 ;;; edit them interactively
@@ -114,6 +114,10 @@
 (def-lkb-parameter *irregular-forms-only-p* nil
   "if this is set, the parser will not parse regular spellings
    if there is an irregular spelling (eated, dreamed)")
+
+#+:packing
+(def-lkb-parameter *packing-restrictor* nil
+  "restrictor used when parsing with ambiguity packing")
 
 ;;; Display 
 

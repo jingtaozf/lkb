@@ -2,7 +2,7 @@
 ;;; types, lexicon etc, in various formats.
 ;;; Takes functions from the old tdloutput and lilout files
 
-(in-package :cl-user)
+(in-package :lkb)
 
 #|
 ;;; all take optional second argument for file name

@@ -1,7 +1,7 @@
 
 ;;; dialect specific from this point
 
-(in-package :user)
+(in-package :lkb)
 
 ;;; want to make sure that a chart window is not left open after
 ;;; a new sentence is parsed, since the interactions sometimes

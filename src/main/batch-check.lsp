@@ -1,6 +1,6 @@
 ;;; Functions for checking instances are well formed
 
-(in-package :cl-user)
+(in-package :lkb)
 
 (defvar *grammar-specific-batch-check-fn* nil)
 
@@ -15,7 +15,7 @@
         (expand-psort-entry entry)
         (let ((new-fs (lex-or-psort-full-fs entry)))
           (unless new-fs
-            (format cl-user::*lkb-background-stream*
+            (format lkb::*lkb-background-stream*
                     "~%No feature structure for ~A~%" lex-id))
           (when (and new-fs
                      *grammar-specific-batch-check-fn*)

@@ -1,4 +1,4 @@
-(in-package :cl-user)
+(in-package :lkb)
 
 ;;; from lexindex
 
@@ -102,7 +102,7 @@
                      (mrs::extract-rule-rels id fs entry nil))))
            *rules*))
                  
-;;; actually used by lexlookup, but convenient to define in USER
+;;; actually used by lexlookup, but convenient to define in :lkb package
 
 (defun make-mrs-unifs (fvplist initial-features)
   (for fvp in fvplist

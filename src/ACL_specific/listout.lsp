@@ -11,7 +11,7 @@
 
 ;;; dialect specific from this point
 
-(in-package :user)
+(in-package :lkb)
 
 (defstruct thing object)
 

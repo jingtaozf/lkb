@@ -5,7 +5,7 @@
 ;;;            - output-lexicon etc removed
 ;;;            - get-psort-type removed (not called)
 
-(in-package :cl-user)
+(in-package :lkb)
 
 ;;; Lexical entries and psort storage etc
 
@@ -607,12 +607,13 @@
    #+(and mcl powerpc)(decf ee (CCL::TOTAL-BYTES-ALLOCATED))
    (finish-output psorts-stream)
    (prog1
-    (let ((successful-positioning
-            (file-position psorts-stream file-pointer)))
-      (unless successful-positioning 
-         (error "~%Can't retrieve entry for ~A" id))
-      (read psorts-stream t))
-    #+(and mcl powerpc)(incf ee (CCL::TOTAL-BYTES-ALLOCATED))))
+       (with-package (:lkb)
+         (let ((successful-positioning 
+                (file-position psorts-stream file-pointer)))
+           (unless successful-positioning 
+             (error "~%Can't retrieve entry for ~A" id))
+           (read psorts-stream t)))
+     #+(and mcl powerpc)(incf ee (CCL::TOTAL-BYTES-ALLOCATED))))
 
 ;; Never called?
 ;;(defun uncache-psort-entry (id)
@@ -636,18 +637,17 @@
 	  (error "~%Failed to open temporary file correctly" 
 		 *psorts-temp-index-file*))
 	(clrhash lexical-entries)
-	(loop
-	  (let* ((id (read istream nil 'eof))
-		 (orth (unless (eql id 'eof)
-			 (read istream nil 'eof)))
-		 (file-pos (unless (eql id 'eof)
-			     (read istream nil 'eof))))
-	    (when (eql id 'eof)
-	      (return))
-	    (setf (gethash id psorts) (list orth file-pos))
-	    (dolist (orth-el orth)
-	      (pushnew id (gethash (string-upcase orth-el) 
-				   lexical-entries))))))
+        (with-package (:lkb)
+          (loop
+              for id = (read istream nil nil)
+              for orth = (and id (read istream nil nil))
+              for file-pos = (and orth (read istream nil nil))
+              while id
+              do
+                (setf (gethash id psorts) (list orth file-pos))
+                (dolist (orth-el orth)
+                  (pushnew id (gethash (string-upcase orth-el) 
+                                       lexical-entries))))))
       (open-psorts-stream *lexicon*))))
 
 (defun delete-temporary-lexicon-files nil

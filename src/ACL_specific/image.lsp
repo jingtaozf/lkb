@@ -1,6 +1,6 @@
 ;; Create a development image
 
-(in-package "COMMON-LISP-USER")
+(in-package :common-lisp-user)
 
 ;;(delete-directory-and-files (merge-pathnames #p"bin/lkb/" sys-home))
 

@@ -2,7 +2,7 @@
 ;;; No use or redistribution without permission.
 ;;; 
 
-(in-package :user)
+(in-package :lkb)
 
 ;;; 1995 modified for MCL port
 
@@ -181,7 +181,7 @@
     (make-array 32 :element-type 'character :fill-pointer 0))
 
 (defun type-node-text-string (node)
-   (without-interrupts ; the code in here isn't re-entrant
+   (excl:without-interrupts ; the code in here isn't re-entrant
       (let* ((str *node-text-scratch-string*)
              (full-string (symbol-name node))
              (full-length (length full-string))

@@ -8,15 +8,15 @@
 
 (defun predict-for-gen nil
   ;;; for debugging
-  (format t "~%~A " cl-user::*sentence*)
-  (dolist (edge cl-user::*parse-record*)
+  (format t "~%~A " lkb::*sentence*)
+  (dolist (edge lkb::*parse-record*)
     (let ((mrs-struct (extract-mrs edge)))
       (when mrs-struct
-        (unless cl-user::*gen-rule-list*
+        (unless lkb::*gen-rule-list*
           (error "~%No heuristic rules defined"))
         (format t "~%~S" 
                 (genpredict-mrs-struct mrs-struct 
-                                       cl-user::*gen-rule-list*))))))
+                                       lkb::*gen-rule-list*))))))
 
 
 (defun genpredict-mrs-struct (mrsstruct rules)
@@ -76,7 +76,7 @@
 (defun construct-output-id (fs)
   (let ((res (fs-type fs)))
     (if (stringp res)
-        (intern (string-upcase res) :cl-user))))
+        (intern (string-upcase res) :lkb))))
 
         
 

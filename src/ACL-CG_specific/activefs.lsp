@@ -4,7 +4,7 @@
 ;;; partly based on the version for Allegro 3.0.1 by
 ;;; Anthony Hull
 
-(in-package :cl-user)
+(in-package :lkb)
 
 ;;; the main entry points are a series of functions with names like
 ;;; display-basic-fs

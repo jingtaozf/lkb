@@ -1,4 +1,4 @@
-(in-package :common-lisp-user)
+(in-package :lkb)
 
 ;;;
 ;;; attempt to add a template mechanism to LKB.  the idea goes as follows:

@@ -1,4 +1,4 @@
-(in-package :cl-user)
+(in-package :lkb)
 
 ;;; functions which output in path notation
 ;;; mostly moved from lexinput.lsp 
