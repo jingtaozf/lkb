@@ -90,12 +90,12 @@
 
 (defstruct fs-display-record 
    ;; the record of the FS associated with a window
-   fs title paths parents)
+   fs title paths parents type-fs-display)
 
-(defun set-associated-fs (stream fs title &optional paths parents)
+(defun set-associated-fs (stream fs title &optional paths parents type-fs-display)
    (setf (feature-structure stream)
       (make-fs-display-record :fs fs :title title :paths paths 
-         :parents parents)))
+         :parents parents :type-fs-display type-fs-display)))
 
 
 (defstruct click-field 
@@ -272,7 +272,11 @@
                       :field-size (make-point page-width full-height)
                       :close-box-p t
                       :view-size (make-point page-width page-height)))))
-        (set-associated-fs (ccl::my-scroller real-window) fs title paths parents)
+        (set-associated-fs (ccl::my-scroller real-window) fs title paths parents
+           (if existing-window
+              (fs-display-record-type-fs-display
+                 (feature-structure (ccl::my-scroller real-window)))
+              *type-fs-display*))
         (setf (fields (ccl::my-scroller real-window)) fields)
         (invalidate-view real-window)
         real-window)))
@@ -398,7 +402,7 @@
 
 
 (defun pop-up-fs-menu-items (type field type-entry shrunk-p type-p menu
-                                  type-label-list full-structure)
+                             type-label-list full-structure)
   ;;; YADU --- full-tdfs for lrule display
   (if type-entry
   (list
@@ -427,22 +431,11 @@
    (make-instance 'menu-item
      :menu-item-title "Type definition"
      :menu-item-action 
-     #'(lambda ()
-         (display-fs-and-parents (type-local-constraint type-entry) 
-                                 (format nil 
-                                         "~(~A~)  - definition" 
-                                         type)
-                                 (type-parents type-entry)))
-     :disabled (not (type-local-constraint type-entry)))
+      #'(lambda () (show-type-spec-aux type type-entry)))
    (make-instance 'menu-item
      :menu-item-title "Expanded type"
      :menu-item-action
-     #'(lambda ()
-         (display-basic-fs (type-tdfs type-entry) 
-                           (format nil 
-                                   "~(~A~) - TDFS" 
-                                   type)))
-     :disabled (not (type-tdfs type-entry)))
+     #'(lambda () (show-type-aux type type-entry)))
    (make-instance 'menu-item 
      :menu-item-title "Full structure"
      :menu-item-action
@@ -469,8 +462,9 @@
          (fs (fs-display-record-fs fs-record))
          (title (fs-display-record-title fs-record))
          (parents (fs-display-record-parents fs-record))
-         (paths (fs-display-record-paths fs-record)))
-    (set-dag-display-value fs (reverse path) action)
+         (paths (fs-display-record-paths fs-record))
+         (type-fs-display (fs-display-record-type-fs-display fs-record)))
+    (set-dag-display-value fs (reverse path) action type-fs-display)
             (cond 
                ((tdfs-p fs) ; YADU
                   (redisplay-fs window fs title))

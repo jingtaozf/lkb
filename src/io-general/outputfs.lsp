@@ -679,67 +679,79 @@
 
 ;;; minor mods to the following two functions for TDFSs
 
-(defparameter *shrunk-types* nil) ; !!! JAC temporary hack
+(defparameter *shrunk-types* nil)
+(defvar *shrunk-local-dags* nil)
+(defvar *not-shrunk-local-dags* nil)
 
 (defun set-up-display-settings (file-name)
    (with-open-file 
       (istream file-name :direction :input)
       (for setting in-stream istream
          do
-         (let ((type-entry 
-                  (get-type-entry (car setting))))
-            (unless type-entry
-               (error "~%Type ~A not found~%" (car setting)))
-            (for path in (cdr setting)
-               do
-               (set-dag-display-value 
-                  (type-tdfs type-entry)
-                  path :shrink))))))
+         (unless (get-type-entry (car setting))
+            (error "Type ~A not found" (car setting)))
+         (for path in (cdr setting)
+            do
+            (unless (listp path)
+               (error "~A is not a valid path" path))
+            (pushnew (nconc (reverse path) (list (car setting))) *shrunk-types*
+               :test #'equal)))))
 
-(defun set-dag-display-value (fs f-list action)
-   (let ((real-path f-list))
-      (if (tdfs-p fs)
-         (let ((dag-pt1 (existing-dag-at-end-of (tdfs-indef fs) real-path)))
-            (unless dag-pt1
-               (cerror "Ignore" "~%Feature structure altered?"))
-            ;JAC - display shrunk slot no longer in dag nodes
-            ;(setf (dag-display dag-pt1)
-            ;   (if (eql action :shrink) :shrunk nil))
-            ;(when dag-pt2
-            ;  (setf (dag-display dag-pt2)
-            ;        (if (eql action :shrink) :shrunk nil)))
-            (set-dag-display-value1 dag-pt1 action)
-            )
-         (let
-            ((dag-pt (existing-dag-at-end-of fs real-path)))
-            ;JAC - display shrunk slot no longer in dag nodes
-            ;(unless dag-pt
-            ;   (cerror "Ignore" "~%Feature structure altered?"))
-            ;(setf (dag-display dag-pt)
-            ;   (if (eql action :shrink) :shrunk nil))
-            (set-dag-display-value1 dag-pt action)
-            ))))
 
-(defun set-dag-display-value1 (dag action)
-   (if (eql action :shrink)
-      (pushnew (type-of-fs dag) *shrunk-types*)
-      (setq *shrunk-types* (remove (type-of-fs dag) *shrunk-types*))))
+(defun set-dag-display-value (fs f-list action type-fs-display)
+   (let* ((sub-dag
+             (if (tdfs-p fs) (existing-dag-at-end-of (tdfs-indef fs) f-list) nil))
+          (type
+             (type-of-fs (if (tdfs-p fs) (tdfs-indef fs) fs)))
+          (spec
+             (nconc (reverse f-list) (list type))))
+      (if (eql action :shrink)
+         (progn
+            ;; shrink a currently expanded node - remove any block on this particular
+            ;; node being shrunk, add it to the local list of shrunk nodes, and
+            ;; if this is a type definition record the path to the root of the fs
+            ;; as a shrunk path 
+            (when sub-dag
+               (setf (tdfs-not-shrunk fs) ; override any globally-set shrunk path
+                  (remove sub-dag (tdfs-not-shrunk fs) :test #'eq))
+               (pushnew sub-dag (tdfs-shrunk fs) ; in addition to any globally-set shrunk paths
+                  :test #'eq))
+            (when type-fs-display (pushnew spec *shrunk-types* :test #'equal)))
+         (progn
+            ;; expand a node which is currently shrunk - remove it from the local list
+            ;; of shrunk nodes, block any path saying that this node should be shrunk,
+            ;; and if this is a type definition remove any record of the path to root
+            ;; being a shrunk path
+            (when sub-dag
+               (setf (tdfs-shrunk fs)
+                  (remove sub-dag (tdfs-shrunk fs) :test #'eq))
+               ;; we maybe don't quite get the expected behaviour if a user has unshrunk
+               ;; a local node, shrunk a matching path in a type definition, and comes
+               ;; back and redisplays this dag: the local node won't be shrunk because
+               ;; it's on the local not-shrunk list
+               (pushnew sub-dag (tdfs-not-shrunk fs) :test #'eq))
+            (when type-fs-display
+               (setq *shrunk-types* (remove spec *shrunk-types* :test #'equal)))))))
 
 
 ;;; 
 ;;; *********** Display functions  ************
 ;;;
 
-
 (defun display-dag (dag-instance device &optional file-name)
-   (if file-name
-      (with-open-file (stream file-name :direction :output)
-         (display-dag1 dag-instance device stream))
-     (cond ((dag-p dag-instance)
-            (display-dag1 dag-instance device t))
-           ((tdfs-p dag-instance)
-            (display-dag2 dag-instance device t))
-           (t (error "Not a feature structure")))))
+   (flet ((display (dag-instance device stream)
+            (cond
+               ((dag-p dag-instance)
+                  (display-dag1 dag-instance device stream))
+               ((tdfs-p dag-instance)
+                  (display-dag2 dag-instance device stream))
+               (t (error "Not a feature structure")))))
+      (if file-name
+         (with-open-file (stream file-name :direction :output :if-exists :supersede
+                                 :if-does-not-exist :create)
+            (display dag-instance device stream))
+         (display dag-instance device t))))
+
 
 (defun display-dag1 (dag-instance device stream &optional x-pos)   
    (def-print-operations device (or x-pos 0) stream)
@@ -748,12 +760,11 @@
               (mark-dag-for-output dag-instance)
               (setf *reentrancy-pointer* 0)
               (funcall (fs-output-start-fn *display-structure*))
-              (print-dag dag-instance 0)
+              (print-dag dag-instance 0 nil)
               (funcall (fs-output-end-fn *display-structure*))              
               (funcall (fs-output-max-width-fn *display-structure*)))
              (t (funcall (fs-output-error-fn *display-structure*) 
                    dag-instance))))
-
 
 (defun mark-dag-for-output (dag-instance)
    (let ((real-dag (follow-pointers dag-instance)))
@@ -767,9 +778,12 @@
                   (let ((label (dag-arc-attribute arc)))
                      (mark-dag-for-output (get-dag-value real-dag label)))))))))
 
-(defun print-dag (dag-instance depth)
+
+(defun print-dag (dag-instance depth rpath)
    (let* ((real-dag (follow-pointers dag-instance))
-         (flag-value (dag-visit real-dag)))
+          (flag-value (dag-visit real-dag))
+          (new-rpath (cons (type-of-fs dag-instance) rpath)))
+      (declare (dynamic-extent new-rpath))
       (cond 
          ((equal flag-value 'double)
             (setf (dag-visit real-dag)
@@ -777,45 +791,61 @@
             (incf *reentrancy-pointer*)
             (funcall (fs-output-reentrant-value-fn *display-structure*) 
                (dag-visit real-dag))                  
-            (print-dag-aux real-dag depth))
+            (print-dag-aux real-dag depth new-rpath))
          ((equal flag-value 'single)
-            (print-dag-aux real-dag depth))
+            (print-dag-aux real-dag depth new-rpath))
          (t (funcall (fs-output-reentrant-fn *display-structure*) 
                flag-value))))) 
   
-(defun print-dag-aux (real-dag depth)
+(defun print-dag-aux (real-dag depth rpath)
    (cond 
       ((is-atomic real-dag) 
          (funcall (fs-output-atomic-fn *display-structure*)
             (type-of-fs real-dag)))
-      ;JAC - display shrunk slot no longer in dag nodes
-      ;((and (eql (dag-display real-dag) :shrunk)
-      ;      (fs-output-shrunk-fn *display-structure*))
-      ;   (funcall (fs-output-shrunk-fn *display-structure*)
-      ;         (dag-type real-dag)))
-      ;cheap and cheerful shrinking - just particular types
-      ((and (member (type-of-fs real-dag) *shrunk-types*)
-            (fs-output-shrunk-fn *display-structure*))
+      ((and
+          ;; shrink it if it is locally specified as shrunk, or it's globally
+          ;; specified and not overriden locally
+          (or (member real-dag *shrunk-local-dags* :test #'eq)
+              (and (find rpath *shrunk-types* :test #'print-dag-shrunk-match-p)
+                 (not (member real-dag *not-shrunk-local-dags* :test #'eq))))
+          (fs-output-shrunk-fn *display-structure*))
          (funcall (fs-output-shrunk-fn *display-structure*)
-               (dag-type real-dag)))
+            (dag-type real-dag)))
       (t 
          (let* 
             ((type (type-of-fs real-dag))
-               (labels (top-level-features-of real-dag))
-               (label-list (if labels (canonical-order type labels))))
-           (if labels
-             (progn
-               (funcall (fs-output-start-fs *display-structure*) 
-                 type depth labels)
-               (for label in label-list
-                          do
-                          (funcall (fs-output-label-fn *display-structure*) 
-                                   label depth)
-                          (print-dag (get-dag-value real-dag label) (+ 1 depth)))
-               (funcall (fs-output-end-fs *display-structure*)
-                 (null labels)))
-             (funcall (fs-output-atomic-fn *display-structure*)
-                      (list type)))))))
+             (labels (top-level-features-of real-dag))
+             (label-list (if labels (canonical-order type labels))))
+            (if labels
+               (progn
+                  (funcall (fs-output-start-fs *display-structure*) 
+                     type depth labels)
+                  (for label in label-list
+                     do
+                     (funcall (fs-output-label-fn *display-structure*) 
+                        label depth)
+                     (let ((new-rpath (cons label rpath)))
+                        (declare (dynamic-extent new-rpath))
+                        (print-dag (get-dag-value real-dag label) (+ 1 depth) new-rpath)))
+                  (funcall (fs-output-end-fs *display-structure*)
+                     (null labels)))
+               (funcall (fs-output-atomic-fn *display-structure*)
+                  (list type)))))))
+
+(defun print-dag-shrunk-match-p (x y)
+   ;; x is an alternating list of types and features representing the current place
+   ;; in the fs, y is a shrunk path spec consisting of a list of features followed by
+   ;; a type. Both are in 'reverse' order (i.e. deeper features first). Return true
+   ;; if y an initial segment of x, modulo type subsumption at the end of x
+   ;; e.g. true for x = (VERB HEAD CAT CAT LOCAL LOCAL PHR_SYNSEM SYNSEM ROOT_CLAUSE),
+   ;; y = (HEAD CAT LOCAL CANONICAL_SYNSEM) if PHR_SYNSEM < CANONICAL_SYNSEM
+   ;; and for x = (ROOT_CLAUSE), y = (CANONICAL_SYNSEM), and for
+   ;; x = (*DIFF-LIST* H-STORE BASICMRS C-CONT HCOMP_RULE), y = (*DIFF-LIST*)
+   (cond
+      ((null (cdr y))
+         (or (eq (car x) (car y)) (subtype-p (car x) (car y))))
+      ((eq (cadr x) (car y))
+         (print-dag-shrunk-match-p (cddr x) (cdr y)))))
                                       
                                       
 ;;; We want a standard order on the features - otherwise the output becomes 

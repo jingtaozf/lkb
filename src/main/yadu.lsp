@@ -15,7 +15,9 @@
 ;;; indefeasible / tail
 
 (defstruct tdfs 
-           indef tail def)
+           indef tail def
+           (shrunk nil) ; local specification of shrunk nodes
+           (not-shrunk nil)) ; non-shrunk nodes, overriding globally shrunk paths
         
 ;;; indef is a normal tfs
 ;;; the result of TDFS1 YADU TDFS2 is computed from indef and tail

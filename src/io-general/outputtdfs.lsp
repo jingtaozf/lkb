@@ -20,7 +20,9 @@
       
 
 (defun display-dag2 (tdfs device stream) 
-   (let* ((indef-dag (tdfs-indef tdfs))
+  (let* ((*shrunk-local-dags* (tdfs-shrunk tdfs))
+         (*not-shrunk-local-dags* (tdfs-not-shrunk tdfs))
+         (indef-dag (tdfs-indef tdfs))
          (def-dag (yadu-winner tdfs))
          (tail (tdfs-tail tdfs))
          (indef-width (display-dag1 indef-dag device stream))

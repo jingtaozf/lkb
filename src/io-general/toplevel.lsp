@@ -13,6 +13,9 @@
 ;;; mods to: set-up-lkb-interaction  (extra menu items added)
 ;;;          apply-lex
 
+(defvar *type-fs-display* nil)
+
+
 ;;; Top level functions
 ;;;
 ;;; "Load"
@@ -39,17 +42,21 @@
                (when type-entry 
                   (create-type-hierarchy-tree type nil show-all-p)))))))
 
+
 ;;; "Type spec" show-type-spec
 (defun show-type-spec nil
    (let* ((type (ask-user-for-type))
          (type-entry (if type (get-type-entry type))))
       (when type-entry 
          (display-type-in-tree type)
-         (display-fs-and-parents (type-local-constraint type-entry) 
-            (format nil 
-               "~(~A~)  - definition" 
-               type)
-            (type-parents type-entry)))))
+         (show-type-spec-aux type type-entry))))
+
+(defun show-type-spec-aux (type type-entry)
+   (let ((*type-fs-display* t))
+      (display-fs-and-parents (type-local-constraint type-entry) 
+         (format nil "~(~A~) - definition" type)
+         (type-parents type-entry))))
+
 
 ;;; "Expanded type" show-type                  
 (defun show-type nil
@@ -57,12 +64,15 @@
         (type-entry (if type (get-type-entry type))))
       (when type-entry 
          (display-type-in-tree type)
-         (if (type-tdfs type-entry)
-            (display-fs (type-tdfs type-entry) 
-            (format nil 
-               "~(~A~) - TDFS" 
-               type))
-            (format t "~%No tdfs for type ~A" type)))))
+         (show-type-aux type type-entry))))
+
+(defun show-type-aux (type type-entry)
+   (if (type-tdfs type-entry)
+      (let ((*type-fs-display* t))
+         (display-fs (type-tdfs type-entry) 
+            (format nil "~(~A~) - expanded" type)))
+      (format t "~%No tdfs for type ~A" type)))
+
 
 ;;; "Type hierarchy" show-type-hierarchy
 ;;; "Word entries" show-words

@@ -325,25 +325,11 @@
      (make-instance 'menu-item
        :menu-item-title "Type definition"
        :menu-item-action 
-       #'(lambda ()
-           (if (type-constraint type-entry)
-             (display-fs-and-parents (type-local-constraint type-entry) 
-                                     (format nil 
-                                             "~(~A~)  - definition" 
-                                             node)
-                                     (type-parents type-entry))
-             (format t "~%No constraint for type ~A" node))))
+       #'(lambda () (show-type-spec-aux node type-entry)))
      (make-instance 'menu-item
        :menu-item-title "Expanded type"
        :menu-item-action
-       #'(lambda ()
-           (if (type-constraint type-entry)
-             (display-fs-and-parents (type-constraint type-entry) 
-                                     (format nil 
-                                             "~(~A~) - expanded" 
-                                             node)
-                                     (type-parents type-entry))
-             (format t "~%No constraint for type ~A" node))))
+       #'(lambda () (show-type-aux node type-entry)))
      (make-instance 'menu-item
        :menu-item-title "New hierarchy..."
        :menu-item-action
