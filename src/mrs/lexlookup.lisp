@@ -382,9 +382,6 @@ at this point).
 		    collect (cons rel combination))
 	      (list (list rel)))))))
 
-         
-(defvar *fs-cache* nil)
-
 (defun match-rels (a b)
   (and (equal (second a)
 	      (second b))
@@ -395,29 +392,21 @@ at this point).
 (defun create-liszt-fs-from-rels (rels sem-path)
   ;; inverse direction to mrsoutput functions, here we're creating a FS from a
   ;; Lisp structure
-  (let ((hit (member (list rels sem-path) *fs-cache* :test #'match-rels
-		     :key #'first)))
-    (if hit
-	(second (first hit))
-      (let* ((cl-user::*safe-not-to-copy-p* nil)
-	     (path-list nil)
-	     (current-path sem-path)
-	     (result
-	      (progn
-		(loop for rel in rels
-		    do
-		      (let ((first-path (append current-path *first-path*)))
-			(loop for unif in (create-unifs-for-rel rel first-path)
-			    do
-			      (push unif path-list))
-			(setf current-path (append current-path *rest-path*))))
-		(let* ((fs (process-unifications path-list))
-		       (wffs (when fs (create-wffs fs)))
-		       (tdfs (when wffs (construct-tdfs wffs nil nil))))
-		  tdfs))))
-	(push (list (list rels sem-path) result) *fs-cache*)
-	result))))
-
+  (let* ((path-list nil)
+	 (current-path sem-path)
+	 (result
+	  (progn
+	    (loop for rel in rels
+		do
+		  (let ((first-path (append current-path *first-path*)))
+		    (loop for unif in (create-unifs-for-rel rel first-path)
+			do
+			  (push unif path-list))
+		    (setf current-path (append current-path *rest-path*))))
+	    (let* ((fs (process-unifications path-list))
+		   (wffs (when fs (create-wffs fs)))
+		   (tdfs (when wffs (construct-tdfs wffs nil nil))))
+	      tdfs))))))
 
 (defun create-unifs-for-rel (rel-str path)
   (let ((handel-unif (if (rel-handel rel-str)

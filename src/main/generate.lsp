@@ -94,34 +94,35 @@
 ;;; an entry point
 
 (defun generate-from-mrs (input-sem)
-   (clear-gen-chart)
-   (setf *cached-category-abbs* nil)
-   (let*
+  (clear-gen-chart)
+  (setf *cached-category-abbs* nil)
+  (let*
       ((found-lex-list
-          (apply #'append (mrs::collect-lex-entries-from-mrs input-sem)))
+	(apply #'append (mrs::collect-lex-entries-from-mrs input-sem)))
        (filtered
         (remove-if #'(lambda (x) (member x '(AN) :test #'eq))
-                                        ; *** e.g. a -> an
-                found-lex-list
-                :key #'mrs::found-lex-lex-id)
-          )
+					; *** e.g. a -> an
+		   found-lex-list
+		   :key #'mrs::found-lex-lex-id))
        (empty
-          (mrs::possibly-applicable-null-semantics input-sem)
-          ;; this must be called after mrs::collect-lex-entries-from-mrs since the
-          ;; latter sets up mrs::*null-semantics-found-items* for it
-          ))
-     #|
-     (for lex in filtered
-          do
-          (format t "~%Id ~A, Rules ~A" (mrs::found-lex-lex-id lex)
-          (mrs::found-lex-rule-list lex)))
-     |#
-      (if filtered
-         (chart-generate input-sem (append filtered empty) mrs::*possible-grules*)
-         (progn
-            (format t "~%Some lexical entries could not be found from MRS relations ~
-                       - has function index-for-generator been run yet?")
-            nil))))
+	(mrs::possibly-applicable-null-semantics input-sem)
+	;; this must be called after mrs::collect-lex-entries-from-mrs since
+	;; the latter sets up mrs::*null-semantics-found-items* for it
+	))
+    #|
+    (for lex in filtered
+    do
+    (format t "~%Id ~A, Rules ~A" (mrs::found-lex-lex-id lex)
+    (mrs::found-lex-rule-list lex)))
+    |#
+    (if filtered
+	(chart-generate input-sem (append filtered empty) 
+			mrs::*possible-grules*)
+      (progn
+	(format t "~%Some lexical entries could not be found from MRS ~
+                     relations - has function index-for-generator been run ~
+                     yet?")
+	nil))))
 
 
 ;;; generate from an input MRS and a set of lexical entry FSs. Each entry
@@ -150,7 +151,6 @@
   ;; also an entry point so ensure chart is clear
   (clear-gen-chart) 
   (flush-heap *agenda*)
-  (setf mrs::*fs-cache* nil)
   ;;(when (> (length found-lex-items) 80)
   ;;   (format t "~%More than 80 initial lexical items - skipping")
   ;;   (return-from chart-generate nil))
