@@ -335,8 +335,11 @@ for gram.dtd and tag.dtd
 
 (defmethod rmrs-output-top-label ((rmrsout compact) label-id)
   (with-slots (stream indentation) rmrsout
-    (format stream "~VTh~A~%" indentation label-id)
-    (lkb::current-position stream)))
+    (format stream "~VTh~A" indentation label-id)
+    (let ((pos
+	   (lkb::current-position stream)))
+      (format stream "~%")
+      pos)))
 
 ;;; Parsonian arguments
 
@@ -348,8 +351,9 @@ for gram.dtd and tag.dtd
 
 (defmethod rmrs-output-end-rmrs-arg ((rmrsout compact))
   (with-slots (stream) rmrsout
-    (format stream ")~%")
-    (lkb::current-position stream)))
+    (let ((position (lkb::current-position stream)))
+      (format stream ")~%")
+      position)))
 ;;; FIX
 
 ;;; hcons
@@ -478,9 +482,12 @@ for gram.dtd and tag.dtd
 
 (defmethod rmrs-output-top-label ((rmrsout compact-two) label-id)
   (with-slots (stream indentation xpos) rmrsout
-    (format stream "~VTh~A~%" indentation label-id)
-    (lkb::make-position-record xpos
-      (lkb::current-position-y stream))))
+    (format stream "~VTh~A" indentation label-id)
+    (let ((pos
+	   (lkb::make-position-record xpos
+				      (lkb::current-position-y stream))))
+      (format stream "~%")
+      pos)))
 
 (defmethod rmrs-output-hcons-label ((rmrsout compact-two) label-id)
   (with-slots (stream xpos) rmrsout
@@ -575,9 +582,9 @@ for gram.dtd and tag.dtd
 				   (find-rmrs-var-id top-h bindings)
 				 (funcall
 				  *rmrs-variable-generator*)))))
-	(when pos-rec-p
+	(when (and pos-rec-p top-h)
 	  (setf (rmrs-position-record-top pos-rec)
-	    top-pos))))
+	    (record-rmrs-position top-pos top-h)))))
     (print-rmrs-eps eps bindings grouping-p 
 		    rmrs-args rmrs-in-groups
 		    rmrs-h-cons

@@ -278,7 +278,7 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
 
 #|
 
-It is conveninet to have a notion of a canonical set of IN-Gs
+It is convenient to have a notion of a canonical set of IN-Gs
 This can be regarded in the same way as the set of qeqs - although
 different groups of qeqs might semantically result in the same thing,
 if we assume consistent composition principles, we'll get the same set

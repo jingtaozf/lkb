@@ -2,6 +2,8 @@
 <gram>
 
 <!-- 
+Copyright Ann Copestake 2003-2004.  Distributed under same licence
+conditions as the LKB and RMRS code - see licence.txt
 
 This file corresponds to some version of tsg14.1 (what version is an
 interesting question, but it was the one checked into CVS on Dec 29 ...)
@@ -3774,10 +3776,11 @@ extended correctly if necessary
 <semstruct>
 <hook><index>X</index><label>H2</label></hook>
 <ing><ing-a><var>H2</var></ing-a><ing-b><var>H1</var></ing-b></ing>
+<rarg><rargname>ARG1</rargname><label>H0</label><var>X</var></rarg>
 </semstruct>
-<equalities><dh><dtr>N</dtr><he>INDEX</he></dh><dh><dtr>ADJ</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H1</rv><dh><dtr>ADJ</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H0</rv><dh><dtr>ADJ</dtr><he>ANCHOR</he></dh></equalities>
 <equalities><rv>H2</rv><dh><dtr>N</dtr><he>LABEL</he></dh></equalities>
 </rule>
 

@@ -1,6 +1,9 @@
 <?xml version='1.0'?> <!DOCTYPE lex SYSTEM "/homes/aac10/lingo/newlkb/src/rmrs/tag.dtd" >
 
 <!--
+Copyright Ann Copestake 2003-2004.  Distributed under same licence
+conditions as the LKB and RMRS code - see licence.txt
+
 Dec 2003 AAC
 Some sort of entry added for the most common tags.  Started
 systematically going through semtestsuite adding grammar preds etc
@@ -125,10 +128,10 @@ empty (and hope this works ...)</comment>
 
 <le>
 <tag>JJ</tag>
-<comment>8k+ adjs</comment>
+<comment>8k+ adjs - adjectives have event variables in ERG</comment>
 <semstruct>
-<hook><index>X</index><label>H</label></hook>
-<ep><pred/><label>H</label><var>X</var></ep>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
 </semstruct>
 </le>
 
