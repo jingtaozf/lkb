@@ -44,7 +44,8 @@
    :include-debugger nil
    :include-devel-env nil
    :include-ide nil
-   #-:mswindows :include-common-graphics #-:mswindows nil
+   #-(or :mswindows (version>= 6 2)) :include-common-graphics #-:mswindows nil
+   #-(or :mswindows (version>= 6 2)) nil
    :include-composer nil
    :include-xcw nil
 
