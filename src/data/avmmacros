@@ -1,0 +1,36 @@
+;;; macros used for typed feature structures
+;;; adapted from a version by Antonio Sanfilippo
+;;; include in a style file or in the preamble of
+;;; a LaTeX document
+
+;;; best within {\tiny }
+
+
+% AVM macros
+\newcommand{\avm}[1]{{\setlength{\arraycolsep}{0.8mm}	
+                       \renewcommand{\arraystretch}{1.1} %1.2
+                       \left[ 			
+                       \begin{array}{l}
+                       \\[-1.5mm] #1 \\[-1.5mm] \\ % was -4mm
+                       \end{array} 		
+                       \right]
+                    }}
+%
+\newcommand{\avmplus}[1]{{\setlength{\arraycolsep}{0.8mm}	
+                       \renewcommand{\arraystretch}{1.1} %1.2
+                       \left[ 			
+                       \begin{array}{l}
+                       \\[-2mm] #1 \\[-2mm] \\
+                       \end{array} 		
+                       \right]
+                    }}
+%
+\newcommand{\att}[1]{{\mbox{\scriptsize {\bf #1}}}}
+\newcommand{\attval}[2]{{\mbox{\scriptsize #1}\ {{#2}}}}
+\newcommand{\attvallist}[2]{{\mbox{\scriptsize #1}\ {<{#2}>}}}
+\newcommand{\attvaltlist}[2]{{\mbox{\scriptsize #1}\ {<{\myvaluebold{#2}}>}}}
+\newcommand{\attvaltyp}[2]{{\mbox{\scriptsize #1}\ {\myvaluebold{#2}}}}
+\newcommand{\attvalshrunktyp}[2]{{\mbox{\scriptsize #1}\ {\boxvaluebold{#2}}}}
+\newcommand{\myvaluebold}[1]{{\mbox{\scriptsize {\bf #1}}}}
+\newcommand{\boxvaluebold}[1]{{\fbox{\scriptsize {\bf #1}}}}
+\newcommand{\ind}[1]{{\setlength{\fboxsep}{0.25mm} \: \fbox{{\tiny #1}} \:}}
