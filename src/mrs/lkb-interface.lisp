@@ -93,7 +93,9 @@
   ;; given a feature structure, return an association list containing feature
   ;; -- value (aka feature structure) pairs, e.g.
   ;;
-  ;;   (
+  ;;   ((LBL . #D[handle ...]) (WLINK . #D[*cons* ...]) (PRED . #D[*top* ...])
+  ;;    (ARG0 . #D[event ...]) (ARG1 . #D[ref-ind ...]))
+  ;;
   (dag-arcs fs))
 
 (defun fs-type (fs)
