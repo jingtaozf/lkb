@@ -105,7 +105,8 @@
        (:file "statistics")
        (:file "podium")
        #+(and :lkb :allegro :clim)
-       (:file "trees")
+       (:file "redwoods")
+       (:file "ptb")
        #+:allegro
        (:file "allegro")
        #+:allegro
