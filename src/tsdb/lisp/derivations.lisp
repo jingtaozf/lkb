@@ -188,8 +188,8 @@
     (let ((hook (typecase *derivations-reconstructor*
                   (null nil)
                   (function *derivations-reconstructor*)
-                  (symbol (and (fboundp *derivations-reconstructor*) 
-                               (symbol-function *derivations-reconstructor*)))
+                  (symbol (when (fboundp *derivations-reconstructor*) 
+                            (symbol-function *derivations-reconstructor*)))
                   (string (ignore-errors 
                            (symbol-function 
                             (read-from-string 
@@ -199,7 +199,9 @@
                         ((consp derivation) derivation)
                         ((and (stringp derivation)
                               (not (string= derivation "")))
-                         (read-from-string derivation)))))
+                         (read-from-string derivation))))
+          (%derivation-offset% 0))
+      (declare (special %derivation-offset%))
       (when derivation
         (if (numberp (first derivation))
           (catch :fail
@@ -207,20 +209,37 @@
           (reconstruct-cfg-derivation derivation))))))
 
 (defun reconstruct-derivation (derivation &optional (dagp t))
+  (declare (special %derivation-offset%))
+  #+:debug
+  (pprint (list %derivation-offset% derivation))
   (let* ((root (derivation-root derivation))
          (daughters (derivation-daughters derivation))
          (princes (and (= (length daughters) 1) 
                        (derivation-daughters (first daughters))))
          (id (derivation-id derivation))
          (start (derivation-start derivation))
+         (start (if (and (integerp start) (>= start 0))
+                  start
+                  %derivation-offset%))
          (end (derivation-end derivation))
+         (end (if (and (integerp end) (> end start))
+                end
+                (+ start 1)))
          (edge 
-          (or (when *reconstruct-cache* (gethash id *reconstruct-cache*))
+          (or (when *reconstruct-cache*
+                (loop
+                    for edge in (gethash id *reconstruct-cache*)
+                    when (and #+:lkb (eql (lkb::edge-from edge) start)
+                              #+:lkb (eql (lkb::edge-to edge) end))
+                    do
+                      #+:lkb (setf %derivation-offset% (lkb::edge-to edge))
+                      (return edge)))
               (cond
                ((and (= (length daughters) 1) (null princes))
                 (let* ((surface (derivation-root (first daughters)))
                        (entry 
                         (find-lexical-entry surface root id start end)))
+                  (incf %derivation-offset%)
                   (if (null entry)
                     (throw :fail
                            (values
@@ -241,6 +260,7 @@
                                (derivation-root (first daughters))
                                id start end
                                dagp)))
+                  (incf %derivation-offset%)
                   (cond
                    ((null fs)
                     (throw :fail
@@ -285,7 +305,7 @@
                                        (list derivation 
                                              result failure))))))))))))
     (when (and *reconstruct-cache* edge)
-      (setf (gethash id *reconstruct-cache*) edge))
+      (push edge (gethash id *reconstruct-cache*)))
     edge))
 
 ;;;
@@ -298,6 +318,8 @@
 ;;; point; right now, LKB, [incr tsdb()], and Redwoods code mutually depend on
 ;;; each other.                                                (14-aug-03; oe)
 ;;;
+(defparameter *reconstruct-cfg-separator* #\_)
+
 #+:lkb
 (defun reconstruct-cfg-derivation (derivation &key (start 0) (id 0))
   (let* ((root (if (consp derivation) (first derivation) derivation))
@@ -307,7 +329,8 @@
                       :from start :to (+ start 1)
                       :leaves (let* ((string (string root))
                                      (break (position 
-                                             #\_ string 
+                                             *reconstruct-cfg-separator*
+                                             string 
                                              :from-end t :test #'char=)))
                                 (list (subseq string 0 break))))
       

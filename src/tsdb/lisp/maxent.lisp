@@ -16,7 +16,7 @@
 
 (defparameter *maxent-ngram-back-off-p* t)
 
-(defparameter *maxent-frequency-threshold* 10)
+(defparameter *maxent-frequency-threshold* 0)
 
 (defparameter *maxent-options*
   '(*maxent-collapse-irules-p*
@@ -67,6 +67,73 @@
     (setf (mem-stream model)
       (open (mem-file model) :direction :output 
             :if-does-not-exist :create :if-exists :supersede))))
+
+(defun read-mem (file)
+  (labels ((|[|-reader (stream char)
+               (declare (ignore char))
+               (read-delimited-list #\] stream nil)))
+    (let* ((*readtable* (copy-readtable nil))
+           (*package* (find-package :lkb))
+           (model (make-mem))
+           (table (mem-table model)))
+      (set-syntax-from-char #\. #\space *readtable*)
+      (if (probe-file file)
+        (with-open-file (stream file :direction :input)
+          (unless (and (eq (read stream nil nil) :begin)
+                       (eq (read stream nil nil) :mem)
+                       (integerp (read stream nil nil)))
+            (format t "read-mem(): invalid header in `~a'.~%" file)
+            (return-from read-mem))
+          (loop
+              with bodyp = nil
+              for form = (read stream nil :eof)
+              while (not (eq form :eof))
+              when (and (eq form :begin) (eq (read stream nil nil) :features))
+              do
+                (let ((n (read stream nil nil)))
+                  (unless (and (integerp n) (>= n 0))
+                    (format 
+                     t 
+                     "read-mem(): invalid `:begin :feature' block in `~a'.~%"
+                     file)
+                    (return-from read-mem))
+                  (setf (mem-size model) n)
+                  (setf (mem-weights model) 
+                    (make-array n :initial-element 0.0)))
+                (setf *readtable* (copy-readtable nil))
+                (set-syntax-from-char #\[ #\( *readtable*)
+                (set-syntax-from-char #\] #\) *readtable*)
+                (set-macro-character #\[ #'|[|-reader nil *readtable*)
+                (setf bodyp t)
+              else when (eq form :end) do
+                (set-syntax-from-char #\. #\space *readtable*)
+                (unless (and (eq (read stream nil nil) :features)
+                             (eq (read stream nil nil) :end) 
+                             (eq (read stream nil nil) :mem))
+                  (format t "read-mem(): invalid MEM prologue.~%")
+                  (return-from read-mem))
+                (return model)
+              else when bodyp do
+                (unless (consp form)
+                  (format t "read-mem(): invalid feature `~a'.~%" form)
+                  (return-from read-mem))
+                (let ((code (symbol-to-code form table))
+                      (weight (read stream nil nil)))
+                  (unless (numberp weight)
+                    (format 
+                     t 
+                     "read-mem(): invalid weight on `~a'.~%"
+                     form)
+                    (return-from read-mem))
+                  (when (>= code (mem-size model))
+                    (format 
+                     t 
+                     "read-mem(): mysterious feature overflow (~a vs. ~a).~%"
+                     code (mem-size model))
+                    (return-from read-mem))
+                  (setf (aref (mem-weights model) code) weight))
+                (incf (mem-count model))))
+        (format t "read-mem(): unable to open `~a'.~%" file)))))
 
 (defun record-feature (feature event model)
   (let ((code (feature-code feature)))

@@ -431,6 +431,17 @@
                               (symbol-function (find-symbol "POOL-GARBAGE"))
                               pool)))
                   (comment (format nil "~{~(~s~)~^ ~}" %generator-statistics%))
+                  (comment 
+                   (if *gen-packing-p*
+                    (format
+                     nil
+                     "~a (:subsumptions . ~d) (:equivalence . ~d) ~
+                      (:proactive . ~d) (:retroactive . ~d)"
+                     comment 
+                     *subsumptions* (packings-equivalent *packings*)
+                     (packings-proactive *packings*) 
+                     (packings-retroactive *packings*))
+                    comment))
                   #+:pooling
                   (comment
                    (format 

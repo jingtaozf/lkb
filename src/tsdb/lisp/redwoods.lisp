@@ -30,6 +30,7 @@
                      &key (condition *statistics-select-condition*)
                           gold strip inspect 
                           (bestp *redwoods-thinning-normalize-p*)
+                          (exactp *redwoods-update-exact-p*)
                           (cache *tsdb-cache-database-writes-p*)
                           (verbose t) interactive
                           (stream *tsdb-io*)
@@ -119,13 +120,13 @@
                              (browse-tree 
                               data i-id frame 
                               :gold gold :strip strip :bestp bestp 
-                              :inspect inspect
+                              :inspect inspect :exactp exactp
                               :cache cache :title title
                               :verbose verbose :stream stream)))
                           (browse-tree 
                            data i-id frame 
                            :gold gold :strip strip :bestp bestp 
-                           :inspect inspect
+                           :inspect inspect :exactp exactp
                            :cache cache :title title
                            :verbose verbose :stream stream)))
           for action = (get-field :status status)
@@ -181,7 +182,8 @@
     
     (or frame t)))
 
-(defun browse-tree (data i-id frame &key gold strip bestp inspect subset
+(defun browse-tree (data i-id frame &key gold strip bestp 
+                                         inspect exactp subset
                                          title cache verbose 
                                          (runp t) stream)
   
@@ -199,7 +201,13 @@
      "~&[~a] browse-tree(): `~a' ~@[(~a) ~]--- item # ~a~%"
      (current-time :long :short) data gold i-id)
 
-    (let* ((*reconstruct-cache* (make-hash-table :test #'eql))
+    (let* (;;
+           ;; _fix_me_
+           ;; disable reconstruct cache, so that we can handle generator edges,
+           ;; where shared edges may correspond to distinct string positions.
+           ;; this requires a real solution!                   (15-dec-03; oe)
+           #-:null
+           (*reconstruct-cache* (make-hash-table :test #'eql))
            (lkb::*tree-update-match-hook* #'update-match-p)
            (lkb::*tree-automatic-update-p* 
             (when gold lkb::*tree-automatic-update-p*))
@@ -338,7 +346,7 @@
            (gactive (when (= (length gtrees) 1)
                       (let ((gactive (get-field :t-active (first gtrees))))
                         (unless (minus-one-p gactive) gactive))))
-           (gitem (when (and gactive (= readings 1))
+           (gitem (when (and gactive (or exactp (= readings 1)))
                     (first
                      (analyze 
                       gold :thorough '(:derivation) :condition condition))))
@@ -494,7 +502,18 @@
         (when (and gactive greadings)
           (pairlis '(:parse-id :u-gin :u-gout)
                    (list parse-id gactive (- greadings gactive)))))
-      
+
+      (when exactp
+        (loop
+            with gderivation = (if (stringp gderivation)
+                                 (ignore-errors
+                                  (read-from-string gderivation nil nil))
+                                 gderivation)
+            for edge in lkb::*parse-record*
+            for derivation = (lkb::edge-bar edge)
+            when (derivation-equal derivation gderivation) do
+              (setf (lkb::compare-frame-exact frame) edge)))
+
       (when (and (null %client%) runp)
         (setf %client%
           (mp:run-function 
@@ -503,6 +522,7 @@
 
       (let ((status (lkb::set-up-compare-frame 
                      frame lkb::*parse-record* :runp runp)))
+         
         #+:expand
         (lkb::record-decision (lkb::make-decision :type :save) frame)
         #-:expand
@@ -1163,19 +1183,25 @@
   ;;   - either the current item has more than one reading, or that single one
   ;;     reading has the exact same derivation as the preferred tree from the
   ;;     gold set.
+  ;;   - also, when in `exact-match' update mode, be content if there is one
+  ;;     unique result.
   ;;
-  (and (or (null (lkb::compare-frame-version frame))
-           (equal(lkb::compare-frame-version frame) ""))
-       (integerp (lkb::compare-frame-gactive frame))
-       (= (length (lkb::compare-frame-in frame)) 
-          (lkb::compare-frame-gactive frame))
-       (or (not (= (length (lkb::compare-frame-edges frame)) 1))
-           (derivation-equal 
-            (lkb::compare-frame-gderivation frame)
-            (loop
-                with id = (lkb::edge-id (first (lkb::compare-frame-in frame)))
-                for derivation in (lkb::compare-frame-derivations frame)
-                thereis (and (= (derivation-id derivation) id) derivation))))))
+  (or (and (lkb::compare-frame-exact frame)
+           (null (rest (lkb::compare-frame-in frame))))
+      (and (or (null (lkb::compare-frame-version frame))
+               (equal(lkb::compare-frame-version frame) ""))
+           (integerp (lkb::compare-frame-gactive frame))
+           (= (length (lkb::compare-frame-in frame)) 
+              (lkb::compare-frame-gactive frame))
+           (or (not (= (length (lkb::compare-frame-edges frame)) 1))
+               (derivation-equal 
+                (lkb::compare-frame-gderivation frame)
+                (loop
+                    with id = (lkb::edge-id 
+                               (first (lkb::compare-frame-in frame)))
+                    for derivation in (lkb::compare-frame-derivations frame)
+                    thereis (when (= (derivation-id derivation) id)
+                              derivation)))))))
 
 (defun export-trees (data &key (condition *statistics-select-condition*)
                                path prefix interrupt meter 
@@ -1961,14 +1987,17 @@
     (loop
         with model = (or model 
                          (case type
-                           (:mem (let ((model (make-mem)))
-                                   (initialize-mem model)
-                                   model))))
+                           ((:mem :tag)
+                            (let ((model (make-mem)))
+                              (initialize-mem model)
+                              model))))
         with gc = (install-gc-strategy 
                    nil :tenure *tsdb-tenure-p* :burst t :verbose verbose)
-        with condition = (if (and condition (not (equal condition "")))
-                           (format nil "t-active >= 1 && (~a)" condition)
-                           "t-active >= 1")
+        with condition = (if (eq type :tag)
+                           condition
+                           (if (and condition (not (equal condition "")))
+                             (format nil "t-active >= 1 && (~a)" condition)
+                             "t-active >= 1"))
         with meter = (when meter (madjust / meter (length sources)))
         with duration = (when meter (mduration meter))
         for i from 0
@@ -2014,10 +2043,14 @@
     (let ((items (analyze sources :gold sources :condition condition
                           :thorough '(:derivation) :readerp nil)))
       (purge-profile-cache sources :expiryp nil)
-      (case type
-        (:mem
-         (estimate-mem 
-          items :model model :estimatep estimatep :stream stream)))))))
+      (when (or items estimatep)
+        (case type
+          (:mem
+           (estimate-mem 
+            items :model model :estimatep estimatep :stream stream))
+          (:tag
+           (estimate-tagger 
+            items :model model :estimatep estimatep :stream stream))))))))
 
 (defun rank-profile (source 
                      &optional (target source)
@@ -2102,6 +2135,7 @@
                        (case type
                          (:pcfg (estimate-cfg train))
                          (:mem (estimate-mem train))
+                         (:tag (estimate-tagger train))
                          (:chance "chance")))
       for item in test
       for iid = (get-field :i-id item)
@@ -2113,7 +2147,7 @@
          stream
          "~&[~a] train-and-rank(): using ~a;~%"
          (current-time :long :short)  model)
-        #+:debug (setf %model% model)
+        (setf %model% model)
       when (and (integerp readings) (> readings 1)) do
         (format 
          stream
@@ -2129,6 +2163,7 @@
                              (case type
                                (:pcfg (pcfg-score-edge edge model))
                                (:mem (mem-score-edge edge model))
+                               (:tag (tag-score-edge edge model))
                                (:chance 0.0)))
             when (and (null edge) (not (eq type :chance))) do 
               (format 

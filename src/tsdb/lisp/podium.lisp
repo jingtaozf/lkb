@@ -96,6 +96,7 @@
       set globals(maximal_number_of_results) ~d~%~
       set globals(tree,updatep) ~:[0~;1~]~%~
       set globals(tree,delay) ~a~%~
+      set globals(tree,exactp) ~:[0~;1~]~%~
       set globals(tree,thinning_normalize_p) ~:[0~;1~]~%~
       set globals(tree,thinning_export_p) ~:[0~;1~]~%~
       ~@[set globals(readers,mrs) {~s}~%~]~
@@ -129,6 +130,7 @@
      *tsdb-maximal-number-of-edges* 
      *tsdb-maximal-number-of-results*
      delay (if (numberp delay) delay 0)
+     *redwoods-update-exact-p*
      *redwoods-thinning-normalize-p*
      *redwoods-thinning-export-p*
      (gethash :mrs *statistics-readers*)

@@ -894,6 +894,10 @@ proc tsdb_set {variable {value ""}} {
           set value [lispify_truth_value 0];
         }; # else
       }
+      update_exact_p {
+        set variable "*redwoods-update-exact-p*";
+        set value [lispify_truth_value $globals(tree,exactp)];
+      }
       thinning_normalize_p {
         set variable "*redwoods-thinning-normalize-p*";
         set value [lispify_truth_value $globals(tree,thinning_normalize_p)];

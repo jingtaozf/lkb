@@ -858,6 +858,9 @@ proc main {} {
   .menu.trees.menu.switches add checkbutton \
     -label "Automatic Update" \
     -variable globals(tree,updatep) -command {tsdb_set automatic_update_p};
+  .menu.trees.menu.switches add checkbutton \
+    -label "Update Exact Match" \
+    -variable globals(tree,exactp) -command {tsdb_set update_exact_p};
   .menu.trees.menu.switches add separator;
   .menu.trees.menu.switches add radiobutton \
     -label "Maximum Entropy" \
@@ -865,6 +868,9 @@ proc main {} {
   .menu.trees.menu.switches add radiobutton \
     -label "Simple PCFG" \
     -variable globals(tree,model) -value :pcfg;
+  .menu.trees.menu.switches add radiobutton \
+    -label "MEM Tagger" \
+    -variable globals(tree,model) -value :tag;
   .menu.trees.menu.switches add radiobutton \
     -label "Random Chance" \
     -variable globals(tree,model) -value :chance;
