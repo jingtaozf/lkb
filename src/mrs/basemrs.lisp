@@ -1436,5 +1436,5 @@ VAR -> VARNAME[:CONSTNAME]*
             (loop
                 for role in (rel-flist ep)
                 for value = (fvpair-value role)
-                do (unfill-variable value))))
-    mrs))
+                do (unfill-variable value)))))
+  mrs)
