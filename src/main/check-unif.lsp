@@ -43,7 +43,7 @@
          (prog1
 	     ;; disable any path checking in force
 	     (let ((*check-paths-optimised* nil)) 
-               ,@forms)
+                ,@forms)
 	   (setq .completedp. t))
        ;; Restore original function definitions
        (dolist (name-and-fn .saved-names-and-fns.)
@@ -53,7 +53,8 @@
 			  :if-exists :supersede
 			  :if-does-not-exist :create)
 	   (let ((*print-pretty* nil))
-	     (format .str. "#|~%Check paths from~%~{  ~S~%~}|#~%" ',forms))
+	     (format .str. "#|~%Check paths created from execution of~%  ~S~%|#~%"
+                '(with-check-path-list-collection ,output-file ,@forms)))
 	   (format t "~%Extracting paths...")
 	   (write
 	    `(defparameter *check-paths* 
