@@ -70,8 +70,8 @@
       parameter list-tail ~a~a~%~
       status ready~a~%"
      *list-type* %lui-eoc%
-     *empty-list-type* %lui-eoc% 
      *non-empty-list-type* %lui-eoc%
+     *empty-list-type* %lui-eoc% 
      (first *list-head*) %lui-eoc%
      (first *list-tail*) %lui-eoc%
      %lui-eoc%)
