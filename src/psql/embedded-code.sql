@@ -345,10 +345,6 @@ CLUSTER current_grammar_name ON current_grammar;
 SELECT true;'' 
 LANGUAGE SQL;
 
-CREATE OR REPLACE VIEW obj_semi_main AS SELECT name, coalesce(btrim(keyrel,''"''),'''') || coalesce('' ''||btrim(altkey,''"''),'''')  || coalesce('' ''||btrim(alt2key,''"''),'''') as preds, coalesce(keytag,altkeytag) as carg, comments, exemplars from current_grammar;
-
-CREATE TABLE obj_semi_main_temp();
-
 ' );
 
 INSERT INTO qrya VALUES ( 'remove-schema', 0, 'select-list' );
