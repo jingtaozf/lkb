@@ -1226,7 +1226,14 @@
       pred1)
      ((and (stringp pred1) (stringp pred2))
       (string-equal pred1 pred2))
-     ((or (eq pred1 pred2) (null pred2))))))
+     ((or (eq pred1 pred2) 
+          ;;
+          ;; _fix_me_
+          ;; half of the solution to the concern expressed above, picked up
+          ;; from dan; make sure the caller records the new value.
+          ;;                                                    (4-apr-04; oe)
+          (unify-types pred1 pred2)
+          (null pred2))))))
 
 (defun expand-solution (mrs mtr solution)
   ;;
