@@ -20,8 +20,22 @@
   ;;; takes the same input as get-parse-fs - returns a string
   ;;; corresponding to the node label as used by the parse-tree
   ;;; drawing system
+  ;;;
+  ;;; this code used to call the recursive reconstruction of the complete parse
+  ;;; tree, thus accounting for up to 80 % of MRS construction time.  it should
+  ;;; be sufficient, for the top node of a parse at least, to not reconstruct 
+  ;;; the entire tree.  besides, the call to this function in `mrsoutput.lisp'
+  ;;; is now disabled because ann wants to eliminate the `synlabel' mechanism
+  ;;; ultimately, i believe.                                (28-mar-00  -  oe)
+  ;;;
+  #+:vm
   (let ((edge-symbol (cl-user::make-new-parse-tree edge 1)))
-    (cl-user::get-string-for-edge edge-symbol)))
+    (cl-user::get-string-for-edge edge-symbol))
+  #-:vm
+  (let ((dag (edge-dag edge)))
+    (cl-user::tree-node-text-string 
+     (or (and dag (cl-user::find-category-abb dag)) 
+         (cl-user::edge-category edge)))))
 
 
 (defun output-parse-tree (tree stream)

@@ -87,6 +87,11 @@
 ;;; to the MRS in some way
 ;;; Functions are from mrsfns.lisp
 
+(defun read-mrs-from-string (string)
+  (let ((*package* (find-package :cl-user)))
+    (ignore-errors 
+     (with-input-from-string (stream string)
+       (read-mrs stream)))))
 
 (defun get-mrs-string (parse)
   (return-mrs-info-string parse :simple))

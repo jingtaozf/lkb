@@ -27,7 +27,11 @@
   (let* ((fs (get-parse-fs parse))
          ;; get-parse-fs also sets *fragment-p*
          ;; which controls whether the scoping code is run
-         (synlabel (get-category-label parse))
+         ;;
+         ;; the synlabel mechanism, apparently, is no longer required; ann
+         ;; says she wants to look into this close sometime  (28-mar-00  -  oe)
+         ;;
+         (synlabel #+:vm (get-category-label parse) nil)
          (sem-fs (path-value fs *initial-semantics-path*)))
     (if (is-valid-fs sem-fs)
         (progn
