@@ -244,3 +244,38 @@
     (lkb-21)
   (lkb-pre-21))
 
+;;;
+;;; Some key bindings for those having trouble with encodings
+;;; FCB 2003-12-25
+
+(add-hook 'fi:inferior-common-lisp-mode-hook
+	  (function (lambda ()
+		      ;;; add parse key
+		      (define-key fi:inferior-common-lisp-mode-map 
+			  "\C-cp" 'lkb-do-parse)
+		      (define-key fi:inferior-common-lisp-mode-map 
+			  "\C-cl" 'lkb-show-words)
+		      (define-key fi:inferior-common-lisp-mode-map 
+			  "\C-cL" 'lkb-show-words-expanded)
+		      )))
+
+(defun lkb-do-parse ()
+  "Prompt for sentence to parse"
+  (interactive)
+  (goto-char (point-max))
+  (insert-string "(do-parse-tty \"\")")
+  (backward-char 2))
+
+(defun lkb-show-words ()
+  "prompt for list of words to look up (unexpanded)"
+  (interactive)
+  (goto-char (point-max))
+  (insert-string "(lkb::show-word-aux-tty \"\" nil)")
+  (backward-char 6))
+
+(defun lkb-show-words-expanded ()
+    "prompt for list of words to look up (expanded)"
+  (interactive)
+  (goto-char (point-max))
+  (insert-string "(lkb::show-word-aux-tty \"\" t)")
+  (backward-char 4))
