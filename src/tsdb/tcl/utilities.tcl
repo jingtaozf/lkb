@@ -67,7 +67,6 @@ proc update_ts_list {{action update} {name all} {arg_one yes} {arg_two yes}} {
         $list selection set $active;
       }; # if
       if {[info exists selection] && $selection != -1} {
-#        $list yview 0;
         $list see $selection;
       }; # if
       set globals(selection) -1;
@@ -120,6 +119,8 @@ proc update_ts_list {{action update} {name all} {arg_one yes} {arg_two yes}} {
       $list selection set $index;
       $list see $index;
       set globals(data) $new;
+      set globals(relations) {};
+      set globals(attributes) {};
       tsdb_set "*tsdb-data*" "\"$new\"";
     }; # if
   } elseif {$action == "delete"} {
@@ -142,6 +143,8 @@ proc update_ts_list {{action update} {name all} {arg_one yes} {arg_two yes}} {
       update_ts_list;
       if {$globals(data) == $name} {
         set globals(data) "";
+        set globals(relations) {};
+        set globals(attributes) {};
         tsdb_set "*tsdb-data*" nil;
       }; # if
       if {$compare_in_detail(source) == $name} {
@@ -220,6 +223,7 @@ proc update_condition_cascade {menu class} {
     $menu delete 0 end;
   }; # if
   $menu add command 
+
 }; # update_condition_cascade()
 
 
@@ -261,6 +265,10 @@ proc tsdb_set {variable {value ""}} {
         set variable "*tsdb-gc-p*";
         set value $globals(gc_p);
       }
+      tenure_p {
+        set variable "*tsdb-tenure-p*";
+        set value [lispify_truth_value $globals(tenure_p)];
+      }
     }; # switch
   }; # if
 
@@ -291,6 +299,13 @@ proc verify_ts_selection {{code ""}} {
 
 }; # verify_ts_selection()
 
+
+proc read_database_schema {data} {
+  
+  send_to_lisp :event "(schema \"$data\")";
+  tkwait variable globals(relations);
+
+}; # read_database_schema()
 
 proc lispify_truth_value {value} {
 
@@ -404,4 +419,89 @@ proc show_chart {file {container ""} {title ""}} {
                  $toplevel $stext $text]
 
 }; # show_chart()
+
+proc send_to_lisp {code string {lispify 0}} {
+
+  if {$lispify} {
+    set string [lispify_string $string];
+  }; # if
+  set command [format "(%s %s)" $code $string];
+  puts $command;
+  flush stdout;
+  logger $command;
+
+}; # send_to_lisp()
+
+
+proc lispify_string {string} {
+
+  regsub -all {(\\)|(")} $string {\\\0} string;
+  return $string;
+
+}; # lispify-string()
+
+
+proc initialize_meter {{toplevel ".meter"} {label ""}} {
+
+  toplevel $toplevel;
+  wm title $label;
+  
+}; # initialize_meter()
+
+#
+# set of utility functions to maintain (input) history for various entry types
+#
+proc history_add {class item} {
+
+  global history;
+
+  if {$item != ""} {
+    if {[info exists history($class)]} {
+      set history($class) [linsert $history($class) 0 $item]
+      incr history($class,size);
+    } else {
+      set history($class) [list $item];
+      set history($class,size) 1;
+    }; # else
+    set history($class,position) -1;
+  }; # if
+
+}; # history_add()
+
+proc history_move {class offset} {
+
+  global history;
+
+  if {![info exists history($class)] 
+      || [set position [expr $history($class,position) + $offset]] < -1
+      || $position > [expr $history($class,size) - 1]} {
+    tsdb_beep;
+    set history(errno) -1;
+    return "";
+  }; # if
+  
+  incr history($class,position) $offset;
+  set history(errno) 0;
+  if {$position == -1} {
+    return "";
+  } else {
+    return [lindex $history($class) $history($class,position)];
+  }; # else
+
+}; # history_move()
+
+
+proc entry_history {entry class offset} {
+
+  global history;
+
+  set item [history_move $class $offset];
+  if {!$history(errno)} {
+    $entry delete 0 end;
+    $entry insert 0 $item;
+    $entry selection clear;
+    $entry icursor end;
+  }; # if
+
+}; # entry_history()
 

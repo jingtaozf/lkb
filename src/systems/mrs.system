@@ -8,9 +8,20 @@
     :depends-on (#+:lkb "lkb" #+:page "page")
     :finally-do
     (progn
-      (load "~/grammar/mrsglobals-eng.lisp")
-      (when (fboundp 'read-mrs-rule-file-aux)
-        (read-mrs-rule-file-aux "~/grammar/data/new-rules.mrs")))
+      (when *grammar-directory* 
+              (load (merge-pathnames
+                        (make-pathname :name "mrsglobals-eng.lisp")
+                    *grammar-directory*)))
+      (when (and *grammar-directory*
+                 mrs::*mrs-to-vit* 
+                 (fboundp 'read-mrs-rule-file-aux))
+        (read-mrs-rule-file-aux 
+                (merge-pathnames
+                   (make-pathname :directory 
+                       (pathname-directory
+                        (dir-append *grammar-directory* 
+                                    '(:relative "data"))))          
+                   (make-pathname :name "new-rules.mrs")))))
     :components
     ((:module "core"
       :source-pathname "mrs"
@@ -26,30 +37,49 @@
        (:file "mrsoutput")              ; constructing MRS from parse result  
        (:file "mrscorpus")              ; checking equality etc
        (:file "interface")
+       (:file "mrsfns")))                 ; from old mrsglobals
        ;; following two files needed for scoping - can be excluded
        ;; for generation
-       (:file "mrsresolve")             ; resolving scope
-       (:file "mrscons")                ; constraints on scope
-       ;; following five files for mrs to vit  - can be excluded 
+     (:module "scoping"
+       :source-pathname "mrs"
+       :binary-pathname "mrs"
+      :components
+       ((:file "mrsresolve")             ; resolving scope
+        (:file "mrscons")))               ; constraints on scope
+
+       ;; following files for mrs to vit  - can be excluded 
        ;; for generation 
-       (:file "vit")                    ; VIT structures
-       (:file "mrs-to-vit")             ; convert MRS to VIT
-       (:file "time-convert")           ; temporary code for converting
-                                        ; times to VIT format
-                                        ; needs fixing
-       (:file "mrsmunge")               ; manipulate MRS via rules
-                                        ; currently for vitrifying - potential
-                                        ; other uses
+     (:module "mrs-to-vit"
+       :source-pathname "mrs"
+       :binary-pathname "mrs"
+      :components
+       ((:file "vit")                    ; VIT structures
+        (:file "mrs-to-vit")             ; convert MRS to VIT
+        (:file "time-convert")           ; temporary code for converting
+                                         ; times to VIT format
+                                         ; needs fixing
+        (:file "mrsmunge")               ; manipulate MRS via rules
+                                         ; currently for vitrifying - potential
+                                         ; other uses
        #+:lkb (:file "mrsruleinput")           ; creating rules for above
-                                        ; requires LKB, but outputs compiled 
-                                        ; rules which can be used without LKB
+                                         ; requires LKB, but outputs compiled 
+                                         ; rules which can be used without LKB
        ;; (:file "acl-mrs")             ; display etc in CLIM
-                                        ; needs fixing
-       (:file "mrsfns")                 ; from old mrsglobals
-       ; (:file "mrsglobals-eng")         ; globals for LinGO grammar
+                                         ; needs fixing
        #+:lkb (:file "lkbmrs")          ; LKB specific - redefines
                                         ; some functions
-       #+:lkb (:file "lexindex")        ; LKB specific - indexing
+       #+:page (:file "pagemrs")))        ; PAGE specific
+     #+:lkb
+     (:module "generator-morph"
+       :source-pathname "mrs"
+       :binary-pathname "mrs"
+      :components
+       ((:file "lexindex")        ; LKB specific - indexing
 					; entries etc on semantics
-       #+:lkb (:file "lexlookup")))))   ; LKB specific - retrieving
- 
+       (:file "lexlookup")))   ; LKB specific - retrieving
+ #+:lkb
+     (:module "generator"
+       :source-pathname "main"
+       :binary-pathname "main"
+      :components
+      ((:file "generate")))))

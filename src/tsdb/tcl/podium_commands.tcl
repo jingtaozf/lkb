@@ -25,6 +25,8 @@ proc tsdb_file {action {index -1}} {
         } else {
           if {![catch {file rename -force -- $aold $anew}]} {
             set globals(data) $new;
+            set globals(relations) {};
+            set globals(attributes) {};
             update_ts_list rename $old $new;
           } else {
             tsdb_beep;
@@ -181,6 +183,8 @@ proc tsdb_list_select {item} {
   global globals test_suites;
 
   set globals(data) [lindex $test_suites($item) 0];
+  set globals(relations) {};
+  set globals(attributes) {};
 
   set command [format "(set *tsdb-data* \"%s\")" $globals(data)];
   send_to_lisp :event $command;
@@ -232,22 +236,18 @@ proc tsdb_browse {code condition} {
   switch $code {
     items {
       set attributes "(\"i-id\" \"i-input\" \"i-wf\" \"i-category\")";
-      set types "(:integer :string :integer :string)";
       set relations "(\"item\")";
     }
     phenomena {
       set attributes "(\"p-id\" \"p-name\" \"p-presupposition\" \"p-author\" \"p-date\")";
-      set types "(:integer :string :string :string :string)";
       set relations "(\"phenomenon\")";
     }
     runs {
-      set attributes "(\"run-id\" \"comment\" \"application\" \"grammar\" \"avms\" \"sorts\" \"templates\" \"user\" \"host\" \"start\")";
-      set types "(:integer :string :string :string :integer :integer :integer :string :string :string)";
+      set attributes "(\"run-id\" \"comment\" \"application\" \"grammar\" \"avms\" \"sorts\" \"templates\" \"lexicon\" \"lrules\" \"rules\" \"user\" \"host\" \"start\")";
       set relations "(\"run\")";
     }
     parses {
-      set attributes "(\"i-id\" \"i-input\" \"readings\" \"words\" \"first\" \"total\" \"tcpu\" \"tgc\" \"p-etasks\" \"p-stasks\")";
-      set types "(:integer :string :integer :integer :integer :integer :integer :integer :integer :integer)";
+      set attributes "(\"i-id\" \"i-input\" \"readings\" \"words\" \"first\" \"total\" \"tcpu\" \"tgc\" \"p-ftasks\" \"p-etasks\" \"p-stasks\" \"aedges\" \"pedges\"  \"raedges\" \"rpedges\")";
       set relations "(\"item\" \"parse\")";
     }
     results {
@@ -262,7 +262,6 @@ proc tsdb_browse {code condition} {
         set condition "error != `'";
       }; # else
       set attributes "(\"i-id\" \"i-input\" \"error\")";
-      set types "(:integer :string :string)";
       set relations "(\"item\" \"parse\")";
      }
   }; # switch
@@ -276,8 +275,8 @@ proc tsdb_browse {code condition} {
   }; # if
 
   if {[info exists attributes]} {
-    set command [format "(select \"%s\" %s %s %s \"%s\")" \
-                   $globals(data) $attributes $types $relations $condition];
+    set command [format "(select \"%s\" %s nil %s \"%s\")" \
+                   $globals(data) $attributes $relations $condition];
     send_to_lisp :event $command;
   }; # if
   
@@ -288,11 +287,42 @@ proc tsdb_browse_condition {} {
 
   global globals;
 
-  if {![input "condition:" $globals(browse_condition)]} {
+  if {![input "where:" $globals(browse_condition) "" where]} {
+    history_add where $globals(input);
     set globals(browse_condition) [lispify_string $globals(input)];
   }; # if
 
 }; # tsdb_browse_condition()
+
+
+proc tsdb_select {} {
+
+  global globals;
+
+  if {![input "select:" "" "" select]} {
+    history_add select $globals(input);
+    set attributes "(";
+    foreach i $globals(input) {
+      set attributes "$attributes \"[lispify_string $i]\"";
+    }; # foreach
+    set attributes "$attributes)";
+    if {![input "from:" "" "" from]} {
+      history_add from $globals(input);
+      set relations "(";
+      foreach i $globals(input) {
+        set relations "$relations \"[lispify_string $i]\"";
+      }; # foreach
+      set relations "$relations)";
+      if {![input "where:" "" "" where]} {
+        history_add where $globals(input);
+        set condition [lispify_string $globals(input)];
+        set command [format "(select \"%s\" %s nil %s \"%s\")" \
+                     $globals(data) $attributes $relations $condition];
+        send_to_lisp :event $command;
+      }; # if
+    }; # if
+  }; # if
+}; # tsdb_select()
 
 proc tsdb_process {code} {
 
@@ -301,7 +331,8 @@ proc tsdb_process {code} {
   if {[verify_ts_selection]} {return 1};
 
   set comment "";
-  if {![input "comment:"]} {
+  if {![input "comment:" "" "" comment]} {
+    history_add comment $globals(input);
     set comment [lispify_string $globals(input)];
     switch $code {
       all {set condition ""}
@@ -494,6 +525,17 @@ proc tsdb_compare_in_detail {} {
   send_to_lisp :event $command;
  
 }; # tsdb_compare_in_detail()
+
+proc toggle_balloon_help {} {
+
+  global globals;
+
+  set globals(balloon_p) [expr ! $globals(balloon_p)];
+  .menu.help.menu entryconfigure 0 \
+    -label "[expr {$globals(balloon_p) ? "Disable" : "Enable"}] Balloon Help"
+  balloon_setup $globals(balloons);
+
+}; # toggle_balloon_help()
 
 
 proc tsdb_todo {} {
@@ -512,31 +554,3 @@ proc tsdb_todo {} {
     show_text $todo .todo "tsdb(1) ToDo List" 80 25;
   }; # if
 }; # tsdb_todo()
-
-proc send_to_lisp {code string {lispify 0}} {
-
-  if {$lispify} {
-    set string [lispify_string $string];
-  }; # if
-  set command [format "(%s %s)" $code $string];
-  puts $command;
-  flush stdout;
-  logger $command;
-
-}; # send_to_lisp()
-
-
-proc lispify_string {string} {
-
-  regsub -all {(\\)|(")} $string {\\\0} string;
-  return $string;
-
-}; # lispify-string()
-
-
-proc initialize_meter {{toplevel ".meter"} {label ""}} {
-
-  toplevel $toplevel;
-  wm title $label;
-  
-}; # initialize_meter()

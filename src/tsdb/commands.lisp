@@ -74,7 +74,7 @@
                              (cache *tsdb-cache-database-writes-p*)
                              (gc *tsdb-gc-p*)
                              overwrite podium)
-  
+  (declare (ignore podium))
   
   (initialize-tsdb)
   (when overwrite (purge-test-run language :action :purge))
@@ -85,21 +85,23 @@
          (data (retrieve condition language :verbose verbose)))
 
     (when data
-      (let ((cache (when cache (create-cache language :verbose verbose)))
-            (environment (initialize-test-run))
-            (trees-hook (typecase *tsdb-trees-hook*
-                          (null nil)
-                          (string (symbol-function 
-                                   (read-from-string *tsdb-trees-hook*)))
-                          (symbol (symbol-function *tsdb-trees-hook*))
-                          (function *tsdb-trees-hook*)))
-            (semantix-hook (typecase *tsdb-semantix-hook*
-                             (null nil)
-                             (string (symbol-function 
-                                      (read-from-string *tsdb-semantix-hook*)))
-                             (symbol (symbol-function *tsdb-semantix-hook*))
-                             (function *tsdb-semantix-hook*)))
-            result gcs i-load a-load)
+      (let* ((cache (when cache (create-cache language :verbose verbose)))
+             (environment (initialize-test-run))
+             (trees-hook (typecase *tsdb-trees-hook*
+                           (null nil)
+                           (string (symbol-function 
+                                    (read-from-string *tsdb-trees-hook*)))
+                           (symbol (symbol-function *tsdb-trees-hook*))
+                           (function *tsdb-trees-hook*)))
+             (semantix-hook (typecase *tsdb-semantix-hook*
+                              (null nil)
+                              (string (symbol-function 
+                                       (read-from-string *tsdb-semantix-hook*)))
+                              (symbol (symbol-function *tsdb-semantix-hook*))
+                              (function *tsdb-semantix-hook*)))
+             (gc-strategy (install-gc-strategy gc))
+             (gc (get-field :gc gc-strategy))
+             result gcs i-load)
 
         (unwind-protect
             (ignore-errors
@@ -108,14 +110,15 @@
                       (comment (or comment "null"))
                       (platform (current-platform))
                       (grammar (current-grammar))
+                      (tsdb (current-tsdb))
                       (host (current-host))
                       (os (current-os))
                       (start (current-time :long t))
                       (run (pairlis (list :run-id :comment 
-                                          :platform :grammar
+                                          :platform :tsdb :grammar
                                           :user :host :os :start)
                                     (list run-id comment 
-                                          platform grammar
+                                          platform tsdb grammar
                                           user host os start)))
                       (run (append run (get-test-run-information))))
                  (write-run run language :cache cache))
@@ -193,6 +196,7 @@
                                                 :semantix-hook semantix-hook)))
                        (setf gcs *tsdb-global-gcs*)
                        (setf *tsdb-global-gcs* 0)
+
                        #+:allegro
                        (when (and (= (get-field :readings result) -1)
                                   (equal (class-of 
@@ -221,6 +225,7 @@
                                      ((<= treal 6000) (first loads))
                                      ((<= treal (* 5 6000)) (second loads))
                                      (t (third loads)))))
+                         (push (cons :i-load i-load) result)
                          (push (cons :a-load a-load) result)
 
                          (if readings
@@ -270,11 +275,10 @@
                            (write-results
                             parse-id 
                             (get-field :results result) language
-                            :cache cache))
-                         #+:page
-                         (write-charts parse-id language :cache cache))))))))
+                            :cache cache)))))))))
           (when cache (flush-cache cache :verbose verbose))
-          (finalize-test-run environment))))))
+          (finalize-test-run environment)
+          (restore-gc-strategy gc-strategy))))))
 
 (defun tsdb-do-vocabulary (language &key condition (load :warn) 
                                          (stream *tsdb-io*)
@@ -346,11 +350,11 @@
               (unless entries (push word unknown-words))))
           (format 
            stream 
-           "~&  ~a ~@? reference(s)~:[~; | ~d lexical entrie(s)~];~%" 
+           "~&  ~a ~@? reference(s)~:[~; | [~d + ~d] lexical entrie(s)~];~%" 
            word tabulation (gethash word frequencies)
-           loadp (+ (gethash word lexicon) (gethash word lstasks))
+           loadp (gethash word lexicon) (gethash word lstasks))
           (when increment (meter-advance increment)))))
-    (when meter (meter :value (get-field :end meter))))))
+    (when meter (meter :value (get-field :end meter)))))
 
 (defun tsdb (&optional action argument &key condition run skeleton load)
   
@@ -431,7 +435,11 @@
 
 (defun tsdb-do-set (variable value)
   (format *tsdb-io* "~%")
-  (set variable value))
+  (let ((value (case variable
+                 ((*tsdb-home*) 
+                  (namestring (make-pathname :directory value)))
+                 (t value))))
+    (set variable value)))
 
 (defun tsdb-do-status (name &key (stream *tsdb-io*) (prefix "  "))
 
@@ -503,6 +511,7 @@
 
 (defun find-tsdb-directories (&optional (home *tsdb-home*) 
                               &key name pattern trace meter)
+  (declare (ignore trace))
   
   (when meter (meter :value (get-field :start meter)))
   (let* ((prefix (length *tsdb-home*))
@@ -625,6 +634,7 @@
 (defun tsdb-do-phenomena (&key (stream *tsdb-io*) 
                                (prefix "  ")
                                (format :tcl))
+  (declare (ignore prefix))
   
   (do ((phenomena *phenomena* (rest phenomena))
        (i 0 (+ i 1)))
@@ -636,9 +646,28 @@
         "set phenomena(~d) ~s;~%"
         i (first phenomena))))))
 
+(defun tsdb-do-schema (data &key (stream *tsdb-io*) (format :tcl))
+  
+  (let* ((schema (read-database-schema data))
+         (relations (map 'list #'first schema))
+         (fields (map 'list #'rest schema))
+         (fields  (reduce #'(lambda (foo bar)
+                              (union foo bar 
+                                     :key #'first 
+                                     :test #'string=))
+                          fields))
+         (attributes (map 'list #'first fields)))
+    (case format
+      (:tcl
+       (format
+        stream
+        "set globals(relations) ~a;~%set globals(attributes) ~a;~%"
+        (list2tcl relations) (list2tcl attributes))))))
+
 (defun tsdb-do-create (name skeleton-name 
                        &key (stream *tsdb-io*) 
                             create meter)
+  (declare (ignore create))
   
   (when meter (meter :value (get-field :start meter)))
   (if (null name)

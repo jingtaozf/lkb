@@ -70,7 +70,8 @@
       set globals(write_output_p) ~:[0~;1~]~%~
       set globals(write_syntax_chart_p) ~:[0~;1~]~%~
       set globals(write_lexicon_chart_p) ~:[0~;1~]~%~
-      set globals(gc_p) ~(~a~)~%"
+      set globals(gc_p) ~(~a~)~%~
+      set globals(tenure_p) ~:[0~;1~]~%"
      *tsdb-podium-home* 
      *tsdb-home*
      *tsdb-skeleton-directory*
@@ -78,6 +79,7 @@
      *tsdb-write-run-p* *tsdb-write-parse-p* 
      *tsdb-write-result-p* *tsdb-write-output-p*
      *tsdb-write-syntax-chart-p* *tsdb-write-lexicon-chart-p*
+     *tsdb-tenure-p*
      *tsdb-gc-p*)
     (tsdb-do-phenomena :stream *tsdb-wish-stream*)
     (format *tsdb-wish-stream* "source \"~a\"~%" *tsdb-podium*)
@@ -89,23 +91,27 @@
                              #'podium-loop)))
 
 (defun shutdown-podium ()
-  (ignore-errors
-   (mp:process-kill *tsdb-wish-process*))
-  (ignore-errors
-   (format *tsdb-wish-stream* "~%~%exit~%")
-   (force-output *tsdb-wish-stream*)
-   (close *tsdb-wish-stream*))
-  (setf *tsdb-wish-stream* nil)
-  (ignore-errors
-   (run-process "kill -HUP ~d" *tsdb-wish-pid* 
-                :wait t :output "/dev/null" :error-output "/dev/null")
-   (run-process "kill -TERM ~d" *tsdb-wish-pid* 
-                :wait t :output "/dev/null" :error-output "/dev/null")
-   (run-process "kill -QUIT ~d" *tsdb-wish-pid* 
-                :wait t :output "/dev/null" :error-output "/dev/null"))
+
+  (when *tsdb-wish-process*
+    (ignore-errors
+     (mp:process-kill *tsdb-wish-process*)
+     (setf *tsdb-wish-process* nil)))
+  (when *tsdb-wish-stream*
+    (ignore-errors
+     (format *tsdb-wish-stream* "~%~%exit~%")
+     (force-output *tsdb-wish-stream*)
+     (close *tsdb-wish-stream*)
+     (setf *tsdb-wish-stream* nil)))
   (when *tsdb-wish-pid*
-    (sys:os-wait nil *tsdb-wish-pid*))
-  (setf *tsdb-wish-pid* nil)
+    (ignore-errors
+     (run-process "kill -HUP ~d" *tsdb-wish-pid* 
+                  :wait t :output "/dev/null" :error-output "/dev/null")
+     (run-process "kill -TERM ~d" *tsdb-wish-pid* 
+                  :wait t :output "/dev/null" :error-output "/dev/null")
+     (run-process "kill -QUIT ~d" *tsdb-wish-pid* 
+                  :wait t :output "/dev/null" :error-output "/dev/null"))
+    (sys:os-wait nil *tsdb-wish-pid*)
+    (setf *tsdb-wish-pid* nil))
   (setf *tsdb-podium-windows* nil))
 
 (defun reset-podium ()
@@ -292,32 +298,48 @@
                    (condition (if (equal condition "") nil condition))
                    (title 
                     (format nil "tsdb(1) `~a' Data~@[ (~a)~]" data condition))
-                   (message "computing table layout and geometry ..."))
-              (apply (symbol-function action)
-                     (append (rest arguments)
-                             (list data 
-                                   :file file :format :tcl 
-                                   :sort t :meter (make-meter 0 1))))
-              (status :text message)
-              (let ((return 
-                      (send-to-podium 
-                       (format 
-                        nil 
-                        "showtable ~s \".~(~a~)\" ~s ~s" 
-                        file (gensym "") data title)
-                       :wait t)))
-                (when (and (equal (first return) :ok) 
-                           (equal (first (second return)) :table))
-                  (push (append (second return)
-                                (pairlis 
-                                 (list :file 
-                                       :command)
-                                 (list file
-                                       (append (rest arguments)
-                                               (list data :file file)))))
-                        *tsdb-podium-windows*)))
-              (status :text (format nil "~a done" message) :duration 2)))
+                   (message "computing table layout and geometry ...")
+                   (items (apply (symbol-function action)
+                                 (append (rest arguments)
+                                         (list data 
+                                               :file file :format :tcl 
+                                               :sort t 
+                                               :meter (make-meter 0 1))))))
+              (cond
+               ((zerop items)
+                (status :text (format 
+                               nil 
+                               "no data in `~a' matching TSQL query"
+                               data)
+                        :duration 10))
+               (t
+                (status :text message)
+                (let ((return 
+                        (send-to-podium 
+                         (format 
+                          nil 
+                          "showtable ~s \".~(~a~)\" ~s ~s" 
+                          file (gensym "") data title)
+                         :wait t)))
+                  (when (and (equal (first return) :ok) 
+                             (equal (first (second return)) :table))
+                    (push (append (second return)
+                                  (pairlis 
+                                   (list :file 
+                                         :command)
+                                   (list file
+                                         (append (rest arguments)
+                                                 (list data :file file)))))
+                          *tsdb-podium-windows*)))
+                (status :text (format nil "~a done" message) :duration 2)))))
 
+           (schema
+            (let* ((data (first arguments)))
+              (let ((schema
+                     (with-output-to-string (stream)
+                       (tsdb-do-schema data :stream stream :format :tcl))))
+                (send-to-podium schema :wait t))))
+           
            (vocabulary
             (let* ((data (first arguments))
                    (meter (list :meter (make-meter 0 1)))
@@ -494,8 +516,8 @@
                    (title (format 
                            nil 
                            "tsdb(1) `~a' vs. `~a' ~a Comparison" 
-                           (if competence-p "Competence" "Performance")
-                           source target))
+                           source target
+                           (if competence-p "Competence" "Performance")))
                    (message "computing table layout and geometry ...")
                    (result (apply (symbol-function action)
                                   (append arguments

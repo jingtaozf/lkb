@@ -64,6 +64,7 @@ run:
   run-id :integer :key                  # unique test run identifier
   comment :string                       # descriptive narrative
   platform :string                      # common-lisp platform (version)
+  tsdb :string                          # tsdb(1) (version) used
   application :string                   # application (version) used
   grammar :string                       # grammar (version) used
   avms :integer                         # number of avm types in image
@@ -95,7 +96,8 @@ parse:
   p-stasks :integer                     # parser succeeding tasks
   aedges :integer                       # active items in chart (PAGE)
   pedges :integer                       # passive items in chart
-  redges :integer                       # items contributing to result(s)
+  raedges :integer                      # active items contributing to result
+  rpedges :integer                      # passive items contributing to result
   unifications :integer                 # number of (node) unifications
   copies :integer                       # number of (node) copy operations
   conses :integer                       # cons() cells allocated
@@ -116,7 +118,8 @@ result:
   r-etasks :integer                     # parser executed tasks
   r-stasks :integer                     # parser succeeding tasks
   size :integer                         # size of feature structure
-  r-redges :integer                     # items contributing to this result
+  r-aedges :integer                     # active items for this result
+  r-pedges :integer                     # passive items in this result
   derivation :string                    # derivation tree for this reading
   tree :string                          # phrase structure tree (CSLI labels)
   mrs :string                           # mrs for this reading
@@ -157,6 +160,6 @@ edge:
 daughter:
   e-id :integer :key                    # edge for this daughter
   d-position :integer                   # position of this daughter
-  d-id :integer                         # identifier of 
+  d-id :integer                         # identifier of this daughter
 
 

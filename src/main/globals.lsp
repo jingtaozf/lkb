@@ -190,3 +190,15 @@
 
 (def-lkb-parameter *label-template-type* 'label)
 
+
+(def-lkb-parameter *psorts-temp-file* 
+  (make-pathname :name "templex" 
+                 :directory (pathname-directory mk::tmp-dir))
+   "a temporary file for the lexicon")
+
+(def-lkb-parameter *psorts-temp-index-file* 
+  (make-pathname :name "templex-index" 
+                 :directory (pathname-directory mk::tmp-dir))
+   "a file to index the lexicon")
+
+(def-lkb-parameter *lkb-system-version* :page)

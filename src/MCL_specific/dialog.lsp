@@ -185,6 +185,8 @@
                    (make-point value-width button-height)
                    nil))
              ((and (consp init) (eq (car init) :typein-menu))
+              (if
+                (find-class 'typein-menu nil)
                 (make-dialog-item 'typein-menu
                    top-left
                    (make-point value-width (+ button-height 3))
@@ -197,7 +199,14 @@
                       #'(lambda (s)
                           (make-instance 'typein-menu-item                
                              :menu-item-title s))
-                      (cdr init))))
+                      (cdr init)))
+                ; MCL 2.0.1 doesn't have typein-menu
+                (make-dialog-item 'editable-text-dialog-item
+                                  top-left
+                                  (make-point value-width button-height)
+                                  (cadr init)
+                                  nil
+                                  :view-font font)))
              (t
                 (make-dialog-item 'editable-text-dialog-item
                    top-left
@@ -258,7 +267,9 @@
                                    (cond
                                       ((typep d-item 'editable-text-dialog-item)
                                          (list (dialog-item-text d-item)))
-                                      ((typep d-item 'typein-menu)
+                                      ((and (find-class 'typein-menu nil)
+                                            (typep d-item 'typein-menu))
+                                       ; old MCL won't have this type 
                                          (list (dialog-item-text
                                                 (ccl::typein-editable-text d-item))))
                                       ((typep d-item 'check-box-dialog-item)

@@ -152,7 +152,7 @@
             (return tmpl))))))
         
 
-;;; code after this point is for the PAGE version
+;;; code after this point is for the PAGE simulation version
 
 ; structures and globals
 

@@ -1,18 +1,53 @@
-.menu.file                      create and maintain test suite databases; set tsdb(1) directories and options
-.menu.file.menu.reread          reread current database status (flush profile cache)
-.menu.file.menu.rename          rename current database (change directory name)
-.menu.file.menu.purge           purge all test run data from current database
-.menu.file.menu.delete          delete current database
-.menu.file.menu.create          create new database from test suite skeleton
-.menu.file.menu.directory       change tsdb(1) directory settings
-.menu.file.menu.options         change tsdb(1) and podium options
-.menu.file.menu.update          update tsdb(1) podium status
-.menu.file.menu.close           close all tsdb(1) client windows
-.menu.file.menu.quit            quit from tsdb(1) podium (why would you?)
+.menu.file                              create and maintain test suite databases; set tsdb(1) directories and options; update display
+{.menu.file.menu Reread}                reread current database status (flush profile cache)
+{.menu.file.menu Rename}                rename current database (change directory name)
+{.menu.file.menu Purge}                 purge all test run data from current database
+{.menu.file.menu Delete}                delete current database
+{.menu.file.menu Create}                create new database from test suite skeleton
+{.menu.file.menu Directories}             change tsdb(1) directory settings
+{.menu.file.menu Options}               change tsdb(1) and podium options
+{.menu.file.menu Update}                update tsdb(1) podium status
+{.menu.file.menu Close}                 close all tsdb(1) client windows
+{.menu.file.menu Quit}                  quit from tsdb(1) podium (only, why would you?)
 
-.menu.browse                    query and browse database schema and data from active (selected) database
+#
+# `Browse' menu (and embedded cascades)
+#
+.menu.browse                            query and browse database schema and data from active (selected) database
+{.menu.browse.menu Database Schema}     browse database schema (definition of relations, attributes, types et al.)
+{.menu.browse.menu Vocabulary}          show lexicographically sorted list of lexical items (and usage frequencies)
+{.menu.browse.menu Test Items}          browse (selected) fields from `item' relation
+{.menu.browse.menu Phenomena}           browse (selected) fields from `phenomena' relation
+{.menu.browse.menu Test Run(s)}         browse (selected) fields from `run' relation
+{.menu.browse.menu Parses}              browse (selected) fields from `parse' relation
+{.menu.browse.menu Results}             browse (selected) fields from `result' relation       
+{.menu.browse.menu Errors}              browse (selected) fields from `error' relation      
+{.menu.browse.menu Condition}           impose TSQL condition on data selection; view current condition
+{.menu.browse.menu Custom Query}        compose and submit custom TSQL query to current test suite database
+#
+# `Process' menu (and embedded cascades)
+#
 .menu.process                   load test suite vocabulary; start and control batch processing (a test run)
+
+#
+# `Analyze' menu (and embedded cascades)
+#
 .menu.analyze                   summarize or graph competence and performance profiles for current database
+#
+# `Compare' menu (and embedded cascades)
+#
+
 .menu.compare                   compare competence or performance profiles across test runs (i.e. databases)
+#
+# `Detail' menu (and embedded cascades)
+#
 .menu.detail                    compare test runs on a per-item basis; select attributes for intersection 
+
+#
+# `Help' menu (and embedded cascades)
+#
 .menu.help                      if only someone provided some help |:-{
+
+
+
+

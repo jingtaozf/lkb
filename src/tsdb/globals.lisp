@@ -18,6 +18,8 @@
 
 (in-package "TSDB")
 
+(defparameter *tsdb-version* "1.0 (4-sep-98)")
+
 (defparameter
   *tsdb-application*
   (format
@@ -68,6 +70,8 @@
 (defparameter *tsdb-gc-p* nil)
 
 (defparameter *tsdb-minimize-gcs-p* t)
+
+(defparameter *tsdb-tenure-p* nil)
 
 (defparameter *tsdb-gc-message-p* t)
 

@@ -19,6 +19,7 @@
 
 (defun compute-report-string (types)
   (let* ((types (substitute "\"%s\"" :string types))
+         (types (substitute "\"%s\"" :date types))
          (types (substitute "%d" :integer types)))
     (concatenate 'string 
       "("
@@ -27,7 +28,7 @@
 
 (defun select (attributes types relations condition
                &optional (language *tsdb-data*) 
-               &key redirection absolute unique
+               &key absolute unique
                     quiet ro meter status file (format :lisp) sort)
 
   (when meter 
@@ -35,10 +36,46 @@
   (when status
     (status :text (format nil "retrieving `~a' data ..." language)))
   
-  (let ((condition (if (equal condition "") nil condition))
-        (attributes (if (listp attributes) attributes (list attributes)))
-        (types (if (listp types) types (list types)))
-        (relations (if (listp relations) relations (list relations))))
+  (let* ((condition (if (equal condition "") nil condition))
+         (attributes (if (listp attributes) attributes (list attributes)))
+         (types (if (null types)
+                  (let* ((schema (read-database-schema language))
+                         (fields (map 'list #'rest schema))
+                         (fields (reduce #'(lambda (foo bar)
+                                             (union foo bar 
+                                                    :key #'first 
+                                                    :test #'string=))
+                                         fields))
+                         types unknown)
+                    (dolist (attribute attributes)
+                      (let ((field (find attribute fields 
+                                         :key #'first :test #'string=)))
+                        (cond
+                         (field (push (second field) types))
+                         (t (format
+                             *tsdb-io*
+                             "~&select(): ignoring unknown attribute `~a'.~%"
+                             attribute)
+                            (push attribute unknown)))))
+                    (dolist (attribute unknown)
+                      (setf attributes 
+                        (delete attribute attributes :test #'equal)))
+                    (nreverse types))
+                  (if (consp types) types (list types))))
+         (relations (if (listp relations) relations (list relations)))
+         (sattribute 
+          (when sort
+            (if (eq sort t)
+              (intern (string-upcase (first attributes)) :keyword)
+              (typecase sort
+                (string (intern (string-upcase sort :keyword)))
+                (keyword sort)
+                (symbol (intern sort :keyword))
+                (t (intern (string-upcase (first attributes)) :keyword))))))
+         (stype (when sattribute
+                  (position sattribute attributes :test #'string-equal)))
+         (stype (when stype (nth stype types))))
+                  
     (if (not (= (length attributes) (length types)))
       (format
        *tsdb-io*
@@ -60,36 +97,39 @@
                "select ~a~@[from ~a~]~@[where ~a ~]report ~s"
                sattributes relations condition report))
              (result (call-tsdb query language :absolute absolute
-                                :redirection redirection :unique unique
+                                :redirection :output :unique unique
                                 :quiet quiet :ro ro))
              data)
         (when rmeter (meter :value (get-field :end rmeter)))
-        (with-input-from-string (stream result)
-          (do ((line (read stream nil) (read stream nil)))
-              ((null line))
-            (push (pairlis keys line) data)))
+        (when (and (stringp result) (probe-file result))
+          (with-open-file (stream result)
+            (do ((line (read stream nil) (read stream nil)))
+                ((null line))
+              (push (pairlis keys line) data)))
+          (unless *tsdb-debug-mode-p* (delete-file result)))
         (when dmeter (meter :value (get-field :end dmeter)))
         (when status
           (status :text (format nil "retrieving `~a' data ... done" language)))
 
         (case format
           (:lisp
-           data)
+           (if sort 
+             (sort data (if (eq stype :integer) #'< #'string<) 
+                   :key #'(lambda (foo) (get-field sattribute foo)))
+             data))
           (:tcl
            (let* ((data 
                    (if sort
-                     (let ((key (intern (string-upcase (first attributes))
-                                        :keyword)))
-                       (sort (copy-list data)
-                             (if (eq (first types) :integer) #'< #'string<) 
-                             :key #'(lambda (foo)
-                                      (get-field key foo))))
+                     (sort (copy-list data)
+                           (if (eq stype :integer) #'< #'string<) 
+                           :key #'(lambda (foo) (get-field sattribute foo)))
                      data))
                   (stream (if file
                             (create-output-stream file nil)
                             *tsdb-io*))
                   (width (length attributes))
-                  (length (length data)))
+                  (length (length data))
+                  (*print-circle* nil))
              (when *statistics-tcl-formats* 
                (format stream *statistics-tcl-formats*))
              (format
@@ -193,6 +233,35 @@
     (dolist (foo records)
       (push (lcombine record foo) result))))
 
+;;;
+;;; once the database access has been optimized, the join() function suddenly
+;;; shows up in the time profile; here is an alternate implementation (that we
+;;; probably will not teach in the introductory course).
+;;;
+;;; _note_ njoin() assumes .relation-1. and .relation-2. to be sort()ed on .key.
+;;;
+(defun njoin (relation-1 relation-2 key &key meter)
 
-
-
+  (when meter (meter :value (get-field :start meter)))
+  (let ((test= (if (numberp (get-field key (first relation-1))) #'= #'string=))
+        (test< (if (numberp (get-field key (first relation-1))) #'< #'string<))
+        result)
+    (loop
+        while (and relation-1 relation-2)
+        for record-1 = (first relation-1)
+        and record-2 = (first relation-2)
+        for key-1 = (get-field key record-1)
+        and key-2 = (get-field key record-2)
+        do
+          (cond
+           ((funcall test= key-1 key-2)
+            (push (append record-1 record-2) result)
+            (loop
+                for record-2 in (rest relation-2)
+                for key-2 = (get-field key record-2)
+                while (funcall test= key-1 key-2)
+                do (push (append record-1 record-2) result))
+            (pop relation-1))
+           ((funcall test< key-1 key-2) (pop relation-1))
+           (t (pop relation-2))))
+    (nreverse result)))

@@ -378,12 +378,13 @@ lists of the form (<modulename> <version no.> <:active-or-NIL>)")
 
 (defparameter bin-dir NIL)
 (defparameter tmp-dir NIL)
+(defparameter grammar-dir NIL)
 (defparameter *source-grammar* NIL)
 
 (defun reset-system-paths ()
   (setq tmp-dir 
-    #+(and :allegro :mswindows (version>= 5 0))
-    #+:mcl (dir-append sys-home '(:relative "tmp"))
+    #+(or (and :allegro :mswindows (version>= 5 0)) :mcl) 
+      (dir-append sys-home '(:relative "tmp"))
     #-(or :mcl (and :allegro :mswindows (version>= 5 0)))
     (dir-append (user-homedir-pathname) '(:relative "tmp")))
   (setq bin-dir

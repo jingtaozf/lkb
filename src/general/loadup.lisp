@@ -26,7 +26,7 @@
 (defparameter %athome% nil)
 (defparameter %sys-home%
   #-:mcl (rest (butlast (pathname-directory *load-truename*) 2))
-  #+:mcl '("macintosh hd" "lkb"))
+  #+:mcl '("macintosh hd" "newlkb"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; --------------- END SITE-SPECIFIC INSTALLATION PARAMETERS -----------------

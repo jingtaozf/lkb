@@ -24,16 +24,15 @@
             (push pathname pathnames)))
       (nreverse pathnames)))
 
-;; clim-user:*lkb-top-frame* is set up in the ACL specific file frame.lsp
-
-(defvar *last-directory* nil)
+;; clim-user:*lkb-top-frame* is set up in the ACL specific file topmenu.lsp
 
 (defun ask-user-for-existing-pathname (prompt)
   (loop for filename = (clim:select-file clim-user:*lkb-top-frame* 
 					 :title prompt
-					 :directory *last-directory*)
+					 :directory clim-user:*last-directory*)
       do (when filename
-	   (setq *last-directory* (directory-namestring (pathname filename))))
+	   (setq clim-user:*last-directory* 
+             (directory-namestring (pathname filename))))
       until (or (null filename)
 		(and (probe-file filename)
                      ;; Make sure file isn't really a directory
@@ -43,9 +42,10 @@
 (defun ask-user-for-new-pathname (prompt)
   (loop for filename = (clim:select-file clim-user:*lkb-top-frame* 
 					 :title prompt
-					 :directory *last-directory*)
+					 :directory clim-user:*last-directory*)
       do (when filename
-	   (setq *last-directory* (directory-namestring (pathname filename))))
+	   (setq clim-user:*last-directory* 
+             (directory-namestring (pathname filename))))
       until (or (null filename)
 		(not (probe-file filename))
                 (when (clim:notify-user clim-user:*lkb-top-frame*

@@ -276,9 +276,6 @@
                      (t (format t 
                            "~%Lexical rule application failed")))))))))
 
-
-(defparameter *number-of-applications* 0)
-
 (defun apply-lex-rules nil
    (let* ((lex (ask-user-for-lex))
          (lex-entry (if lex (get-psort-entry lex)))

@@ -24,7 +24,6 @@
 ;;; LexID -> orth sense-id
 ;;; Path_spec and Default are defined in the type file
 
-
 (defparameter *category-display-templates* nil
   "used in parseout.lsp")
 
@@ -90,9 +89,7 @@
  ;  (reset-cached-lex-entries) ; in constraints.lsp  
    (when overwrite-p (clear-lex))
    (check-for-open-psorts-stream)
-   (let ((*readtable*
-            (define-break-characters 
-               '(#\; #\< #\> #\= #\: #\. #\/))))
+   (let ((*readtable* (make-path-notation-break-table)))
       (with-open-file 
          (istream file-name :direction :input)
          (format t "~%Reading in lexical entry file")
@@ -142,9 +139,7 @@
   (check-for-open-psorts-stream)
   (when templates-p (setf *category-display-templates* nil))
 ;  (when qc-p (clear-quick-check-table))
-   (let ((*readtable*
-            (define-break-characters 
-               '(#\; #\< #\> #\= #\: #\. #\/))))
+   (let ((*readtable* (make-path-notation-break-table)))
       (with-open-file 
          (istream file-name :direction :input)
          (format t "~%Reading in ~A file"

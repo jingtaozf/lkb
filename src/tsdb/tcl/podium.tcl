@@ -2,6 +2,13 @@
 # the next line restarts using wish(1) \
 exec /coli/apps/tcl+tk/bin/wish++ "$0" "$@"
 
+#
+# only used for stand-alone debugging
+#
+set page_root [expr {[info exists env(HOSTNAME)] && $env(HOSTNAME) == "mv" 
+                     ? "/home/oe/src/page" 
+                     : "/proj/perform/page"}];
+
 wm title . "tsdb(1) podium"
 wm iconname . "tsdb(1) podium"
 
@@ -15,10 +22,10 @@ namespace import -force blt::tile::*
 # all state is encoded in a global (associative) array `globals'
 #
 if {![info exists globals(podium_home)]} {
-  set globals(podium_home) "/user/oe/src/page/src/tsdb/tcl/";
+  set globals(podium_home) "$page_root/src/tsdb/tcl/";
 }; # if
 if {![info exists globals(home)]} {
-  set globals(home) "/user/oe/src/page/src/tsdb/small/";
+  set globals(home) "$page_root/src/tsdb/small/";
 }; # if
 if {![info exists globals(data)]} {
   set globals(data) "";
@@ -28,6 +35,10 @@ if {![info exists globals(balloons)]} {
 }; # if
 set globals(default_skeleton) "english"
 set globals(status) "initializing tsdb(1) podium"
+set globals(balloon_font) {Helvetica 10};
+set globals(status_font) {Helvetica 10};
+set globals(input_font) {Courier 10};
+set globals(balloon_p) [expr {![info exists env(USER)] || $env(USER) != "oe"}];
 set globals(balloon) "";
 set globals(browse_condition) "";
 set globals(overwrite) 1;
@@ -37,7 +48,17 @@ set globals(input) "";
 set globals(errno) 0;
 set globals(gensym) 0;
 set globals(slash) "/";
-set globals(user) $env(USER)
+set globals(user) [expr {[info exists env(USER)]
+                         ? $env(USER)
+                         : "anonymous"}];
+
+#
+#
+# relation and attributes for current database; reset when selection changes
+# and filled on-demand (completion request) from back-end process.
+#
+set globals(relations) {};
+set globals(attributes) {};
 
 #
 # determine defaults for (display) options local to the podium(1) universe
@@ -92,6 +113,10 @@ proc main {} {
   #
   # decorate top-level container and create menu bar
   # 
+  label .balloon \
+        -relief flat -bd 4 -font $globals(balloon_font) -bg yellow \
+        -anchor c -textvariable globals(balloon);
+
   frame .menu -relief raised -bd 2
   pack .menu -side top -fill x
 
@@ -185,6 +210,9 @@ proc main {} {
   .menu.file.menu.options add radiobutton \
     -label "Preliminary Garbage Collect" \
     -variable globals(gc_p) -value :global -command {tsdb_set gc_p}
+  .menu.file.menu.options add checkbutton \
+    -label "Enable Tenuring" \
+    -variable globals(tenure_p) -command {tsdb_set tenure_p}
   .menu.file.menu.options add separator
   .menu.file.menu.options add checkbutton -label "Overwrite Test Run" \
     -variable globals(overwrite);
@@ -215,7 +243,7 @@ proc main {} {
   .menu.browse.menu add separator
   .menu.browse.menu add command -label "Condition" \
     -command tsdb_browse_condition;
-  .menu.browse.menu add command -label "Custom Query"
+  .menu.browse.menu add command -label "Custom Query" -command "tsdb_select"
 
   menu .menu.browse.menu.items -tearoff 0
   .menu.browse.menu.items add command -label "All Test Items" \
@@ -359,6 +387,10 @@ proc main {} {
   # `Help' menu (and embedded cascades)
   #
   menu .menu.help.menu -tearoff 0
+  .menu.help.menu add command \
+    -label "[expr {$globals(balloon_p) ? "Disable" : "Enable"}] Balloon Help" \
+    -command toggle_balloon_help;
+  .menu.help.menu add separator;
   .menu.help.menu add command -label "tsdb(1) ToDo List" \
     -command tsdb_todo;
 
@@ -373,29 +405,28 @@ proc main {} {
   #
   frame .status -relief raised -bd 2
   tixMeter .status.meter -value 1
+
+  label .status.dummy \
+          -relief sunken -bd 3 -font $globals(status_font)
   label .status.label \
-          -relief sunken -bd 3 -font {helvetica 10} \
+          -relief flat -bd 0 -font $globals(status_font)  -padx 0 -pady 0 \
           -textvariable globals(status);
-  label .status.balloon \
-          -relief flat -bd 0 -font {helvetica 10} -bg yellow \
-           -padx 0 -pady 0 -textvariable globals(balloon);
 
   tixLabelEntry .status.entry \
           -relief flat -bd 0 \
-          -options { label.font {Helvetica 10} \
-                     label.padx 0 label.pady 0 \
-                     entry.font {Courier 10} \
-                     entry.relief flat entry.highlightThickness 0 }
+          -options [list label.font $globals(status_font) \
+                         label.padx 0 label.pady 0 \
+                         entry.font $globals(input_font) \
+                         entry.relief flat entry.highlightThickness 0 ]
   [.status.entry subwidget label] config \
-    -bg [[.status.entry subwidget entry] cget -bg]
+    -bg [[.status.entry subwidget entry] cget -bg] -font $globals(status_font)
+  [.status.entry subwidget entry] config -font $globals(input_font)
   pack .status -side bottom -fill x -expand no
-  pack .status.meter -side left -padx 2
-  pack .status.label -side left -padx 1 -pady 1 -fill both -expand yes
+  pack .status.dummy -side right -padx 1 -pady 1 -fill both -expand yes
+  pack .status.meter -side right -padx 2
 
-  pack .status.balloon -in .status.label -fill both -expand yes -padx 0 -pady 0
-  lower .status.balloon
-
-  pack .status.entry -in .status.balloon -fill both -expand yes -padx 0 -pady 0
+  place .status.label -in .status.dummy -relwidth 1 -relheight 1
+  place .status.entry -in .status.dummy -relwidth 1 -relheight 1
   lower .status.entry
   status "initializing tsdb(1) podium ..." 2
 
@@ -403,7 +434,7 @@ proc main {} {
   # body of tsdb(1) podium: a scrolled multi-column listbox
   #
   tixScrolledHList .list -width 19c -scrollbar "auto +y" \
-          -options { hlist.columns 5 hlist.height 4\
+          -options { hlist.columns 5 hlist.height 4 \
                      hlist.header true hlist.itemtype text};
   set list [.list subwidget hlist];
   $list config -selectmode single \
@@ -449,6 +480,18 @@ proc main {} {
   pack .list -in .body -side bottom -padx 0.1c -pady 0.1c -expand yes -fill y;
 
   #
+  # another scrolled multi-column listbox; pops up for completions on demand
+  #
+  tixScrolledHList .completions -width [winfo width .list] \
+    -scrollbar "auto +y" \
+    -options { hlist.columns 3 hlist.header true 
+               hlist.itemtype text hlist.background yellow};
+  set clist [.completions subwidget hlist];
+  $clist header create 1 -itemtype text -text "Completions" -style $hcenter;
+  place .completions -in .list -relwidth 1 -relheight 1;
+  lower .completions;
+
+  #
   # set up (minimal) set of default bindings
   #
   bind all <Escape> { 
@@ -469,6 +512,15 @@ proc main {} {
   wm deiconify .
   tkwait visibility .
   tsdb_update complete;
+
+  #
+  # the .list geometry somehow only propagates when we run the event loop :-(.
+  #
+  update idletasks;
+  set width [expr int([winfo width $list] / 3)];
+  $clist column width 0 $width;
+  $clist column width 1 [expr [winfo width $list] - $width * 2];
+  $clist column width 2 $width;
 
 }; # main()
 
@@ -582,7 +634,7 @@ proc gensym {} {
 }; # gensym()
 
 
-proc input {prompt {default ""} {base ""}} {
+proc input {prompt {default ""} {base ""} {mode ""}} {
 
   global globals;
 
@@ -602,7 +654,19 @@ proc input {prompt {default ""} {base ""}} {
     set globals(errno) 0;
     set globals(input) [.status.entry.frame.entry get];
   }; # bind
-  bind $entry <Tab> [list input_completion $entry $base]
+  if {$mode == "select"} {
+    bind $entry <Tab> [list select_completion $entry $mode]
+    set file 0;
+  } elseif {$mode == "from"} {
+    bind $entry <Tab> [list select_completion $entry $mode]
+    set file 0;
+  } elseif {$mode == "where"} {
+    bind $entry <Tab> [list select_completion $entry $mode]
+    set file 0;
+  } else {
+    bind $entry <Tab> [list file_completion $entry $base]
+    set file 1;
+  }; # else
   bind $entry {<Escape> <BackSpace>} {
     set cursor [[.status.entry subwidget entry] index insert];
     set string [[.status.entry subwidget entry] get];
@@ -621,6 +685,39 @@ proc input {prompt {default ""} {base ""}} {
   }; # bind
   bind $entry <Control-G> [bind $entry <Control-g>];
 
+  #
+  # until we sort out proper (mouse-driven) operation of the .completions
+  # scrollbar (while grab()ing the input field) establish a cludge
+  #
+  bind $entry <ButtonPress> {
+    if {[winfo containing %X %Y] == [.completions subwidget vsb]} {
+      tsdb_beep;
+      status [format "%%s %%s" \
+              "<PageUp> or <PageDown> (and equivalents)" \
+              "scroll the list of completions"];
+      after 1500;
+      status "";
+      raise .status.entry;
+      update idletasks;
+    }; # if
+  }; # bind
+  bind $entry <Prior> {[.completions subwidget hlist] yview scroll -1 pages};
+  bind $entry <Alt-v> [bind $entry {<Prior>}];
+  bind $entry {<Escape> <v>} [bind $entry {<Prior>}];
+  bind $entry <Next> {[.completions subwidget hlist] yview scroll 1 pages};
+  bind $entry <Control-v> [bind $entry {<Next>}];
+
+  #
+  # enable history mechanism for appropriate input classes 
+  #
+  if {$mode != ""} {
+    bind $entry <Up> [list entry_history $entry $mode 1];
+    bind $entry <Down> [list entry_history $entry $mode -1];
+  } else {
+    bind $entry <Up> {};
+    bind $entry <Down> {};
+  }; # else
+
   set focus [focus -displayof .]
   focus $entry
   grab set $entry
@@ -632,15 +729,16 @@ proc input {prompt {default ""} {base ""}} {
   focus $focus
   raise .status.label
 
-  if {!$globals(errno)} {
+  if {!$globals(errno) && $file} {
     set globals(input) "$base$globals(input)"
   }; # if
+  lower .completions;
   return $globals(errno)
 
 }; # input()
 
 
-proc input_completion {entry {base ""}} {
+proc file_completion {entry {base ""}} {
 
   set prefix "$base[$entry get]";
   set completion [complete $prefix];
@@ -652,7 +750,49 @@ proc input_completion {entry {base ""}} {
     $entry icursor end;
   }; # if
   
-}; # input_completion()
+}; # file_completion()
+
+
+proc select_completion {entry mode} {
+
+  global globals;
+
+  if {![info exists globals(relations)] 
+      || ![info exists globals(attributes)]
+      || $globals(relations) == "" 
+      || $globals(attributes) == ""
+      || ![llength $globals(relations)]
+      || ![llength $globals(attributes)]} {
+    read_database_schema $globals(data);
+  }; # if
+
+  set prefix [$entry get];
+  if {$mode == "select"} {
+    regexp -nocase {[a-z0-9_-]*$} $prefix match;
+    set completions $globals(attributes);
+  } elseif {$mode == "from"} {
+    regexp -nocase {[a-z0-9_-]*$} $prefix match;
+    set completions $globals(relations);
+  } else {
+    regexp -nocase {^(.*(&|\||!|\())? *([a-z0-9_-]*)$} $prefix \
+      foo bar baz match;
+    set completions $globals(attributes);
+  }; # else
+
+  if {[info exists match]} {
+    set completion [complete $match $completions];
+    if {$completion != "" } {
+      set position [expr [string length $prefix] - [string length $match]];
+      $entry delete $position end;
+      $entry insert $position $completion;
+      $entry selection clear;
+      $entry icursor end;
+    }; # if
+  } else {
+    tsdb_beep;
+  }; # else
+
+};# select_completion()
 
 
 proc complete {prefix {completions ""}} {
@@ -663,7 +803,16 @@ proc complete {prefix {completions ""}} {
   if {$completions == ""} {
     set file 1;
     set completions [lsort [glob -nocomplain -- "$prefix*"]]
-  }; # if
+  } else {
+    set length [expr [string length $prefix] - 1];
+    set foo {};
+    foreach item $completions {
+      if {![string compare $prefix [string range $item 0 $length]]} {
+        lappend foo $item;
+      }; # if
+    };# foreach
+    set completions $foo;
+  }; # else
 
   if {![llength $completions]} {
     tsdb_beep;
@@ -673,24 +822,65 @@ proc complete {prefix {completions ""}} {
   if {[llength $completions] > 1} {
     set kaerb 0;
     for {set i [expr [string length $prefix] - 1]} {!$kaerb} {incr i} {
-      set prefix [string range $completion 0 $i];
+      set match [string range $completion 0 $i];
       foreach item $completions {
-        if {[string compare $prefix [string range $item 0 $i]]} {
-          set completion [string range $prefix 0 [expr $i - 1]];
+        if {[string compare $match [string range $item 0 $i]]} {
+          set completion [string range $match 0 [expr $i - 1]];
           set kaerb 1;
         }; # if
       }; # foreach
     }; # for
   }; # if
 
-  if {$file && [file isdirectory $completion]
-      && $completion != $globals(slash)} {
+  if {$file && [llength $completions] == 1 
+      && [file isdirectory $completion] && $completion != $globals(slash)} {
     set completion "[file dirname [file join $completion .]]$globals(slash)"
   }; # if
 
+  if {!$file && [llength $completions] == 1} {
+    set completion "$completion ";
+  }; # if
+
+  if {[llength $completions] > 1} {
+    show_completions $completions $file;
+  } else {
+    [.completions subwidget hlist] delete all;
+  }; # else
   return $completion
 
 }; # complete()
+
+
+proc show_completions {completions {file 0}} {
+
+  global globals;
+
+  set clist [.completions subwidget hlist];
+  set center [tixDisplayStyle text -bg yellow -anchor w -font {Helvetica 10}];
+
+  $clist delete all
+  set i 0;
+  foreach item [lsort $completions] {
+    set nitem $item;
+    if {$file && [set slash [string last $globals(slash) $item]] >= 0} {
+      set nitem [string range $item [expr $slash + 1] end];
+    }; # if
+    if {$file && [file isdirectory $item] && $item != $globals(slash)} {
+      set nitem "[file dirname [file join $nitem .]]$globals(slash)"
+    }; # if
+    set hposition [expr {int($i / 3)}];
+    set vposition [expr {$i % 3}];
+    if {!$vposition} {
+      $clist add $hposition -at $hposition -text $nitem -style $center;
+    } else {
+      $clist item create $hposition $vposition -text $nitem -style $center;
+    }; # else
+    incr i;
+  };# foreach
+
+  raise .completions;
+
+};# show_completions()
 
 
 proc yes-or-no-p {prompt} {

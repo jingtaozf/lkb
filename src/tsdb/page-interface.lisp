@@ -32,11 +32,6 @@
 
 (defparameter *page-controller* main::*controller*)    
 
-(defmacro current-parser ()
-  (if (equal (elt make::*page-version* 0) #\2)
-    '(pg::get-parser :syntax)
-    'pg::*global-parser*))
-
 (defun run-protocol (protocol input &key (trace nil))
   (let* ((foo (open "/dev/null" :direction :output :if-exists :overwrite))
          (shell (stream main::*page-shell*))
@@ -67,38 +62,30 @@
             (first streams))))
       (values result condition))))
 
-(defun parse-word (word &key load trace nil)
+(defun parse-word (word &key load trace)
   
   (setf (main::output-stream main::*lexicon*) nil)
-  (let ((verbose-reader-p tdl::*verbose-reader-p*)
-        (verbose-definition-p tdl::*verbose-definition-p*))
-    (case load
-      ((:warn :quiet :collect nil)
-       (setf tdl::*verbose-reader-p* nil)
-       (setf tdl::*verbose-definition-p* nil))
-      ((:fair :modest)
-       (setf tdl::*verbose-reader-p* nil)
-       (setf tdl::*verbose-definition-p* t))
-      ((:full :all :verbose t)
-       (setf tdl::*verbose-reader-p* t)
-       (setf tdl::*verbose-definition-p* t)))
+  (let ((tdl::*verbose-reader-p* 
+         (case load
+           ((:warn :quiet :collect nil :fair :modest) nil)
+           ((:full :all :verbose t) t)))
+        (tdl::*verbose-definition-p*
+         (case load
+           ((:warn :quiet :collect nil) nil)
+           ((:fair :modest :full :all :verbose t) t))))
     
     (multiple-value-bind (result condition)
         (run-protocol *tsdb-morphology-protocol* word :trace trace)
       (declare (ignore result))
-      (setf tdl::*verbose-reader-p* verbose-reader-p)
-      (setf tdl::*verbose-definition-p* verbose-definition-p)
-      (let* ((entries (unless condition (main::output-stream main::*lexicon*)))
-             (words (length entries))
-             (lstasks 0))
-        (when (equal load :collect)
+      (when (equal load :collect)
+        (let* ((entries (unless condition 
+                          (main::output-stream main::*lexicon*))))
           (map nil #'(lambda (entry)
                        (when (main::typed-item-p entry)
                          (push (second (main::typed-item-args entry))
                                %tsdb-lexical-preterminals%)))
-               entries))
-        (pairlis '(:words :l-stasks)
-                 (list words lstasks))))))
+               entries)))
+      (pg::summarize-lexicon))))
 
 (defun initialize-test-run ()
   
@@ -118,6 +105,10 @@
                          (pg::ebl-parser-external-signal-fn parser)
                          pg::*maximal-number-of-tasks*
                          pg::*maximal-number-of-tasks-exceeded-p*))))
+
+    (setf main::*draw-chart-p* nil)
+    (setf tdl::*verbose-reader-p* nil)
+    (setf tdl::*verbose-definition-p* nil)
 
     (setf (pg::ebl-parser-name-rule-fn (pg::get-parser :syntax))
       #'get-informative-item-label)
@@ -170,9 +161,11 @@
                                                 string :trace trace))
                               #'(lambda (tgcu tgcs tu ts tr
                                          scons ssym sother 
-                                         #+:allegro-v5.0 foo)
-                                  #+:allegro-v5.0
-                                  (declare (ignore foo))
+                                         #+(and :allegro-version>= 
+                                                (version>= 5 0))
+                                         sstatic)
+                                  #+(and :allegro-version>= (version>= 5 0))
+                                  (declare (ignore sstatic))
                                   (setf tgc (/ (+ tgcu tgcs) 10)
                                         tcpu (/ (+ tu ts) 10)
                                         treal (/ tr 10)
@@ -198,6 +191,7 @@
        result
        (pairlis '(:tgc :tcpu :treal :conses :symbols :others)
                 (list tgc tcpu treal conses symbols others))
+       (pg::summarize-lexicon)
        (cond
         (condition
          (pairlis
@@ -211,8 +205,6 @@
         (t
          (let* ((items (main::output-stream main::*parser*))
                 (readings (length items))
-                (words (length (main::output-stream main::*lexicon*)))
-                (l-stasks 0)
                 (statistics 
                  (pg::parser-stats-readings (pg::get-parser :syntax)))
                 (first (when statistics (first (last statistics))))
@@ -227,10 +219,7 @@
                 (etasks (when global (pg::stats-executed global)))
                 (stasks (when global (pg::stats-successful global)))
                 (ctasks (if (and ftasks etasks) (+ ftasks etasks) -1))
-                (aedges 0)
-                (pedges 0)
-                (redges 0)
-                results)
+                redges results)
            (when (= readings (length statistics))
              (do* ((i 0 (+ i 1))
                    (statistics statistics (rest statistics))
@@ -243,6 +232,9 @@
                               (main::typed-item 
                                (second (main::typed-item-args item)))
                               (t item)))
+                      (summary (pg::summarize-result item))
+                      (r-aedges (get-field :aedges summary))
+                      (r-pedges (get-field :pedges summary))
                       (tree (when trees-hook
                               (ignore-errors (funcall trees-hook item))))
                       (mrs (when semantix-hook
@@ -259,36 +251,44 @@
                         nil 
                         "~s"
                         (pg::item-to-node item (pg::get-parser :syntax)))))
+                 (dolist (item (get-field :redges summary))
+                   (pushnew item redges))
                  (push (pairlis
                         '(:result-id :time
                           :r-ctasks :r-ftasks :r-etasks :r-stasks
+                          :r-adges :r-pedges
                           :derivation :tree :mrs)
                         (list i time
                               ctasks ftasks etasks stasks
+                              r-aedges r-pedges
                               derivation tree mrs))
                        results))))
-           (pairlis
-            '(:readings :first :total
-              :words :l-stasks
-              :p-ctasks :p-ftasks :p-etasks :p-stasks
-              :aedges :pedges :redges 
-              :results)
-            (list readings first total
-                  words l-stasks
-                  ctasks ftasks etasks stasks
-                  aedges pedges redges 
-                  results)))))))))
+           (let* ((rpedges (length redges))
+                  (arities 
+                   (map 'list 
+                     #'(lambda (item) 
+                         (when (pg::item-daughters item)
+                           (- (array-dimension (pg::item-daughters item) 0) 1)))
+                     redges))
+                  (raedges (apply #'+ arities)))
+             (append (pg::summarize-chart)
+                     (pairlis
+                      '(:readings :first :total
+                        :words :l-stasks
+                        :p-ctasks :p-ftasks :p-etasks :p-stasks
+                        :raedges :rpedges 
+                        :results)
+                      (list readings first total
+                            words l-stasks
+                            ctasks ftasks etasks stasks
+                            raedges rpedges
+                            results)))))))))))
 
 (defun get-test-run-information ()
   (let* ((application (if (boundp 'make::*page-version*)
                         (format nil "PAGE (~a)" make::*page-version*)
                         "PAGE"))
-         (grammar 
-          (cond 
-           ((boundp 'disco::*grammar-version*) disco::*grammar-version*)
-           ((boundp 'common-lisp-user::*grammar-version*) 
-            common-lisp-user::*grammar-version*)
-           (t "anonymous grammar")))
+         (grammar (current-grammar))
          (avms (tdl::get-global :avms))
          (avms (when (hash-table-p avms) (hash-table-count avms)))
          (sorts (tdl::get-global :sorts))
@@ -296,7 +296,10 @@
          (templates (tdl::get-global :templates))
          (templates
           (when (hash-table-p templates) (hash-table-count templates)))
-         (lexicon 42)
+         (lexicon (pg::combo-parser-lexicon (pg::get-parser :lexicon)))
+         (lexicon (when (pg::lexicon-p lexicon) 
+                    (pg::lexicon-lex-entries lexicon)))
+         (lexicon (when (hash-table-p lexicon) (hash-table-count lexicon)))
          (lrules 
           (length (pg::combo-parser-lex-rules (pg::get-parser :lexicon))))
          (rules 
@@ -304,10 +307,11 @@
     (append (and avms (list (cons :avms avms)))
             (and sorts (list (cons :sorts sorts)))
             (and templates (list (cons :templates templates)))
+            (and lexicon (list (cons :lexicon lexicon)))
             (pairlis '(:application :grammar
-                       :lexicon :lrules :rules)
+                       :lrules :rules)
                      (list application grammar
-                           lexicon lrules rules)))))
+                           lrules rules)))))
 
 (defmacro get-item-type (item)
   `(get-fs-type (lex::cfs-fs (pg::combo-item-cfs ,item))))
@@ -406,6 +410,28 @@
       (symbol-function (intern "PHRASAL-PRIORITY-ORACLE" "FILTER")))))
 
 
+(in-package "MAIN")
+
+
+;;;
+;;; register tsdb(1) as a module to the PAGE shell; the :close-fn value will
+;;; be called on exit from the PAGE shell and image creation using dump().
+;;;
+
+(defclass tsdb (component) ())
+
+(defparameter *tsdb*
+  (make-instance 'tsdb 
+    :name "tsdb(1)" :gui-name "tsdb(1)"
+    :close-fn #'tsdb::shutdown-podium))
+
+(define-command
+  '(:tsdb
+    &nec command &optional argument &key condition run skeleton load
+    &doc 
+    "Interact with tsdb(1) and profiling module; `tsdb :help' for details.")
+  #'tsdb:tsdb)
+
 (in-package "PARSING")
 
 ;;;
@@ -415,7 +441,7 @@
 ;;; plausible to move it here.                           (31-oct-97  -  oe)
 ;;;
 
-(defun total-number-of-items (&optional (parser (pg::get-parser :syntax)))
+(defun summarize-chart (&optional (parser (pg::get-parser :syntax)))
   (let* ((chart (parser-chart parser))
          (passive-items-starting-at
           (when chart 
@@ -423,22 +449,74 @@
          (passive-items-ending-at
           (when chart 
             (reduce #'append (chart-passive-items-ending-at chart))))
+         (pedges 
+          (when (or passive-items-starting-at passive-items-ending-at)
+            (length 
+             (union passive-items-starting-at passive-items-ending-at))))
          (active-items-starting-at 
           (when chart (chart-active-items-starting-at chart)))
          (active-items-ending-at 
           (when chart (chart-active-items-ending-at chart)))
-         (total 
-          (when (or passive-items-starting-at passive-items-ending-at)
-            (length 
-             (union passive-items-starting-at passive-items-ending-at)))))
+         (aedges 0))
     (when (and active-items-starting-at active-items-ending-at)
       (let ((n (array-dimension active-items-starting-at 0)))
         (dotimes (i n)
-          (incf total (length (aref active-items-starting-at i)))))
+          (incf aedges (length (aref active-items-starting-at i)))))
       (let ((n (array-dimension active-items-ending-at 0)))
         (dotimes (i n)
-          (incf total (length (aref active-items-ending-at i))))))
-    total))
+          (incf aedges (length (aref active-items-ending-at i))))))
+    (pairlis '(:aedges :pedges)
+             (list aedges pedges))))
+
+(defun summarize-result (item 
+                         &optional (chart (parser-chart (get-parser :syntax))))
+
+  (let* ((daughters (item-daughters item))
+         (ndaughters 
+          (if daughters (array-dimension (item-daughters item) 0) 0))
+         (pedges 1)
+         (aedges (if daughters (- ndaughters 1) 0))
+         (redges (list item)))
+    (when daughters
+      (loop
+          for i from 0 to (- ndaughters 1)
+          for daughter = (aref daughters i)
+          when (and daughter (not (eq (combo-item-itype daughter) :morph)))
+          do
+            (let ((summary (summarize-result daughter chart)))
+              (incf pedges (tsdb::get-field :pedges summary))
+              (incf aedges (tsdb::get-field :aedges summary))
+              (nconc redges (tsdb::get-field :redges summary)))))
+    (pairlis '(:pedges :aedges :redges)
+             (list pedges aedges redges))))
+
+(defun summarize-lexicon ()
+  (let* ((entries (main::output-stream main::*lexicon*))
+         (entries (remove "LE-L_STR" entries
+                          :key #'main::typed-item-form
+                          :test #'equal))
+         (entries (remove "LE-R_STR" entries
+                          :key #'main::typed-item-form
+                          :test #'equal))
+         (words (+ (count :lex-entry entries
+                          :key #'(lambda (titem)
+                                   (pg::combo-item-itype 
+                                    (second (main::typed-item-args titem)))))
+                   (count :c-lex-entry entries
+                          :key #'(lambda (titem)
+                                   (pg::combo-item-itype 
+                                    (second (main::typed-item-args titem)))))))
+         (lstasks (count :lex-rule entries
+                         :key #'(lambda (titem)
+                                  (pg::combo-item-itype 
+                                   (second (main::typed-item-args titem)))))))
+    (pairlis '(:words :l-stasks) (list words lstasks))))
+
+;;;
+;;; maximal-number-of-tasks-exceeded-p() is installed as external-signal-fn()
+;;; in the syntax parser (because the :taskslice mechanism) is not readily
+;;; accessible to us)
+;;;
 
 (defparameter *current-number-of-tasks* 0)
 (defparameter *maximal-number-of-tasks* 0)

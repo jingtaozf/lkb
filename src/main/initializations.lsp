@@ -11,15 +11,7 @@
 
 (defparameter *lkb-fasl-dir* (pathname-directory (get-binaries-dir "lkb")))
 
-(defparameter *psorts-temp-file* 
-  (make-pathname :name "templex" 
-                 :directory (pathname-directory mk::tmp-dir))
-   "a temporary file for the lexicon")
-
-(defparameter *psorts-temp-index-file* 
-  (make-pathname :name "templex-index" 
-                 :directory (pathname-directory mk::tmp-dir))
-   "a file to index the lexicon")
+(defparameter *grammar-directory* nil)
 
 (import '(enable-type-interactions disable-type-interactions))
 

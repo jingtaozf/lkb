@@ -175,6 +175,7 @@
 
 
 (defun apply-lex-interactive (lex lex-entry-fs lex-rule)
+  (declare (ignore lex))
   (if 
       ;; modification to check whether a particular 
       ;; lexical rule is morphological - if so, then the 
@@ -264,29 +265,29 @@
         (morph-generate stem rule))))
 
 #|
-(read-irreg-form-file "Macintosh HD:lkb99-expt:data:Dikran:irregs.tab")
+(read-irreg-form-string 
+ (load "Macintosh HD:lkb99-expt:data:Dikran:irregs.tab"))
 
 (find-irregular-morphs "has")
 |#
 
-(defun read-irreg-form-file (file-name)
-  (clrhash *irregular-forms*)
-   (clrhash *irregular-forms-gen*) 
-  (with-open-file
-    (istream file-name :direction :input)
-    (format t "~%Reading in irregular forms")
-    (loop
-      (let ((next-char (peek-char t istream nil 'eof)))
-        (when (eql next-char 'eof) (return))
-        (if (eql next-char #\;) 
-          (read-line istream)
-          (read-irreg-entry istream))))))
-
-(defun read-irreg-entry (istream)
-  (let* ((irreg-form (string (read istream)))
-         (rule (create-lex-rule-name (lkb-read istream nil)))
-         (stem (string (read istream))))
-    (add-to-irregulars irreg-form rule stem)))
+(defun read-irreg-form-string (string)
+  (when (and string (stringp string))
+    (clrhash *irregular-forms*)
+    (clrhash *irregular-forms-gen*) 
+    (with-input-from-string (stream string)
+      (loop for irreg = (read-line stream nil nil)
+          while irreg
+          unless (zerop (length irreg))
+          do
+            (let* ((irreg-right (position '#\  irreg))                         
+                   (spelling (string-upcase (subseq irreg 0 irreg-right)))
+                   (aff-right (position '#\  irreg :start (+ 1 irreg-right)))
+                   (affixname (subseq irreg (+ 1 irreg-right) aff-right))
+                   (stem-right (position '#\  irreg :start (+ 1 aff-right)))
+                   (stem (subseq irreg (+ 1 aff-right) stem-right)))
+              (add-to-irregulars spelling (create-lex-rule-name affixname) 
+                                 stem))))))
 
 (defun add-to-irregulars (irreg-form rule stem)
   (push (list stem (list rule irreg-form))

@@ -16,8 +16,9 @@
 
 (eval-when
  (compile load eval)
- (export '(*lkb-top-frame* *lkb-top-stream* set-up-lkb-interaction
-                           enable-type-interactions disable-type-interactions))
+ (export '(*lkb-top-frame* *lkb-top-stream* *last-directory*
+           set-up-lkb-interaction
+           enable-type-interactions disable-type-interactions))
 )
 
 (defvar *lkb-top-frame* nil)
@@ -25,6 +26,8 @@
 (defvar *lkb-top-stream* nil)
 
 (defvar *lkb-top-process* nil)
+
+(defvar *last-directory* nil)
 
 ;;; Top level menus etc
 
@@ -157,12 +160,18 @@
 
 (defun restart-lkb-function nil
   (user::read-psort-index-file)
-  (setf common-lisp-user::*last-directory* nil)
+  (setf *last-directory* nil)
   (set-up-lkb-interaction :core)
   (enable-type-interactions))
 
 (defun restart-lkb-window nil
-  (setf common-lisp-user::*last-directory* nil)
+  (setf *last-directory* nil)
+  (setf common-lisp-user::*psorts-temp-file* 
+    (make-pathname :name "templex" 
+                   :directory (pathname-directory mk::tmp-dir)))
+  (setf common-lisp-user::*psorts-temp-index-file* 
+    (make-pathname :name "templex-index" 
+                   :directory (pathname-directory mk::tmp-dir)))  
   (set-up-lkb-interaction :core)
   (enable-type-interactions))
 
@@ -178,6 +187,9 @@
       (user::clear-expanded-lex)
       (user::clear-type-cache)
       (user::unexpand-leaf-types)
+      (when fresh-p
+        (setf common-lisp-user::*psorts-temp-file* nil)
+        (setf common-lisp-user::*psorts-temp-index-file* nil))
       (excl:dumplisp :name image-location)
       (user::check-for-open-psorts-stream)
       (user::lkb-beep)

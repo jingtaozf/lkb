@@ -44,6 +44,9 @@
 (defmacro get-field (field alist)
   `(rest (assoc ,field ,alist)))
 
+(defmacro get-field+ (field alist &optional default)
+  `(or (rest (assoc ,field ,alist)) ,default))
+
 (defmacro tsdb-ignore-p (&rest foo)
   (declare (ignore foo))
   t)
@@ -74,6 +77,50 @@
   (setf
     *tsdb-home* 
     (namestring (dir-append (get-sources-dir "tsdb") '(:relative "tsdb")))))
+
+(defun install-gc-strategy (gc &key (verbose nil) (tenure *tsdb-tenure-p*))
+
+  #+:allegro
+  (let ((environment (pairlis '(:print :stats :verbose :auto-step)
+                              (list (sys:gsgc-switch :print)
+                                    (sys:gsgc-switch :stats)
+                                    (sys:gsgc-switch :verbose)
+                                    (sys:gsgc-parameter :auto-step)))))
+    (when verbose
+      (setf (sys:gsgc-switch :print) t)
+      (setf (sys:gsgc-switch :stats) t)
+      (setf (sys:gsgc-switch :verbose) t))
+    (unless verbose
+      (setf (sys:gsgc-switch :print) nil)
+      (setf (sys:gsgc-switch :stats) nil)
+      (setf (sys:gsgc-switch :verbose) nil))
+    (setf (sys:gsgc-parameter :auto-step) tenure)
+    (unless tenure
+      (format
+       *tsdb-io*
+       "install-gc-strategy(): disabling tenure; global garbage collection ...")
+      (busy :cursor *tsdb-gc-cursor*)
+      (excl:gc t)
+      (busy :action :restore)
+      (excl:gc :tenure)
+      (format *tsdb-io* " done.~%"))
+    (when (and (null tenure) (eq gc :global))
+      (format
+       *tsdb-io*
+       "install-gc-strategy(): ~
+        tenure disabled; supressing preliminary gc()s.~%"))
+    (cons (cons :gc (if (and (null tenure) (eq gc :global)) nil gc)) 
+          environment)))
+
+(defun restore-gc-strategy (environment)
+  #+:allegro
+  (setf (sys:gsgc-switch :print) (get-field :print environment))
+  #+:allegro
+  (setf (sys:gsgc-switch :stats) (get-field :stats environment))
+  #+:allegro
+  (setf (sys:gsgc-switch :verbose) (get-field :verbose environment))
+  #+:allegro
+  (setf (sys:gsgc-parameter :auto-step) (get-field :auto-step environment)))
 
 (defun remove-and-insert-punctuation (string)
   (let* ((string (remove #\, string))
@@ -129,6 +176,9 @@
    ((boundp 'common-lisp-user::*grammar-version*) 
     common-lisp-user::*grammar-version*)
    (t "anonymous")))
+
+(defun current-tsdb ()
+  *tsdb-version*)
 
 (defun current-user ()
   (or #+:allegro-v5.0 (sys:user-name)
@@ -203,6 +253,16 @@
         ((>= n (expt 2 10)) (format nil "~,1fK" (/ n (expt 2 10))))
         (t (format nil "~d" n))))
 
+(defun create-output-stream (file &optional append)
+  (cond
+   ((or (stringp file) (stringp append))
+    (open (if (stringp append) append file)
+          :direction :output 
+          :if-exists (if append :append :supersede)
+          :if-does-not-exist :create))
+   ((or file append) (or file append))
+   (t *tsdb-io*)))
+
 (defun verify-tsdb-directory (language &key absolute)
   (let ((data 
          (if absolute (namestring language) (find-tsdb-directory language))))
@@ -245,7 +305,7 @@
       (cons path (mapcan #'subdirectories contents)))))
 
 (defun directory2file (string)
-  (substitute #\. #\/ string :test #'char=))
+  (substitute #\. *tsdb-slash* string :test #'char=))
 
 (defmacro make-meter (start end)
   `(pairlis (list :start :end) (list ,start ,end)))
@@ -291,15 +351,6 @@
                (delete-file compressed))
              (with-open-file (foo name :direction :output 
                               :if-exists :supersede)))))))))
-
-(defun purge-profile-cache (data)
-  (maphash #'(lambda (key foo)
-               (declare (ignore foo))
-               (let* ((position (position #\@ key))
-                      (prefix (subseq key 0 position)))
-                 (when (or (eq data :all) (string= data prefix))
-                   (remhash key *tsdb-profile-cache*))))
-           *tsdb-profile-cache*))
 
 (defun suggest-test-run-directory (skeleton)
   (let* ((grammar (current-grammar))

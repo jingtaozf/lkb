@@ -1,5 +1,7 @@
 (in-package "COMMON-LISP-USER")
 
+(pushnew :mrs *features*)
+
 (defpackage "MRS"
   (:use "COMMON-LISP" "COMMON-LISP-USER" "USER")
   )
