@@ -367,13 +367,13 @@
                              (find-irregular-morphs word) :test #'equalp)
                           #+:powerpc(incf gg (CCL::%HEAP-BYTES-ALLOCATED))))))
           (unless #+:ltemplates (template-p word) #-:ltemplates nil
-            (unless morph-poss (format t "~%Word ~A is not in lexicon" word)
-                    (return)))
-           (setf (aref *morphs* current)
-                 (make-morph-edge :id current 
-                                  :word base-word 
-                                  :morph-results morph-poss))
-           (setf current new)))))
+            (unless morph-poss 
+              (format t "~%Word `~A' is not in lexicon." word)))
+          (when morph-poss
+            (setf (aref *morphs* current)
+              (make-morph-edge :id current :word base-word 
+                               :morph-results morph-poss))
+            (setf current new))))))
 
 (defun add-words-to-chart (f)
   (let ((current 0)
