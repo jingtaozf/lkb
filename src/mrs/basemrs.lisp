@@ -22,6 +22,8 @@
   sort  ; relation name
   handel
   flist
+  parameter-strings                     ; copy of the relations with constant
+                                        ; values
   extra)                                ; extra is a junk slot
                                         ; needed for the munging rules 
 
@@ -1058,7 +1060,6 @@ VAR -> VARNAME[:CONSTNAME]*
 ;;; ARG -> VAR | STRING | CONSTNAME
   ;;; Note that in this notation, the feature has to be determined from
   ;;; a semdb
-  ;;; FIX - faked for now
   (let* ((feature (determine-mrs-feature relname pos))
          (val
            (if (member feature *value-feats*
@@ -1103,8 +1104,6 @@ VAR -> VARNAME[:CONSTNAME]*
   (declare (ignore val))
   'DUMMY)
 
-(defun determine-mrs-feature (reln pos)
-  (declare (ignore reln pos))
-  'DUMMYF)
+
 
 
