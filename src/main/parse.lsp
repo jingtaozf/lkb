@@ -699,35 +699,38 @@
   ;; unification(s) succeed, create a new edge (for the mother), record its
   ;; dag and associated information, add this to the chart, and invoke the
   ;; same process recursively.
+  (declare (type fixnum n))
   (incf *contemplated-tasks*)
-  (if (and (check-rule-filter
-              rule (edge-rule (car child-edge-list)) n)
+  (if (and (check-rule-filter rule (edge-rule (car child-edge-list)) n)
 	   (restrictors-compatible-p (car rule-restricted-list) 
-				     (edge-dag-restricted (car child-edge-list))))
+				     (edge-dag-restricted 
+				      (car child-edge-list))))
       (if (cdr rule-restricted-list)
-         (let ((entry (aref *chart* left-vertex 0)))
+	  (let ((entry (aref (the (simple-array t (* *)) *chart*) 
+			     left-vertex 0)))
 	    (when entry
 	      (dolist (config (chart-entry-configurations entry))
 		(unless
-                  ;; inner recusive call returns nil in cases when first unif
-                  ;; attempt fails - if this happens there's no point continuing
-                  ;; with other alternatives here
-                  (try-grammar-rule-left rule
-				         (cdr rule-restricted-list)
-				         (chart-configuration-begin config)
-				         right-vertex
-				         (cons (chart-configuration-edge config) 
-					       child-edge-list)
-				         f (1- n))
+		    ;; inner recusive call returns nil in cases when first
+		    ;; unif attempt fails - if this happens there's no point
+		    ;; continuing with other alternatives here
+		    (try-grammar-rule-left rule
+					   (cdr rule-restricted-list)
+					   (chart-configuration-begin config)
+					   right-vertex
+					   (cons (chart-configuration-edge config) 
+						 child-edge-list)
+					   f (1- n))
                   (return-from try-grammar-rule-left nil)))))
-         ;; we've got all the bits
-	 (with-agenda (f (when f (rule-priority rule)))
-            (apply-immediate-grammar-rule rule left-vertex right-vertex
-					  child-edge-list f t)))
-      (progn (incf *filtered-tasks*) t)))
+	;; we've got all the bits
+	(with-agenda (f (when f (rule-priority rule)))
+	  (apply-immediate-grammar-rule rule left-vertex right-vertex
+					child-edge-list f t)))
+    (progn (incf *filtered-tasks*) t)))
 
 (defun try-grammar-rule-right (rule rule-restricted-list left-vertex 
 			       right-vertex child-edge-list f n)
+  (declare (type fixnum n))
   (incf *contemplated-tasks*)
   (if (and (check-rule-filter
               rule (edge-rule (car child-edge-list)) n)
@@ -769,19 +772,17 @@
       (if unification-result
 	  (let* ((edge-list
                     (if backwardp child-edge-list child-edge-list-reversed))
-                 (new-edge (make-edge :id (next-edge)
-                                     :category (indef-type-of-tdfs 
-                                                unification-result)
-                                     :rule rule
-                                     :children edge-list
-                                     :dag unification-result
-                                     :lex-ids 
-                                     (mapcan
-                                      #'(lambda (child)
-                                          (copy-list (edge-lex-ids child)))
-                                      edge-list)
-                                     :leaves
-                                     (mapcan
+                 (new-edge 
+		  (make-edge :id (next-edge)
+			     :category (indef-type-of-tdfs unification-result)
+			     :rule rule
+			     :children edge-list
+			     :dag unification-result
+			     :lex-ids (mapcan
+				       #'(lambda (child)
+					   (copy-list (edge-lex-ids child)))
+				       edge-list)
+			     :leaves (mapcan
                                       #'(lambda (child)
                                           (copy-list (edge-leaves child)))
                                       edge-list))))
@@ -793,7 +794,7 @@
 	  (when *debugging*
 	    #+ignore (format t "~%~A" *filtered-tasks*)
 	    (format t "~%Unification failure on rule ~A and edges ~:A" 
-		  (rule-id rule) (mapcar #'edge-id child-edge-list)))
+		    (rule-id rule) (mapcar #'edge-id child-edge-list)))
           (if first-failed-p nil t))))))
 
 
@@ -832,8 +833,8 @@
 	      (return-from evaluate-unifications nil))))
 	(incf *executed-tasks*)
 	(let ((child (pop child-fs-list)))
-	  ;; If two daughters are eq, the subgraph sharing code in the unifier
-	  ;; may cause spurious coreferences in the result
+	  ;; If two daughters are eq, the unifier's subgraph sharing code may
+	  ;; cause spurious coreferences in the result
 	  (when (member child child-fs-list :test #'eq)
 	    (setq child (copy-tdfs-completely child)))
 	  (if (setq current-tdfs

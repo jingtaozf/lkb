@@ -407,10 +407,10 @@
 
 
 (defun check-rule-filter (rule test arg)
-   ;; can test fill argth daughter of rule?
-   (let ((filter (rule-apply-filter rule)))
-      (if (and filter (not (stringp test)))
-         (aref filter
-            (rule-apply-index test)
-            arg)
-         t)))
+  ;; can test fill argth daughter of rule?
+  (let ((filter (rule-apply-filter rule)))
+    (if (and filter (not (stringp test)))
+	(aref (the (simple-array t (* *)) filter) 
+	      (rule-apply-index test)
+	      arg)
+      t)))
