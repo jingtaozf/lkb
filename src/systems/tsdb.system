@@ -118,7 +118,7 @@
        (:file "tnt-interface")
        #+(and (or :lkb :mrs) :allegro :clim)
        (:file "redwoods")
-       #+:lsp
+       #+:lkb
        (:file "lsp")
        #+(or :lkb :mrs)
        (:file "ptb")
