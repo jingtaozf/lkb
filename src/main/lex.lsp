@@ -514,10 +514,12 @@
 		  else when value 
 		  do
 		    (setf result 
-		      (nconc result value))
+		      (append result value))
+		      ;(nconc result value))
 		  finally 
 		    (return result))))
-	   (value (nconc value extra)))
+	   (value (append value extra)))
+	   ;(value (nconc value extra)))
      value))
 
 (defmethod lex-words :around ((lexicon lex-database))
