@@ -203,8 +203,7 @@
         (setf (gethash relation %eds-symbol-table%) name)))))
 
 (defun ed-find-representative (variable &optional (selectp t))
-  (or (let ((match (gethash variable %eds-representatives-table%)))
-        (when match (if selectp match (list match))))
+  (or (and selectp (gethash variable %eds-representatives-table%))
       (setf (gethash variable %eds-representatives-table%)
         (cond
          ((handle-var-p variable)
