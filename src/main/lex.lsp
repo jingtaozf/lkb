@@ -61,10 +61,11 @@
 (defun store-temporary-psort (id fs)
    (unless (gethash id *psorts*)
       (setf (gethash id *psorts*)
-         (cons 'no-pointer 
+         (cons 'no-pointer
+           (cons nil
             (make-lex-or-psort 
                :id id
-               :full-fs fs)))))
+               :full-fs fs))))))
    
 
 (defun get-psort-entry (id &optional parent-p)
@@ -84,14 +85,14 @@
      (let ((hash-table-entry 
             (gethash id *psorts*)))
       (if hash-table-entry
-          (or (cdr hash-table-entry) ; cached
+          (or (cddr hash-table-entry) ; cached
               (let* 
-                  ((file-pointer (car hash-table-entry))
+                  ((file-pointer (cadr hash-table-entry))
                    (file-entry   
                     (cdr (read-psort-entry-from-file 
                           file-pointer id))))
-                (setf (gethash id *psorts*) 
-                      (cons file-pointer file-entry))
+                (setf (cddr (gethash id *psorts*)) 
+                             file-entry)
                 (when parent-p 
                   (setf (lex-or-psort-mother-p file-entry) t))
                 file-entry)))))
@@ -107,7 +108,7 @@
     #+(and mcl powerpc)(incf ee (CCL::TOTAL-BYTES-ALLOCATED))))
 
 
-(defun store-psort (id entry)
+(defun store-psort (id entry &optional orth)
    ;; write new entry to the end of the file
    ;; update the hash table entry with the new file pointer
    (let ((current-file-end (file-length *psorts-stream*))
@@ -116,13 +117,78 @@
       (file-position *psorts-stream* current-file-end)
       (write specified-entry :stream *psorts-stream*)
       (setf (gethash id *psorts*)
-         (cons current-file-end nil))))
+         (list orth current-file-end))))
 
 (defun uncache-psort-entry (id)
    (let ((hash-table-entry 
             (gethash id *psorts*)))
       (when hash-table-entry
-         (setf (cdr hash-table-entry) nil))))
+         (setf (cddr hash-table-entry) nil))))
+
+(defun write-psort-index-file nil
+  (let ((ok nil))
+    (unwind-protect
+        (progn
+          (with-open-file (ostream *psorts-temp-index-file* 
+                                   :direction :output
+                                   :if-exists :supersede)
+                          (maphash #'(lambda (id value)
+                                       (prin1 id ostream)
+                                       (write-string " " ostream)
+                                       (prin1 (car value) ostream)
+                                       (write-string " " ostream)
+                                       (prin1 (cadr value) ostream)
+                                       (terpri ostream)
+                                       )
+                                   *psorts*))
+          (setf ok t))
+      ; if there's an error during the writing of the
+      ; files, delete both the index-file and the temporary file
+      ; This assumes this function is only called by the 
+      ; LKB quit routines
+      (when (and (streamp *psorts-stream*)
+                 (open-stream-p *psorts-stream*))
+        (close *psorts-stream*))
+      (unless ok
+        (when (probe-file *psorts-temp-file*)
+          (delete-file *psorts-temp-file*))
+        (when (probe-file *psorts-temp-index-file*)
+          (delete-file *psorts-temp-index-file*))))))
+        
+
+(defun read-psort-index-file nil
+  (when (and (probe-file *psorts-temp-file*)
+             (probe-file *psorts-temp-index-file*))
+    (with-open-file (istream *psorts-temp-index-file* 
+                             :direction :input)
+                    (unless (input-stream-p istream)
+                      (error "~%Failed to open temporary file correctly" 
+                             *psorts-temp-index-file*))
+                    (clrhash *lexical-entries*)
+                    (loop
+                     (let* ((id (read istream nil 'eof))
+                            (orth (unless (eql id 'eof)
+                                    (read istream nil 'eof)))
+                            (file-pos (unless (eql id 'eof)
+                                        (read istream nil 'eof))))
+                       (when (eql id 'eof)
+                         (return))
+                       (setf (gethash id *psorts*) (list orth file-pos))
+                       (for orth-el in orth
+                            do
+                            (pushnew id 
+                                     (gethash (string-upcase orth-el) 
+                                              *lexical-entries*))))))
+    (setf *psorts-stream*
+          (open *psorts-temp-file* 
+                :direction :io
+                :if-exists :supersede
+                :if-does-not-exist :create))
+    (unless (and (input-stream-p *psorts-stream*)
+                 (output-stream-p *psorts-stream*))
+      (error "~%Failed to open temporary file correctly" 
+             *psorts-temp-file*))))
+
 
 
 (defun lexicon-exists nil
@@ -144,18 +210,19 @@
    (reset-cached-lex-entries)) ; in constraints.lsp
   (maphash #'(lambda (id value)
                (declare (ignore id))
-               (setf (cdr value) nil))
+               (setf (cddr value) nil))
            *psorts*))
    
 (defun clear-non-parents nil
+  (format t "~%Removing cached lexical entries")
    (maphash 
       #'(lambda (id value)
          (declare (ignore id))
-         (when (integerp (car value))
+         (when (integerp (cadr value))
             (unless 
-               (and (lex-or-psort-p (cdr value))
-                  (lex-or-psort-mother-p (cdr value)))
-               (setf (cdr value) nil))))
+               (and (lex-or-psort-p (cddr value))
+                  (lex-or-psort-mother-p (cddr value)))
+               (setf (cddr value) nil))))
       *psorts*))
          
 
@@ -189,6 +256,15 @@
          *lexical-entries*)
       words))
 
+(defun collect-psort-ids nil
+   (let ((ids nil))
+      (maphash 
+         #'(lambda (name val)
+             (declare (ignore val))
+            (push name ids))
+         *psorts*)
+      ids))
+
 (defun get-lex-entry (orth)
    (for psort in (gethash orth *lexical-entries*)
       filter
@@ -201,10 +277,7 @@
 
 
 (defun set-lexical-entry (orth id new-entry)
-   (store-psort id new-entry)
-   (let ((language-list (assoc *current-language* *language-lists*)))
-      (if language-list (pushnew id (cdr language-list))
-         (push (list *current-language*) *language-lists*)))
+   (store-psort id new-entry orth)
    (for orth-el in orth
         do
         (pushnew id (gethash (string-upcase orth-el) *lexical-entries*))))
@@ -231,15 +304,17 @@
               (if (unification-p unif)
                 (let ((unif-lhs (unification-lhs unif)))
                   (if (and (path-p unif-lhs)
-                           (path-matches (path-typed-feature-list unif-lhs) *orth-path*))
+                           (path-matches 
+                            (path-typed-feature-list unif-lhs) *orth-path*))
                     unif))))))
     (loop
       (let ((exact-match
              (for unif in matching-unifs
                   keep-first
                   (and
-                   (path-matches-exactly (path-typed-feature-list (unification-lhs unif))
-                                         (append current-orth-path *list-head*))
+                   (path-matches-exactly 
+                    (path-typed-feature-list (unification-lhs unif))
+                    (append current-orth-path *list-head*))
                    (u-value-p (unification-rhs unif))))))
         (unless exact-match (return))
         (push (car (u-value-types (unification-rhs exact-match)))

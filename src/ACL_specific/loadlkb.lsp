@@ -19,6 +19,11 @@
                  :directory *lkb-source-dir*)
    "a temporary file for the lexicon")
 
+(defparameter *psorts-temp-index-file* 
+  (make-pathname :name "templex-index" 
+                 :directory *lkb-source-dir*)
+   "a file to index the lexicon")
+
 (import '(enable-type-interactions disable-type-interactions))
 
 (defpackage "MRS")
@@ -31,7 +36,6 @@
       '( ("main" "for")         ; duplicate useful Procyon CL for loops
                            ; generic CL
          ("main" "globals")
-         ("io-general" "utils")
          ("ACL_specific" "topmenu") ; dialect specific - toplevel menu
          ("io-general" "menus")
          ("ACL_specific" "graphics") ; dialect specific basic graphics
@@ -71,6 +75,7 @@
          ("io-tdl" "tdlruleinput")
          ("io-tdl" "tdllexinput")
          ("main" "batch-check")
+         ("io-general" "utils")
          ))
       (let* ((dir (car dir-and-file))
              (file (cadr dir-and-file))

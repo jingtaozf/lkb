@@ -62,7 +62,6 @@
       (when settings-file
          (set-up-display-settings settings-file))           
       (set-up-type-interactions)
-      (lkb-beep)
       t))
 
 (defun read-tdl-type-patch-file nil 
@@ -82,7 +81,6 @@
    (when (patch-type-table) 
       (canonicalise-feature-order)           
       (set-up-type-interactions)
-      (lkb-beep)
       t))
 
 
@@ -103,7 +101,6 @@
       (when settings-file
          (set-up-display-settings settings-file))           
       (set-up-type-interactions)
-      (lkb-beep)
       t))
              
 (defun read-tdl-type-patch-file-with-name (file-name) 
@@ -136,7 +133,6 @@
    (when (patch-type-table) 
       (canonicalise-feature-order)           
       (set-up-type-interactions)
-      (lkb-beep)
       t))    
 
 (defun read-tdl-type-stream (istream &optional augment) 
@@ -259,8 +255,8 @@
   (read-char istream)
   (let* ((status-indicator (read istream))
          (break-char (read istream))
-         (status-type (read istream)))
-    (format t "~%~A ~A ~A" status-indicator break-char status-type)))
+         (status-type (read istream)))))
+;    (format t "~%~A ~A ~A" status-indicator break-char status-type)))
 
 (defun make-tdl-coreference-conditions (coref-table)
   ;;; the coref table is a list of paths, indexed by

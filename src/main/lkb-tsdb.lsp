@@ -192,4 +192,4 @@ e.g.
          (uncache-psort-entry psort))))
 
 
-;;; (maphash #'(lambda (key val) (if (cdr val) (print (lex-or-psort-id (cdr val))))) *psorts*)
+;;; (maphash #'(lambda (key val) (if (cddr val) (print (lex-or-psort-id (cddr val))))) *psorts*)

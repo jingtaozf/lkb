@@ -30,19 +30,48 @@
 (defparameter *ordered-lex-list* nil)
 
 (defun read-lex-file nil
+  ; we assume this will only be called by a user
+  ; who really does want a source file to be read in
   (setf *ordered-lex-list* nil)
    (let* ((file-name 
             (ask-user-for-existing-pathname "Entry file?"))
          (*current-language*
+          (if (cdr *possible-languages*)
             (apply #'ask-user-for-multiple-choice "Language" 
                (cons *current-language*
                   (remove *current-language*
-                     *possible-languages*)))))
+                     *possible-languages*)))
+            *current-language*))
+         (overwrite-p (if (lexicon-exists) 
+                          (lkb-y-or-n-p "Overwrite existing lexicon?"))))
       (when file-name
-         (read-lex-file-aux file-name 
-            (if (lexicon-exists) 
-               (y-or-n-p "Overwrite existing lexicon?"))))))
+        (if (eql *lkb-system-version* :page)
+         (read-tdl-lex-file-aux file-name overwrite-p)
+         (read-lex-file-aux file-name overwrite-p)))))
 
+(defun read-cached-lex-if-available (file-name overwrite-p)
+  (if (and file-name (probe-file file-name))
+    (let* ((cache-date
+            (if (probe-file *psorts-temp-file*)
+                (file-write-date *psorts-temp-file*)))
+           (cache-index-date 
+            (if 
+                (probe-file *psorts-temp-index-file*)
+                (file-write-date *psorts-temp-index-file*)))
+           (file-date 
+            (file-write-date file-name)))
+      (if (and cache-date file-date cache-index-date
+               (> cache-date file-date) 
+               (> cache-index-date cache-date))
+          (progn (format t "~%Reading in cached lexicon")
+                 (read-psort-index-file)
+                 (format t "~%Cached lexicon read"))
+        (if (eql *lkb-system-version* :page)
+            (read-tdl-lex-file-aux file-name overwrite-p)
+          (read-lex-file-aux file-name overwrite-p))))
+    (cerror "Continue with script" "Lexicon file not found")))
+
+            
 (defun read-lex-file-aux (file-name overwrite-p)
  ;  (reset-cached-lex-entries) ; in constraints.lsp  
    (when overwrite-p (clear-lex))
@@ -59,7 +88,6 @@
                (if (eql next-char #\;) 
                   (read-line istream)
                   (read-lex-entry istream)))))
-      (lkb-beep)
       (format t "~%Lexical entry file read")))
 
 (defun read-lex-entry (istream)
@@ -72,11 +100,20 @@
          (add-lex-from-file orth id non-def defs))))
 
 (defun read-psort-file nil  
-   (check-for-open-psorts-stream)
    (let ((file-name 
-            (ask-user-for-existing-pathname "Psorts file?")))
+            (ask-user-for-existing-pathname "File?")))
       (when file-name
-         (read-psort-file-aux file-name))))
+        (if (eql *lkb-system-version* :page)
+         (read-tdl-psort-file-aux file-name)
+         (read-psort-file-aux file-name)))))
+
+(defun read-parse-nodes-file nil  
+   (let ((file-name 
+            (ask-user-for-existing-pathname "Node name file?")))
+      (when file-name
+        (if (eql *lkb-system-version* :page)
+         (read-tdl-psort-file-aux file-name t)
+         (read-psort-file-aux file-name t)))))
 
 #|
 (defun read-qc-file nil  
@@ -87,6 +124,7 @@
 |#
 
 (defun read-psort-file-aux (file-name &optional templates-p qc-p)
+  (check-for-open-psorts-stream)
   (when templates-p (setf *category-display-templates* nil))
 ;  (when qc-p (clear-quick-check-table))
    (let ((*readtable*
@@ -104,10 +142,9 @@
                (if (eql next-char #\;) 
                   (read-line istream)
                   (read-psort-entry istream templates-p qc-p)))))
-      (lkb-beep)
       (format t "~%~A entry file read" (cond (templates-p "Template")
 ;                                             (qc-p "Quick check")
-                                             (t "Psort")))))
+                                             (t "")))))
 
 (defun read-psort-entry (istream &optional templates-p qc-p)
   (declare (ignore qc-p))

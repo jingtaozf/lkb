@@ -28,6 +28,12 @@
 
 (defparameter *empty-list-type* '*null*)
 
+(defparameter *diff-list-type* '*diff-list*)
+
+(defparameter *diff-list-list* 'list)
+
+(defparameter *diff-list-last* 'last)
+
 (defparameter *lex-rule-suffix* nil
   "creates the inflectional rule name from the information
    in irregs.tab - for PAGE compatability")

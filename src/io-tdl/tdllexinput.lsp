@@ -12,18 +12,7 @@
 ;;; rather than reading them in
 
 
-; *category-display-templates* 
-; *ordered-lex-list* are in io-paths/lexinput
-
-
-(defun read-tdl-lex-file nil
-  (setf *ordered-lex-list* nil)
-   (let* ((file-name 
-            (ask-user-for-existing-pathname "Entry file?")))
-      (when file-name
-         (read-tdl-lex-file-aux file-name 
-            (if (lexicon-exists) 
-               (y-or-n-p "Overwrite existing lexicon?"))))))
+; *category-display-templates* is in io-paths/lexinput
 
 (defun read-tdl-lex-file-aux (file-name overwrite-p)
  ;  (reset-cached-lex-entries) ; in constraints.lsp  
@@ -35,7 +24,6 @@
          (istream file-name :direction :input)
          (format t "~%Reading in lexical entry file")
          (read-tdl-lex-stream istream))
-      (lkb-beep)
       (format t "~%Lexical entry file read")))
 
 
@@ -90,23 +78,8 @@
 
 ;;; Other varieties of files
 
-(defun read-tdl-psort-file nil  
-   (check-for-open-psorts-stream)
-   (let ((file-name 
-            (ask-user-for-existing-pathname "Psorts file?")))
-      (when file-name
-         (read-tdl-psort-file-aux file-name))))
-
-#|
-
-(defun read-tdl-qc-file nil  
-   (let ((file-name 
-            (ask-user-for-existing-pathname "Quick check file?")))
-      (when file-name
-         (read-tdl-psort-file-aux file-name nil t))))
-|#
-
 (defun read-tdl-psort-file-aux (file-name &optional templates-p qc-p)
+   (check-for-open-psorts-stream)  
   (when templates-p (setf *category-display-templates* nil))
 ;  (when qc-p (clear-quick-check-table))
    (let ((*readtable*

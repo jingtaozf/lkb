@@ -145,8 +145,7 @@
    (let* ((ovwr (lkb-y-or-n-p "Overwrite any existing morphological structures?"))
           (filename (ask-user-for-existing-pathname "Morphological rules")))
       (when filename
-         (morph-file-read-aux filename ovwr)
-         (lkb-beep))))
+         (morph-file-read-aux filename ovwr))))
 
 (defun morph-file-read-aux (filename ovwr)
    (when ovwr
@@ -154,7 +153,7 @@
    (with-open-file 
       (istream filename
          :direction :input)
-      (format t "~%Loading morphological data...")
+      (format t "~%Loading morphological data")
       (block outer
          (loop
             ;; Go through the file - ignore comments.
@@ -178,8 +177,10 @@
                               (setf *letter-set-list*
                                  (letter-set-add form 
                                     *letter-set-list*)))
-                           (t (error "~%Wrong type of command"))))                    
-                     (morph-item-process istream))))))))
+                           (t (error "~%Wrong type of command"))))          
+                     (morph-item-process istream)))))))
+   (format t "~%Morphological data read"))
+
 
 
 (defun morph-item-process (istream)
@@ -345,9 +346,9 @@
                (a-list-search-update letters tree)))
          ((null letters) 
             (setf comp-node tree)
-            (setf (l-tree-node-rules tree) 
-               (cons 
-                  (make-suffix-rule :affix-name rule-name :replacement 
+            (setf (l-tree-node-rules tree)
+                  (cons
+                   (make-suffix-rule :affix-name rule-name :replacement 
                      (do 
                         ((lletters 
                               (cdr (reverse (fifth instance))) 
@@ -369,7 +370,7 @@
                                  (l-tree-node-rules ttree)))
                            ttree)) 
                      :prefix (prefix-args) :infix (infix-args)) 
-                  (l-tree-node-rules tree)))))
+                   (l-tree-node-rules tree)))))
       (setf (suffix-rule-replacement root-rule) comp-node)))
 
 (defun add-infix-instance (rule-name instance)

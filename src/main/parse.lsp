@@ -151,14 +151,34 @@
            (setf current new)))))
 
 (defun add-words-to-chart nil
-   (let ((current 0))
+   (let ((current 0)
+         (to-be-accounted-for (make-array (list *chart-limit*) :initial-element nil)))
+     ;;; to-be-accounted for is needed because we cannot tell
+     ;;; that a word is impossible until after the whole sentence has been processed
+     ;;; because it may be part of a multi-word
      (loop
        (let ((morph-poss (aref *morphs* current)))
          (when (null morph-poss)
            (return nil))
          (incf current)
-         (add-word (morph-edge-word morph-poss)
-          (morph-edge-morph-results morph-poss) current)))))
+         (multiple-value-bind (ind-results multi-strings)
+           (add-word (morph-edge-word morph-poss)
+                     (morph-edge-morph-results morph-poss) current)
+           (unless (or ind-results multi-strings)
+             (setf (aref to-be-accounted-for current)
+                   (morph-edge-word morph-poss)))
+           ; record the fact we haven't analysed this word
+           (for mstr in multi-strings
+                ; wipe the record for multi-words which allow for it
+                do
+                (let ((words (split-into-words mstr)))
+                  (dotimes (x (length words))
+                       (setf (aref to-be-accounted-for (- current x)) 
+                             nil)))))))
+     (dotimes (y current)
+       (when (aref to-be-accounted-for y)
+         (format t "~%No sign can be constructed for ~A" 
+                 (aref to-be-accounted-for y))))))
 
 
 (defun add-word (local-word morph-poss right-vertex)
@@ -193,8 +213,13 @@
                                          :morph-history 
                                          (construct-morph-history 
                                           lex-ids history))
-                                 right-vertex))))
-      (add-multi-words morph-poss right-vertex))
+                                 right-vertex)))
+        (let ((multi-results
+               (add-multi-words morph-poss right-vertex)))
+          ; add-multi-words is mostly for side effects, but want to
+          ; check if we've found something, and produce correct error
+          ; messages, so we return the strings found
+          (values word-senses multi-results))))
 
 (defun get-senses (stem-string)
   (let* ((*safe-not-to-copy-p* nil)
@@ -225,7 +250,8 @@
 
 
 (defun add-multi-words (morph-poss right-vertex)
-   (let* ((word-senses 
+   (let* ((multi-strings nil)
+          (word-senses 
           (for stem in (remove-duplicates 
                         (for analysis in morph-poss
                              collect (car analysis)) :test #'string-equal)
@@ -256,6 +282,7 @@
          (dolist (sense-record word-senses)
            (let ((word (sense-record-word-string sense-record))
                  (left-vertex (sense-record-left-vertex sense-record)))
+             (push word multi-strings)
              (dolist (mrec (sense-record-mrecs sense-record))
                (let ((sense (mrecord-fs mrec))
                      (lex-ids (mrecord-lex-ids mrec))
@@ -273,7 +300,9 @@
                                               (construct-morph-history 
                                                lex-ids
                                                history))
-                                   right-vertex)))))))
+                                   right-vertex)))))
+         ; return multi-strings, so we know what's been found
+         multi-strings))
 
 
 (defun get-multi-senses (stem-string right-vertex)

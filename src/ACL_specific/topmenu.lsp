@@ -129,17 +129,31 @@
   (let ((frame (or *lkb-top-frame*
                    (make-application-frame 'lkb-top))))
     (setf *lkb-top-frame* frame)
-    (mp:process-run-function "start-lkb-frame" #'run-frame-top-level frame)
+    (mp:process-run-function "start-lkb-frame" #'run-lkb-top-menu frame)
     (setf *lkb-top-stream* (get-frame-pane *lkb-top-frame* 'display))))
 
+(defun run-lkb-top-menu (frame)
+  ;;; define this function so that stuff can be called on exit
+  ;;; from LKB
+  (unwind-protect
+      (run-frame-top-level frame)
+    (user::write-psort-index-file)))
 
-
-; ignore disabling for now and cleaning up the temp file
-; also ignore dumping the image
+(defun restart-lkb-function nil
+  (user::read-psort-index-file)
+  (set-up-lkb-interaction :core)
+  (enable-type-interactions))
 
 (defun dump-lkb nil
-  (format t "~%Dump-lkb is not yet implemented")
-  nil)
+  (let ((image-location 
+         (user::ask-user-for-new-pathname 
+          "File for image (local file strongly advised)")))
+    (setf excl:*restart-init-function* #'restart-lkb-function) 
+    (user::write-psort-index-file)
+    (excl:dumplisp :name image-location)
+    (user::lkb-beep)
+    (format t "~%Image saved~%")
+    nil))
 
 (defun enable-type-interactions nil
   ;;; it may only work from within the application frame

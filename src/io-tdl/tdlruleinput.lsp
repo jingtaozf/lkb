@@ -13,31 +13,14 @@
 
 ; *ordered-rule-list* is in io-paths/ruleinput
 
-(defun read-tdl-grammar-file nil  
-   (let ((ovwr
-            (and (not (zerop (hash-table-count *rules*)))
-               (lkb-y-or-n-p "Overwrite existing grammar?"))))
-      (let ((file-name 
-               (ask-user-for-existing-pathname "Grammar file?")))
-         (when file-name (read-tdl-grammar-file-aux file-name ovwr)))))
-
 (defun read-tdl-grammar-file-aux (file-name ovwr)
   (setf *ordered-rule-list* nil)
    (when ovwr
       (clear-grammar))
    (read-tdl-lex-or-grammar-rule-file file-name nil)
-   (lkb-beep))
+   (format t "~%Grammar rule file read"))
 
 ; *ordered-lrule-list* is in io-paths
-
-(defun read-tdl-lex-rule-file nil  
-   (let ((ovwr
-      (and (not (zerop (hash-table-count *lexical-rules*)))
-         (lkb-y-or-n-p "Overwrite existing rules?"))))
-   (let ((file-name 
-            (ask-user-for-existing-pathname "Lex rules file?")))
-      (when file-name 
-         (read-tdl-lex-rule-file-aux file-name ovwr)))))
 
 (defun read-tdl-lex-rule-file-aux (file-name ovwr)
   (setf *ordered-rule-list* nil)
@@ -45,7 +28,7 @@
    (reset-cached-lexical-entries)) ; in constraints.lsp  
   (when ovwr (clear-lex-rules) )    
   (read-tdl-lex-or-grammar-rule-file file-name t)
-  (lkb-beep))   
+  (format t "~%Lexical rule file read"))   
       
 (defun read-tdl-lex-or-grammar-rule-file (file-name lexical)
    (let ((*readtable*
@@ -88,7 +71,7 @@
        (process-unif-list id non-def nil entry *rule-persistence*)
        (when (rule-full-fs entry)
          (if lexical
-             (progn (push id *ordered-lrule-list*)
+             (progn (pushnew id *ordered-lrule-list*)
                     (add-lexical-rule id entry))
-           (progn (push id *ordered-rule-list*)
+           (progn (pushnew id *ordered-rule-list*)
                   (add-grammar-rule id entry)))))))

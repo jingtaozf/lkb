@@ -109,11 +109,11 @@ at this point).
           ; union, because initial-match can include things
           ; we've found already
           ; else - generation fails
-          (format t "~%Not found ~S" initial-rel))) 
+          (format t "~%Not found ~S" (rel-sort initial-rel))))
     results-so-far))
 
 (defun find-lex-entries-from-rel (lex-rels results-so-far)
-  ;;; use the first lex rel to trigger retrieval and test
+  ;;; use the first lex rel to trigger retrieval.
   ;;; lex-rels in general are things the base lex entry MIGHT 
   ;;; also account for (i.e. all the things in the input
   ;;; MRS which MIGHT be lexical and which we haven't already
@@ -491,17 +491,10 @@ at this point).
 
 (defvar *null-semantics-found-items* nil)
 
-(defun filter-null-semantics (id-list)
-  ;;; temporary hack
-  (for id in id-list
-       filter
-       (unless (search "conj" (string id) :test #'char-equal)
-         id)))
 
 (defun instantiate-null-semantic-items nil
   (setf *null-semantics-found-items* 
-        (let ((real-ids (filter-null-semantics  
-                         *empty-semantics-lexical-entries*)))
+        (let ((real-ids *empty-semantics-lexical-entries*))
           (for lex-id in real-ids
                collect
                (let* ((lex-e (user::get-psort-entry lex-id))

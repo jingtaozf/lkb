@@ -3,13 +3,15 @@
 #+:allegro
 (eval-when 
     (compile load eval)
-  (shadowing-import '(cl-user::read-type-file 
+  (shadowing-import '(cl-user::read-script-file
+                      cl-user::read-type-file 
 		      cl-user::read-type-files 
 		      cl-user::read-lex-file
 		      cl-user::read-grammar-file 
 		      cl-user::read-lex-rule-file
-		      cl-user::morph-file-compile 
-		      cl-user::read-templates-file
+		      cl-user::read-morph-file
+                      cl-user::read-psort-file 
+		      cl-user::read-parse-nodes-file
 		      ;; view
 		      cl-user::show-type-tree
 		      cl-user::show-type-spec 
@@ -58,6 +60,8 @@
               (make-lkb-submenu-item :menu-title "Load"
                  :menu-items
                   (list 
+                     (make-menu-item :name "Complete grammar..."
+                        :value 'read-script-file :available-p t)
                      (make-menu-item :name "Type file..."
                         :value 'read-type-file :available-p t)
                      (make-menu-item :name "Type files..."
@@ -68,10 +72,12 @@
                         :value 'read-grammar-file :available-p nil)
                      (make-menu-item :name "Lexical rule file..."
                         :value 'read-lex-rule-file :available-p nil)
-                     (make-menu-item :name "Morphological data file..."
-                        :value 'morph-file-compile :available-p nil)
-                     (make-menu-item :name "Templates file..."
-                        :value 'read-templates-file :available-p nil)
+                     (make-menu-item :name "Morphology file..."
+                        :value 'read-morph-file :available-p nil)
+                     (make-menu-item :name "Root definition file..."
+                        :value 'read-psorts-file :available-p nil)
+                     (make-menu-item :name "Node name file..."
+                        :value 'read-parse-nodes-file :available-p nil)
                      )
                   :available-p t)
          (make-lkb-submenu-item :menu-title "View"
@@ -96,7 +102,7 @@
                      (make-menu-item :name "Lexical rule..."
                         :value 'show-lex-rule)
                      )
-               :available-p nil)
+               :available-p t)
          (make-lkb-submenu-item :menu-title "Parse"
                  :menu-items                       
                   (list 

@@ -41,9 +41,6 @@
    (when *display-type-hierarchy-on-load*
      (create-type-hierarchy-tree)))
 
-
-(defparameter *ordered-type-list* nil)
-
 (defun write-time-readably (&optional stream)
   (multiple-value-bind
       (sec min hour date month year)

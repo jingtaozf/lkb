@@ -47,6 +47,8 @@
 ;;; 
 ;;; Syntactic sugar for lists is still to be defined
 
+(defparameter *ordered-type-list* nil)
+
 (defun read-type-file nil  
    (let* ((file-name 
             (ask-user-for-existing-pathname "Type file?"))
@@ -55,7 +57,9 @@
 ;            (ask-user-for-existing-pathname 
 ;               "Display settings file? (Cancel if none)"))
       (when file-name
-         (read-type-file-aux file-name settings-file))))
+        (if (eql *lkb-system-version* :page)
+         (read-tdl-type-file-aux file-name settings-file)
+         (read-type-file-aux file-name settings-file)))))
 
 (defun read-type-file-aux (file-name &optional settings-file)
    (setf *ordered-type-list* nil)
@@ -73,7 +77,6 @@
       (when settings-file
          (set-up-display-settings settings-file))           
       (set-up-type-interactions)
-      (lkb-beep)
       t))
 
 (defun read-type-files nil  
@@ -84,7 +87,9 @@
 ;            (ask-user-for-existing-pathname 
 ;               "Display settings file? (Cancel if none)"))
       (when file-names
-         (read-type-files-aux file-names settings-file))))
+        (if (eql *lkb-system-version* :page)
+         (read-tdl-type-files-aux file-names settings-file)   
+         (read-type-files-aux file-names settings-file)))))
 
 (defun read-type-files-aux (file-names &optional settings-file)
    (setf *ordered-type-list* nil)
@@ -104,7 +109,6 @@
       (when settings-file
          (set-up-display-settings settings-file))           
       (set-up-type-interactions)
-      (lkb-beep)
       t))
 
 

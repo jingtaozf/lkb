@@ -7,7 +7,7 @@
 ;;; new file split off from old rules.lsp, in order to 
 ;;; keep input functions separate
 
-(defparameter *ordered-rule-list* nil)
+(defvar *ordered-rule-list* nil)
 
 (defun read-grammar-file nil  
    (let ((ovwr
@@ -15,7 +15,10 @@
                (lkb-y-or-n-p "Overwrite existing grammar?"))))
       (let ((file-name 
                (ask-user-for-existing-pathname "Grammar file?")))
-         (when file-name (read-grammar-file-aux file-name ovwr)))))
+         (when file-name 
+           (if (eql *lkb-system-version* :page)
+               (read-tdl-grammar-file-aux file-name ovwr)
+             (read-grammar-file-aux file-name ovwr))))))
 
 (defun read-grammar-file-aux (file-name ovwr)
   (setf *ordered-rule-list* nil)
@@ -23,7 +26,7 @@
    (when ovwr
       (clear-grammar))
    (read-lex-or-grammar-rule-file file-name nil)
-   (lkb-beep))
+   (format t "~%Grammar rule file read"))
 
 (defparameter *ordered-lrule-list* nil)
 
@@ -33,8 +36,10 @@
          (lkb-y-or-n-p "Overwrite existing rules?"))))
    (let ((file-name 
             (ask-user-for-existing-pathname "Lex rules file?")))
-      (when file-name 
-         (read-lex-rule-file-aux file-name ovwr)))))
+      (when file-name
+        (if (eql *lkb-system-version* :page)
+            (read-tdl-lex-rule-file-aux file-name ovwr)
+          (read-lex-rule-file-aux file-name ovwr))))))
 
 (defun read-lex-rule-file-aux (file-name ovwr)
   (setf *ordered-rule-list* nil)
@@ -42,7 +47,14 @@
    (reset-cached-lexical-entries)) ; in constraints.lsp  
   (when ovwr (clear-lex-rules) )    
   (read-lex-or-grammar-rule-file file-name t)
-  (lkb-beep))   
+  (format t "~%Lexical rule file read"))   
+
+(defun read-morph-file nil 
+    (let* ((ovwr (lkb-y-or-n-p "Overwrite any existing lexical rules?"))
+          (filename (ask-user-for-existing-pathname "Morphological rules")))
+      (when filename
+         (morph-file-read-aux filename ovwr)
+         (read-lex-rule-file-aux filename ovwr))))
       
 (defun read-lex-or-grammar-rule-file (file-name lexical)
    (let ((*readtable*
@@ -50,7 +62,7 @@
                '(#\% #\; #\< #\> #\= #\: #\.))))
       (with-open-file 
          (istream file-name :direction :input)
-         (format t "~%Reading in ~Arules" (if lexical "lexical " ""))
+         (format t "~%Reading in ~Arules~%" (if lexical "lexical " ""))
          (loop
             (let ((next-char (peek-char t istream nil 'eof)))
                (when (eql next-char 'eof) (return))
@@ -67,9 +79,9 @@
       (process-unif-list id non-def def entry *rule-persistence*)
       (when (rule-full-fs entry)
          (if lexical
-           (progn (push id *ordered-lrule-list*)
+           (progn (pushnew id *ordered-lrule-list*)
             (add-lexical-rule id entry))
-           (progn (push id *ordered-rule-list*)
+           (progn (pushnew id *ordered-rule-list*)
             (add-grammar-rule id entry)))))))
 
 
