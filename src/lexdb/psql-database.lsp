@@ -254,13 +254,13 @@
 	   (unless out
 	     (error "unexpected `COPY OUT' data transfer operation from PSQL DB ~a" (pq:db conn)))
 	   (copy-out-filename conn (car out))
-	   (setf copy-out (cdr out))
+	   (setf out (cdr out))
 	   )
 	  (:PGRES_COPY_IN 
 	   (unless in
 	     (error "unexpected `COPY IN' data transfer operation sent from PSQL DB ~a" (pq:db conn)))
 	   (copy-in-filename conn (car in))
-	   (setf copy-in (cdr in))	     
+	   (setf in (cdr in))	     
 	   )
 	  (:PGRES_NON_FATAL_ERROR
 	   (let ((error-message (pq:result-error-message result)))
@@ -316,7 +316,6 @@
 
 (defun getline (conn c-str len)
   (loop
-      with line = ""
       for i = (pq:getline conn c-str len)
       for line = (concatenate 'string line (ff::native-to-string c-str))
       while (= i 1)
