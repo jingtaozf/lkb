@@ -158,11 +158,6 @@ order in an MRS")
 
 (defparameter *instloc-path*   `(,(vsym "INSTLOC")))
 
-(defparameter *rel-name-path-only* nil
-  "if set, the indexing code only looks for the rel on the
-   rel-name-path and not at the type of the relation")
-
-
 ;;; for munging - not user-settable
 
 (defparameter *ordered-mrs-rule-list* nil)
