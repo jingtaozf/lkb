@@ -565,7 +565,7 @@
              (scavenge (gc-statistics :scavenge))
              (new (gc-statistics :new))
              (old (gc-statistics :old))
-             (efficiency (average (gc-statistics :efficiency)))
+             (efficiency (round (average (gc-statistics :efficiency))))
              (comment (format 
                        nil 
                        "~a (global ~d) (scavenge ~d) ~

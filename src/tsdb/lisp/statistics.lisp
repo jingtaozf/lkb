@@ -1725,8 +1725,7 @@
                  (edges (round (get-field :edges data)))
                  (edges (if (and edges (>= edges 0))
                           edges
-                          (+ (if (>= aedges 0) aedges 0) 
-                             (if (>= pedges 0) pedges 0))))
+                          (if (>= pedges 0) pedges -1)))
                  (raedges (round (get-field :raedges data)))
                  (rpedges (round (get-field :rpedges data)))
                  (first (float (get-field :first data)))
@@ -1797,8 +1796,7 @@
            (edges (round (get-field :edges data)))
            (edges (if (and edges (>= edges 0))
                     edges
-                    (+ (if (>= aedges 0) aedges 0) 
-                       (if (>= pedges 0) pedges 0))))
+                    (if (>= pedges 0) pedges -1)))
            (raedges (round (get-field :raedges data)))
            (rpedges (round (get-field :rpedges data)))
            (first (float (get-field :first data)))

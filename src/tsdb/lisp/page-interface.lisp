@@ -292,7 +292,7 @@
                 redges results)
            (when (= readings (length statistics))
              (do* ((i 0 (+ i 1))
-                   (statistics statistics (rest statistics))
+                   (statistics (reverse statistics) (rest statistics))
                    (statistic (first statistics) (first statistics))
                    (items items (rest items))
                    (item (first items) (first items)))

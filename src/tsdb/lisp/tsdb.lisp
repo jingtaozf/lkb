@@ -578,9 +578,9 @@
               (write result-id :stream stream) (write-char ofs stream)
               (write time :stream stream) (write-char ofs stream)
               (write r-ctasks :stream stream) (write-char ofs stream)
+              (write r-ftasks :stream stream) (write-char ofs stream)
               (write r-etasks :stream stream) (write-char ofs stream)
               (write r-stasks :stream stream) (write-char ofs stream)
-              (write r-ftasks :stream stream) (write-char ofs stream)
               (write size :stream stream) (write-char ofs stream)
               (write r-aedges :stream stream) (write-char ofs stream)
               (write r-pedges :stream stream) (write-char ofs stream)
@@ -596,7 +596,7 @@
                             ~d ~d ~d ~d ~d ~d ~d ~d ~d ~d ~s ~s ~s"
                            parse-id result-id
                            time
-                           r-ctasks r-etasks r-stasks r-ftasks
+                           r-ctasks r-ftasks r-etasks r-stasks
                            size r-aedges r-pedges
                            derivation tree mrs)))
               (call-tsdb query language :cache cache))))))

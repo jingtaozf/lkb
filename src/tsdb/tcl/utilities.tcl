@@ -337,10 +337,10 @@ proc update_condition_cascade {{active ""}} {
       set condition [history_move condition 1];
       if {$globals(condition,$i)} {
         if {$globals(condition) == ""} {
-          set globals(condition) [lispify_string $condition];
+          set globals(condition) "([lispify_string $condition])";
         } else {
           set globals(condition) \
-            "$globals(condition) and [lispify_string $condition]";
+            "$globals(condition) and ([lispify_string $condition])";
         }; # else
       }; # if
     }; # for

@@ -155,6 +155,7 @@
               (*copies* 0)
               (*subsumptions* 0)
               tgc tcpu treal conses symbols others)
+         (declare (special *maximum-number-of-active-edges*))
          ;;
          ;; this really ought to be done in the parser ...  (30-aug-99  -  oe)
          ;;
@@ -361,8 +362,11 @@
 (defun parse-tsdb-sentence (user-input &optional trace)
   (multiple-value-prog1
       (let ((*dag-recycling-p* (null trace)))
-        (when *dag-recycling-p* 
-          (reset-pools))
+        (when *dag-recycling-p*
+          (let ((reset (and (find-symbol "RESET-POOLS")
+                            (fboundp (find-symbol "RESET-POOLS"))
+                            (symbol-function (find-symbol "RESET-POOLS")))))
+            (when reset (funcall reset))))
         (parse user-input trace))))
 
 

@@ -136,11 +136,15 @@
                 "`~{~a~^|~}'~%  values: `~(~a~)' vs. `~(~a~)'.~%"
                 path one two)))))
         (format t "~%"))
-       ((and (null failure) 
-             (boundp (find-symbol "*RECONSTRUCT-HOOK*" :tsdb)))
-        (let ((hook (symbol-value (find-symbol "*RECONSTRUCT-HOOK*" :tsdb))))
-          (when (functionp hook)
-            (funcall hook result i-input))))))))
+       ((null failure)
+        (if (boundp (find-symbol "*RECONSTRUCT-HOOK*" :tsdb))
+          (let* ((name (find-symbol "*RECONSTRUCT-HOOK*" :tsdb))
+                 (hook (symbol-value name)))
+            (when (functionp hook)
+              (funcall hook result i-input)))
+          (format
+           t
+           "~&~%(~d) `~a' --- success.~%")))))))
 
 (defun reconstruct (derivation)
   (let ((derivation (cond
