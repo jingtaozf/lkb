@@ -2,17 +2,6 @@
 
 ;;; Retrieving lexical entries given a parse structure
 
-(defun lexical-rel-p (rel-name)
-  (gethash rel-name *relation-index*))
-
-(defun grammar-rel-p (rel-name)
-  (member rel-name *grule-rel-index* :key #'car))
-  
-
-(defun lex-rule-rel-p (rel-name)
-  (member rel-name *lrule-rel-index* :key #'car))
-
-
 #| 
 Lookup algorithm
 
@@ -29,6 +18,32 @@ apply lexical rules and instantiate indices (possibly failing
 at this point).
 
 |#
+
+
+;;; ************************************************
+;;;
+;;; Utility stuff
+;;;
+;;; ************************************************
+
+
+;;; check whether relations are lexical or come from rules
+;;; (not mutually exclusive)
+
+(defun lexical-rel-p (rel-name)
+  (gethash rel-name *relation-index*))
+
+(defun grammar-rel-p (rel-name)
+  (member rel-name *grule-rel-index* :key #'car))
+  
+(defun lex-rule-rel-p (rel-name)
+  (member rel-name *lrule-rel-index* :key #'car))
+
+;;; ************************************************
+;;;
+;;; Data structures
+;;;
+;;; ************************************************
 
 (defstruct (base-lex)
   ;;; for intermediate structures
@@ -51,7 +66,6 @@ at this point).
   main-rels ; for grammar rules, these will be the things in ccont
   )
 
-
 ;;; following fns are defined so they can be called in a file
 ;;; loaded before this file
 
@@ -63,6 +77,12 @@ at this point).
 
 (defun found-lex-inst-fs-fn (item)
   (found-lex-inst-fs item))
+
+;;; *********************************************************
+;;;
+;;; Call point
+;;;
+;;; *********************************************************
 
 (defun collect-lex-entries-from-mrs (psoa)
   (let* ((all-rels (psoa-liszt psoa))
@@ -80,15 +100,19 @@ at this point).
                                         ; specified in grammar rule
     ; these are not necessarily mutually exclusive classes
          (possibles 
+          ; Part 1
           ; candidates found without getting actual lex-entry
           (find-lexical-candidates lexical-rels lex-rule-rels 
                                    grammar-rels nil)))
+    ;; Part 2
     (if possibles
         (let* ((lrules (find-possible-rules lex-rule-rels t))
             ;;; lexical rules are possible if they have no effect
             ;;; on semantics or if they contribute relations
             ;;; which are on the list to be accounted for
                (nullsem (instantiate-null-semantic-items psoa lrules))
+            ;;; nullsem items are ones we have to postulate without
+            ;;; direct evidence from the MRS
                (nonnull (loop for possible in possibles
                              append
                                         ; check unification etc
@@ -101,6 +125,12 @@ at this point).
 
 ;;; third value is an ordering specification 
 ;;; given as a list of lex-ids 
+
+;;; *****************************************************
+;;;
+;;; Ordering code (currently non-functional)
+;;;
+;;;  *****************************************************
 
 (defun find-linear-order-spec (lexres)
   (declare (ignore lexres))
@@ -130,7 +160,13 @@ at this point).
   nil)
 ;;;  '((PROJECT_N1 MANAGER_N1)))
 
-                                         
+
+;;; ***********************************************************
+;;;
+;;; Initial access of lexical ids from semdb
+;;;
+;;; ***********************************************************
+
 
 (defun find-lexical-candidates (lex-rels lex-rule-rels grammar-rels
                                 results-so-far)
@@ -164,7 +200,7 @@ at this point).
   ;;; used as triggers)
   (let* ((rel (car lex-rels))
          (rel-sort (rel-sort rel))
-         (rel-params (car (get-rel-parameter-strings rel)))
+         (rel-params (get-rel-parameter-strings rel))
          (initial-candidates (find-candidates-from-rel
                               rel-sort rel-params rel))
         ;;; candidates are things which have the  
@@ -182,65 +218,19 @@ at this point).
         ;;; relations, but we ignore that for now
         candidates))
 
-(defun matches-rel-record (rel rec)
-  (and (rel-p rel)
-       (relation-record-p rec)
-       (compatible-types (rel-sort rel)
-            (relation-record-relation rec))
-       (equal (car (get-rel-parameter-strings rel))
-              (relation-record-feature-string rec))))       
+;;; get-rel-parameter-strings
+;;; matches-rel-record
+;;; find-candidates-from-rel - moved to lexindex.lisp
 
-
-(defun get-rel-parameter-strings (rel)
-  (loop for fvp in (rel-flist rel)
-       nconc
-       (let ((feat
-              (last-path-feature (fvpair-feature fvp))))
-         (if (member feat *value-feats*)
-             (let ((val (fvpair-value fvp)))
-               (list val))))))
-
-                
-(defun find-candidates-from-rel (rel-name parameter-str rel)
   ;;; matching a relation
   ;;; a) relation sort matches
   ;;; b) if relation sort is special (e.g. named_rel) then
   ;;;    the special feature(s) also match
   ;;; c) any coindexation is consistent    
-  ;;; only a) and b) are checked here - the coindexation
+  ;;; only a) and b) are done in find-candidates-from-rel 
+  ;;; the coindexation
   ;;; check is done as part of the process of adding `Skolem'
   ;;; constants (below)
-  (if rel-name
-      (let ((matching (gethash rel-name *relation-index*)))
-         (when matching
-            (if (hash-table-p matching)
-               (if parameter-str
-                  (or
-                     (gethash parameter-str matching)
-                     (gethash (string-upcase (string parameter-str)) matching))
-                  (progn 
-                    (cerror "~%return all relations"  
-                            "~%parameterized rel ~A without parameter string"
-                            rel)
-                    (let ((ids nil))
-                      (maphash #'(lambda (k v)
-                                   (declare (ignore k))
-                                   (setf ids (nconc ids v)))
-                               matching)
-                      ids)))
-               (progn
-                  (when parameter-str
-                     (cerror "~%ignore parameter"
-                             "~%unparameterised relation ~A has parameter ~A"
-                             rel parameter-str))
-                  (when (hash-table-p (car matching))
-                     (let ((contents nil))
-                        (maphash
-                           #'(lambda (key val) (declare (ignore val))
-                               (push key contents))
-                           (car matching))
-                         (setf (car matching) contents)))
-                  (car matching)))))))
 
 
 ;;; candidates contain at least one relation but the
@@ -254,6 +244,7 @@ at this point).
 ;;; so if this happens we can return the existing result
 ;;; which is OK, because we use union, rather than append,
 ;;; to stitch results together
+
 (defun filter-candidates (candidate-set target-rels existing-solutions)
   (loop for candidate in candidate-set
       nconc
@@ -269,6 +260,8 @@ at this point).
                   (list new)))))))
 
 (defun make-new-base-lex (candidate target-rels)
+  ;;; having found a candidate, access the
+  ;;; database that is indexed by id in order to check it
   (let ((semantic-entry (gethash candidate *semantic-table*)))
     (unless semantic-entry
       (error "~%Inconsistent database? 
@@ -293,9 +286,11 @@ at this point).
            ;; preserve lexical ordering of rels in LISZTs 
            :main-rels (reverse found-main-rels))))))
                                                        
-         
-
+;;; **************************************************         
+;;;
 ;;; Creating FSs with appropriate instances
+;;;
+;;; **************************************************         
 
 (defvar *number-of-lrule-applications* 0)
 
@@ -428,7 +423,14 @@ at this point).
        (loop for x in (first a)
 	   for y in (first b)
 	   always (eq x y))))
-  
+
+;;; ********************************************************
+;;;
+;;; Actual fs construction (subpart of instantiation code)
+;;;
+;;;  ********************************************************
+
+
 (defun create-liszt-fs-from-rels (rels sem-path)
   ;; inverse direction to mrsoutput functions, here we're creating a FS from a
   ;; Lisp structure
@@ -495,8 +497,8 @@ at this point).
                template)
          instance))
 
-       
-
+;;; *******************************************************       
+;;;
 ;;; Secondary entries
 ;;;
 ;;; An entry may have to be added to the bag without evidence in 
@@ -535,6 +537,12 @@ at this point).
                              "~%Warning: invalid generation rule --- ~A does not exist" lex-id)
                      nil))))))
     instantiated-sets))
+
+;;; ********************************************
+;;;
+;;; Rules
+;;;
+;;; ********************************************
 
 ;;; Lexical rules
 ;;;
