@@ -154,6 +154,12 @@
     (return-from set-up-compare-frame :skip))
 
   (when runp (frame-cursor frame :vertical-scroll))
+  ;;
+  ;; _fix_me_
+  ;; probably, we should move this further down, untial after extraction of
+  ;; discriminants, so that start-up time is not reflected.
+  ;;                                                           (6-jun-04; oe)
+  ;;
   (setf (compare-frame-decisions frame) (list (make-decision :type :start)))
   (when (null (compare-frame-input frame))
     (setf (compare-frame-input frame) 
