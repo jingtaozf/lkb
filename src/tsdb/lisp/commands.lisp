@@ -413,18 +413,20 @@
         (:tcl
          (format 
           stream 
-          "set test_suites(~d) {~s \"~(~a~)\" ~d ~d ~:[0~;1~]};~%"
+          "set test_suites(~d) {~s \"~(~a~)\" ~d ~d ~
+             ~:[0~;1~] ~:[0~;1~] ~:[0~;1~]};~%"
           (if index (+ index i) i)
           (get-field :database db) (get-field :status db) 
           (get-field :items db) (get-field :parses db)
-          (get-field :chart db)))
+          (get-field :resultp db) (get-field :rulep db) (get-field :treep db)))
         (:list
          (push (format 
                 nil 
-                "{~s \"~(~a~)\" ~d ~d ~:[0~;1~]}"
+                "{~s \"~(~a~)\" ~d ~d ~:[0~;1~] ~:[0~;1~] ~:[0~;1~]}"
                 (get-field :database db) (get-field :status db) 
                 (get-field :items db) (get-field :parses db)
-                (get-field :chart db))
+                (get-field :resultp db) (get-field :rulep db)
+                (get-field :treep db))
                result))))
     (when (and stream dbs) (format stream "~%"))
     (when meter (meter :value (get-field :end meter)))

@@ -611,6 +611,36 @@ proc analyze_performance {{code "performance"}} {
 }; # analyze_performance()
 
 
+proc analyze_trees {} {
+
+  global globals test_suites;
+
+  if {[verify_ts_selection]} {return 1};
+
+  #
+  # _fix_me_ 
+  # we need something like `ts_list find globals(data)' instead (27-jul-98)
+  #
+  for {set i 0} {$i < [array size test_suites]} {incr i} {
+    if {![string compare $globals(data) [lindex $test_suites($i) 0]]} {
+      set index $i;
+      break;
+    }; # if
+  }; # for
+  if {![info exists index] 
+      || ![lindex $test_suites($index) 6]} {
+    tsdb_beep;
+    status [format "no tree data available for `%s' ... |:-\{" \
+            $globals(data)] 10;
+  } else {
+    set command \
+      [format "(analyze-trees \"%s\")" $globals(data)];
+    send_to_lisp :event $command;
+  }; # else
+
+}; # analyze_performance()
+
+
 proc analyze_rules {view} {
 
   global globals test_suites;
@@ -628,7 +658,8 @@ proc analyze_rules {view} {
     }; # if
   }; # for
   if {![info exists index] 
-      || ![lindex $test_suites($index) 4]} {
+      || ![lindex $test_suites($index) 5]} {
+    tsdb_beep;
     status [format "no rule data available for `%s' ... |:-\{" \
             $globals(data)] 10;
   } else {

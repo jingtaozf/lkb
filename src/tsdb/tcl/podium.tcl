@@ -354,6 +354,8 @@ proc main {} {
           -label "Performance" -command {analyze_performance}
   .menu.analyze.menu add command \
           -label "Processor" -command {analyze_performance parser}
+  .menu.analyze.menu add command \
+          -label "Annotations" -command {analyze_trees}
   .menu.analyze.menu add separator
   .menu.analyze.menu add cascade \
           -label "Divison" \
@@ -906,7 +908,7 @@ proc main {} {
   $list header create 1 -itemtype text -text "Status" -style $hcenter
   $list header create 2 -itemtype text -text "Items" -style $hcenter
   $list header create 3 -itemtype text -text "Parses" -style $hcenter
-  $list header create 4 -itemtype text -text "Rule" -style $hcenter
+  $list header create 4 -itemtype text -text "Options" -style $hcenter
 
   pack .list -in .body -side bottom -padx 0.1c -pady 0.1c -expand yes -fill y;
 

@@ -57,11 +57,11 @@ proc update_ts_list {{action update} {name all} {arg_one yes} {arg_two yes}} {
         $list item create $i 1  -text [lindex $item 1] -style $center;
         $list item create $i 2  -text [lindex $item 2] -style $center;
         $list item create $i 3  -text [lindex $item 3] -style $center;
-        if {[lindex $item 4]} {
-          $list item create $i 4  -text yes -style $center;
-        } else {
-          $list item create $i 4  -text no -style $center;
-        }; # else
+        set status "";
+        set status "$status[expr {[lindex $item 4] ? "r" : "-"}]";
+        set status "$status[expr {[lindex $item 5] ? "r" : "-"}]";
+        set status "$status[expr {[lindex $item 6] ? "t" : "-"}]";
+        $list item create $i 4  -text $status -style $center;
         .menu.detail.menu.compare add radiobutton -label "[lindex $item 0]" \
           -selectcolor gold \
           -variable compare_in_detail(source) \

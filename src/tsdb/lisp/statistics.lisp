@@ -574,12 +574,12 @@
                        extras trees
                        (format :latex)
                        meter)
-  (declare (ignore trees))
            
   (when meter (meter :value (get-field :start meter)))
   (let* ((imeter (madjust * meter 0.9))
          (items (if (stringp language) 
-                  (analyze language :condition condition :extras extras
+                  (analyze language :condition condition 
+                           :extras extras :trees trees
                            :meter imeter :message (and meter t)) 
                   language))
          (items (if (eq dimension :space)
@@ -902,8 +902,8 @@
                                      :uresults
                                      :aanalyses 
                                      :aresults
-                                     :asnalyses
-                                     :asesults)
+                                     :sanalyses
+                                     :sresults)
                                    (list nitems nritems
                                          (divide alength nritems)
                                          (divide arlength arresults)

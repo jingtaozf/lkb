@@ -617,6 +617,36 @@
                           *tsdb-podium-windows*)))
                 (status :text (format nil "~a done" message) :duration 2))))
 
+           (analyze-trees
+            (let* ((data (first arguments))
+                   (meter (make-meter 0 1))
+                   (title (format 
+                           nil 
+                           "tsdb(1) `~a' Tree Summary~
+                            ~@[ [~a]~]"
+                           data *statistics-select-condition*))
+                 (message "computing table layout and geometry ..."))
+              (apply #'analyze-trees (append arguments (list :file file 
+                                                             :format :tcl
+                                                             :meter meter)))
+              (when (probe-file file)
+                (status :text message)
+                (let ((return
+                        (send-to-podium
+                         (format 
+                          nil 
+                          "showtable ~a \".~(~a~)\" ~s {~a}" 
+                          file (gensym "") data title)
+                         :wait t)))
+                  (when (and (equal (first return) :ok) 
+                             (equal (first (second return)) :graph))
+                    (push (append (second return)
+                                  (pairlis 
+                                   '(:data :command)
+                                   (list data (cons action arguments))))
+                          *tsdb-podium-windows*)))
+                (status :text (format nil "~a done" message) :duration 2))))
+
            (rules
             (let* ((data (first arguments))
                    (view (find-key-argument :view arguments))

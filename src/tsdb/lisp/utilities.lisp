@@ -381,16 +381,38 @@
                      (make-pathname :directory data :name "item.gz"))
                     :ro)
                    (t :rw)))
-                 (rulep
-                  (unless skeletonp
-                    (let ((n (tcount data "rule" :absolute t :quiet t)))
-                      (and n (not (zerop n))))))
+                 (result
+                  (or (file-size 
+                       (make-pathname :directory data :name "result"))
+                      (file-size 
+                       (make-pathname :directory data :name "result.gz"))))
+                 (resultp (and (not skeletonp) (numberp result) (> result 0)))
+                 (rule
+                  (or (file-size 
+                       (make-pathname :directory data :name "rule"))
+                      (file-size 
+                       (make-pathname :directory data :name "rule.gz"))))
+                 (rulep (and (not skeletonp) (numberp rule) (> rule 0)))
+                 (tree
+                  (or (file-size 
+                       (make-pathname :directory data :name "tree"))
+                      (file-size 
+                       (make-pathname :directory data :name "tree.gz"))))
+                 (treep (and (not skeletonp) (numberp tree) (> tree 0)))
                  (items (tcount data "item" :absolute t :quiet skeletonp))
                  (parses (unless skeletonp (tcount data "parse" :absolute t))))
             (pairlis (list :database 
-                           :path :status :items :parses :chart)
+                           :path :status :items :parses :resultp :rulep :treep)
                      (list (namestring language) 
-                           data status items parses rulep))))))))
+                           data status items parses resultp rulep treep))))))))
+
+(defun file-size (path)
+  (let* ((path (if (stringp path) path (namestring path)))
+         (stream (open path :direction :input :if-does-not-exist nil))
+         (size (and stream (file-length stream))))
+    (when stream
+      (close stream)
+      size)))
 
 (defun subdirectories (path)
   (let* ((path (if (stringp path) path (namestring path)))
