@@ -115,6 +115,31 @@
 ;;;                     (make-menu-item :name "Apply lexical rule"
 ;;;                        :value #'apply-lex)
 
+
+;;; (make-menu-item :name "Generate..."
+;;;                        :value 'generate-from-edge)
+
+(defun do-generate-tty (&optional edge-name)
+   (let ((possible-edge-name 
+            (or edge-name *last-generate-from-edge* *edge-id*)))
+      (when possible-edge-name
+         (setq *last-generate-from-edge* edge-name)
+         (let ((parser-edge (find-edge-given-id possible-edge-name)))
+            (if parser-edge
+               (let* ((input-sem
+                       (car (mrs::extract-mrs (list parser-edge) t))))
+   ;; t indicates that this is being run from the generator and that
+   ;; the appropriate globals should be set
+                  (if (mrs::psoa-liszt input-sem)
+                     (progn
+                        (format t "~&Generating from parser edge ~A" possible-edge-name)
+                        (generate-from-mrs input-sem)
+                        (show-gen-result))
+                     (format t "~&Could not extract any MRS relations from edge ~A"
+                        possible-edge-name)))
+               (format t "~&No parser edge ~A" possible-edge-name))))))
+
+
 (defun apply-lex-tty (lex lex-rule-name)
    (let* ((lex-rule (get-lex-rule-entry lex-rule-name))
          (lex-entry (if lex (get-psort-entry lex)))
@@ -127,7 +152,7 @@
                  (cond (result
                         (display-fs-tty result))
                        (t (format t 
-                                  "~%Lexical rule application failed"))))))))
+                                  "~&Lexical rule application failed"))))))))
 
 
 ;;;                    (make-menu-item :name "Apply all lex rules"
@@ -149,7 +174,7 @@
                      do
                      (display-fs-tty (cdr result-pair))))
                (t (format t 
-                     "~%No applicable lexical rules")))))))
+                     "~&No applicable lexical rules")))))))
 
 
 ;;;                     (make-menu-item :name "Parse"
@@ -173,7 +198,7 @@
   (display-fs-tty fs)
   (for path in paths
        do
-       (format t "~%~S" path)))
+       (format t "~&~S" path)))
            
 
 (defun display-fs-and-parents-tty (fs parents)
@@ -196,12 +221,23 @@
 (defun close-existing-type-hierarchy-trees nil
   nil)
 
+
 (defun show-parse nil
    (if *parse-record*
       (for edge in *parse-record*
          do
+         (format t "~&Edge ~A P:" (edge-id edge))
          (pprint (parse-tree-structure edge)))
-      (format t "~%No parses")))
+      (format t "~&No parses")))
+
+(defun show-gen-result nil
+   (if *gen-record*
+      (for edge in *gen-record*
+         do
+         (format t "~&Edge ~A G:" (edge-id edge))
+         (pprint (parse-tree-structure edge)))
+      (format t "~&No strings generated")))
+
 
 (defun display-type-in-tree (type)
   (declare (ignore type))
@@ -243,12 +279,12 @@
                     (create-path-from-feature-list path2) 
                     fs2 
                     fs1-id path1 fs2-id path2))
-             (format t "~%Unification successful")
+             (format t "~&Unification successful")
              (if resname (store-temporary-psort resname resdag))))
           (cond ((null fs1) 
-                 (error  "~%~A is not a valid FS identifier" fs1-id))
+                 (error  "~&~A is not a valid FS identifier" fs1-id))
                 ((null fs2) 
-                 (error  "~%~A is not a valid FS identifier" fs2-id))
+                 (error  "~&~A is not a valid FS identifier" fs2-id))
                 (t (error  "~%Paths are not lists")))))
-      (error  "~%Need to specify both feature structures")))))
+      (error  "~&Need to specify both feature structures")))))
 
