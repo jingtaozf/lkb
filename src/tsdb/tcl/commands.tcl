@@ -550,9 +550,7 @@ proc tsdb_browse {code {condition ""} {globalp 1} {profile ""} {goldp 0}} {
       && $globalp && $globals(condition) != ""} {
     if {$condition != ""} {
       set condition "$globals(condition) and ($condition)";
-    } else {
-      set condition "$globals(condition)";
-    }; # else
+    }; # if
   }; # if
 
   switch $code {
@@ -579,9 +577,23 @@ proc tsdb_browse {code {condition ""} {globalp 1} {profile ""} {goldp 0}} {
       return 0;
     }
     trees {
-      set command [format "(trees \"%s\" :condition \"%s\" :interactive %s" \
+      #
+      # _fix_me_
+      # we used to say `:condition $condition' here and always set $condition
+      # to $globals(condition) above; hence, it was not possible for francis to
+      # set creatively set *statistics-select-condition* in Lisp and have that
+      # take effect.  the following should preserve the original functionality,
+      # we hope.                                                (4-feb-04; oe)
+      #
+      if {$condition != ""} {
+        set command [format "(trees \"%s\" :condition \"%s\" :interactive %s" \
                      $profile $condition \
                      [lispify_truth_value [expr {!$globalp}]]];
+      } else {
+        set command [format "(trees \"%s\" :interactive %s" \
+                     $profile [lispify_truth_value [expr {!$globalp}]]];
+
+      }; # else
       if {$goldp} {
         if {[verify_ts_selection both]} {return 1};
         set gold $compare_in_detail(source);

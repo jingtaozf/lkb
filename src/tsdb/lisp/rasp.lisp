@@ -49,7 +49,7 @@
         else collect (list form tag))))
 
 (defun rasp-preprocess (string 
-                        &key rawp (plainp t) (posp *ptb-use-pos-tags-p*))
+                        &key (format :plainp) (posp *ptb-use-pos-tags-p*))
   (let ((length 0)
         (result nil))
     (loop
@@ -61,11 +61,12 @@
         for pos = (second token)
         for form = (rewrite-rasp-token raw pos)
         unless (or (string-equal pos "-none-")
-                   (and rawp (string= raw ""))
-                   (and (not rawp) (string= form ""))) do
-          (cond
-           (rawp (push raw result))
-           (plainp (push form result))
+                   (and (eq format :raw) (string= raw ""))
+                   (and (not (eq format :raw)) (string= form ""))) do
+          (case format
+           (:raw (push raw result))
+           (:plain (push form result))
+           (:pos (push pos result))
            (t
             (push (format 
                    nil 
@@ -74,10 +75,14 @@
                    (incf id) i (incf i) form raw posp pos)
                   result)))
           (incf length))
-    (values (and result (format nil "~{~a~^ ~}" (nreverse result))) length)))
+    (values (when result
+              (if (eq format :pos)
+                result
+                (format nil "~{~a~^ ~}" (nreverse result))))
+            length)))
 
 (defun rasp-preprocess-for-pet (string)
-  (rasp-preprocess string :rawp nil :plainp nil :posp t))
+  (rasp-preprocess string :format :pet :posp t))
 
 ;;;
 ;;; from here on, import support to read in a file of RASP parse trees and make

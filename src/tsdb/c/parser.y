@@ -768,6 +768,6 @@ int yyerror(char *s) {
   fflush(tsdb_error_stream);
   tsdb.error = TSDB_PARSE_ERROR;
 
-  YYABORT;
+  exit(1);
 
 } /* yyerror() */
