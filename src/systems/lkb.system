@@ -72,6 +72,7 @@
                (:file "generate")   ; chart generator (requires mrs)
 ; possibly should load generate with mrs but 
 ; treenodes depends on structures defined in it
+               (:file "spell")      ; so far just for a/an
                (:file "morph")    ; morphographemics
                (:file "check-unif"))) ; for efficiency 
      (:module "various io"
