@@ -38,6 +38,8 @@
   (setf *contentful-grs* nil)
   (setf *grule-rel-index* nil))
 
+;;; extract relations from eith lexical or grammar rules
+
 (defun extract-rule-rels (id fs entry lexicalp)
   (let* ((construction-semantics-fs 
           (path-value fs *construction-semantics-path*))
@@ -109,7 +111,7 @@
   (setf (gethash id *semantic-table*)
         record))
 
-(defvar *relation-index* (make-hash-table)
+(defvar *relation-index* (make-hash-table :test #'equal)
  "associates relations with instances") 
 ;;; indexed by relation - values are either simply a list of 
 ;;; identifiers of lexical entries which have this relation
