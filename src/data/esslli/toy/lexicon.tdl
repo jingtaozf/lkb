@@ -1,0 +1,21 @@
+kim_1 := pn-lxm & 
+ [ ORTH <! "kim" !>,
+   SEM [ RESTR <! [ NAME 'Kim ] !> ] ].
+
+sandy_1 := pn-lxm & 
+ [ ORTH <! "sandy" !>,
+   SEM [ RESTR <! [ NAME 'Sandy ] !> ] ].
+
+esmé :=  pn-lxm & 
+ [ ORTH <! "esmé" !>,
+   SEM [ RESTR <! [ NAME 'esmé ] !> ] ].
+
+
+sleeps_1 := iv-infl-3sg &
+ [ ORTH <! "sleeps" !>,
+   SEM  [ RESTR <! [ RELN r_sleep] !> ] ].
+
+likes_1 := tv-infl-3sg &
+ [ ORTH <! "likes" !>,
+   SEM  [ RESTR <! [ RELN r_like ] !> ] ].
+

@@ -1,0 +1,292 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; 
+;;; ESSLLI 1998 Grammar Engineering Practicum - Grammar 1
+;;;  
+;;; types.tdl
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+:begin :type.
+ 
+feat-struc := *top*.
+
+agr-cat := feat-struc &
+ [ PER per,
+   NUM num,
+   GEND gend ]. 
+
+pos := feat-struc &
+ [ FORM form-cat ].
+
+gram-cat := feat-struc &
+ [ HEAD pos,
+   SPR list-of-synsem-structs,
+   COMPS list-of-synsem-structs ].
+
+index := feat-struc.
+ref-index := index.
+sit-index := index.
+null-index := index.
+
+sem-struc := feat-struc &
+ [ MODE mode-cat,
+   INDEX index,
+   RESTR list-of-predications ].
+
+synsem-struc := feat-struc &
+ [ ORTH list-of-orths,
+   SYN gram-cat,
+   SEM sem-struc ].
+     
+
+;   ////////////\\\\\\\\\\\
+;  <<<< parts of speech >>>>
+;   \\\\\\\\\\\\///////////
+
+
+verb := pos &
+ [ AUX boolean,
+   INV boolean ].
+
+noun := pos &
+ [ AGR agr-cat,
+   CASE case-cat ].
+
+det := pos.
+
+prep := pos.
+
+;   /////////////\\\\\\\\\\\\\\
+;  <<<< subtypes of *value* >>>>
+;   \\\\\\\\\\\\\//////////////
+
+*value* := *top*.                
+  
+form-cat := *value*.
+inf := form-cat.
+fin := form-cat.
+prp := form-cat.
+psp := form-cat.
+imp := form-cat.
+pass := form-cat.
+
+per := *value*.
+1or2 := per.
+1st := 1or2.
+2nd := 1or2.
+3rd := per.
+
+num := *value*.
+sing := num. 
+plur := num.
+
+gend := *value*.
+fem := gend.
+masc := gend.
+neut := gend.
+
+3sing := agr-cat &
+ [ PER 3rd,
+   NUM sing ].
+
+non-3sing := agr-cat.
+
+case-cat := *value*.
+nom := case-cat.
+acc := case-cat.
+
+boolean := *value*.
+true := boolean.               
+false := boolean. 
+ 
+reln := *value*.
+
+mode-cat := *value*.
+prop := mode-cat.
+ques := mode-cat.
+dir := mode-cat.
+ref := mode-cat.
+
+predication := feat-struc &
+ [ RELN reln ].
+
+
+; <<<--- types inheriting from SYNSEM-STRUC --->>>
+
+
+lexeme := synsem-struc.
+
+phrase := synsem-struc.
+
+noun-lxm := lexeme &
+ [ SYN [ HEAD noun ],
+   SEM [ INDEX ref-index ] ].
+
+named_pred := predication &
+ [ RELN r_name,
+   NAME string, 
+   NAMED ref-index].
+
+pn-lxm := noun-lxm & 
+ [ SYN [ HEAD  [AGR 3sing],
+         SPR < >,
+         COMPS < > ],
+   SEM [ RESTR <! named_pred & [ NAMED #index ] !>, 
+         INDEX #index ] ].
+
+;;; ----- Verb semantics -----
+
+act_pred := predication &
+ [ ACT ref-index ].
+
+und_pred := predication &
+ [ UND ref-index ].
+
+iv_pred := act_pred.
+tv_pred := act_pred & und_pred.
+
+;;; ----- Verb lexeme types -----
+
+verb-lxm := lexeme &
+ [ SYN [ HEAD verb & [ INV false ],
+	 SPR < [ SYN [ HEAD noun, 
+                       SPR < >, 
+                       COMPS < > ] ] > ],
+   SEM [ MODE prop ] ].	 
+
+iv-lxm := verb-lxm &
+ [ SYN [ HEAD [ AUX false ],
+         SPR < [ SEM [ INDEX #1 ] ] >,
+         COMPS < > ],
+   SEM [ INDEX sit-index,
+	 RESTR <! iv_pred &
+		[ ACT #1 ] !> ] ].
+
+iv-infl-3sg := iv-lxm &
+ [ SYN [ HEAD verb & [ FORM fin ],
+         SPR < [ SYN [ HEAD [ CASE nom, 
+                              AGR 3sing ] ] ] > ] ].
+
+tv-lxm := verb-lxm &
+ [ SYN [ HEAD [ AUX false ],
+         SPR < [ SEM [INDEX #1 ] ] >,
+         COMPS < [ SYN [ HEAD noun & [ CASE acc ],
+                         SPR < >,
+                         COMPS < > ],
+                   SEM [ INDEX #2 ] ] > ],
+   SEM [ INDEX sit-index,
+         RESTR <! tv_pred & [ ACT #1, 
+                              UND #2 ] !> ] ].
+
+tv-infl-3sg := tv-lxm &
+ [ SYN [ HEAD verb & [ FORM fin ],
+         SPR < [ SYN [ HEAD [ CASE nom, 
+                              AGR 3sing ] ] ] > ] ].
+
+;;; ----- Grammar Rule Defs
+
+dtr-type := synsem-struc.
+
+nh-dtr-type := dtr-type &
+ [ NH1 synsem-struc ].
+
+head-dtr-type := dtr-type &
+ [ H synsem-struc ].
+
+grule := phrase &
+ [ ARGS *list* ].
+
+head-feature-principle := grule & head-dtr-type & 
+ [ SYN [ HEAD #head ],
+   H [ SYN [ HEAD #head ] ] ].
+
+semantic-inheritance-principle := grule & head-dtr-type &
+ [ SEM [ MODE  #mode,
+	 INDEX #index ],
+   H [ SEM [ MODE  #mode,
+	     INDEX #index ] ] ].
+
+headed-rule := head-feature-principle & semantic-inheritance-principle.
+
+semantic-compositionality-principle1 := grule & head-dtr-type &
+ [ SEM [ RESTR #restr ],
+   H [ SEM [ RESTR #restr ] ] ].
+
+semantic-compositionality-principle2 := grule & head-dtr-type & nh-dtr-type &
+ [ SEM [ RESTR [ LIST #restr_first,
+                 LAST #restr_last ] ],
+   H [ SEM [ RESTR [ LIST #restr_first,
+                     LAST #restr_middle ] ] ],  
+   NH1 [ SEM [ RESTR [ LIST #restr_middle,
+                       LAST #restr_last ] ] ] ].
+
+unary-headed-rule := headed-rule & semantic-compositionality-principle1 &
+ [ ORTH #orth,
+   H #head & [ ORTH #orth ],
+   ARGS < #head > ].
+
+binary-headed-rule :=  headed-rule & semantic-compositionality-principle2 &
+ [ ORTH [ LIST #first,
+	  LAST #last ],
+   ARGS < [ ORTH [ LIST #first,
+                   LAST #middle ] ],   
+          [ ORTH [ LIST #middle,
+                   LAST #last] ] > ].
+
+birule-headfirst := binary-headed-rule &
+ [ H #1,
+   NH1 #2,
+   ARGS < #1, #2 > ] .
+
+birule-headfinal := binary-headed-rule &
+ [ NH1 #1,
+   H #2,
+   ARGS < #1, #2 > ] .
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Basic types for lists, strings, and parse-node labels
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+*list* := *top*.
+
+ne-list := *list* &
+ [ FIRST *top*,
+   REST *list* ].
+
+list-of-synsem-structs := *list*.
+
+*null* := list-of-synsem-structs.
+
+ne-list-of-synsem-structs := list-of-synsem-structs & ne-list &
+ [ FIRST synsem-struc,
+   REST list-of-synsem-structs ].
+
+ne-list-of-anything := ne-list.
+
+*diff-list* := *top* &
+ [ LIST *list*,
+   LAST *list* ].
+
+list-of-predications := *diff-list*.
+list-of-orths := *diff-list*.
+
+string := *top*.
+
+; LABEL and META used for labeling nodes in parse trees
+
+label :=  synsem-struc &
+ [ LABEL-NAME string ],
+   status: label.
+
+meta := synsem-struc &
+ [ META-PREFIX string,
+   META-SUFFIX string ],
+   status: meta.
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;  Lexical semantic predicates
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+r_sleep := reln.
+r_like := reln.
+r_name := reln.
+

@@ -1,0 +1,87 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; 
+;;; SYNTACTIC THEORY by Sag and Wasow -- Textbook Grammar 
+;;; implementation by Chris Callison-Burch & Scott Guffey
+;;;
+;;; lruletypes.tdl
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; CCB don't change the name of lrule, or it will break -- it's named
+;;; in the globals.lsp file.
+
+lrule-super := lex-item & 
+  [ ARGS < lexeme & [ AFFIX #argaff,
+		      ARGS < [ AFFIX #argaff ] > ] >,
+
+    NEEDS-AFFIX boolean ],
+status: lex-rule.
+
+lrule := lrule-super & word &
+[ SYN #syn,
+  SEM #sem,
+  ARG-ST #arg-st,
+
+  WORD-DUMMY-LABEL boolean,
+  ARGS < [SYN #syn,
+	  SEM #sem,
+	  ARG-ST #arg-st ] > ]. 
+
+3rd-sing-verb-lexical-rule := lrule-super & word &
+[ SYN #syn & [ HEAD  verb & [ FORM fin,
+			      PRED false ],
+	       SPR < [ SYN [ HEAD [ AGR 3sing ] ] ] > ],
+  SEM [ MODE #mode,
+	INDEX #1,
+	RESTR [ LIST  < [RELN r_t-overlap,
+			 ARG1 #1,
+			 ARG2 now] . #restr >  ] ],
+  ARG-ST #arg-st,
+  ARGS < lexeme & [  SYN #syn,
+		     SEM [ MODE #mode,
+			   RESTR #restr ],
+		     ARG-ST #arg-st ] >,
+ NEEDS-AFFIX true ].
+
+
+
+sing-noun := affix & 
+ [ HEAD noun & [ AGR [ NUM sing ] ] ].
+
+plur-noun := affix &
+ [ HEAD noun & [ AGR [ NUM plur ] ] ].
+
+plur-noun-nom := affix &
+ [ HEAD noun & [ AGR [ NUM plur ], CASE nom ] ].
+
+plur-noun-acc := affix &
+ [ HEAD noun & [ AGR [ NUM plur ], CASE acc ] ].
+
+
+non-3rd-sing-verb := affix &  
+ [ HEAD verb & [ FORM fin,
+		 PRED false ],
+   SPR < [ SYN [ HEAD [ CASE nom, AGR non-3sing ] ] ] > ].
+
+past-verb := affix &
+ [ HEAD verb & [ FORM fin,
+		 PRED false ],
+   SPR < [ SYN [ HEAD [ CASE nom ] ] ] > ].
+
+pass-verb := affix &
+ [ HEAD verb & [ FORM pass,
+		 PRED true ] ].
+
+pres-part-verb := affix &
+ [ HEAD verb & [ FORM prp,
+		 PRED true ] ].
+
+past-part-verb := affix & 
+ [ HEAD verb & [ FORM psp,
+		 PRED false ] ].
+
+inf-verb := affix &
+ [ HEAD verb & [ FORM inf,
+		 PRED false ] ].
+
+

@@ -1,0 +1,42 @@
+%(letter-set (!c bdfglmnprstz))
+%(letter-set (!s abcdefghijklmnopqrtuvwxyz))
+%(letter-set (!t bcdfghjklmnpqrstvwxz))
+%(letter-set (!v aeiou))
+
+;;; irregular words are stored in a separate file - irregs.tab
+;;; because the forms stored there are the values of affix
+;;; all the rules here should have the name `affix-type' -infl-rule
+
+
+3sg-v-irule :=
+%suffix (!s !ss) (!ss !ssses) (ss sses) (!ty !ties) (f ves) (tch tches) (sh shes)
+lrule-infl &
+ [ SYN [ HEAD  verb & [ FORM fin ],
+         SPR < [ SYN [ HEAD [ AGR 3sing,
+                              CASE nom ] ] ] > ] ].
+
+non3sg-v_irule := lrule-no-aff &
+ [ SYN [ HEAD verb & [ FORM fin ],
+         SPR < [ SYN [ HEAD [ CASE nom, AGR non-3sing ] ] ] > ] ].
+
+past-v_irule := 
+%suffix (* ed) (!ty !tied) (e ed) (!t!v!c !t!v!c!ced) 
+lrule-infl &
+ [ SYN [ HEAD verb & [ FORM fin ],
+         SPR < [ SYN [ HEAD [ CASE nom ] ] ] > ] ].
+
+pprt-v_irule := 
+%suffix (* ed) (!ty !tied) (e ed) (!t!v!c !t!v!c!ced) 
+lrule-infl &
+ [ SYN [ HEAD verb & [ FORM psp ] ] ].
+
+prprt-v_irule :=
+%suffix (!t!v!c !t!v!c!cing) (* ing) (e ing) (ie ying)
+lrule-infl &
+ [ SYN [ HEAD verb & [ FORM prp ] ] ].
+
+inf-v_irule := lrule-no-aff &
+ [ SYN [ HEAD verb & [ FORM inf ] ] ].
+
+sg-n-irule := lrule-no-aff &
+ [ SYN [ HEAD [ AGR [ NUM sing ] ] ] ].

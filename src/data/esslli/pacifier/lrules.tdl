@@ -1,0 +1,25 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; 
+;;; ESSLLI 1998 Grammar Engineering Practicum - Grammar 4
+;;;  
+;;; lrules.tdl
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dative-shift := lrule-lexeme &
+ [ ORTH #orth,
+   SYN [ HEAD #head,
+         SPR #spr,
+         COMPS < #iobj, synsem-struc &
+                        [ SYN [ HEAD prep & [ FORM f_to ],
+                                COMPS < > ],
+                          SEM [ INDEX #index ] ] > ],
+   SEM #sem,
+   ARGS < lexeme & [ ORTH #orth,
+                   SYN [ HEAD #head,
+                         SPR #spr,
+                         COMPS < [ SYN [ HEAD noun ],
+                                   SEM [ INDEX #index ] ], 
+                                 #iobj & [ SYN [ HEAD noun ] ] > ],
+                   SEM #sem ] > ].
+ 

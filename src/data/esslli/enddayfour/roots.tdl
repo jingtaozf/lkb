@@ -1,0 +1,6 @@
+root := phrase &
+ [ SYN [ HEAD verb & [FORM fin],
+	 SPR   < >,
+	 COMPS < > ] ].
+
+

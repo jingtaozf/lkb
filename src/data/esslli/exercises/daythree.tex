@@ -1,0 +1,63 @@
+\documentclass[10pt]{article}
+\usepackage{a4}
+
+\pagestyle{empty}
+\parindent=0pt
+
+\begin{document}
+\begin{tabular}[t]{@{}l@{}}
+\textbf{Practical HPSG Grammar Engineering}\\
+ESSLLI 1998
+\end{tabular}
+\hfill
+\mbox{\fbox{\textbf{\textsf{\Huge Day Three}}}}
+
+\medskip
+\textbf{Goals:}
+\begin{itemize}
+\item Practice using the grammar debugging tools in the LKB.
+\item Improve the precision of the grammar through type constraints.
+\item Extend grammar coverage to include more complex noun phrases. 
+\end{itemize}
+
+\smallskip
+\textbf{Exercises:}
+\begin{itemize}
+\item[A.] Get your own copy of today's grammar, which is called
+``buggy'', and load it.
+\item[B.] Correct the grammar to eliminate the unwanted additional parses for sentences with multiple prepositional phrases modifying verb phrases.
+\begin{itemize}
+\item[1.] Parse the sentence \emph{Kim sleeps in the buggy in the park}, and examine the parse trees produced.  Determine which of the trees should not be produced.
+\item[2.] Make the necessary correction(s) to the grammar, so that only one parse is produced for the example.  Use the parse chart and related analysis tools in solving the problem.
+\item[3.] Add some test examples to the file ``test.items'' and do a batch parse to check the accuracy of your revisions.
+\end{itemize}
+\item[C.] Expand the lexicon and grammar to allow PPs to modify phrases with nominal heads in addition to verbal heads.
+\begin{itemize}
+\item[1.] Examine the type \textsf{prep-wd} to see what constraint(s) must be changed in order to expand the range of modification for PPs to a larger class of substantives.
+\item[2.] Make the desired modifications, and then test the result on the sentence \emph{The buggy in the park stopped}, and when this is okay, on the sentence \emph{Kim admired the buggy in the park} which should get two parses.
+\item[3.] Add some test examples (grammatical and ungrammatical) to the file ``test.items'' and do a batch parse to check the accuracy of your implementation.
+\end{itemize}
+\item[D.] Extend the lexicon and grammar by adding bare plural noun phrases.
+\begin{itemize}
+\item[1.] Consider the example \emph{Kim likes books} and figure out the changes needed in the grammar to provide a parse for this example.
+\item[2.] Make the desired improvements, and then test your grammar on
+several variations, including bare plurals in subject position, with
+dative verbs, and as the object in a prepositional phrase.
+\item[3.] Now test your analysis on the example \emph{Kim likes buggies in the park} which should have two analyses.  If your grammar is correct, then do the next step; otherwise, make the necessary repairs.
+\item[4.] Add some test examples to the file ``test.items'' and do a batch parse to test the system.
+\item[5.] Send a copy of your results to the instructors, by executing the
+following command at the Unix prompt:
+\par\texttt{submit buggy/test.results}
+\end{itemize}
+\item[E.] (Optional) Extend the grammar to include prenominal adjective modifiers.
+\begin{itemize}
+\item[1.] Consider the example \emph{Kim likes the red book} and figure out the changes needed in the grammar to provide a parse for this example.
+\item[2.] Make the desired improvements, then test and revise your grammar.
+\item[3.] Once the above example parses, try the example \emph{Kim likes red books in the park} and check to see that you get the desired number of parses.
+\item[4.] Add some test examples to the file ``test.items'' and do a batch parse to test the system.  Be sure to include order variation for all elements of the noun phrase in the ungrammatical examples.
+\item[5.] Send a copy of your results to the instructors, by executing the
+following command at the Unix prompt:
+\par\texttt{submit buggy/test.results}
+\end{itemize}
+\end{itemize}
+\end{document}

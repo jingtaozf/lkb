@@ -1,0 +1,11 @@
+
+
+:begin :instance.
+
+root :=  word+arg_realization+ana_agreement &
+ [ SYN [ HEAD verb & [FORM fin],
+	 SPR   < >,
+	 COMPS < >,
+	 GAP   <! !> ] ].
+
+:end :instance.

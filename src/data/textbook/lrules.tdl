@@ -1,0 +1,122 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; 
+;;; SYNTACTIC THEORY by Sag and Wasow -- Textbook Grammar 
+;;; implementation by Chris Callison-Burch & Scott Guffey
+;;;
+;;; lrules.tdl
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+:begin :instance.
+extraposition-lexical-rule := lrule-lexeme & 
+[ SYN  [HEAD #syn],
+  SEM #sem,
+  ARG-ST < #a & [SYN [HEAD comp] ] , #b >,
+  
+  ARGS < lexeme & [SYN [HEAD #syn,
+			SPR < [SYN [HEAD noun & [FORM f_it] ] ] >,
+			COMPS < #b, #a > ],
+		   SEM #sem,
+		   ARG-ST < [SYN [HEAD noun & [FORM f_it] ] ], #b , #a > ] > ].
+:end :instance.
+
+
+:begin :instance.
+negation-lexical-rule := lexeme & 
+[ ORTH #orth,
+  SYN [ HEAD verb & [ FORM fin,
+		      PRED #pred,
+		      INV #inv, 
+		      NEG true, 
+		      AUX true,
+		      ANA #ana  ],
+	SPR #spr,
+	COMPS < [ SYN [ HEAD [ FORM f_not ] ] ] . #comps > ],
+  SEM #sem,
+  ARG-ST #arg-st,
+   
+  ARGS < lexeme & [  ORTH #orth,
+                     SYN [ HEAD verb & [ PRED #pred,
+					  INV #inv, 
+					  NEG false,
+					  AUX true,
+					  ANA #ana ], 
+			    SPR #spr,
+			    COMPS #comps ],
+		      SEM #sem,
+		      ARG-ST #arg-st ] > ].
+:end :instance.
+
+
+
+;  Half of the passive rules below could be removed if we institute code for optionality of 
+;  compliments.  SMG
+;
+:begin :instance.
+tv-pass-rule-short := general-passive-lrule &
+ [ ARG-ST < [SYN [HEAD noun],
+	     SEM [INDEX #und ] ] >,
+   
+   ARGS < [ ARG-ST < [ ], [SYN [HEAD noun],
+			   SEM [INDEX #und ] ] > ] > ].
+:end :instance.
+
+
+:begin :instance.
+tv-pass-rule-long := general-passive-lrule &
+ [ ARG-ST < [SYN [HEAD noun],
+	     SEM [INDEX #und] ], [SYN [HEAD prep & [FORM f_by ] ],
+				  SEM [INDEX #act] ] >,
+	      
+   ARGS < [ ARG-ST < [SEM [INDEX #act ] ], [SYN [HEAD noun ],
+					   SEM [INDEX #und] ] > ] > ].
+:end :instance.
+
+
+:begin :instance.
+dtv-pass-rule-und-short := general-passive-lrule &
+ [ ARG-ST < [SYN [HEAD noun],
+	    SEM [INDEX #und ] ], [SYN [HEAD noun],
+				  SEM [INDEX #thm ] ] >,
+	  
+   ARGS < [ ARG-ST < [ ], [SEM [INDEX #und ] ], [SYN [HEAD noun],
+						  SEM [INDEX #thm] ] > ] > ].
+:end :instance.
+
+
+:begin :instance.
+dtv-pass-rule-und-long := general-passive-lrule & 
+ [ ARG-ST < [SYN [HEAD noun],
+	    SEM [INDEX #und ] ], [SYN [HEAD noun],
+				  SEM [INDEX #thm ] ], [SYN [HEAD prep & [FORM f_by] ],
+							SEM [INDEX #act ] ] >,
+
+   ARGS < [ ARG-ST < [ SEM [INDEX #act] ], [ SEM [INDEX #und ] ], [SYN [HEAD noun],
+								   SEM [INDEX #thm] ] > ] > ].
+:end :instance.
+
+
+:begin :instance.
+dtv-pass-rule-thm-short := general-passive-lrule & 
+ [ ARG-ST < [SYN [HEAD noun],
+	    SEM [INDEX #thm ] ], [SYN [HEAD prep & [FORM #form] ],
+				  SEM [INDEX #und] ] >,
+  
+   ARGS < [ ARG-ST < [SEM [INDEX #act ] ], [SEM [INDEX #thm ] ], [SYN [HEAD prep & [FORM #form] ],
+								  SEM [INDEX #und] ] > ] > ].
+:end :instance.  
+
+
+:begin :instance.
+dtv-pass-rule-thm-long := general-passive-lrule & 
+ [ ARG-ST < [SYN [HEAD noun],
+	    SEM [INDEX #thm ] ], [SYN [HEAD prep & [FORM #form] ],
+				  SEM [INDEX #und]              ], [SYN [HEAD prep & [FORM f_by] ],
+								    SEM [INDEX #act ] ] >,
+  
+   ARGS < [ ARG-ST < [SEM [INDEX #act ] ], [SEM [INDEX #thm ] ], [SYN [HEAD prep & [FORM #form] ],
+								  SEM [INDEX #und] ] > ] > ].
+:end :instance.  
+
+
+

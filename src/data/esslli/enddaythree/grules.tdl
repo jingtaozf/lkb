@@ -1,0 +1,55 @@
+hd-spec-rule := birule-hdfinal &
+ [ SYN [ SPR < >,
+         COMPS #comps ],
+   NH1 #nonhead, 
+   H [ SYN [ SPR < #nonhead >,
+             COMPS #comps & < > ] ] ].
+
+hd-comp-rule := birule-hdfirst & 
+ [ SYN [ SPR #spr,  
+	 COMPS < > ], 
+   H [ SYN [ SPR #spr,
+	     COMPS < #nonhead > ] ],
+   NH1 #nonhead & [ SYN [ COMPS < > ] ] ].
+
+hd-two-comp-rule := trirule-hdfirst & 
+ [ SYN [ SPR #spr,  
+	 COMPS < > ], 
+   H [ SYN [ SPR #spr,
+	     COMPS < #nonhead1, #nonhead2 > ] ],
+   NH1 #nonhead1 & [ SYN [ COMPS < > ] ],
+   NH2 #nonhead2 & [ SYN [ COMPS < > ] ] ].
+
+hd-mod-rule := birule-hdfirst & 
+ [ SYN [ SPR #spr,  
+	 COMPS #comps ], 
+   H #mod & [ SYN [ SPR #spr,
+                    COMPS #comps & < >,
+                    MODIFIED false ] ],
+   NH1 [ SYN [ HEAD prep & [ MOD < #mod > ],
+               COMPS < > ] ] ].
+
+mod-hd-rule := birule-hdfinal & 
+ [ SYN [ SPR #spr,  
+	 COMPS #comps,
+         MODIFIED true ], 
+   H #mod & [ SYN [ SPR #spr,
+                    COMPS #comps & < > ] ],
+   NH1 [ SYN [ HEAD adj & [ MOD < #mod > ],
+               COMPS < > ] ] ].
+
+bare-pl-rule := unary-hd-rule &
+ [ SYN [ SPR < >,
+         COMPS #comps ],
+   SEM [ RESTR [ LIST [ FIRST quant_pred & 
+                              [ BV #index,
+                                RELN r_bare-pl ],
+                        REST #rlist ],
+                 LAST #rlast ],
+         INDEX #index ],
+   H [ SYN [ HEAD noun,
+             SPR < synsem-struc >,
+             COMPS #comps & < > ],
+       SEM [ RESTR [ LIST #rlist,
+                     LAST #rlast ],
+             INDEX #index ] ] ].

@@ -1,0 +1,69 @@
+\documentclass[10pt]{article}
+\usepackage{a4}
+
+\pagestyle{empty}
+\parindent=0pt
+
+\begin{document}
+\begin{tabular}[t]{@{}l@{}}
+\textbf{Practical HPSG Grammar Engineering}\\
+ESSLLI 1998
+\end{tabular}
+\hfill
+\mbox{\fbox{\textbf{\textsf{\Huge Day Four}}}}
+
+\bigskip
+\bigskip
+\textbf{Goals:}
+\begin{itemize}
+\item Learn to use the parse chart and parse tree tools.
+\item Extend the grammar to include sentences with passive verbs.
+\item Develop a treatment of optionality in complementation.
+\end{itemize}
+
+\smallskip
+\textbf{Exercises:}
+\begin{itemize}
+\item[A.] Get your own copy of today's grammar, which is called ``pacifier'', and load it.
+\item[B.] Modify the grammar to provide an appropriate label for
+adjectives in parse trees.
+\begin{itemize}
+\item[1.] Parse the sentence \emph{Kim likes the red book}, and examine the parse trees produced.  Note that the parse node dominating the adjective \emph{red} is labeled with a question mark.
+\item[2.] Modify the file ``parse-nodes.tdl'' to add a label \textsf{ADJ} for adjectives, analogous to that for determiners.
+\end{itemize}
+\item[C.] Expand the lexicon and grammar to provide analyses for sentences with passive verbs.
+\begin{itemize}
+\item[1.] Examine the file ``lrules.tdl'' and study the lexical rule
+\textsf{dative-shift} which relates the ditransitive verb lexeme \emph{give} as in \emph{Kim gives Sandy a book} to the NP-PP variant of \emph{give} in \emph{Kim gives a book to Sandy}.
+\item[2.] Write a similar rule that takes the past-participle form of a
+transitive verb and produces a passive entry,  For example, the input
+to the passive rule would be a word like \emph{admired} as in \emph{Kim has
+admired Sandy}, and the output would be the word \emph{admired} used in
+\emph{Sandy was admired by Kim}.
+\item[3.] Add some test examples (grammatical and ungrammatical) to the file ``test.items'' and do a batch parse to check the accuracy of your implementation.
+Include examples with modifiers and passives together.
+\end{itemize}
+\item[D.] Modify your analysis of passives to make the \emph{by}-phrase optional.
+\begin{itemize}
+\item[1.]  Develop an analysis which will allow the grammar to parse sentences like \emph{Kim was admired}.  As you found yesterday, it is worth considering whether to use lexical rules or syntactic rules (or both) for this problem.
+\item[2.] Make the necessary improvements, and test your grammar on a
+variety of examples.
+\item[3.] Add some test examples to the file ``test.items'' and do a batch parse to test the system.
+\item[4.] Send a copy of your results to the instructors, by executing the
+following command at the Unix prompt:
+\bigskip
+\par\texttt{submit pacifier/test.results}
+\bigskip
+\end{itemize}
+\item[E.] (Optional) Extend the grammar to include passive verb phrases as post-nominal modifiers.
+\begin{itemize}
+\item[1.] Consider the example \emph{The book admired by Sandy is red}.  Note that the passive verb phrase \emph{admired by Sandy} modifies \emph{book} in the same way that prepositional phrases do.
+\item[2.] Make the desired improvements in your grammar, then test and
+revise as needed.
+\item[3.] Add some test examples to the file ``test.items'' and do a batch parse to test the system.  
+\item[4.] Send a copy of your results to the instructors, by executing the
+following command at the Unix prompt:
+\par\texttt{submit pacifier/test.results}
+\end{itemize}
+\end{itemize}
+\end{document}

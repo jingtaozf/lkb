@@ -1,0 +1,11 @@
+;;; Automatically generated file - do not edit!
+(defparameter *DIALOG-FONT-SIZE* 12)
+(defparameter *DISPLAY-TYPE-HIERARCHY-ON-LOAD* NIL)
+(defparameter *DONT-SHOW-LEX-RULES* NIL)
+(defparameter *DONT-SHOW-MORPHOLOGY* NIL)
+(defparameter *FIRST-ONLY-P* T)
+(defparameter *FS-TITLE-FONT-SIZE* 9)
+(defparameter *FS-TYPE-FONT-SIZE* 9)
+(defparameter *MAXIMUM-NUMBER-OF-EDGES* 500)
+(defparameter *PARSE-TREE-FONT-SIZE* 10)
+(defparameter *TYPE-TREE-FONT-SIZE* 9)

@@ -1,0 +1,344 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; 
+;;; ESSLLI 1998 Grammar Engineering Practicum - Grammar 2
+;;;  
+;;; types.tdl
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ 
+feat-struc :< *top*.
+
+agr-cat := feat-struc &
+ [ PER per,
+   NUM num,
+   GEND gend ].
+
+pos := feat-struc &
+ [ FORM form-cat ].
+
+syn-struc := feat-struc &
+ [ HEAD pos,
+   SPR list-ssm-strs,
+   COMPS list-ssm-strs ].
+
+index :< feat-struc.
+ref-index :< index.
+sit-index :< index.
+null-index :< index.
+
+sem-struc := feat-struc &
+ [ MODE mode-cat,
+   INDEX index,
+   RESTR list-preds ].
+
+synsem-struc := feat-struc &
+ [ ORTH list-orths,
+   SYN syn-struc,
+   SEM sem-struc ].
+     
+
+;   ////////////\\\\\\\\\\\
+;  <<<< parts of speech >>>>
+;   \\\\\\\\\\\\///////////
+
+
+verb := pos &
+ [ AUX boolean,
+   INV boolean ].
+
+noun := pos &
+ [ AGR agr-cat,
+   CASE case-cat ].
+
+det := pos.
+
+mod-type := feat-struc &
+ [ MOD *list* ].
+
+prep := pos & mod-type.
+
+;   /////////////\\\\\\\\\\\\\\
+;  <<<< subtypes of *value* >>>>
+;   \\\\\\\\\\\\\//////////////
+
+*value* :< *top*.                
+  
+form-cat :< *value*.
+inf :< form-cat.
+fin :< form-cat.
+prp :< form-cat.
+psp :< form-cat.
+imp :< form-cat.
+pass :< form-cat.
+
+per :< *value*.
+1or2 :< per.
+1st :< 1or2.
+2nd :< 1or2.
+3rd :< per.
+
+num :< *value*.
+sing :< num. 
+plur :< num.
+
+gend :< *value*.
+fem :< gend.
+masc :< gend.
+neut :< gend.
+
+3sing := agr-cat &
+ [ PER 3rd,
+   NUM sing ].
+
+non-3sing :< agr-cat.
+
+case-cat :< *value*.
+nom :< case-cat.
+acc :< case-cat.
+
+boolean :< *value*.
+true :< boolean.               
+false :< boolean. 
+ 
+reln :< *value*.
+
+mode-cat :< *value*.
+prop :< mode-cat.
+ques :< mode-cat.
+dir :< mode-cat.
+ref :< mode-cat.
+
+predication := feat-struc &
+ [ RELN reln ].
+
+
+; <<<--- types inheriting from SYNSEM-STRUC --->>>
+
+
+lexeme :< synsem-struc.
+
+gram-cat := synsem-struc &
+ [ ARGS *list* ].
+
+word :< gram-cat.
+
+phrase :< gram-cat.
+
+lrule-infl := word & 
+ [ SYN #syn,
+   SEM #sem,
+   ARGS < lexeme & [ SYN #syn,
+                     SEM #sem ]  > ].
+
+lrule-no-aff := word &
+ [ ORTH #orth,
+   SYN #syn,
+   SEM #sem,
+   ARGS < lexeme & [ ORTH #orth,
+                     SYN #syn,
+                     SEM #sem ]  > ].
+
+noun-ss := synsem-struc &
+ [ SYN [ HEAD noun ],
+   SEM [ INDEX ref-index ] ].
+
+named_pred := predication &
+ [ RELN r_name,
+   NAME string, 
+   NAMED ref-index].
+
+pn-wd := noun-ss & word &
+ [ SYN [ SPR < >,
+         COMPS < > ],
+   SEM [ RESTR <! named_pred & [ NAMED #index ] !>, 
+         INDEX #index ] ].
+
+cn-lxm := noun-ss & lexeme &
+ [ SYN [ SPR < [ SYN [ HEAD det ] ]  >,
+         COMPS < > ] ].
+
+det-wd := word & 
+ [ SYN [ HEAD det,
+         SPR < >,
+         COMPS < > ] ].
+
+;;; ----- Verb semantics -----
+
+act_pred := predication &
+ [ ACT ref-index ].
+
+und_pred := predication &
+ [ UND ref-index ].
+
+thm_pred := predication &
+ [ THM ref-index ].
+
+iv_pred :< act_pred.
+tv_pred := act_pred & und_pred.
+
+;;; ----- Verb lexeme types -----
+
+verb-lxm := lexeme &
+ [ SYN [ HEAD verb & [ INV false ],
+	 SPR < [ SYN [ HEAD noun, 
+                       SPR < >, 
+                       COMPS < > ] ] > ],
+   SEM [ MODE prop ] ].	 
+
+iv-lxm := verb-lxm &
+ [ SYN [ HEAD [ AUX false ],
+         SPR < [ SEM [ INDEX #1 ] ] >,
+         COMPS < > ],
+   SEM [ INDEX sit-index,
+	 RESTR <! iv_pred &
+		[ ACT #1 ] !> ] ].
+
+tv-lxm := verb-lxm &
+ [ SYN [ HEAD [ AUX false ],
+         SPR < [ SEM [INDEX #1 ] ] >,
+         COMPS < [ SYN [ HEAD noun & [ CASE acc ],
+                         SPR < >,
+                         COMPS < > ],
+                   SEM [ INDEX #2 ] ] > ],
+   SEM [ INDEX sit-index,
+         RESTR <! tv_pred & [ ACT #1, 
+                              UND #2 ] !> ] ].
+
+;;; ----- Grammar Rule Defs
+
+dtr-type :< synsem-struc.
+
+hd-dtr-type := dtr-type &
+ [ H gram-cat ].
+
+nh-dtr-type := dtr-type &
+ [ NH1 gram-cat ].
+
+nh2-dtr-type := dtr-type &
+ [ NH2 gram-cat ].
+
+grule :< phrase.
+
+hd-feat-pr := grule & hd-dtr-type & 
+ [ SYN [ HEAD #head ],
+   H [ SYN [ HEAD #head ] ] ].
+
+sem-inher-pr := grule & hd-dtr-type &
+ [ SEM [ MODE  #mode,
+	 INDEX #index ],
+   H [ SEM [ MODE  #mode,
+	     INDEX #index ] ] ].
+
+headed-rule := hd-feat-pr & sem-inher-pr.
+
+sem-comp-pr1 := grule & hd-dtr-type &
+ [ SEM [ RESTR #restr ],
+   H [ SEM [ RESTR #restr ] ] ].
+
+sem-comp-pr2 := grule & hd-dtr-type & nh-dtr-type &
+ [ SEM [ RESTR [ LIST #restr_first,
+                 LAST #restr_last ] ],
+   H [ SEM [ RESTR [ LIST #restr_first,
+                     LAST #restr_middle ] ] ],  
+   NH1 [ SEM [ RESTR [ LIST #restr_middle,
+                       LAST #restr_last ] ] ] ].
+
+sem-comp-pr3 := grule & hd-dtr-type & nh-dtr-type & nh2-dtr-type &
+ [ SEM [ RESTR [ LIST #restr_first,
+                 LAST #restr_last ] ],
+   H [ SEM [ RESTR [ LIST #restr_first,
+                     LAST #restr_middle1 ] ] ],  
+   NH1 [ SEM [ RESTR [ LIST #restr_middle1,
+                       LAST #restr_middle2 ] ] ],
+   NH2 [ SEM [ RESTR [ LIST #restr_middle2,
+                       LAST #restr_last ] ] ] ].
+
+unary-hd-rule := headed-rule & sem-comp-pr1 &
+ [ ORTH #orth,
+   H #head & [ ORTH #orth ],
+   ARGS < #head > ].
+
+binary-hd-rule :=  headed-rule & sem-comp-pr2 &
+ [ ORTH [ LIST #first,
+	  LAST #last ],
+   ARGS < [ ORTH [ LIST #first,
+                   LAST #middle ] ],   
+          [ ORTH [ LIST #middle,
+                   LAST #last] ] > ].
+
+ternary-hd-rule :=  headed-rule & sem-comp-pr3 &
+ [ ORTH [ LIST #first,
+	  LAST #last ],
+   ARGS < [ ORTH [ LIST #first,
+                   LAST #middle ] ],   
+          [ ORTH [ LIST #middle1,
+                   LAST #middle2] ],
+          [ ORTH [ LIST #middle2,
+                   LAST #last] ] > ].
+
+birule-hdfirst := binary-hd-rule &
+ [ H #1,
+   NH1 #2,
+   ARGS < #1, #2 > ] .
+
+birule-hdfinal := binary-hd-rule &
+ [ NH1 #1,
+   H #2,
+   ARGS < #1, #2 > ] .
+
+trirule-hdfirst := ternary-hd-rule &
+ [ H #1,
+   NH1 #2,
+   NH2 #3,
+   ARGS < #1, #2, #3 > ] .
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Basic types for lists, strings, and parse-node labels
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+*list* :< *top*.
+
+ne-list := *list* &
+ [ FIRST *top*,
+   REST *list* ].
+
+list-ssm-strs :< *list*.
+
+*null* :< list-ssm-strs.
+
+ne-lst-ssm-strs := list-ssm-strs & ne-list &
+ [ FIRST synsem-struc,
+   REST list-ssm-strs ].
+
+ne-list-any :< ne-list.
+
+*diff-list* := *top* &
+ [ LIST *list*,
+   LAST *list* ].
+
+list-preds :< *diff-list*.
+list-orths :< *diff-list*.
+
+string :< *top*.
+
+; LABEL and META used for labeling nodes in parse trees
+
+label :=  synsem-struc &
+ [ LABEL-NAME string ].
+
+meta := synsem-struc &
+ [ META-PREFIX string,
+   META-SUFFIX string ].
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;  Lexical semantic predicates
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+r_sleep :< reln.
+r_like :< reln.
+r_name :< reln.
+r_admire :< reln.
+r_the :< reln.
+r_book :< reln.
+r_park :< reln.

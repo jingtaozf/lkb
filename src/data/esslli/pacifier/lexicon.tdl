@@ -1,0 +1,72 @@
+kim_1 := pn-wd & 
+ [ ORTH <! "kim" !>,
+   SEM [ RESTR <! [ NAME 'Kim ] !> ] ].
+
+sandy_1 := pn-wd & 
+ [ ORTH <! "sandy" !>,
+   SEM [ RESTR <! [ NAME 'Sandy ] !> ] ].
+
+sleep_1 := iv-lxm &
+ [ ORTH <! "sleep" !>,
+   SEM  [ RESTR <! [ RELN r_sleep] !> ] ].
+
+stop_1 := iv-lxm &
+ [ ORTH <! "stop" !>,
+   SEM  [ RESTR <! [ RELN r_stop] !> ] ].
+
+like_1 := tv-lxm &
+ [ ORTH <! "like" !>,
+   SEM  [ RESTR <! [ RELN r_like ] !> ] ].
+
+admire_1 := tv-lxm &
+ [ ORTH <! "admire" !>,
+   SEM  [ RESTR <! [ RELN r_admire ] !> ] ].
+
+the_1 := det-wd &
+ [ ORTH <! "the" !>,
+   SEM  [ RESTR <! [ RELN r_the ] !> ] ].
+
+book_1 := cn-lxm &
+ [ ORTH <! "book" !>,
+   SEM  [ RESTR <! [ RELN r_book ] !> ] ].
+
+park_1 := cn-lxm &
+ [ ORTH <! "park" !>,
+   SEM  [ RESTR <! [ RELN r_park ] !> ] ].
+
+buggy_1 := cn-lxm &
+ [ ORTH <! "buggy" !>,
+   SEM  [ RESTR <! [ RELN r_buggy ] !> ] ].
+
+baby_1 := cn-lxm &
+ [ ORTH <! "baby" !>,
+   SEM  [ RESTR <! [ RELN r_baby ] !> ] ].
+
+guy_1 := cn-lxm &
+ [ ORTH <! "guy" !>,
+   SEM  [ RESTR <! [ RELN r_guy ] !> ] ].
+
+give_1 := dtv-lxm &
+ [ ORTH <! "give" !>,
+   SEM  [ RESTR <! [ RELN r_give ] !> ] ].
+
+in_1 := prep-wd &
+ [ ORTH <! "in" !>,
+   SYN [ HEAD [ FORM f_in ] ],
+   SEM  [ RESTR <! [ RELN r_in ] !> ] ].
+
+to_1 := cm-prep-wd &
+ [ ORTH <! "to" !>,
+   SYN [ HEAD [ FORM f_to ] ] ].
+
+red_1 := adj-wd &
+ [ ORTH <! "red" !>,
+   SEM  [ RESTR <! [ RELN r_red ] !> ] ].
+
+is_1 := aux-wd &
+ [ ORTH <! "is" !>,
+   SYN [ COMPS < [ SYN [ HEAD [ PRED true ] ] ] > ] ].
+
+has_1 := aux-wd &
+ [ ORTH <! "has" !>,
+   SYN [ COMPS < [ SYN [ HEAD [ FORM psp ] ] ] > ] ].

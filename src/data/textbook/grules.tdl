@@ -1,0 +1,367 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; 
+;;; SYNTACTIC THEORY by Sag and Wasow -- Textbook Grammar 
+;;; implementation by Chris Callison-Burch & Scott Guffey
+;;;
+;;; grules.tdl
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; We're using the principle that the system assigns different indexes to each
+; element in the sentence.  So "she loves her" will always be counter-indexed.
+; The problem is that this allows "I love me", which may be judged grammatical,
+; but "I" and "me" should not be allowed to be counter-indexed as the system does.
+
+:begin :instance.
+
+head-specifier-rule := phrasal-birule-headfinal &
+ [ SYN [ SPR < > ],
+
+   NH1 #1, 
+   H [ SYN [ SPR < #1 > ] ] ].
+
+:end :instance.
+
+
+:begin :instance.
+head-complement-rule := birule-headfirst & 
+ [ SYN [ SPR #spr,  
+	 COMPS #rest ], 
+
+   H [ SYN [ SPR #spr,
+	     COMPS < #1  . #rest > ] ],
+   NH1 #1 & [ SYN [ COMPS < > ] ] ].
+:end :instance.
+
+
+:begin :instance.
+head-modifier-rule := phrasal-birule-headfirst &
+ [ SYN [ SPR < #spr > ],
+   
+   H #1 & [ SYN [ SPR < #spr > ] ],
+   NH1 [ SYN [ HEAD [ MOD < #1 > ] ] ] ].
+:end :instance.
+
+
+:begin :instance.
+imperative-rule := unary-grule-phrasal &
+ [ SYN [ HEAD verb & [ FORM fin ],
+	 SPR < > ],
+   SEM [ MODE dir,
+	 INDEX #ind ],
+
+   NH1 [ SYN [ HEAD verb & [ FORM inf ],
+	       SPR < [ SYN [ HEAD noun & [ AGR [ PER 2nd ] ] ] ] > ],
+	 SEM [ INDEX #ind ] ] ].
+:end :instance.
+
+
+:begin :instance.
+bare-plural-rule := unary-grule-phrasal &
+[ SYN [ HEAD noun & [AGR [NUM plur],
+		     ANA false ],
+	SPR < >,
+	COMPS #comps],
+  SEM #sem,
+ 
+  NH1  [SYN [HEAD noun & [AGR [NUM plur] ],
+	     SPR < [ ] >,
+	     COMPS #comps],
+	SEM #sem ] ].
+:end :instance.
+
+
+:begin :instance.
+head-filler-rule := birule-headfinal-minusGAP &
+[  SYN [ SPR < >,
+	 COMPS < >,
+	 GAP  [ LIST #rest,
+		LAST #last] ],
+
+   NH1 #1 & [ SYN [ GAP <! !> ] ],
+   H [ SYN [ HEAD verb & [ FORM fin ],
+		      SPR < >,
+		      COMPS < >,
+		      GAP [ LIST *cons* & < #1 . #rest>,
+			    LAST *null* & #last ] ],
+       SEM [MODE prop ] ] ].
+:end :instance.
+
+
+:begin :instance.
+GAP-rule := unary-grule-headed-minusGAP &
+[ SYN [ SPR #spr,  
+	COMPS #rest,
+	GAP [ LIST < #1 . #gap >,
+	      LAST #gap_last ] ],
+
+  H [ SYN [  SPR #spr,
+	     COMPS < #1 . #rest >,
+	     GAP [ LIST #gap,
+		   LAST #gap_last ] ] ] ].
+:end :instance.
+
+
+
+:begin :instance.
+noun-coordination-rule := trirule &
+ [ SYN [ HEAD noun & [ AGR non-3sing & [ NUM plur ],
+		       CASE #case ],
+	 SPR #spr,
+	 COMPS #comps],
+   SEM [ INDEX #ref-index ],
+
+   1 [ SYN [ HEAD noun & [CASE #case ],
+	     SPR #spr,
+	     COMPS #comps ],
+       SEM [ INDEX #1 ] ],
+   
+   2 [ SYN [ HEAD conj & [ FORM f_and ] ],
+       SEM [ INDEX #ref-index ] ],
+
+   3 [ SYN [ HEAD noun & [CASE #case ],
+	     SPR #spr,
+             COMPS #comps ],
+       SEM [ INDEX #2] ] ].
+:end :instance:
+
+
+:begin :instance.
+verb-coordination-rule := trirule &
+ [ SYN [ HEAD verb & [FORM #form],
+	 SPR #spr,
+	 COMPS #comps,
+	 GAP #gap ],
+   ARG-ST #argst,
+   SEM [ MODE prop,
+	 INDEX #sit-index ],
+
+   1 [ SYN [ HEAD verb & [FORM #form],
+	     SPR #spr,
+	     COMPS #comps,
+	     GAP #gap ],
+       ARG-ST #argst,
+       SEM [ MODE prop,
+	     INDEX #1 ] ],
+
+  2 [ SYN [ HEAD conj & [FORM f_and ] ],
+      SEM [ INDEX #sit-index,
+	    RESTR <! [SIT #sit-index] !> ] ],
+
+   3 [ SYN [ HEAD verb & [FORM #form],
+	     SPR #spr,
+	     COMPS #comps,
+	     GAP #gap ],
+       SEM [ MODE prop,
+	     INDEX #2 ] ] ].
+:end :instance.
+
+
+
+
+;;; The arg-st rules are used to implement the binding theory.
+
+:begin :instance.
+
+argument-realization-principle-rule-1 := word+arg_realization &
+[ SYN #syn,
+  SEM #sem,
+  ARG-ST < #spr . #comps >,
+
+  ARGS < word & [ SYN #syn & [ SPR < #spr >,
+			       COMPS #comps,
+			       GAP <! !>],
+		  SEM #sem,
+		  ARG-ST < #spr . #comps > ] > ].
+
+:end :instance.
+
+
+:begin :instance.
+
+argument-realization-principle-rule-2 := word+arg_realization &
+[ SYN #syn,
+  SEM #sem,
+  ARG-ST #comps,
+
+  ARGS < word & [ SYN #syn & [ SPR <  >,
+			       COMPS #comps,
+			       GAP <! !>],
+		  SEM #sem,
+		  ARG-ST #comps] > ].
+
+:end :instance.
+
+
+
+
+
+; ARG-ST non-branching rules.  Should be lexical rules, so that they don't display
+; in the parse-tree.  CC-B
+;
+
+:begin :instance.
+
+anaphoric-agreement-principle-e := word+arg_realization+ana_agreement &
+[ SYN #syn,
+  SEM #sem,
+  ARG-ST #arg-st & < >,
+
+  ARGS < word+arg_realization & [ SYN #syn,
+		     SEM #sem,
+		     ARG-ST #arg-st ] > ].
+
+:end :instance.
+
+
+:begin :instance.
+
+anaphoric-agreement-principle-x := word+arg_realization+ana_agreement &
+[ SYN #syn,
+  SEM #sem,
+  ARG-ST #arg-st & < [ ] >,
+
+  ARGS < word+arg_realization & [ SYN #syn,
+		     SEM #sem,
+		     ARG-ST #arg-st ] > ].
+
+:end :instance.
+
+
+
+:begin :instance.
+
+anaphoric-agreement-principle-x+ := word+arg_realization+ana_agreement &
+[ SYN #syn,
+  SEM #sem,
+  ARG-ST #arg-st & < [SYN [HEAD [AGR #agr]],
+		      SEM [INDEX #ind]],  [SYN [HEAD [ANA true,
+						      AGR #agr]],
+					   SEM [INDEX #ind]] >,
+
+  ARGS < word+arg_realization & [ SYN #syn,
+		     SEM #sem,
+		     ARG-ST #arg-st ] > ].
+
+:end :instance.
+
+
+
+:begin :instance.
+
+anaphoric-agreement-principle-x- := word+arg_realization+ana_agreement &
+[ SYN #syn,
+  SEM #sem,
+  ARG-ST #arg-st & < [ ],  [SYN [HEAD [ANA false]]] >,
+
+  ARGS < word+arg_realization & [ SYN #syn,
+		     SEM #sem,
+		     ARG-ST #arg-st ] > ].
+
+
+:end :instance.
+
+
+
+
+:begin :instance.
+
+anaphoric-agreement-principle-x-+ := word+arg_realization+ana_agreement &
+[ SYN #syn,
+  SEM #sem,
+  ARG-ST #arg-st & < [SYN [HEAD [AGR #agr]],
+		      SEM [INDEX #ind]],      [SYN [HEAD [ANA false]]],
+
+		     [SYN [HEAD [ANA true,
+				 AGR #agr]],
+		      SEM [INDEX #ind]] >,
+
+  ARGS < word+arg_realization & [ SYN #syn,
+		     SEM #sem,
+		     ARG-ST #arg-st ] > ].
+
+:end :instance.
+
+
+:begin :instance.
+
+anaphoric-agreement-principle-x+- := word+arg_realization+ana_agreement &
+[ SYN #syn,
+  SEM #sem,
+  ARG-ST #arg-st & < [SYN [HEAD [AGR #agr]],
+		      SEM [INDEX #ind]],      [SYN [HEAD [ANA true,
+							   AGR #agr]],
+					       SEM [INDEX #ind]],
+
+		     [SYN [HEAD [ANA false]]] >,
+
+  ARGS < word+arg_realization & [ SYN #syn,
+		     SEM #sem,
+		     ARG-ST #arg-st ] > ].
+
+:end :instance.
+
+
+
+
+:begin :instance.
+
+anaphoric-agreement-principle-x-- := word+arg_realization+ana_agreement &
+[ SYN #syn,
+  SEM #sem,
+  ARG-ST #arg-st & < [ ],  [SYN [HEAD [ANA false]]],
+
+		     [SYN [HEAD [ANA false]]] >,
+
+  ARGS < word+arg_realization & [ SYN #syn,
+		     SEM #sem,
+		     ARG-ST #arg-st ] > ].
+
+:end :instance.
+
+
+
+:begin :instance.
+
+anaphoric-agreement-principle-xi+ := word+arg_realization+ana_agreement &
+[ SYN #syn,
+  SEM #sem,
+  ARG-ST #arg-st & < [ ],  [SYN [HEAD [ANA false,
+				       AGR #agr]],
+			    SEM [INDEX #ind]],       [SYN [HEAD [ANA true,
+								 AGR #agr]],
+						      SEM [INDEX #ind]] >,
+
+  ARGS < word+arg_realization & [ SYN #syn,
+		     SEM #sem,
+		     ARG-ST #arg-st ] > ].
+
+:end :instance.
+
+
+
+:begin :instance.
+
+anaphoric-agreement-principle-x++ := word+arg_realization+ana_agreement &
+[ SYN #syn,
+  SEM #sem,
+  ARG-ST #arg-st & < [SYN [HEAD [AGR #agr]],
+		      SEM [INDEX #ind]],      [SYN [HEAD [ANA true,
+							   AGR #agr]],
+					       SEM [INDEX #ind]],
+
+		     [SYN [HEAD [ANA true,
+				 AGR #agr]],
+		      SEM [INDEX #ind]] >,
+
+  ARGS < word+arg_realization & [ SYN #syn,
+		     SEM #sem,
+		     ARG-ST #arg-st ] > ].
+
+:end :instance.
+
+
+
+
+
+

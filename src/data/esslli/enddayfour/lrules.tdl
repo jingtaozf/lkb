@@ -1,0 +1,70 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; 
+;;; ESSLLI 1998 Grammar Engineering Practicum - Grammar 4
+;;;  
+;;; lrules.tdl
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dative-shift := lrule-lexeme &
+ [ ORTH #orth,
+   SYN [ HEAD #head,
+         SPR #spr,
+         COMPS < #iobj, synsem-struc &
+                        [ SYN [ HEAD prep & [ FORM f_to ],
+                                COMPS < > ],
+                          SEM [ INDEX #index ] ] > ],
+   SEM #sem,
+   ARGS < lexeme & [ ORTH #orth,
+                     SYN [ HEAD #head,
+                           SPR #spr,
+                           COMPS < [ SYN [ HEAD noun ],
+                                     SEM [ INDEX #index ] ], 
+                                   #iobj & [ SYN [ HEAD noun ] ] > ],
+                     SEM #sem ] > ].
+
+passive := lrule-word &
+ [ ORTH #orth,
+   SYN [ HEAD verb & mod-type &
+              [ FORM pass,
+                PRED true,
+                MOD < [ SYN [ HEAD noun,
+                              SPR < [ ] >,
+                              COMPS < > ] ] > ],
+         SPR < [ SYN [ HEAD noun,
+                       SPR < >,
+                       COMPS < > ],
+                 SEM [ INDEX #objind ] ] >,
+         COMPS [ FIRST [ SYN [ HEAD prep & [ FORM f_by ] ],
+                         SEM [ INDEX #subjind ] ],
+                 REST #rest ] ],
+   SEM #sem,
+   ARGS < word & [ ORTH #orth,
+                   SYN [ HEAD verb & [ FORM psp ],
+                         SPR < [ SEM [ INDEX #subjind ] ] >,
+                         COMPS [ FIRST [ SYN [ HEAD noun ],
+                                         SEM [ INDEX #objind ] ],
+                                 REST #rest ] ],
+                   SEM #sem ] > ].
+
+pass-no-by := lrule-word &
+ [ ORTH #orth,
+   SYN [ HEAD verb & mod-type &
+              [ FORM pass,
+                PRED true,
+                MOD < [ SYN [ HEAD noun,
+                              SPR < [ ] >,
+                              COMPS < > ] ] > ],
+         SPR < [ SYN [ HEAD noun,
+                       SPR < >,
+                       COMPS < > ],
+                 SEM [ INDEX #objind ] ] >,
+         COMPS #rest ],
+   SEM #sem,
+   ARGS < word & [ ORTH #orth,
+                   SYN [ HEAD verb & [ FORM psp ],
+                         COMPS [ FIRST [ SYN [ HEAD noun ],
+                                         SEM [ INDEX #objind ] ],
+                                 REST #rest ] ],
+                   SEM #sem ] > ].
+

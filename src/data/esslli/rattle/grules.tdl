@@ -1,0 +1,14 @@
+hd-spec-rule := birule-hdfinal &
+ [ SYN [ SPR < >,
+         COMPS #comps ],
+   NH1 #nonhead, 
+   H [ SYN [ SPR < #nonhead >,
+             COMPS #comps & < > ] ] ].
+
+hd-comp-rule := birule-hdfirst & 
+ [ SYN [ SPR #spr,  
+	 COMPS < > ], 
+   H [ SYN [ SPR #spr,
+	     COMPS < #nonhead > ] ],
+   NH1 #nonhead & [ SYN [ COMPS < > ] ] ].
+

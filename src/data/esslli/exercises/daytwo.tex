@@ -1,0 +1,55 @@
+\documentclass[10pt]{article}
+\usepackage{a4}
+
+\pagestyle{empty}
+\parindent=0pt
+
+\begin{document}
+\begin{tabular}[t]{@{}l@{}}
+\textbf{Practical HPSG Grammar Engineering}\\
+ESSLLI 1998
+\end{tabular}
+\hfill
+\mbox{\fbox{\textbf{\textsf{\Huge Day Two}}}}
+
+\medskip
+\textbf{Goals:}
+\begin{itemize}
+\item Gain a better understanding of the interactions among constraints.
+\item Extend the coverage of the toy grammar by adding grammar rules.
+\item Learn to use the grammar debugging tools in the LKB.
+\end{itemize}
+
+\smallskip
+\textbf{Exercises:}
+\begin{itemize}
+\item[A.] Get your own copy of today's grammar, which is called
+``rattle'', and load it.
+\item[B.] Add the missing inflectional lexical rule to allow plural common nouns. 
+\begin{itemize}
+\item[1.] Open the file ``rattle/infl-rules.tdl'' and add the rule \textbf{pl-n-irule}, which will be similar to the singular noun rule and the rule for third-singular present tense verbs.
+\item[2.] Test the system by parsing the sentence \emph{Kim admired the books}.
+\end{itemize}
+\item[C.] Expand the lexicon and grammar to parse sentences with ditransitive verbs.
+\begin{itemize}
+\item[1.] Add the lexical type, lexical entry and semantic type for \emph{give}, which takes two complements.  Note that you only need to add the lexeme (the stem form) of the verb, since inflection is now done on the fly.
+\item[2.] Add a grammar rule in the file ``grules.tdl'' which is like the \textsf{hd-comp-rule}, but with two complements instead of one. You will need to examine the ``types.tdl'' file to determine the appropriate type for this new rule to inherit from.
+\item[3.] Test the system by parsing the sentence \emph{Kim gives Sandy the book}.
+\item[4.] Add some test examples (grammatical and ungrammatical) to the
+file ``test.items''  and do a batch parse to check the accuracy of your implementation.
+\end{itemize}
+\item[D.] Extend the lexicon and grammar by adding prepositional phrase modifiers.
+\begin{itemize}
+\item[1.] In the file ``types.tdl'' add a lexical type for prepositions.  Be sure to consider whether the type you add is a \textbf{lexeme} which must undergo inflection, or a \textbf{word} which does not inflect.  Use the \textbf{prep} subtype of the part-of-speech (\textbf{pos}) type, and be sure to supply a constraint on the \textsc{mod} attribute for prepositions. 
+\item[2.] In the file ``lexicon.tdl'' add a lexical entry for the preposition \emph{in}.
+\item[3.] In the file ``grules.tdl'' add a grammar rule \textbf{hd-mod-rule} with the modifier as the non-head daughter.
+\item[4.] Test the system by parsing the sentence \emph{Kim sleeps in the park}.
+\item[5.] If the sentence parses successfully, then go on to the next step; otherwise, continue to revise the grammar until it can parse this example.
+\item[6.] Add some test examples to the file ``test.items'' and do a batch parse to test the system.
+\item[7.] Send a copy of your results to the instructors, by executing the
+following command at the Unix prompt:
+\par\texttt{submit rattle/test.results}
+\end{itemize}
+
+\end{itemize}
+\end{document}

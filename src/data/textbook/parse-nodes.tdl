@@ -1,0 +1,85 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; 
+;;; Linguistics 137: CL Practicum, Winter 1998
+;;;  
+;;; parse-nodes.tdl
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+:begin :instance.
+
+slash := meta &
+  [ SYN [ GAP [ LIST ne-list ] ],
+    META-PREFIX "/",
+    META-SUFFIX "" ].
+
+s1 := label &
+  [ SYN [ HEAD verb,
+	  SPR < >,
+	  COMPS < > ],
+    LABEL-NAME "S" ].
+
+np :=  label &
+  [ SYN [ HEAD noun,
+	  SPR < > ],
+    LABEL-NAME "NP" ].
+
+n := label &
+  [ SYN [ HEAD noun,
+	  SPR < [ ] > ],
+    LABEL-NAME "N" ].
+
+vp :=  label &
+   [ SYN [ HEAD verb,
+	   SPR < [ ] >,
+	   COMPS < > ],
+     LABEL-NAME "VP" ].
+
+;;; AAC - fixed COMPS placement below
+
+v := label &
+  [ SYN [ HEAD verb ,
+          COMPS < [ ] >],
+    LABEL-NAME "V" ].
+
+v1 := label &
+  [ SYN [ HEAD verb ,
+          COMPS < [ ], [ ] >],
+    LABEL-NAME "V" ].
+
+v2 := label &
+  [ SYN [ HEAD verb ,
+          COMPS < [ ], [ ], [ ] >],
+    LABEL-NAME "V" ].
+
+det := label &
+  [ SYN [ HEAD det ],
+    LABEL-NAME "DET" ].
+
+pp :=  label &
+  [ SYN [ HEAD prep,
+	  COMPS < > ],
+    LABEL-NAME "PP" ].
+
+p := label &
+  [ SYN [ HEAD prep,
+	  COMPS < [ ] > ],
+    LABEL-NAME "P" ].
+
+adv := label &
+  [ SYN [ HEAD adv ],
+    LABEL-NAME "ADV" ].
+
+adj := label &
+  [ SYN [ HEAD adj ],
+    LABEL-NAME "ADJ" ].
+
+comp := label &
+  [ SYN [ HEAD comp ],
+    LABEL-NAME "COMP" ].
+
+conj := label &
+  [ SYN [ HEAD conj ],
+    LABEL-NAME "CONJ" ].
+
+:end :instance.

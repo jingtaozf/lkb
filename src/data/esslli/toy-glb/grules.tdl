@@ -1,0 +1,14 @@
+head-specifier-rule := birule-headfinal &
+ [ SYN [ SPR < >,
+         COMPS #comps ],
+   NH1 #nonhead, 
+   H [ SYN [ SPR < #nonhead >,
+             COMPS #comps & < > ] ] ].
+
+head-complement-rule := birule-headfirst & 
+ [ SYN [ SPR #spr,  
+	 COMPS < > ], 
+   H [ SYN [ SPR #spr,
+	     COMPS < #nonhead > ] ],
+   NH1 #nonhead & [ SYN [ COMPS < > ] ] ].
+

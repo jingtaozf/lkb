@@ -1,0 +1,143 @@
+\documentclass[10pt]{article}
+\usepackage{a4wide}
+
+\pagestyle{empty}
+\parindent=0pt
+
+\begin{document}
+\begin{tabular}[t]{@{}l@{}}
+\textbf{Practical HPSG Grammar Engineering}\\
+ESSLLI 1998
+\end{tabular}
+\hfill
+\mbox{\fbox{\textbf{\textsf{\Huge Day One}}}}
+
+\medskip
+\textbf{Goals:}
+\begin{itemize}
+\item Become familiar with the LKB grammar development platform.
+\item Learn to extend the English grammar by adding lexical types and entries.
+\end{itemize}
+
+\smallskip
+\textbf{Exercises:}
+\begin{itemize}
+\item[A.] Install your own copy of Version 1 of the toy grammar, and bring up
+the LKB:
+\begin{itemize}
+\item[1.] Login using the server {\it top} instead of the usual ESSLLI machine
+{\it head}.
+\item[2.] In the xterm window, at the Unix prompt, right after logging in:
+\par\texttt{cvs checkout toy <Return>}
+\item[3.] In the Emacs window:
+\par\texttt{<Esc> x lkb}
+\item[4.] Load the grammar by clicking the \textsf{Load grammar} button in the 
+``Lkb Top'' window, then double-clicking on the directory ``toy'' and on the
+file ``script''.  Reassuring messages will appear in the ``Lkb Top'' window,
+and a window will pop up showing you the type hierarchy for this small
+grammar.
+\end{itemize}
+\item[B.] Test the system by parsing the sentence \emph{Kim sleeps}:
+\begin{itemize}
+\item[1.] With the mouse in the ``Lkb Top'' window, click on the button
+\textsf{Parse}. 
+\item[2.] Click on the menu item \textsf{Parse input\ldots}.
+\item[3.] With the mouse in the pop-up ``Sentence'' window, click on the
+button \textsf{OK}.
+\end{itemize}
+The system will parse the sentence and pop up a window containing the parse
+tree for the single analysis of this sentence.
+\item[C.] Add a lexical entry for your own name:
+\begin{itemize}
+\item[1.] In the Emacs window, open the file ``lexicon.tdl'' for editing:
+(note that ``\texttt{<Con\-trol-x>}'' here means you hold down the
+\texttt{<Control>} key while you press the \texttt{x} key)
+\par\texttt{<Control-x> <Control-f> toy/lexicon.tdl}
+\item[2.] In the lexicon.tdl buffer that you get, copy the three lines that
+define the lexical entry for \textbf{kim\_1} and modify your copy to make the
+value of \textsc{orth} and the value of \textsc{name} match your own name.
+(If you have not used the Emacs editor before, ask an instructor or one of
+your neighbors for assistance.)
+\item[3.] Save the changed version of the file:
+\par\texttt{<Control-x> <Control-s>}
+\end{itemize}
+\item[D.] Reload the grammar and test the effect of your addition:
+\begin{itemize}
+\item[1.] In the ``Lkb Top'' window, click on the button \textsf{Load
+grammar\ldots} and reload the ``script'' file.
+\item[2.] Parse the sentence \emph{Kim likes
+$\langle\mbox{your-name}\rangle$,} by clicking on the \textsf{Parse}
+button as before, placing the mouse in the ``Sentence'' window,
+erasing the existing sentence, and entering the new sentence, then
+clicking on \textsf{OK}.
+\end{itemize}
+\item[E.] Add the transitive verb \emph{admires} to the lexicon:
+\begin{itemize}
+\item[1.] Add the type of the semantic relation for the verb:
+\begin{itemize}
+\item Open the file ``types.tdl'', and go to the end of the file, where you
+will see the definition of the relation \textsf{r\_sleep} used in the definition of
+the verb \emph{sleeps.} 
+\item Add a similar definition for \textsf{r\_admire}.
+\end{itemize}
+\item[2.] Add the lexical entry for \emph{admires} in the file ``lexicon.tdl''
+similar to the entry for \emph{likes.}
+\end{itemize}
+\item[F.]
+ Reload the grammar and test the effect of your additions:
+\begin{itemize}
+\item[1.] First make sure you can parse the sentence \emph{Kim admires Sandy.}
+\item[2.] Then add some additional test sentences, both grammatical and 
+ungrammatical, to the file ``test.items'', which test the correctness of your
+new verb entry.
+\item[3.] Call the sentence batch processing utility:
+\begin{itemize}
+\item In the ``Lkb Top'' window, click on the button \textsf{Parse} and
+then on the menu item \textsf{Batch parse\ldots}, which will pop up a window
+asking you for the file to be processed.
+\item Click on the file ``test.items'' in your grammar directory. then hit
+the button \textsf{OK}.  This will pop up a new window asking you for the name
+of the file where the results of the batch run will be stored.
+\item Enter the name ``test.results'' and hit the \textsf{OK} button.
+The system will print the message \texttt{Parsing test file} in the ``Lkb
+Top'' window when it starts, and will print the message \texttt{Finished test
+file} when it is done.
+\item Open the file ``test.results'' and inspect the parsing results.
+\end{itemize}
+\end{itemize}
+\item[G.] Add the types and lexical entries needed for determiner-noun phrases:
+\begin{itemize}
+\item[1.] In the file ``types.tdl'', look at the type definitions for \textsf{pn-lxm} and \textsf{tv-lxm}, then add two new types: 
+\begin{itemize}
+\item one called \textsf{cn-lxm} for common nouns, which have a
+ non-empty \textsc{spr} value whose \textsc{head} is of type
+\textsf{det}.
+\item one called \textsf{det-lxm} for determiners, with \textsc{head} value \textsf{det} (where the grammar already helpfully has the type \textsf{det}
+defined as a subtype of \textsc{pos}).
+\end{itemize}
+\item[2.] In the same file, at the end of the file, add two new subtypes of
+\textsf{reln} for the semantic relations needed in the lexical entries for 
+\emph{the} and \emph{book}:
+\begin{itemize}
+\item one called \textsf{r\_book} 
+\item one called \textsf{r\_the}
+\end{itemize}
+\item[3.] In the file ``lexicon.tdl'' add two new lexical entries:
+\begin{itemize}
+\item one called \textsf{the\_1} of type \textsf{det-lxm}
+\item one called \textsf{book\_1} of type \textsf{cn-lxm} 
+\end{itemize}
+\item[4.] Reload the grammar, and test your additions by parsing the sentence
+\emph{Kim likes the book}  If it parses correctly then go on to the
+next step.  Otherwise, correct your revisions, and test again. 
+\item[5.] Add several test items, both grammatical and ungrammatical,
+to the file ``test.items'' which will allow you to check the
+correctness of your additions to the grammar.   
+\item[6.] Run the batch parsing utility again on the file ``test.items'', and
+examine the results.
+\item[7.] Send a copy of your results to the instructors, by executing the
+following command at the Unix prompt:
+\par\texttt{submit toy/test.results}
+\item[8.] Celebrate as appropriate.
+ \end{itemize}\end{itemize}
+\end{document}

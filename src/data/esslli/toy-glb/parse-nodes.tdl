@@ -1,0 +1,58 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; 
+;;; Linguistics 137: CL Practicum, Winter 1998
+;;;  
+;;; parse-nodes.tdl
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+s1 := label &
+ [ SYN [ HEAD verb,
+         SPR < >,
+         COMPS < > ],
+   LABEL-NAME "S" ].
+
+np :=  label &
+ [ SYN [ HEAD noun,
+         SPR < > ],
+   LABEL-NAME "NP" ].
+
+n := label &
+ [ SYN [ HEAD noun,
+         SPR < [ ] > ],
+   LABEL-NAME "N" ].
+
+detp := label &
+ [ SYN [ HEAD det ],
+   LABEL-NAME "DET" ].
+
+p := label &
+ [ SYN [ HEAD prep,
+         COMPS < [ ] > ],
+   LABEL-NAME "P" ].
+
+pp := label &
+ [ SYN [ HEAD prep,
+         COMPS < > ],
+   LABEL-NAME "PP" ].
+
+vp :=  label &
+ [ SYN [ HEAD verb,
+         SPR < [ ] >,
+         COMPS < > ],
+   LABEL-NAME "VP" ].
+
+v := label &
+ [ SYN [ HEAD verb ,
+         COMPS < [ ] >],
+   LABEL-NAME "V" ].
+
+v1 := label &
+ [ SYN [ HEAD verb ,
+         COMPS < [ ], [ ] >],
+   LABEL-NAME "V" ].
+
+v2 := label &
+ [ SYN [ HEAD verb ,
+         COMPS < [ ], [ ], [ ] >],
+   LABEL-NAME "V" ].

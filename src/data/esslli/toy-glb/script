@@ -1,0 +1,15 @@
+(lkb-load-lisp (this-directory) "globals.lsp")
+(lkb-load-lisp (this-directory) "user-fns.lsp")
+(read-tdl-type-files-aux
+     (list (lkb-pathname (this-directory) "types.tdl")))
+(read-tdl-lex-file-aux 
+     (lkb-pathname (this-directory) "lexicon.tdl"))
+(read-tdl-grammar-file-aux 
+     (lkb-pathname (this-directory) "grules.tdl"))
+(read-tdl-psort-file-aux 
+          (lkb-pathname (this-directory) "roots.tdl"))
+(read-tdl-parse-node-file-aux 
+          (lkb-pathname (this-directory) "parse-nodes.tdl"))
+
+
+

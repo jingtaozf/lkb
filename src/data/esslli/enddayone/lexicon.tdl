@@ -1,0 +1,31 @@
+kim_1 := pn-lxm & 
+ [ ORTH <! "kim" !>,
+   SEM [ RESTR <! [ NAME 'Kim ] !> ] ].
+
+sandy_1 := pn-lxm & 
+ [ ORTH <! "sandy" !>,
+   SEM [ RESTR <! [ NAME 'Sandy ] !> ] ].
+
+sleeps_1 := iv-infl-3sg &
+ [ ORTH <! "sleeps" !>,
+   SEM  [ RESTR <! [ RELN r_sleep] !> ] ].
+
+likes_1 := tv-infl-3sg &
+ [ ORTH <! "likes" !>,
+   SEM  [ RESTR <! [ RELN r_like ] !> ] ].
+
+dan_1 := pn-lxm & 
+ [ ORTH <! "dan" !>,
+   SEM [ RESTR <! [ NAME 'Dan ] !> ] ].
+
+admires_1 := tv-infl-3sg &
+ [ ORTH <! "admires" !>,
+   SEM  [ RESTR <! [ RELN r_admire ] !> ] ].
+
+the_1 := det-lxm &
+ [ ORTH <! "the" !>,
+   SEM  [ RESTR <! [ RELN r_the ] !> ] ].
+
+book_1 := cn-lxm &
+ [ ORTH <! "book" !>,
+   SEM  [ RESTR <! [ RELN r_book ] !> ] ].
