@@ -432,7 +432,7 @@
            (purge
             (let* ((action (third arguments)))
               (apply #'purge-test-run arguments)
-              (when (member action '(:purge :trees :score) :test #'eq)
+              (when (member action '(:purge :tree :score) :test #'eq)
                 (send-to-podium "tsdb_update selection" :wait t))))
            
            (relations
