@@ -1,5 +1,9 @@
+CREATE TABLE erg_version (
+  version_str VARCHAR(50)
+);
+INSERT INTO erg_version VALUES ('1.1');
+
 CREATE TABLE erg (
-  id INTEGER,
   name VARCHAR(95),
   type VARCHAR(95),
   orthography VARCHAR(200),
@@ -16,7 +20,6 @@ CREATE TABLE erg (
   preferences VARCHAR(200),
   classifier VARCHAR(25),
   selectrest VARCHAR(50),
-  jlink VARCHAR(50),
   comments VARCHAR(255),
   exemplars VARCHAR(50),
   usages VARCHAR(50),
@@ -26,44 +29,18 @@ CREATE TABLE erg (
   domains VARCHAR(15),
   genres VARCHAR(25),
   register VARCHAR(50),
-  confidence VARCHAR(50),
-  userid VARCHAR(25),
-  moddate DATE,
+  confidence real,
   version INTEGER DEFAULT 0,
   source VARCHAR(50),
   flags INTEGER DEFAULT 0 NOT NULL,
+  userid VARCHAR(25) DEFAULT user,
+  id SERIAL UNIQUE,
+  modstamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 PRIMARY KEY (name,version)
 );
 
-CREATE INDEX id
-ON erg (id); 
-
-CREATE INDEX altkey
-ON erg (altkey); 
-
-CREATE INDEX alt2key
-ON erg (alt2key); 
-
-CREATE INDEX compkey
-ON erg (compkey); 
-
-CREATE INDEX keyrel
-ON erg (keyrel); 
-
-CREATE INDEX keytag
-ON erg (keytag); 
-
-CREATE INDEX name
-ON erg (name); 
-
-CREATE INDEX ocompkey
-ON erg (ocompkey); 
-
-CREATE INDEX orthography
-ON erg (orthography); 
-
-CREATE UNIQUE INDEX primarykey
-ON erg (name,version); 
+CREATE INDEX orthkey
+ON erg (orthkey); 
 
 CREATE TABLE ergd (
   slot VARCHAR(50),
@@ -106,8 +83,7 @@ PRIMARY KEY (fn)
 INSERT INTO ergq VALUES ( 'orthography-set', 0, 'SELECT DISTINCT orthography FROM ((SELECT name, version, orthography FROM erg) AS tmp1 JOIN (SELECT name, max(version) AS version FROM erg GROUP BY name) AS tmp2 USING (name, version))' );
 INSERT INTO ergq VALUES ( 'psort-id-set', 0, 'SELECT DISTINCT name FROM erg');
 INSERT INTO ergq VALUES ( 'lookup-word', 1, 'SELECT name FROM ((SELECT name, version FROM erg WHERE orthkey=$0) AS tmp1 JOIN (SELECT name, max(version) AS version FROM erg GROUP BY name) AS tmp2 USING (name, version))' );
-INSERT INTO ergq VALUES ( 'next-version', 1, 'SELECT 1 + max(version) FROM erg WHERE name = $0');
-INSERT INTO ergq VALUES ( 'next-id', 0, 'SELECT 1 + max(id) FROM erg');
+INSERT INTO ergq VALUES ( 'next-version', 1, 'SELECT COALESCE(1 + max(version),0) FROM erg WHERE name = $0');
 INSERT INTO ergq VALUES ( 'retrieve-entries', 2, 'SELECT $0 FROM ((SELECT version, $0 FROM erg WHERE orthkey=$1) AS tmp JOIN (SELECT name, max(version) AS version FROM erg GROUP BY name) AS tmp2 USING (name,version))' );
 INSERT INTO ergq VALUES ( 'retrieve-entry', 2, 'SELECT $0 FROM erg WHERE (name,version) = ($1, (SELECT max(version) FROM erg WHERE name=$1))' );
 INSERT INTO ergq VALUES ( 'test', 1, '$0' );
@@ -126,4 +102,3 @@ INSERT INTO ergqa VALUES ( 'retrieve-entries', 1, 'text' );
 INSERT INTO ergqa VALUES ( 'retrieve-entry', 0, 'select-list' );
 INSERT INTO ergqa VALUES ( 'retrieve-entry', 1, 'text' );
 INSERT INTO ergqa VALUES ( 'test', 0, 'select-list' );
-

@@ -6,6 +6,9 @@
 ;;; export TDL lexicon for (Access or) Postgres import.
 ;;;
 
+;;; bmw (jul-03)
+;;; - defaults, fixed bugs in export-lexicon-to-file
+
 ;;; bmw (jun-03)
 ;;; - direct export to postgres
 
@@ -17,9 +20,10 @@
 (defvar *export-output-file* "/tmp/lexicon.txt")
 (defvar *export-skip-file* "/tmp/lexicon.skip")
 (defvar *export-separator* #\,)
+(defvar *export-counter* 0)
+(defvar *export-timestamp* nil)
 
 (defvar *export-output-lexicon* nil)
-(defvar *export-counter* 0)
 (defvar common-lisp-user::*grammar-version*)
 
 
@@ -39,7 +43,7 @@
    (t
     (export-lexicon-to-db
      :output-lexicon output-lexicon)
-    (reload-script-file) ;: fix_me: problems is we don't do this...
+    (reload-script-file) ;: fix_me
     )))
   
 (defun export-lexicon-to-file (&key (output-file *export-output-file*) 
@@ -50,6 +54,16 @@
   (setf *export-separator* separator)
   (setf *export-output-file* output-file)
   (setf *export-skip-file* skip)
+  (setf *current-source* common-lisp-user::*grammar-version*)
+  (setf *export-timestamp* (extract-date-from-source *current-source*))
+  (unless *current-lang* 
+    (setf *current-lang* (ask-user-for-x "Export Lexicon" 
+					 (cons "Language code?" "EN"))))
+  (unless *current-country* 
+    (setf *current-country* (ask-user-for-x "Export Lexicon" 
+					    (cons "Country code?" "US"))))
+  (setf *current-user* (ask-user-for-x "Export Lexicon" 
+				       (cons "Username?" "guest")))
   (with-open-file (stream *export-output-file* :direction :output 
                    :if-exists :supersede :if-does-not-exist :create))
   (with-open-file (stream *export-skip-file* :direction :output 
@@ -62,27 +76,24 @@
 			   (list promptDcons))))
 
  ;;; implemented for postgres
-(defun export-lexicon-to-db (&key 
-			     (output-lexicon *export-output-lexicon*) 
-			     )
+(defun export-lexicon-to-db (&key (output-lexicon *export-output-lexicon*))
   (setf *export-to* 'db)
-  
   (setf *current-source* common-lisp-user::*grammar-version*)
-  (unless *current-user* 
-    (setf *current-user* (ask-user-for-x "Export Lexicon" 
-					 (cons "Userid?" "danf"))))
+  (setf *export-timestamp* (extract-date-from-source *current-source*))
   (unless *current-lang* 
     (setf *current-lang* (ask-user-for-x "Export Lexicon" 
 					 (cons "Language code?" "EN"))))
   (unless *current-country* 
     (setf *current-country* (ask-user-for-x "Export Lexicon" 
 					    (cons "Country code?" "US"))))
+  (setf *current-user* (ask-user-for-x "Export Lexicon" 
+				       (cons "Username?" "guest")))
   (setf *export-output-lexicon* output-lexicon)
-  (unless (and *export-output-lexicon* (connection *export-output-lexicon*))
-    (setf *export-output-lexicon* (initialize-psql-lexicon)))
-  (setf *export-counter* (next-id *export-output-lexicon*))
   (let ((*export-lexicon-p* t))
-    (reload-lex-files :allp nil))) ;: hack: fix_me
+    (reload-lex-files :allp nil)
+    ;(db-commit *export-output-lexicon*)
+    (setf *export-timestamp* nil)
+    ))					;: hack: fix_me
 
 ;;; a switch
 (defun export-lexical-entry (name constraint)
@@ -94,18 +105,19 @@
 
 ;bmw
 (defun export-lexical-entry-to-db (name constraint)
-  (format *trace-output* "~%~a ~a" *export-counter* name)
   (unless (and *export-output-lexicon* (connection *export-output-lexicon*))
-    (setf *export-output-lexicon* (initialize-psql-lexicon)))
-  (set-lexical-entry *export-output-lexicon* nil name constraint)
-  (incf *export-counter*))
+    (setf *export-output-lexicon* (initialize-psql-lexicon))
+    ;(db-begin *export-output-lexicon*)
+    )
+  (format *trace-output* "~%~a" name)
+  (set-lexical-entry *export-output-lexicon* nil name constraint))
 
 ;oe
 (defun export-lexical-entry-to-file (name constraint)
   (with-open-file (stream *export-output-file*
                    :direction :output 
                    :if-does-not-exist :create :if-exists :append)
-    (let* ((separator *export-separator*)
+    (let* ((separator (format nil "~a" *export-separator*))
            (type (extract-type-from-unifications constraint))
            (temp (extract-stem-from-unifications constraint))
            (stem (cdr temp))
@@ -121,59 +133,50 @@
                      (if alt2key 1 0) (if compkey 1 0) (if ocompkey 1 0))))
       (cond 
        ((= total (length constraint))
-        ;;print the lexID and type fields to a file,
-        ;;along with the first word of the stem
-        (format 
-         stream
-         "~d~a~(~a~)~a~(~a~)~a~a"
-         (incf *export-counter*) 
-         separator name separator type separator (first stem))
-        ;;print the rest of the stem to the file
-        (loop
-            for word in (rest stem)
-            do (format stream " ~a" word))
-        ;;print the other fields
-        (format
-         stream
-         "~a~a~a~a~(~a~)~(~a~)~a~(~a~)~a~(~a~)~a~(~a~)~a~(~a~)~
-          ~a~a~a~a~a~a~a~a~a~a~a~a~a~a~a~a~a~a~a~a~a~a~a~a~a~a~a~a"
-         separator (first (last stem))
-         separator  ;;pronunciation
-         separator (or keyrel "")
-         separator (or altkey "")
-         separator (or alt2key "")
-         separator (or keytag "")
-         separator (or compkey "")
-         separator (or ocompkey "")
-         separator ;;complete
-         separator ;;semclasses
-         separator ;;preferences
-         separator ;;classifier
-         separator ;;selectrest
-         separator ;;jlink
-         separator ;;comments
-         separator ;;exemplars
-         separator ;;usages
-         separator "EN" ;;lang
-         separator "US" ;;country
-         separator ;;dialect
-         separator ;;domains
-         separator ;;genres
-         separator ;;register
-         separator ;;confidence
-         separator "danf" ;;user
-         separator "03/27/02" ;;moddate
-         separator 0 ;;version
-         separator "LinGO" ;;source
-         separator 1 ;;flags: 1 = not deleted
-         )
-        (format stream "~%")
-        t)
+	(format stream "~a~%"
+	  (concatenate 'string
+	    (string-downcase name) 
+	    separator (string-downcase type) 
+	    separator (string-downcase (str-list-2-str stem)) ;:todo: comma in word?
+	    separator (string-downcase (first stem))
+	    separator  ;;pronunciation
+	    separator (string-downcase (or keyrel ""))
+	    separator (string-downcase (or altkey ""))
+	    separator (string-downcase (or alt2key ""))
+	    separator (string-downcase (or keytag ""))
+	    separator (string-downcase (or compkey ""))
+	    separator (string-downcase (or ocompkey ""))
+	    separator ;;complete
+	    separator ;;semclasses
+	    separator ;;preferences
+	    separator ;;classifier
+	    separator ;;selectrest
+	    separator ;;comments
+	    separator ;;exemplars
+	    separator ;;usages
+	    separator (or *current-lang* "") ;;lang
+	    separator (or *current-country* "US") ;;country
+	    separator ;;dialect
+	    separator ;;domains
+	    separator ;;genres
+	    separator ;;register
+	    separator "1";;confidence
+	    separator "0" ;;version
+	    separator (or *current-source* "?") ;;source
+	    separator "1" ;;flags: 1 = not deleted
+	    separator *current-user* ;;userid
+	    separator (num-2-str *export-counter*) ;;id
+	    separator (or *export-timestamp* "") ;;modstamp
+	    )
+        t))
        (t
         (format t"~%skipping super-rich entry: `~a'~%"  name)
-        nil)))))
+        nil))))
+  (incf *export-counter*))
 
-
+(defun extract-date-from-source (source)
+  (subseq source (1+ (position #\( source :test #'equal)) (position #\) source :test #'equal)))
+				
 (defun skip-lexical-entry (istream position)
   (with-open-file (ostream *export-skip-file* 
                    :direction :output
