@@ -115,11 +115,13 @@
    (edge-id instance)
    (let ((rule (edge-rule instance)))
      (if rule 
-       (if (stringp rule) rule (rule-id rule)) 
+       (typecase rule
+         (string rule)
+         (rule (rule-id rule)))
        (edge-category instance)))
    (loop 
        for child in (edge-children instance)
-       collect (edge-id child))))
+       collect (if (edge-p child) (edge-id child) "_"))))
 
 (defstruct
    (mrecord
@@ -137,8 +139,12 @@
 (defvar *edge-id* 0)
 (declaim (type fixnum *edge-id*))
 
-(defun next-edge nil
-  (when (> *edge-id* *maximum-number-of-edges*)
+(defparameter %edge-allowance% 0)
+
+(defun next-edge (&optional type)
+  #+:null
+  (when (eq type :unpack) (incf %edge-allowance%))
+  (when (> *edge-id* (+ *maximum-number-of-edges* %edge-allowance%))
     (error "~%Probable runaway rule: parse/generate aborted 
              (see documentation of *maximum-number-of-edges*)"))
   (incf *edge-id*))
@@ -293,6 +299,7 @@
    (fill *morphs* nil)
    (setf *morph-records* nil)
    (setf *edge-id* 0)
+   (setf %edge-allowance% 0)
    (when *active-parsing-p* (clear-achart)))
 
 ;;; Entry point to this group of functions is parse which is passed the

@@ -208,10 +208,11 @@
   ;; preset discriminants from recorded decisions or gold decisions (during an
   ;; update); record `gold' discriminants that are no longer pertinent.
   ;;
-  (setf (compare-frame-lead frame)
-    (preset-discriminants 
-     (compare-frame-discriminants frame) 
-     (compare-frame-preset frame) (compare-frame-gold frame)))
+  (unless (compare-frame-exact frame)
+    (setf (compare-frame-lead frame)
+      (preset-discriminants 
+       (compare-frame-discriminants frame) 
+       (compare-frame-preset frame) (compare-frame-gold frame))))
 
   #+:allegro
   (when runp
@@ -235,6 +236,18 @@
 
   (setf (compare-frame-edges frame) edges)
   (recompute-in-and-out frame t)
+
+  ;;
+  ;; when running in `exact match' update mode, adjust discriminants and most
+  ;; everything else to zoom in on the matching derivation, if any
+  ;;
+  (when (compare-frame-exact frame)
+    (setf (compare-frame-lead frame) nil)
+    (update-discriminants 
+     (compare-frame-discriminants frame)
+     (compare-frame-exact frame) t)
+    (recompute-in-and-out frame))
+
 
   ;;
   ;; extract some quantitative summary measures on update procedure; entirely
@@ -334,6 +347,7 @@
    (trees :initform nil :accessor compare-frame-trees)
    (otrees :initform nil :accessor compare-frame-otrees)
    (preset :initform nil :accessor compare-frame-preset)
+   (exact :initform nil :accessor compare-frame-exact)
    (gold :initform nil :accessor compare-frame-gold)
    (lead :initform nil :accessor compare-frame-lead)
    (mode :initform *tree-discriminants-mode* :accessor compare-frame-mode)
@@ -640,6 +654,7 @@
                                :center-nodes nil)))))
                       (terpri stream)))))))
       (when (and *tree-display-semantics-p*
+                 (compare-frame-trees frame)
                  (null (rest (compare-frame-trees frame))))
         (let* ((extract (when (find-package :mrs)
                           (find-symbol "EXTRACT-MRS" :mrs)))

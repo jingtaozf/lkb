@@ -18,7 +18,12 @@
 
 (defun find-discriminants (edges &key (mode *tree-discriminants-mode*))
   
-  (let* ((n (if (edge-p (first edges)) (+ (edge-to (first edges)) 1) 0))
+  (let* ((n (if (edge-p (first edges)) 
+              (+ (loop
+                     for edge in edges
+                     maximize (edge-to edge))
+                 1)
+              0))
          (*tree-discriminants-chart* (make-array (list n n)))
          %discriminants%)
     (declare (special %discriminants%))

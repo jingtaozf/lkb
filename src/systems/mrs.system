@@ -85,16 +85,6 @@
        (:file "lkb-mcl-mrs")))          ; display etc in MCL
      
      #+:lkb
-     (:module "generator"
-      :source-pathname "mrs"
-      :binary-pathname "mrs"
-      :components
-      ((:file "generate")               ; chart generator (requires mrs)
-       (:file "spell")                  ; for a/an
-       (:file "genbatch")
-       (:file "mrstoplevel")))      
-     
-     #+:lkb
      (:module "generator-morph"
       :source-pathname "mrs"
       :binary-pathname "mrs"
@@ -104,7 +94,18 @@
                                         ; entries etc on semantics
        (:file "lexlookup")              ; LKB specific - retrieving
        (:file "genpredict")))           ; LKB specific - null semantics
+
+     #+:lkb
+     (:module "generator"
+      :source-pathname "mrs"
+      :binary-pathname "mrs"
+      :components
+      ((:file "generate")               ; chart generator (requires mrs)
+       (:file "spell")                  ; for a/an
+       (:file "genbatch")
+       (:file "mrstoplevel")))      
      
+
      #+:nil
 ;;; need to uncomment stuff in lexinput.lsp
 ;;; for this to work
