@@ -13,12 +13,14 @@
     #+:allegro (setf excl:*enable-package-locked-errors* nil)
     #-:allegro nil
     :finally-do
-    (progn
+    #-tty
+      (progn
       #+:allegro 
       (let ((*package* (find-package "CLIM-USER")))
 	(clim-user::set-up-lkb-interaction :big))
       #+:mcl
       (cl-user::set-up-lkb-interaction :big))
+    #+tty nil
     :components
     ((:module "initialization"
               :source-pathname "main"
@@ -30,7 +32,7 @@
   ;; variables for grammar parameterization
   ;; mostly user-settable, usually reset by a globals file associated
   ;; with a particular grammar and loaded by the script file
-     (:module "general graphics utilities"
+     #-:tty(:module "general graphics utilities"
               :source-pathname *lisp-specific-directory*
 	      :binary-pathname *lisp-specific-directory*
 	      :components
@@ -66,11 +68,11 @@
               :source-pathname "io-general"
 	      :binary-pathname "io-general"
 	      :components
-	      ((:file "menus")      ; top level menus for varying 
-                                    ; configurations
+	      (#-tty(:file "menus")      ; top level menus for varying 
+                                         ; configurations
                (:file "outputfs")   ; feature structure display
                (:file "outputtdfs") ; default fs display
-	       (:file "toplevel"))) ; top level menu commands
+	       #-:tty(:file "toplevel"))) ; top level menu commands
      (:module "path notation input"        ; original LKB notation
               :source-pathname "io-paths"  ; toplevel fns also used
 	      :binary-pathname "io-paths"  ; by TDL files (below)
@@ -87,12 +89,11 @@
                (:file "tdloutput")     ; output in TDL notation
                (:file "tdlruleinput")
                (:file "tdllexinput")))
-     (:module "Lisp specific graphics"
+     #-:tty(:module "Lisp specific graphics"
               :source-pathname *lisp-specific-directory*
 	      :binary-pathname *lisp-specific-directory*
 	      :components
 	      (#+:allegro (:file "graph")   ; uses Allegro graph drawing
-               #+:allegro (:file "emacs")   ; recording source positions
                #+:mcl (:file "picwin")      ; low level 
                #+:mcl (:file "picfield")    ; low level
 	       (:file "activefs")           ; display FS in window
@@ -101,6 +102,11 @@
                (:file "listout")            ; `active' lists
                (:file "tree")               ; type hierarchy
                #+:allegro (:file "compare"))) ; comparing parses
+     #+:allegro(:module "emacs-interface"              
+                :source-pathname *lisp-specific-directory*
+	        :binary-pathname *lisp-specific-directory*
+	        :components
+               ((:file "emacs")))   ; recording source positions
      (:module "non-Lisp specific graphics"
               :source-pathname "io-general"
 	      :binary-pathname "io-general"
@@ -110,15 +116,22 @@
                                             ; in parse/generate chart
                                             ; and tree drawing code         
 	       (:file "utils")              ; miscellany
-        #+:mcl (:file "graph")))            ; JAC's graph package
+        #+(and :mcl (not :tty))
+               (:file "graph")))            ; JAC's graph package
      (:module "user utility functions"
               :source-pathname "main"
 	      :binary-pathname "main"
 	      :components
 	      ((:file "lkb-tsdb")           ; connection to tsdb
 	       (:file "batch-check")        ; batch check lexicon
-               (:file "debug")))))          ; rudimentary debugging
+               (:file "debug")))            ; rudimentary debugging
                                             ; for errors in type file
+     #+tty
+     (:module "tty commands"                ; redefine for tty version
+              :source-pathname "tty"
+	      :binary-pathname "tty"
+	      :components
+	      ((:file "tty")))))     
 
 
 

@@ -117,6 +117,8 @@
 ;;; (make-menu-item :name "Generate..."
 ;;;                        :value 'generate-from-edge)
 
+(defparameter *last-generate-from-edge* nil)
+
 (defun do-generate-tty (&optional edge-name)
    (let ((possible-edge-name 
             (or edge-name *last-generate-from-edge* *edge-id*)))
@@ -156,7 +158,6 @@
 ;;;                    (make-menu-item :name "Apply all lex rules"
 ;;;                       :value #'apply-lex-rules)
 
-(defparameter *number-of-applications* 0)
 
 (defun apply-lex-rules-tty (lex)
    (let* ((lex-entry (if lex (get-psort-entry lex)))

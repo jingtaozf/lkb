@@ -97,3 +97,6 @@
             (preprocess-sentence-string 
              (string-trim '(#\space #\tab #\newline) sentence))))))
 
+
+(defun whitespacep (char) 
+  (member char '(#\space #\tab #\newline #\page #\return)))

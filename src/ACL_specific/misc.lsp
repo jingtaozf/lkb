@@ -16,7 +16,3 @@
 (defun disable-type-interactions nil
   (clim-user::disable-type-interactions))
 
-;;; MCL function that JAC uses
-
-(defun whitespacep (char) 
-  (member char '(#\space #\tab #\newline #\page #\return)))

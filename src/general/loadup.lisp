@@ -77,3 +77,6 @@
 (reset-system-paths)
 
 (pushnew :lkb *features*)
+;;; (pushnew :tty *features*)
+;;; uncomment line above for non-graphical generic CL version of LKB
+
