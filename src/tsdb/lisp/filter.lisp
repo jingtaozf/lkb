@@ -86,13 +86,15 @@
       (when verbose
         (format 
          t 
-         "~&~%[~a] `~a'~%~%"
-         (get-field :i-id item) (get-field :i-input item))
+         "~&~%[~a] `~a' (~a)~%~%"
+         (get-field :i-id item) (get-field :i-input item)
+         (get-field :readings item))
         (loop
             for result in (get-field :results item)
             for id = (get-field :result-id result)
             for flag = (gethash id flags)
             when flag do
+              (nconc result (list (cons :flags flag)))
               (format t "  result # ~a:~%" id)
               (loop
                   for foo in (reverse flag) do
