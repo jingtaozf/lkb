@@ -411,10 +411,10 @@
 411@CSLI@formal@none@1@S@What did Abrams show Browne?@1@5@@oe@8-sep-1999
 412@CSLI@formal@none@1@S@What did Abrams show to Browne?@1@6@@oe@8-sep-1999
 413@CSLI@formal@none@1@S@What was Abrams shown?@1@4@@oe@8-sep-1999
-414@CSLI@formal@none@1@S@Which manager did Abrams know was interviewing programmers.@1@8@@oe@8-sep-1999
-415@CSLI@formal@none@1@S@Which managers did Abrams know were interviewing programmers.@1@8@@oe@8-sep-1999
-416@CSLI@formal@none@1@S@Which manager did Abrams know were interviewing programmers.@0@8@@oe@8-sep-1999
-417@CSLI@formal@none@1@S@Which managers did Abrams know was interviewing programmers.@0@8@@oe@8-sep-1999
+414@CSLI@formal@none@1@S@Which manager did Abrams know was interviewing programmers?@1@8@@oe@8-sep-1999
+415@CSLI@formal@none@1@S@Which managers did Abrams know were interviewing programmers?@1@8@@oe@8-sep-1999
+416@CSLI@formal@none@1@S@Which manager did Abrams know were interviewing programmers?@0@8@@oe@8-sep-1999
+417@CSLI@formal@none@1@S@Which managers did Abrams know was interviewing programmers?@0@8@@oe@8-sep-1999
 418@CSLI@formal@none@1@S@Which programmer did Abrams interview?@1@5@@oe@8-sep-1999
 419@CSLI@formal@none@1@S@What project does Abrams manage?@1@5@@oe@8-sep-1999
 420@CSLI@formal@none@1@S@Which office was Abrams shown?@1@5@@oe@8-sep-1999
@@ -1264,7 +1264,7 @@
 1264@CSLI@formal@none@1@S@There are five people in the room, isn't there?@0@9@@oe@8-sep-1999
 1265@CSLI@formal@none@1@S@Sleep, won't you?@1@3@@oe@8-sep-1999
 1266@CSLI@formal@none@1@S@I am sleeping, aren't I?@1@5@@oe@8-sep-1999
-1267@CSLI@formal@none@1@S@You better not be late?@1@5@@oe@8-sep-1999
+1267@CSLI@formal@none@1@S@You better not be late.@1@5@@oe@8-sep-1999
 1268@CSLI@formal@none@1@S@You better not be late, better you?@0@7@@oe@8-sep-1999
 1269@CSLI@formal@none@1@S@I suppose Sara will win, won't she?@1@7@@oe@8-sep-1999
 1270@CSLI@formal@none@1@S@I believe Sara will win, won't she?@0@7@@oe@8-sep-1999
