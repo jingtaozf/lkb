@@ -47,6 +47,24 @@
   (vsym "LNK")
   "LNK feature for recording surface positions on relations")
 
+(defparameter *hook-path* 
+  `(,(vsym "HOOK"))
+  "path to get the hook from an mrs fs")
+
+(defparameter *ltop-path* 
+  `(,(vsym "LTOP"))
+  "path to get the ltop from an mrs hook fs")
+
+(defparameter *index-path* 
+  `(,(vsym "INDEX"))
+  "path to get the index from an mrs hook fs")
+
+(defparameter *xarg-path* 
+  `(,(vsym "XARG"))
+  "path to get the xarg from an mrs hook fs")
+
+;;; following three are retained for backward compatability only
+
 (defparameter *psoa-top-h-path* 
   `(,(vsym "HOOK") ,(vsym "LTOP"))
   "path to get the hook's ltop from an mrs fs (psoa - parameterised state of affairs -
@@ -59,6 +77,8 @@
 (defparameter *psoa-xarg-path* 
   `(,(vsym "HOOK") ,(vsym "XARG"))
   "path to get the hook's external index from an mrs")
+
+;;; end obsolete
 
 (defparameter *psoa-liszt-path* 
     `(,(vsym "RELS") ,(vsym "LIST"))

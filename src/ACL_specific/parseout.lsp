@@ -104,7 +104,8 @@
 	 (item (edge-rule edge-record))
          (rule-name (if (rule-p item) (rule-id item) item)))
     (pop-up-menu
-     `((,(format nil "Feature structure" (edge-id edge-record))
+     `(
+       (,(format nil "Feature structure" (edge-id edge-record))
 	:value fs)
        (,(format nil "Unfilled feature structure" (edge-id edge-record))
 	:value ufs)
@@ -121,6 +122,8 @@
                             *chart-generation-counter*))))
        (,(format nil "Rule ~A" (or rule-name ""))
 	:value rule)
+;;       (,(format nil "Sement" (edge-id edge-record))
+;;	:value sement)
        ("Generate from edge" :value generate
                              :active ,(and *mrs-loaded*
                                        (not (g-edge-p edge-record))))
@@ -175,6 +178,13 @@
 	      (display-fs alternative 
                           (format nil "~A" item)
                           item))))))
+     (sement       
+      (let ((tdfs (and (edge-p edge-record) (edge-dag edge-record))))
+        (when (tdfs-p tdfs)
+	  (show-mrs-sement-window tdfs
+				  (format nil "Edge ~A ~A - Tree FS" 
+					  (edge-id edge-record)
+					  (if (g-edge-p edge-record) "G" "P"))))))
      (generate (funcall 'really-generate-from-edge edge-record)))))
 
 ;;; ***** Single parse display window ********

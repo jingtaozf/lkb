@@ -28,6 +28,22 @@
 ;;; replaced by hook, when the code for displaying MRSs according to the
 ;;; algebra is finally written
 
+;;; for the algebra - rationalise this later 
+;;; not just psoa but rmrs semstruct in comp.lisp
+
+(defstruct (sement (:include basemrs))
+  hook
+  slots)
+
+(defstruct (hook)
+  index
+  ltop
+  xarg)
+
+(defstruct (slot)
+  hook
+  name)
+
 ;;; I have changed the old `sort' to `pred' - the old name was 
 ;;; seriously confusing
 
@@ -1104,43 +1120,46 @@ extras have to be sorted out later
   (let ((first-rel t))
     (loop for rel in (psoa-liszt psoa)
         do 
-          (mrs-output-start-rel 
-           *mrs-display-structure*
-           (rel-pred rel) first-rel
-           (determine-ep-class rel))
-          (mrs-output-rel-handel
-           *mrs-display-structure* 
-           (find-var-name (rel-handel rel) connected-p))
-          (mrs-output-rel-link *mrs-display-structure* (rel-link rel))
-          (print-mrs-extra (rel-handel rel))
-          (loop for feat-val in (rel-flist rel)
-              do
-                (mrs-output-label-fn *mrs-display-structure*
-                                     (fvpair-feature feat-val))
-                (let ((value (fvpair-value feat-val)))
-                  (if (var-p value)
-                      (progn
-                        (mrs-output-var-fn 
-                         *mrs-display-structure*
-                         (find-var-name value connected-p)
-                         (var-extra value))
-                        (print-mrs-extra value))
-                    (mrs-output-atomic-fn 
-                     *mrs-display-structure*
-                     value)))
-                (mrs-output-end-fvpair-fn *mrs-display-structure*))
-          (mrs-output-end-rel *mrs-display-structure*)
-	  ;;; ideally replace above do-clause with this:
-	;  (print-rel :display-to *mrs-display-structure*
-	;	     :first-rel first-rel
-	;	     :connected-p connected-p)
+          (print-rel rel first-rel connected-p *mrs-display-structure*)
 	  (setf first-rel nil)))
   (mrs-output-end-liszt *mrs-display-structure*)
   (when *rel-handel-path*
     (print-mrs-hcons (psoa-h-cons psoa) connected-p *mrs-display-structure*))
   (mrs-output-end-psoa *mrs-display-structure*))
 
-(defun print-rel (rel &key (display-to *mrs-display-structure*) first-rel connected-p)
+(defun print-rel (rel first-rel connected-p display)
+  (mrs-output-start-rel 
+   display
+   (rel-pred rel) first-rel
+   (determine-ep-class rel))
+  (mrs-output-rel-handel
+   display
+   (find-var-name (rel-handel rel) connected-p))
+  (mrs-output-rel-link display (rel-link rel))
+  (print-mrs-extra (rel-handel rel))
+  (loop for feat-val in (rel-flist rel)
+      do
+	(mrs-output-label-fn display
+			     (fvpair-feature feat-val))
+	(let ((value (fvpair-value feat-val)))
+	  (if (var-p value)
+	      (progn
+		(mrs-output-var-fn 
+		 display
+		 (find-var-name value connected-p)
+		 (var-extra value))
+		(print-mrs-extra value))
+	    (mrs-output-atomic-fn display value)))
+	(mrs-output-end-fvpair-fn display))
+  (mrs-output-end-rel display))
+
+;;; FIX
+;;; following version of print-rel is called from the SEM-I 
+;;; but unfortunate use of key and not exactly the same as the `real' code
+;;; so renamed - should be changed to be same as print-rel above
+;;; or moved to semi.lsp
+
+(defun print-semi-rel (rel &key (display-to *mrs-display-structure*) first-rel connected-p)
   (unless (rel-base-p rel)
     (error "unexpected type"))
   ;; print pred name
@@ -1798,3 +1817,86 @@ VAR -> VARNAME[:CONSTNAME]*
          (copy-list (mrs:psoa-liszt mrs))
          #'string-lessp :key #'mrs:rel-pred))
       copy)))
+
+;;; sement output: uses MRS indexed routines, plus a few extras,
+;;; as here
+
+(defmethod mrs-output-hook-fn ((mrsout indexed) ltop index xarg)
+  (with-slots (stream) mrsout
+    (format stream "[~(~a~),~(~a~)" ltop index)
+    (when xarg
+	(format stream ",~(~a~)" xarg))
+    (format stream "]")))
+
+(defmethod mrs-output-start-slots ((mrsout indexed))
+  (with-slots (stream) mrsout
+    (format stream ",~%{")))
+
+(defmethod mrs-output-start-slot ((mrsout indexed) first-p)
+  (with-slots (stream) mrsout
+    (unless first-p
+      (format stream ","))))
+
+(defmethod mrs-output-slot-name ((mrsout indexed) name)
+  (with-slots (stream) mrsout
+    (format stream "~a" name)))
+
+
+(defmethod mrs-output-end-slots ((mrsout indexed))
+  (with-slots (stream) mrsout
+    (format stream "}")))
+
+
+;;; output code for sements
+
+(defun output-algebra-sement (sement device &optional file-name)
+  (if file-name
+      (with-open-file (stream file-name :direction :output)
+	(output-algebra-sement1 sement device stream))
+    (output-algebra-sement1 sement device t)))
+
+(let ((lock #+:allegro (mp:make-process-lock) #-:allegro nil))
+  (defun output-algebra-sement1 (sement device stream)
+    (#+:allegro mp:with-process-lock #+:allegro (lock) #-:allegro progn
+      (def-print-operations device 0 stream)
+      (cond ((sement-p sement)
+             (print-sement sement)
+             (mrs-output-max-width-fn *mrs-display-structure*))
+            (t (mrs-output-error-fn *mrs-display-structure* sement))))))
+
+(defun print-sement (sement)
+  (setf *already-seen-vars* nil)
+  (print-hook (sement-hook sement) *mrs-display-structure*) 
+  (print-slots (sement-slots sement) *mrs-display-structure*) 
+  (mrs-output-start-liszt *mrs-display-structure*)
+  (let ((first-rel t))
+    (loop for rel in (psoa-liszt sement)
+        do 
+          (print-rel rel first-rel nil *mrs-display-structure*)
+	  (setf first-rel nil)))
+  (mrs-output-end-liszt *mrs-display-structure*)
+  (print-mrs-hcons (psoa-h-cons sement) nil *mrs-display-structure*))
+
+(defun print-hook (hook display)
+  (let ((index (hook-index hook))
+	(ltop (hook-ltop hook))
+	(xarg (hook-xarg hook)))
+    (mrs-output-hook-fn 
+     display
+     (find-var-name ltop nil)
+     (find-var-name index nil)
+     (if xarg
+	 (find-var-name xarg nil)))))
+
+(defun print-slots (slots display)
+    (mrs-output-start-slots display)
+    (let ((first-slot t))
+      (loop for slot in slots
+          do
+	    (mrs-output-start-slot display first-slot)
+	    (print-hook  (slot-hook slot) display)
+	    (mrs-output-slot-name display (slot-name slot)) 
+            (setf first-slot nil)))
+    (mrs-output-end-slots display))
+
+

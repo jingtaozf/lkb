@@ -320,4 +320,30 @@
         (existing-dag-at-end-of dag-instance labels-chain))
        (error "dag not found at end of path ~:A" labels-chain)))
 
+;;; Code that walks over an existing dag looking for subdags
+;;; introduced by the feature parameter.  Returns an a-list
+;;; with the subdag associated with all the paths that lead to it
 
+(defun collect-subdags-for-feature (fs feature ignore-list top-ignore-list)
+  (collect-subdags-for-feature-aux fs feature ignore-list top-ignore-list
+				   nil nil t))
+
+(defun collect-subdags-for-feature-aux (fs feature ignore-list top-ignore-list 
+					results path-so-far top-p)
+  (dolist (arc (dag-arcs fs))
+    (let ((dag-feature (dag-arc-attribute arc)))
+      (unless (or (member dag-feature ignore-list)
+		  (and top-p (member dag-feature top-ignore-list)))
+	(let ((next-dag (dag-arc-value arc))
+	      (new-path (cons dag-feature path-so-far)))
+	  (if (eql dag-feature feature)
+	      (let ((already-found (assoc next-dag results))
+		    (rev-path (reverse new-path)))
+		(if already-found 
+		    (push rev-path (cdr already-found))
+		  (push (cons next-dag (list rev-path))
+			results)))
+	    (setf results
+	      (collect-subdags-for-feature-aux 
+	       next-dag feature ignore-list nil results new-path nil)))))))
+  results)

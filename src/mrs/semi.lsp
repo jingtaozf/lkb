@@ -396,7 +396,7 @@
       for rel in rels
       do  
 	(setf *already-seen-vars* nil)
-	(print-rel rel :display-to disp)))
+	(print-semi-rel rel :display-to disp)))
 
 ;;; format = :db
 
@@ -637,7 +637,7 @@
 	 (setf *already-seen-vars* nil)
 	 (mapc 
 	  #'(lambda (x)
-	     (print-rel x :display-to disp))
+	     (print-semi-rel x :display-to disp))
 	  (semantics-record-relations record)))
      *semantic-table*)))
 

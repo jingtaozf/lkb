@@ -20,6 +20,13 @@
   :width *parse-window-width* 
   :height *parse-window-height*)
 
+(define-lkb-frame mrs-sement
+    ((mrsstruct :initform nil
+	    :accessor mrs-sement-mrsstruct))
+  :display-function 'show-mrs-sement
+  :width *parse-window-width* 
+  :height *parse-window-height*)
+
 (define-lkb-frame mrs-prolog
     ((mrsstruct :initform nil
                 :accessor mrs-prolog-mrsstruct))
@@ -110,6 +117,19 @@
     (setf (clim:frame-pretty-name mframe) (or title "Indexed MRS"))
     (clim:run-frame-top-level mframe)))
 
+(defun show-mrs-sement-window (fs title)
+  (let ((sement (mrs::extract-sement fs)))
+    (mp:run-function "Sement MRS"
+     #'show-mrs-sement-window-really sement title)))
+
+(defun show-mrs-sement-window-really (sement title)
+  (let ((mframe (clim:make-application-frame 'mrs-sement)))
+    (setf (mrs-sement-mrsstruct mframe) 
+      sement)
+    (setf (clim:frame-pretty-name mframe) (or title "Sement"))
+    (clim:run-frame-top-level mframe)))
+
+
 (defun show-mrs-prolog-window (edge &optional mrs title)
   (let ((mrs (or mrs (edge-mrs edge) (mrs::extract-mrs edge))))
     (mp:run-function "Prolog MRS"
@@ -181,6 +201,14 @@
         (clim:with-text-style (stream (lkb-parse-tree-font))
           (mrs::output-mrs1 mrsstruct 'mrs::indexed stream))
       (format stream "~%::: MRS structure could not be extracted~%"))))
+
+(defun show-mrs-sement (mframe stream &key max-width max-height)
+  (declare (ignore max-width max-height))
+  (let ((sement (mrs-sement-mrsstruct mframe)))
+    (if sement
+        (clim:with-text-style (stream (lkb-parse-tree-font))
+          (mrs::output-algebra-sement1 sement 'mrs::indexed stream))
+      (format stream "~%::: Sement structure could not be extracted~%"))))
 
 (defun show-mrs-prolog (mframe stream &key max-width max-height)
   (declare (ignore max-width max-height))
