@@ -60,6 +60,9 @@
   id socket stream process
   (display #+:clim clim:*default-server-path* #-:clim nil))
 
+(defstruct lspb
+  id context input morphs chart edge dag mrs)
+
 #-:clisp
 (defun lsp-initialize ()
   (lsp-shutdown)
@@ -300,23 +303,23 @@
                                  (length *parse-record*)
                                  (/ (first *parse-times*) 100000))))
                   (if (eq view :browse)
-                    (lsp-browse id input edges format nil)
+                    (show-parse edges)
                     (when waitp (lsp-return id stream edges format)))))
               (when waitp
                 (format stream " ~a" (length *parse-record*))))))
          (browse
-          (let* ((context (pop command))
+          (let* ((context (lsp-retrieve-object id (pop command)))
                  (location (pop command))
                  (format (let ((foo (pop command)))
                            (and foo (intern (string foo) :keyword))))
                  (view (let ((foo (pop command)))
                          (and foo (intern (string foo) :keyword))))
                  (object (lsp-retrieve-object id location)))
-            (declare (ignore context))
-            (when (and (second object) 
+            (when (and object 
                        (member format '(:avm :edge :edges :chart :tree 
+                                        :generate
                                         :mrs :dependencies)))
-              (lsp-browse id (first object) (rest object) format view))))
+              (lsp-browse id context object format view))))
 
          (type
           (let* ((name (pop command))
@@ -342,11 +345,15 @@
          (unify
           (let* ((tdfs1 (let ((n (pop command)))
                           (when (numberp n) 
-                            (second (lsp-retrieve-object id n)))))
+                            (let ((lspb (lsp-retrieve-object id n)))
+                              (when (lspb-p lspb)
+                                (lspb-dag lspb))))))
                  (path1 (pop command))
                  (tdfs2 (let ((n (pop command)))
                           (when (numberp n) 
-                            (second (lsp-retrieve-object id n)))))
+                            (let ((lspb (lsp-retrieve-object id n)))
+                              (when (lspb-p lspb)
+                                (lspb-dag lspb))))))
                  (path2 (pop command)))
             (if (and (tdfs-p tdfs1) (tdfs-p tdfs2))
               (let* ((tdfs (tdfs-at-end-of path1 (copy-tdfs-elements tdfs1)))
@@ -413,9 +420,9 @@
       for client in %lsp-clients%
       when (equal id (client-id client)) return client))
 
-(defun lsp-store-object (id input object &key globalp)
+(defun lsp-store-object (id object &key globalp)
   (let ((n %lsp-object-counter%))
-    (setf (aref %lsp-attic% n) (cons (if globalp -1 id) (list input object)))
+    (setf (aref %lsp-attic% n) (cons (if globalp -1 id) object))
     (incf %lsp-object-counter%)
     (when (>= %lsp-object-counter% (array-total-size %lsp-attic%))
       (setf %lsp-attic% (adjust-array %lsp-attic% (* %lsp-object-counter% 2))))
@@ -427,46 +434,59 @@
       (when (or (equal (first bucket) -1) (equal (first bucket) id))
         (rest bucket)))))
 
-(defun lsp-browse (id input objects format view &key title)
-  (let ((title (or title (format nil "`~a'~@[ [LSP # ~a]~]" input id))))
+(defun lsp-browse (id context object format view &key title)
+  #+:debug
+  (setf %context context %object object %format format %view view)
+  (let ((title (or title (format
+                          nil
+                          "`~a'~@[ [LSP # ~a]~]"
+                          (lspb-input object) id))))
     (when (eq format :tree)
-      (show-parse objects title)
+      (show-parse object title)
       (return-from lsp-browse))
-    (loop
-        for edge in objects
-        when (null edge) do
-          (format
-           t
-           "[~a] lsp-browse(): null edge for `~a' (~(~a~))~%"
-           id input format)
-        else do
-          (case format
-            (:avm
-             (display-fs edge title))
-            ((:edge :edges)
-             (show-chart)
-             (mp:process-wait-with-timeout "Waiting" 5 #'chart-ready)
-             (when (edge-p edge) (display-edge-in-chart edge)))
-            #+:mrs
-            ((:mrs :dependencies)
-             (let* ((dag (typecase edge
-                           (edge (tdfs-indef (edge-dag edge)))
-                           (tdfs (tdfs-indef edge))
-                           (dag edge)))
-                    (mrs (mrs::extract-mrs-from-fs dag)))
-               (case view
-                 (:simple
-                  (show-mrs-window nil mrs title))
-                 (:indexed 
-                  (show-mrs-indexed-window nil mrs title))
-                 (:prolog 
-                  (show-mrs-prolog-window nil mrs title))
-                 (:scoped 
-                  (show-mrs-scoped-window nil mrs title))
-                 (:robust 
-                  (show-mrs-rmrs-window nil :mrs mrs :title title))
-                 (t
-                  (show-mrs-dependencies-window nil mrs title)))))))))
+    (case format
+      (:avm
+       (if (eq view :local)
+         (when (edge-p (lspb-edge object))
+           (display-fs (edge-dag (lspb-edge object)) title))
+         (display-fs (lspb-dag object) title)))
+      ((:edge :edges)
+       (when (and (lspb-morphs object) (lspb-chart object))
+         (let ((*morphs* (lspb-morphs object))
+               (*chart* (lspb-chart object)))
+           (show-chart)
+           (mp:process-wait-with-timeout "Waiting" 5 #'chart-ready)
+           (when (edge-p (lspb-edge object)) 
+             (display-edge-in-chart (lspb-edge object))))))
+      (:generate
+       (let* ((dag (cond
+                    ((tdfs-p (lspb-dag object)) 
+                     (tdfs-indef (lspb-dag object)))
+                    ((edge-p (lspb-edge object))
+                     (tdfs-indef (edge-dag (lspb-edge object))))))
+              (mrs (and dag (mrs::extract-mrs-from-fs dag))))
+         (when mrs ())))
+      #+:mrs
+      ((:mrs :dependencies)
+       (let* ((dag (cond
+                    ((tdfs-p (lspb-dag object)) 
+                     (tdfs-indef (lspb-dag object)))
+                    ((edge-p (lspb-edge object))
+                     (tdfs-indef (edge-dag (lspb-edge object))))))
+              (mrs (and dag (mrs::extract-mrs-from-fs dag))))
+         (case view
+           (:simple
+            (show-mrs-window nil mrs title))
+           (:indexed 
+            (show-mrs-indexed-window nil mrs title))
+           (:prolog 
+            (show-mrs-prolog-window nil mrs title))
+           (:scoped 
+            (show-mrs-scoped-window nil mrs title))
+           (:robust 
+            (show-mrs-rmrs-window nil :mrs mrs :title title))
+           (t
+            (show-mrs-dependencies-window nil mrs title))))))))
 
 (defun lsp-return (id stream edges format)
 

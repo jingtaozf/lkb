@@ -84,6 +84,9 @@
       parameter list-tail ~a~a~%~
       parameter type-font #F[Helvetica ~a roman blue]~a~%~
       parameter feature-font #F[Helvetica ~a roman black]~a~%~
+      parameter path-font #F[Helvetica ~a roman black]~a~%~
+      parameter big-tree-font #F[Helvetica ~a roman black]~a~%~
+      parameter small-tree-font #F[Helvetica ~a roman black]~a~%~
       status ready~a~%"
      *list-type* %lui-eoc%
      *non-empty-list-type* %lui-eoc%
@@ -92,6 +95,9 @@
      (first *list-tail*) %lui-eoc%
      *fs-type-font-size* %lui-eoc%
      *fs-type-font-size* %lui-eoc%
+     *parse-tree-font-size* %lui-eoc%
+     *parse-tree-font-size* %lui-eoc%
+     *summary-tree-font-size* %lui-eoc%
      %lui-eoc%)
     (force-output %lui-stream%)
     #-:clisp
@@ -179,35 +185,58 @@
 (defun lui-status (string)
   (format %lui-stream% "message ~s~a~%" string %lui-eoc%))
   
-(defun lui-show-parses (edges &optional (input *sentence*))
+(defun lui-show-parses (edges &optional (input *sentence*) 
+                                        (chart (copy-array *chart*))
+                                        (morphs (copy-array *morphs*)))
   (loop
       with stream = (make-string-output-stream)
       initially
         (format 
-         stream "group ~d ~s~a~%"
-         (length edges) (or input "Processing Result(s)") %lui-eoc%)
+         stream 
+         "parameter path-font #F[Helvetica ~a roman black]~a~%~
+          parameter big-tree-font #F[Helvetica ~a roman black]~a~%~
+          parameter small-tree-font #F[Helvetica ~a roman black]~a~%~
+          group ~d ~s~a~%"
+         *parse-tree-font-size* %lui-eoc%
+         *parse-tree-font-size* %lui-eoc%
+         *summary-tree-font-size* %lui-eoc%
+         (length edges) 
+         (if input
+           (format
+            nil
+            "`~a' (~a Tree~p)"
+            input (length edges) (length edges))
+           "Processing Result(s)")
+         %lui-eoc%)
       for i from 1
       for title = (format nil "`~a' Parse Tree # ~d" input i)
       for edge in edges 
       for top = (make-new-parse-tree edge 1)
-      for id = (lsp-store-object nil input top)
+      for tdfs = (get top 'edge-fs)
+      for lspb = (make-lspb
+                  :input input :morphs morphs :chart chart
+                  :edge edge :dag tdfs)
+      for id = (lsp-store-object nil lspb)
       do
         (format stream "tree ~d " id)
-        (lui-show-tree top input :stream stream)
+        (lui-show-tree top input :chart chart :morphs morphs :stream stream)
         (format stream " ~s~a~%" title %lui-eoc%)
       finally
         (format %lui-stream% "~a" (get-output-stream-string stream)))
   (force-output %lui-stream%))
 
 (defun lui-show-tree (top &optional (input *sentence*)
-                      &key (stream %lui-stream%))
+                      &key morphs chart lspb (stream %lui-stream%))
   (let* ((edge (get top 'edge-record))
          (tdfs (get top 'edge-fs))
+         (lspb (make-lspb
+                :context lspb :input input :morphs morphs :chart chart
+                :edge edge :dag tdfs))
          (daughters (get top 'daughters))
          (form (when (and daughters (null (rest daughters))
                           (null (get (first daughters) 'edge-record)))
                  (get-string-for-edge (first daughters))))
-         (id (lsp-store-object nil input tdfs))
+         (id (lsp-store-object nil lspb))
          (label (get-string-for-edge top))
          (n (edge-id edge))
          (rule (if (rule-p (edge-rule edge))
@@ -216,12 +245,14 @@
     (format stream "#T[~a ~s ~s ~a ~a " id label form n rule)
     (loop
         for daughter in (if form (get (first daughters) 'daughters) daughters)
-        do (lui-show-tree daughter input :stream stream))
+        do (lui-show-tree
+            daughter input
+            :morphs morphs :chart chart :lspb lspb :stream stream))
     (format stream "]")))
 
 (defun lui-display-fs (tdfs title id &optional failures)
   (declare (ignore id))
-  (let* ((id (lsp-store-object nil nil tdfs))
+  (let* ((id (lsp-store-object nil (make-lspb :dag tdfs)))
          (dag (tdfs-indef tdfs))
          (*package* (find-package :lkb)))
     (format
@@ -242,7 +273,7 @@
   (force-output %lui-stream%))
 
 (defun lui-display-mrs (mrs)
-  (let* ((id (lsp-store-object nil nil mrs))
+  (let* ((id (lsp-store-object nil (make-lspb :mrs mrs)))
          (dag (mrs::psoa-to-dag mrs))
          (title "Simple MRS Display"))
     (let ((string (with-output-to-string (stream)
@@ -273,4 +304,20 @@
       (:avm (streamp %lui-stream%))
       #-:null
       (:mrs (streamp %lui-stream%)))))
-
+
+(defun copy-array (array)
+  (let ((dimensions (array-dimensions array))
+        (element-type (array-element-type array))
+        (adjustable (adjustable-array-p array))
+        (fill-pointer (when (array-has-fill-pointer-p array)
+                        (fill-pointer array))))
+    (let ((new-array
+           (apply #'make-array
+                  (list dimensions
+                        :element-type element-type
+                        :adjustable adjustable
+                        :fill-pointer fill-pointer))))
+      (dotimes (i (array-total-size array))
+        (setf (row-major-aref new-array i)
+          (row-major-aref array i)))
+      new-array)))
