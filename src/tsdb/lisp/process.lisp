@@ -37,6 +37,12 @@
   (declare (ignore podium))
   
   (initialize-tsdb)
+
+  (when (< (profile-granularity data) 200306)
+    (format
+     stream
+     "~%tsdb-do-process(): out-of-date profile `~a'.~%"
+     data))
   
   (unless (or (null vocabulary) (eq type :generate) interactive
               (and (find :pvm *features*)

@@ -605,8 +605,8 @@
            (tsdb (normalize-string (get-field :tsdb result) :escape rawp))
            (application 
             (normalize-string (get-field :application result) :escape rawp))
-           (context 
-            (normalize-string (get-field :context result) :escape rawp))
+           (environment 
+            (normalize-string (get-field :environment result) :escape rawp))
            (grammar 
             (normalize-string (get-field :grammar result) :escape rawp))
            (avms (get-field+ :avms result -1))
@@ -631,7 +631,7 @@
           (write-string platform stream) (write-char ofs stream)
           (write-string tsdb stream) (write-char ofs stream)
           (write-string application stream) (write-char ofs stream)
-          (write-string context stream) (write-char ofs stream)
+          (write-string environment stream) (write-char ofs stream)
           (write-string grammar stream) (write-char ofs stream)
           (write avms :stream stream) (write-char ofs stream)
           (write sorts :stream stream) (write-char ofs stream)
@@ -658,7 +658,7 @@
                   ~d ~d ~d ~d ~d ~d ~
                   ~s ~s ~s ~a ~a ~d ~s"
                  run-id comment 
-                 platform tsdb application context grammar
+                 platform tsdb application environment grammar
                  avms sorts templates lexicon lrules rules
                  user host os start end items status)))
           (call-tsdb query language :cache cache))))))
