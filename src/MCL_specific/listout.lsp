@@ -33,7 +33,7 @@
              #'(lambda (string-and-item)
                  (string-width (car string-and-item) font))))
        (max-y
-          (* (length string-and-item-list) line-spacing))
+          (* (1+ (length string-and-item-list)) line-spacing))
        (fake-window 
           (make-instance 'picture-field-window
              :view-font font :view-size #@(10000 10000)))
