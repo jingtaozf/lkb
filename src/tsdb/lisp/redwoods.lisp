@@ -24,11 +24,11 @@
 
 (defun browse-trees (&optional (data *tsdb-data*)
                      &key (condition *statistics-select-condition*)
-                          gold
+                          gold strip inspect
                           (cache *tsdb-cache-database-writes-p*)
                           (verbose t) interactive
                           (stream *tsdb-io*)
-                          strip interrupt meter)
+                          interrupt meter)
 
   (declare (optimize (speed 3) (safety 0) (space 0)))
 
@@ -55,7 +55,7 @@
                     (gold "updating")
                     (t "browsing"))
                    data))
-         (items (sort (copy-seq items) 
+         (items (sort (copy-list items) 
                       #'< :key #'(lambda (foo) (get-field :i-id foo))))
          (schema (read-database-schema data))
          (cache (when cache
@@ -110,13 +110,13 @@
                           (excl:tenuring
                            (browse-tree 
                             data i-id frame 
-                            :gold gold
-                            :cache cache :title title :strip strip
+                            :gold gold :strip strip :inspect inspect
+                            :cache cache :title title
                             :verbose verbose :stream stream)))
                         (browse-tree 
                          data i-id frame 
-                         :gold gold
-                         :cache cache :title title :strip strip
+                         :gold gold :strip strip :inspect inspect
+                         :cache cache :title title
                          :verbose verbose :stream stream)))
         for action = (get-field :status status)
         for offset = (or (get-field :offset status) 1)
@@ -168,7 +168,8 @@
       (status :text (format nil "~a done" message) :duration 10)
       (meter :value 1))))
 
-(defun browse-tree (data i-id frame &key gold title cache strip verbose stream)
+(defun browse-tree (data i-id frame &key gold strip inspect 
+                                         title cache verbose stream)
   
   (declare (special %client%))
 
@@ -421,6 +422,7 @@
       (setf (lkb::compare-frame-gversion frame) ghistory)
       (setf (lkb::compare-frame-gactive frame) gactive)
       (setf (lkb::compare-frame-gderivation frame) gderivation)
+      (setf (lkb::compare-frame-inspect frame) inspect)
       (setf (lkb::compare-frame-update frame)
         (when (and gactive greadings)
           (pairlis '(:parse-id :u-gin :u-gout)
@@ -1482,7 +1484,7 @@
   ;; of identical results) vs. (b) scoring by derivation equivalence (e.g.
   ;; when comparing best-first parser output against a gold standard).
   ;;
-  (let* ((thorough (if (eq test :derivation) '(:derivation)))
+  (let* ((thorough (when (eq test :derivation) '(:derivation)))
          (items (if (stringp data)
                   (analyze (if spartanp gold data)
                            :thorough (or thorough spartanp)
@@ -1539,7 +1541,8 @@
                    (t
                     (incf anscores) 
                     (incf alength length) (incf areadings readings)
-                    (if (= i 1) (incf aexact score) (incf anear score))
+                    (when (<= i n)
+                      (if (= i 1) (incf aexact score) (incf anear score)))
                     (when loosep (incf aloose))
                     (when asuccesses (incf (aref asuccesses (- i 1)) score)))))
               finally
@@ -1582,7 +1585,11 @@
     
     results))
 
-(defun score-item (item gold &key test (n 1) (loosep t))
+(defun score-item (item gold &key test (n 1) (loosep t) errorp)
+  
+  #+:debug
+  (setf %item% item %gold% gold)
+  
   (let ((ranks (get-field :ranks item))
         (granks (get-field :ranks gold))
         (test (cond
@@ -1608,43 +1615,198 @@
      ((and (rest granks) (null loosep)) nil)
      (t
       (loop
-          for rank = (pop ranks)
-          for i = (get-field :rank rank)
-          while (and rank (or (null n) (<= i n)))
-          when (loop
-                   for grank in granks
-                   thereis (funcall test rank grank))
+          with result = nil with best = nil
+          for grank in granks
+          for match = (loop
+                          for rank in ranks
+                          for i = (get-field :rank rank)
+                          while (or (null n) errorp (<= i n))
+                          thereis (and (funcall test rank grank) rank))
+          for i = (get-field :rank match)
+          for matches = (when i
+                          (loop
+                              for rank in ranks
+                              for j = (get-field :rank rank)
+                              while (<= j i)
+                              when (= i j) collect rank))
+          for errors = (when errorp
+                         (if i
+                           (loop
+                               for rank in ranks
+                               for j = (get-field :rank rank)
+                               while (< j i) collect rank)
+                           ranks))
+          when (and (numberp i)
+                    (or (null result)
+                        (< i (get-field :rank best))
+                        (and (= i (get-field :rank best)) 
+                             (< (length matches) (length result)))))
+          do
+            (setf best match)
+            (setf result matches)
+          finally 
+            (return (values (get-field+ :rank best 0)
+                            (divide 1 (length result)) 
+                            (rest granks) 
+                            errors match (delete match result))))))))
+
+(defun analyze-errors (data 
+                       &optional (gold data)
+                       &key (condition *statistics-select-condition*)
+                            spartanp (scorep t) (n 1)  test loosep
+                            file append (format :tcl)
+                            meter)
+  (declare (ignore meter))
+
+  (let* ((errors (summarize-errors data gold :condition condition
+                                   :spartanp spartanp :scorep scorep :n n
+                                   :test test :loosep loosep))
+         (stream (create-output-stream file append)))
+    (when (listp errors)
+      (case format
+        (:tcl
+         (when *statistics-tcl-formats* 
+           (format stream *statistics-tcl-formats*))
+         (format
+          stream
+          "layout col def -m1 5 -r 1 -m2 5 -c black -j right~%~
+           layout row def -m1 5 -r 0 -m2 5 -c black -j center~%~
+           layout col 0 -m1 5 -r 2 -m2 5 -c black -j right~%~
+           layout col 1 -m1 5 -r 2 -m2 5 -c black -j right~%~
+           layout col 2 -m1 5 -r 2 -m2 5 -c black -j left~%~
+           layout col 4 -m1 5 -r 2 -m2 5 -c black -j right~%~
+           layout col 7 -m1 5 -r 2 -m2 5 -c black -j right~%~
+           layout row 0 -m1 5 -r 2 -m2 5 -c black -j center~%~
+           layout row 2 -m1 5 -r 2 -m2 5 -c black -j center~%")
+         (format
+          stream
+          "cell 1 1 -contents {i-id} -format title~%~
+           region 1 1 2 1 -contents {i-id} ~
+             -format title -hor_justify center~%~
+           cell 1 2 -contents {i-input} -format title~%~
+           region 1 2 2 2 -contents {i-input} ~
+             -format title -hor_justify center~%~
+           cell 1 3 -contents {xxxx} -format title~%~
+           cell 1 4 -contents {xxxx} -format title~%~
+           region 1 3 2 4 -contents {readings} ~
+             -format title -hor_justify center~%")
+         (format
+          stream
+          "region 1 5 1 7 -contents {scores} ~
+             -format title -hor_justify center~%~
+           cell 2 5 -contents {<} -format title~%~
+           cell 2 6 -contents {=} -format title~%~
+           cell 2 7 -contents {>} -format title~%")))
+      (loop
+          for (item gitem rank errors match others) in errors
+          for i-id = (get-field :i-id item)
+          for i-input = (or (get-field :o-input item)
+                            (get-field :i-input item))
+          for greadings = (get-field :readings gitem)
+          for readings = (get-field :readings item)
+          for tag = (intern (gensym "") :keyword)
+          for i from 3
+          when (zerop (mod i 10))
+          do 
+            (case format
+              (:tcl
+               (format
+                stream
+                "layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%"
+                i)))
           do
             ;;
-            ;; _fix_me_
-            ;; results with equal rank may precede the current result; if so,
-            ;; we fail to discount appropriately.              (29-nov-02; oe)
+            ;; _fix_me_ this creates a potential memory leak: as soon as the
+            ;; window for this table is destroyed, there will be no further
+            ;; reference to the (tag) symbols used to store data on the lisp
+            ;; side.  yet, the values associated with the symbol properties
+            ;; will never become unbound.                         (16-feb-03)
             ;;
-            (loop
-                for next = (first ranks)
-                while (and next (= (get-field :rank next) i)) 
-                do (pop ranks)
-                collect next into others
-                finally
-                  (return-from score-item
-                    (values i 
-                            ;;
-                            ;; _fix_me_
-                            ;; adjust score for others that fall within the
-                            ;; (remaining) scoring beam, e.g. with five items
-                            ;; at rank 2 and a scoring beam of 5, return 4/5.
-                            ;;                               (28-nov-02; oe)
-                            (if others (/ 1 (+ (length others) 1)) 1) 
-                            (rest granks))))
-          finally (return 0))))))
+            (setf rank rank)
+            (setf (get :source tag) gold)
+            (setf (get :i-id tag) i-id)
+            (setf (get :i-input tag) i-input)
+            (setf (get :match tag) match)
+            (setf (get :errors tag) errors)
+            (setf (get :others tag) others)
+            (format
+             stream
+             "cell ~d 1 -contents {~a} -format data~%~
+              cell ~d 2 -contents {~a} -format data -key ~d -source {~a}~%~
+              cell ~d 3 -contents {~a} -format data~%~
+              cell ~d 4 -contents {~a} -format data~%~
+              cell ~d 5 -contents {~a} -format data~%~
+              cell ~d 6 -contents {~a} -format data -action inspect -tag ~a~%~
+              cell ~d 7 -contents {~a} -format data~%"
+             i i-id 
+             i i-input i-id data
+             i greadings
+             i readings
+             i (length errors)
+             i (get-field :result-id match) tag
+             i (length others))
+          finally
+            (case format
+              (:tcl
+               (format
+                stream
+                "layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%"
+                i)))))
+    
+    (when (or (stringp file) (stringp append)) (close stream))
+    (if (listp errors) 0 -1)))
 
-(defun train (source file &key (condition *statistics-select-condition*)
-                               (type :mem) model estimatep
+(defun summarize-errors (data 
+                         &optional (gold data)
+                         &key (condition *statistics-select-condition*)
+                              spartanp (scorep t) (n 1) test loosep
+                              meter)
+  (declare (ignore meter))
+  
+  (let* ((thorough (when (eq test :derivation) '(:derivation)))
+         (items (if (stringp data)
+                   (analyze (if spartanp gold data)
+                            :thorough (or thorough spartanp)
+                            :condition condition :score (if scorep data t)
+                            :readerp (eq test :derivation) :scorep t)
+                  data))
+         (items (sort (copy-list items) #'< 
+                      :key #'(lambda (foo) (get-field :i-id foo))))
+         (gitems (if (stringp gold)
+                   (analyze gold
+                            :thorough thorough
+                            :condition condition :gold gold 
+                            :readerp (eq test :derivation) :scorep t)
+                   gold))
+         (gitems (sort (copy-list gitems) #'< 
+                       :key #'(lambda (foo) (get-field :i-id foo))))
+         result)
+
+    (loop
+        for item in items
+        for gitem in gitems
+        for i-id = (get-field :i-id item)
+        for gi-id = (get-field :i-id gitem)
+        when (or (not (numberp i-id)) (not (numberp gi-id))
+                 (not (= i-id gi-id))) 
+        do
+          (setf result :error)
+          (return)
+        else do
+          (multiple-value-bind (rank foo bar errors match others)
+              (score-item item gitem :test test :n n :loosep loosep :errorp t)
+            (declare (ignore foo bar))
+            (when (and rank (or (zerop rank) (> rank n) others))
+              (push (list item gitem rank errors match others) result))))
+    (if (listp result) (nreverse result) result)))
+
+(defun train (sources file &key (condition *statistics-select-condition*)
+                               (type :mem) model (estimatep t)
                                (verbose t) (stream t)
                                interrupt meter)
   (declare (ignore interrupt meter))
 
-  (if (consp source)
+  (if (consp sources)
     (loop
         with model = (or model (case type
                                  (:mem (make-mem))))
@@ -1653,20 +1815,21 @@
         with condition = (if (and condition (not (equal condition "")))
                            (format nil "t-active >= 1 && (~a)" condition)
                            "t-active >= 1")
-        for profiles on source
+        for sources on sources
         do
-          (train (first profiles) nil :condition condition :type type
-                 :model model :estimatep (null (rest profiles))
+          (train (first sources) nil :condition condition :type type
+                 :model model :estimatep (null (rest sources))
                  :verbose verbose :stream stream)
         finally
           (when verbose
             (format stream "train(): exporting ~a~%" model))
           (print-mem model :file file :format :export)
-          (restore-gc-strategy gc))
-    (let* ((items (analyze source 
+          (restore-gc-strategy gc)
+          (return model))
+    (let* ((items (analyze sources 
                            :thorough '(:derivation)
-                           :condition condition :gold source :readerp nil)))
-      (purge-profile-cache source)
+                           :condition condition :gold sources :readerp nil)))
+      (purge-profile-cache sources)
       (case type
         (:mem
          (estimate-mem 

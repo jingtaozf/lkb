@@ -110,9 +110,11 @@ proc condition_input {{prompt "where"} {default ""} {context "condition"}} {
       update_condition_cascade null $context;
     } else {
       history_add $context $globals(input);
-      update_condition_cascade null $context;
-      set globals($context,0) 1;
-      update_condition_cascade 0 $context;
+      if {$context == "division" || $context == "condition"} {
+        update_condition_cascade null $context;
+        set globals($context,0) 1;
+        update_condition_cascade 0 $context;
+      }; # if
     }; # else
   }; # if
 

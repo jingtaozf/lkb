@@ -162,9 +162,4 @@
     
     :depends-on (#+(and :allegro (or :linux (and :sparc :svr4) :alpha)) "pvm"
                  #+:page "page"
-                 #+(and :lkb (not :mrs)) "lkb" #+:mrs "mrs"))
-
-
-
-
-
+                 #+(or :lkb :mrs) "mrs"))

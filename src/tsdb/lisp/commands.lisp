@@ -32,7 +32,7 @@
          (items (select '("i-id" "i-wf" "i-length" "i-input")
                         '(:integer :integer :integer :string)
                         "item"
-                        condition
+                        (unless mrs condition)
                         data
                         :unique nil :sort :i-id
                         :meter imeter))
@@ -40,15 +40,20 @@
                     (select '("i-id" "o-ignore" "o-wf" "o-gc" "o-edges")
                         '(:integer :string :integer :integer :integer)
                         "output"
-                        condition
+                        (unless mrs condition)
                         data
                         :unique nil :sort :i-id
                         :meter ometer)))
+         (condition (if mrs
+                      (if (or (null condition) (equal condition ""))
+                        "readings >= 1"
+                        (format nil "(~a) && (readings >= 1)" condition))
+                      condition))
          (results (when mrs
                     (select '("i-id" "parse-id" "result-id" "mrs")
                             '(:integer :integer :integer :string)
                             '("parse" "result")
-                            nil
+                            condition
                             mrs
                             :unique nil :sort :i-id)))
          (all (loop
@@ -64,22 +69,24 @@
                   do (nconc item output)
                   when (> length 0) collect item)))
     (when results
-      (loop
-          for item in all
-          for key = (get-field :i-id item)
-          for matches =
-            (when (eql key (get-field :i-id (first results)))
-              (loop
-                  for result = (first results)
-                  while (and result 
-                             (eql key (get-field :i-id result)))
-                  collect (pop results)))
-          when matches
-          do (nconc item (pairlis '(:parse-id 
-                                    :results)
-                                  (list (get-field :parse-id (first matches))
-                                        matches))))
-      (setf all (sort (copy-list all) #'< 
+      (setf all
+        (loop
+            for item in all
+            for key = (get-field :i-id item)
+            for matches =
+              (when (eql key (get-field :i-id (first results)))
+                (loop
+                    for result = (first results)
+                    while (and result 
+                               (eql key (get-field :i-id result)))
+                    collect (pop results)))
+            when matches
+            collect (nconc item 
+                           (pairlis '(:parse-id 
+                                      :results)
+                                    (list (get-field :parse-id (first matches))
+                                          matches)))))
+      (setf all (sort all #'< 
                       :key #'(lambda (foo) (get-field :parse-id foo))))
       (rank-items items :gold mrs :sloppyp t))
     (when verbose

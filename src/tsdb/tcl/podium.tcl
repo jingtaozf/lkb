@@ -101,6 +101,7 @@ set globals(landscape) 0;
 set globals(abort) 0;
 set globals(idle_colours) {yellow orange red violet blue green};
 set globals(special_menues) {
+  .menu.process.menu.switches
   .menu.analyze.menu.values
   .menu.analyze.menu.division
   .menu.analyze.menu.phenomena
@@ -108,6 +109,7 @@ set globals(special_menues) {
   .menu.compare.menu.decoration
   .menu.compare.menu.intersection
   .menu.compare.menu.options
+  .menu.compare.menu.switches
   .menu.evolution.menu.values
   .menu.trees.menu.switches
   .menu.options.menu.condition
@@ -695,9 +697,19 @@ proc main {} {
 
   menu .menu.compare.menu.switches -tearoff 0
   .menu.compare.menu.switches add checkbutton \
+    -label "Subset Comparison" \
+    -variable globals(detail,subsetp);
+  .menu.compare.menu.switches add checkbutton \
+    -label "Best Parse Only" \
+    -variable globals(detail,bestp);
+  .menu.compare.menu.switches add checkbutton \
+    -label "Analogy Aggregation" \
+    -variable globals(analogy_aggregation_p) \
+    -command {tsdb_set analogy_aggregation_p}; 
+  .menu.compare.menu.switches add checkbutton \
     -label "Sloppy Alignment" \
     -variable compare_in_detail(options,sloppy_alignment) \
-    -command {tsdb_set detail_sloppy_alignment_p};
+    -command {tsdb_set sloppy_alignment_p};
 
   #
   # `Evolution' menu (and embedded cascades)
@@ -788,6 +800,8 @@ proc main {} {
     -label "Rank" -command {tsdb_trees rank};
   .menu.trees.menu add command \
     -label "Score" -command {tsdb_trees score};
+  .menu.trees.menu add command \
+    -label "Errors" -command {tsdb_trees errors};
   .menu.trees.menu add command \
     -label "Reset" -command {tsdb_file purge score};
   .menu.trees.menu add separator;
@@ -962,14 +976,6 @@ proc main {} {
   .menu.options.menu.switches add checkbutton \
     -label "Logarithmic Scales" \
     -variable globals(logscale);
-  .menu.options.menu.switches add checkbutton \
-    -label "Analogy Aggregation" \
-    -variable globals(analogy_aggregation_p) \
-    -command {tsdb_set analogy_aggregation_p}; 
-  .menu.options.menu.switches add checkbutton \
-    -label "Sloppy Alignment" \
-    -variable compare_in_detail(options,sloppy_alignment) \
-    -command {tsdb_set detail_sloppy_alignment_p};
   if {$globals(user) == "oe"} {
     .menu.options.menu.switches add checkbutton \
       -label "Custom Fields" \

@@ -252,7 +252,7 @@
 
 (defun analyze (data 
                 &key condition meter message thorough trees extras (readerp t)
-                     score gold)
+                     score gold sloppyp scorep)
 
   (declare (optimize (speed 3) (safety 0) (space 0)))
 
@@ -264,12 +264,13 @@
          (key (format 
                nil 
                "~a~@[ @ ~a~]~@[ # ~a~]~@[~* : trees~]~
-                ~@[~* : extras~]~@[ on ~a~]" 
+                ~@[~* : extras~]~@[ on ~a~@[ (scores)~]~]" 
                data condition foo trees extras
                (cond
                 ((stringp score) score)
                 (score "itself")
-                (gold (format nil "~a (gold)" gold)))))
+                (gold (format nil "~a (gold)" gold)))
+               scorep))
          (relations (read-database-schema data))
          (parse (rest (find "parse" relations :key #'first :test #'string=)))
          pfields ptypes result)
@@ -423,8 +424,8 @@
               (setf sorted 
                 (sort (copy-list all) 
                       #'< :key #'(lambda (foo) (get-field :parse-id foo)))))
-            (rank-items sorted :gold gold :score score 
-                        :condition condition)))
+            (rank-items sorted :gold gold :score score :condition condition 
+                        :sloppyp sloppyp :scorep scorep)))
         
         (setf (gethash key *tsdb-profile-cache*) result)))
     (when meter 
@@ -433,15 +434,19 @@
         (status :text (format nil "~a done" message) :duration 2)))
     result))
 
-(defun rank-items (items &key gold score condition sloppyp)
+(defun rank-items (items &key gold score condition sloppyp scorep)
   
   (declare (ignore condition))
 
   (loop
       with scores = (when (and (null gold) (stringp score))
-                      (select '("parse-id" "result-id" "rank")
-                              '(:integer :integer :integer)
-                              "score" nil score :sort :parse-id))
+                      (if scorep
+                        (select '("parse-id" "result-id" "rank" "score")
+                                '(:integer :integer :integer :string)
+                                "score" nil score :sort :parse-id)
+                        (select '("parse-id" "result-id" "rank")
+                                '(:integer :integer :integer)
+                                "score" nil score :sort :parse-id)))
       with golds = (when gold
                      (select '("parse-id" "t-version" "result-id")
                              '(:integer :integer :integer)
@@ -1564,15 +1569,26 @@
        (when (or (stringp file) (stringp append)) (close stream))
        0)))))
 
-(defun intersect-results (oitem nitem fields)
+(defun intersect-results (oitem nitem fields subsetp bestp)
   (loop
       with oresults = (get-field :results oitem)
+      with best = (when bestp
+                    (let ((ranks (get-field :ranks oitem)))
+                      (loop
+                          for rank in ranks
+                          for foo = (get-field :rank rank)
+                          thereis (when (eql foo 1) 
+                                    (get-field :result-id rank)))))
       with nresults = (get-field :results nitem)
       for field in fields
       for predicate = (find-attribute-predicate field)
-      for ovalues = (loop for result in oresults 
+      for ovalues = (loop 
+                        for result in oresults 
+                        when (or (null bestp) 
+                                 (eql (get-field :result-id result) best))
                         collect (get-field field result))
-      for nvalues = (loop for result in nresults 
+      for nvalues = (loop 
+                        for result in nresults 
                         collect (get-field field result))
       for common = nil
       for oplus = (loop
@@ -1585,7 +1601,7 @@
                           (delete ovalue nvalues 
                                   :count 1 :test-not predicate)))
 
-      collect (list oplus common nvalues)))
+      collect (list oplus common (unless (and subsetp (null oplus)) nvalues))))
 
 (defun compare-in-detail (olanguage nlanguage
                           &key (condition *statistics-select-condition*)
@@ -1595,6 +1611,8 @@
                                (format :tcl)
                                (olabel "(g)old") 
                                (nlabel "new")
+                               subsetp bestp 
+                               (analogyp *statistics-analogy-aggregation-p*)
                                file append meter)
 
   (let* ((ometer (madjust / meter 2))
@@ -1611,6 +1629,7 @@
           (if (stringp olanguage) 
             (analyze olanguage 
                      :condition condition :thorough thorough
+                     :gold (when bestp olanguage) :sloppyp bestp
                      :meter ometer :message t)
             olanguage))
          (oitems (sort (copy-seq oitems) 
@@ -1749,8 +1768,10 @@
             (:tcl
              (format
               stream
-              "layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%"
-              (- row 1))))
+              "cell ~d 1 -contents {~a} -format data~%~
+               layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%~
+               layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%"
+              row (- row 3) (- row 1) row)))
         while (or oitems nitems)
         do 
           (let* ((oitem (first oitems))
@@ -1828,7 +1849,9 @@
               ;; two items of same identifier have equal values for all 
               ;; .show. attributes (as they should |:-)
               ;;
-              (setf clashes (intersect-results oitem nitem thorough))
+              (setf clashes 
+                (intersect-results oitem nitem thorough 
+                                               subsetp bestp))
               (when (or (loop
                             for clash in clashes
                             thereis (or (first clash) (third clash)))
@@ -1935,119 +1958,123 @@
               ;; if .oi-id. is less or equal (which it should not) to 
               ;; .ni-id. output .compare. values for `old' item and continue
               ;;
-              (setf clashes (intersect-results oitem nil thorough))
-              (case format
-                (:tcl
-                 (format
-                  stream
-                  "cell ~d ~d -contents {~a} -format data~%"
-                  row 1 oi-id)
-                 (loop
-                     for j from (if sloppyp 3 2)
-                     for key in show for value in oshow
-                     do
-                       (if (and (eq key :i-input) (stringp olanguage))
-                         (format
-                          stream
-                          "cell ~d ~d -contents {~a} ~
-                           -format data -key ~d -source {~a}~%"
-                          row j (tcl-escape-braces value) oi-id olanguage)
+              (unless analogyp
+                (setf clashes 
+                  (intersect-results oitem nil thorough nil bestp))
+                (case format
+                  (:tcl
+                   (format
+                    stream
+                    "cell ~d ~d -contents {~a} -format data~%"
+                    row 1 oi-id)
+                   (loop
+                       for j from (if sloppyp 3 2)
+                       for key in show for value in oshow
+                       do
+                         (if (and (eq key :i-input) (stringp olanguage))
+                           (format
+                            stream
+                            "cell ~d ~d -contents {~a} ~
+                             -format data -key ~d -source {~a}~%"
+                            row j (tcl-escape-braces value) oi-id olanguage)
+                           (format
+                            stream
+                            "cell ~d ~d -contents {~a} -format data~%"
+                            row j (tcl-escape-braces value))))
+                   (loop
+                       for value in ocompare for j from (+ shows 1)
+                       do
                          (format
                           stream
                           "cell ~d ~d -contents {~a} -format data~%"
-                          row j (tcl-escape-braces value))))
-                 (loop
-                     for value in ocompare for j from (+ shows 1)
-                     do
-                       (format
-                        stream
-                        "cell ~d ~d -contents {~a} -format data~%"
-                        row j (tcl-escape-braces value)))
-                 (loop
-                     for j from (+ shows compares compares 1) by 3
-                     for field in thorough
-                     for (oclash common nclash) in clashes
-                     for otag = (intern (gensym "") :keyword)
-                     do
-                       (setf nclash nclash)
-                       (setf common common)
-                       (setf (get :source otag) olanguage)
-                       (setf (get :contrast otag) nlanguage)
-                       (setf (get :i-id otag) oi-id)
-                       (setf (get :i-input otag)
-                         (or (get-field :o-input oitem)
-                             (get-field :i-input oitem)))
-                       (setf (get :field otag) field)
-                       (setf (get :value otag) oclash)
-                       (format
-                        stream
-                        "cell ~d ~d -contents ~d -format data ~
-                         -action browse -tag ~a~%"
-                        row j (length oclash) otag))))
+                          row j (tcl-escape-braces value)))
+                   (loop
+                       for j from (+ shows compares compares 1) by 3
+                       for field in thorough
+                       for (oclash common nclash) in clashes
+                       for otag = (intern (gensym "") :keyword)
+                       do
+                         (setf nclash nclash)
+                         (setf common common)
+                         (setf (get :source otag) olanguage)
+                         (setf (get :contrast otag) nlanguage)
+                         (setf (get :i-id otag) oi-id)
+                         (setf (get :i-input otag)
+                           (or (get-field :o-input oitem)
+                               (get-field :i-input oitem)))
+                         (setf (get :field otag) field)
+                         (setf (get :value otag) oclash)
+                         (format
+                          stream
+                          "cell ~d ~d -contents ~d -format data ~
+                           -action browse -tag ~a~%"
+                          row j (length oclash) otag))))
+                (incf row))
               (pop oitems)
               (when noffset 
                 (when (and (zerop (decf noffset)) (null ooffset))
-                  (setf ooffset 0)))
-              (incf row))
+                  (setf ooffset 0))))
              (t
               ;;
               ;; otherwise (.ni-id. is less than .oi-id.) output .compare.
               ;; values for it and leave `old' item to next iteration
               ;;
-              (setf clashes (intersect-results nil nitem thorough))
-              (case format
-                (:tcl
-                 (format
-                  stream
-                  "cell ~d ~d -contents {~a} -format data~%"
-                  row (if sloppyp 2 1) ni-id)
-                 (loop
-                     for j from (if sloppyp 3 2)
-                     for key in show for value in nshow
-                     do
-                       (if (and (eq key :i-input) (string nlanguage))
-                         (format
-                          stream
-                          "cell ~d ~d -contents {~a} ~
-                           -format data -key ~d -source {~a}~%"
-                          row j (tcl-escape-braces value) ni-id nlanguage)
+              (unless analogyp
+                (setf clashes 
+                  (intersect-results nil nitem thorough nil nil))
+                (case format
+                  (:tcl
+                   (format
+                    stream
+                    "cell ~d ~d -contents {~a} -format data~%"
+                    row (if sloppyp 2 1) ni-id)
+                   (loop
+                       for j from (if sloppyp 3 2)
+                       for key in show for value in nshow
+                       do
+                         (if (and (eq key :i-input) (string nlanguage))
+                           (format
+                            stream
+                            "cell ~d ~d -contents {~a} ~
+                             -format data -key ~d -source {~a}~%"
+                            row j (tcl-escape-braces value) ni-id nlanguage)
+                           (format
+                            stream
+                            "cell ~d ~d -contents {~a} -format data~%"
+                            row j (tcl-escape-braces value))))
+                   (loop
+                       for value in ncompare for j from (+ shows compares 1)
+                       do
                          (format
                           stream
                           "cell ~d ~d -contents {~a} -format data~%"
-                          row j (tcl-escape-braces value))))
-                 (loop
-                     for value in ncompare for j from (+ shows compares 1)
-                     do
-                       (format
-                        stream
-                        "cell ~d ~d -contents {~a} -format data~%"
-                        row j (tcl-escape-braces value)))
-                 (loop
-                     for j from (+ shows compares compares 1) by 3
-                     for field in thorough
-                     for (oclash common nclash) in clashes
-                     for ntag = (intern (gensym "") :keyword)
-                     do
-                       (setf oclash oclash)
-                       (setf common common)
-                       (setf (get :source ntag) nlanguage)
-                       (setf (get :contrast ntag) olanguage)
-                       (setf (get :i-id ntag) ni-id)
-                       (setf (get :i-input ntag)
-                         (or (get-field :o-input nitem)
-                             (get-field :i-input nitem)))
-                       (setf (get :field ntag) field)
-                       (setf (get :value ntag) nclash)
-                       (format
-                        stream
-                        "cell ~d ~d -contents ~d -format data ~
-                         -action browse -tag ~a~%"
-                        row (+ j 2) (length nclash) ntag))))
+                          row j (tcl-escape-braces value)))
+                   (loop
+                       for j from (+ shows compares compares 1) by 3
+                       for field in thorough
+                       for (oclash common nclash) in clashes
+                       for ntag = (intern (gensym "") :keyword)
+                       do
+                         (setf oclash oclash)
+                         (setf common common)
+                         (setf (get :source ntag) nlanguage)
+                         (setf (get :contrast ntag) olanguage)
+                         (setf (get :i-id ntag) ni-id)
+                         (setf (get :i-input ntag)
+                           (or (get-field :o-input nitem)
+                               (get-field :i-input nitem)))
+                         (setf (get :field ntag) field)
+                         (setf (get :value ntag) nclash)
+                         (format
+                          stream
+                          "cell ~d ~d -contents ~d -format data ~
+                           -action browse -tag ~a~%"
+                          row (+ j 2) (length nclash) ntag))))
+                (incf row))
               (pop nitems)
               (when ooffset 
                 (when (and (zerop (decf ooffset)) (null noffset))
-                  (setf noffset 0)))
-              (incf row)))))
+                  (setf noffset 0)))))))
     
     (when (or (stringp file) (stringp append)) (close stream))))
 
@@ -2288,6 +2315,32 @@
                          i))))))
            (when (and stream (or (stringp file) (stringp append)))
              (close stream)))))
+      (:inspect
+       (labels ((read-score (rank)
+                  (let* ((score (get-field :score rank))
+                         (score (cond
+                                 ((numberp score) score)
+                                 ((stringp score)
+                                  (ignore-errors (read-from-string score))))))
+                    (when score
+                      (setf (get-field :score rank) score))
+                    rank)))
+         (let* ((i-id (get :i-id tag))
+                (condition (format nil "i-id == ~a" i-id))
+                (source (get :source tag))
+                (match (get :match tag))
+                (match (when match (read-score match)))
+                (errors (get :errors tag))
+                (errors (loop
+                            for error in errors
+                            collect (read-score error)))
+                (others (get :others tag))
+                (others (loop
+                            for other in others
+                            collect (read-score other)))
+                (inspect (list errors match others)))
+           (browse-trees 
+            source :condition condition :interactive t :inspect inspect))))
       (:reconstruct
        (let* ((i-id (get :i-id tag))
               (i-input (get :i-input tag))
@@ -2296,7 +2349,7 @@
                             (read-from-string derivation) 
                             derivation)))
          (reconstruct-item i-id i-input derivation))))))
-
+
 (defun summarize-performance-parameters 
     (items 
      &key (fields *statistics-performance-summary*)

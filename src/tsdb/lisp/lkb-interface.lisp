@@ -282,7 +282,7 @@
                 (:total . ,total) (:first . ,first) 
                 (:unifications . ,unifications) (:copies . ,copies)
                 (:readings . ,readings)
-                (:error . ,output)
+                (:error . ,(pprint-error output))
                 (:comment . ,comment)
                 (:results .
                  ,(append
@@ -332,15 +332,11 @@
     (unless trace (release-temporary-storage))
     (append
      (when condition
-       (pairlis '(:readings 
-                  :condition 
-                  :error
-                  :timeup)
-                (list -1 
-                      (unless burst condition)
-                      (format nil "~a" condition)
-                      (when (> *edge-id* *maximum-number-of-edges*)
-                        (format nil "edge limit (~a)" *edge-id*)))))
+         (let* ((error (tsdb::normalize-string 
+                        (format nil "~a" condition)))
+                (error (pprint-error error)))
+           (pairlis '(:readings :condition :error)
+                    (list -1 (unless burst condition) error))))
      return)))
 
 
@@ -352,53 +348,48 @@
                            burst (nderivations 0))
   (declare (ignore derivations string id trees-hook))
 
+  (let* ((*package* *lkb-package*)
+         (*maximum-number-of-edges* (if (or (null edges) (zerop edges))
+                                      *maximum-number-of-edges*
+                                      edges))
+         (*first-only-p* (unless exhaustive
+                           (if (integerp readings)
+                             readings
+                             (if (integerp *first-only-p*)
+                                *first-only-p*
+                               1))))
+         (*do-something-with-parse* nil)
+         (stream (make-string-output-stream))
+         (*standard-output* 
+          (if trace
+            (make-broadcast-stream *standard-output* stream)
+            stream))
+         (*unifications* 0)
+         (*copies* 0)
+         (*subsumptions* 0)
+         tgc tcpu treal conses symbols others)
 
-  (multiple-value-bind (return condition)
-      (ignore-errors
-       (let* ((*package* *lkb-package*)
-              (*maximum-number-of-edges* (if (or (null edges) (zerop edges))
-                                           *maximum-number-of-edges*
-                                           edges))
-              (*first-only-p* (unless exhaustive
-                                (if (integerp readings)
-                                  readings
-                                  (if (integerp *first-only-p*)
-                                    *first-only-p*
-                                    1))))
-              (*do-something-with-parse* nil)
-              (stream (make-string-output-stream))
-              (*standard-output* 
-               (if trace
-                 (make-broadcast-stream *standard-output* stream)
-                 stream))
-              (*unifications* 0)
-              (*copies* 0)
-              (*subsumptions* 0)
-              tgc tcpu treal conses symbols others error)
+    (multiple-value-bind (return condition)
+        (ignore-errors
+         (when (or (null mrs) (not (mrs::psoa-p mrs)))
+           (error "null or malformed input MRS"))
+         (unless (mrs::make-scoped-mrs mrs)
+           (error "input MRS does not scope"))
          (multiple-value-bind (strings f-tasks e-tasks s-tasks
                                unifications copies aedges pedges)
-             (if (mrs::make-scoped-mrs mrs)
-               (tsdb::time-a-funcall
-                #'(lambda ()
-                    (handler-case (generate-from-mrs mrs)
-                      (storage-condition (condition)
-                        (setf error 
-                          (format nil "storage condition: `~a'" condition)))
-                      (error (condition)
-                        (setf error
-                          (format nil "error: `~a'" condition)))))
-                #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
-                   (declare (ignore ignore))
-                   (setf tgc (+ tgcu tgcs) tcpu (+ tu ts) treal tr
-                         conses (* scons 8) symbols (* ssym 24) 
-                         others sother)))
-               (setf error "input MRS does not scope"))
+             (tsdb::time-a-funcall
+              #'(lambda ()
+                  (generate-from-mrs mrs))
+              #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
+                  (declare (ignore ignore))
+                  (setf tgc (+ tgcu tgcs) tcpu (+ tu ts) treal tr
+                        conses (* scons 8) symbols (* ssym 24) 
+                        others sother)))
 
            (let* ((*print-pretty* nil) (*print-level* nil) (*print-length* nil)
                   (output (get-output-stream-string stream))
                   (readings (length strings))
-                  (readings (if (and (null error)
-                                     (or (equal output "") (> readings 0)))
+                  (readings (if (or (equal output "") (> readings 0))
                               readings
                               -1))
                   #+:pooling
@@ -427,7 +418,7 @@
                 (:p-ftasks . ,f-tasks)
                 (:unifications . ,unifications) (:copies . ,copies)
                 (:readings . ,readings)
-                (:error . ,output)
+                (:error . ,(pprint-error output))
                 (:comment . ,comment)
                 (:results .
                  ,(loop
@@ -451,33 +442,52 @@
                         (pairlis '(:result-id :mrs :tree :string
                                    :derivation :size)
                                  (list i mrs tree string
-                                       derivation size)))))))))
-    (unless trace 
-      (clear-gen-chart)
-      (reset-pools :forcep t)
-      (release-temporary-storage))
-    (append
-     (when condition
-       (pairlis '(:readings 
-                  :condition 
-                  :error
-                  :timeup)
-                (list -1 
-                      (unless burst condition)
-                      (format nil "~a" condition)
-                      (when (> *edge-id* *maximum-number-of-edges*)
-                        (format nil "edge limit (~a)" *edge-id*)))))
-     return)))
+                                       derivation size))))))))
+      (unless trace 
+        (clear-gen-chart)
+        (reset-pools :forcep t)
+        (release-temporary-storage))
+    
+      (append
+       (when condition
+         (let* ((error (tsdb::normalize-string 
+                        (format nil "~a" condition)))
+                (error (pprint-error error)))
+           (pairlis '(:readings :condition :error)
+                    (list -1 (unless burst condition) error))))
+       return))))
 
+
+(defun pprint-error (string)
+  (let* ((string (tsdb::normalize-string string))
+         (limit "probable runaway rule:")
+         (n (min (length string) (min (length limit))))
+         (index "Some lexical entries could not be found from MRS"))
+    (cond
+     ((string-equal string limit :end1 n)
+      (format nil "edge limit (~a)" *maximum-number-of-edges*))
+     ((search index string)
+      (subseq string 0 (max (- (search index string) 1) 0)))
+     (t string))))
+         
+         
 (defun compute-derivation-tree (edge)
-  (flet ((edge-label (edge)
-           (intern 
-            (typecase (edge-rule edge)
-              (string (string-upcase (edge-rule edge)))
-              (symbol (string (edge-rule edge)))
-              (rule (string (rule-id (edge-rule edge))))
-              (t :unknown))
-            *lkb-package*)))
+  (labels ((edge-label (edge)
+             (intern 
+              (typecase (edge-rule edge)
+                (string (string-upcase (edge-rule edge)))
+                (symbol (string (edge-rule edge)))
+                (rule (string (rule-id (edge-rule edge))))
+                (t :unknown))
+              *lkb-package*))
+           (unfold-generator-leaf (edge id score start end rules)
+             (if (null rules)
+               (list id (first (edge-lex-ids edge)) score start end
+                     (list (edge-rule edge) start end))
+               (list id (intern (first rules) *lkb-package*) score start end
+                     (unfold-generator-leaf
+                      edge id score start end (rest rules))))))
+                 
     (let* ((id (edge-id edge))
            (score (float (or (edge-score edge) 0)))
            (configuration (and (null (edge-children edge))
@@ -489,14 +499,33 @@
            (end (or (edge-to edge)
                     (when configuration 
                       (chart-configuration-end configuration))
-                    -1)))
+                    -1))
+           (lexemes (when (g-edge-p edge) (g-edge-lexemes edge))))
+      
       (cond
        ((edge-morph-history edge)
         (list id (edge-label edge) score start end
               (compute-derivation-tree (edge-morph-history edge))))
+
+       #+:mrs
+       ((and (g-edge-p edge) lexemes
+             (not (null (mrs::found-lex-rule-list (first lexemes))))
+             ;;
+             ;; _fix_me_
+             ;; what was i thinking?  in the face of one or more derivational
+             ;; rules plus an inflectional rule, this list can be of arbitrary
+             ;; length, of course.
+             ;;
+             #+:null
+             (null (rest (mrs::found-lex-rule-list (first lexemes))))
+             (null (edge-children edge)))
+        (let ((rules (mrs::found-lex-rule-list (first lexemes))))
+          (unfold-generator-leaf edge id score start end rules)))
+
        ((null (edge-children edge))
         (list id (first (edge-lex-ids edge)) score start end
               (list (edge-rule edge) start end)))
+
        (t
         (let* ((start *chart-limit*)
                (end 0)

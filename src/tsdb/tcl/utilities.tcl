@@ -814,7 +814,7 @@ proc tsdb_set {variable {value ""}} {
         set variable "*statistics-aggregate-dimension*";
         set value $globals(aggregate_dimension);
       }
-      detail_sloppy_alignment_p {
+      sloppy_alignment_p {
         set variable "*statistics-detail-sloppy-alignment-p*"
         set value \
           [lispify_truth_value $compare_in_detail(options,sloppy_alignment)];

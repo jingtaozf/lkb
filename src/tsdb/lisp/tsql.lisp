@@ -29,7 +29,7 @@
 (defun select (attributes types relations condition
                &optional (language *tsdb-data*) 
                &key absolute unique
-                    quiet ro meter status file (format :lisp) sort
+                    quiet ro meter status file (format :lisp) (readerp t) sort
                     efs *tsdb-efs*)
   (declare (special *statistics-tcl-formats*)
            (ignore efs))
@@ -110,7 +110,7 @@
             for line in result
             do (push (pairlis keys line) data))
 
-        (when (find-attribute-reader :i-input)
+        (when (and readerp (find-attribute-reader :i-input))
           (loop
               with reader = (find-attribute-reader :i-input)
               for tuple in data

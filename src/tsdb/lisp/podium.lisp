@@ -638,10 +638,11 @@
                           *tsdb-podium-windows*)))
                 (status :text (format nil "~a done" message) :duration 2))))
 
-           ((analyze-trees analyze-update analyze-decisions)
+           ((analyze-errors analyze-trees analyze-update analyze-decisions)
             (let* ((data (first arguments))
                    (meter (make-meter 0 1))
                    (type (case action
+                           (analyze-errors "Error")
                            (analyze-trees "Tree")
                            (analyze-update "Update")))
                    (title (format 

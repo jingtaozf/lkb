@@ -198,9 +198,8 @@
          (setf (clim:command-enabled 'com-show-chart-from-tree frame) nil)))))
 |#
 
-(defun show-parse-tree-frame (parses)
-  (mp:run-function "Parse results" 
-                             #'show-parse-tree-frame-really parses)) 
+(defun show-parse-tree-frame (parses &optional (title "Parse results"))
+  (mp:run-function title #'show-parse-tree-frame-really parses)) 
 
 (defun show-parse-tree-frame-really (parses)
   (let ((frame (clim:make-application-frame 'parse-tree-frame)))

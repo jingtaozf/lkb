@@ -39,6 +39,8 @@
 (defstruct ctree 
   edge
   id
+  score
+  flags
   symbol
   record
   ink)
@@ -81,6 +83,29 @@
   (setf *cached-category-abbs* nil)
 
   ;;
+  ;; when called in error analysis mode, i.e. against the scoring results of
+  ;; some stochastic parse selection model, throw out all edges that are not 
+  ;; part of the set of trees for closer inspection.
+  ;;
+  (when (compare-frame-inspect frame)
+    (setf (compare-frame-mode frame) :inspect)
+    (loop
+        with result = nil
+        with inspect = (compare-frame-inspect frame)
+        with all = (append (first inspect) 
+                           (list (second inspect)) 
+                           (third inspect))
+        for edge in edges
+        for id = (edge-foo edge)
+        for score = (find id all :key #'(lambda (foo)
+                                          (rest (assoc :result-id foo))))
+        when score do 
+          (setf (edge-score edge) (rest (assoc :score score)))
+          (push edge result)
+        finally
+          (setf edges (nreverse result))))
+
+  ;;
   ;; large sets of edges can take some time (and memory :-{) to display; query
   ;; for user confirmation before moving on.
   ;;
@@ -104,21 +129,26 @@
   (when (null (compare-frame-input frame))
     (setf (compare-frame-input frame) 
       (format nil "~{~a~^ ~}" (edge-leaves (first edges)))))
-  
+
   ;;
   ;; wrap each edge into a `ctree' structure, so that we can record additional
   ;; information (associated parse tree symbol, CLIM output record, et al.).
   ;;
   (setf (compare-frame-trees frame)
     (loop
+        with inspect = (compare-frame-inspect frame)
+        with gold = (rest (assoc :result-id (second inspect)))
         for i from 1
         for edge in edges
         for id = (if (compare-frame-derivations frame)
                    (edge-foo edge)
                    i)
+        for score = (edge-score edge)
         for symbol = (when *tree-use-node-labels-p*
                        (make-new-parse-tree edge 1 t))
-        for tree = (make-ctree :edge edge :id id :symbol symbol)
+        for flags = (when (and gold (= id gold)) (list :gold))
+        for tree = (make-ctree :edge edge :id id 
+                               :score score :flags flags :symbol symbol)
         collect tree
         when (and *tree-use-node-labels-p* (zerop (mod i 50))) do
           #+:allegro
@@ -292,6 +322,7 @@
    (gversion :initform nil :accessor compare-frame-gversion)
    (gactive :initform nil :accessor compare-frame-gactive)
    (gderivation :initform nil :accessor compare-frame-gderivation)
+   (inspect :initform nil :accessor compare-frame-inspect)
    (update :initform nil :accessor compare-frame-update)
    (controller :initform nil :accessor compare-frame-controller))
   (:panes
@@ -543,7 +574,7 @@
   (unless (and (integerp *tree-display-threshold*)
                (> (length (compare-frame-trees frame)) 
                   *tree-display-threshold*))
-    (clim:formatting-table (stream :x-spacing "XX")
+    (clim:formatting-table (stream :x-spacing "X")
       (loop
           for tree in (compare-frame-trees frame)
           do
@@ -561,27 +592,34 @@
                           (format stream "~%[~a]" (ctree-id tree))))
                       (clim:formatting-cell 
                           (stream :align-x :left :align-y :center)
-                        (clim:with-output-as-presentation 
-                            (stream tree 'ctree :single-box t)
-                          (clim:format-graph-from-root
-                           (or (ctree-symbol tree)
-                               (setf (ctree-symbol tree)
-                                 (make-new-parse-tree (ctree-edge tree) 1)))
-                           #'(lambda (node stream)
-                               (multiple-value-bind (s bold-p) 
-                                   (get-string-for-edge node)
-                                 (clim:with-text-face
-                                     (stream (if bold-p :bold :roman))
-                                   (write-string s stream))))
-                           #'(lambda (node) (get node 'daughters))
-                           :graph-type :parse-tree
-                           :stream stream 
-                           :merge-duplicates nil
-                           :orientation :vertical
-                           :generation-separation 7
-                           :move-cursor t
-                           :within-generation-separation 7
-                           :center-nodes nil)))
+                        (clim:formatting-row (stream)
+                          (clim:formatting-cell 
+                              (stream :align-x :left :align-y :top)
+                            (format stream "~@[(~a)~]~%" (ctree-score tree)))
+                          (clim:formatting-cell 
+                              (stream :align-x :center :align-y :top)
+                            (clim:with-output-as-presentation 
+                                (stream tree 'ctree :single-box t)
+                              (clim:format-graph-from-root
+                               (or (ctree-symbol tree)
+                                   (setf (ctree-symbol tree)
+                                     (make-new-parse-tree 
+                                      (ctree-edge tree) 1)))
+                               #'(lambda (node stream)
+                                   (multiple-value-bind (s bold-p) 
+                                       (get-string-for-edge node)
+                                     (clim:with-text-face
+                                         (stream (if bold-p :bold :roman))
+                                       (write-string s stream))))
+                               #'(lambda (node) (get node 'daughters))
+                               :graph-type :parse-tree
+                               :stream stream 
+                               :merge-duplicates nil
+                               :orientation :vertical
+                               :generation-separation 7
+                               :move-cursor t
+                               :within-generation-separation 7
+                               :center-nodes nil)))))
                       (terpri stream))))))))
     (update-tree-colours frame)))
 
@@ -612,9 +650,8 @@
                (update-discriminants 
                 (compare-frame-discriminants frame) edge t)
                (recompute-in-and-out frame)
-               (if (member (compare-frame-mode frame) 
-                           '(:concise :ordered) 
-                           :test #'eq)
+               (if (smember (compare-frame-mode frame) 
+                            '(:concise :ordered :inspect))
                  (update-trees frame)
                  (update-tree-colours frame))))
 	    (no
@@ -630,9 +667,8 @@
 	     (clim:with-application-frame (frame)
                (update-discriminants 
                 (compare-frame-discriminants frame) edge nil)
-               (if (member (compare-frame-mode frame) 
-                           '(:concise :ordered) 
-                           :test #'eq)
+               (if (smember (compare-frame-mode frame) 
+                            '(:concise :ordered :inspect))
                  (update-trees frame)
                  (update-tree-colours frame))))
 	    (show 
@@ -826,6 +862,22 @@
                     (let ((foo (ctree-id foo))
                           (bar (ctree-id bar)))
                       (and (numberp foo) (numberp bar) (<= foo bar))))))))
+         (loop
+             for discriminant in (compare-frame-discriminants frame)
+             do
+               (setf (discriminant-hidep discriminant) nil)))
+        (:inspect
+         (setf (compare-frame-trees frame)
+           (stable-sort 
+            (copy-list (compare-frame-otrees frame))
+            #'(lambda (foo bar)
+                (let ((flags (ctree-flags foo))
+                      (foo (ctree-score foo))
+                      (bar (ctree-score bar)))
+                  (when (and (numberp foo) (numberp bar))
+                  (or (> foo bar)
+                      (and (= foo bar) (smember :gold flags))))))))
+
          (loop
              for discriminant in (compare-frame-discriminants frame)
              do

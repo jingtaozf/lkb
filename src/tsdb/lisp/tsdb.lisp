@@ -420,6 +420,13 @@
                              &key (condition *statistics-select-condition*))
   (declare (special *statistics-select-condition*))
   
+  ;;
+  ;; _fix_me_
+  ;; make an attempt to sort source profiles into ascending order, such that
+  ;; the output has a chance of coming out in ascending sorted order (assuming
+  ;; each input profile was properly sorted); our poor little tsdb(1) engine
+  ;; is so much more efficient with sorted input files.       (15-feb-03; oe)
+  ;;
   (when (loop
             with base = (profile-granularity (first profiles))
             for profile in (rest profiles)

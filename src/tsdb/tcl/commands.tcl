@@ -613,7 +613,7 @@ proc tsdb_process {code {data ""} {key ""}} {
     negative {set condition "i-wf == 0"}
     condition {
       set current [unlispify_string $globals(condition)];
-       if {[condition_input "where" $current]} {
+       if {[condition_input "where" $current where]} {
         return;
       }; # if
       set condition [lispify_string $globals(input)];
@@ -668,6 +668,9 @@ proc tsdb_execute {code tag} {
       send_to_lisp :event "(execute :$code |$tag|)";
     }
     reconstruct {
+      send_to_lisp :event "(execute :$code |$tag|)";
+    }
+    inspect {
       send_to_lisp :event "(execute :$code |$tag|)";
     }
   }; # switch
@@ -950,9 +953,12 @@ proc tsdb_compare_in_detail {} {
     }; # if
   }; # foreach
 
-  set command [format "(detail \"%s\" \"%s\" :show (%s) :compare (%s))" \
+  set command [format "(detail \"%s\" \"%s\" :show (%s) :compare (%s) \
+                               :subsetp %s :bestp %s)" \
                       $compare_in_detail(source) $globals(data) \
-                      $show $compare];
+                      $show $compare \
+                      [lispify_truth_value $globals(detail,subsetp)] \
+                      [lispify_truth_value $globals(detail,bestp)]];
   send_to_lisp :event $command;
  
 }; # tsdb_compare_in_detail()
@@ -1077,6 +1083,16 @@ proc tsdb_trees {action} {
     set command \
       [format \
        "(analyze-scores \"%s\" \"%s\" :scorep %s :spartanp %s \
+         :n %d :test %s :loosep %s)" \
+       $target $source \
+       [lispify_truth_value $globals(tree,scorep)] \
+       [lispify_truth_value $spartanp] \
+       $globals(tree,beam) $globals(tree,comparison) \
+       [lispify_truth_value $globals(tree,loosep)]];
+  } elseif {$action == "errors"} {
+    set command \
+      [format \
+       "(analyze-errors \"%s\" \"%s\" :scorep %s :spartanp %s \
          :n %d :test %s :loosep %s)" \
        $target $source \
        [lispify_truth_value $globals(tree,scorep)] \
