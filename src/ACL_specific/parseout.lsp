@@ -1,4 +1,4 @@
-;;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
 ;;; see licence.txt for conditions
 
 
@@ -18,6 +18,9 @@
 
 (defun lkb-parse-tree-font nil
   (list :sans-serif :roman (or *parse-tree-font-size* 9)))
+
+(defun lkb-summary-tree-font ()
+  (list :sans-serif :roman (or *summary-tree-font-size* 7)))
 
 ; replaces  *ptree-text-style* 
 
@@ -177,8 +180,7 @@
   (current-chart :initform nil
 	    :accessor parse-tree-frame-current-chart))
   :display-function 'draw-res-trees-window
-  :text-style (clim:parse-text-style 
-               (list :sans-serif :roman 7))
+  :text-style (clim:parse-text-style  (lkb-summary-tree-font))
   :width :compute
   :height :compute)
 
@@ -220,6 +222,7 @@
   (declare (ignore max-width max-height))
   (dolist (tree (parse-tree-frame-trees window))
     (setf (prtree-output-record tree)
+    (clim:with-text-style (stream (lkb-summary-tree-font))
       (clim:with-new-output-record (stream)
 	(clim:with-output-recording-options (stream :record t)
 	  (clim:with-output-as-presentation 
@@ -240,7 +243,7 @@
 	     :move-cursor t
 	     :within-generation-separation 5
 	     :center-nodes nil)))
-	(terpri stream)))))
+	(terpri stream))))))
 
 
 (define-parse-tree-frame-command (com-multiple-tree-menu)
