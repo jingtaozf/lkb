@@ -5,6 +5,12 @@
 
 (in-package :cl-user)
 
+;; moved from ACL_specific/emacs.lsp
+#+allegro
+(defun record-source (type stream position)
+  (declare (ignore position))
+  (setf (excl:source-file type :lkb) (excl::filename stream)))
+
 (defun check-for (character istream name)
    (let ((next-char (peek-char t istream nil 'eof)))
       (unless (char= next-char character)
