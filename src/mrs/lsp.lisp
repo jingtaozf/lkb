@@ -26,7 +26,7 @@
          (psoa (cond 
                 ((psoa-p psoa) psoa)
                 ((stringp psoa) (read-mrs-from-string psoa))
-                ((numberp psoa) (lkb::lsp-retrieve-object psoa))))
+                ((numberp psoa) (lkb::lsp-retrieve-object id psoa))))
          (action (intern (string (pop command)) :mrs))
          (return lkb::%lsp-ok%))
     (case action

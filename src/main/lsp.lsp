@@ -40,8 +40,6 @@
 
 (defconstant %lsp-invalid-format% 6)
 
-(defconstant %lsp-invalid-format% 6)
-
 (defconstant %lsp-mysterious-error% 42)
 
 (defparameter *lsp-port* 4712)
