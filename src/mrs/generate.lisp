@@ -123,7 +123,7 @@
   (handler-case (generate-from-mrs-internal mrs)
     (condition (condition)
       (if signal
-        (signal condition)
+        (error condition)
         (warn (format nil "~a" condition))))))
 
 (defun generate-from-mrs-internal (input-sem)
@@ -145,7 +145,7 @@
     ;;
     (unless (and (hash-table-p mrs::*relation-index*)
                  (> (hash-table-count mrs::*relation-index*) 0))
-      (signal 'generator-uninitialized))
+      (error 'generator-uninitialized))
     
     (let (lex-results lex-items grules lex-orderings 
           tgc tcpu conses symbols others
@@ -187,7 +187,7 @@
             for ep in (mrs::psoa-liszt input-sem)
             unless (getf rel-indexes ep) do (push ep %generator-unknown-eps%))
         (when %generator-unknown-eps%
-          (signal 'unknown-predicates %generator-unknown-eps%))
+          (error 'unknown-predicates :eps %generator-unknown-eps%))
         ;;
         ;; _fix_me_
         ;; i believe the following should never happen, i.e. we rightly fail
