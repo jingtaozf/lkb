@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.3  1998/08/12 01:38:30  malouf
+;; Change to DFKI directory structure and add tsdb.
+;;
 ;; Revision 1.2  1998/07/23 01:24:05  aac
 ;; mrs equality and removing remnants of page packages
 ;;
@@ -32,11 +35,6 @@
 ;;; to be done: use (tdl::show-current-domain) rather than hardwire
 ;;; domain-package 
 ;;; the defaults are for German
-
-#+lkb
-(defun vsym (str) 
-  ;;; allow mrsglobals-eng file to be system independent
-  (intern (string-upcase str) "USER"))
 
 (defparameter *initial-semantics-path* 
   `(,(vsym "SYNSEM") ,(vsym "LOC") ,(vsym "CONT"))

@@ -96,18 +96,20 @@
 
          
 ;;; WK: with an ugly way to print out 'extra' infos (for German)
-#-lkb(defun get-print-name (var-struct)
+#-lkb
+(defun get-print-name (var-struct)
   (if (var-p var-struct)
       (if (var-extra var-struct)
           (concatenate 'string (var-name var-struct) " " (format nil "~{ ~S~%~}" (var-extra var-struct)))
         (var-name var-struct))
   (format nil "u")))
   
-#+lkb(defun get-print-name (var-struct)
-       (if (var-p var-struct)
-           (format nil "~A ~{ ~A~}" (var-name var-struct) 
-                   (extra-value-strings (var-extra var-struct)))
-         "u"))
+#+lkb
+(defun get-print-name (var-struct)
+  (if (var-p var-struct)
+    (format nil "~A ~{ ~A~}" (var-name var-struct) 
+            (extra-value-strings (var-extra var-struct)))
+    "u"))
 
 (defun extra-value-strings (extra)
   (for fvp in extra

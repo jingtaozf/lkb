@@ -1,27 +1,27 @@
 (in-package "MAKE")
 
-#|
-;;; loading vitrification rules
-(when (fboundp 'read-mrs-rule-file-aux)
-    (read-mrs-rule-file-aux 
-     (make-pathname :name "dan-rules.mrs"
-                    :directory (append *lkb-source-dir* '("mrs" "data")))))
-|#
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defsystem "mrs"
     :source-pathname (get-sources-dir #+:lkb "lkb" #+:page "page")
     :binary-pathname (get-binaries-dir #+:lkb "lkb" #+:page "page")
     :source-extension "lisp"
-    :depends-on ("lkb")
+    :depends-on (#+:lkb "lkb" #+:page "page")
+    :finally-do
+    (progn
+      #+:lkb
+      (when (fboundp 'read-mrs-rule-file-aux)
+        (read-mrs-rule-file-aux 
+         (make-pathname :name "dan-rules.mrs"
+                        :directory (dir-append (get-sources-dir "mrs")
+                                               '(:relative "mrs" "data"))))))
     :components
     ((:module "core"
       :source-pathname "mrs"
       :binary-pathname "mrs"
       :components
-      ((:file "lkb-mrs-package")
+      ((:file "mrs-package")
+       #+:lkb (:file "lkb-interface")   ; interface functions to LKB
+       #+:page (:file "page-interface") ; interface functions to PAGE
        (:file "mrsglobals")             ; have to redefine most of these, but
                                         ; this is mostly done 
 					; by mrsglobals-eng  
@@ -43,7 +43,7 @@
        (:file "mrsmunge")               ; manipulate MRS via rules
                                         ; currently for vitrifying - potential
                                         ; other uses
-       (:file "mrsruleinput")           ; creating rules for above
+       #+:lkb (:file "mrsruleinput")           ; creating rules for above
                                         ; requires LKB, but outputs compiled 
                                         ; rules which can be used without LKB
        ;; (:file "acl-mrs")             ; display etc in CLIM

@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.4  1998/07/23 01:24:04  aac
+;; mrs equality and removing remnants of page packages
+;;
 ;; Revision 1.3  1998/07/06 01:09:08  aac
 ;; mostly fixes to lexical lookup for generation
 ;;
@@ -76,7 +79,7 @@
   `( ,(vsym "TOP") ,(vsym "HANDEL") ,(vsym "INDEX") ,(vsym "EVENT") 
      ,(vsym "INST") ,(vsym "ACT") ,(vsym "BV") ,(vsym "RESTR") 
      ,(vsym "SOA") ,(vsym "SCOPE") ,(vsym "QUANT") ,(vsym "XARG") 
-     ,(vsym "CONST_VALUE")))
+     ,(vsym "ARG") ,(vsym "CONST_VALUE")))
 
 (setf *psoa-top-h-path* 
   `(,(vsym "TOP-H")))

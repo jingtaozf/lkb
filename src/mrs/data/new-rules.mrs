@@ -34,6 +34,19 @@ arbitrary_quantifier_restriction_rule2 := mrs_rule &
                      DIM #v10 ] !>,
            H-CONS <! !> ] ] .
 
+dofm_rule := mrs_rule &
+ [ INPUT.LISZT <! dofm_rel &
+		 [ HANDEL #h1,
+	           INST #i2,
+		   DAY ^c20 ] !>,
+  OUTPUT.LISZT <! abstr_nom_rel &
+                 [ HANDEL #h1,
+		   INST #i2 ],
+		  ord_rel &
+		 [ HANDEL #h1,
+		   INST #i2,
+		   ORD ^c20 ] !> ]. 
+
 ;;; would be nice (but perhaps hacky) to generalize over these
 ;;; get rules, but this would require string concatenation ...
 
@@ -47,26 +60,8 @@ get_together_rule := mrs_rule &
                  [ HANDEL #h1,
                    EVENT #e4 ],
                   _together_rel &
-                 [ HANDEL #h1,
-                   ARG #x3 ] !>,
+                 [ ARG #x3 ] !>,
   OUTPUT.LISZT <!  _get_together_rel &
-                   [ HANDEL #h1,
-                     EVENT #e2,
-                     ARG1 #x3 ] !> ] .
-
-get_away_rule := mrs_rule &
- [ INPUT.LISZT <! _get_state_rel &
-                 [ HANDEL #h1,
-                   EVENT #e2,
-                   ARG3 #x3,
-                   ARG2 #e4 ],          
-                  support_rel &
-                 [ HANDEL #h1,
-                   EVENT #e4 ],
-                  _away_adv_rel &
-                 [ HANDEL #h1,
-                   ARG #x3 ] !>,
-  OUTPUT.LISZT <!  _get_away_rel &
                    [ HANDEL #h1,
                      EVENT #e2,
                      ARG1 #x3 ] !> ] .
@@ -84,6 +79,50 @@ get_back_rule := mrs_rule &
                  [ HANDEL #h1,
                    ARG #x3 ] !>,
   OUTPUT.LISZT <!  _get_back_rel &
+                   [ HANDEL #h1,
+                     EVENT #e2,
+                     ARG1 #x3 ] !> ] .
+
+get_back_together_rule := mrs_rule &
+ [ INPUT [ LISZT <! _get_state_rel &
+                 [ HANDEL #h1,
+                   EVENT #e2,
+                   ARG3 #x3,
+                   ARG2 #e4 ],          
+                  support_rel &
+                 [ HANDEL #h1,
+                   EVENT #e4 ],
+		  _back_adv_rel &
+		 [ ARG #e3 ],
+                  _together_rel &
+                 [ HANDEL #h6,
+		   ARG #x3 ] !>,
+	   H-CONS <! [ SC-ARG #h1,	
+		       CANDS <! #h6 !> ],
+                     [ SC-ARG #h1,
+		       OUTSCPD #h6 ] !> ],
+  OUTPUT [ LISZT <!  _get_together_rel &
+                   [ HANDEL #h1,
+                     EVENT #e2,
+                     ARG1 #x3 ],
+		  _back_adv_rel &
+		 [ HANDEL #h1,
+		   ARG #e3 ] !>,
+	   H-CONS <! !> ] ] .
+
+get_away_rule := mrs_rule &
+ [ INPUT.LISZT <! _get_state_rel &
+                 [ HANDEL #h1,
+                   EVENT #e2,
+                   ARG3 #x3,
+                   ARG2 #e4 ],          
+                  support_rel &
+                 [ HANDEL #h1,
+                   EVENT #e4 ],
+                  _away_adv_rel &
+                 [ HANDEL #h1,
+                   ARG #x3 ] !>,
+  OUTPUT.LISZT <!  _get_away_rel &
                    [ HANDEL #h1,
                      EVENT #e2,
                      ARG1 #x3 ] !> ] .
@@ -212,33 +251,74 @@ abstr_e_rule := mrs_rule &
 prop_to_prop_rule := mrs_rule &
  [ INPUT.LISZT <! adj_rel &
 		 [ HANDEL #h0,
-	           NARG #i1 ],
+	           ARG #i1 ],
 		  support_rel &
 	         [ HANDEL #h0,
-		   EVENT #e3 ],
+		   EVENT #e4 ],
                   prpstn_to_prop_rel &
                  [ HANDEL #h2,
                    PRPSTN #h0,
 		   PROP #i3 ] !>,
   OUTPUT.LISZT <! abstr_apply &
                  [ HANDEL #h2,
-                   ARG #i1,
-                   PROPERTY #i3 ],
-	 	  support_rel &
-		 [ HANDEL #h2,
-		   EVENT #e3 ] !> ].
+                   PROP #i3,
+                   EVENT #e4 ] !> ].
 
-dofm_rule := mrs_rule &
- [ INPUT.LISZT <! dofm_rel &
-		 [ HANDEL #h1,
-	           INST #i2,
-		   DAY #i3 ] !>,
-  OUTPUT.LISZT <! abstr_nom_rel &
-                 [ HANDEL #h1,
-		   INST #i2 ],
-		  ord_rel &
-		 [ HANDEL #h1,
-		   INST #i2,
-		   ORD #i3 ] !> ]. 
+const_rule := mrs_rule &
+ [ INPUT.LISZT <! const_rel &
+		  [ HANDEL #h1,
+		    ARG #i3,
+		    CONST_VALUE ^c20 ] !>,
+   OUTPUT.LISZT <! const_rel &
+		  [ HANDEL #h1,
+		    CONST_VALUE ^c20,
+		    ARG #i3 ] !> ].
 
+excl_okay_rule := mrs_rule &
+ [ INPUT.LISZT <! excl_rel &
+		  [ HANDEL #h1,
+                    EXCL 'okay ] !>,
+   OUTPUT.LISZT <! _okay_accept_rel &
+		  [ HANDEL #h1,
+		    ARG event ] !> ].
+
+excl_well_rule := mrs_rule &
+ [ INPUT.LISZT <! excl_rel &
+		  [ HANDEL #h1,
+                    EXCL 'well ] !>,
+   OUTPUT.LISZT <! _well_rel &
+		  [ HANDEL #h1,
+		    ARG event ] !> ].
+
+def_afternoon_rule := mrs_rule &
+ [ INPUT.LISZT <! _def_afternoon_rel &
+		  [ HANDEL #h1,
+                    INST #i1 ] !>,
+   OUTPUT.LISZT <! _afternoon_rel &
+		  [ HANDEL #h1,
+                    INST #i1 ] !> ].
+
+intersect_hcons_rule1 := mrs_rule &
+ [ INPUT.H-CONS <! [ SC-ARG #h1,	
+		     CANDS <! #h3 !> ],
+                   [ SC-ARG #h1,	
+		     CANDS <! #h2,#h4 !> ]  !>,
+   OUTPUT.H-CONS <! [ SC-ARG #h1,
+         	      CANDS <! #h2,#h3,#h4 !> ] !> ].
+
+intersect_hcons_rule2 := mrs_rule &
+ [ INPUT.H-CONS <! [ SC-ARG #h1,	
+		     CANDS <! #h3 !> ],
+                   [ SC-ARG #h1,	
+		     CANDS <! #h2,#h3 !> ]  !>,
+   OUTPUT.H-CONS <! [ SC-ARG #h1,
+         	      CANDS <! #h2,#h3 !> ] !> ].
+
+intersect_hcons_rule3 := mrs_rule &
+ [ INPUT.H-CONS <! [ SC-ARG #h1,	
+		     CANDS <! #h2,#h3 !> ],
+                   [ SC-ARG #h1,
+		     CANDS <! #h4,#h3 !> ] !>,
+   OUTPUT.H-CONS <! [ SC-ARG #h1,
+         	      CANDS <! #h2,#h4,#h3 !> ] !> ].
 

@@ -2,6 +2,7 @@
 
 (in-package "USER")
 
+#+:lkb
 (export '(edge-dag follow-pointers existing-dag-at-end-of dag-p is-atomic
           type-of-fs tdfs-indef lex-or-psort-id lex-or-psort-full-fs 
           dag-arcs subtype-p extend-typed-path path-p typed-path-p
@@ -24,10 +25,12 @@
   )
 
 ; just to avoid errors because package is undefined
-(defpackage "DISCO")
-; still used in time-convert
-(defpackage "TREES")
-; used in acl-mrs.lisp
+(eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
+           #-:ansi-eval-when (load eval compile)
+  (unless (find-package "DISCO")
+    (defpackage "DISCO"))               ; still used in time-convert
+  (unless (find-package "TREES")
+    (defpackage "TREES")))              ; used in acl-mrs.lisp
 
 
 (in-package "MRS")
@@ -42,6 +45,11 @@
           hcons-scarg hcons-cands hcons-outscpd
           leq-sc-scarg leq-sc-cands leq-sc-outscpd leq-sc-relation
           whg-id-id whg-id-word whg-id-handel))
+
+(defun vsym (str) 
+  ;;; allow mrsglobals-eng file to be system independent
+  (intern (string-upcase str) "USER"))
+
 
 (in-package "USER")
 

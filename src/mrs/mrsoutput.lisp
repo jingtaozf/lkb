@@ -7,6 +7,12 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.7  1998/08/23 15:12:35  oe
+;; use #-(or :lkb :lingo) in fs2vit() because :lingo is only defined once the
+;; grammar has actually been loaded.  if you want to distinguish the PAGE used at
+;; CSLI from the regular distribution, i recommend a feauture :csli or similar
+;; push()ed in `general/loadup.lisp'.
+;;
 ;; Revision 1.6  1998/07/23 01:24:06  aac
 ;; mrs equality and removing remnants of page packages
 ;;
@@ -339,6 +345,7 @@
 
 ;;; global variables are defined in mrsglobals
 
+#+:lkb
 (defun determine-variable-type (fs)
   (let ((type (create-type (fs-type fs))))
     (cond ((equal-or-subtype type *event-type*) "e")
@@ -352,6 +359,21 @@
           ((equal-or-subtype type *individual-type*) "d")
           ((equal-or-subtype type *difference-list-type*) "c") 
           ;; Assume coordination structure
+          (t "v"))))
+
+#+:page
+(defun determine-variable-type (fs)
+  (let ((type (fs-type fs)))
+    (case type
+          (disco::event "e")
+          (disco::eventtime "t")
+          (disco::handle "h")
+          (disco::hole "h")
+          (disco::label "h")
+          (disco::ref-ind "x")
+          (disco::deg-ind "d")
+          (disco::individual "d")
+          (tdl::*diff-list* "c")  ;; Assume coordination structure
           (t "v"))))
 
 ;; Add check for disjunction nodes, which MRS can't handle

@@ -3,6 +3,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Add access function used by TSDB machinery
 
+;;
+;; files copied from `patches/mrsfns.lisp' from the grammar (24-aug-98  -  dpf)
+;;
+
 (defun get-mrs-strings (parse-list)
   (loop for parse in parse-list
         collecting

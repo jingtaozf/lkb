@@ -98,63 +98,63 @@
 
 ;;; GRAMMAR SPECIFIC GLOBALS AND UTILITIES
 
-(defparameter *nhr-inst-feature* 'DISCO::INST)
-(defparameter *nhr-ampm-feature* 'DISCO::AM-PM)
-(defparameter *nhr-hour-feature* 'DISCO::HOUR)
-(defparameter *nhr-min-feature* 'DISCO::MIN)
-(defparameter *min-min-feature* 'DISCO::MINUTE)
-(defparameter *min-index-feature* 'DISCO::INST)
-(defparameter *ampm-index-feature* 'DISCO::INST) ; needs to be checked
-(defparameter *inst-feature* 'DISCO::INST)
-(defparameter *rel-hour-feature* 'DISCO::HOUR-IND)
-(defparameter *rel-minute-feature* 'DISCO::MINUTE-IND)
-(defparameter *prep-prep-feature* 'DISCO::PREP)
-(defparameter *prep-arg-feature* 'DISCO::ARG)
+(defparameter *nhr-inst-feature* (vsym "INST"))
+(defparameter *nhr-ampm-feature* (vsym "AM-PM"))
+(defparameter *nhr-hour-feature* (vsym "HOUR"))
+(defparameter *nhr-min-feature* (vsym "MIN"))
+(defparameter *min-min-feature* (vsym "MINUTE"))
+(defparameter *min-index-feature* (vsym "INST"))
+(defparameter *ampm-index-feature* (vsym "INST")) ; needs to be checked
+(defparameter *inst-feature* (vsym "INST"))
+(defparameter *rel-hour-feature* (vsym "HOUR-IND"))
+(defparameter *rel-minute-feature* (vsym "MINUTE-IND"))
+(defparameter *prep-prep-feature* (vsym "PREP"))
+(defparameter *prep-arg-feature* (vsym "ARG"))
 
 
 
 (defun create-ctime-rel (handel inst hour minutes)
   (make-rel
-   :sort 'DISCO::CTIME_REL
+   :sort (vsym "CTIME_REL")
    :handel handel
    :flist
-   (list (make-fvpair :feature 'DISCO::INST :value inst)
-         (make-fvpair :feature 'DISCO::HOUR :value hour)
-         (make-fvpair :feature 'DISCO::MIN :value minutes))))
+   (list (make-fvpair :feature (vsym "INST") :value inst)
+         (make-fvpair :feature (vsym "HOUR") :value hour)
+         (make-fvpair :feature (vsym "MIN") :value minutes))))
 
 
 (defun nhrel-p (sort)
-  (eql sort 'DISCO::NUMBERED_HOUR_REL))
+  (eql sort (vsym "NUMBERED_HOUR_REL")))
 
 (defun relrel-p (sort)
-    (member sort '(DISCO::_AFTER_HOUR_REL DISCO::_BEFORE_HOUR_REL)))
+    (member sort `(,(vsym "_AFTER_HOUR_REL") ,(vsym "_BEFORE_HOUR_REL"))))
 
 (defun minrel-p (sort)
-  (eql sort 'DISCO::MINUTE_REL))
+  (eql sort (vsym "MINUTE_REL")))
 
 (defun ampmrel-p (sort)
-  (member sort '(DISCO::AM_REL DISCO::PM_REL)))
+  (member sort `(,(vsym "AM_REL"),(vsym "PM_REL"))))
 
 (defun pm-rel-p (sort)
-  (eql sort 'DISCO::PM_REL))
+  (eql sort (vsym "PM_REL")))
 
 (defun am-rel-p (sort)
-  (eql sort 'DISCO::AM_REL))
+  (eql sort (vsym "AM_REL")))
 
 (defun past-rel-p (sort)
-  (eql sort 'DISCO::_AFTER_HOUR_REL))
+  (eql sort (vsym "_AFTER_HOUR_REL")))
 
 (defun to-rel-p (sort)
-  (eql sort 'DISCO::_BEFORE_HOUR_REL))
+  (eql sort (vsym "_BEFORE_HOUR_REL")))
 
 (defun daytime-p (sort)
-  (member sort '(DISCO::_MORNING_REL DISCO::_AFTERNOON_REL DISCO::_EVENING_REL)))
+  (member sort `(,(vsym "_MORNING_REL") ,(vsym "_AFTERNOON_REL") ,(vsym "_EVENING_REL"))))
 
 (defun derive-am-pm-spec (sort)
   (ecase sort
-    (DISCO::_MORNING_REL 'am)
-    (DISCO::_AFTERNOON_REL 'pm)
-    (DISCO::_EVENING_REL 'pm)))
+    ((vsym "_MORNING_REL") 'am)
+    ((vsym "_AFTERNOON_REL") 'pm)
+    ((vsym "_EVENING_REL") 'pm)))
 
 
 
@@ -389,15 +389,4 @@
 (defun horrible-unmotivated-hack (base-hour)
         (if (and (integerp base-hour)
 		 (< base-hour 13))
-              'am))
-  
-            
-         
-
-          
-          
-          
-                
-
-    
-    
+            'am))
