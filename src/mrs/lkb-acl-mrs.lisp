@@ -67,6 +67,7 @@
        `(("Type hierarchy" :value hier
 			    :active 
 			    ,(type-constraint type-entry))
+         #+:allegro
          ("Show source" :value source
 			:active ,(source-available-p type))
 	 ("Type definition" :value def
@@ -75,6 +76,7 @@
 	 ("Expanded type" :value exp
 			  :active ,(type-constraint type-entry)))
        (hier (display-type-in-tree type))
+       #+:allegro
        (source (edit-source type))
        (def (show-type-spec-aux type type-entry))
        (exp (show-type-aux type type-entry))))))

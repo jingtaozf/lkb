@@ -351,7 +351,7 @@
 	       (multiple-value-bind (x1 y1 x2 y2)
 		   (clim:bounding-rectangle* 
 		    (clim:output-record-parent thing))
-		 (clim:draw-rectangle* stream x1 y1 x2 y2 :
+		 (clim:draw-rectangle* stream x1 y1 x2 y2
 				       :ink clim:+flipping-ink+ 
 				       :filled t))))))))))
 

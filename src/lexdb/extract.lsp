@@ -84,79 +84,79 @@
 (defun extract-value-by-path (x key path type)
   (case type
     ;; todo: move LIST to separate fn
-    ('rawlst
+    (rawlst
      (mixed-list-2-str
       (extract-raw-list x key path)))
     
-    ('list
+    (list
      (extract-raw-list x key path))
     
     (nil
      (encode-mixed-as-str 
       (extract-atom-by-path x key path)))
-    ('mixed
+    (mixed
      (encode-mixed-as-str 
       (extract-atom-by-path x key path)))
     
-    ('str
+    (str
      (encode-string-as-str
       (extract-atom-by-path x key path)))
-    ('string
+    (string
      (encode-string-as-str
       (extract-atom-by-path x key path)))
     
-    ('sym
+    (sym
      (symb-2-str
       (extract-atom-by-path x key path)))
-    ('symbol
+    (symbol
      (symb-2-str
       (extract-atom-by-path x key path)))
     
-    ('str-rawlst
+    (str-rawlst
      (str-list-2-str
       (extract-raw-list x key path)))
-    ('string-list
+    (string-list
      (str-list-2-str
       (extract-raw-list x key path)))
     
-    ('str-lst
+    (str-lst
      (str-list-2-str (extract-fs-list x key path)))
-    ('string-fs
+    (string-fs
      (str-list-2-str (extract-fs-list x key path)))
     
-    ('str-dlst
+    (str-dlst
      (str-list-2-str (extract-fs-diff-list x key path)))
-    ('string-diff-fs
+    (string-diff-fs
      (str-list-2-str (extract-fs-diff-list x key path)))
     
     (T
      (typecase type
        (list
 	(case (first type)
-	  ('lst-t
+	  (lst-t
 	   (mixed-list-2-str 
 	    (extract-fs-list-complex x key path 
 				     :e-path (cddr type)
 				     :top (cadr type))))
-	  ('lst
+	  (lst
 	   (mixed-list-2-str 
 	    (extract-fs-list-complex x key path 
 				     :e-path (cdr type))))
-	  ('mixed-fs
+	  (mixed-fs
 	   (mixed-list-2-str 
 	    (extract-fs-list-complex x key path 
 				     :e-path (cdr type))))
 	  
-	  ('dlst-t
+	  (dlst-t
 	   (mixed-list-2-str 
 	    (extract-fs-diff-list-complex x key path 
 					  :e-path (cddr type)
 					  :top (cadr type))))
-	  ('dlst
+	  (dlst
 	   (mixed-list-2-str 
 	    (extract-fs-diff-list-complex x key path 
 					  :e-path (cdr type))))
-	  ('mixed-diff-fs
+	  (mixed-diff-fs
 	   (mixed-list-2-str 
 	    (extract-fs-diff-list-complex x key path 
 					  :e-path (cdr type))))

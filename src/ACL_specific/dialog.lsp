@@ -102,7 +102,7 @@
 (defun ask-for-strings-movable (title prompt-init-pairs 
 				&optional width choices)
   (let* ((history nil)
-	 (stream t)
+	 (stream #+:allegro t #-:allegro clim-user:*lkb-top-stream*) ; jac
 	 (result (loop for p-i-p in prompt-init-pairs
 		     for count from 0
 		     collect (cond ((equal (cdr p-i-p) ":CHECK-BOX")
@@ -132,7 +132,7 @@
 		    (clim:formatting-cell (stream :align-y :center)
 		      (setf (elt result count)
 			(if (typep (elt result count) 'boolean)
-			    (clim:accept 'boolean :stream stream
+			    (clim:accept 'clim:boolean :stream stream
 					 :default (elt result count)
 					 :query-identifier count
 					 :prompt nil
@@ -227,7 +227,7 @@
 	(orientation *print-orientation*)
 	(scale *print-scale*)
 	(file *print-filename*)
-	(stream t))
+	(stream #+:allegro t #-:allegro clim-user:*lkb-top-stream*)) ; jac
     (restart-case
 	(clim:accepting-values (stream :own-window t :label "Print options")
 	  (clim:formatting-table (stream)
@@ -263,7 +263,7 @@
 		(write-string "Use multiple pages?" stream))
 	      (clim:formatting-cell (stream :align-y :center)
 		(setq scale
-		  (clim:accept 'boolean
+		  (clim:accept 'clim:boolean
 			       :stream stream
 			       :prompt nil
 			       :default scale))))))

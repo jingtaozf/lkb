@@ -188,7 +188,8 @@
 (defun type-node-text-string (node)
    (#+:allegro excl:without-interrupts   ; the code in here isn't re-entrant
     #+:lispworks mp:without-interrupts
-    #-(or :allegro :lispworks) 
+    #+:mcl without-interrupts
+    #-(or :allegro :lispworks mcl) 
     (error "no known without-interrupts(); see `tree.lsp'")
       (let* ((str *node-text-scratch-string*)
              (full-string (symbol-name node))
@@ -229,8 +230,8 @@
 	  (declare (special *last-type-name*))
 	  (multiple-value-bind (type show-all-p)
 	      (ask-user-for-type nil 
-				 '(("Show all types?" . :check-box)
-				   ("Ignore 300 descendant limit" . :check-box)))
+				 '("Show all types?" . :check-box)
+				 '("Ignore 300 descendant limit" . :check-box))
 	    (when type
 	      (let ((type-entry (get-type-entry type)))
 		(when type-entry 

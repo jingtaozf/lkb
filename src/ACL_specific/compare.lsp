@@ -823,7 +823,7 @@
       (when condition
         (clim:beep)
         (format
-         excl:*initial-terminal-io*
+         #+:allegro excl:*initial-terminal-io* #-:allegro *terminal-io*
          "tree-completion-hook(): error `~a'.~%"
          (normalize-string (format nil "~a" condition))))
       (let* ((comment (if (stringp result)
@@ -1185,7 +1185,7 @@
         (setf (clim:pointer-cursor pointer) cursor))))
    ((clim:sheetp frame)
     (setf (clim:sheet-pointer-cursor frame) cursor)
-    #-:mswindows
+    #+:allegro
     (loop
         for child in (clim:sheet-children frame)
         ;;

@@ -31,7 +31,7 @@
 ;;
 
 (defpackage net.xml.parser
-  (:use :lisp :clos :excl :net.uri)
+  (:use :common-lisp :clos :excl :net.uri)
   (:nicknames :xml)
   (:export
    #:parse-xml)

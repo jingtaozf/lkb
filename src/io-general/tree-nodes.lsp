@@ -9,15 +9,15 @@
 
 #-:tty
 (defun show-parse (&optional edges title)
-  #-(and :allegro :clim) (declare (ignore title))
+  #-:clim (declare (ignore title))
   (let ((edges (or edges *parse-record*)))
     (if edges
       (with-parser-lock ()
         (if #+:lui (lui-status-p :tree) #-:lui nil
           #+:lui (lui-show-parses edges *sentence*) #-:lui nil
-          #+(and :allegro :clim)
+          #+:clim
           (show-parse-tree-frame edges title)
-          #-(and :allegro :clim) 
+          #-:clim
           (dolist (edge edges) (display-parse-tree edge nil)))
         (let ((hook (when (and (find-package :mrs) 
                                (find-symbol "OUTPUT-MRS-AFTER-PARSE" :mrs))

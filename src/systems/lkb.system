@@ -64,11 +64,12 @@
 (defparameter *lisp-specific-directory*
   (or
    #+(and :allegro :clim) "ACL_specific"
+   #+(and :mcl :clim) "ACL_specific"
    #+(and :lispworks :clim) "ACL_specific"
    #+(and :allegro (not :clim) :tty) "ACL_specific"
    #+(and :null
           :allegro :common-graphics (not (or :clim :tty))) "ACL-CG_specific"
-   #+:mcl "MCL_specific"
+   #+(and :mcl (not :clim)) "MCL_specific"
    ""))
 
 (defsystem "lkb"
@@ -237,8 +238,8 @@
       :components
 	      (#+:clim
                (:file "graph")              ; uses CLIM graph drawing
-               #+:mcl (:file "picwin")      ; low level 
-               #+:mcl (:file "picfield")    ; low level
+               #+(and :mcl (not :clim)) (:file "picwin")      ; low level 
+               #+(and :mcl (not :clim)) (:file "picfield")    ; low level
 ;               #+(and :allegro (not :clim) :common-graphics)
 ;               (:file "fsclasses")          ; classes for display	       
                (:file "activefs")           ; display FS in window
@@ -246,7 +247,7 @@
                (:file "parseout")           ; parse tree output
                (:file "chartout")           ; parse chart
                (:file "listout")            ; `active' lists
-               #+(or (and :allegro :clim) :www)
+               #+(or :clim :www)
                (:file "compare")))          ; comparing parses
 
      #+:allegro
@@ -332,9 +333,9 @@
        (:file "mrsruleinput")           ; creating rules for above
                                         ; requires LKB, but outputs compiled 
                                         ; rules which can be used without LKB
-       #+(and :allegro :clim (not :tty)) 
+       #+(and :clim (not :tty)) 
        (:file "lkb-acl-mrs")            ; display etc in CLIM
-       #+(and :mcl (not :tty)) 
+       #+(and :mcl (not :clim) (not :tty)) 
        (:file "lkb-mcl-mrs")))          ; display etc in MCL
      
      (:module "generator-morph"
@@ -410,7 +411,7 @@
                          ;; readgram
        (:file "input") ;;; loads the underlying rmrs input code
        (:file "compare") ;;; RMRS comparison
-       #+(and :allegro :clim (not :tty)) 	
+       #+(and :clim (not :tty)) 	
        (:file "lkb-acl-rmrs")            ; display etc in CLIM
        (:file "testing") ;;; temporary file for testing
 ))

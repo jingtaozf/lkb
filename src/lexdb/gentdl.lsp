@@ -304,50 +304,50 @@
     (nil
      (unless (equal value "")
        (list (str-to-mixed value))))
-    ('mixed
+    (mixed
      (unless (equal value "")
        (list (str-to-mixed value))))
     
-    ('str
+    (str
      (unless (equal value "")
        (list (str-to-string value))))
-    ('string
+    (string
      (unless (equal value "")
        (list (str-to-string value))))
 
-    ('sym
+    (sym
      (unless (equal value "")
        (list (str-2-symb value))))
-    ('symbol 
+    (symbol 
      (unless (equal value "")
        (list (str-2-symb value))))
 
-    ('str-rawlst
+    (str-rawlst
      (list (string-2-str-list-on-spc value)))
-    ('string-list
+    (string-list
      (list (string-2-str-list-on-spc value)))
     
-;    ('rawlst
+;    (rawlst
 ;     (unless (equal value "")
 ;       (str-2-list value) ))
-    ('list 
+    (list 
      (unless (equal value "")
        (str-2-list value) ))
     
-    ('str-lst
+    (str-lst
      (unless (equal value "")
        (expand-string-list-to-fs-list 
 	(string-2-str-list-on-spc value))))
-    ('string-fs
+    (string-fs
      (unless (equal value "")
        (expand-string-list-to-fs-list 
 	(string-2-str-list-on-spc value))))
     
-    ('str-dlst
+    (str-dlst
      (unless (equal value "")
        (expand-string-list-to-fs-diff-list 
 	(string-2-str-list-on-spc value) :path path)))
-    ('string-diff-fs
+    (string-diff-fs
      (unless (equal value "")
        (expand-string-list-to-fs-diff-list 
 	(string-2-str-list-on-spc value) :path path)))
@@ -356,25 +356,25 @@
        (list
 	(case (first type)
 
-	  ('lst-t
+	  (lst-t
 	   (unless (equal value "")
 	     (expand-string-list-to-fs-list-complex 
 	      (string-2-mxd-list-on-spc value)
 	      :elt-path (cddr type)
 	      :top (cadr type))))
 
-	  ('lst
+	  (lst
 	   (unless (equal value "")
 	     (expand-string-list-to-fs-list-complex 
 	      (string-2-mxd-list-on-spc value)
 	      :elt-path (cdr type))))
-	  ('mixed-fs
+	  (mixed-fs
 	   (unless (equal value "")
 	     (expand-string-list-to-fs-list-complex 
 	      (string-2-mxd-list-on-spc value)
 	      :elt-path (cdr type))))
 
-	  ('dlst-t
+	  (dlst-t
 	   (unless (equal value "")
 	     (expand-string-list-to-fs-diff-list-complex 
 	      (string-2-mxd-list-on-spc value)
@@ -382,13 +382,13 @@
 	      :elt-path (cddr type)
 	      :top (cadr type))))
 
-	  ('dlst
+	  (dlst
 	   (unless (equal value "")
 	     (expand-string-list-to-fs-diff-list-complex 
 	      (string-2-mxd-list-on-spc value)
 	      :path path
 	      :elt-path (cdr type))))
-	  ('mixed-diff-fs
+	  (mixed-diff-fs
 	   (unless (equal value "")
 	     (expand-string-list-to-fs-diff-list-complex 
 	      (string-2-mxd-list-on-spc value)

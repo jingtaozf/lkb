@@ -419,8 +419,9 @@
                (interactive-unification-check))))))
 
 
-#-allegro
-(defun compare-parses ()
+#-(or :clim :www)
+(defun compare-parses (&optional edges)
+  (declare (ignore edges))
   nil)
 
 ;;

@@ -56,26 +56,43 @@
 ;;; Aliases for multiprocessing functions
 
 (defpackage :mp (:use "COMMON-LISP")
-   (:intern "RUN-FUNCTION" "PROCESS-WAIT" "PROCESS-KILL" "WITH-PROCESS-LOCK"
-            "MAKE-PROCESS-LOCK"))
+   (:export "RUN-FUNCTION" "PROCESS-WAIT" "PROCESS-WAIT-WITH-TIMEOUT"
+            "PROCESS-KILL" "WITH-PROCESS-LOCK"
+            "MAKE-PROCESS-LOCK" "PROCESS-ADD-ARREST-REASON"
+            "PROCESS-REVOKE-ARREST-REASON" "*CURRENT-PROCESS*")
+   (:import-from "CCL" "*CURRENT-PROCESS*"))
 (in-package :mp)
 
 (eval-when (:execute :load-toplevel :compile-toplevel)
-  (export 'run-function)
   (setf (symbol-function 'run-function) 
         (symbol-function 'ccl:process-run-function))
-  (export 'process-wait)
   (setf (symbol-function 'process-wait) 
         (symbol-function 'ccl:process-wait))
-  (export 'process-kill)
+  (setf (symbol-function 'process-wait-with-timeout) 
+        (symbol-function 'ccl:process-wait-with-timeout))
   (setf (symbol-function 'process-kill) 
         (symbol-function 'ccl:process-kill))
-  (export 'with-process-lock)
   (defmacro with-process-lock ((lock) &body body) 
      `(ccl:with-lock-grabbed (,lock) ,@body))
-  (export 'make-process-lock)
   (setf (symbol-function 'make-process-lock) 
-        (symbol-function 'ccl:make-lock)))
+        (symbol-function 'ccl:make-lock))
+  (setf (symbol-function 'process-add-arrest-reason) 
+        (symbol-function 'ccl:process-enable-arrest-reason))
+  (setf (symbol-function 'process-revoke-arrest-reason) 
+        (symbol-function 'ccl:process-disable-arrest-reason)))
+
+
+;;; Unix system functions not in MCL -- simulate them
+
+(defpackage :system (:nicknames "SYS") (:use "COMMON-LISP")
+   (:export "USER-NAME" "GETENV"))
+(in-package :system)
+
+(eval-when (:execute :load-toplevel :compile-toplevel)
+  (setf (symbol-function 'user-name) 
+        (symbol-function 'ccl:false))
+  (setf (symbol-function 'getenv)
+        (symbol-function 'ccl:false)))
 
 
 ;;; Set preferred memory allocation for saved images (400MB)

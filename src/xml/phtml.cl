@@ -41,7 +41,7 @@
 ;
 
 (defpackage net.html.parser
-  (:use :lisp :clos :excl)
+  (:use :common-lisp :clos :excl)
   (:export
    #:phtml-internal
    #:parse-html))

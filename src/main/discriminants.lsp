@@ -30,7 +30,7 @@
                      maximize (edge-to edge))
                  1)
               0))
-         (*tree-discriminants-chart* (make-array (list n n)))
+         (*tree-discriminants-chart* (make-array (list n n) :initial-element nil))
          %discriminants%)
     (declare (special %discriminants%))
     ;;
