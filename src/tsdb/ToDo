@@ -6,6 +6,8 @@
 open issues:
 ------------
 
+[01-sep-99] - change `gcs' field to :string; record complete information;
+
 [02-mar-99] - remember all changes since dec-98 and update `ToDo' file;
 
 [31-jan-99] - add `Uniquely Project' flag to `Switches';

@@ -42,7 +42,7 @@
   (when reset                           
     (pvm_quit)
     (pvm_start :user (current-user))
-    (setf *pvm-master* (pvm_register file))
+    (setf *pvm-master* (pvm_register file *pvm-debug-p*))
     (setf *pvm-clients* nil))
   (when (and file (null reset))
     (format
@@ -146,7 +146,7 @@
 
 (defun slave (&optional orphan)
 
-  (let* ((self (pvm_register t))
+  (let* ((self (pvm_register t *pvm-debug-p*))
          (master (if orphan nil (pvm_parent)))
          (*package* (find-package "TSDB"))
          (*print-readably* nil))

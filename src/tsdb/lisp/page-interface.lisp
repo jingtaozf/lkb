@@ -23,10 +23,16 @@
 ;;; renamed to `modstream' --- until everybody can upgrade to a recent PAGE
 ;;; version, install hacky kludge.                      (11-nov-98  -  oe)
 ;;;
+;;; somebody wisely decided to rename this slot just once more; surely, there
+;;; must be a good reason ...                           (23-aug-99  -  oe)
+;;;
 (defmacro mstream (module)
-  (if (find-symbol "MODSTREAM" "MAIN")
-    (list (find-symbol "MODSTREAM" "MAIN") module)
-    `(stream ,module)))
+  (cond 
+   ((find-symbol "MODULE-STREAM" "MAIN")
+    (list (find-symbol "MODULE-STREAM" "MAIN") module))
+   ((find-symbol "MODSTREAM" "MAIN")
+    (list (find-symbol "MODSTREAM" "MAIN") module))
+   (t `(stream ,module))))
 
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
 	   #-:ansi-eval-when (load eval compile)
@@ -55,12 +61,10 @@
   (let* ((foo (open "/dev/null" :direction :output :if-exists :overwrite))
          (shell (mstream main::*page-shell*))
          (controller (mstream *page-controller*))
-         (blinker (mstream main::*blinker*))
          streams)
     (unless trace
       (setf (mstream main::*page-shell*) foo)
       (setf (mstream *page-controller*) foo)
-      (setf (mstream main::*blinker*) foo)
       (dolist (component (main::internal-protocol-rep protocol))
         (push (mstream (main::p-compo (main::p-caller component))) streams)
         (setf (mstream (main::p-compo (main::p-caller component))) foo)))
@@ -72,7 +76,6 @@
       (unless trace
         (setf (mstream main::*page-shell*) shell)
         (setf (mstream *page-controller*) controller)
-        (setf (mstream main::*blinker*) blinker)
         (do ((protocol (main::internal-protocol-rep protocol)
                        (rest protocol))
              (streams streams (rest streams)))
@@ -137,8 +140,9 @@
           (when (and name daughter itype index (eq itype :morph))
             (pushnew (list name index key arity) result :test #'equal)))))
 
-(defun initialize-test-run (&key interactive)
-  (declare (special pg::*maximal-number-of-edges*))
+(defun initialize-test-run (&key interactive exhaustive)
+  (declare (special pg::*maximal-number-of-edges*)
+           (ignore exhaustive))
   
   (let* ((storage (gensym ""))
          (parser (pg::get-parser :syntax))
@@ -147,7 +151,7 @@
                      tdl::*verbose-definition-p*
                      main::*draw-chart-p*
                      pg::stat-rules
-                     pg::ebl-parser-external-signal-fn
+                     pg::combo-parser-external-signal-fn
                      pg::*maximal-number-of-edges*)
                    (list tdl::*verbose-reader-p*
                          tdl::*verbose-definition-p*
@@ -155,7 +159,7 @@
                          (and parser
                            (pg::parser-stat-rules parser))
                          (and parser 
-                           (pg::ebl-parser-external-signal-fn parser))
+                           (pg::combo-parser-external-signal-fn parser))
                          pg::*maximal-number-of-edges*))))
 
     (unless interactive
@@ -178,12 +182,9 @@
          (pg::parser-stat-rules
           (when parser
             (setf (pg::parser-stat-rules parser) (rest pair))))
-         (pg::ebl-parser-name-rule-fn 
+         (pg::combo-parser-external-signal-fn
           (when parser
-            (setf (pg::ebl-parser-name-rule-fn parser) (rest pair))))
-         (pg::ebl-parser-external-signal-fn
-          (when parser
-            (setf (pg::ebl-parser-external-signal-fn parser) (rest pair))))
+            (setf (pg::combo-parser-external-signal-fn parser) (rest pair))))
          (t
           (set (first pair) (rest pair))))))))
 
@@ -192,7 +193,8 @@
                                semantix-hook trees-hook
                                derivationp
                                burst)
-  (declare (special pg::*maximal-number-of-edges*) (ignore readings))
+  (declare (special pg::*maximal-number-of-edges*)
+           (ignore readings derivations derivationp))
 
   (let* ((string (remove-and-insert-punctuation string))
          (tracep (main::trace-p main::*parser*))
@@ -207,7 +209,7 @@
     (setf pg::*maximal-number-of-edges*
       (if (and (integerp edges) (> edges 0)) edges nil))
     (setf pg::*edge-id-counter* 0)
-    (setf (pg::ebl-parser-external-signal-fn (pg::get-parser :syntax))
+    (setf (pg::combo-parser-external-signal-fn (pg::get-parser :syntax))
       (if (> edges 0)
         #'pg::maximal-number-of-edges-exceeded-p
         #'(lambda (parser) (declare (ignore parser)))))
@@ -215,10 +217,6 @@
     (udine::reset-costs)
     (setf (main::output-stream main::*lexicon*) nil)
     (setf (main::output-stream main::*parser*) nil)
-    (when (and derivations *tsdb-lexical-oracle-p*)
-      (install-lexical-oracle derivations))
-    (when (and derivations *tsdb-phrasal-oracle-p*)
-      (install-phrasal-oracle derivations))
 
     (multiple-value-bind (return condition)
         (excl::time-a-funcall #'(lambda ()
@@ -370,18 +368,13 @@
          (templates (tdl::get-global :templates))
          (templates
           (when (hash-table-p templates) (hash-table-count templates)))
-         (lparser (pg::get-parser :lexicon))
+         (lparser (pg::get-parser :syntax))
          (parser (pg::get-parser :syntax))
-         (lexicon (and lparser (pg::combo-parser-lexicon lparser)))
-         (lexicon (when (pg::lexicon-p lexicon) 
-                    (pg::lexicon-lex-entries lexicon)))
-         (lexicon (when (hash-table-p lexicon) (hash-table-count lexicon)))
          (lrules (and lparser (length (pg::combo-parser-lex-rules lparser))))
          (rules (and parser (length (pg::combo-parser-syn-rules parser)))))
     (append (and avms (list (cons :avms avms)))
             (and sorts (list (cons :sorts sorts)))
             (and templates (list (cons :templates templates)))
-            (and lexicon (list (cons :lexicon lexicon)))
             (pairlis '(:application :grammar
                        :lrules :rules)
                      (list application grammar
@@ -396,6 +389,9 @@
 (defmethod get-fs-type ((fs csli-unify::fs))
   (csli-unify::fs-type fs))
 
+;;;
+;;; this is flawed: should not descend into reentrant structures twice ...
+;;;
 (defgeneric fs-size (fs))
 (defmethod fs-size ((item pg::combo-item)) (fs-size (pg::combo-item-cfs item)))
 (defmethod fs-size ((cfs lex::cfs)) (fs-size (lex::cfs-fs cfs)))
@@ -406,6 +402,16 @@
                     sum (fs-size (rest arc)))))))
 (defmethod fs-size ((fs t)) -1)
 
+;;;
+;;; _fix_me_ (some day)
+;;; the parser item structure has changed; until we actually find some use for
+;;; those derivation trees, why hunt a running fox ...      (30-aug-99  -  oe)
+;;;
+(defun compute-derivation-tree (&rest foo)
+  (declare (ignore foo))
+  nil)
+
+#+:bug
 (defun compute-derivation-tree (item &optional (offset (pg::item-start item)))
   (flet ((informative-item-label (item)
            (when (pg::combo-item-p item)
@@ -432,87 +438,11 @@
          (- (pg::item-end item) offset)
          (when (pg::item-daughters item)
            (loop
-               for kid across (pg::Item-daughters item)
+               for kid across (pg::item-daughters item)
                for start = (pg::item-start item)
                collect (compute-derivation-tree kid start))))))))))
 
-(defun remove-terminals (derivation)
-  (let ((daughters (pg::pnode-daughters derivation)))
-    (if daughters
-      (append (list (pg::pnode-name derivation) 
-                    (pg::pnode-start derivation)
-                    (pg::pnode-end derivation))
-              (remove nil (map 'list #'remove-terminals daughters)))
-      nil)))
-       
-(defun extract-preterminals (derivation &optional (offset 0))
-  (let ((daughters (pg::pnode-daughters derivation)))
-    (if daughters
-      (let* ((offset (+ offset (pg::pnode-start derivation))))
-        (mapcan #'(lambda (daughter)
-                    (extract-preterminals daughter offset))
-                daughters))
-      (list (list (pg::pnode-name derivation) 
-                  (+ offset (pg::pnode-start derivation))
-                  (+ offset (pg::pnode-end derivation)))))))
-
-(defparameter *lexical-oracle* nil)
-
-(defun install-lexical-oracle (derivations)
-  (setf *lexical-oracle* nil)
-  (when derivations
-    (let* ((derivations (map 'list #'remove-terminals derivations))
-           (preterminals (mapcan #'extract-preterminals derivations)))
-      (setf *lexical-oracle* 
-        (make-array (+ 1 (apply #'max (map 'list 
-                                        #'pg::pnode-start preterminals)))))
-      (map nil 
-        #'(lambda (preterminal) 
-            (push (intern (string-upcase (pg::pnode-name preterminal)) 
-                          lex::*lex-package*)
-                  (aref *lexical-oracle* (pg::pnode-start preterminal))))
-        preterminals))
-    (setf (pg::parser-task-priority-fn (pg::get-parser :lexicon))
-      #'lexical-priority-oracle)))
-
-(defun lexical-priority-oracle (rule daughter tasktype parser)
-  (declare (ignore parser))
-  #+:odebug
-  (format t "~a: ~a [~a ~a] # ~a [~a ~a]~%" 
-          tasktype 
-          (when rule (get-item-type rule))
-          (when rule (pg::item-start rule))
-          (when rule (pg::item-end rule))
-          (when daughter (get-item-type daughter))
-          (when daughter (pg::item-start daughter))
-          (when daughter (pg::item-end daughter)))
-  (if (and *lexical-oracle*
-           rule daughter
-           (eq tasktype :cf-rule)
-           (eq (pg::combo-item-itype rule) :lex-entry)
-           (eq (pg::combo-item-itype daughter) :morph))
-    (let ((start (pg::item-start daughter))
-          (type (get-item-type rule)))
-      (when (member type (aref *lexical-oracle* start)) 600))
-    600))
-
-;;;
-;;; this is rather awkward because most of the code resides in the :filter
-;;; package; maybe, it should eventually become part of core PAGE and assumed
-;;; to be there |:-{.                                     (15-dec-97  -  oe)
-;;;
-(defun install-phrasal-oracle (derivations)
-  (when (and (find-package "FILTER")
-             (boundp (intern "*UNIVERSE*" "FILTER")))
-    (set (intern "*LOCAL-TREES*" "FILTER") nil)
-    (funcall (intern "COLLECT-LOCAL-TREES" "FILTER") derivations)
-    (funcall (intern "COMPUTE-DERIVATION-ORACLE" "FILTER"))
-    (setf (pg::parser-task-priority-fn (pg::get-parser :syntax))
-      (symbol-function (intern "PHRASAL-PRIORITY-ORACLE" "FILTER")))))
-
-
 (in-package "MAIN")
-
 
 ;;;
 ;;; register tsdb(1) as a module to the PAGE shell; the :close-fn value will

@@ -337,7 +337,7 @@
                     (let* ((value (or (get-field key tuple)
                                       (if (eq type :integer) -1 "")))
                            (value (if (eq type :string)
-                                    (normalize-string value)
+                                    (normalize-string value :escape t)
                                     value)))
                       (format stream "~:[@~;~]~a" start value))
                   finally (format stream "~%"))

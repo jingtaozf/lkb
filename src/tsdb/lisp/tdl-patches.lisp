@@ -312,9 +312,6 @@
                          :domain domain                            ;; of all slots, see the file
                          :surface surface                          ;; "control/infons.lisp")
                          :intermediate input-form
-                         :comment doc
-                         :author author
-                         :date date
                          :value-types occur
                          :restriction-types restriction
                          :atomic-symbols atomic-symbols        ;; apply UNIFY::NSIMPLIFY-FS to term-node (see
@@ -543,9 +540,6 @@ Replacing the old definition of ~S" instance-name domain instance-name)))
 			     :domain domain
 			     :surface surface
 			     :intermediate input-form
-			     :comment doc
-			     :author author
-			     :date date
 			     :value-types occur
 			     :restriction-types restriction
 			     :atomic-symbols atomic-symbols
@@ -629,9 +623,6 @@ Replacing the old definition of ~S" instance-name domain instance-name)))
 			   :parameters params
 			   :intermediate form
 			   :surface surface
-			   :comment doc
-			   :author author
-			   :date date
 			   :domain domain))
     (IF *VERBOSE-P*
 	(FORMAT T "~A~%" date)

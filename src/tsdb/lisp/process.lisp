@@ -21,7 +21,7 @@
 (defun tsdb-do-process (data
                         &key condition
                              run-id comment
-                             (verbose t)
+                             (verbose *tsdb-verbose-processing-p*)
                              output
                              vocabulary
                              (cache *tsdb-cache-database-writes-p*)
@@ -64,8 +64,11 @@
       (status :text imessage))
 
     (when (setf items (retrieve condition data :verbose verbose))
-      (let* ((cache (when (and cache (not interactive))
-                      (create-cache data :verbose verbose)))
+      (let* ((schema (read-database-schema data))
+             (cache (when (and cache (not interactive))
+                      (create-cache data 
+                                    :schema schema :verbose verbose 
+                                    :protocol cache)))
              (run-id 
               (or run-id 
                   (unless interactive
@@ -78,30 +81,43 @@
                     :comment comment :gc gc 
                     :clients (when (find-symbol "*PVM-CLIENTS*")
                                (symbol-value (find-symbol "*PVM-CLIENTS*")))
-                    :interactive interactive 
+                    :interactive interactive :verbose verbose
                     :stream stream :interrupt interrupt))
              (burst (and (not interactive)
                          (find :pvm *features*)
                          (every #'(lambda (run)
                                     (get-field :client run)) runs)))
-             (trees-hook 
+             (*tsdb-trees-hook*
+              (unless interactive
+                (if burst
+                  *tsdb-trees-hook*
+                  (ignore-errors
+                   (typecase *tsdb-trees-hook*
+                     (null nil)
+                     (string (symbol-function 
+                              (read-from-string *tsdb-trees-hook*)))
+                     (symbol (symbol-function *tsdb-trees-hook*))
+                     (function *tsdb-trees-hook*))))))
+             (*tsdb-semantix-hook*
+              (unless interactive
+                (if burst
+                  *tsdb-semantix-hook* 
+                  (ignore-errors
+                   (typecase *tsdb-semantix-hook*
+                     (null nil)
+                     (string (symbol-function 
+                              (read-from-string *tsdb-semantix-hook*)))
+                     (symbol (symbol-function *tsdb-semantix-hook*))
+                     (function *tsdb-semantix-hook*))))))
+             (*tsdb-result-hook*
               (unless interactive
                 (ignore-errors
-                 (typecase *tsdb-trees-hook*
+                 (typecase *tsdb-result-hook*
                    (null nil)
                    (string (symbol-function 
-                            (read-from-string *tsdb-trees-hook*)))
-                   (symbol (symbol-function *tsdb-trees-hook*))
-                   (function *tsdb-trees-hook*)))))
-             (semantix-hook 
-              (unless interactive
-                (ignore-errors
-                 (typecase *tsdb-semantix-hook*
-                   (null nil)
-                   (string (symbol-function 
-                            (read-from-string *tsdb-semantix-hook*)))
-                   (symbol (symbol-function *tsdb-semantix-hook*))
-                   (function *tsdb-semantix-hook*)))))
+                            (read-from-string *tsdb-result-hook*)))
+                   (symbol (symbol-function *tsdb-result-hook*))
+                   (function *tsdb-result-hook*)))))
              (increment (when meter (/ (mduration pmeter) (length items)))))
         
         (when meter 
@@ -111,7 +127,7 @@
           (status :text pmessage)
           (meter :value (get-field :start pmeter)))
         (when (and burst runs)
-          (install-gc-strategy nil :tenure nil))
+          (install-gc-strategy nil :tenure nil :verbose verbose))
         
         (unwind-protect
             (ignore-errors
@@ -147,7 +163,9 @@
                            do (nconc run (acons :status :interrupt nil)))
                        (setf items nil)
                        (setf abort t))
-                    
+
+                     (pre-process :burstp burst)
+                     
                      (when (and burst busy (or (null run) (null items)))
                        (let* ((status (process-queue 
                                        runs 
@@ -158,6 +176,9 @@
                               (item (get-field :item status))
                               (result (get-field :result status))
                               (interrupt (get-field :interrupt status)))
+                         (when result
+                           (setf result 
+                             (enrich-result result :verbose verbose)))
                          (when (and item result)
                            (when verbose
                              (print-item item :stream stream :result result)
@@ -201,8 +222,8 @@
                          (print-item item :stream stream))
                        (setf result
                          (process-item item
-                                       :trees-hook trees-hook 
-                                       :semantix-hook semantix-hook
+                                       :trees-hook *tsdb-trees-hook* 
+                                       :semantix-hook *tsdb-semantix-hook*
                                        :stream stream
                                        :client (get-field :client run)
                                        :interactive interactive))
@@ -214,12 +235,14 @@
                            (when client (setf (client-status client) :error))
                            (nconc run `((:end . ,end)))))
                         ((consp result)
+                         (setf result (enrich-result result :verbose verbose))
                          (when verbose
                            (print-result result :stream stream))
                          (unless interactive
                            (store-result data result :cache cache))
                          (incf (get-field :items run))
-                         (when increment (meter-advance increment))))))))
+                         (when increment (meter-advance increment)))))
+                     (post-process :burstp burst))))
                      
           (when interactive
             (format *tsdb-io* "~&~a" (get-output-stream-string stream)))
@@ -237,7 +260,7 @@
 
 (defun create-runs (data run-id &key comment 
                                      gc (tenure *tsdb-tenure-p*)
-                                     clients interactive 
+                                     clients interactive verbose
                                      stream interrupt)
   (if (and clients (null interactive))
     (let ((clients (remove-if-not #'client-idle-p clients))
@@ -255,7 +278,7 @@
                             `(create-run 
                               ,data ,i 
                               :comment ,comment :gc ,gc :tenure ,tenure
-                              :interactive nil)
+                              :interactive nil :verbose ,verbose)
                             nil
                             :key :create-run)
                            (create_run tid data i comment interactive custom))
@@ -353,16 +376,20 @@
     
     (list (enrich-run (create-run data run-id 
                                   :comment comment :gc gc 
-                                  :interactive interactive)))))
+                                  :interactive interactive 
+                                  :verbose verbose)))))
 
 (defun create-run (data run-id &key comment 
                                     gc (tenure *tsdb-tenure-p*)
-                                    interactive)
+                                    (exhaustive *tsdb-exhaustive-p*)
+                                    interactive verbose)
   
-  (let* ((environment (initialize-test-run :interactive interactive))
+  (let* ((environment (initialize-test-run :interactive interactive 
+                                           :exhaustive exhaustive))
          (start (current-time :long t))
          (gc-strategy (unless interactive 
-                        (install-gc-strategy gc :tenure tenure)))
+                        (install-gc-strategy 
+                         gc :tenure tenure :verbose verbose)))
          (gc (get-field :gc gc-strategy))
          (user (current-user))
          (comment (or comment "null"))
@@ -378,6 +405,7 @@
                              platform grammar
                              user host os start
                              environment gc-strategy gc))))
+    (gc-statistics-reset :all)
     (append run (get-test-run-information))))
 
 (defun enrich-run (run)
@@ -481,12 +509,12 @@
            (i-input (get-field :i-input item))
            (gc (get-field :gc item))
            (edges (get-field :edges item))
-           result gcs i-load)
+           result i-load)
 
       (case gc
         (:local #+:allegro (excl:gc))
-        (:global #+:allegro (excl:gc) #+:allegro (excl:gc t)))
-      (setf *tsdb-global-gcs* 0)
+        (:global #+:allegro (excl:gc t)))
+      (gc-statistics-reset)
       (setf i-load (unless interactive #+:pvm (load_average) #-:pvm nil))
       (setf result (parse-item i-input 
                                :edges edges
@@ -496,21 +524,19 @@
                                :semantix-hook semantix-hook
                                :derivationp derivationp
                                :burst burst))
-      (when (and (not *tsdb-minimize-gcs-p*) 
+      (when (and (not *tsdb-minimize-gcs-p*) (not (eq gc :global))
                  (not interactive)
-                 (eq gc :global)
-                 (>= *tsdb-global-gcs* 1)
-                 (<= *tsdb-global-gcs* 3))
+                 (>= (gc-statistics :global) 1) (<= (gc-statistics :global) 3))
         (when verbose
           (format 
            stream
-           " (~d gc~:p);~%" *tsdb-global-gcs*)
+           " (~d gc~:p);~%" (gc-statistics :global))
           (force-output stream))
         (setf (get-field :gc item) :global)
         #+:allegro (excl:gc t)
         (when verbose
           (print-item item :stream stream))
-        (setf *tsdb-global-gcs* 0)
+        (gc-statistics-reset)
         (setf i-load #+:pvm (load_average) #-:pvm nil)
         (setf result (parse-item i-input :edges edges
                                  :trace interactive
@@ -519,8 +545,6 @@
                                  :semantix-hook semantix-hook
                                  :derivationp derivationp
                                  :burst burst)))
-      (setf gcs *tsdb-global-gcs*)
-      (setf *tsdb-global-gcs* 0)
 
       #+:allegro
       (when (and (= (get-field :readings result) -1)
@@ -536,6 +560,17 @@
 
       (let* ((readings (get-field :readings result))
              (timeup (get-field :timeup result))
+             (comment (get-field+ :comment result ""))
+             (global (gc-statistics :global))
+             (scavenge (gc-statistics :scavenge))
+             (new (gc-statistics :new))
+             (old (gc-statistics :old))
+             (efficiency (average (gc-statistics :efficiency)))
+             (comment (format 
+                       nil 
+                       "~a (global ~d) (scavenge ~d) ~
+                        (new ~d) (old ~d) (efficiency ~d)"
+                       comment global scavenge new old efficiency))
              (a-load #+:pvm (load_average) #-:pvm nil))
         (push (cons :i-load i-load) result)
         (push (cons :a-load a-load) result)
@@ -543,7 +578,8 @@
         (push (cons :run-id run-id) result)
         (push (cons :i-id i-id) result)
         (push (cons :gc gc) result)
-        (push (cons :gcs gcs) result)
+        (push (cons :gcs (+ global scavenge)) result)
+        (push (cons :comment comment) result)
         (when (and timeup (not (= readings -1)))
           (push (cons :error (if (stringp timeup) timeup "timeup")) result))
         #+:page
@@ -663,6 +699,15 @@
                    (list pending t)))))
 
 
+(defun enrich-result (result &key verbose)
+  (declare (ignore verbose))
+  (let* ((readings (get-field :readings result)))
+    (if (and *tsdb-result-hook* (> readings 0))
+      (multiple-value-bind (wealth condition)
+          (ignore-errors (funcall *tsdb-result-hook* result))
+        (or wealth (acons :error (format nil "~a" condition) result)))
+      result)))
+
 (defun print-result (result &key (stream *tsdb-io*))
   (let* ((readings (get-field :readings result))
          (words (get-field :words result))
@@ -753,6 +798,14 @@
          data
          :cache cache)))))
 
+(defun pre-process (&key burstp)
+  (declare (ignore burstp)))
+
+(defun post-process (&key burstp)
+  (declare (ignore burstp))
+  #+:allegro
+  (sys:gsgc-step-generation))
+
 (defun complete-runs (data runs &key cache interactive stream interrupt)
   (loop
       for run in runs
@@ -809,6 +862,41 @@
         (let ((finalization (finalize-test-run environment)))
           (when gc-strategy (restore-gc-strategy gc-strategy))
           (cons (cons :end (current-time :long t)) finalization)))))))
+
+(defun call-hook (hook &rest arguments)
+  (when hook
+    (let* ((hook (typecase hook
+                   (null nil)
+                   (function hook)
+                   (symbol (and (fboundp hook) (symbol-function hook)))
+                   (string (ignore-errors 
+                            (symbol-function (read-from-string hook))))))
+           (result (ignore-errors (apply hook arguments))))
+      (typecase result
+        (null nil)
+        (string result)
+        (t (format nil "~a" result))))))
+
+(defun result-hook (result)
+  (loop
+      for parse in (get-field :results result)
+      for derivation = (get-field :derivation parse)
+      for tree = (get-field :tree parse)
+      for mrs = (get-field :mrs parse)
+      for edge = (when (and derivation
+                            (or *tsdb-trees-hook* (null tree))
+                            (or *tsdb-semantix-hook* (null mrs)))
+                   (reconstruct derivation))
+      when edge do
+        (let ((tree (call-hook *tsdb-trees-hook* edge))
+              (mrs (call-hook *tsdb-semantix-hook* edge)))
+          (when tree
+            (setf (rest parse)
+              (cons (cons :tree tree) (rest parse))))
+          (when mrs
+            (setf (rest parse)
+              (cons (cons :mrs mrs) (rest parse))))))
+  result)
 
 (defun interrupt-p (interrupt)
   (when (and interrupt (probe-file interrupt))

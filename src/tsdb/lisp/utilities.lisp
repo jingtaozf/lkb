@@ -17,32 +17,6 @@
 
 (in-package "TSDB")
 
-(defmacro get-field (field alist)
-  `(rest (assoc ,field ,alist)))
-
-(defmacro get-field+ (field alist &optional default)
-  `(or (rest (assoc ,field ,alist)) ,default))
-
-(defmacro tsdb-ignore-p (&rest foo)
-  (declare (ignore foo))
-  t)
-
-(defmacro find-tsdb-directory (language)
-  `(let* ((data (dir-append (make-pathname :directory *tsdb-home*)
-                            (list :relative ,language))))
-     (namestring data)))
-
-(defmacro find-skeleton (name)
-  `(let* ((name (if (keywordp ,name) (string ,name) ,name)))
-     (find name *tsdb-skeletons* 
-           :key #'(lambda (foo) (get-field :path foo))
-           :test #'equal)))
-
-(defmacro find-skeleton-directory (skeleton)
-  `(let* ((path (dir-append (namestring *tsdb-skeleton-directory*)
-                            (list :relative (get-field :path ,skeleton)))))
-     (namestring path)))
-
 (defun reset-tsdb-paths ()
   (setf
     *tsdb-application*
@@ -55,7 +29,8 @@
     (namestring (dir-append (get-sources-dir "tsdb") '(:relative "tsdb")))))
 
 (defun install-gc-strategy (gc &key (verbosity *tsdb-gc-verbosity*)
-                                    (tenure *tsdb-tenure-p*))
+                                    (tenure *tsdb-tenure-p*)
+                                    verbose)
 
   #+:allegro
   (let ((environment (pairlis '(:print :stats :verbose :auto-step)
@@ -63,26 +38,27 @@
                                     (sys:gsgc-switch :stats)
                                     (sys:gsgc-switch :verbose)
                                     (sys:gsgc-parameter :auto-step))))
-        (stats (member :stats verbosity :test #'eq))
-        (verbose (member :verbose verbosity :test #'eq)))
-    (setf (sys:gsgc-switch :print) (or verbose stats))
-    (setf (sys:gsgc-switch :verbose) verbose)
-    (setf (sys:gsgc-switch :stats) stats)
+        (statsp (member :stats verbosity :test #'eq))
+        (verbosep (member :verbose verbosity :test #'eq)))
+    (setf (sys:gsgc-switch :print) (or verbosep statsp))
+    (setf (sys:gsgc-switch :verbose) verbosep)
+    (setf (sys:gsgc-switch :stats) statsp)
     (setf (sys:gsgc-parameter :auto-step) tenure)
+    (setf (sys:gsgc-parameter :generation-spread) *tsdb-generation-spread*)
     (unless tenure
-      (format
-       *tsdb-io*
-       "install-gc-strategy(): ~
-        disabling tenure; global garbage collection ...")
+      (when verbose
+        (format
+         *tsdb-io*
+         "install-gc-strategy(): ~
+        disabling tenure; global garbage collection ..."))
       #-(version>= 5 0)
       (busy :gc :start)
-      #+:ignore
-      (excl:gc t)
-      (excl:gc :mark-for-tenure)
+      (excl:gc :tenure)
       #-(version>= 5 0)
       (busy :gc :end)
-      (format *tsdb-io* " done.~%"))
-    (when (and (null tenure) (eq gc :global))
+      (setf *tsdb-tenured-bytes* 0)
+      (when verbose (format *tsdb-io* " done.~%")))
+    (when (and (null tenure) (eq gc :global) verbose)
       (format
        *tsdb-io*
        "install-gc-strategy(): ~
@@ -100,6 +76,15 @@
     (setf (sys:gsgc-switch :verbose) (get-field :verbose strategy))
     #+:allegro
     (setf (sys:gsgc-parameter :auto-step) (get-field :auto-step strategy))))
+
+(defun gc-statistics-reset (&optional code)
+  (unless (arrayp *tsdb-gc-statistics*)
+    (setf *tsdb-gc-statistics* (make-array 5)))
+  (loop
+      for key in '(:global :scavenge :new :old)
+      do (setf (gc-statistics key) 0))
+  (when (eq code :all) (setf (gc-statistics :efficiency) nil))
+  *tsdb-gc-statistics*)
 
 (defun remove-and-insert-punctuation (string)
   (let* ((string (remove #\, string))
@@ -128,20 +113,30 @@
       (string-trim '(#\Space #\Tab) string))
     ""))
 
-(defun normalize-string (string)
+(defun normalize-string (string &key escape)
   (if string
-    (let* ((result (make-array 42
+    (let* ((result (make-array 4096
                                :element-type 'character
                                :adjustable t :fill-pointer 0)))
       (loop
           with space = t
           for c across string
-          when (member c '(#\Space #\Newline #\Tab)) do
+          ;;
+          ;; _fix_me_
+          ;; as it stands, normalize-string() gets only called on strings that
+          ;; we are about to insert into tsdb(1); in case we write the data
+          ;; files directly, we have to obey tsdb(1) escape conventions; thus,
+          ;; the `@' --> `\s' translation should usually be deactivated.
+          ;;                                              (26-aug-99  -  oe)
+          when (and escape (char= c *tsdb-ofs*)) do
+            (vector-push-extend #\\ result 2048)
+            (vector-push-extend #\s result 2048)
+          else when (member c '(#\Space #\Newline #\Tab)) do
             (unless space
-              (vector-push-extend #\Space result 42)
+              (vector-push-extend #\Space result 2048)
               (setf space t))
           else do
-            (vector-push-extend c result 42)
+            (vector-push-extend c result 2048)
             (setf space nil)
           finally
             (when (and space (not (zerop (fill-pointer result))))
@@ -278,14 +273,16 @@
          (total (+ conses symbols others)))
     (concatenate 'string
       (pprint-potentially-large-integer conses)
-      (unless (zerop symbols)
+      (unless (zerop conses)
         (string separator))
       (pprint-potentially-large-integer symbols)
-      (unless (zerop others)
+      (unless (zerop symbols)
         (string separator))
       (pprint-potentially-large-integer others)
+      (unless (zerop others)
+        (string separator))
       (unless (zerop total)
-        " = ")
+        "= ")
       (pprint-potentially-large-integer total))))
 
 
@@ -376,24 +373,6 @@
 
 (defun directory2file (string)
   (substitute #\. *tsdb-slash* string :test #'char=))
-
-(defmacro make-meter (start end)
-  `(pairlis (list :start :end) (list ,start ,end)))
-
-(defmacro mduration (meter)
-  `(when ,meter (- (get-field :end ,meter) (get-field :start ,meter))))
-
-(defmacro madjust (action meter value)
-  `(when ,meter
-     (let* ((start (get-field :start ,meter))
-            (end (get-field :end ,meter))
-            (duration (- end start)))
-       (case ',action
-         (* (setf end (+ start (* duration ,value))))
-         (/ (setf end (+ start (/ duration ,value))))
-         (+ (setf start (+ start ,value))
-            (setf end (+ end ,value))))
-       (make-meter start end))))
 
 (defun remove-key-argument (key arguments &optional result)
   (cond

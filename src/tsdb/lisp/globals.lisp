@@ -20,7 +20,7 @@
 
 (defparameter *tsdb-name* "[incr tsdb()]")
 
-(defparameter *tsdb-version* "1.6 (17-aug-99)")
+(defparameter *tsdb-version* "1.6 (1-sep-99)")
 
 (defparameter
   *tsdb-application*
@@ -63,11 +63,15 @@
 
 (defparameter *tsdb-rule-statistics-p* #+:page nil #-:page nil)
 
-(defparameter *tsdb-cache-database-writes-p* t)
+(defparameter *tsdb-verbose-processing-p* t)
+
+(defparameter *tsdb-cache-database-writes-p* :cooked)
 
 (defparameter *tsdb-flush-cache-threshold* 5000)
 
 (defparameter *tsdb-verbose-cache-flush-p* nil)
+
+(defparameter *tsdb-result-hook* "tsdb::result-hook")
 
 (defparameter *tsdb-trees-hook* nil)
 
@@ -78,6 +82,14 @@
 (defparameter *tsdb-minimize-gcs-p* t)
 
 (defparameter *tsdb-tenure-p* nil)
+
+(defparameter *tsdb-generation-spread* 20)
+
+(defparameter *tsdb-scavenge-limit* 402653184)
+
+(defparameter *tsdb-tenured-bytes* 0)
+
+(defparameter *tsdb-tenured-bytes-limit* 20971520)
 
 (defparameter *tsdb-gc-verbosity* nil)
 
@@ -93,10 +105,6 @@
 
 (defparameter *tsdb-maximal-number-of-edges* 0)
 
-(defparameter *tsdb-lexical-oracle-p* nil)
-
-(defparameter *tsdb-phrasal-oracle-p* nil)
-
 (defparameter *tsdb-default-skeleton* "english")
 
 (defparameter *tsdb-skeleton-index* "Index.lisp")
@@ -111,7 +119,9 @@
 
 (defvar *tsdb-phenomena* (make-hash-table :test #'equal))
 
-(defparameter *tsdb-global-gcs* 0)
+(defparameter *tsdb-gc-statistics* nil)
+
+(defparameter *tsdb-ofs* #\@)
 
 (defparameter *tsdb-profile-files*
   '("daughter" "edge" "parse" "result" "rule" "run"))
@@ -123,11 +133,9 @@
   '(:i-difficulty :i-wf :polarity))
 
 (defparameter *tsdb-tokens-to-ignore*
-  '("." "(" ")" "!" "?" "," "-" "'" "[" "]" "`"))
+  '("." "(" ")" "!" "?" "," "+" "-" "'" "[" "]" "`"))
 
 (defparameter *tsdb-slash* #\/)
-
-(defparameter *tenured-bytes* 0)
 
 (defparameter *tsdb-debug-mode-p* nil)
 

@@ -80,6 +80,7 @@
          (condition (if (equal condition "") nil condition))
          (loadp (not (member load (list nil :off :no :none :fuck))))
          (whitespace '(#\Space #\Newline #\Tab))
+         (garbage (append whitespace *tsdb-tokens-to-ignore*))
          (imeter (madjust * meter 0.1))
          (wmeter (madjust + (madjust * meter 0.9) (mduration imeter)))
          (items (retrieve condition language))
@@ -102,8 +103,8 @@
                  (position-if #'(lambda (c) (member c whitespace)) string))
               (word (when i (subseq string 0 i))
                     (when i (subseq string 0 i)))
-              (word (string-downcase (string-trim whitespace word))
-                    (string-downcase (string-trim whitespace word)))
+              (word (string-downcase (string-trim garbage word))
+                    (string-downcase (string-trim garbage word)))
               (n (gethash word frequencies)
                  (gethash word frequencies))
               (string (if i (subseq string i) string)
@@ -111,7 +112,7 @@
               (string (string-left-trim whitespace string)
                       (string-left-trim whitespace string)))
             ((not i)
-             (let* ((word (string-downcase (string-trim whitespace string)))
+             (let* ((word (string-downcase (string-trim garbage string)))
                     (n (gethash word frequencies)))
                (when (and word (> (length word) 0))
                  (setf (gethash word frequencies) (+ (or n 0) 1))
@@ -151,12 +152,13 @@
             (let ((entries (parse-word word :load load)))
               (setf (gethash word lexicon) (get-field :words entries))
               (setf (gethash word lstasks) (get-field :l-stasks entries))
-              (unless entries (push word unknown-words))))
-          (format 
-           stream 
-           "~&  ~a ~@? reference(s)~:[~; | [~d + ~d] lexical entrie(s)~];~%" 
-           word tabulation (gethash word frequencies)
-           loadp (or (gethash word lexicon) -1) (or (gethash word lstasks) -1))
+              (unless entries (push word unknown-words)))
+            (format 
+             stream 
+             "~&  ~a ~@? reference(s)~:[~; | [~d + ~d] lexical entrie(s)~];~%" 
+             word tabulation (gethash word frequencies)
+             loadp (or (gethash word lexicon) -1) 
+             (or (gethash word lstasks) -1)))
           (when increment (meter-advance increment)))))
     (format stream "~&~%")
     (when meter 
@@ -205,7 +207,10 @@
                               :file file :stream *tsdb-io* :prefix "  "))
             (resetp
              (initialize-cpus :classes argument 
-                              :reset reset :stream *tsdb-io* :prefix "  ")))))
+                              :reset reset :stream *tsdb-io* :prefix "  "))
+            (t
+             (initialize-cpus :classes argument 
+                              :stream *tsdb-io* :prefix "  ")))))
          (format *tsdb-io* "~&~%"))
          
         ((:info :inf)
@@ -485,7 +490,13 @@
      (loop 
          for cpu in (sort 
                      (copy-list *pvm-cpus*) #'string< 
-                     :key #'(lambda (cpu) (symbol-name (cpu-class cpu))))
+                     :key #'(lambda (cpu) 
+                              (let ((class (cpu-class cpu)))
+                                (symbol-name
+                                 (typecase class
+                                   (cons (first class))
+                                   (t class))))))
+                                         
          for host = (cpu-host cpu)
          for spawn = (cpu-spawn cpu)
          for options = (cpu-options cpu)
@@ -495,10 +506,10 @@
              (:ascii
               (format
                stream
-               "~&~%~a- `~(~a~)' (`~a');~%~
+               "~&~%~a- `~(~:[~a~;~{~a~^ | ~}~]~)' (`~a');~%~
                 ~a  command: `~a';~%~
                 ~a  options: `~{~a~^ ~}';~%~%"
-               prefix class host
+               prefix (consp class) class host
                prefix spawn
                prefix options)))))
     (:active
@@ -520,7 +531,7 @@
                stream
                "~&~%~a- `~(~a~)' (pid: ~a --- tid: <~a>);~%~
                 ~a  command: `~a';~%~
-                ~a  status: `~(~a~)' --- protocol: `~(~a~)';~%~%"
+                ~a  status: ~(~a~) --- protocol: ~(~a~);~%~%"
                prefix host pid tid
                prefix spawn
                prefix status protocol)))))

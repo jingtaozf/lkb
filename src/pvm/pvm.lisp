@@ -43,22 +43,24 @@
 #+(version>= 5 0)
 (def-foreign-call 
     (_pvm_register "pvm_register")
-    ((file (* :char) string))
+    ((file (* :char) string)
+     (debugp :int integer))
   :returning :int)
 
 #-(version>= 5 0)
 (defforeign
     '_pvm_register :entry-point "pvm_register"
-    :arguments '(string)
+    :arguments '(string integer)
     :return-type :integer)
 
-(defun pvm_register (&optional (file t))
+(defun pvm_register (&optional (file t) debugp)
   (let ((file (cond
                ((or (eq file t) (equal file "")) "")
                ((eq file nil) "/dev/null")
                ((stringp file) file)
-               (t ""))))
-    (_pvm_register file)))
+               (t "")))
+        (debugp (if debugp 1 0)))
+    (_pvm_register file debugp)))
 
 #+(version>= 5 0)
 (def-foreign-call pvm_mytid (:void) :returning :int)
@@ -205,7 +207,6 @@
       (format stream "~s" form))
     (when (probe-file file)
       (let ((status (_pvm_transmit tid tag file)))
-        (unless *pvm-debug-p* (delete-file file))
         status))))
 
 #+(version>= 5 0)

@@ -626,9 +626,15 @@
                  (beep)
                  (status :text (format
                                 nil
-                                "`~a' and `~a' are incompatible ~
-                                 (e.g. in phenomena classification)"
-                                source target)
+                                "one (or both) data sets ~
+                                 in comparison are empty")
+                         :duration 10))
+                (2
+                 (beep)
+                 (status :text (format
+                                nil
+                                "profiles are incompatible ~
+                                 (e.g. in phenomena classification)")
                          :duration 10))
                 (t
                  (status :text message)
@@ -713,7 +719,7 @@
        (when condition 
          (beep)
          (status :text "error processing tsdb(1) podium event" :duration 10)
-         (format *tsdb-io* "podium-loop(): ~s~%" condition)))
+         (format *tsdb-io* "podium-loop(): ~a~%" condition)))
       (unless (eq (first (second form)) 'quit)
         (busy :action :release))))
 
@@ -826,7 +832,8 @@
   (send-to-podium (format nil "status {~a} ~d" text duration) :wait t))
 
 (defun busy (&key (action :freeze) gc)
-  (when (streamp *tsdb-wish-stream*)
+  (when (and (streamp *tsdb-wish-stream*)
+             (not (find :slave *features*)))
     (cond
      ((eq gc :start)
       (gc_start 0))

@@ -100,7 +100,8 @@
 ;;;
 
 (defun reconstruct-item (i-id i-input derivation)
-  (let* ((*package* (find-package "DISCO")))
+  (let* ((*package* (or (find-package "DISCO")
+                        (find-package "COMMON-LISP-USER"))))
     (multiple-value-bind (result failure)
         (reconstruct derivation)
       (cond
@@ -142,8 +143,13 @@
             (funcall hook result i-input))))))))
 
 (defun reconstruct (derivation)
-  (catch :fail
-    (reconstruct-derivation derivation)))
+  (let ((derivation (cond
+                      ((consp derivation) derivation)
+                      ((and (stringp derivation) (not (string= derivation "")))
+                       (read-from-string derivation)))))
+    (when derivation
+      (catch :fail
+        (reconstruct-derivation derivation)))))
 
 (defun reconstruct-derivation (derivation)
   (let* ((root (derivation-root derivation))

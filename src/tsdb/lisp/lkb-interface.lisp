@@ -2,15 +2,22 @@
 ;;; No use or redistribution without permission.
 ;;; 
 
-;;; 5 interface functions supplied by lkb for tsdb proper:
 ;;;
-;;;  get-test-run-information
-;;;  parse-word
-;;;  initialize-test-run
-;;;  finalize-test-run
-;;;  parse-item
+;;; while preparing for the sep-99 release of the LKB we need to do some magic 
+;;; to support the pre-release and current development versions in the same
+;;; source file.  searching for find-symbol() and friends should be a good way
+;;; to find the all-too-many kludges that can be eliminated once the release
+;;; has been made public ... sigh.                         (22-aug-99  -  oe)
+;;;
 
 (in-package :cl-user)
+
+;;;
+;;; another instance of versioning kludges: yadu!() only comes in with the new
+;;; active parser in the current development version       (26-aug-99  -  oe)
+;;;
+(defmacro uday (tdfs1 tdfs2 path)
+  `(yadu ,tdfs1 (create-temp-parsing-tdfs ,tdfs2 ,path)))
 
 (defun get-test-run-information ()
   (let* ((*package* (find-package :common-lisp-user))
@@ -80,8 +87,9 @@
                                str))
           (input (split-into-words (preprocess-sentence-string word))))
      (let ((*dag-recycling-p* t))
-      (parse input nil))
-      (summarize-chart))))
+       (when *dag-recycling-p* (setf *dag-recycling-p* *dag-recycling-p*))
+       (parse input nil))
+     (summarize-chart))))
 
 (defun initialize-test-run (&key interactive exhaustive)
   (declare (ignore interactive))
@@ -125,31 +133,36 @@
   (declare (ignore derivations))
   
   (multiple-value-bind (return condition)
-    (ignore-errors
-     (let* ((*package* (find-package "COMMON-LISP-USER"))
-            (*maximum-number-of-edges* (if (or (null edges) (zerop edges))
-                                         *maximum-number-of-edges*
-                                         edges))
-            (*first-only-p* (not exhaustive))
-            (*maximal-number-of-readings* (if (integerp readings)
-                                            readings
-                                            *maximal-number-of-readings*))
-            (*do-something-with-parse* nil)
-             (sent
-              (split-into-words (preprocess-sentence-string string)))
-            (str (make-string-output-stream)) ; capture any warning messages
-            (*standard-output* (if trace
-                                 (make-broadcast-stream *standard-output* str)
-                                 str))
-            (*unifications* 0)
-            (*copies* 0)
-            (*subsumptions* 0)
-             tgc tcpu treal conses symbols others)
-        (multiple-value-bind (e-tasks s-tasks c-tasks f-tasks packings)
-            #+allegro
-            (excl::time-a-funcall
-             #'(lambda () (parse-tsdb-sentence sent trace))
-             #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
+      (ignore-errors
+       (let* ((*package* (find-package "COMMON-LISP-USER"))
+              (*maximum-number-of-edges* (if (or (null edges) (zerop edges))
+                                           *maximum-number-of-edges*
+                                           edges))
+              (*first-only-p* (not exhaustive))
+              (*maximal-number-of-readings* (if (integerp readings)
+                                              readings
+                                              *maximal-number-of-readings*))
+              (*do-something-with-parse* nil)
+              (sent
+               (split-into-words (preprocess-sentence-string string)))
+              (str (make-string-output-stream)) ; capture any warning messages
+              (*standard-output* 
+               (if trace
+                 (make-broadcast-stream *standard-output* str)
+                 str))
+              (*unifications* 0)
+              (*copies* 0)
+              (*subsumptions* 0)
+              tgc tcpu treal conses symbols others)
+         ;;
+         ;; this really ought to be done in the parser ...  (30-aug-99  -  oe)
+         ;;
+         (setf *sentence* string)
+         (multiple-value-bind (e-tasks s-tasks c-tasks f-tasks packings)
+             #+allegro
+             (excl::time-a-funcall
+              #'(lambda () (parse-tsdb-sentence sent trace))
+              #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
                  (declare (ignore ignore))
                  (setq tgc (+ tgcu tgcs)
                        tcpu (+ tu ts)
@@ -157,34 +170,40 @@
                        conses (* scons 8)
                        symbols (* ssym 24)
                        others sother)))
-            #-allegro
-            (multiple-value-prog1
-                (progn
-                  (setq treal (get-internal-real-time)
-                        tcpu (get-internal-run-time)
-                        tgc #+mcl (ccl:gctime) #-mcl 0
-                        others #+mcl (ccl::total-bytes-allocated) #-mcl 0)
-                  (parse-tsdb-sentence sent trace))
-              (let ((rawgc (- #+mcl (ccl:gctime) tgc)))
-                (setq symbols 0 conses 0
-                      others
-                      (- #+mcl (ccl::total-bytes-allocated) #-mcl -1 others)
-                      tcpu
-                      (round 
-                       (* (- (get-internal-run-time) tcpu #+mcl rawgc) 1000)
-                       internal-time-units-per-second)
-                      treal
-                      (round (* (- (get-internal-real-time) treal) 1000)
-                             internal-time-units-per-second)
-                      tgc #+mcl (round (* rawgc 1000)
-                                       internal-time-units-per-second)
-                      #-mcl -1)))
+             #-allegro
+             (multiple-value-prog1
+                 (progn
+                   (setq treal (get-internal-real-time)
+                         tcpu (get-internal-run-time)
+                         tgc #+mcl (ccl:gctime) #-mcl 0
+                         others #+mcl (ccl::total-bytes-allocated) #-mcl 0)
+                   (parse-tsdb-sentence sent trace))
+               (let ((rawgc (- #+mcl (ccl:gctime) tgc)))
+                 (setq symbols 0 conses 0
+                       others
+                       (- #+mcl (ccl::total-bytes-allocated) #-mcl -1 others)
+                       tcpu
+                       (round 
+                        (* (- (get-internal-run-time) tcpu #+mcl rawgc) 1000)
+                        internal-time-units-per-second)
+                       treal
+                       (round (* (- (get-internal-real-time) treal) 1000)
+                              internal-time-units-per-second)
+                       tgc #+mcl (round (* rawgc 1000)
+                                        internal-time-units-per-second)
+                       #-mcl -1)))
           (let* ((*print-pretty* nil) (*print-level* nil) (*print-length* nil)
                  (output (get-output-stream-string str))
-                 (readings (if *chart-packing-p*
-                             (loop
-                                 for edge in *parse-record*
-                                 sum (length (unpack-edge edge)))
+                 (packingp (and (find-symbol "*CHART-PACKING-P*")
+                                (boundp (find-symbol "*CHART-PACKING-P*"))
+                                (symbol-value 
+                                 (find-symbol "*CHART-PACKING-P*"))))
+                 (readings (if packingp
+                             (let ((function (symbol-function 
+                                              (find-symbol "UNPACK-EDGE"))))
+                               (loop
+                                   for edge in *parse-record*
+                                   sum (length (funcall function edge))))
                              (length *parse-record*)))
                  (readings (if (or (equal output "") (> readings 0))
                               readings
@@ -199,11 +218,21 @@
                           (round (* (- (first times) start) 1000) 
                                  internal-time-units-per-second)
                           (if (> readings 0) total -1)))
-                 (comment 
-                  (format 
-                   nil 
-                   "(s ~d) (p ~d) (g ~d)" 
-                   *subsumptions* packings (pool-garbage *dag-pool*)))
+                 (packings (and packingp packings))
+                 (pool (and (find-symbol "*DAG-POOL*")
+                            (boundp (find-symbol "*DAG-POOL*"))
+                            (symbol-value (find-symbol "*DAG-POOL*"))))
+                 (garbage (when pool
+                            (funcall 
+                             (symbol-function (find-symbol "POOL-GARBAGE"))
+                             pool)))
+                 (comment
+                  (if packingp
+                    (format 
+                     nil 
+                     "(s ~d) (p ~d) (g ~d)" 
+                     *subsumptions* packings garbage)
+                    ""))
                  (summary (summarize-chart :derivationp derivationp)))
             (multiple-value-bind (l-s-tasks redges words)
                 (parse-tsdb-count-lrules-edges-morphs)
@@ -221,11 +250,11 @@
                 (:total . ,total) (:first . ,first) 
                 (:unifications . ,*unifications*) (:copies . ,*copies*)
                 (:readings . ,readings)
-                (:error . ,(tsdb::normalize-string output))
+                (:error . ,output)
                 (:comment . ,comment)
                 (:results .
                  ,(append
-                   (unless *chart-packing-p*
+                   (unless packingp
                      (loop
                          for i from 0
                          for parse in (nreverse *parse-record*)
@@ -233,28 +262,15 @@
                                       (round (* (- (pop times) start) 1000)
                                              internal-time-units-per-second )
                                       total)
-                         for derivation = (tsdb::normalize-string
-                                           (format
-                                            nil
-                                            "~s"
-                                            (compute-derivation-tree parse)))
+                         for derivation = (format
+                                           nil
+                                           "~s"
+                                           (compute-derivation-tree parse))
                          for r-redges = (length 
                                          (parse-tsdb-distinct-edges parse nil))
                          for size = (parse-tsdb-count-nodes parse)
-                         for tree = (when trees-hook
-                                      (let ((tree
-                                             (ignore-errors 
-                                              (funcall trees-hook parse))))
-                                        (if (stringp tree)
-                                          tree
-                                          (format nil "~a" tree))))
-                         for mrs = (when semantix-hook
-                                     (let ((mrs
-                                            (ignore-errors
-                                             (funcall semantix-hook parse))))
-                                       (if (stringp mrs)
-                                          mrs
-                                          (format nil "~a" mrs))))
+                         for tree = (tsdb::call-hook trees-hook parse)
+                         for mrs = (tsdb::call-hook semantix-hook parse)
                          collect
                            (pairlis '(:result-id :mrs :tree
                                       :derivation :r-redges :size
@@ -281,7 +297,7 @@
                   :timeup)
                 (list -1 
                       (unless burst condition)
-                      (tsdb::normalize-string (format nil "~a" condition))
+                      (format nil "~a" condition)
                       (when (> *edge-id* *maximum-number-of-edges*)
                         (format nil "edge limit (~a)" *edge-id*)))))
      return)))
@@ -356,6 +372,7 @@
 (defun parse-tsdb-sentence (user-input &optional trace)
   (multiple-value-prog1
       (let ((*dag-recycling-p* (null trace)))
+        (when *dag-recycling-p* (setf *dag-recycling-p* *dag-recycling-p*))
         (parse user-input trace))
       (when (fboundp *do-something-with-parse*)
          (funcall *do-something-with-parse*))))
@@ -496,26 +513,33 @@
 ;;;
 
 (defparameter *reconstruct-hook*
-  #'(lambda (tdfs &optional (i-input "reconstructed item"))
-      (display-fs tdfs i-input)))
+  #-:tty
+  #'(lambda (edge &optional (i-input "reconstructed item"))
+      (when (edge-p edge)
+        (display-fs (edge-dag edge) i-input)))
+  #+:tty
+  nil)
 
 (defun find-lexical-entry (form instance)
-  (declare (ignore form))
   (let* ((*package* (find-package "COMMON-LISP-USER"))
          (name (intern (if (stringp instance)
                          (string-upcase instance)
                          instance)
                        :common-lisp-user))
          (instance (get-psort-entry name)))
-    (when instance
-      (lex-or-psort-full-fs instance))))
+    (when instance 
+      (let ((tdfs (lex-or-psort-full-fs instance))
+            (id (lex-or-psort-sense-id instance)))
+        (make-edge :id 0 :category (indef-type-of-tdfs tdfs)
+                   :rule form :leaves (list form) :lex-ids (list id)
+                   :dag tdfs)))))
 
 (defun find-affix (type)
   (let* ((*package* (find-package "COMMON-LISP-USER"))
          (name (string-upcase (string type)))
          (name (intern name :common-lisp-user))
          (rule (find-rule name)))
-    (when (rule-p rule) (rule-full-fs rule))))
+    (when (rule-p rule) rule)))
 
 (defun find-rule (instance)
   (let* ((name (intern (if (stringp instance)
@@ -526,29 +550,37 @@
                    (get-grammar-rule-entry name))))
     rule))
 
-(defun instantiate-rule (rule items)
+(defun instantiate-rule (rule edges)
   (let* ((*unify-debug* :return)
          (%failure% nil)
          (status 0)
-         (result (copy-tdfs-completely (rule-full-fs rule)))
+         (result (rule-full-fs rule))
          (paths (rule-order rule)))
     (with-unification-context (foo)
       (loop
           while result
           for path in (rest paths)
-          for item in items
+          for edge in edges
+          for tdfs = (edge-dag edge)
           for i from 0
           do
             (setf status i)
-            (setf result 
-              (yadu
-               result
-               (create-temp-parsing-tdfs item path)))
+            (setf result (uday result tdfs path))
           finally
-            (setf result (and result (copy-tdfs-elements result)))))
-    (or result (values status %failure%))))
+            (setf result (and result (restrict-and-copy-tdfs result)))))
+    (if result
+      (make-edge :id 0 :category (indef-type-of-tdfs result) :rule rule
+                 :leaves (loop 
+                             for edge in edges
+                             append (edge-leaves edge))
+                 :lex-ids (loop 
+                             for edge in edges
+                             append (edge-lex-ids edge))
+                 :dag result
+                 :children edges)
+      (values status %failure%))))
 
-(defun instantiate-preterminal (preterminal affix)
+(defun instantiate-preterminal (preterminal mrule)
   ;;
   ;; _fix_me_
   ;; this hardwires some assumptions about how affixation is carried out. 
@@ -557,10 +589,17 @@
   (with-unification-context (foo)
     (let* ((*unify-debug* :return)
            (%failure% nil)
+           (rtdfs (rule-full-fs mrule))
+           (tdfs (edge-dag preterminal))
            (result 
-            (yadu (create-temp-parsing-tdfs preterminal '(args first)) affix)))
-      (if (tdfs-p result)
-        (copy-tdfs-elements result)
+            (uday rtdfs tdfs '(args first)))
+           (copy (and result (restrict-and-copy-tdfs result))))
+      (if copy
+        (make-edge :id 0 :category (indef-type-of-tdfs copy) :rule mrule 
+                   :leaves (copy-list (edge-leaves preterminal))
+                   :lex-ids (copy-list (edge-lex-ids preterminal))
+                   :dag copy
+                   :children (list preterminal))
         (values nil %failure%)))))
 
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)

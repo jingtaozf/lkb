@@ -23,11 +23,12 @@
 				 '(:relative "tsdb"))
     :binary-pathname (dir-append (get-binaries-dir "tsdb")
 				 '(:relative "tsdb"))
+
     :finally-do
-    #+(and (not :tty) :allegro (or :linux (and :sparc :svr4) :alpha))
+    #+(and :allegro (or :linux (and :sparc :svr4) :alpha) (not :slave))
     (when (system:getenv "DISPLAY") 
       (funcall (symbol-function (read-from-string "tsdb::tsdb")) :podium))
-    #-(and (not :tty) :allegro (or :linux (and :sparc :svr4) :alpha))
+    #-(and :allegro (or :linux (and :sparc :svr4) :alpha) (not :slave))
     nil
 
     :components
@@ -67,6 +68,7 @@
       :binary-pathname ""
       :components
       ((:file "tsdb-package")
+       (:file "macros")
        #+:page 
        (:file "tdl-patches")
        #+:lkb 
@@ -86,15 +88,13 @@
        (:file "server")
        (:file "statistics")
        (:file "podium")
-       #+:allegro 
+       #+:allegro
        (:file "allegro")
-       #+:allegro 
+       #+:allegro
        (:file "gc")
        #+:page 
        (:file "page-interface")
-       (:file "derivations")
-       #+(and :page :edelweiss) 
-       (:file "chart")))
+       (:file "derivations")))
 
      (:module "podium"
       :source-pathname "tcl"

@@ -136,33 +136,53 @@
                 (delete-file file))
               result)))))))
 
-(defun create-cache (language &key (verbose t))
-  (let* ((user (current-user))
-         (file (format
-                nil "/tmp/.tsdb.cache.~a.~a.~a"
-                user (current-pid) (string-downcase (string (gensym "")))))
-         (stream (open file 
-                       :direction :output 
-                       :if-exists :supersede :if-does-not-exist :create)))
-    (when stream
-      (format stream "set implicit-commit \"exit\".~%")
-      (when verbose
-        (format 
-         *tsdb-io*
-         "~&create-cache(): tsdb(1) write cache in `~a'.~%"
-         file)
-        (force-output *tsdb-io*)))
-    (pairlis (list :database :file :stream :count)
-             (list language file stream 0))))
+(defun create-cache (data &key (protocol :cooked) (verbose t) schema)
+  (if (eq protocol :raw)
+    (loop 
+        with cache = (pairlis '(:database :count :protocol)
+                              (list data 0 protocol))
+        with path = (find-tsdb-directory data)
+        initially (when verbose
+                    (format 
+                     *tsdb-io*
+                     "~&create-cache(): write-through mode for `~a'.~%"
+                     data)
+                    (force-output *tsdb-io*))
+        for file in *tsdb-profile-files*
+        for key = (intern (string-upcase file) :keyword)
+        when (assoc file schema :test #'string=) do
+          (let ((stream (open (make-pathname :directory path :name file) 
+                              :direction :output 
+                              :if-exists :append 
+                              :if-does-not-exist :create)))
+            (push (cons key stream) cache))
+        finally (return cache))
+    (let* ((user (current-user))
+           (file (format
+                  nil "/tmp/.tsdb.cache.~a.~a.~a"
+                  user (current-pid) (string-downcase (string (gensym "")))))
+           (stream (open file 
+                         :direction :output 
+                         :if-exists :supersede :if-does-not-exist :create)))
+      (when stream
+        (format stream "set implicit-commit \"exit\".~%")
+        (when verbose
+          (format 
+           *tsdb-io*
+           "~&create-cache(): tsdb(1) write cache in `~a'.~%"
+           file)
+          (force-output *tsdb-io*)))
+      (pairlis '(:database :file :stream :count :protocol)
+               (list data file stream 0 protocol)))))
 
-(defun cache-query (query language cache)
+(defun cache-query (query data cache)
   (let* ((database (get-field :database cache))
          (stream (get-field :stream cache))
          (query (string-trim '(#\Space #\Tab #\Newline) query))
          (query (if (equal (elt query (- (length query) 1)) #\.)
                   query
                   (concatenate 'string query "."))))
-    (if (string-equal language database)
+    (if (string-equal data database)
       (when stream 
         (format stream "~a~%" query)
         (force-output stream)
@@ -179,34 +199,43 @@
       (format
        *tsdb-io*
        "~&cache-query() ignoring query to `~a' (on `~a' cache).~%"
-       language database))))
+       data database))))
 
 (defun flush-cache (cache
                     &key (verbose t))
   (let ((database (get-field :database cache))
-        (file (get-field :file cache))
-        (stream (get-field :stream cache)))
+        (protocol (get-field :protocol cache)))
     (when verbose
       (format 
        *tsdb-io*
        "~&flush-cache(): flushing `~a' cache ..."
        database)
       (force-output *tsdb-io*))
-    (format stream "~&commit.~%")
-    (force-output stream)
-    (close stream)
-    (let* ((query (format nil "do \"~a\"" file)))
-      (call-tsdb query database))
+    (if (eq protocol :raw)
+      (loop
+          for file in *tsdb-profile-files*
+          for key = (intern (string-upcase file) :keyword)
+          for stream = (get-field key cache)
+          when stream do
+            (force-output stream)
+            (close stream))
+      (let ((file (get-field :file cache))
+            (stream (get-field :stream cache)))
+        (format stream "~&commit.~%")
+        (force-output stream)
+        (close stream)
+        (let* ((query (format nil "do \"~a\"" file)))
+          (call-tsdb query database))
+        (unless *tsdb-debug-mode-p*
+          (delete-file file))))
     (when verbose
       (format *tsdb-io* " done.~%")
-      (force-output *tsdb-io*))
-    (unless *tsdb-debug-mode-p*
-      (delete-file file))))
+      (force-output *tsdb-io*))))
 
-(defun largest-result-key (&optional (language *tsdb-data*)
+(defun largest-result-key (&optional (data *tsdb-data*)
                            &key (verbose t))
   (let* ((query "select c-id from csli")
-         (result (call-tsdb query language)))
+         (result (call-tsdb query data)))
     (with-input-from-string (stream result)
       (do ((c-ids nil c-ids)
            (c-id (read stream nil :eof) (read stream nil :eof)))
@@ -221,10 +250,10 @@
            c-id))
         (when (integerp c-id) (push c-id c-ids))))))
 
-(defun largest-run-id (&optional (language *tsdb-data*)
+(defun largest-run-id (&optional (data *tsdb-data*)
                        &key (verbose t))     
   (let* ((query "select run-id from run")
-         (result (call-tsdb query language)))
+         (result (call-tsdb query data)))
     (with-input-from-string (stream result)
       (do ((run-ids nil run-ids)
            (run-id (read stream nil :eof) (read stream nil :eof)))
@@ -340,53 +369,88 @@
                       (push field fields)))))
               (push (cons relation (nreverse fields)) schema))))))))
 
-(defun write-run (result language
-                  &key cache)
+(defun write-run (result language &key cache)
 
   (when *tsdb-write-run-p*
     (let* ((*print-circle* nil)
            (*print-level* nil)
            (*print-length* nil)
+           (*print-escape* t)
+           (rawp (and cache (eq (get-field :protocol cache) :raw)))
            (run-id (get-field+ :run-id result -1))
-           (comment (normalize-string (get-field :comment result)))
-           (platform (normalize-string (get-field :platform result)))
-           (tsdb (normalize-string (get-field :tsdb result)))
-           (application (normalize-string (get-field :application result)))
-           (context (normalize-string (get-field :context result)))
-           (grammar (normalize-string (get-field :grammar result)))
+           (comment 
+            (normalize-string (get-field :comment result) :escape rawp))
+           (platform 
+            (normalize-string (get-field :platform result) :escape rawp))
+           (tsdb (normalize-string (get-field :tsdb result) :escape rawp))
+           (application 
+            (normalize-string (get-field :application result) :escape rawp))
+           (context 
+            (normalize-string (get-field :context result) :escape rawp))
+           (grammar 
+            (normalize-string (get-field :grammar result) :escape rawp))
            (avms (get-field+ :avms result -1))
            (sorts (get-field+ :sorts result -1))
            (templates (get-field+ :templates result -1))
            (lexicon (get-field+ :lexicon result -1))
            (lrules (get-field+ :lrules result -1))
            (rules (get-field+ :rules result -1))
-           (user (normalize-string (get-field+ :user result "")))
-           (host (normalize-string (get-field+ :host result "")))
-           (os (normalize-string (get-field+ :os result "")))
+           (user (normalize-string (get-field+ :user result "") :escape rawp))
+           (host (normalize-string (get-field+ :host result "") :escape rawp))
+           (os (normalize-string (get-field+ :os result "") :escape rawp))
            (start (get-field :start result))
            (end (get-field :end result))
            (items (get-field+ :items result -1))
-           (status (normalize-string (get-field+ :status result "")))
-           (query
-            (format
-             nil
-             "insert into run values ~
-              ~d ~s ~
-              ~s ~s ~s ~s ~s ~
-              ~d ~d ~d ~d ~d ~d ~
-              ~s ~s ~s ~a ~a ~d ~s"
-             run-id comment 
-             platform tsdb application context grammar
-             avms sorts templates lexicon lrules rules
-             user host os start end items status)))
-      (call-tsdb query language :cache cache))))
+           (status 
+            (normalize-string (get-field+ :status result "") :escape rawp)))
+      (if rawp
+        (let ((stream (get-field :run cache))
+              (ofs *tsdb-ofs*))
+          (write run-id :stream stream) (write-char ofs stream)
+          (write-string comment stream) (write-char ofs stream)
+          (write-string platform stream) (write-char ofs stream)
+          (write-string tsdb stream) (write-char ofs stream)
+          (write-string application stream) (write-char ofs stream)
+          (write-string context stream) (write-char ofs stream)
+          (write-string grammar stream) (write-char ofs stream)
+          (write avms :stream stream) (write-char ofs stream)
+          (write sorts :stream stream) (write-char ofs stream)
+          (write templates :stream stream) (write-char ofs stream)
+          (write lexicon :stream stream) (write-char ofs stream)
+          (write lrules :stream stream) (write-char ofs stream)
+          (write rules :stream stream) (write-char ofs stream)
+          (write-string user stream) (write-char ofs stream)
+          (write-string host stream) (write-char ofs stream)
+          (write-string os stream) (write-char ofs stream)
+          (write-string start stream) (write-char ofs stream)
+          (write-string end stream) (write-char ofs stream)
+          (write items :stream stream) (write-char ofs stream)
+          (write-string status stream) 
+          (terpri stream)
+          (force-output stream)
+          (incf (get-field :count cache)))
+        (let* ((query
+                (format
+                 nil
+                 "insert into run values ~
+                  ~d ~s ~
+                  ~s ~s ~s ~s ~s ~
+                  ~d ~d ~d ~d ~d ~d ~
+                  ~s ~s ~s ~a ~a ~d ~s"
+                 run-id comment 
+                 platform tsdb application context grammar
+                 avms sorts templates lexicon lrules rules
+                 user host os start end items status)))
+          (call-tsdb query language :cache cache))))))
 
-(defun write-parse (result language
-                    &key cache)
+(defun write-parse (result language &key cache)
+  
   (when *tsdb-write-parse-p*
     (let* ((*print-circle* nil)
            (*print-level* nil)
            (*print-length* nil)
+           (*print-escape* t)
+           (rawp (and cache (eq (get-field :protocol cache) :raw)))
            (parse-id (get-field+ :parse-id result -1))
            (run-id (get-field+ :run-id result -1))
            (i-id (get-field+ :i-id result -1))
@@ -417,32 +481,70 @@
            (a-load (get-field :a-load result))
            (a-load (if a-load (round (* 100 a-load)) -1))
            (date (current-time :long t))
-           (error (normalize-string (get-field+ :error result "")))
-           (comment (normalize-string (get-field+ :comment result "")))
-           (query "insert into parse values")
-           (query
-            (format
-             nil
-             "~a ~d ~d ~d ~
-              ~d ~d ~d ~d ~d ~d ~
-              ~d ~d ~
-              ~d ~d ~d ~d ~
-              ~d ~d ~d ~d ~
-              ~d ~d ~
-              ~d ~d ~d ~
-              ~d ~d ~d ~
-              ~a ~s ~s"
-             query
-             parse-id run-id i-id
-             readings first total tcpu tgc treal
-             words l-stasks
-             p-ctasks p-ftasks p-etasks p-stasks
-             aedges pedges raedges rpedges
-             unifications copies
-             conses symbols others
-             gcs i-load a-load
-             date error comment)))
-      (call-tsdb query language :cache cache))))
+           (error 
+            (normalize-string (get-field+ :error result "") :escape rawp))
+           (comment 
+            (normalize-string (get-field+ :comment result "") :escape rawp)))
+      (if rawp
+        (let ((stream (get-field :parse cache))
+              (ofs *tsdb-ofs*))
+          (write parse-id :stream stream) (write-char ofs stream)
+          (write run-id :stream stream) (write-char ofs stream)
+          (write i-id :stream stream) (write-char ofs stream)
+          (write readings :stream stream) (write-char ofs stream)
+          (write first :stream stream) (write-char ofs stream)
+          (write total :stream stream) (write-char ofs stream)
+          (write tcpu :stream stream) (write-char ofs stream)
+          (write tgc :stream stream) (write-char ofs stream)
+          (write treal :stream stream) (write-char ofs stream)
+          (write words :stream stream) (write-char ofs stream)
+          (write l-stasks :stream stream) (write-char ofs stream)
+          (write p-ctasks :stream stream) (write-char ofs stream)
+          (write p-ftasks :stream stream) (write-char ofs stream)
+          (write p-etasks :stream stream) (write-char ofs stream)
+          (write p-stasks :stream stream) (write-char ofs stream)
+          (write aedges :stream stream) (write-char ofs stream)
+          (write pedges :stream stream) (write-char ofs stream)
+          (write raedges :stream stream) (write-char ofs stream)
+          (write rpedges :stream stream) (write-char ofs stream)
+          (write unifications :stream stream) (write-char ofs stream)
+          (write copies :stream stream) (write-char ofs stream)
+          (write conses :stream stream) (write-char ofs stream)
+          (write symbols :stream stream) (write-char ofs stream)
+          (write others :stream stream) (write-char ofs stream)
+          (write gcs :stream stream) (write-char ofs stream)
+          (write i-load :stream stream) (write-char ofs stream)
+          (write a-load :stream stream) (write-char ofs stream)
+          (write-string date stream) (write-char ofs stream)
+          (write-string error stream) (write-char ofs stream)
+          (write-string comment stream)
+          (terpri stream)
+          (force-output stream)
+          (incf (get-field :count cache)))
+        (let* ((query "insert into parse values")
+               (query
+                (format
+                 nil
+                 "~a ~d ~d ~d ~
+                  ~d ~d ~d ~d ~d ~d ~
+                  ~d ~d ~
+                  ~d ~d ~d ~d ~
+                  ~d ~d ~d ~d ~
+                  ~d ~d ~
+                  ~d ~d ~d ~
+                  ~d ~d ~d ~
+                  ~a ~s ~s"
+                 query
+                 parse-id run-id i-id
+                 readings first total tcpu tgc treal
+                 words l-stasks
+                 p-ctasks p-ftasks p-etasks p-stasks
+                 aedges pedges raedges rpedges
+                 unifications copies
+                 conses symbols others
+                 gcs i-load a-load
+                 date error comment)))
+          (call-tsdb query language :cache cache))))))
 
 (defun write-results (parse-id results
                       &optional (language *tsdb-data*)
@@ -452,8 +554,10 @@
         with *print-circle* = nil
         with *print-level* = nil
         with *print-length* = nil
+        with rawp = (and cache (eq (get-field :protocol cache) :raw))
         for result in results
-        for result-id = (get-field :result-id result)
+        for id from 0
+        for result-id = (or (get-field :result-id result) id)
         for time = (round (get-field+ :time result -1))
         for r-ctasks = (get-field+ :r-ctasks result -1)
         for r-ftasks = (get-field+ :r-ftasks result -1)
@@ -462,31 +566,54 @@
         for size = (get-field+ :size result -1)
         for r-aedges =  (get-field+ :r-aedges result -1)
         for r-pedges = (get-field+ :r-pedges result -1)
-        for derivation = (normalize-string (get-field :derivation result))
-        for tree = (normalize-string (get-field :tree result))
-        for mrs = (normalize-string (get-field :mrs result))
-        for query = (format
-                     nil
-                     "insert into result values ~
-                      ~d ~d ~d ~d ~d ~d ~d ~d ~d ~d ~s ~s ~s"
-                     parse-id result-id
-                     time
-                     r-ctasks r-etasks r-stasks r-ftasks
-                     size r-aedges r-pedges
-                     derivation tree mrs)
-        when result-id do
-          (call-tsdb query language :cache cache))))
+        for derivation = (normalize-string 
+                          (get-field :derivation result) :escape rawp)
+        for tree = (normalize-string (get-field :tree result) :escape rawp)
+        for mrs = (normalize-string (get-field :mrs result) :escape rawp)
+        do
+          (if rawp
+            (let ((stream (get-field :result cache))
+                  (ofs *tsdb-ofs*))
+              (write parse-id :stream stream) (write-char ofs stream)
+              (write result-id :stream stream) (write-char ofs stream)
+              (write time :stream stream) (write-char ofs stream)
+              (write r-ctasks :stream stream) (write-char ofs stream)
+              (write r-etasks :stream stream) (write-char ofs stream)
+              (write r-stasks :stream stream) (write-char ofs stream)
+              (write r-ftasks :stream stream) (write-char ofs stream)
+              (write size :stream stream) (write-char ofs stream)
+              (write r-aedges :stream stream) (write-char ofs stream)
+              (write r-pedges :stream stream) (write-char ofs stream)
+              (write-string derivation stream) (write-char ofs stream)
+              (write-string tree stream) (write-char ofs stream)
+              (write-string mrs stream) 
+              (terpri stream)
+              (force-output stream)
+              (incf (get-field :count cache)))
+            (let* ((query (format
+                           nil
+                           "insert into result values ~
+                            ~d ~d ~d ~d ~d ~d ~d ~d ~d ~d ~s ~s ~s"
+                           parse-id result-id
+                           time
+                           r-ctasks r-etasks r-stasks r-ftasks
+                           size r-aedges r-pedges
+                           derivation tree mrs)))
+              (call-tsdb query language :cache cache))))))
 
 (defun write-rules (parse-id statistics
                     &optional (language *tsdb-data*)
                     &key cache)
   (when *tsdb-rule-statistics-p*
+    (when (and cache (eq (get-field :protocol cache) :raw))
+      (error "write-rules(): unable to write to raw cache; see `tsdb.lisp'"))
     (loop 
         with *print-circle* = nil
         with *print-level* = nil
         with *print-length* = nil
+        with rawp = nil
         for rule in statistics
-        for name = (normalize-string (get-field+ :rule rule ""))
+        for name = (normalize-string (get-field+ :rule rule "") :escape rawp)
         for filtered = (get-field+ :filtered rule -1)
         for executed = (get-field+ :executed rule -1)
         for successful = (get-field+ :successful rule -1)
@@ -505,11 +632,14 @@
                      language
                      &key cache)
   (when *tsdb-write-output-p*
+    (when (and cache (eq (get-field :protocol cache) :raw))
+      (error "write-output(): unable to write to raw cache; see `tsdb.lisp'"))
     (let* ((*print-circle* nil)
            (*print-level* nil)
            (*print-length* nil)
-           (tree (shell-escape-quotes (remove #\@ (normalize-string tree))))
-           (mrs (shell-escape-quotes (remove #\@ (normalize-string mrs))))
+           (rawp nil)
+           (tree (normalize-string tree :escape rawp))
+           (mrs (normalize-string mrs :escape rawp))
            (query
             (format
              nil
