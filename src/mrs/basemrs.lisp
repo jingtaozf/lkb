@@ -155,8 +155,9 @@
     (call-next-method)
     (format 
      stream
-     "~a:~(~s~)"
-     (var-string (rel-handel object)) (rel-pred object))))
+     "~@[~a:~]~(~s~)"
+     (and (rel-handel object) (var-string (rel-handel object)))
+     (rel-pred object))))
 
 (defmethod print-object ((object var) stream)
   (if *mrs-raw-output-p*
