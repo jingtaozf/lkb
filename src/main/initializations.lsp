@@ -119,9 +119,10 @@
   ;;; this is a no-op in tty mode
   #+(not :tty)
   (let ((building-image-p (find-symbol "*BUILDING-IMAGE-P*" :make)))
-    (unless (and building-image-p 
-                 (boundp building-image-p)
-                 (symbol-value building-image-p))
+    (unless (or (and building-image-p 
+                     (boundp building-image-p)
+                     (symbol-value building-image-p))
+                (find :slave *features*))
       #+:allegro
       (tpl:setq-default *package* 
         (find-package (if (system:getenv "SSP") :ssp :lkb)))
