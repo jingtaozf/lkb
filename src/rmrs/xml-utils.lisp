@@ -29,7 +29,7 @@
 (defun parse-xml-removing-junk (istream)
   ;;; parser insists on tree of `proper' elements
   ;;; so we just need to find this
-  (let ((raw-xml (xml:parse-xml istream)))
+  (let ((raw-xml #+:xml (xml:parse-xml istream) #-:xml nil))
     (dolist (xml-el raw-xml)
       (unless (member (car xml-el) '(:XML :DOCTYPE :COMMENT))
         (return xml-el)))))
