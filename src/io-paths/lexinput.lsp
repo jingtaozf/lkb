@@ -150,9 +150,11 @@
   #+:psql
   (if (typep *lexicon* 'psql-lex-database)
       (initialize-lex *lexicon*)
-    (clear-lex *lexicon*))
+    (clear-lex *lexicon* 
+	       :psorts-temp-files (cons *psorts-temp-file* *psorts-temp-index-file*)))
   #-:psql
-  (clear-lex *lexicon*)
+  (clear-lex *lexicon* 
+	     :psorts-temp-files (cons *psorts-temp-file* *psorts-temp-index-file*))
   (setf *ordered-lex-list* nil)
   (if (check-load-names file-names 'lexical)
       (progn
@@ -162,7 +164,8 @@
 	     (let ((*lexicon-in* *lexicon*))
 	       (read-tdl-lex-file-aux-internal file-name)))
             (:path 
-             (read-lex-file-aux-internal file-name))))
+	     (let ((*lexicon-in* *lexicon*))
+	       (read-lex-file-aux-internal file-name)))))
         (if (typep *lexicon* 'cdb-lex-database)
 	    (store-cached-lex *lexicon*)))
     (cerror "Continue with script" "Lexicon file not found")))
