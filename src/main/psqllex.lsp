@@ -131,7 +131,8 @@
    (slot-to-fields-mapping :initform nil :accessor fields-map)))
 
 (defclass psql-database (sql-database)
-  ((connection :initform nil :accessor connection :initarg connection)))
+  ((connection :initform nil :accessor connection :initarg connection)
+   (server-version :initform nil :accessor server-version)))
 
 (defclass psql-lex-database (psql-database external-lex-database)
   ())
@@ -196,9 +197,13 @@
 		       (sql-escape-string host)
 		       (sql-escape-string dbname)
 		       (sql-escape-string user)
-		       (sql-escape-string password))))
+		       (sql-escape-string password)))
+	  (decoded-status nil))
       (setf (connection lexicon) (pg:connect-db properties))
-      (pg:decode-connection-status (pg:status connection)))))
+      (setf decoded-status (pg:decode-connection-status (pg:status connection)))
+      (if (eq decoded-status :connection-ok)
+	  (setf (server-version lexicon) (get-server-version lexicon)))
+      decoded-status)))
 
 (defmethod disconnect ((lexicon psql-database))
   (with-slots (connection) lexicon
@@ -395,11 +400,17 @@
   (if (connection lexicon)
       (let* (
 	     (orthstr (string-downcase (sql-escape-string orth)))
-	     (sql-str (format 
-		       nil 
-		       "SELECT ~a FROM retrieve_entries('~a');"
-		       (make-requested-fields lexicon)
-		       orthstr))
+	     (sql-str 
+	      (cond
+	       ((string< (server-version lexicon) "7.3")
+		(format nil "SELECT ~a FROM erg_max_version WHERE name IN (SELECT lookup_word('~a'));" 
+			(make-requested-fields lexicon)
+			orthstr))
+	       (t (format 
+		   nil 
+		   "SELECT ~a FROM retrieve_entries('~a');"
+		   (make-requested-fields lexicon)
+		   orthstr))))
 	     (query-res (run-query 
 			 lexicon 
 			 (make-instance 'sql-query :sql-string sql-str)))
@@ -696,7 +707,7 @@
 	  (expand-string-list-to-fs-list (cdr string-list)))))))   
 
 ;;; returns version, eg. "7.3.2"
-(defmethod server-version ((lexicon psql-lex-database))
+(defmethod get-server-version ((lexicon psql-lex-database))
   (let* 
       ((sql-str "SELECT version();")
        (version-str (caar (records (run-query lexicon (make-instance 'sql-query :sql-string sql-str))))))
