@@ -7,13 +7,14 @@ MKDIR=/bin/mkdir
 CVS=/usr/pubsw/bin/cvs
 TAR=/usr/local/bin/tar
 MAKE=/usr/ccs/bin/make
+TEE=/bin/tee
 
 update:
 	( \
 	  cd ${ROOT}/lkb; \
 	  ${CVS} update -P -d -R; \
-	  ${MAKE} lkb; \
-	)
+	  ${MAKE} all; \
+	) | ${TEE} /tmp/build.${USER}
 
 all: lkb erg
 
@@ -21,7 +22,7 @@ all: lkb erg
 # LKB grammar development environment
 #
 
-lkb: lkb_source lkb_data lkb_binaries
+lkb: lkb_source lkb_data lkb_binaries lkb_documentation
 
 lkb_source:
 	( \
@@ -30,14 +31,15 @@ lkb_source:
 	  ${TAR} Svczf ${TARGET}/${DATE}/lkb_source.tgz \
 	      --exclude=Makefile \
 	      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
-              --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
+	      --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
 	      --exclude="src/.???l*" --exclude="src/fasl*" \
 	      --exclude="*.fasl" \
 	      --exclude="src/doc*" --exclude="src/data*" \
 	      --exclude="linux*" --exclude="solaris*" --exclude="windows*" \
 	      --exclude="src/www*" --exclude=src/systems/www.system \
-	      --exclude=bin* --exclude=include* --exclude=lib* \
-	      --exclude=src/tsdb* --exclude=src/pvm* \
+	      --exclude="bin*" --exclude="include*" --exclude="lib*" \
+	      --exclude="etc*" --exclude=src/general/itsdb.lisp \
+	      --exclude="src/tsdb*" --exclude="src/pvm*" \
 	      --exclude=src/systems/tsdb.system \
 	      --exclude=src/systems/pvm.system \
 	      .; \
@@ -50,6 +52,8 @@ lkb_data:
 	      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
               --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
 	      --exclude="src/data/spanish*" \
+	      --exclude="src/data/interrogatives*" \
+	      --exclude="src/data/aline2*" \
 	      src/data; \
 	)
 
@@ -118,33 +122,43 @@ lkb_solaris:
 
 lkb_windows:
 
+lkb_documentation:
+	( \
+	  cd ${ROOT}/lkb; \
+	  tar Svczf ${TARGET}/${DATE}/lkb_documentation.tgz \
+	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
+              --exclude=".nfs*" \
+	      doc/lkb.pdf; \
+	)
+
 #
 # LinGO English Resource Grammar
 #
 
 erg:
 	( \
-	  cd ${ROOT}/grammar; \
+	  cd ${ROOT}; \
 	  ${TAR} Svczf ${TARGET}/${DATE}/erg.tgz \
 	      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
               --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
 	      --exclude="pet*" --exclude="tsdb*" \
 	      --exclude="*.fasl" \
-	      .; \
+	      erg; \
 	)
 
 #
 # [incr tsdb()]
 #
 
-itsdb: itsdb_binaries itsdb_libraries itsdb_source itsdb_data
+itsdb: itsdb_binaries itsdb_libraries itsdb_source itsdb_data \
+       itsdb_documentation
 
 itsdb_binaries:
 	( \
 	  cd ${ROOT}/lkb; \
 	  tar Svczf ${TARGET}/${DATE}/itsdb_solaris.tgz \
 	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
-              --exclude=".nfs*" --exclude="*.fasl" \
+              --exclude=".nfs*" \
 	      bin/solaris/tsdb bin/solaris/swish++ bin/solaris/.swish++ \
 	      bin/solaris/pvmd3 bin/solaris/pvm \
 	      src/pvm/solaris/*.so src/tsdb/solaris/*.so \
@@ -154,7 +168,7 @@ itsdb_binaries:
 	  cd ${ROOT}/lkb; \
 	  tar Svczf ${TARGET}/${DATE}/itsdb_linux.tgz \
 	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
-              --exclude=".nfs*" --exclude="*.fasl" \
+              --exclude=".nfs*" \
 	      bin/linux/tsdb bin/linux/swish++ bin/linux/.swish++ \
 	      bin/linux/pvmd3 bin/linux/pvm \
 	      src/pvm/linux/*.so src/tsdb/linux/*.so \
@@ -167,7 +181,7 @@ itsdb_libraries:
 	  tar Svczf ${TARGET}/${DATE}/itsdb_libraries.tgz \
 	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" \
-	      etc include lib man; \
+	      etc include lib man src/general/itsdb.lisp; \
 	)
 
 itsdb_source:
@@ -198,4 +212,13 @@ itsdb_data:
 	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" \
 	      src/tsdb/skeletons src/tsdb/home; \
+	)
+
+itsdb_documentation:
+	( \
+	  cd ${ROOT}/lkb; \
+	  tar Svczf ${TARGET}/${DATE}/itsdb_documentation.tgz \
+	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
+              --exclude=".nfs*" \
+	      doc/itsdb.ps doc/tsnlp.ps doc/profiling.ps doc/parsing.ps; \
 	)
