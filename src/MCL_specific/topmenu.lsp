@@ -68,7 +68,7 @@
   (set-up-lkb-interaction))
 
 (defun shrink-lkb-menu nil
-  (setf user::*lkb-menu-type* :core)
+  (setf cl-user::*lkb-menu-type* :core)
   (set-up-lkb-interaction))
 
 (defun set-up-lkb-interaction (&optional system-type)
@@ -99,7 +99,6 @@
   nil)
 
 
-
 (defun dump-lkb nil
   (let* ((fresh-p (not *current-grammar-load-file*))
          (pathname (ask-user-for-new-pathname 
@@ -120,7 +119,12 @@
 
 (defun lkb-restart-function nil
   (read-psort-index-file)
-  (set-up-lkb-interaction))
+  (set-up-lkb-interaction)
+  ;; crude way of seeing whether this is being 
+  ;; called when we already have a grammar
+  (when *current-grammar-load-file* ; *** jac 2/15/99
+    (enable-type-interactions))
+  )
 
 (defun restart-lkb-window nil
   (set-up-lkb-interaction))
