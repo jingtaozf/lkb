@@ -793,6 +793,16 @@
                                 (format
                                  nil
                                  "~(~a~) in [~d .. ~d|"
+                                 dimension class (+ class aggregate))))
+                             (:html
+                              (if (= aggregate 1)
+                                (format
+                                 nil
+                                 "~(~a~) = ~d"
+                                 dimension class)
+                                (format
+                                 nil
+                                 "~(~a~) &isin; [~d &ndash; ~d|"
                                  dimension class (+ class aggregate)))))))
                 (when (>= (length data) threshold)
                   (push (cons class (cons name data)) result))))
