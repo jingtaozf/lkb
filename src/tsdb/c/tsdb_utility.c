@@ -18,6 +18,8 @@
 #include <malloc.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <regex.h>
+
 #include <sys/timeb.h>
 
 #include "globals.h"
@@ -84,6 +86,46 @@ BOOL tsdb_value_substring(Tsdb_value *foo, Tsdb_value *bar) {
   } /* else */
 
 } /* tsdb_value_substring() */
+
+
+/*  True if the pattern bar matches foo: If given the compiled pattern
+    bar_pat, it matches with it instead. */
+
+BOOL tsdb_value_match(Tsdb_value *foo, Tsdb_value *bar,void* bar_pat) {
+  BOOL answer=FALSE;
+  int result;
+  regex_t baz,*pattern;
+
+   if (foo->type == TSDB_STRING && bar->type == TSDB_STRING) {
+     if (bar_pat!=NULL)
+       pattern = (regex_t*) bar_pat;
+     else { /* compile new pattern */
+       pattern = &baz;
+       result = regcomp(pattern,bar->value.string,REG_EXTENDED);
+       if (result!=0) {
+         int s = regerror(result,pattern,NULL,0);
+         {
+           char a[s+1];
+           regerror(result,pattern,&a[0],s+1);
+           fprintf(TSDB_ERROR_STREAM,"Regex Error: %s \n",a);
+         }
+         answer = FALSE;
+       } /* if */
+     }
+     answer = regexec(pattern,foo->value.string,0,NULL,0);
+     if (answer!=0) {
+       answer = FALSE;
+     } /* if */
+     else
+       answer = TRUE;
+   } /* if */
+  if (!bar_pat) {
+    regfree(pattern);
+  }
+  return(answer);
+
+} /* tsdb_value_match() */
+
 /*-------------- end of Operations ---------------------*/
 
 BOOL tsdb_tuple_equal(Tsdb_tuple* foo, Tsdb_tuple* bar)
@@ -379,7 +421,7 @@ BOOL tsdb_satisfies_condition(Tsdb_tuple *tuple, Tsdb_node *condition,
                               Tsdb_relation *relation) {
   
   int i, integer;
-  char *string, *attribute;
+  char *string=NULL, *attribute=NULL;
   BOOL number, answer;
 
   attribute = strdup(condition->left->node->value.identifier);
@@ -393,6 +435,8 @@ BOOL tsdb_satisfies_condition(Tsdb_tuple *tuple, Tsdb_node *condition,
   }
   else {
     fprintf(TSDB_ERROR_STREAM, "tsdb: bad tsdb_type.\n");
+    if (attribute)
+      free(attribute);
     return(FALSE);
   }
 
@@ -460,15 +504,15 @@ BOOL tsdb_satisfies_condition(Tsdb_tuple *tuple, Tsdb_node *condition,
       answer = (strstr(string, tuple->fields[i]->value.string) == NULL);
     }
     break; 
-/*  case TSDB_PATTERN : 
-    if (number) {
-      
-    } */
   default :
       fprintf(TSDB_ERROR_STREAM, "no such operator.\n");
   } /* switch */
   
   printf("returning %d.\n", answer);
+  if (attribute)
+    free(attribute);
+  if (string)
+    free(string);
   return(answer);
     
 } /* tsdb_satisfies_condition() */
@@ -698,7 +742,7 @@ Tsdb_relation *tsdb_copy_relation(Tsdb_relation *relation) {
     new->total[i] = relation->total[i];
   } /* for */
   new->n_keys = relation->n_keys;
-  new->keys[new->n_keys]=NULL;
+  new->keys[new->n_keys]=0L;
   return(new);
 
 } /* tsdb_copy_relation() */
@@ -736,8 +780,9 @@ Tsdb_selection *tsdb_find_table(Tsdb_relation *relation) {
 |* last update: 30-jun-95
 |*  updated by: oe, dfki saarbruecken
 |*****************************************************************************|
-|*
-|*
+|* tsdb_find_table() returns the original table!
+|* On demand it gets appended to tsdb_data.
+|* so we won't free it!
 \*****************************************************************************/
 
   int i;
@@ -801,7 +846,7 @@ Tsdb_selection* tsdb_find_tables(Tsdb_relation** relations)
   real_relations[i] = (Tsdb_relation*)NULL;
   
   select = tsdb_find_table(real_relations[0]);
-  
+
   j=i-1;
   while (j) {
     for (kaerb=FALSE,k=1;
@@ -817,7 +862,10 @@ Tsdb_selection* tsdb_find_tables(Tsdb_relation** relations)
         } /* if */
       } /* if */
   } /* while */
-
+  /* we need a tsdb_copy_selection here !! */
+  free(real_relations);
+  if (j==0)
+    select = tsdb_copy_selection(select);
   return(select);
 
 } /* tsdb_find_tables() */
@@ -1085,6 +1133,15 @@ void tsdb_free_relation(Tsdb_relation *relation) {
   free(relation);
 } /* tsdb_free_relation() */
 
+void tsdb_free_relations(Tsdb_relation **relations) {
+  int i;
+  
+  for (i=0;relations[i];i++)
+    tsdb_free_relation(relations[i]);
+  
+} /* tsdb_free_relations() */
+
+
 Tsdb_selection* tsdb_create_selection(int r, int k) {
   Tsdb_selection *foo;
 
@@ -1092,16 +1149,33 @@ Tsdb_selection* tsdb_create_selection(int r, int k) {
   foo->n_relations = r;
   foo->n_key_lists = k;
   foo->relations = (Tsdb_relation **)malloc(sizeof(Tsdb_relation *) * (r + 1));
-  foo->relations[r + 1]=(Tsdb_relation *)NULL;
+  foo->relations[r]=(Tsdb_relation *)NULL;
   memset(foo->relations, '\0', sizeof(Tsdb_relation *) * (r + 1));
   foo->key_lists = (Tsdb_key_list **)malloc(sizeof(Tsdb_key_list *) * (k + 1));
   memset(foo->key_lists, '\0', sizeof(Tsdb_key_list *) * (k + 1));
-  foo->key_lists[k + 1] = (Tsdb_key_list *)NULL;
+  foo->key_lists[k] = (Tsdb_key_list *)NULL;
   return(foo);
 } /*   tsdb_create_selection() */
 
+Tsdb_selection* tsdb_copy_selection(Tsdb_selection* source) {
+  Tsdb_selection* target;
+  int i;
+  
+  target = tsdb_create_selection(source->n_relations,source->n_key_lists);
+  for(i = 0; i < source->n_relations; i++) {
+    target->relations[i] = tsdb_copy_relation(source->relations[i]);
+  } /* for*/
+  
+  for (i=0;i<source->n_key_lists;i++) 
+    target->key_lists[i] = tsdb_copy_key_list(source->key_lists[i]);
+  target->length = source->length;
+
+  return(target);
+} /* tsdb_copy_selection() */
+
 void tsdb_free_selection(Tsdb_selection* foo) {
   int i;
+/*  tsdb_free_relations(foo->relations);*/
   free(foo->relations);
   for (i=0;i<foo->n_key_lists;i++)
     tsdb_free_key_list_chain(foo->key_lists[i],FALSE);
@@ -1309,7 +1383,7 @@ BOOL tsdb_initialize() {
     if((foo = getenv("USER")) != NULL) {
       tsdb_result_prefix
         = (char *)realloc(tsdb_result_prefix,
-                          strlen(tsdb_result_prefix + strlen(foo) + 2));
+                          strlen(tsdb_result_prefix) + strlen(foo) + 2);
       tsdb_result_prefix = strcat(tsdb_result_prefix, foo);
       tsdb_result_prefix = strcat(tsdb_result_prefix, ".");
     } /* if */
@@ -1663,3 +1737,5 @@ char** tsdb_condition_attributes(Tsdb_node *node,
   } /* else */
   return attributes;
 } /* tsdb_condition_attributes() */
+
+/*---------------------------------------------------------------------------*/
