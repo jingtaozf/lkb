@@ -4,75 +4,33 @@
 ;;;
 
 (defun command-merge-into-psql-lexicon (&rest rest)
-  (let ((filename
-	 (cond
-	  ((= (length rest) 0)
-	   (ask-user-for-existing-pathname "CSV file?"))
-	  ((= (length rest) 1)
-	   (first rest))
-	  (t
-	   (error "too many arguments")))))
-    (if (and
-	 (> (- (length filename) 4) 
-	    0)
-	 (equal (subseq filename 
-			(- (length filename) 
-			   4)) 
-		".csv"))
-	(setf filename (subseq filename 
-			       0 
-			       (- (length filename) 4))))
-    (when filename
-      (format t 
-	      "~%Please wait: merging files ~a.* into lexical database ~a" 
-	      filename 
-	      (dbname *psql-lexicon*))
-      (force-output)
-      (time (merge-into-psql-lexicon *psql-lexicon* filename))
-      (lkb-beep))))
+  (let ((filename (get-filename rest :ending ".csv" :existing t)))
+  
+    (format t 
+            "~%Please wait: merging files ~a.* into lexical database ~a" 
+            filename 
+            (dbname *psql-lexicon*))
+    (force-output)
+    (time (merge-into-psql-lexicon *psql-lexicon* filename))
+    (lkb-beep)))
 
 (defun command-dump-psql-lexicon (&rest rest)
-  (let ((filename
-	 (cond
-	  ((= (length rest) 0)
-	   (ask-user-for-new-pathname "CSV file?"))
-	  ((= (length rest) 1)
-	   (first rest))
-	  (t
-	   (error "too many arguments")))))
-    (if (and
-	 (> (- (length filename) 
-	       4) 
-	    0)
-	 (equal (subseq filename (- (length filename) 
-				    4)) 
-		".csv"))
-	(setf filename 
-	  (subseq filename 
-		  0 
-		  (- (length filename) 
-		     4))))
-    (when filename
-      (format t 
-	      "~%Please wait: dumping lexical database ~a to files ~a.*" 
-	      (dbname *psql-lexicon*) 
-	      filename)
-      (force-output)
-      (time (dump-psql-lexicon filename))
-      (lkb-beep))))
+  (let ((filename (get-filename rest :ending ".csv" :existing nil)))
+
+    (format t 
+            "~%Please wait: dumping lexical database ~a to files ~a.*" 
+            (dbname *psql-lexicon*) 
+            filename)
+    (force-output)
+    (time (dump-psql-lexicon filename))
+    (lkb-beep)))
   
 (defun command-export-lexicon-to-tdl (&rest rest)
-  (let ((filename
-	 (cond
-	  ((= (length rest) 0)
-	   (ask-user-for-new-pathname "TDL file?"))
-	  ((= (length rest) 1)
-	   (first rest))
-	  (t
-	   (error "too many arguments")))))
-    (when filename
-      (time (export-lexicon-to-tdl :file filename))
-      (lkb-beep))))
+  (let ((filename (format nil "~a.tdl"
+                          (get-filename rest :ending ".tdl" :existing nil)))) 
+                  
+    (time (export-lexicon-to-tdl :file filename))
+    (lkb-beep)))
   
 (defun command-set-filter-psql-lexicon (&rest rest)
   (time
@@ -125,14 +83,36 @@
   (lkb-beep))
 
 (defun command-load-tdl-to-scratch (&rest rest)
-  (let ((filename
+  (let ((filename (format nil "~a.tdl"
+                          (get-filename rest :ending ".tdl" :existing t)))) 
+  
+    (load-tdl-from-scratch filename)
+    (lkb-beep)))
+
+(defun get-filename (rest &key (ending "") existing)
+  (let* ((len-ending (length ending))
+         (prompt (format nil "~a file?" ending))
+         (filename
 	 (cond
 	  ((= (length rest) 0)
-	   (ask-user-for-existing-pathname "TDL file?"))
+           (if existing
+               (ask-user-for-existing-pathname prompt)
+             (ask-user-for-new-pathname prompt)))
 	  ((= (length rest) 1)
 	   (first rest))
 	  (t
 	   (error "too many arguments")))))
-    (load-tdl-from-scratch filename)
-    (lkb-beep)))
-  
+    (cond
+     ((and
+       (> (- (length filename) len-ending) 
+          0)
+       (equal (subseq filename 
+                      (- (length filename) 
+                         len-ending)) 
+              ending))
+      (subseq filename 
+              0 
+              (- (length filename)
+                 len-ending)))
+     (t
+      filename))))
