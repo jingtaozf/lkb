@@ -14,14 +14,6 @@
 ;;; the scrolling windows and pop up menus, and because the basic functions are
 ;;; called in multiple different ways.
 
-;;; the following is called from functions in output(td)fs.lsp
-
-(defun add-type-and-active-fs-region (stream start-pos type-label-list val
-                                             shrunk-p atomic-p &optional top-box full-tdfs)
-  (with-bold-output stream (format stream "~(~A~)" val))
-  (add-active-fs-region stream start-pos type-label-list val shrunk-p atomic-p 
-                        top-box full-tdfs))
-
 ;;; the main entry points are a series of functions with names like
 ;;; display-basic-fs
 ;;; these functions create a window of type 'picture-field-window
@@ -42,43 +34,62 @@
 ;;;   attached to the picture-field window are added to the window-pane
 ;;;   as subviews.
 
-;;; This is the font for the pop up menu and the display windows
+;;; This is the font for the pop up menu and the display windows. They
+;;; are functions so users can change font sizes after code has loaded
 
-(defparameter *type-font* (list "Helvetica" *fs-type-font-size*))
+(defun lkb-type-font nil (list "Helvetica" *fs-type-font-size*))
+(defun lkb-title-font nil (list "Chicago" *fs-title-font-size*))
 
-(defparameter *title-font* (list "Chicago" *fs-title-font-size*))
 
 ;;; ***** Records and classes *******
 
 (defclass picture-field-window (ccl::picture-maker)
-;;; the class for the temporray windows from which the pict is derived
-  ((fields :initarg fields :initform nil :accessor fields)))
+   ;; the class for the temporary windows from which the pict is derived
+   ((fields :initarg fields :initform nil :accessor fields)))
 
 
 (defclass active-fs-scroll-bar (ccl::scroll-bar-dialog-item) ()
-  ;; scrolls one line at a time
-  (:default-initargs 
+   ;; scrolls one line at a time
+   (:default-initargs
     :scroll-size 11))
 
 (defclass active-fs-window (ccl::picture-window) ()
-;;; the class for the whole scrollable FS window
-;;; this contains the active-fs-window-pane
-  (:default-initargs 
-   :scroller-class 'active-fs-window-pane))
+   ;; the class for the whole scrollable FS window
+   ;; this contains the active-fs-window-pane
+   (:default-initargs
+    :scroller-class 'active-fs-window-pane))
 
 (defclass active-fs-window-pane (ccl::picture-window-pane)
-;;; active fs window panes
-;;; these have an associated fs-record which allows manipulation of the fs being
-;;; displayed
-;;; plus a slot for the fields which contains the info needed to make a pop-up-menu
-;;; when the relevant region is clicked
+   ;; active fs window panes
+   ;; these have an associated fs-record which allows manipulation of the fs being
+   ;; displayed
+   ;; plus a slot for the fields which contains the info needed to make a pop-up-menu
+   ;; when the relevant region is clicked
    ((fields :initarg fields :initform nil :accessor fields)
     (feature-structure :initarg feature-structure :initform nil :accessor feature-structure))
    (:default-initargs 
     :scroll-bar-class 'active-fs-scroll-bar))
 
+(defclass active-fs-pop-up-field (ccl::pop-up-field)
+  ())
+
+
+(defclass dynamic-enable-menu-item (menu-item)
+   ;; a menu-item with an additional field containing a function of zero args
+   ;; called just before menu containing item is popped up, to see if item
+   ;; should be enabled or disabled at that time
+   ((enable-function :initarg :enable-function :initform nil
+                     :accessor dynamic-enable-menu-item-function)))
+
+(defmethod menu-item-update ((item dynamic-enable-menu-item))
+   (let ((fn (dynamic-enable-menu-item-function item)))
+      (if (funcall fn) (menu-item-enable item) (menu-item-disable item))))
+
+
+;;;
+
 (defstruct fs-display-record 
-;;; the record of the FS associated with a window
+   ;; the record of the FS associated with a window
    fs title paths parents)
 
 (defun set-associated-fs (stream fs title &optional paths parents)
@@ -86,47 +97,79 @@
       (make-fs-display-record :fs fs :title title :paths paths 
          :parents parents)))
 
-(defstruct click-field 
-  ;;; the record from which a pop-up-menu is constructed
-  view-pos (clicked-p nil))
 
-;;; YADU - here and below, the slot full-tdfs is needed so that
-;;; lexical rules can be displayed in the type -> type format
-;;; with the full fs associated with full-tdfs
+(defstruct click-field 
+   ;; the record from which a pop-up-menu is constructed
+   view-pos (clicked-p nil))
 
 (defstruct (type-click-field (:include click-field))
-    type-label-list type shrunk-p atomic-p top-box full-tdfs)
+   ;; YADU - here and below, the slot full-tdfs is needed so that
+   ;; lexical rules can be displayed in the type -> type format
+   ;; with the full fs associated with full-tdfs
+   type-label-list type shrunk-p atomic-p top-box full-tdfs)
 
 (defstruct (title-click-field (:include click-field))
-  title fs)
+   title fs)
 
 (defstruct (psort-click-field (:include click-field))
-  psort)
+   psort)
 
-(defmethod view-click-event-handler ((item active-fs-window-pane) where)
+
+;;; Highlight current fs node, if there is one at the moment
+
+(defvar *selected-fs-node* nil)
+
+(defstruct selected-fs-node
+   pane record fs path)
+
+(defmethod view-draw-contents ((pane active-fs-window-pane))
+  (call-next-method)
+  (let ((selection-pane
+           (and *selected-fs-node* (selected-fs-node-pane *selected-fs-node*))))
+     (when (eq pane selection-pane) 
+        (highlight-current-fs-node
+           (selected-fs-node-record *selected-fs-node*) pane))))
+
+(defun highlight-current-fs-node (record pane)
+   (invert-text-box pane
+      (type-click-field-view-pos record)
+      (+ (type-click-field-view-pos record)
+         (string-width
+            (string (type-click-field-type record)) (view-font pane))))) ; *** bold
+
+
+;;; pop up menus are created as separate views in the right position
+;;; but only on the first click near where the node is
+
+(defmethod view-click-event-handler ((pane active-fs-window-pane) where)
   (let ((x-pos-click (point-h where))
-        (y-pos-click (point-v where)))
-  (dolist (field (fields item))
-    (when (click-field-p field)
-      (when
-        (let* ((menu-pos (click-field-view-pos field))
-                 (x-pos-menu (point-h menu-pos))
-                 (y-pos-menu (point-v menu-pos)))
-            (and (> x-pos-click (- x-pos-menu 5))
-                 (< x-pos-click (+ x-pos-menu 80))
-                 (> y-pos-click (- y-pos-menu 2))
-                 (< y-pos-click (+ y-pos-menu 10))))
-        (unless (click-field-clicked-p field)
-          (add-subviews item (create-active-fs-pop-up field))
-          (setf (click-field-clicked-p field) t))
-      (return nil))))
-  (call-next-method item where)))
+        (y-pos-click (point-v where))
+        (ascent (font-ascent pane))
+        (eps 2))
+    (dolist (field (fields pane))
+      (when (click-field-p field)
+        (let ((x-pos-node (point-h (click-field-view-pos field)))
+              (y-pos-node (point-v (click-field-view-pos field))))
+          (when
+              (and (> y-pos-click (- y-pos-node ascent eps))
+                   (< y-pos-click (+ y-pos-node eps))
+                   (> x-pos-click (- x-pos-node eps))
+                   (< x-pos-click (+ x-pos-node 100)))
+             (unless (click-field-clicked-p field)
+                (add-subviews pane
+                   (create-active-fs-pop-up field
+                      (make-point x-pos-node (- y-pos-node ascent))))
+                (setf (click-field-clicked-p field) t))
+             (return nil)))))
+    (call-next-method pane where)))
 
-(defun create-active-fs-pop-up (field)
-  (cond ((type-click-field-p field) (create-active-fs-pop-up-type field))
-        ((title-click-field-p field) (create-active-fs-pop-up-title field))
-        ((psort-click-field-p field) (create-active-fs-pop-up-psort field))
+
+(defun create-active-fs-pop-up (field menu-pos)
+  (cond ((type-click-field-p field) (create-active-fs-pop-up-type field menu-pos))
+        ((title-click-field-p field) (create-active-fs-pop-up-title field menu-pos))
+        ((psort-click-field-p field) (create-active-fs-pop-up-psort field menu-pos))
         (t (error "Unknown class of pop up object"))))
+
 
 ;;; **** display function entry points ****
 
@@ -136,7 +179,7 @@
    (when old-window (erase-region old-window (clip-region old-window)))
    (let ((fs-window 
             (make-instance 'picture-field-window
-               :view-font *type-font* :view-size #@(1600 32000))))
+               :view-font (lkb-type-font) :view-size #@(1600 32000))))
       (display-fs-main fs-window fs title parents paths output-fs
          old-window)))
 
@@ -162,9 +205,8 @@
 (defun display-lrule-window (input-tdfs output-tdfs title)
    (let ((fs-window 
           (make-instance 'picture-field-window
-               :view-font *type-font* :view-size #@(10000 10000))))
+               :view-font (lkb-type-font) :view-size #@(10000 10000))))
       (display-fs-main fs-window input-tdfs title nil nil output-tdfs)))
-
 
 
 ;;; *** main display function ***
@@ -172,7 +214,6 @@
 ;;; very crude attempt to avoid windows displaying on top
 ;;; of eachother - obviously any sensible stuff would
 ;;; have to keep track of where windows were moved etc
-
 
 (defparameter *display-positions* 
   '(#@(56 44) #@(106 44) #@(156 44) #@(206 44) #@(256 44)))
@@ -187,6 +228,7 @@
               position))
         *display-positions*)
   (car *display-positions*)))
+
 
 (defun display-fs-main (fs-window fs title parents paths &optional lrule-out
                         existing-window)
@@ -208,7 +250,7 @@
              (page-width 
               (min (- *screen-width* 100)
                  (max (+ 30 max-width)
-                    (+ 80 (string-width title *title-font*)))))
+                    (+ 80 (string-width title (lkb-title-font))))))
              (fields (fields fs-window))
              (pict (window-close fs-window))
              (real-window
@@ -225,7 +267,7 @@
                    (make-instance 'active-fs-window
                       :window-title title
                       :pict pict
-                      :view-font *type-font*
+                      :view-font (lkb-type-font)
                       :view-position (find-best-position)
                       :field-size (make-point page-width full-height)
                       :close-box-p t
@@ -234,24 +276,6 @@
         (setf (fields (ccl::my-scroller real-window)) fields)
         (invalidate-view real-window)
         real-window)))
-
-;;; **** displaying parents and paths ***
-
-(defun display-active-parents (parents ostream)
-   ;;; this function is dedicated to my Mother and Father
-  (format ostream "~%Parents = ")
-    (for parent in parents
-         do
-         (let ((start-pos (current-position ostream)))
-           (with-bold-output ostream
-             (format ostream "~(~A~)   " parent))
-           (add-active-fs-region ostream start-pos nil parent
-                                 nil t)))
-    (let ((max-width (current-position-x ostream)))
-      (format ostream "~%")
-      max-width))
-
-
 
 
 (defun display-active-dpaths (dpath-list ostream)
@@ -263,8 +287,42 @@
       max-width))
 
 
-;;; YADU
-;;;
+(defun add-active-fs-region (stream start-pos type-label-list type shrunk-p 
+      atomic-p &optional top-box full-tdfs)
+   ;; record info about position of data in active window
+   ;; YADU --- full-tdfs for lrule display
+   (push
+      (make-type-click-field :view-pos start-pos :type-label-list type-label-list
+         :type type :shrunk-p shrunk-p :atomic-p atomic-p
+         :top-box top-box :full-tdfs full-tdfs)
+      (fields stream)))
+
+
+;;; the following is called from functions in output(td)fs.lsp
+
+(defun add-type-and-active-fs-region (stream start-pos type-label-list val
+                                      shrunk-p atomic-p &optional top-box full-tdfs)
+   (with-bold-output stream (format stream "~(~A~)" val))
+   (add-active-fs-region stream start-pos type-label-list val shrunk-p atomic-p 
+      top-box full-tdfs))
+
+
+;;; **** displaying parents and paths ***
+
+(defun display-active-parents (parents ostream)
+   ;; this function is dedicated to my Mother and Father
+   (format ostream "~%Parents = ")
+   (for parent in parents
+        do
+        (let ((start-pos (current-position ostream)))
+           (with-bold-output ostream
+             (format ostream "~(~A~)   " parent))
+           (add-active-fs-region ostream start-pos nil parent nil t)))
+   (let ((max-width (current-position-x ostream)))
+      (format ostream "~%")
+      max-width))
+
+
 ;;; This displays lexical rules as input type -> output type
 ;;; but adds an extra menu item to the type menu so that the 
 ;;; full tdfs can be displayed.
@@ -297,32 +355,12 @@
 ;;;    FS as a whole in TeX, storage as a psort etc
 ;;; 3. pop up menus for psorts displayed in paths
 
+
 ;;; **** pop up menus for types in FSs ****
 
-;;; add-active-fs-region is called by the fns in outputfs.lsp
-;;; it creates a new pop-up-menu which is added to the fields
-;;; of the temporary window which is being created at this point
-;;; eventually the pop-up-menu is added to the subviews of the 
-;;; active-fs-window-pane
-
-(defun add-active-fs-region (stream start-pos type-label-list val shrunk-p 
-      atomic-p &optional top-box full-tdfs)
-  ;;; YADU --- full-tdfs for lrule display
-    (push (new-field (subtract-points start-pos (make-point 0 (font-ascent stream)))
-                   type-label-list val shrunk-p atomic-p top-box full-tdfs)
-          (fields stream)))
-
-(defun new-field (view-pos type-label-list type shrunk-p atomic-p top-box full-tdfs)
-  ;;; YADU --- full-tdfs for lrule display
-  (make-type-click-field :view-pos view-pos :type-label-list type-label-list
-                    :type type :shrunk-p shrunk-p :atomic-p atomic-p
-                    :top-box top-box :full-tdfs full-tdfs))
-
-
-(defun create-active-fs-pop-up-type (field)
-  ;;; YADU --- full-tdfs for lrule display
-  (let* ((view-pos (type-click-field-view-pos field))
-         (type-label-list (type-click-field-type-label-list field))
+(defun create-active-fs-pop-up-type (field menu-pos)
+  ;; YADU --- full-tdfs for lrule display
+  (let* ((type-label-list (type-click-field-type-label-list field))
          (type (type-click-field-type field))
          (shrunk-p (type-click-field-shrunk-p field))
          (atomic-p (type-click-field-atomic-p field))
@@ -330,28 +368,46 @@
          (full-structure (type-click-field-full-tdfs field))
          (type-entry (get-type-entry (if (listp type) (car type) type)))
          (type-p (if atomic-p :atomic :fs))
-        (menu (make-instance 'ccl::pop-up-field
-                 :view-position view-pos
+        (menu (make-instance 'active-fs-pop-up-field
+                 :view-position menu-pos
                  :item-display (format nil "~(~A~)" type)
-                 :view-font (cons :bold *type-font*)
+                 :view-font (cons :bold (lkb-type-font))
                  :shrunk-p shrunk-p)))
     (apply #'add-menu-items menu
-          (pop-up-fs-menu-items (if (listp type) (car type) type) 
+          (pop-up-fs-menu-items (if (listp type) (car type) type) field
                                 type-entry shrunk-p type-p menu type-label-list
                                 full-structure))
     menu))
 
 
-(defun pop-up-fs-menu-items (type type-entry shrunk-p type-p menu type-label-list
-                                  full-structure)
+(defmethod view-click-event-handler :before ((menu active-fs-pop-up-field) (where t))
+   ;; before menu gets popped up blank out label - in case it was highlighted,
+   ;; because if it was it won't get redrawn properly
+   (erase-rect (view-container menu) (view-position menu)
+      (add-points (view-position menu)
+         (make-point
+            (string-width (ccl::pop-up-menu-item-display menu)
+               ;; the item is in bold font
+               (cons :bold (view-font (view-container menu))))
+            (+ 2 (font-ascent (view-container menu)))))))
+
+(defmethod set-pop-up-menu-default-item ((menu active-fs-pop-up-field) num)
+   ;; don't allow the menu mechanism to mark a menu item as default
+   (declare (ignore num))
+   nil)
+
+
+(defun pop-up-fs-menu-items (type field type-entry shrunk-p type-p menu
+                                  type-label-list full-structure)
   ;;; YADU --- full-tdfs for lrule display
   (if type-entry
   (list
-   (make-instance 'menu-item
+   (make-instance 'dynamic-enable-menu-item
      :menu-item-title "Hierarchy"
      :menu-item-action
      #'(lambda ()
-         (display-type-in-tree type)))
+         (display-type-in-tree type))
+     :enable-function #'(lambda nil (front-type-hierarchy-window)))
    (make-instance 'menu-item
      :menu-item-title "Help"
      :menu-item-action
@@ -365,37 +421,48 @@
                                                 (if shrunk-p :expand :shrink)
                                                 type-label-list))
                    :disabled (not (eql type-p :fs)))
-   (make-instance 'menu-item 
-     :menu-item-title "Full structure"
-                     :menu-item-action #'(lambda ()
-                                (display-basic-fs full-structure
-                                 (format nil 
-                                    "LR constraint")))
-                     :disabled (not full-structure))
+   ;; (make-instance 'menu-item
+   ;;   :menu-item-title "Show source"
+   ;;   )
    (make-instance 'menu-item
-     :menu-item-title "Type indef defn"
+     :menu-item-title "Type definition"
      :menu-item-action 
      #'(lambda ()
-         (if (type-constraint type-entry)
-           (display-fs-and-parents (type-local-constraint type-entry) 
-                                   (format nil 
-                                           "~(~A~)  - definition" 
-                                           type)
-                                   (type-parents type-entry))
-           (format t "~%No constraint for type ~A" type))))
+         (display-fs-and-parents (type-local-constraint type-entry) 
+                                 (format nil 
+                                         "~(~A~)  - definition" 
+                                         type)
+                                 (type-parents type-entry)))
+     :disabled (not (type-local-constraint type-entry)))
    (make-instance 'menu-item
      :menu-item-title "Expanded type"
      :menu-item-action
      #'(lambda ()
-         (if (type-tdfs type-entry) ; for YADU instead of type-constraint
-           (display-basic-fs (type-tdfs type-entry) 
-                                (format nil 
-                                        "~(~A~) - TDFS" 
-                                        type))
-           (format t "~%No tdfs for type ~A" type)))))))
+         (display-basic-fs (type-tdfs type-entry) 
+                           (format nil 
+                                   "~(~A~) - TDFS" 
+                                   type)))
+     :disabled (not (type-tdfs type-entry)))
+   (make-instance 'menu-item 
+     :menu-item-title "Full structure"
+     :menu-item-action
+     #'(lambda ()
+         (display-basic-fs full-structure
+                           (format nil "LR constraint")))
+     :disabled (not full-structure))
+   (make-instance 'menu-item
+     :menu-item-title "Select"
+     :menu-item-action 
+     #'(lambda ()
+         (select-fs (view-container menu) field (reverse type-label-list))))
+   (make-instance 'dynamic-enable-menu-item
+     :menu-item-title "Unify"
+     :menu-item-action 
+     #'(lambda ()
+         (try-unify-fs (view-container menu) field (reverse type-label-list)))
+     :enable-function #'(lambda nil *selected-fs-node*))
+   )))
 
-
-;;; ***** pop up menu actions for types ******
 
 (defun shrink-fs-action (window action path)
   (let* ((fs-record (feature-structure window))
@@ -427,33 +494,30 @@
 
 
 
-
 ;;; *** the title or top pop up menu ****
 
 (defun draw-active-title (stream fs title parents paths)
-  ;;; creates a pop up menu 
+   ;; creates a pop up menu 
+   (format stream "~%")
    (let ((start-pos (current-position stream))
          (short-title (subseq title 0 (position #\Space title)))
-         (fs-record (make-fs-display-record :fs fs :title title :paths paths 
-         :parents parents)))
+         (fs-record
+            (make-fs-display-record :fs fs :title title :paths paths 
+                                    :parents parents)))
      (with-underlined-output stream
-      (format stream "~%~A~%" short-title))
-      (push (create-fs-top-menu short-title start-pos fs-record)
-        (fields stream))))
+        (format stream "~A~%" short-title))
+        (push
+           (make-title-click-field :view-pos start-pos :title short-title
+                                   :fs fs-record)
+           (fields stream))))
 
 
-(defun create-fs-top-menu (title view-pos fs-record)
-  (make-title-click-field :view-pos view-pos :title title
-                          :fs fs-record))
-
-
-(defun create-active-fs-pop-up-title (field)
-  (let* ((view-pos (title-click-field-view-pos field))
-         (title (title-click-field-title field))
+(defun create-active-fs-pop-up-title (field menu-pos)
+  (let* ((title (title-click-field-title field))
          (fs-record (title-click-field-fs field))
          (menu
-     (make-instance 'ccl::pop-up-field
-                 :view-position view-pos
+     (make-instance 'active-fs-pop-up-field
+                 :view-position menu-pos
                  :item-display (format nil "~A" title))))
       (apply #'add-menu-items menu
           (top-fs-action fs-record))
@@ -473,11 +537,11 @@
 ;;;     #'(lambda () (eval-enqueue  `(print-fs-plus ,fs-record)))
 ;;;     :disabled t)
    (make-instance 'menu-item
-     :menu-item-title "Output TeX"
+     :menu-item-title "Output TeX..."
      :menu-item-action 
      #'(lambda () (eval-enqueue `(output-fs-in-tex ,fs-record))))
    (make-instance 'menu-item
-     :menu-item-title "Store fs"
+     :menu-item-title "Store fs..."
      :menu-item-action 
      #'(lambda () (eval-enqueue `(store-as-psort ,fs-record))))
 ;;;   (make-instance 'menu-item
@@ -486,6 +550,37 @@
 ;;;     #'(lambda () (show-ldb-entry fs-record))
 ;;;     :disabled (not (boundp '*dictionaries-available*)))
 ))
+
+
+(defun output-fs-in-tex (fs-record)
+   (let ((fs (fs-display-record-fs fs-record)))
+      (when fs
+         (let ((file-name 
+                  (ask-user-for-new-pathname "File for LaTeX macros?")))                          
+            (when file-name
+               (with-open-file (stream file-name :direction :output)
+                  (if (tdfs-p fs)
+                     (progn (format stream "~%% Indef dag~%")
+                        (display-dag1 (tdfs-indef fs) 'tex stream)
+                        (format stream "~%% Def dag~%")
+                        (display-dag1 (tdfs-def fs) 'tex stream))
+                     (display-dag1 fs 'tex stream))))))))
+
+
+(defun store-as-psort (fs-record)
+   (let ((psort-name 'no-name)
+         (fs (fs-display-record-fs fs-record)))
+      (when fs
+           (setf psort-name 
+               (car
+               (ask-for-lisp-movable "Current Interaction" 
+                  `(("Lex-id?" . ,psort-name))
+                  150)))
+            (if psort-name
+              (or 
+               (store-temporary-psort psort-name fs)
+               (cerror "Try Again" "Name already used"))))))
+
 
 
 ;;; **** pop up menus for psorts (called when paths are displayed) *****
@@ -497,21 +592,15 @@
    (let ((start-pos (current-position ostream)))
      (with-bold-output ostream
      (format ostream "~A  " psort))
-         (push (new-psort-field 
-                (subtract-points start-pos (make-point 0 (font-ascent ostream)))
-                   psort)
+         (push (make-psort-click-field :view-pos start-pos :psort psort)
         (fields ostream))))
 
-(defun new-psort-field (view-pos psort)
-  (make-psort-click-field :view-pos view-pos :psort psort))
-
-(defun create-active-fs-pop-up-psort (field)
-  (let* ((view-pos (psort-click-field-view-pos field))
-         (psort (psort-click-field-psort field))
-         (menu (make-instance 'ccl::pop-up-field
-                 :view-position view-pos
+(defun create-active-fs-pop-up-psort (field menu-pos)
+  (let* ((psort (psort-click-field-psort field))
+         (menu (make-instance 'active-fs-pop-up-field
+                 :view-position menu-pos
                  :item-display (format nil "~A" psort)
-                 :view-font (cons :bold *type-font*))))
+                 :view-font (cons :bold (lkb-type-font)))))
     (apply #'add-menu-items menu
       (let ((lex-entry (if psort (get-psort-entry psort))))
         (if lex-entry 
@@ -550,32 +639,44 @@
          (display-fs (rule-full-fs rule-entry) 
                      (format nil "~(~A~)" (rule-id rule-entry)))))))
 
-;;;  ***** TeX macros  ******
 
 
-(defun output-fs-in-tex (fs-record)
-   (let ((fs (fs-display-record-fs fs-record)))
-      (when fs
-         (let ((file-name 
-                  (ask-user-for-new-pathname "File for LaTeX macros?")))                          
-            (when file-name
-               (with-open-file (stream file-name :direction :output)
-                     (display-dag fs 'tex stream)))))))
+;;; Support for interactive unification check
+
+(defun pane-toplevel-dag (pane)
+   (let ((fs (fs-display-record-fs (feature-structure pane))))
+      (if (tdfs-p fs)
+         (tdfs-indef fs)
+         fs)))
+
+(defun select-fs (pane current-fs-field path)
+   ;; remove existing highlighting in any window
+   (highlight-current-fs-node-any-window)
+   (setf *selected-fs-node*
+      (make-selected-fs-node
+         :pane pane :record current-fs-field :fs (pane-toplevel-dag pane) :path path))
+   ;; make new highlighting appear
+   (highlight-current-fs-node-any-window))
 
 
-;;; ***** Other title menu functions *****
+(defun try-unify-fs (pane current-fs-field path2)
+   (declare (ignore current-fs-field))
+   (let* ((sel1 *selected-fs-node*)
+          (path1 (selected-fs-node-path sel1)))
+      (unify-paths-with-fail-messages 
+         (create-path-from-feature-list path1)
+         (selected-fs-node-fs sel1)
+         (create-path-from-feature-list path2)
+         (pane-toplevel-dag pane)
+         :selected1 path1 :selected2 path2)
+      (terpri)
+      (highlight-current-fs-node-any-window)
+      (setq *selected-fs-node* nil)))
 
-(defun store-as-psort (fs-record)
-   (let ((psort-name 'no-name)
-         (fs (fs-display-record-fs fs-record)))
-      (when fs
-           (setf psort-name 
-               (car
-               (ask-for-lisp-movable "Current Interaction" 
-                  `(("Lex-id?" . ,psort-name))
-                  150)))
-            (if psort-name
-              (or 
-               (store-temporary-psort psort-name fs)
-               (cerror "Try Again" "Name already used"))))))
 
+(defun highlight-current-fs-node-any-window nil
+   (when *selected-fs-node*
+      (dolist (w (windows :class 'active-fs-window))
+         (when (eq (ccl::my-scroller w) (selected-fs-node-pane *selected-fs-node*))
+            (highlight-current-fs-node
+               (selected-fs-node-record *selected-fs-node*) (ccl::my-scroller w))))))

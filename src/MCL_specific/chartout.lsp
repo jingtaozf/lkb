@@ -4,10 +4,19 @@
 
 ;;; dialect specific from this point
 
-;;; use *parse-tree-font-size* from globals.lsp
+;;; use *parse-tree-font-size* from globals.lsp. These are functions so users
+;;; can change font sizes after code has loaded
 
-(defparameter *chart-font* (list "Helvetica" (or *parse-tree-font-size* 9)))
-(defparameter *chart-bold-font* (list "Helvetica" (or *parse-tree-font-size* 9) :bold))
+(defun lkb-chart-font nil
+   (list "Helvetica" (or *parse-tree-font-size* 9)))
+
+(defun lkb-chart-bold-font nil
+   (list "Helvetica" (or *parse-tree-font-size* 9) :bold))
+
+
+(defvar *chart-font* nil)
+
+(defvar *chart-bold-font* nil)
 
 (defvar *chart-display* nil)
 
@@ -44,19 +53,20 @@
    (let*
       ((*chart-display* t)
        (*chart-records* nil)
-       (font *chart-font*)
-       (ascent (font-info font))
+       (*chart-font* (lkb-chart-font))
+       (*chart-bold-font* (lkb-chart-bold-font))
+       (ascent (font-info *chart-font*))
        (description
           (graph-display-layout node
              #'(lambda (node) (get node 'chart-edge-descendents))
              #'chart-node-text-string-width
-             (font-height font)
+             (font-height *chart-font*)
              horizontalp))
        (max-x (graph-description-max-x description))
        (max-y (graph-description-max-y description))
        (fake-window 
           (make-instance 'picture-field-window
-             :view-font font :view-size #@(10000 10000))))
+             :view-font *chart-font* :view-size #@(10000 10000))))
       (graph-display-output fake-window description
          #'(lambda (str node)
             (move str 0 ascent)
@@ -67,7 +77,8 @@
                      (with-bold-output str
                         (stream-write-string str s 0 (length (the string s))))
                      (stream-write-string str s 0 (length (the string s))))
-                  (add-active-chart-region node str start-pos)))))
+                  (add-active-chart-region
+                     node str start-pos (current-position str))))))
       (let*
          ((fields (fields fake-window))
           (pict (window-close fake-window))
@@ -81,7 +92,7 @@
                   (min (max (+ 50 max-x) 200) (- *screen-width* 100)) 
                   (min (+ 50 max-y) (- *screen-height* 100)))
                :close-box-p t
-               :view-font font)))
+               :view-font *chart-font*)))
          (apply #'add-subviews (cons (ccl::my-scroller real-window) fields))
          (setf (current-chart-edge (ccl::my-scroller real-window)) nil)
          (setf (chart-records (ccl::my-scroller real-window)) *chart-records*)
@@ -106,7 +117,7 @@
 
 ;;;
 
-(defun add-active-chart-region (edge-symbol stream start-pos)
+(defun add-active-chart-region (edge-symbol stream start-pos end-pos)
   (let ((edge-record
             (get edge-symbol 'chart-edge-contents))
         (view-pos (subtract-points start-pos (make-point 0 (font-ascent stream)))))
@@ -114,14 +125,14 @@
         (let* ((menu (make-instance 'active-chart-pop-up-field
                        :view-position view-pos
                        :item-display (chart-node-text-string edge-symbol)
-                       :view-font *chart-font*)))
+                       :view-font (lkb-chart-bold-font))))
            (apply #'add-menu-items menu
               (pop-up-chart-menu-items edge-record))
            (push menu (fields stream))
            (push
               (make-chart-record
                  :position start-pos
-                 :width (chart-node-text-string-width edge-symbol)
+                 :width (- (point-h end-pos) (point-h start-pos))
                  :edge edge-record)
               *chart-records*)))))
 
@@ -132,10 +143,8 @@
    (erase-rect (view-container menu) (view-position menu)
       (add-points (view-position menu)
          (make-point
-            (string-width 
-             #+powerpc(pop-up-menu-item-display menu) 
-             #-powerpc(ccl::pop-up-menu-item-display menu)
-             (view-font (view-container menu)))
+            (string-width (ccl::pop-up-menu-item-display menu)
+               (view-font (view-container menu)))
             (+ 2 (font-ascent (view-container menu)))))))
 
 (defmethod set-pop-up-menu-default-item ((menu active-chart-pop-up-field) num)

@@ -8,7 +8,10 @@
 ;;; added glb types
 
 
-(defparameter *type-tree-font* (list "Helvetica" *type-tree-font-size*))
+;;; This is a function so users can change font sizes after code has loaded
+
+(defun lkb-type-tree-font nil
+   (list "Helvetica" *type-tree-font-size*))
 
 (defvar *type-display* nil)
 
@@ -124,7 +127,7 @@
    (let*
       ((*type-display* t)
        (*type-records* nil)
-       (font *type-tree-font*)
+       (font (lkb-type-tree-font))
        (ascent (font-info font))
        (description
          (graph-display-layout node
@@ -259,7 +262,7 @@
 
 
 (defun create-type-in-tree-menu (record ascent)
-  (let* ((view-pos (make-point (point-h (type-hier-record-position record)) 
+  (let* ((menu-pos (make-point (point-h (type-hier-record-position record)) 
                                (- (point-v (type-hier-record-position record))
                                   ascent)))
          (node (type-hier-record-node record))
@@ -267,9 +270,9 @@
             (or (get-type-entry node)
                 (get-type-entry (get node 'real-thing))))
          (menu (make-instance 'active-type-pop-up-field
-                 :view-position view-pos
+                 :view-position menu-pos
                  :item-display (format nil "~(~A~) " node) ; there's a 1-off error
-                 :view-font *type-font*)))
+                 :view-font (cons :bold (lkb-type-font)))))
      (apply #'add-menu-items menu
         (type-in-tree-menu-items node type-entry menu))
      menu))
@@ -281,8 +284,7 @@
    (erase-rect (view-container menu) (view-position menu)
       (add-points (view-position menu)
          (make-point
-            (string-width #+powerpc(pop-up-menu-item-display menu) 
-                          #-powerpc(ccl::pop-up-menu-item-display menu)
+            (string-width (ccl::pop-up-menu-item-display menu)
                           (view-font (view-container menu)))
             (+ 2 (font-ascent (view-container menu)))))))
 
@@ -341,7 +343,15 @@
        :menu-item-title "New hierarchy"
        :menu-item-action
        #'(lambda ()
-           (create-type-hierarchy-tree (type-name type-entry) nil))
+           (let ((*idle-sleep-ticks* 0))
+             (let ((*last-type-name* (type-name type-entry)))
+               (declare (special *last-type-name*))
+               (multiple-value-bind (type show-all-p)
+                   (ask-user-for-type nil '("Show all types?" . :check-box))
+                 (when type
+                   (let ((type-entry (get-type-entry type)))
+                     (when type-entry 
+                       (create-type-hierarchy-tree type nil show-all-p))))))))
        :disabled (null (type-daughters type-entry)))))
 
 
@@ -363,13 +373,16 @@
 ;;; If there's not a hierarchy onscreen give up. User can always open one up
 ;;; from toplevel view menu
 
+(defun front-type-hierarchy-window nil
+   (front-window :class 'active-type-hier-window))
+
 (defun display-type-in-tree (node)
    (let* ((type-entry
              (or (get-type-entry node)
                  (get-type-entry (get node 'real-thing))))
           (type (type-name type-entry)))
       (when type-entry
-         (let* ((existing (front-window :class 'active-type-hier-window))
+         (let* ((existing (front-type-hierarchy-window))
                 (pane (and existing (ccl::my-scroller existing)))
                 (top-type
                    (if existing (top-type-node pane) *toptype*)))

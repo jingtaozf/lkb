@@ -8,7 +8,10 @@
 ;;; Dialogs
 ;;; Some general purpose functions
 
-(defparameter *dialog-font* (list "Chicago" *dialog-font-size* :srccopy :plain))
+;;; This is a function so users can change font sizes after code has loaded
+
+(defun lkb-dialog-font nil
+   (list "Chicago" *dialog-font-size* :srccopy :plain))
 
 
 (defun ask-user-for-existing-pathnames (prompt)
@@ -65,7 +68,7 @@
          (return-value nil) 
          (title "")
          (dialog-box nil)
-         (font *dialog-font*)
+         (font (lkb-dialog-font))
          (done-flag nil)
          (query-width (max (string-width query-string font) 100))
          (width
@@ -126,7 +129,7 @@
 
 (defun ask-for-strings-movable (title prompt-init-pairs &optional (expected-width 100))
    (let* ((spacing 16) (button-height 18) (button-width 74) 
-          (font *dialog-font*)
+          (font (lkb-dialog-font))
           (prompt-width
              (+ 20
                 (find-maximum-string-width font 
@@ -285,7 +288,7 @@
 ;;; - this never arises in the LKB currently anyway
 
 (defun ask-user-for-multiple-choice (question-string &rest args)
-  (let* ((font *dialog-font*)
+  (let* ((font (lkb-dialog-font))
          (remainder (mapcar #'(lambda (arg) (format nil "~S" arg)) args))
          (button-width 
           (max 60 

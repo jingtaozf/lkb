@@ -9,9 +9,11 @@
 
 ;;; dialect specific from this point
 
-;;; *parse-tree-font-size* is in globals.lsp
+;;; *parse-tree-font-size* is in globals.lsp. This is a function so users
+;;; can change font sizes after code has loaded
 
-(defparameter *parse-tree-font* (list "Helvetica" (or *parse-tree-font-size* 9)))
+(defun lkb-parse-tree-font nil
+   (list "Helvetica" (or *parse-tree-font-size* 9)))
 
 
 (defclass active-tree-pop-up-field (ccl::pop-up-field)
@@ -21,7 +23,7 @@
 
 (defun draw-new-parse-tree (node title horizontalp)
    (let*
-      ((font *parse-tree-font*)
+      ((font (lkb-parse-tree-font))
        (ascent (font-info font))
        (description
           (graph-display-layout node
@@ -91,7 +93,7 @@
         (let* ((menu (make-instance 'active-tree-pop-up-field
                        :view-position view-pos
                        :item-display (get-string-for-edge edge-symbol)
-                       :view-font *type-font*)))
+                       :view-font (cons :bold (lkb-type-font)))))
           (apply #'add-menu-items menu
                  (pop-up-parse-tree-menu-items edge-record))
           menu))))

@@ -69,41 +69,36 @@
                                 ; LKB before in this session
   (setf *lkb-menu-disabled-list* nil)
   (ecase system-type
-    (:core (create-mini-lkb-system-menu)))
-;    (:full (create-lkb-system-menu))
-;    (:yadu (create-yadu-system-menu)))
+    (:core (create-mini-lkb-system-menu))
+;;;    (:full (create-lkb-system-menu))
+;;;    (:yadu (create-yadu-system-menu))
+    )
   (menu-install *lkb-menu*)
   (for submenu in *lkb-menu-disabled-list*
         do (menu-item-disable submenu))  ; get round bug by disabling after
                                          ; installation
   (pushnew 'lkb-exit-function *lisp-cleanup-functions*))
 
-;;; *lisp-cleanup-functions* is a list of symbols not fns, apparently
-
-
-
 (defun lkb-exit-function (&optional dump)
   (declare (ignore dump))
-   (close-temporary-lexicon-file))
+  (write-psort-index-file))
+
 
 (defun dump-lkb nil
   (let ((pathname (ask-user-for-new-pathname "File for image?")))
     (when pathname
-      (pushnew  #'prompt-for-directory *lisp-startup-functions*
-            :test #'equal)
-      (save-application pathname :excise-compiler t))))
+      (pushnew 'lkb-restart-function *lisp-startup-functions*
+            :test #'eq)
+      (write-psort-index-file)
+      (save-application pathname
+         :excise-compiler (not (y-or-n-p-general "Include lisp compiler in image?")))
+      ;; lisp quits now so no tidying up to do
+      )))
 
-(defun prompt-for-directory nil
-  (let ((response 
-         (catch-cancel
-           (choose-directory-dialog))))
-    (if (not (or (null response) (eql response :cancel)))
-      (setf *lkb-source-dir* response)
-      (setf *lkb-source-dir* (mac-default-directory)))
-    (setf *psorts-temp-file* 
-          (merge-pathnames
-           (make-pathname :name "templex")
-           (pathname *lkb-source-dir*)))))
+(defun lkb-restart-function nil
+  (read-psort-index-file)
+  (set-up-lkb-interaction :core)
+  (enable-type-interactions))
         
  
 (defun enable-type-interactions nil
