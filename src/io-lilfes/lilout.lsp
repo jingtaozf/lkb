@@ -2,9 +2,14 @@
 
 #|
 to convert an LKB grammar
-load in the grammar as usual
+load in the grammar as usual (if outputting an entire lexicon, note that
+the lexicon must not be cached)
 
 check the feature names in this file are set correctly
+
+parse a test suite so that the leaf types are loaded
+and *lex-ids-used* is set.  Also set *recording-constraints-p* to t
+so that the list *type-constraint-list* is instantiated
 
 (output-types :lilfes "~aac/lilfes/lingo/types.lil" t)
 (output-lex-and-derived :lilfes "~aac/lilfes/lingo/lex.lil")
@@ -28,26 +33,35 @@ setenv LD_LIBRARY_PATH /eo/e5/danf/nishiken/bin
 
 lilfes defs.lil types.lil lex.lil grules.lil root.lil test.lil -
 
-This doesn't deal with constraints on types which don't
-end up in the full form lexicon / grammar rules.
+
+
 
 Parse nodes need to be added so we can understand the display.
-
 
 |#
 
 (defun get-directory-name (dir)
   (if (eq #\/ (car (last (coerce dir 'list))))
       dir
-      (concatenate 'string dir "/")))
+    (concatenate 'string dir "/")))
+
+(defun parse-test-suite-for-lilfes nil
+  ;;; start off with a cleanly loaded grammar, then
+  (setf *unify-debug-cycles* t)
+  (setf *recording-constraints-p* t)
+  (setf *type-constraint-list* nil)
+  (setf *first-only-p* nil)
+  (parse-sentences "~aac/grammar/test-sentences" t))
+  
 
 (defun output-all-for-lilfes (&optional dir)
   (setf dir (cond (dir (get-directory-name dir))
-#+:allegro		  ((sys:getenv "LKB_OUTPUT_DIR")
+#+:allegro        ((sys:getenv "LKB_OUTPUT_DIR")
 		   (get-directory-name (sys:getenv "LKB_OUTPUT_DIR")))
 		  (t "./")))
   (output-types :lilfes (concatenate 'string dir "types.lil") t)
-  (output-lex-and-derived :lilfes (concatenate 'string dir "lex.lil"))
+  (output-lex-and-derived :lilfes (concatenate 'string dir "lex.lil")
+                          *lex-ids-used*)
   (output-grules :lilfes (concatenate 'string dir "grules.lil"))
   (output-root :lilfes (concatenate 'string dir "root.lil")))
 
@@ -81,6 +95,7 @@ Parse nodes need to be added so we can understand the display.
         ((eq feat 'ARG1) "'LINGO_ARG1'")
         ((eq feat 'ARG2) "'LINGO_ARG2'")
         ((eq feat 'ARG3) "'LINGO_ARG3'")
+        ((eq feat 'ARG4) "'LINGO_ARG4'")
         (t (convert-iffy-characters feat))))
         
 
@@ -92,6 +107,8 @@ Parse nodes need to be added so we can understand the display.
   '("list" "nil" "cons" "bot" "string"))
     
 (defun output-type-as-lilfes (name type-struct stream sig-only-p)
+  (if (member name *type-constraint-list*)
+      (output-full-constraint-as-lilfes name type-struct stream)
   (let* ((def (type-local-constraint type-struct))
          (parents (type-parents type-struct))
          (lilfes-name (convert-lilfes-type name)))
@@ -112,11 +129,9 @@ Parse nodes need to be added so we can understand the display.
           (display-dag1 def 'lilfes stream nil t)))
       (format stream ".")
       (when (equal lilfes-name "0-1-list")
-	(format stream "~%'0-1-list-nil' <- ['0-1-list', 'nil'].")))))
+	(format stream "~%'0-1-list-nil' <- ['0-1-list', 'nil']."))))))
 
 (defun display-lilfes-signature (type def stream)
-;;; FIX - this needs to be altered for the new version
-;;; of lilfes
   (let ((feats (for feat in (top-level-features-of def)
                     filter
                     (if (eq (maximal-type-of feat) type)
@@ -137,7 +152,25 @@ Parse nodes need to be added so we can understand the display.
 (defun output-lilfes-fv-pair (feat value stream)
     (format stream "~A\\'~A'" (convert-lilfes-feature feat)
             (convert-lilfes-type (if (listp value) (car value)
-                                        value))))
+                                   value))))
+
+(defun output-full-constraint-as-lilfes (name type-struct stream)
+  (let* ((fs (tdfs-indef (type-tdfs type-struct)))
+         (parents (type-parents type-struct))
+         (lilfes-name (convert-lilfes-type name)))
+    (unless 
+      (member lilfes-name *lilfes-builtins* :test #'equal)
+      ;; don't redefine LiLFeS built in types
+      (format stream "~%'~A' <- " lilfes-name)
+      (format stream "['~A'" (convert-lilfes-type (car parents)))
+      (for parent in (cdr parents)
+           do
+           (format stream ", '~A'" (convert-lilfes-type parent)))
+      (format stream "]")
+      (when fs
+          (format stream "~%/ constr\\")
+          (display-dag1 fs 'lilfes stream nil t))
+      (format stream "."))))
 
 (defun output-instance-as-lilfes (name entry stream &optional class)
   (when entry
