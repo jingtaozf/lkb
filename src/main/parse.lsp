@@ -37,6 +37,7 @@
 ;;; Vertices are integers, not atoms.
 
 (defvar *parse-unifs* 0)
+(defvar *parse-fails* 0)
 
 ;;; *chart-limit* is defined in globals.lsp
 
