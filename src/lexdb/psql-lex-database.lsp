@@ -349,8 +349,8 @@
 	       (dbname lexicon) (fields-tb lexicon)))
 
 (defmethod get-internal-table-defn ((lexicon psql-lex-database))
-  (cond 
-   ((string>= (get-server-version lexicon) "7.3")
+;  (cond 
+;   ((string>= (get-server-version lexicon) "7.3")
     (if (string>= (lexdb-version lexicon)
 		  "3.31")
 	(sql-fn-get-records *lexicon* 
@@ -358,8 +358,8 @@
 			    :args (list "public" "revision"))
       (get-records lexicon 
 		   "SELECT attname, typname, atttypmod FROM pg_catalog.pg_attribute AS attribute JOIN (SELECT * FROM pg_catalog.pg_class WHERE relname='revision') AS class ON attribute.attrelid=class.relfilenode JOIN pg_catalog.pg_type AS type ON (type.typelem=attribute.atttypid);")))
-   (t
-    (error "PostgreSQL major version 7.3 or greater required"))))
+;   (t
+;    (error "PostgreSQL major version 7.3 or greater required"))))
 
 (defmethod get-field-size-map ((lexicon psql-lex-database))
   (mapcar 
