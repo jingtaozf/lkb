@@ -101,6 +101,7 @@
 
 (defun make-prompt-init-dialog-items (offset button-height prompt-width spacing
                                       value-width count prompt init font)
+   (declare (special *choice-default*))
    (list
        (make-dialog-item 'static-text-dialog-item
           (make-point spacing
@@ -124,7 +125,8 @@
                 (make-dialog-item 'typein-menu
                    top-left
                    (make-point value-width (+ button-height 3))
-                   (cadr init)
+                   (if (and (boundp '*choice-default*) *choice-default*)
+                      *choice-default* (cadr init))
                    nil
                    :view-font font
                    :menu-position :right
@@ -139,7 +141,8 @@
                 (make-dialog-item 'editable-text-dialog-item
                                   top-left
                                   (make-point value-width button-height)
-                                  (cadr init)
+                                  (if (and (boundp '*choice-default*) *choice-default*)
+                                     *choice-default* (cadr init))
                                   nil
                                   :view-font font)))
              (t
@@ -227,7 +230,9 @@
    ;; Procyon version called a special dialog item - no known equivalnet in MCL
    ;; so coerce the cdrs of the prompt-init pairs to strings and coerce the
    ;; results back to s-expressions
-   (let ((new-prompt-init-pairs 
+   (let*
+      ((*choice-default* nil)
+       (new-prompt-init-pairs 
           (mapcar #'(lambda (p-i-p)
                       (cons (car p-i-p)
                             (cond
@@ -235,13 +240,14 @@
                                  :check-box)
                                ;; ugly way of passing in multiple choices - convert
                                ;; to a typein-menu
-                               ((or choices
-                                    (and (consp (cdr p-i-p)) (eq (cadr p-i-p) :typein-menu)))
+                               ((and choices (< (length choices) 100))
+                                 (setq *choice-default* (format nil "~A" (cdr p-i-p)))
                                  (cons :typein-menu
-                                    (mapcar #'(lambda (x) (format nil "~S" x))
-                                       (or choices (cddr p-i-p)))))
+                                    (mapcar #'(lambda (x) (format nil "~A" x))
+                                       choices)))
                                (t (format nil "~A" (cdr p-i-p))))))
              prompt-init-pairs))) 
+     (declare (special *choice-default*))
      (mapcar
         #'(lambda (x)
             (cond

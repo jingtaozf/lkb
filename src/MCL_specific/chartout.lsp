@@ -151,14 +151,8 @@
 
 
 (defmethod view-click-event-handler :before ((menu active-chart-pop-up-field) (where t))
-   ;; before menu gets popped up blank out label - in case it was highlighted,
-   ;; because if it was it won't get redrawn properly
-   (erase-rect (view-container menu) (view-position menu)
-      (add-points (view-position menu)
-         (make-point
-            (string-width (ccl::pop-up-menu-item-display menu)
-               (view-font (view-container menu)))
-            (+ 2 (font-ascent (view-container menu)))))))
+   ;; used to blank out label in case it was highlighted, but wasn't correct
+   )
 
 (defmethod set-pop-up-menu-default-item ((menu active-chart-pop-up-field) num)
    ;; don't allow the menu mechanism to mark a menu item as default

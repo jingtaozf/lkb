@@ -364,15 +364,8 @@
 
 
 (defmethod view-click-event-handler :before ((menu active-fs-pop-up-field) (where t))
-   ;; before menu gets popped up blank out label - in case it was highlighted,
-   ;; because if it was it won't get redrawn properly
-   (erase-rect (view-container menu) (view-position menu)
-      (add-points (view-position menu)
-         (make-point
-            (string-width (ccl::pop-up-menu-item-display menu)
-               ;; the item is in bold font
-               (cons :bold (view-font (view-container menu))))
-            (+ 2 (font-ascent (view-container menu)))))))
+   ;; used to blank out label in case it was highlighted, but wasn't correct
+   )
 
 (defmethod set-pop-up-menu-default-item ((menu active-fs-pop-up-field) num)
    ;; don't allow the menu mechanism to mark a menu item as default
@@ -384,12 +377,12 @@
                              type-label-list full-structure)
   (if type-entry
   (list
-   (make-instance 'dynamic-enable-menu-item
+   (make-instance 'menu-item
      :menu-item-title "Hierarchy"
      :menu-item-action
      #'(lambda ()
          (display-type-in-tree type))
-     :enable-function #'(lambda nil (front-type-hierarchy-window)))
+     :disabled (not (type-constraint type-entry)))
    (make-instance 'menu-item
      :menu-item-title "Help"
      :menu-item-action
@@ -480,25 +473,26 @@
             (make-fs-display-record :fs fs :title title :paths paths 
                                     :parents parents :id id)))
      (with-underlined-output stream
-        (format stream "~A~%" short-title))
+        (format stream "~A" short-title))
      (push
         (make-title-click-field :view-pos start-pos
                                 :end-pos (current-position stream)
                                 :title short-title
                                 :fs fs-record)
-        (fields stream))))
+        (fields stream))
+     (terpri stream)))
 
 
 (defun create-active-fs-pop-up-title (field menu-pos)
   (let* ((title (title-click-field-title field))
          (fs-record (title-click-field-fs field))
          (menu
-     (make-instance 'active-fs-pop-up-field
-                 :view-position menu-pos
-                 :item-display (format nil "~A" title))))
-      (apply #'add-menu-items menu
-          (top-fs-action fs-record))
-    menu))
+            (make-instance 'active-fs-pop-up-field
+                           :view-position menu-pos
+                           :item-display (format nil "~A" title))))
+     (apply #'add-menu-items menu
+            (top-fs-action fs-record))
+     menu))
    
 
 (defun top-fs-action (fs-record)
@@ -517,16 +511,16 @@
    (make-instance 'menu-item
      :menu-item-title "Output TeX..."
      :menu-item-action 
-     #'(lambda () (eval-enqueue `(output-fs-in-tex ,fs-record))))
+     #'(lambda () (eval-enqueue `(output-fs-in-tex ',fs-record))))
    (make-instance 'menu-item
      :menu-item-title "Apply lex rule ..."
      :menu-item-action 
-     #'(lambda () (eval-enqueue `(apply-lex ,id)))
+     #'(lambda () (eval-enqueue `(apply-lex ',id)))
      :disabled (not (and id (get-psort-entry id))))
    (make-instance 'menu-item
      :menu-item-title "Apply all lex rules"
      :menu-item-action 
-     #'(lambda () (eval-enqueue `(apply-lex-rules ,id)))
+     #'(lambda () (eval-enqueue `(apply-lex-rules ',id)))
      :disabled (not (and id (get-psort-entry id))))
 ;;;   (make-instance 'menu-item
 ;;;     :menu-item-title "Store fs..."
