@@ -22,6 +22,7 @@
 (defvar *gen-packing-p* nil)
 
 (defparameter %generator-lexical-items% nil)
+(defparameter %generator-unknown-eps% nil)
 (defparameter %generator-statistics% nil)
 
 
@@ -90,6 +91,8 @@
 ;;; an entry point
 
 (defun generate-from-mrs (input-sem)
+
+   (setf input-sem (mrs::fill-mrs (mrs::unfill-mrs input-sem)))
    (setf *generator-input* input-sem)
    (with-package (:lkb)
       (clear-gen-chart)
@@ -98,7 +101,8 @@
             (input-rels 0))
          (time-a-funcall
             #'(lambda () 
-               (multiple-value-setq (lex-results grules lex-orderings)
+               (multiple-value-setq (lex-results grules lex-orderings
+                                     %generator-unknown-eps%)
                   (mrs::collect-lex-entries-from-mrs input-sem))
                (multiple-value-setq (lex-items grules lex-orderings)
                   (filter-generator-lexical-items 
@@ -292,22 +296,54 @@
       (time-a-funcall
          #'(lambda () 
             ;; Perform adjunction phase and unpack
-            (unless *gen-first-only-p*
+             (unless *gen-first-only-p*
                (setq *gen-record*
-                  (mapcan
-                     #'(lambda (e)
-                         (delete-if-not
-                            #'(lambda (u)
-                               (and (gen-chart-check-covering u input-rels) ; redundant for consistent
-                                    (gen-chart-check-compatible u input-sem)))
-                            (if (or *gen-packing-p* (and *intersective-rule-names* partial))
-                               ;; may need to un-adjoin even when packing is off
-                               (unpack-edge! nil e)
-                               (list e))))
-                     (nconc consistent
-                        (if (and *intersective-rule-names* partial)
-                           (gen-chart-adjoin-modifiers partial input-rels
-                              possible-grules)))))))
+                 #+:null
+                 (let* ((candidates
+                         (nconc consistent
+                                (and *intersective-rule-names* partial)
+                                (gen-chart-adjoin-modifiers 
+                                 partial input-rels possible-grules)))
+                        (complete
+                         (loop
+                             with unpackp = (or *gen-packing-p* 
+                                                (and *intersective-rule-names*
+                                                     partial))
+                             for edge in candidates
+                             when unpackp
+                             nconc
+                               (loop
+                                   for edge in (unpack-edge! nil edge)
+                                   when (gen-chart-check-covering 
+                                         edge input-rels)
+                                  collect edge)
+                             else when (gen-chart-check-covering 
+                                        edge input-rels)
+                             collect edge))
+                        (consistent
+                         (loop
+                             for edge in complete
+                             when (gen-chart-check-compatible edge input-sem)
+                             collect edge)))
+                   (if (null *bypass-equality-check*)
+                     consistent
+                     (if (eq *bypass-equality-check* :filter)
+                       (or consistent complete)
+                       complete)))
+                 (mapcan
+                  #'(lambda (e)
+                      (delete-if-not
+                       #'(lambda (u)
+                           (and (gen-chart-check-covering u input-rels) ; redundant for consistent
+                                (gen-chart-check-compatible u input-sem)))
+                       (if (or *gen-packing-p* (and *intersective-rule-names* partial))
+                           ;; may need to un-adjoin even when packing is off
+                           (unpack-edge! nil e)
+                         (list e))))
+                  (nconc consistent
+                         (if (and *intersective-rule-names* partial)
+                             (gen-chart-adjoin-modifiers partial input-rels
+                                                         possible-grules)))))))
          #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
              (declare (ignore tr ignore))
              (setq tgc (+ tgcu tgcs) tcpu (+ tu ts)
@@ -378,18 +414,21 @@
    ;; input MRS wrt things like scope - so we pass 3nd arg of nil to mrs-equalp
    ;; Semantics are already guaranteed to be compatible wrt relation arguments since
    ;; these were skolemised in the input MRS
-   (or *bypass-equality-check*
+   (or (and *bypass-equality-check* (not (eq *bypass-equality-check* :filter)))
       (let ((sem-fs
                (existing-dag-at-end-of (tdfs-indef (g-edge-dag edge))
                    mrs::*initial-semantics-path*)))
         (and sem-fs (dag-p sem-fs)
-          (let ((mrs (mrs::construct-mrs sem-fs nil)))
+           (let* ((mrs (mrs::construct-mrs sem-fs nil))
+                  (mrs (mrs::fill-mrs (mrs::unfill-mrs mrs))))
 ;;            (when *debugging*
 ;;              (display-fs sem-fs "semstructure"))
 ;;            (when *sem-debugging*
 ;;              (mrs::output-mrs input-sem 'mrs::simple)
 ;;              (mrs::output-mrs mrs 'mrs::simple))  
-             (mrs::mrs-equalp mrs input-sem nil *debugging*))))))
+             (mrs::mrs-equalp 
+              mrs input-sem nil *debugging* 
+              (not (eq *bypass-equality-check* :filter))))))))
 
 
 (defun gen-chart-root-edges (edges start-symbols)
