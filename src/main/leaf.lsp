@@ -146,10 +146,8 @@
 (defmethod store-leaf-type ((leaf-db cdb-leaf-database) name type-def)
   (unless (leaf-db leaf-db)
     (setf (leaf-db leaf-db) (cdb:open-write *leaf-temp-file*)))
-  (let ((*print-pretty* nil)
-	(*print-readably* t))
-    (cdb:write-record (leaf-db leaf-db) (string name) 
-		      (write-to-string type-def))))
+  (cdb:write-record (leaf-db leaf-db) (string name) 
+		    (with-standard-io-syntax (write-to-string type-def))))
 
 (defmethod eval-possible-leaf-type ((leaf-db cdb-leaf-database) type)
   (unless (stringp type)

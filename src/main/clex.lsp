@@ -77,9 +77,8 @@
   (unless (psort-db lexicon)
     (setf (psort-db lexicon) (cdb:open-write *psorts-temp-file*))
     (setf (orth-db lexicon) (cdb:open-write *psorts-temp-index-file*)))
-  (let ((*print-pretty* nil))
-    (cdb:write-record (psort-db lexicon) (string id) 
-		      (write-to-string entry)))
+  (cdb:write-record (psort-db lexicon) (string id) 
+		    (with-standard-io-syntax (write-to-string entry)))
   id)
 
 
@@ -93,8 +92,7 @@
 	   ;; In case multiple entries are returned, we take the last one
 	   (let* ((rec (car (last (cdb:read-record (psort-db lexicon) 
 						   (string id)))))
-		  (entry (when rec (with-package (:lkb) 
-                                     (read-from-string rec)))))
+		  (entry (when rec (with-package (:lkb) (read-from-string rec)))))
 	     (when (and entry cache)
 	       (setf (gethash id psorts) entry))
 	     entry)))))

@@ -151,10 +151,9 @@
          (morph-file-read-aux filename ovwr))))
 
 (defun morph-file-read-aux (filename ovwr)
-  (with-package (:lkb)
-    (when ovwr
+   (when ovwr
       (reset-morph-var))
-    (with-open-file 
+   (with-open-file 
         (istream filename
          :direction :input)
       (format t "~%Loading morphological data from ~A" 
@@ -172,8 +171,10 @@
               (read-line istream)
               (if (eql next-char #\%)
                 (let* ((string-thing (read-line istream))
-                       (form (read-from-string string-thing 
-                                               nil :eof :start 1)))
+                       (form
+                        (with-package (:lkb)
+                          (read-from-string string-thing 
+                                            nil :eof :start 1))))
                   (cond
                    ((eql form :eof) (error "~%Bad file"))
                    ((not (listp form)) (error "~%Bad line"))
@@ -182,7 +183,7 @@
                       (letter-set-add form 
                                       *letter-set-list*)))
                    (t (error "~%Wrong type of command"))))          
-                (morph-item-process istream)))))))))
+                (morph-item-process istream))))))))
 
 
 
@@ -209,21 +210,22 @@
                         (let ((string-thing (read-line istream))
                               (start-pos 1))
                            (loop
-                              (multiple-value-bind (form end-value)
-                                 (read-from-string string-thing nil 
-                                    :eof :start start-pos)
-                                 (when (eql form :eof) (return))
-                                 (if 
-                                    (and 
-                                       (listp form) 
-                                       (eql (car form) 'letter-set))
-                                    (setf current-set 
-                                       (letter-set-add form 
-                                          current-set))
-                                    (setf method-list 
-                                       (append method-list 
-                                          (list form))))
-                                 (setf start-pos end-value))))
+                              (with-package (:lkb)
+                                (multiple-value-bind (form end-value)
+                                  (read-from-string string-thing nil 
+                                     :eof :start start-pos)
+                                  (when (eql form :eof) (return))
+                                  (if 
+                                     (and 
+                                        (listp form) 
+                                        (eql (car form) 'letter-set))
+                                     (setf current-set 
+                                        (letter-set-add form 
+                                           current-set))
+                                     (setf method-list 
+                                        (append method-list 
+                                           (list form))))
+                                  (setf start-pos end-value)))))
                         (return-from outer))))))
       ;; Tidy up by scanning to the end of the rule
       (let ((*readtable*

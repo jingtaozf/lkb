@@ -607,12 +607,11 @@
    #+(and mcl powerpc)(decf ee (CCL::TOTAL-BYTES-ALLOCATED))
    (finish-output psorts-stream)
    (prog1
-       (with-package (:lkb)
-         (let ((successful-positioning 
-                (file-position psorts-stream file-pointer)))
-           (unless successful-positioning 
-             (error "~%Can't retrieve entry for ~A" id))
-           (read psorts-stream t)))
+      (let ((successful-positioning 
+            (file-position psorts-stream file-pointer)))
+         (unless successful-positioning 
+            (error "~%Can't retrieve entry for ~A" id))
+         (with-package (:lkb) (read psorts-stream t)))
      #+(and mcl powerpc)(incf ee (CCL::TOTAL-BYTES-ALLOCATED))))
 
 ;; Never called?
@@ -639,15 +638,15 @@
 	(clrhash lexical-entries)
         (with-package (:lkb)
           (loop
-              for id = (read istream nil nil)
-              for orth = (and id (read istream nil nil))
-              for file-pos = (and orth (read istream nil nil))
-              while id
-              do
-                (setf (gethash id psorts) (list orth file-pos))
-                (dolist (orth-el orth)
-                  (pushnew id (gethash (string-upcase orth-el) 
-                                       lexical-entries))))))
+            for id = (read istream nil nil)
+            for orth = (and id (read istream nil nil))
+            for file-pos = (and orth (read istream nil nil))
+            while id
+            do
+              (setf (gethash id psorts) (list orth file-pos))
+              (dolist (orth-el orth)
+                (pushnew id (gethash (string-upcase orth-el) 
+                                     lexical-entries))))))
       (open-psorts-stream *lexicon*))))
 
 (defun delete-temporary-lexicon-files nil
