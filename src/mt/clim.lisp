@@ -105,6 +105,7 @@
                       ("Dependencies" :value :dependencies :active t)
                       ("Sort" :value :sort :active t)
                       ("Step" :value :step :active t)
+                      #+:allegro
                       ("Clone" :value :clone :active t)
                       ("Save" :value :save :active t)
                       ("Read" :value :read :active t)
@@ -161,6 +162,7 @@
                                (mrs-transfer-edges frame)))))
            (browse-mrss edge "Transfer Debug")))
 
+        #+:allegro
         (:clone
          (let ((meta (class-of frame))
                (new (clim:make-application-frame 'mrs-transfer)))
@@ -206,7 +208,7 @@
                (lkb::current-user) (lkb::current-time :long :pretty))
               (mrs::output-mrs1 mrs 'mrs::simple stream)
               (format 
-               excl:*initial-terminal-io*
+               #+:allegro excl:*initial-terminal-io* #-:allegro *terminal-io*
                "~&browse-mrss(): saved current view to `~a'.~%"
                file)))))
 
@@ -222,7 +224,7 @@
                     (setf %mrs% mrs)
                     (browse-mrss (list mrs))))))
              (format
-              excl:*initial-terminal-io*
+              #+:allegro excl:*initial-terminal-io* #-:allegro *terminal-io*
               "~&browse-mrss(): unable to open `~a'.~%"
               file))))
 
@@ -270,7 +272,7 @@
              (setf (mrs-transfer-target frame) mrs)
              (setf %mrs% mrs)
              (format
-              excl:*initial-terminal-io*
+              #+:allegro excl:*initial-terminal-io* #-:allegro *terminal-io*
               "~&browse-mrss(): current view now active as selection.~%"))))
 
         (:compare
@@ -291,24 +293,24 @@
                     (condition
                       (clim:beep)
                       (format
-                       excl:*initial-terminal-io*
+                       #+:allegro excl:*initial-terminal-io* #-:allegro *terminal-io*
                        "~&browse-mrss(): mrs-equalp() error `~a'.~%"
                        (lkb::normalize-string (format nil "~a" condition))))
                     (t
                      (format
-                      excl:*initial-terminal-io*
+                      #+:allegro excl:*initial-terminal-io* #-:allegro *terminal-io*
                       "~&browse-mrss(): the equivalence comparison was ~
                        ~:[negative~;positive~].~%"
                       result)
                      (unless result
                        (format
-                        excl:*initial-terminal-io*
+                        #+:allegro excl:*initial-terminal-io* #-:allegro *terminal-io*
                         "~%~%~a~%~%"
                         (get-output-stream-string stream))))))))))
           (t
            (clim:beep)
            (format
-            excl:*initial-terminal-io*
+            #+:allegro excl:*initial-terminal-io* #-:allegro *terminal-io*
             "~&browse-mrss(): no active MRS selection.~%"))))))))
 
 
@@ -467,7 +469,7 @@
             (unless mtr
               (clim:beep)
               (format
-               excl:*initial-terminal-io*
+               #+:allegro excl:*initial-terminal-io* #-:allegro *terminal-io*
                "~&interactively-browse-mtr(): `~a' undefined.~%"
                id)
               (return-from interactively-browse-mtr
