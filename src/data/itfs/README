@@ -1,0 +1,47 @@
+This directory contains grammars for the book `Implementing Typed Feature
+Structure Grammars'
+
+g1cfg - simplest possible cfg
+g2agr - g1 plus agreement
+g3nodes - g2 with slightly different parse nodes
+g4diff - g2 with difference lists
+g5lex - lexicalist equivalent of g1cfg (no difference lists, no agreement)
+g6morph - g5 plus difference lists, agreement, inflectional morphology, 
+dative alternation
+g7sem - g6 plus semantics and modification
+g8gap - g7sem plus gaps
+
+an1 - answer to exercise 3.2.2-1 
+an2 - answer to exercise 3.5.10-2
+an3 - answer to exercise 3.5.10-1
+an4 - answer to exercise 3.5.10-3 
+an5 - answer to exercise 4.2.1
+an6 - answer to exercises 5.1.1-1, 5.1.1-2, 5.1.1-3
+an7 - answer to exercise 5.1.1-4, 5.1.1-5
+an8 - answer to exercise 5.1.1-6
+
+catgram - categorial grammar equivalent of g5lex
+
+an1,an2 identical globals
+
+g1,g2,g3,g5,an3,an4,an5,an6,catgram identical globals
+
+g4,g6,an7,an8 adds difflist
+
+g7,g8 adds paths for semantics
+
+
+g1,g2,g3,g4,g5,an3,an4,an5,an6,an7,test,catgram identical user-fns
+
+g6,g7,g8 add function for make-orth-tdfs and spelling-rule-p
+
+
+an1,an2 identical script
+
+g1,g2,g3,g4,g5,an3,an4,an5,an6,an7,an8,test,catgram identical script
+
+g6 add inflr and lrules
+
+g7,g8 add mrsglobals.lsp and (index-for-generator)
+
+
