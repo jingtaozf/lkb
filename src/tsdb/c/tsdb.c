@@ -3,7 +3,7 @@
 |*      module: TSDB global variables
 |*     version: 
 |*  written by: oe, dfki saarbruecken
-|* last update: 31-may-96
+|* last update: 29-jul-96
 |*  updated by: oe, dfki saarbruecken
 |*****************************************************************************|
 |*
@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include "globals.h"
 #include "tsdb.h"
+#include "errors.h"
 
 #if defined(NOFREE)
 void free(void *foo) {
@@ -44,7 +45,9 @@ Tsdb tsdb = {
 #endif
 
   (char *)NULL,            /* output */
+  (char *)NULL,            /* error output */
 
+  TSDB_OK,                 /* errno */
 #ifdef COMPRESSED_DATA
   (char *)NULL,            /* compress */
   (char *)NULL,            /* uncompress */

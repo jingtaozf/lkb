@@ -919,8 +919,9 @@ Tsdb_selection *tsdb_simple_merge(Tsdb_selection *selection_1,
          } /* else */
        } 
        else {
-         if(tsdb_insert_into_selection(result, &tuples[0])) 
-           result->length++;  /* if */
+         if(tsdb_insert_into_selection(result, &tuples[0])) {
+           result->length++;
+         } /* if */
          else {
            free(tuples); 
            return (Tsdb_selection*)NULL;
@@ -963,8 +964,9 @@ Tsdb_selection *tsdb_simple_merge(Tsdb_selection *selection_1,
          return (Tsdb_selection*)NULL;
        } /* else */
      else
-       if(tsdb_insert_into_selection(result, &tuples[0])) 
-         result->length++;  /* if */
+       if(tsdb_insert_into_selection(result, &tuples[0])) {
+         result->length++;
+       } /* if */
        else {
          free(tuples); 
          return (Tsdb_selection*)NULL;

@@ -95,11 +95,18 @@ TIME (\(|\[)?{HOUR}:{MINUTE}(:{SECOND})?(\)|\])?
   return(Y_COMMIT);
 }
 
-{c}{l}{o}{s}{e} {
+{s}{h}{u}{t}{d}{o}{w}{n} {
   if(verbose_mode) {
-    fprintf(stderr, "CLOSE\n");
+    fprintf(stderr, "SHUTDOWN\n");
   } /* if */
-  return(Y_CLOSE);
+  return(Y_SHUTDOWN);
+}
+
+{h}{a}{n}{g}{u}{p} {
+  if(verbose_mode) {
+    fprintf(stderr, "HANGUP\n");
+  } /* if */
+  return(Y_HANGUP);
 }
 
 {r}{e}{t}{r}{i}{e}{v}{e} {

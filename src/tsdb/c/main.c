@@ -149,11 +149,11 @@ int main(int argc, char **argv) {
   } /* if */
 
   tsdb_parse_options(argc, argv);
-  if(!tsdb_initialize()) {
+  if((status = tsdb_initialize())) {
 #ifdef DEBUG
     tsdb_close_debug(tsdb_debug_stream);
 #endif
-    exit(1);
+    exit(status);
   } /* if */
 
   if(tsdb.status & TSDB_SERVER_MODE) {
@@ -166,10 +166,21 @@ int main(int argc, char **argv) {
     tsdb_server();
   } /* if */
 
+  if(tsdb.status & TSDB_CLIENT_MODE) {
+#ifdef ALEP
+    exit(tsdb_alep_client(tsdb.query));
+#else
+    fprintf(tsdb_error_stream,
+            "main(): tsdb(1) client mode not yet implemented.\n");
+    fflush(tsdb_error_stream);
+    exit(1);
+#endif    
+  } /* if */
+
   signal(SIGPIPE, SIG_IGN);
 
   if(tsdb.query != NULL) {
-    status = tsdb_parse(tsdb.query, (FILE *)NULL);
+    status = tsdb_parse(strdup(tsdb.query), (FILE *)NULL);
   } /* if */
   else {
     status = 0;
@@ -192,14 +203,19 @@ int main(int argc, char **argv) {
     } /* else */
 
     tsdb.command = 0;
-    sprintf(prompt, "tsdb@%s (%d) # ", host, tsdb.command);
-    
+    if(tsdb.status & TSDB_TSDB_CLIENT) {
+      sprintf(prompt, "%c", TSDB_CLIENT_CONNECT_OK);
+    } /* if */
+    else {
+      sprintf(prompt, "tsdb@%s (%d) # ", host, tsdb.command);
+    } /* else */
+
     while(!(tsdb.status & TSDB_QUIT) && ((foo = readline(prompt)) != NULL)) {
       for(; *foo && isspace(*foo); foo++);
       if(*foo) {
         for(bar = &foo[strlen(foo) - 1];
             bar >= foo && isspace(*bar);
-            *bar = 0, bar--);
+            *bar = (char)0, bar--);
         if(input == NULL) {
           input = strdup(foo);
         } /* if */
@@ -212,12 +228,22 @@ int main(int argc, char **argv) {
         if(input != NULL && *input && input[strlen(input) - 1] == '.') {
           tsdb_parse(input, stdin);
           add_history(input);
-          /* tsdb_free(input); */
           input = (char *)NULL;
-          sprintf(prompt, "tsdb@%s (%d) # ", host, ++tsdb.command);
+          if(tsdb.status & TSDB_TSDB_CLIENT) {
+            sprintf(prompt, "%c", TSDB_CLIENT_CONNECT_OK);
+          } /* if */
+          else {
+            sprintf(prompt, "tsdb@%s (%d) # ", host, tsdb.command);
+          } /* else */
+          tsdb.command++;
         } /* if */
         else {
-          sprintf(prompt, "> ");
+          if(!(tsdb.status & TSDB_TSDB_CLIENT)) {
+            sprintf(prompt, "> ");
+          } /* if */
+          else {
+            *prompt = (char)0;
+          } /* else */
         } /* else */
       } /* if */
     } /* while */
@@ -229,7 +255,7 @@ int main(int argc, char **argv) {
     } /* if */
   } /* else */
 
-  tsdb_save_changes();
+  (void)tsdb_save_changes(FALSE);
 
 #ifdef DEBUG
   tsdb_close_debug(tsdb_debug_stream);
@@ -255,6 +281,8 @@ void tsdb_parse_options(int argc, char **argv) {
   char *bar;
   struct option options[] = {
     {"server", optional_argument, 0, TSDB_SERVER_OPTION},
+    {"shutdown", optional_argument, 0, TSDB_SHUTDOWN_OPTION},
+    {"hangup", optional_argument, 0, TSDB_HANGUP_OPTION},
     {"client", no_argument, 0, TSDB_CLIENT_OPTION},
     {"port", required_argument, 0, TSDB_PORT_OPTION},
     {"home", required_argument, 0, TSDB_HOME_OPTION},
@@ -263,6 +291,7 @@ void tsdb_parse_options(int argc, char **argv) {
     {"result-path", required_argument, 0, TSDB_RESULT_PATH_OPTION},
     {"result-prefix", required_argument, 0, TSDB_RESULT_PREFIX_OPTION},
     {"max-results", optional_argument, 0, TSDB_MAX_RESULTS_OPTION},
+    {"implicit-commit", optional_argument, 0, TSDB_IMPLICIT_COMMIT_OPTION},
     {"debug-file", required_argument, 0, TSDB_DEBUG_FILE_OPTION},
     {"history-size", required_argument, 0, TSDB_HISTORY_OPTION},
     {"uniquely-project", optional_argument, 0, TSDB_UNIQUELY_PROJECT_OPTION},
@@ -297,17 +326,41 @@ void tsdb_parse_options(int argc, char **argv) {
       case TSDB_SERVER_OPTION:
         if(optarg != NULL) {
           tsdb.server = strdup(optarg);
+          tsdb.status |= TSDB_CLIENT_MODE;
+          tsdb.status &= ~TSDB_SERVER_MODE;
         } /* if */
         else {
           tsdb.status |= TSDB_SERVER_MODE;
         } /* else */
         break;
+      case TSDB_SHUTDOWN_OPTION:
+        if(optarg != NULL) {
+          tsdb.server = strdup(optarg);
+          tsdb.status |= TSDB_CLIENT_MODE;
+          tsdb.status |= TSDB_QUIT;
+          tsdb.status &= ~TSDB_SERVER_MODE;
+        } /* if */
+        else {
+          tsdb.status |= TSDB_CLIENT_MODE;
+          tsdb.status |= TSDB_QUIT;
+          tsdb.status &= ~TSDB_SERVER_MODE;
+        } /* else */
+        break;
+      case TSDB_HANGUP_OPTION:
+        if(optarg != NULL) {
+          tsdb.server = strdup(optarg);
+          tsdb.status |= TSDB_CLIENT_MODE;
+          tsdb.status |= TSDB_HANGUP;
+          tsdb.status &= ~TSDB_SERVER_MODE;
+        } /* if */
+        else {
+          tsdb.status |= TSDB_CLIENT_MODE;
+          tsdb.status |= TSDB_HANGUP;
+          tsdb.status &= ~TSDB_SERVER_MODE;
+        } /* else */
+        break;
       case TSDB_CLIENT_OPTION:
         tsdb.status |= TSDB_CLIENT_MODE;
-        fprintf(tsdb_error_stream,
-                "parse_options(): client mode not yet implemented; "
-                "use telnet(1) instead.\n");
-        fflush(tsdb_error_stream);
         break;
       case TSDB_PORT_OPTION:
         if(optarg != NULL) {
@@ -361,6 +414,19 @@ void tsdb_parse_options(int argc, char **argv) {
           tsdb.max_results = 0;
         } /* else */
         break;
+      case TSDB_IMPLICIT_COMMIT_OPTION:
+        if(optarg == NULL) {
+          tsdb.status |= TSDB_IMPLICIT_COMMIT;
+        } /* if */
+        else {
+          if(!strcmp(optarg, "on")) {
+            tsdb.status |= TSDB_IMPLICIT_COMMIT;
+          } /* if */
+          else {
+            tsdb.status &= ~TSDB_IMPLICIT_COMMIT;
+          } /* else */
+        } /* else */
+        break;
 #ifdef DEBUG
       case TSDB_DEBUG_FILE_OPTION:
         if(optarg != NULL) {
@@ -377,15 +443,15 @@ void tsdb_parse_options(int argc, char **argv) {
         } /* else */
         break;
       case TSDB_UNIQUELY_PROJECT_OPTION:
-        if(optarg != NULL) {
-          tsdb.status &= !TSDB_UNIQUELY_PROJECT;
+        if(optarg == NULL) {
+          tsdb.status &= ~TSDB_UNIQUELY_PROJECT;
         } /* if */
         else {
           if(!strcmp(optarg, "on")) {
             tsdb.status |= TSDB_UNIQUELY_PROJECT;
           } /* if */
           else {
-            tsdb.status &= !TSDB_UNIQUELY_PROJECT;
+            tsdb.status &= ~TSDB_UNIQUELY_PROJECT;
           } /* else */
         } /* else */
         break;
@@ -497,7 +563,13 @@ void tsdb_usage() {
           "  `-server' --- go into server (daemon) mode;\n");
   fprintf(tsdb_error_stream,
           "  `-server=host' --- "
-          "go into client mode connecting to server `host';\n");
+          "go into client mode connecting to server on `host';\n");
+  fprintf(tsdb_error_stream,
+          "  `-hangup=host' --- "
+          "(attemp to) shut down tsdb(1) server on `host';\n");
+  fprintf(tsdb_error_stream,
+          "  `-shutdown=host' --- "
+          "(really) shut down tsdb(1) server on `host';\n");
   fprintf(tsdb_error_stream,
           "  `-client' --- go into client mode;\n");
   fprintf(tsdb_error_stream,
@@ -518,6 +590,9 @@ void tsdb_usage() {
           "--- maximum of stored query results;\n");
   fprintf(tsdb_error_stream,
           "  `-history-size[={_0_ | 1 | ...}]' --- size of query storage;\n");
+  fprintf(tsdb_error_stream,
+          "  `-implicit-commit[={_on_ | off}]' --- "
+          "always commit (and save) changes;\n");
   fprintf(tsdb_error_stream,
           "  `-uniquely-project[={on | _off_}]' --- "
           "remove duplicates from projections;\n");

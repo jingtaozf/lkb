@@ -832,10 +832,12 @@ Tsdb_relation *tsdb_find_relation(char *name) {
      tsdb_all_relations() != NULL) {
     for(i = 0; tsdb.relations[i] != NULL; i++) {
       if(!strcmp(name, tsdb.relations[i]->name)) {
+        tsdb.errno = TSDB_OK;
         return(tsdb.relations[i]);
       } /* if */
     } /* for */
   } /* if */
+  tsdb.errno = TSDB_UNKNOWN_RELATION_ERROR;
   return((Tsdb_relation *)NULL);
 
 } /* tsdb_find_relation() */
@@ -1008,6 +1010,7 @@ Tsdb_selection *tsdb_find_table(Tsdb_relation *relation) {
     fprintf(tsdb_error_stream,
             "find_table(): invalid context or parameter call.\n");
     fflush(tsdb_error_stream);
+    tsdb.errno = TSDB_UNKNOWN_ERROR;
     return((Tsdb_selection *)NULL);
   } /* if */
   for(i = 0;
@@ -1019,6 +1022,7 @@ Tsdb_selection *tsdb_find_table(Tsdb_relation *relation) {
             "find_table(): unknown relation `%s'.\n",
             relation->name);
     fflush(tsdb_error_stream);
+    tsdb.errno = TSDB_UNKNOWN_RELATION_ERROR;
     return((Tsdb_selection *)NULL);
   } /* if */
 
@@ -1027,6 +1031,7 @@ Tsdb_selection *tsdb_find_table(Tsdb_relation *relation) {
       tsdb.data = (Tsdb_selection **)malloc(2 * sizeof(Tsdb_selection *));
       tsdb.data[0] = foo;
       tsdb.data[1] = (Tsdb_selection *)NULL;
+      tsdb.errno = TSDB_OK;
       return(tsdb.data[0]);
     } /* if */
     else {
@@ -1387,7 +1392,7 @@ Tsdb_relation *tsdb_create_relation() {
   foo->types = (BYTE *)NULL;
   foo->keys = (int *)NULL;
   foo->total = (BYTE *)NULL;
-  foo->status = TSDB_UNCHANGED;
+  foo->status = TSDB_CLEAN;
 
   return(foo);
 
@@ -1596,19 +1601,22 @@ BOOL tsdb_initialize() {
 
   tsdb_parse_environment();
 
-  if(!(tsdb.status & TSDB_SERVER_MODE) && tsdb.port) {
-    fprintf(tsdb_debug_stream,
+  if(tsdb.port
+     && !(tsdb.status & (TSDB_SERVER_MODE | TSDB_CLIENT_MODE))) {
+    fprintf(tsdb_error_stream,
             "initialize(): `-port' option invalid in non-server mode.\n");
+    fflush(tsdb_error_stream);
     tsdb.port = 0;
   } /* if */
-  if(tsdb.status & TSDB_SERVER_MODE) {
+  if(tsdb.status & (TSDB_SERVER_MODE | TSDB_CLIENT_MODE)) {
     if(!tsdb.port) {
       tsdb.port = TSDB_SERVER_PORT;
     } /* if */
     else if(tsdb.port < 1024) {
-      fprintf(tsdb_debug_stream,
+      fprintf(tsdb_error_stream,
               "initialize(): invalid (privileged) `-port' value (%d).\n",
               tsdb.port);
+      fflush(tsdb_error_stream);
       tsdb.port = TSDB_SERVER_PORT;
     } /* if */
   } /* if */
@@ -1628,7 +1636,7 @@ BOOL tsdb_initialize() {
 #endif
 
   if((tsdb.status & TSDB_SERVER_MODE) && tsdb.query != NULL) {
-    fprintf(tsdb_debug_stream,
+    fprintf(tsdb_error_stream,
             "initialize(): `-query' option invalid in server mode.\n");
     tsdb.query = (char *)NULL;
   } /* if */
@@ -1657,6 +1665,11 @@ BOOL tsdb_initialize() {
     tsdb.max_results = TSDB_MAX_RESULTS;
   } /* if */
 
+  if(tsdb.status & TSDB_CLIENT_MODE) {
+    if(tsdb.server == NULL) {
+      tsdb.server = strdup("localhost");
+    } /* if */
+  } /* if */
   if(tsdb.pager != NULL) {
     if(tsdb.status & TSDB_SERVER_MODE || tsdb.query != NULL) {
       tsdb.pager = (char *)NULL;
@@ -1731,49 +1744,67 @@ BOOL tsdb_initialize() {
   } /* if */
 #endif
 
-  if(tsdb_all_relations() == NULL) {
-    return(FALSE);
-  } /* if */
-
-  foo = (char *)malloc(MAXNAMLEN + 1);
-#ifdef COMPRESSED_DATA
-  baz = (char *)malloc(MAXNAMLEN + 1);
+#ifdef ALEP
+  if(!(tsdb.status & TSDB_CLIENT_MODE)) {
 #endif
-  for(i = 0; tsdb.relations[i] != NULL; i++) {
-    foo = strcpy(foo, tsdb.data_path);
-    foo = strcat(foo, tsdb.relations[i]->name);
-    if(access(foo, R_OK)) {
-#ifdef COMPRESSED_DATA
-      baz = strcpy(baz, foo);
-      baz = strcat(baz, tsdb.suffix);
-      if(access(baz, R_OK)) {
-#endif      
-        if((j = creat(foo, 0666)) == -1) {
-          free(foo);
-          fprintf(tsdb_error_stream,
-                  "initialize(): unable to create data file for `%s'.\n",
-                  tsdb.relations[i]->name);
-          fflush(tsdb_error_stream);
-          return(FALSE);
-        } /* if */
-        else {
-          close(j);
-          fprintf(tsdb_error_stream,
-                  "initialize(): creating empty data file for `%s'.\n",
-                  tsdb.relations[i]->name);
-          fflush(tsdb_error_stream);
-        } /* else */
-#ifdef COMPRESSED_DATA
-      } /* if */
-#endif
+    if(tsdb_all_relations() == NULL) {
+      return(TSDB_NO_RELATIONS_ERROR);
     } /* if */
-  } /* for */
-  free(foo);
-#ifdef COMPRESSED_DATA
-  free(baz);
+#ifdef ALEP
+  } /* if */
 #endif
 
-  tsdb_init_history(&tsdb);
+#ifdef ALEP
+  if(!(tsdb.status & TSDB_CLIENT_MODE)) {
+#endif
+    foo = (char *)malloc(MAXNAMLEN + 1);
+#ifdef COMPRESSED_DATA
+    baz = (char *)malloc(MAXNAMLEN + 1);
+#endif
+    for(i = 0; tsdb.relations[i] != NULL; i++) {
+      foo = strcpy(foo, tsdb.data_path);
+      foo = strcat(foo, tsdb.relations[i]->name);
+      if(access(foo, R_OK)) {
+#ifdef COMPRESSED_DATA
+        baz = strcpy(baz, foo);
+        baz = strcat(baz, tsdb.suffix);
+        if(access(baz, R_OK)) {
+#endif      
+          if((j = creat(foo, 0666)) == -1) {
+            free(foo);
+            fprintf(tsdb_error_stream,
+                    "initialize(): unable to create data file for `%s'.\n",
+                    tsdb.relations[i]->name);
+            fflush(tsdb_error_stream);
+            return(TSDB_NO_DATA_ERROR);
+          } /* if */
+          else {
+            close(j);
+            fprintf(tsdb_error_stream,
+                    "initialize(): creating empty data file for `%s'.\n",
+                    tsdb.relations[i]->name);
+            fflush(tsdb_error_stream);
+          } /* else */
+#ifdef COMPRESSED_DATA
+        } /* if */
+#endif
+      } /* if */
+    } /* for */
+    free(foo);
+#ifdef COMPRESSED_DATA
+    free(baz);
+#endif
+#ifdef ALEP
+  } /* if */
+#endif
+
+#ifdef ALEP
+  if(!(tsdb.status & TSDB_CLIENT_MODE)) {
+#endif
+    tsdb_init_history(&tsdb);
+#ifdef ALEP
+  } /* if */
+#endif
 
 #ifdef DEBUG
   if(tsdb.relations != NULL) {
@@ -1785,6 +1816,11 @@ BOOL tsdb_initialize() {
     fprintf(tsdb_debug_stream,
             "initialize(): going into server mode; port: %d;\n",
             tsdb.port);
+  } /* if */
+  if(tsdb.status & TSDB_CLIENT_MODE) {
+    fprintf(tsdb_debug_stream,
+            "initialize(): client mode; port: %d; server: `%s'\n",
+            tsdb.port, tsdb.server);
   } /* if */
   fprintf(tsdb_debug_stream, "initialize(): home: `%s';\n", tsdb.home);
   fprintf(tsdb_debug_stream,
@@ -1800,15 +1836,20 @@ BOOL tsdb_initialize() {
     fprintf(tsdb_debug_stream,
             "initialize(): no query result storage;\n");
   } /* else */
-  fprintf(tsdb_debug_stream,
-          "initialize(): output to `%s';\n",
-          (tsdb.output != NULL ? tsdb.output : "stdio"));
+  if(!(tsdb.status & TSDB_SERVER_MODE)) {
+    fprintf(tsdb_debug_stream,
+            "initialize(): output to `%s';\n",
+            (tsdb.output != NULL ? tsdb.output : "stdio"));
+  } /* if */
   fprintf(tsdb_debug_stream,
           "initialize(): pager: `%s'; debug: `%s'.\n",
           (tsdb.pager != NULL ? tsdb.pager : "null"), tsdb.debug_file);
   fprintf(tsdb_debug_stream,
           "initialize(): removal of duplicates from projections is %s;\n",
           (tsdb.status & TSDB_UNIQUELY_PROJECT ? "on" : "off"));
+  fprintf(tsdb_debug_stream,
+          "initialize(): implicit commit (and save) for new data %s;\n",
+          (tsdb.status & TSDB_IMPLICIT_COMMIT ? "enabled" : "disabled"));
 #ifdef ALEP
   fprintf(tsdb_debug_stream,
           "initialize(): ALEP tx() output mode is %s;\n",
@@ -2426,26 +2467,24 @@ void tsdb_negate_node(Tsdb_node* node)
 
 void tsdb_tree_negate(Tsdb_node* node)
 {
-  if (tsdb_children_leaf(node))
+  if (tsdb_children_leaf(node)) {
     tsdb_negate_node(node);
-  else 
-    if (node->node->value.connective == TSDB_BRACE) /* Klammer */
+  } /* if */
+  else {
+    if (node->node->value.connective == TSDB_NOT) {
+      node->node->value.connective = TSDB_NOT_NOT ;
+      tsdb_check_not(node->right);
+      return;
+    } /* if */
+    else {
+      if (node->node->value.connective == TSDB_AND)
+        node->node->value.connective = TSDB_OR;
+      else
+        node->node->value.connective = TSDB_AND;
       tsdb_tree_negate(node->left);
-    else
-      if (node->node->value.connective == TSDB_NOT) {
-        node->node->value.connective = TSDB_NOT_NOT ;
-        tsdb_check_not(node->right);
-        return;
-      } /* if */
-      else {
-        if (node->node->value.connective == TSDB_AND)
-          node->node->value.connective = TSDB_OR;
-        else
-          node->node->value.connective = TSDB_AND;
-        tsdb_tree_negate(node->left);
-        tsdb_tree_negate(node->right);
-      } /* else */
- 
+      tsdb_tree_negate(node->right);
+    } /* else */
+  } /* else */
 } /* tsdb_tree_negate() */
 
 /* call root of syntax-tree */

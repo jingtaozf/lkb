@@ -18,8 +18,10 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <signal.h>
 #include "globals.h"
 #include "tsdb.h"
+#include "errors.h"
 
 %}
 
@@ -48,7 +50,8 @@
        Y_GREATER_OR_EQUAL
        Y_DO
        Y_COMMIT
-       Y_CLOSE
+       Y_SHUTDOWN
+       Y_HANGUP
        Y_RETRIEVE
        Y_UPDATE
        Y_INSERT
@@ -85,6 +88,20 @@
 
 %token <integer> Y_INTEGER
 
+%type <integer> y_do
+                y_commit
+                y_shutdown
+                y_hangup
+                y_retrieval
+                y_dropping
+                y_deletion
+                y_insertion
+                y_creation
+                y_altering
+                y_info
+                y_set
+                y_exit
+
 %type <string> y_special
                y_redirection
                y_retrieve_report
@@ -115,31 +132,61 @@
 %%
 
 y_query :
-  y_do
+  y_do {
+    return($1);
+  }
 |
-  y_commit
+  y_commit {
+    return($1);
+  }
 |
-  y_close
+  y_shutdown {
+    return($1);
+  }
 |
-  y_retrieval
+  y_hangup {
+    return($1);
+  }
 |
-  y_dropping
+  y_retrieval {
+    return($1);
+  }
 |
-  y_deletion
+  y_dropping {
+    return($1);
+  }
 |
-  y_insertion
+  y_deletion {
+    return($1);
+  }
 |
-  y_creation
+  y_insertion {
+    return($1);
+  }
+|
+  y_creation {
+    return($1);
+  }
 | 
-  y_altering
+  y_altering {
+    return($1);
+  }
 |
-  y_info
+  y_info {
+    return($1);
+  }
 |
-  y_set
+  y_set {
+    return($1);
+  }
 |
-  y_exit
+  y_exit {
+    return($1);
+  }
 | 
-  y_test
+  y_test {
+    return(TSDB_OK);
+  }
 ;
 
 y_redirection : 
@@ -160,155 +207,177 @@ y_redirection :
 
 y_do :
   Y_DO Y_STRING '.' {
-    tsdb_do($2, (char *)NULL);
+    $$ = tsdb_do($2, (char *)NULL);
   }
 |
   Y_DO Y_STRING Y_STRING '.' {
-    tsdb_do($2, $3);
+    $$ = tsdb_do($2, $3);
   }
 ;
 
 y_commit :
+  Y_COMMIT '.' {
+    $$ = tsdb_commit((Tsdb_value **)NULL);
+  }
+|
   Y_COMMIT y_attribute_list '.' {
-
+    $$ = tsdb_commit($2);
   }
 ;
 
-y_close :
-  Y_CLOSE '.' {
+y_shutdown :
+  Y_SHUTDOWN '.' {
+    tsdb_shutdown(SIGTERM);
+    $$ = TSDB_OK;
+  }
+|
+  Y_SHUTDOWN y_redirection '.' {
+    tsdb_shutdown(SIGTERM);
+    $$ = TSDB_OK;
+  }
+;
 
+y_hangup :
+  Y_HANGUP '.' {
+    tsdb_shutdown(SIGHUP);
+    $$ = TSDB_OK;
+  }
+|
+  Y_HANGUP y_redirection '.' {
+    tsdb_shutdown(SIGHUP);
+    $$ = TSDB_OK;
   }
 ;
 
 y_creation : 
   Y_CREATE Y_TABLE y_table_name y_create_attribute_list '.' { 
-    tsdb_create_table($3, $4); 
+    $$ = tsdb_create_table($3, $4); 
   }
 ;
 
 y_dropping : 
   Y_DROP Y_TABLE y_table_name '.' { 
-    tsdb_drop_table($3); 
+    $$ = tsdb_drop_table($3); 
   }
 ;
 
 y_altering : 
   Y_ALTER Y_TABLE y_table_name Y_ADD y_create_attribute_list '.' { 
-    tsdb_alter_table($3, $5);
+    $$ = tsdb_alter_table($3, $5);
   }
 ;
 
 y_insertion :
   Y_INSERT Y_INTO y_table_name y_attribute_list Y_VALUES y_value_list '.' {
-    tsdb_insert($3, $4, $6);
+    $$ = tsdb_insert($3, $4, $6);
   }
 | 
   Y_INSERT Y_INTO y_table_name Y_VALUES y_value_list '.' {
-    tsdb_insert($3, NULL, $5);
+    $$ = tsdb_insert($3, NULL, $5);
   }
 ;
 
 y_deletion :
   Y_DELETE Y_FROM y_table_name '.' {
-    tsdb_delete($3, (Tsdb_node *)NULL);
+    $$ = tsdb_delete($3, (Tsdb_node *)NULL);
   }
 |
   Y_DELETE Y_FROM y_table_name Y_WHERE y_condition '.' {
-    tsdb_delete($3, $5);
+    $$ = tsdb_delete($3, $5);
   }
 ;
 
 y_retrieval :
   Y_RETRIEVE y_attribute_list '.' {
-    tsdb_retrieve((Tsdb_value **)NULL, $2, (Tsdb_node *)NULL,
-                  (char *)NULL, (char *)NULL);
+    $$ = tsdb_retrieve((Tsdb_value **)NULL, $2, (Tsdb_node *)NULL,
+                       (char *)NULL, (char *)NULL);
   }
 |
   Y_RETRIEVE y_retrieve_projection Y_WHERE y_condition '.' {
-    tsdb_retrieve((Tsdb_value **)NULL, $2, $4,
-                  (char *)NULL, (char *)NULL);
+    $$ = tsdb_retrieve((Tsdb_value **)NULL, $2, $4,
+                       (char *)NULL, (char *)NULL);
   }
 |
   Y_RETRIEVE y_retrieve_projection y_retrieve_from '.' {
-    tsdb_retrieve($3, $2, (Tsdb_node *)NULL,
-                  (char *)NULL, (char *)NULL);
+    $$ = tsdb_retrieve($3, $2, (Tsdb_node *)NULL,
+                       (char *)NULL, (char *)NULL);
   }
 |
   Y_RETRIEVE y_retrieve_projection y_retrieve_from Y_WHERE y_condition '.' {
-    tsdb_retrieve($3, $2, $5,
-                  (char *)NULL, (char *)NULL);
+    $$ = tsdb_retrieve($3, $2, $5,
+                       (char *)NULL, (char *)NULL);
   }
 |
   Y_RETRIEVE y_attribute_list
     y_retrieve_report '.' {
-    tsdb_retrieve((Tsdb_value **)NULL, $2, (Tsdb_node *)NULL,
-                  $3, (char *)NULL);
+      $$ = tsdb_retrieve((Tsdb_value **)NULL, $2, (Tsdb_node *)NULL,
+                         $3, (char *)NULL);
   }
 |
   Y_RETRIEVE y_retrieve_projection Y_WHERE y_condition
     y_retrieve_report '.' {
-    tsdb_retrieve((Tsdb_value **)NULL, $2, $4,
-                  $5, (char *)NULL);
+    $$ = tsdb_retrieve((Tsdb_value **)NULL, $2, $4,
+                       $5, (char *)NULL);
   }
 |
   Y_RETRIEVE y_retrieve_projection y_retrieve_from
     y_retrieve_report '.' {
-    tsdb_retrieve($3, $2, (Tsdb_node *)NULL,
-                  $4, (char *)NULL);
+    $$ = tsdb_retrieve($3, $2, (Tsdb_node *)NULL,
+                       $4, (char *)NULL);
   }
 |
   Y_RETRIEVE y_retrieve_projection y_retrieve_from Y_WHERE y_condition
     y_retrieve_report '.' {
-    tsdb_retrieve($3, $2, $5,
-                  $6, (char *)NULL);
+    $$ = tsdb_retrieve($3, $2, $5,
+                       $6, (char *)NULL);
   }
 |
   Y_RETRIEVE y_attribute_list 
     y_redirection '.' {
-    tsdb_retrieve((Tsdb_value **)NULL, $2, (Tsdb_node *)NULL,
-                  (char *)NULL, $3);
+    $$= tsdb_retrieve((Tsdb_value **)NULL, $2, (Tsdb_node *)NULL,
+                      (char *)NULL, $3);
   }
 |
   Y_RETRIEVE y_retrieve_projection Y_WHERE y_condition 
     y_redirection '.' {
-    tsdb_retrieve((Tsdb_value **)NULL, $2, $4,
-                  (char *)NULL, $5);
+    $$ = tsdb_retrieve((Tsdb_value **)NULL, $2, $4,
+                       (char *)NULL, $5);
   }
 |
   Y_RETRIEVE y_retrieve_projection y_retrieve_from 
     y_redirection '.' {
-    tsdb_retrieve($3, $2, (Tsdb_node *)NULL,
-                  (char *)NULL, $4);
+    $$ = tsdb_retrieve($3, $2, (Tsdb_node *)NULL,
+                       (char *)NULL, $4);
   }
 |
   Y_RETRIEVE y_retrieve_projection y_retrieve_from Y_WHERE y_condition 
     y_redirection '.' {
-    tsdb_retrieve($3, $2, $5,
-                  (char *)NULL, $6);
+    $$ = tsdb_retrieve($3, $2, $5,
+                       (char *)NULL, $6);
   }
 |
   Y_RETRIEVE y_attribute_list
     y_retrieve_report y_redirection '.' {
-    tsdb_retrieve((Tsdb_value **)NULL, $2, (Tsdb_node *)NULL,
-                  $3, $4);
+    $$ = tsdb_retrieve((Tsdb_value **)NULL, $2, (Tsdb_node *)NULL,
+                       $3, $4);
   }
 |
   Y_RETRIEVE y_retrieve_projection Y_WHERE y_condition
     y_retrieve_report y_redirection '.' {
-    tsdb_retrieve((Tsdb_value **)NULL, $2, $4,
-                  $5, $6);
+    $$ = tsdb_retrieve((Tsdb_value **)NULL, $2, $4,
+                       $5, $6);
   }
 |
   Y_RETRIEVE y_retrieve_projection y_retrieve_from
     y_retrieve_report  y_redirection '.' {
-    tsdb_retrieve($3, $2, (Tsdb_node *)NULL,
-                  $4, $5);
+    $$ = tsdb_retrieve($3, $2, (Tsdb_node *)NULL,
+                       $4, $5);
   }
 |
   Y_RETRIEVE y_retrieve_projection y_retrieve_from Y_WHERE y_condition
     y_retrieve_report y_redirection '.' {
-    tsdb_retrieve($3, $2, $5,
-                  $6, $7);
+    $$ = tsdb_retrieve($3, $2, $5,
+                       $6, $7);
   }
 ;
 
@@ -342,19 +411,19 @@ y_retrieve_report :
 
 y_info :
   Y_INFO y_attribute_list '.' {
-    tsdb_info($2, (char *)NULL);
+    $$ = tsdb_info($2, (char *)NULL);
   }
 |
   Y_INFO y_value_list '.' {
-    tsdb_info($2, (char *)NULL);
+    $$ = tsdb_info($2, (char *)NULL);
   }
 |
   Y_INFO y_attribute_list y_redirection '.' {
-    tsdb_info($2, $3);
+    $$ = tsdb_info($2, $3);
   }
 |
   Y_INFO y_value_list y_redirection '.' {
-    tsdb_info($2, $3);
+    $$ = tsdb_info($2, $3);
   }
 ;
 
@@ -629,11 +698,19 @@ y_special :
   Y_OFF {
     $$ = "off";
   }
+|
+  Y_SHUTDOWN {
+    $$ = "shutdown";
+  }
+|
+  Y_HANGUP {
+    $$ = "hangup";
+  }
 ;
 
 y_set :
   Y_SET y_attribute y_value '.' {
-    tsdb_set($2, $3);
+    $$ = tsdb_set($2, $3);
   }
 ;
 
@@ -654,6 +731,7 @@ y_test :
 y_exit : 
   Y_QUIT '.' {
     tsdb_quit();
+    $$ = TSDB_OK;
   }
 ;
                                 

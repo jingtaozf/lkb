@@ -30,9 +30,11 @@ int tsdb_parse(char *command, FILE *stream) {
   int foo;
 
 #ifdef DEBUG
-  fprintf(tsdb_debug_stream,
-          "yyparse(): `%s'.\n", command);
-  fflush(tsdb_debug_stream);
+  if(!(tsdb.status & TSDB_SERVER_MODE)) {
+    fprintf(tsdb_debug_stream,
+            "yyparse(): `%s'.\n", command);
+    fflush(tsdb_debug_stream);
+  } /* if */
 #endif
 
   if(tsdb.query != NULL) {
@@ -42,7 +44,7 @@ int tsdb_parse(char *command, FILE *stream) {
 
   tsdb.input = command;
   foo = yyparse();
-  if(stream != NULL) {
+  if(stream != NULL && !(tsdb.status & TSDB_SERVER_MODE)) {
     yyrestart(stream);
   } /* if */
 
@@ -840,6 +842,7 @@ FILE *tsdb_find_data_file(char *name, char *mode) {
 
   if((file = fopen(path, mode)) != NULL) {
     free(path);
+    tsdb.errno = TSDB_OK;
     return(file);
   } /* if */
   else {
@@ -854,6 +857,7 @@ FILE *tsdb_find_data_file(char *name, char *mode) {
       if((stream = popen(command, "r")) != NULL) {
         free(path);
         free(command);
+        tsdb.errno = TSDB_OK;
         return(stream);
       } /* if */
       free(command);
@@ -862,6 +866,7 @@ FILE *tsdb_find_data_file(char *name, char *mode) {
     fprintf(tsdb_error_stream,
             "find_data_file(): unable to open `%s'.\n", path);
     free(path);
+    tsdb.errno = TSDB_NO_DATA_ERROR;
     return((FILE *)NULL);
   } /* else */
 
@@ -882,10 +887,14 @@ char *tsdb_data_backup_file(char* name) {
  strcat(tmpnam,TSDB_BACKUP_SUFFIX);
 
  r = rename(path,tmpnam);
- if (r==-1)
+ if (r==-1) {
+   tsdb.errno = TSDB_FILE_CREATION_ERROR;
    return(NULL);
- else
+ } /* if */
+ else {
+   tsdb.errno = TSDB_OK;
    return(tmpnam);
+ } /* else */
 }
 
 int tsdb_restore_data_file(char*temp, char *name) {
@@ -1267,42 +1276,63 @@ Tsdb_relation *tsdb_read_relation(FILE *input) {
 
 } /* tsdb_read_relation() */
 
-BOOL tsdb_write_table(Tsdb_selection* selection) {
+int tsdb_write_table(Tsdb_selection* selection) {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_write_table()
+|*     version: 
+|*  written by: tom fettig, dfki saarbruecken
+|* last update: 29-jul-96
+|*  updated by: oe, coli saarbruecken
+|*****************************************************************************|
+|*
+\*****************************************************************************/
+
   FILE *output;
-  char *temp;
+  char *foo;
   Tsdb_key_list *bar;
-  int i;
-  BOOL f;
+  int i, n;
   
   bar = selection->key_lists[0];
-  if (((output = tsdb_find_data_file(selection->relations[0]->name, "r"))
-        == NULL) ||
-      ((temp = tsdb_data_backup_file(selection->relations[0]->name)) 
-        == NULL) ){
-    printf("can't open the fucking data or backup-file");
-    return FALSE;
-  }
+  if((output = tsdb_find_data_file(selection->relations[0]->name, "r"))
+     == NULL) {
+    return(tsdb.errno);
+  } /* if */
+  
+  if((foo = tsdb_data_backup_file(selection->relations[0]->name)) 
+     == NULL) {
+    return(tsdb.errno);
+  } /* if */ 
+
   fclose(output);
-  output = tsdb_find_data_file(selection->relations[0]->name, "w");
-  if (!output){
-    printf("the fucking data-file may not be written\n");
-    return FALSE;
-  }
+  if((output = tsdb_find_data_file(selection->relations[0]->name, "w"))
+     == NULL) {
+    return(tsdb.errno);
+  } /* if */
     
-  for (i=0, f=TRUE ;i<selection->length && f==TRUE ; i++){
-    f = tsdb_write_tuple(bar,output);
+  for(i = 0, n = 1;
+      i < selection->length && n == 1;
+      i++) {
+    n = tsdb_write_tuple(bar, output);
     bar = bar->next;
   } /* for */
   fclose(output);
-  if (!f) {
-    perror(NULL);
-    tsdb_restore_data_file(selection->relations[0]->name,temp);
-    return FALSE;
-  }
+  if (n != 1) {
+    tsdb_restore_data_file(selection->relations[0]->name, foo);
+#ifdef DEBUG
+    fprintf(tsdb_debug_stream,
+            "write_table(): reverting data file for `%s' to backup.\n",
+            selection->relations[0]->name);
+    fflush(tsdb_debug_stream);
+#endif
+    return(TSDB_WRITE_FILE_ERROR);
+  } /* if */
   else {
-    remove(temp);
-    return TRUE;
-  }
+    remove(foo);
+    return(TSDB_OK);
+  } /* else */
+
 } /* tsdb_write_table() */
 
 Tsdb_selection *tsdb_read_table(Tsdb_relation *relation,
@@ -1312,9 +1342,9 @@ Tsdb_selection *tsdb_read_table(Tsdb_relation *relation,
 |*        file: 
 |*      module: 
 |*     version: 
-|*  written by: tom fettig & oe, dfki saarbruecken
-|* last update: 
-|*  updated by: 
+|*  written by: oe, dfki saarbruecken
+|* last update: 29-jul-96
+|*  updated by: oe, coli saarbruecken
 |*****************************************************************************|
 |*
 \*****************************************************************************/
@@ -1376,12 +1406,14 @@ Tsdb_selection *tsdb_read_table(Tsdb_relation *relation,
     fflush(tsdb_debug_stream);
   } /* if */
 #endif
+    tsdb.errno = TSDB_OK;
     return(selection);
   } /* if */
   else {
     fprintf(tsdb_error_stream,
             "read_table(): no data file for `%s'.\n", relation->name);
     fflush(tsdb_error_stream);
+    tsdb.errno = TSDB_NO_DATA_ERROR;
     return((Tsdb_selection *)NULL);
   } /* else */
 
@@ -1451,16 +1483,54 @@ void tsdb_tree_print(Tsdb_node* node, FILE* stream)
 
 }
 
-void tsdb_save_changes() {
+int tsdb_save_changes(BOOL implicit) {
 
-  int i = 0;
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_save_changes()
+|*     version: 
+|*  written by: oe, coli saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|*
+\*****************************************************************************/
+
+  int i = 0, status;
+  char c;
   Tsdb_selection *selection;
 
-  for (i=0; tsdb.relations[i] != NULL; i++) {
-    if (tsdb.relations[i]->status != TSDB_UNCHANGED) {
+  for (i = 0, status = TSDB_OK; tsdb.relations[i] != NULL; i++) {
+    if (tsdb.relations[i]->status != TSDB_CLEAN) {
       selection = tsdb_find_table(tsdb.relations[i]);
-      tsdb_write_table(selection);
-      tsdb.relations[i]->status = TSDB_UNCHANGED;
-    }
-  }
+      if(implicit || (tsdb.status & TSDB_IMPLICIT_COMMIT)) {
+        if(tsdb_write_table(selection) == TSDB_OK) {
+          tsdb.relations[i]->status = TSDB_CLEAN;
+#if defined(DEBUG) && defined(COMMIT)
+          fprintf(tsdb_debug_stream,
+                  "save_changes(): written %d record(s) for `%s'.\n",
+                  selection->length, tsdb.relations[i]->name);
+          fflush(tsdb_debug_stream);
+#endif
+        } /* if */
+        else {
+          status = tsdb.errno;
+        } /* else */
+      } /* if */
+      else {
+      /*
+       * fix me: in interactive mode (at least) query user first.
+       */
+        fprintf(tsdb_error_stream,
+                "save_changes(): ignoring modified data for `%s' "
+                "(%d record(s)).\n",
+                tsdb.relations[i]->name, selection->length);
+        fflush(tsdb_error_stream);
+        status = TSDB_WRITE_FILE_ERROR;
+      } /* else */
+    } /* if */
+  } /* for */
+
+  return(status);
+
 } /* tsdb_save_changes() */

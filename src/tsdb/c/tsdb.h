@@ -37,9 +37,10 @@ extern void free(void *);
 #define TSDB_QUIT 4
 #define TSDB_HANGUP 8
 #define TSDB_UNIQUELY_PROJECT 16
-#define TSDB_TSDB_CLIENT 32
+#define TSDB_IMPLICIT_COMMIT 32
+#define TSDB_TSDB_CLIENT 64
 #ifdef ALEP
-#  define TSDB_TX_OUTPUT 128
+#  define TSDB_TX_OUTPUT 1024
 #endif
 
 #ifdef ALEP
@@ -77,7 +78,7 @@ extern void free(void *);
 
 #define TSDB_NEW 0
 #define TSDB_CHANGED 1
-#define TSDB_UNCHANGED 2
+#define TSDB_CLEAN 2
 
 #define TSDB_START_TIMER 0
 #define TSDB_MAX_TIMERS 20
@@ -106,6 +107,7 @@ extern void free(void *);
 #define TSDB_OUTPUT_OPTION 21
 #define TSDB_SHUTDOWN_OPTION 22
 #define TSDB_HANGUP_OPTION 23
+#define TSDB_IMPLICIT_COMMIT_OPTION 24
 #ifdef ALEP
 #  define TSDB_TX_OPTION 255
 #endif
@@ -208,7 +210,11 @@ extern void free(void *);
 #endif
 
 #ifndef TSDB_SERVER_QUEUE_LENGTH
-#  define TSDB_SERVER_QUEUE_LENGTH 5
+#  ifdef ALEP
+#    define TSDB_SERVER_QUEUE_LENGTH 1
+#  else
+#    define TSDB_SERVER_QUEUE_LENGTH 5
+#  endif
 #endif
 
 #ifndef CHAR_SET_SIZE
@@ -251,7 +257,7 @@ typedef struct tsdb_relation {
   int n_keys;
   int *keys;
   BYTE *total;
-  BYTE status;
+  int status;
 } Tsdb_relation;
 
 typedef struct tsdb_tuple {
@@ -390,7 +396,7 @@ int tsdb_uniq_projection(char **, int);
 Tsdb_node *tsdb_leaf(Tsdb_value *);
 Tsdb_node* tsdb_prepare_tree(Tsdb_node *, Tsdb_selection *);
 
-void tsdb_save_changes(void);
+int tsdb_save_changes(BOOL);
 
 BOOL tsdb_children_leaf(Tsdb_node *);
 void tsdb_negate_node(Tsdb_node *);
@@ -506,7 +512,7 @@ int tsdb_init_history(Tsdb*);
 
 int tsdb_server_initialize(void);
 void tsdb_server(void);
-void tsdb_server_child(int);
+int tsdb_server_child(int);
 void tsdb_server_shutdown(int);
 int tsdb_socket_write(int, char *);
 int tsdb_socket_readline(int, char *, int);
