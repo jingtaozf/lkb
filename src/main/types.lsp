@@ -430,6 +430,16 @@
                               "~%Types ~A and ~A have multiple common ancestors 
                               ~A" x y lcs-list))))))))))
 
+(defun remove-ancestors (int-list)
+   (do* ((done nil (cons initial done))
+         (initial (car int-list) (car (set-difference new-int-list done)))
+         (new-int-list
+            (set-difference int-list (retrieve-ancestors initial))
+            (set-difference new-int-list (retrieve-ancestors initial))))
+      ((null (set-difference new-int-list (cons initial done)))
+         new-int-list)))
+
+
 ;;; The following utility functions assume that no cycles are present
 
 (defun retrieve-common-descendants (type1 type2)
