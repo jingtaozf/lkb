@@ -15,7 +15,7 @@
 (defvar *lexdb-completion-lists* nil)
 (defvar *lexdb-read-only* '(:version :userid :modstamp))
 (defvar *lexdb-record-features* '(:name :type :orthography :keyrel :keytag :altkey :altkeytag :alt2key :compkey :ocompkey :lang :country :dialect :domains :genres :register :confidence :comments :exemplars :flags :version :userid :modstamp))
-(defvar *lexdb-completion-features*  '(:name :type :orthography :keyrel :keytag :altkey :altkeytag :alt2key :compkey :ocompkey :lang :country :dialect :domains :genres :register :confidence :comments :exemplars))
+(defvar *lexdb-completion-features*  '(:type :orthography :keyrel :keytag :altkey :altkeytag :alt2key :compkey :ocompkey :lang :country :dialect :domains :genres :register :confidence :comments :exemplars))
 (defvar *lexdb-minibuffer-max* 100)
 (defvar *lexdb-active-id-ring* nil)
 
