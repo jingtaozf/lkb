@@ -100,7 +100,8 @@
                (if (eql next-char #\;) 
                   (read-line istream)
                   (read-lex-entry istream)))))
-      (format t "~%Lexical entry file read")))
+      (format t "~%Lexical entry file read"))
+   (flush-psorts-stream-output))
 
 (defun read-lex-entry (istream)
    (let* ((orth (lkb-read istream nil))
@@ -156,7 +157,8 @@
                   (read-psort-entry istream templates-p qc-p)))))
       (format t "~%~A entry file read" (cond (templates-p "Template")
 ;                                             (qc-p "Quick check")
-                                             (t "")))))
+                                             (t ""))))
+   (flush-psorts-stream-output))
 
 (defun read-psort-entry (istream &optional templates-p qc-p)
   (declare (ignore qc-p))

@@ -24,7 +24,8 @@
          (istream file-name :direction :input)
          (format t "~%Reading in lexical entry file")
          (read-tdl-lex-stream istream))
-      (format t "~%Lexical entry file read")))
+      (format t "~%Lexical entry file read"))
+   (flush-psorts-stream-output))
 
 
 (defun read-tdl-lex-stream (istream) 
@@ -96,6 +97,7 @@
       (format t "~%~A entry file read" (cond (templates-p "Template")
 ;                                             (qc-p "Quick check")
                                              (t "Psort"))))
+   (flush-psorts-stream-output)  
    (if templates-p (split-up-templates)))
 
 (defun read-tdl-psort-stream (istream &optional templates-p qc-p) 
