@@ -20,6 +20,8 @@
 
 (defparameter *process-pretty-print-trace-p* t)
 
+(defparameter *process-raw-print-trace-p* nil)
+
 (defun tsdb-do-process (data
                         &key condition
                              run-id comment
@@ -693,7 +695,9 @@
   (declare (ignore interactive))
   
   (let* ((i-id (get-field :i-id item)) 
-         (i-input (or (when *process-pretty-print-trace-p*
+         (i-input (or (when *process-raw-print-trace-p*
+                        (get-field :i-input item))
+                      (when *process-pretty-print-trace-p*
                         (get-field :o-input item))
                       (get-field :p-input item)
                       (get-field :i-input item)))

@@ -1766,12 +1766,17 @@
         finally
           (case format
             (:tcl
+             (unless (zerop (- row 3))
+               (format
+                stream
+                "cell ~d 1 -contents {~a} -format data~%~
+                 layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%"
+                row (- row 3) (- row 1))
+               (incf row))
              (format
               stream
-              "cell ~d 1 -contents {~a} -format data~%~
-               layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%~
-               layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%"
-              row (- row 3) (- row 1) row)))
+              "layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%"
+              (- row 1))))
         while (or oitems nitems)
         do 
           (let* ((oitem (first oitems))
