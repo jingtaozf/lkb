@@ -344,27 +344,26 @@
 ;;; !!! Won't work for type disjunctions
 
 (defun restrict-fs (fs)
-   (mapcar
-      #'(lambda (path-spec)
-          (let ((v (existing-dag-at-end-of fs (car path-spec))))
-	     (if v
-	        (let ((type (type-of-fs v)))
-	           (when type
-		      ;; check for atomic type and pop out name - if there was a
-                      ;; disjunction it will be lost at this point
-                      (when (consp type) (setq type (car type)))
-                      (if (consp (cdr path-spec))
-		         ;; there is a bit-vector encoding for the possible values
-                         ;; of this path, so use it instead of the type name
-		         (or
-			    (cdr (assoc type (cdr path-spec) :test #'eq))
-			    (cdr (assoc (instance-type-parent type)
-                                    (cdr path-spec) :test #'eq))
-			    (error "Inconsistency - ~A could not find restrictor bit vector ~
-                                    for type ~A at path ~A" 'restrict-fs type (car path-spec)))
-		         type)))
-	        nil)))
-   *check-paths-optimised*))
+  (loop for path-spec in *check-paths-optimised*
+      collect
+	(let ((v (existing-dag-at-end-of fs (car path-spec))))
+	  (when v
+	    (let ((type (type-of-fs v)))
+	      (when type
+		;; check for atomic type and pop out name - if there was a
+		;; disjunction it will be lost at this point
+		(when (consp type) (setq type (car type)))
+		(if (consp (cdr path-spec))
+		    ;; there is a bit-vector encoding for the possible values
+		    ;; of this path, so use it instead of the type name
+		    (or
+		     (cdr (assoc type (cdr path-spec) :test #'eq))
+		     (cdr (assoc (instance-type-parent type)
+				 (cdr path-spec) :test #'eq))
+		     (error "Inconsistency - ~A could not find restrictor ~
+                              bit vector for type ~A at path ~A" 
+			    'restrict-fs type (car path-spec)))
+		  type)))))))
 
 (defun restrictors-compatible-p (daughter-restricted child-restricted)
   (loop for dt in daughter-restricted
@@ -466,4 +465,21 @@
 	  (push np combined-paths))))
     (sort combined-paths #'> :key #'cdr)))
 
-             
+
+#|
+(defun treeify (paths)
+  (let ((tree nil))
+    (dolist (x paths)
+      (setq tree (add-path (car x) (cdr x) tree)))
+    tree))
+
+(defun add-path (path value tree)
+  (if (null path)
+      (push (cons :value value) tree)
+    (let ((next (assoc (car path) tree)))
+      (unless next
+	(setq next (cons (car path) nil))
+	(push next tree))
+      (setf (cdr next) (add-path (cdr path) value (cdr next)))
+      tree)))
+|#

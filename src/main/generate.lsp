@@ -31,7 +31,7 @@
    ;; id, rule, leaves: filled in, not used in generation algorithm itself, but
    ;; needed for chart display etc
    rels-covered ; set of relations generated so far
-   )
+   index)
 
 
 (defvar *gen-chart* nil)
@@ -354,6 +354,9 @@
 
 
 (defun gen-chart-add-with-index (edge index)
+  (when (g-edge-index edge)
+    (print (list (g-edge-index edge) index)))
+  (setf (g-edge-index edge) index)
   (let ((entry (assoc index *gen-chart* :test #'equal)))
     (unless entry
       (push (setq entry (cons index nil)) *gen-chart*))
@@ -630,7 +633,7 @@
 (defun gen-chart-adjoin-modifiers (partial-edges input-sem)
   (let ((*active-modifier-edges* nil)
 	(mod-candidate-edges (gen-chart-intersective-inactive-edges))
-	(cached-rels-edges (make-hash-table :test #'equal))
+	;; (cached-rels-edges (make-hash-table :test #'equal))
 	(res nil))
     (declare (special *active-modifier-edges*))
     (when *gen-adjunction-debug*
@@ -648,12 +651,8 @@
 	  (format t "~&Missing relations ~(~:A~)" 
 		  (mapcar #'mrs::rel-sort missing-rels)))
 	(dolist (mod-alt
-		    (gen-chart-mod-edge-partitions 
-		     (list (car missing-rels)) 
-		     (cdr missing-rels) 
-		     (cdr missing-rels)
-		     mod-candidate-edges 
-		     cached-rels-edges))
+		    (gen-chart-mod-edge-partitions missing-rels 
+						   mod-candidate-edges))
 	  (when *gen-adjunction-debug*
 	    (format t "~&Relation partitions ~(~:A~)"
 		    (mapcar
@@ -694,45 +693,7 @@
 ;; containing the set of modifier edges that cover those relations: e.g.  (
 ;; (((r1 r2) e1 e2) ((r3 r4) e3)) (((r1) e4 e5 e6) ((r2 r3 r4) e5)) )
 
-(defparameter *partitions* nil)
-
-(defun is-partition-p (subsets set)
-  (let ((members (apply #'append subsets)))
-    (dolist (x members)
-      (unless (member x set :test #'eq)
-	(return-from is-partition-p nil)))
-    (dolist (x set)
-      (unless (member x members :test #'eq)
-	(return-from is-partition-p nil)))
-    t))
-
-(defun disjoint-p (set subsets)
-  (dolist (s subsets)
-    (dolist (x s)
-      (when (member x set :test #'eq)
-	(return-from disjoint-p nil))))
-  t)
-
-(defun make-partitions1 (partition rest set)
-  (loop for tail on rest
-      do (let* ((next (car tail))
-		(new-partition (if (disjoint-p next partition)
-				   (cons next partition)
-				 partition)))
-	   (cond ((is-partition-p new-partition set)
-		  (pushnew new-partition *partitions* 
-			   :test #'equal))
-		 ((cdr tail)
-		  (make-partitions1 new-partition (cdr tail) set))))))
-
-(defun make-partitions (subsets set)
-  (let ((*partitions* nil))
-    (make-partitions1 nil subsets set)
-    *partitions*))
-
-#|
 (defun gen-chart-mod-edge-partitions (rels edges)
-  (declare (ignore cached-rels-edges))
   (let ((cache (make-hash-table :test #'equal)))
     ;; Find subsets of rels that are covered by some edge in edges
     (dolist (e edges)
@@ -751,10 +712,34 @@
 			      (append (list s)
 				      (gethash s cache)))
 			  p))
-			  (make-partitions subsets rels)))))
-|#
+	      (make-partitions nil subsets rels)))))
+
+(defun make-partitions (partition rest set)
+  (if (is-partition-p partition set)
+      (list partition)
+    (loop for tail on rest
+	nconc (when (disjoint-p (car tail) partition)
+		(make-partitions (cons (car tail) partition) 
+				 (cdr tail) 
+				 set)))))
+
+(defun is-partition-p (subsets set)
+  (let ((members (apply #'append subsets)))
+    (dolist (x members)
+      (unless (member x set :test #'eq)
+	(return-from is-partition-p nil)))
+    (dolist (x set t)
+      (unless (member x members :test #'eq)
+	(return-from is-partition-p nil)))))
+
+(defun disjoint-p (set subsets)
+  (dolist (s subsets t)
+    (dolist (x s)
+      (when (member x set :test #'eq)
+	(return-from disjoint-p nil)))))
+
   
-  
+#+ignore
 (defun gen-chart-mod-edge-partitions (rels next rest mod-candidate-edges 
 				      cached-rels-edges)
   ;; compute sets of partitions of input relations with each partition
@@ -870,32 +855,34 @@
 
 
 (defun gen-chart-apply-modifiers (edge-and-mods-list)
-   ;; try and apply to edge one modifying active edge from an alternative
-   (append edge-and-mods-list
-      (mapcan
-         #'(lambda (edge-and-mods)
-             (let ((edge (car edge-and-mods))
-                   (res nil))
-                (dolist (act-set (cddr edge-and-mods))
-                   (dolist (act act-set)
-                      ;; (print (list (g-edge-id edge) (g-edge-id act)))
-                      (let ((new-edge (gen-chart-test-active edge act nil t)))
-                         (when new-edge
-                            (gen-chart-finish-active new-edge) 
-                            ;(when *gen-adjunction-debug*
-                            ;   (print
-                            ;      (list (g-edge-leaves new-edge)
-                            ;         (g-edge-id act) (g-edge-id new-edge))))
-                            (gen-chart-add-with-index new-edge *toptype*)
-                            (setq res
-                               (append
-                                  (gen-chart-try-modifiers
-                                     (list* new-edge (cadr edge-and-mods)
-                                        (mapcar #'(lambda (set) (if (eq set act-set) nil set))
-                                           (cddr edge-and-mods))))
-                                  res))))))
-                res))
-         edge-and-mods-list)))
+  ;; try and apply to edge one modifying active edge from an alternative
+  (append 
+   edge-and-mods-list
+   (mapcan
+    #'(lambda (edge-and-mods)
+	(let ((edge (car edge-and-mods))
+	      (res nil))
+	  (dolist (act-set (cddr edge-and-mods))
+	    (dolist (act act-set)
+	      ;; (print (list (g-edge-id edge) (g-edge-id act)))
+	      (let ((new-edge (gen-chart-test-active edge act nil t)))
+		(when new-edge
+		  (gen-chart-finish-active new-edge) 
+		  ;;(when *gen-adjunction-debug*
+		  ;;   (print
+		  ;;      (list (g-edge-leaves new-edge)
+		  ;;         (g-edge-id act) (g-edge-id new-edge))))
+		  (gen-chart-add-with-index new-edge (g-edge-index edge))
+		  (setq res
+		    (append
+		     (gen-chart-try-modifiers
+		      (list* new-edge (cadr edge-and-mods)
+			     (mapcar #'(lambda (set) 
+					 (unless (eq set act-set) set))
+				     (cddr edge-and-mods))))
+		     res))))))
+	  res))
+    edge-and-mods-list)))
 
 
 (defun gen-chart-reapply-rule (edge daughters mods) ; -> list of edge-and-mods
@@ -931,7 +918,7 @@
                                      (mapcar #'g-edge-lex-ids daughters))
                      :leaves (mapcar #'g-edge-leaves daughters))))
                (gen-chart-finish-active new-edge)
-               (gen-chart-add-with-index new-edge *toptype*)
+               (gen-chart-add-with-index new-edge (g-edge-index edge))
                (list (cons new-edge mods)))))))
 
 
