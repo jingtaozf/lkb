@@ -18,6 +18,8 @@
 ;;; - add print button: include edge id in display and print out;
 ;;;
 
+(defparameter *redwoods-export-values* :all)
+
 (defun browse-trees (&optional (data *tsdb-data*)
                      &key (condition *statistics-select-condition*)
                           gold
@@ -903,7 +905,7 @@
       do
         (format 
          t 
-         "kristina(): ~a active tree~:[~;s~] (of ~d) for item # ~d.~%" 
+         "export-trees(): ~a active tree~:[~;s~] (of ~d) for item # ~d.~%" 
          (if version (length active) "all")
          (or (null version) (> (length active) 1))
          (length results) i-id)
@@ -935,13 +937,24 @@
               for mrs = (and edge (mrs::extract-mrs edge))
               when dag do
                 (setf lkb::*cached-category-abbs* nil)
-                (format stream "~s~%~%" derivation)
-                (if tree
-                  (format stream "~a~%" tree)
-                  (format stream "()~%"))
-                (lkb::display-dag1 dag 'lkb::tdl stream)
-                (format stream "~%~%")
-                (mrs::mrs-output-psoa mrs :stream stream)
+                (when (or (eq *redwoods-export-values* :all)
+                          (smember :derivation *redwoods-export-values*))
+                  (format stream "~s~%~%" derivation))
+                (when (or (eq *redwoods-export-values* :all)
+                          (smember :tree *redwoods-export-values*))
+                  (if tree
+                    (format stream "~a~%" tree)
+                    (format stream "()~%")))
+                (when (or (eq *redwoods-export-values* :all)
+                          (smember :avm *redwoods-export-values*))
+                  (lkb::display-dag1 dag 'lkb::tdl stream)
+                  (format stream "~%~%"))
+                (when (or (eq *redwoods-export-values* :all)
+                          (smember :mrs *redwoods-export-values*))
+                  (mrs::output-mrs1 mrs 'mrs::simple stream))
+                (when (or (eq *redwoods-export-values* :all)
+                          (smember :dependencies *redwoods-export-values*))
+                  (mrs::mrs-output-psoa mrs :stream stream))
                 (format stream "~c~%" #\page))
           (loop
               with *package* = (find-package lkb::*lkb-package*)
@@ -956,13 +969,24 @@
               for mrs = (and edge (mrs::extract-mrs edge))
               when dag do
                 (setf lkb::*cached-category-abbs* nil)
-                (format stream "~s~%~%" derivation)
-                (if tree
-                  (format stream "~a~%" tree)
-                  (format stream "()~%"))
-                (lkb::display-dag1 dag 'lkb::tdl stream)
-                (format stream "~%~%")
-                (mrs::mrs-output-psoa mrs :stream stream)
+                (when (or (eq *redwoods-export-values* :all)
+                          (smember :derivation *redwoods-export-values*))
+                  (format stream "~s~%~%" derivation))
+                (when (or (eq *redwoods-export-values* :all)
+                          (smember :tree *redwoods-export-values*))
+                  (if tree
+                    (format stream "~a~%" tree)
+                    (format stream "()~%")))
+                (when (or (eq *redwoods-export-values* :all)
+                          (smember :avm *redwoods-export-values*))
+                  (lkb::display-dag1 dag 'lkb::tdl stream)
+                  (format stream "~%~%"))
+                (when (or (eq *redwoods-export-values* :all)
+                          (smember :mrs *redwoods-export-values*))
+                  (mrs::output-mrs1 mrs 'mrs::simple stream))
+                (when (or (eq *redwoods-export-values* :all)
+                          (smember :dependencies *redwoods-export-values*))
+                  (mrs::mrs-output-psoa mrs :stream stream))
                 (format stream "~c~%" #\page)))))
 
 (defun semantic-equivalence (data &key condition (file "/tmp/equivalences"))
