@@ -21,6 +21,8 @@
 
 (defparameter *derivations-ignore-leafs-p* t)
 
+(defparameter *derivations-reconstructor* nil)
+
 (defmacro derivation-id (derivation)
   `(when (integerp (first ,derivation))
      (first ,derivation)))
@@ -183,13 +185,25 @@
            "~&~%(~d) `~a' --- success.~%")))))))
 
 (defun reconstruct (derivation &optional (dagp t))
-  (let ((derivation (cond
-                      ((consp derivation) derivation)
-                      ((and (stringp derivation) (not (string= derivation "")))
-                       (read-from-string derivation)))))
-    (when derivation
-      (catch :fail
-        (reconstruct-derivation derivation dagp)))))
+  (if *derivations-reconstructor*
+    (let ((hook (typecase *derivations-reconstructor*
+                  (null nil)
+                  (function *derivations-reconstructor*)
+                  (symbol (and (fboundp *derivations-reconstructor*) 
+                               (symbol-function *derivations-reconstructor*)))
+                  (string (ignore-errors 
+                           (symbol-function 
+                            (read-from-string 
+                             *derivations-reconstructor*)))))))
+      (when hook (funcall hook derivation dagp)))
+    (let ((derivation (cond
+                        ((consp derivation) derivation)
+                        ((and (stringp derivation)
+                              (not (string= derivation "")))
+                         (read-from-string derivation)))))
+      (when derivation
+        (catch :fail
+          (reconstruct-derivation derivation dagp))))))
 
 (defun reconstruct-derivation (derivation &optional (dagp t))
   (let* ((root (derivation-root derivation))

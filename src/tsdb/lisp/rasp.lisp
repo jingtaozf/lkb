@@ -78,4 +78,67 @@
 
 (defun rasp-preprocess-for-pet (string)
   (rasp-preprocess string :rawp nil :plainp nil :posp t))
+
+;;;
+;;; from here on, import support to read in a file of RASP parse trees and make
+;;; a profile, including results, from it; optionally, run a hook on each tree,
+;;; prior to storage in the profile, to pad the results (e.g. with RMRSs).
+;;;
+(defun read-items-from-rasp-file (file 
+                                  &key (base 1)
+                                       origin register difficulty 
+                                       category comment 
+                                       (trees-hook *tsdb-trees-hook*)
+                                       (semantix-hook *tsdb-semantix-hook*)
+                                       (run 0) meter)
+  (declare (ignore meter))
+  
+  (let ((author (current-user))
+        (date (current-time))
+        (format "none")
+        item parse result)
+    (with-open-file (stream file :direction :input)
+      (loop
+          for i from 0
+          for surface = (read stream nil nil)
+          for readings = (read stream nil nil)
+          for derivations = (when (integerp readings)
+                              (loop
+                                  for i from 1 to readings
+                                  collect (read stream nil nil)))
+          while derivations do
+            (push (pairlis '(:i-id 
+                             :i-origin :i-register :i-format
+                             :i-difficulty :i-category :i-input :i-wf
+                             :i-length :i-comment :i-author :i-date)
+                           (list (+ base i)
+                                 origin register format
+                                 difficulty category 
+                                 (format nil "~{~a~^ ~}" surface)
+                                 1 (length surface) comment author date))
+                  item)
+            (push (pairlis '(:run-id :parse-id :i-id :readings)
+                           (list run (+ base i) (+ base i) readings))
+                  parse)
+            (let ((foo
+                   (loop
+                       for j from 0
+                       for derivation in derivations
+                       for string = (with-standard-io-syntax 
+                                      (let ((*package* (find-package :tsdb)))
+                                        (write-to-string derivation)))
+                       for tree = (tsdb::call-hook trees-hook string)
+                       for mrs = (tsdb::call-hook semantix-hook string)
+                       collect (pairlis '(:parse-id :result-id 
+                                          :derivation :tree :mrs)
+                                        (list (+ base i) j 
+                                              string tree mrs)))))
+              (setf result
+                (nconc
+                 (if *import-result-hook*
+                   (call-hook *import-result-hook* foo)
+                   foo)
+                 result)))))
+    (values (nreverse item) nil nil (nreverse parse) (nreverse result))))
 
+         

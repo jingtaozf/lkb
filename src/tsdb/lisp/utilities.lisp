@@ -109,6 +109,11 @@
 (defun normalize-string (string &key escape (normalize t))
   (if string
     (loop
+        with string = (if (stringp string)
+                        string 
+                        (with-standard-io-syntax 
+                          (let ((*package* (find-package :tsdb)))
+                            (write-to-string string))))
         with padding = 128
         with length = (+ (length string) padding)
         with result = (make-array length

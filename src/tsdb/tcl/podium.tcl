@@ -341,9 +341,11 @@ proc main {} {
   #
   menu .menu.file.menu.import -tearoff 0
   .menu.file.menu.import add command -label "Test Items" \
-    -command {tsdb_import items};
-  .menu.file.menu.import add command -label "tsdb(1) Database" \
+    -command {tsdb_import ascii};
+  .menu.file.menu.import add command -label {[incr tsdb()] Profile} \
     -command {tsdb_import database};
+  .menu.file.menu.import add command -label "RASP Trees" \
+    -command {tsdb_import rasp};
   .menu.file.menu.import add separator
   .menu.file.menu.import add command -label "Skeleton Data" \
     -state disabled;

@@ -1291,7 +1291,7 @@
 
   (loop
       with *reconstruct-cache* = (make-hash-table :test #'eql)
-      for parse in (get-field :results result)
+      for parse in (or (get-field :results result) result)
       for derivation = (get-field :derivation parse)
       for tree = (get-field :tree parse)
       for mrs = (get-field :mrs parse)

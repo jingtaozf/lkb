@@ -45,6 +45,8 @@
     "MIME-Version:" "Content-Type:" "Content-Transfer-Encoding:"
     "Message-ID:"))
 
+(defparameter *import-result-hook* nil)
+
 (defun do-import-database (source target &key absolute meter except)
   
   (when meter (meter :value (get-field :start meter)))
@@ -98,6 +100,7 @@
 
 (defun do-import-items 
     (file data &key 
+               (format :ascii)
                absolute
                (create t)
                (overwrite t)
@@ -111,6 +114,7 @@
                meter)
   
   (when meter (meter :value (get-field :start meter)))
+  (unless absolute (purge-profile-cache data))
   (let* ((path (if absolute (namestring data) (find-tsdb-directory data)))
          (ifile (make-pathname :directory path :name "item"))
          (status (verify-tsdb-directory path :absolute t))
@@ -125,7 +129,7 @@
      ((null (probe-file file))
       (format
        *tsdb-io*
-       "import-items(): unable to open item file `~a'.~%"
+       "import-items(): unable to open input file `~a'.~%"
        file)
       1)
      ((and (null status) (null create))
@@ -162,17 +166,28 @@
              (ids (map 'list #'(lambda (foo) (get-field :i-id foo)) ids))
              (ids (remove nil ids))
              (base (if ids (+ 1 (apply #'max ids)) 1)))
-        (multiple-value-bind (item phenomenon item-phenomenon)
-            (read-items-from-ascii-file file
-                                        :base base
-                                        :origin origin
-                                        :register register
-                                        :difficulty difficulty
-                                        :category category
-                                        :comment comment
-                                        :separator separator
-                                        :pseparator pseparator
-                                        :meter rmeter)
+        (multiple-value-bind (item phenomenon item-phenomenon parse result)
+            (case format
+              (:ascii
+               (read-items-from-ascii-file file
+                                           :base base
+                                           :origin origin
+                                           :register register
+                                           :difficulty difficulty
+                                           :category category
+                                           :comment comment
+                                           :separator separator
+                                           :pseparator pseparator
+                                           :meter rmeter))
+              (:rasp
+               (read-items-from-rasp-file file
+                                          :base base
+                                          :origin origin
+                                          :register register
+                                          :difficulty difficulty
+                                          :category category
+                                          :comment comment
+                                          :meter rmeter)))
           
           (cond
            (item
@@ -187,6 +202,8 @@
               (insert path "phenomenon" phenomenon :absolute t)
               (insert path "item-phenomenon" item-phenomenon 
                       :absolute t :meter ipmeter))
+            (when parse (insert path "parse" parse :absolute t))
+            (when result (insert path "result" result :absolute t))
             item)
            (t 4))))))))
 

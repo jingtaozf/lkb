@@ -163,7 +163,7 @@ proc tsdb_import {code} {
 
   global globals;
 
-  if {$code == "items"} {
+  if {$code == "ascii" || $code == "rasp"} {
     if {![input "item file:" [pwd] "" import]} {
       set source $globals(input);
       if {![file isfile $source] || ![file readable $source]} {
@@ -195,7 +195,10 @@ proc tsdb_import {code} {
         }; # if
 
         history_add profile $target;
-        set command "(import :items \"$source\" \"$target\")";
+        set command \
+          [format \
+           "(import :items \"%s\" \"%s\" :format :%s)" \
+           $source $target $code];
         send_to_lisp :event $command;
       }; # if
     }; # if
