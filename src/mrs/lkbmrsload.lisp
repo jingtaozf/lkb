@@ -100,12 +100,13 @@
                :directory (append *lkb-source-dir* dir)))
             (compiled-file (make-pathname :name file
                                           :directory (append *lkb-fasl-dir* dir))))
-        (when (and compiled-file (file-write-date source-file)
+        #-mcl
+        (when (and (probe-file compiled-file) (file-write-date source-file)
                    (file-write-date compiled-file)
                    (> (file-write-date source-file) 
                       (file-write-date compiled-file)))             
           (compile-file source-file :output-file compiled-file))
-        (load compiled-file))))
+        (load #-mcl compiled-file #+mcl source-file))))
 ))
 
 (in-package :cl-user)
