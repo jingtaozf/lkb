@@ -668,8 +668,8 @@
        (connection
 	(unless (string>= (server-version lexicon) 
 			  "7.3")
-	  (format *trace-output* 
-		  "~%WARNING: PostgreSQL server version is ~a. Please upgrade to version 7.3 or above." (server-version lexicon)))
+	  (error *trace-output* 
+		  "PostgreSQL server version is ~a. Please upgrade to version 7.3 or above." (server-version lexicon)))
 	(unless (string>= (get-db-version lexicon) 
 			  *psql-db-version*)
 	  (error "Your database structures (v. ~a) are out of date. See the latest script import.sql." (get-db-version lexicon)))
