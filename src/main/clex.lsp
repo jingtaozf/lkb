@@ -3,6 +3,9 @@
 ;;;   see `licence.txt' for conditions.
 
 
+;;; modifications by bmw (aug-03)
+;;; - fixed code broken by *lexicon*-related changes
+
 (in-package :lkb)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -10,11 +13,17 @@
 ;;;  Interface to an off-line hash table lexical cache
 ;;;
 
+(defvar *lexicon-tdl-files* (list "lexicon.tdl"))
+
 (defclass cdb-lex-database (lex-database)
   ((psort-db :initform nil :accessor psort-db)
    (orth-db :initform nil :accessor orth-db)))
 
 (setf *lexicon* (make-instance 'cdb-lex-database))
+
+(defmethod load-lexicon ((lexicon cdb-lex-database))
+  (unless (typep (catch 'abort (read-cached-lex-if-available *lexicon-tdl-files*)) 'cdb-lex-database)
+    (error "~%unable to load lexicon")    ))
 
 (defmethod lookup-word ((lexicon cdb-lex-database) orth &key (cache t))
   (declare (ignore cache))
@@ -119,18 +128,6 @@
     (cdb:close-read (psort-db lexicon))
     (setf (psort-db lexicon) nil))
   nil)
-
-(defmethod collect-expanded-lex-ids ((lexicon cdb-lex-database))
-  (let ((ids nil))
-    (maphash #'(lambda (id value)
-                 (when (and value
-			    (lex-entry-full-fs value))
-		   (push id ids)))
-	     (slot-value lexicon 'psorts))
-    ids))
-
-(defmethod unexpand-psort ((lexicon cdb-lex-database) id)
-  (setf (gethash id (slot-value lexicon 'psorts)) nil))
 
 ;;; hack
 (defmethod delete-temporary-lexicon-files ((lexicon cdb-lex-database))

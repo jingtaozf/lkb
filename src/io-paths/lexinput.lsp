@@ -115,7 +115,8 @@
 	  (if (eql *lkb-system-version* :page)
 	      (read-tdl-lex-file-aux-internal file-name)
 	    (read-lex-file-aux-internal file-name)))
-	(store-cached-lex *lexicon*))))))
+	(store-cached-lex *lexicon*)))))
+  *lexicon*)
 
 (defun read-tdl-lex-file-aux (file-names &optional overwrite-p)
   ;;; this is the version that is called from scripts

@@ -2,6 +2,9 @@
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Ben Waldron;
 ;;;   see `licence.txt' for conditions.
 
+;;; modifications by bmw (aug-03)
+;;; - fixed code broken by *lexicon*-related changes
+
 ;;; aac (aug-03)
 ;;; - moved old flat file stuff to slex.lsp - added to cvs
 ;;;   but not loaded by lkb.system
@@ -608,3 +611,19 @@
            stem=\"~(~{~a~^ ~}~)\" status=\"lexicon\"/>~%"
          id type stem)
       finally (when file (close stream))))
+
+;; -bmw-
+;; moved from clex.lsp (it belongs here)
+
+(defmethod collect-expanded-lex-ids ((lexicon lex-database))
+  (let ((ids nil))
+    (maphash #'(lambda (id value)
+                 (when (and value
+			    (lex-entry-full-fs value))
+		   (push id ids)))
+	     (slot-value lexicon 'psorts))
+    ids))
+
+(defmethod unexpand-psort ((lexicon lex-database) id)
+  (setf (gethash id (slot-value lexicon 'psorts)) nil))
+
