@@ -21,6 +21,8 @@
     (lep::eval-in-emacs (format nil "(find-tdl-definition \"~a\" \"~a\")"
 				thing file))))
 
+;; Redefine a single type
+
 (defun redefine-type (definition)
   (setf *syntax-error* nil)
   (with-output-to-top ()
@@ -35,3 +37,32 @@
 	  (set-up-type-interactions)
 	  (format t "~%Done.")
 	  t)))))
+
+;; Functions to manipulate emacs menu bar
+
+(defun add-lkb-menu (menu)
+  (lep::eval-in-emacs-query :string (format nil "(fi::install-menubar '~A)"
+					    menu)))
+
+
+#|
+
+;; Use an emacs buffer as top-level window
+b
+(defun make-lkb-stream ()
+  (let ((s nil))
+    (flet ((foo (stream)
+	     (declare (ignore stream))
+	     (or s (setq s (make-lkb-listener-stream)))))
+      (let ((s (make-instance 'excl::lazy-encapsulating-stream
+		 :init-in #'foo
+		 :init-out #'foo)))
+	(setf (excl::interactive-stream-p s) t)
+	s))))
+
+(defun make-lkb-listener-stream ()
+  (let ((s (lep:make-editor-listener-stream :splitp t :name "lkb")))
+    (setf (excl::interactive-stream-p s) t)
+    s))
+
+|#

@@ -4,7 +4,15 @@
 
 (in-package :user)
 
-;;; SIMPLE DRAWING
+(defmacro with-output-to-top (() &body body)
+  (let ((func (gensym)))
+    `(let ((,func #'(lambda () ,@body)))
+       (declare (dynamic-extent ,func))
+       (if clim-user::*lkb-top-stream*
+	   (clim-user::invoke-with-output-to-top ,func)
+	 (funcall ,func)))))
+
+ ;;; SIMPLE DRAWING
 
 ;;; All these position functions only affect the text-cursor in CLIM
 ;;; CLIM2 manual 1994 ed 19.3
@@ -138,20 +146,6 @@
 
 ;;; ========================================================================
 ;;; Macros for pop-up menus
-
-(defmacro with-output-to-top (() &body body)
-  `(let ((*standard-output* clim-user::*lkb-top-stream*))
-     (unwind-protect
-	 (progn
-	   (when (not (eq mp:*current-process* 
-			  clim-user::*lkb-top-process*))
-	     (mp:process-add-arrest-reason clim-user::*lkb-top-process* 
-					   :output))
-	   (setf (clim-user::stream-recording-p *standard-output*) t)
-	   ,@body
-	   (terpri))
-       (mp:process-revoke-arrest-reason clim-user::*lkb-top-process* 
-					:output))))
 
 (defmacro pop-up-menu (menu &body cases)
   (let ((command (gensym)))
