@@ -98,12 +98,21 @@
 ;;;      (when results
 ;;;            (display-mrs-rule rule))
       (dolist (result (remove-overlapping-psoas results))
-        (when (matches-input-condition mrsstruct result  
-                              (mrs-munge-rule-input-condition rule))         
-          (setf mrsstruct
-            (alter-mrs-struct mrsstruct result
-                              (mrs-munge-rule-output-spec 
-                               rule)))
+        (let ((new-results 
+               (matches-input-condition 
+                mrsstruct result  
+                (mrs-munge-rule-input-condition rule))))
+          (when new-results
+            (when (cdr new-results)
+                (unless *giving-demo-p*
+                  (cerror "Ignore extras" 
+                          "~%Ambiguous results")))
+            (setf (psoa-result-bindings result)
+              (psoa-result-bindings (car new-results)))
+            (setf mrsstruct
+              (alter-mrs-struct mrsstruct result
+                                (mrs-munge-rule-output-spec 
+                                 rule))))
 ;;;        (output-mrs mrsstruct 'indexed)
           ))))
    mrsstruct)
@@ -135,7 +144,8 @@
 
 
 (defun matches-input-condition (mrs result condition-spec) 
-  (or (null condition-spec)
+  (if (null condition-spec)
+      (list result)
       (let* ((bindings (copy-alist (psoa-result-bindings result)))
              (i-handel (psoa-handel condition-spec))
              (handel (psoa-handel mrs))
@@ -160,11 +170,27 @@
         (match-input-condition-rest mrs condition-spec bindings))))
 
 (defun match-input-condition-rest (mrs input-spec initial-bindings)
-  (let ((i-liszt (psoa-liszt input-spec))
-        (liszt (psoa-liszt mrs)))
-    (match-mrs-rule-rels i-liszt liszt nil initial-bindings nil)
-    ;;; just allow conditions on relations pro tem
-    ))
+  (let ((results nil)
+        (i-liszt (psoa-liszt input-spec))
+        (liszt (psoa-liszt mrs))
+        (i-h-cons (psoa-h-cons input-spec))
+        (h-cons (psoa-h-cons mrs)))
+    (setf results
+      (if i-liszt
+          (for int-res in 
+               (match-mrs-rule-rels i-liszt liszt nil initial-bindings nil)
+               collect
+               (make-psoa-result 
+                :bindings (munge-result-bindings int-res)
+                :constant-bindings (munge-result-constant-bindings int-res)
+                :matching-psoa                
+                (make-psoa :liszt (munge-result-matching-rels int-res))))
+        (list (make-psoa-result 
+               :bindings initial-bindings
+               :matching-psoa                
+               (make-psoa)))))
+    (when results
+      (construct-hcons-results results i-h-cons h-cons))))
 
 (defun match-mrs-rule (mrs input-spec)
   ;;; first match top-h etc, if specified, in order to produce
