@@ -19,8 +19,8 @@
 ;;; the list lexicographically before output.
 ;;;
 
-(((:path . "banira") (:content . "Basic Japanese Constructions"))
+(((:path . "kihon") (:content . "Basic Japanese Constructions"))
  ((:path . "ginkougyou") (:content . "Hand-Constructed Banking Data"))
- ((:path . "dates") (:content . "Date Expressions"))
- ((:path . "numbers") (:content . "Number Expressions"))
+ ((:path . "hizuke") (:content . "Date Expressions"))
+ ((:path . "suuji") (:content . "Number Expressions"))
  ((:path . "faqs") (:content . "Online Banking FAQ Sample")))
