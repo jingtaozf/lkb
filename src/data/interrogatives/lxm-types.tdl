@@ -556,7 +556,7 @@ attrib-adj-lxm_infl := attrib-lxm_infl &
   DTRS < adj-lxm > ].
 
 ;;;JTB 10/17/01 - Changing attrib things so that their content is a
-;;;fucking scop-obj so that we can make them the semantic head of
+;;;scope-obj so that we can make them the semantic head of
 ;;;their hd-mod-phs.  This will allow us to do constituent negation
 ;;;with the same rule, with it acting as the semantic head.
 

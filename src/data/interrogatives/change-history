@@ -133,9 +133,9 @@ The generalization is that normally the wh-filler is the first memeber of the he
 
 The listp error from yesterday was due to the so-called `rule-filter' which Ann suspects has got something LinGO grammar specific in it. For now the fix is to assert (push :vanilla *features*)
 
-I added the wh-excl-ph, but the list typing on the feature QUANTS on the type soa is fucked up, so I moved it back to just being a vanilla *diff-list*.  Haven't tested this type yet, since I need to add "how" or something like that.
+I added the wh-excl-ph, but the list typing on the feature QUANTS on the type soa is screwed up, so I moved it back to just being a vanilla *diff-list*.  Haven't tested this type yet, since I need to add "how" or something like that.
 
-The [ SUBJ *list-of-noncanon-ss* ] constraint on clause is fucking up the stitching together of lists to make the ARG-ST, esp, when it comes to the "not" cases, because I've got not marked as canon-ss so that it won't extract.  This is a problem.
+The [ SUBJ *list-of-noncanon-ss* ] constraint on clause is screwing up the stitching together of lists to make the ARG-ST, esp, when it comes to the "not" cases, because I've got not marked as canon-ss so that it won't extract.  This is a problem.
 
 I added *e-diff-list* because the inv-decl-cl construction was leaking - it was creating the sentence "Can Sandy sing", so I constrainted the SLAS value of root to be an *e-diff-list* rather than just <! !> ... which I would have thought should have that definition anyway.  But maybe not for the ARG-ST list stitching.
 
@@ -245,4 +245,4 @@ I think that I have to add the head-comps-ph-0 back in now that I've included ar
 8/4/1999 
 I'm having trouble with the fact that SPR and COMPS only select for type synsem (i.e. only select for items based on what's inside their SS field), because it doesn't allow me to indicate that a verb is selecting for a noun *phrase* for instance, because phrase clashes with type synsem.
 
-So I thought I'd be clever and define NP in terms of things under SS, which is fine since it solves a problem I was having with abreviations before, but it really fucks up the word/phrase distinction.  For instance "Kim sneezed" gets two parses, one where "Kim" is still of type word and one where it has been pumped through the hd-comps-ph-0 rule.  Is it possible to ditch the pumping rule?  I.e. have anything of COMPS < > simply be treated as a phrase (or an underspecified word/phrase thing) or will that cause problems?
+So I thought I'd be clever and define NP in terms of things under SS, which is fine since it solves a problem I was having with abreviations before, but it really screws up the word/phrase distinction.  For instance "Kim sneezed" gets two parses, one where "Kim" is still of type word and one where it has been pumped through the hd-comps-ph-0 rule.  Is it possible to ditch the pumping rule?  I.e. have anything of COMPS < > simply be treated as a phrase (or an underspecified word/phrase thing) or will that cause problems?

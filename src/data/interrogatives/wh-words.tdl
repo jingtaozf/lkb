@@ -34,7 +34,7 @@ hell_0 := word &
 ;;;JTB - made all of these unfocused since that seemed to be the
 ;;;generalization they were grasping, and added a "what" determiner.
 
-;;;JTB 07/23/01 - What the fuck is DEG supposed to do again?
+;;;JTB 07/23/01 - What the hell is DEG supposed to do again?
 
 inter_which-unfoc := wh-det-lxm-unfoc &
 [ ORTH <! "which" !>,

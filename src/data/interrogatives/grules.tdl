@@ -41,7 +41,7 @@ ncl-vb-rule-1 := ncl-vb-ph-1.
 ncl-vb-rule-2 := ncl-vb-ph-2.
 ncl-vb-rule-3 := ncl-vb-ph-3.
 
-;;; JTB 07/29/01 - Removing elliptical shit because we never talked
+;;; JTB 07/29/01 - Removing elliptical stuff because we never talked
 ;;; about it and I don't want it interfering.
 
 ;;; JTB 02/02/02 - It got put back in in September.
@@ -120,7 +120,7 @@ pre-hd-adv-mod-rule := pre-hd-adv-mod-ph.
 ;coordination-rule-2 := coordination-phrase.
 
 ;;;JTB 07/14/01 - added this for the base case where we trivially form
-;;;a reprise but nothing was on P-STORE.  Hope this bitch doesn't
+;;;a reprise but nothing was on P-STORE.  Hope this sucker doesn't
 ;;;overgenerate.
 
 rep-int-cl-0 := rep-int-cl &

@@ -362,7 +362,7 @@ clause := phrase &
 non-clause := phrase.
 
 ;;;JTB 02/16/02 - Changing verb to verbal in core-cl.  Hope that don't
-;;;fuck anything up.
+;;;screw anything up.
 
 ; core-clause (core-cl)
 core-cl := clause &
@@ -635,7 +635,7 @@ hd-fill-ph := hd-ph &
 
 ;;;JTB 10/17/01 - Changing these to simply inherit the semantics of
 ;;;the mod as the semantic head.  This will allow them to take care of
-;;;adverbs and shit also, especially constituent negation.
+;;;adverbs and stuff also, especially constituent negation.
 
 post-hd-mod-ph := binary-construction &
 [ SS [ LOC [ CAT #cat,
