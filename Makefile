@@ -71,7 +71,7 @@ lkb_source:
 	      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
 	      --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
 	      --exclude="src/.???l*" --exclude="src/fasl*" \
-	      --exclude="*.fasl" --exclude="lexdb*" \
+	      --exclude="*.fasl" --exclude="./lexdb*" \
 	      --exclude="src/doc*" --exclude="src/data*" \
 	      --exclude="linux*" --exclude="solaris*" --exclude="windows*" \
 	      --exclude="bin*" --exclude="include*" --exclude="lib*" \
@@ -309,11 +309,21 @@ itsdb_data:
 	      --exclude=src/tsdb/skeletons/english/wsj00 \
 	      --exclude=src/tsdb/skeletons/english/parc \
 	      --exclude=src/tsdb/skeletons/yy \
-	      --exclude=src/tsdb/home/redwoods \
+	      --exclude=src/tsdb/home/redwoods --exclude=src/tsdb/home/log \
 	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" \
 	      src/tsdb/skeletons src/tsdb/home; \
 	)
+
+itsdb_documentation:
+	( \
+	  cd ${ROOT}/lkb; \
+	  tar Svczf ${TARGET}/${DATE}/itsdb_documentation.tgz \
+	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
+              --exclude=".nfs*" \
+	      doc/itsdb.ps doc/tsnlp.ps doc/profiling.ps doc/parsing.ps; \
+	)
+
 
 itsdb_trees: itsdb_vm32
 
@@ -324,14 +334,4 @@ itsdb_vm32:
 	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" \
 	      src/tsdb/home/trees/vm32; \
-	)
-
-
-itsdb_documentation:
-	( \
-	  cd ${ROOT}/lkb; \
-	  tar Svczf ${TARGET}/${DATE}/itsdb_documentation.tgz \
-	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
-              --exclude=".nfs*" \
-	      doc/itsdb.ps doc/tsnlp.ps doc/profiling.ps doc/parsing.ps; \
 	)
