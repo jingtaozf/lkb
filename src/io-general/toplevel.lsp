@@ -260,7 +260,7 @@
               (when name (setf *last-lex-rule-id* name))
               rule-entry))))))
 
-(defparameter *last-word* nil)
+(defparameter *last-word* "the")
 
 (defun ask-user-for-word nil
    (let ((possible-name

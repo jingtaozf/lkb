@@ -41,6 +41,9 @@
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
            #-:ansi-eval-when (load eval compile)
   (pushnew :preprocessor *features*)
+  #+(and allegro-version>= (version>= 6 0) 
+     (or :linux (and :sparc :svr4)))
+  (pushnew :psql *features*)
   #+(and :allegro (version>= 6 0))
   (pushnew :xml *features*)
   #+(or :lui (and :allegro (version>= 6 0)))
@@ -66,9 +69,8 @@
     :source-pathname (get-sources-dir "lkb")
     :binary-pathname (get-binaries-dir "lkb")
     :source-extension "lsp"
-    :depends-on (#+(and :psql allegro-version>= (version>= 6 0) 
-                        (or :linux (and :sparc :svr4)))
-                 "psql"
+    :depends-on (
+		 #+:psql "psql"
                  #+:preprocessor "ppcre"
                  #+:xml "xml")
 
@@ -129,13 +131,12 @@
 	       (:file "lex")          ; lexical structures, also templates etc
 	       #+plob 
                (:file "plex")         ; lexical database 
-               (:file "lexport")      ; ASCII export of lexicon
-               #+(and :psql allegro-version>= (version>= 6 0) 
-                      (or :linux (and :sparc :svr4)))
+               #+:psql  
                (:file "psqllex")      ; Postgres interface for lexicon
                #+:ltemplates
                (:file "ltemplates")   ; lexical templates (e.g. for cardinals)
 	       (:file "clex")         ; constant lexical database 
+               (:file "lexport")      ; export of lexicon to file/db
                (:file "rules")        ; grammar and lexical rules
 	       (:file "parse")        ; chart parser
 	       (:file "active")       ; experimental key-driven (active) parser

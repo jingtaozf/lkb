@@ -94,17 +94,24 @@
   (unless (listp file-names) 
     (setf file-names (list file-names)))
   (setf *lex-file-list* file-names)
-  (if (check-load-names file-names 'lexical)
-      (unless (read-cached-lex *lexicon* file-names)
-	(let ((*syntax-error* nil))
-	  (setf *ordered-lex-list* nil)
-          (clear-lex *lexicon*)        
-	  (dolist (file-name file-names)
-	    (if (eql *lkb-system-version* :page)
-		(read-tdl-lex-file-aux-internal file-name)
-	      (read-lex-file-aux-internal file-name)))
-	  (store-cached-lex *lexicon*)))
-    (cerror "Continue with script" "Lexicon file not found")))
+  (cond
+   ((null file-names) ;: no files
+    (setf *ordered-lex-list* nil)
+    (clear-lex *lexicon*) 
+    (store-psort *lexicon* nil nil nil)
+    (store-cached-lex *lexicon*))
+   ((not (check-load-names file-names 'lexical)) ;: files not found
+    (cerror "Continue with script" "Lexicon file not found"))
+   (t					;: files found
+    (unless (read-cached-lex *lexicon* file-names)
+      (let ((*syntax-error* nil))
+	(setf *ordered-lex-list* nil)
+	(clear-lex *lexicon*)        
+	(dolist (file-name file-names)
+	  (if (eql *lkb-system-version* :page)
+	      (read-tdl-lex-file-aux-internal file-name)
+	    (read-lex-file-aux-internal file-name)))
+	(store-cached-lex *lexicon*))))))
 
 (defun read-tdl-lex-file-aux (file-names &optional overwrite-p)
   ;;; this is the version that is called from scripts

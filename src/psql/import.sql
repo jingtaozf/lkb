@@ -66,8 +66,6 @@ ON erg (orthography);
 CREATE UNIQUE INDEX primarykey
 ON erg (name,version); 
 
-COPY erg FROM '/tmp/lexicon.txt' DELIMITERS ',';
-
 DROP TABLE ergd;
 CREATE TABLE ergd (
   slot VARCHAR(50),
@@ -91,3 +89,36 @@ INSERT INTO ergd VALUES ( 'unifs', 'altkey', '(synsem local keys altkey)', 'symb
 INSERT INTO ergd VALUES ( 'unifs', 'alt2key', '(synsem local keys alt2key)', 'symbol' );
 INSERT INTO ergd VALUES ( 'unifs', 'compkey', '(synsem local keys --compkey)', 'symbol' );
 INSERT INTO ergd VALUES ( 'unifs', 'ocompkey', '(synsem local keys --ocompkey)', 'symbol' );
+
+DROP VIEW max_version;
+CREATE VIEW max_version 
+	AS SELECT erg.name AS "key", max(erg."version") AS max 
+	FROM erg
+	WHERE erg.flags=1 
+	GROUP BY erg.name;
+
+DROP VIEW erg_max_version;
+CREATE VIEW erg_max_version 
+	AS SELECT erg.* 
+	FROM (erg JOIN max_version ON 
+	(((erg.name = max_version."key") AND (erg."version" = max_version.max))));
+
+DROP FUNCTION orthography_set();
+CREATE FUNCTION orthography_set () RETURNS SETOF text 
+	AS 'SELECT DISTINCT orthography FROM erg_max_version' LANGUAGE SQL;
+
+DROP FUNCTION psort_id_set();
+CREATE FUNCTION psort_id_set() RETURNS SETOF text 
+	AS 'SELECT DISTINCT name FROM erg_max_version' LANGUAGE SQL;
+
+DROP FUNCTION lookup_word(text);
+CREATE FUNCTION lookup_word (text) RETURNS SETOF text 
+	AS 'SELECT name FROM erg_max_version WHERE (orthography LIKE $1 OR orthography LIKE $1 || \' %\' OR orthography LIKE \'% \' || $1 || \' %\' OR orthography LIKE \'% \' || $1);' LANGUAGE SQL;
+
+DROP FUNCTION next_version(text);
+CREATE FUNCTION next_version (text) RETURNS int 
+	AS 'SELECT 1 + max(version) FROM erg WHERE name = $1;' LANGUAGE SQL;
+
+DROP FUNCTION next_id();
+CREATE FUNCTION next_id () RETURNS int 
+	AS 'SELECT 1 + max(id) FROM erg;' LANGUAGE SQL;

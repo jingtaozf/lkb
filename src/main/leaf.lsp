@@ -120,7 +120,7 @@
 	      (setf (leaf-db leaf-db) (cdb:open-read *leaf-temp-file*))
 	    (error (condition)
 	      (format t "~%Error: ~A~%" condition)
-	      (delete-temporary-lexicon-files)
+	      (delete-temporary-lexicon-files leaf-db)
 	      nil))
       (setf (leaf-db-ready-p leaf-db) t)
       (format t "~%Cached leaf types read")
@@ -365,4 +365,8 @@ introduces new features ~A" name new-features)
                   ;; the retyping is actually needed, but probably
                   ;; faster this way
                   (retype-dag parent-constraint *toptype*))))
-    
+
+
+;;; hack
+(defmethod delete-temporary-lexicon-files ((leaf-db cdb-leaf-database))
+  (delete-temporary-lexicon-files-aux))

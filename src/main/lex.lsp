@@ -3,6 +3,8 @@
 ;;;   see `licence.txt' for conditions.
 
 ;;; bmw (jun-03)
+;;; - lex-words looks in sublexicons too
+;;; - (partial) caching of null values
 ;;; - link/unlink replace (setf extra-lexicons)
 ;;;
 
@@ -21,8 +23,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-					;bmw
-(setf *no-cache* nil)
+(defvar *verbose-lex-lookup-word* nil)
 
 (defclass lex-database () 
   ((lexical-entries :initform (make-hash-table :test #'equal))
@@ -30,33 +31,24 @@
    (temp-psorts :initform (make-hash-table :test #'eq))
    (extra-lexicons :initform nil :reader extra-lexicons) ;: use link/unlink to write
    (extra-mode :initform :union :accessor extra-mode)
-   (part-of :initform nil :accessor part-of)
-   )
-  )
+   (part-of :initform nil :accessor part-of)))
 
 ;: obsolete: use link instead
 (defmethod (setf extra-lexicons) (lexicon-list (lexicon lex-database))
-  (print "WARNING: using obsolete method (setf extra-lexicons)")
+  (format *trace-output* "WARNING: using obsolete method (setf extra-lexicons)")
   (mapcar #'(lambda (lex)
 	      (unless (member lex lexicon-list)
 		(unlink lex lexicon)))
-	  (extra-lexicons lexicon)
-	  )
+	  (extra-lexicons lexicon))
   (mapcar #'(lambda (lex)
 	      (unless (member lex (extra-lexicons lexicon))
 		(link lex lexicon)))
-	  lexicon-list
-	  )
-  )
+	  lexicon-list))
 
 (defmethod clear-cache ((lexicon lex-database))
-  (clrhash (slot-value lexicon 'lexical-entries))
-  )
+  (clrhash (slot-value lexicon 'lexical-entries)))
 
-
-;: include one lexicon in another
 (defmethod link ((sub-lexicon lex-database) (lexicon lex-database))
-					;(print (format t "link ~a ~a" sub-lexicon lexicon))
   (if (eq sub-lexicon lexicon)
       (error "cannot link a lexicon to itself!"))
   (with-slots (extra-lexicons) lexicon
@@ -64,29 +56,19 @@
       (unless 
 	  (and
 	   (member sub-lexicon extra-lexicons)
-	   (member lexicon part-of)
-	   )
+	   (member lexicon part-of))
 	(push lexicon part-of)
-	(push sub-lexicon extra-lexicons)
-	)
-      )
-    )
+	(push sub-lexicon extra-lexicons))))
   ; cache becomes invalid if lexicon is altered
-  (clear-cache lexicon)  
-  )
+  (clear-cache lexicon))
 
-;: remove sub lexicon
 (defmethod unlink ((sub-lexicon lex-database) (lexicon lex-database))
   (with-slots (extra-lexicons) lexicon
     (with-slots (part-of) sub-lexicon
       (setf part-of (remove lexicon part-of))
-      (setf extra-lexicons (remove sub-lexicon extra-lexicons))
-      )
-    )
+      (setf extra-lexicons (remove sub-lexicon extra-lexicons))))
   ; cache becomes invalid if lexicon is altered
-  (clear-cache lexicon)
-  )
-
+  (clear-cache lexicon))
 
 ;;;
 ;;; given the orthography (string in all upper case), look up all lexical
@@ -470,26 +452,24 @@
 ;;;  General lexicon methods
 ;;;
 
+;;; null values now also cached
 (defmethod lookup-word :around ((lexicon lex-database) orth &key (cache t))
+  (let ((hashed (gethash orth (slot-value lexicon 'lexical-entries))))
   (cond 
-   ;:use cached value if available
-   ((and (not *no-cache*) (gethash orth (slot-value lexicon 'lexical-entries))))
-   ;:use lexicon(s)
+   (hashed
+    (if (eq hashed 'EMPTY)
+	(setf hashed nil))
+    (if *verbose-lex-lookup-word* (format *trace-output* "~%lookup-word(~a): [HASHED] ~a~%~a" orth (length hashed) hashed))
+    hashed)
    (t 
-    (let* (
-	   ;:get vals from main lexicon
-	   (value (if (next-method-p) (call-next-method)))
+    (let* ((value (if (next-method-p) (call-next-method)))
 	   (mode (extra-mode lexicon))
-	   ;bmw
-	   (active-lexicons (extra-lexicons lexicon))
 	   (extra 
 	    ;:if no vals in lexicon (or union mode) ...
 	    (when (or (null value) (eq mode :union))
 	      (loop
 		  with result = nil
-		  ;:try sublexicon
-		  for lexicon in (extra-lexicons lexicon)
-		
+		  for lexicon in (extra-lexicons lexicon)		
 		  for value = (and lexicon (lookup-word lexicon orth :cache nil))
 		  ;:shadow mode returns first set of vals found
 		  when (and value (eq mode :shadow)) do
@@ -497,12 +477,25 @@
 		  else when value do
 		    (setf result (nconc result value))
 		  finally (return result))))
-	   ;:append extra results to value
 	   (value (nconc value extra)))
       ;:if caching, add entry to cache...
-      (when (and cache value)
-	(setf (gethash orth (slot-value lexicon 'lexical-entries)) value))
-      value))))
+      (when cache
+	(setf (gethash orth (slot-value lexicon 'lexical-entries)) 
+	  (if value value 'EMPTY)))
+      (if *verbose-lex-lookup-word* (format *trace-output* "~%lookup-word(~a): ~a~%~a" orth (length value) value))
+      value)))))
+
+;;; look in lexicons and sublexicons too
+(defmethod lex-words :around ((lexicon lex-database))
+  (let* ((words (if (next-method-p) (call-next-method)))
+	 (extra 
+	    (loop
+					;:try sublexicon
+		for lexicon in (extra-lexicons lexicon)
+		for extra-words = (and lexicon (lex-words lexicon))
+		collect extra-words))
+	 (words (cons words extra)))
+    (remove-duplicates (mapcan #'(lambda (x) x) words) :test #'equal)))
 
 (defmethod set-lexical-entry ((lexicon lex-database) orth id new-entry)
   (store-psort lexicon id new-entry orth)
@@ -526,11 +519,11 @@
 			  :id id
 			  :full-fs entry)))
 
+;;; todo: cache
 (defmethod read-psort :around ((lexicon lex-database) id &key (cache t))
-  (declare (ignore cache))
   (cond ((gethash id (slot-value lexicon 'temp-psorts)))
 	((and (next-method-p) (call-next-method)))
-	(t (some #'(lambda (lex) (read-psort lex id :cache nil))
+	(t (some #'(lambda (lex) (read-psort lex id :cache cache))
 		 (extra-lexicons lexicon)))))
 
 (defmethod collect-expanded-lex-ids :around ((lexicon lex-database))
@@ -549,7 +542,6 @@
 	  (setf (lex-or-psort-full-fs entry) nil)
 	(call-next-method)))))
 
-;:clear lexicon along with its extra lexicons
 (defmethod clear-lex :around ((lexicon lex-database) &optional no-delete)
   (when (fboundp 'clear-generator-lexicon)
     (funcall 'clear-generator-lexicon))
@@ -559,22 +551,18 @@
   (when (fboundp 'clear-lexicon-indices)
     (funcall 'clear-lexicon-indices))
   (call-next-method)
-   ;:unlink from sub lexicons
+   ;:unlink from sub-lexicons
   (mapcar 
    #'(lambda (lex) 
        (unlink lex lexicon)
-       ;:clear sub lexicon if part of no other lexicon
+       ;:clear sub-lexicon if poss
        (if (null (part-of lex))
-	   (clear-lex lex no-delete)
-	 )
-       ) 
-   (extra-lexicons lexicon)
-   )  
-  ;:unlink from super lexicons
+	   (clear-lex lex no-delete))) 
+   (extra-lexicons lexicon))  
+  ;:unlink from super-lexicons
   (mapcar #'(lambda (lex) (unlink lexicon lex)) (part-of lexicon))
   (unless no-delete
-    (delete-temporary-lexicon-files))
-  )
+    (delete-temporary-lexicon-files lexicon)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -627,12 +615,13 @@
 	  (read-psort-index-file)
 	(error (condition)
 	  (format t "~%Error: ~A" condition)
-	  (delete-temporary-lexicon-files)
+	  (delete-temporary-lexicon-files lexicon)
 	  (setf ok nil)))
       (cond (ok (format t "~%Cached lexicon read")
 		t)
 	    (t (format t "~%Cached lexicon missing or out-of-date: reading lexicon source files")
 	       nil)))))
+
 
 (defmethod store-cached-lex ((lexicon simple-lex-database))
   ;; assume that this is only going to be called after a user has
@@ -706,6 +695,7 @@
 	(list orth current-file-end))))
   id)
 
+;;; todo: cache
 (defmethod read-psort ((lexicon simple-lex-database) id &key (cache t))
   (declare (ignore cache))
   (with-slots (psorts) lexicon
@@ -810,14 +800,13 @@
                                      lexical-entries))))))
       (open-psorts-stream *lexicon*))))
 
-(defun delete-temporary-lexicon-files nil
+(defun delete-temporary-lexicon-files-aux nil
   (when (and *psorts-temp-file*
 	     (probe-file *psorts-temp-file*))
     (delete-file *psorts-temp-file*))
   (when (and *psorts-temp-index-file*
 	     (probe-file *psorts-temp-index-file*))
     (delete-file *psorts-temp-index-file*)))
-
 
 (defun lexicon-to-xml (&key (stream t) file)
   (loop
@@ -839,5 +828,3 @@
            stem=\"~(~{~a~^ ~}~)\" status=\"lexicon\"/>~%"
          id type stem)
       finally (when file (close stream))))
-
-
