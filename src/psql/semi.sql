@@ -13,7 +13,9 @@ DROP TABLE semi_extra CASCADE;
 CREATE TABLE semi_pred (
  lex_id text NOT NULL,
  pred_id text NOT NULL,
- frame_id int NOT NULL
+ frame_id int NOT NULL,
+ pred_txt text NOT NULL,
+ string_p boolean NOT NULL
 );
 
 CREATE TABLE semi_frame (
