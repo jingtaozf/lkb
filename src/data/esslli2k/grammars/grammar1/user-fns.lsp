@@ -75,8 +75,7 @@ FIRST))))
                                         (create-path-from-feature-list 
                                          *orth-path*)                    
                                         :rhs
-                                        (make-u-value 
-                                         :types (list orth)))))))
+                                        (make-u-value :type orth))))))
       (when indef
         (setf indef (create-wffs indef))
         (when indef
