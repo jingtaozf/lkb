@@ -1303,27 +1303,32 @@ in their restrictors.
 	    (dolist (qeq (psoa-h-cons mrsstruct))
 	      (when (eq marg-value (var-id (hcons-scarg qeq)))
 		(return (values qeq marg-fvp)))))))))
-	  
+
+(defparameter *contained-var-store* nil) 
 
 (defun order-quantifiers (mrsstruct q-rels top-qeq)
   ;;; the quantifiers have had their restrictors fixed.
   ;;; for every quantifier we find the variable it binds
   ;;; and all variables in its restrictor.  We then attempt to find
   ;;; a valid ordering - if we can't, then we can't scope.
-  (let ((q-var-struct (loop for q in q-rels
+  (setf *contained-var-store* nil) 
+  ;; prevent loops ...
+  (let ((q-var-struct (catch 'vup
+			  (loop for q in q-rels
 			   collect
 			     (let ((bv (get-bv-value q)))
 			       (cons q
 				     (remove bv 
 					     (find-contained-variables 
-					      q mrsstruct)))))))
+					      q mrsstruct))))))))
     ;;; (pprint q-var-struct)
-    (let* ((qs (catch 'qup (q-order q-var-struct nil)))
-	   (ordered-rels (nreverse qs)))
-      (when ordered-rels 
-	(link-q-bodies ordered-rels top-qeq))
+    (when q-var-struct
+      (let* ((qs (catch 'qup (q-order q-var-struct nil)))
+	     (ordered-rels (nreverse qs)))
+	(when ordered-rels 
+	  (link-q-bodies ordered-rels top-qeq))
 ;;;      (pprint ordered-rels)
-      ordered-rels)))
+	ordered-rels))))
 
 (defun link-q-bodies (qlist top-qeq)
     (let* ((first-q (car qlist))
@@ -1383,8 +1388,11 @@ in their restrictors.
 		       vars :test #'equal))))))
     vars))
 
-
 (defun find-contained-variables (rel mrsstruct)
+  (when (member rel *contained-var-store*)
+    (struggle-on-error "MRS is not a tree or a quantifier is not free")
+    (throw 'vup nil))
+  (push rel *contained-var-store*)
   (let ((normal-vars (get-normal-vars rel))
 	(hargs (get-full-handel-args rel)))
     (dolist (harg hargs)
