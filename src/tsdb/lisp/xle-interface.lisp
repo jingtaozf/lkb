@@ -80,13 +80,12 @@
   ;;
   (multiple-value-bind (return condition)
       (#-:debug ignore-errors #+:debug progn
-       (let (tgc tcpu treal conses symbols others utcpu graph solutions)
+       (let (tgc tcpu utcpu treal graph solutions)
          (tsdb::time-a-funcall
           #'(lambda () (setf graph (parse string trace)))
           #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
-              (declare (ignore ignore))
-              (setf tgc (+ tgcu tgcs) tcpu (+ tu ts) treal tr
-                    conses (* scons 8) symbols (* ssym 24) others sother)))
+              (declare (ignore scons ssym sother ignore))
+              (setf tgc (+ tgcu tgcs) tcpu (+ tu ts) treal tr)))
          (let* ((*print-pretty* nil) (*print-level* nil) (*print-length* nil)
                 (readings 
 		 (tsdb::time-a-funcall
@@ -100,9 +99,8 @@
 		      (declare (ignore scons ssym sother ignore))
 		      (setf utcpu (- (+ tu ts) (+ tgcu tgcs)))
 		      (incf treal tr)))))
-           (pairlis '(:others :symbols :conses :treal :total :tcpu :tgc
-                      :readings :results)
-                    (list others symbols conses treal (+ tcpu utcpu) tcpu tgc
+           (pairlis '(:treal :total :tcpu :tgc :readings :results)
+                    (list treal (+ tcpu utcpu) tcpu tgc
                           readings
                           (loop
                               with nresults = (if (<= nresults 0)
