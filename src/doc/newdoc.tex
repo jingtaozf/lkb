@@ -6,19 +6,30 @@
 
 \usepackage{latexsym}
 \usepackage{times}
+\usepackage{mathptm}
 % use the time fonts for better results with
 % pdf (CM fonts don't index correctly)
 
 \ifx\pdfoutput\undefined
   \usepackage[dvips]{hyperref}
 \else
-  \usepackage[pdftex,colorlinks]{hyperref}
+  \usepackage[pdftex,colorlinks,pdfstartview=Fit,b5paper]{hyperref}
   \pdfinfo{ 
     /Title (The (new) LKB system) 
     /Author (Ann Copestake)
     /Subject ()
     /Keywords ()
   }
+
+\pagestyle{empty}
+
+\setlength{\paperwidth}{8in}
+\setlength{\paperheight}{6in}
+\setlength{\textwidth}{7in}
+\setlength{\textheight}{5in}
+\setlength{\topmargin}{-1in}  
+\setlength{\evensidemargin}{-.5in}
+\setlength{\oddsidemargin}{-.5in}
 \fi
 
 \usepackage{graphicx}
@@ -30,15 +41,18 @@
 \input thedefs1
 %\input thedefs
 
-\setlength{\evensidemargin}{0in}
-\setlength{\oddsidemargin}{0in}
-\setlength{\textwidth}{6.5in}
-\setlength{\topmargin}{-0.5in}
-\setlength{\textheight}{9in}
+%\setlength{\evensidemargin}{0in}
+%\setlength{\oddsidemargin}{0in}
+%\setlength{\textwidth}{6.5in}
+%\setlength{\topmargin}{-0.5in}
+%\setlength{\textheight}{9in}
+
+
+
 
 \newcommand{\itsdb}{{\sf \lbrack incr tsdb()\rbrack}}
 
-\newcommand{\lispcommand}[1]{\noindent\rm #1}%
+\newcommand{\lispcommand}[1]{\noindent\textrm{#1}}%
 \newcommand{\ldescnl}{\\}
 \newenvironment{error}%
 {\begin{quote}
@@ -53,27 +67,27 @@
 {\end{quote}
 }
 
-\newcommand{\filename}[1]{{\tt #1}}
-\newcommand{\functionname}[1]{{\tt #1}}
-\newcommand{\lkbentryname}[1]{{\tt #1}}
-\newcommand{\lkbparam}[1]{{\tt #1}}
+\newcommand{\filename}[1]{\texttt{#1}}
+\newcommand{\functionname}[1]{\texttt{#1}}
+\newcommand{\lkbentryname}[1]{\texttt{#1}}
+\newcommand{\lkbparam}[1]{\texttt{#1}}
 \newcommand{\lkbmenucommand}{{\bf}}
-\newcommand{\newterm}[1]{{\it #1}}
+\newcommand{\newterm}[1]{\emph{#1}}
 
 % commands for figures
-\newcommand{\figtype}[1]{{\bf \strut #1}}
-\newcommand{\figfeat}[1]{{\sc \strut #1}}
+\newcommand{\figtype}[1]{\textbf{\strut #1}}
+\newcommand{\figfeat}[1]{\textsc{\strut #1}}
 \newcommand{\nodedot}{\circle*{5}}
 
 %\newcommand{\semnest}[1]{AVM omitted because of semantic nest size}
 \newcommand{\semnest}[1]{#1}
 
 \begin{document}
-\vspace*{1in}
+\vspace*{.5in}
 \begin{center}
 {\Huge\bf The (new) LKB system}\\[0.2in]
-Version 5.2\\[0.2in]
-\today\\[1in]
+Version 5.2\\%[0.2in]
+\today\\[0.2in]%[1in]
 system development by\\[0.2in]
 {\Large Ann Copestake, John Carroll, Rob Malouf, Stephan Oepen\\ 
 and others}\\[0.5in]
@@ -81,9 +95,11 @@ documentation (mainly) written by\\[0.2in]
 {\Large Ann Copestake}\\
 {\tt aac@csli.stanford.edu}\\[0.5in]
 \end{center}
+\vfil
 This document describes the new version of the LKB system:
 a grammar and lexicon development environment for use with
 constraint-based linguistic formalisms.
+\clearpage
 
 \tableofcontents
 
@@ -518,7 +534,7 @@ This will create the new directory and various subdirectories.
 It may take a few minutes to do this.  At this point, you have 
 your own local copy of the LKB system.  Instructions on using
 cvs are on the CVS Website:
-\href{http://www.loria.fr/~molli/cvs/doc/cvs_toc.html}{http://www.loria.fr/~molli/cvs/doc/cvs_toc.html}.
+\href{http://www.loria.fr/~molli/cvs-index.html}{http://www.loria.fr/~molli/cvs-index.html}.
 
 Now follow the instructions in \S\ref{acl-src} to compile the
 files, and in \S\ref{acl-emacs} to start the LKB system from within
@@ -702,7 +718,9 @@ Figure~\ref{lkbtop-unix}.
 To continue, see Chapter~\ref{firstsession}.
 \begin{figure}
 %\epsfbox[0 0 400 100]{figs/lkbtop-unix.ps}
+\begin{center}
 \includegraphics[width=400bp]{figs/lkbtop-unix}
+\end{center}
 \caption{The LKB interaction window in ACL/CLIM}
 \label{lkbtop-unix}
 \end{figure}
@@ -1016,7 +1034,9 @@ The ACL/CLIM version is shown in Figure~\ref{lunix2}, the MCL version
 is on the top menu-bar.
 \begin{figure}
 %\epsfbox[0 0 400 100]{figs/lkbtop-unix.ps}
+\begin{center}
 \includegraphics[width=400bp]{figs/lkbtop-unix}
+\end{center}
 \caption{The LKB interaction window in ACL/CLIM}
 \label{lunix2}
 \end{figure}
@@ -1080,13 +1100,17 @@ possible you have selected another file instead of script --- try again.
 \begin{figure}
 %\epsfxsize=3in
 %\epsfbox[0 0 400 500]{figs/loadscript.ps}
+\begin{center}
 \includegraphics[width=3in]{figs/loadscript}
+\end{center}
 \caption{Selecting the script file in ACL/CLIM}
 \label{loadscript}
 \end{figure}
 \begin{figure}
 %\epsfbox[0 0 400 250]{figs/loadmess.ps}
+\begin{center}
 \includegraphics[width=3in]{figs/loadmess}
+\end{center}
 \caption{Loading a file}
 \label{loadmess}
 \end{figure}
@@ -1096,7 +1120,9 @@ and a type hierarchy window is displayed (as shown in Figure~\ref{typehier}).
 \begin{figure}
 %\epsfxsize=3in
 %\epsfbox[0 0 400 500]{figs/typehier.ps}
+\begin{center}
 \includegraphics[width=3in]{figs/typehier}
+\end{center}
 \caption{The type hierarchy window}
 \label{typehier}
 \end{figure}
@@ -1128,8 +1154,10 @@ as shown in Figure~\ref{ne-list}.
 \begin{figure}
 %\epsfxsize=1in
 %\epsfbox[0 0 200 200]{figs/ne-list.ps}
-\includegraphics[width=1in]{figs/ne-list}
+\begin{center}
+\includegraphics[width=2in]{figs/ne-list}
 \caption{An expanded type constraint window}
+\end{center}
 \label{ne-list}
 \end{figure}
 This window shows the constraint on type {\type ne-list}: it has
@@ -1178,7 +1206,9 @@ can be a feature structure.
 \begin{figure}
 %\epsfxsize=1in
 %\epsfbox[0 0 200 400]{figs/grule.ps}
-\includegraphics[width=1in]{figs/grule}
+\begin{center}
+\includegraphics[width=3in]{figs/grule}
+\end{center}
 \caption{A complex type constraint}
 \label{grule}
 \end{figure}
@@ -1250,7 +1280,9 @@ and choosing the menu option {\lkbmenucommand Shrink/expand}).
 \begin{figure}
 %\epsfxsize=4in
 %\epsfbox[0 0 400 800]{figs/rulefs.ps}
-\includegraphics[width=4in]{figs/rulefs}
+\begin{center}
+\includegraphics[height=4in]{figs/rulefs}
+\end{center}
 \caption{The head specifier rule}
 \label{rulefs}
 \end{figure}
@@ -1276,14 +1308,18 @@ large tree immediately.
 \begin{figure}
 %\epsfxsize=2in
 %\epsfbox[0 0 400 100]{figs/kimsleeps.ps}
-\includegraphics[width=2in]{figs/kimsleeps}
+\begin{center}
+\includegraphics[width=3in]{figs/kimsleeps}
+\end{center}
 \caption{The parse result window in ACL/CLIM}
 \label{kimsleeps}
 \end{figure}
 \begin{figure}
 %\epsfxsize=2in
 %\epsfbox[0 0 400 400]{figs/ptree.ps}
-\includegraphics[width=2in]{figs/ptree}
+\begin{center}
+\includegraphics[width=3in]{figs/ptree}
+\end{center}
 \caption{A parse tree window}
 \label{ptree}
 \end{figure}
@@ -1303,7 +1339,9 @@ shown in Figure~\ref{rulefs}.
 \begin{figure}
 %\epsfxsize=4in
 %\epsfbox[0 0 400 800]{figs/bigfs.ps}
-\includegraphics[width=4in]{figs/bigfs}
+\begin{center}
+\includegraphics[height=4in]{figs/bigfs}
+\end{center}
 \caption{A feature structure representing the sentence {\it Kim sleeps}}
 \label{bigfs}
 \end{figure}
@@ -1532,6 +1570,7 @@ grammars defined in terms of atomic symbols.  For instance,
 Figure~\ref{smplatomic} shows a very simple grammar and lexicon,
 with just two grammar rules and six lexical entries.
 \begin{figure}
+\begin{center}
 {\small
 \begin{minipage}[t]{3in}
 \begin{verbatim}
@@ -1556,6 +1595,7 @@ sleep: VP
 
 \end{verbatim}
 \end{minipage}}
+\end{center}
 \caption{A tiny grammar encoded using atomic symbols}
 \label{smplatomic}
 \end{figure}
@@ -2494,7 +2534,9 @@ process of making a structure well-formed, as we'll discuss in \S\ref{easycons}.
 \end{center}
 \caption{Graph representation of a feature structure}
 \label{introfs}
+\end{figure}
 %
+\begin{figure}
 \begin{center}
 {\tiny $\avmplus{\att{phrase}\\
 \attvaltyp{CATEGORY}{np}\\
@@ -2509,7 +2551,9 @@ process of making a structure well-formed, as we'll discuss in \S\ref{easycons}.
 \end{center}
 \caption{AVM representation of a feature structure}
 \label{introavm}
+\end{figure}
 %
+\begin{figure}
 \begin{center}
 \begin{verbatim}
 example := phrase &
@@ -3752,7 +3796,7 @@ relevant in the LKB only with respect to the treatment of defaults, which we
 are not going to discuss in this chapter.
 \begin{figure}
 \begin{center}
-\setlength{\unitlength}{0.8in}
+\setlength{\unitlength}{1in}
 \begin{picture}(2.5,4.5)(-0.25,-0.25)
 \thicklines
 \put(1,4){\makebox(0,0){{\tiny $\avmplus{\att{*top*}}$}}}
@@ -5054,12 +5098,12 @@ $\pi$ such that $q = \delta(\pi,q_{0})$ for all $q \in Q$
 Only nodes without features can be atomic values, so that if
 $\alpha(q)$ is defined then $\delta(f,q)$ is undefined for every $f
 \in \dom{Feat}$
-{\rm (But note that some nodes without
+\textrm{(But note that some nodes without
 features may not have values.)}
 \item [Acyclicity] The resulting graph is acyclic in that
 there is no path $\pi$ and non-empty path $\pi'$ such that
 $\delta(\pi,q_{0}) = \delta(\pi \cdot \pi',q_{0})$. \\
-{\rm (Although it is not formally 
+\textrm{(Although it is not formally 
 necessary to rule out cycles in untyped or typed
 feature structures, doing so makes some definitions 
 simpler and the implementation more straightforward and efficient.)}
@@ -5279,11 +5323,11 @@ But even if $\bot$ is added to make
 $\langle {\sf TYPE},\sqsubseteq\rangle$ a lattice, 
 this lattice need not be distributive.
 For example, given the type hierarchy in Figure~\ref{itypehier}
-$({\rm \type intrans\_adj} \join {\rm \type card\_num}) 
-\meet {\rm \type verb\_syn} 
-= {\rm \type intrans\_verb}$ 
-but $({\rm \type intrans\_adj} \meet {\rm \type verb\_syn}) 
-\join ({\rm \type card\_num} \meet {\rm \type verb\_syn}) = \bot$.
+$(\textrm{\type intrans\_adj} \join \textrm{\type card\_num}) 
+\meet \textrm{\type verb\_syn} 
+= \textrm{\type intrans\_verb}$ 
+but $(\textrm{\type intrans\_adj} \meet \textrm{\type verb\_syn}) 
+\join (\textrm{ \type card\_num} \meet \textrm{ \type verb\_syn}) = \bot$.
 Although meet will be taken as corresponding to conjunction, 
 join does not correspond
 to disjunction.  
