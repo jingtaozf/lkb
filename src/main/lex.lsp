@@ -522,7 +522,9 @@
 		  for extra-ids = (and lexicon (collect-psort-ids lexicon :cache cache :recurse recurse))
 		  collect extra-ids)))
 	 (ids (cons ids extra)))
-    (remove-duplicates (mapcan #'(lambda (x) x) ids) :test #'equal)))
+    (remove-duplicates 
+     (apply #'append (mapcar #'(lambda (x) x) ids)) 
+     :test #'equal)))
 
 (defmethod set-lexical-entry ((lexicon lex-database) orth id new-entry)
   (store-psort lexicon id new-entry orth)
