@@ -202,6 +202,12 @@
   ;;; e.g. by calling user-homedir-pathname
   ;;; unfortunately this doesn't do what we want for MCL
   ;;; so this hardwires the pathname
+  (or
+   #+(and :allegro :mswindows)
+   (if (system:getenv "TMP")
+     (ignore-errors (parse-namestring (system:getenv "TMP")))
+     (when (system:getenv "TEMP")
+       (ignore-errors (parse-namestring (system:getenv "TEMP")))))
   (let ((pathname  #-mcl (user-homedir-pathname)
                    #+mcl (make-pathname :directory "Macintosh HD"))
         (tmp-dir '("tmp")))
@@ -209,7 +215,7 @@
      :host (pathname-host pathname) :device (pathname-device pathname)
      :directory (append (pathname-directory pathname) tmp-dir)
      :name (pathname-name pathname) :type (pathname-type pathname)
-     :version (pathname-version pathname))))
+     :version (pathname-version pathname)))))
 
 (defun set-temporary-lexicon-filenames nil
   ;;; grammars can redefine this to use different names

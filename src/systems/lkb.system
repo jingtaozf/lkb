@@ -28,7 +28,9 @@
 ;;;   - :ltemplates -- lexical templates: see `src/main/ltemplates.lsp';
 ;;;   - :pooling -- enable recycling of high-frequency objects (dags, for now);
 ;;;   - :packing -- enable code for chart packing under (partial) subsumption;
-;;; 
+;;;   - :vanilla -- run passive parser in pure CKY mode: disable `left-corner'
+;;;                 optimization, rule filter, and quick check.
+;;;
 
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
            #-:ansi-eval-when (load eval compile)

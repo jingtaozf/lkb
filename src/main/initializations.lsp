@@ -81,6 +81,8 @@
   (let ((building-image-p (find-symbol "*BUILDING-IMAGE-P*" :make)))
     (unless (and building-image-p (boundp building-image-p)
                  (symbol-value building-image-p))
+      #+:allegro
+      (tpl:setq-default *package* (find-package :lkb))
       (let ((*package* (find-package #+:clim :clim-user #-:clim :lkb)))
         #+:clim
         (clim-user::set-up-lkb-interaction)

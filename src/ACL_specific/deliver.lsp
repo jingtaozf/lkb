@@ -16,16 +16,16 @@
    :opt-speed 3
    :newspace (* 1024 1024 3)
    :oldspace (* 1024 1024 10)
-   :lisp-heap-size (* 1024 1024 1024)
+   :lisp-heap-size (* 1024 1024 #-:mswindows 1024 #+:mswindows 768)
    ;;
-   ;; change heap placement to allow immense newspace growth (21-may-00   -  oe)
+   ;; change heap placement to allow immense newspace growth (21-may-00  -  oe)
    ;;
    #+:linux86 :lisp-heap-start #+:linux86 "1040M"
    #+:linux86 :c-heap-start #+:linux86 "2816M"
    #+(and :sparc :solaris2) :c-heap-start #+(and :sparc :solaris2) #xe0000000
 
    :runtime :standard 
-
+   #+(version>= 6 0) :runtime-bundle #+(version>= 6 0) t
    :include-clim t
    :include-compiler t
 

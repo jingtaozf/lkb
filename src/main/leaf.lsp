@@ -73,8 +73,9 @@
 ;;; For mysterious reasons, the fix of setting mode binary 
 ;;; for windows doesn't fix the leaf type use of CDB although it
 ;;; does fix the lexicon.  More investigation needed.
+;;; --- we believe the new, binary-only CDB implementation does solve this
+;;; problem.                                        (19-jan-00  -  oe@yy)
 
-#+:mswindows
 (setf *leaf-types* (make-instance 'trivial-leaf-database))
 
 (defmethod read-cached-leaf-types ((leaf-db trivial-leaf-database) filenames)
@@ -109,7 +110,6 @@
   ((leaf-db :initform nil :accessor leaf-db)
    (ready-p :initform nil :accessor leaf-db-ready-p)))
 
-#-:mswindows
 (setf *leaf-types* (make-instance 'cdb-leaf-database))
 
 (defmethod read-cached-leaf-types ((leaf-db cdb-leaf-database) filenames)

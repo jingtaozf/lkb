@@ -52,6 +52,8 @@
   (export '(open-write close-write open-read close-read write-record 
 	    read-record all-keys)))
 
+(defparameter *cdb-ascii-p* t)
+
 (defstruct (cdb)
   (stream nil)
   (num 0)
@@ -66,7 +68,7 @@
 
 (defun write-fixnum (num stream)
   (dotimes (x 4)
-    (write-char (code-char (ldb (byte 8 0) num)) stream)
+    (write-byte (ldb (byte 8 0) num) stream)
     (setq num (ash num -8)))
   (unless (zerop num)
     (error "Overflow in CDB!")))
@@ -78,8 +80,8 @@
 	(c nil))
     (loop for i from 0 to 24 by 8
 	do
-	  (setq c (read-char stream))
-	  (setq num (+ num (ash (char-code c) i))))
+	  (setq c (read-byte stream))
+	  (setq num (+ num (ash c i))))
     num))
 
 ;; The hash function, the same as the one used by D. J. Bernstein.  It might
@@ -102,7 +104,7 @@
       ;; Open database file
       (handler-case
 	  (setf stream (open filename
-                             #+:mswindows :mode #+:mswindows :binary         
+                             :element-type 'unsigned-byte
 			     :direction :output
 			     :if-exists :supersede
 			     :if-does-not-exist :create))
@@ -110,11 +112,10 @@
 	  (format t "~%~A" condition)
 	  (error "~%Can't open database file ~A" filename)))
       ;; Write blank header
-      (unless (write-string (make-string 8 :initial-element #\space) stream)
-	;; was (file-position stream 8) - but stream is zero length so
-        ;; it has to write out padding and mcl appears to try to use
-        ;; write-byte which won't work on a character stream
-        (close stream)
+      (loop
+          for i from 1 to 8
+          do (write-byte 0 stream))
+      (unless (file-position stream :end)
 	(error "~%Error writing database file ~A" filename)))
     (setf (cdb-mode cdb) :output)
     cdb))
@@ -135,8 +136,8 @@
     ;; Write record
     (write-fixnum (length key) stream)
     (write-fixnum (length data) stream)
-    (write-string key stream)
-    (write-string data stream)))
+    (cdb-write-string key stream)
+    (cdb-write-string data stream)))
 
 ;; Write out hash tables and close a database
 
@@ -181,8 +182,8 @@
 	;; Write header and close.  The file header is the string "CDB", a
 	;; null byte, and a four-byte pointer to the table of tables.
 	(file-position stream 0)
-	(write-string "CDB" stream)
-	(write-char (code-char 0) stream)
+	(cdb-write-string "CDB" stream t)
+	(write-byte 0 stream)
 	(write-fixnum pos stream)
 	(setf (cdb-mode cdb) nil)
 	(setf stream (close stream))))))
@@ -195,17 +196,16 @@
       ;; Open database file
       (handler-case
 	  (setf stream (open filename
-                             #+:mswindows :mode #+:mswindows :binary
+                             :element-type 'unsigned-byte
 			     :direction :input
 			     :if-does-not-exist :error))
 	(error (condition)
 	  (error "~%Error ~A in opening database file ~A" 
 		 condition filename)))
       ;; Read header
-      (let ((magic (make-string 3)))
-	(read-sequence magic stream)
+      (let ((magic (cdb-read-string 3 stream t)))
 	(unless (and (equal magic "CDB")
-		     (zerop (char-code (read-char stream))))
+		     (zerop (read-byte stream)))
 	  (setf stream (close stream))
 	  (error "~%Invalid CDB database ~A" filename))
 	;; Read index
@@ -222,16 +222,28 @@
     cdb))
 
 
-#+(or :mcl :cmu)
-(eval-when (compile load eval)
-  ;; read-sequence isn't present in MCL4.0 or CMUCL-18a
-  (unless (fboundp 'common-lisp::read-sequence)
-     (defun cdb::read-sequence (s stream)
-       ;; read (length s) chars into string s from stream
-       (dotimes (n (length s))
-         (setf (char s n) (read-char stream)))
-       s)))
+(defun cdb-read-string (size stream &optional (asciip *cdb-ascii-p*))
+  (loop
+      with string = (make-string size)
+      for i from 0 to (- size 1)
+      for char = (code-char
+                  (if asciip
+                    (read-byte stream)
+                    (code-char (+ (ash (read-byte stream) 8) 
+                                  (read-byte stream)))))
+      do
+        (setf (char string i) char)
+      finally (return string)))
 
+(defun cdb-write-string (string stream &optional (asciip *cdb-ascii-p*))
+  (loop
+      for i from 0 to (- (length string) 1)
+      for code = (char-code (elt string i))
+      when asciip do (write-byte code stream)
+      else do
+        (multiple-value-bind (high low) (floor code 256)
+          (write-byte high stream)
+          (write-byte low stream))))
 
 ;; If the file is open for reading, close it.  If not, don't do anything.
 
@@ -246,10 +258,10 @@
 (defun grab-record (pos stream)
   (let ((old (file-position stream)))
     (file-position stream pos)
-    (let ((key (make-string (read-fixnum stream)))
-	  (data (make-string (read-fixnum stream))))
-      (read-sequence key stream)
-      (read-sequence data stream)
+    (let* ((klength (read-fixnum stream))
+           (dlength (read-fixnum stream))
+           (key (cdb-read-string klength stream))
+           (data (cdb-read-string dlength stream)))
       (file-position stream old)
       (cons key data))))
 
@@ -312,20 +324,17 @@
       (file-position stream 8)
       (loop while (< (file-position stream) end)
 	  do 
-	    (let ((key (make-string (read-fixnum stream)))
-		  (data-len (read-fixnum stream)))
-	      (read-sequence key stream)
+	    (let* ((klength (read-fixnum stream))
+                   (dlength (read-fixnum stream))
+                   (key (cdb-read-string klength stream)))
 	      #-(and :allegro (version>= 5 0))
 	      (setf (gethash key keys) t)
 	      #+(and :allegro (version>= 5 0))
 	      (excl:puthash-key key keys)
-	      (dotimes (x data-len)
-		(read-char stream))))
+	      (dotimes (x dlength)
+		(read-byte stream))))
       (maphash #'(lambda (x y) 
 		   (declare (ignore y))
 		   (push x key-list))
 	       keys)
       key-list)))
-
-	    
-	    
