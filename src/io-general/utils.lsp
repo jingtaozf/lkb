@@ -108,7 +108,7 @@
         (if rule-entry (rule-full-fs rule-entry)
           (let ((lex-rule-entry (get-lex-rule-entry fs-id)))
             (if lex-rule-entry (rule-full-fs lex-rule-entry)
-              (progn (eval-possible-leaf-type fs-id)
+              (progn (eval-possible-leaf-type *leaf-types* fs-id)
                      (let ((type (get-type-entry fs-id)))
                        (if type (tdfs-of fs-id)))))))))))
 

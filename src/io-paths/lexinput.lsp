@@ -69,17 +69,18 @@
       (for file-name in (reverse *lex-file-list*)
            do
            (if (eql *lkb-system-version* :page)
-             (read-tdl-lex-file-aux file-name overwrite-p)
+	       (read-tdl-lex-file-aux file-name overwrite-p)
              (read-lex-file-aux file-name overwrite-p))
            (setf overwrite-p nil))
       (when *template-file-list*
         (reload-template-files))
       (when *psort-file-list*
         (reload-psort-files))
+      (store-cached-lex *lexicon*)
       (format t "~%Reload complete"))
     (progn
       #-:tty(format t "~%Use Load Complete Grammar instead")
-     #+:tty(format t "~%Use (read-script-file-aux file-name) instead"))))
+      #+:tty(format t "~%Use (read-script-file-aux file-name) instead"))))
 
 (defun reload-template-files nil
   (setf *syntax-error* nil)

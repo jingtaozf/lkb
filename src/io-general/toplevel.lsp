@@ -165,7 +165,7 @@
       (when res
         (let ((type (car res))
               (show-all-p (cadr res)))
-          (eval-possible-leaf-type type)
+          (eval-possible-leaf-type *leaf-types* type)
           (let ((type-entry (get-type-entry type)))
             (unless type-entry
                (format t "~%Type ~A is not defined" type)
