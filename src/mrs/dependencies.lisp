@@ -199,17 +199,9 @@
       (setf (gethash variable %eds-representatives-table%)
         (cond
          ((handle-var-p variable)
-          ;;
-          ;; _fix_me_
-          ;; needs transitive treatment for `kim slept while sandy arrived',
-          ;; when messages are bleached: the subordinating conjunction takes a
-          ;; handle argument, which is qeq-ed with a message handle, whose SOA
-          ;; is qeq-ed once again.                           (11-may-03; oe)
-          ;;
           (loop
-              with foo = (handle-var-name variable)
-              with name = (let ((bar (ed-variable-equivalence foo)))
-                            (if bar (handle-var-name bar) foo))
+              with alternate = (ed-variable-equivalence variable)
+              with name = (handle-var-name (or alternate variable))
               with qeq = (ed-hcons-qeq name)
               for ed in (eds-relations %eds-eds%)
               for handle = (ed-handle ed)
@@ -228,7 +220,9 @@
                        (append
                         (when (handle-var-p qeq)
                           (ed-find-representative qeq nil))
-                          candidates)))
+                        (when (var-p alternate)
+                          (ed-find-representative alternate nil))
+                        candidates)))
                     candidates))))
          ((var-p variable)
           (loop
@@ -290,8 +284,10 @@
       thereis 
         (when (equal name scarg) (hcons-outscpd hcons))))
 
-(defun ed-variable-equivalence (name)
-  (gethash name %eds-equivalences%))
+(defun ed-variable-equivalence (variable)
+  (if (var-p variable)
+    (gethash (var-name variable) %eds-equivalences%)
+    (gethash variable %eds-equivalences%)))
 
 (defun ed-quantifier-p (ed)
   (let ((flist (rel-flist (ed-raw ed))))
