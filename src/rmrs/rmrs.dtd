@@ -1,0 +1,50 @@
+<!ELEMENT rmrs-list (rmrs)*>
+
+<!ELEMENT rmrs (label, (ep|rarg|ing|hcons)*)>
+
+<!ELEMENT ep ((realpred|gpred), label, var)>
+<!ATTLIST ep
+          cfrom CDATA #REQUIRED
+          cto   CDATA #REQUIRED >
+
+
+<!ELEMENT realpred EMPTY>
+
+<!ATTLIST realpred
+          lemma CDATA #REQUIRED
+          pos (V|N|J|R|P) #IMPLIED
+          sense CDATA #IMPLIED >
+
+<!ELEMENT gpred (#PCDATA)>
+
+<!ELEMENT label EMPTY>
+
+<!ATTLIST label 
+          vid CDATA #REQUIRED >
+
+<!ELEMENT var EMPTY>
+<!ATTLIST var
+          sort (x|e|h|u|l) #REQUIRED
+          vid  CDATA #REQUIRED 
+          num  CDATA #IMPLIED
+          pers CDATA #IMPLIED
+          gender CDATA #IMPLIED
+          tense CDATA #IMPLIED
+          aspect CDATA #IMPLIED >
+
+<!ELEMENT rarg (rargname, label, (var|constant))>
+
+<!ELEMENT rargname (#PCDATA)>
+
+<!ELEMENT constant (#PCDATA)>
+
+<!ELEMENT ing (ing-a, ing-b)>
+<!ELEMENT ing-a (var)>
+<!ELEMENT ing-b (var)>
+
+<!ELEMENT hcons (hi, lo)>
+<!ATTLIST hcons 
+          hreln (qeq|lheq|outscopes) #REQUIRED >
+
+<!ELEMENT hi (var)>
+<!ELEMENT lo (label|var)>

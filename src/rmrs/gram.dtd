@@ -1,0 +1,47 @@
+<!ELEMENT gram (rule)*>
+
+<!ELEMENT rule (name, (comment)*, dtrs, head, (semstruct)*, (equalities)*)>
+
+<!ELEMENT name (#PCDATA) >
+
+<!ELEMENT dtrs (dtr)*>
+
+<!ELEMENT dtr (#PCDATA) >
+
+<!ELEMENT head (#PCDATA) >
+
+<!ELEMENT semstruct (hook,(ep|rarg|ing)*)>
+
+<!ELEMENT hook (index,label)>
+
+<!ELEMENT index (#PCDATA)>
+
+<!ELEMENT label (#PCDATA)>
+
+<!ELEMENT ep (gpred,label,var)>
+
+<!ELEMENT gpred (#PCDATA)>
+
+<!ELEMENT var (#PCDATA)>
+
+<!ELEMENT constant (#PCDATA)>
+
+<!ELEMENT rarg (rargname,label,(var|constant)) >
+
+<!ELEMENT rargname (#PCDATA) >
+
+<!ELEMENT equalities (rv|dh)* >
+
+<!ELEMENT rv (#PCDATA) >
+
+<!ELEMENT dh (dtr,he) >
+
+<!ELEMENT he (#PCDATA) >
+
+<!ELEMENT comment (#PCDATA) >
+
+<!ELEMENT ing (ing-a,ing-b) >
+
+<!ELEMENT ing-a (var) >
+
+<!ELEMENT ing-b (var) >

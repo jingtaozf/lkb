@@ -1,0 +1,30 @@
+Gpred is for `grammar' predicates: these have to be enumerated in the SEM-I,
+but much too frequent for the DTD.
+
+I am not sure that Realpred should be empty - possibly the lemma
+should be an element rather than an attribute
+
+Possibly there should be a default POS: we may need to add more POSs
+
+Labels are always implicitly of the same sort (i.e., label)
+
+Var is the old arg: the list of attributes must be determined by the
+Matrix/SEM-I, so the current list is still preliminary
+
+Note that the reason for not making vids be IDs in the XML sense is two-fold:
+a) it's too much hassle to ensure uniqueness in a document
+b) this isn't supported in RELAX NG - argument is this is the sort of thing
+that's part of the semantics, not the syntax, which I tend to agree with -
+there's lots of things that have to be checked outside the DTD anyway
+
+Rargnames should be enumerated in the SEM-I, but I don't propose to do this in
+the DTD
+
+cfrom and cto are on eps - they might also end up on the other main elements
+(in-groups, hcons, rargs).  Having them on preds seems too
+restrictive/cumbersome - they should be associated with minimal information
+units.
+
+I am still not entirely happy with in-groups.
+
+
