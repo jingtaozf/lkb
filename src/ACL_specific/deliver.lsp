@@ -15,7 +15,7 @@
  :opt-speed 3
  :newspace 3145728			; 3 meg newspace
  :oldspace 10485760			; 10 meg oldspace 
- 
+ :lisp-heap-size (* 1024 1024 1024) ; 1 gbyte maximal size
  :runtime :standard 
  
  :include-clim t
