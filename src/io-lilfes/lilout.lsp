@@ -256,13 +256,25 @@ Parse nodes need to be added so we can understand the display.
 			(not (eq first-dtr nh-dtr))) "right")
 		  (t (error "~A has problems" name)))))))
 
+#|
 ;; by yusuke  May 25
-;(defun lilfes-rule-order-nonheaded (rule-fs name)
-;  (let ((key-arg-left (existing-dag-at-end-of rule-fs '(ARGS FIRST KEY-ARG)))
-;	(key-arg-right (existing-dag-at-end-of rule-fs '(ARGS REST FIRST KEY-ARG))))
-;    (cond ((eql key-arg-left '+) "right")
-;	  ((eql key-arg-right '+) "left")
-;	  (t "error"))))
+;; modified by aac
+(defun lilfes-rule-order-nonheaded (rule-fs name)
+  (declare (ignore name))
+  (let ((key-arg-left (existing-dag-at-end-of rule-fs '(ARGS FIRST KEY-ARG)))
+	(key-arg-right (existing-dag-at-end-of rule-fs '(ARGS REST FIRST KEY-ARG))))
+    (cond ((bool-value-true key-arg-left) "right")
+          ((bool-value-true key-arg-right) "left")
+	  (t "error"))))
+|#
+
+(defun bool-value-true (fs)
+  (and fs
+       (let ((fs-type (type-of-fs fs)))
+         (and (listp fs-type)
+              (eql (car fs-type) '+)))))
+  
+  
 (defun lilfes-rule-order-nonheaded (rule-fs name)
   "right")
 
