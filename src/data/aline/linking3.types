@@ -1,0 +1,87 @@
+;;; File linking.types
+;;; ----------------------------------------------------
+;;; Linking types
+;;; these are all subtypes of linking-type and the 
+;;; relevant lexical sign type
+;;; This is quick and dirty -
+;;; obviously some generalisations could be made, but
+;;; it would all look much cuter if the LISZT was reversed
+
+
+linking-type (lex-sign).
+
+reg-raised-np-sign-l (linking-type reg-raised-np-sign)
+< cat : active : cat : active : sem > = < sem > .
+
+prep-sign-l (linking-type prep-sign).
+
+
+verb-linking-type (linking-type verb-sign).
+
+;;; modified on 03/11/98 to add default inheritance
+strict-intrans-sign-l (strict-intrans-sign verb-linking-type)
+   / lex 
+   < cat : active : sem : index > = < sem : liszt : lst : tl : hd : arg > .
+
+;;; changed 03/11/98
+strict-trans-sign-l (strict-trans-sign strict-intrans-sign-l)
+   / lex 
+   < cat : active : sem : index > =  < sem : liszt : lst : tl : tl : hd : arg >
+
+   < cat : result : cat : active : sem : index > =  < sem : liszt : lst : tl : 
+hd : arg > .
+
+
+obl-intrans-sign-l (obl-intrans-sign strict-intrans-sign-l)
+   / lex 
+   < cat : active : sem : index > = < sem : liszt : lst : tl : tl : hd : arg > 
+   < cat : result : cat : active : sem : index > = < sem : liszt : lst : tl : 
+hd : arg > .
+
+;;; 09/11 
+obl-trans-sign-l (obl-trans-sign strict-trans-sign-l)
+  
+  < cat : active : sem : index > = < sem : liszt : lst : tl : tl : tl : hd : 
+arg >
+  < cat : result : cat : active : sem : index > = < sem : liszt : lst : tl : 
+tl : hd : arg >
+  < cat : result : cat : result : cat : active : sem : index > = < sem : liszt 
+: lst : tl : hd : arg > .
+
+ditrans-sign-l (ditrans-sign strict-trans-sign-l)
+   / lex 
+   < cat : active : sem : index > = < sem : liszt : lst : tl : tl : tl : hd : 
+arg >
+   < cat : result : cat : active : sem : index > = < sem : liszt : lst : tl : 
+tl : hd : arg >
+   < cat : result : cat : result : cat : active : sem : index > = < sem : 
+liszt : lst : tl : hd : arg > .
+  
+
+dative-sign-l (dative-sign ditrans-sign-l).
+
+transfer-sign-l (transfer-sign obl-trans-sign-l).
+
+
+noun-linking-type (linking-type lex-noun-sign)
+< sem : index > = < sem : liszt : lst : hd : inst > .
+
+count-noun-linking-type (noun-linking-type lex-count-noun).
+
+uncount-noun-linking-type (noun-linking-type lex-uncount-noun).
+
+lex-mass-l (uncount-noun-linking-type lex-mass).
+
+lex-collection-l (uncount-noun-linking-type lex-collection).
+
+lex-plural-l (count-noun-linking-type lex-plural).
+
+lex-group-l (count-noun-linking-type lex-group).
+
+lex-individ-l (count-noun-linking-type lex-individ).
+
+lex-pair-l (count-noun-linking-type lex-pair).
+
+lex-portion-l (count-noun-linking-type lex-portion).
+
+

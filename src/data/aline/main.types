@@ -1,0 +1,680 @@
+
+;;; Signs
+
+;;; Nomenclature is a bit screwed
+;;; I want to retain sign for something with a 
+;;; syn, sem and orth so I can borrow bits of the old type system
+;;;
+;;; but I'm also using NODE so I can have phrasal signs as in
+;;; HPSG
+;;;
+;;; Hence total-sign is something with a NODE which takes a value
+;;; of type sign, and one or more daughters, 1 ..., which
+;;; will be total-signs for phrases but ordinary signs for 
+;;; words.
+;;;
+;;; word is introduced purely so that the grammar rules see a
+;;; consistent interface
+
+any-sign (top).
+
+total-sign (any-sign)
+< NODE > = sign .
+
+sign (any-sign)
+	< orth > = diff-list
+   < cat > = cat
+	< sem > = sem.
+   
+   
+unary (total-sign)
+< 1 > = top.
+   
+phrase (unary)
+"A phrase combines two signs with the categorial syntax
+according to the grammar rules, but will always have an
+orth which is the append of the input orths and a 
+semantics which is the append of the input liszts.
+The handel and index are rule specific."
+< NODE : ORTH : LST > 
+   = < 1 : NODE : ORTH : LST >
+< NODE : ORTH : LAST > 
+   = < 2 : NODE : ORTH : LAST >
+< 1 : NODE : ORTH : LAST > =
+     < 2 : NODE : ORTH : LST > 
+< 1 > = total-sign 
+< 2 > = total-sign
+< NODE : SEM : LISZT : LST > 
+  = < 1 : NODE : SEM : LISZT : LST  >
+< NODE : SEM : LISZT : LAST > 
+  = < 2 : NODE : SEM : LISZT : LAST >
+< 1 : NODE : SEM : LISZT : LAST > =
+    < 2 : NODE : SEM : LISZT : LST > . 
+    
+
+
+word (unary)
+< NODE > = lex-sign.
+   
+lex-sign (sign)
+< ORTH : LAST > =
+< ORTH : LST : TL >.
+  
+
+;;; Syntax: a Categorial Grammar Specification 
+;;; Based on Antonio Sanfilippo's type system
+   
+cat (Top)
+"The category of a sign encodes syntactic information 
+concerning subcategorization, part of speech and 
+morphosyntactic features. Following the insights of a
+categorial grammar calculus, two types of category are
+distinguished: basic categories, and complex (e.g. functor)
+categories.".
+
+
+basic-cat (cat)
+"Basic categories consist of category type, and a series of 
+attribute-value pairs encoding morphosyntactic features relative 
+to category type."
+  < cat-type > = cat-type
+  < m-feats > = m-feats.
+
+cat-type (Top) 
+"There are three category types: noun, noun phrase and sentence."
+(OR n np sent).
+
+;;; 'm-feats' changed: Antonio 1-92
+;;; took away 'agr' from 'm-feats'; only 'nominal-m-feats' encode agreement 
+;;; features
+
+m-feats (Top)
+"The morphosyntactic information of all category types makes 
+reference to paradigm type (regular or irregular)." 
+	< reg-morph > = boolean .
+   
+;;; removed agr from m-feats to go on index instead
+
+nominal-m-feats (m-feats)
+"The morphosyntactic information relative to the categories 'n' and 
+'np' includes information relative to nominal form (e.g. 
+regular or pleonastic), case."
+	< nominal-form > = nominal-form
+	< case > = case.
+
+nominal-form (top).
+
+norm (nominal-form).
+  
+pleonastic (nominal-form) (OR it there).
+
+case (top).
+
+
+   
+noun-cat (basic-cat)
+"Basic category for nouns."
+	< m-feats > = nominal-m-feats
+   < cat-type > = n.
+   
+;;; Ann - added not-acc as subtype of case because I need to block
+;;; the output of lexical rules being a strict-intrans-sign with
+;;; an NP arg taking accusative case, and we don't have negation.
+;;; I assume if we have strict-intrans-sign that the arg cannot
+;;; be acc.
+
+not-acc (case).
+
+no-case (not-acc)
+"For subcategorized subjects of non-finite verbs. It prevents 
+the generation of sentences such as 
+   'John to sleep'
+   'Bill eating'
+Also, for subject NPs which are not assigned case but can combine with a 
+non-finite VP after combining with a prepositional complementizer, e.g.
+   'for John to sleep'".
+   
+reg-case (case)
+"For subject NPs which combine with tensed verbs,
+ or direct object NPs.".
+ 
+nom (reg-case not-acc).
+
+acc (reg-case).
+
+p-case (case)
+"For oblique NPs (e.g. indirect objects).".
+
+sent-m-feats (m-feats)
+"Morphosyntactic features specific to verb signs. 'vform' encodes 
+properties of verbs concerning tense and mood; 'comp-form' specifies 
+whether the sentence takes a complementizer and if so what kind; 
+'alternation' encodes information about possible verbal diatheses (e.g. 
+causative-inchoative, dative movement); 'prt' specifies what kind of 
+particle (e.g. 'up, down' about, off') a verb can take (if any)."
+	< vform > = vform
+	< comp-form > = comp-form
+   < prt > = string
+   < diatheses > = alternations.
+
+vform (Top).
+fin (vform).
+no-fin (vform) (OR base ing inf pass).
+
+comp-form (Top).
+no-comp-or-that-comp (comp-form) (OR no-comp that-comp).
+for-comp (comp-form).
+wh-comp (comp-form).
+
+alternations (Top) 
+   < prt-alt > = prt-or-obl-alt.
+strict-intrans-diatheses (alternations).
+other-intrans-diatheses (alternations).
+trans-diatheses (alternations)
+   < trans-alt > = string.
+strict-trans-diatheses (trans-diatheses).
+other-trans-diatheses (trans-diatheses).
+obl-diatheses (alternations)
+   < obl-alt > = prt-or-obl-alt.
+intrans-obl-diatheses (obl-diatheses).
+other-intrans-obl-diatheses (obl-diatheses).
+ditrans-trans-obl-diatheses (trans-diatheses obl-diatheses).
+trans-obl-diatheses (ditrans-trans-obl-diatheses).
+ditrans-diatheses (ditrans-trans-obl-diatheses)
+   < dat-movt > = string.
+
+prt-or-obl-alt (Top).
+prt-or-obl-alt-info (prt-or-obl-alt)
+   (OR qua-path cum-path no-path).
+prt-or-obl-alt-no-info (prt-or-obl-alt no-info).
+no-info (Top).
+  
+np-cat (basic-cat)
+"Basic category for noun phrases."
+	< m-feats > = nominal-m-feats
+   < cat-type > = np.
+
+sent-cat (basic-cat)
+"Basic category for sentences."
+	< m-feats > = sent-m-feats
+   < cat-type > = sent.   
+  
+complex-cat (cat)
+"Complex categories are recursively defined by letting the category 
+attribute of a sign to be a triple consisting of an active part of type
+sign, a direction specification relative to the active part of the category,
+and a result part which is allowed to instantiate either a basic or complex 
+category. This is a feature structure specification for the more familiar 
+slash notation usually adopted in categorial grammars, e.g.
+   '(S\NP)-NP'.
+Modified so that the result is a sign"
+  < result > = sign
+  < direction > = direction
+  < active > = sign.
+  
+direction (Top) 
+"Direction specifies the order occurrence of the argument relative to the 
+functor sign during a parse (see grammar rules). The specification 
+'backward-wrap' is used to allow the direct object of a transitive taking 
+an oblique or clausal complement to be the first argument to combine with 
+the verb, though not the outermost subcategorized sign, e.g.
+   'S\NP[subj]-NP[obj]-NP[obl] , NP[obj] -> S\NP[subj]-NP[obl]'
+The specification 'no-dir' is used to block the application of grammar-rules."
+   (OR forward backward backward-wrap no-dir).
+   
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; SUBCAT STRUCTURES TEMPLATES  ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+basic-sign (sign)
+  < cat > = basic-cat
+/ lex 
+   < cat : m-feats : reg-morph > = true .
+
+noun-sign (basic-sign)
+  < cat > = noun-cat
+/ lex 
+   < cat : m-feats : nominal-form > = norm .  
+
+complex-sign (sign)
+  < cat > = complex-cat.
+  
+np-sign (basic-sign)
+  < cat > = np-cat.
+  
+;;; Ann
+;;; Added so that subjects can't be dir-obj-np-signs
+poss-subj-np-sign (np-sign)
+  < cat : m-feats : case > = not-acc.
+
+dummy-np-sign (poss-subj-np-sign)
+  < cat : m-feats : nominal-form > = pleonastic.
+  
+reg-np-sign (poss-subj-np-sign).
+  
+dir-obj-np-sign (np-sign)
+  < cat : m-feats : case > = acc.
+  
+oblique-role-np-sign (np-sign).
+  
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ ;;;;;;;;;;;;;
+   ;;; VERBS ;;;
+   ;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Category Types ;;;
+;;;;;;;;;;;;;;;;;;;;;;
+
+verb-cat (complex-cat)
+"Intermediate type.
+All verb categories are complex (i.e. functor) categories.".
+
+strict-intrans-cat (verb-cat)
+"The category type of tensed strict intransitives. Given an NP sign 
+as argument, a category of type 'sent-cat' is returned though 
+functional application (see grammar rules in the file 'ucg-grammar-rules'.
+Direction is 'forward' because verbs combine with type raised NPs, e.g. 
+   X-(X-NP)  S-NP -> S"
+  < result : cat > = sent-cat  
+  < direction > = forward 
+  < active  > = poss-subj-np-sign.
+  
+X-sign-X-cat (verb-cat)
+"Intermediate Type.
+It characterizes all verbs which have at least two 
+subcategorized complements."
+  < result : cat : active > = sign.
+  
+strict-trans-cat (X-sign-X-cat)
+"The category type of strict transitives, e.g.
+   'Bill ate a sandwich'
+The active sign is a direct object NP. The direction attribute relative 
+to the direct object NP is specified to be 'backward' because verbs combine 
+with type raised NPs, e.g. 
+   S-NP-NP S-NP-(S-NP-NP)  -> S-NP"
+  < result : cat > = strict-intrans-cat
+  < direction > = backward
+  < active > = dir-obj-np-sign.
+  
+backward-wrap-trans-cat (X-sign-X-cat)
+"Intermediate type.
+This category type describes the subcategorization pattern of transitives 
+with the direction attribute relative to the direct object NP specified to be 
+'backward-wrap'. Such a specification allows the direct object NP to be 
+satisfied through the 'backward-wrapping' rule (see file 'ucg-grammar-rules'). 
+For transitives which take a clausal-oblique complement where 
+the oblique-comp-xcomp complement is the outer-most subcategorized argument 
+(according to Dowty's obliqueness hierarchy) although it is the direct object 
+NP which follows the verb, e.g.
+   'Jon gave a book to Mary'
+   'Mary persuaded Bill to leave'
+   'Mary persuaded Bill that Jon is right'"
+  < result : cat > = strict-trans-backward-cat.
+
+;;; Ann
+;;; the above type is changed and the type below added, 
+;;; to make every node correctly typed.  This is necessary
+;;; so that lex rules don't screw up.  
+  
+strict-trans-backward-cat (X-sign-X-cat)
+"Like strict-trans-cat except for direction"
+  < result : cat > = strict-intrans-cat
+  < direction > = backward-wrap
+  < active > = dir-obj-np-sign.
+  
+obl-cat (X-sign-X-cat)
+"Intermediate type.
+For verbs which have an oblique NP (i.e. a prepositional phrase) as the 
+outer-most subcategorized complement."
+  < direction > = backward
+  < active > = oblique-role-np-sign.
+  
+;;; Added by Ann
+;;; Antonio wasn't very consistent about adding all the
+;;; types and specifying stuff on cat vs on sign, but this screws
+;;; up the default lex rules
+obl-intrans-cat (obl-cat)
+   < result : cat > = strict-intrans-cat 
+   < active : cat : m-feats : case > = p-case.
+  
+ditrans-cat (obl-cat)
+"The category of ditransitives: prepositional role is assigned accusative 
+case."
+   < result : cat > = strict-trans-cat
+   < active : cat : m-feats : case > = acc.
+  
+
+obl-trans-cat (obl-cat backward-wrap-trans-cat)
+"The category of transitives which take an oblique object."
+   < active : cat : m-feats : case > = p-case.
+
+;;; Semantics is
+;;; in mrs.types
+
+
+
+
+
+;;; VERB SIGNS
+
+verb-sign (complex-sign lex-sign)
+   < cat : result : sem : handel > = < sem : handel >
+   < cat : result : sem : index > = < sem : index >.
+   
+strict-intrans-sign (verb-sign)
+"The type of strict intransitives, e.g.
+   'John sleeps'
+Category is of type 'strict-intrans-cat', semantics of type 'intrans-sem'"
+   < cat > = strict-intrans-cat 
+   < sem > = strict-intrans-sem
+   < cat : result : cat : m-feats : diatheses > = strict-intrans-diatheses.
+   
+2-complements-verb-sign (verb-sign)
+   < cat : result : cat : result : sem : handel > = < sem : handel >
+   < cat : result : cat : result : sem : index > = < sem : index >.
+   
+strict-trans-sign (2-complements-verb-sign)
+"The type of strict transitive, e.g.
+   'John reads a book'."
+   < cat > = strict-trans-cat
+   < sem > = strict-trans-sem
+   < cat : result : cat : result : cat : m-feats : diatheses > = strict-trans-diatheses.
+   
+obl-sign (verb-sign)
+"Intermediate type'"
+   < cat > = obl-cat.
+   
+obl-intrans-sign (obl-sign 2-complements-verb-sign)
+"For intransitives which take a subject and oblique NP only, e.g. 
+   'Bill talks to Mary'"
+   < cat > = obl-intrans-cat
+   < sem > = intrans-obl-sem
+   < cat : result : cat : result : cat : m-feats : diatheses > = intrans-obl-diatheses.
+
+3-complements-verb-sign (verb-sign)
+   < cat : result : cat : result : sem : handel > = < sem : handel >
+   < cat : result : cat : result : sem : index > = < sem : index >
+   < cat : result : cat : result : cat : result : sem : handel > = < sem : handel >
+   < cat : result : cat : result : cat : result : sem : index > = < sem : index >.
+
+   
+obl-xcomp-comp-intrans-obl-trans-ditrans-sign (obl-sign 3-complements-verb-sign)
+"Intermediate type.
+For verbs which take a subject, an oblique NP and either a direct object, 
+xcomp or comp.".
+
+ditrans-sign (obl-xcomp-comp-intrans-obl-trans-ditrans-sign)
+"Ditransitives, e.g.
+   'John gives Mary a book'"
+   < cat : result : cat : result : cat : result : cat : m-feats : diatheses > =  ditrans-diatheses
+   < sem > = obl-trans-or-ditrans-sem
+   < cat > = ditrans-cat .
+   
+trans-xcomp-comp-obl-sign (3-complements-verb-sign)
+"Intermediate type.
+For transitive verbs which take a clausal-oblique complement. According 
+to Dowty's obliqueness hierarchy, the clausal-oblique complement is the 
+outermost subcategorized argument although it is the direct
+object NP which follows the verb, e.g.
+   'John gives a book to Mary'
+   'Mary persuaded Bill to leave'
+   'Mary persuaded Bill that Jon is right'
+Category is of type 'backward-wrap-trans-cat' which describes the 
+subcategorization pattern of transitives with the direction attribute
+relative to the direct object NP specified to be 'backward-wrap'. Such a 
+specification allows the direct object NP to be satisfied through the 
+'backward-wrapping' rule (see file 'ucg-grammar-rules'). "
+   < cat > = backward-wrap-trans-cat.
+   
+obl-trans-sign (obl-xcomp-comp-intrans-obl-trans-ditrans-sign trans-xcomp-comp-obl-sign)
+"Transitives which take an oblique object.
+According to Dowty's obliqueness hierarchy, the oblique 
+complement is the outer-most subcategorized argument  although it is the 
+direct object NP which follows the verb (see definition for 
+'trans-xcomp-comp-obl-sign'), e.g.
+   'John gives a book to Mary'"
+   < sem > = obl-trans-or-ditrans-sem
+   < cat :  result : cat : result : cat : result : cat : m-feats : diatheses > =  
+                                               trans-obl-diatheses.
+                                               
+
+;;; Testing lexical rules and defaults
+
+dative-sign (ditrans-sign)
+/lex
+< SEM : LISZT : LST : TL : HD > = p-agt-cause-transfer_rel   
+< SEM : LISZT : LST : TL : TL : TL : HD > = p-pat-recip_rel .  
+   
+transfer-sign (obl-trans-sign).
+ 
+
+   
+;;; THE FOLLOWING SIGNS ARE DEFINED FOR PARSING PURPOSES
+
+att-ADJ-sign (lex-sign)
+"Attributive adjective, e.g.
+   'The red table'."
+  < cat : result : cat > = < cat : active : cat >
+  < cat : direction > = forward
+  < cat : active > = noun-sign.
+  
+pred-ADJ-sign (lex-sign) 
+"Predicative adjective, e.g.
+   'The table is red'."
+   < cat : result : cat > = < cat : active : cat >
+   < cat : direction > = no-dir.
+   
+raised-np-cat (complex-cat)
+"The category of polymorphic type-raised NPs, e.g. X-(X-NP)."
+  < result > = < active : cat : result >
+  < direction > = < active : cat : direction >.
+  
+raised-np-sign (lex-sign)
+"Lexical raised NP signs, e.g. proper names and pronouns."
+  < cat > = raised-np-cat
+  < cat : active : cat : active : cat : m-feats : case > = reg-case.
+  
+reg-raised-np-sign (raised-np-sign)
+"Lexical raised non pleonastic NP signs, e.g. proper names and pronouns."
+< sem > = reg-raised-np-sem .
+  
+dummy-raised-np-sign (raised-np-sign)
+"Lexical raised pleonastic NP signs, e.g. 
+   'it'      in   'It bothers Bill that Sue is here'
+   'there'   in   'There seems to be a problem'."
+  < cat : active : cat : active > = dummy-np-sign.
+  
+det-sign (lex-sign)
+"Determiners; treated as generalized quantifiers, e.g. the semantics for a 
+sentence like 'a man sleeps' is:
+   [e1]a([x1]man(x1) , [e1]and([e1]sleep(e1), [e1]p-agt(e1,x1)))"
+  < cat : result : cat > = raised-np-cat
+  < cat : result : cat : active : cat : active : cat : m-feats >
+      = < cat : active : cat : m-feats >
+  < cat : direction > = forward
+  < cat : active > = noun-sign. 
+  
+prep-sign (lex-sign)
+"Prepositions; combine with raised NP's 
+The resulting NP inherits all the semantic and category specifications of the 
+input NP, except the case feature which is changed from 'reg-case' to 'p-case'."
+   < cat : direction > = backward
+   < cat : result : cat > = raised-np-cat 
+   < cat : result : sem > = reg-raised-np-sem
+   < cat : result : cat : active : cat : active : sem > = 
+                                       < cat : result : sem >
+   < cat : result : cat : active : cat : active : cat : m-feats : 
+      nominal-form > = < cat : active : cat : m-feats : nominal-form >
+   < cat : result : cat : active : cat : active : cat : m-feats : 
+      case > = p-case
+   < cat : active : cat : m-feats : case > = reg-case
+   < cat : result : cat : active : cat : active : cat : m-feats : 
+      reg-morph > = < cat : active : cat : m-feats : reg-morph >
+   < cat : result : sem : handel > = < sem : handel >
+   < cat : result : sem : index > = < sem : index >
+   < cat : active : sem : handel > = < sem : handel >
+   < cat : active : sem : index > = < sem : index >   
+   < sem > = empty-sem.
+      
+sent-comp-sign (lex-sign)
+"Sentential complementizers, e.g. 'that, whether'"
+   < cat : result : cat > = sent-cat
+   < cat : direction > = forward
+   < cat : active : cat > = sent-cat
+   < cat : active : cat : m-feats : comp-form > = no-comp.
+
+vp-mod-sign (lex-sign)
+"VP modifiers, e.g. 'to' in 'to sleep'"
+   < cat : result : cat > = strict-intrans-cat
+   < cat : result : cat : direction > = < cat : active : cat : direction >
+   < cat : result : cat : active > = < cat : active : cat : active >
+   < cat : active : cat > = strict-intrans-cat.
+
+comp-non-fin-sent-sign (lex-sign)
+"Complementizer for non finite sentences, e.g. 
+   'for' in 'for Bill to sleep'
+   'that' in 'that he sleep'
+The complementizer combines with a type raised NP from which all  
+semantic and syntactic features are inherited except 'case' which
+is changed to 'no-case'. This allows the resulting NP to combine 
+with a non-finite VP."
+   < cat : direction > = backward
+   < cat : result : cat : active : cat : active : cat : m-feats : nominal-form > 
+      = < cat : active : cat : m-feats : nominal-form >
+   < cat : result : cat : active : cat : active : cat : m-feats : case > 
+      = no-case
+   < cat : result : cat : active : cat : active : cat : m-feats : reg-morph >
+      = < cat : active : cat : m-feats : reg-morph >
+   < cat : active : cat : m-feats : case > = reg-case.
+   
+
+;;; stuff from thesis
+   
+lex-noun-sign (noun-sign lex-sign)
+"Lexical noun, e.g. 
+   'book'"
+  < sem  > = common-nom-obj.
+  
+
+form (top).
+
+indform (form).
+
+normal_ind (indform)
+(OR individ plural group).
+
+strange_ind (indform)
+(OR pair complex portion).
+
+massform (form)
+(OR mass collection).
+
+
+
+;;; dog - individ
+;;; children, dogs - plural
+;;; scissors - pair
+;;; works - complex
+;;; team - group (can shift to plural)
+;;; furniture - collection 
+;;; whisky - mass 
+;;; oats - mass 
+;;; a whisky - portion
+
+
+
+;;; We have the following constraints
+;;;
+;;; Agr      plmod       qua            form              plural rule
+;;;
+;;; sg       false       true           individ         applies
+;;; pl       true        false (lex)    plural                -
+;;; pl       false       true           pair               applies
+;;; sg/pl    false       true           complex            applies
+;;; sg/(pl)  false       true           group              applies
+;;; sg       false       true           portion            applies
+;;; sg       false       false (lex)    mass                  -
+;;; pl       false       false          mass (pl. ta)         -
+;;; sg       false       false (lex)    collection            -
+
+
+;;; The plural rule applies to any lexical item which is quantised
+
+;;; Thesis stuff - the most straightforward transaltion to MRS involves
+;;; a) putting qualia in the index
+;;; b) making QUANT and PLMOD be possible features of nominal rels
+;;;    (I don't like this at all, but there's no obvious alternative
+;;;      after ten minutes thought which avoid proliferating rel types
+;;;      and which allows rules to modify these values)
+
+;;; The first six of these correspond to count nouns
+lex-count-noun (lex-noun-sign)
+< sem : index : qualia : form > = indform
+/ lex
+   < sem : index : qualia : form > = individ 
+   < sem : index : agr : num > = sg
+   < sem : liszt : lst : hd : plmod > = false
+   < sem : liszt : lst : hd : quant > = true .
+
+
+;;; default specification for lex-count-noun is as individ
+
+
+lex-uncount-noun (lex-noun-sign)
+< sem : liszt : lst : hd : quant > = false
+< sem : liszt : lst : hd : plmod > = false
+< sem : index : qualia : form > = massform
+/ lex
+   < sem : index : agr : num > = sg.
+  
+;;; the following were psorts
+
+lex-individ (lex-count-noun)
+   < sem : index : qualia : form > = individ
+   < sem : index : agr : num > = sg
+   < sem : liszt : lst : hd : plmod > = false
+   < sem : liszt : lst : hd : quant > = true .
+
+;;; lex-plural was originally for nouns like children
+;;; but with new treatment of types/lex rules it holds for
+;;; all plurals
+
+lex-plural (lex-count-noun)
+   < sem : index : qualia : form > = plural
+   < sem : index : agr : num > = pl
+   < sem : liszt : lst : hd : plmod > = true
+   < sem : liszt : lst : hd : quant > = false .
+
+lex-group (lex-count-noun)
+   < sem : index : qualia : form > = group.
+   
+lex-pair (lex-count-noun)
+   < cat : m-feats : reg-morph > = false
+   < sem : index : qualia : form > = pair
+   < sem : index : agr : num > = pl.
+
+; lex-complex
+;   <> < lex-individ <>
+;  < sem : index : qualia : form > = complex.
+;   < sem : ind : agr : num > == num.
+; usual problem - can't override a default with an underspeciifed
+; value - leave this for now
+
+lex-mass (lex-uncount-noun)
+   < sem : index : qualia : form > = mass.
+
+; agr stays default because
+; pluralia tantum take plural agreement but are uncountable
+; * three oats
+
+lex-collection (lex-uncount-noun)
+   < sem : index : qualia : form > = collection.
+   
+lex-portion (lex-count-noun)
+   < sem : index : agr : num > = sg
+   < sem : index : qualia : form > = portion
+   < sem : liszt : lst : hd : plmod > = false
+   < sem : liszt : lst : hd : quant > = true .
+   
