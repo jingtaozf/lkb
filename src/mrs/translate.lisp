@@ -20,7 +20,7 @@
 ;;;
 
 (defun transfer (&optional (edge (first *parse-record*))
-                 &key (file "/tmp/.transfer"))
+                 &key (file (format nil "/tmp/.transfer.~a" (current-user))))
   (let* ((*package* (find-package :lkb))
          (rules (reverse lkb:*ordered-mrs-rule-list*))
          (input (mrs::extract-mrs edge))
@@ -31,7 +31,8 @@
         (mrs::output-mrs1 output 'mrs::simple stream))
       (mrs::browse-mrs output "Transfer Result"))))
 
-(defun translate (&key serverp (file "/tmp/.transfer"))
+(defun translate (&key serverp 
+                       (file (format nil "/tmp/.transfer.~a" (current-user))))
   (declare (special %mrs%))
   
   (when serverp
@@ -49,6 +50,16 @@
     (delete-file file)
     (translate :serverp serverp :file file)))
 
+(defun current-user ()
+  (or #+(and :allegro-version>= (version>= 5 0)) 
+      (sys:user-name)
+      #+(and :allegro (not (and :allegro-version>= (version>= 5 0))))
+      (system:getenv "USER")
+      #+(and :mcl :powerpc) 
+      (ccl:process-name ccl:*current-process*)
+      #+:lucid 
+      (lcl:environment-variable "USER")
+      "nobody"))
 
 ;;; functions that allow for translation (using interlingua)
 ;;; and `translation'
