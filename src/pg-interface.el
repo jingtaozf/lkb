@@ -262,10 +262,12 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
       (cons fv-pairs lexdb-fsize-map))))
 
 (defun lexdb-retrieve-completion-lists nil
-  (princ "\ngenerating completion lists for\n")
+  (terpri)
+  (princ "generating completion lists for ")
   (setf *lexdb-completion-lists*
 	(mapcar #'(lambda (x)
-		    (princ (format "\t%s\n" x))
+		    (princ (format "\t%s" x))
+		    (terpri)
 		    (cons x
 			  (cle-get-completion-list x)))
 		*lexdb-completion-features*))
@@ -289,7 +291,8 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (push 
    (cons :orthkey (first (split-string (cdr (assoc :orthography record-in)))))
    record-in)
-  (princ "please wait...\n")
+  (princ "please wait...")
+  (terpri)
   (cle-store-record record-in)
   (lexdb-update-completion-lists record-in)
   (cle-empty-psql-cache)
