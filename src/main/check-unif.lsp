@@ -202,46 +202,47 @@
       (setq *check-paths-optimised*
          (mapcan
             #'(lambda (path-and-freq)
-                (let
-                   ((data
-                      (cond
-                         ((not (and (listp (car path-and-freq)) (integerp (cdr path-and-freq))))
-                            (format t "~%Incorrect format for check path list")
-                            (return-from optimise-check-unif-paths nil))
-                         ((< (cdr path-and-freq) freq-threshold) nil)
-                         ((null (car path-and-freq)) ; null path
-                            (cdr path-and-freq))
-                         (t
-                            (let*
-                               ((feat (car (last (car path-and-freq))))
-                                (fs
-                                   (constraint-of
-                                      (or (maximal-type-of feat)
-                                         (error "Inconsistency - *check-paths* uses feature ~A ~
-                                                 which is not in grammar" feat))))
-                                (type (type-of-fs (get-dag-value fs feat))))
-                               (when (consp type) (setq type (car type))) ; atomic type
-                               (let*
-                                  ((types (cons type (retrieve-descendants type)))
-                                   (len (length types)))
-                                  (if (<= len (integer-length most-positive-fixnum))
-                                     (mapcar
-                                        #'(lambda (d)
-                                            (cons d
-                                               (let ((val 0))
-                                                  (dolist
-                                                     (x (cons d (retrieve-descendants d))
-                                                        val)
-                                                     (setq val
-                                                        ;; set bit corresponding to pos
-                                                        ;; of x in types list
-                                                        (dpb 1 (byte 1 (position x types))
-                                                           val))))))
-                                        types)
-                                     (cdr path-and-freq))))))))
-                   (if data (list (cons (car path-and-freq) data)) nil)))
+                (cond
+                   ((not (and (listp (car path-and-freq)) (integerp (cdr path-and-freq))))
+                      (error "Incorrect format for check path list"))
+                   ((< (cdr path-and-freq) freq-threshold) nil)
+                   (t
+                      (list
+                         (optimise-check-unif-path
+                            (car path-and-freq) (cdr path-and-freq))))))
             *check-paths*))
       t))
+
+
+(defun optimise-check-unif-path (path freq)
+   (cons path
+      (if path
+         (let* ((feat (car (last path)))
+                (fs
+                   (constraint-of
+                      (or (maximal-type-of feat)
+                         (error "Inconsistency - *check-paths* uses feature ~A ~
+                                 which is not in grammar" feat))))
+             (type (type-of-fs (get-dag-value fs feat))))
+            (when (consp type) (setq type (car type))) ; atomic type
+            (let*
+               ((types (cons type (retrieve-descendants type)))
+                (len (length types)))
+               ;; (format t "~%Feature ~A, number of possible types ~A" feat len)
+               (if (<= len (integer-length most-positive-fixnum))
+                  (mapcar
+                     #'(lambda (d)
+                          (cons d
+                             (let ((val 0))
+                                (dolist
+                                   (x (cons d (retrieve-descendants d)) val)
+                                   (setq val
+                                      ;; set bit corresponding to pos
+                                      ;; of x in types list
+                                      (dpb 1 (byte 1 (position x types)) val))))))
+                     types)
+                  freq)))
+         freq)))
 
 
 #|
@@ -263,9 +264,10 @@
 
 ;;; Statically compute set of restrictor values for a tdfs or dag, and check two
 ;;; sets of values for compatibility
+;;;
+;;; !!! Won't work for type disjunctions
 
 (defun restrict-fs (fs)
-   (when (tdfs-p fs) (setq fs (tdfs-indef fs)))
    (mapcar
       #'(lambda (path-spec)
           (let ((v (existing-dag-at-end-of fs (car path-spec))))
@@ -273,11 +275,13 @@
                 (let ((type (type-of-fs v)))
                    (when type
                       (if (consp (cdr path-spec))
-                         (or (cdr
-                               (assoc (if (consp type) (car type) type) (cdr path-spec)
-                                  :test #'eq))
-                            (error "Inconsistency - could not find restrictor bit vector ~
-                                    for type ~A" type))
+                         (let ((real-type (if (consp type) (car type) type)))
+                            (or
+                               (cdr (assoc real-type (cdr path-spec) :test #'eq))
+                               (cdr (assoc (instance-type-parent real-type) (cdr path-spec)
+                                       :test #'eq))
+                               (error "Inconsistency - could not find restrictor bit vector ~
+                                       for type ~A" type)))
                          type)))
                 nil)))
       *check-paths-optimised*))
@@ -298,7 +302,6 @@
 ;;; Versions called dynamically inside the scope of a set of unifications
 
 (defun x-restrict-and-compatible-p (fs child-restricted)
-   (when (tdfs-p fs) (setq fs (tdfs-indef fs)))
    (dolist (path-spec *check-paths-optimised* t)
       (let ((dt
               (let ((v (x-existing-dag-at-end-of fs (car path-spec))))
@@ -306,17 +309,18 @@
                     (let ((type (dag-new-type v)))
                        (when type
                           (if (consp (cdr path-spec))
-                             (or
-                                (cdr
-                                   (assoc (if (consp type) (car type) type) (cdr path-spec)
-                                      :test #'eq))
-                                (error "Inconsistency - could not find restrictor bit vector ~
-                                        for type ~A" type))
+                             (let ((real-type (if (consp type) (car type) type)))
+                                (or
+                                   (cdr (assoc real-type (cdr path-spec) :test #'eq))
+                                   (cdr (assoc (instance-type-parent real-type) (cdr path-spec)
+                                           :test #'eq))
+                                   (error "Inconsistency - could not find restrictor bit vector ~
+                                           for type ~A" type)))
                              type)))
                     nil)))
             (ct (pop child-restricted)))
          (cond
-            ((or (null dt) (null ct) (eq dt ct))) ; eq possibly avoids a function call
+            ((or (eq dt ct) (null dt) (null ct))) ; eq possibly avoids a function call
             ((not (integerp dt))
                (unless (find-gcsubtype dt ct)
                   (return-from x-restrict-and-compatible-p nil)))
