@@ -153,15 +153,15 @@
         (setf indef (create-wffs indef))
         (make-tdfs :indef indef)))))
 
-(defun bool-value-true (fs)
-  (and fs
-       (let ((fs-type (type-of-fs fs)))
-         (eql fs-type 'true))))
-  
-(defun bool-value-false (fs)
-  (and fs
-       (let ((fs-type (type-of-fs fs)))
-         (eql fs-type 'false))))
+;(defun bool-value-true (fs)
+;  (and fs
+;       (let ((fs-type (type-of-fs fs)))
+;         (eql fs-type 'true))))
+;  
+;(defun bool-value-false (fs)
+ ; (and fs
+;       (let ((fs-type (type-of-fs fs)))
+;         (eql fs-type 'false))))
 
 
 

@@ -29,7 +29,12 @@ sem-obj := feat-struc.
 ;;; CCB - 4/23/00 - removed RESTR from sem-obj, because it doesn't seem to come into play with any significance in the analysis.
 ;;;[ RESTR *list-of-facts* ].
 
-message := sem-obj.
+;;;JTB - 7/16/01 - adding the REPRISABLE feature to prevent recursion
+;;;on base case reprise rule and on direct-in-situ, as per discussions
+;;;with Ivan.  For the record I'm not happy with this solution but ok.
+
+message := sem-obj &
+[REPRISABLE boolean].
 
 propositional := message &
 [ SOA soa,
@@ -44,9 +49,13 @@ fact := propositional &
 outcome := propositional & 
 [ SOA i-soa ].
 
+;;;JTB - 07/16/01 - REPRISABLE will default to true but false for
+;;;reprises and direct in-situ.
+
 question := message &
 [ PARAMS *list-of-params*, 
-  PROP proposition ].
+  PROP proposition,
+  REPRISABLE /l true ].
 
 ; PARAMS *list-of-params*, 
 
@@ -100,6 +109,16 @@ param := scope-obj & wh-value &
   FOC boolean,
   RESTR list-of-relns ].
 
+;;;JTB 07/13/01 Added some param types to reduce redundant
+;;;information, related to wh-words and their commonalities.
+
+person-param:=param &
+[ INDEX #i,
+  RESTR < [ PERSON #i ] > ].
+
+thing-param:=param &
+[ INDEX #i,
+  RESTR < [ THING #i ] > ].
 
 sit := feat-struc.
 
@@ -170,25 +189,37 @@ e-list-of-relns := list-of-relns & e-list.
 
 ;;; *diff-list* types.
 
+;;;JTB 07/17/01 Experimenting with diff lists by removing the token
+;;;identity condition.  This may help with stitching.
+
 *list-of-params* := *diff-list* &
 [ LIST list-of-params,
   LAST list-of-params ].
 
 *e-list-of-params* := *list-of-params* & *e-diff-list* &
-[ LIST #1 & e-list-of-params,
-  LAST #1 ].
+[ LIST e-list-of-params ].
+
+;*e-list-of-params* := *list-of-params* & *e-diff-list* &
+;[ LIST #1 & e-list-of-params,
+;  LAST #1 ].
 
 *list-of-scope-objs* := *diff-list* &
 [ LIST list-of-scope-objs,
   LAST list-of-scope-objs ].
 
 *e-list-of-locals* := *list-of-locals* & *e-diff-list* & 
-[ LIST #1 & e-list-of-locals,
-  LAST #1 ].
+[ LIST e-list-of-locals ].
 
 *e-list-of-scope-objs* := *list-of-scope-objs* & *e-diff-list* & 
-[ LIST #1 & e-list-of-scope-objs,
-  LAST #1 ].
+[ LIST e-list-of-scope-objs ].
+
+;*e-list-of-locals* := *list-of-locals* & *e-diff-list* & 
+;[ LIST #1 & e-list-of-locals,
+;  LAST #1 ].
+
+;*e-list-of-scope-objs* := *list-of-scope-objs* & *e-diff-list* & 
+;[ LIST #1 & e-list-of-scope-objs,
+;  LAST #1 ].
 
 *list-of-quants* := *diff-list* &
 [ LIST list-of-quants,

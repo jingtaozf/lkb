@@ -425,12 +425,14 @@ hd-spr-ph := hd-ph & binary-construction &
 
 
 ; subject-auxilary-inversion-phrase (sai-ph)
+
 sai-ph := hd-ph & 
 [ SS.LOC.CAT.SUBJ < >,
   HD-DTR #1 & [ SS.LOC.CAT [ HEAD verb & [ INV true,
                                            AUX true ],
                              SUBJ < #2 > ] ],
   DTRS < word & #1, phrase & [ SS #2 ], ... > ].
+
 
 ; elliptical sai-ph.
 sai-ph-0 := sai-ph & 

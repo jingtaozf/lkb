@@ -45,16 +45,21 @@ auxv-lxm := v-lxm &
                                          COMPS < > ] ] > ] ].
 |#
 
+;;;JTB 07/14/01 - stopped coidentifying SUBJs and starting doing the
+;;;locals fo the SUBJS, and insist that SLASH of complement be empty.
 
 auxv-lxm := v-lxm & 
-[ SS.LOC.CAT [ SUBJ < #1 >,
-               ARG-ST < #1, [ LOC.CAT [ SUBJ < #1 & [ LOC.STORE <! !> ] >, 
-                                         COMPS < > ] ] > ] ].
+[ SS.LOC.CAT [ SUBJ < #2 >,
+               ARG-ST < #2 & [LOC.CAT #1], [ LOC.CAT [ SUBJ < [ LOC.CAT #1, 
+								LOC.STORE <! !>, 
+         					                SLASH <! !>] >, 
+                                              COMPS < > ] ] > ] ].
 
-
-
-
- 
+;;;JTB 07/014/01 - original definition but without #1 & STORE <! !> in COMP
+;auxv-lxm := v-lxm & 
+;[ SS.LOC.CAT [ SUBJ < #1 >,
+;               ARG-ST < #1, [ LOC.CAT [ SUBJ < #1  >, 
+;                                        COMPS < > ] ] > ] ].
 
 dummy-auxv-lxm :=  v-lxm & 
 [ SS.LOC.CAT.ARG-ST < [ LOC.CAT.HEAD [ AGR expl-index & [ PERNUM 1or3sg ] ] ],
@@ -84,6 +89,12 @@ pron-lxm := n-lxm & no-args &
                                   ANA /l false ] ] ],
         WH <! !> ] ].
 
+;;;JTB 07/17/01 - According to GS Chapter 5, the SPR.WH value and the
+;;;WH value of this lexeme should be unified.  This isn't captured
+;;;here, although that should be the ultimate effect since the COMPS
+;;;for n-lxms is empty and so any stitching will accomplish the same
+;;;thing.  Is this good enough?
+
 cn-lxm := n-lxm &
  [ SS.LOC [ CAT [ HEAD [ AGR.PERNUM #agr ],
 	          SPR < [ LOC.CAT phrase-cat & [ HEAD det & [ AGR.PERNUM #agr,
@@ -94,11 +105,6 @@ cn-lxm := n-lxm &
 pn-lxm := n-lxm & no-args &
  [ SS [ LOC [ CAT [ HEAD [ AGR.PERNUM 3sg ] ] ],
               WH <! !> ] ].
-
-
-
-
-
 
 ;;; NON-INFLECTING (CONST-LXM) LEXEME TYPES
 
@@ -298,5 +304,46 @@ sra := adj-lxm & s-rais.
 ; subject-control-adjective (sca)
 sca := adj-lxm & s-con.
 
+;;;JTB - 07/13/01 finding commonality in wh words.  All CAT features
+;;;but HEAD are common, as well as SLASH, REL, DTRS.
 
+wh-lxm:=inflected-lexeme+amalg &
+[ SS [ LOC [ CAT [ SUBJ < >,
+                   SPR < >,
+                   COMPS < >,
+                   ARG-ST < > ], 
+	     CONT param],
+       SLASH <! !>,
+       REL <! !> ],       
+  DTRS < inflected-lexeme > ].
 
+wh-lxm-nexcl:=wh-lxm &
+[ SS.LOC.CONT #1,
+  SS.LOC.STORE <! #1 !> ].
+
+wh-lxm-excl:=wh-lxm &
+[ SS [LOC [CONT #1,
+           STORE <! !> ],
+      WH <! #1 !> ] ].
+
+wh-n-lxm:=wh-lxm-nexcl &
+[ SS.LOC.CAT.HEAD noun & [ FORM normal, 
+	        	   ANA false,
+                           AGR ref-index,
+                           MOD < > ] ].
+
+wh-det-lxm:=wh-lxm-nexcl &
+[ SS.LOC.CAT.HEAD det ].
+
+wh-lxm-foc:=wh-lxm-nexcl &
+[ SS [LOC.CONT.FOC true,
+      WH <! !> ] ].
+
+wh-lxm-unfoc:=wh-lxm-nexcl &
+[ SS [ LOC [ CONT #1 & [ FOC false ] ],
+       WH <! #1 !> ] ].
+
+wh-n-lxm-unfoc:=wh-n-lxm & wh-lxm-unfoc.
+wh-n-lxm-foc:=wh-n-lxm & wh-lxm-foc.
+wh-det-lxm-unfoc:=wh-det-lxm & wh-lxm-unfoc.
+wh-det-lxm-foc:=wh-det-lxm & wh-lxm-foc.

@@ -3,42 +3,35 @@ hell_0 := cn-lxm &
 [ ORTH <! "hell" !>,
   SS.LOC.CAT.HEAD.MOD < [ WH <! param !> ] > ].
 
-
-
-
-
 ;;; CCB - I'm guessing at the details of this from the tree in section 5.2 for "Whose cousin's friend"...
 
-inter_whose :=  inflected-lexeme+amalg &
+;;;JTB - made all of these unfocused since that seemed to be the
+;;;generalization they were grasping, and added a "what" determiner.
+
+inter_whose :=  wh-det-lxm-unfoc &
 [ ORTH <! "whose" !>,
-  SS [ LOC [ CAT [ HEAD det,
-                   SUBJ < >,
-                   SPR < >,
-                   COMPS < >,
-                   ARG-ST < > ],
-             CONT param & [ INDEX #i ],
-             STORE <! #1 !> ],
-       WH <! #1 & param & [ INDEX #i ] !>,
-       SLASH <! !>,
-       REL <! !> ],
-  DTRS < inflected-lexeme > ].
+  SS.LOC.CAT.HEAD.DEG true ].
 
-
-
-
-inter_how :=  inflected-lexeme+amalg &
+inter_how :=  wh-det-lxm-unfoc &
 [ ORTH <! "how" !>,
-  SS [ LOC [ CAT [ HEAD det & [ DEG true ],
-                   SUBJ < >,
-                   SPR < >,
-                   COMPS < >,
-                   ARG-ST < > ],
-             CONT param & [ INDEX #i ],
-             STORE <! #1 !> ],
-       WH <! #1 & param & [ INDEX #i ] !>,
-       SLASH <! !>,
-       REL <! !> ],
-  DTRS < inflected-lexeme > ].
+  SS.LOC.CAT.HEAD.DEG true ].
+
+inter_what :=  wh-det-lxm-unfoc &
+[ ORTH <! "what" !>,
+  SS.LOC.CAT.HEAD.DEG true ].
+
+;inter_whose :=  wh-det-lxm &
+;[ ORTH <! "whose" !>,
+;  SS [ LOC [ CONT param & [ INDEX #i ],
+;             STORE <! #1 !> ],
+;       WH <! #1 & param & [ INDEX #i ] !> ] ].
+
+;inter_how :=  wh-det-lxm &
+;[ ORTH <! "how" !>,
+;  SS [ LOC [ CAT [ HEAD [ DEG true ] ],
+;             CONT param & [ INDEX #i ],
+;             STORE <! #1 !> ],
+;       WH <! #1 & param & [ INDEX #i ] !> ] ].
 
 
 big_0 := adj-lxm &
@@ -50,277 +43,118 @@ a_0 := det-lxm &
 [ ORTH <! "a" !>,
   SS.LOC.CAT.SPR < [ LOC.CAT [ HEAD adj ] ] > ].
 
-
-
-
 ;;; <<< >>> WHO
 
 ;;; 4 entries for each - one with a WH value and one without, times FOC vs not FOC....  CCB-  These are messy large structures, containing a lot of redundant info.  Reduce them when you get the chance
 
-
 ;;; CCB - taken from Ch 5 of G&S; should have a preson_rel in the STORE's RESTR once you figure out how to do that.
 
+;;;JTB - 7/17/01 - Added focused but unmarked versions of all of these
+;;;but left the spelled-out focused ones in.  The ambiguity for each
+;;;wh-word does have an effect on parsing, for instance, "who saw who"
+;;;now how two possible readings: "who saw WHÓ?" and "WHÓ saw WHÓ?", both
+;;;of which will appear when we enter "who saw who".  This is predicated
+;;;and fine but a bit undesirable for teasing out the two different
+;;;sentences.
 
-interrogative_who := inflected-lexeme+amalg &
+interrogative_who := wh-n-lxm-unfoc &
+[ ORTH <! "who" !>, 
+  SS.LOC.CONT person-param ].
+
+interrogative_who-foc-2 := wh-n-lxm-foc &
 [ ORTH <! "who" !>,
-  SS [ LOC [ CAT [ HEAD noun & [ FORM normal, 
-	        	         ANA false,
-                                 AGR ref-index ],
-                   SUBJ < >,
-                   SPR < >,
-                   COMPS < >,
-                   ARG-ST < > ],
-             CONT param & [ INDEX #i,
-                            FOC false ],
-             STORE  <! #1 !> ],
-       REL <! !>,
-       WH <! #1 & param & [ INDEX #i,
-                            RESTR < [ PERSON #i ] > ] !>,
-       SLASH <! !> ],
-  DTRS < inflected-lexeme > ].
+  SS.LOC.CONT person-param ].
 
-;;;JTB 7/10/01 - This may be ancient, let's kill it.
-;interrogative_who-2 := inflected-lexeme+amalg &
-;[ ORTH <! "who" !>,
-;  SS [ LOC [ CAT [ HEAD noun & [ FORM normal, 
-;	        	         ANA false,
-;                                 AGR ref-index ],
-;                   SUBJ < >,
-;                   SPR < >,
-;                   COMPS < >,
-;                   ARG-ST < > ],
-;             CONT param & [ INDEX #i ],
-;             STORE <! param & [ INDEX #i,
-;                                RESTR < [ PERSON #i ] >,
-;                                FOC false ] !> ],
-;       REL <! !>,
-;       WH <! !>,
-;       SLASH <! !> ],
-;  DTRS < inflected-lexeme > ].
-
-;;; JTB/IAS/CCB 07/10/01 - The constraint on WH is only applicable to
-;;;fronted wh words, not accented ones.
-;interrogative_who-foc := inflected-lexeme+amalg &
-;[ ORTH <! "WHÓ" !>,
-;  SS [ LOC [ CAT [ HEAD noun & [ FORM normal, 
-;	        	         ANA false,
-;                                 AGR ref-index ],
-;                   SUBJ < >,
-;                   SPR < >,
-;                   COMPS < >,
-;                   ARG-ST < > ],
-;             CONT param & [ INDEX #i ],
-;             STORE  <! #1 & [ FOC true,
-;                              RESTR < [ PERSON #i ] > ] !> ],
-;       REL <! !>,
-;       WH <! #1 & param & [ INDEX #i ] !>,
-;       SLASH <! !> ],
-;  DTRS < inflected-lexeme > ].
-
-
-interrogative_who-foc-2 := inflected-lexeme+amalg &
+interrogative_who-foc-1 := wh-n-lxm-foc &
 [ ORTH <! "WHÓ" !>,
-  SS [ LOC [ CAT [ HEAD noun & [ FORM normal, 
-	        	         ANA false,
-                                 AGR ref-index ],
-                   SUBJ < >,
-                   SPR < >,
-                   COMPS < >,
-                   ARG-ST < > ],
-             CONT param & [ INDEX #i ],
-             STORE <! param & [ INDEX #i,
-                                RESTR < [ PERSON #i ] >,
-                                FOC true ] !> ],
-       REL <! !>,
-       WH <! !>,
-       SLASH <! !> ],
-  DTRS < inflected-lexeme > ].
-
-
-
+  SS.LOC.CONT person-param ].
 
 ;;; <<< >>> WHOM
 
-
-interrogative_whom := inflected-lexeme+amalg &
+interrogative_whom := wh-n-lxm-unfoc &
 [ ORTH <! "whom" !>,
-  SS [ LOC [ CAT [ HEAD noun & [ FORM normal, 
-	        	         ANA false,
-                                 AGR ref-index,
-                                 MOD < > ],
-                   SUBJ < >,
-                   SPR < >,
-                   COMPS < >,
-                   ARG-ST < > ],
-             CONT param & [ INDEX #i,
-                            RESTR < [ PERSON #i ] >,
-                            FOC false ],
-             STORE  <! #1 !> ],
-       REL <! !>,
-       WH <! #1 & param & [ INDEX #i ] !>,
-       SLASH <! !> ],
-  DTRS < inflected-lexeme > ].
+  SS.LOC.CONT person-param ].
 
-;;;JTB 07/10/01 - Dead
-;interrogative_whom-2 := inflected-lexeme+amalg &
-;[ ORTH <! "whom" !>,
-;  SS [ LOC [ CAT [ HEAD noun & [ FORM normal, 
-;	        	         ANA false,
-;                                 AGR ref-index ],
-;                   SUBJ < >,
-;                   SPR < >,
-;                   COMPS < >,
-;                   ARG-ST < > ],
-;             CONT param & [ INDEX #i ],
-;             STORE <! param & [ INDEX #i,
-;                                RESTR < [ PERSON #i ] >,
-;                                FOC false ] !> ],
-;       REL <! !>,
-;       WH <! !>,
-;       SLASH <! !> ],
-;  DTRS < inflected-lexeme > ].
+interrogative_whom-foc-2 := wh-n-lxm-foc &
+[ ORTH <! "whom" !>,
+  SS.LOC.CONT person-param ].
 
-;;;JTB/IAS/CCB 07/10/01 - Also wrong, see above.
-;interrogative_whom-foc := inflected-lexeme+amalg &
-;[ ORTH <! "WHÓM" !>,
-;  SS [ LOC [ CAT [ HEAD noun & [ FORM normal, 
-;	        	         ANA false,
-;                                 AGR ref-index,
-;                                 MOD < > ],
-;                   SUBJ < >,
-;                   SPR < >,
-;                   COMPS < >,
-;                   ARG-ST < > ],
-;             CONT param & [ INDEX #i ],
-;             STORE  <! #1 & [ FOC true ] !> ],
-;       REL <! !>,
-;       WH <! #1 & param & [ INDEX #i ] !>,
-;       SLASH <! !> ],
-;  DTRS < inflected-lexeme > ].
-
-
-interrogative_whom-foc-2 := inflected-lexeme+amalg &
+interrogative_whom-foc-1 := wh-n-lxm-foc &
 [ ORTH <! "WHÓM" !>,
-  SS [ LOC [ CAT [ HEAD noun & [ FORM normal, 
-	        	         ANA false,
-                                 AGR ref-index,
-                                 MOD < > ],
-                   SUBJ < >,
-                   SPR < >,
-                   COMPS < >,
-                   ARG-ST < > ],
-             CONT param & [ INDEX #i ],
-             STORE <! param & [ INDEX #i,
-                                RESTR < [ PERSON #i ] >,
-                                FOC true ] !> ],
-       REL <! !>,
-       WH <! !>,
-       SLASH <! !> ],
-  DTRS < inflected-lexeme > ].
-
-
+  SS.LOC.CONT person-param ].
 
 ;;; <<< >>> WHAT
 
-
-
-interrogative_what := inflected-lexeme+amalg &
+interrogative_what := wh-n-lxm-unfoc &
 [ ORTH <! "what" !>,
-  SS [ LOC [ CAT [ HEAD noun & [ FORM normal, 
-	        	         ANA false,
-                                 AGR ref-index ],
-                   SUBJ < >,
-                   SPR < >,
-                   COMPS < >,
-                   ARG-ST < > ],
-             CONT param & [ INDEX #i,
-                            RESTR < [ THING #i ] >,
-                            FOC false ],
-             STORE  <! #1 !> ],
-       REL <! !>,
-       WH <! #1 & param & [ INDEX #i ] !>,
-       SLASH <! !> ],
-  DTRS < inflected-lexeme > ].
+  SS.LOC.CONT thing-param ].
 
-;;;JTB 07/10/01 - Bye, bye, birdie
-;interrogative_what-2 := inflected-lexeme+amalg &
-;[ ORTH <! "what" !>,
-;  SS [ LOC [ CAT [ HEAD noun & [ FORM normal, 
-;	        	         ANA false,
-;                                 AGR ref-index ],
-;                   SUBJ < >,
-;                   SPR < >,
-;                   COMPS < >,
-;                   ARG-ST < > ],
-;             CONT param & [ INDEX #i ],
-;             STORE <! param & [ INDEX #i,
-;                                RESTR < [ THING #i ] >,
-;                                FOC false ] !> ],
-;       REL <! !>,
-;       WH <! !>,
-;       SLASH <! !> ],
-;  DTRS < inflected-lexeme > ].
+interrogative_what-foc-2 := wh-n-lxm-foc &
+[ ORTH <! "what" !>,
+  SS.LOC.CONT thing-param ].
 
-;;;JTB 07/10/01 - Same as above.
-;interrogative_what-foc := inflected-lexeme+amalg &
-;[ ORTH <! "WHÁT" !>,
-;  SS [ LOC [ CAT [ HEAD noun & [ FORM normal, 
-;	        	         ANA false,
-;                                 AGR ref-index ],
-;                   SUBJ < >,
-;                   SPR < >,
-;                   COMPS < >,
-;                   ARG-ST < > ],
-;             CONT param & [ INDEX #i ],
-;             STORE  <! #1 & [ FOC true,
-;                              RESTR < [ THING #i ] > ] !> ],
-;       REL <! !>,
-;       WH <! #1 & param & [ INDEX #i ] !>,
-;       SLASH <! !> ],
-;  DTRS < inflected-lexeme > ].
-
-
-interrogative_what-foc-2 := inflected-lexeme+amalg &
+interrogative_what-foc-1 := wh-n-lxm-foc &
 [ ORTH <! "WHÁT" !>,
-  SS [ LOC [ CAT [ HEAD noun & [ FORM normal, 
-	        	         ANA false,
-                                 AGR ref-index ],
-                   SUBJ < >,
-                   SPR < >,
-                   COMPS < >,
-                   ARG-ST < > ],
-             CONT param & [ INDEX #i ],
-             STORE <! param & [ INDEX #i,
-                                RESTR < [ THING #i ] >,
-                                FOC true ] !> ],
-       REL <! !>,
-       WH <! !>,
-       SLASH <! !> ],
-  DTRS < inflected-lexeme > ].
-
-
-
-
-
-
+  SS.LOC.CONT thing-param ].
 
 ;;; CCB - add exist_rel to the WH valuse, as per ch 5.
 
-exclamative_what :=  inflected-lexeme+amalg &
+exclamative_what :=  wh-lxm-excl &
 [ ORTH <! "what" !>,
-  SS [ LOC [ CAT [ HEAD det,
-                   SUBJ < >,
-                   SPR < >,
-                   COMPS < > ],
-             CONT param & [ INDEX #i ],
-             STORE <! !> ],
-       WH <! param & [ INDEX #i ] !>,
-       SLASH <! !>,
-       REL <! !> ],
-  DTRS < inflected-lexeme > ].
+  SS.LOC.CAT.HEAD det ].
 
+;;;All dead entries:
 
+;;;JTB 7/10/01 - This may be ancient, let's kill it.
+;interrogative_who-2 := wh-n-lxm &
+;[ ORTH <! "who" !>,
+;  SS [ LOC [ CONT [ INDEX #i ],
+;             STORE <! param & [ INDEX #i,
+;                                RESTR < [ PERSON #i ] >,
+;                                FOC false ] !> ], 
+;       WH *e-list-of-scope-objs* ] ].
 
+;;; JTB/IAS/CCB 07/10/01 - The constraint on WH is only applicable to
+;;;fronted wh words, not accented ones.
+;interrogative_who-foc := wh-n-lxm &
+;[ ORTH <! "WHÓ" !>,
+;  SS [ LOC [ CONT [ INDEX #i ],
+;             STORE  <! #1 & [ FOC true,
+;                              RESTR < [ PERSON #i ] > ] !> ],
+;       WH <! #1 & param & [ INDEX #i ] !> ] ].
+
+;;;JTB 07/10/01 - Dead
+;interrogative_whom-2 := wh-n-lxm &
+;[ ORTH <! "whom" !>,
+;  SS [ LOC [ CONT [ INDEX #i ],
+;             STORE <! param & [ INDEX #i,
+;                                RESTR < [ PERSON #i ] >,
+;                                FOC false ] !> ],
+;       WH *e-list-of-scope-objs* ] ].
+
+;;;JTB/IAS/CCB 07/10/01 - Also wrong, see above.
+;interrogative_whom-foc := wh-n-lxm &
+;[ ORTH <! "WHÓM" !>,
+;  SS [ LOC [ CONT [ INDEX #i ],
+;             STORE  <! #1 & [ FOC true ] !> ],
+;       WH <! #1 & param & [ INDEX #i ] !> ] ].
+
+;;;JTB 07/10/01 - Bye, bye, birdie
+;interrogative_what-2 := wh-n-lxm &
+;[ ORTH <! "what" !>,
+;  SS [ LOC [ CONT [ INDEX #i ],
+;             STORE <! param & [ INDEX #i,
+;                                RESTR < [ THING #i ] >,
+;                                FOC false ] !> ],
+;       WH *e-list-of-scope-objs* ] ].
+
+;;;JTB 07/10/01 - Same as above.
+;interrogative_what-foc := wh-n-lxm &
+;[ ORTH <! "WHÁT" !>,
+;  SS [ LOC [ CONT [ INDEX #i ],
+;             STORE  <! #1 & [ FOC true,
+;                              RESTR < [ THING #i ] > ] !> ],
+;       WH <! #1 & param & [ INDEX #i ] !> ] ].
 
 
 

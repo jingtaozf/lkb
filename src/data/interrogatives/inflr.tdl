@@ -309,7 +309,6 @@ gap-1 := word &
 [ SS [ LOC.CAT.COMPS < > ],
   DTRS < inflected-lexeme+amalg & [ SS.LOC.CAT.COMPS < gap-ss > ] > ].
 
-
 gap-1-of-2 := word &
 [ SS [ LOC.CAT.COMPS < #2 > ],
   DTRS < inflected-lexeme+amalg & [ SS.LOC.CAT.COMPS < gap-ss, #2 > ] > ].
