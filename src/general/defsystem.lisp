@@ -1864,9 +1864,12 @@ D
   ;; just a pathname argument. The default functions are #'compile-file and
   ;; #'load. Unlike fdmm's SET-LANGUAGE macro, this allows a defsystem to 
   ;; mix languages.
-  (language nil :type (or NULL SYMBOL))
-  (compiler nil :type (or NULL function))
-  (loader   nil :type (or NULL function))      
+  (language nil #+(or (not :allegro) :compiler) :type 
+                #+(or (not :allegro) :compiler) (or NULL SYMBOL))
+  (compiler nil #+(or (not :allegro) :compiler) :type 
+                #+(or (not :allegro) :compiler) (or NULL function))
+  (loader   nil #+(or (not :allegro) :compiler) :type 
+                #+(or (not :allegro) :compiler)(or NULL function))      
 
   components          ; a list of components comprising this component's definition
   depends-on          ; a list of the components this one depends on. may refer only
@@ -1889,7 +1892,8 @@ D
   ;; This saves time in some lisps.
   compile-only        ; If T, will not load this file on operation :compile.
   ;; optional documentation slot
-  (documentation       nil            :type (or NULL string))
+  (documentation nil #+(or (not :allegro) :compiler) :type 
+                     #+(or (not :allegro) :compiler) (or NULL string))
 )
 
 (defvar *file-load-time-table* (make-hash-table :test #'equal)
