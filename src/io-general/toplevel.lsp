@@ -358,6 +358,7 @@
    ;; the appropriate globals should be set
                   (if (mrs::psoa-liszt input-sem)
                      (progn
+                        (close-existing-chart-windows)
                         (generate-from-mrs input-sem)
                         (show-gen-result))
                      (format t "~%Could not extract any MRS relations from edge ~A"
