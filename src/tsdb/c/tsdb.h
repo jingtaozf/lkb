@@ -332,6 +332,7 @@ typedef struct tsdb_history {
   int command;
   char *query;
   struct tsdb_selection *result;
+  int unique_tuples;
 } Tsdb_history;
 
 typedef struct tsdb {
@@ -481,7 +482,7 @@ int tsdb_delete(Tsdb_value *, Tsdb_node *);
 int tsdb_update(Tsdb_value *, Tsdb_node *);
 
 
-void tsdb_project(Tsdb_selection*,Tsdb_value **,char*,FILE* );
+int tsdb_project(Tsdb_selection*,Tsdb_value **,char*,FILE* );
 FILE *tsdb_find_relations_file(char *);
 FILE *tsdb_find_data_file(char *, char *);
 FILE* tsdb_open_result();
@@ -556,14 +557,15 @@ Tsdb_relation ***tsdb_real_join_path(Tsdb_relation **, int,
 Tsdb_selection *tsdb_simple_merge(Tsdb_selection *, Tsdb_selection *);
 Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **, Tsdb_value **,
                                       Tsdb_node *,
-                                      char *, char*);
+                                      char *, char*, int*);
 int tsdb_retrieve(Tsdb_value **, Tsdb_value **, Tsdb_node *, char *, char *);
-
+int tsdb_commit(Tsdb_value **);
+void tsdb_quit(void);
 void tsdb_shutdown(int);
 int tsdb_do(char *, char *);
 
 Tsdb_history *tsdb_get_history(int);
-void tsdb_add_to_history(Tsdb_selection*);
+void tsdb_add_to_history(Tsdb_selection*, int);
 void tsdb_set_history_size(int);
 int tsdb_init_history(Tsdb*);
 
