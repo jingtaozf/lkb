@@ -701,13 +701,21 @@
   (declare (ignore in-isolation delete))
   (disconnect lexicon))
 
+(defmethod true-port ((lexicon psql-database))
+  (let* ((port (or
+		(port lexicon)
+		(car (excl.osi::command-output "echo $PGPORT")))))
+    (if (equal port "")
+	5432
+      port)))
+
 (defmethod open-lex ((lexicon psql-database) &key name parameters)
   (declare (ignore parameters)) ;; for_now 
-  (close-lex lexicon)
+  (close-lex lexicon)    
   (format t "~%Connecting to lexical database ~a@~a:~a" 
           (dbname lexicon)
           (host lexicon)
-          (port lexicon))
+          (true-port lexicon))
   (let* ((connection (connect lexicon))
 	 (dbversion))
     (setf *postgres-tmp-lexicon* lexicon)
