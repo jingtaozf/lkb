@@ -119,6 +119,12 @@
   "if this is set, the parser will not parse regular spellings
    if there is an irregular spelling (eated, dreamed)")
 
+(def-lkb-parameter *unknown-word-types* nil
+  "if this is set, the user-fn make-unknown-word-sense-unifications
+   should also be defined.  Together they result in entries
+   of the specified type or types being created for any unknown
+   words which may occur in the input")
+
 #+:packing
 (def-lkb-parameter *packing-restrictor* nil
   "restrictor used when parsing with ambiguity packing")

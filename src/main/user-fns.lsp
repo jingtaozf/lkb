@@ -70,6 +70,18 @@
 ;;;       )))
 
 
+(defun make-unknown-word-sense-unifications (word-string)
+  (when word-string
+    (list 
+       (make-unification :lhs
+          (create-path-from-feature-list '(orth list first))
+          :rhs (make-u-value :type word-string))
+       (make-unification :lhs
+          (create-path-from-feature-list '(sem key pred))
+          :rhs (make-u-value :type 
+                             (concatenate 'string word-string "_rel"))))))
+
+
 (defun make-orth-tdfs (orth)
   (let ((unifs nil)
         (tmp-orth-path *orth-path*))

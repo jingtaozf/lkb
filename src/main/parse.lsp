@@ -367,11 +367,14 @@
                           #+:powerpc(incf gg (CCL::%HEAP-BYTES-ALLOCATED))))))
           (unless #+:ltemplates (template-p word) #-:ltemplates nil
             (unless morph-poss 
-              (format t "~%Word `~A' is not in lexicon." word)))
-          (when morph-poss
+              (format t "~%Word `~A' is not in lexicon." word)
+              (when *unknown-word-types* 
+                (format t " Using unknown word mechanism."))))
+          (when (or morph-poss *unknown-word-types*)
             (setf (aref *morphs* current)
               (make-morph-edge :id current :word base-word 
-                               :morph-results morph-poss))
+                               :morph-results 
+                               (or morph-poss (list (list word)))))
             (setf current new))))))
 
 (defun add-words-to-chart (f)
@@ -471,23 +474,26 @@
              :to to))
 
 (defun get-senses (stem-string)
-  (loop for entry in (get-unexpanded-lex-entry stem-string)
-       nconc
-       (when (not (cdr (lex-or-psort-orth entry)))
-         ;; exclude multi-words
-         (let* ((id (lex-or-psort-id entry))
-                (expanded-entry (get-psort-entry id))
-                (tdfs (when expanded-entry 
-                        (lex-or-psort-full-fs expanded-entry))))
-           (when tdfs
-             (list
-             (cons id
-                   (cond
-                    ((smember tdfs *lexical-entries-used*)
-                     (copy-tdfs-completely tdfs))
-                    (t 
-                     (push tdfs *lexical-entries-used*)
-                     tdfs)))))))))
+  (let ((entries
+         (loop for entry in (get-unexpanded-lex-entry stem-string)
+             nconc
+               (when (not (cdr (lex-or-psort-orth entry)))
+                 ;; exclude multi-words
+                 (let* ((id (lex-or-psort-id entry))
+                        (expanded-entry (get-psort-entry id))
+                        (tdfs (when expanded-entry 
+                                (lex-or-psort-full-fs expanded-entry))))
+                   (when tdfs
+                     (list
+                      (cons id
+                            (cond
+                             ((smember tdfs *lexical-entries-used*)
+                              (copy-tdfs-completely tdfs))
+                             (t 
+                              (push tdfs *lexical-entries-used*)
+                              tdfs))))))))))
+    (or entries
+        (generate-unknown-word-entries stem-string))))
 
 ;;; get-multi-senses has to return a structure
 
@@ -956,7 +962,7 @@
 	  (cdr (rule-order rule))))
        (n -1)
        (new-orth-fs (when nu-orth
-		      (get-orth-tdfs nu-orth nil))))
+		      (get-orth-tdfs nu-orth))))
     ;; shouldn't strictly do this here because we may not need it but
     ;; otherwise we get a nested unification context error - cache the values
     ;; for a word, so it's not reconstructed only wasted if the morphology is
@@ -1042,11 +1048,13 @@
       (make-tdfs :indef indef-dag :tail tail)))
     #+:powerpc (incf hh (CCL::%HEAP-BYTES-ALLOCATED))))
 
-(defun get-orth-tdfs (str &optional (cachedp t))
-  (or (and cachedp (cdr (assoc str *cached-orth-str-list* :test #'equal)))
-      (let ((new-orth-tdfs (make-orth-tdfs str)))
-        (push (cons str new-orth-tdfs) *cached-orth-str-list*)
-        new-orth-tdfs)))
+(defun get-orth-tdfs (str)
+  (let ((new-orth-tdfs (make-orth-tdfs str)))
+    (push (cons str new-orth-tdfs) *cached-orth-str-list*)
+    new-orth-tdfs))
+
+(defun retrieve-orth-tdfs (str)
+   (cdr (assoc str *cached-orth-str-list* :test #'equal)))
 
 ;;; evaluate-unifications-with-fail-messages - temporarily removed
 

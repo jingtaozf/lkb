@@ -512,7 +512,7 @@
              (unless rule-dag (error "Unifications failed to reunify when drawing parse tree"))))
     ;; Re-do spelling change
     (let ((orth-fs (when nu-orth 
-		     (copy-tdfs-completely (get-orth-tdfs nu-orth))))
+		     (copy-tdfs-completely (retrieve-orth-tdfs nu-orth))))
           (mother-fs (tdfs-at-end-of (car (rule-order rule)) rule-dag)))
       (when orth-fs
 	(setf mother-fs (yadu mother-fs orth-fs)))

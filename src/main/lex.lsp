@@ -137,16 +137,36 @@
 
 (defun get-lex-entry (orth)
   (loop for psort in (remove-duplicates (lookup-word *lexicon* orth))
-        nconc
+      nconc
         (let ((entry (get-psort-entry psort)))
-          (if entry (list entry)))))
-                       
+          (if entry (list entry)))))                       
 
 (defun get-unexpanded-lex-entry (orth)
   (loop for psort in (remove-duplicates (lookup-word *lexicon* orth))
-       nconc
+      nconc
         (let ((entry (get-unexpanded-psort-entry psort)))
           (if entry (list entry)))))
+
+(defun generate-unknown-word-entries (orth)
+  (loop for type in *unknown-word-types*
+      nconc
+        (let* 
+            ((*safe-not-to-copy-p* nil)
+             (unifs 
+               (cons 
+                (make-unification 
+                 :lhs
+                 (create-path-from-feature-list nil)
+                 :rhs 
+                 (make-u-value :type type))
+                (make-unknown-word-sense-unifications orth)))
+             (tdfs (let* ((fs (process-unifications unifs))
+                          (wffs (if fs (create-wffs fs))))
+                     (if wffs 
+                         (construct-tdfs wffs nil t)))))
+          (if tdfs
+              (list (cons (gensym "unknown") tdfs))))))
+              
 
 (defun add-lex-from-file (orth sense-id fs-or-type defs)
   (let* ((lex-id (if orth (make-lex-id orth sense-id) sense-id))
