@@ -48,7 +48,16 @@
                    (with-bold-output str
                       (stream-write-string str s 0 (length (the string s))))
                    (stream-write-string str s 0 (length (the string s))))
-                (add-active-parse-region edge-symbol str start-pos)))))
+                (add-active-parse-region
+                   edge-symbol str start-pos (eq edge-symbol node)))))
+         #'(lambda (str parent child x1 y1 x2 y2 reversep)
+            (declare (ignore reversep))
+            (if (edge-mod-edge-p parent child)
+               ;; show this as being a generator intersective modifier link
+               (with-focused-view str
+                  (with-fore-color *light-blue-color*
+                     (draw-line-x-y str x1 y1 x2 y2 nil)))
+               (draw-line-x-y str x1 y1 x2 y2 nil))))
       (let*
          ((fields (fields fake-window))
          (pict (window-close fake-window))
@@ -69,43 +78,18 @@
       real-window)))
 
 
-;; Find the children of a node, respecting various conditional display flags
-
-(defun find-children (node)
-  (let ((edge-record (get node 'edge-record))
-        (dtrs (get node 'daughters)))
-    (cond ((and (or *dont-show-morphology*
-                    *dont-show-lex-rules*)
-                (null edge-record))
-           ;; Leaf node
-           nil)
-          ((and *dont-show-lex-rules*
-                edge-record
-                (lexical-rule-p (edge-rule edge-record)))
-           ;; Lexical rule node
-           (mapcar #'find-leaf dtrs))
-          (t dtrs))))
-
-;; Given a node, return the first leaf node dominated by it.  Assumes
-;; that this node and all nodes under it are unary branching/
-
-(defun find-leaf (node)
-  (if (null (get node 'edge-record))
-      node
-    (find-leaf (car (get node 'daughters)))))
-
-
 ;;; menus
 
-(defun add-active-parse-region (edge-symbol stream start-pos)
+(defun add-active-parse-region (edge-symbol stream start-pos top-edge-p)
   (let ((menu
           (create-parse-tree-menu edge-symbol
-             (subtract-points start-pos (make-point 0 (font-ascent stream))))))
+             (subtract-points start-pos (make-point 0 (font-ascent stream)))
+             top-edge-p)))
     (when menu
       (push menu (fields stream)))))
 
 
-(defun create-parse-tree-menu (edge-symbol view-pos)
+(defun create-parse-tree-menu (edge-symbol view-pos top-edge-p)
   (let ((edge-record (get edge-symbol 'edge-record)))
       (if edge-record
         (let* ((menu (make-instance 'active-tree-pop-up-field
@@ -113,7 +97,7 @@
                        :item-display (get-string-for-edge edge-symbol)
                        :view-font (cons :bold (lkb-type-font)))))
           (apply #'add-menu-items menu
-                 (pop-up-parse-tree-menu-items edge-symbol edge-record))
+             (pop-up-parse-tree-menu-items edge-symbol edge-record top-edge-p))
           menu))))
 
 (defmethod set-pop-up-menu-default-item ((menu active-tree-pop-up-field) num)
@@ -122,10 +106,11 @@
    nil)
 
 
-(defun pop-up-parse-tree-menu-items (edge-symbol edge-record)
+(defun pop-up-parse-tree-menu-items (edge-symbol edge-record top-edge-p)
   (list
    (make-instance 'menu-item
-     :menu-item-title (format nil "Feature structure - Edge ~A" (edge-id edge-record))
+     :menu-item-title
+     (format nil "Feature structure - Edge ~A" (edge-id edge-record))
      :menu-item-action
      #'(lambda ()
          (display-fs (get edge-symbol 'edge-fs)
@@ -135,6 +120,11 @@
                                   "G" 
                                 "P")))
           (display-edge-in-chart edge-record)))
+   (make-instance 'menu-item
+     :menu-item-title 
+     "Show edge in chart"
+     :menu-item-action
+     #'(lambda () (display-edge-in-chart edge-record)))
    (make-instance 'menu-item
      :menu-item-title 
      (format nil "Rule ~A" 
@@ -150,4 +140,15 @@
                    (let ((alternative (get-tdfs-given-id item)))
                       (when alternative
                          (display-fs alternative
-                            (format nil "~A" item))))))))))
+                            (format nil "~A" item)))))))
+     :disabled (not (rule-p (edge-rule edge-record))))
+   (make-instance 'menu-item
+     :menu-item-title "Generate from edge"
+     :menu-item-action
+     #'(lambda () (really-generate-from-edge edge-record))
+     :disabled (not top-edge-p))
+   (make-instance 'menu-item
+     :menu-item-title 
+     (format nil "Lex ids ~A" (edge-lex-ids edge-record))
+     :menu-item-action #'(lambda () nil)
+     :disabled t)))

@@ -727,7 +727,8 @@
             (select-fs pane record t)))))
 
 
-(defun add-active-pointer (stream position pointer valuep)
+(defun add-active-pointer (stream position pointer ignore valuep)
+   (declare (ignore ignore))
    (format stream "<~A>" pointer)
    (let ((record
             (make-reentrancy-click-field :view-pos position

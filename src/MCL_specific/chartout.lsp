@@ -57,7 +57,7 @@
   
 ;;;
 
-(defun draw-chart-lattice (node title horizontalp)
+(defun draw-chart-lattice (node title &optional (horizontalp t))
    (let*
       ((ccl:*idle-sleep-ticks* 0) ; don't let get-next-event give much time to others
        (*chart-display* t)
@@ -264,7 +264,7 @@
 
 ;;; called from display-parse-tree - when it is called to display an edge
 ;;; find topmost chart window on screen,
-;;; and ask for type hierarchy window to be scrolled so given edge is visible
+;;; and ask for chart window to be scrolled so given edge is visible
 ;;; in centre, and the edge highlighted
 ;;; doesn't open a new chart window if not one, since user can do this from
 ;;; toplevel parse menu

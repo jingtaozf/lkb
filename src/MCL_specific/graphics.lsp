@@ -4,6 +4,16 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
    (require 'quickdraw))
 
+
+;;; the following is currently a no-op - it's
+;;; defined for the CLIM version - 
+
+(defmacro with-output-to-top (() &body body)
+  `(progn
+     ,@body
+     (terpri)))
+
+
 ;;; SIMPLE DRAWING
 
 (defun move-to-x-y (stream x y)
@@ -12,10 +22,16 @@
   nil)
 
 (defun draw-line-x-y (stream from-x from-y to-x to-y dashing)
-  (declare (ignore dashing))
   (with-focused-view stream
      (#_MoveTo :long (make-point from-x from-y))
-     (#_LineTo :long (make-point to-x to-y)))
+     (if dashing
+       ;; make pen colour and pattern grey - this seems to look best
+       (with-port (wptr stream)
+          (#_PenPat *gray-pattern*)
+          (with-fore-color *dark-gray-color*
+             (#_LineTo :long (make-point to-x to-y)))
+          (#_PenNormal))
+       (#_LineTo :long (make-point to-x to-y))))
   nil)
 
 (defun move-by-y (stream y)
