@@ -136,7 +136,17 @@
   new-spelling orth-tdfs)
 
 (defvar *edge-id* 0)
-(declaim (type fixnum *edge-id*))
+
+;;;
+;;; when unpacking, edges are a lot cheaper, as we are deterministic at this
+;;; point (e.g. there will be very few failing unifications, if any).  hence,
+;;; impose a separate limit for unpacking, although it could be argued that we
+;;; should count on top of the edges built already (like PET does).  i prefer
+;;; independent counting, however, since active edges (in generation at least)
+;;; are also included in the edge count, but we could dispose of them when we
+;;; move on into unpacking.                                    (26-nov-04; oe)
+;;;
+(defparameter *unpack-edge-allowance* 50000)
 
 (defparameter %edge-allowance% 0)
 
@@ -146,7 +156,7 @@
     ;; _fix_me_
     ;; better generalize all of this, maybe encapsulate state variables.
     ;;                                                       (16-dec-03; oe)
-    (when (> (incf %edge-allowance%) 50000)
+    (when (> (incf %edge-allowance%) *unpack-edge-allowance*)
       (error "~%Edge allowance overrun (~a)" *edge-id*)))
   (when (> *edge-id* (+ *maximum-number-of-edges* %edge-allowance%))
     (error "~%Probable runaway rule: parse/generate aborted ~
