@@ -155,11 +155,13 @@
                                (length (make-scoped-mrs mrs-struct))))))))
 
 (defun read-mrs-from-string (string)
-  (let ((*package* (find-package :lkb))
-        (mrs (ignore-errors 
-              (with-input-from-string (stream string)
-                (read-mrs stream)))))
-    (when (psoa-p mrs) mrs)))
+  (if (psoa-p string)
+    string
+    (let ((*package* (find-package :lkb))
+          (mrs (ignore-errors 
+                (with-input-from-string (stream string)
+                  (read-mrs stream)))))
+      (when (psoa-p mrs) mrs))))
 
 (defun read-and-scope-mrs-from-string (string)
   (let ((*package* (find-package :lkb))
