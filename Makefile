@@ -69,7 +69,7 @@ lkb_source:
 	      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
 	      --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
 	      --exclude="src/.???l*" --exclude="src/fasl*" \
-	      --exclude="*.fasl" \
+	      --exclude="*.fasl" --exclude="lexdb*" \
 	      --exclude="src/doc*" --exclude="src/data*" \
 	      --exclude="linux*" --exclude="solaris*" --exclude="windows*" \
 	      --exclude="bin*" --exclude="include*" --exclude="lib*" \
