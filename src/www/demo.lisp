@@ -76,10 +76,10 @@
                 :newline
                 ((:link
                   :type "text/css" :rel "stylesheet"
-                  :href "http://mv.uio.no:8000/lkb.css"))
+                  :href "/lkb.css"))
                 :newline
                 ((:script
-                  :src "http://mv.uio.no:8000/lkb.js" :language "javascript" 
+                  :src "/lkb.js" :language "javascript" 
                   :type "text/javascript")))
                :newline
                (:body
