@@ -1,4 +1,8 @@
-(in-package "MAKE")
+(in-package :make)
+
+(eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
+           #-:ansi-eval-when (load eval compile)
+  (pushnew :mrs *features*))
 
 (defsystem "mrs"
     :device (make-pathname :device cl-user::%sys-device%)
@@ -16,8 +20,7 @@
       :source-pathname "mrs"
       :binary-pathname "mrs"
       :components
-      ((:file "mrs-package")
-       (:file "lkb-interface")          ; interface functions to LKB
+      ((:file "lkb-interface")          ; interface functions to LKB
        (:file "mrsglobals")             ; have to redefine most of these, but
                                         ; this is mostly done 
 					; by mrsglobals-eng 
