@@ -39,7 +39,9 @@
  ((:path . "ecpa") (:content . "Ecommerce Email (Produce Availability)"))
  ((:path . "ecos") (:content . "Ecommerce Email (Order Status)"))
  ((:path . "ecoc") (:content . "Ecommerce Email (Order Cancellation)"))
- ((:path . "ecpr") (:content . "Ecommerce Email (Product Return)")))
+ ((:path . "ecpr") (:content . "Ecommerce Email (Product Return)"))
+ ((:path . "hike") (:content . "First LOGON Development Corpus")))
+
 
 
 
