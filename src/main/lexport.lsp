@@ -3,10 +3,11 @@
 ;;;   see `licence.txt' for conditions.
 
 ;;;
-;;; export TDL lexicon for (Access or) Postgres import.
+;;; export lexicon in various formats
 ;;;
 
 ;;; bmw (jul-03)
+;;; - generalize field extraction
 ;;; - export to tdl, previous export mechanisms reworked
 ;;; - defaults, fixed bugs in export-lexicon-to-file
 
@@ -21,8 +22,8 @@
 (defvar *export-file* "/tmp/lexicon")
 (defvar *export-skip-stream* t)
 (defvar *export-separator* #\,)
-(defvar *export-counter* 0)
-(defvar *export-version* 0)
+;;(defvar *export-counter* 0)
+(defvar *export-version* "0")
 (defvar *export-timestamp* nil)
 
 (defvar *export-output-lexicon* nil)
@@ -124,57 +125,69 @@
       (when (u-value-p rhs)
         (u-value-type rhs)))))
 
+(defun extract-field (x field-str &optional field-map)
+  (unless (typep x 'lex-or-psort)
+    (error "unexpected type"))
+  (let* ((field-map (or field-map (fields-map *psql-lexicon*)))
+	 (mapping (find field-str field-map :key #'second :test 'equal)))
+    (extract-field2 x (first mapping) (third mapping) (fourth mapping))))
+	 
 
-;;type
-(defun extract-type-from-unifications (constraint)
-  (extract-value-by-path-from-unifications constraint nil))
+(defun extract-field2 (x key2 path2 type2)
+  (unless (typep x 'lex-or-psort)
+    (error "unexpected type"))
+  (let* ((key (un-keyword key2))
+	 (path (get-path path2))
+	 (type (str-2-symb type2))
+	 (x-key (slot-value x key)))
+    (extract-value-by-path x-key path type)))
+
+(defun extract-value-by-path (x path type)
+  (extracted-val-2-str
+   (cond
+    ((and (listp x) (every #'(lambda (y) (typep y 'unification)) x))
+     (extract-value-by-path-from-unifications x path))
+    ((null path)
+     x)
+    (t
+     (error "unhandled input")))
+   :type type))
+
+(defun extracted-val-2-str (val &key (type 'STRING))
+  (cond
+   ((eq type 'STRING)
+    (symb-2-str val))
+   ((eq type 'SYMBOL)
+    (symb-2-str val))
+   ((eq type 'STRING-LIST)
+    (str-list-2-str val))
+   ((eq type 'STRING-FS)
+    (error "unhandled type"))
+   ((eq type 'STRING-DIFF-FS)
+    (error "unhandled type"))
+   ((eq type 'LIST)
+    (if (listp val)
+	val
+      (list val)))
+   (t
+    (error "unhandled type"))))
 
 
-;;keyrel
-(defun extract-key-from-unifications (constraint)
-  (extract-value-by-path-from-unifications constraint 
-                                           '(SYNSEM LOCAL KEYS KEY)))
+(defun get-path (path-str)
+  (cond
+   ((null path-str)
+    nil)
+   ((listp path-str)
+    path-str)
+   ((equal "" path-str)
+    nil)
+   ((stringp path-str)
+    (work-out-value nil "list" path-str))
+   (t
+    (error "unhandled value"))))
 
-;;keytag
-(defun extract-tag-from-unifications (constraint)
-  (extract-value-by-path-from-unifications 
-   constraint '(SYNSEM LOCAL KEYS KEY CARG)))
-
-;;altkey
-(defun extract-altkey-from-unifications (constraint)
-  (extract-value-by-path-from-unifications constraint 
-                                           '(SYNSEM LOCAL KEYS ALTKEY)))
-
-;;altkey
-(defun extract-alt2key-from-unifications (constraint)
-  (extract-value-by-path-from-unifications constraint 
-                                           '(SYNSEM LOCAL KEYS ALT2KEY)))
-
-;;compkey
-(defun extract-comp-from-unifications (constraint)
-  (extract-value-by-path-from-unifications constraint 
-                                           '(SYNSEM LKEYS --COMPKEY)))
-
-
-;;ocompkey
-(defun extract-ocomp-from-unifications (constraint)
-  (extract-value-by-path-from-unifications constraint 
-                                           '(SYNSEM LKEYS --OCOMPKEY)))
-
-
-;;orthography
-(defun extract-stem-from-unifications (constraint)
-  (let ((stem nil)
-        (count 1))
-    (loop
-        for path = nil then (cons 'rest path)
-        for value = (extract-value-by-path-from-unifications
-                     constraint (cons 'stem (append path '(first))))
-        while value do 
-          (incf count)
-          (push value stem))
-    (cons count (reverse stem))))
-
+(defun un-keyword (keyword-symb)
+  (str-2-symb (symb-2-str keyword-symb)))
 
 (defun extract-value-by-path-from-unifications (constraint path)
   (let* ((unification (find path constraint
@@ -391,48 +404,64 @@
 	    (car res)
 	  (cons t (cons first-val (cdr res)))))))))
 
-(defmethod export-to-cvs ((lexicon lex-database) stream)
+(defmethod export-to-csv ((lexicon lex-database) stream)
   (mapc
-   #'(lambda (x) (format stream "~a" (to-cvs (read-psort lexicon x :recurse nil))))
+   #'(lambda (x) (format stream "~a" (to-csv (read-psort lexicon x :recurse nil))))
    (collect-psort-ids lexicon :recurse nil)))
 
 (defmethod export-to-csv-to-file ((lexicon lex-database) filename)
   (with-open-file 
       (ostream filename :direction :output :if-exists :supersede)
-    (export-to-cvs lexicon ostream)))
+    (export-to-csv lexicon ostream)))
 
-(defmethod to-cvs ((x lex-or-psort))
-  (let* ((name (lex-or-psort-id x))
-	 (unifs (lex-or-psort-unifs x))
-	 (separator (string *export-separator*))
-	 (type (extract-type-from-unifications unifs))
-	 (temp (extract-stem-from-unifications unifs))
-	 (stem (cdr temp))
-	 (count (car temp))
-	 (keyrel (extract-key-from-unifications unifs))      
-	 (keytag (extract-tag-from-unifications unifs))
-	 (altkey (extract-altkey-from-unifications unifs))
-	 (alt2key (extract-alt2key-from-unifications unifs))
-	 (compkey (extract-comp-from-unifications unifs))
-	 (ocompkey (extract-ocomp-from-unifications unifs))
-	 (total (+ count 1 
-		   (if keyrel 1 0) (if keytag 1 0) (if altkey 1 0)
-		   (if alt2key 1 0) (if compkey 1 0) (if ocompkey 1 0))))
+(defmethod to-csv ((x lex-or-psort) 
+		   &key 
+		   (field-map
+		    '((:ID "name" "" "symbol") 
+		      (:ORTH "orthography" "" "string-list") 
+					;(:SENSE-ID "name" "" "symbol")
+		      (:UNIFS "alt2key" "(synsem local keys alt2key)" "symbol")
+		      (:UNIFS "altkey" "(synsem local keys altkey)" "symbol")
+		      (:UNIFS "compkey" "(synsem lkeys --compkey)" "symbol")
+		      (:UNIFS "keyrel" "(synsem local keys key)" "symbol")
+		      (:UNIFS "keytag" "(synsem local keys key carg)" "string")
+		      (:UNIFS "ocompkey" "(synsem lkeys --ocompkey)" "symbol")
+					;(:UNIFS "orthography" "(stem)" "string-fs") 
+		      (:UNIFS "type" "nil" "symbol"))))
+  (let* ((separator (string *export-separator*))
+
+	 (keyrel (extract-field x "keyrel" field-map))      
+	 (keytag (extract-field x "keytag" field-map))
+	 (altkey (extract-field x "altkey" field-map))
+	 (alt2key (extract-field x "alt2key" field-map))
+	 (compkey (extract-field x "compkey" field-map))
+	 (ocompkey (extract-field x "ocompkey" field-map))
+	 
+	 (orth-list (extract-field2 x :orth nil "list"))
+	 (name (extract-field x "name" field-map))
+	 (count (+ 2 (length orth-list)))
+	 (total (+ count
+		   (if (string> keyrel "") 1 0) 
+		   (if (string> keytag "") 1 0) 
+		   (if (string> altkey "") 1 0)
+		   (if (string> alt2key "") 1 0) 
+		   (if (string> compkey "") 1 0) 
+		   (if (string> ocompkey "") 1 0))))
     (cond 
-     ((= total (length unifs))
+     ((= total (length (lex-or-psort-unifs x)))
       (format nil "~a~%"
 	      (concatenate 'string
-		(string-downcase name) 
-		separator (string-downcase type) 
-		separator (string-downcase (str-list-2-str stem)) ;:todo: comma in word?
-		separator (string-downcase (first stem))
+		name
+		separator (extract-field x "type" field-map)
+		separator (extract-field x "orthography" field-map) ;:todo: comma in word?
+		separator (first orth-list)
 		separator  ;;pronunciation
-		separator (string-downcase (or keyrel ""))
-		separator (string-downcase (or altkey ""))
-		separator (string-downcase (or alt2key ""))
-		separator (string-downcase (or keytag ""))
-		separator (string-downcase (or compkey ""))
-		separator (string-downcase (or ocompkey ""))
+		separator keyrel
+		separator altkey
+		separator alt2key
+		separator keytag
+		separator compkey
+		separator ocompkey
 		separator ;;complete
 		separator ;;semclasses
 		separator ;;preferences
@@ -442,18 +471,18 @@
 		separator ;;comments
 		separator ;;exemplars
 		separator ;;usages
-		separator (or *current-lang* "") ;;lang
-		separator (or *current-country* "US") ;;country
+		separator *current-lang* ;;lang
+		separator *current-country* ;;country
 		separator ;;dialect
 		separator ;;domains
 		separator ;;genres
 		separator ;;register
 		separator "1";;confidence
-		separator *export-version* ;;version
+		separator (symb-2-str *export-version*) ;;version
 		separator (or *current-source* "?") ;;source
 		separator "1" ;;flags: 1 = not deleted
 		separator *current-user* ;;userid
-		separator (or *export-timestamp* "") ;;modstamp
+		separator *export-timestamp* ;;modstamp
 		)))
      (t
       (format *export-skip-stream* "~%skipping super-rich entry: `~a'"  name)
@@ -462,9 +491,70 @@
 (defmethod export-to-db ((lexicon lex-database) output-lexicon)
   (mapc
    #'(lambda (x) (to-db (read-psort lexicon x :recurse nil) output-lexicon))
-   (collect-psort-ids lexicon :recurse nil)))
+   (collect-psort-ids lexicon :recurse nil))
+  (fn-get-records output-lexicon ''initialize-current-grammar))
 
-(defmethod to-db ((x lex-or-psort) output-lexicon)
-  (let* ((name (lex-or-psort-id x))
-	 (unifs (lex-or-psort-unifs x)))
-    (set-lexical-entry output-lexicon nil name unifs)))
+;(defmethod to-db ((x lex-or-psort) output-lexicon)
+;  (let* ((name (lex-or-psort-id x))
+;	 (unifs (lex-or-psort-unifs x)))
+;    (set-lexical-entry output-lexicon nil name unifs)))
+
+(defmethod to-db ((x lex-or-psort) (lexicon psql-lex-database))  
+  (let* ((field-map (fields-map lexicon))
+
+	 (keyrel (extract-field x "keyrel" field-map))      
+	 (keytag (extract-field x "keytag" field-map))
+	 (altkey (extract-field x "altkey" field-map))
+	 (alt2key (extract-field x "alt2key" field-map))
+	 (compkey (extract-field x "compkey" field-map))
+	 (ocompkey (extract-field x "ocompkey" field-map))
+	 
+	 (orth-list (extract-field2 x :orth nil "list"))
+	 (name (extract-field x "name" field-map))
+	 (count (+ 2 (length orth-list)))
+	 (total (+ count
+		   (if (string> keyrel "") 1 0) 
+		   (if (string> keytag "") 1 0) 
+		   (if (string> altkey "") 1 0)
+		   (if (string> alt2key "") 1 0) 
+		   (if (string> compkey "") 1 0) 
+		   (if (string> ocompkey "") 1 0)))
+	 
+	 (type (extract-field x "type" field-map))
+	 
+	 ;(name lex-id)
+	 ;(constraint new-entry)
+	 ;(temp (extract-stem-from-unifications constraint))
+	 ;(stem (cdr temp))
+	 ;(count (car temp))
+	 ;(keyrel (extract-key-from-unifications constraint))      
+	 ;(keytag (extract-tag-from-unifications constraint))
+	 ;(altkey (extract-altkey-from-unifications constraint))
+	 ;(alt2key (extract-alt2key-from-unifications constraint))
+	 ;(compkey (extract-comp-from-unifications constraint))
+	 ;(ocompkey (extract-ocomp-from-unifications constraint))
+	 ;(total (+ count 1 
+		;   (if keyrel 1 0) (if keytag 1 0) (if altkey 1 0)
+		;   (if alt2key 1 0) (if compkey 1 0) (if ocompkey 1 0)))
+	 (psql-le
+	  (make-instance 'psql-lex-entry
+	    :name name
+	    :type type
+	    :orthography orth-list		;list
+	    :orthkey (first orth-list)
+	    :keyrel keyrel
+	    :altkey altkey
+	    :alt2key alt2key
+	    :keytag keytag
+	    :compkey compkey
+	    :ocompkey ocompkey
+	    :country *current-country*
+	    :lang *current-lang*
+	    :source *current-source*
+	    :flags 1)))
+    (cond
+     ((= total (length (lex-or-psort-unifs x)))
+      (set-lex-entry lexicon psql-le))
+     (t
+      (format *trace-output* "~%skipping super-rich entry: `~a'~%"  name)
+      nil))))
