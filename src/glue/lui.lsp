@@ -61,7 +61,8 @@
       (run-process *lui-application*
                    :wait nil
                    :output :stream :input :stream 
-                   #-:sbcl :error-output #-:sbcl nil)
+                   #-(or :sbcl :openmcl) :error-output 
+		   #-(or :sbcl :openmcl) nil)
       #+:clisp
       (ext:make-pipe-io-stream *lui-application* :buffered nil))
                     

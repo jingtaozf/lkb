@@ -14,7 +14,8 @@
   "SHOW-GRAMMAR-RULE-TTY" "SHOW-LEX-RULE-TTY" "DO-PARSE-TTY" "SHOW-PARSE"
   "PRINT-CHART" "PARSE-SENTENCES" "APPLY-LEX-TTY" "APPLY-LEX-RULES-TTY"
   "INDEX-FOR-GENERATOR" "DO-GENERATE-TTY" "SHOW-GEN-RESULT" 
-  "PRINT-GEN-CHART" "CLEAR-NON-PARENTS")) 
+  "PRINT-GEN-CHART" "CLEAR-NON-PARENTS"
+  #+:lui "LUI-INITIALIZE" #+:lui "LUI-SHUTDOWN")) 
 
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
            #-:ansi-eval-when (load eval compile)

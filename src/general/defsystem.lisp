@@ -2797,12 +2797,13 @@ the system definition, if provided."
 	   (namestring (translate-logical-pathname pathname)))
 	  (t
 	   (namestring
-	    (make-pathname :host (when (component-host component)
+	    (make-pathname :host (let ((host (component-host component)))
+                                   (when (and host (not (eq host :unspecific)))
 				   ;; MCL2.0b1 and ACLPC cause an error on
 				   ;; (pathname-host nil)
 				   (pathname-host (component-host component)
 						  #+scl :case #+scl :common
-						  ))
+						  )))
 			   :directory (pathname-directory pathname
 						  #+scl :case #+scl :common
 						  )

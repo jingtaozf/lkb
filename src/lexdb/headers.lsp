@@ -58,9 +58,9 @@
   (
    (dbname :initform nil :accessor dbname :initarg :dbname)
    (host :initform "localhost" :accessor host :initarg :host)
-   (user :initform (sys:user-name) :accessor user :initarg :user)
+   (user :initform (user-name) :accessor user :initarg :user)
    (password :initform "" :accessor password :initarg :password)
-   (port :initform (or (system:getenv "PGPORT") *psql-database-port*) :accessor port :initarg :port)
+   (port :initform (or (getenv "PGPORT") *psql-database-port*) :accessor port :initarg :port)
    (connection :initform nil :accessor connection :initarg connection)))
 
 (defclass psql-lex-database (psql-database external-lex-database)

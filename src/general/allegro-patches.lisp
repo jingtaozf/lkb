@@ -105,8 +105,9 @@
   (apply #'excl:run-shell-command arguments))
 
 (eval-when (:execute :load-toplevel :compile-toplevel)
-  (export 'getenv)
-  (setf (symbol-function 'getenv) (symbol-function 'system:getenv)))
+  (setf (symbol-function 'getenv) (symbol-function 'system:getenv))
+  (setf (symbol-function 'user-name) (symbol-function 'system:user-name)))
+
 
 (in-package :mp)
 
