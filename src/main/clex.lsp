@@ -99,7 +99,8 @@
 (defmethod collect-expanded-lex-ids ((lexicon cdb-lex-database))
   (let ((ids nil))
     (maphash #'(lambda (id value)
-                 (when (lex-or-psort-full-fs value)
+                 (when (and value
+			    (lex-or-psort-full-fs value))
 		   (push id ids)))
 	     (slot-value lexicon 'psorts))
     ids))
