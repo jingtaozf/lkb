@@ -72,7 +72,8 @@
                  :h-cons (psoa-h-cons mrs)
                  :liszt (nreverse new-lzt)
                  :in-groups (nreverse new-in-groups)
-                 :rmrs-args new-args)))
+                 :rmrs-args new-args
+		 :origin :erg)))
 
 
 #|

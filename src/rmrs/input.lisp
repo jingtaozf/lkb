@@ -12,11 +12,13 @@
 
 #|
 (read-rmrs-file "test.xml")
-(read-rmrs-file "rmrs/annlt-test/test-select.rmrs")
+(read-rmrs-file "rmrs/annlt-test/test-select.rmrs" :rasp)
 |#
  
-(defun read-rmrs-file (file-name)
+(defun read-rmrs-file (file-name &optional origin)
   ;;; <!ELEMENT rmrs-list (rmrs)*>
+  ;;; <!ATTLIST rmrs-list
+  ;;;        origin (RASP|ERG) #REQUIRED >
   (with-open-file (istream file-name :direction :input)
     (let ((rmrss (parse-xml-removing-junk istream)))
 ;      (setf *rmrs-debug* rmrss)
@@ -25,9 +27,9 @@
       (loop for rmrs in (cdr rmrss)
           unless (xml-whitespace-string-p rmrs)
           collect
-            (read-rmrs rmrs)))))
+            (read-rmrs rmrs origin)))))
 
-(defun read-rmrs (content)
+(defun read-rmrs (content origin)
 ;;; <!ELEMENT rmrs (label, (ep|rarg|ing|hcons)*)>
 ;;; <!ATTLIST rmrs
 ;;;          cfrom CDATA #REQUIRED
@@ -70,7 +72,8 @@
                  :liszt (nreverse eps)
                  :h-cons (nreverse h-cons)
                  :rmrs-args (nreverse rargs)
-                 :in-groups (nreverse ings)))))
+                 :in-groups (nreverse ings)
+		 :origin origin))))
 
 (defun read-rmrs-ep (content)
 ;;; <!ELEMENT ep ((realpred|gpred), label, var)>
@@ -137,7 +140,7 @@
     (create-new-label-with-id (parse-integer (third tag)))))
 
 (defun create-new-label-with-id (idnumber)
-  (make-handle-var 
+  (make-var 
    :type "h"
    :id idnumber))
 
