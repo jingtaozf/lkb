@@ -40,7 +40,7 @@
 
 (in-package :lkb)
 
-(defvar *psql-db-version* "1.7")
+(defvar *psql-db-version* "1.8")
 (defvar *psql-port-default* nil)
 
 (defvar *tmp-lexicon* nil)

@@ -19,7 +19,7 @@ CREATE TABLE meta (
   var varchar(50),
   val varchar(250)
 );
-INSERT INTO meta VALUES ('db-version', '1.7');
+INSERT INTO meta VALUES ('db-version', '1.8');
 INSERT INTO meta VALUES ('filter', 'TRUE');
 
 ---
@@ -274,7 +274,7 @@ INSERT INTO qry VALUES
        ( 'merge-into-db', 1, 
        '
 DELETE FROM temp;
-COPY temp FROM $0 DELIMITERS '','' NULL '''';
+COPY temp FROM $0 DELIMITERS '','' WITH NULL AS '''';
 INSERT INTO revision 
  (SELECT temp.* FROM (new_pkeys NATURAL JOIN temp));
        ' );
@@ -297,7 +297,7 @@ INSERT INTO qry VALUES
 DELETE FROM temp;
 INSERT INTO temp
  (SELECT * FROM revision ORDER BY modstamp, name, userid, version);
-COPY temp TO $0 DELIMITERS '','' NULL '''';
+COPY temp TO $0 DELIMITERS '','' WITH NULL AS '''';
 ' );
 
 INSERT INTO qrya VALUES ( 'dump-multi-db', 0, 'text' );
