@@ -12,13 +12,13 @@ systematically going through semtestsuite adding grammar preds etc
 <lex>
 <le>
 <tag>APP$</tag>
-<comment>his,her,its,...
+<comment>possessive pronouns (his,her,its...)
 see sem ex 13
 </comment>
 <semstruct>
 <hook><index>X7</index><label>H4</label></hook>
 <ep><gpred>DEF_EXPLICIT_Q_REL</gpred><label>H4</label><var>X7</var></ep>
-<rarg><rargname>RSTR</rargname><label>H4</label><var>H6</var></rarg>
+<!--rarg><rargname>RSTR</rargname><label>H4</label><var>H6</var></rarg-->
 <ep><gpred>PRO_POSS_REL</gpred><label>H8</label><var>U</var></ep>
 <rarg><rargname>ARG1</rargname><label>H8</label><var>X9</var></rarg>
 <rarg><rargname>ARG2</rargname><label>H8</label><var>X7</var></rarg>
@@ -27,7 +27,7 @@ see sem ex 13
 <rarg><rargname>BODY</rargname><label>H11</label><var>H13</var></rarg>
 <ep><gpred>PRON_REL</gpred><label>H14</label><var>X9</var></ep>
 <hcons hreln='qeq'><hi><var>H12</var></hi><lo><var>H14</var></lo></hcons>
-<hcons hreln='qeq'><hi><var>H6</var></hi><lo><var>H8</var></lo></hcons>
+<!--hcons hreln='qeq'><hi><var>H6</var></hi><lo><var>H8</var></lo></hcons-->
 </semstruct>
 </le>
 
@@ -52,9 +52,40 @@ see sem ex 13
 
 <!--
 ; CC ; and, or, nor, plus
+-->
+
+<le>
+<tag>CC</tag>
+<comment>coordinating conjunctions
+ANNA - NEW RULE - (sem.ex.73,74,75,76)</comment>
+<semstruct>
+<hook><index>U</index><label>H</label></hook>
+<!-- ANNA - have to leave ARG0 as U since we want Xs for NPs but Es fpr VPs and Ss (sem.ex.75,76)-->
+<ep><pred/><label>H</label><var>U</var></ep>
+</semstruct>
+</le>
+
+<!--
 ; CCB ; but
-; CS
-; CSA ;  though, unless, when,...
+; CS ; if, although, because, even, now
+-->
+
+<le>
+<tag>CS</tag>
+<comment>subordinating conjunctions
+ANNA - NEW RULE - (sem.ex.72)</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<!-- ANNA - want H1 to be the label of the topmost prpstn_m_rel but no access -->
+<ep><pred/><label>H</label><var>H1</var></ep>
+<!-- ANNA - want H2 to be the label of the subordinated construction but no access -->
+<!-- ANNA - removed and added in P1/p_s instead -->
+<!--rarg><rargname>SUBORD</rargname><label>H</label><var>H2</var></rarg-->
+</semstruct>
+</le>
+
+<!--
+; CSA ;  though, unless, when,... 
 ; CSN  ; than
 -->
 
@@ -62,7 +93,7 @@ see sem ex 13
 <tag>CST</tag>
 <comment>that - although this supplies the prpstn rel in the ERG,
 the prpstn is coming from the construction in RASP, hence semantically
-empty (and hope this works ...)</comment>
+empty (and hope ths works ...)</comment>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 </semstruct>
@@ -70,6 +101,22 @@ empty (and hope this works ...)</comment>
 
 <!--
 ; CSW ; whether
+-->
+
+<le>
+<tag>CSW</tag>
+<comment>ANNA - NEW RULE - trying to sort out subordinating conjunctions (sem.ex.30)</comment>
+<semstruct>
+<hook><index>E</index><label>H1</label></hook>
+<!-- ANNA - use the anchor to link the int_m_rel appropriately later -->
+<slots><anchor>H2</anchor></slots>
+<!-- ANNA - ERG treats "whether" as an interrogative so introduce int_m_rel -->
+<ep><gpred>INT_M_REL</gpred><label>H1</label><var>H2</var></ep>
+</semstruct>
+</le>
+
+
+<!--
 ; DA ; same, former, latter, such, own
 ; DA1 ; little, much
 ; DA2  ; few, many, several
@@ -77,6 +124,18 @@ empty (and hope this works ...)</comment>
 ; DAR ; less,more
 ; DAT ; most,least
 ; DB ; all, half
+-->
+
+<le>
+<tag>DB</tag>
+<comment>all,half (sem.ex.127)</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<!--
 ; DB2  ; both
 ; DD ; any,enough,some,lot,rest
 ; DD1 ; each,another,neither,either,this,that
@@ -94,8 +153,57 @@ empty (and hope this works ...)</comment>
 
 <!--
 ; DDQ$ ; whose
+-->
+
+<le>
+<tag>DDQ$</tag>
+<comment>ANNA - NEW RULE - for "whose" (sem.ex.27)</comment>
+<semstruct>
+<hook><index>X</index><label>H6</label></hook>
+<ep><gpred>DEF_Q_REL</gpred><label>H1</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H1</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H1</label><var>H3</var></rarg>
+<ep><gpred>PRO_POSS_REL</gpred><label>H4</label><var>U</var></ep>
+<rarg><rargname>ARG1</rargname><label>H4</label><var>X1</var></rarg>
+<rarg><rargname>ARG2</rargname><label>H4</label><var>X</var></rarg>
+<ep><gpred>PERSON_REL</gpred><label>H5</label><var>X1</var></ep>
+<ep><gpred>WHICH_Q_REL</gpred><label>H6</label><var>X1</var></ep>
+<!--rarg><rargname>RSTR</rargname><label>H6</label><var>H7</var></rarg-->
+<!--ing><ing-a><var>H4</var></ing-a><ing-b><var>H9</var></ing-b></ing-->
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H4</var></lo></hcons>
+<!--hcons hreln='qeq'><hi><var>H7</var></hi><lo><var>H5</var></lo></hcons-->
+</semstruct>
+</le>
+
+<!--
 ; DDQV ; whatever,whichever
+-->
+
+<le>
+<tag>DDQV</tag>
+<comment>ANNA - NEW RULE -  (sem.ex.56)</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><gpred>FREE_RELATIVE_EVER_Q_REL</gpred><label>H</label><var>X</var></ep>
+<!--ep><gpred>THING_REL</gpred><label>H1</label><var>X</var></ep-->
+<!--rarg><rargname>RSTR</rargname><label>H</label><var>H2</var></rarg-->
+<!--rarg><rargname>BODY</rargname><label>H</label><var>H3</var></rarg-->
+<!--hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons-->
+</semstruct>
+</le>
+
+<!--
 ; EX ; there
+-->
+
+<le>
+<tag>EX</tag>
+<comment>ANNA - NEW RULE - don't want _there_x for existential "there" (sem.ex.99)</comment>
+<semstruct>
+</semstruct>
+</le>
+
+<!--
 ; ICS ; before,after,like,save,except,...
 ; IF ; for
 -->
@@ -137,10 +245,38 @@ empty (and hope this works ...)</comment>
 
 <!--
 ; JJR ; 154 adj+er
+-->
+
+<le>
+<tag>JJR</tag>
+<comment>ANNA - NEW RULE - general comparative adjectives (sem.ex.98)</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<!-- ANNA - will it be okay for these preds to share a label...?-->
+<ep><pred/><label>H</label><var>E</var></ep>
+<ep><gpred>COMP_REL</gpred><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<!--
 ; JJT ; 126 adj+est
 ; JK ; orient(at)ed
 ; LE ; both, (n)either, not only
 ; MC ; 208 numbers
+-->
+
+<le>
+<tag>MC</tag>
+<comment>ANNA - NEW RULE - 208 numbers (sem.ex.59)</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><gpred>CARD_REL</gpred><label>H</label><var>U</var></ep>
+<rarg><rargname>ARG1</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>CARG</rargname><label>H</label><lemma/></rarg>
+</semstruct>
+</le>
+
+<!--
 ; MC-MC ; number ranges, 1-2
 ; MC1 ; one
 ; MC2 ; num+s,zeros,eighties
@@ -234,12 +370,28 @@ empty (and hope this works ...)</comment>
 </semstruct>
 </le>
 
-<le>
+<!--le>
 <tag>NNO</tag>
 <comment>thousand,billion,...</comment>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le-->
+
+<le>
+<tag>NNO</tag>
+<comment>thousand,billion,...
+ANNA - introduce times_rel as in ERG (sem.ex.64)</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><gpred>CARD_REL</gpred><label>H</label><var>U</var></ep>
+<ep><gpred>TIMES_REL</gpred><label>H1</label><var>U1</var></ep>
+<rarg><rargname>ARG1</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>CARG</rargname><label>H</label><lemma/></rarg>
+<rarg><rargname>ARG1</rargname><label>H1</label><var>X</var></rarg>
+<rarg><rargname>FACTOR2</rargname><label>H1</label><var>H</var></rarg>
+<!-- ANNA - can't add the times_rel's FACTOR rargs here cos we don't have access to the other numbers -->
 </semstruct>
 </le>
 
@@ -356,6 +508,8 @@ empty (and hope this works ...)</comment>
 <comment>9k+ sg names</comment>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
+<!-- ANNA - added H1 as anchor to reach named_rel from outside (sem.ex.120)-->
+<slots><anchor>H1</anchor></slots>
 <ep><gpred>PROPER_Q_REL</gpred><label>H</label><var>X</var></ep>
 <rarg><rargname>RSTR</rargname><label>H</label><var>H2</var></rarg>
 <rarg><rargname>BODY</rargname><label>H</label><var>H3</var></rarg>
@@ -382,13 +536,15 @@ empty (and hope this works ...)</comment>
 
 <le>
 <tag>NPD1</tag>
-<comment>Monday,...</comment>
+<comment>Monday,...
+ANNA - adding underspecified ARG1 for days of week (sem.ex 96,109)</comment>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><gpred>PROPER_Q_REL</gpred><label>H</label><var>X</var></ep>
 <rarg><rargname>RSTR</rargname><label>H</label><var>H2</var></rarg>
 <rarg><rargname>BODY</rargname><label>H</label><var>H3</var></rarg>
 <ep><gpred>DOFW_REL</gpred><label>H1</label><var>X</var></ep>
+<rarg><rargname>ARG1</rargname><label>H1</label><var>U</var></rarg>
 <rarg><rargname>CARG</rargname><label>H1</label><lemma/></rarg>
 <hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
 </semstruct>
@@ -408,7 +564,7 @@ empty (and hope this works ...)</comment>
 </semstruct>
 </le>
 
-<le>
+<!--le>
 <tag>NPM1</tag>
 <comment>April,...</comment>
 <semstruct>
@@ -417,6 +573,22 @@ empty (and hope this works ...)</comment>
 <rarg><rargname>RSTR</rargname><label>H</label><var>H2</var></rarg>
 <rarg><rargname>BODY</rargname><label>H</label><var>H3</var></rarg>
 <ep><gpred>MOFY_REL</gpred><label>H1</label><var>X</var></ep>
+<rarg><rargname>CARG</rargname><label>H1</label><lemma/></rarg>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le-->
+
+<le>
+<tag>NPM1</tag>
+<comment>April,...
+ANNA - replaced the proper_q_rel with non_freerel_q_rel since the ERG sometimes has a def_q_rel instead for months and added missing ARG1 (sem.ex.94,109,115)</comment>
+<semstruct>
+<hook><index>X</index><label>H1</label></hook>
+<ep><gpred>NON_FREEREL_Q_REL</gpred><label>H</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H</label><var>H3</var></rarg>
+<ep><gpred>MOFY_REL</gpred><label>H1</label><var>X</var></ep>
+<rarg><rargname>ARG1</rargname><label>H1</label><var>U</var></rarg>
 <rarg><rargname>CARG</rargname><label>H1</label><lemma/></rarg>
 <hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
 </semstruct>
@@ -439,14 +611,16 @@ empty (and hope this works ...)</comment>
 <tag>PN1</tag>
 <comment>somebody, everybody, one - so very underspecified</comment>
 <semstruct>
-<hook><index>X</index><label>H</label></hook>
+<!--ANNA - made H1 the label so can attach ING to non_temp_nom_rel (sem.ex.17,117)-->
+<hook><index>X</index><label>H1</label></hook>
+<ep><gpred>NON_TEMP_NOM_REL</gpred><label>H1</label><var>X</var></ep>
 <ep><gpred>QUANT_REL</gpred><label>H</label><var>X</var></ep>
 <rarg><rargname>RSTR</rargname><label>H</label><var>H2</var></rarg>
 <rarg><rargname>BODY</rargname><label>H</label><var>H3</var></rarg>
-<ep><gpred>NON_TEMP_NOM_REL</gpred><label>H1</label><var>X</var></ep>
 <hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
 </semstruct>
 </le>
+
 <!--
 ; PNQ0 - whom
 ; PNQS - who
@@ -455,7 +629,7 @@ empty (and hope this works ...)</comment>
 ; PNQVS - whoever
 -->
 
-<le>
+<!--le>
 <tag>PP$</tag>
 <comment>hers, theirs ...</comment>
 <semstruct>
@@ -474,6 +648,31 @@ empty (and hope this works ...)</comment>
 <ing><ing-a><var>H9</var></ing-a><ing-b><var>H8</var></ing-b></ing>
 <hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
 </semstruct>
+</le-->
+
+<le>
+<tag>PP$</tag>
+<comment>hers, theirs ...
+ANNA - think there were a couple of bugs in this (sem.ex.18)</comment>
+<semstruct>
+<hook><index>X1</index><label>H10</label></hook>
+<ep><gpred>DEF_Q_REL</gpred><label>H4</label><var>X1</var></ep>
+<rarg><rargname>RSTR</rargname><label>H4</label><var>H6</var></rarg>
+<rarg><rargname>BODY</rargname><label>H4</label><var>H7</var></rarg>
+<ep><gpred>GENERIC_NOM_REL</gpred><label>H5</label><var>X1</var></ep>
+<ep><gpred>BASIC_POSS_REL</gpred><label>H9</label><var>E</var></ep>
+<rarg><rargname>ARG1</rargname><label>H9</label><var>X</var></rarg>
+<rarg><rargname>ARG2</rargname><label>H9</label><var>X1</var></rarg>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
+<!-- ANNA changed this ING to conjoin BASIC_POSS_REL above GENERIC_NOM_REL as in ERG -->
+<ing><ing-a><var>H5</var></ing-a><ing-b><var>H9</var></ing-b></ing>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+<!-- ANNA added this qeq to connect DEF_Q_REL above GENERIC_NOM_REL as in ERG -->
+<hcons hreln='qeq'><hi><var>H6</var></hi><lo><var>H5</var></lo></hcons>
+</semstruct>
 </le>
 
 <le>
@@ -481,10 +680,10 @@ empty (and hope this works ...)</comment>
 <comment>it</comment>
 <semstruct>
 <hook><index>X</index><label>H0</label></hook>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
 <ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
 <rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
 <rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
-<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
 <hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
 </semstruct>
 </le>
@@ -572,10 +771,10 @@ empty (and hope this works ...)</comment>
 <comment>I</comment>
 <semstruct>
 <hook><index>X</index><label>H0</label></hook>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
 <ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
 <rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
 <rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
-<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
 <hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
 </semstruct>
 </le>
@@ -585,10 +784,10 @@ empty (and hope this works ...)</comment>
 <comment>we</comment>
 <semstruct>
 <hook><index>X</index><label>H0</label></hook>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
 <ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
 <rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
 <rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
-<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
 <hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
 </semstruct>
 </le>
@@ -599,10 +798,10 @@ empty (and hope this works ...)</comment>
 <comment>himself ...</comment>
 <semstruct>
 <hook><index>X</index><label>H0</label></hook>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
 <ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
 <rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
 <rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
-<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
 <hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
 </semstruct>
 </le>
@@ -640,18 +839,79 @@ empty (and hope this works ...)</comment>
 ; RA ; ago, p.m.
 ; REX ; i.e.,e.g.
 ; RG ; very, as, over,...
+-->
+
+<le>
+<tag>RG</tag>
+<comment>ANNA - NEW RULE - degree adverbs (sem.ex.89)</comment>
+<semstruct>
+<hook><index>U</index><label>H0</label></hook>
+<!-- ANNA - how do I change _ver_r to _very_x_deg? -->
+<ep><pred/><label>H0</label><var>U</var></ep>
+<!-- ANNA - want to add DARG and ING to join degree adverb to adjective but no access here -->
+</semstruct>
+</le>
+
+<!--
 ; RGA ; indeed, enough
 ; RGQ ; how
+-->
+
+<le>
+<tag>RGQ</tag>
+<comment>ANNA - NEW RULE - wh- degree adverbs (sem.ex.102)</comment>
+<semstruct>
+<hook><index>U</index><label>H0</label></hook>
+<ep><gpred>ABSTR_DEG_REL</gpred><label>H0</label><var>X</var></ep>
+<ep><gpred>WHICH_Q_REL</gpred><label>H1</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H1</label><var>H0</var></rarg>
+<rarg><rargname>BODY</rargname><label>H1</label><var>H3</var></rarg>
+</semstruct>
+</le>
+
+<!--
 ; RGQV ; however
 ; RL ; upstairs,inside,...
 ; RP ; out,over,...
 ; RR ; 2k advbs
+-->
+
+<le>
+<tag>RR</tag>
+<comment> ANNA - NEW RULE - giving adverbs event variable ARG0s as in ERG (sem.ex.44)</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<!--
 ; RRQ ; where, why, when
 ; RRQV ; wherever, whenever
 ; RRR ; adv+er
 ; RRT ; adv+est
 ; RT ; today,again,now,then,...
 -->
+
+<le>
+<tag>RT</tag>
+<comment> ANNA - NEW RULE - giving temporal adverbs their semantic makeup (sem.ex.47)</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<!--ep><gpred>UNSPEC_LOC_REL</gpred><label>H</label><var>E</var></ep-->
+<ep><gpred>_TIME_N</gpred><label>H1</label><var>X</var></ep>
+<ep><gpred>DEF_Q_REL</gpred><label>H2</label><var>X</var></ep>
+<!-- ANNA - creates  _something_r which doesn't match ERG's _something_j -->
+<ep><pred/><label>H5</label><var>X</var></ep>
+<!-- ANNA - ARG1's event should coindex with the event of the verb the adverb modifies but how can this be done? -->
+<!--rarg><rargname>ARG1</rargname><label>H</label><var>E1</var></rarg-->
+<!--rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg-->
+<rarg><rargname>RSTR</rargname><label>H2</label><var>H3</var></rarg>
+<rarg><rargname>BODY</rargname><label>H2</label><var>H4</var></rarg>
+<ing><ing-a><var>H1</var></ing-a><ing-b><var>H5</var></ing-b></ing>
+<hcons hreln='qeq'><hi><var>H3</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
 
 <le>
 <tag>TO</tag>
@@ -829,9 +1089,19 @@ empty (and hope this works ...)</comment>
 </semstruct>
 </le>
 
-<le>
+<!--le>
 <tag>VM</tag>
 <comment>can,...</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le-->
+
+<le>
+<tag>VM</tag>
+<comment>can,...
+ANNA - latest ERG does have modal predicates except for "will" (sem.ex.72)</comment>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>E</var></ep>
@@ -856,12 +1126,26 @@ empty (and hope this works ...)</comment>
 </semstruct>
 </le>
 
-<le>
+<!--le>
 <tag>VVG</tag>
 <comment>2k+ verb+ing</comment>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le-->
+
+<le>
+<tag>VVG</tag>
+<comment>2k+ verb+ing ANNA - added gerund_rel with ARG1 as in ERG (sem.ex.54)</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<!--ep><gpred>GERUND_REL</gpred><label>H1</label><var>X</var></ep-->
+<ep><pred/><label>H</label><var>E</var></ep>
+<!--rarg><rargname>ARG1</rargname><label>H1</label><var>E</var></rarg-->
+<!-- ANNA - Could add unknown ARG1 for the verb predicate too but would interfere with other rules and have to be merged somewhere -->
+<!--rarg><rargname>ARG1</rargname><label>H</label><var>U</var></rarg-->
+<!--ing><ing-a><var>H1</var></ing-a><ing-b><var>H</var></ing-b></ing-->
 </semstruct>
 </le>
 
@@ -907,7 +1191,7 @@ empty (and hope this works ...)</comment>
 ; ZZ2 ; letters, A,Alpha
 -->
 
-<le>
+<!--le>
 <tag>$</tag>
 <comment>'s, 'S, '</comment>
 <semstruct>
@@ -919,6 +1203,21 @@ empty (and hope this works ...)</comment>
 <rarg><rargname>ARG1</rargname><label>H1</label><var>X1</var></rarg>
 <rarg><rargname>ARG2</rargname><label>H1</label><var>X</var></rarg>
 <hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le-->
+
+<le>
+<tag>$</tag>
+<comment>'s, 'S, '
+ANNA - removed possessive semantics to be added in later rules (sem.ex.61)</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<!--slots><anchor>H1</anchor></slots-->
+<!--ep><gpred>DEF_EXPLICIT_Q_REL</gpred><label>H</label><var>X</var></ep-->
+<!--rarg><rargname>RSTR</rargname><label>H</label><var>H2</var></rarg-->
+<!--rarg><rargname>BODY</rargname><label>H</label><var>H3</var></rarg-->
+<!--ep><gpred>POSS_REL</gpred><label>H1</label><var>U</var></ep-->
+<!--hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons-->
 </semstruct>
 </le>
 
