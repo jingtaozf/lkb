@@ -404,13 +404,26 @@ for gram.dtd and tag.dtd
 
 ;;;
 
-(defclass compact-two (compact)
+(defclass compact-chars (compact)
+  ())
+
+(defmethod rmrs-output-start-ep ((rmrsout compact-chars) cfrom cto)
+  (with-slots (stream indentation) rmrsout
+    (format stream "~VT~A->~A:" indentation cfrom cto)))
+
+(defmethod rmrs-output-realpred ((rmrsout compact-chars) lemma pos sense)
+  (with-slots (stream) rmrsout
+    (format stream "_~(~a_~a~@[~a~]~)(" 
+	    lemma (or pos "U") sense)))
+
+
+(defclass compact-two (compact-chars)
   ((xpos :initform 0 :initarg :xpos)))
 
 (defmethod rmrs-output-start-fn ((rmrsout compact-two) cfrom cto)
   (declare (ignore cfrom cto))
   (with-slots (stream indentation xpos) rmrsout
-    (setf indentation (+ indentation 60))
+    (setf indentation (+ indentation 100))
     (format stream "~%~VT" indentation)
     (setf xpos (lkb::current-position-x stream))))
 

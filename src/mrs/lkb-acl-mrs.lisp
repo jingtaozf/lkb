@@ -264,7 +264,8 @@
         (clim:with-text-style (stream *normal*)
 	  (clim:with-output-recording-options (stream :draw nil :record t)
 	    (let  
-	      ((ep-pts1 (mrs::output-rmrs1 rmrs1 'mrs::compact stream t)))
+		((ep-pts1 (mrs::output-rmrs1 rmrs1 
+					     'mrs::compact-chars stream t)))
 	      (move-to-x-y stream 0 0)
 	      (let ((ep-pts2
 		     (mrs::output-rmrs1 rmrs2 'mrs::compact-two stream t)))
