@@ -598,6 +598,38 @@
                 (format stream "~%")
                 (format stream "~c~%" #\page)))))
 
+(defun semantic-equivalence (data &key condition)
+  
+  (loop
+      with *reconstruct-cache* = (make-hash-table :test #'eql)
+      with items = (analyze data :thorough '(:derivation) 
+                            :condition condition)
+      for item in items
+      for i-id = (get-field :i-id item)
+      for results = (get-field :results item)
+      for edges =
+        (loop
+            with *package* = (find-package lkb::*lkb-package*)
+            for result in results
+            for id = (get-field :result-id result)
+            for derivation = (get-field :derivation result)
+            for edge = (when derivation
+                         (clrhash *reconstruct-cache*)
+                         (reconstruct derivation))
+            when edge 
+            do (setf (lkb::edge-score edge) id)
+            and collect edge)
+      for mrss =
+        (loop
+            for edge in edges
+            for mrs = (mrs::extract-mrs edge)
+            collect mrs)
+      do
+        (format 
+         t 
+         "semantic-equivalence(): ~d: ~d MRSs; ~d edges; ~d results.~%" 
+         i-id (length mrss) (length edges) (length results))))
+
 (defun score-heuristics (&key (profiles '("trees/vm6/ezra/01-07-19"
                                           "trees/vm13/ezra/01-07-30"
                                           "trees/vm31/ezra/01-08-03"

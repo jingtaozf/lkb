@@ -51,16 +51,31 @@
                      form))))
              (read-token ()
                (ignore-errors
-                (let (word start end)
-                  (and (read-character #\()
-                       (setf start (read-form))
-                       (read-character #\,)
-                       (setf end (read-form))
-                       (read-character #\,)
-                       (setf word (read-form))
-                       (skip-to #\)))
-                  (when (read-character #\)) 
-                    (list start end word))))))
+                (let (word start end inflection)
+                  (read-character #\()
+                  (setf start (read-form))
+                  (read-character #\,)
+                  (setf end (read-form))
+                  (read-character #\,)
+                  (cond
+                   ((and (integerp start) (integerp end)
+                         (zerop (mod start 100)) (zerop (mod end 100)))
+                    (setf word (read-form))
+                    (skip-to #\))
+                    (when (read-character #\))
+                      (list start end word nil)))
+                   ((and (integerp start) (integerp end))
+                    (setf start end)
+                    (setf end (read-form))
+                    (read-character #\,) (read-form)
+                    (read-character #\,) (setf word (read-form))
+                    (read-character #\,) (read-form)
+                    (read-character #\,) (setf inflection (read-form))
+                    (skip-to #\))
+                    (when (read-character #\))
+                      (list start end word inflection))))))))
+                    
+                   
       (loop
           with result = (make-array length
                                     :element-type 'character
@@ -71,10 +86,12 @@
           for start = (first token)
           for end = (second token)
           for word = (third token)
+          for inflection = (fourth token)
           while word
           when (and word 
                     (numberp start) (numberp end)
-                    (= (- end start) 100)
+                    (if inflection (= (- end start) 1) (= (- end start) 100))
+                    (or (null inflection) (eq inflection 'null))
                     (not (member start positions :test #'=)))
           do
             (unless (zerop ntokens) (vector-push #\space result))

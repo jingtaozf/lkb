@@ -92,6 +92,8 @@
 (defun rewrite-ptb-token (token pos)
   (cond
    ((string-equal pos "cd") "TwoDigitErsatz")
+   ((string-equal token "-lrb-") "(")
+   ((string-equal token "-rrb-") ")")
    (t token)))
 
 (defun preprocess-ptb-string (string &key (posp *ptb-use-pos-tags-p*))
