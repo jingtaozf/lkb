@@ -505,6 +505,10 @@
   (loop
       (let* ((attribute (lkb-read istream nil))
              (next-char (peek-char t istream nil 'eof)))
+        (when (char-equal (elt (string attribute) 0)
+                          #\#)
+          (lkb-read-cerror istream "Misplaced coreference in ~A" name)
+          (ignore-rest-of-entry istream name))                         
         (push attribute path-so-far)
         (unless (eql next-char #\.) (return))
         (read-char istream)))
