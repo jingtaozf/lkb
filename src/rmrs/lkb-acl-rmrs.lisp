@@ -116,16 +116,14 @@
 		 (+ (position-y ep2-pos) 10)
 		 :ink (determine-comparison-line-colour
 		       (mrs::match-rel-record-pred-comp-status match)
-		       (mrs::match-rel-record-var-comp-status match)
-		       (mrs::match-rel-record-arg-comp-status match)))))))))
+		       (mrs::match-rel-record-var-comp-status match)))))))))
 		       
 
-(defun determine-comparison-line-colour (pred-comp-type var-comp-type 
-					 arg-comp-type)
+(defun determine-comparison-line-colour (pred-comp-type var-comp-type)
   ;;; if we assume that the deep-grammar derived RMRS is
   ;;; in position 1, then the :sub2 and :comp cases are
   ;;; generally unexpected - hence use red/magenta for these
-  (declare (ignore var-comp-type arg-comp-type))
+  (declare (ignore var-comp-type))
   (ecase pred-comp-type
     (:equal +green-flipping-ink+)
     (:sub1 +blue-flipping-ink+)

@@ -57,8 +57,7 @@ In the second pass, the variable bindings are used to rule out members
 of sets, and to record cases where the arguments differ.  
 In the case above, we want to rule out the `wrong' pairings
 for `the' (and possibly `big') and reduce the overall score (somehow) 
-because snore and sleep don't have matching ARGs.  We locate the 
-record of mismatch on the relation with the ARGs.
+because snore and sleep don't have matching ARGs.  
 
 |#
 
@@ -92,7 +91,7 @@ record of mismatch on the relation with the ARGs.
 ;;;
 
 (defstruct rmrs-comparison-record
-  matched-rels)
+  matched-top matched-rels matched-args matched-ings matched-hcons bindings)
 
 (defstruct match-rel-record
   rel1
@@ -101,8 +100,8 @@ record of mismatch on the relation with the ARGs.
   var-comp-status
   arg-comp-status
   label-pair ;; rel labels
-  cvar-pair ;; characteristic vars
-  other-vars ;; all other var pairs
+  cvar-pair ;; characteristic vars (non-handle)
+  hvar-pair ;; non arg vars (handle)
   )
 
 ;;; comp-status records the class of compatibility
@@ -112,6 +111,23 @@ record of mismatch on the relation with the ARGs.
 ;;; :sub2 - rel2 is more specific tham rel1
 ;;; :comp - rel1 and rel2 are compatible but not equal
 ;;;         and not in a subsumes relationship
+
+(defstruct match-top-record
+  label1
+  label2)
+
+(defstruct match-arg-record
+  arg1
+  arg2
+  comp-status)
+
+(defstruct match-ing-record
+  ing1
+  ing2)
+
+(defstruct match-hcons-record
+  hcons1
+  hcons2)
 
   
 ;;; *************************************************************  
@@ -139,8 +155,15 @@ record of mismatch on the relation with the ARGs.
 			       (rmrs-liszt new-rmrs2)
 			       (initial-comparison-record)
 			       same-source-p))
-	 (second-pass (prune-comparison-record first-pass)))
-    (expand-comparison-records second-pass)))
+	 (second-pass (prune-comparison-record first-pass))
+	 (expanded
+	  (expand-comparison-records second-pass)))
+    (dolist (comp expanded)
+      (add-top-label-compare comp new-rmrs1 new-rmrs2) 
+      (add-argument-compare comp new-rmrs1 new-rmrs2)
+      (add-ing-compare comp new-rmrs1 new-rmrs2)
+      (add-hcons-compare comp new-rmrs1 new-rmrs2))
+    expanded))
 
 (defun initial-comparison-record nil
   (make-rmrs-comparison-record 
@@ -421,26 +444,36 @@ the canonical order is fully defined.
 (defun compare-rmrs-rels (rel1 rel2)
   (let ((pred-comparison (compare-rmrs-preds rel1 rel2)))
     (if pred-comparison
-	(let* ((cvar-pair (get-char-var-pair rel1 rel2))
+	(multiple-value-bind
+	    (cvar-pair hvar-pair) 
+	    (get-char-var-pair rel1 rel2)
 	       ;;; don't let var match affect comp-status for now
-	       (match-record
-		(make-match-rel-record :rel1 rel1
-				       :rel2 rel2
-				       :pred-comp-status pred-comparison
-				       :label-pair 
-				       (cons (var-id (rel-handel rel1))
-					     (var-id (rel-handel rel2)))
-				       :cvar-pair cvar-pair 
-				       :other-vars nil)))    
-	  match-record)
+	  (let
+	       ((match-record
+		 (make-match-rel-record :rel1 rel1
+					:rel2 rel2
+					:pred-comp-status pred-comparison
+					:label-pair 
+					(cons (var-id (rel-handel rel1))
+					      (var-id (rel-handel rel2)))
+					:cvar-pair cvar-pair
+					:hvar-pair hvar-pair)))
+	  match-record))
       nil)))
 
 (defun get-char-var-pair (rel1 rel2)
   (let* ((var1 (retrieve-rmrs-ep-var rel1))
 	 (var2 (retrieve-rmrs-ep-var rel2)))
     (if (and var1 var2)
-	(cons (var-id var1)
-	      (var-id var2)))))
+	(let ((cvar-pair (cons (var-id var1)
+			       (var-id var2))))
+	  (if (is-handel-var var1)
+	      (if (is-handel-var var2)
+		  (values nil cvar-pair)
+		nil)			; error state
+	    (if (is-handel-var var2)
+		nil			; error state
+	      (values cvar-pair nil)))))))
 
 (defun compare-rmrs-preds (rel1 rel2)
   ;;; FIX? - need to think about the parameter
@@ -570,30 +603,38 @@ the canonical order is fully defined.
 
 (defun prune-comparison-record (comp-record)
   (let ((firm-bindings nil)
+	(a-set nil)
+	(b-set nil)
 	(matches (rmrs-comparison-record-matched-rels
 			    comp-record)))
     (dolist (match-set matches)
-	(unless (cdr match-set)      
-	  (let* ((mrec (car match-set))
-		 (pred-comp-status (match-rel-record-pred-comp-status mrec)))
-	  (when (distinguished-rel-type-p
-		 (if (eql pred-comp-status :sub2)
-		     (match-rel-record-rel2 mrec)
-		   (match-rel-record-rel1 mrec)))
-	    (let ((label-pair (match-rel-record-label-pair mrec))
-		  (cvar-pair (match-rel-record-cvar-pair mrec)))
-	      (push label-pair firm-bindings)
-	      (push cvar-pair firm-bindings))))))
+      	(let ((firm-p (not (cdr match-set))))      
+	  (dolist (mrec match-set)
+	    (let ((pred-comp-status 
+		   (match-rel-record-pred-comp-status mrec)))
+	      (when (distinguished-rel-type-p
+		     (if (eql pred-comp-status :sub2)
+			 (match-rel-record-rel2 mrec)
+		       (match-rel-record-rel1 mrec)))
+		(let ((label-pair (match-rel-record-label-pair mrec))
+		      (cvar-pair (match-rel-record-cvar-pair mrec)))
+		  (when firm-p
+		    (push label-pair firm-bindings)
+		    (push cvar-pair firm-bindings))
+		  (push (car label-pair) a-set)
+		  (push (cdr label-pair) b-set)
+		  (push (car cvar-pair) a-set)
+		  (push (cdr cvar-pair) b-set)))))))
     (let ((new-matches
 	   (loop for match-set in matches
 	       nconc
-		 (prune-match-set match-set firm-bindings))))
+		 (prune-match-set match-set firm-bindings a-set b-set))))
       (setf (rmrs-comparison-record-matched-rels
 	     comp-record)
 	new-matches)
       comp-record)))
     
-(defun prune-match-set (mrecs bindings)
+(defun prune-match-set (mrecs bindings a-set b-set)
   ;;; this doesn't look at arguments but gets rid of
   ;;; det etc pairings where there's a match failure 
   ;;; on the noun.  It could be adapted so it looked at arguments
@@ -602,9 +643,14 @@ the canonical order is fully defined.
   ;;; no interesting existence apart from the nouns.
   (let ((new-mrecs
 	 (loop for match-record in mrecs
-	     unless (incompatible-with-bindings-p 
-		     (match-rel-record-cvar-pair match-record) 
-		     bindings)
+	     unless
+	       (let ((cvar-pair (match-rel-record-cvar-pair match-record)))
+		 (and cvar-pair
+		      (or ; (not (member (car cvar-pair) a-set))
+			  ; (not (member (cdr cvar-pair) b-set))
+			  (incompatible-with-bindings-p 
+			   cvar-pair
+			   bindings))))
 	     collect match-record)))
     (if new-mrecs
 	(list new-mrecs))))
@@ -638,7 +684,8 @@ the canonical order is fully defined.
     (loop for option in flat-matches
 	collect
 	  (make-rmrs-comparison-record 
-	   :matched-rels option))))
+	   :matched-rels option
+	   :bindings (collect-all-bindings option)))))
 
 
 (defun expand-comparison-records-aux (option-list)
@@ -698,8 +745,27 @@ the canonical order is fully defined.
 		(eql (match-rel-record-rel2 used)
 		     brel))
 	(return t)))))
-    
-    
+
+(defun collect-all-bindings (mrecs)
+  (let ((bindings nil))
+    (dolist (mrec mrecs)
+      (push (match-rel-record-label-pair mrec) bindings)
+      (let ((cvar-pair (match-rel-record-cvar-pair mrec)))
+	(when cvar-pair
+	  (push cvar-pair bindings)))
+      (let ((hvar-pair (match-rel-record-hvar-pair mrec)))
+	(when hvar-pair
+	  (push hvar-pair bindings))))
+    bindings))
+
+;;; Checking top label
+;;;
+
+
+(defun add-top-label-compare (comp rmrs1 rmrs2)
+  (declare (ignore comp rmrs1 rmrs2))
+  nil)
+
 ;;; Checking argument bindings
 ;;;
 ;;;
@@ -712,6 +778,10 @@ Argument compatability status is recorded.
 
 Unattached arguments are ignored
 |#
+
+(defun add-argument-compare (comp rmrs1 rmrs2)
+   (declare (ignore comp rmrs1 rmrs2))
+  nil) 
 
 #|
     (loop for rmrs-arg in (rmrs-rmrs-args rmrs)
@@ -733,16 +803,16 @@ Unattached arguments are ignored
 
 |#
 
-;;; Checking top label
-;;;
-
 ;;; Checking in-groups
 ;;;
 ;;; Canonicalised in-groups
 ;;;
 
-
-
+(defun add-ing-compare (comp rmrs1 rmrs2)
+   (declare (ignore comp rmrs1 rmrs2))
+  nil) 
+  
+  
 ;;; Checking h-cons
 ;;;
 ;;; This is a syntactic check in the sense that two sets of
@@ -751,3 +821,24 @@ Unattached arguments are ignored
 ;;; has rules which are obeyed by the ERG and RASP, this doesn't concern
 ;;; us.  The hcons check is therefore trivial - exact match is a match
 ;;; anything else isn't
+
+(defun add-hcons-compare (comp rmrs1 rmrs2)
+  (let ((bindings (rmrs-comparison-record-bindings comp))
+	(hcons-matches nil))
+    (dolist (hcons1 (rmrs-h-cons rmrs1))
+      (let ((harg-binding (cdr (assoc (var-id (hcons-scarg hcons1)) bindings)))
+	    (larg-binding (cdr (assoc (var-id (hcons-outscpd hcons1)) bindings))))
+	(when (and harg-binding larg-binding)
+	  (dolist (hcons2 (rmrs-h-cons rmrs2))
+	    (when (and (eql (var-id (hcons-scarg hcons2)) harg-binding)
+		       (eql (var-id (hcons-outscpd hcons2)) larg-binding))
+	      (push
+	       (make-match-hcons-record 
+		:hcons1 hcons1
+		:hcons2 hcons2)
+	       hcons-matches))))))
+    (setf (rmrs-comparison-record-matched-hcons comp)
+      hcons-matches)
+    hcons-matches))
+
+

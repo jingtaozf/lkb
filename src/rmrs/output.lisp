@@ -156,7 +156,8 @@
 <!ELEMENT lo (label|var)>
 |#
 
-(defmethod rmrs-output-hcons-start ((rmrsout xml) reln)
+(defmethod rmrs-output-hcons-start ((rmrsout xml) reln with-ep-p)
+  (declare (ignore with-ep-p))
   (with-slots (stream) rmrsout
     (format stream "~%<hcons hreln='~A'><hi>"
             (string-downcase reln))))
@@ -177,7 +178,8 @@
 <!ELEMENT ing-b (var)>
 |#
 
-(defmethod rmrs-output-ingroup-start ((rmrsout xml))
+(defmethod rmrs-output-ingroup-start ((rmrsout xml) with-ep-p)
+  (declare (ignore with-ep-p))
   (with-slots (stream) rmrsout
     (format stream "~%<ing><ing-a>")))
 
@@ -332,10 +334,13 @@ for gram.dtd and tag.dtd
 
 ;;; hcons
 
-(defmethod rmrs-output-hcons-start ((rmrsout compact) reln)
+(defmethod rmrs-output-hcons-start ((rmrsout compact) reln with-ep-p)
   (with-slots (stream indentation) rmrsout
-    (format stream "~VT~A(" indentation
-            reln)))
+    (if with-ep-p
+	(format stream "~VT          ~A(" indentation
+		reln)	
+      (format stream "~VT~A(" indentation
+	      reln))))
 
 (defmethod rmrs-output-hcons-next ((rmrsout compact))
   (with-slots (stream) rmrsout
@@ -347,9 +352,11 @@ for gram.dtd and tag.dtd
 
 ;;; in-group
 
-(defmethod rmrs-output-ingroup-start ((rmrsout compact))
+(defmethod rmrs-output-ingroup-start ((rmrsout compact) with-ep-p)
   (with-slots (stream indentation) rmrsout
-    (format stream "~VTING(" indentation)))
+    (if with-ep-p
+	(format stream "~VT          ING(" indentation)
+      (format stream "~VTING(" indentation))))
 
 (defmethod rmrs-output-ingroup-next ((rmrsout compact))
   (with-slots (stream) rmrsout
@@ -500,9 +507,15 @@ for gram.dtd and tag.dtd
 
 (defparameter *already-seen-rmrs-args* nil)
 
+(defparameter *already-seen-rmrs-hcons* nil)
+
+(defparameter *already-seen-rmrs-ings* nil)
+
 (defun print-rmrs (rmrs grouping-p rmrs-display-structure)
   (setf *already-seen-rmrs-args* nil)
   (setf *already-seen-rmrs-vars* nil)
+  (setf *already-seen-rmrs-hcons* nil)
+  (setf *already-seen-rmrs-ings* nil)
   (let ((hook (if (semstruct-p rmrs) (semstruct-hook rmrs))) 
         (top-h (rmrs-top-h rmrs))
         (eps (rmrs-liszt rmrs))
@@ -523,20 +536,29 @@ for gram.dtd and tag.dtd
 				*rmrs-variable-generator*))))
     (let ((positions
 	   (print-rmrs-eps eps bindings grouping-p 
-			   rmrs-args rmrs-display-structure)))
+			   rmrs-args rmrs-in-groups
+			   rmrs-h-cons
+			   rmrs-display-structure)))
       (loop for arg in rmrs-args
 	  unless (member arg *already-seen-rmrs-args*)
 	  do
 	    (print-rmrs-arg arg bindings nil rmrs-display-structure))
-      (print-rmrs-in-groups rmrs-in-groups bindings rmrs-display-structure)
-      (print-rmrs-hcons rmrs-h-cons bindings rmrs-display-structure)
+      (loop for ing in rmrs-in-groups
+	  unless (member ing *already-seen-rmrs-ings*)
+	  do
+	    (print-rmrs-in-group ing bindings nil rmrs-display-structure))
+      (loop for hcons in rmrs-h-cons
+	  unless (member hcons *already-seen-rmrs-hcons*)
+	  do
+	    (print-rmrs-hcons hcons bindings nil rmrs-display-structure))
       positions)))
 
 (defun print-rmrs-eps (eps bindings grouping-p rmrs-args 
-		       rmrs-display-structure)
+		       rmrs-in-groups rmrs-h-cons rmrs-display-structure)
     (loop for ep in eps
         collect
-	  (let ((pred (rel-pred ep)))
+	  (let ((pred (rel-pred ep))
+		(handel-args nil))
 	    (rmrs-output-start-ep rmrs-display-structure
 				  (if (char-rel-p ep)
 				      (char-rel-cfrom ep)
@@ -559,15 +581,37 @@ for gram.dtd and tag.dtd
 		   ;; but could be a grammar variable
 		   (position 
 		    (print-rmrs-var value bindings rmrs-display-structure)))
+	      (when (is-handel-var value)
+		(push (var-id value) handel-args))
 	      (rmrs-output-end-ep rmrs-display-structure)
 	      (when grouping-p
 		(loop for arg in rmrs-args
 		    when (eql-var-id (rmrs-arg-label arg) (rel-handel ep))
 		    do		
 		      (print-rmrs-arg arg bindings t rmrs-display-structure)
-		      (push arg *already-seen-rmrs-args*)))
+		      (push arg *already-seen-rmrs-args*)
+		      (when (is-handel-var (rmrs-arg-val arg))
+			(push (var-id (rmrs-arg-val arg))
+			      handel-args)))
+		(loop for ing in rmrs-in-groups
+		    when (eql-var-id (in-group-label-a ing) 
+				     (rel-handel ep))
+		    do		
+		      (print-rmrs-in-group ing 
+					   bindings t rmrs-display-structure)
+		      (push ing *already-seen-rmrs-ings*))
+		(loop for hcons in rmrs-h-cons
+		    when (member 
+			  (var-id (hcons-scarg hcons)) 
+			  handel-args)
+		    do		
+		      (print-rmrs-hcons hcons bindings t 
+					 rmrs-display-structure)
+		      (push hcons  *already-seen-rmrs-hcons*)))
 	      (if position
 		  (record-rmrs-position position ep))))))
+
+;;; FIX - redo this to record all positions of matchable things
 
 (defun print-rmrs-arg (arg bindings with-ep-p rmrs-display-structure)
   (rmrs-output-start-rmrs-arg rmrs-display-structure 
@@ -610,36 +654,32 @@ for gram.dtd and tag.dtd
   (rmrs-output-end-var display))
       
 
-(defun print-rmrs-hcons (hcons-list bindings display)
-    (loop for hcons in hcons-list
-        do
-          (rmrs-output-hcons-start
-           display (hcons-relation hcons))
-	  (print-rmrs-var 
-            (hcons-scarg hcons) bindings display)
-          (rmrs-output-hcons-next 
-           display)
-	  (rmrs-output-label 
-	   display
-	   (find-rmrs-var-id (hcons-outscpd hcons)
-			     bindings))
-          (rmrs-output-hcons-end display)))
+(defun print-rmrs-hcons (hcons bindings with-ep-p display)
+  (rmrs-output-hcons-start
+   display (hcons-relation hcons) with-ep-p)
+  (print-rmrs-var 
+   (hcons-scarg hcons) bindings display)
+  (rmrs-output-hcons-next 
+   display)
+  (rmrs-output-label 
+   display
+   (find-rmrs-var-id (hcons-outscpd hcons)
+		     bindings))
+  (rmrs-output-hcons-end display))
 
 
-(defun print-rmrs-in-groups (ingroup-list bindings display)
-    (loop for in-g in ingroup-list
-        do
-          (rmrs-output-ingroup-start
-           display)
-          (print-rmrs-var 
-           (in-group-label-a in-g)
-           bindings display)
-          (rmrs-output-ingroup-next
-           display)
-          (print-rmrs-var 
-           (in-group-label-b in-g)
-           bindings display)
-          (rmrs-output-end-ingroup display)))
+(defun print-rmrs-in-group (in-g bindings with-ep-p display)
+  (rmrs-output-ingroup-start
+   display with-ep-p)
+  (print-rmrs-var 
+   (in-group-label-a in-g)
+   bindings display)
+  (rmrs-output-ingroup-next
+   display)
+  (print-rmrs-var 
+   (in-group-label-b in-g)
+   bindings display)
+  (rmrs-output-end-ingroup display))
 
 (defun print-semstruct-hook (hook bindings display)
   (semstruct-output-start-hook display)
