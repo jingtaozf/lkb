@@ -643,7 +643,8 @@
 (defun purge-profile-cache (data)
   (loop
       for key being each hash-key in *tsdb-profile-cache*
-      when (or (eq data :all) (search data key)) do
+      when (or (eq data :all) 
+               (search data key :end2 (length data))) do
         (remhash key *tsdb-profile-cache*)))
 
 (defun aggregate (&optional (language *tsdb-data*)

@@ -1007,7 +1007,7 @@ proc tsdb_trees {action} {
 
   global globals test_suites compare_in_detail;
 
-  if {$action != "train" || [verify_ts_selection]} {return 1};
+  if {$action != "train" && [verify_ts_selection]} {return 1};
 
   set target $globals(data);
   if {![info exists compare_in_detail(source)] \
@@ -1049,7 +1049,7 @@ proc tsdb_trees {action} {
 
     if {$selection == ""} {
       if {[verify_ts_selection]} {return 1};
-      set selection "\"$globals(data)\";
+      set selection "\"$globals(data)\"";
     }; # if
 
 

@@ -1576,6 +1576,10 @@
                                       texact tnear tloose 
                                       tsuccesses)))
                 results))
+    (when (eq test :derivation)
+      (purge-profile-cache data)
+      (unless (equal data gold) (purge-profile-cache gold)))
+    
     results))
 
 (defun score-item (item gold &key test (n 1) (loosep t))
@@ -1738,7 +1742,9 @@
                                      :cache cache)))))
       finally 
         (flush-cache cache :verbose verbose)
-        (restore-gc-strategy gc)))
+        (restore-gc-strategy gc)
+        (purge-profile-cache source)
+        (purge-profile-cache target)))
 
 (defun train-and-rank (train test 
                        &key (type :mem) (stream *tsdb-io*))
