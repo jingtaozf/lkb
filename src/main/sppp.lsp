@@ -51,10 +51,10 @@
       (run-process *sppp-application*
                    :wait nil
                    :output :stream :input :stream :error-output nil))
-      ;;
-      ;; this may seem silly: suppress compiler warning about unused .foo.
-      ;;
-      (when foo (setf foo foo))))
+    ;;
+    ;; this may seem silly: suppress compiler warning about unused .foo.
+    ;;
+    (when foo (setf foo foo))))
 
 (defun shutdown-sppp ()
 
@@ -87,7 +87,7 @@
                                    nil 
                                    "~@:(~a~)~a" 
                                    inflection *lex-rule-suffix*)
-                                  *lkb-package*))
+                                  :lkb))
             collect (cons stem (when irule (list (list irule form)))))
       for edge = (make-morph-edge :id i :word form :morph-results analyses)
       do
@@ -96,11 +96,13 @@
 (defun sppp (text &key (stream *sppp-stream*))
   (when (streamp stream)
     (when (output-stream-p stream)
+      (setf (stream-external-format stream) (excl:find-external-format :utf-8))
       (format
        stream
-       "<text>~a</text>~%~a~%"
-       text #\page)
+       "<?xml version='1.0' encoding='utf-8'?><text>~a</text>~%~a~%"
+       (xml-escape-string text) #\page)
       (force-output stream))
+    (setf (stream-external-format stream) (excl:find-external-format :ascii))
     (let ((n (loop
                  with size = (array-dimension *sppp-input-buffer* 0)
                  initially (setf (fill-pointer *sppp-input-buffer*) 0)
@@ -123,7 +125,8 @@
                  while c do (vector-push c *sppp-input-buffer*))))
       (when (and (numberp n) (> n 1))
         (multiple-value-bind (pxml condition) 
-            (ignore-errors (xml:parse-xml *sppp-input-buffer*))
+            (ignore-errors
+             (xml:parse-xml (string-trim '(#\newline) *sppp-input-buffer*)))
           (if condition
             (format
              t
@@ -188,4 +191,51 @@
              (read-from-string (second attributes) nil nil))
             (t
              (second attributes))))))
-         
+
+(defun xml-escape-string (string)
+  (if (and string (stringp string))
+    (loop
+        with padding = 128
+        with length = (+ (length string) padding)
+        with result = (make-array length
+                                  :element-type 'character
+                                  :adjustable nil :fill-pointer 0)
+        for c across string
+        when (member c '(#\& #\< #\> #\' #\") :test #'char=) do
+          (vector-push #\& result)
+          (case c
+            (#\&
+             (vector-push #\a result)
+             (vector-push #\m result)
+             (vector-push #\p result)
+             (decf padding 4))
+            (#\<
+             (vector-push #\l result)
+             (vector-push #\t result)
+             (decf padding 3))
+            (#\>
+             (vector-push #\g result)
+             (vector-push #\t result)
+             (decf padding 3))
+            (#\'
+             (vector-push #\a result)
+             (vector-push #\p result)
+             (vector-push #\o result)
+             (vector-push #\s result)
+             (decf padding 5))
+            (#\"
+             (vector-push #\q result)
+             (vector-push #\u result)
+             (vector-push #\o result)
+             (vector-push #\t result)
+             (decf padding 5)))
+          (vector-push #\; result)
+          (when (<= padding 0)
+            (setf padding 42)
+            (incf length padding)
+            (setf result (adjust-array result length)))
+        else do
+          (vector-push c result)
+        finally
+          (return result))
+    string))
