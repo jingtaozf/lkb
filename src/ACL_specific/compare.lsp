@@ -291,6 +291,9 @@
 (defun comparison-tree-font ()
   (list :sans-serif :roman (or *comparison-tree-font-size* 7)))
 
+(defun comparison-dependencies-font ()
+  (list :sans-serif :roman (or *comparison-dependencies-font-size* 10)))
+
 (defun comparison-status-font ()
   (list :sans-serif :roman (or *comparison-discriminant-font-size* 10)))
 
@@ -623,7 +626,57 @@
                                :move-cursor t
                                :within-generation-separation 7
                                :center-nodes nil)))))
-                      (terpri stream))))))))
+                      (terpri stream)))))))
+      (when (null (rest (compare-frame-trees frame)))
+        (let* ((extract (when (find-package :mrs)
+                          (find-symbol "EXTRACT-MRS" :mrs)))
+               (extract (when (and extract (fboundp extract))
+                          (symbol-function extract)))
+               (tree (first (compare-frame-trees frame)))
+               (edge (ctree-edge tree))
+               (mrs (when extract
+                      (ignore-errors (funcall extract edge))))
+               (convert (when (find-package :mrs)
+                         (find-symbol "ED-CONVERT-PSOA" :mrs)))
+               (convert (when (and convert (fboundp convert))
+                          (symbol-function convert)))
+               (eds (when (and mrs convert) 
+                      (ignore-errors (funcall convert mrs))))
+               (predicate (when (find-package :mrs)
+                             (find-symbol "ED-WELLFORMED-P" :mrs)))
+               (predicate (when (and predicate (fboundp predicate))
+                          (symbol-function predicate))))
+          (when eds
+            (clim:formatting-row (stream)
+              (clim:formatting-cell 
+                  (stream :align-x :center :align-y :top)
+                (format stream " ~% ")))
+            (let ((record 
+                   (clim:with-new-output-record (stream)
+                     (clim:formatting-row (stream)
+                       (clim:formatting-cell 
+                           (stream :align-x :center :align-y :top)
+                         (clim:with-text-style 
+                             (stream 
+                              (clim:parse-text-style '(:sans-serif :bold 12)))
+                           (format stream "[~a]" (ctree-id tree))))
+                       (clim:formatting-cell 
+                           (stream :align-x :left :align-y :top)
+                         (clim:formatting-row (stream)
+                           (clim:formatting-cell 
+                               (stream :align-x :left :align-y :top)
+                             (format stream "~@[(~a)~]~%" (ctree-score tree)))
+                           (clim:formatting-cell 
+                               (stream :align-x :center :align-y :top)
+                             (clim:with-text-style 
+                                 (stream (comparison-dependencies-font))
+                               (format stream "~a" eds)))))))))
+              (recolor-record 
+               record 
+               (if (funcall predicate eds)
+                 (if (update-match-p frame) clim:+magenta+ clim:+blue+)
+                 clim:+red+))
+              (clim:replay record stream))))))
     (update-tree-colours frame)))
 
 (define-compare-frame-command (com-tree-popup)

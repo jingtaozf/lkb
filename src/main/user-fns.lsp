@@ -165,7 +165,7 @@
 ;;; this version tests for
 ;;; < NEEDS-AFFIX > = true
 ;;; in the rule
-  (let ((affix (get-dag-value (rule-full-fs rule) 'needs-affix)))
+  (let ((affix (get-dag-value (tdfs-indef (rule-full-fs rule)) 'needs-affix)))
     (and affix (bool-value-true affix))))
 
 (defun redundancy-rule-p (rule)
@@ -175,7 +175,7 @@
 ;;; this version tests for 
 ;;; < PRODUCTIVE > = false
 ;;; in the rule
-  (let ((affix (get-dag-value (rule-full-fs rule) 'productive)))
+  (let ((affix (get-dag-value (tdfs-indef (rule-full-fs rule)) 'productive)))
     (and affix (bool-value-false affix))))
 
 ;;; return true for types that shouldn't be displayed in type hierarchy

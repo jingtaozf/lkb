@@ -1047,9 +1047,7 @@
   ;;     gold set.
   ;;
   (and (or (null (lkb::compare-frame-version frame))
-           (equal(lkb::compare-frame-version frame) "")
-	   (and (integerp (lkb::compare-frame-gactive frame))
-		(= (lkb::compare-frame-gactive frame) -1)))
+           (equal(lkb::compare-frame-version frame) ""))
        (integerp (lkb::compare-frame-gactive frame))
        (= (length (lkb::compare-frame-in frame)) 
           (lkb::compare-frame-gactive frame))

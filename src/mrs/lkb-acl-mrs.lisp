@@ -213,8 +213,15 @@
 
 (defun show-mrs-dependencies (mframe stream &key max-width max-height)
   (declare (ignore max-width max-height))
-  (let ((mrsstruct (mrs-dependencies-mrsstruct mframe)))
-    (if mrsstruct
-      (clim:with-text-style (stream (lkb-parse-tree-font))
-        (mrs::mrs-output-psoa mrsstruct :stream stream))
-      (format stream "~%::: MRS structure could not be extracted~%"))))
+  (let* ((mrsstruct (mrs-dependencies-mrsstruct mframe))
+         (eds (mrs::ed-convert-psoa mrsstruct)))
+    (if eds
+      (let ((record (clim:with-new-output-record (stream)
+                      (clim:with-text-style (stream (lkb-parse-tree-font))
+                        (format stream "~a~%" eds)))))
+        (unless (mrs::ed-wellformed-p eds)
+          (recolor-record record clim:+red+)
+          (clim:replay record stream)))
+      (format 
+       stream 
+       "~%::: Dependencies structure could not be extracted~%"))))
