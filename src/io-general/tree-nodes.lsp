@@ -14,7 +14,7 @@
          (display-parse-tree edge nil))
       (let ((possible-edge-name
                (ask-for-lisp-movable "Current Interaction" 
-                  `(("No parses - specify an edge number?" . ,*edge-id*)) 150)))
+                  `(("No parses - specify an edge number" . ,*edge-id*)) 60)))
          (when possible-edge-name
             (let* ((edge-id (car possible-edge-name))
                   (edge-record (find-edge-given-id edge-id)))
@@ -24,7 +24,7 @@
 (defun show-parse-edge nil
    (let ((possible-edge-name
             (ask-for-lisp-movable "Current Interaction" 
-               `(("Specify an edge number" . ,*edge-id*)) 150)))
+               `(("Specify an edge number" . ,*edge-id*)) 60)))
       (when possible-edge-name
          (let* ((edge-id (car possible-edge-name))
                (edge-record (find-edge-given-id edge-id)))
