@@ -108,6 +108,8 @@
         "NP_Modification"
         "NP_Coordination"))
 
+(defparameter *statistics-predicates* (make-hash-table))
+
 (defun latexify-string (string)
   (if (and (stringp string) (>= (length string) 1))
     (let ((prefix (elt string 0)))
@@ -126,6 +128,12 @@
 
 (defmacro sum (values)
   `(apply #'+ ,values))
+
+(defun find-attribute-predicate (attribute)
+  (let* ((name (if (stringp attribute) (string-upcase attribute) attribute))
+         (attribute (intern name :keyword)))
+    (or (gethash attribute *statistics-predicates*) 
+        #'(lambda (old new) (not (equal old new))))))
 
 (defun find-attribute-label (attribute)
   (case attribute
@@ -1016,6 +1024,7 @@
          (show (cons :i-id show))
          (shows (length show))
          (compare (if (atom compare) (list compare) compare))
+         (predicates (map 'list #'find-attribute-predicate compare))
          (compares (length compare))
          (oitems
           (if (stringp olanguage) 
@@ -1146,7 +1155,13 @@
               ;; two items of same identifier have equal values for all .show.
               ;; attributes (as they should |:-)
               ;;
-              (unless (equal ocompare ncompare)
+              (when (loop
+                        for predicate in predicates 
+                        for ovalue in ocompare
+                        for nvalue in ncompare
+                        when (funcall predicate ovalue nvalue)
+                        do (return t)
+                        finally (return nil))
                 (case format
                   (:tcl
                    (do ((show show (rest show))

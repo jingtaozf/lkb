@@ -65,6 +65,8 @@
              (runs (create-test-runs 
                     data run-id 
                     :comment comment :gc gc 
+                    :tasks (when (find-symbol "*PVM-TASKS*")
+                             (symbol-value (find-symbol "*PVM-TASKS*")))
                     :interactive interactive))
              (burst (and (not interactive)
                          (find :pvm *features*)
@@ -98,6 +100,7 @@
              (catch :break
                (loop
                    until (or (null runs)
+                             (and (not burst) (null items))
                              (and (null items)
                                   (null (find-if #'consp runs 
                                                  :key #'run-status))))
@@ -184,8 +187,7 @@
               (meter :value (get-field :end meter)))))))))
 
 (defun create-test-runs (data run-id &key comment gc 
-                                          (tasks *pvm-tasks*)
-                                          interactive)
+                                          tasks interactive)
   (if tasks
     (let ((tasks (remove-if-not #'task-idle-p tasks))
           runs)
@@ -640,7 +642,7 @@
           (gc-strategy (get-field :gc-strategy run))
           (task (get-field :task run)))
       (cond
-       ((task-p task)
+       ((and task (task-p task))
         (let* ((tid (task-tid task))
                (status (revaluate 
                         tid 

@@ -210,15 +210,15 @@
 
 
 (defun compute-derivation-tree (edge &optional (offset 0))
-  (flet ((tree-node-label (edge)
-           (format nil "~(~a~)"
-              (if (rule-p (edge-rule edge))
-                 (rule-id (edge-rule edge)) (edge-rule edge)))))
+  (flet ((edge-label (edge)
+           (format nil "~(~a~)" (if (rule-p (edge-rule edge))
+                                  (rule-id (edge-rule edge)) 
+                                  (edge-rule edge)))))
     (cond
      ((null (edge-children edge))
       (list (format nil "~(~a~)" (first (edge-lex-ids edge)))
             offset (+ offset 1)
-            (list (tree-node-label edge) offset (+ offset 1))))
+            (list (edge-label edge) offset (+ offset 1))))
      (t
       (let* ((end offset)
              (children
@@ -228,7 +228,7 @@
                   do
                     (setf end (max end (third derivation)))
                   collect derivation)))
-        (nconc (list (tree-node-label edge) offset end)
+        (nconc (list (edge-label edge) offset end)
                children))))))
 
 (defun parse-tsdb-sentence (user-input &optional trace)

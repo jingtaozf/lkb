@@ -74,8 +74,10 @@
        *tsdb-io*
        "install-gc-strategy(): ~
         disabling tenure; global garbage collection ...")
+      #+:debug
       (busy :cursor *tsdb-gc-cursor*)
       (excl:gc t)
+      #+:debug
       (busy :action :restore)
       (excl:gc :tenure)
       (format *tsdb-io* " done.~%"))

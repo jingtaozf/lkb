@@ -571,7 +571,7 @@
          (statistics (parser-rule-stats parser))
          (counts (make-array (combo-parser-rule-number parser))))
     (when statistics
-      (flet ((count (edge type)
+      (flet ((ecount (edge type)
                (when (eq (combo-item-itype edge) :rule)
                  (let* ((key (combo-item-key edge)))
                    (incf (tsdb::get-field type (aref counts key)))))))
@@ -593,13 +593,13 @@
                                0 0))))
         (loop for edges across pedges
             do (loop for edge in edges
-                   do (count edge :passives)))
+                   do (ecount edge :passives)))
         (loop for edges across saedges
             do (loop for edge in edges
-                   do (count edge :actives)))
+                   do (ecount edge :actives)))
         (loop for edges across eaedges
             do (loop for edge in edges
-                   do (count edge :actives)))
+                   do (ecount edge :actives)))
         (loop for rule across counts
             when rule collect rule)))))
 
