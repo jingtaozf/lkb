@@ -25,7 +25,8 @@
 (defvar *export-lexicon-p* nil)
 (defvar *export-to* nil)
 
-(defvar *export-file* "~/tmp/lexicon")
+(defvar *export-file* (make-pathname :name "lexicon"
+				     :directory (pathname-directory (lkb-tmp-dir))))
 (defvar *export-skip-stream* t)
 (defvar *export-separator* #\,)
 (defvar *export-version* "0")
@@ -833,7 +834,8 @@
 (defun merge-tdl-into-psql-lexicon2 (file-in)
   (setf file-in (namestring (pathname file-in)))
   (let ((tmp-lex (create-empty-cdb-lex))
-	(file-out (get-new-filename "~/tmp/lexicon")))
+	(file-out (get-new-filename (make-pathname :name "lexicon"
+                     :directory (pathname-directory (lkb-tmp-dir))))))
     (unless (probe-file file-in)
       (error "~%file not found (~a)" file-in))
     (load-lex tmp-lex :filename file-in)

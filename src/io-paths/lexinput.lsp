@@ -94,6 +94,8 @@
     (format t "~%Root file reload complete")))
 
 (defun read-cached-lex-if-available (file-names)
+  ;; bmw 090903
+  (clear-lex *lexicon* :psorts-temp-file *psorts-temp-file* :no-delete t)
   (unless (listp file-names) 
     (setf file-names (list file-names)))
   (setf *lex-file-list* file-names)

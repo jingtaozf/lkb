@@ -71,15 +71,27 @@
 (defun open-psql-lex (&rest rest)
   (apply 'initialize-psql-lexicon rest))
 
+;;  (defvar *psql-lexicon-parameters*
+;;    '((:host "localhost")
+;;      (:db "lingo") (:table "erg")))
+
+;;(defun initialize-psql-lexicon (&key
+;;                                (db "lingo")
+;;                                (host "localhost")
+;;                                (table (or 
+;;					(and
+;;					 (typep *psql-lexicon* 'psql-database)
+;;					 (fields-tb *psql-lexicon*)) 
+;;					"erg")))
 (defun initialize-psql-lexicon (&key
-                                (db "lingo")
-                                (host "localhost")
-                                (table (or 
-					(and
-					 (typep *psql-lexicon* 'psql-database)
-					 (fields-tb *psql-lexicon*)) 
-					"erg")))
-    (let* ((lexicon (make-instance 'psql-lex-database 
+                                (db (extract-param :db *psql-lexicon-parameters*))
+                                (host (extract-param :host *psql-lexicon-parameters*))
+                                (table (extract-param :table *psql-lexicon-parameters*)))
+  (unless (and db host table)
+    (error "please instantiate db+host+table in *psql-lexicon-parameters*"))
+  (if (extract-param :user *psql-lexicon-parameters*)
+      (setf *current-user* (extract-param :user *psql-lexicon-parameters*)))
+  (let* ((lexicon (make-instance 'psql-lex-database 
                     :dbname db :host host
                     :lex-tb table ;;unused 
 		    :fields-tb table)))
@@ -90,6 +102,9 @@
       (clear-lex *psql-lexicon*))
     (setf *psql-lexicon* lexicon)
     lexicon))
+
+(defun extract-param (param param-list)
+  (second (assoc param param-list)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -175,16 +190,20 @@
 ;;; --- psql-database methods
 ;;;
 
+;(defmethod load-lex ((lexicon psql-database) &rest rest)
+;  (declare (ignore rest))
+;  (cond
+;   ((typep (catch 'abort (setf lexicon (initialize-psql-lexicon))) 'psql-database)
+;    lexicon)
+;   (t
+;    (format t "~%... attempting to fall back to .tdl lexicon")
+;    (setf lexicon (make-instance 'cdb-lex-database))
+;    (load-cached-lexicon-if-available lexicon)
+;    lexicon)))
+
 (defmethod load-lex ((lexicon psql-database) &rest rest)
   (declare (ignore rest))
-  (cond
-   ((typep (catch 'abort (setf lexicon (initialize-psql-lexicon))) 'psql-database)
-    lexicon)
-   (t
-    (format t "~%... attempting to fall back to .tdl lexicon")
-    (setf lexicon (make-instance 'cdb-lex-database))
-    (load-cached-lexicon-if-available lexicon)
-    lexicon)))
+  (initialize-psql-lexicon))
 
 (defmethod connect ((lexicon psql-database)) 
   (let ((user *current-user*))
@@ -1120,7 +1139,3 @@
     (when filename
       (merge-tdl-into-psql-lexicon filename)
       (lkb-beep))))
-
-
-
-

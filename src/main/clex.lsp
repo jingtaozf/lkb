@@ -15,7 +15,7 @@
 ;;;  Interface to an off-line hash table lexical cache
 ;;;
 
-(defvar *lexicon-tdl-files* (list "~/tmp/lexicon.tdl"))
+;;(defvar *lexicon-tdl-files* (list "~/tmp/lexicon.tdl"))
 
 (defun get-new-filename (filename)
   (loop
@@ -28,15 +28,20 @@
 (defclass cdb-lex-database (lex-database)
   ((psort-db :initform nil :accessor psort-db)
    (orth-db :initform nil :accessor orth-db)
-   (psorts-temp-file 
-    :initform *psorts-temp-file* :accessor psorts-temp-file)
-   (psorts-temp-index-file 
-    :initform *psorts-temp-index-file* :accessor psorts-temp-index-file)
+   (psorts-temp-file :initform (make-pathname :name "templex" 
+					      :directory (pathname-directory (lkb-tmp-dir))) 
+		     
+		     :accessor psorts-temp-file)
+   (psorts-temp-index-file :initform nil :reader psorts-temp-index-file)
    (all-cdb-lex-dbs :allocation :class :initform nil :accessor all-cdb-lex-dbs)))
-(defmethod load-cached-lexicon-if-available ((lexicon cdb-lex-database))
-  (unless (typep (catch 'abort (read-cached-lex-if-available *lexicon-tdl-files*)) 'cdb-lex-database)
-    (error "~%unable to load lexicon")
-    lexicon))
+
+(defmethod psorts-temp-index-file ((lexicon cdb-lex-database))
+  (format nil "~a-index" (psorts-temp-file lexicon))) 
+
+;;(defmethod load-cached-lexicon-if-available ((lexicon cdb-lex-database))
+;;  (unless (typep (catch 'abort (read-cached-lex-if-available *lexicon-tdl-files*)) 'cdb-lex-database)
+;;    (error "~%unable to load lexicon")
+;;    lexicon))
 
 (defmethod lookup-word ((lexicon cdb-lex-database) orth &key (cache t))
   (declare (ignore cache))
@@ -114,7 +119,6 @@
   (cdb:write-record (psort-db lexicon) (string id) 
 		    (with-standard-io-syntax (write-to-string entry)))
   id)
-
 
 (defmethod read-psort ((lexicon cdb-lex-database) id &key (cache t) (recurse t))
   (declare (ignore recurse))

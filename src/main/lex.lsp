@@ -3,7 +3,6 @@
 ;;;   see `licence.txt' for conditions.
 
 ;;; modifications by bmw (aug-03)
-;;; - load-lexicon-from-script
 ;;; - fixed code broken by *lexicon*-related changes
 
 ;;; aac (aug-03)
@@ -630,27 +629,34 @@
 
 ;;--
 
-(defun load-lexicon-from-script nil
-  (if (member :psql *features*)
-      (load-psql-lexicon-from-script)
-  (load-cdb-lexicon-from-script)))
+;(defun load-lexicon-from-script nil
+;  (unless
+;      (and (member :psql *features*)
+;	   (typep (catch 'abort (load-psql-lexicon-from-script)) 'psql-database))
+;    (load-cdb-lexicon-from-script)))
 
-(defun load-cdb-lexicon-from-script nil
-  (format t "~%Loading lexicon")
-  (clear-lex *lexicon* :psorts-temp-file *psorts-temp-file* :no-delete t)
-  (load-cached-lexicon-if-available *lexicon*)
-  (format t "~%Loading complete"))
+;(defun load-cdb-lexicon-from-script nil
+;  ;;(format t "~%Loading lexicon")
+;  ;;(clear-lex *lexicon* :psorts-temp-file *psorts-temp-file* :no-delete t)
+;  ;;(load-cached-lexicon-if-available *lexicon*)
+;  (read-cached-lex-if-available *lex-file-list*)
+;  ;;(format t "~%Loading complete")
+;  )
 
 (defun load-psql-lexicon-from-script nil
-  (format t "~%Loading lexicon")
-  (clear-lex *lexicon* :psorts-temp-file "~/tmp/templex")
+  ;;(format t "~%Loading lexicon")
+  (clear-lex *lexicon* 
+	     :psorts-temp-file (make-pathname :name "templex"
+					      :directory (pathname-directory (lkb-tmp-dir))) 
+	     :no-delete t)
   (setf *psql-lexicon* (make-instance 'psql-lex-database))
   (link (load-lex *psql-lexicon*) *lexicon*)
-  (format t "~%Loading complete"))
+  ;;(format t "~%Loading complete")
+  )
 
 (defun get-keyword-val (keyword list)
   (second (member keyword list)))
 
-(defun load-lexicon (lexicon)
-  (declare (ignore lexicon))
-  (load-lexicon-from-script))
+;;(defun load-lexicon (lexicon)
+;;  (declare (ignore lexicon))
+;;  (load-lexicon-from-script))
