@@ -88,6 +88,7 @@ in RMRSs from different sources, unless we have some matching
 realpreds.
 
 |#
+#|
 
 (defun sort-rmrs (rmrs same-source-p)
   (let* ((liszt (rmrs-liszt rmrs))
@@ -96,17 +97,28 @@ realpreds.
     ;;; combine-similar-relations is in mrs/mrscorpus.lisp
   (if same-source-p rmrs
     (let ((sorted-liszt (sort (rmrs-liszt rmrs) #'< 
-			      :key #'rel-cfrom)))
+			      :key #'char-rel-cfrom)))
       (setf (rmrs-liszt rmrs)
 	(merge-equal-elements sorted-liszt #'(lambda (x y)
-					       (eql (rel-cfrom x)
-						    (rel-cfrom y))))
+					       (eql (char-rel-cfrom x)
+						    (char-rel-cfrom y))))
       rmrs)
       ;;; else - FIX
-    rmrs))
+    rmrs))))
+
+|#
+
+(defun rmrs-rel-sort-same-source-eql (rel1 rel2)
+  (let ((cfrom1 (char-rel-cfrom rel1))
+	(cfrom2 (char-rel-cfrom rel2)))
+    (and (eql cfrom1 cfrom2)
+	 (rmrs-rel-sort-eql rel1 rel2))))
 
 
-  
+(defun rmrs-rel-sort-eql (rel1 rel2)
+)
+
+
   
 ;;; Inequalities
 ;;;
@@ -131,6 +143,8 @@ realpreds.
 
 ;;; Variables are extracted during the pass over the RMRS
 ;;; structure which converts it to a comp-rmrs
+;;; This code also puts any CARG values into parameter-strings
+;;; --- CARGS can subsequently be ignored
 
 (defun convert-to-comparison-rmrs (rmrs)
   (let* ((holes (list (rmrs-top-h rmrs)))
@@ -141,8 +155,8 @@ realpreds.
 	 (elpreds
 	  (loop for ep in (rmrs-liszt rmrs)
 	      collect
-		(incf count) ;;; temporary hack
 		(progn
+		(incf count) ;;; temporary hack
 		  (pushnew (rel-handel ep) labels 
 			   :test #'eql-var-id)
 		  (let ((ep-var (retrieve-rmrs-ep-var ep)))
@@ -155,7 +169,11 @@ realpreds.
 		    (make-comp-rel :handel (rel-handel ep)
 				   :pred (rel-pred ep)
 				   :flist (rel-flist ep)
-				   :cfrom count))))))
+				   :cfrom count
+				   :parameter-strings
+				   (get-carg-value
+				    ep
+				    (rmrs-rmrs-args rmrs))))))))
       (dolist (qeq (rmrs-h-cons rmrs))
 	(cond
 	  ((equal (hcons-relation qeq) "qeq")
@@ -200,7 +218,16 @@ realpreds.
 	 :distinguished distinguished
 	 :undistinguished undistinguished))))
 
-  
+(defun get-carg-value (rel rmrs-args)
+  (let ((lbl (rel-handel rel)))
+    (dolist (arg rmrs-args)
+      (when (and (eql-var-id lbl 
+			     (rmrs-arg-label arg))
+		 (equal (rmrs-arg-arg-type arg)
+			"CARG"))
+	(return (rmrs-arg-val arg))))))
+      
+
 (defun distinguished-rel-type-p (rel)
   (let ((pred (rel-pred rel)))
     (or (equal pred "named_rel")
