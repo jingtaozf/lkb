@@ -34,6 +34,18 @@ int tsdb_shorten_tuple(Tsdb_tuple** tuples,Tsdb_tuple* fuck)
   return(j);
 }
 
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_clean_selection()
+|*     version: 
+|*  written by: oe, dfki saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|* deletes all tuples in a selection with first tuple==NULL;
+|* 
+\*****************************************************************************/
+
 Tsdb_selection *tsdb_clean_selection(Tsdb_selection* selection,Tsdb_tuple* fuck)
 {
   Tsdb_key_list *next, *first, *previous;
@@ -80,7 +92,9 @@ Tsdb_selection *tsdb_clean_selection(Tsdb_selection* selection,Tsdb_tuple* fuck)
               first = NULL;
             } /*if */
             else {
-              previous->n_tuples = tsdb_shorten_tuple(previous->tuples,fuck);
+              if (fuck!=NULL) {
+                previous->n_tuples = tsdb_shorten_tuple(previous->tuples,fuck);
+              }
               previous->next = next ;
               previous = previous->next;
               next = previous->next;
@@ -509,7 +523,7 @@ Tsdb_selection *tsdb_join(Tsdb_selection *selection_1,
   BOOL kaerb;
   int* delete;
 
-#if defined(DEBUG) && defined(TOM)
+#if defined(DEBUG) && defined(TOM) && defined(CRAZY)
 
   tsdb_print_selection(selection_1,tsdb_debug_stream);
   tsdb_print_selection(selection_2,tsdb_debug_stream);
@@ -518,7 +532,7 @@ Tsdb_selection *tsdb_join(Tsdb_selection *selection_1,
 
   delete =  tsdb_double_relations(selection_1,selection_2,&d);
 
-#if defined(DEBUG) && defined(TOM)
+#if defined(DEBUG) && defined(TOM)&& defined(CRAZY)
 /*  output = tsdb_open_pager();*/
   fprintf(tsdb_debug_stream,"reduced selection 1\n");
   tsdb_print_selection(selection_1,tsdb_debug_stream);
@@ -604,7 +618,7 @@ Tsdb_selection *tsdb_join(Tsdb_selection *selection_1,
         }
       selection_1=tsdb_simple_join(selection_1,selection_3);
 
-#if defined(DEBUG) && defined(TOM)
+#if defined(DEBUG) && defined(TOM) && defined(CRAZY)
       tsdb_print_selection(selection_1,tsdb_debug_stream);
 #endif
       result = selection_1;
@@ -685,7 +699,7 @@ Tsdb_selection *tsdb_simple_merge(Tsdb_selection *selection_1,
  } /* for */
  /* merge-key gefunden offset_2 und offset_1 indices der Key_lists */
 
-#if defined(DEBUG) && defined(TOM)
+#if defined(DEBUG) && defined(TOM) && defined(CRAZY)
  fprintf(tsdb_debug_stream,"vor create result\n");
  tsdb_print_selection(selection_1,tsdb_debug_stream); 
  tsdb_print_selection(selection_2,tsdb_debug_stream); 
@@ -703,7 +717,7 @@ Tsdb_selection *tsdb_simple_merge(Tsdb_selection *selection_1,
  } /* if */
  result->length = 0;
 
-#if defined(DEBUG) && defined(TOM)
+#if defined(DEBUG) && defined(TOM) && defined(CRAZY)
  fprintf(tsdb_debug_stream,"vor match\n");
  tsdb_print_selection(selection_1,tsdb_debug_stream); 
  tsdb_print_selection(selection_2,tsdb_debug_stream); 
@@ -714,7 +728,7 @@ Tsdb_selection *tsdb_simple_merge(Tsdb_selection *selection_1,
  next_1 = selection_1->key_lists[offset_1 + key_1];
  next_2 = selection_2->key_lists[offset_2 + key_2];
 
-#if defined(DEBUG) && defined(TOM)
+#if defined(DEBUG) && defined(TOM) && defined(CRAZY)
  fprintf(tsdb_debug_stream,"vor merge\n");
  tsdb_print_selection(selection_1,tsdb_debug_stream); 
  tsdb_print_selection(selection_2,tsdb_debug_stream); 
@@ -955,7 +969,7 @@ Tsdb_selection* tsdb_complex_merge(Tsdb_selection *selection_1,
     tsdb_free_selection(one);
     selection_1 = tsdb_simple_join(selection_1,two);
     tsdb_free_selection(two);
-#if defined(DEBUG) && defined(TOM)
+#if defined(DEBUG) && defined(TOM) && defined(CRAZY)
     tsdb_print_selection(selection_1,tsdb_debug_stream);
     tsdb_print_selection(selection_2,tsdb_debug_stream);
 #endif
@@ -978,7 +992,7 @@ Tsdb_selection* tsdb_complex_merge(Tsdb_selection *selection_1,
      the same relations, not necessarily in the same order, but
      this is handled by simple_merge
      */
-#if defined(DEBUG) && defined(TOM)
+#if defined(DEBUG) && defined(TOM) && defined(CRAZY)
   fprintf(tsdb_debug_stream,"vor tsdb_simple_merge\n");
 
   tsdb_print_selection(selection_1,tsdb_debug_stream);
