@@ -300,10 +300,12 @@ duplicate variables")
                               (cdr handel-pair)
                               variable-generator)))
              (pred (create-type (extract-pred-from-rel-fs fs)))
+             (reltype (extract-type-from-rel-fs fs))
              (fvps (extract-fvps-from-rel-fs fs variable-generator indexing-p))
              (parameter-strings (get-fvps-parameter-strings fvps)))
         (unless (member pred *dummy-relations*)
-          (make-rel :sort pred
+          (make-rel :reltype (if reltype (create-type reltype))
+                    :sort pred
                     :handel handle-var
                     :flist fvps
                     :parameter-strings parameter-strings)))))
@@ -331,6 +333,9 @@ duplicate variables")
                 (is-top-type pred-type)))
           pred-type
         (fs-type rel-fs))))
+
+(defun extract-type-from-rel-fs (rel-fs)
+  (fs-type rel-fs))
 
 (defun extract-fvps-from-rel-fs (rel-fs variable-generator indexing-p)
   (let* ((label-list (fs-arcs rel-fs))

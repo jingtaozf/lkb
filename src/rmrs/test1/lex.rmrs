@@ -1,0 +1,32 @@
+<le>
+<tag> N
+<semstruct>
+ <hook><index> x
+ <ep> <pred><arg> x </ep> 
+</semstruct>
+</le>
+
+<le>
+<tag> Adj
+<semstruct>
+ <hook><index> x
+ <ep> <pred><arg> x </ep> 
+</semstruct>
+</le>
+
+<le>
+<tag> V
+<semstruct>
+ <hook><index> e
+ <ep> <pred><arg> e </ep>
+</semstruct> 
+</le>
+
+<le>
+<tag> Det
+<semstruct>
+ <hook><index> x
+ <ep> <pred><arg> x </ep> 
+</semstruct>
+</le>
+

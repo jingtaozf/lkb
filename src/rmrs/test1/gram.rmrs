@@ -1,0 +1,54 @@
+<rule>
+<name>NP -> Det N</name> 
+<dtrs> Det N </dtrs>
+<head> N
+<eq> Det.index N.index </eq>
+</rule>
+ 
+<rule>
+<name>N -> Adj N</name> 
+<dtrs> Adj N </dtrs>
+<head> N
+<eq> Adj.index N.index </eq>
+</rule>
+
+<rule>
+<name>VP -> V NP</name>
+<dtrs> V NP </dtrs>
+<head> V
+<semstruct> 
+ <hook><index> e
+ <ep> <realpred>p-pat <arg> e <arg> x </ep> 
+</semstruct>
+<eq> V.index e </eq>
+<eq> NP.index x </eq>
+</rule>
+
+<rule>
+<name>VP -> V NP NP</name>
+<dtrs> V NP1 NP2 </dtrs>
+<head> V
+<semstruct> 
+ <hook><index> e
+ <ep> <realpred> p-pat <arg> e <arg> x2 </ep>
+ <ep> <realpred> recip <arg> e <arg> x1 </ep>
+</semstruct>
+<eq> V.index e </eq>
+<eq> NP1.index x1 </eq>
+<eq> NP2.index x2 </eq>
+</rule>
+
+<rule>
+<name>S -> NP VP</name>
+<dtrs> NP VP </dtrs>
+<head> VP
+<semstruct>
+ <hook><index> e 
+ <ep> <realpred> p-agt <arg> e <arg> x </ep>
+</semstruct>
+<eq> VP.index e </eq>
+<eq> NP.index x </eq>
+</rule>
+
+
+

@@ -1,0 +1,121 @@
+Robust MRS
+
+The idea behind this is to construct underspecified semantic structures from
+some relatively shallow parser.  This is done completely robustly from a parse
+represented as a tree, terminated by tags, without any lexical entries.  The
+eventual idea is to do this in a way which means that the RMRS structures are
+underspecified forms of full MRS structures: i.e., they can be monotonically
+enhanced to give a full MRS.  Right now, they are compatible with the
+handle-free MRS, such as produced by the textbook grammar.
+
+Composition of semnatics is done according to a very simple algebra, in effect
+equivalent to the simplest form of the algebra defined in Copestake et al,
+2001, but without the holes.  Holes are replaced by rule-specific operations.
+
+In composition, semnatic structures consist of a hook, currently with a single
+element, which is the index, a list of eps, and a list of equalities.
+
+Tags are assigned a semantic structure - generally containing one ep, which is
+usually unary, with the single argument being an event or an object (or another
+type - type assignments are specified by letters).  
+
+For instance:
+
+<le>
+<tag> NN1
+<semstruct>
+ <hook><index> x
+ <ep> <pred><arg> x </ep> 
+</semstruct>
+</le>
+
+This can be more conveniently represented as
+
+[x][pred(x)]
+
+where pred will be replaced by a predicate for a particular lexeme, e.g.:
+
+[x][book(x)]
+
+Initially there are no equalities: coindexation is used.
+
+If a tag is unknown, the assigned structure is
+
+[u] [pred(u)]
+
+where u stands for `unknown' type - it can be regarded as a generalization
+of event and object types.
+
+Rules combine the semantics of the daughters as follows:
+
+1) eps are always accumulated 
+
+2) if a semantic head is specified, the hook of the result will be the hook of
+the semantic head.  If no head is specified, but the rule is unary, the
+semantic head is assumed to be the single daughter.  Otherwise, a new variable
+is created for the hook.
+
+3) the rule may specify equalities between the hooks of the daughters
+
+4) the rule may have its own semantic structure, with equalities between
+this structure and the hook of one or more daughters.
+
+5) all equalities are accumulated on the result of the rule
+
+For instance:
+
+<rule>
+<name>N1/ap_n1/-</name> 
+<dtrs> Adj N </dtrs>
+<head> N
+<eq> Adj.index N.index </eq>
+</rule>
+
+applied to [x0][book(x0)] and [x1][red(x1)] results in
+
+[x0][book(x0),red(x1)] [x=x1]
+
+If there had been no equalities, then the result would be:
+
+[x0][book(x0),red(x1)]
+
+If there was no rule, the result would be:
+
+[x2][book(x0),red(x1)]
+
+For an example of a rule contributing its own semstruct:
+
+<rule>
+<name>V/np</name>
+<dtrs> V NP </dtrs>
+<head> V
+<semstruct> 
+ <hook><index> e
+ <ep> <realpred> ARG2 <arg> e <arg> x </ep> 
+</semstruct>
+<eq> V.index e </eq>
+<eq> NP.index x </eq>
+</rule>
+
+Assume this is applied to V = [e5][like(e5)] and 
+NP = [x0] [the(x1),book(x0),red(x2)][x1=x0, x0=x2] (note that x1=x2 is true
+by transitive closure, but this is not calculated till the end).
+The result is:
+[e5] [the(x1),book(x0),red(x2),like(e5),arg2(e6,x3)] 
+[x1=x0, x0=x2, e5=e6, x3=x0]
+
+The identifiers used to represent the dtrs in the rule, for instance, V and NP
+above are of no significance - no checking is carried out to see that the
+daughters in the tree match the categories.  Internally, they simply represent
+a daughter position.  A rule can only be applied if the arity in the tree
+matches the arity specified - otherwise the system reverts to the base rule.
+
+Currently, there are no checks on equalities for type compatability.
+
+Once a complete structure is constructed, the hooks are irrelevant, and the
+equalities can undergo transitive closure.  In this case, if
+`like the red book' were a complete utterance, the result would be:
+
+[e5] [the(x0),book(x0),red(x0),like(e5),arg2(e5,x0)]
+
+

@@ -1,0 +1,9 @@
+("What" "debts" "did" "Qintex" "group" "leave" "?") 1 ; (-10.648)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| (|NP/det_n| |What_DDQ| (|N1/n| |debt+s_NN2|))
+  (|S/sai/-| |do+ed_VDD|
+   (|S/np_vp|
+    (|NP/name_n1| (|NP/n1_name/-| (|N1/n| |Qintex_NP1|))
+     (|N1/n| |group_NN1|))
+    (V/0 |leave_VV0|))))
+ ?_?)

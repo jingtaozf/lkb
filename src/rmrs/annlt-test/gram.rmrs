@@ -1,0 +1,140 @@
+<rule>
+<name>NP/det_n</name> 
+<dtrs> Det N </dtrs>
+<head> N
+<eq> Det.index N.index </eq>
+</rule>
+
+<rule>
+<name>NP/name_n1</name> 
+<dtrs> Det N </dtrs>
+<head> N
+<eq> Det.index N.index </eq>
+</rule>
+
+<rule>
+<name>N1/ap_n1/-</name> 
+<dtrs> Adj N </dtrs>
+<head> N
+<eq> Adj.index N.index </eq>
+</rule>
+
+<rule>
+<name>N1/n1_nm/-</name> 
+<dtrs> N1 NM </dtrs>
+<head> N1
+<eq> N1.index NM.index </eq>
+</rule>
+
+<rule>
+<name>V/np</name>
+<dtrs> V NP </dtrs>
+<head> V
+<semstruct> 
+ <hook><index> e
+ <ep> <realpred> ARG2 <arg> e <arg> x </ep> 
+</semstruct>
+<eq> V.index e </eq>
+<eq> NP.index x </eq>
+</rule>
+
+<rule>
+<name>S/np_vp</name>
+<dtrs> NP VP </dtrs>
+<head> VP
+<semstruct>
+ <hook><index> e 
+ <ep> <realpred> ARG1 <arg> e <arg> x </ep>
+</semstruct>
+<eq> VP.index e </eq>
+<eq> NP.index x </eq>
+</rule>
+
+<rule>
+<name>S/whnp_s</name>
+<dtrs> WHNP VP </dtrs>
+<head> VP
+<semstruct>
+ <hook><index> e 
+ <ep> <realpred> ARGN <arg> e <arg> x </ep>
+</semstruct>
+<eq> VP.index e </eq>
+<eq> WHNP.index x </eq>
+</rule>
+
+<rule>
+<name>S/sai/-</name>
+<dtrs> AUX S </dtrs>
+<head> S
+<eq> S.index AUX.index </eq>
+</rule>
+
+<rule>
+<name>N1/n</name>
+<dtrs> N </dtrs>
+<head> N
+</rule>
+
+<rule>
+<name>NP/n1_name/-</name>
+<dtrs> N </dtrs>
+<head> N
+</rule>
+
+<rule>
+<name>A1/a</name>
+<dtrs> A </dtrs>
+<head> A
+</rule>
+
+<rule>
+<name>V/0</name>
+<dtrs> V </dtrs>
+<head> V
+</rule>
+
+<rule>
+<name>AP/a1</name>
+<dtrs> A1 </dtrs>
+<head> A1
+</rule>
+
+<rule>
+<name>PP/p1</name>
+<dtrs> P1 </dtrs>
+<head> P1
+</rule>
+
+<rule>
+<name>T/txt-sc1/-+-</name>
+<dtrs> S </dtrs>
+<head> S
+</rule>
+
+<rule>
+<name>P1/p_np</name>
+<dtrs> P NP </dtrs>
+<head> P
+<semstruct> 
+ <hook><index> e
+ <ep> <realpred> ARG2 <arg> e <arg> x </ep> 
+</semstruct>
+<eq> P.index e </eq>
+<eq> NP.index x </eq>
+</rule>
+
+<rule>
+<name>VP/vp_pp</name>
+<dtrs> VP PP </dtrs>
+<head> VP
+<semstruct> 
+ <hook><index> e
+ <ep> <realpred> ARGN <arg> e <arg> e1 </ep> 
+</semstruct>
+<eq> VP.index e </eq>
+<eq> PP.index e1 </eq>
+</rule>
+
+
+
+

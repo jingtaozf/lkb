@@ -97,6 +97,18 @@
        (:file "nf-to-fol")
        (:file "fol-to-mrs")))
 
+(:module "rmrs"
+      :source-pathname "rmrs"
+      :binary-pathname "rmrs"
+      :components
+      ((:file "comp")
+       (:file "convert")
+       (:file "annlt")                           
+       (:file "output")
+       (:file "xml-utils")
+       (:file "readgram")
+       (:file "readtag")))
+
      #+:nil
       (:module "extensions"
        :source-pathname "mrs"

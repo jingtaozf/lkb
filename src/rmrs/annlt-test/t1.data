@@ -1,0 +1,27 @@
+("Who" "is" "the" "author" "of" "the" "book" "," "\"" "The" "Iron" "Lady" ":" "A" "Biography" "of" "Margaret" "Thatcher" "\"" "?") 1 ; (-30.946)
+(|T/txt-sc1/-+-|
+ (|T/leta_cl|
+  (|S/s_co_np1|
+   (|S/whnp_vp| |Who_PNQS|
+    (|V/be_np/---| |be+s_VBZ|
+     (|NP/det_n| |the_AT|
+      (|N1/n_of| |author_NN1|
+       (|PP/p1|
+        (|P1/p_np| |of_IO|
+         (|NP/det_n| |the_AT| (|N1/n| |book_NN1|))))))))
+   |,_,|
+   (|NP/n2_name|
+    (|NP/ap2_np| (|A1/a| |"_RR|)
+     (|NP/det_n| |The_AT| (|N1/n| |Iron_NN1|)))
+    (|NP/n1_name/-| (|N1/n| |Lady_NP1|))))
+  (|Tacl/colon1| |:_:|
+   (|S/np_vp|
+    (|NP/det_n| A_AT1
+     (|N1/n_of| |Biography_NN1|
+      (|PP/p1|
+       (|P1/p_np| |of_IO|
+        (|NP/n1_name/-|
+         (|N1/name+| |Margaret_NP1| (|N1/n| |Thatcher_NP1|)))))))
+    (V/0 |"_VV0|))))
+ ?_?)
+

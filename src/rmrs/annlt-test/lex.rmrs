@@ -1,0 +1,96 @@
+<le>
+<tag> NN1
+<semstruct>
+ <hook><index> x
+ <ep> <pred><arg> x </ep> 
+</semstruct>
+</le>
+
+<le>
+<tag> NN2
+<semstruct>
+ <hook><index> x
+ <ep> <pred><arg> x </ep> 
+</semstruct>
+</le>
+
+<le>
+<tag> NP1
+<semstruct>
+ <hook><index> x
+ <ep> <pred><arg> x </ep> 
+</semstruct>
+</le>
+
+<le>
+<tag> VV0
+<semstruct>
+ <hook><index> e
+ <ep> <pred><arg> e </ep>
+</semstruct> 
+</le>
+
+<le>
+<tag> VBZ
+<semstruct>
+ <hook><index> e
+ <ep> <pred><arg> e </ep>
+</semstruct> 
+</le>
+
+<le>
+<tag> VVN
+<semstruct>
+ <hook><index> e
+ <ep> <pred><arg> e </ep>
+</semstruct> 
+</le>
+
+<le>
+<tag> VVD
+<semstruct>
+ <hook><index> e
+ <ep> <pred><arg> e </ep>
+</semstruct> 
+</le>
+
+<le>
+<tag> DDQ
+<semstruct>
+ <hook><index> x
+ <ep> <pred><arg> x </ep> 
+</semstruct>
+</le>
+
+<le>
+<tag> AT
+<semstruct>
+ <hook><index> x
+ <ep> <pred><arg> x </ep> 
+</semstruct>
+</le>
+
+<le>
+<tag> II
+<semstruct>
+ <hook><index> e
+ <ep> <pred><arg> e </ep>
+</semstruct> 
+</le>
+
+<le>
+<tag> IO
+<semstruct>
+ <hook><index> e
+ <ep> <pred><arg> e </ep>
+</semstruct> 
+</le>
+
+<le>
+<tag> JJ
+<semstruct>
+ <hook><index> x
+ <ep> <pred><arg> x </ep>
+</semstruct> 
+</le>
+

@@ -21,16 +21,20 @@
   h-cons
   info-s) ; information structure
 
-(defstruct (rel)
+;;; defined ep so there's a basic structure for EPs for RMRS
+;;; elaborated for MRS proper
+
+(defstruct ep
+  reltype
   sort  ; relation name
+  flist)
+  
+(defstruct (rel (:include ep))
   handel
-  flist
   parameter-strings                     ; copy of the relations with constant
                                         ; values
   extra)                                ; extra is a junk slot
                                         ; needed for the munging rules 
-
-
 
 (defstruct (fvpair)
   feature

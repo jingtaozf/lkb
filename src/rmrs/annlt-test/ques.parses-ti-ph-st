@@ -1,0 +1,2871 @@
+("Who" "is" "the" "author" "of" "the" "book" "," "\"" "The" "Iron" "Lady" ":" "A" "Biography" "of" "Margaret" "Thatcher" "\"" "?") 1 ; (-30.946)
+(|T/txt-sc1/-+-|
+ (|T/leta_cl|
+  (|S/s_co_np1|
+   (|S/whnp_vp| |Who_PNQS|
+    (|V/be_np/---| |be+s_VBZ|
+     (|NP/det_n| |the_AT|
+      (|N1/n_of| |author_NN1|
+       (|PP/p1|
+        (|P1/p_np| |of_IO|
+         (|NP/det_n| |the_AT| (|N1/n| |book_NN1|))))))))
+   |,_,|
+   (|NP/n2_name|
+    (|NP/ap2_np| (|A1/a| |"_RR|)
+     (|NP/det_n| |The_AT| (|N1/n| |Iron_NN1|)))
+    (|NP/n1_name/-| (|N1/n| |Lady_NP1|))))
+  (|Tacl/colon1| |:_:|
+   (|S/np_vp|
+    (|NP/det_n| A_AT1
+     (|N1/n_of| |Biography_NN1|
+      (|PP/p1|
+       (|P1/p_np| |of_IO|
+        (|NP/n1_name/-|
+         (|N1/name+| |Margaret_NP1| (|N1/n| |Thatcher_NP1|)))))))
+    (V/0 |"_VV0|))))
+ ?_?)
+
+("What" "was" "the" "monetary" "value" "of" "the" "Nobel" "Peace" "Prize" "in" "1989" "?") 1 ; (-15.478)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |What_DDQ|
+  (|S/sai-be2/--| |be+ed_VBDZ|
+   (|NP/det_n| |the_AT|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |monetary_JJ|))
+     (|N1/n_of| |value_NN1|
+      (|PP/p1|
+       (|P1/p_np| |of_IO|
+        (|NP/name_n1| (|NP/det_n| |the_AT| (|N1/n| |Nobel_NP1|))
+         (|N1/n1_nm| |Peace_NN1| (|N1/n| |Prize_NN1|))))))))
+   (|PP/p1| (|P1/p_np| |in_II| (|NP/num| (|N1/n| 1989_MC))))))
+ ?_?)
+
+("What" "does" "the" "Peugeot" "company" "manufacture" "?") 1 ; (-11.754)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |What_DDQ|
+  (|V/do_np| |do+s_VDZ|
+   (|NP/name_n1| (|NP/det_n| |the_AT| (|N1/n| |Peugeot_NP1|))
+    (|N1/n1_nm| |company_NN1| (|N1/n| |manufacture_NN1|)))))
+ ?_?)
+
+("How" "much" "did" "Mercury" "spend" "on" "advertising" "in" "1993" "?") 1 ; (-17.954)
+(|T/txt-sc1/-+-|
+ (|S/pp_s/-|
+  (|PP/p1|
+   (|P1/p_s| |How_RGQ|
+    (|S/np_vp| |much_DA1| (|V/do_pas| |do+ed_VDD|))))
+  (|S/np_vp| (|NP/n1_name/-| (|N1/n| |Mercury_NP1|))
+   (|VP/vp_pp|
+    (|V/pp| |spend_VV0|
+     (|PP/p1| (|P1/p_n1| |on_II| (|N1/n| |advertising_NN1|))))
+    (|PP/p1| (|P1/p_np| |in_II| (|NP/num| (|N1/n| 1993_MC)))))))
+ ?_?)
+
+("What" "is" "the" "name" "of" "the" "managing" "director" "of" "Apricot" "Computer" "?") 1 ; (-11.856)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |What_DDQ|
+  (|S/sai-be2/--| |be+s_VBZ|
+   (|NP/det_n| |the_AT|
+    (|N1/n_of| |name_NN1|
+     (|PP/p1|
+      (|P1/p_np| |of_IO|
+       (|NP/det_n| |the_AT|
+        (|N1/ap_n1/-| (|AP/a1| (|A1/a| |managing_JJ|))
+         (|N1/n| |director_NN1|)))))))
+   (|PP/p1|
+    (|P1/p_n1| |of_IO|
+     (|N1/n1_nm| |Apricot_NN1| (|N1/n| |Computer_NN1|))))))
+ ?_?)
+
+("Why" "did" "David" "Koresh" "ask" "the" "FBI" "for" "a" "word" "processor" "?") 1 ; (-16.770)
+(|T/txt-sc1/-+-|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |Why_RRQ|))
+  (|S/sai/-| |do+ed_VDD|
+   (|S/np_vp|
+    (|NP/n1_name/-| (|N1/name+| |David_NP1| (|N1/n| |Koresh_NP1|)))
+    (|V/np_pp| |ask_VV0| (|NP/det_n| |the_AT| (|N1/n| FBI_NP1))
+     (|PP/p1|
+      (|P1/p_np| |for_IF|
+       (|NP/det_n| |a_AT1|
+        (|N1/n1_nm| |word_NN1| (|N1/n| |processor_NN1|)))))))))
+ ?_?)
+
+("What" "debts" "did" "Qintex" "group" "leave" "?") 1 ; (-10.648)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| (|NP/det_n| |What_DDQ| (|N1/n| |debt+s_NN2|))
+  (|S/sai/-| |do+ed_VDD|
+   (|S/np_vp|
+    (|NP/name_n1| (|NP/n1_name/-| (|N1/n| |Qintex_NP1|))
+     (|N1/n| |group_NN1|))
+    (V/0 |leave_VV0|))))
+ ?_?)
+
+("What" "is" "the" "name" "of" "the" "rare" "neurological" "disease" "with" "symptoms" "such" "as" ":" "involuntary" "movements" "(" "tics)" "," "swearing" "," "and" "incoherent" "vocalizations" "(" "grunts" "," "shouts" "," "etc." ")" "?") 1 ; (-58.430)
+(|T/fragx|
+ (|T/leta_cl|
+  (|S/whnp_vp| |What_DDQ|
+   (|VP/vp_pp|
+    (|VP/vp_pp|
+     (|V/be_np/---| |be+s_VBZ|
+      (|NP/det_n| |the_AT|
+       (|N1/n_of| |name_NN1|
+        (|PP/p1|
+         (|P1/p_np| |of_IO|
+          (|NP/det_n| |the_AT|
+           (|N1/ap_n1/-| (|AP/a1| (|A1/a| |rare_JJ|))
+            (|N1/ap_n1/-| (|AP/a1| (|A1/a| |neurological_JJ|))
+             (|N1/n| |disease_NN1|)))))))))
+     (|PP/p1|
+      (|P1/p_np| |with_IW| (|NP/plu1| (|N1/n| |symptom+s_NN2|)))))
+    (|PP/p1| (|P1/p_pp| |such_II| (|PP/p1| (|P1/p| |as_II|))))))
+  (|Taph/colon| |:_:|
+   (|Tph/n1/-|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |involuntary_JJ|))
+     (|N1/n| |movement+s_NN2|)))))
+ |(_(|
+ (|N1/cj_int1/-|
+  (|N1/n|
+   (|T/lmta_n| |tics)_NN2|
+    (|Taph/comma+/-| |,_,| (|Tph/vp/-| (V/0 |swear+ing_VVG|)) |,_,|)))
+  (|N1/cj_end| |and_CC|
+   (|N1/ap_n1/-| (|AP/a1| (|A1/a| |incoherent_JJ|))
+    (|N1/n| |vocalization+s_NN2|))))
+ |(_(| (|NP/co_np| (|NP/plu1| (|N1/n| |grunt+s_NN2|)) |,_,|)
+ (|NP/co_np| (|NP/plu1| (|N1/n| |shout+s_NN2|)) |,_,|)
+ (|Tph/a2/-| (|AP/a1| (|A1/a| |etc._RA|))) |)_)| ?_?)
+
+("How" "far" "is" "Yaroslavl" "from" "Moscow" "?") 1 ; (-14.282)
+(|T/txt-sc1/-+-|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |How_RGQ|))
+  (|S/adv_s/-| (|AP/a1| (|A1/a| |far_RR|))
+   (|S/s_npvoc1/-|
+    (|S/sai-be4/--| |be+s_VBZ|
+     (|NP/n1_name/-| (|N1/n| |Yaroslavl_NP1|)) |from_II|)
+    (|NP/n1_name/-| (|N1/n| |Moscow_NP1|)))))
+ ?_?)
+
+("Name" "the" "designer" "of" "the" "shoe" "that" "spawned" "millions" "of" "plastic" "imitations" "," "known" "as" "\"" "jellies" "\"") 1 ; (-29.542)
+(|T/frag|
+ (|Tph/n1/-|
+  (|N1/n_s1| |Name_NN1|
+   (|S/np_co_s1|
+    (|NP/det_n| |the_AT|
+     (|N1/n_of| |designer_NN1|
+      (|PP/p1|
+       (|P1/p_np| |of_IO|
+        (|NP/det_n| |the_AT|
+         (|N1/n_rel| |shoe_NN1| |that_CST|
+          (|V/np| |spawn+ed_VVD|
+           (|NP/plu1|
+            (|N1/n_of| |million+s_NN2|
+             (|PP/p1|
+              (|P1/p_np| |of_IO|
+               (|NP/plu1|
+                (|N1/ap_n1/-| (|AP/a1| (|A1/a| |plastic_JJ|))
+                 (|N1/n| |imitation+s_NN2|))))))))))))))
+    |,_,|
+    (|S/vppt_s/-|
+     (|VP/vp_adv| (V/0 |know+en_VVN|) (|AP/a1| (|A1/a| |as_RG|)))
+     (|S/np_vp|
+      (|NP/plu1|
+       (|N1/ap_n1/-| (|AP/a1| (|A1/a| |"_JJ|)) (|N1/n| |jelly+s_NN2|)))
+      (V/0 |"_VV0|)))))))
+
+("Who" "was" "President" "Cleveland" "'s" "wife" "?") 1 ; (-14.534)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |Who_PNQS|
+  (|V/be_n1/--| |be+ed_VBDZ|
+   (|N1/n1_nm| |President_NNS1|
+    (|N1/poss_n1| (|N1/n1_poss| (|N1/n| |Cleveland_NP1|) |'s+_$|)
+     (|N1/n| |wife_NN1|)))))
+ ?_?)
+
+("How" "much" "did" "Manchester" "United" "spend" "on" "players" "in" "1993" "?") 1 ; (-24.505)
+(|T/frag|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |How_RGQ|))
+  (|S/s_npvoc1/-| (|S/np_vp| |much_DA1| (|V/do_pas| |do+ed_VDD|))
+   (|NP/n1_name/-| (|N1/n| |Manchester_NP1|))))
+ (|AP/a1| (|A1/a| |United_JJ|))
+ (|S/imp|
+  (|V/pp| |spend_VV0|
+   (|PP/p1|
+    (|P1/p_np| |on_II|
+     (|NP/plu1|
+      (|N1/n1_pp1| (|N1/n| |player+s_NN2|)
+       (|PP/p1| (|P1/p_np| |in_II| (|NP/num| (|N1/n| 1993_MC))))))))))
+ ?_?)
+
+("How" "much" "could" "you" "rent" "a" "Volkswagen" "bug" "for" "in" "1966" "?") 1 ; (-26.774)
+(|T/frag|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |How_RGQ|))
+  (|S/adv_s/-| (|AP/a1| (|A1/a| |much_DA1|))
+   (|S/sai/-| |could_VM|
+    (|S/np_vp| |you_PPY|
+     (|V/np| |rend+ed_VV0|
+      (|NP/name_n1| (|NP/det_n| |a_AT1| (|N1/n| |Volkswagen_NP1|))
+       (|N1/n| |bug_NN1|)))))))
+ |for_IF| |in_II| (|NP/num| (|N1/n| 1966_MC)) ?_?)
+
+("What" "country" "is" "the" "biggest" "producer" "of" "tungsten" "?") 1 ; (-9.230)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| (|NP/det_n| |What_DDQ| (|N1/n| |country_NN1|))
+  (|S/sai-be2/--| |be+s_VBZ|
+   (|NP/det_n| |the_AT|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |biggest_JJT|))
+     (|N1/n| |producer_NN1|)))
+   (|PP/p1| (|P1/p_n1| |of_IO| (|N1/n| |tungsten_NN1|)))))
+ ?_?)
+
+("When" "was" "London" "'s" "Docklands" "Light" "Railway" "constructed" "?") 1 ; (-19.162)
+(|T/frag| |When_CS|
+ (|S/sai/-| |be+ed_VBDZ|
+  (|S/np_vp|
+   (|NP/n1_name/-|
+    (|N1/poss_n1| (|N1/n1_poss| (|N1/n| |London_NP1|) |'s+_$|)
+     (|N1/name+| |Docklands_NP1|
+      (|N1/name+| |Light_NP1| (|N1/n| |Railway_NP1|)))))
+   (V/0 |construct+ed_VVN|)))
+ ?_?)
+
+("What" "two" "US" "biochemists" "won" "the" "Nobel" "Prize" "in" "medicine" "in" "1992" "?") 1 ; (-17.596)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| (|NP/det_n| |What_DDQ| (|N1/n| |two_MC|))
+  (|S/np_vp|
+   (|NP/name_n1| (|NP/n1_name/-| (|N1/n| US_NP1))
+    (|N1/n| |biochemist+s_NN2|))
+   (|VP/vp_pp|
+    (|VP/vp_pp|
+     (|V/np_n1| |win+ed_VVD| (|NP/det_n| |the_AT| (|N1/n| |Nobel_NP1|))
+      (|N1/n| |Prize_NN1|))
+     (|PP/p1| (|P1/p_n1| |in_II| (|N1/n| |medicine_NN1|))))
+    (|PP/p1| (|P1/p_np| |in_II| (|NP/num| (|N1/n| 1992_MC)))))))
+ ?_?)
+
+("How" "long" "did" "the" "Charles" "Manson" "murder" "trial" "last" "?") 1 ; (-17.127)
+(|T/txt-sc1/-+-|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |How_RGQ|))
+  (|S/adv_s/-| (|AP/a1| (|A1/a| |long_RR|))
+   (|S/sai/-| |do+ed_VDD|
+    (|S/np_vp|
+     (|NP/name_n1|
+      (|NP/det_n| |the_AT|
+       (|N1/name+| |Charles_NP1| (|N1/n| |Manson_NP1|)))
+      (|N1/n1_nm| |murder_NN1| (|N1/n| |trial_NN1|)))
+     (V/0 |last_VV0|)))))
+ ?_?)
+
+("Who" "was" "the" "first" "Taiwanese" "President" "?") 1 ; (-7.811)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |Who_PNQS|
+  (|V/be_np/---| |be+ed_VBDZ|
+   (|NP/det_n| |the_AT|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |first_MD|))
+     (|N1/ap_n1/-| (|AP/a1| (|A1/a| |Taiwanese_JJ|))
+      (|N1/n| |President_NNS1|))))))
+ ?_?)
+
+("Who" "was" "the" "leader" "of" "the" "Branch" "Davidian" "Cult" "confronted" "by" "the" "FBI" "in" "Waco" "," "Texas" "in" "1993" "?") 1 ; (-29.466)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |Who_PNQS|
+  (|VP/vp_pp|
+   (|V/be_s| |be+ed_VBDZ|
+    (|S/s_npvoc1/+|
+     (|S/np_vp|
+      (|NP/det_n| |the_AT|
+       (|N1/n_of| |leader_NN1|
+        (|PP/p1|
+         (|P1/p_np| |of_IO|
+          (|NP/det_n| |the_AT|
+           (|N1/name+| |Branch_NP1|
+            (|N1/name+| |Davidian_NP1| (|N1/n| |Cult_NP1|))))))))
+      (|V/pp_pp| |confront+ed_VVD|
+       (|PP/p1|
+        (|P1/p_np| |by_II| (|NP/det_n| |the_AT| (|N1/n| FBI_NP1))))
+       (|PP/p1|
+        (|P1/p_np| |in_II| (|NP/n1_name/-| (|N1/n| |Waco_NP1|))))))
+     |,_,| (|NP/n1_name/-| (|N1/n| |Texas_NP1|))))
+   (|PP/p1| (|P1/p_np| |in_II| (|NP/num| (|N1/n| 1993_MC))))))
+ ?_?)
+
+("Where" "is" "Inoco" "based" "?") 1 ; (-11.106)
+(|T/txt-sc1/-+-|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |Where_RRQ|))
+  (|S/sai/-| |be+s_VBZ|
+   (|S/np_vp| (|NP/n1_name/-| (|N1/n| |Inoco_NP1|))
+    (V/0 |base+ed_VVN|))))
+ ?_?)
+
+("Who" "was" "the" "first" "American" "in" "space" "?") 1 ; (-9.086)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |Who_PNQS|
+  (|S/sai-be2/--| |be+ed_VBDZ|
+   (|NP/det_n| |the_AT|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |first_MD|))
+     (|N1/n| |American_NN1|)))
+   (|PP/p1| (|P1/p_n1| |in_II| (|N1/n| |space_NN1|)))))
+ ?_?)
+
+("When" "did" "the" "Jurassic" "Period" "end" "?") 1 ; (-13.235)
+(|T/frag| |When_CS| (|V/do_pas| |do+ed_VDD|)
+ (|NP/det_n| |the_AT|
+  (|N1/ap_n1/-| (|AP/a1| (|A1/a| |Jurassic_JJ|))
+   (|N1/n1_nm| |Period_NN1| (|N1/n| |end_NN1|))))
+ ?_?)
+
+("When" "did" "Spain" "and" "Korea" "start" "ambassadorial" "relations" "?") 1 ; (-17.715)
+(|T/frag| |When_CS|
+ (|S/sai/-| |do+ed_VDD|
+  (|S/np_vp|
+   (|NP/num|
+    (|N1/n|
+     (|N/cj_int/-| |Spain_NP1| (|N/cj_end| |and_CC| |Korea_NP1|))))
+   (|V/np| |start_VV0|
+    (|NP/plu1|
+     (|N1/ap_n1/-| (|AP/a1| (|A1/a| |ambassadorial_JJ|))
+      (|N1/n| |relation+s_NN2|))))))
+ ?_?)
+
+("When" "did" "Nixon" "visit" "China" "?") 1 ; (-18.716)
+(|T/frag| |When_CS|
+ (|S/sai/-| |do+ed_VDD|
+  (|S/s_npvoc1/-|
+   (|S/np_vp| (|NP/n1_name/-| (|N1/n| |Nixon_NP1|)) (V/0 |visit_VV0|))
+   (|NP/n1_name/-| (|N1/n| |China_NP1|))))
+ ?_?)
+
+("Who" "was" "the" "lead" "actress" "in" "the" "movie" "\"" "Sleepless" "in" "Seattle" "\"" "?") 1 ; (-17.910)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |Who_PNQS|
+  (|S/sai/-| |be+ed_VBDZ|
+   (|S/np_vp|
+    (|NP/det_n| |the_AT|
+     (|N1/n1_pp1|
+      (|N1/n1_pp1| (|N1/n1_nm| |lead_NN1| (|N1/n| |actress_NN1|))
+       (|PP/p1|
+        (|P1/p_np| |in_II|
+         (|NP/det_n| |the_AT|
+          (|N1/n1_nm| |movie_NN1|
+           (|N1/ap_n1/-| (|AP/a1| (|A1/a| |"_JJ|))
+            (|N1/n| |Sleepless_NNJ1|)))))))
+      (|PP/p1|
+       (|P1/p_np| |in_II| (|NP/n1_name/-| (|N1/n| |Seattle_NP1|))))))
+    (V/0 |"_VVD|))))
+ ?_?)
+
+("What" "is" "the" "name" "of" "the" "\"" "female" "\"" "counterpart" "to" "El" "Nino" "," "which" "results" "in" "cooling" "temperatures" "and" "very" "dry" "weather" "?") 1 ; (-29.072)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |What_DDQ|
+  (|S/sai/-| |be+s_VBZ|
+   (|S/np_co_s1|
+    (|NP/det_n| |the_AT|
+     (|N1/n_of| |name_NN1|
+      (|PP/p1|
+       (|P1/p_np| |of_IO|
+        (|NP/det_n| |the_AT|
+         (|N1/n1_pp1|
+          (|N1/ap_n1/-| (|AP/a1| (|A1/a| |"_JJ|))
+           (|N1/ap_n1/-| (|AP/a1| (|A1/a| |female_JJ|))
+            (|N1/ap_n1/-| (|AP/a1| (|A1/a| |"_JJ|))
+             (|N1/n| |counterpart_NN1|))))
+          (|PP/p1|
+           (|P1/p_np| |to_II|
+            (|NP/n1_name/-|
+             (|N1/name+| |El_NP1| (|N1/n| |Nino_NP1|)))))))))))
+    |,_,|
+    (|S/whnp_vp| |which_DDQ|
+     (|V/pp| |result+s_VVZ|
+      (|PP/p1|
+       (|P1/p_np| |in_II|
+        (|NP/plu1|
+         (|N1/cj_int1/-|
+          (|N1/ap_n1/-| (|AP/a1| (|A1/a| |cooling_JJ|))
+           (|N1/n| |temperature+s_NN2|))
+          (|N1/cj_end| |and_CC|
+           (|N1/ap_n1/-|
+            (|AP/a1|
+             (|A1/adv_a1| (|AP/a1| (|A1/a| |very_RG|))
+              (|A1/a| |dry_JJ|)))
+            (|N1/n| |weather_NN1|))))))))))))
+ ?_?)
+
+("Where" "did" "the" "6th" "annual" "meeting" "of" "Indonesia-Malaysia" "forest" "experts" "take" "place" "?") 1 ; (-18.792)
+(|T/txt-sc1/-+-|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |Where_RRQ|))
+  (|S/sai/-| |do+ed_VDD|
+   (|S/np_vp|
+    (|NP/det_n| |the_AT|
+     (|N1/ap_n1/-| (|AP/a1| (|A1/a| |6th_MD|))
+      (|N1/ap_n1/-| (|AP/a1| (|A1/a| |annual_JJ|))
+       (|N1/n_of| |meeting_NN1|
+        (|PP/p1|
+         (|P1/p_np| |of_IO|
+          (|NP/name_n1|
+           (|NP/n1_name/-| (|N1/n| |Indonesia-Malaysia_NP1|))
+           (|N1/n1_nm| |forest_NN1| (|N1/n| |expert+s_NN2|)))))))))
+    (|V/n1| |take_VV0| (|N1/n| |place_NN1|)))))
+ ?_?)
+
+("Who" "may" "be" "best" "known" "for" "breaking" "the" "color" "line" "in" "baseball" "?") 1 ; (-17.872)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |Who_PNQS|
+  (|VP/vp_pp|
+   (|V/modal_bse/-| |may_VM|
+    (|V/be_ppart/+| |be_VB0| (|AP/a1| (|A1/a| |best_RRT|))
+     (|V/pp| |know+en_VVN|
+      (|PP/p1|
+       (|P1/p_ing| |for_IF|
+        (|V/np| |break+ing_VVG|
+         (|NP/det_n| |the_AT|
+          (|N1/n1_nm| |color_NN1| (|N1/n| |line_NN1|)))))))))
+   (|PP/p1| (|P1/p_n1| |in_II| (|N1/n| |baseball_NN1|)))))
+ ?_?)
+
+("What" "is" "the" "brightest" "star" "visible" "from" "Earth" "?") 1 ; (-12.777)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |What_DDQ|
+  (|V/be_np/---| |be+s_VBZ|
+   (|NP/np_ap|
+    (|NP/det_n| |the_AT|
+     (|N1/ap_n1/-| (|AP/a1| (|A1/a| |brightest_JJT|))
+      (|N1/n| |star_NN1|)))
+    (|A1/a_pp1| |visible_JJ|
+     (|PP/p1| (|P1/p_n1| |from_II| (|N1/n| |Earth_NN1|)))))))
+ ?_?)
+
+("What" "are" "the" "Valdez" "Principles" "?") 1 ; (-7.678)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |What_DDQ|
+  (|V/be_np/---| |be+_VBR|
+   (|NP/det_n| |the_AT|
+    (|N1/name+| |Valdez_NP1| (|N1/n| |Principles_NP1|)))))
+ ?_?)
+
+("Where" "was" "Ulysses" "S." "Grant" "born" "?") 1 ; (-14.462)
+(|T/txt-sc1/-+-|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |Where_RRQ|))
+  (|S/sai/-| |be+ed_VBDZ|
+   (|S/np_vp|
+    (|NP/n1_name/-|
+     (|N1/name+| |Ulysses_NP1|
+      (|N1/name+| S._NP1 (|N1/n| |Grant_NP1|))))
+    (V/0 |bear+en_VVN|))))
+ ?_?)
+
+("Who" "received" "the" "Will" "Rogers" "Award" "in" "1989" "?") 1 ; (-11.607)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |Who_PNQS|
+  (|VP/vp_pp|
+   (|V/np_n1| |receive+ed_VVD|
+    (|NP/det_n| |the_AT| (|N1/name+| |Will_NP1| (|N1/n| |Rogers_NP1|)))
+    (|N1/n| |Award_NN1|))
+   (|PP/p1| (|P1/p_np| |in_II| (|NP/num| (|N1/n| 1989_MC))))))
+ ?_?)
+
+("What" "is" "the" "largest" "city" "in" "Germany" "?") 1 ; (-8.941)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |What_DDQ|
+  (|S/sai-be2/--| |be+s_VBZ|
+   (|NP/det_n| |the_AT|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |largest_JJT|))
+     (|N1/n| |city_NN1|)))
+   (|PP/p1|
+    (|P1/p_np| |in_II| (|NP/n1_name/-| (|N1/n| |Germany_NP1|))))))
+ ?_?)
+
+("Where" "is" "the" "actress" "," "Marion" "Davies" "," "buried" "?") 1 ; (-14.860)
+(|T/txt-sc1/-+-|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |Where_RRQ|))
+  (|S/sai/-| |be+s_VBZ|
+   (|S/np_vp|
+    (|T/lmta_np| (|NP/det_n| |the_AT| (|N1/n| |actress_NN1|))
+     (|Taph/comma+/-| |,_,|
+      (|Tph/n1/-| (|N1/name+| |Marion_NP1| (|N1/n| |Davies_NP1|)))
+      |,_,|))
+    (V/0 |bury+ed_VVN|))))
+ ?_?)
+
+("What" "is" "the" "name" "of" "the" "highest" "mountain" "in" "Africa" "?") 1 ; (-10.791)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |What_DDQ|
+  (|S/sai-be2/--| |be+s_VBZ|
+   (|NP/det_n| |the_AT|
+    (|N1/n_of| |name_NN1|
+     (|PP/p1|
+      (|P1/p_np| |of_IO|
+       (|NP/det_n| |the_AT|
+        (|N1/ap_n1/-| (|AP/a1| (|A1/a| |highest_JJT|))
+         (|N1/n| |mountain_NN1|)))))))
+   (|PP/p1|
+    (|P1/p_np| |in_II| (|NP/n1_name/-| (|N1/n| |Africa_NP1|))))))
+ ?_?)
+
+("In" "1990" "," "what" "day" "of" "the" "week" "did" "Christmas" "fall" "on" "?") 1 ; (-19.768)
+(|T/txt-sc1/-+-|
+ (|S/pp_s/+| (|PP/p1| (|P1/p_np| |In_II| (|NP/num| (|N1/n| 1990_MC))))
+  |,_,|
+  (|S/whnp_vp|
+   (|NP/det_n| |what_DDQ|
+    (|N1/n_of| |day_NN1|
+     (|PP/p1|
+      (|P1/p_np| |of_IO| (|NP/det_n| |the_AT| (|N1/n| |week_NN1|))))))
+   (|VP/vp_adv|
+    (|V/do_bse/-| |do+ed_VDD|
+     (|VP/npadv1_vp| (|NP/adv1| (|N1/n| |Christmas_NNT1|))
+      (V/0 |fall_VV0|)))
+    (|AP/a1| (|A1/a| |on_RP|)))))
+ ?_?)
+
+("What" "was" "the" "name" "of" "the" "US" "helicopter" "pilot" "shot" "down" "over" "North" "Korea" "?") 1 ; (-19.299)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |What_DDQ|
+  (|S/sai-be2/--| |be+ed_VBDZ|
+   (|NP/det_n| |the_AT| (|N1/n| |name_NN1|))
+   (|PP/p1|
+    (|P1/p_np| |of_IO|
+     (|NP/name_n1| (|NP/det_n| |the_AT| (|N1/n| US_NP1))
+      (|N1/n1_nm| |helicopter_NN1|
+       (|N1/n_pprt| |pilot_NN1|
+        (|V/pp| (|V/0_p| |shoot+ed_VVN| |down_RP|)
+         (|PP/p1|
+          (|P1/p_np| |over_II|
+           (|NP/n1_name/-|
+            (|N1/name+| |North_NP1| (|N1/n| |Korea_NP1|)))))))))))))
+ ?_?)
+
+("Where" "was" "George" "Washington" "born" "?") 1 ; (-12.806)
+(|T/txt-sc1/-+-|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |Where_RRQ|))
+  (|S/sai/-| |be+ed_VBDZ|
+   (|S/np_vp|
+    (|NP/n1_name/-|
+     (|N1/name+| |George_NP1| (|N1/n| |Washington_NP1|)))
+    (V/0 |bear+en_VVN|))))
+ ?_?)
+
+("Who" "was" "chosen" "to" "be" "the" "first" "black" "chairman" "of" "the" "military" "Joint" "Chiefs" "of" "Staff" "?") 1 ; (-18.348)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |Who_PNQS|
+  (|V/be_ppart/-| |be+ed_VBDZ|
+   (|V/inf| |choose+en_VVN|
+    (|V/to_bse| |to_TO|
+     (|V/be_np/---| |be_VB0|
+      (|NP/det_n| |the_AT|
+       (|N1/ap_n1/-| (|AP/a1| (|A1/a| |first_MD|))
+        (|N1/ap_n1/-| (|AP/a1| (|A1/a| |black_JJ|))
+         (|N1/n_of| |chairman_NN1|
+          (|PP/p1|
+           (|P1/p_np| |of_IO|
+            (|NP/det_n| |the_AT|
+             (|N1/ap_n1/-| (|AP/a1| (|A1/a| |military_JJ|))
+              (|N1/n1_nm| |Joint_NN1|
+               (|N1/n_of| |Chief+s_NNS2|
+                (|PP/p1|
+                 (|P1/p_n1| |of_IO|
+                  (|N1/n| |Staff_NN|))))))))))))))))))
+ ?_?)
+
+("Who" "won" "the" "Nobel" "Peace" "Prize" "in" "1991" "?") 1 ; (-12.056)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |Who_PNQS|
+  (|VP/vp_pp|
+   (|V/np_n1| |win+ed_VVD| (|NP/det_n| |the_AT| (|N1/n| |Nobel_NP1|))
+    (|N1/n1_nm| |Peace_NN1| (|N1/n| |Prize_NN1|)))
+   (|PP/p1| (|P1/p_np| |in_II| (|NP/num| (|N1/n| 1991_MC))))))
+ ?_?)
+
+("What" "is" "the" "legal" "blood" "alcohol" "limit" "for" "the" "state" "of" "California" "?") 1 ; (-13.645)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |What_DDQ|
+  (|VP/vp_pp|
+   (|V/be_np/---| |be+s_VBZ|
+    (|NP/det_n| |the_AT|
+     (|N1/ap_n1/-| (|AP/a1| (|A1/a| |legal_JJ|))
+      (|N1/n1_nm| |blood_NN1|
+       (|N1/n1_nm| |alcohol_NN1| (|N1/n| |limit_NN1|))))))
+   (|PP/p1|
+    (|P1/p_np| |for_IF|
+     (|NP/det_n| |the_AT|
+      (|N1/n_of| |state_NN1|
+       (|PP/p1|
+        (|P1/p_np| |of_IO|
+         (|NP/n1_name/-| (|N1/n| |California_NP1|))))))))))
+ ?_?)
+
+("What" "was" "the" "target" "rate" "for" "M3" "growth" "in" "1992" "?") 1 ; (-13.921)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |What_DDQ|
+  (|VP/vp_pp|
+   (|VP/vp_pp|
+    (|V/be_np/---| |be+ed_VBDZ|
+     (|NP/det_n| |the_AT|
+      (|N1/n1_nm| |target_NN1| (|N1/n| |rate_NN1|))))
+    (|PP/p1|
+     (|P1/p_n1| |for_IF|
+      (|N1/ap_n1/-| (|AP/a1| (|A1/a| M3_JJ)) (|N1/n| |growth_NN1|)))))
+   (|PP/p1| (|P1/p_np| |in_II| (|NP/num| (|N1/n| 1992_MC))))))
+ ?_?)
+
+("What" "costume" "designer" "decided" "that" "Michael" "Jackson" "should" "only" "wear" "one" "glove" "?") 1 ; (-18.296)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp|
+  (|NP/det_n| |What_DDQ|
+   (|N1/n1_nm| |costume_NN1| (|N1/n| |designer_NN1|)))
+  (|V/s| |decide+ed_VVD|
+   (|S/comp| |that_CST|
+    (|S/np_vp|
+     (|NP/n1_name/-| (|N1/name+| |Michael_NP1| (|N1/n| |Jackson_NP1|)))
+     (|V/modal_bse/+| |should_VM| (|AP/a1| (|A1/a| |only_RR|))
+      (|V/np| |wear_VV0|
+       (|NP/det_n| |one_MC1| (|N1/n| |glove_NN1|))))))))
+ ?_?)
+
+("Who" "is" "the" "director" "of" "the" "international" "group" "called" "the" "Human" "Genome" "Organization" "(" "HUGO" ")" "that" "is" "trying" "to" "coordinate" "gene-mapping" "research" "worldwide" "?") 1 ; (-37.421)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |Who_PNQS|
+  (|S/sai/-| |be+s_VBZ|
+   (|S/np_vp|
+    (|NP/det_n| |the_AT|
+     (|N1/n_of| |director_NN1|
+      (|PP/p1|
+       (|P1/p_np| |of_IO|
+        (|NP/det_n| |the_AT|
+         (|N1/ap_n1/-| (|AP/a1| (|A1/a| |international_JJ|))
+          (|N1/n| |group_NN1|)))))))
+    (|V/np_ap| |call+ed_VVD|
+     (|NP/name_n1|
+      (|NP/det_n| |the_AT|
+       (|N1/ap_n1/-| (|AP/a1| (|A1/a| |Human_JJ|))
+        (|N1/n| |Genome_NP1|)))
+      (|N1/n_rel|
+       (|T/lmta_n| |Organization_NNJ1|
+        (|Taph/brack| |(_(| (|Tph/n1/-| (|N1/n| HUGO_NP1)) |)_)|))
+       |that_CST|
+       (|V/be_ing/-| |be+s_VBZ|
+        (|V/inf| |try+ing_VVG|
+         (|V/to_bse| |to_TO|
+          (|V/n1| |coordinate_VV0|
+           (|N1/ap_n1/-| (|AP/a1| (|A1/a| |gene-mapping_JB|))
+            (|N1/n| |research_NN1|))))))))
+     (|AP/a1| (|A1/a| |worldwide_JJ|))))))
+ ?_?)
+
+("When" "did" "Lucelly" "Garcia" "," "a" "former" "ambassador" "of" "Columbia" "to" "Honduras" "," "die" "?") 1 ; (-24.949)
+(|T/frag| |When_CS|
+ (|S/sai/-| |do+ed_VDD|
+  (|S/np_vp|
+   (|NP/n1_name/-|
+    (|N1/name+| |Lucelly_NP1|
+     (|N1/n|
+      (|T/lmta_n| |Garcia_NP1|
+       (|Taph/comma+/-| |,_,|
+        (|Tph/np/-|
+         (|NP/det_n| |a_AT1|
+          (|N1/ap_n1/-| (|AP/a1| (|A1/a| |former_DA|))
+           (|N1/n1_pp1|
+            (|N1/n_of| |ambassador_NN1|
+             (|PP/p1|
+              (|P1/p_np| |of_IO|
+               (|NP/n1_name/-| (|N1/n| |Columbia_NP1|)))))
+            (|PP/p1|
+             (|P1/p_np| |to_II|
+              (|NP/n1_name/-| (|N1/n| |Honduras_NP1|))))))))
+        |,_,|)))))
+   (V/0 |die_VV0|)))
+ ?_?)
+
+("Who" "is" "the" "mayor" "of" "Marbella" "?") 1 ; (-8.088)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |Who_PNQS|
+  (|S/sai-be2/--| |be+s_VBZ| (|NP/det_n| |the_AT| (|N1/n| |mayor_NN1|))
+   (|PP/p1|
+    (|P1/p_np| |of_IO| (|NP/n1_name/-| (|N1/n| |Marbella_NP1|))))))
+ ?_?)
+
+("What" "company" "is" "the" "largest" "Japanese" "ship" "builder" "?") 1 ; (-9.754)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| (|NP/det_n| |What_DDQ| (|N1/n| |company_NN1|))
+  (|V/be_np/---| |be+s_VBZ|
+   (|NP/det_n| |the_AT|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |largest_JJT|))
+     (|N1/ap_n1/-| (|AP/a1| (|A1/a| |Japanese_JJ|))
+      (|N1/n1_nm| |ship_NN1| (|N1/n| |builder_NN1|)))))))
+ ?_?)
+
+("Where" "is" "the" "massive" "North" "Korean" "nuclear" "complex" "located" "?") 1 ; (-16.881)
+(|T/txt-sc1/-+-|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |Where_RRQ|))
+  (|S/sai/-| |be+s_VBZ|
+   (|S/np_vp|
+    (|NP/name_n1|
+     (|NP/det_n| |the_AT|
+      (|N1/ap_n1/-| (|AP/a1| (|A1/a| |massive_JJ|))
+       (|N1/n| |North_NP1|)))
+     (|N1/ap_n1/-| (|AP/a1| (|A1/a| |Korean_JJ|))
+      (|N1/ap_n1/-| (|AP/a1| (|A1/a| |nuclear_JJ|))
+       (|N1/n| |complex_NN1|))))
+    (V/0 |locate+ed_VVN|))))
+ ?_?)
+
+("Who" "fired" "Maria" "Ybarra" "from" "her" "position" "in" "San" "Diego" "council" "?") 1 ; (-20.683)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |Who_PNQS|
+  (|VP/vp_pp|
+   (|V/np_pp| |fire+ed_VVD|
+    (|NP/n1_name/-| (|N1/name+| |Maria_NP1| (|N1/n| |Ybarra_NP1|)))
+    (|PP/p1|
+     (|P1/p_np| |from_II|
+      (|NP/det_n| |her_APP$| (|N1/n| |position_NN1|)))))
+   (|PP/p1|
+    (|P1/p_np| |in_II|
+     (|NP/name_n1|
+      (|NP/n1_name/-| (|N1/name+| |San_NP1| (|N1/n| |Diego_NP1|)))
+      (|N1/n| |council_NN1|))))))
+ ?_?)
+
+("When" "was" "Dubai" "'s" "first" "concrete" "house" "built" "?") 1 ; (-15.596)
+(|T/frag| |When_CS|
+ (|S/sai/-| |be+ed_VBDZ|
+  (|S/np_vp|
+   (|NP/poss_n1|
+    (|NP/n2_poss| (|NP/n1_name/-| (|N1/n| |Dubai_NP1|)) |'s+_$|)
+    (|N1/ap_n1/-|
+     (|AP/a1|
+      (|A1/adv_a1| (|AP/a1| (|A1/a| |first_MD|))
+       (|A1/a| |concrete_JJ|)))
+     (|N1/n| |house_NN1|)))
+   (V/0 |build+ed_VVD|)))
+ ?_?)
+
+("Who" "is" "the" "president" "of" "Stanford" "University" "?") 1 ; (-13.497)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |Who_PNQS|
+  (|S/sai-be2/--| |be+s_VBZ|
+   (|NP/det_n| |the_AT| (|N1/n| |president_NN1|))
+   (|PP/p1|
+    (|P1/p_np| |of_IO|
+     (|NP/place|
+      (|N1/n|
+       (|N/name_npl| (|NP/n1_name/-| (|N1/n| |Stanford_NP1|))
+        |University_NNL1|)))))))
+ ?_?)
+
+("Who" "invented" "the" "road" "traffic" "cone" "?") 1 ; (-7.315)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |Who_PNQS|
+  (|V/np| |invent+ed_VVD|
+   (|NP/det_n| |the_AT|
+    (|N1/n1_nm| |road_NN1|
+     (|N1/n1_nm| |traffic_NN1| (|N1/n| |cone_NN1|))))))
+ ?_?)
+
+("Who" "was" "the" "first" "doctor" "to" "successfully" "transplant" "a" "liver" "?") 1 ; (-13.145)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |Who_PNQS|
+  (|S/sai/-| |be+ed_VBDZ|
+   (|S/np_vp|
+    (|NP/det_n| |the_AT|
+     (|N1/ap_n1/-| (|AP/a1| (|A1/a| |first_MD|))
+      (|N1/n| |doctor_NN1|)))
+    (|VP/adv_vp| (|AP/a1| (|A1/a| |to_RG|))
+     (|VP/adv_vp| (|AP/a1| (|A1/a| |successfully_RR|))
+      (|V/np| |transplant_VV0|
+       (|NP/det_n| |a_AT1| (|N1/n| |liver_NN1|))))))))
+ ?_?)
+
+("When" "did" "Nixon" "die" "?") 1 ; (-11.273)
+(|T/frag| |When_CS|
+ (|S/sai/-| |do+ed_VDD|
+  (|S/np_vp| (|NP/n1_name/-| (|N1/n| |Nixon_NP1|)) (V/0 |die_VV0|)))
+ ?_?)
+
+("Where" "is" "Microsoft" "'s" "corporate" "headquarters" "located" "?") 1 ; (-14.143)
+(|T/txt-sc1/-+-|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |Where_RRQ|))
+  (|S/sai/-| |be+s_VBZ|
+   (|S/np_vp|
+    (|NP/poss_n1|
+     (|NP/n2_poss| (|NP/n1_name/-| (|N1/n| |Microsoft_NP1|)) |'s+_$|)
+     (|N1/ap_n1/-| (|AP/a1| (|A1/a| |corporate_JJ|))
+      (|N1/n| |headquarters_NN1|)))
+    (V/0 |locate+ed_VVN|))))
+ ?_?)
+
+("How" "many" "calories" "are" "there" "in" "a" "Big" "Mac" "?") 1 ; (-13.611)
+(|T/txt-sc1/-+-|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |How_RGQ|))
+  (|S/np_vp|
+   (|NP/plu1|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |many_DA2|))
+     (|N1/n| |calorie+s_NN2|)))
+   (|VP/vp_pp| (|V/be_ap/-| |be+_VBR| (|AP/a1| (|A1/a| |there_RL|)))
+    (|PP/p1|
+     (|P1/p_np| |in_II|
+      (|NP/det_n| |a_AT1|
+       (|N1/ap_n1/-| (|AP/a1| (|A1/a| |Big_JJ|))
+        (|N1/n| |Mac_NP1|))))))))
+ ?_?)
+
+("What" "is" "the" "acronym" "for" "the" "rating" "system" "for" "air" "conditioner" "efficiency" "?") 1 ; (-13.153)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |What_DDQ|
+  (|VP/vp_pp|
+   (|VP/vp_pp|
+    (|V/be_np/---| |be+s_VBZ|
+     (|NP/det_n| |the_AT| (|N1/n| |acronym_NN1|)))
+    (|PP/p1|
+     (|P1/p_np| |for_IF|
+      (|NP/det_n| |the_AT|
+       (|N1/n1_nm| |rating_NN1| (|N1/n| |system_NN1|))))))
+   (|PP/p1|
+    (|P1/p_n1| |for_IF|
+     (|N1/n1_nm| |air_NN1|
+      (|N1/n1_nm| |conditioner_NN1| (|N1/n| |efficiency_NN1|)))))))
+ ?_?)
+
+("Name" "a" "film" "that" "has" "won" "the" "Golden" "Bear" "in" "the" "Berlin" "Film" "Festival" "?") 1 ; (-23.514)
+(|T/frag| (|N1/n| |Name_NN1|)
+ (|NP/det_n| |a_AT1|
+  (|N1/n_rel| |film_NN1| |that_CST|
+   (|VP/vp_pp|
+    (|V/have_ppart/-| |have+s_VHZ|
+     (|V/np_np| |win+ed_VVN|
+      (|NP/det_n| |the_AT| (|N1/n| |Golden_NP1|))
+      (|NP/n1_name/-| (|N1/n| |Bear_NP1|))))
+    (|PP/p1|
+     (|P1/p_np| |in_II|
+      (|NP/det_n| |the_AT|
+       (|N1/name+| |Berlin_NP1|
+        (|N1/name+| |Film_NP1| (|N1/n| |Festival_NP1|)))))))))
+ ?_?)
+
+("Who" "was" "President" "of" "Costa" "Rica" "in" "1994" "?") 1 ; (-14.618)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |Who_PNQS|
+  (|VP/vp_pp|
+   (|V/be_n1/--| |be+ed_VBDZ|
+    (|N1/n_of| |President_NNS1|
+     (|PP/p1|
+      (|P1/p_np| |of_IO|
+       (|NP/n1_name/-|
+        (|N1/name+| |Costa_NP1| (|N1/n| |Rica_NP1|)))))))
+   (|PP/p1| (|P1/p_np| |in_II| (|NP/num| (|N1/n| 1994_MC))))))
+ ?_?)
+
+("What" "is" "the" "fare" "cost" "for" "the" "round" "trip" "between" "New" "York" "and" "London" "on" "Concorde" "?") 1 ; (-19.015)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |What_DDQ|
+  (|VP/vp_pp|
+   (|VP/vp_pp|
+    (|VP/vp_pp|
+     (|V/be_np/---| |be+s_VBZ|
+      (|NP/det_n| |the_AT|
+       (|N1/n1_nm| |fare_NN1| (|N1/n| |cost_NN1|))))
+     (|PP/p1|
+      (|P1/p_np| |for_IF|
+       (|NP/det_n| |the_AT|
+        (|N1/ap_n1/-| (|AP/a1| (|A1/a| |round_JJ|))
+         (|N1/n| |trip_NN1|))))))
+    (|PP/p1|
+     (|P1/p_np| |between_II|
+      (|NP/num|
+       (|N1/n|
+        (|N/cj_int/-| |New_NP1|
+         (|N/cj_int/-| |York_NP1|
+          (|N/cj_end| |and_CC| |London_NP1|))))))))
+   (|PP/p1| (|P1/p_n1| |on_II| (|N1/n| |Concorde_&FW|)))))
+ ?_?)
+
+("What" "brand" "of" "white" "rum" "is" "still" "made" "in" "Cuba" "?") 1 ; (-13.830)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp|
+  (|NP/det_n| |What_DDQ|
+   (|N1/n_of| |brand_NN1|
+    (|PP/p1|
+     (|P1/p_n1| |of_IO|
+      (|N1/ap_n1/-| (|AP/a1| (|A1/a| |white_JJ|))
+       (|N1/n| |rum_NN1|))))))
+  (|V/be_ppart/+| |be+s_VBZ| (|AP/a1| (|A1/a| |still_RR|))
+   (|V/pp| |make+ed_VVN|
+    (|PP/p1|
+     (|P1/p_np| |in_II| (|NP/n1_name/-| (|N1/n| |Cuba_NP1|)))))))
+ ?_?)
+
+("What" "is" "the" "name" "of" "the" "chronic" "neurological" "autoimmune" "disease" "which" "attacks" "the" "protein" "sheath" "that" "surrounds" "nerve" "cells" "causing" "a" "gradual" "loss" "of" "movement" "in" "the" "body" "?") 1 ; (-30.922)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |What_DDQ|
+  (|S/sai-be2/--| |be+s_VBZ| (|NP/det_n| |the_AT| (|N1/n| |name_NN1|))
+   (|PP/p1|
+    (|P1/p_np| |of_IO|
+     (|NP/det_n| |the_AT|
+      (|N1/ap_n1/-| (|AP/a1| (|A1/a| |chronic_JJ|))
+       (|N1/ap_n1/-| (|AP/a1| (|A1/a| |neurological_JJ|))
+        (|N1/n1_nm| |autoimmune_NN1|
+         (|N1/n_s1| |disease_NN1|
+          (|S/whnp_vp| |which_DDQ|
+           (|V/np_ing_pp| |attack+s_VVZ|
+            (|NP/det_n| |the_AT|
+             (|N1/n1_nm| |protein_NN1|
+              (|N1/n_rel| |sheath_NN1| |that_CST|
+               (|V/np| |surround+s_VVZ|
+                (|NP/plu1|
+                 (|N1/n1_nm| |nerve_NN1| (|N1/n| |cell+s_NN2|)))))))
+            (|V/np| |cause+ing_VVG|
+             (|NP/det_n| |a_AT1|
+              (|N1/ap_n1/-| (|AP/a1| (|A1/a| |gradual_JJ|))
+               (|N1/n_of| |loss_NN1|
+                (|PP/p1|
+                 (|P1/p_n1| |of_IO| (|N1/n| |movement_NN1|)))))))
+            (|PP/p1|
+             (|P1/p_np| |in_II|
+              (|NP/det_n| |the_AT| (|N1/n| |body_NN1|)))))))))))))))
+ ?_?)
+
+("What" "nuclear-powered" "Russian" "submarine" "sank" "in" "the" "Norwegian" "Sea" "on" "April" "7" "," "1989" "?") 1 ; (-19.235)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp|
+  (|NP/det_n| |What_DDQ|
+   (|N1/ap_n1/-| (|AP/a1| (|A1/a| |nuclear-powered_JJ|))
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |Russian_JJ|))
+     (|N1/n| |submarine_NN1|))))
+  (|V/np_pp| (|V/0_p| |sink+ed_VVD| |in_II|)
+   (|NP/det_n| |the_AT|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |Norwegian_JJ|))
+     (|N1/n| |Sea_NNL1|)))
+   (|PP/p1|
+    (|P1/p_np| |on_II|
+     (|NP/date/-+| |April_NPM1| (|NP/num| (|N1/n| 7_MC)) |,_,|
+      (|NP/num| (|N1/n| 1989_MC)))))))
+ ?_?)
+
+("Who" "is" "the" "voice" "of" "Miss" "Piggy" "?") 1 ; (-9.826)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |Who_PNQS|
+  (|S/sai-be2/--| |be+s_VBZ| (|NP/det_n| |the_AT| (|N1/n| |voice_NN1|))
+   (|PP/p1|
+    (|P1/p_n1| |of_IO| (|N1/n1_nm| |Miss_NNS| (|N1/n| |Piggy_NN1|))))))
+ ?_?)
+
+("Name" "a" "country" "that" "is" "developing" "a" "magnetic" "levitation" "railway" "system" "?") 1 ; (-23.207)
+(|T/frag| (|N1/n| |Name_NN1|)
+ (|NP/det_n| |a_AT1|
+  (|N1/n_s1| |country_NN1|
+   (|S/np_vp| |that_DD1|
+    (|V/be_ing/-| |be+s_VBZ|
+     (|V/np_n1| |develop+ing_VVG|
+      (|NP/det_n| |a_AT1|
+       (|N1/ap_n1/-| (|AP/a1| (|A1/a| |magnetic_JJ|))
+        (|N1/n1_nm| |levitation_NN1| (|N1/n| |railway_NN1|))))
+      (|N1/n| |system_NN1|))))))
+ ?_?)
+
+("Name" "the" "first" "private" "citizen" "to" "fly" "in" "space") 1 ; (-16.018)
+(|T/frag|
+ (|Tph/n1/-|
+  (|N1/n1_nm| |Name_NN1|
+   (|N1/num2_n1| (|NP/det_n| |the_AT| (|N1/n| |first_MD|))
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |private_JJ|))
+     (|N1/n_inf| |citizen_NN1|
+      (|V/to_bse| |to_TO|
+       (|V/n1| (|V/0_p| |fly_VV0| |in_II|) (|N1/n| |space_NN1|)))))))))
+
+("What" "is" "the" "longest" "river" "in" "the" "United" "States" "?") 1 ; (-9.036)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |What_DDQ|
+  (|S/sai-be2/--| |be+s_VBZ|
+   (|NP/det_n| |the_AT|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |longest_JJT|))
+     (|N1/n| |river_NN1|)))
+   (|PP/p1|
+    (|P1/p_np| |in_II|
+     (|NP/det_n| |the_AT|
+      (|N1/ap_n1/-| (|AP/a1| (|A1/a| |United_JJ|))
+       (|N1/n| |State+s_NN2|)))))))
+ ?_?)
+
+("What" "does" "El" "Nino" "mean" "in" "spanish" "?") 1 ; (-12.849)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |What_DDQ|
+  (|S/sai/-| |do+s_VDZ|
+   (|S/np_vp|
+    (|NP/n1_name/-| (|N1/name+| |El_NP1| (|N1/n| |Nino_NP1|)))
+    (|V/pp| |mean_VV0|
+     (|PP/p1| (|P1/p_npl| |in_II| (|AP/a1| (|A1/a| |spanish_JJ|))))))))
+ ?_?)
+
+("Who" "came" "up" "with" "the" "name" "," "El" "Nino" "?") 1 ; (-13.455)
+(|T/txt-sc1/-+-|
+ (|S/s_npvoc1/-|
+  (|S/s_npvoc1/+|
+   (|S/whnp_vp| |Who_PNQS|
+    (|V/pp| (|V/0_p| |come+ed_VVD| |up_RP|)
+     (|PP/p1|
+      (|P1/p_np| |with_IW|
+       (|NP/det_n| |the_AT| (|N1/n| |name_NN1|))))))
+   |,_,| (|NP/n1_name/-| (|N1/n| |El_NP1|)))
+  (|NP/n1_name/-| (|N1/n| |Nino_NP1|)))
+ ?_?)
+
+("How" "many" "lives" "were" "lost" "in" "the" "China" "Airlines" "'" "crash" "in" "Nagoya" "," "Japan" "?") 1 ; (-23.940)
+(|T/txt-sc1/-+-|
+ (|S/s_npvoc1/+|
+  (|S/whpp| (|PP/p1| (|P1/pwh| |How_RGQ|))
+   (|S/np_vp|
+    (|NP/plu1|
+     (|N1/ap_n1/-| (|AP/a1| (|A1/a| |many_DA2|))
+      (|N1/n| |life+s_NN2|)))
+    (|V/be_ppart/-| |be+ed_VBDR|
+     (|V/pp_pp| |lose+ed_VVN|
+      (|PP/p1|
+       (|P1/p_np| |in_II|
+        (|NP/poss_n1|
+         (|NP/n2_poss|
+          (|NP/det_n| |the_AT|
+           (|N1/name+| |China_NP1| (|N1/n| |Airlines_NP1|)))
+          |'_$|)
+         (|N1/n| |crash_NN1|))))
+      (|PP/p1|
+       (|P1/p_np| |in_II| (|NP/n1_name/-| (|N1/n| |Nagoya_NP1|))))))))
+  |,_,| (|NP/n1_name/-| (|N1/n| |Japan_NP1|)))
+ ?_?)
+
+("In" "what" "year" "did" "Joe" "DiMaggio" "compile" "his" "56-game" "hitting" "streak" "?") 1 ; (-16.351)
+(|T/txt-sc1/-+-|
+ (|S/whpp|
+  (|PP/p1|
+   (|P1/p_np| |In_II| (|NP/det_n| |what_DDQ| (|N1/n| |year_NN1|))))
+  (|S/sai/-| |do+ed_VDD|
+   (|S/np_vp|
+    (|NP/n1_name/-| (|N1/name+| |Joe_NP1| (|N1/n| |DiMaggio_NP1|)))
+    (|V/np_ing| |compile_VV0|
+     (|NP/det_n| |his_APP$| (|N1/n| |56-game_NN1|))
+     (|V/n1| |hit+ing_VVG| (|N1/n| |streak_NN1|))))))
+ ?_?)
+
+("When" "did" "the" "original" "Howdy" "Doody" "show" "go" "off" "the" "air" "?") 1 ; (-13.960)
+(|T/frag| |When_CS|
+ (|S/sai/-| |do+ed_VDD|
+  (|S/np_vp|
+   (|NP/name_n1|
+    (|NP/det_n| |the_AT|
+     (|N1/ap_n1/-| (|AP/a1| (|A1/a| |original_JJ|))
+      (|N1/ap_n1/-| (|AP/a1| (|A1/a| |Howdy_JJ|))
+       (|N1/n| |Doody_NP1|))))
+    (|N1/n| |show_NN1|))
+   (|V/np| (|V/0_p| |go_VV0| |off_RP|)
+    (|NP/det_n| |the_AT| (|N1/n| |air_NN1|)))))
+ ?_?)
+
+("Where" "is" "the" "Taj" "Mahal" "?") 1 ; (-15.413)
+(|T/txt-sc1/-+-|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |Where_RRQ|))
+  (|S/sai-be1/--| |be+s_VBZ| (|NP/det_n| |the_AT| (|N1/n| |Taj_NP1|))
+   (|NP/n1_name/-| (|N1/n| |Mahal_NP1|))))
+ ?_?)
+
+("Who" "leads" "the" "star" "ship" "Enterprise" "in" "Star" "Trek" "?") 1 ; (-12.889)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |Who_PNQS|
+  (|V/np_pp| |lead+s_VVZ|
+   (|NP/det_n| |the_AT|
+    (|N1/n1_nm| |star_NN1|
+     (|N1/n1_nm| |ship_NN1| (|N1/n| |Enterprise_NN1|))))
+   (|PP/p1|
+    (|P1/p_np| |in_II|
+     (|NP/n1_name/-| (|N1/name+| |Star_NP1| (|N1/n| |Trek_NP1|)))))))
+ ?_?)
+
+("What" "cancer" "is" "commonly" "associated" "with" "AIDS" "?") 1 ; (-10.782)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| (|NP/det_n| |What_DDQ| (|N1/n| |cancer_NN1|))
+  (|V/be_ppart/+| |be+s_VBZ| (|AP/a1| (|A1/a| |commonly_RR|))
+   (|V/pp| |associate+ed_VVN|
+    (|PP/p1| (|P1/p_np| |with_IW| (|NP/plu1| (|N1/n| |AID+s_NN2|)))))))
+ ?_?)
+
+("In" "which" "year" "was" "New" "Zealand" "excluded" "from" "the" "ANZUS" "alliance" "?") 1 ; (-13.153)
+(|T/txt-sc1/-+-|
+ (|S/whpp|
+  (|PP/p1|
+   (|P1/p_np| |In_II| (|NP/det_n| |which_DDQ| (|N1/n| |year_NN1|))))
+  (|S/sai/-| |be+ed_VBDZ|
+   (|S/np_vp|
+    (|NP/n1_name/-|
+     (|N1/ap_n1/-| (|AP/a1| (|A1/a| |New_JJ|)) (|N1/n| |Zealand_NP1|)))
+    (|V/pp| |exclude+ed_VVD|
+     (|PP/p1|
+      (|P1/p_np| |from_II|
+       (|NP/det_n| |the_AT|
+        (|N1/n1_nm| ANZUS_NN1 (|N1/n| |alliance_NN1|)))))))))
+ ?_?)
+
+("Who" "played" "the" "part" "of" "the" "Godfather" "in" "the" "movie" "," "\"" "The" "Godfather" "\"" "?") 1 ; (-17.095)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |Who_PNQS|
+  (|V/np_p_s| |play+ed_VVD|
+   (|NP/det_n| |the_AT|
+    (|N1/n_of| |part_NN1|
+     (|PP/p1|
+      (|P1/p_np| |of_IO|
+       (|NP/det_n| |the_AT| (|N1/n| |Godfather_NN1|))))))
+   |in_II|
+   (|S/np_co_s1| (|NP/det_n| |the_AT| (|N1/n| |movie_NN1|)) |,_,|
+    (|S/np_vp|
+     (|NP/ap2_np| (|A1/a| |"_RR|)
+      (|NP/det_n| |The_AT| (|N1/n| |Godfather_NN1|)))
+     (V/0 |"_VV0|)))))
+ ?_?)
+
+("Which" "large" "U.S." "city" "had" "the" "highest" "murder" "rate" "for" "1988" "?") 1 ; (-15.203)
+(|T/txt-sc1/-+-|
+ (|S/np_vp|
+  (|NP/name_n1|
+   (|NP/det_n| |Which_DDQ|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |large_JJ|)) (|N1/n| U.S._NP1)))
+   (|N1/n| |city_NN1|))
+  (|VP/vp_pp|
+   (|V/have_np| |have+ed_VHD|
+    (|NP/det_n| |the_AT|
+     (|N1/ap_n1/-| (|AP/a1| (|A1/a| |highest_JJT|))
+      (|N1/n1_nm| |murder_NN1| (|N1/n| |rate_NN1|)))))
+   (|PP/p1| (|P1/p_np| |for_IF| (|NP/num| (|N1/n| 1988_MC))))))
+ ?_?)
+
+("What" "did" "Shostakovich" "write" "for" "Rostropovich" "?") 1 ; (-9.760)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |What_DDQ|
+  (|S/sai/-| |do+ed_VDD|
+   (|S/np_vp| (|NP/n1_name/-| (|N1/n| |Shostakovich_NP1|))
+    (|V/pp| |write_VV0|
+     (|PP/p1|
+      (|P1/p_np| |for_IF|
+       (|NP/n1_name/-| (|N1/n| |Rostropovich_NP1|))))))))
+ ?_?)
+
+("What" "is" "the" "name" "of" "the" "promising" "anticancer" "compound" "derived" "from" "the" "pacific" "yew" "tree" "?") 1 ; (-13.778)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |What_DDQ|
+  (|S/sai-be2/--| |be+s_VBZ| (|NP/det_n| |the_AT| (|N1/n| |name_NN1|))
+   (|PP/p1|
+    (|P1/p_np| |of_IO|
+     (|NP/det_n| |the_AT|
+      (|N1/ap_n1/-| (|AP/a1| (|A1/a| |promising_JJ|))
+       (|N1/n1_nm| |anticancer_NN1|
+        (|N1/n_pprt| |compound_NN1|
+         (|V/pp| |derive+ed_VVN|
+          (|PP/p1|
+           (|P1/p_np| |from_II|
+            (|NP/det_n| |the_AT|
+             (|N1/ap_n1/-| (|AP/a1| (|A1/a| |pacific_JJ|))
+              (|N1/n1_nm| |yew_NN1| (|N1/n| |tree_NN1|)))))))))))))))
+ ?_?)
+
+("How" "many" "inhabitants" "live" "in" "the" "town" "of" "Ushuaia" "?") 1 ; (-12.492)
+(|T/txt-sc1/-+-|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |How_RGQ|))
+  (|S/np_vp|
+   (|NP/plu1|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |many_DA2|))
+     (|N1/n| |inhabitant+s_NN2|)))
+   (|V/np| (|V/0_p| |live_VV0| |in_II|)
+    (|NP/det_n| |the_AT|
+     (|N1/n_of| |town_NN1|
+      (|PP/p1|
+       (|P1/p_np| |of_IO|
+        (|NP/n1_name/-| (|N1/n| |Ushuaia_NP1|)))))))))
+ ?_?)
+
+("How" "many" "consecutive" "baseball" "games" "did" "Lou" "Gehrig" "play" "?") 1 ; (-17.681)
+(|T/txt-sc1/-+-|
+ (|S/pp_s/-|
+  (|PP/p1|
+   (|P1/p_s| |How_RGQ|
+    (|S/np_vp|
+     (|NP/plu1|
+      (|N1/ap_n1/-| (|AP/a1| (|A1/a| |many_DA2|))
+       (|N1/ap_n1/-| (|AP/a1| (|A1/a| |consecutive_JJ|))
+        (|N1/n1_nm| |baseball_NN1| (|N1/n| |game+s_NN2|)))))
+     (|V/do_np| |do+ed_VDD| (|NP/n1_name/-| (|N1/n| |Lou_NP1|))))))
+  (|S/np_vp| (|NP/n1_name/-| (|N1/n| |Gehrig_NP1|)) (V/0 |play_VV0|)))
+ ?_?)
+
+("What" "is" "the" "tallest" "building" "in" "Japan" "?") 1 ; (-8.947)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |What_DDQ|
+  (|S/sai-be2/--| |be+s_VBZ|
+   (|NP/det_n| |the_AT|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |tallest_JJT|))
+     (|N1/n| |building_NN1|)))
+   (|PP/p1|
+    (|P1/p_np| |in_II| (|NP/n1_name/-| (|N1/n| |Japan_NP1|))))))
+ ?_?)
+
+("Which" "country" "is" "Australia" "'s" "largest" "export" "market" "?") 1 ; (-15.328)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| (|NP/det_n| |Which_DDQ| (|N1/n| |country_NN1|))
+  (|V/be_np/---| |be+s_VBZ|
+   (|NP/poss_n1|
+    (|NP/n2_poss| (|NP/n1_name/-| (|N1/n| |Australia_NP1|)) |'s+_$|)
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |largest_JJT|))
+     (|N1/n1_nm| |export_NN1| (|N1/n| |market_NN1|))))))
+ ?_?)
+
+("Which" "former" "Ku" "Klux" "Klan" "member" "won" "an" "elected" "office" "in" "the" "U.S." "?") 1 ; (-14.273)
+(|T/txt-sc1/-+-|
+ (|S/np_vp|
+  (|NP/name_n1|
+   (|NP/det_n| |Which_DDQ|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |former_DA|))
+     (|N1/name+| |Ku_NP1|
+      (|N1/name+| |Klux_NP1| (|N1/n| |Klan_NP1|)))))
+   (|N1/n| |member_NN1|))
+  (|V/np_pp| |win+ed_VVD|
+   (|NP/det_n| |an_AT1|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |elected_JJ|))
+     (|N1/n| |office_NN1|)))
+   (|PP/p1|
+    (|P1/p_np| |in_II| (|NP/det_n| |the_AT| (|N1/n| U.S._NP1))))))
+ ?_?)
+
+("Who" "won" "two" "gold" "medals" "in" "skiing" "in" "the" "Olympic" "Games" "in" "Calgary" "?") 1 ; (-17.083)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |Who_PNQS|
+  (|VP/vp_pp|
+   (|VP/vp_pp|
+    (|VP/vp_pp|
+     (|V/np_np| |win+ed_VVD| (|NP/num| (|N1/n| |two_MC|))
+      (|NP/plu1|
+       (|N1/ap_n1/-| (|AP/a1| (|A1/a| |gold_JJ|))
+        (|N1/n| |medal+s_NN2|))))
+     (|PP/p1| (|P1/p_n1| |in_II| (|N1/n| |skiing_NN1|))))
+    (|PP/p1|
+     (|P1/p_np| |in_II|
+      (|NP/det_n| |the_AT|
+       (|N1/ap_n1/-| (|AP/a1| (|A1/a| |Olympic_JJ|))
+        (|N1/n| |Game+s_NN2|))))))
+   (|PP/p1|
+    (|P1/p_np| |in_II| (|NP/n1_name/-| (|N1/n| |Calgary_NP1|))))))
+ ?_?)
+
+("Who" "followed" "Willy" "Brandt" "as" "chancellor" "of" "the" "Federal" "Republic" "of" "Germany" "?") 1 ; (-16.257)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |Who_PNQS|
+  (|VP/vp_pp|
+   (|V/np_np| |follow+ed_VVD| (|NP/n1_name/-| (|N1/n| |Willy_NP1|))
+    (|NP/n1_name/-| (|N1/n| |Brandt_NP1|)))
+   (|PP/p1|
+    (|P1/p_n1| |as_II|
+     (|N1/n_of| |chancellor_NN1|
+      (|PP/p1|
+       (|P1/p_np| |of_IO|
+        (|NP/det_n| |the_AT|
+         (|N1/ap_n1/-| (|AP/a1| (|A1/a| |Federal_JJ|))
+          (|N1/n_of| |Republic_NP1|
+           (|PP/p1|
+            (|P1/p_np| |of_IO|
+             (|NP/n1_name/-| (|N1/n| |Germany_NP1|))))))))))))))
+ ?_?)
+
+("What" "is" "Grenada" "'s" "main" "commodity" "export" "?") 1 ; (-13.854)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |What_DDQ|
+  (|V/be_np/---| |be+s_VBZ|
+   (|NP/poss_n1|
+    (|NP/n2_poss| (|NP/n1_name/-| (|N1/n| |Grenada_NP1|)) |'s+_$|)
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |main_JB|))
+     (|N1/n1_nm| |commodity_NN1| (|N1/n| |export_NN1|))))))
+ ?_?)
+
+("At" "what" "age" "did" "Rossini" "stop" "writing" "opera" "?") 1 ; (-12.883)
+(|T/txt-sc1/-+-|
+ (|S/whpp|
+  (|PP/p1|
+   (|P1/p_np| |At_II| (|NP/det_n| |what_DDQ| (|N1/n| |age_NN1|))))
+  (|S/sai/-| |do+ed_VDD|
+   (|S/np_vp| (|NP/n1_name/-| (|N1/n| |Rossini_NP1|))
+    (|V/n1| |stop_VV0|
+     (|N1/n1_nm| |writing_NN1| (|N1/n| |opera_NN1|))))))
+ ?_?)
+
+("Who" "is" "the" "founder" "of" "Scientology" "?") 1 ; (-7.618)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |Who_PNQS|
+  (|S/sai-be2/--| |be+s_VBZ|
+   (|NP/det_n| |the_AT| (|N1/n| |founder_NN1|))
+   (|PP/p1| (|P1/p_n1| |of_IO| (|N1/n| |Scientology_NN1|)))))
+ ?_?)
+
+("Which" "city" "in" "China" "has" "the" "largest" "number" "of" "foreign" "financial" "companies" "?") 1 ; (-16.087)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp|
+  (|NP/det_n| |Which_DDQ|
+   (|N1/n1_pp1| (|N1/n| |city_NN1|)
+    (|PP/p1|
+     (|P1/p_np| |in_II| (|NP/n1_name/-| (|N1/n| |China_NP1|))))))
+  (|V/have_np| |have+s_VHZ|
+   (|NP/det_n| |the_AT|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |largest_JJT|))
+     (|N1/n_of| |number_NN1|
+      (|PP/p1|
+       (|P1/p_np| |of_IO|
+        (|NP/plu1|
+         (|N1/ap_n1/-| (|AP/a1| (|A1/a| |foreign_JJ|))
+          (|N1/ap_n1/-| (|AP/a1| (|A1/a| |financial_JJ|))
+           (|N1/n| |company+s_NN2|)))))))))))
+ ?_?)
+
+("Who" "released" "the" "Internet" "worm" "in" "the" "late" "1980s" "?") 1 ; (-10.527)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |Who_PNQS|
+  (|VP/vp_pp|
+   (|V/np_n1| |release+ed_VVD|
+    (|NP/det_n| |the_AT| (|N1/n| |Internet_NP1|)) (|N1/n| |worm_NN1|))
+   (|PP/p1|
+    (|P1/p_np| |in_II|
+     (|NP/det_n| |the_AT|
+      (|N1/ap_n1/-| (|AP/a1| (|A1/a| |late_JJ|))
+       (|N1/n| |1980+s_NN1|)))))))
+ ?_?)
+
+("Who" "first" "circumnavigated" "the" "globe" "?") 1 ; (-7.927)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |Who_PNQS|
+  (|VP/adv_vp| (|AP/a1| (|A1/a| |first_MD|))
+   (|V/np| |circumnavigate+ed_VVD|
+    (|NP/det_n| |the_AT| (|N1/n| |globe_NN1|)))))
+ ?_?)
+
+("Who" "wrote" "the" "song" "," "\"" "Stardust" "\"" "?") 1 ; (-11.283)
+(|T/txt-sc1/-+-|
+ (|S/s_npvoc3|
+  (|S/whnp_vp| |Who_PNQS|
+   (|V/np| |write+ed_VVD| (|NP/det_n| |the_AT| (|N1/n| |song_NN1|))))
+  |,_,|
+  (|N1/ap_n1/-| (|AP/a1| (|A1/a| |"_JJ|))
+   (|N1/n1_nm| |Stardust_NN1| (|N1/n| |"_NN1|))))
+ ?_?)
+
+("What" "country" "is" "the" "worlds" "leading" "supplier" "of" "cannabis" "?") 1 ; (-11.339)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| (|NP/det_n| |What_DDQ| (|N1/n| |country_NN1|))
+  (|V/be_np/---| |be+s_VBZ|
+   (|NP/det_n| |the_AT|
+    (|N1/n1_nm| |world+s_NN2|
+     (|N1/ap_n1/-| (|AP/a1| (|A1/a| |leading_JJ|))
+      (|N1/n_of| |supplier_NN1|
+       (|PP/p1| (|P1/p_n1| |of_IO| (|N1/n| |cannabis_NN1|)))))))))
+ ?_?)
+
+("What" "time" "of" "day" "did" "Emperor" "Hirohito" "die" "?") 1 ; (-15.179)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s|
+  (|NP/det_n| |What_DDQ|
+   (|N1/n_of| |time_NNT1|
+    (|PP/p1| (|P1/p_n1| |of_IO| (|N1/n| |day_NN1|)))))
+  (|S/sai/-| |do+ed_VDD|
+   (|S/np_vp| (|NP/pretit_n1| |Emperor_NNSB1| (|N1/n| |Hirohito_NP1|))
+    (V/0 |die_VV0|))))
+ ?_?)
+
+("How" "large" "is" "the" "Arctic" "refuge" "to" "preserve" "unique" "wildlife" "and" "wilderness" "value" "on" "Alaska" "'s" "north" "coast" "?") 1 ; (-35.066)
+(|T/frag|
+ (|PP/p1| (|P1/p_npl| |How_RGQ| (|AP/a1| (|A1/a| |large_JJ|))))
+ (|S/sai-be2/--| |be+s_VBZ|
+  (|NP/name_n1| (|NP/det_n| |the_AT| (|N1/n| |Arctic_NP1|))
+   (|N1/n_inf| |refuge_NN1|
+    (|V/to_bse| |to_TO|
+     (|V/n1| |preserve_VV0|
+      (|N1/ap_n1/-| (|AP/a1| (|A1/a| |unique_JJ|))
+       (|N1/n1_nm|
+        (|N/cj_int/-| |wildlife_NN1|
+         (|N/cj_end| |and_CC| |wilderness_NN1|))
+        (|N1/n| |value_NN1|)))))))
+  (|PP/p1|
+   (|P1/p_n1| |on_II|
+    (|N1/poss_n1| (|N1/n1_poss| (|N1/n| |Alaska_NP1|) |'s+_$|)
+     (|N1/n| (|N/dir_nm| |north_ND1| |coast_NN1|))))))
+ ?_?)
+
+("Where" "is" "the" "highest" "point" "in" "Japan" "?") 1 ; (-11.359)
+(|T/txt-sc1/-+-|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |Where_RRQ|))
+  (|S/s_npvoc1/-|
+   (|S/sai-be4/--| |be+s_VBZ|
+    (|NP/det_n| |the_AT|
+     (|N1/ap_n1/-| (|AP/a1| (|A1/a| |highest_JJT|))
+      (|N1/n| |point_NN1|)))
+    |in_II|)
+   (|NP/n1_name/-| (|N1/n| |Japan_NP1|))))
+ ?_?)
+
+("What" "is" "the" "term" "for" "the" "sum" "of" "all" "genetic" "material" "in" "a" "given" "organism" "?") 1 ; (-17.827)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |What_DDQ|
+  (|VP/vp_pp|
+   (|VP/vp_pp|
+    (|V/be_np/---| |be+s_VBZ|
+     (|NP/det_n| |the_AT| (|N1/n| |term_NN1|)))
+    (|PP/p1|
+     (|P1/p_np| |for_IF|
+      (|NP/det_n| |the_AT|
+       (|N1/n_of| |sum_NN1|
+        (|PP/p1|
+         (|P1/p_n1| |of_IO|
+          (|N1/ap_n1/-|
+           (|AP/a1|
+            (|A1/adv_a1| (|AP/a1| (|A1/a| |all_DB|))
+             (|A1/a| |genetic_JJ|)))
+           (|N1/n| |material_NN1|)))))))))
+   (|PP/p1|
+    (|P1/p_np| |in_II|
+     (|NP/det_n| |a_AT1|
+      (|N1/vppt_n1| |give+en_VVN| (|N1/n| |organism_NN1|)))))))
+ ?_?)
+
+("What" "is" "considered" "the" "costliest" "disaster" "the" "insurance" "industry" "has" "ever" "faced" "?") 1 ; (-15.559)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |What_DDQ|
+  (|V/be_ppart/-| |be+s_VBZ|
+   (|V/np| |consider+ed_VVN|
+    (|NP/det_n| |the_AT|
+     (|N1/ap_n1/-| (|AP/a1| (|A1/a| |costliest_JJT|))
+      (|N1/n_s1| |disaster_NN1|
+       (|S/np_vp|
+        (|NP/det_n| |the_AT|
+         (|N1/n1_nm| |insurance_NN1| (|N1/n| |industry_NN1|)))
+        (|V/have_ppart/+| |have+s_VHZ| (|AP/a1| (|A1/a| |ever_RR|))
+         (V/0 |face+ed_VVN|)))))))))
+ ?_?)
+
+("How" "many" "people" "live" "in" "the" "Falklands" "?") 1 ; (-10.332)
+(|T/txt-sc1/-+-|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |How_RGQ|))
+  (|S/np_vp|
+   (|NP/plu1|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |many_DA2|)) (|N1/n| |people_NN|)))
+   (|V/np| (|V/0_p| |live_VV0| |in_II|)
+    (|NP/det_n| |the_AT| (|N1/n| |Falklands_NP1|)))))
+ ?_?)
+
+("Who" "is" "the" "Voyager" "project" "manager" "?") 1 ; (-7.964)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |Who_PNQS|
+  (|V/be_np/---| |be+s_VBZ|
+   (|NP/det_n| |the_AT|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |Voyager_JJ|))
+     (|N1/n1_nm| |project_NN1| (|N1/n| |manager_NN1|))))))
+ ?_?)
+
+("How" "many" "people" "died" "when" "the" "Estonia" "sank" "in" "1994" "?") 1 ; (-15.209)
+(|T/txt-sc1/-+-|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |How_RGQ|))
+  (|S/np_vp|
+   (|NP/plu1|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |many_DA2|)) (|N1/n| |people_NN|)))
+   (|V/pp| |die+ed_VVD|
+    (|PP/p1|
+     (|P1/p_s| |when_CS|
+      (|S/np_vp| (|NP/det_n| |the_AT| (|N1/n| |Estonia_NP1|))
+       (|V/np| (|V/0_p| |sink+ed_VVD| |in_II|)
+        (|NP/num| (|N1/n| 1994_MC)))))))))
+ ?_?)
+
+("What" "language" "is" "most" "commonly" "used" "in" "Bombay" "?") 1 ; (-12.358)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| (|NP/det_n| |What_DDQ| (|N1/n| |language_NN1|))
+  (|V/be_ppart/+| |be+s_VBZ| (|AP/a_a| |most_RR| |commonly_RR|)
+   (|V/pp| |use+ed_VVN|
+    (|PP/p1|
+     (|P1/p_np| |in_II| (|NP/n1_name/-| (|N1/n| |Bombay_NP1|)))))))
+ ?_?)
+
+("How" "many" "people" "does" "Honda" "employ" "in" "the" "U.S." "?") 1 ; (-20.106)
+(|T/txt-sc1/-+-|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |How_RGQ|))
+  (|S/np_vp|
+   (|NP/pro_s| |many_DA2|
+    (|S/n1_vp| (|N1/n| |people_NN|)
+     (|V/do_np| |do+s_VDZ| (|NP/n1_name/-| (|N1/n| |Honda_NP1|)))))
+   (|V/pp| |employ_VV0|
+    (|PP/p1|
+     (|P1/p_np| |in_II| (|NP/det_n| |the_AT| (|N1/n| U.S._NP1)))))))
+ ?_?)
+
+("What" "is" "the" "second" "highest" "mountain" "peak" "in" "the" "world" "?") 1 ; (-10.932)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |What_DDQ|
+  (|S/sai-be2/--| |be+s_VBZ|
+   (|NP/det_n| |the_AT|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |second_MD|))
+     (|N1/ap_n1/-| (|AP/a1| (|A1/a| |highest_JJT|))
+      (|N1/n1_nm| |mountain_NN1| (|N1/n| |peak_NN1|)))))
+   (|PP/p1|
+    (|P1/p_np| |in_II| (|NP/det_n| |the_AT| (|N1/n| |world_NN1|))))))
+ ?_?)
+
+("When" "was" "China" "'s" "first" "nuclear" "test" "?") 1 ; (-16.880)
+(|T/frag| |When_CS| |be+ed_VBDZ|
+ (|NP/poss_n1|
+  (|NP/n2_poss| (|NP/n1_name/-| (|N1/n| |China_NP1|)) |'s+_$|)
+  (|N1/ap_n1/-| (|AP/a1| (|A1/a| |first_MD|))
+   (|N1/ap_n1/-| (|AP/a1| (|A1/a| |nuclear_JJ|)) (|N1/n| |test_NN1|))))
+ ?_?)
+
+("Which" "company" "created" "the" "Internet" "browser" "Mosaic" "?") 1 ; (-13.351)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| (|NP/det_n| |Which_DDQ| (|N1/n| |company_NN1|))
+  (|V/np_ap| |create+ed_VVD|
+   (|NP/name_n1| (|NP/det_n| |the_AT| (|N1/n| |Internet_NP1|))
+    (|N1/n| |browser_NN1|))
+   (|AP/a1| (|A1/a| |Mosaic_JJ|))))
+ ?_?)
+
+("Where" "does" "Buzz" "Aldrin" "want" "to" "build" "a" "permanent" "," "manned" "space" "station" "?") 1 ; (-37.206)
+(|T/fragx|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |Where_RRQ|))
+  (|S/sai/-| |do+s_VDZ|
+   (|S/np_vp|
+    (|NP/n1_name/-| (|N1/name+| |Buzz_NP1| (|N1/n| |Aldrin_NP1|)))
+    (|VP/vp_inf| (V/0 |want_VV0|)
+     (|V/to_bse| |to_TO| (V/0 |build_VV0|))))))
+ |a_AT1| (|AP/co_pp| (|AP/a1| (|A1/a| |permanent_JJ|)) |,_,|)
+ (|Tph/vp/-|
+  (|V/n1| |man+ed_VVD|
+   (|N1/n1_nm| |space_NN1| (|N1/n| |station_NN1|))))
+ ?_?)
+
+("Who" "killed" "Lee" "Harvey" "Oswald" "?") 1 ; (-9.917)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |Who_PNQS|
+  (|V/np| |kill+ed_VVD|
+   (|NP/n1_name/-|
+    (|N1/name+| |Lee_NP1|
+     (|N1/name+| |Harvey_NP1| (|N1/n| |Oswald_NP1|))))))
+ ?_?)
+
+("How" "long" "does" "it" "take" "to" "travel" "from" "Tokyo" "to" "Niigata" "?") 1 ; (-18.703)
+(|T/txt-sc1/-+-|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |How_RGQ|))
+  (|S/adv_s/-| (|AP/a1| (|A1/a| |long_RR|))
+   (|S/sai/-| |do+s_VDZ|
+    (|S/np_vp| |it_PPH1|
+     (|V/inf| |take_VV0|
+      (|V/to_bse| |to_TO|
+       (|V/pp_pp| |travel_VV0|
+        (|PP/p1|
+         (|P1/p_np| |from_II| (|NP/n1_name/-| (|N1/n| |Tokyo_NP1|))))
+        (|PP/p1|
+         (|P1/p_np| |to_II|
+          (|NP/n1_name/-| (|N1/n| |Niigata_NP1|)))))))))))
+ ?_?)
+
+("Who" "is" "the" "President" "of" "Ghana" "?") 1 ; (-8.084)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |Who_PNQS|
+  (|S/sai-be2/--| |be+s_VBZ|
+   (|NP/det_n| |the_AT| (|N1/n| |President_NNS1|))
+   (|PP/p1|
+    (|P1/p_np| |of_IO| (|NP/n1_name/-| (|N1/n| |Ghana_NP1|))))))
+ ?_?)
+
+("What" "is" "the" "name" "of" "the" "medical" "condition" "in" "which" "a" "baby" "is" "born" "without" "a" "brain" "?") 1 ; (-17.115)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |What_DDQ|
+  (|S/sai-be2/--| |be+s_VBZ| (|NP/det_n| |the_AT| (|N1/n| |name_NN1|))
+   (|PP/p1|
+    (|P1/p_np| |of_IO|
+     (|NP/det_n| |the_AT|
+      (|N1/ap_n1/-| (|AP/a1| (|A1/a| |medical_JJ|))
+       (|N1/n_s1| |condition_NN1|
+        (|S/whpp| (|PP/p1| (|P1/p_np| |in_II| |which_DDQ|))
+         (|S/np_vp| (|NP/det_n| |a_AT1| (|N1/n| |baby_NN1|))
+          (|V/be_ppart/-| |be+s_VBZ|
+           (|V/pp| |bear+en_VVN|
+            (|PP/p1|
+             (|P1/p_np| |without_IW|
+              (|NP/det_n| |a_AT1| (|N1/n| |brain_NN1|)))))))))))))))
+ ?_?)
+
+("How" "much" "stronger" "is" "the" "new" "vitreous" "carbon" "material" "invented" "by" "the" "Tokyo" "Institute" "of" "Technology" "compared" "with" "the" "material" "made" "from" "cellulose" "?") 1 ; (-28.101)
+(|T/txt-sc1/-+-|
+ (|S/whpp|
+  (|PP/p1|
+   (|P1/p_np| |How_RGQ|
+    (|NP/pro_er| |much_DA1| (|A1/a| |stronger_JJR|))))
+  (|S/sai/-| |be+s_VBZ|
+   (|S/np_vp|
+    (|NP/det_n| |the_AT|
+     (|N1/ap_n1/-| (|AP/a1| (|A1/a| |new_JJ|))
+      (|N1/ap_n1/-| (|AP/a1| (|A1/a| |vitreous_JJ|))
+       (|N1/n1_nm| |carbon_NN1| (|N1/n| |material_NN1|)))))
+    (|V/pp| |invent+ed_VVN|
+     (|PP/p1|
+      (|P1/p_np| |by_II|
+       (|NP/place|
+        (|N1/n_of|
+         (|N/name_npl| (|NP/det_n| |the_AT| (|N1/n| |Tokyo_NP1|))
+          |Institute_NNL1|)
+         (|PP/p1|
+          (|P1/p_n1| |of_IO|
+           (|N1/n_pprt| |Technology_NN1|
+            (|V/pp| |compare+ed_VVN|
+             (|PP/p1|
+              (|P1/p_np| |with_IW|
+               (|NP/det_n| |the_AT|
+                (|N1/n_pprt| |material_NN1|
+                 (|V/pp| |make+ed_VVN|
+                  (|PP/p1|
+                   (|P1/p_n1| |from_II|
+                    (|N1/n| |cellulose_NN1|))))))))))))))))))))
+ ?_?)
+
+("What" "is" "Head" "Start" "?") 1 ; (-7.400)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |What_DDQ|
+  (|S/sai/-| |be+s_VBZ|
+   (|S/np_vp| (|NP/n1_name/-| (|N1/n| |Head_NP1|)) (V/0 |Start_VV0|))))
+ ?_?)
+
+("Which" "team" "won" "the" "Super" "Bowl" "in" "1968" "?") 1 ; (-10.007)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| (|NP/det_n| |Which_DDQ| (|N1/n| |team_NN1|))
+  (|V/np_pp| |win+ed_VVD|
+   (|NP/det_n| |the_AT|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |Super_JJ|)) (|N1/n| |Bowl_NN1|)))
+   (|PP/p1| (|P1/p_np| |in_II| (|NP/num| (|N1/n| 1968_MC))))))
+ ?_?)
+
+("What" "two" "researchers" "discovered" "the" "double-helix" "structure" "of" "DNA" "in" "1953" "?") 1 ; (-16.187)
+(|T/txt-sc1/-+-|
+ (|S/np_vp|
+  (|NP/plu1|
+   (|N1/num2_n1| (|NP/det_n| |What_DDQ| (|N1/n| |two_MC|))
+    (|N1/n| |researcher+s_NN2|)))
+  (|V/np_pp| |discover+ed_VVD|
+   (|NP/det_n| |the_AT|
+    (|N1/n1_nm| |double-helix_NN1|
+     (|N1/n_of| |structure_NN1|
+      (|PP/p1|
+       (|P1/p_np| |of_IO| (|NP/n1_name/-| (|N1/n| DNA_NP1)))))))
+   (|PP/p1| (|P1/p_np| |in_II| (|NP/num| (|N1/n| 1953_MC))))))
+ ?_?)
+
+("What" "percentage" "of" "the" "world" "'s" "plant" "and" "animal" "species" "can" "be" "found" "in" "the" "Amazon" "forests" "?") 1 ; (-20.248)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp|
+  (|NP/det_n| |What_DDQ|
+   (|N1/cj_int1/-|
+    (|N1/n_of| |percentage_NN1|
+     (|PP/p1|
+      (|P1/p_np| |of_IO|
+       (|NP/poss_n1|
+        (|NP/n2_poss| (|NP/det_n| |the_AT| (|N1/n| |world_NN1|))
+         |'s+_$|)
+        (|N1/n| |plant_NN1|)))))
+    (|N1/cj_end| |and_CC|
+     (|N1/ap_n1/-| (|AP/a1| (|A1/a| |animal_JJ|))
+      (|N1/n| |species_NN|)))))
+  (|VP/vp_pp|
+   (|V/modal_bse/-| |can_VM|
+    (|V/be_ppart/-| |be_VB0| (V/0 |find+ed_VVN|)))
+   (|PP/p1|
+    (|P1/p_np| |in_II|
+     (|NP/det_n| |the_AT|
+      (|N1/n1_nm| |Amazon_NN1| (|N1/n| |forest+s_NN2|)))))))
+ ?_?)
+
+("What" "Nobel" "laureate" "was" "expelled" "from" "the" "Philippines" "before" "the" "conference" "on" "East" "Timor" "?") 1 ; (-18.144)
+(|T/txt-sc1/-+-|
+ (|S/np_vp|
+  (|NP/name_n1| (|NP/det_n| |What_DDQ| (|N1/n| |Nobel_NP1|))
+   (|N1/n| |laureate_NN1|))
+  (|VP/vp_pp|
+   (|V/be_ppart/-| |be+ed_VBDZ|
+    (|V/pp| |expel+ed_VVN|
+     (|PP/p1|
+      (|P1/p_np| |from_II|
+       (|NP/name_n2| (|NP/det_n| |the_AT| (|N1/n| |Philippines_NP2|))
+        (|NP/ap2_np| (|A1/a| |before_RR|)
+         (|NP/det_n| |the_AT| (|N1/n| |conference_NNJ1|))))))))
+   (|PP/p1|
+    (|P1/p_n1| |on_II| (|N1/n| (|N/dir_nm| |East_ND1| |Timor_NN1|))))))
+ ?_?)
+
+("Who" "held" "the" "endurance" "record" "for" "women" "pilots" "in" "1929" "?") 1 ; (-13.862)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |Who_PNQS|
+  (|VP/vp_pp|
+   (|V/np_pp| |hold+ed_VVD|
+    (|NP/det_n| |the_AT|
+     (|N1/n1_nm| |endurance_NN1| (|N1/n| |record_NN1|)))
+    (|PP/p1|
+     (|P1/p_np| |for_IF|
+      (|NP/plu1| (|N1/n1_nm| |woman+s_NN2| (|N1/n| |pilot+s_NN2|))))))
+   (|PP/p1| (|P1/p_np| |in_II| (|NP/num| (|N1/n| 1929_MC))))))
+ ?_?)
+
+("Who" "won" "the" "first" "general" "election" "for" "President" "held" "in" "Malawi" "in" "May" "1994" "?") 1 ; (-22.302)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |Who_PNQS|
+  (|V/np_pp| |win+ed_VVD|
+   (|NP/det_n| |the_AT|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |first_MD|))
+     (|N1/ap_n1/-| (|AP/a1| (|A1/a| |general_JJ|))
+      (|N1/n| |election_NN1|))))
+   (|PP/p1|
+    (|P1/p_n1| |for_IF|
+     (|N1/n_pprt| |President_NNS1|
+      (|VP/vp_pp|
+       (|V/pp| |hold+ed_VVN|
+        (|PP/p1|
+         (|P1/p_np| |in_II| (|NP/n1_name/-| (|N1/n| |Malawi_NP1|)))))
+       (|PP/p1|
+        (|P1/p_np| |in_II|
+         (|NP/adv2|
+          (|N1/nms_num2| |May_NPM1|
+           (|NP/num| (|N1/n| 1994_MC))))))))))))
+ ?_?)
+
+("Who" "is" "section" "manager" "for" "guidance" "and" "control" "systems" "at" "JPL" "?") 1 ; (-17.981)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |Who_PNQS|
+  (|VP/vp_pp|
+   (|V/be_n1/--| |be+s_VBZ|
+    (|N1/n1_nm| |section_NN1| (|N1/n| |manager_NN1|)))
+   (|PP/p1|
+    (|P1/p_n1| |for_IF|
+     (|N1/cj_int1/-| (|N1/n| |guidance_NN1|)
+      (|N1/cj_end| |and_CC|
+       (|N1/n1_nm| |control_NN1|
+        (|N1/n1_pp1| (|N1/n| |system+s_NN2|)
+         (|PP/p1|
+          (|P1/p_np| |at_II|
+           (|NP/n1_name/-| (|N1/n| JPL_NP1))))))))))))
+ ?_?)
+
+("How" "many" "Vietnamese" "were" "there" "in" "the" "Soviet" "Union" "?") 1 ; (-14.490)
+(|T/txt-sc1/-+-|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |How_RGQ|))
+  (|S/np_vp|
+   (|NP/plu1|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |many_DA2|))
+     (|N1/n| |Vietnamese_NN2|)))
+   (|VP/vp_pp| (|V/be_ap/-| |be+ed_VBDR| (|AP/a1| (|A1/a| |there_RL|)))
+    (|PP/p1|
+     (|P1/p_np| |in_II|
+      (|NP/det_n| |the_AT|
+       (|N1/name+| |Soviet_NP1| (|N1/n| |Union_NP1|))))))))
+ ?_?)
+
+("What" "was" "Agent" "Orange" "used" "for" "during" "the" "Vietnam" "War" "?") 1 ; (-22.434)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |What_DDQ|
+  (|VP/vp_pp|
+   (|V/be_n1/-+| |be+ed_VBDZ|
+    (|N1/n1_nm| |Agent_NN1|
+     (|N1/n_pprt| |Orange_NN1| (V/0 |use+ed_VVN|)))
+    |for_II|)
+   (|PP/p1|
+    (|P1/p_np| |during_II|
+     (|NP/name_n1| (|NP/det_n| |the_AT| (|N1/n| |Vietnam_NP1|))
+      (|N1/n| |War_NN1|))))))
+ ?_?)
+
+("In" "what" "city" "is" "the" "US" "Declaration" "of" "Independence" "located" "?") 1 ; (-12.629)
+(|T/txt-sc1/-+-|
+ (|S/whpp|
+  (|PP/p1|
+   (|P1/p_np| |In_II| (|NP/det_n| |what_DDQ| (|N1/n| |city_NN1|))))
+  (|S/sai-be2/--| |be+s_VBZ|
+   (|NP/name_n1| (|NP/det_n| |the_AT| (|N1/n| US_NP1))
+    (|N1/n| |Declaration_NN1|))
+   (|PP/p1|
+    (|P1/p_n1| |of_IO|
+     (|N1/n_pprt| |Independence_NN1| (V/0 |locate+ed_VVN|))))))
+ ?_?)
+
+("When" "did" "Israel" "begin" "turning" "the" "Gaza" "Strip" "and" "Jericho" "over" "to" "the" "PLO" "?") 1 ; (-24.516)
+(|T/frag| |When_CS|
+ (|S/sai/-| |do+ed_VDD|
+  (|S/np_vp| (|NP/n1_name/-| (|N1/n| |Israel_NP1|))
+   (|V/ing_pp| |begin_VV0|
+    (|V/np_p| |turn+ing_VVG|
+     (|NP/det_n| |the_AT|
+      (|N1/cj_int1/-| (|N1/name+| |Gaza_NP1| (|N1/n| |Strip_NP1|))
+       (|N1/cj_end| |and_CC| (|N1/n| |Jericho_NP1|))))
+     |over_II|)
+    (|PP/p1|
+     (|P1/p_np| |to_II| (|NP/det_n| |the_AT| (|N1/n| PLO_NP1)))))))
+ ?_?)
+
+("Which" "city" "has" "the" "oldest" "relationship" "as" "a" "sister-city" "with" "Los" "Angeles" "?") 1 ; (-14.328)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| (|NP/det_n| |Which_DDQ| (|N1/n| |city_NN1|))
+  (|VP/vp_pp|
+   (|V/have_np| |have+s_VHZ|
+    (|NP/det_n| |the_AT|
+     (|N1/n1_pp1|
+      (|N1/ap_n1/-| (|AP/a1| (|A1/a| |oldest_JJT|))
+       (|N1/n| |relationship_NN1|))
+      (|PP/p1|
+       (|P1/p_np| |as_II|
+        (|NP/det_n| |a_AT1| (|N1/n| |sister-city_NN1|)))))))
+   (|PP/p1|
+    (|P1/p_np| |with_IW|
+     (|NP/n1_name/-| (|N1/name+| |Los_NP1| (|N1/n| |Angeles_NP1|)))))))
+ ?_?)
+
+("Who" "was" "the" "second" "man" "to" "walk" "on" "the" "moon" "?") 1 ; (-10.967)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |Who_PNQS|
+  (|VP/vp_inf|
+   (|V/be_np/---| |be+ed_VBDZ|
+    (|NP/det_n| |the_AT|
+     (|N1/ap_n1/-| (|AP/a1| (|A1/a| |second_MD|)) (|N1/n| |man_NN1|))))
+   (|V/to_bse| |to_TO|
+    (|V/pp| |walk_VV0|
+     (|PP/p1|
+      (|P1/p_np| |on_II|
+       (|NP/det_n| |the_AT| (|N1/n| |moon_NN1|))))))))
+ ?_?)
+
+("How" "many" "times" "was" "pitcher" "," "Warren" "Spahn" "," "a" "20-game" "winner" "in" "his" "21" "major" "league" "seasons" "?") 1 ; (-36.418)
+(|T/frag|
+ (|S/whpp-aux| (|PP/p1| (|P1/pwh| |How_RGQ|))
+  (|NP/plu2|
+   (|N1/ap_n1/-| (|AP/a1| (|A1/a| |many_DA2|)) (|N1/n| |time+s_NNT2|)))
+  |be+ed_VBDZ|)
+ (|N1/co_n1| (|N1/n| |pitcher_NN1|) |,_,|)
+ (|N1/co_n1| (|N1/name+| |Warren_NP1| (|N1/n| |Spahn_NP1|)) |,_,|)
+ (|NP/det_n| |a_AT1|
+  (|N1/n1_nm| |20-game_NN1|
+   (|N1/n1_pp1| (|N1/n| |winner_NN1|)
+    (|PP/p1|
+     (|P1/p_np| |in_II|
+      (|NP/plu1|
+       (|N1/num2_n1| (|NP/det_n| |his_APP$| (|N1/n| 21_MC))
+        (|N1/ap_n1/-| (|AP/a1| (|A1/a| |major_JJ|))
+         (|N1/n1_nm| |league_NN1| (|N1/n| |season+s_NN2|))))))))))
+ ?_?)
+
+("When" "was" "Yemen" "reunified" "?") 1 ; (-10.546)
+(|T/frag| |When_CS|
+ (|S/sai/-| |be+ed_VBDZ|
+  (|S/np_vp| (|NP/n1_name/-| (|N1/n| |Yemen_NP1|))
+   (V/0 |reunify+ed_VVD|)))
+ ?_?)
+
+("Which" "Japanese" "car" "maker" "had" "its" "biggest" "percentage" "of" "sale" "in" "the" "domestic" "market" "?") 1 ; (-14.368)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp|
+  (|NP/det_n| |Which_DDQ|
+   (|N1/ap_n1/-| (|AP/a1| (|A1/a| |Japanese_JJ|))
+    (|N1/n1_nm| |car_NN1| (|N1/n| |maker_NN1|))))
+  (|VP/vp_pp|
+   (|V/have_np| |have+ed_VHD|
+    (|NP/det_n| |its_APP$|
+     (|N1/ap_n1/-| (|AP/a1| (|A1/a| |biggest_JJT|))
+      (|N1/n_of| |percentage_NN1|
+       (|PP/p1| (|P1/p_n1| |of_IO| (|N1/n| |sale_NN1|)))))))
+   (|PP/p1|
+    (|P1/p_np| |in_II|
+     (|NP/det_n| |the_AT|
+      (|N1/ap_n1/-| (|AP/a1| (|A1/a| |domestic_JJ|))
+       (|N1/n| |market_NN1|)))))))
+ ?_?)
+
+("What" "is" "the" "capital" "of" "Uruguay" "?") 1 ; (-8.088)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |What_DDQ|
+  (|S/sai-be2/--| |be+s_VBZ|
+   (|NP/det_n| |the_AT| (|N1/n| |capital_NN1|))
+   (|PP/p1|
+    (|P1/p_np| |of_IO| (|NP/n1_name/-| (|N1/n| |Uruguay_NP1|))))))
+ ?_?)
+
+("What" "is" "the" "name" "for" "the" "technique" "of" "growing" "certain" "plants" "in" "soils" "contaminated" "with" "toxic" "metals" "," "wherein" "the" "plants" "take" "up" "the" "toxic" "metals" "," "are" "harvested" "," "and" "the" "metals" "recovered" "for" "recycling" "?") 1 ; (-39.579)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |What_DDQ|
+  (|S/cj_int/-|
+   (|S/sai-be4/--| |be+s_VBZ|
+    (|NP/det_n| |the_AT|
+     (|N1/n1_pp5| (|N1/n| |name_NN1|)
+      (|PP/p1|
+       (|P1/p_np| |for_IF|
+        (|NP/det_n| |the_AT| (|N1/n| |technique_NN1|))))))
+    |of_IO|)
+   (|S/cj_int/+|
+    (|S/np_vp|
+     (|T/lmta_np|
+      (|NP/plu1|
+       (|N1/n1_pp1|
+        (|N1/ap_n1/-| (|AP/a1| (|A1/a| |growing_JJ|))
+         (|N1/ap_n1/-| (|AP/a1| (|A1/a| |certain_JJ|))
+          (|N1/n| |plant+s_NN2|)))
+        (|PP/p1|
+         (|P1/p_np| |in_II|
+          (|NP/plu1|
+           (|N1/n_pprt| |soil+s_NN2|
+            (|V/pp| |contaminate+ed_VVN|
+             (|PP/p1|
+              (|P1/p_np| |with_IW|
+               (|NP/plu1|
+                (|N1/ap_n1/-| (|AP/a1| (|A1/a| |toxic_JJ|))
+                 (|N1/n| |metal+s_NN2|))))))))))))
+      (|Tacl/comma+| |,_,|
+       (|S/np_vp|
+        (|NP/ap2_np| (|A1/a| |wherein_RR|)
+         (|NP/det_n| |the_AT| (|N1/n| |plant+s_NN2|)))
+        (|V/np| (|V/0_p| |take_VV0| |up_RP|)
+         (|NP/det_n| |the_AT|
+          (|N1/ap_n1/-| (|AP/a1| (|A1/a| |toxic_JJ|))
+           (|N1/n| |metal+s_NN2|)))))
+       |,_,|))
+     (|V/be_ppart/-| |be+_VBR| (V/0 |harvest+ed_VVN|)))
+    |,_,|
+    (|S/cj_end| |and_CC|
+     (|S/np_vp| (|NP/det_n| |the_AT| (|N1/n| |metal+s_NN2|))
+      (|V/pp| |recover+ed_VVN|
+       (|PP/p1| (|P1/p_n1| |for_IF| (|N1/n| |recycling_NN1|)))))))))
+ ?_?)
+
+("Where" "is" "it" "planned" "to" "berth" "the" "merchant" "ship" "," "Lane" "Victory" "," "which" "Merchant" "Marine" "veterans" "are" "converting" "into" "a" "floating" "museum" "?") 1 ; (-34.391)
+(|T/txt-sc1/-+-|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |Where_RRQ|))
+  (|S/sai/-| |be+s_VBZ|
+   (|S/np_vp| |it_PPH1|
+    (|V/pp| |plan+ed_VVD|
+     (|PP/p1|
+      (|P1/p_n1| |to_II|
+       (|N1/n_s1| |berth_NN1|
+        (|S/np_co_s1|
+         (|NP/det_n| |the_AT|
+          (|N1/n1_nm| |merchant_NN1| (|N1/n| |ship_NN1|)))
+         |,_,|
+         (|S/npvoc_s1|
+          (|NP/n1_name/-|
+           (|N1/name+| |Lane_NP1| (|N1/n| |Victory_NP1|)))
+          |,_,|
+          (|S/np_vp|
+           (|NP/name_n1|
+            (|NP/det_n| |which_DDQ| (|N1/n| |Merchant_NP1|))
+            (|N1/ap_n1/-| (|AP/a1| (|A1/a| |Marine_JJ|))
+             (|N1/n| |veteran+s_NN2|)))
+           (|V/be_ing/-| |be+_VBR|
+            (|V/pp| |convert+ing_VVG|
+             (|PP/p1|
+              (|P1/p_np| |into_II|
+               (|NP/det_n| |a_AT1|
+                (|N1/vping_n1| |float+ing_VVG|
+                 (|N1/n| |museum_NN1|)))))))))))))))))
+ ?_?)
+
+("What" "famous" "communist" "leader" "died" "in" "Mexico" "City" "?") 1 ; (-12.479)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp|
+  (|NP/det_n| |What_DDQ|
+   (|N1/ap_n1/-| (|AP/a1| (|A1/a| |famous_JJ|))
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |communist_JJ|))
+     (|N1/n| |leader_NN1|))))
+  (|V/pp| |die+ed_VVD|
+   (|PP/p1|
+    (|P1/p_np| |in_II|
+     (|NP/n1_name/-| (|N1/name+| |Mexico_NP1| (|N1/n| |City_NP1|)))))))
+ ?_?)
+
+("Who" "is" "the" "Queen" "of" "Holland" "?") 1 ; (-8.155)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |Who_PNQS|
+  (|S/sai-be2/--| |be+s_VBZ| (|NP/det_n| |the_AT| (|N1/n| |Queen_NP1|))
+   (|PP/p1|
+    (|P1/p_np| |of_IO| (|NP/n1_name/-| (|N1/n| |Holland_NP1|))))))
+ ?_?)
+
+("Who" "is" "the" "president" "of" "the" "Spanish" "government" "?") 1 ; (-8.132)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |Who_PNQS|
+  (|S/sai-be2/--| |be+s_VBZ|
+   (|NP/det_n| |the_AT| (|N1/n| |president_NN1|))
+   (|PP/p1|
+    (|P1/p_np| |of_IO|
+     (|NP/det_n| |the_AT|
+      (|N1/ap_n1/-| (|AP/a1| (|A1/a| |Spanish_JJ|))
+       (|N1/n| |government_NN1|)))))))
+ ?_?)
+
+("What" "is" "the" "name" "of" "the" "normal" "process" "in" "all" "living" "things" "," "including" "humans" "," "in" "which" "cells" "are" "programmed" "to" "\"" "commit" "suicide" "\"" "?") 1 ; (-32.858)
+(|T/txt-sc1/-+-|
+ (|T/leta_s|
+  (|S/s_pp|
+   (|S/whnp_vp| |What_DDQ|
+    (|V/be_np/---| |be+s_VBZ|
+     (|NP/det_n| |the_AT|
+      (|N1/n_of| |name_NN1|
+       (|PP/p1|
+        (|P1/p_np| |of_IO|
+         (|NP/det_n| |the_AT|
+          (|N1/n1_pp1|
+           (|N1/ap_n1/-| (|AP/a1| (|A1/a| |normal_JJ|))
+            (|N1/n| |process_NN1|))
+           (|PP/p1|
+            (|P1/p_np| |in_II|
+             (|NP/plu1|
+              (|N1/ap_n1/-|
+               (|AP/a1|
+                (|A1/adv_a1| (|AP/a1| (|A1/a| |all_DB|))
+                 (|A1/a| |living_JJ|)))
+               (|N1/n| |thing+s_NN2|)))))))))))))
+   |,_,|
+   (|PP/p1|
+    (|P1/p_np| |including_II| (|NP/plu1| (|N1/n| |human+s_NN2|)))))
+  (|Tacl/comma-e| |,_,|
+   (|S/whpp|
+    (|PP/p1|
+     (|P1/p_np| |in_II|
+      (|NP/det_n| |which_DDQ| (|N1/n| |cell+s_NN2|))))
+    (|S/sai/-| |be+_VBR|
+     (|S/np_vp|
+      (|NP/plu1|
+       (|N1/vppt_n1| (|V/0_p| |program+ed_VVN| |to_II|)
+        (|N1/n| |"_NN2|)))
+      (|V/np| |commit_VV0|
+       (|NP/plu1| (|N1/n1_nm| |suicide_NN1| (|N1/n| |"_NN2|)))))))))
+ ?_?)
+
+("How" "many" "people" "did" "the" "United" "Nations" "commit" "to" "help" "restore" "order" "and" "distribute" "humanitarian" "relief" "in" "Somalia" "in" "September" "1992" "?") 1 ; (-36.878)
+(|T/txt-sc1/-+-|
+ (|S/pp_s/-|
+  (|PP/p1|
+   (|P1/p_n1| |How_RGQ|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |many_DA2|)) (|N1/n| |people_NN|))))
+  (|S/cj_int/-|
+   (|S/sai/-| |do+ed_VDD|
+    (|S/np_vp|
+     (|NP/det_n| |the_AT|
+      (|N1/ap_n1/-| (|AP/a1| (|A1/a| |United_JJ|))
+       (|N1/n| |Nation+s_NN2|)))
+     (|V/inf| |commit_VV0|
+      (|V/to_bse| |to_TO|
+       (|V/s| |help_VV0|
+        (|S/imp| (|V/n1| |restore_VV0| (|N1/n| |order_NN1|))))))))
+   (|S/cj_end| |and_CC|
+    (|S/imp|
+     (|VP/vp_pp|
+      (|V/n1_pp| |distribute_VV0|
+       (|N1/ap_n1/-| (|AP/a1| (|A1/a| |humanitarian_JJ|))
+        (|N1/n| |relief_NN1|))
+       (|PP/p1|
+        (|P1/p_np| |in_II| (|NP/n1_name/-| (|N1/n| |Somalia_NP1|)))))
+      (|PP/p1|
+       (|P1/p_np| |in_II|
+        (|NP/adv2|
+         (|N1/nms_num2| |September_NPM1|
+          (|NP/num| (|N1/n| 1992_MC)))))))))))
+ ?_?)
+
+("How" "many" "people" "on" "the" "ground" "were" "killed" "from" "the" "bombing" "of" "Pan" "Am" "Flight" "103" "over" "Lockerbie" "," "Scotland" "," "December" "21" "," "1988" "?") 1 ; (-38.611)
+(|T/txt-sc1/-+-|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |How_RGQ|))
+  (|S/np_vp|
+   (|NP/plu1|
+    (|N1/n1_pp1|
+     (|N1/ap_n1/-| (|AP/a1| (|A1/a| |many_DA2|)) (|N1/n| |people_NN2|))
+     (|PP/p1|
+      (|P1/p_np| |on_II|
+       (|NP/det_n| |the_AT| (|N1/n| |ground_NN1|))))))
+   (|V/be_ppart/-| |be+ed_VBDR|
+    (|V/pp| |kill+ed_VVN|
+     (|PP/p1|
+      (|P1/p_s| |from_II|
+       (|S/np_vp|
+        (|NP/det_n| |the_AT|
+         (|N1/n_of| |bombing_NN1|
+          (|PP/p1|
+           (|P1/p_np| |of_IO| (|NP/n1_name/-| (|N1/n| |Pan_NP1|))))))
+        (|VP/vp_npadv2| (|V/be_n1/--| |be+_VBM| (|N1/n| |Flight_NN1|))
+         (|NP/date/++|
+          (|NP/num|
+           (|N1/n1_pp1| (|N1/n| 103_MC)
+            (|PP/p1|
+             (|P1/p_np| |over_II|
+              (|T/lmta_np| (|NP/n1_name/-| (|N1/n| |Lockerbie_NP1|))
+               (|Taph/comma+/-| |,_,|
+                (|Tph/n1/-| (|N1/n| |Scotland_NP1|)) |,_,|))))))
+          |December_NPM1| (|NP/num| (|N1/n| 21_MC)) |,_,|
+          (|NP/num| (|N1/n| 1988_MC)))))))))))
+ ?_?)
+
+("What" "is" "the" "duration" "of" "the" "trip" "from" "Bristol" "to" "London" "by" "rail" "?") 1 ; (-15.075)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |What_DDQ|
+  (|VP/vp_pp|
+   (|VP/vp_pp|
+    (|VP/vp_pp|
+     (|V/be_np/---| |be+s_VBZ|
+      (|NP/det_n| |the_AT|
+       (|N1/n_of| |duration_NN1|
+        (|PP/p1|
+         (|P1/p_np| |of_IO|
+          (|NP/det_n| |the_AT| (|N1/n| |trip_NN1|)))))))
+     (|PP/p1|
+      (|P1/p_np| |from_II| (|NP/n1_name/-| (|N1/n| |Bristol_NP1|)))))
+    (|PP/p1|
+     (|P1/p_np| |to_II| (|NP/n1_name/-| (|N1/n| |London_NP1|)))))
+   (|PP/p1| (|P1/p_n1| |by_II| (|N1/n| |rail_NN1|)))))
+ ?_?)
+
+("What" "is" "the" "population" "of" "Ulan" "Bator" "," "capital" "of" "Mongolia" "?") 1 ; (-14.894)
+(|T/txt-sc1/-+-|
+ (|S/s_npvoc3|
+  (|S/s_npvoc1/-|
+   (|S/whnp_s| |What_DDQ|
+    (|S/sai-be4/--| |be+s_VBZ|
+     (|NP/det_n| |the_AT| (|N1/n| |population_NN1|)) |of_IO|))
+   (|NP/n1_name/-| (|N1/name+| |Ulan_NP1| (|N1/n| |Bator_NP1|))))
+  |,_,|
+  (|N1/n_of| |capital_NN1|
+   (|PP/p1|
+    (|P1/p_np| |of_IO| (|NP/n1_name/-| (|N1/n| |Mongolia_NP1|))))))
+ ?_?)
+
+("Where" "does" "most" "of" "the" "marijuana" "entering" "the" "United" "States" "come" "from" "?") 1 ; (-22.644)
+(|T/frag| (|PP/p1| (|P1/pwh| |Where_RRQ|))
+ (|V/do_np| |do+s_VDZ| |most_DAT|)
+ (|PP/p1|
+  (|P1/p_np| |of_IO| (|NP/det_n| |the_AT| (|N1/n| |marijuana_NN1|))))
+ (|S/vping_s/-| (V/0 |enter+ing_VVG|)
+  (|S/np_vp|
+   (|NP/det_n| |the_AT|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |United_JJ|))
+     (|N1/n| |State+s_NN2|)))
+   (V/0 (|V/0_p| |come_VVN| |from_II|))))
+ ?_?)
+
+("How" "many" "megawatts" "will" "the" "power" "project" "in" "Indonesia" "," "built" "by" "a" "consortium" "headed" "by" "Mission" "Energy" "of" "US" "," "produce" "?") 1 ; (-29.515)
+(|T/frag|
+ (|PP/p1|
+  (|P1/p_np| |How_RGQ|
+   (|NP/plu1|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |many_DA2|))
+     (|N1/n| |megawatt+s_NN2|)))))
+ (|S/sai/-| |will_VM|
+  (|S/np_vp|
+   (|T/lmta_np|
+    (|NP/det_n| |the_AT|
+     (|N1/n1_pp1| (|N1/n1_nm| |power_NN1| (|N1/n| |project_NN1|))
+      (|PP/p1|
+       (|P1/p_np| |in_II| (|NP/n1_name/-| (|N1/n| |Indonesia_NP1|))))))
+    (|Taph/comma+/-| |,_,|
+     (|Tph/vp/-|
+      (|VP/vp_pp| (V/0 |build+ed_VVN|)
+       (|PP/p1|
+        (|P1/p_np| |by_II|
+         (|NP/det_n| |a_AT1|
+          (|N1/n_pprt| |consortium_NN1|
+           (|V/pp| |head+ed_VVN|
+            (|PP/p1|
+             (|P1/p_n1| |by_II|
+              (|N1/n1_nm| |Mission_NN1|
+               (|N1/n_of| |Energy_NN1|
+                (|PP/p1|
+                 (|P1/p_np| |of_IO|
+                  (|NP/n1_name/-| (|N1/n| US_NP1)))))))))))))))
+     |,_,|))
+   (V/0 |produce_VV0|)))
+ ?_?)
+
+("What" "did" "John" "Hinckley" "do" "to" "impress" "Jodie" "Foster" "?") 1 ; (-22.136)
+(|T/frag|
+ (|S/s_npvoc1/-|
+  (|S/whnp_vp| |What_DDQ|
+   (|V/do_np| |do+ed_VDD| (|NP/n1_name/-| (|N1/n| |John_NP1|))))
+  (|NP/n1_name/-| (|N1/n| |Hinckley_NP1|)))
+ |do_VD0| (|V/to_bse| |to_TO| (V/0 |impress_VV0|))
+ (|NP/n1_name/-| (|N1/name+| |Jodie_NP1| (|N1/n| |Foster_NP1|))) ?_?)
+
+("In" "what" "year" "did" "Ireland" "elect" "its" "first" "woman" "president" "?") 1 ; (-12.675)
+(|T/txt-sc1/-+-|
+ (|S/whpp|
+  (|PP/p1|
+   (|P1/p_np| |In_II| (|NP/det_n| |what_DDQ| (|N1/n| |year_NN1|))))
+  (|S/sai/-| |do+ed_VDD|
+   (|S/np_vp| (|NP/n1_name/-| (|N1/n| |Ireland_NP1|))
+    (|V/np| |elect_VV0|
+     (|NP/det_n| |its_APP$|
+      (|N1/ap_n1/-| (|AP/a1| (|A1/a| |first_MD|))
+       (|N1/n1_nm| |woman_NN1| (|N1/n| |president_NN1|))))))))
+ ?_?)
+
+("Who" "is" "the" "prime" "minister" "of" "Japan" "?") 1 ; (-9.066)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |Who_PNQS|
+  (|S/sai-be2/--| |be+s_VBZ|
+   (|NP/det_n| |the_AT|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |prime_JJ|))
+     (|N1/n| |minister_NN1|)))
+   (|PP/p1|
+    (|P1/p_np| |of_IO| (|NP/n1_name/-| (|N1/n| |Japan_NP1|))))))
+ ?_?)
+
+("How" "many" "soldiers" "were" "involved" "in" "the" "last" "Panama" "invasion" "by" "the" "United" "States" "of" "America" "?") 1 ; (-19.713)
+(|T/txt-sc1/-+-|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |How_RGQ|))
+  (|S/np_vp|
+   (|NP/plu1|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |many_DA2|))
+     (|N1/n| |soldier+s_NN2|)))
+   (|VP/vp_pp|
+    (|V/be_ppart/-| |be+ed_VBDR|
+     (|V/pp| |involve+ed_VVN|
+      (|PP/p1|
+       (|P1/p_np| |in_II|
+        (|NP/name_n1|
+         (|NP/det_n| |the_AT|
+          (|N1/ap_n1/-| (|AP/a1| (|A1/a| |last_MD|))
+           (|N1/n| |Panama_NP1|)))
+         (|N1/n| |invasion_NN1|))))))
+    (|PP/p1|
+     (|P1/p_np| |by_II|
+      (|NP/det_n| |the_AT|
+       (|N1/ap_n1/-| (|AP/a1| (|A1/a| |United_JJ|))
+        (|N1/n_of| |State+s_NN2|
+         (|PP/p1|
+          (|P1/p_np| |of_IO|
+           (|NP/n1_name/-| (|N1/n| |America_NP1|))))))))))))
+ ?_?)
+
+("Where" "is" "the" "Bulls" "basketball" "team" "based" "?") 1 ; (-11.534)
+(|T/txt-sc1/-+-|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |Where_RRQ|))
+  (|S/sai/-| |be+s_VBZ|
+   (|S/np_vp|
+    (|NP/det_n| |the_AT|
+     (|N1/n1_nm| |Bull+s_NN2|
+      (|N1/n1_nm| |basketball_NN1| (|N1/n| |team_NN1|))))
+    (V/0 |base+ed_VVN|))))
+ ?_?)
+
+("What" "is" "the" "length" "of" "border" "between" "the" "Ukraine" "and" "Russia" "?") 1 ; (-13.505)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |What_DDQ|
+  (|S/sai-be2/--| |be+s_VBZ|
+   (|NP/det_n| |the_AT|
+    (|N1/n_of| |length_NN1|
+     (|PP/p1| (|P1/p_n1| |of_IO| (|N1/n| |border_NN1|)))))
+   (|PP/p1|
+    (|P1/p_np| |between_II|
+     (|NP/det_n| |the_AT|
+      (|N1/cj_int1/-| (|N1/n| |Ukraine_NP1|)
+       (|N1/cj_end| |and_CC| (|N1/n| |Russia_NP1|))))))))
+ ?_?)
+
+("Where" "did" "Dylan" "Thomas" "die" "?") 1 ; (-12.034)
+(|T/txt-sc1/-+-|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |Where_RRQ|))
+  (|S/sai/-| |do+ed_VDD|
+   (|S/np_vp|
+    (|NP/n1_name/-| (|N1/name+| |Dylan_NP1| (|N1/n| |Thomas_NP1|)))
+    (V/0 |die_VV0|))))
+ ?_?)
+
+("How" "many" "people" "live" "in" "Tokyo" "?") 1 ; (-11.867)
+(|T/txt-sc1/-+-|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |How_RGQ|))
+  (|S/np_vp|
+   (|NP/plu1|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |many_DA2|)) (|N1/n| |people_NN|)))
+   (|V/np| (|V/0_p| |live_VV0| |in_II|)
+    (|NP/n1_name/-| (|N1/n| |Tokyo_NP1|)))))
+ ?_?)
+
+("What" "is" "the" "capital" "of" "California" "?") 1 ; (-8.088)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |What_DDQ|
+  (|S/sai-be2/--| |be+s_VBZ|
+   (|NP/det_n| |the_AT| (|N1/n| |capital_NN1|))
+   (|PP/p1|
+    (|P1/p_np| |of_IO| (|NP/n1_name/-| (|N1/n| |California_NP1|))))))
+ ?_?)
+
+("How" "many" "Grand" "Slam" "titles" "did" "Bjorn" "Borg" "win" "?") 1 ; (-17.739)
+(|T/txt-sc1/-+-|
+ (|S/pp_s/-|
+  (|PP/p1|
+   (|P1/p_s| |How_RGQ|
+    (|S/np_vp|
+     (|NP/plu1|
+      (|N1/ap_n1/-| (|AP/a1| (|A1/a| |many_DA2|))
+       (|N1/ap_n1/-| (|AP/a1| (|A1/a| |Grand_JJ|))
+        (|N1/n1_nm| |Slam_NN1| (|N1/n| |title+s_NN2|)))))
+     (|V/do_np| |do+ed_VDD| (|NP/n1_name/-| (|N1/n| |Bjorn_NP1|))))))
+  (|S/np_vp| (|NP/n1_name/-| (|N1/n| |Borg_NP1|)) (V/0 |win_VV0|)))
+ ?_?)
+
+("Who" "was" "the" "Democratic" "nominee" "in" "the" "American" "presidential" "election" "?") 1 ; (-10.201)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |Who_PNQS|
+  (|S/sai-be2/--| |be+ed_VBDZ|
+   (|NP/det_n| |the_AT|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |Democratic_JJ|))
+     (|N1/n| |nominee_NN1|)))
+   (|PP/p1|
+    (|P1/p_np| |in_II|
+     (|NP/det_n| |the_AT|
+      (|N1/ap_n1/-| (|AP/a1| (|A1/a| |American_JJ|))
+       (|N1/ap_n1/-| (|AP/a1| (|A1/a| |presidential_JJ|))
+        (|N1/n| |election_NN1|))))))))
+ ?_?)
+
+("When" "was" "General" "Manuel" "Noriega" "ousted" "as" "the" "leader" "of" "Panama" "and" "turned" "over" "to" "U.S." "authorities" "?") 1 ; (-43.495)
+(|T/frag|
+ (|PP/p1|
+  (|P1/p_s| |When_CS|
+   (|S/sing_vp|
+    (|S/sai-be1/--| |be+ed_VBDZ|
+     (|NP/n1_name/-|
+      (|N1/ap_n1/-| (|AP/a1| (|A1/a| |General_JJ|))
+       (|N1/n| |Manuel_NP1|)))
+     (|NP/n1_name/-| (|N1/n| |Noriega_NP1|)))
+    (|VP/cj_int/-|
+     (|V/pp| |oust+ed_VVN|
+      (|PP/p1|
+       (|P1/p_np| |as_II|
+        (|NP/det_n| |the_AT|
+         (|N1/n_of| |leader_NN1|
+          (|PP/p1|
+           (|P1/p_np| |of_IO|
+            (|NP/n1_name/-| (|N1/n| |Panama_NP1|)))))))))
+     (|VP/cj_end| |and_CC|
+      (|V/pp| (|V/0_p| |turn+ed_VVN| |over_RP|)
+       (|PP/p1| (|P1/p| |to_II|))))))))
+ (|NP/name_n2| (|NP/n1_name/-| (|N1/n| U.S._NP1))
+  (|NP/plu1| (|N1/n| |authority+s_NN2|)))
+ ?_?)
+
+("Where" "is" "Dartmouth" "College" "?") 1 ; (-16.172)
+(|T/txt-sc1/-+-|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |Where_RRQ|))
+  (|S/sai-be1/--| |be+s_VBZ| (|NP/n1_name/-| (|N1/n| |Dartmouth_NP1|))
+   (|NP/place| (|N1/n| |College_NNL1|))))
+ ?_?)
+
+("How" "many" "mines" "can" "still" "be" "found" "in" "the" "Falklands" "after" "the" "war" "ended" "?") 1 ; (-17.668)
+(|T/txt-sc1/-+-|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |How_RGQ|))
+  (|S/np_vp|
+   (|NP/plu1|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |many_DA2|)) (|N1/n| |mine+s_NN2|)))
+   (|V/modal_bse/+| |can_VM| (|AP/a1| (|A1/a| |still_RR|))
+    (|V/be_ppart/-| |be_VB0|
+     (|V/pp_pp| |find+ed_VVN|
+      (|PP/p1|
+       (|P1/p_np| |in_II|
+        (|NP/det_n| |the_AT| (|N1/n| |Falklands_NP1|))))
+      (|PP/p1|
+       (|P1/p_np| |after_ICS|
+        (|NP/det_n| |the_AT|
+         (|N1/n_pprt| |war_NN1| (V/0 |end+ed_VVN|))))))))))
+ ?_?)
+
+("Why" "are" "electric" "cars" "less" "efficient" "in" "the" "north-east" "than" "in" "California" "?") 1 ; (-24.128)
+(|T/txt-sc1/-+-|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |Why_RRQ|))
+  (|S/sai-be2/--| |be+_VBR|
+   (|NP/np_ap|
+    (|NP/plu1|
+     (|N1/ap_n1/-| (|AP/a1| (|A1/a| |electric_JJ|))
+      (|N1/n| |car+s_NN2|)))
+    (|A1/adv_a1| (|AP/a1| (|A1/a| |less_DAR|))
+     (|A1/a_pp1| |efficient_JJ|
+      (|PP/p1|
+       (|P1/p_np| |in_II|
+        (|NP/det_n| |the_AT| (|N1/n| |north-east_ND1|)))))))
+   (|PP/p1|
+    (|P1/p_pp| |than_CSN|
+     (|PP/p1|
+      (|P1/p_np| |in_II|
+       (|NP/n1_name/-| (|N1/n| |California_NP1|))))))))
+ ?_?)
+
+("When" "did" "French" "revolutionaries" "storm" "the" "Bastille" "?") 1 ; (-17.687)
+(|T/frag| |When_CS|
+ (|S/sai/-| |do+ed_VDD|
+  (|S/s_npvoc1/-|
+   (|S/np_vp|
+    (|NP/plu1|
+     (|N1/ap_n1/-| (|AP/a1| (|A1/a| |French_JJ|))
+      (|N1/n| |revolutionary+s_NN2|)))
+    (V/0 |storm_VV0|))
+   (|NP/det_n| |the_AT| (|N1/n| |Bastille_NP1|))))
+ ?_?)
+
+("How" "rich" "is" "Bill" "Gates" "?") 1 ; (-17.963)
+(|T/frag| (|PP/p1| (|P1/p_npl| |How_RGQ| (|AP/a1| (|A1/a| |rich_JJ|))))
+ (|S/sai-be1/--| |be+s_VBZ| (|NP/n1_name/-| (|N1/n| |Bill_NP1|))
+  (|NP/n1_name/-| (|N1/n| |Gates_NP1|)))
+ ?_?)
+
+("What" "is" "the" "capital" "of" "Kosovo" "?") 1 ; (-8.088)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |What_DDQ|
+  (|S/sai-be2/--| |be+s_VBZ|
+   (|NP/det_n| |the_AT| (|N1/n| |capital_NN1|))
+   (|PP/p1|
+    (|P1/p_np| |of_IO| (|NP/n1_name/-| (|N1/n| |Kosovo_NP1|))))))
+ ?_?)
+
+("What" "state" "does" "Charles" "Robb" "represent" "?") 1 ; (-9.743)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| (|NP/det_n| |What_DDQ| (|N1/n| |state_NN1|))
+  (|S/sai/-| |do+s_VDZ|
+   (|S/np_vp|
+    (|NP/n1_name/-| (|N1/name+| |Charles_NP1| (|N1/n| |Robb_NP1|)))
+    (V/0 |represent_VV0|))))
+ ?_?)
+
+("Who" "is" "the" "leading" "competitor" "of" "Trans" "Union" "Company" "?") 1 ; (-11.727)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |Who_PNQS|
+  (|S/sai-be2/--| |be+s_VBZ|
+   (|NP/det_n| |the_AT|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |leading_JJ|))
+     (|N1/n| |competitor_NN1|)))
+   (|PP/p1|
+    (|P1/p_n1| |of_IO|
+     (|N1/ap_n1/-| (|AP/a1| (|A1/a| |Trans_JJ|))
+      (|N1/n1_nm| |Union_NNJ1| (|N1/n| |Company_NNJ1|)))))))
+ ?_?)
+
+("Which" "type" "of" "submarine" "was" "bought" "recently" "by" "South" "Korea" "?") 1 ; (-15.364)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp|
+  (|NP/det_n| |Which_DDQ|
+   (|N1/n_of| |type_NN1|
+    (|PP/p1| (|P1/p_n1| |of_IO| (|N1/n| |submarine_NN1|)))))
+  (|V/be_ppart/-| |be+ed_VBDZ|
+   (|V/pp| |buy+ed_VVN|
+    (|PP/adv_p1| (|AP/a1| (|A1/a| |recently_RR|))
+     (|P1/p_np| |by_II|
+      (|NP/n1_name/-|
+       (|N1/name+| |South_NP1| (|N1/n| |Korea_NP1|))))))))
+ ?_?)
+
+("When" "did" "communist" "control" "end" "in" "Hungary" "?") 1 ; (-16.190)
+(|T/frag| |When_CS| (|V/do_pas| |do+ed_VDD|)
+ (|N1/ap_n1/-| (|AP/a1| (|A1/a| |communist_JJ|))
+  (|N1/n1_nm| |control_NN1| (|N1/n| |end_NN1|)))
+ |in_II| (|NP/n1_name/-| (|N1/n| |Hungary_NP1|)) ?_?)
+
+("What" "nationality" "is" "Pope" "John" "Paul" "II" "?") 1 ; (-17.331)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| (|NP/det_n| |What_DDQ| (|N1/n| |nationality_NN1|))
+  (|S/sai-be1/--| |be+s_VBZ|
+   (|NP/n1_name/-|
+    (|N1/name+| |Pope_NP1|
+     (|N1/name+| |John_NP1| (|N1/n| |Paul_NP1|))))
+   (|NP/num| (|N1/n| II_MC))))
+ ?_?)
+
+("Who" "was" "the" "captain" "of" "the" "tanker" "," "Exxon" "Valdez" "," "involved" "in" "the" "oil" "spill" "in" "Prince" "William" "Sound" "," "Alaska" "," "1989" "?") 1 ; (-35.491)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |Who_PNQS|
+  (|S/sai-be2/--| |be+ed_VBDZ|
+   (|NP/det_n| |the_AT| (|N1/n| |captain_NN1|))
+   (|PP/p1|
+    (|P1/p_np| |of_IO|
+     (|NP/det_n| |the_AT|
+      (|N1/nm_num2|
+       (|T/lmta_n| |tanker_NN1|
+        (|Taph/comma+/-| |,_,|
+         (|Tph/n1/-|
+          (|N1/name+| |Exxon_NP1|
+           (|N1/name+|
+            (|T/lmta_n| |Valdez_NP1|
+             (|Taph/comma+/-| |,_,|
+              (|Tph/vp/-|
+               (|VP/vp_pp|
+                (|V/pp| |involve+ed_VVN|
+                 (|PP/p1|
+                  (|P1/p_np| |in_II|
+                   (|NP/det_n| |the_AT|
+                    (|N1/n1_nm| |oil_NN1| (|N1/n| |spill_NN1|))))))
+                (|PP/p1|
+                 (|P1/p_np| |in_II|
+                  (|NP/n1_name/-|
+                   (|N1/name+| |Prince_NP1|
+                    (|N1/name+| |William_NP1|
+                     (|N1/n| |Sound_NP1|))))))))
+              |,_,|))
+            (|N1/n| |Alaska_NP1|))))
+         |,_,|))
+       (|NP/num| (|N1/n| 1989_MC))))))))
+ ?_?)
+
+("Whom" "did" "the" "Chicago" "Bulls" "beat" "in" "the" "1993" "championship" "?") 1 ; (-16.302)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |Whom_PNQO|
+  (|S/sai/-| |do+ed_VDD|
+   (|S/np_vp|
+    (|NP/det_n| |the_AT|
+     (|N1/name+| |Chicago_NP1| (|N1/n| |Bulls_NP1|)))
+    (|V/np_n1| (|V/0_p| |beat+ed_VVD| |in_II|)
+     (|NP/det_n| |the_AT| (|N1/n| 1993_MC))
+     (|N1/n| |championship_NN1|)))))
+ ?_?)
+
+("Who" "was" "President" "of" "Afghanistan" "in" "1994" "?") 1 ; (-12.878)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |Who_PNQS|
+  (|VP/vp_pp|
+   (|V/be_n1/--| |be+ed_VBDZ|
+    (|N1/n_of| |President_NNS1|
+     (|PP/p1|
+      (|P1/p_np| |of_IO|
+       (|NP/n1_name/-| (|N1/n| |Afghanistan_NP1|))))))
+   (|PP/p1| (|P1/p_np| |in_II| (|NP/num| (|N1/n| 1994_MC))))))
+ ?_?)
+
+("Who" "is" "the" "director" "of" "intergovernmental" "affairs" "for" "the" "San" "Diego" "county" "?") 1 ; (-19.309)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |Who_PNQS|
+  (|VP/vp_pp|
+   (|V/be_np/---| |be+s_VBZ|
+    (|NP/det_n| |the_AT|
+     (|N1/n_of| |director_NN1|
+      (|PP/p1|
+       (|P1/p_np| |of_IO|
+        (|NP/plu1|
+         (|N1/ap_n1/-| (|AP/a1| (|A1/a| |intergovernmental_JJ|))
+          (|N1/n| |affair+s_NN2|))))))))
+   (|PP/p1|
+    (|P1/p_np| |for_IF|
+     (|NP/place|
+      (|N1/n|
+       (|N/name_npl|
+        (|NP/det_n| |the_AT|
+         (|N1/name+| |San_NP1| (|N1/n| |Diego_NP1|)))
+        |county_NNL1|)))))))
+ ?_?)
+
+("Where" "is" "the" "Keck" "telescope" "?") 1 ; (-16.104)
+(|T/frag| |Where_RRQ| |be+s_VBZ|
+ (|NP/name_n1| (|NP/det_n| |the_AT| (|N1/n| |Keck_NP1|))
+  (|N1/n| |telescope_NN1|))
+ ?_?)
+
+("How" "many" "moons" "does" "Jupiter" "have" "?") 1 ; (-11.313)
+(|T/fragx|
+ (|S/s_npvoc1/-|
+  (|S/whpp-aux| (|PP/p1| (|P1/pwh| |How_RGQ|))
+   (|NP/plu1|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |many_DA2|)) (|N1/n| |moon+s_NN2|)))
+   |do+s_VDZ|)
+  (|NP/n1_name/-| (|N1/n| |Jupiter_NP1|)))
+ |have_VH0| ?_?)
+
+("When" "did" "Jaco" "Pastorius" "die" "?") 1 ; (-12.747)
+(|T/frag| |When_CS|
+ (|S/sai/-| |do+ed_VDD|
+  (|S/np_vp|
+   (|NP/n1_name/-| (|N1/name+| |Jaco_NP1| (|N1/n| |Pastorius_NP1|)))
+   (V/0 |die_VV0|)))
+ ?_?)
+
+("When" "did" "beethoven" "die" "?") 1 ; (-13.010)
+(|T/frag| |When_CS| (|V/do_pas| |do+ed_VDD|)
+ (|S/adv_s/-| (|AP/a1| (|A1/a| |beethoven_RR|))
+  (|S/imp| (V/0 |die_VV0|)))
+ ?_?)
+
+("How" "many" "people" "in" "Tucson" "?") 1 ; (-13.841)
+(|T/frag| (|PP/p1| (|P1/p_np| |How_RGQ| |many_DA2|))
+ (|NP/plu1|
+  (|N1/n1_pp1| (|N1/n| |people_NN|)
+   (|PP/p1|
+    (|P1/p_np| |in_II| (|NP/n1_name/-| (|N1/n| |Tucson_NP1|))))))
+ ?_?)
+
+("How" "tall" "is" "Mt." "Everest" "?") 1 ; (-17.759)
+(|T/frag| (|PP/p1| (|P1/p_npl| |How_RGQ| (|AP/a1| (|A1/a| |tall_JJ|))))
+ (|S/sai-be1/--| |be+s_VBZ| (|NP/n1_name/-| (|N1/n| |Mt._NP1|))
+  (|NP/n1_name/-| (|N1/n| |Everest_NP1|)))
+ ?_?)
+
+("What" "is" "the" "capital" "of" "Congo" "?") 1 ; (-8.088)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |What_DDQ|
+  (|S/sai-be2/--| |be+s_VBZ|
+   (|NP/det_n| |the_AT| (|N1/n| |capital_NN1|))
+   (|PP/p1|
+    (|P1/p_np| |of_IO| (|NP/n1_name/-| (|N1/n| |Congo_NP1|))))))
+ ?_?)
+
+("What" "is" "the" "capital" "of" "Italy" "?") 1 ; (-8.088)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |What_DDQ|
+  (|S/sai-be2/--| |be+s_VBZ|
+   (|NP/det_n| |the_AT| (|N1/n| |capital_NN1|))
+   (|PP/p1|
+    (|P1/p_np| |of_IO| (|NP/n1_name/-| (|N1/n| |Italy_NP1|))))))
+ ?_?)
+
+("What" "is" "the" "capital" "of" "Sri" "Lanka" "?") 1 ; (-9.947)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |What_DDQ|
+  (|S/sai-be2/--| |be+s_VBZ|
+   (|NP/det_n| |the_AT| (|N1/n| |capital_NN1|))
+   (|PP/p1|
+    (|P1/p_np| |of_IO|
+     (|NP/n1_name/-| (|N1/name+| |Sri_NP1| (|N1/n| |Lanka_NP1|)))))))
+ ?_?)
+
+("What" "novel" "inspired" "the" "movie" "BladeRunner" "?") 1 ; (-7.364)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| (|NP/det_n| |What_DDQ| (|N1/n| |novel_NN1|))
+  (|V/np| |inspire+ed_VVD|
+   (|NP/det_n| |the_AT|
+    (|N1/n1_nm| |movie_NN1| (|N1/n| |BladeRunner_NN1|)))))
+ ?_?)
+
+("What" "was" "the" "first" "Gilbert" "and" "Sullivan" "opera" "?") 1 ; (-12.770)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |What_DDQ|
+  (|V/be_np/---| |be+ed_VBDZ|
+   (|NP/det_n| |the_AT|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |first_MD|))
+     (|N1/n1_nm|
+      (|N/cj_int/-| |Gilbert_NP1| (|N/cj_end| |and_CC| |Sullivan_NP1|))
+      (|N1/n| |opera_NN1|))))))
+ ?_?)
+
+("What" "was" "the" "name" "of" "the" "computer" "in" "\"" "2001" ":" "A" "Space" "Odyssey" "\"" "?") 1 ; (-22.876)
+(|T/txt-sc1/-+-|
+ (|T/leta_cl|
+  (|S/whnp_vp| |What_DDQ|
+   (|VP/vp_pp|
+    (|V/be_np/---| |be+ed_VBDZ|
+     (|NP/det_n| |the_AT|
+      (|N1/n_of| |name_NN1|
+       (|PP/p1|
+        (|P1/p_np| |of_IO|
+         (|NP/det_n| |the_AT| (|N1/n| |computer_NN1|)))))))
+    (|PP/p1|
+     (|P1/p_np| |in_II|
+      (|NP/num|
+       (|N1/ap_n1/-| (|AP/a1| (|A1/a| |"_JJ|)) (|N1/n| 2001_MC)))))))
+  (|Tacl/colon1| |:_:|
+   (|S/np_vp|
+    (|NP/n2_name| (|NP/det_n| A_AT1 (|N1/n| |Space_NN1|))
+     (|NP/n1_name/-| (|N1/n| |Odyssey_NP1|)))
+    (V/0 |"_VVD|))))
+ ?_?)
+
+("When" "was" "Queen" "Victoria" "born" "?") 1 ; (-13.214)
+(|T/frag| |When_CS|
+ (|S/sai/-| |be+ed_VBDZ|
+  (|S/np_vp|
+   (|NP/n1_name/-| (|N1/name+| |Queen_NP1| (|N1/n| |Victoria_NP1|)))
+   (V/0 |bear+en_VVN|)))
+ ?_?)
+
+("When" "was" "the" "battle" "of" "the" "Somme" "fought" "?") 1 ; (-12.179)
+(|T/frag| |When_CS|
+ (|S/sai-be2/--| |be+ed_VBDZ|
+  (|NP/det_n| |the_AT| (|N1/n| |battle_NN1|))
+  (|PP/p1|
+   (|P1/p_np| |of_IO|
+    (|NP/det_n| |the_AT|
+     (|N1/n_pprt| |Somme_NP1| (V/0 |fight+ed_VVN|))))))
+ ?_?)
+
+("Where" "did" "the" "Battle" "of" "the" "Bulge" "take" "place" "?") 1 ; (-12.531)
+(|T/txt-sc1/-+-|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |Where_RRQ|))
+  (|S/sai/-| |do+ed_VDD|
+   (|S/np_vp|
+    (|NP/det_n| |the_AT|
+     (|N1/n_of| |Battle_NN1|
+      (|PP/p1|
+       (|P1/p_np| |of_IO|
+        (|NP/det_n| |the_AT| (|N1/n| |Bulge_NN1|))))))
+    (|V/n1| |take_VV0| (|N1/n| |place_NN1|)))))
+ ?_?)
+
+("Where" "was" "Lincoln" "assassinated" "?") 1 ; (-10.142)
+(|T/txt-sc1/-+-|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |Where_RRQ|))
+  (|S/sai/-| |be+ed_VBDZ|
+   (|S/np_vp| (|NP/n1_name/-| (|N1/n| |Lincoln_NP1|))
+    (V/0 |assassinate+ed_VVD|))))
+ ?_?)
+
+("When" "was" "the" "women" "'s" "suffrage" "amendment" "ratified" "?") 1 ; (-13.750)
+(|T/frag| |When_CS|
+ (|S/sai/-| |be+ed_VBDZ|
+  (|S/np_vp|
+   (|NP/poss_n1|
+    (|NP/n2_poss| (|NP/det_n| |the_AT| (|N1/n| |woman+s_NN2|)) |'s+_$|)
+    (|N1/n1_nm| |suffrage_NN1| (|N1/n| |amendment_NN1|)))
+   (V/0 |ratify+ed_VVN|)))
+ ?_?)
+
+("Where" "is" "Qatar" "?") 1 ; (-11.643)
+(|T/frag| |Where_RRQ| |be+s_VBZ| (|NP/n1_name/-| (|N1/n| |Qatar_NP1|))
+ ?_?)
+
+("Where" "is" "South" "Bend" "?") 1 ; (-11.065)
+(|T/txt-sc1/-+-|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |Where_RRQ|))
+  (|S/sai/-| |be+s_VBZ|
+   (|S/np_vp| (|NP/n1_name/-| (|N1/n| |South_NP1|)) (V/0 |Bend_VV0|))))
+ ?_?)
+
+("Where" "was" "Harry" "Truman" "born" "?") 1 ; (-12.806)
+(|T/txt-sc1/-+-|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |Where_RRQ|))
+  (|S/sai/-| |be+ed_VBDZ|
+   (|S/np_vp|
+    (|NP/n1_name/-| (|N1/name+| |Harry_NP1| (|N1/n| |Truman_NP1|)))
+    (V/0 |bear+en_VVN|))))
+ ?_?)
+
+("Who" "was" "Secretary" "of" "State" "during" "the" "Nixon" "administration" "?") 1 ; (-19.520)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |Who_PNQS|
+  (|VP/vp_pp|
+   (|V/be_n1/--| |be+ed_VBDZ|
+    (|N1/n_of| |Secretary_NN1|
+     (|PP/p1| (|P1/p_np| |of_IO| (|NP/place| (|N1/n| |State_NNL1|))))))
+   (|PP/p1|
+    (|P1/p_np| |during_II|
+     (|NP/name_n1| (|NP/det_n| |the_AT| (|N1/n| |Nixon_NP1|))
+      (|N1/n| |administration_NN1|))))))
+ ?_?)
+
+("Who" "was" "the" "16th" "President" "of" "the" "United" "States" "?") 1 ; (-9.042)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |Who_PNQS|
+  (|S/sai-be2/--| |be+ed_VBDZ|
+   (|NP/det_n| |the_AT|
+    (|N1/ap_n1/-| (|AP/a1| (|A1/a| |16th_MD|))
+     (|N1/n| |President_NNS1|)))
+   (|PP/p1|
+    (|P1/p_np| |of_IO|
+     (|NP/det_n| |the_AT|
+      (|N1/ap_n1/-| (|AP/a1| (|A1/a| |United_JJ|))
+       (|N1/n| |State+s_NN2|)))))))
+ ?_?)
+
+("Who" "wrote" "\"" "The" "Pines" "of" "Rome" "\"" "?") 1 ; (-13.023)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |Who_PNQS|
+  (|VP/vp_adv|
+   (|V/ing| |write+ed_VVD|
+    (|V/np_ppof| |"_VVG| (|NP/det_n| |The_AT| (|N1/n| |Pine+s_NN2|))
+     (|PP/p1|
+      (|P1/p_np| |of_IO| (|NP/n1_name/-| (|N1/n| |Rome_NP1|))))))
+   (|AP/a1| (|A1/a| |"_RR|))))
+ ?_?)
+
+("Who" "wrote" "\"" "Dubliners" "\"" "?") 1 ; (-10.676)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |Who_PNQS|
+  (|V/s| |write+ed_VVD|
+   (|S/np_vp|
+    (|NP/n1_name/-|
+     (|N1/ap_n1/-| (|AP/a1| (|A1/a| |"_JJ|)) (|N1/n| |Dubliners_NP1|)))
+    (V/0 |"_VVD|))))
+ ?_?)
+
+("Who" "wrote" "\"" "Hamlet" "\"" "?") 1 ; (-10.691)
+(|T/txt-sc1/-+-|
+ (|S/whnp_vp| |Who_PNQS|
+  (|V/s| |write+ed_VVD|
+   (|S/np_vp|
+    (|NP/n1_name/-|
+     (|N1/ap_n1/-| (|AP/a1| (|A1/a| |"_JJ|)) (|N1/n| |Hamlet_NP1|)))
+    (V/0 |"_VVD|))))
+ ?_?)
+
+("What" "did" "Richard" "Feynman" "say" "upon" "hearing" "he" "would" "receive" "the" "Nobel" "Prize" "in" "Physics" "?") 1 ; (-20.090)
+(|T/txt-sc1/-+-|
+ (|S/whnp_s| |What_DDQ|
+  (|S/sai/-| |do+ed_VDD|
+   (|S/np_vp|
+    (|NP/n1_name/-| (|N1/name+| |Richard_NP1| (|N1/n| |Feynman_NP1|)))
+    (|V/pp| |say_VV0|
+     (|PP/p1|
+      (|P1/p_n1| |upon_II|
+       (|N1/n_s1| |hearing_NN1|
+        (|S/np_vp| |he_PPHS1|
+         (|VP/vp_pp|
+          (|V/modal_bse/-| |would_VM|
+           (|V/np_n1| |receive_VV0|
+            (|NP/det_n| |the_AT| (|N1/n| |Nobel_NP1|))
+            (|N1/n| |Prize_NN1|)))
+          (|PP/p1| (|P1/p_n1| |in_II| (|N1/n| |Physics_NN1|))))))))))))
+ ?_?)
+
+("How" "did" "Socrates" "die" "?") 1 ; (-10.345)
+(|T/txt-sc1/-+-|
+ (|S/whpp| (|PP/p1| (|P1/pwh| |How_RRQ|))
+  (|S/sai/-| |do+ed_VDD|
+   (|S/np_vp| (|NP/n1_name/-| (|N1/n| |Socrates_NP1|))
+    (V/0 |die_VV0|))))
+ ?_?)
+
+("How" "tall" "is" "the" "Matterhorn" "?") 1 ; (-9.076)
+(|T/frag| (|PP/p1| (|P1/p_npl| |How_RGQ| (|AP/a1| (|A1/a| |tall_JJ|))))
+ |be+s_VBZ| (|NP/det_n| |the_AT| (|N1/n| |Matterhorn_NP1|)) ?_?)
+
+("How" "tall" "is" "the" "replica" "of" "the" "Matterhorn" "at" "Disneyland" "?") 1 ; (-14.492)
+(|T/frag| (|PP/p1| (|P1/p_npl| |How_RGQ| (|AP/a1| (|A1/a| |tall_JJ|))))
+ (|S/sai-be2/--| |be+s_VBZ|
+  (|NP/det_n| |the_AT| (|N1/n| |replica_NN1|))
+  (|PP/p1|
+   (|P1/p_np| |of_IO|
+    (|NP/det_n| |the_AT|
+     (|N1/n1_pp1| (|N1/n| |Matterhorn_NP1|)
+      (|PP/p1|
+       (|P1/p_np| |at_II|
+        (|NP/n1_name/-| (|N1/n| |Disneyland_NP1|)))))))))
+ ?_?)
+
+() 0 ; ()
+
+(X)
+
+() 0 ; ()
+
+(X)
+
+() 0 ; ()
+
+(X)
+
+() 0 ; ()
+
+(X)
+
+() 0 ; ()
+
+(X)
+
+() 0 ; ()
+
+(X)
+
+() 0 ; ()
+
+(X)
+
+() 0 ; ()
+
+(X)
+
+() 0 ; ()
+
+(X)
+
+() 0 ; ()
+
+(X)
+
