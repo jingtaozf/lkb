@@ -270,3 +270,12 @@
   `(progn
      ,@body
      (terpri)))
+
+;;; should not be called in tty version anyway
+;;; but added to avoid undefined function warnings
+
+(defun show-message-window (message)
+  (declare (ignore message))
+  (error "Should not be called in tty version"))
+
+
