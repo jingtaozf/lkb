@@ -23,6 +23,18 @@
 (defparameter *pvm-debug-p* nil)
 (defparameter *pvm-pending-events* nil)
 
+(defun initialize-pvm ()
+  (setf *pvm*
+    (format
+     nil "exec ~a"
+     (namestring (make-pathname :directory (pathname-directory make::bin-dir)
+                                :name "pvm"))))
+  (setf *pvmd*
+    (format
+     nil "exec ~a"
+     (namestring (make-pathname :directory (pathname-directory make::bin-dir)
+                                :name "pvmd3")))))
+
 (defstruct cpu 
   host spawn options 
   architecture class task threshold name grammar template
