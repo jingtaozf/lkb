@@ -49,5 +49,5 @@ sing-noun &
 const-pump :=
 word &
 [ ORTH #1,
-  ARGS < const-lxm  & [ ORTH #1 ] > ].
+  ARGS < all-const-lxm  & [ ORTH #1 ] > ].
 

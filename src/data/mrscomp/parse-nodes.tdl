@@ -15,7 +15,7 @@ v-label := label &
   LABEL-NAME "V" ].
 
 dp-label := label & 
-[ HEAD det, SPR <>, SPEC <>, COMPS <>,
+[ HEAD det, SPR <>, COMPS <>,
   LABEL-NAME "DP" ].
 
 n-label := label & 

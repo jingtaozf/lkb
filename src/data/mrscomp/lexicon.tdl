@@ -206,6 +206,9 @@ or := conj-lxm &
   SEM.HOOK.KEYPRED "or_rel" ].
 
 ;;; complementizers
+;;; the no_rel here is a placeholder
+;;; these really should be semantically empty
+
 
 that_2 := comp-lxm &
 [ ORTH.LIST.FIRST "that",
