@@ -1674,13 +1674,21 @@ VAR -> VARNAME[:CONSTNAME]*
 ;;; purpose, but then i would rather build them on the new MRS transfer code,
 ;;; and for now i hesitate to deploy that in the generator.    (12-dec-03; oe)
 ;;;
-(defparameter %mrs-extras-defaults% 
+
+(defparameter %mrs-extras-defaults% nil)
+
+;;; commented out the settings because they are grammar-specific and are
+;;; set in the ERG mrsglobals file, which seems like the right place.
+;;; AAC Apr 2004
+
+#|
   (list
    #-:null
    (list (vsym "E") 
          (cons (vsym "E.ASPECT.PROGR") (vsym "-"))
          (cons (vsym "E.ASPECT.PERF") (vsym "-"))
-         (cons (vsym "E.TENSE") (vsym "NO_TENSE")))))
+	 (cons (vsym "E.TENSE") (vsym "NO_TENSE")))))
+|#
 
 (defun fill-mrs (mrs &optional (defaults %mrs-extras-defaults%))
   (when defaults

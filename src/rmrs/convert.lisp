@@ -345,45 +345,98 @@ Errors won't be devastating anyway ...
 
 ;;; RMRS to MRS conversion
 
+;;; Currently this is for purposes of generation.  The conversion
+;;; is done with respect to a SEM-I for some grammar, so as the MRS
+;;; is constructed, it is checked for well-formedness.  
+;;; Because it is likely that _all_ errors will be required,
+;;; errors are accumulated by the various functions
+
+(defun report-rmrs-conversion-problems (problems)
+  (dolist (problem problems)
+    (format t "~%~A" problem)))
+    
+
 ;;; (convert-rmrs-to-mrs *rmrs-debug*)
 
-(defun convert-rmrs-to-mrs (rmrs)
-;  (setf *rmrs-debug* rmrs)
-  (make-psoa  :top-h (rmrs-top-h rmrs)
-	      :h-cons (rmrs-h-cons rmrs)
-	      :liszt (convert-rmrs-liszt-to-mrs (rmrs-liszt rmrs)
-						(rmrs-rmrs-args rmrs))))
+(defstruct semi-entry 
+  stringp fvpairs)
+  
 
-(defun convert-rmrs-liszt-to-mrs (eps rargs) 
-  ;;; FIX - in-groups
-  (loop for ep in eps
-      collect
-	(convert-rmrs-ep-to-mrs 
-	 ep
-	 (loop for rarg in rargs
-	     when (eql-var-id (rmrs-arg-label rarg) (rel-handel ep))
-	     collect rarg))))
+(defun convert-rmrs-to-mrs (rmrs)
+  (let ((top-h (rmrs-top-h rmrs))
+	(h-cons (rmrs-h-cons rmrs)))
+    (multiple-value-bind
+	(liszt problems) 
+	 (convert-rmrs-liszt-to-mrs (rmrs-liszt rmrs)
+				    (rmrs-rmrs-args rmrs))
+      (if problems
+	  (report-rmrs-conversion-problems problems)
+	(make-psoa  :top-h top-h 
+		    :h-cons h-cons
+		    :liszt liszt)))))
+		
+(defun convert-rmrs-liszt-to-mrs (eps rargs)
+    ;;; FIX - in-groups
+  (let* ((problems nil)
+	 (new-eps
+	  (loop for ep in eps
+	      collect
+		(multiple-value-bind (new-ep ep-problems)
+		    (convert-rmrs-ep-to-mrs 
+		     ep
+		     (loop for rarg in rargs
+			 when (eql-var-id (rmrs-arg-label rarg) (rel-handel ep))
+			 collect rarg))
+		  (setf problems (append problems ep-problems))
+		  new-ep))))
+    (values new-eps problems)))
+	    
 
 (defun convert-rmrs-ep-to-mrs (ep rargs)
-  (make-char-rel
-   :handel (rel-handel ep)
-   :parameter-strings (rel-parameter-strings ep)
-;   :extra (rel-extra ep)
-   :pred (convert-rmrs-pred-to-mrs (rel-pred ep))
-   :flist (cons (convert-rmrs-main-arg (car (rel-flist ep)))
-		(loop for rarg in rargs
-		      collect
-		      (deparsonify rarg)))
-   :cfrom (char-rel-cfrom ep)
-   :cto (char-rel-cto ep)))
+  (let* ((problems nil)
+	 (rmrs-pred (rel-pred ep))
+	 (semi-entries (find-semi-entries rmrs-pred)))
+    (if semi-entries
+	(let*
+	    ((string-p (cond ((every #'(lambda (semi-entry)
+					 (semi-entry-stringp semi-entry))
+				     semi-entries)
+			      t)
+			     ((every #'(lambda (semi-entry)
+					 (not (semi-entry-stringp semi-entry)))
+				     semi-entries)
+			      nil)
+			     (t (push 
+				 (format nil "~A ambiguous between string and non-string" rmrs-pred)
+				 problems)
+				nil)))
+	     (new-ep
+	      (make-char-rel
+	       :handel (rel-handel ep)
+	       :parameter-strings (rel-parameter-strings ep)
+     ;;;   :extra (rel-extra ep)  FIX
+	       :pred (convert-rmrs-pred-to-mrs rmrs-pred string-p)
+	       :flist (cons (convert-rmrs-main-arg (car (rel-flist ep))
+						   rmrs-pred semi-entries)
+			    (loop for rarg in rargs
+				collect
+				  (deparsonify rarg semi-entries)))
+	       :cfrom (char-rel-cfrom ep)
+	       :cto (char-rel-cto ep))))
+	  (values new-ep problems))
+      (values nil
+	      (list (format nil "No entry found in SEM-I for ~A" 
+			    rmrs-pred))))))
 
 
-(defun convert-rmrs-main-arg (var)
+(defun convert-rmrs-main-arg (var pred semi-entries)
   ;;; FIX - ARG0 assumption
-  (make-fvpair :feature (vsym "ARG0")
+  (make-fvpair :feature (cond ((equal pred "prpstn_m_rel")
+			       (vsym "MARG"))
+			      (t (vsym "ARG0")))
 	       :value (convert-rmrs-to-mrs-variable var)))
 
-(defun deparsonify (rarg)
+(defun deparsonify (rarg semi-entries)
   (make-fvpair :feature (vsym (rmrs-arg-arg-type rarg))
 	       :value 
 	       (let ((val (rmrs-arg-val rarg)))
@@ -396,7 +449,12 @@ Errors won't be devastating anyway ...
   (make-var :id (var-id var)
 	    :type (var-type var)))
 
-(defun convert-rmrs-pred-to-mrs (pred)
+(defun convert-rmrs-pred-to-mrs (pred string-p)
+  ;;; This encodes the following assumptions:
+  ;;; all grampreds are types in the grammar
+  ;;; realpreds may or may not be types - they can be looked
+  ;;; up in the object level SEM-I and converted to symbols
+  ;;; as needed
   (if (realpred-p pred)
       (let ((pred-string
 	     (concatenate 'string
@@ -405,15 +463,42 @@ Errors won't be devastating anyway ...
 			       (realpred-pos pred)
 			       (realpred-sense pred))
 			      "_rel")))
-	(if (semi-type-pred-p pred)
-	    (vsym pred-string)
-	  pred-string))
+	(if string-p 
+	    pred-string
+	  (vsym pred-string)))
     (vsym pred)))
 
-;;; stand ins for SEM-I functionality
+(defun find-semi-entries (pred)
+  ;;; note that if there are multiple entries in the sem-i
+  ;;; e.g. for open_V where the semi has open_V_1 and open_V_cause
+  ;;; then this returns multiple results
+  (let ((semi-results  (if (realpred-p pred)
+			   (get-info-from-semi
+			    (realpred-lemma pred)
+			    :pos     (realpred-pos pred)
+			    :id     (realpred-sense pred))
+			 (get-info-from-meta-semi pred))))
+	(loop for entry in semi-results
+	    collect
+	      (make-semi-entry :stringp (car entry)
+			       :fvpairs (cdr entry)))))
 
-(defun semi-type-pred-p (pred)
-  (string-equal (realpred-pos pred) "q"))
+;;; meta-level semi
 
-;;; FIX - SEM-I needs to return something if given a `supertype' e.g. 
-;;; open V
+(defvar *meta-semi* nil)
+
+(defstruct meta-semi-entry
+  pred)
+
+(defun get-info-from-meta-semi (pred)
+  (find pred *meta-semi* :test #'equal :key #'meta-semi-pred))
+
+(defun make-meta-level-semi nil
+  (setf *meta-semi* nil)
+  (loop for type in (lkb::retrieve-descendants 'lkb::predsort)
+      unless (or (lkb::type-daughters type)
+		 (let ((name (lkb::type-name type)))
+		   (char-equal (elt (string name) 0) #\_)))
+      do
+	(push (make-meta-semi-entry :pred (lkb::type-name type))
+	      *meta-semi*)))

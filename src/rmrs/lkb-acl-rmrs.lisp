@@ -314,7 +314,8 @@
     (when mrs
       ;;; (mrs-quick-check-lex-retrieval mrs)
       ;;; FIX
-      (let ((lkb::*bypass-equality-check* t))
+      (let ((mrs::%mrs-extras-defaults% nil)
+	    (lkb::*bypass-equality-check* t))
 	(generate-from-mrs mrs)
 	)
       (show-gen-result))))
