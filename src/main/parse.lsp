@@ -1014,7 +1014,7 @@
                    (let ((n (length *parse-record*)))
                      (format ostream "  ~R parse~:[s~;~] found~%" n (= n 1))
                      (finish-output ostream)))))
-             (for lex-id in (expanded-lex-ids)
+             (for lex-id in (collect-expanded-lex-ids *lexicon*)
                   do
                   (pushnew lex-id *lex-ids-used*))
              (clear-expanded-lex)       ; try and avoid image increasing

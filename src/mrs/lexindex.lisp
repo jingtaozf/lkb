@@ -10,37 +10,24 @@
  
 
 (defun index-lexicon nil
-  (check-for-open-psorts-stream)
   (mrs::clear-semantic-indices)
    (setf *batch-mode* t)
    (let ((ids nil))
-     (maphash 
-      #'(lambda (name val)
-          (declare (ignore name))
-          (for id in val
-               do
-               (pushnew id ids)))
-      ; because of multiple lexical entries,
-      ; an id may be indexed by multiple orthographies
-      *lexical-entries*)
-     (for id in ids
-          do
-          (let* ((hash-table-entry (gethash id *psorts*))
-                 (file-pointer (cadr hash-table-entry)))
-            (when (integerp file-pointer)
-              (let* 
-                  ((entry 
-                    (cdr (read-psort-entry-from-file 
-                          file-pointer id)))
-                   (lex-id (lex-or-psort-id entry)))
-                (expand-psort-entry entry)
-                (let ((new-fs (lex-or-psort-full-fs entry)))
-                  (if new-fs
-                      (mrs::extract-lexical-relations entry)
-                    (format t "~%No feature structure for ~A" lex-id))))
-              (setf (cddr (gethash id *psorts*)) nil)))) ; clear structure
+      ;; because of multiple lexical entries, an id may be indexed by
+      ;; multiple orthographies
+     (dolist (word (lex-words *lexicon*))
+       (dolist (inst (lookup-word *lexicon* word))
+	 (pushnew inst ids :test #'eq)))
+     (dolist (id ids)
+       (let* ((entry (read-psort *lexicon* id))
+	      (lex-id (lex-or-psort-id entry)))
+	 (expand-psort-entry entry)
+	 (let ((new-fs (lex-or-psort-full-fs entry)))
+	   (if new-fs
+	       (mrs::extract-lexical-relations entry)
+	     (format t "~%No feature structure for ~A" lex-id))))
+       (unexpand-psort *lexicon* id))
      (setf *batch-mode* nil)))
-
   
 (defun index-lexical-rules nil
   (mrs::clear-lrule-globals)

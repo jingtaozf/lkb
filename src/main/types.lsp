@@ -288,22 +288,22 @@
 |#
 
 (defun greatest-common-subtype (type1 type2)
-   ;; implemented as a memo function. In practice we won't see anything like
-   ;; all possible combinations of arguments so best not to attempt to
-   ;; pre-compute the cache contents
-   ;;
-   ;; we expect both args to be lisp atoms, but either or both could be
-   ;; strings/string type, or instance types. The latter are cached, but not
-   ;; the former
-   (cond 
-      ((eq type1 type2) type1)
-      ((arrayp type1) ; a string?
-         (when (or (equal type1 type2) (string-type-p type2))
-            type1))
-      ((arrayp type2) 
-         (when (string-type-p type1) type2))
-      (t
-         (cached-greatest-common-subtype type1 type2 nil))))
+  ;; implemented as a memo function. In practice we won't see anything
+  ;; like all possible combinations of arguments so best not to
+  ;; attempt to pre-compute the cache contents
+  ;;
+  ;; we expect both args to be lisp atoms, but either or both could be
+  ;; strings/string type, or instance types. The latter are cached,
+  ;; but not the former
+  (cond 
+   ((eq type1 type2) type1)
+   ((arrayp type1)			; a string?
+    (when (or (equal type1 type2) (string-type-p type2))
+      type1))
+   ((arrayp type2) 
+    (when (string-type-p type1) type2))
+   (t
+    (cached-greatest-common-subtype type1 type2 nil))))
 
 
 (defun cached-greatest-common-subtype (type1 type2 type1-atomic-p)
@@ -324,8 +324,8 @@
     ;; initial size - we really need speed here
     (setq *type-cache*
       (make-hash-table :test #'eq :size (* (hash-table-count *types*) 2))))
-  ;; many subtype results are same as type2 - so we could perhaps use a
-  ;; more compact storage representation for these cases
+  ;; many subtype results are same as type2 - so we could perhaps use
+  ;; a more compact storage representation for these cases
   (let*
       ((type1-index (if type1-atomic-p (car type1) type1))
        (entry (gethash type1-index *type-cache*))
@@ -340,17 +340,18 @@
 	(when (and subtype type1-atomic-p) (setq subtype (list subtype)))
 	(typecase entry
 	  ((or cons null)		; entry is an alist
-	   (if (> (length entry) 7)
-	       ;; convert alist into a hash table since it's got bigger
-	       ;; than an average empirical break-even point for gethash vs
-	       ;; assoc
-	       (let ((new (make-hash-table :test #'eq :size (* (length entry) 2))))
+	   (if (> (length entry) 10000)
+	       ;; convert alist into a hash table since it's got
+	       ;; bigger than an average empirical break-even point
+	       ;; for gethash vs assoc
+	       (let ((new (make-hash-table :test #'eq 
+					   :size (* (length entry) 2))))
 		 (dolist (item entry)
 		   (setf (gethash (car item) new) (cdr item)))
 		 (setf (gethash type2 new) (cons subtype constraintp))
 		 (setf (gethash type1-index *type-cache*) new))
-	     ;; add to end of list since it's likely to be less frequent
-	     ;; (maybe)
+	     ;; add to end of list since it's likely to be less
+	     ;; frequent (maybe)
 	     (setf (gethash type1-index *type-cache*)
 	       (nconc entry
 		      (list (cons type2 (cons subtype constraintp)))))))
@@ -511,6 +512,8 @@
 (defun compress-types nil
   (maphash #'(lambda (name type)
 	       (declare (ignore name))
+	       (when (type-tdfs type)
+		 (compress-dag (tdfs-indef (type-tdfs type))))
 	       (compress-dag (type-constraint type))
 	       (compress-dag (type-local-constraint type)))
 	   *types*))
@@ -523,3 +526,23 @@
 		 (setf (type-tdfs type) nil)))
 	   *types*))
 
+(defun used-types (type)
+  (let ((used (mapcar #'(lambda (x) (u-value-types (unification-rhs x)))
+		      (type-constraint-spec type))))
+    (when used
+      (reduce #'union used))))
+
+(defun purge-constraints nil
+  (compress-types)
+  (let* ((leaves (mapcar #'(lambda (x) (gethash x *types*)) *leaf-types*))
+	 (parents 
+	  (union (reduce #'union (mapcar #'type-real-parents leaves))
+		 (reduce #'union (mapcar #'type-template-parents leaves))))
+	 (referred
+	  (reduce #'union (mapcar #'used-types leaves)))
+	 (save (union parents referred)))
+    (maphash #'(lambda (name type)
+		 (unless (member (symbol-name name) save)
+		   ;; (setf (type-constraint type) nil)
+		   (setf (type-tdfs type) nil)))
+	     *types*)))

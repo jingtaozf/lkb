@@ -186,7 +186,7 @@
     (clear-type-load-files)
     (clear-lex-load-files)
     (clear-rule-load-files)
-    (clear-lex t)                ;; doesn't delete temporary files
+    (clear-lex *lexicon* t)                ;; doesn't delete temporary files
     (reset-morph-var)
     (clear-grammar)              ;; should clear everything that might not be
     (clear-lex-rules)            ;; overridden, this should do for now    

@@ -826,19 +826,19 @@
 ;;; Do strong typing and well-formedness check
 
 (defun strongly-type-constraints nil
-   ;; c. check for well-formedness ...
-   (let ((ok t))
-      (unmark-type-table)
-      (for type-name in *type-names*
-           do
-           (unless (leaf-type-p (get-type-entry type-name))
-             (unless 
-                 (nth-value 1 (wf-constraint-of type-name))
- ;;; i.e. just looks at boolean ok/not-ok
-                  (setf ok nil))))
-         (unmark-type-table)
-; !!! can't create cyclic dags so don't check for them
-         ok))
+  ;; c. check for well-formedness ...
+  (let ((ok t))
+    (unmark-type-table)
+    (for type-name in *type-names*
+	 do
+	 (unless (leaf-type-p (get-type-entry type-name))
+	   (unless 
+	       (nth-value 1 (wf-constraint-of type-name))
+	     ;; i.e. just looks at boolean ok/not-ok
+	     (setf ok nil))))
+    (unmark-type-table)
+    ;; !!! can't create cyclic dags so don't check for them
+    ok))
 
 (defun wf-constraint-of (type-name) 
   ;; may need to be copied completely before use

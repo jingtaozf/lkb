@@ -146,7 +146,6 @@
       (error "~%Patching currently only available for TDL syntax"))
     (clear-types-for-patching-constraints)
     (read-tdl-patch-files-aux *type-file-list*)
-    (check-for-open-psorts-stream)
     (format t "~%Reload complete")))
 
 

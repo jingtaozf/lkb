@@ -459,40 +459,38 @@
          (coerce (string-upcase string) 'list))))
 
 (defun remove-morphemes (word)
-   (let ((definites-list (copy-list '(nil))))
-      (do ((current-combinations
-               (list (list word))
-               (append
-                  (remove-prefix current-combinations)
-                  (remove-infix current-combinations)
-                  (remove-suffix current-combinations))))
-         ((null current-combinations) (cdr definites-list))
-         (nconc definites-list
-            (for morphological-possibility in current-combinations
-               when 
-               (or
-                  (equal morphological-possibility 
-                     (remove-duplicates morphological-possibility 
-                        :test #'equal))
-                  (or
-                     (setf current-combinations 
-                        (remove morphological-possibility 
-                           current-combinations :test #'equal)) 
-                     nil))
-               filter
-               (let* 
-                  ((root 
+  (let ((definites-list (copy-list '(nil))))
+    (do ((current-combinations
+	  (list (list word))
+	  (append
+	   (remove-prefix current-combinations)
+	   (remove-infix current-combinations)
+	   (remove-suffix current-combinations))))
+	((null current-combinations) (cdr definites-list))
+      (nconc definites-list
+	     (for morphological-possibility in current-combinations
+		  when 
+		  (or
+		   (equal morphological-possibility 
+			  (remove-duplicates morphological-possibility 
+					     :test #'equal))
+		   (or
+		    (setf current-combinations 
+		      (remove morphological-possibility 
+			      current-combinations :test #'equal)) 
+		    nil))
+		  filter
+		  (let* 
+		      ((root 
                         (string-downcase
-                           (coerce 
-                              (mapcar #'character 
-                                 (car morphological-possibility)) 
-                              'string)))
-                     (lexical 
-                        (gethash (string-upcase root) 
-                           *lexical-entries*)))
-                  (and lexical
-                     (cons root 
-                        (cdr morphological-possibility)))))))))
+			 (coerce 
+			  (mapcar #'character 
+				  (car morphological-possibility)) 
+			  'string)))
+		       (lexical (lookup-word *lexicon* (string-upcase root))))
+		    (and lexical
+			 (cons root 
+			       (cdr morphological-possibility)))))))))
 
 (defun remove-suffix (input-words)
    (for entry in input-words

@@ -180,7 +180,7 @@
    (let ((possible-name
             (ask-for-lisp-movable "Current Interaction" 
                `(("Lex-id?" . ,(or *last-lex-id*
-                        (car (collect-psort-ids)))))
+                        (car (collect-psort-ids *lexicon*)))))
                          150)))
       (when possible-name
          (let* ((lex (car possible-name))
@@ -195,7 +195,7 @@
    (let ((possible-name
             (ask-for-lisp-movable "Current Interaction" 
                `(("Psort-id?" . ,(or *last-lex-id*
-                        (car (collect-psort-ids)))))
+                        (car (collect-psort-ids *lexicon*)))))
                          150)))
       (when possible-name
          (let* ((lex (car possible-name))
@@ -243,7 +243,7 @@
             (ask-for-strings-movable "Current Interaction" 
                `(("word" . 
                      ,(or *last-word* 
-                        (car (collect-defined-word-strings))))) 150)))
+                        (car (lex-words *lexicon*))))) 150)))
       (when possible-name
          (let* ((lex (car possible-name))
                (lex-string

@@ -472,85 +472,86 @@
     (when new-arcs1 (setf (dag-comp-arcs dag1) new-arcs1))))
 
 
-;;; similar to constraint-of
-;;; return the type's constraint, a 'fresh' copy if we've previously returned it
-;;; during this unification attempt, otherwise as is. Copies are cached and
-;;; we cycle through them, creating new ones if needed
-;;; we want normal 'safe' dag behaviour, i.e. when we're parsing/generating we
-;;; don't need the copy itself to be 'safe' wrt copying. In all other cases we want
+;;; similar to constraint-of return the type's constraint, a 'fresh'
+;;; copy if we've previously returned it during this unification
+;;; attempt, otherwise as is. Copies are cached and we cycle through
+;;; them, creating new ones if needed we want normal 'safe' dag
+;;; behaviour, i.e. when we're parsing/generating we don't need the
+;;; copy itself to be 'safe' wrt copying. In all other cases we want
 ;;; it safe
 
 (defun may-copy-constraint-of (type-name)
-   (let* ((type-parent-name (instance-type-parent type-name))
-          (type-record (get-type-entry (or type-parent-name type-name)))
-          (constraint (type-constraint type-record))
-          (cache (type-constraint-mark type-record)))
-      (unless (consp cache)
-         (setq cache (list* 0 nil nil)) ; mark, unused, used
-         (setf (type-constraint-mark type-record) cache))
-      (cond
-         ((not (= (car cache) *unify-generation*))
-            ;; (print (list "not copying constraint for" type-name))
-            (setf (car cache) *unify-generation*)
-            (setf (cadr cache)
-               (nconc (cadr cache) (cddr cache))) ; old used copies become ready for use
-            (setf (cddr cache) nil)
-            constraint) ; first return constraint itself
-         ((cadr cache)
-            ;; (print (list "not copying constraint for" type-name))
-            (let ((pre (pop (cadr cache))))
-               (push pre (cddr cache)) ; previously computed copy becomes used
-               pre))
-         (t
-            ;; (print (list "copying constraint for" type-name))
-            (let ((new (copy-dag-completely constraint)))
-               (push new (cddr cache)) ; new copy becomes used
-               new)))))
+  (let* ((type-parent-name (instance-type-parent type-name))
+	 (type-record (get-type-entry (or type-parent-name type-name)))
+	 (constraint (type-constraint type-record))
+	 (cache (type-constraint-mark type-record)))
+    (unless (consp cache)
+      (setq cache (list* 0 nil nil))	; mark, unused, used
+      (setf (type-constraint-mark type-record) cache))
+    (cond
+     ((not (= (car cache) *unify-generation*))
+      ;; (print (list "not copying constraint for" type-name))
+      (setf (car cache) *unify-generation*)
+      (setf (cadr cache)
+	(nconc (cadr cache) (cddr cache))) ; old used copies become ready for use
+      (setf (cddr cache) nil)
+      constraint)			; first return constraint itself
+     ((cadr cache)
+      ;; (print (list "not copying constraint for" type-name))
+      (let ((pre (pop (cadr cache))))
+	(push pre (cddr cache))		; previously computed copy becomes used
+	pre))
+     (t
+      ;; (print (list "copying constraint for" type-name))
+      (let ((new (copy-dag-completely constraint)))
+	(push new (cddr cache))		; new copy becomes used
+	new)))))
 
 
-;;; Greatest common subtype of two type specs - atomic (maybe a disjunction) and/or
-;;; non-atomic
+;;; Greatest common subtype of two type specs - atomic (maybe a
+;;; disjunction) and/or non-atomic
 
 (defun find-gcsubtype (type1 type2)
-   (when (eq type1 type2) (return-from find-gcsubtype type1))
-   ;;#+(and mcl powerpc)(decf cc (CCL::%HEAP-BYTES-ALLOCATED))
-   ;;(multiple-value-prog1
-    (cond
-      ((and (not (type-spec-atomic-p type1)) (not (type-spec-atomic-p type2))) 
-         (greatest-common-subtype type1 type2))
-      ((not (type-spec-atomic-p type1)) (gcssemi type1 type2))
-      ((not (type-spec-atomic-p type2)) (gcssemi type2 type1))
-      ((and (null (cdr type1)) (null (cdr type2)))
-         (let ((res (greatest-common-subtype (car type1) (car type2))))
-            (cond
-               ((listp res) res)
-               ((eq res (car type1)) type1)
-               ((eq res (car type2)) type2)
-               (t (list res)))))
-      (t (gcslists type1 type2)))
-    ;;#+(and mcl powerpc)(incf cc (CCL::%HEAP-BYTES-ALLOCATED)))
-    )
+  (when (eq type1 type2) (return-from find-gcsubtype type1))
+  ;;#+(and mcl powerpc)(decf cc (CCL::%HEAP-BYTES-ALLOCATED))
+  ;;(multiple-value-prog1
+  (cond
+   ((and (not (type-spec-atomic-p type1)) (not (type-spec-atomic-p type2))) 
+    (greatest-common-subtype type1 type2))
+   ((not (type-spec-atomic-p type1)) (gcssemi type1 type2))
+   ((not (type-spec-atomic-p type2)) (gcssemi type2 type1))
+   ((and (null (cdr type1)) (null (cdr type2)))
+    (let ((res (greatest-common-subtype (car type1) (car type2))))
+      (cond
+       ((listp res) res)
+       ((eq res (car type1)) type1)
+       ((eq res (car type2)) type2)
+       (t (list res)))))
+   (t (gcslists type1 type2)))
+  ;;#+(and mcl powerpc)(incf cc (CCL::%HEAP-BYTES-ALLOCATED)))
+  )
 
 
 (defun gcssemi (type tlist)
-   ;; first arg is non-atomic, second is atomic
-   (if (null (cdr tlist))
+  ;; first arg is non-atomic, second is atomic
+  (if (null (cdr tlist))
       (if (and (symbolp type) (symbolp (car tlist)))
-         ;; this result can be cached - a single disjunct and only in first argument
-         ;; We're bypassing greatest-common-subtype here since we don't have strings
-         ;; and we want to cache an atomic type (which is represented as a list) to
-         ;; save consing. There's special-purpose code for this in the caching which
-         ;; we would otherwise not be able to get to
-         (cached-greatest-common-subtype tlist type t)
-         (let ((res (greatest-common-subtype type (car tlist))))
-            (cond
-               ((listp res) res)
-               ((eq res (car tlist)) tlist)
-               (t (list res)))))
-      (let ((res nil))
-         (dolist (t1 tlist res)
-            (let ((gcs (greatest-common-subtype t1 type)))
-               (when gcs (pushnew (if (consp gcs) (car gcs) gcs) res)))))))
+	  ;; this result can be cached - a single disjunct and only in
+	  ;; first argument We're bypassing greatest-common-subtype
+	  ;; here since we don't have strings and we want to cache an
+	  ;; atomic type (which is represented as a list) to save
+	  ;; consing. There's special-purpose code for this in the
+	  ;; caching which we would otherwise not be able to get to
+	  (cached-greatest-common-subtype tlist type t)
+	(let ((res (greatest-common-subtype type (car tlist))))
+	  (cond
+	   ((listp res) res)
+	   ((eq res (car tlist)) tlist)
+	   (t (list res)))))
+    (let ((res nil))
+      (dolist (t1 tlist res)
+	(let ((gcs (greatest-common-subtype t1 type)))
+	  (when gcs (pushnew (if (consp gcs) (car gcs) gcs) res)))))))
 
 (defun gcslists (tlist1 tlist2)
    ;; called with two (atomic) disjunctive values, at least one of which has more

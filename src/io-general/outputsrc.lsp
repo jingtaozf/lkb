@@ -78,7 +78,7 @@
         (for lex-name in (or lex-ids (reverse *ordered-lex-list*))
              do
              (if (> count 100)
-               (progn (clear-expanded-lex)
+               (progn (clear-expanded-lex *lexicon*)
                       (setf count 0))
                (incf count))
              (let ((entry (get-psort-entry lex-name)))

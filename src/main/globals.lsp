@@ -197,3 +197,5 @@
 (defparameter *current-grammar-load-file* nil
   "not user settable - has to be here because it's
    used in lisp specific stuff as well as elsewhere")
+
+(defparameter *lexicon* nil)

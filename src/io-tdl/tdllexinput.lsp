@@ -18,19 +18,16 @@
 
 (defun read-tdl-lex-file-aux (file-name &optional overwrite-p)
   (if overwrite-p 
-    (setf *lex-file-list* (list file-name))
+      (setf *lex-file-list* (list file-name))
     (pushnew file-name *lex-file-list* :test #'equal))
- ;  (reset-cached-lex-entries) ; in constraints.lsp  
-   (when overwrite-p (clear-lex))
-   (check-for-open-psorts-stream)
-   (let ((*readtable*
-            (make-tdl-break-table)))
-      (with-open-file 
-         (istream file-name :direction :input)
-        (format t "~%Reading in lexical entry file ~A" 
-                (pathname-name file-name))
-        (read-tdl-lex-stream istream)))
-   (flush-psorts-stream-output))
+  ;; (reset-cached-lex-entries) ; in constraints.lsp  
+  (when overwrite-p (clear-lex *lexicon*))
+  (let ((*readtable* (make-tdl-break-table)))
+    (with-open-file 
+	(istream file-name :direction :input)
+      (format t "~%Reading in lexical entry file ~A" 
+	      (pathname-name file-name))
+      (read-tdl-lex-stream istream))))
 
 
 (defun read-tdl-lex-stream (istream) 
@@ -111,21 +108,18 @@
 
 (defun read-tdl-psort-file-aux (file-name &optional templates-p)
   (if templates-p
-    (pushnew file-name *template-file-list* :test #'equal)
+      (pushnew file-name *template-file-list* :test #'equal)
     (pushnew file-name *psort-file-list* :test #'equal))
-  (check-for-open-psorts-stream)  
   (when templates-p (setf *category-display-templates* nil))
-   (let ((*readtable*
-          (make-tdl-break-table)))
-     (with-open-file 
-         (istream file-name :direction :input)
-       (format t "~%Reading in ~A file ~A"
-               (cond (templates-p "templates")
-                     (t "psort"))
-               (pathname-name file-name))
-       (read-tdl-psort-stream istream templates-p)))
-   (flush-psorts-stream-output)  
-   (if templates-p (split-up-templates)))
+  (let ((*readtable* (make-tdl-break-table)))
+    (with-open-file 
+	(istream file-name :direction :input)
+      (format t "~%Reading in ~A file ~A"
+	      (cond (templates-p "templates")
+		    (t "psort"))
+	      (pathname-name file-name))
+      (read-tdl-psort-stream istream templates-p)))
+  (if templates-p (split-up-templates)))
 
 (defun read-tdl-psort-stream (istream &optional templates-p) 
    (loop

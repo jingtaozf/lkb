@@ -54,7 +54,7 @@
                   (remove *current-language*
                      *possible-languages*)))
             *current-language*))
-         (overwrite-p (if (lexicon-exists) 
+         (overwrite-p (if (lexicon-loaded-p *lexicon*) 
                           (lkb-y-or-n-p "Overwrite existing lexicon?"))))
       (when file-name
         (if (eql *lkb-system-version* :page)
@@ -103,63 +103,28 @@
 
 
 (defun read-cached-lex-if-available (file-names)
-  (unless (or *psorts-temp-file* *psorts-temp-index-file*)
-    (set-temporary-lexicon-filenames))
-  (setf *syntax-error* nil)
-  (unless (listp file-names) (setf file-names (list file-names)))
+  (unless (listp file-names) 
+    (setf file-names (list file-names)))
+  (setf *lex-file-list* file-names)
   (if (check-load-names file-names 'lexical)
-      (progn
-        (setf *lex-file-list* file-names)
-        (let* ((ok nil)
-               (cache-date
-                (if (and *psorts-temp-file* 
-                         (probe-file *psorts-temp-file*))
-                    (file-write-date *psorts-temp-file*)))
-               (cache-index-date 
-                (if 
-                    (and
-                     *psorts-temp-index-file*
-                     (probe-file *psorts-temp-index-file*))
-                    (file-write-date *psorts-temp-index-file*)))
-               (last-file-date
-                (apply #'max (for file in file-names
-                                  filter
-                                  (file-write-date file)))))
-          (when (and cache-date last-file-date cache-index-date
-                     (> cache-date last-file-date) 
-                     (> cache-index-date last-file-date))
-            (progn (setf ok t)
-                   (format t "~%Reading in cached lexicon")
-                   (clear-lex t)
-                   (handler-case 
-                       (read-psort-index-file)
-                     (error (condition)
-                       (format t "~%Error: ~A~%" condition)
-                       (delete-temporary-lexicon-files)
-                       (setf ok nil)))
-                   (if ok
-                       (format t "~%Cached lexicon read")
-                     (format t "~%Cached lexicon corrupt: reading lexicon source files"))))
-          (unless ok
-            (let ((overwrite-p t))
-              (setf *ordered-lex-list* nil)
-              (for file-name in file-names
-                   do
-                   (if (eql *lkb-system-version* :page)
-                       (read-tdl-lex-file-aux file-name overwrite-p)
-                     (read-lex-file-aux file-name overwrite-p))
-                   (setf overwrite-p nil)))
-            (write-psort-index-file))))
+      (unless (read-cached-lex *lexicon* file-names)
+	(let ((overwrite-p t)
+	      (*syntax-error* nil))
+	  (setf *ordered-lex-list* nil)
+	  (dolist (file-name file-names)
+	    (if (eql *lkb-system-version* :page)
+		(read-tdl-lex-file-aux file-name overwrite-p)
+	      (read-lex-file-aux file-name overwrite-p)))
+	  (store-cached-lex *lexicon*)))
     (cerror "Continue with script" "Lexicon file not found")))
 
-            
+
 (defun read-lex-file-aux (file-name &optional overwrite-p)
   (if overwrite-p 
-    (setf *lex-file-list* (list file-name))
+      (setf *lex-file-list* (list file-name))
     (pushnew file-name *lex-file-list* :test #'equal))
   ;;  (reset-cached-lex-entries) ; in constraints.lsp  
-  (when overwrite-p (clear-lex))
-  (check-for-open-psorts-stream)
+  (when overwrite-p (clear-lex *lexicon*))
   (let ((*readtable* (make-path-notation-break-table)))
     (with-open-file 
         (istream file-name :direction :input)
@@ -170,8 +135,7 @@
           (when (eql next-char 'eof) (return))
           (if (eql next-char #\;) 
               (read-line istream)
-            (read-lex-entry istream))))))
-  (flush-psorts-stream-output))
+            (read-lex-entry istream)))))))
 
 (defun read-lex-entry (istream)
    (let* ((orth (lkb-read istream nil))
@@ -200,24 +164,22 @@
 
 (defun read-psort-file-aux (file-name &optional templates-p)
   (if templates-p
-    (pushnew file-name *template-file-list* :test #'equal)
+      (pushnew file-name *template-file-list* :test #'equal)
     (pushnew file-name *psort-file-list* :test #'equal))
-  (check-for-open-psorts-stream)
   (when templates-p (setf *category-display-templates* nil))
-   (let ((*readtable* (make-path-notation-break-table)))
-      (with-open-file 
-         (istream file-name :direction :input)
-         (format t "~%Reading in ~A file ~A"
-                (cond (templates-p "templates")
-                      (t "psort")) 
-                (pathname-name file-name))
-         (loop
-            (let ((next-char (peek-char t istream nil 'eof)))
-               (when (eql next-char 'eof) (return))
-               (if (eql next-char #\;) 
-                  (read-line istream)
-                  (read-psort-entry istream templates-p))))))
-   (flush-psorts-stream-output))
+  (let ((*readtable* (make-path-notation-break-table)))
+    (with-open-file 
+	(istream file-name :direction :input)
+      (format t "~%Reading in ~A file ~A"
+	      (cond (templates-p "templates")
+		    (t "psort")) 
+	      (pathname-name file-name))
+      (loop
+	(let ((next-char (peek-char t istream nil 'eof)))
+	  (when (eql next-char 'eof) (return))
+	  (if (eql next-char #\;) 
+	      (read-line istream)
+	    (read-psort-entry istream templates-p)))))))
 
 (defun read-psort-entry (istream &optional templates-p)
    (let ((id (lkb-read istream nil)))
