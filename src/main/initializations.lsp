@@ -170,8 +170,15 @@
       #+:lui
       (when (system:getenv "LUI") (lui-initialize))
 
+      ;;
+      ;; in the following, the featurep() test makes sense, since our run-time
+      ;; images, by default, drop the :psql feature after the build.  someone
+      ;; loading from source can then get PSQL in return for the :psql feature,
+      ;; someone running a binary, can set the PSQL environment variable.
+      ;;
       #+:psql
-      (when (system:getenv "PSQL") (psql-initialize))
+      (when (or (featurep :psql) (system:getenv "PSQL"))
+        (psql-initialize))
 
       ;;
       ;; no graphics when in :tty mode
