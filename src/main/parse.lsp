@@ -143,6 +143,10 @@
 
 (defun next-edge (&optional type)
   (when (eq type :unpack)
+    ;;
+    ;; _fix_me_
+    ;; better generalize all of this, maybe encapsulate state variables.
+    ;;                                                       (16-dec-03; oe)
     (when (> (incf %edge-allowance%) 50000)
       (error "edge allowance overrun (~a)" *edge-id*)))
   (when (> *edge-id* (+ *maximum-number-of-edges* %edge-allowance%))
