@@ -86,11 +86,13 @@
                  (symbol-value building-image-p))
       #+:allegro
       (tpl:setq-default *package* (find-package :lkb))
-      (let ((*package* (find-package #+:clim :clim-user #-:clim :lkb)))
-        #+:clim
-        (clim-user::set-up-lkb-interaction)
-        #-:clim
-        (lkb::set-up-lkb-interaction)))))
+      (let ((display (system:getenv "DISPLAY"))
+            (*package* (find-package #+:clim :clim-user #-:clim :lkb)))
+        (when (and (stringp display) (not (zerop (length display))))
+          #+:clim
+          (clim-user::set-up-lkb-interaction)
+          #-:clim
+          (lkb::set-up-lkb-interaction))))))
 
 
 
