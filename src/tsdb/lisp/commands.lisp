@@ -418,11 +418,11 @@
                                (prefix "  ")
                                (format :ascii)
                                (indentation 0)
-                               name meter index)
+                               name pattern meter index)
   
   (when stream (format stream "~%"))
   (loop
-      with dbs = (sort (find-tsdb-directories home :name name 
+      with dbs = (sort (find-tsdb-directories home :name name :pattern pattern
                                               :meter (madjust * meter 0.95))
                        #'string< :key #'(lambda (foo) 
                                           (get-field :database foo)))
