@@ -21,10 +21,11 @@
 
 (defun lkb-read-cerror (istream string &rest rest)
   (setf *syntax-error* t)
-  (format t 
-         (concatenate 'string "~%Syntax error at position ~A: " string)  
-         (file-position istream) 
-         rest))
+  (apply #'format 
+         (append (list t 
+                       (concatenate 'string "~%Syntax error at position ~A: " string)  
+                       (file-position istream))
+                 rest)))
 
 (defun ignore-rest-of-entry (istream name)
   ;;; called after a continuable error
