@@ -1352,7 +1352,20 @@
                                (member result-id active :test #'eql))
                          (get-field :derivation result))
       for edge = (and derivation (reconstruct derivation))
-      for tree = (and edge (lkb::parse-tree-structure edge))
+      for tree = (when (and edge
+                            (or (eq *redwoods-export-values* :all)
+                                (smember :tree *redwoods-export-values*)))
+                   (let ((tree (ignore-errors
+                                (lkb::parse-tree-structure edge))))
+                     (unless tree
+                       (format 
+                        stream 
+                        "[~a] export-trees(): [~a] ~
+                         error() labeling tree # ~a.~%" 
+                        (current-time :long :short)
+                        (+ parse-id offset)
+                        result-id))
+                     tree))
       for dag = (and edge (lkb::tdfs-indef (lkb::edge-dag edge)))
       for mrs = (and edge (mrs::extract-mrs edge))
       when (zerop (mod i 100)) do (clrhash *reconstruct-cache*)
