@@ -197,7 +197,7 @@
          (derivation (read-from-string derivation nil nil)))
     (ignore-errors
      (with-output-to-string (stream)
-       (construct-sem-for-tree derivation stream)))))
+       (construct-sem-for-tree derivation :rasp stream)))))
 
 #+:xml
 (defun read-rmrs-from-string (string)
