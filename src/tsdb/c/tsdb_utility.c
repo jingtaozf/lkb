@@ -19,6 +19,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <regex.h>
+#include <memory.h>
 #include <sys/types.h>
 #include <sys/param.h>
 #include <errno.h>
@@ -1950,6 +1951,79 @@ float tsdb_timer(BYTE action) {
   } /* else */
 
 } /* tsdb_timer() */
+
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_collect_tuples()
+|*     version: 
+|*  written by: tom, dfki saarbruecken
+|* last update: 23-nov-95
+|*  updated by: 
+|*****************************************************************************|
+|*
+|*****************************************************************************|
+|* <known bugs>
+|*
+\*****************************************************************************/
+
+BOOL tsdb_collect_tuples(Tsdb_selection* selection,Tsdb_tuple** tuples,
+                         Tsdb_key_list*** lists,int last,int size) {
+  int offset,i,j,n_tuples;
+  BOOL kaerb;
+  Tsdb_value* value;
+  Tsdb_key_list* new;
+
+  for(n_tuples = 0; tuples != NULL && tuples[n_tuples] != NULL; n_tuples++);
+  for(i = 0, offset = 0; i < selection->n_relations; i++, offset += j) {
+#if defined(DEBUG) && defined(INSERT_INTO_SELECTION)
+    n_keys += selection->relations[i]->n_keys;
+#endif    
+    for (j = 0; j < selection->relations[i]->n_keys; j++) {
+      kaerb = FALSE;
+      value = tuples[i]->fields[selection->relations[i]->keys[j]];
+      new = (Tsdb_key_list *)malloc(sizeof(Tsdb_key_list));
+      new->key = value;
+      new->tuples = tuples;
+      new->n_tuples = n_tuples;
+      new->next = (Tsdb_key_list *)NULL;
+      lists[i][last] = new;
+    } /* for j */
+  } /* for i */
+  last++;
+  return TRUE;
+} /* tsdb_collect_tuples */
+
+
+
+int tsdb_keylist_compare(Tsdb_key_list* foo,Tsdb_key_list* bar) {
+  int i = tsdb_value_compare(foo->key,bar->key);
+
+  switch(i) {
+    case 1: return 0;
+    case 3: return -1;
+    case 4: return 0;
+    case 5: return 1;
+    case 6: return 0;
+  }
+  return 0;
+} /* tsdb_keylist_compare() */
+
+
+BOOL tsdb_sort_tuples(Tsdb_key_list*** lists,int last,int n_lists) {
+  int i;
+  
+  for (i=0;i<n_lists;i++ ) {
+    qsort((char*)lists[i],last,sizeof(Tsdb_key_list*),
+          tsdb_keylist_compare);
+  } /* for () */
+  return TRUE;
+} /* tsdb_sort_tuples () */
+
+
+BOOL tsdb_init_insert(Tsdb_selection* selection) {
+  
+} /* tsdb_init_insert() */
 
 BOOL tsdb_insert_into_selection(Tsdb_selection *selection,
                                 Tsdb_tuple **tuples) {
