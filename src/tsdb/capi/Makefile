@@ -22,7 +22,8 @@ solaris: acl.o gc.o capi.o client.o mfile.o ../../../include/itsdb.h
 	$(LD) -o ../../../lib/solaris/libitsdb.so \
 	  client.o acl.o mfile.o $(SOLARIS_LIBS)
 	$(AR) ../../../lib/solaris/libitsdb.a \
-	  client.o acl.o mfile.o 5lib/getloadavg.o 5lib/libpvm3.a
+	  client.o acl.o mfile.o 5lib/getloadavg.o \
+	  ../../../lib/solaris/libpvm3.a
 
 linux: 
 	make clean;
