@@ -312,7 +312,6 @@ printing routines -  convenient to make this global to keep printing generic")
 
 (defun check-mrs-struct (mrsstruct &optional sentence)
   ;;; first output the existing structure in the indexed notation
-  (clear-scope-memos)
   (setf *canonical-bindings* nil)
   (when sentence
     (format t "~%~A" sentence)
@@ -1085,18 +1084,20 @@ or modulo some number of quantifiers
 
 (defvar *output-scope-errors* nil)
 
+(defvar *mrs-right-margin* 50)
+
 (defun output-scoped-mrs (mrs &key (stream t))
   (format stream "~%")
   (let* ((top-handel (get-true-var-num (psoa-handel mrs)))
          (rel-list (psoa-liszt mrs)))
     (setf *output-scope-errors* nil)
-    (output-scoped-rels top-handel rel-list stream nil)
+    (output-scoped-rels top-handel rel-list stream nil 0)
     (when *output-scope-errors*
       (unless (or *giving-demo-p* *debug-scoping*)
         (format t "~%WARNING: unconnected structure passed to output-scoped-mrs")))
     (format stream "~%")))
 
-(defun output-scoped-rels (top-handel rel-list stream handels-so-far)
+(defun output-scoped-rels (top-handel rel-list stream handels-so-far width)
   (if (member top-handel handels-so-far)
       (progn 
         (struggle-on-error "Circular structure passed to output-scoped-mrs")
@@ -1111,22 +1112,36 @@ or modulo some number of quantifiers
       ;;; list-length returns nil if top-rels is a cycle
         (struggle-on-error "Circular LISZT passed to output-scoped-mrs"))
       (if (and top-rels (list-length top-rels))
-          (loop (output-scoped-rel (car top-rels) rel-list stream 
-                                   (cons top-handel handels-so-far))
+          (loop
+            (setf width
+                   (output-scoped-rel (car top-rels) rel-list stream 
+                                      (cons top-handel handels-so-far) width))
             (if (cdr top-rels)
                 (progn (format stream " /~A " #\\)
-                       (setf top-rels (cdr top-rels)))
+                       (setf width (+ 4 width))
+                       (setf top-rels (cdr top-rels))
+                       (when (> width *mrs-right-margin*)
+                         (format stream "~%")
+                         (setf width 0)))
               (return)))
-        (setf *output-scope-errors* t)))))
+        (setf *output-scope-errors* t))))
+  width)
 
 
-(defun output-scoped-rel (rel rel-list stream handels-so-far)
-  (let ((need-comma nil))
-    (format stream "~A(" 
-            (remove-right-sequence "_rel" (string-downcase (rel-sort rel))))
+(defun output-scoped-rel (rel rel-list stream handels-so-far width)
+  (let ((need-comma nil)
+        (current-string nil))
+    (when (> width *mrs-right-margin*)
+      (format stream "~%")
+      (setf width 0))
+    (setf current-string
+      (format nil "~A(" 
+              (remove-right-sequence "_rel" (string-downcase (rel-sort rel)))))
+    (format stream "~A" current-string)
+    (setf width (+ width (length current-string)))
     (for feat-val in (rel-flist rel)
          do     
-         (when need-comma (format stream ", "))
+         (when need-comma (format stream ", ") (setf width (+ width 2)))
          (setf need-comma t)
          (let* ((var (fvpair-value feat-val))
                 (conj-vars (extract-variables-from-conj var)))
@@ -1135,23 +1150,38 @@ or modulo some number of quantifiers
            (if (listp var)
              (progn 
                (format stream "(")
+               (setf width (+ width 1))
                (for val in var
                     do
                     (if (is-handel-var val)
-                      (output-scoped-rels (get-true-var-num val) rel-list stream handels-so-far)
-                      (format stream "~A " (remove-variable-junk 
-                                      (if (var-p val)
-                                        (get-bound-var-value val)
-                                        val)))))
-               (format stream ")"))
+                        (setf width
+                          (output-scoped-rels (get-true-var-num val) 
+                                              rel-list stream handels-so-far width))
+                      (progn 
+                        (setf current-string
+                          (format nil "~A " (remove-variable-junk 
+                                             (if (var-p val)
+                                                 (get-bound-var-value val)
+                                               val))))
+                        (format stream "~A" current-string)
+                        (setf width (+ width (length current-string))))))
+               (format stream ")")
+               (incf width))
              (if (is-handel-var var)
-                 (output-scoped-rels (get-true-var-num var) rel-list stream
-                                     handels-so-far)
-                  (format stream "~A" (remove-variable-junk 
+                 (setf width
+                   (output-scoped-rels (get-true-var-num var) rel-list stream
+                                       handels-so-far width))
+               (progn
+                 (setf current-string
+                  (format nil "~A" (remove-variable-junk 
                                   (if (var-p var)
                                     (get-bound-var-value var)
-                                    var)))))))
-    (format stream ")")))
+                                    var))))
+                 (format stream "~A" current-string)
+                 (setf width (+ width (length current-string))))))))
+    (format stream ")")
+    (incf width)
+    width))
 
 (defun show-scope-so-far (top-handel bindings rels-left pending)
   (let ((*canonical-bindings* (canonical-bindings bindings)))
@@ -1159,7 +1189,7 @@ or modulo some number of quantifiers
       (when true-top
         (format t "~%pending: ~A top: ~A " pending top-handel)
         (output-scoped-rels true-top
-                            (set-difference *starting-rels* rels-left) t nil)))))
+                            (set-difference *starting-rels* rels-left) t nil 0)))))
 
 
     

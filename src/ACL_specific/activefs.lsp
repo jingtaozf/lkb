@@ -63,7 +63,7 @@
 
 (defstruct fs-display-record 
 ;;; the record of the FS associated with a window
-   fs title paths parents type-fs-display)
+   fs title paths parents type-fs-display id)
 
 ;;
 ;; Define a frame class for our FS windows
@@ -90,14 +90,15 @@
 
 ;;; **** display function entry points ****
 
-(defun display-basic-fs (fs title &optional parents paths output-fs)
+(defun display-basic-fs (fs title &optional parents paths id)
   (declare (ignore output-fs))
   (let ((fs-window 
           (clim:make-application-frame 'active-fs-window)))
     (setf (active-fs-window-fs fs-window) 
       (make-fs-display-record :fs fs :title title :paths paths 
 			      :parents parents
-			      :type-fs-display *type-fs-display*))
+			      :type-fs-display *type-fs-display*
+                              :id id))
     (setf (clim:frame-pretty-name fs-window) title)
     ;; Initialize fonts
     (setf *normal* (clim:parse-text-style (make-active-fs-type-font-spec)))
@@ -117,22 +118,14 @@
 			     #'clim:run-frame-top-level
 			     fs-window)))
 
-(defun display-fs (fs title)
-  (display-basic-fs fs title))
+(defun display-fs (fs title &optional id)
+  (display-basic-fs fs title nil nil id))
 
-(defun display-fs-and-parents (fs title parents)
-  (display-basic-fs fs title parents))
+(defun display-fs-and-parents (fs title parents &optional id)
+  (display-basic-fs fs title parents nil id))
 
-(defun display-fs-and-paths (fs title paths)
-  (display-basic-fs fs title nil paths))
-
-;;; YADU display
-
-;;; display-tdfs-window is unnecessary - use display-fs instead
-
-;;(defun display-lrule-window (input-tdfs output-tdfs title)
-;;  (display-basic-fs input-tdfs title nil nil output-tdfs))
-
+(defun display-fs-and-paths (fs title paths &optional id)
+  (display-basic-fs fs title nil paths id))
 
 ;;; process lock appears to be necessary (at least in CLIM 2.1.beta)
 ;;; to avoid the situation where the wrong output goes to a 
@@ -338,8 +331,7 @@
     (when (and (atom type) type-entry)
       (pop-up-menu
        `(("Hierarchy" :value hier
-		      :active ,(getf (class-frames frame) 
-				     (find-class 'type-hierarchy)))
+		      :active ,(type-constraint type-entry))
 ;	 ("Help" :value help
 ;		 :active ,(type-comment type-entry))
 	 ("Shrink/expand" :value shrink)
@@ -390,15 +382,22 @@
 
 (define-active-fs-window-command (com-title-fs-menu)
     ((name 'symbol :gesture :select))
-  (let ((fs (fs-display-record-fs 
+  (let ((id (fs-display-record-id 
+	     (active-fs-window-fs clim:*application-frame*)))
+        (fs (fs-display-record-fs 
 	     (active-fs-window-fs clim:*application-frame*))))
     (pop-up-menu
-     `(("Output TeX" :value tex)
+     `(("Output TeX ..." :value tex)
+       ("Apply lex rule ..." :value lexrule
+                             :active ,(get-psort-entry id))
+       ("Apply all lex rules" :value allrules
+                             :active ,(get-psort-entry id))
        ("Show source" :value source 
-		      :active ,(source-available-p name)))
+		      :active ,(source-available-p id)))
      (tex (output-fs-in-tex fs))
-     (source (edit-source name))
-     (store (store-as-psort fs)))))
+     (source (edit-source id))
+     (lexrule (apply-lex id))
+     (allrules (apply-lex-rules id)))))
   
 ;;; **** pop up menus for psorts (called when paths are displayed) *****
 
@@ -435,7 +434,8 @@
 	  (ecase command
 	    (def (display-unexpanded-lex-entry psort lex-entry))  
 	    (exp (display-fs (lex-or-psort-full-fs lex-entry) 
-			     (format nil "~(~A~) - expanded" psort)))) 
+			     (format nil "~(~A~) - expanded" psort)
+                             psort)))
 	(error (condition)
 	  (with-output-to-top ()
 	    (format t "~%Error: ~A~%" condition)))))))
@@ -449,7 +449,8 @@
       (handler-case
 	  (ecase command
 	    (rule (display-fs (rule-full-fs rule-entry) 
-			      (format nil "~(~A~)" (rule-id rule-entry)))))
+			      (format nil "~(~A~)" (rule-id rule-entry))
+                              (rule-id rule-entry))))
 	(error (condition)
 	  (with-output-to-top ()
 	    (format t "~%Error: ~A~%" condition)))))))

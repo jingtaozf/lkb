@@ -36,6 +36,8 @@
 (defvar *lkb-menu-disabled-list* nil
   "Kludge because of MCL bug!!!!")
 
+(defvar *lkb-menu-mrs-list* nil)
+
 (defvar *lkb-menu* nil)
 
 ;; Classes for abstract menus, with methods for turning them into real
@@ -64,9 +66,12 @@
 		:menu-title name
 		:value value
 		:available-p available-p)))
-    (unless available-p 
+    (unless (eql available-p :always) 
       (push (intern (concatenate 'string "COM-" name))
             *lkb-menu-disabled-list*))
+    (when (eql available-p :mrs) 
+      (push (intern (concatenate 'string "COM-" name))
+            *lkb-menu-mrs-list*))
     menu))
 
 ;; Create a sub-menu
@@ -76,9 +81,12 @@
 		:menu-title menu-title
 		:menu-items menu-items
 		:available-p available-p)))
-    (unless available-p 
-      (push (intern (concatenate 'string "COM-" menu-title))
+    (unless (eql available-p :always)
+      (push (intern (concatenate 'string "MENU-" menu-title))
 	    *lkb-menu-disabled-list*))
+    (when (eql available-p :mrs) 
+      (push (intern (concatenate 'string "MENU-" menu-title))
+            *lkb-menu-mrs-list*))
     menu))
 
 ;; Process menu description
@@ -108,6 +116,11 @@
 			    :command-table ,table) ()
 	     (handler-case
 		 (funcall (quote ,(menu-value menu)))
+               (excl:interrupt-signal (condition)
+		 (format t "~%Interrupted"))
+               ;; placeholder - we need a way
+               ;; of generating an interrupt which will
+               ;; affect these processes
 	       (error (condition)
 		 (format t "~%Error: ~A~%" condition)))))))
 
@@ -151,6 +164,7 @@
     (setf system-type (or user::*lkb-menu-type* :core)))
   ;; remove any old commands
   (setf *lkb-menu-disabled-list* nil)
+  (setf *lkb-menu-mrs-list* nil)
   (ecase system-type
     (:core (create-mini-lkb-system-menu))
     (:big  (create-big-lkb-system-menu)))
@@ -169,11 +183,16 @@
   ;; Flush old commands
   (let ((table (find-command-table 'lkb-top-command-table :errorp nil)))
     (when table
-      (map-over-command-table-menu-items 
-       #'(lambda (name char item)
-	   (declare (ignore char item))
-	   (remove-menu-item-from-command-table table name :errorp nil))
-       table)
+      (let ((menu-items nil))
+        ;; Note - removing items inside the mapping function
+        ;; does not always work - hence the fudge
+        (map-over-command-table-menu-items 
+         #'(lambda (name char item)
+             (declare (ignore char item))
+             (pushnew name menu-items))
+         table)
+        (dolist (name menu-items)
+             (remove-menu-item-from-command-table table name)))
       (map-over-command-table-commands 
        #'(lambda (name)
 	   (unless (eql name 'COM-CLOSE-TO-REPLACE)
@@ -187,7 +206,7 @@
   (setf (command-table-inherit-from 
 	 (find-command-table 'lkb-top-command-table))
     (list (make-command-table 'menu-quit :errorp nil)))    
-  (define-command (com-quit :menu "Are you sure?"
+  (define-command (com-quit :menu "Click to confirm quit"
 			    :command-table menu-quit) ()
     (setq *complete-lisp-close* t)
     (frame-exit *application-frame*))
@@ -275,20 +294,20 @@
   (setf *last-directory* nil)
   (set-up-lkb-interaction))
 
+|#
+
 (defun restart-lkb-window nil
   (setf *last-directory* nil)
   (set-up-lkb-interaction))
-|#
 
 (defun dump-lkb nil
-  (format t "~%Warning: dump-lkb is currently non-operational"))
-  #|
-  (let* ((fresh-p (not common-lisp-user::*current-grammar-load-file*))
-        (image-location 
-         (user::ask-user-for-new-pathname
-          (format nil 
-                  "File for image ~A grammar (local file advised)" 
-                  (if fresh-p "without" "with")))))                   
+  (if common-lisp-user::*current-grammar-load-file*
+      (progn (cl-user::lkb-beep)
+             (format t "~%Dump system will not work after a grammar has been loaded"))
+    (let ((image-location 
+           (user::ask-user-for-new-pathname
+            (format nil 
+                    "File for image (local file advised)"))))
     (when image-location
       ;;; apparently 5.0 requires that the file be .dxl
       ;;; this lets the user give another type - since they may know more
@@ -304,31 +323,28 @@
             (format t 
                     "~%Warning - image type was ~A when dxl was expected" 
                     image-type))))
-      (setf excl:*restart-init-function* (if fresh-p
-                                             #'restart-lkb-window
-                                           #'restart-lkb-function))
-      (unless fresh-p
-        (user::store-cached-lex user::*lexicon*))
-      (user::clear-expanded-lex)
-      (user::clear-type-cache)
-      (user::unexpand-leaf-types)
+      (setf excl:*restart-init-function* #'restart-lkb-window)
       (excl:dumplisp :name image-location)
-;      (user::check-for-open-psorts-stream)
       (user::lkb-beep)
       (format t "~%Image saved~%")
-      nil)))
-      |#
+      nil))))
 
 (defun enable-type-interactions nil
   ;; it may only work from within the application frame
   (dolist (command *lkb-menu-disabled-list*)
-    (setf (command-enabled command *lkb-top-frame*) t)))
+    (if (or cl-user::*mrs-loaded* (not (member command *lkb-menu-mrs-list*)))
+        (setf (command-enabled command *lkb-top-frame*) t))))
 
 (defun disable-type-interactions nil
   ;; this is called when a type file is being redefined it may only
   ;; work from within the application frame
   (dolist (command *lkb-menu-disabled-list*)
     (setf (command-enabled command *lkb-top-frame*) nil)))
+
+(defun enable-mrs-interactions nil
+  (when cl-user::*mrs-loaded*
+    (dolist (command *lkb-menu-mrs-list*)
+      (setf (command-enabled command *lkb-top-frame*) t))))
 
 ;;; functions called from top level menu which are time
 ;;; consuming 

@@ -49,7 +49,7 @@
    (let* ((type (ask-user-for-type))
          (type-entry (if type (get-type-entry type))))
       (when type-entry 
-         (display-type-in-tree type)
+         (display-type-in-tree type t)
          (show-type-spec-aux type type-entry))))
 
 (defun show-type-spec-aux (type type-entry)
@@ -62,21 +62,23 @@
            (let ((parent-entry (get-type-entry parent)))
              (if (type-glbp parent-entry)
                  (list parent (remove-duplicates (get-real-types parent)))
-               (list parent)))))))
+               (list parent))))
+      type)))
            
 ;;; "Expanded type" show-type                  
 (defun show-type nil
   (let* ((type (ask-user-for-type))
         (type-entry (if type (get-type-entry type))))
       (when type-entry 
-         (display-type-in-tree type)
+         (display-type-in-tree type t)
          (show-type-aux type type-entry))))
 
 (defun show-type-aux (type type-entry)
    (if (type-tdfs type-entry)
       (let ((*type-fs-display* t))
          (display-fs (type-tdfs type-entry) 
-            (format nil "~(~A~) - expanded" type)))
+                     (format nil "~(~A~) - expanded" type)
+                     type))
       (format t "~%No tdfs for type ~A" type)))
 
 
@@ -101,7 +103,8 @@
                     orth-list)
            (if exp-p
              (display-fs (lex-or-psort-full-fs word-entry) 
-                         (format nil "~(~A~) - expanded" word-string))
+                         (format nil "~(~A~) - expanded" word-string)
+                         (lex-or-psort-id word-entry))
              (display-unexpanded-lex-entry word-string word-entry))))))
 
   
@@ -111,7 +114,8 @@
         (lex-entry (if lex (get-psort-entry lex))))
       (when lex-entry 
             (display-fs (lex-or-psort-full-fs lex-entry) 
-                     (format nil "~(~A~) - expanded" lex)))))
+                        (format nil "~(~A~) - expanded" lex)
+                        lex))))
          
 
 (defun show-lex-def nil
@@ -131,7 +135,8 @@
                (equality-p unif)
                (inheritance-p unif)
                (default-inheritance-p unif)))
-         (lex-or-psort-unifs lex-entry)))
+         (lex-or-psort-unifs lex-entry))
+      lex)
    (display-fs (lex-or-psort-local-fs lex-entry) 
                      (format nil "~(~A~) - definition (indef)" lex))))
 
@@ -140,13 +145,16 @@
   (let* ((rule-entry (ask-user-for-rule)))
       (when rule-entry 
             (display-fs (rule-full-fs rule-entry) 
-                     (format nil "~(~A~)" (rule-id rule-entry))))))
+                        (format nil "~(~A~)" (rule-id rule-entry))
+                        (rule-id rule-entry)
+                        ))))
 
 (defun show-lex-rule nil
   (let* ((rule-entry (ask-user-for-lexical-rule)))
       (when rule-entry 
             (display-fs (rule-full-fs rule-entry) 
-                     (format nil "~(~A~)" (rule-id rule-entry)))))) 
+                        (format nil "~(~A~)" (rule-id rule-entry))
+                        (rule-id rule-entry))))) 
 
 
 (defparameter *last-lex-id* nil)
@@ -272,8 +280,8 @@
 ;;; Lexical rule application
 
 
-(defun apply-lex nil
-   (let* ((lex (ask-user-for-lex))
+(defun apply-lex (&optional id)
+   (let* ((lex (or id (ask-user-for-lex)))
          (lex-entry (if lex (get-psort-entry lex)))
          (lex-entry-fs
             (if lex-entry (lex-or-psort-full-fs lex-entry))))
@@ -287,12 +295,13 @@
                   (cond (result
                         (display-fs result
                            (format nil "~(~A~) + ~A" 
-                              lex (rule-id lex-rule))))
+                                   lex (rule-id lex-rule))
+                           (rule-id lex-rule)))
                      (t (format t 
                            "~%Lexical rule application failed")))))))))
 
-(defun apply-lex-rules nil
-   (let* ((lex (ask-user-for-lex))
+(defun apply-lex-rules (&optional id)
+   (let* ((lex (or id (ask-user-for-lex)))
          (lex-entry (if lex (get-psort-entry lex)))
          (lex-entry-fs
             (if lex-entry (lex-or-psort-full-fs lex-entry))))
@@ -494,3 +503,25 @@
   (set-up-display-settings
    (ask-user-for-existing-pathname "Load type display settings from?")))
 
+;;; debugging - finding maximal type
+
+(defun find-type-from-features nil
+  (let ((feature-list
+         (ask-for-lisp-movable "Current Interaction" 
+                               `(("Feature(s)" . (,*diff-list-list*)))
+                               150)))
+    (when feature-list 
+      (when (listp (car feature-list)) 
+        (setf feature-list (car feature-list)))
+      (let ((type (maximal-type-of-list feature-list)))
+        (if type
+            (format t "~%Maximal type for ~A is ~A" feature-list type)
+          (let ((bogus-features (for f in feature-list
+                                     filter
+                                     (if (not (maximal-type-of f)) f))))
+            (if bogus-features
+                (format t "~%Features ~A not found in this grammar"
+                        bogus-features)
+              (format t "~%Features ~A not mutually compatible" feature-list))))))))
+
+              

@@ -118,7 +118,8 @@
 		   (add-discriminant rule (type-of-fs (tdfs-indef fs)) :type top)
 		   (add-discriminant rule (type-of-fs (existing-dag-at-end-of 
 						       (tdfs-indef fs)
-						       '(synsem local cont key)))
+                                                       *discriminant-path*
+						       ))
 				     :rel top))
 	       (add-discriminant (symbol-name rule) yield :constituent top))))
 	  (fs
@@ -129,7 +130,8 @@
 	   (add-discriminant (symbol-name parse) 
 			     (type-of-fs (existing-dag-at-end-of 
 					  (tdfs-indef fs)
-					  '(synsem local cont key)))
+                                          *discriminant-path*
+					  ))
 			     :rel top)))
     (dolist (child daughters)
       (find-discriminants-in-parse child top))))

@@ -20,6 +20,7 @@
 (defvar *lkb-menu-disabled-list* nil
   "Kludge because of MCL bug!!!!")
 
+(defvar *lkb-menu-mrs-list* nil)
 
 ;;; Define make-menu-item for leaf items only
 
@@ -31,9 +32,11 @@
           (make-instance 'menu-item :menu-item-title  name
                         :menu-item-action 
                         #'(lambda nil (eval-enqueue `(,value))) 
-                        :disabled (not available-p))))
-    (unless available-p 
+                        :disabled (not (eql available-p :always)))))
+    (unless (eql available-p :always)
       (push menu *lkb-menu-disabled-list*))
+    (when (eql available-p :mrs) 
+      (push menu *lkb-menu-mrs-list*))
     menu))
 
 #|
@@ -57,8 +60,10 @@
 (defun make-lkb-submenu-item (&key menu-title menu-items available-p)
   (let ((menu (make-instance 'menu :menu-title menu-title
                              :menu-items menu-items)))
-    (unless available-p 
+    (unless (eql available-p :always) 
       (push menu *lkb-menu-disabled-list*))
+    (when (eql available-p :mrs) 
+      (push menu *lkb-menu-mrs-list*))
     menu))
 
 (defvar *lkb-menu* nil)
@@ -78,6 +83,7 @@
    (menu-deinstall *lkb-menu*))  ; reset if we've loaded the 
                                 ; LKB before in this session
   (setf *lkb-menu-disabled-list* nil)
+  (setf *lkb-menu-mrs-list* nil)
   (ecase system-type
     (:core (create-mini-lkb-system-menu))
     (:big  (create-big-lkb-system-menu))   
@@ -132,10 +138,12 @@
  
 (defun enable-type-interactions nil
    ;; called when a type file has been read in successfully
-   ;; just enables everything!
    ;; use the kludge
    (for submenu in *lkb-menu-disabled-list*
-        do (menu-item-enable submenu)))
+        do 
+        (if 
+            (or cl-user::*mrs-loaded* (not (member submenu *lkb-menu-mrs-list*)))
+            (menu-item-enable submenu))))
 
 (defun disable-type-interactions nil
    ;; called when a type file has been cleared
@@ -143,7 +151,12 @@
    ;; use the kludge
    (for submenu in *lkb-menu-disabled-list*
         do (menu-item-disable submenu)))
- 
+
+(defun enable-mrs-interactions nil
+  (when cl-user::*mrs-loaded*
+    (dolist (submenu *lkb-menu-mrs-list*)
+      (menu-item-enable submenu))))
+
 ;;; functions called from top level menu which are time
 ;;; consuming - don't need to do anything special for MCL?
 

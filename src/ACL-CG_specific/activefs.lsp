@@ -47,13 +47,13 @@
 
 (defstruct fs-display-record 
    fs title paths parents type-fs-display (changed-p t)
-  data)
+  data id)
 
-(defun set-associated-fs (stream fs title &optional paths parents)
+(defun set-associated-fs (stream fs title &optional paths parents id)
    (setf (cg-user::active-fs-window-feature-structure stream)
       (make-fs-display-record :fs fs :title title :paths paths 
          :parents parents :type-fs-display *type-fs-display*
-        :data (make-hash-table :test #'equal))))
+        :data (make-hash-table :test #'equal) :id id)))
 
 (defun create-box-for-fs-region (start-pos end-pos stream)
    (cg:make-box-relative-from-corner start-pos
@@ -82,7 +82,7 @@
             
 ;;; **** display function entry points ****
 
-(defun display-basic-fs (fs title &optional parents paths)
+(defun display-basic-fs (fs title &optional parents paths id)
    (let ((fs-window (cg:open-stream 'cg-user::active-fs-window
                       (lkb-parent-stream) :io
                        :title title
@@ -92,7 +92,7 @@
                        :scrollbars t
                        :font (make-active-fs-type-font-spec)
                       )))
-      (set-associated-fs fs-window fs title paths parents)
+      (set-associated-fs fs-window fs title paths parents id)
       (cg:expand-window fs-window)
       (cg:select-window fs-window)))
 
@@ -106,7 +106,7 @@
            (fs (fs-display-record-fs fs-record))
           (title (fs-display-record-title fs-record))
           (parents (fs-display-record-parents fs-record))
-          (paths (fs-display-record-paths fs-record)))
+           (paths (fs-display-record-paths fs-record)))
       (cg:move-to-x-y fs-window 10 10)
       (draw-active-title fs-window title)
       (let* ((parents-width 
@@ -144,14 +144,14 @@
             (setf (fs-display-record-changed-p fs-record)
                   nil)))))))
 
-(defun display-fs (fs title)
-   (display-basic-fs fs title))
+(defun display-fs (fs title &optional id)
+   (display-basic-fs fs title nil nil id))
 
-(defun display-fs-and-paths (fs title paths)
-      (display-basic-fs fs title nil paths))
+(defun display-fs-and-paths (fs title paths &optional id)
+      (display-basic-fs fs title nil paths id))
 
-(defun display-fs-and-parents (fs title parents)
-   (display-basic-fs fs title parents))
+(defun display-fs-and-parents (fs title parents &optional id)
+   (display-basic-fs fs title parents nil id))
 
          
 (defun display-active-dpaths (dpath-list ostream)
@@ -297,21 +297,25 @@
                      :value 
                      #'(lambda ()
                           (if (type-constraint type-entry)
-                             (display-fs-and-parents (type-local-constraint type-entry) 
+                              (display-fs-and-parents 
+                               (type-local-constraint type-entry) 
                                 (format nil 
                                    "~(~A~)  - definition" 
                                    type)
-                                (type-parents type-entry))
+                                (type-parents type-entry)
+                                type)
                              (format t "~%No constraint for type ~A" type))))
                   (make-instance 'cg:menu-item :name "Expanded type"
                      :available-p (type-p type-entry)
                      :value #'(lambda ()
                                  (if (type-constraint type-entry)
-                                    (display-fs-and-parents (type-constraint type-entry) 
+                                     (display-fs-and-parents 
+                                      (type-constraint type-entry) 
                                        (format nil 
                                           "~(~A~) - expanded" 
                                           type)
-                                       (type-parents type-entry))
+                                       (type-parents type-entry)
+                                       type)
                                     (format t "~%No constraint for type ~A" type)))))     
                'cg:pop-up-menu (lkb-parent-stream)
                :selection-function #'lkb-funcall-menu-item)))
@@ -377,7 +381,9 @@
                   (make-instance 'cg:menu-item :name "Expanded psort"
                      :value #'(lambda ()
                         (display-fs (lex-or-psort-full-fs lex-entry) 
-                           (format nil "~(~A~) - expanded" psort)))))     
+                                    (format nil "~(~A~) - expanded" psort)
+                                    psort
+                                    ))))     
                'cg:pop-up-menu (lkb-parent-stream)
                :selection-function #'lkb-funcall-menu-item)))
       (let ((result (cg:pop-up-menu menu)))
@@ -393,7 +399,9 @@
                      :value 
                      #'(lambda ()
                         (display-fs (rule-full-fs rule-entry) 
-                           (format nil "~(~A~)" (rule-id rule-entry))))))     
+                                    (format nil "~(~A~)" (rule-id rule-entry))
+                                    (rule-id rule-entry)
+                                    ))))     
                'cg:pop-up-menu (lkb-parent-stream)
                :selection-function #'lkb-funcall-menu-item)))
       (let ((result (cg:pop-up-menu menu)))
@@ -405,20 +413,31 @@
 ;;; *** the title or top pop up menu ****
 
 (defun top-fs-action (stream fs-record name)
-   (declare (ignore stream))
-   (let ((menu 
+  (declare (ignore stream name)) 
+  (let* ((id (fs-display-record-id fs-record))
+         (menu 
             (cg:open-menu
                (list
                   (make-instance 'cg:menu-item :name "Output TeX"
                      :available-p t
                      :value 
                      #'(lambda ()
-                          (output-fs-in-tex fs-record)))
+                         (output-fs-in-tex fs-record)))
+                  (make-instance 'cg:menu-item :name "Apply lex rule"
+                     :available-p (get-psort-entry id)
+                     :value 
+                     #'(lambda ()
+                         (apply-lex id)))
+                  (make-instance 'cg:menu-item :name "Apply lex rules"
+                     :available-p (get-psort-entry id)
+                     :value 
+                     #'(lambda ()
+                          (apply-lex-rules id)))
                   (make-instance 'cg:menu-item :name "Show source" 
-                    :value 
+                     :available-p (source-available-p id)
+                     :value 
                     #'(lambda ()
-                          (edit-source name)) 
-		        :available-p (source-available-p name)))
+                          (edit-source id)))   
                   )                  
                'cg:pop-up-menu (lkb-parent-stream)
                :selection-function #'lkb-funcall-menu-item)))

@@ -195,7 +195,7 @@
 
 (defmethod mrs-output-start-liszt ((mrsout simple))
   (with-slots (stream indentation) mrsout
-    (format stream "  LISZT: <")
+    (format stream "  LISZT: <~%")
     (setf indentation (+ indentation 10))))
 
 (defmethod mrs-output-atomic-fn ((mrsout simple) atomic-value)
@@ -225,7 +225,7 @@
 
 (defmethod mrs-output-start-h-cons ((mrsout simple))
   (with-slots (stream) mrsout
-    (format stream "~%  H-CONS: <")))
+    (format stream "~%  H-CONS: <~%")))
 
 (defmethod mrs-output-outscopes ((mrsout simple) higher lower)
   (with-slots (stream indentation) mrsout
@@ -254,7 +254,17 @@
             do 
               (progn (identity feat-val)
                      ; silly, but avoids warning messages
-                (mrs-output-start-rel mrsout))))))
+                     (mrs-output-start-rel mrsout))))))
+
+(defclass active-t (simple)
+  ())
+
+(defmethod mrs-output-start-rel ((mrsout active-t) sort handel)
+  (with-slots (stream indentation) mrsout
+    (format stream "~VT[ " indentation)
+    (cl-user::add-mrs-type-region stream sort)
+    (format stream "~%~VT~A: ~A" (+ indentation 2) 'handel handel)))
+
 
 ;;; 
 ;;; comment output-type class
@@ -363,7 +373,7 @@
 
 (defmethod mrs-output-end-rel ((mrsout indexed))
   (with-slots (stream need-comma) mrsout
-    (format stream ") ") 
+    (format stream ")~%") 
     (setf need-comma nil)))
 
 (defmethod mrs-output-end-liszt ((mrsout indexed))
@@ -420,7 +430,7 @@
   
 ; Added option to print raw MRS structures along with pretty-printed ones.
 
-(defun output-mrs1 (mrs-instance device stream)   
+(defun output-mrs1 (mrs-instance device stream)
   (def-print-operations device 0 stream)
        (cond ((psoa-p mrs-instance)
               (mrs-output-start-fn *mrs-display-structure*)

@@ -392,7 +392,9 @@
    (if path
    (let ((max-type (maximal-type-of (car path))))
       (unless max-type (error "~%Unknown feature ~A~%" (car path)))
-      (append (for type in (cons max-type (retrieve-descendants max-type))
+      (append (for type in (cons max-type
+                                 (mapcar #'type-name
+                                         (retrieve-descendants max-type)))
                filter 
                (let ((type-rest (extract-paths-for-canonical-rep 
                            (constraint-of type) nil)))

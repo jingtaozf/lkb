@@ -1274,8 +1274,7 @@ implement the grammars described there.
 \chapter{Feature structures and types in the LKB system}
 \label{formal}
 % Note to self - the way to handle this stuff in the textbook would be
-% to put this in an appendix, but to introduce the TFSs carefully in
-% one or two chapters, with reference to the toy and rattle grammars.
+% to put this in an appendix.
 % For now, it stays in the main text, so that it can be cross referenced
 % from other places.
 
@@ -2268,7 +2267,31 @@ me_1 := pron-lxm &
                     & [ PER 1st ],
 		CASE acc ] ] ].
 \end{verbatim}
-Here the value of the feature {\sc orth} is a string.
+However the interpretation is different.  Rather than
+stipulating that me\_1 is a type in the hierarchy under the
+type {\bf pron-lxm}, this definition 
+states that me\_1 is a feature structure which has the
+type {\bf pron-lxm}.  If the definition were simply:
+\begin{verbatim}
+me_1 := pron-lxm.
+\end{verbatim}
+this should be
+read as stating that the feature structure named by me\_1 is
+{\tiny $\avmplus{\att{pron-lxm}}$}: that is the single-node 
+feature structure with the node having type {\bf pron-lxm}
+(though obviously the process of making this well-formed expands the
+structure).
+Given the way the formalism is defined (following Carpenter),
+it is a category error to
+think of lexical entries as being like maximally-specific types,
+or even as `instances' of types: lexical entries are typed feature 
+structures and types label nodes in feature structures.
+However, the terminology in the literature is very confused,
+because {\it type} is often used to mean something more like the concept
+we refer to as the type constraint.  
+
+Note that the value of the feature {\sc orth} in this
+definition is a string.
 Strings are a method of allowing a feature structure to contain a 
 value without an explicit declaration of that value as a type
 being necessary.  Formally, all strings can be treated as
@@ -4014,28 +4037,6 @@ can be run in conjunction with the LKB (see \ref{tsdb}).
 \paragraph{Compare*}
 FIX - add description
 
-\subsection{Tests}
-\label{tests}
-
-FIX - I am thinking of removing this menu item, but adding
-options to the FS windows, so that lexical rules can be tested
-on a displayed FS.
-
-\paragraph{Apply lexical rule}
-This prompts for a lexical entry and a lexical or morphological rule
-and applies the rule to the entry.  The result is displayed if
-application succeeds.  
-
-\paragraph{Apply all lex rules}
-This prompts for a lexical entry and tries to apply all the defined
-lexical and morphological rules to the entry, and to any results of
-the application and so on.  (To prevent infinite recursion on
-inappropriately specified rules the number of applications is limited.)
-The results are displayed in summary form,
-see Figure~\ref{lexruleapp}.  Clicking on one of
-these summaries will display the resulting feature structure.
-% FIX - {lexruleapp}
-
 \subsection{Debug}
 \label{debug}
 
@@ -4196,16 +4197,26 @@ window.
 \begin{description}
 \item [Output TeX] Outputs the FS as TeX macros to a file selected by
 the user.  
+\item[Apply lexical rule]
+Only available if the identifier points to something that might
+be a lexical entry.
+It prompts for a lexical or morphological rule
+and applies the rule to the entry.  The result is displayed if
+application succeeds.  
+\item[Apply all lex rules]
+Only available if the identifier points to something that might
+be a lexical entry.
+This tries to apply all the defined
+lexical and morphological rules to the entry, and to any results of
+the application and so on.  (To prevent infinite recursion on
+inappropriately specified rules the number of applications is limited.)
+The results are displayed in summary form,
+see Figure~\ref{lexruleapp}.  Clicking on one of
+these summaries will display the resulting feature structure.
+% FIX - {lexruleapp}
 \item [Show source] Shows the source code for this structure 
 if ACL/CLIM is being used with emacs --- see \S\ref{emacs}
 (not available with all structures)
-\item [Store fs] The displayed feature structure will be stored as a
-temporary structure with a user supplied name.  Lexical rules may then be
-applied to it.
-It is not written to a file or permanently saved in
-any way.
-%FIX probably want to remove this option but allow
-% lexical rules to be applied from this menu
 \end{description}
 \item Clicking on a type (either a parent, or a type in the feature
 structure itself) will give a sub-menu with the following options:
@@ -5422,11 +5433,10 @@ and an output file for the results.  For example:
     "~aac/grammar/lkb/results")
 \end{verbatim}
 
-\section{Links}
+\section{Lexical rules}
 \lispcommand{apply-lex-tty {\it lexidentifier} {\it lruleidentifier}}
 
-Similar to {\bf Tests} / {\bf Apply lexical rule} (see \S\ref{tests}),
-%FIX - Tests etc may go
+Similar to {\bf Apply lexical rule} (see \S\ref{activefs}),
 but requires a lexical identifier and a rule identifier to be specified.
 For example:
 \begin{verbatim}
@@ -5437,7 +5447,7 @@ of the rule application (if it succeeds).
 
 \lispcommand{apply-lex-rules-tty {\it lexidentifier} }
 
-Similar to {\bf Tests} / {\bf Apply all lex rules} (see \S\ref{tests}),
+Similar to {\bf Apply all lex rules} (see \S\ref{activefs}),
 but requires a lexical identifier to be specified.
 For example:
 \begin{verbatim}

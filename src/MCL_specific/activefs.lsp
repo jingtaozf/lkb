@@ -90,12 +90,12 @@
 
 (defstruct fs-display-record 
    ;; the record of the FS associated with a window
-   fs title paths parents type-fs-display)
+   fs title paths parents type-fs-display id)
 
-(defun set-associated-fs (stream fs title &optional paths parents type-fs-display)
+(defun set-associated-fs (stream fs title &optional paths parents type-fs-display id)
    (setf (feature-structure stream)
       (make-fs-display-record :fs fs :title title :paths paths 
-         :parents parents :type-fs-display type-fs-display)))
+         :parents parents :type-fs-display type-fs-display :id id)))
 
 
 (defstruct click-field 
@@ -178,38 +178,31 @@
 
 ;;; some redundancy here - clean up sometime
 
-(defun display-basic-fs (fs title &optional parents paths output-fs old-window)
+(defun display-basic-fs (fs title &optional parents paths old-window id)
    (when old-window (erase-region old-window (clip-region old-window)))
    (let ((fs-window 
             (make-instance 'picture-field-window
                :view-font (lkb-type-font) :view-size #@(1600 32000))))
-      (display-fs-main fs-window fs title parents paths output-fs
-         old-window)))
+      (display-fs-main fs-window fs title parents paths
+         old-window id)))
 
-(defun display-fs (fs title)
-   (display-basic-fs fs title))
+(defun display-fs (fs title &optional id)
+   (display-basic-fs fs title nil nil nil id))
 
-(defun display-fs-and-parents (fs title parents)
-   (display-basic-fs fs title parents))
+(defun display-fs-and-parents (fs title parents &optional id)
+   (display-basic-fs fs title parents nil nil id))
 
-(defun display-fs-and-paths (fs title paths)
-   (display-basic-fs fs title nil paths))
+(defun display-fs-and-paths (fs title paths &optional id)
+   (display-basic-fs fs title nil paths nil id))
 
-(defun redisplay-fs (old-window fs title)
-   (display-basic-fs fs title nil nil nil old-window))
+(defun redisplay-fs (old-window fs title &optional id)
+   (display-basic-fs fs title nil nil old-window id))
 
-(defun redisplay-fs-and-parents (old-window fs title parents)
-   (display-basic-fs fs title parents nil nil old-window))
+(defun redisplay-fs-and-parents (old-window fs title parents &optional id)
+   (display-basic-fs fs title parents nil old-window id))
 
-(defun redisplay-fs-and-paths (old-window fs title paths)
-   (display-basic-fs fs title nil paths nil old-window))
-
-
-(defun display-lrule-window (input-tdfs output-tdfs title)
-   (let ((fs-window 
-          (make-instance 'picture-field-window
-               :view-font (lkb-type-font) :view-size #@(10000 10000))))
-      (display-fs-main fs-window input-tdfs title nil nil output-tdfs)))
+(defun redisplay-fs-and-paths (old-window fs title paths &optional id)
+   (display-basic-fs fs title nil paths old-window id))
 
 
 ;;; *** main display function ***
@@ -233,17 +226,13 @@
   (car *display-positions*)))
 
 
-(defun display-fs-main (fs-window fs title parents paths &optional lrule-out
-                        existing-window)
-  ;;; extra argument (optional) for B+C96 lrule which causes different display
-  ;;; function to be called
-   (draw-active-title fs-window fs title parents paths)
+(defun display-fs-main (fs-window fs title parents paths &optional
+                        existing-window id)
+   (draw-active-title fs-window fs title parents paths id)
    (let* ((parents-width (if parents 
                (display-active-parents parents fs-window) 0))
          (dag-width (or (if (tdfs-p fs) (display-dag2 fs 'edit fs-window)
-                            (if lrule-out
-                              (display-lrule fs lrule-out fs-window)
-                              (display-dag1 fs 'edit fs-window))) 0))
+                              (display-dag1 fs 'edit fs-window)) 0))
          (path-width (if paths (display-active-dpaths paths fs-window) 0))
          (max-width (max dag-width path-width parents-width 100)))
       (terpri fs-window)
@@ -297,7 +286,6 @@
 (defun add-active-fs-region (stream start-pos end-pos type-label-list type shrunk-p 
       atomic-p &optional top-box full-tdfs)
    ;; record info about position of data in active window
-   ;; YADU --- full-tdfs for lrule display
    (push
       (make-type-click-field :view-pos start-pos :end-pos end-pos
          :type-label-list type-label-list :type type :shrunk-p shrunk-p
@@ -332,33 +320,6 @@
       max-width))
 
 
-;;; This displays lexical rules as input type -> output type
-;;; but adds an extra menu item to the type menu so that the 
-;;; full tdfs can be displayed.
-
-(defun display-lrule (input output ostream)
-   (let ((max-width 0) (input-type (indef-type-of-tdfs input))
-         (output-type (indef-type-of-tdfs output)))
-      (format ostream "~% ")
-      (let ((start-pos (current-position ostream)))
-         (with-bold-output ostream
-            (format ostream "~(~A~)" input-type)
-            (add-active-fs-region ostream start-pos (current-position ostream)
-               nil input-type nil t nil input)
-            (format ostream "   ")))
-      (format ostream "  ->  ")       
-      (let ((start-pos (current-position ostream)))
-         (with-bold-output ostream
-            (format ostream "~(~A~)" output-type)
-            (add-active-fs-region ostream start-pos (current-position ostream)
-               nil output-type nil t nil output)
-            (format ostream "   ")))
-      (setf max-width 
-         (max max-width (current-position-x ostream)))
-      (format ostream "~%")
-      max-width))
-
-
 ;;; ***** Pop up menu creation *****
 ;;;
 ;;; There are several sorts of pop up menu which can occur
@@ -372,7 +333,6 @@
 ;;; **** pop up menus for types in FSs ****
 
 (defun create-active-fs-pop-up-type (field menu-pos)
-  ;; YADU --- full-tdfs for lrule display
   (let* ((type-label-list (type-click-field-type-label-list field))
          (type (type-click-field-type field))
          (shrunk-p (type-click-field-shrunk-p field))
@@ -411,7 +371,6 @@
 
 (defun pop-up-fs-menu-items (type field type-entry shrunk-p type-p menu
                              type-label-list full-structure)
-  ;;; YADU --- full-tdfs for lrule display
   (if type-entry
   (list
    (make-instance 'dynamic-enable-menu-item
@@ -474,7 +433,8 @@
          (title (fs-display-record-title fs-record))
          (parents (fs-display-record-parents fs-record))
          (paths (fs-display-record-paths fs-record))
-         (type-fs-display (fs-display-record-type-fs-display fs-record)))
+         (type-fs-display (fs-display-record-type-fs-display fs-record))
+         (id (fs-display-record-id fs-record)))
     (set-dag-display-value fs (reverse path) action type-fs-display)
             (cond 
                ((tdfs-p fs) ; YADU
@@ -501,14 +461,14 @@
 
 ;;; *** the title or top pop up menu ****
 
-(defun draw-active-title (stream fs title parents paths)
+(defun draw-active-title (stream fs title parents paths id)
    ;; creates a pop up menu 
    (format stream "~%")
    (let ((start-pos (current-position stream))
          (short-title (subseq title 0 (position #\Space title)))
          (fs-record
             (make-fs-display-record :fs fs :title title :paths paths 
-                                    :parents parents)))
+                                    :parents parents :id id)))
      (with-underlined-output stream
         (format stream "~A~%" short-title))
      (push
@@ -532,6 +492,7 @@
    
 
 (defun top-fs-action (fs-record)
+  (let ((id (fs-display-record-id fs-record)))
   (list
 ;;;   (make-instance 'menu-item
 ;;;     :menu-item-title "Print shrunk"
@@ -547,6 +508,16 @@
      :menu-item-title "Output TeX..."
      :menu-item-action 
      #'(lambda () (eval-enqueue `(output-fs-in-tex ,fs-record))))
+   (make-instance 'menu-item
+     :menu-item-title "Apply lex rule ..."
+     :menu-item-action 
+     #'(lambda () (eval-enqueue `(apply-lex ,id)))
+     :disabled (not (get-psort-entry id)))
+   (make-instance 'menu-item
+     :menu-item-title "Apply all lex rules"
+     :menu-item-action 
+     #'(lambda () (eval-enqueue `(apply-lex-rules ,id)))
+     :disabled (not (get-psort-entry id)))
 ;;;   (make-instance 'menu-item
 ;;;     :menu-item-title "Store fs..."
 ;;;     :menu-item-action 
@@ -556,7 +527,7 @@
 ;;;     :menu-item-action 
 ;;;     #'(lambda () (show-ldb-entry fs-record))
 ;;;     :disabled (not (boundp '*dictionaries-available*)))
-))
+)))
 
 
 (defun output-fs-in-tex (fs-record)
@@ -634,7 +605,8 @@
      :menu-item-action 
      #'(lambda ()
          (display-fs (lex-or-psort-full-fs lex-entry) 
-                     (format nil "~(~A~) - expanded" psort)))))) 
+                     (format nil "~(~A~) - expanded" psort)
+                     psort))))) 
 
 
 (defun pop-up-lex-rule-menu-items (psort rule-entry)
@@ -645,7 +617,9 @@
      :menu-item-action 
      #'(lambda ()
          (display-fs (rule-full-fs rule-entry) 
-                     (format nil "~(~A~)" (rule-id rule-entry)))))))
+                     (format nil "~(~A~)" (rule-id rule-entry))
+                     (rule-id rule-entry)
+                     )))))
 
 
 

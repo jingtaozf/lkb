@@ -2,28 +2,21 @@
 
 (in-package :cl-user)
 
-(defun batch-check-lexicon (&optional path-name)
-  (let ((error-file (or path-name 
-                        (ask-user-for-new-pathname "File for errors?"))))
-    (when error-file
-      (format t "~%Checking lexicon")
-      (with-open-file (ostream error-file :direction :output
-		       :if-exists :new-version)  
-        (setf *batch-mode* t)
-        (write-time-readably ostream)
-        (dolist (id (collect-psort-ids *lexicon*))
-	  ;; alternatively - for lexicon only
-	  ;; (reverse *ordered-lex-list*) 
-	  (format ostream "~%Checking ~A" id)
-	  (let* ((entry (read-psort *lexicon* id))
-		 (lex-id (lex-or-psort-id entry)))
-	    (expand-psort-entry entry)
-	    (let ((new-fs (lex-or-psort-full-fs entry)))
-	      (unless new-fs
-		(format ostream "~%No feature structure for ~A" lex-id))
-	      ;; uncomment these lines with the LinGO ERG version of
-	      ;; user-fns in order to check coindexation for
-	      ;; inflection position
+(defun batch-check-lexicon nil
+  (format t "~%Checking lexicon")
+  (setf *batch-mode* t)
+  (dolist (id (collect-psort-ids *lexicon*))
+    ;; alternatively - for lexicon only
+    ;; (reverse *ordered-lex-list*) 
+    (let* ((entry (read-psort *lexicon* id))
+           (lex-id (lex-or-psort-id entry)))
+      (expand-psort-entry entry)
+      (let ((new-fs (lex-or-psort-full-fs entry)))
+        (unless new-fs
+          (format t "~%No feature structure for ~A" lex-id))
+        ;; uncomment these lines with the LinGO ERG version of
+        ;; user-fns in order to check coindexation for
+        ;; inflection position
 ;;;	      (when new-fs
 ;;;		(unless (extract-infl-pos-from-fs (tdfs-indef new-fs))
 ;;;		  (format t "~%No position identified for ~A" id)))
@@ -32,10 +25,10 @@
 ;;;                                  (tdfs-indef new-fs) 
 ;;;                                  mrs::*initial-semantics-path*)
 ;;;                                 lex-id ostream))))
-	      ))
-	  (unexpand-psort *lexicon* id))))
-    (format t "~%Lexicon checked")
-    (setf *batch-mode* nil)))
+        ))
+    (unexpand-psort *lexicon* id))
+  (format t "~%Lexicon checked")
+  (setf *batch-mode* nil))
 
 #|
 (sanitize (existing-dag-at-end-of (tdfs-indef (lex-or-psort-full-fs

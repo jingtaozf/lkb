@@ -210,12 +210,21 @@
   "type of interaction menu that is displayed 
    - valid values are :big or :core")
 
+;;; for the compare function 
+
+(def-lkb-parameter *discriminant-path* '(synsem local cont key))
+
+
 (defparameter *current-grammar-load-file* nil
   "not user settable - has to be here because it's
    used in lisp specific stuff as well as elsewhere")
 
 (defvar *lexicon* nil)
 (defvar *leaf-types* nil)
+
+;;; MRS interaction control
+
+(defvar *mrs-loaded* nil)
 
 ;;; generator globals (should be moved eventually)
 

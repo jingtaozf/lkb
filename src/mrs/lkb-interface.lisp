@@ -18,11 +18,13 @@
           make-pv-unif construct-tdfs create-wffs 
           process-unifications yadu)))
 
+#|
 ; just to avoid errors because package is undefined
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
            #-:ansi-eval-when (load eval compile)
   (unless (find-package "TREES")
     (defpackage "TREES")))              ; used in acl-mrs.lisp
+|#
 
 #-excl (defpackage "EXCL")
 

@@ -26,15 +26,19 @@
 		      cl-user::show-parse 
 		      cl-user::show-chart 
 		      cl-user::compare-parses
+                      ;; mrs
+                      cl-user::read-mrs-rule-file
+                      cl-user::clear-mrs-rules
                       ;; generate
-		      cl-user::generate-from-edge
                       cl-user::show-gen-result
 		      cl-user::show-gen-chart
+                      cl-user::index-for-generator
+                      cl-user::read-gen-rule-file
+                      cl-user::clear-gen-rules
                       cl-user::index-for-generator
 		      ;; link
 		      cl-user::apply-lex 
 		      cl-user::apply-lex-rules 
-		      cl-user::interactive-unification-check
 		      ;; tidy
 		      cl-user::clear-non-parents
 		      ;; output
@@ -47,7 +51,8 @@
                       cl-user::print-gen-chart
                       cl-user::batch-check-lexicon
 		      ;; options
-		      cl-user::get-parameters)))
+		      cl-user::get-parameters
+                      cl-user::find-type-from-features)))
 
 ;;; Menus moved to here from topmenu.lsp, since they can be
 ;;; treated as independent between ACL and MCL
@@ -64,11 +69,11 @@
                                           (list
                                            (make-menu-item :name "Complete grammar..."
                                                            :value 'read-script-file 
-                                                           :available-p t)
+                                                           :available-p :always)
                                            (make-menu-item :name "Reload grammar"
                                                            :value 'reload-script-file 
-                                                           :available-p nil))
-                                          :available-p t)
+                                                           :available-p :grammar))
+                                          :available-p :always)
                    (make-lkb-submenu-item :menu-title "View"
                                           :menu-items
                                           (list 
@@ -87,7 +92,7 @@
                                            (make-menu-item :name "Lexical rule..."
                                                            :value 'show-lex-rule)
                                            )
-                                          :available-p t)
+                                          :available-p :always)
                    (make-lkb-submenu-item :menu-title "Parse"
                                           :menu-items                       
                                           (list 
@@ -99,37 +104,32 @@
                                                            :value 'show-chart)
                                            (make-menu-item :name "Batch parse..."
                                                            :value 'parse-sentences-batch))
-                                          :available-p nil)
-                   (make-lkb-submenu-item :menu-title "Tests"
-                                          :menu-items                       
-                                          (list 
-                                           (make-menu-item :name "Apply lexical rule..."
-                                                           :value 'apply-lex)
-                                           (make-menu-item :name "Apply all lex rules..."
-                                                           :value 'apply-lex-rules)
-                                           )
-                                          :available-p nil) 
+                                          :available-p :grammar)
                    (make-lkb-submenu-item :menu-title "Debug"
-                                          :available-p nil
+                                          :available-p :grammar
                                           :menu-items
                                           (list
                                            (make-menu-item :name "Check lexicon"
-                                                           :value 'batch-check-lexicon :available-p nil)
+                                                           :value 'batch-check-lexicon 
+                                                           :available-p :grammar)
                                            (make-menu-item :name "Print chart"
-                                                           :value 'print-chart :available-p nil))
+                                                           :value 'print-chart 
+                                                           :available-p :grammar))
                                            )
                    (make-lkb-submenu-item :menu-title "Options"
                                           :menu-items
                                           (list
                                            (make-menu-item :name "Expand menu"
-                                                           :value 'expand-lkb-menu :available-p t)
+                                                           :value 'expand-lkb-menu 
+                                                           :available-p :always)
                                            (make-menu-item :name "Set options..."
-                                                           :value 'get-parameters :available-p t)
+                                                           :value 'get-parameters 
+                                                           :available-p :always)
                                            (make-menu-item :name "Save display settings..."
                                                            :value 'output-display-settings)
                                            (make-menu-item :name "Load display options..."
                                                            :value 'load-display-settings))
-                                          :available-p t)))))
+                                          :available-p :always)))))
 
 
 (defun create-big-lkb-system-menu nil
@@ -141,28 +141,28 @@
                  :menu-items
                   (list 
                      (make-menu-item :name "Complete grammar..."
-                                     :value 'read-script-file :available-p t)
+                                     :value 'read-script-file :available-p :always)
                      (make-menu-item :name "Reload grammar"
                                      :value 'reload-script-file 
-                                     :available-p nil)
+                                     :available-p :grammar)
                      (make-menu-item :name "Reload constraints"
                                      :value 'read-type-patch-files
-                                     :available-p nil)
+                                     :available-p :grammar)
                      (make-menu-item :name "Reload leaf types"
                                      :value 'reload-leaf-files
-                                     :available-p nil)
+                                     :available-p :grammar)
                      (make-menu-item :name "Reload lexicon"
-                        :value 'reload-lex-files :available-p nil)
+                        :value 'reload-lex-files :available-p :grammar)
                      (make-menu-item :name "Reload grammar rules"
-                        :value 'reload-grammar-rules :available-p nil)
+                        :value 'reload-grammar-rules :available-p :grammar)
                      (make-menu-item :name "Reload lexical rules"
-                        :value 'reload-lexical-rules :available-p nil)
+                        :value 'reload-lexical-rules :available-p :grammar)
                      (make-menu-item :name "Reload tree nodes"
-                        :value 'reload-template-files :available-p nil)
+                        :value 'reload-template-files :available-p :grammar)
                      (make-menu-item :name "Reload other entries"
-                        :value 'reload-psort-files :available-p nil)
+                        :value 'reload-psort-files :available-p :grammar)
                      )
-                  :available-p t)
+                  :available-p :always)
          (make-lkb-submenu-item :menu-title "View"
                  :menu-items
                   (list 
@@ -181,7 +181,7 @@
                      (make-menu-item :name "Lexical rule..."
                         :value 'show-lex-rule)
                      )
-               :available-p t)
+               :available-p :always)
          (make-lkb-submenu-item :menu-title "Parse"
                  :menu-items                       
                   (list 
@@ -198,64 +198,74 @@
   		        :value 'parse-sentences-batch)
 		     (make-menu-item :name "Compare..."
                         :value 'compare-parses))
-               :available-p nil)
+                  :available-p :grammar)
+         (make-lkb-submenu-item :menu-title "MRS"
+                 :menu-items                       
+                 (list 
+                     (make-menu-item :name "Load munger..."
+                                     :value 'read-mrs-rule-file
+                                     :available-p :mrs)
+                     (make-menu-item :name "Clear munger"
+                                     :value 'clear-mrs-rules
+                                     :available-p :mrs))
+               :available-p :mrs)
          (make-lkb-submenu-item :menu-title "Generate"
                  :menu-items                       
                  (list 
-                     (make-menu-item :name "Generate..."
-                        :value 'generate-from-edge)
                      (make-menu-item :name "Redisplay realisation"
-                        :value 'show-gen-result)
+                                     :value 'show-gen-result
+                                     :available-p :mrs)
                      (make-menu-item :name "Show gen chart"
-                                     :value 'show-gen-chart)
+                                     :value 'show-gen-chart
+                                     :available-p :mrs)
+                     (make-menu-item :name "Load heuristics..."
+                                     :value 'read-gen-rule-file
+                                     :available-p :mrs)
+                     (make-menu-item :name "Clear heuristics"
+                                     :value 'clear-gen-rules
+                                     :available-p :mrs)
                      (make-menu-item :name "Index"
-                        :value 'index-for-generator))
-               :available-p nil)
-         (make-lkb-submenu-item :menu-title "Tests"
-                 :menu-items                       
-                  (list 
-                     (make-menu-item :name "Apply lexical rule..."
-                        :value 'apply-lex)
-                     (make-menu-item :name "Apply all lex rules..."
-                        :value 'apply-lex-rules)
-                     )
-                  :available-p nil)           
+                                     :value 'index-for-generator
+                                     :available-p :mrs))
+               :available-p :mrs)
          (make-lkb-submenu-item :menu-title "Debug"
-                                :available-p nil
+                                :available-p :grammar
                                 :menu-items
                                 (list
                                  (make-menu-item :name "Check lexicon"
-                                                 :value 'batch-check-lexicon :available-p nil)
+                                                 :value 'batch-check-lexicon :available-p :grammar)
+                                 (make-menu-item :name "Find features' type"
+                                                 :value 'find-type-from-features :available-p :grammar)
                                  (make-menu-item :name "Print parser chart"
-                                                 :value 'print-chart :available-p nil)
+                                                 :value 'print-chart :available-p :grammar)
                                  (make-menu-item :name "Print generator chart"
-                                                 :value 'print-gen-chart :available-p nil)))
-         (make-menu-item :name "Tidy up"
-                         :value 'clear-non-parents
-                         :available-p nil) 
-         (make-lkb-submenu-item :menu-title "Output"
+                                                 :value 'print-gen-chart :available-p :mrs)))
+         (make-lkb-submenu-item :menu-title "Advanced"
                  :menu-items 
                    (list                     
                       (make-menu-item :name "Dump system..."
-                        :value 'dump-lkb)
+                                      :value 'dump-lkb :available-p :always)
+                      (make-menu-item :name "Tidy up"
+                                      :value 'clear-non-parents
+                                      :available-p :grammar)
 ;                     (make-menu-item :name "Types with glbs..."
 ;                        :value 'output-type-file 
-;                        :available-p nil)
+;                        :available-p :grammar)
                      )
-		  :available-p nil)
+		  :available-p :always)
 	    (make-lkb-submenu-item 
 	     :menu-title "Options"
 	     :menu-items                       
 	     (list 
               (make-menu-item :name "Shrink menu"
-                                    :value 'shrink-lkb-menu :available-p t)
+                                    :value 'shrink-lkb-menu :available-p :always)
 	      (make-menu-item :name "Set options"
-			      :available-p t
+			      :available-p :always
 			      :value 'get-parameters)
               (make-menu-item :name "Save display settings..."
                                                            :value 'output-display-settings)
               (make-menu-item :name "Load display options..."
                                                            :value 'load-display-settings))
-	     :available-p t)))))
+	     :available-p :always)))))
 
 

@@ -3,8 +3,6 @@
 ;;;
 ;;; Drastically simplified for YADU
 ;;; old laurel input stuff is now in laurel/lrlinput
-;;; facilities for templates for trees and quick-check need 
-;;; to be added back in
 
 (in-package :cl-user)
 

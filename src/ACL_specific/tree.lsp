@@ -238,12 +238,11 @@
 ;;; we currently have one on screen, and ask for type hierarchy window to be
 ;;; scrolled so given type is visible in centre, and the type highlighted. If
 ;;; we're looking in an existing window and the type isn't a descendent of the
-;;; window's top type then we give up immediately. If there's not a hierarchy
-;;; onscreen give up. User can always open one up from toplevel view menu
+;;; window's top type then we show a new hierarchy
 
 (defvar *needs-redisplay* nil)
 
-(defun display-type-in-tree (node)
+(defun display-type-in-tree (node &optional scroll-onlyp)
   (let* ((frame (reuse-frame 'type-hierarchy))
 	 (type-entry
 	  (or (get-type-entry node)
@@ -253,20 +252,24 @@
 		       (type-hierarchy-nodes frame) 
 		     *toptype*))
 	 (*needs-redisplay* nil))
-    (when (and type-entry
-	       frame
+    (when type-entry
+      (if (and frame
 	       (or (eq type top-type)
-		   (member type (retrieve-descendants top-type))))
-      ;; ensure the type will be visible, whether or not it is now
-      (unshrink-ancestors type-entry top-type)
-      (when *needs-redisplay*
-	(create-type-hierarchy-tree (type-hierarchy-nodes frame) frame
-				    (type-hierarchy-show-all-p frame)))
-      (let* ((stream (clim:frame-standard-output frame))
-	     (record (find-object stream #'(lambda (t1) (eq t1 type)))))
-	(when record
-	  (scroll-to record stream)
-	  (highlight-objects (list record) frame))))))
+		   (member type-entry (retrieve-descendants top-type))))
+          ;; ensure the type will be visible, whether or not it is now
+          (progn
+            (unshrink-ancestors type-entry top-type)
+            (when *needs-redisplay*
+              (create-type-hierarchy-tree (type-hierarchy-nodes frame) frame
+                                          (type-hierarchy-show-all-p frame)))
+            (let* ((stream (clim:frame-standard-output frame))
+                   (record (find-object stream #'(lambda (t1) (eq t1 type)))))
+              (when record
+                (scroll-to record stream)
+                (highlight-objects (list record) frame))))
+        (unless scroll-onlyp
+          (create-type-hierarchy-tree type nil t))))))
+        
 
 (defun unshrink-ancestors (type-entry top-type)
   ;; can't just use type-ancestors list since we have to stop at top-type arg

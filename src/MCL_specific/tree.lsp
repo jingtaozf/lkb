@@ -366,7 +366,7 @@
 (defun front-type-hierarchy-window nil
    (front-window :class 'active-type-hier-window))
 
-(defun display-type-in-tree (node)
+(defun display-type-in-tree (node &optional scroll-onlyp)
    (let ((type-entry
             (or (get-type-entry node)
                 (get-type-entry (get node 'real-thing)))))
@@ -376,10 +376,10 @@
                 (pane (and existing (ccl::my-scroller existing)))
                 (top-type
                    (if existing (top-type-node pane) *toptype*)))
-            (when existing
-               (if (or (eq type top-type)
+           (if (and existing
+                    (or (eq type top-type)
                        (member type-entry 
-                         (retrieve-descendants top-type) :test #'eq))
+                         (retrieve-descendants top-type) :test #'eq)))
                   (progn
                      ;; we want to see if type is not visible in this window.
                      ;; We can't just test for visible-p on the type since another
@@ -402,7 +402,9 @@
                            (setf (show-all-p pane) t))
                         (create-type-hierarchy-tree top-type existing))
                      (reposition-type-in-window node pane t nil))
-                  (lkb-beep)))))))
+             (unless scroll-onlyp
+               (create-type-hierarchy-tree type nil t)))))))
+                  
 
 (defun unshrink-ancestors (type-entry top-type)
    ;; can't just use type-ancestors list since we have to stop at top-type arg

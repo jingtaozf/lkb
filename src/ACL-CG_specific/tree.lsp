@@ -262,7 +262,7 @@
          (when (and window (cg:windowp window))
             (return window)))))
 
-(defun display-type-in-tree (node)
+(defun display-type-in-tree (node &optional scroll-onlyp)
    (let ((type-entry
             (or (get-type-entry node)
                 (get-type-entry (get node 'real-thing)))))
@@ -297,8 +297,9 @@
                                  (funcall 
                                    (symbol-function 'hide-in-type-hierarchy-p)
                                     type))
-                           (setf (cg-user::show-all-p existing) t))
-                        (create-type-hierarchy-tree top-type existing))
+                          (setf (cg-user::show-all-p existing) t))
+                        (unless scroll-onlyp
+                          (create-type-hierarchy-tree top-type existing)))
                      (reposition-type-in-window node existing t))
                   (lkb-beep)))))))
 

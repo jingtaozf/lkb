@@ -191,7 +191,9 @@
 		(rule (and (rule-p item) item)))
 	     (when rule
 	       (display-fs (rule-full-fs rule)
-			   (format nil "~A" (rule-id rule)))))))
+			   (format nil "~A" (rule-id rule))
+                           (rule-id rule)
+                           )))))
    (make-instance 'menu-item
      :menu-item-title "Highlight nodes"
      :menu-item-action

@@ -6,7 +6,7 @@
         
 ;;; ACL version
 
-(in-package :user)
+(in-package :cl-user)
 
 ;; Dialect specific stuff
 
@@ -106,10 +106,13 @@
              (rule (and (rule-p item) item)))
 	(if rule
 	    (display-fs (rule-full-fs rule)
-			(format nil "~A" (rule-id rule)))
+			(format nil "~A" (rule-id rule))
+                        (rule-id rule))
 	  (let ((alternative (get-tdfs-given-id item)))
 	    (when alternative
-	      (display-fs alternative (format nil "~A" item)))))))
+	      (display-fs alternative 
+                          (format nil "~A" item)
+                          item))))))
      (generate 
       (really-generate-from-edge edge-record)))))
 
@@ -199,8 +202,12 @@
 (define-parse-tree-frame-command (com-multiple-tree-menu)
     ((tree 'prtree :gesture :select))
   (let ((command (clim:menu-choose
-		  '(("Show enlarged tree" :value show)
+		  `(("Show enlarged tree" :value show)
                     ("Highlight chart nodes" :value chart) 
+                    ("Generate" :value generate :active ,*mrs-loaded*)
+                    ("MRS" :value mrs :active ,*mrs-loaded*)
+                    ("Indexed MRS" :value indexed :active ,*mrs-loaded*)
+                    ("Scoped MRS" :value scoped :active ,*mrs-loaded*)
                     ))))
     (when command
       (handler-case
@@ -219,6 +226,10 @@
                                                     5 #'chart-ready)))
              (display-edge-in-chart
               (prtree-edge tree)))
+            (generate (really-generate-from-edge (prtree-edge tree)))
+            (mrs (show-mrs-window (prtree-edge tree)))
+            (indexed (show-mrs-indexed-window (prtree-edge tree)))
+            (scoped (show-mrs-scoped-window (prtree-edge tree)))
             )
 	(error (condition) 
 	  (declare (ignore condition) )
@@ -232,4 +243,4 @@
     ()   
     (show-chart))
 
-    
+

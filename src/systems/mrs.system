@@ -9,6 +9,7 @@
     :depends-on (#+:lkb "lkb" #+:page "page")
     :finally-do
     (progn
+      #+:lkb(setf cl-user::*mrs-loaded* t)
       (when COMMON-LISP-USER::*grammar-directory* 
               (load (merge-pathnames
                         (make-pathname :name "mrsglobals-eng.lisp")
@@ -67,8 +68,8 @@
        #+:lkb (:file "mrsruleinput")           ; creating rules for above
                                          ; requires LKB, but outputs compiled 
                                          ; rules which can be used without LKB
-       ;; (:file "acl-mrs")             ; display etc in CLIM
-                                         ; needs fixing
+       #+:lkb (:file "lkb-acl-mrs")      ; display etc in CLIM
+       #+:page (:file "acl-mrs")
        #+:lkb (:file "lkbmrs")          ; LKB specific - redefines
                                         ; some functions
        #+:page (:file "pagemrs")))        ; PAGE specific

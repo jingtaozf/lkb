@@ -216,19 +216,6 @@
 	(type-ancestors type-record)
       (error "~%~A is not a valid type" type-name))))
 
-(defun retrieve-ancestors-any-type (type-name)
-  (let ((type-record (get-type-entry type-name)))
-    (cond 
-     (type-record 
-      (type-ancestors type-record))
-     ((stringp type-name)
-      (if *string-type*
-	  (cons *string-type* 
-		(retrieve-ancestors *string-type*))))
-     ;; ((instance-type-parent type-name) ?)
-     (t 
-      (error "~%~A is not a valid type" type-name)))))
-
 (defun retrieve-descendants (type-name)
   (let ((type-record (get-type-entry type-name)))
     (if type-record 

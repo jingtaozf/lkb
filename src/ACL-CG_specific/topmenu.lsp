@@ -31,6 +31,8 @@
 
 (defvar *lkb-menu-disabled-list* nil)
 
+(defvar *lkb-menu-mrs-list* nil)
+
 (defvar *lkb-top-frame* nil
   "only relevant for the exe version")
 
@@ -71,19 +73,24 @@
 ;;; Define make-menu-item for leaf items only
 
 (defun make-menu-item (&key name value available-p)
-  (unless available-p (pushnew name *lkb-menu-disabled-list* :test #'equal))
+  (unless (eql available-p :always) 
+    (pushnew name *lkb-menu-disabled-list* :test #'equal))
+  (when (eql available-p :mrs) 
+    (pushnew name *lkb-menu-mrs-list* :test #'equal))
   (make-instance 'cg:menu-item :name name
                :value value :available-p available-p))
 
 ;;; items which are themselves menus are created as follows
 
 (defun make-lkb-submenu-item (&key menu-title menu-items available-p)
-   (unless available-p 
-      (pushnew menu-title *lkb-menu-disabled-list* :test #'equal))
-   (make-menu-item :name menu-title      
-     :value
-     (open-top-level-menu menu-items)
-     :available-p available-p))
+  (unless (eql available-p :always) 
+    (pushnew name *lkb-menu-disabled-list* :test #'equal))
+  (when (eql available-p :mrs) 
+    (pushnew name *lkb-menu-mrs-list* :test #'equal))
+  (make-menu-item :name menu-title      
+                  :value
+                  (open-top-level-menu menu-items)
+                  :available-p available-p))
 
 (defun open-top-level-menu (list-of-menu-items)
    (cg:open-menu
@@ -101,6 +108,8 @@
   (set-up-lkb-interaction))
 
 (defun set-up-lkb-interaction (&optional system-type)
+  (setf *lkb-menu-disabled-list* nil)
+  (setf *lkb-menu-mrs-list* nil)
   (unless system-type 
     (setf system-type (or *lkb-menu-type* :core)))
 ;;; Create the Lkb menu and sub-menus.
@@ -168,7 +177,7 @@
 
 ; FIX
 ; ignore disabling for now and cleaning up the temp file
-; also ignore dumping the image
+; ignore dumping the image
 
 (defun dump-lkb nil
   (format t "~%Dump-lkb is not yet implemented")
@@ -182,18 +191,26 @@
   ;;; this is called when a type file is being redefined
    (disable-defined-interactions 
     *lkb-real-menu*))
+
+(defun enable-mrs-interactions nil
+  (when cl-user::*mrs-loaded*
+    (enable-defined-interactions 
+     *lkb-real-menu*)))
      
     
 (defun enable-defined-interactions (menu)
    (for menu-item in 
       (cg:menu-items menu)      
       do
-      (let ((value (cg:value menu-item)))
-         (when value
-               (setf (cg:available menu-item) t)
-                (if (cg:menup value)
-                   (enable-defined-interactions value))
-                ))))
+      (let ((name (cg:name menu-item))
+            (value (cg:value menu-item)))
+        (when value
+          (when (or cl-user::*mrs-loaded* 
+                    (not (member name *lkb-menu-mrs-list*)))
+            (setf (cg:available menu-item) t)
+            (if (cg:menup value)
+                (enable-defined-interactions value))
+            )))))
 
 (defun disable-defined-interactions (menu)
    (for menu-item in 

@@ -245,8 +245,8 @@
       (format t "~&No strings generated")))
 
 
-(defun display-type-in-tree (type)
-  (declare (ignore type))
+(defun display-type-in-tree (type scroll-onlyp)
+  (declare (ignore type scroll-onlyp))
   nil)
 
 (defun enable-type-interactions nil
