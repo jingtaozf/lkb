@@ -110,7 +110,7 @@
                                 (spelling-change-rule-p rule)
                                 ;;; test changed AAC Feb 1996
                                 (car (mapcar #'car
-                                             (morph-generate 
+                                             (full-morph-generate 
                                               (extract-orth-from-fs (cdr entry))
                                               (rule-id rule))))))))
                      (if result 
@@ -135,7 +135,7 @@
                      (if 
                        (spelling-change-rule-p rule)
                        (car (mapcar #'car
-                                    (morph-generate 
+                                    (full-morph-generate 
                                      (extract-orth-from-fs entry)
                                      (rule-id rule))))))))))
       (if transformed-entries 
@@ -209,8 +209,24 @@
 
 (defparameter *irregular-forms* (make-hash-table :test #'equal))
 
+(defparameter *irregular-forms-gen* (make-hash-table :test #'equal))
+
 (defun find-irregular-morphs (word)
   (gethash (string-upcase word) *irregular-forms*))
+
+(defun gen-irreg-morphs (stem rule)
+  ;;; assumes only one answer which is clearly wrong, but until we
+  ;;; have a mechanism for alternate spellings in
+  ;;; lexical entries it'll have to do
+  (let ((irreg
+         (gethash (string-upcase stem) *irregular-forms-gen*)))
+    (cdr (assoc rule irreg)))) 
+
+(defun full-morph-generate (stem rule)
+  (let ((irreg-form (gen-irreg-morphs stem rule)))
+    (if irreg-form
+        (list (list (string-downcase irreg-form) (list rule stem)))
+        (morph-generate stem rule))))
 
 #|
 (read-irreg-form-file "Macintosh HD:lkb99-expt:data:Dikran:irregs.tab")
@@ -220,6 +236,7 @@
 
 (defun read-irreg-form-file (file-name)
   (clrhash *irregular-forms*)
+   (clrhash *irregular-forms-gen*) 
   (with-open-file
     (istream file-name :direction :input)
     (format t "~%Reading in irregular forms")
@@ -238,7 +255,9 @@
 
 (defun add-to-irregulars (irreg-form rule stem)
   (push (list stem (list rule irreg-form))
-        (gethash irreg-form *irregular-forms*)))
+        (gethash irreg-form *irregular-forms*))
+  (push (cons rule irreg-form)
+        (gethash stem *irregular-forms-gen*)))
 
 (defun create-lex-rule-name (rule-name)
   (if *lex-rule-suffix*

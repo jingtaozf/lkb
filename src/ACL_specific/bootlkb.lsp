@@ -36,6 +36,8 @@
                  :directory *lkb-source-dir*)
    "a temporary file for the lexicon")
 
+(defpackage "MRS")
+(defpackage "MAIN")
 
 (eval-when (eval)
    (load

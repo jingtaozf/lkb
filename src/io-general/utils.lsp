@@ -38,7 +38,8 @@
    (enable-type-interactions)
 ;   (initialise-type-menus)
    (close-existing-type-hierarchy-trees)
-   (create-type-hierarchy-tree))
+   (when *display-type-hierarchy-on-load*
+     (create-type-hierarchy-tree)))
 
 
 (defparameter *ordered-type-list* nil)

@@ -33,7 +33,9 @@
 ;;; Status -> status: status-name
 ;;;
 ;;; special characters are
-;;; . : < = & , # [ ] @ $ ( ) > !
+;;; . : < = & , # [ ] @ $ ( ) > ! ^
+;;; ^ - added - indicates `expanded syntax'
+;;; also note that % indicates an instance type
 
 ;;; the type file extra.tdl is necessary for the basic type definitions
 ;;; to get the templates, evaluate the file templates.lsp
@@ -42,7 +44,7 @@
 
 (defun make-tdl-break-table nil 
   (define-break-characters '(#\< #\> #\! #\= #\: #\. #\# #\&
-                             #\, #\[ #\] #\; #\@ #\$ #\( #\))))
+                             #\, #\[ #\] #\; #\@ #\$ #\( #\) #\^)))
 
 
 (defun read-tdl-type-file-aux (file-name &optional settings-file)
@@ -60,7 +62,8 @@
       (when settings-file
          (set-up-display-settings settings-file))           
       (set-up-type-interactions)
-      (lkb-beep)))
+      (lkb-beep)
+      t))
 
 (defun read-tdl-type-patch-file nil 
   (clear-types-for-patching-constraints)
@@ -79,7 +82,8 @@
    (when (patch-type-table) 
       (canonicalise-feature-order)           
       (set-up-type-interactions)
-      (lkb-beep)))
+      (lkb-beep)
+      t))
 
 
 (defun read-tdl-type-files-aux (file-names &optional settings-file)
@@ -99,7 +103,8 @@
       (when settings-file
          (set-up-display-settings settings-file))           
       (set-up-type-interactions)
-      (lkb-beep)))
+      (lkb-beep)
+      t))
              
 (defun read-tdl-type-patch-file-with-name (file-name) 
   (clear-types-for-patching-constraints)
@@ -131,7 +136,8 @@
    (when (patch-type-table) 
       (canonicalise-feature-order)           
       (set-up-type-interactions)
-      (lkb-beep)))    
+      (lkb-beep)
+      t))    
 
 (defun read-tdl-type-stream (istream &optional augment) 
    (loop
@@ -309,7 +315,7 @@
   ;;; Templ-call         - @ - ditto
   ;;; Coreference        - # - sets up global coref and returns nil
   ;;; Symbol-value       - ' - returns a list of one path=string unif
-  ;;; Expanded-syntax    - % - not valid in type files (see below)
+  ;;; Expanded-syntax    - ^ - not valid in type files (see below)
   ;;; Type               - anything else - returns a list of one path=type unif
   (let ((next-char (peek-char t istream nil 'eof)))
     (cond ((eql next-char 'eof) (error "Unexpected eof when reading ~A" name))
@@ -320,7 +326,7 @@
           ((eql next-char #\@) (read-tdl-templ-call istream name path-so-far))
           ((eql next-char #\() (read-tdl-lkb-disj istream name path-so-far))
           ((eql next-char #\') (read-tdl-symbol istream name path-so-far))
-          ((eql next-char #\!) (if (and (boundp 
+          ((eql next-char #\^) (if (and (boundp 
                                          *tdl-expanded-syntax-function*)
                                         *tdl-expanded-syntax-function*)
                                    (apply *tdl-expanded-syntax-function*
@@ -337,7 +343,7 @@
   ;;; The idea is to allow the TDL reading code to be specialized
   ;;; for different applications by allowing this function to
   ;;; be redefined
-  (cerror "~%Treat as type" "~% % syntax not allowed in type files")
+  (cerror "~%Treat as type" "~% ^ syntax not allowed in type files")
   (read-tdl-type istream name path-so-far))
 
 

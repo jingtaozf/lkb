@@ -75,6 +75,7 @@
 
 ;;; Display 
 
+(defparameter *display-type-hierarchy-on-load* t)
 
 (defparameter *display-glb-messages* nil
    "if set, informs user of glbtypes as they are created")

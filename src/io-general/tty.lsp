@@ -152,7 +152,7 @@
                            (evaluate-unifications lex-rule 
                               (list (copy-tdfs-completely lex-entry-fs)) 
                               (mapcar #'car 
-                                      (morph-generate 
+                                      (full-morph-generate 
                                        (extract-orth-from-fs lex-entry-fs)
                                        (rule-id lex-rule))))
                            (evaluate-unifications lex-rule

@@ -711,6 +711,9 @@
                'string)) 
          (cdr morphological-possibility))))
    
+;;; AAC - changed the following two functions
+;;; June 1998, but have no confidence they are working correctly!
+
 (defun make-suffix (input-word rule)
    (let* ((node (suffix-tree-root))
          (oldword 
@@ -718,7 +721,7 @@
                (coerce 
                   (mapcar #'character input-word) 
                   'string)))
-         (output 
+         (reg-output 
             (process-suffix 
                oldword
                (reverse input-word) 
@@ -726,22 +729,24 @@
                   when (eql rule (suffix-rule-affix-name poss))
                   collect
                   poss)
-               nil)))
-      (for residue on (reverse input-word)
-         while node
-         do
-         (setf node (ass-look-up node))
-         (and node
-            (setf output 
-               (process-suffix 
-                  oldword
-                  (cdr residue) 
-                  (for poss in (l-tree-node-rules node)
-                     when (eql rule (suffix-rule-affix-name poss))
-                     collect
-                     poss)
-                  nil))))
-      output))
+               nil))
+         (output nil))
+     (for residue on (reverse input-word)
+          while node
+          do
+          (setf node (ass-look-up node))
+          (and node
+               (let ((new-output 
+                     (process-suffix 
+                      oldword
+                      (cdr residue) 
+                      (for poss in (l-tree-node-rules node)
+                           when (eql rule (suffix-rule-affix-name poss))
+                           collect
+                           poss)
+                      nil)))
+                 (if new-output (setf output new-output)))))
+     (or output reg-output)))
 
 (defun make-prefix (input-word rule)
    (let* ((node (prefix-tree-root))
@@ -750,7 +755,7 @@
                (coerce 
                   (mapcar #'character input-word) 
                   'string)))
-         (output 
+         (reg-output 
             (process-prefix 
                oldword
                input-word 
@@ -758,22 +763,24 @@
                   when (eql rule (prefix-rule-affix-name poss))
                   collect
                   poss)
-               nil)))
-      (for residue on input-word
-         while node
-         do
-         (setf node (ass-look-up node))
-         (and node
-            (setf output 
-               (process-prefix 
-                  oldword
-                  (cdr residue) 
-                  (for poss in (l-tree-node-rules node)
-                     when (eql rule (prefix-rule-affix-name poss))
-                     collect
-                     poss)
-                  nil))))
-      output))
+               nil))
+         (output nil))
+     (for residue on input-word
+          while node
+          do
+          (setf node (ass-look-up node))
+          (and node
+               (let ((new-output 
+                     (process-prefix 
+                      oldword
+                      (cdr residue) 
+                      (for poss in (l-tree-node-rules node)
+                           when (eql rule (prefix-rule-affix-name poss))
+                           collect
+                           poss)
+                      nil)))
+              (if new-output (setf output new-output)))))   
+     (or output reg-output)))
 
 ;;; Currently dubious, hence not instnatiated...
 

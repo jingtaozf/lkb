@@ -73,7 +73,8 @@
       (when settings-file
          (set-up-display-settings settings-file))           
       (set-up-type-interactions)
-      (lkb-beep)))
+      (lkb-beep)
+      t))
 
 (defun read-type-files nil  
    (let* ((file-names 
@@ -103,7 +104,8 @@
       (when settings-file
          (set-up-display-settings settings-file))           
       (set-up-type-interactions)
-      (lkb-beep)))
+      (lkb-beep)
+      t))
 
 
              
