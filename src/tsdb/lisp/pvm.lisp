@@ -42,6 +42,7 @@
   (when reset                           
     (pvm_quit)
     (pvm_start :user (current-user))
+    (sleep 2)
     (setf *pvm-master* (pvm_register file *pvm-debug-p*))
     (setf *pvm-clients* nil))
   (when (and file (null reset))

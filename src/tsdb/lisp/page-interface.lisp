@@ -349,7 +349,11 @@
                       (list readings first total
                             ctasks ftasks etasks stasks
                             raedges rpedges
-                            results)))))))))))
+                            results))
+                     (unless (or trace (= readings -1))
+                       (let ((statistics (pg::summarize-rules)))
+                         (when statistics
+                           (cons :statistics statistics)))))))))))))
 
 (defun get-test-run-information ()
   (let* ((grammar (current-grammar))

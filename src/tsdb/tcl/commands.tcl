@@ -427,7 +427,7 @@ proc tsdb_process {code {data ""} {key ""}} {
 
   global globals test_suites;
 
-  if {$data == "" && [verify_ts_selection]} {return 1};
+  if {$data == "" && [verify_ts_selection "" "write"]} {return 1};
 
   switch $code {
     all {set condition ""}

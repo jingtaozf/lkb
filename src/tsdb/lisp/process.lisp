@@ -584,12 +584,7 @@
         (push (cons :gcs (+ global scavenge)) result)
         (push (cons :comment comment) result)
         (when (and timeup (not (= readings -1)))
-          (push (cons :error (if (stringp timeup) timeup "timeup")) result))
-        #+:page
-        (unless (or interactive (= readings -1))
-          (let ((statistics (pg::summarize-rules)))
-            (when statistics
-              (push (cons :statistics statistics) result)))))
+          (push (cons :error (if (stringp timeup) timeup "timeup")) result)))
       result))))
 
 (defun process-queue (runs &key (verbose t) (stream *tsdb-io*) interrupt)

@@ -248,6 +248,8 @@ proc main {} {
     -command {tsdb_file rename}
   .menu.file.menu add command -label "Reread" \
     -command {tsdb_file reread}
+  .menu.file.menu add command -label "Swap" \
+    -command {tsdb_file swap} -state disabled
   .menu.file.menu add command -label "Compress" \
     -command {tsdb_file compress} -state disabled
   .menu.file.menu add command -label "Purge" \

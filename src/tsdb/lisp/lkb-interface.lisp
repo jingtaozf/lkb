@@ -439,8 +439,8 @@
 
 (defun summarize-chart (&key derivationp)
   (loop
-      with leaves = nil
       with pedges = 0
+      with i-stasks = 0
       with words = 0
       with l-stasks = 0
       with derivations = nil
@@ -453,41 +453,34 @@
             for configuration in (chart-entry-configurations entry)
             for edge = (chart-configuration-edge configuration)
             for rule = (edge-rule edge)
+            for tdfs = (edge-dag edge)
+            for dag = (and tdfs (tdfs-indef tdfs))
             do 
-              ;;
-              ;; the situation here is somewhat more complicated than we like
-              ;; it :-{: the LKB chart contains two edges for words that have
-              ;; undergone an inflectional rule without spelling change (e.g.
-              ;; `pos_adj_infl_rule') but only one for inflectional rules that
-              ;; change the surface form (e.g. `third_sg_fin_verb_infl_rule');
-              ;; hence, in counting the number of passives edges and words we
-              ;; have to keep track of lexical entry + inflectional rule pairs
-              ;; and adjust the counting accordingly.       (26-may-99  -  oe)
-              ;;
+              (when derivationp 
+                (when (and dag (dag-inflected-p dag))             
+                  (push (compute-derivation-tree edge) derivations)))
               (cond
                ((and (rule-p rule) (tsdb::inflectional-rule-p (rule-id rule)))
-                (if (edge-children edge)
+                (incf i-stasks)
+                (incf words)
+                (when (edge-morph-history edge)
                   (loop
-                      for child in (edge-children edge)
-                      for id = (edge-id child)
-                      unless (member id leaves) 
+                      for child in (edge-morph-history edge)
+                      for tdfs = (edge-dag child)
+                      for dag = (and tdfs (tdfs-indef tdfs))
+                      when (and dag (dag-inflected-p dag))
                       do
-                        (incf words)
-                        (pushnew id leaves))
-                  (incf words)))
-               ((not (rule-p rule))
-                (let ((id (edge-id edge)))
-                  (unless (member id leaves)
-                    (incf words)
-                    (pushnew id leaves))))
+                        (incf words))))
                ((rule-p rule)
                 (incf pedges)
-                (when derivationp 
-                  (push (compute-derivation-tree edge) derivations))
-                (when (lexical-rule-p rule) (incf l-stasks)))))
-      finally (return (pairlis '(:pedges :aedges :words :l-stasks 
+                (when (lexical-rule-p rule) (incf l-stasks)))
+               ((not (rule-p rule))
+                (when (and dag (dag-inflected-p dag)) (incf words)))))
+      finally (return (pairlis '(:pedges :aedges 
+                                 :words :i-stasks :l-stasks
                                  :derivations)
-                               (list (+ pedges words) aedges words l-stasks 
+                               (list (+ pedges words) aedges 
+                                     words i-stasks l-stasks
                                      derivations)))))
               
                            
@@ -621,7 +614,7 @@
                        :common-lisp-user))
          (instance (ignore-errors (get-psort-entry name))))
     (when instance 
-      (let ((tdfs (lex-or-psort-full-fs instance))
+      (let ((tdfs (copy-tdfs-completely (lex-or-psort-full-fs instance)))
             (id (lex-or-psort-sense-id instance)))
         (make-edge :id 0 :category (indef-type-of-tdfs tdfs)
                    :rule form :leaves (list form) :lex-ids (list id)

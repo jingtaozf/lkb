@@ -644,15 +644,29 @@ proc tsdb_set {variable {value ""}} {
 }; # tsdb_set()
 
 
-proc verify_ts_selection {{code ""}} {
+proc verify_ts_selection {{code ""} {access "read"}} {
 
-  global globals compare_in_detail;
+  global globals compare_in_detail test_suites;
 
   if {$globals(data) == ""} {
     tsdb_beep;
     status "no test suite database active; make up your mind ... |:-\}" 5;
     return 1;
   }; # if
+  if {$access == "write"} {
+    for {set i 0} {$i < [array size test_suites]} {incr i} {
+      if {![string compare $globals(data) [lindex $test_suites($i) 0]]} {
+        set index $i;
+        break;
+      }; # if
+    }; # for
+    if {![info exists index] || [lindex $test_suites($index) 1] != "rw"} {
+      tsdb_beep;
+      status "database `$globals(data)' is write-protected (has `ro' status)" 5;
+      return 1;
+    }; # fi
+  }; # fi
+
   if {$code != ""
       && (![info exists compare_in_detail(source)] 
           || $compare_in_detail(source) == "")} {
