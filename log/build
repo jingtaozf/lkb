@@ -16,7 +16,6 @@ cvs update: Updating tsdb/src
 cvs update: Updating .
 cvs update: Updating lkb
 cvs update: Updating .
-U banca.items
 cvs update: Updating lkb
 ? lkb/globals.lsp.fasl
 ? lkb/mrs-globals.lisp.fasl
@@ -25,7 +24,6 @@ cvs update: Updating .
 M Makefile
 ? doc
 ? etc
-? linux
 ? man
 ? solaris
 cvs update: Updating bin
@@ -163,6 +161,7 @@ cvs update: Updating src/.nasl/tty
 cvs update: Updating src/.nasl/www
 cvs update: Updating src/ACL-CG_specific
 cvs update: Updating src/ACL_specific
+M src/ACL_specific/deliver.lsp
 cvs update: Updating src/MCL_specific
 cvs update: Updating src/data
 cvs update: Updating src/data/Dikran
@@ -360,7 +359,7 @@ cvs update: Updating src/www
 **********
 Checking in /eo/e7/apache/htdocs/src/lkb/src/version.lsp;
 /eo/e1/CVSROOT/newlkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.193; previous revision: 1.192
+new revision: 1.194; previous revision: 1.193
 done
 ( \
   cd /eo/e7/apache/htdocs/src/lkb; \
@@ -1194,10 +1193,8 @@ src/data/itfs/g8gap/user-fns.lsp
 src/data/itfs/g8gap/user-prefs.lsp
 rm -f /eo/e7/apache/htdocs/src/.yes;
 rsh cypriot "cd /eo/e7/apache/htdocs/src/lkb && make lkb_linux_om@remote";
-make: *** Warning: File `Makefile' has modification time in the future (2002-11-27 07:48:24 > 2002-11-27 07:31:29)
+make: *** Warning: File `Makefile' has modification time in the future (2002-11-27 07:48:24 > 2002-11-27 07:44:29)
 ( \
-/bin/sh: ./clim: No such file or directory
-make: *** [lkb_linux_om@remote] Error 127
   echo "(load \"/eo/e7/apache/htdocs/src/lkb/src/general/loadup.lisp\")"; \
   echo "(load \"/eo/e7/apache/htdocs/src/lkb/src/ACL_specific/deliver.lsp\")"; \
   echo "(pushnew :lkb *features*)"; \
@@ -1207,6 +1204,41 @@ make: *** [lkb_linux_om@remote] Error 127
   echo "(compile-system \"tsdb\" :force t)"; \
   echo "(excl:exit)"; \
 ) | ( cd /lingo/local/acl; ./clim -qq && touch /eo/e7/apache/htdocs/src/.yes; )
+Temporarily scaling back lisp reserved region from 1610612736 to
+1542455296 bytes. Scaling back is normal and is typically not a matter
+for concern.  This message is printed for record only.
+International Allegro CL Enterprise Edition
+6.2 [Linux (x86)] (Nov 27, 2002 7:25)
+Copyright (C) 1985-2002, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
+
+This development copy of Allegro CL is licensed to:
+   [TC7227] Stanford University, CSLI
+
+;; Optimization settings: safety 1, space 1, speed 3, debug 2.
+;; For a complete description of all compiler switches given the
+;; current optimization settings evaluate (EXPLAIN-COMPILER-SETTINGS).
+CL-USER(1): ; Loading /eo/e7/apache/htdocs/src/lkb/src/general/loadup.lisp
+;   Loading
+;      /eo/e7/apache/htdocs/src/lkb/src/general/allegro-patches.lisp
+;     Loading /eo/e7/apache/htdocs/src/lkb/src/general/defsystem.lisp
+;   Loading /eo/e7/apache/htdocs/src/lkb/src/general/loadup-library.lisp
+T
+CL-USER(2): ; Loading /eo/e7/apache/htdocs/src/lkb/src/ACL_specific/deliver.lsp
+;   Fast loading /lingo/local/acl/code/fileutil.001
+;;; Installing fileutil patch, version 1
+Error: Directory /eo/e7/apache/htdocs/src/lkb/linux/ does not exist.
+
+Restart actions (select using :continue):
+ 0: retry the load of /eo/e7/apache/htdocs/src/lkb/src/ACL_specific/deliver.lsp
+ 1: skip loading /eo/e7/apache/htdocs/src/lkb/src/ACL_specific/deliver.lsp
+ 2: recompile /eo/e7/apache/htdocs/src/lkb/src/ACL_specific/deliver.lsp
+ 3: Return to Top Level (an "abort" restart).
+ 4: Abort entirely from this process.
+[1] CL-USER(3): :pop
+CL-USER(3): EOF
+Really exit lisp [n]? 
+; Exiting Lisp
+make: warning:  Clock skew detected.  Your build may be incomplete.
 ( \
   if [ ! -f /eo/e7/apache/htdocs/src/.yes ]; then exit 1; fi; \
   cd /eo/e7/apache/htdocs/src/lkb; \
@@ -1214,6 +1246,8 @@ make: *** [lkb_linux_om@remote] Error 127
               --exclude=".nfs*" \
       linux; \
 )
-*** Error code 1
+tar: Cannot add file linux: No such file or directory
+tar: Error exit delayed from previous errors
+*** Error code 2
 make: Fatal error: Command failed for target `lkb_linux_om'
 Current working directory /eo/e8nb/oe/www/src/lkb
