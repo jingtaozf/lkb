@@ -14,7 +14,7 @@ To create a version of the LKB for delivery:
   a) start Lisp 
   b) (load "general/loadup")
   c) (load "ACL_specific/deliver.lsp")
-  d) cd newlkb/bin
+  d) cd newlkb/bin (NB now newlkb/bin/linux or newlkb/bin/solaris)
   e) tar cf ~aac/lkbdeliver/vers5-0/climimage5-0.tar lkb
   f) gzip ~aac/lkbdeliver/vers5-0/climimage5-0.tar
   g) cp ~aac/lkbdeliver/vers5-0/climimage5-0.tar.gz ~aac/WWW
