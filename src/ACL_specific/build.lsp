@@ -43,6 +43,7 @@
 #+(version>= 6 0) (require :constructor)
 #+(version>= 6 0) (require :mcombin)
 #+(version>= 6 0) (require :uri)
+#+(version>= 6 2) (require :euc)
 
 (setq make::*building-image-p* t)
 (setq make:*compile-during-load* t)

@@ -232,12 +232,10 @@
   (when *tree-automatic-update-p*
     (when (numberp *tree-automatic-update-p*)
       (sleep *tree-automatic-update-p*))
-    (when (or (update-match-p frame) 
-              (not (numberp *tree-automatic-update-p*)))
-      (record-decision 
-       (make-decision :type (if (update-match-p frame) :save :next))
-       frame)
-      (return-from set-up-compare-frame :skip)))
+    (record-decision 
+     (make-decision :type (if (update-match-p frame) :save :flag))
+     frame)
+    (return-from set-up-compare-frame :skip))
 
   (setf (compare-frame-gactive frame) nil)
   (frame-cursor frame :default))
@@ -300,19 +298,18 @@
    (top
     (clim:outlining (:thickness 1)
       (clim:spacing (:thickness 2)  
-	(clim:scrolling (:scroll-bars :y)
-	  (clim:make-pane 'clim:application-pane
-			  :display-function 'draw-top-window
-			  :text-cursor nil
-			  :text-style (comparison-top-font)
-                          :height :compute
-			  :end-of-line-action :allow
-			  :end-of-page-action :allow
-			  :borders nil
-			  :incremental-redisplay nil
-			  :display-time nil
-			  :background clim:+white+
-			  :foreground clim:+black+)))))
+        (clim:make-pane 'clim:application-pane
+                        :display-function 'draw-top-window
+                        :text-cursor nil
+                        :text-style (comparison-top-font)
+                        :height :compute
+                        :end-of-line-action :allow
+                        :end-of-page-action :allow
+                        :borders nil
+                        :incremental-redisplay nil
+                        :display-time nil
+                        :background clim:+white+
+                        :foreground clim:+black+))))
    
    (trees  
     (clim:spacing (:thickness 0)
@@ -909,7 +906,7 @@
         (setf (clim:pointer-cursor pointer) cursor))))
    ((clim:sheetp frame)
     (setf (clim:sheet-pointer-cursor frame) cursor)
-    #+:silica
+    #-:mswindows
     (loop
         for child in (clim:sheet-children frame)
         ;;
