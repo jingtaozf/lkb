@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.26  1999/10/14 00:46:31  danf
+;; Patches for better sorts
+;;
 ;; Revision 1.25  1999/08/02 20:51:43  danf
 ;; Updates from Walter K.
 ;;
@@ -553,13 +556,12 @@
         rel)))
 
 
-;; DPF 13-Oct-99 - Replaced with WK's def
-#|
+#+lkb
 (defun create-type (sort)
   ;;; base-create-type is the LKB/PAGE specific function
   (horrible-hack-3 (base-create-type sort)))
-|#
 
+#+page
 (defun create-type (sort)
   ;;; base-create-type is the LKB/PAGE specific function
   (horrible-hack-3 (vm-create-type sort)))
@@ -600,8 +602,7 @@
       (unless (member feat2 *feat-priority-list*)
               (string-lessp feat1 feat2)))))
 
-;; DPF 13-Oct-99 - Replaced with WK's def
-#|
+#+lkb
 (defun create-word-identifier (id gen)
   (if id
       (let ((val (if (stringp id)
@@ -614,8 +615,8 @@
             val
           (funcall gen)))
     (funcall gen)))
-|#
 
+#+page
 (defun create-word-identifier (id gen)
   (if (keywordp id)
       id
