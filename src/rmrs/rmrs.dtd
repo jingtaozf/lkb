@@ -3,19 +3,21 @@
 <!ELEMENT rmrs (label, (ep|rarg|ing|hcons)*)>
 <!ATTLIST rmrs
           cfrom CDATA #REQUIRED
-          cto   CDATA #REQUIRED >
+          cto   CDATA #REQUIRED 
+          surface   CDATA #IMPLIED >
 
 <!ELEMENT ep ((realpred|gpred), label, var)>
 <!ATTLIST ep
           cfrom CDATA #REQUIRED
-          cto   CDATA #REQUIRED >
+          cto   CDATA #REQUIRED 
+          surface   CDATA #IMPLIED >
 
 
 <!ELEMENT realpred EMPTY>
 
 <!ATTLIST realpred
           lemma CDATA #REQUIRED
-          pos (v|n|j|r|p|q|c|x|u) #REQUIRED
+          pos (v|n|j|r|p|q|c|x|u|a|s) #REQUIRED
           sense CDATA #IMPLIED >
 
 <!ELEMENT gpred (#PCDATA)>

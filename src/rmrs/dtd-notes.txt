@@ -8,7 +8,7 @@ Note that the LKB code does not treat pred case as significant - the only
 place where case is respected is string-valued arguments (CARG and ??)
 
 POS - now lowercase and obligatory
-(v|n|j|r|p|q|x|u)
+(v|n|j|r|p|q|c|x|u|a|s)
 v - verb
 n - noun
 j - adjective
@@ -17,6 +17,8 @@ p - preposition
 q - quantifier (needs to be distinguished for scoping code)
 x - other closed class
 u - unknown
+a - adjective or adverb (i.e. supertype of j and r)
+s - verbal noun (used in Japanese)
 
 Labels are always implicitly of the same sort (i.e., label)
 
