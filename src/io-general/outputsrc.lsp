@@ -113,7 +113,6 @@
                                syntax)))
                  (format t "~%Warning ~A not found" lex-name))))))))
 
-
 (defun output-lex-and-derived (syntax &optional file-name ids-used)
   ;;; lexicon and everything that can be derived from it
   ;;; via lexical rule.  Ordered by base form.
@@ -139,7 +138,6 @@
                      (if lex-entry
                        (lex-or-psort-full-fs (get-psort-entry lex-name))
                        (error "Entry for ~A not found" lex-name)))
-                    (infl-pos (lex-or-psort-infl-pos lex-entry))
                     (result-list
                      (cons (cons nil lex-entry-fs)
                            (try-all-lexical-rules 
@@ -147,7 +145,10 @@
                     (idno 0))
                (for result-pair in result-list
                     do
-                    (let* ((fs (cdr result-pair))
+                    (let* ((derivation 
+                            (append (first result-pair) (list lex-name)))
+                           (id (format nil "~(~a~)_~d" lex-name idno))
+                           (fs (cdr result-pair))
                            (orth (extract-orth-from-fs fs)))
                       (case syntax
                         (:tdl 
@@ -155,16 +156,14 @@
                                                          lex-name idno))
                         (:lilfes 
                          (output-derived-instance-as-lilfes 
-                          orth fs ostream))
+                          orth fs ostream id derivation))
                         (:ebl
                          (output-for-ebl orth fs ostream (car result-pair)
                                          lex-name lex-entry-fs))
-                        (:chic
-                         (output-for-chic orth fs ostream (car result-pair)
-                                          lex-name lex-entry-fs infl-pos))
                         (t (error "Unsupported syntax specifier ~A"
                                   syntax))))
                     (incf idno))))))))
+
 
 (defparameter *infl-rules* '(plur_noun_infl_rule third_sg_fin_verb_infl_rule
                              past_verb_infl_rule psp_verb_infl_rule 
