@@ -11,6 +11,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 #include <signal.h>
 #include <sys/wait.h>
 #include <sys/types.h>
@@ -80,8 +81,9 @@ void tsdb_server() {
 
   n = TRUE;
   setsockopt(_server, SOL_SOCKET, SO_KEEPALIVE, (char *)&n, sizeof(n));
+  setsockopt(_server, SOL_SOCKET, SO_REUSEADDR, (char *)&n, sizeof(n));
   linger.l_onoff = TRUE;
-  linger.l_linger = 5;
+  linger.l_linger = 2;
   setsockopt(_server,
              SOL_SOCKET, SO_LINGER, (char *)&linger, sizeof(linger));
 
@@ -123,8 +125,8 @@ void tsdb_server() {
                              4, AF_INET)) != NULL
        && host->h_name != NULL) {
       fprintf(tsdb_debug_stream,
-              "server(): [%d] connection from `%s' "
-              "(now %d active clients).\n",
+              "server(): [%d] connect from `%s' "
+              "(now %d client(s)).\n",
               getpid(), host->h_name, (_n_clients + 1));
     } /* if */
     else {
@@ -136,18 +138,16 @@ void tsdb_server() {
 #endif    
     n = TRUE;
     setsockopt(_client, SOL_SOCKET, SO_KEEPALIVE, (char *)&n, sizeof(n));
+    setsockopt(_client, SOL_SOCKET, SO_REUSEADDR, (char *)&n, sizeof(n));
     linger.l_onoff = TRUE;
-    linger.l_linger = 5;
+    linger.l_linger = 2;
     setsockopt(_client, SOL_SOCKET, SO_LINGER,
                (char *)&linger, sizeof(linger));
 
 #if defined(ALEP)
-    status = tsdb.status;
     (void)tsdb_server_child(_client);
     close(_client);
-    tsdb.status = status;
-    tsdb.status &= ~TSDB_QUIT;
-    tsdb.status &= ~TSDB_HANGUP;
+    tsdb.status = (tsdb.status & (TSDB_LOCK | TSDB_SERVER_MODE));
 #else
     if((child = fork()) < 0) {
       exit(TSDB_OS_ERROR);
@@ -182,7 +182,49 @@ int tsdb_server_initialize() {
 |*
 \*****************************************************************************/
 
-  int i;
+  int i, n, foo;
+  struct sockaddr_in server_address;
+  struct linger linger;
+
+  if((foo = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+    fprintf(tsdb_error_stream,
+            "server_initialize(): unable to create server socket.\n");
+    fflush(tsdb_error_stream);
+    close(foo);
+    exit(TSDB_SERVER_CONNECTION_ERROR);
+  } /* if */
+
+  n = TRUE;
+  setsockopt(foo, SOL_SOCKET, SO_REUSEADDR, (char *)&n, sizeof(n));
+  linger.l_onoff = FALSE;
+  setsockopt(foo,
+             SOL_SOCKET, SO_LINGER, (char *)&linger, sizeof(linger));
+
+  bzero((char *)&server_address, sizeof(server_address));
+  server_address.sin_family = AF_INET;
+  server_address.sin_addr.s_addr = htonl(INADDR_ANY);
+  server_address.sin_port = htons(tsdb.port);
+  if(bind(foo,
+          (struct sockaddr *)&server_address, sizeof(server_address)) < 0) {
+    fprintf(tsdb_error_stream,
+            "server_initialize(): unable to bind to port %d.\n", tsdb.port);
+    fflush(tsdb_error_stream);
+    close(foo);
+    exit(TSDB_SERVER_CONNECTION_ERROR);
+  } /* if */
+
+  /*
+   * _fix_me_ 
+   * try to see whether there actually is a tsdb(1) server on that port (it
+   * might be a white mouse or worse |:-); set alarm() and make an attempt to
+   * obtaining tsdb(1) server status information.
+   *                                              (31-jul-96 -- oe)
+   */
+  close(foo);
+
+  if(tsdb.relations == NULL) {
+    exit(TSDB_UNKNOWN_ERROR);
+  } /* if */
 
   for(i = 0; tsdb.relations[i] != NULL; i++) {
     if(tsdb_find_table(tsdb.relations[i]) == NULL) {
@@ -405,24 +447,37 @@ void sigsegv_server(int signal) {
 |*      module: sigsegv_server()
 |*     version: 
 |*  written by: oe, dfki saarbruecken
-|* last update: 
-|*  updated by: 
+|* last update: 2-aug-96
+|*  updated by: oe, coli saarbruecken
 |*****************************************************************************|
 |* sigsegv() is installed as the handler for SIGSEGV and SIGBUS signals to the
 |* TSDB server.
 \*****************************************************************************/
+
+  char foo[MAXPATHLEN + 1];
 
   close(_server);
 #if defined(DEBUG) && defined(SERVER)
   fprintf(tsdb_debug_stream,
           "sigsegv(): [%d] server going down on %s.\n",
           getpid(), (signal == SIGSEGV ? "SIGSEGV" : "SIGBUS"));
-  fflush(tsdb_debug_stream);
+
+#if defined(SUNOS)
+  if(getwd(&foo[0]) != NULL) {
+#else
+  if(getcwd(&foo[0], MAXPATHLEN + 1) != NULL) {
 #endif
-#if defined(DEBUG)
+    fprintf(tsdb_debug_stream,
+            "sigsegv(): [%d] core(5) dumped to `%s/core'.\n",
+            getpid(), foo);
+ 
+  } /* if */
+  fflush(tsdb_debug_stream);
   tsdb_close_debug(tsdb_debug_stream);
 #endif
-  exit(TSDB_OS_ERROR);
+  sleep(1);
+  abort();
+
 } /* sigsegv_server() */
 
 void sigsegv_client(int signal) {
@@ -535,6 +590,7 @@ int tsdb_server_child(int socket) {
           } /* else */
 #endif
           status = tsdb_parse(command, (FILE *)NULL);
+          tsdb.command++;
           free(command);
           command = (char *)NULL;
           if(tsdb.status & TSDB_TSDB_CLIENT) {
@@ -544,7 +600,6 @@ int tsdb_server_child(int socket) {
           else {
             sprintf(prompt, "tsdb@%s (%d) # ", host, tsdb.command);
           } /* else */
-          tsdb.command++;
         } /* if */
         else {
           if(!(tsdb.status & TSDB_TSDB_CLIENT)) {
@@ -555,9 +610,6 @@ int tsdb_server_child(int socket) {
           } /* else */
         } /* else */
       } /* if */
-      else {
-        tsdb.status |= TSDB_QUIT;
-      } /* else */
     } /* if */
   } /* while */
 
@@ -717,8 +769,11 @@ int tsdb_alep_client(char *query) {
   char *command, *foo, c;
 
   if(query == NULL 
-     && !(tsdb.status & (TSDB_QUIT | TSDB_HANGUP))) {
-    return(TSDB_OK);
+     && !(tsdb.status & (TSDB_QUIT | TSDB_HANGUP | TSDB_STATUS))) {
+    fprintf(tsdb_error_stream,
+            "alep_client(): missing `-query' option or client action.\n");
+    fflush(tsdb_error_stream);
+    return(TSDB_NO_QUERY_ERROR);
   } /* if */
 
   if((server = gethostbyname(tsdb.server)) == NULL) {
@@ -738,17 +793,21 @@ int tsdb_alep_client(char *query) {
     return(TSDB_SERVER_CONNECTION_ERROR);
   } /* if */
   
+  setsockopt(client, SOL_SOCKET, SO_KEEPALIVE, (char *)&n, sizeof(n));
+  setsockopt(client, SOL_SOCKET, SO_REUSEADDR, (char *)&n, sizeof(n));
   linger.l_onoff = TRUE;
-  linger.l_linger = 30;
+  linger.l_linger = 2;
   setsockopt(client, SOL_SOCKET, SO_LINGER, (char *)&linger, sizeof(linger));
 
   if(connect(client,
              (struct sockaddr *)&server_address,
              sizeof(server_address)) < 0) {
-    fprintf(tsdb_error_stream,
-            "alep_client(): connection refused by `%s' (port %d).\n",
-            tsdb.server, tsdb.port);
-    fflush(tsdb_error_stream);
+    if(!(tsdb.status & TSDB_STATUS)) {
+      fprintf(tsdb_error_stream,
+              "alep_client(): connection refused by `%s' (port %d).\n",
+              tsdb.server, tsdb.port);
+      fflush(tsdb_error_stream);
+    } /* if */
     close(client);
     return(TSDB_SERVER_CONNECTION_ERROR);
   } /* if */
@@ -761,6 +820,7 @@ int tsdb_alep_client(char *query) {
   } /* else */
   (void)sprintf(command, "set status %d.\n",
                 (TSDB_TSDB_CLIENT
+                 | (tsdb.status & TSDB_IMPLICIT_COMMIT)
                  | (tsdb.status & TSDB_UNIQUELY_PROJECT)
                  | (tsdb.status & TSDB_TX_OUTPUT)));
   if(tsdb_socket_write(client, command) != strlen(command)) {
@@ -777,6 +837,22 @@ int tsdb_alep_client(char *query) {
     return(status);
   } /* if */
 
+  (void)sprintf(command, "set ofs \"%s\".\n", tsdb.ofs);
+  if(tsdb_socket_write(client, command) != strlen(command)) {
+    fprintf(tsdb_error_stream,
+            "alep_client(): incomplete write on server socket.\n");
+    fflush(tsdb_error_stream);
+    close(client);
+    tsdb_free(command);
+    return(TSDB_SOCKET_IO_ERROR);
+  } /* if */
+  if((status = tsdb_client_clear_stream(client, TRUE))) {
+    close(client);
+    tsdb_free(command);
+    return(status);
+  } /* if */
+
+  status = TSDB_OK;
   if(tsdb.status & (TSDB_QUIT | TSDB_HANGUP)) {
     (void)sprintf(command, 
                   "%s.\n",
@@ -785,14 +861,49 @@ int tsdb_alep_client(char *query) {
       fprintf(tsdb_error_stream,
               "alep_client(): incomplete write on server socket.\n");
       fflush(tsdb_error_stream);
-      close(client);
-      tsdb_free(command);
-      return(1);
+      status = TSDB_SOCKET_IO_ERROR;
     } /* if */
-    status = tsdb_client_clear_stream(client, FALSE);
     close(client);
     tsdb_free(command);
     return(status);
+  } /* if */
+
+  if(tsdb.home != NULL
+     && (foo = tsdb_obtain_server_home(client)) != NULL) {
+    if(strcmp(tsdb.home, foo)) {
+      fprintf(tsdb_error_stream,
+              "alep_client(): database mismatch (`%s').\n",
+              foo);
+      fflush(tsdb_error_stream);
+      (void)sprintf(command, "quit.\n");
+      if(tsdb_socket_write(client, command) != strlen(command)) {
+        fprintf(tsdb_error_stream,
+                "alep_client(): incomplete write on server socket.\n");
+        fflush(tsdb_error_stream);
+        tsdb_free(command);
+        close(client);
+        return(TSDB_SOCKET_IO_ERROR);
+      } /* if */
+      tsdb_free(command);
+      close(client);
+      return(TSDB_SERVER_HOME_MISMATCH);
+    } /* if */
+  } /* if */
+
+  if(tsdb.status & TSDB_STATUS) {
+    status = tsdb_obtain_server_status(client);
+    (void)sprintf(command, "quit.\n");
+    if(tsdb_socket_write(client, command) != strlen(command)) {
+      fprintf(tsdb_error_stream,
+              "alep_client(): incomplete write on server socket.\n");
+      fflush(tsdb_error_stream);
+      tsdb_free(command);
+      close(client);
+      return(TSDB_SOCKET_IO_ERROR);
+    } /* if */
+    close(client);
+    tsdb_free(command);
+    return(((status & TSDB_LOCK) ? TSDB_LOCK_ERROR : TSDB_OK));
   } /* if */
 
   for(foo = query; *foo; foo++);
@@ -801,8 +912,8 @@ int tsdb_alep_client(char *query) {
     *foo = (char)0;
   } /* if */
   for(foo = query; *foo && isspace(*foo); foo++);
-  if(!strncmp(foo, "do", 2)
-     || !strncmp(foo, "insert", 6)
+  if(!strncmp(foo, "insert", 6)
+     || !strncmp(foo, "set", 3)
      || !strncmp(foo, "commit", 6)
      || !strncmp(foo, "hangup", 6)
      || !strncmp(foo, "shutdown", 8)) {
@@ -811,7 +922,7 @@ int tsdb_alep_client(char *query) {
   else {
     (void)sprintf(command, "%s > \"%s\".\n",
                   query, 
-                  (tsdb.output != NULL ? tsdb.output : "tsdb2alep"));
+                  (tsdb.output != NULL ? tsdb.output : "/dev/null"));
   } /* else */
   if(tsdb_socket_write(client, command) != strlen(command)) {
     fprintf(tsdb_error_stream,
@@ -840,6 +951,102 @@ int tsdb_alep_client(char *query) {
 
 } /* tsdb_alep_client() */
 #endif
+
+int tsdb_obtain_server_status(int client) {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_obtain_server_status()
+|*     version: 
+|*  written by: oe, coli saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|*
+\*****************************************************************************/
+
+  int status;
+  char buffer[1024 + 1], *foo, *bar;
+
+  (void)sprintf(&buffer[0], "info status.\n");
+  if(tsdb_socket_write(client, &buffer[0]) != strlen(&buffer[0])) {
+    fprintf(tsdb_error_stream,
+            "obtain_server_status(): incomplete write on server socket.\n");
+    fflush(tsdb_error_stream);
+    return(TSDB_SOCKET_IO_ERROR);
+  } /* if */
+
+  if(tsdb_socket_readline(client, &buffer[0], 1024) >= 0
+     && buffer[0]) {
+    if((status = tsdb_client_clear_stream(client, TRUE))) {
+      return(status);
+    } /* if */
+    if((foo = strrchr(&buffer[0], ':')) != NULL) {
+      foo++;
+      if(*foo) {
+        if((status = strtol(foo, &bar, 0))
+           || bar != foo) {
+          return(status);
+        } /* if */
+      } /* if */
+    } /* if */
+  } /* if */
+  return(TSDB_SOCKET_IO_ERROR);
+
+} /* tsdb_obtain_server_status() */
+
+char *tsdb_obtain_server_home(int client) {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_obtain_server_home()
+|*     version: 
+|*  written by: oe, coli saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|*
+\*****************************************************************************/
+
+  int status;
+  char buffer[1024 + 1], *foo, *bar;
+
+  (void)sprintf(&buffer[0], "info home.\n");
+  if(tsdb_socket_write(client, &buffer[0]) != strlen(&buffer[0])) {
+    fprintf(tsdb_error_stream,
+            "obtain_server_status(): incomplete write on server socket.\n");
+    fflush(tsdb_error_stream);
+    tsdb.errno = TSDB_SOCKET_IO_ERROR;
+    return((char *)NULL);
+  } /* if */
+
+  if(tsdb_socket_readline(client, &buffer[0], 1024) >= 0
+     && buffer[0]) {
+    if((status = tsdb_client_clear_stream(client, TRUE))) {
+      tsdb.errno = status;
+      return((char *)NULL);
+    } /* if */
+    if((foo = strrchr(&buffer[0], '`')) != NULL) {
+      foo++;
+      if(*foo) {
+        if((bar = strrchr(foo, '\'')) != NULL) {
+          *bar = (char)0;
+#if defined(DEBUG) && defined(OBTAIN_SERVER_HOME)
+          fprintf(tsdb_debug_stream,
+                  "obtain_server_home(): got `%s'.\n", foo);
+          fflush(tsdb_debug_stream);
+#endif
+          tsdb.errno = TSDB_OK;
+          return(foo);
+        } /* if */
+      } /* if */
+    } /* if */
+  } /* if */
+  
+  tsdb.errno = TSDB_SOCKET_IO_ERROR;
+  return((char *)NULL);
+
+} /* tsdb_obtain_server_home() */
 
 int tsdb_client_clear_stream(int stream, BOOL sink) {
 

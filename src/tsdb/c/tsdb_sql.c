@@ -3,7 +3,7 @@
 |*      module: TSDB query language functionality
 |*     version: 
 |*  written by: andrew white, tom fettig & oe (dfki saarbruecken)
-|* last update: 14-jul-95
+|* last update: 30-jul-96
 |*  updated by: oe, dfki saarbruecken
 |*****************************************************************************|
 |*
@@ -38,7 +38,7 @@ int tsdb_info(Tsdb_value **value_list, char *redirection) {
   Tsdb_relation *foo;
   Tsdb_history *bar;
   FILE *output;
-  int i, j;
+  int i, j, status;
   BOOL match;
   BYTE output_type;
 
@@ -58,7 +58,9 @@ int tsdb_info(Tsdb_value **value_list, char *redirection) {
       } /* else */
     } /* else */
 
-    for(i = 0, match = FALSE; value_list[i] != NULL; i++, match = FALSE) {
+    for(i = 0, match = FALSE, status = TSDB_UNKNOWN_VARIABLE_ERROR;
+        value_list[i] != NULL;
+        i++, status = (match ? TSDB_OK : status), match = FALSE) {
       switch(value_list[i]->type) {
         case TSDB_IDENTIFIER:
           if(!strcmp(value_list[i]->value.identifier, "relations")
@@ -164,6 +166,23 @@ int tsdb_info(Tsdb_value **value_list, char *redirection) {
             match = TRUE;
           } /* if */
 #endif
+          if(!strncmp(value_list[i]->value.identifier,
+                      "tsdb_status", 11)
+             || !strncmp(value_list[i]->value.identifier,
+                         "status", 6)) {
+            fprintf(output, "current tsdb status: %d.\n", tsdb.status);
+            match = TRUE;
+          } /* if */
+#ifdef WORKING_RCS_STRIP
+          if(!strcmp(value_list[i]->value.identifier, "all")) {
+            fprintf(output,
+                    "tsdb(1) %s (%s) [%s] --- (c) oe@tsnlp.dfki.uni-sb.de.\n\n",
+                    tsdb_version,
+                    tsdb_rcs_strip(&tsdb_revision[0], "Revision"),
+                    tsdb_rcs_strip(&tsdb_revision_date[0], "Date"));
+            match = TRUE;
+          } /* if */
+#endif
           if(!match) {
             fprintf(tsdb_error_stream,
                     "info(): invalid argument `%s'.\n",
@@ -180,21 +199,22 @@ int tsdb_info(Tsdb_value **value_list, char *redirection) {
             fflush(tsdb_error_stream);
           } /* if */
           else {
-            fprintf(tsdb_default_stream, 
-                    "[%d]", value_list[i]->value.integer);
+            fprintf(output, 
+                    "[%d]", bar->command);
             if(bar->result && bar->result->relations[0]) {
-              fprintf(tsdb_default_stream,
+              fprintf(output,
                       " `%s", bar->result->relations[0]->name);
               for(j = 1; bar->result->relations[j]; j++) {
-                fprintf(tsdb_default_stream,
+                fprintf(output,
                         ":%s", bar->result->relations[j]->name);
               } /* for */
-              fprintf(tsdb_default_stream,
-                      "' (%d records).", bar->result->length);
+              fprintf(output,
+                      "' (%d record(s)).", bar->result->length);
             } /* if */
-            fprintf(tsdb_default_stream, "\n");
-            fflush(tsdb_default_stream);
+            fprintf(output, "\n");
+            fflush(output);
           } /* else */
+          match = TRUE;
           break;
         default:
           fprintf(tsdb_error_stream, "info(): invalid argument entity.\n");
@@ -211,7 +231,7 @@ int tsdb_info(Tsdb_value **value_list, char *redirection) {
         break;
     } /* switch */
   } /* if */
-  return(TSDB_OK);
+  return(status);
 } /* tsdb_info() */
 
 int tsdb_set(Tsdb_value *variable, Tsdb_value *value) {
@@ -221,8 +241,8 @@ int tsdb_set(Tsdb_value *variable, Tsdb_value *value) {
 |*      module: tsdb_set()
 |*     version: 
 |*  written by: oe, dfki saarbruecken
-|* last update: 
-|*  updated by: 
+|* last update: 2-aug-96
+|*  updated by: oe, coli saarbruecken
 |*****************************************************************************|
 |*
 \*****************************************************************************/
@@ -308,12 +328,12 @@ int tsdb_set(Tsdb_value *variable, Tsdb_value *value) {
       } /* else */
     } /* else */
   } /* if */
-  else if(!strncmp(variable->value.identifier, "tsdb_uniquely_project", 22)
-          || !strncmp(variable->value.identifier, "uniquely-project", 12)) {
+  else if(!strncmp(variable->value.identifier, "tsdb_lock", 9)
+          || !strncmp(variable->value.identifier, "lock", 4)) {
     if(value->type != TSDB_STRING) {
       if(value->type != TSDB_IDENTIFIER) {
         fprintf(tsdb_error_stream, 
-                "set: invalid type for uniquely-project; "
+                "set(): invalid type for lock; "
                 "should be `on' or `off'.\n");
         foo = (char *)NULL;
         fflush(tsdb_error_stream);
@@ -327,19 +347,33 @@ int tsdb_set(Tsdb_value *variable, Tsdb_value *value) {
     } /* else */
     
     if(foo != NULL) {
-      if (!strcmp(foo, "on")) {
-        tsdb.status |=  TSDB_UNIQUELY_PROJECT;
+      if(!strcmp(foo, "on")
+         && !tsdb_lock(TRUE)) {
+        tsdb.status |=  TSDB_LOCK;
       } /* if */
-      else if (!strcmp(foo, "off")) {
-        tsdb.status &= !TSDB_UNIQUELY_PROJECT;
+      else if(!strcmp(foo, "off")
+              && !tsdb_lock(FALSE)) {
+        tsdb.status &= ~TSDB_LOCK;
       } /* if */
       else {
         fprintf(tsdb_error_stream, 
-                "set: invalid value for uniquely-project: "
+                "set(): invalid value for lock: "
                 "should be `on' or `off'.\n");
         fflush(tsdb_error_stream);
       } /* else */
     } /* if */
+  } /* if */
+  else if(!strncmp(variable->value.identifier, "tsdb_ofs", 8)
+          || !strncmp(variable->value.identifier, "ofs", 3)) {
+    if(value->type != TSDB_STRING) {
+      fprintf(tsdb_error_stream,
+              "set(): invalid (non-string) type for `ofs'.\n");
+      fflush(tsdb_error_stream);
+    } /* if */
+    else {
+      free(tsdb.ofs);
+      tsdb.ofs = value->value.string;
+    } /* else */
   } /* if */
 #ifdef ALEP
   else if(!strncmp(variable->value.identifier, "tsdb_tx_output", 14)
@@ -347,7 +381,7 @@ int tsdb_set(Tsdb_value *variable, Tsdb_value *value) {
     if(value->type != TSDB_STRING) {
       if(value->type != TSDB_IDENTIFIER) {
         fprintf(tsdb_error_stream, 
-                "set: invalid type for tx-output; "
+                "set(): invalid type for tx-output; "
                 "should be `on' or `off'.\n");
         foo = (char *)NULL;
         fflush(tsdb_error_stream);
@@ -361,15 +395,15 @@ int tsdb_set(Tsdb_value *variable, Tsdb_value *value) {
     } /* else */
     
     if(foo != NULL) {
-      if (!strcmp(foo, "on")) {
+      if(!strcmp(foo, "on")) {
         tsdb.status |=  TSDB_TX_OUTPUT;
       } /* if */
-      else if (!strcmp(foo, "off")) {
-        tsdb.status &= !TSDB_TX_OUTPUT;
+      else if(!strcmp(foo, "off")) {
+        tsdb.status &= ~TSDB_TX_OUTPUT;
       } /* if */
       else {
         fprintf(tsdb_error_stream, 
-                "set: invalid value for tx-output: "
+                "set(): invalid value for tx-output: "
                 "should be `on' or `off'.\n");
         fflush(tsdb_error_stream);
       } /* else */
@@ -615,8 +649,10 @@ int tsdb_insert(Tsdb_value *table,
       } /* if */
       else {
         /* 
-         * fix me: make tuple of appropriate type;
-         * find some bogus default value for :integer and :date types.
+         * _fix_me_
+         * make tuple of appropriate type; find some bogus default value for
+         * :integer and :date types.  
+         *                                           (26-jul-96  -  oe)
          */
         tuple->fields[n] = (Tsdb_value *)malloc(sizeof(Tsdb_value *));
         tuple->fields[n]->value.string = strdup(TSDB_DEFAULT_VALUE);
@@ -1071,7 +1107,7 @@ Tsdb_selection* tsdb_join_one_relation(Tsdb_selection* selection,
   return(selection);
 } /* tsdb_join_one_relation */
 
-int tsdb_do(char *file, char *output) {
+int tsdb_do(char *file, char *redirection) {
 
 /*****************************************************************************\
 |*        file: 
@@ -1085,8 +1121,8 @@ int tsdb_do(char *file, char *output) {
 \*****************************************************************************/
 
   char *path, *buffer, *command;
-  char *foo, *bar;
-  FILE *input;
+  char *foo, *bar, *baz;
+  FILE *input, *output, *default_stream;
   int status;
 #ifdef DEBUG
   int n_commands = 0;
@@ -1117,6 +1153,14 @@ int tsdb_do(char *file, char *output) {
   fflush(tsdb_debug_stream);
 #endif
 
+  if(redirection != NULL 
+     && (output = tsdb_open_output(redirection)) != NULL) {
+    default_stream = tsdb_default_stream;
+    tsdb_default_stream = output;
+    baz = tsdb.output;
+    tsdb.output = strdup(&redirection[1]);
+  } /* if */
+  
   buffer = (char *)malloc(4096);
   while(!(tsdb.status & TSDB_QUIT) 
         && !status 
@@ -1158,6 +1202,10 @@ int tsdb_do(char *file, char *output) {
   fflush(tsdb_debug_stream);
 #endif
 
+  fclose(tsdb_default_stream);
+  tsdb_default_stream = default_stream;
+  free(tsdb.output);
+  tsdb.output = baz;
   tsdb_free(path);
   return(status);
 
@@ -1241,24 +1289,21 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
 |*      module: tsdb_complex_retrieve()
 |*     version: 
 |*  written by: tom fettig, dfki saarbruecken
-|* last update: 04-09-95
-|*  updated by: tom, dfki saarbruecken
+|* last update: 2-aug-96
+|*  updated by: oe, coli saarbruecken
 |*****************************************************************************|
 |* tom said: ``final retrieve() function'' --- i suppose he is mistaken |:-}.
-|* if the attribute_list should be empty, the user gave '*', which means
-|* show all attributes of the relations that are in the selection.
-|* updated to understand report strings, history and so on...
 \*****************************************************************************/
 
   char **attributes = NULL;
   Tsdb_relation **a_relations;
-  int s_attributes = 10, i, j, r,kaerb=0;
-  Tsdb_selection *selection=NULL,*temp,*history=NULL;
+  int s_attributes = 10, i, j, r, kaerb = 0;
+  Tsdb_selection *selection = NULL, *temp, *history = NULL;
   Tsdb_history *foo;
   FILE *output;
-  BOOL from_find=FALSE,
-  history_retrieve=FALSE,
-  extend_history=FALSE;
+  BOOL from_find = FALSE,
+  history_retrieve = FALSE,
+  extend_history = FALSE;
 
   /* 
      1. find out about attributes in conditions, transform expression
@@ -1273,10 +1318,11 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
   if(tsdb.status & TSDB_TX_OUTPUT) {
     tsdb_free_tsdb_values(attribute_list);
     tsdb_free(attribute_list);
-    attribute_list = (Tsdb_value **)malloc(3 * sizeof(Tsdb_value *));
+    attribute_list = (Tsdb_value **)malloc(4 * sizeof(Tsdb_value *));
     attribute_list[0] = tsdb_identifier("i-id");
     attribute_list[1] = tsdb_identifier("i-input");
-    attribute_list[2] = (Tsdb_value *)NULL;
+    attribute_list[2] = tsdb_identifier("i-comment");
+    attribute_list[3] = (Tsdb_value *)NULL;
     tsdb_free(report);
     report = TSDB_TX_FORMAT;
   } /* if */
@@ -1317,7 +1363,7 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
     } /* if */
   } /* if conditions */
   
-  if (attribute_list) /* check explicit attribute names! */{
+  if(attribute_list) /* check explicit attribute names! */{
     kaerb = 0;
     for(i = 0; attribute_list[i]; i++) {
       if (!tsdb_is_attribute(attribute_list[i])) {
@@ -1328,9 +1374,9 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
       } /* if */
       else if(history_retrieve && 
               (!tsdb_attribute_in_selection(history,
-                                            attribute_list[i]->value.string))){
+                                            attribute_list[i]->value.string))) {
         extend_history = TRUE;
-      } /* else */
+      } /* if */
     } /* for */
     if (kaerb) {
       if (attributes) {
@@ -1338,10 +1384,10 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
       } /* if */
       tsdb.errno = TSDB_UNKNOWN_ATTRIBUTE_ERROR;
       return((Tsdb_selection *)NULL);
-    }
+    } /* if */
   } /* if */
   
-  if (relation_list && !history )  /* check relation names! */ {
+  if(relation_list && !history) {
     kaerb = 0;
     for(r=0;relation_list[r];r++) {
       if (!tsdb_is_relation(relation_list[r])) {
@@ -1367,7 +1413,8 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
     if (history_retrieve) {
       history = tsdb_copy_selection(history);
       selection = tsdb_complex_select(conditions,NULL,history);
-      if (tsdb_relation_in_selection(selection,history->relations[0]->name)==-1) {
+      if (tsdb_relation_in_selection(selection,
+                                     history->relations[0]->name)==-1) {
         selection = tsdb_join(selection,history);
       } /* if */
     }
@@ -1606,6 +1653,23 @@ void tsdb_project(Tsdb_selection *selection,
     fprintf(tsdb_debug_stream,"%s\n",projection[k]);
   } /* for */
 #endif    
+
+
+  /* _hack_
+   * frob report string (if not specified in query) to incorporate .ofs.
+   *                                                 (2-aug-96  -  oe)
+   */
+  if(format == NULL
+     && n_attributes) {
+    format = (char *)malloc((2 * n_attributes)
+                            + (strlen(tsdb.ofs) * (n_attributes - 1))
+                            + 1);
+    format = strcpy(format, "%s");
+    for(i = 1; i < n_attributes; i++) {
+      format = strcat(format, tsdb.ofs);
+      format = strcat(format, "%s");
+    } /* for */
+  } /* if */
 
   if(tsdb.status & TSDB_UNIQUELY_PROJECT) {
     n = tsdb_uniq_projection(projection,n);

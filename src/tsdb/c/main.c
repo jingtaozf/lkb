@@ -97,6 +97,12 @@ char *tsdb_variables[] = {
   "tsdb_history_size",
   "uniquely-project",
   "tsdb_uniquely_project",
+  "tsdb_status",
+  "status",
+  "tsdb_lock",
+  "lock",
+  "tsdb_ofs",
+  "ofs",
 #ifdef ALEP
   "tsdb_tx_output",
   "tx-output",
@@ -105,9 +111,9 @@ char *tsdb_variables[] = {
 };
 
 #ifndef ALEP
-#  define TSDB_VAR_NUM 10
+#  define TSDB_VAR_NUM 14
 #else
-#  define TSDB_VAR_NUM 12
+#  define TSDB_VAR_NUM 16
 #endif
 
 char *tsdb_rest_generate(char *, int) ;
@@ -144,6 +150,7 @@ int main(int argc, char **argv) {
     } /* else */
     if(!strcmp(bar, "tsdbd")) {
       tsdb.status |= TSDB_SERVER_MODE;
+      tsdb.status &= ~TSDB_CLIENT_MODE;
     } /* if */
     tsdb_free(foo);
   } /* if */
@@ -228,6 +235,7 @@ int main(int argc, char **argv) {
         if(input != NULL && *input && input[strlen(input) - 1] == '.') {
           tsdb_parse(input, stdin);
           add_history(input);
+          tsdb.command++;
           input = (char *)NULL;
           if(tsdb.status & TSDB_TSDB_CLIENT) {
             sprintf(prompt, "%c", TSDB_CLIENT_CONNECT_OK);
@@ -235,7 +243,6 @@ int main(int argc, char **argv) {
           else {
             sprintf(prompt, "tsdb@%s (%d) # ", host, tsdb.command);
           } /* else */
-          tsdb.command++;
         } /* if */
         else {
           if(!(tsdb.status & TSDB_TSDB_CLIENT)) {
@@ -283,8 +290,10 @@ void tsdb_parse_options(int argc, char **argv) {
     {"server", optional_argument, 0, TSDB_SERVER_OPTION},
     {"shutdown", optional_argument, 0, TSDB_SHUTDOWN_OPTION},
     {"hangup", optional_argument, 0, TSDB_HANGUP_OPTION},
+    {"status", optional_argument, 0, TSDB_STATUS_OPTION},
     {"client", no_argument, 0, TSDB_CLIENT_OPTION},
     {"port", required_argument, 0, TSDB_PORT_OPTION},
+    {"standalone", no_argument, 0, TSDB_STANDALONE_OPTION},
     {"home", required_argument, 0, TSDB_HOME_OPTION},
     {"relations-file", required_argument, 0, TSDB_RELATIONS_FILE_OPTION},
     {"data-path", required_argument, 0, TSDB_DATA_PATH_OPTION},
@@ -331,36 +340,36 @@ void tsdb_parse_options(int argc, char **argv) {
         } /* if */
         else {
           tsdb.status |= TSDB_SERVER_MODE;
+          tsdb.status &= ~TSDB_CLIENT_MODE;
         } /* else */
         break;
       case TSDB_SHUTDOWN_OPTION:
         if(optarg != NULL) {
           tsdb.server = strdup(optarg);
-          tsdb.status |= TSDB_CLIENT_MODE;
-          tsdb.status |= TSDB_QUIT;
-          tsdb.status &= ~TSDB_SERVER_MODE;
         } /* if */
-        else {
-          tsdb.status |= TSDB_CLIENT_MODE;
-          tsdb.status |= TSDB_QUIT;
-          tsdb.status &= ~TSDB_SERVER_MODE;
-        } /* else */
+        tsdb.status |= TSDB_CLIENT_MODE;
+        tsdb.status |= TSDB_QUIT;
+        tsdb.status &= ~TSDB_SERVER_MODE;
         break;
       case TSDB_HANGUP_OPTION:
         if(optarg != NULL) {
           tsdb.server = strdup(optarg);
-          tsdb.status |= TSDB_CLIENT_MODE;
-          tsdb.status |= TSDB_HANGUP;
-          tsdb.status &= ~TSDB_SERVER_MODE;
         } /* if */
-        else {
-          tsdb.status |= TSDB_CLIENT_MODE;
-          tsdb.status |= TSDB_HANGUP;
-          tsdb.status &= ~TSDB_SERVER_MODE;
-        } /* else */
+        tsdb.status |= TSDB_CLIENT_MODE;
+        tsdb.status |= TSDB_HANGUP;
+        tsdb.status &= ~TSDB_SERVER_MODE;
+        break;
+      case TSDB_STATUS_OPTION:
+        if(optarg != NULL) {
+          tsdb.server = strdup(optarg);
+        } /* if */
+        tsdb.status |= TSDB_CLIENT_MODE;
+        tsdb.status |= TSDB_STATUS;
+        tsdb.status &= ~TSDB_SERVER_MODE;
         break;
       case TSDB_CLIENT_OPTION:
         tsdb.status |= TSDB_CLIENT_MODE;
+        tsdb.status &= ~TSDB_SERVER_MODE;
         break;
       case TSDB_PORT_OPTION:
         if(optarg != NULL) {
@@ -373,6 +382,10 @@ void tsdb_parse_options(int argc, char **argv) {
             tsdb.port = 0;
           } /* if */
         } /* if */
+        break;
+      case TSDB_STANDALONE_OPTION:
+        tsdb.status &= ~TSDB_CLIENT_MODE;
+        tsdb.status &= ~TSDB_SERVER_MODE;
         break;
       case TSDB_HOME_OPTION:
         if(optarg != NULL) {
@@ -565,15 +578,22 @@ void tsdb_usage() {
           "  `-server=host' --- "
           "go into client mode connecting to server on `host';\n");
   fprintf(tsdb_error_stream,
-          "  `-hangup=host' --- "
+          "  `-hangup[=host]' --- "
           "(attemp to) shut down tsdb(1) server on `host';\n");
   fprintf(tsdb_error_stream,
-          "  `-shutdown=host' --- "
+          "  `-shutdown[=host]' --- "
           "(really) shut down tsdb(1) server on `host';\n");
+  fprintf(tsdb_error_stream,
+          "  `-status[=host]' --- "
+          "determine current status of tsdb(1) server on `host';\n");
   fprintf(tsdb_error_stream,
           "  `-client' --- go into client mode;\n");
   fprintf(tsdb_error_stream,
           "  `-port=n' --- server TCP port address;\n");
+  fprintf(tsdb_error_stream,
+          "  `-standalone' --- go into standalone mode%s;\n",
+          (TSDB_INITIAL_STATUS & (TSDB_CLIENT_MODE | TSDB_SERVER_MODE) ?
+           "" : " (default)"));
   fprintf(tsdb_error_stream,
           "  `-home=directory' --- root directory for database;\n");
   fprintf(tsdb_error_stream,

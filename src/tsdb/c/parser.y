@@ -50,6 +50,8 @@
        Y_GREATER_OR_EQUAL
        Y_DO
        Y_COMMIT
+       Y_LOCK
+       Y_UNLOCK
        Y_SHUTDOWN
        Y_HANGUP
        Y_RETRIEVE
@@ -210,7 +212,7 @@ y_do :
     $$ = tsdb_do($2, (char *)NULL);
   }
 |
-  Y_DO Y_STRING Y_STRING '.' {
+  Y_DO Y_STRING y_redirection '.' {
     $$ = tsdb_do($2, $3);
   }
 ;

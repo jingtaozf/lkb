@@ -147,7 +147,18 @@ FILE *tsdb_open_debug() {
   char *name, *date, *user;
   time_t clock;
 
-  user = tsdb_user();
+  if(tsdb.status & TSDB_SERVER_MODE) {
+   /* 
+    * _fix_me_
+    * determine appropriate length for .port.
+    *                                            (1-apr-95  -  oe)
+    */
+    user = (char *)malloc(42);
+    (void)sprintf(user, "%d", tsdb.port);
+  } /* if */
+  else {
+    user = tsdb_user();
+  } /* else */
 
   if(tsdb.debug_file == NULL) {
     if((name = getenv("TSDB_DEBUG_FILE")) != NULL
@@ -1519,7 +1530,10 @@ int tsdb_save_changes(BOOL implicit) {
       } /* if */
       else {
       /*
-       * fix me: in interactive mode (at least) query user first.
+       * _fix_me_
+       * make an attempt not to loose data: in interactive mode (at least)
+       * query user first and allow save of individual relations.
+       *                                              (29-jul-96  -  oe)
        */
         fprintf(tsdb_error_stream,
                 "save_changes(): ignoring modified data for `%s' "
@@ -1534,3 +1548,26 @@ int tsdb_save_changes(BOOL implicit) {
   return(status);
 
 } /* tsdb_save_changes() */
+
+int tsdb_lock(BOOL flag) {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_lock()
+|*     version: 
+|*  written by: oe, coli saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|*
+\*****************************************************************************/
+
+  /*
+   * _fix_me_
+   * actually create or release lock by creating a lock file containing our
+   * getpid() in the database directory.
+   *                                                 (31-jul-96  -  oe)
+   */
+  return(TSDB_OK);
+
+} /* tsdb_lock() */

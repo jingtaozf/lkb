@@ -10,12 +10,10 @@
 \*****************************************************************************/
 
 #if defined(NOFREE)
-#  if !defined(TSDB_DOT_C)
-extern void free(void *);
-#  endif
+#  define tsdb_free(foo) { ; }
+#else
+#  define tsdb_free(foo) free(foo)
 #endif
-
-#define tsdb_free(foo) { ; }
 
 #if defined(unix)
 #  if defined(sun) && defined(__svr4__)
@@ -39,15 +37,23 @@ extern void free(void *);
 #define TSDB_UNIQUELY_PROJECT 16
 #define TSDB_IMPLICIT_COMMIT 32
 #define TSDB_TSDB_CLIENT 64
+#define TSDB_STATUS 128
+#define TSDB_LOCK 256
 #ifdef ALEP
 #  define TSDB_TX_OUTPUT 1024
 #endif
 
 #ifdef ALEP
-#  define TSDB_TX_FORMAT "tx(%s, '%s', '')."
+#  define TSDB_INITIAL_STATUS \
+     (TSDB_UNIQUELY_PROJECT | TSDB_IMPLICIT_COMMIT | TSDB_CLIENT_MODE)
+#else
+#  define TSDB_INITIAL_STATUS (TSDB_UNIQUELY_PROJECT)
 #endif
 
-#
+#ifdef ALEP
+#  define TSDB_TX_FORMAT "tx(%s, '%s', '%s')."
+#endif
+
 #define TSDB_UNKNOWN_TYPE 0
 #define TSDB_INTEGER 1
 #define TSDB_IDENTIFIER 2
@@ -108,6 +114,8 @@ extern void free(void *);
 #define TSDB_SHUTDOWN_OPTION 22
 #define TSDB_HANGUP_OPTION 23
 #define TSDB_IMPLICIT_COMMIT_OPTION 24
+#define TSDB_STATUS_OPTION 25
+#define TSDB_STANDALONE_OPTION 26
 #ifdef ALEP
 #  define TSDB_TX_OPTION 255
 #endif
@@ -116,8 +124,8 @@ extern void free(void *);
 #define TSDB_REDIRECTION_APPEND 2
 #define TSDB_REDIRECTION_PIPE 3
 
-#define TSDB_CLIENT_CONNECT_OK 'Ö'
-#define TSDB_CLIENT_CONNECT_ERROR 'Ä'
+#define TSDB_CLIENT_CONNECT_OK '\001'
+#define TSDB_CLIENT_CONNECT_ERROR '\002'
 
 #ifndef TSDB_PSEUDO_USER
 #  define TSDB_PSEUDO_USER "TSDB@tsdb"
@@ -182,7 +190,7 @@ extern void free(void *);
 #endif
 
 #ifndef TSDB_OFS
-#  define TSDB_OFS "@"
+#  define TSDB_OFS " | "
 #endif
 
 #ifndef TSDB_BACKUP_SUFFIX
@@ -211,7 +219,7 @@ extern void free(void *);
 
 #ifndef TSDB_SERVER_QUEUE_LENGTH
 #  ifdef ALEP
-#    define TSDB_SERVER_QUEUE_LENGTH 1
+#    define TSDB_SERVER_QUEUE_LENGTH 0
 #  else
 #    define TSDB_SERVER_QUEUE_LENGTH 5
 #  endif
@@ -257,7 +265,7 @@ typedef struct tsdb_relation {
   int n_keys;
   int *keys;
   BYTE *total;
-  int status;
+  BYTE status;
 } Tsdb_relation;
 
 typedef struct tsdb_tuple {
@@ -287,7 +295,7 @@ typedef struct tsdb_history {
 } Tsdb_history;
 
 typedef struct tsdb {
-  BYTE status;
+  int status;
 
   Tsdb_relation **relations;
   Tsdb_selection **data;
@@ -395,7 +403,7 @@ void tsdb_test_negation(Tsdb_value **, Tsdb_node *);
 int tsdb_uniq_projection(char **, int);
 Tsdb_node *tsdb_leaf(Tsdb_value *);
 Tsdb_node* tsdb_prepare_tree(Tsdb_node *, Tsdb_selection *);
-
+int tsdb_lock(BOOL);
 int tsdb_save_changes(BOOL);
 
 BOOL tsdb_children_leaf(Tsdb_node *);
@@ -516,6 +524,8 @@ int tsdb_server_child(int);
 void tsdb_server_shutdown(int);
 int tsdb_socket_write(int, char *);
 int tsdb_socket_readline(int, char *, int);
+int tsdb_obtain_server_status(int);
+char *tsdb_obtain_server_home(int);
 int tsdb_client_clear_stream(int, BOOL);
 #ifdef ALEP
 int tsdb_alep_client(char *);

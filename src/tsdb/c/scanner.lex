@@ -397,7 +397,6 @@ TIME (\(|\[)?{HOUR}:{MINUTE}(:{SECOND})?(\)|\])?
     fprintf(stderr, "STRING\n");
   } /* if */
   yytext[strlen(&yytext[0]) - 1] = 0;
-  /* fixme: remove escape characters for quotes */
   lvalp->string = (char *)tsdb_normalize_string(&yytext[1]);
   return(Y_STRING);
 }

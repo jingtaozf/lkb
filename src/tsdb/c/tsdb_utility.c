@@ -1622,14 +1622,6 @@ BOOL tsdb_initialize() {
   } /* if */
 
 #ifdef DEBUG
-  if(tsdb.status & TSDB_SERVER_MODE) {
-    if(tsdb.debug_file != NULL) {
-      free(tsdb.debug_file);
-    } /* if */
-    /* fix me: determine appropriate length for .port. */
-    tsdb.debug_file = (char *)malloc(strlen("/tmp/tsdb.debug.") + 42);
-    (void)sprintf(tsdb.debug_file, "/tmp/tsdb.debug.%d", tsdb.port);
-  } /* if */
   if((tsdb_debug_stream = tsdb_open_debug()) == NULL) {
     tsdb_debug_stream = tsdb_error_stream;
   } /* if */
@@ -2012,6 +2004,16 @@ void tsdb_parse_environment() {
       tsdb.pager = strdup(TSDB_PAGER);
     } /* else */
   } /* if */
+
+  if(tsdb.ofs == NULL) {
+    if((name = getenv("TSDB_OFS")) != NULL) {
+      tsdb.ofs = strdup(name);
+    } /* if */
+    else {
+      tsdb.ofs = strdup(TSDB_OFS);
+    } /* else */
+  } /* if */
+
 } /* tsdb_parse_environment() */
 
 char *tsdb_pseudo_user() {

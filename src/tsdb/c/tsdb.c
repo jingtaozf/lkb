@@ -16,14 +16,8 @@
 #include "tsdb.h"
 #include "errors.h"
 
-#if defined(NOFREE)
-void free(void *foo) {
-  ;
-} /* free() */
-#endif
-
 Tsdb tsdb = { 
-  TSDB_UNIQUELY_PROJECT,   /* status */
+  TSDB_INITIAL_STATUS,     /* status */
   (Tsdb_relation **)NULL,  /* relations */
   (Tsdb_selection **)NULL, /* data */
   (char *)NULL,            /* input */
@@ -34,7 +28,7 @@ Tsdb tsdb = {
   (char *)NULL,            /* result_prefix */
   -1,                      /* max_results */
   TSDB_FS,                 /* fs */
-  TSDB_OFS,                /* ofs */
+  (char *)NULL,            /* ofs */
   (char *)NULL,            /* server */
   0,                       /* port */
   (char *)NULL,            /* pager */
