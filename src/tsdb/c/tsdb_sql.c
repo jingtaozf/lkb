@@ -1412,23 +1412,46 @@ int tsdb_retrieve(Tsdb_value **relation_list,
 
   Tsdb_selection* result;
   int unique_tuples;
+  FILE *output;
 
-  unique_tuples = -1;
+  unique_tuples = 0;
   tsdb.error = TSDB_OK;
 
   if((result = tsdb_complex_retrieve(relation_list,
                                      attribute_list, conditions,
                                      report, redirection,
                                      &unique_tuples)) != NULL) {
+
+    if(redirection != NULL 
+       && (output = tsdb_open_output(redirection)) != NULL) {
+      if(result != NULL) {
+        unique_tuples =
+          tsdb_project(result, attribute_list, report, output);
+      } /* if */
+      if(tsdb.eof != NULL) fprintf(output, "%s\n", tsdb.eof);
+      fclose(output);
+    } /* if */
+    else {
+      if(tsdb.output == NULL 
+         && (output = tsdb_open_pager()) != NULL) {
+        if(result != NULL) {
+          unique_tuples = 
+            tsdb_project(result, attribute_list, report, output);
+        } /* if */
+        if(tsdb.eof != NULL) fprintf(output, "%s\n", tsdb.eof);
+        pclose(output);
+      } /* if */
+      else {
+        if(result != NULL) {
+          unique_tuples = 
+            tsdb_project(result, attribute_list, report, tsdb_default_stream);
+        } /* if */
+        if(tsdb.eof != NULL) fprintf(output, "%s\n", tsdb.eof);
+        fflush(tsdb_default_stream);
+      } /* else */
+    } /* else */
     tsdb_add_to_history(result, unique_tuples);
   } /* if */
-
-#if defined(DEBUG) && defined(TOM)
-  if (copy_key_list_flag) {
-    printf("tsdb_copy_keylist was just called... strange\n");
-    copy_key_list_flag=0;
-  } /* if */
-#endif
 
   return((result == NULL ? tsdb.error : TSDB_OK));
 
@@ -1656,29 +1679,8 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
 
   } /* else */
 
-
   if (attributes)
     free(attributes);
-
-  /* now check the attributes for projections */
-
-  if(redirection != NULL 
-     && (output = tsdb_open_output(redirection)) != NULL) {
-    *unique_tuples = tsdb_project(selection, attribute_list, report, output);
-    fclose(output);
-  } /* if */
-  else {
-    if(tsdb.output == NULL 
-       && (output = tsdb_open_pager()) != NULL) {
-      *unique_tuples = tsdb_project(selection, attribute_list, report, output);
-      pclose(output);
-    } /* if */
-    else {
-      *unique_tuples 
-        = tsdb_project(selection, attribute_list, report, tsdb_default_stream);
-      fflush(tsdb_default_stream);
-    } /* else */
-  } /* else */
 
   return(selection);
 
@@ -1844,6 +1846,7 @@ int tsdb_project(Tsdb_selection *selection,
   tsdb_free_char_array(projection,n);
   free(r);
   free(f);
+
   return((tsdb.status & TSDB_UNIQUELY_PROJECT) ? n : -1);
 
 } /* tsdb_project() */
