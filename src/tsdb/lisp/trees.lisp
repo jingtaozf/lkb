@@ -450,8 +450,8 @@
           \\hline~%"
          ncolumns
          (if (stringp data) data "")
-         (if (= wf 1) "Coverage" "Overgeneration")
-         (if (= wf 1) "positive" "negative")
+         (if nil "Coverage" "Overgeneration")
+         (if nil "positive" "negative")
          alabel))
       (:tcl
        (format stream *statistics-tcl-formats*)
@@ -477,7 +477,7 @@
          cell 1 6 -contents \"parser\\nanalyses\\n\\330\" -format title~%~
          cell 1 7 -contents \"total\\nresults\\n#\" -format title~%~
          cell 1 8 -contents \"overall\\ncoverage\\n%\" -format title~%~%"
-        alabel (if (= wf 1) "positive" "negative"))))
+        alabel (if nil "positive" "negative"))))
     (loop
         for aggregate in items
         for i from 2
@@ -662,6 +662,7 @@
            i-id (length active) (length results) input #\page)
           (loop
               with *package* = (find-package lkb::*lkb-package*)
+	      with lkb::*deleted-daughter-features* = nil
               for i from 1
               for result in results
               for id = (get-field :result-id result)
