@@ -112,7 +112,7 @@
           with annotated = (make-array nitems :initial-element 0)
           with position = 0
           initially
-            (unless frame
+            (when frame
               (setf (lkb::compare-frame-chart frame) nil)
               (setf (clim:frame-pretty-name frame) title)
               (setf (lkb::compare-frame-controller frame) *current-process*))
