@@ -1051,7 +1051,8 @@ or modulo some number of quantifiers
       (setf width 0))
     (setf current-string
       (format nil "~A(" 
-              (remove-right-sequence "_rel" (string-downcase (rel-sort rel)))))
+              (remove-right-sequence 
+               *sem-relation-suffix* (string-downcase (rel-sort rel)))))
     (format stream "~A" current-string)
     (setf width (+ width (length current-string)))
     (loop for feat-val in (rel-flist rel)
