@@ -1,13 +1,14 @@
 (in-package "CL-USER")
 
 (defun fix-spelling (string)
+  (setf string (mapcar #'string-downcase string))
   (let ((res nil))
     (loop
       (when (null string) (return))
       (let ((word (car string))
             (rest (cdr string)))
         (setf string (cdr string))
-        (if (string-equal word "a")
+        (if (equal word "a")
             (if (vowel-first-p (car rest))
                 (push "an" res)
               (push "a" res))
@@ -116,9 +117,8 @@
         (return t))))
   
 
-(defun vowel-first-p (input-str)
-  (let* ((str (string-downcase input-str))
-         (letters (coerce str 'list))
+(defun vowel-first-p (str)
+  (let* ((letters (coerce str 'list))
          (initial-letter (car letters)))
     (cond ((digit-char-p initial-letter) ; digits first
            (vowel-number-p letters))

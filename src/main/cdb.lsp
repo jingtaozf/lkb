@@ -296,9 +296,9 @@
 	    (let ((key (make-string (read-fixnum stream)))
 		  (data-len (read-fixnum stream)))
 	      (read-sequence key stream)
-	      #-allegro
+	      #-(and :allegro (version>= 5 0))
 	      (setf (gethash key keys) t)
-	      #+allegro
+	      #+(and :allegro (version>= 5 0))
 	      (excl:puthash-key key keys)
 	      (dotimes (x data-len)
 		(read-char stream))))

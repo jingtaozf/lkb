@@ -229,8 +229,6 @@
     (if (probe-file file)
         (progn 
           #-allegro (load file)
-  ;;; above also for ACL if no compiler, but don't know how to
-  ;;; specify this
           #+allegro (load
 		     (handler-bind ((excl:compiler-no-in-package-warning
 				     #'(lambda (c)

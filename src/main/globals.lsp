@@ -202,6 +202,10 @@
   "if set, only the first parse is produced"
   :user)
 
+(def-lkb-parameter *gen-first-only-p* nil
+  "if set, only the first parse is produced"
+  :user)
+
 (def-lkb-parameter *lkb-menu-type* :big 
   "type of interaction menu that is displayed 
    - valid values are :big or :core")

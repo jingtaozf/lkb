@@ -5,6 +5,10 @@
 ;;; evaluate the following for this stuff to be run
 ;;; as part of LKB batch testing
 
+;;; currently only works in Allegro CL because of timing
+
+
+
 #|
 (defparameter *do-something-with-parse* 'check-generate)
 

@@ -489,7 +489,7 @@
                        :if-exists :supersede)
 	(print *shrunk-types* stream)))))
 
-(defun load-display-settings (filename)
+(defun load-display-settings nil
   (set-up-display-settings
    (ask-user-for-existing-pathname "Load type display settings from?")))
 

@@ -41,6 +41,7 @@
 
 
 (defun output-derived-instance-as-tdl (str fs stream id1 id2)
+  (declare (ignore str))
   (let ((indef-fs (tdfs-indef fs)))
     ;;; assume no defaults
     (format stream "~%:begin :instance.~%")

@@ -424,6 +424,8 @@
 (defmethod clear-lex :around ((lexicon lex-database) &optional no-delete)
   (when (fboundp 'reset-cached-lex-entries)
     (funcall 'reset-cached-lex-entries))
+  (when (fboundp 'clear-generator-lexicon)
+    (funcall 'clear-generator-lexicon))
   (clrhash (slot-value lexicon 'lexical-entries))
   (clrhash (slot-value lexicon 'psorts))
   (clrhash (slot-value lexicon 'temp-psorts))

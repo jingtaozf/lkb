@@ -419,7 +419,7 @@
   `(second ,state))
 
 (defmacro defaults (state)
-  `(third state))
+  `(third ,state))
 
 (defun make-state (defaults)
   (list nil nil 

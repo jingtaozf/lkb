@@ -41,7 +41,9 @@
   (declare (ignore sense-string id language))
    nil)
 
-(defparameter *sense-unif-fn* #'make-sense-unifications)
+;;; if  make-sense-unifications is redefined to do something
+;;; *sense-unif-fn* should be set 
+;;; (defparameter *sense-unif-fn* #'make-sense-unifications)
 
 
 ;;;   (when sense-string

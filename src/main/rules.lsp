@@ -37,11 +37,15 @@
 (defvar *ordered-lrule-list* nil)
 
 (defun clear-grammar nil
-   (clrhash *rules*))
+  (when (fboundp 'clear-generator-grules)
+    (funcall 'clear-generator-grules))
+  (clrhash *rules*))
 
 (defun clear-lex-rules nil
   (when (fboundp 'reset-cached-lex-entries)
-   (funcall 'reset-cached-lex-entries))
+    (funcall 'reset-cached-lex-entries))
+  (when (fboundp 'clear-generator-lrules)
+    (funcall 'clear-generator-lrules))
   (clrhash *lexical-rules*))
 
 (defstruct (rule (:include lex-or-psort))
@@ -267,12 +271,12 @@
 
 ;;; Irregular morphology
 
-(defparameter *irregular-forms* (make-hash-table :test #'equal))
+(defvar *irregular-forms* (make-hash-table :test #'equal))
 
-(defparameter *irregular-forms-gen* (make-hash-table :test #'equal))
+(defvar *irregular-forms-gen* (make-hash-table :test #'equal))
 
 (defun find-irregular-morphs (word)
-  (gethash (string-upcase word) *irregular-forms*))
+  (gethash word *irregular-forms*))
 
 (defun gen-irreg-morphs (stem rule)
   ;;; assumes only one answer which is clearly wrong, but until we
@@ -280,13 +284,14 @@
   ;;; lexical entries it'll have to do
   (let ((irreg
          (reverse ; so order matches textual order
-          (gethash (string-upcase stem) *irregular-forms-gen*))))
+          (gethash stem *irregular-forms-gen*))))
     (cdr (assoc rule irreg)))) 
 
 (defun full-morph-generate (stem rule)
+  (setf stem (string-upcase stem))
   (let ((irreg-form (gen-irreg-morphs stem rule)))
     (if irreg-form
-        (list (list (string-downcase irreg-form) (list rule stem)))
+        (list (list irreg-form (list rule stem)))
         (morph-generate stem rule))))
 
 
@@ -301,8 +306,7 @@
            (let* ((stem (car reg))
                   (first-rule (caadr reg))
                   (irreg-stems 
-                   (gethash (string-upcase stem)
-                            *irregular-forms-gen*))
+                   (gethash stem *irregular-forms-gen*))
                   (irreg-rules (mapcar #'car irreg-stems)))
              (if (and irreg-stems first-rule
                       (member first-rule irreg-rules))

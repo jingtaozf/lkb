@@ -7,7 +7,9 @@
 ;;; *check-paths* is the parameter set in user file. This is used to construct
 ;;; value of *check-paths-optimised* which is what is used internally
 
-(defparameter *check-paths* nil)
+;;; (defparameter *check-paths* nil)
+;;; defined in globals
+
 (defparameter *check-paths-optimised* nil)
 
 
