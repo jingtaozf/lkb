@@ -706,7 +706,7 @@
   (let ((count-new
 	 (str-2-num
 	  (sql-fn-get-val lexicon :merge_into_db2))))
-    (format t "~%(~a new entries)" count-new)
+    (format t "~%(~a new revision entries)" count-new)
     (unless (equal 0 count-new)
       (vacuum-public-revision lexicon))
     count-new))
