@@ -163,16 +163,28 @@
              (null body))
       (error "Malformed variable ~A" content))
     (create-new-var-with-id (parse-integer (fifth tag)) 
-                            (third tag))))
-;;; FIX - do the `extra' stuff
+                            (third tag)
+			    (construct-rmrs-var-extras 
+			     (nthcdr 5 tag)))))
 
-(defun create-new-var-with-id (idnumber str)
+(defun construct-rmrs-var-extras (extra-list)
+  (if extra-list
+      (let ((feat (car extra-list))
+	    (val (cadr extra-list)))
+	(unless (and feat val)
+	  (error "Malformed variable extras ~A" extra-list))
+	(cons 
+	 (make-extrapair :feature feat :value val)
+	 (construct-rmrs-var-extras (cddr extra-list))))))
+
+(defun create-new-var-with-id (idnumber str &optional extras)
   (let* ((type (find-var-type str))
          (variable-name (format nil "~A~A" str idnumber)))
         (make-var 
          :name variable-name
          :type type
-         :id idnumber)))
+         :id idnumber
+	 :extra extras)))
 
 (defun read-rmrs-constant (content)
 ;;;  <!ELEMENT constant (#PCDATA)>

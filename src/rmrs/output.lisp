@@ -94,7 +94,18 @@
           
 (defmethod rmrs-output-var-fn ((rmrsout xml) var-id var-type)
   (with-slots (stream) rmrsout
-    (format stream "<var sort='~A' vid='~A'/>" var-type var-id)))
+    (format stream "<var sort='~A' vid='~A'" var-type var-id)))
+
+(defmethod rmrs-output-end-var ((rmrsout xml))
+  (with-slots (stream) rmrsout
+    (format stream "/>")))
+
+(defmethod rmrs-output-start-extra ((rmrsout xml))
+   nil)
+
+(defmethod rmrs-output-extra-feat-val  ((rmrsout xml) feat val)
+  (with-slots (stream) rmrsout
+    (format stream " ~A='~A'" feat val)))
 
 (defmethod rmrs-output-constant-fn ((rmrsout xml) constant)
   (with-slots (stream) rmrsout
@@ -268,6 +279,19 @@ for gram.dtd and tag.dtd
   (with-slots (stream) rmrsout
     (format stream "~A~A" var-type var-id)))
 
+(defmethod rmrs-output-end-var ((rmrsout compact))
+  nil)
+
+(defmethod rmrs-output-start-extra ((rmrsout compact))
+  (with-slots (stream) rmrsout
+    (format stream ":")))
+
+(defmethod rmrs-output-extra-feat-val  ((rmrsout compact) feat val)
+  (declare (ignore feat))
+  (with-slots (stream) rmrsout
+    (format stream "~A:" val)))
+
+
 (defmethod rmrs-output-constant-fn ((rmrsout compact) constant)
   (with-slots (stream) rmrsout
     (format stream "~A" constant)))
@@ -401,7 +425,10 @@ for gram.dtd and tag.dtd
         (t (rmrs-output-error-fn *rmrs-display-structure* 
                                  rmrs-instance))))
 
+(defparameter *already-seen-rmrs-vars* nil)
+
 (defun print-rmrs (rmrs)
+  (setf *already-seen-rmrs-vars* nil)
   (let ((hook (if (semstruct-p rmrs) (semstruct-hook rmrs))) 
         (top-h (rmrs-top-h rmrs))
         (eps (rmrs-liszt rmrs))
@@ -471,12 +498,22 @@ for gram.dtd and tag.dtd
     (var-id canon-var)))
 
 (defun print-rmrs-var (value bindings display)
-    (if (var-p value)
-        (rmrs-output-var-fn 
-         display
-         (find-rmrs-var-id value bindings)
-         (find-var-letter (var-type value)))
-      (error "Unexpected value ~A" value)))
+  (unless (var-p value) (error "Unexpected value ~A" value))
+  (rmrs-output-var-fn 
+   display
+   (find-rmrs-var-id value bindings)
+   (find-var-letter (var-type value)))
+  (unless (member value *already-seen-rmrs-vars* :test #'eq)
+    (push value *already-seen-rmrs-vars*)
+    (rmrs-output-start-extra display)
+    (loop for extrapair in (var-extra value)
+	do
+	  (rmrs-output-extra-feat-val 
+	   display
+	   (extrapair-feature extrapair)
+	   (extrapair-value extrapair))))
+  (rmrs-output-end-var display))
+      
 
 (defun print-rmrs-hcons (hcons-list bindings display)
     (loop for hcons in hcons-list

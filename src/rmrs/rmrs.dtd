@@ -15,7 +15,7 @@
 
 <!ATTLIST realpred
           lemma CDATA #REQUIRED
-          pos (V|N|J|R|P) #IMPLIED
+          pos (V|N|J|R|P|Q|X|U) #REQUIRED
           sense CDATA #IMPLIED >
 
 <!ELEMENT gpred (#PCDATA)>

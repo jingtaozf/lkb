@@ -6,22 +6,10 @@
 
 ;;; convert an MRS structure to an RMRS  
 
-;;; simple version currently broken ...
-
 ;;; (defparameter lkb::*do-something-with-parse* 'mrs::batch-output-rmrs)
-
-#+:lkb
-(defun batch-output-simple-rmrs nil
-  ;;; to be called from LKB batch processing
-  (batch-output-rmrs-aux t))
-
-#+:lkb
-(defun batch-output-rmrs nil
-  ;;; to be called from LKB batch processing
-  (batch-output-rmrs-aux nil))
   
 #+:lkb
-(defun batch-output-rmrs-aux (simple-p)  
+(defun batch-output-rmrs nil
   (let ((sentence lkb::*parse-input*)
         (ostream (if (and lkb::*ostream* 
                           (streamp lkb::*ostream*) 
@@ -40,9 +28,7 @@
           (let* ((parse (car *parse-record*))
                  (mrs-struct (extract-mrs parse))
                  (rmrs-struct 
-                  (if simple-p
-                      (simple-mrs-to-rmrs mrs-struct)
-                    (mrs-to-rmrs mrs-struct))))
+                    (mrs-to-rmrs mrs-struct)))
             (output-rmrs1 rmrs-struct 'xml ostream))
       (format ostream
               "~%<rmrs></rmrs>"))
@@ -138,101 +124,41 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
 (defparameter *do-not-convert-preds* '("_cop_id_rel"))
 
 (defun rmrs-convert-pred (pred)
-  (let* ((pos-type (find-pred-pos-type pred))
-        (str (string-downcase (string pred))))
+  ;;; the pred should obey the format:
+  ;;; _lemma_pos_sense_rel
+  ;;; or
+  ;;; _lemma_pos_rel
+  ;;; if the senses are not distinguished
+  ;;;
+  ;;; If there is no leading underscore, the pred
+  ;;; is not decomposed
+  (let* ((str (string-downcase (string pred))))
     ;;; parse the string - hacky ...
     (if (or (not (eql (elt str 0) #\_))
          (member str *do-not-convert-preds* :test #'string-equal))
         str
       (let*
-          ((uscore-pos (position #\_ str :start 1))
-           (uscore-pos2 
-            (if uscore-pos
-                (position #\_ str :start (+ 1 uscore-pos))))
+          ((uscore-pos2 (position #\_ str :start 1))
            (uscore-pos3 
             (if uscore-pos2
                 (position #\_ str :start (+ 1 uscore-pos2))))
-           (remainder (cond (uscore-pos3
+           (uscore-pos4
+            (if uscore-pos3
+                (position #\_ str :start (+ 1 uscore-pos3))))
+           (remainder (cond (uscore-pos4
+                             (subseq str uscore-pos4))
+                            (uscore-pos3
                              (subseq str uscore-pos3))
-                            (uscore-pos2
-                             (subseq str uscore-pos2))
-                            (uscore-pos
-                             (subseq str uscore-pos))
                             (t nil))))
         (if (not (equal remainder "_rel"))
               ;;; we're missing the _rel
               ;;; nasty so just output what we've got
             str
-          (make-realpred :lemma (subseq str 1 uscore-pos)
-                         :pos pos-type
-                         :sense (if uscore-pos3
-                                   (subseq str uscore-pos2 uscore-pos3))))))))
+          (make-realpred :lemma (subseq str 1 uscore-pos2)
+                         :pos (subseq str uscore-pos uscore-pos3)
+                         :sense (if uscore-pos4
+                                   (subseq str uscore-pos3 uscore-pos4))))))))
 
 
-(defun find-pred-pos-type (pred)
-  (cond ((not (lkb::is-valid-type pred)) "")
-        ((lkb::subtype-p pred 'LKB::basic_NOM_REL) "N")
-        ((lkb::subtype-p pred 'LKB::adj_rel) "J")
-        ((lkb::subtype-p pred 'LKB::adv_rel) "R")
-        ((lkb::subtype-p pred 'LKB::prep_rel) "P")
-        ((lkb::subtype-p pred 'LKB::event_rel) "V")
-        (t nil)))
-
-(defun strip-pos-type (str pos-type)
-  (if (eql (elt str 2) #\_)
-      (let ((candidate-pos (subseq str 0 2)))
-        (if (string-equal candidate-pos pos-type)
-            (subseq str 2)
-          str))
-    str))
                
-
-;;; simple MRS (currently broken, due to adding the full MRS)
-
-
-
-(defun simple-mrs-to-rmrs (mrs)
-  (let ((lzt (psoa-liszt mrs)))
-    (make-rmrs :liszt
-               (loop for rel in lzt
-                     append
-                     (simple-parsonify-rel rel)))))
-
-#|
-bindings aren't set, since the assumption is that all variable
-equalities are known.  So the code simply has to walk down the list
-of rels in the lzt, converting them to simple eps, in parsons style.
-The conversion should only be done for relations which are of the correct 
-type.
-|#
-
-(defun simple-parsonify-rel (rel)
-  (let* ((reltype (rel-reltype rel))
-         (pred (rel-sort rel))
-         (flist (rel-flist rel))
-         (main-arg (fvpair-value (car flist)))
-         (parsons-eps
-          (if (and (cdr flist)
-                   (parsonifiable-type-p reltype))
-              (loop for fvpair in (cdr flist)
-                  collect
-                    (let ((feat (fvpair-feature fvpair))
-                     (val (fvpair-value fvpair)))
-                      (make-ep :sort (string feat)
-                               :flist 
-                               (list main-arg val)))))))
-    (cons
-     (make-ep :sort pred 
-              :flist (if parsons-eps 
-                         (list main-arg) 
-                       (loop for fvpair in flist
-                           collect (fvpair-value fvpair))))
-     parsons-eps)))
-
-
-(defun parsonifiable-type-p (reltype)
-  (declare (ignore reltype))
-  ;;; needs to return t for rels with more than
-  ;;; one arg which are to be split up
-  t)
 

@@ -3,6 +3,7 @@
 ;;;   see `licence.txt' for conditions.
 
 ;;; FIX - not dealing with optional elements in rules
+;;; FIX - share-var-info
 
 (in-package :mrs)
 
@@ -96,9 +97,10 @@
 
 ;;;;
 
-(defun construct-grammar-var (var-string)
+(defun construct-grammar-var (var-string &optional extras)
   (make-grammar-var :type (find-var-type var-string)
-                    :id var-string))
+                    :id var-string
+		    :extra extras))
 
 (defparameter *rmrs-var-types*
     '((#\h . :handle)
@@ -413,7 +415,7 @@ goes to
 
 (init-rmrs-variable-generator)
 
-(defun create-new-rmrs-var (type gen)
+(defun create-new-rmrs-var (type gen extras)
   ;;; constructs a new variable of a given type
   (let* ((idnumber (funcall gen))
          (letter (find-var-letter type))
@@ -422,29 +424,37 @@ goes to
         (make-handle-var 
          :name variable-name
          :type 'handle
-         :id idnumber)
+         :id idnumber
+         :extra extras)
     (make-var 
      :name variable-name
      :type type
-     :id idnumber))))
+     :id idnumber
+     :extra extras))))
 
 (defun make-default-running-hook nil
   (make-indices :index (create-new-rmrs-var 
                         :other 
-                        *rmrs-variable-generator*)
+                        *rmrs-variable-generator* nil)
                 :label (create-new-rmrs-var 
                         :handle 
-                        *rmrs-variable-generator*)))
+                        *rmrs-variable-generator* nil)))
 
 
 (defun generate-new-var (old-var-struct)
   ;;; called from construct-new-semstruct
   ;;; takes a var-struct with a dummy id 
   ;;; and creates a new variable of the same type
-  (or (rest (assoc old-var-struct *local-var-context* :test #'rmrs-var-equal))
+  (or (let  ((existing-var
+	      (rest (assoc old-var-struct *local-var-context* :test #'rmrs-var-equal))))
+	(when (and existing-var (var-extra old-var-struct)
+		   (not (var-extra existing-var)))
+	  (setf (var-extra existing-var) (var-extra old-var-struct)))
+	existing-var)
       (let* ((var-type (var-type old-var-struct))
              (varstruct (create-new-rmrs-var var-type 
-                        *rmrs-variable-generator*)))
+					     *rmrs-variable-generator* 
+					     (var-extra old-var-struct))))
 	(push (cons old-var-struct varstruct) *local-var-context*)
 	varstruct)))
 
@@ -466,7 +476,9 @@ goes to
            (make-char-rel :handel 
                      (if (rel-handel old-ep)
                          (generate-new-var (rel-handel old-ep))
-                       (create-new-rmrs-var :handle *rmrs-variable-generator*))
+                       (create-new-rmrs-var 
+			:handle 
+			*rmrs-variable-generator* nil))
                        :sort 
                        (let ((old-pred (rel-sort old-ep)))
                          (if (dummy-pred-p old-pred)
@@ -530,6 +542,8 @@ goes to
 		    (rest (assoc el *local-var-context* 
                                  :test #'rmrs-var-equal)))))
 	    (when new-var
+	      (dolist (el1 new-els)
+		(share-var-info new-var el1))
 	      (push new-var new-els))))
 	(when new-els
 	  (push new-els real-eqs))))
@@ -537,7 +551,17 @@ goes to
 
 (defun rmrs-var-equal (v1 v2)
   (equal (var-id v1) (var-id v2)))
-	      
+
+(defun share-var-info (v1 v2)
+  ;;; FIX
+  ;;; eventually this should deal with the cases of compatible
+  ;;; extra info, but for now, just assume only one variable has
+  ;;; extra info
+  ;;; should also deal with compatible sorts
+  (if (var-extra v1)
+      (setf (var-extra v2) (var-extra v1))
+    (setf (var-extra v1) (var-extra v2))))
+
 (defun get-var-for-pointer (pointer dtr-hooks)
   (let* ((dtr-num (pointer-dtrnum pointer))
 	 (hook (elt dtr-hooks dtr-num)))

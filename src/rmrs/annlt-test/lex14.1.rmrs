@@ -516,7 +516,7 @@
 <tag>VVD</tag>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<ep><pred/><label>H</label><var>E</var></ep>
+<ep><pred/><label>H</label><var tense='past'>E</var></ep>
 </semstruct>
 </le>
 

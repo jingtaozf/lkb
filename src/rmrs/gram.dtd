@@ -23,6 +23,12 @@
 <!ELEMENT gpred (#PCDATA)>
 
 <!ELEMENT var (#PCDATA)>
+<!ATTLIST var
+          num  CDATA #IMPLIED
+          pers CDATA #IMPLIED
+          gender CDATA #IMPLIED
+          tense CDATA #IMPLIED
+          aspect CDATA #IMPLIED >
 
 <!ELEMENT constant (#PCDATA)>
 

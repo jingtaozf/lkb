@@ -56,6 +56,10 @@
   extra ; useful for e.g. agreement values
   id)
 
+(defstruct (extrapair)
+  feature
+  value)
+
 (defstruct (handle-var (:include var)))
 
 (defstruct (grammar-var (:include var)))

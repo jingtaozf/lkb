@@ -118,17 +118,34 @@
 
 (defun read-rmrs-semstruct-ep (content)
   ;;; <!ELEMENT ep ((gpred|pred|realpred),label,var)>
-  (let ((pred nil) (arg nil) (label nil))
+  (let ((pred nil) (label nil))
     (setf pred (read-rmrs-pred (car content)))
     (setf label (read-rmrs-simple '|label| (cadr content)))
-    (setf arg (read-rmrs-simple '|var| (caddr content)))
-    ;;; vars are just letters in grammar file
-    (make-rel :sort pred 
-              :handel (construct-grammar-var label)
-              :flist (list (construct-grammar-var arg)))))
+    (multiple-value-bind (arg extras)
+	(read-rmrs-grammar-var (caddr content))
+      (make-rel :sort pred 
+		:handel (construct-grammar-var label)
+		:flist (list (construct-grammar-var arg extras))))))
 
-
+(defun read-rmrs-grammar-var (content)
+;;; <!ELEMENT var (#PCDATA) >
+;;; <!ATTLIST var
+;;;          num  CDATA #IMPLIED
+;;;          pers CDATA #IMPLIED
+;;;          gender CDATA #IMPLIED
+;;;          tense CDATA #IMPLIED
+;;;          aspect CDATA #IMPLIED >
+  (let ((tag (car content))
+        (body (cdr content)))
+    (unless (or (eql tag '|var|) 
+		(and (listp tag) (eql (first tag) '|var|)))
+      (error "Malformed variable ~A" content))
+    (values (first body)
+	    (if (listp tag)
+		(construct-rmrs-var-extras (rest tag))))))
+	    
 ;;; read-rmrs-pred is in input.lisp
+;;; construct-rmrs-extras is in input.lisp
 
 (defun read-rmrs-semstruct-rarg (content)
   ;;; <!ELEMENT rarg (rargname, label, (var|constant|lemma)) >
@@ -143,8 +160,9 @@
           (|constant|  
            (read-rmrs-simple '|constant| argval))
           (|var|
-           (construct-grammar-var 
-            (read-rmrs-simple '|var| argval))))))
+	   (multiple-value-bind (arg extras)
+	       (read-rmrs-grammar-var argval)
+	     (construct-grammar-var arg extras))))))
     (make-rmrs-arg :arg-type name :label (construct-grammar-var label) 
                    :val arg)))
   
