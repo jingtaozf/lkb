@@ -51,6 +51,8 @@ windows: lkb_windows
 
 solaris: lkb_solaris itsdb_solaris
 
+linux_x86_64: lkb_linux@ar itsdb_linux_x86_64
+
 #
 # link structure on CSLI LinGO ftp(1) site
 #
@@ -282,6 +284,21 @@ itsdb_linux_x86_32:
 	      bin/linux.x86.32/pvmd3 bin/linux.x86.32/pvm \
 	      src/pvm/linux.x86.32/*.so src/tsdb/linux.x86.32/*.so \
 	      src/.l6cl/pvm src/.l6cl/tsdb; \
+	)
+
+itsdb_linux_x86_64:
+	( \
+	  cd ${LROOT}/lkb; \
+	  find src/.l7c4 -type f -exec touch {} \; ; \
+	  tar Svczf /tmp/itsdb_linux.x86.64.tgz \
+	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
+              --exclude=".nfs*" \
+	      bin/linux.x86.64/tsdb bin/linux.x86.64/swish++ \
+	      bin/linux.x86.64/pvmd3 bin/linux.x86.64/pvm \
+	      src/pvm/solaris/*.so src/tsdb/solaris/*.so \
+	      src/.l7c4/pvm src/.l7c4/tsdb; \
+	  scp /tmp/itsdb_linux.x86.64.tgz \
+	    oe@lingo.stanford.edu:${TARGET}/${DATE}; \
 	)
 
 itsdb_solaris:
