@@ -1,9 +1,22 @@
 cvs update: Updating .
+U Version.lisp
+U auxverbs.tdl
+U constructions.tdl
+U fundamentals.tdl
+U letypes.tdl
+U lexicon.csv
+U lexicon.tdl
+U lexrinst.tdl
+U lexrules.tdl
+U lextypes.tdl
+U syntax.tdl
+U vm6p.mem
 cvs update: Updating data
 cvs update: Updating gold
 cvs update: Updating gold/csli
 cvs update: Updating gold/mrs
 cvs update: Updating lkb
+U lkb/globals.lsp
 cvs update: Updating pet
 cvs update: Updating .
 cvs update: Updating doc
@@ -80,6 +93,7 @@ cvs update: Updating lib/tk8.3/images
 cvs update: Updating log
 M log/build
 cvs update: Updating src
+U src/pg-interface.el
 ? src/.l6cl
 ? src/.l6sl
 ? src/.sacl
@@ -157,7 +171,6 @@ cvs update: Updating src/.nasl/tty
 cvs update: Updating src/.nasl/www
 cvs update: Updating src/ACL-CG_specific
 cvs update: Updating src/ACL_specific
-U src/ACL_specific/compare.lsp
 cvs update: Updating src/MCL_specific
 cvs update: Updating src/data
 cvs update: Updating src/data/Dikran
@@ -258,16 +271,32 @@ cvs update: Updating src/fasl/mrs
 cvs update: Updating src/general
 cvs update: Updating src/glue
 cvs update: Updating src/io-general
+U src/io-general/menus.lsp
 cvs update: Updating src/io-lilfes
 cvs update: Updating src/io-paths
+U src/io-paths/lexinput.lsp
 cvs update: Updating src/io-tdl
 cvs update: Updating src/lexicon
 cvs update: Updating src/main
+U src/main/batch-check.lsp
+U src/main/lex.lsp
+U src/main/lexport.lsp
+U src/main/psql-emacs.lsp
+U src/main/psql-mwe.lsp
+U src/main/psqllex.lsp
 cvs update: Updating src/mrs
+U src/mrs/lkb-acl-mrs.lisp
+U src/mrs/mrsmunge.lisp
+U src/mrs/translate.lisp
 cvs update: Updating src/mrs/data
+cvs update: Updating src/mt
 cvs update: Updating src/non-core
 cvs update: Updating src/ppcre
 cvs update: Updating src/psql
+U src/psql/defn.sql
+U src/psql/embedded-code.sql
+U src/psql/import.sql
+U src/psql/mwe.sql
 cvs update: Updating src/psql/linux
 cvs update: Updating src/psql/solaris
 cvs update: Updating src/pvm
@@ -277,6 +306,7 @@ cvs update: Updating src/rmrs
 cvs update: Updating src/rmrs/annlt-test
 cvs update: Updating src/rmrs/test1
 cvs update: Updating src/systems
+U src/systems/lkb.system
 cvs update: Updating src/tproving
 cvs update: Updating src/tsdb
 ? src/tsdb/c
@@ -308,6 +338,14 @@ cvs update: Updating src/tsdb/home/trees/vm32/ezra/01-07-17
 cvs update: Updating src/tsdb/html
 cvs update: Updating src/tsdb/linux
 cvs update: Updating src/tsdb/lisp
+U src/tsdb/lisp/filter.lisp
+U src/tsdb/lisp/globals.lisp
+U src/tsdb/lisp/lkb-interface.lisp
+U src/tsdb/lisp/process.lisp
+U src/tsdb/lisp/redwoods.lisp
+U src/tsdb/lisp/statistics.lisp
+U src/tsdb/lisp/tsdb.lisp
+U src/tsdb/lisp/xle-interface.lisp
 cvs update: Updating src/tsdb/lisp/RCS
 cvs update: Updating src/tsdb/skeletons
 cvs update: Updating src/tsdb/skeletons/csli
@@ -364,10 +402,13 @@ cvs update: Updating src/tsdb/skeletons/norsk
 cvs update: Updating src/tsdb/skeletons/norsk/enkel
 cvs update: Updating src/tsdb/skeletons/norsk/mrs
 cvs update: Updating src/tsdb/skeletons/norsk/tur
+U src/tsdb/skeletons/norsk/tur/item
 cvs update: Updating src/tsdb/skeletons/s+w
 cvs update: Updating src/tsdb/skeletons/toy
 cvs update: Updating src/tsdb/solaris
 cvs update: Updating src/tsdb/tcl
+U src/tsdb/tcl/commands.tcl
+U src/tsdb/tcl/podium.tcl
 cvs update: Updating src/tty
 cvs update: Updating src/www
 cvs update: Updating src/www/linux
@@ -381,7 +422,7 @@ cvs update: Updating src/xml
 **********
 Checking in /eo/e7/apache/htdocs/src/lkb/src/version.lsp;
 /eo/e1/CVSROOT/newlkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.267; previous revision: 1.266
+new revision: 1.268; previous revision: 1.267
 done
 ( \
   cd /eo/e7/apache/htdocs/src/lkb; \
@@ -520,6 +561,8 @@ src/main/discriminants.lsp
 src/main/slex.lsp
 src/main/preprocess.lsp
 src/main/ssp.lsp
+src/main/psql-emacs.lsp
+src/main/psql-mwe.lsp
 src/mrs/
 src/mrs/after.lisp
 src/mrs/basemrs.lisp
@@ -606,11 +649,14 @@ src/psql/bind-libpq.cl
 src/psql/import.sql
 src/psql/pg-package.cl
 src/psql/sql.cl
+src/psql/mwe.sql
 src/psql/solaris/
 src/psql/solaris/libpq.so
 src/psql/import-7.1.sql
 src/psql/test.txt
 src/psql/import-patch-7-1.sql
+src/psql/defn.sql
+src/psql/embedded-code.sql
 src/ppcre/
 src/ppcre/api.lisp
 src/ppcre/closures.lisp
@@ -1342,7 +1388,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-6.2 [Linux (x86)] (Oct 20, 2003 14:27)
+6.2 [Linux (x86)] (Oct 30, 2003 9:42)
 Copyright (C) 1985-2002, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -2406,7 +2452,7 @@ NIL
  (DISCARD-ALL-SOURCE-FILE-INFO)
  |#
 
-#<EQUAL hash-table with 0 entries @ #x4445351a> 
+#<EQUAL hash-table with 0 entries @ #x4445350a> 
  #|
 ; Libfasl from bundle code/who.fasl.
  (DISCARD-LOCAL-NAME-INFO)
@@ -2417,7 +2463,7 @@ NIL
  (REQUIRE :NOCOMPILER)
  |#
 ; Libfasl from bundle code/nocompiler.fasl.
-94597392 bytes have been tenured, next gc will be global.
+90702664 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 
 T 
@@ -2607,7 +2653,7 @@ CL-USER(7): ; Loading /eo/e7/apache/htdocs/src/lkb/src/systems/tsdb.system
 ; Fast loading
 ;    /eo/e7/apache/htdocs/src/lkb/src/.l6cl/ppcre/repetition-closures.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/ppcre/scanner.lisp
-8433224 bytes have been tenured, next gc will be global.
+8433200 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/ppcre/scanner.fasl
@@ -2942,7 +2988,7 @@ See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;    /eo/e7/apache/htdocs/src/lkb/src/.l6cl/ACL_specific/chartout.fasl
 ;;; Compiling file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/ACL_specific/listout.lsp
-8441224 bytes have been tenured, next gc will be global.
+8441032 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/ACL_specific/listout.fasl
@@ -3296,7 +3342,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading
 ;    /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/derivations.fasl
-gc-after-hook(): local; new: 1157368; old: 50664; pending: 5456; efficiency: 93.
+gc-after-hook(): local; new: 1157464; old: 50664; pending: 1904; efficiency: 91.
 ;;; Compiling file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/tnt-interface.lisp
 ;;; Writing fasl file
@@ -3306,8 +3352,8 @@ gc-after-hook(): local; new: 1157368; old: 50664; pending: 5456; efficiency: 93.
 ;    /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/tnt-interface.fasl
 ;;; Compiling file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/redwoods.lisp
-gc-after-hook(): local; new: 1094672; old: 300336; pending: 72; efficiency: 93.
-gc-after-hook(): local; new: 1096568; old: 71472; pending: 72; efficiency: 92.
+gc-after-hook(): local; new: 1106376; old: 300336; pending: 72; efficiency: 93.
+gc-after-hook(): local; new: 1042128; old: 71472; pending: 0; efficiency: 94.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/redwoods.fasl
 ;;; Fasl write complete
@@ -3334,7 +3380,7 @@ gc-after-hook(): local; new: 1096568; old: 71472; pending: 72; efficiency: 92.
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/pcfg.fasl
 ;;; Compiling file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/maxent.lisp
-gc-after-hook(): local; new: 902216; old: 449064; pending: 0; efficiency: 91.
+gc-after-hook(): local; new: 814128; old: 449064; pending: 40; efficiency: 92.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/maxent.fasl
 ;;; Fasl write complete
@@ -3436,7 +3482,7 @@ Root pages: 12
  C heap    base: #xe0000000  position: #xe0004000 reserved: 1024000
 
 
-Allegro CL Enterprise Edition 5.0.1 [SPARC] (10/20/3 14:33)
+Allegro CL Enterprise Edition 5.0.1 [SPARC] (10/30/3 9:48)
 Copyright (C) 1985-1999, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 ;; Optimization settings: safety 1, space 1, speed 1, debug 2.
 ;; For a complete description of all compiler switches given the current
@@ -3731,10 +3777,10 @@ Warning: Variable #:G20890 is never used.
 ;   Libfasl loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/clex.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/main/rules.lsp
 ; While compiling RULES-TO-XML:
+Warning: Variable #:G25426 is never used.
 Warning: Variable #:G25427 is never used.
-Warning: Variable #:G25428 is never used.
+Warning: Variable #:G25412 is never used.
 Warning: Variable #:G25413 is never used.
-Warning: Variable #:G25414 is never used.
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/rules.fasl
 ;;; Fasl write complete
 ;   Libfasl loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/rules.fasl
@@ -3796,9 +3842,9 @@ Warning: Variable #:G25414 is never used.
 ;      /eo/e7/apache/htdocs/src/lkb/src/.sacl/io-general/outputtdfs.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/io-general/outputsrc.lsp
 ; While compiling (LABELS OUTPUT-RULES-FOR-EBL OUTPUT-RULES):
-Warning: Variable #:G30667 is never used.
+Warning: Variable #:G30666 is never used.
+Warning: Variable #:G30662 is never used.
 Warning: Variable #:G30663 is never used.
-Warning: Variable #:G30664 is never used.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.sacl/io-general/outputsrc.fasl
 ;;; Fasl write complete
@@ -4103,7 +4149,7 @@ USER(24): ; Autoloading for DISCARD-LOCAL-NAME-INFO:
 NIL
 [Current process: Initial Lisp Listener]
 USER(25): ; Libfasl from bundle code/nocompiler.fasl.
-33669664 bytes have been tenured, next gc will be global.
+31637784 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 T
 [Current process: Initial Lisp Listener]
@@ -4299,7 +4345,7 @@ Warning: Variable #:G25894 is never used.
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/dag.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/dag.fasl
-7703304 bytes have been tenured, next gc will be global.
+7703320 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/main/yadu.lsp
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/yadu.fasl
@@ -4344,10 +4390,10 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/clex.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/main/rules.lsp
 ; While compiling RULES-TO-XML:
+Warning: Variable #:G30442 is never used.
 Warning: Variable #:G30443 is never used.
-Warning: Variable #:G30444 is never used.
+Warning: Variable #:G30428 is never used.
 Warning: Variable #:G30429 is never used.
-Warning: Variable #:G30430 is never used.
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/rules.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/rules.fasl
@@ -4405,9 +4451,9 @@ Warning: Variable #:G30430 is never used.
 ;    /eo/e7/apache/htdocs/src/lkb/src/.sacl/io-general/outputtdfs.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/io-general/outputsrc.lsp
 ; While compiling (LABELS OUTPUT-RULES-FOR-EBL OUTPUT-RULES):
-Warning: Variable #:G35695 is never used.
+Warning: Variable #:G35694 is never used.
+Warning: Variable #:G35690 is never used.
 Warning: Variable #:G35691 is never used.
-Warning: Variable #:G35692 is never used.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.sacl/io-general/outputsrc.fasl
 ;;; Fasl write complete
@@ -4737,11 +4783,11 @@ Warning: Variable ENCODING is never used.
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/filter.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/statistics.lisp
 ; While compiling ANALYZE-AGGREGATES:
-Warning: Variable #:G52593 is never used.
-Warning: Variable #:G52594 is never used.
+Warning: Variable #:G52609 is never used.
+Warning: Variable #:G52610 is never used.
 ; While compiling PURGE-PROFILE-CACHE:
-Warning: Variable #:G52755 is never used.
-Warning: Variable #:G52756 is never used.
+Warning: Variable #:G52771 is never used.
+Warning: Variable #:G52772 is never used.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/statistics.fasl
 ;;; Fasl write complete
@@ -4772,7 +4818,7 @@ Warning: Variable #:G52756 is never used.
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/yy.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/derivations.lisp
-gc-after-hook(): local; new: 2041200; old: 422472; pending: 0; efficiency: 98.
+gc-after-hook(): local; new: 2035928; old: 422600; pending: 64; efficiency: 98.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/derivations.fasl
 ;;; Fasl write complete
