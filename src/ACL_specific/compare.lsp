@@ -231,7 +231,9 @@
     (setf (compare-frame-lead frame)
       (preset-discriminants 
        (compare-frame-discriminants frame) 
-       (compare-frame-preset frame) (compare-frame-gold frame))))
+       (compare-frame-preset frame)
+       (compare-frame-gold frame)
+       (compute-discriminant-skew edges))))
 
   #+:allegro
   (when runp

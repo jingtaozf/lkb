@@ -12,6 +12,8 @@
 
 (def-lkb-parameter *tree-results-show* :tree)
 
+(defparameter *tree-discriminants-skews* nil #+:null '("," "(" ")" "."))
+
 (defparameter *tree-discriminants-blaze* nil)
 
 (defvar *tree-discriminants-chart* nil)
@@ -30,7 +32,8 @@
                      maximize (edge-to edge))
                  1)
               0))
-         (*tree-discriminants-chart* (make-array (list n n) :initial-element nil))
+         (*tree-discriminants-chart* 
+          (make-array (list n n) :initial-element nil))
          %discriminants%)
     (declare (special %discriminants%))
     ;;
@@ -250,14 +253,14 @@
                    (equal (discriminant-end discriminant) end)
                    discriminant)))
 
-(defun preset-discriminants (discriminants preset &optional gold)
+(defun preset-discriminants (discriminants preset &optional gold skew)
   
   (let (lead)
     (loop
         for old in gold
         for new = (loop 
                      for new in discriminants
-                     thereis (when (discriminant-equal old new) new))
+                     thereis (when (discriminant-equal old new skew) new))
         when new do
           (setf (discriminant-toggle new) (discriminant-toggle old))
           (setf (discriminant-state new) (discriminant-state old))
@@ -297,15 +300,29 @@
           (setf (discriminant-time foo) (get-universal-time)))
         (setf (discriminant-state foo) nil)))
 
-(defun discriminant-equal (foo bar)
+(defmacro skewed-discriminant-start (discriminant skew)
+  `(if ,skew
+     (let ((start (discriminant-start ,discriminant)))
+       (- start (aref ,skew start)))
+     (discriminant-start ,discriminant)))
+
+(defmacro skewed-discriminant-end (discriminant skew)
+  `(if ,skew
+     (let ((end (discriminant-end ,discriminant)))
+       (- end (aref ,skew end)))
+     (discriminant-end ,discriminant)))
+
+(defun discriminant-equal (foo bar &optional skew)
   (and (or (null (discriminant-key foo)) (null (discriminant-key bar))
            (equal (discriminant-key foo) (discriminant-key bar)))
        (or (null (discriminant-type foo)) (null (discriminant-type bar))
            (equal (discriminant-type foo) (discriminant-type bar)))
        (or (null (discriminant-start foo)) (null (discriminant-start bar))
-           (equal (discriminant-start foo) (discriminant-start bar)))
+           (equal (discriminant-start foo)
+                  (skewed-discriminant-start bar skew)))
        (or (null (discriminant-end foo)) (null (discriminant-end bar))
-           (equal (discriminant-end foo) (discriminant-end bar)))))
+           (equal (discriminant-end foo)
+                  (skewed-discriminant-end bar skew)))))
 
 (defun discriminant-state-as-string (discriminant)
   (let ((state (discriminant-state discriminant)))
@@ -314,6 +331,47 @@
 (defun discriminant-toggle-as-string (discriminant)
   (let ((toggle (discriminant-toggle discriminant)))
     (cond ((eq toggle t) "+") ((null toggle) "-") (t "?"))))
+
+(defun edge-yield (edge)
+  (unless (null edge)
+    (let ((daughters (edge-children edge)))
+      (if (null daughters)
+        (list edge)
+        (loop 
+            for daughter in daughters
+            nconc (edge-yield daughter))))))
+
+(defun compute-discriminant-skew (edges)
+  ;;
+  ;; _fix_me_
+  ;; there appears to be a bug in PET derivations: `do not throw [...]' comes
+  ;; out as 
+  ;;
+  ;;  (hcomp 0 7
+  ;;   (dont_3 1 2 ("Do not" 1 2))
+  ;;   [...] (bse_verb_infl_rule 2 3 (throw_away_v1 0 2 3 ("throw" 2 3))) [...]
+  ;;
+  ;; for now, attempt to work around this and assume that end positions will be
+  ;; correct.  maybe this should go into reconstruction, even.  (11-jul-04; oe)
+  ;;
+  (when *tree-discriminants-skews*
+    (loop
+        with yield = (edge-yield (first edges))
+        with size = (loop
+                        for edge in yield maximize (edge-to edge))
+        with skew = (make-array (+ size 1) :initial-element 0)
+        with offset = 0
+        with start = 0
+        for edge in yield
+        for surface = (first (edge-leaves edge))
+        when (member surface *tree-discriminants-skews* :test #'string-equal)
+        do (incf offset)
+        do 
+          (loop
+              for i from (+ start 1) to (edge-to edge)
+              do (setf (aref skew i) offset))
+          (setf start (edge-to edge))
+        finally (return skew))))
 
 (defun read-blaze (&optional file)
   (setf *tree-discriminants-blaze* nil)
