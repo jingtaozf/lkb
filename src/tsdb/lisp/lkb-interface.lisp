@@ -298,7 +298,7 @@
                    (unless #+:packing packingp #-:packing nil
                      (loop
                          for i from 0
-                         for parse in (nreverse *parse-record*)
+                         for parse in (reverse *parse-record*)
                          for time = (if (integerp (first times))
                                       (round (* (- (pop times) start) 1000)
                                              internal-time-units-per-second )
@@ -332,7 +332,8 @@
                                          :escape t :case :downcase))
                          collect (pairlis '(:result-id :derivation)
                                           (list i string))))))))))))
-    (release-temporary-storage)
+        
+    (unless trace (release-temporary-storage))
     (append
      (when condition
        (pairlis '(:readings 

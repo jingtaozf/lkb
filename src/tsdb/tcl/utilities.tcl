@@ -271,6 +271,7 @@ proc update_condition_cascade {{active ""}} {
   # restrictions.
   #
   set globals(condition) "";
+  set disjunctionp 0;
   if {!$globals(phenomena,all)} {
     foreach i [lsort -integer [array names phenomena]] {
       if {$globals(phenomena,$i)} {
@@ -278,11 +279,15 @@ proc update_condition_cascade {{active ""}} {
         if {$globals(condition) == ""} {
           set globals(condition) $condition;
         } else {
+          set disjunctionp 1;
           set globals(condition) \
             "$globals(condition) or $condition";
         }; # else
       }; # if
     }; # foreach
+    if {$disjunctionp} {
+      set globals(condition) "($globals(condition))";
+    }; # if
   }; # if
   if {!$globals(condition,null)} {
 
