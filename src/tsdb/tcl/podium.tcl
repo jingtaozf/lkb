@@ -125,7 +125,12 @@ set globals(attributes) {};
 set compare_in_detail(source) "";
 set compare_in_detail(phenomena,all) 1;
 set compare_in_detail(show,i-input) 1;
-set compare_in_detail(compare,words) 0;
+set compare_in_detail(compare,all) {
+  words readings first total pedges rpedges gcs error
+}; # compare_in_detail(compare,all)
+foreach attribute $compare_in_detail(compare,all) {
+  set compare_in_detail(compare,$attribute) 0;
+}; # foreach
 set compare_in_detail(compare,readings) 1;
 
 #
@@ -164,12 +169,19 @@ proc logger {string} {
 
 proc main {} {
 
-  global globals;
+  global globals compare_in_detail;
 
   #
   # withdraw podium application until it is fully decorated
   #
   wm withdraw .
+
+  #
+  # read `.podiumrc' from user home directory if available
+  #
+  if {[file exists ~/.podiumrc]} {
+    catch {source ~/.podiumrc};
+  }; # if
 
   #
   # decorate top-level container and create menu bar
@@ -301,9 +313,6 @@ proc main {} {
   .menu.process.menu add separator
   .menu.process.menu add command -label "Vocabulary" \
       -command {tsdb_browse_vocabulary 1}
-#  .menu.process.menu add separator
-#  .menu.process.menu add command -label "Interrupt" \
-#      -command {tsdb_abort} -state disabled;
 
   #
   # `Analyze' menu (and embedded cascades)
@@ -487,19 +496,10 @@ proc main {} {
     -variable compare_in_detail(show,i-category)
 
   menu .menu.detail.menu.intersection -tearoff 0
-  .menu.detail.menu.intersection add checkbutton -label "words" \
-    -variable compare_in_detail(compare,words)
-  .menu.detail.menu.intersection add checkbutton -label "readings" \
-    -variable compare_in_detail(compare,readings)
-  .menu.detail.menu.intersection add checkbutton -label "first" \
-    -variable compare_in_detail(compare,first)
-  .menu.detail.menu.intersection add checkbutton -label "total" \
-    -variable compare_in_detail(compare,total)
-  .menu.detail.menu.intersection add checkbutton -label "gcs" \
-    -variable compare_in_detail(compare,gcs)
-  .menu.detail.menu.intersection add checkbutton -label "error" \
-    -variable compare_in_detail(compare,error)
-
+  foreach attribute $compare_in_detail(compare,all) {
+    .menu.detail.menu.intersection add checkbutton -label $attribute \
+      -variable compare_in_detail(compare,$attribute)
+  }; # foreach
   menu .menu.detail.menu.compare -tearoff 0
 
   #
@@ -838,17 +838,6 @@ proc main {} {
   }; # if
   wm deiconify .
   tkwait visibility .
-
-  #
-  # read `.podiumrc' from user home directory if available
-  #
-  if {[file exists ~/.podiumrc]} {
-    set message "reading `[file nativename ~/.podiumrc]' ...";
-    status $message;
-    catch {source ~/.podiumrc};
-    after 1000;
-    status "$message done" 2;
-  }; # if
 
   copyleft initialize;
   tsdb_update complete;

@@ -675,7 +675,7 @@ proc tsdb_compare_in_detail {} {
     }; # if
   }; # foreach
 
-  foreach attribute {words readings first total gcs error} {
+  foreach attribute $compare_in_detail(compare,all) {
     if {$compare_in_detail(compare,$attribute)} {
       set compare "$compare :$attribute";
     }; # if
