@@ -23,7 +23,7 @@
   (or (getenv "DELPHINHOME") "/afs/ir.stanford.edu/users/o/e/oepen/src/lingo"))
 
 (defconst allegro-home 
-  (or (getenv "ALLEGROHOME") "/usr/local/acl"))
+  (or (getenv "ACL_HOME") "/usr/local/acl"))
 
 (defconst allegro-locale
   (or (getenv "ACL_LOCALE") "en_US.UTF-8"))
@@ -149,18 +149,20 @@
   (interactive "P")
 
   (allegro)
-  (setq fi:common-lisp-image-name 
-    (format
-     "%s/alisp"
-     allegro-home
-     (if (or (string-match "windows" system-configuration)
-             (string-match "mingw-nt" system-configuration)
-             (string-match "msvc" system-configuration))
-       ".exe"
-       "")))
 
-  (setq fi:common-lisp-image-file 
-    (format "%s/clim.dxl" allegro-home))
+  (let ((image (getenv "ACL_IMAGE")))
+    (setq fi:common-lisp-image-name 
+      (format
+       "%s/%s"
+       allegro-home (or image "alisp")
+       (if (or (string-match "windows" system-configuration)
+               (string-match "mingw-nt" system-configuration)
+               (string-match "msvc" system-configuration))
+         ".exe"
+         "")))
+
+    (setq fi:common-lisp-image-file 
+      (format "%s/%s.dxl" allegro-home (or image "clim"))))
 
   (setq fi:common-lisp-image-arguments (list "-locale" allegro-locale))
 

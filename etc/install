@@ -215,7 +215,7 @@ if [ -n "${TSDBHOME}" ]; then
 fi
 
 #
-# on Linux, we need to make sure that (a good) version of the Motif library is
+# on Linux, we need to make sure that a (good) version of the Motif library is
 # available for the LKB; unless we find one in `/usr/X11R6/lib' that looks as
 # if it were right, install our own and suggest that the user that they tell
 # their shell how to find it.  this all is a little iffy ...
