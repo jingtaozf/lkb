@@ -36,10 +36,12 @@
 
 (defmacro make-scratch () '(cons -1 nil))
 
-(defstruct (rel)
-  handel                               
+(defstruct (rel-base)
   pred					; relation name
-  flist
+  flist)
+
+(defstruct (rel (:include rel-base))
+  handel                               
   parameter-strings			; the constant values
 					; a junk slot used by the
                                         ; generator and comparison code
@@ -65,9 +67,11 @@
 ;;; a var structure which contains a string plus a number 
 ;;; (unique to this MRS)
 
-(defstruct (var)
+(defstruct (var-base)
   type
-  extra ; e.g. agreement values
+  extra) ; e.g. agreement values
+
+(defstruct (var (:include var-base))
   id
   (scratch (make-scratch)))
 
@@ -101,15 +105,19 @@
 ;;; adds d and v (should be u??)
 
 (defun var-string (var)
-  ;;; always constructed from the type and the id
-  (unless (var-p var)
-    (error "var expected ~A found" var))
-  (if (grammar-var-p var)
-      (var-id var)
-  (format 
-   nil 
-   "~@[~(~A~)~]~A" 
-   (when (var-id var) (or (var-type var) "u")) (var-id var))))
+  (cond
+   ((grammar-var-p var)
+    (var-id var))
+   ((and (var-p var) (not (eq (var-id var) :dummy)))
+    (format nil 
+	    "~@[~(~A~)~]~A" 
+	    (when (var-id var) (or (var-type var) "u")) (var-id var)))
+   ((var-base-p var)
+    (format nil 
+	    "~@[~(~A~)~]" 
+	    (or (var-base-type var) "u")))
+   (t
+    (error "var expected ~A found" var))))
 
 ;;; macros moved from mrsresolve
 
@@ -194,7 +202,7 @@
 
 (defclass output-type ()
   ((indentation :initform 0 :initarg :indentation)
-   (stream :initarg :stream)))
+   (stream :initform t :initarg :stream)))
 
 (defmethod initialize-display-structure ((class output-type) mrs &optional id)
   (declare (ignore mrs id)))
@@ -210,7 +218,8 @@
 ;;; simple output-type class
 ;;;
 
-(defclass simple (output-type) ())
+(defclass simple (output-type) 
+  ((line-per-rel :initform nil :initarg line-per-rel)))
 
 (defmethod mrs-output-start-fn ((mrsout simple))
   (with-slots (stream) mrsout
@@ -261,9 +270,11 @@
         (format stream "~%~VT~A: ~(~a~)" (+ indentation 2) 'lbl handel))))
 
 (defmethod mrs-output-label-fn  ((mrsout simple) label)
-  (with-slots (stream indentation) mrsout
-    (format stream "~%~VT~a: " (+ indentation 2) label)))
-
+  (with-slots (stream indentation line-per-rel) mrsout
+    (if line-per-rel
+	(format stream " ~a: " (+ indentation 2) label)
+      (format stream "~%~VT~a: " (+ indentation 2) label))))
+  
 (defmethod mrs-output-start-extra ((mrsout simple) var-type)
   (with-slots (stream indentation) mrsout
     (format stream " [ ~A" var-type)))
@@ -895,7 +906,7 @@ higher and lower are handle-variables
   (mrs-output-start-liszt *mrs-display-structure*)
   (let ((first-rel t))
     (loop for rel in (psoa-liszt psoa)
-        do
+        do 
           (mrs-output-start-rel *mrs-display-structure*
                                 (rel-pred rel) first-rel)
           (mrs-output-rel-handel
@@ -917,11 +928,44 @@ higher and lower are handle-variables
                      *mrs-display-structure*
                      value))))
           (mrs-output-end-rel *mrs-display-structure*)
-          (setf first-rel nil)))
+	  ;;; ideally replace above do-clause with this:
+	;  (print-rel :display-to *mrs-display-structure*
+	;	     :first-rel first-rel
+	;	     :connected-p connected-p)
+	  (setf first-rel nil)))
   (mrs-output-end-liszt *mrs-display-structure*)
   (when *rel-handel-path*
     (print-mrs-hcons (psoa-h-cons psoa) connected-p *mrs-display-structure*))
   (mrs-output-end-psoa *mrs-display-structure*))
+
+(defun print-rel (rel &key (display-to *mrs-display-structure*) first-rel connected-p)
+  (unless (rel-base-p rel)
+    (error "unexpected type"))
+  ;; print pred name
+  (mrs-output-start-rel display-to
+			(rel-pred rel) first-rel)
+  ;; print handel if valid
+  (when (rel-p rel)
+    (mrs-output-rel-handel
+     display-to 
+     (find-var-name (rel-handel rel) connected-p))
+    (print-mrs-extra (rel-handel rel)
+		     :display-to display-to))
+  (loop for feat-val in (rel-flist rel)
+      do
+	;; print feature
+	(mrs-output-label-fn display-to
+			     (fvpair-feature feat-val))
+	(let ((value (fvpair-value feat-val)))
+	  ;; print value struct
+	  (if (var-p value)
+	      (progn
+		(mrs-output-var-fn display-to
+				   (find-var-name value connected-p))
+		(print-mrs-extra value
+				 :display-to display-to))
+	    (mrs-output-atomic-fn display-to value))))
+  (mrs-output-end-rel display-to))
 
 (defun print-mrs-hcons (hcons-list connected-p display)
     (mrs-output-start-h-cons display)
@@ -942,21 +986,21 @@ higher and lower are handle-variables
     (mrs-output-end-h-cons display))
 
 
-(defun print-mrs-extra (var)
-  (when (and (var-p var) (var-type var) (var-extra var))
+(defun print-mrs-extra (var &key (display-to *mrs-display-structure*))
+  (when (and (var-base-p var) (var-base-type var) (var-base-extra var))
     (when (not (member var *already-seen-vars*
-                                            :test #'eq))
-      (mrs-output-start-extra *mrs-display-structure*
-                              (var-type var))
-      (loop for extrapair in (var-extra var)
+		       :test #'eq))
+      (mrs-output-start-extra display-to
+                              (var-base-type var))
+      (loop for extrapair in (var-base-extra var)
           do
-            (mrs-output-extra-feat *mrs-display-structure*
+            (mrs-output-extra-feat display-to
                                    (extrapair-feature extrapair))
-            (mrs-output-extra-val *mrs-display-structure*
+            (mrs-output-extra-val display-to
                                   (extrapair-value extrapair)))
-      (mrs-output-end-extra *mrs-display-structure*)
+      (mrs-output-end-extra display-to)
       (push var *already-seen-vars*))))
-                         
+
 
 ;;; error messages
 
