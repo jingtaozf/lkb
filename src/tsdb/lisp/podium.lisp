@@ -95,6 +95,7 @@
       set globals(maximal_number_of_derivations) ~d~%~
       set globals(tree,updatep) ~:[0~;1~]~%~
       set globals(tree,delay) ~a~%~
+      set globals(cache_connections_p) ~:[0~;1~]~%~
       set globals(gc_p) ~(~a~)~%~
       set globals(tenure_p) ~:[0~;1~]~%~%"
      *tsdb-version*
@@ -117,6 +118,7 @@
      *tsdb-write-syntax-chart-p* *tsdb-write-lexicon-chart-p*
      *tsdb-maximal-number-of-edges* *tsdb-maximal-number-of-derivations*
      delay (if (numberp delay) delay 0)
+     *tsdb-cache-connections-p*
      *tsdb-gc-p*
      *tsdb-tenure-p*)
     (tsdb-do-phenomena :stream *tsdb-wish-stream*)
@@ -130,6 +132,7 @@
 
 (defun shutdown-podium ()
 
+  (when *tsdb-cache-connections-p* (close-connections))
   (setf *tsdb-podium-windows* nil)
   (enable-gc-cursor -1)
   (when *tsdb-wish-stream*
@@ -203,6 +206,9 @@
             (let ((symbol (first arguments))
                   (value (second arguments))
                   (package (third arguments)))
+              (when (and (member symbol '(*tsdb-data* *tsdb-gold*))
+                         *tsdb-cache-connections-p*)
+                (close-connections :data (symbol-value symbol)))
               (when (or (null package) (find-package package))
                 (set (intern symbol (or package :tsdb)) value))
               (when (eq symbol '*tsdb-home*)

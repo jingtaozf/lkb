@@ -967,6 +967,10 @@ proc main {} {
 
   menu .menu.options.menu.switches -tearoff 0
   .menu.options.menu.switches add checkbutton \
+    -label "Cache DB Connections" \
+    -variable globals(cache_connections_p) \
+    -command {tsdb_set cache_connections_p}; 
+  .menu.options.menu.switches add checkbutton \
     -label "Exclude GC Time" \
     -variable globals(exclude_tgc_p) \
     -command {tsdb_set exclude_tgc_p}; 
@@ -1109,6 +1113,7 @@ proc main {} {
     if {$entry != "" && [info exists test_suites($entry)]} {
       if {$compare_in_detail(source) == [lindex $test_suites($entry) 0]} {
         set compare_in_detail(source) "";
+        tsdb_set "*tsdb-gold*" "\"$compare_in_detail(source)\"";
       } else {
         set compare_in_detail(source) [lindex $test_suites($entry) 0];
         set globals(selection) $entry;

@@ -890,6 +890,10 @@ proc tsdb_set {variable {value ""}} {
           set value [lispify_truth_value 0];
         }; # else
       }
+      cache_connections_p {
+        set variable "*tsdb-cache-connections-p*";
+        set value [lispify_truth_value $globals(cache_connections_p)];
+      }
     }; # switch
   }; # if
 

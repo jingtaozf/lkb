@@ -18,6 +18,77 @@
 
 (in-package "TSDB")
 
+(defparameter *tsdb-cache-connections-p* nil)
+
+(defparameter *tsdb-connection-expiry* 200)
+
+(defparameter *tsdb-maximal-number-of-connections* 20)
+
+(defparameter %tsdb-connection-cache% nil)
+
+(defstruct connection
+  data absolute path unique ro
+  stream pid
+  (count 0))
+
+(defun cache-connection (data &key absolute unique ro verbose)
+
+  (declare (ignore verbose))
+  (loop
+      for connection in (copy-list %tsdb-connection-cache%)
+      when (and (equal (connection-data connection) data)
+                (equal (connection-absolute connection) absolute)
+                (equal (connection-unique connection) unique)
+                (equal (connection-ro connection) ro))
+      do
+        (incf (connection-count connection))
+        (if (and (numberp *tsdb-connection-expiry*)
+                 (>= (connection-count connection) *tsdb-connection-expiry*))
+          (close-connection connection :verbose t)
+          (return connection))
+      finally
+        (let* ((path
+                (if absolute (namestring data) (find-tsdb-directory data)))
+               (command (format
+                         nil 
+                         "~a -home=~a -uniquely-project=~:[off~;on~] ~
+                          -quiet~:[~; -read-only~] -eof=\":eof\" ~
+                          -string-escape=lisp -pager=null -max-results=0"
+                         *tsdb-application* path unique ro)))
+          (multiple-value-bind (stream foo pid)
+            (run-process
+             command :wait nil
+             :output :stream :input :stream
+             :error-output nil)
+            (declare (ignore foo))
+            (push (make-connection :data data :absolute absolute :path path
+                                   :unique unique :ro ro
+                                   :stream stream :pid pid)
+                  %tsdb-connection-cache%)))
+        (return (first %tsdb-connection-cache%))))
+
+(defun close-connections (&key data (verbose t))
+  (loop
+      for connection in %tsdb-connection-cache%
+      when (or (null data) (equal data (connection-data connection))) do
+        (close-connection connection :deletep nil :verbose verbose)
+      else collect connection into result
+      finally (setf %tsdb-connection-cache% result)))
+
+(defun close-connection (connection &key (deletep t) (verbose t))
+  (ignore-errors
+   (close (connection-stream connection))
+   #+:allegro
+   (sys:os-wait nil (connection-pid connection)))
+  (when deletep
+    (setf %tsdb-connection-cache%
+      (delete connection %tsdb-connection-cache%)))
+  (when verbose
+    (format
+     *tsdb-io*
+     "close-connection(): `~a' expiry."
+     (connection-data connection))))
+
 (defun initialize-tsdb (&optional cache &key action background name pattern)
   
   (unless (and *tsdb-initialized-p* (null action))
@@ -58,7 +129,7 @@
              (command (format
                        nil 
                        "~a -home=~a -uniquely-project=~:[off~;on~]~
-                       ~:[~; -quiet~]~:[~; -read-only~] ~
+                       ~:[~; -quiet~]~:[~; -read-only~] -eof=\":eof\" ~
                         -string-escape=lisp -pager=null -max-results=0"
                        *tsdb-application* data unique quiet ro))
              (command (format
@@ -75,7 +146,13 @@
                         (string-downcase (string (gensym ""))))))
              (redirection 
               (if output (concatenate 'string " > \"" output "\"") ""))
-             (query (concatenate 'string query redirection ".")))
+             (query (concatenate 'string query redirection "."))
+             (connection (when (and *tsdb-cache-connections-p* 
+                                    (eq format :lisp))
+                           (cache-connection language 
+                                             :absolute absolute
+                                             :unique unique :ro ro))))
+
         (when (and output (probe-file output)) (delete-file output))
         (with-open-file (stream file :direction :output
                          :if-exists :supersede
@@ -83,11 +160,18 @@
           (format stream "~a~%" query)
           (force-output stream))
         (multiple-value-bind (stream foo pid)
-          (run-process
-            command :wait nil
-            :output (if output "/dev/null" :stream)
-            :if-output-exists :append
-            :input "/dev/null" :error-output nil)
+          (if connection
+            (let* ((command (format nil "do \"~a\".~%" file))
+                   (stream (connection-stream connection)))
+              (format stream command)
+              (force-output stream)
+              (read-line stream)
+              (values stream nil nil))
+            (run-process
+             command :wait nil
+             :output (if output "/dev/null" :stream)
+             :if-output-exists :append
+             :input "/dev/null" :error-output nil))
           (declare (ignore foo #-:allegro pid))
           (if output
             ;;
@@ -143,10 +227,12 @@
                (let ((result (loop
                                  for form = (read stream nil :eof)
                                  until (eq form :eof)
+;                                 do (pprint form)
                                  collect form)))
-                 (close stream)
-                 #+:allegro 
-                 (loop until (sys:os-wait nil pid))
+                 (when pid 
+                   (close stream)
+                   #+:allegro
+                   (loop until (sys:os-wait nil pid)))
                  (unless *tsdb-debug-mode-p*
                    (delete-file file))
                  result)))))))))
