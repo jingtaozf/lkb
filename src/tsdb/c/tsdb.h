@@ -183,6 +183,11 @@ typedef struct tsdb_tuple {
   Tsdb_value **fields;
 } Tsdb_tuple;
 
+typedef struct tsdb_history {
+  int command;
+  struct tsdb_selection *result;
+} Tsdb_history;
+
 typedef struct tsdb_key_list {
   struct tsdb_value *key;
   int n_tuples;
@@ -220,6 +225,8 @@ typedef struct tsdb {
 #ifdef DEBUG
   char *debug_file;
 #endif
+
+  Tsdb_history **history;
 } Tsdb;
 
 #if !defined(TSDB_C)
@@ -257,7 +264,7 @@ BYTE tsdb_value_compare(Tsdb_value *, Tsdb_value *);
 BYTE tsdb_tuple_compare(Tsdb_tuple *, Tsdb_tuple *);
 
 BOOL tsdb_tuple_equal(Tsdb_tuple* , Tsdb_tuple* );
-BOOL tsdb_value_match(Tsdb_value *, Tsdb_value *,void *);
+BYTE tsdb_value_match(Tsdb_value *, Tsdb_value *,void *);
 
 FILE* tsdb_open_pager();
 FILE* tsdb_open_debug();

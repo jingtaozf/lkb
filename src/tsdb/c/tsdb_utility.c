@@ -89,7 +89,7 @@ BOOL tsdb_value_substring(Tsdb_value *foo, Tsdb_value *bar) {
 /*  True if the pattern bar matches foo: If given the compiled pattern
     bar_pat, it matches with it instead. */
 
-BOOL tsdb_value_match(Tsdb_value *foo, Tsdb_value *bar,void* bar_pat) {
+BYTE tsdb_value_match(Tsdb_value *foo, Tsdb_value *bar,void* bar_pat) {
   BOOL answer=FALSE;
   int result;
   regex_t baz,*pattern;
@@ -105,7 +105,8 @@ BOOL tsdb_value_match(Tsdb_value *foo, Tsdb_value *bar,void* bar_pat) {
          {
            char a[s+1];
            regerror(result,pattern,&a[0],s+1);
-           fprintf(tsdb_error_stream,"Regex Error: %s \n",a);
+           fprintf(tsdb_error_stream,
+                   "value_match(): invalid expression: %s \n",a);
            fflush(tsdb_error_stream);
          }
          return 3;
