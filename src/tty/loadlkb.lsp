@@ -52,6 +52,7 @@
          ("io-paths" "ruleinput")       ; generic CL
          ("main" "parse")       ; generic CL
          ("main" "generate")       ; generic CL
+#+allegro("ACL_specific" "emacs")       ; dialect specific - emacs interface
          ("main" "morph")       ; generic CL
          ("main" "check-unif")  ; generic CL
          ("main" "batch-check")
