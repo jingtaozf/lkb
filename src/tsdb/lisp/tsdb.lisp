@@ -887,7 +887,7 @@
          (t-version (get-field :t-version record))
          (u-matches (get-field+ :u-matches record -1))
          (u-mismatches (get-field+ :u-mismatches record -1))
-         (u-decisions (get-field+ :u-decisions record -1))
+         (u-new (get-field+ :u-new record -1))
          (u-gin (get-field+ :u-gin record -1))
          (u-gout (get-field+ :u-gout record -1))
          (u-pin (get-field+ :u-pin record -1))
@@ -901,7 +901,7 @@
         (write t-version :stream stream) (write-char ofs stream)
         (write u-matches :stream stream) (write-char ofs stream)
         (write u-mismatches :stream stream) (write-char ofs stream)
-        (write u-decisions :stream stream) (write-char ofs stream)
+        (write u-new :stream stream) (write-char ofs stream)
         (write u-gin :stream stream) (write-char ofs stream)
         (write u-gout :stream stream) (write-char ofs stream)
         (write u-pin :stream stream) (write-char ofs stream)
@@ -915,7 +915,7 @@
                     nil
                     "insert into update values ~
                      ~d ~d ~d ~d ~d ~d ~d ~d ~d ~d ~d"
-                    parse-id t-version u-matches u-mismatches u-decisions
+                    parse-id t-version u-matches u-mismatches u-new
                     u-gin u-gout u-pin u-pout u-in u-out)))
         (call-tsdb query data :cache cache)))))
 

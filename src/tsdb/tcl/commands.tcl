@@ -728,7 +728,7 @@ proc analyze_performance {{code "performance"}} {
 }; # analyze_performance()
 
 
-proc analyze_trees {{code ""}} {
+proc analyze_trees {{code "trees"}} {
 
   global globals test_suites;
 
@@ -751,7 +751,37 @@ proc analyze_trees {{code ""}} {
             $globals(data)] 10;
   } else {
     set command \
-      [format "(analyze-trees \"%s\")" $globals(data)];
+      [format "(analyze-%s \"%s\")" $code $globals(data)];
+    send_to_lisp :event $command;
+  }; # else
+
+}; # analyze_trees()
+
+
+proc analyze_update {{code ""}} {
+
+  global globals test_suites;
+
+  if {[verify_ts_selection]} {return 1};
+
+  #
+  # _fix_me_ 
+  # we need something like `ts_list find globals(data)' instead (27-jul-98)
+  #
+  for {set i 0} {$i < [array size test_suites]} {incr i} {
+    if {![string compare $globals(data) [lindex $test_suites($i) 0]]} {
+      set index $i;
+      break;
+    }; # if
+  }; # for
+  if {![info exists index] 
+      || ![lindex $test_suites($index) 6]} {
+    tsdb_beep;
+    status [format "no tree data available for `%s' ... |:-\{" \
+            $globals(data)] 10;
+  } else {
+    set command \
+      [format "(analyze-update \"%s\")" $globals(data)];
     send_to_lisp :event $command;
   }; # else
 

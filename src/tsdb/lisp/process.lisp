@@ -18,6 +18,8 @@
 
 (in-package "TSDB")
 
+(defparameter *process-pprint-item-p* t)
+
 (defun tsdb-do-process (data
                         &key condition
                              run-id comment
@@ -651,10 +653,14 @@
            (parse-id (if (>= parse-id i-id) parse-id i-id))
            (client (get-field :client run))
            (cpu (and client (client-cpu client)))
+           (o-input (when (and (cpu-p cpu) (cpu-reader cpu))
+                      (call-hook (cpu-reader cpu) i-input)))
+           (o-input (when (and (stringp o-input) (not (string= o-input "")))
+                      o-input))
            (p-input (when (cpu-p cpu)
                       (call-hook (or (cpu-preprocessor cpu)
                                      *tsdb-preprocessing-hook*) 
-                                 i-input))))
+                                 (or o-input i-input)))))
 
       (cond 
        ((and o-ignore (tsdb-ignore-p o-ignore))
@@ -677,8 +683,8 @@
                             (floor (* *tsdb-edge-factor* o-edges))
                             *tsdb-maximal-number-of-edges*))))
           (append 
-           (pairlis '(:run-id :parse-id :gc :edges :p-input) 
-                    (list run-id parse-id gc edges p-input)) 
+           (pairlis '(:run-id :parse-id :gc :edges :o-input :p-input) 
+                    (list run-id parse-id gc edges o-input p-input)) 
            item)))))))
 
 (defun print-item (item &key (stream *tsdb-io*) result interactive)
@@ -686,7 +692,8 @@
   
   (let* ((i-id (get-field :i-id item)) 
          (i-input (or (get-field :o-input item)
-                      (get-field :p-input item)
+                      (unless *process-pprint-item-p*
+                        (get-field :p-input item))
                       (get-field :i-input item)))
          (i-wf (get-field :i-wf item))
          (gc (get-field :gc item))

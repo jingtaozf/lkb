@@ -31,6 +31,7 @@
 ;;;
 ;;;   - :psql -- support for (external) PostGreSQL-based lexical database;
 ;;;   - :ltemplates -- lexical templates: see `src/main/ltemplates.lsp';
+;;;   - :preprocessor -- include RE library and enable preprocessor support;
 ;;;   - :pooling -- enable recycling of high-frequency objects (dags, for now);
 ;;;   - :packing -- enable code for chart packing under (partial) subsumption;
 ;;;   - :vanilla -- run passive parser in pure CKY mode: disable `left-corner'
@@ -39,6 +40,7 @@
 
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
            #-:ansi-eval-when (load eval compile)
+  (pushnew :preprocessor *features*)
   (pushnew :pooling *features*)
   (pushnew :packing *features*))
 
@@ -48,7 +50,8 @@
    #+(and :allegro :clim) "ACL_specific"
    #+(and :lispworks :clim) "ACL_specific"
    #+(and :allegro (not :clim) :tty) "ACL_specific"
-;   #+(and :allegro :common-graphics (not :clim) (not :tty)) "ACL-CG_specific"
+   #+(and :null
+          :allegro :common-graphics (not (or :clim :tty))) "ACL-CG_specific"
    #+:mcl "MCL_specific"
    ""))
 
@@ -61,7 +64,8 @@
     :source-extension "lsp"
     :depends-on (#+(and :psql allegro-version>= (version>= 6 0) 
                         (or :linux (and :sparc :svr4)))
-                 "psql")
+                 "psql"
+                 #+:preprocessor "ppcre")
 
     :finally-do (funcall (symbol-function (find-symbol "START-LKB" :lkb)))
 
@@ -132,7 +136,9 @@
                (:file "brackets")     ; partial bracketing constraints
                (:file "morph")        ; morphographemics
                (:file "check-unif")     ; for efficiency 
-               (:file "discriminants")))
+               (:file "discriminants")
+               #+:preprocessor       
+               (:file "preprocess")))
 
      (:module "various io"
       :source-pathname "io-general"

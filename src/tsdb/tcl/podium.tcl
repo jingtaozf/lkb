@@ -801,7 +801,9 @@ proc main {} {
   .menu.trees.menu.summarize add command \
     -label "Annotations" -command {analyze_trees};
   .menu.trees.menu.summarize add command \
-    -label "Update" -state disabled -command {};
+    -label "Decisions" -command {analyze_trees "decisions"};
+  .menu.trees.menu.summarize add command \
+    -label "Update" -command {analyze_trees "update"};
 
   menu .menu.trees.menu.switches -tearoff 0;
   .menu.trees.menu.switches add checkbutton \

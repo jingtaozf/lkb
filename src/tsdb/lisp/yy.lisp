@@ -68,7 +68,7 @@
                     (setf start end)
                     (setf end (read-form))
                     (read-character #\,) (read-form)
-                    (read-character #\,) (setf word (read-form))
+                    (read-character #\,) (setf word (read-form)) (read-form)
                     (read-character #\,) (read-form)
                     (read-character #\,) (setf inflection (read-form))
                     (skip-to #\))
@@ -91,7 +91,7 @@
           when (and word 
                     (numberp start) (numberp end)
                     (if inflection (= (- end start) 1) (= (- end start) 100))
-                    (or (null inflection) (eq inflection 'null))
+                    (or (null inflection) (string= inflection "null"))
                     (not (member start positions :test #'=)))
           do
             (unless (zerop ntokens) (vector-push #\space result))

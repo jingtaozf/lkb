@@ -35,6 +35,14 @@
 
 (defparameter *import-category* "S")
 
+(defparameter *import-marks*
+  '((#\* . :illformed) (#\+ . :incomplete) (#\^ . :mispeled)))
+
+(defparameter *import-email-headers*
+  '("From " "From:" "To:" "Subject:" 
+    "MIME-Version:" "Content-Type:" "Content-Transfer-Encoding:"
+    "Message-ID:"))
+
 (defun do-import-database (source target &key absolute meter except)
   
   (when meter (meter :value (get-field :start meter)))
@@ -196,6 +204,7 @@
          (format "none")
          (author (current-user))
          (date (current-time))
+         (index 0)
          item phenomenon item-phenomenon)
     (when stream
       (decf p-id)
@@ -213,64 +222,58 @@
                                (list p-id p-name author date))
                       phenomenon)))
           else unless (zerop (length string)) do
-            (let* ((start (if (char= (char string 0) #\") 1 0))
-                   (wf (if (char= (char string start) #\*) 0 1))
-                   (fragmentp (char= (char string start) #\+))
-                   (category (cond
-                              ((zerop wf) "")
-                              (fragmentp "XP")
-                              (t category)))
-                   (string (subseq 
-                            string 
-                            (+ start (if (or (zerop wf) fragmentp) 1 0))))
-                   (break (if (zerop start)
-                            (and separator 
-                                 (search separator string 
-                                         :test #'string= :from-end t))
-                            (loop
-                                for i from 0
-                                for c across string
-                                for escape = (unless escape (char= c #\\))
-                                when (and (char= c #\") (null escape))
-                                return i)))
-                   (comment 
-                    (or comment
-                        (when break
-                          (string-trim 
-                           (list #\Space #\Tab) 
-                           (subseq string (+ break (if (zerop start) 
-                                                     (length separator)
-                                                     1)))))
-                        ""))
-                   (string (if break
-                             (subseq string 0 (max break 0)) 
-                             string))
-                   (string (string-trim '(#\Space #\Tab) string))
-                   (length (- (length string) 1))
-                   (end (when (and (not (zerop start))
-                                   (char= (char string length) #\"))
-                          length))
-                   (string (subseq string 0 end))
-                   (input (string-trim '(#\Space #\Tab) string))
-                   (oinput 
-                    (when (find-attribute-reader :i-input)
-                      (funcall (find-attribute-reader :i-input) input))))
-              (multiple-value-bind (ninput length)
-                  (normalize-item (or oinput input))
-                (unless (zerop length)
-                  (push (pairlis '(:i-id :i-origin :i-register :i-format
-                                   :i-difficulty :i-category :i-input :i-wf
-                                   :i-length :i-comment :i-author :i-date)
-                                 (list base origin register format
-                                       difficulty category 
-                                       (if oinput input ninput) wf
-                                       length comment author date))
-                        item)
-                  (when phenomenon
-                    (push (pairlis '(:ip-id :i-id :p-id :ip-author :ip-date)
-                                   (list base base p-id author date))
-                          item-phenomenon))
-                  (incf base)))))
+            (multiple-value-bind (offset extras)
+                (classify-item line)
+              (when (get-field :index extras)
+                (setf index (get-field :index extras)))
+              (when (get-field :author extras)
+                (setf author (get-field :author extras)))
+              (when (get-field :date extras)
+                (setf author (get-field :date extras)))
+              (let* ((string (subseq line offset))
+                     (break (when separator 
+                              (search separator string 
+                                      :test #'string= :from-end t)))
+                     (comment 
+                      (format
+                       nil
+                       "~@[~a~]~@[ ~a~]"
+                       comment
+                       (when break
+                         (normalize-string 
+                          (subseq string (+ break (length separator)))))))
+                     (string (if break
+                               (subseq string 0 (max break 0)) 
+                               string))
+                     (input (string-trim '(#\Space #\Tab) string))
+                     (oinput 
+                      (when (find-attribute-reader :i-input)
+                        (funcall (find-attribute-reader :i-input) input))))
+                (multiple-value-bind (ninput length)
+                    (if (get-field :header extras)
+                      (values input -1)
+                      (normalize-item (or oinput input)))
+                  (unless (zerop length)
+                    (let* ((category (get-field+ :category extras category))
+                           (wf (cond
+                                ((get-field :header extras) -1)
+                                ((get-field :illformed extras) 0)
+                                (t 1))))
+                      (push (pairlis '(:i-id 
+                                       :i-origin :i-register :i-format
+                                       :i-difficulty :i-category :i-input :i-wf
+                                       :i-length :i-comment :i-author :i-date)
+                                     (list (+ (* index 1000) base)
+                                           origin register format
+                                           difficulty category 
+                                           (if oinput input ninput) wf
+                                           length comment author date))
+                          item)
+                    (when phenomenon
+                      (push (pairlis '(:ip-id :i-id :p-id :ip-author :ip-date)
+                                     (list base base p-id author date))
+                            item-phenomenon))
+                    (incf base)))))))
       (close stream)
       (when meter (meter :value (get-field :end meter)))
       (values 
@@ -318,7 +321,41 @@
           (call-safe-hook *tsdb-preprocessing-hook* string)))
       (setf foo foo)
       (values (string-right-trim '(#\Space) result) (or n -1)))))
-            
-
-
-
+
+(defun classify-item (string)
+  (let ((result nil)
+        (offset 0))
+    (loop
+        for stablep = t
+        do
+          (loop
+              for (mark . key) in *import-marks*
+              when (char= (char string offset) mark) do
+                (push (cons key t) result)
+                (incf offset)
+                (setf stablep nil))
+        until stablep)
+    (loop
+        with length = (length string)
+        for key in *import-email-headers*
+        for end = (min length (+ offset (length key)))
+        when (string-equal string key :start1 offset :end1 end) do
+          (push (cons :category "EH") result)
+          (push (cons :header t) result)
+          (when (string-equal key "From:" :start1 offset :end1 end)
+            (let ((value (subseq string (+ offset 5))))
+              (push (cons :author (normalize-string value)) result)))
+          (when (string-equal key "Subject:" :start1 offset :end1 end)
+            (let* ((start (position #\# string :from-end t))
+                   (index (when start
+                            (read-from-string 
+                             string nil nil :start (+ start 1)))))
+              (when (integerp index)
+                (push (cons :index index) result)))))
+    (unless (get-field :category result)
+      (cond
+       ((get-field :illformed result)
+        (push (cons :category "") result))
+       ((get-field :incomplete result)
+        (push (cons :category "XP") result))))
+    (values offset result)))

@@ -131,7 +131,7 @@
 
 (defparameter *statistics-extra* 
   #+:oe
-  '(:tree :utcpu :uspace 
+  '(:trees :utcpu :uspace 
     :subsumptions :equivalence :proactive :retroactive
     :frozen :failures)
   #-:oe
@@ -803,6 +803,63 @@
         collect (list* (first sample) (second sample) analogy)
         finally
           (when meter (meter :value (get-field :end meter))))))
+
+(defun aggregate-by-classes 
+    (items classes
+     &key (dimension *statistics-aggregate-dimension*)
+          (threshold (or *statistics-aggregate-threshold* 1))
+          (lower (or *statistics-aggregate-lower* 0))
+          (upper *statistics-aggregate-upper*)
+          (format :latex))
+  (declare (ignore threshold lower upper))
+  
+  (loop
+      with result = nil
+      with size = (+ (length classes) 1)
+      with results = (make-array size)
+      for item in items
+      for value = (when dimension (get-field dimension item))
+      for index = (if (numberp value)
+                    (loop
+                        for i from 0
+                        for class in classes
+                        thereis (and (> class value) i)
+                        finally (return i))
+                    0)
+      do (push item (aref results index))
+      finally 
+        (loop
+            for i from 1
+            for class on classes
+            for this = (first class)
+            for next = (second class)
+            for name = (case format
+                         (:latex
+                          (if (and next (= next (+ this 1)))
+                            (format
+                             nil
+                             "\\multicolumn{1}{|c|} {\\em ~(~a~)\\/ $=$ ~d}"
+                             dimension this)
+                            (format 
+                             nil 
+                             "\\multicolumn{1}{|c|}~
+                                  {~d $\\leq$ {\\em ~(~a~)\\/}~@[ $<$ ~d}~]"
+                             this dimension next)))
+                         (:tcl
+                          (if (and next (= next (+ this 1)))
+                            (format
+                             nil
+                             "~(~a~) = ~d"
+                             dimension this)
+                            (format
+                             nil
+                             "~(~a~) in [~d .. ~@[~d~]|"
+                             dimension this next))))
+            for data = (aref results i)
+            when data
+            do (push (cons this (cons name data)) result))
+        (return (nreverse result))))
+                  
 
 (defun summarize-competence-parameters-by-division (items division
                                                     &key restrictor)

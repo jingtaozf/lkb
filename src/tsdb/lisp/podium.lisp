@@ -636,35 +636,46 @@
                           *tsdb-podium-windows*)))
                 (status :text (format nil "~a done" message) :duration 2))))
 
-           (analyze-trees
+           ((analyze-trees analyze-update analyze-decisions)
             (let* ((data (first arguments))
                    (meter (make-meter 0 1))
+                   (type (case action
+                           (analyze-trees "Tree")
+                           (analyze-update "Update")))
                    (title (format 
                            nil 
-                           "tsdb(1) `~a' Tree Summary~
+                           "tsdb(1) `~a' ~a Summary~
                             ~@[ [~a]~]"
-                           data *statistics-select-condition*))
-                 (message "computing table layout and geometry ..."))
-              (apply #'analyze-trees (append arguments (list :file file 
-                                                             :format :tcl
-                                                             :meter meter)))
-              (when (probe-file file)
-                (status :text message)
-                (let ((return
-                        (send-to-podium
-                         (format 
-                          nil 
-                          "showtable ~a \".~(~a~)\" ~s {~a}" 
-                          file (gensym "") data title)
-                         :wait t)))
-                  (when (and (equal (first return) :ok) 
-                             (equal (first (second return)) :graph))
-                    (push (append (second return)
-                                  (pairlis 
-                                   '(:data :command)
-                                   (list data (cons action arguments))))
-                          *tsdb-podium-windows*)))
-                (status :text (format nil "~a done" message) :duration 2))))
+                           data type *statistics-select-condition*))
+                   (message "computing table layout and geometry ...")
+                   (status (apply (symbol-function action)
+                                  (append arguments (list :file file 
+                                                          :format :tcl 
+                                                          :meter meter)))))
+              (if (not (zerop status))
+                (let ((message (format 
+                                nil 
+                                "no ~(~a~) records for `~a'" 
+                                type data)))
+                  (beep)
+                  (status :text message :duration 5))
+                (when (probe-file file)
+                  (status :text message)
+                  (let ((return
+                          (send-to-podium
+                           (format 
+                            nil 
+                            "showtable ~a \".~(~a~)\" ~s {~a}" 
+                            file (gensym "") data title)
+                           :wait t)))
+                    (when (and (equal (first return) :ok) 
+                               (equal (first (second return)) :graph))
+                      (push (append (second return)
+                                    (pairlis 
+                                     '(:data :command)
+                                     (list data (cons action arguments))))
+                            *tsdb-podium-windows*)))
+                  (status :text (format nil "~a done" message) :duration 2)))))
 
            (rules
             (let* ((data (first arguments))

@@ -611,7 +611,7 @@
       with l-stasks = 0
       with derivations = nil
       for i from 0 to (- *chart-limit* 1)
-      for entry = (aref *chart* i 0)
+      for entry in (reverse *gen-chart*)
       sum (length (aref *achart* i 0)) into aedges
       when (chart-entry-p entry)
       do
