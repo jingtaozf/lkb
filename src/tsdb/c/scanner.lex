@@ -354,7 +354,7 @@ TIME (\(|\[)?{HOUR}:{MINUTE}(:{SECOND})?(\)|\])?
   } /* if */
   yytext[strlen(&yytext[0]) - 1] = 0;
   /* fixme: remove escape characters for quotes */
-  yylval.string = (char *)strdup(&yytext[1]);
+  yylval.string = (char *)tsdb_normalize_string(&yytext[1]);
   return(Y_STRING);
 }
 

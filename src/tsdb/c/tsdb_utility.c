@@ -2928,3 +2928,23 @@ int *tsdb_parse_date(char *date) {
   return(result);
 
 } /* tsdb_parse_date() */
+
+char *tsdb_normalize_string(char *string) {
+
+  char *foo, *bar;
+  int i, j;
+
+  foo = (char *)strdup(string);
+  for(i = j = 0; foo[i]; i++, j++) {
+    if(foo[i] == '\\' && foo[i + 1] == '\'' || foo[i + 1] == '"') {
+      i++;
+    } /* if */
+    foo[j] = foo[i];
+  } /* for */
+  foo[j] = 0;
+
+  bar = strdup(foo);
+  free(foo);
+  return(bar);
+
+} /* tsdb_normalize_string() */
