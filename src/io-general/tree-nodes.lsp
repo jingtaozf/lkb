@@ -210,11 +210,18 @@
 ; matching the label part
 
 (defun match-label (fs)
-   (if fs
-      (dolist (tmpl *label-display-templates*)
-         (when (template-match-p (label-template-fs tmpl) fs t)
-            (return (label-template-label tmpl))))
-      "?"))
+  (or
+   (dolist (tmpl *label-display-templates*)
+     (when (template-match-p (label-template-fs tmpl) fs t)
+       (return (label-template-label tmpl))))
+   "?"))
+
+(defun match-meta-label (fs)
+  (or
+   (dolist (tmpl *label-display-templates*)
+     (when (meta-template-match-p (label-template-fs tmpl) fs)
+       (return (label-template-label tmpl))))
+   "?"))
 
 ; checking for slash etc
 
@@ -226,9 +233,7 @@
         (when (template-match-p (meta-template-fs meta-tmpl) fs nil)
           (return (concatenate 'string 
                                (meta-template-prefix meta-tmpl) 
-                               (match-label (existing-dag-at-end-of 
-                                             meta-fs
-                                             *local-path*))                
+                               (match-meta-label meta-fs)
                                (meta-template-suffix meta-tmpl))))))))
 
 
@@ -236,14 +241,20 @@
   ;;; the test is whether all the `real' parts of the
   ;;; template fs (i.e. the bits apart from e.g. LABEL-NAME)
   ;;; unify with the node
-  ;;; actually there's some spurious copying going on,
-  ;;; but check this works first
   (for feat in (get-real-templ-feats tmpl-fs label-p)
        all-satisfy
        (let ((real-templ-fs (get-dag-value tmpl-fs feat))
              (sub-fs (get-dag-value fs feat)))
          (and sub-fs
-              (unifiable-dags-p real-templ-fs sub-fs)))))          
+              (unifiable-dags-p real-templ-fs sub-fs)))))
+
+(defun meta-template-match-p (tmpl-fs fs)
+  ;;; the test is whether all the `real' parts of the
+  ;;; template fs after the *local-path*
+  ;;; unify with the node
+  (let ((real-templ-fs (existing-dag-at-end-of tmpl-fs *local-path*)))
+    (if real-templ-fs
+        (unifiable-dags-p real-templ-fs fs))))
   
 
 (defun get-real-templ-feats (tmpl-fs label-p)
