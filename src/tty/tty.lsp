@@ -124,7 +124,7 @@
 
 (defun do-parse-tty (sentence)
   (when sentence
-    (parse (split-into-words sentence))))
+    (parse (split-into-words (preprocess-sentence-string sentence)))))
 
 ;;; (make-menu-item :name "Show chart"
 ;;;                        :value #'show-chart)))
@@ -295,6 +295,9 @@
 
 (defun create-type-hierarchy-tree nil
   (declare (ignore type))
+  nil)
+
+(defun close-existing-type-hierarchy-trees nil
   nil)
 
 (defun show-parse nil
