@@ -55,6 +55,7 @@
        #+:lkb (:file "mrsruleinput")           ; creating rules for above
                                          ; requires LKB, but outputs compiled 
                                          ; rules which can be used without LKB
+       #+:lkb (:file "vit-to-mrs")
        #+(and :lkb :allegro :clim (not :tty)) 
               (:file "lkb-acl-mrs")      ; display etc in CLIM
        #+:page (:file "acl-mrs")
