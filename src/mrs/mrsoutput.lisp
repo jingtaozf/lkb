@@ -188,10 +188,13 @@
                                  label-list))
              (pred (assoc (car *rel-name-path*)
                           label-list))
+             (pred-type (if pred (fs-type (rest pred))))
              (rel nil))
         (setf rel (make-rel :sort
-                             (create-type (if pred 
-                                              (fs-type (rest pred))
+                            (create-type (if (and pred-type
+                                                  (not 
+                                                   (is-top-type pred-type)))
+                                             pred-type
                                             (fs-type fs)))
                             :handel (if handel-pair
                                         (create-variable
