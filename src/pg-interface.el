@@ -1,4 +1,4 @@
-;;; Copyright (c) 2003 Benjamin Waldron
+;;; Copyright (c) 2003-2004 Benjamin Waldron
 ;;; see licence.txt for conditions
 
 ;;; Add a PG menu to the emacs menu bar
@@ -13,7 +13,8 @@
 ;;;
 
 (defvar *lexdb-completion-lists* nil)
-(defvar *lexdb-record-features* '(:name :type :orthography :keyrel :keytag :altkey :altkeytag :alt2key :compkey :ocompkey :lang :country :dialect :domains :genres :register :confidence :comments :exemplars))
+(defvar *lexdb-read-only* '(:version :userid :modstamp))
+(defvar *lexdb-record-features* '(:name :type :orthography :keyrel :keytag :altkey :altkeytag :alt2key :compkey :ocompkey :lang :country :dialect :domains :genres :register :confidence :comments :exemplars :flags :version :userid :modstamp))
 (defvar *lexdb-completion-features*  '(:name :type :orthography :keyrel :keytag :altkey :altkeytag :alt2key :compkey :ocompkey :lang :country :dialect :domains :genres :register :confidence :comments :exemplars))
 (defvar *lexdb-minibuffer-max* 100)
 (defvar *lexdb-active-id-ring* nil)
@@ -25,10 +26,12 @@
 (setq lexdb-fw-map nil)
 (setq lexdb-fsize-map nil)
 (setq lexdb-id nil)
+(setq lexdb-record nil)
 
 (make-variable-buffer-local 'lexdb-fw-map)
 (make-variable-buffer-local 'lexdb-fsize-map)
 (make-variable-buffer-local 'lexdb-id)
+(make-variable-buffer-local 'lexdb-record)
 
 ;;;
 ;;; connection to common lisp process
@@ -209,13 +212,13 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
     (find-file filename)))    
 
 (defun lexdb-commit-record-aux (buffer)
-  (let* ((record (lexdb-read-record-buffer buffer)))
-    (lexdb-display-record record buffer)
-    (when (y-or-n-p "Confirm commit record: ")
-      (lexdb-store-record (car record))
-      (with-current-buffer buffer
-	(rename-buffer (cdr (assoc :name (car record)))))
-      t)))
+  (lexdb-update-record-from-buffer buffer)
+  (lexdb-display-record buffer)
+  (when (y-or-n-p "Confirm commit record: ")
+    (lexdb-store-record (car lexdb-record))
+    (lexdb-load-record-aux (cdr (assoc :name (car lexdb-record)))))
+    (with-current-buffer buffer
+    t))
 
 (defun lexdb-complete-field-aux nil
   (let* ((widget (widget-field-find (point))))
@@ -252,36 +255,52 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
       (error "not in an editable field"))))
 
 (defun lexdb-normalize-buffer-aux (buffer)
-  (let ((record (lexdb-read-record-buffer buffer)))
-    (lexdb-display-record record buffer)))
+  (lexdb-update-record-from-buffer buffer)
+  (let ((record lexdb-record))
+    (kill-buffer buffer)
+    (with-current-buffer (get-buffer-create buffer)
+      (lexdb-mode)
+      (setf lexdb-record record)
+      (lexdb-display-record buffer))))
 
 (defun lexdb-load-record-aux (id)
-  (let* ((buffer (format "%s" id))
-	 (record (lexdb-retrieve-record id)))
-    (lexdb-display-record record buffer)))
-
-(defun lexdb-display-record (record buffer)
-  (unless (or (stringp buffer) (bufferp buffer))
-    (setf buffer (cle-force-str buffer)))
-  (save-current-buffer
+  (let* ((buffer (format "%s" id)))
     (if (get-buffer buffer)
 	(kill-buffer buffer))
-    (switch-to-buffer (get-buffer-create buffer))
-    (lexdb-mode)
-    (setf lexdb-fsize-map (cdr record))
+    (with-current-buffer (get-buffer-create buffer)
+      (lexdb-mode)
+      (setf lexdb-record (lexdb-retrieve-record id))
+      (lexdb-display-record buffer))))
+
+(defun lexdb-display-record (buffer)
+  (with-current-buffer buffer
+    (switch-to-buffer buffer)
+    (unless lexdb-record
+      (error "buffer has no associated record"))
+    (setf lexdb-fsize-map (cdr lexdb-record))
     (setf lexdb-id (format "%s" buffer))
     (let ((inhibit-read-only t))
       (erase-buffer))
-    (setf lexdb-fw-map (mapcar #'l:fv-pair-2-fw-pair (l:prepare-record (car record))))
+    (setf lexdb-fw-map 
+	  (remove-if-not #'cdr
+			 (mapcar #'l:fv-pair-2-fw-pair (l:prepare-record (car lexdb-record)))))
     (widget-setup)
     lexdb-fw-map))
-  
-(defun lexdb-read-record-buffer (buffer)
+   
+(defun lexdb-update-record-from-buffer (buffer)
   (with-current-buffer buffer
-    (let* ((lines (split-string (buffer-string) "\n"))
-	   (fv-pairs (remove nil 
-			     (mapcar #'l:fw-pair-2-fv-pair lexdb-fw-map))))
-      (cons fv-pairs lexdb-fsize-map))))
+    (mapcar #'(lambda (x) (update-from-widget x (car lexdb-record)))
+	    lexdb-fw-map)))
+
+(defun update-from-widget (fw-pair record)
+  (let* ((fv-pair (l:fw-pair-2-fv-pair fw-pair))
+	 (feat (car fv-pair))
+	 (val (cdr fv-pair))
+	 (record-elt (assoc feat record)))
+    (when val
+      (if (null record-elt) (error "feature not found in record"))
+      (setf (cdr record-elt) val))))
+      
 
 (defun lexdb-retrieve-completion-lists nil
   ;;(terpri)
@@ -305,9 +324,10 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 		    fields)))
     (unless *lexdb-completion-lists*
       (lexdb-retrieve-completion-lists))
-    (cons
-     fields
-     sizes)))
+    (setf lexdb-record
+	  (cons
+	   fields
+	   sizes))))
 
 (defun lexdb-store-record (record-in)
   (push 
@@ -381,18 +401,24 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 	      " ")))
 
 (defun l:fv-pair-2-fw-pair (x)
+  (let ((feat (car x))
+	(val (cdr x)))
   (cons 
-   (car x)
+   feat
    (progn 
      (widget-insert "\n"
-		    (make-string (max 0 (- 15 (length (kw2str (car x))))) ? ) 
-		    (upcase (kw2str (car x))) 
+		    (make-string (max 0 (- 15 (length (kw2str feat)))) ? ) 
+		    (upcase (kw2str feat)) 
 		    ": ")
-     (widget-create 'editable-field
-		    :size (min 50 (l:field-size (car x)))
-		    :keymap nil
-		    :value-face nil
-		    (cdr x)))))
+     (cond
+      ((member feat *lexdb-read-only*)
+       (widget-insert val))
+      (t
+       (widget-create 'editable-field
+		      :size (min 50 (l:field-size feat))
+		      :keymap nil
+		      :value-face nil
+		      val)))))))
 
 (defun l:fw-pair-2-fv-pair (x)
   (cons
@@ -457,7 +483,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 		     "")))
 
 (defun cle-retrieve-record-fields (id)
-  (cle-eval-lexdb 'retrieve-record-str (cle-lisp-str id)))
+  (cle-eval-lexdb 'retrieve-head-record-str (cle-lisp-str id)))
 
 (defun cle-retrieve-record-sizes nil
    (cle-eval-lexdb 'get-field-size-map))

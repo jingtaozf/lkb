@@ -1,4 +1,4 @@
-;;; Copyright (c) 2002-2003 
+;;; Copyright (c) 2002-2004
 ;;;   Ann Copestake, Fabre Lambeau, Stephan Oepen, Benjamin Waldron;
 ;;;   see `licence.txt' for conditions.
 
@@ -104,16 +104,26 @@
 (defmethod sql-retrieve-all-entries ((lexicon psql-lex-database) select-list)
   (fn lexicon 'retrieve-all-entries select-list))
 
+(defmethod build-lex ((lexicon psql-database))
+  (format *postgres-debug-stream* "~%(building current_grammar)")
+  (fn-get-records lexicon ''initialize-current-grammar (get-filter lexicon))
+  (format *postgres-debug-stream* "~%(lexicon filter: ~a )" (get-filter lexicon))
+  (format *postgres-debug-stream* "~%(active lexical entries: ~a )" (fn-get-val lexicon ''size-current-grammar))
+  lexicon)
+
 (defun build-current-grammar (lexicon)
+  (format *postgres-debug-stream* "~%(building current_grammar)")
   (fn-get-records  lexicon ''build-current-grammar)
+  (format *postgres-debug-stream* "~%(lexicon filter: ~a )" (get-filter lexicon))
+  (format *postgres-debug-stream* "~%(active lexical entries: ~a )" (fn-get-val lexicon ''size-current-grammar))
   (empty-cache lexicon))
   
 (defmethod dump-db ((lexicon psql-lex-database) revision-filename defn-filename)  
     (fn-get-records lexicon ''dump-db revision-filename defn-filename))
 
-;;(defmethod dump-scratch-db ((lexicon psql-lex-database) filename)  
-;;  (setf filename (namestring (pathname filename)))
-;;  (fn-get-records lexicon ''dump-scratch-db filename))
+(defmethod dump-scratch-db ((lexicon psql-lex-database) filename)  
+  (setf filename (namestring (pathname filename)))
+  (fn-get-records lexicon ''dump-scratch-db filename))
 
 (defmethod show-scratch ((lexicon psql-lex-database))
   (fn-get-records lexicon ''show-scratch))
@@ -166,13 +176,13 @@
 					       defn-filename))
   ))
 
-;;(defun dump-scratch (filename)
-;;  (get-postgres-temp-filename)
-;;  (setf filename (namestring (pathname filename)))
-;;  (dump-scratch-db *psql-lexicon* *postgres-temp-filename*)
-;;  (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
-;;					       *postgres-temp-filename*
-;;					       filename)))
+(defun dump-scratch (filename)
+  (get-postgres-temp-filename)
+  (setf filename (namestring (pathname filename)))
+  (dump-scratch-db *psql-lexicon* *postgres-temp-filename*)
+  (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
+					       *postgres-temp-filename*
+					       filename)))
 
 ;;(defun normalize-csv-lexicon (filename-in filename-out)
 ;;  (get-postgres-temp-filename)
@@ -233,8 +243,8 @@
 	(format t "~%(~a new defn entries)"
 		(merge-defn lexicon 
 			    defn-filename)))
-    (format *postgres-debug-stream* "~%(building current_grammar)")
-    (build-current-grammar *psql-lexicon*)))
+    (build-current-grammar *psql-lexicon*)
+    ))
 
 (defmethod initialize-userschema ((lexicon psql-database))
   (unless

@@ -92,6 +92,15 @@ INSERT INTO qry VALUES
        ( 'retrieve-entry', 2, 
          'SELECT $0 FROM current_grammar WHERE name ILIKE $1' );
 
+INSERT INTO qrya VALUES ( 'retrieve-head-entry', 0, 'select-list' );
+INSERT INTO qrya VALUES ( 'retrieve-head-entry', 1, 'like-text' );
+INSERT INTO qry VALUES 
+       ( 'retrieve-head-entry', 2, 
+         'SELECT $0 FROM filtered WHERE name ILIKE $1
+		AND modstamp=
+			(SELECT max(modstamp) FROM filtered WHERE name ILIKE $1)
+	LIMIT 1' );
+
 
 INSERT INTO qrya VALUES ( 'retrieve-all-entries', 0, 'select-list' );
 INSERT INTO qry VALUES 
@@ -178,6 +187,10 @@ INSERT INTO qry VALUES
        ( 'dump-multi-db', 1, 
        'SELECT dump_multi_db($0)' );
 
+INSERT INTO qry VALUES 
+       ( 'size-current-grammar', 0, 
+       'SELECT count(*) FROM current_grammar;' );
+
 INSERT INTO qrya VALUES ( 'value-set', 0, 'select-list' );
 INSERT INTO qry VALUES 
        ( 'value-set', 1, 
@@ -205,6 +218,16 @@ INSERT INTO qry VALUES
 INSERT INTO qry VALUES 
        ( 'load-semi', 0, 
        'SELECT load_semi()');
+
+INSERT INTO qrya VALUES ( 'dump-scratch-db', 0, 'text' );
+INSERT INTO qry VALUES
+       ( 'dump-scratch-db', 1,
+       '
+DELETE FROM temp;
+INSERT INTO temp
+ (SELECT * FROM revision ORDER BY name, userid, version);
+COPY temp TO $0 DELIMITERS '','' WITH NULL AS '''';
+' );
 
 
 
@@ -408,8 +431,9 @@ BEGIN
   CREATE OR REPLACE VIEW filtered
    AS SELECT * 
     FROM revision_all
-    WHERE flags = 1
-          AND '' || $1 ;
+    WHERE '' || $1 ;
+--    WHERE flags = 1
+--          AND '' || $1 ;
  EXECUTE ''UPDATE meta SET val= '' || quote_literal($1) || '' WHERE var=''''filter'''''';
  EXECUTE ''SELECT build_current_grammar()'';
  RETURN true;
@@ -423,6 +447,8 @@ BEGIN
  CREATE TABLE meta AS SELECT * FROM public.meta WHERE var=''filter'';
 -- scratch
  CREATE TABLE revision AS SELECT * FROM public.revision WHERE NULL;
+ EXECUTE ''CREATE UNIQUE INDEX user_''''user''''_name_revision_userid
+  ON revision (name,version,userid)''; 
 -- temp
  CREATE TABLE temp AS SELECT * FROM public.revision WHERE NULL;
  CREATE TABLE revision_new AS SELECT * FROM public.revision WHERE NULL;
@@ -441,7 +467,8 @@ BEGIN
    NATURAL JOIN 
     (SELECT name, max(modstamp) AS modstamp 
       FROM filtered
-      GROUP BY name) AS t1);
+      GROUP BY name) AS t1)
+  WHERE flags=1;
  CREATE VIEW revision_all
   AS SELECT * FROM public.revision 
    UNION 

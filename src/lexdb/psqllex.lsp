@@ -1,4 +1,4 @@
-;;; Copyright (c) 2002-2003 
+;;; Copyright (c) 2002-2004 
 ;;;   Ann Copestake, Fabre Lambeau, Stephan Oepen, Benjamin Waldron;
 ;;;   see `licence.txt' for conditions.
 
@@ -63,7 +63,7 @@
 
 (in-package :lkb)
 
-(defvar *psql-db-version* "3.04")
+(defvar *psql-db-version* "3.05")
 (defvar *psql-port-default* nil)
 (defvar *psql-lexicon-parameters*) ;; define in GRAMMAR/globals.lsp
 
@@ -402,6 +402,21 @@
 	(error (format nil "database error (too many records returned)"))
 	      (car records))))
 
+(defmethod retrieve-head-record-str ((lexicon psql-lex-database) id-str &optional reqd-fields)
+  (unless (connection lexicon)
+    (format t "~%WARNING: no connection to psql-lex-database")
+    (return-from retrieve-head-record-str nil))
+  (unless reqd-fields 
+    (setf reqd-fields "*"))
+  (let* ((sql-str (fn lexicon 'retrieve-head-entry reqd-fields id-str))
+	 (query-res (run-query 
+		     lexicon 
+		     (make-instance 'sql-query :sql-string sql-str)))
+	 (records (when (records query-res) (make-column-map-record query-res))))
+    (if (> (length records) 1)
+	(error (format nil "database error (too many records returned)"))
+	      (car records))))
+
 (defmethod read-psort ((lexicon psql-lex-database) id &key (cache t) (recurse t))
   (declare (ignore recurse))
   (with-slots (psorts) lexicon
@@ -499,14 +514,14 @@
 (defmethod set-lex-entry ((lexicon psql-lex-database) (psql-le psql-lex-entry))
   (set-val psql-le :modstamp "NOW")
   (set-val psql-le :userid *postgres-current-user*)
-  (set-val psql-le :flags 1)
+  ;;(set-val psql-le :flags 1)
   
   (set-lex-entry-aux lexicon psql-le))
   
 (defmethod set-lex-entry-aux ((lexicon psql-lex-database) (psql-le psql-lex-entry))
   (set-version psql-le lexicon) 
   (if *postgres-export-timestamp* (set-val psql-le :modstamp *postgres-export-timestamp*))
-  (set-val psql-le :flags 1)
+  ;;(set-val psql-le :flags 1)
   (let* ((symb-list '(:type :orthography :orthkey :keyrel :altkey :alt2key :keytag :altkeytag :compkey :ocompkey :comments :exemplars :lang :country :dialect :domains :genres :register :confidence :version :source :flags :modstamp :userid))
 	 (symb-list (remove-if #'(lambda (x) (or (null x) 
 						 (and (stringp x)
@@ -561,11 +576,6 @@
   (open-lex lexicon)	
   (build-lex lexicon))
   
-(defmethod build-lex ((lexicon psql-database))
-  (format *postgres-debug-stream* "~%(building current_grammar)")
-  (fn-get-records lexicon ''initialize-current-grammar (get-filter lexicon))
-  lexicon)
-
 ;; lexicon is open
 (defmethod load-lex-from-files ((lexicon psql-lex-database) file-names syntax)
 ;  (setf *lex-file-list* file-names) ;;fix_me
@@ -625,10 +635,6 @@
 	   (first rest))
 	  (t
 	   (error "too many arguments")))))
-;  (let* ((old-filter (get-filter lexicon))
-;	(filter
-;         (ask-user-for-x "Alter filter" 
-;                         (cons "New filter?" old-filter))))
     (when (or (null filter) (string= filter old-filter))
       (format t "Database filter unchanged")
       (return-from set-filter))
