@@ -148,6 +148,8 @@
 (defvar *lexdb-minibuffer-max* 80)
 (defvar *lexdb-active-id-ring* nil)
 (defvar *new-entries-buffer* "*new-entries*")
+(defvar *field-mask* '((:altkey . "XaltkeyX")))
+
 ;;;
 ;;; buffer local vbles
 ;;;
@@ -319,8 +321,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (let* ((widget (widget-field-find (point))))
     (if widget
 	  (lexdb-lookup-aux2 (l:widget-to-field-kw widget)
-		  (l:normalize val-str)
-		  )
+		  (l:normalize val-str))
       (error "not in an editable field"))))
 
 (defun lexdb-advance-id-aux nil
@@ -350,8 +351,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 	     (format "%s:%s\t%s\n"
 		     (nth 0 x)
 		     (nth 1 x)
-		     (nth 2 x)
-	     ))
+		     (nth 2 x)))
 	(cdr 
 	 (cle-new-entries)))))
     (switch-to-buffer buffer)))
@@ -394,8 +394,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (let* ((widget (widget-field-find (point))))
     (if widget
 	  (lexdb-lookup-aux2 (l:widget-to-field-kw widget)
-		  (l:widget-val-normd widget)
-		  )
+		  (l:widget-val-normd widget))
       (error "not in an editable field"))))
 
 (defun lexdb-normalize-buffer-aux (buffer)
@@ -488,7 +487,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 
 (defun l:make-empty-record (id)
   (let* ((record
-	  (mapcar #'(lambda (x) (cons x (make-string 0 ?x))) 
+	  (mapcar #'(lambda (x) (cons x (make-string 0 ?x)))
 		  *lexdb-record-features*))
 	 (name-elt (assoc :name record)))
   (when name-elt
@@ -601,10 +600,14 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 ;;;
 
 (defun kw2str (kw)
-  (let ((name-str (symbol-name kw)))
+  (field-display-str kw))
+
+(defun field-display-str (field-kw)
+  (or (cdr (assoc field-kw *field-mask*))
+      (let ((name-str (symbol-name kw)))
     (if (= (aref name-str 0) 58)
 	(substring name-str 1)
-      (error "keyword expected"))))
+      (error "keyword expected")))))
 
 (defun truncate-list (l n)
   (let ((out)
@@ -621,7 +624,6 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 
 (defun make-ring (l)
   (setf (cdr (last l)) l))
-
 
 ;;;
 ;;; allegro lisp interface fns
