@@ -50,13 +50,17 @@ SED=sed
 # inclusion of Redwoods data (off by default).
 #
 while [ $# -gt 0 ]; do
-  case $1 in
+  case ${1} in
     -h|--home)
-      DELPHINHOME=$2;
+      DELPHINHOME=${2};
       shift 2;
     ;;
     -r|--redwoods)
       TSDBHOME=${DELPHINHOME}/lkb/src/tsdb/home;
+      shift;
+    ;;
+    *)
+      echo "install: ignoring invalid parameter \`${1}'.";
       shift;
     ;;
   esac
