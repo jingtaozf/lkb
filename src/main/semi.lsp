@@ -8,6 +8,7 @@
 (defvar *obj-semi-lex-pred-n* 0) ;; counter must be reset at start of dump
 
 (defmethod dump-obj-semi ((lexicon psql-lex-database))
+  (format t "~%Generating object-level SEM-I. See files ~asemi.obj.*" *postgres-user-temp-dir*)
   (with-open-file 
       (arg-stream
        (format nil "~asemi.obj.arg" *postgres-user-temp-dir*)

@@ -1362,18 +1362,11 @@
 (defun command-generate-semi nil
   (unless (typep *lexicon* 'psql-lex-database)
     (error "You need to load the LexDB before generating the SEMI..."))
-  (format t "~%Generating SEM-I. See files ~asemi.*" *postgres-user-temp-dir*)
   (format *postgres-debug-stream* "~%(caching all lexical entries)")
   (cache-all-lex-entries *lexicon*)
-  (let ((obj-semi-main-filename (format nil "~asemi.obj.main" *postgres-user-temp-dir*))
-	(obj-semi-args-filename (format nil "~asemi.obj.args" *postgres-user-temp-dir*))
-	(obj-semi-sec-filename (format nil "~asemi.obj.sec" *postgres-user-temp-dir*)))
-    (format *postgres-debug-stream* "~%(dumping obj_semi_main to file ~a)" obj-semi-main-filename)
-    (dump-obj-semi-main  obj-semi-main-filename)
-    (format *postgres-debug-stream* "~%(dumping obj_semi_args to file ~a)" obj-semi-args-filename)
-    (dump-obj-semi-args  obj-semi-args-filename)
-    (format *postgres-debug-stream* "~%(dumping obj_semi_secondaries to file ~a)" obj-semi-sec-filename)
-    (dump-obj-semi-secondaries  obj-semi-sec-filename))
+
+  (dump-obj-semi *lexicon*)
+  
   (format *postgres-debug-stream* "~%(clearing cache)")
   (empty-cache *lexicon*)
   (lkb-beep))
