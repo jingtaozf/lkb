@@ -92,6 +92,8 @@
       for i from 0
       for token in tokens
       for form = (rest (assoc :form token))
+      for from = (or (rest (assoc :from token)) -1)
+      for to = (or (rest (assoc :to token)) -1)
       for analyses = 
         (loop
             for analysis in (rest (assoc :analyses token))
@@ -104,7 +106,9 @@
                                    inflection *lex-rule-suffix*)
                                   :lkb))
             collect (cons stem (when irule (list (list irule form)))))
-      for edge = (make-morph-edge :id i :word form :morph-results analyses)
+      for edge = (make-morph-edge 
+                  :id i :word form :morph-results analyses
+                  :cfrom from :cto to)
       do
         (setf (aref *morphs* i) edge)))
 
