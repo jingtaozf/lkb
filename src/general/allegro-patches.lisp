@@ -40,13 +40,13 @@
   #+(and :allegro-v4.2 :sparc) (if sys:*patches* ".fasl" ".fosl")
   #+(and (or :allegro-v4.3 :allegro-v4.3.1) :sparc) ".nasl"
   #+(and :allegro-v5.0 :sparc) ".basl"
-  #+(and :allegro-v4.3 :linux86) ".lasl" ;; GN on 22/1/97
+  #+:linux86 ".lasl"
   #+(and :allegro-v4.3 :hpprism) ".pasl"
   #+(and :allegro-v4.3 :alpha) ".aasl"
   #-(or (and :allegro-v4.2 :sparc) 
         (and (or :allegro-v4.3 :allegro-v4.3.1) :sparc)
         (and :allegro-v5.0 :sparc)
-        (and :allegro-v4.3 :linux86)
+        :linux86
         (and :allegro-v4.3 :hpprism)
         (and :allegro-v4.3 :alpha)) "fasl")
 
@@ -58,12 +58,12 @@
 
 (defvar %system-binaries%
   #+:prism "hppa"
-  #+:linux86 "linux"   ;; GN on 22/1/97
+  #+:linux86 "linux"
   #+:sunos4 "sunos"
   #+(and :sun :svr4) "solaris"
-  #+:alpha "alpha"
+  #+:alpha "osf"
   #+:mswindows "mswindows"
-  #-(or :prism :sunos (and :sun :svr4) :alpha :linux86)
+  #-(or :prism :sunos4 (and :sun :svr4) :alpha :linux86 :mswindows)
   (error "~&loadup: unable to determine system type; see file ~
           `allegro-patches.lisp'.~%"))
 
