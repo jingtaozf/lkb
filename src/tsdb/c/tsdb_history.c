@@ -32,7 +32,7 @@ extern int errno;
 #  include <sys/times.h>
 #endif
 
-static _history_position = -1;
+static int _history_position = -1;
 
 Tsdb_history* tsdb_alloc_history() {
   Tsdb_history* bar;
@@ -153,18 +153,25 @@ void tsdb_add_to_history(Tsdb_selection* s) {
   tsdb.history[pos]->result = s;
 
   _history_position = pos;
+
 } /* tsdb_add_to_history() */
 
-Tsdb_history *tsdb_get_history(int c) {
+Tsdb_history *tsdb_get_history(int item) {
+
+  Tsdb_history **past = tsdb.history;
   int i;
-  Tsdb_history** past = tsdb.history;
   
-  if (_history_position<0)
-    return NULL;
-  for (i=0;i<tsdb.history_size;i++) {
-    if (past[(i+_history_position)%tsdb.history_size]->command == c)
-      return(past[(i+_history_position)%tsdb.history_size]);
+  if (_history_position < 0 || item < -1) {
+    return((Tsdb_history *)NULL);
+  } /* if */
+  if(item == -1) {
+    return(past[_history_position % tsdb.history_size]);
+  } /* if */
+  for (i = 0; i < tsdb.history_size; i++) {
+    if (past[(_history_position + i) % tsdb.history_size]->command == item) {
+      return(past[(_history_position + i) % tsdb.history_size]);
+    } /* if */
   } /* for */
-  return NULL;
+  return((Tsdb_history *)NULL);
 
 } /* tsdb_get_history() */

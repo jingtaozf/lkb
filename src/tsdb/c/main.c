@@ -155,7 +155,7 @@ int main(int argc, char **argv) {
   signal(SIGPIPE, SIG_IGN);
 
   if(tsdb.query != NULL) {
-    (void)tsdb_parse(tsdb.query);
+    (void)tsdb_parse(tsdb.query, (FILE *)NULL);
   } /* if */
   else {
     using_history();
@@ -195,7 +195,7 @@ int main(int argc, char **argv) {
         } /* else */
         tsdb_free(foo);
         if(input != NULL && *input && input[strlen(input) - 1] == '.') {
-          tsdb_parse(input);
+          tsdb_parse(input, stdin);
           add_history(input);
           /* tsdb_free(input); */
           input = (char *)NULL;
@@ -258,9 +258,8 @@ void tsdb_parse_options(int argc, char **argv) {
     {"suffix", required_argument, 0, TSDB_SUFFIX_OPTION},
 #endif
     {"fs", required_argument, 0, TSDB_FS_OPTION},
-    {"field-separator", required_argument, 0, TSDB_FS_OPTION},
     {"ofs", required_argument, 0, TSDB_OFS_OPTION},
-    {"output-field-separator", required_argument, 0, TSDB_OFS_OPTION},
+    {"output", required_argument, 0, TSDB_OUTPUT_OPTION},
     {"query", required_argument, 0, TSDB_QUERY_OPTION},
     {"usage", no_argument, 0, TSDB_USAGE_OPTION},
     {"help", no_argument, 0, TSDB_USAGE_OPTION},
@@ -426,6 +425,31 @@ void tsdb_parse_options(int argc, char **argv) {
           tsdb.ofs = strdup(optarg);
         } /* if */
         break;
+      case TSDB_OUTPUT_OPTION:
+        if(optarg != NULL) {
+
+          char *path;
+          FILE *output;
+          
+          if((path = tsdb_expand_file((char *)NULL, optarg)) == NULL) {
+            fprintf(tsdb_error_stream,
+                    "parse_options(): unable to expand file name `%s'.\n", 
+                    optarg);
+            fflush(tsdb_error_stream);
+            break;
+          } /* if */
+
+          if((output = fopen(path, "w")) == NULL) {
+            fprintf(tsdb_error_stream,
+                    "parse_options(): unable to open output file `%s'.\n", 
+                    path);
+            fflush(tsdb_error_stream);
+            break;
+          } /* if */
+          tsdb.output = path;
+          tsdb_default_stream = output;
+        } /* if */
+        break;
       } /* switch */
   } /* while */
 } /* tsdb_parse_options() */
@@ -484,6 +508,8 @@ void tsdb_usage() {
           "  `-fs=character' --- field separator character;\n");
   fprintf(tsdb_error_stream,
           "  `-ofs=string' --- output field separator character;\n");
+  fprintf(tsdb_error_stream,
+          "  `-output=file' --- output file;\n");
   fprintf(tsdb_error_stream,
           "  `-query=string' --- query to be processed in batch mode;\n");
   fprintf(tsdb_error_stream,

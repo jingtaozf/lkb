@@ -25,7 +25,7 @@
 #include "tsdb.h"
 #include "errors.h"
 
-int tsdb_parse(char *command) {
+int tsdb_parse(char *command, FILE *stream) {
 
   int foo;
 
@@ -42,7 +42,9 @@ int tsdb_parse(char *command) {
 
   tsdb.input = command;
   foo = yyparse();
-  yyrestart(stdin);
+  if(stream != NULL) {
+    yyrestart(stream);
+  } /* if */
 
   return(foo);
 
@@ -53,6 +55,53 @@ int tsdb_getchar(void) {
   return((*tsdb.input ? *tsdb.input++ : EOF));
 
 } /* tsdb_getchar */
+
+FILE *tsdb_open_output(char *path) {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_open_output()
+|*     version: 
+|*  written by: oe, dfki saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|*
+\*****************************************************************************/
+
+  char *foo;
+  FILE *output;
+
+  if((foo = tsdb_expand_file((char *)NULL, &path[1])) == NULL) {
+    fprintf(tsdb_error_stream,
+            "open_output(): unable to expand file name `%s'.\n", 
+            &path[1]);
+    fflush(tsdb_error_stream);
+    return((FILE *)NULL);
+  } /* if */
+
+  if((output = fopen(foo, (path[0] == TSDB_REDIRECTION_OVERWRITE ?
+                            "w" : "a"))) == NULL) {
+    fprintf(tsdb_error_stream,
+            "open_output(): unable to open output file `%s'.\n", 
+            foo);
+    fflush(tsdb_error_stream);
+    return((FILE *)NULL);
+  } /* if */
+
+#ifdef DEBUG
+  fprintf(tsdb_debug_stream,
+          "open_output(): %s `%s'.\n",
+          (path[0] == TSDB_REDIRECTION_OVERWRITE ?
+           "overwriting" : "appending to"),
+          foo);
+  fflush(tsdb_debug_stream);
+#endif
+
+  free(path);
+  return(output);
+
+} /* tsdb_open_output() */
 
 FILE *tsdb_open_pager() {
 

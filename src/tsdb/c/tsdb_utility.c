@@ -36,7 +36,7 @@ extern int errno;
 #  include <sys/times.h>
 #endif
 
-#define REDIRECT " </dev/null >/dev/null"
+#define REDIRECT " < /dev/null > /dev/null"
 
 
 /* it's only hacked code but i like it */
@@ -1801,6 +1801,10 @@ BOOL tsdb_initialize() {
             "initialize(): no query result storage;\n");
   } /* else */
   fprintf(tsdb_debug_stream,
+          "initialize(): output to `%s';\n",
+          (tsdb.output != NULL ? tsdb.output : "stdio"));
+  fflush(tsdb_debug_stream);
+  fprintf(tsdb_debug_stream,
           "initialize(): pager: `%s'; debug: `%s'.\n",
           (tsdb.pager != NULL ? tsdb.pager : "null"), tsdb.debug_file);
 #ifdef COMPRESSED_DATA
@@ -1928,6 +1932,7 @@ void tsdb_parse_environment() {
     } /* else */
   } /* if */
 
+  
   if(tsdb.max_results == -1) {
     if((name = getenv("TSDB_MAX_RESULTS")) != NULL) {
       if(!(tsdb.max_results = (BYTE)strtol(name, &foo, 10)) &&
@@ -2632,7 +2637,7 @@ char *tsdb_expand_directory(char *base, char *name) {
         return(tsdb_expand_directory((char *)NULL, &foo[0]));
     } /* else */
   } /* else */
-  return(NULL);
+  return((char *)NULL);
 } /* tsdb_expand_directory() */
 
 char *tsdb_expand_file(char *directory, char *name) {
@@ -2648,7 +2653,29 @@ char *tsdb_expand_file(char *directory, char *name) {
 |*
 \*****************************************************************************/
 
-  
+  char bar[MAXNAMLEN], *foo;
+
+  if(name != NULL && name[0] == TSDB_DIRECTORY_DELIMITER[0]) {
+    return(strdup(name));
+  } /* if */
+
+  if(directory != NULL) {
+    if((foo = tsdb_expand_directory(tsdb.home, directory)) == NULL) {
+      return((char *)NULL);
+    } /* if */
+  } /* if */
+  else {
+    if((foo = tsdb_expand_directory(tsdb.home, ".")) == NULL) {
+      return((char *)NULL);
+    } /* if */
+  } /* else */
+
+  (void)strcpy(&bar[0], foo);
+  free(foo);
+  (void)strcat(&bar[0], name);
+
+  return(strdup(&bar[0]));
+
 } /* tsdb_expand_file() */
 
 char *tsdb_user() {

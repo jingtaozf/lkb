@@ -78,6 +78,13 @@ TIME (\(|\[)?{HOUR}:{MINUTE}(:{SECOND})?(\)|\])?
 
 %%
 
+{d}{o} {
+  if(verbose_mode) {
+    fprintf(stderr, "DO\n");
+  } /* if */
+  return(Y_DO);
+}
+
 {r}{e}{t}{r}{i}{e}{v}{e} {
   if(verbose_mode) {
     fprintf(stderr, "RETRIEVE\n");

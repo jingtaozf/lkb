@@ -33,19 +33,24 @@ Tsdb tsdb = {
   (char *)NULL,            /* result_prefix */
   -1,                      /* max_results */
   TSDB_FS,                 /* fs */
-  (char *)NULL,            /* ofs */
+  TSDB_OFS,                /* ofs */
   (char *)NULL,            /* server */
   0,                       /* port */
   (char *)NULL,            /* pager */
   (char *)NULL,            /* query */
+
 #ifdef DEBUG
   (char *)NULL,            /* debug_file */
 #endif
+
+  (char *)NULL,            /* output */
+
 #ifdef COMPRESSED_DATA
   (char *)NULL,            /* compress */
   (char *)NULL,            /* uncompress */
   (char *)NULL,            /* suffix */
 #endif
+
   -1,                      /* command */
   (Tsdb_history **)NULL,   /* history */
   TSDB_HISTORY_SIZE,       /* history_size */
@@ -53,6 +58,7 @@ Tsdb tsdb = {
 
 FILE *tsdb_default_stream = TSDB_DEFAULT_STREAM;
 FILE *tsdb_error_stream = TSDB_ERROR_STREAM;
+
 #ifdef DEBUG
   FILE *tsdb_debug_stream = (FILE *)NULL;
 #endif

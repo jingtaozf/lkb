@@ -447,7 +447,7 @@ void tsdb_server_child(int socket) {
             _query = strdup(command);
           } /* else */
 #endif
-          tsdb_parse(command);
+          tsdb_parse(command, (FILE *)NULL);
           free(command);
           command = (char *)NULL;
           sprintf(prompt, "tsdb@%s (%d) # ", host, ++n_commands);

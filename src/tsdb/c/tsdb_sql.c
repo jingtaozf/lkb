@@ -22,7 +22,6 @@
 
 extern int copy_key_list_flag;
 
-
 void tsdb_info(Tsdb_value **value_list) {
 
 /*****************************************************************************\
@@ -94,6 +93,12 @@ void tsdb_info(Tsdb_value **value_list) {
              || !strcmp(value_list[i]->value.identifier, "all")) {
             fprintf(output,
                     "tsdb data path: `%s'.\n", tsdb.data_path);
+            match = TRUE;
+          } /* if */
+          if(!strcmp(value_list[i]->value.identifier, "all")
+             && tsdb.output != NULL) {
+            fprintf(output,
+                    "tsdb output file: `%s'.\n", tsdb.output);
             match = TRUE;
           } /* if */
           if(!strncmp(value_list[i]->value.identifier, "tsdb_result_path", 16)
@@ -895,6 +900,104 @@ Tsdb_selection* tsdb_join_one_relation(Tsdb_selection* selection,
   return(selection);
 } /* tsdb_join_one_relation */
 
+int tsdb_do(char *file, char *output) {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_do()
+|*     version: 
+|*  written by: oe, dfki saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|*
+\*****************************************************************************/
+
+  char *path, *buffer, *command;
+  char *foo, *bar;
+  FILE *input;
+  int status;
+#ifdef DEBUG
+  int n_commands = 0;
+#endif
+
+  command = (char *)NULL;
+  status = 0;
+
+  if((path = tsdb_expand_file((char *)NULL, file)) == NULL) {
+    fprintf(tsdb_error_stream,
+            "do(): unable to expand file name `%s'.\n", 
+            file);
+    fflush(tsdb_error_stream);
+    return(TSDB_UNKNOWN_ERROR);
+  } /* if */
+  
+  if((input = fopen(path, "r")) == NULL) {
+    fprintf(tsdb_error_stream,
+            "do(): unable to open file name `%s'.\n", 
+            path);
+    fflush(tsdb_error_stream);
+    return(TSDB_FILE_NOT_FOUND);
+  } /* if */
+
+#ifdef DEBUG
+  fprintf(tsdb_debug_stream,
+          "do(): reading `%s'.\n", path);
+  fflush(tsdb_debug_stream);
+#endif
+
+  buffer = (char *)malloc(4096);
+  while(!(tsdb.status & TSDB_QUIT) 
+        && !status 
+        && fgets(&buffer[0], 4096, input) != NULL) {
+    if(buffer[strlen(buffer) - 1] == '\n') {
+      buffer[strlen(buffer) - 1] = 0;
+    } /* if */
+    for(foo = &buffer[0]; *foo && isspace(*foo); foo++);
+    if(*foo) {
+      for(bar = &foo[strlen(foo) - 1];
+          bar >= foo && isspace(*bar);
+          *bar = 0, bar--);
+      if(command == NULL) {
+        command = strdup(foo);
+      } /* if */
+      else {
+        command
+          = (char *)realloc(command, strlen(command) + strlen(foo) + 2);
+        command = strcat(command, " ");
+        command = strcat(command, foo);
+      } /* else */
+      if(command != NULL && *command && command[strlen(command) - 1] == '.') {
+        status = tsdb_parse(command, input);
+        tsdb_free(command);
+        command = (char *)NULL;
+#ifdef DEBUG
+        n_commands++;
+#endif     
+      } /* if */
+    } /* if */
+  } /* while */
+  
+  tsdb.status &= !TSDB_QUIT;
+  fclose(input);
+
+#ifdef DEBUG
+  fprintf(tsdb_debug_stream,
+          "do(): read `%d' command(s) from `%s'.\n", n_commands, path);
+  fflush(tsdb_debug_stream);
+#endif
+
+  tsdb_free(path);
+  return(status);
+
+} /* tsdb_do() */
+
+Tsdb_selection *tsdb_retrieve(Tsdb_value **relation_list,
+                              Tsdb_value **attribute_list,
+                              Tsdb_node *conditions,
+                              char *report,
+                              char *redirection) {
+
 /*****************************************************************************\
 |*        file: 
 |*      module: tsdb_retrieve()
@@ -908,13 +1011,9 @@ Tsdb_selection* tsdb_join_one_relation(Tsdb_selection* selection,
 |*
 \*****************************************************************************/
 
-Tsdb_selection *tsdb_retrieve(Tsdb_value **relation_list,
-                                      Tsdb_value **attribute_list,
-                                      Tsdb_node* conditions,
-                                      char *report) {
   Tsdb_selection* result ;
-  result = tsdb_complex_retrieve(relation_list,attribute_list,
-                                 conditions,report);
+  result = tsdb_complex_retrieve(relation_list, attribute_list, conditions,
+                                 report, redirection);
   tsdb_add_to_history(result);
   if (copy_key_list_flag) {
     printf("tsdb_copy_keylist was just called... strange\n");
@@ -928,7 +1027,8 @@ Tsdb_selection *tsdb_retrieve(Tsdb_value **relation_list,
 Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
                                       Tsdb_value **attribute_list,
                                       Tsdb_node* conditions,
-                                      char *report) {
+                                      char *report,
+                                      char *redirection) {
 
 /*****************************************************************************\
 |*        file: 
@@ -939,7 +1039,7 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
 |*  updated by: tom, dfki saarbruecken
 |*****************************************************************************|
 |* tom said: ``final retrieve() function'' --- i suppose he is mistaken |:-}.
-|* if the attributre_list should be empty, the user gave '*', which means
+|* if the attribute_list should be empty, the user gave '*', which means
 |* show all attributes of the relations that are in the selection.
 |* updated to understand report strings, history and so on...
 \*****************************************************************************/
@@ -949,6 +1049,7 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
   int s_attributes = 10, i, j, r,kaerb=0;
   Tsdb_selection *selection=NULL,*temp,*history=NULL;
   Tsdb_history *foo;
+  FILE *output;
   BOOL from_find=FALSE,
   history_retrieve=FALSE,
   extend_history=FALSE;
@@ -1127,7 +1228,23 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
     free(attributes);
 
   /* now check the attributes for projections */
-  tsdb_project(selection, attribute_list, report,(FILE *)NULL);
+
+  if(redirection != NULL 
+     && (output = tsdb_open_output(redirection)) != NULL) {
+    tsdb_project(selection, attribute_list, report, output);
+    fclose(output);
+  } /* if */
+  else {
+    if(tsdb.output == NULL 
+       && (output = tsdb_open_pager()) != NULL) {
+      tsdb_project(selection, attribute_list, report, output);
+      pclose(output);
+    } /* if */
+    else {
+      tsdb_project(selection, attribute_list, report, tsdb_default_stream);
+      fflush(tsdb_default_stream);
+    } /* else */
+  } /* else */
   return(selection);
 
 } /* tsdb_complex_retrieve */
@@ -1135,8 +1252,19 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
 void tsdb_project(Tsdb_selection *selection,
                   Tsdb_value **attributes, 
                   char* format,
-                  FILE* stream)
-{
+                  FILE* stream) {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_project()
+|*     version: 
+|*  written by: tom fettig, dfki saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|*
+\*****************************************************************************/
+
   /* print attributes in order */
   int i, j, k,h,l,m, n, n_attributes,sum_attr=0;
   Tsdb_relation *relation;
@@ -1254,17 +1382,11 @@ void tsdb_project(Tsdb_selection *selection,
   if(tsdb.status & TSDB_UNIQUELY_PROJECT) {
     n = tsdb_uniq_projection(projection,n);
   } /* if */
-  if((output = tsdb_open_pager()) != NULL) {
-    tsdb_print_projection(projection,n,format,output);
-    pclose(output);
-  } /* if */
-  else {
-    tsdb_print_projection(projection, n,format, tsdb_default_stream);
-  } /* else */
+  tsdb_print_projection(projection, n,format, stream);
   if (output=tsdb_open_result()) {
     tsdb_print_projection(projection,n,format, output);
     fclose(output);
-  }
+  } /* if */
   tsdb_free_char_array(projection,n);
   free(r);
   free(f);

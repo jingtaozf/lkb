@@ -17,6 +17,7 @@
 #endif
 
 #include <stdio.h>
+#include <string.h>
 #include "globals.h"
 #include "tsdb.h"
 
@@ -43,6 +44,7 @@
        Y_EQUAL 
        Y_LESS_OR_EQUAL
        Y_GREATER_OR_EQUAL
+       Y_DO
        Y_RETRIEVE
        Y_UPDATE
        Y_INSERT
@@ -78,9 +80,12 @@
 %token <integer> Y_INTEGER
 
 %type <string> y_special
+               y_redirection
                y_retrieve_report
 
-%type <tsdb_value_array> y_attribute_list
+%type <tsdb_value_array> y_retrieve_projection
+                         y_retrieve_from
+                         y_attribute_list
                          y_value_list
                          y_attribute_value_list
                          y_table_list
@@ -106,6 +111,8 @@
 %%
 
 y_query :
+  y_do
+|
   y_retrieval
 |
   y_dropping
@@ -125,6 +132,32 @@ y_query :
   y_exit
 | 
   y_test
+;
+
+y_redirection : 
+  Y_GREATER Y_STRING {
+    $$ = (char *)malloc(strlen($2) + 2);
+    $$[0] = (char)TSDB_REDIRECTION_OVERWRITE;
+    $$[1] = 0;
+    $$ = strcat($$, $2);
+  }
+|
+  Y_GREATER Y_GREATER Y_STRING {
+    $$ = (char *)malloc(strlen($3) + 2);
+    $$[0] = (char)TSDB_REDIRECTION_APPEND;
+    $$[1] = 0;
+    $$ = strcat($$, $3);
+  }
+;
+
+y_do :
+  Y_DO Y_STRING '.' {
+    tsdb_do($2, (char *)NULL);
+  }
+|
+  Y_DO Y_STRING Y_STRING '.' {
+    tsdb_do($2, $3);
+  }
 ;
 
 y_creation : 
@@ -167,100 +200,117 @@ y_deletion :
 
 y_retrieval :
   Y_RETRIEVE y_attribute_list '.' {
-    tsdb_retrieve((Tsdb_value **)NULL, $2, (Tsdb_node *)NULL, (char *)NULL);
+    tsdb_retrieve((Tsdb_value **)NULL, $2, (Tsdb_node *)NULL,
+                  (char *)NULL, (char *)NULL);
   }
 |
-  Y_RETRIEVE y_attribute_list Y_WHERE y_condition '.' {
-    tsdb_retrieve((Tsdb_value **)NULL, $2, $4, (char *)NULL);
+  Y_RETRIEVE y_retrieve_projection Y_WHERE y_condition '.' {
+    tsdb_retrieve((Tsdb_value **)NULL, $2, $4,
+                  (char *)NULL, (char *)NULL);
   }
 |
-  Y_RETRIEVE y_attribute_list Y_FROM y_attribute_list '.' {
-    tsdb_retrieve($4, $2, (Tsdb_node *)NULL, (char *)NULL);
+  Y_RETRIEVE y_retrieve_projection y_retrieve_from '.' {
+    tsdb_retrieve($3, $2, (Tsdb_node *)NULL,
+                  (char *)NULL, (char *)NULL);
   }
 |
-  Y_RETRIEVE y_attribute_list Y_FROM y_attribute_list Y_WHERE y_condition '.' {
-    tsdb_retrieve($4, $2, $6, (char *)NULL);
+  Y_RETRIEVE y_retrieve_projection y_retrieve_from Y_WHERE y_condition '.' {
+    tsdb_retrieve($3, $2, $5,
+                  (char *)NULL, (char *)NULL);
   }
 |
-  Y_RETRIEVE y_attribute_list y_retrieve_report '.' {
-    tsdb_retrieve((Tsdb_value **)NULL, $2, (Tsdb_node *)NULL, $3);
-  }
-|
-  Y_RETRIEVE y_attribute_list Y_WHERE y_condition y_retrieve_report '.' {
-    tsdb_retrieve((Tsdb_value **)NULL, $2, $4, $5);
-  }
-|
-  Y_RETRIEVE y_attribute_list Y_FROM y_attribute_list y_retrieve_report '.' {
-    tsdb_retrieve($4, $2, (Tsdb_node *)NULL, $5);
-  }
-|
-  Y_RETRIEVE y_attribute_list Y_FROM y_attribute_list
-    Y_WHERE y_condition
+  Y_RETRIEVE y_attribute_list
     y_retrieve_report '.' {
-    tsdb_retrieve($4, $2, $6, $7);
+    tsdb_retrieve((Tsdb_value **)NULL, $2, (Tsdb_node *)NULL,
+                  $3, (char *)NULL);
   }
 |
-  Y_RETRIEVE '*' Y_WHERE y_condition '.' {
-    tsdb_retrieve((Tsdb_value **)NULL, (Tsdb_value **)NULL, $4, (char *)NULL);
-  }
-|
-  Y_RETRIEVE '*' Y_FROM y_attribute_list '.' {
-    tsdb_retrieve($4, (Tsdb_value **)NULL, (Tsdb_node *)NULL, (char *)NULL);
-  }
-|
-  Y_RETRIEVE '*' Y_FROM y_attribute_list Y_WHERE y_condition '.' {
-    tsdb_retrieve($4, (Tsdb_value **)NULL, $6, (char *)NULL);
-  }
-|
-  Y_RETRIEVE y_attribute_list Y_FROM Y_INTEGER '.' {
-    Tsdb_value **from;
-    from = (Tsdb_value **)malloc(2 * sizeof(Tsdb_value *));
-    from[0] = tsdb_integer($4);
-    from[1] = (Tsdb_value *)NULL;
-    tsdb_retrieve(&from[0], $2, (Tsdb_node *)NULL, (char *)NULL);
-  }
-|
-  Y_RETRIEVE y_attribute_list Y_FROM Y_INTEGER Y_WHERE y_condition '.' {
-    Tsdb_value **from;
-    from = (Tsdb_value **)malloc(2 * sizeof(Tsdb_value *));
-    from[0] = tsdb_integer($4);
-    from[1] = (Tsdb_value *)NULL;
-    tsdb_retrieve(&from[0], $2, $6, (char *)NULL);
-  }
-|
-  Y_RETRIEVE y_attribute_list Y_FROM Y_INTEGER y_retrieve_report '.' {
-    Tsdb_value **from;
-    from = (Tsdb_value **)malloc(2 * sizeof(Tsdb_value *));
-    from[0] = tsdb_integer($4);
-    from[1] = (Tsdb_value *)NULL;
-    tsdb_retrieve(&from[0], $2, (Tsdb_node *)NULL, $5);
-  }
-|
-  Y_RETRIEVE y_attribute_list Y_FROM Y_INTEGER
-    Y_WHERE y_condition
+  Y_RETRIEVE y_retrieve_projection Y_WHERE y_condition
     y_retrieve_report '.' {
-    Tsdb_value **from;
-    from = (Tsdb_value **)malloc(2 * sizeof(Tsdb_value *));
-    from[0] = tsdb_integer($4);
-    from[1] = (Tsdb_value *)NULL;
-    tsdb_retrieve(&from[0], $2, $6, $7);
+    tsdb_retrieve((Tsdb_value **)NULL, $2, $4,
+                  $5, (char *)NULL);
   }
 |
-  Y_RETRIEVE '*' Y_FROM Y_INTEGER '.' {
-    Tsdb_value **from;
-    from = (Tsdb_value **)malloc(2 * sizeof(Tsdb_value *));
-    from[0] = tsdb_integer($4);
-    from[1] = (Tsdb_value *)NULL;
-    tsdb_retrieve(&from[0], (Tsdb_value **)NULL, 
-                  (Tsdb_node *)NULL, (char *)NULL);
+  Y_RETRIEVE y_retrieve_projection y_retrieve_from
+    y_retrieve_report '.' {
+    tsdb_retrieve($3, $2, (Tsdb_node *)NULL,
+                  $4, (char *)NULL);
   }
 |
-  Y_RETRIEVE '*' Y_FROM Y_INTEGER Y_WHERE y_condition '.' {
-    Tsdb_value **from;
-    from = (Tsdb_value **)malloc(2 * sizeof(Tsdb_value *));
-    from[0] = tsdb_integer($4);
-    from[1] = (Tsdb_value *)NULL;
-    tsdb_retrieve(&from[0], (Tsdb_value **)NULL, $6, (char *)NULL);
+  Y_RETRIEVE y_retrieve_projection y_retrieve_from Y_WHERE y_condition
+    y_retrieve_report '.' {
+    tsdb_retrieve($3, $2, $5,
+                  $6, (char *)NULL);
+  }
+|
+  Y_RETRIEVE y_attribute_list 
+    y_redirection '.' {
+    tsdb_retrieve((Tsdb_value **)NULL, $2, (Tsdb_node *)NULL,
+                  (char *)NULL, $3);
+  }
+|
+  Y_RETRIEVE y_retrieve_projection Y_WHERE y_condition 
+    y_redirection '.' {
+    tsdb_retrieve((Tsdb_value **)NULL, $2, $4,
+                  (char *)NULL, $5);
+  }
+|
+  Y_RETRIEVE y_retrieve_projection y_retrieve_from 
+    y_redirection '.' {
+    tsdb_retrieve($3, $2, (Tsdb_node *)NULL,
+                  (char *)NULL, $4);
+  }
+|
+  Y_RETRIEVE y_retrieve_projection y_retrieve_from Y_WHERE y_condition 
+    y_redirection '.' {
+    tsdb_retrieve($3, $2, $5,
+                  (char *)NULL, $6);
+  }
+|
+  Y_RETRIEVE y_attribute_list
+    y_retrieve_report y_redirection '.' {
+    tsdb_retrieve((Tsdb_value **)NULL, $2, (Tsdb_node *)NULL,
+                  $3, $4);
+  }
+|
+  Y_RETRIEVE y_retrieve_projection Y_WHERE y_condition
+    y_retrieve_report y_redirection '.' {
+    tsdb_retrieve((Tsdb_value **)NULL, $2, $4,
+                  $5, $6);
+  }
+|
+  Y_RETRIEVE y_retrieve_projection y_retrieve_from
+    y_retrieve_report  y_redirection '.' {
+    tsdb_retrieve($3, $2, (Tsdb_node *)NULL,
+                  $4, $5);
+  }
+|
+  Y_RETRIEVE y_retrieve_projection y_retrieve_from Y_WHERE y_condition
+    y_retrieve_report y_redirection '.' {
+    tsdb_retrieve($3, $2, $5,
+                  $6, $7);
+  }
+;
+
+y_retrieve_projection :
+  y_attribute_list {
+    $$ = $1;
+  }
+|
+  '*' {
+    $$ = (Tsdb_value **)NULL;
+  }
+;
+
+y_retrieve_from :
+  Y_FROM y_attribute_list {
+    $$ = $2;
+  }
+|
+  Y_FROM Y_INTEGER {
+    $$ = (Tsdb_value **)malloc(2 * sizeof(Tsdb_value *));
+    $$[0] = tsdb_integer($2);
+    $$[1] = (Tsdb_value *)NULL;
   }
 ;
 

@@ -27,7 +27,7 @@ extern void free(void *);
 #  endif
 #endif
 
-#define TSDB_VERSION "0.2"
+#define TSDB_VERSION "0.3"
 
 #define TSDB_DEFAULT_STREAM stdout
 #define TSDB_ERROR_STREAM stderr
@@ -94,6 +94,10 @@ extern void free(void *);
 #define TSDB_SUFFIX_OPTION 18
 #define TSDB_FS_OPTION 19
 #define TSDB_OFS_OPTION 20
+#define TSDB_OUTPUT_OPTION 21
+
+#define TSDB_REDIRECTION_OVERWRITE 1
+#define TSDB_REDIRECTION_APPEND 2
 
 #ifndef TSDB_PSEUDO_USER
 #  define TSDB_PSEUDO_USER "TSDB@tsdb"
@@ -108,11 +112,19 @@ extern void free(void *);
 #endif
 
 #ifndef TSDB_RELATIONS_FILE
-#  define TSDB_RELATIONS_FILE "etc/relations"
+#  ifdef ALEP
+#    define TSDB_RELATIONS_FILE "relations"
+#  else
+#    define TSDB_RELATIONS_FILE "etc/relations"
+#  endif
 #endif
 
 #ifndef TSDB_DATA_PATH
-#  define TSDB_DATA_PATH "german/"
+#  ifdef ALEP
+#    define TSDB_DATA_PATH ""
+#  else
+#    define TSDB_DATA_PATH "german/"
+#  endif
 #endif
 
 #ifndef TSDB_RESULT_PATH
@@ -147,6 +159,10 @@ extern void free(void *);
 
 #ifndef TSDB_FS
 #  define TSDB_FS '@'
+#endif
+
+#ifndef TSDB_OFS
+#  define TSDB_OFS "@"
 #endif
 
 #ifndef TSDB_BACKUP_SUFFIX
@@ -271,6 +287,7 @@ typedef struct tsdb {
 #ifdef DEBUG
   char *debug_file;
 #endif
+  char *output;
 
 #ifdef COMPRESSED_DATA
   char *compress;
@@ -300,12 +317,12 @@ typedef struct tsdb {
 
 void tsdb_parse_options(int, char **);
 void tsdb_usage(void);
-int tsdb_parse(char *);
+int tsdb_parse(char *, FILE *);
 int tsdb_getchar(void);
 BOOL tsdb_verify_selection(Tsdb_selection *);
-BOOL tsdb_key_list_not_copied(Tsdb_relation* ,int , Tsdb_key_list* );
-void tsdb_debug_join_path(Tsdb_value **, Tsdb_value**);
-void tsdb_debug_simple_join(Tsdb_value **, Tsdb_value**);
+BOOL tsdb_key_list_not_copied(Tsdb_relation *, int, Tsdb_key_list *);
+void tsdb_debug_join_path(Tsdb_value **, Tsdb_value **);
+void tsdb_debug_simple_join(Tsdb_value **, Tsdb_value **);
 void tsdb_debug_canonical_date(Tsdb_value **);
 char *tsdb_pseudo_user();
 float tsdb_timer(BYTE);
@@ -317,7 +334,7 @@ Tsdb_value *tsdb_date(char *);
 Tsdb_value *tsdb_position(char *);
 Tsdb_value *tsdb_connective(BYTE);
 Tsdb_value *tsdb_operator(BYTE);
-Tsdb_value *tsdb_descriptor(int r,int f);
+Tsdb_value *tsdb_descriptor(int r, int f);
 Tsdb_value **tsdb_singleton_value_array(Tsdb_value *);
 Tsdb_value **tsdb_value_array_append(Tsdb_value **, Tsdb_value *);
 Tsdb_field **tsdb_singleton_field_array(Tsdb_field *);
@@ -325,41 +342,42 @@ Tsdb_field **tsdb_field_array_append(Tsdb_field **, Tsdb_field *);
 
 BYTE tsdb_value_compare(Tsdb_value *, Tsdb_value *);
 BYTE tsdb_tuple_compare(Tsdb_tuple *, Tsdb_tuple *);
-BOOL tsdb_verify_tuple(Tsdb_node* , Tsdb_tuple** );
+BOOL tsdb_verify_tuple(Tsdb_node *, Tsdb_tuple **);
 
-BOOL tsdb_tuple_equal(Tsdb_tuple* , Tsdb_tuple* );
-BYTE tsdb_value_match(Tsdb_value *, Tsdb_value *,char,void *);
+BOOL tsdb_tuple_equal(Tsdb_tuple *, Tsdb_tuple *);
+BYTE tsdb_value_match(Tsdb_value *, Tsdb_value *, char, void *);
 
 FILE* tsdb_open_pager();
 FILE* tsdb_open_debug();
+FILE* tsdb_open_output(char *);
 void tsdb_close_debug(FILE *);
 
-void tsdb_tree_print(Tsdb_node* , FILE* );
+void tsdb_tree_print(Tsdb_node *, FILE *);
 BOOL tsdb_print_value(Tsdb_value *, FILE *);
 char* tsdb_sprint_value(Tsdb_value *);
-char* tsdb_sprint_key_list(Tsdb_key_list* ,int* ,int* ,int );
+char* tsdb_sprint_key_list(Tsdb_key_list *, int *, int *, int);
 void tsdb_print_array(Tsdb_value **, FILE *);
 void tsdb_print_relation(Tsdb_relation *, FILE *);
 void tsdb_print_node(Tsdb_node *, FILE *);
 void tsdb_print_tuple(Tsdb_tuple *, FILE *);
 void tsdb_print_key_list(Tsdb_key_list *, FILE *);
 void tsdb_print_join_path(Tsdb_relation **, FILE *);
-void tsdb_print_projection(char** ,int,char* ,FILE *);
+void tsdb_print_projection(char **, int, char *, FILE *);
 void tsdb_print_selection(Tsdb_selection *, FILE *);
-void tsdb_test_negation(Tsdb_value ** _list,Tsdb_node* );
-int tsdb_uniq_projection(char** ,int );
+void tsdb_test_negation(Tsdb_value **, Tsdb_node *);
+int tsdb_uniq_projection(char **, int);
 Tsdb_node *tsdb_leaf(Tsdb_value *);
-Tsdb_node* tsdb_prepare_tree(Tsdb_node* node,Tsdb_selection* selection);
+Tsdb_node* tsdb_prepare_tree(Tsdb_node *, Tsdb_selection *);
 
 void tsdb_save_changes(void);
 
-BOOL tsdb_children_leaf(Tsdb_node* node);
-void tsdb_negate_node(Tsdb_node* node);
-void tsdb_tree_negate(Tsdb_node* node);
-void tsdb_check_not(Tsdb_node* node);
+BOOL tsdb_children_leaf(Tsdb_node *);
+void tsdb_negate_node(Tsdb_node *);
+void tsdb_tree_negate(Tsdb_node *);
+void tsdb_check_not(Tsdb_node *);
 
-BOOL tsdb_contains_relation(Tsdb_selection*,Tsdb_relation*);
-BOOL tsdb_joins_to(Tsdb_relation *,Tsdb_selection*);
+BOOL tsdb_contains_relation(Tsdb_selection *, Tsdb_relation *);
+BOOL tsdb_joins_to(Tsdb_relation *, Tsdb_selection *);
 BOOL tsdb_are_joinable(Tsdb_relation *, Tsdb_relation *);
 BOOL tsdb_is_attribute(Tsdb_value *);
 BOOL tsdb_are_attributes(Tsdb_value **, Tsdb_relation *);
@@ -371,12 +389,12 @@ BOOL tsdb_satisfies_condition(Tsdb_tuple *, Tsdb_node *, Tsdb_relation *);
 
 char *tsdb_join_key(Tsdb_relation *, Tsdb_relation *);
 char **tsdb_common_keys(Tsdb_relation *, Tsdb_relation *);
-char** tsdb_key_names(Tsdb_selection* );
+char** tsdb_key_names(Tsdb_selection *);
 char** tsdb_all_attribute_names();
 char** tsdb_all_relation_names();
-BOOL tsdb_attribute_in_relation(Tsdb_relation *,char *);
+BOOL tsdb_attribute_in_relation(Tsdb_relation *, char *);
 BOOL tsdb_attribute_in_selection(Tsdb_selection *, char *);
-int tsdb_relation_in_selection(Tsdb_selection* ,char* );
+int tsdb_relation_in_selection(Tsdb_selection *, char* );
 void tsdb_info(Tsdb_value **);
 void tsdb_set(Tsdb_value *, Tsdb_value *);
 int tsdb_drop_table(Tsdb_value *);
@@ -393,6 +411,7 @@ FILE *tsdb_find_data_file(char *, char *);
 FILE* tsdb_open_result();
 char *tsdb_rcs_strip(char *, char *);
 char *tsdb_expand_directory(char *, char *);
+char *tsdb_expand_file(char *, char *);
 char *tsdb_user(void);
 char *tsdb_canonical_date(char *);
 int *tsdb_parse_date(char *);
@@ -418,31 +437,32 @@ Tsdb_key_list* tsdb_first_other_key(Tsdb_key_list*);
 char* tsdb_translate_table() ;
 
 BOOL tsdb_insert_into_selection(Tsdb_selection *, Tsdb_tuple **);
-char** tsdb_condition_attributes(Tsdb_node* , char** , int* );
+char** tsdb_condition_attributes(Tsdb_node *, char **, int *);
 int* tsdb_relation_match(Tsdb_selection *, Tsdb_selection *);
 Tsdb_relation *tsdb_create_relation(void);
-void tsdb_free_relation(Tsdb_relation*);
-void tsdb_remove_relation(char*);
+void tsdb_free_relation(Tsdb_relation *);
+void tsdb_remove_relation(char *);
 
-void tsdb_free_tsdb_value(Tsdb_value*);
-void tsdb_free_tsdb_values(Tsdb_value**);
+void tsdb_free_tsdb_value(Tsdb_value *);
+void tsdb_free_tsdb_values(Tsdb_value **);
 
 Tsdb_selection *tsdb_create_selection(int, int);
 void tsdb_free_selection(Tsdb_selection*);
 void tsdb_free_selections(Tsdb_selection** );
-Tsdb_selection* tsdb_clean_selection(Tsdb_selection* ,Tsdb_tuple*);
-Tsdb_selection *tsdb_copy_selection(Tsdb_selection*);
+Tsdb_selection* tsdb_clean_selection(Tsdb_selection *, Tsdb_tuple *);
+Tsdb_selection *tsdb_copy_selection(Tsdb_selection *);
 Tsdb_selection *tsdb_find_table(Tsdb_relation *);
-Tsdb_selection *tsdb_find_tables(Tsdb_relation**);
+Tsdb_selection *tsdb_find_tables(Tsdb_relation **);
 Tsdb_selection *tsdb_read_table(Tsdb_relation *, Tsdb_node *);
 void tsdb_free_key_list(Tsdb_key_list *);
-void tsdb_free_key_list_chain(Tsdb_key_list* ,BOOL);
+void tsdb_free_key_list_chain(Tsdb_key_list *,BOOL);
 void tsdb_free_char_array(char** ,int);
 
-Tsdb_selection *tsdb_add_relations(Tsdb_selection* , Tsdb_relation** );
+Tsdb_selection *tsdb_add_relations(Tsdb_selection *, Tsdb_relation **);
 Tsdb_selection *tsdb_join(Tsdb_selection *, Tsdb_selection *);
-Tsdb_selection *tsdb_select(Tsdb_selection *, Tsdb_node **,BYTE);
-Tsdb_selection *tsdb_complex_select(Tsdb_node *node,Tsdb_value **,Tsdb_selection* );
+Tsdb_selection *tsdb_select(Tsdb_selection *, Tsdb_node **, BYTE);
+Tsdb_selection *tsdb_complex_select(Tsdb_node *, 
+                                    Tsdb_value **, Tsdb_selection *);
 Tsdb_selection *tsdb_complex_merge(Tsdb_selection *, Tsdb_selection *);
 Tsdb_selection *tsdb_merge(Tsdb_selection *, Tsdb_selection *);
 Tsdb_selection *tsdb_simple_join(Tsdb_selection *, Tsdb_selection *);
@@ -451,10 +471,10 @@ Tsdb_relation ***tsdb_real_join_path(Tsdb_relation **, int,
                                      Tsdb_relation *, int);
 Tsdb_selection *tsdb_simple_merge(Tsdb_selection *, Tsdb_selection *);
 Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **, Tsdb_value **,
-                                      Tsdb_node *, char *);
-Tsdb_selection *tsdb_retrieve(Tsdb_value **, Tsdb_value **,Tsdb_node *, 
-                              char *);
-
+                                      Tsdb_node *, char *, char*);
+Tsdb_selection *tsdb_retrieve(Tsdb_value **, Tsdb_value **, Tsdb_node *, 
+                              char *, char *);
+int tsdb_do(char *, char *);
 
 Tsdb_history *tsdb_get_history(int);
 void tsdb_add_to_history(Tsdb_selection*);
