@@ -246,8 +246,10 @@
 
 (defun highlight-edge (edge frame &key (scroll-to nil))
   (let* ((stream (clim:frame-standard-output frame))
-	 (record (find-object stream #'(lambda (e) (eql (edge-id e)
-							(edge-id edge)))))
+	 (record (find-object stream #'(lambda (e)
+                                         (and (edge-p e)
+                                              (eql (edge-id e)
+                                                   (edge-id edge))))))
 	 (on-path (append (cdr (collect-subs edge stream))
 			  (collect-supers edge frame stream))))
     (setf (chart-window-words frame) nil)
@@ -259,8 +261,10 @@
 
 (defun collect-subs (edge stream)
   (when edge
-    (let ((record (find-object stream #'(lambda (e) (eql (edge-id e)
-							 (edge-id edge))))))
+    (let ((record (find-object stream #'(lambda (e) 
+                                          (and (edge-p e)
+                                               (eql (edge-id e)
+                                                    (edge-id edge)))))))
       (append (when record 
 		(list record))
 	      (if (edge-morph-history edge)
@@ -269,19 +273,23 @@
 			(edge-children edge)))))))
 
 (defun collect-supers (edge frame stream)
+  (when (edge-p edge)
   (labels
       ((highlight-chart-edge-path-p (e)
-	 ;; path from e recursively through children to edge?
-	 (or (eq e edge)
-	     (eq (edge-morph-history e) edge)
-	     (some #'highlight-chart-edge-path-p (edge-children e)))))
+         ;; path from e recursively through children to edge?
+         (and (edge-p e)
+              (or (eq e edge)
+                  (eq (edge-morph-history e) edge)
+                  (some #'highlight-chart-edge-path-p (edge-children e))))))
     (loop for record in (chart-window-edges frame)
 	appending
 	  (when (and (not (eq edge record))
 		     (highlight-chart-edge-path-p record))
 	    (list
-	     (find-object stream #'(lambda (e) (eql (edge-id e)
-						    (edge-id record)))))))))
+	     (find-object stream #'(lambda (e) 
+                                     (and (edge-p e)
+                                          (eql (edge-id e)
+                                               (edge-id record)))))))))))
 
 ;;; create a new chart window and display just the descendents and ancestors
 ;;; of the edge in it
