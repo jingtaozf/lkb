@@ -208,6 +208,8 @@
   (set-up-lkb-interaction))
 
 (defun dump-lkb nil
+  (format t "~%Warning: dump-lkb is currently non-operational"))
+  #|
   (let* ((fresh-p (not common-lisp-user::*current-grammar-load-file*))
         (image-location 
          (user::ask-user-for-new-pathname
@@ -238,10 +240,11 @@
       (user::clear-type-cache)
       (user::unexpand-leaf-types)
       (excl:dumplisp :name image-location)
-      (user::check-for-open-psorts-stream)
+;      (user::check-for-open-psorts-stream)
       (user::lkb-beep)
       (format t "~%Image saved~%")
       nil)))
+      |#
 
 (defun enable-type-interactions nil
   ;;; it may only work from within the application frame
