@@ -22,7 +22,7 @@ M log/build
 **********
 Checking in ./src/version.lsp;
 /lingo/CVS/lkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.367; previous revision: 1.366
+new revision: 1.368; previous revision: 1.367
 done
 make[1]: Entering directory `/lingo/build/lkb'
 ( \
@@ -1058,7 +1058,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-6.2 [Linux (x86)] (Jan 16, 2005 21:04)
+6.2 [Linux (x86)] (Jan 16, 2005 21:08)
 Copyright (C) 1985-2002, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -2293,7 +2293,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/xml/pxml1.fasl
 ;;; Compiling file /lingo/build/lkb/src/xml/pxml3.cl
-8848784 bytes have been tenured, next gc will be global.
+8848792 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 9185328 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
@@ -2918,7 +2918,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/yy.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/mt.lisp
-gc-after-hook(): local; new: 2179680; old: 75400; pending: 0; efficiency: 81.
+gc-after-hook(): local; new: 2177800; old: 75400; pending: 0; efficiency: 81.
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/tsdb/mt.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/mt.fasl
@@ -2931,9 +2931,9 @@ gc-after-hook(): local; new: 2179680; old: 75400; pending: 0; efficiency: 81.
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/tnt-interface.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/redwoods.lisp
-gc-after-hook(): local; new: 3135656; old: 308304; pending: 0; efficiency: 81.
-gc-after-hook(): local; new: 1228256; old: 74600; pending: 0; efficiency: 84.
-gc-after-hook(): local; new: 3007336; old: 370728; pending: 24; efficiency: 83.
+gc-after-hook(): local; new: 3133048; old: 308304; pending: 0; efficiency: 80.
+gc-after-hook(): local; new: 1227520; old: 74600; pending: 128; efficiency: 85.
+gc-after-hook(): local; new: 3007456; old: 370728; pending: 24; efficiency: 83.
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/tsdb/redwoods.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/redwoods.fasl
@@ -2946,7 +2946,7 @@ gc-after-hook(): local; new: 3007336; old: 370728; pending: 24; efficiency: 83.
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/ptb.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/rasp.lisp
-gc-after-hook(): local; new: 1097704; old: 127664; pending: 0; efficiency: 83.
+gc-after-hook(): local; new: 1097552; old: 127656; pending: 0; efficiency: 82.
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/tsdb/rasp.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/rasp.fasl
@@ -2959,7 +2959,7 @@ gc-after-hook(): local; new: 1097704; old: 127664; pending: 0; efficiency: 83.
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/maxent.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/tagger.lisp
-gc-after-hook(): local; new: 899816; old: 96888; pending: 40; efficiency: 86.
+gc-after-hook(): local; new: 899816; old: 96896; pending: 40; efficiency: 86.
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/tsdb/tagger.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/tagger.fasl
