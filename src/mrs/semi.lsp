@@ -71,6 +71,12 @@
         do (record-ep ep semi :mode mode))))
 
 (defun record-ep (ep semi &key (mode :dynamic))
+  ;;
+  ;; _fix_me_
+  ;; probably simpler and faster to use independent routines
+  ;; to extend each has table (predicates, roles, properties)
+  ;; or even: generate roles/properties on demand
+  ;;   eg. populate-semi-roles
   (loop
       with roles = (rel-flist ep)
       with pred = (mrs::rel-pred ep)
@@ -379,7 +385,7 @@
     (setf last (1+ last))))
   
 (defun sdbt-hash (row sdbt)
-  (setf (gethash (first row) sdbt) row))
+  (setf (gethash row sdbt) row))
 
 (defun print-sdb (sdb)
   (let ((temp-dir (make-pathname :directory (pathname-directory (lkb::lkb-tmp-dir)))))
@@ -427,6 +433,9 @@
 	       (format stream "~a~%" (tsv-line row)))
 	   (sdbt-rows sdbt)))
 
+;; for now...
+(defvar *sdb* (make-sdb))
+
 (defun print-semi-db (semi)
   (let* ((predicates (sort
 		      (loop
@@ -441,6 +450,7 @@
 	for predicate in predicates
 	do (process-predicate-db predicate sdb)
 	finally
+	  (setf *sdb* sdb)
 	  (print-sdb sdb))))
 
 (defun process-predicate-db (predicate sdb)
@@ -579,7 +589,7 @@
      (null
       "\\N")
      (symbol
-      (let ((val-str (string val)))
+      (let ((val-str (string-downcase (string val))))
 	(if (and (> (length val-str) 0)
 		 (eq (aref val-str 0) #\"))
 	    (format nil "\\~a" val-str)
@@ -603,18 +613,3 @@
 	       (pop str-list)
 	       (mapcan #'(lambda (x) (list separator x)) str-list)))))))
   
-;(defun encode-as-str (val)
-;  (typecase val
-;   (null 
-;    "")
-;   ((symbolp val)
-;    (let ((val-str (string val)))
-;      (if (and (> (length val-str) 0)
-;	       (eq (aref val-str 0) #\"))
-;	  (format nil "\\~a" val-str)
-;	val-str)))
-;   ((stringp val)
-;    (format nil "\"~a\"" val))
-;   (t
-;    (error "unhandled type: ~a" val))))
-
