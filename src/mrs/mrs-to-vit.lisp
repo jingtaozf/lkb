@@ -277,7 +277,6 @@
             (unless (and (optional-var-p value)
                          (mrs-language '(english)))
               (if arg
-                   ;; args assoc-Liste (arg . var)
                   (setf args (push (make-argval :arg arg :var value
                                                 :sort sort) args))
                 (push (make-argval :var (fvpair-value fvp)
@@ -287,7 +286,7 @@
 
 (defun extract-sort (def extra)
   (if def
-      (if (third extra)
+      (if (and (third extra) (stringp (third extra)))
           (let ((argpos (dolist (char (coerce (string (car def)) 'list))
                              (when (digit-char-p char)
                                (return (digit-char-p char))))))
@@ -298,8 +297,9 @@
                             filter
                             (digit-char-p char)))
                        (index (position argpos poslist)))
-              (elt (expand-sort (third extra)) index))))))
-    (if (second extra)
+                  (when index
+                    (elt (expand-sort (third extra)) index)))))))
+    (if (and (second extra) (stringp (second extra)))
         (car (expand-sort (second extra))))))
 
 (defun expand-sort (str)
@@ -670,12 +670,8 @@
        append
        (for sort2 in sorts2
             filter
-            (let* ((munged1 (intern 
-                            (concatenate 'string "VMSORT_" (string sort1))
-                            :cl-user))
-                   (munged2 (intern 
-                             (concatenate 'string "VMSORT_" (string sort2))
-                            :cl-user))
+            (let* ((munged1 (make-vm-sort sort1))
+                   (munged2 (make-vm-sort sort2))
                    (res
                     (if 
                         (and (is-valid-type munged1)
@@ -683,8 +679,11 @@
                         (compatible-types munged1 munged2))))
               ;;; needs fixing for PAGE
               (when (and res (string-equal (subseq (string res) 0 7) "VMSORT_"))
-                  (setf res (intern (subseq (string res) 7) :cl-user)))
+                  (setf res (vsym (subseq (string res) 7))))
               res))))
+
+(defun make-vm-sort (srt)
+  (vsym (concatenate 'string "VMSORT_" (string srt))))
   
 
 (defun german-mrs-to-vit (mrs)
