@@ -64,7 +64,8 @@
 
 
 ;;; return true for types that shouldn't be displayed in type hierarchy
-;;; window. None of their descendents (if any) will be displayed either
+;;; window. Descendents (if any) will be displayed, i.e. non-displayed
+;;; types are effectively spliced out
 
 (defun hide-in-type-hierarchy-p (type-name)
    ;; starts with _, or ends with _[0-9][M]LE[0-9]
