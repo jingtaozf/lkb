@@ -518,6 +518,18 @@
     (mapcar #'(lambda (x) (str-2-symb (car x)))
             (records query-res))))
 
+(defmethod retrieve-all-records ((lexicon psql-lex-database) &optional reqd-fields)
+  (unless (connection lexicon)
+    (format t "~%WARNING: no connection to psql-lex-database")
+    (return-from retrieve-all-records nil))
+  (unless reqd-fields 
+    (setf reqd-fields "*"))
+  (let* ((sql-str (sql-retrieve-all-entries lexicon reqd-fields))
+	 (query-res (run-query 
+		     lexicon 
+		     (make-instance 'sql-query :sql-string sql-str))))
+    (when (records query-res) (make-column-map-record query-res))))
+
 (defmethod retrieve-record ((lexicon psql-lex-database) id &optional reqd-fields)
   (retrieve-record-str lexicon (symb-2-str id) reqd-fields))
 
@@ -546,7 +558,19 @@
 	     (when (and entry cache)
 	       (setf (gethash id psorts) entry))
 	     entry)))))
-	     
+
+(defun record-id (record)
+  (str-2-symb (cdr (assoc :name record))))
+
+(defmethod cache-all-lex-entries ((lexicon psql-lex-database))
+  (with-slots (psorts) lexicon
+    (mapc 
+     #'(lambda (x) 
+	 (let ((id (record-id x)))
+	   (unless (gethash id psorts) 
+	     (setf (gethash id psorts) (make-psort-struct lexicon x)))))
+     (retrieve-all-records lexicon (make-requested-fields lexicon)))))
+
 ;; (store-psort) not required 
 
 (defmethod make-psort-struct ((lexicon psql-lex-database) query-res)
@@ -889,6 +913,9 @@
 
 (defmethod sql-retrieve-entry ((lexicon psql-lex-database) select-list word)
   (fn lexicon 'retrieve-entry select-list word))
+
+(defmethod sql-retrieve-all-entries ((lexicon psql-lex-database) select-list)
+  (fn lexicon 'retrieve-all-entries select-list))
 
 (defun build-current-grammar (lexicon)
   (fn-get-records  lexicon ''build-current-grammar)
@@ -1324,6 +1351,8 @@
 
 (defun command-generate-semi nil
   (format t "~%Generating SEM-I. See files ~asemi.*" *postgres-user-temp-dir*)
+  (format *postgres-debug-stream* "~%(caching all lexical entries)")
+  (cache-all-lex-entries *lexicon*)
   (let ((obj-semi-main-filename (format nil "~asemi.obj.main" *postgres-user-temp-dir*))
 	(obj-semi-args-filename (format nil "~asemi.obj.args" *postgres-user-temp-dir*))
 	(obj-semi-sec-filename (format nil "~asemi.obj.sec" *postgres-user-temp-dir*)))
@@ -1333,6 +1362,8 @@
     (dump-obj-semi-args  obj-semi-args-filename)
     (format *postgres-debug-stream* "~%(dumping obj_semi_secondaries to file ~a)" obj-semi-sec-filename)
     (dump-obj-semi-secondaries  obj-semi-sec-filename))
+  (format *postgres-debug-stream* "~%(clearing cache)")
+  (empty-cache *lexicon*)
   (lkb-beep))
 
 ;;;

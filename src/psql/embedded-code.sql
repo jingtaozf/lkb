@@ -78,6 +78,12 @@ INSERT INTO qry VALUES
          'SELECT $0 FROM current_grammar WHERE name ILIKE $1' );
 
 
+INSERT INTO qrya VALUES ( 'retrieve-all-entries', 0, 'select-list' );
+INSERT INTO qry VALUES 
+       ( 'retrieve-all-entries', 1, 
+         'SELECT $0 FROM current_grammar' );
+
+
 INSERT INTO qrya VALUES ( 'initialize-current-grammar', 0, 'where-subcls' );
 INSERT INTO qry VALUES 
        ( 'initialize-current-grammar', 1, 
