@@ -130,8 +130,7 @@
          (event-dispatch) ; get remove-subviews redrawing over and done with
          (erase-region existing (clip-region existing))))
    (let*
-      ((ccl:*idle-sleep-ticks* 0) ; don't let get-next-event give much time to others
-       (*type-display* t)
+      ((*type-display* t)
        (*type-records* nil)
        (font (lkb-type-tree-font))
        (ascent (font-info font))
@@ -145,7 +144,7 @@
        (max-y (graph-description-max-y description))
        (fake-window 
          (make-instance 'picture-field-window
-            :view-font font :view-size #@(5000 #x7fff))))
+            :view-font font :view-size (make-point max-x max-y))))
       (graph-display-output fake-window description
          #'(lambda (str node)
               (with-focused-view str

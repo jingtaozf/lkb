@@ -60,8 +60,7 @@
 
 (defun draw-chart-lattice (node title &optional (horizontalp t))
    (let*
-      ((ccl:*idle-sleep-ticks* 0) ; don't let get-next-event give much time to others
-       (*chart-display* t)
+      ((*chart-display* t)
        (*chart-records* nil)
        (*chart-font* (lkb-chart-font))
        (*chart-bold-font* (lkb-chart-bold-font))
@@ -76,7 +75,7 @@
        (max-y (graph-description-max-y description))
        (fake-window 
           (make-instance 'picture-field-window
-             :view-font *chart-font* :view-size #@(10000 10000))))
+             :view-font *chart-font* :view-size (make-point max-x max-y))))
       (graph-display-output fake-window description
          #'(lambda (str node)
             (move str 0 ascent)

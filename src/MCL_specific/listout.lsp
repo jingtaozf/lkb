@@ -24,8 +24,7 @@
 
 (defun draw-active-list (string-and-item-list title menu-command-and-action-list)
    (let*
-      ((ccl:*idle-sleep-ticks* 0) ; don't let get-next-event give much time to others
-       (font (lkb-list-font))
+      ((font (lkb-list-font))
        (line-spacing (* (font-height (font-info font)) 2))
        (max-x
           (reduce #'max string-and-item-list :key
@@ -33,12 +32,13 @@
                  (string-width (car string-and-item) font))))
        (max-y
           (* (1+ (length string-and-item-list)) line-spacing))
+       (offset-x 2)
        (fake-window 
           (make-instance 'picture-field-window
-             :view-font font :view-size #@(10000 10000)))
+             :view-font font :view-size (make-point (+ max-x offset-x) max-y)))
        (n 0))
       (dolist (string-and-item string-and-item-list)
-         (move-to fake-window 2 (* (incf n) line-spacing))
+         (move-to fake-window offset-x (* (incf n) line-spacing))
          (let ((start-pos (current-position fake-window)))
             (write-string (car string-and-item) fake-window)
             (add-active-list-region

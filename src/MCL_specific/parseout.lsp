@@ -44,8 +44,7 @@
 
 (defun draw-new-parse-tree (node title horizontalp)
    (let*
-      ((ccl:*idle-sleep-ticks* 0) ; don't let get-next-event give much time to others
-       (*tree-records* nil)
+      ((*tree-records* nil)
        (font (lkb-parse-tree-font))
        (bold-font (cons :bold font))
        (ascent (font-info font))
@@ -62,7 +61,7 @@
        (max-y (graph-description-max-y description))
        (fake-window 
           (make-instance 'picture-field-window
-             :view-font font :view-size #@(5000 5000))))
+             :view-font font :view-size (make-point max-x max-y))))
       (graph-display-output fake-window description
          #'(lambda (str edge-symbol)
              (move str 0 ascent)
