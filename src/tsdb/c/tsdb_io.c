@@ -649,6 +649,21 @@ BOOL tsdb_write_tuple(Tsdb_key_list* bar,FILE *output)
 
 Tsdb_tuple *tsdb_read_tuple(Tsdb_relation *relation, FILE *input) {
 
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_read_tuple()
+|*     version: 
+|*  written by: oe, dfki saarbruecken
+|* last update: 31-jul-95
+|*  updated by: oe, dfki saarbruecken
+|*****************************************************************************|
+|*
+|*****************************************************************************|
+|* <known bugs>
+|* There is a (small) memory leak for invalid tuples because `value' and
+|* `tuple' are not free(2)d.
+\*****************************************************************************/
+
   Tsdb_tuple *tuple;
   Tsdb_value *value;
   char buf[1024+1];
@@ -664,7 +679,6 @@ Tsdb_tuple *tsdb_read_tuple(Tsdb_relation *relation, FILE *input) {
 
     if(buf[0] != '\n') {
       *(char *)strchr(&buf[0], '\n') = TSDB_FS;
-      /* tom : changed strrchr -> strchr */
       for(field = &buf[0], n = 0, fs = strchr(field, TSDB_FS);
           n < relation->n_fields && fs != NULL;
           field = ++fs, n++, fs = strchr(field, TSDB_FS)) {
@@ -676,9 +690,21 @@ Tsdb_tuple *tsdb_read_tuple(Tsdb_relation *relation, FILE *input) {
             value->value.integer = foo;
           } /* if */
           else {
-            fprintf(tsdb_error_stream, "tsdb_read_tuple(): non-integer ");
-            fprintf(tsdb_error_stream, "`%s' in field `%s' of `%s'.\n",
+            fprintf(tsdb_error_stream,
+                    "read_tuple(): non-integer `%s' as `%s' in `%s'",
                     field, relation->fields[n], relation->name);
+            if(n) {
+              if(tuple->fields[0]->type == TSDB_INTEGER) {
+                fprintf(tsdb_error_stream,
+                        " (%d)", tuple->fields[0]->value.integer);
+              } /* if */
+              else {
+                fprintf(tsdb_error_stream,
+                        " (%s)", tuple->fields[0]->value.string);
+              } /* else */
+            } /* if */
+            fprintf(tsdb_error_stream, ".\n");
+            fflush(tsdb_error_stream);
             return(Tsdb_tuple *)NULL;
           } /* else */
         } /* if */
@@ -995,6 +1021,9 @@ Tsdb_selection *tsdb_read_table(Tsdb_relation *relation,
     return(selection);
   } /* if */
   else {
+    fprintf(tsdb_error_stream,
+            "read_table(): no data file for `%s'.\n", relation->name);
+    fflush(tsdb_error_stream);
     return((Tsdb_selection *)NULL);
   } /* else */
 
