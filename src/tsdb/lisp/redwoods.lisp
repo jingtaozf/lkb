@@ -73,7 +73,7 @@
           (unless interactive
             (install-gc-strategy 
              nil :tenure *tsdb-tenure-p* :burst t :verbose t)))
-         (frame (unless strip
+         (frame (unless #-:expand strip #+:expand nil
                   (clim:make-application-frame 'lkb::compare-frame)))
          %client%)
     (declare (special %client%))
@@ -104,7 +104,7 @@
         initially
           #+:debug
           (setf lkb::%frame% frame)
-          (unless strip
+          (unless #-:expand strip #+:expand nil
             (setf (lkb::compare-frame-chart frame) nil)
             (setf (clim:frame-pretty-name frame) title)
             (setf (lkb::compare-frame-controller frame) *current-process*))
@@ -243,7 +243,7 @@
                          "(~a) ~a on ~a: ~a (~a)"
                          version user date confidence foo)
                         "")))
-           (edges (unless strip
+           (edges (unless (or #-:expand strip #+:expand (null trees))
                     #+:allegro
                     (format
                      excl:*initial-terminal-io*
@@ -285,7 +285,7 @@
                                  "parse-id == ~a && t-version == ~a" 
                                  parse-id version) 
                                 data)))
-           (discriminants (unless strip
+           (discriminants (unless #-:expand strip #+:expand nil
                             #+:allegro
                             (format
                              excl:*initial-terminal-io*
@@ -381,6 +381,7 @@
       (declare (ignore active))
 
       (when strip
+        #-:expand
         (loop
             with preferences = (select '("parse-id" "t-version" "result-id")
                                        '(:integer :integer :integer)
@@ -441,6 +442,7 @@
         (loop
             for decision in decisions
             do (write-decision strip decision :cache cache))
+        #-:expand
         (return-from browse-tree (acons :status :save nil)))
 
       (when (null edges)
@@ -479,6 +481,9 @@
            #'lkb::run-compare-frame frame)))
 
       (let ((status (lkb::set-up-compare-frame frame lkb::*parse-record*)))
+        #+:expand
+        (lkb::record-decision (lkb::make-decision :type :save) frame)
+        #-:expand
         (unless (eq status :skip)
           (process-add-arrest-reason *current-process* :wait)))
       
@@ -498,7 +503,9 @@
             (write-tree strip tree :cache cache)))
 
         (when (eq status :save)
-          (let* ((version (if version (incf version) 1))
+          (let* ((version (if version 
+                            #-:expand (incf version) #+:expand version
+                            1))
                  (edges (lkb::compare-frame-in frame))
                  (active (length edges))
                  (foo (lkb::compare-frame-confidence frame))
@@ -519,6 +526,7 @@
                           (if end 
                             (decode-time end :long :tsdb)
                             (current-time :long :tsdb)))))
+            #-:expand
             (write-tree data (pairlis '(:parse-id 
                                         :t-version :t-active :t-confidence
                                         :t-author :t-start :t-end :t-comment)
@@ -538,6 +546,7 @@
                                                    version id))
                                     :cache cache)))
 
+          #-:expand
           (when (and (lkb::decision-p recent)
                      (member (lkb::decision-type recent) '(:reject :select)))
             (let* ((version (or version 1))
@@ -557,7 +566,7 @@
                                              state type nil nil 
                                              start end time))
                               :cache cache)))
-          
+          #-:expand
           (loop
               with version = (or version 1)
               for discriminant in (lkb::compare-frame-discriminants frame)
@@ -581,7 +590,7 @@
                                                state type key value 
                                                start end time))
                                 :cache cache))
-          
+          #-:expand
           (let* ((update (lkb::compare-frame-update frame))
                  (discriminants (lkb::compare-frame-discriminants frame))
                  (decisions (loop

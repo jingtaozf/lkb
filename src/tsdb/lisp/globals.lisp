@@ -162,9 +162,9 @@
 
 (defparameter *redwoods-export-values* :all)
 
-(defparameter *redwoods-thinning-export-p* t)
+(defparameter *redwoods-thinning-export-p* nil)
 
-(defparameter *redwoods-thinning-normalize-p* t)
+(defparameter *redwoods-thinning-normalize-p* nil)
 
 (defvar *reconstruct-cache* nil)
 
