@@ -13,33 +13,34 @@
 
 (defstruct mark-field seen active tree-depth)
         
-(defun active-node-p (type-record)
-   (mark-field-active (type-marks type-record)))
+(defmacro active-node-p (type-record)
+   `(mark-field-active (type-marks ,type-record)))
 
-(defun seen-node-p (type-record)
-   (mark-field-seen (type-marks type-record)))
+(defmacro seen-node-p (type-record)
+   `(mark-field-seen (type-marks ,type-record)))
 
-(defun mark-node-active-and-seen (type-record)
-   (setf (mark-field-active (type-marks type-record)) t)
-   (setf (mark-field-seen (type-marks type-record)) t))
+(defmacro mark-node-active-and-seen (type-record)
+   `(let ((.type-marks. (type-marks ,type-record)))
+      (setf (mark-field-active .type-marks.) t)
+      (setf (mark-field-seen .type-marks.) t)))
 
-(defun mark-node-active (type-record)
-   (setf (mark-field-active (type-marks type-record)) t))
+(defmacro mark-node-active (type-record)
+   `(setf (mark-field-active (type-marks ,type-record)) t))
 
-(defun mark-node-seen (type-record)
-   (setf (mark-field-seen (type-marks type-record)) t))
+(defmacro mark-node-seen (type-record)
+   `(setf (mark-field-seen (type-marks ,type-record)) t))
 
-(defun mark-node-seen-mark (type-record mark)
-   (push mark (mark-field-seen (type-marks type-record))))
+(defmacro mark-node-seen-mark (type-record mark)
+   `(push ,mark (mark-field-seen (type-marks ,type-record))))
 
-(defun unmark-node-active (type-record)
-      (setf (mark-field-active (type-marks type-record)) nil))
+(defmacro unmark-node-active (type-record)
+   `(setf (mark-field-active (type-marks ,type-record)) nil))
    
-(defun clear-marks (type-record)
-  (when (type-marks type-record)
-      (setf (mark-field-active (type-marks type-record)) nil)
-      (setf (mark-field-seen (type-marks type-record)) nil)))
+(defmacro clear-marks (type-record)
+   `(let ((.type-marks. (type-marks ,type-record)))
+      (when .type-marks.
+         (setf (mark-field-active .type-marks.) nil)
+         (setf (mark-field-seen .type-marks.) nil))))
    
-(defun create-mark-field (type-record)
-   (setf (type-marks type-record) (make-mark-field)))
-   
+(defmacro create-mark-field (type-record)
+   `(setf (type-marks ,type-record) (make-mark-field)))

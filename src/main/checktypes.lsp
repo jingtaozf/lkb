@@ -474,14 +474,17 @@
 
 |#
 
-(defun collect-highest-intersects (descendants)
-  (for node in descendants
+(defun collect-highest-intersects (xs)
+  (for type in xs
        do
-       (let ((node-entry (get-type-entry node)))         
-         (when (and (seen-node-p node-entry)
-                    (not (active-node-p node-entry)))
-           (push node *wanted*))
-         (clear-marks node-entry))))
+       (let ((type-entry (get-type-entry type)))         
+         (cond 
+            ((not (seen-node-p type-entry)))
+            ((not (active-node-p type-entry))
+               ;; seen but not active
+               (push type *wanted*)
+               (clear-marks type-entry))
+            (t (clear-marks type-entry))))))
   
            
 
