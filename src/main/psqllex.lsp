@@ -499,7 +499,7 @@
 ;;; todo: DB fn instead
 (defmethod retrieve-record ((lexicon psql-lex-database) id)
   (let* (
-	 (sql-str (sql-retrieve-entries lexicon (make-requested-fields lexicon) (symbol-to-str-format id)))
+	 (sql-str (sql-retrieve-entry lexicon (make-requested-fields lexicon) (symbol-to-str-format id)))
 	 ;(sql-str (format nil "SELECT ~a FROM ~a WHERE ~a='~a';" 
 		;	  (make-requested-fields lexicon)
 			;  "erg_max_version"
@@ -794,6 +794,9 @@
 (defmethod sql-retrieve-entries ((lexicon psql-lex-database) select-list word)
   (fn lexicon 'retrieve-entries select-list word))
 
+(defmethod sql-retrieve-entry ((lexicon psql-lex-database) select-list word)
+  (fn lexicon 'retrieve-entry select-list word))
+
 (defmethod retrieve-fn-defns ((lexicon psql-lex-database))
   (let* ((sql-str (format nil "SELECT * FROM ergq;"))
 	 (records (make-column-map-record (run-query 
@@ -854,6 +857,7 @@
 	)
   (loop
       with max = (1- (length str))
+      and c
       for i from 0 to max
       with max-arg = -1
       and arg

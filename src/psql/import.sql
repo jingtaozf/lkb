@@ -112,6 +112,8 @@ INSERT INTO ergq VALUES ( 'lookup-word', 1, 'SELECT name FROM erg_max_version WH
 INSERT INTO ergq VALUES ( 'next-version', 1, 'SELECT 1 + max(version) FROM erg WHERE name = $0');
 INSERT INTO ergq VALUES ( 'next-id', 0, 'SELECT 1 + max(id) FROM erg');
 INSERT INTO ergq VALUES ( 'retrieve-entries', 2, 'SELECT $0 FROM erg_max_version WHERE name IN (SELECT name FROM erg_max_version WHERE orthkey = $1)' );
+INSERT INTO ergq VALUES ( 'retrieve-entry', 2, 'SELECT $0 FROM erg_max_version WHERE name IN (SELECT name FROM erg_max_version WHERE name = $1)' );
+-- INSERT INTO ergq VALUES ( 'test', 1, '$0' );
 
 CREATE TABLE ergqa (
   fn VARCHAR(50),
@@ -124,3 +126,6 @@ INSERT INTO ergqa VALUES ( 'lookup-word', 0, 'text' );
 INSERT INTO ergqa VALUES ( 'next-version', 0, 'text');
 INSERT INTO ergqa VALUES ( 'retrieve-entries', 0, 'select-list' );
 INSERT INTO ergqa VALUES ( 'retrieve-entries', 1, 'text' );
+INSERT INTO ergqa VALUES ( 'retrieve-entry', 0, 'select-list' );
+INSERT INTO ergqa VALUES ( 'retrieve-entry', 1, 'text' );
+-- INSERT INTO ergqa VALUES ( 'test', 0, 'select-list' );
