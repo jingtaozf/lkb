@@ -614,19 +614,29 @@
 ;;; db filter
 ;;;
 
-(defmethod set-filter ((lexicon psql-lex-database))  
+(defmethod set-filter ((lexicon psql-lex-database) &rest rest)  
   (let* ((old-filter (get-filter lexicon))
-	(filter
-         (ask-user-for-x "Alter filter" 
-                         (cons "New filter?" old-filter))))
+	 (filter
+	 (cond
+	  ((= (length rest) 0)
+	   (ask-user-for-x "Alter filter" 
+                         (cons "New filter?" old-filter)))
+	  ((= (length rest) 1)
+	   (first rest))
+	  (t
+	   (error "too many arguments")))))
+;  (let* ((old-filter (get-filter lexicon))
+;	(filter
+;         (ask-user-for-x "Alter filter" 
+;                         (cons "New filter?" old-filter))))
     (when (or (null filter) (string= filter old-filter))
       (format t "Database filter unchanged")
       (return-from set-filter))
     (when (catch 'pg:sql-error
-	  (format *postgres-debug-stream* "~%(applying new filter to db and rebuilding current grammar)")
-	  (fn-get-records lexicon ''initialize-current-grammar filter)
-	  (empty-cache lexicon)
-	  nil)
+	    (format *postgres-debug-stream* "~%(applying new filter to db and rebuilding current grammar)")
+	    (fn-get-records lexicon ''initialize-current-grammar filter)
+	    (empty-cache lexicon)
+	    nil)
       (lkb-beep)
       (set-filter lexicon))
     (format *postgres-debug-stream* "~%(new filter: ~a )" filter)))
@@ -635,8 +645,8 @@
   (fn-get-records lexicon ''initialize-current-grammar filter)
   (empty-cache lexicon))
 
-(defun set-filter-psql-lexicon nil
-  (set-filter *psql-lexicon*))
+(defun set-filter-psql-lexicon (&rest rest)
+  (apply #'set-filter (cons *psql-lexicon* rest)))
 
 ;;;
 ;;; LexDB menu commands
