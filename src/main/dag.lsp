@@ -525,6 +525,10 @@
    (if (null (cdr tlist))
       (if (and (symbolp type) (symbolp (car tlist)))
          ;; this result can be cached - a single disjunct and only in first argument
+         ;; We're bypassing greatest-common-subtype here since we don't have strings
+         ;; and we want to cache an atomic type (which is represented as a list) to
+         ;; save consing. There's special-purpose code for this in the caching which
+         ;; we would otherwise not be able to get to
          (cached-greatest-common-subtype tlist type t)
          (let ((res (greatest-common-subtype type (car tlist))))
             (cond
@@ -763,6 +767,9 @@
 ;;; not already in one. If we are, we'll be leaving :outside in copy slots
 ;;; so subsequent copying will have to take care. On entry we assume that 
 ;;; copy slots will be empty (or at least not contain :outside or :inside)
+;;; We use 2 markers: :outside is used to mark where we've been already so
+;;; we don't go checking re-entrant structure that we've already checked,
+;;; and :inside is used for the cyclic check itself
 
 (defun cyclic-dag-p (dag)   
    ;; return t if cyclic
