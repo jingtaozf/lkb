@@ -889,6 +889,18 @@ int tsdb_relation_in_selection(Tsdb_selection* selection,char* name)
 } /* tsdb_relation_in_selection */
 
 /*---------------------------------------------------------------------------*/
+BOOL tsdb_attribute_in_relation(Tsdb_relation *relation,char *name) {
+  int j;
+
+  for (j=0;j<relation->n_fields;j++) {
+    if (!strcmp(relation->fields[j],name))
+      return(TRUE);
+  } /* for */
+
+  return(FALSE);
+} /* tsdb_attribute_in_relation() */
+
+/*---------------------------------------------------------------------------*/
 
 BOOL tsdb_attribute_in_selection(Tsdb_selection *selection, char *name)
 {
