@@ -25,7 +25,8 @@
      :components
      ((:file "pg-package")
       (:file "bind-libpq")
-      (:file "sql")))))
+      (:file "sql")
+      (:file "sql2")))))
 
 
 
