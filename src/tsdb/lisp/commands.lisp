@@ -528,7 +528,7 @@
                    prefix options)))))
     (:kill
      (format stream "~atsdb(): performing full PVM reset ..." prefix)
-     (pvm_quit)
+     (pvm_halt :user (current-user))
      (sleep 1)
      (setf *pvm-clients* nil)
      (format stream " done; no active PVM clients.~%~%"))

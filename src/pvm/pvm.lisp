@@ -332,18 +332,21 @@
                  "~&pvm_task_info(): error `~a'.~%" condition))
               (or result :error)))))))))
 
+(defun pvm_halt (&key (user (system:getenv "USER")))
+  (pvm_quit)
+  (let ((file (format nil "/tmp/.pvm.halt.~a.~a" user (gensym ""))))
+    (with-open-file (stream file :direction :output :if-exists :supersede)
+      (format stream "halt~%"))
+    (run-process 
+     *pvm* :wait t 
+     :output "/dev/null" :if-output-exists :append
+     :error-output "/dev/null" :if-error-output-exists :append
+     :input file)
+    (when (probe-file file) (delete-file file))))
+
 (defun pvm_start (&key reset (user (system:getenv "USER")))
-  (when reset
-    (pvm_quit)
-    (let ((file (format nil "/tmp/.pvm.halt.~a.~a" user (gensym ""))))
-      (with-open-file (stream file :direction :output :if-exists :supersede)
-        (format stream "halt~%"))
-      (run-process 
-       *pvm* :wait t 
-       :output "/dev/null" :if-output-exists :append
-       :error-output "/dev/null" :if-error-output-exists :append
-       :input file)
-      (when (probe-file file) (delete-file file))))
+  (pvm_quit)
+  (when reset (pvm_halt :user user))
   (let ((status (run-process 
                  *pvmd* :wait t 
                  :output "/dev/null" :if-output-exists :append
