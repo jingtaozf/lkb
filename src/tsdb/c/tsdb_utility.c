@@ -1996,12 +1996,19 @@ char** tsdb_condition_attributes(Tsdb_node *node,
           kaerb = TRUE;
       
       if (!kaerb) {
-        if (!(i<*s_attributes)) {
-          *s_attributes *= 2;
-          attributes = (char**)realloc(attributes,*s_attributes*sizeof(char*));
+        if (!tsdb_is_attribute(node->node)) {
+          fprintf(tsdb_error_stream,
+                  "condition_attributes: %s is not an attribute\n",
+                  node->node->value.string);
+          attributes[i] = NULL;
         }
-        attributes[i++] = strdup(node->node->value.string);
-        attributes[i] = NULL;
+        else {
+          if (!(i<*s_attributes)) {
+            *s_attributes *= 2;
+            attributes = (char**)realloc(attributes,*s_attributes*sizeof(char*));
+          }
+          attributes[i++] = strdup(node->node->value.string);
+        } /* else */
       } /* if */
     } /* else */
   } /* else */
