@@ -7,7 +7,13 @@ proc Blt_MakePkgIndex { dir } {
     foreach lib {  } {
 	catch { load ${lib}${suffix} BLT }
     }
-    set library BLT${version_no_dots}${suffix}
+    # Determine whether to load the normal BLT library or 
+    # the "lite" tcl-only version.
+    if { [info commands tk] == "tk" } {
+        set library BLT${version_no_dots}${suffix}
+    } else {
+        set library BLTlite${version_no_dots}${suffix}
+    }
     global tcl_platform
     if { $tcl_platform(platform) == "unix" } {
 	set library [file join [file dirname $dir] lib${library}]

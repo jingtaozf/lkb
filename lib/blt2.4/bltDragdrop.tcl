@@ -1,5 +1,5 @@
 #
-# bltDnd.tcl
+# bltDragdrop.tcl
 #
 # ----------------------------------------------------------------------
 # Bindings for the BLT drag&drop command
@@ -32,19 +32,19 @@
 # ======================================================================
 
 if { $tcl_version >= 8.0 } {
-    set cmd blt::dnd
+    set cmd blt::drag&drop
 } else {
-    set cmd dnd
+    set cmd drag&drop
 }
 for { set i 1 } { $i <= 5 } { incr i } {
-    bind BltDndButton$i <ButtonPress-$i>  [list $cmd select %W %X %Y %t]
-    bind BltDndButton$i <B$i-Motion>	  [list $cmd drag %W %X %Y]
-    bind BltDndButton$i <ButtonRelease-$i> [list $cmd drop %W %X %Y]
+    bind BltDrag&DropButton$i <ButtonPress-$i>  [list $cmd drag %W %X %Y]
+    bind BltDrag&DropButton$i <B$i-Motion>	  [list $cmd drag %W %X %Y]
+    bind BltDrag&DropButton$i <ButtonRelease-$i> [list $cmd drop %W %X %Y]
 }
 
 # ----------------------------------------------------------------------
 #
-# DndInit --
+# Drag&DropInit --
 #
 #	Invoked from C whenever a new drag&drop source is created.
 #	Sets up the default bindings for the drag&drop source.
@@ -60,43 +60,16 @@ for { set i 1 } { $i <= 5 } { incr i } {
 #
 # ----------------------------------------------------------------------
 
-proc blt::DndInit { widget button } {
+proc blt::Drag&DropInit { widget button } {
     set tagList {}
     if { $button > 0 } {
-	lappend tagList BltDndButton$button
+	lappend tagList BltDrag&DropButton$button
     }
     foreach tag [bindtags $widget] {
-	if { ![string match BltDndButton* $tag] } {
+	if { ![string match BltDrag&DropButton* $tag] } {
 	    lappend tagList $tag
 	}
     }
     bindtags $widget $tagList
 }
 
-proc blt::DndStdDrop { widget args } {
-    array set info $args
-    set fmt [lindex $info(formats) 0]
-    dnd pull $widget $fmt 
-    return 0
-}
-
-proc blt::PrintInfo { array } {
-    upvar $array state
-
-    parray state
-    if { $info(state) & 0x01 } {
-	puts "Shift-Drop"
-    }
-    if { $info(state) & 0x02 } {
-	puts "CapsLock-Drop"
-    }
-    if { $info(state) & 0x04 } {
-	puts "Control-Drop"
-    }
-    if { $info(state) & 0x08 } {
-	puts "Alt-Drop"
-    }
-    if { $info(state) & 0x10 } {
-	puts "NumLock-Drop"
-    }
-}
