@@ -189,8 +189,6 @@
 ;;;
 ;;; daughters-restricted field of rules must be kept in synch with optimised paths.
 ;;; This is done when a rule is read in
-;;;
-;;; (optimise-check-unif-paths)
 
 (defun optimise-check-unif-paths nil
    (unless *check-paths*
@@ -256,6 +254,8 @@
 
 
 #|
+(optimise-check-unif-paths)
+
 ;;; update rules in situ with unif paths
 
 (dolist (table (list *rules* *lexical-rules*))
