@@ -204,10 +204,7 @@
                   (format t "~%Invalid type ~A" type)
                   nil)
                (t
-                (cond 
-                 ((atomic-type-p type)
-                  (create-atomic-dag type))
-                 (t (create-typed-dag type)))))))
+                 (create-typed-dag type)))))
       (t (error "~%Invalid path specification ~A"
             path-or-value)))
      #+(and mcl powerpc)(incf ff (CCL::%HEAP-BYTES-ALLOCATED))))
@@ -219,10 +216,10 @@
            ;; can get called with null path and dag-instance=nil
            (if dag-instance (deref-dag dag-instance) nil)))
       (cond
-         ((null labels-chain) real-dag)
-         ((is-atomic real-dag) nil)
-         (t
-          (let* ((next-feature (car labels-chain))
+          ((null labels-chain) real-dag)
+          ((atomic-type-p (unify-get-type real-dag)) nil)
+          (t
+           (let* ((next-feature (car labels-chain))
                  (found
                    (unify-arcs-find-arc next-feature
                                         (dag-arcs real-dag)
@@ -246,7 +243,7 @@
            (if dag-instance (deref-dag dag-instance) nil)))
       (cond
          ((null labels-chain) real-dag)
-         ((is-atomic real-dag) nil)
+         ((atomic-type-p (unify-get-type real-dag)) nil)
          (t
             (let ((next-type (type-feature-pair-type (car labels-chain))))
                (if (is-valid-type next-type)
@@ -310,7 +307,6 @@
 (defun existing-dag-at-end-of (real-dag labels-chain)
    (cond 
       ((null labels-chain) real-dag)
-      ((is-atomic real-dag) nil)
       (t
          (let ((one-step-down
                   (get-dag-value real-dag

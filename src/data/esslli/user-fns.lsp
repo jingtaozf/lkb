@@ -13,13 +13,13 @@
          (daughter3 (get-value-at-end-of rule-fs '(ARGS REST REST
 FIRST))))
     (declare (ignore mother))
-    (unless (and daughter1 (not (eql daughter1 'no-way-through)))
+    (unless daughter1 
       (cerror "Ignore it" "Rule without daughter"))
     (append (list nil '(ARGS FIRST))
-            (if (and daughter2 (not (eql daughter2 'no-way-through)))
+            (if daughter2
                 (list '(ARGS REST FIRST)))
-            (if (and daughter3 (not (eql daughter3 'no-way-through)))
-                (if (and daughter2 (not (eql daughter2 'no-way-through)))
+            (if daughter3
+                (if daughter2 
                     (list '(ARGS REST REST FIRST)))))))
 
 

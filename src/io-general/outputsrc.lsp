@@ -501,13 +501,11 @@
   (declare (special *res*))
   (let ((real-dag (follow-pointers dag-instance)))
       (pushnew 
-       (let ((val (type-of-fs real-dag)))
-         (if (listp val) (car val) val))
+       (type-of-fs real-dag)
        *res* :test #'eq)
-      (unless (is-atomic real-dag)
-        (dolist (arc (dag-arcs real-dag))
-          (collect-types-from-fs 
-           (get-dag-value real-dag (dag-arc-attribute arc)))))))
+      (dolist (arc (dag-arcs real-dag))
+        (collect-types-from-fs 
+         (get-dag-value real-dag (dag-arc-attribute arc))))))
 
 ;;; expand-local-only-constraints is
 ;;; called from checktypes if hierarchy-only-p is set

@@ -349,12 +349,7 @@
 
 (defun gen-chart-dag-index (index-dag edge-id)
    (if index-dag
-      (let ((index (unify-get-type index-dag))) ; may be called inside unif context
-         (when (and (consp index) (null (cdr index)))
-            ;; simplify single-item disjunction - doesn't need to be stored as
-            ;; an atomic type and will speed up subsequent type lookup
-            (setq index (car index)))
-         index)
+      (unify-get-type index-dag) ; may be called inside unif context
       (progn
          ;;(cerror (format nil "use type ~A" *toptype*)
          ;;   "unexpectedly missing index for edge ~A: ~S" edge-id dag)

@@ -179,8 +179,7 @@ Parse nodes need to be added so we can understand the display.
 
 (defun output-lilfes-fv-pair (feat value stream)
     (format stream "~A\\'~A'" (convert-lilfes-feature feat)
-            (convert-lilfes-type (if (listp value) (car value)
-                                   value))))
+            (convert-lilfes-type value)))
 
 (defun output-constraint-as-lilfes (fs stream)
   (format stream "~%/ constr\\")
@@ -242,8 +241,8 @@ Parse nodes need to be added so we can understand the display.
 (defun lilfes-rule-order (rule-fs name)
   (let ((nh-dtr (existing-dag-at-end-of rule-fs '(NON-HEAD-DTR)))
 	(h-dtr (existing-dag-at-end-of rule-fs '(HEAD-DTR))))
-    (when (and nh-dtr (not (eql nh-dtr 'no-way-through))
-	       h-dtr (not (eql h-dtr 'no-way-through)))
+    (when (and nh-dtr 
+	       h-dtr)
 	  (let ((first-dtr (existing-dag-at-end-of rule-fs '(ARGS FIRST))))
 	    (unless first-dtr
 		    (error "No first dtr in ~A" name))
@@ -262,13 +261,6 @@ Parse nodes need to be added so we can understand the display.
     (cond ((bool-value-true key-arg-left) "right")
           ((bool-value-true key-arg-right) "left")
 	  (t "error"))))
-
-(defun bool-value-true (fs)
-  (and fs
-       (let ((fs-type (type-of-fs fs)))
-         (and (listp fs-type)
-              (eql (car fs-type) '+)))))
-  
   
 ;(defun lilfes-rule-order-nonheaded (rule-fs name)
 ;  "right")

@@ -52,8 +52,8 @@
          (flag-value (dag-visit real-dag)))
      (unless (eql flag-value :sanitized)
        (setf (dag-visit real-dag) :sanitized)
-       (unless (is-atomic real-dag)
-         ; don't care about atomic things - they can't be relevant
+       (unless (not (has-features real-dag))
+         ; don't care about things without features
          (when (or (eq (type-of-fs real-dag) *diff-list-type*)
                    (subtype-p (type-of-fs real-dag) *diff-list-type*))
            (check-diff-list dag-instance id path-so-far ostream))
@@ -84,7 +84,7 @@
 
 (defun find-end-of-list (input-fs id path &optional (ostream t))
   (let* ((fs (follow-pointers input-fs)))
-    (if (is-atomic fs)
+    (if (not (has-features fs))
         (if (eq (type-of-fs fs) *empty-list-type*)
             fs
           (progn

@@ -478,21 +478,8 @@
 (defmacro create-dag nil
   `(make-dag :type *toptype* :arcs nil))
 
-(defun create-atomic-dag (type)
-  (make-dag
-   :type (if (consp type) type (list type))
-   :arcs nil))
-
-
-(defmacro type-spec-atomic-p (type)
-   `(consp ,type))
-
-
 ;;; NB don't use following inside unification since they ignore temporary structure
 ;;; (deref pointer, new-type, comp-arcs)
-
-(defmacro is-atomic (dag)
-   `(type-spec-atomic-p (dag-type ,dag)))                 
 
 (defmacro has-features (dag)
    `(consp (dag-arcs ,dag)))
@@ -502,18 +489,7 @@
 
 
 (defun top-level-features-of (dag)
-   (unless (is-atomic dag)
-      (mapcar #'(lambda (arc) (dag-arc-attribute arc)) (dag-arcs dag))))
-
-(defun get-top-features-and-values (dag)
-    (loop for arc in (dag-arcs dag)
-         collect
-         (let ((type (dag-type (dag-arc-value arc))))
-           (cons (dag-arc-attribute arc)
-                 (if (listp type)
-                     (car type)
-                   type)))))
-
+  (mapcar #'(lambda (arc) (dag-arc-attribute arc)) (dag-arcs dag)))
 
 (defun get-dag-value (dag attribute)
    (dolist (arc (dag-arcs dag) nil)
@@ -524,7 +500,6 @@
 (defun get-value-at-end-of (dag labels-chain)
    (cond
       ((null labels-chain) (type-of-fs dag))
-      ((is-atomic dag) 'no-way-through)
       (t
          (let ((one-step-down
                   (get-dag-value dag
@@ -653,86 +628,77 @@
 
 (defun unify2 (dag1 dag2 path)
   (multiple-value-bind (new-type constraintp)
-      (find-gcsubtype (unify-get-type dag1) (unify-get-type dag2))
+      (greatest-common-subtype (unify-get-type dag1) (unify-get-type dag2))
     (if new-type
-      (progn
-        (setf (dag-new-type dag1) new-type)
-        (if (type-spec-atomic-p new-type)
-          (if (or (dag-arcs dag1) (dag-comp-arcs dag1)
-                  (dag-arcs dag2) (dag-comp-arcs dag2))
-              (progn
-                (when *unify-debug*
-                  (if (eq *unify-debug* :return)
-                    (setf %failure% (list :atomic (reverse path)))
-                    (format 
-                     t 
-                     "~%Unification failed due to atomic/~
-                      non-atomic clash at path < ~{~A ~^: ~}>" 
-                     (reverse path))))
-                (throw '*fail* nil))
-            (setf (dag-forward dag2) dag1))
-          (progn
-            ;; unify in constraints if necessary - may have to copy them to
-            ;; prevent separate uses of same constraint in same unification
-            ;; becoming reentrant
-            (when (and constraintp *unify-wffs*)
-              (let ((constraint (if *expanding-types*
-                                    (possibly-new-constraint-of 
-                                     new-type)
-                                  (may-copy-constraint-of new-type))))
-;                (when *recording-constraints-p*
-;                  (pushnew new-type *type-constraint-list* :test #'eq))
-                (if  *unify-debug*
-                  (let ((res 
-                         (catch '*fail* (unify1 dag1 constraint path))))
-                    (unless res
-                      (if (eq *unify-debug* :return)
+        (progn
+          (setf (dag-new-type dag1) new-type)
+          ;; theory is that the atomic type check is spurious because
+          ;; an atomic type can't have a gcsubtype with a type 
+          ;; that has features.  Removing this check will mean that
+          ;; type constraints etc which specify features on atomic types
+          ;; are only found when we try and make them well-formed
+          
+        ;; unify in constraints if necessary - may have to copy them to
+        ;; prevent separate uses of same constraint in same unification
+        ;; becoming reentrant
+        (when (and constraintp *unify-wffs*)
+          (let ((constraint (if *expanding-types*
+                                (possibly-new-constraint-of 
+                                 new-type)
+                              (may-copy-constraint-of new-type))))
+            ;;                (when *recording-constraints-p*
+            ;;                (pushnew new-type *type-constraint-list* :test #'eq))
+            (if  *unify-debug*
+                (let ((res 
+                       (catch '*fail* (unify1 dag1 constraint path))))
+                  (unless res
+                    (if (eq *unify-debug* :return)
                         (setf %failure% 
                           (list :constraints 
                                 (reverse path) new-type nil nil))
-                        (progn (when *expanding-types*
-                                 (format 
-                                  t "Problem in ~A" *expanding-types*))
-                        (format 
-                         t 
-                         "~%Unification with constraint 
+                      (progn (when *expanding-types*
+                               (format 
+                                t "Problem in ~A" *expanding-types*))
+                             (format 
+                              t 
+                              "~%Unification with constraint 
                           of type ~A failed ~
                           at path < ~{~A ~^: ~}>" 
-                         new-type (reverse path))))
-                      (throw '*fail* nil)))
-                  (unify1 dag1 constraint path)))
-              ;; dag1 might just have been forwarded so dereference it again
-              (setq dag1 (deref-dag dag1)))
-            ;; cases for each of dag1 and dag2 where they have no arcs just
-            ;; considering straightforward use of unify1: if we've
-            ;; previously visited a node with no arcs then it must have got
-            ;; forwarded then so we won't ever visit it again - so no need
-            ;; to test for presence of any comp-arcs BUT:
-            ;; unify-paths-dag-at-end-of1 adds to comp-arcs independently so
-            ;; we do need the additional tests
-            (cond
-             ((and (null (dag-arcs dag1)) (null (dag-comp-arcs dag1)))
-              (setf (dag-new-type dag2) new-type)
-              (setf (dag-forward dag1) dag2))
-             ((and (null (dag-arcs dag2)) (null (dag-comp-arcs dag2)))
-              (setf (dag-forward dag2) dag1))
-             (t
-              (setf (dag-forward dag2) dag1)
-              (setf (dag-copy dag1) :inside)
-              (unify-arcs dag1 dag2 path)
-              (setf (dag-copy dag1) nil))))))
-      (progn
-        (when *unify-debug*
-          (if (eq *unify-debug* :return)
-            (setf %failure% 
-              (list :clash (reverse path) 
-                    (unify-get-type dag1) (unify-get-type dag2)))
-            (format 
-             t 
-             "~%Unification of ~A and ~A failed at path < ~{~A ~^: ~}>"
-             (unify-get-type dag1) (unify-get-type dag2) 
-             (reverse path))))
-        (throw '*fail* nil)))))
+                              new-type (reverse path))))
+                    (throw '*fail* nil)))
+              (unify1 dag1 constraint path)))
+          ;; dag1 might just have been forwarded so dereference it again
+          (setq dag1 (deref-dag dag1)))
+        ;; cases for each of dag1 and dag2 where they have no arcs just
+        ;; considering straightforward use of unify1: if we've
+        ;; previously visited a node with no arcs then it must have got
+        ;; forwarded then so we won't ever visit it again - so no need
+        ;; to test for presence of any comp-arcs BUT:
+        ;; unify-paths-dag-at-end-of1 adds to comp-arcs independently so
+        ;; we do need the additional tests
+        (cond
+         ((and (null (dag-arcs dag1)) (null (dag-comp-arcs dag1)))
+          (setf (dag-new-type dag2) new-type)
+          (setf (dag-forward dag1) dag2))
+         ((and (null (dag-arcs dag2)) (null (dag-comp-arcs dag2)))
+          (setf (dag-forward dag2) dag1))
+         (t
+          (setf (dag-forward dag2) dag1)
+          (setf (dag-copy dag1) :inside)
+          (unify-arcs dag1 dag2 path)
+          (setf (dag-copy dag1) nil))))
+  (progn
+    (when *unify-debug*
+      (if (eq *unify-debug* :return)
+          (setf %failure% 
+            (list :clash (reverse path) 
+                  (unify-get-type dag1) (unify-get-type dag2)))
+        (format 
+         t 
+         "~%Unification of ~A and ~A failed at path < ~{~A ~^: ~}>"
+         (unify-get-type dag1) (unify-get-type dag2) 
+         (reverse path))))
+    (throw '*fail* nil)))))
 
 (defmacro unify-arcs-find-arc (attribute arcs comp-arcs)
   ;; find arc in arcs or comp-arcs with given attribute - also used in
@@ -836,61 +802,6 @@
       (let ((new (copy-dag-completely constraint)))
 	(push new (cddr cache))		; new copy becomes used
 	new)))))
-
-
-;;; Greatest common subtype of two type specs - atomic (maybe a
-;;; disjunction) and/or non-atomic
-
-(defun find-gcsubtype (type1 type2)
-  (when (eq type1 type2) (return-from find-gcsubtype type1))
-  ;;#+(and mcl powerpc)(decf cc (CCL::%HEAP-BYTES-ALLOCATED))
-  ;;(multiple-value-prog1
-  (cond
-   ((and (not (type-spec-atomic-p type1)) (not (type-spec-atomic-p type2))) 
-    (greatest-common-subtype type1 type2))
-   ((not (type-spec-atomic-p type1)) (gcssemi type1 type2))
-   ((not (type-spec-atomic-p type2)) (gcssemi type2 type1))
-   ((and (null (cdr type1)) (null (cdr type2)))
-    (let ((res (greatest-common-subtype (car type1) (car type2))))
-      (cond
-       ((listp res) res)
-       ((eq res (car type1)) type1)
-       ((eq res (car type2)) type2)
-       (t (list res)))))
-   (t (gcslists type1 type2)))
-  ;;#+(and mcl powerpc)(incf cc (CCL::%HEAP-BYTES-ALLOCATED)))
-  )
-
-
-(defun gcssemi (type tlist)
-  ;; first arg is non-atomic, second is atomic
-  (if (null (cdr tlist))
-      (if (and (symbolp type) (symbolp (car tlist)))
-	  ;; this result can be cached - a single disjunct and only in
-	  ;; first argument We're bypassing greatest-common-subtype
-	  ;; here since we don't have strings and we want to cache an
-	  ;; atomic type (which is represented as a list) to save
-	  ;; consing. There's special-purpose code for this in the
-	  ;; caching which we would otherwise not be able to get to
-	  (cached-greatest-common-subtype tlist type t)
-	(let ((res (greatest-common-subtype type (car tlist))))
-	  (cond
-	   ((listp res) res)
-	   ((eq res (car tlist)) tlist)
-	   (t (list res)))))
-    (let ((res nil))
-      (dolist (t1 tlist res)
-	(let ((gcs (greatest-common-subtype t1 type)))
-	  (when gcs (pushnew (if (consp gcs) (car gcs) gcs) res)))))))
-
-(defun gcslists (tlist1 tlist2)
-   ;; called with two (atomic) disjunctive values, at least one of which has more
-   ;; than a single disjunct
-   (let ((res nil))
-      (dolist (t1 tlist1 res)
-         (dolist (t2 tlist2)
-            (let ((gcs (greatest-common-subtype t1 t2)))
-               (when gcs (pushnew (if (consp gcs) (car gcs) gcs) res)))))))
 
 
 ;;; Copy first feature structure after a successful unification, respecting
@@ -1085,7 +996,7 @@
          (setf (dag-visit dag) toptype-dag) ; 3/98 - avoid crashes with cyclic dags
          (let ((new-instance 
                   (make-dag
-                     :type (dag-type dag) ; no one must modify an atomic type (list)
+                     :type (dag-type dag) 
                      :arcs
                      (mapcar
                         #'(lambda (arc)
@@ -1245,30 +1156,36 @@
 
 (defun make-well-formed (fs features-so-far &optional type-name)
    (let ((real-dag (deref-dag fs)))
-     (cond ((dag-visit real-dag)        ; been here before
-           t)
-          (t
+     (or (dag-visit real-dag)        ; been here before
+         (let ((current-type (unify-get-type real-dag)))
            (setf (dag-visit real-dag) t)
-           (or (type-spec-atomic-p (unify-get-type real-dag)) ; atomic types are well-formed by definition 
-               (let
-                   ((fs-type (find-type-of-fs real-dag 
-                                              type-name features-so-far)))
-                   (if fs-type
-                     (cond ((and type-name
-                                 (or (eq fs-type type-name)
-                                     (subtype-p fs-type type-name)))
-                            (format t "~%Error in ~A: ~%  Type ~A occurs in constraint ~
+           (if (atomic-type-p current-type)
+               (if (not (dag-arcs real-dag))
+                   ;; atomic types are well-formed by definition 
+                   ;; as long as there aren't any features on the dag
+                   ;; this lookup may be a bit slow
+                   t
+                 (progn 
+                   (format t "~%Error in ~A: ~% Atomic type ~A specified to have features at ~:A" type-name current-type (reverse features-so-far))
+                   nil))
+             (let
+                 ((fs-type (find-type-of-fs real-dag current-type
+                                            type-name features-so-far)))
+               (if fs-type
+                   (cond ((and type-name
+                               (or (eq fs-type type-name)
+                                   (subtype-p fs-type type-name)))
+                          (format t "~%Error in ~A: ~%  Type ~A occurs in constraint ~
                                        for type ~A at ~:A"
-                                    type-name fs-type type-name (reverse features-so-far))
-                            nil)
-                           (t (really-make-well-formed real-dag fs-type 
-                                                       features-so-far type-name)))
-                   nil)))))))
+                                  type-name fs-type type-name (reverse features-so-far))
+                          nil)
+                         (t (really-make-well-formed real-dag fs-type 
+                                                     features-so-far type-name)))
+                 nil)))))))
 
 
-(defun find-type-of-fs (real-dag &optional id path)
+(defun find-type-of-fs (real-dag current-type id path)
    (let* ((existing-features (top-level-features-of real-dag))
-          (current-type (unify-get-type real-dag))
           (possible-type 
             (if existing-features 
                (maximal-type-of-list existing-features)
@@ -1317,10 +1234,12 @@
           nil)))))
 
 (defun really-make-features-well-formed (real-dag features-so-far type-name)
-  (loop for label in (top-level-features-of real-dag)
-      always (make-well-formed (get-dag-value real-dag label)
-			       (cons label features-so-far)
-			       type-name)))
+  (loop for arc in (dag-arcs real-dag)
+      always
+        (let ((label (dag-arc-attribute arc)))
+          (make-well-formed (dag-arc-value arc)
+                            (cons label features-so-far)
+                            type-name))))
 
 ;;; It is possible for two wffs to be unified and the result to need 
 ;;; the constraint of the resulting type to be unified in - 

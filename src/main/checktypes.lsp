@@ -714,11 +714,11 @@
                                (bit-code-subsume-p
                                   (type-bit-code entry) (type-bit-code (car tail))))
                               (return))))))))
-         (insert-new-type-into-hieriarchy
+         (insert-new-type-into-hierarchy
             (type-name glbtype-entry) glbtype-entry parents daughters))))
 
          
-(defun insert-new-type-into-hieriarchy (new-type new-type-entry parents daughters)
+(defun insert-new-type-into-hierarchy (new-type new-type-entry parents daughters)
    ;; ancestors and descendants are updated later in a single pass
    (create-mark-field new-type-entry)
    (set-type-entry new-type new-type-entry)   
@@ -851,7 +851,7 @@
 
 (defun inherit-constraints (node type-entry local-constraint)
   (if (type-atomic-p type-entry)
-      (create-atomic-dag node)
+      (create-typed-dag node)
     (let ((supers 
 	   (mapcar #'(lambda (parent)
 		       (expand-constraint parent (get-type-entry parent)))
@@ -1110,8 +1110,7 @@
 
 (defun collect-tails (node dag)
   (let* ((type (type-of-fs dag))
-	 (type-entry (unless (type-spec-atomic-p type)
-		       (get-type-entry type))))
+	 (type-entry (get-type-entry type)))
     (when type-entry
       (let ((tdfs (type-tdfs type-entry)))
 	(when (and tdfs

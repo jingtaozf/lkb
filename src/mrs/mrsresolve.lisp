@@ -81,18 +81,13 @@
   (let ((existing (assoc rel *rel-handel-store* :test #'eq)))
     (if existing (cdr existing)
         (let ((res
-               (loop for fvp in (rel-flist  rel)
-                    append
+               (loop for fvp in (rel-flist rel)
+                    nconc
                     (let ((val (fvpair-value fvp))
                           (feature (fvpair-feature fvp)))
-                      (cond ((is-handel-var val)
-                             (list (cons feature val)))
-                            ((listp val) 
-                             (loop for val-el in val
-                                 when (and (var-p val-el) 
-                                           (is-handel-var val-el))
-                                 collect (cons (fvpair-feature fvp) val-el)))
-                            (t nil))))))
+                      (if (is-handel-var val)
+                          (list (cons feature val))
+                          nil)))))
           (push (cons rel res) *rel-handel-store*)
           res))))
 

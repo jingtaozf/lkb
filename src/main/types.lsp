@@ -301,8 +301,8 @@
    `(svref *type-cache*
        (the fixnum (+ (the fixnum (ash (the fixnum ,x) 10)) (the fixnum ,y)))))
 
-(defmacro cached-greatest-common-subtype (type1 type2 type1-atomic-p)
-  `(let ((t1 ,(if type1-atomic-p `(car ,type1) type1))
+(defmacro cached-greatest-common-subtype (type1 type2)
+  `(let ((t1 ,type1)
          (t2 ,type2))
       (if (eq t1 *toptype*)
          ;; avoid caching on top type - result will always be other type
@@ -322,8 +322,6 @@
                       (values (car found) (cdr found))
                       (multiple-value-bind (subtype constraintp)
                            (full-greatest-common-subtype t1 t2)
-                         ,@(when type1-atomic-p
-                            `((when subtype (setq subtype (list subtype)))))
                          (setf (type-cache-entry i1 i2)
                             (nconc entry
                               (list (list* t1 t2 (cons subtype constraintp)))))
@@ -399,11 +397,9 @@
    ((arrayp type2) 
     (when (string-type-p type1) type2))
    (t
-    (cached-greatest-common-subtype type1 type2 nil))))
+    (cached-greatest-common-subtype type1 type2))))
 
 (defun full-greatest-common-subtype (type1 type2)
-  ;; atomic types should have been stripped down to their constituent type
-  ;; component(s) before this point
   (let ((t1 (get-type-entry type1))
 	(t2 (get-type-entry type2))
 	ptype1 ptype2)
@@ -471,13 +467,7 @@
                    (not (member type t2ancs :test #'eq)))
             (return t))))))
 
-;;; when called from generalisation this should only take non-atomic types 
-;;; as arguments and so disjunctions are not taken into consideration
-;;; e.g. if 
-;;; language (top) (OR english dutch italian spanish)
-;;; 
-;;; (least-common-supertype 'english 'dutch)
-;;; will return language
+;;; called from generalisation 
 
 (defun least-common-supertype (x y)
   (cond 
@@ -566,14 +556,6 @@
                      (greatest-common-subtype x y)))
                (mapcar #'maximal-type-of features))))
       
-
-;; Utility function
-
-(defun type-signature (type-entry)
-  (let ((tc (tdfs-indef (type-tdfs type-entry))))
-    (get-top-features-and-values tc)))
-               
-
 ;; Remove obsolete pointers from type constraints so that the garbage
 ;; collector can purge the structures they point to.
 

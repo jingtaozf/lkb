@@ -334,7 +334,7 @@
 (define-active-fs-window-command (com-type-fs-menu)
     ((type-thing 'type-thing :gesture :select))
   (let* ((type (type-thing-value type-thing))
-         (type-entry (get-type-entry (if (listp type) (car type) type)))
+         (type-entry (get-type-entry type))
          (type-label-list (type-thing-type-label-list type-thing))
          (full-tdfs (type-thing-full-tdfs type-thing))
 	 (frame clim:*application-frame*))

@@ -31,7 +31,7 @@
                                    (tdfs-indef fs)
                                                 fs)
                                'needs-affix)))
-    (and affix (equal (type-of-fs affix) '(true)))))
+    (and affix (bool-value-true affix))))
 
 (defun redundancy-rule-p (rule)
 ;;; a function which is used to prevent the parser 
@@ -45,7 +45,7 @@
                                    (tdfs-indef fs)
                                    fs) 
                                'productive)))
-    (and affix (equal (type-of-fs affix) '(false)))))
+    (and affix (bool-value-false affix))))
 
 
 (defun make-orth-tdfs (orth)

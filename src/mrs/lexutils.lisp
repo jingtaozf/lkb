@@ -158,7 +158,7 @@
                 (if ancestors
                     (find-strict-type (cons value ancestors)))))
           (if strict-type
-              (find-gcsubtype strict-type value))))
+              (greatest-common-subtype strict-type value))))
    value))
 |#
    

@@ -254,7 +254,7 @@
                             (tdfs-indef fs)
                             (append path *key-daughter-path*))))
                       (and dag
-                           (member (type-of-fs dag) '(+ (+)) :test #'equal)
+                           (bool-value-true dag)
                            path)))
                 (cdr f-list))))
           ;; if there is a key daughter, remaining daughters ordered to be

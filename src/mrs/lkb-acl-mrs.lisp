@@ -50,8 +50,8 @@
 
 (defun mrs-type-thing-command (mrs-type-thing)
   (let* ((type (mrs-type-thing-value mrs-type-thing))
-         (type-entry (if type (get-type-entry (if (listp type) (car type) type)))))
-    (when (and type (atom type) type-entry)
+         (type-entry (if type (get-type-entry type))))
+    (when (and type type-entry)
       (pop-up-menu
        `(("Type hierarchy" :value hier
 			    :active 

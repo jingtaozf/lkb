@@ -154,7 +154,7 @@
 	   (special *collecting-check-paths-p* *unify-dags-failed-p* 
 		    *unify-dags-fail-count* *fail-path-list*))
 	  (multiple-value-bind (new-type constraintp)
-	      (find-gcsubtype (unify-get-type dag1) (unify-get-type dag2))
+	      (greatest-common-subtype (unify-get-type dag1) (unify-get-type dag2))
 	    ;; --- new bit start
 	    (if (or new-type *collecting-check-paths-p*)
 		(progn
@@ -171,21 +171,6 @@
 		      (setf (gethash *unify-dags-fail-count* (cdr item)) t)))
 		  ;; --- new bit end
 		  (setf (dag-new-type dag1) new-type)
-		  (if (type-spec-atomic-p new-type)
-		      (if (or (dag-arcs dag1) (dag-comp-arcs dag1)
-			      (dag-arcs dag2) (dag-comp-arcs dag2))
-			  (progn
-			    (when *unify-debug*
-                              (if (eq *unify-debug* :return)
-                                (setf %failure% 
-                                  (list :atomic (reverse path)))
-                                (format 
-                                 t 
-                                 "~%Unification failed due to atomic/~
-                                  non-atomic clash at path < ~{~A ~^: ~}>" 
-                                 (reverse path))))
-			    (throw '*fail* nil))
-			(setf (dag-forward dag2) dag1))
 		    (progn
 		      ;; unify in constraints if necessary - may have to copy
 		      ;; them to prevent separate uses of same constraint in
@@ -229,7 +214,7 @@
 		       (t
                         (setf (dag-forward dag2) dag1)
                         (unify-arcs dag1 dag2 path)))
-		      (setf (dag-copy dag1) nil))))
+		      (setf (dag-copy dag1) nil)))
 	      (progn
 		;; Unification failed, and we aren't collecting failure stats
 		(when *unify-debug*
@@ -294,8 +279,6 @@
 			 (error "Inconsistency - *check-paths* uses feature ~A ~
                                  which is not in grammar" feat))))
 		   (type (type-of-fs (get-dag-value fs feat))))
-	      (when (consp type) 
-		(setq type (car type)))	; atomic type
 	      (let* ((types (cons (get-type-entry type) 
 				  (retrieve-descendants type)))
 		     (len (length types)))
@@ -347,7 +330,7 @@
 ;;; Statically compute set of restrictor values for a tdfs or dag, and check
 ;;; two sets of values for compatibility
 ;;;
-;;; !!! Won't work for type disjunctions
+
 
 (defun restrict-fs (fs)
   (loop for path-spec in *check-paths-optimised*
@@ -356,9 +339,6 @@
 	  (when v
 	    (let ((type (type-of-fs v)))
 	      (when type
-		;; check for atomic type and pop out name - if there was a
-		;; disjunction it will be lost at this point
-		(when (consp type) (setq type (car type)))
 		(if (consp (cdr path-spec))
 		    ;; there is a bit-vector encoding for the possible values
 		    ;; of this path, so use it instead of the type name
@@ -449,7 +429,6 @@
 (defun x-existing-dag-at-end-of (dag labels-chain)
   (cond 
    ((null labels-chain) dag)
-   ((is-atomic dag) nil)
    (t
     (let ((one-step-down (x-get-dag-value dag (car labels-chain))))
       (when one-step-down 

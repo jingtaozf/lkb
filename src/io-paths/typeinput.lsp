@@ -21,7 +21,7 @@
 ;;; Parents -> ( Typename_list ) | ( )
 ;;; Typename_list -> typename | typename Typename_list
 ;;; DefConstraint -> / persistence Constraint
-;;; Constraint -> Path_spec_list | Enumeration
+;;; Constraint -> Path_spec_list 
 ;;; Path_spec_list -> Path_spec | Path_spec Path_spec_list
 ;;; Path_spec -> EPath = Typevalue | Path = Path
 ;;; Typevalue -> typename | ( typename+ )
@@ -31,24 +31,11 @@
 ;;;                           Type_Feature_pair : Type_F_pair_list 
 ;;; Type_Feature_pair -> typename feature | feature
 ;;;
-;;; Enumeration -> (OR Typename_list)
 ;;; 
 ;;; typename and feature are terminal symbols (Lisp atoms)
 ;;; so is persistence
 ;;; other symbols are < > ( ) = : . /
 ;;; 
-;;; Enumeration is syntactic sugar for enumerated atomic types.  For example:
-;;; 
-;;; state (T) (OR solid liquid gas).
-;;; 
-;;; expands out into the equivalent of:
-;;; 
-;;; state (T).
-;;; solid (state).
-;;; liquid (state).
-;;; gas (state).
-;;; 
-;;; Syntactic sugar for lists is still to be defined
 
 (eval-when
     (compile load eval)
@@ -201,11 +188,6 @@
          ((char= next-char #\.) 
             (read-char istream)
             (add-type-from-file name parents nil nil comment))
-         ((char= next-char #\( )
-            (let ((daughters (read-disjunction istream name)))
-               (add-enumerated-types name daughters)
-               (add-type-from-file name parents nil nil comment daughters))
-            (check-for #\. istream name))
          ((char= next-char #\/)
             (let ((def-constraint 
                      (read-defaults istream name nil)))
@@ -260,23 +242,6 @@
             (read-defaults istream name defaults-so-far)
             defaults-so-far))))
                                       
-
-(defun add-enumerated-types (name daughter-list)
-   (loop for daughter in daughter-list
-      do
-      (add-type-from-file daughter (list name) nil nil nil)))
-
-(defun read-disjunction (istream name)
-   (let ((daughter-list (read istream)))
-      (unless (and (listp daughter-list)
-            (eql (car daughter-list) 'or))
-         (error "Badly formed disjuction in ~A" name))
-      (loop for dtr in (cdr daughter-list)
-           collect
-           (if (symbolp dtr) dtr
-               (convert-to-lkb-symbol dtr)))))
-
-
 (defun read-path-spec-list (istream name)
    ;;; Path_spec_list -> Path_spec | Path_spec Path_spec_list
    ;;; Path_spec -> Path = typename | Path = Path

@@ -59,7 +59,7 @@
    path value)
 
 ;;; path is a list of features
-;;; value may be a type or a list of types
+;;; value is a type
 
 (defstruct yadu-pp
    paths)
@@ -659,28 +659,20 @@
       (push current-path (dag-visit real-dag))
       (when real-indef
          (push current-path (dag-visit real-indef)))
-      (if (is-atomic real-dag) 
-         (let ((val (type-of-fs real-dag)))
-            (unless 
-               (and real-indef (is-atomic real-indef)
-                    (equalp (type-of-fs real-indef) val))
-              (save-if-new-tail 
-               (make-yadu-pv :path current-path :value val) 
-               spec persistence)))
-         (progn
-            (let ((type (dag-type real-dag)))
-               (unless 
-                  (and real-indef 
-                       (eql (dag-type real-indef) type))
-                 (save-if-new-tail 
-                  (make-yadu-pv :path current-path :value (list type))
-                  spec persistence)))
-            (loop for label in (top-level-features-of real-dag)
-               do
-               (yadu-convert-dag-to-atfs (get-dag-value real-dag label)
-                  (cons label path-so-far) spec
-                  (if indef-dag (get-dag-value indef-dag label))
-                  persistence))))))
+      (let ((type (dag-type real-dag)))
+        (unless 
+            (and real-indef 
+                 (eql (dag-type real-indef) type))
+          (save-if-new-tail 
+           (make-yadu-pv :path current-path :value type)
+           spec persistence)))
+      (loop for label in (top-level-features-of real-dag)
+          do
+            (yadu-convert-dag-to-atfs 
+             (get-dag-value real-dag label)
+             (cons label path-so-far) spec
+             (if indef-dag (get-dag-value indef-dag label))
+             persistence))))
       
 (defun save-if-new-tail (path-rep spec persistence)
   (let ((fs-rep (dagify path-rep)))

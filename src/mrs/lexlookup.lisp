@@ -198,8 +198,7 @@ at this point).
               (last-path-feature (fvpair-feature fvp))))
          (if (member feat *value-feats*)
              (let ((val (fvpair-value fvp)))
-               (list (if (listp val) 
-                   (car val) val)))))))
+               (list val))))))
 
                 
 (defun find-candidates-from-rel (rel-name parameter-str rel)

@@ -89,9 +89,7 @@
 
 (defmethod fs-output-atomic-fn ((fsout linear) atomic-value)
   (with-slots (stream) fsout
-    (format stream "~(~A~)" (if (and (listp atomic-value) 
-                                             (null (cdr atomic-value)))
-                                      (car atomic-value) atomic-value))))
+    (format stream "~A" atomic-value)))
 
 (defmethod fs-output-start-fs ((fsout linear) type depth labels)
   (declare (ignore depth labels))
@@ -152,14 +150,10 @@
 
 (defmethod fs-output-atomic-fn ((fsout tdl) atomic-value)
   (with-slots (stream indentation) fsout
-    (if (or (stringp atomic-value) 
-                 (and (listp atomic-value) (stringp (car atomic-value))))
-           (format stream "~VT~S" indentation 
-                   (if (listp atomic-value) (car atomic-value)
-                                        atomic-value))
-           (format stream "~VT~A" indentation 
-                   (string-downcase (if (listp atomic-value) (car atomic-value)
-                                        atomic-value))))))
+    (if (stringp atomic-value) 
+        (format stream "~VT~S" indentation atomic-value)
+      (format stream "~VT~A" indentation 
+                   (string-downcase atomic-value)))))
 
 (defmethod fs-output-start-fs ((fsout tdl) type depth labels)
   (declare (ignore labels))
@@ -221,16 +215,11 @@
 
 (defmethod fs-output-atomic-fn ((fsout lilfes) atomic-value)
   (with-slots (stream) fsout
-    (if (or (stringp atomic-value) 
-                 (and (listp atomic-value) (stringp (car atomic-value))))
-           (format stream "~S" 
-                   (if (listp atomic-value) (car atomic-value)
-                                        atomic-value))
-           (format stream "'~A'"
-                   (string-downcase
-                    (convert-lilfes-type
-                    (if (listp atomic-value) (car atomic-value)
-                                        atomic-value)))))))
+    (if (stringp atomic-value) 
+        (format stream "~S" atomic-value)
+      (format stream "'~A'"
+              (string-downcase
+               (convert-lilfes-type atomic-value))))))
 
 
 (defmethod fs-output-start-fs ((fsout lilfes) type depth labels)
@@ -359,15 +348,12 @@
 
 (defmethod fs-output-atomic-fn ((fsout edit) atomic-value)
   (with-slots (stream indentation type-label-list max-width) fsout
-    (let ((val
-           (if (cdr atomic-value) atomic-value 
-              (car atomic-value)))
-          (y-pos (current-position-y stream)))
+    (let ((y-pos (current-position-y stream)))
        (move-to-x-y stream indentation y-pos) 
        ; make start-pos the actual place where the type label starts!!
        (let ((start-pos (current-position stream)))
 	 (add-type-and-active-fs-region stream start-pos type-label-list 
-					val nil t)
+					 atomic-value nil t)
           (setf max-width (max (current-position-x stream) max-width))
           (pop type-label-list)))))
 
@@ -514,10 +500,10 @@ macro definitions
    ;; \attvaltyp{label}{value}\\
   (with-slots (stream indentation unoutput-label) fsout
     (if unoutput-label             
-         (format stream "\\\\~%~VT\\attvaltyp{~A}{~(~A~)}" 
+         (format stream "\\\\~%~VT\\attvaltyp{~A}{~A}" 
             indentation (convert-values-for-tex unoutput-label)
             (convert-values-for-tex atomic-value))
-         (format stream "\\ \\ \\myvaluebold{~(~A~)}" 
+         (format stream "\\ \\ \\myvaluebold{~A}" 
             (convert-values-for-tex atomic-value)))
          (setf unoutput-label nil)))
 
@@ -580,24 +566,15 @@ macro definitions
 
 ;;; TeX support functions 
 
-(defun convert-values-for-tex (atomic-value)
-   (if (listp atomic-value)
-      (let ((escaped-list
-               (mapcar #'convert-underscores-for-tex 
-                  atomic-value)))
-         (if (cdr escaped-list) escaped-list
-            (car escaped-list)))
-      (convert-underscores-for-tex atomic-value)))
-
-(defun convert-underscores-for-tex (at-val)
-   (let ((value (format nil "~A" at-val))
-         (char-bag nil))
-         (loop for char in (coerce value 'list)
-            do
-            (when (char= char #\_)
-               (push #\\ char-bag))
-            (push char char-bag))
-         (coerce (nreverse char-bag) 'string)))
+(defun convert-values-for-tex (at-val)
+  (let ((value (format nil "~A" at-val))
+        (char-bag nil))
+    (loop for char in (coerce value 'list)
+        do
+          (when (char= char #\_)
+            (push #\\ char-bag))
+          (push char char-bag))
+    (coerce (nreverse char-bag) 'string)))
 
 ;;; ********** Paths *************
 
@@ -709,9 +686,7 @@ macro definitions
   (with-slots (stream type-label-list) fsout
     (format stream "~%")
     (output-typed-list2 stream type-label-list)             
-    (format stream " = ~(~A~)" (if (and (listp atomic-value) 
-                                        (null (cdr atomic-value)))
-                                  (car atomic-value) atomic-value))
+    (format stream " = ~A" atomic-value)
     (pop type-label-list)))
    
    
@@ -925,10 +900,9 @@ for PAGE and LiLFeS")
             (setf (dag-visit real-dag) 'double))
          (t
             (setf (dag-visit real-dag) 'single)
-            (unless (is-atomic real-dag)
-               (dolist (arc (dag-arcs real-dag))
-                  (let ((label (dag-arc-attribute arc)))
-                     (mark-dag-for-output (get-dag-value real-dag label)))))))))
+            (dolist (arc (dag-arcs real-dag))
+              (let ((label (dag-arc-attribute arc)))
+                (mark-dag-for-output (get-dag-value real-dag label))))))))
 
 
 (defun print-dag (dag-instance depth rpath)
@@ -959,7 +933,7 @@ for PAGE and LiLFeS")
   
 (defun print-dag-aux (real-dag depth rpath stored-label-pos)
   (cond 
-   ((is-atomic real-dag) 
+   ((not (has-features real-dag)) 
     (fs-output-atomic-fn *display-structure* (type-of-fs real-dag)))
    ((and (fs-output-shrinks *display-structure*) 
 	 ;; shrink it if it is locally specified as shrunk, or it's

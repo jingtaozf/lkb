@@ -158,7 +158,7 @@
 
 (defun label-template-fs-p (fs)
   (let ((type (type-of-fs fs)))
-    (subtype-or-equal (if (listp type) (car type) type) 
+    (subtype-or-equal type
          *label-template-type*)))
 
 ; extracting label string
@@ -172,8 +172,8 @@
   (if path
       (let* ((dag-found (existing-dag-at-end-of tmpl-fs path))
              (dag-value (if dag-found (type-of-fs dag-found)))
-             (label (if (stringp (car dag-value)) 
-                        (car dag-value))))
+             (label (if (stringp dag-value) 
+                        dag-value)))
         (or label
             (progn 
               (format t "~%Warning: no ~A in ~A, template name used instead"

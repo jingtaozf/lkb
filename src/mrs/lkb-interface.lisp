@@ -1,7 +1,7 @@
 (in-package :lkb)
 
 (eval-when (compile load eval)
-(export '(edge-dag follow-pointers existing-dag-at-end-of dag-p is-atomic
+(export '(edge-dag follow-pointers existing-dag-at-end-of dag-p
           type-of-fs tdfs-indef lex-or-psort-id lex-or-psort-full-fs 
           dag-arcs subtype-p extend-typed-path path-p typed-path-p
           path-typed-feature-list typed-path-typed-feature-list

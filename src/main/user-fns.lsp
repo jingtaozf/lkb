@@ -139,7 +139,7 @@
 ;;; < NEEDS-AFFIX > = true
 ;;; in the rule
   (let ((affix (get-dag-value (rule-full-fs rule) 'needs-affix)))
-    (and affix (equal (type-of-fs affix) '(true)))))
+    (and affix (bool-value-true affix))))
 
 (defun redundancy-rule-p (rule)
 ;;; a function which is used to prevent the parser 
@@ -149,7 +149,7 @@
 ;;; < PRODUCTIVE > = false
 ;;; in the rule
   (let ((affix (get-dag-value (rule-full-fs rule) 'productive)))
-    (and affix (equal (type-of-fs affix) '(false)))))
+    (and affix (bool-value-false affix))))
 
 ;;; return true for types that shouldn't be displayed in type hierarchy
 ;;; window. Descendents (if any) will be displayed, i.e. non-displayed
@@ -275,3 +275,13 @@
 	    (setf (cdr existing) (+ (cdr existing) (cdr np)))
 	  (push np combined-paths))))
     (sort combined-paths #'> :key #'cdr)))
+
+(defun bool-value-true (fs)
+  (and fs
+       (let ((fs-type (type-of-fs fs)))
+         (eql fs-type 'true))))
+  
+(defun bool-value-false (fs)
+  (and fs
+       (let ((fs-type (type-of-fs fs)))
+         (eql fs-type 'false))))

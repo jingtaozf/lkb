@@ -126,7 +126,7 @@
          (pushnew reentrant-labels *reentrant-sets* :test #'equal))
       (let*
          ((lcsupertype
-             (find-lcsupertype dag-type1 dag-type2))
+             (least-common-supertype dag-type1 dag-type2))
           (constraint
              (if (symbolp lcsupertype) (may-copy-constraint-of lcsupertype))))
          (setf (dag-new-type result-dag) lcsupertype)
@@ -140,7 +140,7 @@
                      lcsupertype dag-type1 dag-type2 (reverse path))))
             ;; result-dag might just have been forwarded so dereference it again
             (setq result-dag (deref-dag result-dag)))
-         (unless (or (type-spec-atomic-p dag-type1) (type-spec-atomic-p dag-type2))
+         (when (and (dag-arcs dag1) (dag-arcs dag2))
             (generalise-subparts dag1 dag2 result-dag path)))))
 
 (defun generalise-path-intersection (paths1 paths2)
@@ -175,26 +175,6 @@
          (generalise-arcs (dag-comp-arcs real-result-dag)))))
 
 
-(defun find-lcsupertype (type1 type2)
-   ;; disjunctions are not taken into consideration, e.g. if 
-   ;; language (top) (OR english dutch italian spanish)
-   ;; 
-   ;; (find-lcsupertype '(english) '(dutch)) will return top
-   (cond
-      ((eq type1 type2)
-         type1)
-      ((and (not (listp type1)) (not (listp type2))) 
-         (least-common-supertype type1 type2))
-      ((not (listp type1)) 
-         (least-common-supertype type1
-            (reduce #'least-common-supertype type2)))
-      ((not (listp type2)) 
-         (least-common-supertype type2
-            (reduce #'least-common-supertype type1)))
-      (t
-         (least-common-supertype
-            (reduce #'least-common-supertype type1)
-            (reduce #'least-common-supertype type2)))))
 
 ;;; subsumption - first value true if dag1 subsumes dag2, second value true
 ;;; if reverse relation holds
@@ -251,9 +231,9 @@
   (let ((type1 (type-of-fs real-dag1))
         (type2 (type-of-fs real-dag2)))
     (unless (eq type1 type2)
-      (when (and forwardp (not (subsume-types type1 type2)))
+      (when (and forwardp (not (subtype-or-equal type1 type2)))
         (setq forwardp nil))
-      (when (and backwardp (not (subsume-types type2 type1)))
+      (when (and backwardp (not (subtype-or-equal type2 type1)))
         (setq backwardp nil))
       (unless (or forwardp backwardp) (throw '*fail* nil)))
     (dolist (arc1 (dag-arcs real-dag1))
@@ -265,45 +245,6 @@
              (dag-arc-value arc1) existing-dag2 forwardp backwardp)))))
     (values forwardp backwardp)))
 
-(defun subsume-types (type1 type2)
-  ;;; make this long-winded in the hope of improving efficiency
-  (if (listp type1) 
-    (if (not (cdr type1))
-      (if (listp type2)
-        (if (not (cdr type2))
-          (subtype-or-equal (car type2) (car type1)) ; both single element lists
-          (every #'(lambda (type-el2)
-                     (subtype-or-equal type-el2 (car type1)))
-                 type2))               ; type1 single element list
-                                       ; type2 multielement list
-        (subtype-or-equal type2 (car type1))) ; type1 single element list
-                                       ; type2 atomic
-      (if (listp type2)
-        (if (not (cdr type2))
-          (some #'(lambda (type-el1)
-                    (subtype-or-equal (car type2) type-el1))
-                type1)                 ; type1 multielement 
-                                       ; type2 single element
-          (every #'(lambda (type-el2)
-                      (some 
-                         #'(lambda (type-el1)
-                              (subtype-or-equal type-el2 type-el1))
-                           type1))
-                        type2))        ; both multielement
-        (some #'(lambda (type-el1)
-                  (subtype-or-equal type2 type-el1))
-              type1)))                 ; type1 multielement type2 atomic
-    (if (listp type2)
-      (if (not (cdr type2))
-        (subtype-or-equal (car type2) type1) ; type1 atomic type2 singleton
-        (every #'(lambda (type-el2)
-                   (subtype-or-equal type-el2 type1))
-               type2))               ; type1 atomic
-                                     ; type2 multielement list
-      (subtype-or-equal type2 type1)) ; type1 atomic
-                               ; type2 atomic               
-         ))
-            
 (defun subtype-or-equal (type1 type2)
    (or (equal type1 type2)
       (subtype-p type1 type2)))
@@ -331,10 +272,10 @@
    (let* ((real-dag (follow-pointers fs))
          (type (type-of-fs real-dag)))
       (unless 
-         (member (if (listp type) type (list type)) 
+         (member type 
             (loop for pred in predictions
                when (null (car pred))
-               collect (cdr pred)) :test #'equal)
+               collect (cdr pred)))
          (push (make-unification 
                :lhs (create-path-from-feature-list (reverse path))
                :rhs (make-u-value :type type)) 
@@ -365,7 +306,7 @@
          (type (type-of-fs real-dag)))      
          (cons 
             (cons (reverse path)
-            (if (listp type) type (list type)))
+            type
             (unless
                (is-atomic real-dag)
                (loop for label in (top-level-features-of real-dag)

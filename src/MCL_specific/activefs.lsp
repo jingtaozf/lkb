@@ -349,7 +349,7 @@
          (shrunk-p (type-click-field-shrunk-p field))
          (atomic-p (type-click-field-atomic-p field))
          (full-structure (type-click-field-full-tdfs field))
-         (type-entry (get-type-entry (if (listp type) (car type) type)))
+         (type-entry (get-type-entry type))
          (type-p (if atomic-p :atomic :fs))
         (menu (make-instance 'active-fs-pop-up-field
                  :view-position menu-pos

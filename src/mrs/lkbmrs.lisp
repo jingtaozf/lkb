@@ -70,8 +70,7 @@
   (and fs (dag-p fs)))
 
 (defun fs-arcs (dag-instance)
-   (unless (is-atomic dag-instance)
-             (dag-arcs dag-instance)))
+  (dag-arcs dag-instance))
 
 (defun no-path-to (path-value-res)
 ;;; for PAGE this is (eql path-value-res 'unify::*fail*)
@@ -79,11 +78,7 @@
 
 (defun fs-type (fs)
   ;;; also defined for PAGE
-  (let* ((type (type-of-fs fs))
-         (real-type 
-          (if (listp type)
-              (car type)
-            type)))
+  (let* ((real-type (type-of-fs fs)))
     (when 
         (and #+allegro (or (string-equal (system:getenv "USER") "aac")
                         (string-equal (system:getenv "USER") "dan")
@@ -123,7 +118,7 @@
 (defun compatible-types (type1 type2)
   (if (and (null type1) (null type2))
       t ; *** fudge, since sometimes erroneously gets called with nil args
-      (lkb::find-gcsubtype type1 type2)))
+      (lkb::greatest-common-subtype type1 type2)))
 
 
 (defun is-valid-type (val)
