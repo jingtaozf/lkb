@@ -1,4 +1,4 @@
-;;; Copyright (c) 2003-2004 Benjamin Waldron
+;;; Copyright (c) 2003-2004 Ben Waldron
 ;;; see licence.txt for conditions
 
 ;; Portions copyright (c) 1996, 1997, 1999, 2000, 2001 Free Software Foundation, Inc.
