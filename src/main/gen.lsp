@@ -269,6 +269,13 @@
   (with-unification-context (dag1)
     (catch '*fail* (subsume-wffs-p dag1 dag2 t t))))
 
+(defun dag-equal-p (dag1 dag2)
+  ;; assume not circular, and not called within a unification context
+  (multiple-value-bind (sub1 sub2)
+      (with-unification-context (dag1)
+        (catch '*fail* (subsume-wffs-p dag1 dag2 t t)))
+    (and sub1 sub2)))
+
 
 (defun subsume-wffs-p (real-dag1 real-dag2 forwardp backwardp)
   ;; forwardp, backwardp are true when it's possible that dag1 subsumes dag2
