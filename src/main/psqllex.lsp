@@ -415,7 +415,14 @@
    ((symbolp x) x)
    ((stringp x) (str-2-symb x))
    (t (error "unhandled type"))))
-    
+
+(defun 2-str (x)
+  (cond
+   ((stringp x) x)
+   ((symbolp x) (symb-2-str x))
+   ((numberp x) (num-2-str x))
+   (t (error "unhandled type"))))
+
 (defun get-val (field record)
   (cdr (assoc field record :test #'equal)))
 
@@ -1188,8 +1195,8 @@
 	    (retr-val psql-le :name) 
 	    lexicon)))
 
-(defun split-on-char (string &optional char)
-  (unless char (setf char #\Space))
+(defun split-on-char (string &optional (char #\Space))
+;  (unless char (setf char #\Space))
   (loop for i = 0 then (1+ j)
       as j = (position char string :start i)
       collect (subseq string i j)
