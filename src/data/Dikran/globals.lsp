@@ -37,7 +37,7 @@
    "a special type wrt parsing - rule indexing is checked for its
    descendants")
  
-(defparameter *mother-feature* 0
+(defparameter *mother-feature* '(0)
    "The feature giving the mother in a grammar rule")
 
 (defparameter *start-symbol* 'root-cat

@@ -34,6 +34,10 @@
 
 (defstruct (unification (:include basic-unification)))
 
+;;; following substructures are semi-obsolete, but retaining them
+;;; would make it easier to reintegrate old version of the LKB
+;;; if anyone ever decides to do this
+
 (defstruct (c-identity (:include basic-unification)) )
 
 (defstruct (equality (:include basic-unification)) )

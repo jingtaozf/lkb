@@ -563,13 +563,16 @@
 	do (when dtr-fs
 	     (setf rule-dag
 	       (yadu rule-dag (create-temp-parsing-tdfs dtr-fs path)))))
+    (unless rule-dag (error "Unifications failed to reunify"))
     ;; Re-do spelling change
     (let ((orth-fs (when nu-orth 
-		     (copy-tdfs-completely (get-orth-tdfs nu-orth)))))
+		     (copy-tdfs-completely (get-orth-tdfs nu-orth))))
+          (mother-fs (tdfs-at-end-of (car (rule-order rule)) rule-dag)))
       (when orth-fs
-	(setf rule-dag (yadu rule-dag orth-fs))))
-    ;; Return the result
-    (tdfs-at-end-of (car (rule-order rule)) rule-dag)))
+	(setf mother-fs (yadu mother-fs orth-fs)))
+      (unless mother-fs (error "Orthography failed to reunify"))
+      ;; Return the result
+      mother-fs)))
 
 (defun copy-parse-tree (edge-symbol)
   (when (get edge-symbol 'edge-fs)

@@ -142,11 +142,13 @@
 
 
 (defun generalise-set (fs-set)
-;;;    (format t "~% test generalise")
-;;;    (for fs in fs-set
+;;;  (format t "~% test generalise")
+;;;  (let ((num 0))
+;;;  (for fs in fs-set
 ;;;       do 
-;;;       (display-dag1 fs 'simple t))
-   (reduce #'generalise fs-set))
+;;;       (incf num)
+;;;       (display-fs fs (format nil "~A" num))))
+   (reduce #'generalise-dags fs-set))
 
 
 
@@ -447,33 +449,38 @@
    (if def-fs-list
 ;         (incf *unif-count*)
        (let* ((first-def (car def-fs-list))
-             (res (if (yadu-pv-p first-def) 
-                      (unify-paths (create-path-from-feature-list nil)
-                                   indef-fs
-                                   (create-path-from-feature-list 
-                                    (yadu-pv-path first-def))
-                                   (yadu-pv-value first-def))
-                    (let* ((paths (yadu-pp-paths first-def))
-                           (initial-path 
-                            (create-path-from-feature-list 
-                                      (car paths))))
-                      (dolist (path2 (cdr paths))
-                        (unify-paths initial-path       
-                                     indef-fs
-                                     (create-path-from-feature-list 
-                                      path2)
-                                     indef-fs))))))
+              (res 
+               (with-unification-context (indef-fs)
+                 (if (yadu-pv-p first-def)
+                       (if 
+                           (unify-paths 
+                            (yadu-pv-path first-def)
+                            indef-fs
+                            (make-u-value :types (yadu-pv-value first-def))
+                            nil)
+                           (copy-dag indef-fs))
+                   (let* ((paths (yadu-pp-paths first-def))
+                          (initial-path 
+                           (car paths))
+                          (ok nil))
+                     (dolist (path2 (cdr paths))
+                       (setf ok
+                         (unify-paths initial-path       
+                                      indef-fs
+                                      path2
+                                      indef-fs))
+                       (unless ok
+                         (return)))
+                     (if ok
+                         (copy-dag indef-fs)))))))
          (if res
-            ; should this be unify-wffs?
-            ; or maybe something that does limited 
-            ; wellformedness checking?
-            (unify-in indef-fs (cdr def-fs-list)
-               (cons (car def-fs-list) added))
-            (progn
-               (push (cons (car def-fs-list) added) *failure-list*) 
-               nil)))
-      indef-fs))
-
+             (unify-in res (cdr def-fs-list)
+                       (cons (car def-fs-list) added))
+           (progn
+             (push (cons (car def-fs-list) added) *failure-list*) 
+             nil)))
+     indef-fs))
+   
 
 
 ;;; incorporating all the defaults of a given persistence

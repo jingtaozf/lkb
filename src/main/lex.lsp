@@ -427,16 +427,18 @@
                       (make-equivalent-persistence-defaults 
                        indef (car default-spec) (cdr default-spec) lex-id)))
                (local-tdfs (construct-tdfs indef default-fss t)))
-          (if local-p local-tdfs
-            (let ((interim-fs
-                   (if default-fss
-                       (yadu
-                        local-tdfs
-                        (type-tdfs (get-type-entry (type-of-fs indef))))
-                     local-tdfs)))
-              (if interim-p interim-fs
+          (if local-p 
+              local-tdfs
+            (let ((interim-fs local-tdfs))
+              (setf (tdfs-tail interim-fs)
+                (yadu-general-merge-tails
+                 (tdfs-tail interim-fs)
+                 (tdfs-tail (type-tdfs (get-type-entry (type-of-fs indef))))
+                 indef))
+              (if interim-p 
+                  interim-fs
                 (let ((incorp-fs 
-                       (if (and default-fss persistence) 
+                       (if persistence
                            (make-indefeasible interim-fs (list persistence))
                          interim-fs)))
                   (setf (lex-or-psort-full-fs entry)

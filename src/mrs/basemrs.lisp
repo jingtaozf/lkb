@@ -497,7 +497,7 @@
 
 (defun struggle-on-error (&rest rest)
   (unless *giving-demo-p*
-    (apply #'error rest)))
+    (apply #'cerror "Try and continue" rest)))
 
 
 

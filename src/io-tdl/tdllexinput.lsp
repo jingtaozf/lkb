@@ -50,7 +50,6 @@
 ;;; Avm-def -> := Conjunction (as in tdltypeinput.lsp)
   (let* ((position  (1+ (file-position istream)))
 	 (name (lkb-read istream nil))
-	 (constraint nil)
 	 (next-char (peek-char t istream nil 'eof)))
      (unless (eql next-char #\:)
        (error "~%Incorrect syntax following lexicon name ~A" name))
@@ -60,41 +59,57 @@
        (unless (eql next-char2 #\=)
             (error "~%Incorrect syntax following lexicon name ~A" name))   
        (read-char istream)
-       (setf constraint
-             (read-tdl-lex-avm-def istream name))
-       (check-for #\. istream name)
-       (push name *ordered-lex-list*)
-       (add-lex-from-file nil name constraint nil))))
+       (multiple-value-bind
+           (constraint default)
+           (read-tdl-lex-avm-def istream name)
+         (check-for #\. istream name)
+         (push name *ordered-lex-list*)
+         (add-lex-from-file nil name constraint default)))))
 
 
 
 (defun read-tdl-lex-avm-def (istream name)
   ;;; Avm-def -> := Conjunction
-  (clrhash *tdl-coreference-table*) ; parameter defined in tdltypeinput
-  (let ((constraint nil))
+  (clrhash *tdl-coreference-table*)     ; parameter defined in tdltypeinput
+  (clrhash *tdl-default-coreference-table*)
+  (let ((constraint nil)
+        (def-alist nil))
       ;;; read-tdl-conjunction in tdltypeinput
-      ;;;; returns a list of path constraints.
-    (setf constraint (read-tdl-conjunction istream name nil))
-    (for coref in (make-tdl-coreference-conditions *tdl-coreference-table*)
+    (for unif in (read-tdl-conjunction istream name nil nil)
          do
+         (cond ((unification-p unif) (push unif constraint))
+               ((consp unif)
+                (let ((entry (assoc (car unif) def-alist)))
+                  (if entry
+                      (push (cadr unif) (cdr entry))
+                    (push unif def-alist))))
+               (t (error "~%Unexpected unif in ~A" name))))
+    (dolist (coref (make-tdl-coreference-conditions 
+                    *tdl-coreference-table* nil))
       (push coref constraint))
-    constraint))
+    (dolist (coref (make-tdl-coreference-conditions 
+                    *tdl-default-coreference-table* t))
+      (let ((entry (assoc (car coref) def-alist)))
+        (if entry
+            (push (cadr coref) (cdr entry))
+          (push coref def-alist))))
+    (values constraint def-alist)))
 
 
 ;;; Other varieties of files
 
 (defun read-tdl-psort-file-aux (file-name &optional templates-p qc-p)
-   (check-for-open-psorts-stream)  
+  (check-for-open-psorts-stream)  
   (when templates-p (setf *category-display-templates* nil))
 ;  (when qc-p (clear-quick-check-table))
    (let ((*readtable*
           (make-tdl-break-table)))
-      (with-open-file 
+     (with-open-file 
          (istream file-name :direction :input)
-         (format t "~%Reading in ~A file"
-                (cond (templates-p "templates")
-;                      (qc-p "quick check")
-                      (t "psort")))
+       (format t "~%Reading in ~A file"
+               (cond (templates-p "templates")
+;;                      (qc-p "quick check")
+                     (t "psort")))
          (read-tdl-psort-stream istream templates-p qc-p))
       (format t "~%~A entry file read" (cond (templates-p "Template")
 ;                                             (qc-p "Quick check")
@@ -117,8 +132,8 @@
                (t (read-tdl-psort-entry istream templates-p qc-p))))))
 
 (defun read-tdl-psort-entry (istream &optional templates-p qc-p)
+  (declare (ignore qc-p))
    (let* ((name (lkb-read istream nil))
-          (constraint nil)
           (next-char (peek-char t istream nil 'eof)))
      (unless (eql next-char #\:)
        (error "~%Incorrect syntax following template name ~A" name))
@@ -127,14 +142,15 @@
        (unless (eql next-char2 #\=)
             (error "~%Incorrect syntax following template name ~A" name))   
        (read-char istream)
-       (setf constraint
-             (read-tdl-lex-avm-def istream name))
-       (check-for #\. istream name)
-;       (if qc-p 
-;           (add-qc-from-file name constraint) ; in check-unif.lsp      
+       (multiple-value-bind
+           (constraint default)
+           (read-tdl-lex-avm-def istream name)
+         (check-for #\. istream name)
+;;       (if qc-p 
+;;           (add-qc-from-file name constraint) ; in check-unif.lsp      
          (progn 
-            (add-psort-from-file name constraint nil)
-            (if templates-p (pushnew name *category-display-templates*))))))
+           (add-psort-from-file name constraint default)
+           (if templates-p (pushnew name *category-display-templates*)))))))
 
  
 

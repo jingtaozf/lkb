@@ -38,8 +38,7 @@
       (tex (def-tex-print-operations indentation stream))
       (shrunk (def-shrunk-print-operations stream))
       (path (def-path-print-operations stream))
-      (path2 (def-path2-print-operations stream))
-      (tail (def-tail-print-operations indentation stream))))
+      (path2 (def-path2-print-operations stream))))
 
 
 (defun def-linear-print-operations (indentation stream)
@@ -590,88 +589,6 @@
          (pop label-list))))))
 
 
-;;; Output tails in TDFSs as paths with no top
-
-(defun def-tail-print-operations (indentation stream)
-   (let ((type-label-list nil)
-         (reentrant-vector (make-array '(3000)))
-         (max-width 0))
-    ;;; keep the current path
-    ;;; also keep the path to each reentrant node
-  (setf *display-structure*
-   (make-fs-output 
-      :name 'tail
-      :error-fn #'(lambda (dag-instance)
-         (format stream
-            "~%::: ~A is not a dag...~%"
-            dag-instance))
-      :start-fn #'(lambda nil nil)   
-      :end-fn #'(lambda nil nil)
-      :reentrant-value-fn                 
-      #'(lambda (reentrant-pointer)
-         (setf (aref reentrant-vector reentrant-pointer)
-            type-label-list))
-      :reentrant-fn
-      #'(lambda (reentrant-pointer)
-          (move-to-x-y stream indentation (current-position-y stream))
-          (output-tail-features stream type-label-list)
-          (format stream " = ")
-          (output-tail-features stream 
-             (aref reentrant-vector reentrant-pointer))
-          (pop type-label-list))
-;          (format stream "~%"))
-      :atomic-fn
-      #'(lambda (atomic-value) 
-         (let ((start-pos (current-position stream))
-               (val
-                  (if (cdr atomic-value) atomic-value 
-                     (car atomic-value))))
-            (move-to-x-y stream indentation (current-position-y stream))
-            (output-tail-features stream type-label-list)
-            (add-type-and-active-fs-region stream start-pos 
-                                              type-label-list val nil t)      
-            (setf max-width (max (current-position-x stream) max-width))
-            (pop type-label-list)))
-      :start-fs
-      #'(lambda (type depth labels)
-          (declare (ignore depth labels))
-         (push type type-label-list))
-      :label-fn
-      #'(lambda (label depth)
-          (declare (ignore depth))
-         (push label type-label-list))
-      :end-fs 
-      #'(lambda (terminal)
-         (when terminal
-            (let ((start-pos (current-position stream)))
-               (move-to-x-y stream indentation (current-position-y stream))
-               (output-tail-features stream (cdr type-label-list))
-               (add-type-and-active-fs-region stream start-pos type-label-list
-                                                 (car type-label-list) nil t)))
-         (setf max-width (max (current-position-x stream) max-width))
-         (pop type-label-list)
-         (pop type-label-list))))))
-
-
-(defun output-tail-features (stream type-label-list)
-   (if type-label-list
-      (let ((ordered-list (reverse type-label-list)))
-         (if (eql (car ordered-list) *toptype*)
-            (format stream "< ~A " 
-               (cadr ordered-list))
-            (format stream "< ~A ~A " (car ordered-list)
-               (cadr ordered-list)))
-         (when (cddr ordered-list)
-            (let ((remainder (cddr ordered-list)))
-               (loop 
-                  (unless remainder (return))
-                  (if (eql (car remainder) *toptype*)
-                     (format stream ": ~A " (cadr remainder))
-                     (format stream ": ~A ~A " (car remainder)
-                        (cadr remainder)))
-                  (setf remainder (cddr remainder)))))
-         (format stream ">"))
-      (format stream "<>")))
 
 ;;;
 ;;; ************* Shrinking paths in types **********

@@ -62,7 +62,6 @@
   (let* ((position (1+ (file-position istream)))
 	 (id (lkb-read istream nil))
 	 (entry (make-rule :id id))
-	 (non-def nil)
 	 (next-char (peek-char t istream nil 'eof)))
      (unless (eql next-char #\:)
        (error "~%Incorrect syntax following rule name ~A" id))
@@ -76,13 +75,13 @@
          (when (eql next-char3 #\%)
            (read-line istream))
          ; ignore Bernie morphology
-         (setf non-def
-               (read-tdl-lex-avm-def istream id))
-         (check-for #\. istream id)
-         (process-unif-list id non-def nil entry *rule-persistence*)
-         (when (rule-full-fs entry)
-           (if lexical
-               (progn (pushnew id *ordered-lrule-list*)
-                      (add-lexical-rule id entry))
-             (progn (pushnew id *ordered-rule-list*)
-                    (add-grammar-rule id entry))))))))
+         (multiple-value-bind (non-def def)
+             (read-tdl-lex-avm-def istream id)
+           (check-for #\. istream id)
+           (process-unif-list id non-def def entry *rule-persistence*)
+           (when (rule-full-fs entry)
+             (if lexical
+                 (progn (pushnew id *ordered-lrule-list*)
+                        (add-lexical-rule id entry))
+               (progn (pushnew id *ordered-rule-list*)
+                      (add-grammar-rule id entry)))))))))

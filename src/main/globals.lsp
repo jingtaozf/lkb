@@ -40,6 +40,8 @@
 
 (def-lkb-parameter *empty-list-type* '*null*)
 
+(def-lkb-parameter *list-type* '*list*)
+
 (def-lkb-parameter *diff-list-type* '*diff-list*)
 
 (def-lkb-parameter *diff-list-list* 'list)

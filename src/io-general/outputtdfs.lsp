@@ -59,17 +59,42 @@
 ;;; *lexical-persistence* is in globals.lsp
 
 (defun display-tail (tail-element stream) 
-  ; needs fixing
    (format stream "~%")
    (let ((start-pos (current-position stream))
          (pers (tail-element-persistence tail-element))
          (spec (tail-element-spec tail-element)))
-;         (dag-instance (tail-element-fs tail-element)))
       (unless (equal pers (list *lexical-persistence*))
          (format stream " *"))
       (add-type-and-active-fs-region stream 
          start-pos nil spec nil t)
       (format stream ": ")
-      (format stream (tail-element-path-rep tail-element))))
-;      (display-dag1 dag-instance 'tail stream 
-;        (current-position-x stream))))
+      (let ((path-rep (tail-element-path-rep tail-element)))
+        (if (yadu-pv-p path-rep)
+            (let ((path (path-typed-feature-list (yadu-pv-path path-rep)))
+                  (value (yadu-pv-value path-rep)))
+              (output-tail-features stream path) 
+              (let ((new-start-pos (current-position stream)))
+                (add-type-and-active-fs-region stream 
+                                               new-start-pos nil 
+                                               (if (cdr value) 
+                                                   value 
+                                                 (car value)) nil t)))
+          (for path in (yadu-pp-paths path-rep)
+               do
+               (output-tail-features stream path)))
+        (current-position-x stream))))
+          
+          
+(defun output-tail-features (stream label-list)
+  (if label-list
+      (progn
+        (format stream "< ~A " (car label-list))
+        (when (cdr label-list)
+          (let ((remainder (cdr label-list)))
+            (loop 
+              (unless remainder (return))
+              (format stream " ~A " (car remainder))
+              (setf remainder (cdr remainder)))))
+        (format stream ">"))
+    (format stream "<>"))
+  (format stream " "))

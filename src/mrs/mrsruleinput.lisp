@@ -95,7 +95,7 @@
       ;;; read-tdl-conjunction in tdltypeinput
       ;;; returns a list of path constraints
       ;;; plus funny-unifications
-    (setf constraint (read-tdl-conjunction istream name nil))
+    (setf constraint (read-tdl-conjunction istream name nil nil))
     (for coref in (make-mrs-rule-coref-conditions *tdl-coreference-table*)
          do
       (push coref constraint))
@@ -112,17 +112,20 @@
                    (if rest
                      (for path2 in rest
                           do
-                          (push (make-tdl-path-path-unif path1 path2) unifs))
-                     (push (make-tdl-path-value-unif path1 *toptype*)
+                          (push (make-tdl-path-path-unif path1 path2 nil) unifs))
+                     (push (make-tdl-path-value-unif path1 *toptype* nil)
                            unifs))))
              coref-table)
     unifs))
 
 
-(defun read-mrs-rule-expanded-syntax (istream name path-so-far)
+(defun read-mrs-rule-expanded-syntax (istream name path-so-far in-default-p)
   ;;; stuff starting with ^
   ;;; intended to be value of *tdl-expanded-syntax-function*
   ;;; and thus to be called in tdltypeinput
+  (when in-default-p
+    (error "~%read-mrs-rule-expanded-syntax called inside default in ~A" 
+           name))
   (unless (eql (read-char istream) #\^)
     (error "~%read-mrs-rule-expanded-syntax called without initial ^ in ~A" 
            name))
@@ -136,7 +139,7 @@
                   (#\( (make-mrs-rule-sexp :value value))
                   (t (make-mrs-rule-predicate :value value))))
           (make-tdl-path-value-unif 
-           (reverse path-so-far) *toptype*))))
+           (reverse path-so-far) *toptype* nil))))
 
            
 

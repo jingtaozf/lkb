@@ -177,7 +177,8 @@
         (liszt (psoa-liszt mrs)))
       (setf results
             (if i-liszt
-              (for int-res in (match-mrs-rule-rels i-liszt liszt nil initial-bindings nil)
+                (for int-res in 
+                     (match-mrs-rule-rels i-liszt liszt nil initial-bindings nil)
                    collect
                    (make-psoa-result 
                     :bindings (munge-result-bindings int-res)

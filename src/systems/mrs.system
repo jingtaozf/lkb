@@ -8,12 +8,9 @@
     :depends-on (#+:lkb "lkb" #+:page "page")
     :finally-do
     (progn
-      #+:lkb
+      (load "~/grammar/mrsglobals-eng.lisp")
       (when (fboundp 'read-mrs-rule-file-aux)
-        (read-mrs-rule-file-aux 
-         (make-pathname :name "dan-rules.mrs"
-                        :directory (dir-append (get-sources-dir "mrs")
-                                               '(:relative "mrs" "data"))))))
+        (read-mrs-rule-file-aux "~/grammar/data/new-rules.mrs")))
     :components
     ((:module "core"
       :source-pathname "mrs"
@@ -49,7 +46,7 @@
        ;; (:file "acl-mrs")             ; display etc in CLIM
                                         ; needs fixing
        (:file "mrsfns")                 ; from old mrsglobals
-       (:file "mrsglobals-eng")         ; globals for LinGO grammar
+       ; (:file "mrsglobals-eng")         ; globals for LinGO grammar
        #+:lkb (:file "lkbmrs")          ; LKB specific - redefines
                                         ; some functions
        #+:lkb (:file "lexindex")        ; LKB specific - indexing
