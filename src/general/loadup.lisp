@@ -21,7 +21,9 @@
 ;;; set LKB version
 ;;;
 
-(defvar *lkb-version* "5.0")
+(defvar *lkb-version* "5.1")
+
+;;; see also below - *features*
 
 (defparameter %athome% nil)
 (defparameter %sys-home%
@@ -91,6 +93,7 @@
 (reset-system-paths)
 
 (pushnew :lkb *features*)
+(pushnew :lkb-v5.1 *features*)
 #+(or :cl-http (not (or :mcl :clim :common-graphics))) 
    (pushnew :tty *features*)
 
