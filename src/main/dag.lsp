@@ -6,6 +6,8 @@
 ;;; CSLI, Stanford University
 ;;; No use or redistribution without permission.
 
+#+mcl
+(progn ; for space profiling and similar investigation
 (defparameter aa 0)
 (defparameter bb 0)
 (defparameter cc 0)
@@ -16,6 +18,7 @@
 (defparameter hh 0)
 (defparameter ii 0)
 (defparameter jj 0)
+)
 
 
 ;;; **********************************************************************
@@ -611,14 +614,11 @@
                   dag))))))
 
 
-;; compiler must not convert recursive function into interative otherwise
-;; stack allocation will break. Allegro 4.3 (at least) must be stopped
-#+allegro
-(eval-when (compile)
-   (defparameter old-tail-call-self-merge-switch compiler:tail-call-self-merge-switch)
-   (setq compiler:tail-call-self-merge-switch nil))
-
 (defun copy-dag-arcs (arcs-tail vals path lower-copied-p arcs new-arcs)
+   ;; compiler must not convert recursive function into interative otherwise
+   ;; stack allocation will break. Allegro 4.3 (at least) must be explicitly
+   ;; stopped from doing this 
+   (declare (notinline copy-dag-arcs))
    (cond
       (arcs-tail
          (let* ((arc (car arcs-tail))
@@ -652,10 +652,6 @@
       (new-arcs
          (nconc new-arcs arcs))
       (t arcs)))
-
-#+allegro
-(eval-when (compile)
-   (setq compiler:tail-call-self-merge-switch old-tail-call-self-merge-switch))
 
 
 #|
