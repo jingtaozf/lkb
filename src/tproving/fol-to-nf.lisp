@@ -111,6 +111,14 @@ convert to inf: (=> (cat ?x) (animal ?x))
 
 |#
 
+#|
+
+(convert-fol-to-inf 
+ '(forall ?x (exists ?y (=> (cat ?x) (eats ?x ?y))))
+ )
+
+|#
+
 (defun convert-fol-to-inf (fol-exp &key (proper-skolem t) (noisy t))
   (let* ((cnf (convert-fol-to-cnf fol-exp :proper-skolem proper-skolem
 				  :noisy noisy))
@@ -349,6 +357,10 @@ convert to inf: (=> (cat ?x) (animal ?x))
 
 ;;; Utility functions
 ;;;
+
+(defun implication-p (expr)
+  (and (consp expr)
+       (eql (first expr) '=>)))
 
 (defun negated-p (expr)
   (and (consp expr)

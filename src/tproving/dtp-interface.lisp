@@ -28,6 +28,7 @@
               (let ((inf-exps (convert-fol-to-inf fol-exp)))
                 inf-exps))))))
 
+#|
 (defun query-dtp nil
   ;;; won't work because of package problems
   (dtp::dtp-load *dtp-file*)
@@ -35,7 +36,7 @@
     (loop for exp in converted-expression
         do
         (dtp::prove exp))))
-
+|#
 
 (defun output-selected-gq (parse)
   (let* ((mrs-struct (extract-mrs parse))
