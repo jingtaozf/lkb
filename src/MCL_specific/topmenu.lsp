@@ -87,9 +87,8 @@
 (defun dump-lkb nil
   (let ((pathname (ask-user-for-new-pathname "File for image?")))
     (when pathname
-      (pushnew 'lkb-restart-function *lisp-startup-functions*
-            :test #'eq)
-      (write-psort-index-file)
+      (pushnew 'lkb-restart-function *lisp-startup-functions*)
+      (pushnew 'lkb-exit-function *lisp-cleanup-functions*)
       (save-application pathname
          :excise-compiler (not (y-or-n-p-general "Include lisp compiler in image?")))
       ;; lisp quits now so no tidying up to do
