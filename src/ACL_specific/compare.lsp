@@ -35,7 +35,7 @@
 
 (defun find-discriminants (parses)
   (let ((*discrs* nil))
-    ;; Collect all constituents
+    ;; Collect all discriminants
     (dolist (parse parses)
       (find-discriminants-in-parse parse parse))
     ;; Filter out discriminants that are implied by other longer discriminants
@@ -67,10 +67,10 @@
 (defun find-discriminants-in-parse (parse top)
   (let ((label (find-category-abb (edge-dag parse)))
 	(yield (apply #'concatenate 
-		      (append '(string) 
-			      (mapcan #'(lambda (x) 
-					  (list x " ")) 
-				      (edge-leaves parse))))))
+		      `(string
+			,@(mapcan #'(lambda (x) 
+				      (list x " ")) 
+				  (edge-leaves parse))))))
     (add-discriminant label yield :constituent top))
   (unless (edge-children parse)
     (let ((word (car (edge-leaves parse)))
