@@ -98,11 +98,10 @@
       ((found-lex-list
           (apply #'append (mrs::collect-lex-entries-from-mrs input-sem)))
        (filtered
-          ; (remove '(ER_COMP_ADJ_INFL_RULE) ; *** e.g. small -> smaller etc
-             (remove-if #'(lambda (x) (member x '(AN) :test #'eq)) ; *** e.g. a -> an
+        (remove-if #'(lambda (x) (member x '(AN) :test #'eq))
+                                        ; *** e.g. a -> an
                 found-lex-list
                 :key #'mrs::found-lex-lex-id)
-          ;   :key #'mrs::found-lex-rule-list :test #'equal)
           )
        (empty
           (mrs::possibly-applicable-null-semantics input-sem)
