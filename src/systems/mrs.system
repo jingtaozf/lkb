@@ -58,6 +58,8 @@
        #+:lkb (:file "vit-to-mrs")
        #+(and :lkb :allegro :clim (not :tty)) 
               (:file "lkb-acl-mrs")      ; display etc in CLIM
+       #+(and :lkb :mcl (not :tty)) 
+              (:file "lkb-mcl-mrs")      ; display etc in MCL
        #+:page (:file "acl-mrs")
        #+:lkb (:file "lkbmrs")          ; LKB specific - redefines
                                         ; some functions
