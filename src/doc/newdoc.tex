@@ -339,7 +339,7 @@ Then:
 \begin{verbatim}
 gunzip lkbsrc5-0.tar.gz
 \end{verbatim}
-this should give you a file called {\tt newlkb.tar}.  
+this should give you a file called {\tt lkbsrc5-0.tar}.  
 Make sure this in a directory where you want the LKB system to reside
 and extract the LKB by:
 \begin{verbatim}
@@ -362,7 +362,7 @@ make an image.
 \subsection{Downloading an image}
 \label{down-images}
 
-The image files for are available from the
+The image files for Sun Solaris are available from the
 \href{http://www-csli.stanford.edu/~aac/lkb.html}{LKB Web Site}
 as a gzipped Unix tar file.
 Download the file, making sure you are using binary mode.
@@ -799,7 +799,8 @@ you can continue from these after creating the files.
 
 One likely error message is something like the following:
 \begin{verbatim}
-Failure to open temporary lexicon file /user/bloggs/tmp/templex correctly.
+Failure to open temporary lexicon file 
+/user/bloggs/tmp/templex correctly.
 Please create the appropriate directory 
 if it does not currently exist or redefine
 the user functions lkb-tmp-dir and/or
@@ -962,7 +963,7 @@ complex constraints: that is the value of a feature can be
 a feature structure.  
 \begin{figure}
 \epsfxsize=1in
-\epsfbox[0 0 200 200]{figs/grule.ps}
+\epsfbox[0 0 200 400]{figs/grule.ps}
 \caption{A complex type constraint}
 \label{grule}
 \end{figure}
@@ -2122,12 +2123,12 @@ is equivalent to:
 \end{verbatim}
 
 
-\subsection{Syntax of type descriptions}
+\subsection{A formal description of the syntax of type descriptions}
 \label{bnftype}
 
 To formally express the syntax of the description language, we
 use Backus-Naur Form (BNF) basically following the typographic conventions used
-in Aho et al (19??).
+in Aho et al (1982).
 %FIX
 As there, alternative right-hand sides of productions are indicated by
 $|$.  
@@ -2717,7 +2718,7 @@ graphical or tty versions of the system.
 The source file organization is based on the assumption that
 a single file contains one class of object.  The user may however 
 choose to split
-the descriptions in a particular classes over multiple files, for example to have
+the descriptions in a particular class over multiple files, for example to have
 different type files for the types used in rules as opposed to those used
 in lexical entries, or have multiple files for the lexicon.
 This often enhances modularity.
@@ -2842,7 +2843,7 @@ correct, according to the definition in \S\ref{bnftype},
 then error messages will be generated.  The system tries
 to make a partial
 recovery from syntactic errors, either by
-skipping to the end of an definition or inserting the
+skipping to the end of a definition or inserting the
 character it expected,
 and then continuing to read the file.
 This recovery does not always work: sometimes the
@@ -3022,7 +3023,8 @@ from it instead inherit from its parents.  This type {\bf hd-grule}
 was actually included in the toy grammar purely to
 avoid a glb problem.  To illustrate what happens if the type hierarchy does not
 meet the glb condition,
-load the script file {\tt toy-glb/script}.  T
+load the script file {\tt toy-glb/script}, which should give the following
+messages:
 \begin{verbatim}
 Reading in type file /home/aac/toy/types.tdl
 Checking type hierarchy
@@ -3251,9 +3253,11 @@ higher in the hierarchy.
 This example generates the following error messages:
 \begin{verbatim}
 Error in NOUN-LXM:
-   No possible type for features (INDEX HEAD) at path (SYN)
+   No possible type for features (INDEX HEAD) at 
+   path (SYN)
 Error in PN-LXM:
-   No possible type for features (COMPS SPR HEAD INDEX) at path (SYN)
+   No possible type for features (COMPS SPR HEAD INDEX) at 
+   path (SYN)
 \end{verbatim}
 
 A slightly different error message
@@ -3591,7 +3595,7 @@ the label {\tt S/NP}).
 If meta templates are specified,
 each meta template feature structure must
 specify a prefix string and a suffix string
-(by default, at the paths {\sc meta-prefix} and {\tt meta-suffix}).  
+(by default, at the paths {\sc meta-prefix} and {\sc meta-suffix}).  
 For instance, the following is specified as a meta template in the textbook
 grammar:
 \begin{verbatim}
@@ -5196,7 +5200,7 @@ See {\bf View} / {\bf Expanded type} (\S\ref{view})
 Displays the expanded lexical entry corresponding to the identifier.
 For example,
 \begin{verbatim}
-(show-lex-tty 'Kim_1}
+(show-lex-tty 'Kim_1)
 \end{verbatim}
 See {\bf View} / {\bf Lex entry} (\S\ref{view})
 
@@ -5206,7 +5210,7 @@ Displays the expanded lexical entries corresponding to the
 orthography given by the string.
 For example,
 \begin{verbatim}
-(show-words-tty "Kim"}
+(show-words-tty "Kim")
 \end{verbatim}
 The argument has to be a Lisp string but the command is
 not case-sensitive.
@@ -5217,7 +5221,7 @@ See {\bf View} / {\bf Word entries} (\S\ref{view})
 Displays the grammar rule corresponding to the identifier.
 For example,
 \begin{verbatim}
-(show-grammar-rule-tty 'hd_spec_rule}
+(show-grammar-rule-tty 'hd_spec_rule)
 \end{verbatim}
 See {\bf View} / {\bf Grammar rule} (\S\ref{view})
 
@@ -5227,7 +5231,7 @@ Displays the lexical or
 morphological rule corresponding to the identifier.
 For example,
 \begin{verbatim}
-(show-lex-rule-tty 'plur_noun}
+(show-lex-rule-tty 'plur_noun)
 \end{verbatim}
 See {\bf View} / {\bf Lexical rule} (\S\ref{view})
 
@@ -5974,6 +5978,11 @@ will be reconstructed from the source file.
     \itemindent -\leftmargin
     \itemsep 0pt plus 1pt
     \parsep 0pt plus 1pt}
+
+\book{Aho, A. V.,  J.E.~Hopcroft and J.D.~Ullman}
+{Data Structures and Algorithms}
+{Addison Wesley, Reading, MA}
+{1982}
 
 \book{Briscoe, E.J., A.~Copestake and V.~de~Paiva}
 {Inheritance, defaults and the lexicon}
