@@ -1,73 +1,31 @@
-;the first time you try and run it do:
+#|
+
+;the first time you try and run the LKB do:
 ;
-;(load "~/lkb/src/general/loadup")
-;(compile-system "mrs" :force t) 
+
+(load "~/newlkb/src/general/loadup")
+(compile-system "mrs" :force t) 
+
 ;
 ;on subsequent sessions, the files will be compiled, so do
 ;
 
-(load "~/lkb/src/general/loadup")
+(load "~/newlkb/src/general/loadup")
 (load-system "mrs")
 
 
+; to redisplay the LKB top window in ACL/CLIM if it has
+; been closed accidentally
 
-; In raw CLIM-ACL image
-
-; First time after update, do
-;(load "~/lkb/ACL_specific/bootlkb.lsp")
-
-; Each time
-;(load "~/lkb/ACL_specific/loadlkb.lsp")
-
-; Assuming working directory is set to "~/lkb"
-;(load "~/grammar/lkb/script")
-
-; have some coffee ...
-
-;(setq *shrunk-types* '(tmp mrs))
-;(setq *non-display-features* '(ARGS HEAD-DTR NON-HEAD-DTR))
-;(clear-type-cache)
-
-; To run batch process
-
-(in-package "TPL")
-(setq *print-level* nil *print-length* nil)
-(in-package "USER")
-(parse-tsdb-sentences "~/tsdb/jun98/vm/lkbjun23/item" 
-	              "~/tsdb/jun98/vm/lkbjun23/parse" 
-	              "~/tsdb/jun98/vm/lkbjun23/result")
-
-; To parse sentences interactively
-
-#|
 (in-package :clim-user)
 (set-up-lkb-interaction :core) 
 (in-package :cl-user)
 (enable-type-interactions)
-|#
-
-; To find source of unification failure
-
-; 1) Bring up the two feature structures in separate windows.
-; 2) Click on the name of the topmost type near the top of each FS, and save it 
-;    to some name (e.g. "edgea" and "edgeb")
-; 3) Work out the relative paths in the two features that want to be unified
-; 4) Execute the following function (with arguments adjusted as needed), which
-;    will save the result as "edgec".
- 
-(less-interactive-unification-check '(dfe11 (SYNSEM LOCAL CAT VALENCE COMPS FIRST) dfe12 (SYNSEM) dfres1))
 
 ;; To check lexicon for well-formedness,
 
-(load "~/lkb/main/batch-check.lsp")
 (batch-check-lexicon)
 
+|#
 
 
-; To reload a type, then check constraints:
-; First, put the type(s) in a separate file, then
-
-(read-tdl-type-patch-file)
-
-; Performance
-; 18-Jun-98: CSLI 1349: 4865 secs.
