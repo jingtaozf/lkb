@@ -67,6 +67,11 @@
 
 (defvar *scratch-tdl-file* nil)
 
+(defun load-psql-lexicon-from-script nil
+  (clear-lex *lexicon* :no-delete t)
+  (initialize-psql-lexicon)
+  (setf *lexicon* *psql-lexicon*))
+  
 ;; obsolete...
 (defun open-psql-lex (&rest rest)
   (apply 'initialize-psql-lexicon rest))

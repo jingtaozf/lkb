@@ -629,10 +629,5 @@
 
 ;;--
 
-(defun load-psql-lexicon-from-script nil
-  (clear-lex *lexicon* :no-delete t)
-  (initialize-psql-lexicon)
-  (setf *lexicon* *psql-lexicon*))
-  
 (defun get-keyword-val (keyword list)
   (second (member keyword list)))
