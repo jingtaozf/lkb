@@ -84,14 +84,14 @@
    (arcs nil)
    ;; generation counter for all temporary slots
    (x-generation 0 :type fixnum)
-   ;; pointer to representative for this fs's equivalence class
-   (x-forward nil)
    ;; new type computed during a unification
    (x-new-type nil)
    ;; new arcs computed during a unification
    (x-comp-arcs nil)
    ;; pointer to a copy of this fs
    (x-copy nil)
+   ;; pointer to representative for this fs's equivalence class
+   (x-forward nil)
    ;; flag used when traversing a fs doing interleaved unifications
    (x-visit-slot nil))
 
@@ -110,11 +110,14 @@
    `(= (the fixnum (dag-x-generation ,dag)) (the fixnum *unify-generation*)))
 
 (defmacro current-generation-p (dag)
+#|
+   `(current-generation-strict-p ,dag)
+|#
    ;; ignore least significant bit of dag generation wrt global generation
    `(<= (the fixnum
           (logxor (the fixnum (dag-x-generation ,dag)) (the fixnum *unify-generation*)))
-        1))
-
+        1)
+   )
 
 (defmacro with-dag-optimize ((dag) &body body)
    #-lkb-nochecks (declare (ignore dag))
@@ -236,7 +239,7 @@
         with data = (pool-data pool)
         for i from 0 to (pool-position pool)
         for dag = (svref data i) 
-        when (dag-p dag) do
+        when dag do
           (setf (dag-type dag) nil)
           (setf (dag-arcs dag) nil)
           (when compressp (compress-dag dag :recursivep nil))))
@@ -445,7 +448,7 @@
          (with-dag-optimize (,dag-var)
             (loop
                (cond
-                 ((not (= (the fixnum (dag-x-generation ,dag)) *unify-generation*))
+                 ((not (current-generation-p ,dag-var))
                     (return))
                  ((with-verified-dag (,dag-var) (dag-x-forward ,dag-var))
                     (setq ,dag-var
