@@ -317,7 +317,8 @@
              (eq (first (first (ed-arguments ed))) (vsym "CARG"))))))
 
 (defun ed-wellformed-p (eds)
-  (not (ed-cyclic-p eds)))
+  (and (not (ed-cyclic-p eds))
+       (not (ed-fragmented-p eds))))
 
 (defun ed-cyclic-p (eds)
   (loop

@@ -101,7 +101,7 @@
                          (:dependencies 
                           (lkb::show-mrs-dependencies-window nil mrs title))
                          (t
-                          (setf return %lsp-invalid-format%))))
+                          (setf return lkb::%lsp-invalid-format%))))
                  (let ((string (with-output-to-string (stream)
                                  (export-tree item active :lspp t 
                                               :stream stream))))
