@@ -312,7 +312,7 @@
 	  (clim:make-pane 'clim:application-pane
 			  :display-function 'draw-trees-window
 			  :text-cursor nil
-			  :width 530
+			  :width 520
 			  ;; :height 100
 			  :text-style (clim:parse-text-style 
 				       (list :sans-serif :roman 7))
@@ -330,8 +330,8 @@
 	  (clim:make-pane 'clim:application-pane
 			  :display-function 'draw-compare-window
 			  :text-cursor nil
-			  :width 410
-			  :height 660
+			  :width 420
+			  :height 650
 			  :text-style (clim:parse-text-style 
 				       (list :sans-serif :roman 10))
 			  :end-of-line-action :allow
