@@ -210,12 +210,12 @@
 ;;; called from functions in core files
 
 
-(defun draw-new-type-tree (type title something)
-  (declare (ignore type title something))
+(defun draw-new-type-tree (node title horizontalp existing show-all-p)
+  (declare (ignore node title horizontalp existing show-all-p))
   nil)
 
-(defun create-type-hierarchy-tree nil
-  (declare (ignore type))
+(defun create-type-hierarchy-tree (&optional (type *toptype*) old-window show-all-p)
+  (declare (ignore type old-window show-all-p))
   nil)
 
 (defun close-existing-type-hierarchy-trees nil
