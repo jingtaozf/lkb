@@ -295,7 +295,7 @@ at this point).
            (base-lex-alternative-rels lex-res)
            (base-lex-message-rels lex-res))))
     (for new-found-str in new-found-lex-list
-         append
+         collect
          (setf user::*number-of-applications* 0)
          (cons new-found-str
                (let ((res-fs-and-rules 
@@ -518,7 +518,7 @@ at this point).
           (let ((retrieved-ids
                  (for res in identified-entry-sets
                       collect
-                      (mrs::found-lex-lex-id res))))
+                      (mrs::found-lex-lex-id (car res)))))
             (format t "~%Retrieved ids ~A" retrieved-ids)
             (for id-and-rules in lrules-and-entries-used
                  do
@@ -535,11 +535,13 @@ at this point).
         (let* ((mrs (car (mrs::extract-mrs (list parse-res))))
                (identified-entry-sets
                 (mrs::collect-lex-entries-from-mrs mrs)))
+          (format t "~%~A"
           (for res in identified-entry-sets
-               do
-               (format t "~%~A ~A"
-                      (mrs::found-lex-lex-id res)
-                      (mrs::found-lex-rule-list res))))))
+               collect
+               (for item in res
+                    collect
+                    (cons (mrs::found-lex-lex-id item)
+                            (mrs::found-lex-rule-list item))))))))
 
 |#
 
