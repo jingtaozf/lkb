@@ -13,6 +13,7 @@ initialize_mrs() {
   extern void init_MRSRESOLVE(cl_object);
   extern void init_MRSCONS(cl_object);
   extern void init_CHEAPSCOPE(cl_object);
+  extern void init_BASERMRS(cl_object);
   extern void init_COMP(cl_object);
   extern void init_CONVERT(cl_object);
   extern void init_ANNLT(cl_object);
@@ -33,6 +34,7 @@ initialize_mrs() {
   read_VV(OBJNULL, init_MRSRESOLVE);
   read_VV(OBJNULL, init_MRSCONS);
   read_VV(OBJNULL, init_CHEAPSCOPE);
+  read_VV(OBJNULL, init_BASERMRS);
   read_VV(OBJNULL, init_COMP);
   read_VV(OBJNULL, init_CONVERT);
   read_VV(OBJNULL, init_ANNLT);
