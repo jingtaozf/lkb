@@ -885,19 +885,31 @@ char* fr_wh[3] = {"from","where",NULL};
 char** matches_rest(char* text, int start, int end) {
   char** words = string_to_words(text);
   static char** matches=NULL;
-  static int num=50; 
-  char **names_r, **names_a;
-  int n,last,rel_num,attr_num;
+  static int num=100; 
+  static char **names_r = (char **)NULL;
+  static char **names_a = (char **)NULL;
+  static int rel_num = 0;
+  static int attr_num = 0;
+  int n,last;
 
   if (!matches) {
     matches = (char**)malloc((num+1)*sizeof(char*));
     memset(matches,'\0',(num+1)*sizeof(char*));
   }
   
-  names_r = tsdb_all_relation_names();
-  names_a = tsdb_all_attribute_names();
-  rel_num = tsdb_n_relations();
-  attr_num = tsdb_n_attributes();
+  if(names_r == NULL) {
+    names_r = tsdb_all_relation_names();
+  } /* if */
+  if(names_a == NULL) {
+    names_a = tsdb_all_attribute_names();
+  } /* if */
+  if(!rel_num) {
+    rel_num = tsdb_n_relations();
+  } /* if */
+  if(!attr_num) {
+    attr_num = tsdb_n_attributes();
+  } /* if */
+
   if (attr_num+rel_num+TSDB_VAR_NUM+TSDB_CONST_NUM+10 > num) {
     num+=num;
     matches = (char**)realloc(matches,(num+1)*sizeof(char*));
