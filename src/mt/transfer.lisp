@@ -46,20 +46,6 @@
 ;;; manipulating variable properties destructively and taking advantage of
 ;;; match operators like :null and :exact to test for specific values.
 ;;;                                                           (9-jan-03; oe)
-(defparameter %transfer-properties-filter%
-  (list
-   (cons (mrs::vsym "TENSE") (mrs::vsym "E.TENSE"))
-   #+:null
-   (cons (mrs::vsym "PROG") (mrs::vsym "E.ASPECT.PROGR"))
-   #+:null
-   (cons (mrs::vsym "PERF") (mrs::vsym "E.ASPECT.PERF"))
-   (cons (mrs::vsym "NATGEND") (mrs::vsym "PNG.GEN"))
-   (cons (mrs::vsym "ASPECT-PROTRACTED") nil)
-   (cons (mrs::vsym "ASPECT-STATIVE") nil)
-   (cons (mrs::vsym "ASPECT-TELIC") nil)
-   (cons (mrs::vsym "ASPECT-BOUNDED") nil)
-   (cons (mrs::vsym "ASPECT-INCHOATIVE") nil)))
-
 (defparameter %transfer-properties-accumulator%
   (list
    (cons 
@@ -77,6 +63,20 @@
      (list (mrs::vsym "3") nil (mrs::vsym "3per"))
      (list nil (mrs::vsym "sg") nil (mrs::vsym "pernum"))
      (list nil (mrs::vsym "pl") nil (mrs::vsym "pernum"))))
+   (cons 
+    (mrs::vsym "x")
+    (list
+     (list (mrs::vsym "NATGEND") (mrs::vsym "PNG.GEN"))
+     (list (mrs::vsym "m") (mrs::vsym "masc"))
+     (list (mrs::vsym "f") (mrs::vsym "fem"))
+     (list (mrs::vsym "n") (mrs::vsym "neut"))
+     (list nil (mrs::vsym "gender"))))
+   (cons
+    (mrs::vsym "e")
+    (list
+     (list (mrs::vsym "TENSE") (mrs::vsym "E.TENSE"))
+     (list (mrs::vsym "pres") (mrs::vsym "present"))
+     (list nil (mrs::vsym "tense"))))
    (cons
     (mrs::vsym "e")
     (list
@@ -96,6 +96,18 @@
   (list
    (list (mrs::vsym "e") 
          (cons (mrs::vsym "E.MOOD") (mrs::vsym "indicative")))))
+
+(defparameter %transfer-properties-filter%
+  (list
+   (cons (mrs::vsym "NATGEND") (mrs::vsym "PNG.GEN"))
+   (cons (mrs::vsym "TENSE") (mrs::vsym "E.TENSE"))
+   (cons (mrs::vsym "PROG") (mrs::vsym "E.ASPECT.PROGR"))
+   (cons (mrs::vsym "PERF") (mrs::vsym "E.ASPECT.PERF"))
+   (cons (mrs::vsym "ASPECT-PROTRACTED") nil)
+   (cons (mrs::vsym "ASPECT-STATIVE") nil)
+   (cons (mrs::vsym "ASPECT-TELIC") nil)
+   (cons (mrs::vsym "ASPECT-BOUNDED") nil)
+   (cons (mrs::vsym "ASPECT-INCHOATIVE") nil)))
 
 (defparameter %transfer-values-filter%
   (list
@@ -125,7 +137,7 @@
 (defstruct (edge (:constructor make-edge-x))
   (id (let ((n %transfer-edge-id%)) (incf %transfer-edge-id%) n))
   rule mrs daughter solution n (vector 0)
-  (source 0))
+  source)
 
 (defun make-edge (&rest rest)
   (let* ((edge (apply #'make-edge-x rest))
@@ -221,9 +233,10 @@
   ;; after all unifcation and `expansion' is complete probably has resolved our
   ;; non-eq()ness issues.                                      (19-jan-04; oe)
   ;;
-  (when (mrs::var-p variable)
+  (if (mrs::var-p variable)
     (let ((new (getf (solution-variables solution) variable)))
-      (if new (retrieve-variable new solution) variable))))
+      (if new (retrieve-variable new solution) variable))
+    variable))
 
 (defun align-eps (old new solution)
   (push (cons old new) (solution-eps solution)))
@@ -265,7 +278,12 @@
               for feature in (lkb::appropriate-features-of name)
               do (pushnew feature %transfer-variable-features%))))
 
-  (let* ((files (if (listp files) files (list files)))
+  ;;
+  ;; protect general MRS code from ending up using our variable generator, as
+  ;; construct-mrs() makes a global assignment :-(.            (27-jan-04; oe)
+  ;;
+  (let* ((mrs::*variable-generator* mrs::*variable-generator*)
+         (files (if (listp files) files (list files)))
          (id (if (stringp name) 
                name 
                (let ((file (pathname (first files))))
@@ -314,9 +332,9 @@
                       (read-char stream)
                       (let ((unifications 
                              (lkb::read-expanded-avm-def stream id))
-                            lhs rhs)
+                            lhs rhs constants)
                         (when (lkb::check-for #\. stream id)
-                          (multiple-value-setq (lhs rhs)
+                          (multiple-value-setq (lhs rhs constants)
                             (discriminate-mtr-unifications unifications))
                           (setf lhs (lkb::process-unifications lhs))
                           (unless lhs
@@ -343,7 +361,8 @@
                                "read-transfer-rules(): ~
                               `~(~a~)' is not wellformed.~%"
                                id)))
-                          (let ((rule (convert-dag-to-mtr lhs rhs id)))
+                          (let ((rule (convert-dag-to-mtr 
+                                       lhs rhs constants id)))
                             ;;
                             ;; _fix_me_
                             ;; maybe inherit flags from MTRS defaults and do a
@@ -357,8 +376,14 @@
              (list (make-mtrs :id id :mtrs (nreverse rules) :flags flags)))))))
 
 (defun discriminate-mtr-unifications (unifications)
+  ;;
+  ;; _fix_me_
+  ;; give a little more thought about built-in assumptions about surface order,
+  ;; e.g. confirm that .outputp. below would also work if an MTR had OUTPUT as
+  ;; its first component.                                      (27-jan-04; oe)
+  ;;
   (loop
-      with lhss with rhss
+      with lhss with constants with rhss
       with n = (length *mtr-output-path*)
       for unification in unifications
       for lhs = (lkb::unification-lhs unification)
@@ -377,6 +402,17 @@
         #+:debug
         (format t "lhs: ~a~%" unification)
         (push unification lhss)
+        ;;
+        ;; for coreferences on constant MRS elements (PRED, CARG, et al., and
+        ;; properties inside of variables, circumvent construct-mrs() default
+        ;; behavior; maybe we should not use construct-mrs(), at some point.
+        ;;
+        (when (and path (lkb::path-p rhs)
+                   (let ((feature (first (last path))))
+                     (or (eq feature (first (last mrs::*rel-name-path*)))
+                         (member feature mrs::*value-feats*)
+                         (member feature %transfer-variable-features%))))
+          (push unification constants))
         (let ((rhsp (and (lkb::path-p rhs)
                          (null
                           (mismatch
@@ -392,10 +428,10 @@
             (push (lkb::make-unification :lhs lhs :rhs lhs) rhss))))
       finally 
         #+:debug
-        (setf %lhss% lhss %rhss% rhss)
-        (return (values lhss rhss))))
+        (setf %lhss lhss %rhss rhss)
+        (return (values lhss rhss constants))))
 
-(defun convert-dag-to-mtr (lhs rhs id)
+(defun convert-dag-to-mtr (lhs rhs constants id)
   ;;
   ;; _fix_me_
   ;; give some thought to variable types: authors of transfer rules might well
@@ -409,64 +445,89 @@
   ;; even where variables were called for (by means of coreferences, say).  we
   ;; will need to specialize construct-mrs() relatively soon, it seems, also to
   ;; treat special operators like :exact.                      (24-jan-04; oe)
-  ;; 
+  ;;
+  ;; _fix_me_
+  ;; the method implemented above (finding .constants. among the unifications
+  ;; of the MTR specification will only work for coreferences in the instance;
+  ;; to generally deal with inherited coreferences too, we will need to walk
+  ;; through the dag and identify coreferences ... not that hard, but we will
+  ;; have to do a little more work (also worry about coreferences on constant
+  ;; nodes more, e.g. handle an additional type appropriately, since constants
+  ;; cannot have sub-structures, at least :-).                 (27-jan-04; oe)
+  ;;
   #+:debug
-  (setf %lhs% lhs %rhs% rhs)
-  (let* ((generator (let ((n 0)) #'(lambda () (decf n))))
-         (mrs::*named-nodes* nil)
-         (filter (mrs::path-value lhs *mtr-filter-path*))
-         (filter (and filter 
-                      (not (vacuous-constraint-p *mtr-filter-path* filter))
-                      (mrs::construct-mrs filter generator)))
-         (context (mrs::path-value lhs *mtr-context-path*))
-         (context (and context 
-                       (not (vacuous-constraint-p *mtr-context-path* context))
-                       (mrs::construct-mrs context generator)))
-         (input (mrs::path-value lhs *mtr-input-path*))
-         (input (and input
-                     (not (vacuous-constraint-p *mtr-input-path* input))
-                     (mrs::construct-mrs input generator)))
-         (output (mrs::path-value lhs *mtr-output-path*))
-         (output (and output
-                      (not (vacuous-constraint-p *mtr-output-path* output))
-                      (mrs::construct-mrs output generator)))
-         (defaults (and rhs (mrs::path-value rhs *mtr-output-path*)))
-         (defaults (and defaults
-                        (not (vacuous-constraint-p *mtr-output-path* defaults))
-                        (mrs::construct-mrs defaults generator)))
-         (flags (and lhs (mrs::path-value lhs *mtr-flags-path*)))
-         (flags (and flags
-                     (not (vacuous-constraint-p *mtr-flags-path* flags))
-                     (convert-dag-to-flags flags))))
-         
-    (unless (or output rhs)
-      ;;
-      ;; warn: rule with no output specification
-      ;;
-      (format
-       *transfer-debug-stream*
-       "convert-dag-to-mtr(): `~(~a~)' has an empty output specification.~%"
-       id))
+  (setf %lhs lhs %rhs rhs %constants constants)
+  (let ((generator (let ((n 0)) #'(lambda () (decf n))))
+        (mrs::*named-nodes* nil))
     ;;
-    ;; _fix_me_
-    ;; since our current treatment of FILTER components is wrong anyway, give a
-    ;; warning and ignore all rules that try to use filters.     (8-jan-04; oe)
-    ;; 
-    (if filter
-      (format
-       *transfer-debug-stream*
-       "convert-dag-to-mtr(): ~
-        ignoring `~(~a~)' because it contains a FILTER.~%"
-       id)
-      (let* ((vector (ash 1 %transfer-rule-id%))
-             (mtr (make-mtr :id id :filter filter :context context
-                            :input input :output output :defaults defaults
-                            :variables (nreverse mrs::*named-nodes*)
-                            :flags flags :vector vector)))
-        (incf %transfer-rule-id%)
-        (when (member :optional (mtr-flags mtr))
-          (setf vector (logior vector %transfer-optional-rules%)))
-        mtr))))
+    ;; to allow use of `standard' MRS variables as (meta-level) variables on
+    ;; `constant' MRS elements (like PRED, CARG, and extras), work around the
+    ;; default construct-mrs() behaviour; maybe we should move to doing all MRS
+    ;; construction ourselves, or maybe not use MRS variables for meta-leval
+    ;; variables.
+    ;;
+    (when constants (convert-constants-to-variables lhs constants generator))
+    (let* ((filter (mrs::path-value lhs *mtr-filter-path*))
+           (filter (and filter 
+                        (not (vacuous-constraint-p *mtr-filter-path* filter))
+                        (mrs::construct-mrs filter generator)))
+           (context (mrs::path-value lhs *mtr-context-path*))
+           (context 
+            (and context 
+                 (not (vacuous-constraint-p *mtr-context-path* context))
+                 (mrs::construct-mrs context generator)))
+           (input (mrs::path-value lhs *mtr-input-path*))
+           (input (and input
+                       (not (vacuous-constraint-p *mtr-input-path* input))
+                       (mrs::construct-mrs input generator)))
+           (output (mrs::path-value lhs *mtr-output-path*))
+           (output (and output
+                        (not (vacuous-constraint-p *mtr-output-path* output))
+                        (mrs::construct-mrs output generator)))
+           (defaults (and rhs (mrs::path-value rhs *mtr-output-path*)))
+           (defaults 
+               (and defaults
+                    (not (vacuous-constraint-p *mtr-output-path* defaults))
+                    (mrs::construct-mrs defaults generator)))
+           (flags (and lhs (mrs::path-value lhs *mtr-flags-path*)))
+           (flags (and flags
+                       (not (vacuous-constraint-p *mtr-flags-path* flags))
+                       (convert-dag-to-flags flags))))
+      (unless (or output rhs)
+        ;;
+        ;; warn: rule with no output specification
+        ;;
+        (format
+         t
+         "convert-dag-to-mtr(): `~(~a~)' has an empty output specification.~%"
+         id))
+      ;;
+      ;; _fix_me_
+      ;; since our current treatment of FILTER components is wrong anyway, give
+      ;; a warning and ignore rules that try to use filters.    (8-jan-04; oe)
+      ;; 
+      (if filter
+        (format
+         t
+         "convert-dag-to-mtr(): ~
+          ignoring `~(~a~)' because it contains a FILTER.~%"
+         id)
+        (let* ((vector (ash 1 %transfer-rule-id%))
+               (mtr (make-mtr :id id :filter filter :context context
+                              :input input :output output :defaults defaults
+                              :variables (nreverse mrs::*named-nodes*)
+                              :flags flags :vector vector)))
+          (incf %transfer-rule-id%)
+          (when (member :optional (mtr-flags mtr))
+            (setf vector (logior vector %transfer-optional-rules%)))
+          mtr)))))
+
+(defun convert-constants-to-variables (dag constants generator)
+  (loop
+      for constant in constants
+      for path = (lkb::path-typed-feature-list (lkb::unification-lhs constant))
+      for node = (mrs::path-value dag path)
+      when node do (mrs::create-variable node generator)))
 
 (defun convert-dag-to-flags (dag)
   (let* ((optional (mrs::path-value dag *mtr-optional-path*))
@@ -605,11 +666,12 @@
           (loop
               for edge in result
               do (setf (edge-source edge)
-                   (length 
-                    (intersection 
-                     (mrs:psoa-liszt (edge-mrs edge)) eps 
-                     :key #'mrs::rel-pred :test #'equal))))
-          (setf result (stable-sort result #'< :key #'edge-source)))
+                   (intersection 
+                    (mrs:psoa-liszt (edge-mrs edge)) eps 
+                    :key #'mrs::rel-pred :test #'equal))))
+        (setf result 
+          (stable-sort 
+           result #'< :key #'(lambda (edge) (length (edge-source edge)))))
         (if filterp
           ;;
           ;; when filtering is requested, suppress all derivations that have a
@@ -941,9 +1003,18 @@
       (unify-types value1 value2))
      ((null value1) 
       value2)
+     ;;
+     ;; _fix_me_
+     ;; is the following actually correct?  an object-level variable against a
+     ;; constant?  i think probably the next one was intended.  (27-jan-04; oe)
+     ;;
+     #+:null
      ((and (mrs::var-p value1) (not (mrs::var-p value2)))
       (forward-variable value1 value2 solution)
       value2)
+     ((and (not (mrs::var-p value1)) (mrs::var-p value2))
+      (forward-variable value2 value1 solution)
+      value1)
      ((and strictp (or forwardp1 forwardp2)) nil)
      (t
       (let* ((type (unify-types 
@@ -1123,10 +1194,16 @@
         (let ((default (mrs:fvpair-value default)))
           (if (and (mrs::var-p value) (mrs::var-p default))
             (merge-values value default)
-            (setf (mrs:fvpair-value role) default))) 
+            (setf (mrs:fvpair-value role) 
+              (if (mtr-operator-p default) 
+                (merge-values value default)
+                default))))
       else when default do
         (push (mrs::copy-fvpair default) (mrs:rel-flist ep)))
   ep)
+
+(defun mtr-operator-p (value)
+  (or (eq value *mtr-upcase-operator*) (eq value *mtr-downcase-operator*)))
 
 (defun merge-values (variable default)
   ;;
@@ -1144,6 +1221,14 @@
   ;; part to have a less specific type than the variable already?
   ;;                                                           (22-jan-04; oe)
   (when (null default) (return-from merge-values variable))
+  (when (mtr-operator-p default)
+    (return-from merge-values
+      (cond
+       ((and (stringp variable) (eq default *mtr-upcase-operator*))
+        (string-upcase variable))
+       ((and (stringp variable) (eq default *mtr-downcase-operator*))
+        (string-downcase variable))
+       (t variable))))
   (when (and (mrs::var-type default)
              (or (null (mrs::var-type variable))
                  (not (member (mrs::var-type default) '

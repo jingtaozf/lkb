@@ -247,8 +247,7 @@
                      (format 
                       stream 
                       "~%Invalid MRS Object~%")))))
-            (unless (and (numberp (edge-source edge))
-                         (zerop (edge-source edge)))
+            (when (edge-source edge)
               (lkb::recolor-record record clim:+red+))))
         (when (edge-rule edge)
           (clim:formatting-row (stream)
@@ -281,11 +280,11 @@
                 (length (mrs-transfer-stack frame))
                 (loop
                     for edge in (mrs-transfer-edges frame)
-                    when (zerop (edge-source edge)) count 1))
+                    unless (edge-source edge) count 1))
               (unless edge
                 (let ((n (loop
                              for edge in (mrs-transfer-edges frame)
-                             unless (zerop (edge-source edge)) count 1)))
+                             when (edge-source edge) count 1)))
                   (unless (zerop n) n)))
               (when (and (edge-p edge) (mtr-p (edge-rule edge)))
                 (mtr-id (edge-rule edge))))))))
@@ -333,10 +332,10 @@
                (make-edge :mrs (mtr-filter edges))
                (make-edge :mrs (mtr-context edges))
                (make-edge :mrs (mtr-input edges))
-               #-:debug
+               #+:null
                (make-edge :mrs (merge-and-copy-mrss 
                                 (mtr-output edges) (mtr-defaults edges)))
-               #+:debug
+               #-:null
                (make-edge :mrs (mtr-output edges))
                (make-edge :mrs (mtr-defaults edges))))
             (loop

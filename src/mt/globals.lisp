@@ -16,3 +16,6 @@
 
 (defconstant *mtr-optional-path* (list (mrs::vsym "OPTIONAL")))
 
+(defconstant *mtr-upcase-operator* (mrs::vsym "+upcase+"))
+
+(defconstant *mtr-downcase-operator* (mrs::vsym "+downcase+"))
