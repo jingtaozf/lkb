@@ -96,6 +96,9 @@
   ;;   ((LBL . #D[handle ...]) (WLINK . #D[*cons* ...]) (PRED . #D[*top* ...])
   ;;    (ARG0 . #D[event ...]) (ARG1 . #D[ref-ind ...]))
   ;;
+  ;; where features are symbols and values whatever representation is used for
+  ;; feature structures in the interface (i.e. integers for PET).
+  ;;
   (dag-arcs fs))
 
 (defun fs-type (fs)
@@ -120,6 +123,20 @@
         (format t "~%!!!!!!!!!!!!!!!!!!!!!!" real-type)))
     real-type))
 
+(defun is-valid-type (type)
+  ;;
+  ;; given a type, test its validity.
+  ;;
+  (lkb::is-valid-type type))
+
+
+(defun is-top-type (type)
+  ;;
+  ;; given a type, return true if it is the top (i.e. most general) type.
+  ;;
+  (eql lkb::*toptype* type))
+
+
 (defun equal-or-subtype (type1 type2)
   ;;
   ;; given two types, return true if .type1. is equal to .type2. or one of its
@@ -128,24 +145,12 @@
   (or (equal type1 type2)
       (subtype-p type1 type2)))
 
-(defun is-top-type (type)
-  ;;
-  ;; given a type, return true if it is the top (i.e. most general) type.
-  ;;
-  (eql lkb::*toptype* type))
-
 (defun compatible-types (type1 type2)
   ;;
   ;; given two types, return true if .type1. and .type2. are either identical
   ;; or have a greatest lower bound (common descendant).
   ;;
   (or (eq type1 type2) (lkb::greatest-common-subtype type1 type2)))
-
-(defun is-valid-type (type)
-  ;;
-  ;; given a type, test its validity.
-  ;;
-  (lkb::is-valid-type type))
 
 ;;;
 ;;; convert PSOA to LKB/ERG dag representation; 
