@@ -43,6 +43,10 @@
 
 ;;; *chart-limit* is defined in globals.lsp
 
+(defvar *chart-generation-counter* 0
+  "a counter used by the user interface to make sure parse tree windows 
+   etc have the current chart")
+
 (defvar *chart* (make-array (list *chart-limit* 2))) 
 
 (defvar *parse-record* nil)
@@ -198,6 +202,7 @@
 ;;; interspersed among them) can be displayed
 
 (defun clear-chart nil
+   (incf *chart-generation-counter*)
    (setf *cached-orth-str-list* nil)
    (setf *parse-record* nil) 
    (loop for i from 0 upto (1- *chart-limit*)
