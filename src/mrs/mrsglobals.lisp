@@ -4,78 +4,81 @@
 
 (in-package "MRS")
 
-;;; Globals - freed of VM specific stuff
+;;; Globals for MRS
+;;; This version is aligned with the 2004 version of the MRS paper
+;;; and therefore quite extensively changed from previous versions.
+;;; This may necessitate some changes to mrsglobals for grammars
+;;; which use earlier style MRS and were relying on the defaults here.
+;;; Changing the actual variable names would require
+;;; extensive hacking of the code and cause far more serious disruption
+;;; with older grammars - comments here briefly explain old nomenclature
 
-(defparameter *giving-demo-p* nil)
-;; when set, this avoids error and warning messages
+;;; Note the use of vsym below - this allows for the code to be
+;;; run independently of the LKB and without worrying about
+;;; having to specify packages.  
 
-(defparameter *mrs-results-check* nil)
-;; mrscorpus and mrsfns - causes results to be checked against
-;; previous stored results.  Currently non-operational.
-
-;;; Following are needed to construct an MRS feature
+;;; The following are needed to construct an MRS feature
 ;;; structure, or to create an MRS Lisp structure from a 
 ;;; feature structure
 
 (defparameter *initial-semantics-path* 
   `(,(vsym "SYNSEM") ,(vsym "LOCAL") ,(vsym "CONT"))
-  "Following this path into a sign gets you to the MRS structure")
+  "Following this path into a sign fs gets you to the MRS fs")
 
 (defparameter *rel-name-path*
     `(,(vsym "PRED"))
-  "path within a rel to get the predicate name 
-   (type of rel may be used instead)")
-;;; i.e., this is a default location for a predicate name within
-;;; a relation - if this path doesn't have a value, the type of the
-;;; relation is used instead.  This is designed for the situation
-;;; where some relations have PREDs and others don't.
-;;;
-;;; _fix_me_
-;;; the above contradicts the current behavior of extract-pred-from-rel-fs() in
-;;; `mrsoutput.lisp'; see comment there and resolve with ann.  (10-dec-03; oe)
-;;;
+  "path within a relation fs to get the predicate name 
+   (this may be set no nil, in which case the type of relation 
+    is used instead to extract the predicate)")
 
 (defparameter *rel-handel-path*
-    `(,(vsym "HANDEL"))
-  "path to get the handel from a relation")
+    `(,(vsym "LBL"))
+  "path to get the label from a relation fs (old MRS called this HANDEL)")
 
 (defparameter *rel-cto-feature*
     (vsym "CTO")
-  "feature with the CTO")
+  "cto feature for recording character positions on relations")
 
 (defparameter *rel-cfrom-feature*
     (vsym "CFROM")
-  "feature with the CFROM")
+  "cfrom feature for recording character positions on relations")
 
 (defparameter *psoa-top-h-path* 
-  `(,(vsym "TOP-H"))
-  "path to get the top handle from a psoa")
+  `(,(vsym "HOOK") ,(vsym "LTOP"))
+  "path to get the hook's ltop from an mrs fs (psoa - parameterised state of affairs -
+   old terminology)")
 
 (defparameter *psoa-index-path* 
-  `(,(vsym "INDEX"))
-  "path to get an index from a psoa")
+  `(,(vsym "HOOK") ,(vsym "INDEX"))
+  "path to get the hook's index from an mrs")
+
+(defparameter *psoa-xarg-path* 
+  `(,(vsym "HOOK") ,(vsym "XARG"))
+  "path to get the hook's external index from an mrs")
 
 (defparameter *psoa-liszt-path* 
-    `(,(vsym "LISZT") ,(vsym "LIST"))
-  "path to get a liszt from a psoa")
+    `(,(vsym "RELS") ,(vsym "LIST"))
+  "path to get the list of relations from an mrs")
+;;; note LIST here - assumption is that we're using a difference list
+;;; encoding
 
 (defparameter *psoa-rh-cons-path*
-    `(,(vsym "H-CONS") ,(vsym "LIST"))
-  "path to get a list of handle constraints from a root psoa")
+    `(,(vsym "HCONS") ,(vsym "LIST"))
+  "path to get a list of handle constraints from an mrs fs")
 
-(defparameter *sc-arg-feature* (vsym "SC-ARG")
+(defparameter *sc-arg-feature* (vsym "HARG")
   "the feature in a qeq that leads to the first argument")
 
-(defparameter *outscpd-feature* (vsym "OUTSCPD")
+(defparameter *outscpd-feature* (vsym "LARG")
   "the feature in a qeq that leads to the second argument")
 
 (defparameter *qeq-type* (vsym "qeq")
-  "the type associated with a qeq relation")
+  "the fs type associated with a qeq relation")
 
 ;;; generic paths
 
 (defparameter *first-path*  `(,(vsym "FIRST"))
-  "path for first element in a list and a liszt")
+  "path for first element in a list and a rels list")
 ;;; note - assumption is made in mrsoutput that this is a singleton
 
 (defparameter *rest-path*  `(,(vsym "REST")))
@@ -83,23 +86,36 @@
 
 ;;; other globals for FS <-> MRS structure conversion
 
-(defparameter *value-feats* nil
+(defparameter *value-feats* `(,(vsym "CARG"))
    "A list of features within an MRS that take constant values
    instead of variables")
 
 (defparameter *feat-priority-list*  
-    `( ,(vsym "TOP-H") ,(vsym "HANDEL") ,(vsym "INDEX"))
+    `( ,(vsym "LTOP") ,(vsym "INDEX") ,(vsym "LBL")
+       ,(vsym "ARG0") ,(vsym "ARG1") ,(vsym "ARG2") ,(vsym "ARG3") 
+       ,(vsym "RSTR") ,(vsym "BODY")
+       ,(vsym "MARG") ,(vsym "CARG"))
   "A not-necessarily-complete list of features that determines printing
-order in an MRS")
+order in the MRS output routines and also determines the order
+of variables in the indexed representation")
 
 (defparameter *ignored-sem-features* `( ,(vsym "IDIOMP")
 					,(vsym "CFROM")
 					,(vsym "CTO"))
-  "A list of features which are ignored completely")
+  "A list of features which are ignored completely when constructing
+an MRS from a FS representation of an MRS")
 
 (defparameter *ignored-extra-features* `( ,(vsym "INSTLOC"))
   "A list of features in the variable substructure 
-   which are ignored completely")
+   which are ignored completely when constructing
+   an MRS from a FS representation of an MRS")
+
+(defparameter *dummy-relations* nil
+   "this allows the rels list in the FS to contain relations that
+    have no effect on the extracted MRS.  The values set here should
+    correspond to the value of the pred - so they could be the
+    type of the ep fs or the value of *rel-name-path*")
+
 
 ;;; types for variable naming in mrsoutput
 
@@ -110,47 +126,58 @@ order in an MRS")
 (defparameter *ref-ind-type* (vsym "ref-ind"))
 (defparameter *deg-ind-type* (vsym "deg-ind"))
 
+;;; used in mrsresolve (code for scoping MRSs)
 
-;;; used in mrsresolve
+(defparameter *bv-feature* (vsym "ARG0")
+  "the feature used to indicate a quantifier's bound variable")
 
-(defparameter *bv-feature* (vsym "BV"))
+(defparameter *scope-feat* (vsym "BODY")
+  "the feature used to indicate a quantifier's scope - required
+   by the scoping code and also, by default, used in the test for
+   quantifierness of EPs")
 
-(defparameter *quant-rel-types* nil)
-
-(defparameter *scope-feat* (vsym "SCOPE"))
+(defparameter *quant-rel-types* nil
+  "the scoping code needs to know which relations correspond
+   to quantifiers - the default way of doing this is to assume
+   that quantifiers uniquely have a body feature but alternatively
+   this can be set to an exhaustive list of quantifiers - useful
+   for teaching purposes")
 
 (defparameter *scoping-ignored-roles* (list (vsym "TPC") (vsym "PSV"))
   "Variables which are the values of these features are ignored
    with respect to the scoping code.  This is curently used for the
    simple information structure encoding.")
 
+(defvar *top-level-rel-types* nil
+  "the types of any relations which introduce variables
+which need not be scoped - pronouns etc.  Not used in current ERG")
+
 ;;;
 ;;; MRS output control
 
-(defparameter *sem-relation-suffix* nil
+(defparameter *sem-relation-suffix* "_rel"
   "a suffix string marking semantic relations - 
    used in the compact MRS representation")
 
-;;; for generation - real values in mrsglobals-eng
+;;; for generation
 
 (defparameter *null-semantics-hack-p* nil
   "for debugging - if set, this cheats on null semantic items
    WARNING - do not set when processing in batch mode")
 
-(defparameter *dummy-relations* nil)
-;;; this allows the LISZT to contain relations that
-;;; have no effect on the MRS.  The type of the relation should be
-;;; specified
-
-(defparameter *main-semantics-path* nil
+(defparameter *main-semantics-path* 
+    `(,(vsym "SYNSEM") ,(vsym "LOCAL") ,(vsym "CONT") 
+		       ,(vsym "RELS") ,(vsym "LIST"))
   "the path into a lexical entry which gives the list of
-   relations - typically (append *initial-semantics-path* '(LISZT LIST))")
+   relations - typically (append *initial-semantics-path* 
+   *psoa-liszt-path*)")
 
-(defparameter *construction-semantics-path* nil
+(defparameter *construction-semantics-path* 
+  `(,(vsym "C-CONT") ,(vsym "RELS") ,(vsym "LIST"))
   "the path into a rule/construction which gives the
    semantics specific to that construction")
 
-(defparameter *top-semantics-type* nil
+(defparameter *top-semantics-type* (vsym "predsort")
   "the highest type in the hierarchy under which all
    rels are found")
 
@@ -160,11 +187,15 @@ order in an MRS")
 ;;; INSTLOC is a feature that should appear on all feature structures
 ;;; representing variables (handles etc)  It is needed by the generator
 ;;; as a location for a constant value that distinguishes different
-;;; variables.  
+;;; variables.  It is now assumed to be string-valued.
 
-(defparameter *instloc-type* (vsym "INSTLOC"))
+(defparameter *instloc-path* `(,(vsym "INSTLOC")))
 
-(defparameter *instloc-path*   `(,(vsym "INSTLOC")))
+(defparameter *slash-semantics-path* 
+    `(,(vsym "SYNSEM") ,(vsym "NON-LOCAL") 
+      ,(vsym "SLASH") ,(vsym "LIST") ,(vsym "FIRST") 
+      ,(vsym "CONT"))
+  "This path is used for filtering the edges in the generator to improve efficiency")
 
 ;;; for munging - not user-settable
 
@@ -183,13 +214,6 @@ order in an MRS")
 "global variable which is set to the current set of bindings for the
 printing routines -  convenient to make this global to keep printing generic")
 
-
-;;; set in mrsglobals-eng
-
-(defvar *top-level-rel-types* nil
-  "the types of any relations which introduce variables
-which need not be scoped - pronouns etc")
-
 (defvar *top-level-variables* nil
   "the variables which correspond to pronouns -
 set in the code")
@@ -200,13 +224,12 @@ set in the code")
   "if t for a parse, cheapscope is not called - not user settable")
 
 ;;; the following are needed only for the detection of fragments
-;;; indicated in the LinGO gramar by the value of ROOT
+;;; indicated in the LinGO grammar by the value of ROOT
 
+(defvar *root-path* `(,(vsym "ROOT")))
 
-(defvar *root-path* nil)
-
-(defvar *false-type* nil)
-(defvar *true-type* nil)
+(defvar *false-type* (vsym "-"))
+(defvar *true-type* (vsym "+"))
 
 ;;;
 ;;; in LOGON, we have an addtional notion of `fragmented' MRSs, viz. in cases
@@ -219,6 +242,17 @@ set in the code")
 
 (defparameter *alex-mode* nil
   "if t, allows scope to have specified relations")
+
+
+;;; Control of functionality
+
+(defparameter *giving-demo-p* nil
+  "when set, this squashes various error and warning messages in the MRS code.
+   This is not a good thing to do in general!")
+
+(defparameter *mrs-results-check* nil)
+;; mrscorpus and mrsfns - causes results to be checked against
+;; previous stored results.  Currently non-operational.
 
 ;;; for some reason, the function determine-variable-type 
 ;;; was moved here, where it surely doesn't belong (given that it's
