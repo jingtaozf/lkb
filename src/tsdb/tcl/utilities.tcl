@@ -404,7 +404,10 @@ proc update_graph_cascade {code} {
 
   set fields {first total tcpu tgc 
               p-ftasks p-etasks p-stasks 
-              aedges pedges raedges rpedges};
+              aedges pedges raedges rpedges
+              trees utcpu uspace 
+              subsumptions equivalence proactive retroactive
+              frozen failures};
   if {$code == "tasks" || $code == "ptimes" || $code == "ttimes"} {
     set globals(graph,values) $code;
     foreach field $fields {

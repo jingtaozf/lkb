@@ -191,6 +191,8 @@
          "JANUS")
         ((member :chic *features* :test #'eq)
          "CHIC")
+        ((member :anlt *features* :test #'eq)
+         "A(N)NLT")
         ((member :babel *features* :test #'eq)
          "BABEL")
         (t

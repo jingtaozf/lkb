@@ -605,13 +605,11 @@
                     &optional (language *tsdb-data*)
                     &key cache)
   (when *tsdb-rule-statistics-p*
-    (when (and cache (eq (get-field :protocol cache) :raw))
-      (error "write-rules(): unable to write to raw cache; see `tsdb.lisp'"))
     (loop 
         with *print-circle* = nil
         with *print-level* = nil
         with *print-length* = nil
-        with rawp = nil
+        with rawp = (and cache (eq (get-field :protocol cache) :raw))
         for rule in statistics
         for name = (normalize-string (get-field+ :rule rule "") :escape rawp)
         for filtered = (get-field+ :filtered rule -1)
@@ -619,12 +617,26 @@
         for successful = (get-field+ :successful rule -1)
         for actives = (get-field+ :actives rule -1)
         for passives = (get-field+ :passives rule -1)
-        for query = (format
-                     nil
-                     "insert into rule values ~d ~s ~d ~d ~d ~d ~d"
-                     parse-id name filtered executed successful
-                     actives passives)
-        do (call-tsdb query language :cache cache))))
+        do
+          (if rawp
+            (let ((stream (get-field :rule cache))
+                  (ofs *tsdb-ofs*))
+              (write parse-id :stream stream) (write-char ofs stream)
+              (write-string name stream) (write-char ofs stream)
+              (write filtered :stream stream) (write-char ofs stream)
+              (write executed :stream stream) (write-char ofs stream)
+              (write successful :stream stream) (write-char ofs stream)
+              (write actives :stream stream) (write-char ofs stream)
+              (write passives :stream stream)
+              (terpri stream)
+              (force-output stream)
+              (incf (get-field :count cache)))
+            (let ((query (format
+                          nil
+                          "insert into rule values ~d ~s ~d ~d ~d ~d ~d"
+                          parse-id name filtered executed successful
+                          actives passives)))
+              (call-tsdb query language :cache cache))))))
 
 (defun write-output (i-id application 
                      tree mrs tasks 

@@ -458,6 +458,44 @@ proc main {} {
     -label "Passive Result Items (`rpedges')" \
     -variable globals(graph,rpedges) \
     -command {update_graph_cascade rpedges};
+  if {$globals(user) == "oe"} {
+    .menu.analyze.menu.values add checkbutton \
+      -label "Packed Parse Trees (`trees')" \
+      -variable globals(graph,trees) \
+      -command {update_graph_cascade trees};
+    .menu.analyze.menu.values add checkbutton \
+      -label "Unpacking Time (`utcpu')" \
+      -variable globals(graph,utcpu) \
+      -command {update_graph_cascade utcpu};
+    .menu.analyze.menu.values add checkbutton \
+      -label "Unpacking Space (`uspace')" \
+      -variable globals(graph,uspace) \
+      -command {update_graph_cascade utcpu};
+    .menu.analyze.menu.values add checkbutton \
+      -label "Subsumption Tests (`subsumptions')" \
+      -variable globals(graph,subsumptions) \
+      -command {update_graph_cascade subsumptions};
+    .menu.analyze.menu.values add checkbutton \
+      -label "Equivalence Packings (`equivalence')" \
+      -variable globals(graph,equivalence) \
+      -command {update_graph_cascade equivalence};
+    .menu.analyze.menu.values add checkbutton \
+      -label "Proactive Packings (`proactive')" \
+      -variable globals(graph,proactive) \
+      -command {update_graph_cascade proactive};
+    .menu.analyze.menu.values add checkbutton \
+      -label "Retroactive Packings (`retroactive')" \
+      -variable globals(graph,retroactive) \
+      -command {update_graph_cascade retroactive};
+    .menu.analyze.menu.values add checkbutton \
+      -label "Frozen Edges (`frozen')" \
+      -variable globals(graph,frozen) \
+      -command {update_graph_cascade frozen};
+    .menu.analyze.menu.values add checkbutton \
+      -label "Unpacking Failures (`failures')" \
+      -variable globals(graph,failures) \
+      -command {update_graph_cascade failures};
+  }; # if
 
   menu .menu.analyze.menu.rvalues -tearoff 0
   .menu.analyze.menu.rvalues add checkbutton \
@@ -684,6 +722,11 @@ proc main {} {
   .menu.options.menu.switches add checkbutton \
     -label "Logarithmic Scales" \
     -variable globals(logscale);
+  if {$globals(user) == "oe"} {
+    .menu.options.menu.switches add checkbutton \
+      -label "Custom Fields" \
+      -variable globals(graph,extras);
+  }; # if
 
   #
   # `Help' menu (and embedded cascades)

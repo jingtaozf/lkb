@@ -592,6 +592,9 @@ proc tsdb_graph {{code "graph"}} {
   if {$globals(graph,scatterp)} {
     set command "$command :scatterp t";
   }; # if
+  if {$globals(graph,extras)} {
+    set command "$command :extras t";
+  }; # if
 
   if {$code == "chart"} {
     set command "$command :title \"Aggregate Size (Number of Test Items)\"";

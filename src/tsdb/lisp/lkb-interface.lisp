@@ -84,9 +84,7 @@
                                  (make-broadcast-stream *standard-output* str)
                                str))
           (input (split-into-words (preprocess-sentence-string word))))
-     (let ((*dag-recycling-p* t))
-       (when *dag-recycling-p* (setf *dag-recycling-p* *dag-recycling-p*))
-       (parse input nil))
+     (parse input nil)
      (summarize-chart))))
 
 (defun initialize-test-run (&key interactive exhaustive)
@@ -125,10 +123,10 @@
 ;;; representations (strings); all times in thousands of secs
 
 (defun parse-item (string 
-                   &key exhaustive trace
+                   &key id exhaustive trace
                         readings edges derivations semantix-hook trees-hook
                         burst derivationp)
-  (declare (ignore derivations))
+  (declare (ignore derivations #-:packing id))
   
   (multiple-value-bind (return condition)
       (ignore-errors
@@ -153,7 +151,7 @@
               (*copies* 0)
               (*subsumptions* 0)
               tgc tcpu treal conses symbols others)
-         (declare (special *maximum-number-of-active-edges*))
+         (declare (special *maximum-number-of-active-edges* *subsumptions*))
          ;;
          ;; this really ought to be done in the parser ...  (30-aug-99  -  oe)
          ;;
@@ -195,11 +193,26 @@
                  (copies *copies*)
                  #+:packing
                  (packingp *chart-packing-p*)
+                 #+:packing
+                 utcpu
+                 #+:packing
+                 utgc
+                 #+:packing
+                 uspace
                  (readings #+:packing
                            (if packingp
-                             (loop
-                                 for edge in *parse-record*
-                                 sum (length (unpack-edge! edge)))
+                             (excl::time-a-funcall
+                              #'(lambda () 
+                                  (loop
+                                      for edge in *parse-record*
+                                      sum (length (unpack-edge! id edge))))
+                              #'(lambda (tgcu tgcs tu ts tr scons ssym sother
+                                         &rest ignore)
+                                  (declare (ignore tr ignore))
+                                  (setf utcpu (- (+ tu ts) (+ tgcu tgcs)))
+                                  (setf utgc (+ tgcu tgcs))
+                                  (setf uspace
+                                    (+ (* scons 8) (* ssym 24) sother))))
                              (length *parse-record*))
                            #-:packing
                            (length *parse-record*))
@@ -219,23 +232,29 @@
                  (pool (and (find-symbol "*DAG-POOL*")
                             (boundp (find-symbol "*DAG-POOL*"))
                             (symbol-value (find-symbol "*DAG-POOL*"))))
+                 (position (when pool
+                            (funcall 
+                             (symbol-function (find-symbol "POOL-POSITION"))
+                             pool)))
                  (garbage (when pool
                             (funcall 
                              (symbol-function (find-symbol "POOL-GARBAGE"))
                              pool)))
-                 (comment (format nil "(:garbage ~d)" garbage))
+                 (comment 
+                  (format nil "(:pool . ~d) (:garbage . ~d)" position garbage))
                  #+:packing
                  (comment
                   (if packingp
                     (format 
                      nil 
-                     "(:subsumptions ~d) ~
-                      (:proactive ~d) (:retroactive ~d) (:equivalence ~d) ~
-                      (:trees ~d) (:frozen ~d) (:failures ~d) ~a"
-                     *subsumptions*
-                     (packings-proactive *packings*)
+                     "(:utcpu . ~d) (:utgc . ~d) (:uspace . ~d) 
+                      (:subsumptions . ~d) (:equivalence . ~d) ~
+                      (:proactive . ~d) (:retroactive . ~d)  ~
+                      (:trees . ~d) (:frozen . ~d) (:failures . ~d) ~a"
+                     utcpu utgc uspace 
+                     *subsumptions* (packings-equivalent *packings*)
+                     (packings-proactive *packings*) 
                      (packings-retroactive *packings*)
-                     (packings-equivalent *packings*)
                      (length *parse-record*)
                      (packings-frozen *packings*) 
                      (packings-failures *packings*)
@@ -263,7 +282,7 @@
                 (:comment . ,comment)
                 (:results .
                  ,(append
-                   (unless packingp
+                   (unless #+:packing packingp #-:packing nil
                      (loop
                          for i from 0
                          for parse in (nreverse *parse-record*)
@@ -298,6 +317,7 @@
                          for string = (format nil "~s" derivation)
                          collect (pairlis '(:result-id :derivation)
                                           (list i string))))))))))))
+    (free)
     (append
      (when condition
        (pairlis '(:readings 
@@ -507,6 +527,38 @@
       -1))))
     
 
+;;;
+;;; make an attempt to release references to temporary objects; because the
+;;; Lisp gc() mechanism cannot interprete the generation counter mechanism, we
+;;; need to explicitly reset all scratch slots.
+;;;
+
+(defun free ()
+  (loop
+      for i from 0 to (- *chart-limit* 1)
+      for entry = (aref *chart* i 0)
+      when (chart-entry-p entry)
+      do
+        (loop
+            for configuration in (chart-entry-configurations entry)
+            for edge = (chart-configuration-edge configuration)
+            when (stringp (edge-rule edge)) do
+              (compress-dag (tdfs-indef (edge-dag edge)))))
+  (loop 
+      for edge in *morph-records* do
+        (compress-dag (tdfs-indef (edge-dag edge))))
+  (clear-chart)
+  (setf *cached-category-abbs* nil)
+  (setf *parse-times* nil)
+  (loop
+      for rule in (get-matching-lex-rules nil)
+      for dag = (tdfs-indef (rule-full-fs rule)) do
+        (compress-dag dag))
+  (loop
+      for rule in (get-matching-rules nil nil)
+      for dag = (tdfs-indef (rule-full-fs rule)) do
+        (compress-dag dag)))
+                  
 ;;;
 ;;; interface functions for reconstruction of derivations (in UDF --- unified
 ;;; derivation format |:-).

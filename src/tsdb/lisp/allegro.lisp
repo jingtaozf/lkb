@@ -51,8 +51,9 @@
             (format
              t
              "~&gc-after-hook(): ~:[local~;global~]~@[ (recursive)~*~]; ~
-              new: ~a; old: ~a; pending: ~a~%" 
-             global global-gc-p new old pending)
+              new: ~a; old: ~a; pending: ~a~@[~*; efficiency: ~d~].~%" 
+             global global-gc-p new old pending 
+             (integerp efficiency) (round efficiency))
             (top-level::zoom-command
              :from-read-eval-print-loop nil :all t :brief t))
           (when *tsdb-gc-statistics*
@@ -73,7 +74,6 @@
                      (tpl:*zoom-print-length* nil)
                      (*terminal-io* stream)
                      (*standard-output* stream))
-                 
                  (top-level::zoom-command
                   :from-read-eval-print-loop nil :all t :brief t)))
               (error
@@ -90,8 +90,7 @@
                   (setf global-gc-p t)
                   #-(version>= 5 0)
                   (busy :gc :start)
-                  (when (and #-:oe *tsdb-gc-message-p*
-                             (output-stream-p stream))
+                  (when (and #-:oe *tsdb-gc-message-p* (output-stream-p stream))
                     (format 
                      stream
                      "~&gc-after-hook(): ~d bytes were tenured; ~
