@@ -10,6 +10,10 @@
 # Linux are built with patch `p8a007.001' only (further investigation of the
 # portability issues pending).
 #
+# note that this script assumes that it resides in the same directory as the
+# LKB run-time binaries (`.../linux' on Linux, where `...' is the root of the
+# LKB installation directory); also, the script has to be executable.
+#
 # _fix_me_
 # there should be a portable way of working out the libc version and deciding
 # on whether this is necessary or not, such that the same script could be used
