@@ -251,7 +251,8 @@
 		 (create-path-from-feature-list path2)
 		 fs2
 		 ;; was copied, but shouldn't be necessary
-		 :selected1 *path1* :selected2 path2))
+		 :selected1 *path1* :selected2 path2 
+		 t))
 	   (result (when dag (make-tdfs :indef dag))))
       (terpri)
       (when result

@@ -64,12 +64,12 @@
   ;; then we call hide-in-type-hierarchy-p on each type to see whether
   ;; it should be hidden
   (loop for name in *type-names*
-       do 
-       (unless (symbolp name)
-         (let ((real-thing name))
-	   (setq name (intern (princ-to-string name)))
-	   (setf (get name 'real-thing) real-thing))) 
-       (setf (get name 'daughters) nil))
+      do 
+	(unless (symbolp name)
+	  (let ((real-thing name))
+	    (setq name (intern (princ-to-string name)))
+	    (setf (get name 'real-thing) real-thing))) 
+	(setf (get name 'daughters) nil))
   (clear-type-visibility)
   (propagate-visibility-in-type-tree type)
   (let ((node (car (make-new-type-tree type show-all-p t))))

@@ -430,3 +430,31 @@
 				    (- x-max vp-width)))
 			(max 0 (min (- y-pos (floor vp-height 2))
 				    (- y-max vp-height))))))
+
+;;; Generic message window
+;;; 
+;;; To replace some of the messages which appear in the LKB Top
+;;; etc and get lost
+;;;
+
+(define-lkb-frame message-window
+    ((message :initform nil
+	    :accessor message-window-message))
+  :display-function 'draw-message-window
+  :width :compute
+  :height :compute)
+
+(defun show-message-window (message)
+  (mp:run-function "Message" #'show-message-really 
+		   message))
+
+(defun show-message-really (message)                           
+  (let ((frame (clim:make-application-frame 'message-window)))
+    (setf (message-window-message frame) message)
+    (setf (clim:frame-pretty-name frame) "Message")
+    (clim:run-frame-top-level frame)))
+
+(defun draw-message-window (frame stream &key max-width max-height)
+  (declare (ignore max-width max-height))
+  (format stream "~%~A~%" (message-window-message frame)))
+
