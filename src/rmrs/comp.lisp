@@ -2,39 +2,19 @@
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `licence.txt' for conditions.
 
+;;; Code for RMRS composition
+;;; Building semantic structures via an algebra
+
 ;;; FIX - not dealing with optional elements in rules
 ;;; FIX - need anchors when dealing with scopal modifiers
 ;;; FIX - share-var-info
 
 (in-package :mrs)
 
-;;; final output structure
+;;; final output structure in basermrs.lisp
 
-(defstruct (rmrs (:include basemrs))
-  rmrs-args 
-  in-groups
-  bindings
-  cfrom
-  cto)
-
-(defstruct rmrs-arg
-  arg-type
-  label
-  val)
-
-(defstruct in-group
-  labels)
-
-;;; the variables are replaced by canonical forms when 
-;;; the structure is printed
-
-(defstruct realpred
-  lemma
-  pos
-  sense)
-
-
-;;; Building semantic structures via an algebra
+;;; ****************************************************
+;;; Structures
 
 (defstruct (semstruct (:include rmrs))
   hook
@@ -101,8 +81,8 @@
   from
   to)
 
-;;;;
-
+;;;; ***********************************
+;;;; Utility functions
 
 (defun find-var-type (str)
   ;;; this is only used in grammar/lextag rmrs files
@@ -145,13 +125,17 @@
                 :label (construct-grammar-var "H") :default t))
 
 
-(defparameter *rmrs-output-type* 'xml)
-
+;;; ***************************
 ;;; Main entry point
 
-(defun construct-sem-for-tree (tree &optional (ostream t))
+(defparameter *rmrs-output-type* 'xml)
+
+(defun construct-sem-for-tree (tree origin ostream)
   ;;; takes a tree and returns a semstruct - guaranteed
   ;;; - unless there's a syntax error in input data
+  ;;;
+  ;;; origin is a record of where the rmrs comes from 
+  ;;; - currently this will always be :rasp
   (initialize-rmrs-variables)
   (let* ((semstruct
           (construct-sem-for-tree-aux tree))
@@ -165,12 +149,21 @@
                    :h-cons (semstruct-h-cons semstruct) 
 		   :cfrom (semstruct-cfrom semstruct)
 		   :cto (semstruct-cto semstruct)
-                  :bindings canonical-bindings)
-                 *rmrs-output-type* ostream)))
+		   :bindings canonical-bindings
+		   :origin origin)
+		  *rmrs-output-type* ostream)))
+
+;;; **********************************************************
+;;; Code for computing transitive closure of variable equalities
+;;;
+;;; the bindings are a list of binding structures,
+;;; each of which relates a variable with a set of equivalents
+;;; (as the bindings are being constructed), and ultimately
+;;; with a canonical variable.  The key is the id
 
 (defstruct binding 
   var
-  id
+  id 
   equivs
   canonical)
 
@@ -230,6 +223,10 @@
                             bindings (cons main-var done)))
         (push second-var (binding-equivs main-var-entry))))))
 
+;;; end transitive closure code
+
+;;; ******** Main composition code ************
+
 ;;; the code assumes a tree structure, where there's some
 ;;; notion of a node, which either contains a base tag/lexeme
 ;;; specification or a rule-name plus dtrs.  The functions
@@ -255,11 +252,11 @@
       (create-base-struct base-tag lexeme))))
 
 
-;;; composition
-
 (defvar *local-var-context* nil)
+;;; for equalities
 
-(defvar *trace-rmrs-composition* nil)
+(defvar *trace-rmrs-composition-p* nil)
+;;; for debugging
 
 (defun compose (rule-name dtrs)
   ;;; compose takes a rule name and a list of daughters
@@ -366,7 +363,7 @@
                            (append equalities dtr-binding-list)
 			   :cfrom cfrom
 			   :cto cto)))
-      (when *trace-rmrs-composition*
+      (when *trace-rmrs-composition-p*
         (format t "~%Applying rule ~A" rule-name)
         (unless rule-instruction
           (format t " (not found)"))
@@ -375,6 +372,7 @@
         (internal-output-rmrs semstruct-out 'vcompact t))
       semstruct-out)))
 
+;;;
 ;;; Tag lookup
 ;;; 
 
@@ -424,6 +422,9 @@ goes to
 
 |#
 
+;;; ***********************************************
+;;; Variable handling during composition
+
 (defvar *rmrs-variable-generator* nil)
 
 (defun init-rmrs-variable-generator ()
@@ -438,15 +439,11 @@ goes to
 (defun create-new-rmrs-var (type gen extras)
   ;;; constructs a new variable of a given type
   (let* ((idnumber (funcall gen)))
-    (if (equal type "h")
-        (make-handle-var 
-         :type "h"
-         :id idnumber
-         :extra extras)
     (make-var 
      :type type
      :id idnumber
-     :extra extras))))
+     :extra extras)))
+
 
 (defun make-default-running-hook nil
   (make-indices :index (create-new-rmrs-var 
@@ -473,6 +470,8 @@ goes to
 					     (var-extra old-var-struct))))
 	(push (cons old-var-struct varstruct) *local-var-context*)
 	varstruct)))
+
+;;; end variable handling code
 
 
 (defun construct-new-semstruct (semstruct cfrom cto lex)
@@ -592,9 +591,10 @@ goes to
 	       (indices-label hook))
 	      (t nil)))))
 
-(defparameter *rule-instructions* nil)
+;;; ********************************
+;;; Rule lookup
 
-;;; rule lookup
+(defparameter *rule-instructions* nil)
 
 (defun lookup-instruction (rule-name)
   ;;; first check for an exact match
@@ -655,8 +655,13 @@ goes to
                        nil
                      (list dtr))))))
     new-rule))
-      
+
+;;; ****************************************
 ;;; recording rule use  
+;;;
+;;; This is to aid grammar development, so that 
+;;; the developer can tell which rules are most important
+;;; for a given test suite
           
 (defvar *known-rule-record* (make-hash-table :test #'equal))
 (defvar *unknown-rule-record* (make-hash-table :test #'equal))
@@ -696,16 +701,4 @@ goes to
             (push (cons opt-spec 1) 
                   (gethash rule-name rule-table))))
       (setf (gethash rule-name rule-table)
-        (list (cons opt-spec 1))))))
-  
-(defun test-rule-record nil
-  (let ((foo *unknown-rule-record*))
-    (setf *unknown-rule-record* (make-hash-table :test #'equal))
-    (dotimes (n 10)
-      (increment-rule-record "foobar" nil nil))
-    (dotimes (n 5)
-      (increment-rule-record "foobar" '(t nil) nil))
-    (dotimes (n 22)
-      (increment-rule-record "foobar" '(t nil t) nil))
-    (show-rule-record nil)
-    (setf *unknown-rule-record* foo)))
+        (list (cons opt-spec 1))))))  
