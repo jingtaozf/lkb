@@ -267,33 +267,34 @@
                                             (path-typed-feature-list path))))))))
 
 (defun atomic-unifiable-dags-p (atomic-fs indef-fs)
-  (with-unification-context (nil)
-    (if (yadu-pv-p atomic-fs)
-        (unify-paths (yadu-pv-path atomic-fs)
-                     indef-fs
-                     (make-u-value 
-                      :types (yadu-pv-value atomic-fs))
-                     nil)
-      (let* ((paths (yadu-pp-paths atomic-fs))
-             (initial-path (car paths))
-             (ok nil))
-        (dolist (path2 (cdr paths))
-          (setf ok
-            (unify-paths initial-path       
-                         indef-fs
-                         path2
-                         indef-fs))
-          (unless ok
-            (return)))
-        ok))))
-
+  (if *within-unification-context-p*
+      (if (yadu-pv-p atomic-fs)
+	  (unify-paths (yadu-pv-path atomic-fs)
+		       indef-fs
+		       (make-u-value 
+			:types (yadu-pv-value atomic-fs))
+		       nil)
+	(let* ((paths (yadu-pp-paths atomic-fs))
+	       (initial-path (car paths))
+	       (ok nil))
+	  (dolist (path2 (cdr paths))
+	    (setf ok
+	      (unify-paths initial-path       
+			   indef-fs
+			   path2
+			   indef-fs))
+	    (unless ok
+	      (return)))
+	  ok))
+    (with-unification-context (indef-fs)
+      (atomic-unifiable-dags-p atomic-fs indef-fs))))
 
 
 
 
 (defun union-tails (tail1 tail2)
    (when (> (length tail2) (length tail1))
-      (rotatef tail1 tail2))  ; swaps the values
+     (rotatef tail1 tail2))		; swaps the values
    (let ((new-elements
             (for tail-element in tail2
                filter
@@ -524,7 +525,6 @@
 ;; return the fatal constraint.
 
 (defun unify-in (indef-fs combo state)
-  ;; *** FIX - need to check for well-formedness ***
   ;; We might have already verified that a subset of combo is inconsistent.
   ;; If so, we know combo can't be consistent.
   (unless (dolist (old-comb (failures state))
@@ -533,42 +533,32 @@
     (let ((added (make-array (length (defaults state))
 			     :element-type 'bit 
 			     :initial-element 0)))
-      (with-unification-context (nil)
 	(dolist (def (defaults state))
-	  (unless (zerop (sbit combo (cdr def)))
-	    (let ((res (progn
-		   ;; Skip if not in set
-		   (setf (sbit added (cdr def)) 1)
-		   (if (yadu-pv-p (car def))
-		       (unify-paths (yadu-pv-path (car def))
-				    indef-fs
-				    (make-u-value
-				     :types (yadu-pv-value (car def)))
-				    nil)
-		     (let* ((paths (yadu-pp-paths (car def)))
-			    (initial-path (car paths)))
-		       (dolist (path2 (cdr paths) t)
-			 (unless (unify-paths initial-path       
-					      indef-fs
-					      path2
-					      indef-fs)
-			   (return))))))))
-	      (cond ((and res (not (cyclic-dag-p indef-fs)))
-		     ;; So far so good, now try the next constraint
-		     (setq indef-fs (fix-dag indef-fs)))
-		    (t 
-		     ;; Failed: add set so far to *failure-list*, and move
-		     ;; constraint that caused the failure to the front of the
-		     ;; list of constraints.  That way, we should wind up with
-		     ;; the mutually inconsistent constraints at the front of
-		     ;; the list, and we should be able to catch failures
-		     ;; early.
-		     (push added (failures state))
-		     (setf (defaults state) 
-		       (cons def (delete def (defaults state) :test #'eq)))
-		     (return-from unify-in nil))))))
-	;; Unifications all successful, now try to copy
-	(copy-dag indef-fs)))))
+	  (unless (or
+		   (zerop (sbit combo (cdr def))) ; Skip if not in set
+		   (let ((res
+			  (with-unification-context (indef-fs)
+			    (let ((it			    
+				   (atomic-unifiable-dags-p (car def) 
+							    indef-fs)))
+			      (if it
+				  (setq indef-fs (copy-dag indef-fs))
+				(progn
+				  nil))))))
+		     (setf (sbit added (cdr def)) 1)
+		     (when res
+		       (setq indef-fs (create-wffs indef-fs)))))
+	    ;; Failed: add set so far to *failure-list*, and move constraint
+	    ;; that caused the failure to the front of the list of
+	    ;; constraints.  That way, we should wind up with the mutually
+	    ;; inconsistent constraints at the front of the list, and we
+	    ;; should be able to catch failures early.
+	    (push added (failures state))
+	    (setf (defaults state) 
+	      (cons def (delete def (defaults state) :test #'eq)))
+	    (return-from unify-in nil)))
+	;; Unifications all successful, so return the final result
+	indef-fs)))
 
 ;;; incorporating all the defaults of a given persistence
 ;;; non-destructively
