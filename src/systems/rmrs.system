@@ -1,0 +1,90 @@
+;;; Copyright (c) 1991--2003
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see `licence.txt' for conditions.
+
+
+(in-package :make)
+
+#| code for construction of `robust' MRSs, from trees
+produced by robust parsers of various types.  
+|#
+
+;;; the idea is that the RMRS code can either be used in an
+;;; LKB image, or standalone.  The load-comp.lisp file
+;;; itself is intended for the standalone case.  The
+;;; standalone.lisp file replicates some LKB stuff, including
+;;; the MRS package definition
+;;; But the standalone code won't convert MRSs to RMRSs
+;;; (this is only available with the LKB)
+
+(defsystem "rmrs"
+    :device (make-pathname :device cl-user::%sys-device%)
+    :source-pathname (get-sources-dir "lkb")
+    :binary-pathname (get-binaries-dir "lkb")
+    :source-extension "lisp"
+    :depends-on ("pxml") ;; needs the XML stuff
+
+    :components
+    ((:module "package"
+      :source-pathname ""
+      :binary-pathname ""
+      :load-only t
+      :source-extension "lsp"
+      :components
+               ((:file "mrs-package"))) ; use the mrs package
+     
+     (:module "rmrs"
+      :source-pathname "rmrs"
+      :binary-pathname "rmrs"
+      :components
+      ((:file "standalone") ;; replaces some LKB structures
+       (:file "comp")    ;; main code for semantic composition
+                         ;; and the RMRS specific structures
+       (:file "annlt")   ;; The ANNLT specific code - navigates round the input trees                
+       (:file "output")
+                         ;; outputting RMRS structures, and also LKB
+                         ;; generated structures in a compatible format.
+                         ;; In principle, supports multiple outputs - right no
+                         ;; outputs stuff in XML or a compact representation
+       (:file "xml-utils")
+                         ;; file with some utilities for XML parser
+       (:file "readgram")
+                         ;; loads the data file that associates the 
+                         ;; rule names with semantic operations
+       (:file "readtag")
+                         ;; loads the data file that associates the tags with
+                         ;; base semantic structures - uses a lot of code from 
+                         ;; readgram
+       (:file "input"))) ;;; loads the underlying rmrs input code
+
+))
+
+;;; Examples of how to use the code
+
+#|
+;;; ANNLT tree output
+
+ :pa :mrs
+ (read-rmrs-grammar "annlt-test/gram14.1.rmrs")
+ (read-rmrs-grammar "rmrs/annlt-test/gram14.1.rmrs")
+ (read-rmrs-tag-templates "annlt-test/lex14.1.rmrs")
+ (read-rmrs-tag-templates "rmrs/annlt-test/lex14.1.rmrs")
+  ;;; functions for ANNLT version are in annlt.lisp
+
+  :pa :mrs
+  (rmrs-from-file "annlt-test/test-select.rasp"
+  "annlt-test/test-select.rmrs")
+
+  (rmrs-from-file "rmrs/annlt-test/test-select.rasp"
+  "rmrs/annlt-test/test-select.rmrs")
+
+  (read-rmrs-file "annlt-test/test-select.rmrs")
+  (read-rmrs-file "rmrs/annlt-test/test-select.rmrs")
+
+  (construct-sem-for-tree
+  '(|T/txt-sc1/----|
+     (|S/np_vp| (|NP/n1_n1-name/-| (|N1/n| |Abrams_NP1|))
+      (|V1/v| |bark+ed_VVD|))))
+
+|#
+

@@ -129,7 +129,7 @@
        (:file "convert")
        (:file "annlt")                           
        (:file "output")
-       (:file "xml-utils")
+#+:xml       (:file "xml-utils")
        (:file "readgram")
        (:file "readtag")
        (:file "input")))
