@@ -104,7 +104,12 @@
     (when file-name 
       (with-open-file 
           (ostream file-name :direction :output :if-exists :supersede)
-        (let ((count 0))
+        (let ((count 0)
+	      (eblstream (when (eq syntax :ebl)
+                         (open (concatenate 'string file-name ".lextypes")
+                               :direction :output
+                               :if-exists :supersede
+                               :if-does-not-exist :create))))
           (unless (or ids-used *ordered-lex-list*)
             (cerror "Continue without lexicon" 
                     "No lexicon list - lexicon must be read in from scratch"))
@@ -143,7 +148,7 @@
                             orth fs ostream id stem derivation))
                           (:ebl
                            (output-for-ebl orth fs ostream (car result-pair)
-                                           lex-name lex-entry-fs))
+					   lex-name lex-entry-fs eblstream))
                           (:chic
                            (output-for-chic orth fs ostream (car result-pair) 
                                             lex-name lex-entry-fs 
@@ -155,8 +160,28 @@
                                            (lex-or-psort-infl-pos lex-entry)))
                           (t (error "Unsupported syntax specifier ~A"
                                     syntax))))
-                      (incf idno)))))))))
+                      (incf idno))))
+	  (when (eq syntax :ebl)
+	    (output-rules-for-ebl eblstream)))))))
 
+(defun output-rules-for-ebl (stream)
+  (labels ((output-rules (stream rules)
+             (loop
+                 for rule being each hash-value in rules
+                 and id being each hash-key in rules
+                 for type = (type-of-fs (tdfs-indef (rule-full-fs rule)))
+                 for head = (if (or (subtype-p type 'head_final)
+                                    (subtype-p type 'coord_phr))
+                                1 0)
+                 for adjunctionp = (subtype-p type 'head_mod_phrase_simple) do
+                   (format 
+                    stream
+                    "(~s ~s ~d ~:[nil~;t~])~%" 
+                    id type head adjunctionp))))
+    (output-rules stream *rules*)
+    (output-rules stream *lexical-rules*))
+  (when (and (streamp stream) (open-stream-p stream))
+    (close stream)))
 
 (defun dag-inflected-p (dag)
   (declare (ignore dag))
@@ -272,25 +297,32 @@
                          (entry (cons type (if result t :fail))))
                     (push entry (aref caches j))))))))
 
-
-(defun output-for-ebl (orth fs ostream rule-list base-id base-fs)
+(defun output-for-ebl (orth fs ostream rule-list base-id base-fs ostream2)
   (declare (ignore fs))
   (let* ((type (type-of-fs (tdfs-indef base-fs)))
-         (category (find-possibly-cached-cat type base-fs))
+         (category (find-possibly-cached-cat type fs))
         (infl-rules nil)
         (other-rules nil))
-    (for rule in rule-list 
-         do
-         (if (inflectional-rule-p rule)
-             (push rule infl-rules)
-           (push rule other-rules)))
-    (format ostream 
-            "~%(~S ~S ~S ~S ~A)" 
-            (split-into-words orth) 
-            type
-            (cons base-id infl-rules)
-            other-rules
-            category)))
+    (when (and category 
+               (not (equal category "?")))
+      (for rule in rule-list 
+           do
+           (if (inflectional-rule-p rule)
+               (push rule infl-rules)
+             (push rule other-rules)))
+      (format ostream 
+              "~%(~S ~S ~S ~S ~A)" 
+              (split-into-words orth) 
+              type
+              (cons base-id infl-rules)
+              other-rules
+              category)
+      ;; build lexical-types
+      (when ostream2
+        (format
+         ostream2
+         "(~s . ~s)~%"
+         base-id type)))))
 
 (defun output-for-chic (orth fs ostream rule-list base-id base-fs 
                              infl-pos stem)
@@ -340,7 +372,9 @@
 (defvar *cat-type-cache* (make-hash-table))
 
 (defun find-possibly-cached-cat (type fs)
-  (let ((cached-cat (gethash type *cat-type-cache*)))
+  (let ((cached-cat nil)
+        ;(cached-cat (gethash type *cat-type-cache*))
+        )
     (or cached-cat
         (let ((cat (find-category-abb fs)))
           (setf (gethash type *cat-type-cache*) cat)
