@@ -188,8 +188,8 @@
       while c do (vector-push c buffer)))
 
 (defun lsp-process-event (id event stream)
-  #+:lui
-  (declare (special %lui-stream% %lui-eoc%))
+  #+:glue
+  (declare (special %glue-stream% %glue-eoc%))
   (let* ((client  (loop
                       for client in %lsp-clients%
                       when (= (client-id client) id) return client))
@@ -258,11 +258,12 @@
          (grammar
           (let ((script (pop command)))
             (when (probe-file script)
-              #+:lui
-              (unless id (format %lui-stream% "status loading~a~%" %lui-eoc%))
+              #+:glue
+              (unless id 
+                (format %glue-stream% "status loading~a~%" %glue-eoc%))
               (read-script-file-aux script)))
-          #+:lui
-          (unless id (format %lui-stream% "status ready~a~%" %lui-eoc%)))
+          #+:glue
+          (unless id (format %glue-stream% "status ready~a~%" %glue-eoc%)))
          (parse
           (let* ((input (pop command))
                  (set (let ((foo (pop command))) 
@@ -274,8 +275,8 @@
             (when (stringp input)
               (setf *sentence* input)
               (unless id 
-                #+:lui
-                (lui-status (format nil "parsing `~a' ..." input)))
+                #+:glue
+                (glue-status (format nil "parsing `~a' ..." input)))
               (parse (split-into-words 
                       (preprocess-sentence-string 
                        (string-trim '(#\space #\tab #\newline) input)))
@@ -286,8 +287,8 @@
                                (list (first *parse-record*))
                                *parse-record*)))
                   (unless id 
-                    #+:lui
-                    (lui-status (format 
+                    #+:glue
+                    (glue-status (format 
                                  nil 
                                  " done (~d tree~p; ~,2f seconds)~%"
                                  (length *parse-record*) 

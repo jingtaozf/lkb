@@ -5,7 +5,7 @@
 ;;;   see `licence.txt' for conditions.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;        file: lui.lsp
+;;;        file: glue.lsp
 ;;;      module: Linguistic User Interface protocol
 ;;;     version: 0.0 (1-jun-03)
 ;;;  written by: oe, csli stanford
@@ -21,43 +21,43 @@
 
 (in-package :lkb)
 
-(defparameter *lui-application*
+(defparameter *glue-application*
   (format
    nil 
    "exec ~a"
    (namestring (make-pathname :directory (pathname-directory make::bin-dir)
-                              :name "yzlui"))))
+                              :name "yzglue"))))
 
-(defparameter *lui-hidden-features*
+(defparameter *glue-hidden-features*
   '(ARG ARG0 ARG1 ARG2 ARG3 ARG4
     MARG L-INDEX R-INDEX L-HNDL R-HNDL L-HANDEL R-HANDEL 
     MAIN SUBORD ROLE HINST NHINST))
 
-(defparameter *lui-debug-p* t)
+(defparameter *glue-debug-p* t)
 
-(defparameter %lui-stream% nil)
+(defparameter %glue-stream% nil)
 
-(defparameter %lui-pid% nil)
+(defparameter %glue-pid% nil)
 
-(defparameter %lui-process% nil)
+(defparameter %glue-process% nil)
 
-(defparameter %lui-pending-events% nil)
+(defparameter %glue-pending-events% nil)
 
-(defparameter %lui-eoc% (format nil " ~a" #\page))
+(defparameter %glue-eoc% (format nil " ~a" #\page))
 
-(defun lui-initialize ()
-  (lui-shutdown)
+(defun glue-initialize ()
+  (glue-shutdown)
   (let (foo)
-    (multiple-value-setq (%lui-stream% foo %lui-pid%)
+    (multiple-value-setq (%glue-stream% foo %glue-pid%)
       #-(or :openmcl :clisp)
-      (run-process *lui-application*
+      (run-process *glue-application*
                    :wait nil
                    :output :stream :input :stream 
                    #-:clisp :error-output #-:clisp nil)
       #+:clisp
-      (ext:make-pipe-io-stream *lui-application* :buffered nil)
+      (ext:make-pipe-io-stream *glue-application* :buffered nil)
       #+:openmcl
-      (let ((process (run-program "yzlui" nil :wait nil :input :stream
+      (let ((process (run-program "yzglue" nil :wait nil :input :stream
                                   :output :stream)))
         (values (make-two-way-stream 
                  (external-process-input-stream process)
@@ -65,106 +65,106 @@
                     
     (when foo (setf foo foo))
     (format
-     %lui-stream%
+     %glue-stream%
      "parameter list-type ~a~a~%~
       parameter non-empty-list-type ~a~a~%~
       parameter empty-list-type ~a~a~%~
       parameter list-head ~a~a~%~
       parameter list-tail ~a~a~%~
       status ready~a~%"
-     *list-type* %lui-eoc%
-     *non-empty-list-type* %lui-eoc%
-     *empty-list-type* %lui-eoc% 
-     (first *list-head*) %lui-eoc%
-     (first *list-tail*) %lui-eoc%
-     %lui-eoc%)
-    (force-output %lui-stream%)
+     *list-type* %glue-eoc%
+     *non-empty-list-type* %glue-eoc%
+     *empty-list-type* %glue-eoc% 
+     (first *list-head*) %glue-eoc%
+     (first *list-tail*) %glue-eoc%
+     %glue-eoc%)
+    (force-output %glue-stream%)
     #-:clisp
-    (setf %lui-process%
-      (mp:run-function '(:name "LUI") #'lsp-loop nil %lui-stream%))
+    (setf %glue-process%
+      (mp:run-function '(:name "GLUE") #'lsp-loop nil %glue-stream%))
     #+:clisp
-    (lsp-loop nil %lui-stream%)
+    (lsp-loop nil %glue-stream%)
     #+:clisp
-    (lui-shutdown)))
+    (glue-shutdown)))
 
-(defun lui-shutdown ()
+(defun glue-shutdown ()
 
-  (when %lui-stream%
+  (when %glue-stream%
     (ignore-errors
-     (format %lui-stream% "~%~%quit~a" %lui-eoc%)
-     (force-output %lui-stream%)
-     (sleep 2)
-     (close %lui-stream%)
-     (setf %lui-stream% nil)))
+     (format %glue-stream% "~%~%quit~a" %glue-eoc%)
+     (force-output %glue-stream%))
+    (sleep 2)
+    (ignore-errors (close %glue-stream%))
+    (setf %glue-stream% nil))
   #-:clisp
-  (when %lui-pid%
+  (when %glue-pid%
     (ignore-errors
-     (run-process "kill -HUP ~d" %lui-pid% 
+     (run-process "kill -HUP ~d" %glue-pid% 
                   :wait t :output "/dev/null" 
                   #-:clisp :error-output #-:clisp "/dev/null")
-     (run-process "kill -TERM ~d" %lui-pid% 
+     (run-process "kill -TERM ~d" %glue-pid% 
                   :wait t :output "/dev/null" 
                   #-:clisp :error-output #-:clisp "/dev/null")
-     (run-process "kill -QUIT ~d" %lui-pid% 
+     (run-process "kill -QUIT ~d" %glue-pid% 
                   :wait t :output "/dev/null" 
                   #-:clisp :error-output #-:clisp "/dev/null"))
     #+:allegro
-    (sys:os-wait nil %lui-pid%)
-    (setf %lui-pid% nil))
+    (sys:os-wait nil %glue-pid%)
+    (setf %glue-pid% nil))
   #-:clisp
-  (when %lui-process%
-    (let ((process %lui-process%))
-      (setf %lui-process% nil)
+  (when %glue-process%
+    (let ((process %glue-process%))
+      (setf %glue-process% nil)
       (ignore-errors
        (mp:process-kill process)))))
 
-(defun send-to-lui (string &key (wait nil) recursive)
+(defun send-to-glue (string &key (wait nil) recursive)
   (unless recursive
     #+:debug
-    (when (and %lui-process% (not (eq mp:*current-process* %lui-process%)))
-      (mp:process-add-arrest-reason %lui-process% :send-to-lui))
-    (when *lui-debug-p*
-      (format t "~&send-to-lui(): [send] `~a'.~%" string))
-    (format %lui-stream% "~@[wait ~*~]~a~a" wait string %lui-eoc%)
-    (force-output %lui-stream%))
+    (when (and %glue-process% (not (eq mp:*current-process* %glue-process%)))
+      (mp:process-add-arrest-reason %glue-process% :send-to-glue))
+    (when *glue-debug-p*
+      (format t "~&send-to-glue(): [send] `~a'.~%" string))
+    (format %glue-stream% "~@[wait ~*~]~a~a" wait string %glue-eoc%)
+    (force-output %glue-stream%))
   (unwind-protect 
       (when (or wait recursive)
         (let ((*package* (find-package :lkb))
-              (form (when (streamp %lui-stream%) 
-                      (lsp-parse-command nil (lsp-read nil %lui-stream%)))))
-          (when *lui-debug-p*
-            (format t "~&send-to-lui(): [return] `~s'.~%" form))
+              (form (when (streamp %glue-stream%) 
+                      (lsp-parse-command nil (lsp-read nil %glue-stream%)))))
+          (when *glue-debug-p*
+            (format t "~&send-to-glue(): [return] `~s'.~%" form))
           (cond
            ((eq (first form) 'event)
-            (when *lui-debug-p*
+            (when *glue-debug-p*
               (format
                t 
-               "~&send-to-lui(): queueing intervening event `~s'.~%" 
+               "~&send-to-glue(): queueing intervening event `~s'.~%" 
                form))
-            (setf %lui-pending-events% 
-              (append %lui-pending-events% (list form)))
-            (send-to-lui nil :recursive t))
+            (setf %glue-pending-events% 
+              (append %glue-pending-events% (list form)))
+            (send-to-glue nil :recursive t))
            (t
             form))))
     #+:debug
-    (when (and %lui-process% (not (eq mp:*current-process* %lui-process%)))
-      (mp:process-revoke-arrest-reason %lui-process% :send-to-lui))))
+    (when (and %glue-process% (not (eq mp:*current-process* %glue-process%)))
+      (mp:process-revoke-arrest-reason %glue-process% :send-to-glue))))
 
 (defun process-pending-events ()
   #+:debug
-  (when (and %lui-process% (not (eq mp:*current-process* %lui-process%)))
-    (mp:process-add-arrest-reason %lui-process% :pending-events))
+  (when (and %glue-process% (not (eq mp:*current-process* %glue-process%)))
+    (mp:process-add-arrest-reason %glue-process% :pending-events))
   (loop
-      while (and (streamp %lui-stream%) %lui-pending-events%)
-      do (lsp-process-event nil (pop %lui-pending-events%) %lui-stream%))
+      while (and (streamp %glue-stream%) %glue-pending-events%)
+      do (lsp-process-event nil (pop %glue-pending-events%) %glue-stream%))
   #+:debug
-  (when (and %lui-process% (not (eq mp:*current-process* %lui-process%)))
-    (mp:process-revoke-arrest-reason %lui-process% :pending-events)))
+  (when (and %glue-process% (not (eq mp:*current-process* %glue-process%)))
+    (mp:process-revoke-arrest-reason %glue-process% :pending-events)))
 
-(defun lui-status (string)
-  (format %lui-stream% "message ~s~a~%" string %lui-eoc%))
+(defun glue-status (string)
+  (format %glue-stream% "message ~s~a~%" string %glue-eoc%))
   
-(defun lui-show-parses (edges &optional (input *sentence*))
+(defun glue-show-parses (edges &optional (input *sentence*))
   (loop
       for i from 1
       for title = (format nil "`~a' Parse Tree # ~d" input i)
@@ -172,12 +172,12 @@
       for top = (make-new-parse-tree edge 1)
       for id = (lsp-store-object nil input top)
       do
-        (format %lui-stream% "tree ~d " id)
-        (lui-show-tree top input)
-        (format %lui-stream% " ~s~a~%" title %lui-eoc%))
-  (force-output %lui-stream%))
+        (format %glue-stream% "tree ~d " id)
+        (glue-show-tree top input)
+        (format %glue-stream% " ~s~a~%" title %glue-eoc%))
+  (force-output %glue-stream%))
 
-(defun lui-show-tree (top &optional (input *sentence*))
+(defun glue-show-tree (top &optional (input *sentence*))
   (let* ((edge (get top 'edge-record))
          (tdfs (get top 'edge-fs))
          (daughters (get top 'daughters))
@@ -190,51 +190,51 @@
          (rule (if (rule-p (edge-rule edge))
                  (rule-id (edge-rule edge))
                  (string-downcase (string (first (edge-lex-ids edge)))))))
-    (format %lui-stream% "#T[~a ~s ~s ~a ~a " id label form n rule)
+    (format %glue-stream% "#T[~a ~s ~s ~a ~a " id label form n rule)
     (loop
         for daughter in (if form (get (first daughters) 'daughters) daughters)
-        do (lui-show-tree daughter))
-    (format %lui-stream% "]")))
+        do (glue-show-tree daughter))
+    (format %glue-stream% "]")))
 
-(defun lui-display-fs (tdfs title id)
+(defun glue-display-fs (tdfs title id)
   (declare (ignore id))
   (let* ((id (lsp-store-object nil nil tdfs))
          (dag (tdfs-indef tdfs)))
-    (format %lui-stream% "avm ~d " id)
+    (format %glue-stream% "avm ~d " id)
     (let ((string (with-output-to-string (stream)
                     (display-dag1 dag 'linear stream))))
-      (format %lui-stream% string))
-    (format %lui-stream% " ~s~a~%" title %lui-eoc%))
-  (force-output %lui-stream%))
+      (format %glue-stream% string))
+    (format %glue-stream% " ~s~a~%" title %glue-eoc%))
+  (force-output %glue-stream%))
 
-(defun lui-display-mrs (mrs)
+(defun glue-display-mrs (mrs)
   (let* ((id (lsp-store-object nil nil mrs))
          (dag (mrs::psoa-to-dag mrs))
          (title "Simple MRS Display"))
     (let ((string (with-output-to-string (stream)
-                    (when *lui-hidden-features*
+                    (when *glue-hidden-features*
                       (format 
                        stream 
                        "parameter+ hidden-features ~a~a~%"
-                       (first *lui-hidden-features*) %lui-eoc%)
+                       (first *glue-hidden-features*) %glue-eoc%)
                       (loop
-                          for foo in (rest *lui-hidden-features*)
+                          for foo in (rest *glue-hidden-features*)
                           do
                             (format 
                              stream 
                              "parameter+ hidden-features ~a~a~%"
-                             foo %lui-eoc%)))
+                             foo %glue-eoc%)))
                     (format stream "avm ~d " id)
                     (display-dag1 dag 'linear stream))))
-      (format %lui-stream% string))
-    (format %lui-stream% " ~s~a~%" title %lui-eoc%))
-  (force-output %lui-stream%))
+      (format %glue-stream% string))
+    (format %glue-stream% " ~s~a~%" title %glue-eoc%))
+  (force-output %glue-stream%))
 
-(defun lui-status-p (key)
+(defun glue-status-p (key)
   (case key
     #+:null
-    (:tree (streamp %lui-stream%))
+    (:tree (streamp %glue-stream%))
     #-:null
-    (:avm (streamp %lui-stream%))
+    (:avm (streamp %glue-stream%))
     #-:null
-    (:mrs (streamp %lui-stream%))))
+    (:mrs (streamp %glue-stream%))))

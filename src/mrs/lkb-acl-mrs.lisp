@@ -1,5 +1,6 @@
-;;; Copyright (c) 1998-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
-;;; see licence.txt for conditions
+;;; Copyright (c) 1998--2003
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see `licence.txt' for conditions.
 
 (in-package :lkb)
 
@@ -89,8 +90,8 @@
 
 
 (defun show-mrs-window (edge &optional mrs title)
-  (if #+:lui (lui-status-p :mrs) #-:lui nil
-    (lui-display-mrs (or mrs (mrs::extract-mrs edge)))
+  (if #+:glue (glue-status-p :mrs) #-:glue nil
+    (glue-display-mrs (or mrs (mrs::extract-mrs edge)))
     (mp:run-function "Simple MRS" #'show-mrs-window-really edge mrs title)))
 
 (defun show-mrs-window-really (edge &optional mrs title)
@@ -170,8 +171,8 @@
   (declare (ignore max-width max-height))
   (let ((mrsstruct (mrs-simple-mrsstruct mframe)))
     (if mrsstruct
-      (if #+:lui (lui-status-p :mrs) #-:lui nil
-        (lui-display-mrs mrsstruct)
+      (if #+:glue (glue-status-p :mrs) #-:glue nil
+        (glue-display-mrs mrsstruct)
         (clim:with-text-style (stream *normal*)
 	  (clim:with-output-recording-options (stream :draw nil :record t)
             (mrs::output-mrs1 mrsstruct 'mrs::active-t stream))))
