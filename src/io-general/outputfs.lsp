@@ -937,6 +937,7 @@ for PAGE and LiLFeS")
             ((type (if *no-type* *toptype* (type-of-fs real-dag)))
              (labels (top-level-features-of real-dag))
              (start-x nil) (start-y nil))
+            (setf *no-type* nil)
             (if labels
                (progn
                   (fs-output-start-fs *display-structure* 
