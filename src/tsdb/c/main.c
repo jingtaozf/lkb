@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
 
   char *input = NULL;
   char host[512 + 1], prompt[80 + 1], *foo, *bar;
-  int n_commands = 0;
+  int n_commands = 0, n;
 
 #ifdef DBMALLOC
   /* union dbmalloptarg m;
@@ -138,9 +138,10 @@ int main(int argc, char **argv) {
 #endif
 
   if(tsdb.query != NULL) {
-    tsdb_parse(tsdb.query);
+    n = tsdb_parse(tsdb.query);
   } /* if */
   else {
+    n = 0;
     using_history();
     if(read_history(TSDB_HISTORY_FILE) != NULL) {
       fprintf(tsdb_error_stream,
@@ -198,6 +199,7 @@ int main(int argc, char **argv) {
   tsdb_close_debug(tsdb_debug_stream);
 #endif
 
+  exit(n);
 } /* main() */
 
 void tsdb_parse_options(int argc, char **argv) {
