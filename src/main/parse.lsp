@@ -46,7 +46,7 @@
 
 ;;; *chart-limit* is defined in globals.lsp
 
-(defvar *chart* (make-array (list *chart-limit*))) 
+(defvar *chart* (make-array (list *chart-limit* 2))) 
 
 (defvar *parse-record* nil)
 
@@ -57,7 +57,7 @@
 ;;; chart-entry-configurations is a list of chart-configurations
 
 (defstruct (chart-configuration) 
-    begin edge roots)
+    begin edge roots end)
 
 ;;; begin is a vertex - edge is an edge 
 
@@ -121,6 +121,77 @@
 
 (defvar *morph-records* nil)
 
+;;; Agenda stuff - the agenda is represented as a heap (as in of Cormen,
+;;; Leiserson, and Rivest).  The heap is a tree stored in an array: the car of
+;;; each array element is its key and the cdr is the value.
+
+(defmacro parent (i)
+  `(the fixnum (floor (the fixnum ,i) 2)))
+
+(defmacro left (i)
+  `(the fixnum (* (the fixnum ,i) 2)))
+
+(defmacro right (i)
+  `(the fixnum (1+ (* (the fixnum ,i) 2))))
+
+(defmacro heap-size (a)
+  `(the fixnum (aref ,a 0)))
+
+(defun heapify (a i)
+  (let* ((l (left i))
+	 (r (right i))
+	 (largest (if (and (<= l (heap-size a))
+			   (> (car (aref a l)) (car (aref a r))))
+		      l
+		    i)))
+    (when (and (<= r (heap-size a))
+	       (> (car (aref a r)) (car (aref a largest))))
+      (setq largest r))
+    (unless (eql largest i)
+      (rotatef (aref a i) (aref a largest))
+      (heapify a largest))))
+
+(defun heap-insert (a key value)
+  (incf (heap-size a))
+  (when (>= (heap-size a)  (array-dimension a 0))
+    (error "Heap overflow!"))
+  (loop 
+      with i = (heap-size a)
+      while (and (> i 1)
+		 (< (car (aref a (parent i))) key))
+      do (setf (aref a i) (aref a (parent i)))
+	 (setf i (parent i))
+      finally (setf (aref a i) (cons key value)))
+  value)
+
+(defun heap-extract-max (a)
+  (when (< (heap-size a) 1)
+    (error "Heap underflow!"))
+  (let ((max (shiftf (aref a 1) (aref a (heap-size a)))))
+    (decf (heap-size a))
+    (heapify a 1)
+    (cdr max)))
+
+(defun make-heap ()
+  (let ((heap (make-array '(5000))))
+    (setf (aref heap 0) 0)
+    heap))
+
+(defun empty-heap (a)
+  (zerop (aref a 0)))
+
+(defun flush-heap (a)
+  (setf (heap-size a) 0))
+
+(defvar *agenda* (make-heap))
+
+(defmacro with-agenda ((f priority) &body body)
+  `(if ,f
+       (heap-insert *agenda* ,priority (excl:named-function task 
+					 (lambda () ,@body)))
+     (progn
+       ,@body)))
+
 ;;; *morph-records* is just so that the morphological history
 ;;; (i.e. inflection, derivation rules and any zero-morpheme rules
 ;;; interspersed among them) can be displayed
@@ -128,7 +199,9 @@
 (defun clear-chart nil
    (setf *cached-orth-str-list* nil)
    (setf *parse-record* nil) 
-   (fill *chart* nil) 
+   (loop for i from 0 upto (1- *chart-limit*)
+       do (setf (aref *chart* i 0) nil)
+	  (setf (aref *chart* i 1) nil))
    (fill *morphs* nil)
    (setf *morph-records* nil)
    (setf *edge-id* 0))
@@ -143,12 +216,17 @@
     (let ((*safe-not-to-copy-p* t)
 	  (*executed-tasks* 0) (*successful-tasks* 0)
 	  (*contemplated-tasks* 0) (*filtered-tasks* 0))
+      (flush-heap *agenda*)
       (clear-chart)
       #+powerpc(setq aa 0 bb 0 cc 0 dd 0 ee 0 ff 0 gg 0 hh 0 ii 0 jj 0)
       (add-morphs-to-morphs user-input)
-      (catch 'first
-	(add-words-to-chart first-only-p 0 (length user-input)))
-      (unless first-only-p
+      (unless 
+	  (catch 'first
+	    (add-words-to-chart (when first-only-p 
+				  (cons 0 (length user-input))))
+	    (loop 
+		until (empty-heap *agenda*)
+		do (funcall (heap-extract-max *agenda*))))
 	(setf *parse-record*
 	  (find-spanning-edges 0 (length user-input))))
       (when show-parse-p (show-parse))
@@ -176,89 +254,82 @@
                                   :morph-results morph-poss))
            (setf current new)))))
 
-(defun add-words-to-chart (first-only-p start-vertex end-vertex)
+(defun add-words-to-chart (f)
    (let ((current 0)
          (to-be-accounted-for (make-array (list *chart-limit*) 
                                           :initial-element nil)))
-     ;; to-be-accounted for is needed because we cannot tell
-     ;; that a word is impossible until after the 
-     ;; whole sentence has been processed
-     ;; because it may be part of a multi-word
+     ;; to-be-accounted for is needed because we cannot tell that a word is
+     ;; impossible until after the whole sentence has been processed because
+     ;; it may be part of a multi-word
      (loop
        (let ((morph-poss (aref *morphs* current)))
          (when (null morph-poss)
            (return nil))
          (incf current)
          (multiple-value-bind (ind-results multi-strings)
-           (add-word (morph-edge-word morph-poss)
-                     (morph-edge-morph-results morph-poss) current
-		     first-only-p start-vertex end-vertex)
+	     (add-word (morph-edge-word morph-poss)
+		       (morph-edge-morph-results morph-poss) current
+		       f)
            (unless (or ind-results multi-strings)
              (setf (aref to-be-accounted-for current)
-                   (morph-edge-word morph-poss)))
-           ; record the fact we haven't analysed this word
-           (for mstr in multi-strings
-                ; wipe the record for multi-words which allow for it
-                do
-                (let ((words (split-into-words mstr)))
-                  (dotimes (x (length words))
-                       (setf (aref to-be-accounted-for (- current x)) 
-                             nil)))))))
+	       (morph-edge-word morph-poss)))
+	   ;; record the fact we haven't analysed this word
+           (dolist (mstr multi-strings)
+	     ;; wipe the record for multi-words which allow for it
+	     (let ((words (split-into-words mstr)))
+	       (dotimes (x (length words))
+		 (setf (aref to-be-accounted-for (- current x)) 
+		   nil)))))))
      (dotimes (y current)
        (when (aref to-be-accounted-for y)
          (format t "~%No sign can be constructed for ~A" 
                  (aref to-be-accounted-for y))))))
 
 
-(defun add-word (local-word morph-poss right-vertex first-only-p start end)
-   ;;; get-senses returns a list of conses of ids and dags 
-   ;;; corresponding to the word senses 
-   ;;; - the type of the dag is used 
-   ;;; to do the indexing
-  (let* ((multi-results
-               (add-multi-words morph-poss right-vertex first-only-p start end))
+(defun add-word (local-word morph-poss right-vertex f)
+  ;; get-senses returns a list of conses of ids and dags corresponding to the
+  ;; word senses - the type of the dag is used to do the indexing
+  (let* ((multi-results (add-multi-words morph-poss right-vertex f))
          (word-senses 
-              (for morph-res in morph-poss
-                   append
-                   (for sense in (get-senses (car morph-res))
-                        append
-                        (if (cdr morph-res)
-                            (apply-all-lexical-and-morph-rules 
-                             (list (make-mrecord :lex-ids (list (car sense))
-                                                 :fs (cdr sense) 
-                                                 :rules (cdr morph-res))))
-                          (list (make-mrecord :lex-ids (list (car sense))
-                                 :fs (cdr sense) :rules nil)))))))
-        (dolist (mrec word-senses)
-          (let ((lex-ids (mrecord-lex-ids mrec))
-                (sense (mrecord-fs mrec))
-                (history (mrecord-history mrec)))
-            (activate-context (- right-vertex 1) 
-                              (construct-lex-edge sense history local-word
-						  lex-ids)
-			      right-vertex
-			      first-only-p start end)))
-          ; add-multi-words is mostly for side effects, but want to
-          ; check if we've found something, and produce correct error
-          ; messages, so we return the strings found
-          (values word-senses multi-results)))
+	  (loop for morph-res in morph-poss
+	      append
+		(loop for sense in (get-senses (car morph-res))
+		    append
+		      (if (cdr morph-res)
+			  (apply-all-lexical-and-morph-rules 
+			   (list (make-mrecord :lex-ids (list (car sense))
+					       :fs (cdr sense) 
+					       :rules (cdr morph-res)))
+			   f)
+			(list (make-mrecord :lex-ids (list (car sense))
+					    :fs (cdr sense) :rules nil)))))))
+    (dolist (mrec word-senses)
+      (let ((lex-ids (mrecord-lex-ids mrec))
+	    (sense (mrecord-fs mrec))
+	    (history (mrecord-history mrec)))
+	(activate-context (- right-vertex 1) 
+			  (construct-lex-edge sense history local-word
+					      lex-ids)
+			  right-vertex
+			  f)))
+    ;; add-multi-words is mostly for side effects, but want to check if we've
+    ;; found something, and produce correct error messages, so we return the
+    ;; strings found
+    (values word-senses multi-results)))
 
 (defun construct-lex-edge (sense history word lex-ids)
+  #+ignore (format t "~%Construct word ~A" word)
   (make-edge :id (next-edge) 
              :category (indef-type-of-tdfs sense) 
-             :rule-number 
-             (if history (mhistory-rule-id 
-                          (car 
-                           history)) word)
+             :rule-number (if history (mhistory-rule-id 
+				       (car history))
+			    word)
              :dag sense
              :leaves (list word)
              :lex-ids lex-ids
-             :morph-history 
-             (construct-morph-history 
-              lex-ids history)
-             :spelling-change (if history (mhistory-new-spelling
-                                           (car 
-                                            history)))))
+             :morph-history (construct-morph-history lex-ids history)
+             :spelling-change (when history 
+				(mhistory-new-spelling (car history)))))
 
 ;; RPM (18-Aug-1998) This originally just marked lexical entries as unsafe, so
 ;; as soon as they successfully unified with something they'd get copied.  That
@@ -298,7 +369,7 @@
   morph-res
   mrecs)
   
-(defun add-multi-words (morph-poss right-vertex first-only-p start end)
+(defun add-multi-words (morph-poss right-vertex f)
   (let* ((multi-strings nil)
 	 (word-senses 
           (for stem in (remove-duplicates 
@@ -320,7 +391,8 @@
 				 (list (make-mrecord :fs sense 
 						     :lex-ids lex-ids
 						     :rules 
-						     (cdr new-morph-res))))
+						     (cdr new-morph-res)))
+				 f)
                               (list (make-mrecord :fs sense 
                                                   :lex-ids lex-ids      
                                                   :rules nil)))))
@@ -339,7 +411,7 @@
 	    (activate-context left-vertex 
 			      (construct-lex-edge sense history word
 						  lex-ids)      
-			      right-vertex first-only-p start end)))))
+			      right-vertex f)))))
     ;; return multi-strings, so we know what's been found
     multi-strings))
 
@@ -444,112 +516,132 @@
     
 
 
-(defun apply-all-lexical-and-morph-rules (entries)
-  ;;; This function applies morphological rules, possibly interleaved with
-  ;;; lexical rules, but terminating when the last morphologically significant 
-  ;;; rule has been applied, since the parser will take care of the rest
-  ;;;
-  ;;; entries is a list of mrecords - current-fs, morph-rule-ids, history
-  ;;; (the history is nil initially, then a list of mhistory structures)
-  ;;;
-  ;;; the function returns a list of such mrecords, though the second element
-  ;;; will be nil in each case
-  ;;;
-   (let ((transformed-entries 
-            (for entry in entries
-               append
-               (let ((fs (mrecord-fs entry))
-                     (fs-restricted (mrecord-fs-restricted entry))
-                     (lex-ids (mrecord-lex-ids entry))
-                     (morph-rules (mrecord-rules entry))
-                     (history (mrecord-history entry)))
-                 (if (>=  (length history) *maximal-lex-rule-applications*)
-                   (progn (format t 
-                             "~%Warning - probable circular lexical rule") 
-                          nil)
-                   (append
-                      (for rule in (get-matching-lex-rules fs)
-                             filter
-                             (let ((result (apply-morph-rule 
-                                            rule fs fs-restricted nil)))
-                               (if result 
-                                   (make-mrecord :fs result
-                                                 :lex-ids lex-ids
-                                           :rules morph-rules 
-                                           :history (cons
-                                                     (make-mhistory 
-                                                      :rule-id (rule-id rule)
-                                                      :fs fs
-                                                      :new-spelling nil)
-                                                     history)))))
-                      (if morph-rules
-                         (let* ((morph-rule-info (car morph-rules))
-                                (new-orth (cadr morph-rule-info))
-                                (rule-id (car morph-rule-info))
-                                (rule-entry (get-lex-rule-entry rule-id))
-                                (result
-                                 (if rule-entry
-                                     (apply-morph-rule
-                                      rule-entry fs fs-restricted new-orth))))
-                           (unless rule-entry
-                             (format t 
-                                     "~%Warning: rule ~A specified by ~
+(defun apply-all-lexical-and-morph-rules (entries f)
+  ;; This function applies morphological rules, possibly interleaved with
+  ;; lexical rules, but terminating when the last morphologically significant
+  ;; rule has been applied, since the parser will take care of the rest
+  ;;
+  ;; entries is a list of mrecords - current-fs, morph-rule-ids, history (the
+  ;; history is nil initially, then a list of mhistory structures)
+  ;;
+  ;; the function returns a list of such mrecords, though the second element
+  ;; will be nil in each case
+  ;;
+  (let ((transformed-entries 
+	 (for entry in entries
+	      append
+	      (let ((fs (mrecord-fs entry))
+		    (fs-restricted (mrecord-fs-restricted entry))
+		    (lex-ids (mrecord-lex-ids entry))
+		    (morph-rules (mrecord-rules entry))
+		    (history (mrecord-history entry)))
+		(if (>=  (length history) *maximal-lex-rule-applications*)
+		    (progn (format t 
+				   "~%Warning - probable circular lexical rule") 
+			   nil)
+		  (append
+		   (for rule in (get-matching-lex-rules fs)
+			filter
+			(let ((result (apply-morph-rule 
+				       rule fs fs-restricted nil)))
+			  (if result 
+			      (make-mrecord :fs result
+					    :lex-ids lex-ids
+					    :rules morph-rules 
+					    :history (cons
+						      (make-mhistory 
+						       :rule-id (rule-id rule)
+						       :fs fs
+						       :new-spelling nil)
+						      history)))))
+		   (when morph-rules
+		     (let* ((morph-rule-info (car morph-rules))
+			    (new-orth (cadr morph-rule-info))
+			    (rule-id (car morph-rule-info))
+			    (rule-entry (get-lex-rule-entry rule-id))
+			    (result
+			     (if rule-entry
+				 (apply-morph-rule
+				  rule-entry fs fs-restricted new-orth))))
+		       (unless rule-entry
+			 (format t 
+				 "~%Warning: rule ~A specified by ~
                                        morphology was not found"
-                                     rule-id))
-                           (if result 
-                             (list (make-mrecord :fs result 
-                                                 :lex-ids lex-ids
-                                   :rules (cdr morph-rules)
-                                   :history (cons (make-mhistory 
-                                                      :rule-id rule-id
-                                                      :fs fs
-                                                      :new-spelling new-orth)
-                                                  history))))))))))))
-     (if transformed-entries
-         (append (remove-if #'mrecord-rules transformed-entries)
-            (apply-all-lexical-and-morph-rules 
-             (remove-if-not #'mrecord-rules transformed-entries))))))
+				 rule-id))
+		       (when result 
+			 (list (make-mrecord :fs result 
+					     :lex-ids lex-ids
+					     :rules (cdr morph-rules)
+					     :history (cons (make-mhistory 
+							     :rule-id rule-id
+							     :fs fs
+							     :new-spelling new-orth)
+							    history))))))))))))
+    (if transformed-entries
+	(append (remove-if #'mrecord-rules transformed-entries)
+		(apply-all-lexical-and-morph-rules 
+		 (remove-if-not #'mrecord-rules transformed-entries) f)))))
 
 
 (defun apply-morph-rule (rule fs fs-restricted new-orth)
-   (and
-      (restrictors-compatible-p (car (rule-daughters-restricted rule))
-         fs-restricted)
-      (evaluate-unifications rule (list fs) new-orth)))
+  (and
+   (restrictors-compatible-p (car (rule-daughters-restricted rule))
+			     fs-restricted)
+   (evaluate-unifications rule (list fs) new-orth)))
 
 
-(defun activate-context (left-vertex edge right-vertex first-only-p start end)
+(defun activate-context (left-vertex edge right-vertex f)
   (let ((no-unary nil))
-    (add-to-chart left-vertex edge right-vertex first-only-p start end)
+    (add-to-chart left-vertex edge right-vertex f)
     (dolist (rule (get-matching-rules (edge-dag edge) no-unary))
       ;; grammar rule application is attempted when we've got all the bits
-      (apply-grammar-rule rule
-			  (reverse (rule-daughters-restricted rule))
-			  left-vertex
-			  right-vertex
-			  (list edge)
-			  first-only-p start end))))
+      (try-grammar-rule-left rule
+			     (reverse (rule-daughters-restricted rule))
+			     left-vertex
+			     right-vertex
+			     (list edge)
+			     f)
+      ;; when we don't build up the chart in strict left-to-right
+      ;; order (as when we're doing a best-first search), we need to
+      ;; check for rule applying to the right as well as to the left.
+      ;; WARNING: this will only work correctly if all rules are
+      ;; binary branching!!
+      (when (and f (cdr (rule-daughters-restricted rule)))
+	(try-grammar-rule-right rule
+				(rule-daughters-restricted rule)
+				left-vertex
+				right-vertex
+				(list edge)
+				f)))))
 
 
-(defun add-to-chart (left edge right first-only-p start end)
+(defun add-to-chart (left edge right f)
   ;; Find an existing chart-entry structure if there is one and add a
   ;; new chart-configuration to it, otherwise build up a new
   ;; chart-entry
-  (let ((item (aref *chart* right))
-	(config (make-chart-configuration :begin left :edge edge)))
-    (if item (push config (chart-entry-configurations item))
-      (setf (aref *chart* right)
+  (let ((item (aref *chart* right 0))
+	(config (make-chart-configuration :begin left :edge edge :end right)))
+    (if item 
+	(push config (chart-entry-configurations item))
+      (setf (aref *chart* right 0)
 	(make-chart-entry :configurations (list config))))
+    ;; When doing a best-first parse, we need to index chart edges
+    ;; by both the end vertex and the start vertex
+    (when f
+      (let ((item2 (aref *chart* left 1)))
+	(if item2
+	    (push config (chart-entry-configurations item2))
+	  (setf (aref *chart* left 1)
+	    (make-chart-entry :configurations (list config))))))
     ;; Did we just find a parse?
-    (when (and first-only-p
-	       (eql left start)
-	       (eql right end)
-	       (setf *parse-record* (find-spanning-edge config start end)))
-      (throw 'first nil))))
+    (when (and f (eql left (car f))
+	       (eql right (cdr f))
+	       (setf *parse-record* (find-spanning-edge config (car f) 
+							(cdr f))))
+      (throw 'first t))))
 
-
-(defun apply-grammar-rule (rule rule-restricted-list left-vertex right-vertex
-                           child-fs-list first-only-p start end)
+(defun try-grammar-rule-left (rule rule-restricted-list left-vertex 
+			      right-vertex child-fs-list f)
   ;; Application of a grammar rule: Every time an edge is added to the chart,
   ;; a check is made to see whether its addition triggers a rule application.
   ;; (That is whether it has a category corresponding to the rightmost
@@ -564,31 +656,54 @@
   (if (restrictors-compatible-p
        (car rule-restricted-list) (edge-dag-restricted (car child-fs-list)))
       (if (cdr rule-restricted-list)
-	  (let ((entry (aref *chart* left-vertex)))
-            (when entry
-	      (dolist (configuration (chart-entry-configurations entry))
-		(apply-grammar-rule rule
-				    (cdr rule-restricted-list)
-				    (chart-configuration-begin configuration)
-				    right-vertex
-				    (cons (chart-configuration-edge configuration) 
-					  child-fs-list)
-				    first-only-p start end))))
+	  (let ((entry (aref *chart* left-vertex 0)))
+	    (when entry
+	      (dolist (config (chart-entry-configurations entry))
+		(try-grammar-rule-left rule
+				       (cdr rule-restricted-list)
+				       (chart-configuration-begin config)
+				       right-vertex
+				       (cons (chart-configuration-edge config) 
+					     child-fs-list)
+				       f))))
 	;; we've got all the bits
-	(apply-immediate-grammar-rule rule left-vertex right-vertex
-				      child-fs-list first-only-p start end))
+	(with-agenda (f (when f (rule-priority rule)))
+	  (apply-immediate-grammar-rule rule left-vertex right-vertex
+					child-fs-list f)))
+    (incf *filtered-tasks*)))
+
+(defun try-grammar-rule-right (rule rule-restricted-list left-vertex 
+				 right-vertex child-fs-list f)
+  (incf *contemplated-tasks*)
+  (if (restrictors-compatible-p
+       (car rule-restricted-list) (edge-dag-restricted (car child-fs-list)))
+      (if (cdr rule-restricted-list)
+	  (let ((entry (aref *chart* right-vertex 1)))
+	    (when entry
+	      (dolist (config (chart-entry-configurations entry))
+		(try-grammar-rule-right rule
+					(cdr rule-restricted-list)
+					left-vertex
+					(chart-configuration-end config)
+					(cons (chart-configuration-edge config)
+					      child-fs-list)
+					f))))
+	;; we've got all the bits
+	(with-agenda (f (when f (rule-priority rule)))
+	  (apply-immediate-grammar-rule rule left-vertex right-vertex 
+					(reverse child-fs-list) f)))
     (incf *filtered-tasks*)))
 
 
 (defparameter *debugging* nil)
 
 (defun apply-immediate-grammar-rule (rule left-vertex right-vertex 
-				     child-fs-list first-only-p start end)
+				     child-fs-list f)
   ;; attempt to apply a grammar rule when we have all the parts which match
   ;; its daughter categories
-  #+ignore 
-  (format t "~%Try Rule id ~A left ~A right ~A filter ~A" (rule-id rule)  
-	  left-vertex right-vertex *filtered-tasks*)
+  #+ignore
+  (format t "~%Try Rule id ~A left ~A right ~A dtrs ~A" (rule-id rule)  
+	  left-vertex right-vertex (mapcar #'edge-id child-fs-list))
   (let ((unification-result
 	 (evaluate-unifications rule (mapcar #'edge-dag child-fs-list)
 				nil child-fs-list)))
@@ -610,10 +725,9 @@
                                         (copy-list (edge-leaves child)))
                                     child-fs-list))))
 	  #+ignore (format t " Succeed.")
-	  (activate-context left-vertex new-edge right-vertex 
-			    first-only-p start end))
+	  (activate-context left-vertex new-edge right-vertex f))
       (progn
-	 #+ignore (format t " Fail.")
+	#+ignore (format t " Fail.")
 	(when *debugging*
 	  #+ignore (format t "~%~A" *filtered-tasks*)
 	  (format t "~%Unification failure on rule ~A and edges ~:A" 
@@ -721,7 +835,7 @@
   (let ((start-symbols (if (listp *start-symbol*)
 			   *start-symbol*
 			 (list *start-symbol*)))
-	(chart-index (aref *chart* end-vertex)))
+	(chart-index (aref *chart* end-vertex 0)))
     (when chart-index
       (for item in (chart-entry-configurations chart-index)
 	   append
@@ -783,7 +897,7 @@
                                    new-edge
                                    end-vertex
 				   ;; Don't (recursively) check for success
-				   nil 0 0)
+				   nil)
                      new-edge)))))))
 
 
@@ -794,7 +908,7 @@
    (format t "~% > chart dump:~%")
    (dotimes (vertex (- *chart-limit* 1))
       (unless 
-         (print-chart-entry (+ 1 vertex) (aref *chart* (+ 1 vertex)))
+         (print-chart-entry (+ 1 vertex) (aref *chart* (+ 1 vertex) 0))
          (return nil)))
    (terpri))
 
@@ -930,11 +1044,7 @@
             (collect-morph-history-rule-names 
              (edge-morph-history edge-rec)))))
 
-        
-
-
-
-      
-      
-
+(defun preprocess-sentence-string (str)
+  ;;; to be defined by the user
+    str)
 

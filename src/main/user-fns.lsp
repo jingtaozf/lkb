@@ -137,3 +137,10 @@
   ; default inflection position for multi-word entries is rightmost
   (declare (ignore unifs sense-id))
   (length orths))
+
+;;; Assign priorities to parser tasks
+
+(defun rule-priority (rule)
+  (declare (ignore rule))
+  1)
+

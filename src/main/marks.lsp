@@ -11,7 +11,7 @@
 ;;; a series of functions to look after marking and unmarking of types
 
 
-(defstruct mark-field seen active tree-depth)
+(defstruct (mark-field (:type vector)) seen active tree-depth)
         
 (defmacro active-node-p (type-record)
    `(mark-field-active (type-marks ,type-record)))

@@ -101,7 +101,7 @@
 (defun find-edge-given-id (edge-id)
   (or
    (dotimes (i *chart-limit*)
-      (let ((chart-entry (aref *chart* i)))
+      (let ((chart-entry (aref *chart* i 0)))
          (if (chart-entry-p chart-entry) 
             (let ((edge 
                      (for config in (chart-entry-configurations chart-entry) 
@@ -410,15 +410,15 @@
    ;; of symbols interned - so we don't end up hanging on to old edges
    (let ((edge-symbols nil))
       (dotimes (vertex (1- *chart-limit*))
-         (when (aref *chart* (1+ vertex))
+         (when (aref *chart* (1+ vertex) 0)
            (dolist (span (chart-entry-configurations 
-                          (aref *chart* (1+ vertex))))
+                          (aref *chart* (1+ vertex) 0)))
                (let ((e (chart-configuration-edge span)))
                   (push
                      (cons (edge-id e) (make-edge-symbol (edge-id e)))
                      edge-symbols)))))
       (dotimes (vertex (1- *chart-limit*))
-         (if (aref *chart* (1+ vertex)) 
+         (if (aref *chart* (1+ vertex) 0) 
              (create-chart-pointers1 (1+ vertex) root edge-symbols)
            (unless (aref *morphs* (1+ vertex))
             (return vertex))))))
@@ -426,7 +426,7 @@
 
 (defun create-chart-pointers1 (right-vertex root edge-symbols)
    (let ((lex-pairs nil))
-      (dolist (span (chart-entry-configurations (aref *chart* right-vertex)))
+      (dolist (span (chart-entry-configurations (aref *chart* right-vertex 0)))
          (let*
             ((e (chart-configuration-edge span))
              (edge-symbol (cdr (assoc (edge-id e) edge-symbols))))
