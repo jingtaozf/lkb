@@ -102,7 +102,7 @@
             result gcs i-load a-load)
 
         (unwind-protect
-            (progn;ignore-errors
+            (ignore-errors
              (catch :break
                (let* ((user (current-user))
                       (comment (or comment "null"))

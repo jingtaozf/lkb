@@ -137,7 +137,7 @@
      (unless (eq (first (second form)) 'quit) (busy))
      (unwind-protect
       (multiple-value-bind (value condition)
-       (progn;ignore-errors
+       (ignore-errors
        (let* ((command (second form))
               (action (first command))
               (arguments (rest command))

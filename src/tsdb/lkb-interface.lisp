@@ -165,9 +165,12 @@
                (when (get-lex-rule-entry (edge-rule-number (chart-configuration-edge config)))
                   (incf successful-lrule-applications)))))
       (values successful-lrule-applications (length distinct-parse-edges)
-         (reduce #'+ *morphs* :key
-            #'(lambda (x)
-                (if (morph-edge-p x) (length (morph-edge-morph-results x)) 0))))))
+         (reduce #'+ (map 'vector
+                      #'(lambda (x)
+                          (if (morph-edge-p x) 
+                            (length (morph-edge-morph-results x)) 
+                            0))
+                      *morphs*)))))
 
 (defun parse-tsdb-distinct-edges (edge found)
    ;; collect edge for top lrule on each branch and all above

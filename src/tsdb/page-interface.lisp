@@ -51,7 +51,7 @@
         (push (stream (main::p-compo (main::p-caller component))) streams)
         (setf (stream (main::p-compo (main::p-caller component))) foo)))
     (multiple-value-bind (result condition)
-        (progn;ignore-errors
+        (ignore-errors
          (catch 'main::stop
            (main::eval-proto *page-controller* protocol input)))
       (close foo)

@@ -76,3 +76,4 @@
 (reset-module-status)
 (reset-system-paths)
 
+(pushnew :lkb *features*)
