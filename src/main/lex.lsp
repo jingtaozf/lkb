@@ -634,7 +634,9 @@
 
 ;; this can't go in psqllex
 (defun psql-lexicon-enabled-p nil
-  (and
-   (common-lisp-user::featurep :psql)
-   *psql-lexicon-parameters*))
-
+  (when *psql-lexicon-parameters*
+    (cond
+     ((common-lisp-user::featurep :psql) t)
+     (t
+      (format t "~%WARNING: ignoring *psql-lexicon-parameters* (distribution is not :psql-enabled)")
+      nil))))
