@@ -12,13 +12,15 @@
 
 (defparameter %failures% nil)
 
-(let ((n -1))
-  (defun reset-failure-count () 
-    (setf n -1))
+(eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
+           #-:ansi-eval-when (load eval compile)
+  (let ((n -1))
+    (defun reset-failure-count () 
+      (setf n -1))
 
-  (defstruct failure
-    (id (incf n))
-    nature type1 type2 glb path suffix context))
+    (defstruct failure
+      (id (incf n))
+      nature type1 type2 glb path suffix context)))
 
 (defmethod print-object ((object failure) stream)
   (if *failure-raw-output-p*
@@ -27,7 +29,7 @@
       (:type
        (format 
         stream 
-        "#U[type ~:[-1~*~;~a~] ~:[.~*~;\"~{~a~^.~}\"~] ~
+        "#U[type ~:[-1~*~;~a~] [~:[~*~;~{~a~^ ~}~]] ~
             ~:[top~*~;~a~] ~:[top~*~;~a~] ~:[-1~*~;~a~]]"
         (failure-id object) (failure-id object)
         (failure-path object) (failure-path object)
@@ -37,7 +39,7 @@
       (:cycle
        (format 
         stream 
-        "#U[cycle ~:[-1~*~;~a~] ~:[.~*~;\"~{~a~^.~}\"~] ~:[.~*~;~{~a~^.~}~] ~
+        "#U[cycle ~:[-1~*~;~a~] [~:[~*~;~{~a~^ ~}~] ~:[.~*~;~{~a~^.~}~] ~
             ~:[-1~*~;~a~]]"
         (failure-id object) (failure-id object) 
         (failure-path object) (failure-path object)
@@ -46,7 +48,7 @@
       (:constraint
        (format 
         stream 
-        "#U[constraint ~:[-1~*~;~a~] ~:[.~*~;\"~{~a~^.~}\"~] ~
+        "#U[constraint ~:[-1~*~;~a~] [~:[~*~;[~{~a~^ ~}~]] ~
            ~:[top~*~;~a~] ~:[top~*~;~a~] ~:[top~*~;~a~] ~:[-1~*~;~a~]]"
         (failure-id object) (failure-id object)
         (failure-path object) (failure-path object)

@@ -300,18 +300,22 @@
                                  (length *parse-record*)
                                  (/ (first *parse-times*) 100000))))
                   (if (eq view :browse)
-                    (lsp-browse id input edges format)
+                    (lsp-browse id input edges format nil)
                     (when waitp (lsp-return id stream edges format)))))
               (when waitp
                 (format stream " ~a" (length *parse-record*))))))
          (browse
-          (pop command)
-          (let* ((location (pop command))
+          (let* ((context (pop command))
+                 (location (pop command))
                  (format (let ((foo (pop command)))
                            (and foo (intern (string foo) :keyword))))
+                 (view (let ((foo (pop command)))
+                         (and foo (intern (string foo) :keyword))))
                  (object (lsp-retrieve-object id location)))
-            (when (and (second object) (member format '(:avm :tree)))
-              (lsp-browse id (first object) (rest object) format))))
+            (when (and (second object) 
+                       (member format '(:avm :edge :edges :chart :tree 
+                                        :mrs :dependencies)))
+              (lsp-browse id (first object) (rest object) format view))))
 
          (type
           (let* ((name (pop command))
@@ -333,16 +337,17 @@
                t
                "[~d] lsp-process-event(): invalid type identifier `~a'~%" 
                id name))))
+         #+:lui
          (unify
           (let* ((tdfs1 (let ((n (pop command)))
                           (when (numberp n) 
                             (second (lsp-retrieve-object id n)))))
-                 (path1 (convert-path (pop command)))
+                 (path1 (pop command))
                  (tdfs2 (let ((n (pop command)))
                           (when (numberp n) 
                             (second (lsp-retrieve-object id n)))))
-                 (path2 (convert-path (pop command))))
-            (if (and (tdfs-p tdfs1) path1 (tdfs-p tdfs2) path2)
+                 (path2 (pop command)))
+            (if (and (tdfs-p tdfs1) (tdfs-p tdfs2))
               (let* ((tdfs (tdfs-at-end-of path1 (copy-tdfs-elements tdfs1)))
                      (*unify-debug* :return)
                      (%failures% nil)
@@ -379,23 +384,28 @@
     (force-output stream)))
 
 (defun lsp-parse-command (id string)
-  (loop
-      with *package* = (find-package :lkb)
-      with *readtable* = (lsp-make-readtable)
-      with stream = (make-string-input-stream string)
-      for form = (ignore-errors (read stream nil :eof))
-      when (null form) do
+  (handler-case
+      (loop
+          with *package* = (find-package :lkb)
+          with *readtable* = (lsp-make-readtable)
+          with stream = (make-string-input-stream string)
+          for form = (read stream nil :eof)
+          while (not (eq form :eof)) collect form)
+    (error ()
         (when *lsp-debug-p*
           (format 
            t 
            "[~a] lsp-parse-command(): parse error in `~a'~%"
-           id string))
-        (return)
-      while (not (eq form :eof)) collect form))
+           id string)))))
 
-(defun lsp-make-readtable ()
-  (let ((readtable (copy-readtable)))
-    readtable))
+(labels ((|[|-reader (stream char)
+           (declare (ignore char))
+           (read-delimited-list #\] stream t)))
+  (defun lsp-make-readtable ()
+    (let ((readtable (copy-readtable)))
+      (set-macro-character #\[ #'|[|-reader nil readtable)
+      (set-macro-character #\] (get-macro-character #\)) nil readtable)
+    readtable)))
 
 (defun lsp-find-client (id)
   (loop
@@ -416,13 +426,13 @@
       (when (or (equal (first bucket) -1) (equal (first bucket) id))
         (rest bucket)))))
 
-(defun lsp-browse (id input edges format &key title)
+(defun lsp-browse (id input objects format view &key title)
   (let ((title (or title (format nil "`~a'~@[ [LSP # ~a]~]" input id))))
     (when (eq format :tree)
-      (show-parse edges title)
+      (show-parse objects title)
       (return-from lsp-browse))
     (loop
-        for edge in edges
+        for edge in objects
         when (null edge) do
           (format
            t
@@ -432,11 +442,19 @@
           (case format
             (:avm
              (display-fs edge title))
+            ((:edge :edges)
+             (show-chart)
+             (mp:process-wait-with-timeout "Waiting" 5 #'chart-ready)
+             (when (edge-p edge) (display-edge-in-chart edge)))
             #+:mrs
-            ((:mrs :indexed :prolog :scoped :rmrs :dependencies)
-             (let ((mrs (mrs::extract-mrs edge)))
-               (case format
-                 (:mrs
+            ((:mrs :dependencies)
+             (let* ((dag (typecase edge
+                           (edge (tdfs-indef (edge-dag edge)))
+                           (tdfs (tdfs-indef edge))
+                           (dag edge)))
+                    (mrs (mrs::extract-mrs-from-fs dag)))
+               (case view
+                 (:simple
                   (show-mrs-window nil mrs title))
                  (:indexed 
                   (show-mrs-indexed-window nil mrs title))
@@ -444,9 +462,9 @@
                   (show-mrs-prolog-window nil mrs title))
                  (:scoped 
                   (show-mrs-scoped-window nil mrs title))
-                 (:rmrs 
+                 (:robust 
                   (show-mrs-rmrs-window nil :mrs mrs :title title))
-                 (:dependencies 
+                 (t
                   (show-mrs-dependencies-window nil mrs title)))))))))
 
 (defun lsp-return (id stream edges format)
