@@ -492,7 +492,7 @@
     (if edge
 	(setf (get edge-symbol 'edge-fs)
 	  (if (rule-p rule)
-	      (reapply-rule rule dtrs (edge-spelling-change edge))
+	      (reapply-rule rule dtrs (edge-orth-tdfs edge))
 	    (copy-tdfs-completely (edge-dag edge))))
       (setf (get edge-symbol 'edge-fs) (get (car dtrs) 'edge-fs))))
   edge-symbol)
@@ -513,7 +513,7 @@
              (unless rule-dag (error "Unifications failed to reunify when drawing parse tree"))))
     ;; Re-do spelling change
     (let ((orth-fs (when nu-orth 
-		     (copy-tdfs-completely (retrieve-orth-tdfs nu-orth))))
+		     (copy-tdfs-completely nu-orth)))
           (mother-fs (tdfs-at-end-of (car (rule-order rule)) rule-dag)))
       (when orth-fs
 	(setf mother-fs (yadu mother-fs orth-fs)))
@@ -560,11 +560,7 @@
                    (or (when edge-fs (find-category-abb edge-fs))
                        (edge-category edge-record)))
                   (tree-node-text-string edge-symbol))))
-    ;;
-    ;; record edge label in edge; at least the tree comparison machinery will
-    ;; expect to find it here.
-    ;;
-    (when edge-record (setf (edge-label edge-record) label))
+    (setf (get edge-symbol 'label) label)
     (values label (if edge-record nil t))))
 
 
@@ -693,7 +689,7 @@
 ;;; generate HTML-only rendering of parse tree; requires LKB style sheet
 ;;;
 
-(defun edge2html (edge stream)
+(defun html-tree (edge &key tree (indentation 0) color (stream t))
   (labels ((depth (edge)
              (let ((children (or (edge-children edge) 
                                  (when (edge-morph-history edge)
@@ -744,14 +740,18 @@
     (let* ((depth (depth edge))
            (width (- (length (edge-lex-ids edge)) 1))
            (cache (make-array (list (+ depth 1) (+ width 1))))
-           (tree (make-new-parse-tree edge 1)))
-      (label-parse-tree tree)
+           (tree (or tree (make-new-parse-tree edge 1 t))))
       (index tree cache 0 0)
       (loop
-          initially (format stream "<table cellspacing=0 class=tree>~%")
-          finally (format stream "</table>")
+          initially 
+            (format 
+             stream 
+             "~v,0t<table cellspacing=0 class=tree ~
+                          ~@[style=\"color: ~a;\"~]>~%" 
+             indentation color)
+          finally (format stream "~v,0t</table>" indentation)
           for row from 0 to depth
-          do (format stream "<tr>~%")
+          do (format stream "~v,0t  <tr>~%" indentation)
           do
             (loop
                 with span = 0
@@ -764,19 +764,25 @@
                         (comment (or (fourth label) "")))
                     (format 
                      stream 
-                     "  <td class=~:[branch~;leaf~] colspan=~a>~%    ~
-                      <div class=~:[label~;form~]~%         ~
-                           onMouseOver=\"postStatus('~a')\"~%         ~
-                           onMouseOut=\"postStatus('')\">~a</div>~%  </td>~
-                      ~:[~;<td class=margin>&nbsp;</td>~]~%"
-                     leafp (if (= size 1) 1 (- (* size 2) 1)) 
-                     leafp comment string 
-                     (< (+ column (- size 1)) width))
+                     "~v,0t    ~
+                      <td class=tree~:[Branch~;Leaf~] colspan=~a>~%~v,0t      ~
+                      <div class=tree~:[Label~;Form~]~%~v,0t           ~
+                           onMouseOver=\"postStatus('~a')\"~%~v,0t           ~
+                           onMouseOut=\"postStatus('')\">~a</div></td>~%~
+                      ~:[~*~;~v,0t    <td class=treeMargin>&nbsp;</td>~%~]"
+                     indentation
+                     leafp (if (= size 1) 1 (- (* size 2) 1)) indentation
+                     leafp indentation
+                     comment indentation 
+                     string
+                     (< (+ column (- size 1)) width) indentation)
                     (setf span (- size 1)))
                 else when (zerop span) do
                   (format 
                    stream 
-                   "  <td class=none>~:[~;<td class=margin>&nbsp;</td>~]~%"
-                   (< column width))
+                   "~v,0t    ~
+                    <td class=treeNone>~
+                    ~:[~;<td class=treeMargin>&nbsp;</td>~]~%"
+                   indentation (< column width))
                 else do (decf span))
-          do (format stream "</tr>~%")))))
+          do (format stream "~v,0t  </tr>~%" indentation)))))
