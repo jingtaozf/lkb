@@ -73,7 +73,8 @@
                                     :protocol cache)))
              (run-id 
               (or run-id 
-                  (unless interactive
+                  (if interactive
+                    0
                     (+ (largest-run-id data :verbose verbose) 1))))
              (parse-id 
               (unless interactive
