@@ -27,12 +27,12 @@
   (let* ((main-semantics-fs (path-value fs *main-semantics-path*))
          (main-rels (if main-semantics-fs
                         (extract-relations-from-liszt 
-                         main-semantics-fs id)))
+                         main-semantics-fs id *main-semantics-path*)))
          (message-semantics-fs (path-value fs *message-semantics-path*))
          (message-rels
           (if message-semantics-fs
               (extract-relations-from-liszt 
-               message-semantics-fs id))))
+               message-semantics-fs id *message-semantics-path*))))
     (if (or main-rels message-rels)
         (let* ((new-record
                 (make-semantics-record
@@ -68,18 +68,19 @@
           (path-value fs *construction-semantics-path*))
          (construction-rels (if construction-semantics-fs
                         (extract-relations-from-liszt 
-                         construction-semantics-fs id)))
+                         construction-semantics-fs id 
+                         *construction-semantics-path*)))
          ;;; shouldn't be anything on main-semantics path
          ;;; but leave this here for checking
          (main-semantics-fs (path-value fs *main-semantics-path*))
          (main-rels (if main-semantics-fs
                         (extract-relations-from-liszt 
-                         main-semantics-fs id)))
+                         main-semantics-fs id *main-semantics-path*)))
          (message-semantics-fs (path-value fs *message-semantics-path*))
          (message-rels
           (if message-semantics-fs
               (extract-relations-from-liszt 
-               message-semantics-fs id))))
+               message-semantics-fs id *message-semantics-path*))))
     (if (or main-rels message-rels construction-rels)
         (let* ((new-record
                 (make-semantics-record
@@ -191,12 +192,12 @@
          (main-semantics-fs (path-value fs *main-semantics-path*))
          (main-rels (if main-semantics-fs
                         (extract-relations-from-liszt 
-                         main-semantics-fs id)))
+                         main-semantics-fs id *main-semantics-path*)))
          (message-semantics-fs (path-value fs *message-semantics-path*))
          (message-rels
           (if message-semantics-fs
               (extract-relations-from-liszt 
-               message-semantics-fs id))))
+               message-semantics-fs id *message-semantics-path*))))
     (when (or main-rels message-rels)
         (let* ((new-record
                 (make-semantics-record
@@ -218,7 +219,7 @@
 
 
 
-(defun extract-relations-from-liszt (fs id &optional last-fs path)
+(defun extract-relations-from-liszt (fs id path)
   ;;; similar to the mrsoutput fn, construct-liszt
   (if (is-valid-fs fs)
       (let ((label-list (fs-arcs fs)))
@@ -234,18 +235,14 @@
                   (cons rel
                         (if rest-part
                             (extract-relations-from-liszt
-                             (cdr rest-part) id last-fs path)
+                             (cdr rest-part) id path)
                             (format t 
                                     "~%Warning: ~A has a defective ~A" id path)))
                 (if rest-part
                     (progn
                     (format t "~%Warning: ~A has a gap in its ~A" id path)
-                    nil))))
-            (when last-fs
-              (unless (eq last-fs fs)
-                (format t 
-                        "~%Warning: ~A has a non-terminated ~A" id path)
-                nil))))))
+                    nil))))))))
+
                   
 (defun extract-relation-from-fs (fs id)
   ;;; two cases - normal relation and string-valued relation
