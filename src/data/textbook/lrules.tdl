@@ -71,6 +71,20 @@ inversion-lexical-rule := word+arg_real+ana_agr &
 
 
 
+#|
+:begin :instance.
+extraposition-lexical-rule := lrule-lexeme & 
+[ SYN  [HEAD #syn],
+  SEM #sem,
+  ARG-ST < #a & [SYN [HEAD comp] ] , #b >,
+  
+  ARGS < lexeme & [SYN [HEAD #syn,
+			SPR < [SYN [HEAD noun & [FORM f_it] ] ] >,
+			COMPS < #b, #a > ],
+		   SEM #sem,
+		   ARG-ST < [SYN [HEAD noun & [FORM f_it] ] ], #b , #a > ] > ].
+:end :instance.
+|#
 
 
 ;  Half of the passive rules below could be removed if we institute code for optionality of 

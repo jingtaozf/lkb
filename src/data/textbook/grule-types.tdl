@@ -1,0 +1,211 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; 
+;;; SYNTACTIC THEORY by Sag and Wasow -- Textbook Grammar 
+;;; implementation by Chris Callison-Burch & Scott Guffey
+;;;
+;;; grule-types.tdl
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;; <<>> ----- GRAMMAR RULE DEFINITIONS  -----
+
+dtr-type :< synsem-struc.
+
+nh-dtr-type := dtr-type &
+ [ NH1 synsem-struc ].
+
+
+head-dtr-type := dtr-type &
+ [ H synsem-struc ].
+
+grule :< phrase.
+
+head-feature-principle := grule & head-dtr-type & 
+ [ SYN [ HEAD #head ],
+
+   H [ SYN [ HEAD #head ] ] ].
+
+valence-principle :< grule.
+;;; CCB when we introduce defaults we should add the following
+;;; constraints as the default for headed-rules.
+; & head-dtr-type & 
+; [ SYN [ SPR   #spr,
+;	  COMPS #comps ],
+;
+;  H [ SYN [ SPR   #spr,
+;	     COMPS #comps ] ] ].
+
+semantic-inheritance-principle := grule & head-dtr-type &
+ [ SEM [ MODE  #mode,
+	 INDEX #index ],
+
+   H [ SEM [ MODE  #mode,
+	     INDEX #index ] ] ].
+
+headed-rule := head-feature-principle & 
+               semantic-inheritance-principle & 
+	       valence-principle.
+
+
+semantic-compositionality-unary := grule &
+[ SEM [ RESTR #restr ],
+
+  ARGS < [ SEM [ RESTR #restr ] ] > ].
+
+
+semantic-compositionality-binary := grule &
+[ SEM [ RESTR [ LIST #restr_first,
+		LAST #restr_last ] ],
+
+  ARGS < [ SEM [ RESTR [ LIST #restr_first,
+			 LAST #restr_middle ] ] ],  
+	                   
+	 [ SEM [ RESTR [ LIST #restr_middle,
+			 LAST #restr_last ] ] ] > ].
+
+semantic-compositionality-trinary := grule &
+[ SEM [ RESTR [ LIST #restr_first,
+		LAST #restr_last ] ],
+
+  ARGS < [ SEM [ RESTR [ LIST #restr_first,
+			 LAST #restr_second ] ] ],  
+	        
+	 [ SEM [ RESTR [ LIST #restr_second,
+			 LAST #restr_third ] ] ],
+
+	 [ SEM [ RESTR [ LIST #restr_third,
+			 LAST #restr_last ] ] ] > ].
+
+GAP-principle-unary := grule &
+[ SYN [ GAP #gap ],
+
+  ARGS < [ SYN [ GAP #gap ] ] > ].
+
+GAP-principle-binary := grule &
+[ SYN [ GAP [ LIST #gap_first,
+	      LAST #gap_last ] ],
+
+  ARGS < [ SYN [ GAP [ LIST #gap_first,
+		       LAST  #gap_middle ] ] ],
+
+	 [ SYN [ GAP [ LIST #gap_middle,
+		       LAST  #gap_last ] ] ] > ].
+
+
+GAP-principle-trinary := grule &
+[ SYN [ GAP [ LIST #gap_first,
+	      LAST #gap_last ] ],
+
+  ARGS < [ SYN [ GAP [ LIST #gap_first,
+		       LAST  #gap_second ] ] ],
+
+	 [ SYN [ GAP [ LIST #gap_second,
+		       LAST  #gap_third ] ] ],
+
+	 [ SYN [ GAP [ LIST #gap_third,
+		       LAST  #gap_last ] ] ] > ].
+
+
+
+
+
+unary-grule-type := GAP-principle-unary & semantic-compositionality-unary &
+ [ ORTH #orth,
+   ARGS < [ ORTH #orth ] > ].
+
+
+binary-grule-type :=  GAP-principle-binary & nh-dtr-type & 
+		     semantic-compositionality-binary & 
+ [ ORTH [ LIST #first,
+	  LAST #last ],
+
+   ARGS <  [ ORTH [ LIST #first,
+		    LAST #middle ] ],  [ ORTH [ LIST #middle,
+						LAST #last] ], ... > ].
+
+
+trinary-grule-type :=  GAP-principle-trinary & nh-dtr-type & 
+		     semantic-compositionality-trinary &
+ [ ORTH [ LIST #first,
+	  LAST #last],
+   NH2 synsem-struc,
+   ARGS < [ORTH [ LIST #first,
+		  LAST #second ] ],  [ORTH [ LIST #second,
+					     LAST #third ] ], 
+
+	  [ORTH [LIST #third,
+		 LAST #last] ] > ].
+
+
+unary-COMPS-rule := unary-grule-type & headed-rule &
+[ H #1,
+  ARGS < #1 & word+arg_real+ana_agr > ].
+
+
+binary-COMPS-rule := binary-grule-type & headed-rule &
+ [ H #1,
+   NH1 #2,
+   ARGS < word+arg_real+ana_agr & #1,  phrase & #2 > ] .
+
+
+trinary-COMPS-rule := trinary-grule-type & headed-rule &
+ [ H   #1,
+   NH1 #2,
+   NH2 #3,
+   ARGS < word+arg_real+ana_agr & #1, phrase & #2, phrase & #3 > ].
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+unary-grule := nh-dtr-type & unary-grule-type &
+ [ NH1 #1,
+   ARGS < phrase & #1 > ].
+
+
+unary-grule-headed := headed-rule & unary-grule &
+ [ H #1,
+   ARGS < phrase & #1 > ].
+
+
+birule-headfirst := binary-grule-type & headed-rule &
+ [ H #1,
+   NH1 #2,
+   ARGS < phrase & #1, phrase & #2 > ] .
+
+birule-headfinal := binary-grule-type & headed-rule & 
+ [ NH1 #1,
+   H #2,
+   ARGS < phrase & #1, phrase & #2 > ] .
+
+
+
+birule-minusGAP := semantic-compositionality-binary & nh-dtr-type &
+ [ ORTH [ LIST #first,
+	  LAST #last ],
+   ARGS < [ ORTH [ LIST #first,
+		   LAST #middle ] ],  [ ORTH [ LIST #middle,
+					       LAST #last] ] > ].
+
+birule-headfinal-minusGAP := birule-minusGAP & 
+			     headed-rule & 
+			    
+ [ NH1 #1,
+   H #2,
+   ARGS < phrase & #1,  phrase & #2 > ] .
+
+
+
+trirule-nonheaded := trinary-grule-type &
+ [ NH1 #1,
+   NH2 #2,
+   NH3 synsem-struc & #3,
+
+   ARGS< phrase & #1,  phrase & #2,  phrase & #3> ].
+
+
+

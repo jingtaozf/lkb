@@ -4,7 +4,6 @@ could 3RD-SING-VERB could
 am NON-3RD-SING-VERB be
 are NON-3RD-SING-VERB be
 is 3RD-SING-VERB be
-are NON-3RD-SING-VERB be
 was PAST-VERB be
 were PAST-VERB be 
 they PLUR-NOUN-NOM it
@@ -28,7 +27,7 @@ begun PAST-PART-VERB begin
 bet PAST-VERB bet
 bit PAST-VERB bite
 bet PAST-PART-VERB bet
-bitten PAST-PART-VERB bit
+bitten PAST-PART-VERB bite
 bought PAST-VERB buy
 bought PAST-PART-VERB buy
 broke PAST-VERB break
@@ -111,6 +110,7 @@ overheard PAST-VERB overhear
 overheard PAST-PART-VERB overhear
 paid PAST-VERB pay
 paid PAST-PART-VERB pay
+people PLUR-NOUN person
 put PAST-VERB put
 put PAST-PART-VERB put
 ran PAST-VERB run
@@ -177,6 +177,7 @@ went PAST-VERB go
 will 3RD-SING-VERB will
 wives PLUR-NOUN wife
 women PLUR-NOUN woman
+won PAST-VERB win
 written PAST-PART-VERB write
 wrote PAST-VERB write
 "

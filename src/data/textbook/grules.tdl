@@ -12,7 +12,7 @@ head-specifier-rule := birule-headfinal &
  [ SYN [ SPR < > ],
 
    NH1 #1, 
-   H [ SYN [ SPR < #1 > ] ] ].
+   H [ SYN [ SPR < #1 & [ SYN [ SPR < > ] ] > ] ] ].
 :end :instance.
 
 

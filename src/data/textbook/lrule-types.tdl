@@ -3,50 +3,41 @@
 ;;; SYNTACTIC THEORY by Sag and Wasow -- Textbook Grammar 
 ;;; implementation by Chris Callison-Burch & Scott Guffey
 ;;;
-;;; lruletypes.tdl
+;;; lrule-types.tdl
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;; CCB don't change the name of lrule, or it will break -- it's named
-;;; in the globals.lsp file.
-
-general-passive-lrule := word & 
-[ ORTH #orth,
-  SYN [ HEAD verb & [ FORM pass,
-		      PRED true ],
-	SPR < [ ] > ],
-  SEM #sem,
-  
-  ARGS < word & [ ORTH #orth,
-                  SYN [ HEAD verb & [ FORM psp,
-				      PRED false ] ],
-		  SEM #sem ] > ].
+;;; Don't change the name of lrule-super, or it will break -- it's named
+;;; in the globals.lsp file.  CCB.
 
 
-lrule-super := lex-item & 
+lrule-super :< lex-item.
+
+; Words go through several stages before they can be used by our grammatical
+; rules.  First the argument realization principle is applied, which sets up 
+; the correspondence between the arg-st and the spr and comps.  Next the 
+; anaphoric agreement principle determines which forms the argument structure
+; can take.
+; We've made types that correspond to these steps. They're called word, 
+; word+arg_real, and word+arg_real+ana_agr.  The latter two types correspond 
+; fairly closely to the book's notion of Lexical-Structural Description.  CCB
+ 
+word+arg_real :< lrule-super.
+ 
+;word+arg_real+ana_agr :< lrule-super.
+
+;;; turning off the binding stuff for speed too.
+;;; added this line to make sure that things go through.
+word+arg_real+ana_agr :< word+arg_real.
+
+lrule := lrule-super & 
   [ ARGS < lexeme & [ AFFIX #argaff,
 		      ARGS < [ AFFIX #argaff ] > ] >,
 
     NEEDS-AFFIX boolean ],
 status: lex-rule.
-#|
-:begin :instance.
-extraposition-lexical-rule := lrule-lexeme & 
-[ SYN  [HEAD #syn],
-  SEM #sem,
-  ARG-ST < #a & [SYN [HEAD comp] ] , #b >,
-  
-  ARGS < lexeme & [SYN [HEAD #syn,
-			SPR < [SYN [HEAD noun & [FORM f_it] ] ] >,
-			COMPS < #b, #a > ],
-		   SEM #sem,
-		   ARG-ST < [SYN [HEAD noun & [FORM f_it] ] ], #b , #a > ] > ].
-:end :instance.
-|#
 
-
-
-lrule := lrule-super & word &
+lrule-general := lrule & word &
 [ SYN #syn,
   SEM #sem,
   ARG-ST #arg-st,
@@ -56,7 +47,7 @@ lrule := lrule-super & word &
 	  SEM #sem,
 	  ARG-ST #arg-st ] > ]. 
 
-3rd-sing-verb-lexical-rule := lrule-super & word &
+3rd-sing-verb-lexical-rule := lrule & word &
 [ SYN #syn & [ HEAD  verb & [ FORM fin,
 			      PRED false ],
 	       SPR < [ SYN [ HEAD [ AGR 3sing ] ] ] > ],
@@ -76,11 +67,28 @@ lrule := lrule-super & word &
 
 
 
+general-passive-lrule := word & 
+[ ORTH #orth,
+  SYN [ HEAD verb & [ FORM pass,
+		      PRED true ],
+	SPR < [ ] > ],
+  SEM #sem,
+  
+  ARGS < word & [ ORTH #orth,
+                  SYN [ HEAD verb & [ FORM psp,
+				      PRED false ] ],
+		  SEM #sem ] > ].
+
+
+
+
+
 sing-noun := affix & 
  [ HEAD noun & [ AGR [ NUM sing ] ] ].
 
 plur-noun := affix &
- [ HEAD noun & [ AGR [ NUM plur ] ] ].
+ [ HEAD noun & [ AGR [ NUM plur ] ],
+   SPR < [ SYN [ HEAD [ COUNT true ] ] ] > ].
 
 plur-noun-nom := affix &
  [ HEAD noun & [ AGR [ NUM plur ], CASE nom ] ].

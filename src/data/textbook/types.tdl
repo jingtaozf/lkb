@@ -15,8 +15,7 @@ feat-struc :< *top*.
 synsem-struc := feat-struc &
 [ ORTH *diff-list*,              
   SYN  gram-cat,
-  SEM  sem-struc,
-  KEY-ARG boolnum ].
+  SEM  sem-struc ].
 
 
 agr-cat := feat-struc &
@@ -65,7 +64,6 @@ verb := pos &
    NEG boolean,
    ANA false].
 
-
 nominal-cat := pos & 
  [ AGR agr-cat,
    COUNT boolean ].
@@ -93,7 +91,7 @@ adj := pos & mod-type &
 
 prep := mod-type & nominal-cat.
 
-;;; CCB - Agreement really only goes on Nouns and Dets.  I added onto preps
+;;; CCB - Agreement is really only marked on Nouns and Dets.  I added onto preps
 ;;; because our current bining theory implementation relys on PPs having AGR.
 
 
@@ -117,7 +115,9 @@ form-cat :< *value*.
    
    f_to   :< form-cat.
    f_about:< form-cat.
+   f_around:< form-cat.
    f_on   :< form-cat.
+   f_in   :< form-cat.
    f_with :< form-cat.
    f_of   :< form-cat.
    f_for  :< form-cat.
@@ -141,20 +141,6 @@ form-cat :< *value*.
 non-3sing :< agr-cat.
 
 
-plural := non-3sing & 
- [ NUM plur ].
-
-1or2sing :< non-3sing.
-
-1sing := 1or2sing & 
- [ PER 1st,
-   NUM sing ].
-
-2sing := 1or2sing & 
- [ PER 2nd,
-   NUM sing ].
-
-
 per :< *value*.
    1st :< per.
    2nd :< per.
@@ -174,492 +160,13 @@ case-cat :< *value*.
    nom :< case-cat.
    acc :< case-cat.
 
- 
- 
-;;; <<<----- STRUCTURE FOR SEMANTIC FIELDS  ----->>>
-
-
-list-of-predications :< *diff-list*.
-
-mode-cat :< *value*.
-   prop :< mode-cat.
-   ques :< mode-cat.
-   dir  :< mode-cat.
-   ref  :< mode-cat.
-   null-mode :< mode-cat.
-
-reln :< *value*.
-
-null-sem := sem-struc &
-[ MODE null-mode,
-  INDEX null-index,
-  RESTR <! !>].
-
-modifier-sem := synsem-struc &
- [ SYN [ HEAD [ MOD < [SEM [INDEX #2 ] ] > ] ],
-   SEM [ INDEX #1,
-	 RESTR <! arg_pred & [ SIT #1, ARG #2 ] !> ] ].
-
-
-
-noun_pred := predication &
- [ INSTANCE  ref-index ].
-
-named_pred := predication &
- [ RELN      r_name,
-   NAME      symbol, 
-   NAMED     ref-index].
-
-conj_pred := predication.
-
-act_pred := predication &
- [ ACT ref-index ].
-und_pred := predication &
- [ UND ref-index ].
-thm_pred := predication &
- [ THM ref-index ].
-
-iv_pred  :< act_pred.
-piv_pred := act_pred & thm_pred.
-stv_pred := act_pred & und_pred.
-ctv_pred := act_pred & arg_pred.
-dtv_pred := act_pred & und_pred & thm_pred.
-srv_pred :< arg_pred.
-scv_pred := act_pred & arg_pred.
-orv_pred :< scv_pred.
-ocv_pred := act_pred & und_pred & arg_pred.
-
-time_pred := predication &
- [ ARG1  sit-index,
-   ARG2  sit-index ].
-
-now:< sit-index.
-
-
-not_pred := predication &
- [ RELN     r_not,
-   NOT-ARG  sit-index ].
-
-question_pred := predication &
- [ RELN       r_question,
-   QUERY-ARG  index ].
-
-arg_pred := predication &
- [ ARG  index ].
-
-auxv_pred :< arg_pred.
-
-r_name :< reln.
-
-r_speaker :< reln.
-r_female :< reln.
-r_male :< reln.
-r_hearer :< reln.
-r_thing :< reln. 
-r_group :< reln.
-r_no-person :< reln.
-r_every-person :< reln.
-
-r_book :< reln.
-r_picture :< reln.
-r_table :< reln.
-r_cause :<reln.
-r_idea :< reln.  
-r_cat :< reln.
-r_goose :< reln.
-r_ice-cream :< reln.
-r_Ande :< reln.
-r_story :< reln.
-r_astronomer :< reln.
-r_telescope  :< reln.
-
-r_and :< reln.
-
-r_eat :< reln.
-r_see :< reln.
-r_kick :< reln.
-r_sleep :< reln.
-r_die :< reln.
-r_love :< reln.
-r_like :< reln.
-r_hate :< reln.
-r_give :< reln.
-r_buy :< reln.
-r_tell :< reln.
-r_annoy :< reln.
-r_vote :< reln.
-
-r_can :< reln.
-r_do :< reln.
-r_could :< reln.
-
-r_have :< reln.
-r_will :< reln.
-
-r_exploit :< reln.
-
-r_expect :< reln.
-r_continue :< reln.
-r_try :< reln.
-r_observe :< reln.
-r_persuade :< reln.
-
-r_quickly :< reln.
-r_today   :< reln.
-
-r_t-overlap :< reln.
-r_t-precede :< reln.
-
-r_question :< reln.
-r_not      :< reln.
-
- r_age :< reln.
- r_bark :< reln.
- r_believe :< reln.
- r_dine :< reln.
- r_disappear :< reln.
- r_fall :< reln.
- r_fly :< reln.
- r_float :< reln.
- r_gather :< reln.
- r_laugh :< reln.
- r_leave :< reln.
- r_lie :< reln.
- r_live :< reln.
- r_run :< reln.
- r_sank :< reln.
- r_sat :< reln.
- r_scream :< reln.
- r_sing :< reln.
- r_skate :< reln.
- r_sneeze :< reln.
- r_speak :< reln.
- r_suck :< reln.
- r_talk :< reln.
- r_tapdance :< reln.
- r_visit :< reln.
- r_win :< reln.
- r_yell :< reln.
- r_ask :< reln.
- r_campaign :< reln.
- r_come :< reln.
- r_cooccur :< reln.
- r_fit :< reln.
- r_go :< reln.
- r_look :< reln.
- r_rely :< reln.
- r_tug :< reln.
- r_hope :< reln.
- r_say :< reln.
- r_think :< reln.
- r_suspect :< reln.
- r_discover :< reln.
- r_learn :< reln.
- r_admire :< reln.
- r_affect :< reln.
- r_arrest :< reln.
- r_avoid :< reln.
- r_bite :< reln.
- r_bare :< reln.
- r_broke :< reln.
- r_cark :< reln.
- r_chase :< reln.
- r_close :< reln.
- r_consider :< reln.
- r_consume :< reln.
- r_cross :< reln.
- r_cut :< reln.
- r_determine :< reln.
- r_devour :< reln.
- r_deny :< reln.
- r_display :< reln.
- r_draw :< reln.
- r_dread :< reln.
- r_drive :< reln.
- r_elect :< reln.
- r_enjoy :< reln.
- r_examine :< reln.
- r_find :< reln.
- r_finish :< reln.
- r_fix :< reln.
- r_fill :< reln.
- r_follow :< reln.
- r_get :< reln.
- r_halve :< reln.
- r_help :< reln.
- r_hit :< reln.
- r_improve :< reln.
- r_involve :< reln.
- r_know :< reln.
- r_leave :< reln.
- r_list :< reln.
- r_lock :< reln.
- r_meet :< reln.
- r_pat :< reln.
- r_paint :< reln.
- r_pet :< reln.
- r_phone :< reln.
- r_present :< reln.
- r_protect :< reln.
- r_race :< reln.
- r_rake :< reln.
- r_represent :< reln.
- r_respect :< reln.
- r_solve :< reln.
- r_spot :< reln.
- r_spray :< reln.
- r_supervise :< reln.
- r_take :< reln.
- r_taste :< reln.
- r_target :< reln.
- r_trick :< reln.
- r_turn :< reln.
- r_upset :< reln.
- r_watch :< reln.
- r_bring :< reln.
- r_donate :< reln.
- r_hand :< reln.
- r_move :< reln.
- r_put :< reln.
- r_wrap :< reln.
- r_appear :< reln.
- r_appeal :< reln.
- r_try :< reln.
- r_abbie :< reln.
- r_accusation :< reln.
- r_advantage :< reln.
- r_album :< reln.
- r_alps :< reln.
- r_andes :< reln.
- r_animal :< reln.
- r_answer :< reln.
- r_arrow :< reln.
- r_artist :< reln.
- r_assignment :< reln.
- r_associate :< reln.
- r_atom :< reln.
- r_audience :< reln.
- r_auxiliary :< reln.
- r_baby :< reln.
- r_barn :< reln.
- r_beer :< reln.
- r_belief :< reln.
- r_bicycle :< reln.
- r_bird :< reln.
- r_bit :< reln.
- r_blanket :< reln.
- r_blues :< reln.
- r_boat :< reln.
- r_bucket :< reln.
- r_building :< reln.
- r_cancer :< reln.
- r_candidate :< reln.
- r_captain :< reln.
- r_car :< reln.
- r_cardinal :< reln.
- r_chair :< reln.
- r_cheetah :< reln.
- r_child :< reln.
- r_city :< reln.
- r_class :< reln.
- r_cloud :< reln.
- r_clue :< reln.
- r_coast :< reln.
- r_conflict :< reln.
- r_council :< reln.
- r_customer :< reln.
- r_day :< reln.
- r_dealer :< reln.
- r_dealership :< reln.
- r_defendant :< reln.
- r_difference :< reln.
- r_dinner :< reln.
- r_disease :< reln.
- r_doctor :< reln.
- r_dog :< reln.
- r_drug :< reln.
- r_duck :< reln.
- r_earthquake :< reln.
- r_east :< reln.
- r_exam :< reln.
- r_fbi :< reln.
- r_felon :< reln.
- r_fever :< reln.
- r_food :< reln.
- r_fool :< reln.
- r_form :< reln.
- r_friend :< reln.
- r_furniture :< reln.
- r_game :< reln.
- r_garden :< reln.
- r_garlic :< reln.
- r_gas :< reln.
- r_gathering :< reln.
- r_grandmother :< reln.
- r_guest :< reln.
- r_head :< reln.
- r_horse :< reln.
- r_hospital :< reln.
- r_improvement :< reln.
- r_innocent :< reln.
- r_judge :< reln.
- r_jury :< reln.
- r_language :< reln.
- r_leg :< reln.
- r_letter :< reln.
- r_library :< reln.
- r_life :< reln.
- r_light :< reln.
- r_linguist :< reln.
- r_logic :< reln.
- r_lunch :< reln.
- r_mailbox :< reln.
- r_martini :< reln.
- r_master :< reln.
- r_meal :< reln.
- r_meeting :< reln.
- r_man :< reln.
- r_monster :< reln.
- r_museum :< reln.
- r_napkin :< reln.
- r_neighborhood :< reln.
- r_nephew :< reln.
- r_night :< reln.
- r_note :< reln.
- r_opportunity :< reln.
- r_painting :< reln.
- r_park :< reln.
- r_participant :< reln.
- r_past :< reln.
- r_patient :< reln.
- r_pencil :< reln.
- r_person :< reln.
- r_police :< reln.
- r_price :< reln.
- r_problem :< reln.
- r_protester :< reln.
- r_ravioli :< reln.
- r_riot :< reln.
- r_river :< reln.
- r_roof :< reln.
- r_room :< reln.
- r_seat :< reln.
- r_senora :< reln.
- r_sentence :< reln.
- r_series :< reln.
- r_shepherd :< reln.
- r_song :< reln.
- r_storm :< reln.
- r_student :< reln.
- r_tabs :< reln.
- r_tail :< reln.
- r_tale :< reln.
- r_teacher :< reln.
- r_team :< reln.
- r_television :< reln.
- r_theorem :< reln.
- r_thief :< reln.
- r_thrill :< reln.
- r_time :< reln.
- r_town :< reln.
- r_toy :< reln.
- r_trash :< reln.
- r_trouble :< reln.
- r_tv :< reln.
- r_twin :< reln.
- r_type :< reln.
- r_umbrella :< reln.
- r_unicorn :< reln.
- r_verb :< reln.
- r_voter :< reln.
- r_water :< reln.
- r_window :< reln.
- r_wine :< reln.
- r_witness :< reln.
- r_woman :< reln.
- r_work :< reln.
- r_worm :< reln.
-
-
-
-
-;;; <<<---- TYPES INHERITING FROM SYNSEM-STRUC/LEXICAL RULE DEFINITIONS ---->>>
-
-; AAC added type for feature introduction condition
-;
-args-type := *top* &
- [ ARGS *list* ].
-
-arg-st-type := feat-struc &
-[ ARG-ST list-of-synsem-structs ].
-
-lex-item := synsem-struc & arg-st-type & args-type.
-
-mod_affix :< gram-cat.
-  affix := mod_affix.
-  no-affix :< mod_affix.
-
-; Words go through several stages before they can be used by our grammatical
-; rules.  First the argument realization principle is applied, which sets up 
-; the correspondence between the arg-st and the spr and comps.  Next the 
-; anaphoric agreement principle determines which forms the argument structure
-; can take.
-; We've made types that correspond to these steps. They're called word, 
-; word+arg_real, and word+arg_real+ana_agr.  The latter two types correspond 
-; fairly closely to the book's notion of Lexical-Structural Description.  CCB
- 
-phrase :=  synsem-struc & args-type.
-
-word := lex-item.
- 
-word+arg_real := lex-item.
- 
-word+arg_real+ana_agr :< lex-item.
-
-;;; CCB removed the restiction that the ORTH contained a single string.
-;;; Might try using AAC's mod if it doesn't work.  Hers is as follows"
-#|
-lexeme := lex-item &
- [ AFFIX mod_affix,
-   ORTH #orth & [ LIST [ FIRST string,
-                         REST /l #last ],
-                  LAST /l #last ],
-   SYN [ GAP <! !> ],
-   ARGS < [ ORTH #orth ] > ].
-|#
-
-lexeme := lex-item &
- [ AFFIX mod_affix,
-   ORTH #orth,
-   SYN [ GAP <! !> ],
-   ARGS < [ ORTH #orth ] > ].
-
-
-
-infl-lxm := lexeme &
- [ ARGS < [ AFFIX affix &
-		  [ HEAD #head,
-		    SPR #spr,
-		    COMPS #comps ] ] >,
-   SYN [ HEAD #head,
-	 SPR #spr,
-	 COMPS #comps ] ].
-
-const-lxm := lexeme &
- [ ARGS < [ AFFIX no-affix ] >].
-
-rule := synsem-struc & args-type &
- [ ARGS *list* ],
- status: root-node.
-
-
 
 
 ;;; <<>> ----- CONST-LXM DEFINITIONS  -----
 
-; Right now we have MOD implemented as a list which can either modify a single synsem-struc
-; or nothing at all.  Should we adopt the same strategy for our ANA fields?  SMG
- 
+; Right now we have MOD implemented as a list to cover the case where the thing that can be
+; modified is "none", which we mark as the empty list.  CCB
+
 prep-lxm := const-lxm &
  [ SYN [ HEAD prep ] ].
 
@@ -671,12 +178,12 @@ pdp-lxm := prep-lxm &
 
 mkp-lxm := prep-lxm &  
  [ SYN [ HEAD [ MOD < >, 
-		ANA #agr],
+		ANA #ana],
 	 SPR < > ],
    SEM [ MODE  #mod,
 	 INDEX ref-index & #ind ],
    ARG-ST < [ SYN [ HEAD noun & [ CASE acc, 
-				  ANA #agr ] ],
+				  ANA #ana ] ],
 	      SEM [ MODE  #mod, 
 		    INDEX #ind ] ] > ].
 
@@ -717,61 +224,55 @@ comp-lxm := const-lxm &
 ;;; <<>> ----- NOUN-LXM DEFINITIONS  -----
 
 
-; I've pushed the empty ARG-ST default constraint down from the noun-lxm
-; to the pron-lxm and pn-lxm because the current system doesn't support
-; defaults.  CCB
+; I've put the empty ARG-ST default constraint on the SPR and COMPS, because
+; in this system you need to specifically override the default value.  It's not
+; able to do clever infrenece about the Argument Realization Principle.   
+; 
+; I also added [COUNT +] as a default so I didn't have to type it so much.  CCB
 
 noun-lxm := infl-lxm &
- [ SYN [ HEAD noun & [FORM normal,
-		      ANA false ] ],
-   SEM [ MODE ref,
-	 INDEX #1,
-	 RESTR <! noun_pred & [INSTANCE #1] !> ] ].
+ [ SYN [ HEAD noun & [ FORM /l normal,
+ 		       AGR [ PER /l 3rd ],
+		       ANA /l false,
+                       COUNT /l true ],
+         SPR /l < >,
+         COMPS /l < > ],
+   SEM [ MODE  /l ref,
+         INDEX  #1,
+         RESTR <! noun_pred & [ INSTANCE #1] !>  ] ].
 
-pron-lxm := noun-lxm & 
- [  ARG-ST < > ].
+pron-lxm :< noun-lxm.
 
-; Added reflex-pron-lxm because the [ANA false] feature can't be inheritied from the noun-lxm.
-;
-reflex-pron-lxm := infl-lxm &
- [ SYN [ HEAD noun & [ ANA true,
-		       FORM normal ] ],
-   SEM [ MODE ref,
-	 INDEX #1,
-	 RESTR <! noun_pred & [INSTANCE #1] !> ],
-   ARG-ST < > ].
 
-; If we ever institute optionality then we should fill in a second optional ARG-ST element.    
-;
 cn-lxm := noun-lxm & 
  [ SYN [ HEAD [ COUNT #count,
-		AGR #agr & [ PER 3rd,
-			     GEND neut ] ],
+		AGR #agr & [ GEND /l neut ] ],
 	 SPR < [ SYN [ HEAD det & [AGR #agr, COUNT #count], 
-		       SPR < > ] ] >,
-	 COMPS < > ],
-   ARG-ST < [ ], ... > ].
+		          SPR < > ] ] > ] ].
 
+;;; Because of the way that non-3sing is currently set up it can unify with [ PER 3rd, NUM sing], 
+;;; it's best to mark 3sing explicitly so that pn-lxms will interact with the verb rules properly.
+;;; It's still a problem with cn-lxms.  CCB
 
-; Right now pn-lxm can't inherit from noun-lxm because they contain different semantic fields.  SMG
-;
-pn-lxm := infl-lxm & 
- [ SYN [ HEAD noun & [ ANA false,
-		       AGR 3sing,
-		       FORM normal ] ],
-   SEM [ MODE ref,
-	 INDEX #1,
-	 RESTR <! named_pred & [ NAMED #1 ] !> ],
-   ARG-ST < > ].
+pn-lxm := noun-lxm & 
+ [ SYN [ HEAD [ AGR 3sing ] ],
+   SEM [ INDEX #1,
+	 RESTR <! named_pred & [ NAMED #1 ] !> ] ].
 
 ; This type allows us to have common nouns without specifiers, with different FORM values, and with
 ; null semantics.   SMG
 
+#|
 dummy-idiom-lxm := const-lxm &
  [ SYN  [ HEAD noun & [ ANA false ] ], 
    SEM  null-sem,
    ARG-ST < > ].
+|#
 
+
+dummy-idiom-lxm := const-lxm &
+ [ SYN  [ HEAD noun & [ ANA false ] ], 
+   ARG-ST < > ].
 
 
 ;;; <<>> ----- VERB LEXEME TYPES  -----
@@ -784,329 +285,141 @@ dummy-idiom-lxm := const-lxm &
 ; FORM normal has been distributed down inside sub lexemes for verbs to account for verbs which allow
 ; for dummy subjects and objects.  SMG
 
+;;; Attempting to abrieviate the notation -- CCB
+;NP := synsem-struc &
+;[ SYN [ HEAD noun & [ CASE nom ],
+;	SPR < >,
+;	COMPS < >  ] ].
+
+
 verb-lxm := infl-lxm & 
  [ SYN [ HEAD verb & [ INV false, 
 		       NEG false, 
-		       AUX false,
+		       AUX /l false,
 		       ANA false],
 	 SPR < [ ] > ],   
    SEM [INDEX #1,
 	MODE prop,
 	RESTR <! predication & [SIT #1] !> ],
-   ARG-ST < [ SYN [ HEAD noun & [ CASE nom ],
-		    SPR < >,
-		    COMPS < > ]            ],  ...  > ].
+   ARG-ST < [ SYN [ HEAD noun & [ FORM /l normal,
+   				  CASE nom ],
+	      SPR < >,
+	      COMPS < >  ] ],  ...  > ].
 
-iv-lxm := verb-lxm &
- [ SEM [ RESTR <! iv_pred & [ ACT #1 ] !> ],
-   ARG-ST < [ SYN [HEAD [FORM normal ] ],
-	      SEM [ INDEX #1 ] ] > ].
+iv-lxm := verb-lxm & iv-sem &
+ [ ARG-ST < [ ] > ].
 
-piv-lxm := verb-lxm &
- [ SEM [ RESTR <! piv_pred & [ ACT #1, 
-			       THM #2 ] !> ],
-   ARG-ST < [ SEM [ INDEX #1 ] ], [ SYN [ HEAD prep, 
-					  SPR < >, 
-					  COMPS < > ],
-				    SEM [ INDEX #2 ] ]  > ].
+piv-lxm := verb-lxm & piv-sem &
+ [ ARG-ST < [ ], [ SYN [ HEAD prep, 
+			 SPR < >, 
+			 COMPS < > ] ] > ].
 
-ctv-lxm := verb-lxm &
- [ SEM [ RESTR <! ctv_pred & [ ACT #1,
-			       ARG #2 ] !> ],
-   ARG-ST < [ SEM [ INDEX #1 ] ], [ SYN [ HEAD comp,
-					  COMPS < > ],
-				    SEM [ INDEX #2 ] ] > ].
+ctv-lxm := verb-lxm & ctv-sem & 
+ [ ARG-ST < [ ], [ SYN [ HEAD comp,
+			 COMPS < > ] ] > ].
 
 tv-lxm := verb-lxm &
- [ ARG-ST < [ ], [SYN [ HEAD noun & [ CASE acc ],
-			SPR < > ,
-		        COMPS < > ]            ], ... > ].
+ [ ARG-ST < [ ], [SYN [ HEAD noun & [ FORM /l normal, CASE acc ],
+ 			SPR < >,
+ 			COMPS < > ] ], ... > ].
 
-stv-lxm := tv-lxm &
-[ SEM [ RESTR <! stv_pred & [ ACT #1, 
-			      UND #2 ] !> ],
-  ARG-ST < [SEM [INDEX #1 ] ], [ SEM [INDEX #2 ] ] > ].
+stv-lxm := tv-lxm & stv-sem &
+[ ARG-ST < [ ], [ ] > ].
 
-dtv-lxm := tv-lxm &
- [ SEM [ RESTR <! dtv_pred & [ ACT #1, 
-			       UND #2, 
-			       THM #3 ] !> ],
-   ARG-ST < [ SEM [ INDEX #1 ] ],  [ SEM [ INDEX #2 ] ], [ SYN [ HEAD noun & [ FORM normal, CASE acc ],
-								 SPR < >,
-								 COMPS < > ],
-							   SEM [ INDEX #3 ] ] > ].
 
-ptv-lxm := tv-lxm &
- [ SEM [ RESTR <! dtv_pred & [ ACT #1, 
-			       UND #2, 
-			       THM #3 ] !> ],
-   ARG-ST < [ SEM [ INDEX #1 ] ],  [ SEM [ INDEX #3 ] ],  [ SYN [ HEAD prep,
-								  SPR < >,
-								  COMPS < > ],
-							    SEM [ INDEX #2 ] ] > ].
+dtv-lxm := tv-lxm & dtv-sem &
+ [ ARG-ST < [ ],  [ ], [ SYN [ HEAD noun & [CASE acc ],
+			       SPR < >,
+			       COMPS < > ] ] > ].
 
-srv-lxm := verb-lxm &
-[ SEM [	RESTR <! srv_pred & [ ARG #3 ] !> ],
-  ARG-ST < #4 ,  [SYN [HEAD comp & [FORM inf],
-		       SPR < #4 >],
-		  SEM [INDEX #3] ] > ]. 
+ptv-lxm := tv-lxm & ptv-sem &
+ [ ARG-ST < [ ],  [ ],  [ SYN [ HEAD prep ] ] > ].
 
-; I have added FORM normal to the second element of the ARG-ST so that we cannot parse
-; the sentence "It tries to rain" where "it" is the regular singular pronoun.  SMG
-;
-scv-lxm := verb-lxm &
-[ SEM [	RESTR <! scv_pred & [ ACT #1,
-			      ARG #3 ] !> ],
-  ARG-ST < [SYN [HEAD [AGR #agr] ],
+
+;;; Does FORM need to be specified on srv-lxm (and auxv-lxm)?  CCB
+
+#|
+srv-lxm := verb-lxm & srv-sem &
+[ ARG-ST < #1 ,  [SYN [HEAD [FORM /l inf],
+		       SPR < #1 >] ] > ]. 
+|#
+
+
+srv-lxm := verb-lxm & srv-sem &
+[ ARG-ST < #1 ,  [SYN [ SPR < #1 > ] ] > ]. 
+
+
+scv-lxm := verb-lxm & scv-sem &
+[ ARG-ST < [SYN [HEAD [AGR #agr] ],
 	    SEM [INDEX #1 ]      ], [SYN [ HEAD comp,
 					   SPR < [SYN [HEAD [AGR #agr] ],
-						  SEM [INDEX #1 ] ] > ],
-				     SEM [INDEX #3] ] > ].
+						  SEM [INDEX #1 ] ] > ] ] > ].
 
-orv-lxm := verb-lxm &
-[ SEM [	RESTR <! orv_pred & [ ACT #1,
-			      ARG #3 ] !> ],
-  ARG-ST < [ SEM [ INDEX #1 ] ],  #4,  [SYN [SPR < #4 > ],
-					SEM [INDEX #3] ] > ].
+orv-lxm := verb-lxm & orv-sem &
+[ ARG-ST < [ ],  #1,  [SYN [SPR < #1 > ] ] > ].
 
-ocv-lxm := verb-lxm &
-[ SEM [ RESTR <! ocv_pred & [ ACT #1, 
-			      UND #2,
-			      ARG #3 ] !> ],
-  ARG-ST < [ SEM [ INDEX #1 ] ] , [SYN [HEAD noun & [AGR #agr] ],
-				   SEM [INDEX #2]              ], [SYN [ HEAD comp,
-									 SPR < [SYN [HEAD [AGR #agr] ],
-										SEM [INDEX #2] ] > ],
-								   SEM [INDEX #3 ] ] > ].
 
-;  auxv-lxm should inherit from the srv-lxm, but is inconsistant with AUX false.
+ocv-lxm := verb-lxm & ocv-sem &
+[ ARG-ST < [ ] , [SYN [HEAD noun & [AGR #agr] ],
+		  SEM [INDEX #1]              ], [SYN [ HEAD comp,
+						  SPR < [SYN [HEAD [AGR #agr] ],
+							 SEM [INDEX #1] ] > ] ] > ].
+
+auxv-lxm := srv-lxm &
+[ SYN [ HEAD verb & [ AUX true ] ] ].
+
+
+
+
+;;; <<<---- TYPES INHERITING FROM SYNSEM-STRUC/LEXICAL RULE DEFINITIONS ---->>>
+
+; AAC added type for feature introduction condition
 ;
-auxv-lxm := infl-lxm &
- [ SYN [ HEAD verb & [ INV false,
-		       NEG false,
-		       PRED false,
-		       AUX true ],
-	 SPR < [ ] > ],
-   SEM [ INDEX #1,
-	 MODE prop,
-	 RESTR <! auxv_pred & [ SIT #1, ARG #3 ] !> ],
-   ARG-ST < #4 & [SYN [ HEAD noun & [CASE nom],
-			SPR < >,
-			COMPS < > ]          ], [ SYN [ SPR < #4 > ],
-						  SEM [ INDEX #3 ] ] > ].
+args-type := *top* &
+ [ ARGS *list* ].
 
+lex-item := synsem-struc & args-type &
+[ ARG-ST *list* ].
 
+mod_affix :< gram-cat.
+  affix := mod_affix.
+  no-affix :< mod_affix.
+ 
 
-;;; <<>> ----- GRAMMAR RULE DEFINITIONS  -----
+phrase :=  synsem-struc & args-type.
 
-dtr-type :< synsem-struc.
+word :< lex-item.
 
-nh-dtr-type := dtr-type &
- [ NH1 synsem-struc ].
-
-
-head-dtr-type := dtr-type &
- [ H synsem-struc ].
-
-grule :< phrase.
-
-head-feature-principle := grule & head-dtr-type & 
- [ SYN [ HEAD #head ],
-
-   H [ SYN [ HEAD #head ] ] ].
-
-valence-principle :< grule.
-;;; CCB when we introduce defaults we should add the following
-;;; constraints as the default for headed-rules.
-; & head-dtr-type & 
-; [ SYN [ SPR   #spr,
-;	  COMPS #comps ],
-;
-;  H [ SYN [ SPR   #spr,
-;	     COMPS #comps ] ] ].
-
-semantic-inheritance-principle := grule & head-dtr-type &
- [ SEM [ MODE  #mode,
-	 INDEX #index ],
-
-   H [ SEM [ MODE  #mode,
-	     INDEX #index ] ] ].
-
-headed-rule := head-feature-principle & 
-               semantic-inheritance-principle & 
-	       valence-principle.
-
-
-semantic-compositionality-unary := grule &
-[ SEM [ RESTR #restr ],
-
-  ARGS < [ SEM [ RESTR #restr ] ] > ].
-
-
-semantic-compositionality-binary := grule &
-[ SEM [ RESTR [ LIST #restr_first,
-		LAST #restr_last ] ],
-
-  ARGS < [ SEM [ RESTR [ LIST #restr_first,
-			 LAST #restr_middle ] ] ],  
-	                   
-	 [ SEM [ RESTR [ LIST #restr_middle,
-			 LAST #restr_last ] ] ] > ].
-
-semantic-compositionality-trinary := grule &
-[ SEM [ RESTR [ LIST #restr_first,
-		LAST #restr_last ] ],
-
-  ARGS < [ SEM [ RESTR [ LIST #restr_first,
-			 LAST #restr_second ] ] ],  
-	        
-	 [ SEM [ RESTR [ LIST #restr_second,
-			 LAST #restr_third ] ] ],
-
-	 [ SEM [ RESTR [ LIST #restr_third,
-			 LAST #restr_last ] ] ] > ].
-
-GAP-principle-unary := grule &
-[ SYN [ GAP #gap ],
-
-  ARGS < [ SYN [ GAP #gap ] ] > ].
-
-GAP-principle-binary := grule &
-[ SYN [ GAP [ LIST #gap_first,
-	      LAST #gap_last ] ],
-
-  ARGS < [ SYN [ GAP [ LIST #gap_first,
-		       LAST  #gap_middle ] ] ],
-
-	 [ SYN [ GAP [ LIST #gap_middle,
-		       LAST  #gap_last ] ] ] > ].
-
-
-GAP-principle-trinary := grule &
-[ SYN [ GAP [ LIST #gap_first,
-	      LAST #gap_last ] ],
-
-  ARGS < [ SYN [ GAP [ LIST #gap_first,
-		       LAST  #gap_second ] ] ],
-
-	 [ SYN [ GAP [ LIST #gap_second,
-		       LAST  #gap_third ] ] ],
-
-	 [ SYN [ GAP [ LIST #gap_third,
-		       LAST  #gap_last ] ] ] > ].
-
-
-
-
-
-unary-grule-type := GAP-principle-unary & semantic-compositionality-unary &
- [ ORTH #orth,
+lexeme := lex-item &
+ [ AFFIX mod_affix,
+   ORTH #orth,
+   SYN [ GAP <! !> ],
    ARGS < [ ORTH #orth ] > ].
 
 
-binary-grule-type :=  GAP-principle-binary & nh-dtr-type & 
-		     semantic-compositionality-binary & 
- [ ORTH [ LIST #first,
-	  LAST #last ],
 
-   ARGS <  [ ORTH [ LIST #first,
-		    LAST #middle ] ],  [ ORTH [ LIST #middle,
-						LAST #last] ], ... > ].
+infl-lxm := lexeme &
+ [ ARGS < [ AFFIX affix &
+		  [ HEAD #head,
+		    SPR #spr,
+		    COMPS #comps ] ] >,
+   SYN [ HEAD #head,
+	 SPR #spr,
+	 COMPS #comps ] ].
 
+const-lxm := lexeme &
+ [ ARGS < [ AFFIX no-affix ] >].
 
-trinary-grule-type :=  GAP-principle-trinary & nh-dtr-type & 
-		     semantic-compositionality-trinary &
- [ ORTH [ LIST #first,
-	  LAST #last],
-   NH2 synsem-struc,
-   ARGS < [ORTH [ LIST #first,
-		  LAST #second ] ],  [ORTH [ LIST #second,
-					     LAST #third ] ], 
+rule := synsem-struc & args-type &
+ [ ARGS *list* ],
+ status: root-node.
 
-	  [ORTH [LIST #third,
-		 LAST #last] ] > ].
-
-
-unary-COMPS-rule := unary-grule-type & headed-rule &
-[ H #1,
-  ARGS < #1 & word+arg_real+ana_agr > ].
-
-
-binary-COMPS-rule := binary-grule-type & headed-rule &
- [ H #1,
-   NH1 #2,
-   ARGS < word+arg_real+ana_agr & #1,  phrase & #2 > ] .
-
-
-trinary-COMPS-rule := trinary-grule-type & headed-rule &
- [ H   #1,
-   NH1 #2,
-   NH2 #3,
-   ARGS < word+arg_real+ana_agr & #1, phrase & #2, phrase & #3 > ].
-
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
-unary-grule := nh-dtr-type & unary-grule-type &
- [ NH1 #1,
-   ARGS < phrase & #1 > ].
-
-
-unary-grule-headed := headed-rule & unary-grule &
- [ H #1,
-   ARGS < phrase & #1 > ].
-
-
-birule-headfirst := binary-grule-type & headed-rule &
- [ H #1,
-   NH1 #2,
-   ARGS < phrase & #1, phrase & #2 > ] .
-
-birule-headfinal := binary-grule-type & headed-rule & 
- [ NH1 #1,
-   H #2,
-   ARGS < phrase & #1, phrase & #2 > ] .
-
-
-
-birule-minusGAP := semantic-compositionality-binary & nh-dtr-type &
- [ ORTH [ LIST #first,
-	  LAST #last ],
-   ARGS < [ ORTH [ LIST #first,
-		   LAST #middle ] ],  [ ORTH [ LIST #middle,
-					       LAST #last] ] > ].
-
-birule-headfinal-minusGAP := birule-minusGAP & 
-			     headed-rule & 
-			    
- [ NH1 #1,
-   H #2,
-   ARGS < phrase & #1,  phrase & #2 > ] .
-
-
-
-trirule-nonheaded := trinary-grule-type &
- [ NH1 #1,
-   NH2 #2,
-   NH3 synsem-struc & #3,
-
-   ARGS< phrase & #1,  phrase & #2,  phrase & #3> ].
 
 
 
 
 
 ;;; <<>> ----- MOST BASIC DEFINITIONS FOR TYPE HIERARCHY  -----
-
-; This one needed for PAGE-internal machinery
-;
-boolnum :< *value*.
-+ :< boolnum.
-- :< boolnum.
 
 boolean :< *value*.
    true  :< boolean.               
@@ -1136,10 +449,14 @@ label :=  synsem-struc &
    [ LABEL-NAME symbol ],
     status: label.
 
+
 meta := synsem-struc &
   [  META-PREFIX symbol,
      META-SUFFIX symbol ],
     status: meta.
+
+
+
 
 
 

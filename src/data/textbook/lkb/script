@@ -9,15 +9,17 @@
 (load-irregular-spellings (lkb-pathname (parent-directory) "irregs.lisp"))
 (read-tdl-type-files-aux
      (list (lkb-pathname (this-directory) "extra.tdl")
-           (lkb-pathname (parent-directory) "types.tdl")
-           (lkb-pathname (parent-directory) "lruletypes.tdl"))
+           (lkb-pathname (parent-directory) "semantics.tdl")
+           (lkb-pathname (parent-directory) "lrule-types.tdl")
+           (lkb-pathname (parent-directory) "grule-types.tdl")
+           (lkb-pathname (parent-directory) "types.tdl"))
      (lkb-pathname (this-directory) "settings.lsp"))
 (read-tdl-lex-file-aux 
      (lkb-pathname (parent-directory) "lexicon.tdl"))
 (read-tdl-grammar-file-aux 
-	(lkb-pathname (parent-directory) "grules.tdl"))
-(read-tdl-grammar-file-aux 
 	(lkb-pathname (parent-directory) "binding.tdl"))
+(read-tdl-grammar-file-aux 
+	(lkb-pathname (parent-directory) "grules.tdl"))
 (read-morph-file-aux (lkb-pathname (this-directory) "inflr.tdl"))
 (read-tdl-psort-file-aux 
           (lkb-pathname (parent-directory) "roots.tdl"))

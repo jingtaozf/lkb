@@ -38,7 +38,6 @@ This was discarded in the interest of producing non-binary branching trees.
 
 |#
 
-
 :begin :instance.
 
 arg_real-principle-spr-NE := word+arg_real &
@@ -98,6 +97,7 @@ arg_real-principle-GAP1 :=  word+arg_real &
 
 |#
 
+#|  Temoparially disabling GAP to speed things up -- CCB
 
 ;;;;;
 
@@ -174,15 +174,11 @@ arg_real-principle-GAP3 :=  word+arg_real &
 
 ;;;;;
 
+|#
 
 
 
-
-
-; ARG-ST non-branching rules.  Should be lexical rules, so that they don't display
-; in the parse-tree.  CC-B
-;
-
+#|
 :begin :instance.
 
 ana_agr-principle-e := word+arg_real+ana_agr &
@@ -246,18 +242,19 @@ ana_agr-principle-x- := word+arg_real+ana_agr &
 
 
 
-
 :begin :instance.
 
 ana_agr-principle-x-+ := word+arg_real+ana_agr &
 [ SYN #syn,
   SEM #sem,
   ARG-ST #arg-st & < [SYN [HEAD [AGR #agr]],
-		      SEM [INDEX #ind]],      [SYN [HEAD [ANA false]]],
+		      SEM [INDEX #ind]], 
 
-		     [SYN [HEAD [ANA true,
-				 AGR #agr]],
-		      SEM [INDEX #ind]] >,
+                      [SYN [HEAD [ANA false]]],
+
+                      [SYN [HEAD [ANA true,
+				  AGR #agr]],
+		       SEM [INDEX #ind]] >,
 
   ARGS < word+arg_real & [ SYN #syn,
 		     SEM #sem,
@@ -266,15 +263,18 @@ ana_agr-principle-x-+ := word+arg_real+ana_agr &
 :end :instance.
 
 
+
 :begin :instance.
 
 ana_agr-principle-x+- := word+arg_real+ana_agr &
 [ SYN #syn,
   SEM #sem,
   ARG-ST #arg-st & < [SYN [HEAD [AGR #agr]],
-		      SEM [INDEX #ind]],      [SYN [HEAD [ANA true,
-							   AGR #agr]],
-					       SEM [INDEX #ind]],
+		      SEM [INDEX #ind]],      
+
+                     [SYN [HEAD [ ANA true,
+			          AGR #agr]],
+                      SEM [INDEX #ind]],
 
 		     [SYN [HEAD [ANA false]]] >,
 
@@ -342,3 +342,4 @@ ana_agr-principle-x++ := word+arg_real+ana_agr &
 
 :end :instance.
 
+|#

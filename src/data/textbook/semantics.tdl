@@ -1,0 +1,524 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; 
+;;; SYNTACTIC THEORY by Sag and Wasow -- Textbook Grammar 
+;;; implementation by Chris Callison-Burch & Scott Guffey
+;;;
+;;; semantics.tdl
+;;;
+;;; This file is a coninutation of the types file, and is seperated
+;;; purely for sake of readibility.  Notice how it's included in  
+;;; the lkb:script file.
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;; <<<----- STRUCTURE FOR SEMANTIC FIELDS  ----->>>
+
+
+list-of-predications :< *diff-list*.
+
+mode-cat :< *value*.
+   prop :< mode-cat.
+   ques :< mode-cat.
+   dir  :< mode-cat.
+   ref  :< mode-cat.
+   null-mode :< mode-cat.
+
+reln :< *value*.
+
+null-sem := sem-struc &
+[ MODE null-mode,
+  INDEX null-index,
+  RESTR <! !>].
+
+modifier-sem := synsem-struc &
+ [ SYN [ HEAD [ MOD < [SEM [INDEX #2 ] ] > ] ],
+   SEM [ INDEX #1,
+	 RESTR <! arg_pred & [ SIT #1, ARG #2 ] !> ] ].
+
+
+
+noun_pred := predication &
+ [ INSTANCE  ref-index ].
+
+named_pred := noun_pred &
+ [ RELN      r_name,
+   NAME      symbol, 
+   NAMED     ref-index].
+
+;;; named_pred should be a sub-type of noun_pred where NAMED = INSTANCE.
+;;; It's redundant to have both NAMED and INSTANCE.  CCB
+
+conj_pred := predication.
+
+act_pred := predication &
+ [ ACT ref-index ].
+und_pred := predication &
+ [ UND ref-index ].
+thm_pred := predication &
+ [ THM ref-index ].
+
+iv_pred  :< act_pred.
+piv_pred := act_pred & thm_pred.
+stv_pred := act_pred & und_pred.
+ctv_pred := act_pred & arg_pred.
+dtv_pred := act_pred & und_pred & thm_pred.
+srv_pred :< arg_pred.
+scv_pred := act_pred & arg_pred.
+orv_pred :< scv_pred.
+ocv_pred := act_pred & und_pred & arg_pred.
+
+iv-sem := lex-item &
+[ SEM [ INDEX #ind,
+	RESTR <! iv_pred & [ SIT #ind,
+			     ACT #1 ] !> ],
+  ARG-ST < [ SEM [ INDEX #1 ] ] > ].
+
+piv-sem := lex-item &
+[ SEM [ INDEX #ind,
+	RESTR <! piv_pred & [ SIT #ind,
+			      ACT #1, 
+			      THM #2 ] !> ],
+  ARG-ST < [ SEM [ INDEX #1 ] ], [ SEM [ INDEX #2 ] ]  > ].
+
+ctv-sem := lex-item &
+[ SEM [ RESTR <! ctv_pred & [ ACT #1,
+			      ARG #2 ] !> ],
+  ARG-ST < [ SEM [ INDEX #1 ] ], [ SEM [ INDEX #2 ] ] > ].
+  
+stv-sem := lex-item &
+[ SEM [ RESTR <! stv_pred & [ ACT #1, 
+			      UND #2 ] !> ],
+  ARG-ST < [SEM [INDEX #1 ] ], [ SEM [INDEX #2 ] ] > ].
+
+dtv-sem := lex-item &
+[ SEM [ RESTR <! dtv_pred & [ ACT #1, 
+			      UND #2, 
+			      THM #3 ] !> ],
+  ARG-ST < [ SEM [ INDEX #1 ] ],  [ SEM [ INDEX #2 ] ], [ SEM [ INDEX #3 ] ] > ].
+  
+ptv-sem := lex-item &
+ [ SEM [ RESTR <! dtv_pred & [ ACT #1, 
+			       UND #2, 
+			       THM #3 ] !> ],
+   ARG-ST < [ SEM [ INDEX #1 ] ],  [ SEM [ INDEX #3 ] ],  [ SEM [ INDEX #2 ] ] > ].  
+   
+srv-sem := lex-item &
+[ SEM [	RESTR <! srv_pred & [ ARG #3 ] !> ],
+  ARG-ST < #4 ,  [ SEM [INDEX #3] ] > ].
+
+scv-sem := lex-item &
+[ SEM [	RESTR <! scv_pred & [ ACT #1,
+			      ARG #3 ] !> ],
+  ARG-ST < [ SEM [INDEX #1 ] ], [ SEM [INDEX #3] ] > ].
+
+;;; Are the sematics right for this one?  It looks weird.  CCB		  
+orv-sem := lex-item &
+[ SEM [	RESTR <! orv_pred & [ ACT #1,
+			      ARG #3 ] !> ],
+  ARG-ST < [ SEM [ INDEX #1 ] ],  [ ],  [SEM [INDEX #3] ] > ].
+
+ocv-sem := lex-item &
+[ SEM [ RESTR <! ocv_pred & [ ACT #1, 
+			      UND #2,
+			      ARG #3 ] !> ],
+  ARG-ST < [ SEM [ INDEX #1 ] ] , [ SEM [ INDEX #2 ] ], [ SEM [INDEX #3 ] ] > ].
+
+
+		     
+time_pred := predication &
+ [ ARG1  sit-index,
+   ARG2  sit-index ].
+
+now:< sit-index.
+
+
+not_pred := predication &
+ [ RELN     r_not,
+   NOT-ARG  sit-index ].
+
+question_pred := predication &
+ [ RELN       r_question,
+   QUERY-ARG  index ].
+
+arg_pred := predication &
+ [ ARG  index ].
+
+auxv_pred :< arg_pred.
+
+r_name :< reln.
+r_not :< reln.
+r_t-overlap :< reln.
+
+r_speaker :< reln.
+r_female :< reln.
+r_male :< reln.
+r_listener :< reln.
+r_thing :< reln. 
+r_group :< reln.
+r_no-person :< reln.
+r_every-person :< reln.
+
+r_animal :< reln.
+r_cat :< r_animal.
+r_dog :< r_animal.
+r_duck :< r_animal.
+
+r_it :< reln.
+r_itself :< reln.
+r_tabs :< reln.
+r_advantage :< reln.
+r_there :< reln.
+r_the :< reln.
+r_a :< reln.
+r_this :< reln.
+r_that :< reln.
+r_these :< reln.
+r_those :< reln.
+r_few :< reln.
+r_many :< reln.
+r_much :< reln.
+r_my :< reln.
+r_your :< reln.
+r_his :< reln.
+r_its :< reln.
+r_our :< reln.
+r_their :< reln.
+r_all :< reln.
+r_no :< reln.
+r_to :< reln.
+r_about :< reln.
+r_on :< reln.
+r_in :< reln.
+r_with :< reln.
+r_of :< reln.
+r_for :< reln.
+r_by :< reln.
+r_around :< reln.
+r_and :< reln.
+r_easily :< reln.
+r_quickly :< reln.
+r_today :< reln.
+r_angry :< reln.
+r_available :< reln.
+r_black :< reln.
+r_broken :< reln.
+r_brown :< reln.
+r_eager :< reln.
+r_expensive :< reln.
+r_funny :< reln.
+r_german :< reln.
+r_hard :< reln.
+r_kind :< reln.
+r_likely :< reln.
+r_large :< reln.
+r_magnificent :< reln.
+r_obvious :< reln.
+r_offended :< reln.
+r_optional :< reln.
+r_new :< reln.
+r_noisy :< reln.
+r_unfair :< reln.
+r_undocumented :< reln.
+r_rain :< reln.
+r_can :< reln.
+r_could :< reln.
+r_do :< reln.
+r_will :< reln.
+r_have :< reln.
+r_age :< reln.
+r_bark :< reln.
+r_believe :< reln.
+r_die :< reln.
+r_dine :< reln.
+r_disappear :< reln.
+r_drive :< reln.
+r_eat :< reln.
+r_explode :< reln.
+r_fall :< reln.
+r_fly :< reln.
+r_float :< reln.
+r_gather :< reln.
+r_laugh :< reln.
+r_leave :< reln.
+r_lie :< reln.
+r_live :< reln.
+r_run :< reln.
+r_sank :< reln.
+r_sat :< reln.
+r_scream :< reln.
+r_sing :< reln.
+r_skate :< reln.
+r_sleep :< reln.
+r_sneeze :< reln.
+r_speak :< reln.
+r_suck :< reln.
+r_talk :< reln.
+r_tapdance :< reln.
+r_visit :< reln.
+r_vote :< reln.
+r_win :< reln.
+r_yell :< reln.
+r_ask :< reln.
+r_campaign :< reln.
+r_come :< reln.
+r_fit :< reln.
+r_go :< reln.
+r_look :< reln.
+r_rely :< reln.
+r_tug :< reln.
+r_hope :< reln.
+r_say :< reln.
+r_think :< reln.
+r_suspect :< reln.
+r_discover :< reln.
+r_learn :< reln.
+r_see :< reln.
+r_admire :< reln.
+r_affect :< reln.
+r_annoy :< reln.
+r_arrest :< reln.
+r_avoid :< reln.
+r_bite :< reln.
+r_bare :< reln.
+r_broke :< reln.
+r_cause :< reln.
+r_cark :< reln.
+r_chase :< reln.
+r_close :< reln.
+r_consider :< reln.
+r_consume :< reln.
+r_cross :< reln.
+r_cut :< reln.
+r_determine :< reln.
+r_devour :< reln.
+r_deny :< reln.
+r_display :< reln.
+r_draw :< reln.
+r_dread :< reln.
+r_elect :< reln.
+r_enjoy :< reln.
+r_examine :< reln.
+r_exploit :< reln.
+r_find :< reln.
+r_finish :< reln.
+r_fix :< reln.
+r_fill :< reln.
+r_follow :< reln.
+r_get :< reln.
+r_halve :< reln.
+r_hate :< reln.
+r_help :< reln.
+r_hit :< reln.
+r_improve :< reln.
+r_involve :< reln.
+r_know :< reln.
+r_kick :< reln.
+r_like :< reln.
+r_list :< reln.
+r_lock :< reln.
+r_love :< reln.
+r_meet :< reln.
+r_observe :< reln.
+r_pat :< reln.
+r_paint :< reln.
+r_pet :< reln.
+r_phone :< reln.
+r_present :< reln.
+r_protect :< reln.
+r_question :< reln.
+r_race :< reln.
+r_rake :< reln.
+r_represent :< reln.
+r_respect :< reln.
+r_solve :< reln.
+r_spot :< reln.
+r_spray :< reln.
+r_supervise :< reln.
+r_taste :< reln.
+r_target :< reln.
+r_tell :< reln.
+r_trick :< reln.
+r_turn :< reln.
+r_upset :< reln.
+r_watch :< reln.
+r_bring :< reln.
+r_donate :< reln.
+r_hand :< reln.
+r_give :< reln.
+r_move :< reln.
+r_put :< reln.
+r_wrap :< reln.
+r_continue :< reln.
+r_appear :< reln.
+r_appeal :< reln.
+r_try :< reln.
+r_expect :< reln.
+r_persuade :< reln.
+r_abbie :< reln.
+r_accusation :< reln.
+r_album :< reln.
+r_alps :< reln.
+r_andes :< reln.
+r_answer :< reln.
+r_arrow :< reln.
+r_artist :< reln.
+r_assignment :< reln.
+r_associate :< reln.
+r_astronomer :< reln.
+r_atom :< reln.
+r_audience :< reln.
+r_auxiliary :< reln.
+r_baby :< reln.
+r_back :< reln.
+r_barn :< reln.
+r_beer :< reln.
+r_belief :< reln.
+r_bicycle :< reln.
+r_bird :< reln.
+r_bit :< reln.
+r_blanket :< reln.
+r_blues :< reln.
+r_boat :< reln.
+r_book :< reln.
+r_bucket :< reln.
+r_building :< reln.
+r_cancer :< reln.
+r_candidate :< reln.
+r_captain :< reln.
+r_car :< reln.
+r_cardinal :< reln.
+r_chair :< reln.
+r_cheetah :< reln.
+r_child :< reln.
+r_city :< reln.
+r_class :< reln.
+r_cloud :< reln.
+r_clue :< reln.
+r_coast :< reln.
+r_conflict :< reln.
+r_council :< reln.
+r_customer :< reln.
+r_day :< reln.
+r_dealer :< reln.
+r_dealership :< reln.
+r_defendant :< reln.
+r_difference :< reln.
+r_dinner :< reln.
+r_disease :< reln.
+r_doctor :< reln.
+r_drug :< reln.
+r_earthquake :< reln.
+r_east :< reln.
+r_exam :< reln.
+r_evidence :< reln.
+r_fbi :< reln.
+r_felon :< reln.
+r_fever :< reln.
+r_flower :< reln.
+r_flour :< reln.
+r_food :< reln.
+r_fool :< reln.
+r_form :< reln.
+r_friend :< reln.
+r_furniture :< reln.
+r_game :< reln.
+r_garden :< reln.
+r_garlic :< reln.
+r_gas :< reln.
+r_gathering :< reln.
+r_grandmother :< reln.
+r_guest :< reln.
+r_head :< reln.
+r_horse :< reln.
+r_hospital :< reln.
+r_ice_cream :< reln.
+r_idea :< reln.
+r_improvement :< reln.
+r_innocent :< reln.
+r_judge :< reln.
+r_jury :< reln.
+r_language :< reln.
+r_leaf :< reln.
+r_leg :< reln.
+r_letter :< reln.
+r_library :< reln.
+r_life :< reln.
+r_light :< reln.
+r_linguist :< reln.
+r_logic :< reln.
+r_lunch :< reln.
+r_mailbox :< reln.
+r_martini :< reln.
+r_master :< reln.
+r_meal :< reln.
+r_meeting :< reln.
+r_man :< reln.
+r_monster :< reln.
+r_mothen :< reln.
+r_movie :< reln.
+r_museum :< reln.
+r_napkin :< reln.
+r_neighborhood :< reln.
+r_nephew :< reln.
+r_night :< reln.
+r_note :< reln.
+r_opportunity :< reln.
+r_painting :< reln.
+r_park :< reln.
+r_participant :< reln.
+r_past :< reln.
+r_patient :< reln.
+r_pencil :< reln.
+r_person :< reln.
+r_picture :< reln.
+r_police :< reln.
+r_price :< reln.
+r_problem :< reln.
+r_protester :< reln.
+r_ravioli :< reln.
+r_relative :< reln.
+r_riot :< reln.
+r_river :< reln.
+r_roof :< reln.
+r_room :< reln.
+r_seat :< reln.
+r_senora :< reln.
+r_sentence :< reln.
+r_series :< reln.
+r_shepherd :< reln.
+r_song :< reln.
+r_storm :< reln.
+r_storm_cloud :< reln.
+r_student :< reln.
+r_table :< reln.
+r_tail :< reln.
+r_tale :< reln.
+r_teacher :< reln.
+r_team :< reln.
+r_telescope :< reln.
+r_television :< reln.
+r_theorem :< reln.
+r_thief :< reln.
+r_take :< reln.
+r_thing :< reln.
+r_thrill :< reln.
+r_time :< reln.
+r_town :< reln.
+r_toy :< reln.
+r_trash :< reln.
+r_trouble :< reln.
+r_tv :< reln.
+r_twin :< reln.
+r_type :< reln.
+r_umbrella :< reln.
+r_unicorn :< reln.
+r_verb :< reln.
+r_voter :< reln.
+r_water :< reln.
+r_window :< reln.
+r_wine :< reln.
+r_witness :< reln.
+r_woman :< reln.
+r_work :< reln.
+r_worm :< reln.
