@@ -1613,8 +1613,10 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
       return((Tsdb_selection *)NULL);
     }
     if (temp!=selection) {
+#ifndef NOFREE
       if (selection) 
         tsdb_free_selection(selection);
+#endif
       selection = temp;
     } /* if */
     free(a_relations);

@@ -33,13 +33,15 @@ SOLARIS_LIBS = -L5lib $(LINUX_LIBS) -liberty -lsocket -lnsl
 #         -DMALLOC -DNOFORK \
 #         -DCOMPRESSED_DATA \
 #
-XCFLAGS = -DDEBUG -DALEP \
+XCFLAGS = -DDEBUG \
+          -DALEP \
 	  -DREAD_TABLE \
           -DJOIN \
           -DCOMMIT \
           -DPRINT_SELECTION \
           -DINITIALIZE \
           -DSERVER \
+	  -DNOFREE \
           -DCOMPRESSED_DATA \
           -g -Iinclude -pipe
 
