@@ -40,7 +40,7 @@
 (defun draw-list-window (frame stream &key max-width max-height)
   (declare (ignore max-width max-height))
   (dolist (pair (list-window-pairs frame))
-    (terpri stream)
+;    (terpri stream)
     (clim:with-output-as-presentation (stream (make-thing :object (cdr pair))
 					      'thing)
       (write-line (car pair) stream))))
