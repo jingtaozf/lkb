@@ -9,8 +9,16 @@
 |*
 \*****************************************************************************/
 
+#ifdef DEMO
+#  define free(x) x
+#endif
+
+#define TSDB_VERSION "0.0"
+
 #define TSDB_DEFAULT_STREAM stdout
 #define TSDB_ERROR_STREAM stderr
+
+#define TSDB_SERVER_MODE 1
 
 #define TSDB_UNKNOWN_TYPE 0
 #define TSDB_INTEGER 1
@@ -44,6 +52,17 @@
 #define TSDB_MAX_TIMERS 20
 
 #define TSDB_SERVER_OPTION 0
+#define TSDB_PORT_OPTION 1
+#define TSDB_HOME_OPTION 2
+#define TSDB_RELATIONS_FILE_OPTION 3
+#define TSDB_DATA_PATH_OPTION 4
+#define TSDB_RESULT_PATH_OPTION 5
+#define TSDB_RESULT_PREFIX_OPTION 6
+#define TSDB_MAX_RESULTS_OPTION 7
+#define TSDB_DEBUG_FILE_OPTION 8
+#define TSDB_PAGER_OPTION 9
+#define TSDB_USAGE_OPTION 10
+#define TSDB_VERSION_OPTION 11
 
 #ifndef TSDB_PSEUDO_USER
 #  define TSDB_PSEUDO_USER "TSDB@tsdb"
@@ -81,8 +100,14 @@
 #  define TSDB_TEMPORARY_FILE "tsdb.tmp"
 #endif
 
-#ifndef TSDB_DEBUG_FILE
-#  define TSDB_DEBUG_FILE "/tmp/tsdb.debug"
+#ifndef TSDB_PAGER
+#  define TSDB_PAGER "more"
+#endif
+
+#ifdef DEBUG
+#  ifndef TSDB_DEBUG_FILE
+#    define TSDB_DEBUG_FILE "/tmp/tsdb.debug"
+#  endif
 #endif
 
 #ifndef TSDB_FS
@@ -97,13 +122,17 @@
 #  define DEFAULT_VALUE "null"
 #endif
 
+#ifndef TSDB_SERVER_PORT
+#  define TSDB_SERVER_PORT 4711
+#endif
+
+#ifndef TSDB_SERVER_QUEUE_LENGTH
+#  define TSDB_SERVER_QUEUE_LENGTH 5
+#endif
+
 typedef struct tsdb {
-  BYTE type;
-  union {
-    struct tsdb_Selection *selection;
-  } result;
-  BOOL new_relations;
-  BOOL new_data;
+  BYTE status;
+  int port;
 } Tsdb;
 
 typedef struct tsdb_field {
@@ -161,6 +190,16 @@ typedef struct tsdb_selection {
 } Tsdb_selection;
 
 #if !defined(TSDB_DOT_C)
+  Tsdb tsdb;
+
+  extern FILE *tsdb_default_stream;
+  extern FILE *tsdb_error_stream;
+
+#ifdef DEBUG
+  extern FILE *tsdb_debug_stream;
+  extern char *tsdb_debug_file;
+#endif
+
   extern char *tsdb_home;
   extern char *tsdb_relations_file;
   extern char *tsdb_data_path;
@@ -172,8 +211,6 @@ typedef struct tsdb_selection {
   extern char *tsdb_input;
   extern Tsdb_relation **tsdb_relations;
   extern Tsdb_selection **tsdb_data;
-
-  extern FILE *tsdb_debug_stream;
 
   extern int really_verbose_mode;
 #endif
@@ -215,7 +252,7 @@ void tsdb_print_join_path(Tsdb_relation **, FILE *);
 void tsdb_test_negation(Tsdb_value ** attribute_list,Tsdb_node* conditions);
 Tsdb_node *tsdb_leaf(Tsdb_value *);
 
-extern void tsdb_save_changes() ;
+extern void tsdb_save_changes(void) ;
 
 BOOL tsdb_children_leaf(Tsdb_node* node);
 void tsdb_negate_node(Tsdb_node* node);
@@ -228,7 +265,8 @@ BOOL tsdb_are_joinable(Tsdb_relation *, Tsdb_relation *);
 BOOL tsdb_are_attributes(Tsdb_value **, Tsdb_relation *);
 BOOL tsdb_is_relation(Tsdb_value *value);
 BOOL tsdb_relations_are_equal(Tsdb_relation *, Tsdb_relation *);
-BOOL tsdb_initialize();
+BOOL tsdb_initialize(void);
+void tsdb_parse_environment(void);
 BOOL tsdb_satisfies_condition(Tsdb_tuple *, Tsdb_node *, Tsdb_relation *);
 
 char *tsdb_join_key(Tsdb_relation *, Tsdb_relation *);
@@ -249,6 +287,7 @@ void tsdb_project(Tsdb_selection*,Tsdb_value **,FILE* );
 FILE *tsdb_find_relations_file(char *);
 FILE *tsdb_find_data_file(char *, char *);
 FILE* tsdb_open_result();
+char *tsdb_rcs_strip(char *, char *);
 
 Tsdb_node **tsdb_linearize_conditions(Tsdb_node *);
 
@@ -292,5 +331,6 @@ Tsdb_selection *tsdb_simple_merge(Tsdb_selection *, Tsdb_selection *);
 Tsdb_selection* tsdb_conditional_retrieve(Tsdb_value **, Tsdb_value **,
                                           Tsdb_node *);
 
-
-
+int tsdb_server_initialize(void);
+void tsdb_server_toplevel();
+void tsdb_server_instance(int);

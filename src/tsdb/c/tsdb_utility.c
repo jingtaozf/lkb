@@ -53,20 +53,20 @@ BYTE tsdb_value_compare(Tsdb_value *foo, Tsdb_value *bar) {
       break;
     default:
       if(really_verbose_mode) 
-        fprintf(TSDB_ERROR_STREAM,
+        fprintf(tsdb_error_stream,
                 "What are you at? I've never heard of such a tsdb type.\n");
       else 
-        fprintf(TSDB_ERROR_STREAM,
+        fprintf(tsdb_error_stream,
                 "tsdb_value_compare: invalid value type in comparison.\n");
       return(TSDB_VALUE_INCOMPATIBLE);
     } /* switch */
   } /* if */
   else {
     if(really_verbose_mode) 
-      fprintf(TSDB_ERROR_STREAM,
+      fprintf(tsdb_error_stream,
               "Dickhead, you want me to compare strings & integers???.\n");
     else 
-      fprintf(TSDB_ERROR_STREAM,
+      fprintf(tsdb_error_stream,
               "tsdb_value_compare: incompatible types in comparison.\n");
     return(TSDB_VALUE_INCOMPATIBLE);
   } /* else */
@@ -107,7 +107,7 @@ BOOL tsdb_value_match(Tsdb_value *foo, Tsdb_value *bar,void* bar_pat) {
          {
            char a[s+1];
            regerror(result,pattern,&a[0],s+1);
-           fprintf(TSDB_ERROR_STREAM,"Regex Error: %s \n",a);
+           fprintf(tsdb_error_stream,"Regex Error: %s \n",a);
          }
          answer = FALSE;
        } /* if */
@@ -214,10 +214,10 @@ BOOL tsdb_are_attributes(Tsdb_value **attribute_list, Tsdb_relation *relation){
     } /* for */
     if(!kaerb) {
       if(really_verbose_mode)
-        fprintf(TSDB_ERROR_STREAM, "No such fucking attribute: %s\n",
+        fprintf(tsdb_error_stream, "No such fucking attribute: %s\n",
                 attribute_list[i]->value.identifier);
       else
-        fprintf(TSDB_ERROR_STREAM, "No such attribute: %s\n",
+        fprintf(tsdb_error_stream, "No such attribute: %s\n",
                 attribute_list[i]->value.identifier);
       return(FALSE);
     } /* if */
@@ -434,7 +434,7 @@ BOOL tsdb_satisfies_condition(Tsdb_tuple *tuple, Tsdb_node *condition,
     number = TRUE;
   }
   else {
-    fprintf(TSDB_ERROR_STREAM, "tsdb: bad tsdb_type.\n");
+    fprintf(tsdb_error_stream, "tsdb: bad tsdb_type.\n");
     if (attribute)
       free(attribute);
     return(FALSE);
@@ -461,34 +461,34 @@ BOOL tsdb_satisfies_condition(Tsdb_tuple *tuple, Tsdb_node *condition,
   case TSDB_LESS_THAN :
     if(number) answer = (tuple->fields[i]->value.integer < integer);
     else {
-      fprintf(TSDB_ERROR_STREAM, "Cannot compare strings with '<' operator.\n");
+      fprintf(tsdb_error_stream, "Cannot compare strings with '<' operator.\n");
       answer = FALSE;
     }
     break;
   case TSDB_LESS_OR_EQUAL_THAN :
     if(number) answer = (tuple->fields[i]->value.integer <= integer);
     else {
-      fprintf(TSDB_ERROR_STREAM, "Cannot compare strings with '<=' operator.\n");
+      fprintf(tsdb_error_stream, "Cannot compare strings with '<=' operator.\n");
       answer = FALSE;
     }
     break;
   case TSDB_GREATER_THAN :
     if(number) answer = (tuple->fields[i]->value.integer > integer);
     else {
-      fprintf(TSDB_ERROR_STREAM, "Cannot compare strings with '>' operator.\n");
+      fprintf(tsdb_error_stream, "Cannot compare strings with '>' operator.\n");
       answer = FALSE;
     }
     break;
   case TSDB_GREATER_OR_EQUAL_THAN :
     if(number) answer = (tuple->fields[i]->value.integer >= integer);
     else {
-      fprintf(TSDB_ERROR_STREAM, "Cannot compare strings with '>=' operator.\n");
+      fprintf(tsdb_error_stream, "Cannot compare strings with '>=' operator.\n");
       answer = FALSE;
     }
     break;
   case TSDB_SUBSTRING :
     if(number) {
-      fprintf(TSDB_ERROR_STREAM, "Cannot compare integers with '~' operator.\n");
+      fprintf(tsdb_error_stream, "Cannot compare integers with '~' operator.\n");
       answer = FALSE;
     }
     else {
@@ -497,7 +497,7 @@ BOOL tsdb_satisfies_condition(Tsdb_tuple *tuple, Tsdb_node *condition,
     break; 
   case TSDB_NOT_SUBSTRING :
     if(number) {
-      fprintf(TSDB_ERROR_STREAM, "Cannot compare integers with '~' operator.\n");
+      fprintf(tsdb_error_stream, "Cannot compare integers with '~' operator.\n");
       answer = TRUE;
     }
     else {
@@ -505,7 +505,7 @@ BOOL tsdb_satisfies_condition(Tsdb_tuple *tuple, Tsdb_node *condition,
     }
     break; 
   default :
-      fprintf(TSDB_ERROR_STREAM, "no such operator.\n");
+      fprintf(tsdb_error_stream, "no such operator.\n");
   } /* switch */
   
   printf("returning %d.\n", answer);
@@ -789,7 +789,7 @@ Tsdb_selection *tsdb_find_table(Tsdb_relation *relation) {
   BOOL kaerb = FALSE;
 
   if(relation == NULL || relation->name == NULL || tsdb_relations == NULL) {
-    fprintf(TSDB_ERROR_STREAM,
+    fprintf(tsdb_error_stream,
             "find_table(): invalid context or parameter call.\n");
     return((Tsdb_selection *)NULL);
   } /* if */
@@ -798,7 +798,7 @@ Tsdb_selection *tsdb_find_table(Tsdb_relation *relation) {
                                           relation->name);
       i++);
   if(tsdb_relations[i] == NULL) {
-    fprintf(TSDB_ERROR_STREAM,
+    fprintf(tsdb_error_stream,
             "find_table(): unknown relation `%s'.\n",
             relation->name);
     return((Tsdb_selection *)NULL);
@@ -1244,7 +1244,7 @@ BOOL tsdb_initialize() {
 |*      module: tsdb_initialize()
 |*     version: 
 |*  written by: andrew p. white, tom fettig & oe, dfki saarbruecken
-|* last update: 30-jun-95
+|* last update: 14-jul-95
 |*  updated by: oe, dfki saarbruecken
 |*****************************************************************************|
 |*
@@ -1254,158 +1254,44 @@ BOOL tsdb_initialize() {
 |* popen(3) to me (30-jun-95 -- oe).
 \*****************************************************************************/
 
-  char *name, *foo;
-  FILE* f;
+  char *foo;
+  FILE *bar;
 #ifdef DEBUG
   int i;
 #endif
 
-#ifdef DBMALLOC
-  union dbmalloptarg m;
-  m.str = "malloc_tsdb";
-  mallopt(MALLOC_ERRFILE,m);
-#endif
-
-#ifdef SYSV
-  struct sigaction tsdb_sig = { SIG_IGN, (sigset_t)0, 0 };
-  sigaction(SIGPIPE, &tsdb_sig);
-#else
-  signal(SIGPIPE, SIG_IGN);
-#endif
-
+#ifdef DEBUG
   if((tsdb_debug_stream = tsdb_open_debug()) == NULL) {
-    tsdb_debug_stream = TSDB_ERROR_STREAM;
+    tsdb_debug_stream = tsdb_error_stream;
+  } /* if */
+#endif
+
+  tsdb_parse_environment();
+
+  if(!(tsdb.status & TSDB_SERVER_MODE) && tsdb.port) {
+    fprintf(tsdb_debug_stream,
+            "initialize(): `-port' option invalid in non-server mode.\n");
+    tsdb.port = 0;
+  } /* if */
+  if(tsdb.status & TSDB_SERVER_MODE) {
+    if(!tsdb.port) {
+      tsdb.port = TSDB_SERVER_PORT;
+    } /* if */
+    else if(tsdb.port < 1024) {
+      fprintf(tsdb_debug_stream,
+              "initialize(): invalid (privileged) `-port' value (%d).\n",
+              tsdb.port);
+      tsdb.port = TSDB_SERVER_PORT;
+    } /* if */
   } /* if */
 
-  if((name = getenv("TSDB_HOME")) != NULL || 
-     (name = tsdb_pseudo_user()) != NULL) {
-    tsdb_home = strdup(name);
-    if(tsdb_home[strlen(tsdb_home) - 1] != TSDB_DIRECTORY_DELIMITER[0]) {
-      tsdb_home = (char *)realloc(tsdb_home, strlen(tsdb_home) + 2);
-      tsdb_home = strcat(tsdb_home, TSDB_DIRECTORY_DELIMITER);
-    } /* if */
-    tsdb_relations_file =
-      (char *)malloc(strlen(tsdb_home) + 
-                     strlen(TSDB_RELATIONS_FILE) + 1);
-    tsdb_relations_file = strcpy(tsdb_relations_file, tsdb_home);
-    tsdb_relations_file = strcat(tsdb_relations_file, TSDB_RELATIONS_FILE);
-    
-    tsdb_data_path =
-      (char *)malloc(strlen(tsdb_home) + 
-                     strlen(TSDB_DATA_PATH) + 1);
-    tsdb_data_path = strcpy(tsdb_data_path, tsdb_home);
-    tsdb_data_path = strcat(tsdb_data_path, TSDB_DATA_PATH);
-  } /* if */
-  else {
-    tsdb_home = strdup(TSDB_HOME);
-  } /* else */
-  
-  if((name = getenv("TSDB_RELATIONS_FILE")) != NULL) {
-    if(name[0] == TSDB_DIRECTORY_DELIMITER[0]) {
-      tsdb_relations_file = strdup(name);
-      if(tsdb_relations_file[strlen(tsdb_relations_file) - 1]
-         != TSDB_DIRECTORY_DELIMITER[0]) {
-        tsdb_relations_file = 
-          (char *)realloc(tsdb_relations_file, 
-                          strlen(tsdb_relations_file) + 2);
-        tsdb_relations_file
-          = strcat(tsdb_relations_file, TSDB_DIRECTORY_DELIMITER);
-      } /* if */
-    } /* if */
-    else {
-      tsdb_relations_file = strdup(name);
-      tsdb_relations_file = strdup(tsdb_home);
-      tsdb_relations_file = (char *)realloc(tsdb_relations_file, 
-                                            strlen(tsdb_relations_file) + 
-                                            strlen(name) + 1);
-      tsdb_relations_file = strcat(tsdb_relations_file, name);
-    } /* else */
-  } /* if */
-  else {
-    tsdb_relations_file = strdup(tsdb_home);
-    tsdb_relations_file = (char *)realloc(tsdb_relations_file, 
-                                          strlen(tsdb_relations_file) + 
-                                          strlen(TSDB_RELATIONS_FILE) + 1);
-    tsdb_relations_file = strcat(tsdb_relations_file, TSDB_RELATIONS_FILE);
-  } /* else */
-
-  if((name = getenv("TSDB_DATA_PATH")) != NULL) {
-    if(name[0] == TSDB_DIRECTORY_DELIMITER[0]) {
-      tsdb_data_path = strdup(name);
-      if(tsdb_data_path[strlen(tsdb_data_path) - 1]
-         != TSDB_DIRECTORY_DELIMITER[0]) {
-        tsdb_data_path = (char *)realloc(tsdb_data_path, 
-                                         strlen(tsdb_data_path) + 2);
-        tsdb_data_path = strcat(tsdb_data_path, TSDB_DIRECTORY_DELIMITER);
-      } /* if */
-    } /* if */
-    else { /* relative path */
-      tsdb_data_path = strdup(name);
-      tsdb_data_path = strdup(tsdb_home);
-      tsdb_data_path = (char *)realloc(tsdb_data_path, 
-                                       strlen(tsdb_data_path) + 
-                                       strlen(name) + 1);
-      tsdb_data_path = strcat(tsdb_data_path, name);
-    } /* else */
-  } /* if */
-  else {
-    tsdb_data_path = strdup(tsdb_home);
-    tsdb_data_path = (char *)realloc(tsdb_data_path, 
-                                     strlen(tsdb_data_path) + 
-                                     strlen(TSDB_DATA_PATH) + 1);
-    tsdb_data_path = strcat(tsdb_data_path, TSDB_DATA_PATH);
-  } /* else */
-
-  if((name = getenv("TSDB_RESULT_PATH")) != NULL) {
-    tsdb_result_path = strdup(name);
-    if(tsdb_result_path[strlen(tsdb_result_path) - 1]
-       != TSDB_DIRECTORY_DELIMITER[0]) {
-      tsdb_result_path = (char *)realloc(tsdb_result_path,
-                                         strlen(tsdb_result_path) + 2);
-      tsdb_result_path = strcat(tsdb_result_path, TSDB_DIRECTORY_DELIMITER);
-    } /* if */
-    if(access(tsdb_result_path, W_OK | X_OK)) {
-      fprintf(TSDB_ERROR_STREAM,
-              "initialize(): unable to write directory `%s'.\n",
-              tsdb_result_path);
-      tsdb_result_path = strdup(TSDB_RESULT_PATH);
-    } /* if */
-  } /* if */
-  else {
-    tsdb_result_path = strdup(TSDB_RESULT_PATH);
-  } /* else */
-
-  if((name = getenv("TSDB_RESULT_PREFIX")) != NULL) {
-    tsdb_result_prefix = strdup(name);
-  } /* if */
-  else {
-    tsdb_result_prefix = strdup(TSDB_RESULT_PREFIX);
-    if((foo = getenv("USER")) != NULL) {
-      tsdb_result_prefix
-        = (char *)realloc(tsdb_result_prefix,
-                          strlen(tsdb_result_prefix) + strlen(foo) + 2);
-      tsdb_result_prefix = strcat(tsdb_result_prefix, foo);
-      tsdb_result_prefix = strcat(tsdb_result_prefix, ".");
-    } /* if */
-  } /* else */
-
-  if((name = getenv("TSDB_MAX_RESULTS")) != NULL) {
-    if(!(tsdb_max_results = (BYTE)strtol(name, &foo, 10)) &&
-       name == foo) {
-      fprintf(TSDB_ERROR_STREAM,
-              "initialize(): "
-              "non-integer (`%s') for `TSDB_MAX_RESULTS'.\n", name);
-      tsdb_max_results = TSDB_MAX_RESULTS;
-    } /* if */
-  } /* if */
-  else {
-    tsdb_max_results = TSDB_MAX_RESULTS;
-  } /* else */
-  if((strlen(tsdb_result_path) + strlen(tsdb_result_prefix)
-      + tsdb_max_results / 10) > MAXNAMLEN) {
-    fprintf(TSDB_ERROR_STREAM,
+  if(tsdb_result_path != NULL && tsdb_result_prefix != NULL
+     && tsdb_max_results != -1 && tsdb_max_results
+     && (strlen(tsdb_result_path) + strlen(tsdb_result_prefix)
+         + tsdb_max_results / 10) > MAXNAMLEN) {
+    fprintf(tsdb_error_stream,
             "initialize(): "
-            "TSDB_RESULT_PATH + TSDB_RESULT_PREFIX are too long.\n");
+            "|result_path| + |result_prefix| values are too long.\n");
     free(tsdb_result_path);
     free(tsdb_result_prefix);
     tsdb_result_path = strdup(TSDB_RESULT_PATH);
@@ -1420,24 +1306,38 @@ BOOL tsdb_initialize() {
     tsdb_max_results = TSDB_MAX_RESULTS;
   } /* if */
 
-  name = getenv("PAGER");
-  if (name && (f=popen(name,"w"))) {
-    tsdb_pager = strdup(name);
-    pclose(f);
-  }/* if */
-  else {
-    if (f=popen("more","w")) {
-      tsdb_pager = strdup("more");
-      pclose(f);
+  if(tsdb_pager != NULL) {
+    if((bar = popen(tsdb_pager, "w")) == NULL) {
+      fprintf(tsdb_error_stream,
+              "initialize(): unaple to popen(3) `%s'.\n", tsdb_pager);
+      if((bar = popen(TSDB_PAGER, "w")) != NULL) {
+        free(tsdb_pager);
+        tsdb_pager = strdup("TSDB_PAGER");
+        pclose(bar);
+      } /* if */      
+      else if((bar = popen("more", "w")) != NULL) {
+        free(tsdb_pager);
+        tsdb_pager = strdup("more");
+        pclose(bar);
+      } /* if */
+      else if((bar = popen("page", "w")) != NULL) {
+        free(tsdb_pager);
+        tsdb_pager = strdup("page");
+        pclose(bar);
+      } /* if */
+      else {
+        fprintf(tsdb_error_stream,
+                "initialize(): "
+                "unable to locate pager; check your `PATH' variable.\n");
+        free(tsdb_pager);
+        tsdb_pager = (char *)NULL;
+      } /* else */
     } /* if */
     else {
-      if (f=popen("page","w")) {
-        tsdb_pager = strdup("page");
-        pclose(f);
-      } /* if */
-    }/* else */
-  }/* else */
-  
+      pclose(bar);
+    } /* else */
+  } /* if */
+
   (void)tsdb_all_relations();
 
 #ifdef DEBUG
@@ -1445,12 +1345,200 @@ BOOL tsdb_initialize() {
     for(i = 0; tsdb_relations[i] != NULL; i++) {
       tsdb_print_relation(tsdb_relations[i], tsdb_debug_stream);
     } /* for */
-    fflush(tsdb_debug_stream);
   } /* if */
-#endif  
+  if(tsdb.status & TSDB_SERVER_MODE) {
+    fprintf(tsdb_debug_stream,
+            "initialize(): going into server mode; port: %d;\n",
+            tsdb.port);
+  } /* if */
+  fprintf(tsdb_debug_stream, "initialize(): home: `%s';\n", tsdb_home);
+  fprintf(tsdb_debug_stream,
+          "initialize(): relations: `%s';\n", tsdb_relations_file);
+  fprintf(tsdb_debug_stream,
+          "initialize(): data: `%s';\n", tsdb_data_path);
+  if(tsdb_max_results) {
+    fprintf(tsdb_debug_stream,
+            "initialize(): result path `%s'; result prefix: `%s' (%d);\n",
+            tsdb_result_path, tsdb_result_prefix, tsdb_max_results);
+  } /* if */
+  else {
+    fprintf(tsdb_debug_stream,
+            "initialize(): no query result storage;\n");
+  } /* else */
+  fprintf(tsdb_debug_stream,
+          "initialize(): pager: `%s'; debug: `%s'.\n",
+          (tsdb_pager != NULL ? tsdb_pager : "null"), tsdb_debug_file);
+  fflush(tsdb_debug_stream);
+#endif
 } /* tsdb_initialize */
 
+void tsdb_parse_environment() {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_parse_environment()
+|*     version: 
+|*  written by: oe, dfki saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|*
+\*****************************************************************************/
+
+  char *name, *foo;
+
+  if(tsdb_home == NULL) {
+    if((name = getenv("TSDB_HOME")) != NULL || 
+       (name = tsdb_pseudo_user()) != NULL) {
+      tsdb_home = strdup(name);
+      if(tsdb_home[strlen(tsdb_home) - 1] != TSDB_DIRECTORY_DELIMITER[0]) {
+        tsdb_home = (char *)realloc(tsdb_home, strlen(tsdb_home) + 2);
+        tsdb_home = strcat(tsdb_home, TSDB_DIRECTORY_DELIMITER);
+      } /* if */
+    } /* if */
+    else {
+      tsdb_home = strdup(TSDB_HOME);
+    } /* else */
+  } /* if */
+  
+  if(tsdb_relations_file == NULL) {
+    if((name = getenv("TSDB_RELATIONS_FILE")) != NULL) {
+      if(name[0] == TSDB_DIRECTORY_DELIMITER[0]) {
+        tsdb_relations_file = strdup(name);
+        if(tsdb_relations_file[strlen(tsdb_relations_file) - 1]
+           != TSDB_DIRECTORY_DELIMITER[0]) {
+          tsdb_relations_file = 
+            (char *)realloc(tsdb_relations_file, 
+                            strlen(tsdb_relations_file) + 2);
+          tsdb_relations_file
+            = strcat(tsdb_relations_file, TSDB_DIRECTORY_DELIMITER);
+        } /* if */
+      } /* if */
+      else {
+        tsdb_relations_file = strdup(tsdb_home);
+        tsdb_relations_file = (char *)realloc(tsdb_relations_file, 
+                                              strlen(tsdb_relations_file) + 
+                                              strlen(name) + 1);
+        tsdb_relations_file = strcat(tsdb_relations_file, name);
+      } /* else */
+    } /* if */
+    else {
+      tsdb_relations_file = strdup(tsdb_home);
+      tsdb_relations_file = (char *)realloc(tsdb_relations_file, 
+                                            strlen(tsdb_relations_file) + 
+                                            strlen(TSDB_RELATIONS_FILE) + 1);
+      tsdb_relations_file = strcat(tsdb_relations_file, TSDB_RELATIONS_FILE);
+    } /* else */
+  } /* if */
+
+  if(tsdb_data_path == NULL) {
+    if((name = getenv("TSDB_DATA_PATH")) != NULL) {
+      if(name[0] == TSDB_DIRECTORY_DELIMITER[0]) {
+        tsdb_data_path = strdup(name);
+        if(tsdb_data_path[strlen(tsdb_data_path) - 1]
+           != TSDB_DIRECTORY_DELIMITER[0]) {
+          tsdb_data_path = (char *)realloc(tsdb_data_path, 
+                                           strlen(tsdb_data_path) + 2);
+          tsdb_data_path = strcat(tsdb_data_path, TSDB_DIRECTORY_DELIMITER);
+        } /* if */
+      } /* if */
+      else {
+        tsdb_data_path = strdup(tsdb_home);
+        tsdb_data_path = (char *)realloc(tsdb_data_path, 
+                                         strlen(tsdb_data_path) + 
+                                         strlen(name) + 1);
+        tsdb_data_path = strcat(tsdb_data_path, name);
+      } /* else */
+    } /* if */
+    else {
+      tsdb_data_path = strdup(tsdb_home);
+      tsdb_data_path = (char *)realloc(tsdb_data_path, 
+                                       strlen(tsdb_data_path) + 
+                                       strlen(TSDB_DATA_PATH) + 1);
+      tsdb_data_path = strcat(tsdb_data_path, TSDB_DATA_PATH);
+    } /* else */
+  } /* if */
+
+  if(tsdb_result_path == NULL) {
+    if((name = getenv("TSDB_RESULT_PATH")) != NULL) {
+      tsdb_result_path = strdup(name);
+      if(tsdb_result_path[strlen(tsdb_result_path) - 1]
+         != TSDB_DIRECTORY_DELIMITER[0]) {
+        tsdb_result_path = (char *)realloc(tsdb_result_path,
+                                           strlen(tsdb_result_path) + 2);
+        tsdb_result_path = strcat(tsdb_result_path, TSDB_DIRECTORY_DELIMITER);
+      } /* if */
+      if(access(tsdb_result_path, W_OK | X_OK)) {
+        fprintf(tsdb_error_stream,
+                "initialize(): unable to write directory `%s'.\n",
+                tsdb_result_path);
+        tsdb_result_path = strdup(TSDB_RESULT_PATH);
+      } /* if */
+    } /* if */
+    else {
+      tsdb_result_path = strdup(TSDB_RESULT_PATH);
+    } /* else */
+  } /* if */
+
+  if(tsdb_result_prefix == 0) {
+    if((name = getenv("TSDB_RESULT_PREFIX")) != NULL) {
+      tsdb_result_prefix = strdup(name);
+    } /* if */
+    else {
+      tsdb_result_prefix = strdup(TSDB_RESULT_PREFIX);
+      if((foo = getenv("USER")) != NULL) {
+        tsdb_result_prefix
+          = (char *)realloc(tsdb_result_prefix,
+                            strlen(tsdb_result_prefix) + strlen(foo) + 2);
+        tsdb_result_prefix = strcat(tsdb_result_prefix, foo);
+        tsdb_result_prefix = strcat(tsdb_result_prefix, ".");
+      } /* if */
+    } /* else */
+  } /* if */
+
+  if(tsdb_max_results == -1) {
+    if((name = getenv("TSDB_MAX_RESULTS")) != NULL) {
+      if(!(tsdb_max_results = (BYTE)strtol(name, &foo, 10)) &&
+         name == foo) {
+        fprintf(tsdb_error_stream,
+                "initialize(): "
+                "non-integer (`%s') for `TSDB_MAX_RESULTS'.\n", name);
+        tsdb_max_results = TSDB_MAX_RESULTS;
+      } /* if */
+    } /* if */
+    else {
+      tsdb_max_results = TSDB_MAX_RESULTS;
+    } /* else */
+  } /* if */
+
+  if(tsdb_pager == NULL) {
+    if((name = getenv("TSDB_PAGER")) != NULL
+       || (name = getenv("PAGER")) != NULL) {
+      if(!strcmp(name, "null") || !strcmp(name, "nil")) {
+        tsdb_pager = (char *)NULL;
+      } /* if */
+      else {
+        tsdb_pager = strdup(name);
+      } /* else */
+    } /* if */
+    else {
+      tsdb_pager = strdup(TSDB_PAGER);
+    } /* else */
+  } /* if */
+} /* tsdb_parse_environment() */
+
 char *tsdb_pseudo_user() {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_pseudo_user()
+|*     version: 
+|*  written by: oe, dfki saarbruecken
+|* last update: 14-jul-95
+|*  updated by: oe, dfki saarbruecken
+|*****************************************************************************|
+|*
+\*****************************************************************************/
   
   struct passwd *clare;
   char *fs, *name = strdup(TSDB_PSEUDO_USER);
@@ -1460,7 +1548,6 @@ char *tsdb_pseudo_user() {
       name = ++fs, fs = strchr(name, TSDB_FS)) {
     *fs = 0;
     if((clare = getpwnam(name)) != NULL) {
-      printf("returning %s.\n", clare->pw_dir);
       return(clare->pw_dir);
     } /* if */
   } /* while */
@@ -1494,7 +1581,7 @@ float tsdb_timer(BYTE action) {
   } /* if */
   else {
     if(!n_timers || action > n_timers) {
-      fprintf(TSDB_ERROR_STREAM,
+      fprintf(tsdb_error_stream,
               "timer(): timer # %d not running.\n", action);
       return((float)-1);
     } /* if */
@@ -1561,7 +1648,7 @@ BOOL tsdb_insert_into_selection(Tsdb_selection *selection,
                 kaerb = TRUE;
                 break;
               default:
-                fprintf(TSDB_ERROR_STREAM,
+                fprintf(tsdb_error_stream,
                         "insert_into_selection(): ignoring invalid tuple.\n");
                 return(FALSE);
               } /* switch */
@@ -1579,7 +1666,7 @@ BOOL tsdb_insert_into_selection(Tsdb_selection *selection,
           case TSDB_LESS_THAN:
             break;
           default:
-            fprintf(TSDB_ERROR_STREAM,
+            fprintf(tsdb_error_stream,
                     "insert_into_selection(): ignoring invalid tuple.\n");
             return(FALSE);
           } /* switch */
@@ -1614,7 +1701,7 @@ BOOL tsdb_insert_into_selection(Tsdb_selection *selection,
 void tsdb_negate_node(Tsdb_node* node)
 {
   if (node->node->type != TSDB_OPERATOR) {
-    fprintf(TSDB_ERROR_STREAM,"tsdb_negate_node: wrong type at leaf\n");
+    fprintf(tsdb_error_stream,"tsdb_negate_node: wrong type at leaf\n");
     return ;
   }
   switch (node->node->value.operator) {
@@ -1643,7 +1730,7 @@ void tsdb_negate_node(Tsdb_node* node)
     node->node->value.operator = TSDB_SUBSTRING ; 
     break;
   default:
-    fprintf(TSDB_ERROR_STREAM," eh what??\n");
+    fprintf(tsdb_error_stream," eh what??\n");
   }/* switch */
 
 } /* tsdb_negate_node */
@@ -1737,5 +1824,46 @@ char** tsdb_condition_attributes(Tsdb_node *node,
   } /* else */
   return attributes;
 } /* tsdb_condition_attributes() */
+
+char *tsdb_rcs_strip(char *s1, char *s2) {
 
-/*---------------------------------------------------------------------------*/
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_rcs_strip()
+|*     version: 
+|*  written by: oe, dfki saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|*
+\*****************************************************************************/
+
+  char *foo, *bar;
+
+  if(s1 != NULL && s2 != NULL) {
+    if((foo = strchr(s1, '$')) != NULL) {
+      for(foo++; *foo && *foo == *s2; foo++, s2++);
+      if(!*foo || *foo++ != ':') {
+        return(s1);
+      } /* if */
+      else {
+        if((bar = strrchr(foo, '$')) != NULL) {
+          *bar = 0;
+          for(; *foo && isspace(*foo); foo++);
+          for(bar--; bar > foo && isspace(*bar); bar--);
+          *++bar = 0;
+          return(foo);
+        } /* if */
+        else {
+          return(s1);
+        } /* else */
+      } /* else */
+    } /* if */
+    else {
+      return(s1);
+    } /* else */
+  } /* if */
+  else {
+    return((char *)NULL);
+  } /* else */
+} /* tsdb_rcs_strip() */

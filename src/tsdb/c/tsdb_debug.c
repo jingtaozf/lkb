@@ -117,7 +117,7 @@ void tsdb_debug_join_path(Tsdb_value **source_attribute_list,
         = tsdb_find_relation(source_attribute_list[i]->value.identifier);
     } /* if */
     else {
-      fprintf(TSDB_ERROR_STREAM,
+      fprintf(tsdb_error_stream,
               "debug_join_path(): unknown relation `%s'\n",
               source_attribute_list[i]->value.identifier);
       tsdb_free_tsdb_values(source_attribute_list);
@@ -148,14 +148,14 @@ void tsdb_debug_join_path(Tsdb_value **source_attribute_list,
   targets[i] = (Tsdb_relation *)NULL;
 
   if((path = tsdb_join_path(sources, targets)) != NULL) {
-    fprintf(TSDB_DEFAULT_STREAM, "%s", path[0]->name);
+    fprintf(tsdb_default_stream, "%s", path[0]->name);
     for(i = 1; path[i] != NULL; i++) {
-      fprintf(TSDB_DEFAULT_STREAM, " -- %s", path[i]->name);
+      fprintf(tsdb_default_stream, " -- %s", path[i]->name);
     } /* for */
-    fprintf(TSDB_DEFAULT_STREAM, ".\n");
+    fprintf(tsdb_default_stream, ".\n");
   } /* if */
   else {
-    fprintf(TSDB_DEFAULT_STREAM,
+    fprintf(tsdb_default_stream,
             "debug_join_path(): no path from here to there.\n");
   } /* else */
   tsdb_free_tsdb_values(source_attribute_list);
@@ -193,7 +193,7 @@ void tsdb_debug_simple_join(Tsdb_value **attribute_list_1,
         = tsdb_find_relation(attribute_list_1[i]->value.identifier);
     } /* if */
     else {
-      fprintf(TSDB_ERROR_STREAM,
+      fprintf(tsdb_error_stream,
               "debug_simple_join(): unknown relation `%s'\n",
               attribute_list_1[i]->value.identifier);
       tsdb_free_tsdb_values(attribute_list_1);
@@ -206,7 +206,7 @@ void tsdb_debug_simple_join(Tsdb_value **attribute_list_1,
   selections_1 = (Tsdb_selection **)malloc((i + 1) * sizeof(Tsdb_selection *));
   for(i = 0; relations_1[i] != NULL; i++) {
     if((selections_1[i] = tsdb_find_table(relations_1[i])) == NULL) {
-      fprintf(TSDB_ERROR_STREAM,
+      fprintf(tsdb_error_stream,
               "debug_simple_join(): no table for relation `%s'\n",
               relations_1[i]->name);
       tsdb_free_tsdb_values(attribute_list_1);
@@ -220,7 +220,7 @@ void tsdb_debug_simple_join(Tsdb_value **attribute_list_1,
     for(i = 1; selections_1[i] != NULL; i++) {
       if((selection_1 = tsdb_simple_join(selections_1[i - 1],
                                          selections_1[i])) == NULL) {
-        fprintf(TSDB_ERROR_STREAM,
+        fprintf(tsdb_error_stream,
                 "debug_simple_join(): empty selection after join with `%s'.\n",
                 relations_1[i]);
         tsdb_free_tsdb_values(attribute_list_1);
@@ -243,7 +243,7 @@ void tsdb_debug_simple_join(Tsdb_value **attribute_list_1,
         = tsdb_find_relation(attribute_list_2[i]->value.identifier);
     } /* if */
     else {
-      fprintf(TSDB_ERROR_STREAM,
+      fprintf(tsdb_error_stream,
               "debug_simple_join(): unknown relation `%s'\n",
               attribute_list_2[i]->value.identifier);
       tsdb_free_tsdb_values(attribute_list_1);
@@ -257,7 +257,7 @@ void tsdb_debug_simple_join(Tsdb_value **attribute_list_1,
   selections_2 = (Tsdb_selection **)malloc((i + 1) * sizeof(Tsdb_selection *));
   for(i = 0; relations_2[i] != NULL; i++) {
     if((selections_2[i] = tsdb_find_table(relations_2[i])) == NULL) {
-      fprintf(TSDB_ERROR_STREAM,
+      fprintf(tsdb_error_stream,
               "debug_simple_join(): no table for relation `%s'\n",
               relations_2[i]->name);
       tsdb_free_tsdb_values(attribute_list_1);
@@ -273,7 +273,7 @@ void tsdb_debug_simple_join(Tsdb_value **attribute_list_1,
     for(i = 1; selections_2[i] != NULL; i++) {
       if((selection_2 = tsdb_simple_join(selections_2[i - 1],
                                          selections_2[i])) == NULL) {
-        fprintf(TSDB_ERROR_STREAM,
+        fprintf(tsdb_error_stream,
                 "debug_simple_join(): empty selection after join with `%s'.\n",
                 relations_2[i]);
         tsdb_free_tsdb_values(attribute_list_1);
@@ -297,7 +297,7 @@ void tsdb_debug_simple_join(Tsdb_value **attribute_list_1,
       fclose(output);
     } /* if */
     else {
-      tsdb_print_selection(result, TSDB_DEFAULT_STREAM);
+      tsdb_print_selection(result, tsdb_default_stream);
     } /* else */
   } /* if */
 } /* tsdb_debug_simple_join() */

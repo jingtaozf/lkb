@@ -42,24 +42,30 @@ int tsdb_getchar(void) {
 
 } /* tsdb_getchar */
 
-FILE* tsdb_open_pager()
-{
+FILE *tsdb_open_pager() {
 
-  FILE* tsdb_stream=NULL;
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_open_pager()
+|*     version: 
+|*  written by: tom fettig, dfki saarbruecken
+|* last update: 14-jul-95
+|*  updated by: oe, dfki saarbruecken
+|*****************************************************************************|
+|*
+\*****************************************************************************/
 
-  if (tsdb_pager=getenv("PAGER"))
-      tsdb_stream = popen(tsdb_pager,"w");
-  if (tsdb_stream) return(tsdb_stream);
+  FILE* stream = (FILE *)NULL;
 
-  tsdb_stream = popen("more","w");
-  if (tsdb_stream) return(tsdb_stream);
-  
-  tsdb_stream = popen("page","w");
-  if (tsdb_stream) 
-    return(tsdb_stream);
-  
+  if((stream = popen(tsdb_pager, "w")) == NULL) {
+    fprintf(tsdb_error_stream,
+            "open_pager(): unable to popen(3) `%s'.\n", tsdb_pager);
+  } /* if */
+  return(stream);
+
 } /* tsdb_open_pager */
 
+#ifdef DEBUG
 FILE *tsdb_open_debug() {
 
 /*****************************************************************************\
@@ -74,52 +80,60 @@ FILE *tsdb_open_debug() {
 |* file and resets the file pointer to its beginning.
 \*****************************************************************************/
 
-#ifdef DEBUG
   FILE *output;
-  char *name, *file, *date, *user;
+  char *name, *date, *user;
   time_t clock;
+
+  user = getenv("USER");
+
+  if(tsdb_debug_file == NULL) {
+    if((name = getenv("TSDB_DEBUG_FILE")) != NULL
+       && strcmp(name, "null") && strcmp(name, "nil")) {
+      tsdb_debug_file
+        = (char *)malloc(strlen(name)
+                         + (user != NULL ? 1 + strlen(user) : 0) + 1);
+      tsdb_debug_file = strcpy(tsdb_debug_file, name);
+    } /* if */
+    else if(strcmp(TSDB_DEBUG_FILE, "null") && strcmp(TSDB_DEBUG_FILE, "nil")) {
+      tsdb_debug_file
+        = (char *)malloc(strlen(TSDB_DEBUG_FILE)
+                         + (user != NULL ? 1 + strlen(user) : 0) + 1);
+      tsdb_debug_file = strcpy(tsdb_debug_file, TSDB_DEBUG_FILE);
+    } /* else */
+
+    if(tsdb_debug_file != NULL && user != NULL) {
+      tsdb_debug_file = strcat(tsdb_debug_file, ".");
+      tsdb_debug_file = strcat(tsdb_debug_file, user);
+    } /* if */
+  } /* if */
+  
+  if(tsdb_debug_file == NULL) {
+    return((FILE *)NULL);
+  } /* if */
 
   if(time(&clock) != (time_t)-1) {
     if((date = ctime(&clock)) != NULL) {
       date[strlen(date) - 1] = 0;
     } /* if */
-    user = getenv("USER");
-  } /* if */
-     
-  if((name = getenv("TSDB_DEBUG_FILE")) != NULL) {
-    file = (char *)malloc(strlen(name)
-                          + (user != NULL ? 1 + strlen(user) : 0) + 1);
-    strcpy(file, name);
-  } /* if */
-  else {
-    file = (char *)malloc(strlen(TSDB_DEBUG_FILE)
-                          + (user != NULL ? 1 + strlen(user) : 0) + 1);
-    strcpy(file, TSDB_DEBUG_FILE);
-  } /* else */
-  if(user != NULL) {
-    file = strcat(file, ".");
-    file = strcat(file, user);
   } /* if */
 
-  if((output = fopen(file, "w")) != NULL) {
+  if((output = fopen(tsdb_debug_file, "w")) != NULL) {
     fprintf(output,
             "TSDB debug opened by %s on %s.\n\n",
             (user != NULL ? user : ""),
             (date != NULL ? date : ""));
     fflush(output);
-    free(file);
+    free(tsdb_debug_file);
     return(output);
   } /* if */
 
-  fprintf(TSDB_ERROR_STREAM,
-          "open_debug(): unable to open file `%s'.\n",
-          (file != NULL ? file : TSDB_DEBUG_FILE));
-  if(file != NULL) {
-    free(file);
-  } /* if */
-#endif    
+  fprintf(tsdb_error_stream,
+          "open_debug(): unable to open file `%s'.\n", tsdb_debug_file);
+  free(tsdb_debug_file);
   return((FILE *)NULL);
+
 } /* tsdb_open_debug() */
+#endif    
 
 void tsdb_close_debug(FILE *stream) {
 
@@ -213,9 +227,9 @@ BOOL tsdb_print_value(Tsdb_value *value, FILE *stream) {
       break;
     default:
       if(really_verbose_mode) 
-        fprintf(TSDB_ERROR_STREAM, "Never fucking heard of tsdb_value: %d\n",value->type);
+        fprintf(tsdb_error_stream, "Never fucking heard of tsdb_value: %d\n",value->type);
       else
-        fprintf(TSDB_ERROR_STREAM, "tsdb: unknown tsdb_value type: %d\n", value->type);
+        fprintf(tsdb_error_stream, "tsdb: unknown tsdb_value type: %d\n", value->type);
     } /* switch */
   if (r==EOF)
     return FALSE;
@@ -357,9 +371,9 @@ void tsdb_print_tuple(Tsdb_tuple *tuple, FILE *stream) {
   } /* if */
   else {
     if(really_verbose_mode)
-      fprintf(TSDB_ERROR_STREAM, "Ignoring a shite tuple, you have a crap data file.\n");
+      fprintf(tsdb_error_stream, "Ignoring a shite tuple, you have a crap data file.\n");
     else
-      fprintf(TSDB_ERROR_STREAM, "tsdb_print_tuple is ignoring invalid tuple.\n");
+      fprintf(tsdb_error_stream, "tsdb_print_tuple is ignoring invalid tuple.\n");
   } /* else */
 
 } /* tsdb_print_tuple() */
@@ -421,9 +435,9 @@ FILE *tsdb_find_relations_file(char *mode) {
 
   if((file = fopen(tsdb_relations_file, mode )) == NULL) {
     if(really_verbose_mode)
-      fprintf(TSDB_ERROR_STREAM, "I can't find the fucking relations file.\n");
+      fprintf(tsdb_error_stream, "I can't find the fucking relations file.\n");
     else 
-      fprintf(TSDB_ERROR_STREAM, "tsdb: unable to open relations file %s.\n",
+      fprintf(tsdb_error_stream, "tsdb: unable to open relations file %s.\n",
             tsdb_relations_file);
     return((FILE *)NULL);
   } /* if */
@@ -441,7 +455,7 @@ FILE *tsdb_find_data_file(char *name, char *mode) {
   path = strcat(path, name);
 
   if((file = fopen(path, mode)) == NULL) {
-    fprintf(TSDB_ERROR_STREAM, "tsdb: unable to open data file %s.\n", path);
+    fprintf(tsdb_error_stream, "tsdb: unable to open data file %s.\n", path);
     return((FILE *)NULL);
   } /* if */
   else {
@@ -533,8 +547,8 @@ Tsdb_tuple *tsdb_read_tuple(Tsdb_relation *relation, FILE *input) {
             value->value.integer = foo;
           } /* if */
           else {
-            fprintf(TSDB_ERROR_STREAM, "tsdb_read_tuple(): non-integer ");
-            fprintf(TSDB_ERROR_STREAM, "`%s' in field `%s' of `%s'.\n",
+            fprintf(tsdb_error_stream, "tsdb_read_tuple(): non-integer ");
+            fprintf(tsdb_error_stream, "`%s' in field `%s' of `%s'.\n",
                     field, relation->fields[n], relation->name);
             return(Tsdb_tuple *)NULL;
           } /* else */
@@ -647,7 +661,7 @@ Tsdb_relation *tsdb_read_relation(FILE *input) {
       if((foo = strchr(&buf[0], '\n')) != NULL) {
         *foo = 0;
       } /* if */
-      fprintf(TSDB_ERROR_STREAM,
+      fprintf(tsdb_error_stream,
               "read_relation(): invalid relation `%s'.\n",
               &buf[0]);
       for(foo = fgets(&buf[0], 256, input);
@@ -692,7 +706,7 @@ Tsdb_relation *tsdb_read_relation(FILE *input) {
           relation->types[relation->n_fields] = TSDB_STRING;
         } /* if */
         else {
-          fprintf(TSDB_ERROR_STREAM,
+          fprintf(tsdb_error_stream,
                   "read_relation(): `%s' has no type in relation `%s'.\n",
                   foo, relation->name);
           for(foo = fgets(&buf[0], 256, input);
@@ -872,6 +886,16 @@ FILE* tsdb_open_result() {
   int i;
   char old[MAXNAMLEN], new[MAXNAMLEN];
 
+  if(!tsdb_max_results) {
+    return((FILE *)NULL);
+  } /* if */
+  if(tsdb_max_results < 0) {
+    fprintf(tsdb_error_stream,
+            "open_result(): invalid value (%d) for `max_results'.\n",
+            tsdb_max_results);
+    return((FILE *)NULL);
+  } /* if */
+
   for(i = tsdb_max_results; i > 1; i--) {
     (void)sprintf(&new[0],
                   "%s%s%d", tsdb_result_path, tsdb_result_prefix, i);
@@ -882,7 +906,7 @@ FILE* tsdb_open_result() {
   
 
   if((output = fopen(&old[0], "w")) == NULL) {
-    fprintf(TSDB_ERROR_STREAM,
+    fprintf(tsdb_error_stream,
             "open_result(): unable to create \%s'.\n", &old[0]);
     return((FILE *)NULL);
   } /* if */

@@ -448,6 +448,6 @@ int yywrap() {
 yyerror(char *s) {
  
   fprintf(TSDB_ERROR_STREAM,
-          "parser(): parse error; check the tsdb syntax.\n");
+          "parser(): parse error; check the tsdb(1) syntax.\n");
 
 } /* yyerror() */

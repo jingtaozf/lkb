@@ -3,13 +3,12 @@
 |*      module: TSDB query language functionality
 |*     version: 
 |*  written by: andrew white, tom fettig & oe (dfki saarbruecken)
-|* last update: 
-|*  updated by: 
+|* last update: 14-jul-95
+|*  updated by: oe, dfki saarbruecken
 |*****************************************************************************|
 |*
 \*****************************************************************************/
 
-#include <signal.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>
@@ -30,7 +29,7 @@ int tsdb_drop_table(Tsdb_value *table) {
   if((infp = tsdb_find_relations_file("r")) != NULL) {
 
     if((outfp = fopen(TSDB_TEMPORARY_FILE,"w")) == NULL) {
-      fprintf(TSDB_ERROR_STREAM,"Cannot create: %s\n", TSDB_TEMPORARY_FILE);
+      fprintf(tsdb_error_stream,"Cannot create: %s\n", TSDB_TEMPORARY_FILE);
       return(TSDB_TMPFILE);
     } /* if */
     
@@ -102,7 +101,7 @@ int tsdb_alter_table(Tsdb_value *table, Tsdb_field **fields) {
   if((input = tsdb_find_relations_file("r")) != NULL) {
   
     if((output = fopen(TSDB_TEMPORARY_FILE, "w")) == NULL) {
-      fprintf(TSDB_ERROR_STREAM,"Cannot create: %s\n", TSDB_TEMPORARY_FILE);
+      fprintf(tsdb_error_stream,"Cannot create: %s\n", TSDB_TEMPORARY_FILE);
       return(TSDB_TMPFILE);
     } /* if */
 
@@ -181,7 +180,7 @@ int tsdb_insert(Tsdb_value *table,
       for(num_attributes = 0; attribute_list[num_attributes] != NULL;
           num_attributes++);
       if(num_attributes != num_values) {
-        fprintf(TSDB_ERROR_STREAM, "tsdb: incompatible list sizes.\n");
+        fprintf(tsdb_error_stream, "tsdb: incompatible list sizes.\n");
         return(TSDB_INCOMPAT_SIZES);
       } /* if */
     } /* if */
@@ -229,7 +228,7 @@ int tsdb_insert(Tsdb_value *table,
         tsdb_insert_into_selection(selection, &foo[0]);
       } /* if */
       else {
-        fprintf(TSDB_ERROR_STREAM, "segementation fault: core well and truly dumped.\n");
+        fprintf(tsdb_error_stream, "segementation fault: core well and truly dumped.\n");
       } /* else */
     } /* if */
     else {
@@ -238,9 +237,9 @@ int tsdb_insert(Tsdb_value *table,
   } /* if */
   else {
     if(really_verbose_mode)
-      fprintf(TSDB_ERROR_STREAM, "Never fucking heard of %s.\n", table->value.identifier);
+      fprintf(tsdb_error_stream, "Never fucking heard of %s.\n", table->value.identifier);
     else
-      fprintf(TSDB_ERROR_STREAM, "tsdb: unknown relation %s.\n", table->value.identifier);
+      fprintf(tsdb_error_stream, "tsdb: unknown relation %s.\n", table->value.identifier);
     return(TSDB_NO_SUCH_RELATION);
   } /* else */
 
@@ -302,7 +301,7 @@ int tsdb_delete(Tsdb_value *table, Tsdb_node *condition) {
     selection = tsdb_complex_select(condition,wanted);
     if ((selection->n_relations!=1) ||
         (strcmp(relation->name,selection->relations[0]->name))){
-      fprintf(TSDB_ERROR_STREAM,"Wrong Specification of attributes!\n");
+      fprintf(tsdb_error_stream,"Wrong Specification of attributes!\n");
       return(TSDB_NO_SUCH_RELATION);
     }
     /* now perform the hard deletion of tuples */
@@ -312,8 +311,10 @@ int tsdb_delete(Tsdb_value *table, Tsdb_node *condition) {
        value-Pointers. So delete the first value, put something known 
        in it, then clean the original list. then you may delete the selection
        */
-    fprintf(TSDB_DEFAULT_STREAM," Tuples to be deleted:\n");
-    tsdb_print_selection(selection,TSDB_DEFAULT_STREAM);
+#if defined(DEBUG) && defined(TOM)
+    fprintf(tsdb_debug_stream," Tuples to be deleted:\n");
+    tsdb_print_selection(selection, tsdb_debug_stream);
+#endif
     list = selection->key_lists[0];
     for (anna=0;anna<selection->length; anna++) {
       list->tuples[0]->fields[0]=fuck;
@@ -478,7 +479,7 @@ int tsdb_complex_retrieve(Tsdb_value **relation_list,
     kaerb = 0;
     for(r=0;relation_list[r];r++) {
       if (!tsdb_is_relation(relation_list[r])) {
-        fprintf(TSDB_ERROR_STREAM,"Unkown Relation %s\n",
+        fprintf(tsdb_error_stream,"Unkown Relation %s\n",
                  relation_list[r]->value.string);
         kaerb = 1;
       } /* if */
@@ -496,7 +497,7 @@ int tsdb_complex_retrieve(Tsdb_value **relation_list,
    kaerb = 0;
    for(i = 0; attribute_list[i]; i++) {
      if (!tsdb_is_attribute(attribute_list[i])) {
-       fprintf(TSDB_ERROR_STREAM,"Unknown Attribute %s\n",
+       fprintf(tsdb_error_stream,"Unknown Attribute %s\n",
                attribute_list[i]->value.string);
        kaerb = 1;
      } /* if */
@@ -557,7 +558,7 @@ int tsdb_complex_retrieve(Tsdb_value **relation_list,
       pclose(output);
     } /* if */
     else {
-      tsdb_project(selection,attribute_list,TSDB_DEFAULT_STREAM);
+      tsdb_project(selection,attribute_list,tsdb_default_stream);
     } /* else */
     if (!from_find)
       tsdb_free_selection(selection);

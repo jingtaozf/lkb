@@ -135,7 +135,7 @@ int* tsdb_double_relations(Tsdb_selection *selection_1,
         (*d)++;
         /* one more to delete */
         if(!relation_1->n_keys || !relation_2->n_keys) {
-          fprintf(TSDB_ERROR_STREAM, "Bollox, no key in relation.\n");
+          fprintf(tsdb_error_stream, "Bollox, no key in relation.\n");
           return((int *)NULL);
         } /* if */
 
@@ -613,8 +613,8 @@ Tsdb_selection *tsdb_join(Tsdb_selection *selection_1,
       result = selection_1;
     } /* if */
     else {
-/*      fprintf(TSDB_ERROR_STREAM, "asshole: unconnected Relations.\n");*/
-      fprintf(TSDB_ERROR_STREAM," Error: unconnected Relations.\n");
+/*      fprintf(tsdb_error_stream, "asshole: unconnected Relations.\n");*/
+      fprintf(tsdb_error_stream," Error: unconnected Relations.\n");
       return((Tsdb_selection *)NULL);
     } /* else */
   } /* else */

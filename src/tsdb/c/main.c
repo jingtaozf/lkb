@@ -21,7 +21,8 @@
 
 #define TSDB_HISTORY_FILE ".tsdb_history"
 
-char tsdb_version[] = "0.0 ($Revision$";
+char tsdb_version[] = TSDB_VERSION;
+char tsdb_revision[] = "$Revision$";
 char tsdb_date[] = "$Date$";
 
 BOOL quit = FALSE;
@@ -110,6 +111,17 @@ int main(int argc, char **argv) {
   tsdb_default_stream = TSDB_DEFAULT_STREAM;
   tsdb_error_stream = TSDB_ERROR_STREAM;
 
+  tsdb_parse_options(argc, argv);
+  tsdb_initialize();
+
+  if(tsdb.status && TSDB_SERVER_MODE) {
+
+    if(tsdb_server_initialize()) {
+      exit(-1);
+    } /* if */
+    tsdb_server_toplevel();
+  } /* if */
+
   using_history();
   if(read_history(TSDB_HISTORY_FILE) != NULL) {
     fprintf(tsdb_error_stream,
@@ -127,9 +139,6 @@ int main(int argc, char **argv) {
       *foo = 0;
     } /* if */
   } /* else */
-
-  tsdb_parse_options(argc, argv);
-  tsdb_initialize();
 
   sprintf(prompt, "tsdb@%s (%d) # ", host, n_commands);
 
@@ -187,6 +196,7 @@ void tsdb_parse_options(int argc, char **argv) {
   char *bar;
   struct option options[] = {
     {"server", no_argument, 0, TSDB_SERVER_OPTION},
+    {"port", required_argument, 0, TSDB_PORT_OPTION},
     {"home", required_argument, 0, TSDB_HOME_OPTION},
     {"relations-file", required_argument, 0, TSDB_RELATIONS_FILE_OPTION},
     {"data-path", required_argument, 0, TSDB_DATA_PATH_OPTION},
@@ -211,6 +221,19 @@ void tsdb_parse_options(int argc, char **argv) {
         exit(-1);
         break;
       case TSDB_SERVER_OPTION:
+        tsdb.status |= TSDB_SERVER_MODE;
+        break;
+      case TSDB_PORT_OPTION:
+        if(optarg != NULL) {
+          if((tsdb.port = strtol(optarg, &bar, 10)) == 0
+             && optarg == bar) {
+            fprintf(tsdb_error_stream,
+                    "parse_options(): "
+                    "non-integer (`%s') argument to `-port'.\n",
+                    optarg);
+            tsdb.port = 0;
+          } /* if */
+        } /* if */
         break;
       case TSDB_HOME_OPTION:
         if(optarg != NULL) {
@@ -252,11 +275,13 @@ void tsdb_parse_options(int argc, char **argv) {
           tsdb_max_results = 0;
         } /* else */
         break;
+#ifdef DEBUG
       case TSDB_DEBUG_FILE_OPTION:
         if(optarg != NULL) {
           tsdb_debug_file = strdup(optarg);
         } /* if */
         break;
+#endif
       case TSDB_PAGER_OPTION:
         if(optarg != NULL) {
           tsdb_pager = strdup(optarg);
@@ -267,10 +292,15 @@ void tsdb_parse_options(int argc, char **argv) {
         break;
       case TSDB_USAGE_OPTION:
         tsdb_usage();
+        exit(0);
         break;
       case TSDB_VERSION_OPTION:
         fprintf(tsdb_error_stream,
-                "
+                "tsdb(1) %s (%s) [%s] --- (c) oe@tsnlp.dfki.uni-sb.de.\n",
+                tsdb_version,
+                tsdb_rcs_strip(tsdb_revision, "Revision"),
+                tsdb_rcs_strip(tsdb_date, "Date"));
+        exit(0);
         break;
       } /* switch */
   } /* while */
@@ -290,27 +320,31 @@ void tsdb_usage() {
 \*****************************************************************************/
 
   fprintf(tsdb_error_stream,
-          "usage: `tsdb [option+]'; "
-          "valid options are (defaults underlined):\n\n");
+          "usage: `tsdb [options]'; "
+          "valid options are (default values underlined):\n\n");
   fprintf(tsdb_error_stream,
-          "  `-server' --- run in server (daemon) mode;\n");
+          "  `-server' --- go into server (daemon) mode;\n");
+  fprintf(tsdb_error_stream,
+          "  `-port=' --- server TCP port address;\n");
   fprintf(tsdb_error_stream,
           "  `-home=' --- root directory for database;\n");
   fprintf(tsdb_error_stream,
-          "  `-relations-file=' --- database relations file;\n");
+          "  `-relations-file=' --- relations file for database;\n");
   fprintf(tsdb_error_stream,
-          "  `-data-path=' --- database data directory;\n");
+          "  `-data-path=' --- data directory for database;\n");
   fprintf(tsdb_error_stream,
           "  `-result-path' --- directory to store query results;\n");
   fprintf(tsdb_error_stream,
-          "  `-result-prefix=' --- file prefix for query result;\n");
+          "  `-result-prefix=' --- file prefix for query results;\n");
   fprintf(tsdb_error_stream,
-          "  `-max-results[=[_0_ -- ]]' "
-          "--- maximal number of stored query results;\n");
+          "  `-max-results[={_0_ | 1 | ...}]' "
+          "--- maximum of stored query results;\n");
+#ifdef DEBUG
   fprintf(tsdb_error_stream,
-          "  `-debug-file=' --- file to open for debug output;\n");
+          "  `-debug-file=' --- output file for debug information;\n");
+#endif
   fprintf(tsdb_error_stream,
-          "  `-pager={command | off}' --- pager command to use;\n");
+          "  `-pager[={command | _off_}' --- pager command to use;\n");
   fprintf(tsdb_error_stream,
           "  `-usage' or `-help' --- this message (give it a try |:-);\n");
   fprintf(tsdb_error_stream,
