@@ -512,12 +512,12 @@
      :menu-item-title "Apply lex rule ..."
      :menu-item-action 
      #'(lambda () (eval-enqueue `(apply-lex ,id)))
-     :disabled (not (get-psort-entry id)))
+     :disabled (not (and id (get-psort-entry id))))
    (make-instance 'menu-item
      :menu-item-title "Apply all lex rules"
      :menu-item-action 
      #'(lambda () (eval-enqueue `(apply-lex-rules ,id)))
-     :disabled (not (get-psort-entry id)))
+     :disabled (not (and id (get-psort-entry id))))
 ;;;   (make-instance 'menu-item
 ;;;     :menu-item-title "Store fs..."
 ;;;     :menu-item-action 

@@ -424,17 +424,17 @@
                      #'(lambda ()
                          (output-fs-in-tex fs-record)))
                   (make-instance 'cg:menu-item :name "Apply lex rule"
-                     :available-p (get-psort-entry id)
+                     :available-p (and id (get-psort-entry id))
                      :value 
                      #'(lambda ()
                          (apply-lex id)))
                   (make-instance 'cg:menu-item :name "Apply lex rules"
-                     :available-p (get-psort-entry id)
+                     :available-p (and id (get-psort-entry id))
                      :value 
                      #'(lambda ()
                           (apply-lex-rules id)))
                   (make-instance 'cg:menu-item :name "Show source" 
-                     :available-p (source-available-p id)
+                     :available-p (and id (source-available-p id))
                      :value 
                     #'(lambda ()
                           (edit-source id)))   
