@@ -454,9 +454,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun morph-analyse (string)
+  ;;; everything is assumed to be already upcase
    (remove-morphemes 
       (mapcar #'(lambda (x) (intern (string x))) 
-         (coerce (string-upcase string) 'list))))
+         (coerce string 'list))))
 
 (defun remove-morphemes (word)
   (let ((definites-list (copy-list '(nil))))
@@ -482,12 +483,11 @@
 		  filter
 		  (let* 
 		      ((root 
-                        (string-downcase
-			 (coerce 
+                        (coerce 
 			  (mapcar #'character 
 				  (car morphological-possibility)) 
-			  'string)))
-		       (lexical (lookup-word *lexicon* (string-upcase root))))
+			  'string))
+		       (lexical (lookup-word *lexicon* root)))
 		    (and lexical
 			 (cons root 
 			       (cdr morphological-possibility)))))))))
@@ -497,11 +497,10 @@
       append
       (let ((node (suffix-tree-comp))
             (oldword 
-               (string-downcase
                   (coerce 
                      (mapcar #'character 
                         (car entry)) 
-                     'string))))
+                     'string)))
          (for residue on (reverse (car entry))
             while node
             append
@@ -520,11 +519,10 @@
       append
       (let ((node (prefix-tree-comp))
             (oldword 
-               (string-downcase
                   (coerce 
                      (mapcar #'character 
                         (car entry)) 
-                     'string))))
+                     'string)))
          (for residue on (car entry)
             while node
             append
@@ -548,11 +546,10 @@
                (prog1
                   (let ((node (infix-tree-comp))
                         (oldword 
-                           (string-downcase
                               (coerce 
                                  (mapcar #'character 
                                     (car entry)) 
-                                 'string))))
+                                 'string)))
                      (for residue on segment
                         while node
                         append
@@ -696,7 +693,7 @@
 (defun morph-generate (string rule)
    (add-morphemes 
       (mapcar #'(lambda (x) (intern (string x))) 
-         (coerce (string-upcase string) 'list))
+         (coerce string 'list))
       rule))
 
 (defun add-morphemes (word rule)
@@ -707,11 +704,10 @@
          (make-suffix word rule))
       filter
       (cons 
-         (string-downcase
-            (coerce 
+         (coerce 
                (mapcar #'character 
                   (car morphological-possibility)) 
-               'string)) 
+               'string) 
          (cdr morphological-possibility))))
    
 ;;; AAC - changed the following two functions
@@ -720,10 +716,9 @@
 (defun make-suffix (input-word rule)
    (let* ((node (suffix-tree-root))
          (oldword 
-            (string-downcase
-               (coerce 
-                  (mapcar #'character input-word) 
-                  'string)))
+          (coerce 
+           (mapcar #'character input-word) 
+           'string))
          (reg-output 
             (process-suffix 
                oldword
@@ -754,10 +749,9 @@
 (defun make-prefix (input-word rule)
    (let* ((node (prefix-tree-root))
          (oldword 
-            (string-downcase
-               (coerce 
-                  (mapcar #'character input-word) 
-                  'string)))
+          (coerce 
+           (mapcar #'character input-word) 
+           'string))
          (reg-output 
             (process-prefix 
                oldword
