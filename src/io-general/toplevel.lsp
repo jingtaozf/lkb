@@ -27,7 +27,8 @@
 (defun read-script-file nil
   (let ((file-name 
          (ask-user-for-existing-pathname "Script file?")))
-    (read-script-file-aux file-name)))
+    (with-output-to-top ()
+      (read-script-file-aux file-name))))
 
 ;;; "View"
 ;;;
