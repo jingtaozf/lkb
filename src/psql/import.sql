@@ -1,17 +1,20 @@
+\i embedded-code.sql
+\i defn.sql
+
 --- postgres optimization is poor...
 ALTER DATABASE lingo SET enable_seqscan TO off;
 
-CREATE TABLE meta (
+CREATE TABLE public.meta (
   var varchar(50),
   val varchar(250)
 );
-INSERT INTO meta VALUES ('db-version', '2.6');
-INSERT INTO meta VALUES ('filter', 'TRUE');
+INSERT INTO public.meta VALUES ('db-version', '2.7');
+INSERT INTO public.meta VALUES ('filter', 'TRUE');
 
 ---
 --- main table
 ---
-CREATE TABLE revision (
+CREATE TABLE public.revision (
   name VARCHAR(95) NOT NULL,
   userid VARCHAR(25) DEFAULT user,
   version INTEGER DEFAULT 0,
@@ -48,56 +51,19 @@ CREATE TABLE revision (
  PRIMARY KEY (name,version,userid)
 );
 
-CREATE INDEX orthkey
-ON revision (orthkey); 
+CREATE INDEX public_orthkey
+ON public.revision (orthkey); 
 
 CREATE UNIQUE INDEX name_modstamp
-ON revision (name,modstamp); 
+ON public.revision (name,modstamp); 
 
-CREATE INDEX revision_name_modstamp ON revision (name, modstamp);
-
-CREATE VIEW revision_view AS
- SELECT
-  lower(name) AS name,
-  userid,
-  version,
-  modstamp,
-  lower(type) AS type,
-  lower(orthography) AS orthography,
-  lower(orthkey) AS orthkey,
-  pronunciation,
-  lower(keyrel) AS keyrel,
-  lower(altkey) AS altkey,
-  lower(alt2key) AS alt2key,
-  lower(keytag) AS keytag,
-  lower(altkeytag) AS altkeytag,
-  lower(compkey) AS compkey,
-  lower(ocompkey) AS ocompkey,
-  complete,
-  semclasses,
-  preferences,
-  classifier,
-  selectrest,
-  jlink,
-  comments,
-  exemplars,
-  usages,
-  lang,
-  country,
-  dialect,
-  domains,
-  genres,
-  register,
-  confidence,
-  source,
-  flags
- FROM revision;
+CREATE INDEX public_revision_name_modstamp ON public.revision (name, modstamp);
 
 ---
 --- multi word entries
 ---
 
-CREATE TABLE multi (
+CREATE TABLE public.multi (
   name VARCHAR(95),
   verb_id VARCHAR(95),
   particle VARCHAR(95),
@@ -106,7 +72,7 @@ CREATE TABLE multi (
 PRIMARY KEY (name)
 );
 
-CREATE VIEW multi_revision AS 
+CREATE VIEW public.revision_multi AS 
 	SELECT 
   multi.name,
   rev.userid,
@@ -144,385 +110,7 @@ CREATE VIEW multi_revision AS
   rev.source,
   rev.flags
 
-	FROM multi LEFT JOIN revision_view AS rev 
+	FROM public.multi LEFT JOIN public.revision AS rev 
 		ON rev.name = multi.verb_id;
 
----
---- table on which queries executed
----
-
-CREATE TABLE current_grammar AS SELECT * FROM revision_view WHERE NULL;
-
-CREATE UNIQUE INDEX current_grammar_name
-ON current_grammar (name); 
-
-CREATE INDEX current_grammar_orthkey
-ON current_grammar (orthkey); 
-
----
---- scratch tables
----
-CREATE TABLE temp AS SELECT * FROM revision_view WHERE NULL;
-CREATE TABLE multi_temp AS SELECT * FROM multi WHERE NULL;
-
-CREATE TABLE scratch (
-  name VARCHAR(95),
-  type VARCHAR(95),
-  orthography VARCHAR(200),
-  orthkey VARCHAR(200),
-  pronunciation VARCHAR(200),
-  keyrel VARCHAR(50),
-  altkey VARCHAR(50),
-  alt2key VARCHAR(50),
-  keytag VARCHAR(50),
-  altkeytag VARCHAR(50),
-  compkey VARCHAR(50),
-  ocompkey VARCHAR(50),
- PRIMARY KEY (name)
-);
-
-CREATE VIEW scratch_revision AS 
-	SELECT 
-  name,
-  NULL::VARCHAR AS userid,
-  NULL::INTEGER AS version,
-  'infinity'::TIMESTAMP AS modstamp,
-  type,
-  orthography,
-  orthkey,
-  NULL::VARCHAR AS pronunciation,
-  keyrel,
-  altkey,
-  alt2key,
-  keytag,
-  altkeytag,
-  compkey,
-  ocompkey,
-
-  NULL::VARCHAR AS complete,
-  NULL::VARCHAR AS semclasses,
-  NULL::VARCHAR AS preferences,
-
-  NULL::VARCHAR AS classifier,
-  NULL::VARCHAR AS selectrest,
-  NULL::VARCHAR AS jlink,
-  NULL::VARCHAR AS comments,
-  NULL::VARCHAR AS exemplars,
-  NULL::VARCHAR AS usages,
-  NULL::VARCHAR AS lang,
-  NULL::VARCHAR AS country,
-  NULL::VARCHAR AS dialect,
-  NULL::VARCHAR AS domains,
-  NULL::VARCHAR AS genres,
-  NULL::VARCHAR AS register,
-
-  NULL::REAL AS confidence,
-
-  'scratch'::VARCHAR AS source,
-  NULL::INTEGER AS flags
-
-	FROM scratch;
-
----
---- sql queries embedded in db
----
-
-CREATE TABLE qry (
-  fn VARCHAR(50),
-  arity int,
-  sql_code VARCHAR(4096),
-PRIMARY KEY (fn)
-);
-
--- arities
-CREATE TABLE qrya (
-  fn VARCHAR(50),
-  arg int,
-  type VARCHAR(50),
-PRIMARY KEY (fn,arg)
-);
-
-INSERT INTO qrya VALUES ( 'test', 0, 'select-list' );
-INSERT INTO qry VALUES 
-       ( 'test', 1, 
-         '$0' );
-
-INSERT INTO qrya VALUES ( 'next-version', 0, 'text');
-INSERT INTO qry VALUES 
-       ( 'next-version', 1, 
-         'SELECT COALESCE(1 + max(version),0) FROM revision_view WHERE (name,user) = ($0,user)');
-
-INSERT INTO qry VALUES 
-       ( 'orthography-set', 0, 
-         'SELECT DISTINCT orthography FROM current_grammar' );
-
-INSERT INTO qry VALUES 
-       ( 'lex-id-set', 0, 
-         'SELECT DISTINCT name FROM current_grammar');
-
-INSERT INTO qrya VALUES ( 'lookup-word', 0, 'text' );
-INSERT INTO qry VALUES 
-       ( 'lookup-word', 1, 
-         'SELECT name FROM current_grammar WHERE orthkey=$0' );
-
-INSERT INTO qrya VALUES ( 'lookup-general', 0, 'select-list' );
-INSERT INTO qrya VALUES ( 'lookup-general', 1, 'text' );
-INSERT INTO qry VALUES 
-       ( 'lookup-general', 2, 
-         'SELECT name FROM current_grammar WHERE $0 = $1' );
-
-INSERT INTO qrya VALUES ( 'lookup-general-null', 0, 'select-list' );
-INSERT INTO qry VALUES 
-       ( 'lookup-general-null', 1,
-         'SELECT name FROM current_grammar WHERE $0 IS NULL' );
-
-INSERT INTO qrya VALUES ( 'retrieve-entries-by-orthkey', 0, 'select-list' );
-INSERT INTO qrya VALUES ( 'retrieve-entries-by-orthkey', 1, 'text' );
-INSERT INTO qry VALUES 
-       ( 'retrieve-entries-by-orthkey', 2, 
-         'SELECT $0 FROM current_grammar WHERE orthkey=$1' );
-
-INSERT INTO qrya VALUES ( 'retrieve-entry', 0, 'select-list' );
-INSERT INTO qrya VALUES ( 'retrieve-entry', 1, 'text' );
-INSERT INTO qry VALUES 
-       ( 'retrieve-entry', 2, 
-         'SELECT $0 FROM current_grammar WHERE name=$1' );
-
-INSERT INTO qrya VALUES ( 'initialize-current-grammar', 0, 'where-subcls' );
-INSERT INTO qry VALUES 
-       ( 'initialize-current-grammar', 1, 
-'
-DROP VIEW active;
-DROP VIEW revision_active;
-DROP VIEW revision_filtered_union_scratch_revision;
-DROP VIEW revision_filtered;
-DROP VIEW multi_revision_active;
-DROP VIEW multi_revision_filtered;
-
-CREATE VIEW revision_filtered
-AS SELECT * 
-     FROM revision_view
-     WHERE flags = 1
-      AND $0;
-
-CREATE VIEW revision_filtered_union_scratch_revision
-AS SELECT * FROM revision_filtered 
-   UNION 
-   SELECT * FROM scratch_revision;
-
-CREATE VIEW revision_active
- AS SELECT rev.*
- FROM 
-  (revision_filtered_union_scratch_revision AS rev
-  NATURAL JOIN 
-   (SELECT name, max(modstamp) AS modstamp 
-     FROM revision_filtered_union_scratch_revision
-     GROUP BY name) AS t1
-); 
-
-CREATE VIEW multi_revision_filtered
-AS SELECT * 
-     FROM multi_revision
-     WHERE flags = 1
-      AND $0;
-
-CREATE VIEW multi_revision_active
- AS SELECT rev.* 
- FROM 
-  (multi_revision_filtered AS rev 
-  NATURAL JOIN 
-   (SELECT name, max(modstamp) AS modstamp 
-     FROM multi_revision_filtered
-      GROUP BY name) AS t1
-); 
-
-CREATE VIEW active
- AS SELECT * FROM revision_active 
-  UNION SELECT * FROM multi_revision_active;
-
-UPDATE meta SET val=$0:text WHERE var=''filter'';
-
-VACUUM ANALYZE revision; 
-BEGIN; 
-DELETE FROM current_grammar; 
-INSERT INTO current_grammar SELECT * FROM active; 
-COMMIT; 
-CLUSTER current_grammar_name ON current_grammar; 
-VACUUM ANALYZE current_grammar;
-' );
-
-INSERT INTO qry VALUES 
-       ( 'update-current-grammar', 0, 
-	'BEGIN;
-DELETE FROM temp;
-INSERT INTO temp 
- (SELECT * FROM active 
-   WHERE modstamp >= 
-    (SELECT max(modstamp) FROM current_grammar)); 
-DELETE FROM current_grammar 
- WHERE name IN 
-  (SELECT name FROM temp); 
-INSERT INTO current_grammar
- (SELECT * FROM temp); 
-COMMIT;');
-
-INSERT INTO qrya VALUES ( 'update-entry', 0, 'text' );
-INSERT INTO qrya VALUES ( 'update-entry', 1, 'select-list' );
-INSERT INTO qrya VALUES ( 'update-entry', 2, 'value-list' );
-INSERT INTO qry VALUES 
-       ( 'update-entry', 3, 
-       '
-INSERT INTO revision (name, $1) VALUES ($0, $2); 
-DELETE FROM current_grammar 
- WHERE name=$0; 
-INSERT INTO current_grammar 
- SELECT * FROM active
-  WHERE name = $0
-   LIMIT 1;' );
-
-INSERT INTO qrya VALUES ( 'update-entry-scratch', 0, 'text' );
-INSERT INTO qrya VALUES ( 'update-entry-scratch', 1, 'select-list' );
-INSERT INTO qrya VALUES ( 'update-entry-scratch', 2, 'value-list' );
-INSERT INTO qry VALUES 
-       ( 'update-entry-scratch', 3, 
-       '
-INSERT INTO scratch (name, $1) VALUES ($0, $2); 
-DELETE FROM current_grammar 
- WHERE name=$0; 
-INSERT INTO current_grammar 
- SELECT * FROM active
-  WHERE name = $0
-   LIMIT 1;' );
-
-INSERT INTO qry VALUES 
-       ( 'clear-scratch', 0, 
-       '
-DELETE FROM scratch;
-       ' );
-
-INSERT INTO qrya VALUES ( 'merge-into-db', 0, 'text' );
-INSERT INTO qry VALUES 
-       ( 'merge-into-db', 1, 
-       '
-DELETE FROM temp;
-COPY temp FROM $0 DELIMITERS '','' WITH NULL AS '''';
-INSERT INTO revision 
- (SELECT temp.* FROM (new_pkeys NATURAL JOIN temp));
-       ' );
-
-INSERT INTO qrya VALUES ( 'add-to-db', 0, 'text' );
-INSERT INTO qry VALUES 
-       ( 'add-to-db', 1, 
-       '
-DELETE FROM temp;
-COPY temp FROM $0 DELIMITERS '','' WITH NULL AS '''';
-INSERT INTO revision 
-  (SELECT * FROM temp);
-       ' );
-
-INSERT INTO qrya VALUES ( 'merge-multi-into-db', 0, 'text' );
-INSERT INTO qry VALUES 
-       ( 'merge-multi-into-db', 1, 
-       '
-DELETE FROM multi_temp;
-COPY multi_temp FROM $0 DELIMITERS '','';
-DELETE FROM multi WHERE name IN (SELECT name FROM multi_temp);
-INSERT INTO multi
- (SELECT * FROM multi_temp);
-       ' );
-
-INSERT INTO qrya VALUES ( 'dump-db', 0, 'text' );
-INSERT INTO qry VALUES 
-       ( 'dump-db', 1, 
-       '
-DELETE FROM temp;
-INSERT INTO temp
- (SELECT * FROM revision ORDER BY name, userid, version);
-COPY temp TO $0 DELIMITERS '','' WITH NULL AS '''';
-' );
-
-INSERT INTO qrya VALUES ( 'dump-multi-db', 0, 'text' );
-INSERT INTO qry VALUES 
-       ( 'dump-multi-db', 1, 
-       '
-DELETE FROM multi_temp;
-INSERT INTO multi_temp
- (SELECT * FROM multi ORDER BY name);
-COPY multi_temp TO $0 DELIMITERS '','';
-' );
-
-INSERT INTO qrya VALUES ( 'value-set', 0, 'select-list' );
-INSERT INTO qry VALUES 
-       ( 'value-set', 1, 
-       'SELECT DISTINCT $0 FROM revision WHERE $0 IS NOT NULL;' );
-
----
---- views
----
-
-CREATE VIEW active AS SELECT * FROM revision_view WHERE NULL;
-CREATE VIEW revision_active AS SELECT * FROM revision_view WHERE NULL;
-CREATE VIEW revision_filtered AS SELECT * FROM revision_view WHERE NULL;
-CREATE VIEW revision_filtered_union_scratch_revision AS SELECT * FROM revision_view WHERE NULL;
-CREATE VIEW multi_revision_active AS SELECT * FROM revision_view WHERE NULL;
-CREATE VIEW multi_revision_filtered AS SELECT * FROM revision_view WHERE NULL;
-
-CREATE VIEW new_pkeys 
-       AS SELECT t2.* from 
-          ((SELECT name,userid,version FROM revision_view) t1 
-           RIGHT OUTER JOIN 
-           (SELECT name,userid,version FROM temp) t2 
-           USING (name,userid,version))
-            where t1.name IS NULL;
-
----
---- definition table
----
-
--- DROP TABLE defn CASCADE;
-
-CREATE TABLE defn (
-  mode VARCHAR(50),
-  slot VARCHAR(50),
-  field VARCHAR(50),
-  path VARCHAR(255),
-  type VARCHAR(20),
-PRIMARY KEY (mode,slot, field)
-);
-
-DELETE FROM defn WHERE mode = 'erg';
-INSERT INTO defn VALUES ( 'erg', 'id', 'name', '', 'symbol' );
-INSERT INTO defn VALUES ( 'erg', 'orth', 'orthography', '', 'string-list' );
-INSERT INTO defn VALUES ( 'erg', 'unifs', 'type', 'nil', 'symbol' );
-INSERT INTO defn VALUES ( 'erg', 'unifs', 'orthography', '(stem)', 'string-fs' );
-INSERT INTO defn VALUES ( 'erg', 'unifs', 'keyrel', '(synsem local keys key)', 'symbol' );
-INSERT INTO defn VALUES ( 'erg', 'unifs', 'keytag', '(synsem local keys key carg)', 'string' );
-INSERT INTO defn VALUES ( 'erg', 'unifs', 'altkey', '(synsem local keys altkey)', 'symbol' );
-INSERT INTO defn VALUES ( 'erg', 'unifs', 'altkeytag', '(synsem local keys altkey carg)', 'string' );
-INSERT INTO defn VALUES ( 'erg', 'unifs', 'alt2key', '(synsem local keys alt2key)', 'symbol' );
-INSERT INTO defn VALUES ( 'erg', 'unifs', 'compkey', '(synsem lkeys --compkey)', 'symbol' );
-INSERT INTO defn VALUES ( 'erg', 'unifs', 'ocompkey', '(synsem lkeys --ocompkey)', 'symbol' );
-
-
-DELETE FROM defn WHERE mode = 'mwe';
-INSERT INTO defn VALUES ( 'mwe', 'id', 'name', '', 'symbol' );
-INSERT INTO defn VALUES ( 'mwe', 'orth', 'orthography', '', 'string-list' ); 
-INSERT INTO defn VALUES ( 'mwe', 'unifs', 'type', 'nil', 'symbol' );
-INSERT INTO defn VALUES ( 'mwe', 'unifs', 'orthography', '(orth)', 'string-diff-fs' ); -- DIFF LIST
-INSERT INTO defn VALUES ( 'mwe', 'unifs', 'keyrel', '(sem hook keypred)', 'mixed' );
-INSERT INTO defn VALUES ( 'mwe', 'unifs', 'compkey', '(sem keys --compkey)', 'symbol' );
-INSERT INTO defn VALUES ( 'mwe', 'unifs', 'ocompkey', '(sem keys --ocompkey)', 'symbol' );
-
-DELETE FROM defn WHERE mode = 'erg2';
-INSERT INTO defn VALUES ( 'erg2', 'id', 'name', '', 'symbol' );
-INSERT INTO defn VALUES ( 'erg2', 'orth', 'orthography', '', 'string-list' );
-INSERT INTO defn VALUES ( 'erg2', 'unifs', 'type', 'nil', 'symbol' );
-INSERT INTO defn VALUES ( 'erg2', 'unifs', 'orthography', '(stem)', 'string-fs' );
-INSERT INTO defn VALUES ( 'erg2', 'unifs', 'keyrel', '(synsem lkeys keyrel pred)', 'mixed' );
-INSERT INTO defn VALUES ( 'erg2', 'unifs', 'keytag', '(synsem lkeys keyrel carg)', 'string' ); 
-INSERT INTO defn VALUES ( 'erg2', 'unifs', 'altkey', '(synsem lkeys altkeyrel pred)', 'mixed' );
-INSERT INTO defn VALUES ( 'erg2', 'unifs', 'altkeytag', '(synsem lkeys altkeyrel carg)', 'string' );
-INSERT INTO defn VALUES ( 'erg2', 'unifs', 'alt2key', '(synsem lkeys alt2keyrel pred)', 'mixed' );
-INSERT INTO defn VALUES ( 'erg2', 'unifs', 'compkey', '(synsem lkeys --compkey)', 'symbol' );
-INSERT INTO defn VALUES ( 'erg2', 'unifs', 'ocompkey', '(synsem lkeys --ocompkey)', 'symbol' );
 

@@ -47,9 +47,9 @@
                       lkb::command-merge-into-psql-lexicon
                       lkb::command-dump-psql-lexicon
                       lkb::command-export-lexicon-to-tdl
-                      lkb::command-load-scratch-lex
-                      lkb::command-clear-scratch-lex
-                      lkb::command-merge-tdl-into-psql-lexicon		      
+                      lkb::command-load-tdl-to-scratch
+                      lkb::command-clear-scratch
+                      lkb::command-commit-scratch		      
                       lkb::command-set-filter-psql-lexicon		      
                       ;; generate
                       lkb::show-gen-result
@@ -334,18 +334,18 @@
                                   ;:available-p :always
 				  )
                   #+:psql
-                  (make-menu-item :name "Load scratch"
-                                  :value 'command-load-scratch-lex
+                  (make-menu-item :name "Load TDL entries"
+                                  :value 'command-load-tdl-to-scratch
                                   ;:available-p :always
 				  )
                   #+:psql
                   (make-menu-item :name "Commit scratch"
-                                  :value 'command-merge-tdl-into-psql-lexicon
+                                  :value 'command-commit-scratch
                                   ;:available-p :always
 				  )
                   #+:psql
                   (make-menu-item :name "Clear scratch"
-                                  :value 'command-clear-scratch-lex
+                                  :value 'command-clear-scratch
                                   ;:available-p :always
 				  )
                   )

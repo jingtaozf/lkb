@@ -54,8 +54,8 @@
 		(link lex lexicon)))
 	  lexicon-list))
 
-(defmethod clear-cache ((lexicon lex-database))
-  (clrhash (slot-value lexicon 'lexical-entries)))
+;(defmethod clear-cache ((lexicon lex-database))
+;  (clrhash (slot-value lexicon 'lexical-entries)))
 
 (defmethod link ((sub-lexicon lex-database) (lexicon lex-database))
   (if (eq sub-lexicon lexicon)
@@ -251,7 +251,6 @@
     ;; per-grammar basis
 
     (set-lexical-entry *lexicon-in* orth-string lex-id 
-    ;(set-lexical-entry *lexicon* orth-string lex-id 
 		       (make-lex-entry
 			:orth orth-string
 			:infl-pos infl-pos                  

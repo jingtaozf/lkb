@@ -55,6 +55,10 @@
 
     ;;
     ;; level 1
+    (define-key map [menu-bar LexDB view-scratch]
+      '(menu-item "View scratch" lexdb-view-scratch 
+		  :keys "M-v"
+		  :enable (cle-eval-lexdb 'connection)))
     (define-key map [menu-bar LexDB next-id]
       '(menu-item "Next id" lexdb-advance-id 
 		  :keys "M-n"
@@ -87,6 +91,7 @@
 
 (defun make-lexdb-keymap nil
   (let ((map (make-sparse-keymap)))
+    (define-key map "\M-v" 'lexdb-view-scratch)
     (define-key map "\C-l" 'lexdb-load-record)
     (define-key map "\C-c" 'lexdb-commit-record)
     (define-key map "\C-n" 'lexdb-normalize-buffer)
@@ -158,6 +163,10 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (interactive)
   (lexdb-advance-id-aux))
 
+(defun lexdb-view-scratch ()
+  (interactive)
+  (lexdb-view-scratch-aux))
+
 (defun lexdb-search-field-val (val-str)
   (interactive 
    (list 
@@ -185,12 +194,18 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
     (princ *lexdb-active-id-ring*)
     t))
     
+(defun lexdb-view-scratch-aux nil
+  (let ((filename "~/tmp/lexdb-scratch.csv"))
+    (cle-dump-scratch filename)
+    (find-file filename)))    
 
 (defun lexdb-commit-record-aux (buffer)
   (let* ((record (lexdb-read-record-buffer buffer)))
     (lexdb-display-record record buffer)
     (when (y-or-n-p "Confirm commit record: ")
       (lexdb-store-record (car record))
+      (with-current-buffer buffer
+	(rename-buffer (cdr (assoc :name (car record)))))
       t)))
 
 (defun lexdb-complete-field-aux nil
@@ -463,3 +478,6 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 		 field-kw
 		 val-str))
   
+(defun cle-dump-scratch (filename)
+  (cle-eval (format "(dump-scratch \"%s\")" (cle-force-str filename))))
+

@@ -56,6 +56,8 @@
 (defvar *export-multi-separately* nil)
 (defvar *export-multi-stream* t)
 
+(defvar *user-temp-dir* (make-pathname :directory (pathname-directory (lkb-tmp-dir))))
+
 (defun get-postgres-temp-filename nil
   (setf *postgres-temp-filename*
     (format nil "~a.~a" "/tmp/postgres-temp" (sys:user-name))))
@@ -316,48 +318,6 @@
     (when (unification-p unification)
       (extract-value-from-unification unification))))
 
-;;;
-;;; tdl export (unpacked)
-;;;
-
-;(defmethod to-unpacked-tdl ((unif unification))
-;  (let ((lhs (unification-lhs unif))
-;	(rhs (unification-rhs unif)))
-;  (format nil "~a ~a"
-;    (str-list-2-str (path-typed-feature-list lhs) ".")
-;    (tdl-val-str (u-value-type rhs)))))
-
-;(defun unifs-to-unpacked-tdl (unifs)
-;  (format 
-;   nil "~a &~%  [ ~a ]."
-;   (str-list-2-str 
-;    (mapcar 'to-unpacked-tdl
-;	    (remove-if (lambda (x) (path-typed-feature-list (unification-lhs x))) 
-;		       unifs))
-;    "&~%    ")
-;   (str-list-2-str 
-;    (mapcar 'to-unpacked-tdl
-;	    (remove-if-not (lambda (x) (path-typed-feature-list (unification-lhs x))) 
-;			   unifs))
-;    ",~%    ")))
-
-;(defmethod to-unpacked-tdl ((x lex-entry))
-;  (format 
-;   nil "~a := ~a~%~%"
-;   (tdl-val-str (lex-entry-id x))
-;   (unifs-to-unpacked-tdl (lex-entry-unifs x))))
-	  
-;(defmethod export-to-unpacked-tdl ((lexicon lex-database) stream)
-;  (mapc
-;   #'(lambda (x) (format stream "~a" (to-unpacked-tdl (read-psort lexicon x))))
-;   (collect-psort-ids lexicon)))
-
-;(defmethod export-to-unpacked-tdl-to-file ((lexicon lex-database) filename)
-;  (setf filename (namestring (pathname filename)))
-;  (with-open-file 
-;      (ostream filename :direction :output :if-exists :supersede)
-;    (export-to-unpacked-tdl lexicon ostream)))
- 
 (defun tdl-val-str (symb)
   (cond
    ((null symb) "")
@@ -788,7 +748,9 @@
   (mapc
    #'(lambda (x) (to-db (read-psort lexicon x :recurse nil) output-lexicon))
    (collect-psort-ids lexicon :recurse nil))
-  (fn-get-records output-lexicon ''initialize-current-grammar (get-filter output-lexicon)))
+  (build-current-grammar *psql-lexicon*)
+  ;;(fn-get-records output-lexicon ''initialize-current-grammar (get-filter output-lexicon))
+  )
 
 (defmethod to-db ((x lex-entry) (lexicon psql-lex-database))  
   (let* ((fields-map (fields-map lexicon))
@@ -832,65 +794,18 @@
 	   :lang *current-lang*
 	   :source (extract-pure-source-from-source *current-source*)
 	   :confidence 1
-	   :flags 1)
+	   )
 	  ))
     (cond
      ((= total (length (lex-entry-unifs x)))
       (set-lex-entry lexicon psql-le)
-      (clear-cache lexicon))
+      (empty-cache lexicon))
      (t
       (format t "~%skipping super-rich entry: `~a'~%"  name)
       nil))))
 
 (defun get-orthkey (orth-list)
   (car (last orth-list)))
-
-(defmethod to-db-scratch ((x lex-entry) (lexicon psql-lex-database))  
-  (let* ((fields-map (fields-map lexicon))
-
-	 (keyrel (extract-field x :keyrel fields-map))      
-	 (keytag (extract-field x :keytag fields-map))
-	 (altkey (extract-field x :altkey fields-map))
-	 (altkeytag (extract-field x :altkeytag fields-map))
-	 (alt2key (extract-field x :alt2key fields-map))
-	 (compkey (extract-field x :compkey fields-map))
-	 (ocompkey (extract-field x :ocompkey fields-map))
-	 
-	 (orth-list (extract-field2 x :orth nil "list"))
-	 (name (extract-field x :name fields-map))
-	 (count (+ 2 (length orth-list)))
-	 (total (+ count
-		   (if (string> keyrel "") 1 0)
-		   (if (string> keytag "") 1 0) 
-		   (if (string> altkey "") 1 0)
-		   (if (string> altkeytag "") 1 0)
-		   (if (string> alt2key "") 1 0) 
-		   (if (string> compkey "") 1 0) 
-		   (if (string> ocompkey "") 1 0)))
-	 
-	 (type (extract-field x :type fields-map))
-	 
-	 (psql-le
-	  (make-instance-psql-lex-entry
-	   :name name
-	   :type type
-	   :orthography orth-list
-	   :orthkey (get-orthkey orth-list)
-	   :keyrel keyrel
-	   :altkey altkey
-	   :alt2key alt2key
-	   :keytag keytag
-	   :altkeytag altkeytag
-	   :compkey compkey
-	   :ocompkey ocompkey
-	   :flags 1)))
-    (cond
-     ((= total (length (lex-entry-unifs x)))
-      (set-lex-entry-scratch lexicon psql-le))
-     (t
-      (format t "~%skipping super-rich entry: `~a'~%"  name)
-      nil))))
-
 (defun get-current-source nil
   (cond
    ((boundp '*grammar-version*)
@@ -923,16 +838,31 @@
 ;; assumes *lexicon* eq *psql-lexicon*
 (defun load-scratch-lex (&key filename)
   (let ((lexicon (create-empty-cdb-lex)))
-    (link *psql-lexicon* lexicon)
-    (setf *lexicon* lexicon))
-    (load-lex *lexicon* :filename filename)
-    (setf *scratch-tdl-file* filename))
+    (load-lex lexicon :filename filename)
+    lexicon))
 
-;; assumes *psql-lexicon* part-of (scratch) *lexicon*
+(defun build-current-grammar (lexicon)
+  (fn-get-records  lexicon ''build-current-grammar)
+  (empty-cache lexicon))
+  
+
 (defun clear-scratch-lex nil
-  (clear-lex *lexicon* :in-isolation t :no-delete t)
-  (unlink *psql-lexicon* *lexicon*)
-  (setf *lexicon* *psql-lexicon*)
-  (setf *scratch-tdl-file* nil)
+  (fn-get-val *psql-lexicon* ''clear-scratch)
+  (build-current-grammar *psql-lexicon*)
+  ;;  (fn-get-records  *psql-lexicon* ''build-current-grammar)
+;;  (empty-cache *psql-lexicon*)
+  )
+
+(defun clear-scratch2-lex nil
+  (format t "~%clearing scratch")
+  (time (fn-get-records *psql-lexicon* ''clear-scratch2))
+  (format t "~%clustering current_grammar")
+  (time (fn-get-records *psql-lexicon* ''cluster-current-grammar))
+  (empty-cache *psql-lexicon*)
+  )
+
+(defun commit-scratch-lex nil
+  (fn-get-val *psql-lexicon* ''commit-scratch)
+  (empty-cache *psql-lexicon*)
   )
 
