@@ -39,7 +39,8 @@
 (defun clear-grammar nil
   (when (fboundp 'clear-generator-grules)
     (funcall 'clear-generator-grules))
-  (clrhash *rules*))
+  (clrhash *rules*)
+  (setf *arules* nil))
 
 (defun clear-lex-rules nil
   (when (fboundp 'reset-cached-lex-entries)
