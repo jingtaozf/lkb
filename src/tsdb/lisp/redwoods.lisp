@@ -437,7 +437,7 @@
       (let ((status (lkb::set-up-compare-frame frame lkb::*parse-record*)))
         (unless (eq status :skip)
           (process-add-arrest-reason *current-process* :wait)))
-
+      
       (let* ((decisions (lkb::compare-frame-decisions frame))
              (status (lkb::decision-type (first decisions)))
              (recent (second decisions)))

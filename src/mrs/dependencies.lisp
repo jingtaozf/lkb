@@ -317,11 +317,19 @@
       unless (or (ed-bleached-p ed) (null (ed-arguments ed))) do
         (unless (ed-walk ed) (return ed))))
 
-(defun ed-walk (ed &optional (start (ed-id ed) startp))
-  (unless (and startp (eq (ed-id ed) start))
+(defun ed-walk (ed &optional (start (list (ed-id ed)) startp))
+  ;;
+  ;; _fix_me_
+  ;; on certain platforms (notably Linux), Allegro CL 6.2 will fail to detect a
+  ;; stack overflow in (certain) recursive functions; this was pointed out to
+  ;; Franz as [spr27625] in apr-03, and soon my favourite tech person, Lois Wolf,
+  ;; suggested to make those function not-inline.                (19-may-03; oe)
+  ;;
+  (declare (notinline foo))
+  (unless (and startp (member (ed-id ed) start))
     (loop
         for (role . value) in (unless (ed-bleached-p ed) (ed-arguments ed))
         when (ed-p value) do
           (setf role role)
-          (unless (ed-walk value start) (return nil))
+          (unless (ed-walk value (adjoin (ed-id ed) start)) (return nil))
         finally (return t))))
