@@ -1232,7 +1232,7 @@
                           `(complete-run
                             (quote ,(pairlis '(:context :gc-strategy)
                                              (list context gc-strategy)))
-                            :custom custom)
+                            :custom ,custom)
                           1
                           :key :complete-run
                           :verbose nil
