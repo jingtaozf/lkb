@@ -26,6 +26,8 @@
 
 (defparameter %redwoods-items-increment% 100)
 
+(defparameter %redwoods-items-percentile% 20)
+
 (defparameter %model% nil)
 
 (defun browse-trees (&optional (data *tsdb-data*)
@@ -281,6 +283,12 @@
                                        (reconstruct derivation mode)
                                        (when mrs 
                                          (reconstruct-mrs id mrs i-length))))
+                        ;;
+                        ;; _fix_me_
+                        ;; this seems overly robust: issue a warning message
+                        ;; whenever we fail to reconstruct an edge.
+                        ;;                                      7-jun-04; oe)
+                        ;;
                         when edge do 
                           (setf (lkb::edge-foo edge) id)
                           (setf (lkb::edge-bar edge) derivation)
@@ -2434,6 +2442,7 @@
   (cond
    ((consp sources)
     (loop
+        with *tsdb-connection-expiry* = 50
         with model = (or model 
                          (case type
                            ((:mem :tag)
@@ -2456,6 +2465,7 @@
           (train (first sources) nil :condition condition :type type
                  :model model :estimatep (null (rest sources))
                  :verbose verbose :stream stream :meter rmeter)
+          (purge-profile-cache (first sources))
         finally
           (when verbose
             (format stream "train(): exporting ~a~%" model))
@@ -2472,7 +2482,18 @@
         with items = (select "i-id" :integer "item" nil sources :sort :i-id)
         with first = (get-field :i-id (first items))
         with last = (get-field :i-id (first (last items)))
-        with delta = %redwoods-items-increment%
+        with delta = (if (numberp %redwoods-items-percentile%)
+                       (or
+                        (loop
+                            with i = (ceiling
+                                      (length items)
+                                      %redwoods-items-percentile%)
+                            for item in items
+                            when (<= (decf i) 0)
+                            return (max %redwoods-items-increment%
+                                        (- (get-field :i-id item) first)))
+                        %redwoods-items-increment%)
+                       %redwoods-items-increment%)
         with n = (max (ceiling (- last first) delta) 1)
         with increment = (when meter (/ (mduration meter) n))
         for i from 1 to n

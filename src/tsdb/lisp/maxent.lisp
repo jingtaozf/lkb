@@ -20,6 +20,10 @@
 
 (defparameter *maxent-random-sample-size* 1000)
 
+(defparameter *maxent-iterations* 100)
+
+(defparameter *maxent-relative-tolerance* 0.0001)
+
 (defparameter *maxent-options*
   '(*maxent-collapse-irules-p*
     *maxent-use-preterminal-types-p*
@@ -308,7 +312,7 @@
 			     (reconstruct derivation nil)))
 	    for event = (when edge (edge-to-event edge model))
 	    while (or (not sample) 
-                      (<= i *maxent-random-sample-size*))		  
+                      (< i (+ *maxent-random-sample-size* (length active))))
 	    when (and derivation (null edge)) do
 	      (format
 	       stream
@@ -333,8 +337,10 @@
 	  (let* ((out (format nil "/tmp/.mem.~a.mew" (current-user)))
 		 (command (format 
 			   nil 
-			   "estimate -events_in ~a -params_out ~a"
-			   (mem-file model) out))
+			   "estimate -events_in ~a -params_out ~a~
+                              ~@[ -max_it ~a~]~@[ -frtol ~a~]"
+			   (mem-file model) out
+                           *maxent-iterations* *maxent-relative-tolerance*))
 		 (output (if *maxent-debug-p* nil "/dev/null")))
 	    (force-output (mem-stream model))
 	    (close (mem-stream model))
