@@ -172,3 +172,12 @@
 (defun lkb-y-or-n-p (strg)
    ;; define so it uses y-or-n-p-dialog 
    (y-or-n-dialog strg :cancel-text nil))
+
+;;;
+
+;;; FIX - add this sometime
+
+(defun show-message-window (message)
+  (declare (ignore message))
+  nil)
+
