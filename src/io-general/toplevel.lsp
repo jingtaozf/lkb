@@ -172,7 +172,7 @@
                         (rule-id rule-entry))))) 
 
 
-(defparameter *last-lex-id* nil)
+(defparameter *last-lex-id* 'kim_1)
         
 
         
@@ -195,7 +195,7 @@
             (unless type-entry
                (format t "~%Type ~A is not defined" type)
                (setf type (ask-user-for-type)))
-            (setf *last-type-name* type)
+            (when type (setf *last-type-name* type))
             (values type show-all-p))))))
 
 
@@ -213,7 +213,7 @@
         (unless lex-entry
           (format t "~%~A is not defined" lex)
           (setf lex (ask-user-for-lex)))
-        (setf *last-lex-id* lex)
+        (when lex (setf *last-lex-id* lex))
         lex))))
 
 (defun ask-user-for-psort nil
@@ -228,7 +228,7 @@
             (unless lex-entry
                (format t "~%~A is not defined" lex)
                (setf lex (ask-user-for-lex)))
-            (setf *last-lex-id* lex)
+            (when lex (setf *last-lex-id* lex))
             lex))))
 
 (defparameter *last-rule-id* 'head-specifier-rule)
@@ -244,7 +244,7 @@
     (let ((possible-name
            (with-package (:lkb)
              (ask-for-lisp-movable "Current Interaction" 
-                                   `(("Rule name" . ,*last-rule-id*)) 
+                                   `(("Rule?" . ,*last-rule-id*)) 
                                    150 rule-names))))
       (when possible-name
 	(let* ((name (car possible-name))
@@ -252,7 +252,7 @@
 	  (unless rule-entry
 	    (format t "~%~A is not defined" name)
 	    (setf rule-entry (ask-user-for-rule)))
-	  (setf *last-rule-id* name)
+	  (when name (setf *last-rule-id* name))
 	  rule-entry)))))
 
 (defparameter *last-lex-rule-id* '3rd-sing-verb_infl_rule)
@@ -276,15 +276,15 @@
 	  (unless rule-entry 
 	    (format t "~%Lexical rule ~A is not defined" name)
 	    (setf rule-entry (ask-user-for-lexical-rule)))
-	  (setf *last-lex-rule-id* name)
+	  (when name (setf *last-lex-rule-id* name))
 	  rule-entry)))))
 
-(defparameter *last-word* nil)
+(defparameter *last-word* "Kim")
 
 (defun ask-user-for-word nil
    (let ((possible-name
             (ask-for-strings-movable "Current Interaction" 
-               `(("word" . 
+               `(("Word?" . 
                      ,(or *last-word* 
                         (car (lex-words *lexicon*))))) 150)))
       (when possible-name
@@ -293,7 +293,7 @@
                   (if (stringp lex)
                      lex
                      (format nil "~S" lex))))
-            (setf *last-word* lex-string)
+            (when lex-string (setf *last-word* lex-string))
             lex-string))))
 
 
