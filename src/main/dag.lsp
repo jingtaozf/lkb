@@ -383,6 +383,10 @@
    ((not (eq dag1 dag2)) (unify2 dag1 dag2 path)))
   dag1)
 
+(defparameter *recording-constraints-p* nil)
+
+(defvar *type-constraint-list* nil)
+
 (defun unify2 (dag1 dag2 path)
   (multiple-value-bind (new-type constraintp)
       (find-gcsubtype (unify-get-type dag1) (unify-get-type dag2))
@@ -404,6 +408,8 @@
 	      ;; becoming reentrant
 	      (when (and constraintp *unify-wffs*)
 		(let ((constraint (may-copy-constraint-of new-type)))
+                  (when *recording-constraints-p*
+                    (pushnew new-type *type-constraint-list* :test #'eq))
 		  (if  *unify-debug*
 		      (let ((res 
 			     (catch '*fail* (unify1 dag1 constraint path))))
