@@ -151,19 +151,24 @@
                    (delete-file file))
                  result)))))))))
 
-(defun create-cache (data &key (protocol :cooked) (verbose t) schema)
+(defun create-cache (data &key (protocol :cooked) (verbose t) schema allp)
   (if (eq protocol :raw)
     (loop 
         with cache = (pairlis '(:database :count :protocol)
                               (list data 0 protocol))
         with path = (find-tsdb-directory data)
+        with schema = (or schema (read-database-schema data))
         initially (when verbose
                     (format 
                      *tsdb-io*
                      "~&create-cache(): write-through mode for `~a'.~%"
                      data)
                     (force-output *tsdb-io*))
-        for file in *tsdb-profile-files*
+        for file in (if allp
+                      (loop 
+                          for relation in schema
+                          collect (first relation))
+                      *tsdb-profile-files*)
         for key = (intern (string-upcase file) :keyword)
         when (assoc file schema :test #'string=) do
           (let ((stream (open (make-pathname :directory path :name file) 
@@ -410,6 +415,82 @@
                                     (and (search "unique" flags) '(:unique)))))
                       (push field fields)))))
               (push (cons relation (nreverse fields)) schema))))))))
+
+(defun concatenate-profiles (profiles target
+                             &key (condition *statistics-select-condition*))
+  (declare (special *statistics-select-condition*))
+  
+  (when (loop
+            with base = (profile-granularity (first profiles))
+            for profile in (rest profiles)
+            for granularity = (profile-granularity profile)
+            thereis (not (= base granularity)))
+    (return-from concatenate-profiles))
+  
+  (let ((target (find-tsdb-directory target)))
+    #+:allegro
+    (when (probe-file target) (excl:delete-directory-and-files target))
+    (ignore-errors (mkdir target))
+    (let ((source (find-tsdb-directory (first profiles))))
+      (cp (make-pathname :directory source :name "relations")
+          (make-pathname :directory target :name "relations"))))
+  
+  (loop
+      with *print-circle* = nil 
+      with *print-level* = nil 
+      with *print-length* = nil
+      with ofs = *tsdb-ofs*
+      with gc = (install-gc-strategy 
+                 nil :tenure *tsdb-tenure-p* :burst t :verbose t)
+      with schema = (read-database-schema (first profiles))
+      with cache = (create-cache 
+                    target :protocol :raw :verbose t :schema schema :allp t)
+      with special = '(:i-id :run-id :parse-id)
+      for profile in profiles
+      for offset from 0 by 10000
+      for schema = (read-database-schema profile)
+      do
+        (loop
+            for (relation . structure) in schema
+            for key = (first (find :key structure :key #'third))
+            for fields = (loop 
+                             for foo in structure collect (first foo))
+            for types = (loop 
+                            for foo in structure collect (second foo))
+            for data = (select 
+                        fields types relation condition profile
+                        :sort (and key (intern (string-upcase key) :keyword)))
+            do
+              (loop
+                  with foo = (intern (string-upcase relation) :keyword)
+                  with stream = (get-field foo cache)
+                  for tuple in data
+                  do
+                    (loop
+                        with firstp = t
+                        for field in fields
+                        for type in types
+                        for key = (intern (string-upcase field) :keyword)
+                        for value = (if (smember key special)
+                                      (+ (get-field key tuple) offset)
+                                      (get-field key tuple))
+                        when firstp do 
+                          (setf firstp nil) 
+                        else do 
+                           (write-char ofs stream)
+                        when (smember type '(:string :date)) do
+                          (let ((value (normalize-string 
+                                        value :escape t :normalize nil)))
+                            (write-string value stream))
+                        else do 
+                          (write value :stream stream))
+                    (terpri stream)
+                    (force-output stream)
+                    (incf (get-field :count cache))))
+        (purge-profile-cache profile)
+      finally 
+        (flush-cache cache :verbose t)
+        (restore-gc-strategy gc)))
 
 (defun write-run (result language &key cache)
 
@@ -744,7 +825,7 @@
          (*print-length* nil)
          (rawp (and cache (eq (get-field :protocol cache) :raw)))
          (parse-id (get-field :parse-id record))
-         (version (get-field :version record))
+         (t-version (get-field :t-version record))
          (d-state (get-field :d-state record))
          (d-type (get-field :d-type record))
          (d-key (string-trim '(#\Space) (or (get-field :d-key record) "")))
@@ -756,7 +837,7 @@
       (let ((stream (get-field :decision cache))
             (ofs *tsdb-ofs*))
         (write parse-id :stream stream) (write-char ofs stream)
-        (write version :stream stream) (write-char ofs stream)
+        (write t-version :stream stream) (write-char ofs stream)
         (write d-state :stream stream) (write-char ofs stream)
         (write d-type :stream stream) (write-char ofs stream)
         (write-string (or d-key "") stream) (write-char ofs stream)
@@ -769,8 +850,8 @@
         (incf (get-field :count cache)))
       (let ((query (format
                     nil
-                    "insert into decision values ~d ~d ~s ~s ~d ~d ~a"
-                    parse-id d-type (or d-key "") (or d-value "") 
+                    "insert into decision values ~d ~d ~d ~s ~s ~d ~d ~a"
+                    parse-id t-version d-type (or d-key "") (or d-value "") 
                     d-start d-end (or d-date ""))))
         (call-tsdb query data :cache cache)))))
 
@@ -803,7 +884,7 @@
          (*print-length* nil)
          (rawp (and cache (eq (get-field :protocol cache) :raw)))
          (parse-id (get-field :parse-id record))
-         (version (get-field :version record))
+         (t-version (get-field :t-version record))
          (u-matches (get-field+ :u-matches record -1))
          (u-mismatches (get-field+ :u-mismatches record -1))
          (u-decisions (get-field+ :u-decisions record -1))
@@ -817,7 +898,7 @@
       (let ((stream (get-field :update cache))
             (ofs *tsdb-ofs*))
         (write parse-id :stream stream) (write-char ofs stream)
-        (write version :stream stream) (write-char ofs stream)
+        (write t-version :stream stream) (write-char ofs stream)
         (write u-matches :stream stream) (write-char ofs stream)
         (write u-mismatches :stream stream) (write-char ofs stream)
         (write u-decisions :stream stream) (write-char ofs stream)
@@ -826,14 +907,40 @@
         (write u-pin :stream stream) (write-char ofs stream)
         (write u-pout :stream stream) (write-char ofs stream)
         (write u-in :stream stream) (write-char ofs stream)
-        (write u-out :stream stream) (write-char ofs stream)
+        (write u-out :stream stream)
         (terpri stream)
         (force-output stream)
         (incf (get-field :count cache)))
       (let ((query (format
                     nil
-                    "insert into preference values ~
+                    "insert into update values ~
                      ~d ~d ~d ~d ~d ~d ~d ~d ~d ~d ~d"
-                    parse-id version u-matches u-mismatches u-decisions
+                    parse-id t-version u-matches u-mismatches u-decisions
                     u-gin u-gout u-pin u-pout u-in u-out)))
+        (call-tsdb query data :cache cache)))))
+
+(defun write-score (data record &key cache)
+  (let* ((*print-circle* nil)
+         (*print-level* nil)
+         (*print-length* nil)
+         (rawp (and cache (eq (get-field :protocol cache) :raw)))
+         (parse-id (get-field :parse-id record))
+         (result-id (get-field :result-id record))
+         (rank (get-field :rank record))
+         (score (get-field+ :score record "")))
+    (if rawp
+      (let ((stream (get-field :score cache))
+            (ofs *tsdb-ofs*))
+        (write parse-id :stream stream) (write-char ofs stream)
+        (write result-id :stream stream) (write-char ofs stream)
+        (write rank :stream stream) (write-char ofs stream)
+        (write-string score stream)
+        (terpri stream)
+        (force-output stream)
+        (incf (get-field :count cache)))
+      (let ((query (format
+                    nil
+                    "insert into score values ~
+                     ~d ~d ~d ~s"
+                    parse-id result-id rank score)))
         (call-tsdb query data :cache cache)))))

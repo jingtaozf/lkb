@@ -664,7 +664,7 @@
     (list (format nil "~(~A~)" (lkb::edge-category edge))
           (list (lkb::edge-rule edge))))
    (t
-    (let* ((label (lkb::edge-odag edge))
+    (let* ((label (lkb::edge-label edge))
            (children
             (loop
                 for child in (lkb::edge-children edge)

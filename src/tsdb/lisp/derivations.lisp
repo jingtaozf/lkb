@@ -273,6 +273,18 @@
       (setf (gethash id *reconstruct-cache*) edge))
     edge))
 
+(defun qtree (derivation &key (stream t))
+  (let ((root (derivation-root derivation))
+        (daughters (derivation-daughters derivation)))
+    (if (null daughters)
+      (format stream "\\leaf{~a}~%" root)
+      (loop
+          for daughter in daughters
+          do
+            (qtree daughter :stream stream)
+          finally
+             (format stream "\\branch{~d}{~a}~%" (length daughters) root)))))
+
 ;;;
 ;;; install conversion routine and equality predicate for derivations (uniform
 ;;; derivation format --- UDF).

@@ -250,27 +250,37 @@
      ((null update) 0209)
      (t 0210))))
 
-(defun analyze (language &key condition meter message thorough trees extras)
+(defun analyze (data 
+                &key condition meter message thorough trees extras
+                     edgep score gold)
 
   (declare (optimize (speed 3) (safety 0) (space 0)))
 
   (let* ((message (when message
-                    (format nil "retrieving `~a' data ..." language)))
+                    (format nil "retrieving `~a' data ..." data)))
          (extras (and extras t))
          (trees (and trees t))
          (foo (if (consp thorough) (format nil "~{~(~a~)~^#~}" thorough) "t"))
          (key (format 
                nil 
-               "~a @ ~a~@[ # ~a~]~@[~* : trees~]~@[~* : extras~]" 
-               language condition foo trees extras))
-         (relations (read-database-schema language))
+               "~a~@[ @ ~a~]~@[ # ~a~]~@[~* : trees~]~
+                ~@[~* : extras~]~@[ on ~a~]~@[ : edge~]" 
+               data condition foo trees extras
+               (cond
+                ((stringp score) score)
+                (score "itself")
+                (gold (format nil "~a (gold)" gold)))
+               edgep))
+         (relations (read-database-schema data))
          (parse (rest (find "parse" relations :key #'first :test #'string=)))
-         pfields ptypes data)
+         pfields ptypes result)
+    #+:debug
+    (format t "~&analyze(): `~a'~%" key)
     (when meter
       (when message (status :text message))
       (meter :value (get-field :start meter)))
-    (loop while (eq (setf data (gethash key *tsdb-profile-cache*)) :seized))
-    (unless data
+    (loop while (eq (setf result (gethash key *tsdb-profile-cache*)) :seized))
+    (unless result
       (setf (gethash key *tsdb-profile-cache*) :seized)
       (loop
           for field in '("i-id" "parse-id" "readings" 
@@ -314,11 +324,11 @@
                                   (+ (mduration pmeter) 
                                      (mduration rmeter)
                                      (mduration imeter)))))
-               (parse (select pfields ptypes "parse" condition language
+               (parse (select pfields ptypes "parse" condition data
                               :meter pmeter :sort :i-id))
                (item (select '("i-id" "i-input" "i-length" "i-wf")
                              '(:integer :string :integer :integer)
-                             "item" condition language 
+                             "item" condition data 
                              :meter imeter :sort :i-id))
                (results (when thorough
                           (select (append '("parse-id" "result-id")
@@ -328,17 +338,18 @@
                                                          nil 
                                                          "~(~a~)" 
                                                          symbol))))
-                                  nil "result" condition language 
+                                  nil "result" condition data 
                                   :meter rmeter :sort :parse-id)))
                (trees (when trees
                         (select '("parse-id" "t-active" "t-version")
-                                nil "tree" condition language
+                                nil "tree" condition data
                                 :sort :parse-id)))
-               (all (njoin parse item :i-id :meter ameter)))
-          (setf data all)
+               (all (njoin parse item :i-id :meter ameter))
+               sorted)
+          (setf result all)
           (when extras
             (loop
-                for tuple in data
+                for tuple in result
                 for comment = (get-field :comment tuple)
                 for stream = (and comment (make-string-input-stream comment))
                 for extra = (when stream
@@ -352,17 +363,32 @@
           (when results
             (when (consp thorough)
               (loop
+                  with *reconstruct-cache* = (make-hash-table :test #'eql)
                   for field in thorough
                   for reader = (find-attribute-reader field)
-                  when reader
+                  when (or reader edgep)
                   do
                     (loop
                         for result in results
                         for value = (get-field field result)
-                        when value
-                        do 
+                        when (and reader value) do 
                           (setf (get-field field result) 
-                            (funcall reader value)))))
+                            (funcall reader value))
+                        when (and edgep (eq field :derivation)) do
+                          ;;
+                          ;; _fix_me_
+                          ;; move this into rank-items() below, such that only
+                          ;; results that end up ranked have their derivation
+                          ;; reconstructed (and, thus, converted from string to
+                          ;; derivation); this must only be done when ranking
+                          ;; from `gold', presumabyly.        (29-oct-02; oe)
+                          ;;
+                          ;; alternatively, look at reconstruting edges on the
+                          ;; fly, i.e. in the Redwoods PCFG part.
+                          ;;                                  (30-oct-02; oe)
+                          (let* ((value (get-field :derivation result))
+                                 (edge (reconstruct value (eq edgep :full))))
+                            (nconc result (acons :edge edge nil))))))
             ;;
             ;; _fix_me_
             ;; this is sort of hacky: since we fail to guarantee unique parse
@@ -371,10 +397,12 @@
             ;; until we get his fixed, it hard-wires the assumption that we
             ;; will not use the same profile to represent multiple test runs.
             ;;                                          (10-mar-99  -  oe)
+            (unless sorted 
+              (setf sorted 
+                (sort (copy-list all) 
+                      #'< :key #'(lambda (foo) (get-field :parse-id foo)))))
             (loop
-                with all = (copy-list all)
-                for item in (sort all #'< :key #'(lambda (foo)
-                                                   (get-field :parse-id foo)))
+                for item in sorted
                 for key = (get-field :parse-id item)
                 for matches =
                   (when (eql key (get-field :parse-id (first results)))
@@ -384,16 +412,14 @@
                                    (eql key (get-field :parse-id result)))
                         collect (pop results)))
                 when matches
-                     
                 do (nconc item (acons :results matches nil))))
-          ;;
-          ;;
-          ;;
           (when trees
+            (unless sorted 
+              (setf sorted 
+                (sort (copy-list all) 
+                      #'< :key #'(lambda (foo) (get-field :parse-id foo)))))
             (loop
-                with all = (copy-list all)
-                for item in (sort all #'< :key #'(lambda (foo)
-                                                   (get-field :parse-id foo)))
+                for item in sorted
                 for key = (get-field :parse-id item)
                 for tree = (loop
                                with result = nil
@@ -408,14 +434,83 @@
                                    (setf result tree))
                                finally (return result))
                 when tree
-                do (nconc item tree))))
-                  
-        (setf (gethash key *tsdb-profile-cache*) data)))
+                do (nconc item tree)))
+          (when (or score gold)
+            (unless sorted 
+              (setf sorted 
+                (sort (copy-list all) 
+                      #'< :key #'(lambda (foo) (get-field :parse-id foo)))))
+            (rank-items sorted :gold gold :score score :edgep edgep)))
+        
+        (setf (gethash key *tsdb-profile-cache*) result)))
     (when meter 
       (meter :value (get-field :end meter))
       (when message 
         (status :text (format nil "~a done" message) :duration 2)))
-    data))
+    result))
+
+(defun rank-items (items &key gold score edgep)
+
+  (declare (ignore edgep))
+  
+  (loop
+      with scores = (when (and (null gold) (stringp score))
+                      (select '("parse-id" "result-id" "rank")
+                              '(:integer :integer :integer)
+                              "score"
+                              nil
+                              score :sort :parse-id))
+      with golds = (when gold
+                     (select '("parse-id" "t-version" "result-id")
+                             '(:integer :integer :integer)
+                             "preference" 
+                             nil gold :sort :parse-id))
+      for item in items
+      for parse-id = (get-field :parse-id item)
+      for results = (get-field :results item)
+      for matches = (if golds
+                      (let* ((matches (loop
+                                          for foo = (first golds)
+                                          for id = (get-field :parse-id foo)
+                                          while (and id (= parse-id id)) 
+                                          collect (pop golds)))
+                             (version (loop
+                                          for foo in matches
+                                          for bar = (get-field :t-version foo)
+                                          maximize bar)))
+                        (loop
+                            for foo in matches
+                            when (= (get-field :t-version foo) version)
+                            collect (nconc (acons :rank 1 nil) foo)))
+                      (let ((matches (loop
+                                         for score = (first scores)
+                                         for id = (get-field :parse-id score)
+                                         while (and id (= parse-id id)) 
+                                         collect (pop scores))))
+                        (sort matches #'< :key (lambda (foo) 
+                                                 (get-field :rank foo)))))
+      when matches do
+        (loop
+            for match in matches 
+            for id = (get-field :result-id match)
+            for result = (loop
+                             for result in results
+                             for foo = (get-field :result-id result)
+                             thereis (when (= id foo) result))
+            when result do (nconc match result))
+        (nconc item (acons :ranks matches nil))
+      else do
+        (nconc item
+               (unless (or (stringp score) gold)
+                 (let ((results (sort (copy-seq results) #'<
+                                      :key #'(lambda (foo) 
+                                               (get-field :result-id foo)))))
+                   (acons :ranks
+                          (loop
+                              for result in results
+                              for i from 1
+                              collect (acons :rank i result))
+                          nil))))))
 
 (defun analyze-aggregates (language
                            &key condition phenomena extras trees
@@ -568,7 +663,7 @@
 (defun aggregate (&optional (language *tsdb-data*)
                   &key (condition nil)
                        (restrictor nil)
-                       (dimension :i-length)
+                       (dimension *statistics-aggregate-dimension*)
                        (aggregate (or *statistics-aggregate-size* 2))
                        (threshold (or *statistics-aggregate-threshold* 1))
                        (lower (or *statistics-aggregate-lower* 0))
@@ -600,10 +695,12 @@
                                       (+ (* conses 8) (* symbols 24) others)))
                       when (and space (>= space lower))
                       collect (cons (cons :space space) item))
-                  (remove-if #'(lambda (foo)
-                                 (< (get-field dimension foo) lower))
-                             items)))
-         (items (if upper
+                  (if (eq dimension :phenomena)
+                    items
+                    (remove-if #'(lambda (foo)
+                                   (< (get-field dimension foo) lower))
+                               items))))
+         (items (if (and upper (not (eq dimension :phenomena)))
                   (remove-if #'(lambda (foo)
                                  (> (get-field dimension foo) upper))
                              items)
@@ -630,67 +727,69 @@
                     ~@[; lower ~d~]~@[; upper ~d~]] for `~(~a~)' ..."
                    aggregate threshold lower upper dimension)))
     (when meter (status :text message))
-    (when values
-      (let* ((minimum (apply #'min values))
-             (aminimum (floor (/ minimum aggregate)))
-             (maximum (apply #'max values))
-             (amaximum (floor (/ maximum aggregate)))
-             (width (+ (- amaximum aminimum) 1)))
-        (when (> width *statistics-aggregate-maximum*)
-          (let* ((base (/ width *statistics-aggregate-maximum*))
-                 (precision (expt 10 (floor (log base 10))))
-                 (base (* precision (ceiling base precision))))
-            (setf aggregate base
-                  aminimum (floor (/ minimum aggregate))
-                  amaximum (floor (/ maximum aggregate))
-                  width (+ (- amaximum aminimum) 1)))
-          (when meter
-            (beep)
-            (status 
-             :text (format
-                    nil
-                    "invalid (too small) aggregate width; ~
-                     using ~d instead"
-                    aggregate)
-             :duration 10)
-            (sleep 2)))
-        (let ((storage (make-array width :initial-element nil))
-              result)
-          (dolist (item items)
-            (let* ((value (get-field dimension item))
-                   (class (- (floor (/ value aggregate)) aminimum)))
-              (push item (aref storage class))))
-          (dotimes (i (+ (- amaximum aminimum) 1) result)
-            (let* ((data (aref storage i))
-                   (class (* (+ i aminimum) aggregate))
-                   (name (case format
-                           (:latex
-                            (if (= aggregate 1)
-                              (format
-                               nil
-                               "\\multicolumn{1}{|c|} {\\em ~(~a~)\\/ $=$ ~d}"
-                               dimension class)
-                              (format 
-                               nil 
-                               "\\multicolumn{1}{|c|}~
-                                {~d $\\leq$ {\\em ~(~a~)\\/} $<$ ~d}"
-                               class dimension (+ class aggregate))))
-                           (:tcl
-                            (if (= aggregate 1)
-                              (format
-                               nil
-                               "~(~a~) = ~d"
-                               dimension class)
-                              (format
-                               nil
-                               "~(~a~) in [~d .. ~d|"
-                               dimension class (+ class aggregate)))))))
-              (when (>= (length data) threshold)
-                (push (cons class (cons name data)) result))))
-          (when meter 
-            (meter :value (get-field :end meter))
-            (status :text (format nil "~a done" message) :duration 5))
-          result)))))
+    (if (eq dimension :phenomena)
+      (list (cons :all (cons "All" items)))
+      (when values
+        (let* ((minimum (apply #'min values))
+               (aminimum (floor (/ minimum aggregate)))
+               (maximum (apply #'max values))
+               (amaximum (floor (/ maximum aggregate)))
+               (width (+ (- amaximum aminimum) 1)))
+          (when (> width *statistics-aggregate-maximum*)
+            (let* ((base (/ width *statistics-aggregate-maximum*))
+                   (precision (expt 10 (floor (log base 10))))
+                   (base (* precision (ceiling base precision))))
+              (setf aggregate base
+                    aminimum (floor (/ minimum aggregate))
+                    amaximum (floor (/ maximum aggregate))
+                    width (+ (- amaximum aminimum) 1)))
+            (when meter
+              (beep)
+              (status 
+               :text (format
+                      nil
+                      "invalid (too small) aggregate width; ~
+                       using ~d instead"
+                      aggregate)
+               :duration 10)
+              (sleep 2)))
+          (let ((storage (make-array width :initial-element nil))
+                result)
+            (dolist (item items)
+              (let* ((value (get-field dimension item))
+                     (class (- (floor (/ value aggregate)) aminimum)))
+                (push item (aref storage class))))
+            (dotimes (i (+ (- amaximum aminimum) 1) result)
+              (let* ((data (aref storage i))
+                     (class (* (+ i aminimum) aggregate))
+                     (name (case format
+                             (:latex
+                              (if (= aggregate 1)
+                                (format
+                                 nil
+                                 "\\multicolumn{1}{|c|} {\\em ~(~a~)\\/ $=$ ~d}"
+                                 dimension class)
+                                (format 
+                                 nil 
+                                 "\\multicolumn{1}{|c|}~
+                                  {~d $\\leq$ {\\em ~(~a~)\\/} $<$ ~d}"
+                                 class dimension (+ class aggregate))))
+                             (:tcl
+                              (if (= aggregate 1)
+                                (format
+                                 nil
+                                 "~(~a~) = ~d"
+                                 dimension class)
+                                (format
+                                 nil
+                                 "~(~a~) in [~d .. ~d|"
+                                 dimension class (+ class aggregate)))))))
+                (when (>= (length data) threshold)
+                  (push (cons class (cons name data)) result))))
+            (when meter 
+              (meter :value (get-field :end meter))
+              (status :text (format nil "~a done" message) :duration 5))
+            result))))))
 
 (defun aggregate-by-analogy (data analogon
                              &key condition (key :i-id)

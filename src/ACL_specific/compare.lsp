@@ -106,16 +106,19 @@
       (format nil "~{~a~^ ~}" (edge-leaves (first edges)))))
   
   ;;
-  ;; wrap each each into a `ctree' structure, so that we can record additional
+  ;; wrap each edge into a `ctree' structure, so that we can record additional
   ;; information (associated parse tree symbol, CLIM output record, et al.).
   ;;
   (setf (compare-frame-trees frame)
     (loop
-        for i from 0
+        for i from 1
         for edge in edges
+        for id = (if (compare-frame-derivations frame)
+                   (edge-foo edge)
+                   i)
         for symbol = (when *tree-use-node-labels-p*
                        (make-new-parse-tree edge 1 t))
-        for tree = (make-ctree :edge edge :id i :symbol symbol)
+        for tree = (make-ctree :edge edge :id id :symbol symbol)
         collect tree
         when (and *tree-use-node-labels-p* (zerop (mod i 50))) do
           #+:allegro

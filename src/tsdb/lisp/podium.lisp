@@ -179,7 +179,7 @@
      (unless (eq (first (second form)) 'quit) (busy))
      (unwind-protect
       (multiple-value-bind (foo condition)
-       (progn;ignore-errors
+       (ignore-errors
         (let* ((command (second form))
                (action (first command))
                (arguments (rest command))
@@ -431,7 +431,7 @@
            (purge
             (let* ((action (third arguments)))
               (apply #'purge-test-run arguments)
-              (when (member action '(:purge :trees) :test #'eq)
+              (when (member action '(:purge :trees :score) :test #'eq)
                 (send-to-podium "tsdb_update selection" :wait t))))
            
            (relations
@@ -904,7 +904,45 @@
              (format nil "update_ts_list update ~a" (first arguments)) 
              :wait t))
 
-
+         (analyze-scores
+          (let* ((data (first arguments))
+                 (condition 
+                  (when (and *statistics-select-condition*
+                             (not (equal *statistics-select-condition* "")))
+                    *statistics-select-condition*))
+                 (title 
+                  (format 
+                   nil 
+                   "tsdb(1) `~a' Parse Selecton Score~@[ @ `~a'~]"
+                   data condition))
+                 (message "computing table layout and geometry ..."))
+            (apply #'analyze-scores
+                   (append arguments 
+                           (list :file file 
+                                 :format :tcl
+                                 :meter (make-meter 0 1))))
+            (when (probe-file file)
+              (status :text message)
+              (let ((return 
+                      (send-to-podium 
+                       (format 
+                        nil 
+                        "showtable ~s \".~(~a~)\" ~s {~a}" 
+                        file (gensym "") data title)
+                       :wait t)))
+                (cond
+                 ((and (equal (first return) :ok) 
+                       (equal (first (second return)) :table))
+                  (push (append (second return)
+                                (pairlis 
+                                 '(:data :command)
+                                 (list data (cons action arguments))))
+                        *tsdb-podium-windows*)
+                  (status :text (format nil "~a done" message) :duration 2))
+                 (t
+                  (status :text (format nil "~a abort" message) 
+                          :duration 2)))))))
+           
            (latex
             (status :text "generating LaTeX output ...")
             (let* ((window (find-podium-window (second command)))

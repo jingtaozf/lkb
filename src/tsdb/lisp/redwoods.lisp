@@ -87,7 +87,7 @@
         with annotated = (make-array nitems :initial-element 0)
         with position = 0
         initially
-          #-:debug
+          #+:debug
           (setf lkb::%frame% frame)
           (unless strip
             (setf (lkb::compare-frame-chart frame) nil)
@@ -234,8 +234,8 @@
                         for edge = (when derivation
                                      (reconstruct derivation nil))
                         when edge do 
-                          (setf (lkb::edge-score edge) id)
-                          (setf (lkb::edge-parents edge) derivation)
+                          (setf (lkb::edge-foo edge) id)
+                          (setf (lkb::edge-bar edge) derivation)
                           (push edge edges)
                         finally
                           #+:allegro
@@ -245,11 +245,12 @@
                            (current-time :long :short) 
                            (length edges) (length edges))
                           (return (nreverse edges)))))
+           (edges (sort edges #'< :key #'lkb::edge-foo))
            (foo (first edges))
            (start (and foo (lkb::edge-from foo)))
            (end (and foo (lkb::edge-to foo)))
            (decisions (when (and parse-id version)
-                        (select '("parse-id" "version"
+                        (select '("parse-id" "t-version"
                                   "d-state" "d-type" "d-key" "d-value" 
                                   "d-start" "d-end" "d-date")
                                 '(:integer :integer
@@ -258,7 +259,7 @@
                                 "decision" 
                                 (format 
                                  nil 
-                                 "parse-id == ~a && version == ~a" 
+                                 "parse-id == ~a && t-version == ~a" 
                                  parse-id version) 
                                 data)))
            (discriminants (unless strip
@@ -305,7 +306,7 @@
                                    "preference" 
                                    (format 
                                     nil 
-                                    "parse-id == ~a && version == ~a" 
+                                    "parse-id == ~a && t-version == ~a" 
                                     parse-id gversion) 
                                    gold)))
            (gderivation (when (= (length gpreferences) 1)
@@ -330,7 +331,7 @@
                           "~&[~a] browse-tree(): retrieved ~a gold tree~p.~%"
                           (current-time :long :short) 
                           (length gtrees) (length gtrees))
-                         (select '("parse-id" "version"
+                         (select '("parse-id" "t-version"
                                    "d-state" "d-type" "d-key" "d-value" 
                                    "d-start" "d-end" "d-date")
                                  '(:integer :integer
@@ -339,7 +340,7 @@
                                  "decision" 
                                  (format 
                                   nil 
-                                  "parse-id == ~a && version == ~a" 
+                                  "parse-id == ~a && t-version == ~a" 
                                   parse-id gversion) 
                                  gold)))
            (gdiscriminants (when gdecisions
@@ -445,7 +446,7 @@
 
             (loop
                 for edge in edges
-                for id = (when (lkb::edge-p edge) (lkb::edge-score edge))
+                for id = (when (lkb::edge-p edge) (lkb::edge-foo edge))
                 do
                   (write-preference (or strip data)
                                     (pairlis '(:parse-id 
@@ -466,7 +467,7 @@
                              (decode-time time :long :tsdb)
                              (current-time :long :tsdb)))))
               (write-decision data 
-                              (pairlis '(:parse-id :version 
+                              (pairlis '(:parse-id :t-version 
                                          :d-state :d-type :d-key :d-value 
                                          :d-start :d-end :d-date)
                                        (list parse-id version 
@@ -490,7 +491,7 @@
               unless (= state 5)
               do
                 (write-decision data 
-                                (pairlis '(:parse-id :version 
+                                (pairlis '(:parse-id :t-version 
                                            :d-state :d-type :d-key :d-value 
                                            :d-start :d-end :d-date)
                                          (list parse-id version 
@@ -509,7 +510,7 @@
             (when (and update (>= (profile-granularity data) 0210))
               (write-update 
                data (append
-                     (pairlis '(:version :u-decisions :u-in :u-out)
+                     (pairlis '(:t-version :u-decisions :u-in :u-out)
                               (list (or version 1) decisions in out))
                      update)
                :cache cache))))
@@ -989,46 +990,354 @@
         (format stream "~a~%" #\page)
       finally (close stream)))
 
-(defun score-heuristics (&key (profiles '("trees/vm6/ezra/01-07-19"
-                                          "trees/vm13/ezra/01-07-30"
-                                          "trees/vm31/ezra/01-08-03"
-                                          "trees/vm32/ezra/01-07-16"))
-                              (condition *statistics-select-condition*))
-  
-  (loop
-      with tsum = 0 with msum = 0
-      for data in profiles
-      for total = (length (select '("parse-id") nil
-                                  '("parse")
-                                  (format 
-                                   nil 
-                                   "(t-active == 1)~@[ && (~a)~]"
-                                   condition)
-                                  data))
-      for match = (length (select '("parse-id") nil
-                                  '("parse" "preference")
-                                  (format
-                                   nil
-                                   "(t-active == 1 && result-id == 0)~
-                                    ~@[ && (~a)~]"
-                                   condition)
-                                  data))
-      do
-        (incf tsum total) (incf msum match)
-      finally
+(defun analyze-scores (data 
+                       &optional (gold data)
+                       &key (condition *statistics-select-condition*)
+                            spartanp (scorep t) (n 1)  test ambiguityp
+                            file append (format :latex)
+                            meter)
+  (declare (ignore meter))
+
+  (let* ((stream (create-output-stream file append))
+         (aggregates (summarize-scores
+                      data gold :condition condition 
+                      :spartanp spartanp :scorep scorep :n n
+                      :test test :ambiguityp ambiguityp
+                      :format format))
+         (aggregates (nreverse aggregates))
+         (ncolumns 8)
+         (alabel (if (eq *statistics-aggregate-dimension* :phenomena)
+                   "Phenomenon"
+                   "Aggregate"))
+         (caption (format 
+                   nil "(generated by ~a at ~a)"
+                   *tsdb-name* (current-time :long :pretty)))
+         (i 2))
+                   
+    (case format
+      (:latex
         (format
-         t
-         "total: ~d; correct: ~d: ~,2f~%"
-         tsum msum (/ msum tsum))))
+         stream
+         "\\begin{tabular}{@{}|l|c|c|c|c|c|c|c|@{}}~%  ~
+          \\hline~%  ~
+          \\multicolumn{~d}{|c|}~%    {\\bf `~a' ~a Profile}\\\\~%  ~
+          \\hline\\hline~%  ~
+          & {\\bf  total} & {\\bf total} & {\\bf word} & {\\bf parser}~%    ~
+            & {\\bf exact} & {\\bf loose} & {\\bf overall}\\\\~%  ~
+          {\\bf ~a} & {\\bf items} & {\\bf scores} & {\\bf string}~%    ~
+            & {\\bf analyses} & {\\bf matches} & {\\bf matches}~%    ~
+            & {\\bf accuracy}\\\\~%  ~
+          & $\\sharp$ & $\\sharp$ & $\\phi$ & $\\phi$ & $\\sharp$~%    ~
+            & $\\sharp$ & $\\%$\\\\~%  ~
+          \\hline~%  ~
+          \\hline~%"
+         ncolumns
+         (if (stringp data) data "Some") "Parse Selection" alabel))
+      (:tcl
+       (format stream *statistics-tcl-formats*)
+       (format
+        stream
+        "layout col def -m1 5 -r 1 -m2 5 -c black -j right~%~
+         layout row def -m1 5 -r 0 -m2 5 -c black -j center~%~
+         layout col 0 -m1 5 -r 2 -m2 5 -c black -j left~%~
+         layout col 1 -m1 5 -r 2 -m2 5 -c black -j left~%~
+         layout col 8 -m1 5 -r 2 -m2 5 -c black -j right~%~
+         layout row 0 -m1 5 -r 2 -m2 5 -c black -j center~%~
+         layout row 1 -m1 5 -r 2 -m2 5 -c black -j center~%")
+       (format
+        stream
+        "cell 1 1 -contents {~a} -format title~%~
+         cell 1 2 -contents \"total\\nitems\\n#\" -format title~%~
+         cell 1 3 -contents \"total\\nscores\\n#\" -format title~%~
+         cell 1 4 -contents \"word\\nstring\\n\\330\" -format title~%~
+         cell 1 5 -contents \"parser\\nanalyses\\n\\330\" -format title~%~
+         cell 1 6 -contents \"exact\\nmatches\\n#\" -format title~%~
+         cell 1 7 -contents \"loose\\nmatches\\n#\" -format title~%~
+         cell 1 8 -contents \"overall\\naccuracy\\n%\" -format title~%~%"
+        alabel)))
+    (loop
+        for (id foo . data) in aggregates
+        for name = (if (eq format :latex) (latexify-string foo) foo)
+        for items = (get-field :items data)
+        for scores = (get-field :scores data)
+        for length = (get-field+ :i-length data 0)
+        for analyses = (get-field :analyses data)
+        for successful = (get-field :successful data)
+        for ambiguous = (get-field :ambiguous data)
+        for accuracy = (if (zerop scores)
+                         100
+                         (* (divide (+ successful ambiguous) scores) 100))
+        unless (or (smember id '(:all :total)) (zerop scores)) do
+          (setf id id)
+          (case format
+            (:latex
+             (format
+              stream
+              "  ~a & ~d & ~d & ~,2f & ~,2f & ~d & ~d & ~,2f\\\\~%"
+              name items scores length analyses successful ambiguous accuracy))
+            (:tcl
+             (format
+              stream
+              "cell ~d 1 -contents {~a} -format aggregate~%~
+               cell ~d 2 -contents ~d -format data~%~
+               cell ~d 3 -contents ~d -format data~%~
+               cell ~d 4 -contents ~,2f -format data~%~
+               cell ~d 5 -contents ~,2f -format data~%~
+               cell ~d 6 -contents ~d -format data~%~
+               cell ~d 7 -contents ~d -format data~%~
+               cell ~d 8 -contents ~,2f -format data~%~%"
+              i name
+              i items
+              i scores
+              i length
+              i analyses
+              i successful
+              i ambiguous
+              i accuracy)))
+          (incf i))
+    
+    (let* ((data (rest (rest (assoc :total aggregates))))
+           (name "Total")
+           (items (get-field :items data))
+           (scores (get-field :scores data))
+           (length (get-field+ :i-length data 0))
+           (analyses (get-field :analyses data))
+           (successful (get-field :successful data))
+           (ambiguous (get-field :ambiguous data))
+           (accuracy (if (zerop scores)
+                       100
+                       (* (divide (+ successful ambiguous) scores) 100))))
+      (case format
+        (:latex
+         (format
+          stream
+          "  \\hline~%  \\hline~%  ~
+           {\\bf ~a} & {\\bf ~d} & {\\bf ~d} & {\\bf ~,2f} & {\\bf ~,2f}~%    ~
+           & {\\bf ~d} & {\\bf ~d} & {\\bf ~,2f}\\\\~%  \\hline~%"
+           name items scores length analyses successful ambiguous accuracy)
+         (format
+          stream
+          "  \\multicolumn{~d}{r}{\\tiny ~%    ~a}~%~
+           \\end{tabular}~%"
+          ncolumns caption))
+        (:tcl
+         (format
+          stream
+          "layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%~
+           layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%~%~
+           cell ~d 1 -contents {~a} -format total~%~
+           cell ~d 2 -contents ~d -format total~%~
+           cell ~d 3 -contents ~d -format total~%~
+           cell ~d 4 -contents ~,2f -format total~%~
+           cell ~d 5 -contents ~,2f -format total~%~
+           cell ~d 6 -contents ~d -format total~%~
+           cell ~d 7 -contents ~d -format total~%~
+           cell ~d 8 -contents ~,2f -format total~%~%"
+          (- i 1) i
+          i name
+          i items
+          i scores
+          i length
+          i analyses
+          i successful
+          i ambiguous
+          i accuracy))))
+    (when (or (stringp file) (stringp append)) (close stream))))
 
-(defun qtree (tree &key (stream t))
-  (let ((root (derivation-root tree))
-        (daughters (derivation-daughters tree)))
-    (if (null daughters)
-      (format stream "\\leaf{~a}~%" root)
+(defun summarize-scores (data &optional (gold data)
+                         &key (condition *statistics-select-condition*)
+                              spartanp (scorep t) (n 1) test ambiguityp
+                              (format :latex))
+  ;;
+  ;; score results in .data. against ground truth in .gold.  operates in
+  ;; several slightly distinct modes: (i) using the implicit parse ranking in
+  ;; the order of `results' or (ii) using an explicit ranking from the `score'
+  ;; relation an orthogonal dimension of variation is (a) scoring by result
+  ;; identifier (e.g. within the same profile or against one that is comprised
+  ;; of identical results) vs. (b) scoring by derivation equivalence (e.g.
+  ;; when comparing best-first parser output against a gold standard).
+  ;;
+  (let* ((thorough (if (eq test :derivation) '(:derivation)))
+         (items (if (stringp data)
+                  (analyze (if spartanp gold data)
+                           :thorough (or thorough spartanp)
+                           :condition condition :score (if scorep data t))
+                  data))
+         (aggregates (aggregate items :format format))
+         (gitems (if (stringp gold)
+                   (analyze gold
+                            :thorough thorough
+                            :condition condition :gold gold)
+                   gold))
+         (gaggregates (aggregate-by-analogy gitems aggregates))
+         results)
+    (loop
+        with tnitems = 0
+        with tnscores = 0
+        with tlength = 0
+        with treadings = 0
+        with tsuccessful = 0
+        with tambiguous = 0
+        with tsuccesses = (and n (make-array (+ n 1) :initial-element 0))
+        for (id name . data) in aggregates
+        for gaggregate = (when (equal (first (first gaggregates)) id)
+                           (pop gaggregates))
+        for gdata = (rest (rest gaggregate))
+        when gdata do
+          (loop
+              with anitems = 0
+              with anscores = 0
+              with alength = 0
+              with areadings = 0
+              with asuccessful = 0
+              with aambiguous = 0
+              with asuccesses = (and n (make-array (+ n 1) :initial-element 0))
+              for item in data
+              for i-id = (get-field :i-id item)
+              for length = (get-field :i-length item)
+              for readings = (get-field :readings item)
+              for gitem = (when (= (get-field :i-id (first gdata)) i-id)
+                            (pop gdata))
+              for score = (score-item item gitem 
+                                      :test test :n n :ambiguityp ambiguityp)
+              do
+                (incf anitems)
+                (cond
+                 ((null score))
+                 ((zerop score)
+                  (incf anscores) 
+                  (incf alength length) (incf areadings readings))
+                 (t
+                  (incf anscores) 
+                  (incf alength length) (incf areadings readings) 
+                  (incf asuccessful) 
+                  (when asuccesses (incf (aref asuccesses score)))
+                  (when (< score 0) (incf aambiguous))))
+              finally
+                (incf tnitems anitems) (incf tnscores anscores)
+                (incf tlength alength) (incf treadings areadings) 
+                (incf tsuccessful asuccessful) (incf tambiguous aambiguous)
+                (loop
+                    for i from 0
+                    for j across asuccesses
+                    do
+                      (incf (aref tsuccesses i) j))
+                (push (nconc (list id name)
+                             (pairlis '(:items :scores 
+                                        :i-length 
+                                        :analyses
+                                        :successful :ambiguous 
+                                        :successes)
+                                      (list anitems anscores 
+                                            (divide alength anscores)
+                                            (divide areadings anscores)
+                                            asuccessful aambiguous 
+                                            asuccesses)))
+                      results))
+        finally
+          (push (nconc (list :total "Total")
+                       (pairlis '(:items :scores 
+                                  :i-length
+                                  :analyses
+                                  :successful :ambiguous 
+                                  :successes)
+                                (list tnitems tnscores 
+                                      (divide tlength tnscores)
+                                      (divide treadings tnscores)
+                                      tsuccessful tambiguous 
+                                      tsuccesses)))
+                results))
+    results))
+
+(defun score-item (item gold &key test (n 1) (ambiguityp t))
+  (let ((ranks (get-field :ranks item))
+        (granks (get-field :ranks gold))
+        (test (cond
+               ((functionp test) test)
+               ((eq test :id)
+                #'(lambda (old new)
+                    (let ((foo (get-field :result-id old))
+                          (bar (get-field :result-id new)))
+                      (and foo bar (= foo bar)))))
+               ((eq test :derivation)
+                #'(lambda (old new)
+                    (let ((foo (get-field :derivation old))
+                          (bar (get-field :derivation new)))
+                      (and foo bar (derivation-equal foo bar))))))))
+                
+    (cond
+     ((null granks) nil)
+     ((loop
+          for grank in granks
+          for rank = (get-field :rank grank)
+          thereis (or (not (integerp rank)) (not (= rank 1))))
+      nil)
+     ((and (rest granks) (null ambiguityp)) 0)
+     (t
       (loop
-          for daughter in daughters
-          do
-            (qtree daughter :stream stream)
-          finally
-             (format stream "\\branch{~d}{~a}~%" (length daughters) root)))))
+          for i from 1
+          for rank in ranks
+          while (or (null n) (<= i n))
+          when (loop
+                   for grank in granks
+                   thereis (funcall test rank grank))
+          do (if (rest granks)
+               (return (- i))
+               (return i))
+          finally (return 0))))))
+
+(defun rank-profile (source 
+                     &optional (target source)
+                     &key (condition *statistics-select-condition*)
+                          (nfold 10) 
+                          (stream *tsdb-io*) (cache :raw) (verbose t))
+  
+  (format
+   stream
+   "~&[~a] rank-profile:() `~a' --> `~a'~%"
+   (current-time :long :short) source target)
+
+  (purge-test-run target :action :score)
+  (loop
+      with gc = (install-gc-strategy 
+                 nil :tenure *tsdb-tenure-p* :burst t :verbose t)
+      with cache = (create-cache source :verbose verbose :protocol cache)
+      with data = (analyze source 
+                           :thorough '(:derivation)
+                           :condition condition :gold source :edgep t)
+      with nfold = (min (length data) nfold)
+      initially #+:debug (setf %data% data) #-:debug nil
+      for i from 1 to (+ nfold 1)
+      do
+        (multiple-value-bind (test train) (ith-nth data i nfold)
+          (when (and test train)
+            (format
+             stream
+             "~&[~a] rank-profile:() iteration # ~d (~d against ~d)~%"
+             (current-time :long :short) i (length test) (length train))
+            (loop
+                with items =  (train-and-rank train test)
+                for item in items
+                for parse-id = (get-field :parse-id item)
+                for ranks = (get-field :ranks item)
+                do
+                  (loop
+                      for foo in ranks
+                      for result-id = (get-field :result-id foo)
+                      for score = (let ((score (get-field :score foo)))
+                                    (if score (format nil "~,16f" score) ""))
+                      for rank = (get-field :rank foo)
+                      do
+                        #+:debug
+                        (format
+                         stream
+                         "  parse: ~a; result: ~d; rank: ~d; score: ~a~%"
+                         parse-id result-id rank score)
+                        (write-score target (pairlis '(:parse-id :result-id
+                                                       :rank :score)
+                                                     (list parse-id result-id
+                                                           rank score))
+                                     :cache cache)))))
+      finally 
+        (flush-cache cache :verbose verbose)
+        (restore-gc-strategy gc)))

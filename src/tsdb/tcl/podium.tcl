@@ -107,6 +107,7 @@ set globals(special_menues) {
   .menu.compare.menu.intersection
   .menu.compare.menu.options
   .menu.evolution.menu.values
+  .menu.trees.menu.switches
   .menu.options.menu.condition
   .menu.options.menu.phenomena
   .menu.options.menu.switches
@@ -146,6 +147,10 @@ set globals(evolution,all) {
   first total tcpu tgc p-ftasks p-etasks p-stasks aedges pedges raedges rpedges
 }; # globals(evolution,all)
 set globals(evolution,coverage) 1;
+
+set globals(tree,n) 1;
+set globals(tree,scorep) true;
+set globals(tree,comparison) :id;
 
 #
 # determine defaults for (display) options local to the podium(1) universe
@@ -695,17 +700,58 @@ proc main {} {
   .menu.trees.menu add command \
      -label "Browse" -state disabled -command {tsdb_browse trees ""};
   .menu.trees.menu add command \
-    -label "Summarize" -command {analyze_trees};
-  .menu.trees.menu add command \
      -label "Annotate" -command {tsdb_browse trees ""};
   .menu.trees.menu add command \
     -label "Update" -command {tsdb_browse trees "" 1 "" 1};
+  .menu.trees.menu add cascade \
+    -label "Summarize" -menu .menu.trees.menu.summarize;
+  .menu.trees.menu add separator;
+  .menu.trees.menu add command \
+    -label "Rank" -command {tsdb_trees rank};
+  .menu.trees.menu add command \
+    -label "Score" -command {tsdb_trees score};
+  .menu.trees.menu add command \
+    -label "Reset" -command {tsdb_file purge score};
+  .menu.trees.menu add cascade \
+    -label "Switches" -menu .menu.trees.menu.switches;
+  .menu.trees.menu add cascade \
+    -label "Variables" -menu .menu.trees.menu.variables;
+  .menu.trees.menu add separator;
   .menu.trees.menu add command \
     -label "Normalize" -command {tsdb_file strip};
   .menu.trees.menu add command \
     -label "Export" -state disabled -command {tsdb_file export trees};
   .menu.trees.menu add command \
     -label "Clear-Cut" -command {tsdb_file purge trees};
+
+  menu .menu.trees.menu.summarize -tearoff 0;
+  .menu.trees.menu.summarize add command \
+    -label "Annotations" -command {analyze_trees};
+  .menu.trees.menu.summarize add command \
+    -label "Update" -state disabled -command {};
+
+  menu .menu.trees.menu.switches -tearoff 0;
+  .menu.trees.menu.switches add radiobutton \
+    -label "Explicit Ranks" \
+    -variable globals(tree,scorep) -value true;
+  .menu.trees.menu.switches add radiobutton \
+    -label "Implicit Ranks" \
+    -variable globals(tree,scorep) -value false;
+  .menu.trees.menu.switches add separator;
+  .menu.trees.menu.switches add radiobutton \
+    -label "Result Identity" \
+    -variable globals(tree,comparison) -value :id;
+  .menu.trees.menu.switches add radiobutton \
+    -label "Result Equivalence" \
+    -variable globals(tree,comparison) -value :derivation;
+  .menu.trees.menu.switches add separator;
+  .menu.trees.menu.switches add checkbutton \
+    -label "Ambiguous Trees" \
+    -variable globals(tree,ambiguityp);
+
+  menu .menu.trees.menu.variables -tearoff 0;
+  .menu.trees.menu.variables add command \
+    -label "Scoring Beam" -command {tsdb_option beam};
 
   #
   # `Options' menu (and embedded cascades)

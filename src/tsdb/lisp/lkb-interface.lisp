@@ -288,7 +288,7 @@
                          with nderivations = (if (<= nderivations 0)
                                                (length *parse-record*)
                                                nderivations)
-                         for i from 0
+                         for i from 1
                          for parse in (reverse *parse-record*)
                          for time = (if (integerp (first times))
                                       (round (* (- (pop times) start) 1000)

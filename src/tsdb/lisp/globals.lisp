@@ -20,7 +20,7 @@
 
 (defparameter *tsdb-name* "[incr tsdb()]")
 
-(defparameter *tsdb-version* "1.9 (18-oct-02)")
+(defparameter *tsdb-version* "1.9 (30-oct-02)")
 
 (defparameter
   *tsdb-application*
@@ -131,7 +131,7 @@
 (defparameter *tsdb-efs* #\@)
 
 (defparameter *tsdb-redwoods-files*
-  '("tree" "decision" "preference" "update"))
+  '("tree" "decision" "preference" "update" "score"))
 
 (defparameter *tsdb-profile-files*
   (append '("daughter" "edge" "parse" "result" "rule" "run")

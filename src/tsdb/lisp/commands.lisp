@@ -246,8 +246,12 @@
          (tsdb-do-list (or argument *tsdb-home*)))
         
         ((:skeletons :ske :sk :s)
-         (format *tsdb-io* "~&~%")
-         (tsdb-do-skeletons argument))
+         (cond
+          ((stringp argument)
+           (tsdb-do-set (quote *tsdb-skeleton-directory*) argument))
+          (t
+           (format *tsdb-io* "~&~%")
+           (tsdb-do-skeletons nil))))
         
         ((:create :cre :cr :c)
          (format *tsdb-io* "~&~%")
@@ -280,13 +284,13 @@
          (format 
           *tsdb-io* 
           "~&~%  tsdb(): invalid or ambiguous command `~(~:a~)'; ~
-           try `tsdb :help'.~%~%"
+           try `(tsdb :help)'.~%~%"
           action))))))
 
 (defun tsdb-do-set (variable value)
   (format *tsdb-io* "~%")
   (let ((value (case variable
-                 ((*tsdb-home*) 
+                 ((*tsdb-home* *tsdb-skeleton-directory*) 
                   (namestring (make-pathname :directory value)))
                  (t value))))
     (set variable value)))
@@ -376,17 +380,16 @@
                         (or (null name) (string= name suffix))
                         (or (null pattern) (search pattern suffix)))
               collect suffix))
-         (dmeter (madjust * meter 0.2))
-         (dbmeter (madjust + (madjust * meter 0.8) (mduration dmeter)))
-         (increment (when (and directories dbmeter)
-                      (/ (mduration dbmeter) (length directories))))
+         (increment (when (and directories meter)
+                      (/ (mduration meter) (+ (length directories) 1))))
          (databases
           (loop
+              initially (when increment (meter-advance increment))
               for directory in directories
               for status = (verify-tsdb-directory directory :absolute absolute)
               when status collect status
               when increment do (meter-advance increment))))
-    (when dbmeter (meter :value (get-field :end dbmeter)))
+    (when meter (meter :value (get-field :end meter)))
     databases))
 
 (defun tsdb-do-list (home &key (stream *tsdb-io*) 
@@ -415,19 +418,21 @@
          (format 
           stream 
           "set test_suites(~d) {~s \"~(~a~)\" ~d ~d ~
-             ~:[0~;1~] ~:[0~;1~] ~:[0~;1~]};~%"
+             ~:[0~;1~] ~:[0~;1~] ~:[0~;1~] ~:[0~;1~]};~%"
           (if index (+ index i) i)
           (get-field :database db) (get-field :status db) 
           (get-field :items db) (get-field :parses db)
-          (get-field :resultp db) (get-field :rulep db) (get-field :treep db)))
+          (get-field :resultp db) (get-field :rulep db) 
+          (get-field :treep db) (get-field :scorep db)))
         (:list
          (push (format 
                 nil 
-                "{~s \"~(~a~)\" ~d ~d ~:[0~;1~] ~:[0~;1~] ~:[0~;1~]}"
+                "{~s \"~(~a~)\" ~d ~d ~
+                 ~:[0~;1~] ~:[0~;1~] ~:[0~;1~] ~:[0~;1~]}"
                 (get-field :database db) (get-field :status db) 
                 (get-field :items db) (get-field :parses db)
                 (get-field :resultp db) (get-field :rulep db)
-                (get-field :treep db))
+                (get-field :treep db) (get-field :scorep db))
                result))))
     (when (and stream dbs) (format stream "~%"))
     (when meter (meter :value (get-field :end meter)))
@@ -755,8 +760,7 @@
      *tsdb-io*
      "    - :skeletons [ _string_ ]
 
-        list available skeleton databases (name, description, and size) or
-        make _string_ the new default skeleton;~%~%"))
+        query or set tsdb(1) skeleton root directory;;~%~%"))
 
   (when (member command (list :all :create :cre :cr))
     (format

@@ -123,7 +123,7 @@
       (string-trim '(#\Space #\Tab) string))
     ""))
 
-(defun normalize-string (string &key escape)
+(defun normalize-string (string &key escape (normalize t))
   (if string
     (loop
         with padding = 128
@@ -148,7 +148,7 @@
             (incf length padding)
             (setf result (adjust-array result length)))
           (setf space nil)
-        else when (member c '(#\Space #\Newline #\Tab)) do
+        else when (and normalize (member c '(#\Space #\Newline #\Tab))) do
           (when space (incf padding))
           (unless space
             (vector-push #\Space result)
@@ -206,6 +206,18 @@
         finally
           (return result))
     string))
+
+(defun ith-nth (list ith nth)
+  (loop
+      with i = 1
+      with n = (floor (length list) (if (zerop nth) 1 nth))
+      for j from 1
+      for foo in list
+      when (or (zerop nth) (and (not (zerop n)) (= i ith)))
+      collect foo into result
+      else collect foo into complement
+      when (and (not (zerop n)) (zerop (mod j n))) do (incf i)
+      finally (return (values result complement))))
 
 (defun complement! (fn)
   #'(lambda (&rest args) (not (apply fn args))))
@@ -437,12 +449,20 @@
                       (file-size 
                        (make-pathname :directory data :name "tree.gz"))))
                  (treep (and (not skeletonp) (numberp tree) (> tree 0)))
+                 (score
+                  (or (file-size 
+                       (make-pathname :directory data :name "score"))
+                      (file-size 
+                       (make-pathname :directory data :name "score.gz"))))
+                 (scorep (and (not skeletonp) (numberp score) (> score 0)))
                  (items (tcount data "item" :absolute t :quiet skeletonp))
                  (parses (unless skeletonp (tcount data "parse" :absolute t))))
             (pairlis (list :database 
-                           :path :status :items :parses :resultp :rulep :treep)
+                           :path :status :items :parses 
+                           :resultp :rulep :treep :scorep)
                      (list (namestring language) 
-                           data status items parses resultp rulep treep))))))))
+                           data status items parses 
+                           resultp rulep treep scorep))))))))
 
 (defun file-size (path)
   (let* ((path (if (stringp path) path (namestring path)))
@@ -521,11 +541,12 @@
   (unless (eq data :all)
     (let* ((directory (find-tsdb-directory data)))
       (case action
-        ((:purge :trees)
+        ((:purge :tree :score)
          (loop
-             for file in (if (eq action :purge)
-                           *tsdb-profile-files*
-                           *tsdb-redwoods-files*)
+             for file in (case action
+                           (:score '("score"))
+                           (:tree *tsdb-redwoods-files*)
+                           (:purge *tsdb-profile-files*))
              for name = (concatenate 'string directory file)
              for compressed = (concatenate 'string name ".gz")
              when (probe-file name) do (delete-file name)

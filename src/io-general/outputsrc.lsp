@@ -267,17 +267,18 @@
   t)
 
 (defun inflectional-rule-p (object)
-  (let* ((name (cond
-                ((stringp object) object)
-                ((symbolp object) (symbol-name object))
-                ((rule-p object) (symbol-name (rule-id object)))
-                (t 
-                 (error 
-                  "inflectional-rule-p(): invalid call `~s'." 
-                  object))))
-         (break (max 0 (- (length name) (length *lex-rule-suffix*)))))
-    (when (string-equal name *lex-rule-suffix* :start1 break)
-      (subseq name 0 break))))
+  (when *lex-rule-suffix*
+    (let* ((name (cond
+                  ((stringp object) object)
+                  ((symbolp object) (symbol-name object))
+                  ((rule-p object) (symbol-name (rule-id object)))
+                  (t 
+                   (error 
+                    "inflectional-rule-p(): invalid call `~s'." 
+                    object))))
+           (break (max 0 (- (length name) (length *lex-rule-suffix*)))))
+      (when (string-equal name *lex-rule-suffix* :start1 break)
+        (subseq name 0 break)))))
 
 ;;;
 ;;; generate full-form table for PET.  ann, i hope you will forgive me: this

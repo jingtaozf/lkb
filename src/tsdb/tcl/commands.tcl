@@ -90,9 +90,13 @@ proc tsdb_file {action {index -1}} {
     if {[file isdirectory $globals(home)$globals(data)] 
         && [yes-or-no-p $prompt] == 1} {
       if {$index == "trees"} {
-        set command "(purge \"$globals(data)\" :action :trees)";
+        set command "(purge \"$globals(data)\" :action :tree)";
       } else {
-        set command "(purge \"$globals(data)\" :action :purge)";
+        if {$index == "score"} {
+          set command "(purge \"$globals(data)\" :action :score)";
+        } else {
+          set command "(purge \"$globals(data)\" :action :purge)";
+        }; # else
       }; # else
       send_to_lisp :event $command;
     }; # if
@@ -292,7 +296,15 @@ proc tsdb_option {name} {
         }; # if
         set globals(maximal_number_of_derivations) $globals(integer,lvalue);
         tsdb_set "*tsdb-maximal-number-of-derivations*" \
-                 $globals(maximal_number_of_edges);
+                 $globals(maximal_number_of_derivations);
+      }; # if
+    }
+    beam {
+      if {![integer_input "maximal size of scoring beam" $globals(tree,n)]} {
+        if {$globals(integer,lvalue) == ""} {
+          set globals(integer,lvalue) 1;
+        }; # if
+        set globals(tree,n) $globals(integer,lvalue);
       }; # if
     }
   }; # switch
@@ -919,11 +931,58 @@ proc tsdb_evolution {code} {
 
 }; # tsdb_evolution()
 
+proc tsdb_trees {action} {
+
+  global globals test_suites compare_in_detail;
+
+  if {[verify_ts_selection]} {return 1};
+
+  set target $globals(data);
+  if {![info exists compare_in_detail(source)] \
+      || $compare_in_detail(source) == ""} {
+    set source $target;
+  } else {
+    set source $compare_in_detail(source);
+  }; # else
+
+  set spartanp false;
+  #
+  # _fix_me_ 
+  # we somehow still need something like `ts_list find'  (29-oct-02)
+  #
+  for {set i 0} {$i < [array size test_suites]} {incr i} {
+    if {![string compare $target [lindex $test_suites($i) 0]]} {
+      set index $i;
+      break;
+    }; # if
+  }; # for
+  if {![info exists index] || ![lindex $test_suites($index) 4]} {
+    set spartanp true;
+  }; # if
+
+  set command "";
+  if {$action == "score"} {
+    set command \
+      [format \
+       "(analyze-scores \"%s\" \"%s\" :scorep %s :spartanp %s \
+         :n %d :test %s :ambiguityp %s)" \
+       $target $source \
+       [lispify_truth_value $globals(tree,scorep)] \
+       [lispify_truth_value $spartanp] \
+       $globals(tree,n) $globals(tree,comparison) \
+       [lispify_truth_value $globals(tree,ambiguityp)]];
+  }; # if
+
+  if {$command != ""} {
+    send_to_lisp :event $command;
+  }; # if
+
+}; # tsdb_trees()
+
 proc tsdb_switch {code} {
 
   global globals;
-
-  
+ 
 }; # tsdb_switch()
 
 proc toggle_balloon_help {} {

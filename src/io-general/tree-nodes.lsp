@@ -530,9 +530,20 @@
       mother-fs)))
 
 (defun copy-parse-tree (edge-symbol)
-  (when (get edge-symbol 'edge-fs)
-    (setf (get edge-symbol 'edge-fs) 
-      (copy-tdfs-elements (get edge-symbol 'edge-fs))))
+  (let ((edge (get edge-symbol 'edge-record))
+        (fs (get edge-symbol 'edge-fs)))
+    (when fs (setf (get edge-symbol 'edge-fs) (copy-tdfs-elements fs)))
+    ;;
+    ;; when edge has no DAG itself (typically because it was reconstructed from
+    ;; a recorded derivation in Redwoods land), record the DAG that would gone
+    ;; with this edge during parsing; however, no need to restrict the full DAG
+    ;; (for strict parsing compliance), as no-one should ever be able to look
+    ;; at this edge directly: all viewing (in the current LKB at least :-) is
+    ;; through nodes in the corresponding tree (un-restricted) or a derived
+    ;; form, e.g. some MRS display variant.                    (30-oct-02; oe)
+    ;;
+    (unless (edge-dag edge) 
+      (setf (edge-dag edge) (get edge-symbol 'edge-fs))))
   (mapc #'copy-parse-tree (get edge-symbol 'daughters))
   edge-symbol)
 

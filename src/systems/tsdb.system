@@ -118,7 +118,9 @@
        #+(and :lkb :allegro :clim)
        (:file "redwoods")
        #+:lkb
-       (:file "ptb")))
+       (:file "ptb")
+       #+:lkb
+       (:file "pcfg")))
      
      #+:dfki
      (:module "podium"

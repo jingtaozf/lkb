@@ -15,6 +15,14 @@
 
 (in-package :tsdb)
 
+(defmacro sassoc (element list)
+  `(loop
+       for foo in (the list ,list)
+       when (eq (first (the cons foo)) ,element) return foo))
+
+(defmacro smember (element list)
+  `(loop for foo in (the list ,list) thereis (eq ,element foo)))
+
 (defmacro get-field (field alist)
   `(rest (assoc ,field ,alist)))
 

@@ -121,45 +121,28 @@
 ;;; entry must supply the appropriate value.  the `rely on' lexical entry will
 ;;; only survive if an `_on_rel_s' is provided somewhere in the chart.
 ;;;
-;;; _fix_me_
-;;; as i write this, i realize that there are (at least) two flaws in the 
-;;; current implementation: (i) as noted for PET a few weeks ago, it should be
-;;; possible for rules to also supply the target dependencies and (ii) when
-;;; checking dependencies, we should only look at provided values found under
-;;; the corresponding path, i.e. the target in the paths pair that gave rise
-;;; to this token dependency.  as, currently, the target paths tend to be all
-;;; the same and, at the worst, we may keep a few too many edges in the chart,
-;;; let people at DFKI play with this for a little while first.
-;;;                                                      (24-oct-02; oe & bk)
-
 (defparameter *chart-dependencies* nil)
 
-(defun chart-dependencies-provided ()
+(defun chart-dependencies-provided (tasks)
   (loop
-      with results
       with paths = (loop 
                        for i from 0
                        for path in *chart-dependencies*
-                       unless (or (evenp i)
-                                  (member path paths :test #'equal))
-                       collect path into paths
+                       unless (evenp i) collect path into paths
                        finally (return paths))
-      for i from 1 to (- *chart-limit* 1)
-      for entry = (aref *chart* i 0)
-      for configurations = (and entry (chart-entry-configurations entry))
-      while entry
+      with results = (make-array (length paths))
+      for task in tasks
+      for configuration = (rest task)
+      for edge = (chart-configuration-edge configuration)
+      for tdfs = (edge-dag edge)
+      for dag = (tdfs-indef tdfs)
       do
         (loop
-            for configuration in configurations
-            for edge = (chart-configuration-edge configuration)
-            for tdfs = (edge-dag edge)
-            for dag = (tdfs-indef tdfs)
-            do
-              (loop
-                  for path in paths
-                  for key = (existing-dag-at-end-of dag path)
-                  for type = (and key (type-of-fs key))
-                  when type do (pushnew type results :test #'eq)))
+            for path in paths
+            for i from 0
+            for key = (existing-dag-at-end-of dag path)
+            for type = (and key (type-of-fs key))
+            when type do (pushnew type (aref results i) :test #'eq))
       finally (return results)))
 
 (defun chart-dependencies-p (edge paths provided)
@@ -167,15 +150,16 @@
       with tdfs = (edge-dag edge)
       with dag = (tdfs-indef tdfs)
       for path in paths
+      for i from 0
       for node = (existing-dag-at-end-of dag path)
       always (or (null node) 
                  (loop
                      with type = (type-of-fs node)
-                     for foo in provided
+                     for foo in (aref provided i)
                      thereis (greatest-common-subtype foo type)))))
   
 (defun reduce-chart ()
-
+  
   (labels ((freeze (edge id)
              #+:rdebug
              (format t "~&freeze(): ~a~%" edge)
@@ -184,23 +168,33 @@
                  for parent in (edge-parents edge) do (freeze parent id))))
 
     (loop
+        with tasks = (loop
+                         until (empty-heap *agenda*) 
+                         for task = (heap-extract-max-full *agenda*)
+                         when (chart-configuration-p (rest task) )
+                         collect task
+                         else do
+                           (error 
+                            "reduce-chart(): ~
+                             invalid non-lexical task on agenda upon entry."))
         with paths = (loop 
                          for i from 0
                          for path in *chart-dependencies*
                          unless (or (oddp i) (member path paths :test #'equal))
                          collect path into paths
                          finally (return paths))
-        with provided = (chart-dependencies-provided)
-        for i from 1 to (- *chart-limit* 1)
-        for entry = (aref *chart* i 0)
-        for configurations = (and entry (chart-entry-configurations entry))
-        while entry
-        do
+        with provided = (chart-dependencies-provided tasks)
+        for task in tasks
+        for configuration = (rest task)
+        for edge = (chart-configuration-edge configuration)
+        for happyp = (chart-dependencies-p edge paths provided)
+        unless happyp do (freeze edge -1)
+        else collect task into survivors
+        finally
+          (setf *chart-dependencies* nil)
           (loop
-              for configuration in configurations
-              for edge = (chart-configuration-edge configuration)
-              for happyp = (chart-dependencies-p edge paths provided)
-              unless happyp do (freeze edge -1)))))
+              for survivor in survivors
+              do (lexical-task (first survivor) (rest survivor))))))
 
 (defmacro yadu! (tdfs1 tdfs2 path)
   `(yadu ,tdfs1 (create-temp-parsing-tdfs ,tdfs2 ,path)))
@@ -267,7 +261,7 @@
 (defmacro rule-and-passive-task (rule passive)
   #+:agenda
   `(cond
-    ((or *first-only-p* *chart-dependencies*)
+    (*first-only-p*
      (let ((priority (rule-priority ,rule)))
        (heap-insert *agenda* priority (cons ,rule ,passive))))
     #+:priority
@@ -286,7 +280,7 @@
   (declare (ignore arule))
   #+:agenda
   `(cond
-    ((or *first-only-p* *chart-dependencies*)
+    (*first-only-p*
      (let ((priority (rule-priority ,arule)))
        (heap-insert *agenda* priority (cons ,active ,passive))))
     #+:priority
@@ -304,29 +298,35 @@
 (defun complete-chart ()
 
   ;;
-  ;; the chart reduction after lexical look-up only works when we are using an
-  ;; agenda, such that the lexical look-up phase is completed before the start
-  ;; actual parsing.  i should probably eliminate many of these conditionals
-  ;; and just make the agenda-driven mode the default.         (24-oct-02; oe)
+  ;; shadow global value of *chart-dependencies*, such that reduce-chart() can
+  ;; `destructively' reset it to nil and cause subsequent task execution to go
+  ;; back to non-agenda mode, unless required otherwise (in best-first mode).
   ;;
-  #+:agenda
-  (when *chart-dependencies* (reduce-chart))
+  (let ((*chart-dependencies* *chart-dependencies*))
+    ;;
+    ;; the chart reduction after lexical look-up only works when we are using
+    ;; an agenda, such that the lexical look-up phase is completed before we 
+    ;; start actual parsing.  i should probably eliminate many of these 
+    ;; conditionals and just make the agenda-driven mode the default.
+    ;;                                                        (24-oct-02 ; oe)
+    #+:agenda
+    (when *chart-dependencies* (reduce-chart))
 
-  ;;
-  ;; now run the main parser loop: until we empty the agenda (or hell
-  ;; freezes over) apply the fundamental rule of chart parsing.
-  ;;
-  #+:agenda
-  (when (or *first-only-p* *chart-dependencies* #+:priority *chart-packing-p*)
-    (loop
-        until (empty-heap *agenda*)
-        for task = (heap-extract-max *agenda*)
-        when (chart-configuration-p task) do
-          (fundamental4passive task)
-        else when (rule-p (first task)) do
-          (process-rule-and-passive task)
-        else do
-          (process-active-and-passive task))))
+    ;;
+    ;; now run the main parser loop: until we empty the agenda (or hell
+    ;; freezes over) apply the fundamental rule of chart parsing.
+    ;;
+    #+:agenda
+    (when (or *first-only-p* #+:priority *chart-packing-p*)
+      (loop
+          until (empty-heap *agenda*)
+          for task = (heap-extract-max *agenda*)
+          when (chart-configuration-p task) do
+            (fundamental4passive task)
+          else when (rule-p (first task)) do
+            (process-rule-and-passive task)
+          else do
+            (process-active-and-passive task)))))
 
 (defun postulate (passive)
   (declare (special *minimal-vertex* *maximal-vertex*))

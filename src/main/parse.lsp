@@ -66,7 +66,10 @@
 ;;; leaves - orthography of whatever this edge has been formed from
 ;;; lex-ids - like leaves, but identifiers of whole structures
 ;;; children - daughter edges
- 
+;;;
+;;; `foo,' `bar', and `baz' are junk slots for various pieces of code (e.g. the
+;;; Redwoods annotation tool and PCFG estimation) to use at their discretion.
+;;;                                                           (28-oct-02; oe)
 (defstruct
    (edge
       (:constructor make-edge
@@ -75,10 +78,12 @@
                                             (restrict-fs (tdfs-indef dag))))
                           leaves lex-ids parents children morph-history 
                           spelling-change from to label
+                          foo bar baz
                           #+:packing packed #+:packing equivalent 
                           #+:packing frozen)))
    id score category rule dag odag dag-restricted leaves lex-ids
    parents children morph-history spelling-change from to label
+   foo bar baz
    #+:packing packed #+:packing equivalent #+:packing frozen)
 
 (defmethod print-object ((instance edge) stream)
@@ -198,6 +203,17 @@
     (let ((entry (rest max)))
       (setf (rest max) nil)
       entry)))
+
+(defun heap-extract-max-full (a)
+  (when (< (heap-size a) 1)
+    (error "This shouldn't happen!  Something's wrong with the parser."))
+  (let ((max (shiftf (fast-aref a 1) (fast-aref a (heap-size a)))))
+    (decf (heap-size a))
+    (heapify a 1)
+    (let ((key (first max))
+          (value (rest max)))
+      (setf (rest max) nil)
+      (cons key value))))
 
 (defun make-heap ()
   (let ((heap (make-array (list *maximum-number-of-tasks*))))
