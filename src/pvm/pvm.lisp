@@ -103,26 +103,10 @@
 (defforeign 'pvm_quit :arguments nil :return-type :integer)
 
 #+(version>= 5 0)
-(def-foreign-call 
-    (_pvm_halt "pvm_halt")
-    (:void) 
-  :returning :int)
-
-#-(version>= 5 0)
-(defforeign 
-    '_pvm_halt :entry-point "pvm_halt" 
-    :arguments nil 
-    :return-type :integer)
-
-#+(version>= 5 0)
 (def-foreign-call pvmendtask (:void) :returning :int)
 
 #-(version>= 5 0)
 (defforeign 'pvmendtask :arguments nil :return-type :integer)
-
-(defun pvm_halt () 
-  (_pvm_halt)
-  (pvm_quit))
 
 #+(version>= 5 0)
 (def-foreign-call pvm_kill ((tid :int integer)) :returning :int)
