@@ -181,7 +181,7 @@
     
     (or frame t)))
 
-(defun browse-tree (data i-id frame &key gold strip bestp inspect 
+(defun browse-tree (data i-id frame &key gold strip bestp inspect subset
                                          title cache verbose 
                                          (runp t) stream)
   
@@ -268,11 +268,12 @@
                         for id = (get-field :result-id result)
                         for derivation = (get-field :derivation result)
                         for mrs = (get-field :mrs result)
-                        for edge = (if (and derivation 
-                                            (not (equal derivation "")))
-                                     (reconstruct derivation mode)
-                                     (when mrs 
-                                       (reconstruct-mrs id mrs i-length)))
+                        for edge = (when (or (null subset) (member id subset))
+                                     (if (and derivation 
+                                              (not (equal derivation "")))
+                                       (reconstruct derivation mode)
+                                       (when mrs 
+                                         (reconstruct-mrs id mrs i-length))))
                         when edge do 
                           (setf (lkb::edge-foo edge) id)
                           (setf (lkb::edge-bar edge) derivation)
