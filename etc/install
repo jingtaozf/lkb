@@ -4,10 +4,11 @@
 # a first shot at automating an install of several of the DELPH-IN open-source
 # packages, specifically:
 #
-# - the Linguistic Knowledge Builder (LKB)
-# - the LinGO English Resource Grammar (ERG)
-# - the Grammar Matrix, a grammar development starter kit
-# - the [incr tsdb()] (aka `tee ess dee bee plus plus') profiler
+# - the Linguistic Knowledge Builder (LKB);
+# - the LinGO English Resource Grammar (ERG);
+# - the Grammar Matrix, a grammar development starter kit;
+# - the [incr tsdb()] (aka `tee ess dee bee plus plus') profiler;
+# - the Redwoods HPSG treebank in [incr tsdb()] form (optionally).
 #
 # others (e.g. PET, maybe more grammars) to follow.  for now, this is a rough
 # script intended to give people an idea of how to do an installation; i have
@@ -26,9 +27,9 @@ if [ -z "${DELPHINHOME}" ]; then
 fi
 
 #
-# set the following to also retrieve the (current) Redwoods treebank data
+# comment out the following to skip the Redwoods treebank data (1.5 gbytes)
 #
-#TSDBHOME=${DELPHINHOME}/lkb/src/tsdb/home
+TSDBHOME=${DELPHINHOME}/lkb/src/tsdb/home
 
 #
 # for the script to be independent of where specific OS versions keep their
