@@ -1210,6 +1210,7 @@
 
 (defun complete-runs (data runs &key cache interactive stream interrupt)
   (declare (special %accumlated-rule-statistics%))
+  (setf %graft-aligned-generation-hack% nil)
   (loop
       for run in runs
       for completion = (unless (get-field :end run)
