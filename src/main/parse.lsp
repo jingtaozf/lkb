@@ -70,7 +70,7 @@
    (edge
       (:constructor make-edge
                     (&key id category rule-number dag 
-                          (dag-restricted (restrict-fs dag))
+                          (dag-restricted (restrict-fs (tdfs-indef dag)))
                           leaves lex-ids children morph-history)))
    id category rule-number dag dag-restricted leaves lex-ids
    children morph-history)
@@ -78,7 +78,7 @@
 (defstruct
    (mrecord
       (:constructor make-mrecord
-                    (&key fs (fs-restricted (restrict-fs fs)) 
+                    (&key fs (fs-restricted (restrict-fs (tdfs-indef fs)))
                           lex-ids rules history)))
    fs fs-restricted lex-ids rules history)
 
@@ -127,6 +127,7 @@
          (let ((*safe-not-to-copy-p* t)
                (*parse-unifs* 0) (*parse-fails* 0))
             (clear-chart)
+            #+powerpc(setq aa 0 bb 0 cc 0 dd 0 ee 0 ff 0 gg 0 hh 0 ii 0 jj 0)
             (add-morphs-to-morphs user-input)
             (add-words-to-chart)
             (setf *parse-record*
@@ -689,8 +690,9 @@
   (let* ((input-file 
             (ask-user-for-existing-pathname "Sentence file?"))
          (output-file 
-            (ask-user-for-new-pathname "Output file?"))
+            (and input-file (ask-user-for-new-pathname "Output file?")))
          (start-time (get-universal-time)))
+    (unless (and input-file output-file) (return-from parse-sentences nil))
     (with-open-file (istream input-file :direction :input)
       (with-open-file (ostream output-file :direction :output
                                :if-exists :supersede)
@@ -707,7 +709,9 @@
                           nil)
                          (t
                           (let ((*safe-not-to-copy-p* t)
-                                (*parse-unifs* 0) (*parse-fails* 0))(clear-chart)
+                                (*parse-unifs* 0) (*parse-fails* 0))
+                            (clear-chart)
+                            #+powerpc(setq aa 0 bb 0 cc 0 dd 0 ee 0 ff 0 gg 0 hh 0 ii 0 jj 0)
                             (add-morphs-to-morphs user-input)
                             (add-words-to-chart)
                             (setf *parse-record*
