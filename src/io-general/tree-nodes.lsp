@@ -326,9 +326,9 @@
       (let*
 	  ((e (chart-configuration-edge span))
 	   (edge-symbol (cdr (assoc (edge-id e) edge-symbols))))
-	;; (setf (get edge-symbol 'chart-edge-span)
-	;; (format nil "~A-~A" 
-	;; (chart-configuration-begin span) right-vertex))
+	(setf (get edge-symbol 'chart-edge-span) ; needed for mcl chart display
+	   (format nil "~A-~A" 
+	      (chart-configuration-begin span) right-vertex))
 	(setf (get edge-symbol 'chart-edge-contents) e)
 	;; (print (lexical-rule-p (edge-rule e)))
 	(if (edge-children e)
@@ -459,6 +459,9 @@
 			  (list (make-symbol ""))))
 		    daughters)
 	  (make-lex-and-morph-tree edge 1)))
+      (when (and (g-edge-p edge) (g-edge-mod-index edge))
+         (setf (get edge-symbol 'edge-mod-edge)
+            (nth (g-edge-mod-index edge) (get edge-symbol 'daughters))))
       (list edge-symbol))))
   
 (defun make-lex-and-morph-tree (edge level)
@@ -527,6 +530,9 @@
 			  (find-category-abb (get edge-symbol 'edge-fs)))
 			(edge-category edge-record))) nil))
        (values (tree-node-text-string edge-symbol) t))))
+
+(defun edge-mod-edge-p (edge-symbol1 edge-symbol2)
+   (eq (get edge-symbol1 'edge-mod-edge) edge-symbol2))
 
 
 ;;; convert tree into a nested list - for simple printing of structure
