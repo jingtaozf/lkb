@@ -242,7 +242,13 @@
        ((zerop status) nil)
        ((< status 0) :error)
        ((> status size)
-        (setf size (+ status 4096))
+        (if (>= (+ status 4096) (- array-total-size-limit 2))
+          (when *pvm-debug-p*
+            (format 
+             t 
+             "pvm-poll(): rejecting over-sized message (~d)~%"
+             (+ status 4096)))
+          (setf size (+ status 4096)))
         ;;
         ;; _fix_me_
         ;; we would want to free the old .output. array here; apparently, the
@@ -267,9 +273,7 @@
                      (format t "pvm_poll(): read `~a'.~%" string))
                    (read-from-string string t nil :end status)))
               (when (and (null result) condition)
-                (format
-                 t
-                 "~&pvm_poll(): error `~a'.~%" condition))
+                (format t "~&pvm_poll(): error `~a'.~%" condition))
               (or result :error)))))
        (t
         (multiple-value-bind (result condition)
