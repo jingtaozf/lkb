@@ -74,23 +74,25 @@
 ;;; Full MRS to RMRS conversion
 
 (defun mrs-to-rmrs (mrs)
-  (initialize-rmrs-variables-plus)
-  (let ((lzt (psoa-liszt mrs))
-        (new-lzt nil)
-        (new-args nil)
-        (label-recs nil))
-    (dolist (rel lzt)
-          (multiple-value-bind (ep rmrs-args new-label-recs)
-            (parsonify-rel rel label-recs)
-            (push ep new-lzt)
-            (setf new-args (append new-args rmrs-args))
-            (setf label-recs new-label-recs)))
-    (make-rmrs   :top-h (psoa-top-h mrs)
-                 :h-cons (psoa-h-cons mrs)
-                 :liszt (nreverse new-lzt)
-                 :in-groups (construct-converted-in-groups label-recs) 
-                 :rmrs-args new-args
-		 :origin :erg)))
+  (if *rel-handel-path*
+      (progn
+        (initialize-rmrs-variables-plus)
+        (let ((lzt (psoa-liszt mrs))
+              (new-lzt nil)
+              (new-args nil)
+              (label-recs nil))
+          (dolist (rel lzt)
+            (multiple-value-bind (ep rmrs-args new-label-recs)
+                (parsonify-rel rel label-recs)
+              (push ep new-lzt)
+              (setf new-args (append new-args rmrs-args))
+              (setf label-recs new-label-recs)))
+          (make-rmrs   :top-h (psoa-top-h mrs)
+                       :h-cons (psoa-h-cons mrs)
+                       :liszt (nreverse new-lzt)
+                       :in-groups (construct-converted-in-groups label-recs) 
+                       :rmrs-args new-args
+                       :origin :erg)))))
 
 
 
@@ -174,18 +176,19 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
     (dolist (label-rec label-recs)
       (let ((matches (ing-info-new-label-type-pairs label-rec)))
 	(when matches
-	  (let* ((var-pairs (cons (cons (ing-info-label label-rec)
-				       (ing-info-type label-rec))
-				 matches))
-		(sorted-pairs (sort var-pairs #'ing-rel-type-greater-p 
-				    :key #'cdr))
-		 (top-rank-var (caar sorted-pairs)))
-	    (dolist (pair (cdr sorted-pairs))
-	      (push
-		  (make-in-group :label-a top-rank-var
-				 :label-b (car pair))
-		  ings))))))
-    ings))
+          (when (ing-info-label label-rec)
+            (let* ((var-pairs (cons (cons (ing-info-label label-rec)
+                                          (ing-info-type label-rec))
+                                    matches))
+                   (sorted-pairs (sort var-pairs #'ing-rel-type-greater-p 
+                                       :key #'cdr))
+                   (top-rank-var (caar sorted-pairs)))
+              (dolist (pair (cdr sorted-pairs))
+                (push
+                 (make-in-group :label-a top-rank-var
+                                :label-b (car pair))
+                 ings)))))))
+     ings))
 
 
 
