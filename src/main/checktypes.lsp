@@ -756,21 +756,20 @@
 
 
 (defun inherit-constraints (node type-entry local-constraint)
-   (if (type-atomic-p type-entry)
+  (if (type-atomic-p type-entry)
       (create-atomic-dag node)
-      (reduce
-         #'(lambda (x y) (if (and x y) (unify-dags x y)))
-         (mapcar #'(lambda (parent)
-                     (let ((constraint
-                            (expand-constraint parent (get-type-entry parent))))
-                        (if constraint
-                           ;; hack to allow for templates
-                           (retype-dag constraint *toptype*))))
-                 (append (type-template-parents type-entry)
-                         (type-parents type-entry)))
-         :initial-value 
-         (or local-constraint (create-typed-dag node)))))
-
+    (let ((supers 
+	   (mapcar #'(lambda (parent)
+		       (expand-constraint parent (get-type-entry parent)))
+		   (append (type-template-parents type-entry)
+			   (type-parents type-entry)))))
+      (with-unification-context (nil)
+	(copy-dag
+	 (reduce #'(lambda (x y) (when (and x y) 
+				   (unify-dags x (retype-dag y *toptype*))))
+		 supers
+		 :initial-value (or local-constraint 
+				    (create-typed-dag node))))))))
 
 (defun add-maximal-type (feature type)
    ;; a feature may only be introduced at one

@@ -862,6 +862,7 @@
                                                        features-so-far type-name)))
                    nil)))))))
 
+
 (defun find-type-of-fs (real-dag &optional id path)
    (let* ((existing-features (top-level-features-of real-dag))
           (current-type (unify-get-type real-dag))
@@ -887,7 +888,8 @@
 (defun really-make-well-formed (real-dag fs-type features-so-far type-name)
   (when (really-make-features-well-formed real-dag features-so-far type-name)
     (let ((constraint
-            ;; !!! outside here must stay within current visiting generation
+            ;; !!! outside here must stay within current visiting
+            ;; generation
             (let ((*visit-generation* *visit-generation*))
                ;; if we're making a type wf then type-name is non-nil - in this case
                ;; we must always copy constraints before unifying in to ensure that
@@ -909,13 +911,18 @@
              (or type-name "unknown") fs-type (reverse features-so-far))
           nil)))))
 
-(defun really-make-features-well-formed (real-dag features-so-far type-name)
-   (every #'(lambda (label)
-                   (make-well-formed (get-dag-value real-dag label)
-                                     (cons label features-so-far)
-                                     type-name))
-          (top-level-features-of real-dag)))
+;; (defun really-make-features-well-formed (real-dag features-so-far type-name)
+;;   (every #'(lambda (label)
+;;                   (make-well-formed (get-dag-value real-dag label)
+;;                                     (cons label features-so-far)
+;;                                     type-name))
+;;          (top-level-features-of real-dag)))
 
+(defun really-make-features-well-formed (real-dag features-so-far type-name)
+  (loop for label in (top-level-features-of real-dag)
+      always (make-well-formed (get-dag-value real-dag label)
+			       (cons label features-so-far)
+			       type-name)))
 
 ;;; It is possible for two wffs to be unified and the result to need 
 ;;; the constraint of the resulting type to be unified in - see document
