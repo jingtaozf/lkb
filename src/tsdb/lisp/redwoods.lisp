@@ -909,6 +909,7 @@
         #+:allegro (ignore-errors (mkdir target))
         (when meter (meter :value (get-field :start meter)))
       for item in items
+      for i-wf = (get-field :i-wf item)
       for input = (or (get-field :o-input item) (get-field :i-input item))
       for parse-id = (get-field :parse-id item)
       for results = (get-field :results item)
@@ -956,10 +957,10 @@
                          :if-exists :supersede :if-does-not-exist :create)
           (format 
            stream
-           "[~d] (~a of ~d) `~a'~%~a~%"
+           "[~d] (~a of ~d) {~d} `~a'~%~a~%"
            parse-id 
-           (if version (length active) "all")
-           (length results) input #\page)
+           (if version (length active) "all") (length results) i-wf
+           input #\page)
           
           (setf (get-field :results item) (nreverse results))
           (export-tree item active :stream stream)
@@ -1459,7 +1460,7 @@
                          condition)
       with data = (analyze source 
                            :thorough '(:derivation)
-                           :condition condition :gold source)
+                           :condition condition :gold source :readerp nil)
       with nfold = (min (length data) nfold)
       initially #+:debug (setf %data% data) #-:debug nil
       for i from 1 to (+ nfold 1)

@@ -251,7 +251,7 @@
      (t 0210))))
 
 (defun analyze (data 
-                &key condition meter message thorough trees extras
+                &key condition meter message thorough trees extras (readerp t)
                      score gold)
 
   (declare (optimize (speed 3) (safety 0) (space 0)))
@@ -363,7 +363,7 @@
             (when (consp thorough)
               (loop
                   for field in thorough
-                  for reader = (find-attribute-reader field)
+                  for reader = (when readerp (find-attribute-reader field))
                   when reader
                   do
                     (loop
