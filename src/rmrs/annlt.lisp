@@ -165,7 +165,7 @@
 		(handler-case
 		    (progn
 		      (unless (equal tree '(X))
-			(construct-sem-for-tree tree ostream))
+			(construct-sem-for-tree tree :rasp ostream))
 		      (finish-output ostream))
 		  (storage-condition (condition)
 		    (format ostream "~%Memory allocation problem: ~A~%" condition))
