@@ -1281,7 +1281,9 @@
       for i-wf = (get-field :i-wf item)
       for input = (or (get-field :o-input item) (get-field :i-input item))
       for parse-id = (get-field :parse-id item)
-      for results = (get-field :results item)
+      for results = (let ((results (get-field :results item)))
+                      (sort (copy-list results) #'< 
+                            :key #'(lambda (foo) (get-field :result-id foo))))
       for trees = (select '("t-active" "t-version") '(:integer :integer) 
                           "tree" 
                           (format nil "parse-id == ~a" parse-id) 
@@ -1305,7 +1307,7 @@
                   nil 
                   "~a/~@[~a.~]~d~@[.~a~]" 
                   target prefix (+ parse-id offset) suffix)
-      do
+      when results do
         (format 
          stream 
          "[~a] export-trees(): [~a] ~a active tree~:[~;s~] (of ~d).~%" 
@@ -1335,7 +1337,6 @@
            (if version (length active) "all") (length results) i-wf
            input #\page)
           
-          (setf (get-field :results item) (nreverse results))
           (export-tree item active :offset offset :stream stream)
           (unless *redwoods-thinning-export-p*
             (export-tree item active 
@@ -2560,7 +2561,7 @@
                                        &key (test '(:id :label :bracket)))
   ;;
   ;; for now, make sure we do not count word nodes themselves, i.e. the ones
-  ;; that have no edge id; this should deflate agreement the measure somewhat.
+  ;; that have no edge id; this should deflate the agreement measure somewhat.
   ;;
   (let* ((nodes1 (delete nil (derivation-nodes derivation1) :key #'first))
          (nodes2 (delete nil (derivation-nodes derivation2) :key #'first))
@@ -3132,8 +3133,7 @@
                     (setf
                         (experiment-target clone)
                       (format nil "~a.ae" (experiment-target experiment)))
-                    (setf
-                        (experiment-environment clone)
+                    (setf (experiment-environment clone)
                       (copy-list (experiment-environment experiment)))
                     (setf (second (experiment-environment clone)) t)
                     (run-experiment clone)

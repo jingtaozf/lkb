@@ -1884,7 +1884,7 @@
              oi-id (or (get-field :o-input oitem) (get-field :i-input oitem))
              ni-id (or (get-field :o-input nitem) (get-field :i-input nitem)))
             ;;
-            ;; in `align' mode: when necessary, determine distance to cloesest
+            ;; in `align' mode: when necessary, determine distance to closest
             ;; alignment point (identical :i-input values); if there is none,
             ;; output all remaining items from `old' first, then `new'.
             ;;
