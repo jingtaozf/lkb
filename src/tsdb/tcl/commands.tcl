@@ -712,6 +712,14 @@ proc tsdb_latex {toplevel} {
 }; # tsdb_latex()
 
 
+proc tsdb_html {toplevel} {
+
+    set command [format "(html (:toplevel . \"%s\"))" $toplevel];
+    send_to_lisp :event $command;
+
+}; # tsdb_html()
+
+
 proc analyze_competence {code} {
 
   global globals;

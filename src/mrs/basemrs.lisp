@@ -109,9 +109,9 @@
 (defparameter *mrs-display-structure* nil)
 
 (defun def-print-operations (class indentation stream)
-  (setf *mrs-display-structure* (make-instance class 
-					   :indentation indentation
-					   :stream stream)))
+  (setf *mrs-display-structure* 
+    (make-instance class 
+      :indentation indentation :stream stream)))
 
 
 ;;; 
@@ -121,6 +121,9 @@
 (defclass output-type ()
   ((indentation :initform 0 :initarg :indentation)
    (stream :initarg :stream)))
+
+(defmethod initialize-display-structure ((class output-type) mrs-instance)
+  (declare (ignore mrs-instance)))
 
 (defmethod mrs-output-error-fn ((mrsout output-type) mrs-instance)
   (with-slots (stream) mrsout
@@ -545,8 +548,19 @@ higher and lower are handle-variables
 ;;; HTML output-type class
 ;;;
 
-(defclass html (output-type) ())
+(defparameter *mrs-relations-per-row* 6)
 
+(defclass html (output-type) 
+  ((nrels :initform nil)
+   (i :initform nil)
+   (nrows :initform nil)))
+
+(defmethod initialize-display-structure ((class html) mrs)
+  (with-slots (nrels nrows i) class
+    (setf nrels (length (psoa-liszt mrs)))
+    (setf nrows (ceiling nrels *mrs-relations-per-row*))
+    (setf i 0)))
+    
 (defmethod mrs-output-start-fn ((mrs html))
   (with-slots (stream) mrs
     (format stream "~V%" 1)))
@@ -557,67 +571,95 @@ higher and lower are handle-variables
 
 (defmethod mrs-output-start-psoa ((mrs html))
   (with-slots (stream) mrs
-    (format stream "<table class=mrs>")))
+    (format stream "<table class=mrsMrs>~%")))
 
 (defmethod mrs-output-top-h ((mrs html) handle)
   (when (and handle *rel-handel-path*)
     (with-slots (stream) mrs
       (format 
        stream 
-       "<tr><td id=top>TOP</td><td class=top>~(~a~)</td>~%" 
-       handle))))
+       "<tr><td class=mrsFeatureTop>TOP</td>~%~
+        <td class=mrsValueTop>~%  ~
+        <div class=\"mrsVariable~:(~a~)\"~%       ~
+             onMouseOver=\"mrsVariableSelect('~:(~a~)')\"~%       ~
+             onMouseOut=\"mrsVariableUnselect('~:(~a~)')\">~(~a~)</div>~%~
+        </td>~%" 
+       handle handle handle handle))))
 
 (defmethod mrs-output-index ((mrs html) index)
   (when index
     (with-slots (stream) mrs
       (format 
        stream 
-       "<tr><td id=index>INDEX</td><td class=index>~(~a~)</td>~%" 
-       index))))
+       "<tr>~%<td class=mrsFeatureIndex>INDEX</td>~%~
+        <td class=mrsValueIndex>~%  ~
+        <div class=\"mrsVariable~:(~a~)\"~%       ~
+             onMouseOver=\"mrsVariableSelect('~:(~a~)')\"~%       ~
+             onMouseOut=\"mrsVariableUnselect('~:(~a~)')\">~(~a~)</div>~%~
+        </td>~%" 
+       index index index index))))
 
 (defmethod mrs-output-mode ((mrs html) mode)
   (declare (ignore mode)))
 
 (defmethod mrs-output-start-liszt ((mrs html))
-  (with-slots (stream) mrs
+  (with-slots (stream nrows) mrs
     (format
      stream 
-     "<tr><td id=rels>RELS</td>~
-      <td class=rels>~%  ~
-      <table class=container>~%    ~
-      <tr>~%    ~
-      <td><span class=bracket>&lang;</span></td>~%")))
+     "<tr>~%<td class=mrsFeatureRels>RELS</td>~%~
+      <td class=mrsValueRels>~%~
+      <table class=mrsRelsContainer>~%<tr>~%~
+      <td valign=middle><span class=mrsBracket>{</span></td>~%~
+      <td><table class=mrsRelsContainer><tr>~%
+      <td><table class=mrsRelsContainer><tr>~%"
+     nrows)))
 
 (defmethod mrs-output-var-fn ((mrs html) variable)
   (with-slots (stream) mrs
-    (format stream "<td class=value>~(~a~)</td>~%" variable)))
+    (format 
+     stream 
+     "<td class=mrsValue>~%~
+      <div class=\"mrsVariable~:(~a~)\"~
+             onMouseOver=\"mrsVariableSelect('~:(~a~)')\"~
+             onMouseOut=\"mrsVariableUnselect('~:(~a~)')\">~(~a~)</div>~
+      </td>~%" 
+     variable variable variable variable)))
 
 (defmethod mrs-output-atomic-fn ((mrs html) value)
   (with-slots (stream) mrs
-    (format stream "<td class=value>~(~a~)</td>~%" value)))
+    (format stream "<td class=mrsValue>~(~a~)</td>~%" value)))
 
 (defmethod mrs-output-start-rel ((mrs html) type sort firstp)
   (declare (ignore type firstp))
-  (with-slots (stream) mrs
+  (with-slots (stream i nrows) mrs
+    (when (and (not (zerop i)) (zerop (mod i *mrs-relations-per-row*)))
+      (format 
+       stream 
+       "</tr></table></td></tr>~%~
+        <tr><td><table class=mrsRelsContainer><tr>~%"))
     (format 
      stream 
-     "    <td><table class=relation>~%      ~
-      <tr><td class=predicate colspan=2>~(~a~)</td>~%"
-     sort)))
+     "    <td><table class=mrsRelation>~%      ~
+      <tr><td class=mrsPredicate colspan=2>~(~a~)</td>~%"
+     sort)
+    (incf i)))
 
 (defmethod mrs-output-rel-handel ((mrs html) handle)
   (when handle
     (with-slots (stream) mrs
       (format 
        stream 
-       "      <tr><td class=label>LBL</td><td class=value>~(~a~)</td>~%"
-       handle))))
+       "      <tr><td class=mrsLabel>LBL</td><td class=mrsValue>~%
+        <div class=\"mrsVariable~:(~a~)\"~
+             onMouseOver=\"mrsVariableSelect('~:(~a~)')\"~
+             onMouseOut=\"mrsVariableUnselect('~:(~a~)')\">~(~a~)</div></td>~%"
+       handle handle handle handle))))
 
 (defmethod mrs-output-label-fn  ((mrs html) label)
   (with-slots (stream) mrs
     (format 
      stream 
-     "      <tr><td class=label>~a</td>"
+     "      <tr><td class=mrsLabel>~a</td>"
      label)))
 
 (defmethod mrs-output-start-extra ((mrs html) type)
@@ -639,24 +681,36 @@ higher and lower are handle-variables
   (with-slots (stream) mrs
     (format 
      stream 
-     "    <td><span class=bracket>&rang;</span></td>~%  ~
+     "</tr></table></td></tr></table>~%    ~
+      <td valign=middle><span class=mrsBracket>}</span></td>~%  ~
       </table>~%</td>~%")))
 
 (defmethod mrs-output-start-h-cons ((mrs html))
   (with-slots (stream) mrs
-    (format stream "<tr><td id=hcons>HCONS</td><td class=hcons>&lang; ")))
+    (format 
+     stream 
+     "<tr><td class=mrsFeatureHcons>HCONS</td>~
+      <td class=mrsValueHcons>{ ")))
 
 (defmethod mrs-output-outscopes ((mrs html) relation higher lower firstp)
   (with-slots (stream) mrs
     (unless firstp (format stream ", "))
     (format 
      stream 
-     "~(~a~) ~a ~(~a~)"
-     higher relation lower)))
+     "<span class=\"mrsVariable~:(~a~)\"~
+            onMouseOver=\"mrsVariableSelect('~:(~a~)')\"~
+            onMouseOut=\"mrsVariableUnselect('~:(~a~)')\">~(~a~)</span> ~
+      ~a ~
+      <span class=\"mrsVariable~:(~a~)\"~
+            onMouseOver=\"mrsVariableSelect('~:(~a~)')\"~
+            onMouseOut=\"mrsVariableUnselect('~:(~a~)')\">~(~a~)</span>"
+     higher higher higher higher 
+     relation 
+     lower lower lower lower)))
 
 (defmethod mrs-output-end-h-cons ((mrs html))
   (with-slots (stream) mrs
-    (format stream " &rang;</td>~%")))
+    (format stream " }</td>~%")))
 
 (defmethod mrs-output-start-info-s ((mrs html)))
 
@@ -692,19 +746,20 @@ higher and lower are handle-variables
 ;;; Actual output fns
 
 (defun output-mrs (mrs-instance device &optional file-name)
-     (if file-name
-      (with-open-file (stream file-name :direction :output)
-         (output-mrs1 mrs-instance device stream))
-      (output-mrs1 mrs-instance device t)))
+  (if file-name
+    (with-open-file (stream file-name :direction :output)
+      (output-mrs1 mrs-instance device stream))
+    (output-mrs1 mrs-instance device t)))
   
 (defun output-mrs1 (mrs-instance device stream)
   (def-print-operations device 0 stream)
-       (cond ((psoa-p mrs-instance)
-              (mrs-output-start-fn *mrs-display-structure*)
-              (print-psoa mrs-instance)
-              (mrs-output-end-fn *mrs-display-structure*)
-              (mrs-output-max-width-fn *mrs-display-structure*))
-             (t (mrs-output-error-fn *mrs-display-structure* mrs-instance))))
+  (initialize-display-structure *mrs-display-structure* mrs-instance)
+  (cond ((psoa-p mrs-instance)
+         (mrs-output-start-fn *mrs-display-structure*)
+         (print-psoa mrs-instance)
+         (mrs-output-end-fn *mrs-display-structure*)
+         (mrs-output-max-width-fn *mrs-display-structure*))
+        (t (mrs-output-error-fn *mrs-display-structure* mrs-instance))))
 
 (defparameter *already-seen-vars* nil)
 

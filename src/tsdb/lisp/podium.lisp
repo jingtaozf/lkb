@@ -691,7 +691,8 @@
                             file (gensym "") data title)
                            :wait t)))
                     (when (and (equal (first return) :ok) 
-                               (equal (first (second return)) :graph))
+                               (member (first (second return)) 
+                                       '(:table :graph)))
                       (push (append (second return)
                                     (pairlis 
                                      '(:data :command)
@@ -1010,20 +1011,29 @@
                      (append arguments 
                              (list :interrupt interrupt :meter meter)))))
 
-           (latex
-            (status :text "generating LaTeX output ...")
+           ((latex html)
             (let* ((window (find-podium-window (second command)))
                    (properties (rest window))
                    (data (or (get-field :data properties) "evolution"))
                    (command (get-field :command properties))
                    (command (remove-key-argument :file command))
                    (command (remove-key-argument :format command))
-                   (output (format nil "/tmp/~a.tex" (directory2file data))))
+                   (output (format 
+                            nil 
+                            "/tmp/~a.~a" 
+                            (directory2file data)
+                            (if (eq action 'latex) "tex" "html")))
+                   (message (format
+                             nil
+                             "generating ~a output ..."
+                             (if (eq action 'latex) "LaTeX" "HTML"))))
+              (status :text message)
               (apply (symbol-function (first command)) 
                      (append (rest command)
-                             (list :file output :format :latex)))
+                             (list :file output 
+                                   :format (intern action :keyword))))
               (run-meter 500)
-              (status :text "generating LaTeX output ... done")
+              (status :text (format nil "~a done" message))
               (sleep 1)
               (status :text (format nil "wrote `~a'" output) :duration 5)))
 

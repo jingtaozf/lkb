@@ -134,7 +134,7 @@ proc showtable {filename {container ".table"}
 ##          in unpredictable program behavior.
 ##
 
-  global globals viewer cell layout noOfCols noOfRows colWidth \
+  global globals viewer flags cell layout noOfCols noOfRows colWidth \
       colAnchor colDefaultAnchor  titlerows titlecols
     
   ## Constants
@@ -215,17 +215,47 @@ proc showtable {filename {container ".table"}
 
   button $toplevel.quit -text "Close" \
       -command [list "tsdb_close" $toplevel]
-  button $toplevel.latex -text "LaTeX" \
-      -command [list "tsdb_latex" $toplevel]
+  if {[expr {$flags & 1}]} {
+    button $toplevel.latex -text "LaTeX" \
+        -command [list "tsdb_latex" $toplevel]
+  }; # if
+  if {[expr {$flags & 2}]} {
+    button $toplevel.html -text "HTML" \
+        -command [list "tsdb_html" $toplevel]
+  }; # if
   if { $viewer == "nice" } {
       button $toplevel.print -text "PostScript" \
 	  -command [list make_postscript $c $database]
   
-      table $toplevel \
-	  0,0 $t -cspan 3 -fill both -padx 5 -pady 5\
-	  1,0 $toplevel.quit -pady {5 10} \
-	  1,1 $toplevel.latex -pady {5 10} \
-	  1,2 $toplevel.print -pady {5 10}
+    if {[expr {$flags & 2}]} {
+      if {[expr {$flags & 1}]} {
+        table $toplevel \
+            0,0 $t -cspan 4 -fill both -padx 5 -pady 5\
+            1,0 $toplevel.quit -pady {5 10} \
+            1,1 $toplevel.latex -pady {5 10} \
+            1,2 $toplevel.html -pady {5 10} \
+            1,3 $toplevel.print -pady {5 10}
+      } else {
+        table $toplevel \
+            0,0 $t -cspan 3 -fill both -padx 5 -pady 5\
+            1,0 $toplevel.quit -pady {5 10} \
+            1,1 $toplevel.html -pady {5 10} \
+            1,2 $toplevel.print -pady {5 10}
+      }; # else
+    } else {
+      if {[expr {$flags & 1}]} {
+        table $toplevel \
+            0,0 $t -cspan 3 -fill both -padx 5 -pady 5\
+            1,0 $toplevel.quit -pady {5 10} \
+            1,1 $toplevel.latex -pady {5 10} \
+            1,2 $toplevel.print -pady {5 10}
+      } else {
+        table $toplevel \
+            0,0 $t -cspan 2 -fill both -padx 5 -pady 5\
+            1,0 $toplevel.quit -pady {5 10} \
+            1,1 $toplevel.print -pady {5 10}
+      }; # else
+    }
   } else {
       table $toplevel \
 	  0,0 $t -cspan 2 -fill both -padx 5 -pady 5\
@@ -465,13 +495,14 @@ proc read_table_file {file} {
     ## Reads the description of a table from 'file' and stores it in global
     ## variables.
     ##
-    global format layout region cell viewer titlerows titlecols
+    global flags format layout region cell viewer titlerows titlecols
 
     catch {unset format}
     catch {unset layout}
     catch {unset region}
     catch {unset cell}
     set viewer "nice";			# default value
+    set flags 0;
     set ncells 0;
     set titlecols 0;			# default value
     set titlerows 1;			# default value
@@ -493,6 +524,7 @@ proc read_table_file {file} {
 
 	set command [lindex $line 0]
 	switch $command {
+	    flags  { set flags [lindex $line 1] }
 	    format  { set format([lindex $line 1]) [lrange $line 2 end] }
 	    layout  { set layout([lindex $line 1],[lindex $line 2]) [lrange $line 3 end] }
 	    region  { set region([lindex $line 1],[lindex $line 2],[lindex $line 3],[lindex $line 4]) \

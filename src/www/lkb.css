@@ -1,24 +1,25 @@
 <style type="text/css">
+
   body { 
     margin-left: 10%; margin-right: 10%;
-    font-weight: normal; font-family: Helvetica;
+    font-weight: normal; font-family: helvetica, arial, sans-serif;
     color: #1a04a5;
   }
   td { 
-    font-weight: normal; font-family: Helvetica;
+    font-weight: normal; font-family: helvetica, arial, sans-serif;
     color: #1a04a5;
   }
   td.center {
     text-align: center;
   }
-  table.mrs {
+  table.mrsMrs {
     padding: 0.2em;
     border: solid;
     border-width: thin;
     color: #1a04a5;
     background: #d8d6d6;
   }
-  table.relation {
+  table.mrsRelation {
     padding-right: 0.2em;
     padding-left: 0.2em;
     color: #1a04a5;
@@ -29,19 +30,24 @@
     border-top: none;
     border-bottom: none;
   }
-  td#top, td#rels, td#index, td#hcons {
+  td.mrsFeatureTop, td.mrsFeatureIndex, 
+  td.mrsFeatureRels, td.mrsFeatureHcons {
     font-size: 10pt; 
   }
-  td.top, td.index, td.label, td.hcons {
+  td.mrsValueTop, td.mrsValueIndex, 
+  td.mrsValueRels, td.mrsValueHcons {
     font-size: 10pt; 
   }
-  td.predicate { 
+  td.mrsPredicate { 
     font-size: 10pt; font-style: italic; 
   }
-  td.value { 
+  td.mrsLabel { 
+    font-size: 10pt; font-style: normal; text-align: left; 
+  }
+  td.mrsValue { 
     font-size: 10pt; font-style: italic; text-align: right; 
   }
-  span.bracket { 
+  span.mrsBracket { 
     font-size: 150%; 
   }
 
@@ -77,16 +83,17 @@
     padding: 0em;
   }
   div.label {
-    font-weight: normal; font-size: 10pt; font-family: Helvetica;
+    font-weight: normal; font-size: 10pt; 
+    font-family: helvetica, arial, sans-serif;
   }
   div.form {
-    font-weight: normal; font-size: 10pt; font-family: Helvetica;
+    font-weight: normal; font-size: 10pt; 
+    font-family: helvetica, Arial, sans-serif;
     font-style: italic; 
   }
 
   table.results {
     border-collapse: collapse;
-    vertical-align: top;
   }
   td.tree, td.mrs {
     background: #d8d6d6;
@@ -97,41 +104,62 @@
     border-width: thin;
     color: #2d2d2b;
   }
-
-  table.navigation {
-    border-collapse: collapse;
-    vertical-align: top;
-    height: 100%;
-  }
   td.navigation {
     background: #d8d6d6;
+    color: #2d2d2b;
     text-align: center; vertical-align: middle;
     padding: 0.2em;
-    border: solid;
+    border-top: solid;
+    border-bottom: solid;
     border-width: thin;
-    color: #2d2d2b;
+    font-weight: normal; font-size: 14pt; 
+    font-family: helvetica, arial, sans-serif;
   }
-  div.id {
-    font-weight: normal; font-size: 10pt; font-family: Helvetica;
-    margin-bottom: 2em;
-    color: #2d2d2b;
+  table.navigation {
+    border-collapse: collapse;
+    vertical-align: middle;
   }
-  div.action {
-    font-weight: normal; font-size: 8pt; font-family: Helvetica;
-    text-transform: uppercase;
-    color: #d8d6d6;
-    background: #2d2d2b;
-    padding: 0.5ex;
-    border: none;
-    border-width thin;
+  div.navigation {
+    font-weight: normal; font-size: 12pt; 
+    font-family: helvetica, arial, sans-serif;
   }
   td.buttons { 
-    font-weight: normal; font-size: 80%; font-family: Helvetica;
+    font-weight: normal; font-size: 80%; 
+    font-family: helvetica, arial, sans-serif;
     color: black; vertical-align: middle;
   }
+  div#introduction {
+    font-weight: normal; font-size: 12pt; 
+    font-family: helvetica, arial, sans-serif; 
+    text-align: left;
+    background: #d8d6d6;
+    border: solid; border-width: thin;
+    padding-top: 5px;
+    padding-left: 10px;
+    padding-bottom: 5px;
+    width: 80%;
+    margin-bottom: 1em;
+  }
   div#summary { 
-    font-weight: normal; font-size: 100%; font-family: Helvetica; 
-    bottom-margin: 2em;
+    font-weight: normal; font-size: 100%; 
+    font-family: helvetica, arial, sans-serif; 
+    margin-bottom: 1em;
+  }
+  div#error { 
+    font-weight: normal; font-size: 100%; 
+    font-family: helvetica, arial, sans-serif; 
+    background: #d8d6d6;
+    color: red;
+    width: 80%;
+    padding-top: 5px;
+    padding-left: 10px;
+    padding-bottom: 5px;
+    margin-bottom: 1em;
+  }
+  div#version { 
+    font-weight: normal; font-size: 60%; 
+    font-family: helvetica, arial, sans-serif; 
+    margin-top: 1ex;
   }
 
 </style>

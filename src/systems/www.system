@@ -14,7 +14,7 @@
     :source-pathname (dir-append (get-sources-dir "www") '(:relative "www"))
     :binary-pathname (dir-append (get-binaries-dir "www") '(:relative "www"))
     :source-extension "lisp"
-    :depends-on (#+:tsdb "tsdb" #-:tsdb "lkb")
+    :depends-on ("tsdb")
     :components
     ((:module "aserve"
       :source-pathname %system-binaries%
