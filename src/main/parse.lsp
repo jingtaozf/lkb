@@ -209,6 +209,9 @@
 ;;; Entry point to this group of functions is parse which is passed the
 ;;; sentence as a list of strings and is called from the top level
 
+(defvar *cached-category-abbs* nil
+  "variable used in output to avoid recomputation of tree nodes")
+
 (defun parse (user-input &optional (show-parse-p t) 
 				   (first-only-p *first-only-p*))
   (if (> (length user-input) *chart-limit*)
@@ -218,6 +221,7 @@
 	  (*contemplated-tasks* 0) (*filtered-tasks* 0))
       (flush-heap *agenda*)
       (clear-chart)
+      (setf *cached-category-abbs* nil)
       #+powerpc(setq aa 0 bb 0 cc 0 dd 0 ee 0 ff 0 gg 0 hh 0 ii 0 jj 0)
       (add-morphs-to-morphs user-input)
       (unless 
@@ -981,6 +985,10 @@
 
 (defparameter *lex-ids-used* nil)
 
+(defparameter *sentence* nil)
+
+(defparameter *ostream* nil)
+
 (defun batch-parse-sentences (istream raw-sentence parse-file &optional access-fn)
   (setf *lex-ids-used* nil)
   (let* ((output-file 
@@ -994,8 +1002,11 @@
            (when (eql raw-sentence 'eof) (return))
            (let ((interim-sentence (if access-fn (apply access-fn (list raw-sentence))
                                      raw-sentence)))
-             (format ostream "~A~%" interim-sentence)
-             (finish-output ostream)
+             (unless (fboundp *do-something-with-parse*)
+                     ;;; if we're doing something else, let that function
+                     ;;; control the output
+               (format ostream "~A~%" interim-sentence)
+               (finish-output ostream))
              (let ((sentence (string-trim '(#\Space #\Tab) interim-sentence)))
                (unless (equal sentence "")
                  (let* ((munged-string 
@@ -1005,23 +1016,25 @@
                         (user-input (split-into-words munged-string)))
                    (handler-case
                        (progn (parse user-input nil)
-                              (let ((*sentence* user-input)
-                                    (*ostream* ostream))
-                                (declare (special *sentence* *ostream*))
-                                (when (fboundp *do-something-with-parse*)
-                                  (funcall *do-something-with-parse*))))
+                              (setf *sentence* user-input)
+                              (setf *ostream* ostream)
+                              (when (fboundp *do-something-with-parse*)
+                                (funcall *do-something-with-parse*)))
                        (error (condition)
                               (format t  "~%Error: ~A caused by ~A~%" condition user-input)))                  
-                   (let ((n (length *parse-record*)))
-                     (format ostream "  ~R parse~:[s~;~] found~%" n (= n 1))
-                     (finish-output ostream)))))
+                   (unless (fboundp *do-something-with-parse*)
+                     ;;; if we're doing something else, let that function
+                     ;;; control the output
+                     (let ((n (length *parse-record*)))
+                       (format ostream "  ~R parse~:[s~;~] found~%" n (= n 1))
+                       (finish-output ostream))))))
              (for lex-id in (collect-expanded-lex-ids *lexicon*)
                   do
                   (pushnew lex-id *lex-ids-used*))
              (clear-expanded-lex)       ; try and avoid image increasing
                                         ; at some speed cost
              (setq raw-sentence (read-line istream nil 'eof))))
-        (format ostream "Total elapsed time: ~A msecs~%" 
+        (format ostream ";;; Total elapsed time: ~A msecs~%" 
                 (- (get-internal-run-time) start-time))
         (format t "~%Finished test file")
         (lkb-beep))))
