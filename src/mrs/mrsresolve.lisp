@@ -349,8 +349,10 @@ printing routines -  convenient to make this global to keep printing generic")
                                (if (not (nonquantified-var-p var))
                                    var))))
     (if free-variables
-      (progn (format t "~%Free variables in MRS: ~A" free-variables)
-             nil)
+        (progn
+          (unless *giving-demo-p*
+            (format t "~%Free variables in MRS: ~A" free-variables))
+          nil)
 ;;; variables must be bound by quantifiers unless they are in relations
 ;;; which license implicit existential binding
 ;;; Note that, as far as I can tell, MRS does not have the equivalent

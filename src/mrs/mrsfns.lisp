@@ -109,41 +109,44 @@
 						 (horrible-hack-2 vit)))))))))
 
 (defun extract-and-output (parse-list)
- (let ((*print-circle* nil))
-  (loop for parse in parse-list
+  (let ((*print-circle* nil))
+    (setf *mrs-wg-liszt* (loop for form in (main::output-stream main::*scanner*)
+                             collect
+                               (list (main::typed-item-form form))))
+    (loop for parse in parse-list
         do
-        (let* ((fs (get-parse-fs parse))
-               (sem-fs (path-value fs *initial-semantics-path*)))
-          (if (is-valid-fs sem-fs)
-              (let 
-                  ((mrs-struct (construct-mrs sem-fs)))
-		(unless *mrs-to-vit*
-		  (output-mrs mrs-struct 'simple))
-                (if *mrs-to-vit*
-                    (mrs-to-vit-convert mrs-struct)
-                  (if *mrs-scoping-p*
-                      (scope-mrs-struct mrs-struct)))
-                (when *mrs-results-check*
+          (let* ((fs (get-parse-fs parse))
+                 (sem-fs (path-value fs *initial-semantics-path*)))
+            (if (is-valid-fs sem-fs)
+                (let 
+                    ((mrs-struct (construct-mrs sem-fs)))
+                  (unless *mrs-to-vit*
+                    (output-mrs mrs-struct 'simple))
+                  (if *mrs-to-vit*
+                      (mrs-to-vit-convert mrs-struct)
+                    (if *mrs-scoping-p*
+                        (scope-mrs-struct mrs-struct)))
+                  (when *mrs-results-check*
                     (let ((sorted-mrs-struct (sort-mrs-struct mrs-struct))
 			  (previous-result
                            (gethash (remove-trailing-periods
                                      (get-last-sentence))
                                     *mrs-results-table*)))
                       (if previous-result
-                         (unless (mrs-equalp sorted-mrs-struct previous-result)
-                                  (when 
-                                   (y-or-n-p "Differs from previous result.
+                          (unless (mrs-equalp sorted-mrs-struct previous-result)
+                            (when 
+                                (y-or-n-p "Differs from previous result.
                                        Replace?")
-                                   (setf 
-                                    (gethash
-                                     (remove-trailing-periods
-                                     (get-last-sentence))
-                                     *mrs-results-table*)
-                                    sorted-mrs-struct)))
+                              (setf 
+                                  (gethash
+                                   (remove-trailing-periods
+                                    (get-last-sentence))
+                                   *mrs-results-table*)
+                                sorted-mrs-struct)))
                         (when (y-or-n-p "No previous result.
                                        Add?")
-                              (setf 
-                               (gethash
-                                (remove-trailing-periods
+                          (setf 
+                              (gethash
+                               (remove-trailing-periods
                                 (get-last-sentence)) *mrs-results-table*)
-                               sorted-mrs-struct)))))))))))
+                            sorted-mrs-struct)))))))))))

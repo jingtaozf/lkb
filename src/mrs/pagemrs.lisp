@@ -32,8 +32,10 @@
 
 
 (defun equal-or-subtype (type1 type2)
-  (or (eql type1 type2)
-      (tdl:extends type1 type2)))
+  (or (equal type1 type2)
+      (if (and (symbolp type1) (symbolp type2))
+          (tdl:extends type1 type2)
+        (tdl::complex-subsumes-p type2 type1))))
 
 ;;; called from mrs-to-vit
 

@@ -275,7 +275,7 @@
     (loop for rel in rels
         do
           (unless (member (p-term-predicate rel) *top-level-rel-types*)
-            (loop for arg in (cddr (p-term-args rel))
+            (loop for arg in (cdr (p-term-args rel))
                 do
                   (when (and (vit-var-p arg)
                              (not (member arg *bound-vit-vars*)))
