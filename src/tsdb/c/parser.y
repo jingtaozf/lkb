@@ -433,7 +433,7 @@ y_test :
 
 y_exit : 
   Y_QUIT {
-    main_quit();
+    tsdb_quit();
   }
 ;
                                 
