@@ -2177,21 +2177,15 @@ D
 ;;; of topological-sort.
 
 (defstruct (topological-sort-node (:conc-name topsort-))
-  (color :white :type (member :gray :black :white))
+  (color :white)
   ;; time
   )
 
 (defstruct (component (:include topological-sort-node)
                       (:print-function print-component))
-  (type :file     ; to pacify the CMUCL compiler (:type is alway supplied)
-	:type (member :defsystem
-		      :system
-		      :subsystem
-		      :module
-		      :file
-		      :private-file))
-  (name nil :type (or symbol string))
-  (indent 0 :type (mod 1024))		; Number of characters of indent in
+  (type :file)    ; to pacify the CMUCL compiler (:type is alway supplied)
+  (name nil)
+  (indent 0)				; Number of characters of indent in
 					; verbose output to the user.
   host					; The pathname host (i.e., "/../a").
   device				; The pathname device.
@@ -2219,19 +2213,19 @@ D
   ;; just a pathname argument. The default functions are #'compile-file and
   ;; #'load. Unlike fdmm's SET-LANGUAGE macro, this allows a defsystem to
   ;; mix languages.
-  (language nil :type (or null symbol))
-  (compiler nil :type (or null symbol function))
-  (loader   nil :type (or null symbol function))
-  (compiler-options nil :type list)	; A list of compiler options to
+  (language nil)
+  (compiler nil)
+  (loader   nil)
+  (compiler-options nil)		; A list of compiler options to
                                         ; use for compiling this
                                         ; component.  These must be
                                         ; keyword options supported by
                                         ; the compiler.
 
-  (components () :type list)		; A list of components
+  (components ())			; A list of components
 					; comprising this component's
 					; definition.
-  (depends-on () :type list)		; A list of the components
+  (depends-on ())			; A list of the components
 					; this one depends on. may
 					; refer only to the components
 					; at the same level as this
@@ -2265,9 +2259,9 @@ D
 					; even if file has not
 					; changed.
   ;; PVE: add banner
-  (banner nil :type (or null string))
+  (banner nil)
 
-  (documentation nil :type (or null string)) ; Optional documentation slot
+  (documentation nil) ; Optional documentation slot
   )
 
 (defvar *file-load-time-table* (make-hash-table :test #'equal)
