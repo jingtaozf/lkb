@@ -31,14 +31,6 @@
   ;;
   (declare (ignore fs)))
 
-(defun cyclic-p (fs)
-  ;;
-  ;; given a feature structure, test for cycles (which are not allowed by the
-  ;; FS logic, so probably the MRS construction code should be able to assert
-  ;; that it will never be called on an invalid structure).
-  ;;
-  (declare (ignore fs)))
-
 (defun path-value (fs path)
   ;;
   ;; given a feature structure and a list of symbols naming features, extract

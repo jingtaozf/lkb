@@ -41,3 +41,12 @@
   (unless (rel-p ep) (error "Incorrect type passed to ep-var"))
   (car (rel-flist ep)))
 
+(defstruct rmrs-position
+  position
+  ep)
+
+(defun record-rmrs-position (position ep)
+  (make-rmrs-position
+   :position position
+   :ep ep))
+

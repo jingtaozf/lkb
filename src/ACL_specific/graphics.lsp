@@ -52,6 +52,9 @@
 
 (defun position-x (point)
   (clim:point-x point))
+
+(defun make-position-record (x y)
+  (clim:make-point x y))
  
 
 ;;; RECTANGLE DRAWING

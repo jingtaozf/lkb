@@ -39,7 +39,8 @@
   pred					; relation name
   flist
   parameter-strings			; the constant values
-                                        ; FIX - remove when generator is redone
+					; a junk slot used by the
+                                        ; generator and comparison code
   extra)                                ; extra is a junk slot
                                         ; needed for the munging rules 
 
@@ -181,8 +182,8 @@
     (format stream "~V%" 1)))
 
 (defmethod mrs-output-start-psoa ((mrsout simple))
-  (with-slots (stream) mrsout
-    (format stream "[")))
+  (with-slots (stream indentation) mrsout
+    (format stream "~VT[" indentation)))
 
 (defmethod mrs-output-top-h ((mrsout simple) handel-val)
   (when (and handel-val *rel-handel-path*)
@@ -190,13 +191,13 @@
       (format stream " LTOP: ~(~a~)" handel-val))))
 
 (defmethod mrs-output-index ((mrsout simple) index-val)
-  (with-slots (stream) mrsout
+  (with-slots (stream indentation) mrsout
     (when index-val
-      (format stream "~%  INDEX: ~(~a~)" index-val))))
+      (format stream "~%~VT  INDEX: ~(~a~)" indentation index-val))))
 
 (defmethod mrs-output-start-liszt ((mrsout simple))
   (with-slots (stream indentation) mrsout
-    (format stream "~%  RELS: <")
+    (format stream "~%~VT  RELS: <" indentation)
     (setf indentation (+ indentation 10))))
 
 (defmethod mrs-output-var-fn ((mrsout simple) var-string)
@@ -249,8 +250,8 @@
     (format stream "~VT>" indentation)))
 
 (defmethod mrs-output-start-h-cons ((mrsout simple))
-  (with-slots (stream) mrsout
-    (format stream "~%  HCONS: <")))
+  (with-slots (stream indentation) mrsout
+    (format stream "~%~VT  HCONS: <" indentation)))
 
 (defmethod mrs-output-outscopes ((mrsout simple) reln higher lower first-p)
   (with-slots (stream indentation) mrsout
@@ -281,6 +282,18 @@
     (format stream "~%")
     (format stream "~VT[ " indentation)
     (lkb::add-mrs-pred-region stream pred)))
+
+;;;
+;;; column-two output class (for displaying two MRSs side by side)
+;;;
+
+(defclass column-two (active-t)
+  ())
+
+(defmethod mrs-output-start-fn ((mrsout column-two))
+  (with-slots (stream indentation) mrsout
+    (setf indentation (+ indentation 60))
+    (format stream "~V%" 1)))
 
 ;;; 
 ;;; indexed output-type class

@@ -1,13 +1,13 @@
 (in-package :mrs)
 
-(defparameter *rmrs-display-structure* nil)
-
-(defun def-rmrs-print-operations (class stream)
-  (setf *rmrs-display-structure* (make-instance class 
-					   :stream stream)))
+(defun def-rmrs-print-operations (class indentation stream)
+  (make-instance class 
+    :indentation indentation
+    :stream stream))
 
 (defclass rmrs-output-type ()
-  ((stream :initarg :stream)))
+  ((indentation :initform 0 :initarg :indentation)
+   (stream :initarg :stream)))
 
 (defmethod rmrs-output-error-fn ((rmrsout rmrs-output-type) rmrs-instance)
   (with-slots (stream) rmrsout
@@ -268,19 +268,25 @@ for gram.dtd and tag.dtd
     (format stream "")))
 
 (defmethod rmrs-output-realpred ((rmrsout compact) lemma pos sense)
-  (with-slots (stream) rmrsout
-    (format stream "_~(~a_~a~@[~a~]~)(" lemma (or pos "U") sense)))
+  (with-slots (stream indentation) rmrsout
+    (format stream "~VT_~(~a_~a~@[~a~]~)(" 
+	    indentation lemma (or pos "U") sense)))
 
 (defmethod rmrs-output-gpred ((rmrsout compact) predname)
-  (with-slots (stream) rmrsout
-    (format stream "~(~a~)(" predname)))
+  (with-slots (stream indentation) rmrsout
+    (format stream "~VT~(~a~)(" indentation predname)))
 
 (defmethod rmrs-output-var-fn ((rmrsout compact) var-id var-type)
   (with-slots (stream) rmrsout
     (format stream "~A~A" var-type var-id)))
 
+
 (defmethod rmrs-output-end-var ((rmrsout compact))
-  nil)
+  (with-slots (stream) rmrsout
+      (lkb::current-position stream)))
+;;; may need fixing for generality if current-position isn't
+;;; safe - also needs fixing to remove lkb specificity
+
 
 (defmethod rmrs-output-start-extra ((rmrsout compact))
   (with-slots (stream) rmrsout
@@ -305,14 +311,14 @@ for gram.dtd and tag.dtd
     (format stream "h~A," label-id)))
 
 (defmethod rmrs-output-top-label ((rmrsout compact) label-id)
-  (with-slots (stream) rmrsout
-    (format stream "h~A~%" label-id)))
+  (with-slots (stream indentation) rmrsout
+    (format stream "~VTh~A~%" indentation label-id)))
 
 ;;; Parsonian arguments
 
 (defmethod rmrs-output-start-rmrs-arg ((rmrsout compact) predname)
-  (with-slots (stream) rmrsout
-    (format stream "~A(" predname)))
+  (with-slots (stream indentation) rmrsout
+    (format stream "~VT~A(" indentation predname)))
 
 (defmethod rmrs-output-end-rmrs-arg ((rmrsout compact))
   (with-slots (stream) rmrsout
@@ -321,8 +327,8 @@ for gram.dtd and tag.dtd
 ;;; hcons
 
 (defmethod rmrs-output-hcons-start ((rmrsout compact) reln)
-  (with-slots (stream) rmrsout
-    (format stream "~A("
+  (with-slots (stream indentation) rmrsout
+    (format stream "~VT~A(" indentation
             reln)))
 
 (defmethod rmrs-output-hcons-next ((rmrsout compact))
@@ -336,8 +342,8 @@ for gram.dtd and tag.dtd
 ;;; in-group
 
 (defmethod rmrs-output-ingroup-start ((rmrsout compact))
-  (with-slots (stream) rmrsout
-    (format stream "ING(")))
+  (with-slots (stream indentation) rmrsout
+    (format stream "~VTING(" indentation)))
 
 (defmethod rmrs-output-ingroup-next ((rmrsout compact))
   (with-slots (stream) rmrsout
@@ -396,6 +402,26 @@ for gram.dtd and tag.dtd
   (with-slots (stream) rmrsout
     (format stream "], ")))
 
+;;;
+
+(defclass compact-two (compact)
+  ((xpos :initform 0 :initarg :xpos)))
+
+(defmethod rmrs-output-start-fn ((rmrsout compact-two) cfrom cto)
+  (declare (ignore cfrom cto))
+  (with-slots (stream indentation xpos) rmrsout
+    (setf indentation (+ indentation 60))
+    (format stream "~%~VT" indentation)
+    (setf xpos (lkb::current-position-x stream))))
+
+(defmethod rmrs-output-end-var ((rmrsout compact-two))
+  (with-slots (stream xpos) rmrsout
+    (make-point xpos
+      (lkb::current-position-y stream))))
+;;; may need fixing for generality if current-position isn't
+;;; safe - also needs fixing to remove lkb specificity
+
+
 
 ;;; Actual printing function for robust mrs
 ;;; version for real mrs uses same (or similar) defmethods but
@@ -407,28 +433,40 @@ for gram.dtd and tag.dtd
          (output-rmrs1 rmrs-instance device stream))
       (output-rmrs1 rmrs-instance device t)))
 
-(defun output-rmrs1 (rmrs-instance device stream)
-  (def-rmrs-print-operations device stream)
-  (cond ((rmrs-p rmrs-instance)         
-         (rmrs-output-start-fn *rmrs-display-structure* 
-			       (rmrs-cfrom rmrs-instance)
-			       (rmrs-cto rmrs-instance))
-         (print-rmrs rmrs-instance)
-         (rmrs-output-end-fn *rmrs-display-structure*))
-        (t (rmrs-output-error-fn *rmrs-display-structure* 
-                                 rmrs-instance))))
+(defun output-rmrs1 (rmrs-instance device stream 
+		     &optional grouping-p)
+  ;;; changed to return a list of eps and their positions
+  ;;; for calculation of comparison arrows 
+  ;;; not used otherwise
+  (let ((rmrs-display-structure
+	 (def-rmrs-print-operations device 0 stream)))
+    (cond ((rmrs-p rmrs-instance)         
+	   (rmrs-output-start-fn rmrs-display-structure 
+				 (rmrs-cfrom rmrs-instance)
+				 (rmrs-cto rmrs-instance))
+	   (let ((positions
+		  (print-rmrs rmrs-instance grouping-p 
+			      rmrs-display-structure)))
+	     (rmrs-output-end-fn rmrs-display-structure)
+	     positions))
+	  (t (rmrs-output-error-fn rmrs-display-structure 
+				   rmrs-instance)))))
 
 (defun internal-output-rmrs (rmrs-instance device stream)
   ;;; for rule output
-  (def-rmrs-print-operations device stream)
-  (cond ((rmrs-p rmrs-instance)         
-         (print-rmrs rmrs-instance))
-        (t (rmrs-output-error-fn *rmrs-display-structure* 
-                                 rmrs-instance))))
+  (let ((rmrs-display-structure
+	 (def-rmrs-print-operations device 0 stream)))
+    (cond ((rmrs-p rmrs-instance)         
+	   (print-rmrs rmrs-instance nil rmrs-display-structure))
+	  (t (rmrs-output-error-fn rmrs-display-structure 
+				   rmrs-instance)))))
 
 (defparameter *already-seen-rmrs-vars* nil)
 
-(defun print-rmrs (rmrs)
+(defparameter *already-seen-rmrs-args* nil)
+
+(defun print-rmrs (rmrs grouping-p rmrs-display-structure)
+  (setf *already-seen-rmrs-args* nil)
   (setf *already-seen-rmrs-vars* nil)
   (let ((hook (if (semstruct-p rmrs) (semstruct-hook rmrs))) 
         (top-h (rmrs-top-h rmrs))
@@ -441,56 +479,77 @@ for gram.dtd and tag.dtd
                        (rmrs-bindings rmrs))))
     (when (and hook (not (indices-default hook)))
       (print-semstruct-hook hook 
-                            bindings *rmrs-display-structure*))
+                            bindings rmrs-display-structure))
     (unless hook
-      (rmrs-output-top-label *rmrs-display-structure*
+      (rmrs-output-top-label rmrs-display-structure
 			     (if top-h
 				 (find-rmrs-var-id top-h bindings)
 			       (funcall
 				*rmrs-variable-generator*))))
+    (let ((positions
+	   (print-rmrs-eps eps bindings grouping-p 
+			   rmrs-args rmrs-display-structure)))
+      (loop for arg in rmrs-args
+	  unless (member arg *already-seen-rmrs-args*)
+	  do
+	    (print-rmrs-arg arg bindings rmrs-display-structure))
+      (print-rmrs-in-groups rmrs-in-groups bindings rmrs-display-structure)
+      (print-rmrs-hcons rmrs-h-cons bindings rmrs-display-structure)
+      positions)))
+
+(defun print-rmrs-eps (eps bindings grouping-p rmrs-args 
+		       rmrs-display-structure)
     (loop for ep in eps
-        do
-          (rmrs-output-start-ep *rmrs-display-structure*
-                                (if (char-rel-p ep)
-                                    (char-rel-cfrom ep)
-                                  -1)
-                                (if (char-rel-p ep)
-                                    (char-rel-cto ep)
-                                  -1))
-          (let ((pred (rel-pred ep)))
+        collect
+	  (let ((pred (rel-pred ep)))
+	    (rmrs-output-start-ep rmrs-display-structure
+				  (if (char-rel-p ep)
+				      (char-rel-cfrom ep)
+				    -1)
+				  (if (char-rel-p ep)
+				      (char-rel-cto ep)
+				    -1))
             (if (realpred-p pred)
-                (rmrs-output-realpred *rmrs-display-structure*
+                (rmrs-output-realpred rmrs-display-structure
                                       (realpred-lemma pred)
                                       (realpred-pos pred)
                                       (realpred-sense pred))
-              (rmrs-output-gpred *rmrs-display-structure* pred)))
-          (let ((label (rel-handel ep)))
-            (rmrs-output-label *rmrs-display-structure*
-                                 (find-rmrs-var-id label bindings)))
-          (loop for value in (rel-flist ep)
-                             ;; got to be a variable, not a constant
-                             ;; but could be a grammar variable
-              do
-                (print-rmrs-var value bindings *rmrs-display-structure*))
-          (rmrs-output-end-ep *rmrs-display-structure*))
-    (loop for arg in rmrs-args
-        do
-          (rmrs-output-start-rmrs-arg *rmrs-display-structure*
-                                      (rmrs-arg-arg-type arg))
-          (let ((label (rmrs-arg-label arg)))
-            (rmrs-output-label *rmrs-display-structure* 
-                                   (find-rmrs-var-id
-                                    label
-                                    bindings)))
-          (let ((value (rmrs-arg-val arg)))
-            (if (var-p value)
-                (print-rmrs-var value bindings *rmrs-display-structure*)
-                (rmrs-output-constant-fn 
-                 *rmrs-display-structure*
-                 value)))
-          (rmrs-output-end-rmrs-arg *rmrs-display-structure*))
-    (print-rmrs-in-groups rmrs-in-groups bindings *rmrs-display-structure*)
-    (print-rmrs-hcons rmrs-h-cons bindings *rmrs-display-structure*)))
+              (rmrs-output-gpred rmrs-display-structure pred))
+	    (let ((label (rel-handel ep)))
+	      (rmrs-output-label rmrs-display-structure
+				 (find-rmrs-var-id label bindings)))
+	    (let* ((value (car (rel-flist ep)))
+		   ;; checking should happen elsewhere
+		   ;; got to be a variable, not a constant
+		   ;; but could be a grammar variable
+		   (position 
+		    (print-rmrs-var value bindings rmrs-display-structure)))
+	      (rmrs-output-end-ep rmrs-display-structure)
+	      (when grouping-p
+		(loop for arg in rmrs-args
+		    when (eql-var-id (rmrs-arg-label arg) (rel-handel ep))
+		    do		
+		      (print-rmrs-arg arg bindings rmrs-display-structure)
+		      (push arg *already-seen-rmrs-args*)))
+	      (if position
+		  (record-rmrs-position position ep))))))
+
+(defun print-rmrs-arg (arg bindings rmrs-display-structure)
+  (rmrs-output-start-rmrs-arg rmrs-display-structure
+			      (rmrs-arg-arg-type arg))
+  (let ((label (rmrs-arg-label arg)))
+    (rmrs-output-label rmrs-display-structure 
+		       (find-rmrs-var-id
+			label
+			bindings)))
+  (let ((value (rmrs-arg-val arg)))
+    (if (var-p value)
+	(print-rmrs-var value bindings rmrs-display-structure)
+      (rmrs-output-constant-fn 
+       rmrs-display-structure
+       value)))
+  (rmrs-output-end-rmrs-arg rmrs-display-structure))
+
 
 (defun find-rmrs-var-id (var bindings)
   (let ((canon-var (if bindings 
@@ -556,3 +615,6 @@ for gram.dtd and tag.dtd
    (indices-index hook)
    bindings display)
   (semstruct-output-end-hook display))
+
+
+

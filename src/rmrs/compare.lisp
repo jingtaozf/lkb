@@ -31,33 +31,67 @@ Should be possible to reuse this as MRS code
 (defstruct (comp-arg (:include rmrs-arg))
   comp-status)
 
-(defstruct comparison-record
+(defstruct rmrs-comparison-record
+  matched-rels
   label-list
   var-list)
+
+(defstruct match-rel-record
+  rel1
+  rel2
+  comp-status)
   
 #|
-(setf *rasp-eg5*
+(progn
+(setf *rasp-eg5-a*
   (nth 4
        (read-rmrs-file "xxx" :rasp)))
+nil)
+
+(progn
+(setf *rasp-eg5-b*
+  (nth 4
+       (read-rmrs-file "xxx" :rasp)))
+nil)
 
 (setf *erg-eg5*
   (progn (let ((*mrs-output-p* t))
 	   (do-parse-tty "Abrams handed Browne the cigarette")
 	   (mrs-to-rmrs *mrs-debug*))))
+
+(compare-rmrs *rasp-eg5-a* *rasp-eg5-b* t)
 |#
+
+;;; Main entry point - same-source-p is t if we want
+;;; to use the character position information 
 
 (defun compare-rmrs (rmrs1 rmrs2 same-source-p)
   (unless (and (rmrs-p rmrs1) (rmrs-p rmrs2))
     (error "Arguments to compare-rmrs are not valid RMRSs"))
-  (compare-rmrs-aux (convert-to-comparison-rmrs 
-		     (sort-rmrs rmrs1 same-source-p))
-		    ;; turns the rmrs into comp-rel and comp-args
-		    (convert-to-comparison-rmrs 
-		     (sort-rmrs rmrs2 same-source-p))
-		    (initial-comparison-record)))
+  (let* ((new-rmrs1 (sort-rmrs (convert-to-comparison-rmrs rmrs1)
+	      ;; turns the rmrs into comp-rel and comp-args
+			  same-source-p))
+	 (new-rmrs2 (sort-rmrs (convert-to-comparison-rmrs rmrs2)
+			  same-source-p))
+	 (comparison-records
+	  (compare-rmrs-aux new-rmrs1 new-rmrs2 
+			    (initial-comparison-record)
+			    same-source-p)))
+    (dolist (comparison-record comparison-records)
+      (display-comparison-results rmrs1 rmrs2
+       comparison-record))))
+
+
+
+(defun display-comparison-results (rmrs1 rmrs2 record)
+  (lkb::show-mrs-rmrs-compare-window rmrs1 rmrs2 record "Comparison"))
+  
 
 (defun initial-comparison-record nil
-  nil)
+  (make-rmrs-comparison-record 
+   :matched-rels nil
+   :label-list nil
+   :var-list nil))
 
 #|
 sorting
@@ -88,38 +122,82 @@ in RMRSs from different sources, unless we have some matching
 realpreds.
 
 |#
-#|
+
 
 (defun sort-rmrs (rmrs same-source-p)
   (let* ((liszt (rmrs-liszt rmrs))
 	 (new-liszt 
-	  (combine-similar-relations liszt nil FIX)))
+	  (combine-similar-relations liszt nil 
+				     (if same-source-p
+					 #'rmrs-rel-sort-same-source-eql
+				       #'rmrs-rel-sort-eql))))
     ;;; combine-similar-relations is in mrs/mrscorpus.lisp
-  (if same-source-p rmrs
-    (let ((sorted-liszt (sort (rmrs-liszt rmrs) #'< 
-			      :key #'char-rel-cfrom)))
+    (let ((sorted-liszt 
+	   (sort new-liszt 
+		 (if same-source-p
+		     #'rmrs-rel-sort-same-source-lesser-p
+		   #'rmrs-rel-sort-lesser-p)
+		 :key #'car)))
       (setf (rmrs-liszt rmrs)
-	(merge-equal-elements sorted-liszt #'(lambda (x y)
-					       (eql (char-rel-cfrom x)
-						    (char-rel-cfrom y))))
-      rmrs)
-      ;;; else - FIX
-    rmrs))))
+	sorted-liszt)
+      rmrs)))
 
-|#
 
 (defun rmrs-rel-sort-same-source-eql (rel1 rel2)
   (let ((cfrom1 (char-rel-cfrom rel1))
-	(cfrom2 (char-rel-cfrom rel2)))
+	(cfrom2 (char-rel-cfrom rel2))
+	(cto1 (char-rel-cto rel1))
+	(cto2 (char-rel-cto rel2)))
     (and (eql cfrom1 cfrom2)
+	 (eql cto1 cto2)
 	 (rmrs-rel-sort-eql rel1 rel2))))
 
 
 (defun rmrs-rel-sort-eql (rel1 rel2)
-)
+  (compare-rmrs-preds rel1 rel2))
+			   
+
+(defun rmrs-rel-sort-same-source-lesser-p (rel1 rel2)
+  (let ((cfrom1 (char-rel-cfrom rel1))
+	(cfrom2 (char-rel-cfrom rel2))
+	(cto1 (char-rel-cto rel1))
+	(cto2 (char-rel-cto rel2)))
+    (or (< cfrom1 cfrom2)
+	(and (eql cfrom1 cfrom2) 
+	    (or (< cto1 cto2)
+		(and (eql cfrom1 cfrom2)
+		    (rmrs-rel-sort-lesser-p rel1 rel2)))))))
+
+(defun rmrs-rel-sort-lesser-p (rel1 rel2)
+  (let ((pred1 (rel-pred rel1))
+	(pred2 (rel-pred rel2)))
+  ;;; returns t if 
+  ;;; pred1 is alphabetically less than pred2
+  ;;; or if they are equal non realpreds and the parameter 
+  ;;;                                     string is less
+  ;;; or if pred1 is a real-pred and pred2 isn't
+    (if (realpred-p pred1)
+	(if (not (realpred-p pred2))
+	    t
+	  (rmrs-real-pred-lesser-p pred1 pred2))
+    ;;; else pred1 isn't a realpred
+      (if (realpred-p pred2)
+	  nil
+	(if (equal pred1 pred2)
+	    (let ((str1 (rel-parameter-strings rel1))
+		  (str2 (rel-parameter-strings rel2)))
+	      (if (and str1 str2)
+		  (string-lessp str1 str2)
+		  nil)) ;; bit arbitrary ...
+	  nil))))) ;;; we don't want to order two grammar preds
+                   ;;; because one might subsume the other
+
+(defun rmrs-real-pred-lesser-p (pred1 pred2)
+  ;;; note that this ignores pos tages and senses deliberately
+  (string-lessp (realpred-lemma pred1)
+		(realpred-lemma pred2)))
 
 
-  
 ;;; Inequalities
 ;;;
 ;;; When two RMRSs are compared, it may be possible to
@@ -151,12 +229,10 @@ realpreds.
 	 (labels nil)
 	 (distinguished nil)
 	 (undistinguished nil)
-	 (count 0)
 	 (elpreds
 	  (loop for ep in (rmrs-liszt rmrs)
 	      collect
 		(progn
-		(incf count) ;;; temporary hack
 		  (pushnew (rel-handel ep) labels 
 			   :test #'eql-var-id)
 		  (let ((ep-var (retrieve-rmrs-ep-var ep)))
@@ -169,7 +245,8 @@ realpreds.
 		    (make-comp-rel :handel (rel-handel ep)
 				   :pred (rel-pred ep)
 				   :flist (rel-flist ep)
-				   :cfrom count
+				   :cfrom (char-rel-cfrom ep)
+				   :cto (char-rel-cto ep)
 				   :parameter-strings
 				   (get-carg-value
 				    ep
@@ -236,37 +313,46 @@ realpreds.
 	     (equal (realpred-pos pred) "v"))))))
 
 
-(defun compare-rmrs-aux (rmrs1 rmrs2 comp-record)
+(defun compare-rmrs-aux (rmrs1 rmrs2 comp-record same-source-p)
   ;;; FIX needs much more!
-  (compare-rmrs-liszts (rmrs-liszt rmrs1) (rmrs-liszt rmrs2) comp-record))
+  (compare-rmrs-liszts (rmrs-liszt rmrs1) (rmrs-liszt rmrs2) 
+		       comp-record same-source-p))
 
-(defun compare-rmrs-liszts (l1 l2 comp-record)
-  ;;; these should eventually be lists of comparison sets
-  ;;; but for now just lists of rels
+(defun compare-rmrs-liszts (l1 l2 comp-record same-source-p)
   (if (and l1 l2)
-      (let ((first1 (car l1))
-	    (first2 (car l2)))
-	(cond ((greater-sort-rels first1 first2)
-	       (compare-rmrs-liszts first1 (cdr l2) comp-record))
-	      ((greater-sort-rels first2 first1)
-	       (compare-rmrs-liszts (cdr l1) first2 comp-record))
+      (let ((first1 (caar l1))
+	    (first2 (caar l2)))
+	(cond ((if same-source-p
+		   (rmrs-rel-sort-same-source-lesser-p first2 first1)
+		 (rmrs-rel-sort-lesser-p first2 first1))
+	       (compare-rmrs-liszts l1 (cdr l2) comp-record same-source-p))
+	      ((if same-source-p
+		   (rmrs-rel-sort-same-source-lesser-p first1 first2)
+		 (rmrs-rel-sort-lesser-p first1 first2))
+	       (compare-rmrs-liszts (cdr l1) l2 comp-record same-source-p))
 	      (t (let ((comp-records (compare-rmrs-rel-set 
-				      first1 first2 comp-record)))
+				      (car l1) (car l2) comp-record)))
 		   (loop for alternative in comp-records
-		       do
+		       nconc
 			 (compare-rmrs-liszts (cdr l1) (cdr l2) 
-					      alternative))))))
+					      alternative same-source-p))))))
     (list comp-record)))
   
 (defun compare-rmrs-rel-set (s1 s2 comp-record)
-  ;;; FIX when these are sets
-  (let ((match (compare-rmrs-rels s1 s2 comp-record)))
-    (or match comp-record)))
+  ;;; the full set of possibilities here is horrible
+  ;;; since in principle if we have {a,b} and {c,d}
+  ;;; we should allow for the possibility that if a matches c
+  ;;; b might match d if we ignored the a/c match
+  ;;; For now, see if we can get away without this since it
+  ;;; seems very unlikely that the bindings will interact
+  ;;;
+  ;;; FIX - cheat altogether for now ... 
+  ;;; very unlikely to have non-singleton sets with same-source-p
+  ;;; anyway.
+  (list (compare-rmrs-rels (car s1) (car s2) comp-record)))
 
 (defun compare-rmrs-rels (rel1 rel2 comparison-record)
-  (let ((pred-comparison (compare-rmrs-preds 
-			  (rel-pred rel1)
-			  (rel-pred rel2))))
+  (let ((pred-comparison (compare-rmrs-preds rel1 rel2)))
     (if pred-comparison
 	(let ((var-match-record 
 	       (let ((label-match (compare-rmrs-labels 
@@ -283,27 +369,40 @@ realpreds.
 			     (t label-match)))
 		   nil))))
 	  (if var-match-record
-	      (progn
-		(setf (comp-rel-comp-status rel1) pred-comparison)
-		(setf (comp-rel-comp-status rel2) pred-comparison)
+	      (let ((match-record
+		     (make-match-rel-record :rel1 rel1
+					:rel2 rel2
+					:comp-status pred-comparison)))
+		(push match-record
+		      (rmrs-comparison-record-matched-rels 
+		       var-match-record))
 		var-match-record)
 	    ;;; else - variable match is impossible
-	    nil))
+	    comparison-record))
       ;;; else - predicates don't match
-      nil)))
+      comparison-record)))
       
 
      
 
-(defun compare-rmrs-preds (pred1 pred2)
+(defun compare-rmrs-preds (rel1 rel2)
+  ;;; code is used both for comparing rels from different
+  ;;; sources and putting rels into equivalence classes
+  ;;; initially, though in the latter case we treat as a boolean fn
+  (let ((pred1 (rel-pred rel1))
+	(pred2 (rel-pred rel2)))
   ;;; a gram pred can never to equal to a non-gram pred
-  (cond ((and (realpred-p pred1) 
-	      (realpred-p pred2))
-	 (compare-rmrs-real-preds pred1 pred2))
-	((realpred-p pred1) nil)
-	((realpred-p pred2) nil)
-	((equal pred1 pred2) :equal)
-	(t nil)))
+    (cond ((and (realpred-p pred1) 
+		(realpred-p pred2))
+	   (compare-rmrs-real-preds pred1 pred2))
+	  ((realpred-p pred1) nil)
+	  ((realpred-p pred2) nil)
+	  ((and (equal pred1 pred2) 
+		(string-equal (rel-parameter-strings rel1)
+			      (rel-parameter-strings rel2)))
+	 ;;; string equal returns t if args are both nil
+	   :equal)
+	  (t nil))))
 
 (defun compare-rmrs-real-preds (pred1 pred2)
   (if (equal (realpred-lemma pred1)
@@ -326,6 +425,12 @@ realpreds.
 (defun unknown-rmrs-pos (pred)
   (equal (realpred-pos pred)
 	 "u"))
+
+(defun compare-rmrs-vars (var1 var2 comparison-record)
+  comparison-record)
+
+(defun compare-rmrs-labels (var1 var2 comparison-record)
+  comparison-record)
 
 #|
 

@@ -44,6 +44,7 @@
   (format t "deref(): ~a.~%" fs)
   (when (fixnump fs) (pet_fs_deref fs)))
 
+#|
 (defun cyclic-p (fs)
   ;;
   ;; given a feature structure, test for cycles (which are not allowed by the
@@ -53,6 +54,7 @@
   #+:debug
   (format t "cyclic-p(): ~a.~%" fs)
   (when (fixnump fs) (pet_fs_cyclic_p fs)))
+|#
 
 (defun path-value (fs path)
   ;;

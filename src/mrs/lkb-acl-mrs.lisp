@@ -4,7 +4,16 @@
 
 (in-package :lkb)
 
-;;; MRS windows
+;;; MRS and RMRS windows
+
+;;;    RMRS comparison - to-do
+;;;
+;;;    put on a menu somewhere 
+;;;    ("RMRS compare" :value rmrs-compare :active ,*mrs-loaded*)
+;;; 
+;;;    (rmrs-compare (funcall 'show-mrs-rmrs-compare-window rmrs1 rmrs2 
+;;;      comparison-record title))
+;;;
 
 (define-lkb-frame mrs-simple
     ((mrsstruct :initform nil
@@ -44,6 +53,18 @@
   :display-function 'show-mrs-rmrs  
   :width *parse-window-width* 
   :height *parse-window-height*)
+
+(define-lkb-frame mrs-rmrs-compare
+    ((rmrs1 :initform nil
+	    :accessor mrs-rmrs-compare-rmrs1)
+     (rmrs2 :initform nil
+	    :accessor mrs-rmrs-compare-rmrs2)
+     (comparison-record :initform nil
+	    :accessor mrs-rmrs-compare-comparison-record))
+  :display-function 'show-mrs-rmrs-compare
+  :width (* 2 *parse-window-width*) 
+  :height *parse-window-height*)
+
 
 (define-lkb-frame mrs-dependencies
     ((mrsstruct :initform nil
@@ -103,8 +124,6 @@
     (setf (clim:frame-pretty-name mframe) (or title "Simple MRS"))
     (clim:run-frame-top-level mframe)))
 
-
-
 (defun show-mrs-indexed-window (edge &optional mrs title)
   (mp:run-function "Indexed MRS"
    #'show-mrs-indexed-window-really edge mrs title))
@@ -154,6 +173,26 @@
       (or rmrs (mrs::mrs-to-rmrs mrsstruct)))
     (setf (clim:frame-pretty-name mframe) (or title "Robust MRS"))
     (clim:run-frame-top-level mframe)))
+
+(defun show-mrs-rmrs-compare-window (rmrs1 rmrs2 comparison-record title)
+    (mp:run-function "RMRS comparison" 
+		     #'show-mrs-rmrs-compare-window-really 
+		     rmrs1 rmrs2 comparison-record title))
+
+(defun show-mrs-rmrs-compare-window-really (rmrs1 rmrs2 comparison-record
+					    title)
+  (let ((mframe (clim:make-application-frame 'mrs-rmrs-compare)))
+    (setf *normal* (clim:parse-text-style (make-active-fs-type-font-spec)))
+    (setf *bold* (clim:merge-text-styles '(nil :bold nil) *normal*))
+    (setf (mrs-rmrs-compare-rmrs1 mframe) 
+      rmrs1)
+    (setf (mrs-rmrs-compare-rmrs2 mframe) 
+      rmrs2)
+    (setf (mrs-rmrs-compare-comparison-record mframe) 
+      comparison-record)
+    (setf (clim:frame-pretty-name mframe) (or title "RMRS comparison"))
+    (clim:run-frame-top-level mframe)))
+
 
 (defun show-mrs-dependencies-window (edge &optional mrs title)
   (mp:run-function "Elementary Dependencies"
@@ -212,7 +251,32 @@
     (if rmrs
       (clim:with-text-style (stream (lkb-parse-tree-font))
         (mrs::output-rmrs1 rmrs 'mrs::compact stream))
-      (format stream "~%::: MRS structure could not be extracted~%"))))
+      (format stream "~%::: RMRS structure could not be extracted~%"))))
+
+(defun show-mrs-rmrs-compare (mframe stream &key max-width max-height)
+  (declare (ignore max-width max-height))
+  (let ((rmrs1 (mrs-rmrs-compare-rmrs1 mframe))
+	(rmrs2 (mrs-rmrs-compare-rmrs2 mframe))
+	(comparison-record (mrs-rmrs-compare-comparison-record mframe)))
+    (if (and rmrs1 rmrs2 comparison-record)
+        (clim:with-text-style (stream *normal*)
+	  (clim:with-output-recording-options (stream :draw nil :record t)
+	    (let  
+	      ((ep-pts1 (mrs::output-rmrs1 rmrs1 'mrs::compact stream t)))
+	      (move-to-x-y stream 0 0)
+	      (let ((ep-pts2
+		     (mrs::output-rmrs1 rmrs2 'mrs::compact-two stream t)))
+		(add-comparison-pointers stream ep-pts1 ep-pts2 
+					 comparison-record)))))
+      (format stream "~%::: RMRS structures could not be extracted~%"))))
+
+(defun add-comparison-pointers (stream ep-pts1 ep-pts2 comparison-record)
+  (when (and ep-pts1 ep-pts2 comparison-record)
+    (clim:draw-line stream
+		     (mrs::rmrs-position-position (car ep-pts1))
+		     (mrs::rmrs-position-position  (car ep-pts2))
+		    :ink +red-flipping-ink+)))
+
 
 (defun show-mrs-dependencies (mframe stream &key max-width max-height)
   (declare (ignore max-width max-height))
