@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.19  1999/10/14 00:46:31  danf
+;; Patches for better sorts
+;;
 ;; Revision 1.18  1999/08/20 00:45:16  aac
 ;; allow hack for null semantics to be turned off
 ;;
@@ -156,6 +159,8 @@
 				       ,(vsym "QUANT"))
   "A not-necessarily-complete list of features that determines printing
 order in an MRS")
+
+(defparameter *arg-feat* nil)
 
 (defparameter *do-not-convert-sort-list* nil
   "relations which will be ignored in the conversion process")
@@ -388,7 +393,7 @@ printing routines -  convenient to make this global to keep printing generic")
 (defvar *true-type* nil)
 
 ;;; don't unstring these:
-(setf *string-valued-features* nil)
+(defvar *vit-string-valued-features* nil)
 
 (defparameter *alex-mode* nil
   "if t, allows scope to have specified relations")
