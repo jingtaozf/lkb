@@ -114,7 +114,7 @@
 
 (defparameter *tsdb-maximal-number-of-analyses* 0)
 
-(defparameter *tsdb-maximal-number-of-derivations* 0)
+(defparameter *tsdb-maximal-number-of-derivations* 5000)
 
 (defparameter *tsdb-default-skeleton* "english")
 
