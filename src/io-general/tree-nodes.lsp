@@ -597,3 +597,54 @@
 
 
 
+
+;;; variant on above, which gives the ids of lexical items
+;;; This always shows the complete tree, i.e. with any lexical
+;;; rules etc
+
+(defun print-parse-tty (stream)
+  (loop for edge in *parse-record*
+      do
+        (pprint (parse-tree-structure-with-ids edge) stream)))
+
+(defun construct-parse-trees nil
+  (loop for edge in *parse-record*
+      collect
+        (parse-tree-structure-with-ids edge)))
+
+(defun parse-tree-structure-with-ids (edge)
+   (parse-tree-structure1-with-ids (make-new-parse-tree edge 1) nil))
+
+(defun parse-tree-structure1-with-ids (node lex-ids)
+  (let ((daughters (get node 'daughters)))
+    (multiple-value-bind 
+        (str lex new-lex-ids) 
+        (get-string-for-edge-with-ids node)
+      (if lex
+          ;;; skip the pseudo-node if there are daughters
+          (if daughters
+              (progn
+              (when (cdr daughters) 
+                (error "~%Multiple daughters under pseudonode ~A" node))
+              (parse-tree-structure1-with-ids (car daughters) new-lex-ids))
+            (progn
+              (when (cdr lex-ids) 
+                (error "~%Multiple lex-ids under pseudonode ~A" node))
+              (car lex-ids)))
+          (cons str
+                (loop for dtr in daughters
+                    collect 
+                      (parse-tree-structure1-with-ids dtr new-lex-ids)))))))
+
+(defun get-string-for-edge-with-ids (edge-symbol)
+  (let* ((edge-record (get edge-symbol 'edge-record))
+         (edge-fs (get edge-symbol 'edge-fs)))
+     (if edge-record
+	 (progn
+	   (values 
+		    (or (when edge-fs (find-category-abb edge-fs))
+			(edge-category edge-record))
+                   nil
+                   (edge-lex-ids edge-record)))     
+       (values nil t nil))))
+
