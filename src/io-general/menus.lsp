@@ -54,69 +54,69 @@ cl-user::*lkb-system-version*)))
               (make-lkb-submenu-item :menu-title "Load"
                  :menu-items
                   (list 
-                     (make-menu-item :name "Type file"
+                     (make-menu-item :name "Type file..."
                         :value 'read-type-file :available-p t)
-                     (make-menu-item :name "Type files"
+                     (make-menu-item :name "Type files..."
                         :value 'read-type-files :available-p t)
-                     (make-menu-item :name "Lexicon file"
+                     (make-menu-item :name "Lexicon file..."
                         :value 'read-lex-file :available-p nil)
-                     (make-menu-item :name "Grammar rule file"
+                     (make-menu-item :name "Grammar rule file..."
                         :value 'read-grammar-file :available-p nil)
-                     (make-menu-item :name "Lexical rule file"
+                     (make-menu-item :name "Lexical rule file..."
                         :value 'read-lex-rule-file :available-p nil)
-                     (make-menu-item :name "Morphological data file"
+                     (make-menu-item :name "Morphological data file..."
                         :value 'morph-file-compile :available-p nil)
-                     (make-menu-item :name "Templates file"
+                     (make-menu-item :name "Templates file..."
                         :value 'read-templates-file :available-p nil)
                      )
                   :available-p t)
          (make-lkb-submenu-item :menu-title "View"
                  :menu-items
                   (list 
-                     (make-menu-item :name "Type hierarchy"
+                     (make-menu-item :name "Type hierarchy..."
                         :value 'show-type-tree)
-                     (make-menu-item :name "Type definition"
+                     (make-menu-item :name "Type definition..."
                         :value 'show-type-spec)
-                     (make-menu-item :name "Expanded type"
+                     (make-menu-item :name "Expanded type..."
                         :value 'show-type)
-                     (make-menu-item :name "Lex definition"
+                     (make-menu-item :name "Lex definition..."
                         :value 'show-lex-def)
-                     (make-menu-item :name "Lex entry"
+                     (make-menu-item :name "Lex entry..."
                         :value 'show-lex)
-                     (make-menu-item :name "Word definitions"
+                     (make-menu-item :name "Word definitions..."
                         :value 'show-word-defs)
-                     (make-menu-item :name "Word entries"
+                     (make-menu-item :name "Word entries..."
                         :value 'show-words)
-                     (make-menu-item :name "Grammar rule"
+                     (make-menu-item :name "Grammar rule..."
                         :value 'show-grammar-rule)
-                     (make-menu-item :name "Lexical rule"
+                     (make-menu-item :name "Lexical rule..."
                         :value 'show-lex-rule)
                      )
                :available-p nil)
          (make-lkb-submenu-item :menu-title "Parse"
                  :menu-items                       
                   (list 
-                     (make-menu-item :name "Parse input"
+                     (make-menu-item :name "Parse input..."
                         :value 'do-parse)
                      (make-menu-item :name "Show parse"
                         :value 'show-parse)
-                     (make-menu-item :name "Show edge"
+                     (make-menu-item :name "Show edge..."
                         :value 'show-parse-edge)
                      (make-menu-item :name "Show chart"
                         :value 'show-chart)
                      (make-menu-item :name "Print chart"
                         :value 'print-chart)
-                     (make-menu-item :name "Batch parse"
+                     (make-menu-item :name "Batch parse..."
                         :value 'parse-sentences))
                :available-p nil)
          (make-lkb-submenu-item :menu-title "Links"
                  :menu-items                       
                   (list 
-                     (make-menu-item :name "Apply lexical rule"
+                     (make-menu-item :name "Apply lexical rule..."
                         :value 'apply-lex)
-                     (make-menu-item :name "Apply all lex rules"
+                     (make-menu-item :name "Apply all lex rules..."
                         :value 'apply-lex-rules)
-                     (make-menu-item :name "Unification check"
+                     (make-menu-item :name "Unification check..."
                         :value 'interactive-unification-check)
                      )
                :available-p nil)           
@@ -126,9 +126,9 @@ cl-user::*lkb-system-version*)))
             (make-lkb-submenu-item :menu-title "Output"
                  :menu-items 
                   (list                     
-                     (make-menu-item :name "Dump system"
+                     (make-menu-item :name "Dump system..."
                         :value 'dump-lkb)
-                     (make-menu-item :name "Types with glbs"
+                     (make-menu-item :name "Types with glbs..."
                         :value 'output-type-file 
                         :available-p nil))
                :available-p nil)))))
