@@ -3,8 +3,8 @@
 |*      module: TSDB global variables
 |*     version: 
 |*  written by: oe, dfki saarbruecken
-|* last update: 
-|*  updated by: 
+|* last update: 31-may-96
+|*  updated by: oe, dfki saarbruecken
 |*****************************************************************************|
 |*
 \*****************************************************************************/
