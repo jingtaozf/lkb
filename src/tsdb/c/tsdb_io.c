@@ -84,7 +84,7 @@ FILE *tsdb_open_debug() {
   } /* if */
      
   if((name = getenv("TSDB_DEBUG_FILE")) != NULL) {
-    if((output = fopen(name, "w")) == NULL) {
+    if((output = fopen(name, "w")) != NULL) {
       fprintf(output,
               "TSDB debug opened by %s on %s\n",
               (user != NULL ? user : ""),
@@ -107,8 +107,8 @@ FILE *tsdb_open_debug() {
   fprintf(TSDB_ERROR_STREAM,
           "open_debug(): unable to open file `%s'.\n",
           (name != NULL ? name : TSDB_DEBUG_FILE));
-  return((FILE *)NULL);
 #endif    
+  return((FILE *)NULL);
 } /* tsdb_open_debug() */
 
 void tsdb_close_debug(FILE *stream) {
@@ -201,9 +201,9 @@ BOOL tsdb_print_value(Tsdb_value *value, FILE *stream) {
       break;
     default:
       if(really_verbose_mode) 
-        fprintf(stderr, "Never fucking heard of tsdb_value: %d\n",value->type);
+        fprintf(TSDB_ERROR_STREAM, "Never fucking heard of tsdb_value: %d\n",value->type);
       else
-        fprintf(stderr, "tsdb: unknown tsdb_value type: %d\n", value->type);
+        fprintf(TSDB_ERROR_STREAM, "tsdb: unknown tsdb_value type: %d\n", value->type);
     } /* switch */
   if (r==EOF)
     return FALSE;
@@ -238,14 +238,13 @@ void tsdb_print_selection(Tsdb_selection* selection,FILE *stream){
 #endif
   }
 
-#if defined(DEBUG) && defined(TOM)
+#if !defined(DEBUG) 
   tsdb_print_key_list(selection->key_lists[0],stream);
 #endif
 
-#ifndef DEBUG
+#if defined(DEBUG) && defined(TOM)
   for (i=0;i<selection->n_key_lists;i++) {
-    printf("key list %ld\n",i);
-    fprintf(stream,"key list %ld\n",i);
+    fprintf(tsdb_debug_stream,"key list %ld\n",i);
     tsdb_print_key_list(selection->key_lists[i],stream);
   }
 #endif
@@ -305,9 +304,9 @@ void tsdb_print_tuple(Tsdb_tuple *tuple, FILE *stream) {
   } /* if */
   else {
     if(really_verbose_mode)
-      fprintf(stderr, "Ignoring a shite tuple, you have a crap data file.\n");
+      fprintf(TSDB_ERROR_STREAM, "Ignoring a shite tuple, you have a crap data file.\n");
     else
-      fprintf(stderr, "tsdb_print_tuple is ignoring invalid tuple.\n");
+      fprintf(TSDB_ERROR_STREAM, "tsdb_print_tuple is ignoring invalid tuple.\n");
   } /* else */
 
 } /* tsdb_print_tuple() */
@@ -369,9 +368,9 @@ FILE *tsdb_find_relations_file(char *mode) {
 
   if((file = fopen(tsdb_relations_file, mode )) == NULL) {
     if(really_verbose_mode)
-      fprintf(stderr, "I can't find the fucking relations file.\n");
+      fprintf(TSDB_ERROR_STREAM, "I can't find the fucking relations file.\n");
     else 
-      fprintf(stderr, "tsdb: unable to open relations file %s.\n",
+      fprintf(TSDB_ERROR_STREAM, "tsdb: unable to open relations file %s.\n",
             tsdb_relations_file);
     return((FILE *)NULL);
   } /* if */
@@ -389,7 +388,7 @@ FILE *tsdb_find_data_file(char *name, char *mode) {
   path = strcat(path, name);
 
   if((file = fopen(path, mode)) == NULL) {
-    fprintf(stderr, "tsdb: unable to open data file %s.\n", path);
+    fprintf(TSDB_ERROR_STREAM, "tsdb: unable to open data file %s.\n", path);
     return((FILE *)NULL);
   } /* if */
   else {
@@ -468,7 +467,8 @@ Tsdb_tuple *tsdb_read_tuple(Tsdb_relation *relation, FILE *input) {
     tuple->fields = (Tsdb_value **)NULL;
 
     if(buf[0] != '\n') {
-      *(char *)strrchr(&buf[0], '\n') = TSDB_FS;
+      *(char *)strchr(&buf[0], '\n') = TSDB_FS;
+      /* tom : changed strrchr -> strchr */
       for(field = &buf[0], n = 0, fs = strchr(field, TSDB_FS);
           n < relation->n_fields && fs != NULL;
           field = ++fs, n++, fs = strchr(field, TSDB_FS)) {
@@ -480,8 +480,8 @@ Tsdb_tuple *tsdb_read_tuple(Tsdb_relation *relation, FILE *input) {
             value->value.integer = foo;
           } /* if */
           else {
-            fprintf(stderr, "tsdb_read_tuple(): non-integer ");
-            fprintf(stderr, "`%s' in field `%s' of `%s'.\n",
+            fprintf(TSDB_ERROR_STREAM, "tsdb_read_tuple(): non-integer ");
+            fprintf(TSDB_ERROR_STREAM, "`%s' in field `%s' of `%s'.\n",
                     field, relation->fields[n], relation->name);
             return(Tsdb_tuple *)NULL;
           } /* else */
@@ -813,7 +813,7 @@ FILE* tsdb_open_result()
   FILE* f;
 
   f = fopen(tsdb_last_result,"w");
-  if (!f) { fprintf(stderr,"TSDB: couldn't open %s\n",tsdb_last_result);}
+  if (!f) { fprintf(TSDB_ERROR_STREAM,"TSDB: couldn't open %s\n",tsdb_last_result);}
   return(f);
 
 } /* tsdb_open_result */
