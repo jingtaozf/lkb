@@ -77,7 +77,7 @@
                    :sense-id (rule-sense-id rule) :id (rule-id rule)
                    :language (rule-language rule) 
                    :unifs (rule-unifs rule) :def-unifs (rule-def-unifs rule)
-                   :mother-p (rule-mother-p rule) :full-fs (rule-full-fs rule)
+                   :full-fs (rule-full-fs rule)
                    :daughters-restricted (rule-daughters-restricted rule)
                    :daughters-restricted-reversed 
                    (rule-daughters-restricted-reversed rule)

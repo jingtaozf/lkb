@@ -73,8 +73,6 @@
    language
    unifs
    def-unifs
-   mother-p ; set if the psort is specified as a parent
-            ; cacheing may be sensitive to this value
    full-fs)
 
 ;; interim-fs is removed from the structure since it's redundant -
@@ -86,8 +84,8 @@
 ;;;  Database-independent lexical access functions
 ;;;
 
-(defun get-psort-entry (id &optional parent-p)
-  (let ((entry (get-unexpanded-psort-entry id parent-p)))
+(defun get-psort-entry (id)
+  (let ((entry (get-unexpanded-psort-entry id)))
     ;; if we haven't previously expanded then
     ;; destructively modify entry
     (when entry
@@ -97,12 +95,10 @@
 	    (t (setf (lex-or-psort-full-fs entry) :fail)
 	       nil)))))
                    
-(defun get-unexpanded-psort-entry (id &optional parent-p)
+(defun get-unexpanded-psort-entry (id)
   ;; for multi words, where we don't want the full-fs to be created
   ;; until we're sure we've got all the bits
   (let ((entry (read-psort *lexicon* id)))
-    (when parent-p 
-      (setf (lex-or-psort-mother-p entry) t))
     entry))
 
 (defun clear-expanded-lex nil
@@ -112,17 +108,6 @@
 (defun clear-non-parents nil
   (format t "~%Removing cached lexical entries")
   (clear-expanded-lex))
-
-#|
-(defun clear-non-parents nil
-  (format t "~%Removing cached lexical entries")
-  (dolist (psort (collect-psort-ids *lexicon*))
-    (let ((entry (get-unexpanded-psort-entry psort)))
-      (when entry
-	(unless (and (lex-or-psort-p entry)
-		     (lex-or-psort-mother-p entry))
-	  (unexpand-psort *lexicon* psort))))))       
-|#
 
 (defun get-psort-value (psort) 
   (let ((psort-entry (get-psort-entry psort)))
@@ -389,7 +374,7 @@
 (defmethod read-psort :around ((lexicon lex-database) id &key (cache t))
   (declare (ignore cache))
   (cond ((gethash id (slot-value lexicon 'temp-psorts)))
-	((call-next-method))
+	((and (next-method-p) (call-next-method)))
 	(t (some #'(lambda (lex) (read-psort lex id :cache nil))
 		 (extra-lexicons lexicon)))))
 
