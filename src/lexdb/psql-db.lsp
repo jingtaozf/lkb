@@ -272,7 +272,9 @@
 		(format t "~%(~a new defn entries)"
 			(merge-defn lexicon 
 				    defn-filename)))
-	    (build-current-grammar *psql-lexicon*))))
+	    (build-current-grammar *psql-lexicon*))
+	  nil
+	  ))
     (format t "Merge new entries aborted... (do you have the appropriate db permissions?)")))
 	
 (defmethod initialize-userschema ((lexicon psql-database))
