@@ -59,16 +59,15 @@
        (setf (get name 'daughters) nil))
   (clear-type-visibility)
   (propagate-visibility-in-type-tree type)
-  (let ((node (car (make-new-type-tree type show-all-p))))
+  (let ((node (car (make-new-type-tree type show-all-p t))))
     (display-type-hierarchy 
      node (format nil "Type hierarchy below ~(~A~)" type) t old-window
      show-all-p)))
-     
-			      
 
-;;; initially all nodes are marked not visible. If we're not a shrunk
-;;; node, go on to attempt to mark each daughter as visible If we're
-;;; marked as visible then daughters must have been done already
+;;; initially all nodes are marked not visible. If we're not a shrunk node,
+;;; go on to attempt to mark each daughter as visible
+;;; If we're marked as visible then daughters must have been done already
+;;; If we start below a shrunk node then nodes are visible despite this
 
 (defun propagate-visibility-in-type-tree (type)
    (let ((type-record (get-type-entry type)))
@@ -79,26 +78,35 @@
             (propagate-visibility-in-type-tree daughter)))
       (setf (type-visible-p type-record) t)))
 
-(defun make-new-type-tree (type show-all-p)
-  (let ((type-record (get-type-entry type)))
-    (cond ((not (type-visible-p type-record))
-	   nil)
-	  ((and (not show-all-p)
-		(fboundp 'hide-in-type-hierarchy-p)
-		(funcall (symbol-function 'hide-in-type-hierarchy-p) type))
-	   (mapcan #'(lambda (d) (make-new-type-tree d show-all-p))
-		   (type-daughters type-record)))
-	  (t
-	   (let ((node
-		  (if (symbolp type) type
-		    (let ((new (intern (princ-to-string type))))
-		      (setf (get new 'real-thing) type) new))))
-	     (unless (get node 'daughters)
-	       (setf (get node 'daughters)
-		 (delete-duplicates
-		  (mapcan #'(lambda (d) (make-new-type-tree d show-all-p))
-			  (type-daughters type-record)) :test #'eq)))
-	     (list node))))))
+
+(defun make-new-type-tree (type show-all-p toplevel-p)
+   ;; make sure that top type is not hidden, no matter what
+   ;; hide-in-type-hierarchy-p function says - otherwise we may end up
+   ;; displaying no hierarchy at all (if all descendents are hidden), or just
+   ;; one branch rather than all
+   (let ((type-record (get-type-entry type)))
+      (cond
+         ((not (type-visible-p type-record))
+            nil)
+         ((and (not toplevel-p) (not show-all-p)
+             (fboundp 'hide-in-type-hierarchy-p)
+             (funcall (symbol-function 'hide-in-type-hierarchy-p) type))
+            (mapcan
+               #'(lambda (d) (make-new-type-tree d show-all-p nil))
+               (type-daughters type-record)))
+         (t
+            (let ((node
+                   (if (symbolp type) type
+                      (let ((new (intern (princ-to-string type))))
+                         (setf (get new 'real-thing) type)
+                         new))))
+               (unless (get node 'daughters)
+                  (setf (get node 'daughters)
+                     (delete-duplicates
+                        (mapcan
+                           #'(lambda (d) (make-new-type-tree d show-all-p nil))
+                           (type-daughters type-record)) :test #'eq)))
+               (list node))))))
 
 ;;
 ;; Define a frame class for our tree window
@@ -172,61 +180,39 @@
          (when (> full-length 30) (setf (subseq str 29) "...")) ; '...'
          str)))
 
-
 ;;
 ;; Make nodes active
 ;;
 
 (define-type-hierarchy-command (com-type-hier-menu) 
     ((node 'hier-node :gesture :select))
-  (unhighlight-objects clim:*application-frame*)
-  (let* ((type-entry (get-type-entry node))
-	 (frame clim:*application-frame*)
-	 (command (clim:menu-choose
-                   `(("Help" :value help 
-			     :active ,(type-comment type-entry))
-		     ("Shrink/expand" :value shrink
-				      :active ,(type-daughters type-entry))
-		     ("Type definition" :value def)
-		     ("Expanded type" :value exp)
-		     ("New hierarchy" :value new)))))
-    (when command
-      (handler-case
-	  (ecase command
-	    (help (display-type-comment node (type-comment type-entry)))
-	    (shrink   
-	     (setf (type-shrunk-p type-entry) 
-	       (not (type-shrunk-p type-entry)))
-	     (create-type-hierarchy-tree (type-hierarchy-nodes frame) frame
-					 (type-hierarchy-show-all-p frame)))
-	    (def (if (type-constraint type-entry)
-		     (display-fs-and-parents 
-		      (type-local-constraint type-entry) 
-		      (format nil "~(~A~)  - definition" 
-			      node)
-		      (type-parents type-entry))
-		   (format t "~%No constraint for type ~A" node)))
-	    (exp (if (type-constraint type-entry)
-		     (display-fs-and-parents 
-		      (type-constraint type-entry) 
-		      (format nil "~(~A~) - expanded" (type-name type-entry))
-		      (type-parents type-entry))
-		   (format clim-user:*lkb-top-stream* 
-			   "~%No constraint for type ~A" 
-			   (type-name type-entry))))
-	    (new
-	     (let ((*last-type-name* (type-name type-entry)))
-	       (declare (special *last-type-name*))
-	       (multiple-value-bind (type show-all-p)
-		   (ask-user-for-type nil '("Show all types?" . :check-box))
-		 (when type
-		   (let ((type-entry (get-type-entry type)))
-		     (when type-entry 
-		       (create-type-hierarchy-tree type nil show-all-p))))))))
-	(error (condition)
-	  (format clim-user:*lkb-top-stream*  
-		  "~%Error: ~A~%" condition))))))
-
+  (clim:with-application-frame (frame)
+    (unhighlight-objects frame)
+    (let ((type-entry (get-type-entry node)))
+      (pop-up-menu 
+       `(;; ("Help" :value help 
+	 ;;  :active ,(type-comment type-entry))
+	 ("Shrink/expand" :value shrink
+			  :active ,(type-daughters type-entry))
+	 ("Type definition" :value def)
+	 ("Expanded type" :value exp)
+	 ("New hierarchy" :value new))
+       (help (display-type-comment node (type-comment type-entry)))
+       (shrink (setf (type-shrunk-p type-entry) 
+		 (not (type-shrunk-p type-entry)))
+	       (create-type-hierarchy-tree (type-hierarchy-nodes frame) frame
+					   (type-hierarchy-show-all-p frame)))
+       (def (show-type-spec-aux node type-entry))
+       (exp (show-type-aux node type-entry))
+       (new
+	(let ((*last-type-name* (type-name type-entry)))
+	  (declare (special *last-type-name*))
+	  (multiple-value-bind (type show-all-p)
+	      (ask-user-for-type nil '("Show all types?" . :check-box))
+	    (when type
+	      (let ((type-entry (get-type-entry type)))
+		(when type-entry 
+		  (create-type-hierarchy-tree type nil show-all-p)))))))))))
  
 ;;; NB Problems caused by having only 1 field per type for shrunk and visible
 ;;; flags and allowing multiple type windows on screen at once:
@@ -281,3 +267,46 @@
 	   (setf (type-shrunk-p parent-entry) nil)
 	   (unshrink-ancestors parent-entry top-type)))))
 
+
+;; ----------------------------------------------------------------------
+;; Draw type hierarchy using daVinci
+
+(defvar *davinci-nodes* nil)
+
+(defun davinci (&optional (type *toptype*) old-window show-all-p)
+  (declare (ignore old-window))
+  ;; if show-all-p is true then we never hide any nodes. If it's false
+  ;; then we call hide-in-type-hierarchy-p on each type to see whether
+  ;; it should be hidden
+  (dolist (name *type-names*)
+    (unless (symbolp name)
+      (let ((real-thing name))
+	(setq name (intern (princ-to-string name)))
+	(setf (get name 'real-thing) real-thing))) 
+    (setf (get name 'daughters) nil))
+  (clear-type-visibility)
+  (propagate-visibility-in-type-tree type)
+  (let ((node (car (make-new-type-tree type show-all-p)))
+	(*davinci-nodes* (make-hash-table :test #'equal)))
+    (with-open-file (stream "~/test.daVinci" :direction :output 
+		     :if-exists :supersede)
+      (write-char #\[ stream)
+      (davinci-node stream node)
+      (write-char #\] stream)))
+  t)
+
+(defun davinci-node (stream node)
+  (let ((name (symbol-name node)))
+    (unless (gethash name *davinci-nodes*)
+      (format stream "l(\"~a\",n(\"\"," name)
+      (format stream "[a(\"OBJECT\",\"~a\"),a(\"_GO\",\"text\")],[" name)
+      (dolist (node2 (get node 'daughters))
+	(let ((name2 (symbol-name node2)))
+	  (format stream 
+		  "l(\"~a->~a\",e(\"\",[a(\"_DIR\",\"none\")],r(\"~a\")))," 
+		  name name2 name2)))
+      (write-string "]))," stream)
+      (terpri stream)
+      (setf (gethash name *davinci-nodes*) t)
+      (dolist (node2 (get node 'daughters))
+	(davinci-node stream node2)))))

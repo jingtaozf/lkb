@@ -199,6 +199,20 @@
 	(clim:execute-frame-command f '(com-close-frame))))
     (clim:execute-frame-command frame '(com-close-frame))))
 
+;; Add a [Print] button
+
+#|
+(define-lkb-frame-command (com-print-frame :menu "Print") 
+    ()
+  (clim:with-application-frame (frame)
+    (with-open-file (file "~/print.ps" :direction :output 
+		     :if-exists :supersede)
+      (clim:with-output-to-postscript-stream (stream file :multi-page t)
+	(funcall (clim-internals::pane-display-function 
+		  (clim-internals::find-frame-pane-of-type 
+		   frame 'clim:application-pane))
+		 frame stream)))))
+|#
 
 (defmacro define-lkb-frame (frame-class slots &rest pane-options)
   `(clim:define-application-frame ,frame-class (lkb-frame)
@@ -211,7 +225,7 @@
 	 (clim:spacing (:thickness 1)  
 	   (clim:scrolling (:scroll-bars :both)
 	     (clim:make-pane 'clim:application-pane
-			     :name "lkb-pane"
+			     :name :lkb-pane
 			     :text-cursor nil
 			     :end-of-line-action :allow
 			     :end-of-page-action :allow
@@ -229,24 +243,47 @@
   (let ((stream (clim:frame-standard-output frame)))
     (unhighlight-objects frame)
     (setf (frame-selected frame) 
-      (clim:with-new-output-record (stream)
-	(clim:with-output-recording-options (stream :record t)
-	  (dolist (thing things)
-	    (when thing
-	      (multiple-value-bind (x1 y1 x2 y2)
-		  (clim:bounding-rectangle* 
-		   (clim:output-record-parent thing))
-		(clim:draw-rectangle* stream x1 y1 x2 y2 :
-				      ink clim:+flipping-ink+ 
-				      :filled t)))))))))
+      (list
+       (clim:with-new-output-record (stream)
+	 (clim:with-output-recording-options (stream :record t)
+	   (dolist (thing things)
+	     (when thing
+	       (multiple-value-bind (x1 y1 x2 y2)
+		   (clim:bounding-rectangle* 
+		    (clim:output-record-parent thing))
+		 (clim:draw-rectangle* stream x1 y1 x2 y2 :
+				       ink clim:+flipping-ink+ 
+				       :filled t))))))))))
+
+;; Highlight a list of objects, making the first one red
+
+(defconstant +red-flipping-ink+ 
+    (clim:make-flipping-ink clim:+green+ clim:+foreground-ink+))
+
+(defun highlight-objects-mark (things frame)
+  (let ((stream (clim:frame-standard-output frame)))
+    (unhighlight-objects frame)
+    (highlight-objects (cdr things) frame)
+    (push 
+     (clim:with-new-output-record (stream)
+       (clim:with-output-recording-options (stream :record t)
+	 (when (car things)
+	   (multiple-value-bind (x1 y1 x2 y2)
+	       (clim:bounding-rectangle* 
+		(clim:output-record-parent (car things)))
+	     (clim:draw-rectangle* stream x1 y1 x2 y2 
+				   :ink +red-flipping-ink+ 
+				   :filled t)))))
+     (frame-selected frame))))
 
 ;; Clear highlighting from a particular frame
 
 (defun unhighlight-objects (frame)
-  (let ((selected (frame-selected frame)))
+  (with-slots (selected) frame
     (when selected
-      (clim:erase-output-record selected (clim:frame-standard-output frame)))
-    (setf (frame-selected frame) nil)))
+      (dolist (record selected)
+	(clim:erase-output-record record (clim:frame-standard-output frame))))
+    (setf selected nil)))
 
 ;; Clear highlighting all frames of a particular class
 

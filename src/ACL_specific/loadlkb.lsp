@@ -28,6 +28,10 @@
 
 (import '(enable-type-interactions disable-type-interactions))
 
+;; Too bad this runs into a bug in CLIM in Allegro 5.0.beta...
+
+#-allegro-v5.0 (setq tk-silica::*use-clim-gc-cursor* t)
+
 (defpackage "MRS")
 
 (eval-when (load eval)

@@ -58,7 +58,7 @@
 
 (defstruct fs-display-record 
 ;;; the record of the FS associated with a window
-   fs title paths parents lrout)
+   fs title paths parents type-fs-display)
 
 ;;
 ;; Define a frame class for our FS windows
@@ -76,12 +76,14 @@
 ;;; **** display function entry points ****
 
 (defun display-basic-fs (fs title &optional parents paths output-fs)
-   (let ((fs-window 
+  (when output-fs
+    (error "!"))
+  (let ((fs-window 
           (clim:make-application-frame 'active-fs-window)))
         (setf (active-fs-window-fs fs-window) 
               (make-fs-display-record :fs fs :title title :paths paths 
                                       :parents parents
-                                      :lrout output-fs))
+				      :type-fs-display *type-fs-display*))
 	(setf (clim:frame-pretty-name fs-window) title)
 	(mp:process-run-function "FS" 
                                  #'clim:run-frame-top-level
@@ -100,8 +102,8 @@
 
 ;;; display-tdfs-window is unnecessary - use display-fs instead
 
-(defun display-lrule-window (input-tdfs output-tdfs title)
-  (display-basic-fs input-tdfs title nil nil output-tdfs))
+;;(defun display-lrule-window (input-tdfs output-tdfs title)
+;;  (display-basic-fs input-tdfs title nil nil output-tdfs))
 
 
 ;;; process lock appears to be necessary (at least in CLIM 2.1.beta)
@@ -119,7 +121,6 @@
            (title (fs-display-record-title fs-record))
            (parents (fs-display-record-parents fs-record))
            (paths (fs-display-record-paths fs-record))
-           (lrule-out (fs-display-record-lrout fs-record))
            (fudge 20)
            (max-width 0))
       (silica:inhibit-updating-scroll-bars (stream)
@@ -129,9 +130,7 @@
 	    (setf max-width (+ fudge (display-active-parents parents stream))))
 	  (let ((dag-width (or (if (tdfs-p fs) 
 				   (display-dag2 fs 'edit stream)
-				 (if lrule-out
-				     (display-lrule fs lrule-out stream)
-				   (display-dag1 fs 'edit stream))) 0)))
+				 (display-dag1 fs 'edit stream)) 0)))
 	    (setf max-width (max (+ fudge dag-width max-width)))
 	    (when paths (setf max-width 
 			  (max max-width 
@@ -195,6 +194,7 @@
          (full-tdfs (type-thing-full-tdfs type-thing))
 	 (frame clim:*application-frame*))
     (when (and (atom type) type-entry)
+      (setq *frame* frame)
       (pop-up-menu
        `(("Hierarchy" :value hier
 		      :active ,(getf (class-frames frame) 
@@ -222,19 +222,8 @@
 				     :expand 
 				   :shrink)
 				 type-label-list))
-       (def (if (type-constraint type-entry)
-		(display-fs-and-parents (type-local-constraint type-entry) 
-					(format nil "~(~A~)  - definition" 
-						type)
-					(type-parents type-entry))
-	      (format clim-user:*lkb-top-stream* 
-		      "~%No constraint for type ~A" type)))
-       (exp (if (type-constraint type-entry)
-		(display-fs-and-parents (type-constraint type-entry) 
-					(format nil "~(~A~) - expanded" type)
-					(type-parents type-entry))
-	      (format clim-user:*lkb-top-stream* 
-		      "~%No constraint for type ~A" type)))
+       (def (show-type-spec-aux type type-entry))
+       (exp (show-type-aux type type-entry))
        (full (if full-tdfs
 		 (display-fs full-tdfs (format nil "LR constraint"))))
        (select (select-fs frame type-thing))
@@ -245,7 +234,8 @@
 (defun shrink-fs-action (window action path)
   (set-dag-display-value (fs-display-record-fs (active-fs-window-fs window))
 			 (reverse path)
-			 action)
+			 action
+			 (fs-display-record-type-fs-display window))
   (clim:redisplay-frame-panes window :force-p t))
 
 
