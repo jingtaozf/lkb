@@ -235,7 +235,7 @@
 ;; topmost chart window on screen, and ask for chart window to be
 ;; scrolled so given edge is visible in center, and the edge highlighted
 
-(defun display-edge-in-chart (edge frame)
+(defun display-edge-in-chart (edge)
   (let ((frame (reuse-frame 'chart-window)))
     (when frame
       (highlight-edge edge frame :scroll-to t))))
