@@ -447,6 +447,7 @@ because of the likelyhood of changes in the grammar.
 ;; window.
 
 (defun run-command (command &optional (stream *standard-output*))
+  #+allegro
   (multiple-value-bind (output error process)
       (excl::run-shell-command command 
 			       :input nil 
@@ -459,20 +460,27 @@ because of the likelyhood of changes in the grammar.
 	    as line = (read-line output nil)
 	    until (null line)
 	    do (write-line line stream))
-      (sys:os-wait nil process))))
+      (sys:os-wait nil process)))
+  #-allegro
+  (warn "function run-command needs customising for this Lisp"))
 
 
 (defun check-vit (vit &optional (as-string nil) (stream *standard-output*))
-  (with-open-file (vit-out "~/tmp/vitcheck" :direction :output
-	                                    :if-exists :supersede)
-    (format vit-out "ensure_loaded(vitADT).~%V = ")
-    (if as-string 
-	(format vit-out "~A" vit)
-      (write-vit vit-out vit))
-    (format vit-out ",vitCheck(V).~%~%halt.~%"))
-  (excl::run-shell-command "cd /eo/e1/vm2/vitADT/lib/Vit_Adt;/opt/quintus/bin3.2/sun4-5/prolog < ~/tmp/vitcheck" :output "~/tmp/vitout" :if-output-exists :supersede :error-output "~/tmp/viterror" :if-error-output-exists :supersede)
-  (run-command "tail +56 ~/tmp/viterror | tail -r | tail +2 | tail -r"  stream)
-  (format stream "~%"))
+  #+allegro
+  (progn
+    (with-open-file (vit-out "~/tmp/vitcheck" :direction :output
+                                              :if-exists :supersede)
+      (format vit-out "ensure_loaded(vitADT).~%V = ")
+      (if as-string 
+	  (format vit-out "~A" vit)
+        (write-vit vit-out vit))
+      (format vit-out ",vitCheck(V).~%~%halt.~%"))
+    (excl::run-shell-command "cd /eo/e1/vm2/vitADT/lib/Vit_Adt;/opt/quintus/bin3.2/sun4-5/prolog < ~/tmp/vitcheck" :output "~/tmp/vitout" :if-output-exists :supersede :error-output "~/tmp/viterror" :if-error-output-exists :supersede)
+    (run-command "tail +56 ~/tmp/viterror | tail -r | tail +2 | tail -r"  stream)
+    (format stream "~%"))
+  #-allegro
+  (warn "function check-vit needs customising for this Lisp"))
+
 
 (defun horrible-hack-2 (vit)
   ;;; deletes any leqs which cannot be expressed correctly because
