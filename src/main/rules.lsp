@@ -37,6 +37,7 @@
 (defvar *ordered-lrule-list* nil)
 
 (defun clear-grammar nil
+  (declare (special *arules*))
   (when (fboundp 'clear-generator-grules)
     (funcall 'clear-generator-grules))
   (clrhash *rules*)
