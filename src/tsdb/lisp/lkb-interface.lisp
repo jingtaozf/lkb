@@ -49,9 +49,12 @@
       (:lrules . ,(hash-table-count *lexical-rules*))
       (:lexicon . ,(size-of-lexicon))
       (:grammar . 
-       ,(or (symbol-value (find-symbol "*GRAMMAR-VERSION*" *lkb-package*))
-            (symbol-value (find-symbol "*GRAMMAR-VERSION*" :common-lisp-user))
-            "unknown"))
+       ,(or
+         (loop
+             for package in (list *lkb-package* :common-lisp-user)
+             for symbol = (find-symbol "*GRAMMAR-VERSION*" package)
+             thereis (when (boundp symbol) (symbol-value symbol)))
+         "unknown"))
       (:application . ,(format 
                         nil 
                         "LKB (~A mode~@[; version `~a'~]; ~
