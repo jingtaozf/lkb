@@ -1278,6 +1278,27 @@ Tsdb_relation *tsdb_read_relation(FILE *input) {
 
 } /* tsdb_read_relation() */
 
+int tsdb_count(Tsdb_value *relation) {
+
+  FILE *data;
+  int c, i, n;
+
+  if((data = tsdb_find_data_file(relation->value.string, "r")) == NULL) {
+    return(tsdb.error);
+  } /* if */
+
+  for(i = n = 0; (c = getc(data)) != EOF; i++) {
+    if(c == '\n') ++n;
+  } /* for */
+  if(pclose(data) == -1) fclose(data);
+  fprintf(tsdb_default_stream,
+          "%s: %d record(s) (%d byte(s)).\n",
+          relation->value.string, n, i);
+  fflush(tsdb_default_stream);
+  return(TSDB_OK);
+
+} /* tsdb_count() */
+
 int tsdb_write_table(Tsdb_selection *selection, BOOL raw) {
 
 /*****************************************************************************\

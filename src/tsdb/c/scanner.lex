@@ -123,6 +123,13 @@ TIME (\(|\[)?{HOUR}:{MINUTE}(:{SECOND})?(\)|\])?
   return(Y_RETRIEVE);
 }
 
+{c}{o}{u}{n}{t} {
+  if(verbose_mode) {
+    fprintf(stderr, "COUNT\n");
+  } /* if */
+  return(Y_COUNT);
+}
+
 {u}{p}{d}{a}{t}{e} {
   if(verbose_mode) {
     fprintf(stderr, "UPDATE\n");

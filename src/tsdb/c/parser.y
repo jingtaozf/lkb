@@ -55,6 +55,7 @@
        Y_SHUTDOWN
        Y_HANGUP
        Y_RETRIEVE
+       Y_COUNT
        Y_UPDATE
        Y_INSERT
        Y_DELETE
@@ -95,6 +96,7 @@
                 y_shutdown
                 y_hangup
                 y_retrieval
+                y_counting
                 y_dropping
                 y_deletion
                 y_insertion
@@ -155,6 +157,10 @@ y_query :
   }
 |
   y_dropping {
+    return($1);
+  }
+|
+  y_counting {
     return($1);
   }
 |
@@ -286,6 +292,12 @@ y_deletion :
 |
   Y_DELETE Y_FROM y_table_name Y_WHERE y_condition '.' {
     $$ = tsdb_delete($3, $5);
+  }
+;
+
+y_counting :
+  Y_COUNT y_table_name {
+    $$ = tsdb_count($2);
   }
 ;
 

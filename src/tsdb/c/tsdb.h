@@ -480,6 +480,7 @@ int tsdb_alter_table(Tsdb_value *, Tsdb_field **);
 int tsdb_insert(Tsdb_value *, Tsdb_value **, Tsdb_value **);
 int tsdb_delete(Tsdb_value *, Tsdb_node *);
 int tsdb_update(Tsdb_value *, Tsdb_node *);
+int tsdb_count(Tsdb_value *);
 
 
 int tsdb_project(Tsdb_selection*,Tsdb_value **,char*,FILE* );
