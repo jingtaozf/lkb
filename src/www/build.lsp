@@ -15,14 +15,16 @@
 (load-system "www")
 (setq *building-image-p* nil)
 
+(defun lkb-tmp-dir nil 
+  '#p"/usr/local/etc/www/htdocs/tmp/")
+
 (setq excl:*restart-init-function* 
   #'(lambda ()
       (read-script-file-aux "/usr/local/etc/www/htdocs/grammar/lkb/script")
       (http:start)
       (mp:process-disable mp:*current-process*)))
 
-
 (excl:gc t)
 
-(dumplisp :file "wwwlkb.dxl")
+(dumplisp :file "/eo/e4/malouf/acl/wwwlkb.dxl")
 
