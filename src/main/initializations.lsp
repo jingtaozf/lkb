@@ -51,8 +51,10 @@
 
 
 (defun time-a-funcall (timed-function report-function)
-   #+:allegro
+   #+(and :allegro-version>= (not (version>= 6 1)))
    (excl::time-a-funcall timed-function report-function)
+   #+(and :allegro-version>= (version>= 6 1))
+   (excl::time-a-funcall report-function timed-function)
    #-:allegro
    (let* ((treal (get-internal-real-time))
           (tcpu (get-internal-run-time))
