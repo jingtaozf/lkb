@@ -1,3 +1,15 @@
+/*****************************************************************************\
+|*        file: main.c
+|*      module: TSDB standalone version
+|*     version: 
+|*  written by: oe, dfki saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|*
+\*****************************************************************************/
+
+#include <signal.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -8,6 +20,9 @@
 #include <readline/history.h>
 
 #define TSDB_HISTORY_FILE ".tsdb_history"
+
+char tsdb_version[] = "0.0";
+char tsdb_date[] = "$Date$";
 
 BOOL quit = FALSE;
 
@@ -40,9 +55,6 @@ char *rev_complete[] = {
   (char*)NULL
 };
 
-extern char** relation_names;
-extern char** attribute_names;
-
 char *tsdb_keywords[] = {
   "from",
   "where",
@@ -57,9 +69,6 @@ char *tsdb_keywords[] = {
   (char *)NULL
 };
 
-extern char** tsdb_relation_names;
-extern char** tsdb_attribute_names;
-
 char *tsdb_rest_generate(char* , int ) ;
 char **tsdb_completion(char *, int, int);
 char *tsdb_command_generate(char *, int);
@@ -67,16 +76,43 @@ char *tsdb_others_generate(char *, int);
 char *cannon_whitespace(char *);
 int initialize_readline(void);
 BOOL tsdb_command(char *);
-
+
 int main(int argc, char **argv) {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: main()
+|*     version: 
+|*  written by: oe, dfki saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|* main() is the root of all evil.
+\*****************************************************************************/
 
   char *input = NULL;
   char host[512 + 1], prompt[80 + 1], *foo;
   int n_commands = 0;
 
+#ifdef DBMALLOC
+  union dbmalloptarg m;
+  m.str = "malloc_tsdb";
+  mallopt(MALLOC_ERRFILE,m);
+#endif
+
+#ifdef SYSV
+  struct sigaction tsdb_sig = { SIG_IGN, (sigset_t)0, 0 };
+  sigaction(SIGPIPE, &tsdb_sig);
+#else
+  signal(SIGPIPE, SIG_IGN);
+#endif
+
+  tsdb_default_stream = TSDB_DEFAULT_STREAM;
+  tsdb_error_stream = TSDB_ERROR_STREAM;
+
   using_history();
   if(read_history(TSDB_HISTORY_FILE) != NULL) {
-    fprintf(TSDB_ERROR_STREAM,
+    fprintf(tsdb_error_stream,
             "main(): no history file `%s'.\n",
             TSDB_HISTORY_FILE);
   } /* if */
@@ -94,6 +130,7 @@ int main(int argc, char **argv) {
 
   tsdb_parse_options(argc, argv);
   tsdb_initialize();
+
   sprintf(prompt, "tsdb@%s (%d) # ", host, n_commands);
 
   while((!quit) && ((foo = readline(prompt)) != NULL)) {
@@ -121,7 +158,7 @@ int main(int argc, char **argv) {
   } /* while */
 
   if(write_history(TSDB_HISTORY_FILE) != NULL) {
-    fprintf(TSDB_ERROR_STREAM,
+    fprintf(tsdb_error_stream,
             "main(): unable to write to history file `%s'.\n",
             TSDB_HISTORY_FILE);
   } /* if */
@@ -147,8 +184,20 @@ void tsdb_parse_options(int argc, char **argv) {
 \*****************************************************************************/
 
   int c, foo;
+  char *bar;
   struct option options[] = {
     {"server", no_argument, 0, TSDB_SERVER_OPTION},
+    {"home", required_argument, 0, TSDB_HOME_OPTION},
+    {"relations-file", required_argument, 0, TSDB_RELATIONS_FILE_OPTION},
+    {"data-path", required_argument, 0, TSDB_DATA_PATH_OPTION},
+    {"result-path", required_argument, 0, TSDB_RESULT_PATH_OPTION},
+    {"result-prefix", required_argument, 0, TSDB_RESULT_PREFIX_OPTION},
+    {"max-results", optional_argument, 0, TSDB_MAX_RESULTS_OPTION},
+    {"debug-file", required_argument, 0, TSDB_DEBUG_FILE_OPTION},
+    {"pager", optional_argument, 0, TSDB_PAGER_OPTION},
+    {"usage", no_argument, 0, TSDB_USAGE_OPTION},
+    {"help", no_argument, 0, TSDB_USAGE_OPTION},
+    {"version", no_argument, 0, TSDB_VERSION_OPTION},
     {0, 0, 0, 0}
   }; /* struct option */
 
@@ -162,6 +211,66 @@ void tsdb_parse_options(int argc, char **argv) {
         exit(-1);
         break;
       case TSDB_SERVER_OPTION:
+        break;
+      case TSDB_HOME_OPTION:
+        if(optarg != NULL) {
+          tsdb_home = strdup(optarg);
+        } /* if */
+        break;
+      case TSDB_RELATIONS_FILE_OPTION:
+        if(optarg != NULL) {
+          tsdb_relations_file = strdup(optarg);
+        } /* if */
+        break;
+      case TSDB_DATA_PATH_OPTION:
+        if(optarg != NULL) {
+          tsdb_data_path = strdup(optarg);
+        } /* if */
+        break;
+      case TSDB_RESULT_PATH_OPTION:
+        if(optarg != NULL) {
+          tsdb_result_path = strdup(optarg);
+        } /* if */
+        break;
+      case TSDB_RESULT_PREFIX_OPTION:
+        if(optarg != NULL) {
+          tsdb_result_prefix = strdup(optarg);
+        } /* if */
+        break;
+      case TSDB_MAX_RESULTS_OPTION:
+        if(optarg != NULL) {
+          if((tsdb_max_results = strtol(optarg, &bar, 10)) == 0
+             && optarg == bar) {
+            fprintf(tsdb_error_stream,
+                    "parse_options(): "
+                    "non-integer (`%s') argument to `-max-results'.\n",
+                    optarg);
+            tsdb_max_results = -1;
+          } /* if */
+        } /* if */
+        else {
+          tsdb_max_results = 0;
+        } /* else */
+        break;
+      case TSDB_DEBUG_FILE_OPTION:
+        if(optarg != NULL) {
+          tsdb_debug_file = strdup(optarg);
+        } /* if */
+        break;
+      case TSDB_PAGER_OPTION:
+        if(optarg != NULL) {
+          tsdb_pager = strdup(optarg);
+        } /* if */
+        else {
+          tsdb_pager = (char *)NULL;
+        } /* else */
+        break;
+      case TSDB_USAGE_OPTION:
+        tsdb_usage();
+        break;
+      case TSDB_VERSION_OPTION:
+        fprintf(tsdb_error_stream,
+                "
         break;
       } /* switch */
   } /* while */
@@ -180,9 +289,33 @@ void tsdb_usage() {
 |*
 \*****************************************************************************/
 
-  fprintf(TSDB_ERROR_STREAM,
-          "usage: `tsdb [options]'.\n");
-  fflush(TSDB_ERROR_STREAM);
+  fprintf(tsdb_error_stream,
+          "usage: `tsdb [option+]'; "
+          "valid options are (defaults underlined):\n\n");
+  fprintf(tsdb_error_stream,
+          "  `-server' --- run in server (daemon) mode;\n");
+  fprintf(tsdb_error_stream,
+          "  `-home=' --- root directory for database;\n");
+  fprintf(tsdb_error_stream,
+          "  `-relations-file=' --- database relations file;\n");
+  fprintf(tsdb_error_stream,
+          "  `-data-path=' --- database data directory;\n");
+  fprintf(tsdb_error_stream,
+          "  `-result-path' --- directory to store query results;\n");
+  fprintf(tsdb_error_stream,
+          "  `-result-prefix=' --- file prefix for query result;\n");
+  fprintf(tsdb_error_stream,
+          "  `-max-results[=[_0_ -- ]]' "
+          "--- maximal number of stored query results;\n");
+  fprintf(tsdb_error_stream,
+          "  `-debug-file=' --- file to open for debug output;\n");
+  fprintf(tsdb_error_stream,
+          "  `-pager={command | off}' --- pager command to use;\n");
+  fprintf(tsdb_error_stream,
+          "  `-usage' or `-help' --- this message (give it a try |:-);\n");
+  fprintf(tsdb_error_stream,
+          "  `-version' --- current TSDB version.\n");
+  fflush(tsdb_error_stream);
 } /* tsdb_usage() */
 
 void tsdb_quit(void) {
