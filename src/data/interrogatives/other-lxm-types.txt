@@ -1,23 +1,22 @@
 
 dummy-idiom-lxm := lexeme & 
- [ SS.LOC [ CAT [ HEAD noun & [ ANA false ], 
-                  SUBJ <! !>,
-                  ARG-ST <! !> ] ] ].
+ [ SS.LOC.CAT [ HEAD noun & [ ANA false ], 
+                SUBJ <! !> ],
+   ARG-ST < > ].
 
 
 
 ;;; CCB - pdp needs to be marked MOD < [ SS.LOC.CAT [ HEAD noun|verb ] ] >.  Should I put in two entries, or make a supertype in the pos hierarchy?
 
 pdp-lxm := p-lxm &
- [ SS.LOC [ CAT [ HEAD [ ANA false ],
-	          SPR <! [ ] !>,
-                  ARG-ST <! [ LOC.CAT phrase-cat & [ HEAD noun,
-                                                     SPR <! !>,
-                                                     COMPS <! !> ] ], 
-
-                             [ LOC.CAT phrase-cat & [ HEAD noun,
-                                                      SPR <! !>,
-                                                      COMPS <! !> ] ] !> ] ] ].
+ [ SS.LOC.CAT [ HEAD [ ANA false ],
+	        SPR < [ ] > ],
+   ARG-ST < [ LOC.CAT [ HEAD noun,
+                        SPR < >,
+                        COMPS < > ] ], 
+            [ LOC.CAT [ HEAD noun,
+                        SPR < >,
+                        COMPS < > ] ] > ].
 
 ;; If the ARG-ST isn't limited to things of type NP then that info
 ;; must be placed on the the ARG-ST of verbs using P-OBJ.

@@ -2,23 +2,33 @@
 ;;;phrase-cat argument structure stuff so we don't need to pump to
 ;;;phrases.
 
-the-possessive := inflected-lexeme &
-[ ORTH <! "s" !>,
-  SS [ LOC.CAT.SPR < #1 >,
-       WH #2 ],
-  ARG-ST < #1 & [ LOC.CAT [ HEAD noun,
-                            SPR < > ],
-                  WH #2 ] >,
-  DTRS < det-lxm > ].
+;;;JTB 07/20/01 - Making 's inherit from determiner so it can act
+;;;like one.
 
-;the-possessive := inflected-lexeme &
-;[ ORTH <! "s" !>,
-;  SS [ LOC.CAT [ SPR < #1 >,
-;                 ARG-ST < #1 & [ LOC.CAT phrase-cat & [ HEAD noun,
-;                                                         SPR < > ],
-;                                  WH #2 ] > ],
-;       WH #2 ],
-;  DTRS < det-lxm > ].
+;;;JTB 07/22/01 - This entry is fucked.
+
+the-possessive := det-lxm & 
+[ ORTH <! "s" !>,
+  SS [ LOC [ CAT [ SPR < #spr >,
+                   HEAD.SPEC [ INDEX #index,
+                               RESTR #restr1 ] ],
+             CONT #cont,
+             Q-STORE [ LIST [ FIRST the-rel & [ INDEX #index,
+                                                RESTR [ FIRST.PROP.SOA.NUCL poss-rel &
+                                                                [ POSS-ER #ind2,
+                                                                  POSS-ED #index ], 
+                                                        REST #restr1 ] ],
+                              REST #qlist ],
+                       LAST #qlast ],
+             P-STORE #pstore ],
+       WH #wh ],
+  ARG-ST < #spr & [ LOC [ CAT [ HEAD noun,
+                                SPR < > ],
+                        CONT #cont & [ INDEX #ind2 ],
+                        Q-STORE [ LIST #qlist, LAST #qlast ],
+                        P-STORE #pstore ],
+                  WH #wh ] >,
+  DTRS < inflected-lexeme > ].
 
 and_1 := word &
 [ ORTH <! "and" !>,
@@ -59,7 +69,7 @@ if_0 := comp-lxm &
                    CONT #1 ] ] > ].
 
 
-;;; CCB - 5/17/00 - Changed the content of that_0 to be propositional
+;;; CCB - 5/17/00 - Changed the content of that_0 to be austinian
 ;;;rather than proposition, so that it would work with outcomes - "I
 ;;;insist that Sandy leave".
 
@@ -69,7 +79,8 @@ that_0 := comp-lxm &
                                INF false,
                                FORM #2 ],
                  SUBJ < > ],
-           CONT #1 & propositional ], 
+           CONT #1 & austinian ],
+  SS.WH <! !>,
   ARG-ST <  [ LOC [ CAT [ HEAD verb & [ INF false,
                                         INV false,
                                         FORM #2 ],
@@ -87,31 +98,43 @@ for_0 := comp-lxm &
                                INF true,
                                FORM #4 & base ],
                  SUBJ < > ],
-            CONT proposition & [ SOA #1 ] ],
+            CONT outcome & [ SOA #1 ] ],
   ARG-ST < [ LOC #2 ],  [ LOC [ CAT [ HEAD verbal & [ INF true,
                                                       FORM #4 ],
                                       SUBJ < [ LOC #2 ] > ],
                                 CONT #1 ] ] > ].
 
 
-to_0 := inflected-lexeme &
+to_0 := non-infl-vb-comp &
 [ ORTH <! "to" !>,
-  SS.LOC [ CAT [ HEAD verb & [ FORM inf ],
-                 SUBJ < [ LOC #2,
-                           SLASH <! !> ] > ],
-           CONT #1 ],
-  ARG-ST < synsem,  [ LOC [ CAT [ HEAD verb & [ FORM base ],
-                                  SUBJ < [ LOC #2 ] >,
-                                  COMPS < > ],
-                            CONT #1 ] ] >,
-  DTRS < non-auxv-lxm & tran > ].
-                                        
+  SS.LOC [ CAT [ HEAD verb & [ FORM inf ] ] ],
+  ARG-ST < synsem,  [ LOC [ CAT [ HEAD verb & [ FORM base ] ] ] ] >,
+  DTRS < srv > ].                                     
 
 believe_0 := v-lxm &
 [ ORTH <! "believe" !>,
-  ARG-ST < synsem, [ LOC.CAT [ HEAD comp,
-                               SUBJ < >,
-                               COMPS < > ] ] > ].
+  SS.LOC.CONT.NUCL believe-rel & [ BELIEVER #index, BELIEVED #1 ],
+  ARG-ST < [ LOC.CONT.INDEX #index ], 
+           [ LOC.CAT [ HEAD.FORM fin,
+                       SUBJ < >,
+                       COMPS < > ],
+             LOC.CONT #1 ] > ].
+
+believe_1 := v-lxm &
+[ ORTH <! "believe" !>,
+  SS.LOC.CONT.NUCL believe-rel & [ BELIEVER #index, BELIEVED #1 ],
+  ARG-ST < [ LOC.CONT.INDEX #index ], 
+           [ LOC.CAT #cat,
+             LOC.CONT #cont ], 
+           [ LOC [ CAT [ HEAD.FORM inf,
+                         SUBJ < [ LOC.CAT #cat,
+                                  LOC.CONT #cont,
+                                  LOC.Q-STORE <! !>,
+                                  LOC.P-STORE <! !>,
+                                  SLASH <! !>,
+                                  WH <! !> ] >,
+                         COMPS < > ],
+                   CONT #1 ] ] > ].
 
 wonder_0 := v-lxm &
 [ ORTH <! "wonder" !>,
@@ -122,29 +145,9 @@ wonder_0 := v-lxm &
                                                 COMPS < > ],
                                           CONT #2 & question ] ] > ].
 
-
-;believe_0 := v-lxm &
-;[ ORTH <! "believe" !>,
-;  SS.LOC.CAT [ ARG-ST < synsem, [ LOC.CAT phrase-cat & [ HEAD comp,
-;                                                       SUBJ < >,
-;                                                       COMPS < > ] ] > ] ].
-
-;wonder_0 := v-lxm &
-;[ ORTH <! "wonder" !>,
-;  SS.LOC.CONT.NUCL [ WONDERER #1,
-;                     WONDERED #2 ],
-;  SS.LOC.CAT [ ARG-ST < [ LOC.CONT.INDEX #1 ], [ LOC [ CAT phrase-cat & [
-;                                                       HEAD.IC false,
-;                                                       SUBJ < >,
-;                                                       COMPS < > ],
-;                                         CONT #2 & question ] ] > ] ].
-
 think_1 := ctv &
 [ ORTH <! "think" !>,
   SS.LOC.CAT.COMPS < [ LOC.CAT.HEAD.IC false ] > ].
-
-
-
 
 
 insist_0 := v-lxm &
@@ -152,12 +155,6 @@ insist_0 := v-lxm &
   ARG-ST < synsem, [ LOC [ CAT [ SUBJ < >,
                                  COMPS < > ],
                            CONT outcome ] ] > ].
-
-;insist_0 := v-lxm &
-;[ ORTH <! "insist" !>,
-;  SS.LOC.CAT [ ARG-ST < synsem, [ LOC [ CAT [ SUBJ < >,
-;                                              COMPS < > ],
-;                                         CONT outcome ] ] > ] ].
 
 ;;; "Easy" - an example of a lexical entry which has a compulsory
 ;;; extracting element.  Because my slash amalgimation constraint doesn't
@@ -172,20 +169,44 @@ insist_0 := v-lxm &
 ;;;the SUBJ, but the former is a LOC and the latter an SS, so I've
 ;;;type-raised the one to the other.
 
+;;;JTB 07/29/01 - Problem: the unexpressed subject.  What to do with
+;;;it?  That's weird.  Needs a quantifier at least.
+
 easy_0 := inflected-lexeme+amalg &
 [ ORTH <! "easy" !>,
-  SS [ LOC.CAT [ HEAD adj & [ FORM normal,
-                              PRED true ],
-                 SUBJ < #subj & [LOC #1 & [ CAT [ HEAD noun,
-                                                  SPR < > ]]] >,
-                 COMPS < #2 & [ LOC.CAT [ HEAD verb & [ FORM inf ] ] ] > ],
+  NEEDS-AFFIX false,
+  SS [ LOC.CAT [ SPR < #spr & [ LOC.Q-STORE [ LIST #qlist1,
+                                              LAST #qlist2 ],
+                                LOC.P-STORE [ LIST #plist1,
+                                              LAST #plist2 ],
+                         WH #wh ] >,
+                 SUBJ < #subj & [ LOC #1 & [ CAT.SPR < > ],
+                                  WH <! !> ] >,
+                 COMPS < #2 & [ LOC.CAT [ HEAD verb & [ FORM inf ] ],
+                                LOC.CONT #cont ] > ],
+       LOC.CONT [ NUCL.EASY-TO.SOA #cont,
+                  QUANTS [ LIST #qlist1,
+                           LAST #qlist_last ] ],
+       LOC.P-STORE [ LIST #plist1,
+                     LAST #plist_last ],
+       WH #wh,
        SLASH [ LIST #first,
                LAST #last ] ],
   ARG-ST < #subj & [ SLASH [ LIST #first,
-                             LAST #rest ] ], 
-              #2 & [ SLASH [ LIST *cons* & < #1 . #rest >,
-                             LAST *null* & #last ] ] >,
-  DTRS < inflected-lexeme > ].
+                             LAST #rest ] ],
+           #spr, 
+           #2 & [ SLASH [ LIST *cons* & < #1 . #rest >,
+                          LAST *null* & #last ],
+                  LOC.Q-STORE [ LIST #qlist2,
+                                LAST #qlist_last ],
+                  LOC.P-STORE [ LIST #plist2,
+                                LAST #plist_last ],
+                  LOC.CAT.SUBJ < [ LOC.P-STORE <! !>,
+                                   LOC.Q-STORE <! !>,
+                                   SLASH <! !>,
+                                   WH <! !> ] >,
+                  WH <! !> ] >,
+  DTRS < adj-lxm > ].
 
 ;easy_0 := inflected-lexeme+amalg &
 ;[ ORTH <! "easy" !>,
@@ -218,40 +239,89 @@ easy_0 := inflected-lexeme+amalg &
 ;; DTRS < inflected-lexeme > ].
 
 please_1 := stv &
-[ ORTH <! "please" !> ].
+[ ORTH <! "please" !>,
+  SS.LOC.CONT [ NUCL please-rel & [ PLEASER #ind1, 
+                                    PLEASED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], 
+           [ LOC.CONT.INDEX #ind2 ] > ].
 
 play_1 := ptv &
-[ ORTH <! "play" !> ].
+[ ORTH <! "play" !>,
+  SS.LOC.CONT [ NUCL play-rel & [ PLAYER #ind1, 
+                                  PLAYED #ind2, 
+                                  PLAYED-ON #ind3 ] ],
+  SS.LOC.CAT.COMPS < synsem, [ LOC.CAT.HEAD.FORM on ] >,
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], 
+           [ LOC.CONT.INDEX #ind2 ], 
+           [ LOC.CONT.INDEX #ind3 ] > ].
 
 violin_1 := cn-lxm &
-[ ORTH <! "violin" !> ].
+[ ORTH <! "violin" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_violin ] > ].
 
 sonata_1 := cn-lxm &
-[ ORTH <! "sonata" !> ].
+[ ORTH <! "sonata" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_sonata ] > ].
 
-picture_0 := cn-lxm &
+picture_0 := tr-cn-lxm &
 [ ORTH <! "picture" !>,
-  SS.LOC.CAT.COMPS < [ LOC.CAT [ HEAD prep,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_picture ] >,
+  SS.LOC.CAT.COMPS < [ LOC.CAT [ HEAD prep & [ PRED false ],
                                  COMPS < > ] ] >  ].
-
 see_0 := stv &
 [ ORTH <! "see" !>,
-  SS.LOC.CONT [ NUCL r_see & [ OBSERVER #1,
-                               OBSERVED #2 ] ],
+  SS.LOC.CONT [ NUCL see-rel & [ OBSERVER #1,
+                                 OBSERVED #2 ] ],
   ARG-ST < [ LOC.CONT.INDEX #1 ], [ LOC.CONT.INDEX #2 ] > ].
 
-
-
-
-a_1 := det-lxm &
+a_1 := non-wh-det-lxm &
 [ ORTH <! "a" !>,
-  SS.LOC.CAT.HEAD.AGR.PERNUM 3sg ].
+  SS.LOC.CAT.HEAD.AGR.PERNUM 3sg,
+  SS.LOC.CONT some-rel,
+  ARG-ST < > ].
+
+a_2 := det-lxm &
+[ ORTH <! "a" !>,
+  SS [ LOC [ CAT [ HEAD [ AGR.PERNUM 3sg,
+                          SPEC [ INDEX #index,
+                                 RESTR #restr ] ],
+                   SPR < #spr > ],
+             CONT #cont & some-rel & [ INDEX #index,
+                                       RESTR [ FIRST.PROP.SOA #soa,
+                                               REST #restr ] ],
+             P-STORE #pstore,
+             Q-STORE [ LIST [ FIRST #cont,
+                              REST #qlist ],
+                       LAST #qlast ] ],
+       WH #wh ],
+  ARG-ST < #spr & [ LOC [ CAT [ HEAD adj & [ DEG true,
+                                             PRED false ],
+                                SPR < > ], 
+                          CONT #soa,
+                          P-STORE #pstore,
+                          Q-STORE [ LIST #qlist, 
+                                    LAST #qlast ] ],
+                    WH #wh ] > ].
 
 ;;;JTB - changed wh-none to <! !> which should be the same thing, yes?
-these_1 := det-lxm &
+these_1 := non-wh-det-lxm &
 [ ORTH <! "these" !>,
   SS.LOC.CAT.HEAD.AGR.PERNUM 3pl,
-  SS.WH <! !> ].
+  SS.LOC.CONT this-rel ].
+
+this_1 := non-wh-det-lxm &
+[ ORTH <! "this" !>,
+  SS.LOC.CAT.HEAD.AGR.PERNUM 3sg,
+  SS.LOC.CONT this-rel ].
+
+every_1 := non-wh-det-lxm &
+[ ORTH <! "every" !>,
+  SS.LOC.CAT.HEAD.AGR.PERNUM 3sg,
+  SS.LOC.CONT every-rel ].
+
+some_1 := non-wh-det-lxm &
+[ ORTH <! "some" !>,
+  SS.LOC.CONT some-rel ].
 
 ;;; Pronouns are hand encoded into the lexicon as infelcted-lexemes
 ;;;since they don't fit into the inflectional paradigm of other n-lxms.
@@ -262,13 +332,14 @@ these_1 := det-lxm &
 
 i_0 := inflected-lexeme &
 [ ORTH <! "i" !>,
+  SS.LOC.CONT.INDEX speaker,
   SS.LOC.CAT.HEAD [ AGR.PERNUM 1sg,
                     CASE nom ],
   DTRS < pron-lxm > ].
 
-
 me_0 := inflected-lexeme &
 [ ORTH <! "me" !>,
+  SS.LOC.CONT.INDEX speaker,
   SS.LOC.CAT.HEAD [ AGR.PERNUM 1sg,
                     CASE acc ],
   DTRS < pron-lxm > ].
@@ -276,20 +347,22 @@ me_0 := inflected-lexeme &
 
 myself_0 := inflected-lexeme &
 [ ORTH <! "myself" !>,
+  SS.LOC.CONT.INDEX speaker,
   SS.LOC.CAT.HEAD [ AGR.PERNUM 1sg,
                     CASE acc,
                     ANA true ],
   DTRS < pron-lxm > ].
 
-
 you_0 := inflected-lexeme &
 [ ORTH <! "you" !>,
+  SS.LOC.CONT.INDEX listener,
   SS.LOC.CAT.HEAD [ AGR.PERNUM 2per ],
   DTRS < pron-lxm > ].
 
 
 yourself_0 := inflected-lexeme &
 [ ORTH <! "yourself" !>,
+  SS.LOC.CONT.INDEX listener,
   SS.LOC.CAT.HEAD [ AGR.PERNUM 2per,
                     CASE acc,
                     ANA true ],
@@ -298,6 +371,7 @@ yourself_0 := inflected-lexeme &
 
 she_0 := inflected-lexeme &
 [ ORTH <! "she" !>,
+  SS.LOC.CONT.INDEX her,
   SS.LOC.CAT.HEAD [ AGR.PERNUM 3sg & [ GEND fem ],
                     CASE nom ],
   DTRS < pron-lxm > ].
@@ -305,6 +379,7 @@ she_0 := inflected-lexeme &
 
 her_0 := inflected-lexeme &
 [ ORTH <! "her" !>,
+  SS.LOC.CONT.INDEX her,
   SS.LOC.CAT.HEAD [ AGR.PERNUM 3sg & [ GEND fem ],
                     CASE acc ],
   DTRS < pron-lxm > ].
@@ -312,6 +387,7 @@ her_0 := inflected-lexeme &
 
 herself_0 := inflected-lexeme &
 [ ORTH <! "herself" !>,
+  SS.LOC.CONT.INDEX her,
   SS.LOC.CAT.HEAD [ AGR.PERNUM 3sg & [ GEND fem ],
                     CASE acc,
                     ANA true ],
@@ -320,6 +396,7 @@ herself_0 := inflected-lexeme &
 
 he_0 := inflected-lexeme &
 [ ORTH <! "he" !>,
+  SS.LOC.CONT.INDEX him,
   SS.LOC.CAT.HEAD [ AGR.PERNUM 3sg & [ GEND masc ],
                     CASE nom ],
   DTRS < pron-lxm > ].
@@ -327,6 +404,7 @@ he_0 := inflected-lexeme &
 
 him_0 := inflected-lexeme &
 [ ORTH <! "him" !>,
+  SS.LOC.CONT.INDEX him,
   SS.LOC.CAT.HEAD [ AGR.PERNUM 3sg & [ GEND masc ],
                     CASE acc ],
   DTRS < pron-lxm > ].
@@ -334,6 +412,7 @@ him_0 := inflected-lexeme &
 
 himself_0 := inflected-lexeme &
 [ ORTH <! "himself" !>,
+  SS.LOC.CONT.INDEX him,
   SS.LOC.CAT.HEAD [ AGR.PERNUM 3sg & [ GEND masc ],
                     CASE acc,
                     ANA true ],
@@ -342,12 +421,14 @@ himself_0 := inflected-lexeme &
 
 it_0 := inflected-lexeme &
 [ ORTH <! "it" !>,
+  SS.LOC.CONT.INDEX it,
   SS.LOC.CAT.HEAD [ AGR.PERNUM 3sg & [ GEND neut ] ],
   DTRS < pron-lxm > ].
 
 
 itself_0 := inflected-lexeme &
 [ ORTH <! "itself" !>,
+  SS.LOC.CONT.INDEX it,
   SS.LOC.CAT.HEAD [ AGR.PERNUM 3sg & [ GEND neut ],
                     CASE acc,
                     ANA true ],
@@ -356,6 +437,7 @@ itself_0 := inflected-lexeme &
 
 we_0 := inflected-lexeme &
 [ ORTH <! "we" !>,
+  SS.LOC.CONT.INDEX us,
   SS.LOC.CAT.HEAD [ AGR.PERNUM 1pl,
                     CASE nom ],
   DTRS < pron-lxm > ].
@@ -363,6 +445,7 @@ we_0 := inflected-lexeme &
 
 us_0 := inflected-lexeme &
 [ ORTH <! "us" !>,
+  SS.LOC.CONT.INDEX us,
   SS.LOC.CAT.HEAD [ AGR.PERNUM 1pl,
                     CASE acc ],
   DTRS < pron-lxm > ].
@@ -370,6 +453,7 @@ us_0 := inflected-lexeme &
 
 ourselves_0 := inflected-lexeme &
 [ ORTH <! "ourselves" !>,
+  SS.LOC.CONT.INDEX us,
   SS.LOC.CAT.HEAD [ AGR.PERNUM 1pl,
                     CASE acc,
                     ANA true ],
@@ -379,6 +463,7 @@ ourselves_0 := inflected-lexeme &
 
 they_0 := inflected-lexeme &
 [ ORTH <! "they" !>,
+  SS.LOC.CONT.INDEX them,
   SS.LOC.CAT.HEAD [ AGR.PERNUM 3pl,
                     CASE nom ],
   DTRS < pron-lxm > ].
@@ -386,6 +471,7 @@ they_0 := inflected-lexeme &
 
 them_0 := inflected-lexeme &
 [ ORTH <! "them" !>,
+  SS.LOC.CONT.INDEX them,
   SS.LOC.CAT.HEAD [ AGR.PERNUM 3pl,
                     CASE acc ],
   DTRS < pron-lxm > ].
@@ -393,10 +479,17 @@ them_0 := inflected-lexeme &
 
 themselves_0 := inflected-lexeme &
 [ ORTH <! "themselves" !>,
+  SS.LOC.CONT.INDEX them,
   SS.LOC.CAT.HEAD [ AGR.PERNUM 3pl,
                     CASE acc,
                     ANA true ],
   DTRS < pron-lxm > ].
+
+
+
+
+
+
 
 
 

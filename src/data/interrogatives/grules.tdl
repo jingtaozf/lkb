@@ -3,7 +3,9 @@
 
 ;;;JTB 07/18/01 - Why not a bare plurals rule?
 
-bare-pl-rule-0:=bare-pl-np.
+bare-pl-rule-0 := bare-pl-np.
+
+bare-adj-rule := bare-adj-ph.
 
 ;;;JTB 07/18/01 - Slowly removing all unary constructions.  No more pumping.
 
@@ -20,16 +22,26 @@ ncl-vb-rule-1 := ncl-vb-ph-1.
 ncl-vb-rule-2 := ncl-vb-ph-2.
 ncl-vb-rule-3 := ncl-vb-ph-3.
 
+;;; JTB 07/29/01 - Removing elliptical shit because we never talked
+;;; about it and I don't want it interfering.
+
 ;ellip-vp-rule-0 := ncl-ellip-vp-0.
-ellip-vp-rule-1 := ncl-ellip-vp-1.
+;ellip-vp-rule-1 := ncl-ellip-vp-1.
 
 cp-cl-rule-1 := cp-cl-1.
 cp-cl-rule-2 := cp-cl-2.
 
 hd-spr-rule := hd-spr-ph.
+
+pred-ph-rule := pred-ph.
+
 decl-hs-rule := decl-hs-cl.
 
-inv-decl-rule := inv-decl-cl.
+;;;JTB 07/26/01 - The second one is for predicative comp taking is,
+;;;which only has one comp and no verbal one.
+
+inv-decl-rule-1 := inv-decl-cl-1.
+inv-decl-rule-2 := inv-decl-cl-2.
 
 decl-ns-gap-rule := decl-ns-cl &
 [ SS.LOC.CAT.SUBJ < gap-ss > ].
@@ -41,115 +53,137 @@ decl-ns-pro-rule := decl-ns-cl &
 top-cl-rule := top-cl. 
 
 inv-excl-rule := inv-excl-cl.
-;;;wh-excl-rule := wh-excl-cl.
 
+wh-excl-rule-0 := wh-excl-cl & 
+[ SS.LOC [ P-STORE <! !> ],
+  DTRS < [SS.WH <! #1 !> ], [ SS.LOC.P-STORE <! #1 !> ] > ].
+
+wh-excl-rule-1 := wh-excl-cl &
+[ SS.LOC [ P-STORE <! #2 !> ],
+  DTRS < [SS.WH <! #1 !> ], [ SS.LOC.P-STORE <! #1, #2 !> ] > ].
+
+wh-excl-rule-2 := wh-excl-cl & 
+[ SS.LOC [ P-STORE <! #1 !> ],
+  DTRS < [SS.WH <! #2 !> ], [ SS.LOC.P-STORE <! #1, #2 !> ] > ].
+
+wh-excl-rule-5 := wh-excl-cl & 
+[ SS.LOC [ P-STORE <! #2, #3 !> ],
+  DTRS < [SS.WH <! #1 !> ], [ SS.LOC.P-STORE <! #1, #2, #3 !> ] > ].
+
+wh-excl-rule-6 := wh-excl-cl & 
+[ SS.LOC [ P-STORE <! #1, #3 !> ],
+  DTRS < [SS.WH <! #2 !> ], [ SS.LOC.P-STORE <! #1, #2, #3 !> ] > ].
+
+wh-excl-rule-7 := wh-excl-cl & 
+[ SS.LOC [ P-STORE <! #1, #2 !> ],
+  DTRS < [SS.WH <! #3 !> ], [ SS.LOC.P-STORE <! #1, #2, #3 !> ] > ].
 
 post-hd-mod-rule := post-hd-mod-ph.
-;pre-hd-mod-rule := pre-hd-mod-ph.
+pre-hd-mod-rule := pre-hd-mod-ph.
 
 ;coordination-rule := coordination-word.
 ;coordination-rule-2 := coordination-phrase.
 
 ;;;JTB 07/14/01 - added this for the base case where we trivially form
-;;;a reprise but nothing was on STORE.  Hope this bitch doesn't
+;;;a reprise but nothing was on P-STORE.  Hope this bitch doesn't
 ;;;overgenerate.
 
 rep-int-cl-0 := rep-int-cl &
-[ SS.LOC [ STORE <! !>,
+[ SS.LOC [ P-STORE <! !>,
            CONT.PARAMS <! !> ],
-  HD-DTR [ SS.LOC.STORE <! !> ] ].
+  HD-DTR [ SS.LOC.P-STORE <! !> ] ].
 
 rep-int-cl-1 := rep-int-cl &
 [ SS.LOC [ CONT.PARAMS <! #1 & [ FOC true ] !>,
-           STORE <! !> ],
-  HD-DTR.SS.LOC.STORE <! #1 !> ].
+           P-STORE <! !> ],
+  HD-DTR.SS.LOC.P-STORE <! #1 !> ].
 
 rep-int-cl-2 := rep-int-cl &
 [ SS.LOC [ CONT.PARAMS <! #1 & [ FOC true ], #2 & [ FOC true ] !>,
-           STORE <! !> ],
-  HD-DTR.SS.LOC.STORE <! #1, #2 !> ].
+           P-STORE <! !> ],
+  HD-DTR.SS.LOC.P-STORE <! #1, #2 !> ].
 
 ;;;JTB 07/14/01 - Added this for the base case as above.  Again, hope
 ;;;we don't overgenerate.
 
 dir-is-int-cl-0 := dir-is-int-cl &
-[ SS.LOC.STORE <! !> ].
+[ SS.LOC.P-STORE <! !> ].
 
 dir-is-int-cl-1 := dir-is-int-cl &
 [ SS.LOC [ CONT.PARAMS <! #1 & [ FOC true ] !>,
-           STORE <! !> ],
-  HD-DTR.SS.LOC.STORE <! #1 !> ].
+           P-STORE <! !> ],
+  HD-DTR.SS.LOC.P-STORE <! #1 !> ].
 
 dir-is-int-cl-2 := dir-is-int-cl &
 [ SS.LOC [ CONT.PARAMS <! #1 & [ FOC true ], #2 & [ FOC true ] !>,
-           STORE <! !> ],
-  HD-DTR.SS.LOC.STORE <! #1, #2 !> ].
+           P-STORE <! !> ],
+  HD-DTR.SS.LOC.P-STORE <! #1, #2 !> ].
 
 su-wh-int-cl-1 := su-wh-int-cl &
 [ SS.LOC [ CONT.PARAMS <! #1 !>,
-           STORE <! !> ],
-  HD-DTR.SS.LOC.STORE <! #1 !> ].
+           P-STORE <! !> ],
+  HD-DTR.SS.LOC.P-STORE <! #1 !> ].
 
 
 su-wh-int-cl-2 := su-wh-int-cl & 
 [ SS.LOC [ CONT.PARAMS <! #1, #2 !>,
-           STORE <! !> ],
-  HD-DTR.SS.LOC.STORE <! #1, #2 !> ].
+           P-STORE <! !> ],
+  HD-DTR.SS.LOC.P-STORE <! #1, #2 !> ].
 
 su-wh-int-cl-3 := su-wh-int-cl & 
 [ SS.LOC [ CONT.PARAMS <! #1 !>,
-           STORE <! #2 !> ],
-  HD-DTR.SS.LOC.STORE <! #1, #2 !> ].
+           P-STORE <! #2 !> ],
+  HD-DTR.SS.LOC.P-STORE <! #1, #2 !> ].
 
-;;; CCB - the second item from the store needs to be FOC in this case,
+;;; CCB - the second item from the P-STORE needs to be FOC in this case,
 ;;; Delete this case.
 ;su-wh-int-cl-4 := su-wh-int-cl &
 ;[ SS.LOC [ CONT.PARAMS <! #2 !>,
-;           STORE <! #1 !> ],
-;  HD-DTR.SS.LOC.STORE <! #1, #2 !> ].
+;           P-STORE <! #1 !> ],
+;  HD-DTR.SS.LOC.P-STORE <! #1, #2 !> ].
 
 su-wh-int-cl-5 := su-wh-int-cl &
 [ SS.LOC [ CONT.PARAMS <! #1 !>,
-           STORE <! #2, #3 !> ],
-  HD-DTR.SS.LOC.STORE <! #1, #2, #3 !> ].
+           P-STORE <! #2, #3 !> ],
+  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
 
 su-wh-int-cl-6 := su-wh-int-cl & 
 [ SS.LOC [ CONT.PARAMS <! #1, #2 !>,
-           STORE <! #3 !> ],
-  HD-DTR.SS.LOC.STORE <! #1, #2, #3 !> ].
+           P-STORE <! #3 !> ],
+  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
 
 su-wh-int-cl-7 := su-wh-int-cl & 
 [ SS.LOC [ CONT.PARAMS <! #1, #3 !>,
-           STORE <! #2 !> ],
-  HD-DTR.SS.LOC.STORE <! #1, #2, #3 !> ].
+           P-STORE <! #2 !> ],
+  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
 
 su-wh-int-cl-8 := su-wh-int-cl & 
 [ SS.LOC [ CONT.PARAMS <! #1, #2, #3 !>,
-           STORE <! !> ],
-  HD-DTR.SS.LOC.STORE <! #1, #2, #3 !> ].
+           P-STORE <! !> ],
+  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
 
 ns-wh-int-cl-1 := ns-wh-int-cl &
 [ SS.LOC [ CONT.PARAMS <! #1 !>,
-           STORE <! !> ],
-  HD-DTR.SS.LOC.STORE <! #1 !> ].
+           P-STORE <! !> ],
+  HD-DTR.SS.LOC.P-STORE <! #1 !> ].
 
 ns-wh-int-cl-2 := ns-wh-int-cl &
 [ SS.LOC [ CONT.PARAMS <! #1, #2 !>,
-           STORE <! !> ],
-  HD-DTR.SS.LOC.STORE <! #1, #2 !> ].
+           P-STORE <! !> ],
+  HD-DTR.SS.LOC.P-STORE <! #1, #2 !> ].
 
 ns-wh-int-cl-3 := ns-wh-int-cl & 
 [ SS.LOC [ CONT.PARAMS <! #1 !>,
-           STORE <! #2 !> ],
-  HD-DTR.SS.LOC.STORE <! #1, #2 !> ].
+           P-STORE <! #2 !> ],
+  HD-DTR.SS.LOC.P-STORE <! #1, #2 !> ].
 
 ;;;IAS (with observer JTB) 7/14/01 - Ivan says this will solve
 ;;;everything.  And as it turns out he was right.  I owe him two pints.
 
 ns-wh-int-cl-4 := ns-wh-int-cl &
 [ SS.LOC [ CONT.PARAMS <! #2 !>,
-           STORE <! #1 !> ],
-  HD-DTR.SS.LOC.STORE <! #1, #2 !> ].
+           P-STORE <! #1 !> ],
+  HD-DTR.SS.LOC.P-STORE <! #1, #2 !> ].
 
 ;;;JTB 07/14/01 Added this to account for "What did WHÓ see" where a
 ;;;constraint on wh-int-cl and a constraint on ns-wh-int-cl-2 were
@@ -158,84 +192,83 @@ ns-wh-int-cl-4 := ns-wh-int-cl &
 
 ns-wh-int-cl-5 := ns-wh-int-cl &
 [ SS.LOC [ CONT.PARAMS <! #2, #1 !>,
-           STORE <! !> ],
-  HD-DTR.SS.LOC.STORE <! #1, #2 !> ].
+           P-STORE <! !> ],
+  HD-DTR.SS.LOC.P-STORE <! #1, #2 !> ].
 
 ;;;JTB 07/18/01 Added these to handle stuff like what did who give to
-;;;whom where we (should) have three things on STORE.
+;;;whom where we (should) have three things on P-STORE.
 
 ;;;A note on permutations.  The constraint on wh-int-cl that the first
-;;;daughter of PARAMS be the first daughter on store means that we need
-;;;to make sure each item on store (which were picked up from the COMPS
+;;;daughter of PARAMS be the first daughter on P-STORE means that we need
+;;;to make sure each item on P-STORE (which were picked up from the COMPS
 ;;;lists) gets a crack at being first on PARAMS, but the order of the
 ;;;remaining two shouldn't make a difference.
 
-ns-wh-int-cl-6 := ns-wh-int-cl &
-[ SS.LOC [ CONT.PARAMS <! #1, #2, #3 !>,
-           STORE <! !> ],
-  HD-DTR.SS.LOC.STORE <! #1, #2, #3 !> ].
 
-ns-wh-int-cl-7 := ns-wh-int-cl &
-[ SS.LOC [ CONT.PARAMS <! #2, #1, #3 !>,
-           STORE <! !> ],
-  HD-DTR.SS.LOC.STORE <! #1, #2, #3 !> ].
 
-ns-wh-int-cl-8 := ns-wh-int-cl &
-[ SS.LOC [ CONT.PARAMS <! #3, #1, #2 !>,
-           STORE <! !> ],
-  HD-DTR.SS.LOC.STORE <! #1, #2, #3 !> ].
+;ns-wh-int-cl-6 := ns-wh-int-cl &
+;[ SS.LOC [ CONT.PARAMS <! #1, #2, #3 !>,
+;           P-STORE <! !> ],
+;  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
 
-ns-wh-int-cl-9 := ns-wh-int-cl &
-[ SS.LOC [ CONT.PARAMS <! #1, #2 !>,
-           STORE <! #3 !> ],
-  HD-DTR.SS.LOC.STORE <! #1, #2, #3 !> ].
+;ns-wh-int-cl-7 := ns-wh-int-cl &
+;[ SS.LOC [ CONT.PARAMS <! #2, #1, #3 !>,
+;           P-STORE <! !> ],
+;  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
 
-ns-wh-int-cl-10 := ns-wh-int-cl &
-[ SS.LOC [ CONT.PARAMS <! #2, #1 !>,
-           STORE <! #3  !> ],
-  HD-DTR.SS.LOC.STORE <! #1, #2, #3 !> ].
+;ns-wh-int-cl-8 := ns-wh-int-cl &
+;[ SS.LOC [ CONT.PARAMS <! #3, #1, #2 !>,
+;           P-STORE <! !> ],
+;  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
 
-ns-wh-int-cl-11 := ns-wh-int-cl &
-[ SS.LOC [ CONT.PARAMS <! #3, #1  !>,
-           STORE <! #2 !> ],
-  HD-DTR.SS.LOC.STORE <! #1, #2, #3 !> ].
+;ns-wh-int-cl-9 := ns-wh-int-cl &
+;[ SS.LOC [ CONT.PARAMS <! #1, #2 !>,
+;           P-STORE <! #3 !> ],
+;  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
 
-ns-wh-int-cl-12 := ns-wh-int-cl &
-[ SS.LOC [ CONT.PARAMS <! #1, #3 !>,
-           STORE <! #2 !> ],
-  HD-DTR.SS.LOC.STORE <! #1, #2, #3 !> ].
+;ns-wh-int-cl-10 := ns-wh-int-cl &
+;[ SS.LOC [ CONT.PARAMS <! #2, #1 !>,
+;           P-STORE <! #3  !> ],
+;  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
 
-ns-wh-int-cl-13 := ns-wh-int-cl &
-[ SS.LOC [ CONT.PARAMS <! #2, #3 !>,
-           STORE <! #1 !> ],
-  HD-DTR.SS.LOC.STORE <! #1, #2, #3 !> ].
+;ns-wh-int-cl-11 := ns-wh-int-cl &
+;[ SS.LOC [ CONT.PARAMS <! #3, #1  !>,
+;           P-STORE <! #2 !> ],
+;  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
 
-ns-wh-int-cl-14 := ns-wh-int-cl &
-[ SS.LOC [ CONT.PARAMS <! #3, #2 !>,
-           STORE <! #1 !> ],
-  HD-DTR.SS.LOC.STORE <! #1, #2, #3 !> ].
+;ns-wh-int-cl-12 := ns-wh-int-cl &
+;[ SS.LOC [ CONT.PARAMS <! #1, #3 !>,
+;           P-STORE <! #2 !> ],
+;  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
 
-ns-wh-int-cl-15 := ns-wh-int-cl &
-[ SS.LOC [ CONT.PARAMS <! #1 !>,
-           STORE <! #2, #3 !> ],
-  HD-DTR.SS.LOC.STORE <! #1, #2, #3 !> ].
+;ns-wh-int-cl-13 := ns-wh-int-cl &
+;[ SS.LOC [ CONT.PARAMS <! #2, #3 !>,
+;           P-STORE <! #1 !> ],
+;  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
 
-ns-wh-int-cl-16 := ns-wh-int-cl &
-[ SS.LOC [ CONT.PARAMS <! #2 !>,
-           STORE <! #1, #3 !> ],
-  HD-DTR.SS.LOC.STORE <! #1, #2, #3 !> ].
+;ns-wh-int-cl-14 := ns-wh-int-cl &
+;[ SS.LOC [ CONT.PARAMS <! #3, #2 !>,
+;           P-STORE <! #1 !> ],
+;  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
 
-ns-wh-int-cl-17 := ns-wh-int-cl &
-[ SS.LOC [ CONT.PARAMS <! #3 !>,
-           STORE <! #1, #2 !> ],
-  HD-DTR.SS.LOC.STORE <! #1, #2, #3 !> ].
+;ns-wh-int-cl-15 := ns-wh-int-cl &
+;[ SS.LOC [ CONT.PARAMS <! #1 !>,
+;           P-STORE <! #2, #3 !> ],
+;  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
 
-;;; CCB - the second item from the store needs to be FOC in this case,
+;ns-wh-int-cl-16 := ns-wh-int-cl &
+;[ SS.LOC [ CONT.PARAMS <! #2 !>,
+;           P-STORE <! #1, #3 !> ],
+;  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
+
+;ns-wh-int-cl-17 := ns-wh-int-cl &
+;[ SS.LOC [ CONT.PARAMS <! #3 !>,
+;           P-STORE <! #1, #2 !> ],
+;  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
+
+
+;;; CCB - the second item from the P-STORE needs to be FOC in this case,
 ;ns-wh-int-cl-4 := ns-wh-int-cl &
 ;[ SS.LOC [ CONT.PARAMS <! #2 !>,
-;           STORE <! #1 !> ],
-;  HD-DTR.SS.LOC.STORE <! #1, #2 !> ].
-
-
-
-
+;           P-STORE <! #1 !> ],
+;  HD-DTR.SS.LOC.P-STORE <! #1, #2 !> ].

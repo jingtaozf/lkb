@@ -1,107 +1,144 @@
 
-hell_0 := cn-lxm &
-[ ORTH <! "hell" !>,
-  SS.LOC.CAT.HEAD.MOD < [ WH <! param !> ] > ].
+hell_0 := word &
+[ ORTH <! "the","hell" !>,
+  SS [ LOC [ CAT [ HEAD noun & [ MOD < [ WH <! param !>,
+                                         LOC.CAT [ SUBJ < >,
+                                                   COMPS < >,
+                                                   SPR < > ] ] > ],
+                   SUBJ < >,
+                   COMPS < >,
+                   SPR < > ],
+             CONT soa & [ QUANTS <! !>,
+                          NUCL emphasis-rel & [ EMPH-BY speaker ] ],
+             Q-STORE <! !>,
+             P-STORE <! !> ],
+       SLASH <! !>,
+       WH <! !> ],
+  ARG-ST < >,
+  DTRS < inflected-lexeme > ].
 
-;;; CCB - I'm guessing at the details of this from the tree in section 5.2 for "Whose cousin's friend"...
+;;; CCB - I'm guessing at the details of this from the tree in section
+;;;5.2 for "Whose cousin's friend"...
 
 ;;;JTB - made all of these unfocused since that seemed to be the
 ;;;generalization they were grasping, and added a "what" determiner.
 
-inter_whose :=  wh-det-lxm-unfoc &
-[ ORTH <! "whose" !>,
-  SS.LOC.CAT.HEAD.DEG true ].
+;;;JTB 07/23/01 - What the fuck is DEG supposed to do again?
 
-inter_how :=  wh-det-lxm-unfoc &
+inter_which-unfoc := wh-det-lxm-unfoc &
+[ ORTH <! "which" !>,
+  SS.LOC.Q-STORE <! !> ].
+
+inter_which-foc := wh-det-lxm-foc &
+[ ORTH <! "which" !>,
+  SS.LOC.Q-STORE <! !> ].
+
+;;;JTB 07/25/01 - What to do about these?  These are questioning the
+;;;possessor.
+
+inter_whose-unfoc :=  wh-poss-det-lxm-unfoc & 
+[ ORTH <! "whose" !> ].
+
+inter_whose-foc :=  wh-poss-det-lxm-foc &
+[ ORTH <! "whose" !> ].
+
+inter_how-unfoc :=  wh-det-lxm-unfoc &
 [ ORTH <! "how" !>,
-  SS.LOC.CAT.HEAD.DEG true ].
+  SS.LOC [ CAT.HEAD [ DEG true, 
+                      SPEC.NUCL.EXTENT #delta ],
+           CONT [INDEX #delta, 
+                 RESTR < >] ] ].
 
-inter_what :=  wh-det-lxm-unfoc &
-[ ORTH <! "what" !>,
-  SS.LOC.CAT.HEAD.DEG true ].
+inter_how-foc :=  wh-det-lxm-foc &
+[ ORTH <! "how" !>,
+  SS.LOC [ CAT.HEAD [ DEG true, 
+                      SPEC.NUCL.EXTENT #delta ],
+           CONT [INDEX #delta, 
+                 RESTR < >] ] ].
 
-;inter_whose :=  wh-det-lxm &
-;[ ORTH <! "whose" !>,
-;  SS [ LOC [ CONT param & [ INDEX #i ],
-;             STORE <! #1 !> ],
-;       WH <! #1 & param & [ INDEX #i ] !> ] ].
+inter_what-unfoc :=  wh-det-lxm-unfoc &
+[ ORTH <! "what" !> ].
 
-;inter_how :=  wh-det-lxm &
-;[ ORTH <! "how" !>,
-;  SS [ LOC [ CAT [ HEAD [ DEG true ] ],
-;             CONT param & [ INDEX #i ],
-;             STORE <! #1 !> ],
-;       WH <! #1 & param & [ INDEX #i ] !> ] ].
-
+inter_what-foc :=  wh-det-lxm-foc &
+[ ORTH <! "what" !> ].
 
 big_0 := adj-lxm &
 [ ORTH <! "big" !>,
   SS.LOC.CAT [ HEAD.DEG true,
                SPR < [ LOC.CAT.HEAD.DEG true ] > ] ].
 
-a_0 := det-lxm &
-[ ORTH <! "a" !>,
-  SS.LOC.CAT.SPR < [ LOC.CAT [ HEAD adj ] ] > ].
+;a_0 := det-lxm &
+;[ ORTH <! "a" !>,
+;  SS.LOC.CAT.SPR < [ LOC.CAT [ HEAD adj ] ] > ].
 
 ;;; <<< >>> WHO
 
-;;; 4 entries for each - one with a WH value and one without, times FOC vs not FOC....  CCB-  These are messy large structures, containing a lot of redundant info.  Reduce them when you get the chance
+;;; 4 entries for each - one with a WH value and one without, times
+;;;FOC vs not FOC....  CCB- These are messy large structures, containing
+;;;a lot of redundant info.  Reduce them when you get the chance
 
-;;; CCB - taken from Ch 5 of G&S; should have a preson_rel in the STORE's RESTR once you figure out how to do that.
+;;; CCB - taken from Ch 5 of G&S; should have a preson_rel in the
+;;;STORE's RESTR once you figure out how to do that.
 
 ;;;JTB - 7/17/01 - Added focused but unmarked versions of all of these
 ;;;but left the spelled-out focused ones in.  The ambiguity for each
 ;;;wh-word does have an effect on parsing, for instance, "who saw who"
-;;;now how two possible readings: "who saw WHÓ?" and "WHÓ saw WHÓ?", both
-;;;of which will appear when we enter "who saw who".  This is predicated
-;;;and fine but a bit undesirable for teasing out the two different
-;;;sentences.
+;;;now how two possible readings: "who saw WHÓ?" and "WHÓ saw WHÓ?",
+;;;both of which will appear when we enter "who saw who".  This is
+;;;predicted and fine but a bit undesirable for teasing out the two
+;;;different sentences.
 
 interrogative_who := wh-n-lxm-unfoc &
 [ ORTH <! "who" !>, 
-  SS.LOC.CONT person-param ].
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL person-rel ] > ].
 
 interrogative_who-foc-2 := wh-n-lxm-foc &
 [ ORTH <! "who" !>,
-  SS.LOC.CONT person-param ].
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL person-rel ] >  ].
 
 interrogative_who-foc-1 := wh-n-lxm-foc &
 [ ORTH <! "WHÓ" !>,
-  SS.LOC.CONT person-param ].
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL person-rel ] >  ].
 
 ;;; <<< >>> WHOM
 
 interrogative_whom := wh-n-lxm-unfoc &
 [ ORTH <! "whom" !>,
-  SS.LOC.CONT person-param ].
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL person-rel ] >  ].
 
 interrogative_whom-foc-2 := wh-n-lxm-foc &
 [ ORTH <! "whom" !>,
-  SS.LOC.CONT person-param ].
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL person-rel ] >  ].
 
 interrogative_whom-foc-1 := wh-n-lxm-foc &
 [ ORTH <! "WHÓM" !>,
-  SS.LOC.CONT person-param ].
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL person-rel ] >  ].
 
 ;;; <<< >>> WHAT
 
 interrogative_what := wh-n-lxm-unfoc &
 [ ORTH <! "what" !>,
-  SS.LOC.CONT thing-param ].
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL thing-rel ] >  ].
 
 interrogative_what-foc-2 := wh-n-lxm-foc &
 [ ORTH <! "what" !>,
-  SS.LOC.CONT thing-param ].
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL thing-rel ] >  ].
 
 interrogative_what-foc-1 := wh-n-lxm-foc &
 [ ORTH <! "WHÁT" !>,
-  SS.LOC.CONT thing-param ].
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL thing-rel ] >  ].
 
 ;;; CCB - add exist_rel to the WH valuse, as per ch 5.
 
+;;; JTB 07/22/01 - Let's get the exclamatives going.
+
 exclamative_what :=  wh-lxm-excl &
-[ ORTH <! "what" !>,
-  SS.LOC.CAT.HEAD det ].
+[ ORTH <! "what", "a" !> ].
+
+exclamative_how := wh-lxm-excl &
+[ ORTH <! "how" !>,
+  SS.LOC [ CAT.HEAD.SPEC.NUCL.EXTENT #delta,
+           CONT [INDEX #delta, RESTR < >] ] ].
 
 ;;;All dead entries:
 

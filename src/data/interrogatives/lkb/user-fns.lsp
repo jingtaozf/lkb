@@ -9,11 +9,7 @@
                  (display-dag sem-struct 'simple))))
 
 
-
-
 (defparameter *do-something-with-parse* 'show-parse-fs)
-
-
 
 ;;; LinGO big grammar specific functions
 

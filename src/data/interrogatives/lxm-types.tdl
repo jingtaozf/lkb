@@ -9,7 +9,6 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 ;;; <<< >>> PART OF SPEECH
 
 ;;; VERB LEXEME DEFINITIONS 
@@ -17,57 +16,95 @@
 ;;;JTB 07/18/01 - Trying to ditch all pumping rules.  Here eliminating
 ;;;phrase restrictions on COMPS and SUBJ and SPR of VPs.
 
+;;;JTB 07/19/01 - Added default restriction on P-STORE to see if this
+;;;prevents useless rule appliation.
+
+;;;JTB 07/23/01 - These are a couple of hacks just to make the way
+;;;Chris does copulas generalized.
+
+;;;JTB 07/29/01 - This type is for things like "be" and "to" which are
+;;;non-inflected and do subject raising (like auxiliaries) while
+;;;inheriting soas.  It skims amalgamation and unifies the subject's
+;;;cat and cont values and the cont.nucl value of the higher and lower
+;;;verbs, and amalgamates everything else.  The difference between
+;;;this and normal amalg is that it takes the quants list from the soa
+;;;rather than the Q-STORE and amalgamates the subject onto that.
+
+non-infl-vb-comp := inflected-lexeme+amalg &
+[ SS [ LOC [ CONT [ NUCL /l #nucl,
+                    QUANTS [ LIST #qlist1,
+                             LAST #qlist_last ] ],
+             CAT [ SUBJ < #subj & [ LOC.CAT.HEAD.PRED false ] >,
+                   SPR < >,
+                   COMPS < #comp > ],
+             Q-STORE <! !>,
+             P-STORE [ LIST #plist1, 
+                       LAST #plist_last ] ],
+       SLASH [ LIST #slash1, 
+               LAST #slash_last ], 
+       WH [ LIST #wh1, 
+            LAST #wh_last ] ],
+  ARG-ST < #subj & [ LOC [ CAT.HEAD.PRED false,
+                           Q-STORE [ LIST #qlist1,
+                                     LAST #qlist2 ],
+                           P-STORE [ LIST #plist1, 
+                                     LAST #plist2 ] ],
+                     SLASH [ LIST #slash1, 
+                             LAST #slash2 ],
+                     WH [ LIST #wh1, 
+                          LAST #wh2 ] ],
+           #comp & [ LOC [ CONT [ NUCL /l #nucl,
+                                  QUANTS [ LIST #qlist2,
+                                           LAST #qlist_last ] ],
+                           P-STORE [ LIST #plist2, 
+                                     LAST #plist_last ] ],
+                     SLASH [ LIST #slash2, 
+                             LAST #slash_last ],
+                     WH [ LIST #wh2, 
+                          LAST #wh_last ] ] > ].
+
+copula := non-infl-vb-comp &
+[ SS.LOC.CAT.COMPS < [ LOC.CAT.HEAD.PRED true ] >,
+  DTRS < auxv-lxm > ].
+
+fin_copula := copula & 
+[ SS.LOC.CAT.HEAD.FORM fin,
+  SS.LOC.CONT r-soa,
+  ARG-ST < [ LOC.CAT.HEAD.CASE nom ], synsem > ].
+
+do-lexeme := non-infl-vb-comp &
+[ SS.LOC.CAT [ HEAD [ PRED false ],
+               SUBJ < [ LOC.CAT.HEAD.CASE nom ] >,
+               COMPS < [ LOC.CAT [ HEAD.FORM base,
+                                   COMPS < > ] ] > ],
+  DTRS < auxv-lxm > ].
+
+do-lxm-unfoc := do-lexeme &
+[ SS.LOC.CAT.HEAD.AUX true ].
+
+do-lxm-foc := do-lexeme.
+
 v-lxm := lexeme & 
  [ SS [ LOC [ CAT [ HEAD verb & [ NEG false,
                                   ANA false],
                     SPR < >,
 	            SUBJ < [ LOC.CAT [ HEAD noun,
                                        SPR < >,
-                                       COMPS < > ] ] > ] ],
+                                       COMPS < > ] ] > ],
+              CONT soa,
+              Q-STORE <! !> ],
         WH <! !> ] ].
-
-;v-lxm := lexeme & 
-; [ SS [ LOC [ CAT [ HEAD verb & [ NEG false,
-;                                  ANA false],
-;                    SPR < >,
-;	            SUBJ < [ LOC.CAT phrase-cat & [ HEAD noun,
-;                                                   SPR < >,
-;                                                   COMPS < > ] ] > ] ],
-;        WH <! !> ] ].
-
-; CCB -- temporarially removed content from verbs, because the pol-int-cl was breaking because of a failure to unify between soa and question.  So "Can Sandy sleep?"  Was breaking. 
-;            CONT soa ] ].
-
 
 non-auxv-lxm:= v-lxm &
 [ SS.LOC [ CAT [ HEAD verb & [ INV false, 
                                AUX false ] ] ] ].
 
-;;; CCB - Ivan says should only be LOC that are identified in the SUBJs
-;auxv-lxm := v-lxm & 
-;[ SS.LOC.CAT [ SUBJ < #2 >,
-;               ARG-ST < #2 & [ LOC #1 &
-;                                      [STORE <! > ] ], [ LOC.CAT [ SUBJ < [ LOC #1 & [ STORE <! > ] ] >, 
-;                                                                    COMPS < > ] ] >
-
-#|
-auxv-lxm := v-lxm & 
-<[ SS.LOC.CAT [ SUBJ < [ LOC /l #1 ] > ],
-   ARG-ST < [ LOC /l #1 ], [ LOC.CAT [ SUBJ < [ LOC /l #1  & [ STORE <! !> ] ] >, 
-                                       COMPS < > ] ] > ] ].
-|#
-
 ;;;JTB 07/14/01 - stopped coidentifying SUBJs and starting doing the
 ;;;locals fo the SUBJS, and insist that SLASH of complement be empty.
 
-auxv-lxm := v-lxm & 
-[ SS.LOC.CAT [ SUBJ < #2 > ],
-  ARG-ST < #2 & [LOC.CAT #1], [ LOC.CAT [ SUBJ < [ LOC.CAT #1, 
-						   LOC.STORE <! !>, 
-         					   SLASH <! !>] >, 
-                                          COMPS < > ] ] > ].
+auxv-lxm := v-lxm & s-rais. 
 
-;;;JTB 07/014/01 - original definition but without #1 & STORE <! !> in COMP
+;;;JTB 07/014/01 - original definition but without #1 & P-STORE <! !> in COMP
 ;auxv-lxm := v-lxm & 
 ;[ SS.LOC.CAT [ SUBJ < #1 >,
 ;               ARG-ST < #1, [ LOC.CAT [ SUBJ < #1  >, 
@@ -83,33 +120,27 @@ dummy-auxv-lxm :=  v-lxm &
                   [ LOC.CAT [ HEAD [ PRED true ],
                                      SUBJ < #1 >,
                                      COMPS < > ] ] > ].
-;dummy-auxv-lxm :=  v-lxm & 
-;[ SS.LOC.CAT.ARG-ST < [ LOC.CAT.HEAD [ AGR expl-index & [ PERNUM 1or3sg ] ] ],
-;                       #1 & [ LOC.CAT  phrase-cat & [ HEAD noun,
-;                                                      SPR < > ] ],
-;                       [ LOC.CAT [ HEAD [ PRED true ],
-;                                          SUBJ < #1 >,
-;                                          COMPS < > ] ] > ].
-
-;s-rais.
-
-
 ;;; NOUN LEXEME DEFINITIONS 
+
+;;;JTB 07/19/01 - Noun semantics is now a scope-obj.  The
+;;;determiner/pumping rule/specific lexical entry will determine
+;;;whether it's a quant or a param.
 
 n-lxm := lexeme &
  [ SS.LOC [ CAT [ HEAD noun & [ FORM /l normal, 
 	        	        ANA /l false,
                                 AGR /l ref-index,
                                 MOD /l < > ],
-                  SUBJ < >,
+                  SUBJ /l < >,
                   SPR /l < >,
-                  COMPS /l < > ] ] ].
-
-;            CONT param ] ].
+                  COMPS /l < > ],
+            CONT scope-obj ] ].
 	 
 pron-lxm := n-lxm & no-args &
  [ SS [ LOC [ CAT [ HEAD noun & [ FORM /l normal, 
-                                  ANA /l false ] ] ],
+                                  ANA /l false ] ],
+              Q-STORE <! !>,
+              P-STORE <! !> ],
         WH <! !> ] ].
 
 ;;;JTB 07/17/01 - According to GS Chapter 5, the SPR.WH value and the
@@ -122,60 +153,92 @@ pron-lxm := n-lxm & no-args &
 ;;;phrase restrictions on COMPS and SUBJ and SPR.
 
 cn-lxm := n-lxm &
- [ SS.LOC [ CAT [ HEAD [ AGR.PERNUM #agr ],
-	          SPR < [ LOC.CAT [ HEAD det & [ AGR.PERNUM #agr,
+ [ SS.LOC.CAT [ HEAD.AGR.PERNUM #agr,
+	        SPR < [ LOC [ CAT [ HEAD det & [ AGR.PERNUM #agr,
                                                  COUNT /l true ],
-                                    SPR < > ] ] > ] ] ].
+                                    SPR < > ] ] ] > ],
+   SS.LOC.CONT [ INDEX #index, RESTR < [ PROP.SOA.NUCL.INSTANCE #index ] > ] ].
 
-;cn-lxm := n-lxm &
-; [ SS.LOC [ CAT [ HEAD [ AGR.PERNUM #agr ],
-;	          SPR < [ LOC.CAT phrase-cat & [ HEAD det & [ AGR.PERNUM #agr,
-;                                                             COUNT /l true ],
-;                                                  SPR < > ] ] > ] ] ].
+;;;JTB 07/29/01 - For nouns that take a prepositional complement like
+;;;picture.
 
-pn-lxm := n-lxm & no-args &
- [ SS [ LOC [ CAT [ HEAD [ AGR.PERNUM 3sg ] ] ],
-              WH <! !> ] ].
+tr-cn-lxm := cn-lxm & str-tr & prep-arg.
+
+pn-lxm := n-lxm &
+ [ SS [ LOC [ CAT.HEAD [ PRED false, AGR.PERNUM 3sg ],
+              CONT param,
+              Q-STORE <! !>,
+              P-STORE <! !> ],
+        WH <! !>,
+        SLASH <! !> ] ].
 
 ;;; NON-INFLECTING (CONST-LXM) LEXEME TYPES
 
 const-lxm := lexeme.
 
-det-lxm := const-lxm &
- [ SS [ LOC [ CAT [ HEAD det,
-                    SUBJ < >,
-                    SPR /l < >,
-                    COMPS < > ],
-              CONT null-sem ] ] ].
+det-lxm := inflected-lexeme+amalg &
+[ SS [ LOC [ CAT [ HEAD det & [ SPEC /l scope-obj ],
+                   SUBJ < >,
+                   SPR /l < >,
+                   COMPS < > ],
+             CONT scope-obj ],
+       SLASH <! !> ],
+  DTRS < inflected-lexeme >,
+  ARG-ST /l < > ].
 
+non-wh-det-lxm := det-lxm &
+[ SS [ LOC [ CAT [ HEAD.SPEC /l [ INDEX #index,
+                                  RESTR #restr ] ],
+             CONT #cont & /l [ INDEX #index,
+                               RESTR #restr ],
+             Q-STORE <! #cont !>,
+             P-STORE <! !> ],
+     WH <! !> ] ].
+
+gen-poss-det-lxm := det-lxm &
+[ SS [ LOC [ CAT [ HEAD.SPEC [ INDEX #index,
+                               RESTR #restr1 ] ],
+             CONT #cont,
+             Q-STORE <! #cont & the-rel & [ INDEX #index,
+                                            RESTR [ FIRST.PROP.SOA.NUCL poss-rel &
+                                                          [ POSS-ED #index ], 
+                                                    REST #restr1 ] ] !>,
+             P-STORE <! !> ],
+       WH <! !> ],
+  ARG-ST < > ].
 
 ;;;JTB 07/18/01 - Trying to ditch all pumping rules.  Here eliminating
 ;;;phrase restrictions on COMPS and SUBJ and SPR.
 
+;;;JTB 07/22/01 - Semantics????
+
 p-lxm := const-lxm &
- [ SS.LOC.CAT [ HEAD prep,
-                    SPR < >,
-                    COMPS < [ LOC [ CAT [ HEAD noun,
-                                          SPR < >,
-                                          COMPS  < > ] ] ] > ] ].
+ [ SS.LOC [ CAT [ HEAD prep,
+                  SPR < >,
+                  COMPS < [ LOC [ CAT [ HEAD noun & [ CASE acc ],
+                                        SPR < >,
+                                        COMPS  < > ] ] ] > ] ] ].
 
-;p-lxm := const-lxm &
-; [ SS.LOC.CAT [ HEAD prep,
-;                    SPR < >,
-;                    COMPS < [ LOC [ CAT phrase-cat & [ HEAD noun,
-;                                                        SPR < >,
-;                                                       COMPS  < > ] ] ] > ] ].
+;;;JTB 07/10/01 marking one shouldn't have a subject, predicative one
+;;;should.  07/24/01 Hoping to ditch these two types and make
+;;;predicative ones out of non-predicative ones.
 
+mkp-lxm := p-lxm & str-intr &
+ [ SS.LOC [ CAT [ HEAD [ PRED false,
+                         FORM mkp-pform ],
+                  SUBJ < >,
+                  COMPS < [ LOC.CONT #cont ] > ],
+            CONT #cont ] ].
 
-;;;JTB 07/10/01 marking one shouldn't have a subject, predicative one should.
-mkp-lxm := p-lxm &
- [ SS.LOC.CAT [ HEAD.PRED false,
-                SUBJ < > ] ].
-
-pdp-lxm := p-lxm &
- [ SS.LOC.CAT [ HEAD.PRED true,
-                SUBJ < synsem > ] ].
-
+pdp-lxm := p-lxm & 
+ [ SS [ WH <! !>,
+        LOC [ CAT [ HEAD [ PRED true,
+                           FORM pdp-pform ],
+                    SUBJ < synsem & [ LOC [ CAT [ HEAD noun ],
+                                            CONT.INDEX #index,
+                                            Q-STORE <! !>,
+                                            P-STORE <! !> ] ] > ], 
+              CONT soa & [ NUCL.ARG #index ] ] ] ].
 
 comp-lxm := const-lxm &
  [ SS [ LOC.CAT [ HEAD comp,
@@ -185,13 +248,27 @@ comp-lxm := const-lxm &
 
 
 ;;; CCB - this is just a quick definiton.  Needs to be fixed.
+
+;;;JTB - 07/23/01 - We're going to derive ADJs from a simpler
+;;;definition so we can get both attributive and predicative.
+;;;Consequently, we'll lose the MOD values and stuff and derive all of
+;;;the necessary stuff via lexical rules.  And at present, we'll only
+;;;worry about predicative ones.  Furthermore, all ADJs will have
+;;;specifiers and we'll lose then with a bare-adj rule like with
+;;;nouns.
+
 adj-lxm := const-lxm &
- [ SS.LOC.CAT [ HEAD adj & [ FORM normal,
-                             PRED true,
-                             MOD < [ LOC.CAT.HEAD noun ] > ],
-                SUBJ /l < >,
-                SPR /l < >,
-                COMPS /l < > ] ].
+ [ SS.LOC [ CAT [ HEAD adj & [ PRED true,
+                               FORM normal,
+                               DEG /l #deg ],
+                  SUBJ < synsem & [ LOC [ CAT.HEAD noun,
+                                          CONT.INDEX #index,
+                                          Q-STORE <! !>,
+                                          P-STORE <! !> ] ] >,
+                  SPR /l < [ LOC.CAT.HEAD det & [ DEG #deg ] ] >,
+                  COMPS /l < > ],
+            CONT soa & [ NUCL.ARG #index ],
+            Q-STORE <! !> ] ].
 
 ;;; CCB - this is just a quick definiton.  Needs to be fixed.
 adv-lxm := const-lxm &
@@ -200,10 +277,7 @@ adv-lxm := const-lxm &
                 SPR < >,
                 COMPS < > ] ].
 
-
-
 ;;; <<< >>> ARGUMENT SELECTION
-
 
 ; no-arguments (no-args)
 no-args := lexeme &
@@ -211,26 +285,33 @@ no-args := lexeme &
 
 ; intransitive (intr)
 intr := lexeme &
-[ ARG-ST < synsem, ... > ].
+[ ARG-ST < [ LOC.CAT.HEAD.PRED /l false ], ... > ].
 
 ; strict-intransitive (str-intr)
 str-intr := intr &
-[ ARG-ST < synsem > ].
+[ ARG-ST < [ LOC.CAT.HEAD.PRED /l false ] > ].
 
 ; intransitive-xcomp (intr-xcomp)
 intr-xcomp := intr &
-[ ARG-ST < synsem, synsem > ].
+[ ARG-ST < [ LOC.CAT.HEAD.PRED /l false ], 
+           [ LOC.CAT.HEAD.PRED /l false ] > ].
+
+;;;JTB 07/29/01 - Added <! !> constraints to prevent extra
+;;;amalgamation.
 
 ; subject-control (s-con)
 s-con := intr-xcomp &
 [ ARG-ST < [ LOC [ CONT [ INDEX #1 ] ] ], 
-           [ LOC.CAT [ SPR < [ LOC [ CONT [ INDEX #1 ] ] ] >,
+           [ LOC.CAT [ SUBJ < [ LOC [ CONT [ INDEX #1 ],
+                                      P-STORE <! !>,
+                                      Q-STORE <! !> ],
+                                SLASH <! !> ] >,
                        COMPS < > ] ] > ].
-
 
 ; transitive (tran)
 tran := lexeme &
-[ ARG-ST < synsem, synsem, ... > ].
+[ ARG-ST < [ LOC.CAT.HEAD.PRED /l false ], 
+           [ LOC.CAT.HEAD.PRED /l false ], ... > ].
 
 ; strict-transitive (str-tr)
 str-tr := tran &
@@ -238,11 +319,7 @@ str-tr := tran &
 
 ; transitive-xcomp (tran-xcomp)
 tran-xcomp := tran &
-[ ARG-ST < synsem, synsem, synsem > ].
-
-
-
-
+[ ARG-ST < synsem, synsem, synsem & [ LOC.CAT.HEAD.PRED /l false ]> ].
 
 ;;; <<< >>> Maximal Subtypes of PART-OF-SPEECH and ARG-SELECTION
 
@@ -255,26 +332,18 @@ scv := non-auxv-lxm & s-con.
 ; subject-raising-verb (srv)
 srv := non-auxv-lxm & s-rais.
 
-
-
-
-
-
-
 ; PP-argument (prep-arg)
 
 ;;;JTB 07/18/01 - Trying to ditch all pumping rules.  Here eliminating
 ;;;phrase restrictions on COMPS and SUBJ and SPR.
 
 prep-arg := lexeme &
-[ ARG-ST < synsem, [ LOC.CAT [ HEAD prep,
-                               SPR < >,
-                               COMPS < > ] ] > ].
-
-;prep-arg := lexeme &
-;[ SS.LOC.CAT.ARG-ST < synsem, [ LOC.CAT phrase-cat & [ HEAD prep,
-;                                                       SPR < >,
-;                                                       COMPS < > ] ] > ].
+[ ARG-ST < [ LOC.CAT.HEAD.PRED /l false ], 
+           [ LOC.CAT [ HEAD prep & [ PRED false,
+                                     FORM mkp-pform ],
+                       SPR < >,
+                       SUBJ < >,
+                       COMPS < > ] ] > ].
 
 ; NP-transitive-argument (NP-trans-arg) - Added by CCB 9/9/99
 NP-trans-arg := tran &
@@ -282,15 +351,11 @@ NP-trans-arg := tran &
                                SPR < >,
                                COMPS < > ] ] > ].
 
-;NP-trans-arg := tran &
-;[ SS.LOC.CAT.ARG-ST < synsem, [ LOC.CAT phrase-cat & [ HEAD noun,
-;                                                     SPR < >,
-;                                                     COMPS < > ] ] > ].
-
-
 ; ditransitive-argument (ditrans-arg) - Added by CCB 9/9/99
 ditrans-arg := lexeme &
-[ ARG-ST < synsem, synsem, synsem > ].
+[ ARG-ST < [ LOC.CAT.HEAD.PRED /l false ], 
+           [ LOC.CAT.HEAD.PRED /l false ], 
+           [ LOC.CAT.HEAD.PRED /l false ] > ].
 
 ; dative-argument (dt-arg) - Added by CCB 9/9/99
 dt-arg := ditrans-arg &
@@ -301,37 +366,28 @@ dt-arg := ditrans-arg &
                                SPR < >,
                                COMPS < > ] ] > ].
 
-;dt-arg := ditrans-arg &
-;[ SS.LOC.CAT.ARG-ST < synsem, [ LOC.CAT phrase-cat & [ HEAD noun,
-;                                                       SPR < >,
-;                                                       COMPS < > ] ], 
-;                              [ LOC.CAT phrase-cat & [ HEAD noun,
-;                                                       SPR < >,
-;                                                       COMPS < > ] ] > ].
-
 ; PP-ditransitive (ptv-arg) - Added by CCB 9/9/99
 ptv-arg :=  ditrans-arg &
 [ ARG-ST < synsem, [ LOC.CAT [ HEAD noun,
                                SPR < > ] ],
-                   [ LOC.CAT [ HEAD prep,
-                               SPR < > ] ] > ].
-
-;ptv-arg :=  ditrans-arg &
-;[ SS.LOC.CAT.ARG-ST < synsem, [ LOC.CAT [ HEAD noun,
-;                                          SPR < > ] ],
-;                              [ LOC.CAT [ HEAD prep,
-;                                          SPR < > ] ] > ].
+                   [ LOC.CAT [ HEAD prep & [ PRED false,
+                                             FORM mkp-pform ],
+                               SPR < >,
+                               SUBJ < >,
+                               COMPS < > ] ] > ].
 
 ; subject-raising (s-rais)
 s-rais := lexeme &
-[ ARG-ST < #1, [ LOC.CAT [ SUBJ < #1 >,
-                           COMPS < > ] ] > ].
-
-
-
-
-
-
+[ SS.LOC.CAT.SUBJ < #2 >,
+  ARG-ST < #2 & [ LOC [ CAT #1 & [ HEAD.PRED /l false ],
+                        CONT #3 ] ], 
+           [ LOC.CAT [ SUBJ < [ LOC [ CAT #1,
+                                      CONT #3,
+                                      Q-STORE <! !>,
+                                      P-STORE <! !> ],
+                                SLASH <! !> ] >,
+                       COMPS < >,
+                       HEAD.PRED /l false ] ] > ].
 
 ; PP-intransitive-verb (piv)
 piv := non-auxv-lxm & prep-arg.
@@ -346,15 +402,11 @@ ctv := non-auxv-lxm & str-tr &
                                  COMPS < > ],
                            CONT proposition ] ] > ].
 
-
 ; dative-verb (dtv)
 dtv := non-auxv-lxm & dt-arg.
 
 ; PP-transitive-verb (ptv)
 ptv := non-auxv-lxm & ptv-arg.
-
-
-
 
 
 ;;; <<>> Adjective Lexeme types.
@@ -381,39 +433,220 @@ wh-lxm:=inflected-lexeme+amalg &
 [ SS [ LOC [ CAT [ SUBJ < >,
                    SPR < >,
                    COMPS < > ], 
-	     CONT param],
+	     CONT scope-obj],
        SLASH <! !>,
        REL <! !> ],
   ARG-ST < >,        
   DTRS < inflected-lexeme > ].
 
+;;;Exclamative vs. non-exclamative
+
 wh-lxm-nexcl:=wh-lxm &
-[ SS.LOC.CONT #1,
-  SS.LOC.STORE <! #1 !> ].
+[ SS.LOC.CONT #1 & param,
+  SS.LOC.P-STORE <! #1 !> ].
 
-wh-lxm-excl:=wh-lxm &
-[ SS [LOC [CONT #1,
-           STORE <! !> ],
-      WH <! #1 !> ] ].
+wh-lxm-excl:=wh-lxm & wh-det-lxm &
+[ SS.LOC.CONT unusual-rel & #1,
+  SS.WH <! #1 !> ].
 
-wh-n-lxm:=wh-lxm-nexcl &
-[ SS.LOC.CAT.HEAD noun & [ FORM normal, 
+;;; Noun vs. determiner vs. possessive determiner wh-lxms
+
+wh-n-lxm:=wh-lxm &
+[ SS.LOC.CAT.HEAD noun & [ FORM normal,
 	        	   ANA false,
                            AGR ref-index,
-                           MOD < > ] ].
+                           MOD < > ],
+  SS.LOC.CONT [ INDEX #index,
+                RESTR < [ PROP.SOA.NUCL.ARG #index ] > ] ].
 
-wh-det-lxm:=wh-lxm-nexcl &
-[ SS.LOC.CAT.HEAD det ].
+wh-det-lxm := det-lxm &
+[ SS.LOC [ CAT.HEAD.SPEC /l [ INDEX #index,
+                              RESTR #restr ],
+           CONT #cont & /l [ INDEX #index,
+                             RESTR #restr ],
+           Q-STORE <! !>,
+           P-STORE <! #cont !> ] ].
+
+wh-poss-det-lxm := det-lxm &
+[ SS [ LOC [ CAT [ HEAD [ DEG true,
+                          SPEC [ INDEX #index,
+                                 RESTR #restr1 ] ] ],
+             CONT param & [ INDEX #ind2, 
+                            RESTR < [ PROP.SOA.NUCL person-rel &
+                                       [ ARG #index ] ] > ],
+             Q-STORE <! the-rel & [ INDEX #index,
+                                    RESTR [ FIRST.PROP.SOA.NUCL poss-rel &
+                                             [ POSS-ER #ind2,
+                                               POSS-ED #index ], 
+                                            REST #restr1 ] ] !> ] ] ].
+
+;;; Focused vs. non-focused in the non-exclamatives
 
 wh-lxm-foc:=wh-lxm-nexcl &
-[ SS [LOC.CONT.FOC true,
-      WH <! !> ] ].
+[ SS.LOC.CONT.FOC true,
+  SS.WH <! !> ].
 
 wh-lxm-unfoc:=wh-lxm-nexcl &
-[ SS [ LOC [ CONT #1 & [ FOC false ] ],
-       WH <! #1 !> ] ].
+[ SS.LOC.CONT #1 & [ FOC false ],
+  SS.WH <! #1 !> ].
+
+;;; Maximal types
 
 wh-n-lxm-unfoc:=wh-n-lxm & wh-lxm-unfoc.
 wh-n-lxm-foc:=wh-n-lxm & wh-lxm-foc.
 wh-det-lxm-unfoc:=wh-det-lxm & wh-lxm-unfoc.
 wh-det-lxm-foc:=wh-det-lxm & wh-lxm-foc.
+
+wh-poss-det-lxm-foc := wh-poss-det-lxm & wh-lxm-foc.
+wh-poss-det-lxm-unfoc := wh-poss-det-lxm & wh-lxm-unfoc.
+
+;;;JTB 07/20/01 - Put these here for now.  These are supertypes of
+;;;amalgamation rules.  Now split between soa and scope-obj, although
+;;;complementizers don't get amalgamated anymore.
+
+inflected-lexeme+amalg-0 := inflected-lexeme+amalg &
+[ SS [ SLASH <! !>,
+       WH <! !>,
+       LOC [ P-STORE <! !> ] ],
+  ARG-ST < >,
+  DTRS < inflected-lexeme+ARP > ].
+
+inflected-lexeme+amalg-1 := inflected-lexeme+amalg &
+ [ SS [ SLASH #slash,
+        WH #wh,
+        LOC.P-STORE #store ],
+  ARG-ST < [ SLASH #slash,
+             WH #wh,
+             LOC.P-STORE #store ] >,
+  DTRS < inflected-lexeme+ARP > ].
+
+inflected-lexeme+amalg-2 := inflected-lexeme+amalg &
+[ SS.LOC.P-STORE [ LIST #store_1,
+                   LAST #store_last ], 
+ ARG-ST < [ LOC.P-STORE [ LIST #store_1,
+                          LAST #store_2 ] ], [ LOC.P-STORE [ LIST #store_2,
+                                                             LAST #store_last ] ] >,
+ SS.SLASH [ LIST #slash_1,
+            LAST #slash_last ], 
+ ARG-ST < [ SLASH [ LIST #slash_1,
+                    LAST #slash_2 ] ], [ SLASH [ LIST #slash_2,
+                                                 LAST #slash_last ] ] >,
+ SS.WH [ LIST #wh_1,
+         LAST #wh_last ], 
+ ARG-ST < [ WH [ LIST #wh_1,
+                 LAST #wh_2 ] ], [ WH [ LIST #wh_2,
+                                        LAST #wh_last ] ] >,
+  DTRS < inflected-lexeme+ARP > ].
+
+
+inflected-lexeme+amalg-3 := inflected-lexeme+amalg &
+[ SS.LOC.P-STORE [ LIST #store_1,
+                 LAST #store_last ], 
+  ARG-ST < [ LOC.P-STORE [ LIST #store_1,
+                         LAST #store_2 ] ], [ LOC.P-STORE [ LIST #store_2,
+                                                          LAST #store_3 ] ], [ LOC.P-STORE [ LIST #store_3,
+                LAST #store_last ] ] >,
+ SS.SLASH [ LIST #slash_1,
+            LAST #slash_last ], 
+ ARG-ST < [ SLASH [ LIST #slash_1,
+                    LAST #slash_2 ] ], [ SLASH [ LIST #slash_2,
+                                                 LAST #slash_3 ] ], [ SLASH [ LIST #slash_3,
+                                                                              LAST #slash_last ] ] >,
+ SS.WH [ LIST #wh_1,
+         LAST #wh_last ], 
+ ARG-ST < [ WH [ LIST #wh_1,
+                 LAST #wh_2 ] ], [ WH [ LIST #wh_2,
+                                        LAST #wh_3 ] ], [ WH [ LIST #wh_3,
+                                                               LAST #wh_last ] ] >,
+  DTRS < inflected-lexeme+ARP > ].
+        
+
+inflected-lexeme+amalg-4 := inflected-lexeme+amalg &
+[ SS.LOC.P-STORE [ LIST #store_1,
+                 LAST #store_last ], 
+  ARG-ST < [ LOC.P-STORE [ LIST #store_1,
+                         LAST #store_2 ] ], [ LOC.P-STORE [ LIST #store_2,
+                                                          LAST #store_3 ] ], [ LOC.P-STORE [ LIST #store_3, 
+        LAST #store_4 ] ],  [ LOC.P-STORE [ LIST #store_4,
+                                          LAST #store_last ] ]  >,
+ SS.SLASH [ LIST #slash_1,
+            LAST #slash_last ], 
+ ARG-ST < [ SLASH [ LIST #slash_1,
+                    LAST #slash_2 ] ], [ SLASH [ LIST #slash_2,
+                                                 LAST #slash_3 ] ], [ SLASH [ LIST #slash_3,
+           LAST #slash_4 ] ],  [ SLASH [ LIST #slash_4,
+                                         LAST #slash_last ] ]  >,
+ SS.WH [ LIST #wh_1,
+         LAST #wh_last ], 
+ ARG-ST < [ WH [ LIST #wh_1,
+                         LAST #wh_2 ] ], [ WH [ LIST #wh_2,
+                                                LAST #wh_3 ] ], 
+    [ WH [ LIST #wh_3,
+           LAST #wh_4 ] ],  [ WH [ LIST #wh_4,
+                                       LAST #wh_last ] ]  >,
+  DTRS < inflected-lexeme+ARP > ].
+
+;;;JTB - generalized inflectional rules.  I'll add to this some stuff
+;;;about predicative vs. non-predicative.
+
+
+;const-lxm_infl := inflected-lexeme & 
+;[ ORTH #orth,
+;  DTRS < const-lxm & [ ORTH #orth,
+;                       NEEDS-AFFIX false ] > ].
+
+;sg-cn-lxm-infl := sing-noun_infl.
+;pl-cn-lxm-infl := plur-common-noun_infl.
+
+
+const-lxm_infl := inflected-lexeme & 
+[ ORTH #orth,
+  DTRS < const-lxm & [ ORTH #orth,
+                       NEEDS-AFFIX false ] > ].
+
+attrib-prep-lxm_infl := attrib-lxm_infl &
+[ SS.LOC.CAT.HEAD prep, 
+  DTRS < pdp-lxm > ].
+
+attrib-adj-lxm_infl := attrib-lxm_infl &
+[ SS.LOC.CAT.HEAD adj & /l [ SPEC.INDEX #index ],
+  SS.LOC.CONT.NUCL.ARG /l #index, 
+  DTRS < adj-lxm > ].
+
+attrib-lxm_infl := const-lxm_infl & 
+[ SS.LOC [ CAT [ HEAD [ PRED false,
+                        MOD < [ LOC [ CAT.HEAD noun,
+                                      CAT.SPR < synsem >,
+                                      CONT.INDEX #index ] ] > ],
+                 SUBJ < > ],
+           CONT.NUCL.ARG #index ],
+  DTRS < [ SS.LOC.CAT.HEAD.PRED true ] > ].
+
+;;;JTB 07/24/01 - Do this with the semantics for now but check with
+;;;Ivan eventually.
+
+;pred-lxm := inflected-lexeme &
+;[ SS.LOC [ CAT [ HEAD.PRED true,
+;                 SUBJ < synsem > ],
+;           CONT soa ] ].
+
+;non-pred-lxm := inflected-lexeme &
+;[ SS.LOC.CAT [ HEAD.PRED false,
+;               SUBJ < > ] ].
+
+;pred-n-lxm := pred-lxm &
+;[ SS.LOC [ CAT [ HEAD.PRED true,
+;                 SUBJ < synsem & [ LOC [ CONT.INDEX #index,
+;                                         Q-STORE <! !>,
+;                                         P-STORE <! !> ],
+;                                   SLASH <! !> ] > ],
+;           CONT soa & [ NUCL.INSTANCE #index ] & #soa ],
+;  DTRS < n-lxm & [ SS.LOC.CONT.RESTR < [ PROP.SOA #soa ] > ] > ].
+
+;non-pred-n-lxm := inflected-lexeme &
+;[ SS.LOC.CAT [ HEAD.PRED false,
+;               SUBJ < > ],
+;  DTRS < n-lxm > ].
+
+;;;
+

@@ -3,12 +3,25 @@
 %(letter-set (!t bcdfghjklmnpqrstvwxz))
 %(letter-set (!v aeiou))
 
+;const-lxm_infl_rule := inflected-lexeme & 
+;[ ORTH #orth,
+;  DTRS < const-lxm & [ ORTH #orth,
+;                       NEEDS-AFFIX false ] > ].
 
-const-lxm_infl_rule := inflected-lexeme &
-[ ORTH #orth,
-  DTRS < const-lxm & [ ORTH #orth,
-                       NEEDS-AFFIX false ] > ].
+;attrib-adj-lxm_infl_rule := inflected-lexeme & 
+;[ ORTH #orth,
+;  SS.LOC [ CAT [ HEAD [ PRED false,
+;                        MOD < [ LOC [ CAT.HEAD noun,
+;                                      CONT.INDEX #index ] ] > ],
+;                 SUBJ < > ],
+;           CONT.NUCL.ARG #index ],
+;  DTRS < adj-lxm & [ SS.LOC.CAT.HEAD.PRED true,
+;                     ORTH #orth,
+;                     NEEDS-AFFIX false ] > ].
 
+const-lxm_infl_rule := const-lxm_infl.
+attrib-adj-lxm_infl_rule := attrib-adj-lxm_infl.
+attrib-prep-lxm_infl_rule := attrib-prep-lxm_infl.
 
 sing-noun_infl_rule := inflected-lexeme &
 [ ORTH #orth,
@@ -119,9 +132,24 @@ inflected-lexeme &
                                               PRED false ] ] ] > ].
 
 
-;;; CCB - when the semantics for negation is added, the rule should actually be two rules, one for wide scope negation, the other for narrow.
+;;; CCB - when the semantics for negation is added, the rule should
+;;;actually be two rules, one for wide scope negation, the other for
+;;;narrow.
 
-;;; CCB - I'm futzing this a bit.  When I added the list of noncanonical synsems onto the SUBJ of the type clause, the canon-ss that I had assigned to the negation broke because of the list stitching.  Now I'm saying that neg-ss is a subtype of noncanon-ss.  A total hack.
+;;; CCB - I'm futzing this a bit.  When I added the list of
+;;;noncanonical synsems onto the SUBJ of the type clause, the canon-ss
+;;;that I had assigned to the negation broke because of the list
+;;;stitching.  Now I'm saying that neg-ss is a subtype of noncanon-ss.  A
+;;;total hack.
+
+;;;JTB - 07/23/01 - This is missing some sort of restriction or
+;;;another because I'm picking up "Kim is a dog" as a negation with
+;;;"a" as the negation element.  Right now I'm goign to say that head
+;;;of neg must be an adv.
+
+;;;JTB - 07/29/01 - This is not working now because it's an
+;;;inflected-lexeme and most AUX's have been moved beyond that lexically
+;;;to account for their subject-raising effects by sais hack.
 
 negation-lexical-rule :=
 inflected-lexeme &
@@ -131,7 +159,8 @@ inflected-lexeme &
                       INV false ],
                SPR < >,
                SUBJ < #1 >,
-               COMPS < neg-ss & #neg & [ LOC.CAT.HEAD.FORM f_not ], #2 > ],
+               COMPS < neg-ss & #neg & [ LOC.CAT.HEAD adv & [FORM f_not ] ], 
+                       #2 > ],
   ARG-ST < #1, #neg, #2 >, 
   DTRS < inflected-lexeme & [ NEEDS-AFFIX false,
                               ORTH #orth,
@@ -141,9 +170,6 @@ inflected-lexeme &
                                            SUBJ < #1 >,
                                            COMPS < #2 > ], 
                               ARG-ST < #1, #2 > ] > ].
-  
-
-
 
 negation-lexical-rule-2 :=
 inflected-lexeme &
@@ -153,7 +179,8 @@ inflected-lexeme &
                       INV false ],
                SPR < >,
                SUBJ < #1 >,
-               COMPS < #neg & neg-ss & [ LOC.CAT.HEAD.FORM f_not ], #2, #3 > ],
+               COMPS < #neg & neg-ss & [ LOC.CAT.HEAD adv & [FORM f_not ] ], 
+                       #2, #3 > ],
   ARG-ST < #1, #neg, #2, #3 >,
   DTRS < inflected-lexeme & [ NEEDS-AFFIX false,
                       ORTH #orth,
@@ -167,7 +194,14 @@ inflected-lexeme &
 
 ;;; <<< >>> Argument Realization Principle
 
+;;; JTB 07/23/01 - Not one for SPR and SUBJ combinations?
+;;;Hmmm... need to add some.
  
+;;;Oh, I found the WHC... it's a constraint on these guys.  That
+;;;actually sucks, since it's also here that I need to add some other
+;;;stuff to make predicatively pumped lexemes not conform to this
+;;;constraint, or that that pumping happens after the ARP.
+
 ARP-no-args := inflected-lexeme+ARP &
 [ SS.LOC.CAT [ SPR < >,
                SUBJ < >,
@@ -192,7 +226,11 @@ ARP-spr+comps := inflected-lexeme+ARP &
            REST  list-of-synsems-wh-none & #comps ],
   DTRS < inflected-lexeme > ].
 
-
+;;;JTB 07/23/01 The intent of these changes is to incorporate some of
+;;;the exceptions to predicatives that shows up.  Namely, if you're a
+;;;non-predicative word you also follow the WHC.  If you're a
+;;;predicative, your SPR may have whatever WH value it likes, the
+;;;comps will all be WH empty and so will the SUBJ.
 
 ARP-subj+comps := inflected-lexeme+ARP &
 [ SS.LOC.CAT [ SPR < >,
@@ -202,97 +240,117 @@ ARP-subj+comps := inflected-lexeme+ARP &
            REST  list-of-synsems-wh-none & #comps ],
   DTRS < inflected-lexeme > ].
 
+non-pred-ARP-subj+spr+comps := inflected-lexeme+ARP &
+[ SS.LOC.CAT [ SPR < #spr >,
+               SUBJ < #subj >,
+               COMPS #comps,
+               HEAD.PRED false ],
+  ARG-ST [ FIRST #subj,
+           REST [ FIRST #spr & [ WH <! !> ],
+                  REST list-of-synsems-wh-none & #comps ] ],
+  DTRS < inflected-lexeme > ].
 
+pred-ARP-subj+spr+comps := inflected-lexeme+ARP &
+[ SS.LOC.CAT [ SPR < #spr >,
+               SUBJ < #subj >,
+               COMPS #comps,
+               HEAD.PRED true ],
+  ARG-ST [ FIRST #subj,
+           REST [ FIRST #spr,
+                  REST list-of-synsems-wh-none & #comps ] ],
+  DTRS < inflected-lexeme > ].
 
+;ARP-subj+spr+comps := inflected-lexeme+ARP &
+;[ SS.LOC.CAT [ SPR < #spr >,
+;               SUBJ < #subj >,
+;               COMPS #comps ],
+;  ARG-ST [ FIRST #subj,
+;           REST [ FIRST #spr & [ WH <! !> ],
+;                  REST list-of-synsems-wh-none & #comps ] ],
+;  DTRS < inflected-lexeme > ].
 
-;;; <<< >>> STORE, SLASH, and WH Amalgamation Constraints
+;;; <<< >>> Q-STORE, P-STORE, SLASH, and WH Amalgamation Constraints
 
-amalgamation-0 := inflected-lexeme+amalg &
-[ SS [ SLASH <! !>,
-       WH <! !>,
-       LOC.STORE <! !> ],
-  ARG-ST < >,
-  DTRS < inflected-lexeme+ARP > ].
+amalg-0-lrule := inflected-lexeme+amalg-0 &
+[ SS.LOC.CONT soa & [ QUANTS <! !> ],
+  SS.LOC.Q-STORE <! !> ].
 
-amalgamation-1 := inflected-lexeme+amalg &
-[ SS [ SLASH #slash,
-       WH #wh,
-       LOC.STORE #store ],
-  ARG-ST < [ SLASH #slash,
-             WH #wh,
-             LOC [ STORE #store ] ] >,
-  DTRS < inflected-lexeme+ARP > ].
+amalg-1-lrule := inflected-lexeme+amalg-1 &
+[ SS.LOC.CONT soa & [QUANTS #quants],
+  SS.LOC.Q-STORE <! !>,
+  ARG-ST < [ LOC.Q-STORE #quants] > ].
 
+amalg-2-lrule := inflected-lexeme+amalg-2 &
+[ SS.LOC.CONT soa & [QUANTS [ LIST #quants1,
+                              LAST #quants_last ] ],
+  SS.LOC.Q-STORE <! !>,
+  ARG-ST < [ LOC.Q-STORE [ LIST #quants1,
+                           LAST #quants2 ] ], [ LOC.Q-STORE [ LIST #quants2,
+                                                              LAST #quants_last ] ] > ].
 
-amalgamation-2 := inflected-lexeme+amalg &
-[ SS.LOC.STORE [ LIST #store_1,
-                 LAST #store_last ], 
- ARG-ST < [ LOC.STORE [ LIST #store_1,
-                         LAST #store_2 ] ], [ LOC.STORE [ LIST #store_2,
-                                                          LAST #store_last ] ] >,
- SS.SLASH [ LIST #slash_1,
-            LAST #slash_last ], 
- ARG-ST < [ SLASH [ LIST #slash_1,
-                    LAST #slash_2 ] ], [ SLASH [ LIST #slash_2,
-                                                 LAST #slash_last ] ] >,
- SS.WH [ LIST #wh_1,
-         LAST #wh_last ], 
- ARG-ST < [ WH [ LIST #wh_1,
-                 LAST #wh_2 ] ], [ WH [ LIST #wh_2,
-                                        LAST #wh_last ] ] >,
-  DTRS < inflected-lexeme+ARP > ].
+amalg-3-lrule := inflected-lexeme+amalg-3 &
+[ SS.LOC.CONT soa & [QUANTS [ LIST #quants1,
+                              LAST #quants_last ] ],
+  SS.LOC.Q-STORE <! !>,
+  ARG-ST < [ LOC.Q-STORE [ LIST #quants1,
+                           LAST #quants2 ] ], [ LOC.Q-STORE [ LIST #quants2,
+                                                              LAST #quants3 ] ],  [ LOC.Q-STORE [ LIST #quants3, LAST #quants_last ] ] > ].
 
+amalg-4-lrule := inflected-lexeme+amalg-4 &
+[ SS.LOC.CONT soa & [QUANTS [ LIST #quants1,
+                            LAST #quants_last ] ],
+  SS.LOC.Q-STORE <! !>,
+  ARG-ST < [ LOC.Q-STORE [ LIST #quants1,
+                           LAST #quants2 ] ], [ LOC.Q-STORE [ LIST #quants2,
+                                                              LAST #quants3 ] ],  [ LOC.Q-STORE [ LIST #quants3, LAST #quants4 ] ], [ LOC.Q-STORE [ LIST #quants4, LAST #quants_last ] ] > ].
 
-amalgamation-3 := inflected-lexeme+amalg &
-[ SS.LOC.STORE [ LIST #store_1,
-                 LAST #store_last ], 
-  ARG-ST < [ LOC.STORE [ LIST #store_1,
-                         LAST #store_2 ] ], [ LOC.STORE [ LIST #store_2,
-                                                          LAST #store_3 ] ], [ LOC.STORE [ LIST #store_3,
-                LAST #store_last ] ] >,
- SS.SLASH [ LIST #slash_1,
-            LAST #slash_last ], 
- ARG-ST < [ SLASH [ LIST #slash_1,
-                    LAST #slash_2 ] ], [ SLASH [ LIST #slash_2,
-                                                 LAST #slash_3 ] ], [ SLASH [ LIST #slash_3,
-                                                                              LAST #slash_last ] ] >,
- SS.WH [ LIST #wh_1,
-         LAST #wh_last ], 
- ARG-ST < [ WH [ LIST #wh_1,
-                 LAST #wh_2 ] ], [ WH [ LIST #wh_2,
-                                        LAST #wh_3 ] ], [ WH [ LIST #wh_3,
-                                                               LAST #wh_last ] ] >,
-  DTRS < inflected-lexeme+ARP > ].
-        
+;;;JTB 07/20/01 - Ok, the weird glomming on the Q-STORE is for
+;;;determiners that introduce their own quatifiers and thus need to
+;;;pass that up.  The other cases (like nouns and stuff) should have
+;;;empty Q-STORES on the daughter and so this shouldn't cause any
+;;;problems.
 
-amalgamation-4 := inflected-lexeme+amalg &
-[ SS.LOC.STORE [ LIST #store_1,
-                 LAST #store_last ], 
-  ARG-ST < [ LOC.STORE [ LIST #store_1,
-                         LAST #store_2 ] ], [ LOC.STORE [ LIST #store_2,
-                                                          LAST #store_3 ] ], [ LOC.STORE [ LIST #store_3, 
-        LAST #store_4 ] ],  [ LOC.STORE [ LIST #store_4,
-                                          LAST #store_last ] ]  >,
- SS.SLASH [ LIST #slash_1,
-            LAST #slash_last ], 
- ARG-ST < [ SLASH [ LIST #slash_1,
-                    LAST #slash_2 ] ], [ SLASH [ LIST #slash_2,
-                                                 LAST #slash_3 ] ], [ SLASH [ LIST #slash_3,
-           LAST #slash_4 ] ],  [ SLASH [ LIST #slash_4,
-                                         LAST #slash_last ] ]  >,
- SS.WH [ LIST #wh_1,
-         LAST #wh_last ], 
- ARG-ST < [ WH [ LIST #wh_1,
-                         LAST #wh_2 ] ], [ WH [ LIST #wh_2,
-                                                LAST #wh_3 ] ], 
-    [ WH [ LIST #wh_3,
-           LAST #wh_4 ] ],  [ WH [ LIST #wh_4,
-                                       LAST #wh_last ] ]  >,
-  DTRS < inflected-lexeme+ARP > ].
-       
+amalg-5-lrule := inflected-lexeme+amalg-1 &
+[ SS.LOC.CONT scope-obj,
+  SS.LOC.Q-STORE #quants,
+  ARG-ST < [ LOC.Q-STORE #quants ] > ].
 
+;amalg-5-2-lrule := inflected-lexeme+amalg-1 &
+;[ SS.LOC.CONT scope-obj,
+;  SS.LOC.Q-STORE [ LIST #quants1,
+;                   LAST #quants_last ],
+;  ARG-ST < [ LOC.Q-STORE [ LIST #quants1,
+;                           LAST #quants2 ] ] >,
+;  DTRS < [ SS.LOC.Q-STORE [ LIST #quants2,
+;                            LAST #quants_last ] ] > ].
 
+amalg-6-lrule := inflected-lexeme+amalg-2 &
+[ SS.LOC.CONT scope-obj,
+  SS.LOC.Q-STORE [ LIST #quants1,
+                   LAST #quants_last ],
+  ARG-ST < [ LOC.Q-STORE [ LIST #quants1,
+                           LAST #quants2 ] ], [ LOC.Q-STORE [ LIST #quants2,
+                                                              LAST #quants_last ] ] > ].
 
+amalg-7-lrule := inflected-lexeme+amalg-3 &
+[ SS.LOC.CONT scope-obj,
+  SS.LOC.Q-STORE [ LIST #quants1,
+                   LAST #quants_last ],
+  ARG-ST < [ LOC.Q-STORE [ LIST #quants1,
+                           LAST #quants2 ] ], [ LOC.Q-STORE [ LIST #quants2,
+                                                              LAST #quants3 ] ],  [ LOC.Q-STORE [ LIST #quants3, LAST #quants_last ] ] > ].
+
+amalg-8-lrule := inflected-lexeme+amalg-4 &
+[ SS.LOC.CONT scope-obj,
+  SS.LOC.Q-STORE [ LIST #quants1,
+                   LAST #quants_last ],
+  ARG-ST < [ LOC.Q-STORE [ LIST #quants1,
+                           LAST #quants2 ] ], [ LOC.Q-STORE [ LIST #quants2,
+                                                              LAST #quants3 ] ],  [ LOC.Q-STORE [ LIST #quants3, LAST #quants4 ] ], [ LOC.Q-STORE [ LIST #quants4, LAST #quants_last ] ] > ].
+
+amalg-9-lrule := inflected-lexeme+amalg-0 &
+[ SS.LOC.CONT scope-obj,
+  SS.LOC.Q-STORE <! !> ].
 
 ;;; <<< >>> GAP
 
@@ -315,4 +373,5 @@ gap-2 := word &
 gap-both := word &
 [ SS [ LOC.CAT.COMPS < > ],
   DTRS < inflected-lexeme+amalg & [ SS.LOC.CAT.COMPS < gap-ss, gap-ss > ] > ].
+
 

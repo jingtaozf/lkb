@@ -137,29 +137,31 @@ Kim left.
 
 (defparameter  *semantics-index-path* '(SEM INDEX))
 
-;;;;;; Parse tree node labels
-;;;
-;;;;;; the path where the name string is stored
-;;;(defparameter *label-path* '(LABEL-NAME))
-;;;
-;;;;;; the path for the meta prefix symbol
-;;;(defparameter *prefix-path* '(META-PREFIX))
-;;;
-;;;;;; the path for the meta suffix symbol
-;;;(defparameter *suffix-path* '(META-SUFFIX))
+;;;Parse tree node labels
+
+;;; the path where the name string is stored
+(defparameter *label-path* '(LABEL-NAME))
+
+;;; the path for the meta prefix symbol
+(defparameter *prefix-path* '(META-PREFIX))
+
+;;; the path for the meta suffix symbol
+(defparameter *suffix-path* '(META-SUFFIX))
+
 ;;;
 ;;;;;; the path for the recursive category
 ;;;(defparameter *recursive-path* '(SYN GAP LIST FIRST))
-;;;
-;;;;;; the path inside the node to be unified with the recursive node
+
+;;; the path inside the node to be unified with the recursive node
 ;;;(defparameter *local-path* nil)
 ;;;
-;;;;;; the path inside the node to be unified with the label node
-;;;(defparameter *label-fs-path* nil)
-;;;
-;;;(defparameter *label-template-type* 'label)
+;;; the path inside the node to be unified with the label node
 
+(defparameter *label-fs-path* nil)
+
+(defparameter *label-template-type* 'label)
 
 ;;; Changing the max number of lex rules before warning...
 
 (defparameter *maximal-lex-rule-applications* 20)
+

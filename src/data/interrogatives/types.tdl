@@ -10,6 +10,17 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
+tree_node_label := *top* &
+  [ NODE sign ].
+
+label := lex-sign &
+  [ LABEL-NAME string ].
+
+;; see lkbpatches
+meta := sign &
+  [ META-PREFIX string,
+    META-SUFFIX string ].
+
 feat-struc := *top*.
 
 ; I've expanded the feature NHD-DTRS to DTRS which contains all the
@@ -35,25 +46,20 @@ synsem := feat-struc &
 ;;;JTB 07/18/01 Testing to see if forcing STORE to be empty will have
 ;;;any effect on dir-is-int-cl and rep-int-cl rules from applying
 ;;;vacuously to undefined lists.  It does but this constraint must go
-;;;on "word" or something like it, maybe "non-lexeme".  Maybe all
+;;;on "word" or something like it, maybe "expression".  Maybe all
 ;;;lists should default to empty unless specified otherwise?
 
 local := feat-struc &
 [ CAT  category,
   CONT sem-obj,
-  STORE *list-of-params* ].
+  P-STORE *list-of-scope-objs*,
+  Q-STORE *list-of-quants* ].
 
 category := feat-struc &
 [ HEAD  pos,
   SUBJ  list-of-synsems,
   SPR   list-of-synsems,
   COMPS list-of-synsems ].
-
-;;;JTB 07/18/01 - Ok, ARG-ST is moving to where it is in the book,
-;;;which is lex-sign.
-
-;lex-cat := category &
-;[ ARG-ST list-of-synsems ].
 
 ;;;JTB and especially IAS 07/10/01 We're adding a comps < > to
 ;;;phrase-cat as a lark.
@@ -74,7 +80,7 @@ gap-ss := noncanon-ss &
 
 pro-ss := noncanon-ss &
 [ SLASH <! !>,
-  LOC [ STORE <! !>,
+  LOC [ P-STORE <! !>,
         CAT.HEAD.CASE acc ] ].
 
 ;;; CCB - added the type elip-ss, to mark elliptical constituents.
@@ -86,39 +92,30 @@ pro-ss := noncanon-ss &
 ellip-ss := noncanon-ss &
 [ SLASH <! !>,
   LOC [ CAT.COMPS < >,
-        STORE <! !> ] ].
-
-;ellip-ss := noncanon-ss &
-;[ SLASH <! !>,
-;  LOC [ CAT phrase-cat,
-;        STORE <! !> ] ].
+        P-STORE <! !> ] ].
 
 neg-ss := noncanon-ss. 
 
-
 ;;; <<< >>> SUBTYPES OF SIGN
 
-;;;JTB 07/18/01 - Either use phrase-cat as a type or just specify the
-;;;restriction right here.  But I think eliminating phrase-cat is a good idea.
-
-;phrase := non-lexeme &
-;[ SS.LOC.CAT phrase-cat ].
-
 ;;;JTB 7/18/01 - Upgrading daughters of phrases to
-;;;list-of-non-lexemes.  If this trick works then we won't need to
-;;;specificy non-lexeme of any daughters of phrases in the entries below.
+;;;list-of-expressions.  If this trick works then we won't need to
+;;;specificy expression of any daughters of phrases in the entries below.
 
-phrase := non-lexeme &
+phrase := expression &
 [ SS.LOC.CAT [ COMPS < > ],
-  DTRS ne-list-of-non-lexemes ].
+  DTRS ne-list-of-expressions ].
+
+;;;JTB 07/18/01 - Here's a joke:
+expression:=sign.
+
+;;;JTB 07/23/01 - Experimenting with making PRED false a default
+;;;constraint to prevent overapplication of rules that want something
+;;;that's PRED true or don't specify.
 
 lex-sign := sign &
 [ NEEDS-AFFIX boolean,
   ARG-ST list-of-synsems ].
-
-;lex-sign := sign &
-;[ NEEDS-AFFIX boolean,
-;  SS.LOC.CAT lex-cat ].
 
 lexeme := lex-sign.
 
@@ -131,7 +128,7 @@ lexeme := lex-sign.
 
 #| 
 
-removing the idfference list stitching approach for the Argument
+removing the difference list stitching approach for the Argument
 Realization Principle.  I'm instead going to do it using a
 non-branching rule.
 
@@ -154,32 +151,33 @@ inflected-lexeme := lex-sign &
 [ NEEDS-AFFIX /l false,
   SS /l #ss,
   ARG-ST /l #arg,
-  DTRS < [ SS /l #ss, ARG-ST /l #arg ] > ].
+  DTRS < [ SS /l #ss, 
+           ARG-ST /l #arg ] > ].
 ; lexeme
 
-;;;JTB 07/18/01 - What the hell is that SUBJ constraint???
+;;;JTB 07/18/01 - What the hell is that SUBJ constraint??? - 07/22/01,
+;;;why it's WH-subject prohibition (WHSP), you fool.
 
 inflected-lexeme+ARP := lex-sign &
 [ NEEDS-AFFIX false,
   ORTH #orth,
-  SS /l #ss & [ LOC.CAT.SUBJ list-of-synsems-wh-none],
+  SS /l #ss & [ LOC.CAT.SUBJ list-of-synsems-wh-none ],
   ARG-ST #arg,
   DTRS < [ ORTH #orth,
-            SS /l #ss,
-            ARG-ST #arg ] > ].
+           SS /l #ss,
+           ARG-ST #arg ] > ].
 ; inflected-lexeme &
-
 
 inflected-lexeme+amalg := lex-sign &
 [ NEEDS-AFFIX false,
   ORTH #orth,
-  SS #ss,
+  SS /l #ss,
   ARG-ST #arg,
   DTRS < [ ORTH #orth,
-           SS #ss, 
+           SS /l #ss, 
            ARG-ST #arg ] > ].
 
-word := lex-sign & non-lexeme &
+word := lex-sign & expression &
 [ NEEDS-AFFIX false,
   ORTH #orth,
   SS /l #ss,
@@ -189,17 +187,15 @@ word := lex-sign & non-lexeme &
             ARG-ST #arg ] > ].
 ;inflected-lexeme+slash_amalg &
 
-;;;JTB 07/18/01 - Here's a joke:
-
-non-lexeme:=sign.
-
 ;;; <<< >>> PARTS OF SPEECH 
 
 pos := feat-struc &
 [ FORM form-cat,
   PRED boolean,
   ANA boolean ].
-;;;JTB 06/27/01 is ANA appropriate for type pos?  Shouldn't it just be in nominals?
+
+;;;JTB 06/27/01 is ANA appropriate for type pos?  Shouldn't it just be
+;;;in nominals?
 
 mod-type := feat-struc &
 [ MOD *list* ].
@@ -207,17 +203,28 @@ mod-type := feat-struc &
 deg-type := feat-struc &
 [ DEG boolean ].
 
+spec-type := feat-struc &
+[ SPEC sem-obj ].
 
+;;;JTB 07/23/01 - This would be a mighty useful type for dealing with
+;;;things that are predicative and thus violate certain constraints:
 
-; Features for verbal are described in section 4.4 (Features for Verbals) in Ginzburg and Sag.  Rather than adding the additional feature VFORM I've simply constrained the FORM feature from pos to be type vform.  The feature INF serces to distinguish infiniticals, i.e. the verb 'to' and the copmlementizer 'for', which are [INF +] from all other verbs and compementizers which are [INF -].  (Ginzburg and Sag).
+;pred-type := feat-struc &
+;[ PRED boolean ].
 
+;;;Features for verbal are described in section 4.4 (Features for
+;;;Verbals) in Ginzburg and Sag.  Rather than adding the additional
+;;;feature VFORM I've simply constrained the FORM feature from pos to be
+;;;type vform.  The feature INF serces to distinguish infiniticals,
+;;;i.e. the verb 'to' and the copmlementizer 'for', which are [INF +]
+;;;from all other verbs and compementizers which are [INF -].  (Ginzburg
+;;;and Sag).
 
 verbal := pos &
 [ FORM vform,
   IC boolean,
   INF boolean ].
  
-
 verb := verbal & mod-type &
 [ AUX boolean,
   INV boolean,
@@ -228,38 +235,40 @@ nonverbal := pos.
 
 comp := verbal.
 
-
-; I've added "topic" to the heirarchy to restrict what can be topicalized though the head-filler rule. 
+;;;I've added "topic" to the heirarchy to restrict what can be
+;;;topicalized though the head-filler rule.
 
 topic := nonverbal.
 
 nominal-cat := topic & 
  [ AGR index ]. 
 
+;;;JTB 07/29/01 - Why the hell are these spec types?  Nouns can't be
+;;;determiners.  Can they?  I'm going to quietly remove this and put it
+;;;in later if need be.
+
 noun := nominal-cat & mod-type &
  [ CASE case,
    MOD /l < > ].
 
-det := nominal-cat & deg-type &
- [ COUNT boolean ].
+det := nominal-cat & deg-type & spec-type &
+ [ COUNT boolean,
+   PRED false ].
 
 conj := nonverbal.
 
 adv := topic & mod-type.
 
-adj := nonverbal & mod-type & deg-type.
+adj := nonverbal & mod-type & deg-type & spec-type.
 
-;;; In English, agreement is marked on nouns and determiners, but I've added it on prepositions because my bining theory implementation relys on PPs having AGR.
-prep := nominal-cat.
+prep := nominal-cat & mod-type &
+[ FORM pform ].
 
-
-
-
+;;;In English, agreement is marked on nouns and determiners, but I've
+;;;added it on prepositions because my binding theory implementation relys
+;;;on PPs having AGR.  
 
 ;;; <<< >>> AGREEMENT TYPES
-
-index := feat-struc &
-[ PERNUM agr-cat ].
 
 ; referential-index (ref-index)
 ref-index := index.
@@ -283,13 +292,12 @@ non-1sg := non-3sg.
 3sg := 1or3sg &
 [ GEND gend ].
 
+pl := 1pl & 2pl & 3pl.
+
 gend := *value*.
 fem := gend.
 masc := gend.
 neut := gend.
-
-
-
 
 ;;; <<< >>> CLAUSALITY
 
@@ -307,11 +315,7 @@ clause := phrase &
              CONT message ],
        WH <! !> ] ].
 
-
-
 non-clause := phrase.
-
-
 
 ; core-clause (core-cl)
 core-cl := clause &
@@ -330,22 +334,20 @@ rel-cl := clause &
 ;;; CCB - should decl-cl inherit from hd-ph, or should I add a HD-DTR type?
 ; declarative-clause (decl-cl)
 decl-cl := core-cl & hd-ph &
-[ SS.LOC.CONT propositional & [ SOA #1 ],
+[ SS.LOC.CONT austinian & [ SOA #1 ],
   HD-DTR [ SS.LOC [ CONT #1 ] ] ]. 
-
-
 
 ; interrogative-clause (inter-cl)
 inter-cl := core-cl &
 [ SS.LOC.CONT question ].
 
 ;;; The headed-interrogative-clause is constrained by the Wh-Question
-;;;Retrieval principle, which requires that the STORE value of a
-;;;hd-int-cl be the head daughter's STORE value, minus some set of
+;;;Retrieval principle, which requires that the P-STORE value of a
+;;;hd-int-cl be the head daughter's P-STORE value, minus some set of
 ;;;indicies that are included in the clause's PARAM's set.  (Note that
 ;;;the set of retrieved indicies can be the empty set).
 
-;;; I'm treating the STORE and the PARAMS as *diff-lists* rather than
+;;; I'm treating the P-STORE and the PARAMS as *diff-lists* rather than
 ;;;sets, so might be making different predictions.  CCB - like what?
 
 
@@ -353,11 +355,11 @@ inter-cl := core-cl &
 hd-int-cl := inter-cl & hd-ph.
 
 #| &
-[ SS.LOC [ STORE [ LIST #first,
+[ SS.LOC [ P-STORE [ LIST #first,
                    LAST #last ],
            CONT [ PARAMS [ LIST #middle,
                            LAST #last ] ] ],
-  HD-DTR.SS.LOC.STORE [ LIST #first,
+  HD-DTR.SS.LOC.P-STORE [ LIST #first,
                         LAST #middle ] ].
    
 |#
@@ -382,7 +384,6 @@ imp-cl := core-cl &
 excl-cl := core-cl &
 [ SS.LOC.CONT fact ].
 
-
 ;;; <<< >>> HEADEDNESS
 
 ;;;I've collapsed the Head Feature Principle, the Valence Principle,
@@ -399,14 +400,9 @@ excl-cl := core-cl &
 
 hd-ph := phrase &
 [ SS /l #1,
-  HD-DTR non-lexeme & [ SS /l #1 ] ].
-
-;hd-ph := phrase &
-;[ SS /l #1,
-;  HD-DTR sign & [ SS /l #1 ] ].
+  HD-DTR expression & [ SS /l #1 ] ].
 
 ; head-complement-phrase (hd-comp-ph)
-;;; CCB - I'm not allowing for non-phrasal complements.  Will that mess anything up?
 
 hd-comp-ph := hd-ph & 
 [ HD-DTR #1,
@@ -415,63 +411,37 @@ hd-comp-ph := hd-ph &
 nv-hd-comp-ph := hd-comp-ph &
 [ HD-DTR [ SS.LOC.CAT.HEAD nonverbal ] ].
 
-
 ;;;JTB 07/18/01 - Trying to eliminate phrasal restrictions and zero
 ;;;level pumping rules
 
-;hd-comp-ph-0 := nv-hd-comp-ph & 
-;[ HD-DTR.SS.LOC.CAT.COMPS < >,
-;  DTRS < sign > ].
-
 hd-comp-ph-1 := nv-hd-comp-ph &
-[ HD-DTR.SS.LOC.CAT.COMPS < #1 >,
-  DTRS < non-lexeme, [ SS #1 ] > ].
+[ HD-DTR.SS.LOC.CAT.COMPS < #1 & [ LOC.CAT [ SPR < >, COMPS < > ] ] >,
+  DTRS < expression, [ SS #1 ] > ].
 
 hd-comp-ph-2 := nv-hd-comp-ph &
-[ HD-DTR.SS.LOC.CAT.COMPS < #1, #2 >,
-  DTRS < non-lexeme, [ SS #1 ], [ SS #2 ] > ].
-
-;hd-comp-ph-1 := nv-hd-comp-ph &
-;[ HD-DTR.SS.LOC.CAT.COMPS < #1 >,
-;  DTRS < sign, phrase & [ SS #1 ] > ].
-
-;hd-comp-ph-2 := nv-hd-comp-ph &
-;[ HD-DTR.SS.LOC.CAT.COMPS < #1, #2 >,
-;  DTRS < sign, phrase & [ SS #1 ], phrase & [ SS #2 ] > ].
+[ HD-DTR.SS.LOC.CAT.COMPS < #1 & [ LOC.CAT [ SPR < >, COMPS < > ] ], 
+                            #2 & [ LOC.CAT [ SPR < >, COMPS < > ] ] >,
+  DTRS < expression, [ SS #1 ], [ SS #2 ] > ].
 
 ; verb-phrase (vb-ph)
 vb-ph := hd-comp-ph &
 [ HD-DTR [ SS.LOC.CAT.HEAD verb & [ AUX #1,
                                     NEG #1 ] ] ].
 
-
-;vb-ph-0 := vb-ph & 
-;[ HD-DTR.SS.LOC.CAT.COMPS < >,
-;  DTRS < sign > ].
-
 vb-ph-1 := vb-ph &
-[ HD-DTR.SS.LOC.CAT.COMPS < #1 >,
-  DTRS < non-lexeme, [ SS #1 ] > ].
+[ HD-DTR.SS.LOC.CAT.COMPS < #1 & [ LOC.CAT [ SPR < >, COMPS < > ] ] >,
+  DTRS < expression, [ SS #1 ] > ].
 
 vb-ph-2 := vb-ph &
-[ HD-DTR.SS.LOC.CAT.COMPS < #1, #2 >,
-  DTRS < non-lexeme, [ SS #1 ], [ SS #2 ] > ].
+[ HD-DTR.SS.LOC.CAT.COMPS < #1 & [ LOC.CAT [ SPR < >, COMPS < > ] ], 
+                            #2 & [ LOC.CAT [ SPR < >, COMPS < > ] ] >,
+  DTRS < expression, [ SS #1 ], [ SS #2 ] > ].
 
 vb-ph-3 := vb-ph &
-[ HD-DTR.SS.LOC.CAT.COMPS < #1, #2, #3 >,
-  DTRS < non-lexeme, [ SS #1 ], [ SS #2 ], [ SS #3 ] > ].
-
-;vb-ph-1 := vb-ph &
-;[ HD-DTR.SS.LOC.CAT.COMPS < #1 >,
-;  DTRS < sign, phrase & [ SS #1 ] > ].
-
-;vb-ph-2 := vb-ph &
-;[ HD-DTR.SS.LOC.CAT.COMPS < #1, #2 >,
-;  DTRS < sign, phrase & [ SS #1 ], phrase & [ SS #2 ] > ].
-
-;vb-ph-3 := vb-ph &
-;[ HD-DTR.SS.LOC.CAT.COMPS < #1, #2, #3 >,
-;  DTRS < sign, phrase & [ SS #1 ], phrase & [ SS #2 ], phrase & [ SS #3 ] > ].
+[ HD-DTR.SS.LOC.CAT.COMPS < #1 & [ LOC.CAT [ SPR < >, COMPS < > ] ], 
+                            #2 & [ LOC.CAT [ SPR < >, COMPS < > ] ],
+                            #3 & [ LOC.CAT [ SPR < >, COMPS < > ] ] >,
+  DTRS < expression, [ SS #1 ], [ SS #2 ], [ SS #3 ] > ].
 
 ; elliptical-verb-phrase (ellip-vp)
 ellip-vp := hd-comp-ph &
@@ -479,15 +449,11 @@ ellip-vp := hd-comp-ph &
 
 ellip-vp-0 := ellip-vp &
 [ HD-DTR.SS.LOC.CAT.COMPS < ellip-ss >,
-  DTRS < non-lexeme > ].
+  DTRS < expression > ].
 
 ellip-vp-1 := ellip-vp &
 [ HD-DTR.SS.LOC.CAT.COMPS < #1, ellip-ss >,
-  DTRS < non-lexeme, [ SS #1 ] > ].
-
-;ellip-vp-1 := ellip-vp &
-;[ HD-DTR.SS.LOC.CAT.COMPS < #1, ellip-ss >,
-;  DTRS < sign, phrase & [ SS #1 ] > ].
+  DTRS < expression, [ SS #1 ] > ].
 
 ; complementizer-phrase (cp-ph)
 cp-ph := hd-comp-ph &
@@ -495,25 +461,19 @@ cp-ph := hd-comp-ph &
 
 cp-ph-1 := cp-ph &
 [ HD-DTR.SS.LOC.CAT.COMPS < #1 >,
-  DTRS < non-lexeme, [ SS #1 ] > ].
+  DTRS < expression, [ SS #1 ] > ].
 
 cp-ph-2 := cp-ph &
 [ HD-DTR.SS.LOC.CAT.COMPS < #1, #2 >,
-  DTRS < non-lexeme, [ SS #1 ], [ SS #2 ] > ].
-
-;cp-ph-1 := cp-ph &
-;[ HD-DTR.SS.LOC.CAT.COMPS < #1 >,
-;  DTRS < sign, phrase & [ SS #1 ] > ].
-
-;cp-ph-2 := cp-ph &
-;[ HD-DTR.SS.LOC.CAT.COMPS < #1, #2 >,
-;  DTRS < sign, phrase & [ SS #1 ], phrase & [ SS #2 ] > ].
-
+  DTRS < expression, [ SS #1 ], [ SS #2 ] > ].
 
 ;;; CCB - Note the cleverness here with this unifying with the
 ;;;constraint on clause that the SUBJ be a list of non-canonical synsems.
 ;;;An e-list is...  
 ; head-subject-phrase (hd-subj-ph)
+
+;;;JTB - 07/19/01 Will it cut down on frivolous parsing if we specify
+;;;for hd-subj-ph and hd-spr-ph that COMPS of HD-DTR must be zilch?
 
 hd-subj-ph := hd-ph &
 [ SS.LOC [ CAT [ SUBJ < > ] ],
@@ -521,25 +481,15 @@ hd-subj-ph := hd-ph &
                              SPR < > ] ],
   DTRS < [ SS #2 ], #1 > ].
 
+;;;JTB 07/19/01 Added SPEC restrictions to make spec stuff come out
+;;;right.
 
 ; head-specifier-phrase (hd-spr-ph)
 hd-spr-ph := hd-ph & binary-construction &
 [ SS.LOC [ CAT [ SPR < > ] ],
-  HD-DTR #1 & [ SS.LOC.CAT [ SPR < #2 > ] ],
+  HD-DTR #1 & [ SS.LOC.CAT.SPR < #2 & [ LOC.CAT.HEAD.SPEC #cont ] >,
+                SS.LOC.CONT #cont ],
   DTRS < [ SS #2 ], #1 > ].
-
-;hd-subj-ph := hd-ph &
-;[ SS.LOC [ CAT [ SUBJ < > ] ],
-;  HD-DTR #1 & [ SS.LOC.CAT [ SUBJ < #2 >,
-;                             SPR < > ] ],
-;  DTRS < phrase & [ SS #2 ], phrase & #1 > ].
-
-
-; head-specifier-phrase (hd-spr-ph)
-;hd-spr-ph := hd-ph & binary-construction &
-;[ SS.LOC [ CAT [ SPR < > ] ],
-;  HD-DTR #1 & [ SS.LOC.CAT [ SPR < #2 > ] ],
-;  DTRS < phrase & [ SS #2 ], phrase & #1 > ].
 
 ; subject-auxilary-inversion-phrase (sai-ph)
 
@@ -550,45 +500,31 @@ sai-ph := hd-ph &
                              SUBJ < #2 > ] ],
   DTRS < word & #1, [ SS #2 ], ... > ].
 
-;sai-ph := hd-ph & 
-;[ SS.LOC.CAT.SUBJ < >,
-;  HD-DTR #1 & [ SS.LOC.CAT [ HEAD verb & [ INV true,
-;                                           AUX true ],
-;                             SUBJ < #2 > ] ],
-;  DTRS < word & #1, phrase & [ SS #2 ], ... > ].
-
 ; elliptical sai-ph.
 sai-ph-0 := sai-ph & 
 [ HD-DTR.SS.LOC.CAT.COMPS < ellip-ss >,
-  DTRS < non-lexeme, non-lexeme > ].
-
+  DTRS < expression, expression & [ SS.LOC.CAT.SPR < > ] > ].
 
 sai-ph-1 := sai-ph & 
 [ HD-DTR.SS.LOC.CAT.COMPS < #1 >,
-  DTRS < non-lexeme, non-lexeme, [ SS #1 ] > ].
-
-;sai-ph-1 := sai-ph & 
-;[ HD-DTR.SS.LOC.CAT.COMPS < #1 >,
-;  DTRS < sign, sign, phrase & [ SS #1 ] > ].
+  DTRS < expression, expression & [ SS.LOC.CAT.SPR < > ], [ SS #1 & [ LOC.CAT.SPR < > ] ] > ].
 
 ;;;CCB - Is a two placed COMPS construction ever needed with sai-ph?
 ;;;Do auxv-lxms ever have more than one complement? -- Yes, in the case
 ;;;of the dummy-subject "be".
 
 sai-ph-2 := sai-ph & 
-[ HD-DTR.SS.LOC.CAT.COMPS < #1, #2 >,
-  DTRS < non-lexeme, non-lexeme, [ SS #1 ], [ SS #2 ] > ].
+[ HD-DTR.SS.LOC.CAT.COMPS < #1 & [ LOC.CAT.SPR < > ], #2 & [ LOC.CAT.SPR < > ] >,
+  DTRS < expression, expression & [ SS.LOC.CAT.SPR < > ], [ SS #1 ], [ SS #2 ] > ].
 
-;sai-ph-2 := sai-ph & 
-;[ HD-DTR.SS.LOC.CAT.COMPS < #1, #2 >,
-;  DTRS < sign, sign, phrase & [ SS #1 ], phrase & [ SS #2 ] > ].
+sai-ph-3 := sai-ph & 
+[ HD-DTR.SS.LOC.CAT.COMPS < >,
+  DTRS < expression, expression & [ SS.LOC.CAT.SPR < > ] > ].
 
 ; head-adjunct-phrase (hd-adj-ph)
 hd-adj-ph := hd-ph & non-clause &
 [ HD-DTR #1 & [ SS #2 ],
   DTRS < #1, [ SS.LOC.CAT.HEAD [ MOD < #2 > ] ] > ].
-
-
 
 ; head-filler-phrase (hd-fill-ph)
 hd-fill-ph := hd-ph &
@@ -600,46 +536,104 @@ hd-fill-ph := hd-ph &
   DTRS < [ SS [ LOC #2,
                 SLASH <! !> ] ], #1 > ].
 
-; head-filler-phrase (hd-fill-ph)
-;hd-fill-ph := hd-ph &
-;[ SS [ LOC.CAT.HEAD verb,
-;       SLASH [ LIST #rest,
-;	       LAST #last] ],
-;  HD-DTR #1 & [ SS.SLASH [ LIST *cons* & < #2 . #rest>,
-;			   LAST *null* & #last ] ],
-;  DTRS < phrase & [ SS [ LOC #2,
-;                    SLASH <! !> ] ], phrase & #1 > ].
-
 ;;; CCB - 5/22/00 - added the hd-modifier-ph
+
 ; post-head-modifier-phrase (post-hd-mod-ph)
-post-hd-mod-ph := hd-ph & binary-construction &
-[ HD-DTR #1 & [ SS #mod ],
-  DTRS < #1, [ SS.LOC.CAT [ HEAD.MOD < #mod >,
+post-hd-mod-ph := binary-construction &
+[ SS [ LOC [ CAT #cat,
+             CONT [ INDEX #index,
+                    RESTR [ FIRST.PROP.SOA #soa,
+                            REST #restr ] ],
+             Q-STORE [ LIST #qlist1,
+                       LAST #qlist_last],
+             P-STORE [ LIST #plist1,
+                       LAST #plist_last ] ],
+       SLASH #slash,
+       WH #wh ],
+  DTRS < [ SS #mod & [ LOC [ CAT #cat,
+                             CONT [ RESTR #restr,
+                                    INDEX #index ],
+                             Q-STORE [ LIST #qlist1,
+                                       LAST #qlist2 ],
+                             P-STORE [ LIST #plist1,
+                                            LAST #plist2 ] ],
+                       SLASH #slash,
+                       WH #wh ] ], 
+         [ SS [ LOC [ CAT [ HEAD nominal-cat & [ PRED false,
+                                                 MOD < #mod > ],
                             SPR < >,
-                            SUBJ < > ] ] > ].
+                            SUBJ < >,
+                            COMPS < > ],
+                      CONT #soa,
+                      Q-STORE [ LIST #qlist2,
+                                LAST #qlist_last],
+                      P-STORE [ LIST #plist2,
+                                LAST #plist_last ] ],
+                SLASH <! !>,
+                WH <! !> ] ] > ].
 
 ;post-hd-mod-ph := hd-ph & binary-construction &
-;[ HD-DTR #1 & [ SS #mod ],
-;  DTRS < phrase & #1, phrase & [ SS.LOC.CAT [ HEAD.MOD < #mod >,
-;                                 SPR < >,
-;                                 SUBJ < > ] ] > ].
-
+;[ SS #mod & [ LOC [ CAT.SPR < synsem >,
+;                    CONT [ INDEX #index,
+;                           RESTR [ FIRST.PROP.SOA #soa,
+;                                   REST #restr ] ] ] ],
+;  HD-DTR #1 & [ SS #mod & [ LOC [ CONT [ RESTR #restr,
+;                                         INDEX #index ] ] ] ],
+;  DTRS < #1, [ SS.LOC.CAT [ HEAD nominal-cat & [ PRED false,
+;                                                 MOD < #mod > ],
+;                            SPR < >,
+;                            SUBJ < [ LOC.CONT.INDEX #index,
+;                                     SLASH <! !> ] >,
+;                            COMPS < > ],
+;               SS.LOC.CONT #soa,
+;               SS.SLASH <! !> ] > ].
 
 ;;; CCB - 5/22/00 - added the hd-modifier-ph
 ; pre-head-modifier-phrase (pre-hd-mod-ph)
-pre-hd-mod-ph := hd-ph & binary-construction &
-[ HD-DTR #1 & [ SS #mod ],
-  DTRS < [ SS.LOC.CAT [ HEAD.MOD < #mod >,
-                        SPR < >,
-                        SUBJ < > ] ], #1 > ].
+
+pre-hd-mod-ph := binary-construction &
+[ SS [ LOC [ CAT #cat,
+             CONT [ INDEX #index,
+                    RESTR [ FIRST.PROP.SOA #soa,
+                            REST #restr ] ],
+             Q-STORE [ LIST #qlist1,
+                       LAST #qlist_last],
+             P-STORE [ LIST #plist1,
+                       LAST #plist_last ] ],
+       SLASH #slash,
+       WH #wh ],
+  DTRS < [ SS [ LOC [ CAT [ HEAD adj & [ PRED false,
+                                         MOD < #mod > ],
+                            SPR < >,
+                            SUBJ < >,
+                            COMPS < > ],
+                      CONT #soa,
+                      Q-STORE [ LIST #qlist2,
+                                LAST #qlist_last],
+                      P-STORE [ LIST #plist2,
+                                LAST #plist_last ] ],
+                SLASH <! !>,
+                WH <! !> ] ],
+         [ SS #mod & [ LOC [ CAT #cat,
+                             CONT [ RESTR #restr,
+                                    INDEX #index ],
+                             Q-STORE [ LIST #qlist1,
+                                       LAST #qlist2 ],
+                             P-STORE [ LIST #plist1,
+                                            LAST #plist2 ] ],
+                       SLASH #slash,
+                       WH #wh ] ] > ].
 
 ;pre-hd-mod-ph := hd-ph & binary-construction &
-;[ HD-DTR #1 & [ SS #mod ],
-;  DTRS < phrase & [ SS.LOC.CAT [ HEAD.MOD < #mod >,
-;                                 SPR < >,
-;                                 SUBJ < > ] ], phrase & #1 > ].
-
-
+;[ SS.LOC.CONT [ INDEX #index,
+;                RESTR [ FIRST.PROP.SOA #soa,
+;                        REST #restr ] ],
+;  HD-DTR #1 & [ SS #mod & [ LOC.CONT [ RESTR #restr,
+;                                       INDEX #index ] ] ],
+;  DTRS < [ SS.LOC.CAT [ HEAD adj & [ MOD < #mod > ],
+;                        SPR < >,
+;                        SUBJ < > ],
+;           SS.LOC.CONT #soa ], #1 > ].
 
 ;;;JTB 7/18/01 - Trying to eliminate pumping rules.
 
@@ -673,7 +667,7 @@ wh-int-cl := hd-int-cl & hd-fill-ph &
 [ SS.LOC.CONT [ PARAMS.LIST.FIRST #1,
                 PROP #2 ],
   HD-DTR.SS.LOC.CONT proposition & #2,
-  DTRS < [ SS.WH <! #1 & param !> ], non-lexeme > ].
+  DTRS < [ SS.WH <! #1 & param !> ], expression > ].
 
 
 ;;; <<< >>> VALUES FOR VARIOUS FEATURES.
@@ -711,6 +705,24 @@ pas := part.
 form-cat := *value*.
 
 f_not := form-cat.
+
+pform := form-cat.
+
+mkp-pform := pform.
+pdp-pform := pform.
+
+loc := mkp-pform.
+recpt_ben := mkp-pform.
+
+to := recpt_ben.
+for := recpt_ben.
+about := mkp-pform.
+with := mkp-pform.
+of := mkp-pform.
+at := loc.
+around := loc.
+in := loc.
+on := loc.
 
 ; The noun form types distinguish between normal and idiomatic usages.
 nform := form-cat.
@@ -787,15 +799,15 @@ e-list-of-signs := list-of-signs & e-list.
 
 
 ;;;JTB 07/18/01 - Make this for daughters so that daughters are always
-;;;words or phrases (i.e., non-lexemes)
+;;;words or phrases (i.e., expressions)
 
-list-of-non-lexemes := list-of-signs.
+list-of-expressions := list-of-signs.
 
-ne-list-of-non-lexemes := list-of-non-lexemes & ne-list &
-[ FIRST non-lexeme,
-  REST list-of-non-lexemes ].
+ne-list-of-expressions := list-of-expressions & ne-list &
+[ FIRST expression,
+  REST list-of-expressions ].
 
-e-list-of-non-lexemes := list-of-non-lexemes & e-list.
+e-list-of-expressions := list-of-expressions & e-list.
 
 list-of-synsems := *list*.
 
@@ -846,7 +858,6 @@ ne-list-of-synsems-wh-none := list-of-synsems-wh-none & ne-list-of-synsems &
 
 e-list-of-synsems-wh-none := list-of-synsems-wh-none &
  e-list-of-synsems.
-
 
 
 list-of-nc-ss-wh-none := list-of-synsems-wh-none & list-of-noncanon-ss.

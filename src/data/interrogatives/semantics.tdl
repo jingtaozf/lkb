@@ -1,26 +1,17 @@
-r_see := reln &
-[ OBSERVER index,
-  OBSERVED index ].
+;;; CCB -- added the wh-value (with g-quant and param and wh-none as
+;;;subtypes), and rel-values.
 
-r_person := reln &
-[ PERSON index ].
+;;; JTB 07/19/01 What the hell are these for?  I'm thinking of
+;;;ditching them since they don't get used anywhere.
 
-r_thing := reln &
-[ THING index ].
+;wh-value := *value*.
+;wh-none := wh-value.
 
-r_wonder := reln &
-[ WONDERER index,
-  WONDERED question ].
+;rel-value := *value*.
+;rel-none := rel-value.
 
-;;; CCB -- added the wh-value (with g-quant and param and wh-none as subtypes), and rel-values.
-
-wh-value := *value*.
-wh-none := wh-value.
-
-rel-value := *value*.
-rel-none := rel-value.
-
-;;; The basic semantic types are from Ginzburg and Sag chapter 3 (January 2000 draft).
+;;; The basic semantic types are from Ginzburg and Sag chapter 3
+;;;(January 2000 draft).
 
 ;;; <<< >>>> SOME BASIC SEMANTIC TYPES
 
@@ -33,60 +24,85 @@ sem-obj := feat-struc.
 ;;;on base case reprise rule and on direct-in-situ, as per discussions
 ;;;with Ivan.  For the record I'm not happy with this solution but ok.
 
+;;;JTB 07/19/01 - Making semantics fit G&S Chapter 3.
+
 message := sem-obj &
 [REPRISABLE boolean].
 
-propositional := message &
+austinian := message &
 [ SOA soa,
   SIT sit ].
 
-proposition := propositional & 
+prop-constr := message &
+[ PROP proposition ].
+
+proposition := austinian & 
 [ SOA r-soa ].
 
-fact := propositional & 
-[ SOA r-soa ].
-
-outcome := propositional & 
+outcome := austinian & 
 [ SOA i-soa ].
 
 ;;;JTB - 07/16/01 - REPRISABLE will default to true but false for
 ;;;reprises and direct in-situ.
 
-question := message &
+fact := prop-constr.
+
+question := prop-constr &
 [ PARAMS *list-of-params*, 
-  PROP proposition,
   REPRISABLE /l true ].
 
-; PARAMS *list-of-params*, 
-
-illoc-rel := reln &
+illoc-rel := rel &
 [ MSG-ARG message ].
 
-assert-reln := illoc-rel &
+assert-rel := illoc-rel &
 [ MSG-ARG proposition ].
 
-ask-reln := illoc-rel &
+ask-rel := illoc-rel &
 [ MSG-ARG question ].
 
-order-reln := illoc-rel &
+order-rel := illoc-rel &
 [ MSG-ARG outcome ].
 
-exclaim-reln := illoc-rel &
+exclaim-rel := illoc-rel &
 [ MSG-ARG fact ].
 
+unusual-rel := quant-rel.
 
-;;; CCB - 5/17/00 -  removed quants from the semantics to try to simplify things for the KB application.  Had to comment out the  wh-exclamative-clause from constructions.tdl as a result, but I hadn't been playing with that much anyway.
-;; QUANTS *list-of-quants*,
+;;; CCB - 5/17/00 - removed quants from the semantics to try to
+;;;simplify things for the KB application.  Had to comment out the
+;;;wh-exclamative-clause from constructions.tdl as a result, but I hadn't
+;;;been playing with that much anyway.
+
+;;;JTB - 07/19/01 - Put them back in, but I'm not going to touch them
+;;;right now.  This is just to make the thing look like the book.
  
 soa := sem-obj &
-[ NUCL reln ]. 
-
+[ QUANTS *list-of-quants*,
+  NUCL rel ].
 
 r-soa := soa.
 
-i-soa := soa.
+i-soa := soa &
+[ T-PARAM param ].
 
+pos-soa := soa.
 
+qf-pos-soa := pos-soa &
+[ QUANTS.LIST.FIRST pquant-rel  ].
+
+qf-fr-pos-soa := pos-soa & 
+[ QUANTS <! !> ].
+
+neg-soa := soa &
+[ QUANTS.LIST.FIRST nquant-rel ].
+
+rel := sem-obj.
+
+quant-rel := scope-obj & rel.
+
+nquant-rel := quant-rel.
+
+pquant-rel := quant-rel.
 
 ;;; <<< >>> MISC. SEMANTIC TYPES
 
@@ -100,38 +116,26 @@ mode-cat :< *value*.
 
 null-sem := sem-obj.
 
-scope-obj := sem-obj.
-
-g-quant := scope-obj & wh-value.
-
-param := scope-obj & wh-value &
+scope-obj := sem-obj &
 [ INDEX index,
-  FOC boolean,
-  RESTR list-of-relns ].
+  RESTR list-of-facts ].
+
+; g-quant := scope-obj & wh-value.
+
+param := scope-obj &
+[ FOC boolean ].
 
 ;;;JTB 07/13/01 Added some param types to reduce redundant
 ;;;information, related to wh-words and their commonalities.
-
-person-param:=param &
-[ INDEX #i,
-  RESTR < [ PERSON #i ] > ].
-
-thing-param:=param &
-[ INDEX #i,
-  RESTR < [ THING #i ] > ].
 
 sit := feat-struc.
 
 reln := feat-struc.
 
-
-
-
-
-
+index := sem-obj &
+[ PERNUM agr-cat ].
 
 ;;; <<< >>> LIST TYPES
-
 
 list-of-scope-objs := *list*.
 
@@ -141,9 +145,6 @@ ne-list-of-scope-objs := list-of-scope-objs & ne-list &
 
 e-list-of-scope-objs := list-of-scope-objs & e-list.
 
-
-
-
 list-of-params := list-of-scope-objs.
 
 ne-list-of-params := list-of-params & ne-list-of-scope-objs &
@@ -152,20 +153,13 @@ ne-list-of-params := list-of-params & ne-list-of-scope-objs &
 
 e-list-of-params := list-of-params & e-list-of-scope-objs.
 
-
-
-
-
 list-of-quants := *list*.
 
 ne-list-of-quants := list-of-quants & ne-list &
-[ FIRST g-quant,
+[ FIRST quant-rel,
   REST list-of-quants ].
 
 e-list-of-quants := list-of-quants & e-list.
-
-
-
 
 list-of-propositions := *list*.
 
@@ -175,9 +169,6 @@ ne-list-of-propositions := list-of-propositions & ne-list &
 
 e-list-of-propositions := list-of-propositions & e-list.
 
-
-
-
 list-of-relns := *list*.
 
 ne-list-of-relns := list-of-relns & ne-list &
@@ -186,6 +177,13 @@ ne-list-of-relns := list-of-relns & ne-list &
 
 e-list-of-relns := list-of-relns & e-list.
 
+list-of-facts := *list*.
+
+ne-list-of-facts := list-of-facts & ne-list &
+[ FIRST fact,
+  REST list-of-facts ].
+
+e-list-of-facts := list-of-facts & e-list.
 
 ;;; *diff-list* types.
 
@@ -236,7 +234,9 @@ e-list-of-relns := list-of-relns & e-list.
 [ LIST list-of-relns,
   LAST list-of-relns ].
 
-
+*list-of-facts* := *diff-list* &
+[ LIST list-of-facts,
+  LAST list-of-facts ].
 
 
 
