@@ -80,7 +80,13 @@
          (condition (if (equal condition "") nil condition))
          (loadp (not (member load (list nil :off :no :none :fuck))))
          (whitespace '(#\Space #\Newline #\Tab))
-         (garbage (append whitespace *tsdb-tokens-to-ignore*))
+         (garbage (append whitespace 
+                          (loop
+                              for string in *tsdb-tokens-to-ignore* 
+                              when (and (stringp string) (= (length string) 1))
+                              collect (schar string 0)
+                              else when (characterp string)
+                              collect string)))
          (imeter (madjust * meter 0.1))
          (wmeter (madjust + (madjust * meter 0.9) (mduration imeter)))
          (items (retrieve condition language))

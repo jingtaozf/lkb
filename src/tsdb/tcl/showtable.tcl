@@ -28,7 +28,10 @@ bind TkTable <Control-Left>  {}
 bind TkTable <Control-Right> {}
 
 
-proc showtable {filename {container ".table"} {database "unknown"} {title ""}} {
+proc showtable {filename {container ".table"} 
+                         {database "unknown"} 
+                         {title ""}
+                         {cells -1}} {
 
 ## Usage:   showtable <tablefilename>
 ##          
@@ -168,7 +171,27 @@ proc showtable {filename {container ".table"} {database "unknown"} {title ""}} {
 
   ## Read table from file
 
-  read_table_file $file
+  if {$cells == -1} {
+    set cells [read_table_file $file];
+    if {[expr {$globals(critical_cell_threshold) > 0
+               && $cells > $globals(critical_cell_threshold)}]} {
+      tsdb_beep;
+      if {[yes-or-no-p \
+          "table layout may be slow ($cells  cells); continue"] != 1} {
+        return "nil";
+      }; # if
+    }; # if
+  } else {
+    read_table_file $file;
+    if {[expr {$globals(critical_cell_threshold) > 0
+               && $cells > $globals(critical_cell_threshold)}]} {
+      tsdb_beep;
+      if {[yes-or-no-p \
+          "table layout may be slow ($cells cells); continue"] != 1} {
+        return "nil";
+      }; # if
+    }; # if
+  }; # else
 
   ## Make toplevel window
 
@@ -463,6 +486,7 @@ proc read_table_file {file} {
     catch {unset region}
     catch {unset cell}
     set viewer "nice";			# default value
+    set ncells 0;
     set titlecols 0;			# default value
     set titlerows 1;			# default value
 
@@ -486,13 +510,18 @@ proc read_table_file {file} {
 	    layout  { set layout([lindex $line 1],[lindex $line 2]) [lrange $line 3 end] }
 	    region  { set region([lindex $line 1],[lindex $line 2],[lindex $line 3],[lindex $line 4]) \
 			  [lrange $line 5 end] }
-	    cell    { set cell([lindex $line 1],[lindex $line 2]) [lrange $line 3 end] }
+	    cell    { 
+              set cell([lindex $line 1],[lindex $line 2]) \
+                  [lrange $line 3 end] 
+              incr ncells;
+            }
 	    viewer  { set viewer [lindex $line 1] }
 	    titlerows { set titlerows [lindex $line 1] }
 	    titlecols { set titlecols [lindex $line 1] }
 	    default { error "showtable: unknown command '$command'!" }
 	}
     }
+  return $ncells;
 }
 
 proc make_table {table} {
@@ -834,3 +863,4 @@ proc fast_viewer_process_cell_options {Tbl TagName OptsVarName} {
 	}
     }
 }
+

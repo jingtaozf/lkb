@@ -236,12 +236,12 @@ proc tsdb_update {{name complete}} {
     send_to_lisp :event $command;
   }; # if
 
-  if {$name == "complete" || $name == "phenomena"} {
-    update_phenomena_list;
-  }; # if
-
   if {$name == "complete" || $name == "condition"} {
     update_condition_cascade null;
+  }; # if
+
+  if {$name == "complete" || $name == "phenomena"} {
+    update_phenomena_cascade reset;
   }; # if
 
 }; # tsdb_update()
@@ -324,7 +324,7 @@ proc tsdb_browse_vocabulary {{load 0}} {
 }; # tsdb_browse_vocabulary()
 
 
-proc tsdb_browse {code condition} {
+proc tsdb_browse {code {condition ""}} {
 
   global globals;
 
@@ -354,16 +354,16 @@ proc tsdb_browse {code condition} {
     }
     errors {
       if {$condition != ""} {
-        set condition "($condition and readings == -1)";
+        set condition "$condition and (errors != `')";
       } else {
-        set condition "readings == -1";
+        set condition "(errors != `')";
       }; # else
       set attributes "(\"i-id\" \"i-input\" \"error\")";
       set relations "(\"item\" \"parse\")";
      }
   }; # switch
 
-  if {$code != "runs" && $globals(condition) != ""} {
+  if {$globals(condition) != ""} {
     if {$condition != ""} {
       set condition "$globals(condition) and ($condition)";
     } else {

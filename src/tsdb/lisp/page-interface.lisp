@@ -23,8 +23,7 @@
 ;;; renamed to `modstream' --- until everybody can upgrade to a recent PAGE
 ;;; version, install hacky kludge.                      (11-nov-98  -  oe)
 ;;;
-;;; somebody wisely decided to rename this slot just once more; surely, there
-;;; must be a good reason ...                           (23-aug-99  -  oe)
+;;; it seems the slot was renamed once more ...         (23-aug-99  -  oe)
 ;;;
 (defmacro mstream (module)
   (cond 
@@ -405,13 +404,9 @@
 ;;;
 ;;; _fix_me_ (some day)
 ;;; the parser item structure has changed; until we actually find some use for
-;;; those derivation trees, why hunt a running fox ...      (30-aug-99  -  oe)
+;;; those derivation trees, why try and shoot a running fox ...
+;;;                                                         (30-aug-99  -  oe)
 ;;;
-(defun compute-derivation-tree (&rest foo)
-  (declare (ignore foo))
-  nil)
-
-#+:bug
 (defun compute-derivation-tree (item &optional (offset (pg::item-start item)))
   (flet ((informative-item-label (item)
            (when (pg::combo-item-p item)
@@ -422,11 +417,11 @@
     (cond
      ((eq (pg::combo-item-itype item) :morph)
       (list
-       (format nil "~(~a~)" (third (pg::combo-item-index item)))
+       (format nil "~(~a~)" (informative-item-label item))
        (- (pg::item-start item) offset)
        (- (pg::item-end item) offset)
        (list
-        (format nil "~(~a~)" (pg::combo-item-stem item))
+        (format nil "~(~a~)" (pg::combo-item-index item))
         (- (pg::item-start item) offset)
         (- (pg::item-end item) offset))))
      (t

@@ -5,11 +5,11 @@ exec /coli/apps/tcl+tk/bin/wish++ "$0" "$@"
 #
 # facilitate stand-alone debugging for `oe'
 #
-if {![info exists page_root]} {
-  set page_root [expr {[info exists env(HOSTNAME)] 
-                       && ![string first "mv" $env(HOSTNAME)]
-                       ? "/home/oe/src/page" 
-                       : "/proj/perform/page"}];
+if {![info exists itsdbroot]} {
+  set itsdb_root [expr {[info exists env(HOSTNAME)] 
+                        && ![string first "mv" $env(HOSTNAME)]
+                        ? "/home/oe/src/itsdb" 
+                        : "/proj/perform/itsdb"}];
 }; # if
 #
 # import BLT library (for `table' and `graph' widgets)
@@ -22,10 +22,10 @@ namespace import -force blt::tile::*
 #
 set globals(name) {[incr tsdb()]};
 if {![info exists globals(podium_home)]} {
-  set globals(podium_home) "$page_root/src/tsdb/tcl/";
+  set globals(podium_home) "$itsdb_root/src/tsdb/tcl/";
 }; # if
 if {![info exists globals(home)]} {
-  set globals(home) "$page_root/src/tsdb/small/";
+  set globals(home) "$itsdb_root/src/tsdb/small/";
 }; # if
 if {![info exists globals(data)]} {
   set globals(data) "";
@@ -96,13 +96,16 @@ set globals(special_menues) {
   .menu.analyze.menu.values
   .menu.analyze.menu.rvalues
   .menu.options.menu.condition
+  .menu.options.menu.phenomena
   .menu.detail.menu.phenomena
   .menu.detail.menu.decoration
   .menu.detail.menu.intersection
   .menu.options.menu.switches
 }; # globals(special_menues)
 set globals(condition) "";
+set globals(condition,null) 1;
 set globals(condition,size) 0;
+set globals(phenomena,all) 1;
 set globals(overwrite) 1;
 set globals(autoload_vocabulary) 1;
 set globals(logscale) 0;
@@ -115,6 +118,7 @@ set globals(saarbruecken) "mail.coli.uni-sb.de";
 set globals(busy_cursor) "watch";
 set globals(gc_cursor) "pirate";
 set globals(kanji_p) [expr {[info commands kanji] == "kanji"}];
+set globals(critical_cell_threshold) 2000;
 
 #
 # relation and attributes for current database; reset when selection changes
@@ -281,18 +285,18 @@ proc main {} {
   .menu.browse.menu add command -label "Vocabulary" \
       -command tsdb_browse_vocabulary
   .menu.browse.menu add separator
-  .menu.browse.menu add cascade \
-      -label "Test Items" -menu .menu.browse.menu.items
+  .menu.browse.menu add command \
+      -label "Test Items" -command {tsdb_browse items ""}
   .menu.browse.menu add command \
       -label "Phenomena" -command {tsdb_browse phenomena ""}
   .menu.browse.menu add command \
       -label "Test Run(s)" -command {tsdb_browse runs ""}
-  .menu.browse.menu add cascade \
-      -label "Parses" -menu .menu.browse.menu.parses
-  .menu.browse.menu add cascade \
-      -label "Results" -menu .menu.browse.menu.results
-  .menu.browse.menu add cascade \
-    -label "Errors" -menu .menu.browse.menu.errors
+  .menu.browse.menu add command \
+      -label "Parses" -command {tsdb_browse parses ""}
+  .menu.browse.menu add command \
+      -state disabled -label "Results" -command {tsdb_browse results ""}
+  .menu.browse.menu add command \
+    -label "Errors" -command {tsdb_browse errors ""}
   .menu.browse.menu add separator
   .menu.browse.menu add command -label "Custom Query" -command "tsdb_select"
 
@@ -533,6 +537,9 @@ proc main {} {
   .menu.options.menu add cascade \
     -label "TSQL Condition" \
     -menu .menu.options.menu.condition
+  .menu.options.menu add cascade \
+    -label "Phenomena" \
+    -menu .menu.options.menu.phenomena
   .menu.options.menu add command -label "New Condition" \
     -command condition_input;
   .menu.options.menu add separator
@@ -555,6 +562,8 @@ proc main {} {
     -command [list tsdb_update complete]
 
   menu .menu.options.menu.condition -tearoff 0
+
+  menu .menu.options.menu.phenomena -tearoff 0
 
 
   menu .menu.options.menu.aggregate -tearoff 0
@@ -874,17 +883,20 @@ proc main {} {
 
 proc evaluate {script {quiet 0}} {
 
+  #
+  # only variables imported here will be visible to the Lisp side of the 
+  # [incr tsdb()] podium; all commands from Lisp are wrapped into evaluate()
+  # calls.
+  #
   global globals;
   global test_suites skeletons phenomena;
 
   logger [format "(evaluate: %s)" $script];
   set status [catch {eval $script} return];
     
-  if {$status == 0} {
-    if {!$quiet} {
-      puts [format "(:ok %s)" $return];
-    }; # if
-  } else {
+  if {$status == 0 && !$quiet} {
+    puts [format "(:ok %s)" $return];
+  } elseif {!$quiet} {
     set return [lispify_string $return];
     if {$status == 1} {
       puts [format "(:error \"%s\")" $return];

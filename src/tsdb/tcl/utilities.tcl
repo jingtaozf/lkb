@@ -167,54 +167,6 @@ proc update_ts_list {{action update} {name all} {arg_one yes} {arg_two yes}} {
 }; # update_ts_list()
 
 
-proc update_phenomena_list {} {
-
-  global phenomena;
-
-  set browse_cascades {
-    .menu.browse.menu.items
-    .menu.browse.menu.parses
-    .menu.browse.menu.results
-    .menu.browse.menu.errors
-  }; # browse_cascades
-
-  if {[info exists phenomena]} {
-    if {[.menu.detail.menu.phenomena index end]} {
-      #
-      # somehow, deleting from position 1 (as it should be because of the
-      # static `All Phenomena' entry at position 0) produces a miss-by-one
-      # error.  possibly a TCL 8.0 bug.             (3-aug-98  -  oe@csli)
-      #
-      .menu.detail.menu.phenomena delete 0 end;
-    }; # if
-
-    foreach cascade $browse_cascades {
-      if {[$cascade index end] != "none" && [$cascade index end]} {
-        $cascade delete 1 end;
-      }; # if
-    }; # foreach
-
-    .menu.detail.menu.phenomena add separator
-    foreach i [lsort -integer [array names phenomena]] {
-      .menu.detail.menu.phenomena add checkbutton -label "$phenomena($i)" \
-        -variable compare_in_detail(phenomena,$phenomena($i));
-    }; # foreach
-
-    foreach cascade $browse_cascades {
-      $cascade add separator;
-      foreach i [lsort -integer [array names phenomena]] {
-        set condition "p-name ~ `$phenomena($i)'";
-        set action [string range $cascade 18 end];
-        $cascade add command -label "$phenomena($i)" \
-          -command [list tsdb_browse $action $condition];
-      }; # foreach
-    }; # foreach
-
-  }; # if
-
-}; # update_phenomena_list()
-
-
 proc update_source_database {index} {
 
   global globals;
@@ -227,16 +179,10 @@ proc update_source_database {index} {
 
 proc update_condition_cascade {{active ""}} {
 
-  global globals;
+  global globals phenomena;
 
-  if {$active == "null"} {
-    set globals(condition,null) 1;
-    foreach i {wellformed illformed analyzed unanalyzed unproblematic} {
-      set globals(condition,$i) 0;
-    }; # foreach
-    for {set i 0} {$i < $globals(condition,size)} {incr i} {
-      set globals(condition,$i) 0;
-    }; # for
+  if {$active == "phenomena"} {
+    set globals(condition,null) $globals(phenomena,all);
   } elseif {[regexp {^[0-9]+$} $active]} {
     set globals(condition,null) 0;
   } elseif {$active == "wellformed"} {
@@ -253,62 +199,91 @@ proc update_condition_cascade {{active ""}} {
     set globals(condition,analyzed) 0;
   } elseif {$active == "unproblematic"} {
     set globals(condition,null) 0;
-  }; # else
-
-  #
-  # construct cascade of checkbuttons; bottom is .n. (5) most recent history
-  # entries for the condition class.
-  #
-  if {[.menu.options.menu.condition index end] != "none"} {
-    .menu.options.menu.condition delete 0 end;
+  } elseif {$active == "null" || $globals(condition,null)} {
+    set globals(condition,null) 1;
+    foreach i {wellformed illformed analyzed unanalyzed unproblematic} {
+      set globals(condition,$i) 0;
+    }; # foreach
+    for {set i 0} {$i < $globals(condition,size)} {incr i} {
+      set globals(condition,$i) 0;
+    }; # for
+    update_phenomena_cascade all;
   }; # if
-  .menu.options.menu.condition add checkbutton \
-    -label "No Condition" \
-    -variable globals(condition,null) \
-    -command {update_condition_cascade null};
-  .menu.options.menu.condition add separator
-
-  .menu.options.menu.condition add checkbutton \
-    -label "Wellformed (`i-wf = 1')" \
-    -variable globals(condition,wellformed) \
-    -command {update_condition_cascade wellformed};
-  .menu.options.menu.condition add checkbutton \
-    -label "Illformed (`i-wf = 0')" \
-    -variable globals(condition,illformed) \
-    -command {update_condition_cascade illformed};
-  .menu.options.menu.condition add checkbutton \
-    -label "Analyzed (`readings > 0')" \
-    -variable globals(condition,analyzed) \
-    -command {update_condition_cascade analyzed};
-  .menu.options.menu.condition add checkbutton \
-    -label "Unanalyzed (`readings = 0')" \
-    -variable globals(condition,unanalyzed) \
-    -command {update_condition_cascade unanalyzed};
-  .menu.options.menu.condition add checkbutton \
-    -label "Unproblematic (`readings != -1')" \
-    -variable globals(condition,unproblematic) \
-    -command {update_condition_cascade unproblematic};
-
-  history_move condition end 1;
-  for {set i 0} {$i < 10} {incr i} {
-    if {[set condition [history_move condition 1 1]] == ""} {
-      break;
-    }; # if
-    if {!$i} {
-      .menu.options.menu.condition add separator
+  
+  if {$active != "phenomena"} {
+    #
+    # construct cascade of checkbuttons; bottom is .n. (5) most recent history
+    # entries for the condition class.
+    #
+    if {[.menu.options.menu.condition index end] != "none"} {
+      .menu.options.menu.condition delete 0 end;
     }; # if
     .menu.options.menu.condition add checkbutton \
-      -label "`$condition'" -variable globals(condition,$i) \
-      -command [list update_condition_cascade $i];
-  }; # for
-  set globals(condition,size) $i;
-  history_move condition end 1;
+      -label "No Condition" \
+      -variable globals(condition,null) \
+      -command {update_condition_cascade null};
+    .menu.options.menu.condition add checkbutton \
+      -label "Phenomena Selection" \
+      -offvalue 1 -onvalue 0 -state disabled \
+      -variable globals(phenomena,all) \
+      -command {update_phenomena_cascade};
+    .menu.options.menu.condition add separator
+
+    .menu.options.menu.condition add checkbutton \
+      -label "Wellformed (`i-wf = 1')" \
+      -variable globals(condition,wellformed) \
+      -command {update_condition_cascade wellformed};
+    .menu.options.menu.condition add checkbutton \
+      -label "Illformed (`i-wf = 0')" \
+      -variable globals(condition,illformed) \
+      -command {update_condition_cascade illformed};
+    .menu.options.menu.condition add checkbutton \
+      -label "Analyzed (`readings > 0')" \
+      -variable globals(condition,analyzed) \
+      -command {update_condition_cascade analyzed};
+    .menu.options.menu.condition add checkbutton \
+      -label "Unanalyzed (`readings = 0')" \
+      -variable globals(condition,unanalyzed) \
+      -command {update_condition_cascade unanalyzed};
+    .menu.options.menu.condition add checkbutton \
+      -label "Unproblematic (`readings != -1')" \
+      -variable globals(condition,unproblematic) \
+      -command {update_condition_cascade unproblematic};
+
+    history_move condition end 1;
+    for {set i 0} {$i < 10} {incr i} {
+      if {[set condition [history_move condition 1 1]] == ""} {
+        break;
+      }; # if
+      if {!$i} {
+        .menu.options.menu.condition add separator
+      }; # if
+      .menu.options.menu.condition add checkbutton \
+        -label "`$condition'" -variable globals(condition,$i) \
+        -command [list update_condition_cascade $i];
+    }; # for
+    set globals(condition,size) $i;
+    history_move condition end 1;
+  }; # if
 
   #
   # determine current TSQL condition: conjunctively concatenate all active
   # restrictions.
   #
   set globals(condition) "";
+  if {!$globals(phenomena,all)} {
+    foreach i [lsort -integer [array names phenomena]] {
+      if {$globals(phenomena,$i)} {
+        set condition [lispify_string "(p-name ~ `$phenomena($i)')"];
+        if {$globals(condition) == ""} {
+          set globals(condition) $condition;
+        } else {
+          set globals(condition) \
+            "$globals(condition) or $condition";
+        }; # else
+      }; # if
+    }; # foreach
+  }; # if
   if {!$globals(condition,null)} {
 
     if {$globals(condition,wellformed)} {
@@ -375,6 +350,47 @@ proc update_condition_cascade {{active ""}} {
   history_move condition end 1;
 
 }; # update_condition_cascade()
+
+
+proc update_phenomena_cascade {{code ""}} {
+
+  global globals phenomena;
+
+  if {$code == "all" || $code == "reset" || $globals(phenomena,all)} {
+    set globals(phenomena,all) 1;
+    foreach i [lsort -integer [array names phenomena]] {
+      set globals(phenomena,$i) 0;
+    }; # foreach
+  } elseif {$code != ""} {
+    set globals(phenomena,all) 0;
+  }; # if
+
+  if {$code == "reset"} {
+    #
+    # construct cascade of checkbuttons, one per phenomenon.
+    #
+    if {[.menu.options.menu.phenomena index end] != "none"} {
+      .menu.options.menu.phenomena delete 0 end;
+    }; # if
+    .menu.options.menu.phenomena add checkbutton \
+      -label "All Phenomena" \
+      -variable globals(phenomena,all) \
+      -command {update_phenomena_cascade all};
+
+    if {[array names phenomena] != ""} {
+      .menu.options.menu.phenomena add separator;
+    }; # if
+    foreach i [lsort -integer [array names phenomena]] {
+      .menu.options.menu.phenomena add checkbutton \
+        -variable globals(phenomena,$i) \
+        -label "$phenomena($i)" \
+        -command "update_phenomena_cascade $i";
+    }; # foreach
+  }; # if
+
+  update_condition_cascade phenomena;
+
+}; # update_phenomena_cascade()
 
 
 proc update_graph_cascade {code} {

@@ -751,7 +751,7 @@
       (format 
        stream 
        " --- error: ~a.~%" 
-       (get-field :error result)))
+       (normalize-string (get-field :error result))))
      ((and (integerp readings) (> readings 0))
       (format 
        stream 

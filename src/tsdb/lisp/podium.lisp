@@ -420,8 +420,9 @@
                           "showtable ~s \".~(~a~)\" ~s {~a}" 
                           file (gensym "") data title)
                          :wait t)))
-                  (when (and (equal (first return) :ok) 
-                             (equal (first (second return)) :table))
+                  (cond
+                   ((and (equal (first return) :ok) 
+                         (equal (first (second return)) :table))
                     (push (append (second return)
                                   (pairlis 
                                    '(:file 
@@ -429,8 +430,11 @@
                                    (list file
                                          (append (rest arguments)
                                                  (list data :file file)))))
-                          *tsdb-podium-windows*)))
-                (status :text (format nil "~a done" message) :duration 2)))))
+                          *tsdb-podium-windows*)
+                    (status :text (format nil "~a done" message) :duration 2))
+                   (t
+                    (status :text (format nil "~a abort" message)
+                            :duration 2))))))))
 
            (schema
             (let* ((data (first arguments)))
@@ -498,14 +502,18 @@
                         "showtable ~s \".~(~a~)\" ~s {~a}" 
                         file (gensym "") data title)
                        :wait t)))
-                (when (and (equal (first return) :ok) 
-                           (equal (first (second return)) :table))
+                (cond
+                 ((and (equal (first return) :ok) 
+                       (equal (first (second return)) :table))
                   (push (append (second return)
                                 (pairlis 
                                  '(:data :command)
                                  (list data (cons action arguments))))
-                        *tsdb-podium-windows*))))
-            (status :text (format nil "~a done" message) :duration 2)))
+                        *tsdb-podium-windows*)
+                  (status :text (format nil "~a done" message) :duration 2))
+                 (t
+                  (status :text (format nil "~a abort" message) 
+                          :duration 2)))))))
 
            ((graph chart)
             (let* ((database (first arguments))
@@ -586,14 +594,18 @@
                           "showtable ~s \".~(~a~)\" ~s {~a}" 
                           file (gensym "") data title)
                          :wait t)))
-                  (when (and (equal (first return) :ok) 
-                             (equal (first (second return)) :table))
+                  (cond
+                   ((and (equal (first return) :ok) 
+                         (equal (first (second return)) :table))
                     (push (append (second return)
                                   (pairlis 
                                    '(:data :command)
                                    (list data (cons 'execute-tag arguments))))
-                          *tsdb-podium-windows*))))
-              (status :text (format nil "~a done" message) :duration 2)))
+                          *tsdb-podium-windows*)
+                    (status :text (format nil "~a done" message) :duration 2))
+                   (t
+                    (status :text (format nil "~a abort" message) 
+                            :duration 2)))))))
 
            (close
             (if (second command)
@@ -645,9 +657,9 @@
                            "showtable ~s \".~(~a~)\" ~s ~s" 
                            file (gensym "") name title)
                           :wait t)))
-                   (status :text (format nil "~a done" message) :duration 2)
-                   (when (and (equal (first return) :ok) 
-                              (equal (first (second return)) :table))
+                   (cond
+                    ((and (equal (first return) :ok) 
+                          (equal (first (second return)) :table))
                      (push (append (second return)
                                    (pairlis 
                                     '(:file 
@@ -656,8 +668,12 @@
                                     (list file
                                           (format nil "~a@~a" source target)
                                           (cons action arguments))))
-                           *tsdb-podium-windows*)))))))
-           
+                           *tsdb-podium-windows*)
+                     (status :text (format nil "~a done" message) :duration 2))
+                    (t
+                     (status :text (format nil "~a abort" message) 
+                             :duration 2))))))))
+
            (detail
             (let* ((source (first arguments))
                    (target (second arguments))
@@ -679,9 +695,9 @@
                         "showtable ~s \".~(~a~)\" ~s ~s" 
                         file (gensym "") name title)
                        :wait t)))
-                (status :text (format nil "~a done" message) :duration 2)
-                (when (and (equal (first return) :ok) 
-                           (equal (first (second return)) :table))
+                (cond
+                 ((and (equal (first return) :ok) 
+                       (equal (first (second return)) :table))
                   (push (append (second return)
                                 (pairlis 
                                  '(:file 
@@ -689,7 +705,11 @@
                                  (list file
                                        (append (rest arguments)
                                                (list :file file)))))
-                        *tsdb-podium-windows*)))))
+                        *tsdb-podium-windows*)
+                  (status :text (format nil "~a done" message) :duration 2))
+                 (t
+                  (status :text (format nil "~a abort" message) 
+                          :duration 2))))))
            
            (latex
             (status :text "generating LaTeX output ...")
@@ -822,7 +842,8 @@
   (defun meter-advance (increment)
     (incf pending increment)
     (when (>= pending 0.01)
-      (send-to-podium (format nil "meter_advance ~,6f" pending) :wait t)
+      (send-to-podium 
+       (format nil "meter_advance ~,6f" pending) :wait nil :quiet t)
       (setf pending 0))))
 
 (defun run-meter (duration)

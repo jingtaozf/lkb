@@ -32,7 +32,7 @@
             (incf (gc-statistics (if global :global :scavenge)))
             (incf (gc-statistics :new) new)
             (incf (gc-statistics :old) old)
-            (when (and (integerp efficiency) (not (zerop efficiency)))
+            (when (and (not global) (integerp efficiency))
               (push efficiency (gc-statistics :efficiency))))
           (when (null global-gc-p)
             (when (or (>= new *tsdb-scavenge-limit*) (< new 0))
