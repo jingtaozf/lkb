@@ -81,24 +81,55 @@ e.g.
             (format t "~%~A: ~A -> ~A, ~A..." 'parse-tsdb-sentences
                (truename istream) parse-file result-file)
             (finish-output)
-            (let ((start-time (get-internal-run-time))
-                  #+mcl (start-gc-time (gctime))
+            (let ((run (get-internal-run-time))
+                  (gc #+mcl (ccl:gctime)
+                      #+allegro (nth-value 2 (excl::get-internal-run-times))
+                      #-(or mcl allegro) 0)
                   )
                (parse-tsdb-sentences2 istream line parse-file result-file)
-               (format t "~%~%Total CPU time: ~A secs"
-                  (round (- (get-internal-run-time) start-time)
-                     internal-time-units-per-second))
-               #+mcl
-               (format t " (includes ~A secs GC)"
-                  (round (- (gctime) start-gc-time)
-                     internal-time-units-per-second))
-               )))))
+               (let ((run (- (get-internal-run-time) run))
+                     (gc (- #+mcl (ccl:gctime)
+                            #+allegro (nth-value 2 (excl::get-internal-run-times))
+                            gc))
+                     )
+                  (format t "~%~%Total CPU time: ~A secs"
+                     (round
+                        #+(or mcl allegro) (- run gc) ; get-internal-run-time included gc time
+                        #-(or mcl allegro) run
+                        internal-time-units-per-second))
+                  #+(or mcl allegro)
+                  (format t " (+ ~A secs GC)"
+                     (round gc internal-time-units-per-second))
+                  ))))))
 
+
+;;;  p-etasks :integer                     # parser executed tasks
+;;;  -> number of checkpaths successes
+;;;  p-stasks :integer                     # parser succeeding tasks
+;;;  -> unifications that succeeded
+;;;  p-ftasks :integer                     # parser filtered tasks
+;;;  -> number of checkpaths failures
+;;;
+;;; I don't believe I can do the following since they refer to the history of
+;;; individual analyses, which I don't keep
+;;;
+;;;  r-etasks :integer     # parser executed tasks - total complete edges
+;;;  r-stasks :integer     # parser succeeding tasks - edges used in successful parses
+;;;  r-ftasks :integer     # parser filtered tasks - edges filtered out by rule filter
 
 (proclaim '(special *do-something-with-parse* *tdsb-progress-pos*))
 
 (defun parse-tsdb-sentences2 (istream line parse-file result-file
-                              &aux (nsent 0) (*tdsb-progress-pos* 0))
+                              &aux (nsent 0) (*tdsb-progress-pos* 0)
+                              #+allegro (old-hook excl:*gc-after-hook*) #+allegro (gccount 0))
+   #+allegro (setf (sys:gsgc-switch :hook-after-gc) t)
+   #+allegro
+   (let ((continuation excl:*gc-after-hook*))
+      (setq excl:*gc-after-hook*
+         #'(lambda (global new old efficiency &rest rest)
+             (incf gccount)
+             (when continuation
+                (apply continuation global new old efficiency rest)))))
    ;; open and close output files for each sentence, so if run fails for some reason
    ;; we have all results in them until that point
    (clear-type-cache)
@@ -120,16 +151,36 @@ e.g.
                       (*standard-output* (make-broadcast-stream *standard-output* str))
                       (real (get-internal-real-time))
                       (run (get-internal-run-time))
-                      (gcs #+mcl (ccl:gccounts) #-mcl 0)
-                      (bytes #+mcl (ccl::total-bytes-allocated) #-mcl 0))
-                  (multiple-value-bind (unifs fails)
+                      (gc #+mcl (ccl:gctime)
+                          #+allegro (nth-value 2 (excl::get-internal-run-times))
+                          #-(or mcl allegro) 0)
+                      (gcs #+mcl (ccl:gccounts) #+allegro gccount #-(or mcl allegro) 0)
+                      (bytes #+mcl (ccl::total-bytes-allocated)
+                             #+allegro (sys:gsgc-totalloc-bytes t)
+                             #-(or mcl allegro) 0))
+                  (multiple-value-bind (unifs fails check-successes check-fails)
                         (parse-tsdb-sentence words)
-                     (declare (ignore fails))
-                     (let* ((bytes #+mcl (- (ccl::total-bytes-allocated) bytes) #-mcl -1)
-                            (gcs #+mcl (- (ccl:gccounts) gcs) #-mcl -1)
-                            (run
+                     (let* ((bytes (- #+mcl (ccl::total-bytes-allocated)
+                                      #+allegro (sys:gsgc-totalloc-bytes t)
+                                      #-(or mcl allegro) -1
+                                      bytes))
+                            (gcs (- #+mcl (ccl:gccounts) #+allegro gccount
+                                    #-(or mcl allegro) -1
+                                    gcs))
+                            (rawgc (- #+mcl (ccl:gctime)
+                                      #+allegro (nth-value 2 (excl::get-internal-run-times))
+                                      gc))
+                            (total
                                (round (* (- (get-internal-run-time) run) 10)
                                   internal-time-units-per-second))
+                            (cpu
+                               (round
+                                  (* (- (get-internal-run-time) run #+(or mcl allegro) rawgc)
+                                     10)
+                                  internal-time-units-per-second))
+                            (gc #+(or mcl allegro)
+                                (round (* rawgc 10) internal-time-units-per-second)
+                                #-(or mcl allegro) -1)
                             (real ; in tenths of secs
                                (round (* (- (get-internal-real-time) real) 10)
                                   internal-time-units-per-second))
@@ -141,13 +192,15 @@ e.g.
                                            :if-exists :append :if-does-not-exist :create)
                            (format ostream "~@{~A~^@~}~%"
                               id 1 id (length *parse-record*)
-                              run run run 0 real -1 -1 -1
+                              total total cpu gc real
+                              check-successes (- unifs fails) check-fails
                               (reduce #'+ *morphs* :key
                                  #'(lambda (x)
                                      (if (morph-edge-p x) (length (morph-edge-morph-results x)) 0)))
-                              *edge-id* unifs -1 -1 -1 bytes gcs -1 -1
+                              *edge-id* unifs *edge-id* ; exactly 1 copy for each edge
+                              -1 -1 bytes gcs -1 -1
                               (multiple-value-bind (sec min hour day mon year)
-                                   (decode-universal-time (get-universal-time))
+                                    (get-decoded-time)
                                  (format nil "~A-~A-~A ~2,'0D:~2,'0D:~2,'0D" day
                                     (aref #("jan" "feb" "mar" "apr" "may" "jun" "jul"
                                             "aug" "sep" "oct" "nov" "dec") (1- mon))
@@ -157,12 +210,13 @@ e.g.
                                            :if-exists :append :if-does-not-exist :create)
                            (dolist (parse *parse-record*)
                               (format ostream "~@{~A@~}"
-                                 id n run *edge-id* -1 -1 -1 -1)
+                                 id n total *edge-id* -1 -1 -1 -1)
                               (format ostream "~A@~S@~A~%"
                                  "" (parse-tree-structure parse) "")
-                              (setq run 0) ; zero time for all parses after first
+                              (setq total 0) ; zero time for all parses after first
                               (incf n))))))))
          (setq line (read-line istream nil 'eof)))
+     #+allegro (setq excl:*gc-after-hook* old-hook)
      (uncache-lexical-entries)))
 
 (defun parse-tsdb-sentences-progress (id)
@@ -185,7 +239,8 @@ e.g.
 
 (defun parse-tsdb-sentence (user-input)
    (let ((*safe-not-to-copy-p* t)
-         (*parse-unifs* 0) (*parse-fails* 0))
+         (*parse-unifs* 0) (*parse-fails* 0) (*check-paths-successes* 0)
+         (*check-paths-fails* 0))
         (clear-chart)
         (add-morphs-to-morphs user-input)
         (add-words-to-chart)
@@ -193,7 +248,8 @@ e.g.
         (find-spanning-edges 0 (length user-input)))
         (when (fboundp *do-something-with-parse*)
                  (funcall *do-something-with-parse*))
-        (values *parse-unifs* *parse-fails*)))
+        (values *parse-unifs* *parse-fails* *check-paths-successes*
+           *check-paths-fails*)))
 
 
 (defun parse-tsdb-sentence-read (line)
