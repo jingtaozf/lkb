@@ -87,8 +87,8 @@
 
 (defvar %binary-dir-name% 
   (or
-   #+(and :i686 :linux) ".lecl"
-   #+(and :i686 (not :unix)) ".wecl"
+   #+(and (or :i686 :pentium4) :linux) ".lecl"
+   #+(and (or :i686 :pentium4) (not :unix)) ".wecl"
    ".ecl"))
 
 ;;;
@@ -97,10 +97,10 @@
 ;;; accordingly (6-feb-96 -- oe@csli)
 ;;;
 (defvar %system-binaries%
-  #+(and :i686 :unix) "linux"
-  #+(and (not :i686) :unix) "ppc"
-  #+(and :i686 (not :unix)) "windows"
-  #-(or (and :unix :i686))
+  #+(and (or :i686 :pentium4) :unix) "linux"
+  #+(and (not (or :i686 :pentium4)) :unix) "ppc"
+  #+(and (or :i686 :pentium4) (not :unix)) "windows"
+  #-(or (or :i686 :pentium4) (and (not (or :i686 :pentium4)) :unix))
   (error "~&loadup: unable to determine system type; see file ~
           `ecl-patches.lisp'.~%"))
 
