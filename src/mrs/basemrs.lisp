@@ -34,6 +34,8 @@
 ;;; ep removed again - was used for the `simple' RMRS
 ;;; but that's no longer supported
 
+(defmacro make-scratch () '(cons -1 nil))
+
 (defstruct (rel)
   handel                               
   pred					; relation name
@@ -41,8 +43,9 @@
   parameter-strings			; the constant values
 					; a junk slot used by the
                                         ; generator and comparison code
-  extra)                                ; extra is a junk slot
+  extra                                 ; extra is a junk slot
                                         ; needed for the munging rules 
+  (scratch (make-scratch)))             ; another junk slot (for MT transfer)
 
 ;;; currently the cfrom and cto are just used in RMRS (plus in some
 ;;; experimental MRS code that was never checked in) but defined here
@@ -65,7 +68,8 @@
 (defstruct (var)
   type
   extra ; e.g. agreement values
-  id)
+  id
+  (scratch (make-scratch)))
 
 (defstruct (extrapair)
   feature
