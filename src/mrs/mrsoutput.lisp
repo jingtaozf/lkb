@@ -418,7 +418,7 @@ duplicate variables")
           ((equal-or-subtype type *ref-ind-type*) "x")
           ((equal-or-subtype type *deg-ind-type*) "d")
           ((equal-or-subtype type *non_expl-ind-type*) "u")
-          ((equal-or-subtype type *event_or_index-type*) "e")
+          ((equal-or-subtype type *event_or_index-type*) "i")
           ((equal-or-subtype type *handle-type*) "h")  
           (t "u"))))
 
