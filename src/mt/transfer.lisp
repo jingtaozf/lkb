@@ -284,9 +284,9 @@
   ;; _fix_me_
   ;; make top variable type (`u') customizable, one day.       (22-jan-04; oe)
   ;;
-  (when (lkb::is-valid-type (mrs::vsym "u"))
+  (when (lkb::is-valid-type (mrs::vsym *semi-u-type*))
     (loop
-        for type in (lkb::retrieve-descendants (mrs::vsym "u"))
+        for type in (lkb::retrieve-descendants (mrs::vsym *semi-u-type*))
         for name = (lkb::type-name type)
         do
           (loop
@@ -1252,8 +1252,10 @@
        (t variable))))
   (when (and (mrs::var-type default)
              (or (null (mrs::var-type variable))
-                 (not (member (mrs::var-type default) '
-                              ("u" "i") :test #'string-equal))))
+                 (not (member 
+                       (mrs::var-type default)
+                       (list *semi-u-type* *semi-i-type*)
+                       :test #'string-equal))))
     (setf (mrs::var-type variable) (mrs::var-type default)))
   (setf (mrs:var-extra variable)
     (if (null (mrs:var-extra variable))

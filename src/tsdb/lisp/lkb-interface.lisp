@@ -512,7 +512,8 @@
                            edges derivations semantix-hook trees-hook
                            burst (nresults 0))
   (declare (ignore edges derivations string id exhaustive nanalyses
-                   semantix-hook trees-hook))
+                   semantix-hook trees-hook)
+           (special mt::*transfer-filter-p*))
 
   (let* ((*package* *lkb-package*)
          (stream (make-string-output-stream))

@@ -2,6 +2,16 @@
 
 (defparameter *semis* nil)
 
+(defconstant *semi-u-type* "u")
+
+(defconstant *semi-h-type* "h")
+
+(defconstant *semi-i-type* "i")
+
+(defconstant *semi-e-type* "e")
+
+(defconstant *semi-x-type* "x")
+
 (defstruct semi
   signature
   (roles (make-hash-table))
@@ -152,25 +162,29 @@
   ;; first of all, this should not be hard-wiring the signature in code, and
   ;; second, there should be a less naive way of generalizing (14-jan-04; oe)
   ;;
-  (when (and (member (mrs::vsym "E") values)
-             (member (mrs::vsym "X") values))
-    (pushnew (mrs::vsym "I") values))
-  (when (and (member (mrs::vsym "H") values)
-             (or (member (mrs::vsym "I") values)
-                 (member (mrs::vsym "E") values)
-                 (member (mrs::vsym "X") values)))
-    (pushnew (mrs::vsym "U") values))
+  (when (and (member (mrs::vsym *semi-e-type*) values)
+             (member (mrs::vsym *semi-x-type*) values))
+    (pushnew (mrs::vsym *semi-i-type*) values))
+  (when (and (member (mrs::vsym *semi-h-type*) values)
+             (or (member (mrs::vsym *semi-i-type*) values)
+                 (member (mrs::vsym *semi-e-type*) values)
+                 (member (mrs::vsym *semi-x-type*) values)))
+    (pushnew (mrs::vsym *semi-u-type*) values))
   (cond
-   ((member (mrs::vsym "U") values)
+   ((member (mrs::vsym *semi-u-type*) values)
     (loop
         for value in values 
-        unless (member value (list (mrs::vsym "H") (mrs::vsym "I") 
-                                   (mrs::vsym "E") (mrs::vsym "X")))
+        unless (member 
+                value 
+                (list (mrs::vsym *semi-h-type*) (mrs::vsym *semi-i-type*) 
+                      (mrs::vsym *semi-e-type*) (mrs::vsym *semi-x-type*)))
         collect value))
-   ((member (mrs::vsym "I") values)
+   ((member (mrs::vsym *semi-i-type*) values)
     (loop
         for value in values 
-        unless (member value (list (mrs::vsym "E") (mrs::vsym  "X")))
+        unless (member 
+                value 
+                (list (mrs::vsym *semi-e-type*) (mrs::vsym  *semi-x-type*)))
         collect value))
    (t
     values)))
@@ -193,7 +207,7 @@
                       (loop
                           with type = (let ((type (mrs:var-type value)))
                                         (mrs::vsym 
-                                         (string-upcase (or type "u"))))
+                                         (or type *semi-u-type*)))
                           for extra in (mrs:var-extra value)
                           do 
                             (record-property
