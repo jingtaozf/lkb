@@ -33,17 +33,15 @@
         (loop for qeq2 in rest
              do
              (cond ((eql (qeq-left qeq2) left)
-                   (unless *giving-demo-p*
-                     (format t
-                             "~%WARNING: multiple qeqs with left member ~A ignored"
-                             left))
+		    (struggle-on-error
+		     "~%Multiple qeqs with left member ~A"
+                             left)
                    (pushnew current problems)
                    (pushnew qeq2 problems))
                    ((eql (qeq-right qeq2) right)
-                    (unless *giving-demo-p*
-                      (format t
-                              "~%WARNING: multiple qeqs with right member ~A ignored"
-                              right))
+                    (struggle-on-error
+                     "~%Multiple qeqs with right member ~A"
+                              right)
                    (pushnew current problems)
                    (pushnew qeq2 problems))
                    (t nil)))))
@@ -56,23 +54,20 @@
        (let ((left (get-var-num (hcons-scarg constr)))
              (right (get-var-num (hcons-outscpd constr))))
          (if (eql left right)
-             (unless *giving-demo-p*
-               (format t
-                       "~%WARNING:  qeq between identical handels ~A" 
-                       left))
+             (struggle-on-error
+               "~%qeq between identical handels ~A" 
+                       left)
            (if (and (member left holes) (not (member left labels)))
                (if (and (member right labels) (not (member right holes)))
                    (pushnew (make-qeq :left left :right right)
                             *qeqs* 
                             :test #'qeq-equal)
-                 (unless *giving-demo-p*
-                   (format t
-                           "~%WARNING:  in ~A qeq ~A, ~A is not a label - ignored" 
-                           left right right)))
-             (unless *giving-demo-p*
-               (format t
-                       "~%WARNING:  in ~A qeq ~A, ~A is not a hole - ignored" 
-                       left right left)))))))
+                 (struggle-on-error
+		  "~%in ~A qeq ~A, ~A is not a label" 
+		  left right right))
+             (struggle-on-error
+	      "in ~A qeq ~A, ~A is not a hole" 
+	      left right left))))))
 
 (defun satisfy-qeq-p (x y) 
   (dolist (qeq *qeqs*)
