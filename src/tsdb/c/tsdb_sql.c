@@ -911,8 +911,7 @@ Tsdb_relation ***tsdb_real_join_path(Tsdb_relation **guess,
       } /* if */
     } /* if */
   } /* for */
-  
-  /* All neighbours of source that are not on the path are found */
+
 #if defined(DEBUG) && defined(JOIN_PATH)
   fprintf(tsdb_debug_stream,
           "real_join_path(): neighbours: %s",
@@ -936,8 +935,9 @@ Tsdb_relation ***tsdb_real_join_path(Tsdb_relation **guess,
                                      (n_successes + 2) * 
                                      sizeof(Tsdb_relation**));
       } /* else */
-      successes[n_successes]=(Tsdb_relation **)malloc((length + 2) * 
-                                                      sizeof(Tsdb_relation *));
+      successes[n_successes]
+        = (Tsdb_relation **)malloc((length + 2) * 
+                                   sizeof(Tsdb_relation *));
       memcpy(successes[n_successes], guess, length * sizeof(Tsdb_relation *));
       successes[n_successes][length] = target;
       successes[n_successes][length + 1] = (Tsdb_relation *)NULL;
