@@ -139,6 +139,30 @@
   ;;; can't be macroized cos used where fn is required
   (eql (var-id var1) (var-id var2)))
 
+;;;
+;;; make debugging with MRSs a little easier: print very compact representation
+;;; of object by default; set *mrs-raw-output-p* to see things in full glory.
+;;;
+(defparameter *mrs-raw-output-p* nil)
+
+(defmethod print-object ((object psoa) stream)
+  (if *mrs-raw-output-p*
+    (call-next-method)
+    (output-mrs1 object 'debug stream)))
+
+(defmethod print-object ((object rel) stream)
+  (if *mrs-raw-output-p*
+    (call-next-method)
+    (format 
+     stream
+     "~a:~(~s~)"
+     (var-string (rel-handel object)) (rel-pred object))))
+
+(defmethod print-object ((object var) stream)
+  (if *mrs-raw-output-p*
+    (call-next-method)
+    (format stream "~a" (var-string object))))
+
 ;;; The MRS structure could be output either as simple ascii
 ;;; or as LaTeX and possibly in other ways
 ;;; So use the same trick as the LKB to avoid unnecessary work
@@ -236,11 +260,11 @@
 
 (defmethod mrs-output-extra-feat  ((mrsout simple) feat)
   (with-slots (stream indentation) mrsout
-    (format stream "~%~VT~A: " (+ indentation 15) feat)))
+    (format stream " ~A: " feat)))
 
 (defmethod mrs-output-extra-val  ((mrsout simple) val)
   (with-slots (stream) mrsout
-    (format stream " ~A" val)))
+    (format stream "~A" val)))
 
 (defmethod mrs-output-end-extra ((mrsout simple))
   (with-slots (stream) mrsout
@@ -252,22 +276,21 @@
 
 (defmethod mrs-output-end-liszt ((mrsout simple))
   (with-slots (stream indentation) mrsout
-    (format stream "~VT>" indentation)))
+    (format stream " >")
+    (setf indentation (- indentation 10))))
 
 (defmethod mrs-output-start-h-cons ((mrsout simple))
   (with-slots (stream indentation) mrsout
     (format stream "~%~VT  HCONS: <" indentation)))
 
 (defmethod mrs-output-outscopes ((mrsout simple) reln higher lower first-p)
+  (declare (ignore first-p))
   (with-slots (stream indentation) mrsout
-    (unless first-p
-      (format stream "~%"))
-    (format stream "~VT~(~a~) ~A ~(~a~)" 
-            (+ indentation 2) higher reln lower)))
+    (format stream " ~(~a~) ~A ~(~a~)" higher reln lower)))
 
 (defmethod mrs-output-end-h-cons ((mrsout simple))
-  (with-slots (stream indentation) mrsout
-    (format stream "~VT>" indentation)))
+  (with-slots (stream) mrsout
+    (format stream " >")))
 
 
 (defmethod mrs-output-end-psoa ((mrsout simple))
@@ -724,6 +747,83 @@ higher and lower are handle-variables
   (with-slots (stream) mrs
     (format stream "</table>")))
 
+;;; 
+;;; maximally compact debugging output-type class
+;;;
+
+(defclass debug (output-type) 
+  ((memory :initform nil)))
+
+(defmethod initialize-display-structure ((class debug) mrs &optional n)
+  (declare (ignore mrs n)))
+    
+(defmethod mrs-output-start-fn ((mrs debug)))
+
+(defmethod mrs-output-end-fn ((mrs debug)))
+
+(defmethod mrs-output-start-psoa ((mrs debug)))
+
+(defmethod mrs-output-top-h ((mrs debug) handle)
+  (when (and handle *rel-handel-path*)
+    (with-slots (id stream) mrs
+      (format stream "~a:" handle))))
+
+(defmethod mrs-output-index ((mrs debug) index)
+  (when index
+    (with-slots (id stream) mrs
+      (format stream "~a:" index))))
+
+(defmethod mrs-output-start-liszt ((mrs debug))
+  (with-slots (stream nrows) mrs
+    (format stream "{")))
+
+(defmethod mrs-output-var-fn ((mrs debug) variable)
+  (declare (ignore variable)))
+
+(defmethod mrs-output-atomic-fn ((mrs debug) value)
+  (declare (ignore value)))
+
+(defmethod mrs-output-start-rel ((mrs debug) pred firstp)
+  (declare (ignore firstp))
+  (with-slots (stream memory) mrs
+    (setf memory (if (stringp pred) 
+                   (format nil "~(~s~)" pred)
+                   (format nil "~(~a~)" pred)))
+    (format stream " ")))
+
+(defmethod mrs-output-rel-handel ((mrs debug) handle)
+  (when handle
+    (with-slots (stream memory) mrs
+      (format stream "~a:~@[~a~]" handle memory))))
+
+(defmethod mrs-output-label-fn  ((mrs debug) label)
+  (declare (ignore label)))
+
+(defmethod mrs-output-start-extra ((mrs debug) type)
+  (declare (ignore type)))
+
+(defmethod mrs-output-extra-feat  ((mrs debug) feature)
+  (declare (ignore feature)))
+
+(defmethod mrs-output-extra-val  ((mrs debug) value)
+  (declare (ignore value)))
+
+(defmethod mrs-output-end-extra ((mrs debug)))
+
+(defmethod mrs-output-end-rel ((mrs debug)))
+
+(defmethod mrs-output-end-liszt ((mrs debug))
+  (with-slots (stream) mrs
+    (format stream " }")))
+
+(defmethod mrs-output-start-h-cons ((mrs debug)))
+
+(defmethod mrs-output-outscopes ((mrs debug) relation higher lower firstp)
+  (declare (ignore relation higher lower firstp)))
+
+(defmethod mrs-output-end-h-cons ((mrs debug)))
+
+(defmethod mrs-output-end-psoa ((mrs debug)))
 
 ;;; Utility fns
 
@@ -958,7 +1058,7 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
                        :liszt liszt
                        :h-cons hcons)))
       (mrs-check-for #\] istream)
-      psoa)))
+      (unfill-mrs psoa))))
 
 (defun read-mrs-ltop (istream)
 ;;;  LTOP -> top: VAR
@@ -1312,6 +1412,36 @@ VAR -> VARNAME[:CONSTNAME]*
   (declare (ignore val))
   'DUMMY)
 
-
-
-
+;;;
+;;; interim solution for MRS `unfilling' until we construct a proper SEMI
+;;;
+(defparameter %mrs-extras-filter%
+  (list
+   (cons (mrs::vsym "E.TENSE") (mrs::vsym "BASIC_TENSE"))
+   (cons (mrs::vsym "E.ASPECT.PROGR") (mrs::vsym "LUK"))
+   (cons (mrs::vsym "E.ASPECT.PERF") (mrs::vsym "LUK"))
+   (cons (mrs::vsym "E.MOOD") (mrs::vsym "MOOD"))
+   (cons (mrs::vsym "PNG.GEN") (mrs::vsym "REAL_GENDER"))
+   (cons (mrs::vsym "DIVISIBLE") (mrs::vsym "BOOL"))
+   (cons (mrs::vsym "PRONTYPE") (mrs::vsym "PRONTYPE"))))
+
+(defun unfill-mrs (mrs &optional (filter %mrs-extras-filter%))
+  (labels ((unfill-variable (variable)
+             (when (var-p variable)
+               (setf (var-extra variable)
+                 (loop
+                     for extra in (var-extra variable)
+                     for feature = (extrapair-feature extra)
+                     for value = (extrapair-value extra)
+                     for match = (find feature filter :key #'first)
+                     unless (and match (eq value (rest match)))
+                     collect extra)))))
+    (unfill-variable (psoa-index mrs))
+    (loop
+        for ep in (psoa-liszt mrs)
+        do
+          (loop
+              for role in (rel-flist ep)
+              for value = (fvpair-value role)
+              do (unfill-variable value))))
+  mrs)

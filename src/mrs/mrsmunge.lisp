@@ -253,7 +253,13 @@
                  :matching-psoa new-psoa))))))
 
 (defun compatible-types-or-values (val1 val2)
+  ;;
+  ;; in the current untyped universe, it seems legitimate to not have values
+  ;; for PRED or any of the roles: while this should not happen for the input
+  ;; MRS, allow null() values in the munging rule to be considered compatible.
+  ;;                                                          (3-nov-03; oe)
   (or (is-top-type val1) (is-top-type val2)
+      (null val1)
       (and (is-valid-type val1) (is-valid-type val2) 
            (compatible-types val1 val2))
       (cond ((and (symbolp val1) (symbolp val2))

@@ -121,20 +121,17 @@ duplicate variables")
         (liszt-fs (path-value fs *psoa-liszt-path*))
         (h-cons-fs (if *psoa-rh-cons-path*
                        (path-value fs *psoa-rh-cons-path*))))
-    (make-psoa
-     :top-h (if top-h-fs
-                (create-variable top-h-fs
-                                 *variable-generator*)
-                (create-new-handle-var *variable-generator*))
-     :index (if (is-valid-fs index-fs)
-                (create-variable index-fs
-                                 *variable-generator*))
-     :liszt (nreverse (construct-liszt liszt-fs
-                                       nil
-                                       *variable-generator*))
-     :h-cons (nreverse (construct-h-cons h-cons-fs
-                                         nil
-                                         *variable-generator*)))))
+    (unfill-mrs
+     (make-psoa
+      :top-h (if top-h-fs
+               (create-variable top-h-fs *variable-generator*)
+               (create-new-handle-var *variable-generator*))
+      :index (if (is-valid-fs index-fs)
+               (create-variable index-fs *variable-generator*))
+      :liszt (nreverse (construct-liszt 
+                        liszt-fs nil *variable-generator*))
+      :h-cons (nreverse (construct-h-cons 
+                         h-cons-fs nil *variable-generator*))))))
 
 
 ;;; ***************************************************
@@ -319,11 +316,18 @@ duplicate variables")
            (pred (assoc (car *rel-name-path*)
                           label-list))
            (pred-type (if pred (fs-type (rest pred)))))
-      (if (and pred-type
-               (not 
-                (is-top-type pred-type)))
-          pred-type
-        (fs-type rel-fs))))
+      ;;
+      ;; _fix_me_
+      ;; i believe this is too robust: in PRED-style mode, we should not end up
+      ;; using the relation type in case there is no PRED.      (1-nov-03; oe)
+      ;;
+      ;; we could of course use (lkb::minimal-type-for *rel-name-path*) here,
+      ;; in a sense as a mimicry of making the rule description well-formed,
+      ;; but it seems the munging code has to in general allow for nil values.
+      ;;                                                        (3-nov-03; oe)
+      (if (and pred-type (not (is-top-type pred-type)))
+        pred-type
+        (unless *rel-name-path* (fs-type rel-fs)))))
 
 (defun extract-type-from-rel-fs (rel-fs)
   (fs-type rel-fs))

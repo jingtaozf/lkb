@@ -10,8 +10,8 @@
     ((mrsstruct :initform nil
                 :accessor mrs-simple-mrsstruct))
   :display-function 'show-mrs-simple
-  :width *parse-window-width* 
-  :height *parse-window-height*)
+  :width (* *parse-window-width* 1.5)
+  :height (* *parse-window-height* 1.2))
 
 (define-lkb-frame mrs-indexed
     ((mrsstruct :initform nil
@@ -36,14 +36,12 @@
   :width *parse-window-width* 
   :height *parse-window-height*)
 
-
 (define-lkb-frame mrs-dependencies
     ((mrsstruct :initform nil
                 :accessor mrs-dependencies-mrsstruct))
   :display-function 'show-mrs-dependencies  
   :width *parse-window-width* 
   :height (round *parse-window-height* 2))
-
 
 (defstruct mrs-type-thing value)
 
@@ -57,7 +55,9 @@
     (clim:with-text-style (stream *bold*)
       (clim:with-output-as-presentation 
 	  (stream pred-rec 'mrs-type-thing)
-	(write-string (string-downcase val) stream)))))
+        (if (stringp val)
+          (format stream "~s" val)
+          (format stream "~(~a~)" val))))))
 
 (defun mrs-type-thing-command (mrs-type-thing)
   (let* ((type (mrs-type-thing-value mrs-type-thing))

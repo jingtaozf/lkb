@@ -37,37 +37,47 @@
     (loop until (probe-file file) do (sleep 1)))
   (when (probe-file file)
     (with-open-file (stream file :direction :input)
-      (let* ((mrs (mrs::read-mrs-from-file file))
-             (*bypass-equality-check* t))
-        (cond
-         ((mrs::psoa-p mrs)
-          (format
-           t
-           "translate(): read one MRS (~a EP~p) as generator input.~%"
-           (length (mrs:psoa-liszt mrs)) (length (mrs:psoa-liszt mrs)))
-          (multiple-value-bind (result condition)
-              (ignore-errors (generate-from-mrs mrs))
-            (when result
-              (format
-               t
-               "translate(): ~a generation result~p.~%"
-               (length result) (length result)))
-            (when condition
-              (format
-               t
-               "translate(): error `~a'.~%"
-               condition)))
-          (show-gen-result))
-         (t
-          (format
-           t
-           "translate(): ignoring null or illformed MRS.~%"))))))
+      (with-open-file (log (format nil "/tmp/transfer.debug.~a" (current-user))
+                       :direction :output :if-exists :append)
+        (let* ((mrs (mrs::read-mrs-from-file file))
+               (*bypass-equality-check* t))
+          (cond
+           ((mrs::psoa-p mrs)
+            (format
+             log
+             "translate(): read one MRS (~a EP~p) as generator input.~%"
+             (length (mrs:psoa-liszt mrs)) (length (mrs:psoa-liszt mrs)))
+            (multiple-value-bind (result condition)
+                (ignore-errors 
+                 ;;
+                 ;; work around values() return from generate-from-mrs() ...
+                 ;;
+                 (let ((strings (generate-from-mrs mrs)))
+                   strings))
+              (when result
+                (format
+                 log
+                 "translate(): ~a generation result~p.~%"
+                 (length result) (length result)))
+              (when condition
+                (format
+                 log
+                 "translate(): error `~a'.~%"
+                 condition)))
+            (show-gen-result))
+           (t
+            (format
+             log
+             "translate(): ignoring null or illformed MRS.~%")))))))
   (when serverp 
     (delete-file file)
     (translate :serverp serverp :file file)))
 
 (defun start-generator-server (&optional (forkp t))
-  (when (and *generator-server* forkp) (stop-generator-server))
+  (when (and *generator-server* forkp) 
+    (stop-generator-server)
+    (with-open-file (log (format nil "/tmp/transfer.debug.~a" (current-user))
+                     :direction :output :if-exists :supersede)))
   (if forkp
     (with-output-to-top ()
       #-:clisp
