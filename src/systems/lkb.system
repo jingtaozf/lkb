@@ -13,13 +13,13 @@
     #+:allegro (setf excl:*enable-package-locked-errors* nil)
     #-:allegro nil
     :finally-do
-    #-tty
-      (progn
-      #+:allegro 
+    #+(and :allegro (not :tty))
+    (unless (and (boundp 'user::*building-image-p*)
+		 user::*building-image-p*)
       (let ((*package* (find-package "CLIM-USER")))
-	(clim-user::set-up-lkb-interaction :big))
-      #+:mcl
-      (cl-user::set-up-lkb-interaction :big))
+	(clim-user::set-up-lkb-interaction :big)))
+    #+(and :mcl (not :tty))
+    (cl-user::set-up-lkb-interaction :big)
     #+tty nil
     :components
     ((:module "for"

@@ -230,15 +230,17 @@
                                directory)))
     (if (probe-file file)
         (progn 
-          #-allegro(load file)
+          #-allegro (load file)
   ;;; above also for ACL if no compiler, but don't know how to
   ;;; specify this
-          #+allegro(load
-                    (handler-bind ((excl:compiler-no-in-package-warning
-                                    #'(lambda (c)
-                                        (declare (ignore c))
-                                        (muffle-warning))))
-                      (compile-file file :verbose nil :print nil))))
+          #+allegro (load
+		     (handler-bind ((excl:compiler-no-in-package-warning
+				     #'(lambda (c)
+					 (declare (ignore c))
+					 (muffle-warning))))
+		       (if (member :compiler *features*)
+			   (compile-file file :verbose nil :print nil)
+			 file))))
       (unless optional
         (cerror "Continue loading script" "~%File ~A not found" file)))))
 

@@ -32,7 +32,7 @@
 #-:mk-defsystem
 (load (make-pathname :directory general-dir :name "defsystem"))
 
-(load (make-pathname :directory general-dir :name "autozoom" :type "cl"))
+;(load (make-pathname :directory general-dir :name "autozoom" :type "cl"))
 
 (in-package "MAKE")
 
