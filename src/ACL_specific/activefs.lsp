@@ -390,9 +390,11 @@
     (pop-up-menu
      `(("Output TeX ..." :value tex)
        ("Apply lex rule ..." :value lexrule
-                             :active ,(get-psort-entry id))
+                             :active ,(and (get-psort-entry id)
+                                           *ordered-lrule-list*))
        ("Apply all lex rules" :value allrules
-                             :active ,(get-psort-entry id))
+                              :active ,(and (get-psort-entry id)
+                                            *ordered-lrule-list*))
        ("Show source" :value source 
 		      :active ,(source-available-p id)))
      (tex (output-fs-in-tex fs))
