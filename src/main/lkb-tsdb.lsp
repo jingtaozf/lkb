@@ -95,9 +95,10 @@ e.g.
                )))))
 
 
-(proclaim '(special *do-something-with-parse*))
+(proclaim '(special *do-something-with-parse* *tdsb-progress-pos*))
 
-(defun parse-tsdb-sentences2 (istream line parse-file result-file &aux (nsent 0))
+(defun parse-tsdb-sentences2 (istream line parse-file result-file
+                              &aux (nsent 0) (*tdsb-progress-pos* 0))
    ;; open and close output files for each sentence, so if run fails for some reason
    ;; we have all results in them until that point
    (clear-type-cache)
@@ -165,13 +166,21 @@ e.g.
      (uncache-lexical-entries)))
 
 (defun parse-tsdb-sentences-progress (id)
+   ;; make sure output goes to the correct stream when clim is in use - also Ann
+   ;; wanted explicit line-wrap so there's a sort-of-solution to this, except
+   ;; it doesn't wrap at the same point on every line if warning messages come
+   ;; out as well
    (let* ((clim-stream-symbol
              (find-symbol "*LKB-TOP-STREAM*" (find-package "CLIM-USER")))
-          (str
+          (out
              (if clim-stream-symbol (symbol-value clim-stream-symbol)
-                *standard-output*)))
-      (format str " ~A" id)
-      (finish-output str)))
+                *standard-output*))
+          (str (format nil " ~A" id)))
+      (write-string str out)
+      (finish-output out)
+      (incf *tdsb-progress-pos* (length str))
+      (when (> *tdsb-progress-pos* 60)
+         (terpri out) (setq *tdsb-progress-pos* 0))))
 
 
 (defun parse-tsdb-sentence (user-input)
