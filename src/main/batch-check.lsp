@@ -6,22 +6,22 @@
 (in-package :lkb)
 
 (defvar *grammar-specific-batch-check-fn* nil)
-(defvar *batch-check-diff-list-acceptable-ostream* nil)
-(defvar *batch-check-semantics-path*)
+(defvar *batch-check-diff-list-strict* nil)
+(defvar *batch-check-diff-list*)
 (defvar mrs::*initial-semantics-path*)
 
-(defun get-semantics-path nil
+(defun get-diff-list-start-path nil
   (cond
-   ((boundp '*batch-check-semantics-path*)
-    *batch-check-semantics-path*)
+   ((boundp '*batch-check-diff-list*)
+    *batch-check-diff-list*)
    ((boundp 'mrs::*initial-semantics-path*)
     mrs::*initial-semantics-path*)
    (t
-    (error "please set *batch-check-semantics-path*"))))
+    (error "please set *batch-check-diff-list*"))))
    
 (defun batch-check-lexicon (&optional (unexpandp t))
   (let ((*batch-mode* t)
-	(start-path (get-semantics-path)))
+	(start-path (get-diff-list-start-path)))
     (when (typep *lexicon* 'psql-lex-database)
       (format t "~%(caching all lexical entries)")
       (cache-all-lex-entries *lexicon*))
@@ -92,7 +92,7 @@
 	 (null (top-level-features-of last-dag))
 	 (eq-or-subtype list-dag *list-type*)
 	 (eq-or-subtype last-dag *list-type*))
-      (format *batch-check-diff-list-acceptable-ostream* "~%WARNING: malformed but 'acceptable' difference list at ~a in ~a" (reverse path) id)
+      (format *batch-check-diff-list-strict* "~%WARNING: malformed but 'acceptable' difference list at ~a in ~a" (reverse path) id)
       (return-from check-dag-diff-list))
     (loop
 	with rest-dag
