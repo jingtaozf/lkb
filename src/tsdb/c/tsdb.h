@@ -59,7 +59,6 @@
 #  define TSDB_INITIAL_STATUS \
      (TSDB_UNIQUELY_PROJECT \
       | TSDB_IMPLICIT_COMMIT \
-      | TSDB_CLIENT_MODE \
       | TSDB_BACKUP_DATA_FILES)
 #else
 #  define TSDB_INITIAL_STATUS \
@@ -253,6 +252,10 @@
 #  define CHAR_SET_SIZE 256
 #endif
 
+#ifndef TSDB_COMMENT_CHRARACTER
+#  define TSDB_COMMENT_CHRARACTER '#'
+#endif
+
 #define ISUPPER(c) (isascii (c) && isupper (c))
 
 typedef struct tsdb_field {
@@ -376,6 +379,7 @@ typedef struct tsdb {
 
 void tsdb_parse_options(int, char **);
 void tsdb_usage(void);
+char *tsdb_readline(char *);
 int tsdb_parse(char *, FILE *);
 int tsdb_getchar(void);
 BOOL tsdb_verify_selection(Tsdb_selection *);
@@ -412,8 +416,8 @@ FILE* tsdb_open_output(char *);
 void tsdb_close_debug(FILE *);
 
 void tsdb_tree_print(Tsdb_node *, FILE *);
-BOOL tsdb_print_value(Tsdb_value *, FILE *);
-char* tsdb_sprint_value(Tsdb_value *);
+BOOL tsdb_print_value(Tsdb_value *, FILE *, BOOL);
+char* tsdb_sprint_value(Tsdb_value *, BOOL);
 char* tsdb_sprint_key_list(Tsdb_key_list *, int *, int *, int);
 void tsdb_print_array(Tsdb_value **, FILE *);
 void tsdb_print_relation(Tsdb_relation *, FILE *);
@@ -479,6 +483,7 @@ char *tsdb_denormalize_string(char *);
 int tsdb_quotes_are_balanced(char *);
 char *tsdb_prolog_escape_string(char *);
 char *tsdb_lisp_escape_string(char *);
+BOOL tsdb_check_potential_command(char *);
 
 Tsdb_node **tsdb_linearize_conditions(Tsdb_node *);
 
@@ -488,6 +493,7 @@ Tsdb_tuple *tsdb_read_tuple(Tsdb_relation *, FILE *);
 
 Tsdb_relation *tsdb_field_2_relation(char *, Tsdb_field **);
 Tsdb_relation *tsdb_read_relation(FILE *);
+int tsdb_write_table(Tsdb_selection *, BOOL);
 Tsdb_relation *tsdb_find_relation(char *);
 void tsdb_add_relation(Tsdb_relation *) ;
 Tsdb_relation **tsdb_all_relations(void);
