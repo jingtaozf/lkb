@@ -170,7 +170,8 @@
 
 (defparameter *statistics-select-condition* nil)
 
-(defparameter *redwoods-export-values* :all)
+(defparameter *redwoods-export-values* 
+  '(:derivation :tree :avm :mrs :indexed :dependencies))
 
 (defparameter *redwoods-update-exact-p* nil)
 

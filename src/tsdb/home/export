@@ -55,7 +55,8 @@ unset DISPLAY
 
       echo "(setf mrs::*eds-include-quantifiers-p* nil)"; \
       echo "(setf mrs::*eds-include-vacuous-relations-p* nil)"; \
-      echo "(setf tsdb::*redwoods-export-values* :all)"; \
+      echo "(setf tsdb::*redwoods-export-values*
+              '(:derivation :tree :avm :mrs :indexed :dependencies))"; \
       echo "(setf tsdb::*redwoods-thinning-export-p* nil)"; \
       echo "(lkb:read-script-file-aux \"${GRAMMAR}/lkb/script\")"; \
 
