@@ -4,6 +4,8 @@
 
 
 ;;; modifications by bmw (jul-03)
+;;; - default port mechanism
+;;; - db queries now execute on fixed table 'current grammar'
 ;;; - postgres login no longer restricted to 'guest'
 ;;; - timestamp, user and id fields set in db
 
@@ -46,7 +48,8 @@
 
 (in-package :lkb)
 
-(defvar *psql-db-version* "1.1")
+(defvar *psql-db-version* "1.2")
+(defvar *psql-port-default* 5432)
 
 (defvar *psql-lexicon* nil)
 (defvar *psql-verbose-query* nil) ;;; flag
@@ -67,11 +70,11 @@
 					;: replace existing *psql-lexicon*
 					;: clear lexical entries of *lexicon*
 					;: link to lexicon
-(defun initialize-psql-lexicon (&key (db "lingo")
-                                     (host "localhost")
-                                     ;(password)
-                                     (table "erg")
-                                     (definition (format nil "~ad" table)))
+(defun initialize-psql-lexicon (&key
+                                (db "lingo")
+                                (host "localhost")
+                                (table "erg")
+                                (definition (format nil "~ad" table)))
   
   (let* ((lexicon (make-instance 'psql-lex-database 
                     :dbname db :host host
@@ -88,8 +91,9 @@
       (retrieve-fn-defns lexicon)
       (when *psql-lexicon* (clear-lex *psql-lexicon*))
       (setf *psql-lexicon* lexicon)
-      ;(run-query lexicon 
-      ;(make-instance 'sql-query :sql-string "VACUUM ANALYZE"))
+      (if (equal (fn-get-val lexicon ''current-grammar-up-to-date-p)
+                 "t")
+          (fn-get-records lexicon ''initialize-current-grammar))
       (cond
        ((null *lexicon*)
 	(setf *lexicon* *psql-lexicon*))
@@ -130,7 +134,10 @@
   ((dbname :initform nil :accessor dbname	:initarg :dbname)
    (host :initform "localhost" :accessor host :initarg :host)
    (user :initform (sys:user-name) :accessor user :initarg :user)
-   (password :initform "" :accessor password :initarg :password)))
+   (password :initform "" :accessor password :initarg :password)
+   (port :initform (num-2-str *psql-port-default*) :accessor port :initarg :port)
+   
+   ))
 
 (defclass external-lex-database (lex-database)
   (
@@ -216,15 +223,15 @@
 	(connect lexicon))))))
       
 (defmethod connect-aux ((lexicon psql-database) &key (user "guest"))
-  (with-slots (host dbname connection) lexicon
+  (with-slots (port host dbname connection) lexicon
     (let ((decoded-status nil)
 	  (password nil))
 					;: attempt connection w/o pwd
-      (setf connection (connect-aux2 :host host :dbname dbname :user user))
+      (setf connection (connect-aux2 :port port :host host :dbname dbname :user user))
       (setf decoded-status (pg:decode-connection-status (pg:status connection)))
       (unless (eq decoded-status :connection-ok)
 	;: attempt connection w/ default pwd
-	(setf connection (connect-aux2 :host host :dbname dbname :user user :password user))
+	(setf connection (connect-aux2 :port port :host host :dbname dbname :user user :password user))
 	(setf decoded-status (pg:decode-connection-status (pg:status connection)))
 	(unless (eq decoded-status :connection-ok)
 	;: attempt connection w/ pwd
@@ -238,12 +245,13 @@
 	  (setf (user lexicon) user))
       decoded-status)))
 
-(defun connect-aux2 (&key (host) (dbname) (user) (password))
+(defun connect-aux2 (&key (host) (dbname) (user) (password) (port))
   (let ((connection)
 	(decoded-status))
     (setf connection 
       (pg:connect-db 
        (concatenate 'string 
+	 (format nil "port='~a' " (sql-escape-string port))
 	 (format nil "host='~a' " (sql-escape-string host))
 	 (format nil "dbname='~a' " (sql-escape-string dbname))
 	 (format nil "user='~a' " (sql-escape-string user))
@@ -254,6 +262,7 @@
       (setf connection 
 	(pg:connect-db
 	 (concatenate 'string 
+           (format nil "port='~a' " (sql-escape-string port))
 	   (format nil "dbname='~a' " (sql-escape-string dbname))
 	   (format nil "user='~a' " (sql-escape-string user))
 	   (if password (format nil "password='~a'" (sql-escape-string password))
@@ -317,7 +326,7 @@
             (return result))
     string))
 
-(defun symbol-to-str-format (expr) ;: must be symbol. will not sork for num
+(defun symbol-to-str-format (expr) ;: must be symbol. will not work for num
   (unless (symbolp expr)
     (error "symbol expected"))
   (string-downcase (string expr)))
@@ -334,22 +343,24 @@
 
 ;;; prepare field list for SQL INSERT INTO query
 (defun sql-field-list-str (symb-list)
+  (concatenate 'string "(" (sql-select-list-str symb-list) ")"))
+  
+;;; prepare select list for SQL query
+(defun sql-select-list-str (symb-list)
   (if (null symb-list) (error (format nil "non-null list expected")))
   (let ((stream (make-string-output-stream)))
-    (format stream "(")
     (format stream "~a" (symbol-to-str-format (pop symb-list)))
     (loop 
 	while symb-list
 	do 
 	  (format stream ",~a" (symbol-to-str-format (pop symb-list))))
-    (format stream ")")
     (get-output-stream-string stream)))
 
 ;;; prepare val list for SQL INSERT INTO query
 (defun sql-val-list-str (symb-list psql-le)
   (if (null symb-list) (error (format nil "non-null list expected")))
   (let ((stream (make-string-output-stream)))
-    (format stream "(")
+    ;(format stream "(")
     (format stream "~a" (make-sql-val-str 
 			 (slot-value psql-le (pop symb-list))))
     (loop 
@@ -357,7 +368,7 @@
 	do 
 	  (format stream ",~a" (make-sql-val-str 
 				(slot-value psql-le (pop symb-list)))))
-    (format stream ")")
+    ;(format stream ")")
     (get-output-stream-string stream)))
 
 ;;; create val string for SQL query
@@ -456,7 +467,7 @@
   (if (connection lexicon)
       (let* (
 	     (orthstr (string-downcase (sql-escape-string orth)))
-	     (sql-str (sql-retrieve-entries lexicon (make-requested-fields lexicon) orthstr))
+	     (sql-str (sql-retrieve-entries-by-orthkey lexicon (make-requested-fields lexicon) orthstr))
 	     (query-res (run-query 
 			 lexicon 
 			 (make-instance 'sql-query :sql-string sql-str)))
@@ -616,16 +627,14 @@
   (let* ((symb-list 
 	  (mapcan 
 	   #'(lambda (x) (unless (null (slot-value psql-le x)) (list x))) 
-	   ;'(id name type orthography orthkey keyrel altkey alt2key keytag compkey ocompkey comments exemplars lang country dialect domains genres register confidence userid moddate version source flags))))
-	   '(name type orthography orthkey keyrel altkey alt2key keytag compkey ocompkey comments exemplars lang country dialect domains genres register confidence version source flags modstamp userid))))
+	   '(type orthography orthkey keyrel altkey alt2key keytag compkey ocompkey comments exemplars lang country dialect domains genres register confidence version source flags modstamp userid)))) 
     (run-query lexicon 
 	       (make-instance 'sql-query
 		 :sql-string (format 
-			      nil 
-			      "INSERT INTO ~a ~a VALUES ~a;"
-			      (lex-tb lexicon)
-			      (sql-field-list-str symb-list)
-			      (sql-val-list-str symb-list psql-le))))))
+			      nil
+                              (fn lexicon 'update-entry (name psql-le) (sql-select-list-str symb-list) (sql-val-list-str symb-list psql-le))
+                              ;(fn lexicon 'update-entry-erg (name psql-le) (sql-select-list-str symb-list) (sql-val-list-str symb-list psql-le))
+                 )))))
 
 (defun set-lexical-entry-psql-lex-database-check (orth-string lex-id new-entry) 
   (declare (ignore lex-id))
@@ -763,19 +772,30 @@
     (str-2-num res)))
 
 (defmethod fn-get-records ((lexicon psql-lex-database) fn-name &rest rest)
-  (let* ((sql-str (eval (append (list 'fn lexicon fn-name) rest)))
-	 (res))
-    
-    ;(time
-    
-    (setf res (run-query 
-       *psql-lexicon* 
-       (make-instance 'sql-query :sql-string sql-str)))
-    
-    ;)
-    
-     (make-column-map-record res)))
+  (get-records lexicon (eval (append (list 'fn lexicon fn-name) rest))))
 
+(defmethod get-records ((lexicon psql-lex-database) sql-string)
+  (make-column-map-record 
+   (run-query 
+    *psql-lexicon* 
+    (make-instance 'sql-query :sql-string sql-string))))
+
+(defmethod fn-get-record ((lexicon psql-lex-database) fn-name &rest rest)
+  (let ((res (get-records lexicon (eval (append (list 'fn lexicon fn-name) rest)))))
+    (if (> (length res) 1)
+        (error "too many records returned")
+      (first res))))
+  
+(defmethod fn-get-val ((lexicon psql-lex-database) fn-name &rest rest)
+  (let* ((res (get-records lexicon (eval (append (list 'fn lexicon fn-name) rest))))
+         (rec (first res)))
+    (if (> (length res) 1)
+        (error "too many records returned")
+      (if (> (length rec) 1)
+          (error "multiple columns returned")
+        (cdar rec)))))
+  
+  
 (defmethod fn ((lexicon psql-lex-database) fn-name &rest rest)
   (eval (append (list (cdr (assoc fn-name (fns lexicon)))) rest)))
   
@@ -791,8 +811,8 @@
 (defmethod sql-lookup-word ((lexicon psql-lex-database) word)
   (fn lexicon 'lookup-word word))
 
-(defmethod sql-retrieve-entries ((lexicon psql-lex-database) select-list word)
-  (fn lexicon 'retrieve-entries select-list word))
+(defmethod sql-retrieve-entries-by-orthkey ((lexicon psql-lex-database) select-list word)
+  (fn lexicon 'retrieve-entries-by-orthkey select-list word))
 
 (defmethod sql-retrieve-entry ((lexicon psql-lex-database) select-list word)
   (fn lexicon 'retrieve-entry select-list word))
@@ -886,6 +906,8 @@
 	    (format stream "~~a"))
 	   ((equal type 'select-list)
 	    (format stream "~~a"))
+	   ((equal type 'value-list)
+	    (format stream "~~a"))
 	   (t
 	    (error "unknown type: ~a" type)))
 	  (push (nth arg arg-vars) args)
@@ -895,21 +917,21 @@
   (cons (cons (get-output-stream-string stream) (reverse args)) 
 	(subseq arg-vars 0 arity))))
 
-(defmethod db-begin ((lexicon psql-lex-database))
-  (let* 
-      ((sql-str "BEGIN"))
-    (run-query lexicon (make-instance 'sql-query :sql-string sql-str))))
+;(defmethod db-begin ((lexicon psql-lex-database))
+;  (let* 
+;      ((sql-str "BEGIN"))
+;    (run-query lexicon (make-instance 'sql-query :sql-string sql-str))))
     
-(defmethod db-commit ((lexicon psql-lex-database))
-  (let* 
-      ((sql-str "COMMIT"))
-    (run-query lexicon (make-instance 'sql-query :sql-string sql-str))))
+;(defmethod db-commit ((lexicon psql-lex-database))
+;  (let* 
+;      ((sql-str "COMMIT"))
+;    (run-query lexicon (make-instance 'sql-query :sql-string sql-str))))
     
 ;;;
 ;;; --- psql-lex-entry methods and funtions
 ;;;
 
-;;; set version to next available val
+;;; set version to next val
 (defmethod set-version ((psql-le psql-lex-entry) (lexicon psql-lex-database))
   (setf (version psql-le) (next-version (name psql-le) lexicon)))
 
