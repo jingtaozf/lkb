@@ -1,0 +1,193 @@
+#!/bin/bash
+
+#
+# a first shot at automating an install of several of the DELPH-IN open-source
+# packages, specifically:
+#
+# - the Linguistic Knowledge Builder (LKB)
+# - the LinGO English Resource Grammar (ERG)
+# - the Grammar Matrix, a grammar development starter kit
+# - the [incr tsdb()] (aka `tee ess dee bee plus plus') profiler
+#
+# others (e.g. PET, maybe more grammars) to follow.  for now, this is a rough
+# script intended to give people an idea of how to do an installation; i have
+# mostly tested it on Linux and Solaris, although Windoze plus the open-source
+# CygWin package (a Un*x-like add-on set of tools for Windoze) should work.
+#                                                              (9-nov-04; oe)
+
+
+#
+# the root directory for the DELPH-IN installation; everything else will end up
+# in sub-directories of $DELPHINHOME.  the default is a directory `delphin' in
+# the user home directory.
+#
+if [ -z "${DELPHINHOME}" ]; then
+  DELPHINHOME=${HOME}/delphin
+fi
+
+#
+# set the following to also retrieve the (current) Redwoods treebank data
+#
+TSDBHOME=${DELPHINHOME}/lkb/src/tsdb/home
+
+#
+# for the script to be independent of where specific OS versions keep their
+# files (e.g. on some Solaris boxes one might have to use `gtar' for a decent
+# GNU tar(1)).
+#
+# _fix_me_
+# come to think of it, we should probably use gunzip(1) plus tar(1) instead,
+# so as to not be dogmatic and even succeed with a Sun tar(1).  (9-nov-04; oe)
+#
+MKDIR=mkdir
+LS=ls
+LN="ln -s"
+GREP=grep
+WGET="wget --quiet --timestamping"
+TAR="tar zpSxf"
+SED=sed
+
+#
+# create the target directory, unless it exists already.  if the target exists
+# as a non-directory (e.g. plain file), then stop here.
+#
+if [ ! -d ${DELPHINHOME} -a -e ${DELPHINHOME} ]; then
+  echo "install: \`${DELPHINHOME}' exists as a non-directory."
+  exit 1;
+fi
+[ -d ${DELPHINHOME} ] || ${MKDIR} ${DELPHINHOME}
+
+#
+# next, determine the current operating system, one of `linux' (x86), `solaris'
+# (sparc), or `windows' (x86); anything else will require manual installation.
+#
+if [ "$OSTYPE" = "linux" -o "$OSTYPE" = "linux-gnu" ]; then
+  os="linux";
+elif [ "$OSTYPE" = "solaris" ]; then
+  os="solaris";
+elif [ "$OSTYPE" = "cygwin" ]; then
+  os="windows";
+fi
+
+#
+# for the LKB, make sure there is a temporary directory available.
+#
+if [ "$os" == "linux" -o "$os" == "solaris" ]; then
+  [ -d ${HOME}/tmp ] || ${MKDIR} ${HOME}/tmp;
+fi
+
+#
+# now, obtain all the installation archives, defaulting to the latest version
+# for those packages distributed from the LinGO server at CSLI.
+#
+cd ${DELPHINHOME}
+
+[ -d ${DELPHINHOME}/Archives ] || ${MKDIR} ${DELPHINHOME}/Archives
+[ -d ${DELPHINHOME}/lkb ] || ${MKDIR} ${DELPHINHOME}/lkb
+[ -d ${DELPHINHOME}/bin ] || ${MKDIR} ${DELPHINHOME}/bin
+
+for i in lkb_data.tgz lkb_${os}.tgz lkb_source.tgz; do
+  echo -n "install: \`${i}' ...";
+  ( cd Archives; ${WGET} http://lingo.stanford.edu/ftp/latest/${i}; )
+  ( cd lkb; ${TAR} ${DELPHINHOME}/Archives/${i}; )
+  echo " done.";
+  if [ -f ${DELPHINHOME}/lkb/etc/lkb ]; then
+  [ -f ${DELPHINHOME}/bin/lkb ] && {RM} ${DELPHINHOME}/bin/lkb;
+  ${LN} ${DELPHINHOME}/lkb/etc/lkb ${DELPHINHOME}/bin/lkb;
+done
+
+#
+# the [incr tsdb()] software, for now, is only available on Linux and Solaris
+# and shares a source directory with the LKB
+#
+if [ "$os" == "linux" -o "$os" == "solaris" ]; then
+  for i in itsdb_libraries.tgz itsdb_tsdb.tgz itsdb_capi.tgz \
+           itsdb_${os}.tgz itsdb_data.tgz itsdb_documentation.tgz \
+           itsdb_source.tgz; do
+    echo -n "install: \`${i}' ...";
+    ( cd Archives; ${WGET} http://lingo.stanford.edu/ftp/latest/${i}; )
+    ( cd lkb; ${TAR} ${DELPHINHOME}/Archives/${i}; )
+    echo " done.";
+  done
+fi
+
+#
+# for integration of the LKB et al. with emacs(1), we need the following
+#
+echo -n "install: \`eli.tgz' ...";
+( cd Archives; ${WGET} http://lingo.stanford.edu/ftp/etc/eli.tgz )
+${TAR} ${DELPHINHOME}/Archives/eli.tgz
+echo " done.";
+
+#
+# finally, a couple of grammars (and the Matrix `meta-grammar') ...
+#
+for i in erg.tgz matrix.tgz spanish.tgz; do
+  echo -n "install: \`${i}' ...";
+  ( cd Archives; ${WGET} http://lingo.stanford.edu/ftp/latest/${i}; )
+  ${TAR} ${DELPHINHOME}/Archives/${i};
+  echo " done.";
+done
+
+#
+# on demand, also get the Redwoods treebanks and corresponding versions of the 
+# ERG; by default, only get the latest growth (currently the fifth).
+#
+if [ -n "${TSDBHOME}" ]; then
+  echo -n "install: \`erg.jun-04.tgz' ...";
+  ( cd Archives; ${WGET} http://redwoods.stanford.edu/ftp/5th/erg.jun-04.tgz; )
+  ${TAR} ${DELPHINHOME}/Archives/erg.jun-04.tgz;
+  echo " done.";
+  for i in vm6 vm13 vm31 vm32 ecoc ecos ecpa ecpr; do
+    file="itsdb_${i}.tgz"
+    echo -n "install: \`${file}' ...";
+    ( \
+      cd Archives; \
+      ${WGET} http://redwoods.stanford.edu/ftp/5th/${file}; \
+      cd ${TSDBHOME}; \
+      ${TAR} ${DELPHINHOME}/Archives/${file}; \
+    )
+    echo " done.";
+  done
+fi
+
+#
+# on Linux, we need to make sure that (a good) version of the Motif library is
+# available for the LKB; unless we find one in `/usr/X11R6/lib' that looks as
+# if it were right, install our own and suggest that the user that they tell
+# their shell how to find it.  this all is a little iffy ...
+#
+if [ "${os}" == "linux" ]; then
+  if [ -e /usr/X11R6/lib/libXm.so.2 ]; then
+    link=$(${LS} -l /usr/X11R6/lib/libXm.so.2 | grep -i "lesstif")
+    if [ -n "${link}" ]; then
+      echo
+      echo "most likely the Motif library \`/usr/X11R6/lib/libXm.so.2' is not"
+      echo "suitable for the LKB; un-install LessTiff and install OpenMotif."
+      echo
+      sleep 5;
+    fi
+  fi
+  [ -d ${DELPHINHOME}/lib ] || ${MKDIR} ${DELPHINHOME}/lib;
+  [ -d ${DELPHINHOME}/lib/linux ] || ${MKDIR} ${DELPHINHOME}/lib/linux;
+  ( \
+    cd lib/linux; \
+    ${WGET} http://lingo.stanford.edu/ftp/lib/linux/libXm.so.2; \
+  )
+fi
+
+#
+# in a similarly (overly) helpful spirit, install a `dot.emacs' that should be
+# suitable for inclusion in a per-user `.emacs' file.  also, see whether there
+# is any evidence of conflicting settings in `.emacs'.
+#
+if [ -f ${DELPHINHOME}/lkb/etc/dot.emacs \
+     -a ! -f ${DELPHINHOME}/dot.emacs ]; then
+  ${SED} \
+    "s@/afs/ir.stanford.edu/users/o/e/oepen/src/lingo@${DELPHINHOME}@g" \
+    ${DELPHINHOME}/lkb/etc/dot.emacs > ${DELPHINHOME}/dot.emacs;
+fi
+echo
+echo "to run the LKB and [incr tsdb()] from within emacs(1), add the following"
+echo "to the file \`.emacs' in your home directory:"
+echo
