@@ -371,14 +371,16 @@ Tsdb_selection* tsdb_complex_select(Tsdb_node *node,Tsdb_relation ** wanted)
       left = tsdb_complex_select(node->left,wanted);
       right = tsdb_complex_select(node->right,wanted);
       result = tsdb_complex_merge(left,right);
-      tsdb_free_selection(left);
+      if (result!=left)
+        tsdb_free_selection(left);
       tsdb_free_selection(right);
       break;
     case TSDB_AND:
       left = tsdb_complex_select(node->left,wanted);
       right = tsdb_complex_select(node->right,wanted);
       result = tsdb_join(left,right);
-      tsdb_free_selection(left);
+      if (result != left)
+        tsdb_free_selection(left);
       tsdb_free_selection(right);
       break;
     case TSDB_NOT:
@@ -675,7 +677,7 @@ void tsdb_project(Tsdb_selection *selection,Tsdb_value **attributes,FILE* stream
         if (r[k]!=-1) {
         tsdb_print_value(list->tuples[r[k]]->fields[f[k]],stream);
         }
-        if (k+1 < n_attributes) fprintf(stream,"%s", TSDB_FS);
+        if (k+1 < n_attributes) fprintf(stream,"%c", TSDB_FS);
       } /* for */
       fprintf(stream,"\n");
     } /* for */
