@@ -6,11 +6,11 @@
   (gethash rel-name *relation-index*))
 
 (defun grammar-rel-p (rel-name)
-  nil)
+  (member rel-name *grule-rel-index* :key #'car))
+  
 
 (defun lex-rule-rel-p (rel-name)
-  nil)
-; ignore extraneous sources for now
+  (member rel-name *lrule-rel-index* :key #'car))
 
 
 
@@ -71,7 +71,7 @@ at this point).
          (grammar-rels (for rel in all-rels filter 
                             (if (grammar-rel-p (rel-sort rel))
                                  rel)))
-         ; specified in grammar rule or root fs
+         ; specified in grammar rule
     ; these are not necessarily mutually exclusive classes
          (possibles 
           ; candidates found without getting actual lex-entry
@@ -151,7 +151,7 @@ at this point).
   (for fvp in (rel-flist rel)
        filter
        (let ((feat
-              (fvpair-feature fvp)))
+              (last-path-feature (fvpair-feature fvp))))
          (if (member feat *value-feats*)
              (let ((val (fvpair-value fvp)))
                (if (listp val) 
@@ -368,24 +368,24 @@ at this point).
                                   main-rels alt-rels)
   (for rel-sequence in (create-all-rel-sequences rel-list)
        filter
-       (let* ((new-fs (create-liszt-fs-from-rels 
+       ;;; needs fixing
+       ;;; unnecessary expense since we repeat this on the same rels for multiple ids
+       (let ((new-fs (create-liszt-fs-from-rels 
                        rel-sequence
-                       path))
-              (inst-fs (yadu 
-                        (copy-tdfs-completely base-fs) 
-                        new-fs)))
-         (if inst-fs
-             (let ((new-str
-                    (make-found-lex :lex-id lex-id
-                                    :inst-fs inst-fs
-                                    slot rel-sequence)))
-               (cond ((eql slot :alternative-rels)
-                      (setf (found-lex-main-rels new-str) main-rels))
-                     ((eql slot :message-rels)
-                      (setf (found-lex-main-rels new-str) main-rels)
-                      (setf (found-lex-alternative-rels new-str) alt-rels))
-                     (t nil))
-               new-str)))))
+                       path)))
+         (user::with-unification-context (base-fs)
+              (if (yadu base-fs new-fs)
+                  (let ((new-str
+                         (make-found-lex :lex-id lex-id
+                                         :inst-fs (user::copy-tdfs-elements base-fs)
+                                         slot rel-sequence)))
+                    (cond ((eql slot :alternative-rels)
+                           (setf (found-lex-main-rels new-str) main-rels))
+                          ((eql slot :message-rels)
+                           (setf (found-lex-main-rels new-str) main-rels)
+                           (setf (found-lex-alternative-rels new-str) alt-rels))
+                          (t nil))
+                    new-str))))))
                       
 
 
@@ -420,33 +420,33 @@ at this point).
                 (push unif path-list))
            (setf current-path (append current-path *rest-path*))))
     (let* ((fs (process-unifications path-list))
-           (wffs (if fs (create-wffs fs))))
-          (if wffs (construct-tdfs wffs nil nil)))))
+           (wffs (if fs (create-wffs fs)))
+           (tdfs (if wffs (construct-tdfs wffs nil nil))))
+      tdfs)))
 
 (defun create-unifs-for-rel (rel-str path)
-  ;;; for the time being, just instantiate variables
-  ;;; and ignore agreement etc
   (cons
    (make-tdl-path-value-unif (append path *rel-handel-path*)
                             (make-instance-type (rel-handel rel-str)))
    (for fvp in (rel-flist rel-str)
-        collect
-        (let ((feature (fvpair-feature fvp))
-              (value (fvpair-value fvp)))
-          (make-tdl-path-value-unif (append path (list feature)) 
-                                    (if (var-p value)
-                                      (make-instance-type value)
-                                      value))))))
-
-
-
+        append
+        (let* ((feature (fvpair-feature fvp)) ; should be a symbol
+              (value (fvpair-value fvp))
+              (new-path (append path (list feature))))
+          (if (listp value) ; exclude conj values for the time being
+              nil
+            (cons
+             (make-tdl-path-value-unif new-path
+                                       (if (var-p value)
+                                           (make-instance-type value)
+                                         value))
+             (if (var-p value)
+                 (USER::make-mrs-unifs (var-extra value) new-path))))))))
 
 (defun make-instance-type (var-struct)
   ;;; a var structure consists of a name (which we ignore) 
   ;;; an `extra' slot and a unique id
-  ;;; Handling the extra slot requires that
-  ;;; we fix mrsoutput.lisp because currently this
-  ;;; isn't really reversible
+  ;;; We do the `extra' slot stuff in create-unifs-for-rel
   ;;; JAC seems to have decided that all instance
   ;;; types should start with `%', so this function does this
        (let* ((instance nil)
@@ -474,6 +474,7 @@ at this point).
                template)
          instance))
 
+       
 
 ;;; Secondary entries
 ;;;
@@ -525,7 +526,7 @@ at this point).
 
 
 
-;;; Root types and grammar rules
+;;; Grammar rules
 ;;;
 ;;; A set of lexical entries may be a match for an input structure
 ;;; which has `extra' relations as long as these are all either
@@ -549,6 +550,7 @@ at this point).
 (defparameter *do-something-with-parse* 'check-lex-retrieval)
 
 (defun check-lex-retrieval nil
+  (setf main::*VM-arg-roles-only-p* nil)
   (time
    (for parse-res in *parse-record*
         do
@@ -562,30 +564,43 @@ at this point).
           (let ((retrieved-ids
                  (for res in identified-entry-sets
                       collect
-                      (mrs::found-lex-lex-id (car res)))))
-            (format t "~%Retrieved ids ~A" retrieved-ids)
+                      (mrs::found-lex-lex-id (car res))))
+                (overgen nil)
+                (undergen nil))
+            (for id in retrieved-ids
+                 do
+                 (unless
+                     (member id lrules-and-entries-used :key #'car)
+                   (push id overgen)))
             (for id-and-rules in lrules-and-entries-used
                  do
                  (unless
                      (member (car id-and-rules) retrieved-ids)
-                   (format t "~%Entry ~A not retrieved" 
-                           (car id-and-rules))))))))))
+                   (push (car id-and-rules) undergen)))
+            (when undergen
+                (format t "~%Entries not retrieved ~{~A ~}" undergen)) 
+            (when overgen
+                (format t "~%Extra entries retrieved  ~{~A ~}" overgen))))))))
 
 ;;; needs to be made more sophisticated to deal with lex rules etc
 
 (defun quick-check-lex-retrieval nil
+     (setf main::*VM-arg-roles-only-p* nil)
      (for parse-res in *parse-record*
         do
-        (let* ((mrs (car (mrs::extract-mrs (list parse-res))))
-               (identified-entry-sets
+        (let ((mrs (car (mrs::extract-mrs (list parse-res)))))
+          (mrs::output-mrs mrs 'mrs::simple)
+          (let
+               ((identified-entry-sets
                 (mrs::collect-lex-entries-from-mrs mrs)))
-          (format t "~%~A"
           (for res in identified-entry-sets
-               collect
+               do
                (for item in res
-                    collect
-                    (cons (mrs::found-lex-lex-id item)
-                            (mrs::found-lex-rule-list item))))))))
+                    do
+                    (format t "~A ~A " (mrs::found-lex-lex-id item)
+                                       (mrs::found-lex-rule-list item))))))))
+;                    (display-basic-fs (mrs::found-lex-inst-fs item)
+;                                      (string (mrs::found-lex-lex-id item)))
 
 |#
 

@@ -83,6 +83,16 @@
    (pop (path-typed-feature-list path)))
 
 
+(defun extend-path (path type feature)
+  (let ((new-tvp (make-type-feature-pair :type type :feature feature))
+        (old-tvp-list (if (path-p path)
+                          (path-typed-feature-list path)
+                        nil)))
+    (make-path 
+     :typed-feature-list 
+     (append old-tvp-list (list new-tvp)))))
+   
+
 (defun process-unifications (specific-list)
    ;; if create-wffs-p then create-wffs is called to finish off - if
    ;; it fails then second value of just the non-wff fs is returned

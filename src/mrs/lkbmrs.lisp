@@ -69,3 +69,10 @@
   (or (equal type1 type2)
       (subtype-p type2 type1)))
 
+(defun last-path-feature (path)
+  (if (path-p path)
+      (let ((last-tfp (car (last (path-typed-feature-list path)))))
+        (if (type-feature-pair-p last-tfp)
+            (type-feature-pair-feature last-tfp)))
+    path))
+

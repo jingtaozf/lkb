@@ -592,8 +592,6 @@
 
 ;;; evaluate-unifications-with-fail-messages - temporarily removed
 
-(defparameter *substantive-roots-p* nil)
-
 (defun find-spanning-edges (start-vertex end-vertex)
    ;;; Returns all edges between two vertices and checks for
    ;;; root conditions - used to see if a parse has been found. 
@@ -619,7 +617,7 @@
 (defun filter-root-edges (item start-symbols)
   (dolist (start-symbol start-symbols)
     (let ((root-spec (get-tdfs-given-id start-symbol)))
-         (when tdfs
+         (when root-spec
              (when (yadu root-spec
                          (edge-dag 
                           (chart-configuration-edge item)))

@@ -3,7 +3,9 @@
 (defun index-for-generator nil
   (index-lexicon)
   (index-lexical-rules)
-  (mrs::instantiate-null-semantic-items))
+  (index-grammar-rules)
+  (mrs::instantiate-null-semantic-items)
+  nil)
  
 
 (defun index-lexicon nil
@@ -38,6 +40,7 @@
      (setf *batch-mode* nil)))
 
 (defun index-lexical-rules nil
+  (mrs::clear-lrule-globals)
   (maphash #'(lambda (id entry)
                (let* ((tdfs (rule-full-fs entry))
                       (fs (if tdfs (tdfs-indef tdfs))))
@@ -45,19 +48,66 @@
                      (mrs::extract-lex-rule-rels id fs))))
            *lexical-rules*))           
                            
+
+(defun index-grammar-rules nil
+  (mrs::clear-grule-globals)
+  (maphash #'(lambda (id entry)
+               (let* ((tdfs (rule-full-fs entry))
+                      (fs (if tdfs (tdfs-indef tdfs))))
+                 (if fs
+                     (mrs::extract-grammar-rule-rels id fs))))
+           *rules*))
                  
+;;; actually used by lexlookup, but convenient to define in USER
+
+(defun make-mrs-unifs (fvplist initial-features)
+  (let ((initial-path (create-path-from-feature-list initial-features)))
+    (for fvp in fvplist
+         filter
+         (let ((value (mrs:fvpair-value fvp)))
+           (if (listp value)
+               nil
+             (make-unification :lhs (make-path 
+                                     :typed-feature-list
+                                     (append (path-typed-feature-list
+                                              initial-path)
+                                             (path-typed-feature-list
+                                              (mrs:fvpair-feature fvp))))
+                               :rhs (make-u-value :types
+                                                  (list (deasterisk value)))))))))
+
+(defun deasterisk (value)
+  ;;; disgusting hack - have to push e.g. masc* to masc
+  ;;; need to do this properly somewhere/how
+  (if (or (symbolp value) (stringp value))
+      (let ((new-val
+             (intern (string-right-trim '(#\*) value))))
+        (if (is-valid-type new-val)
+            new-val
+          value))
+    value))
   
 
 
 (in-package "MRS")
 
 
-(defparameter *contentful-lrs* nil)
-(defparameter *contentless-lrs* nil)
-
 ;;; lexical rules
 ;;; Interim stuff for excluding lexical rules
 ;;; which have semantics
+
+
+(defvar *contentful-lrs* nil)
+(defvar *contentless-lrs* nil)
+
+(defvar *lrule-rel-index* nil)
+
+(defun clear-lrule-globals nil
+  (setf *contentful-lrs* nil)
+  (setf *contentless-lrs* nil)
+  (setf *lrule-rel-index* nil))
+
+
 
 (defun extract-lex-rule-rels (id fs)
   (let* ((semantic-fs
@@ -67,9 +117,30 @@
              (extract-relations-from-liszt 
               semantic-fs id))))
     (if rels
-        (push id *contentful-lrs*)
+        (progn
+          (for rel in rels
+               do
+               (push (cons (relation-record-relation rel) id) *lrule-rel-index*))
+          (push id *contentful-lrs*))
       (push id *contentless-lrs*))))
 
+;;; grammar rules
+
+(defvar *grule-rel-index* nil)
+
+(defun clear-grule-globals nil
+  (setf *grule-rel-index* nil))
+
+(defun extract-grammar-rule-rels (id fs)
+  (let* ((semantic-fs
+         (path-value fs *construction-semantics-path*))
+        (rels      
+         (if semantic-fs
+             (extract-relations-from-liszt 
+              semantic-fs id))))
+    (for rel in rels
+         do
+         (push (cons (relation-record-relation rel) id) *grule-rel-index*))))
 
 ;;; indexing and retrieving a lexical entry based on some input semantics
 
@@ -93,7 +164,7 @@
 ;;; warning message is issued and the id is stored on
 ;;; *empty-semantics-lexical-entries*
 
-(defparameter *empty-semantics-lexical-entries* nil)
+(defvar *empty-semantics-lexical-entries* nil)
 
 ;;; semantics record is intended for all possible semantics 
 ;;; bearing structures
@@ -111,7 +182,7 @@
   relation                 ; i.e. the actual rel
   feature-string)          ; for proper names etc
 
-(defparameter *semantic-table* (make-hash-table)
+(defvar *semantic-table* (make-hash-table)
  "semantics associated with each instance (psort)")
 ;;; indexed by identifier, values are semantics-record
 
@@ -119,7 +190,7 @@
   (setf (gethash id *semantic-table*)
         record))
 
-(defparameter *relation-index* (make-hash-table)
+(defvar *relation-index* (make-hash-table)
  "associates relations with instances") 
 ;;; indexed by relation - values are either simply a list of 
 ;;; identifiers of lexical entries which have this relation

@@ -480,6 +480,8 @@ because of the likelyhood of changes in the grammar.
          ; The old code assumed string types would be converted to
          ; symbols on construction of the MRS, but this 
          ; loses information
+         ; this function also converts the path values in the
+         ; `extra' property lists into single feature values
          (mrs-psoa (if (mrs-language '(english))
 		       (time-convert-mrs-struct unstrung-psoa)
 		     unstrung-psoa))
@@ -1055,8 +1057,12 @@ because of the likelyhood of changes in the grammar.
     new-rel))
 
 (defun mrs-unstring-fvp (fvp)
-  (make-fvpair :feature (mrs-unstring-value (fvpair-feature fvp))
-            :value (mrs-unstring-value (fvpair-value fvp))))
+  (let* ((current-fvp-feature (fvpair-feature fvp))
+         (vitrified-feature (last-path-feature current-fvp-feature)))
+    ;;; last-path-feature is a no-op for atomic features
+    ;;; but returns the last feature for paths
+    (make-fvpair :feature (mrs-unstring-value (fvpair-feature fvp))
+                 :value (mrs-unstring-value (fvpair-value fvp)))))
 
 (defun mrs-unstring-value (val)
   (if (listp val)

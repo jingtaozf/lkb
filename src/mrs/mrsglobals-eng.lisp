@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.2  1998/06/26 02:35:27  aac
+;; at least partially working VIT construction
+;;
 ;; Revision 1.1  1998/06/24 17:15:10  aac
 ;; adding mrs code to source control
 ;;
@@ -85,10 +88,10 @@
   `(,(vsym "INDEX")))
 
 (setf *psoa-liszt-path* 
-    `(,(vsym "RLISZT") ,(vsym "LIST")))
+    `(,(vsym "LISZT") ,(vsym "LIST")))
 
 (setf *psoa-rh-cons-path*
-    `(,(vsym "RH-CONS") ,(vsym "LIST")))
+    `(,(vsym "H-CONS") ,(vsym "LIST")))
 
 (setf *psoa-h-cons-path*
     `(,(vsym "H-CONS") ,(vsym "LIST")))
@@ -302,7 +305,7 @@
     ,(vsym "LISZT") ,(vsym "LIST")))
 
 (defparameter *construction-semantics-path*
-  `(,(vsym "C-CONT")))
+  `(,(vsym "C-CONT") ,(vsym "LISZT") ,(vsym "LIST")))
 
 (defparameter *external-semantics-path*
   `(,(vsym "SYNSEM") ,(vsym "LOCAL") ,(vsym "CONT")
@@ -312,3 +315,16 @@
   `(,(vsym "SYNSEM") ,(vsym "LOCAL") ,(vsym "CONT") ,(vsym "MESSAGE")
     ,(vsym "LIST")))
 
+;;; display of extra features in an MRS
+
+(defparameter *mrs-extra-display* 
+  `((,(vsym "PNG") . "")
+    (,(vsym "PN") . "")
+    (,(vsym "VITTENSE") . "")
+    (,(vsym "VITMOOD") . "")
+    (,(vsym "VIT") . "")
+    (,(vsym "PRONTYPE") . "")
+    (,(vsym "SPTYPE") . "")
+    (,(vsym "VREF") . "")
+    (,(vsym "VTYPE")  . "")
+    (,(vsym "FUN") . "")))

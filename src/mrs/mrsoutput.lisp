@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.2  1998/06/26 02:35:28  aac
+;; at least partially working VIT construction
+;;
 ;; Revision 1.1  1998/06/24 17:15:13  aac
 ;; adding mrs code to source control
 ;;
@@ -220,18 +223,9 @@
                                 (format nil "~A~A" idletter idnumber)))
                (var-type (fs-type fs))
                (extra (create-index-property-list fs))
-#|
-;;; Trying to reconstruct information from the abbreviations is a disaster
-;;; area - put this stuff in the OUTPUT routines, not here!
-                (cond 
-                       ((or *mrs-to-vit*
-                            (mrs-language '(german japanese)))
-                        (create-index-property-list fs))
-                       ((equal idletter "e") (event-abbrev fs gen))
-                       ((equal idletter "x") (ref-ind-abbrev fs))
-                       ((equal idletter "c") (format nil "~A" (coord-abbrev fs gen)))
-                       (t nil)))
-|#
+;;; create-index-property list is defived
+;;; differently for LKB and PAGE versions - abbreviations are
+;;; moved to output routines in basemrs 
                (variable-identifier (cond ((equal idletter "g")
                                            (make-group-var 
                                             :name variable-name
@@ -261,6 +255,7 @@
 ;; should be made recursive
 ;;; according to Bernd the dnf is now correct and does not leave embedded
 ;; disjuntions which I had to check for before
+#-lkb
 (defun create-index-property-list (fs)
   #-pagelite
   (when (is-valid-fs fs)
@@ -290,33 +285,42 @@
                                  feat-list)))))
         feat-list)))
 
+;;; AAC - for generation, we need to retain more information
+;;; so the index-proprty-list contains (typed) paths, rather than features
+;;; The code in mrs-to-vit converts the paths to the last feature
+;;; so the structures there are as expected
 
-#|
-  
-;; In mrsoutput.lisp, modified EVENT-ABBREV since we're no longer encoding
-;; event/speech/reference time in the event FS.
-
-(defun event-abbrev (fs gen)
-  (let ((eventtime (path-value fs *time-path*))
-        (reftime (path-value fs *reference-path*))
-	(sptime (path-value fs *spch-path*)))
-    (when (and eventtime sptime)
-      (if (not (no-path-to sptime))
-	  (format nil "(E:~A, R:~A, S:~A)" 
-		  (var-name (create-variable eventtime gen))
-		  (var-name (create-variable reftime gen))
-		  (var-name (create-variable sptime gen)))
-	(format nil "(E:~A, R:~A)" (var-name (create-variable eventtime gen))
-		(var-name (create-variable reftime gen)))))))
-
-
-(defun ref-ind-abbrev (fs)
-  (let* ((png (path-value fs *png-path*))
-	 (pn (when png (get-tdl-val png *pn-path*)))
-	 (gen (when png (get-tdl-val png *gen-path*))))
-    (format nil "~A ~A" pn gen)))
-
-|#
+#+lkb
+(defun create-index-property-list (fs &optional path-so-far)
+  (when (is-valid-fs fs)
+    (setf fs (deref fs)))
+  (if (is-valid-fs fs)
+      (let ((label-list (fs-arcs fs))
+            (feat-list nil)
+            (fs-type (type-of-fs fs)))
+        (if (and label-list (consp label-list))
+            (loop for feat-val in label-list
+                do
+                (let ((new-path (extend-path path-so-far fs-type
+                                                 (car feat-val)))
+                      (next-fs (cdr feat-val)))
+                  (cond ((eq (car feat-val) *list-feature*)
+                         (push (make-fvpair :feature new-path
+                                            :value (create-coord-list 
+                                                    next-fs))
+                               feat-list))
+                        ((is-atomic next-fs)
+                         (push (make-fvpair :feature new-path
+                                            :value (create-type 
+                                                    (fs-type next-fs)))
+                               feat-list))
+                        (t
+                         (setf feat-list 
+                           (append feat-list
+                                   (create-index-property-list 
+                                    next-fs
+                                    new-path))))))))
+        feat-list)))
 
 (defun create-coord-list (fs)
   (let* ((firstval (path-value fs *first-path*))
@@ -324,32 +328,6 @@
     (when (is-valid-fs firstval)
       (cons (create-variable firstval *variable-generator*)
             (create-coord-list restval)))))
-
-#|      
-
-(defun coord-abbrev (fs gen)
-  (let ((listval (path-value fs *list-path*))
-	(lastval (path-value fs *last-path*)))
-    (format nil (concatenate 'string "(" 
-			     (coord-abbrev-aux listval lastval gen)
-			     ")"))
-    ))
-
-|#
-
-; Generalize printing of list-valued attributes
-
-(defun coord-abbrev-aux (listval lastval gen)
-  (let* ((firstval (path-value listval *first-path*))
-	 (restval (path-value listval *rest-path*)))
-    (if (or (null firstval) (no-path-to firstval))
-        ""
-      (concatenate 'string (var-name (create-variable firstval gen))
-		 (if (eq restval lastval)
-		     ""
-		   (concatenate 'string ","
-				(coord-abbrev-aux restval lastval gen))))
-      )))
 
 ;;; global variables are defined in mrsglobals
 
@@ -578,8 +556,6 @@
 
 
 
-
-;;; parametrize for feature names?
 (defun construct-wgliszt (fs variable-generator)
   #-pagelite
   (when (is-valid-fs fs)

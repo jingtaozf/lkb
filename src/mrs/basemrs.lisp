@@ -48,6 +48,8 @@
   feature
   value)
 
+;;; feature may either be a symbol, or, for the LKB version only,
+;;; a path structure (as defined in struct)
 
 ;;; value is either a constant (simple atom) or
 ;;; a var structure which contains a string plus a number 
@@ -99,13 +101,32 @@
 
          
 ;;; WK: with an ugly way to print out 'extra' infos (for German)
-(defun get-print-name (var-struct)
+#-lkb(defun get-print-name (var-struct)
   (if (var-p var-struct)
       (if (var-extra var-struct)
           (concatenate 'string (var-name var-struct) " " (format nil "~{ ~S~%~}" (var-extra var-struct)))
         (var-name var-struct))
   (format nil "u")))
   
+#+lkb(defun get-print-name (var-struct)
+       (if (var-p var-struct)
+           (format nil "~A ~{ ~A~}" (var-name var-struct) 
+                   (extra-value-strings (var-extra var-struct)))
+         "u"))
+
+(defun extra-value-strings (extra)
+  (for fvp in extra
+       filter
+       (let* ((feature (last-path-feature (fvpair-feature fvp)))
+              (abbrev (assoc feature *mrs-extra-display*)))
+         (if abbrev
+             (format nil "~A ~A"
+                     (cdr abbrev)
+                     (fvpair-value fvp))))))
+
+
+
+
 ;;; The MRS structure could be output either as simple ascii
 ;;; or as LaTeX and possibly in other ways
 ;;; So use the same trick as the LKB to avoid unnecessary work
