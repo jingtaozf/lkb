@@ -458,7 +458,10 @@
 ;;              (mrs::output-mrs input-sem 'mrs::simple)
 ;;              (mrs::output-mrs mrs 'mrs::simple))  
              (mrs::mrs-equalp 
-              mrs input-sem nil *debugging* 
+	      (if (eq *bypass-equality-check* :eqqeqs)
+		  (mrs::equate-all-qeqs mrs) 
+		mrs)
+	      input-sem nil *debugging* 
               (not (eq *bypass-equality-check* :filter))))))))
 
 
