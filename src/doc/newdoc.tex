@@ -229,8 +229,11 @@ of parsing reasonable length sentences with a large grammar.
 \item Default unification is based on YADU, defined in Lascarides and
 Copestake (in press).
 \item Automatic computation of greatest lower bounds in the type hierarchy.
-\item Integration with the \itsdb\ test suite machinery 
-(Oepen and Flickinger, in press).
+\item Integration with the \itsdb\footnote{This is really
+what the system is called, but this is not
+the responsibility of the current author.  Please direct any comments
+about \itsdb\ to {\tt oe@coli.uni-sb.de}.}\ test suite machinery 
+(Oepen and Flickinger, 1998).
 \item Integration with MRS semantics (Copestake et al, 1997).
 \item Tactical generation from MRS input (experimental). 
 \item Many new user interface features.
@@ -745,13 +748,16 @@ to the {\tt user-fns} file (or replace {\tt lkb-tmp-dir} if it exists
 already):
 \begin{verbatim}
 (defun lkb-tmp-dir nil 
-  (let ((pathname  #-mcl (user-homedir-pathname)
-                   #+mcl (make-pathname :directory "Applications"))
+  (let ((pathname  
+          #-mcl (user-homedir-pathname)
+          #+mcl (make-pathname :directory "Applications"))
         (tmp-dir '("tmp")))
     (make-pathname
-     :host (pathname-host pathname) :device (pathname-device pathname)
+     :host (pathname-host pathname) 
+     :device (pathname-device pathname)
      :directory (append (pathname-directory pathname) tmp-dir)
-     :name (pathname-name pathname) :type (pathname-type pathname)
+     :name (pathname-name pathname) 
+     :type (pathname-type pathname)
      :version (pathname-version pathname))))
 \end{verbatim}
 
@@ -2775,8 +2781,10 @@ LKB system:
      (lkb-pathname (this-directory) "lexicon.tdl"))
 (read-tdl-grammar-file-aux 
      (lkb-pathname (this-directory) "grules.tdl"))
-(read-morph-file-aux (lkb-pathname (this-directory) "infl-rules.tdl"))
-(load-irregular-spellings (lkb-pathname (this-directory) "irregs.txt"))
+(read-morph-file-aux 
+     (lkb-pathname (this-directory) "infl-rules.tdl"))
+(load-irregular-spellings 
+     (lkb-pathname (this-directory) "irregs.txt"))
 (read-tdl-psort-file-aux 
           (lkb-pathname (this-directory) "roots.tdl"))
 (read-tdl-parse-node-file-aux 
@@ -3383,10 +3391,13 @@ information describing affixation.
 The morphology system expects that the
 orthographic specification comes immediately after the 
 {\tt :=} or {\tt :<} in the rule.
-For example:
+For example:\footnote{Note: the linebreak 
+in the orthographemic specification below is just for readability,
+it is not allowed in the actual file.}
 \begin{verbatim}
 plur-noun_infl_rule :=
-%suffix (!s !ss) (!ss !ssses) (ss sses) (!ty !ties) (f ves) (tch tches) (sh shes)
+%suffix (!s !ss) (!ss !ssses) (ss sses) 
+(!ty !ties) (f ves) (tch tches) (sh shes)
 lex_rule_infl_affixed &
 [ NEEDS-AFFIX true,
   ARGS [ FIRST [ AFFIX  plur-noun] ] ].
@@ -4505,7 +4516,7 @@ to extend using a predefined feature structure architecture).
 There are many practical aspects to grammar engineering, many of which
 are similar to good practise in other forms of programming.
 One aspect which is to some extent peculiar to grammar writing is the
-use of test suites (see e.g., Oepen and Flickinger, in press).
+use of test suites (see e.g., Oepen and Flickinger, 1998).
 The LKB system is compatible with the \itsdb\  system, as discussed
 in \S\ref{tsdb}.
 You should use a test-suite of sentences as soon as you have got
@@ -4555,7 +4566,8 @@ the CSLI LinGO ERG:
 (load-lkb-preferences (this-directory) "user-prefs.lsp")
 (lkb-load-lisp (this-directory) "templates.lsp")
 (lkb-load-lisp (this-directory) "checkpaths.lsp" t)
-(load-irregular-spellings (lkb-pathname (parent-directory) "irregs.tab"))
+(load-irregular-spellings 
+     (lkb-pathname (parent-directory) "irregs.tab"))
 (read-tdl-type-files-aux
      (list (lkb-pathname (this-directory) "extra.tdl")
            (lkb-pathname (parent-directory) "fundamentals.tdl")
@@ -5013,7 +5025,8 @@ The batch parsing support which is distributed with the
 LKB is very simple.  For extensive grammar development,
 more sophisticated tools
 are available through the \itsdb\ package that was recently
-integrated with the LKB.  The following description is by Stephan Oepen.
+integrated with the LKB.  The following description is by Stephan Oepen
+(to whom all comments should be directed: {\tt oe@coli.uni-sb.de}).
 
 \itsdb\ builds on the following components and modules
 \begin{itemize}
@@ -5042,13 +5055,16 @@ overgeneration) and performance at highly variable
 granularities, aggregate, correlate, and visualize the data,
 and compare profiles obtained from previous grammar or system
 versions or other platforms.
+
+\item a universal pronounciation rule:\ {\em tee ess dee bee plus 
+plus\/} is the name of the game.
 \end{itemize}
 
 While \itsdb\ is not yet available for public download, the LKB
 distribution contains a bundled beta version of the complete
 package.  See the draft user manual (`{\tt manual.ps}') in the
 `{\tt src/tsdb/doc/}' subdirectory of the LKB source tree.
-PostScript copies of Oepen et al, 1997 and Oepne and Flickinger, in press, in
+PostScript copies of Oepen et al, 1997 and Oepen and Flickinger, 1998, in
 the same directory provide additional background reading.
 
 \appendix
@@ -6049,13 +6065,14 @@ for Computational Linguistics (EACL-89)}
 {CSLI Lecture Notes 77, CSLI Publications, Stanford CA}
 {1997}
 
-\forthjournart{Oepen, Stephan and Daniel P. Flickinger}
+\journart{Oepen, Stephan and Daniel P. Flickinger}
 {Towards Systematic Grammar Profiling.
                {T}est Suite Technology Ten Years After}
 {Journal of Computer Speech and Language:
 Special Issue on Evaluation}
-{in press}
-
+{12 (4)}
+{411-437}
+{1998}
 
 \procart{Pereira, F. C.~N. and S.~M. Shieber}
 {The semantics of grammar formalisms seen as computer languages}
