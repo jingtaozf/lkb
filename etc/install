@@ -243,6 +243,6 @@ echo "to the file \`.emacs' in your home directory:"
 echo
 echo "  (let ((root (or (getenv \"DELPHINHOME\")"
 echo "                  \"${DELPHINHOME}\")))" 
-echo "    (if (file-exists-p (format \"%s/etc/dot.emacs\" root))"
-echo "      (load (format \"%s/etc/dot.emacs\" root) nil t t)))"
+echo "    (if (file-exists-p (format \"%s/lkb/etc/dot.emacs\" root))"
+echo "      (load (format \"%s/lkb/etc/dot.emacs\" root) nil t t)))"
 echo

@@ -6,8 +6,8 @@
 ;;; course):
 ;;;
 ;;;   (let ((root (getenv "DELPHINHOME")))
-;;;     (if (file-exists-p (format "%s/etc/dot.emacs" root))
-;;;       (load (format "%s/etc/dot.emacs" root) nil t t)))
+;;;     (if (file-exists-p (format "%s/lkb/etc/dot.emacs" root))
+;;;       (load (format "%s/lkb/etc/dot.emacs" root) nil t t)))
 ;;;
 ;;; in other words, set the shell environment variable `DELPHINHOME' to the 
 ;;; root directory of your installation tree (which is `~/delphin' for most 
@@ -19,8 +19,11 @@
 ;;; you can safely move to a later version.
 ;;;
 
-(defconst lingo-home (or (getenv "DELPHINHOME")
-			 "/afs/ir.stanford.edu/users/o/e/oepen/src/lingo"))
+(defconst delphin-home 
+  (or (getenv "DELPHINHOME") "/afs/ir.stanford.edu/users/o/e/oepen/src/lingo"))
+
+(defconst allegro-home 
+  (or (getenv "ALLEGROHOME") "/usr/local/acl"))
 
 (defmacro when (condition &rest body)
   (list 'and condition (cons 'progn body)))
@@ -39,32 +42,21 @@
         (string-match "mingw-nt" system-configuration)
         (string-match "msvc" system-configuration)) "windows")))
 
-(defun lkb (&optional prefix)
+(defun allegro (&optional prefix)
   (interactive "P")
 
   ;;
   ;; set up .load-path., load and configure emacs -- lisp interface
   ;;
-  (let ((eli (format "%s/eli" lingo-home))
-        (lkb (format "%s/lkb/src" lingo-home)))
+  (let ((eli (format "%s/eli" delphin-home))
+        (lkb (format "%s/lkb/src" delphin-home)))
     (unless (member eli load-path)
       (setq load-path (cons eli load-path)))
     (unless (member lkb load-path)
       (setq load-path (cons lkb load-path))))
   (load "fi-site-init" nil t)
   (fset 'lisp-mode (symbol-function 'common-lisp-mode))
-  (setq fi:common-lisp-image-name 
-    (format
-     "%s/lkb/%s/lkb%s"
-     lingo-home
-     (system-binaries)
-     (if (or (string-match "windows" system-configuration)
-             (string-match "mingw-nt" system-configuration)
-             (string-match "msvc" system-configuration))
-       ".exe"
-       "")))
-
-  (setq fi:common-lisp-directory lingo-home)
+  (setq fi:common-lisp-directory delphin-home)
   (setq fi:lisp-evals-always-compile nil)
   (setq
     fi:lisp-mode-hook
@@ -86,11 +78,89 @@
         ("\\.tdl$" . tdl-mode)
         ("\\.mrs$" . tdl-mode)
         ("\\.system$" . common-lisp-mode))
-      auto-mode-alist))
+      auto-mode-alist)))
+
+(defun lkb (&optional prefix)
+  (interactive "P")
+
+  (allegro)
+  ;;
+  ;; use pre-built run-time binaries distributed from `lingo.stanford.edu'
+  ;;
+  (setq fi:common-lisp-image-name 
+    (format
+     "%s/lkb/%s/lkb%s"
+     delphin-home
+     (system-binaries)
+     (if (or (string-match "windows" system-configuration)
+             (string-match "mingw-nt" system-configuration)
+             (string-match "msvc" system-configuration))
+       ".exe"
+       "")))
+
+  (setq fi:common-lisp-image-file
+    (format "%s/lkb/%s/lkb.dxl" delphin-home (system-binaries)))
 
   ;;
   ;; start up inferior lisp process
   ;;
+  (let ((process-connection-type nil))
+    (fi:common-lisp)))
+
+(defun japanese (&optional prefix)
+  (interactive "P")
+
+  (allegro)
+  ;;
+  ;; make sure that emacs(1) will use the appropriate encoding on all buffers
+  ;; connected to Lisp (aka the LKB), which for latest versions include more 
+  ;; than just the main `*common-lisp*' buffer.  also, we need to force the LKB
+  ;; into using a locale with corresponding encoding (`japan.EUC' as we used to
+  ;; call it appears to be an Allegro CL nickname for `ja_JP.EUC').
+  ;;
+  (let ((encoding 'euc-jp))
+    (set-language-environment 'japanese)
+    (setq default-buffer-file-coding-system encoding)
+    (setq default-process-coding-system (cons encoding encoding)))
+
+  (setq fi:common-lisp-image-name 
+    (format
+     "%s/lkb/%s/lkb%s"
+     delphin-home
+     (system-binaries)
+     (if (or (string-match "windows" system-configuration)
+             (string-match "mingw-nt" system-configuration)
+             (string-match "msvc" system-configuration))
+       ".exe"
+       "")))
+
+  (setq fi:common-lisp-image-file
+    (format "%s/lkb/%s/lkb.dxl" delphin-home (system-binaries)))
+
+  (setq fi:common-lisp-image-arguments (list "-locale" "ja_JP.EUC"))
+
+  (let ((process-connection-type nil))
+    (fi:common-lisp)))
+
+(defun lisp (&optional prefix)
+  (interactive "P")
+
+  (allegro)
+  (setq fi:common-lisp-image-name 
+    (format
+     "%s/alisp"
+     allegro-home
+     (if (or (string-match "windows" system-configuration)
+             (string-match "mingw-nt" system-configuration)
+             (string-match "msvc" system-configuration))
+       ".exe"
+       "")))
+
+  (setq fi:common-lisp-image-file 
+    (format "%s/clim.dxl" allegro-home))
+
+  (setq fi:common-lisp-image-arguments (list "-locale" "no_NO.UTF-8"))
+
   (let ((process-connection-type nil))
     (fi:common-lisp)))
 
@@ -109,4 +179,4 @@
         (load \"%s/lkb/src/general/loadup.lisp\")
         (load-system \"tsdb\")
         nil)"
-      lingo-home lingo-home))))
+      delphin-home delphin-home))))
