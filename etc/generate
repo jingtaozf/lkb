@@ -21,6 +21,8 @@ log=${HOME}/${skeleton}.${date}.log
   echo "(lkb::read-script-file-aux \"${ROOT}/erg/lkb/script\")"
   echo "(lkb::index-for-generator)"; \
   echo "(tsdb:tsdb 
+         :home \"${ROOT}/lkb/src/tsdb/acl05\")"
+  echo "(tsdb:tsdb 
          :skeletons \"${ROOT}/lkb/src/tsdb/skeletons/english\")"
   echo "(tsdb:tsdb :skeletons)"
   echo "(setf target 
@@ -29,7 +31,7 @@ log=${HOME}/${skeleton}.${date}.log
   echo "(setf lkb::*unpack-edge-allowance* 50000)"
   echo "(setf tsdb::*tsdb-maximal-number-of-edges* 50000)"
   echo "(setf tsdb::*process-default-task* :generate)"
-  echo "(tsdb::tsdb-do-process target :gold \"gold/erg/${skeleton}\"
+  echo "(tsdb::tsdb-do-process target :gold \"gold/lingo/${skeleton}\"
          :type :generate :overwrite t)"
   echo "(excl:exit)"
 } | ( cd ${HOME}/src/acl; \
