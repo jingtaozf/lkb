@@ -45,6 +45,8 @@
 
 (defun compare (parses)
   (let ((frame (clim:make-application-frame 'compare-frame)))
+    (setf (compare-frame-current-chart frame) 
+          *chart-generation-counter*)
     (set-up-compare-frame parses frame)
     (setf (clim:frame-pretty-name frame) 
       (format nil "~a" (edge-leaves (car parses))))
@@ -170,7 +172,10 @@
    (item :initform 0
 	 :accessor compare-frame-item)
    (stream :initform nil
-	   :accessor compare-frame-stream))
+	   :accessor compare-frame-stream)
+   (current-chart :initform nil
+	    :accessor  compare-frame-current-chart)
+   )
   (:panes
    (trees  
     (clim:outlining (:thickness 1)
@@ -338,11 +343,21 @@
 			 (compare-frame-trees frame) 
 			 :test #'eq))
 	       (update-trees frame)))
-	    (show (draw-new-parse-tree (ptree-top tree)
-				       "Parse tree" nil)))
-	(error (condition) 
-	  (declare (ignore condition) )
-	  nil)))))
+	    (show 
+             (clim:with-application-frame (frame)
+               (draw-new-parse-tree (ptree-top tree)
+                                    "Parse tree" nil
+                                    (compare-frame-current-chart frame)))))
+        (storage-condition (condition)
+          (with-output-to-top ()
+            (format t "~%Memory allocation problem: ~A~%" condition)))
+	(error (condition)
+	  (with-output-to-top ()
+	    (format t "~%Error: ~A~%" condition)))
+        (serious-condition (condition)
+          (with-output-to-top ()
+            (format t "~%Something nasty: ~A~%" condition)))))))
+
 
 (defun update-trees (window)
   (let (; (done-p nil)

@@ -441,9 +441,15 @@
 	    (exp (display-fs (lex-or-psort-full-fs lex-entry) 
 			     (format nil "~(~A~) - expanded" psort)
                              psort)))
+        (storage-condition (condition)
+          (with-output-to-top ()
+            (format t "~%Memory allocation problem: ~A~%" condition)))
 	(error (condition)
 	  (with-output-to-top ()
-	    (format t "~%Error: ~A~%" condition)))))))
+	    (format t "~%Error: ~A~%" condition)))
+        (serious-condition (condition)
+          (with-output-to-top ()
+            (format t "~%Something nasty: ~A~%" condition)))))))
 
 
 (defun pop-up-lex-rule-menu-items (psort rule-entry)
@@ -456,10 +462,18 @@
 	    (rule (display-fs (rule-full-fs rule-entry) 
 			      (format nil "~(~A~)" (rule-id rule-entry))
                               (rule-id rule-entry))))
+        (storage-condition (condition)
+          (with-output-to-top ()
+            (format t "~%Memory allocation problem: ~A~%" condition)))
 	(error (condition)
 	  (with-output-to-top ()
-	    (format t "~%Error: ~A~%" condition)))))))
+	    (format t "~%Error: ~A~%" condition)))
+        (serious-condition (condition)
+          (with-output-to-top ()
+            (format t "~%Something nasty: ~A~%" condition)))))))
 
+        
+        
 ;;;  ***** TeX macros  ******
 
 (defun output-fs-in-tex (fs)

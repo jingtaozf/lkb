@@ -158,9 +158,15 @@
 	 (handler-case
 	     (ecase ,command
 	       ,@cases)
-	   (error (condition)
-	     (with-output-to-top ()
-	       (format t "~%Error: ~A~%" condition))))))))
+           (storage-condition (condition)
+             (with-output-to-top ()
+               (format t "~%Memory allocation problem: ~A~%" condition)))
+           (error (condition)
+             (with-output-to-top ()
+               (format t "~%Error: ~A~%" condition)))
+           (serious-condition (condition)
+             (with-output-to-top ()
+               (format t "~%Something nasty: ~A~%" condition))))))))
 
 ;;; ========================================================================
 ;;; Define general frame class for LKB frames
@@ -253,8 +259,12 @@
 			       (clim-internals::find-frame-pane-of-type 
 				frame 'clim:application-pane))
 			      frame stream)))
-	       (error (condition)
-		 (format t "~%Error: ~a" condition))))))))))
+               (storage-condition (condition)
+		 (format t "~%Memory allocation problem: ~A~%" condition))
+               (error (condition)
+		 (format t "~%Error: ~A~%" condition))
+	       (serious-condition (condition)
+		 (format t "~%Something nasty: ~A~%" condition))))))))))
 
 
 (defmacro define-lkb-frame (frame-class slots 

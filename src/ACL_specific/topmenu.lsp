@@ -22,6 +22,8 @@
 	   enable-type-interactions disable-type-interactions))
 )
 
+(defvar *lkb-menu-type* :core)
+
 (defvar *lkb-top-frame* nil)
 
 (defvar *lkb-top-stream* nil)
@@ -122,8 +124,12 @@
                ;; placeholder - we need a way
                ;; of generating an interrupt which will
                ;; affect these processes
-	       (error (condition)
-		 (format t "~%Error: ~A~%" condition)))))))
+               (storage-condition (condition)
+		 (format t "~%Memory allocation problem: ~A~%" condition))
+               (error (condition)
+		 (format t "~%Error: ~A~%" condition))
+	       (serious-condition (condition)
+		 (format t "~%Something nasty: ~A~%" condition)))))))
 
 #|
 (defun construct-menu (menu)
@@ -153,16 +159,16 @@
 ;; Create lkb interaction frame
 
 (defun expand-lkb-menu nil
-  (setf user::*lkb-menu-type* :big)
+  (setf *lkb-menu-type* :big)
   (set-up-lkb-interaction))
 
 (defun shrink-lkb-menu nil
-  (setf user::*lkb-menu-type* :core)
+  (setf *lkb-menu-type* :core)
   (set-up-lkb-interaction))
 
 (defun set-up-lkb-interaction (&optional system-type)
   (unless system-type 
-    (setf system-type (or user::*lkb-menu-type* :core)))
+    (setf system-type (or *lkb-menu-type* :core)))
   ;; remove any old commands
   (setf *lkb-menu-disabled-list* nil)
   (setf *lkb-menu-mrs-list* nil)

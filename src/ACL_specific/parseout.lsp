@@ -29,6 +29,14 @@
 (def-lkb-parameter *ptree-level-sep* 12
   "Spacing between levels in the tree.")                    
 
+;;; Globals used to keep track of parse chart
+
+(defvar *main-chart-frame* nil)
+(defvar *sub-chart-window-frames* nil)
+
+;;; globals are set in chartout which is therefore read in
+;;; after this file
+
 
 ;;
 ;; Define a frame class for our parse tree window
@@ -38,16 +46,18 @@
     ((nodes :initform nil
 	    :accessor parse-tree-nodes)
      (current-chart :initform nil
-	    :accessor parse-tree-current-chart))
+                    :accessor parse-tree-current-chart))
   :display-function 'draw-parse-tree
   :width *parse-window-width* 
   :height *parse-window-height*)
 
-(defun draw-new-parse-tree (topnode title horizontalp)
+(defun draw-new-parse-tree (topnode title horizontalp &optional counter)
   (declare (ignore horizontalp))
   (let ((pframe (clim:make-application-frame 'parse-tree)))
     (setf (parse-tree-nodes pframe) topnode)
-    (setf (parse-tree-current-chart pframe) *chart-generation-counter*)
+    (setf (parse-tree-current-chart pframe) 
+      (or counter
+          *chart-generation-counter*))
     (mp:process-run-function title 
                              #'clim:run-frame-top-level pframe)))
 
@@ -89,10 +99,18 @@
     (pop-up-menu
      `((,(format nil "Feature structure - Edge ~A" (edge-id edge-record))
 	:value fs)
-       ("Show edge in chart" :value edge)
+       ("Show edge in chart" 
+        :value edge
+        :active ,(and (not (g-edge-p edge-record))
+                      (or
+                       (not (parse-tree-current-chart clim:*application-frame*))
+                       (eql (parse-tree-current-chart clim:*application-frame*)
+                            *chart-generation-counter*))))
        (,(format nil "Rule ~A" (or rule-name ""))
 	:value rule)
-       ("Generate from edge" :value generate)
+       ("Generate from edge" :value generate
+                             :active ,(not (g-edge-p edge-record)))
+       ;;; FIX - actually crashes Lisp to select this with a generator edge
        (,(format nil "Lex ids ~A" (edge-lex-ids edge-record))
 	:value nil))
      (fs (display-fs edge-fs
@@ -102,13 +120,19 @@
 				   "G" 
 				 "P"))))
      (edge
-      (if 
-          (eql (parse-tree-current-chart clim:*application-frame*)
-               *chart-generation-counter*)
-          (let ((chart-frame (reuse-frame 'chart-window)))
-            (when chart-frame
-              (highlight-edge edge-record chart-frame :scroll-to t)))
-        (lkb-beep)))
+          (progn
+            (cond ((and *main-chart-frame* 
+                        (eql (clim:frame-state *main-chart-frame*) 
+                             :enabled))
+                   nil)
+                  ((and *main-chart-frame* 
+                        (eql (clim:frame-state *main-chart-frame*) 
+                             :shrunk))
+                   (clim:raise-frame *main-chart-frame*))
+                  (t (show-chart) 
+                     (mp:process-wait-with-timeout "Waiting" 
+                                                   5 #'chart-ready)))
+            (highlight-edge edge-record *main-chart-frame* :scroll-to t)))
      (rule 
       (let* ((item (edge-rule edge-record))
              (rule (and (rule-p item) item)))
@@ -121,8 +145,7 @@
 	      (display-fs alternative 
                           (format nil "~A" item)
                           item))))))
-     (generate 
-      (funcall 'really-generate-from-edge edge-record)))))
+     (generate (funcall 'really-generate-from-edge edge-record)))))
 
 
 
@@ -133,12 +156,6 @@
 ;;; single window with lots of little parse trees.  It is
 ;;; based on Rob's compare code (see compare.lsp)
 
-
-(defvar *main-chart-frame* nil)
-(defvar *sub-chart-window-frames* nil)
-
-;;; globals are set in chartout which is therefore read in
-;;; after this file
 
 (defstruct prtree 
   ;; Top node of parse tree
@@ -230,10 +247,15 @@
       (handler-case
 	  (ecase command
 	    (show (draw-new-parse-tree (prtree-top tree)
-				       "Parse tree" nil))
+				       "Parse tree" nil 
+                                       (parse-tree-frame-current-chart 
+                                        clim:*application-frame*)))
             (chart
-             (if (eql (parse-tree-frame-current-chart clim:*application-frame*)
-                     *chart-generation-counter*)
+             (if (or (not (parse-tree-frame-current-chart 
+                           clim:*application-frame*))
+                     (eql (parse-tree-frame-current-chart 
+                           clim:*application-frame*)
+                     *chart-generation-counter*))
                  (progn
                    (cond ((and *main-chart-frame* 
                                (eql (clim:frame-state *main-chart-frame*) 
@@ -255,9 +277,16 @@
             (indexed (funcall 'show-mrs-indexed-window (prtree-edge tree)))
             (scoped (funcall 'show-mrs-scoped-window (prtree-edge tree)))
             )
-	(error (condition) 
+        (storage-condition (condition)
           (with-output-to-top ()
-	    (format t "~%Error: ~A~%" condition)))))))
+            (format t "~%Memory allocation problem: ~A~%" condition)))
+	(error (condition)
+	  (with-output-to-top ()
+	    (format t "~%Error: ~A~%" condition)))
+        (serious-condition (condition)
+          (with-output-to-top ()
+            (format t "~%Something nasty: ~A~%" condition)))))))
+
 
 (defun chart-ready nil
   (and *main-chart-frame* 
@@ -265,8 +294,9 @@
 
 (define-parse-tree-frame-command (com-show-chart-from-tree :menu "Show chart")
     ()   
-  (if (eql (parse-tree-frame-current-chart clim:*application-frame*)
-           *chart-generation-counter*)
+  (if (or (not (parse-tree-frame-current-chart clim:*application-frame*))
+          (eql (parse-tree-frame-current-chart clim:*application-frame*)
+               *chart-generation-counter*))
       (show-chart)
     (lkb-beep)))
 

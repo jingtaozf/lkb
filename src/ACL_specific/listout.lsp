@@ -51,6 +51,13 @@
 	  (handler-case
 	      (funcall (cdr (nth command (list-window-menu frame)))
 		       (thing-object object))
-	    (error (condition)
-	      (with-output-to-top ()
-		(format t "~%Error: ~A~%" condition)))))))))
+            (storage-condition (condition)
+              (with-output-to-top ()
+                (format t "~%Memory allocation problem: ~A~%" condition)))
+            (error (condition)
+              (with-output-to-top ()
+                (format t "~%Error: ~A~%" condition)))
+            (serious-condition (condition)
+              (with-output-to-top ()
+                (format t "~%Something nasty: ~A~%" condition)))))))))
+
