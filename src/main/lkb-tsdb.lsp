@@ -224,17 +224,15 @@ e.g.
    ;; wanted explicit line-wrap so there's a sort-of-solution to this, except
    ;; it doesn't wrap at the same point on every line if warning messages come
    ;; out as well
-   (let* ((clim-stream-symbol
-             (find-symbol "*LKB-TOP-STREAM*" (find-package "CLIM-USER")))
-          (out
-             (if clim-stream-symbol (symbol-value clim-stream-symbol)
-                *standard-output*))
-          (str (format nil " ~A" id)))
-      (write-string str out)
-      (finish-output out)
-      (incf *tdsb-progress-pos* (length str))
-      (when (> *tdsb-progress-pos* 60)
-         (terpri out) (setq *tdsb-progress-pos* 0))))
+   (#+(and clim (not tty)) with-output-to-top #+(and clim (not tty)) ()
+    #-clim progn
+      (let ((str (format nil " ~A" id))
+            (out *standard-output*))
+         (write-string str out)
+         (finish-output out)
+         (incf *tdsb-progress-pos* (length str))
+         (when (> *tdsb-progress-pos* 60)
+            (terpri out) (setq *tdsb-progress-pos* 0)))))
 
 
 (defun parse-tsdb-sentence (user-input)
