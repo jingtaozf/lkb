@@ -447,7 +447,8 @@
 ;;; respectively when the output format is horizontal. Max-x and max-y in
 ;;; the description structure run in the conventional directions, though.
 
-(defun graph-display-output (stream description node-print-function)
+(defun graph-display-output (stream description node-print-function
+      &optional link-draw-function)
    (unless (and (streamp stream) (output-stream-p stream))
       (error "The STREAM argument to ~S is not a stream open for output."
          'graph-display-output))
@@ -460,6 +461,10 @@
       (if (graph-description-horizontalp description)
          'graph-display-horizontally 'graph-display-vertically)
       stream node-print-function
+      (or link-draw-function
+         #'(lambda (str parent child x1 y1 x2 y2 reversep)
+             (declare (ignore parent child))
+             (draw-line-x-y str x1 y1 x2 y2 reversep)))
       (graph-description-node-width-function description)
       (graph-description-node-height description)
       (graph-description-nodes description)))
@@ -467,8 +472,8 @@
 
 ;;; display type hierarchy / chart horizontally
 
-(defun graph-display-horizontally (stream node-print-function node-width-function
-      node-height node-depths-table)
+(defun graph-display-horizontally (stream node-print-function link-draw-function
+      node-width-function node-height node-depths-table)
    (let ((half-node-height (1- (truncate node-height 2))))
       (for depth fixnum (if *type-display* 0 1)
                  to (1- (length (the simple-vector node-depths-table)))
@@ -479,11 +484,15 @@
                (for parent in (the list (graph-node-parents node))
                   do
                   ;; x and y positions for nodes are top left of label
-                  (draw-line-x-y stream
+                  (funcall link-draw-function stream
+                     (and (proper-graph-node-p parent)
+                        (proper-graph-node-contents parent))
+                     (and (proper-graph-node-p node)
+                        (proper-graph-node-contents node))
                      (if (dummy-graph-node-p parent) (graph-node-y parent)
                         (+ (graph-node-y parent) 1
                            (get-node-width parent node-width-function)))
-                    (+ (graph-node-x parent) half-node-height)
+                     (+ (graph-node-x parent) half-node-height)
                      (if (dummy-graph-node-p node) (graph-node-y node)
                         (- (graph-node-y node) 2))
                      (+ (graph-node-x node) half-node-height)
@@ -502,8 +511,8 @@
 
 ;;; display parse tree vertically
 
-(defun graph-display-vertically (stream node-print-function node-width-function
-      node-height node-depths-table)
+(defun graph-display-vertically (stream node-print-function link-draw-function
+      node-width-function node-height node-depths-table)
    (for depth fixnum 0 to (1- (length (the simple-vector node-depths-table)))
       do
       (for node in (the list (svref node-depths-table depth))
@@ -511,7 +520,11 @@
          (for parent in (the list (graph-node-parents node))
             do
             ;; x and y positions for nodes are in middle of top of label
-            (draw-line-x-y stream
+            (funcall link-draw-function stream
+               (and (proper-graph-node-p parent)
+                  (proper-graph-node-contents parent))
+               (and (proper-graph-node-p node)
+                  (proper-graph-node-contents node))
                (graph-node-x parent)
                (if (dummy-graph-node-p parent) (graph-node-y parent)
                   (1- (+ (graph-node-y parent) node-height)))
