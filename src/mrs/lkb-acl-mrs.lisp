@@ -54,6 +54,8 @@
   :width *parse-window-width* 
   :height *parse-window-height*)
 
+;;; new compare functionality
+
 (define-lkb-frame mrs-rmrs-compare
     ((rmrs1 :initform nil
 	    :accessor mrs-rmrs-compare-rmrs1)

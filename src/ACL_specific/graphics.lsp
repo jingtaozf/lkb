@@ -53,6 +53,8 @@
 (defun position-x (point)
   (clim:point-x point))
 
+;;; added for RMRS output
+
 (defun make-position-record (x y)
   (clim:make-point x y))
  

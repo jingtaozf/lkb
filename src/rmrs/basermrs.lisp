@@ -41,6 +41,8 @@
   (unless (rel-p ep) (error "Incorrect type passed to ep-var"))
   (car (rel-flist ep)))
 
+;;; added for comparison code
+
 (defstruct rmrs-position
   position
   ep)
