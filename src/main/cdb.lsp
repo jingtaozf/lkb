@@ -88,12 +88,25 @@
 ;; be worth it to investigate perfect hashing someday, but for now this works
 ;; pretty well.
 
+;;;
+;;; _fix_me_
+;;; using Allegro CL 6.0 and the Japanese grammar, multiple entries map to the
+;;; same hash key; under these circumstances, only one of the entries can be
+;;; retrieved using its orthography.  it seems unlikely that the CDB code is
+;;; intended to require unique hash keys?                   (30-jul-01  -  oe)
+;;;
 (defun hash (key)
   (let ((h 5381))
-    (loop for c across key
+    (loop for c across #-(and :allegro-version>= (version>= 6 0)) 
+                       key
+                       #+(and :allegro-version>= (version>= 6 0)) 
+                       (excl:string-to-octets key)
 	do
 	  (setq h (ldb (byte 32 0) (+ h (ash h 5))))
-	  (setq h (logxor h (char-code c))))
+	  (setq h (logxor h #-(and :allegro-version>= (version>= 6 0)) 
+                            (char-code c) 
+                            #+(and :allegro-version>= (version>= 6 0)) 
+                            c)))
     h))
 
 ;; Open a database file for writing
