@@ -20,7 +20,8 @@
 		      lkb::show-lex
 		      lkb::show-words 
 		      lkb::show-grammar-rule 
-		      lkb::show-lex-rule 
+		      lkb::show-lex-rule
+                      lkb::display-lex-words
                       ;; parse
                       #+:ltemplates
                       lkb::parse-with-preprocessor
@@ -50,8 +51,8 @@
                       lkb::load-display-settings
 		      lkb::*lkb-system-version*
                       ;; debug
-                      lkb::print-chart
-                      lkb::print-gen-chart
+                      lkb::print-chart-toplevel
+                      lkb::print-gen-chart-toplevel
                       lkb::batch-check-lexicon
 		      ;; options
 		      lkb::get-parameters
@@ -114,7 +115,7 @@
                                                            :value 'batch-check-lexicon 
                                                            :available-p :grammar)
                                            (make-menu-item :name "Print chart"
-                                                           :value 'print-chart 
+                                                           :value 'print-chart-toplevel 
                                                            :available-p :grammar))
                                            )
                    (make-lkb-submenu-item :menu-title "Options"
@@ -180,7 +181,9 @@
                      (make-menu-item :name "Grammar rule..."
                         :value 'show-grammar-rule)
                      (make-menu-item :name "Lexical rule..."
-                        :value 'show-lex-rule)
+                                     :value 'show-lex-rule)
+                     (make-menu-item :name "All words"
+                        :value 'display-lex-words)
                      )
                :available-p :always)
          (make-lkb-submenu-item :menu-title "Parse"
@@ -241,9 +244,9 @@
                                  (make-menu-item :name "Find features' type..."
                                                  :value 'find-type-from-features :available-p :grammar)
                                  (make-menu-item :name "Print parser chart"
-                                                 :value 'print-chart :available-p :grammar)
+                                                 :value 'print-chart-toplevel :available-p :grammar)
                                  (make-menu-item :name "Print generator chart"
-                                                 :value 'print-gen-chart :available-p :mrs)))
+                                                 :value 'print-gen-chart-toplevel :available-p :mrs)))
          (make-lkb-submenu-item :menu-title "Advanced"
                  :menu-items 
                    (list                     

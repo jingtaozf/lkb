@@ -459,16 +459,20 @@
       (setf *user-params-file* 
         (ask-user-for-new-pathname "File to save parameters?")))
     (when *user-params-file*
-      (with-open-file
-          (ostream *user-params-file* :direction :output
-           :if-exists :supersede)
-        (format ostream ";;; Automatically generated file - do not edit!")
-        (loop for p in params
-            for r in result
-            do
-              (format ostream "~%(defparameter ~S '~S)"
-                      (read-from-string (car p))
-                      (read-from-string r)))))))
+      (handler-case 
+          (with-open-file
+              (ostream *user-params-file* :direction :output
+               :if-exists :supersede)
+            (format ostream ";;; Automatically generated file - do not edit!")
+            (loop for p in params
+                for r in result
+                do
+                  (format ostream "~%(defparameter ~S '~S)"
+                          (read-from-string (car p))
+                          (read-from-string r))))
+        (file-error (condition)
+          (format t "~%Parameters not saved to file ~A
+                      ~A" *user-params-file* condition))))))
 
 ;;
 ;; Save and load shrunk paths in display settings file
@@ -515,4 +519,16 @@
                         bogus-features)
               (format t "~%Features ~A not mutually compatible" feature-list))))))))
 
-              
+(defun display-lex-words nil
+  (let ((stream lkb::*lkb-background-stream*))
+    (format stream "~%")
+    (loop for word in (sort (lex-words *lexicon*) #'string-lessp)
+        do (format stream "~A, " (string-downcase word)))))
+
+(defun print-chart-toplevel nil
+  (let ((stream lkb::*lkb-background-stream*))
+    (print-chart :stream stream)))
+
+(defun print-gen-chart-toplevel nil
+  (let ((stream lkb::*lkb-background-stream*))
+    (print-gen-chart :stream stream)))

@@ -948,13 +948,13 @@
 
 ;;; Print out contents of generator chart (tty output) - (print-gen-chart)
 
-(defun print-gen-chart ()
-   (format t "~&------~%")
+(defun print-gen-chart (&key (stream t))
+   (format stream "~&------~%")
    (dolist (entry (reverse *gen-chart*)) ; order in which originally created
-      (format t "~%Vertex ~(~A~):~%" (car entry))
+      (format stream "~%Vertex ~(~A~):~%" (car entry))
       (dolist (e (sort (append (cadr entry) (copy-list (cddr entry))) #'<
                        :key #'edge-id))
-         (format t "[~A] ~A~A ~30,5T=> (~{~:A~^ ~})  [~{~A~^ ~}]~%"
+         (format stream "[~A] ~A~A ~30,5T=> (~{~:A~^ ~})  [~{~A~^ ~}]~%"
             (g-edge-id e)
             (if (rule-p (g-edge-rule e)) (rule-id (g-edge-rule e))
                 (g-edge-rule e))
@@ -965,7 +965,7 @@
             (mapcan
                #'(lambda (x) (if x (list (g-edge-id x))))
                (g-edge-children e)))))
-   (format t "~%"))
+   (format stream "~%"))
 
 
 ;;; End of file

@@ -1090,15 +1090,15 @@ Setting *first-only-p* to nil")
 ;;; TTY printout of chart
 ;;; chart edges are ordered on: right vertex, left vertex, edge id
 
-(defun print-chart (&key frozen concise)
-  (format t "~% > chart dump:~%")
+(defun print-chart (&key frozen concise (stream t))
+  (format stream "~% > chart dump:~%")
   (loop
       for i from 1 to *chart-limit*
       while (print-chart-entry i (aref *chart* i 0) 
-                               :frozen frozen :concise concise))
+                               :frozen frozen :concise concise :stream stream))
   (terpri))
 
-(defun print-chart-entry (vertex item &key frozen concise)
+(defun print-chart-entry (vertex item &key frozen concise (stream t))
   (if item 
     (progn
       (terpri)
@@ -1115,7 +1115,7 @@ Setting *first-only-p* to nil")
                         (< (chart-configuration-begin span1)
                            (chart-configuration-begin span2)))))))
         (print-chart-item configuration vertex 
-                          :frozen frozen :concise concise))
+                          :frozen frozen :concise concise :stream stream))
       t)
     (aref *morphs* vertex)))      ; return t if we might be in the middle
                                   ; of a multi word
@@ -1123,7 +1123,7 @@ Setting *first-only-p* to nil")
 (defun print-chart-item (item 
                          &optional end 
                          &key (frozen nil frozenp)
-                              concise)
+                              concise (stream t))
   #-:packing
   (declare (ignore frozen))
   
@@ -1132,7 +1132,7 @@ Setting *first-only-p* to nil")
         (roots (unless (edge-p item) (chart-configuration-roots item))))
     (when (or (null frozenp) #+:packing (eq (edge-frozen edge) frozen))
       (format 
-       t 
+       stream 
        "~&~:[~2*~;~A-~A ~][~A] ~A => ~A~A  [~{~A~^ ~}]"
        (and begin end) begin end
        (edge-id edge)
@@ -1153,14 +1153,14 @@ Setting *first-only-p* to nil")
       (when (or (edge-equivalent edge) (edge-packed edge))
         (let ((edge (first (or (edge-equivalent edge) (edge-packed edge)))))
           (format 
-           t 
+           stream 
            " { [~d < ~{~d~^ ~}" 
            (edge-id edge) 
            (loop for child in (edge-children edge) collect (edge-id child))))
         (loop
             for edge in (rest (edge-equivalent edge)) do
               (format 
-               t 
+               stream 
                "; ~d < ~{~d~^ ~}"
                (edge-id edge) 
                (loop 
@@ -1171,14 +1171,14 @@ Setting *first-only-p* to nil")
                           (edge-packed edge)   
                           (rest (edge-packed edge))) do
               (format 
-               t 
+               stream 
                "; ~d < ~{~d~^ ~}"
                (edge-id edge) 
                (loop 
                    for child in (edge-children edge) 
                    collect (edge-id child))))
-        (format t "]"))
-      (format t "~%"))))
+        (format stream "]"))
+      (format stream "~%"))))
       
 (defun concise-edge-label (edge)
   (if (rule-p (edge-rule edge))

@@ -8,7 +8,7 @@
       (*load-source-file-info* t))
   
   (excl:build-lisp-image
-   "/eo/e6/users/aac/lkbimages/linux/lkb.dxl" 
+   "/usr/groups/nltools/lingo/images/linux/lkb.dxl"
 
    :lisp-files (list :srecord
 		     :eli
@@ -40,6 +40,6 @@
    :print-startup-message t
    
    :presto t
-   :presto-lib "/eo/e6/users/aac/lkbimages/linux/lkb.lib"
+   :presto-lib "/usr/groups/nltools/lingo/images/linux/lkb.lib"
    ))
 
