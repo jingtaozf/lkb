@@ -33,6 +33,7 @@ extern void free(void *);
 #define TSDB_SERVER_MODE 1
 #define TSDB_CLIENT_MODE 2
 #define TSDB_QUIT 4
+#define TSDB_UNIQUELY_PROJECT 8
 
 #define TSDB_UNKNOWN_TYPE 0
 #define TSDB_INTEGER 1
@@ -82,6 +83,7 @@ extern void free(void *);
 #define TSDB_USAGE_OPTION 12
 #define TSDB_VERSION_OPTION 13
 #define TSDB_HISTORY_OPTION 14
+#define TSDB_UNIQUELY_PROJECT_OPTION 15
 
 #ifndef TSDB_PSEUDO_USER
 #  define TSDB_PSEUDO_USER "TSDB@tsdb"

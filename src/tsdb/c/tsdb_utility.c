@@ -1439,7 +1439,7 @@ BOOL tsdb_initialize() {
   } /* if */
 
   if(tsdb.pager != NULL) {
-    if(tsdb.status & TSDB_SERVER_MODE) {
+    if(tsdb.status & TSDB_SERVER_MODE || tsdb.query != NULL) {
       tsdb.pager = (char *)NULL;
     } /* if */
     else {
@@ -1573,14 +1573,6 @@ void tsdb_parse_environment() {
     if((name = getenv("TSDB_RELATIONS_FILE")) != NULL) {
       if(name[0] == TSDB_DIRECTORY_DELIMITER[0]) {
         tsdb.relations_file = strdup(name);
-        if(tsdb.relations_file[strlen(tsdb.relations_file) - 1]
-           != TSDB_DIRECTORY_DELIMITER[0]) {
-          tsdb.relations_file = 
-            (char *)realloc(tsdb.relations_file, 
-                            strlen(tsdb.relations_file) + 2);
-          tsdb.relations_file
-            = strcat(tsdb.relations_file, TSDB_DIRECTORY_DELIMITER);
-        } /* if */
       } /* if */
       else {
         tsdb.relations_file = strdup(tsdb.home);
@@ -1603,6 +1595,9 @@ void tsdb_parse_environment() {
     if((name = getenv("TSDB_DATA_PATH")) != NULL) {
       if(name[0] == TSDB_DIRECTORY_DELIMITER[0]) {
         tsdb.data_path = tsdb_expand_directory(tsdb.home, name);
+      } /* if */
+      else if(name[0] == '.') {
+        tsdb.data_path = tsdb_expand_directory((char *)NULL, name);
       } /* if */
       else {
         tsdb.data_path = strdup(tsdb.home);
@@ -2166,7 +2161,7 @@ char *tsdb_expand_directory(char *base, char *name) {
       return(strdup(foo));
     } /* else */
   } /* if */
-  else if(name[0] == '.' && !name[1]) {
+  else if(name[0] && name[0] == '.' && !name[1]) {
 #if defined(SUNOS)
     if(getwd(&foo[0]) == NULL) {
       fprintf(tsdb_error_stream,
@@ -2181,7 +2176,8 @@ char *tsdb_expand_directory(char *base, char *name) {
     return(tsdb_expand_directory((char *)NULL, &foo[0]));
   } /* if */
   else {
-    if(base == NULL) {
+    if(name[0] && name[0] == '.' &&  name[1] == TSDB_DIRECTORY_DELIMITER[0]
+       || base == NULL) {
 #if defined(SUNOS)
       if(getwd(&foo[0]) == NULL) {
         fprintf(tsdb_error_stream,
@@ -2208,9 +2204,6 @@ char *tsdb_expand_directory(char *base, char *name) {
       (void)strcpy(&foo[0], &base[0]);
       if(foo[strlen(foo) - 1] != TSDB_DIRECTORY_DELIMITER[0]) {
         (void)strcat(&foo[0], TSDB_DIRECTORY_DELIMITER);
-      } /* if */
-      if(name[0] == '.' && name[1] == TSDB_DIRECTORY_DELIMITER[0]) {
-        (void)strcat(&foo[0], &name[2]);
       } /* if */
       else {
         (void)strcat(&foo[0], &name[0]);

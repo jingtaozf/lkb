@@ -115,18 +115,22 @@ void tsdb_info(Tsdb_value **value_list) {
                     tsdb.max_results);
             match = TRUE;
           } /* if */
-          if(!match) {
-            fprintf(tsdb_error_stream,
-                    "info(): invalid argument `%s'.\n",
-                    value_list[i]->value.identifier);
-            fflush(tsdb_error_stream);
-          } /* if */
-          if(!strncmp(value_list[i]->value.identifier, "tsdb_history_size", 16)
-             || !strncmp(value_list[i]->value.identifier, "history-size", 11)
+          if(!strncmp(value_list[i]->value.identifier, "tsdb_history_size", 17)
+             || !strncmp(value_list[i]->value.identifier, "history-size", 12)
              || !strcmp(value_list[i]->value.identifier, "all")) {
             fprintf(output,
                     "tsdb size of query result storage: %d.\n",
                     tsdb.history_size);
+            match = TRUE;
+          } /* if */
+          if(!strncmp(value_list[i]->value.identifier,
+                      "tsdb_uniquely_project", 21)
+             || !strncmp(value_list[i]->value.identifier,
+                         "uniquely-project", 16)
+             || !strcmp(value_list[i]->value.identifier, "all")) {
+            fprintf(output,
+                    "tsdb removal of duplicates from projections is %s.\n",
+                    (tsdb.status & TSDB_UNIQUELY_PROJECT ? "on" : "off"));
             match = TRUE;
           } /* if */
           if(!match) {
@@ -187,7 +191,7 @@ void tsdb_set(Tsdb_value *variable, Tsdb_value *value) {
     } /* else */
   } /* if */
   else if(!strncmp(variable->value.identifier, "tsdb_max_results", 16)
-     || !strncmp(variable->value.identifier, "max-results", 11)) {
+          || !strncmp(variable->value.identifier, "max-results", 11)) {
     if(value->type != TSDB_INTEGER) {
       fprintf(tsdb_error_stream,
               "set(): invalid (non-integer) type for `max-results'.\n");
@@ -206,7 +210,7 @@ void tsdb_set(Tsdb_value *variable, Tsdb_value *value) {
     } /* else */
   } /* if */
   else if(!strncmp(variable->value.identifier, "tsdb_history_size", 17)
-     || !strncmp(variable->value.identifier, "history-size", 12)) {
+          || !strncmp(variable->value.identifier, "history-size", 12)) {
     if(value->type != TSDB_INTEGER) {
       fprintf(tsdb_error_stream,
               "set(): invalid (non-integer) type for `history-size'.\n");
@@ -1062,7 +1066,9 @@ void tsdb_project(Tsdb_selection *selection,
   } /* for */
 #endif    
 
-  n  = tsdb_uniq_projection(projection,n);
+  if(tsdb.status & TSDB_UNIQUELY_PROJECT) {
+    (void)tsdb_uniq_projection(projection,n);
+  } /* if */
   if((output = tsdb_open_pager()) != NULL) {
     tsdb_print_projection(projection,n,format,output);
     pclose(output);

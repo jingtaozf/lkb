@@ -25,7 +25,7 @@ void free(void *foo) {
 Tsdb_selection *tsdb_last_result = (Tsdb_selection *)NULL;
 
 Tsdb tsdb = { 
-  0,                       /* status */
+  TSDB_UNIQUELY_PROJECT,   /* status */
   (Tsdb_relation **)NULL,  /* relations */
   (Tsdb_selection **)NULL, /* data */
   (char *)NULL,            /* input */

@@ -225,12 +225,13 @@ void tsdb_parse_options(int argc, char **argv) {
     {"result-prefix", required_argument, 0, TSDB_RESULT_PREFIX_OPTION},
     {"max-results", optional_argument, 0, TSDB_MAX_RESULTS_OPTION},
     {"debug-file", required_argument, 0, TSDB_DEBUG_FILE_OPTION},
+    {"history-size", required_argument, 0, TSDB_HISTORY_OPTION},
+    {"uniquely-project", optional_argument, 0, TSDB_UNIQUELY_PROJECT_OPTION},
     {"pager", optional_argument, 0, TSDB_PAGER_OPTION},
     {"query", required_argument, 0, TSDB_QUERY_OPTION},
     {"usage", no_argument, 0, TSDB_USAGE_OPTION},
     {"help", no_argument, 0, TSDB_USAGE_OPTION},
     {"version", no_argument, 0, TSDB_VERSION_OPTION},
-    {"history-size",required_argument,0,TSDB_HISTORY_OPTION},
     {0, 0, 0, 0}
   }; /* struct option */
 
@@ -325,6 +326,19 @@ void tsdb_parse_options(int argc, char **argv) {
           tsdb.pager = (char *)NULL;
         } /* else */
         break;
+      case TSDB_UNIQUELY_PROJECT_OPTION:
+        if(optarg != NULL) {
+          tsdb.status &= !TSDB_UNIQUELY_PROJECT;
+        } /* if */
+        else {
+          if(!strcmp(optarg, "on")) {
+            tsdb.status |= TSDB_UNIQUELY_PROJECT;
+          } /* if */
+          else {
+            tsdb.status &= !TSDB_UNIQUELY_PROJECT;
+          } /* else */
+        } /* else */
+        break;
       case TSDB_QUERY_OPTION:
         if(optarg != NULL) {
           tsdb.query = strdup(optarg);
@@ -407,7 +421,10 @@ void tsdb_usage() {
           "  `-max-results[={_0_ | 1 | ...}]' "
           "--- maximum of stored query results;\n");
   fprintf(tsdb_error_stream,
-          "  `-history-size=[={_0_ | 1 | ...}]' --- size of query storage;\n");
+          "  `-history-size[={_0_ | 1 | ...}]' --- size of query storage;\n");
+  fprintf(tsdb_error_stream,
+          "  `-uniquely-project[={on | _off_}]' --- "
+          "remove duplicates from projections;\n");
 #ifdef DEBUG
   fprintf(tsdb_error_stream,
           "  `-debug-file=file' --- output file for debug information;\n");
