@@ -26,6 +26,8 @@ update:
 	) 2>&1 | ${TEE} ${ROOT}/lkb/log/build
 	( \
 	  cd ${ROOT}/lkb/log; \
+          mail -s "automated build output" lkb-bugs@csli.stanford.edu \
+            < build; \
 	  cvs commit -m "" build; \
 	)
 
@@ -245,7 +247,7 @@ itsdb_libraries:
 	  cd ${ROOT}/lkb; \
 	  tar Svczf ${TARGET}/${DATE}/itsdb_libraries.tgz \
 	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
-              --exclude=".nfs*" \
+              --exclude=".nfs*" --exclude=".#*" \
 	      etc include lib man src/general/itsdb.lisp; \
 	)
 
@@ -254,7 +256,7 @@ itsdb_source:
 	  cd ${ROOT}/lkb; \
 	  tar Svczf ${TARGET}/${DATE}/itsdb_source.tgz \
 	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
-              --exclude=".nfs*" \
+              --exclude=".nfs*" --exclude=".#*" \
 	      src/systems/tsdb.system src/systems/pvm.system \
 	      src/pvm/*.lisp \
 	      src/tsdb/lisp src/tsdb/tcl \
@@ -274,8 +276,9 @@ itsdb_data:
 	      --exclude=src/tsdb/skeletons/english/vm31 \
 	      --exclude=src/tsdb/skeletons/english/vm32 \
 	      --exclude=src/tsdb/skeletons/english/wsj00 \
+	      --exclude=src/tsdb/skeletons/english/parc \
 	      --exclude=src/tsdb/skeletons/yy \
-	      --exclude=src/tsdb/home/trees \
+	      --exclude=src/tsdb/home/redwoods \
 	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" \
 	      src/tsdb/skeletons src/tsdb/home; \
