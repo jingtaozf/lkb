@@ -99,11 +99,8 @@
                (loop
                    until (or (null runs)
                              (and (null items)
-                                  (null (find-if 
-                                         #'consp runs
-                                         :key #'(lambda (run)
-                                                  (task-status 
-                                                   (get-field :task run)))))))
+                                  (null (find-if #'consp runs 
+                                                 :key #'run-status))))
                    with result = nil
                    with item = nil
                    for i = (or parse-id 0) then (+ i 1)
@@ -457,10 +454,10 @@
         (push (cons :gc gc) result)
         (push (cons :gcs gcs) result)
         (when (and timeup (not (= readings -1)))
-          (push (cons :error "timeup") result))
+          (push (cons :error (if (stringp timeup) timeup "timeup")) result))
         #+:page
         (unless (or interactive (= readings -1))
-          (let ((statistics (pg::rule-statistics)))
+          (let ((statistics (pg::summarize-rules)))
             (when statistics
               (push (cons :statistics statistics) result)))))
       result)))

@@ -2023,9 +2023,9 @@
     (force-output stream)
     (when file (close stream))))
 
-(defun rule-chart (data
-                   &key condition (attributes '(:executed successes))
-                        file (format :tcl) (view :graph) logscale meter)
+(defun rule-statistics (data
+                        &key condition (attributes '(:executed successes))
+                             file (format :tcl) (view :graph) logscale meter)
 
   (when attributes
     (let* ((stream (if file

@@ -546,8 +546,8 @@
                            nil 
                            "tsdb(1) `~a' Rule Application Profile"
                            data)))
-              (apply #'rule-chart (append arguments (list :file file
-                                                          :meter meter)))
+              (apply #'rule-statistics (append arguments (list :file file
+                                                               :meter meter)))
               (when (probe-file file)
                 (let ((return
                         (send-to-podium

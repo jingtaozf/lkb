@@ -233,9 +233,13 @@
               (udine::unify-costs-copy udine::*unification-costs*)))
         (push (cons :unifications unifications) result)
         (push (cons :copies copies) result)
-        (when (pg::maximal-number-of-edges-exceeded-p (pg::get-parser :syntax))
-          (push (cons :timeup pg::*edge-id-counter*) result)))
-      
+        (let ((timeup (or (pg::maximal-number-of-edges-exceeded-p 
+                           (pg::get-parser :syntax))
+                          (pg::maximal-number-of-tasks-exceeded-p 
+                           (pg::get-parser :syntax)))))
+          (when timeup
+            (push (cons :timeup timeup) result))))
+
       (append
        result
        (pairlis '(:tgc :tcpu :treal :conses :symbols :others)
@@ -557,7 +561,7 @@
                      -1)
                    redges))))
 
-(defun rule-statistics ()
+(defun summarize-rules ()
   (let* ((parser (get-parser :syntax))
          (chart (parser-chart parser))
          (pedges (chart-passive-items-starting-at chart))
@@ -637,17 +641,14 @@
 
 (defun maximal-number-of-edges-exceeded-p (parser)
   (declare (ignore parser))
-  (setf *maximal-number-of-edges-exceeded-p*
-    (and *maximal-number-of-edges*
-         (>= *edge-id-counter* *maximal-number-of-edges*))))
+  (and *maximal-number-of-edges*
+       (when (>= *edge-id-counter* *maximal-number-of-edges*)
+         (format nil "edge limit (~a)" *edge-id-counter*))))
 
-
-
-
-
-
-
-
-
-
-
+(defun maximal-number-of-tasks-exceeded-p (parser)
+  (when (eq (first (main::add-keys main::*parser*)) :taskslice)
+    (let* ((limit (second (main::add-keys main::*parser*)))
+           (statistics (parser-global-stats parser))
+           (executed (and statistics (stats-executed statistics))))
+      (when (and (integerp limit) (>= executed limit))
+        (format nil "task limit (~a)" executed)))))

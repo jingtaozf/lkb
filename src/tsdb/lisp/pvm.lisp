@@ -83,6 +83,10 @@
 
 (defparameter *pvm-master* nil)
 
+(defun run-status (run)
+  (let ((task (get-field :task run)))
+    (and task (task-status task))))
+
 (defun task-idle-p (task)
   (eq (task-status task) :ready))
 
