@@ -10,6 +10,8 @@
 
 ;;; 1997 - merged with YADU version
 
+(in-package :user)
+
 ;;; the main entry points are a series of functions with names like
 ;;; display-basic-fs
 ;;; these functions create a window. They then call
@@ -37,9 +39,9 @@
 ;;; B+C96 style lexical rules can be displayed in the type -> type format
 ;;; with the full fs associated with full-tdfs
 
-
 (defun add-type-and-active-fs-region (stream start-pos 
-      type-label-list val shrunk-p atomic-p &optional top-box full-tdfs)
+				      type-label-list val shrunk-p atomic-p 
+				      &optional top-box full-tdfs)
   (declare (ignore start-pos atomic-p top-box))
   (let ((type-rec
          (make-type-thing :value val
@@ -47,10 +49,9 @@
                           :shrunk-p shrunk-p
                           :full-tdfs full-tdfs)))
     (clim:with-text-style (stream '(nil :bold nil))
-         (clim:with-output-as-presentation 
-              (stream type-rec 'type-thing)
-              (format stream "~(~A~)" val)))))
-
+      (clim:with-output-as-presentation 
+	  (stream type-rec 'type-thing)
+	(write-string (string-downcase val) stream)))))
 
 
 ;;; ***** Records and classes *******
@@ -65,17 +66,25 @@
 
 (clim:define-application-frame active-fs-window ()
   ((fs :initform nil
-   :accessor active-fs-window-fs))
+       :accessor active-fs-window-fs))
   (:panes
-   (display :application
-	    :display-function 'draw-active-fs
-	    :text-cursor nil
-	    :width :compute :height :compute
-;	    :text-style *tree-text-style*
-	    :borders nil
-            :display-after-commands nil))
+   (display 
+    (clim:outlining (:thickness 1)
+      (clim:spacing (:thickness 1)  
+	(clim:scrolling (:scroll-bars :both)
+	  (clim:make-pane 'clim:application-pane
+			  :display-function 'draw-active-fs
+			  :text-cursor nil
+			  :width :compute :height :compute
+			  :output-record 
+			  (make-instance 'clim:standard-tree-output-history)
+			  :end-of-line-action :allow
+			  :end-of-page-action :allow
+			  :borders nil
+			  :background (clim:make-rgb-color 1 1 1)
+			  :display-time nil))))))
   (:layouts
-    (default display)))
+   (default display)))
 
 ;;; **** display function entry points ****
 
@@ -126,28 +135,61 @@
            (lrule-out (fs-display-record-lrout fs-record))
            (fudge 20)
            (max-width 0))
-    ;;; the terpris are here because of the CLIM 2.1 
-    ;;; bug of apparently not allowing for scroll bars when 
-    ;;; sizing a window
-      (terpri stream)
-      (terpri stream)
-      (terpri stream)
-      (draw-active-title stream fs title parents paths)
-      (when parents 
-            (setf max-width (+ fudge (display-active-parents parents stream))))
-      (let ((dag-width (or (if (tdfs-p fs) 
-                               (display-dag2 fs 'edit stream)
-                             (if lrule-out
-                                 (display-lrule fs lrule-out stream)
-                                 (display-dag1 fs 'edit stream))) 0)))
-        (setf max-width (max (+ fudge dag-width max-width)))
-        (when paths (setf max-width 
-                        (max max-width 
-                             (+ fudge (display-active-dpaths paths stream))))))
-      (move-to-x-y stream max-width (current-position-y stream))
-    ; for CLIM bug as above
-      (format stream ".~%")
-      stream)))
+      (silica:inhibit-updating-scroll-bars (stream)
+        (clim:with-output-recording-options (stream :draw nil :record t)
+	  (draw-active-title stream fs title parents paths)
+	  (when parents 
+	    (setf max-width (+ fudge (display-active-parents parents stream))))
+	  (let ((dag-width (or (if (tdfs-p fs) 
+				   (display-dag2 fs 'edit stream)
+				 (if lrule-out
+				     (display-lrule fs lrule-out stream)
+				   (display-dag1 fs 'edit stream))) 0)))
+	    (setf max-width (max (+ fudge dag-width max-width)))
+	    (when paths (setf max-width 
+			  (max max-width 
+			       (+ fudge (display-active-dpaths paths stream))))))
+	  (move-to-x-y stream max-width (current-position-y stream))))
+      (clim:replay (clim:stream-output-history stream) stream))
+    stream))
+
+#|
+(defun draw-active-fs (window stream &key max-width max-height)
+  (declare (ignore max-width max-height))
+  (mp:with-process-lock (*fs-output-lock*)
+    (let* ((fs-record (active-fs-window-fs window))
+           (fs (fs-display-record-fs fs-record))
+           (title (fs-display-record-title fs-record))
+           (parents (fs-display-record-parents fs-record))
+           (paths (fs-display-record-paths fs-record))
+           (lrule-out (fs-display-record-lrout fs-record))
+           (fudge 20)
+           (max-width 0)
+	   (record 
+	    (clim:with-output-recording-options (stream :draw nil :record t)
+	      (clim:with-output-to-output-record (stream 'clim:standard-tree-output-record)
+		(dotimes (x 1)
+		  (draw-active-title stream fs title parents paths)
+		  (when parents 
+		    (setf max-width (+ fudge (display-active-parents parents stream))))
+		  (let ((dag-width (or (if (tdfs-p fs) 
+					   (display-dag2 fs 'edit stream)
+					 (if lrule-out
+					     (display-lrule fs lrule-out stream)
+					   (display-dag1 fs 'edit stream))) 0)))
+		    (setf max-width (max (+ fudge dag-width max-width)))
+		    (when paths (setf max-width 
+				  (max max-width 
+				       (+ fudge (display-active-dpaths paths stream))))))
+		  (move-to-x-y stream max-width (current-position-y stream)))))))
+      (if (clim:output-record-p record)
+	  (progn
+	    (setq x clim:*application-frame*)
+	    (clim:replay record stream)
+	    )
+	(print "Not an output record!"))
+      record)))
+|#
 
 
 ;;; display-dag2 and display-lrule should be in output(td)fs.lsp
@@ -184,18 +226,15 @@
 (defun draw-active-title (stream fs title parents paths)
   (declare (ignore parents paths))
   (let* ((val (make-title-thing :title title :fs fs)))
-;         (short-title (subseq title 0 (position #\Space title))))
+    ;; (short-title (subseq title 0 (position #\Space title))))
     (clim:with-text-style (stream '(nil nil :large))
-              (clim:with-output-as-presentation 
-                   (stream val 'title-thing)
-                   (format stream "~%~A~%" title)))))
-
-
+      (clim:with-output-as-presentation 
+	  (stream val 'title-thing)
+	(format stream "~%~A~%" title)))))
 
 ;; 
 ;; Add [EXIT] button
 ;;
-
 
 (define-active-fs-window-command (com-exit-active-fs :menu "Close")
     ()

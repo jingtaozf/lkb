@@ -111,7 +111,8 @@
    ;; write new entry to the end of the file
    ;; update the hash table entry with the new file pointer
    (let ((current-file-end (file-length *psorts-stream*))
-         (specified-entry (cons id entry)))
+         (specified-entry (cons id entry))
+	 (*print-pretty* nil))
       (file-position *psorts-stream* current-file-end)
       (write specified-entry :stream *psorts-stream*)
       (setf (gethash id *psorts*)

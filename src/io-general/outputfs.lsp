@@ -80,14 +80,14 @@
          (format stream ")")))))
 
 (defmethod print-object ((object dag) (stream t))
-   ;; default dag structure output during lisp code tracing etc
-   ;; effectively ignores *print-level* etc since control never passes out
-   ;; to lisp printer again
-   (if *print-readably*
+  ;; default dag structure output during lisp code tracing etc
+  ;; effectively ignores *print-level* etc since control never passes out
+  ;; to lisp printer again
+  (if *print-readably*
       ;; print so object can be read back into lisp
       (call-next-method)
-      ;; usual case
-      (display-dag1 object 'linear stream)))
+    ;; usual case
+    (display-dag1 object 'linear stream)))
 
 
 (defun def-tdl-print-operations (indentation stream)
@@ -195,8 +195,8 @@
          (incf indentation))))))
 
 (defun make-output-label (real-name)
-   (let* ((real-string (format nil "~A" real-name))
-         (real-length (length real-string)))
+   (let* ((real-string (symbol-name real-name))
+	  (real-length (length real-string)))
       (or (cdr (assoc-if 
                #'(lambda (test-string)
                   (let ((test-l (length test-string)))
@@ -266,7 +266,7 @@
           (declare (ignore labels))
           (let ((y-pos (current-position-y stream)))
             (move-to-x-y stream indentation y-pos)
-            (format stream "[")
+            (write-char #\[ stream)
             (let ((start-pos (current-position stream)))   
               (add-type-and-active-fs-region stream start-pos type-label-list 
                                     type nil nil)
@@ -277,10 +277,11 @@
       #'(lambda (label depth)
          (push label type-label-list)
          (setf indentation (aref indentation-vector depth))         
-         (format stream "~%")
+         (write-char #\newline stream)
          (move-to-x-y stream indentation (current-position-y stream))
          (let ((output-label (make-output-label label)))
-            (format stream "~A: " output-label))
+	   (write-string output-label stream)
+	   (write-string ": " stream))
          (setf max-width (max (current-position-x stream) max-width))
          (setf indentation (current-position-x stream)))
       :max-width-fn
@@ -289,7 +290,7 @@
       #'(lambda (terminal)
           (declare (ignore terminal))
          (setq type-label-list (cdr type-label-list))
-         (format stream "]")
+         (write-char #\] stream)
          (setf indentation
             (+ indentation (stream-string-width stream "]")))
          (setf max-width (max (current-position-x stream) max-width)))))))

@@ -102,13 +102,19 @@
   ((nodes :initform nil
    :accessor parse-tree-nodes))
   (:panes
-   (display :application
-	    :display-function 'draw-parse-tree
-	    :text-cursor nil
-	    :width *parse-window-width* :height *parse-window-height*
-	    :text-style *ptree-text-style*
-	    :borders nil
-            :display-after-commands nil))
+   (display  
+    (clim:outlining (:thickness 1)
+      (clim:spacing (:thickness 1)  
+	(clim:scrolling (:scroll-bars :both)
+	  (clim:make-pane 'clim:application-pane
+			  :display-function 'draw-parse-tree
+			  :text-cursor nil
+			  :width *parse-window-width* 
+			  :height *parse-window-height*
+			  :text-style *ptree-text-style*
+			  :borders nil
+			  :background (clim:make-rgb-color 1 1 1)
+			  :display-time nil))))))
   (:layouts
     (:default display)))
 
@@ -136,6 +142,7 @@
                          (ptree-node-pstruct node)))) s))
 	   (write-string (princ-to-string (ptree-node-name node)) s)))
      #'ptree-node-children
+     :graph-type :tree
      :stream stream 
      :merge-duplicates nil
      :orientation :vertical
