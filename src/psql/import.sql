@@ -5,7 +5,7 @@ CREATE TABLE meta (
   var varchar(50),
   val varchar(250)
 );
-INSERT INTO meta VALUES ('db-version', '2.5');
+INSERT INTO meta VALUES ('db-version', '2.6');
 INSERT INTO meta VALUES ('filter', 'TRUE');
 
 ---
@@ -13,6 +13,9 @@ INSERT INTO meta VALUES ('filter', 'TRUE');
 ---
 CREATE TABLE revision (
   name VARCHAR(95) NOT NULL,
+  userid VARCHAR(25) DEFAULT user,
+  version INTEGER DEFAULT 0,
+  modstamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   type VARCHAR(95) NOT NULL,
   orthography VARCHAR(200) NOT NULL,
   orthkey VARCHAR(200) NOT NULL,
@@ -40,11 +43,8 @@ CREATE TABLE revision (
   genres VARCHAR(25),
   register VARCHAR(50),
   confidence real NOT NULL,
-  version INTEGER DEFAULT 0,
   source VARCHAR(50),
   flags INTEGER DEFAULT 0 NOT NULL,
-  userid VARCHAR(25) DEFAULT user,
-  modstamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
  PRIMARY KEY (name,version,userid)
 );
 
@@ -59,6 +59,9 @@ CREATE INDEX revision_name_modstamp ON revision (name, modstamp);
 CREATE VIEW revision_view AS
  SELECT
   lower(name) AS name,
+  userid,
+  version,
+  modstamp,
   lower(type) AS type,
   lower(orthography) AS orthography,
   lower(orthkey) AS orthkey,
@@ -86,11 +89,8 @@ CREATE VIEW revision_view AS
   genres,
   register,
   confidence,
-  version,
   source,
-  flags,
-  userid,
-  modstamp
+  flags
  FROM revision;
 
 ---
@@ -109,6 +109,9 @@ PRIMARY KEY (name)
 CREATE VIEW multi_revision AS 
 	SELECT 
   multi.name,
+  rev.userid,
+  rev.version,
+  rev.modstamp,
   COALESCE(multi.type,rev.type) AS type,
   rev.orthography,
   rev.orthkey,
@@ -137,12 +140,9 @@ CREATE VIEW multi_revision AS
   rev.genres,
   rev.register,
   rev.confidence,
-  rev.version,
 
   rev.source,
-  rev.flags,
-  rev.userid,
-  rev.modstamp
+  rev.flags
 
 	FROM multi LEFT JOIN revision_view AS rev 
 		ON rev.name = multi.verb_id;
@@ -184,6 +184,9 @@ CREATE TABLE scratch (
 CREATE VIEW scratch_revision AS 
 	SELECT 
   name,
+  NULL::VARCHAR AS userid,
+  NULL::INTEGER AS version,
+  'infinity'::TIMESTAMP AS modstamp
   type,
   orthography,
   orthkey,
@@ -214,18 +217,16 @@ CREATE VIEW scratch_revision AS
   NULL::VARCHAR AS register,
 
   NULL::REAL AS confidence,
-  NULL::INTEGER AS version,
 
   'scratch'::VARCHAR AS source,
-  NULL::INTEGER AS flags,
-  NULL::VARCHAR AS userid,
-  'infinity'::TIMESTAMP AS modstamp
+  NULL::INTEGER AS flags
 
 	FROM scratch;
 
 ---
 --- sql queries embedded in db
 ---
+
 CREATE TABLE qry (
   fn VARCHAR(50),
   arity int,
@@ -520,19 +521,11 @@ INSERT INTO defn VALUES ( 'erg2', 'id', 'name', '', 'symbol' );
 INSERT INTO defn VALUES ( 'erg2', 'orth', 'orthography', '', 'string-list' );
 INSERT INTO defn VALUES ( 'erg2', 'unifs', 'type', 'nil', 'symbol' );
 INSERT INTO defn VALUES ( 'erg2', 'unifs', 'orthography', '(stem)', 'string-fs' );
---<<<<<<< import.sql
---INSERT INTO defn VALUES ( 'erg2', 'unifs', 'keyrel', '(synsem lkeys keyrel pred)', 'mixed' );
---INSERT INTO defn VALUES ( 'erg2', 'unifs', 'keytag', '(synsem lkeys keyrel carg)', 'string' ); 
---INSERT INTO defn VALUES ( 'erg2', 'unifs', 'altkey', '(synsem lkeys altkeyrel pred)', 'symbol' );
---INSERT INTO defn VALUES ( 'erg2', 'unifs', 'altkeytag', '(synsem lkeys altkeyrel carg)', 'mixed' );
---INSERT INTO defn VALUES ( 'erg2', 'unifs', 'alt2key', '(synsem lkeys alt2keyrel pred)', 'symbol' );
---=======
 INSERT INTO defn VALUES ( 'erg2', 'unifs', 'keyrel', '(synsem lkeys keyrel pred)', 'mixed' );
 INSERT INTO defn VALUES ( 'erg2', 'unifs', 'keytag', '(synsem lkeys keyrel carg)', 'string' ); 
 INSERT INTO defn VALUES ( 'erg2', 'unifs', 'altkey', '(synsem lkeys altkeyrel pred)', 'mixed' );
 INSERT INTO defn VALUES ( 'erg2', 'unifs', 'altkeytag', '(synsem lkeys altkeyrel carg)', 'string' );
 INSERT INTO defn VALUES ( 'erg2', 'unifs', 'alt2key', '(synsem lkeys alt2keyrel pred)', 'mixed' );
--->>>>>>> 1.29
 INSERT INTO defn VALUES ( 'erg2', 'unifs', 'compkey', '(synsem lkeys --compkey)', 'symbol' );
 INSERT INTO defn VALUES ( 'erg2', 'unifs', 'ocompkey', '(synsem lkeys --ocompkey)', 'symbol' );
 
