@@ -45,12 +45,14 @@
 ;;; paths); e.g. wherever `CONT' is seen in a structure, its value is ignored.
 ;;;                                                        (15-sep-99  -  oe)
 ;;;
+
 (defparameter *partial-dag-interpretation* nil)
 
 ;;;
 ;;; [incr tsdb()] support: global counters for calls to unify-dags() and
 ;;; copy-dag().
 ;;;
+
 (defparameter *unifications* 0)
 (defparameter *copies* 0)
 (declaim (type fixnum *unifications* *copies*))
@@ -458,7 +460,23 @@
                      (get-value-at-end-of one-step-down
                                           (cdr labels-chain)))
                   (t nil))))))
-      
+
+;;;
+;;; to simplify interaction with the quick check, viz. to avoid prediction of
+;;; unification failure where partial unification would in fact succeed, the
+;;; minimal appropriate constraint for a feature is returned when partially
+;;; unifying values for that feature.                      (27-sep-99  -  oe)
+;;;
+
+(defun minimal-type-for (feature)
+  (or (get feature :constraint)
+      (let* ((introduction (maximal-type-of feature))
+             (constraint (and introduction (constraint-of introduction)))
+             (type (and constraint 
+                        (type-of-fs (get-dag-value constraint feature)))))
+        (setf (get feature :constraint) type))))
+
+
 ;;; **********************************************************************
 ;;; Unify
 
@@ -500,16 +518,16 @@
                (unify1 dag1 dag2 nil)
                (when (or *unify-debug* *unify-debug-cycles*)
                  (if (cyclic-dag-p dag1)
-                     ;;
-                     ;; for the (eq *unify-debug* :return) variant the 
-                     ;; %failure% value is determined in cyclic-dag-p()
-                     ;; already; hence suppress printed output here.  the
-                     ;; baroque conditionals preserve the original LKB
-                     ;; behaviour.                   (19-mar-99  -  oe)
-                     ;;
-                     (unless (and (null *unify-debug-cycles*)
-                                  (eq *unify-debug* :return))
-                       (format t "~%Unification failed - cyclic result"))
+                   ;;
+                   ;; for the (eq *unify-debug* :return) variant the 
+                   ;; %failure% value is determined in cyclic-dag-p()
+                   ;; already; hence suppress printed output here.  the
+                   ;; baroque conditionals preserve the original LKB
+                   ;; behaviour.                   (19-mar-99  -  oe)
+                   ;;
+                   (unless (and (null *unify-debug-cycles*)
+                                (eq *unify-debug* :return))
+                     (format t "~%Unification failed - cyclic result"))
                    (when (and *unify-debug* 
                               (not (eq *unify-debug* :return)))
                      (format t "~%Unification succeeded"))))
@@ -566,6 +584,18 @@
          "~%Unification failed: unifier found cycle at < ~{~A ~^: ~}>" 
          (reverse path))))
     (throw '*fail* nil))
+   ((and *partial-dag-interpretation*
+         (smember (first path) *partial-dag-interpretation*))
+    (let ((type (minimal-type-for (first path))))
+      (cond
+       ((eq (dag-type dag1) type)
+        (setf (dag-forward dag2) dag1))
+       ((eq (dag-type dag2) type)
+        (setf (dag-forward dag1) dag2))
+       (t
+        (let ((new (may-copy-constraint-of type)))
+          (setf (dag-forward dag1) new)
+          (setf (dag-forward dag2) new))))))
    ((not (eq dag1 dag2)) (unify2 dag1 dag2 path)))
   dag1)
 
@@ -575,87 +605,84 @@
 (defvar *type-constraint-list* nil)
 
 (defun unify2 (dag1 dag2 path)
-  (if (and *partial-dag-interpretation*
-           (member (first path) *partial-dag-interpretation* :test #'eq))
-    (setf (dag-forward dag1) dag2)
-    (multiple-value-bind (new-type constraintp)
-        (find-gcsubtype (unify-get-type dag1) (unify-get-type dag2))
-      (if new-type
-        (progn
-          (setf (dag-new-type dag1) new-type)
-          (if (type-spec-atomic-p new-type)
-            (if (or (dag-arcs dag1) (dag-comp-arcs dag1)
-                    (dag-arcs dag2) (dag-comp-arcs dag2))
-                (progn
-                  (when *unify-debug*
-                    (if (eq *unify-debug* :return)
-                      (setf %failure% (list :atomic (reverse path)))
-                      (format 
-                       t 
-                       "~%Unification failed due to atomic/~
-                        non-atomic clash at path < ~{~A ~^: ~}>" 
-                       (reverse path))))
-                  (throw '*fail* nil))
+  (multiple-value-bind (new-type constraintp)
+      (find-gcsubtype (unify-get-type dag1) (unify-get-type dag2))
+    (if new-type
+      (progn
+        (setf (dag-new-type dag1) new-type)
+        (if (type-spec-atomic-p new-type)
+          (if (or (dag-arcs dag1) (dag-comp-arcs dag1)
+                  (dag-arcs dag2) (dag-comp-arcs dag2))
+              (progn
+                (when *unify-debug*
+                  (if (eq *unify-debug* :return)
+                    (setf %failure% (list :atomic (reverse path)))
+                    (format 
+                     t 
+                     "~%Unification failed due to atomic/~
+                      non-atomic clash at path < ~{~A ~^: ~}>" 
+                     (reverse path))))
+                (throw '*fail* nil))
+            (setf (dag-forward dag2) dag1))
+          (progn
+            ;; unify in constraints if necessary - may have to copy them to
+            ;; prevent separate uses of same constraint in same unification
+            ;; becoming reentrant
+            (when (and constraintp *unify-wffs*)
+              (let ((constraint (if *expanding-types*
+                                  (copy-dag-completely
+                                   (wf-constraint-of new-type))
+                                  (may-copy-constraint-of new-type))))
+                (when *recording-constraints-p*
+                  (pushnew new-type *type-constraint-list* :test #'eq))
+                (if  *unify-debug*
+                  (let ((res 
+                         (catch '*fail* (unify1 dag1 constraint path))))
+                    (unless res
+                      (if (eq *unify-debug* :return)
+                        (setf %failure% 
+                          (list :constraints 
+                                (reverse path) new-type nil nil))
+                        (format 
+                         t 
+                         "~%Unification with constraint 
+                          of type ~A failed ~
+                          at path < ~{~A ~^: ~}>" 
+                         new-type (reverse path)))
+                      (throw '*fail* nil)))
+                  (unify1 dag1 constraint path)))
+              ;; dag1 might just have been forwarded so dereference it again
+              (setq dag1 (deref-dag dag1)))
+            ;; cases for each of dag1 and dag2 where they have no arcs just
+            ;; considering straightforward use of unify1: if we've
+            ;; previously visited a node with no arcs then it must have got
+            ;; forwarded then so we won't ever visit it again - so no need
+            ;; to test for presence of any comp-arcs BUT:
+            ;; unify-paths-dag-at-end-of1 adds to comp-arcs independently so
+            ;; we do need the additional tests
+            (cond
+             ((and (null (dag-arcs dag1)) (null (dag-comp-arcs dag1)))
+              (setf (dag-new-type dag2) new-type)
+              (setf (dag-forward dag1) dag2))
+             ((and (null (dag-arcs dag2)) (null (dag-comp-arcs dag2)))
               (setf (dag-forward dag2) dag1))
-            (progn
-              ;; unify in constraints if necessary - may have to copy them to
-              ;; prevent separate uses of same constraint in same unification
-              ;; becoming reentrant
-              (when (and constraintp *unify-wffs*)
-                (let ((constraint (if *expanding-types*
-                                    (copy-dag-completely
-                                     (wf-constraint-of new-type))
-                                    (may-copy-constraint-of new-type))))
-                  (when *recording-constraints-p*
-                    (pushnew new-type *type-constraint-list* :test #'eq))
-                  (if  *unify-debug*
-                    (let ((res 
-                           (catch '*fail* (unify1 dag1 constraint path))))
-                      (unless res
-                        (if (eq *unify-debug* :return)
-                          (setf %failure% 
-                            (list :constraints 
-                                  (reverse path) new-type nil nil))
-                          (format 
-                           t 
-                           "~%Unification with constraint 
-                            of type ~A failed ~
-                            at path < ~{~A ~^: ~}>" 
-                           new-type (reverse path)))
-                        (throw '*fail* nil)))
-                    (unify1 dag1 constraint path)))
-                ;; dag1 might just have been forwarded so dereference it again
-                (setq dag1 (deref-dag dag1)))
-              ;; cases for each of dag1 and dag2 where they have no arcs just
-              ;; considering straightforward use of unify1: if we've
-              ;; previously visited a node with no arcs then it must have got
-              ;; forwarded then so we won't ever visit it again - so no need
-              ;; to test for presence of any comp-arcs BUT:
-              ;; unify-paths-dag-at-end-of1 adds to comp-arcs independently so
-              ;; we do need the additional tests
-              (cond
-               ((and (null (dag-arcs dag1)) (null (dag-comp-arcs dag1)))
-                (setf (dag-new-type dag2) new-type)
-                (setf (dag-forward dag1) dag2))
-               ((and (null (dag-arcs dag2)) (null (dag-comp-arcs dag2)))
-                (setf (dag-forward dag2) dag1))
-               (t
-                (setf (dag-forward dag2) dag1)
-                (setf (dag-copy dag1) :inside)
-                (unify-arcs dag1 dag2 path)
-                (setf (dag-copy dag1) nil))))))
-        (progn
-          (when *unify-debug*
-            (if (eq *unify-debug* :return)
-              (setf %failure% 
-                (list :clash (reverse path) 
-                      (unify-get-type dag1) (unify-get-type dag2)))
-              (format 
-               t 
-               "~%Unification of ~A and ~A failed at path < ~{~A ~^: ~}>"
-               (unify-get-type dag1) (unify-get-type dag2) 
-               (reverse path))))
-          (throw '*fail* nil))))))
+             (t
+              (setf (dag-forward dag2) dag1)
+              (setf (dag-copy dag1) :inside)
+              (unify-arcs dag1 dag2 path)
+              (setf (dag-copy dag1) nil))))))
+      (progn
+        (when *unify-debug*
+          (if (eq *unify-debug* :return)
+            (setf %failure% 
+              (list :clash (reverse path) 
+                    (unify-get-type dag1) (unify-get-type dag2)))
+            (format 
+             t 
+             "~%Unification of ~A and ~A failed at path < ~{~A ~^: ~}>"
+             (unify-get-type dag1) (unify-get-type dag2) 
+             (reverse path))))
+        (throw '*fail* nil)))))
 
 (defmacro unify-arcs-find-arc (attribute arcs comp-arcs)
   ;; find arc in arcs or comp-arcs with given attribute - also used in
