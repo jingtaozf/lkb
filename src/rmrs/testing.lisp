@@ -69,7 +69,7 @@
 ("Dogs chase whatever barks" . 1) ; 56
 ("The dog barked every day" . 1)
 ("When did the dog bark" . 3)
-("Three of the dogs bark" . 2)
+("Three of the dogs bark" . 1)
 ("Three bark" . 1)
 ("Browne's dog barks" . 1) ; 61
 ("Browne's barks" . 2)
@@ -94,7 +94,7 @@
 ("Abrams believes Browne to be barking" . 1) ; 81
 ("It bothered Abrams that Browne barked" . 1)
 ("It took Abrams ten minutes to arrive" . 2)
-("Abrams left it to Browne to bark" . 1)
+("Abrams left it to Browne to bark" . 2)
 ("Abrams strikes Browne as old" . 1)
 ("Browne considers Abrams old" . 1) ; 86
 ("Abrams liked the idea that Browne could bark" . 1)
