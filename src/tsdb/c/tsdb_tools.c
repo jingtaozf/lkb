@@ -30,15 +30,37 @@ extern int errno;
 #include "errors.h"
 
 
+BOOL tsdb_selection_tree(Tsdb_node *node,
+                         Tsdb_selection* selection) {
+  int s_attributes = 4, i;
+  char**
+    attributes = (char **)malloc(s_attributes * sizeof(char *));
+  
+  if (!attributes) {
+    return FALSE ;
+  }
+  
+  memset(attributes,'\0',s_attributes*sizeof(char*));
+  attributes = tsdb_condition_attributes(node,attributes,&s_attributes);
+  
+  if (!attributes) 
+    return FALSE;
+  for (i=0;attributes[i];i++) {
+    if (!tsdb_attribute_in_selection(selection,attributes[i])) {
+      free(attributes);
+      return FALSE;
+    } /* if */
+  } /* for */
+  free(attributes);
+  return TRUE;
+} /* tsdb_selection_tree() */
 
 BOOL tsdb_verify_tuple(Tsdb_node* node, Tsdb_tuple** tuple ) {
-  BOOL left,right;
-  BYTE cmp;
+  BOOL left;
   int* desc;
  
   if (node==NULL) 
     return TRUE;
-  
   if (node->node->type==TSDB_CONNECTIVE) {
     left = tsdb_verify_tuple(node->left,tuple);
     if ((node->node->value.connective==TSDB_AND)&&left) {
@@ -56,7 +78,7 @@ BOOL tsdb_verify_tuple(Tsdb_node* node, Tsdb_tuple** tuple ) {
   
   if (node->node->type==TSDB_OPERATOR) {
     desc = node->left->node->value.descriptor;
-    if (tsdb_value_satisfies(tuple[desc[0]][desc[1]],
+    if (tsdb_value_satisfies(tuple[desc[0]]->fields[desc[1]],
                              node->node,
                              node->right->node))
       return TRUE;
@@ -76,6 +98,10 @@ void tsdb_field_to_descriptor(Tsdb_selection* selection,Tsdb_node* n) {
       if (!strcmp(relation->fields[j],n->node->value.string)) {
         tsdb_free_tsdb_value(n->node);
         n->node = tsdb_descriptor(i,j);
+#ifdef DTOM 
+        fprintf(TSDB_DEFAULT_STREAM,"rel %d attr %d\n",i,j);
+#endif     
+        return;
       } /* if */         
     } /* for */
   } /* for */
@@ -83,16 +109,28 @@ void tsdb_field_to_descriptor(Tsdb_selection* selection,Tsdb_node* n) {
 } /* tsdb_field_to_descriptor() */
 
 Tsdb_node* tsdb_prepare_tree(Tsdb_node* node,Tsdb_selection* selection) {
-  Tsdb_node* the_node;
-  int r,f;
   
   if (node==NULL) 
     return NULL;
+#ifdef DTOM
+    tsdb_print_node(node,TSDB_DEFAULT_STREAM);
+    fprintf(TSDB_DEFAULT_STREAM,"\n");
+#endif
   if (node->node->type==TSDB_CONNECTIVE) {
+#ifdef DTOM
+    tsdb_print_node(node->left,TSDB_DEFAULT_STREAM);
+    fprintf(TSDB_DEFAULT_STREAM,"\n");
+#endif
     tsdb_prepare_tree(node->left,selection);
+#ifdef DTOM
+    tsdb_print_node(node->right,TSDB_DEFAULT_STREAM);
+    fprintf(TSDB_DEFAULT_STREAM,"\n");
+#endif
     tsdb_prepare_tree(node->right,selection);
   }
   if (node->node->type== TSDB_OPERATOR) {
     tsdb_field_to_descriptor(selection,node->left);
   }
+
+  return node;
 } /* tsdb_prepare_tree() */
