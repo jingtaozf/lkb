@@ -6,15 +6,6 @@
 
 ;;; RMRS windows
 
-;;;    RMRS comparison - to-do
-;;;
-;;;    put on a menu somewhere 
-;;;    ("RMRS compare" :value rmrs-compare :active ,*mrs-loaded*)
-;;; 
-;;;    (rmrs-compare (funcall 'show-mrs-rmrs-compare-window rmrs1 rmrs2 
-;;;      comparison-record title))
-;;;
-
 ;;; Frames
 
 (define-lkb-frame rmrs-ordinary
@@ -47,6 +38,16 @@
   :height *parse-window-height*)
 
 ;;; end frames
+
+(define-rmrs-ordinary-command (com-select-rmrs :menu "Select") 
+    ()
+  (set-selected-rmrs-from-menu 
+   (rmrs-ordinary-rmrs clim:*application-frame*)))
+
+(define-mrs-rmrs-command (com-select-mrs-rmrs :menu "Select") 
+    ()
+  (set-selected-rmrs-from-menu 
+   (mrs-rmrs-rmrs clim:*application-frame*)))
 
 ;;; ordinary window for one RMRS
 
@@ -254,17 +255,36 @@
 (defvar *rmrs-input-str* nil
   "just for display purposes, set by parser")
 
+(defun select-rmrs-from-emacs (str)
+  (with-package (:mrs)
+    (let ((rmrs (mrs::read-single-rmrs-from-string str)))
+      (when (and rmrs (mrs::rmrs-p rmrs))
+	    (set-selected-rmrs-from-menu rmrs)))))
+    
+(defun set-selected-rmrs-from-menu (rmrs)
+  (when (and rmrs (mrs::rmrs-p rmrs))
+    (cond ((or (null *selected-rmrs*)
+	       (and *selected-rmrs* *compared-rmrs*))
+	   (setf *compared-rmrs* nil)
+	   (setf *selected-rmrs* rmrs)
+	   (with-output-to-top () 
+	       (format t "~%Selected RMRS 1")))
+	  (t (setf *compared-rmrs* rmrs)
+	     (with-output-to-top ()
+		 (format t "~%Selected RMRS 2"))))))
+
 
 (defun compare-rmrs-interactive nil  
   (let ((rmrs1 *selected-rmrs*)
         (rmrs2 *compared-rmrs*)
         (strpos-p *pos-sensitive-rmrs-p*)
         (input (or *rmrs-input-str* "Unknown")))
-    (when (and (mrs::rmrs-p rmrs1)
-               (mrs::rmrs-p rmrs2))
-      (dolist (comparison-record (mrs::compare-rmrs rmrs1 rmrs2 strpos-p))
-        (show-mrs-rmrs-compare-window rmrs1 rmrs2 
-                                      comparison-record input)))))
+    (unless (and (mrs::rmrs-p rmrs1)
+		 (mrs::rmrs-p rmrs2))
+      (error "No RMRSs to compare"))
+    (dolist (comparison-record (mrs::compare-rmrs rmrs1 rmrs2 strpos-p))
+      (show-mrs-rmrs-compare-window rmrs1 rmrs2 
+				    comparison-record input))))
 
 
 ;;; Utility fn
@@ -280,4 +300,23 @@
       (let ((mrs (mrs::extract-mrs selected-parse)))
 	(unless mrs (error "~%Can't extract MRS"))
 	(mrs::mrs-to-rmrs mrs)))))
+
+;;; 
+
+(defun generate-rmrs-from-emacs (str)
+  (with-package (:mrs)
+    (let ((rmrs (mrs::read-single-rmrs-from-string str)))
+      (when (and rmrs (mrs::rmrs-p rmrs))
+	(generate-from-rmrs rmrs)))))
+
+(defun generate-from-rmrs (rmrs)
+  (let ((mrs (mrs::convert-rmrs-to-mrs rmrs)))
+    (when mrs
+      ;;; (mrs-quick-check-lex-retrieval mrs)
+      ;;; FIX
+      (let ((lkb::*bypass-equality-check* t))
+	(generate-from-mrs mrs)
+	)
+      (show-gen-result))))
+
 
