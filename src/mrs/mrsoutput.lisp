@@ -337,15 +337,6 @@ duplicate variables")
                           label-list))
            (pred-type (if pred (fs-type (rest pred)))))
       (when rawp (return-from extract-pred-from-rel-fs pred))
-      ;;
-      ;; _fix_me_
-      ;; i believe this is too robust: in PRED-style mode, we should not end up
-      ;; using the relation type in case there is no PRED.      (1-nov-03; oe)
-      ;;
-      ;; we could of course use (lkb::minimal-type-for *rel-name-path*) here,
-      ;; in a sense as a mimicry of making the rule description well-formed,
-      ;; but it seems the munging code has to in general allow for nil values.
-      ;;                                                        (3-nov-03; oe)
       (if (and pred-type (not (is-top-type pred-type)))
         pred-type
         (unless *rel-name-path* (fs-type rel-fs)))))
