@@ -18,6 +18,9 @@
 (defstruct (mrs-rule-predicate)
   value)
 
+(defstruct (mrs-rule-constant)
+  value)
+
 ;;; Conversion rules
 
 
@@ -61,16 +64,24 @@
      (unless (eql next-char #\:)
        (error "~%Incorrect syntax following rule name ~A" id))
      (read-char istream)
-     (let ((next-char2 (peek-char t istream nil 'eof)))
+     (let ((next-char2 (peek-char t istream nil 'eof))
+           (normal-unifs nil)
+           (funny-unifs nil))
        (unless (eql next-char2 #\=)
             (error "~%Incorrect syntax following rule name ~A" id))   
        (read-char istream)
        (setf non-def
              (read-expanded-avm-def istream id))
        (check-for #\. istream id)
-       (let* ((temp-fs (process-unifications non-def))
+       (for unif in non-def
+            do
+            (if (funny-unification-p unif)
+                (push unif funny-unifs)
+                (push unif normal-unifs)))
+       (let* ((temp-fs (process-unifications normal-unifs))
               (entry (if temp-fs
-                         (mrs::construct-munge-rule-from-fs id temp-fs))))
+                         (mrs::construct-munge-rule-from-fs id temp-fs
+                                                            funny-unifs))))
          (push temp-fs *mrs-rule-fs-list*) ; just for debugging
          (if entry
              (push entry *ordered-mrs-rule-list*))))))
@@ -118,9 +129,10 @@
   (let* ((next-char (peek-char t istream nil 'eof))
          (value (read istream)))
     (list (make-funny-unification 
-           :lhs (create-path-from-feature-list (reverse path-so-far))
+           :lhs (reverse path-so-far)
            :rhs (case next-char
                   (#\u :unique)
+                  (#\c (make-mrs-rule-constant :value value))
                   (#\( (make-mrs-rule-sexp :value value))
                   (t (make-mrs-rule-predicate :value value))))
           (make-tdl-path-value-unif 

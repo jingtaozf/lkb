@@ -51,15 +51,31 @@
        ARG: e ] ))
 |#
 
+(defstruct (action-condition)
+  feat
+  value)
+
+(defun get-appropriate-constant (action-conditions feature)
+  (dolist (ac action-conditions)
+    (let ((ac-feat (action-condition-feat ac))
+          (ac-val (action-condition-value ac)))
+    (when (and
+           (or (and (null feature) (null ac-feat))
+               (same-names feature ac-feat))
+           (mrs-rule-constant-p ac-val))
+      (return (mrs-rule-constant-value ac-val))))))
+
 ;;; utility structure - for passing results around
 
 (defstruct (munge-result)
   matching-rels
-  bindings)
+  bindings
+  constant-bindings)
 
 (defstruct (psoa-result)
   matching-psoa
-  bindings)
+  bindings
+  constant-bindings)
 
 (defparameter *original-variables* nil)
 
@@ -159,10 +175,11 @@
         (liszt (psoa-liszt mrs)))
       (setf results
             (if i-liszt
-              (for int-res in (match-mrs-rule-rels i-liszt liszt nil initial-bindings)
+              (for int-res in (match-mrs-rule-rels i-liszt liszt nil initial-bindings nil)
                    collect
                    (make-psoa-result 
                     :bindings (munge-result-bindings int-res)
+                    :constant-bindings (munge-result-constant-bindings int-res)
                     :matching-psoa                
                     (make-psoa :liszt (munge-result-matching-rels int-res))))
               (list (make-psoa-result 
@@ -185,7 +202,8 @@
        filter
        (let ((message-results 
               (match-mrs-rule-rels i-message message nil 
-                                   (psoa-result-bindings curr-res))))
+                                   (psoa-result-bindings curr-res)
+                                   (psoa-result-constant-bindings curr-res))))
          (for message-result in message-results
               collect
               (let ((new-psoa 
@@ -193,6 +211,8 @@
                 (setf (psoa-message new-psoa) 
                       (munge-result-matching-rels message-result))
                 (make-psoa-result 
+                 :constant-bindings 
+                 (munge-result-constant-bindings message-result)
                  :bindings (munge-result-bindings message-result)
                  :matching-psoa new-psoa))))))
 
@@ -201,7 +221,8 @@
        filter
        (let ((wgliszt-results 
               (match-mrs-rule-rels i-wgliszt wgliszt nil 
-                                   (psoa-result-bindings curr-res))))
+                                   (psoa-result-bindings curr-res)
+                                   (psoa-result-constant-bindings curr-res))))
          (for wgliszt-result in wgliszt-results
               collect
               (let ((new-psoa 
@@ -209,6 +230,8 @@
                 (setf (psoa-wgliszt new-psoa) 
                       (munge-result-matching-rels wgliszt-result))
                 (make-psoa-result 
+                 :constant-bindings 
+                 (munge-result-constant-bindings wgliszt-result)
                  :bindings (munge-result-bindings wgliszt-result)
                  :matching-psoa new-psoa))))))
                  
@@ -217,7 +240,8 @@
        append
        (let ((hcons-results 
               (match-mrs-rule-hcons i-h-cons hcons nil 
-                                   (psoa-result-bindings curr-res))))
+                                    (psoa-result-bindings curr-res)
+                                    (psoa-result-constant-bindings curr-res))))
          (for hcons-result in hcons-results
               collect
               (let ((new-psoa 
@@ -225,20 +249,41 @@
                 (setf (psoa-h-cons new-psoa) 
                       (munge-result-matching-rels hcons-result))
                 (make-psoa-result 
+                 :constant-bindings 
+                 (munge-result-constant-bindings hcons-result)
                  :bindings (munge-result-bindings hcons-result)
                  :matching-psoa new-psoa))))))
 
-              
+(defun compatible-types-or-values (val1 val2)
+  (or (eql val1 *toptype*) (eql val2 *toptype*)
+      (if (and (symbolp val1) (symbolp val2))
+          (same-names val1 val2)
+        (equal val1 val2))))
+
 (defun same-names (sym1 sym2)
   ;;; avoid package problems
   (equal (symbol-name sym1) (symbol-name sym2)))
 
-(defun same-values (val1 val2)
-  (if (and (symbolp val1) (symbolp val2))
-      (same-names val1 val2)
-      (equal val1 val2)))
+(defun find-constant-values (extra rel constant-bindings)
+  (let ((new-bindings nil))
+     (for ac in extra
+          do
+          (let ((ac-feat (action-condition-feat ac))
+                (ac-val (action-condition-value ac)))
+            (when (mrs-rule-constant-p ac-val)
+              (let ((rel-val (if (null ac-feat)
+                                 (rel-sort rel)
+                               (dolist (fvp (rel-flist rel))
+                                 (when (same-names (fvpair-feature fvp) ac-feat)
+                                   (return (fvpair-value fvp)))))))
+                (when rel-val
+                  (push (cons (mrs-rule-constant-value ac-val)
+                              rel-val)
+                        new-bindings))))))
+  (append new-bindings constant-bindings)))
 
-(defun match-mrs-rule-rels (remaining-rels rels matching-rels bindings)
+(defun match-mrs-rule-rels (remaining-rels rels matching-rels bindings 
+                            constant-bindings)
   ;;; remaining-rels is the list of things in the rule,
   ;;; rels is the list of rels in the relevant part of the input MRS.
   ;;; Each function call attempts to match the top remaining-rel
@@ -252,13 +297,15 @@
       ; effectively allowing material to be appended to a LISZT
       ; without anything being deleted
       (list (make-munge-result :matching-rels matching-rels
+                               :constant-bindings constant-bindings
                                :bindings bindings))
     (let ((input-rel (car remaining-rels))
           (results nil))
       (dolist (rel rels)
-        (when (and (same-names (rel-sort input-rel)
+        (when (and (compatible-types-or-values (rel-sort input-rel)
                         (rel-sort rel))
                    (not (member rel matching-rels)))
+          ; conditions such as predicates should be checked here
           (let ((local-bindings (copy-alist bindings)))
             (setf local-bindings
                 (bindings-match (get-var-num (rel-handel input-rel))
@@ -272,6 +319,10 @@
                      (rel-flist rel)
                      local-bindings))
               (when local-bindings
+              ; constant-values are also local to a particular solution
+                (setf constant-bindings
+                  (find-constant-values (rel-extra input-rel) rel
+                                        constant-bindings))
               ; locally successful match, so we assume this
               ; condition is checked off, and continue with
               ; the rest of the conditions
@@ -279,18 +330,21 @@
                                       (cdr remaining-rels)
                                       rels
                                       (cons rel matching-rels)
-                                      local-bindings)))
+                                      local-bindings
+                                      constant-bindings)))
                   (when local-results
                               ; all conditions satisfied
                     (setf results (append local-results results)))))))))
         results)))
 
 (defun match-mrs-rule-hcons (remaining-hcons hcons-list 
-                                             matching-hcons bindings)
+                             matching-hcons bindings 
+                             constant-bindings)
   ; similar to above, but for hcons
   (if (null remaining-hcons)
       (list (make-munge-result :matching-rels matching-hcons
-                               :bindings bindings))
+                               :bindings bindings 
+                               :constant-bindings constant-bindings))
     (let ((ihcon (car remaining-hcons))
           (results nil))
       (dolist (hcons hcons-list)
@@ -321,7 +375,8 @@
                                           (cdr remaining-hcons)
                                           hcons-list
                                           (cons ihcon matching-hcons)
-                                          local-bindings)))
+                                          local-bindings
+                                          constant-bindings)))
                       (when local-results
                         (setf results (append local-results results))))))
                 ; else - an is-one-of constraint - may be
@@ -335,7 +390,8 @@
                                            (cdr remaining-hcons)
                                            hcons-list
                                            (cons hcons matching-hcons)
-                                           new-bindings)))
+                                           new-bindings
+                                           constant-bindings)))
                        (when local-results
                          (setf results (append local-results results))))))))))
         results)))
@@ -363,8 +419,9 @@
                         (member
                          (fvpair-feature input-fvpair)
                          *value-feats* :test #'same-names)
-                        (same-values (fvpair-value input-fvpair)
-                               (fvpair-value actual-fvpair))
+                        (compatible-types-or-values 
+                         (fvpair-value input-fvpair)
+                         (fvpair-value actual-fvpair))
                       (progn
                         (record-munge-variable (fvpair-value actual-fvpair))
                         (setf bindings 
@@ -417,7 +474,8 @@
 
 (defun alter-mrs-struct (input-structure result output-spec)
   (let ((matching-psoa (psoa-result-matching-psoa result))
-        (bindings (psoa-result-bindings result)))
+        (bindings (psoa-result-bindings result))
+        (constant-bindings (psoa-result-constant-bindings result)))
     (make-psoa 
      :handel (change-psoa-variable (psoa-handel input-structure)
                                    (psoa-handel output-spec)
@@ -435,15 +493,15 @@
      :message (change-psoa-rel-list (psoa-message input-structure)
                              (psoa-message matching-psoa)
                              (psoa-message output-spec)
-                             bindings)
+                             bindings constant-bindings)
      :wgliszt (change-psoa-rel-list (psoa-wgliszt input-structure)
                              (psoa-wgliszt matching-psoa)
                              (psoa-wgliszt output-spec)
-                             bindings)
+                             bindings constant-bindings)
      :liszt (change-psoa-rel-list (psoa-liszt input-structure)
                              (psoa-liszt matching-psoa)
                              (psoa-liszt output-spec)
-                             bindings))))
+                             bindings constant-bindings))))
 
 (defun change-psoa-variable (existing-var new-var bindings)
   (if new-var
@@ -473,10 +531,12 @@
 
 
 
-(defun change-psoa-rel-list (old-rels matching-rels new-rel-specs bindings)
+(defun change-psoa-rel-list (old-rels matching-rels new-rel-specs 
+                             bindings constant-bindings)
   (if (or matching-rels new-rel-specs)
       (append (set-difference old-rels matching-rels)
-              (change-rel-bindings new-rel-specs bindings))
+              (change-rel-bindings new-rel-specs bindings 
+                                   constant-bindings))
     old-rels))
 
 (defun make-name-in-correct-package (sym)
@@ -487,14 +547,17 @@
       (make-name-in-correct-package value)
       value))
 
-(defun change-rel-bindings (new-rel-specs bindings)
+(defun change-rel-bindings (new-rel-specs bindings constant-bindings)
   (for rel in new-rel-specs
        collect
        (let ((new-rel
               (make-rel :extra nil ; rules should never specify extra,
                         :type nil  ; type or label
                         :label nil
-                        :sort (make-name-in-correct-package (rel-sort rel)))))
+                        :sort (make-name-in-correct-package 
+                               (make-output-sort
+                                (rel-sort rel) (rel-extra rel)
+                                constant-bindings)))))
          (setf (rel-handel new-rel)
                (convert-var-to-new-bindings (rel-handel rel)
                                             bindings))
@@ -509,13 +572,29 @@
                                      (member (fvpair-feature fvpair) 
                                              *value-feats* 
                                              :test #'same-names)
-                                     (make-value-in-package 
-                                      (fvpair-value fvpair))
+                                     (make-value-in-package
+                                      (make-output-value
+                                       (fvpair-value fvpair)
+                                       (fvpair-feature fvpair)
+                                       (rel-extra rel)
+                                       constant-bindings))
                                    (convert-var-to-new-bindings 
                                     (fvpair-value fvpair)
                                     bindings)))))
          new-rel)))
 
+(defun make-output-sort (rel-spec extra constant-bindings)
+  (let* ((constant (get-appropriate-constant extra nil))
+         (constant-match (if constant
+                             (cdr (assoc constant constant-bindings)))))
+    (or constant-match rel-spec)))
+
+(defun make-output-value (val-spec feat extra constant-bindings)
+  (let* ((constant (get-appropriate-constant extra feat))
+         (constant-match (if constant
+                             (cdr (assoc constant constant-bindings)))))  
+    (or constant-match val-spec)))
+  
 (defun convert-var-to-new-bindings (variable bindings)
   (if (var-p variable)
       (let* ((old-var-id (get-var-num variable))
@@ -552,26 +631,83 @@
 
 (defparameter *mrs-rule-output-path* '(user::output))
 
-(defun construct-munge-rule-from-fs (id fs)
+(defun construct-munge-rule-from-fs (id fs funny-unifs)
   ;;; input and output are constructed using construct-mrs
   ;;; with a given variable-generator
   (declare (ignore id))
-  (let ((input-fs (path-value fs *mrs-rule-input-path*))
-        (output-fs (path-value fs *mrs-rule-output-path*))
-;        (condition-fs (path-value fs *mrs-rule-condition-path*))
-        (variable-generator (create-variable-generator)))
-    (if (and input-fs output-fs)
-        (let ((*psoa-rh-cons-path* `( ,(vsym "H-CONS")  ,(vsym "LIST")))
-               (*psoa-liszt-path* `( ,(vsym "LISZT")  ,(vsym "LIST"))))
-          (let* ((input-spec (construct-mrs input-fs variable-generator))
-               (output-spec (construct-mrs output-fs variable-generator)))
-          (if (and input-spec output-spec)
-              (make-mrs-munge-rule
-               :input-spec input-spec
-               :output-spec output-spec)))))))
+  (let ((input-funny (collect-funny-unifs funny-unifs *mrs-rule-input-path*))
+        (output-funny (collect-funny-unifs funny-unifs *mrs-rule-output-path*))
+        (input-fs (path-value fs *mrs-rule-input-path*))
+        (output-fs (path-value fs *mrs-rule-output-path*)))
+      ;;        (condition-fs (path-value fs *mrs-rule-condition-path*))
+      (if (and input-fs output-fs)
+          (let* ((variable-generator (create-variable-generator))
+                 (*psoa-rh-cons-path* `( ,(vsym "H-CONS")  ,(vsym "LIST")))
+                 (*psoa-liszt-path* `( ,(vsym "LISZT")  ,(vsym "LIST")))
+                 (input-spec (construct-mrs input-fs variable-generator))
+                 (output-spec (construct-mrs output-fs variable-generator)))
+            (when (and input-spec output-spec)
+              (add-funny-stuff input-spec input-funny)
+              (add-funny-stuff output-spec output-funny)
+                (make-mrs-munge-rule 
+                 :input-spec input-spec
+                 :output-spec output-spec))))))
+    
+
+;;; This is a bit grubby, because I want to use the standard code
+;;; for constructing an mrs, but then add in any extra stuff which
+;;; may have been specified 
+;;; For now, the only sort of extra stuff is a binding variable for
+;;; a constant: either a value (e.g. a string) or a type, typically
+;;; used so these can be copied from input to output
+;;; The code identifies the rel to which the funny stuff belongs and
+;;; makes use of the extra slot to store it
+
+(defun collect-funny-unifs (funny-unifs initial-path)
+  (for funny-unif in funny-unifs
+       filter
+       (let ((path (funny-unification-lhs funny-unif))
+             (initial-path-length (length initial-path)))
+         (unless (> initial-path-length (length path))
+           (if (equal (subseq path 0 initial-path-length) 
+                                      initial-path)
+               (make-funny-unification 
+                :lhs (subseq path initial-path-length)
+                :rhs (funny-unification-rhs funny-unif)))))))
 
 
+(defun add-funny-stuff (mrs extra)
+  ;; destructively modifies the relations
+  (for funny-unif in extra
+       do
+       (let* ((path (funny-unification-lhs funny-unif))
+              (real-path (cddr path))
+              (liszt (psoa-liszt mrs)))
+         (unless (and (> (length path) 2)
+                      (eql (car path)  (vsym "LISZT"))
+                      (eql (cadr path)  (vsym "LIST")))
+           (error "~A is not a valid path in add-funny-stuff" path))
+         (multiple-value-bind (rel rel-feat)
+             (find-relevant-rel liszt real-path)
+           (when rel
+             (push
+              (make-action-condition :feat rel-feat
+                                     :value (funny-unification-rhs funny-unif))
+              (rel-extra rel)))))))
 
+(defun find-relevant-rel (liszt path)
+  (when (and liszt path)
+    (if (eql (car path) 'FIRST)
+        (if (cddr path)
+            (error "Too many components ~A in path" (cdr path))
+          ; should be single feature or nil
+          (values (car liszt) (cadr path)))
+      (if (eql (car path) 'REST)
+          (find-relevant-rel (cdr liszt) (cdr path))
+        (error "Unexpected component ~A in path" (car path))))))
+               
+         
+       
 
 
 ;;; Display a rule

@@ -7,9 +7,14 @@
           dag-arcs subtype-p extend-typed-path path-p typed-path-p
           path-typed-feature-list typed-path-typed-feature-list
           type-feature-pair-p type-feature-pair-feature type-feature-pair-type
-          *parse-record*
+          *parse-record* *toptype*
 ; for vitrification
           *ordered-mrs-rule-list*
+          make-funny-unification funny-unification-rhs
+          funny-unification-lhs funny-unification-p
+          mrs-rule-sexp-p  mrs-rule-sexp-value
+          mrs-rule-predicate-p mrs-rule-predicate-value
+          mrs-rule-constant-p mrs-rule-constant-value
 ; for lexlookup
           make-pv-unif construct-tdfs create-wffs 
           process-unifications yadu))
