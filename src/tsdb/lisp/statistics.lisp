@@ -254,6 +254,9 @@
            (find "e-epsilons" (rest edge) 
                  :key #'first :test #'string=)) 200210)
      ((and update 
+           (not (find "e-parents" (rest edge) 
+                      :key #'first :test #'string=))) 200305)
+     ((and update 
            (find "e-parents" (rest edge) :key #'first :test #'string=)) 200306)
      (t
       (error "profile-granularity(): invalid `~a'" data)))))
