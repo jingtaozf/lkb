@@ -84,7 +84,7 @@
        (:file "macros")
        #+:page 
        (:file "tdl-patches")
-       #+(and :lkb (not :sltg))
+       #+(and (or :lkb :mrs) (not :sltg))
        (:file "lkb-interface")
        #+:anlt 
        (:file "anlt-interface")
@@ -114,15 +114,15 @@
        #+:page 
        (:file "page-interface")
        (:file "derivations")
-       #+:lkb
+       #+(or :lkb :mrs)
        (:file "tnt-interface")
-       #+(and :lkb :allegro :clim)
+       #+(and (or :lkb :mrs) :allegro :clim)
        (:file "redwoods")
-       #+:lkb
+       #+(or :lkb :mrs)
        (:file "ptb")
-       #+:lkb
+       #+(or :lkb :mrs)
        (:file "pcfg")
-       #+:lkb
+       #+(or :lkb :mrs)
        (:file "maxent")))
      
      #+:dfki

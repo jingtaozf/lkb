@@ -432,10 +432,12 @@
                    (target (second arguments))
                    (arguments (rest (rest arguments)))
                    (meter (make-meter 0 1))
+                   (interrupt (install-interrupt-handler))
                    (status (apply #'browse-trees
                                   (append (list source :strip target)
                                           arguments
-                                          (list :meter meter)))))
+                                          (list :meter meter
+                                                :interrupt interrupt)))))
               (if (null status)
                 (let ((message (format 
                                 nil 
