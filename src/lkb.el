@@ -230,7 +230,7 @@
     (goto-char pos)
     (setq end (calc-end-of-tdl-expression))
     (eval-in-lisp (format "(lkb::redefine-type \"%s\")" 
-			  (buffer-substring beg (min (1+ end) (point-max)))))
+			  (buffer-substring-no-properties beg (min (1+ end) (point-max)))))
     (goto-char pos)))
 
 
@@ -288,7 +288,7 @@
     (goto-char pos)
     (setq end (calc-end-of-rmrs-expression))
     (eval-in-lisp (format "(lkb::display-rmrs-from-string \"%s\")" 
-			  (buffer-substring beg (min (1+ end) (point-max)))))
+			  (buffer-substring-no-properties beg (min (1+ end) (point-max)))))
     (goto-char pos)))
 
 (defun calc-begin-of-rmrs-expression ()
@@ -310,7 +310,7 @@
     (goto-char pos)
     (setq end (calc-end-of-rmrs-expression))
     (eval-in-lisp (format "(lkb::select-rmrs-from-emacs \"%s\")" 
-			  (buffer-substring beg (min (1+ end) (point-max)))))
+			  (buffer-substring-no-properties beg (min (1+ end) (point-max)))))
     (goto-char pos)))
 
 (defun generate-from-rmrs (arg)
@@ -322,7 +322,7 @@
     (goto-char pos)
     (setq end (calc-end-of-rmrs-expression))
     (eval-in-lisp (format "(lkb::generate-rmrs-from-emacs \"%s\")" 
-			  (buffer-substring beg (min (1+ end) (point-max)))))
+			  (buffer-substring-no-properties beg (min (1+ end) (point-max)))))
     (goto-char pos)))
 
 ; following are commented out because they may overlap with other commands
@@ -346,7 +346,7 @@
     (goto-char pos)
     (setq end (calc-end-of-mrs-expression))
     (eval-in-lisp (format "(lkb::display-mrs-from-string \"%s\")" 
-			  (buffer-substring beg (min (1+ end) (point-max)))))
+			  (buffer-substring-no-properties beg (min (1+ end) (point-max)))))
     (goto-char pos)))
 
 (defun calc-begin-of-mrs-expression ()
