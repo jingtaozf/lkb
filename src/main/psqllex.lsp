@@ -1205,8 +1205,7 @@
 ;; assumes *psql-lexicon* part-of (scratch) *lexicon*
 (defun command-clear-scratch-lex nil
   (format t "~%Clearing scratch entries")
-  (clear-lex *lexicon* :in-isolation t :no-delete t)
-  (setf *scratch-tdl-file* nil)
+  (clear-scratch-lex)
   (lkb-beep))
 
 (defun command-merge-tdl-into-psql-lexicon (&rest rest)

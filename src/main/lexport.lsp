@@ -829,7 +829,8 @@
 	  ))
     (cond
      ((= total (length (lex-entry-unifs x)))
-      (set-lex-entry lexicon psql-le))
+      (set-lex-entry lexicon psql-le)
+      (clear-cache lexicon))
      (t
       (format t "~%skipping super-rich entry: `~a'~%"  name)
       nil))))
@@ -917,6 +918,14 @@
   (let ((lexicon (create-empty-cdb-lex)))
     (link *psql-lexicon* lexicon)
     (setf *lexicon* lexicon))
-    
     (load-lex *lexicon* :filename filename)
     (setf *scratch-tdl-file* filename))
+
+;; assumes *psql-lexicon* part-of (scratch) *lexicon*
+(defun clear-scratch-lex nil
+  (clear-lex *lexicon* :in-isolation t :no-delete t)
+  (unlink *psql-lexicon* *lexicon*)
+  (setf *lexicon* *psql-lexicon*)
+  (setf *scratch-tdl-file* nil)
+  )
+
