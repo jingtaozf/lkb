@@ -8,9 +8,9 @@
 (in-package :common-lisp-user)
 
 (let ((target (dir-append sys-home (list :relative mk::%system-binaries%))))
-  (delete-directory-and-files target)
+  (when (probe-file target) (delete-directory-and-files target))
   #+(and :allegro-version>= (version>= 5 0) :excl)
-  (excl:make-directory path)
+  (ignore-errors (excl:make-directory path))
  
   (excl:generate-application 
    "lkb" 
