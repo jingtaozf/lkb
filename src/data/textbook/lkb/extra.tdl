@@ -4,7 +4,7 @@
 
 *cons* := *list* &
   [ FIRST *top*,
-    REST *top* ].
+    REST *list* ].
 
 
 *diff-list* := *top* &

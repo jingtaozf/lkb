@@ -591,8 +591,6 @@
 ;;; **** pop up menus for psorts (called when paths are displayed) *****
 ;;; shouldn't happen in YADU
 
-;;; display-fs-spec etc are in lexinput.lsp
-
 (defun display-active-psort (psort ostream)
    (let ((start-pos (current-position ostream)))
      (with-bold-output ostream

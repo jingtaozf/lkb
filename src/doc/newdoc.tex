@@ -282,7 +282,8 @@ The full LKB system is available in four configurations:
 \item Source files for Macintosh Common Lisp (MCL)
 \end{enumerate}
 To use any version of the LKB, you need a machine with adequate amounts of memory.
-We would suggest 32 Meg of RAM as a minimum on MCL. To run larger grammars
+We would suggest 32 Meg of RAM as a minimum on MCL, and 64 Meg for ACL with CLIM.
+To run larger grammars
 you will need larger amount of memory.  The size of the source
 files is about (FIX whatever ...)
 The Solaris image will run on (FIX what?)
@@ -399,10 +400,13 @@ in ACL/CLIM, do the following:
 \item Start ACL/CLIM.  The command needed will vary with your local
 installation.  For instance,
 at CSLI, the command to start ACL with CLIM is \verb+/usr/acl/bin/acl+.
-\footnote{Note that, for simplicity, we describe the procedure for
+\footnote{Note that since the objective is just to compile the system,
+we describe the procedure for
 starting the system from the command line.  For actually running the LKB,
 it is preferable to start Lisp from within emacs, as described
-in \S\ref{acl-emacs}}.
+in \S\ref{acl-emacs}.  If you prefer, you can follow the steps described
+there, replacing the {\tt load-system} command with {\tt compile-system},
+as below.}
 \item At the Lisp prompt enter:
 \begin{verbatim}
 (load "general/loadup") 
@@ -420,9 +424,13 @@ You
 should now see the LKB interaction window, as shown in 
 Figure~\ref{lkbtop-unix}.
 \item At this point, you have a choice:
-if you want to make a Lisp image, to simplify later loading,
-execute \verb+(dump-lkb)+.
-You can start the LKB system from the image as described in 
+if you want to make a Lisp image, execute \verb+(dump-lkb)+.
+This simplifies and speeds up starting the LKB slightly, at the cost of
+using a lot of file space.
+On the whole, you should only do this if you don't expect
+frequent changes in the code or if you are setting up the LKB for
+a group of users who won't be modifying the code.
+The LKB system can be started from the image as described in 
 \S\ref{emacs-image}.
 % FIX ??
 Otherwise, once you have exited Lisp,
@@ -451,8 +459,14 @@ You
 should now see LKB on the menu-bar.
 \item
 At this point, you have a choice:
-if you want to make an image, to simplify later loading,
-execute (dump-lkb).  This will end your Lisp session.
+if you want to make an image,
+execute {\tt (dump-lkb)}.  
+This simplifies and speeds up starting the LKB slightly, at the cost of
+using a lot of file space.
+On the whole, you should only do this if you don't expect
+frequent changes in the code or if you are setting up the LKB for
+a group of users who won't be modifying the code.
+Calling {\tt (dump-lkb)} will end your Lisp session.
 You can restart the LKB from the image as described in \S\ref{mcl-image}.
 % may not on later versions of MCL?
 % FIX ??
@@ -515,6 +529,9 @@ a running Lisp process.
 \begin{verbatim}
 (load-system "lkb")
 \end{verbatim}
+(If you haven't been following the instruction exactly, you may be asked whether
+you want to compile some or all of these files.  Respond {\tt y} to this
+question.)
 \end{enumerate}
 You
 should now see the LKB interaction window, as shown in 
@@ -683,7 +700,7 @@ all of which are in the directory \verb+data+.  In this section, we
 will assume that you are working with the smallest, which is called
 `toy'.  
 
-Select {\bf Load grammar} from the LKB {\bf Load}
+Select {\bf Complete grammar} from the LKB {\bf Load}
 menu, and choose the file {\tt script} from the {\tt toy} directory
 as shown in Figure~\ref{loadscript}.  The script file is responsible for
 loading the remainder of the files into the system.  You should see various
@@ -802,7 +819,7 @@ are given in \S\ref{thier}.
 
 \subsection{The View commands}
 
-The view commands let you get an entities such as lexical entries which cannot
+The view commands let you get at entities such as lexical entries which cannot
 be accessed from the type hierarchy window.
 
 Select {\bf View} from the LKB top menu and then select {\bf Word entries}.

@@ -366,37 +366,6 @@
                         (car possible-edge-name)))))))
 
 
-#|
-;;; "Type file" output-type-file
-
-
-(defun output-type-file nil
-  (let ((output-file 
-         (ask-user-for-new-pathname "Output types to?")))
-    (with-open-file (ostream output-file :direction :output)
-      (output-types *toptype* ostream)
-      (unmark-type-table))))
-         
-(defun output-types (type ostream)
-  (let ((type-record (get-type-entry type)))
-    (unless (seen-node-p type-record) 
-      (mark-node-seen type-record)
-      (format ostream 
-              "~%~(~A~) ~(~A~) " type (type-parents type-record))
-      (when (type-comment type-record)
-        (format ostream "~%~S" (type-comment type-record)))
-      (if (type-enumerated-p type-record)
-        (format ostream "~%(OR~{~( ~A~)~}).~%" (type-daughters type-record))
-        (let ((local-constraint (type-local-constraint type-record)))
-          (if (null local-constraint)
-            (format ostream ".~%")
-            (display-dag1 local-constraint
-                          'path2 ostream))
-          (for daughter in (type-daughters type-record)
-               do
-               (output-types daughter ostream)))))))
-|#
-
 
 
 ;;; Unification checking

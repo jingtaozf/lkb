@@ -33,6 +33,8 @@
 (with-check-path-list-collection "~aac/checkpaths.lsp"
   (tsdb::tsdb-do-process "csli3"))
 
+(with-check-path-list-collection "data/textbook/lkb/checkpaths.lsp"
+  (parse-sentences "data/textbook/test.items" "data/textbook/test2.out"))
 |#
 
 (defmacro with-check-path-list-collection (output-file &body forms)
@@ -388,7 +390,11 @@
                    (if (and (eql (car rest) 'REST)
                             (eql (cadr rest) 'FIRST))
                        (push (cons (cddr rest) count) new-paths)
-                     (error "Unexpected path ~A" path))))
+                     (if (and (eql (car rest) 'REST)
+                              (eql (cadr rest) 'REST)
+                              (eql (caddr rest) 'FIRST))
+                        (push (cons (cdddr rest) count) new-paths)
+                     (error "Unexpected path ~A" path)))))
              (push (cons path count) new-paths))))
     (for np in new-paths
          do

@@ -135,29 +135,6 @@
         (car (mapcar #'car new-morph)))))
     
 
-(defun apply-all-lexical-rules (entries)
-   (incf *number-of-applications*)
-   (when (> *number-of-applications* *maximal-lex-rule-applications*)
-      (error "~%Probable circular lexical rule"))
-   (let ((transformed-entries 
-            (for entry in entries
-               append
-               (for rule in (get-indexed-lrules entry)
-                  filter
-                  (let* ((spelling-rule-p (spelling-change-rule-p rule))
-                         (new-morph 
-                              (if spelling-rule-p
-                                  (construct-new-morph entry rule))))
-                    (if (or (not spelling-rule-p) new-morph)
-                        (evaluate-unifications rule
-                                               (list entry)
-                                               new-morph)))))))
-      (if transformed-entries 
-         (append transformed-entries
-            (apply-all-lexical-rules transformed-entries)))))
-      
-
-
 (defun get-matching-rules (rhd-fs &optional no-unary)
   ;;; the test which stops the parser applying a rule
   ;;; with orthographic effects is now

@@ -76,6 +76,8 @@
                                          ; configurations
                (:file "outputfs")   ; feature structure display
                (:file "outputtdfs") ; default fs display
+               (:file "outputsrc") ; outputting machine readable
+                                   ; versions (useful for translating between formalisms)
 	       #-:tty(:file "toplevel"))) ; top level menu commands
      (:module "path notation input"        ; original LKB notation
               :source-pathname "io-paths"  ; toplevel fns also used
@@ -84,7 +86,8 @@
 	      ((:file "typeinput")     ; types and main input fns used by
                                        ; other input files
                (:file "lexinput")      ; lexical entries, templates etc
-               (:file "ruleinput")))   ; lexical and grammar rules
+               (:file "ruleinput")     ; lexical and grammar rules
+               (:file "pathout")))     ; output in path notation
      (:module "TDL syntax input"
               :source-pathname "io-tdl" ; as used in ERG
 	      :binary-pathname "io-tdl"
@@ -93,6 +96,12 @@
                (:file "tdloutput")     ; output in TDL notation
                (:file "tdlruleinput")
                (:file "tdllexinput")))
+     (:module "LiLFeS syntax output"
+              :source-pathname "io-lilfes" 
+	      :binary-pathname "io-lilfes"
+	      :components
+	      ((:file "lilout")     ; output in LiLFeS notation
+               ))
      #-:tty(:module "Lisp specific graphics"
               :source-pathname *lisp-specific-directory*
 	      :binary-pathname *lisp-specific-directory*

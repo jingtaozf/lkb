@@ -154,31 +154,48 @@
           (unless (leaf-type-expanded-p type-entry)
             (add-in-leaf-type-entry type-entry)))))))
 
-(defun process-unifications (specific-list)
+(defvar *debug* nil)
+
+(defun process-unifications (specific-list &optional debugging)
    ;; if create-wffs-p then create-wffs is called to finish off - if
   ;; it fails then second value of just the non-wff fs is returned
   (when *leaf-types*
     (eval-any-leaf-types specific-list))
-   (if specific-list
+  (if specific-list
       (let ((new-dag (create-dag)))
-         (with-unification-context (new-dag)
-            (if
-               (every
-                  #'(lambda (unification) 
-                      (unify-paths 
-                         (basic-unification-lhs unification)
-                         new-dag
-                         (basic-unification-rhs unification)
-                         new-dag))
-                  specific-list)
-               (copy-dag new-dag)
-               (progn 
+        (if debugging
+            (progn
+              (for unification in specific-list
+                   do
+                   (unify-paths-with-fail-messages 
+                    (basic-unification-lhs unification)
+                    new-dag
+                    (basic-unification-rhs unification)
+                    new-dag 'a 'b 'c 'd))
+              nil)
+          (let ((res 
+                 (with-unification-context (new-dag)
+                   (if
+                       (every
+                        #'(lambda (unification)
+                            (unify-paths 
+                             (basic-unification-lhs unification)
+                             new-dag
+                             (basic-unification-rhs unification)
+                             new-dag))
+                        specific-list)
+                       (copy-dag new-dag)
+                     nil))))
+            (or res
+                (progn 
                   (format t
-"~%Unifications specified are invalid or do not unify~%")
-;                  (for unif in specific-list
-;                     do
-;                     (output-unif unif t nil))
-                  nil))))))
+                          "~%Unifications specified are invalid or do not unify~%")
+                  (when *debug*
+                    (for unif in specific-list
+                         do
+                         (output-unif unif t nil))
+                    (process-unifications specific-list t) 
+                    nil))))))))
 
 (defun unify-paths (lhs-path lhs-dag rhs-path rhs-dag)
    ;; follows paths into dags and unifies the dags at the end

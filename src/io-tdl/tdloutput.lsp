@@ -1,36 +1,11 @@
 (in-package :cl-user)
 
-#|
-(output-tdl-types)
-(output-tdl-lex)
-(output-tdl-rules)
-(output-tdl-lrules)
-|#
 
+;;; currently have no need for signature only output in TDL, so don't
+;;; support it here
 
-(defun output-tdl-types (&optional file-name)
-  (unless file-name 
-    (setf file-name
-         (ask-user-for-new-pathname "Output file?")))
-  (when file-name 
-    (with-open-file 
-        (ostream file-name :direction :output :if-exists :supersede)
-      (for type-name in (append (reverse *ordered-type-list*)
-                                *ordered-glbtype-list*)
-           ;; because glbtypes are effectively defined bottom up
-           ;; there will be fewer warnings from PAGE if we don't reverse
-           ;; them
-           do
-           (output-type-as-tdl (get-type-entry type-name)
-                               ostream)))))
-   ;; don't want this to be especially readable ...
-   ;;             (format ostream "~%")))))
-      
-
-
-(defun output-type-as-tdl (type-struct stream)
-  (let* ((name (type-name type-struct))
-         (status (assoc name *tdl-status-info*))
+(defun output-type-as-tdl (name type-struct stream)
+  (let* ((status (assoc name *tdl-status-info*))
          (def (type-local-constraint type-struct))
          (parents (type-parents type-struct)))
     (format stream "~%~A :" (string-downcase name))
@@ -46,85 +21,34 @@
                   do
                   (format stream " & ~A" (string-downcase parent)))
              (format stream " &")
-             (display-dag1 def 'tdl stream)))
+             (display-dag1 def 'tdl stream nil t)))
+    ;;; need fifth argument to block the first type being
+    ;;; output
     (when status (format stream ", ~A" (cdr status)))
     (format stream ".")))
 
-(defun output-tdl-lex nil
-  (let ((file-name 
-         (ask-user-for-new-pathname "Output file?")))
-    (when file-name 
-      (with-open-file 
-        (ostream file-name :direction :output)
-        (for lex-name in (reverse *ordered-lex-list*)
-             do
-             (output-lex-as-tdl (get-psort-entry lex-name)
-                                 ostream)
-             (format ostream "~%"))))))
-      
 
 
-(defun output-lex-as-tdl (lex-struct stream)
-  (let ((name (lex-or-psort-id lex-struct))
-        (def (lex-or-psort-local-fs lex-struct)))
+(defun output-instance-as-tdl (name lex-struct stream local-p)
+  (let ((fs (if local-p (lex-or-psort-local-fs lex-struct)
+                (tdfs-indef (lex-or-psort-full-fs lex-struct)))))
+    ;;; assume no defaults
     (format stream "~%:begin :instance.~%")
     (format stream "~%~A :=" (string-downcase name))
-    (display-dag1 def 'tdl stream)
+    (display-dag1 fs 'tdl stream)
     (format stream ".")
     (format stream "~%:end :instance.~%")))
 
 
+(defun output-derived-instance-as-tdl (str fs stream id)
+  (let ((indef-fs (tdfs-indef fs)))
+    ;;; assume no defaults
+    (format stream "~%:begin :instance.~%")
+    (format stream "~%~A_~A :=" str id)
+    (display-dag1 indef-fs 'tdl stream)
+    (format stream ".")
+    (format stream "~%:end :instance.~%")))
 
-(defun output-tdl-rules nil
-  (let ((file-name 
-         (ask-user-for-new-pathname "Output file?")))
-    (when file-name 
-      (with-open-file 
-        (ostream file-name :direction :output)
-        (for rule-name in (reverse *ordered-rule-list*)
-             do
-             (output-lex-as-tdl (get-grammar-rule-entry rule-name)
-                                 ostream)
-             (format ostream "~%"))))))
-
-(defun output-tdl-lrules nil
-  (let ((file-name 
-         (ask-user-for-new-pathname "Output file?")))
-    (when file-name 
-      (with-open-file 
-        (ostream file-name :direction :output)
-        (for rule-name in (reverse *ordered-lrule-list*)
-             do
-             (output-lex-as-tdl (get-lex-rule-entry rule-name)
-                                 ostream)
-             (format ostream "~%"))))))
-
-
-(defun expand-local-only-constraints nil
-   (let ((ok t))
-     (unmark-type-table)
-     (determine-atomic-types)
-     (for node in *type-names*
-          do
-          (let ((type-entry (get-type-entry node)))
-            (unless 
-                (expand-local-only-constraint node type-entry)
-              (setf ok nil))))
-     ok))
-         
-
-(defun expand-local-only-constraint (node type-entry)
-  (let* ((*unify-debug-cycles* t)       ; turn on cyclic dag warning messages
-         (constraint-spec (type-constraint-spec type-entry))
-         (local-constraint 
-          (if constraint-spec (process-unifications constraint-spec))))
-    (if (and constraint-spec (null local-constraint))
-        (progn
-          (format t "~%Type ~A has an invalid constraint specification" node)
-          nil)
-     (progn
-       (setf (type-local-constraint type-entry) local-constraint)
-       t))))
 
 
 

@@ -375,7 +375,7 @@
       type1)
      ((and (setq ptype2 (instance-type-parent type2))
 	   (or (eq ptype2 type1) 
-	       (member type2 (retrieve-ancestors ptype2) :test #'eq)))
+	       (member t1 (retrieve-ancestors ptype2) :test #'eq)))
       type2)			;; ditto
      ((or ptype1 ptype2)
       nil)

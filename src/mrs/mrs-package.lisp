@@ -3,7 +3,8 @@
 (pushnew :mrs *features*)
 
 (defpackage "MRS"
-  (:use "COMMON-LISP" "COMMON-LISP-USER" "USER")
+  #+acl(:use "COMMON-LISP" "COMMON-LISP-USER" "USER")
+  #-acl(:use "COMMON-LISP" "COMMON-LISP-USER")
   )
 
 (in-package "MRS")

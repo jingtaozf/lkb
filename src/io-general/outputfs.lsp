@@ -153,8 +153,8 @@
          (incf indentation))))))
 
 (defun def-lilfes-print-operations (indentation stream)
-   (let ((indentation-vector (make-array '(3000)))
-         (new-fs-p t))
+  (declare (ignore indentation))
+   (let ((new-fs-p t))
   (setf *display-structure*
    (make-fs-output 
       :name 'lilfes
@@ -162,17 +162,14 @@
          (format stream
             "~%::: ~A is not a dag...~%"
             dag-instance))
-      :start-fn #'(lambda nil (format stream "~V%" 1))      
+      :start-fn #'(lambda nil nil)      
       :end-fn #'(lambda nil nil)
-      ;; was (format stream "~V%" 1))
       :reentrant-value-fn                 
       #'(lambda (reentrant-pointer)
          (format stream
             "($~A & "
-            reentrant-pointer)
-         (setf indentation
-         (cond ((> indentation 53) (terpri stream) 3)
-               (t (+ 12 indentation)))))
+            reentrant-pointer))
+      ;; no terpris
       :reentrant-value-endfn #'(lambda nil (format stream ")"))
       :reentrant-fn
       #'(lambda (reentrant-pointer)
@@ -191,47 +188,28 @@
                                         atomic-value))))))
       :start-fs
       #'(lambda (type depth labels)
-          (declare (ignore labels))
+          (declare (ignore labels depth))
           (if (eql type *toptype*)
             (format stream "(")
             (if (stringp type)
               (format stream "(~S & " type)
               (format stream "('~A' & " 
                       (string-downcase (convert-lilfes-type type)))))
-          (setf new-fs-p t)
-         (setf (aref indentation-vector depth) (+ indentation 2)))
+          (setf new-fs-p t))
       :label-fn
       #'(lambda (label depth)
-         (setf indentation (aref indentation-vector depth))
+          (declare (ignore depth))
          (unless new-fs-p 
-           (format stream " &~%~VT" indentation))
+           (format stream " & "))
          (setf new-fs-p nil)
-         (format stream "'~A'\\" (convert-lilfes-feature label))
-         (setf indentation (+ indentation 7))
-         (when (> indentation 65) (terpri stream) (setf indentation 1)))
+         (format stream "~A\\" (convert-lilfes-feature label)))
       :end-fs 
       #'(lambda (terminal)
           (declare (ignore terminal))
-         (format stream ")")
-         (incf indentation))))))
+         (format stream ")"))))))
 
-(defun convert-lilfes-type (type)
-  (string-downcase
-   (cond ((eq type *list-type*) 'list)
-         ((eq type *empty-list-type*) nil) ; the type is called nil
-         ((eq type 'ne-list) 'cons)     ; needs a global
-         ((eq type *toptype*) 'bot)
-         ((eq type *string-type*) 'string)
-         ((eq type 'true) 'tru)
-         (t type))))
-
-(defun convert-lilfes-feature (feat)
-  (cond ((eq feat (car *list-head*)) 'hd)
-        ((eq feat (car *list-tail*)) 'tl)
-        (t feat)))
-        
-             
-             
+;;; convert-lilfes-type etc are defined in lilout
+          
              
          
 (defun def-simple-print-operations (indentation stream)
@@ -488,6 +466,8 @@
          (coerce (nreverse char-bag) 'string)))
 
 ;;; Output paths in notation defined for types etc
+;;; this is the original LKB version, with the type feature
+;;; notation in the paths
 
 (defun def-path-print-operations (stream)
    (let ((type-label-list nil)
@@ -544,6 +524,9 @@
          (format stream "~{: ~A ~A ~}" 
             (cddr ordered-list)))
       (format stream ">")))
+
+;;; this is a simpler version, with no types on
+;;; paths
 
 (defun def-path2-print-operations (stream)
    (let ((type-label-list nil)
@@ -743,19 +726,26 @@
             (display dag-instance device stream))
          (display dag-instance device t))))
 
+(defparameter *no-type* nil
+  "if this is set via optional argument to display-dag1 instead
+of using the real first type in a feature structure, the code in print-dag-aux is
+called on *toptype*.  This is for conversion of type constraints
+for PAGE and LiLFeS")
 
-(defun display-dag1 (dag-instance device stream &optional x-pos)   
-   (def-print-operations device (or x-pos 0) stream)
-       (cond ((dag-p dag-instance)
-              (invalidate-visit-marks)
-              (mark-dag-for-output dag-instance)
-              (setf *reentrancy-pointer* 0)
-              (funcall (fs-output-start-fn *display-structure*))
-              (print-dag dag-instance 0 nil)
-              (funcall (fs-output-end-fn *display-structure*))              
-              (funcall (fs-output-max-width-fn *display-structure*)))
-             (t (funcall (fs-output-error-fn *display-structure*) 
-                   dag-instance))))
+(defun display-dag1 (dag-instance device stream &optional x-pos 
+                                  no-first-type)
+  (def-print-operations device (or x-pos 0) stream)
+  (let ((*no-type* no-first-type))
+    (cond ((dag-p dag-instance)
+           (invalidate-visit-marks)
+           (mark-dag-for-output dag-instance)
+           (setf *reentrancy-pointer* 0)
+           (funcall (fs-output-start-fn *display-structure*))
+           (print-dag dag-instance 0 nil)
+           (funcall (fs-output-end-fn *display-structure*))              
+           (funcall (fs-output-max-width-fn *display-structure*)))
+          (t (funcall (fs-output-error-fn *display-structure*) 
+                      dag-instance)))))
 
 (defun mark-dag-for-output (dag-instance)
    (let ((real-dag (follow-pointers dag-instance)))
@@ -795,7 +785,7 @@
       ((is-atomic real-dag) 
          (funcall (fs-output-atomic-fn *display-structure*)
             (type-of-fs real-dag)))
-      ((and
+      ((and 
           ;; shrink it if it is locally specified as shrunk, or it's globally
           ;; specified and not overriden locally
           (or (member real-dag *shrunk-local-dags* :test #'eq)
@@ -806,7 +796,7 @@
             (dag-type real-dag)))
       (t 
          (let* 
-            ((type (type-of-fs real-dag))
+            ((type (if *no-type* *toptype* (type-of-fs real-dag)))
              (labels (top-level-features-of real-dag))
              (label-list (if labels (canonical-order type labels))))
             (if labels
@@ -823,7 +813,8 @@
                   (funcall (fs-output-end-fs *display-structure*)
                      (null labels)))
                (funcall (fs-output-atomic-fn *display-structure*)
-                  (list type)))))))
+                  (list type))))))           
+   (setf *no-type* nil))
 
 (defun print-dag-shrunk-match-p (x y)
    ;; x is an alternating list of types and features representing the current place

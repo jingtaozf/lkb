@@ -187,8 +187,7 @@
 
 (defmacro with-agenda ((f priority) &body body)
   `(if ,f
-       (heap-insert *agenda* ,priority (excl:named-function task 
-					 (lambda () ,@body)))
+       (heap-insert *agenda* ,priority #'(lambda () ,@body))
      (progn
        ,@body)))
 
@@ -992,9 +991,12 @@
                              (preprocess-sentence-string sentence)
                            sentence))
                         (user-input (split-into-words munged-string)))
-                   (parse user-input nil)
-                   (when (fboundp *do-something-with-parse*)
-                     (funcall *do-something-with-parse*))
+                   (handler-case
+                         (progn (parse user-input nil)
+                                (when (fboundp *do-something-with-parse*)
+                                  (funcall *do-something-with-parse*)))
+                       (error (condition)
+                              (format t  "~%Error: ~A caused by ~A~%" condition user-input)))                  
                    (let ((n (length *parse-record*)))
                      (format ostream "  ~R parse~:[s~;~] found~%" n (= n 1))
                      (finish-output ostream)))))

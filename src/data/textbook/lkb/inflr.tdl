@@ -9,7 +9,7 @@
 ;;; all the rules here should have the name `affix-type'_infl_rule
 
 
-plur_noun_infl_rule :=
+plur-noun_infl_rule :=
 %suffix (!s !ss) (!ss !ssses) (ss sses) (!ty !ties) (f ves) (tch tches) (sh shes)
 lrule &
 [ NEEDS-AFFIX true,

@@ -929,11 +929,12 @@
 ;;; Functionality of the LKB. Signalled by *unify-wffs* true
 
 (defun unify-wffs (dag1 dag2)
-   ;; non-destructive
    (let ((*unify-wffs* t)) (unify-dags dag1 dag2)))
 
+(defun unifiable-wffs-p (dag1 dag2)
+   (let ((*unify-wffs* t)) (unifiable-dags-p dag1 dag2)))
 
-;;; The following two function were added December 1995
+
 ;;; to support interactive unification checking
 ;;; which informs the user where unification failed
 

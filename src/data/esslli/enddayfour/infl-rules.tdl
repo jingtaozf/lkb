@@ -41,7 +41,7 @@ lrule-infl &
 prprt-v_irule :=
 %suffix (!t!v!c !t!v!c!cing) (* ing) (e ing) (ie ying)
 lrule-infl &
- [ SYN [ HEAD verb & mod-type & 
+ [ SYN [ HEAD verb &
               [ FORM prp,
                 PRED true,
                 MOD < [ SYN [ HEAD noun,

@@ -365,21 +365,22 @@ at this point).
        (let ((new-fs (create-liszt-fs-from-rels 
                        rel-sequence
                        path)))
-         (unless new-fs (cerror "Ignore this entry" 
-                                "~%Problem in create-liszt-from-rels"))
-         (user::with-unification-context (base-fs)
-              (if (yadu base-fs new-fs)
-                  (let ((new-str
-                         (make-found-lex :lex-id lex-id
-                                         :inst-fs (user::copy-tdfs-elements base-fs)
-                                         slot rel-sequence)))
-                    (cond ((eql slot :alternative-rels)
-                           (setf (found-lex-main-rels new-str) main-rels))
-                          ((eql slot :message-rels)
-                           (setf (found-lex-main-rels new-str) main-rels)
-                           (setf (found-lex-alternative-rels new-str) alt-rels))
-                          (t nil))
-                    new-str))))))
+         (if new-fs 
+             (user::with-unification-context (base-fs)
+               (if (yadu base-fs new-fs)
+                   (let ((new-str
+                          (make-found-lex :lex-id lex-id
+                                          :inst-fs (user::copy-tdfs-elements base-fs)
+                                          slot rel-sequence)))
+                     (cond ((eql slot :alternative-rels)
+                            (setf (found-lex-main-rels new-str) main-rels))
+                           ((eql slot :message-rels)
+                            (setf (found-lex-main-rels new-str) main-rels)
+                            (setf (found-lex-alternative-rels new-str) alt-rels))
+                           (t nil))
+                     new-str)))
+           (cerror "Ignore this entry" 
+                                "~%Problem in create-liszt-fs-from-rels")))))
                       
 
 
@@ -413,17 +414,20 @@ at this point).
                 do
                 (push unif path-list))
            (setf current-path (append current-path *rest-path*))))
-    (let* ((fs (process-unifications path-list))
-           (wffs (if fs (create-wffs fs)))
-           (tdfs (if wffs (construct-tdfs wffs nil nil))))
-      tdfs)))
+    (let ((fs (process-unifications path-list)))
+      (if fs 
+          (let*
+              ((wffs (create-wffs fs))
+               (tdfs (if wffs (construct-tdfs wffs nil nil))))
+            tdfs)))))
 
 
 (defun create-unifs-for-rel (rel-str path)
-  (cons
-   (make-pv-unif (append path *rel-handel-path*)
-                 (make-instance-type (rel-handel rel-str)))
-   (for fvp in (rel-flist rel-str)
+  (let ((handel-unif (if (rel-handel rel-str)
+              (make-pv-unif (append path *rel-handel-path*)
+                 (make-instance-type (rel-handel rel-str)))))
+        (other-unifs
+         (for fvp in (rel-flist rel-str)
         append
         (let* ((feature (fvpair-feature fvp)) ; should be a symbol
               (value (fvpair-value fvp))
@@ -437,6 +441,8 @@ at this point).
                              value))
              (if (var-p value)
                  (USER::make-mrs-unifs (var-extra value) new-path))))))))
+  (if handel-unif (cons handel-unif other-unifs)
+      other-unifs)))
 
 (defun make-instance-type (var-struct)
   ;;; a var structure consists of a name (which we ignore) 

@@ -292,7 +292,7 @@
        (let ((real-templ-fs (get-dag-value tmpl-fs feat))
              (sub-fs (get-dag-value fs feat)))
          (and sub-fs
-              (unifiable-dags-p real-templ-fs sub-fs)))))
+              (unifiable-wffs-p real-templ-fs sub-fs)))))
 
 (defun meta-template-match-p (tmpl-fs fs)
   ;;; the test is whether all the parts of the
@@ -302,7 +302,7 @@
   (if *local-path*
       (let ((real-templ-fs (existing-dag-at-end-of tmpl-fs *local-path*)))
         (if real-templ-fs
-            (unifiable-dags-p real-templ-fs fs)))
+            (unifiable-wffs-p real-templ-fs fs)))
     (template-match-p tmpl-fs fs)))
   
 

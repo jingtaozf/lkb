@@ -19,9 +19,9 @@
   (if ovwr 
     (setf *grammar-rule-file-list* (list file-name))
     (pushnew file-name *grammar-rule-file-list* :test #'equal))
-  (setf *ordered-rule-list* nil)
-   (when ovwr
-      (clear-grammar))
+  (when ovwr 
+    (setf *ordered-rule-list* nil)
+    (clear-grammar))
    (read-tdl-lex-or-grammar-rule-file file-name nil))
 
 ; *ordered-lrule-list* is in main/rules.lsp
@@ -30,7 +30,8 @@
   (if ovwr 
     (setf *lexical-rule-file-list* (list file-name))
     (pushnew file-name *lexical-rule-file-list* :test #'equal))
-  (setf *ordered-rule-list* nil)
+  (when ovwr 
+    (setf *ordered-lrule-list* nil))
   (when (fboundp 'reset-cached-lex-entries)
    (funcall 'reset-cached-lex-entries)) ; in constraints.lsp  
   (when ovwr (clear-lex-rules) )    

@@ -31,7 +31,9 @@
        #+:page (:file "page-interface") ; interface functions to PAGE
        (:file "mrsglobals")             ; have to redefine most of these, but
                                         ; this is mostly done 
-					; by mrsglobals-eng  
+					; by mrsglobals-eng 
+       #+:lkb(:file "extraglobals")     ; to avoid changing files that WK
+                                        ; sees
        (:file "basemrs")                ; MRS structures and printing 
        (:file "mrsoutput")              ; constructing MRS from parse result  
        (:file "mrscorpus")              ; checking equality etc

@@ -3,7 +3,6 @@
 (in-package :cl-user)
 
 (defun batch-check-lexicon (&optional path-name)
-; name is a misnomer - actually check all instances
   (let ((error-file (or path-name 
                         (ask-user-for-new-pathname "File for errors?"))))
     (when error-file
@@ -13,6 +12,8 @@
         (setf *batch-mode* t)
         (write-time-readably ostream)
         (for id in (collect-psort-ids)
+             ;; alternatively - for lexicon only
+             ;; (reverse *ordered-lex-list*) 
              do
              (let* ((hash-table-entry (gethash id *psorts*))
                     (file-pointer (cadr hash-table-entry)))

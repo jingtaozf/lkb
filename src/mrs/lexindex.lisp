@@ -279,40 +279,26 @@
 ;;; Note that rels are kept in the order they have in the entries
 
 
-; (mrs::extract-lexical-relations (get-psort-entry 'aac-check))
+; (mrs::extract-lexical-relations (get-psort-entry 'andes_1))
+; (mrs::extract-lexical-relations (get-psort-entry 'kim_1))
 
 
 (defun extract-lexical-relations (lex-entry)
   (let* ((fs (tdfs-indef (lex-or-psort-full-fs lex-entry)))
          (id  (lex-or-psort-id lex-entry))
          (main-semantics-fs (path-value fs *main-semantics-path*))
-;         (main-semantics-last (path-value fs
-;                                           (append (butlast *main-semantics-path*)
-;                                                   *last-path*)))
          (main-rels (if main-semantics-fs
                         (extract-relations-from-liszt 
                          main-semantics-fs id)))
-;                         main-semantics-last
-;                        *main-semantics-path*)))
          (alternate-semantics-fs (path-value fs *external-semantics-path*))
-;         (alternate-semantics-last (path-value fs
-;                                           (append (butlast *external-semantics-path*)
-;                                                   *last-path*)))
          (alternate-rels (if alternate-semantics-fs
                         (extract-relations-from-liszt 
                          alternate-semantics-fs id)))
-;                         alternate-semantics-last
-;                         *external-semantics-path*)))
          (message-semantics-fs (path-value fs *message-semantics-path*))
-;         (message-semantics-last (path-value fs
-;                                             (append (butlast *message-semantics-path*)
-;                                                     *last-path*)))
          (message-rels
           (if message-semantics-fs
               (extract-relations-from-liszt 
                message-semantics-fs id))))
-;               message-semantics-last 
-;               *message-semantics-path*))))
     (if (or main-rels alternate-rels message-rels)
         (let* ((new-record
                 (make-semantics-record
@@ -366,23 +352,30 @@
 (defun extract-relation-from-fs (fs id)
   ;;; two cases - normal relation and string-valued relation
   (if (is-valid-fs fs)
-      (let* ((fs-type (fs-type fs))
-             (real-type (create-type fs-type)))
-        (when (listp real-type)
-          (error "~%Disjunction not expected in ~A" id))
-        (unless (member real-type *dummy-relations*)
-          (let* ((label-list (fs-arcs fs))
-                 (string-values
-                  (for pair in label-list
-                       filter
-                       (if (member (car pair) 
-                                   *value-feats*)
-                           (create-type
-                            (fs-type (cdr pair)))))))
-            (when (cdr string-values)
-              (error "~%Multiple string values not expected in ~A
+      (let* ((reln_type (extract-relation-type fs))
+             (real-type (create-type reln_type)))
+        (when real-type
+            (when (listp real-type)
+              (error "~%Disjunction not expected in ~A" id))
+            (unless (member real-type *dummy-relations*)
+              (let* ((label-list (fs-arcs fs))
+                     (string-values
+                      (for pair in label-list
+                           filter
+                           (if (member (car pair) 
+                                       *value-feats*)
+                             (create-type
+                              (fs-type (cdr pair)))))))
+                (when (cdr string-values)
+                  (error "~%Multiple string values not expected in ~A
                       values ~A labels ~A" id string-values label-list)) 
-            (make-relation-record 
-             :relation real-type
-             :feature-string (car string-values)))))))
+                (make-relation-record 
+                 :relation real-type
+                 :feature-string (car string-values))))))))
 
+
+(defun extract-relation-type (fs)
+  (if *rel-name-path-only* 
+    (let ((reln-res (assoc (car *rel-name-path*) (fs-arcs fs))))
+      (if reln-res (fs-type (cdr reln-res))))
+    (fs-type fs)))

@@ -22,7 +22,9 @@
 
 (defvar *language-lists* nil)
 
-   
+
+(defvar *ordered-lex-list* nil)
+
 (defparameter *batch-mode* nil
    "set when indexing to prevent errors in expanding a lexical entry being
    signalled as continuable errors, rather than written

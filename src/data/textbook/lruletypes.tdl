@@ -35,11 +35,13 @@ lrule := lrule-super & word &
 	INDEX #1,
 	RESTR [ LIST  < [RELN r_t-overlap,
 			 ARG1 #1,
-			 ARG2 now] . #restr >  ] ],
+			 ARG2 now] . #restr >,
+                LAST #semlast ]],
   ARG-ST #arg-st,
   ARGS < lexeme & [  SYN #syn,
 		     SEM [ MODE #mode,
-			   RESTR #restr ],
+			   RESTR [ LIST #restr,
+                                   LAST #semlast ]],
 		     ARG-ST #arg-st ] >,
  NEEDS-AFFIX true ].
 
