@@ -1,3 +1,7 @@
+--- Copyright (c) 2003-2004 
+--- Fabre Lambeau, Stephan Oepen, Benjamin Waldron;
+--- see `licence.txt' for conditions.
+
 --- postgres optimization is poor...
 ALTER DATABASE lingo SET enable_seqscan TO off;
 

@@ -1,3 +1,7 @@
+--- Copyright (c) 2003-2004 
+--- Fabre Lambeau, Stephan Oepen, Benjamin Waldron;
+--- see `licence.txt' for conditions.
+
 ---
 --- first, get rid of existing user schemas
 --- (user schema USER is renamed to tmpUSER,

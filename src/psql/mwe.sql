@@ -1,3 +1,7 @@
+--- Copyright (c) 2003-2004 
+--- Benjamin Waldron;
+--- see `licence.txt' for conditions.
+
 ---
 --- public tables
 ---
