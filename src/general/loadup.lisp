@@ -98,10 +98,12 @@
 
 (in-package "MAKE")
 
+#|
 (let ((dumping
        (make-pathname :device cl-user::%sys-device% 
          :directory general-dir :name "dump" :type "lisp")))
   (when (probe-file dumping) (load dumping)))
+|#
 
 (reset-module-status)
 (reset-system-paths)

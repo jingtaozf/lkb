@@ -37,20 +37,14 @@
 (in-package "MAKE")
 
 (defvar %BINARY-DIR-NAME% 
-  #+(and :allegro-v4.2 :sparc) ".fosl"
-  #+(and (or :allegro-v4.3 :allegro-v4.3.1) :sparc) ".nasl"
-  #+(and :allegro-v5.0 :sparc) ".basl"
-  #+(and :allegro-v5.0.1 :sparc) ".fasl"
-  #+:linux86 ".lasl"
-  #+(and :allegro-v4.3 :hpprism) ".pasl"
-  #+(and :allegro-v4.3 :alpha) ".aasl"
-  #-(or (and :allegro-v4.2 :sparc) 
-        (and (or :allegro-v4.3 :allegro-v4.3.1) :sparc)
-        (and :allegro-v5.0 :sparc)
-        (and :allegro-v5.0.1 :sparc)
-        :linux86
-        (and :allegro-v4.3 :hpprism)
-        (and :allegro-v4.3 :alpha)) "fasl")
+    (remove-if-not #'(lambda (x) (or (alphanumericp x) (member x '(#\- #\_))
+                                   #-:mswindows  (eql x #\.)))
+                  (substitute #\_ #\space 
+                   (concatenate 'string 
+                     #-:mswindows "."
+                     (or (machine-type) "") "-" 
+                     (or (software-type) "") "-"
+                     (or (lisp-implementation-version) "")))))
 
 ;;;
 ;;; determine the system type (in terms of hardware and os) in order to set

@@ -12,26 +12,14 @@
 
 (in-package "MAKE")
 
-;;; Set up binary path names based on information about this implementation,
-;;; and add a hook to defsystem so that it creates the necessary directories
-;;; as it goes.  This eliminates the need to create a .?asl tree by hand and
-;;; it ought to be completely portable.
-
 (defvar %BINARY-DIR-NAME% 
-  (concatenate 'string "." (machine-type) "-" (software-type) "-"
-	       (lisp-implementation-version)))
-
-(defun compile-file-in-dir (source &key output-file #+CMU error-file)
-  (progn
-    (ensure-directories-exist output-file :verbose t)
-    (compile-file source :output-file output-file 
-		  #+CMU :error-file #+CMU error-file)))
-
-(define-language :lisp
-  :compiler #'compile-file-in-dir
-  :loader #'load
-  :source-extension (car *filename-extensions*)
-  :binary-extension (cdr *filename-extensions*))
+    (remove-if-not #'(lambda (x) (or (alphanumericp x) (char= x #\-)
+                                     (char= x #\_)))
+                   (substitute #\_ #\space
+                               (concatenate 'string 
+                                 (or (machine-type) "") "-" 
+                                 (or (software-type) "") "-"
+                                 (or (lisp-implementation-version) "")))))
 
 ;;;
 ;;; determine the system type (in terms of hardware and os) in order to set
