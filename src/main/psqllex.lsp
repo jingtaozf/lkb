@@ -220,16 +220,13 @@
     (let ((decoded-status nil)
 	  (password nil))
 					;: attempt connection w/o pwd
-      (print "conn wo pwd")
       (setf connection (connect-aux2 :host host :dbname dbname :user user))
       (setf decoded-status (pg:decode-connection-status (pg:status connection)))
       (unless (eq decoded-status :connection-ok)
 	;: attempt connection w/ default pwd
-	(print "conn w def pwd")
 	(setf connection (connect-aux2 :host host :dbname dbname :user user :password user))
 	(setf decoded-status (pg:decode-connection-status (pg:status connection)))
 	(unless (eq decoded-status :connection-ok)
-      (print "conn w pwd")
 	;: attempt connection w/ pwd
 	  (setf password (ask-user-for-x "Connect to PostgreSQL lexicon" 
 					 (cons (format nil "Password for ~a?" user) user)))
