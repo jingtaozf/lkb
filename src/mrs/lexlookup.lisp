@@ -280,7 +280,8 @@ at this point).
                           (if (matches-rel-record target-rel lex-rel)
                               target-rel))))
                 (if found-rels
-                    (push found-rels found-message-rels)
+                    (setf found-message-rels 
+                      (append found-rels found-message-rels))
                   (setf ok nil))))
             (when (or (null found-message-rels)
                       ok)
@@ -639,7 +640,7 @@ at this point).
                (if (yadu base-fs new-fs)
                    (cons
                     (cl-user::copy-tdfs-elements base-fs)
-                    rel-list)))
+                    rel-sequence)))
            (cerror "Ignore this rule" 
                                 "~%Problem in create-liszt-fs-from-rels")))))
 
