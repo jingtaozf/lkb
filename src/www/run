@@ -17,6 +17,7 @@ LOG=${ROOT}/${GRAMMAR}.log
 unset DISPLAY
 
 {
+  date
   echo $GRAMMAR @ $PORT
   ( \
     echo "(load \"${ROOT}/lkb/src/general/loadup.lisp\")"; \
