@@ -28,6 +28,8 @@
 
 ;;; Parsing
 
+(defparameter *last-parses* '("The cat barks with the dogs"))
+
 (defparameter *mother-feature* NIL
    "The feature giving the mother in a grammar rule")
 

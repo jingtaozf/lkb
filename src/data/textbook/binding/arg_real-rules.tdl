@@ -1,0 +1,37 @@
+
+;The arg_real-principle rules are an implementation of the textbook's
+;Argument Realization Principle which states that the argument structure
+;is the concatenation of the SPR + COMPS.
+
+:begin :instance.
+
+arg_real-principle-spr-NE := word+arg_real &
+[ SYN #syn,
+  SEM #sem,
+  ARG-ST < #spr . #comps >,
+
+  ARGS < word & [ SYN #syn & [ SPR < #spr >,
+			       COMPS #comps,
+			       GAP <! !>],
+		  SEM #sem,
+		  ARG-ST < #spr . #comps > ] > ].
+
+:end :instance.
+
+
+:begin :instance.
+
+arg_real-principle-spr-empty := word+arg_real &
+[ SYN #syn,
+  SEM #sem,
+  ARG-ST #comps,
+
+  ARGS < word & [ SYN #syn & [ SPR <  >,
+			       COMPS #comps,
+			       GAP <! !>],
+		  SEM #sem,
+		  ARG-ST #comps] > ].
+
+:end :instance.
+
+
