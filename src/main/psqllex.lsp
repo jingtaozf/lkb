@@ -1219,6 +1219,7 @@
 	   (error "to many arguments")))))
     (when filename
       (merge-tdl-into-psql-lexicon filename)
+      (clear-scratch-lex)
       (lkb-beep))))
 
 ;;;
