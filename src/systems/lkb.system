@@ -16,7 +16,7 @@
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
            #-:ansi-eval-when (load eval compile)
   (pushnew :lkb *features*)
-  (pushnew :lkb-v5.3 *features*)         
+  (pushnew :lkb-v5.4 *features*)         
   #+(or :cl-http (not (or :mcl :clim))) 
        ;; (not (or :mcl :clim :common-graphics))
   (pushnew :tty *features*))
