@@ -88,7 +88,7 @@
       ;con ("lingo" "guest" "guest")
       con ("lingo" "guest" "guest" "localhost" *psql-port-default*)
       (let* (
-	    (res (pg:exec con (print (format "SELECT * FROM erg_max_version WHERE name='%s';" id))))
+	    (res (pg:exec con (print (format "SELECT * FROM active WHERE name='%s';" id))))
 	    (tuple (pg:result res :tuple 0))
 	    (attributes (pg:result res :attributes))
 	    )
@@ -157,7 +157,7 @@
 	  default))))
 
 (defun next-version (id)
-  (retrieve-val (format "SELECT COALESCE(1 + max(version),0) FROM erg WHERE name = '%s'" id) 0))
+  (retrieve-val (format "SELECT COALESCE(1 + max(version),0) FROM revision WHERE name = '%s'" id) 0))
 
 (defun val (field record)
   (cdr (assoc (upcase field) record)))
