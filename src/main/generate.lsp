@@ -3,15 +3,47 @@
 ;;;
 ;;; CSLI, Stanford University, USA
 
+(in-package :cl-user)
+(in-package :mrs)
+(defun variables-equal (var1 var2 syntactic-p)
+  (or (eq var1 var2)
+      (and (var-p var1) (var-p var2)
+        (if syntactic-p
+           (equal (var-type var1) (var-type var2))
+           (compatible-types (var-type var1) (var-type var2)))
+        (if syntactic-p
+            (equal-extra-vals
+              (var-extra var1) 
+              (var-extra var2))
+            (compatible-extra-vals 
+              (var-extra var1) 
+              (var-extra var2)))
+         (bindings-equal (get-var-num var1)
+                         (get-var-num var2)))))
+(in-package :cl-user)
 
 ;;;
 
-(defstruct (dotted-chart-edge (:include edge))
+(defstruct (dotted-edge (:include edge))
    res ; feature name of mother in rule dag in active edges
    needed ; ordered list of names of daughter features still to be found
    )
 
-(defstruct (gen-chart-edge (:include dotted-chart-edge))
+(defstruct (g-edge (:include dotted-edge)
+                   (:constructor make-g-edge
+                    (&key id category rule-number dag needed
+                          (dag-restricted
+                             ;; restricted field in inactive edges is dag, for
+                             ;; active edges it's the next needed daughter
+                             (restrict-fs
+                                (if needed
+                                   (existing-dag-at-end-of (tdfs-indef dag)
+                                      (if (listp (first needed))
+                                         (first needed)
+                                         (list (first needed))))
+                                   (tdfs-indef dag))))
+                          leaves lex-ids children morph-history 
+                          spelling-change res rels-covered)))
    ;; category: not used
    ;; id, rule-number, leaves: filled in, not used by generation
    ;; algorithm itself, but needed for chart display etc
@@ -23,11 +55,23 @@
 (defvar *gen-record* nil)
 (defvar *gen-chart-unifs* 0)
 (defvar *gen-chart-fails* 0)
-(defvar *gen-filter-debug* nil)
+
+(defparameter *gen-filter-debug* nil)
+(defparameter *gen-adjunction-debug* t)
 
 
 (defparameter *semantics-index-path* '(synsem local cont index)
    "path used by generator to index chart")
+
+(defparameter *intersective-rule-names* '(adjh_i nadj_i hadj_i)
+   "names of rules that introduce intersective modifiers")
+
+(defun intersective-modifier-dag-p (dag)
+   "is this dag a possible intersective modifier?"
+   (let ((val
+          (existing-dag-at-end-of dag '(synsem local cat head mod))))
+      (and val
+         (eq (type-of-fs val) 'intersective_mod))))
 
 
 (proclaim
@@ -38,7 +82,8 @@
        mrs::*null-semantics-found-items*))
 
 
-;;; utility functions
+;;; utility functions for initialising and building daughters and leaves
+;;; fields in active chart edges
 
 (defun gen-make-list-and-insert (len item index)
    ;; make list of length len and insert item at index (1-based)
@@ -49,228 +94,34 @@
    ;; replace first nil with item in top-level copy of lst
    (substitute item nil lst :count 1))
 
-(defun gen-chart-intersection-p (lst1 lst2)
-   (member-if #'(lambda (x) (member x lst1 :test #'eq)) lst2))
 
-(defun gen-chart-subset-p (lst1 lst2)
-   ;; is lst1 a (not necessarily strict) subset of lst2?
-   (every #'(lambda (x) (member x lst2 :test #'eq)) lst1))
+;;; functions on sets (of MRS relations)
+
+(defun gen-chart-set-intersection-p (lst1 lst2)
+   (dolist (x lst1 nil) (when (member x lst2 :test #'eq) (return t))))
 
 (defun gen-chart-set-equal-p (lst1 lst2)
-   ;; do the two sets have exactly the same (eq) members?
-   (and (eql (length lst1) (length lst2))
+   (and
+      (do* ((t1 lst1 (cdr t1)) (t2 lst2 (cdr t2))) ; same length?
+           ((or (null t1) (null t2)) (eq t1 t2)))
       (gen-chart-subset-p lst1 lst2)))
 
-;;;
+(defun gen-chart-subset-p (lst1 lst2)
+   (dolist (x lst1 t) (unless (member x lst2 :test #'eq) (return nil))))
 
-(defun generate-from-mrs (input-sem)
-   (let*
-      ((found-lex-list
-          (apply #'append (mrs::collect-lex-entries-from-mrs input-sem)))
-       (filtered
-          (remove 'THAT_C found-lex-list :key #'mrs::found-lex-lex-id :count 1))
-       (empty (mrs::possibly-applicable-null-semantics input-sem))
-          ;nil
-          )
-      (if filtered
-         (chart-generate input-sem (append filtered empty))
-         (progn
-            (format t "~%Some lexical entries could not be found from MRS relations - ~
-                       has function index-for-generator been run yet?")
-            nil))))
+(defun gen-chart-set-difference (lst1 lst2)
+   (remove-if #'(lambda (x) (member x lst2 :test #'eq)) lst1))
 
 
-;;; generate from an input MRS and a bag of lexical entry FSs
-;;;
-;;; constraints on generation:
-;;;
-;;; when completing an active edge ensure that all relations containing
-;;; indices internal to the rule have been realised (ensures only
-;;; maximal alternative phrase containing modifiers is available for
-;;; incorporation into larger phrases)
-;;;
-;;; extending an active edge with an inactive must not result in the duplication
-;;; of any relation (prevents e.g. same modifier being added repeatedly)
-;;;
-;;; final analysis must not have any semantics missing (e.g. makes sure
-;;; all relevant modifiers have been realised)
-;;;
-;;; returns values: realisations, time taken (msecs), number of unification
-;;; attempts, number of unification failures, number of active edges, number
-;;; of inactive, total number of chart edges
-
-(defun chart-generate (input-sem found-lex-items)
-   (setq *edge-id* 0)
-   (setq *gen-chart* nil)
-   (setq *gen-record* nil)
-   (let ((*safe-not-to-copy-p* t)
-         (*gen-chart-unifs* 0) (*gen-chart-fails* 0)
-         (start-time (get-internal-run-time)))
-      #+(and mcl powerpc) (setq aa 0 bb 0 cc 0 dd 0 ee 0 ff 0 gg 0 hh 0 ii 0 jj 0)
-      (dolist (found found-lex-items)
-         (let* ((lex-entry-fs (mrs::found-lex-inst-fs found))
-                (word (extract-orth-from-fs lex-entry-fs)))
-            (gen-chart-add-inactive
-               (make-gen-chart-edge
-                  :id (next-edge) :rule-number word
-                  :dag lex-entry-fs
-                  :needed nil
-                  :rels-covered
-                  (append (mrs::found-lex-main-rels found)
-                          (mrs::found-lex-alternative-rels found)
-                          (mrs::found-lex-message-rels found))
-                  :children nil :leaves (list word))
-              input-sem)))
-      (setq *gen-record*
-         (gen-chart-find-complete-edges input-sem))
-      (let* ((total-time
-                (truncate (* 1000 (- (get-internal-run-time) start-time))
-                   internal-time-units-per-second))
-             (inact-tot
-                (length (gen-chart-retrieve-with-index *toptype* nil)))
-             (act-tot
-                (length (gen-chart-retrieve-with-index *toptype* t))))
-         (values
-            ;; !!! assume that final orthography is purely the concatenation of
-            ;; the orthographies of the lexical entries passed in
-            (mapcar #'gen-chart-edge-leaves *gen-record*)
-            total-time *gen-chart-unifs* *gen-chart-fails*
-            act-tot inact-tot (+ act-tot inact-tot)))))
-
-
-;;; Finish off syntactically complete analyses, and return those that
-;;; cover all of input semantics 
-
-(defun gen-chart-find-complete-edges (input-sem)
-   (let ((res nil)
-         (start-symbols
-            (if (listp *start-symbol*) *start-symbol* (list *start-symbol*))))
-      (dolist (e (gen-chart-retrieve-with-index *toptype* nil))
-         ;; process has so far ensured that we have not generated any edge containing
-         ;; a relation that is not in input semantics, and that no edge contains
-         ;; duplicates of exactly the same relation - now check that we have generated
-         ;; all relations, bearing in mind that rules may introduce semantics
-         (dolist
-            (new
-               (if *substantive-roots-p*
-                  (gen-chart-root-edges e start-symbols)
-                  (gen-filter-root-edges e start-symbols)))
-            (when (gen-chart-check-complete new input-sem)
-               (push new res))))
-      (nreverse res)))
-
-
-(defun gen-chart-check-complete (edge input-sem)
-   ;; check that semantics of edge is equivalent to input-sem
-   ;; first do quick check verifying set equality of relation names, then if
-   ;; that succeeds construct the MRS and check equality of that
-   (and
-      (gen-chart-set-equal-p (gen-chart-relation-names edge)
-         (mapcar #'mrs::rel-sort (mrs::psoa-liszt input-sem)))
-      (let ((sem-fs
-               (existing-dag-at-end-of (tdfs-indef (gen-chart-edge-dag edge))
-                   mrs::*initial-semantics-path*)))
-         (if (mrs::is-valid-fs sem-fs)
-            (let ((mrs (mrs::construct-mrs sem-fs nil t)))
-               ;; (mrs::output-mrs mrs 'mrs::simple)
-               ;; *** (mrs::mrs-equalp mrs input-sem t) ; or nil?
-               (and ; *** how do you check mrs for equality properly? (handel values
-                    ; may be variously fully instantiated or not, or have different
-                    ; names but refer to same relation if instantiated)
-                    ; this is just a crude top-level check
-                   (equal (mrs::var-name (mrs::psoa-handel mrs))
-                      (mrs::var-name (mrs::psoa-handel input-sem)))
-                   (equal (mrs::var-name (mrs::psoa-index mrs))
-                      (mrs::var-name (mrs::psoa-index input-sem)))))))))
-
-
-(defun gen-chart-root-edges (edge start-symbols)
-   ;; c.f. create-new-root-edges in parse.lsp
-   (for start-symbol in start-symbols        
-       filter
-       (let ((tdfs (get-tdfs-given-id 
-                    start-symbol)))
-         (if tdfs
-             (let ((unif 
-                    (yadu tdfs (gen-chart-edge-dag edge))))
-               (if unif
-                   (let ((new-edge
-                          (make-gen-chart-edge :dag unif
-                                     :id (next-edge)
-                                     :rule-number 'root
-                                     :children (list edge)
-                                     :leaves (gen-chart-edge-leaves edge))))
-                      (gen-chart-add-with-index new-edge
-                         (gen-chart-dag-index (tdfs-indef (gen-chart-edge-dag new-edge))
-                            (gen-chart-edge-id new-edge)))
-                      new-edge)))))))
-
-(defun gen-filter-root-edges (edge start-symbols)
-   ;; c.f. filter-root-edges in parse.lsp
-   (dolist (start-symbol start-symbols)
-      (let ((root-spec (get-tdfs-given-id start-symbol)))
-         (when root-spec
-            (when (yadu root-spec (gen-chart-edge-dag edge))
-               (return (list edge)))))))
-
-
-;;; Chart indexing - on *semantics-index-path* values. May be full types or
-;;; instance types. Seem to be mostly disjoint if not eq, so don't bother using
-;;; a tree-like representation
-;;; Apart from these fns, show-gen-chart (below), and find-gen-edge-given-id
-;;; (tree-nodes.lsp) are the only functions that need to know the internal
-;;; representation of chart
-
-(defun gen-chart-dag-index (dag edge-id)
-   (let ((index-dag (existing-dag-at-end-of dag *semantics-index-path*)))
-      (if index-dag
-         (let ((index (type-of-fs index-dag)))
-            (when (and (consp index) (null (cdr index)))
-               ;; simplify single-item disjunction - doesn't need to be stored as
-               ;; an atomic type and will speed up subsequent gcsubtype lookup
-               (setq index (car index)))
-            index)
-         (progn
-            ;(cerror (format nil "use type ~A" *toptype*) ; ***
-            ;   "unexpectedly missing index for edge ~A: ~S" edge-id dag)
-            (warn "unexpectedly missing index for edge ~A - using ~A" edge-id *toptype*)
-            *toptype*))))
-
-
-(defun gen-chart-add-with-index (edge index)
-   (let ((entry
-          (assoc index *gen-chart* :test #'equal))) ; index type could be string or a
-                                                    ; disjunction of atomic types
-      (unless entry
-         (push (setq entry (cons index nil)) *gen-chart*))
-      (push edge (cdr entry))))
-
-
-(defun gen-chart-retrieve-with-index (index activep)
-   ;; return all active/inactive edges in chart keyed by a type compatible with
-   ;; index
-   (let ((res nil))
-      (dolist (entry *gen-chart* res)
-         (when (find-gcsubtype (car entry) index)
-            (dolist (e (cdr entry))
-               (when (eq activep (not (null (gen-chart-edge-needed e))))
-                  (push e res)))))))
-
-
-;;; Daughter features of rule, in order that they should be instantiated.
-;;; !!! filling of children and leaves fields assumes that features are integers
-;;; numbered from 1 as leftmost daughter
-
-(defun gen-chart-rule-ordered-daughters (rule)
-   (values (rule-daughters-apply-order rule)
-      (position (car (rule-daughters-apply-order rule)) (cdr (rule-order rule)))))
-
-
-;;; Extract list of relation names in semantic portion of an edge FS
+;;; Extract list of relation names in semantic portion of an edge FS. Also fns
+;;; for checking resulting bags for equality and finding bag difference. I hope
+;;; these can go once I have a list of instantiated versions of rules which add
+;;; semantics - then I can just use the mrs relation structures and simply
+;;; append them to form sets, rather than having bags of relation names ***
 
 (defun gen-chart-relation-names (edge)
    (let ((sem-fs
-          (existing-dag-at-end-of (tdfs-indef (gen-chart-edge-dag edge))
+          (existing-dag-at-end-of (tdfs-indef (g-edge-dag edge))
              (append mrs::*initial-semantics-path* mrs::*psoa-liszt-path*))))
       (gen-chart-relation-names1 sem-fs nil)))
 
@@ -294,6 +145,263 @@
                   rels-list))
             rels-list))))
 
+(defun gen-chart-bag-equal-p (b1 b2)
+   ;; do the two bags have exactly the same (eq) members?
+   (and (eql (length b1) (length b2))
+      (gen-chart-subbag-p b1 b2)))
+
+(defun gen-chart-subbag-p (b1 b2)
+   ;; is lst1 a (not necessarily strict) subset of lst2, considering duplicate
+   ;; elements as distinct?
+   (labels ((subbag-p-1 (t1 t2 t2-found)
+              (if t1
+                 ;; is there a tail of t2 whose head is eq to (car t1) such that
+                 ;; the tail is not present in t2-found?
+                 (do ((t1head (car t1))
+                      (t2tail t2 (cdr t2tail)))
+                     ((null t2tail) nil)
+                     (if (eq t1head (car t2tail))
+                        (unless (member t2tail t2-found :test #'eq)
+                           (let ((new-t2-found (cons t2tail t2-found)))
+                              (declare (dynamic-extent new-t2-found))
+                              (return (subbag-p-1 (cdr t1) t2 new-t2-found))))))
+                 t)))
+      (subbag-p-1 b1 b2 nil)))
+
+(defun gen-chart-bag-difference (b1 b2)
+   ;; items in b1 that aren't in b2, considering duplicate elements as distinct
+   (remove-if
+      #'(lambda (x)
+           (when (member x b2 :test #'eq) (setq b2 (remove x b2 :test #'eq)) t))
+      b1))
+
+
+;;; Interface to generator - take an input MRS, ask for instantiated lexical items
+;;; and other items that might be applicable, and call generator proper
+
+(defun generate-from-mrs (input-sem)
+   (let*
+      ((found-lex-list
+          (apply #'append (mrs::collect-lex-entries-from-mrs input-sem)))
+       (filtered
+          ;; *** remove 1 'that' and its no-afix_infl_rule variant
+          (remove 'THAT_C found-lex-list :key #'mrs::found-lex-lex-id :count 2))
+       (empty (mrs::possibly-applicable-null-semantics input-sem))
+          ;nil
+          )
+      (if filtered
+         (chart-generate input-sem (append filtered empty))
+         (progn
+            (format t "~%Some lexical entries could not be found from MRS relations ~
+                       - has function index-for-generator been run yet?")
+            nil))))
+
+
+;;; generate from an input MRS and a set of lexical entry FSs. Each entry
+;;; covers zero or more of the relations in the MRS
+;;;
+;;; constraints on generation:
+;;;
+;;; when completing an active edge ensure that all relations containing
+;;; indices internal to the rule have been realised (ensures only
+;;; maximal alternative phrase containing modifiers is available for
+;;; incorporation into larger phrases)
+;;;
+;;; extending an active edge with an inactive must not result in the duplication
+;;; of any relation (prevents e.g. same modifier being added repeatedly)
+;;;
+;;; final analysis must not have any semantics missing (e.g. makes sure
+;;; all relevant modifiers have been realised)
+;;;
+;;; returns values: realisations, time taken (msecs), number of unification
+;;; attempts, number of unification failures, number of active edges, number
+;;; of inactive, total number of chart edges
+
+(defun chart-generate (input-sem found-lex-items)
+   (setq *edge-id* 0)
+   (setq *gen-chart* nil)
+   (setq *gen-record* nil)
+   (let ((*safe-not-to-copy-p* t)
+         (*gen-chart-unifs* 0) (*gen-chart-fails* 0))
+      #+(and mcl powerpc) (setq aa 0 bb 0 cc 0 dd 0 ee 0 ff 0 gg 0 hh 0 ii 0 jj 0)
+      (dolist (found found-lex-items)
+         (let* ((lex-entry-fs (mrs::found-lex-inst-fs found))
+                (word (extract-orth-from-fs lex-entry-fs)))
+            (gen-chart-add-inactive
+               (make-g-edge
+                  :id (next-edge) :rule-number word
+                  :dag lex-entry-fs
+                  :needed nil
+                  :rels-covered
+                  (append (mrs::found-lex-main-rels found)
+                          (mrs::found-lex-alternative-rels found)
+                          (mrs::found-lex-message-rels found))
+                  :children nil :leaves (list word))
+              input-sem)))
+      (multiple-value-bind (complete partial)
+            (gen-chart-find-complete-edges
+               (gen-chart-retrieve-with-index *toptype* nil) input-sem)
+         (setq *gen-record*
+            (nconc complete
+               (if *intersective-rule-names*
+                  (gen-chart-adjoin-modifiers partial input-sem)
+                  (progn
+                     (format t "~%Warning: no intersective rules defined")
+                     nil)))))
+      (let* ((inact-tot
+                (length (gen-chart-retrieve-with-index *toptype* nil)))
+             (act-tot
+                (length (gen-chart-retrieve-with-index *toptype* t))))
+         (values
+            ;; !!! assume that final orthography is purely the concatenation of
+            ;; the orthographies of the lexical entries passed in
+            (mapcar #'g-edge-leaves *gen-record*)
+            *gen-chart-unifs* *gen-chart-fails*
+            act-tot inact-tot (+ act-tot inact-tot)))))
+
+
+;;; Finish off syntactically complete analyses, and return those that cover all
+;;; of input semantics 
+
+(defun gen-chart-find-complete-edges (candidate-edges input-sem)
+   (let ((complete nil)
+         (partial nil)
+         (start-symbols
+            (if (listp *start-symbol*) *start-symbol* (list *start-symbol*))))
+      (dolist (e candidate-edges)
+         ;; process has so far ensured that we have not generated any edge containing
+         ;; a relation name that is not in input semantics, and that no edge contains
+         ;; duplicates of exactly the same relation - now check that we have generated
+         ;; all relations
+         (dolist
+            (new
+               (if *substantive-roots-p*
+                  (gen-chart-root-edges e start-symbols)
+                  (gen-filter-root-edges e start-symbols)))
+            (if (gen-chart-check-complete new input-sem)
+               (push new complete)
+               (push new partial))))
+      (when *gen-adjunction-debug*
+         (format t "~&Complete edges: ~:A~%Partial edges: ~:A"
+            (mapcar #'g-edge-id complete)
+            (mapcar #'g-edge-id partial)))
+      (values complete partial)))
+
+
+(defun gen-chart-check-complete (edge input-sem)
+   ;; check that semantics of edge is equivalent to input-sem
+   ;; first do quick check verifying set equality of relation names, then if
+   ;; that succeeds construct the MRS and check equality of that
+   ;; *** we really want a test for 'compatibility' rather than equality - in
+   ;; particular, semantics of generated string might be more specific than
+   ;; input MRS wrt things like scope
+   ;; they are already guaranteed to be compatible wrt relation arguments since
+   ;; these were skolemised in the input MRS
+   (and
+      ;; *** rules may have introduced semantics, so we can't just look at lexical
+      ;; items' semantics and compare with input
+      ;; (gen-chart-set-equal-p (g-edge-rels-covered edge) (mrs::psoa-liszt input-sem))
+      (gen-chart-bag-equal-p (gen-chart-relation-names edge)
+         (mapcar #'mrs::rel-sort (mrs::psoa-liszt input-sem)))
+      (let ((sem-fs
+               (existing-dag-at-end-of (tdfs-indef (g-edge-dag edge))
+                   mrs::*initial-semantics-path*)))
+         (if (mrs::is-valid-fs sem-fs)
+            (let ((mrs (mrs::construct-mrs sem-fs nil t)))
+               ;; won't allow "in the city kim interviewed" with input mrs from
+               ;; "kim interviewed in the city"
+               ;;(mrs::output-mrs input-sem 'mrs::simple)
+               ;;(mrs::output-mrs mrs 'mrs::simple)
+               ;;(print (mrs::mrs-equalp mrs input-sem nil))
+               (and ; *** how do you check mrs for equality properly? (handel values
+                    ; may be variously fully instantiated or not, or have different
+                    ; names but refer to same relation if instantiated)
+                    ; this is just a crude top-level check
+                   (equal (mrs::var-name (mrs::psoa-handel mrs))
+                      (mrs::var-name (mrs::psoa-handel input-sem)))
+                   (equal (mrs::var-name (mrs::psoa-index mrs))
+                      (mrs::var-name (mrs::psoa-index input-sem)))))))))
+
+
+(defun gen-chart-root-edges (edge start-symbols)
+   ;; c.f. create-new-root-edges in parse.lsp
+   (for start-symbol in start-symbols        
+       filter
+       (let ((tdfs (get-tdfs-given-id 
+                    start-symbol)))
+         (if tdfs
+             (let ((unif 
+                    (yadu tdfs (g-edge-dag edge))))
+               (if unif
+                   (let ((new-edge
+                          (make-g-edge :dag unif
+                                     :id (next-edge)
+                                     :rule-number 'root
+                                     :children (list edge)
+                                     :leaves (g-edge-leaves edge))))
+                      (gen-chart-add-with-index new-edge
+                         (gen-chart-dag-index (tdfs-indef (g-edge-dag new-edge))
+                            (g-edge-id new-edge)))
+                      new-edge)))))))
+
+(defun gen-filter-root-edges (edge start-symbols)
+   ;; c.f. filter-root-edges in parse.lsp
+   (dolist (start-symbol start-symbols)
+      (let ((root-spec (get-tdfs-given-id start-symbol)))
+         (when root-spec
+            (when (yadu root-spec (g-edge-dag edge))
+               (return (list edge)))))))
+
+
+;;; Chart indexing - on *semantics-index-path* values. May be full types or
+;;; instance types. Seem to be mostly disjoint if not eq, so don't bother using
+;;; a tree-like representation
+;;; Apart from these fns, show-gen-chart (below), and find-gen-edge-given-id
+;;; (tree-nodes.lsp) are the only functions that need to know the internal
+;;; representation of chart
+
+(defun gen-chart-dag-index (dag edge-id)
+   (let ((index-dag (existing-dag-at-end-of dag *semantics-index-path*)))
+      (if index-dag
+         (let ((index (type-of-fs index-dag)))
+            (when (and (consp index) (null (cdr index)))
+               ;; simplify single-item disjunction - doesn't need to be stored as
+               ;; an atomic type and will speed up subsequent gcsubtype lookup
+               (setq index (car index)))
+            index)
+         (progn
+            ;(cerror (format nil "use type ~A" *toptype*) ; ***
+            ;   "unexpectedly missing index for edge ~A: ~S" edge-id dag)
+            ;(warn "unexpectedly missing index for edge ~A - using ~A" edge-id *toptype*)
+            *toptype*))))
+
+
+(defun gen-chart-add-with-index (edge index)
+   (let ((entry
+          (assoc index *gen-chart* :test #'equal))) ; index type could be string or a
+                                                    ; disjunction of atomic types
+      (unless entry
+         (push (setq entry (cons index nil)) *gen-chart*))
+      (push edge (cdr entry))))
+
+
+(defun gen-chart-retrieve-with-index (index activep)
+   ;; return all active/inactive edges in chart keyed by a type compatible with
+   ;; index
+   (let ((res nil))
+      (dolist (entry *gen-chart* res)
+         (when (find-gcsubtype (car entry) index)
+            (dolist (e (cdr entry))
+               (when (eq activep (not (null (g-edge-needed e))))
+                  (push e res)))))))
+
+
+;;; Daughter features of rule, in order that they should be instantiated.
+
+(defun gen-chart-rule-ordered-daughters (rule)
+   (values (rule-daughters-apply-order rule)
+      (position (car (rule-daughters-apply-order rule)) (cdr (rule-order rule)))))
+
 
 ;;; Core control functions. Processing inactive and active edges
 
@@ -301,222 +409,144 @@
    ;; check that we haven't generated any relation that is not in input semantics
    ;; assume that once a relation has been put in liszt it won't be removed. This
    ;; filter is needed as well as less expensive one that lexical items are used
-   ;; only once since some rules can introduce semantics when applied to null
-   ;; semantics lexical items
-   ;; *** a stronger and more expensive filter would also check indices for
+   ;; only once since some rules can introduce relations
+   ;; *** a stronger - and more expensive - filter would also check indices for
    ;; compatibility
-   (when (not (gen-chart-subset-p (gen-chart-relation-names edge)
+   (when (not (gen-chart-subbag-p (gen-chart-relation-names edge)
                  (mapcar #'mrs::rel-sort (mrs::psoa-liszt input-sem))))
+; *** (not (gen-chart-subset-p (g-edge-rels-covered edge) (mrs::psoa-liszt input-sem)))
       (when *gen-filter-debug*
          (format t "~&Filtered out candidate inactive edge covering ~A ~
-                    with relations ~(~A~) that are not a subset of input semantics"
-             (gen-chart-edge-leaves edge) (gen-chart-relation-names edge)))
+                    with lexical relations ~(~A~) that are not a subset of ~
+                    input semantics"
+             (g-edge-leaves edge) (gen-chart-relation-names edge)))
       (return-from gen-chart-add-inactive nil))
    (let
       ((index
-          (gen-chart-dag-index (tdfs-indef (gen-chart-edge-dag edge))
-             (gen-chart-edge-id edge))))
+          (gen-chart-dag-index (tdfs-indef (g-edge-dag edge))
+             (g-edge-id edge))))
       (gen-chart-add-with-index edge index)
-      (setf (gen-chart-edge-dag-restricted edge)
-         (restrict-fs (tdfs-indef (gen-chart-edge-dag edge))))
       ;; see if this new inactive edge can extend any existing active edges
       (dolist (e (gen-chart-retrieve-with-index index t))
          (gen-chart-test-active edge e input-sem))
       ;; see if we can create new active edges by instantiating the head
       ;; daughter of a rule
       (dolist (rule
-                 (get-indexed-rules (gen-chart-edge-dag edge)
-                    #'spelling-change-rule-p))
+                 (get-indexed-rules (g-edge-dag edge)
+                    #'(lambda (r)
+                        (or (member (rule-id r) *intersective-rule-names* :test #'eq)
+                            (spelling-change-rule-p r)))))
          (when *debugging*
             (format t "~&Trying to create new active edge from rule ~A and inactive edge ~A"
-               (rule-id rule) (gen-chart-edge-id edge)))
+               (rule-id rule) (g-edge-id edge)))
          (multiple-value-bind (gen-daughter-order head-index) ; zero-based on daughters
                (gen-chart-rule-ordered-daughters rule)
-            (let
-               ((unified-dag
-                  (gen-chart-try-unification (rule-full-fs rule)
-                     (first gen-daughter-order) ; pick out head daughter
-                     (nth head-index (rule-daughters-restricted rule)) ; head restrictor
-                     (gen-chart-edge-dag edge)
-                     (gen-chart-edge-dag-restricted edge)
-                     (not (rest gen-daughter-order))
-                     (first (rule-order rule)))))
-               (when unified-dag
-                  (gen-chart-extend-active
-                     (make-gen-chart-edge
-                        :id (next-edge) :rule-number (rule-id rule)
-                        :dag unified-dag
-                        :res (first (rule-order rule)) ; path of mother in fs
-                        :needed (rest gen-daughter-order)
-                        :rels-covered (gen-chart-edge-rels-covered edge)
-                        :children
-                        (cond
-                           ((null (cdr gen-daughter-order)) (list edge))
-                           ((eql head-index 0) (list edge nil))
-                           (t (list nil edge)))
-                        :leaves
-                        (gen-make-list-and-insert (length gen-daughter-order)
-                           (gen-chart-edge-leaves edge) (1+ head-index)))
-                     input-sem)))))))
+            (let ((act (gen-chart-create-active rule edge gen-daughter-order head-index)))
+               (when act
+                  (gen-chart-extend-active act input-sem)))))))
 
 
-(defun gen-chart-test-active (inact act input-sem)
+(defun gen-chart-create-active (rule edge gen-daughter-order head-index)
+   (let
+      ((unified-dag
+          (gen-chart-try-unification (rule-full-fs rule)
+             (first gen-daughter-order) ; pick out head daughter
+             (nth head-index (rule-daughters-restricted rule)) ; head restrictor
+             (g-edge-dag edge)
+             (g-edge-dag-restricted edge)
+             (not (rest gen-daughter-order))
+             (first (rule-order rule)))))
+      (when unified-dag
+         (make-g-edge
+            :id (next-edge) :rule-number (rule-id rule)
+            :dag unified-dag
+            :res (first (rule-order rule)) ; path of mother in fs
+            :needed (rest gen-daughter-order)
+            :rels-covered (g-edge-rels-covered edge)
+            :children
+            (cond
+               ((null (cdr gen-daughter-order)) (list edge))
+               ((eql head-index 0) (list edge nil))
+               (t (list nil edge)))
+            :leaves
+            (gen-make-list-and-insert (length gen-daughter-order)
+               (g-edge-leaves edge) (1+ head-index))))))
+
+
+(defun gen-chart-test-active (inact act input-sem &optional one-off-p)
    ;; can extend active edge with inactive? First check to make sure new edge
-   ;; would not use any initial lexical item more than once
-   (when (not (gen-chart-intersection-p (gen-chart-edge-rels-covered act)
-                 (gen-chart-edge-rels-covered inact)))
+   ;; would not use any relation from initial lexical items more than once.
+   ;; Assumption here that rels are eq between alternative lexical items 
+   (when (not (gen-chart-set-intersection-p (g-edge-rels-covered act)
+                 (g-edge-rels-covered inact)))
       (when *debugging*
          (format t "~&Trying to extend active edge ~A with inactive edge ~A"
-            (gen-chart-edge-id act) (gen-chart-edge-id inact)))
+            (g-edge-id act) (g-edge-id inact)))
       (let ((unified-dag
-               (gen-chart-try-unification (gen-chart-edge-dag act)
-                  (first (gen-chart-edge-needed act))
-                  nil
-                  (gen-chart-edge-dag inact)
-                  (gen-chart-edge-dag-restricted inact)
-                  (not (rest (gen-chart-edge-needed act)))
-                  (gen-chart-edge-res act))))
+               (gen-chart-try-unification (g-edge-dag act)
+                  (first (g-edge-needed act))
+                  (g-edge-dag-restricted act)
+                  (g-edge-dag inact)
+                  (g-edge-dag-restricted inact)
+                  (not (rest (g-edge-needed act)))
+                  (g-edge-res act))))
          (when unified-dag
             ;; remaining non-head daughters in active edge are filled in
             ;; left-to-right order
             (let ((new-act
-                     (make-gen-chart-edge
+                     (make-g-edge
                         :id (next-edge) 
-                        :rule-number (gen-chart-edge-rule-number act)
+                        :rule-number (g-edge-rule-number act)
                         :dag unified-dag
-                        :res (gen-chart-edge-res act)
-                        :needed (rest (gen-chart-edge-needed act))
+                        :res (g-edge-res act)
+                        :needed (rest (g-edge-needed act))
                         :rels-covered
-                        (append (gen-chart-edge-rels-covered act)
-                           (gen-chart-edge-rels-covered inact))
+                        (append (g-edge-rels-covered act)
+                           (g-edge-rels-covered inact))
                         :children
                         (let ((combined ; *** not very clean, really need an index
-                               (if (car (gen-chart-edge-children act))
+                               (if (car (g-edge-children act))
                                   (list act inact) (list inact act))))
-                           (if (rest (gen-chart-edge-needed act))
+                           (if (rest (g-edge-needed act))
                               ;; empty branch always on right, though if head was 3rd
                               ;; or subsequent daughter there will also/instead be
                               ;; interspersed unfilled arg slots
                               (nconc combined (list nil)) combined))
                         :leaves
-                        (gen-copy-list-and-insert (gen-chart-edge-leaves act)
-                           (gen-chart-edge-leaves inact)))))
-               (gen-chart-extend-active new-act input-sem))))))
+                        (gen-copy-list-and-insert (g-edge-leaves act)
+                           (g-edge-leaves inact)))))
+               (if one-off-p new-act
+                  (gen-chart-extend-active new-act input-sem)))))))
 
 
 (defun gen-chart-extend-active (act input-sem)
    ;; (show-gen-chart)
-   (if (gen-chart-edge-needed act)
+   (if (g-edge-needed act)
       ;; add newly extended active edge to chart, then
       ;; look for any existing inactive edges which can extend it
-      (let*
-         ((daughter-path
-             (if (listp (first (gen-chart-edge-needed act)))
-                (first (gen-chart-edge-needed act))
-                (list (first (gen-chart-edge-needed act)))))
-          (index
+      (let
+         ((index
              (gen-chart-dag-index
-                (existing-dag-at-end-of (tdfs-indef (gen-chart-edge-dag act))
-                   daughter-path)
-                (gen-chart-edge-id act))))
+                (existing-dag-at-end-of (tdfs-indef (g-edge-dag act))
+                   (if (listp (first (g-edge-needed act)))
+                      (first (g-edge-needed act))
+                      (list (first (g-edge-needed act)))))
+                (g-edge-id act))))
          (gen-chart-add-with-index act index)
          (dolist (e (gen-chart-retrieve-with-index index nil))
             (gen-chart-test-active e act input-sem)))
       ;; have ended up completing an active edge - forming a complete constituent
-      ;; so carry on processing it as an inactive edge
-      ;; Check first that we have by now generated all relations from input
-      ;; spec that refer to any indices that are internal to the constituent
-      ;; Doing this on creation of active edges seems not to be any
-      ;; more effective at filtering, and of course takes much more time
-      (let
-         ((dag (gen-chart-edge-dag act)))
-         (unless (gen-chart-inaccessible-needed-p
-                    dag input-sem (gen-chart-edge-rels-covered act)
-                    (gen-chart-edge-leaves act))
-            (setf (gen-chart-edge-dag act) dag)
-            (setf (gen-chart-edge-res act) nil)
-            (setf (gen-chart-edge-leaves act)
-               (apply #'append (gen-chart-edge-leaves act)))
-            (gen-chart-add-inactive act input-sem)))))
+      (progn
+         (gen-chart-finish-active act)
+         (gen-chart-add-inactive act input-sem))))
 
 
-;;; In relations in input-sem that haven't yet been generated, are there any
-;;; instance types which are internal to the dag - i.e. present in dag but are
-;;; (i.e. have become) inaccessible?
-;;; Present but inaccessible means: instance type is in dag semantics but not
-;;; in *semantics-index-path* or rest of dag. (The only access we allow to
-;;; semantics in rules is to *semantics-index-path*)
-
-(defun gen-chart-inaccessible-needed-p (dag input-sem rels-covered leaves)
-   (let
-      ((sem-fs
-          (existing-dag-at-end-of (tdfs-indef dag)
-             (append mrs::*initial-semantics-path* mrs::*psoa-liszt-path*))))
-      (unless sem-fs
-         (error "could not find semantics in ~A" 'gen-chart-inaccessible-needed-p))
-      (let
-         ((present-inaccessible-lvs
-              (gen-chart-present-inaccessible-variables-in (tdfs-indef dag) sem-fs))
-          (not-yet-generated-lvs nil))
-         (dolist (rel (mrs::psoa-liszt input-sem))
-            (unless (member rel rels-covered :test #'eq)
-               (dolist (fvpair (mrs::rel-flist rel))
-                  (when (mrs::var-p (mrs::fvpair-value fvpair))
-                     (pushnew
-                        ;; lv in portion of input-sem that hasn't been generated yet
-                        (mrs::make-instance-type (mrs::fvpair-value fvpair))
-                        not-yet-generated-lvs)))))
-         ;(print sem-fs)
-         ;(print (list rels-covered present-inaccessible-lvs not-yet-generated-lvs))
-         (let ((to-be-generated-but-inaccessible-p
-                  (gen-chart-intersection-p
-                     present-inaccessible-lvs not-yet-generated-lvs)))
-            (when (and to-be-generated-but-inaccessible-p *gen-filter-debug*)
-               (format t "~&Filtered out candidate inactive edge covering ~A ~
-                          with IVs ~(~A~) in semantics that are no longer reachable, ~
-                          but which has still to generate relations containing ~(~A~)"
-                  leaves present-inaccessible-lvs not-yet-generated-lvs))
-            to-be-generated-but-inaccessible-p))))
-
-
-(defun gen-chart-present-inaccessible-variables-in (dag sub-dag)
-   ;; return set of instance types that are in sub-dag (semantic part in call)
-   ;; but do not occur anywhere in remainder of dag U *semantics-index-path*
-   (set-difference
-      (gen-chart-instance-variables-in sub-dag nil nil)
-      (gen-chart-instance-variables-in dag sub-dag
-         (list
-            (let ((type
-                    (type-of-fs
-                       (existing-dag-at-end-of dag *semantics-index-path*))))
-               (if (consp type) (car type) type))))))
-
-
-(defun gen-chart-instance-variables-in (dag exclude res)
-   ;; iterate over all features present, necessarily using low-level access
-   ;; functions. Don't go into exclude dag
-   (invalidate-visit-marks)
-   (when exclude
-      ;; mark exclude dag as already visited
-      (setf (dag-visit exclude) :visited))
-   (gen-chart-instance-variables-in1 dag res))
-
-(defun gen-chart-instance-variables-in1 (dag res)
-   ;; mark dags already processed and don't re-enter them
-   (cond
-      ((eq (dag-visit dag) :visited))
-      ((is-atomic dag)
-         (dolist (type (type-of-fs dag))
-            (when (instance-type-parent type) (pushnew type res))))
-      (t
-         (when (instance-type-parent (type-of-fs dag)) ; instance type could be non-atomic
-            (pushnew (type-of-fs dag) res))
-         (setf (dag-visit dag) :visited)
-         (dolist (arc (dag-arcs dag))
-            (setq res
-               (gen-chart-instance-variables-in1 (dag-arc-value arc)
-                  res)))))
-   res)
+(defun gen-chart-finish-active (act)
+   ;; turn active into an inactive edge
+   (setf (g-edge-res act) nil)
+   (setf (g-edge-leaves act)
+      (apply #'append (g-edge-leaves act)))
+   act)
 
 
 ;;; Unification routines, entered only through gen-chart-try-unification
@@ -525,14 +555,7 @@
       fs fs-restricted completedp mother-path)
    ;; attempt to apply a grammar rule - c.f. apply-immediate-grammar-rule
    ;; in parse.lsp
-   (when
-      (if daughter-restricted
-         (restrictors-compatible-p daughter-restricted fs-restricted)
-         (x-restrict-and-compatible-p
-            (if (listp daughter-index)
-               (x-existing-dag-at-end-of (tdfs-indef rule-tdfs) daughter-index)
-               (x-get-dag-value (tdfs-indef rule-tdfs) daughter-index))
-            fs-restricted))
+   (when (restrictors-compatible-p daughter-restricted fs-restricted)
       (gen-chart-evaluate-unification rule-tdfs daughter-index fs completedp
          mother-path)))
 
@@ -585,6 +608,249 @@
 
 
 
+;;; Second phase, where modifiers are introduced
+;;;
+;;; if we could find just one preferred partial edge at this point then we would
+;;; potentially save a lot of work of inserting modifiers into all the other
+;;; analyses
+;;;
+;;; find missing rels and look for sets of potential modifier edges that cover them
+
+(defun gen-chart-adjoin-modifiers (partial-edges input-sem)
+   (let ((*active-modifier-edges* nil)
+         (mod-candidate-edges (gen-chart-intersective-inactive-edges))
+         (cached-rels-edges (make-hash-table :test #'equal))
+         (res nil))
+      (declare (special *active-modifier-edges*))
+      (dolist (partial partial-edges)
+         (when *gen-adjunction-debug*
+            (format t "~&Partial edge [~A] spanning ~A" (g-edge-id partial)
+               (g-edge-leaves partial)))
+         (let ((missing-rels
+                 (remove-if ; ***
+                    #'(lambda (r) (member r '(prpstn_rel hypo_rel MESSAGE ABSTR_E_REL SUPPORT_REL)))
+                    (gen-chart-set-difference
+                       (mrs::psoa-liszt input-sem) (g-edge-rels-covered partial))
+                    :key #'mrs::rel-sort)))
+            (when *gen-adjunction-debug*
+               (format t "~&Missing rel names ~A" (mapcar #'mrs::rel-sort missing-rels)))
+            (dolist (mod-alt
+                      (gen-chart-mod-edge-partitions
+                         (list (car missing-rels)) (cdr missing-rels) (cdr missing-rels)
+                         mod-candidate-edges cached-rels-edges))
+               (when *gen-adjunction-debug*
+                  (print 
+                     (mapcar
+                        #'(lambda (rels-and-edges)
+                             (cons (mapcar #'mrs::rel-sort (car rels-and-edges))
+                                (mapcar #'g-edge-id (cdr rels-and-edges))))
+                        mod-alt)))
+               (setq mod-alt (gen-chart-create-active-mod-edges mod-alt))
+               (let* ((e-ms-list
+                        (gen-chart-try-modifiers (list* partial nil (mapcar #'cdr mod-alt))))
+                      (complete
+                        (gen-chart-find-complete-edges
+                           (mapcan
+                              #'(lambda (e-ms)
+                                  (if (find-if #'consp (cddr e-ms)) nil (list (car e-ms))))
+                              e-ms-list)
+                           input-sem)))
+                  (setq res (nconc complete res))))))
+      res))
+
+
+(defun gen-chart-intersective-inactive-edges nil
+   ;; return a list of all inactive edges in chart which are able to function as
+   ;; intersective modifiers
+   (let ((res nil))
+      (dolist (entry *gen-chart*)
+         (dolist (e (cdr entry))
+            (when
+               (and (not (g-edge-needed e))
+                  ;; words like 'had' on their own with no semantics cannot
+                  ;; be intersective modifiers
+                  (g-edge-rels-covered e)
+                  (intersective-modifier-dag-p (tdfs-indef (g-edge-dag e))))
+               (push e res))))
+      res))
+
+(defun gen-chart-mod-edge-partitions (rels next rest mod-candidate-edges cached-rels-edges)
+   ;; compute sets of partitions of input relations with each partition containing
+   ;; the set of modifier edges that cover those relations: e.g.
+   ;; ( (((r1 r2) e1 e2) ((r3 r4) e3))  (((r1) e4 e5 e6) ((r2 r3 r4) e5)) )
+   (let ((rels-edges (gethash rels cached-rels-edges t)))
+      (when (eq rels-edges t)
+         (setq rels-edges nil)
+         (dolist (e mod-candidate-edges)
+            (when (gen-chart-set-equal-p (g-edge-rels-covered e) rels)
+               (push e rels-edges)))
+         (setf (gethash rels cached-rels-edges) rels-edges))
+      (if rest
+         (nconc
+            (when rels-edges
+               (mapcar
+                  #'(lambda (alt) (cons (cons rels rels-edges) alt))
+                  (gen-chart-mod-edge-partitions
+                     (list (car rest)) (cdr rest) (cdr rest) mod-candidate-edges
+                     cached-rels-edges)))
+            (mapcon
+               #'(lambda (tail)
+                   (gen-chart-mod-edge-partitions (cons (car tail) rels)
+                      (cdr tail) (remove (car tail) rest :test #'eq)
+                      mod-candidate-edges cached-rels-edges))
+               next))
+         (when rels-edges (list (list (cons rels rels-edges)))))))
+
+
+(defun gen-chart-create-active-mod-edges (mod-alt)
+   (flet
+      ((active-from-inactive (inact)
+         (mapcan
+            #'(lambda (rule-name)
+                (let ((rule (get-grammar-rule-entry rule-name)))
+                   (mapcan
+                      #'(lambda (path)
+                          (let ((act
+                                  (gen-chart-create-active rule inact
+                                     (cons path
+                                        (remove path (cdr (rule-order rule))))
+                                     (position path (cdr (rule-order rule))))))
+                              (when act
+                                 (gen-chart-add-with-index act *toptype*)
+                                 (when *gen-adjunction-debug*
+                                    (format t "~&Inactive [~A] -> active [~A]"
+                                       (g-edge-id inact) (g-edge-id act)))
+                                 (list act))))
+                      (cdr (rule-order rule)))))
+            *intersective-rule-names*)))
+      (declare (special *active-modifier-edges*))
+      (mapcar
+         #'(lambda (rels-and-edges)
+             (cons (car rels-and-edges)
+                (mapcan
+                   #'(lambda (inact)
+                       (let ((mods (getf *active-modifier-edges* inact t)))
+                          (copy-list
+                             (if (eq mods t)
+                                (setf (getf *active-modifier-edges* inact)
+                                   (active-from-inactive inact))
+                                mods))))
+                   (cdr rels-and-edges))))
+         mod-alt)))
+
+
+;;; Take set of possible modifier edges and try to apply each at every node in
+;;; partial tree
+;;; Only need to redo unifications above node replacements
+
+(defun gen-chart-try-modifiers (edge-and-mods)
+   (if (member (car edge-and-mods) (cadr edge-and-mods) :test #'eq)
+      (list edge-and-mods) ; we've already processed this node
+      (progn
+         (setq edge-and-mods
+            (list* (car edge-and-mods) (cons (car edge-and-mods) (cadr edge-and-mods))
+               (cddr edge-and-mods)))
+         (let ((daughters-alts (list (cons nil (cdr edge-and-mods)))))
+            (dolist (d (gen-chart-try-modifiers-children (car edge-and-mods)))
+               (setq daughters-alts
+                  (gen-chart-try-modifiers-daughter d daughters-alts)))
+            (gen-chart-apply-modifiers
+               (cons edge-and-mods
+                  (if (cdr daughters-alts)
+                     (mapcan
+                        #'(lambda (mods-and-daughters)
+                            (gen-chart-reapply-rule (car edge-and-mods)
+                               (reverse (car mods-and-daughters)) (cdr mods-and-daughters)))
+                        (cdr daughters-alts)))))))))
+
+(defun gen-chart-try-modifiers-children (e)
+   (mapcan
+      #'(lambda (c)
+          (when c
+             (if (g-edge-needed c)
+                (gen-chart-try-modifiers-children c)
+                (list c))))
+      (g-edge-children e)))
+
+(defun gen-chart-try-modifiers-daughter (d daughters-alts)
+   (mapcan
+      #'(lambda (alt)
+          (mapcar
+             #'(lambda (d-and-mods)
+                 (cons (cons (car d-and-mods) (car alt)) (cdr d-and-mods)))
+             (gen-chart-try-modifiers (cons d (cdr alt)))))
+      daughters-alts))
+
+
+(defun gen-chart-apply-modifiers (edge-and-mods-list)
+   ;; try and apply to edge one modifying active edge from an alternative
+   (append edge-and-mods-list
+      (mapcan
+         #'(lambda (edge-and-mods)
+             (let ((edge (car edge-and-mods))
+                   (res nil))
+                (dolist (act-set (cddr edge-and-mods))
+                   (dolist (act act-set)
+                      ;; (print (list (g-edge-id edge) (g-edge-id act)))
+                      (let ((new-edge (gen-chart-test-active edge act nil t)))
+                         (when (and new-edge
+                                    (not (g-edge-needed new-edge)))
+                            ;; only works if mod rules are binary branching so we have an
+                            ;; inactive edge now
+                            (gen-chart-finish-active new-edge) 
+                            ;(when *gen-adjunction-debug*
+                            ;   (print
+                            ;      (list (g-edge-leaves new-edge)
+                            ;         (g-edge-id act) (g-edge-id new-edge))))
+                            (gen-chart-add-with-index new-edge *toptype*)
+                            (setq res
+                               (append
+                                  (gen-chart-try-modifiers
+                                     (list* new-edge (cadr edge-and-mods)
+                                        (mapcar #'(lambda (set) (if (eq set act-set) nil set))
+                                           (cddr edge-and-mods))))
+                                  res))))))
+                res))
+         edge-and-mods-list)))
+
+
+(defun gen-chart-reapply-rule (edge daughters mods) ; -> list of edge-and-mods
+   (let*
+      ((rule
+         (or (get-grammar-rule-entry (edge-rule-number edge))
+             (get-lex-rule-entry (edge-rule-number edge))))
+       (unified-dag (rule-full-fs rule)))
+      (with-unification-context (ignore)
+         (loop 
+	    while unified-dag
+            for path in (cdr (rule-order rule))
+            for dtr in daughters
+	    as dtr-fs = (g-edge-dag dtr)
+	    do (setq unified-dag
+	         (yadu unified-dag (create-temp-parsing-tdfs dtr-fs path))))
+         (setq unified-dag
+            (and unified-dag
+               (copy-tdfs-elements
+                  (tdfs-at-end-of (car (rule-order rule)) unified-dag))))
+         (when unified-dag 
+            (let
+               ((new-edge
+                  (make-g-edge
+                     :id (next-edge) :rule-number (rule-id rule)
+                     :dag unified-dag
+                     :res nil
+                     :needed nil
+                     :rels-covered
+                     (mapcan #'(lambda (x) (copy-list (g-edge-rels-covered x)))
+                        daughters)
+                     :children daughters
+                     :leaves
+                     (mapcan #'(lambda (x) (copy-list (g-edge-leaves x)))
+                        daughters))))
+               (gen-chart-add-with-index new-edge *toptype*)
+               (list (cons new-edge mods)))))))
+
+
 ;;; Print out contents of generator chart (tty output) - (print-gen-chart)
 
 (defun print-gen-chart ()
@@ -593,15 +859,15 @@
       (format t "Vertex ~(~A~):~%" (car entry))
       (dolist (e (reverse (cdr entry))) ; to get in chronological order
          (format t "[~A] ~A~A ~30,5T=> (~{~:A~^ ~})  [~{~A~^ ~}]~%"
-            (gen-chart-edge-id e)
-            (gen-chart-edge-rule-number e)
-            (if (gen-chart-edge-needed e)
-               (format nil " / ~{~A~^ ~}" (gen-chart-edge-needed e))
+            (g-edge-id e)
+            (g-edge-rule-number e)
+            (if (g-edge-needed e)
+               (format nil " / ~{~A~^ ~}" (g-edge-needed e))
                "")
-            (gen-chart-edge-leaves e)
+            (g-edge-leaves e)
             (mapcan
-               #'(lambda (x) (if x (list (gen-chart-edge-id x))))
-               (gen-chart-edge-children e)))))
+               #'(lambda (x) (if x (list (g-edge-id x))))
+               (g-edge-children e)))))
    (format t "~%"))
 
 
