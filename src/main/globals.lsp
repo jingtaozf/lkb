@@ -56,7 +56,7 @@
 
 ;;; Parsing
 
-(def-lkb-parameter *maximum-number-of-edges* 3000)
+(def-lkb-parameter *maximum-number-of-edges* 500)
 
 (def-lkb-parameter *chart-limit* 100)
 
