@@ -156,7 +156,7 @@
                                            *maximum-number-of-edges*
                                            edges))
               (*first-only-p* (if (integerp nanalyses)
-                                nanalyses
+                                (unless (zerop nanalyses) nanalyses)
                                 (unless exhaustive
                                   (if (integerp readings)
                                     readings
