@@ -18,7 +18,7 @@
      (:TEMPLATES . ,(length *templates*))
      (:RULES . ,(hash-table-count *rules*))
      (:LRULES . ,(hash-table-count *lexical-rules*))
-     (:LEXICON . (size-of-lexicon))
+     (:LEXICON . ,(size-of-lexicon))
      (:GRAMMAR . ,(if (boundp '*grammar-version*) 
                       (symbol-value '*grammar-version*)
                       "unknown"))
