@@ -100,7 +100,7 @@
 
 (defstruct click-field 
    ;; the record from which a pop-up-menu is constructed
-   view-pos (clicked-p nil))
+   view-pos end-pos (clicked-p nil))
 
 (defstruct (type-click-field (:include click-field))
    ;; YADU - here and below, the slot full-tdfs is needed so that
@@ -108,7 +108,7 @@
    ;; with the full fs associated with full-tdfs
    type-label-list type shrunk-p atomic-p top-box full-tdfs)
 
-(defstruct (reentrancy-click-field (:include type-click-field))
+(defstruct (reentrancy-click-field (:include click-field))
    label valuep)
 
 (defstruct (title-click-field (:include click-field))
@@ -136,9 +136,7 @@
 (defun highlight-current-fs-node (record pane)
    (invert-text-box pane
       (type-click-field-view-pos record)
-      (+ (type-click-field-view-pos record)
-         (string-width
-            (string (type-click-field-type record)) (view-font pane))))) ; *** bold
+      (type-click-field-end-pos record)))
 
 
 ;;; pop up menus are created as separate views in the right position
@@ -157,12 +155,12 @@
               (and (> y-pos-click (- y-pos-node ascent eps))
                    (< y-pos-click (+ y-pos-node eps))
                    (> x-pos-click (- x-pos-node eps))
-                   (< x-pos-click (+ x-pos-node 100)))
-             (unless (click-field-clicked-p field)
-                (add-subviews pane
-                   (create-active-fs-pop-up field
-                      (make-point x-pos-node (- y-pos-node ascent))))
-                (setf (click-field-clicked-p field) t))
+                   (< x-pos-click (+ (point-h (click-field-end-pos field)) eps)))
+              (unless (click-field-clicked-p field)
+                 (add-subviews pane
+                    (create-active-fs-pop-up field
+                       (make-point x-pos-node (- y-pos-node ascent))))
+                 (setf (click-field-clicked-p field) t))
              (return nil)))))
     (call-next-method pane where)))
 
@@ -296,14 +294,14 @@
       max-width))
 
 
-(defun add-active-fs-region (stream start-pos type-label-list type shrunk-p 
+(defun add-active-fs-region (stream start-pos end-pos type-label-list type shrunk-p 
       atomic-p &optional top-box full-tdfs)
    ;; record info about position of data in active window
    ;; YADU --- full-tdfs for lrule display
    (push
-      (make-type-click-field :view-pos start-pos :type-label-list type-label-list
-         :type type :shrunk-p shrunk-p :atomic-p atomic-p
-         :top-box top-box :full-tdfs full-tdfs)
+      (make-type-click-field :view-pos start-pos :end-pos end-pos
+         :type-label-list type-label-list :type type :shrunk-p shrunk-p
+         :atomic-p atomic-p :top-box top-box :full-tdfs full-tdfs)
       (fields stream)))
 
 
@@ -312,8 +310,8 @@
 (defun add-type-and-active-fs-region (stream start-pos type-label-list val
                                       shrunk-p atomic-p &optional top-box full-tdfs)
    (with-bold-output stream (format stream "~(~A~)" val))
-   (add-active-fs-region stream start-pos type-label-list val shrunk-p atomic-p 
-      top-box full-tdfs))
+   (add-active-fs-region stream start-pos (current-position stream) type-label-list val
+      shrunk-p atomic-p top-box full-tdfs))
 
 
 ;;; **** displaying parents and paths ***
@@ -325,8 +323,10 @@
         do
         (let ((start-pos (current-position ostream)))
            (with-bold-output ostream
-             (format ostream "~(~A~)   " parent))
-           (add-active-fs-region ostream start-pos nil parent nil t)))
+              (format ostream "~(~A~)" parent)
+              (add-active-fs-region ostream start-pos (current-position ostream)
+                 nil parent nil t)
+              (format ostream "   " parent))))
    (let ((max-width (current-position-x ostream)))
       (format ostream "~%")
       max-width))
@@ -342,13 +342,17 @@
       (format ostream "~% ")
       (let ((start-pos (current-position ostream)))
          (with-bold-output ostream
-             (format ostream "~(~A~)   " input-type))
-         (add-active-fs-region ostream start-pos nil input-type nil t nil input))
+            (format ostream "~(~A~)" input-type)
+            (add-active-fs-region ostream start-pos (current-position ostream)
+               nil input-type nil t nil input)
+            (format ostream "   ")))
       (format ostream "  ->  ")       
       (let ((start-pos (current-position ostream)))
          (with-bold-output ostream
-             (format ostream "~(~A~)   " output-type))
-         (add-active-fs-region ostream start-pos nil output-type nil t nil output))
+            (format ostream "~(~A~)" output-type)
+            (add-active-fs-region ostream start-pos (current-position ostream)
+               nil output-type nil t nil output)
+            (format ostream "   ")))
       (setf max-width 
          (max max-width (current-position-x ostream)))
       (format ostream "~%")
@@ -373,7 +377,6 @@
          (type (type-click-field-type field))
          (shrunk-p (type-click-field-shrunk-p field))
          (atomic-p (type-click-field-atomic-p field))
-;         (top-box (type-click-field-top-box field))
          (full-structure (type-click-field-full-tdfs field))
          (type-entry (get-type-entry (if (listp type) (car type) type)))
          (type-p (if atomic-p :atomic :fs))
@@ -688,25 +691,26 @@
 ;;; **********************************************************************
 
 (defun create-active-fs-pop-up-reentrancy (field menu-pos)
-  ;; YADU --- full-tdfs for lrule display
-  (let ((label (reentrancy-click-field-label field))
-        (menu (make-instance 'active-fs-pop-up-field
-                 :view-position menu-pos
-                 :item-display (reentrancy-click-field-type field)
-                 :view-font (cons :bold (lkb-type-font)))))
+  (let* ((label (reentrancy-click-field-label field))
+         (valuep (reentrancy-click-field-valuep field))
+         (menu (make-instance 'active-fs-pop-up-field
+                  :view-position menu-pos
+                  :item-display (format nil "<~A>" label)
+                  :view-font (cons :bold (lkb-type-font)))))
       (apply #'add-menu-items menu
          (list
+            (make-instance 'menu-item
+               :menu-item-title "Find value"
+               :menu-item-action 
+               #'(lambda ()
+                   (select-fs-node-label label (view-container menu) nil))
+               :disabled valuep)
             (make-instance 'menu-item
                :menu-item-title "Find next"
                :menu-item-action 
                #'(lambda ()
                    (select-fs (view-container menu) field t)
-                   (select-fs-node-label label (view-container menu) field)))
-            (make-instance 'menu-item
-               :menu-item-title "Find value"
-               :menu-item-action 
-               #'(lambda ()
-                   (select-fs-node-label label (view-container menu) nil)))))
+                   (select-fs-node-label label (view-container menu) field)))))
       menu))
 
 
@@ -743,11 +747,12 @@
 
 
 (defun add-active-pointer (stream position pointer valuep)
+   (format stream "<~A>" pointer)
    (let ((record
-          (make-reentrancy-click-field :view-pos position
-             :label pointer :type (format nil "<~A>" pointer) :valuep valuep)))
+            (make-reentrancy-click-field :view-pos position
+               :end-pos (current-position stream)
+               :label pointer :valuep valuep)))
       (push record (fields stream))
-      (write-string (reentrancy-click-field-type record) stream)
       (when valuep
          (write-string " = " stream))))
 
