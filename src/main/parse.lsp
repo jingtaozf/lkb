@@ -221,7 +221,7 @@
 ;;; disabled by default, and hidden in `active.lsp'.
 ;;;                                                        (20-jun-99  -  oe)
 ;;;
-;;; now that we have tested the active parser some more (and people had the time
+;;; now that we have tested the active parser a bit (and people had the time
 ;;; to get used to the idea of active parsing :-), turn it on by default.
 ;;;                                                        (20-jan-00  -  oe)
 ;;;
@@ -272,22 +272,33 @@
 
 (defvar *brackets-list* nil)
 
-(defun parse (bracketed-input &optional (show-parse-p *show-parse-p*) 
-                                   (first-only-p *first-only-p*))
-  
-  (when (and first-only-p (greater-than-binary-p))
-    (format t "~%First only mode only works if rules are unary or binary.
-Setting *first-only-p* to nil")
-    (setf *first-only-p* nil)
-    (setf first-only-p nil))
-  (when *bracketing-p* (setf *active-parsing-p* nil))
-  (multiple-value-bind (user-input brackets-list)
-      (if *bracketing-p*
+(defun parse (bracketed-input &optional 
+                              (show-parse-p *show-parse-p*) 
+                              (first-only-p *first-only-p*))
+
+  (when (> (length user-input) *chart-limit*)
+    (error "Sentence `~a' too long - ~A words maximum (*chart-limit*)" 
+           user-input *chart-limit*))
+  ;;
+  ;; keep track of mutual dependencies between various configurations:
+  ;;   - input bracketing is only available in passive mode;
+  ;;   - passive best-first restricted to unary and binary rules.
+  ;;
+  (let* ((*active-parsing-p* (if *bracketing-p* nil *active-parsing-p*))
+         (first-only-p (if (and first-only-p 
+                                (null *active-parsing-p*)
+                                (greater-than-binary-p))
+                         (format 
+                          t 
+                          "~&Passive best-first mode only available for ~
+                           unary and binary rules.~%~
+                           Disabling best-first mode: setting ~
+                           *first-only-p* to `nil'.~%")
+                         first-only-p)))
+    (multiple-value-bind (user-input brackets-list)
+        (if *bracketing-p*
           (initialise-bracket-list bracketed-input)
           (values bracketed-input nil))
-    (if (> (length user-input) *chart-limit*)
-        (error "Sentence ~A too long - ~A words maximum (*chart-limit*)" 
-               user-input *chart-limit*)
       (let ((*brackets-list* brackets-list)
             (*executed-tasks* 0) (*successful-tasks* 0)
             (*contemplated-tasks* 0) (*filtered-tasks* 0)
@@ -299,7 +310,7 @@ Setting *first-only-p* to nil")
             ;;
             ;; shadow global variable to allow best-first mode to decrement for
             ;; each result found; eliminates need for additional result count.
-            ;;                                              (22-jan-00  -  oe)
+            ;;                                           (22-jan-00  -  oe)
             ;;
             (*first-only-p*
              (cond
@@ -315,7 +326,7 @@ Setting *first-only-p* to nil")
           (setf *parse-record* nil)
           (setf *parse-times* (list (get-internal-run-time)))
           #+powerpc(setq aa 0 bb 0 cc 0 dd 0 ee 0 ff 0 gg 0 hh 0 ii 0 jj 0)
-          (let ((*safe-not-to-copy-p* t))
+          (let ((*safe-not-to-copy-p* #-:cle t #+:cle nil))
             (add-morphs-to-morphs user-input)
             (catch :best-first
               (add-words-to-chart (and first-only-p (null *active-parsing-p*)
@@ -333,8 +344,8 @@ Setting *first-only-p* to nil")
               (setf *parse-record* 
                 (find-spanning-edges 0 (length user-input)))))
           (push (get-internal-run-time) *parse-times*))
-	(when show-parse-p (show-parse))
-	(values *executed-tasks* *successful-tasks* 
+        (when show-parse-p (show-parse))
+        (values *executed-tasks* *successful-tasks* 
                 *contemplated-tasks* *filtered-tasks*)))))
 
 
@@ -460,23 +471,22 @@ Setting *first-only-p* to nil")
              :to to))
 
 (defun get-senses (stem-string)
-  (let* (#+:ignore (*safe-not-to-copy-p* nil))
-    (for entry in (get-unexpanded-lex-entry stem-string)
-         filter
-         (when (not (cdr (lex-or-psort-orth entry)))
-           ;; exclude multi-words
-           (let* ((id (lex-or-psort-id entry))
-                  (expanded-entry (get-psort-entry id))
-                  (tdfs (when expanded-entry 
-                          (lex-or-psort-full-fs expanded-entry))))
-             (when tdfs
-               (cons id
-                     (cond
-                      ((smember tdfs *lexical-entries-used*)
-                       (copy-tdfs-completely tdfs))
-                      (t 
-                       (push tdfs *lexical-entries-used*)
-                       tdfs)))))))))
+  (for entry in (get-unexpanded-lex-entry stem-string)
+       filter
+       (when (not (cdr (lex-or-psort-orth entry)))
+         ;; exclude multi-words
+         (let* ((id (lex-or-psort-id entry))
+                (expanded-entry (get-psort-entry id))
+                (tdfs (when expanded-entry 
+                        (lex-or-psort-full-fs expanded-entry))))
+           (when tdfs
+             (cons id
+                   (cond
+                    ((smember tdfs *lexical-entries-used*)
+                     (copy-tdfs-completely tdfs))
+                    (t 
+                     (push tdfs *lexical-entries-used*)
+                     tdfs))))))))
 
 ;;; get-multi-senses has to return a structure
 
@@ -541,8 +551,7 @@ Setting *first-only-p* to nil")
 
 
 (defun get-multi-senses (stem-string right-vertex)
-  (let* (;; (*safe-not-to-copy-p* nil)
-	 (entries (get-unexpanded-lex-entry stem-string)))
+  (let* ((entries (get-unexpanded-lex-entry stem-string)))
     (for entry in (sort entries #'(lambda (x y) 
                                     (> (length (lex-or-psort-orth x))
                                        (length (lex-or-psort-orth y)))))
@@ -1209,7 +1218,8 @@ Setting *first-only-p* to nil")
 
 ;;; Parsing sentences from file
 
-(defun parse-sentences (&optional input-file (output-file 'unspec) run-file result-file)
+(defun parse-sentences (&optional input-file (output-file 'unspec) 
+                                  run-file result-file)
    (declare (ignore run-file result-file))
    (unless input-file 
       (setq input-file (ask-user-for-existing-pathname "Sentence file?")))
@@ -1220,11 +1230,14 @@ Setting *first-only-p* to nil")
       (with-open-file (istream input-file :direction :input)
          (when (eq output-file 'unspec)
             (setq output-file (ask-user-for-new-pathname "Output file?"))
+            (when (equal input-file output-file)
+              (error "Attempt to overwrite input file `~a'" input-file))
             (unless output-file (return-from parse-sentences)))
          (let ((line (read-line istream nil 'eof)))
             (if (and output-file (not (eq output-file t)))
                (with-open-file (ostream output-file :direction :output
-                                :if-exists :supersede :if-does-not-exist :create)
+                                :if-exists :supersede 
+                                :if-does-not-exist :create)
                   (batch-parse-sentences istream ostream line))
                (batch-parse-sentences istream output-file line))))))
 

@@ -40,6 +40,12 @@
 
 (defvar %binary-dir-name% 
     (or
+     #+(and (version>= 6 0) :linux86 :clim) ".l6cl"
+     #+(and (version>= 6 0) :linux86 (not :clim)) ".l6sl"
+     #+(and (version>= 6 0) :sparc :clim) ".s6cl" 
+     #+(and (version>= 6 0) :sparc (not :clim)) ".s6sl"
+     #+(and (version>= 6 0) :mswindows :clim) "w6cl" 
+     #+(and (version>= 6 0) :mswindows (not :clim)) "w6sl"
      #+(and :sparc :clim) ".sacl" #+(and :sparc (not :clim)) ".sasl"
      #+(and :linux86 :clim) ".lacl" #+(and :linux86 (not :clim)) ".lasl"
      #+(and :alpha :clim) ".aacl" #+(and :alpha (not :clim)) ".aasl"
