@@ -209,9 +209,12 @@
     (when stream
       (decf p-id)
       (loop
+          with context = :newline
+          for i from 1
           for line = (read-line stream nil nil)
           while line
           for string = (string-trim '(#\Space #\Tab #\Return) line)
+          for length = (length string)
           for pseparation = (search pseparator string)
           when (and pseparation (zerop pseparation)) do
             (let* ((string (subseq string (length pseparator)))
@@ -221,15 +224,26 @@
                 (push (pairlis '(:p-id :p-name :p-author :p-date) 
                                (list p-id p-name author date))
                       phenomenon)))
-          else unless (zerop (length string)) do
+            (setf context :phenomenon)
+          else when (zerop length) do
+            (setf context :newline)
+          else unless (zerop length) do
             (multiple-value-bind (offset extras)
                 (classify-item line)
-              (when (get-field :index extras)
-                (setf index (get-field :index extras)))
+              (when (and (eq (get-field :header extras) :envelope)
+                         (smember context '(:newline :phenomenon)))
+                (incf index 1000))
               (when (get-field :author extras)
                 (setf author (get-field :author extras)))
               (when (get-field :date extras)
                 (setf author (get-field :date extras)))
+              (let ((foo (get-field :index extras)))
+                (when (and (numberp foo) (not (= foo index)))
+                  (format
+                   t
+                   "read-items-from-ascii-file(): ~
+                    [~d] index mismatch (~d vs. ~d).~%"
+                   i foo index)))
               (let* ((string (subseq line offset))
                      (break (when separator 
                               (search separator string 
@@ -273,7 +287,9 @@
                       (push (pairlis '(:ip-id :i-id :p-id :ip-author :ip-date)
                                      (list base base p-id author date))
                             item-phenomenon))
-                    (incf base)))))))
+                    (incf base))))))
+            (setf context nil))
+
       (close stream)
       (when meter (meter :value (get-field :end meter)))
       (values 
@@ -342,10 +358,14 @@
         when (string-equal string key :start1 offset :end1 end) do
           (push (cons :category "EH") result)
           (push (cons :header t) result)
+          (when (string-equal key "From " :start1 offset :end1 end)
+            (push (cons :header :envelope) result))
           (when (string-equal key "From:" :start1 offset :end1 end)
+            (push (cons :header :from) result)
             (let ((value (subseq string (+ offset 5))))
               (push (cons :author (normalize-string value)) result)))
           (when (string-equal key "Subject:" :start1 offset :end1 end)
+            (push (cons :header :subject) result)
             (let* ((start (position #\# string :from-end t))
                    (index (when start
                             (read-from-string 
