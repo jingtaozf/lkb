@@ -284,21 +284,22 @@
 
 (defun add-morphs-to-morphs (user-input)
    (let ((current 0))
-      (dolist (word user-input)
-         (let* ((new (+ current 1))
+      (dolist (base-word user-input)
+        (let* ((word (string-upcase base-word))
+               (new (+ current 1))
                 (morph-poss 
                  (progn #+:powerpc(decf gg (CCL::%HEAP-BYTES-ALLOCATED))
                         (prog1
-                            (append 
+                            (union
                              (filter-for-irregs (morph-analyse word))
                              ;; filter is in rules.lsp
-                             (find-irregular-morphs word))
+                             (find-irregular-morphs word) :test #'equalp)
                           #+:powerpc(incf gg (CCL::%HEAP-BYTES-ALLOCATED))))))
            (unless morph-poss (format t "~%Word ~A is not in lexicon" word)
                    (return))
            (setf (aref *morphs* current)
                  (make-morph-edge :id current 
-                                  :word word 
+                                  :word base-word 
                                   :morph-results morph-poss))
            (setf current new)))))
 
@@ -382,8 +383,7 @@
 
 (defun get-senses (stem-string)
   (let* (;;(*safe-not-to-copy-p* nil)
-         (entries (get-unexpanded-lex-entry 
-                   (string-upcase stem-string))))
+         (entries (get-unexpanded-lex-entry stem-string)))
     (for entry in entries
          filter
          (if (not (cdr (lex-or-psort-orth entry)))
@@ -410,7 +410,7 @@
 	 (word-senses 
           (for stem in (remove-duplicates 
                         (for analysis in morph-poss
-                             collect (car analysis)) :test #'string-equal)
+                             collect (car analysis)) :test #'equal)
 	       ;; make sure we have all the possible stems in case inflection
 	       ;; is going to be allowed on rightmost element but otherwise
 	       ;; the variable morph-poss is not used
@@ -455,7 +455,7 @@
 
 (defun get-multi-senses (stem-string right-vertex)
   (let* (;; (*safe-not-to-copy-p* nil)
-	 (entries (get-unexpanded-lex-entry (string-upcase stem-string))))
+	 (entries (get-unexpanded-lex-entry stem-string)))
     (for entry in (sort entries #'(lambda (x y) 
                                     (> (length (lex-or-psort-orth x))
                                        (length (lex-or-psort-orth y)))))
@@ -1039,11 +1039,11 @@
             (setq output-file (ask-user-for-new-pathname "Output file?"))
             (unless output-file (return-from parse-sentences)))
          (let ((line (read-line istream nil 'eof)))
-            (if output-file
+            (if (and output-file (not (eq output-file t)))
                (with-open-file (ostream output-file :direction :output
                                 :if-exists :supersede :if-does-not-exist :create)
                   (batch-parse-sentences istream ostream line))
-               (batch-parse-sentences istream nil line))))))
+               (batch-parse-sentences istream output-file line))))))
 
 
 (defparameter *do-something-with-parse* nil)
@@ -1057,24 +1057,26 @@
 (defun batch-parse-sentences (istream ostream raw-sentence &optional access-fn)
    (setf *lex-ids-used* nil)
    (clear-type-cache)
-   (format t "~%;;; Parsing test file") (finish-output t)
+   (format t "~%;;; Parsing test file~%") (finish-output t)
    (let ((nsent 0)
+         (*print-right-margin* 300)
          (start-time (get-internal-run-time)))
       (loop
          (when (eql raw-sentence 'eof) (return))
-         (incf nsent)
-         (when (eql (rem nsent 50) 1)
+         (when (eql (rem nsent 50) 49)
             (clear-expanded-lex))      ; try and avoid image increasing
                                        ; at some speed cost
          (let ((interim-sentence (if access-fn (apply access-fn (list raw-sentence))
                                      raw-sentence)))
-            (unless (fboundp *do-something-with-parse*)
-               ;; if we're doing something else, let that function control the output
-               (when ostream
-                  (format ostream "~A~%" interim-sentence)
-                  (finish-output ostream)))
             (let ((sentence (string-trim '(#\Space #\Tab) interim-sentence)))
-               (unless (or (equal sentence "") (char= (elt sentence 0) #\;))
+              (unless (or (equal sentence "") (char= (elt sentence 0) #\;))
+                (incf nsent)
+                (unless (fboundp *do-something-with-parse*)
+                  ;; if we're doing something else, 
+                  ;; let that function control the output
+                  (when ostream
+                    (format ostream "~A ~S " nsent interim-sentence)
+                    (finish-output ostream)))
                  (let* ((munged-string 
                          (if (fboundp 'preprocess-sentence-string)
                              (preprocess-sentence-string sentence)
@@ -1089,11 +1091,14 @@
                        (error (condition)
                               (format t  "~%Error: ~A caused by ~A~%" condition user-input))) 
                    (unless (fboundp *do-something-with-parse*)
-                      ;; if we're doing something else, let that function control the output
-                      (when ostream
-                         (let ((n (length *parse-record*)))
-                            (format ostream "  ~R parse~:[s~;~] found~%" n (= n 1))
-                            (finish-output ostream)))))))
+                     ;; if we're doing something else, 
+                     ;; let that function control the output
+                     (when ostream
+                       (let ((n (length *parse-record*)))
+                         (format ostream "~A ~A ~A~%" n 
+                                 (edge-count)
+                                 *edge-id*))
+                       (finish-output ostream))))))
             (for lex-id in (collect-expanded-lex-ids *lexicon*)
                do
                (pushnew lex-id *lex-ids-used*))
@@ -1101,6 +1106,24 @@
       (format t "~%;;; Finished test file~%;;; Total CPU time: ~A msecs~%" 
           (- (get-internal-run-time) start-time))
       (lkb-beep)))
+
+(defun edge-count nil
+  (let ((distinct-parse-edges nil))
+    (dolist (p *parse-record*)
+      (setq distinct-parse-edges 
+        (local-parse-tsdb-distinct-edges p distinct-parse-edges)))
+    (length distinct-parse-edges)))
+      
+
+(defun local-parse-tsdb-distinct-edges (edge found)
+  ;; same as parse-tsdb-distinct-edges but don't want 
+  ;; to necessarily load tsdb
+   (pushnew edge found :test #'eq)
+   (when (and (edge-children edge)
+            (not (lexical-rule-p (edge-rule edge))))
+      (dolist (c (edge-children edge))
+         (setq found (local-parse-tsdb-distinct-edges c found))))
+   found)
 
 
 ;;; extracting a list of lexical entries used in a parse
