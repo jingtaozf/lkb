@@ -139,6 +139,7 @@
                      (if lex-entry
                        (lex-or-psort-full-fs (get-psort-entry lex-name))
                        (error "Entry for ~A not found" lex-name)))
+                    (infl-pos (lex-or-psort-infl-pos lex-entry))
                     (result-list
                      (cons (cons nil lex-entry-fs)
                            (try-all-lexical-rules 
@@ -158,6 +159,9 @@
                         (:ebl
                          (output-for-ebl orth fs ostream (car result-pair)
                                          lex-name lex-entry-fs))
+                        (:chic
+                         (output-for-chic orth fs ostream (car result-pair)
+                                          lex-name lex-entry-fs infl-pos))
                         (t (error "Unsupported syntax specifier ~A"
                                   syntax))))
                     (incf idno))))))))
@@ -190,6 +194,27 @@
             (cons base-id infl-rules)
             other-rules
             category)))
+
+(defun output-for-chic (orth fs ostream rule-list base-id base-fs infl-pos)
+  (declare (ignore fs))
+  (let* ((type (type-of-fs (tdfs-indef base-fs)))
+         (infl-rules nil)
+         (other-rules nil))
+    (declare (ignore type))
+    (for rule in rule-list 
+         do
+         (if (member rule *infl-rules*)
+             (push rule infl-rules)
+           (push rule other-rules)))
+    (unless other-rules
+      (format ostream 
+              "  {\"~(~S~)\", ~S, NULL, ~:[NULL~*~;\"~(~S~)\"~], ~S, ~S},~%" 
+              base-id
+              (if infl-pos (nth (- infl-pos 1) (split-into-words orth)) orth)
+              infl-rules
+              (if infl-rules (first infl-rules))
+              (if infl-pos infl-pos 0)
+              (length (split-into-words orth))))))
 
 (defvar *cat-type-cache* (make-hash-table))
 
