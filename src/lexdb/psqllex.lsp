@@ -351,8 +351,20 @@
       (mapcan #'(lambda (x) (split-into-words (string-upcase (car x))))
 	      (records query-res))))
 
-(defmethod collect-psort-ids ((lexicon psql-lex-database)  &key (recurse t))
+(defmethod collect-psort-ids ((lexicon psql-lex-database) &key (cache t) (recurse t))
   (declare (ignore recurse))
+  (with-slots (cache-lex-list) lexicon
+    (let ((lex-list cache-lex-list))
+      (when (null cache-lex-list)
+	(setf lex-list (collect-psort-ids-aux lexicon))
+	(if (null lex-list)
+	    (setf lex-list :empty))
+	(if cache (setf cache-lex-list lex-list)))
+      (case lex-list
+	(:empty nil)
+	(otherwise lex-list)))))
+
+(defmethod collect-psort-ids-aux ((lexicon psql-lex-database))
   (let* ((sql-str (sql-lex-id-set lexicon))
           (query-res (run-query 
                      lexicon 
@@ -556,7 +568,7 @@
 
 ;; lexicon is open
 (defmethod load-lex-from-files ((lexicon psql-lex-database) file-names syntax)
-  (setf *lex-file-list* file-names) ;;fix_me
+;  (setf *lex-file-list* file-names) ;;fix_me
   (setf *ordered-lex-list* nil) ;;fix_me
   (cond
    ((check-load-names file-names 'lexical)
@@ -618,6 +630,10 @@
       (lkb-beep)
       (set-filter lexicon))
     (format *postgres-debug-stream* "~%(new filter: ~a )" filter)))
+
+(defmethod set-filter-text-only ((lexicon psql-database) filter)
+  (fn-get-records lexicon ''initialize-current-grammar filter)
+  (empty-cache lexicon))
 
 (defun set-filter-psql-lexicon nil
   (set-filter *psql-lexicon*))

@@ -2,7 +2,7 @@
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron;
 ;;;   see `licence.txt' for conditions.
 
-;;; modifications by bmw (nov-03)
+;;; modifications by bmw (dec-03)
 ;;; - internal reworking of cdb-lex-database + cdb-leaf-database classes 
 ;;;   and associated script functions
 
@@ -31,7 +31,7 @@
 ;;; LexID -> orth sense-id
 ;;; Path_spec and Default are defined in the type file
 
-(defvar *lex-file-list* nil)
+;(defvar *lex-file-list* nil)
 
 (defvar *template-file* nil)
 
@@ -39,10 +39,34 @@
 
 (defvar *idiom-file* nil)
 
+;; entry fn
+(defun read-cached-sublex-if-available (cache-file-base filenames)
+  ;; force filenames to list
+  (unless (listp filenames) 
+    (setf filenames (list filenames)))
+  (cond
+   ((null filenames)
+    (error "no file names supplied"))
+   ((not (check-load-names filenames 'lexical))
+    (error "Lexicon file not found")
+    )
+   (t		
+    (let ((lex (make-instance 'cdb-lex-database)))
+      (open-lex lex
+		:parameters (list (make-nice-temp-file-pathname 
+				   (format nil "~a-~a.lex" (get-grammar-version) cache-file-base))
+				  (make-nice-temp-file-pathname 
+				   (format nil "~a-~a.idx" (get-grammar-version) cache-file-base))))
+      (unless (read-cached-lex lex filenames)
+	(let ((syntax (if (eql *lkb-system-version* :page) :tdl :path)))
+	  (load-lex-from-files lex filenames syntax)))
+      (link lex *lexicon*)
+      ))))
+
 (defun clear-lex-load-files nil
-  (setf *ordered-lex-list* nil)         ; adding this makes
+;  (setf *ordered-lex-list* nil)         ; adding this makes
                                         ; the fn name a bit of a misnomer
-  (setf *lex-file-list* nil)
+;  (setf *lex-file-list* nil)
   (setf *template-file* nil)
   (setf *idiom-file* nil)
   (setf *root-file* nil))
@@ -57,29 +81,36 @@
       (load-lex-from-files *lexicon* (list file-name) :path))))
 
 (defun reload-lex-files (&key (allp t))
-  (setf *syntax-error* nil)
-  (if (check-load-names *lex-file-list* 'lexical)
+  (when (typep *lexicon* 'psql-lex-database)
+    #-:tty(format t "~%Use Load Complete Grammar instead")
+    #+:tty(format t "~%Use (read-script-file-aux file-name) instead")
+    (return-from reload-lex-files))
+  (let ((lex-source-files (source-files *lexicon*)))
+    (setf *syntax-error* nil)
+    ;;  (if (check-load-names *lex-file-list* 'lexical)
+    (if (check-load-names lex-source-files 'lexical)
+	(progn
+	  (set-temporary-lexicon-filenames)
+	  (open-lex *lexicon* 
+		    :parameters (list *psorts-temp-file* *psorts-temp-index-file*))
+;;	  (load-lex-from-files *lexicon* (reverse *lex-file-list*)
+	  (load-lex-from-files *lexicon* lex-source-files
+			       (if (eql *lkb-system-version* :page) :tdl :path))
+	  (format t "~%Lexicon reload complete")
+	  (when (and allp *template-file*)
+	    (reload-template-file))
+	  (when (and allp *root-file*)
+	    (reload-root-file))
+	  #+:psql
+	  (when (and allp 
+		     (mwe-lexicon-enabled-p))
+	    (reload-roots-mwe *lexicon*))
+	  (when (and allp *idiom-file*)
+	    (reload-idiom-file))
+	  )
       (progn
-	(set-temporary-lexicon-filenames)
-	(open-lex *lexicon* 
-		      :parameters (list *psorts-temp-file* *psorts-temp-index-file*))
-        (load-lex-from-files *lexicon* (reverse *lex-file-list*)
-		  (if (eql *lkb-system-version* :page) :tdl :path))
-        (format t "~%Lexicon reload complete")
-        (when (and allp *template-file*)
-          (reload-template-file))
-	(when (and allp *root-file*)
-          (reload-root-file))
-	#+:psql
-	(when (and allp 
-		   (mwe-lexicon-enabled-p))
-	      (reload-roots-mwe *lexicon*))
-        (when (and allp *idiom-file*)
-	  (reload-idiom-file))
-	)
-    (progn
-      #-:tty(format t "~%Use Load Complete Grammar instead")
-      #+:tty(format t "~%Use (read-script-file-aux file-name) instead"))))
+	#-:tty(format t "~%Use Load Complete Grammar instead")
+	#+:tty(format t "~%Use (read-script-file-aux file-name) instead")))))
 
 (defun reload-template-file nil
   (setf *syntax-error* nil)
@@ -180,13 +211,15 @@
             (read-lex-entry istream)))))))
 
 (defun read-lex-entry (istream)
-   (let* ((orth (lkb-read istream nil))
-         (id (lkb-read istream nil)))
-      (push (make-lex-id orth id) *ordered-lex-list*)
-      (multiple-value-bind 
-         (non-def defs)
-         (read-psort-unifications id istream)
-         (add-lex-from-file orth id non-def defs))))
+  (let* ((orth (lkb-read istream nil))
+	 (id (lkb-read istream nil)))
+;      (push (make-lex-id orth id) *ordered-lex-list*)
+;    (setf (cache-lex-list *lexicon-in*)
+;      (cons (make-lex-id orth id) (collect-psort-ids *lexicon-in*))) ;;fix_me properly
+    (multiple-value-bind 
+	(non-def defs)
+	(read-psort-unifications id istream)
+      (add-lex-from-file orth id non-def defs))))
 
 ;;; other sorts of entry
 

@@ -38,8 +38,8 @@
 (defvar *postgres-current-country*)
 
 (defvar *postgres-export-output-lexicon* nil)
-(defvar common-lisp-user::*grammar-version*)
-(defvar *grammar-version*)
+;(defvar common-lisp-user::*grammar-version*)
+;(defvar *grammar-version*)
 (defvar *postgres-export-default-fields-map*
     '((:ID "name" "" "symbol") 
       (:ORTH "orthography" "" "string-list") 
@@ -749,13 +749,22 @@
       source)))
 
 (defun get-current-source nil
-  (cond
-   ((boundp '*grammar-version*)
-    *grammar-version*)
-   ((boundp 'common-lisp-user::*grammar-version*)
-    common-lisp-user::*grammar-version*)
-   (t
-    (format t "WARNING: no *GRAMMAR-VERSION* defined!"))))
+  (let ((version (or (and (find-package :lkb)
+			  (find-symbol "*GRAMMAR-VERSION*" :lkb))
+		     (find-symbol "*GRAMMAR-VERSION*" :common-lisp-user))))
+    (if (and version (boundp version))
+	(symbol-value version)
+      (format t "WARNING: no *GRAMMAR-VERSION* defined!"))))
+    
+;    (cond
+;     (	   (boundp version))
+;    *grammar-version*)
+;      (symbol-value '*grammar-version*))
+;     ((boundp 'common-lisp-user::*grammar-version*)
+;    common-lisp-user::*grammar-version*)
+;      (symbol-value 'common-lisp-user::*grammar-version*))
+;     (t
+;      (format t "WARNING: no *GRAMMAR-VERSION* defined!")))))
 
 ;;;
 ;;; extract grammatical fields

@@ -34,10 +34,10 @@
   ((lexical-entries :initform (make-hash-table :test #'equal))
    (psorts :initform (make-hash-table :test #'eq))
    (extra-lexicons :initform nil :reader extra-lexicons) ;: use link/unlink to write
-;;   (extra-mode :initform :union :accessor extra-mode)
    (extra-mode :initform *lex-database-default-extra-mode* :accessor extra-mode)
    (part-of :initform nil :accessor part-of)
    (invalid-p :initform t :accessor invalid-p)
+   (cache-lex-list :initform nil :accessor cache-lex-list)
    ))
 
 (defmethod link ((sub-lexicon lex-database) (lexicon lex-database))
@@ -96,7 +96,7 @@
 ;;; identifiers of lexical items plus start symbols and node labels (for the
 ;;; time being, these are stored in the same namespace).
 ;;;
-(defgeneric collect-psort-ids (lexicon &key (recurse t)))
+(defgeneric collect-psort-ids (lexicon &key (cache t) (recurse t)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -512,13 +512,13 @@
 	 (words (cons words extra)))
     (remove-duplicates (mapcan #'(lambda (x) x) words) :test #'equal)))
 
-(defmethod collect-psort-ids :around ((lexicon lex-database) &key (recurse t))
+(defmethod collect-psort-ids :around ((lexicon lex-database) &key (cache t) (recurse t))
   (let* ((ids (if (next-method-p) (call-next-method)))
 	 (extra 
 	  (if recurse
 	      (loop
 		  for lexicon in (extra-lexicons lexicon)
-		  for extra-ids = (and lexicon (collect-psort-ids lexicon :recurse recurse))
+		  for extra-ids = (and lexicon (collect-psort-ids lexicon :cache cache :recurse recurse))
 		  collect extra-ids)))
 	 (ids (cons ids extra)))
     (remove-duplicates (mapcan #'(lambda (x) x) ids) :test #'equal)))
@@ -557,11 +557,12 @@
     lexicon))
 
 (defmethod empty-cache ((lexicon lex-database))
-  (with-slots (lexical-entries psorts) lexicon
+  (with-slots (lexical-entries psorts cache-lex-list) lexicon
     (when (fboundp 'clear-generator-lexicon)
       (funcall 'clear-generator-lexicon))
     (clrhash lexical-entries)
     (clrhash psorts)
+    (setf cache-lex-list nil)
     (when (fboundp 'clear-lexicon-indices)
       (funcall 'clear-lexicon-indices))
     lexicon))
@@ -600,9 +601,115 @@
    (psql-lexicon-enabled-p)
    *postgres-mwe-enable*))
 
+;;;
+;;; format conversion
+;;;
+
+(defun str-2-symb (str)
+  (unless (stringp str)
+    (error "string exected"))
+  (intern (string-upcase str) :lkb))
+
+(defun str-2-keyword (str)
+  (unless (stringp str)
+    (error "string exected"))
+  (intern (string-upcase str) :keyword))
+
+;; currently 'str-2-lisp-object' ...
+(defun str-2-list (str)
+  (with-package (:lkb)
+    (let ((item (read-from-string str)))
+      (cond
+       ((listp item)
+	item)
+       (t
+	(error "list expected"))))))
+
+;; use (parse-integer X :junk-allowed t) for integers
+(defun str-2-num (str &optional default)
+  (with-package (:lkb)
+    (let ((item (read-from-string str)))
+      (cond
+       ((numberp item)
+	item)
+       ((eq default t)
+	(error "number expected"))
+       (t default)))))
+
+(defun str-2-numstr (str &optional default)
+  (let ((num (str-2-num str)))
+    (cond
+     ((numberp num) 
+      (format nil "~a" num))
+     ((eq default t)
+      (error "number expected"))
+     (t default))))
+
+(defun str-list-2-str (str-list &optional (separator " "))
+  (unless (listp str-list)
+    (error "list expected"))
+  (cond
+   ((null str-list) "")
+   (t (apply 'concatenate
+	     (cons
+	      'string
+	      (cons
+	       (pop str-list)
+	       (mapcan #'(lambda (x) (list separator x)) str-list)))))))
+  
+(defun symb-2-str (symb)
+  (unless (symbolp symb)
+    (error "symbol expected"))
+  (cond
+   ((null symb) "")
+   (t (string-downcase (string symb)))))
+
+(defun num-2-str (num)
+  (if (null num)
+      (return-from num-2-str))
+  (unless (numberp num)
+    (error "number expected"))
+  (format nil "~a" num))
+  
+(defun char-2-symb (c)
+  (unless (characterp c)
+    (error "character expected"))
+  (str-2-symb (string c)))
+
+(defun char-2-num (c)
+  (unless (characterp c)
+    (error "character expected"))
+  (str-2-num (string c)))
+
+(defun 2-symb (x)
+  (cond
+   ((symbolp x) x)
+   ((stringp x) (str-2-symb x))
+   (t (error "unhandled type"))))
+
+(defun 2-str (x)
+  (cond
+   ((stringp x) x)
+   ((symbolp x) (symb-2-str x))
+   ((numberp x) (num-2-str x))
+   (t (error "unhandled type"))))
+
+;;;
+;;; misc
+;;;
+
 (defun make-nice-temp-file-pathname (filename)
   (make-pathname :name filename
-                 :host (pathname-host (lkb-tmp-dir))
-                 :device (pathname-device (lkb-tmp-dir))
-                 :directory (pathname-directory (lkb-tmp-dir))))
+		 :host (pathname-host (lkb-tmp-dir))
+		 :device (pathname-device (lkb-tmp-dir))
+		 :directory (pathname-directory (lkb-tmp-dir))))
+
+(defun get-grammar-version nil
+  (let ((grammar-version (or (and (find-package :lkb)
+				  (find-symbol "*GRAMMAR-VERSION*" :lkb))
+			     (find-symbol "*GRAMMAR-VERSION*" :common-lisp-user))))
+    (if (and grammar-version (boundp grammar-version))
+            (remove-if-not #'alphanumericp (symbol-value grammar-version))
+            "UNKNOWN_VERSION")))
+
 

@@ -3,7 +3,7 @@
 ;;;   see `licence.txt' for conditions.
 
 
-;;; modifications by bmw (nov-03)
+;;; modifications by bmw (dec-03)
 ;;; - internal reworking of cdb-lex-database + cdb-leaf-database classes 
 ;;;   and associated script functions
 
@@ -16,7 +16,7 @@
 
 (in-package :lkb)
 
-(defvar *lex-file-list*)
+;(defvar *lex-file-list*)
 
 (defparameter *syntax-error* nil
   "boolean that is set to t if a syntax error is detected")
@@ -34,7 +34,9 @@
 	      :initarg :temp-file)
    (temp-index-file :initform nil
 		    :accessor temp-index-file
-		    :initarg :temp-index-file)))
+		    :initarg :temp-index-file)
+   (source-files :initform nil :accessor source-files)
+   ))
 
 (setf *lexicon* (make-instance 'cdb-lex-database))
 
@@ -61,18 +63,19 @@
 
 ;; lexicon is open...
 ;; open-write lexicon, read filenames whilst building cache, close-write lexicon
-(defmethod build-cache ((lexicon cdb-lex-database) file-names syntax)
-  (with-slots (invalid-p) lexicon
+(defmethod build-cache ((lexicon cdb-lex-database) filenames syntax)
+  (with-slots (invalid-p source-files) lexicon
 ;    (setf invalid-p nil)
     (open-write lexicon)
-    (setf *lex-file-list* file-names) ;;fix_me
+    (setf source-files filenames) 
+;    (setf *lex-file-list* filenames) ;;fix_me
     (setf *ordered-lex-list* nil) ;;fix_me
     (cond
-     ((check-load-names file-names 'lexical)
+     ((check-load-names filenames 'lexical)
       (let ((syntax-error *syntax-error*))
 	(let* ((*lexicon-in* lexicon);; *lexicon-in* is needed deep inside read-...-file-aux
 	       (*syntax-error* nil)) 
-	  (dolist (file-name file-names)
+	  (dolist (file-name filenames)
 	    (ecase syntax
 	      (:tdl (read-tdl-lex-file-aux-internal file-name))
 	      (:path (read-lex-file-aux-internal file-name))))
@@ -155,8 +158,11 @@
        ((and (eq (cdb::cdb-mode orth-db) :input)
 	     (eq (cdb::cdb-mode psort-db) :input))
 	t)
+       ((and (eq (cdb::cdb-mode orth-db) :output)
+	     (eq (cdb::cdb-mode psort-db) :output))
+	nil)
        ((and (eq (cdb::cdb-mode orth-db) nil)
-	     (eq (cdb::cdb-mode orth-db) nil))
+	     (eq (cdb::cdb-mode psort-db) nil))
 	nil)
        (t
 	(error "internal"))))))
@@ -168,19 +174,24 @@
        ((and (eq (cdb::cdb-mode orth-db) :output)
 	     (eq (cdb::cdb-mode psort-db) :output))
 	t)
+       ((and (eq (cdb::cdb-mode orth-db) :input)
+	     (eq (cdb::cdb-mode psort-db) :input))
+	nil)
        ((and (eq (cdb::cdb-mode orth-db) nil)
-	     (eq (cdb::cdb-mode orth-db) nil))
+	     (eq (cdb::cdb-mode psort-db) nil))
 	nil)
        (t
 	(error "internal"))))))
 
 (defmethod close-lex ((lexicon cdb-lex-database) &key in-isolation delete)
   (declare (ignore in-isolation))
-  (close-read-write lexicon)
-  (if delete
-      (delete-temporary-lexicon-files lexicon))
-  (setf (temp-file lexicon) nil)
-  (setf (temp-index-file lexicon) nil))
+  (with-slots (source-files temp-file temp-index-file) lexicon
+    (close-read-write lexicon)
+    (if delete
+	(delete-temporary-lexicon-files lexicon))
+    (setf source-files nil)
+    (setf temp-file nil)
+    (setf temp-index-file nil)))
 
 ;; lexicon is open...
 (defmethod close-read-write ((lexicon cdb-lex-database))
@@ -245,13 +256,27 @@
     (when orth-db
       (cdb:all-keys orth-db))))
 
-(defmethod collect-psort-ids ((lexicon cdb-lex-database) &key (recurse t))
+(defmethod collect-psort-ids ((lexicon cdb-lex-database) &key (cache t) (recurse t))
   (declare (ignore recurse))
+  (with-slots (cache-lex-list) lexicon
+    (let ((lex-list cache-lex-list))
+      (when (null cache-lex-list)
+	(setf lex-list (collect-psort-ids-aux lexicon))
+	(if (null lex-list)
+	    (setf lex-list :empty))
+	(if cache (setf cache-lex-list lex-list)))
+      (case lex-list
+	(:empty nil)
+	(otherwise lex-list)))))
+
+(defmethod collect-psort-ids-aux ((lexicon cdb-lex-database))
+  (unless (open-read-p lexicon) ;;fix_me sometime
+    (return-from collect-psort-ids-aux nil)) 
   (with-slots (psort-db) lexicon
     (when psort-db
       (let ((res (cdb:all-keys psort-db)))
-	(unless (equal res '("NIL")) ;; check this
-	  res)))))
+	(unless (equal res '("NIL")) ;; this is cdb output for empty lex
+	  (mapcar #'2-symb res))))))
 
 (defmethod set-lexical-entry ((lexicon cdb-lex-database) orth id new-entry)
   (with-slots (orth-db ) lexicon
@@ -283,7 +308,7 @@
 ;; lexicon is open...
 (defun write-empty-lex (lexicon)
   (open-write lexicon)
-  (setf *ordered-lex-list* nil)
+;  (setf *ordered-lex-list* nil)
   (store-psort lexicon nil nil nil)
   (close-read-write lexicon)
   lexicon)

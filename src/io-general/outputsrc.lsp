@@ -73,8 +73,8 @@
     (with-open-file 
         (ostream file-name :direction :output :if-exists :supersede)
       (let ((count 0))
-        (loop for lex-name in (reverse *ordered-lex-list*)
-             do
+        (loop for lex-name in (collect-psort-ids *lexicon*)
+              do
              (if (> count 100)
                (progn (clear-expanded-lex)
                       (setf count 0))
@@ -114,10 +114,10 @@
                                :direction :output
                                :if-exists :supersede
                                :if-does-not-exist :create))))
-          (unless (or ids-used *ordered-lex-list*)
+          (unless (or ids-used (collect-psort-ids *lexicon*))
             (cerror "Continue without lexicon" 
                     "No lexicon list - lexicon must be read in from scratch"))
-          (loop for lex-name in (or ids-used (reverse *ordered-lex-list*))
+          (loop for lex-name in (or ids-used (collect-psort-ids *lexicon*)) ;; use collect-psort-ids instead
                do            
                (if (> count 100)
                  (progn (clear-expanded-lex)
@@ -188,10 +188,10 @@
                                :direction :output
                                :if-exists :supersede
                                :if-does-not-exist :create))))
-          (unless (or ids-used *ordered-lex-list*)
+          (unless (or ids-used (collect-psort-ids *lexicon*))
             (cerror "Continue without lexicon" 
                     "No lexicon list - lexicon must be read from scratch"))
-          (loop for lex-name in (or ids-used (reverse *ordered-lex-list*))
+          (loop for lex-name in (or ids-used (collect-psort-ids *lexicon*)) ;;fix_me
                do            
                (if (> count 100)
                  (progn (clear-expanded-lex)
@@ -320,7 +320,7 @@
 
 (defun output-lexicon-for-pet (file 
                                &optional (format :pet)
-                                         (ids (or *ordered-lex-list*
+                                         (ids (or (collect-psort-ids *lexicon*)
                                                   (collect-expanded-lex-ids 
                                                    *lexicon*))))
   (if (null ids)

@@ -2,7 +2,7 @@
 ;;; see licence.txt for conditions
 
 
-;;; modifications by bmw (nov-03)
+;;; modifications by bmw (dec-03)
 ;;; - internal reworking of cdb-lex-database + cdb-leaf-database classes 
 ;;;   and associated script functions
 
@@ -66,10 +66,13 @@
            (read-tdl-lex-avm-def istream name)
          (check-for #\. istream name)
          (if (member name *ordered-lex-list* :test #'eq)
-           (format
-            t
-            "~%WARNING: lexicon entry `~a' redefined." name)
-           (push name *ordered-lex-list*))
+	     (format
+	      t
+	      "~%WARNING: lexicon entry `~a' redefined." name)
+	   (push name *ordered-lex-list*)
+;	   (setf (cache-lex-list *lexicon-in*)
+;	     (cons name (collect-psort-ids *lexicon-in*))) ;;fix_me properly
+	   )
 	 (let ((*readtable* (copy-readtable nil))) ;;bmw
 	   (add-lex-from-file nil name constraint default))))))
 

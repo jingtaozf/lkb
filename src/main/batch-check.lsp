@@ -29,7 +29,7 @@
     (format t "~%  - difference-list check starts at path ~a" start-path)
     (dolist (id (collect-psort-ids *lexicon*))
       ;; alternatively - for lexicon only
-      ;; (reverse *ordered-lex-list*) 
+      ;; (collect-psort-ids *lexicon*) 
       (let* ((entry (read-psort *lexicon* id))
              (lex-id (lex-entry-id entry)))
         (expand-psort-entry entry)
@@ -117,7 +117,7 @@
   ;;; plus-ids is a boolean value: if set to t, it 
   ;;; also outputs the id of the base form and the rule 
   ;;; used to generate the new form
-  (loop for lexid in *ordered-lex-list*
+  (loop for lexid in (collect-psort-ids *lexicon*)
        do
        (gen-all-morphs lexid (get-lex-entry-from-id lexid) plus-ids)))   
 
