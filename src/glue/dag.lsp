@@ -56,6 +56,7 @@
         (failure-context object) (failure-context object))))))
 
 (defun debug-yadu! (tdfs1 tdfs2 path)
+  #+:debug
   (setf %tdfs1 tdfs1 %tdfs2 tdfs2)
   (with-unification-context (ignore)
     (let* ((dag1 (tdfs-indef tdfs1))
@@ -67,6 +68,7 @@
       (when result (make-tdfs :indef result)))))
 
 (defun debug-unify-dags (dag1 dag2)
+  #+:debug
   (setf %dag1 dag1 %dag2 dag2)
   (debug-unify1 dag1 dag2 nil) 
   (copy-dag dag1))
