@@ -1021,6 +1021,9 @@ proc main {} {
   .menu.options.menu.filters add checkbutton -label "MRS Sparseness" \
     -variable globals(filters,sparseness) \
     -command tsdb_filters;
+  .menu.options.menu.filters add checkbutton -label "MRS Predicate" \
+    -variable globals(filters,predicate) \
+    -command tsdb_filters -state disabled;
   .menu.options.menu.filters add checkbutton -label "MRS Scoping" \
     -variable globals(filters,scope) \
     -command tsdb_filters;

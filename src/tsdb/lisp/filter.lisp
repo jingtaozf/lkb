@@ -72,7 +72,12 @@
           for stream = (make-string-output-stream)
           for scopes = (when mrs 
                          (let ((*standard-output* stream))
-                           (mrs::make-scoped-mrs mrs)))
+                           (multiple-value-bind (result error)
+                               (ignore-errors
+                                (mrs::make-scoped-mrs mrs))
+                             (when error
+                               (format stream "~a" error))
+                             result)))
           when (and mrs (null scopes))
           do 
             (let ((output (and verbose (get-output-stream-string stream))))
@@ -95,11 +100,11 @@
                       (:sparseness
                        (format 
                         t 
-                        "    has only ~a relation~p.~%"
+                        "    sparseness: only ~a relation~p.~%"
                         (second foo) (second foo)))
                       (:scope
                        (format 
                         t 
-                        "    scope error: `~a'~%"
+                        "    scoping: `~a'.~%"
                         (normalize-string (second foo))))))))
       item)))
