@@ -23,21 +23,21 @@ proc copyleft {action} {
 
       label $copyleft.title -bg $bg -fg grey -font [concat $large {bold}] \
         -text "$globals(name)  -  version $globals(version)"
-      frame $copyleft.zero -bg $bg -height 6
+      frame $copyleft.zero -bg $bg -height 5
       label $copyleft.first -bg $bg -fg grey -font $small \
         -text "Copyleft (c) 1995 - 1999 by Stephan Oepen (oe@coli.uni-sb.de) \
                -  All Rights Reserved"
-      frame $copyleft.second -bg $bg -height 10
+      frame $copyleft.second -bg $bg -height 8
       label $copyleft.third -bg $bg -fg green -font [concat $normalsize] \
         -text "$globals(name) is available free of royalties\
                for research purposes."
       if {[info exists globals(copyleft,key)]
           && [oe copyleft $globals(copyleft,key)]} {
-        frame $copyleft.fourth -bg $bg -height 8
+        frame $copyleft.fourth -bg $bg -height 6
         label $copyleft.fifth -bg $bg -fg grey -font [concat $normalsize] \
           -text [format {-  Registered Copy [%s]  -} $globals(copyleft,key)];
       } else {
-        frame $copyleft.fourth -bg $bg -height 6
+        frame $copyleft.fourth -bg $bg -height 5
         label $copyleft.fifth -bg $bg -fg grey -font [concat $normalsize] \
           -text "Until registered, after several minutes of continuous use\
                  a log entry will be generated and\n\
