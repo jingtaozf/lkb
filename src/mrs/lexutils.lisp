@@ -105,20 +105,36 @@
 ;;; actually used by lexlookup, but convenient to define in USER
 
 (defun make-mrs-unifs (fvplist initial-features)
-  (let ((initial-path (create-typed-path-from-feature-list initial-features)))
-    (for fvp in fvplist
-         filter
-         (let ((value (mrs:fvpair-value fvp)))
-           (if (listp value)
-               nil
-             (make-unification :lhs (make-typed-path 
-                                     :typed-feature-list
-                                     (append (path-typed-feature-list
-                                              initial-path)
-                                             (path-typed-feature-list
-                                              (mrs:fvpair-feature fvp))))
-                               :rhs (make-u-value :types
-                                                  (list (deasterisk value)))))))))
+  (for fvp in fvplist
+       filter
+       (let ((value (mrs::extrapair-value fvp)))
+           (make-unification 
+            :lhs 
+            (make-path 
+             :typed-feature-list
+             (append initial-features
+                     (extract-mrs-path
+                      (mrs::extrapair-feature fvp))))
+            :rhs (make-u-value :types
+                               (list (deasterisk value)))))))
+
+(defun extract-mrs-path (dotted-feature)
+  (let ((feature-string (nreverse (coerce (string dotted-feature) 'list)))
+        (current-feat nil)
+        (feats nil))
+    (dolist (char feature-string)
+      (if (char= char #\.)
+          (when current-feat
+            (push (intern (coerce current-feat 'string))
+                  feats)
+            (setf current-feat nil))
+        (push char current-feat)))
+    (when current-feat
+      (push (intern (coerce current-feat 'string))
+            feats))
+    feats))
+
+  
 
 (defun deasterisk (value)
   (let ((val-string (reverse (string value))))

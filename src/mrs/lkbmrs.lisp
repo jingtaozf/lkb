@@ -73,17 +73,9 @@
       (car type)
     type))
 
-;;; string conversion now done in the proper place - part of
-;;; the MRS to VIT conversion
-
 (defun equal-or-subtype (type1 type2)
   (or (equal type1 type2)
       (subtype-p type1 type2)))
-
-;;; called from mrs-to-vit
-
-(defun tdl-show-current-domain nil
-  nil)
 
 (defun is-top-type (val)
 ;;; also defined for PAGE

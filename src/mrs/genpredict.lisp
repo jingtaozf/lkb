@@ -65,8 +65,6 @@
         (condition-fs (path-value fs *mrs-rule-condition-path*)))
       (if (and condition-fs output-fs)
           (let* ((variable-generator (create-variable-generator 1000))
-                 (*psoa-rh-cons-path* `( ,(vsym "H-CONS")  ,(vsym "LIST")))
-                 (*psoa-liszt-path* `( ,(vsym "LISZT")  ,(vsym "LIST")))
                  (output-spec (construct-output-id output-fs))
                  (condition-spec 
                       (construct-mrs condition-fs variable-generator)))

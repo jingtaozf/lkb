@@ -10,7 +10,7 @@
   (let* ((rels (psoa-liszt mrsstruct))
          (hcons (psoa-h-cons mrsstruct))
          (labels nil) (holes nil) (equated-list nil)
-         (top-handel (get-var-num (psoa-handel mrsstruct))))
+         (top-handel (get-var-num (psoa-top-h mrsstruct))))
     (for rel in rels
          do
          (let ((var (rel-handel rel)))
@@ -23,9 +23,8 @@
            (for full-handel-var in (get-full-handel-args rel)
                 do
                 (let ((handel-var (var-id full-handel-var)))
-                  (if (member handel-var labels)
-                      (push handel-var equated-list)
-                    (push full-handel-var *unbound-holes*))
+                  (when (member handel-var labels)
+                      (push handel-var equated-list))
                   (pushnew handel-var holes))))
     (pushnew top-handel holes) ;; this may be wrong, given the use of prpstn etc
     (process-hcons hcons labels holes equated-list)))

@@ -126,6 +126,7 @@ at this point).
 |#
             
 (defun find-partial-orders (ids)
+  (declare (ignore ids))
   nil)
 ;;;  '((PROJECT_N1 MANAGER_N1)))
 
@@ -444,19 +445,17 @@ at this point).
                                         (rel-handel rel-str)))))
         (other-unifs
          (for fvp in (rel-flist rel-str)
-        append
-        (let* ((feature (fvpair-feature fvp)) ; should be a symbol
-              (value (fvpair-value fvp))
-              (new-path (append path (list feature))))
-          (if (listp value) ; exclude conj values for the time being
-              nil
-            (if (var-p value)
-                (cons
-                   (make-pv-unif (append new-path *instloc-path*)
-                               (make-instance-type value))
-                   (CL-USER::make-mrs-unifs (var-extra value) new-path))
-               (list (make-pv-unif new-path
-                                   value))))))))
+              append
+              (let* ((feature (fvpair-feature fvp)) ; should be a symbol
+                     (value (fvpair-value fvp))
+                     (new-path (append path (list feature))))
+                (if (var-p value)
+                    (cons
+                     (make-pv-unif (append new-path *instloc-path*)
+                                   (make-instance-type value))
+                     (CL-USER::make-mrs-unifs (var-extra value) new-path))
+                  (list (make-pv-unif new-path
+                                      value)))))))
   (if handel-unif (cons handel-unif other-unifs)
       other-unifs)))
 

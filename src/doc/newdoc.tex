@@ -6317,6 +6317,7 @@ templates, for compatibility with PAGE.
 For completeness the augmentation to the description language
 syntax is given here, although since this facility is likely
 to disappear, new templates should not be constructed.
+As of November 1999, the LinGO grammar does not use parameterized templates.
 
 \begin{list}{}
    {\leftmargin 5em
@@ -8576,7 +8577,6 @@ the CSLI LinGO ERG:
 (lkb-load-lisp (this-directory) "user-fns.lsp")
 (load-lkb-preferences (this-directory) "user-prefs.lsp")
 (lkb-load-lisp (this-directory) "lkb-code-patches.lsp" t)
-(lkb-load-lisp (this-directory) "templates.lsp")
 (lkb-load-lisp (this-directory) "checkpaths.lsp" t)
 (lkb-load-lisp (this-directory) "comlex.lsp" t)
 (load-irregular-spellings (lkb-pathname (parent-directory) "irregs.tab"))
@@ -8629,12 +8629,6 @@ cache files (see \S\ref{cache}).
 \item The userprefs file is loaded automatically.  Here we assume it's
 kept in the same directory as the other globals file, which allows
 a user to set up different preferences for different grammars.
-\item The \filename{templates.lsp} file contains a list of 
-parameterized templates as used in TDL, but here defined in Lisp
-to avoid the necessity to reimplement the TDL reader.
-Parameterized templates are only supported for PAGE compatibility,
-and should not be used when developing a new grammar, because this
-facility will eventually be removed.
 \item The \filename{checkpaths} file is loaded to improve efficiency,
 as discussed in \S\ref{checkpaths}.  The third argument to 
 \functionname{lkb-load-lisp} is {\tt t}, to indicate that the file is optional.

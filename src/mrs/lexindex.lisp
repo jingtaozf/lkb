@@ -200,12 +200,12 @@
   (if (is-valid-fs fs)
       (let ((label-list (fs-arcs fs)))
         (if label-list
-            (let* ((first-part (assoc (car *liszt-first-path*)
+            (let* ((first-part (assoc (car *first-path*)
                                      label-list))
                    (rel (if first-part
                             (extract-relation-from-fs 
                              (cdr first-part) id)))
-                   (rest-part (assoc (car *liszt-rest-path*)
+                   (rest-part (assoc (car *rest-path*)
                                     label-list)))
               (if rel
                   (if (empty-diff-list-p fs path old-fs)

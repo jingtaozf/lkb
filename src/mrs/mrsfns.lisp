@@ -10,6 +10,10 @@
 ;; DPF (16-Apr-99) - Changed GET-MRS-STRINGS to work properly with TSDB++
 ;; machinery.
 
+;; AAC This all needs FIXing and cleaning up - I have removed the
+;; VIT specific functions, but their analog is probably needed
+;; some further stuff probably needs to be removed too
+
 (defun get-mrs-strings (parse-list)
   (loop for parse in parse-list
         collecting
@@ -19,11 +23,8 @@
   (let* ((fs (get-parse-fs parse))
 	 (sem-fs (path-value fs *initial-semantics-path*)))
     (if (is-valid-fs sem-fs)
-	(let ((mrs-struct (sort-mrs-struct (construct-mrs sem-fs))))
-	  (with-output-to-string (stream) 
-	    (format stream "~%~S" mrs-struct)
-	;(output-mrs1 mrs-struct 'simple stream)
-	    )))))
+	(let ((mrs-struct (construct-mrs sem-fs)))
+          (output-mrs1 mrs-struct 'simple stream)))))
 
 (defun get-mrs-resolved-strings (parse-list)
   (loop for parse in parse-list
@@ -31,7 +32,7 @@
         (let* ((fs (get-parse-fs parse))
                (sem-fs (path-value fs *initial-semantics-path*)))
           (when (is-valid-fs sem-fs)
-              (let* ((mrs-struct (sort-mrs-struct (construct-mrs sem-fs)))
+              (let* ((mrs-struct (construct-mrs sem-fs))
 		     (binding-sets (make-scoped-mrs mrs-struct)))
 		(when binding-sets
 		  (with-output-to-string (stream) 
@@ -44,6 +45,7 @@
 
 #|
 (defun expand-tsdb-results (result-file dest-file &optional (vitp nil))
+  (declare (ignore vitp))
   (let ((sent-list
 	 (tsdb::select '("parse-id" "i-input") nil '("item" "result") nil 
 		       result-file))
@@ -51,8 +53,7 @@
 	 (tsdb::select '("parse-id" "tree") nil '("result") nil 
 		       result-file))
 	(mrs-list
-	 (tsdb::select '("parse-id" "mrs") nil '("result") nil result-file))
-	(*raw-mrs-output-p* nil))
+	 (tsdb::select '("parse-id" "mrs") nil '("result") nil result-file)))
     (with-open-file 
 	(ostream dest-file :direction :output :if-exists :supersede)
     (loop for rawsent in sent-list
@@ -67,158 +68,12 @@
 	     (pprint tree ostream)
 	     (format ostream "~%~%")
 	     ;(cl-user::output-parse-tree tree ostream)
-	     (if vitp
-	    #|
-	    (progn
-	      (multiple-value-bind 
-		  (vit binding-sets)
-		  (mrs-to-vit mrs))
-	      (write-vit-pretty t (horrible-hack-2 vit))
-	      (format ostream "~%")
-	      (check-vit vit))
-	      |#
-	    (progn
-	      (format ostream "~A~%~%" mrs)
-	      (finish-output ostream)
-	      (when *mrs-to-vit* 
-	       (check-vit mrs t ostream))
-	      (format ostream "~%~%"))
-	    (output-mrs1 (read-from-string mrs) 'indexed ostream)))))))
+	    (output-mrs1 (read-from-string mrs) 'indexed ostream))))))
 |#
-
-#+page
-(defun get-vit-strings (parse)
-  (setf *mrs-wg-liszt* (loop for form in (main::output-stream main::*scanner*)
-			   collect
-			     (list (string-left-trim "'"
-					     (main::typed-item-form form)))))
-  (when parse 
-    (let* ((fs (if (eq (type-of parse) 'pg::combo-item)
-		   (get-parse-fs-alt parse)
-		 (get-parse-fs parse)))
-	   (sem-fs (path-value fs *initial-semantics-path*)))
-      (if (is-valid-fs sem-fs)
-	  (let* ((mrs-struct1 (sort-mrs-struct (construct-mrs sem-fs)))
-		 (mrs-struct (if (boundp '*ordered-mrs-rule-list*)
-				 (munge-mrs-struct mrs-struct1
-						   *ordered-mrs-rule-list*)
-			       mrs-struct1)))
-	    (multiple-value-bind (vit binding-sets)
-		(mrs-to-vit mrs-struct)
-	      (with-output-to-string (stream) 
-		(format nil "~S" (write-vit stream 
-					    (horrible-hack-2 vit))))))))))
-
-#|
-#+page
-(defun get-vit-strings-from-phrases (parse)
-  (setf *mrs-wg-liszt* (loop for form in (main::output-stream main::*scanner*)
-                             collect
-                               (list (string-left-trim "'"
-					 (main::typed-item-form form)))))
-  (let* ((fs (if (eq (type-of parse) 'pg::combo-item)
-		 (get-parse-fs-alt parse)
-	       (get-parse-fs parse)))
-	 (sem-fs (path-value fs *initial-semantics-path*)))
-          (if (is-valid-fs sem-fs)
-              (let* ((mrs-struct1 (sort-mrs-struct (construct-mrs sem-fs)))
-		     (mrs-struct (if (boundp '*ordered-mrs-rule-list*)
-				     (munge-mrs-struct mrs-struct1
-						       *ordered-mrs-rule-list*)
-				   mrs-struct1)))
-		 (multiple-value-bind (vit binding-sets)
-		     (mrs-to-vit mrs-struct)
-		   (with-output-to-string (stream) 
-		     (format nil "~S" (write-vit stream 
-						 (horrible-hack-2 vit)))))))))
-
-|#
-#+page
-(defun get-vit-strings-from-phrases (parse)
-  (setf *mrs-wg-liszt* (loop for form in (main::output-stream main::*scanner*)
-                             collect
-                               (list (string-left-trim "'"
-					 (main::typed-item-form form)))))
-  (let* ((mrs-struct1 (sort-mrs-struct (extract-mrs parse)))
-	 (mrs-struct (if (boundp '*ordered-mrs-rule-list*)
-			 (munge-mrs-struct mrs-struct1
-					   *ordered-mrs-rule-list*)
-		       mrs-struct1)))
-    (multiple-value-bind (vit binding-sets)
-	(mrs-to-vit mrs-struct)
-      (with-output-to-string (stream) 
-	(format nil "~S" (write-vit stream 
-				    (horrible-hack-2 vit)))))))
-
-
-#+lkb
-(defun compute-mrs-wg-liszt ()
-  (loop for elem in 
-	(cl-user::split-into-words 
-	 (cl-user::preprocess-sentence-string 
-	  (string-trim '(#\space #\tab #\newline) cl-user::*sentence*)))
-      collect (list (string-left-trim "'" elem))))
-
-#|
-#+lkb
-(defun get-vit-strings-from-phrases (parse)
-  (setf *mrs-wg-liszt* (compute-mrs-wg-liszt))
-  (let* ((fs (get-parse-fs parse))
-         (sem-fs (path-value fs *initial-semantics-path*)))
-          (if (is-valid-fs sem-fs)
-              (let* ((mrs-struct1 (sort-mrs-struct (construct-mrs sem-fs)))
-                     (mrs-struct (if (boundp '*ordered-mrs-rule-list*)
-                                     (munge-mrs-struct mrs-struct1
-                                                       *ordered-mrs-rule-list*)
-                                   mrs-struct1)))
-                 (multiple-value-bind (vit binding-sets)
-                     (mrs-to-vit mrs-struct)
-                   (with-output-to-string (stream) 
-                     (format nil "~S" (write-vit stream 
-                                                 (horrible-hack-2 vit)))))))))
-|#
-#+lkb
-(defun get-vit-strings-from-phrases (parse)
-  ;;
-  ;; _fix_me_
-  ;; this all seems slightly clumsy: the regular LKB devices will typically
-  ;; bind the global *sentence* to the input string that was given to the
-  ;; parser.  when using another processor for parsing (with [icnr tsdb()]),
-  ;; the LKB will only do reconstruction of derivations before this function
-  ;; gets called.  in principle, the information can always be read off the
-  ;; parser edge; however, to play things safe during a critical integration
-  ;; effort, we decide to only (re)bind *sentence* here, if the current .parse.
-  ;; was not computed by the LKB parser recently.  in general, i would think,
-  ;; we should aim to eliminate all the globals ...         (30-aug-99  -  oe)
-  ;;
-  (unless (member parse *parse-record* :test #'eq)
-    (setf cl-user::*sentence* 
-      (format nil "~{~a~^ ~}" (cl-user::edge-leaves parse)))
-    ;;
-    ;; to avoid image growth, clear cache of expanded lexical entries; as it
-    ;; stands, at this point we know the LKB parser proper is not used in the
-    ;; current environment.
-    (common-lisp-user::clear-expanded-lex))
-  (setf *mrs-wg-liszt* (compute-mrs-wg-liszt))
-  (let* ((mrs-struct1 (sort-mrs-struct (extract-mrs parse)))
-	 (mrs-struct (if (boundp '*ordered-mrs-rule-list*)
-			 (munge-mrs-struct mrs-struct1
-					   *ordered-mrs-rule-list*)
-		       mrs-struct1)))
-    (multiple-value-bind (vit binding-sets)
-	(mrs-to-vit mrs-struct)
-      (declare (ignore binding-sets))
-      (with-output-to-string (stream) 
-	(format nil "~S" (write-vit stream 
-				    (horrible-hack-2 vit)))))))
 
 #+page
 (defun extract-and-output (parse-list)
   (let ((*print-circle* nil))
-    (setf *mrs-wg-liszt* (loop for form in (main::output-stream main::*scanner*)
-                             collect
-                               (list (string-left-trim "'"
-					 (main::typed-item-form form)))))
     (loop for parse in parse-list
         do
           (let* ((fs (get-parse-fs parse))
@@ -226,12 +81,9 @@
             (if (is-valid-fs sem-fs)
                 (let 
                     ((mrs-struct (construct-mrs sem-fs)))
-                  (unless *mrs-to-vit*
-                    (output-mrs mrs-struct 'simple))
-                  (if *mrs-to-vit*
-                      (mrs-to-vit-convert mrs-struct)
-                    (if *mrs-scoping-p*
-                        (scope-mrs-struct mrs-struct)))
+                  (output-mrs mrs-struct 'simple)
+                  (if *mrs-scoping-p*
+                      (scope-mrs-struct mrs-struct))
                   (when *mrs-results-check*
                     (let ((sorted-mrs-struct (sort-mrs-struct mrs-struct))
 			  (previous-result

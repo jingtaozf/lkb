@@ -45,8 +45,6 @@
 (defparameter *mrs-rule-fs-list* nil 
   "list of rules expressed as fs for debugging")
 
-
-; DPF 13-Oct-99 - CONSTRUCT-MRS uses the global *key-fs*, which must be reset
 (defun read-mrs-rule-file-aux (file-names &optional generator-p)
   (unless (listp file-names)
     (setf file-names (list file-names)))
@@ -61,7 +59,6 @@
            #'read-mrs-rule-expanded-syntax)
           (*readtable* (make-tdl-break-table)))
       (setf *mrs-rule-fs-list* nil)
-      (setf mrs::*key-fs* nil)
       (for file in file-names
            do
            (with-open-file 

@@ -273,7 +273,7 @@
             ;; ((and (< (cdr path-and-freq) 1000) (> nseen 40))
             ;;  ;; keep all paths whose freq is within a factor of 1000 of most frequent
             ;;  nil)
-            ((> nseen #+:oe 45 #-:oe 30)
+            ((> nseen *check-path-count*)
              ;; AAC - for ACL/Linux at least, 45 seems 
              ;; suboptimal
              nil)

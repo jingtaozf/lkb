@@ -108,6 +108,9 @@
    "an alist in which the keys are feature paths that often fail -
     these are checked first before attempting unification")
 
+(def-lkb-parameter *check-path-count* 30
+  "the number of check paths actually used")
+
 (def-lkb-parameter *substantive-roots-p* nil
   "if this is set, root edges are regarded as real edges
    for the purposes of chart display")

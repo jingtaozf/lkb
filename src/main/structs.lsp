@@ -102,18 +102,6 @@
                    (subseq f2 (length f1)))
       path2)))
         
-
-
-(defun extend-typed-path (path type feature)
-  (let ((new-tvp (make-type-feature-pair :type type :feature feature))
-        (old-tvp-list (if (typed-path-p path)
-                          (typed-path-typed-feature-list path)
-                        nil)))
-    (make-typed-path 
-     :typed-feature-list 
-     (append old-tvp-list (list new-tvp)))))
-   
-
 (defun get-unif-features (unif)
   (if (basic-unification-p unif)
       (append (get-path-features (basic-unification-lhs unif))

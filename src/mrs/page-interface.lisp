@@ -39,16 +39,13 @@
            #-:ansi-eval-when (load eval compile)
   (import 'tdl::*diff-list* lex:*lex-package*))
 
-(export '(psoa-handel psoa-top-h psoa-index psoa-liszt psoa-h-cons
-          psoa-message psoa-wgliszt psoa-extras psoa-key-h
-          rel-extra rel-type rel-sort rel-handel rel-label rel-flist
+(export '(psoa-top-h psoa-index psoa-liszt psoa-h-cons
+          rel-sort rel-handel rel-flist rel-extra
           fvpair-feature fvpair-value
           var-name var-extra var-id
           handle-var-name handle-var-extra handel-var-id
-          group-var-name group-var-extra group-var-id
-          hcons-scarg hcons-outscpd
-          leq-sc-scarg leq-sc-cands leq-sc-outscpd leq-sc-relation
-          whg-id-id whg-id-word whg-id-handel))
+          hcons-scarg hcons-outscpd hcons-relation))
+
 
 
 

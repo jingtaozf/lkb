@@ -126,7 +126,8 @@
 ;;; compatability pairwise
 
 (defun sort-mrs-struct-liszt (liszt)
-  (let ((new-liszt (combine-similar-relations liszt nil)))
+  (let ((new-liszt 
+         (combine-similar-relations liszt nil)))
    (sort new-liszt
          #'(lambda (relset1 relset2)
              (let ((rel1 (car relset1)) (rel2 (car relset2)))
@@ -193,8 +194,8 @@
 ;;; bindings is a list of assoc lists of variable numbers
 
 (defun mrs-equalp (mrs1 mrs2 &optional syntactic-p noisy-p)
-  (let ((bindings (variables-equal (psoa-handel mrs1)
-                                   (psoa-handel mrs2) syntactic-p nil)))
+  (let ((bindings (variables-equal (psoa-top-h mrs1)
+                                   (psoa-top-h mrs2) syntactic-p nil)))
     (if bindings
         ; hack for case where no handels
         (progn
@@ -229,8 +230,8 @@
     (progn 
       (when noisy-p
         (format t "~%handel difference ~A ~A"
-                (psoa-handel mrs1)
-                (psoa-handel mrs2)))
+                (psoa-top-h mrs1)
+                (psoa-top-h mrs2)))
       nil))))
 
 
@@ -337,124 +338,60 @@
 
 
 (defun variables-equal (var1 var2 syntactic-p bindings)
-  (let ((new-bindings nil))
-    (or (eq var1 var2)
-        (and (var-p var1) (var-p var2)
-             (if syntactic-p
-                 (equal (var-type var1) (var-type var2))
-               (compatible-types (var-type var1) (var-type var2)))
-             (if syntactic-p
-                 (equal-extra-vals
-                  (var-extra var1) 
-                  (var-extra var2))
-               (progn
-                 (setf new-bindings
-                   (compatible-extra-vals 
-                    (var-extra var1) 
-                    (var-extra var2) bindings))
-                 (or new-bindings (null bindings))))
-             (bindings-equal (get-var-num var1)
-                             (get-var-num var2) new-bindings)))))
+  (or (eq var1 var2)
+      (and (var-p var1) (var-p var2)
+           (if syntactic-p
+               (equal (var-type var1) (var-type var2))
+             (compatible-types (var-type var1) (var-type var2)))
+           (if syntactic-p
+               (equal-extra-vals
+                (var-extra var1) 
+                (var-extra var2))
+             (compatible-extra-vals 
+              (var-extra var1) 
+              (var-extra var2)))
+           (bindings-equal (get-var-num var1)
+                           (get-var-num var2) bindings))))
 
-(defun compatible-extra-vals (extra1 extra2 bindings)
-  ;;; extra values are currently in a typed-path notation
+(defun compatible-extra-vals (extra1 extra2)
   ;;; this version is for generation, where we assume we need
   ;;; compatibility, rather than identity
-  (let ((ok t))
-    (dolist (tp1 extra1)
-      (if (and (fvpair-p tp1)
-               (typed-path-p (fvpair-feature tp1)))
-          (let ((flist1 (typed-path-typed-feature-list 
-                         (fvpair-feature tp1))))
-            (dolist (tp2 extra2)
-              (if (and (fvpair-p tp2)
-                       (typed-path-p (fvpair-feature tp2)))
-                  (let ((flist2 (typed-path-typed-feature-list 
-                                 (fvpair-feature tp2))))
-                    (multiple-value-bind
-                        (compatible-p comparable-p)
-                        (typed-feature-list-compatible flist1
-                                                flist2)
-                      (unless compatible-p
-                        (setf ok nil)
-                        (return))
-                      (when comparable-p
-                        (unless (setf bindings (compatible-extra-values (fvpair-value tp1)
-                                                  (fvpair-value tp2) bindings))
-                          (setf ok nil)
-                          (return)))))))))
-      (when (not ok)
-        (return)))
-    (if ok
-        bindings)))
+  (or (null extra1) (null extra2)
+      (let ((ok t))
+        (dolist (tp1 extra1)
+          (if (extrapair-p tp1)
+              (let ((f1 (extrapair-feature tp1)))
+                (dolist (tp2 extra2)
+                  (if (extrapair-p tp2)
+                      (let ((f2 (extrapair-feature tp2)))
+                        (when (eql f1 f2)
+                          (unless (compatible-types 
+                                   (extrapair-value tp1)
+                                   (extrapair-value tp2))
+                            (setf ok nil)
+                            (return))))))))
+          (when (not ok)
+            (return)))
+        ok)))
 
-
-(defun compatible-extra-values (val1 val2 bindings)
-  ;;; needs to deal with lists of variables correctly
-  ;;; currently just checks for first ones being compatible
-  (if (and (listp val1) (var-p (car val1)))
-      (if (and (listp val2) (var-p (car val2)))
-          (variables-equal (car val1) (car val2) nil bindings)
-        nil)
-    (if (compatible-types val1 val2) bindings)))
-
-  
-
-(defun typed-feature-list-compatible (tp1 tp2)
-  (if (or (null tp1) (null tp2))
-      (values t t) ; compatible and equal features
-    (let ((first-tvp1 (car tp1))
-          (first-tvp2 (car tp2)))
-      (if (compatible-types 
-           (type-feature-pair-type first-tvp1)
-           (type-feature-pair-type first-tvp2))
-          (if (eq (type-feature-pair-feature first-tvp1)
-                   (type-feature-pair-feature first-tvp2))
-            (typed-feature-list-compatible (cdr tp1) (cdr tp2))
-            (values t nil))             ; different features, so compatible
-                                        ; but not comparable
-        (values nil nil))))) ; same features, incompatible type
-          
 (defun equal-extra-vals (extra1 extra2)
-  ;;; extra values are currently in a typed-path notation
   ;;; this version is for tsdb etc, so we're really looking for identity
   (and (eql (length extra1) (length extra2))
        (for tp1 in extra1
             all-satisfy
             (for tp2 in extra2
                  some-satisfy
-                 (fvpairs-equal tp1 tp2)))))
+                 (extrapairs-equal tp1 tp2)))))
 
-(defun fvpairs-equal (tp1 tp2)
-  (if (and (fvpair-p tp1) (fvpair-p tp2))
+(defun extrapairs-equal (tp1 tp2)
+  (if (and (extrapair-p tp1) (extrapair-p tp2))
       (and 
-       (typed-paths-equal (fvpair-feature tp1)
-                         (fvpair-feature tp2))
-       (equal (fvpair-value tp1)
-              (fvpair-value tp2)))
+       (eq (extrapair-feature tp1)
+           (extrapair-feature tp2))
+       (equal (extrapair-value tp1)
+              (extrapair-value tp2)))
     (equal tp1 tp2)))
-
-(defun typed-paths-equal (tp1 tp2)
-  (if (and (typed-path-p tp1) (typed-path-p tp2))
-      (let ((tfl1 (typed-path-typed-feature-list tp1))
-            (tfl2 (typed-path-typed-feature-list tp2)))
-        (typed-feature-list-equal tfl1 tfl2))
-    (equal tp1 tp2)))
-
-(defun typed-feature-list-equal (tp1 tp2)
-  (if (or (null tp1) (null tp2))
-      t
-    (let ((first-tvp1 (car tp1))
-          (first-tvp2 (car tp2)))
-      (if (equal 
-           (type-feature-pair-type first-tvp1)
-           (type-feature-pair-type first-tvp2))
-          (if (eq (type-feature-pair-feature first-tvp1)
-                  (type-feature-pair-feature first-tvp2))
-              (typed-feature-list-equal (cdr tp1) (cdr tp2))
-            nil)
-        nil))))
-        
+       
 (defun bindings-equal (val1 val2 bindings)
   ;;; this should only be called with null bindings 
   ;;; at the start of a process of checking equality

@@ -4,35 +4,18 @@
 (in-package "MRS")
 
 ;;;
-;;; ******** Global variables **********
-;;;
-
-;;; set in mrsglobals-eng
-
-(defvar *scope-feat* nil)
-
-(defvar *top-level-rel-types* nil)
-
-(defvar *top-level-variables* nil
-  "the variables which correspond to pronouns or proper names")
-
-;;;
 ;;; ******** utility functions (some grammar specific) **********
 ;;;
 
 ;;; memoisation
 
 (defvar *rel-handel-store* nil)
-(defvar *conj-val-store* nil)
-(defvar *conj-handel-val-store* nil)
 (defvar *unbound-vars-store* nil)
 
 
 (defun clear-scope-memos nil
   (setf *rel-handel-store* nil)
-  (setf *conj-val-store* nil)
-  (setf *unbound-vars-store* nil)
-  (setf *conj-handel-val-store* nil))
+  (setf *unbound-vars-store* nil))
 
 ;;; Utility functions for taking apart MRS structures.
 ;;; All the functions which rely on particular names for features or rels,
@@ -82,10 +65,6 @@
                           (feature (fvpair-feature fvp)))
                       (cond ((is-handel-var val)
                              (list (cons feature val)))
-                            ((is-conj-var val)
-                             (for conj-val in (extract-handels-from-conj val)
-                                  collect
-                                  (cons feature conj-val)))
                             ((listp val) 
                              (for val-el in val
                                   filter
@@ -95,44 +74,12 @@
           (push (cons rel res) *rel-handel-store*)
           res))))
 
-(defun extract-handels-from-conj (val)
-  ;;; example input
-  #|
-  #S(MRS::VAR :NAME "c16" 
-              :TYPE *DIFF-LIST* 
-              :EXTRA (#S(MRS::FVPAIR :FEATURE #S(TYPED-PATH 
-                               :TYPED-FEATURE-LIST (#S(TYPE-FEATURE-PAIR :TYPE *DIFF-LIST* :FEATURE LIST))) 
-              :VALUE (#S(MRS::HANDLE-VAR :NAME "h11" :TYPE (HANDLE) :EXTRA NIL :ID 11)
-              #S(MRS::HANDLE-VAR :NAME "h17" :TYPE (HANDLE) :EXTRA NIL :ID 17)))) :ID 16))
-                                                |#
-  ;;; returns list any handel variables
-    (let ((existing (assoc val *conj-handel-val-store* :test #'eq)))
-      (if existing (cdr existing)
-        (let ((res
-               (let ((extra (var-extra val)))
-                 (if (listp extra)
-                     (for ex-el in extra
-                          append
-                          (if (fvpair-p ex-el)
-                              (let ((new-val (fvpair-value ex-el)))
-                                (if (listp new-val)
-                                    (for var-el in new-val
-                                         filter
-                                         (if (is-handel-var var-el)
-                                             var-el))))))))))
-          (push (cons val res) *conj-handel-val-store*)
-          res))))
   
 
 (defun is-handel-var (var)
     ;;; test is whether the string begins with #\h
   (and (var-p var)
-       (eq (elt (var-name var) 0) #\h)))
-
-(defun is-conj-var (var)
-    ;;; test is whether the string begins with #\c
-  (and (var-p var)
-       (eq (elt (var-name var) 0) #\c)))
+       (char-equal (elt (var-name var) 0) #\h)))
 
 (defun is-handel-arg-rel (rel)
   ;;; true if the rel has an argument which is a handel
@@ -241,13 +188,11 @@
   ;;; note that this returns the entire structures (necessary because
   ;;; of identification of sorts of variables)
   (for fvp in (rel-flist  rel)
-       append 
+       filter
        (let ((value (fvpair-value fvp)))
          (if (var-p value) 
-             (cons value (extract-variables-from-conj value))
-           (if (and (listp value) (var-p (car value)))
-             value)))))
-
+             value))))
+             
 (defun collect-unbound-vars-from-rel (rel)
   ;;; collects all the variables from a rel which have to be bound
   ;;; off by some other rel: i.e. variables other than events,
@@ -265,14 +210,8 @@
                   (unless (eq (fvpair-feature fvp) *bv-feature*)
                     (let ((value (fvpair-value fvp)))
                       (for el in (if (listp value) value (list value))
-                           append
-                           (let ((unbound-id (unbound-var-id el))
-                                 (conjids
-                                  (for conj-var in (extract-variables-from-conj value)
-                                       filter
-                                       (unbound-var-id conj-var))))
-                             (if unbound-id (cons unbound-id conjids)
-                               conjids))))))))
+                           filter
+                           (unbound-var-id el)))))))
         (push (cons rel res) *unbound-vars-store*)
         res))))
 
@@ -283,21 +222,6 @@
                         *top-level-variables*)))
       (get-var-num el)))
 
-
-(defun extract-variables-from-conj (val)
-  (if (is-conj-var val)
-      (let ((existing (assoc val *conj-val-store* :test #'eq)))
-        (if existing (cdr existing)
-          (let ((res 
-                 (let ((extra (var-extra val)))
-                   (if (listp extra)
-                       (for ex-el in extra
-                            append
-                            (if (fvpair-p ex-el)
-                                (let ((new-val (fvpair-value ex-el)))
-                                  (if (listp new-val) new-val))))))))
-            (push (cons val res) *conj-val-store*)
-            res)))))
 
 ;;;
 ;;; ******** Main code entry point  **********
@@ -532,7 +456,7 @@ printing routines -  convenient to make this global to keep printing generic")
         (catch 'up
           (for result in (create-scoped-structures top-handel nil 
                                  (construct-initial-bindings 
-                                  (psoa-handel mrsstruct) 
+                                  (psoa-top-h mrsstruct) 
                                   rels hcons)
                                  rels nil nil nil nil)
                filter
@@ -1028,31 +952,7 @@ or modulo some number of quantifiers
 
 (defun print-connected-psoa (psoa indentation)
   (declare (ignore indentation))
-  (mrs-output-start-psoa *mrs-display-structure*
-           (get-bound-var-value (psoa-handel psoa))
-	   (get-bound-var-value (psoa-index psoa)))
-  (mrs-output-start-liszt *mrs-display-structure*)
-  (loop for rel in (psoa-liszt psoa)
-        do
-        (mrs-output-start-rel *mrs-display-structure*
-                 (rel-sort rel) (get-bound-var-value (rel-handel rel)))
-        (loop for feat-val in (rel-flist rel)
-              do
-             (mrs-output-label-fn *mrs-display-structure*
-                      (fvpair-feature feat-val))
-             (let ((value (fvpair-value feat-val)))
-                      (if (var-p value)
-                          (mrs-output-atomic-fn *mrs-display-structure*
-                             (get-bound-var-value value))
-                          (if (and (listp value)
-                                   (var-p (car value)))
-                            (mrs-output-list-fn *mrs-display-structure*
-                             (mapcar #'get-bound-var-value value))
-                            (mrs-output-atomic-fn *mrs-display-structure*
-                                                  value)))))
-        (mrs-output-end-rel *mrs-display-structure*))
-  (mrs-output-end-liszt *mrs-display-structure*)
-  (mrs-output-end-psoa *mrs-display-structure*))
+  (print-psoa psoa t))
 
 
 ;;; printing utility fn
@@ -1084,7 +984,7 @@ or modulo some number of quantifiers
 
 (defun output-scoped-mrs (mrs &key (stream t))
   (format stream "~%")
-  (let* ((top-handel (get-true-var-num (psoa-handel mrs)))
+  (let* ((top-handel (get-true-var-num (psoa-top-h mrs)))
          (rel-list (psoa-liszt mrs)))
     (setf *output-scope-errors* nil)
     (output-scoped-rels top-handel rel-list stream nil 0)
@@ -1139,30 +1039,7 @@ or modulo some number of quantifiers
          do     
          (when need-comma (format stream ", ") (setf width (+ width 2)))
          (setf need-comma t)
-         (let* ((var (fvpair-value feat-val))
-                (conj-vars (extract-variables-from-conj var)))
-           (when conj-vars
-             (setf var conj-vars))
-           (if (listp var)
-             (progn 
-               (format stream "(")
-               (setf width (+ width 1))
-               (for val in var
-                    do
-                    (if (is-handel-var val)
-                        (setf width
-                          (output-scoped-rels (get-true-var-num val) 
-                                              rel-list stream handels-so-far width))
-                      (progn 
-                        (setf current-string
-                          (format nil "~A " (remove-variable-junk 
-                                             (if (var-p val)
-                                                 (get-bound-var-value val)
-                                               val))))
-                        (format stream "~A" current-string)
-                        (setf width (+ width (length current-string))))))
-               (format stream ")")
-               (incf width))
+         (let* ((var (fvpair-value feat-val)))
              (if (is-handel-var var)
                  (setf width
                    (output-scoped-rels (get-true-var-num var) rel-list stream
@@ -1174,7 +1051,7 @@ or modulo some number of quantifiers
                                     (get-bound-var-value var)
                                     var))))
                  (format stream "~A" current-string)
-                 (setf width (+ width (length current-string))))))))
+                 (setf width (+ width (length current-string)))))))
     (format stream ")")
     (incf width)
     width))

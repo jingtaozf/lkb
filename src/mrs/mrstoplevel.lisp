@@ -166,21 +166,15 @@
           "MRS output?" 
           :none
           :base
-          :scoped
-          :vit)))
+          :scoped)))
     (case output-level
       (:none (setf mrs::*mrs-output-p* nil)
-             (setf mrs::*mrs-scoping* nil)
-             (setf mrs::*mrs-to-vit* nil))
+             (setf mrs::*mrs-scoping* nil))
       (:base (setf mrs::*mrs-output-p* t)
-             (setf mrs::*mrs-scoping* nil)
-             (setf mrs::*mrs-to-vit* nil))
+             (setf mrs::*mrs-scoping* nil))
       (:scoped (setf mrs::*mrs-output-p* nil)
-             (setf mrs::*mrs-scoping* t)
-             (setf mrs::*mrs-to-vit* nil))
-      (:vit (setf mrs::*mrs-output-p* nil)
-             (setf mrs::*mrs-scoping* nil)
-             (setf mrs::*mrs-to-vit* t)))))
+             (setf mrs::*mrs-scoping* t)))))
+
                                                     
 
 

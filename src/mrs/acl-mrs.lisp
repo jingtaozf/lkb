@@ -25,9 +25,7 @@
 
 (clim:define-application-frame mrs-frame ()
   ((fs :initform nil
-       :accessor mrs-fs)
-   (vitp :initform nil
-	 :accessor mrs-vitp))
+       :accessor mrs-fs))
   (:panes
    (display :application
 	    :display-function 'display-mrs
@@ -48,26 +46,22 @@
   (clim:frame-exit clim:*application-frame*))
 
 ;; 
-;; Add [MRS] and [VIT] button
+;; Add [MRS] button
 ;;
 
 (define-tree-frame-command (com-mrs-tree :menu "MRS")
     ()
   (draw-mrs (tree-frame-nodes clim:*application-frame*) nil))
 
-(define-tree-frame-command (com-vit-tree :menu "VIT")
-    ()
-  (draw-mrs (tree-frame-nodes clim:*application-frame*) t))
-
 ;;
 ;; Open an MRS window for a parse
 ;;
 
 (defmethod draw-mrs ((tree tree) vitp &key &allow-other-keys)
+  (declare (ignore vitp))
   (let ((frame (clim:make-application-frame 'mrs-frame
 					    :pretty-name "Parse Results")))
     (setf (mrs-fs frame) (node-fs tree))
-    (setf (mrs-vitp frame) vitp)
     (mp:process-run-function "tree" #'clim:run-frame-top-level frame)))
 
 ;; This is like mrs::extract-and-output except it takes a feature structure
@@ -80,6 +74,5 @@
 	      (*standard-output* stream))
           (clim:with-end-of-line-action (stream :allow)
             (clim:with-end-of-page-action (stream :allow)
-	      (mrs::output-mrs mrs-struct 'mrs::simple)
-	      (when (mrs-vitp frame)
-		(mrs::mrs-to-vit-convert mrs-struct))))))))
+	      (mrs::output-mrs mrs-struct 'mrs::simple)))))))
+

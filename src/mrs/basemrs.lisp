@@ -1,14 +1,6 @@
 ;;; Reorganised MRS code -
 ;;; this is the basic MRS file, which defines the lisp structures
-;;; used for internally encoding MRS.  The other files are
-;;; 
-;;; 1. mrsoutput.lsp - this will differ between the TDL and LKB versions
-;;;    - it constructs an MRS structure from a FS
-;;; 2. mrsresolve.lsp - takes an MRS structure and returns a set of
-;;; scope resolved structures
-;;; 3. mrscons.lsp - dealing with the hcons structures
-;;;
-;;; in general, for.lsp is required
+;;; used for internally encoding MRS.  
 
 
 (in-package "MRS")
@@ -18,39 +10,31 @@
 ;;; just printing them, this stuff defines a set of structures
 ;;; for MRS.  Note that these structures are simple, because
 ;;; reentrancies have been replaced by variables.
-;;; For VITs we need the top-handel and wgliszt
 
 (defstruct (psoa)
-  extras
-  handel
   top-h
   index
   liszt
-  h-cons
-  message
-  wgliszt
-  key-h)
-
+  h-cons)
 
 (defstruct (rel)
-  extra                                 ; WK: used for non-argument features
-  type                                  ; type might differ from relation
-  sort                                  ; relation name
+  sort  ; relation name
   handel
-  label
-  flist)
+  flist
+  extra)                                ; extra is a junk slot
+                                        ; needed for the munging rules 
+
 
 
 (defstruct (fvpair)
   feature
   value)
 
-;;; feature may either be a symbol, or, for the LKB version only,
-;;; a path structure (as defined in struct)
+;;; feature is a symbol
 
 ;;; value is either a constant (simple atom) or
 ;;; a var structure which contains a string plus a number 
-;;; (unique to this MRS) or a list of var structures
+;;; (unique to this MRS)
 
 (defstruct (var)
   name
@@ -58,87 +42,16 @@
   extra ; useful for e.g. agreement values
   id)
 
+(defstruct (extrapair)
+  feature
+  value)
+
 (defstruct (handle-var (:include var)))
 
-(defstruct (group-var (:include handle-var)))
-
 (defstruct (hcons)
+  relation
   scarg
   outscpd)
-
-(defstruct (leq-sc (:include hcons))
-  relation)
-
-;; DPF 16-Apr-99 - Removed specialized print operation for WHG-ID, since it
-;; introduced comma-separated elements into a raw MRS structure, which prevents
-;; the Lisp reader from reading the structure back in from a stored string
-;; representation of the structure.
-
-;;; for VM-wordgraph identifiers
-#|
-(defstruct (whg-id)
-  id
-  word
-  handel)
-|#
-
-
-(defstruct (whg-id (:print-function print-whg-id))
-  id
-  word
-  handel)
-
-(defun print-whg-id (whg stream level)
-  (declare (ignore level))
-  (let ((handels (whg-id-handel whg)))
-    (format stream "word('~A',~A," 
-            (make-quoted-p-string (whg-id-word whg))
-            (whg-id-id whg))
-    (if handels 
-        (format stream "~([~A~@[~{,~A~}~]])~)" (first handels) 
-                (rest handels))
-      (format stream "[])"))))
-
-(defun print-prolog-list (elements stream)
-  (if elements
-      (format stream "~([~A~@[~{,~A~}~]]~)" (first elements) (rest elements))
-    (format stream "[]")))
-         
-;;; WK: with an ugly way to print out 'extra' infos (for German)
-#-lkb
-(defun get-print-name (var-struct)
-  (if (var-p var-struct)
-      (if (var-extra var-struct)
-          (concatenate 'string (var-name var-struct) " " (format nil "~{ ~S~%~}" (var-extra var-struct)))
-        (var-name var-struct))
-  (format nil "u")))
-  
-#+lkb
-(defun get-print-name (var-struct)
-  (if (var-p var-struct)
-      (let ((extras (extra-value-strings var-struct)))
-        (if extras 
-            (format nil "~A: ~{ ~A~}" (var-name var-struct) 
-                    extras)
-            (format nil "~A" (var-name var-struct))))
-    "u"))
-
-(defun extra-value-strings (var)
-  (if (var-extra var)
-      (append (for cvar in (extract-variables-from-conj var) 
-                   collect
-                   (get-print-name cvar))
-              (for fvp in (var-extra var)
-                   filter
-                   (let* ((feature (last-path-feature (fvpair-feature fvp)))
-                          (abbrev (assoc feature *mrs-extra-display*)))
-                     (if abbrev
-                         (format nil "~A ~A"
-                                 (cdr abbrev)
-                                 (fvpair-value fvp))))))))
-
-
-
 
 ;;; The MRS structure could be output either as simple ascii
 ;;; or as LaTeX and possibly in other ways
@@ -168,10 +81,6 @@
 (defmethod mrs-output-max-width-fn ((mrsout output-type))
   nil)
 
-(defmethod mrs-output-print-name ((mrsout output-type) value)
-  (with-slots () mrsout
-    (get-print-name value)))
-
 ;;; 
 ;;; simple output-type class
 ;;;
@@ -186,38 +95,60 @@
   (with-slots (stream) mrsout
     (format stream "~V%" 1)))
 
-(defmethod mrs-output-start-psoa ((mrsout simple) 
-				  handel-val event-val)
+(defmethod mrs-output-start-psoa ((mrsout simple))
   (with-slots (stream) mrsout
-    (format stream "[ TOP: ~A~%" handel-val)
-    (when event-val
-      (format stream "  INDEX: ~A~%" event-val))))
+    (format stream "[")))
+
+(defmethod mrs-output-top-h ((mrsout simple) handel-val)
+  (with-slots (stream) mrsout
+    (format stream " TOP: ~A" handel-val)))
+
+(defmethod mrs-output-index ((mrsout simple) index-val)
+  (with-slots (stream) mrsout
+    (when index-val
+      (format stream "~%  INDEX: ~A" index-val))))
 
 (defmethod mrs-output-start-liszt ((mrsout simple))
   (with-slots (stream indentation) mrsout
-    (format stream "  LISZT: <~%")
+    (format stream "~%  LISZT: <")
     (setf indentation (+ indentation 10))))
 
 (defmethod mrs-output-atomic-fn ((mrsout simple) atomic-value)
   (with-slots (stream) mrsout
     (format stream "~A" atomic-value)))
 
-(defmethod mrs-output-list-fn ((mrsout simple) list-value)
-  (with-slots (stream) mrsout
-    (format stream "(~{~A~})" list-value)))
-  
-(defmethod mrs-output-start-rel ((mrsout simple) sort handel)
+(defmethod mrs-output-start-rel ((mrsout simple) sort first-p)
   (with-slots (stream indentation) mrsout
-    (format stream "~VT[ ~A" indentation (string-downcase sort))
+    (unless first-p (format stream "~%"))
+    (format stream "~VT[ ~A" indentation (string-downcase sort))))
+
+(defmethod mrs-output-rel-handel ((mrsout simple) handel)
+  (with-slots (stream indentation) mrsout
     (format stream "~%~VT~A: ~A" (+ indentation 2) 'handel handel)))
 
 (defmethod mrs-output-label-fn  ((mrsout simple) label)
   (with-slots (stream indentation) mrsout
     (format stream "~%~VT~A: " (+ indentation 2) label)))
 
+(defmethod mrs-output-start-extra ((mrsout simple) var-type)
+  (with-slots (stream indentation) mrsout
+    (format stream " [ ~A" var-type)))
+
+(defmethod mrs-output-extra-feat  ((mrsout simple) feat)
+  (with-slots (stream indentation) mrsout
+    (format stream "~%~VT~A: " (+ indentation 15) feat)))
+
+(defmethod mrs-output-extra-val  ((mrsout simple) val)
+  (with-slots (stream) mrsout
+    (format stream " ~A" val)))
+
+(defmethod mrs-output-end-extra ((mrsout simple))
+  (with-slots (stream) mrsout
+    (format stream " ]")))
+
 (defmethod mrs-output-end-rel ((mrsout simple))
   (with-slots (stream) mrsout
-    (format stream "]~%")))
+    (format stream " ]")))
 
 (defmethod mrs-output-end-liszt ((mrsout simple))
   (with-slots (stream indentation) mrsout
@@ -225,17 +156,14 @@
 
 (defmethod mrs-output-start-h-cons ((mrsout simple))
   (with-slots (stream) mrsout
-    (format stream "~%  H-CONS: <~%")))
+    (format stream "~%  HCONS: <")))
 
-(defmethod mrs-output-outscopes ((mrsout simple) higher lower)
+(defmethod mrs-output-outscopes ((mrsout simple) reln higher lower first-p)
   (with-slots (stream indentation) mrsout
-    (format stream "~VT~A =_q ~A~%" 
-            (+ indentation 2) higher lower)))
-
-(defmethod mrs-output-leq ((mrsout simple) higher lower)
-  (with-slots (stream indentation) mrsout
-    (format stream "~VT~A =< ~A~%" 
-            (+ indentation 2) higher lower)))
+    (unless first-p
+      (format stream "~%"))
+    (format stream "~VT~A ~A ~A" 
+            (+ indentation 2) higher reln lower)))
 
 (defmethod mrs-output-end-h-cons ((mrsout simple))
   (with-slots (stream indentation) mrsout
@@ -245,93 +173,23 @@
   (with-slots (stream indentation) mrsout
     (format stream " ]~%" indentation)))
 
-;;; WK:
-(defmethod mrs-output-var ((mrsout output-type) var)
-  (with-slots (stream indentation) mrsout
-    (mrs-output-atomic-fn *mrs-display-structure* (var-name var))
-    (if (var-extra var)
-        (loop for feat-val in (var-extra var)
-            do 
-              (progn (identity feat-val)
-                     ; silly, but avoids warning messages
-                     (mrs-output-start-rel mrsout))))))
 
 (defclass active-t (simple)
   ())
 
-(defmethod mrs-output-start-rel ((mrsout active-t) sort handel)
+(defmethod mrs-output-start-rel ((mrsout active-t) sort first-p)
   (with-slots (stream indentation) mrsout
+    (unless first-p (format stream "~%"))
     (format stream "~VT[ " indentation)
-    (cl-user::add-mrs-type-region stream sort)
-    (format stream "~%~VT~A: ~A" (+ indentation 2) 'handel handel)))
-
-
-;;; 
-;;; comment output-type class
-;;;
-
-(defclass comment (simple)
-  ((comment-string :initform ";;; ")))
-
-(defmethod mrs-output-start-psoa ((mrsout comment) 
-				  handel-val event-val)
-  (with-slots (stream comment-string) mrsout
-    (format stream "~A  TOP: ~A~%" comment-string handel-val)
-    (when event-val
-      (format stream "~A  INDEX: ~A~%" comment-string event-val))))
-
-(defmethod mrs-output-start-liszt ((mrsout comment))
-  (with-slots (stream indentation comment-string) mrsout
-    (format stream "~A  LISZT: <~%" comment-string)
-    (setf indentation (+ indentation (+ 10 (length comment-string))))))
-
-(defmethod mrs-output-start-rel ((mrsout comment) sort handel)
-  (with-slots (stream indentation comment-string) mrsout
-    (format stream "~A~VT[ ~A" comment-string 
-	    indentation (string-downcase sort))
-  (format stream "~%~A~VT~A: ~A" comment-string
-	  (+ indentation 2) 'handel handel)))
-
-(defmethod mrs-output-end-rel ((mrsout comment))
-  (with-slots (stream) mrsout
-    (format stream "]~%")))
-
-(defmethod mrs-output-label-fn  ((mrsout comment) label)
-  (with-slots (stream indentation comment-string) mrsout
-    (format stream "~%~A~VT~A: " comment-string (+ indentation 2) label)))
-
-(defmethod mrs-output-end-liszt ((mrsout comment))
-  (with-slots (stream indentation comment-string) mrsout
-    (format stream "~A~VT>" comment-string indentation)))
-
-(defmethod mrs-output-start-h-cons ((mrsout comment))
-  (with-slots (stream comment-string) mrsout
-    (format stream "~%~A H-CONS: < " comment-string)))
-
-(defmethod mrs-output-outscopes ((mrsout comment) higher lower)
-  (with-slots (stream indentation comment-string) mrsout
-    (format stream "~VT~A =_q ~A~%~A" (+ indentation 2) higher lower
-                             comment-string)))
-
-(defmethod mrs-output-leq ((mrsout comment) higher lower)
-  (with-slots (stream indentation comment-string) mrsout
-    (format stream "~VT~A =< ~A~%~A" (+ indentation 2) higher lower
-                             comment-string)))
-
-(defmethod mrs-output-end-h-cons ((mrsout comment))
-  (with-slots (stream indentation) mrsout
-    (format stream "~VT>" indentation)))
-
-(defmethod mrs-output-end-psoa ((mrsout comment))
-  (with-slots (stream) mrsout
-    (format stream " ]~%")))
+    (cl-user::add-mrs-type-region stream sort)))
 
 ;;; 
 ;;; indexed output-type class
 ;;;
 
 (defclass indexed (output-type) 
-  ((need-comma :initform nil)))
+  ((need-comma :initform nil)
+   (temp-sort :initform nil)))
 
 (defmethod mrs-output-start-fn ((mrsout indexed))
   (with-slots (stream) mrsout
@@ -341,12 +199,17 @@
   (with-slots (stream) mrsout
     (format stream "~V%" 1)))
 
-(defmethod mrs-output-start-psoa ((mrsout indexed) 
-				  handel-val event-val)
-  (declare (ignore event-val))
+(defmethod mrs-output-start-psoa ((mrsout indexed)) 
+  nil)
+  
+(defmethod mrs-output-top-h ((mrsout indexed) handel-val)
   (with-slots (stream) mrsout
     (format stream "TOP: ~A~%"
             handel-val)))
+
+(defmethod mrs-output-index ((mrsout indexed) index-val)
+  (declare (ignore index-val))
+  nil)
 
 (defmethod mrs-output-start-liszt ((mrsout indexed))
   (with-slots (stream) mrsout
@@ -356,20 +219,38 @@
   (with-slots (stream) mrsout
     (format stream "~A" (remove-variable-junk atomic-value))))
 
-(defmethod mrs-output-list-fn ((mrsout indexed) list-value)
-  (with-slots (stream) mrsout
-    (format stream "(~{~A~})" list-value)))
-  
-(defmethod mrs-output-start-rel ((mrsout indexed) sort handel)
-  (with-slots (stream indentation) mrsout
+(defmethod mrs-output-start-rel ((mrsout indexed) sort first-p)
+  (declare (ignore first-p))
+  (with-slots (temp-sort) mrsout
+    (setf temp-sort sort)))
+
+(defmethod mrs-output-rel-handel ((mrsout indexed) handel)
+  (with-slots (stream temp-sort) mrsout  
     (format stream "~A:~A(" 
-             handel (remove-right-sequence "_rel" (string-downcase sort)))))
+            handel (remove-right-sequence 
+                    *sem-relation-suffix* 
+                    (string-downcase temp-sort)))))
 
 (defmethod mrs-output-label-fn  ((mrsout indexed) label)
   (declare (ignore label)) 
   (with-slots (stream need-comma) mrsout
     (when need-comma (format stream ", "))
     (setf need-comma t)))
+
+(defmethod mrs-output-start-extra ((mrsout indexed) var-type)
+  (declare (ignore var-type))
+  nil)
+
+(defmethod mrs-output-extra-feat  ((mrsout indexed) feat)
+  (declare (ignore feat))
+  nil)
+
+(defmethod mrs-output-extra-val  ((mrsout indexed) val)
+  (declare (ignore val))
+  nil)
+
+(defmethod mrs-output-end-extra ((mrsout indexed))
+  nil)
 
 (defmethod mrs-output-end-rel ((mrsout indexed))
   (with-slots (stream need-comma) mrsout
@@ -385,14 +266,11 @@
     (format stream "~%")))
 
 ;;; ???
-(defmethod mrs-output-outscopes ((mrsout indexed) higher lower)
+(defmethod mrs-output-outscopes ((mrsout indexed) reln higher lower first-p)
+  (declare (ignore first-p))
   (with-slots (stream) mrsout
-    (format stream "~A =_q ~A~%" 
-             higher lower)))
-
-(defmethod mrs-output-leq ((mrsout indexed) higher lower)
-  (with-slots (stream) mrsout
-    (format stream "~A=<~A  " higher lower)))
+    (format stream "~A ~A ~A~%" 
+            higher reln lower)))
 
 (defmethod mrs-output-end-h-cons ((mrsout indexed))
   (with-slots (stream) mrsout
@@ -401,7 +279,6 @@
 (defmethod mrs-output-end-psoa ((mrsout indexed))
   (with-slots (stream) mrsout
     (format stream "~%" )))
-
 
 
 
@@ -440,6 +317,8 @@ higher and lower are handle-variables
 |#
 
 
+#|
+
 (defclass prolog (output-type)
   ((need-rel-comma :initform nil)
    (need-comma :initform nil)))
@@ -475,10 +354,6 @@ higher and lower are handle-variables
         (format stream "'~A')" atomic-value)
       (format stream "~A)" atomic-value))))
 
-(defmethod mrs-output-list-fn ((mrsout prolog) list-value)
-  (with-slots (stream) mrsout
-    (print-prolog-list list-value stream)))
-  
 (defmethod mrs-output-start-rel ((mrsout prolog) sort handel)
   (with-slots (stream need-rel-comma) mrsout
     (when need-rel-comma (format stream ","))
@@ -505,17 +380,11 @@ higher and lower are handle-variables
   (with-slots (stream) mrsout
     (format stream ",hcons([")))
 
-(defmethod mrs-output-outscopes ((mrsout prolog) higher lower)
-  (with-slots (stream need-comma) mrsout    
+(defmethod mrs-output-outscopes ((mrsout prolog) reln higher lower)
+  (with-slots (stream need-comma) mrsout  
     (when need-comma (format stream ","))
     (setf need-comma t)
-    (format stream "qeq(~A,~A)" higher lower)))
-
-(defmethod mrs-output-leq ((mrsout prolog) higher lower)
-  (with-slots (stream need-comma) mrsout
-    (when need-comma (format stream ","))
-    (setf need-comma t)
-    (format stream "leq(~A,~A)" higher lower)))
+    (format stream "~A(~A,~A)" reln higher lower)))
 
 (defmethod mrs-output-end-h-cons ((mrsout prolog))
   (with-slots (stream need-comma) mrsout
@@ -526,6 +395,8 @@ higher and lower are handle-variables
   (with-slots (stream) mrsout
     (format stream ")~%")))
 
+
+|#
 
 ;;; Utility fns
 
@@ -554,87 +425,337 @@ higher and lower are handle-variables
          (output-mrs1 mrs-instance device stream))
       (output-mrs1 mrs-instance device t)))
   
-; Added option to print raw MRS structures along with pretty-printed ones.
-
 (defun output-mrs1 (mrs-instance device stream)
   (def-print-operations device 0 stream)
        (cond ((psoa-p mrs-instance)
               (mrs-output-start-fn *mrs-display-structure*)
-              (print-psoa mrs-instance 0)
+              (print-psoa mrs-instance)
               (mrs-output-end-fn *mrs-display-structure*)
-              (mrs-output-max-width-fn *mrs-display-structure*)
-	      (when (and (boundp *raw-mrs-output-p*)
-			 *raw-mrs-output-p*)
-		(format stream "~%~S" mrs-instance)))
+              (mrs-output-max-width-fn *mrs-display-structure*))
              (t (mrs-output-error-fn *mrs-display-structure* mrs-instance))))
 
-(defun print-psoa (psoa indentation)
-  (declare (ignore indentation))
-  (mrs-output-start-psoa *mrs-display-structure*
-           (mrs-output-print-name *mrs-display-structure* (psoa-handel psoa))
-	   (mrs-output-print-name *mrs-display-structure* (psoa-index psoa)))
-  (mrs-output-start-liszt *mrs-display-structure*)
-  (loop for rel in (psoa-liszt psoa)
-        do
-        (mrs-output-start-rel *mrs-display-structure*
-                              (rel-sort rel) 
-                              (mrs-output-print-name 
-                               *mrs-display-structure* (rel-handel rel)))
-        (loop for feat-val in (rel-flist rel)
-              do
-             (mrs-output-label-fn *mrs-display-structure*
-                      (fvpair-feature feat-val))
-             (let ((value (fvpair-value feat-val)))
-                      (if (var-p value)
-                          (mrs-output-atomic-fn 
-                           *mrs-display-structure*
-                           (mrs-output-print-name 
-                            *mrs-display-structure* value))
-                          (if (and (listp value)
-                                   (var-p (car value)))
-                              (mrs-output-list-fn 
-                               *mrs-display-structure*
-                               (for el in value
-                                    collect
-                                    (mrs-output-print-name 
-                                     *mrs-display-structure* el)))
-                            (mrs-output-atomic-fn *mrs-display-structure*
-                                                  value)))))
-        (mrs-output-end-rel *mrs-display-structure*))
-  (mrs-output-end-liszt *mrs-display-structure*)
-  (mrs-output-start-h-cons *mrs-display-structure*) 
-  (loop for hcons in (psoa-h-cons psoa)
-      do
-        (cond ((leq-sc-p hcons)
-               (mrs-output-leq 
-                *mrs-display-structure*
-                (mrs-output-print-name 
-                 *mrs-display-structure* (leq-sc-scarg hcons)) 
-                (mrs-output-print-name 
-                 *mrs-display-structure* (leq-sc-outscpd hcons))))
-              (t (mrs-output-outscopes 
-                  *mrs-display-structure*
-                  (mrs-output-print-name 
-                   *mrs-display-structure* 
-                   (hcons-scarg hcons)) 
-                  (mrs-output-print-name 
-                   *mrs-display-structure* 
-                   (hcons-outscpd hcons))))))
-  (mrs-output-end-h-cons *mrs-display-structure*)
-  (mrs-output-end-psoa *mrs-display-structure*))
+(defparameter *already-seen-vars* nil)
 
+(defun find-var-name (var connected-p)
+  (if connected-p
+      (get-bound-var-value var)
+      (var-name var)))
+
+(defun print-psoa (psoa &optional connected-p)
+  (setf *already-seen-vars* nil)
+  (mrs-output-start-psoa *mrs-display-structure*)
+  (mrs-output-top-h *mrs-display-structure* 
+                    (find-var-name (psoa-top-h psoa) connected-p))
+  (print-mrs-extra (psoa-top-h psoa))
+  (mrs-output-index *mrs-display-structure* 
+                    (find-var-name (psoa-index psoa) connected-p))
+  (print-mrs-extra (psoa-index psoa))
+  (mrs-output-start-liszt *mrs-display-structure*)
+  (let ((first-rel t))
+    (loop for rel in (psoa-liszt psoa)
+        do
+          (mrs-output-start-rel *mrs-display-structure*
+                                (rel-sort rel) first-rel)
+          (mrs-output-rel-handel
+           *mrs-display-structure* 
+           (find-var-name (rel-handel rel) connected-p))
+          (print-mrs-extra (rel-handel rel))
+          (loop for feat-val in (rel-flist rel)
+              do
+                (mrs-output-label-fn *mrs-display-structure*
+                                     (fvpair-feature feat-val))
+                (let ((value (fvpair-value feat-val)))
+                  (if (var-p value)
+                      (progn
+                        (mrs-output-atomic-fn 
+                         *mrs-display-structure*
+                         (find-var-name value connected-p))
+                        (print-mrs-extra value))
+                    (mrs-output-atomic-fn 
+                     *mrs-display-structure*
+                     value))))
+          (mrs-output-end-rel *mrs-display-structure*)
+          (setf first-rel nil)))
+    (mrs-output-end-liszt *mrs-display-structure*)
+    (mrs-output-start-h-cons *mrs-display-structure*)
+    (let ((first-hcons t))
+      (loop for hcons in (psoa-h-cons psoa)
+          do
+            (mrs-output-outscopes 
+             *mrs-display-structure*
+             (hcons-relation hcons)
+             (find-var-name 
+              (hcons-scarg hcons) connected-p) 
+             (find-var-name 
+              (hcons-outscpd hcons) connected-p)
+             first-hcons)
+            (setf first-hcons nil)))
+    ;; extra info can be ignored here because all handels
+    ;; will have appeared elsewhere
+    (mrs-output-end-h-cons *mrs-display-structure*)
+    (mrs-output-end-psoa *mrs-display-structure*))
+
+(defun print-mrs-extra (var)
+  (when (var-p var)
+    (when (not (member var *already-seen-vars*
+                                            :test #'eq))
+      (mrs-output-start-extra *mrs-display-structure*
+                              (var-type var))
+      (loop for extrapair in (var-extra var)
+          do
+            (mrs-output-extra-feat *mrs-display-structure*
+                                   (extrapair-feature extrapair))
+            (mrs-output-extra-val *mrs-display-structure*
+                                  (extrapair-value extrapair)))
+      (mrs-output-end-extra *mrs-display-structure*)
+      (push var *already-seen-vars*))))
+                         
 
 ;;; error messages
-
-(defparameter *giving-demo-p* nil)
 
 (defun struggle-on-error (&rest rest)
   (unless *giving-demo-p*
     (apply #'cerror "Try and continue" rest)))
 
 
+;;; Reading in an MRS that was written out in the `simple' format
+
+#|
+
+MRS -> [ LTOP INDEX LISZT HCONS ]
+
+LTOP -> top: VAR
+
+INDEX -> index: VAR
+
+LISZT -> liszt: < REL* >
+
+HCONS -> hcons: < QEQ* >
+
+REL -> [ PREDNAME handel: VAR FEATPAIR* ]
+
+FEATPAIR -> FEATNAME: VAR | FEAT: CONSTNAME
+
+VAR -> VARNAME | VARNAME [ VARTYPE EXTRAPAIR* ]
+
+EXTRAPAIR -> PATHNAME: CONSTNAME
+
+QEQ -> VARNAME RELNNAME VARNAME
+
+
+|#
+
+
+(defun make-mrs-break-table nil 
+  (cl-user::define-break-characters '(#\< #\> #\:
+                                      #\[ #\])))
+
+(defun mrs-check-for (character istream)
+   (let ((next-char (peek-char t istream nil 'eof)))
+     (if (char-equal next-char character)
+         (read-char istream)
+         (error
+                 "~%Syntax error: ~A expected and not found at position ~A" 
+                 character (file-position istream)))))
 
 
 
+(defun read-mrs-files-aux (file-names)
+   (let ((*readtable* (make-mrs-break-table)))
+      (for file-name in file-names
+         append
+         (format t "~%Reading in MRS file ~A" (pathname-name file-name))
+         (force-output t)
+         (with-open-file 
+            (istream file-name :direction :input)
+           (read-mrs-stream istream)))))
 
+(defun read-mrs-stream (istream) 
+  (let ((psoas nil))
+   (loop
+      (let ((next-char (peek-char t istream nil 'eof)))
+         (when (eql next-char 'eof) (return))
+         (cond ((eql next-char #\;) 
+                 (read-line istream))
+               ; one line comments
+               (t (push (read-mrs istream)
+                        psoas)))))
+   psoas))
+
+(defparameter *already-read-vars* nil
+  "temporary storage of variables read in in one MRS")
+
+(defun read-mrs (istream)
+;;;  MRS -> [ LTOP INDEX LISZT HCONS ]
+  (setf *already-read-vars* nil)
+  (mrs-check-for #\[ istream)
+  (let* ((ltop (read-mrs-ltop istream))
+         (index (read-mrs-index istream))
+         (liszt (read-mrs-liszt istream))
+         (hcons (read-mrs-hcons istream))
+         (psoa
+          (make-psoa :top-h ltop
+                     :index index
+                     :liszt liszt
+                     :h-cons hcons)))
+    (mrs-check-for #\] istream)
+    psoa))
+
+(defun read-mrs-ltop (istream)
+;;;  LTOP -> top: VAR
+  (mrs-check-for #\t istream)
+  (mrs-check-for #\o istream)
+  (mrs-check-for #\p istream)
+  (mrs-check-for #\: istream)
+  (read-mrs-var istream))
+
+(defun read-mrs-index (istream)
+;;; INDEX -> index: VAR
+  (mrs-check-for #\i istream)
+  (mrs-check-for #\n istream)
+  (mrs-check-for #\d istream)
+  (mrs-check-for #\e istream)
+  (mrs-check-for #\x istream)
+  (mrs-check-for #\: istream)
+  (read-mrs-var istream))
+
+(defun read-mrs-liszt (istream)
+  ;;; LISZT -> liszt: < REL* >
+  (let ((rels nil))
+    (mrs-check-for #\l istream)
+    (mrs-check-for #\i istream)
+    (mrs-check-for #\s istream)
+    (mrs-check-for #\z istream)
+    (mrs-check-for #\t istream)
+    (mrs-check-for #\: istream)
+    (mrs-check-for #\< istream)
+    (loop 
+      (let ((next-char (peek-char t istream nil 'eof)))
+        (when (eql next-char 'eof) (error "Unexpected eof"))
+        (when (eql next-char #\>) (return))
+        (push (read-mrs-rel istream)
+              rels)))
+    (mrs-check-for #\> istream)
+    rels))
+
+(defun read-mrs-hcons (istream)
+  ;; HCONS -> hcons: < QEQ* >
+  (let ((cons nil))
+    (mrs-check-for #\h istream)
+    (mrs-check-for #\c istream)
+    (mrs-check-for #\o istream)
+    (mrs-check-for #\n istream)
+    (mrs-check-for #\s istream)
+    (mrs-check-for #\: istream)
+    (mrs-check-for #\< istream)
+    (loop 
+      (let ((next-char (peek-char t istream nil 'eof)))
+        (when (eql next-char 'eof) (error "Unexpected eof"))
+        (when (eql next-char #\>) (return))
+        (push (read-mrs-qeq istream)
+              cons)))
+    (mrs-check-for #\> istream)
+    cons))
+
+(defun read-mrs-rel (istream)
+;  REL -> [ PREDNAME handel: VAR FEATPAIR* ]
+  (mrs-check-for #\[ istream)
+  (let ((predname (read-mrs-atom istream)))
+    (mrs-check-for #\h istream)
+    (mrs-check-for #\a istream)
+    (mrs-check-for #\n istream)
+    (mrs-check-for #\d istream)
+    (mrs-check-for #\e istream)
+    (mrs-check-for #\l istream)
+    (mrs-check-for #\: istream)
+    (let ((hvar (read-mrs-var istream))
+          (featpairs nil))
+      (loop 
+        (let ((next-char (peek-char t istream nil 'eof)))
+          (when (eql next-char 'eof) (error "Unexpected eof"))
+          (when (eql next-char #\]) 
+            (read-char istream)
+            (return))
+          (push (read-mrs-featpair istream)
+                featpairs)))
+      (make-rel :sort predname
+                :handel hvar
+                :flist (sort featpairs #'feat-sort-func)))))
+          
+(defun read-mrs-featpair (istream)         
+  ;; FEATPAIR -> FEATNAME: VAR | FEAT: CONSTNAME
+  (let ((feature (read-mrs-atom istream)))
+    (mrs-check-for #\: istream)
+    (let ((val
+           (if (member feature *value-feats*
+                       :test #'eq)
+               (read-mrs-atom istream)
+             (read-mrs-var istream))))
+      (make-fvpair :feature feature
+                   :value val))))
+
+(defun read-mrs-var (istream)
+  ;;  VAR -> VARNAME | VARNAME [ VARTYPE EXTRAPAIR* ]
+  ;; note that the type and extra values are assumed
+  ;; to only occur once (or if repeated, to be consistent)
+  (let* ((varname (read-mrs-atom istream))
+         (existing (assoc varname *already-read-vars*))
+         (var (or (cdr existing)
+                  (make-var :name (string varname)
+                            :id (funcall *variable-generator*)))))
+    (unless existing 
+      (push (cons varname var) *already-read-vars*))
+    (let ((next-char (peek-char t istream nil 'eof)))
+      (when (eql next-char 'eof) (error "Unexpected eof"))
+      (when (eql next-char #\[)
+        (read-char istream)
+        (let ((extra nil)
+              (var-type (read-mrs-atom istream)))
+          (loop
+            (let ((inner-next-char (peek-char t istream nil 'eof)))
+              (when (eql inner-next-char 'eof) (error "Unexpected eof"))
+              (when (eql inner-next-char #\]) (return))
+              (push (read-mrs-extrapair istream)
+                extra)))
+        (setf (var-type var) var-type)
+        (setf (var-extra var) extra)
+        (mrs-check-for #\] istream)))
+      var)))
+
+(defun read-mrs-simple-var (istream)
+  ;;  VAR -> VARNAME 
+  ;; no type or extras
+  (let* ((varname (read-mrs-atom istream))
+         (existing (assoc varname *already-read-vars*))
+         (var (or (cdr existing)
+                  (make-var :name (string varname)
+                            :id (gensym (string varname))))))
+    (unless existing 
+      (push (cons varname var) *already-read-vars*))
+    var))
+
+(defun read-mrs-extrapair (istream)
+  ;; EXTRAPAIR -> PATHNAME: CONSTNAME
+  (let ((pathname (read-mrs-atom istream)))
+    (mrs-check-for #\: istream)
+    (let ((val (read-mrs-atom istream)))
+      (make-extrapair :feature pathname
+                      :value val))))
+    
+
+(defun read-mrs-qeq (istream)
+  ;; QEQ -> VARNAME RELNNAME VARNAME
+  (let* ((var1 (read-mrs-simple-var istream))
+         (reln (read-mrs-atom istream))
+         (var2 (read-mrs-simple-var istream)))
+    (make-hcons :relation reln
+                :scarg var1
+                :outscpd var2)))    
+          
+          
+(defun read-mrs-atom (istream)
+  (let ((atomsym (read istream nil 'eof)))
+    (when (eq atomsym 'eof)
+      (error "Unexpected eof"))
+    atomsym))
 

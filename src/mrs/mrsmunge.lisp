@@ -60,6 +60,7 @@
            (mrs-rule-constant-p ac-val))
       (return (mrs-rule-constant-value ac-val))))))
 
+
 ;;; utility structure - for passing results around
 
 (defstruct (munge-result)
@@ -147,21 +148,14 @@
   (if (null condition-spec)
       (list result)
       (let* ((bindings (copy-alist (psoa-result-bindings result)))
-             (i-handel (psoa-handel condition-spec))
-             (handel (psoa-handel mrs))
              (i-top-h (psoa-top-h condition-spec))
              (top-h (psoa-top-h mrs))
              (i-index (psoa-index condition-spec))
              (index (psoa-index mrs)))
-        (when i-handel
-          (setf bindings
-            (bindings-match (get-var-num i-handel)
-                            (get-var-num handel)
-                            bindings)))
         (when i-top-h
           (setf bindings
-            (bindings-match (get-var-num i-top-h) 
-                            (get-var-num top-h) 
+            (bindings-match (get-var-num i-top-h)
+                            (get-var-num top-h)
                             bindings)))
         (when i-index
           (setf bindings
@@ -197,19 +191,12 @@
   ;;; bindings
   ;;; 
     (let ((initial-bindings nil)
-          (i-handel (psoa-handel input-spec))
-          (handel (psoa-handel mrs))
           (i-top-h (psoa-top-h input-spec))
           (top-h (psoa-top-h mrs))
           (i-index (psoa-index input-spec))
           (index (psoa-index mrs)))
-      (record-munge-variable handel)
       (record-munge-variable top-h)
       (record-munge-variable index)           
-      (when i-handel
-        (push (cons (get-var-num i-handel) 
-                    (get-var-num handel)) 
-              initial-bindings))
       (when i-top-h
         (push (cons 
                (get-var-num i-top-h) 
@@ -224,10 +211,6 @@
   (let ((results nil)
         (i-h-cons (psoa-h-cons input-spec))
         (h-cons (psoa-h-cons mrs))
-        (i-message (psoa-message input-spec))
-        (message (psoa-message mrs))
-        (i-wgliszt (psoa-wgliszt input-spec))
-        (wgliszt (psoa-wgliszt mrs))
         (i-liszt (psoa-liszt input-spec))
         (liszt (psoa-liszt mrs)))
       (setf results
@@ -245,54 +228,8 @@
                      :matching-psoa                
                      (make-psoa)))))
       (when results
-        (when i-message
-          (setf results
-                (construct-message-results results i-message message)))                
-        (when results
-          (when i-wgliszt
-            (setf results
-                  (construct-wgliszt-results results i-wgliszt wgliszt)))
-          (when results
-            (construct-hcons-results results i-h-cons h-cons))))))
+        (construct-hcons-results results i-h-cons h-cons))))
           
-(defun construct-message-results (results i-message message)
-  (for curr-res in results
-       filter
-       (let ((message-results 
-              (match-mrs-rule-rels i-message message nil 
-                                   (psoa-result-bindings curr-res)
-                                   (psoa-result-constant-bindings curr-res))))
-         (for message-result in message-results
-              collect
-              (let ((new-psoa 
-                     (copy-psoa (psoa-result-matching-psoa curr-res))))
-                (setf (psoa-message new-psoa) 
-                      (munge-result-matching-rels message-result))
-                (make-psoa-result 
-                 :constant-bindings 
-                 (munge-result-constant-bindings message-result)
-                 :bindings (munge-result-bindings message-result)
-                 :matching-psoa new-psoa))))))
-
-(defun construct-wgliszt-results (results i-wgliszt wgliszt)              
-  (for curr-res in results
-       filter
-       (let ((wgliszt-results 
-              (match-mrs-rule-rels i-wgliszt wgliszt nil 
-                                   (psoa-result-bindings curr-res)
-                                   (psoa-result-constant-bindings curr-res))))
-         (for wgliszt-result in wgliszt-results
-              collect
-              (let ((new-psoa 
-                     (copy-psoa (psoa-result-matching-psoa curr-res))))
-                (setf (psoa-wgliszt new-psoa) 
-                      (munge-result-matching-rels wgliszt-result))
-                (make-psoa-result 
-                 :constant-bindings 
-                 (munge-result-constant-bindings wgliszt-result)
-                 :bindings (munge-result-bindings wgliszt-result)
-                 :matching-psoa new-psoa))))))
-                 
 (defun construct-hcons-results (results i-h-cons hcons)
   (for curr-res in results
        append
@@ -377,13 +314,7 @@
                 (bindings-match (get-var-num (rel-handel input-rel))
                                 (get-var-num (rel-handel rel))
                                 local-bindings))
-	    (when (get-var-num (rel-label input-rel))
-             (setf local-bindings
-                (bindings-match (get-var-num (rel-label input-rel))
-                                (get-var-num (rel-label rel))
-                                local-bindings)))
             (record-munge-variable (rel-handel rel))
-            (record-munge-variable (rel-label rel))
             (when local-bindings
               (setf local-bindings
                  (compatible-values
@@ -466,8 +397,7 @@
             (if (same-names (fvpair-feature input-fvpair)
                      (fvpair-feature actual-fvpair))
                 (if (and (match-var-extras (fvpair-value input-fvpair)
-                                           (fvpair-value actual-fvpair)
-                                           bindings)
+                                           (fvpair-value actual-fvpair))
                     (if 
                         (member
                          (fvpair-feature input-fvpair)
@@ -487,7 +417,7 @@
       input-flist)
       bindings))
 
-(defun match-var-extras (value1 value2 bindings)
+(defun match-var-extras (value1 value2)
   (if (and (var-p value1) (var-p value2))
       (let ((type1 (var-type value1))
             (type2 (var-type value2))
@@ -500,7 +430,7 @@
              (compatible-types type1 type2)
            t)
         (if (and extra1 extra2)
-            (compatible-extra-vals extra1 extra2 bindings)
+            (compatible-extra-vals extra1 extra2)
             t)))
       t))
 
@@ -513,14 +443,8 @@
         (bindings (psoa-result-bindings result))
         (constant-bindings (psoa-result-constant-bindings result)))
     (make-psoa 
-     :handel (change-psoa-variable (psoa-handel input-structure)
-                                   (psoa-handel output-spec)
-                                   bindings)
      :top-h (change-psoa-variable (psoa-top-h input-structure)
                                   (psoa-top-h output-spec)
-                                   bindings)
-     :key-h (change-psoa-variable (psoa-key-h input-structure)
-                                  (psoa-key-h output-spec)
                                    bindings)
      :index (change-psoa-variable (psoa-index input-structure)
                                   (psoa-index output-spec)
@@ -529,14 +453,6 @@
                              (psoa-h-cons matching-psoa)
                              (psoa-h-cons output-spec)
                              bindings)
-     :message (change-psoa-rel-list (psoa-message input-structure)
-                             (psoa-message matching-psoa)
-                             (psoa-message output-spec)
-                             bindings constant-bindings)
-     :wgliszt (change-psoa-rel-list (psoa-wgliszt input-structure)
-                             (psoa-wgliszt matching-psoa)
-                             (psoa-wgliszt output-spec)
-                             bindings constant-bindings)
      :liszt (change-psoa-rel-list (psoa-liszt input-structure)
                              (psoa-liszt matching-psoa)
                              (psoa-liszt output-spec)
@@ -586,18 +502,13 @@
   (for rel in new-rel-specs
        collect
        (let ((new-rel
-              (make-rel :extra nil ; rules should never specify extra,
-                        :type nil  ; type or label
-                        :label nil
-                        :sort (make-name-in-correct-package 
-                               (make-output-sort
-                                (rel-sort rel) (rel-extra rel)
-                                constant-bindings)))))
+              (make-rel :extra nil ; rules should never specify extra
+               :sort (make-name-in-correct-package 
+                      (make-output-sort
+                       (rel-sort rel) (rel-extra rel)
+                       constant-bindings)))))
          (setf (rel-handel new-rel)
                (convert-var-to-new-bindings (rel-handel rel)
-                                            bindings))
-         (setf (rel-label new-rel)
-               (convert-var-to-new-bindings (rel-label rel)
                                             bindings))
          (setf (rel-flist new-rel)
                (sort
@@ -623,6 +534,7 @@
                 #'feat-sort-func))
          new-rel)))
 
+
 (defun make-output-sort (rel-spec extra constant-bindings)
   (let* ((constant (get-appropriate-constant extra nil))
          (constant-match (if constant
@@ -635,6 +547,7 @@
                              (cdr (assoc constant constant-bindings)))))  
     (or constant-match val-spec)))
   
+
 (defun convert-var-to-new-bindings (variable bindings)
   (if (var-p variable)
       (let* ((old-var-id (get-var-num variable))
@@ -686,8 +599,6 @@
         (condition-fs (path-value fs *mrs-rule-condition-path*)))
       (if (and input-fs output-fs)
           (let* ((variable-generator (create-variable-generator 10000))
-                 (*psoa-rh-cons-path* `( ,(vsym "H-CONS")  ,(vsym "LIST")))
-                 (*psoa-liszt-path* `( ,(vsym "LISZT")  ,(vsym "LIST")))
                  (input-spec (construct-mrs input-fs variable-generator))
                  (output-spec (construct-mrs output-fs variable-generator))
                  (condition-spec 
