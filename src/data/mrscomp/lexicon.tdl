@@ -1,0 +1,221 @@
+
+;;; determiners
+
+the := det-lxm &
+[ ORTH.LIST.FIRST "the",
+  SEM.HOOK.KEYPRED "the_rel" ].
+
+her_1 := det-lxm &
+[ ORTH.LIST.FIRST "her",
+  SEM.HOOK.KEYPRED "her_rel" ].
+
+that_1 := sg-det-lxm &
+[ ORTH.LIST.FIRST "that",
+  SEM.HOOK.KEYPRED "that_rel" ].
+
+those := pl-det-lxm &
+[ ORTH.LIST.FIRST "those",
+  SEM.HOOK.KEYPRED "those_rel" ].
+
+these := pl-det-lxm &
+[ ORTH.LIST.FIRST "these",
+  SEM.HOOK.KEYPRED "these_rel" ].
+
+;;; nouns
+
+aardvark := noun-lxm &
+[ ORTH.LIST.FIRST "aardvark",
+  SEM.HOOK.KEYPRED "aardvark_rel" ].
+
+dog := noun-lxm &
+[ ORTH.LIST.FIRST "dog",
+  SEM.HOOK.KEYPRED "dog_rel" ].
+
+food := noun-lxm &
+[ ORTH.LIST.FIRST "food",
+  SEM.HOOK.KEYPRED "food_rel" ].
+
+bowl := noun-lxm &
+[ ORTH.LIST.FIRST "bowl",
+  SEM.HOOK.KEYPRED "bowl_rel" ].
+
+cat := noun-lxm &
+[ ORTH.LIST.FIRST "cat",
+  SEM.HOOK.KEYPRED "cat_rel" ].
+
+biscuit := noun-lxm &
+[ ORTH.LIST.FIRST "biscuit",
+  SEM.HOOK.KEYPRED "biscuit_rel" ].
+
+kennel := noun-lxm &
+[ ORTH.LIST.FIRST "kennel",
+  SEM.HOOK.KEYPRED "kennel_rel" ].
+
+flap := noun-lxm &
+[ ORTH.LIST.FIRST "flap",
+  SEM.HOOK.KEYPRED "flap_rel" ].
+
+
+;;; pronouns / names
+
+it_1 := pronm-lxm &
+[ ORTH.LIST.FIRST "it",
+  HEAD.FORM it,
+  SEM.HOOK.KEYPRED "no_rel" ].
+
+it_2 := pronm-lxm &
+[ ORTH.LIST.FIRST "it",
+  SEM.HOOK.KEYPRED "it_rel" ].
+
+there := pronm-lxm &
+[ ORTH.LIST.FIRST "there",
+  HEAD.FORM there,
+  SEM.HOOK.KEYPRED "no_rel" ].
+
+he := pronm-lxm &
+[ ORTH.LIST.FIRST "he",
+  SEM.HOOK.KEYPRED "he_rel" ].
+
+they := pronm-lxm &
+[ ORTH.LIST.FIRST "they",
+  HEAD.AGR non-3sing,
+  SEM.HOOK.KEYPRED "they_rel" ].
+
+her_2 := pronm-lxm &
+[ ORTH.LIST.FIRST "her",
+  SEM.HOOK.KEYPRED "her_rel" ].
+
+kim := pronm-lxm &
+[ ORTH.LIST.FIRST "kim",
+  SEM.HOOK.KEYPRED "kim_rel" ].
+
+sandy := pronm-lxm &
+[ ORTH.LIST.FIRST "sandy",
+  SEM.HOOK.KEYPRED "sandy_rel" ].
+
+;;; verbs
+
+rain := no-arg-verb &
+[ ORTH.LIST.FIRST "rain",
+  SEM.HOOK.KEYPRED "rain_rel" ].
+
+bark := intrans-verb &
+[ ORTH.LIST.FIRST "bark",
+  SEM.HOOK.KEYPRED "bark_rel" ].
+
+eat_1 := intrans-verb &
+[ ORTH.LIST.FIRST "eat",
+  SEM.HOOK.KEYPRED "eat_rel" ].
+
+eat_2 := trans-verb &
+[ ORTH.LIST.FIRST "eat",
+  SEM.HOOK.KEYPRED "eat_rel" ].
+
+chase := trans-verb &
+[ ORTH.LIST.FIRST "chase",
+  SEM.HOOK.KEYPRED "chase_rel" ].
+
+give := ditransnp-verb &
+[ ORTH.LIST.FIRST "give",
+  SEM.HOOK.KEYPRED "give_rel" ].
+
+seem := srv-lxm &
+[ ORTH.LIST.FIRST "seem",
+  SEM.HOOK.KEYPRED "seem_rel" ].
+
+try := scv-lxm &
+[ ORTH.LIST.FIRST "try",
+  SEM.HOOK.KEYPRED "try_rel" ].
+
+believe := scomp-lxm &
+[ ORTH.LIST.FIRST "believe",
+  SEM.HOOK.KEYPRED "believe_rel" ].
+
+be := auxv-lxm &
+[ ORTH.LIST.FIRST "be",
+  COMPS < [HEAD.FORM presp] >,
+  SEM.HOOK.KEYPRED "be_rel" ].
+
+have := auxv-lxm &
+[ ORTH.LIST.FIRST "have",
+  COMPS < [HEAD.FORM pastp] >,
+  SEM.HOOK.KEYPRED "have_rel" ].
+
+;;; preps
+
+to_1 := prep-lxm &
+[ ORTH.LIST.FIRST "to",
+  SEM.HOOK.KEYPRED "to_rel" ].
+
+near := prep-lxm &
+[ ORTH.LIST.FIRST "near",
+  SEM.HOOK.KEYPRED "near_rel" ].
+
+from := prep-lxm &
+[ ORTH.LIST.FIRST "from",
+  SEM.HOOK.KEYPRED "from_rel" ].
+
+in := prep-lxm &
+[ ORTH.LIST.FIRST "in",
+  SEM.HOOK.KEYPRED "in_rel" ].
+
+into := prep-lxm &
+[ ORTH.LIST.FIRST "into",
+  SEM.HOOK.KEYPRED "into_rel" ].
+
+
+;;; adverbs
+
+slowly := adv-lxm &
+[ ORTH.LIST.FIRST "slowly",
+  SEM.HOOK.KEYPRED "slow_rel" ].
+
+loudly := adv-lxm &
+[ ORTH.LIST.FIRST "loudly",
+  SEM.HOOK.KEYPRED "loud_rel" ].
+
+carefully := adv-lxm &
+[ ORTH.LIST.FIRST "carefully",
+  SEM.HOOK.KEYPRED "careful_rel" ].
+
+
+;;; adjectives
+
+slow := adj-lxm &
+[ ORTH.LIST.FIRST "slow",
+  SEM.HOOK.KEYPRED "slow_rel" ].
+
+loud := adj-lxm &
+[ ORTH.LIST.FIRST "loud",
+  SEM.HOOK.KEYPRED "loud_rel" ].
+
+;;; degree intensifiers
+
+so := deg-lxm &
+[ ORTH.LIST.FIRST "so",
+  SEM.HOOK.KEYPRED "so_rel" ].
+
+;;; conjunctions
+
+and := conj-lxm &
+[ ORTH.LIST.FIRST "and",
+  SEM.HOOK.KEYPRED "and_rel" ].
+
+or := conj-lxm &
+[ ORTH.LIST.FIRST "or",
+  SEM.HOOK.KEYPRED "or_rel" ].
+
+;;; complementizers
+
+that_2 := comp-lxm &
+[ ORTH.LIST.FIRST "that",
+  HEAD.FORM fin,
+  SPR <>,
+  SEM.HOOK.KEYPRED "no_rel" ].
+
+to_2 := comp-lxm &
+[ ORTH.LIST.FIRST "to",
+  HEAD.FORM inf,
+  SEM.HOOK.KEYPRED "no_rel" ].
+
+

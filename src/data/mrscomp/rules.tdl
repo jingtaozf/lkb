@@ -1,0 +1,117 @@
+head-complement-rule-0 := unary-head-initial & 
+[ SPR #spr,
+  ARGS < word & 
+         [ SPR #spr, 
+           COMPS < > ] >  ].
+
+head-complement-rule-1 := binary-head-initial &
+[ SPR #spr, 
+  ARGS < word & 
+         [ SPR #spr, 
+           COMPS < #1 > ],
+         #1 >  ].
+
+
+head-complement-rule-2 := ternary-head-initial &
+[ SPR #spr, 
+  ARGS < word & 
+         [ SPR #spr, 
+           COMPS < #1, #2> ],  
+         #1, #2 > ].
+
+head-specifier-rule := binary-head-final-passgap &
+[ SPR < >,
+  COMPS #comps,
+  ARGS < phrase & #1,
+         phrase & 
+         [ SPR < #1 >,
+           COMPS #comps ] > ]. 
+
+head-modifier-rule := binary-head-initial &
+[ SPR #spr,
+  COMPS #comps,
+  ARGS < phrase & #hdtr &
+         [ SPR #spr,
+           COMPS #comps ],
+         phrase & 
+         [HEAD [MOD [CAT < #hdtr >, DIR post]],
+	  GAP <! !> ] > ].
+
+modifier-head-rule := binary-head-final-passgap &
+[ SPR #spr,
+  COMPS #comps,
+  ARGS <phrase &  
+         [ HEAD [MOD [CAT < #hdtr >, DIR pre]],
+	   GAP <! !> ], 
+	phrase & #hdtr &
+         [ SPR #spr,
+           COMPS #comps ] > ].
+
+noun-modifier-rule := unary-rule &
+[ HEAD noun-mod & [ MOD.CAT < [ SEM.HOOK #hook ] > ],
+  SPR <>,
+  ARGS < phrase & [ HEAD noun, SPR < [ ] >, SEM.HOOK #hook ] > ].
+
+bare-pl-noun-rule := unary-head-initial &
+[ HEAD noun & [AGR non-3sing],
+  SPR <>,
+  ARGS < phrase & [ SPR < [ ] > ] > ].
+
+coord-rule := phrase &
+[ ORTH [LIST #ofront, LAST #otail],
+  HEAD #hd,
+  SPR #spr,
+  COMPS #comps,
+  SEM.RELS [LIST #cfront, LAST #ctail ],
+  GAP [ LIST #gfront,
+	LAST #gtail ],
+  ARGS < phrase & 
+         [ ORTH [LIST #ofront, LAST #omiddle1 ],
+           HEAD #hd,
+           SPR #spr,
+           COMPS #comps,
+           SEM.RELS [LIST #cfront, LAST #cmiddle1 ],
+           GAP [LIST #gfront, LAST #gtail ] ],
+         phrase &
+         [ ORTH [LIST #omiddle1, LAST #omiddle2 ],
+           HEAD conj,
+           SEM.RELS [LIST #cmiddle1, LAST #cmiddle2 ],
+           GAP [LIST #g1, LAST #g1 ] ],
+         phrase &
+         [ ORTH [LIST #omiddle2, LAST #otail ],
+           HEAD #hd,
+           SPR #spr,
+           COMPS #comps,
+           SEM.RELS [LIST #cmiddle2, LAST #ctail ],
+           GAP [LIST #gfront, LAST #gtail ] ] > ].
+
+head-gap-rule-1 := unary-head-initial-startgap &
+[ GAP <! #1 !>,
+  SPR #spr,
+  ARGS < word & 
+         [ SPR #spr, 
+           COMPS < #1 > ] >  ].
+
+head-gap-rule-2 := binary-head-initial-startgap &
+[ GAP <! #1 !>,
+  SPR #spr,
+  ARGS < word & 
+         [ SPR #spr, 
+           COMPS < #1, #2 > ], #2 & [ GAP <! !> ] > ].
+
+head-gap-rule-3 := binary-head-initial-startgap &
+[ GAP <! #2 !>,
+  SPR #spr,
+  ARGS < word & 
+         [ SPR #spr, 
+           COMPS < #1, #2 > ], #1 & [ GAP <! !> ] > ].
+
+head-filler-rule := binary-head-final &
+[ HEAD verb,
+  SPR < >,
+  GAP <! !>,
+  ARGS < phrase & #1 & [ GAP <! !> ],
+         phrase & 
+         [ SPR < >,
+           GAP <! #1 !> ] > ]. 
+
