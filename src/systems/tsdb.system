@@ -106,6 +106,7 @@
        (:file "podium")
        #+(and :lkb :allegro :clim)
        (:file "trees")
+       (:file "tnt-interface")
        #+:allegro
        (:file "allegro")
        #+:allegro
