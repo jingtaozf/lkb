@@ -24,6 +24,7 @@ LINUX_LIBS = -Lllib -lreadline -ltermcap -lregex
 SUNOS_LIBS = -L4lib $(LINUX_LIBS) -liberty
 HPUX_LIBS = -L7lib -lreadline -ltermcap -lregex -liberty
 SOLARIS_LIBS = -L5lib $(LINUX_LIBS) -liberty -lsocket -lnsl 
+OSF_LIBS = -Lolib -lreadline -ltermcap -lregex -liberty
 
 #
 # compiler flags
@@ -43,7 +44,7 @@ XCFLAGS = -DDEBUG \
           -DSERVER \
 	  -DNOFREE \
           -DCOMPRESSED_DATA \
-          -g -Iinclude -pipe
+          -g -Iinclude
 
 #
 # dependendies
@@ -62,6 +63,10 @@ linux : main.$(OBJ)$(DOT) libtsdb.a
 #
 hpux : main.$(OBJ)$(DOT) libtsdb.a
 	$(CC) -o tsdb main.$(OBJ)$(DOT) libtsdb.a $(LIBS) $(HPUX_LIBS)
+#
+#
+osf : main.$(OBJ)$(DOT) libtsdb.a
+	$(CC) -o tsdb main.$(OBJ)$(DOT) libtsdb.a $(LIBS) $(OSF_LIBS)
 #
 #
 libtsdb.a : tsdb.$(OBJ)$(DOT) \
