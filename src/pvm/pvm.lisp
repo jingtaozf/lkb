@@ -7,6 +7,7 @@
 (defconstant %pvm_task_fail% 42)
 (defconstant %pvm_lisp_message% 50)
 (defconstant %pvm_c_message% 51)
+
 (defparameter 
   *pvm*
   (format
@@ -20,7 +21,10 @@
    (namestring (make-pathname :directory (pathname-directory make::bin-dir)
                               :name "pvmd3"))))
 
+(defparameter *pvm-encoding* #+:logon :utf-8 #-:logon nil)
+
 (defparameter *pvm-debug-p* nil)
+
 (defparameter *pvm-pending-events* nil)
 
 (defun initialize-pvm ()
@@ -36,7 +40,7 @@
                                 :name "pvmd3")))))
 
 (defstruct cpu 
-  host spawn options 
+  host spawn options encoding
   architecture class task threshold name grammar template
   preprocessor tagger reader
   create complete)
@@ -249,6 +253,8 @@
     (let* ((block (cond ((null block) 0)
                         ((numberp block) (round block))
                         (t -1)))
+           (encoding (or *pvm-encoding* 
+                         (excl:locale-external-format excl:*locale*)))
            (status (_pvm_poll tid tag block output size)))
       (cond
        ((zerop status) nil)
@@ -263,6 +269,7 @@
           (let ((new (make-array 
                       (+ status 4096) :element-type 'character 
                       :allocation :static)))
+
             ;;
             ;; _fix_me_
             ;; we would want to free the old .output. array here; apparently, 
@@ -283,7 +290,9 @@
             (multiple-value-bind (result condition)
                 (ignore-errors 
                  (let ((string 
-                        #-:ics output #+:ics (excl:native-to-string output)))
+                        #-:ics output 
+                        #+:ics (excl:native-to-string 
+                                output :external-format encoding)))
                    (when *pvm-debug-p*
                      (format t "pvm_poll(): read `~a'.~%" string))
                    (read-from-string string t nil :end status)))
@@ -294,7 +303,9 @@
         (multiple-value-bind (result condition)
             (ignore-errors 
              (let ((string 
-                    #-:ics output #+:ics (excl:native-to-string output)))
+                    #-:ics output 
+                    #+:ics (excl:native-to-string
+                            output :external-format encoding)))
                (when *pvm-debug-p*
                  (format t "pvm_poll(): read `~a'.~%" string))
                (read-from-string string t nil :end status)))
@@ -309,9 +320,9 @@
     (_pvm_transmit "pvm_transmit")
     ((tid :int integer)
      (tag :int integer)
-     (file (* :char) string))
+     (string :int integer))
   :returning :int
-  #+(version>= 6 0) :strings-convert #+(version>= 6 0) t)
+  #+(version>= 6 0) :strings-convert #+(version>= 6 0) nil)
 
 #-(version>= 5 0)
 (defforeign
@@ -330,7 +341,11 @@
          #+:null
          (string (format nil "~s" form))
          (string (with-standard-io-syntax (write-to-string form)))
-         (status (_pvm_transmit tid tag string)))
+         (encoding (or *pvm-encoding*
+                       (excl:locale-external-format excl:*locale*)))
+         (status 
+          (excl:with-native-string (address string :external-format encoding)
+            (_pvm_transmit tid tag address))))
     status))
 
 #+(version>= 5 0)
@@ -492,7 +507,9 @@
        t
        "revaluate(): invalid task id ~d.~%" tid))
     (return-from revaluate :error))
-  (if (< (pvm_transmit tid %pvm_lisp_message% (list :eval key form)) 0)
+  (if (< (pvm_transmit 
+          tid %pvm_lisp_message% (list :eval key form))
+         0)
     :error
     (if block
       (loop
