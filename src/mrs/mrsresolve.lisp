@@ -443,11 +443,13 @@ printing routines -  convenient to make this global to keep printing generic")
               (cdr (bindings-and-sisters-sisters rel-comb-and-bindings)) 
               bvs 
               (bindings-and-sisters-bindings rel-comb-and-bindings) 
-              (set-difference rels 
-                              (bindings-and-sisters-sisters rel-comb-and-bindings))
+              (set-difference 
+               rels 
+               (bindings-and-sisters-sisters rel-comb-and-bindings))
               (cons top-handel scoping-handels)))))))
 
-(defun make-combinations-with-is-one-ofs  (top-handel known-top-rels other-possibles bindings)
+(defun make-combinations-with-is-one-ofs (top-handel known-top-rels 
+                                          other-possibles bindings)
   (let ((is-one-ofs (get-is-one-ofs top-handel)))
     (if is-one-ofs
       (for is-one-of in is-one-ofs
@@ -458,22 +460,35 @@ printing routines -  convenient to make this global to keep printing generic")
                           (if (eql (get-var-num (rel-handel rel)) is-one-of)
                                    rel))))
              (if matching-rels
-               (make-combinations-of-top-rels top-handel 
-                                              (append known-top-rels matching-rels)
-                                              (set-difference other-possibles matching-rels)
-                                          (adjust-bindings bindings top-handel is-one-of)))))
-      (make-combinations-of-top-rels top-handel known-top-rels other-possibles bindings))))
+                 (make-combinations-of-top-rels 
+                  top-handel 
+                  (append known-top-rels matching-rels)
+                  (set-difference other-possibles matching-rels)
+                  (adjust-bindings bindings top-handel is-one-of)))))
+      (make-combinations-of-top-rels 
+       top-handel 
+       known-top-rels 
+       other-possibles 
+       bindings))))
       
 
-(defun make-combinations-of-top-rels  (top-handel known-top-rels other-possibles bindings)
+(defun make-combinations-of-top-rels  (top-handel known-top-rels 
+                                       other-possibles bindings)
   ;;; we need all possible combinations of rels which include the known 
   ;;; top rels
-    (let ((other-combinations (generate-combinations other-possibles)))
-      ;;; other-combinations is is a list of sets of rels including the empty set
+  (let ((other-combinations
+         (generate-combinations other-possibles)))
+         ;;; replacing the line above with the
+         ;;; following prevents handel unification
+         ;;; (if known-top-rels nil
+         ;;;  (mapcar #'list other-possibles))))
+      ;;; other-combinations is is a list of sets of rels 
+      ;;; including the empty set
       (for other-combination in other-combinations
            filter
            (let* ((combined-rels (append other-combination known-top-rels))
-                  (new-bindings (generate-top-bindings top-handel combined-rels bindings)))
+                  (new-bindings 
+                   (generate-top-bindings top-handel combined-rels bindings)))
              (if (and new-bindings combined-rels)
                ;;; combined rels might be nil in the case where there are 
                ;;; no known-top-rels

@@ -16,12 +16,11 @@
   input-condition
   output-spec)
 
-;;; input spec and output spec are psoas, 
+;;; input spec, input condition and output spec are psoas, 
 ;;; with variables specified appropriately
 ;;; If the input spec (and any specified input-conditions) match
 ;;; then the input-spec elements are deleted, and replaced with the 
 ;;; output-spec elements
-;;; input condition is a boolean with elements which are relations 
 
 (defstruct (mrs-trigger-rule)
   id
@@ -31,12 +30,8 @@
 ;;; input condition is as above
 ;;; output-parameters is a list of parameter value pairs
 
-(defstruct (mrs-condition)
-  boolean
-  cond-list)
-
-;;; cond-list is a list of mrs-conditions, or of relations.  
-;;; If boolean is NOT, cond-list must be a singleton.
+;;; for now, condition is a LISZT of rels, but eventually
+;;; might want boolean e.g.
 
 #|
 
@@ -103,13 +98,15 @@
 ;;;      (when results
 ;;;            (display-mrs-rule rule))
       (dolist (result (remove-overlapping-psoas results))
-        (setf mrsstruct
-              (alter-mrs-struct mrsstruct result
-                                (mrs-munge-rule-output-spec 
-                                 rule)))
+        (when (matches-input-condition mrsstruct result  
+                              (mrs-munge-rule-input-condition rule))         
+          (setf mrsstruct
+            (alter-mrs-struct mrsstruct result
+                              (mrs-munge-rule-output-spec 
+                               rule)))
 ;;;        (output-mrs mrsstruct 'indexed)
-        )))
-  mrsstruct)
+          ))))
+   mrsstruct)
 
 
 (defun remove-overlapping-psoas (results)
@@ -136,6 +133,38 @@
    (psoa-liszt (psoa-result-matching-psoa res1))
    (psoa-liszt (psoa-result-matching-psoa res2))))
 
+
+(defun matches-input-condition (mrs result condition-spec) 
+  (or (null condition-spec)
+      (let* ((bindings (copy-alist (psoa-result-bindings result)))
+             (i-handel (psoa-handel condition-spec))
+             (handel (psoa-handel mrs))
+             (i-top-h (psoa-top-h condition-spec))
+             (top-h (psoa-top-h mrs))
+             (i-index (psoa-index condition-spec))
+             (index (psoa-index mrs)))
+        (when i-handel
+          (setf bindings
+            (bindings-match (get-var-num i-handel)
+                            (get-var-num handel)
+                            bindings)))
+        (when i-top-h
+          (setf bindings
+            (bindings-match (get-var-num i-top-h) 
+                            (get-var-num top-h) 
+                            bindings)))
+        (when i-index
+          (setf bindings
+            (bindings-match (get-var-num i-index) 
+                            (get-var-num index) bindings)))
+        (match-input-condition-rest mrs condition-spec bindings))))
+
+(defun match-input-condition-rest (mrs input-spec initial-bindings)
+  (let ((i-liszt (psoa-liszt input-spec))
+        (liszt (psoa-liszt mrs)))
+    (match-mrs-rule-rels i-liszt liszt nil initial-bindings nil)
+    ;;; just allow conditions on relations pro tem
+    ))
 
 (defun match-mrs-rule (mrs input-spec)
   ;;; first match top-h etc, if specified, in order to produce
@@ -642,27 +671,37 @@
 
 (defparameter *mrs-rule-output-path* '(user::output))
 
+(defparameter *mrs-rule-condition-path* '(user::lcondition))
+
 (defun construct-munge-rule-from-fs (id fs funny-unifs)
   ;;; input and output are constructed using construct-mrs
   ;;; with a given variable-generator
   (declare (ignore id))
   (let ((input-funny (collect-funny-unifs funny-unifs *mrs-rule-input-path*))
         (output-funny (collect-funny-unifs funny-unifs *mrs-rule-output-path*))
+        (condition-funny (collect-funny-unifs funny-unifs 
+                                              *mrs-rule-condition-path*))
         (input-fs (path-value fs *mrs-rule-input-path*))
-        (output-fs (path-value fs *mrs-rule-output-path*)))
-      ;;        (condition-fs (path-value fs *mrs-rule-condition-path*))
+        (output-fs (path-value fs *mrs-rule-output-path*))
+        (condition-fs (path-value fs *mrs-rule-condition-path*)))
       (if (and input-fs output-fs)
           (let* ((variable-generator (create-variable-generator))
                  (*psoa-rh-cons-path* `( ,(vsym "H-CONS")  ,(vsym "LIST")))
                  (*psoa-liszt-path* `( ,(vsym "LISZT")  ,(vsym "LIST")))
                  (input-spec (construct-mrs input-fs variable-generator))
-                 (output-spec (construct-mrs output-fs variable-generator)))
+                 (output-spec (construct-mrs output-fs variable-generator))
+                 (condition-spec 
+                  (if condition-fs
+                      (construct-mrs condition-fs variable-generator))))
             (when (and input-spec output-spec)
               (add-funny-stuff input-spec input-funny)
               (add-funny-stuff output-spec output-funny)
-                (make-mrs-munge-rule 
-                 :input-spec input-spec
-                 :output-spec output-spec))))))
+              (when condition-spec
+                  (add-funny-stuff condition-spec condition-funny))
+              (make-mrs-munge-rule 
+               :input-spec input-spec
+               :output-spec output-spec
+               :input-condition condition-spec))))))
     
 
 ;;; This is a bit grubby, because I want to use the standard code
