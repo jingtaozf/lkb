@@ -281,7 +281,8 @@
 #+(or :allegro :lispworks)
 (defvar *parser-lock* (mp:make-process-lock))
 
-(defmacro with-parser-lock (() &body body)
+(defmacro with-parser-lock ((&optional foo) &body body)
+  (declare (ignore foo))
   #+(or :allegro :lispworks)
   `(mp:with-process-lock (*parser-lock*)
      ,@body)

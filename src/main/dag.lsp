@@ -1,5 +1,6 @@
-;;; Copyright (c) 1997-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
-;;; see licence.txt for conditions
+;;; Copyright (c) 1997--2002 
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see `licence.txt' for conditions.
 
 ;;; LKB
 ;;;
@@ -138,7 +139,7 @@
 ;;;
 ;;; first attempt at dag recycling.  to reduce creation of garbage, keep a pool
 ;;; of (safe) dag instances.  while parsing (i.e. when creating temporary data)
-;;; use dags from the pool rather than allocation new ones.  the parser has to
+;;; use dags from the pool rather than allocating new ones.  the parser has to
 ;;; record the initial pool pointer (on entry) and can then reset the pointer
 ;;; once the parse has completed.  this should reduce dynamic allocation quite
 ;;; significantly (at the minor cost of slightly increased initial image size);
@@ -191,7 +192,7 @@
 ;;; from the pool.  suppose that dag recycling was on in interactive mode: the
 ;;; pool pointer is reset (to 0) on entry into the parser.  since people may 
 ;;; have feature structure windows open browsing results from a previous parse,
-;;; dag recycling could mean that parts of those features structures suddenly
+;;; dag recycling could mean that parts of those feature structures suddenly
 ;;; are changed, because dag nodes have been reused (nb: it is not clear, the
 ;;; problem cannot be solved; it seems most of the display of previous results
 ;;; is closed or frozen anyway, when new input is parsed; in Allegro at least).
@@ -259,22 +260,22 @@
 
 #+:pooling
 (defmacro pool-next (pool)
-   `(let* ((position (pool-position ,pool))
-           (next
-            (svref (the simple-vector (with-verified-pool (,pool)
-                                        (pool-data ,pool)))
-               (the fixnum position))))
-       (cond
+  `(let* ((position (pool-position ,pool))
           (next
-             (with-verified-pool (,pool)
-                (setf (pool-position ,pool)
-                   (the fixnum (1+ (the fixnum position)))))
-             next)
-          (t
-             (with-verified-pool (,pool)
-                (setf (pool-garbage ,pool)
-                   (the fixnum (1+ (the fixnum (pool-garbage ,pool))))))
-             (funcall (with-verified-pool (,pool) (pool-constructor ,pool)))))))
+           (svref (the simple-vector (with-verified-pool (,pool)
+                                       (pool-data ,pool)))
+                  (the fixnum position))))
+     (cond
+      (next
+       (with-verified-pool (,pool)
+         (setf (pool-position ,pool)
+           (the fixnum (1+ (the fixnum position)))))
+       next)
+      (t
+       (with-verified-pool (,pool)
+         (setf (pool-garbage ,pool)
+           (the fixnum (1+ (the fixnum (pool-garbage ,pool))))))
+       (funcall (with-verified-pool (,pool) (pool-constructor ,pool)))))))
 
 
 ;;; Dag creation

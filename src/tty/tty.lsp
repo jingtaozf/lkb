@@ -208,9 +208,10 @@
              do
              (format t "~&Edge ~A P:" (edge-id edge))
              (pprint (parse-tree-structure edge)))        
-        (let ((hook (when (and (find-package :mrs) 
-                               (find-symbol "OUTPUT-MRS-AFTER-PARSE" :mrs))
-                      (fboundp (find-symbol "OUTPUT-MRS-AFTER-PARSE" :mrs)))))
+        (let* ((symbol (when (find-package :mrs)
+                         (find-symbol "OUTPUT-MRS-AFTER-PARSE" :mrs)))
+               (hook (when (and symbol (fboundp symbol))
+                       (symbol-function symbol))))
           (when hook (funcall hook *parse-record*))))
       (format t "~&No parses")))
 
@@ -266,7 +267,8 @@
 
 ;; This macro takes care of synchonization problems in the CLIM version
 
-(defmacro with-output-to-top (() &body body)
+(defmacro with-output-to-top ((&optional foo) &body body)
+  (declare (ignore foo))
   `(progn
      ,@body
      (terpri)))

@@ -150,6 +150,7 @@
        (read-indexed-mrs stream))))
 
 (defun safe-mrs-unequalp (mrs1 mrs2 &rest options)
+  (declare (ignore options))
   (not 
    (if (and mrs1 mrs2)
      (apply #'mrs-equalp mrs1 mrs2 '(t nil))

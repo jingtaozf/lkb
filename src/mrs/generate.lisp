@@ -801,6 +801,7 @@
 ;;; Make active edges from inactive modifier edges, when not already done
 
 (defun gen-chart-create-active-mod-edges (mod-alt intersective-rules)
+  (declare (special *gen-modifier-active-edges*))
   (flet
       ((active-from-inactive (inact)
          (mapcan
@@ -826,7 +827,6 @@
                          (list act))))
                  (cdr (rule-order rule))))
           intersective-rules)))
-    (declare (special *gen-modifier-active-edges*))
     (mapcar
      #'(lambda (rels-and-edges)
          (cons (car rels-and-edges)

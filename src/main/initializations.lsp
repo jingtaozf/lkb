@@ -31,6 +31,9 @@
      for package = (find-package name)
      unless (eq key package) collect name))
 
+#+:clisp
+(setf (ext:package-lock "LISP") nil)
+
 ;;; not used in LKB code but required by some grammar loading stuff
 (defparameter *grammar-directory* nil)
 

@@ -12,15 +12,15 @@
 
 (in-package "MAKE")
 
-(defvar %BINARY-DIR-NAME% 
-    (remove-if-not #'(lambda (x) (or (alphanumericp x) (char= x #\-)
-                                     (char= x #\_)))
-                   (substitute #\_ #\space
-                               (concatenate 'string 
-                                 (or (machine-type) "") "-" 
-                                 (or (software-type) "") "-"
-                                 (or (lisp-implementation-version) "")))))
-
+(defvar %binary-dir-name% 
+  (or
+   #+:hppa ".huf"
+   #+(and :x86 :linux) ".luf"
+   #+:sparc ".suf"
+   #+:alpha ".auf"
+   #+(and :x86 (not :linux)) ".wuf"
+   ".cuf"))
+   
 ;;;
 ;;; determine the system type (in terms of hardware and os) in order to set
 ;;; `bin-dir' (the location of external platform-specific executables)
@@ -28,13 +28,13 @@
 ;;;
 
 (defvar %system-binaries%
-  #+(or :prism :hppa) "hppa"
-  #+:linux86 "linux"
-  #+:sunos4 "sunos"
-  #+(and :sun :svr4) "solaris"
+  #+:hppa "hppa"
+  #+(and :x86 :linux) "linux"
+  #+:sunos "sunos"
+  #+:solaris "solaris"
   #+:alpha "osf"
-  #+:mswindows "mswindows"
-  #-(or :prism :hppa :sunos4 (and :sun :svr4) :alpha :linux86 :mswindows)
+  #+(and :x86 (not :linux)) "windows"
+  #-(or :hppa :x86 :sunos :solaris :alpha)
   (error "~&loadup: unable to determine system type; see file ~
-          `allegro-patches.lisp'.~%"))
+          `cmucl-patches.lisp'.~%"))
 

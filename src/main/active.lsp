@@ -732,14 +732,14 @@
               #+:adebug
               (print-trace :reconstruct active)
               (loop
-                  initially (setf atdfs (if #+:restrict *chart-packing-p* 
-                                            #-:restrict nil
-                                          (rule-rtdfs arule)
-                                          (rule-full-fs arule)))
                   for edge in achildren
                   for tdfs = (edge-dag edge)
                   for i in (rule-rhs arule)
                   for path = (nth i daughters)
+                  initially (setf atdfs (if #+:restrict *chart-packing-p* 
+                                            #-:restrict nil
+                                          (rule-rtdfs arule)
+                                          (rule-full-fs arule)))
                   do
                     (setf atdfs 
                       (yadu! atdfs tdfs path))))
