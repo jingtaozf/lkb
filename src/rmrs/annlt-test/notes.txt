@@ -1,4 +1,4 @@
-the approach of not connecting the ltop of the determiner and the
+The approach of not connecting the ltop of the determiner and the
 label of its relation does not translate into RMRS-RASP because we
 need access to the label to connect up the Nbar.  Hence, for now,
 pretend that the NP is headed by RULE, so we can disconnect the
@@ -10,7 +10,13 @@ Presumably we have the same issue with `do' (ERG has a contentful `do'
 for `do the dishes' etc).  There is also a contentful `be' in the ERG for 
 `Abrams is a dog' etc.
 
-Test suite examples:
+Test suite examples.
+
+The lack of comments indicates a perfect match (up to the level being
+considered).  I haven't systematically noted cases where the ERG-RMRS
+has a more specific pred name than RASP-RMRS.  I also haven't
+noted cases where the mismatch arises from something already noted -
+e.g. the `it rained' always mismatches.
 
 1. It rained
 
@@ -18,36 +24,103 @@ RASP has no chance of distinguishing expletive `it'
 
 2. Abrams barked 
 
+CARG treatment - case is an issue.  Lexical entries in the ERG have nearly
+all got completely lower case CARG values (it appears that something 
+may be downcasing systematically anyway, but I can't easily check this).
+For the time being, all RASP CARG values are also downcased.  In principle,
+RMRS allows case to be preserved in CARGs (and only in CARGs), so this
+issue may be revisited if it's useful for disambiguation or something.
+
 3. The window opened
    open_v_1 in ERG vs open_v
    (note that `Abrams opened the window' gives `open_v_cause' (ARG1 ARG2)
+    in the ERG)
 
 4. Abrams chased Browne
 
 5. Abrams handed Browne the cigarette 
 
-6. Abrams handed the cigarette to Browne
-ARG1, ARG2, ARG3 FIX
+6. Abrams handed the cigarette to Browne 
+
+ARG1, ARG2, ARG3 in ERG (with to_p_sel) but ARG1 ARG2 with `real' prep
+in RASP.  Can't do anything about this, since it might be a `real'
+`to' in this rule, although it would be nice to figure out a way to make the
+parses look more similar.
 
 7. Abrams bet Browne a cigarette that it rained
+
+expl it
+as with `hand' - ARG2 is a cigarette, ARG3 is Browne
+`that' supplies the prpstn rel in the ERG, but
+the prpstn is coming from the construction in RASP (and `that' is semantically
+empty).  Hence mismatch in character position, but OK otherwise.
+
 8. Abrams knew that it rained
+
+prpstn - as 7
+
 9. Abrams intended to bark 
+
+RASP is missing the ARG1 for `bark' here.  To get this to work would require
+having two anchors and retrieving the second as well as the first when
+we get to the subject.  May be possible, but difficult.
+Would require checking that V1/v_inf didn't turn up in contexts
+where this isn't the right behaviour.
+
 10. Abrams intended Browne to bark
+
+why does bark have u not e??
+can we bind Browne?
+
 11. Every cat barked
+
 12. Every cat chased some dog
+
 13. My cat barked
+
+This is quite horrible.  The only way the RASP version can work
+properly is for the code to recognise that we've got a RSTR from the
+DEF_EXPLICIT_Q_REL already with a qeq, and when we get another one for
+the N, it'd have to merge them ... Leave it like this for now, but see
+if a better idea emerges!
+
+
 14. It barked
+
 15. The cat chased it
+
 16. The cat chased itself
+
 17. The cat chased one
 
-this is the pronoun `one' (I think) - in RASP it has the same tag as somebody
+This is the pronoun `one' - in RASP it has the same tag as somebody
 and everybody - which means we have to treat it as very underspecified
 
 18. Mine barked
+
 19. That opened
+
+In the ERG there's a generic_nom_rel which can't be replicated in RASP.
+The RASP output is ill-formed because `that' is treated as a quantifier
+but there's nothing to act as a RSTR.  This is not likely to be fixable 
+- RASP treats DD1 as an NP here - this is just the ordinary np_vp
+rule.
+
 20. Cats bark
 
+21. Tobacco arrived.
+
+S/n1_vp 
+
+22. Some bark.
+23. Some of the cats bark.
+24. No cat barked.
+25. Did the dog bark?
+26. Which dog barked? 
+27. Whose dog barked?
+28. Chase Browne!
+29. Abrams wondered which dog barked.
+30. Abrams wondered whether Browne barked.
 
 
 
