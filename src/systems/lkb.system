@@ -471,6 +471,7 @@
       :components
       ((:file "mt-package" :load-only t)
        (:file "version" :load-only t)
+       #+:logon
        (:file "mrsglobals" :load-only t)
        (:file "globals")
        (:file "patches")
