@@ -13,12 +13,14 @@
 ;;; for MRS.  Note that these structures are simple, because
 ;;; reentrancies have been replaced by variables.
 
-(defstruct (psoa)
+(defstruct (basemrs)
+  liszt
+  h-cons)
+
+(defstruct (psoa (:include basemrs))
   top-h
   mode
   index
-  liszt
-  h-cons
   info-s) ; information structure
 
 ;;; defined ep so there's a basic structure for EPs for RMRS
@@ -614,22 +616,7 @@ higher and lower are handle-variables
           (setf first-rel nil)))
   (mrs-output-end-liszt *mrs-display-structure*)
   (when *rel-handel-path*
-    (mrs-output-start-h-cons *mrs-display-structure*)
-    (let ((first-hcons t))
-      (loop for hcons in (psoa-h-cons psoa)
-          do
-            (mrs-output-outscopes 
-             *mrs-display-structure*
-             (hcons-relation hcons)
-             (find-var-name 
-              (hcons-scarg hcons) connected-p) 
-             (find-var-name 
-              (hcons-outscpd hcons) connected-p)
-             first-hcons)
-            (setf first-hcons nil)))
-    ;; extra info can be ignored here because all handels
-    ;; will have appeared elsewhere
-    (mrs-output-end-h-cons *mrs-display-structure*))
+    (print-mrs-hcons (psoa-h-cons psoa) connected-p *mrs-display-structure*))
   (when *psoa-info-s-path*
     (mrs-output-start-info-s *mrs-display-structure*)
     (let ((first-info-s t))
@@ -644,6 +631,25 @@ higher and lower are handle-variables
             (setf first-info-s nil)))
     (mrs-output-end-info-s *mrs-display-structure*))
   (mrs-output-end-psoa *mrs-display-structure*))
+
+(defun print-mrs-hcons (hcons-list connected-p display)
+    (mrs-output-start-h-cons display)
+    (let ((first-hcons t))
+      (loop for hcons in hcons-list
+          do
+            (mrs-output-outscopes 
+             display
+             (hcons-relation hcons)
+             (find-var-name 
+              (hcons-scarg hcons) connected-p) 
+             (find-var-name 
+              (hcons-outscpd hcons) connected-p)
+             first-hcons)
+            (setf first-hcons nil)))
+    ;; extra info can be ignored here because all handels
+    ;; will have appeared elsewhere
+    (mrs-output-end-h-cons display))
+
 
 (defun print-mrs-extra (var)
   (when (and (var-p var) (var-type var) (var-extra var))

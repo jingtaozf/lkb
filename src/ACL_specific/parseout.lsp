@@ -253,6 +253,7 @@
                     ("Generate" :value generate :active ,*mrs-loaded*)
                     ("MRS" :value mrs :active ,*mrs-loaded*)
                     ("Prolog MRS" :value prolog :active ,*mrs-loaded*)
+                    ("RMRS" :value rmrs :active ,*mrs-loaded*)
                     ("Indexed MRS" :value indexed :active ,*mrs-loaded*)
                     ("Scoped MRS" :value scoped :active ,*mrs-loaded*)
                     ("Dependencies" :value dependencies :active ,*mrs-loaded*)
@@ -293,6 +294,7 @@
             (indexed (funcall 'show-mrs-indexed-window (prtree-edge tree)))
             (prolog (funcall 'show-mrs-prolog-window (prtree-edge tree)))
             (scoped (funcall 'show-mrs-scoped-window (prtree-edge tree)))
+            (rmrs (funcall 'show-mrs-rmrs-window (prtree-edge tree)))
             (dependencies 
              (funcall 'show-mrs-dependencies-window (prtree-edge tree)))
             (transfer

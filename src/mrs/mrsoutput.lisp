@@ -171,8 +171,9 @@ duplicate variables")
          (variable-name (format nil "h~A" idnumber)))
     (make-handle-var 
      :name variable-name
+     :type 'handle
      :id idnumber)))
-  
+
 (defun create-variable (fs gen)
   (when (is-valid-fs fs)
     (let ((existing-variable (assoc fs *named-nodes*)))

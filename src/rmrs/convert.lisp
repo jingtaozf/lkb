@@ -36,8 +36,6 @@
                   (if simple-p
                       (simple-mrs-to-rmrs mrs-struct)
                     (mrs-to-rmrs mrs-struct))))
-            (setf *test-mrs* mrs-struct)
-            (setf *test-rmrs* rmrs-struct)
             (output-rmrs1 rmrs-struct 'xml ostream))
       (format ostream
               "~%<rmrs></rmrs>"))

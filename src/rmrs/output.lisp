@@ -174,7 +174,7 @@
 
 (defmethod rmrs-output-end-ep ((rmrsout compact))
   (with-slots (stream) rmrsout
-    (format stream ")")))
+    (format stream ")  ")))
 
 (defmethod rmrs-output-end-eps ((rmrsout compact))
   (with-slots (stream) rmrsout
@@ -196,7 +196,7 @@
 
 (defmethod rmrs-output-end-rmrs-arg ((rmrsout compact))
   (with-slots (stream) rmrsout
-    (format stream ")")))
+    (format stream ")  ")))
 
 (defmethod rmrs-output-end-rmrs-args ((rmrsout compact))
   (with-slots (stream) rmrsout

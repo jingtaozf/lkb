@@ -51,7 +51,7 @@
 			  :if-exists :append)
 	   (output-mrs1 mrs-struct 'prolog pro-out)))
         (*rmrs-xml* 
-         (output-rmrs1 (simple-mrs-to-rmrs mrs-struct) 'xml stream))
+         (output-rmrs1 (mrs-to-rmrs mrs-struct) 'xml stream))
         (*regurgitate*
          (output-mrs1 mrs-struct 'simple-indexed stream))
         (t (output-mrs1 mrs-struct 'simple stream))))

@@ -35,6 +35,15 @@
   :width *parse-window-width* 
   :height *parse-window-height*)
 
+(define-lkb-frame mrs-rmrs
+    ((mrsstruct :initform nil
+                :accessor mrs-rmrs-mrsstruct)
+     (rmrs :initform nil
+                :accessor mrs-rmrs-rmrs))
+  :display-function 'show-mrs-rmrs  
+  :width *parse-window-width* 
+  :height *parse-window-height*)
+
 (define-lkb-frame mrs-dependencies
     ((mrsstruct :initform nil
                 :accessor mrs-dependencies-mrsstruct))
@@ -130,6 +139,20 @@
     (setf (clim:frame-pretty-name mframe) "Scoped MRS")
     (clim:run-frame-top-level mframe)))
 
+(defun show-mrs-rmrs-window (edge)
+  (mp:run-function "RMRS"
+   #'show-mrs-rmrs-window-really edge))
+  
+(defun show-mrs-rmrs-window-really (edge)
+  (let ((mframe (clim:make-application-frame 'mrs-rmrs))
+        (mrsstruct (mrs::extract-mrs edge)))
+    (setf (mrs-rmrs-mrsstruct mframe) 
+      mrsstruct)
+    (setf (mrs-rmrs-rmrs mframe) 
+      (mrs::mrs-to-rmrs mrsstruct))
+    (setf (clim:frame-pretty-name mframe) "RMRS")
+    (clim:run-frame-top-level mframe)))
+
 (defun show-mrs-dependencies-window (edge)
   (mp:run-function "Elementary Dependencies"
    #'show-mrs-dependencies-window-really edge))
@@ -178,6 +201,15 @@
                (setf mrs::*canonical-bindings* (mrs::canonical-bindings binding))
                (mrs::output-scoped-mrs mrsstruct :stream stream)))
       (format stream "~%::: MRS structure does not scope~%"))))
+
+(defun show-mrs-rmrs (mframe stream &key max-width max-height)
+  (declare (ignore max-width max-height))
+  (let ((mrsstruct (mrs-rmrs-mrsstruct mframe))
+        (rmrs (mrs-rmrs-rmrs mframe)))
+    (if (and mrsstruct rmrs)
+        (clim:with-text-style (stream (lkb-parse-tree-font))
+          (mrs::output-rmrs1 rmrs 'mrs::compact stream))
+      (format stream "~%::: MRS structure could not be extracted~%"))))
 
 (defun show-mrs-dependencies (mframe stream &key max-width max-height)
   (declare (ignore max-width max-height))

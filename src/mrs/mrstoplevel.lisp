@@ -176,11 +176,15 @@
           "MRS output?" 
           :none
           :base
+          :rmrs
           :scoped)))
     (case output-level
       (:none (setf mrs::*mrs-output-p* nil)
              (setf mrs::*mrs-scoping* nil))
       (:base (setf mrs::*mrs-output-p* t)
+             (setf mrs::*mrs-scoping* nil))
+      (:rmrs (setf mrs::*mrs-output-p* t)
+             (setf mrs::*rmrs-xml* t)
              (setf mrs::*mrs-scoping* nil))
       (:scoped (setf mrs::*mrs-output-p* nil)
              (setf mrs::*mrs-scoping* t)))))
