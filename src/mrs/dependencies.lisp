@@ -215,7 +215,9 @@
               with foo = (var-name variable)
               with name = (or (ed-variable-equivalence foo) foo)
               for ed in (eds-relations %eds-eds%)
-              for id = (unless (ed-quantifier-p ed) (ed-id ed))
+              for id = (unless (or (ed-bleached-p ed)
+                                   (ed-quantifier-p ed))
+                         (ed-id ed))
               thereis (when (equal name id) ed)))
          ((stringp variable) variable)))))
 
@@ -232,6 +234,11 @@
    (loop
        for ed in eds
        unless (char= (char (ed-id ed) 0) #\_) collect ed into candidates
+       finally (when (and candidates (null (rest candidates)))
+                 (return (first candidates))))
+   (loop
+       for ed in eds
+       unless (eq (ed-type ed) :quantifier) collect ed into candidates
        finally (when (and candidates (null (rest candidates)))
                  (return (first candidates))))
    (loop
