@@ -560,10 +560,10 @@
 
 ;;; Output of derivation trees
 
-(defun construct-derivation-trees (&optional no-morph)
+(defun construct-derivation-trees nil
   (loop for parse in *parse-record*
       collect
-        (deriv-tree-compute-derivation-tree parse no-morph)))
+        (deriv-tree-compute-derivation-tree parse)))
 
 #|
 ;;; for batch parsing
@@ -589,14 +589,12 @@
      (t :unknown))
    :lkb))
 
-(defun deriv-tree-compute-derivation-tree (edge &optional no-morph)
+(defun deriv-tree-compute-derivation-tree (edge)
   (let ((edge-children 
          (or (edge-children edge) 
              (if (edge-morph-history edge)
                  (list (edge-morph-history edge))))))
-    (if (and edge-children
-             (not (and no-morph
-                       (lexical-rule-p (edge-rule edge)))))
+    (if edge-children
       (let* ((start *chart-limit*)
              (end 0)
              (children
@@ -605,7 +603,7 @@
                     collect
                     (let ((derivation 
                            (deriv-tree-compute-derivation-tree 
-                            child no-morph)))
+                            child)))
                       (setf start (min start (second derivation)))
                       (setf end (max end (third derivation)))
                       derivation))))
