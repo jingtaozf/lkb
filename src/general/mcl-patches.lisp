@@ -47,3 +47,19 @@
 
 (defparameter %system-binaries%
     "mac")
+
+
+(defpackage :mp (:use "COMMON-LISP")
+   (:intern "RUN-FUNCTION" "PROCESS-WAIT" "PROCESS-KILL"))
+(in-package :mp)
+
+(eval-when (:execute :load-toplevel :compile-toplevel)
+  (export 'run-function)
+  (setf (symbol-function 'run-function) 
+        (symbol-function 'ccl:process-run-function))
+  (export 'process-wait)
+  (setf (symbol-function 'process-wait) 
+        (symbol-function 'ccl:process-wait))
+  (export 'process-kill)
+  (setf (symbol-function 'process-kill) 
+        (symbol-function 'ccl:process-kill)))
