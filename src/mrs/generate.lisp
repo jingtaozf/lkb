@@ -41,8 +41,8 @@
                   (subtype-p *string-type* type))
         (format
          t
-         "~%Error: the constraint of feature `~a' must be compatible with 
-            (the string) type `~(~a~)'."
+         "~%Error: the constraint of feature `~a' must be compatible with ~
+            (the *string-type* parameter) type `~(~a~)'."
          feature *string-type*)
         (force-output t)
         (return-from check-generator-environment :error))))
