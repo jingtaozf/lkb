@@ -1,7 +1,6 @@
 ;;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
 ;;; see licence.txt for conditions
 
-
 (in-package :lkb)
 
 ;;; not loaded in tty mode
@@ -90,24 +89,37 @@
   (show-word-aux nil))
 
 (defun show-word-aux (exp-p)
-  (let* ((word-string (ask-user-for-word))
-         (orth-list (if word-string 
-                      (split-into-words (string-upcase word-string))))
-         (lex-entries (if orth-list (get-lex-entry (car orth-list)))))
-      ; entries indexed by all elements
-    (loop for word-entry in lex-entries
-         do
-         (when (equal (mapcar #'string-upcase (lex-entry-orth word-entry))
-                    orth-list)
-           (if exp-p
-             (display-fs (lex-entry-full-fs word-entry) 
-                         (format nil "~(~A~) - ~A - expanded" word-string
-                                 (lex-entry-id word-entry))
-                         (lex-entry-id word-entry))
-             (display-unexpanded-lex-entry word-string word-entry
-                                 (lex-entry-id word-entry)))))))          
+  (loop 
+      with word-string 
+      and orth-list 
+      and lex-entries
+      and prompt = ""
+      for word-entry in 
+	(loop
+	    do
+	     (setf word-string (ask-user-for-word prompt))
+	     (if word-string 
+		 (setf orth-list 
+		   (split-into-words (string-upcase word-string)))
+	       (return nil))
+	     (if orth-list
+		 (setf lex-entries
+		   (get-lex-entry (car orth-list))))
+	     (if lex-entries
+		 (return lex-entries)
+	       (setf prompt 
+		 (format nil "(~a is not defined)" (string-upcase word-string)))))
+      do
+	(when (equal (mapcar #'string-upcase (lex-entry-orth word-entry))
+		     orth-list)
+	  (if exp-p
+	      (display-fs (lex-entry-full-fs word-entry) 
+			  (format nil "~(~A~) - ~A - expanded" word-string
+				  (lex-entry-id word-entry))
+			  (lex-entry-id word-entry))
+	    (display-unexpanded-lex-entry word-string word-entry
+					  (lex-entry-id word-entry))))))   
 
-  
 ;;; "Lex entry" show-lex
 (defun show-lex nil
   (let* ((lex (ask-user-for-lex))
@@ -158,12 +170,14 @@
 ;;; View utilities
 
 
-(defun ask-user-for-type (&optional qstring check-box-spec show-all-types-spec)
+(defun ask-user-for-type (&optional qstring check-box-spec show-all-types-spec 
+				    (prompt ""))
   (let ((res
          (with-package (:lkb)
            (ask-for-lisp-movable "Current Interaction" 
              (append
-                (list (cons (or qstring "Type?") *last-type-name*))
+	      (list (cons (format nil "~a~%~a" prompt (or qstring "Type?"))
+				  *last-type-name*))
                 (if check-box-spec (list check-box-spec) nil)
                 (if show-all-types-spec (list show-all-types-spec) nil))
              150 *type-names*))))
@@ -171,48 +185,50 @@
         (let ((type (car res))
               (check-1-p (cadr res))
 	      (check-2-p (caddr res)))
-          (eval-possible-leaf-type *leaf-types* type)
+	  (setf *last-type-name* type)
+	  (eval-possible-leaf-type *leaf-types* type)
           (let ((type-entry (get-type-entry type)))
             (unless type-entry
-               (format t "~%Type ~A is not defined" type)
-               (setf type (ask-user-for-type qstring check-box-spec)))
-            (when type (setf *last-type-name* type))
+               (setf type 
+		 (ask-user-for-type qstring 
+				    check-box-spec 
+				    nil 
+				    (format nil "(Type ~A is not defined)" type))))
             (values type check-1-p check-2-p))))))
 
 
 ;;; display-fs is in outputfs.lsp
 
-(defun ask-user-for-lex nil
-  (let ((possible-name
-         (with-package (:lkb)
-           (ask-for-lisp-movable "Current Interaction" 
-            `(("Lex-id?" . ,*last-lex-id*))
-            150))))
+(defun ask-user-for-lex (&optional (prompt ""))
+  (let* ((possible-name
+	  (with-package (:lkb)
+	    (ask-for-lisp-movable "Current Interaction" 
+				  `((,(format nil "~a~%Lex-id?" prompt) . ,*last-lex-id*))
+				  150))))
     (when possible-name
       (let* ((lex (car possible-name))
              (lex-entry (get-lex-entry-from-id lex)))
-        (unless lex-entry
-          (format t "~%~A is not defined" lex)
-          (setf lex (ask-user-for-lex)))
-        (when lex (setf *last-lex-id* lex))
+       (setf *last-lex-id* lex)
+       (unless lex-entry
+          (setf lex (ask-user-for-lex
+		     (format nil "(Lexical entry ~A is not defined)" lex))))
         lex))))
 
 (defparameter *last-other-id* 'root)
 
-(defun ask-user-for-other-id nil
+(defun ask-user-for-other-id (&optional (prompt ""))
   (let ((possible-name
          (with-package (:lkb)
  	  (ask-for-lisp-movable "Current Interaction" 
-		 	        `(("Entry id?" . ,*last-other-id*))
+		 	        `((,(format nil "~a~%Entry id?" prompt) . ,*last-other-id*))
 			        150))))
       (when possible-name
          (let* ((id (car possible-name))
-               (id-entry (get-other-entry id)))
-            (unless id-entry
-               (format t "~%~A is not defined" id)
-               (setf id (ask-user-for-other-id)))
-            (when id (setf *last-other-id* id))
-            (values id id-entry)))))
+		(id-entry (get-other-entry id)))
+	   (setf *last-other-id* id)
+	   (unless id-entry
+	     (setf id (ask-user-for-other-id (format nil "(~A is not defined)" id))))
+	   (values id id-entry)))))
 
 (defparameter *last-rule-id* 'head-specifier-rule)
 
@@ -270,10 +286,10 @@
 
 (defparameter *last-word* "the")
 
-(defun ask-user-for-word nil
+(defun ask-user-for-word (prompt)
    (let ((possible-name
-            (ask-for-strings-movable "Current Interaction" 
-               `(("Word?" . 
+            (ask-for-strings-movable "Current interaction" 
+               `((,(format nil "~a~%Word?" prompt) . 
                      ,(or *last-word* 
                         (car (lex-words *lexicon*))))) 150)))
       (when possible-name
