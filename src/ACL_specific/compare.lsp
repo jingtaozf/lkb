@@ -76,7 +76,10 @@
     (mp:run-function "Tree Comparison" #'compare *parse-record*)))
 
 (defun compare (edges &key (runp t))
-  (let ((frame (clim:make-application-frame 'compare-frame)))
+  (let ((frame (if runp
+                 (clim:make-application-frame 'compare-frame)
+                 (clim:make-application-frame 
+                  'compare-frame :frame-manager nil))))
     #+:debug
     (setf %frame% frame)
     (setf (compare-frame-chart frame) *chart-generation-counter*)
