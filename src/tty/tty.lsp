@@ -62,20 +62,8 @@
 (defun show-words-tty (word-string)
   (show-word-aux-tty word-string t))
 
-(defun show-word-aux-tty (word-string exp-p)
-  (let* ((orth-list (if word-string 
-                      (split-into-words (string-upcase word-string))))
-         (lex-entries (if orth-list (get-lex-entry (car orth-list)))))
-                                        ; entries indexed by all elements
-    (unless lex-entries
-      (format t "~%No entry found for ~A" word-string))
-    (loop for word-entry in lex-entries
-         do
-         (when (equal (mapcar #'string-upcase (lex-entry-orth word-entry))
-                    orth-list)
-           (if exp-p
-             (display-fs-tty (lex-entry-full-fs word-entry))
-             (display-unexpanded-lex-entry-tty word-string word-entry))))))
+;;; show-word-aux-tty moved to ../io-general/utils.lsp 
+;;; for encoding challenged users (FCB)
 
 ;;;                     (make-menu-item :name "Grammar rule"
 ;;;                        :value #'show-grammar-rule)
