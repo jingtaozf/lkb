@@ -1,4 +1,4 @@
-;;; Copyright (c) 1996-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; Copyright (c) 1996-2003 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron
 ;;; see licence.txt for conditions
 
 (in-package :lkb)
@@ -96,36 +96,45 @@
        (unless ok (cerror "Continue loading script anyway" 
         "Problems in type file")))))
 
-(defun read-tdl-leaf-type-file-aux (file-name)
-  (pushnew file-name *leaf-type-file-list* :test #'equal)
+(defun read-tdl-leaf-type-file-aux (filename)
+  (close-leaf-db *leaf-types*)
+  (set-temporary-lexicon-filenames)
+  (open-leaf-db *leaf-types* *leaf-temp-file*)
+  (read-tdl-leaf-type-file-aux-internal filename))
+
+;; takes open *leaf-types* obj
+(defmethod read-tdl-leaf-type-file-aux-internal (filename)
+  (open-write *leaf-types*)
+  (pushnew filename *leaf-type-file-list* :test #'equal)
   (let ((*readtable* (make-tdl-break-table))
         (*leaf-type-addition* t))
       (with-open-file 
-         (istream file-name :direction :input)
+         (istream filename :direction :input)
         (format t "~%Reading in leaf type file ~A" 
-                (pathname-name file-name))
-         (read-tdl-type-stream istream))))
+                (pathname-name filename))
+	(read-tdl-type-stream istream)))
+  (open-read *leaf-types*))
 
-(defun read-tdl-patch-files-aux (file-names)
-    (let ((*readtable* (make-tdl-break-table)))
-      (loop for file-name in file-names
-         do
-         (format t "~%Reading in type file ~A" 
-                 (pathname-name file-name))
-         (with-open-file 
-            (istream file-name :direction :input)
-            (read-tdl-type-stream istream t)))) 
-    ;; check-type-table is in checktypes.lsp 
-    (if *syntax-error*
-      (progn (setf *syntax-error* nil)
-             (cerror "Cancel load" "Syntax error(s) in type file")
-             nil)
-      (if *amend-error*
-          (setf *amend-error* nil)
-        (when (patch-type-table) 
-          (canonicalise-feature-order)           
-          (set-up-type-interactions)
-          t)) ))   
+;(defun read-tdl-patch-files-aux (file-names)
+;    (let ((*readtable* (make-tdl-break-table)))
+;      (loop for file-name in file-names
+;         do
+;         (format t "~%Reading in type file ~A" 
+;                 (pathname-name file-name))
+;         (with-open-file 
+;            (istream file-name :direction :input)
+;            (read-tdl-type-stream istream t)))) 
+;    ;; check-type-table is in checktypes.lsp 
+;    (if *syntax-error*
+;      (progn (setf *syntax-error* nil)
+;             (cerror "Cancel load" "Syntax error(s) in type file")
+;             nil)
+;      (if *amend-error*
+;          (setf *amend-error* nil)
+;        (when (patch-type-table) 
+;          (canonicalise-feature-order)           
+;          (set-up-type-interactions)
+;          t)) ))   
 
 
 ;;; main functions

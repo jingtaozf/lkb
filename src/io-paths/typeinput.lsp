@@ -1,4 +1,4 @@
-;;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; Copyright (c) 1991-2003 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron
 ;;; see licence.txt for conditions
 
 
@@ -54,9 +54,6 @@
 (defun clear-type-load-files nil
   (setf *type-file-list* nil)
   (setf *leaf-type-file-list* nil))
-
-(defparameter *syntax-error* nil
-  "boolean that is set to t if a syntax error is detected")
 
 (defparameter *amend-error* nil
   "boolean that is set to t if an error in amending a type is detected")
@@ -115,30 +112,49 @@
           (read-tdl-leaf-type-file-aux file-name)
         (read-leaf-type-file-aux file-name)))))
 
-(defun read-leaf-type-file-aux (file-name)
-  (pushnew file-name *leaf-type-file-list* :test #'equal)
+(defun read-leaf-type-file-aux (filename)
+  ;(close-lex *leaf-types*)
+  (set-temporary-lexicon-filenames)
+  (open-leaf-db *leaf-types* *leaf-temp-file*)
+  (read-leaf-type-file-aux-internal filename))
+
+;; takes open *leaf-types* obj
+(defun read-leaf-type-file-aux-internal (filename)
+  (open-write *leaf-types*)
+  (pushnew filename *leaf-type-file-list* :test #'equal)
   (let ((*readtable* (make-path-notation-break-table))
         (*leaf-type-addition* t))
       (with-open-file 
-         (istream file-name :direction :input)
+         (istream filename :direction :input)
         (format t "~%Reading in leaf type file ~A" 
-                (pathname-name file-name))
-         (read-type-stream istream))))
+                (pathname-name filename))
+	(read-type-stream istream)))
+  (open-read *leaf-types*))
 
-(defun read-cached-leaf-types-if-available (file-names)
-  (unless (listp file-names) 
-    (setf file-names (list file-names)))
-  (setf *leaf-type-file-list* file-names)
-  (if (check-load-names file-names 'leaf-type)
-      (unless (read-cached-leaf-types *leaf-types* file-names)
-	(dolist (file-name file-names)
-	  (if (eql *lkb-system-version* :page)
-	      (read-tdl-leaf-type-file-aux file-name)
-	    (read-leaf-type-file-aux file-name)))
-	(store-cached-leaf-types *leaf-types*))
-    (cerror "Continue with script" "Leaf type file not found")))
+(defun read-cached-leaf-types-if-available (filenames)
+  (unless (listp filenames) 
+    (setf filenames (list filenames)))
+  (setf *leaf-type-file-list* filenames)
+  (cond
+   ((null filenames)
+    (error "no file names supplied"))
+   ((not (check-load-names filenames 'leaf-type))
+    (cerror "Continue with script" "Leaf type file not found")
+    (close-leaf-db *leaf-types*)
+    (set-temporary-lexicon-filenames)
+    (open-leaf-db *leaf-types* *leaf-temp-file*)
+    (open-read *leaf-types*))
+   (t
+    (close-leaf-db *leaf-types*)
+    (set-temporary-lexicon-filenames)
+    (open-leaf-db *leaf-types* *leaf-temp-file*)
+    (unless (read-cached-leaf-types *leaf-types* filenames)
+      (dolist (file-name filenames)
+	(if (eql *lkb-system-version* :page)
+	    (read-tdl-leaf-type-file-aux-internal file-name)
+	  (read-leaf-type-file-aux-internal file-name)))))))
 
-(defun reload-leaf-files nil
+  (defun reload-leaf-files nil
   (setf *syntax-error* nil)
   (when (check-load-names *leaf-type-file-list* 'leaf-type)
     (clear-leaf-types *leaf-types*)
@@ -150,14 +166,14 @@
     (store-cached-leaf-types *leaf-types*)
     (format t "~%Reload complete")))
 
-(defun read-type-patch-files nil
-  (setf *syntax-error* nil)
-  (when (check-load-names *type-file-list* 'type)
-    (unless (eql *lkb-system-version* :page)
-      (error "~%Patching currently only available for TDL syntax"))
-    (clear-types-for-patching-constraints)
-    (read-tdl-patch-files-aux *type-file-list*)
-    (format t "~%Reload complete")))
+;(defun read-type-patch-files nil
+;  (setf *syntax-error* nil)
+;  (when (check-load-names *type-file-list* 'type)
+;    (unless (eql *lkb-system-version* :page)
+;      (error "~%Patching currently only available for TDL syntax"))
+;    (clear-types-for-patching-constraints)
+;    (read-tdl-patch-files-aux *type-file-list*)
+;    (format t "~%Reload complete")))
 
 
 

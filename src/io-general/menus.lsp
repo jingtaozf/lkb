@@ -10,7 +10,6 @@
     (compile load eval)
   (shadowing-import '(lkb::read-script-file
                       lkb::reload-script-file
-                      lkb::read-type-patch-files
                       lkb::reload-leaf-files
                       lkb::reload-lex-files
                       lkb::reload-grammar-rules
@@ -170,9 +169,6 @@
                                      :value 'reload-script-file 
                                      :available-p :grammar-file)
                      #|
-                     (make-menu-item :name "Reload constraints"
-                                     :value 'read-type-patch-files
-                                     :available-p :grammar)
                      (make-menu-item :name "Reload leaf types"
                                      :value 'reload-leaf-files
                                      :available-p :grammar)

@@ -268,7 +268,7 @@
    ((stringp val)
     (format nil "\"~a\"" val))
    (t
-    (error "unhandled type"))))
+    (error "unhandled type: ~a" val))))
 
 (defun encode-string-as-str (val)
   (cond
@@ -277,7 +277,7 @@
    ((stringp val)
     (format nil "\"~a\"" val))
    (t
-    (error "unhandled type"))))
+    (error "unhandled type: ~a" val))))
 
 (defmethod to-multi-csv-line (&key name base-name particle type keyrel)
   (let ((separator (string *postgres-export-separator*)))
@@ -490,6 +490,24 @@
        (append (path-typed-feature-list rhs)
 	       '\#1))))))
 
+(defun packed-extract-nonterminal (path packed)
+  (packed-extract-aux path packed :terminal nil))
+
+(defun packed-extract-terminal (path packed)
+  (packed-extract-aux path packed :terminal t))
+
+(defun packed-extract-aux (path packed &key terminal)
+  (cond
+   (path
+    (packed-extract-nonterminal
+     (cdr path)
+     (cdr (car (member (car path) packed :key #'(lambda (x) (and (car x))))))))
+   (terminal
+    (mapcan #'(lambda (x) (and (not (cdr x)) (list x))) packed))
+   (t
+    (mapcan #'(lambda (x) (and (cdr x) (list x))) packed))))
+
+
 (defun pack (l2)
   (loop
       for x in l2
@@ -632,32 +650,32 @@
 (defun tdl-list-start-p (branches)
     (and
      (= (length branches) 2)
-     (find 'FIRST branches :key 'car)
-     (find 'REST branches :key 'car)
-     '*NULL*))
+     (find (CAR *LIST-HEAD*) branches :key 'car)
+     (find (CAR *LIST-TAIL*) branches :key 'car)
+     *empty-list-type*))
 
 (defun tdl-diff-list-start-p (branches)
   (let ((blast))
     (and
      (= (length branches) 2)
-     (find 'LIST branches :key 'car)
-     (setf blast (find 'LAST branches :key 'car))
+     (find *diff-list-list* branches :key 'car)
+     (setf blast (find *diff-list-last* branches :key 'car))
      (= (length blast) 2)
      (coindex-p (car (second blast)))
      (car (second blast)))))
 
 (defun get-tdl-list (branches)
-  (let* ((bfirst (find 'FIRST branches :key 'car))
-	 (brest (find 'REST branches :key 'car))
+  (let* ((bfirst (find (CAR *LIST-HEAD*) branches :key 'car))
+	 (brest (find (CAR *LIST-TAIL*) branches :key 'car))
 	 (res))
     (when (tdl-list-start-p branches)
-      (setf res (get-tdl-list-aux '*NULL* (cdr brest)))
+      (setf res (get-tdl-list-aux *empty-list-type* (cdr brest)))
       (when (car res)
 	(cons (cdr bfirst)
 	      (cdr res))))))
 
 (defun get-tdl-diff-list (branches)
-  (let* ((blist (find 'LIST branches :key 'car))
+  (let* ((blist (find *diff-list-list* branches :key 'car))
 	 (end-symb (tdl-diff-list-start-p branches))
 	 (res))
     (when end-symb
@@ -666,8 +684,8 @@
 	(cdr res)))))
 
 (defun get-tdl-list-aux (end-symb branches)
-  (let* ((vfirst (cdr (find 'FIRST branches :key 'car)))
-	 (vrest (cdr (find 'REST branches :key 'car)))
+  (let* ((vfirst (cdr (find (CAR *LIST-HEAD*) branches :key 'car)))
+	 (vrest (cdr (find (CAR *LIST-TAIL*) branches :key 'car)))
 	 (res))
     (cond
      ((eq (caar branches) end-symb)
@@ -759,7 +777,7 @@
   (if (stringp field-kw)
       (setf field-kw (str-2-keyword field-kw)))
   (unless (typep x 'lex-entry)
-    (error "unexpected type"))
+    (error "unexpected type: ~a" x))
   (let* ((fields-map (or fields-map (fields-map *psql-lexicon*)))
 	 (mapping (find field-kw fields-map :key #'second :test 'equal)))
     (if mapping
@@ -768,7 +786,7 @@
 	 
 (defun extract-field2 (x key2 path2 type2)
   (unless (typep x 'lex-entry)
-    (error "unexpected type"))
+    (error "unexpected type: ~a" x))
   (let* ((key (un-keyword key2))
 	 (path (get-path path2))
 	 (type (2-symb type2))
@@ -783,7 +801,7 @@
     ((null path)
      x)
     (t
-     (error "unhandled input")))
+     (error "unhandled input: ~a" x)))
    :type type))
 
 (defun extracted-val-2-str (val &key (type 'STRING))
@@ -797,15 +815,15 @@
    ((eq type 'STRING-LIST)
     (str-list-2-str val))
    ((eq type 'STRING-FS)
-    (error "unhandled type"))
+    (error "unhandled type: ~a" type))
    ((eq type 'STRING-DIFF-FS)
-    (error "unhandled type"))
+     (str-list-2-str (mapcar #'2-str (dag-diff-list-2-list val)))) ;;!!!
    ((eq type 'LIST)
     (if (listp val)
 	val
       (list val)))
    (t
-    (error "unhandled type"))))
+    (error "unhandled type: ~a" type))))
 
 
 (defun get-path (path-str)
@@ -819,7 +837,7 @@
    ((stringp path-str)
     (work-out-value "list" path-str))
    (t
-    (error "unhandled value"))))
+    (error "unhandled value: ~a" path-str))))
 
 (defun extract-value-by-path-from-unifications (constraint path)
   (let* ((unification (find path constraint
@@ -856,20 +874,26 @@
 
 (defun merge-tdl-into-psql-lexicon (file-in)
   (setf file-in (namestring (pathname file-in)))
-  (let ((tmp-lex (create-empty-cdb-lex)))
-  (unless (probe-file file-in)
-    (error "~%file not found (~a)" file-in))
-  (load-lex tmp-lex :filename file-in)
-  (export-lexicon-to-db :lexicon tmp-lex :output-lexicon *psql-lexicon*)
-  (clear-lex tmp-lex)))
+  (let ((tmp-lex (make-instance 'cdb-lex-database)))
+    (open-lex tmp-lex
+	      :parameters (list (make-nice-temp-file-pathname ".tx")
+				(make-nice-temp-file-pathname ".tx-index")))
+    (unless (probe-file file-in)
+      (error "~%file not found (~a)" file-in))
+    (load-lex-from-files tmp-lex (list file-in) :tdl)
+    (export-lexicon-to-db :lexicon tmp-lex :output-lexicon *psql-lexicon*)
+    (close-lex tmp-lex)))
 
 ;; assumes *lexicon* eq *psql-lexicon*
 (defun load-scratch-lex (&key filename)
-  (let ((lexicon (create-empty-cdb-lex)))
-    (load-lex lexicon :filename filename)
+  (let ((lexicon (make-instance 'cdb-lex-database)))
+    (open-lex lexicon 
+	      :parameters (list (make-nice-temp-file-pathname ".tx")
+				(make-nice-temp-file-pathname ".tx-index")))
+    (load-lex-from-files lexicon (list filename) :tdl)
     lexicon))
 
-(defun clear-scratch-lex nil
+(defun close-scratch-lex nil
   (fn-get-val *psql-lexicon* ''clear-scratch)
   (build-current-grammar *psql-lexicon*))
 
@@ -884,3 +908,8 @@
   (fn-get-val *psql-lexicon* ''commit-scratch)
   (empty-cache *psql-lexicon*))
 
+(defun make-nice-temp-file-pathname (filename)
+  (make-pathname :name filename
+		 :host (pathname-host (lkb-tmp-dir))
+		 :device (pathname-device (lkb-tmp-dir))
+		 :directory (pathname-directory (lkb-tmp-dir))))

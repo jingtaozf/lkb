@@ -3,9 +3,6 @@
 ;;;   see `licence.txt' for conditions.
 
 ;;; bmw (aug-03)
-;;; - lookup-word now caches for each lexicon separately
-
-;;; bmw (aug-03)
 ;;; - fixed code broken by *lexicon*-related changes
 
 ;;; aac (aug-03)
@@ -14,12 +11,6 @@
 ;;; - removed `other' entries from *lexicon*
 ;;;   (code for handling them is either here or in 
 ;;;   specific files)
-
-;;; bmw (jun-03)
-;;; - lex-words looks in sublexicons too
-;;; - (partial) caching of null values
-;;; - link/unlink replace (setf extra-lexicons)
-;;;
 
 (in-package :lkb)
 	   
@@ -30,6 +21,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defconstant *lex-database-default-extra-mode* :union)
 
 (defvar mrs::*initial-semantics-path*)
 
@@ -42,23 +34,11 @@
   ((lexical-entries :initform (make-hash-table :test #'equal))
    (psorts :initform (make-hash-table :test #'eq))
    (extra-lexicons :initform nil :reader extra-lexicons) ;: use link/unlink to write
-   (extra-mode :initform :union :accessor extra-mode)
-   (part-of :initform nil :accessor part-of)))
-
-;: obsolete: use link instead
-(defmethod (setf extra-lexicons) (lexicon-list (lexicon lex-database))
-  (format *trace-output* "WARNING: using obsolete method (setf extra-lexicons)")
-  (mapcar #'(lambda (lex)
-	      (unless (member lex lexicon-list)
-		(unlink lex lexicon)))
-	  (extra-lexicons lexicon))
-  (mapcar #'(lambda (lex)
-	      (unless (member lex (extra-lexicons lexicon))
-		(link lex lexicon)))
-	  lexicon-list))
-
-;(defmethod clear-cache ((lexicon lex-database))
-;  (clrhash (slot-value lexicon 'lexical-entries)))
+;;   (extra-mode :initform :union :accessor extra-mode)
+   (extra-mode :initform *lex-database-default-extra-mode* :accessor extra-mode)
+   (part-of :initform nil :accessor part-of)
+   (invalid-p :initform t :accessor invalid-p)
+   ))
 
 (defmethod link ((sub-lexicon lex-database) (lexicon lex-database))
   (if (eq sub-lexicon lexicon)
@@ -101,7 +81,7 @@
 
 (defgeneric set-lexical-entry (lexicon orth id new-entry))
 
-(defgeneric clear-lex (lexicon &rest rest))
+(defgeneric close-lex (lexicon &key in-isolation delete))
 
 (defgeneric collect-expanded-lex-ids (lexicon))
 
@@ -446,7 +426,7 @@
 
 ;; Check to see if compiled files match originals
 
-(defun up-to-date-p (in-files out-files)
+(defun up-to-date-p (in-files out-files) ;; move to clex.lsp
   (when (every #'probe-file out-files)
     (let ((in-date (apply #'max (mapcar #'file-write-date in-files)))
 	  (out-date (apply #'min (mapcar #'file-write-date out-files))))
@@ -556,9 +536,12 @@
 	(recurse (some #'(lambda (lex) (read-psort lex id :cache cache))
 		       (extra-lexicons lexicon)))))
 
-(defmethod clear-lex :around ((lexicon lex-database) &rest rest)
-  (let ((in-isolation (get-keyword-val :in-isolation rest)))
+(defmethod close-lex :around ((lexicon lex-database) &key in-isolation delete)
+  (declare (ignore delete))
+  (with-slots (invalid-p extra-mode extra-lexicons part-of) lexicon
     (empty-cache lexicon)
+    (setf invalid-p nil)
+    (setf extra-mode *lex-database-default-extra-mode*)
     (call-next-method)
     (unless in-isolation
       ;;unlink from sub-lexicons
@@ -567,49 +550,23 @@
 	   (unlink lex lexicon)
 	   ;;clear sub-lexicon
 	   (if (null (part-of lex))
-	       (apply #'clear-lex (cons lex rest)))) 
-       (extra-lexicons lexicon))  
+	       (close-lex lex))) 
+       extra-lexicons)  
       ;;unlink from super-lexicons
-      (mapcar #'(lambda (lex) (unlink lexicon lex)) (part-of lexicon)))
+      (mapcar #'(lambda (lex) (unlink lexicon lex)) part-of))
     lexicon))
 
 (defmethod empty-cache ((lexicon lex-database))
-  (when (fboundp 'clear-generator-lexicon)
-    (funcall 'clear-generator-lexicon))
-  (clrhash (slot-value lexicon 'lexical-entries))
-  (clrhash (slot-value lexicon 'psorts))
-  (when (fboundp 'clear-lexicon-indices)
-    (funcall 'clear-lexicon-indices))
-    lexicon)
+  (with-slots (lexical-entries psorts) lexicon
+    (when (fboundp 'clear-generator-lexicon)
+      (funcall 'clear-generator-lexicon))
+    (clrhash lexical-entries)
+    (clrhash psorts)
+    (when (fboundp 'clear-lexicon-indices)
+      (funcall 'clear-lexicon-indices))
+    lexicon))
 
 ;;; End of general methods
-
-;;; Utility function - called from leaf.lsp and clex.lsp
-
-;;; dunno what this is - looks like oe code
-
-;;(defun lexicon-to-xml (&key (stream t) file)
-;;  (loop
-;;      with stream = (if file
-;;                      (open file
-;;                            :direction :output :if-exists :supersede
-;;                            :if-does-not-exist :create)
-;;                      stream)
-;;      with *batch-mode* = t
-;;      for id in (collect-psort-ids *lexicon*)
-;;      for entry = (read-psort *lexicon* id)
-;;      for tdfs = (and entry (lex-entry-local-fs entry))
-;;      for type = (and tdfs (indef-type-of-tdfs tdfs))
-;;      for stem = (and entry (lex-entry-orth entry))
-;;      when (and id type stem) do
-;;        (format
-;;         stream
-;;         "<instance name=\"~(~a~)\" type=\"~(~a~)\" ~
-;;           stem=\"~(~{~a~^ ~}~)\" status=\"lexicon\"/>~%"
-;;         id type stem)
-;;      finally (when file (close stream))))
-
-;; moved from clex.lsp (it belongs here)
 
 (defmethod collect-expanded-lex-ids ((lexicon lex-database))
   (let ((ids nil))

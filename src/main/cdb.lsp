@@ -56,7 +56,7 @@
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (export '(open-write close-write open-read close-read write-record 
-	    read-record all-keys num-entries)))
+	    read-record all-keys num-entries close-cdb)))
 
 (defparameter *cdb-ascii-p* t)
 
@@ -108,26 +108,31 @@
 
 ;; Open a database file for writing
 
+; -> newly opened cdb obj with mode = :output
 (defun open-write (filename)
   (let ((cdb (make-cdb)))
-    (with-slots (stream) cdb
-      ;; Open database file
-      (handler-case
-	  (setf stream (open filename
-                             :element-type 'unsigned-byte
-			     :direction :output
-			     :if-exists :supersede
-			     :if-does-not-exist :create))
-	(error (condition)
-	  (format t "~%~A" condition)
-	  (error "~%Can't open database file ~A" filename)))
-      ;; Write blank header
-      (loop
-          for i from 1 to 8
-          do (write-byte 0 stream))
-      (unless (file-position stream :end)
-	(error "~%Error writing database file ~A" filename)))
-    (setf (cdb-mode cdb) :output)
+    (handler-case
+	(with-slots (stream) cdb
+	  ;; Open database file
+	  (handler-case
+	      (setf stream (open filename
+				 :element-type 'unsigned-byte
+				 :direction :output
+				 :if-exists :supersede
+				 :if-does-not-exist :create))
+	    (error (condition)
+	      (format t "~%~A" condition)
+	      (error "~%Can't open database file ~A" filename)))
+	  ;; Write blank header
+	  (loop
+	      for i from 1 to 8
+	      do (write-byte 0 stream))
+	  (unless (file-position stream :end)
+	    (error "~%Error writing database file ~A" filename))
+	  (setf (cdb-mode cdb) :output))
+      (error (condition)
+	(emergency-close cdb)
+	(error "~%~a" condition)))
     cdb))
 
 ;; Store a record in the database
@@ -211,35 +216,40 @@
 
 ;; Open a CDB file for reading
 
+; -> new cdb obj mode=:input
 (defun open-read (filename)
   (let ((cdb (make-cdb)))
-    (with-slots (stream) cdb
-      ;; Open database file
-      (handler-case
-	  (setf stream (open filename
-                             :element-type 'unsigned-byte
-			     :direction :input
-			     :if-does-not-exist :error))
-	(error (condition)
-	  (error "~%Error ~A in opening database file ~A" 
-		 condition filename)))
-      ;; Read header
-      (let ((magic (cdb-read-string 3 stream t)))
-	(unless (and (equal magic "CDB")
-		     (zerop (read-byte stream)))
-	  (setf stream (close stream))
-	  (error "~%Invalid CDB database ~A" filename))
-	;; Read index
-	(let ((count 0))
-	  (file-position stream (read-fixnum stream))
-	  (loop for i from 0 to 255 
-	      do
-		(setf (aref (cdb-tables cdb) i)
-		  (cons (read-fixnum stream)
-			(read-fixnum stream)))
-		(incf count (cdr (aref (cdb-tables cdb) i))))
-	  (setf (cdb-num cdb) count))))
-    (setf (cdb-mode cdb) :input)
+    (handler-case
+	(with-slots (stream) cdb
+	  ;; Open database file
+	  (handler-case
+	      (setf stream (open filename
+				 :element-type 'unsigned-byte
+				 :direction :input
+				 :if-does-not-exist :error))
+	    (error (condition)
+	      (error "~%Error ~A in opening database file ~A" 
+		     condition filename)))
+	;; Read header
+	(let ((magic (cdb-read-string 3 stream t)))
+	  (unless (and (equal magic "CDB")
+		       (zerop (read-byte stream)))
+	    (setf stream (close stream))
+	    (error "~%Invalid CDB database ~A" filename))
+	  ;; Read index
+	  (let ((count 0))
+	    (file-position stream (read-fixnum stream))
+	    (loop for i from 0 to 255 
+		do
+		  (setf (aref (cdb-tables cdb) i)
+		    (cons (read-fixnum stream)
+			  (read-fixnum stream)))
+		  (incf count (cdr (aref (cdb-tables cdb) i))))
+	    (setf (cdb-num cdb) count)))
+	(setf (cdb-mode cdb) :input))
+      (error (condition)
+	(emergency-close cdb)
+	(error "~%~a" condition)))
     cdb))
 
 
@@ -267,6 +277,7 @@
 
 ;; If the file is open for reading, close it.  If not, don't do anything.
 
+; add mode check?
 (defun close-read (cdb)
   (cond ((eq (cdb-mode cdb) :input)
 	 (setf (cdb-mode cdb) nil)
@@ -359,4 +370,13 @@
 	       keys)
       key-list)))
 
-
+;; close database appropriately
+(defun close-cdb (cdb)
+  (cond
+   ((eq (cdb-mode cdb) :input)
+    (close-read cdb))
+   ((eq (cdb-mode cdb) :output)
+    (close-write cdb))
+   (t
+    (error "internal: invalid cdb mode"))))
+  

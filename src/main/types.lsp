@@ -1,4 +1,4 @@
-;;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; Copyright (c) 1991-2003 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron
 ;;; see licence.txt for conditions
 
 
@@ -103,7 +103,7 @@
    (clrhash *types*) 
    (setf *ordered-type-list* nil)
    (setf *ordered-glbtype-list* nil)
-   (clear-leaf-types *leaf-types*)
+;   (clear-leaf-types *leaf-types*) ;; no longer needed here
    (clear-feature-table)
    (clear-expanded-lex)
    #+:allegro 

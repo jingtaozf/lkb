@@ -1,14 +1,21 @@
-;;; Copyright (c) 1999--2002
-;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;; Copyright (c) 1999--2003
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron;
 ;;;   see `licence.txt' for conditions.
 
 
 ;;; modifications by bmw (aug-03)
-;;; - multiple cdb lexicons can run at once
-;;; - *psorts-temp-file* etc. moved into slots
+;;; - cdb open/close reimplemented cleanly
+
+;;; modifications by bmw (aug-03)
+;;; - multiple cdb lexicons can run in parallel
 ;;; - fixed code broken by *lexicon*-related changes
 
 (in-package :lkb)
+
+(defvar *lex-file-list*)
+
+(defparameter *syntax-error* nil
+  "boolean that is set to t if a syntax error is detected")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -18,22 +25,197 @@
 (defclass cdb-lex-database (lex-database)
   ((psort-db :initform nil :accessor psort-db)
    (orth-db :initform nil :accessor orth-db)
-   (psorts-temp-file :initform nil
-		     :accessor psorts-temp-file
-                     :initarg :psorts-temp-file)
-   (psorts-temp-index-file :initform nil
-                           :accessor psorts-temp-index-file
-                           :initarg :psorts-temp-index-file)
-   (all-cdb-lex-dbs :allocation :class :initform nil :accessor all-cdb-lex-dbs)))
+   (temp-file :initform nil
+	      :accessor temp-file
+	      :initarg :temp-file)
+   (temp-index-file :initform nil
+		    :accessor temp-index-file
+		    :initarg :temp-index-file)))
+
+(setf *lexicon* (make-instance 'cdb-lex-database))
+
+;; lexicon is open...
+;; opens cached lexicon for reading
+(defmethod read-cached-lex ((lexicon cdb-lex-database) filenames)
+  (with-slots (temp-file temp-index-file) lexicon
+    (cond
+     ((up-to-date-p filenames (list temp-file temp-index-file))
+      (format t "~%Reading in cached lexicon")
+      (when (open-read lexicon)
+	(format t "~%Cached lexicon read")
+	t))
+     (t
+      (format t "~%Cached lexicon missing or out-of-date: reading lexicon source files")
+      nil))))
+  
+;; lexicon is open...
+;; build cache and open lexicon for reading
+(defmethod load-lex-from-files ((lexicon cdb-lex-database) filenames syntax)
+  (build-cache lexicon filenames syntax)
+  (unless (open-read lexicon)
+    (error "cannot open cache file for lexicon ~a" lexicon)))
+
+;; lexicon is open...
+;; open-write lexicon, read filenames whilst building cache, close-write lexicon
+(defmethod build-cache ((lexicon cdb-lex-database) file-names syntax)
+  (with-slots (invalid-p) lexicon
+;    (setf invalid-p nil)
+    (open-write lexicon)
+    (setf *lex-file-list* file-names) ;;fix_me
+    (setf *ordered-lex-list* nil) ;;fix_me
+    (cond
+     ((check-load-names file-names 'lexical)
+      (let ((syntax-error *syntax-error*))
+	(let* ((*lexicon-in* lexicon);; *lexicon-in* is needed deep inside read-...-file-aux
+	       (*syntax-error* nil)) 
+	  (dolist (file-name file-names)
+	    (ecase syntax
+	      (:tdl (read-tdl-lex-file-aux-internal file-name))
+	      (:path (read-lex-file-aux-internal file-name))))
+	  (setf invalid-p *syntax-error*)
+	  (setf syntax-error (or syntax-error *syntax-error*)))
+	(setf *syntax-error* syntax-error))
+      (close-read-write lexicon)
+      (when invalid-p
+	(format t "~%(discarding invalid lexicon)")
+	(close-lex lexicon :delete t)
+	(open-lex lexicon
+		  :parameters (list (make-nice-temp-file-pathname ".empty")
+				    (make-nice-temp-file-pathname ".empty-index")))
+	(write-empty-lex lexicon))
+      t)
+     (t
+      (cerror "Continue" "Lexicon file not found")
+      (close-read-write lexicon)
+      nil))))
+
+;; sets temp-file/temp-index-file
+(defmethod open-lex ((lexicon cdb-lex-database) &key parameters)
+  (let ((temp-file (first parameters))
+	(temp-index-file (second parameters)))
+    (if (open-p lexicon)
+	(close-lex lexicon :in-isolation t))
+    (setf (temp-file lexicon) temp-file)
+    (setf (temp-index-file lexicon) temp-index-file)))
+
+(defmethod open-p ((lexicon cdb-lex-database))
+  (with-slots (temp-file temp-index-file) lexicon
+      (cond
+       ((and temp-file temp-index-file)
+	t)
+       ((not (or temp-file temp-index-file))
+	nil)
+       (t
+	(error "internal")))))
+
+;; lexicon is open...
+(defmethod open-read ((lexicon cdb-lex-database))
+  (unless (open-p lexicon)
+    (return-from open-read nil))
+  (if (open-read-write-p lexicon)
+      (close-read-write lexicon))
+  (handler-case 
+      (with-slots (orth-db psort-db temp-file temp-index-file) lexicon
+	(progn
+	  (setf psort-db (cdb:open-read temp-file))
+	  (setf orth-db (cdb:open-read temp-index-file))
+	  t))
+    (error (condition)
+      (format t "~%Error: ~A~%" condition)
+      (delete-temporary-lexicon-files lexicon)
+      nil)))
+
+;; lexicon is open...
+(defmethod open-write ((lexicon cdb-lex-database))
+  (if (open-read-write-p lexicon)
+      (close-read-write lexicon))
+  (handler-case 
+      (with-slots (orth-db psort-db) lexicon
+ 	(progn
+	  (setf psort-db (cdb:open-write (temp-file lexicon)))
+	  (setf orth-db (cdb:open-write (temp-index-file lexicon)))
+	  t))
+    (error (condition)
+      (format t "~%Error: ~A~%" condition)
+      (delete-temporary-lexicon-files lexicon)
+      nil)))
+
+(defmethod open-read-write-p ((lexicon cdb-lex-database))
+  (or (open-read-p lexicon)
+      (open-write-p lexicon)))
+  
+(defmethod open-read-p ((lexicon cdb-lex-database))
+  (with-slots (orth-db psort-db) lexicon
+    (when (and orth-db psort-db)
+      (cond
+       ((and (eq (cdb::cdb-mode orth-db) :input)
+	     (eq (cdb::cdb-mode psort-db) :input))
+	t)
+       ((and (eq (cdb::cdb-mode orth-db) nil)
+	     (eq (cdb::cdb-mode orth-db) nil))
+	nil)
+       (t
+	(error "internal"))))))
+
+(defmethod open-write-p ((lexicon cdb-lex-database))
+  (with-slots (orth-db psort-db) lexicon
+    (when (and orth-db psort-db)
+      (cond
+       ((and (eq (cdb::cdb-mode orth-db) :output)
+	     (eq (cdb::cdb-mode psort-db) :output))
+	t)
+       ((and (eq (cdb::cdb-mode orth-db) nil)
+	     (eq (cdb::cdb-mode orth-db) nil))
+	nil)
+       (t
+	(error "internal"))))))
+
+(defmethod close-lex ((lexicon cdb-lex-database) &key in-isolation delete)
+  (declare (ignore in-isolation))
+  (close-read-write lexicon)
+  (if delete
+      (delete-temporary-lexicon-files lexicon))
+  (setf (temp-file lexicon) nil)
+  (setf (temp-index-file lexicon) nil))
+
+;; lexicon is open...
+(defmethod close-read-write ((lexicon cdb-lex-database))
+  (handler-case 
+      (with-slots (orth-db psort-db) lexicon
+	(when psort-db 
+	  (cdb:close-cdb psort-db)
+	  (setf psort-db nil))
+	(when orth-db
+	  (cdb:close-cdb orth-db)
+	  (setf orth-db nil)))
+    (error (condition)
+      (format t "~%Error: ~A~%" condition)
+      (delete-temporary-lexicon-files lexicon)
+      nil)))
+
+(defmethod delete-temporary-lexicon-files ((lexicon cdb-lex-database))
+  (with-slots (temp-file temp-index-file) lexicon
+    (delete-temp-file temp-file)
+    (delete-temp-file temp-index-file)
+    t))
+
+(defun delete-temp-file (filename)
+  (and filename
+       (probe-file filename)
+       (delete-file filename)))
+
+;;
+;; reading
+;;
 
 (defmethod lookup-word ((lexicon cdb-lex-database) orth &key (cache t))
   (let ((hashed (gethash orth 
 			 (slot-value lexicon 'lexical-entries))))
   (cond 
    (hashed
-    (if (eq hashed 'EMPTY)
-	(setf hashed nil))
-    hashed)
+    (if (eq hashed :empty)
+	nil
+      hashed))
    (t 
     (let ((value (lookup-word-cdb-lex-database lexicon orth)))
       ;:if caching, add entry to cache...
@@ -42,194 +224,70 @@
 		       (slot-value lexicon 'lexical-entries)) 
 	  (if value 
 	      value 
-	    'EMPTY)))
+	    :empty)))
       value)))))
 
 (defun lookup-word-cdb-lex-database (lexicon orth)
   (with-slots (orth-db) lexicon
     (unless (stringp orth)
-      (error "~a is not a string." orth))
-    (when (and (null orth-db) 
-	       (psorts-temp-index-file lexicon))
-      (setf orth-db (cdb:open-read 
-		     (psorts-temp-index-file lexicon))))
+      (error "string expected (~a)" orth))
     (when orth-db
       (loop
 	  for record in (cdb:read-record orth-db orth)
 	  collect (intern record :lkb)))))
 
-(defmethod lexicon-loaded-p ((lexicon cdb-lex-database))
-  (psort-db lexicon))
-
 (defmethod lex-words ((lexicon cdb-lex-database))
-  (unless (orth-db lexicon)
-    (setf (orth-db lexicon) 
-      (cdb:open-read (psorts-temp-index-file lexicon))))
-  (cdb:all-keys (orth-db lexicon)))
+  (with-slots (orth-db) lexicon
+    (when orth-db
+      (cdb:all-keys orth-db))))
 
 (defmethod collect-psort-ids ((lexicon cdb-lex-database) &key (recurse t))
   (declare (ignore recurse))
-  (unless (psort-db lexicon)
-    (setf (psort-db lexicon) 
-      (cdb:open-read (psorts-temp-file lexicon))))
-  (let ((res (cdb:all-keys (psort-db lexicon))))
-    (unless (equal res '("NIL"))
-      res)))
-
-(defmethod read-cached-lex ((lexicon cdb-lex-database) filenames)
-  (with-slots (psorts-temp-file) lexicon
-    (set-temporary-lexicon-filenames)
-    (when (up-to-date-p filenames
-                        (list *psorts-temp-file* 
-                              *psorts-temp-index-file*))
-      (format t "~%Reading in cached lexicon")
-      (set-temporary-lexicon-filenames)
-      (clear-lex *lexicon* 
-                 :psorts-temp-files (cons *psorts-temp-file* *psorts-temp-index-file*)
-                 :no-delete t)
-      (when (handler-case 
-                (progn
-                  (setf (psort-db lexicon) 
-                    (cdb:open-read psorts-temp-file))
-                  (setf (orth-db lexicon) 
-                    (cdb:open-read (psorts-temp-index-file lexicon)))
-                  ;;(unless (> (cdb:num-entries (psort-db lexicon)) 1) (error "no lexicon cached"))
-                  t)
-              (error (condition)
-                (format t "~%Error: ~A~%" condition)
-                (delete-temporary-lexicon-files lexicon)
-                nil))
-        (format t "~%Cached lexicon read")
-        (return-from read-cached-lex t)))
-    (format t "~%Cached lexicon missing or out-of-date: reading lexicon source files")
-    nil))
-  
-(defmethod store-cached-lex ((lexicon cdb-lex-database))
-  (cdb:close-write (psort-db lexicon))
-  (cdb:close-write (orth-db lexicon))
-  (setf (psort-db lexicon) nil)
-  (setf (orth-db lexicon) nil))
+  (with-slots (psort-db) lexicon
+    (when psort-db
+      (let ((res (cdb:all-keys psort-db)))
+	(unless (equal res '("NIL")) ;; check this
+	  res)))))
 
 (defmethod set-lexical-entry ((lexicon cdb-lex-database) orth id new-entry)
-  (store-psort lexicon id new-entry orth)
-  (dolist (orth-el orth)
-    (cdb:write-record (orth-db lexicon) (string-upcase orth-el) (string id)))
-  orth)
-
-(defmethod store-psort ((lexicon cdb-lex-database) id entry &optional orth)
-  (declare (ignore orth))
-  (unless (psort-db lexicon)
-    (setf (psort-db lexicon) (cdb:open-write (psorts-temp-file lexicon)))
-    (setf (orth-db lexicon) (cdb:open-write (psorts-temp-index-file lexicon))))
-  (cdb:write-record (psort-db lexicon) (string id) 
-		    (with-standard-io-syntax (write-to-string entry)))
-  id)
+  (with-slots (orth-db ) lexicon
+    (store-psort lexicon id new-entry orth)
+    (dolist (orth-el orth)
+      (cdb:write-record orth-db (string-upcase orth-el) (string id)))
+    orth))
 
 (defmethod read-psort ((lexicon cdb-lex-database) id &key (cache t) (recurse t))
   (declare (ignore recurse))
-  (unless (psort-db lexicon)
-    (setf (psort-db lexicon) 
-      (cdb:open-read (psorts-temp-file lexicon))))
-  (with-slots (psorts) lexicon
-    (cond ((gethash id psorts))
-	  (t
-	   ;; In case multiple entries are returned, we take the last one
-	   (let* ((rec (car (last (cdb:read-record (psort-db lexicon) 
-						   (string id)))))
-		  (entry (when rec 
-                           (with-package (:lkb) (read-from-string rec)))))
-	     (when (and entry cache)
-	       (setf (gethash id psorts) entry))
-	     entry)))))
+  (with-slots (psort-db) lexicon
+    (with-slots (psorts) lexicon
+      (cond 
+       ((gethash id psorts))
+       (t
+	;; In case multiple entries are returned, we take the last one
+	(let* ((rec (car (last (cdb:read-record psort-db 
+						(string id)))))
+	       (entry (when rec 
+			(with-package (:lkb) (read-from-string rec)))))
+	  (when (and entry cache)
+	    (setf (gethash id psorts) entry))
+	  entry))))))
 
-(defmethod clear-lex ((lexicon cdb-lex-database) &rest rest)
-  (let* ((no-delete (get-keyword-val :no-delete rest))
-	 (psorts-temp-files (get-keyword-val :psorts-temp-files rest))
-         (new-psorts-temp-file)
-         (new-psorts-temp-index-file)
-	 ;;(lexicon-size 0)
-	 )
+;;
+;; writing
+;;
 
-    ;; extract psorts-temp-file and psorts-temp-index-file
-    (if (and (car psorts-temp-files)
-	     (not (cdr psorts-temp-files)))
-	(error "both psorts-temp-file and psorts-temp-index-file must be specified"))
-    
-    ;; determine new temporary filenames
-    (cond
-     (psorts-temp-files
-       (setf new-psorts-temp-file (car psorts-temp-files))
-       (setf new-psorts-temp-index-file (cdr psorts-temp-files)))
-     (t
-      (setf new-psorts-temp-file (psorts-temp-file lexicon))
-      (setf new-psorts-temp-index-file (psorts-temp-index-file lexicon))))
-    ;; close (old) temporary lexicon files
-    (when (orth-db lexicon)
-      (cdb:close-read (orth-db lexicon))
-            ;; close-read leaves it open if it's open for output
-      (cdb::emergency-close (orth-db lexicon))
-      (setf (orth-db lexicon) nil))
-    (when (psort-db lexicon)
-      (cdb:close-read (psort-db lexicon))
-      (cdb::emergency-close (psort-db lexicon))
-      (setf (psort-db lexicon) nil))
-    (unless 
-	no-delete
-      (delete-temporary-lexicon-files lexicon))
-    
-    ;; set new temporary lexicon filenames    
-    (setf (psorts-temp-file lexicon) new-psorts-temp-file)
-    (setf (psorts-temp-index-file lexicon) new-psorts-temp-index-file)
-    
-    lexicon))
-
-(defmethod initialize-lex ((lexicon cdb-lex-database) &key no-delete psorts-temp-files)
-  (clear-lex 
-   lexicon 
-   :no-delete no-delete 
-   :psorts-temp-files psorts-temp-files))
-
-(defmethod delete-temporary-lexicon-files ((lexicon cdb-lex-database))
-  (with-slots (psorts-temp-file psorts-temp-index-file) lexicon
-    (when (and psorts-temp-file
-	       (probe-file psorts-temp-file))
-      (delete-file psorts-temp-file))
-    (when (and (psorts-temp-index-file lexicon)
-	       (probe-file (psorts-temp-index-file lexicon)))
-      (delete-file (psorts-temp-index-file lexicon)))
-    (cons psorts-temp-file psorts-temp-index-file)))
-
-(defun create-empty-cdb-lex nil
-  (create-empty-cdb-lex-aux 
-   (make-instance 'cdb-lex-database
-     :psorts-temp-file (make-pathname :name "tx"
-                                      :host (pathname-host (lkb-tmp-dir))
-                                      :device (pathname-device (lkb-tmp-dir))
-                                      :directory 
-                                      (pathname-directory (lkb-tmp-dir)))
-     :psorts-temp-index-file (make-pathname :name "tx-index"
-                                            :host (pathname-host (lkb-tmp-dir))
-                                            :device (pathname-device (lkb-tmp-dir))
-                                            :directory 
-                                            (pathname-directory (lkb-tmp-dir))))))
-
-(defun create-empty-cdb-lex-aux (lexicon)
+;; lexicon is open...
+(defun write-empty-lex (lexicon)
+  (open-write lexicon)
   (setf *ordered-lex-list* nil)
   (store-psort lexicon nil nil nil)
-  (store-cached-lex lexicon)
-  (push lexicon (all-cdb-lex-dbs lexicon))
+  (close-read-write lexicon)
   lexicon)
 
-(defmethod load-lex ((lexicon cdb-lex-database) &rest rest)
-  (let ((filename (get-keyword-val :filename rest)))
-    (if (null filename)
-	(error "no :filename supplied"))
-    (clear-lex lexicon :in-isolation t)
-    (if (check-load-names (list filename) 'lexical)
-	(let ((*lexicon-in* lexicon)) ;;ugly 
-	  (read-tdl-lex-file-aux-internal filename))
-      (error "Lexicon file not found"))
-    (store-cached-lex lexicon)
-    lexicon))
-
-(setf *lexicon* (make-instance 'cdb-lex-database))
+;; lexicon is open for writing...
+(defmethod store-psort ((lexicon cdb-lex-database) id entry &optional orth)
+  (declare (ignore orth))
+  (with-slots (orth-db psort-db) lexicon
+    (cdb:write-record psort-db (string id) 
+		      (with-standard-io-syntax (write-to-string entry)))
+    id))

@@ -106,13 +106,13 @@
     *psql-lexicon*))
 
 (defun load-psql-lexicon-from-script nil
-  (clear-lex *lexicon* :no-delete t)
+  (close-lex *lexicon*)
   (initialize-psql-lexicon)
   (setf *lexicon* *psql-lexicon*))
   
 ;; obsolete
 (defun open-psql-lex (&rest rest)
-  (apply 'initialize-psql-lexicon rest))
+  (apply 'open-psql-lexicon rest))
 
 ;;;
 ;;; class declarations
@@ -157,8 +157,8 @@
 ;;; --- sql-database methods
 ;;;
 
-(defmethod clear-lex ((lexicon sql-database) &rest rest)
-  (declare (ignore rest))
+(defmethod close-lex ((lexicon sql-database) &key in-isolation delete)
+  (declare (ignore in-isolation delete))
   (setf (dbname lexicon) nil)
   (setf (host lexicon) nil)
   (setf (user lexicon) nil)
@@ -169,8 +169,9 @@
 ;;; --- psql-database methods
 ;;;
 
-(defmethod load-lex ((lexicon psql-database) &rest rest)
-  (apply 'initialize-psql-lexicon rest))
+; check unused!!!
+;(defmethod load-lex ((lexicon psql-database) &rest rest)
+;  (apply 'open-psql-lexicon rest))
 
 (defmethod connect ((lexicon psql-database)) 
   (let ((user *postgres-current-user*))
@@ -281,8 +282,8 @@
   ;(error "collect-expanded-lex-ids(): invalid method on PostGreSQL lexicon")
   )
 
-(defmethod clear-lex ((lexicon external-lex-database) &key no-delete psorts-temp-file)
-  (declare (ignore no-delete psorts-temp-file))
+(defmethod close-lex ((lexicon external-lex-database) &key in-isolation delete)
+  (declare (ignore in-isolation delete))
   (setf (lex-tb lexicon) nil) ;; unused
   (setf (fields-map lexicon) nil)
   (setf (fields-tb lexicon) nil))
@@ -512,25 +513,21 @@
 (defmethod clear-scratch ((lexicon psql-database))
   (fn-get-records lexicon ''clear-scratch))
 
-(defmethod clear-lex ((lexicon psql-database) &key no-delete psorts-temp-file)
-  (declare (ignore no-delete psorts-temp-file))
+(defmethod close-lex ((lexicon psql-database) &key in-isolation delete)
+  (declare (ignore in-isolation delete))
   (disconnect lexicon))
 
-(defmethod initialize-lex ((lexicon psql-database) &key no-delete psorts-temp-file)
-  (declare (ignore no-delete psorts-temp-file))
-  (clear-lex lexicon)
-  (if *postgres-tmp-lexicon* 
-      (clear-lex *postgres-tmp-lexicon*))
+(defmethod open-lex ((lexicon psql-database) &key parameters)
+  (declare (ignore parameters)) ;; for_now 
+  (close-lex lexicon)
   (format t "~%Connecting to lexical database ~a as user ~a" (dbname lexicon) (user lexicon))
   (let* ((connection (connect lexicon))
-	 (dbversion)
-	 )
+	 (dbversion))
       (setf *postgres-tmp-lexicon* lexicon)
-      (format t "~%(Re)initializing ~a" (dbname lexicon))
+      (format t "~%Opening ~a" (dbname lexicon))
       (cond
        (connection
-	(unless (string>= (server-version lexicon) 
-			  "7.3")
+	(unless (string>= (server-version lexicon) "7.3")
 	  (error *trace-output* 
 		 "PostgreSQL server version is ~a. Please upgrade to version 7.3 or above." (server-version lexicon)))
 	(setf dbversion (get-db-version lexicon))
@@ -541,26 +538,37 @@
 	    (error "Your database structures (v. ~a) are too out of date. You must recreate the database: dump the LexDB using LKB, go to shell prompt and 'dropdb ~a' then 'createdb ~a', then import file lkb/src/psql/import.sql using PSQL tool, and finally merge dumped LexDB into new database." dbversion (dbname lexicon))))
 	(make-field-map-slot lexicon)
 	(retrieve-fn-defns lexicon)
-	
-	(initialize-userschema lexicon)
-	
-	;;(clear-scratch lexicon)
-	
-	(format *postgres-debug-stream* "~%(building current_grammar)")
-	(fn-get-records lexicon ''initialize-current-grammar (get-filter lexicon))
-	)
+	(initialize-userschema lexicon))
        (t
 	(error 
 	 "unable to connect to ~s: ~a"
 	 (pg:db (connection lexicon)) (pg:error-message (connection lexicon)))))
-      (setf *postgres-tmp-lexicon* nil)
       lexicon))
   
-;;; hack (psql-lex-database does not use temporary lexicon files)
-(defmethod delete-temporary-lexicon-files ((lexicon psql-lex-database))
-  ;;; does nothing
-  )
+(defmethod initialize-lex ((lexicon psql-database))
+  (open-lex lexicon)	
+  (build-lex lexicon))
+  
+(defmethod build-lex ((lexicon psql-database))
+  (format *postgres-debug-stream* "~%(building current_grammar)")
+  (fn-get-records lexicon ''initialize-current-grammar (get-filter lexicon))
+  lexicon)
 
+;; lexicon is open
+(defmethod load-lex-from-files ((lexicon psql-lex-database) file-names syntax)
+  (setf *lex-file-list* file-names) ;;fix_me
+  (setf *ordered-lex-list* nil) ;;fix_me
+  (cond
+   ((check-load-names file-names 'lexical)
+    (let ((*lexicon-in* lexicon)) ;; *lexicon-in* is needed deep inside read-...-file-aux
+      (dolist (file-name file-names)
+	(ecase syntax
+	  (:tdl (read-tdl-lex-file-aux-internal file-name))
+	  (:path (read-lex-file-aux-internal file-name)))))
+    t)
+   (t
+    (cerror "Continue" "Lexicon file not found")
+    nil)))
 ;;;
 ;;; --- psql-lex-entry methods
 ;;;
@@ -650,7 +658,7 @@
 	 (equal (subseq filename (- (length filename) 4)) ".csv"))
 	(setf filename (subseq filename 0 (- (length filename) 4))))
     (when filename
-      (format t "Dumping lexical database ~a to files ~a.*" (dbname *psql-lexicon*) filename)
+      (format t "~%Dumping lexical database ~a to files ~a.*" (dbname *psql-lexicon*) filename)
       (dump-psql-lexicon filename)
       (lkb-beep))))
   
@@ -664,7 +672,7 @@
 	  (t
 	   (error "too many arguments")))))
     (when filename
-      ;;(format t "Dumping lexical database ~a to (TDL format) file ~a" (dbname *psql-lexicon*) filename)
+      ;;(format t "~%Dumping lexical database ~a to (TDL format) file ~a" (dbname *psql-lexicon*) filename)
       (export-lexicon-to-tdl :file filename)
       (lkb-beep))))
   
@@ -695,12 +703,12 @@
 	     (cons "Country code?" (or *postgres-current-country* "UK"))))
 	  (unless *postgres-current-country* (throw 'abort 'country))
 	  (export-to-db lexicon *psql-lexicon*)
-	  (clear-lex lexicon)
+	  (close-lex lexicon)
 	  (lkb-beep))))))
 
 (defun command-clear-scratch nil
   (format t "~%Clearing scratch entries")
-  (clear-scratch-lex)
+  (close-scratch-lex)
   (lkb-beep))
 
 (defun command-commit-scratch nil
@@ -757,19 +765,4 @@
 	   (unless (gethash id psorts) 
 	     (setf (gethash id psorts) (make-psort-struct lexicon x)))))
      (retrieve-all-records lexicon (make-requested-fields lexicon)))))
-
-;;CREATE OR REPLACE FUNCTION build_current_grammar () RETURNS boolean AS
-;;''
-;;
-;;SELECT CASE
-;;  WHEN
-;;    coalesce((SELECT max(modstamp) FROM revision_all),''''infinity'''')
-;;    >=
-;;    coalesce((SELECT val FROM meta WHERE var=''''build_time'''' LIMIT 1),''''-infinity'''')
-;;      THEN build_current_grammar_aux()
-;;  ELSE false
-;;  END;
-;;
-;;'' 
-;;LANGUAGE SQL;
 

@@ -1,4 +1,4 @@
-;;; Copyright (c) 1998-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; Copyright (c) 1998-2003 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron
 ;;; see licence.txt for conditions
 
 
@@ -15,7 +15,7 @@
 
 
 (defun read-tdl-lex-file-aux-internal (file-name)
-  (let ((*readtable* (make-tdl-break-table))) ;; this can be dangerous
+  (let ((*readtable* (make-tdl-break-table)))
     (with-open-file 
 	(istream file-name :direction :input)
       (format t "~%Reading in lexical entry file ~A" 

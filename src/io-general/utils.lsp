@@ -1,4 +1,4 @@
-;;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; Copyright (c) 1991-2003 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron
 ;;; see licence.txt for conditions
 
 ;;; Functions moved from io-paths/typeinput.lsp
@@ -213,7 +213,8 @@
     (clear-type-load-files)
     (clear-lex-load-files)
     (clear-rule-load-files)
-    (clear-lex *lexicon* :no-delete t)                ;; doesn't delete temporary files
+    (clear-leaf-types *leaf-types*)
+    (close-lex *lexicon*) ;; this will close *lexicon* and _all_ sublexicons
     (unless 
         (typep *lexicon* 'cdb-lex-database)
       (setf *lexicon* (make-instance 'cdb-lex-database)))

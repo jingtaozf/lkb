@@ -1,4 +1,4 @@
-;;; Copyright (c) 1998-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; Copyright (c) 1998-2003 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron
 ;;; see licence.txt for conditions
 
 
@@ -53,8 +53,8 @@
   (let ((type-entry (get-type-entry name)))
     (when (leaf-type-p type-entry)
       (remove-type-entry name)
-      (setf (slot-value leaf-db 'leaf-types) 
-        (slot-value leaf-db 'leaf-types))
+ ;     (setf (slot-value leaf-db 'leaf-types) 
+ ;       (slot-value leaf-db 'leaf-types))
       ;;; FIX ? is this right
       (setf *type-names* (delete name *type-names*))
       (delete-non-local-uses name type-entry))))
@@ -67,108 +67,165 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defclass trivial-leaf-database (leaf-database)
-  ())
-
-;;; For mysterious reasons, the fix of setting mode binary 
-;;; for windows doesn't fix the leaf type use of CDB although it
-;;; does fix the lexicon.  More investigation needed.
-;;; --- we believe the new, binary-only CDB implementation does solve this
-;;; problem.                                        (19-jan-00  -  oe@yy)
-
-(setf *leaf-types* (make-instance 'trivial-leaf-database))
-
-(defmethod read-cached-leaf-types ((leaf-db trivial-leaf-database) filenames)
-  (declare (ignore filenames))
-  (format t "~%Cached leaf types missing or out-of-date: reading leaf type source files.")
-  nil)
-
-(defmethod store-cached-leaf-types ((leaf-db trivial-leaf-database))
-  t)
-
-(defmethod is-leaf-type ((leaf-db trivial-leaf-database) name)
-  (member name (slot-value leaf-db 'leaf-types) :test #'eq))
-
-(defmethod store-leaf-type ((leaf-db trivial-leaf-database) name type-def)
-  (with-slots (leaf-types) leaf-db
-    (pushnew name *type-names* :test #'eq)
-    (pushnew name *ordered-type-list* :test #'eq)
-    (pushnew name leaf-types :test #'eq)    
-    (set-type-entry name type-def)))
-
-(defmethod eval-possible-leaf-type ((leaf-db trivial-leaf-database) type)
-  (when type
-    (let ((type-entry (get-type-entry type)))
-      (when type-entry
-        (when (leaf-type-p type-entry)
-          (unless (leaf-type-expanded-p type-entry)
-	    (add-in-leaf-type-entry type-entry)))))))
+;;;(defclass trivial-leaf-database (leaf-database)
+;;;  ())
+;;;
+;;;;;; For mysterious reasons, the fix of setting mode binary 
+;;;;;; for windows doesn't fix the leaf type use of CDB although it
+;;;;;; does fix the lexicon.  More investigation needed.
+;;;;;; --- we believe the new, binary-only CDB implementation does solve this
+;;;;;; problem.                                        (19-jan-00  -  oe@yy)
+;;;
+;;;(setf *leaf-types* (make-instance 'trivial-leaf-database))
+;;;
+;;;(defmethod read-cached-leaf-types ((leaf-db trivial-leaf-database) filenames)
+;;;  (declare (ignore filenames))
+;;;  (format t "~%Cached leaf types missing or out-of-date: reading leaf type source files.")
+;;;  nil)
+;;;
+;;;(defmethod store-cached-leaf-types ((leaf-db trivial-leaf-database))
+;;;  t)
+;;;
+;;;(defmethod is-leaf-type ((leaf-db trivial-leaf-database) name)
+;;;  (member name (slot-value leaf-db 'leaf-types) :test #'eq))
+;;;
+;;;(defmethod store-leaf-type ((leaf-db trivial-leaf-database) name type-def)
+;;;  (with-slots (leaf-types) leaf-db
+;;;    (pushnew name *type-names* :test #'eq)
+;;;    (pushnew name *ordered-type-list* :test #'eq)
+;;;    (pushnew name leaf-types :test #'eq)    
+;;;    (set-type-entry name type-def)))
+;;;
+;;;(defmethod eval-possible-leaf-type ((leaf-db trivial-leaf-database) type)
+;;;  (when type
+;;;    (let ((type-entry (get-type-entry type)))
+;;;      (when type-entry
+;;;        (when (leaf-type-p type-entry)
+;;;          (unless (leaf-type-expanded-p type-entry)
+;;;	    (add-in-leaf-type-entry type-entry)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defclass cdb-leaf-database (leaf-database)
   ((leaf-db :initform nil :accessor leaf-db)
-   (ready-p :initform nil :accessor leaf-db-ready-p)))
+;   (ready-p :initform nil :accessor ready-p)
+   (mode :initform nil :accessor mode)
+   (temp-file :initform nil
+	      :accessor temp-file
+	      :initarg :temp-file)))
 
 (setf *leaf-types* (make-instance 'cdb-leaf-database))
 
 (defmethod read-cached-leaf-types ((leaf-db cdb-leaf-database) filenames)
-  (set-temporary-lexicon-filenames)
-  (when (up-to-date-p filenames (list *leaf-temp-file*))
-    (format t "~%Reading in cached leaf types")
-    (when (handler-case 
-	      (setf (leaf-db leaf-db) (cdb:open-read *leaf-temp-file*))
-	    (error (condition)
-	      (format t "~%Error: ~A~%" condition)
-	      (delete-temporary-lexicon-files leaf-db)
-	      nil))
-      (setf (leaf-db-ready-p leaf-db) t)
-      (format t "~%Cached leaf types read")
-      (return-from read-cached-leaf-types t)))
-  (format t "~%Cached leaf types missing or out-of-date: reading leaf type source files")
-  nil)
+  (with-slots (temp-file) leaf-db
+    (cond 
+     ((up-to-date-p filenames (list temp-file))
+      (format t "~%Reading in cached leaf types")
+      (when (open-read leaf-db)
+	(format t "~%Cached leaf types read")
+	t))
+     (t
+      (format t "~%Cached leaf types missing or out-of-date: reading leaf type source files")
+      nil))))
 
 (defmethod clear-leaf-types :after ((leaf-db cdb-leaf-database))
-  (when (leaf-db leaf-db)
-    (cdb:close-read (leaf-db leaf-db))
-  (setf (leaf-db-ready-p leaf-db) nil)
-  (setf (leaf-db leaf-db) nil)))
+  (close-leaf-db leaf-db))
 
 (defmethod store-cached-leaf-types ((leaf-db cdb-leaf-database))
-  (cdb:close-write (leaf-db leaf-db))
-  (setf (leaf-db-ready-p leaf-db) t)
-  (setf (leaf-db leaf-db) nil))
+  (close-leaf-db leaf-db))
 
-(defmethod is-leaf-type ((leaf-db cdb-leaf-database) name)
-  (preload-leaf-type leaf-db name)
-  (member name (slot-value leaf-db 'leaf-types) :test #'eq))
+(defmethod open-p ((db cdb-leaf-database))
+  (temp-file db))
 
-(defmethod store-leaf-type ((leaf-db cdb-leaf-database) name type-def)
-  (unless (leaf-db leaf-db)
-    (setf (leaf-db leaf-db) (cdb:open-write *leaf-temp-file*)))
-  (cdb:write-record (leaf-db leaf-db) (string name) 
+(defmethod open-leaf-db ((db cdb-leaf-database) temp-file)
+  (if (open-p db)
+      (close-leaf-db db))
+  (setf (temp-file db) temp-file))
+
+(defmethod close-leaf-db ((db cdb-leaf-database))
+  (close-read-write db)
+  (setf (temp-file db) nil))
+
+(defmethod open-read-p ((db cdb-leaf-database))
+  (eq (mode db) :read))
+
+(defmethod open-write-p ((db cdb-leaf-database))
+  (eq (mode db) :write))
+
+(defmethod open-read-write-p ((db cdb-leaf-database))
+  (or (open-read-p db)
+      (open-write-p db)))
+
+(defmethod open-read ((db cdb-leaf-database))
+  (if (open-read-write-p db)
+      (close-read-write db))
+  (with-slots (leaf-db temp-file mode) db
+    (handler-case
+	(and (setf leaf-db (cdb:open-read temp-file))
+	     (setf mode :read)
+	     t)
+      (error (condition)
+	(format t "~%Error: ~A~%" condition)
+	(delete-temporary-lexicon-files db)
+	(delete-temporary-lexicon-files *lexicon*) ;;fix_me
+	nil))))
+
+(defmethod open-write ((db cdb-leaf-database))
+  (if (open-read-write-p db)
+      (close-read-write db))
+  (with-slots (leaf-db temp-file mode) db
+    (handler-case
+	(and (setf leaf-db (cdb:open-write temp-file))
+	     (setf mode :write)
+	     t)
+      (error (condition)
+	(format t "~%Error: ~A~%" condition)
+	(delete-temporary-lexicon-files db)
+	(delete-temporary-lexicon-files *lexicon*) ;;fix_me
+	nil))))
+
+(defmethod close-read-write ((db cdb-leaf-database))
+  (with-slots (leaf-db mode) db
+    (handler-case
+	(progn
+	  (when leaf-db
+	     (cdb:close-cdb leaf-db)
+	     (setf leaf-db nil))
+	  (setf mode nil)
+	  t)
+      (error (condition)
+	(format t "~%Error: ~A~%" condition)
+	(delete-temporary-lexicon-files db)
+	(delete-temporary-lexicon-files *lexicon*) ;;fix_me
+	nil))))
+
+(defmethod is-leaf-type ((db cdb-leaf-database) name)
+  (preload-leaf-type db name)
+  (member name (slot-value db 'leaf-types) :test #'eq))
+
+;; db is open for writing...
+(defmethod store-leaf-type ((db cdb-leaf-database) name type-def)
+  (cdb:write-record (leaf-db db) (string name) 
 		    (with-standard-io-syntax (write-to-string type-def))))
 
-(defmethod eval-possible-leaf-type ((leaf-db cdb-leaf-database) type)
+(defmethod eval-possible-leaf-type ((db cdb-leaf-database) type)
   (unless (stringp type)
     (let ((type-entry (get-type-entry type)))
       (when (or (null type-entry)
 		(leaf-type-p type-entry))
-	(preload-leaf-type leaf-db type)
+	(preload-leaf-type db type)
 	(let ((type-entry (get-type-entry type)))
 	  (when (and type-entry
 		     (leaf-type-p type-entry)
 		     (not (leaf-type-expanded-p type-entry)))
 	    (add-in-leaf-type-entry type-entry)))))))
 
-(defun preload-leaf-type (leaf-db type)
-  (when (leaf-db-ready-p leaf-db)
-    (unless (leaf-db leaf-db)
-      (setf (leaf-db leaf-db) (cdb:open-read *leaf-temp-file*)))
-    (with-slots (leaf-types) leaf-db
+(defmethod preload-leaf-type ((db cdb-leaf-database) type)
+  (with-slots (leaf-types mode leaf-db) db
+    (when (eq mode :read)
       (unless (get-type-entry type)
 	;; We take the last entry that's returned
-	(let ((entry (car (last (cdb:read-record (leaf-db leaf-db) 
+	(let ((entry (car (last (cdb:read-record leaf-db 
 						 (string type)))))
 	      (*readtable* #+allegro excl::std-lisp-readtable
                            #-allegro (copy-readtable nil)))
@@ -179,6 +236,13 @@
 	    (set-type-entry type 
               (with-package (:lkb) (read-from-string entry)))))))))
 
+
+(defmethod delete-temporary-lexicon-files ((db cdb-leaf-database))
+  (with-slots (temp-file) db
+    (when (and temp-file
+	       (probe-file temp-file))
+      (delete-file temp-file))
+    t)) 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun add-leaf-type (name parents constraint default comment daughters)
@@ -366,13 +430,3 @@ introduces new features ~A" name new-features)
                   ;; faster this way
                   (retype-dag parent-constraint *toptype*))))
 
-
-(defmethod delete-temporary-lexicon-files ((leaf-db cdb-leaf-database))
-  ;; i don't understand this. fix later
-  )
-;  (when (and *psorts-temp-file*
-;	     (probe-file *psorts-temp-file*))
-;    (delete-file *psorts-temp-file*))
-;  (when (and *psorts-temp-index-file*
-;	     (probe-file *psorts-temp-index-file*))
-;    (delete-file *psorts-temp-index-file*)))
