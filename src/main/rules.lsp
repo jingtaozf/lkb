@@ -205,7 +205,9 @@
 
 (defun add-lex-or-grammar-rule (id rule lexp)
   ;;; YADU - need to get at the indef structure
-   (let* ((fs (rule-full-fs rule))
+  (when (gethash id (if lexp *lexical-rules* *rules*))
+    (format t "~%Rule ~A redefined" id))
+  (let* ((fs (rule-full-fs rule))
           (f-list (establish-linear-precedence (tdfs-indef fs))))
       (setf (rule-order rule) f-list)
       (setf (rule-daughters-restricted rule)
