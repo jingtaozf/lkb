@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.5  1998/09/04 00:43:31  aac
+;; merging WK's changes
+;;
 ;; Revision 1.4  1998/08/24 21:59:14  oe
 ;; committing minor changes contributed by the manager; make MRS work for PAGE ...
 ;;
@@ -244,12 +247,14 @@ for extra features for using the extra-features of a relation")
 ;;; types for variable naming in mrsoutput
 
 (defparameter *event-type* (vsym "event"))
+(defparameter *event_or_index-type* (vsym "event_or_index"))
 (defparameter *eventtime-type* (vsym "eventtime"))
 (defparameter *handle-type* (vsym "handle"))
 (defparameter *group_lab-type* (vsym "group_lab"))
 (defparameter *hole-type* (vsym "hole"))
 (defparameter *label-type* (vsym "label"))
 (defparameter *ref-ind-type* (vsym "ref-ind"))
+(defparameter *full_ref-ind-type* (vsym "full_ref-ind"))
 (defparameter *deg-ind-type* (vsym "deg-ind"))
 (defparameter *individual-type* (vsym "individual"))
 (defparameter *difference-list-type* (vsym "*diff-list*"))

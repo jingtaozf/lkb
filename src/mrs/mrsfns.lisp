@@ -33,18 +33,6 @@
 						(first binding-sets)))
 		    (output-scoped-mrs mrs-struct :stream stream))))))))
 
-(defun get-vit-strings (parse-list)
-  (loop for parse in parse-list
-        collecting
-	(let* ((fs (get-parse-fs parse))
-               (sem-fs (path-value fs *initial-semantics-path*)))
-          (if (is-valid-fs sem-fs)
-              (let ((mrs-struct (sort-mrs-struct (construct-mrs sem-fs))))
-		 (multiple-value-bind (vit binding-sets)
-		     (mrs-to-vit mrs-struct)
-		   (with-output-to-string (stream) 
-		     (format nil "~S" (write-vit stream vit)))))))))
-
 (defun expand-tsdb-results (result-file dest-file &optional (vitp nil))
   (excl::run-shell-command (format nil "sort -n < ~A | sed -f ~A > ~A" 
 				   result-file
@@ -58,8 +46,9 @@
       (do ((sent-num (read istream nil 'eof))
 	   (sent (read istream nil 'eof))
 	   (mrs (read istream nil 'eof))
-	   (sep (read-char istream nil 'eof))
-	   (tree (read istream nil 'eof)))
+	   (sep2 (read-char istream nil 'eof))
+	   (tree (read istream nil 'eof))
+	   )
 	  ((eql sent-num 'eof) nil)
 	(format t "~%~A" sent)
 	(format ostream "~%~A~%" sent)
@@ -82,9 +71,42 @@
 	  (format ostream "~%~A~%" mrs))
 	(setf sent-num (read istream nil 'eof)
 	      sent (read istream nil 'eof)
+	      sep (read-char istream nil 'eof)
 	      mrs (read istream nil 'eof)
 	      sep (read-char istream nil 'eof)
 	      tree (read istream nil 'eof)))))))
+
+(defun get-vit-strings (parse-list)
+  (loop for parse in parse-list
+        collecting
+	(let* ((fs (get-parse-fs parse))
+               (sem-fs (path-value fs *initial-semantics-path*)))
+          (if (is-valid-fs sem-fs)
+              (let* ((mrs-struct1 (sort-mrs-struct (construct-mrs sem-fs)))
+		     (mrs-struct (if (boundp '*ordered-mrs-rule-list*)
+				     (munge-mrs-struct mrs-struct1
+						       *ordered-mrs-rule-list*)
+				   mrs-struct1)))
+		 (multiple-value-bind (vit binding-sets)
+		     (mrs-to-vit mrs-struct)
+		   (with-output-to-string (stream) 
+		     (format nil "~S" (write-vit stream 
+						 (horrible-hack-2 vit))))))))))
+
+(defun get-vit-strings-from-phrases (parse)
+  (let* ((fs (get-parse-fs parse))
+               (sem-fs (path-value fs *initial-semantics-path*)))
+          (if (is-valid-fs sem-fs)
+              (let* ((mrs-struct1 (sort-mrs-struct (construct-mrs sem-fs)))
+		     (mrs-struct (if (boundp '*ordered-mrs-rule-list*)
+				     (munge-mrs-struct mrs-struct1
+						       *ordered-mrs-rule-list*)
+				   mrs-struct1)))
+		 (multiple-value-bind (vit binding-sets)
+		     (mrs-to-vit mrs-struct t)
+		   (with-output-to-string (stream) 
+		     (format nil "~S" (write-vit stream 
+						 (horrible-hack-2 vit)))))))))
 
 (defun extract-and-output (parse-list)
  (let ((*print-circle* nil))

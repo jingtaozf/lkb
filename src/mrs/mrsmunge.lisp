@@ -314,8 +314,8 @@
 
 (defun compatible-types-or-values (val1 val2)
   (or (is-top-type val1) (is-top-type val2)
-      (and (is-valid-type val1) (is-valid-type val2) 
-           (compatible-types val1 val2))
+      ;(and (is-valid-type val1) (is-valid-type val2) 
+      ;     (compatible-types val1 val2))
       (cond ((and (symbolp val1) (symbolp val2))
 	     (same-names val1 val2))
 	    ((and (stringp val1) (stringp val2))
@@ -348,36 +348,19 @@
                         new-bindings))))))
   (append new-bindings constant-bindings)))
 
-(defun match-mrs-rule-rels (remaining-rels rels matching-rels bindings 
-                            constant-bindings)
-  ;;; remaining-rels is the list of things in the rule,
-  ;;; rels is the list of rels in the relevant part of the input MRS.
-  ;;; Each function call attempts to match the top remaining-rel
-  ;;; with the input MRSs.
-  ;;; The function always takes one set of matching-rels and of bindings
-  ;;; but the result may be a set, because we may have multiple
-  ;;; matches for a particular relation
-  (if (null remaining-rels)
-      ; normally this will be the end condition
-      ; but it allows rules to be written which always fire,
-      ; effectively allowing material to be appended to a LISZT
-      ; without anything being deleted
-      (list (make-munge-result :matching-rels matching-rels
-                               :constant-bindings constant-bindings
-                               :bindings bindings))
-    (let ((input-rel (car remaining-rels))
-          (results nil))
-      (dolist (rel rels)
-        (when (and (compatible-types-or-values (rel-sort input-rel)
-                        (rel-sort rel))
-                   (not (member rel matching-rels)))
           ; conditions such as predicates should be checked here
           (let ((local-bindings (copy-alist bindings)))
             (setf local-bindings
                 (bindings-match (get-var-num (rel-handel input-rel))
                                 (get-var-num (rel-handel rel))
                                 local-bindings))
+	    (when (get-var-num (rel-label input-rel))
+             (setf local-bindings
+                (bindings-match (get-var-num (rel-label input-rel))
+                                (get-var-num (rel-label rel))
+                                local-bindings)))
             (record-munge-variable (rel-handel rel))
+            (record-munge-variable (rel-label rel))
             (when local-bindings
               (setf local-bindings
                  (compatible-values
@@ -400,8 +383,7 @@
                                       constant-bindings)))
                   (when local-results
                               ; all conditions satisfied
-                    (setf results (append local-results results)))))))))
-        results)))
+                    (setf results (append local-results results)))))))
 
 (defun match-mrs-rule-hcons (remaining-hcons hcons-list 
                              matching-hcons bindings 
@@ -626,6 +608,9 @@
                                 constant-bindings)))))
          (setf (rel-handel new-rel)
                (convert-var-to-new-bindings (rel-handel rel)
+                                            bindings))
+         (setf (rel-label new-rel)
+               (convert-var-to-new-bindings (rel-label rel)
                                             bindings))
          (setf (rel-flist new-rel)
                (sort

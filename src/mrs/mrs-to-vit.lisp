@@ -59,6 +59,9 @@
 (defparameter *used-handel-labels* nil
   "store handels which are used as base labels")
 
+(defparameter *bound-vit-vars* nil
+  "store bound vit-vars")
+
 ;;; **** General purpose utility functions ****
 
 ;;; general purpose functions for creating new atoms ...
@@ -245,20 +248,38 @@
                     (pushnew var instances))))
     instances))
 
+;;; hack for identifying rels whose instance counts as bound
+(defun vit-bind-inst-rel-p (mrsrel)
+  (or (vit-quant-rel-p mrsrel)
+      (nonquantified-var-p (fvpair-value (first (rel-flist mrsrel))))
+      (member (rel-sort mrsrel) *top-level-rel-types*)))
+
+;;; use simply presence of feature BV as indicator of quantifier
+(defun vit-quant-rel-p (mrsrel)
+  (eq 'disco::bv (fvpair-feature (first (rel-flist mrsrel)))))
+
+(defun vit-var-p (var)
+  (and (symbolp var)
+       (member (subseq (symbol-name var) 0 2) 
+               '("IH" "HH" "LH") :test #'equal)))
+
+; This definition of COLLECT-UNBOUND-VARS temporarily replaced by the one
+; following, for Fall 98 Integration:
 ;;; returns list of free "individual" variables
 ;;; only x and v variables are candidates, not e's and d's
 ;;; perhaps to 'logical' for Vits: it might be that a variable which is used
 ;;; more than once in Vits counts as unbound
-(defun collect-unbound-vars (mrs)
-  (setf *top-level-variables* nil)
-  (let* ((rels (psoa-liszt mrs))
-         (quant-rels (for rel in rels filter (if (is-quant-rel rel) rel)))
-         (implicit-existentials (find-unbound-vars rels quant-rels))
+(defun collect-unbound-vars (vit)
+  (let* ((rels (vit-semantics vit))
          (free nil))
-    (for var in implicit-existentials
-         do
-         (if (member (elt (var-name var) 0) '(#\x #\v))
-             (pushnew var free :key #'var-id)))
+    (loop for rel in rels
+        do
+          (unless (member (p-term-predicate rel) *top-level-rel-types*)
+            (loop for arg in (cddr (p-term-args rel))
+                do
+                  (when (and (vit-var-p arg)
+                             (not (member arg *bound-vit-vars*)))
+                    (pushnew arg free)))))
     free))
 
 ;;; ***** Main code *******
@@ -320,7 +341,7 @@
                         (if (> (length binding-sets) 10)
                             "only printing first 10" 
                           ""))
-              (format t "~%WARNING: No valid scopes~%"))
+	      (format t "~%WARNING: No valid scopes~%"))
             (for binding in (subseq binding-sets 0 
                                     (min (length binding-sets) 10))
                  do
@@ -330,7 +351,7 @@
           (when (and vit standalone)
             (write-vit-pretty t (horrible-hack-2 vit))
             (format t "~%"))
-	    (check-vit vit)
+	  ;(check-vit vit)
           vit))
     (let ((vit (german-mrs-to-vit mrs-psoa)))
       (when standalone
@@ -375,7 +396,7 @@
       (write-vit vit-out vit))
     (format vit-out ",vitCheck(V).~%~%halt.~%"))
    (excl::run-shell-command "cd /eo/e1/vm2/vitADT/lib/Vit_Adt;/opt/quintus/bin3.2/sun4-5/prolog < ~/tmp/vitcheck" :output "~/tmp/vitout" :if-output-exists :supersede :error-output "~/tmp/viterror" :if-error-output-exists :supersede)
-   (excl::run-shell-command "tail +65 ~/tmp/viterror | tail -r | tail +2 | tail -r" :output "~/tmp/errorout" :error-output "~/tmp/realerrorout" :if-output-exists :supersede :if-error-output-exists :supersede)
+   (excl::run-shell-command "tail +65 ~/tmp/viterror | tail -r | tail +2 | tail -r" :output stream :error-output "~/tmp/realerrorout" :if-output-exists :supersede :if-error-output-exists :supersede)
    (format stream "~%"))
   #-allegro
   (warn "function check-vit needs customising for this Lisp"))
@@ -778,7 +799,8 @@
 (defun convert-mrs-var-extra (vars vit inst groups labels)
   (loop for var in vars
       do
-        (when (and (var-p var) (not (member inst *vit-instances*)))
+        (when (and (var-p var) (not (member inst *vit-instances*))
+		   (var-extra var))
           (loop for fvp in (var-extra var)
               do
                 (let ((todo (assoc (fvpair-feature fvp) 

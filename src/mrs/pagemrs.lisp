@@ -52,7 +52,10 @@
 (defun get-parse-fs (parse)
   (if (string-equal "1" (subseq user::*page-version* 0 1))
       (lexicon::cfs-fs (pg::u-item-cfs parse))
-  (lexicon::cfs-fs (car (main::typed-item-args parse)))))
+    (if (or (eq (type-of parse) 'typed-item)
+	    (eq (type-of parse) 'main::typed-item))
+	(lexicon::cfs-fs (car (main::typed-item-args parse)))
+      (cfs-fs (pg::combo-item-cfs parse)))))
 
 (defun output-parse-tree (tree ostream)
   (trees::kh-parse-tree tree :stream ostream))

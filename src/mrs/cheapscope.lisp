@@ -80,8 +80,8 @@
   (for is-one-of in *is-one-ofs*
        filter
        (unless (cdr (possible-binding-hset is-one-of))
-         (cons (possible-binding-h1 is-one-of)
-               (car (possible-binding-hset is-one-of))))))
+         (cons (car (possible-binding-hset is-one-of))
+	       (possible-binding-h1 is-one-of)))))
 
 
   

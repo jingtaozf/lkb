@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.13  1998/10/07 00:13:23  aac
+;; patch for PAGE bug
+;;
 ;; Revision 1.12  1998/10/06 03:02:59  aac
 ;; cheap and cheerful leqs for fragments
 ;;
@@ -141,6 +144,7 @@
 (defvar *input-string* nil)
 (defvar *segment-id* nil)
 (defvar *short-test-vit* nil)
+(defvar *mrs-wg-liszt* nil)
 
 ;;; called from VM-Parser
 ;;; AAC - not called for CSLI version of PAGE or the LKB
@@ -176,6 +180,8 @@
 
 (defvar *variable-generator* nil)
 (defparameter *named-nodes* nil)
+(defvar *restart-variable-generator* t
+    "if t the variable counter is restarted for each sentence")
 
 ;;; WK: distinction between handel and top-handel
 ;;; added test for cycles
@@ -185,41 +191,43 @@
   (let ((*VM-arg-roles-only-p* (if generator-p nil *VM-arg-roles-only-p*)))
       (when #-pagelite (not (cyclic-p fs))
             #+pagelite t
-            (let ((variable-generator (setf *variable-generator*
-                                        (or existing-variable-generator
-                                            (create-variable-generator)))))
-              (unless existing-variable-generator (setf *named-nodes* nil))
-              #-pagelite
-              (SETQ fs (deref fs))
-              (let ((handel-fs (path-value fs *psoa-handel-path*))
-                    (top-h-fs (path-value fs *psoa-top-h-path*))
-                    (event-fs (path-value fs *psoa-event-path*))
-                    (liszt-fs (path-value fs *psoa-liszt-path*))
-                    (h-cons-fs (path-value fs *psoa-rh-cons-path*))
-                    (message-fs (path-value fs *psoa-message-path*))
-                    (wgliszt-fs (path-value fs *psoa-wgliszt-path*)))
-                (make-psoa
-                 :handel (create-variable (if (mrs-language '(english))
-                                              top-h-fs
-                                            handel-fs)
-                                          variable-generator *handle-type*)
-                 :top-h (create-variable top-h-fs
-                                         variable-generator *handle-type*)
-                 :index (if (is-valid-fs event-fs)
-                            (create-variable event-fs
-                                             variable-generator))
-                 :liszt (nreverse (construct-liszt liszt-fs
+            (if existing-variable-generator
+                (setf *variable-generator* existing-variable-generator)
+              (if *restart-variable-generator*
+                  (init-variable-generator)))
+            (unless existing-variable-generator (setf *named-nodes* nil))
+            #-pagelite
+            (SETQ fs (deref fs))
+            (let ((handel-fs (path-value fs *psoa-handel-path*))
+                  (top-h-fs (path-value fs *psoa-top-h-path*))
+                  (event-fs (path-value fs *psoa-event-path*))
+                  (liszt-fs (path-value fs *psoa-liszt-path*))
+                  (h-cons-fs (path-value fs *psoa-rh-cons-path*))
+                  (message-fs (path-value fs *psoa-message-path*))
+                  (wgliszt-fs (path-value fs *psoa-wgliszt-path*)))
+              (make-psoa
+               :handel (create-variable (if (mrs-language '(english))
+                                            top-h-fs
+                                          handel-fs)
+                                        *variable-generator*)
+               :top-h (create-variable top-h-fs
+                                       *variable-generator*)
+               :index (if (is-valid-fs event-fs)
+                          (create-variable event-fs
+                                           *variable-generator*))
+               :liszt (nreverse (construct-liszt liszt-fs
+                                                 nil
+                                                 *variable-generator*))
+               :h-cons (nreverse (construct-h-cons h-cons-fs
                                                    nil
-                                                   variable-generator))
-                 :h-cons (nreverse (construct-h-cons h-cons-fs
-                                                     nil
-                                                     variable-generator))
-                 :message (if (is-valid-fs message-fs)
-                              (create-rel-struct message-fs 
-                                                 variable-generator))
-                 :wgliszt (nreverse (construct-wgliszt 
-                                     wgliszt-fs
-                                     variable-generator))))))))
+                                                   *variable-generator*))
+               :message (if (is-valid-fs message-fs)
+                            (create-rel-struct message-fs 
+                                               *variable-generator*))
+               :wgliszt (nreverse (construct-wgliszt 
+                                   wgliszt-fs
+                                   *variable-generator*
+                                   *mrs-wg-liszt*)))))))
 
 
 
@@ -228,6 +236,11 @@
     #'(lambda nil
         (incf number)
         number)))
+
+(defun init-variable-generator ()
+  (setf *variable-generator* (create-variable-generator)))
+
+(init-variable-generator)
 
 ;; Allow NIL argument to get-var-num
 (defun get-var-num (var-struct)
@@ -353,17 +366,19 @@
 
 ;;; global variables are defined in mrsglobals
 
+
 (defun determine-variable-type (fs)
   (let ((type (create-type (fs-type fs))))
     (cond ((equal-or-subtype type *event-type*) "e")
+          ((equal-or-subtype type *ref-ind-type*) "x")
+          ((equal-or-subtype type *full_ref-ind-type*) "x")
+          ((equal-or-subtype type *event_or_index-type*) "e")
           ((equal-or-subtype type *eventtime-type*) "t")
           ((equal-or-subtype type *handle-type*) "h")  
 ;          ((equal-or-subtype type *group_lab-type*) "g")  
           ((equal-or-subtype type *hole-type*) "h")
           ((equal-or-subtype type *label-type*) "h")
-          ((equal-or-subtype type *ref-ind-type*) "x")
           ((equal-or-subtype type *deg-ind-type*) "d")
-          ((equal-or-subtype type *individual-type*) "d")
           ((equal-or-subtype type *difference-list-type*) "c") 
           ;; Assume coordination structure
           (t "v"))))
@@ -475,8 +490,11 @@
 
 (defun create-word-identifier (id gen)
   (if id
-      (let ((val (create-type (fs-type (rest id)))))
-        (if (or (numberp val) 
+      (let ((val (if (stringp id)
+                     id
+                   (create-type (fs-type (rest id))))))
+        (if (or (numberp val)
+                (stringp val)
                 (and (symbolp val)
                      (member (elt (string val) 0) '(#\R))))
             val
@@ -574,7 +592,7 @@
 
 
 
-(defun construct-wgliszt (fs variable-generator)
+(defun construct-wgliszt (fs variable-generator &optional (ext-liszt *mrs-wg-liszt*))
   #-pagelite
   (when (is-valid-fs fs)
 ;    (if (is-disjunctive-fs fs)
@@ -591,12 +609,18 @@
               (if (and first-part rest-part)
                   (let* ((first (fs-arcs 
                                  (deref (rest first-part))))
-                         (word (assoc *word-feature* first))
-                         (id (assoc *id-feature* first))
+                         (word (if ext-liszt
+                                   (first (first ext-liszt))
+                                 (assoc *word-feature* first)))
+                         (id (if ext-liszt
+                                 (rest (first ext-liszt))
+                               (assoc *id-feature* first)))
                          (handels (assoc *handels-feature* first)))
                     (when (and word handels)
-                      (cons (make-whg-id :word (create-type 
-                                                (fs-type (rest word)))
+                      (cons (make-whg-id :word (if (stringp word)
+                                                   word
+                                                 (create-type 
+                                                (fs-type (rest word))))
                                          :id (create-word-identifier id
                                                                      variable-generator)
                                          :handel (construct-wgliszt-handels 
@@ -604,9 +628,8 @@
                                                   nil 
                                                   variable-generator))
                             (construct-wgliszt (cdr rest-part) 
-                                               variable-generator))))))))))
-
-
+                                               variable-generator 
+                                               (cdr ext-liszt)))))))))))
 
 
 ;;; make a list of handels

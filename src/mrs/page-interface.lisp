@@ -41,7 +41,7 @@
   (import 'tdl::*diff-list* lex:*lex-package*))
 
 (export '(psoa-handel psoa-top-h psoa-index psoa-liszt psoa-h-cons
-          psoa-message psoa-wgliszt
+          psoa-message psoa-wgliszt psoa-extras
           rel-extra rel-type rel-sort rel-handel rel-label rel-flist
           fvpair-feature fvpair-value
           var-name var-extra var-id
