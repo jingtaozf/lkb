@@ -2,7 +2,7 @@
 ;;; CL dialect specific
 ;;; This version for Allegro CL - CLIM2
 
-
+(in-package :user)
 
 ;;; SIMPLE DRAWING
 
@@ -137,3 +137,144 @@
   ;;; define so it uses y-or-n-p-dialog 
   (y-or-n-p-general strg))
 
+
+;;; ========================================================================
+;;; Define general frame class for LKB frames
+
+(clim:define-application-frame lkb-frame ()
+  ((class-frames :initform nil
+		 :accessor class-frames
+		 :allocation :class)
+   (selected :initform nil
+	     :accessor frame-selected)))
+
+;; Register frames of each class when they are created
+
+(defmethod clim:run-frame-top-level :before ((frame lkb-frame) &key)
+  (push frame (getf (class-frames frame) (class-of frame))))
+
+;; Find and raise the most recently created frame of a given class
+
+(defun reuse-frame (class)
+  (let ((frame (clim:find-application-frame class :create nil :activate nil)))
+    (when frame
+      (let ((latest (car (getf (class-frames frame) (find-class class)))))
+	(when latest
+	  (clim:enable-frame latest)
+	  (clim:raise-frame latest)
+	  latest)))))
+
+;; Add a [Close] button
+
+(define-lkb-frame-command (com-close-frame :menu "Close") 
+    ()
+  (clim:with-application-frame (frame)
+    (unhighlight-objects frame)
+    (setf (getf (class-frames frame) (class-of frame))
+      (delete frame (getf (class-frames frame) (class-of frame))))
+    (clim:frame-exit frame)))
+
+;; Add a [Close All] button
+
+(define-lkb-frame-command (com-close-all-frame :menu "Close All") 
+    ()
+  (clim:with-application-frame (frame)
+    (dolist (f (getf (class-frames frame) (class-of frame)))
+      ;; Make sure we close ourself last
+      (unless (eq f frame)
+	(clim:execute-frame-command f '(com-close-frame))))
+    (clim:execute-frame-command frame '(com-close-frame))))
+
+
+(defmacro define-lkb-frame (frame-class slots &rest pane-options)
+  `(clim:define-application-frame ,frame-class (lkb-frame)
+     ,slots
+     (:command-table (,frame-class :inherit-from (lkb-frame)
+				   :inherit-menu t))
+     (:panes
+      (display  
+       (clim:outlining (:thickness 1)
+	 (clim:spacing (:thickness 1)  
+	   (clim:scrolling (:scroll-bars :both)
+	     (clim:make-pane 'clim:application-pane
+			     :name "lkb-pane"
+			     :text-cursor nil
+			     :end-of-line-action :allow
+			     :end-of-page-action :allow
+			     :borders nil
+			     :background clim:+white+
+			     :foreground clim:+black+
+			     :display-time nil
+			     ,@pane-options))))))
+     (:layouts
+      (default display))))
+
+;; Highlight a list of objects
+
+(defun highlight-objects (things frame)
+  (let ((stream (clim:frame-standard-output frame)))
+    (unhighlight-objects frame)
+    (setf (frame-selected frame) 
+      (clim:with-new-output-record (stream)
+	(clim:with-output-recording-options (stream :record t)
+	  (dolist (thing things)
+	    (when thing
+	      (multiple-value-bind (x1 y1 x2 y2)
+		  (clim:bounding-rectangle* 
+		   (clim:output-record-parent thing))
+		(clim:draw-rectangle* stream x1 y1 x2 y2 :
+				      ink clim:+flipping-ink+ 
+				      :filled t)))))))))
+
+;; Clear highlighting from a particular frame
+
+(defun unhighlight-objects (frame)
+  (let ((selected (frame-selected frame)))
+    (when selected
+      (clim:erase-output-record selected (clim:frame-standard-output frame)))
+    (setf (frame-selected frame) nil)))
+
+;; Clear highlighting all frames of a particular class
+
+(defun unhighlight-class (frame)
+  (mapc #'unhighlight-objects (getf (class-frames frame) (class-of frame))))
+
+;; Find a frame of this class with something highlighted
+
+(defun highlighted-class (frame)
+  (find-if #'frame-selected (getf (class-frames frame) (class-of frame))))
+
+;;; Search the display list for an object
+
+(defun find-object (stream test)
+  (catch 'find-object
+    (find-object-1 (slot-value stream 'clim:output-record) stream test)))
+
+(defun find-object-1 (rec stream test)
+  (clim:map-over-output-records 
+   #'(lambda (rec)
+       (when (clim:presentationp rec) 
+	 (if (funcall test (clim:presentation-object rec))
+	     (throw 'find-object rec)))
+       (dolist (q (clim:output-record-children rec)) 
+	 (find-object-1 q stream test)))
+   rec))
+
+;;; Center the viewport on object
+
+(defun scroll-to (record stream)
+  (let* ((vp-width (clim:bounding-rectangle-width 
+		    (clim:pane-viewport-region stream)))
+         (vp-height (clim:bounding-rectangle-height
+		     (clim:pane-viewport-region stream)))
+	 (x-pos (clim:point-x (clim:bounding-rectangle-center 
+			       (clim:output-record-parent record))))
+	 (y-pos (clim:point-y (clim:bounding-rectangle-center 
+			       (clim:output-record-parent record))))
+	 (x-max (clim:bounding-rectangle-max-x stream))
+	 (y-max (clim:bounding-rectangle-max-y stream)))
+    (clim:scroll-extent stream
+			(max 0 (min (- x-pos (floor vp-width 2))
+				    (- x-max vp-width)))
+			(max 0 (min (- y-pos (floor vp-height 2))
+				    (- y-max vp-height))))))

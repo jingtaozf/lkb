@@ -64,28 +64,14 @@
 ;; Define a frame class for our FS windows
 ;;
 
-(clim:define-application-frame active-fs-window ()
-  ((fs :initform nil
-       :accessor active-fs-window-fs))
-  (:panes
-   (display 
-    (clim:outlining (:thickness 1)
-      (clim:spacing (:thickness 1)  
-	(clim:scrolling (:scroll-bars :both)
-	  (clim:make-pane 'clim:application-pane
-			  :display-function 'draw-active-fs
-			  :text-cursor nil
-			  :width :compute :height :compute
-			  :output-record 
-			  (make-instance 'clim:standard-tree-output-history)
-			  :end-of-line-action :allow
-			  :end-of-page-action :allow
-			  :borders nil
-			  :background clim:+white+
-			  :foreground clim:+black+
-			  :display-time nil))))))
-  (:layouts
-   (default display)))
+(define-lkb-frame active-fs-window 
+    ((fs :initform nil
+	 :accessor active-fs-window-fs))
+  :display-function 'draw-active-fs
+  :width :compute 
+  :height :compute
+  :output-record (make-instance 'clim:standard-tree-output-history))
+    
 
 ;;; **** display function entry points ****
 
@@ -102,14 +88,13 @@
                                  fs-window)))
 
 (defun display-fs (fs title)
-   (display-basic-fs fs title))
+  (display-basic-fs fs title))
 
 (defun display-fs-and-parents (fs title parents)
-   (display-basic-fs fs title parents))
+  (display-basic-fs fs title parents))
 
 (defun display-fs-and-paths (fs title paths)
-      (display-basic-fs fs title nil paths))
-
+  (display-basic-fs fs title nil paths))
 
 ;;; YADU display
 
@@ -161,48 +146,34 @@
 ;;; **** displaying parents and paths ***
 
 (defun display-active-parents (parents ostream)
-   ;;; this function is dedicated to my Mother and Father
+  ;; this function is dedicated to my Mother and Father
   (format ostream "~%Parents = ")
   (for parent in parents
        do
-       (let ( ; (start-pos (current-position ostream))
+       (let (;; (start-pos (current-position ostream))
              (val (make-type-thing :value parent)))
          (clim:with-text-style (ostream '(nil :bold nil))
-              (clim:with-output-as-presentation 
-                   (ostream val 'type-thing)
-                   (format ostream "~(~A~) " (type-thing-value val))))))
+	   (clim:with-output-as-presentation 
+	       (ostream val 'type-thing)
+	     (format ostream "~(~A~) " (type-thing-value val))))))
   (let ((max-width (current-position-x ostream)))
     (format ostream "~%")
     max-width))
 
 (defun display-active-dpaths (dpath-list ostream)
-   (let ((max-width 0))
-     (for unif in dpath-list
-          do
+  (let ((max-width 0))
+    (for unif in dpath-list
+	 do
          (output-unif unif ostream t)
          (setf max-width (max max-width (current-position-x ostream))))
-      max-width))
-
-
-(defstruct title-thing title fs)
+    max-width))
 
 (defun draw-active-title (stream fs title parents paths)
-  (declare (ignore parents paths))
-  (let* ((val (make-title-thing :title title :fs fs)))
-    ;; (short-title (subseq title 0 (position #\Space title))))
-    (clim:with-text-style (stream '(nil nil :large))
-      (clim:with-output-as-presentation 
-	  (stream val 'title-thing)
-	(format stream "~%~A~%" title)))))
-
-;; 
-;; Add [EXIT] button
-;;
-
-(define-active-fs-window-command (com-exit-active-fs :menu "Close")
-    ()
-  (clim:frame-exit clim:*application-frame*))
-
+  (declare (ignore fs parents paths))
+  (clim:with-text-style (stream '(nil nil :large))
+    (clim:with-output-as-presentation 
+	(stream t 'symbol)
+      (format stream "~%~A~%" title))))
 
 
 ;;; ***** Pop up menu creation *****
@@ -221,77 +192,79 @@
   (let* ((type (type-thing-value type-thing))
          (type-entry (get-type-entry (if (listp type) (car type) type)))
          (type-label-list (type-thing-type-label-list type-thing))
-         (shrunk-p (type-thing-shrunk-p type-thing))
-         (full-tdfs (type-thing-full-tdfs type-thing)))
-    (if (and (atom type) type-entry)
-        (let
-         ((command (clim:menu-choose
-		    (append (when *type-hier-frame*
-			      '(("Hierarchy" :value hier)))
-			    (when (type-comment type-entry)
-			      '(("Help" :value help)))
-			    '(("Shrink/expand" :value shrink))
-			    (when (type-constraint type-entry)
-			      '(("Type definition" :value def)))
-			    (when (type-constraint type-entry)
-			      '(("Expanded type" :value exp)))
-			    (when full-tdfs
-			      '(("Full structure" :value full)))))))
-         ; see CLIM 13-2 for making things inactive
-    (when command
-          (handler-case
-            (ecase command
-                   (hier (display-type-in-tree type))
-                   (help (display-type-comment type 
-                                  (type-comment type-entry)))
-                   (shrink (shrink-fs-action 
-                                   clim:*application-frame*
-                                   (if shrunk-p :expand :shrink)
-                                                type-label-list))
-                   (def                      
-                     (if (type-constraint type-entry)
-                         (display-fs-and-parents 
-                          (type-local-constraint type-entry) 
-                          (format nil 
-                                  "~(~A~)  - definition" 
+         (full-tdfs (type-thing-full-tdfs type-thing))
+	 (frame clim:*application-frame*))
+    (when (and (atom type) type-entry)
+      (let ((command 
+	     (clim:menu-choose
+	      `(("Hierarchy" :value hier
+			     :active ,(getf (class-frames frame) 
+					    (find-class 'type-hierarchy)))
+		("Help" :value help
+			:active ,(type-comment type-entry))
+		("Shrink/expand" :value shrink)
+		("Show source" :value source
+			       :active ,(source-available-p type))
+		("Type definition" :value def
+				   :active 
+				   ,(type-constraint type-entry))
+		("Expanded type" :value exp
+				 :active ,(type-constraint type-entry))
+		("Full structure" :value full
+				  :active full-tdfs)
+		("Select" :value select)
+		("Unify" :value unify
+			 :active ,(highlighted-class frame))))))
+	;; see CLIM 13-2 for making things inactive
+	(when command
+	  (handler-case
+	      (ecase command
+		(hier (display-type-in-tree type))
+		(help (display-type-comment type 
+					    (type-comment type-entry)))
+		(source (edit-source type))
+		(shrink (shrink-fs-action 
+			 frame
+			 (if (type-thing-shrunk-p type-thing)
+			     :expand 
+			   :shrink)
+			 type-label-list))
+		(def (if (type-constraint type-entry)
+			 (display-fs-and-parents 
+			  (type-local-constraint type-entry) 
+			  (format nil 
+				  "~(~A~)  - definition" 
                                   type)
                           (type-parents type-entry))
                        (format clim-user:*lkb-top-stream* 
                                "~%No constraint for type ~A" type)))
-                   (exp (if (type-constraint type-entry)
-                            (display-fs-and-parents 
-                             (type-constraint type-entry) 
-                                   (format nil 
-                                           "~(~A~) - expanded" 
-                                           type)
-                                   (type-parents type-entry))
-                          (format clim-user:*lkb-top-stream* 
-                                  "~%No constraint for type ~A" type)))
-                   (full (if full-tdfs
-                             (display-fs full-tdfs
-                                 (format nil 
-                                    "LR constraint")))))
-            (error (condition)
-                   (format clim-user:*lkb-top-stream*  
-                           "~%Error: ~A~%" condition))))))))
-
-
-
-  
+		(exp (if (type-constraint type-entry)
+			 (display-fs-and-parents 
+			  (type-constraint type-entry) 
+			  (format nil 
+				  "~(~A~) - expanded" 
+				  type)
+			  (type-parents type-entry))
+		       (format clim-user:*lkb-top-stream* 
+			       "~%No constraint for type ~A" type)))
+		(full (if full-tdfs
+			  (display-fs full-tdfs
+				      (format nil 
+					      "LR constraint"))))
+		(select (select-fs frame type-thing))
+		(unify (try-unify-fs frame type-thing)))
+	    (error (condition)
+	      (format clim-user:*lkb-top-stream*  
+		      "~%Error: ~A~%" condition))))))))
 
 
 ;;; ***** pop up menu actions for types ******
 
-; shrink-fs not yet implemented
-
 (defun shrink-fs-action (window action path)
-  (let* ((fs-record (active-fs-window-fs window))
-         (fs (fs-display-record-fs fs-record)))
-      ;   (title (fs-display-record-title fs-record))
-      ;   (parents (fs-display-record-parents fs-record))
-      ;   (paths (fs-display-record-paths fs-record)))
-    (set-dag-display-value fs (reverse path) action)
-    (clim:redisplay-frame-panes window :force-p t)))
+  (set-dag-display-value (fs-display-record-fs (active-fs-window-fs window))
+			 (reverse path)
+			 action)
+  (clim:redisplay-frame-panes window :force-p t))
 
 
 (defun display-type-comment (type comment-string &optional parent-stream)
@@ -300,28 +273,26 @@
       (format clim-user:*lkb-top-stream* 
               "~%~A" comment-string)))
 
-
-
-
 ;;; *** the title or top pop up menu ****
 
-
 (define-active-fs-window-command (com-title-fs-menu)
-    ((title-thing 'title-thing :gesture :select))
-  (let* ((fs (title-thing-fs title-thing))
+    ((name 'symbol :gesture :select))
+  (let* ((fs (fs-display-record-fs
+	      (active-fs-window-fs clim:*application-frame*)))
          (command (clim:menu-choose
-                   '(("Output TeX" :value tex)
-                     ("Store fs" :value store)))))
+                   `(("Output TeX" :value tex)
+		     ("Show source" :value source 
+				    :active ,(source-available-p name))
+		     ("Store fs" :value store)))))
     (when command
-          (handler-case
-            (ecase command
-                   (tex (output-fs-in-tex fs))
-                   (store (store-as-psort fs)))
-            (error (condition)
-                   (format clim-user:*lkb-top-stream*  
-                           "~%Error: ~A~%" condition))))))
-
-
+      (handler-case
+	  (ecase command
+	    (tex (output-fs-in-tex fs))
+	    (source (edit-source name))
+	    (store (store-as-psort fs)))
+	(error (condition)
+	  (format clim-user:*lkb-top-stream*  
+		  "~%Error: ~A~%" condition))))))
 
 ;;; **** pop up menus for psorts (called when paths are displayed) *****
 
@@ -394,21 +365,49 @@
 ;;; ***** Other title menu functions *****
 
 (defun store-as-psort (fs)
-   (let ((psort-name 'no-name))
-      (when fs
-           (setf psort-name 
-               (car
-               (ask-for-lisp-movable "Current Interaction" 
-                  `(("Lex-id?" . ,psort-name))
-                  150)))
-            (if psort-name
-              (or 
-               (store-temporary-psort psort-name fs)
-               (progn
-                 (clim:notify-user clim:*application-frame* 
-                                   "Psort name already used")
-                 (store-as-psort fs)))))))
+  (let ((psort-name 'no-name))
+    (when fs
+      (setf psort-name 
+	(car (ask-for-lisp-movable "Current Interaction" 
+				   `(("Lex-id?" . ,psort-name))
+				   150)))
+      (when psort-name
+	(or (store-temporary-psort psort-name fs)
+	    (progn
+	      (clim:notify-user clim:*application-frame* 
+				"Psort name already used")
+	      (store-as-psort fs)))))))
 
-           
-                  
+;;; Support for interactive unification check
+
+(defvar *fs1* nil)
+(defvar *path1* nil)
+
+(defun frame-dag (frame)
+  (let ((fs (fs-display-record-fs (active-fs-window-fs frame))))
+    (if (tdfs-p fs)
+	(tdfs-indef fs)
+      fs)))
+
+(defun select-fs (frame type-thing)
+  (let ((sel (find-object (clim:frame-standard-output frame) 
+			  #'(lambda (e) 
+			      (eq e type-thing)))))
+    (setq *fs1* (frame-dag frame))
+    (setq *path1* (reverse (type-thing-type-label-list type-thing)))
+    (unhighlight-class frame)
+    (highlight-objects (clim:output-record-children sel) frame)))
+
+(defun try-unify-fs (frame type-thing)
+  (let* ((fs2 (frame-dag frame))
+	 (path2 (reverse (type-thing-type-label-list type-thing)))
+	 (*standard-output* clim-user:*lkb-top-stream*))
+    (unify-paths-with-fail-messages 
+     (create-path-from-feature-list *path1*)
+     *fs1*
+     (create-path-from-feature-list path2)
+     (copy-dag-completely fs2)
+     :selected1 *path1* :selected2 path2)
+    (terpri)
+    (unhighlight-class frame)))
 

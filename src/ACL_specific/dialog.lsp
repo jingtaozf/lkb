@@ -27,12 +27,19 @@
 ;;; clim-user:*lkb-top-frame* is set up in the ACL specific file
 ;;; frame.lsp
 
+(defvar *last-directory* nil)
+
 (defun ask-user-for-existing-pathname (prompt)
-  ; to match Procyon def
-  ; but isn't certain to return a valid file ...
-  (let ((filename 
-           (clim:select-file clim-user:*lkb-top-frame* :title prompt)))
-        filename))
+  ;; This still isn't right, since it allows the user to select a
+  ;; directory rather than a file.
+  (loop for filename = (clim:select-file clim-user:*lkb-top-frame* 
+					 :title prompt
+					 :directory *last-directory*)
+      do (when filename
+	   (setq *last-directory* (directory-namestring (pathname filename))))
+      until (or (null filename)
+		(probe-file filename))
+      finally (return filename)))
 
 (defun ask-user-for-new-pathname (prompt)
   ; to match Procyon def
@@ -88,39 +95,51 @@
 ;;; the following, extraordinarily messy function, is due
 ;;; to accepting-values being a macro
 
+;;; note to self - rewrite this thing!  
 
 (defun ask-for-strings-movable (title prompt-init-pairs 
 				&optional expected-width)
-  (declare (special *temp-result* *abort-query*))
+  (declare (special *temp-result* *abort-query* *history*))
   (setf *abort-query* nil)
+  (setf *history* nil)
   (setf *temp-result* (loop for p-i-p in prompt-init-pairs
+			  for count from 0
 			  collect (cond ((equal (cdr p-i-p) ":CHECK-BOX")
 					 nil) ; Default for checkbox is nil
 					((and (consp (rest p-i-p))
 					      (eq (second p-i-p) :TYPEIN-MENU))
+					 (setf (getf *history* count)
+					   (cddr p-i-p))
 					 (third p-i-p))
 					(t (cdr p-i-p)))))
   ;; this has to be a special, because eval doesn't take any notice of lexical
   ;; environment
-  (let* ((count 0)
-	 (accepting-values-body
-	  (for p-i-p in prompt-init-pairs
-	       append
-	       (incf count)
+  (let ((accepting-values-body
+	 (loop for p-i-p in prompt-init-pairs
+	     for count from 0
+	     append
 	       (list '(terpri stream)
-		     `(setf (elt *temp-result* ,(- count 1))
-			(if (typep (elt *temp-result* ,(- count 1)) 'boolean)
-			    (clim:accept 'boolean :stream stream
-					 :default 
-					 (elt *temp-result* ,(- count 1))
-					 :prompt ,(car p-i-p)
-					 :view 'clim:toggle-button-view)
-			  (clim:accept 'string :stream stream
-				       :default 
-				       (elt *temp-result* ,(- count 1))
-				       :view '(clim:text-field-view :width ,expected-width)
-				       :prompt ,(car p-i-p))))))))
-	 
+		     `(setf (elt *temp-result* ,count)
+			(typecase (elt *temp-result* ,count)
+			  (boolean
+			   (clim:accept 'boolean :stream stream
+					:default (elt *temp-result* ,count)
+					:prompt ,(car p-i-p)
+					:view 'clim:toggle-button-view))
+			  (t
+			   (clim:accept 'string :stream stream
+					:default (elt *temp-result* ,count)
+					:view '(clim:text-field-view 
+						:width ,expected-width)
+					:prompt ,(car p-i-p)))))
+		     `(when (getf *history* ,count)
+			(clim:accept-values-command-button (stream) 
+			    "Prev"
+			  (let ((choice (clim:menu-choose
+					 (getf *history* ,count))))
+			    (when choice
+			      (setf (elt *temp-result* ,count) choice)))))))))
+
     (eval
      `(let ((stream t))
 	(restart-case

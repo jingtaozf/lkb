@@ -8,7 +8,6 @@
 
 (in-package :user)
 
-
 ;; Dialect specific stuff
 
 (defparameter *parse-window-width* 400
@@ -32,26 +31,13 @@
 ;; Define a frame class for our parse tree window
 ;;
 
-(clim:define-application-frame parse-tree ()
-  ((nodes :initform nil
-   :accessor parse-tree-nodes))
-  (:panes
-   (display  
-    (clim:outlining (:thickness 1)
-      (clim:spacing (:thickness 1)  
-	(clim:scrolling (:scroll-bars :both)
-	  (clim:make-pane 'clim:application-pane
-			  :display-function 'draw-parse-tree
-			  :text-cursor nil
-			  :width *parse-window-width* 
-			  :height *parse-window-height*
-			  :text-style *ptree-text-style*
-			  :borders nil
-			  :background clim:+white+
-			  :foreground clim:+black+
-			  :display-time nil))))))
-  (:layouts
-    (:default display)))
+(define-lkb-frame parse-tree
+    ((nodes :initform nil
+	    :accessor parse-tree-nodes))
+  :display-function 'draw-parse-tree
+  :width *parse-window-width* 
+  :height *parse-window-height*
+  :text-style *ptree-text-style*)
 
 (defun draw-new-parse-tree (topnode title horizontalp)
   (declare (ignore horizontalp))
@@ -59,8 +45,6 @@
     (setf (parse-tree-nodes pframe) topnode)
     (mp:process-run-function title 
                              #'clim:run-frame-top-level pframe)))
-
-
 
 (defun draw-parse-tree (ptree-frame stream &key max-width max-height)
   (declare (ignore max-width max-height))
@@ -95,15 +79,6 @@
          (values (tree-node-text-string edge-symbol) t))))
 
 ;;; menus
-
-;; 
-;; Add [EXIT] button
-;;
-
-(define-parse-tree-command (com-exit-parse-tree :menu "Close")
-    ()
-  (clim:frame-exit clim:*application-frame*))
-
 
 ;;
 ;; Make nodes active

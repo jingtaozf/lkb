@@ -192,10 +192,12 @@
 ;;; Type  -> identifier
 ;;; Subtype-def ->  :< type 
 ;;; Avm-def -> := Conjunction
-   (let* ((name (lkb-read istream nil))
-         (next-char (peek-char t istream nil 'eof)))
+  (let* ((position (1+ (file-position istream)))
+	 (name (lkb-read istream nil))
+	 (next-char (peek-char t istream nil 'eof)))
      (unless (eql next-char #\:)
        (error "~%Incorrect syntax following type name ~A" name))
+     #+allegro (record-source name istream position)
      (read-char istream)
      (let ((next-char2 (peek-char t istream nil 'eof)))
        (cond 

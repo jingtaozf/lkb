@@ -54,12 +54,14 @@
 
 
 (defun read-tdl-rule-entry (istream lexical)
-   (let* ((id (lkb-read istream nil))
-          (entry (make-rule :id id))
-          (non-def nil)
-          (next-char (peek-char t istream nil 'eof)))
+  (let* ((position (1+ (file-position istream)))
+	 (id (lkb-read istream nil))
+	 (entry (make-rule :id id))
+	 (non-def nil)
+	 (next-char (peek-char t istream nil 'eof)))
      (unless (eql next-char #\:)
        (error "~%Incorrect syntax following rule name ~A" id))
+     #+allegro (record-source id istream position)
      (read-char istream)
      (let ((next-char2 (peek-char t istream nil 'eof)))
        (unless (eql next-char2 #\=)

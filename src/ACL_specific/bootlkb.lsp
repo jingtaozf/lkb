@@ -1,8 +1,9 @@
 ;;; Compiling the lkb
 ;;; main functionality plus graphics
 
-
 (in-package :cl-user)
+
+(proclaim '(optimize (speed 3)))
 
 (eval-when (compile load eval)
    (shadow '(defmacro defstruct)))
@@ -81,7 +82,8 @@
          ("io-paths" "ruleinput")       ; generic CL
          ("main" "parse")       ; generic CL
          ("main" "generate")       ; generic CL
-	 ("ACL_specific" "graph")	; dialect specific - tree drawing fns
+ 	 ("ACL_specific" "graph")	; dialect specific - tree drawing fns
+	 ("ACL_specific" "emacs")	; dialect specific - emacs interface
 	 ("ACL_specific" "parseout")	; some dialect specific - parse tree fns
          ("ACL_specific" "chartout") ; some dialect specific
          ("main" "morph")       ; generic CL

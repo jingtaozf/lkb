@@ -1,37 +1,15 @@
 
 ;;; dialect specific from this point
 
-(defvar *chart-frame* nil)
-(defvar *chart-selected* nil)
+(in-package :user)
 
-(clim:define-application-frame parse-chart ()
+(define-lkb-frame chart-window 
   ((root :initform nil
 	 :accessor chart-window-root))
-  (:panes
-   (display  
-    (clim:outlining (:thickness 1)
-      (clim:spacing (:thickness 1)  
-	(clim:scrolling (:scroll-bars :both)
-	  (clim:make-pane 'clim:application-pane
-			  :display-function 'draw-chart-window
-			  :text-cursor nil
-			  :width :compute
-			  :height :compute
-			  :text-style *ptree-text-style*
-			  :end-of-line-action :allow
-			  :end-of-page-action :allow
-			  :borders nil
-			  :background clim:+white+
-			  :foreground clim:+black+
-			  :display-time nil))))))
-  (:layouts
-    (:default display)))
-
-(define-parse-chart-command (com-exit-chart-window :menu "Close")
-    ()
-  (setq *chart-frame* nil)
-  (unhighlight-edges *standard-output*)
-  (clim:frame-exit clim:*application-frame*))
+  :display-function 'draw-chart-window
+  :width :compute 
+  :height :compute
+  :text-style *ptree-text-style*)
 
 ;;; use *parse-tree-font-size* from globals.lsp
 
@@ -39,22 +17,14 @@
 (defparameter *chart-bold-font* (list "Helvetica" 
 				      (or *parse-tree-font-size* 9) :bold))
 
-
 (defun draw-chart-lattice (node title horizontalp)
   (declare (ignore horizontalp))
-  (cond (*chart-frame*
-	 (clim:enable-frame *chart-frame*)
-	 (clim:raise-frame *chart-frame*))
-	(t (let ((chart-window 
-		  (clim:make-application-frame 'parse-chart)))
-	     (setf (chart-window-root chart-window) node)
-	     (setf (clim:frame-pretty-name chart-window) title)
-	     (setf *chart-frame* chart-window)
-	     (setf *chart-selected* nil)
-	     (mp:process-run-function "CHART" 
-				      #'clim:run-frame-top-level
-				      chart-window)))))
-
+  (let ((chart-window (clim:make-application-frame 'chart-window)))
+    (setf (chart-window-root chart-window) node)
+    (setf (clim:frame-pretty-name chart-window) title)
+    (mp:process-run-function "CHART" 
+			     #'clim:run-frame-top-level
+			     chart-window)))
 
 (defun draw-chart-window (window stream &key max-width max-height)
   (declare (ignore max-width max-height))
@@ -99,10 +69,9 @@
             nil)
          (values (tree-node-text-string x) t))))
 
-(define-parse-chart-command (com-edge-menu)
+(define-chart-window-command (com-edge-menu)
     ((edge-rec 'edge :gesture :select)) 
   (when (edge-p edge-rec)
-    (unhighlight-edges *standard-output*)
     (let ((command (clim:menu-choose
 		    (append '(("Feature structure" :value fs))
 			    `((,(format nil "Edge ~A" (edge-id edge-rec))
@@ -129,83 +98,31 @@
 				    (format nil "~A" rule-name))))))
 	  (error (condition)
 	    (format clim-user:*lkb-top-stream*  
-		    "~%Error: ~A~%" condition)))))))
+		    "~%Error: ~A~%" condition))))))
+    (unhighlight-objects clim:*application-frame*))
+
 
 ;;; called from display-parse-tree - when it is called to display an edge find
 ;;; topmost chart window on screen, and ask for type hierarchy window to be
 ;;; scrolled so given edge is visible in center, and the edge highlighted
 
 (defun display-edge-in-chart (edge)
-  (when *chart-frame*
-    (clim:enable-frame *chart-frame*)
-    (clim:raise-frame *chart-frame*)
-    (let* ((stream (clim:frame-standard-output *chart-frame*))
-	   (records (collect-records edge stream)))
-      (when records
-	(scroll-to (car records) stream))
-      (highlight-edges records stream))))
+  (let ((frame (reuse-frame 'chart-window)))
+    (when frame
+      (let* ((stream (clim:frame-standard-output frame))
+	     (records (collect-records edge stream)))
+	(when records
+	  (scroll-to (car records) stream))
+	(highlight-objects records frame)))))
 
 (defun collect-records (edge stream)
   (when edge
-    (let ((record (find-edge stream (edge-id edge))))
+    (let ((record (find-object stream #'(lambda (e) (eql (edge-id e)
+							 (edge-id edge))))))
       (append (when record 
 		(list record))
 	      (mapcan #'(lambda (x) (collect-records x stream))
 		      (edge-children edge))))))
-
-;;; Center the viewport on object
-
-(defun scroll-to (record stream)
-  (let* ((vp-width (clim:bounding-rectangle-width 
-		    (clim:pane-viewport-region stream)))
-         (vp-height (clim:bounding-rectangle-height
-		     (clim:pane-viewport-region stream)))
-	 (x-pos (clim:point-x (clim:bounding-rectangle-center 
-			       (clim:output-record-parent record))))
-	 (y-pos (clim:point-y (clim:bounding-rectangle-center 
-			       (clim:output-record-parent record))))
-	 (x-max (clim:bounding-rectangle-max-x stream))
-	 (y-max (clim:bounding-rectangle-max-y stream)))
-    (clim:scroll-extent stream
-			(max 0 (min (- x-pos (floor vp-width 2))
-				    (- x-max vp-width)))
-			(max 0 (min (- y-pos (floor vp-height 2))
-				    (- y-max vp-height))))))
-
-;;; Search the display list for an edge with the right id
-
-(defun find-edge (stream id)
-  (catch 'edge
-    (find-edge-1 (slot-value stream 'clim:output-record) stream id)))
-
-(defun find-edge-1 (rec stream id)
-  (clim:map-over-output-records 
-   #'(lambda (rec)
-       (when (clim:presentationp rec) 
-	 (if (eql id (edge-id (clim:presentation-object rec)))
-	     (throw 'edge rec)))
-       (dolist (q (clim:output-record-children rec)) 
-	 (find-edge-1 q stream id)))
-   rec))
-
-;;; Show a list of highlighted edges
-
-(defun highlight-edges (edges stream)
-  (unhighlight-edges stream)
-  (setq *chart-selected* 
-    (clim:with-new-output-record (stream)
-      (clim:with-output-recording-options (stream :record t)
-	(dolist (edge edges)
-	  (when edge
-	    (multiple-value-bind (x1 y1 x2 y2)
-		(clim:bounding-rectangle* 
-		 (clim:output-record-parent edge))
-	      (clim:draw-rectangle* stream x1 y1 x2 y2 :
-				    ink clim:+flipping-ink+ :filled t))))))))
-
-(defun unhighlight-edges (stream)
-  (when *chart-selected*
-    (clim:erase-output-record *chart-selected* stream)))
 
 ;;; -----------------------------------------------------------------
 ;;; Draw chart as a shared forest

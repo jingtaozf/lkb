@@ -45,11 +45,13 @@
 ;;; Lex-def -> Lexid Avm-def . 
 ;;; Lexid  -> identifier
 ;;; Avm-def -> := Conjunction (as in tdltypeinput.lsp)
-   (let* ((name (lkb-read istream nil))
-          (constraint nil)
-          (next-char (peek-char t istream nil 'eof)))
+  (let* ((position  (1+ (file-position istream)))
+	 (name (lkb-read istream nil))
+	 (constraint nil)
+	 (next-char (peek-char t istream nil 'eof)))
      (unless (eql next-char #\:)
        (error "~%Incorrect syntax following lexicon name ~A" name))
+     #+allegro (record-source name istream position)
      (read-char istream)
      (let ((next-char2 (peek-char t istream nil 'eof)))
        (unless (eql next-char2 #\=)
