@@ -188,7 +188,8 @@
       #+(not :tty)
       (let ((display #+:allegro (system:getenv "DISPLAY") #-:allegro nil)
             (*package* (find-package #+:clim :clim-user #-:clim :lkb)))
-        (when (and (stringp display) (not (zerop (length display))))
+        (when #+:mswindows t
+              #-:mswindows (and (stringp display) (not (string= display "")))
           #+:clim
           (clim-user::set-up-lkb-interaction)
           #-:clim
