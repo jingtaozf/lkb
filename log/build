@@ -2,7 +2,6 @@ cvs update: Updating .
 M Version.lisp
 cvs update: Updating data
 cvs update: Updating lkb
-U lkb/script
 cvs update: Updating pet
 cvs update: Updating .
 cvs update: Updating doc
@@ -21,7 +20,6 @@ cvs update: Updating bin
 cvs update: Updating bin/linux
 cvs update: Updating bin/solaris
 cvs update: Updating etc
-U etc/dot.emacs
 cvs update: Updating include
 cvs update: Updating lib
 cvs update: Updating lib/Tktable2.7
@@ -78,10 +76,6 @@ cvs update: Updating lib/tk8.3/images
 cvs update: Updating log
 M log/build
 cvs update: Updating src
-U src/lkb.21.el
-U src/lkb.el
-U src/lkb.pre21.el
-cvs update: src/lkb21.el is no longer in the repository
 ? src/.l6cl
 ? src/.l6sl
 ? src/.sacl
@@ -261,15 +255,10 @@ cvs update: Updating src/glue
 cvs update: Updating src/io-general
 cvs update: Updating src/io-lilfes
 cvs update: Updating src/io-paths
-U src/io-paths/lexinput.lsp
 cvs update: Updating src/io-tdl
 cvs update: Updating src/lexicon
 cvs update: Updating src/main
-U src/main/cdb.lsp
-U src/main/clex.lsp
-U src/main/lex.lsp
-U src/main/lexport.lsp
-U src/main/psqllex.lsp
+M src/main/initializations.lsp
 cvs update: Updating src/mrs
 cvs update: Updating src/mrs/data
 cvs update: Updating src/non-core
@@ -375,7 +364,6 @@ cvs update: Updating src/tsdb/solaris
 cvs update: Updating src/tsdb/tcl
 cvs update: Updating src/tty
 cvs update: Updating src/www
-U src/www/demo.lisp
 cvs update: Updating src/www/linux
 cvs update: Updating src/xml
 **********
@@ -387,7 +375,7 @@ cvs update: Updating src/xml
 **********
 Checking in /eo/e7/apache/htdocs/src/lkb/src/version.lsp;
 /eo/e1/CVSROOT/newlkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.253; previous revision: 1.252
+new revision: 1.254; previous revision: 1.253
 done
 ( \
   cd /eo/e7/apache/htdocs/src/lkb; \
@@ -1344,7 +1332,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-6.2 [Linux (x86)] (Sep 15, 2003 6:36)
+6.2 [Linux (x86)] (Sep 15, 2003 8:44)
 Copyright (C) 1985-2002, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -1843,6 +1831,9 @@ T
 ;;; Fasl write complete
 ;   Libfasl loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/version.fasl
 ;   Loading /eo/e7/apache/htdocs/src/lkb/src/main/initializations.lsp
+Warning: ignoring extra right parenthesis on
+         #<FILE-SIMPLE-STREAM
+           #p"/eo/e7/apache/htdocs/src/lkb/src/main/initializations.lsp" for input pos 4677>
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/main/globals.lsp
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/main/globals.fasl
@@ -2399,7 +2390,7 @@ NIL
  (REQUIRE :NOCOMPILER)
  |#
 ; Libfasl from bundle code/nocompiler.fasl.
-91476808 bytes have been tenured, next gc will be global.
+90443184 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 
 T 
@@ -2633,6 +2624,9 @@ See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/version.fasl
 ; Loading /eo/e7/apache/htdocs/src/lkb/src/main/initializations.lsp
+Warning: ignoring extra right parenthesis on
+         #<FILE-SIMPLE-STREAM
+           #p"/eo/e7/apache/htdocs/src/lkb/src/main/initializations.lsp" for input pos 4677>
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/main/globals.lsp
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/main/globals.fasl
@@ -2829,7 +2823,7 @@ See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/glue/sppp.fasl
 ;;; Compiling file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/io-paths/typeinput.lsp
-8460816 bytes have been tenured, next gc will be global.
+8467488 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/io-paths/typeinput.fasl
@@ -3265,8 +3259,8 @@ gc-after-hook(): local; new: 1034256; old: 50592; pending: 72; efficiency: 93.
 ;    /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/tnt-interface.fasl
 ;;; Compiling file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/redwoods.lisp
-gc-after-hook(): local; new: 926440; old: 298872; pending: 0; efficiency: 92.
-gc-after-hook(): local; new: 1925352; old: 67584; pending: 0; efficiency: 90.
+gc-after-hook(): local; new: 926664; old: 298872; pending: 0; efficiency: 92.
+gc-after-hook(): local; new: 1925576; old: 67584; pending: 0; efficiency: 90.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/redwoods.fasl
 ;;; Fasl write complete
@@ -3395,7 +3389,7 @@ Root pages: 12
  C heap    base: #xe0000000  position: #xe0004000 reserved: 1024000
 
 
-Allegro CL Enterprise Edition 5.0.1 [SPARC] (9/15/3 6:39)
+Allegro CL Enterprise Edition 5.0.1 [SPARC] (9/15/3 8:47)
 Copyright (C) 1985-1999, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 ;; Optimization settings: safety 1, space 1, speed 1, debug 2.
 ;; For a complete description of all compiler switches given the current
@@ -3602,6 +3596,7 @@ Warning: Variable #:G17818 is never used.
 ;;; Fasl write complete
 ;   Libfasl loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/version.fasl
 ;   Loading /eo/e7/apache/htdocs/src/lkb/src/main/initializations.lsp
+Warning: ignoring extra right parenthesis
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/main/globals.lsp
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/globals.fasl
 ;;; Fasl write complete
@@ -4048,7 +4043,7 @@ USER(24): ; Autoloading for DISCARD-LOCAL-NAME-INFO:
 NIL
 [Current process: Initial Lisp Listener]
 USER(25): ; Libfasl from bundle code/nocompiler.fasl.
-33239688 bytes have been tenured, next gc will be global.
+34369888 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 T
 [Current process: Initial Lisp Listener]
@@ -4202,6 +4197,7 @@ Warning: Variable #:G22690 is never used.
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/version.fasl
 ; Loading /eo/e7/apache/htdocs/src/lkb/src/main/initializations.lsp
+Warning: ignoring extra right parenthesis
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/main/globals.lsp
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/globals.fasl
 ;;; Fasl write complete
@@ -4244,7 +4240,7 @@ Warning: Variable #:G25424 is never used.
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/dag.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/dag.fasl
-7707528 bytes have been tenured, next gc will be global.
+7707848 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/main/yadu.lsp
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/yadu.fasl
@@ -4665,8 +4661,8 @@ Warning: Variable ENCODING is never used.
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/import.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/statistics.lisp
 ; While compiling PURGE-PROFILE-CACHE:
-Warning: Variable #:G51454 is never used.
 Warning: Variable #:G51455 is never used.
+Warning: Variable #:G51456 is never used.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/statistics.fasl
 ;;; Fasl write complete
@@ -4708,7 +4704,7 @@ Warning: Variable #:G51455 is never used.
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/tnt-interface.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/redwoods.lisp
-gc-after-hook(): local; new: 2097440; old: 418184; pending: 0; efficiency: 98.
+gc-after-hook(): local; new: 2277536; old: 418624; pending: 40; efficiency: 98.
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/redwoods.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/redwoods.fasl
