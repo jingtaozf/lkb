@@ -494,36 +494,32 @@
 					 (sql-val-list-str symb-list psql-le)))))
     (unless
 	(check-lex-entry (str-2-symb (retr-val psql-le :name)))
-      (error "Invalid lexical entry -- see Lisp buffer output"))
+      (error "Invalid lexical entry ~a -- see Lisp buffer output" (retr-val psql-le :name)))
     ))
 
-;;;
-;;; top-level commands
-;;;
-
-(defun command-load-tdl-to-scratch nil
-  (catch 'abort 
-    (unless *psql-lexicon*
-      (error "~%no *psql-lexicon*!"))
-    (let ((filename (ask-user-for-existing-pathname "TDL file?")))
-      (when filename
-	(let ((lexicon (load-scratch-lex :filename filename)))
-	  (setf *postgres-current-source* 
-	    (ask-user-for-x 
-	     "Export Lexicon" 
-	     (cons "Source?" (or (extract-pure-source-from-source *postgres-current-source*) ""))))
-	  (unless *postgres-current-source* (throw 'abort 'source))
-	  (setf *postgres-current-lang* 
-	    (ask-user-for-x 
-	     "Export Lexicon" 
-	     (cons "Language code?" (or *postgres-current-lang* "EN"))))
-	  (unless *postgres-current-lang* (throw 'abort 'lang))
-	  (setf *postgres-current-country* 
-	    (ask-user-for-x 
-	     "Export Lexicon" 
-	     (cons "Country code?" (or *postgres-current-country* "UK"))))
-	  (unless *postgres-current-country* (throw 'abort 'country))
-	  (export-to-db lexicon *psql-lexicon*)
-	  (close-lex lexicon)
-	  (lkb-beep))))))
-
+(defun load-tdl-from-scratch (filename)
+  (let ((psql-lexicon *psql-lexicon*))
+    (catch 'abort 
+      (unless psql-lexicon
+	(error "~%psql-lexicon is NULL"))
+      (let ((lexicon (load-scratch-lex :filename filename)))
+	(setf *postgres-current-source* 
+	  (ask-user-for-x 
+	   "Export Lexicon" 
+	   (cons "Source?" (or (extract-pure-source-from-source *postgres-current-source*) ""))))
+	(unless *postgres-current-source* (throw 'abort 'source))
+	(setf *postgres-current-lang* 
+	  (ask-user-for-x 
+	   "Export Lexicon" 
+	   (cons "Language code?" (or *postgres-current-lang* "EN"))))
+	(unless *postgres-current-lang* (throw 'abort 'lang))
+	(setf *postgres-current-country* 
+	  (ask-user-for-x 
+	   "Export Lexicon" 
+	   (cons "Country code?" (or *postgres-current-country* "UK"))))
+	(unless *postgres-current-country* (throw 'abort 'country)) 
+	(reconnect psql-lexicon);; work around server bug...
+	(export-to-db lexicon psql-lexicon)
+	(close-lex lexicon)
+	(format t "~%(private space: ~a entries)" 
+		(length (show-scratch psql-lexicon)))))))

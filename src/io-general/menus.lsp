@@ -338,19 +338,19 @@
                                   :value 'command-set-filter-psql-lexicon
                                   ;:available-p :always
 				  )
-                  (make-menu-item :name "Load TDL entries"
+                  (make-menu-item :name "Import TDL entries"
                                   :value 'command-load-tdl-to-scratch
                                   ;:available-p :always
 				  )
-                  (make-menu-item :name "Show scratch"
+                  (make-menu-item :name "Display private entries"
                                   :value 'command-show-scratch
                                   ;:available-p :always
 				  )
-                  (make-menu-item :name "Commit scratch"
+                  (make-menu-item :name "Commit private entries"
                                   :value 'command-commit-scratch
                                   ;:available-p :always
 				  )
-                  (make-menu-item :name "Clear scratch"
+                  (make-menu-item :name "Clear private entries"
                                   :value 'command-clear-scratch
                                   ;:available-p :always
 				  )

@@ -236,6 +236,10 @@
       (pg:finish connection)
       (setf connection nil))))
 
+(defmethod reconnect ((lexicon psql-database))
+  (disconnect lexicon)
+  (connect lexicon))
+
 ;;;
 ;;; --- sql-query methods and functions
 ;;;
@@ -787,15 +791,20 @@
 	    (first rest))
 	   (t
 	    (error "too many arguments")))))
-    (when (or (null filter) (string= filter old-filter))
-      (format t "Database filter unchanged")
-      (return-from set-filter))
+    ;;    (when (or (null filter) (string= filter old-filter))
+    ;;      (format t "Database filter unchanged")
+    ;;      (return-from set-filter))
     (when (catch 'pg:sql-error
 	    (format *postgres-debug-stream* 
-		    "~%(applying new filter to db and rebuilding current grammar)")
-	    (initialize-psql-lexicon) ;; must reconnect to avoid server bug...
-	    (fn-get-records lexicon ''initialize-current-grammar filter)
-	    (empty-cache lexicon)
+		    "~%Please wait: recreating database cache for new filter")
+
+	    (unless (set-filter-aux lexicon filter)
+	      (format t "~%(LexDB filter unchanged)")
+	      (return-from set-filter))
+	    ;;(initialize-psql-lexicon) ;; must reconnect to avoid server bug...
+	    ;;(fn-get-records lexicon ''initialize-current-grammar filter)
+	    ;;(empty-cache lexicon)
+	
 	    nil)
       (lkb-beep)
       (set-filter lexicon))
@@ -806,12 +815,12 @@
 	    "~%(active lexical entries: ~a )" 
 	    (fn-get-val lexicon ''size-current-grammar))))
 
-(defmethod set-filter-text-only ((lexicon psql-database) filter)
-  (initialize-psql-lexicon) ;; must reconnect to avoid server bug...
-  (fn-get-records lexicon 
-		  ''initialize-current-grammar 
-		  filter)
-  (empty-cache lexicon))
+(defmethod set-filter-aux ((lexicon psql-database) filter)
+  (unless (or (null filter) 
+	      (equal (get-filter lexicon) filter))
+    (initialize-psql-lexicon) ;; must reconnect to avoid server bug...
+    (fn-get-records lexicon ''initialize-current-grammar filter)
+    (empty-cache lexicon)))
 
 (defun set-filter-psql-lexicon (&rest rest)
   (apply #'set-filter 
@@ -822,94 +831,106 @@
 ;;;
 
 (defun command-merge-into-psql-lexicon (&rest rest)
-  (let ((filename
-	 (cond
-	  ((= (length rest) 0)
-	   (ask-user-for-existing-pathname "CSV file?"))
-	  ((= (length rest) 1)
-	   (first rest))
-	  (t
-	   (error "too many arguments")))))
-    (if (and
-	 (> (- (length filename) 4) 
-	    0)
-	 (equal (subseq filename 
-			(- (length filename) 
-			   4)) 
-		".csv"))
-	(setf filename (subseq filename 
-			       0 
-			       (- (length filename) 4))))
-    (when filename
-      (format t 
-	      "~%Please wait: merging files ~a.* into lexical database ~a" 
-	      filename 
-	      (dbname *psql-lexicon*))
-      (merge-into-psql-lexicon *psql-lexicon* filename)
-      (lkb-beep))))
+  (time
+   (let ((filename
+	  (cond
+	   ((= (length rest) 0)
+	    (ask-user-for-existing-pathname "CSV file?"))
+	   ((= (length rest) 1)
+	    (first rest))
+	   (t
+	    (error "too many arguments")))))
+     (if (and
+	  (> (- (length filename) 4) 
+	     0)
+	  (equal (subseq filename 
+			 (- (length filename) 
+			    4)) 
+		 ".csv"))
+	 (setf filename (subseq filename 
+				0 
+				(- (length filename) 4))))
+     (when filename
+       (format t 
+	       "~%Please wait: merging files ~a.* into lexical database ~a" 
+	       filename 
+	       (dbname *psql-lexicon*))
+       (merge-into-psql-lexicon *psql-lexicon* filename)
+       (lkb-beep)))))
   
 (defun command-dump-psql-lexicon (&rest rest)
-  (let ((filename
-	 (cond
-	  ((= (length rest) 0)
-	   (ask-user-for-new-pathname "CSV file?"))
-	  ((= (length rest) 1)
-	   (first rest))
-	  (t
-	   (error "too many arguments")))))
-    (if (and
-	 (> (- (length filename) 
-	       4) 
-	    0)
-	 (equal (subseq filename (- (length filename) 
-				    4)) 
-		".csv"))
-	(setf filename 
-	  (subseq filename 
-		  0 
-		  (- (length filename) 
-		     4))))
-    (when filename
-      (format t 
-	      "~%Please wait: dumping lexical database ~a to files ~a.*" 
-	      (dbname *psql-lexicon*) 
-	      filename)
-      (dump-psql-lexicon filename)
-      (lkb-beep))))
+  (time
+   (let ((filename
+	  (cond
+	   ((= (length rest) 0)
+	    (ask-user-for-new-pathname "CSV file?"))
+	   ((= (length rest) 1)
+	    (first rest))
+	   (t
+	    (error "too many arguments")))))
+     (if (and
+	  (> (- (length filename) 
+		4) 
+	     0)
+	  (equal (subseq filename (- (length filename) 
+				     4)) 
+		 ".csv"))
+	 (setf filename 
+	   (subseq filename 
+		   0 
+		   (- (length filename) 
+		      4))))
+     (when filename
+       (format t 
+	       "~%Please wait: dumping lexical database ~a to files ~a.*" 
+	       (dbname *psql-lexicon*) 
+	       filename)
+       (dump-psql-lexicon filename)
+       (lkb-beep)))))
   
 (defun command-export-lexicon-to-tdl (&rest rest)
-  (let ((filename
-	 (cond
-	  ((= (length rest) 0)
-	   (ask-user-for-new-pathname "TDL file?"))
-	  ((= (length rest) 1)
-	   (first rest))
-	  (t
-	   (error "too many arguments")))))
-    (when filename
-      (export-lexicon-to-tdl :file filename)
-      (lkb-beep))))
+  (time
+   (let ((filename
+	  (cond
+	   ((= (length rest) 0)
+	    (ask-user-for-new-pathname "TDL file?"))
+	   ((= (length rest) 1)
+	    (first rest))
+	   (t
+	    (error "too many arguments")))))
+     (when filename
+       (export-lexicon-to-tdl :file filename)
+       (lkb-beep)))))
   
 (defun command-set-filter-psql-lexicon (&rest rest)
-  (apply 'set-filter-psql-lexicon rest)
-  (lkb-beep))
+  (time
+   (apply 'set-filter-psql-lexicon rest))
+   (lkb-beep))
 
 (defun command-clear-scratch nil
-  (format t "~%Clearing scratch entries")
-  (close-scratch-lex)
-  (lkb-beep))
+  (let ((count-priv (length (show-scratch *psql-lexicon*))))
+    (format t "~%Clearing ~a entries from private space" count-priv)
+    (time
+     (close-scratch-lex))
+    (lkb-beep)))
 
 (defun command-commit-scratch nil
-  (format t "~%Committing scratch entries")
-  (commit-scratch-lex)
-  (lkb-beep))
+  (let ((count-priv (length (show-scratch *psql-lexicon*))))
+    (format t "~%Moving ~a private entries to public space"
+	    count-priv)
+    (time
+     (commit-scratch-lex))
+    (lkb-beep)))
 
 (defun command-show-scratch nil
-  (format t "~%Contents of scratch: ~a"
-	  (mapcar 
-	   #'(lambda (x) (cdr (first x))) 
-	   (show-scratch *psql-lexicon*)))
-  (lkb-beep))
+  (let ((scratch
+	 (mapcar 
+	  #'(lambda (x) (cdr (first x))) 
+	  (show-scratch *psql-lexicon*))))
+    (format t "~%Contents of scratch (~a entries): ~a"
+	    (length scratch)
+	    scratch)
+    (lkb-beep)))
 
 ;;;
 ;;; cache
@@ -947,8 +968,8 @@
 (defun i (&optional (slot 'record-cache)) (inspect (slot-value *lexicon* slot)))
 (defun command-index-new-lex-entries nil
   (format t "~%Indexing new lexical entries for generator")
-  (index-new-lex-entries *lexicon*)
-  (format t "~%done~%")
+  (time
+   (index-new-lex-entries *lexicon*))
   (lkb-beep))
 
 (defun index-new-lex-entries (lexicon)
@@ -977,11 +998,13 @@
     (forget-psort lexicon lexid))
 
 (defun command-vacuum-current-grammar nil
-  (vacuum-current-grammar *lexicon*))
+  (time
+   (vacuum-current-grammar *lexicon*)))
 
 (defun command-vacuum-public-revision nil
-  (vacuum-public-revision *lexicon*)
-  (lkb-beep))
+  (time
+   (vacuum-public-revision *lexicon*))
+   (lkb-beep))
 
 (defmethod vacuum-current-grammar ((lexicon psql-database) &key verbose)
   (let ((command
@@ -1006,3 +1029,17 @@
       (format t "~%Please wait: vacuuming public table")
       (connect l2)
       (run-command l2 command))))
+
+(defun command-load-tdl-to-scratch (&rest rest)
+  (time
+   (let ((filename
+	  (cond
+	   ((= (length rest) 0)
+	    (ask-user-for-existing-pathname "TDL file?"))
+	   ((= (length rest) 1)
+	    (first rest))
+	   (t
+	    (error "too many arguments")))))
+     (load-tdl-from-scratch filename)
+     (lkb-beep))))
+  
