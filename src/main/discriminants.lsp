@@ -8,6 +8,8 @@
 
 (def-lkb-parameter *tree-discriminants-mode* :classic)
 
+(def-lkb-parameter *tree-results-show* :tree)
+
 (defvar *tree-discriminants-chart* nil)
 
 (defstruct discriminant

@@ -337,6 +337,7 @@
    (gold :initform nil :accessor compare-frame-gold)
    (lead :initform nil :accessor compare-frame-lead)
    (mode :initform *tree-discriminants-mode* :accessor compare-frame-mode)
+   (show :initform *tree-results-show* :accessor compare-frame-show)
    (discriminants :initform nil :accessor compare-frame-discriminants)
    (decisions :initform nil :accessor compare-frame-decisions)
    (confidence :initform nil :accessor compare-frame-confidence)
