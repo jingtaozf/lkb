@@ -272,20 +272,23 @@ with an ARG4 without changing the relation type
 |#
 
 (defun convert-vit-args-to-mrs (item args db-item)
-  (let* ((mrs-args (find-mrs-args db-item))
-        (internal-args (cdr (p-term-args item)))
-        (dbextra (semdbitem-extra db-item))
-        (arg4-mapping (find-arg4-mapping args mrs-args)))
-    (append
-    (for mrs-arg in mrs-args
+  (multiple-value-bind (mrs-args rel-type) 
+      (find-mrs-args db-item)
+    (let* ((internal-args (cdr (p-term-args item)))
+	   (dbextra (semdbitem-extra db-item))
+	   (arg4-mapping (find-arg4-mapping args mrs-args)))
+      (append
+       (for mrs-arg in mrs-args
          filter
          (let* ((mrs-arg-feature (car mrs-arg))
                 (mrs-arg-fstring (string mrs-arg-feature))
                 (mrs-arg-type (cdr mrs-arg))
                 (vit-match nil)
                 (res
-           (unless (member mrs-arg-feature '(cl-user::handel
-                                             cl-user::label))
+           (unless (or (and (equal mrs-arg-feature 'cl-user::event)
+			    (not (equal-or-subtype rel-type 'cl-user::v_event_rel)))
+		       (member mrs-arg-feature '(cl-user::handel
+						 cl-user::label)))
              (cond ((vit-external-arg-p mrs-arg-fstring dbextra)
                     (setf vit-match 
                       (find-vit-external-arg args 
@@ -337,7 +340,7 @@ with an ARG4 without changing the relation type
                   'cl-user)
           (convert-vit-arg-val-to-mrs 
            cl-user::*toptype*
-           (third (p-term-args leftover))))))))
+           (third (p-term-args leftover)))))))))
          
 
 (defun find-arg4-mapping (vit-args mrs-args)
@@ -406,11 +409,13 @@ with an ARG4 without changing the relation type
                                                    relname)
                  (cl-user::get-type-entry relname))))
     (if known-type
-        (sort
+	(values 
+	 (sort
          ;; feat-sort-func should accept this
          ;; it returns an alist of features and type values
          (cl-user::type-signature known-type)
          #'feat-sort-func)
+	 relname)
       (error "Unknown relation ~A" relname))))
 
 (defun make-dummy-mrs-var (type)
