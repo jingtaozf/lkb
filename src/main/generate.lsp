@@ -103,12 +103,7 @@
         (remove-if #'(lambda (x) (member x '(AN) :test #'eq))
 					; *** e.g. a -> an
 		   found-lex-list
-		   :key #'mrs::found-lex-lex-id))
-       (empty
-	(mrs::possibly-applicable-null-semantics input-sem)
-	;; this must be called after mrs::collect-lex-entries-from-mrs since
-	;; the latter sets up mrs::*null-semantics-found-items* for it
-	))
+		   :key #'mrs::found-lex-lex-id)))
     #|
     (for lex in filtered
     do
@@ -116,7 +111,7 @@
     (mrs::found-lex-rule-list lex)))
     |#
     (if filtered
-	(chart-generate input-sem (append filtered empty) 
+	(chart-generate input-sem filtered 
 			mrs::*possible-grules*)
       (progn
 	(format t "~%Some lexical entries could not be found from MRS ~

@@ -7,6 +7,11 @@
 (defun clear-mrs-rules nil
   (setf *ordered-mrs-rule-list* nil))
 
+(defparameter *gen-rule-list* nil)
+
+(defun clear-gen-rules nil
+  (setf *gen-rule-list* nil))
+
 ;;; Reading in rules expressed in tdl format
 ;;; 
 (defstruct (funny-unification)
@@ -24,7 +29,11 @@
 
 ;;; Conversion rules
 
-
+(defun read-gen-rule-file nil  
+   (let* ((file-name 
+            (ask-user-for-existing-pathname "Heuristics file?")))
+      (when file-name
+         (read-mrs-rule-file-aux file-name t))))
 
 (defun read-mrs-rule-file nil  
    (let* ((file-name 
@@ -37,7 +46,7 @@
   "list of rules expressed as fs for debugging")
 
 
-(defun read-mrs-rule-file-aux (file-name)
+(defun read-mrs-rule-file-aux (file-name &optional generator-p)
    (clear-mrs-rules)
   (let ((*tdl-expanded-syntax-function* 
          #'read-mrs-rule-expanded-syntax)
@@ -46,9 +55,9 @@
          (istream file-name :direction :input)
          (format t "~%Reading in rule file")
          (setf *mrs-rule-fs-list* nil)
-         (read-mrs-rule-stream istream))))
+         (read-mrs-rule-stream istream generator-p))))
 
-(defun read-mrs-rule-stream (istream) 
+(defun read-mrs-rule-stream (istream generator-p) 
    (loop
       (let ((next-char (peek-char t istream nil 'eof)))
          (when (eql next-char 'eof) (return))
@@ -56,9 +65,9 @@
                  (read-line istream))
                ; one line comments
                ((eql next-char #\#) (read-tdl-comment istream))
-               (t (read-mrs-rule-entry istream))))))
+               (t (read-mrs-rule-entry istream generator-p))))))
 
-(defun read-mrs-rule-entry (istream)
+(defun read-mrs-rule-entry (istream generator-p)
    (let* ((id (read istream))
           (non-def nil)
           (next-char (peek-char t istream nil 'eof)))
@@ -81,8 +90,11 @@
                 (push unif normal-unifs)))
        (let* ((temp-fs (process-unifications normal-unifs))
               (entry (if temp-fs
+                         (if generator-p
+                             (mrs::construct-gen-rule-from-fs id temp-fs
+                                                            funny-unifs)
                          (mrs::construct-munge-rule-from-fs id temp-fs
-                                                            funny-unifs))))
+                                                            funny-unifs)))))
          (push temp-fs *mrs-rule-fs-list*) ; just for debugging
          (if entry
              (push entry *ordered-mrs-rule-list*))))))

@@ -465,7 +465,9 @@
           (dolist (actual-fvpair actual-flist)
             (if (same-names (fvpair-feature input-fvpair)
                      (fvpair-feature actual-fvpair))
-                (if 
+                (if (and (match-var-extras (fvpair-value input-fvpair)
+                                           (fvpair-value actual-fvpair)
+                                           bindings)
                     (if 
                         (member
                          (fvpair-feature input-fvpair)
@@ -479,12 +481,20 @@
                             (bindings-match
                              (get-var-num (fvpair-value input-fvpair))
                              (get-var-num (fvpair-value actual-fvpair))
-                             bindings))))
+                             bindings)))))
                     (return t)
                   (return nil)))))
       input-flist)
       bindings))
 
+(defun match-var-extras (value1 value2 bindings)
+  (if (and (var-p value1) (var-p value2))
+      (let ((extra1 (var-extra value1))
+            (extra2 (var-extra value2)))
+        (if (and extra1 extra2)
+            (compatible-extra-vals extra1 extra2 bindings)
+            t))
+      t))
 
 
 ;;; once we've matched the input, we need to remove the matching relations

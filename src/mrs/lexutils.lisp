@@ -155,7 +155,7 @@
 ;;; If the following is evaluated, then the parse-tsdb-sentences
 ;;; code will call the fn on each parse
 #|
-(defparameter *do-something-with-parse* 'check-lex-retrieval)
+(defparameter *do-something-with-parse* 'batch-check-lex-retrieval)
 |#
 
 (defun check-lex-retrieval nil
@@ -188,6 +188,36 @@
                   (format t "~%Entries not retrieved ~{~A ~}" undergen)) 
                 (when overgen
                   (format t "~%Extra entries retrieved  ~{~A ~}" overgen))))))))
+
+(defun batch-check-lex-retrieval nil
+  (format t "~%~A" *sentence*)
+  (for parse-res in *parse-record*
+       do
+       (let* ((lrules-and-entries-used (collect-parse-base parse-res))
+              (mrs (car (mrs::extract-mrs (list parse-res) t))))
+         (let
+             ((identified-entry-sets
+               (mrs::collect-lex-entries-from-mrs mrs)))
+           (let ((retrieved-ids
+                  (for res in identified-entry-sets
+                       collect
+                       (mrs::found-lex-lex-id-fn (car res))))
+                 (overgen nil)
+                 (undergen nil))
+             (for id in retrieved-ids
+                  do
+                  (unless
+                      (member id lrules-and-entries-used :key #'car)
+                    (push id overgen)))
+             (for id-and-rules in lrules-and-entries-used
+                  do
+                  (unless
+                      (member (car id-and-rules) retrieved-ids)
+                    (push (car id-and-rules) undergen)))
+             (when undergen
+               (format t "~%Entries not retrieved ~{~A ~}" undergen)) 
+             (when overgen
+               (format t "~%Extra entries retrieved  ~{~A ~}" overgen)))))))
 
 ;;; needs to be made more sophisticated to deal with lex rules etc
 

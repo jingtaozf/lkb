@@ -80,4 +80,5 @@
        ((:file "lexutils")
         (:file "lexindex")        ; LKB specific - indexing
 					; entries etc on semantics
-       (:file "lexlookup")))))   ; LKB specific - retrieving
+       (:file "lexlookup")           ; LKB specific - retrieving
+       (:file "genpredict")))))   ; LKB specific - null semantics

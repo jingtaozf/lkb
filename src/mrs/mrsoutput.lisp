@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.18  1999/04/13 01:01:57  aac
+;; First attempt at doing qeq constraints
+;;
 ;; Revision 1.17  1999/04/09 23:20:56  danf
 ;; Merged WK's changes
 ;;
@@ -360,12 +363,12 @@
                                             :value (create-coord-list 
                                                     next-fs))
                                feat-list))
-                        ((is-atomic next-fs)
+                        ((not (fs-arcs next-fs))
                          (push (make-fvpair :feature new-path
                                             :value (create-type 
                                                     (fs-type next-fs)))
                                feat-list))
-                        (t
+                        (t 
                          (setf feat-list 
                            (append feat-list
                                    (create-index-property-list 

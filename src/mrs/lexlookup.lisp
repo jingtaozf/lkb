@@ -64,7 +64,6 @@ at this point).
 (defun found-lex-inst-fs-fn (item)
   (found-lex-inst-fs item))
 
-
 (defvar *possible-grules* nil)
 
 (defun collect-lex-entries-from-mrs (psoa)
@@ -98,11 +97,12 @@ at this point).
             ;;; which are on the list to be accounted for
           (setf *possible-grules*
             (find-possible-rules grammar-rels nil))
-          (instantiate-null-semantic-items lrules)
-          (for possible in possibles
-               append
-               ; check unification etc
-               (create-instantiated-structures possible lrules))))))
+          (append 
+           (instantiate-null-semantic-items psoa lrules)
+           (for possible in possibles
+                append
+                                        ; check unification etc
+                (create-instantiated-structures possible lrules)))))))
                                          
 
 (defun find-lexical-candidates (lex-rels lex-rule-rels grammar-rels
@@ -466,37 +466,36 @@ at this point).
 ;;; An entry may have to be added to the bag without evidence in 
 ;;; the input semantics 
 
-;;; null semantics lexical entries - instantiate a global with the
+;;; null semantics lexical entries - including the
 ;;; result of all the lexical rule applications.
 
-(defvar *null-semantics-found-items* nil)
-
-(defun instantiate-null-semantic-items (lrules)
-  (setf *null-semantics-found-items* 
-        (let ((real-ids *empty-semantics-lexical-entries*))
+(defun instantiate-null-semantic-items (input-sem lrules)
+  (let* ((real-ids (if *ordered-mrs-rule-list*
+                       (genpredict-mrs-struct input-sem 
+                                              *ordered-mrs-rule-list*)
+                     (let ((found-list (apply #'append 
+                                   (cl-user::retrieve-lex-from-parses))))
+                      (for empty in *empty-semantics-lexical-entries*
+                           filter
+                           (if (member empty found-list)
+                               empty)))))
+        (instantiated-sets
           (for lex-id in real-ids
-               collect
-               (let* ((lex-e (cl-user::get-psort-entry lex-id))
-                      (base-fs (cl-user::lex-or-psort-full-fs lex-e))
-                      (new-found-str
-                       (make-found-lex 
-                        :lex-id lex-id :inst-fs base-fs)))
-                 (apply-instantiated-rules-base
-                  new-found-str lrules))))))
-
-(defun possibly-applicable-null-semantics (input-sem)
-  ;;; this is called by the generator
-  ;;; eventually this has to filter the null semantics items
-  ;;; on the basis of the input semantics
-  ;;; but for now we cheat ...
-  (declare (ignore input-sem))
-  (let ((lex-ids-used (apply #'append (cl-user::retrieve-lex-from-parses))))
-    (remove-if-not #'(lambda (x) (member
-                                      (found-lex-lex-id x) 
-                                      lex-ids-used))
-             (apply #'append *null-semantics-found-items*))))
-
-
+               filter
+               (let ((lex-e (cl-user::get-psort-entry lex-id)))
+                 (if lex-e
+                   (let*
+                      ((base-fs (cl-user::lex-or-psort-full-fs lex-e))
+                       (new-found-str
+                        (make-found-lex 
+                         :lex-id lex-id :inst-fs base-fs)))
+                     (apply-instantiated-rules-base
+                      new-found-str lrules))
+                   (progn 
+                     (format t 
+                             "~%Warning: invalid generation rule --- ~A does not exist" lex-id)
+                     nil))))))
+    instantiated-sets))
 
 ;;; Lexical rules
 ;;;
