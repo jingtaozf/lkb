@@ -47,8 +47,12 @@
     (with-open-file 
         (ostream file-name :direction :output :if-exists :supersede)
       (for type-name in (sort-by-appearance-order
-                         (copy-list (append *ordered-type-list*
-                                *ordered-glbtype-list*)) sig-only-p)
+                         (copy-list
+                          ; remove unaccessed leaf types
+                          (remove-if-not 
+                           #'(lambda (x) (get-type-entry x))
+                           (append *ordered-type-list*
+                                   *ordered-glbtype-list*))) sig-only-p)
            do
            (let ((entry (get-type-entry type-name)))                  
              (ecase syntax
@@ -57,7 +61,25 @@
                (:path (output-type-as-paths type-name entry
                                          ostream))
                (:lilfes (output-type-as-lilfes type-name entry
-                                         ostream sig-only-p))))))))
+                                               ostream sig-only-p))))))))
+
+(defun output-full-constraints (syntax type-list &optional file-name)
+  (unless (member syntax '(:lilfes))
+    (error "Unsupported syntax specifier ~A" 
+           syntax))
+  (unless file-name 
+    (setf file-name
+         (ask-user-for-new-pathname "Output file?")))
+  (when file-name 
+    (with-open-file 
+        (ostream file-name :direction :output :if-exists :supersede)
+      (for type-name in (sort-by-appearance-order
+                         (copy-list type-list) nil)
+           do
+           (let ((entry (get-type-entry type-name)))                  
+             (ecase syntax
+               (:lilfes (output-full-constraint-as-lilfes 
+                         type-name entry ostream))))))))
 
 ;;; Neither of these lexical output functions
 ;;; will work from a cached lexicon
@@ -92,7 +114,7 @@
                  (format t "~%Warning ~A not found" lex-name))))))))
 
 
-(defun output-lex-and-derived (syntax &optional file-name)
+(defun output-lex-and-derived (syntax &optional file-name ids-used)
   ;;; lexicon and everything that can be derived from it
   ;;; via lexical rule.  Ordered by base form.
   (unless file-name 
@@ -102,7 +124,10 @@
     (with-open-file 
         (ostream file-name :direction :output :if-exists :supersede)
       (let ((count 0))
-        (for lex-name in (reverse *ordered-lex-list*)
+        (unless (or ids-used *ordered-lex-list*)
+          (cerror "Continue without lexicon" 
+                  "No lexicon list - lexicon must be read in from scratch"))
+        (for lex-name in (or ids-used (reverse *ordered-lex-list*))
              do            
              (if (> count 100)
                (progn (clear-expanded-lex)
@@ -248,8 +273,11 @@
     (setf *complete-order-alist* nil)
     (for type in types
          do
-         (let ((types-used (extract-used-types type sig-only-p)))
-           (push (cons type types-used) type-order-alist)))
+        (let ((type-entry (get-type-entry type)))
+          (when type-entry
+            ;; ignore unused leaf types
+            (let ((types-used (extract-used-types type sig-only-p)))
+              (push (cons type types-used) type-order-alist)))))
     (for type in types
          do
          (construct-all-ref-types type type-order-alist nil))
@@ -282,23 +310,23 @@
   ;;; structure
   (declare (special *res*))
   (setf *res* nil)
-  (let* ((type-entry (get-type-entry type))
-         (type-local-fs (if type-entry (type-local-constraint type-entry))))
-    (unless type-entry (error "%Invalid type ~A" type))
-    (when type-local-fs
-      (for feat in (top-level-features-of type-local-fs)
-           do
-           (let ((internal-fs (get-dag-value type-local-fs feat)))
-             (if sig-only-p
-               (pushnew
-                (let ((val (type-of-fs internal-fs)))
-                  (if (listp val) (car val) val))
-                *res* :test #'eq)
-               (collect-types-from-fs internal-fs)))))
-    (for parent in (type-parents type-entry)
-         do 
-         (pushnew parent *res*))
-    *res*))
+  (let ((type-entry (get-type-entry type)))
+    (when type-entry 
+      (let ((type-local-fs (type-local-constraint type-entry)))
+        (when type-local-fs
+          (for feat in (top-level-features-of type-local-fs)
+               do
+               (let ((internal-fs (get-dag-value type-local-fs feat)))
+                 (if sig-only-p
+                     (pushnew
+                      (let ((val (type-of-fs internal-fs)))
+                        (if (listp val) (car val) val))
+                      *res* :test #'eq)
+                   (collect-types-from-fs internal-fs)))))
+        (for parent in (type-parents type-entry)
+             do 
+             (pushnew parent *res*))
+        *res*))))
          
 
 (defun collect-types-from-fs (dag-instance)
