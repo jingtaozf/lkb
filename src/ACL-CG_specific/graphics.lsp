@@ -1,5 +1,14 @@
 (in-package :cl-user)
 
+;;; the following is currently a no-op - it's
+;;; defined for the CLIM version - 
+;;; something similar may be needed here eventually
+
+(defmacro with-output-to-top (() &body body)
+  `(progn
+     ,@body
+     (terpri)))
+
 (defun move-to-x-y (stream x y)
    (cg:move-to-x-y stream x y))
 

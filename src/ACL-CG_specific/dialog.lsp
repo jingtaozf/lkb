@@ -177,7 +177,11 @@
       (if (eql return-values :cancel) nil return-values)))
 
 
-(defun ask-for-lisp-movable (title prompt-init-pairs &optional expected-width)
+(defun ask-for-lisp-movable (title prompt-init-pairs &optional 
+                              expected-width choices)
+   (declare (ignore choices))
+   ;; CLIM version uses choices when there's a specified list
+   ;; of things
    (let* ((spacing 10) (button-height 20) 
          (font (lkb-dialog-font))
          (prompt-width 
@@ -209,4 +213,5 @@
 
 
 (defun ask-user-for-multiple-choice (title &rest args)
-   (cg:ask-user-for-choice-from-list title args))
+  (cg:ask-user-for-choice-from-list title args))
+

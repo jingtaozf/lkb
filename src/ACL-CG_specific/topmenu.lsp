@@ -84,9 +84,9 @@
 
 (defun make-lkb-submenu-item (&key menu-title menu-items available-p)
   (unless (eql available-p :always) 
-    (pushnew name *lkb-menu-disabled-list* :test #'equal))
+    (pushnew menu-title *lkb-menu-disabled-list* :test #'equal))
   (when (eql available-p :mrs) 
-    (pushnew name *lkb-menu-mrs-list* :test #'equal))
+    (pushnew menu-title *lkb-menu-mrs-list* :test #'equal))
   (make-menu-item :name menu-title      
                   :value
                   (open-top-level-menu menu-items)
@@ -119,8 +119,8 @@
     (:big  (create-big-lkb-system-menu)))
    (if *lkb-exe-p* (make-lkb-top-frame)
       (make-lkb-top-menu))
-   (when *ordered-type-list*
-    (enable-type-interactions)))
+   (when cl-user::*current-grammar-load-file*
+      (enable-type-interactions)))
 
 
 (defun make-lkb-top-frame nil
