@@ -177,7 +177,7 @@
       ;; someone running a binary, can set the PSQL environment variable.
       ;;
       #+:psql
-      (when (or (featurep :psql) (system:getenv "PSQL"))
+      (when (or (find :psql *features*) (system:getenv "PSQL"))
         (psql-initialize))
 
       ;;
