@@ -59,7 +59,8 @@
   (define-key tdl-mode-map "\177" 'backward-delete-char-untabify)
   (define-key tdl-mode-map "\C-c;" 'comment-region)
   (define-key tdl-mode-map "\e\034" 'tdl-indent-region)
-  (define-key tdl-mode-map "\t" 'tdl-indent-command))
+  (define-key tdl-mode-map "\t" 'tdl-indent-command)
+  (define-key tdl-mode-map [double-down-mouse-1] 'tdl-show-type))
 
 (defvar tdl-mode-syntax-table nil
   "Syntax table in use in TDL-mode buffers.")
@@ -109,6 +110,7 @@ TDL mode supports:
 - connection to TDL/Common Lisp
 - syntactic coloring (font-lock)
 - comment/uncomment with comment-region
+- double clicking on a type shows its hierarchy (via the lkb)
 
 Known bugs: TDL mode may be confused by strange comment lines and strings.
 
@@ -450,9 +452,24 @@ with no args, if that value is non-nil."
       (setq char (aref string i)))
     newstring))
 
-;; TODO
-;; add link to show type in hierarchy on request...
-;;    - bind mouse-button-2 with word-at-point to show-type-tree
+;;
+;; show type in hierarchy on double click
+;; assumes lkb and a grammar are loaded
+;;
+
+(defun tdl-show-type  ()
+  "Show type of thing at point using lkb"
+  (interactive)
+  ;; assume that a type was clicked (is checked later)
+  (setq tdl-type-at-point (thing-at-point 'symbol))
+  ;; remove text properties
+  (set-text-properties 0 (length tdl-type-at-point) nil tdl-type-at-point)
+  ;; set up 
+  (fi:eval-in-lisp 
+   (format "(setq *last-type-name* '%s)"
+	   tdl-type-at-point))
+  ;; defined in lkb, shows *last-type-name*
+  (show-type-tree))  
 
 
 ;;;STUFF FOR MINOR MODE (not used)
