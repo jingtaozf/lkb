@@ -37,15 +37,13 @@
     "HINST" "NHINST"))
 
 (defstruct eds
-  top relations hcons)
+  top relations hcons status)
 
 (defmethod print-object ((object eds) stream)
   (if *eds-pretty-print-p*
     (let ((cyclicp (ed-cyclic-p object))
           (fragmentedp (ed-fragmented-p object)))
       (loop
-          with *eds-include-vacuous-relations-p*
-          = (if fragmentedp t *eds-include-vacuous-relations-p*)
           initially
             (format 
              stream 
@@ -56,8 +54,16 @@
              cyclicp (and cyclicp fragmentedp) fragmentedp
              (eds-relations object))
           for ed in (eds-relations object)
-          unless (or (ed-bleached-p ed) (ed-vacuous-p ed)) do
-            (format stream " ~a~%" ed)
+          unless (and (null (ed-status ed))
+                      (or (ed-bleached-p ed) (ed-vacuous-p ed))) do
+            (format 
+             stream 
+             "~c~a~%" 
+             (cond
+              ((member :cyclic (ed-status ed)) #\|)
+              ((member :fragmented (ed-status ed)) #\|)
+              (t #\Space))
+             ed)
           finally
             (format stream "}~%")))
     (call-next-method)))
@@ -65,7 +71,7 @@
 (defstruct ed
   handle id type
   predicate arguments carg
-  raw mark)
+  raw status mark)
 
 (defmethod print-object ((object ed) stream)
   (if *eds-pretty-print-p*
@@ -322,9 +328,15 @@
 
 (defun ed-cyclic-p (eds)
   (loop
+      with return = nil
       for ed in (eds-relations eds)
       unless (or (ed-bleached-p ed) (null (ed-arguments ed))) do
-        (unless (ed-walk ed) (return ed))))
+        (unless (ed-walk ed)
+          (push :cyclic (ed-status ed))
+          (setf return t))
+      finally 
+        (when return (push :cyclic (eds-status eds)))
+        (return return)))
 
 (defun ed-walk (ed &optional (start (list (ed-id ed)) startp))
   ;;
@@ -367,8 +379,12 @@
                                 (equal (ed-id (rest argument)) id)) do
                         (push ed agenda)))))
     (loop
+        with return = nil
         for ed in (eds-relations eds)
         when (and (not (ed-bleached-p ed)) (not (eq (ed-mark ed) mark)))
-        return ed)))
-
-                                      
+        do 
+          (push :fragmented (ed-status ed))
+          (setf return t)
+        finally 
+          (when return (push :cyclic (eds-status eds)))
+          (return return))))
