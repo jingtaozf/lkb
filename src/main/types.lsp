@@ -250,8 +250,10 @@
     (let ((ptype (instance-type-parent type1)))
       (if ptype
 	  (or (eq ptype type2)
-	      (member (get-type-entry type2) (retrieve-ancestors ptype)))
-	(member (get-type-entry type2) (retrieve-ancestors type1))))))
+	      (member (get-type-entry type2) (retrieve-ancestors ptype) 
+		      :test #'eq))
+	(member (get-type-entry type2) (retrieve-ancestors type1)
+		:test #'eq)))))
 
 
 (defun atomic-type-p (type-name)
@@ -275,35 +277,6 @@
    ;; be exercised
    (setf *type-cache* nil))
 
-#|
-;;; investigate effectiveness of subtype cache
-(let ((max 0) (longest nil))
-   (maphash
-      #'(lambda (key entry)
-           (when (hash-table-p entry) (print (list key entry)))
-           (when (and (consp entry) (> (length entry) max))
-              (setq max (length entry) longest (cons key entry))))
-      *type-cache*)
-   (values max longest))
-|#
-
-(defun greatest-common-subtype (type1 type2)
-  ;; implemented as a memo function. In practice we won't see anything
-  ;; like all possible combinations of arguments so best not to
-  ;; attempt to pre-compute the cache contents
-  ;;
-  ;; we expect both args to be lisp atoms, but either or both could be
-  ;; strings/string type, or instance types. The latter are cached,
-  ;; but not the former
-  (cond 
-   ((eq type1 type2) type1)
-   ((arrayp type1)			; a string?
-    (when (or (equal type1 type2) (string-type-p type2))
-      type1))
-   ((arrayp type2) 
-    (when (string-type-p type1) type2))
-   (t
-    (cached-greatest-common-subtype type1 type2 nil))))
 
 
 (defun cached-greatest-common-subtype (type1 type2 type1-atomic-p)
@@ -359,6 +332,55 @@
 	   (setf (gethash type2 entry) (cons subtype constraintp))))
 	(values subtype constraintp)))))
 
+#+ignore
+(defmacro cached-greatest-common-subtype (type1 type2 type1-atomic-p)
+  `(let* ((t1 ,(if type1-atomic-p 
+		   `(car ,type1) 
+		 `,type1))
+	  (t2 ,type2)
+	  (entry (get t1 :type-cache))
+	  (found (cdr (assoc t2 entry :test #'eq))))
+     (if found
+	 (values (car found) (cdr found))
+       (multiple-value-bind (subtype constraintp)
+	   (full-greatest-common-subtype t1 t2)
+	 ,(when type1-atomic-p
+	    '(when subtype
+	       (setq subtype (list subtype))))
+	 (setf (get t1 :type-cache) 
+	   (nconc entry
+		  (list (cons t2 (cons subtype constraintp)))))
+	   (values subtype constraintp)))))
+
+#|
+;;; investigate effectiveness of subtype cache
+(let ((max 0) (longest nil))
+   (maphash
+      #'(lambda (key entry)
+           (when (hash-table-p entry) (print (list key entry)))
+           (when (and (consp entry) (> (length entry) max))
+              (setq max (length entry) longest (cons key entry))))
+      *type-cache*)
+   (values max longest))
+|#
+
+(defun greatest-common-subtype (type1 type2)
+  ;; implemented as a memo function. In practice we won't see anything
+  ;; like all possible combinations of arguments so best not to
+  ;; attempt to pre-compute the cache contents
+  ;;
+  ;; we expect both args to be lisp atoms, but either or both could be
+  ;; strings/string type, or instance types. The latter are cached,
+  ;; but not the former
+  (cond 
+   ((eq type1 type2) type1)
+   ((arrayp type1)			; a string?
+    (when (or (equal type1 type2) (string-type-p type2))
+      type1))
+   ((arrayp type2) 
+    (when (string-type-p type1) type2))
+   (t
+    (cached-greatest-common-subtype type1 type2 nil))))
 
 (defun full-greatest-common-subtype (type1 type2)
   ;; atomic types should have been stripped down to their constituent type
