@@ -57,10 +57,12 @@
 
 (defun set-up-compare-frame (parses frame)
   (setf (compare-frame-decisions frame) (list (make-decision :type :start)))
-  (setf (compare-frame-trees frame)
-    (mapcar #'(lambda (p) 
-		(make-ptree :top (make-new-parse-tree p 1)))
-	    parses))
+  (let ((id 0))
+    (setf (compare-frame-trees frame)
+      (mapcar #'(lambda (p) 
+                  (make-ptree :top (make-new-parse-tree p 1) :id (incf id)))
+              parses)))
+  (setf (compare-frame-otrees frame) (copy-list (compare-frame-trees frame)))
   (setf (compare-frame-discrs frame) (find-discriminants frame))
   (recompute-in-and-out frame t))
 
@@ -226,12 +228,13 @@
    (preset :initform nil :accessor compare-frame-preset)
    (decisions :initform nil :accessor compare-frame-decisions)
    (confidence :initform nil :accessor compare-frame-confidence)
-   (trees :initform nil
-	  :accessor compare-frame-trees)
+   (trees :initform nil :accessor compare-frame-trees)
+   (otrees :initform nil :accessor compare-frame-otrees)
    (in :initform nil
        :accessor compare-frame-in-parses)
    (out :initform nil
 	:accessor compare-frame-out-parses)
+   (mode :initform nil :accessor compare-frame-mode)
    (trees-stream :initform nil
 		 :accessor compare-frame-trees-stream)
    (item :initform 0
@@ -341,20 +344,44 @@
       (mp:process-revoke-arrest-reason 
        (compare-frame-controller frame) :wait))))
 
+
 (define-compare-frame-command (com-clear-compare-frame :menu "Clear")
     ()
   (clim:with-application-frame (frame)
     (record-decision (make-decision :type :clear) frame)
-    (setf (compare-frame-in-parses frame) (compare-frame-trees frame))
-    (setf (compare-frame-out-parses frame) nil)
-    (dolist (d (compare-frame-discrs frame))
-      (setf (discr-time d) (get-universal-time))
-      (setf (discr-state d) :unknown)
-      (setf (discr-toggle d) :unknown))
-    (recompute-in-and-out frame)
-    (update-trees frame))) 
+    (let ((mode (compare-frame-mode frame)))
+      (declare (ignore mode))
+      (setf (compare-frame-mode frame) nil)
+      (setf (compare-frame-trees frame) (compare-frame-otrees frame))
+      (setf (compare-frame-in-parses frame) (compare-frame-trees frame))
+      (setf (compare-frame-out-parses frame) nil)
+      (dolist (d (compare-frame-discrs frame))
+        (setf (discr-time d) (get-universal-time))
+        (setf (discr-state d) :unknown)
+        (setf (discr-toggle d) :unknown))
+      (recompute-in-and-out frame)
+      (update-trees frame t))))
 
-(define-compare-frame-command (com-confidence :menu "Confidence")
+
+(define-compare-frame-command (com-concise-compare-frame :menu "Concise")
+    ()
+  (clim:with-application-frame (frame)
+    (let ((mode (compare-frame-mode frame)))
+      (declare (ignore mode))
+      (setf (compare-frame-mode frame) :concise)
+      (update-trees frame t))))
+
+
+(define-compare-frame-command (com-ordered-compare-frame :menu "Ordered")
+    ()
+  (clim:with-application-frame (frame)
+    (let ((mode (compare-frame-mode frame)))
+      (declare (ignore mode))
+      (setf (compare-frame-mode frame) :ordered)
+      (update-trees frame t))))
+
+
+(define-compare-frame-command (com-confidence-compare-frame :menu "Confidence")
     ()
   (clim:with-application-frame (frame)
     (let ((command (clim:menu-choose
@@ -364,6 +391,8 @@
                       ("Zero" :value 0 :active t)))))
       (when command
         (setf (compare-frame-confidence frame) command)))))
+
+
 
 (defun type-tree (tree)
   (let ((edge-record (get tree 'edge-record)))
@@ -402,34 +431,44 @@
   ;; Output record of tree
   output-record				
   ;; Current color of tree
-  ink)
+  ink
+  id)
   
 (defun draw-trees-window (window stream)
   (setf (compare-frame-trees-stream window) stream)
-  (dolist (tree (compare-frame-trees window))
-    (setf (ptree-ink tree) clim:+foreground-ink+)
-    (setf (ptree-output-record tree)
-      (clim:with-new-output-record (stream)
-	(clim:with-output-recording-options (stream :record t)
-	  (clim:with-output-as-presentation 
-	      (stream tree 'ptree :single-box t)
-	    (clim:format-graph-from-root
-	     (ptree-top tree)
-	     #'(lambda (node stream)
-		 (multiple-value-bind (s bold-p) 
-		     (get-string-for-edge node)
-		   (clim:with-text-face (stream (if bold-p :bold :roman))
-		     (write-string s stream))))
-	     #'(lambda (node) (get node 'daughters))
-	     :graph-type :parse-tree
-	     :stream stream 
-	     :merge-duplicates nil
-	     :orientation :vertical
-	     :generation-separation 7
-	     :move-cursor t
-	     :within-generation-separation 7
-	     :center-nodes nil)))
-	(terpri stream))))
+
+  
+  (clim:formatting-table (stream :x-spacing "XX")
+    (dolist (tree (compare-frame-trees window))
+      (setf (ptree-ink tree) clim:+foreground-ink+)
+      (setf (ptree-output-record tree)
+        (clim:with-new-output-record (stream)
+          (clim:with-output-recording-options (stream :record t)
+            (clim:formatting-row (stream)
+              (clim:formatting-cell (stream :align-x :center :align-y :top)
+                (clim:with-text-style (stream (clim:parse-text-style 
+                                               '(:sans-serif :bold 14)))
+                  (format stream "~%[~a]" (ptree-id tree))))
+              (clim:formatting-cell (stream :align-x :left :align-y :center)
+                (clim:with-output-as-presentation 
+                    (stream tree 'ptree :single-box t)
+                  (clim:format-graph-from-root
+                   (ptree-top tree)
+                   #'(lambda (node stream)
+                       (multiple-value-bind (s bold-p) 
+                           (get-string-for-edge node)
+                         (clim:with-text-face (stream (if bold-p :bold :roman))
+                           (write-string s stream))))
+                   #'(lambda (node) (get node 'daughters))
+                   :graph-type :parse-tree
+                   :stream stream 
+                   :merge-duplicates nil
+                   :orientation :vertical
+                   :generation-separation 7
+                   :move-cursor t
+                   :within-generation-separation 7
+                   :center-nodes nil)))
+              (terpri stream)))))))
   (update-trees window))
 
 (defun propagate-discriminants (frame top toggle)
@@ -459,12 +498,15 @@
 (define-compare-frame-command (com-tree-menu)
     ((tree 'ptree :gesture :select))
   (let ((command (clim:menu-choose
-		  '(("Yes" :value yes :active t)
-                    ("No" :value no :active t)
-		    ("Enlarged Tree" :value show)
-                    ("MRS" :value mrs)
-                    ("Indexed MRS" :value mrs)
-                    ("Scoped MRS" :value mrs)))))
+		  (list
+                   '("Yes" :value yes :active t)
+                   #+:null
+                   '("No" :value no :active t)
+                   '("Enlarged Tree" :value show)
+                   (list "MRS" :value 'mrs :active *mrs-loaded*)
+                   (list "Indexed MRS" :value 'indexed :active *mrs-loaded*)
+                   (list "Scoped MRS" :value 'scoped :active *mrs-loaded*))))
+        (edge (get (ptree-top tree) 'edge-record)))
     (when command
       (handler-case
 	  (ecase command
@@ -484,7 +526,16 @@
              (clim:with-application-frame (frame)
                (draw-new-parse-tree (ptree-top tree)
                                     "Parse tree" nil
-                                    (compare-frame-current-chart frame)))))
+                                    (compare-frame-current-chart frame))))
+            (mrs
+             (when edge
+               (ignore-errors (funcall 'show-mrs-window edge))))
+            (indexed
+             (when edge
+               (ignore-errors (funcall 'show-mrs-indexed-window edge))))
+            (scoped
+             (when edge
+               (ignore-errors (funcall 'show-mrs-scoped-window edge)))))
         (storage-condition (condition)
           (with-output-to-top ()
             (format t "~%Memory allocation problem: ~A~%" condition)))
@@ -496,27 +547,54 @@
             (format t "~%Something nasty: ~A~%" condition)))))))
 
 
-(defun update-trees (window)
-  (let (; (done-p nil)
-	(stream (compare-frame-trees-stream window)))
-    (dolist (tree (compare-frame-trees window))
-      (let ((ink (cond ((member (ptree-top tree) 
-				(compare-frame-out-parses window)
-				:test #'eq)
-			clim:+red+)
-		       ((and (not (cdr (compare-frame-in-parses window)))
-			     (eq (car (compare-frame-in-parses window))
-				 (ptree-top tree)))
-			clim:+green+)
-		       (t clim:+foreground-ink+))))
-;	(when (eq ink clim:+green+)
-;	  (setq done-p t))
-	(unless (eq ink (ptree-ink tree))
-	  (setf (ptree-ink tree) ink)
-	  (recolor-tree (ptree-output-record tree) ink)
-	  (clim:replay (ptree-output-record tree) stream))))))
-;;    (setf (clim:command-enabled 'com-done-compare-frame window) done-p)))
+(defun update-trees (window &optional resetp)
 
+  (if resetp
+    (let ((stream (compare-frame-trees-stream window))
+          (in (compare-frame-in-parses window)))
+      (loop
+          for tree in (compare-frame-trees window)
+          do
+           (clim:clear-output-record (ptree-output-record tree)))
+      (case (compare-frame-mode window)
+        (:ordered
+         (setf (compare-frame-trees window)
+           (stable-sort 
+            (copy-list (compare-frame-otrees window))
+            #'(lambda (foo bar)
+                (let ((foop (member (ptree-top foo) in :test #'eq))
+                      (barp (member (ptree-top bar) in :test #'eq)))
+                  (or (and foop barp) (eq foop barp) 
+                      (and foop (null barp))))))))
+                                         
+        (:concise
+         (setf (compare-frame-trees window)
+           (remove-if 
+            #'(lambda (foo) (not (member (ptree-top foo) in :test #'eq)))
+            (compare-frame-otrees window))))
+        (t
+         (setf (compare-frame-trees window) 
+           (copy-list (compare-frame-otrees window)))))
+      (draw-trees-window window stream)
+      (clim:redisplay-frame-panes window :force-p t))
+    (let (; (done-p nil)
+          (stream (compare-frame-trees-stream window)))
+      (dolist (tree (compare-frame-trees window))
+        (let ((ink (cond ((member (ptree-top tree) 
+                                  (compare-frame-out-parses window)
+                                  :test #'eq)
+                          clim:+red+)
+                         ((and (not (cdr (compare-frame-in-parses window)))
+                               (eq (car (compare-frame-in-parses window))
+                                   (ptree-top tree)))
+                          clim:+green+)
+                         (t clim:+foreground-ink+))))
+          (unless (eq ink (ptree-ink tree))
+            (setf (ptree-ink tree) ink)
+            (recolor-tree (ptree-output-record tree) ink)
+            (clim:replay (ptree-output-record tree) stream)))))))
+
+    
 (defun recolor-tree (record ink)
   (labels ((recolor-node (node) 
 	     (when (clim:displayed-output-record-p node)

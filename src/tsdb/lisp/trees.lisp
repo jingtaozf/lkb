@@ -14,6 +14,7 @@
 
 (defun browse-trees (&optional (data *tsdb-data*)
                      &key (condition *statistics-select-condition*)
+                          (threshold 100)
                           (cache *tsdb-cache-database-writes-p*)
                           (verbose t)
                           meter)
@@ -63,9 +64,12 @@
           (setf (lkb::compare-frame-controller frame) *current-process*)
         for item = (nth position items)
         for i-id = (get-field :i-id item)
-        for status = (and (integerp i-id) (browse-tree 
-                                           data i-id frame
-                                           :cache cache))
+        for readings = (get-field :readings item)
+        for status = (if (and (numberp threshold) (numberp readings)
+                              (> readings threshold))
+                         (acons :status :skip nil)
+                       (and (integerp i-id) 
+                            (browse-tree data i-id frame :cache cache)))
         for action = (get-field :status status)
         while (and status (not (eq action :close)))
         do 
