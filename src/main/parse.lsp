@@ -382,7 +382,21 @@
               (format t "~%Word `~A' is not in lexicon." word)
               (when *unknown-word-types* 
                 (format t " Using unknown word mechanism."))))
-          (when (or morph-poss *unknown-word-types* t)
+          ;;
+          ;; this test seems unnecessary, as later on there is a test for
+          ;; coverage over the full string of tokens (`to-be-accounted-for');
+          ;; furthermore, failure to create (zero-inflection) morph edges here
+          ;; prevents us from efficient retrieval of lexical entries: moving 
+          ;; to the PSQL lexical database, we want to be able to pull out 
+          ;; multi-word lexical entries by just one of their tokens (i.e. the
+          ;; inflected one, by default the last token for English).  hence, 
+          ;; for input like `ad hoc' it must be possible for look-up to fail
+          ;; on `ad' and later retrieve the multi-word entry when we process
+          ;; `hoc'.  this seems to work okay, though some further inspection 
+          ;; of related code, particularly the *unknown-word-types* mechanics,
+          ;; (and more testing :-) would seem in order.  (22-oct-02; oe & dan)
+          ;; 
+          (when #-:null t #+:null (or morph-poss *unknown-word-types*)
             (setf (aref *morphs* current)
               (make-morph-edge :id current :word base-word 
                                :morph-results 
@@ -417,7 +431,7 @@
 		   nil)))))))
      (dotimes (y current)
        (when (aref to-be-accounted-for y)
-         (format t "~%No sign can be constructed for ~A" 
+         (format t "~%No sign can be constructed for `~(~a~)'" 
                  (aref to-be-accounted-for y))))))
 
 
