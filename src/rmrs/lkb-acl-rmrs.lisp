@@ -15,6 +15,15 @@
 ;;;      comparison-record title))
 ;;;
 
+;;; Frames
+
+(define-lkb-frame rmrs-ordinary
+    ((rmrs :initform nil
+	   :accessor rmrs-ordinary-rmrs))
+  :display-function 'show-rmrs-ordinary  
+  :width *parse-window-width* 
+  :height *parse-window-height*)
+
 (define-lkb-frame mrs-rmrs
     ((mrsstruct :initform nil
                 :accessor mrs-rmrs-mrsstruct)
@@ -37,6 +46,39 @@
   :width (* 2 *parse-window-width*) 
   :height *parse-window-height*)
 
+;;; end frames
+
+;;; ordinary window for one RMRS
+
+;;; calling function (called from emacs)
+
+(defun display-rmrs-from-string (str)
+  (with-package (:mrs)
+    (let ((rmrs (mrs::read-single-rmrs-from-string str)))
+      (when (and rmrs (mrs::rmrs-p rmrs))
+	(show-rmrs-ordinary-window rmrs "RMRS")))))
+
+;;; windows functions
+
+(defun show-rmrs-ordinary-window (rmrs title)
+  (mp:run-function "RMRS ORDINARY"
+   #'show-rmrs-ordinary-window-really :rmrs rmrs :title title))
+  
+(defun show-rmrs-ordinary-window-really (&key rmrs title)
+  (let ((mframe (clim:make-application-frame 'rmrs-ordinary)))
+    (setf (rmrs-ordinary-rmrs mframe) 
+      rmrs)
+    (setf (clim:frame-pretty-name mframe) (or title "Robust MRS"))
+    (clim:run-frame-top-level mframe)))
+
+(defun show-rmrs-ordinary (mframe stream &key max-width max-height)
+  (declare (ignore max-width max-height))
+  (let ((rmrs (rmrs-ordinary-rmrs mframe)))
+      (clim:with-text-style (stream (lkb-parse-tree-font))
+        (mrs::output-rmrs1 rmrs 'mrs::compact stream t))))
+
+;;; Window from parser
+
 (defun show-mrs-rmrs-window (edge &key mrs rmrs title)
   (mp:run-function "RMRS"
    #'show-mrs-rmrs-window-really edge :mrs mrs :rmrs rmrs :title title))
@@ -50,6 +92,16 @@
       (or rmrs (mrs::mrs-to-rmrs mrsstruct)))
     (setf (clim:frame-pretty-name mframe) (or title "Robust MRS"))
     (clim:run-frame-top-level mframe)))
+
+(defun show-mrs-rmrs (mframe stream &key max-width max-height)
+  (declare (ignore max-width max-height))
+  (let ((rmrs (mrs-rmrs-rmrs mframe)))
+    (if rmrs
+      (clim:with-text-style (stream (lkb-parse-tree-font))
+        (mrs::output-rmrs1 rmrs 'mrs::compact stream t))
+      (format stream "~%::: RMRS structure could not be extracted~%"))))
+
+;;; RMRS comparison
 
 (defun show-mrs-rmrs-compare-window (rmrs1 rmrs2 comparison-record title)
     (mp:run-function "RMRS comparison" 
@@ -69,15 +121,6 @@
       comparison-record)
     (setf (clim:frame-pretty-name mframe) (or title "RMRS comparison"))
     (clim:run-frame-top-level mframe)))
-
-
-(defun show-mrs-rmrs (mframe stream &key max-width max-height)
-  (declare (ignore max-width max-height))
-  (let ((rmrs (mrs-rmrs-rmrs mframe)))
-    (if rmrs
-      (clim:with-text-style (stream (lkb-parse-tree-font))
-        (mrs::output-rmrs1 rmrs 'mrs::compact stream t))
-      (format stream "~%::: RMRS structure could not be extracted~%"))))
 
 (defun show-mrs-rmrs-compare (mframe stream &key max-width max-height)
   (declare (ignore max-width max-height))
@@ -196,7 +239,6 @@
 	((mrs::match-ing-record-p match) +green-flipping-ink+)
 	((mrs::match-hcons-record-p match) +green-flipping-ink+)
 	(t (error "Unexpected record type ~A" match))))
-	
 	
     
 ;;; ************* Temporary !!!! ************************

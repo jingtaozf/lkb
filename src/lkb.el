@@ -189,7 +189,8 @@
        ["Show chart" show-gen-chart t]
        ["Index" index-for-generator t])
       "---"
-      ["Redefine type" redefine-type t]))
+      ["Redefine type" redefine-type t]
+))
       
 (add-hook 'fi:lisp-mode-hook 
 	  (function (lambda ()
@@ -275,3 +276,34 @@
   (goto-char (point-max))
   (insert-string "(lkb::show-word-aux-tty \"\" t)")
   (backward-char 4))
+
+;;; RMRS display utility
+
+(defun display-rmrs (arg)
+  (interactive "P")
+  (let ((beg 0)
+        (end 0)
+        (pos (point)))
+    (setq beg (calc-begin-of-rmrs-expression))
+    (goto-char pos)
+    (setq end (calc-end-of-rmrs-expression))
+    (eval-in-lisp (format "(lkb::display-rmrs-from-string \"%s\")" 
+			  (buffer-substring beg (min (1+ end) (point-max)))))
+    (goto-char pos)))
+
+(defun calc-begin-of-rmrs-expression ()
+  "calculates begin of a rmrs expression in XML"
+  (or (re-search-backward "<rmrs " nil t)
+               (point-min)))
+
+(defun calc-end-of-rmrs-expression ()
+  "calculates end of an rmrs expression"
+    (or (re-search-forward "</rmrs>" nil t)
+                 (point-max)))
+
+; following is commented out because it may overlap with other commands
+; which people use
+; however, I can't see any way of making this non-global unless
+; we agree an extension for rmrs files etc
+
+; (global-set-key "\C-cr" 'display-rmrs)

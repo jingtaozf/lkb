@@ -29,50 +29,61 @@
           collect
             (read-rmrs rmrs origin)))))
 
+(defun read-single-rmrs-from-string (str)
+  ;;; currently called from emacs interface - takes
+  ;;; a string containing an rmrs (we hope) and
+  ;;; reads it in
+  (with-input-from-string (istream str)
+    (let ((rmrs (parse-xml-removing-junk istream)))
+      (setf *rmrs-debug* rmrs)
+      (unless (xml-whitespace-string-p rmrs)
+	(read-rmrs rmrs :rasp)))))
+  
+
 (defun read-rmrs (content origin)
 ;;; <!ELEMENT rmrs (label, (ep|rarg|ing|hcons)*)>
 ;;; <!ATTLIST rmrs
 ;;;          cfrom CDATA #REQUIRED
 ;;;          cto   CDATA #REQUIRED >
   (let ((top-h nil) (eps nil) (rargs nil) (ings nil)
-        (h-cons nil))
-    (let ((tag (car content)))
-      (unless (eql (car tag) '|rmrs|)
-        (error "~A is not an rmrs" content)))
+        (h-cons nil)
+	(tag (car content)))
+    (unless (eql (car tag) '|rmrs|)
+      (error "~A is not an rmrs" content))
     (setf content (cdr content))
     (loop (let ((next-el (car content)))
-            (if (xml-whitespace-string-p next-el)
-                (pop content)
-              (return))))
+	    (if (xml-whitespace-string-p next-el)
+		(pop content)
+	      (return))))
     (when content
       (setf top-h (read-rmrs-label (car content)))
       (loop for next-el in (cdr content)
-          do
-            (unless (xml-whitespace-string-p next-el)
-              (let*  
-                  ((next-tag (car next-el))
-                   (body (cdr next-el)))
-                (cond 
-                 ((eql next-tag '|rarg|)
-                  (push (read-rmrs-rarg body)
-                        rargs))
-                 ((eql next-tag '|ing|)
-                  (push (read-rmrs-in-g body)
-                        ings))
-                 ((atom next-tag)
-                  (error "Unexpected element ~A" next-el))
-                 ((eql (car next-tag) '|ep|)
-                  (push (read-rmrs-ep next-el)
-                        eps))
-                 ((eql (car next-tag) '|hcons|)
-                  (push (read-rmrs-hcons next-el)
-                        h-cons))
-                 (t (error "Unexpected element ~A" next-el))))))
+	  do
+	    (unless (xml-whitespace-string-p next-el)
+	      (let*  
+		  ((next-tag (car next-el))
+		   (body (cdr next-el)))
+		(cond 
+		 ((eql next-tag '|rarg|)
+		  (push (read-rmrs-rarg body)
+			rargs))
+		 ((eql next-tag '|ing|)
+		  (push (read-rmrs-in-g body)
+			ings))
+		 ((atom next-tag)
+		  (error "Unexpected element ~A" next-el))
+		 ((eql (car next-tag) '|ep|)
+		  (push (read-rmrs-ep next-el)
+			eps))
+		 ((eql (car next-tag) '|hcons|)
+		  (push (read-rmrs-hcons next-el)
+			h-cons))
+		 (t (error "Unexpected element ~A" next-el))))))
       (make-rmrs :top-h top-h
-                 :liszt (nreverse eps)
-                 :h-cons (nreverse h-cons)
-                 :rmrs-args (nreverse rargs)
-                 :in-groups (nreverse ings)
+		 :liszt (nreverse eps)
+		 :h-cons (nreverse h-cons)
+		 :rmrs-args (nreverse rargs)
+		 :in-groups (nreverse ings)
 		 :origin origin))))
 
 (defun read-rmrs-ep (content)

@@ -171,8 +171,8 @@
     (when (and (psoa-p mrs) (ignore-errors (make-scoped-mrs mrs)))
       mrs)))
 
-;;; FIX - is someone really calling this?  it only reads in one MRS
 (defun read-mrs-from-file (file)
+  ;;; called by oe
   (when (probe-file file)
     (#+:debug progn #-:debug ignore-errors 
      (with-open-file (istream file :direction :input)
