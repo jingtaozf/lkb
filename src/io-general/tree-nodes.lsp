@@ -97,7 +97,6 @@
             (when edge-record 
                (display-parse-tree edge-record t))))))
 
-;;; display-parse-tree is dialect specific
 
 (defun find-edge-given-id (edge-id)
   (or
@@ -614,50 +613,12 @@
    (parse-tree-structure1 (make-new-parse-tree edge 1) complete-p))
 
 (defun parse-tree-structure1 (node complete-p)
-  (let ((edge (get node 'edge-record))
- 	(daughters (if complete-p
+  (let ((daughters (if complete-p
 		       (get node 'daughters)
 		     (find-children node))))
     (cons (get-string-for-edge node)
 	  (loop for dtr in daughters
                collect (parse-tree-structure1 dtr complete-p)))))
-
-#|
-(defun parse-tree-structure (edge)
-   (car (parse-tree-structure1 edge 1)))
-
-(defun parse-tree-structure1 (edge level)
-  ;; show active edge nodes at first level but not thereafter
-  (if (and (> level 1) 
-	   (dotted-edge-p edge) 
-	   (dotted-edge-needed edge))
-      (mapcan #'(lambda (c) 
-		  (when c 
-		    (parse-tree-structure1 c (1+ level))))
-	      (edge-children edge))
-      (let ((daughters (edge-children edge)))
-         (list
-          (if (and *dont-show-lex-rules*
-                   (lexical-rule-p (edge-rule edge)))
-             (car (edge-leaves edge))
-             (if daughters
-                (cons (tree-node-text-string
-                       (or (find-category-abb 
-                            (edge-dag edge))
-                           (edge-category edge)))
-                  (mapcan
-                   #'(lambda (dtr)
-                       (if dtr
-                          (parse-tree-structure1 dtr (1+ level))
-                          ;; active chart edge daughter
-                          (list ""))) 
-                   daughters))
-                (if *dont-show-morphology*
-                   (car (edge-leaves edge))
-                   (cons (car (edge-leaves edge))
-                     (morph-tree-structure
-                        (edge-rule edge) (edge-morph-history edge))))))))))
-|#
 
 (defun morph-tree-structure (rule edge)
    (if rule
