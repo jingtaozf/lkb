@@ -256,9 +256,15 @@
 
 (defun compatible-types-or-values (val1 val2)
   (or (is-top-type val1) (is-top-type val2)
-      (if (and (symbolp val1) (symbolp val2))
-          (same-names val1 val2)
-        (equal val1 val2))))
+      (cond ((and (symbolp val1) (symbolp val2))
+	     (same-names val1 val2))
+	    ((and (stringp val1) (stringp val2))
+	     (equal val1 val2))
+	    ((and (stringp val1) (symbolp val2))
+	     (equal val1 (symbol-name val2)))
+	    ((and (stringp val2) (symbolp val1))
+	     (equal val2 (symbol-name val1)))
+	    (t (equal val1 val2)))))
 
 (defun same-names (sym1 sym2)
   ;;; avoid package problems
