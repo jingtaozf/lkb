@@ -315,122 +315,121 @@
 ;;; does not see any old marks
 
 (defmacro with-unification-context ((dag) &body body)
-   ;; caller must call copy-dag explicitly at end - before any other unification
-   ;; attempt - if result is needed
-   ;; NB unwind-protect is needed to deal properly with local exits (e.g.
-   ;; return-from) out of body, as well as throws and errors
-   (declare (ignore dag))
-   `(if *within-unification-context-p*
+  ;; caller must call copy-dag explicitly at end - before any other
+  ;; unification attempt - if result is needed 
+  ;; NB unwind-protect is needed to deal properly with local exits (e.g.
+  ;; return-from) out of body, as well as throws and errors
+  (declare (ignore dag))
+  `(if *within-unification-context-p*
        (error "Entered a nested unification context - should not happen")
-       (let ((*within-unification-context-p* t))
-          (unwind-protect (progn ,@body) (invalidate-marks)))))
-
+     (let ((*within-unification-context-p* t))
+       (unwind-protect (progn ,@body) (invalidate-marks)))))
 
 (defun unify-dags (dag1 dag2)
-   (if *within-unification-context-p*
+  (if *within-unification-context-p*
       (progn #+(and mcl powerpc)(decf bb (CCL::%HEAP-BYTES-ALLOCATED))
              (prog1
-                (catch '*fail*
+		 (catch '*fail*
                    (progn
-                      (unify1 dag1 dag2 nil)
-                      (when *unify-debug* (format t "~%Unification succeeded"))
-                      dag1))
-                #+(and mcl powerpc)(incf bb (CCL::%HEAP-BYTES-ALLOCATED))
-                ))
-      (with-unification-context (dag1) (when (unify-dags dag1 dag2) (copy-dag dag1)))))
+		     (unify1 dag1 dag2 nil)
+		     (when *unify-debug* (format t "~%Unification succeeded"))
+		     dag1))
+	       #+(and mcl powerpc)(incf bb (CCL::%HEAP-BYTES-ALLOCATED))
+	       ))
+    (with-unification-context (dag1) 
+      (when (unify-dags dag1 dag2) (copy-dag dag1)))))
 
 (defun unifiable-dags-p (dag1 dag2)
-   (if *within-unification-context-p*
+  (if *within-unification-context-p*
       (catch '*fail*
-         (progn
-            (unify1 dag1 dag2 nil)
-            (unless (cyclic-dag-p dag1)
-               (when *unify-debug* (format t "~%Unification succeeded"))
-               t)))
-      (with-unification-context (dag1) (unifiable-dags-p dag1 dag2))))
-
+	(progn
+	  (unify1 dag1 dag2 nil)
+	  (unless (cyclic-dag-p dag1)
+	    (when *unify-debug* (format t "~%Unification succeeded"))
+	    t)))
+    (with-unification-context (dag1) (unifiable-dags-p dag1 dag2))))
 
 ;;; This is the heart of the unification algorithm, and is based on Hideto
 ;;; Tomabechi's paper in the 1991 ACL proceedings.  We walk through the two
 ;;; feature structures checking for compatibility and setting forward
 ;;; pointers.  As soon as we find a problem, we stop.  If we get through the
-;;; whole structure without finding a problem, then we copy the first
-;;; unifact using the forward pointers we set during the check.
+;;; whole structure without finding a problem, then we copy the first unifact
+;;; using the forward pointers we set during the check.
 ;;;
-;;; Unique marker is passed in on each individual unification attempt to
-;;; mark dags that we're currently inside, so if a circularity has just
-;;; cropped up we don't get stuck in it
+;;; Unique marker is passed in on each individual unification attempt to mark
+;;; dags that we're currently inside, so if a circularity has just cropped up
+;;; we don't get stuck in it
 
 (defmacro unify-get-type (fs)
   `(or (dag-new-type ,fs) (dag-type ,fs)))
 
 (defun unify1 (dag1 dag2 path)
-   (setq dag1 (deref-dag dag1))
-   (setq dag2 (deref-dag dag2))
-   (cond
-      ((eq (dag-copy dag1) :inside)
-         (when (or *unify-debug* *unify-debug-cycles*)
-            (format t "~%Unification failed: unifier found cycle at < ~{~A ~^: ~}>" 
-               (reverse path)))
-         (throw '*fail* nil))
-      ((not (eq dag1 dag2)) (unify2 dag1 dag2 path))))
+  (setq dag1 (deref-dag dag1))
+  (setq dag2 (deref-dag dag2))
+  (cond
+   ((eq (dag-copy dag1) :inside)
+    (when (or *unify-debug* *unify-debug-cycles*)
+      (format t "~%Unification failed: unifier found cycle at < ~{~A ~^: ~}>" 
+	      (reverse path)))
+    (throw '*fail* nil))
+   ((not (eq dag1 dag2)) (unify2 dag1 dag2 path)))
+  dag1)
 
 (defun unify2 (dag1 dag2 path)
-   (multiple-value-bind (new-type constraintp)
-         (find-gcsubtype (unify-get-type dag1) (unify-get-type dag2))
-      (if new-type
-         (progn
-            (setf (dag-new-type dag1) new-type)
-            (if (type-spec-atomic-p new-type)
-               (if (or (dag-arcs dag1) (dag-comp-arcs dag1)
-                       (dag-arcs dag2) (dag-comp-arcs dag2))
+  (multiple-value-bind (new-type constraintp)
+      (find-gcsubtype (unify-get-type dag1) (unify-get-type dag2))
+    (if new-type
+	(progn
+	  (setf (dag-new-type dag1) new-type)
+	  (if (type-spec-atomic-p new-type)
+	      (if (or (dag-arcs dag1) (dag-comp-arcs dag1)
+		      (dag-arcs dag2) (dag-comp-arcs dag2))
                   (progn
-                     (when *unify-debug*
-                        (format t "~%Unification failed due to atomic/~
+		    (when *unify-debug*
+		      (format t "~%Unification failed due to atomic/~
                            non-atomic clash at path < ~{~A ~^: ~}>" (reverse path)))
-                     (throw '*fail* nil))
-                  (setf (dag-forward dag2) dag1))
-               (progn
-                  ;; unify in constraints if necessary - may have to copy them to
-                  ;; prevent separate uses of same constraint in same unification
-                  ;; becoming reentrant
-                  (when (and constraintp *unify-wffs*)
-                     (let ((constraint (may-copy-constraint-of new-type)))
-                        (if *unify-debug*
-                           (let ((res
-                                   (catch '*fail* (unify1 dag1 constraint path))))
-                              (unless res
-                                 (format t 
-                                    "~%Unification with constraint of type ~A failed ~
+		    (throw '*fail* nil))
+		(setf (dag-forward dag2) dag1))
+	    (progn
+	      ;; unify in constraints if necessary - may have to copy them to
+	      ;; prevent separate uses of same constraint in same unification
+	      ;; becoming reentrant
+	      (when (and constraintp *unify-wffs*)
+		(let ((constraint (may-copy-constraint-of new-type)))
+		  (if  *unify-debug*
+		      (let ((res 
+			     (catch '*fail* (unify1 dag1 constraint path))))
+			(unless res
+			  (format t 
+				  "~%Unification with constraint of type ~A failed ~
                                     at path < ~{~A ~^: ~}>" new-type (reverse path))
-                                 (throw '*fail* nil)))
-                           (unify1 dag1 constraint path)))
-                     ;; dag1 might just have been forwarded so dereference it again
-                     (setq dag1 (deref-dag dag1)))
-                  ;; cases for each of dag1 and dag2 where they have no arcs
-                  ;; just considering straightforward use of unify1: if we've previously
-                  ;; visited a node with no arcs then it must have
-                  ;; got forwarded then so we won't ever visit it again - so no need to
-                  ;; test for presence of any comp-arcs
-                  ;; BUT: unify-paths-dag-at-end-of1 adds to comp-arcs independently
-                  ;; so we do need the additional tests
-                  (cond
-                     ((and (null (dag-arcs dag1)) (null (dag-comp-arcs dag1)))
-                        (setf (dag-new-type dag2) new-type)
-                        (setf (dag-forward dag1) dag2))
-                     ((and (null (dag-arcs dag2)) (null (dag-comp-arcs dag2)))
-                        (setf (dag-forward dag2) dag1))
-                     (t
-                        (setf (dag-forward dag2) dag1)
-                        (setf (dag-copy dag1) :inside)
-                        (unify-arcs dag1 dag2 path)
-                        (setf (dag-copy dag1) nil))))))
-         (progn
-            (when *unify-debug*
-               (format t "~%Unification of ~A and ~A failed at path < ~{~A ~^: ~}>" 
+			  (throw '*fail* nil)))
+		    (unify1 dag1 constraint path)))
+		;; dag1 might just have been forwarded so dereference it again
+		(setq dag1 (deref-dag dag1)))
+	      ;; cases for each of dag1 and dag2 where they have no arcs just
+	      ;; considering straightforward use of unify1: if we've
+	      ;; previously visited a node with no arcs then it must have got
+	      ;; forwarded then so we won't ever visit it again - so no need
+	      ;; to test for presence of any comp-arcs BUT:
+	      ;; unify-paths-dag-at-end-of1 adds to comp-arcs independently so
+	      ;; we do need the additional tests
+	      (cond
+	       ((and (null (dag-arcs dag1)) (null (dag-comp-arcs dag1)))
+		(setf (dag-new-type dag2) new-type)
+		(setf (dag-forward dag1) dag2))
+	       ((and (null (dag-arcs dag2)) (null (dag-comp-arcs dag2)))
+		(setf (dag-forward dag2) dag1))
+	       (t
+		(setf (dag-forward dag2) dag1)
+		(setf (dag-copy dag1) :inside)
+		(unify-arcs dag1 dag2 path)
+		(setf (dag-copy dag1) nil))))))
+      (progn
+	(when *unify-debug*
+	  (format t "~%Unification of ~A and ~A failed at path < ~{~A ~^: ~}>" 
                   (unify-get-type dag1) (unify-get-type dag2) (reverse path)))
-            (throw '*fail* nil)))))
-
+	(throw '*fail* nil)))))
 
 (defmacro unify-arcs-find-arc (attribute arcs comp-arcs)
    ;; find arc in arcs or comp-arcs with given attribute - also used in
@@ -555,8 +554,8 @@
                (when gcs (pushnew (if (consp gcs) (car gcs) gcs) res)))))))
 
 
-;;; Copy first feature structure after a successful unification, respecting any
-;;; forward pointers set by the unifier.
+;;; Copy first feature structure after a successful unification, respecting
+;;; any forward pointers set by the unifier.
 
 (defun copy-dag (dag)
    #+(and mcl powerpc)(decf aa (CCL::%HEAP-BYTES-ALLOCATED))
@@ -569,51 +568,51 @@
 ;;; where no lower level dags need to be copied
 
 (defun copy-dag1 (dag path)
-   (setq dag (deref-dag dag))
-   (cond
-      ((eq (dag-copy dag) :inside)
-         (when (or *unify-debug* *unify-debug-cycles*)
-            (format t "~%Unification failed: copy found cycle at < ~{~A ~^: ~}>" 
-               (reverse path)))
-         (throw '*fail* nil))
-      ((not (symbolp (dag-copy dag)))
-         (dag-copy dag))
-      ((and (null (dag-arcs dag)) (null (dag-comp-arcs dag)))
-         (setf (dag-copy dag)
-            (if (or (not (dag-safe-p dag))
-                    (and (dag-new-type dag)
-                       (not (eq (dag-new-type dag) (dag-type dag)))))
-               (make-dag :type (unify-get-type dag) :arcs nil)
-               dag)))
-      (t
-         ;; would have liked to have put path here, but it would hang around after
-         ;; a circularity was detected - bad news for stack allocated conses
-         (setf (dag-copy dag) :inside)
-         (let ((copy-p (or (not (dag-safe-p dag))
-                           (and (dag-new-type dag)
-                              (not (eq (dag-new-type dag) (dag-type dag))))
-                           (dag-comp-arcs dag)))
-               (new-arcs (nreverse (dag-comp-arcs dag))))
-            (do ((tail new-arcs (cdr tail))) 
-                ((null tail))
-               ;; top-level conses in comp-arcs can be re-used, but an arc needs to
-               ;; be fresh structure if its value is changed
-               (let ((new-path (cons (dag-arc-attribute (car tail)) path)))
-                  (declare (dynamic-extent new-path))
-                  (let ((v (copy-dag1 (dag-arc-value (car tail)) new-path)))
-                     (unless (eq v (dag-arc-value (car tail)))
-                        (setf (car tail)
-                           (make-dag-arc
-                              :attribute (dag-arc-attribute (car tail))
-                              :value v))))))
-            (setq new-arcs
-               (copy-dag-arcs (dag-arcs dag) nil path nil (dag-arcs dag) new-arcs))
-            (unless copy-p
-               (setq copy-p (not (eq new-arcs (dag-arcs dag)))))
-            (setf (dag-copy dag)
-               (if copy-p
-                  (make-dag :type (unify-get-type dag) :arcs new-arcs)
-                  dag))))))
+  (setq dag (deref-dag dag))
+  (cond
+   ((eq (dag-copy dag) :inside)
+    (when (or *unify-debug* *unify-debug-cycles*)
+      (format t "~%Unification failed: copy found cycle at < ~{~A ~^: ~}>" 
+	      (reverse path)))
+    (throw '*fail* nil))
+   ((not (symbolp (dag-copy dag)))
+    (dag-copy dag))
+   ((and (null (dag-arcs dag)) (null (dag-comp-arcs dag)))
+    (setf (dag-copy dag)
+      (if (or (not (dag-safe-p dag))
+	      (and (dag-new-type dag)
+		   (not (eq (dag-new-type dag) (dag-type dag)))))
+	  (make-dag :type (unify-get-type dag) :arcs nil)
+	dag)))
+   (t
+    ;; would have liked to have put path here, but it would hang around after
+    ;; a circularity was detected - bad news for stack allocated conses
+    (setf (dag-copy dag) :inside)
+    (let ((copy-p (or (not (dag-safe-p dag))
+		      (and (dag-new-type dag)
+			   (not (eq (dag-new-type dag) (dag-type dag))))
+		      (dag-comp-arcs dag)))
+	  (new-arcs (nreverse (dag-comp-arcs dag))))
+      (do ((tail new-arcs (cdr tail))) 
+	  ((null tail))
+	;; top-level conses in comp-arcs can be re-used, but an arc needs to
+	;; be fresh structure if its value is changed
+	(let ((new-path (cons (dag-arc-attribute (car tail)) path)))
+	  (declare (dynamic-extent new-path))
+	  (let ((v (copy-dag1 (dag-arc-value (car tail)) new-path)))
+	    (unless (eq v (dag-arc-value (car tail)))
+	      (setf (car tail)
+		(make-dag-arc
+		 :attribute (dag-arc-attribute (car tail))
+		 :value v))))))
+      (setq new-arcs
+	(copy-dag-arcs (dag-arcs dag) nil path nil (dag-arcs dag) new-arcs))
+      (unless copy-p
+	(setq copy-p (not (eq new-arcs (dag-arcs dag)))))
+      (setf (dag-copy dag)
+	(if copy-p
+	    (make-dag :type (unify-get-type dag) :arcs new-arcs)
+	  dag))))))
 
 
 (defun copy-dag-arcs (arcs-tail vals path lower-copied-p arcs new-arcs)
@@ -929,19 +928,21 @@
 ;;; Functionality of the LKB. Signalled by *unify-wffs* true
 
 (defun unify-wffs (dag1 dag2)
-   (let ((*unify-wffs* t)) (unify-dags dag1 dag2)))
+  (let ((*unify-wffs* t)) 
+    (unify-dags dag1 dag2)))
 
 (defun unifiable-wffs-p (dag1 dag2)
-   (let ((*unify-wffs* t)) (unifiable-dags-p dag1 dag2)))
-
+  (let ((*unify-wffs* t)) 
+    (unifiable-dags-p dag1 dag2)))
 
 ;;; to support interactive unification checking
 ;;; which informs the user where unification failed
 
 (defun unify-wffs-with-fail-messages (dag1 dag2 path)
-   ;; non-destructive
-   (declare (ignore path))
-   (let ((*unify-debug* t)) (unify-wffs dag1 dag2)))
+  ;; non-destructive
+  (declare (ignore path))
+  (let ((*unify-debug* t)) 
+    (unify-wffs dag1 dag2)))
 
 
 ;;; End of file

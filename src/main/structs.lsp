@@ -208,17 +208,18 @@
 
 (defun unify-paths-with-fail-messages (lhs-path lhs-dag rhs-path rhs-dag 
                              lhs-id lhs-features rhs-id rhs-features)
-   (with-unification-context (lhs-dag)
-      (let ((dag1 (unify-paths-dag-at-end-of lhs-path lhs-dag)))
-         (if dag1
-            (let ((dag2 (unify-paths-dag-at-end-of rhs-path rhs-dag)))
-               (if dag2
-                  (when (unify-wffs-with-fail-messages dag1 dag2 nil)
-                     (copy-dag lhs-dag))
-                  (format t "~%Path ~A is not appropriate for dag ~A" 
-                     rhs-features rhs-id)))
-           (format t "~%Path ~A is not appropriate for dag ~A" 
-              lhs-features lhs-id)))))
+  (with-unification-context (lhs-dag)
+    (let ((dag1 (unify-paths-dag-at-end-of lhs-path lhs-dag)))
+      (if dag1
+	  (let ((dag2 (unify-paths-dag-at-end-of rhs-path rhs-dag)))
+	    (if dag2
+		(when (unify-wffs-with-fail-messages dag1 dag2 nil)
+		  (let ((*unify-debug* t))
+		    (copy-dag lhs-dag)))
+	      (format t "~%Path ~A is not appropriate for dag ~A" 
+		      rhs-features rhs-id)))
+	(format t "~%Path ~A is not appropriate for dag ~A" 
+		lhs-features lhs-id)))))
 
 ;;; Following a path into a dag - recursively descends into the dag,  at each
 ;;; step choosing the attribute-value pair as defined  by the current point in
