@@ -49,12 +49,14 @@
 
 (defparameter *lisp-specific-directory*
     #+(and :allegro :clim) "ACL_specific"
-    #+(and :allegro :tty) "ACL_specific"
-    #+(and :allegro :common-graphics) "ACL-CG_specific"
+    #+(and :allegro (not :clim) :tty) "ACL_specific"
+    #+(and :allegro :common-graphics (not :clim) (not :tty)) 
+                                             "ACL-CG_specific"
     #+:mcl "MCL_specific"
-    #+:cmu "")
+    #+(and (not :allegro) (not :mcl)) "")
 
 (defsystem "lkb"
+    :host (make-pathname :host cl-user::%sys-host%)   
     :device (make-pathname :device cl-user::%sys-device%)
     :source-pathname (get-sources-dir "lkb")
     :binary-pathname (get-binaries-dir "lkb")
@@ -69,7 +71,7 @@
 		 cl-user::*building-image-p*)
       (let ((*package* (find-package "CLIM-USER")))
 	(clim-user::set-up-lkb-interaction :core)))
-  #+(and :allegro :common-graphics (not :tty))
+  #+(and :allegro :common-graphics (not :clim) (not :tty))
     (unless (and (boundp 'cl-user::*building-image-p*)
 		 cl-user::*building-image-p*)
 	(cl-user::set-up-lkb-interaction :core))
@@ -174,7 +176,8 @@
         #+(and :allegro :clim)(:file "graph")   ; uses Allegro graph drawing
                #+:mcl (:file "picwin")      ; low level 
                #+:mcl (:file "picfield")    ; low level
-        #+(and :allegro :common-graphics)(:file "fsclasses") ; classes for display	       
+        #+(and :allegro (not :clim)
+               :common-graphics)(:file "fsclasses") ; classes for display	       
         (:file "activefs")           ; display FS in window
              (:file "tree")               ; type hierarchy
              (:file "parseout")           ; parse tree output

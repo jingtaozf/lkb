@@ -3,10 +3,10 @@
 
 (defsystem "mrs"
      :device (make-pathname :device cl-user::%sys-device%)
-    :source-pathname (get-sources-dir #+:lkb "lkb" #+:page "page")
-    :binary-pathname (get-binaries-dir #+:lkb "lkb" #+:page "page")
+    :source-pathname (get-sources-dir #+:lkb "lkb")
+    :binary-pathname (get-binaries-dir #+:lkb "lkb")
     :source-extension "lisp"
-    :depends-on (#+:lkb "lkb" #+:page "page")
+    :depends-on (#+:lkb "lkb")
     :finally-do
     (progn
       #+:lkb(setf cl-user::*mrs-loaded* t))
@@ -17,7 +17,6 @@
       :components
       ((:file "mrs-package")
        #+:lkb (:file "lkb-interface")   ; interface functions to LKB
-       #+:page (:file "page-interface") ; interface functions to PAGE
        (:file "mrsglobals")             ; have to redefine most of these, but
                                         ; this is mostly done 
 					; by mrsglobals-eng 
@@ -50,10 +49,8 @@
               (:file "lkb-acl-mrs")      ; display etc in CLIM
        #+(and :lkb :mcl (not :tty)) 
               (:file "lkb-mcl-mrs")      ; display etc in MCL
-       #+:page (:file "acl-mrs")
-       #+:lkb (:file "lkbmrs")          ; LKB specific - redefines
+       #+:lkb (:file "lkbmrs")))          ; LKB specific - redefines
                                         ; some functions
-       #+:page (:file "pagemrs")))        ; PAGE specific
      #+:lkb
      (:module "generator"
        :source-pathname "mrs"
