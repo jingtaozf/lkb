@@ -40,15 +40,6 @@ Parse nodes need to be added so we can understand the display.
 
 |#
 
-;;
-;; _hack_
-;; since the LiLFeS encoding for lexical entries only has slots for the surface
-;; form (spelling) and the feature structure itself, the output code has to add
-;; unique identifiers to the structure.  if the structure has this path, then
-;; it will be enriched to point to a unique identifier.       (2-jun-99  -  oe)
-;;
-(defvar *lexical-id-path* '(--IDENTIFIER))
-
 (defun get-directory-name (dir)
   (if (eq #\/ (car (last (coerce dir 'list))))
       dir
@@ -60,7 +51,8 @@ Parse nodes need to be added so we can understand the display.
   (setf *recording-constraints-p* t)
   (setf *type-constraint-list* nil)
   (setf *first-only-p* nil)
-  (parse-sentences "/tmp/items" t))
+;  (parse-sentences "~aac/grammar/test-sentences" t))
+  (parse-sentences "~/tmp/test-sentences" t))  ;; by yusuke  May. 20
   
 
 (defun output-all-for-lilfes (&optional dir)
@@ -76,6 +68,16 @@ Parse nodes need to be added so we can understand the display.
 
 ;;; very preliminary
 
+;;
+;; _hack_
+;; since the LiLFeS encoding for lexical entries only has slots for the surface
+;; form (spelling) and the feature structure itself, the output code has to add
+;; unique identifiers to the structure.  if the structure has this path, then
+;; it will be enriched to point to a unique identifier.       (2-jun-99  -  oe)
+;;
+
+(defvar *lexical-id-path* '(--IDENTIFIER))
+
 ;;; types can be in '' in the LilFeS syntax
 ;;; in LilFeS 0.71, so can features
 
@@ -87,6 +89,7 @@ Parse nodes need to be added so we can understand the display.
          ((eq type '*cons*) 'cons)
          ((eq type *toptype*) 'bot)
          ((eq type *string-type*) 'string)
+	 ((eq type 'atom) 'string)
          ((eq type 'true) 'tru)
          ;;; following are for the textbook grammar
          ((eq type '-) 'minus)
@@ -124,6 +127,7 @@ Parse nodes need to be added so we can understand the display.
     (unless 
       (member lilfes-name *lilfes-builtins* :test #'equal)
       ;; don't redefine LiLFeS built in types
+;      (format t "'~A'~%" lilfes-name)
       (format stream "~%'~A' <- " lilfes-name)
       (format stream "['~A'" (convert-lilfes-type (car parents)))
       (for parent in (cdr parents)
@@ -137,8 +141,10 @@ Parse nodes need to be added so we can understand the display.
           ;;; not sure what to do with constraints
           (display-dag1 def 'lilfes stream nil t)))
       (format stream ".")
-      (when (equal lilfes-name "0-1-list")
-	(format stream "~%'0-1-list-nil' <- ['0-1-list', 'nil']."))))))
+;; deleted by yusuke  May. 21
+;      (when (equal lilfes-name "0-1-list")
+;	(format stream "~%'0-1-list-nil' <- ['0-1-list', 'nil']."))))))
+))))  ;; by yusuke  May. 21
 
 (defun display-lilfes-signature (type def stream)
   (let ((feats (for feat in (top-level-features-of def)
@@ -165,7 +171,8 @@ Parse nodes need to be added so we can understand the display.
 
 (defun output-full-constraint-as-lilfes (name type-struct stream)
   (let* ((fs (tdfs-indef (type-tdfs type-struct)))
-         (parents (type-parents type-struct))
+         (def (type-local-constraint type-struct))  ;; by yusuke  May. 20
+	 (parents (type-parents type-struct))
          (lilfes-name (convert-lilfes-type name)))
     (unless 
       (member lilfes-name *lilfes-builtins* :test #'equal)
@@ -176,6 +183,8 @@ Parse nodes need to be added so we can understand the display.
            do
            (format stream ", '~A'" (convert-lilfes-type parent)))
       (format stream "]")
+      (when def                                      ;; by yusuke  May. 20
+	(display-lilfes-signature name def stream))  ;; by yusuke  May. 20
       (when fs
           (format stream "~%/ constr\\")
           (display-dag1 fs 'lilfes stream nil t))
@@ -209,15 +218,29 @@ Parse nodes need to be added so we can understand the display.
 	     (format stream ").~%"))))))
 
 
+;; changed by yusuke  May 25
+;(defun output-lilfes-spec (stream def order name)
+;  (if (eql order 1)
+;      (format stream "~%unary_rule \& ARC_DTR\\['HEAD-DTR'\\]")
+;    (if (eql order 2)          
+;	(progn 
+;	  (format stream "~%binary_rule \& NH_DIR\\~A &~%" 
+;		  (lilfes-rule-order def name))  
+;	  (format stream "ARC_DTR\\['HEAD-DTR'\\] &~%INP_DTR\\['NON-HEAD-DTR'\\]"))
+;      (error "Unrecognised order ~A in ~A" order name))))
 (defun output-lilfes-spec (stream def order name)
   (if (eql order 1)
-      (format stream "~%unary_rule \& ARC_DTR\\['HEAD-DTR'\\]")
+      (format stream "~%unary_rule \& UNARY_DTR_PATH\\['ARGS'\\, hd\\]")
     (if (eql order 2)          
-	(progn 
-	  (format stream "~%binary_rule \& NH_DIR\\~A &~%" 
-		  (lilfes-rule-order def name))  
-	  (format stream "ARC_DTR\\['HEAD-DTR'\\] &~%INP_DTR\\['NON-HEAD-DTR'\\]"))
-      (error "Unrecognised order ~A in ~A" order name))))
+	(let ((rule-order (lilfes-rule-order def name)))
+	  (if (eq rule-order nil)
+	      (setq rule-order (lilfes-rule-order-nonheaded def name)))
+	  (format stream "~%binary_rule \&~%")
+	  (format stream "LEFT_DTR_PATH\\['ARGS'\\, hd\\] &~%RIGHT_DTR_PATH\\['ARGS'\\, tl\\, hd\\] &~%")
+	  (if (string= rule-order "right")
+	      (format stream "TNT_ARC_PATH\\['ARGS'\\, hd\\]")
+	      (format stream "TNT_ARC_PATH\\['ARGS'\\, tl\\, hd\\]")))
+	(error "Unrecognised order ~A in ~A" order name))))
 
 (defun lilfes-rule-order (rule-fs name)
   (let ((nh-dtr (existing-dag-at-end-of rule-fs '(NON-HEAD-DTR)))
@@ -232,7 +255,27 @@ Parse nodes need to be added so we can understand the display.
 		  ((and (eq first-dtr h-dtr)
 			(not (eq first-dtr nh-dtr))) "right")
 		  (t (error "~A has problems" name)))))))
+
+;; by yusuke  May 25
+;; modified by aac
+(defun lilfes-rule-order-nonheaded (rule-fs name)
+  (declare (ignore name))
+  (let ((key-arg-left (existing-dag-at-end-of rule-fs '(ARGS FIRST KEY-ARG)))
+	(key-arg-right (existing-dag-at-end-of rule-fs '(ARGS REST FIRST KEY-ARG))))
+    (cond ((bool-value-true key-arg-left) "right")
+          ((bool-value-true key-arg-right) "left")
+	  (t "error"))))
+
+(defun bool-value-true (fs)
+  (and fs
+       (let ((fs-type (type-of-fs fs)))
+         (and (listp fs-type)
+              (eql (car fs-type) '+)))))
   
+  
+;(defun lilfes-rule-order-nonheaded (rule-fs name)
+;  "right")
+
 (defun enhance-tdfs (tdfs path value)
   (if (and path (existing-dag-at-end-of (tdfs-indef tdfs) path))
     (with-unification-context (ignore)
@@ -242,16 +285,15 @@ Parse nodes need to be added so we can understand the display.
 
 (defun output-derived-instance-as-lilfes (string fs stream 
                                           &optional id derivation)
-  (let* ((id (and id (intern id :user)))
-         (identifier (and id (make-tdfs :indef (make-dag :type id))))
+  (let* ((identifier (and id (make-tdfs :indef (make-dag :type (list id)))))
          (enhanced 
           (if identifier (enhance-tdfs fs *lexical-id-path* identifier) fs))
          (dag (tdfs-indef enhanced)))
     ;; assume no defaults
     (when (and id derivation)
       (format stream "~%% ~(~a~): ~{~(~a~)~^ ~}~%" id derivation))
-    (format stream "~%lexical_entry(\"~A\", " string)
+    (format stream "~%lexical_entry(\"~A\", " (string-downcase string))
     (display-dag1 dag 'lilfes stream)
-    (format stream ").~%")))                 
+    (format stream ").~%")))
 
 
