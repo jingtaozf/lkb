@@ -14,7 +14,7 @@
 
 (defstruct (g-edge (:include dotted-edge)
                    (:constructor make-g-edge
-                    (&key id category rule-number dag needed
+                    (&key id category rule dag needed
                           (dag-restricted
                              ;; restricted field in inactive edges is dag, for
                              ;; active edges it's the next needed daughter
@@ -28,8 +28,8 @@
                           leaves lex-ids children morph-history 
                           spelling-change res rels-covered)))
    ;; category: not used
-   ;; id, rule-number, leaves: filled in, not used by generation
-   ;; algorithm itself, but needed for chart display etc
+   ;; id, rule, leaves: filled in, not used in generation algorithm itself, but
+   ;; needed for chart display etc
    rels-covered ; set of relations generated so far
    )
 
@@ -51,10 +51,11 @@
        *start-symbol* *debugging* *substantive-roots-p*
        mrs::*initial-semantics-path* mrs::*psoa-liszt-path*
        mrs::*liszt-first-path* mrs::*liszt-rest-path* mrs::*rel-name-path*
-       mrs::*null-semantics-found-items*))
+       mrs::*null-semantics-found-items* mrs::*possible-grules*))
 )
 
-;;; utility functions for initialising and building daughters and leaves
+
+;;; Utility functions for initialising and building daughters and leaves
 ;;; fields in active chart edges
 
 (defun gen-make-list-and-insert (len item index)
@@ -67,7 +68,7 @@
    (substitute item nil lst :count 1))
 
 
-;;; functions on sets (of MRS relations)
+;;; Functions on sets (of MRS relations)
 
 (defun gen-chart-set-intersection-p (lst1 lst2)
    (dolist (x lst1 nil) (when (member x lst2 :test #'eq) (return t))))
@@ -83,75 +84,6 @@
 
 (defun gen-chart-set-difference (lst1 lst2)
    (remove-if #'(lambda (x) (member x lst2 :test #'eq)) lst1))
-
-
-;;; Extract list of relation names in semantic portion of an edge FS. Also fns
-;;; for checking resulting bags for equality and finding bag difference. I hope
-;;; these can go once I have a list of instantiated versions of rules which add
-;;; semantics - then I can just use the mrs relation structures and simply
-;;; append them to form sets, rather than computing bags of relation names
-;;; from semantics ***
-
-(defun gen-chart-relation-names (edge)
-   (let ((sem-fs
-          (existing-dag-at-end-of (tdfs-indef (g-edge-dag edge))
-             (append mrs::*initial-semantics-path* mrs::*psoa-liszt-path*))))
-      (gen-chart-relation-names1 sem-fs nil)))
-
-(defun gen-chart-relation-names1 (fs rels-list) ; c.f. mrs::construct-liszt
-  (if (and fs (dag-p fs))
-     (let ((label-list (unless (is-atomic fs)
-                         (dag-arcs fs))))
-        (if label-list
-           (let ((first-part (assoc (car mrs::*liszt-first-path*)
-                                       label-list))
-                 (rest-part (assoc (car mrs::*liszt-rest-path*)
-                                      label-list)))
-               (if (and first-part rest-part)
-                  (let* ((fs (cdr first-part))
-                         (label-list (unless (is-atomic fs)
-                                       (dag-arcs fs)))
-                         (pred (assoc (car mrs::*rel-name-path*) label-list))
-                         (type (if pred 
-                                   (type-of-fs (rest pred)) 
-                                 (type-of-fs fs))))
-                      (push
-                       (if (listp type) (car type) type)
-                       rels-list)
-                      (gen-chart-relation-names1 (cdr rest-part) rels-list))
-                  rels-list))
-            rels-list))))
-
-(defun gen-chart-bag-equal-p (b1 b2)
-   ;; do the two bags have exactly the same (eq) members?
-   (and (eql (length b1) (length b2))
-      (gen-chart-subbag-p b1 b2)))
-
-(defun gen-chart-subbag-p (b1 b2)
-   ;; is lst1 a (not necessarily strict) subset of lst2, considering duplicate
-   ;; elements as distinct?
-   (labels ((subbag-p-1 (t1 t2 t2-found)
-              (if t1
-                 ;; is there a tail of t2 whose head is eq to (car t1) such that
-                 ;; the tail is not present in t2-found?
-                 (do ((t1head (car t1))
-                      (t2tail t2 (cdr t2tail)))
-                     ((null t2tail) nil)
-                     (if (eq t1head (car t2tail))
-                        (unless (member t2tail t2-found :test #'eq)
-                           (let ((new-t2-found (cons t2tail t2-found)))
-                              (declare (dynamic-extent new-t2-found))
-                              (return (subbag-p-1 (cdr t1) t2 new-t2-found))))))
-                 t)))
-      (subbag-p-1 b1 b2 nil)))
-
-(defun gen-chart-bag-difference (b1 b2)
-   ;; items in b1 that aren't in b2, considering duplicate elements as distinct
-   (remove-if
-      #'(lambda (x)
-           (when (member x b2 :test #'eq) (setq b2 (remove x b2 :test #'eq)) t))
-      b1))
-
 
 
 ;;; Interface to generator - take an input MRS, ask for instantiated lexical items
@@ -173,10 +105,11 @@
              :key #'mrs::found-lex-rule-list :test #'equal))
        (empty
           (mrs::possibly-applicable-null-semantics input-sem)
-          ;; *** (apply #'append mrs::*null-semantics-found-items*)
+          ;; this must be called after mrs::collect-lex-entries-from-mrs since the
+          ;; latter sets up mrs::*null-semantics-found-items* for it
           ))
       (if filtered
-         (chart-generate input-sem (append filtered empty))
+         (chart-generate input-sem (append filtered empty) mrs::*possible-grules*)
          (progn
             (format t "~%Some lexical entries could not be found from MRS relations ~
                        - has function index-for-generator been run yet?")
@@ -203,33 +136,30 @@
 ;;; attempts, number of unification failures, number of active edges, number
 ;;; of inactive, total number of chart edges
 
-(defun chart-generate (input-sem found-lex-items)
+(defun chart-generate (input-sem found-lex-items possible-grules)
    (clear-gen-chart) ; also an entry point so ensure chart is clear
    ;(when (> (length found-lex-items) 80)
    ;   (format t "~%More than 80 initial lexical items - skipping")
    ;   (return-from chart-generate nil))
    (let ((*safe-not-to-copy-p* t)
          (*gen-chart-unifs* 0) (*gen-chart-fails* 0)
-         (*input-sem-liszt* (mrs::psoa-liszt input-sem))
          (*non-intersective-rules*
-            (get-indexed-rules nil
+            (remove-if
                #'(lambda (r)
                    (or (member (rule-id r) *intersective-rule-names* :test #'eq)
-                      (spelling-change-rule-p r))))))
-      (declare (special *input-sem-liszt*))
+                      (spelling-change-rule-p r)))
+               possible-grules)))
       #+(and mcl powerpc) (setq aa 0 bb 0 cc 0 dd 0 ee 0 ff 0 gg 0 hh 0 ii 0 jj 0)
       (dolist (found found-lex-items)
          (let* ((lex-entry-fs (mrs::found-lex-inst-fs found))
                 (word (extract-orth-from-fs lex-entry-fs)))
             (gen-chart-add-inactive
                (make-g-edge
-                  :id (next-edge) :rule-number word
+                  :id (next-edge) :rule word
                   :dag lex-entry-fs
                   :needed nil
                   :rels-covered
-                  (append (mrs::found-lex-main-rels found)
-;                          (mrs::found-lex-alternative-rels found)
-                          (mrs::found-lex-message-rels found))
+                  (mrs::found-lex-main-rels found) ; ignore any message rels
                   :children nil :leaves (list word))
               input-sem)))
       (multiple-value-bind (complete partial)
@@ -299,15 +229,15 @@
 
 
 (defun gen-chart-check-complete (edge input-sem)
-   ;; check that semantics of edge is subsumed by input-sem
-   ;; *** rules may have introduced semantics, so we can't just look at lexical
-   ;; items' semantics and compare with input - we need to also take into
-   ;; account relations created by the rules used so far
-   ;; - in time this will be present in rels-covered field, but not yet
-   ;; (gen-chart-set-equal-p (g-edge-rels-covered edge) (mrs::psoa-liszt input-sem))
-   ;; For now we just compute the bag of relation names from the semantics
-   (gen-chart-bag-equal-p (gen-chart-relation-names edge)
-      (mapcar #'mrs::rel-sort (mrs::psoa-liszt input-sem))))
+   ;; check that semantics of edge is subsumed by input-sem, i.e. that we've
+   ;; got all the relations that we wanted
+   #+ignore (print (list (edge-id edge) (mapcar #'mrs::rel-sort (g-edge-rels-covered edge))))
+   (gen-chart-subset-p
+       ;; *** discount any rels that might be coming from a message
+       (remove-if
+         #'(lambda (s) (or (eq s 'MESSAGE) (subtype-p s 'MESSAGE)))
+         (mrs::psoa-liszt input-sem) :key #'mrs::rel-sort)
+      (g-edge-rels-covered edge)))
 
 
 (defun gen-chart-check-compatible (edge input-sem)
@@ -351,7 +281,7 @@
                    (let ((new-edge
                           (make-g-edge :dag unif
                                      :id (next-edge)
-                                     :rule-number 'root
+                                     :rule 'root
                                      :children (list edge)
                                      :leaves (g-edge-leaves edge))))
                       (gen-chart-add-with-index new-edge
@@ -426,16 +356,12 @@
    ;; assume that once a relation has been put in liszt it won't be removed. This
    ;; filter is needed as well as less expensive one that lexical items are used
    ;; only once since some rules can introduce relations.
-   ;; A stronger - and more expensive - filter would also check indices for
-   ;; compatibility
-   (unless (gen-chart-subbag-p (gen-chart-relation-names edge)
-               (mapcar #'mrs::rel-sort (mrs::psoa-liszt input-sem)))
-      ;; *** (gen-chart-subset-p (g-edge-rels-covered edge) (mrs::psoa-liszt input-sem))
+   (unless (gen-chart-subset-p (g-edge-rels-covered edge) (mrs::psoa-liszt input-sem))
       (when *gen-filter-debug*
          (format t "~&Filtered out candidate inactive edge covering ~A ~
-                    with lexical relations ~(~A~) that are not a subset of ~
+                    with lexical relations ~A that are not a subset of ~
                     input semantics"
-             (g-edge-leaves edge) (gen-chart-relation-names edge)))
+             (g-edge-leaves edge) (mapcar #'mrs::rel-sort (g-edge-rels-covered edge))))
       (return-from gen-chart-add-inactive nil))
    (let
       ((index
@@ -461,7 +387,7 @@
 (defun gen-chart-create-active (rule edge gen-daughter-order head-index)
    (let
       ((unified-dag
-          (gen-chart-try-unification (rule-id rule)
+          (gen-chart-try-unification rule
              (rule-full-fs rule)
              (first gen-daughter-order) ; head daughter path
              (nth head-index (rule-daughters-restricted rule)) ; head restrictor
@@ -470,11 +396,15 @@
              (first (rule-order rule)))))
       (when unified-dag
          (make-g-edge
-            :id (next-edge) :rule-number (rule-id rule)
+            :id (next-edge) :rule rule
             :dag unified-dag
             :res rule
             :needed (rest gen-daughter-order)
-            :rels-covered (g-edge-rels-covered edge)
+            :rels-covered
+            (append
+               (if (mrs::found-rule-p rule)
+                  (mrs::found-rule-main-rels rule)) ; ignore any message rels
+               (g-edge-rels-covered edge))
             :children
             (gen-make-list-and-insert (length gen-daughter-order)
                edge (1+ head-index))
@@ -493,7 +423,7 @@
          (format t "~&Trying to extend active edge ~A with inactive edge ~A"
             (g-edge-id act) (g-edge-id inact)))
       (let ((unified-dag
-               (gen-chart-try-unification (g-edge-rule-number act)
+               (gen-chart-try-unification (g-edge-rule act)
                   (g-edge-dag act)
                   (first (g-edge-needed act))
                   (g-edge-dag-restricted act)
@@ -508,7 +438,7 @@
             (let ((new-act
                      (make-g-edge
                         :id (next-edge) 
-                        :rule-number (g-edge-rule-number act)
+                        :rule (g-edge-rule act)
                         :dag unified-dag
                         :res (g-edge-res act)
                         :needed (rest (g-edge-needed act))
@@ -550,31 +480,6 @@
 (defun gen-chart-finish-active (act)
    ;; turn active into an inactive edge
    (setf (g-edge-res act) nil)
-   ;; *** there may be extra relations coming from the rule application, but I
-   ;; can't detect them as yet, unfortunately
-   ;; (setf (g-edge-rels-covered act)
-   ;;    (nconc (gen-chart-extra-rels-covered act) (g-edge-rels-covered act)))
-   ;; *** I must find the pron_rel introduced by IMPER - this is a very ugly hack
-   ;; but I must make sure I consume it, otherwise I may be looking for it later
-   ;; in adjuncts and of course failing to find it
-   (when (eq (g-edge-rule-number act) 'IMPER)
-      (let ((sem-fs
-               (existing-dag-at-end-of (tdfs-indef (g-edge-dag act))
-                   mrs::*initial-semantics-path*)))
-         (if (and sem-fs (dag-p sem-fs))
-            (let ((mrs (mrs::construct-mrs sem-fs nil t)))
-               (declare (special *input-sem-liszt*))
-               (dolist (rel (mrs::psoa-liszt mrs))
-                  (when (eq (mrs::rel-sort rel) 'PRON_REL)
-                     (let ((found (find-if
-                                   #'(lambda (x)
-                                       (and (eq (mrs::rel-sort x) 'PRON_REL)
-                                         (eql (mrs::var-id (mrs::rel-handel x))
-                                           (mrs::var-id (mrs::rel-handel rel)))))
-                                   *input-sem-liszt*)))
-                        (when found
-                           (push found (g-edge-rels-covered act))
-                           (return nil)))))))))
    (setf (g-edge-leaves act)
       (apply #'append (g-edge-leaves act)))
    act)
@@ -582,14 +487,16 @@
 
 ;;; Unification routines, entered only through gen-chart-try-unification
 
-(defun gen-chart-try-unification (rule-id rule-tdfs daughter-path
+(defun gen-chart-try-unification (rule rule-tdfs daughter-path
       daughter-restricted daughter-index edge completedp mother-path)
    ;; attempt to apply a grammar rule - c.f. apply-immediate-grammar-rule
    ;; in parse.lsp
    (when
       (and
-         (check-filter
-            rule-id (g-edge-rule-number edge) daughter-index)
+         (if (and (rule-p (g-edge-rule edge)) (rule-apply-index (g-edge-rule edge))) ; ***
+            (check-rule-filter
+               rule (g-edge-rule edge) daughter-index)
+            t)
          (restrictors-compatible-p
             daughter-restricted (g-edge-dag-restricted edge)))
       (gen-chart-evaluate-unification
@@ -660,21 +567,21 @@
          (cached-rels-edges (make-hash-table :test #'equal))
          (res nil))
       (declare (special *active-modifier-edges*))
+      (when *gen-adjunction-debug*
+         (format t "~%Candidate modifier edges ~:A" (mapcar #'edge-id mod-candidate-edges)))
       (dolist (partial partial-edges)
          (when *gen-adjunction-debug*
             (format t "~&---~%Partial edge [~A] spanning ~:A" (g-edge-id partial)
                (g-edge-leaves partial)))
          (let* ((*optional-rel-names* nil)
                 (missing-rels
-                  ;; *** don't go looking for rels that do not not always come from
-                  ;; lexical entries. But do allow an edge to have one or more of them
-                  ;; i.e. they're optional. When we have info about rels coming frm
-                  ;; rules this slop can be removed
+                  ;; *** don't go looking for rels that might be coming from a message
+                  ;; - they might be part of the semantics proper so can't just ignore
+                  ;; them in the input-sem
                   (remove-if
-                     #'(lambda (r)
-                         (when (some #'(lambda (type) (or (eq r type) (subtype-p r type)))
-                                     '(MESSAGE ABSTR_E_REL SUPPORT_REL UDEF_REL))
-                            (pushnew r *optional-rel-names* :test #'eq)
+                     #'(lambda (s)
+                         (when (or (eq s 'MESSAGE) (subtype-p s 'MESSAGE))
+                            (pushnew s *optional-rel-names* :test #'eq)
                             t))
                      (gen-chart-set-difference
                         (mrs::psoa-liszt input-sem) (g-edge-rels-covered partial))
@@ -684,7 +591,7 @@
             (when *gen-adjunction-debug*
                (format t "~&Missing relations ~:A" (mapcar #'mrs::rel-sort missing-rels))
                (when *optional-rel-names*
-                  (format t "~&'Optional' relations ~:A" *optional-rel-names*)))
+                  (format t "~&'Optional' possibly message relations ~:A" *optional-rel-names*)))
             (dolist (mod-alt
                       (gen-chart-mod-edge-partitions
                          (list (car missing-rels)) (cdr missing-rels) (cdr missing-rels)
@@ -728,7 +635,7 @@
 (defun gen-chart-mod-edge-partitions (rels next rest mod-candidate-edges cached-rels-edges)
    ;; compute sets of partitions of input relations with each partition containing
    ;; the set of modifier edges that cover those relations: e.g.
-  ;; ( (((r1 r2) e1 e2) ((r3 r4) e3))  (((r1) e4 e5 e6) ((r2 r3 r4) e5)) )
+   ;; ( (((r1 r2) e1 e2) ((r3 r4) e3))  (((r1) e4 e5 e6) ((r2 r3 r4) e5)) )
    (let ((rels-edges (gethash rels cached-rels-edges t)))
       (when (eq rels-edges t)
          (setq rels-edges nil)
@@ -877,9 +784,7 @@
 
 (defun gen-chart-reapply-rule (edge daughters mods) ; -> list of edge-and-mods
    (let*
-      ((rule
-         (or (get-grammar-rule-entry (edge-rule-number edge))
-             (get-lex-rule-entry (edge-rule-number edge))))
+      ((rule (edge-rule edge))
        (unified-dag (rule-full-fs rule)))
       (with-unification-context (ignore)
          (loop 
@@ -897,11 +802,14 @@
             (let
                ((new-edge
                   (make-g-edge
-                     :id (next-edge) :rule-number (rule-id rule)
+                     :id (next-edge) :rule rule
                      :dag unified-dag
                      :needed nil
                      :rels-covered
-                     (apply #'append (mapcar #'g-edge-rels-covered daughters))
+                     (apply #'append
+                        (if (mrs::found-rule-p rule)
+                           (mrs::found-rule-main-rels rule))
+                        (mapcar #'g-edge-rels-covered daughters))
                      :children daughters
                      :leaves (mapcar #'g-edge-leaves daughters))))
                (gen-chart-finish-active new-edge)
@@ -918,7 +826,8 @@
       (dolist (e (reverse (cdr entry))) ; to get in chronological order
          (format t "[~A] ~A~A ~30,5T=> (~{~:A~^ ~})  [~{~A~^ ~}]~%"
             (g-edge-id e)
-            (g-edge-rule-number e)
+            (if (rule-p (g-edge-rule e)) (rule-id (g-edge-rule e))
+                (g-edge-rule e))
             (if (g-edge-needed e)
                (format nil " / ~{~A~^ ~}" (g-edge-needed e))
                "")
