@@ -101,22 +101,23 @@
         ((derivation-preterminalp deriv)
          (format 
           stream 
-          "~(~20a~c~30a~c~%~)"
+          "~(~20a~c~a~c~%~)"
           (derivation-terminal (nth-daughter 0 deriv) :normalize t)
           #\tab
           (derivation-preterminal deriv)
           #\tab))
 	((inflectional-rule-p deriv)
 	 (format 
-          stream 
-          "~(~20a~c~30a~c~@[~a~]~%~)"
-          (derivation-terminal 
-           (nth-daughter 0 (nth-daughter 0 deriv))
-           :normalize t)
-          #\tab
-          (derivation-preterminal (nth-daughter 0 deriv))
-          #\tab
-          (when (inflectional-rule-p deriv) (derivation-root deriv))))
+	  stream 
+	  "~(~20a~c~30a~c~@[~a~]~c~%~)"
+	  (derivation-terminal 
+	   (nth-daughter 0 (nth-daughter 0 deriv))
+	   :normalize t)
+	  #\tab
+	  (derivation-preterminal (nth-daughter 0 deriv))
+	  #\tab
+	  (when (inflectional-rule-p deriv) (derivation-root deriv))
+	  #\tab))
 	((derivation-daughters deriv)
 	 (mapc (lambda (daughter)
 		 (tnt-process-deriv daughter stream))
@@ -129,62 +130,83 @@
 ;;; data (defaulting to *tsdb-data*), restricted by the provided
 ;;; condition and written to files in the directory provided as path.
 
-(defun export-trees-for-tnt (&optional (data *tsdb-data*)
-                             &key (condition *statistics-select-condition*)
-                                  path prefix)
-  (loop
-      with target = (or path 
-                        (format nil "/home/tmp/~a" (substitute #\. #\/ data)))
-                  
-      with items = (analyze data :thorough '(:derivation) 
-                            :condition condition)
-      for item in items
-      for input = (or (get-field :o-input item) (get-field :i-input item))
-      for i-id = (get-field :i-id item)
-      for parse-id = (get-field :parse-id item)
-      for trees = (select '("t-version") '(:integer) "tree" 
-                          (format nil "parse-id == ~a" parse-id) 
-                          data
-                          :sort :parse-id)
-      for version = (loop
-                        for tree in trees
-                        maximize (get-field :t-version tree))
-      for active = (let ((foo (select '("result-id") '(:integer) "preference" 
-                                      (format 
-                                       nil 
-                                       "parse-id == ~a && t-version == ~d" 
-                                       parse-id version) 
-                                      data)))
-                     (loop for bar in foo collect (get-field :result-id bar)))
-      for results = (get-field :results item)
-      initially 
-        (unless path
-          #+:allegro (excl::delete-directory-and-files target))
-        #+:allegro (ignore-errors (mkdir target))
-      when (= (length active) 1) do
-        (format t 
-		"~d: ~d active tree~p (of ~d)~%" 
-		i-id (length active) (length active) (length results))
+(defun export-trees-for-tnt (&key (data *tsdb-data*) 
+				  (condition *statistics-select-condition*)
+                                  path)
 
-	(with-open-file 
-	 (stream (format nil "~a/~@[~a.~]~d" target prefix i-id)
-		 :direction :output
-		 :if-exists :supersede :if-does-not-exist :create)
-	 (format 
-	  stream
-	  "%% TnT data from LinGO Redwoods (~a by ~a)~%~
-           %% ~d active tree~p (of ~d) for item # ~d (`~a')~%~
-           %% ~a~d"
-          (current-time) (current-user)
-	  (length active) (length active) (length results) i-id data
-          input)
-	 (loop
-             with *package* = (find-package lkb::*lkb-package*)
-             for result in results
-             for id = (get-field :result-id result)
-             for derivation = (when (member id active :test #'eql)
-                                (get-field :derivation result))
-             when derivation do
-               (format stream "%% tree # %d~%" id)
-               (tnt-process-deriv derivation stream)
-               (format stream "~%")))))
+  (let* ((target (or path 
+		     (format nil "/eo/e5/users/sshieber/tnt/data/~a/" 
+			     (substitute #\. #\/ data))))
+	 (*package* (find-package lkb::*lkb-package*)))
+    ;; delete any previous results and make a new directory for these
+    #+:allegro (ignore-errors (mkdir target))
+    (loop 
+     with cutoffincrement = 100
+     for cutoff from 0 by cutoffincrement
+     for items = (analyze data :thorough '(:derivation) 
+			  :condition (format nil "(i-id >= ~a) and (i-id < ~a) ~@[and (~a)~] and (t-active == 1)"
+					     cutoff 
+					     (+ cutoff cutoffincrement)
+					     condition))
+     while items
+	   ;; for each item (sentence)
+     do (loop for item in items do
+	      ;; extract a bunch of properties of the item
+	      (let* ((input (or (get-field :o-input item) 
+				(get-field :i-input item)))
+		     (i-id (get-field :i-id item))
+		     (parse-id (get-field :parse-id item))
+		     (results (get-field :results item))
+		     (trees (select '("t-version") '(:integer) "tree" 
+				    (format nil "parse-id == ~a" parse-id) 
+				    data
+				    :sort :parse-id))
+		     (version (loop
+			       for tree in trees
+			       maximize (get-field :t-version tree)))
+		     (active (let ((foo (select '("result-id") '(:integer) 
+						"preference" 
+						(format nil 
+							"parse-id == ~a && t-version == ~d" 
+							parse-id version) 
+						data)))
+			       (loop for bar in foo collect (get-field :result-id bar)))))
+		;; announce we're working on the item
+		(format t "~d: ~d active tree~p (of ~d)~%" 
+			i-id (length active) (length active) (length results))
+		(if (/= (length active) 1)
+		    ;; skip if there isn't exactly one active tree
+		    (format t "...skipped~%")
+		  (progn
+		    ;; make a subdirectory for the output
+		    (mkdir (format nil "~a/~d" target i-id))
+		    ;; for each parse of the item
+		    (loop for result in results do
+			  ;; get the derivation
+			  (let* ((id (get-field :result-id result))
+				 (derivation (get-field :derivation result)))
+			    ;; if there is one, open a file for the output
+			    (if derivation 
+				(let ((active? (member id active :test #'eql)))
+				  (with-open-file 
+				   (stream (format nil "~a/~d/~d~a" 
+						   target 
+						   i-id id (if active? "A" ""))
+					   :direction :output
+					   :if-exists :supersede :if-does-not-exist :create)
+				   ;; print a header
+				   (format stream
+					   "%% TnT data from LinGO Redwoods (~a by ~a)~%~
+                     %% ~d tree ~a(of ~d) for item # ~d~%~
+                     %% ~a~%"
+					   (current-time) (current-user)
+					   id (if active? "[active] " "") 
+					   (length results) i-id input)
+				   ;; print sentence start tags
+				   (format stream "~20a~:*~30a~:*~%~20a~:*~30a~%" "-s-")
+				   ;; print the tagger data
+				   (tnt-process-deriv derivation stream)
+				   ;; print sentence end tags
+				   (format stream "~20a~:*~30a~:*~%~20a~:*~30a~%" "-e-")
+			       
+				   ))))))))))))
