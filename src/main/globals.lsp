@@ -93,6 +93,9 @@
   "a type which specifies the type of any valid parse" 
   :user)
 
+(def-lkb-parameter *non-idiom-root* nil
+  "an fs id which specifies a structure which prevents idioms")
+
 (def-lkb-parameter *feature-ordering* nil
   "partial order of features for fixing or resolving default ordering")
 

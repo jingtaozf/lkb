@@ -32,7 +32,7 @@
    :include-debugger t
    :include-devel-env t
    :include-ide nil
-   :include-common-graphics nil
+;   :include-common-graphics nil
    :include-composer t
    :include-xcw t
 

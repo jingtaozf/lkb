@@ -43,6 +43,48 @@
           notag))
       "_rel")))
 
+
+;;; multiple files
+
+(defun process-rasp-files nil
+ (read-rmrs-grammar "~aac10/lingo/newlkb/src/rmrs/annlt-test/gram.rmrs")
+ (read-rmrs-tag-templates "~aac10/lingo/newlkb/src/rmrs/annlt-test/lex.rmrs")
+ (let* ((ifiles (directory "/usr/groups/mphil/qa02/trec8qa/parses2/*"))
+        (ofiles (directory "/usr/groups/mphil/qa02/trec8qa/rmrs2/*"))
+        (ofile-qnos (loop for ofile in ofiles
+                        collect
+                        (let* ((namestring (file-namestring ofile))
+                               (dot-pos (position #\. namestring)))
+                 (if dot-pos (subseq namestring 0 dot-pos))))))      
+    (loop for ifile in ifiles
+        do
+          (let* ((namestring (file-namestring ifile))
+                 (dot-pos (position #\. namestring))
+                 (qno (if dot-pos (subseq namestring 0 dot-pos)))
+                 (frest (if dot-pos (subseq namestring (+ 1 dot-pos))))
+                 (fdot-pos (if frest (position #\. frest)))
+                 (ftype (if fdot-pos (subseq frest 0 fdot-pos))))
+            (when
+                (and (not (member qno ofile-qnos
+                              :test #'string-equal))
+                     (equal ftype "parses")
+                     (equal (subseq namestring 
+                                    (- (length namestring) 2))
+                            "gz"))
+              (excl::shell 
+               (concatenate 
+                   'string "gunzip -c < " 
+                   "/usr/groups/mphil/qa02/trec8qa/parses2/"
+                   namestring "> /tmp/pfile"))
+              (let ((new-file (concatenate 'string 
+                                "/usr/groups/mphil/qa02/trec8qa/rmrs2/" 
+                                qno "." "rmrs")))
+                (rmrs-from-file "/tmp/pfile" 
+                                new-file)
+                (when (probe-file new-file)
+                  (excl::shell (concatenate 'string "gzip " 
+                                      new-file)))))))))
+
 ;;; File wrapper - note use of handler-case
 
 (defun rmrs-from-file (filename output)
@@ -77,7 +119,8 @@
                   (progn
                     (unless (equal tree '(X))
                       (construct-sem-for-tree tree ostream))
-                    (format ostream "</sentence>"))
+                    (format ostream "</sentence>")
+                    (finish-output ostream))
                 (storage-condition (condition)
                   (format ostream "~%Memory allocation problem: ~A~%" condition))
                 (error (condition)

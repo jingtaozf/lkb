@@ -3,57 +3,65 @@
 
 the := det-lxm &
 [ ORTH.LIST.FIRST "the",
-  SEM.HOOK.KEYPRED "the_rel" ].
+  KEY.PRED "the_rel" ].
 
 her_1 := det-lxm &
 [ ORTH.LIST.FIRST "her",
-  SEM.HOOK.KEYPRED "her_rel" ].
+  KEY.PRED "her_rel" ].
 
 that_1 := sg-det-lxm &
 [ ORTH.LIST.FIRST "that",
-  SEM.HOOK.KEYPRED "that_rel" ].
+  KEY.PRED "that_rel" ].
 
 those := pl-det-lxm &
 [ ORTH.LIST.FIRST "those",
-  SEM.HOOK.KEYPRED "those_rel" ].
+  KEY.PRED "those_rel" ].
 
 these := pl-det-lxm &
 [ ORTH.LIST.FIRST "these",
-  SEM.HOOK.KEYPRED "these_rel" ].
+  KEY.PRED "these_rel" ].
+
+every_1 := sg-det-lxm &
+[ ORTH.LIST.FIRST "every",
+  KEY.PRED "every_rel" ].
+
+some_1 := det-lxm &
+[ ORTH.LIST.FIRST "some",
+  KEY.PRED "some_rel" ].
 
 ;;; nouns
 
 aardvark := noun-lxm &
 [ ORTH.LIST.FIRST "aardvark",
-  SEM.HOOK.KEYPRED "aardvark_rel" ].
+  KEY.PRED "aardvark_rel" ].
 
 dog := noun-lxm &
 [ ORTH.LIST.FIRST "dog",
-  SEM.HOOK.KEYPRED "dog_rel" ].
+  KEY.PRED "dog_rel" ].
 
 food := noun-lxm &
 [ ORTH.LIST.FIRST "food",
-  SEM.HOOK.KEYPRED "food_rel" ].
+  KEY.PRED "food_rel" ].
 
 bowl := noun-lxm &
 [ ORTH.LIST.FIRST "bowl",
-  SEM.HOOK.KEYPRED "bowl_rel" ].
+  KEY.PRED "bowl_rel" ].
 
 cat := noun-lxm &
 [ ORTH.LIST.FIRST "cat",
-  SEM.HOOK.KEYPRED "cat_rel" ].
+  KEY.PRED "cat_rel" ].
 
 biscuit := noun-lxm &
 [ ORTH.LIST.FIRST "biscuit",
-  SEM.HOOK.KEYPRED "biscuit_rel" ].
+  KEY.PRED "biscuit_rel" ].
 
 kennel := noun-lxm &
 [ ORTH.LIST.FIRST "kennel",
-  SEM.HOOK.KEYPRED "kennel_rel" ].
+  KEY.PRED "kennel_rel" ].
 
 flap := noun-lxm &
 [ ORTH.LIST.FIRST "flap",
-  SEM.HOOK.KEYPRED "flap_rel" ].
+  KEY.PRED "flap_rel" ].
 
 
 ;;; pronouns / names
@@ -61,149 +69,149 @@ flap := noun-lxm &
 it_1 := pronm-lxm &
 [ ORTH.LIST.FIRST "it",
   HEAD.FORM it,
-  SEM.HOOK.KEYPRED "no_rel" ].
+  KEY.PRED "no_rel" ].
 
 it_2 := pronm-lxm &
 [ ORTH.LIST.FIRST "it",
-  SEM.HOOK.KEYPRED "it_rel" ].
+  KEY.PRED "it_rel" ].
 
 there := pronm-lxm &
 [ ORTH.LIST.FIRST "there",
   HEAD.FORM there,
-  SEM.HOOK.KEYPRED "no_rel" ].
+  KEY.PRED "no_rel" ].
 
 he := pronm-lxm &
 [ ORTH.LIST.FIRST "he",
-  SEM.HOOK.KEYPRED "he_rel" ].
+  KEY.PRED "he_rel" ].
 
 they := pronm-lxm &
 [ ORTH.LIST.FIRST "they",
   HEAD.AGR non-3sing,
-  SEM.HOOK.KEYPRED "they_rel" ].
+  KEY.PRED "they_rel" ].
 
 her_2 := pronm-lxm &
 [ ORTH.LIST.FIRST "her",
-  SEM.HOOK.KEYPRED "her_rel" ].
+  KEY.PRED "her_rel" ].
 
 kim := pronm-lxm &
 [ ORTH.LIST.FIRST "kim",
-  SEM.HOOK.KEYPRED "kim_rel" ].
+  KEY.PRED "kim_rel" ].
 
 sandy := pronm-lxm &
 [ ORTH.LIST.FIRST "sandy",
-  SEM.HOOK.KEYPRED "sandy_rel" ].
+  KEY.PRED "sandy_rel" ].
 
 ;;; verbs
 
 rain := no-arg-verb &
 [ ORTH.LIST.FIRST "rain",
-  SEM.HOOK.KEYPRED "rain_rel" ].
+  KEY.PRED "rain_rel" ].
 
 bark := intrans-verb &
 [ ORTH.LIST.FIRST "bark",
-  SEM.HOOK.KEYPRED "bark_rel" ].
+  KEY.PRED "bark_rel" ].
 
 eat_1 := intrans-verb &
 [ ORTH.LIST.FIRST "eat",
-  SEM.HOOK.KEYPRED "eat_rel" ].
+  KEY.PRED "eat_rel" ].
 
 eat_2 := trans-verb &
 [ ORTH.LIST.FIRST "eat",
-  SEM.HOOK.KEYPRED "eat_rel" ].
+  KEY.PRED "eat_rel" ].
 
 chase := trans-verb &
 [ ORTH.LIST.FIRST "chase",
-  SEM.HOOK.KEYPRED "chase_rel" ].
+  KEY.PRED "chase_rel" ].
 
 give := ditransnp-verb &
 [ ORTH.LIST.FIRST "give",
-  SEM.HOOK.KEYPRED "give_rel" ].
+  KEY.PRED "give_rel" ].
 
 seem := srv-lxm &
 [ ORTH.LIST.FIRST "seem",
-  SEM.HOOK.KEYPRED "seem_rel" ].
+  KEY.PRED "seem_rel" ].
 
 try := scv-lxm &
 [ ORTH.LIST.FIRST "try",
-  SEM.HOOK.KEYPRED "try_rel" ].
+  KEY.PRED "try_rel" ].
 
 believe := scomp-lxm &
 [ ORTH.LIST.FIRST "believe",
-  SEM.HOOK.KEYPRED "believe_rel" ].
+  KEY.PRED "believe_rel" ].
 
 be := auxv-lxm &
 [ ORTH.LIST.FIRST "be",
   COMPS < [HEAD.FORM presp] >,
-  SEM.HOOK.KEYPRED "be_rel" ].
+  KEY.PRED "be_rel" ].
 
 have := auxv-lxm &
 [ ORTH.LIST.FIRST "have",
   COMPS < [HEAD.FORM pastp] >,
-  SEM.HOOK.KEYPRED "have_rel" ].
+  KEY.PRED "have_rel" ].
 
 ;;; preps
 
 to_1 := prep-lxm &
 [ ORTH.LIST.FIRST "to",
-  SEM.HOOK.KEYPRED "to_rel" ].
+  KEY.PRED "to_rel" ].
 
 near := prep-lxm &
 [ ORTH.LIST.FIRST "near",
-  SEM.HOOK.KEYPRED "near_rel" ].
+  KEY.PRED "near_rel" ].
 
 from := prep-lxm &
 [ ORTH.LIST.FIRST "from",
-  SEM.HOOK.KEYPRED "from_rel" ].
+  KEY.PRED "from_rel" ].
 
 in := prep-lxm &
 [ ORTH.LIST.FIRST "in",
-  SEM.HOOK.KEYPRED "in_rel" ].
+  KEY.PRED "in_rel" ].
 
 into := prep-lxm &
 [ ORTH.LIST.FIRST "into",
-  SEM.HOOK.KEYPRED "into_rel" ].
+  KEY.PRED "into_rel" ].
 
 
 ;;; adverbs
 
 slowly := adv-lxm &
 [ ORTH.LIST.FIRST "slowly",
-  SEM.HOOK.KEYPRED "slow_rel" ].
+  KEY.PRED "slow_rel" ].
 
 loudly := adv-lxm &
 [ ORTH.LIST.FIRST "loudly",
-  SEM.HOOK.KEYPRED "loud_rel" ].
+  KEY.PRED "loud_rel" ].
 
 carefully := adv-lxm &
 [ ORTH.LIST.FIRST "carefully",
-  SEM.HOOK.KEYPRED "careful_rel" ].
+  KEY.PRED "careful_rel" ].
 
 
 ;;; adjectives
 
 slow := adj-lxm &
 [ ORTH.LIST.FIRST "slow",
-  SEM.HOOK.KEYPRED "slow_rel" ].
+  KEY.PRED "slow_rel" ].
 
 loud := adj-lxm &
 [ ORTH.LIST.FIRST "loud",
-  SEM.HOOK.KEYPRED "loud_rel" ].
+  KEY.PRED "loud_rel" ].
 
 ;;; degree intensifiers
 
 so := deg-lxm &
 [ ORTH.LIST.FIRST "so",
-  SEM.HOOK.KEYPRED "so_rel" ].
+  KEY.PRED "so_rel" ].
 
 ;;; conjunctions
 
 and := conj-lxm &
 [ ORTH.LIST.FIRST "and",
-  SEM.HOOK.KEYPRED "and_rel" ].
+  KEY.PRED "and_rel" ].
 
 or := conj-lxm &
 [ ORTH.LIST.FIRST "or",
-  SEM.HOOK.KEYPRED "or_rel" ].
+  KEY.PRED "or_rel" ].
 
 ;;; complementizers
 ;;; the no_rel here is a placeholder
@@ -214,11 +222,11 @@ that_2 := comp-lxm &
 [ ORTH.LIST.FIRST "that",
   HEAD.FORM fin,
   SPR <>,
-  SEM.HOOK.KEYPRED "no_rel" ].
+  KEY.PRED "no_rel" ].
 
 to_2 := comp-lxm &
 [ ORTH.LIST.FIRST "to",
   HEAD.FORM inf,
-  SEM.HOOK.KEYPRED "no_rel" ].
+  KEY.PRED "no_rel" ].
 
 

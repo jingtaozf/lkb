@@ -104,7 +104,7 @@
 (defvar *morphs* (make-array (list *chart-limit*) :initial-element nil))
 
 ;;; *morphs* is added, paralleling *chart* to allow for
-;;; multi-word entries (and eventually idioms perhaps).
+;;; multi-word entries (including non-decomposable idioms).
 ;;; multi-word entries may have affixation on any member
 ;;; but they span several vertices.  It's therefore
 ;;; necessary to treat them as individual words with respect to
@@ -1092,23 +1092,34 @@
 	  (create-new-root-edges item start-symbols start-vertex end-vertex)
           (filter-root-edges item start-symbols))))))
 
-(defun filter-root-edges (item &optional (roots *start-symbol*))
+(defparameter *additional-root-condition* nil
+  "defined in mrs/idioms.lisp")
+
+(defun filter-root-edges (item roots)
   (loop
       with edge = (if (edge-p item) item (chart-configuration-edge item))
       with tdfs = (edge-dag edge)
-      for root in (if (listp roots) roots (list roots))
+      for root in roots
       for rtdfs = (get-tdfs-given-id root)
-      thereis (when (and rtdfs (yaduablep rtdfs tdfs))
+      thereis (when 
+                  (and rtdfs 
+                       (yaduablep rtdfs tdfs)
+                       (if *additional-root-condition*
+                           (funcall *additional-root-condition* tdfs)
+                         t))
                 (list edge))))
+
+;;; FIX - can't really have substantive-roots-p and idioms
+;;; need to stop it being set if idioms are loaded
 
 (defun create-new-root-edges (item start-symbols start-vertex end-vertex)
   (loop for start-symbol in start-symbols        
        nconc
-       (let ((tdfs (get-tdfs-given-id 
+       (let ((rtdfs (get-tdfs-given-id 
                     start-symbol)))
-         (if tdfs
+         (if rtdfs
             (let ((unif
-                    (yadu tdfs
+                    (yadu rtdfs
                           (edge-dag 
                             (chart-configuration-edge item)))))
                (if unif

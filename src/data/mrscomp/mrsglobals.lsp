@@ -22,13 +22,13 @@
 
 (defparameter *value-feats* `(,(vsym "NAME")))
 
-(defparameter *psoa-top-h-path* `(,(vsym "GTOP")))
 (defparameter *psoa-index-path* 
   `(,(vsym "HOOK") ,(vsym "INDEX"))
   "path to get an index from a psoa")
+
 (defparameter *psoa-event-path* `(,(vsym "HOOK") ,(vsym "INDEX")))
 (defparameter *psoa-liszt-path* `(,(vsym "RELS") ,(vsym "LIST")))
-(defparameter *psoa-rh-cons-path* `(,(vsym "QEQS") ,(vsym "LIST")))
+(defparameter *psoa-rh-cons-path* `(,(vsym "HCONS") ,(vsym "LIST")))
 
 (defparameter *ref-ind-type* (vsym "object"))
 
@@ -43,7 +43,7 @@
   "the feature in a qeq that leads to the second argument")
 
 (defparameter *feat-priority-list*  
-    `( ,(vsym "GTOP") ,(vsym "HNDL") ,(vsym "INDEX"))
+    `( ,(vsym "HNDL") ,(vsym "INDEX"))
   "A not-necessarily-complete list of features that determines printing
 order in an MRS")
 
@@ -54,4 +54,4 @@ order in an MRS")
 
 (defparameter *bv-feature* (vsym "BV"))
 
-(defparameter *scope-feat* (vsym "SCOPE"))
+(defparameter *scope-feat* (vsym "BODY"))

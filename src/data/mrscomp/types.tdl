@@ -48,36 +48,26 @@ comp := pos & [MOD.CAT <>].
 
 ;;; schematically, we are concerned with three types of slot
 ;;; for the semantics
-;;; 1. Accumulators: RELS (aka LZT, LISZT) and QEQS (aka HCONS)
+;;; 1. Accumulators: RELS (aka LZT, LISZT) and HCONS (aka QEQS)
 ;;;    Implemented as difference lists --- only for accumulating values.  
 ;;;    The only operation on accumulators during parsing is difference 
 ;;;    list append.
 ;;; 2. Hooks: INDEX and LTOP
-;;;    Pointers into the LZT which are set up lexically: the only
+;;;    Pointers into the RELS which are set up lexically: the only
 ;;;    way of accessing parts of the semantics of a sign.
-;;; 3. Holes: e.g., the SPR's INDEX.  A pointer into a syntax `slot', 
+;;; 3. Slots: e.g., the SPR's INDEX.  A pointer into a syntax `slot', 
 ;;;    which will be coindexed with a hook in another sign.
 ;;; 
 ;;; 1 and 2 are represented in the semantics
-;;;
-;;; We also have the global value GTOP which is the same for all signs
-;;; and may be redundant
+
 
 semantics := feat-struc &
-[ GTOP handle,
-  HOOK hook,
+[ HOOK hook,
   RELS *dlist*,
-  QEQS *dlist* ].
-
-
-;;; making the KEYPRED part of the HOOK has the advantage 
-;;; that it gets passed up correctly, but the disadvantage that
-;;; intersective modifiers have to state the coindexation of
-;;; their indexes and ltops separately
+  HCONS *dlist* ].
 
 hook := feat-struc &
 [ INDEX index,
-  KEYPRED string,
   LTOP handle ].
 
 
@@ -109,7 +99,7 @@ arg1-2-3-relation := arg1-2-relation & [ ARG3 index ].
 det-relation := relation &
 [ BV object,
   RESTR handle,
-  SCOPE handle ].
+  BODY handle ].
   
 
 phrase := syn-struc &
@@ -127,13 +117,13 @@ unary-rule-passgap := unary-rule &
 binary-rule := phrase &
 [ ORTH [LIST #ofront, LAST #otail],
   SEM.RELS [LIST #cfront, LAST #ctail ],
-  SEM.QEQS [LIST #qfront, LAST #qtail ],
+  SEM.HCONS [LIST #qfront, LAST #qtail ],
   ARGS < [ ORTH [LIST #ofront, LAST #omiddle ],
            SEM.RELS [LIST #cfront, LAST #cmiddle ],
-           SEM.QEQS [LIST #qfront, LAST #qmiddle ]],
+           SEM.HCONS [LIST #qfront, LAST #qmiddle ]],
          [ ORTH [LIST #omiddle, LAST #otail ],
            SEM.RELS [LIST #cmiddle, LAST #ctail ], 
-           SEM.QEQS [LIST #qmiddle, LAST #qtail ]] > ].
+           SEM.HCONS [LIST #qmiddle, LAST #qtail ]] > ].
 
 binary-rule-passgap := binary-rule &
 [ GAP [LIST #gfront, LAST #gtail ],
@@ -143,20 +133,20 @@ binary-rule-passgap := binary-rule &
 ternary-rule := phrase &
 [ ORTH [LIST #ofront, LAST #otail],
   SEM.RELS [LIST #cfront, LAST #ctail ],
-  SEM.QEQS [LIST #qfront, LAST #qtail ],
+  SEM.HCONS [LIST #qfront, LAST #qtail ],
   GAP [ LIST #gfront,
 	LAST #gtail ],
   ARGS < [ ORTH [LIST #ofront, LAST #omiddle1 ],
            SEM.RELS [LIST #cfront, LAST #cmiddle1 ],
-           SEM.QEQS [LIST #qfront, LAST #qmiddle1 ],
+           SEM.HCONS [LIST #qfront, LAST #qmiddle1 ],
            GAP [LIST #gfront, LAST #gmiddle1 ] ],
          [ ORTH [LIST #omiddle1, LAST #omiddle2 ],
            SEM.RELS [LIST #cmiddle1, LAST #cmiddle2 ],
-           SEM.QEQS [LIST #qmiddle1, LAST #qmiddle2 ],
+           SEM.HCONS [LIST #qmiddle1, LAST #qmiddle2 ],
            GAP [LIST #gmiddle1, LAST #gmiddle2 ] ],
          [ ORTH [LIST #omiddle2, LAST #otail ],
            SEM.RELS [LIST #cmiddle2, LAST #ctail ],
-           SEM.QEQS [LIST #qmiddle2, LAST #qtail ],
+           SEM.HCONS [LIST #qmiddle2, LAST #qtail ],
            GAP [LIST #gmiddle2, LAST #gtail ] ] > ].
 
 head-initial := phrase &
@@ -191,16 +181,13 @@ lex-item := syn-struc &
 [ ORTH [ LIST [ REST #rest ], LAST #rest ],
   GAP <! !> ].
 
-;;; KEYPRED is now the name of the feature that is passed up
-;;; potentially for doing selection.  
 ;;; KEY is only used for convenience in setting up lexemes
 ;;; so I've made it an appropriate feature of lexemes only
 
 lexeme := lex-item &
-[ SEM [ HOOK.KEYPRED #pred,        
-        RELS <! #key !>,
-        QEQS /l <! !> ],
-  KEY #key & [ PRED #pred ]].
+[ SEM [ RELS <! #key !>,
+        HCONS /l <! !> ],
+  KEY #key ].
 
 ;;; LTOP is equal to the KEY's HNDL except for quantifiers
 ;;; we also have a BV rather than an ARG0 on quantifiers, though
@@ -245,7 +232,7 @@ det-lxm := quant-lxm & all-const-lxm &
                        LTOP  #lh ]]>,
   SEM [ HOOK [ INDEX #index & object,
                LTOP handle ],
-        QEQS <! [ HARG #rh, LARG #lh ] !>],
+        HCONS <! [ HARG #rh, LARG #lh ] !>],
   KEY det-relation 
       & [ HNDL handle,
           BV  #index,
@@ -308,7 +295,7 @@ no-arg-verb := verb-lxm &
   COMPS <>,
   KEY relation].
 
-;;; the hook/hole combination is done lexically here
+;;; the hook/slot combination is done lexically here
 ;;; normal verbs are non-scopal - though note that because
 ;;; the ltop of the NP is not coindexed, the equating
 ;;; of the ltops doesn't actually have much effect
@@ -353,7 +340,7 @@ srv-lxm := verb-lxm &
 [ SPR < #1  >,
   COMPS < phrase & [HEAD comp, HEAD.FORM inf, 
                     SPR < #1 >, SEM.HOOK.LTOP #lh] >,
-  SEM.QEQS <! [ HARG #arg1, LARG #lh ] !>,
+  SEM.HCONS <! [ HARG #arg1, LARG #lh ] !>,
   KEY arg1-relation & [ARG1 #arg1]].
 
 scv-lxm := verb-lxm &
@@ -361,7 +348,7 @@ scv-lxm := verb-lxm &
   COMPS < phrase & [HEAD comp, HEAD.FORM inf, 
                     SPR < #1 & [SEM.HOOK.INDEX #arg1] >, 
                     SEM.HOOK.LTOP #lh] >,
-  SEM.QEQS <! [ HARG #arg2, LARG #lh ] !>,
+  SEM.HCONS <! [ HARG #arg2, LARG #lh ] !>,
   KEY arg1-2-relation & [ARG1 #arg1, ARG2 #arg2]].
 
 scomp-lxm := verb-lxm &
@@ -369,7 +356,7 @@ scomp-lxm := verb-lxm &
   COMPS < phrase & [HEAD.FORM fin, 
                     SPR <>,
                     SEM.HOOK.LTOP #lh ] >, 
-  SEM.QEQS <! [ HARG #arg2, LARG #lh ] !>,
+  SEM.HCONS <! [ HARG #arg2, LARG #lh ] !>,
   KEY arg1-2-relation & [ARG1 #arg1, ARG2 #arg2]].
 
 auxv-lxm := verb-lxm &
@@ -380,39 +367,33 @@ auxv-lxm := verb-lxm &
   KEY arg1-relation & [ARG1 #arg1]].
 
 prep-lxm := const-lxm &
-[ HEAD prep & [MOD.CAT < [SEM.HOOK.INDEX #index,
-                          SEM.HOOK.LTOP  #h ] > ],
+[ HEAD prep & [MOD.CAT < [SEM.HOOK #hook ]>],
   SPR <>,
   COMPS < phrase & [HEAD det, HEAD.FORM norm, 
                     SPR <>, COMPS <>, 
                     SEM.HOOK [ INDEX #arg1,
                                LTOP #h ]] >,
-  SEM.HOOK [ INDEX #index,
-             LTOP #h  ],
+  SEM.HOOK #hook & [ LTOP #h ],
   KEY arg1-relation & [ARG1 #arg1]].
 
 ;;; this is for intersective modification
 
 adv-lxm := const-lxm &
 [ HEAD adv & 
-       [ MOD.CAT < [SEM.HOOK [ INDEX #index,
-                               LTOP #ltop ]] > ],
+       [ MOD.CAT < [SEM.HOOK #hook ] > ],
   SPR <>,
   COMPS <>,
-  SEM.HOOK [ INDEX #index,
-             LTOP #ltop ],
+  SEM.HOOK #hook,
   KEY relation ].
 
 ;;; this is for intersective modification
 
 adj-lxm := const-lxm &
 [ HEAD adj & 
-       [MOD.CAT < [SEM.HOOK [ INDEX #index,
-                              LTOP #ltop ]] > ],
+       [MOD.CAT < [SEM.HOOK #hook ] > ],
   SPR <>,
   COMPS <>,
-  SEM.HOOK [ INDEX #index,
-             LTOP #ltop ],
+  SEM.HOOK #hook,
   KEY relation ].
 
 
@@ -421,12 +402,10 @@ adj-lxm := const-lxm &
 ;;; underconstrained anyway
 
 deg-lxm := const-lxm &
-[ HEAD deg & [MOD.CAT < [SEM.HOOK.INDEX #index,
-                         SEM.HOOK.LTOP #ltop ] > ],
+[ HEAD deg & [MOD.CAT < [SEM.HOOK #hook ] > ],
   SPR <>,
   COMPS <>,
-  SEM.HOOK [ INDEX #index,
-             LTOP #ltop ],
+  SEM.HOOK #hook,
   KEY relation ].
 
 ;;; forget semantics of conjunction for the time being!
@@ -442,8 +421,8 @@ comp-lxm := const-lxm &
  COMPS < phrase & [HEAD verb, 
                    HEAD.FORM #form, 
                    SPR #1,
-                   SEM [HOOK.INDEX #index, HOOK.LTOP #h] ] >,
- SEM [HOOK.INDEX #index, HOOK.LTOP #h] ].
+                   SEM.HOOK #hook ] >, 
+ SEM.HOOK #hook ].
 
 ;;;
 ;;; some built-in data types

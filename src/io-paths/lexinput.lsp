@@ -29,6 +29,9 @@
 (defparameter *category-display-templates* nil
   "used in parseout.lsp")
 
+(defparameter *idiom-phrases* nil
+  "used in mrs/idioms.lisp")
+
 (defvar *lex-file-list* nil)
 
 (defvar *template-file-list* nil)

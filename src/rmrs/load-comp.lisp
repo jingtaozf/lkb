@@ -72,6 +72,10 @@ produced by robust parsers of various types.
   ;;; functions for ANNLT version are in annlt.lisp
   (rmrs-from-file "/usr/groups/corpora/trec8qa/parses/14.parses-st" 
   "../results/14.rmrsout")
- 
+
+
+  :pa :mrs
+  (process-rasp-files)
+  ;;; pathnames hard-wired - see annlt.lisp
 |#
 

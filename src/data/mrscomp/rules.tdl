@@ -47,63 +47,14 @@ modifier-head-rule := binary-head-final-passgap &
          [ SPR #spr,
            COMPS #comps ] > ].
 
-#|
-;;; revisions needed to the following rule
 
-noun-modifier-rule := unary-rule &
-[ HEAD noun-mod & [ MOD.CAT < [ SEM.HOOK #hook ] > ],
-  SPR <>,
-  ARGS < phrase & [ HEAD noun, SEM.HOOK #hook ] > ].
-|#
-
-#|
-;;; revisions needed to the following rule
-;;; as it stands it'll apply for ever.
-;;; Basically, it can't be headed.
-
-bare-pl-noun-rule := unary-head-initial &
-[ HEAD noun & [AGR non-3sing],
-  SPR <>,
-  ARGS < phrase > ].
-
-|#
-
-coord-rule := phrase &
-[ ORTH [LIST #ofront, LAST #otail],
-  HEAD #hd,
-  SPR #spr,
-  COMPS #comps,
-  SEM.RELS [LIST #cfront, LAST #ctail ],
-  GAP [ LIST #gfront,
-	LAST #gtail ],
-  ARGS < phrase & 
-         [ ORTH [LIST #ofront, LAST #omiddle1 ],
-           HEAD #hd,
-           SPR #spr,
-           COMPS #comps,
-           SEM.RELS [LIST #cfront, LAST #cmiddle1 ],
-           GAP [LIST #gfront, LAST #gtail ] ],
-         phrase &
-         [ ORTH [LIST #omiddle1, LAST #omiddle2 ],
-           HEAD conj,
-           SEM.RELS [LIST #cmiddle1, LAST #cmiddle2 ],
-           GAP [LIST #g1, LAST #g1 ] ],
-         phrase &
-         [ ORTH [LIST #omiddle2, LAST #otail ],
-           HEAD #hd,
-           SPR #spr,  
-           COMPS #comps,
-           SEM.RELS [LIST #cmiddle2, LAST #ctail ],
-           GAP [LIST #gfront, LAST #gtail ] ] > ].
-
-
-;;; the restriction to things with empty QEQs is a hack
+;;; the restriction to things with empty HCONS is a hack
 ;;; to prevent extraction of the N out of DPs!
 
 head-gap-rule-1 := unary-head-initial-startgap &
 [ GAP <! #1 !>,
   SPR #spr,
-  SEM.QEQS <! !>,
+  SEM.HCONS <! !>,
   ARGS < word & 
          [ SPR #spr,
            COMPS < #1 > ] >  ].
