@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include "getopt.h"
 #include "globals.h"
 #include "tsdb.h"
 #include <readline/readline.h>
@@ -67,7 +68,7 @@ char *cannon_whitespace(char *);
 int initialize_readline(void);
 BOOL tsdb_command(char *);
 
-int main(void) {
+int main(int argc, char **argv) {
 
   char *input = NULL;
   char host[512 + 1], prompt[80 + 1], *foo;
@@ -91,6 +92,7 @@ int main(void) {
     } /* if */
   } /* else */
 
+  tsdb_parse_options(argc, argv);
   tsdb_initialize();
   sprintf(prompt, "tsdb@%s (%d) # ", host, n_commands);
 
@@ -131,11 +133,63 @@ int main(void) {
 
 } /* main() */
 
-void main_quit(void) {
+void tsdb_parse_options(int argc, char **argv) {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_parse_options()
+|*     version: 
+|*  written by: oe, dfki saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|*
+\*****************************************************************************/
+
+  int c, foo;
+  struct option options[] = {
+    {"server", no_argument, 0, TSDB_SERVER_OPTION},
+    {0, 0, 0, 0}
+  }; /* struct option */
+
+  optind = 0;
+  opterr = 1;
+
+  while((c = getopt_long_only(argc, argv, "", options, &foo)) != EOF) {
+    switch(c) {
+      case '?':
+        tsdb_usage();
+        exit(-1);
+        break;
+      case TSDB_SERVER_OPTION:
+        break;
+      } /* switch */
+  } /* while */
+} /* tsdb_parse_options() */
+
+void tsdb_usage() {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_usage()
+|*     version: 
+|*  written by: oe, dfki saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|*
+\*****************************************************************************/
+
+  fprintf(TSDB_ERROR_STREAM,
+          "usage: `tsdb [options]'.\n");
+  fflush(TSDB_ERROR_STREAM);
+} /* tsdb_usage() */
+
+void tsdb_quit(void) {
 
   quit = TRUE;
 
-} /* main_quit() */
+} /* tsdb_quit() */
 
 int initialize_readline(void) {
 
