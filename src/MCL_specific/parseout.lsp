@@ -107,31 +107,31 @@
 
 
 (defun pop-up-parse-tree-menu-items (edge-symbol edge-record top-edge-p)
-  (list
-   (make-instance 'menu-item
-     :menu-item-title
-     (format nil "Feature structure - Edge ~A" (edge-id edge-record))
-     :menu-item-action
-     #'(lambda ()
-         (display-fs (get edge-symbol 'edge-fs)
+  (list*
+    (make-instance 'menu-item
+      :menu-item-title
+      (format nil "Feature structure - Edge ~A" (edge-id edge-record))
+      :menu-item-action
+      #'(lambda ()
+          (display-fs (get edge-symbol 'edge-fs)
                       (format nil "Edge ~A ~A - Tree FS" 
                               (edge-id edge-record)
                               (if (g-edge-p edge-record) 
                                   "G" 
                                 "P")))
           (display-edge-in-chart edge-record)))
-   (make-instance 'menu-item
-     :menu-item-title 
-     "Show edge in chart"
-     :menu-item-action
-     #'(lambda () (display-edge-in-chart edge-record)))
-   (make-instance 'menu-item
-     :menu-item-title 
-     (format nil "Rule ~A" 
-                 (let ((item (edge-rule edge-record)))
-                    (if (rule-p item) (rule-id item) (or item ""))))
-     :menu-item-action
-     #'(lambda ()
+    (make-instance 'menu-item
+      :menu-item-title 
+      "Show edge in chart"
+      :menu-item-action
+      #'(lambda () (display-edge-in-chart edge-record)))
+    (make-instance 'menu-item
+      :menu-item-title 
+      (format nil "Rule ~A" 
+                  (let ((item (edge-rule edge-record)))
+                     (if (rule-p item) (rule-id item) (or item ""))))
+      :menu-item-action
+      #'(lambda ()
          (let* ((item (edge-rule edge-record))
                 (rule (and (rule-p item) item)))
                (if rule
@@ -141,14 +141,38 @@
                       (when alternative
                          (display-fs alternative
                             (format nil "~A" item)))))))
-     :disabled (not (rule-p (edge-rule edge-record))))
-   (make-instance 'menu-item
-     :menu-item-title "Generate from edge"
-     :menu-item-action
-     #'(lambda () (really-generate-from-edge edge-record))
-     :disabled (not top-edge-p))
-   (make-instance 'menu-item
-     :menu-item-title 
-     (format nil "Lex ids ~A" (edge-lex-ids edge-record))
-     :menu-item-action #'(lambda () nil)
-     :disabled t)))
+      :disabled (not (rule-p (edge-rule edge-record))))
+    (make-instance 'menu-item
+      :menu-item-title "Generate from edge"
+      :menu-item-action
+      #'(lambda () (really-generate-from-edge edge-record))
+      :disabled
+      ;; would get error if select this with a generator edge
+      (or (not top-edge-p) (not *mrs-loaded*) (g-edge-p edge-record)))
+    (make-instance 'menu-item
+      :menu-item-title 
+      (format nil "Lex ids ~A" (edge-lex-ids edge-record))
+      :menu-item-action #'(lambda () nil)
+      :disabled t)
+    (if top-edge-p
+      (list
+        (make-instance 'menu-item
+          :menu-item-title "MRS"
+          :menu-item-action
+          #'(lambda () ; use funcall so don't get undefined function warning
+             (funcall 'show-mrs-window edge-record))
+          :disabled (not *mrs-loaded*))
+        (make-instance 'menu-item
+          :menu-item-title "Indexed MRS"
+          :menu-item-action
+          #'(lambda ()
+             (funcall 'show-mrs-indexed-window edge-record))
+          :disabled (not *mrs-loaded*))
+        (make-instance 'menu-item
+          :menu-item-title "Scoped MRS"
+          :menu-item-action
+          #'(lambda ()
+             (funcall 'show-mrs-scoped-window edge-record))
+          :disabled (not *mrs-loaded*))))))
+
+      
