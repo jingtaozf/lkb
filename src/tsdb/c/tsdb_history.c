@@ -32,6 +32,7 @@ extern int errno;
 #  include <sys/times.h>
 #endif
 
+static _history_position = -1;
 
 Tsdb_history* tsdb_alloc_history() {
   Tsdb_history* bar;
@@ -70,7 +71,7 @@ int tsdb_init_history(Tsdb* status) {
     } /* if */
     past[i] = bar;
   } /* for */
-  status->history_position = -1;
+  _history_position = -1;
 } /* tsdb_init_history() */
 
 void tsdb_free_history(Tsdb_history* h) {
@@ -109,7 +110,7 @@ void tsdb_set_history_size(int size) {
   } /* else */
 
   for (i=0;i<min;i++) {
-    foo[i]=tsdb.history[(i+tsdb.history_position)%tsdb.history_size];
+    foo[i]=tsdb.history[(i+_history_position)%tsdb.history_size];
   } /* for */
   
   if (max==size) {
@@ -121,20 +122,20 @@ void tsdb_set_history_size(int size) {
   else {
     /* history made smaller */
     for (;i<max;i++) {
-      tsdb_free_history(tsdb.history[(i+tsdb.history_position)%
+      tsdb_free_history(tsdb.history[(i+_history_position)%
                                      tsdb.history_size]);
     } /* for */
   } /* else */
   
   free(tsdb.history);
   tsdb.history = foo;
-  tsdb.history_position = 0;
+  _history_position = 0;
   tsdb.history_size = size;
   
 } /* tsdb_set_history_size() */
 
 void tsdb_add_to_history(Tsdb_selection* s) {
-  Tsdb_history *foo = tsdb.history[(tsdb.history_position)];
+  Tsdb_history *foo = tsdb.history[(_history_position)];
   int pos;
 
   if (tsdb.history_size<1) {
@@ -142,25 +143,26 @@ void tsdb_add_to_history(Tsdb_selection* s) {
     return;
   } /* if */
   
-  pos = (tsdb.history_position+1)%tsdb.history_size;
+  pos = (_history_position+1)%tsdb.history_size;
 
   if (tsdb.history[pos]->result)
     tsdb_free_selection(tsdb.history[pos]->result);
   tsdb.history[pos]->command = tsdb.command;
+  tsdb.history[pos]->query = tsdb.query;
   tsdb.history[pos]->result = s;
 
-  tsdb.history_position = pos;
+  _history_position = pos;
 } /* tsdb_add_to_history() */
 
-Tsdb_selection* tsdb_get_history(int c) {
+Tsdb_history *tsdb_get_history(int c) {
   int i;
   Tsdb_history** past = tsdb.history;
   
-  if (tsdb.history_position<0)
+  if (_history_position<0)
     return NULL;
   for (i=0;i<tsdb.history_size;i++) {
-    if (past[(i+tsdb.history_position)%tsdb.history_size]->command == c)
-      return(past[(i+tsdb.history_position)%tsdb.history_size]->result);
+    if (past[(i+_history_position)%tsdb.history_size]->command == c)
+      return(past[(i+_history_position)%tsdb.history_size]);
   } /* for */
   return NULL;
 

@@ -1608,6 +1608,7 @@ BOOL tsdb_initialize() {
   free(foo);
 
   tsdb_init_history(&tsdb);
+
 #ifdef DEBUG
   if(tsdb.relations != NULL) {
     for(i = 0; tsdb.relations[i] != NULL; i++) {

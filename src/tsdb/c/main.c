@@ -117,7 +117,6 @@ int main(int argc, char **argv) {
 
   char *input = NULL;
   char host[512 + 1], prompt[80 + 1], *foo, *bar;
-  int n_commands = 0;
 
   if((foo = strdup(argv[0])) != NULL) {
     if((bar = strrchr(foo, TSDB_DIRECTORY_DELIMITER[0])) != NULL) {
@@ -174,8 +173,9 @@ int main(int argc, char **argv) {
         *foo = 0;
       } /* if */
     } /* else */
-    
-    sprintf(prompt, "tsdb@%s (%d) # ", host, n_commands);
+
+    tsdb.command = 0;
+    sprintf(prompt, "tsdb@%s (%d) # ", host, tsdb.command);
     
     while(!(tsdb.status & TSDB_QUIT) && ((foo = readline(prompt)) != NULL)) {
       for(; *foo && isspace(*foo); foo++);
@@ -193,15 +193,14 @@ int main(int argc, char **argv) {
         } /* else */
         free(foo);
         if(input != NULL && *input && input[strlen(input) - 1] == '.') {
-          tsdb.command = n_commands;
           tsdb_parse(input);
           add_history(input);
           free(input);
           input = (char *)NULL;
-          sprintf(prompt, "tsdb@%s (%d) # ", host, ++n_commands);
+          sprintf(prompt, "tsdb@%s (%d) # ", host, ++tsdb.command);
         } /* if */
         else {
-          sprintf(prompt, "> ", host, n_commands);
+          sprintf(prompt, "> ");
         } /* else */
       } /* if */
     } /* while */
@@ -385,7 +384,7 @@ void tsdb_parse_options(int argc, char **argv) {
         break;
       case TSDB_HISTORY_OPTION:
         if (optarg != NULL) {
-          long l = strtol(optarg,&bar,10);
+          int l = (int)strtol(optarg,&bar,10);
           if ( l == 0 
               && optarg == bar ) {
             fprintf(tsdb_error_stream,

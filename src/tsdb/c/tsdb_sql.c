@@ -34,6 +34,7 @@ void tsdb_info(Tsdb_value **value_list) {
 \*****************************************************************************/
 
   Tsdb_relation *foo;
+  Tsdb_history *bar;
   FILE *output;
   int i, j;
   BOOL match, pager;
@@ -140,6 +141,31 @@ void tsdb_info(Tsdb_value **value_list) {
             fflush(tsdb_error_stream);
           } /* if */
           break;
+        case TSDB_INTEGER:
+          if((bar = tsdb_get_history(value_list[i]->value.integer)) 
+             == NULL) {
+            fprintf(tsdb_error_stream,
+                    "info(): no history item %d.\n",
+                    value_list[i]->value.integer);
+            fflush(tsdb_error_stream);
+          } /* if */
+          else {
+            fprintf(tsdb_default_stream, 
+                    "[%d]", value_list[i]->value.integer);
+            if(bar->result && bar->result->relations[0]) {
+              fprintf(tsdb_default_stream,
+                      " `%s", bar->result->relations[0]->name);
+              for(j = 1; bar->result->relations[j]; j++) {
+                fprintf(tsdb_default_stream,
+                        ":%s", bar->result->relations[j]->name);
+              } /* for */
+              fprintf(tsdb_default_stream,
+                      "' (%d records).", bar->result->length);
+            } /* if */
+            fprintf(tsdb_default_stream, "\n");
+            fflush(tsdb_default_stream);
+          } /* else */
+          break;
         default:
           fprintf(tsdb_error_stream, "info(): invalid argument entity.\n");
           fflush(tsdb_error_stream);
@@ -224,7 +250,7 @@ void tsdb_set(Tsdb_value *variable, Tsdb_value *value) {
         fflush(tsdb_error_stream);
       } /* if */
       else {
-        tsdb.history_size = value->value.integer;
+        tsdb_set_history_size(value->value.integer);
       } /* else */
     } /* else */
   } /* if */
@@ -873,6 +899,7 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
   Tsdb_relation **a_relations;
   int s_attributes = 10, i, j, r,kaerb=0;
   Tsdb_selection *selection=NULL,*temp,*history=NULL;
+  Tsdb_history *foo;
   BOOL from_find=FALSE;
 
   /* 
@@ -905,13 +932,13 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
   
   if (relation_list)  /* check relations */ {
     if (relation_list[0]->type==TSDB_INTEGER) {
-      history = tsdb_get_history(relation_list[0]->value.integer);
-      if (history==NULL) {
-        fprintf(tsdb_error_stream,"history reference %d not available\n",
+      foo = tsdb_get_history(relation_list[0]->value.integer);
+      if (foo==NULL) {
+        fprintf(tsdb_error_stream,"retrieve(): no history item %d.\n",
                 relation_list[0]->value.integer);
         return NULL;
       } /* if */
-      history = tsdb_copy_selection(history);
+      history = tsdb_copy_selection(foo->result);
       history = tsdb_tree_select(conditions,history);
       relation_list = NULL;
       /* principle of history:

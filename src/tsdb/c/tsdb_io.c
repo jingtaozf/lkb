@@ -28,6 +28,11 @@ int tsdb_parse(char *command) {
 
   int foo;
 
+  if(tsdb.query != NULL) {
+    free(tsdb.query);
+  } /* if */
+  tsdb.query = strdup(command);
+
   tsdb.input = command;
   foo = yyparse();
   yyrestart(stdin);

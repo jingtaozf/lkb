@@ -244,8 +244,7 @@ typedef struct tsdb {
 
   int command;
   Tsdb_history **history;
-  int history_position;
-  long history_size;
+  int history_size;
 } Tsdb;
 
 #if !defined(TSDB_C)
@@ -411,7 +410,7 @@ Tsdb_selection *tsdb_retrieve(Tsdb_value **, Tsdb_value **,Tsdb_node *,
                               char *);
 
 
-Tsdb_selection* tsdb_get_history(int);
+Tsdb_history *tsdb_get_history(int);
 void tsdb_add_to_history(Tsdb_selection*);
 void tsdb_set_history_size(int);
 int tsdb_init_history(Tsdb*);

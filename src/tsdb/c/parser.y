@@ -272,6 +272,10 @@ y_info :
   Y_INFO y_attribute_list '.' {
     tsdb_info($2);
   }
+|
+  Y_INFO y_value_list '.' {
+    tsdb_info($2);
+  }
 ;
 
 y_table_list :
