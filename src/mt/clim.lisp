@@ -1,11 +1,14 @@
 (in-package :mt)
 
+(defvar %edges%)
+
 (clim:define-application-frame mrs-transfer ()
   ((frames :initform nil :accessor mrs-transfer-frames :allocation :class)
    (edges :initform nil :accessor mrs-transfer-edges)
    (i :initform 0 :accessor mrs-transfer-i)
    (stack :initform nil :accessor mrs-transfer-stack)
    (title :initform "" :accessor mrs-transfer-title)
+   (mode :initform nil :accessor mrs-transfer-mode)
    (stream :initform nil :accessor mrs-transfer-stream))
   (:panes
    (top
@@ -20,7 +23,7 @@
            :borders nil
            :incremental-redisplay t
            :display-function 'show-mrs-transfer
-           :width 500 
+           :width 550 
            :height 500)))))))
 
 (let ((lock (mp:make-process-lock)))
@@ -68,15 +71,11 @@
 (define-mrs-transfer-command (com-scope-mrs-transfer :menu "Scope")
     ()
   (clim:with-application-frame (frame)
-    (let ((mrs (nth (mrs-transfer-i frame) 
-                    (or (mrs-transfer-stack frame) 
-                        (mrs-transfer-edges frame))))
-          (title (format 
-                  nil 
-                  "`~a' (# ~a of ~a) - Scopes" 
-                  (mrs-transfer-title frame)
-                  (mrs-transfer-i frame)
-                  (length (mrs-transfer-edges frame)))))
+    (let* ((mrs (nth (mrs-transfer-i frame) 
+                     (or (mrs-transfer-stack frame) 
+                         (mrs-transfer-edges frame))))
+           (mrs (if (edge-p mrs) (edge-mrs mrs) mrs))
+           (title (format nil "~a - Scopes" (transfer-title frame))))
       (lkb::show-mrs-scoped-window nil mrs title))))
 
 
@@ -89,6 +88,20 @@
            (mrs (edge-mrs edge))
            (edges (transfer-mrs mrs :filterp nil)))
       (when edges (browse-mrss edges "Transfer Output")))))
+
+
+(define-mrs-transfer-command (com-transfer-mrs-clone :menu "Clone")
+    ()
+  (clim:with-application-frame (frame)
+    ;;
+    ;; _fix_me_
+    ;; use class copier instead and invoke run-function() directly on it.
+    ;;                                                         (8-jan-04; oe)
+    (if (mrs-transfer-stack frame)
+      (browse-mrss
+       (first (mrs-transfer-edges frame)) (mrs-transfer-title frame)
+       :stack (mrs-transfer-stack frame) :i (mrs-transfer-i frame))
+      (browse-mrss (mrs-transfer-edges frame) (mrs-transfer-title frame)))))
 
 
 (define-mrs-transfer-command (com-transfer-mrs-debug :menu "Debug")
@@ -181,45 +194,86 @@
 
 (defun transfer-title (frame)
   (let ((edge (nth (mrs-transfer-i frame) (mrs-transfer-stack frame))))
-    (format 
-     nil 
-     "~a (# ~a of ~:[~a~@[+~a~]~;~a~*~])~@[ [~(~a~)]~]" 
-     (mrs-transfer-title frame)
-     (mrs-transfer-i frame)
-     edge
-     (if edge 
-       (length (mrs-transfer-stack frame))
-       (loop
-           for edge in (mrs-transfer-edges frame)
-           when (zerop (edge-source edge)) count 1))
-     (unless edge
-       (let ((n (loop
-                    for edge in (mrs-transfer-edges frame)
-                    unless (zerop (edge-source edge)) count 1)))
-         (unless (zerop n) n)))
-     (when (and (edge-p edge) (mtr-p (edge-rule edge)))
-       (mtr-id (edge-rule edge))))))
+    (case (mrs-transfer-mode frame)
+      (:mtr
+       (format
+        nil 
+        "~a @ ~a"
+        (mrs-transfer-title frame)
+        (aref 
+         #("FILTER" "CONTEXT" "INPUT" "OUTPUT" "DEFAULT")
+         (mrs-transfer-i frame))))
+      (t
+       (format 
+        nil 
+        "~a (# ~a of ~:[~a~@[+~a~]~;~a~*~])~@[ [~(~a~)]~]" 
+        (mrs-transfer-title frame)
+        (mrs-transfer-i frame)
+        edge
+        (if edge 
+          (length (mrs-transfer-stack frame))
+          (loop
+              for edge in (mrs-transfer-edges frame)
+              when (zerop (edge-source edge)) count 1))
+        (unless edge
+          (let ((n (loop
+                       for edge in (mrs-transfer-edges frame)
+                       unless (zerop (edge-source edge)) count 1)))
+            (unless (zerop n) n)))
+        (when (and (edge-p edge) (mtr-p (edge-rule edge)))
+          (mtr-id (edge-rule edge))))))))
 
-(defun browse-mrss (edges &optional (title "Transfer Input"))
+(defun browse-mrss (edges 
+                    &optional (title "Transfer Input") 
+                    &key stack i)
+
+  (unless edges (return-from browse-mrss))
+  #-:debug
+  (setf %edges% edges)
   (mp:run-function 
    title 
    #'(lambda ()
        (let ((frame (clim:make-application-frame 'mrs-transfer)))
+         (setf (mrs-transfer-title frame) title)
          (typecase edges
            (edge
             (setf (mrs-transfer-edges frame) (list edges))
+            (if stack
+              (setf (mrs-transfer-stack frame) stack)
+              (loop
+                  for edge = edges then (edge-daughter edge)
+                  while edge do (push edge (mrs-transfer-stack frame))
+                  finally (setf (mrs-transfer-stack frame)
+                            (nreverse (mrs-transfer-stack frame)))))
+            (when i (setf (mrs-transfer-i frame) i))
+            (setf (mrs-transfer-mode frame) :debug))
+           (mtr
+            ;;
+            ;; _fix_me_
+            ;; the OUTPUT vs. DEFAULTS presentation is, hmm, misleading, since
+            ;; variables in defaults carry no meaning; ideally, we would merge
+            ;; the two components for visualization, or at least `shrink' the
+            ;; DEFAULTS part, so that variables without properties disappear.
+            ;;                                                 (8-jan-04; oe)
+            (setf (mrs-transfer-edges frame) 
+              (list
+               (make-edge :mrs (mtr-filter edges))
+               (make-edge :mrs (mtr-context edges))
+               (make-edge :mrs (mtr-input edges))
+               (make-edge :mrs (mtr-output edges))
+               (make-edge :mrs (mtr-defaults edges))))
             (loop
-                for edge = edges then (edge-daughter edge)
-                while edge do (push edge (mrs-transfer-stack frame)))
-            (setf (mrs-transfer-stack frame) 
-              (nreverse (mrs-transfer-stack frame))))
+                for edge in (mrs-transfer-edges frame)
+                while (null (edge-mrs edge)) do (incf (mrs-transfer-i frame)))
+            (setf (mrs-transfer-title frame)
+              (format nil "`~(~a~)' MTR" (mtr-id edges)))
+            (setf (mrs-transfer-mode frame) :mtr))
            (list
             (setf (mrs-transfer-edges frame) 
               (loop
                   for edge in edges
                   when (edge-p edge) collect edge
                   else collect (make-edge :mrs edge)))))
-         (setf (mrs-transfer-title frame) title)
          (setf (clim:frame-pretty-name frame) 
            (or (transfer-title frame) "Transfer Input"))
          (push frame (mrs-transfer-frames frame))

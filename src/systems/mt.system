@@ -34,6 +34,8 @@
     :source-extension "lisp"
     :components
     ((:file "mt-package" :load-only t)
+     (:file "version" :load-only t)
+     (:file "mrsglobals" :load-only t)
      (:file "globals")
      (:file "transfer")
      (:file "clim")))))

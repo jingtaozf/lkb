@@ -27,12 +27,16 @@
 (defparameter *transfer-debug-stream* 
   (or #+:allegro excl:*initial-terminal-io* t))
 
+;;;
+;;; _fix_me_
+;;; the following are stop-gap solutions and, presumably, should be replaced
+;;; with a more general solution, possibly a separate set of transfer rules
+;;; manipulating variable properties destructively and taking advantage of
+;;; match operators like :null and :exact to test for specific values.
+;;;                                                           (9-jan-03; oe)
 (defparameter %transfer-properties-filter%
   (list
    (cons (mrs::vsym "TENSE") (mrs::vsym "E.TENSE"))
-   (cons (mrs::vsym "MOOD") (mrs::vsym "E.MOOD"))
-   (cons (mrs::vsym "PERS") nil)
-   (cons (mrs::vsym "NUM") nil)
    (cons (mrs::vsym "ASPECT-PROTRACTED") nil)
    (cons (mrs::vsym "ASPECT-STATIVE") nil)
    (cons (mrs::vsym "ASPECT-TELIC") nil)
@@ -58,13 +62,13 @@
     (call-next-method)
     (format
      stream
-     "~@[!~a ~]~@[@~a ~]~@[~a -> ~]~a"
+     "~@[!~a ~]~@[@~a ~]~@[~a ~]-> ~a~@[ / ~a~]"
      (mtr-filter object) (mtr-context object)
-     (mtr-input object) (mtr-output object))))
+     (mtr-input object) (mtr-output object) (mtr-defaults object))))
 
 (defstruct (edge (:constructor make-edge-x))
   (id (let ((n %transfer-edge-id%)) (incf %transfer-edge-id%) n))
-  rule mrs daughter n 
+  rule mrs daughter solution n 
   (source 0))
 
 (defun make-edge (&rest rest)
@@ -114,8 +118,25 @@
   (setf (getf (solution-variables solution) old) new))
 
 (defun retrieve-variable (variable solution)
+  ;;
+  ;; _fix_me_
+  ;; transfer/24 appears to be caused by variable lookup failure, even though
+  ;; h8 == h53 (for item # 2 from the `mrs' test suite) appears to be in the
+  ;; set of variable equations, but somehow they are not eq()!  for now, try a
+  ;; more robust comparison, not assuming that variables be eq() --- it is not
+  ;; that much more expensive, after all.                       (9-jan-04; oe)
+  ;;
+  #+:null
   (let ((new (getf (solution-variables solution) variable)))
-    (if new (retrieve-variable new solution) variable)))
+    (if new (retrieve-variable new solution) variable))
+  (loop
+      with id = (mrs:var-id variable)
+      for variables = (solution-variables solution) 
+      then (rest (rest variables))
+      while variables
+      when (= (mrs:var-id (first variables)) id) return (second variables)
+      finally (return variable)))
+                         
 
 (defun align-eps (old new solution)
   (push (cons old new) (solution-eps solution)))
@@ -279,7 +300,7 @@
   ;; access to the original tag names) and add :type information to each node.
   ;;
   #+:debug
-  (setf %lhs% lhs)
+  (setf %lhs% lhs %rhs% rhs)
   (let* ((generator (let ((n 0)) #'(lambda () (decf n))))
          (mrs::*named-nodes* nil)
          (filter (mrs::path-value lhs *mtr-filter-path*))
@@ -310,12 +331,25 @@
        *transfer-debug-stream*
        "convert-dag-to-mtr(): `~(~a~)' has an empty output specification.~%"
        id))
-    (make-mtr :id id :filter filter :context context
-              :input input :output output :defaults defaults
-              :variables (nreverse mrs::*named-nodes*))))
-
+    ;;
+    ;; _fix_me_
+    ;; since our current treatment of FILTER components is wrong anyway, give a
+    ;; warning and ignore all rules that try to use filters.     (8-jan-04; oe)
+    ;; 
+    (if filter
+      (format
+       *transfer-debug-stream*
+       "convert-dag-to-mtr(): ~
+        ignoring `~(~a~)' because it contains a FILTER.~%"
+       id)
+      (make-mtr :id id :filter filter :context context
+                :input input :output output :defaults defaults
+                :variables (nreverse mrs::*named-nodes*)))))
+  
 (defun vacuous-constraint-p (path dag)
-  (let* ((type (lkb::minimal-type-for (first (last path))))
+  (let* ((feature (if (consp path) (first (last path)) path))
+         (dag (if (lkb::dag-p dag) dag (lkb::create-typed-dag dag)))
+         (type (lkb::minimal-type-for feature))
          (constraint (and type (lkb::constraint-of type))))
     (lkb::dag-subsumes-p dag constraint)))
 
@@ -406,7 +440,7 @@
       for mrs = (expand-solution (edge-mrs edge) mtr solution)
       collect (make-edge 
                :rule mtr :mrs (postprocess-mrs mrs) :daughter edge 
-               :n %transfer-variable-id%)))
+               :solution solution :n %transfer-variable-id%)))
 
 ;;;
 ;;; to simplify the treatment of constants, where the rule may use a variable
@@ -562,7 +596,8 @@
            for hcons2 in hconss2
            for result = (unify-hcons hcons1 hcons2 solution)
            when result collect result)
-       (unify-hconss (rest hconss1) hconss2 solution)))))
+       (unify-hconss (rest hconss1) hconss2 solution)))
+    (list solution)))
 
 (defun unify-hcons (hcons1 hcons2 solution)
   (let* ((solution (copy-solution solution))
@@ -649,6 +684,11 @@
     result))
 
 (defun unify-preds (pred1 pred2 solution)
+  ;;
+  ;; _fix_me_
+  ;; what about PREDs that stand in a subsumption relation?  presumably, we
+  ;; also need to record the result somewhere, or return it?    (8-jan-04; oe)
+  ;;
   (let ((pred2 (if (mrs::var-p pred2) 
                  (retrieve-variable pred2 solution)
                  pred2)))
@@ -739,8 +779,7 @@
     value))
 
 (defun merge-eps (ep default)
-  (unless default
-    (return-from merge-eps ep))
+  (unless default (return-from merge-eps ep))
   (when (mrs::rel-pred default)
     (setf (mrs::rel-pred ep) (mrs::rel-pred default)))
   (loop
@@ -750,6 +789,12 @@
       for value = (mrs:fvpair-value role)
       for default = (find feature defaults :key #'mrs:fvpair-feature)
       when (and value default) do 
+        ;;
+        ;; _fix_me_
+        ;; this is not quite right: as long as we well-type the DEFAULTS part,
+        ;; there could be non-variable defaults that are more general than the
+        ;; actual value, for CARGs, say.                        (8-jan-04; oe)
+        ;;
         (let ((default (mrs:fvpair-value default)))
           (if (and (mrs::var-p value) (mrs::var-p default))
             (merge-values value default)
@@ -758,18 +803,25 @@
         (push (mrs::copy-fvpair default) (mrs:rel-flist ep)))
   ep)
 
-(defun merge-values (value default)
+(defun merge-values (variable default)
+  ;;
+  ;; _fix_me_
+  ;; apparently, we assume we can frob the input .value., presumably we know
+  ;; it to be a copy at this point.  better confirm this ...    (8-jan-04; oe)
+  ;;
   (loop
       with defaults = (mrs:var-extra default)
-      for extra in (mrs:var-extra value)
+      for extra in (mrs:var-extra variable)
       for feature = (mrs::extrapair-feature extra)
-      for value = (mrs::extrapair-value extra)
-      for default = (find feature defaults :key #'mrs::extrapair-feature)
-      when (and value default) do 
-        (setf (mrs::extrapair-value extra) (mrs::extrapair-value default))
-      else when default do
-        (push (mrs::copy-extrapair default) (mrs:var-extra value)))
-  value)
+      for default = (let ((default (find feature defaults 
+                                         :key #'mrs::extrapair-feature)))
+                      (and default (mrs::extrapair-value default)))
+      unless (or (null default) (vacuous-constraint-p feature default)) do
+        (if (mrs::extrapair-value extra)
+          (setf (mrs::extrapair-value extra) default)
+          (push (mrs::make-extrapair :feature feature :value default)
+                (mrs:var-extra variable))))
+  variable)
 
 (defun new-variable (type extras)
   (let ((id %transfer-variable-id%))
@@ -826,7 +878,7 @@
   ;; taken from .set1.
   ;;
   ;; _fix_me_
-  ;; provide native implementation one day :-}.              (23-oct-03; oe)
+  ;; provide an actual implementation one day :-}.             (23-oct-03; oe)
   ;;
   (loop
       with intersection = (intersection set1 set2 :key key :test test)
