@@ -97,7 +97,9 @@
                                                             funny-unifs)))))
          (push temp-fs *mrs-rule-fs-list*) ; just for debugging
          (if entry
-             (push entry *ordered-mrs-rule-list*))))))
+             (if generator-p
+                 (push entry *gen-rule-list*)
+                 (push entry *ordered-mrs-rule-list*)))))))
 
               
          

@@ -470,9 +470,9 @@ at this point).
 ;;; result of all the lexical rule applications.
 
 (defun instantiate-null-semantic-items (input-sem lrules)
-  (let* ((real-ids (if *ordered-mrs-rule-list*
+  (let* ((real-ids (if cl-user::*gen-rule-list*
                        (genpredict-mrs-struct input-sem 
-                                              *ordered-mrs-rule-list*)
+                                              cl-user::*gen-rule-list*)
                      (let ((found-list (apply #'append 
                                    (cl-user::retrieve-lex-from-parses))))
                       (for empty in *empty-semantics-lexical-entries*

@@ -10,10 +10,10 @@
   (format t "~%~{~A ~}" cl-user::*sentence*)
   (dolist (mrs-struct (extract-mrs cl-user::*parse-record*))
     (when mrs-struct
-      (unless *ordered-mrs-rule-list*
+      (unless cl-user::*gen-rule-list*
         (error "~%No heuristic rules defined"))
       (format t "~%~S" 
-        (genpredict-mrs-struct mrs-struct *ordered-mrs-rule-list*)))))
+        (genpredict-mrs-struct mrs-struct cl-user::*gen-rule-list*)))))
 
 
 (defun genpredict-mrs-struct (mrsstruct rules)
