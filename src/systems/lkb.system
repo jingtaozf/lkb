@@ -69,7 +69,7 @@
     :source-extension "lsp"
     :depends-on (#+:psql "psql"
                  #+:preprocessor "ppcre"
-                 #+:xml "xml")
+                 #+:xml "pxml")
 
     :finally-do (funcall (symbol-function (find-symbol "START-LKB" :lkb)))
 
@@ -238,9 +238,7 @@
       :source-pathname "main"
       :binary-pathname "main"
       :components
-	      (#+:null
-               (:file "lkb-tsdb")           ; simulation of tsdb (out of date)
-	       (:file "batch-check")        ; batch check lexicon
+	      ((:file "batch-check")        ; batch check lexicon
                (:file "debug")))            ; rudimentary debugging
                                             ; for errors in type file
      #+tty

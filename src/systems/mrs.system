@@ -16,7 +16,7 @@
     :source-pathname (get-sources-dir "lkb")
     :binary-pathname (get-binaries-dir "lkb")
     :source-extension "lisp"
-    :depends-on (#+:lkb "lkb" #+:xml "xml")
+    :depends-on (#+:lkb "lkb" #+(and :xml (not :lkb)) "pxml")
 
     :finally-do
     (when (and (find-package :lkb) (find-symbol "*MRS-LOADED*" :lkb))
