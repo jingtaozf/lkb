@@ -165,11 +165,12 @@
 (setq lexdb-fsize-map nil)
 (setq lexdb-id nil)
 (setq lexdb-record nil)
+(setq lexdb-tdl nil)
 
 (make-variable-buffer-local 'lexdb-fw-map)
 (make-variable-buffer-local 'lexdb-fsize-map)
 (make-variable-buffer-local 'lexdb-id)
-(make-variable-buffer-local 'lexdb-record)
+(make-variable-buffer-local 'lexdb-tdl)
 
 ;;;
 ;;; connection to common lisp process
@@ -366,9 +367,12 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 (defun lexdb-commit-record-aux (buffer)
   (lexdb-update-record-from-buffer buffer)
   (lexdb-display-record buffer)
-  (when (y-or-n-p "Confirm commit record: ")
+  (cond 
+   ((y-or-n-p "Confirm commit record: ")
     (lexdb-store-record (car lexdb-record))
     (lexdb-load-record-aux (cdr (assoc :name (car lexdb-record)))))
+   (t
+    (lexdb-normalize-buffer buffer)))
     (with-current-buffer buffer
     t))
 
@@ -407,16 +411,19 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 (defun lexdb-normalize-buffer-aux (buffer)
   (lexdb-update-record-from-buffer buffer)
   (let ((record lexdb-record)
+	(tdl lexdb-tdl)
 	(pos (point)))
     (kill-buffer buffer)
     (with-current-buffer (get-buffer-create buffer)
       (lexdb-mode)
       (setf lexdb-record record)
+      (setf lexdb-tdl tdl)
       (lexdb-display-record buffer)
       (goto-char pos))))
 
 (defun lexdb-load-record-aux (id)
-  (let ((rec (lexdb-retrieve-record id)))
+  (let ((record (lexdb-retrieve-record id))
+	(tdl lexdb-tdl))
     (if (equal id "") 
 	(setf id "?new?"))
     (setf buffer (format "%s" id))
@@ -424,8 +431,9 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 	(kill-buffer buffer))
     (with-current-buffer (get-buffer-create buffer)
       (lexdb-mode)
-      (setf lexdb-record rec)
-      (lexdb-display-record buffer))))
+      (setf lexdb-record record)
+      (setf lexdb-tdl tdl)
+     (lexdb-display-record buffer))))
 
 (defun lexdb-display-record (buffer)
   (with-current-buffer buffer
@@ -440,6 +448,8 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 	  (remove-if-not #'cdr
 			 (mapcar #'l:fv-pair-2-fw-pair 
 				 (l:prepare-record (car lexdb-record)))))
+    (widget-insert "\n"
+		   lexdb-tdl)
     (widget-setup)
     lexdb-fw-map))
    
@@ -463,6 +473,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 	(sizes (cle-retrieve-record-sizes)))
     (setf *lexdb-field-mask* (cle-retrieve-field-mask))
     (setf *lexdb-record-features* (cle-retrieve-record-features))
+    (setf lexdb-tdl (cle-retrieve-tdl (cdr (assoc :name fields))))
     (unless fields
       (princ (format "%s not found! " id))
       (setf fields (l:make-empty-record id)))
@@ -530,7 +541,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 	   (define-key map "\t" 'l:minibuffer-complete-dyn)
 	   map)))
     (completing-read prompt 
-		     '(("dog_n1") ("dogsled_n1")))))
+		     '(("DUMMY")))))
 
 (defun l:prepare-record (full-record)
   (mapcar #'(lambda (x) (cons x 
@@ -659,8 +670,14 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 		     (split-string (format "%s" id) "")
 		     "")))
 
+(defun cle-lisp-symb (id)
+  (format "'%s" id))
+
 (defun cle-retrieve-record-fields (id)
   (cle-eval-lexdb 'retrieve-head-record-str (cle-lisp-str id)))
+
+(defun cle-retrieve-tdl (id)
+  (cle-eval-lexdb 'id-to-tdl (cle-lisp-symb id)))
 
 (defun cle-retrieve-record-sizes nil
    (cle-eval-lexdb 'get-field-size-map))

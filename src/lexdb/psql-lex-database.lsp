@@ -193,6 +193,9 @@
 	(error (format nil "database error (too many records returned)"))
       (car records))))
 
+(defmethod id-to-tdl ((lexicon psql-lex-database) id)
+  (to-tdl (read-psort lexicon id)))
+
 (defmethod read-psort 
     ((lexicon psql-lex-database) id &key (cache t) (recurse t) (new-instance nil))
   (declare (ignore recurse))
