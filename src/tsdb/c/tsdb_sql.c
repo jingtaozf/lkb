@@ -19,7 +19,10 @@
 #include "globals.h"
 #include "tsdb.h"
 #include "errors.h"
+
+extern int copy_key_list_flag;
 
+
 void tsdb_info(Tsdb_value **value_list) {
 
 /*****************************************************************************\
@@ -913,6 +916,10 @@ Tsdb_selection *tsdb_retrieve(Tsdb_value **relation_list,
   result = tsdb_complex_retrieve(relation_list,attribute_list,
                                  conditions,report);
   tsdb_add_to_history(result);
+  if (copy_key_list_flag) {
+    printf("tsdb_copy_keylist was just called... strange\n");
+    copy_key_list_flag=0;
+  } /* if */
   return result;
 
 } /* tsdb_retrieve() */
@@ -1029,8 +1036,13 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
   
 
   if (conditions) {
-    if (history_retrieve)
+    if (history_retrieve) {
+      history = tsdb_copy_selection(history);
       selection = tsdb_complex_select(conditions,NULL,history);
+      if (tsdb_relation_in_selection(selection,history->relations[0]->name)==-1) {
+        selection = tsdb_join(selection,history);
+      } /* if */
+    }
     else
       selection = tsdb_complex_select(conditions, relation_list,NULL);
     if (!selection) {
@@ -1070,29 +1082,6 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
 #endif
   
   for(i = 0; relation_list && relation_list[i]; i++) ;
-#ifdef OLD
-  /* now join with relations so that all attributes are in */
-  if (!attribute_list) { /* '*' for attribute list */
-    if (relation_list) {
-      a_relations = (Tsdb_relation **)malloc((r+1)*sizeof(Tsdb_relation*));
-      for (i=0;i<r;i++) {
-        a_relations[i] = tsdb_find_relation(relation_list[i]->value.string);
-      } /* for */
-      a_relations[i] = NULL;
-      temp = tsdb_add_relations(selection,a_relations);
-      if (!temp) {
-        return((Tsdb_selection *)NULL);
-      }
-      if (temp!=selection) {
-        if (selection) 
-          tsdb_free_selection(selection);
-        selection = temp;
-      } /* if */
-      free(a_relations);
-      a_relations = NULL;
-    } /* if relation_list */
-  } /* if attribute_list */
-#endif
 
   if (attribute_list) { /* else */
     j=0;
@@ -1129,7 +1118,10 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
         free(a_relations);
       } /* if */
     }/* for */
+  /* in case of history: join the history with the selection?? */
+
   } /* else */
+
 
   if (attributes)
     free(attributes);
@@ -1252,7 +1244,7 @@ void tsdb_project(Tsdb_selection *selection,
     } /* for key_list */
   } /* if */
 
-#if defined(DEBUG) && defined(TOM)
+#if defined(DEBUG) && defined(TOM) && defined(CRAZY)
   fprintf(tsdb_debug_stream,"project:\n");
   for (k=0;k<n;k++) {
     fprintf(tsdb_debug_stream,"%s\n",projection[k]);
