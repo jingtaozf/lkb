@@ -177,7 +177,7 @@
   "size of font in tree comparison (tree pane)"
   :user)
 
-(def-lkb-parameter *comparison-discriminant-font-size* 10
+(def-lkb-parameter *comparison-discriminant-font-size* 8
   "size of font in tree comparison (discriminant pane)"
   :user)
 
