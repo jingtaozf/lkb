@@ -1759,21 +1759,21 @@ BYTE tsdb_initialize() {
       foo = strcpy(foo, tsdb.data_path);
       foo = strcat(foo, tsdb.relations[i]->name);
       if(access(foo, R_OK)) {
-        if(tsdb.status & TSDB_READ_ONLY) {
-          if(!(tsdb.status & TSDB_QUIET)) {
-            fprintf(tsdb_error_stream,
-                    "initialize(): "
-                    "unable to create data file for `%s' (read-only).\n",
-                    tsdb.relations[i]->name);
-            fflush(tsdb_error_stream);
-          } /* if */
-          return(TSDB_NO_DATA_ERROR);
-        } /* if */
 #ifdef COMPRESSED_DATA
         baz = strcpy(baz, foo);
         baz = strcat(baz, tsdb.suffix);
         if(access(baz, R_OK)) {
 #endif      
+          if(tsdb.status & TSDB_READ_ONLY) {
+            if(!(tsdb.status & TSDB_QUIET)) {
+              fprintf(tsdb_error_stream,
+                      "initialize(): "
+                      "unable to create data file for `%s' (read-only).\n",
+                      tsdb.relations[i]->name);
+              fflush(tsdb_error_stream);
+            } /* if */
+            return(TSDB_NO_DATA_ERROR);
+          } /* if */
           if((j = creat(foo, 0666)) == -1) {
             free(foo);
             fprintf(tsdb_error_stream,
