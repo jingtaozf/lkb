@@ -287,10 +287,10 @@
   "alternative path used by generator to index chart --- needed
    for Aline's grammar")
 
-(defparameter *intersective-rule-names* '(adjh_i nadj_i hadj_i_uns)
+(defparameter *intersective-rule-names* nil
   "names of rules that introduce intersective modifiers")
 
-(defparameter *duplicate-lex-ids* '(AN)
+(defparameter *duplicate-lex-ids* nil
   "temporary expedient to avoid generating dual forms")
 
 ;;; RMRS interactive globals
