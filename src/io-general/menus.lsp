@@ -245,9 +245,11 @@
                      (make-menu-item :name "Index"
                                      :value 'index-for-generator
                                      :available-p :mrs)
+                     #+:mt
                      (make-menu-item :name "Start server"
                                      :value 'start-generator-server
                                      :available-p :mrs)
+                     #+:mt
                      (make-menu-item :name "Stop server"
                                      :value 'stop-generator-server
                                      :available-p :mrs))

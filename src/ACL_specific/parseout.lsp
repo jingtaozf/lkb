@@ -257,6 +257,7 @@
                     ("Indexed MRS" :value indexed :active ,*mrs-loaded*)
                     ("Scoped MRS" :value scoped :active ,*mrs-loaded*)
                     ("Dependencies" :value dependencies :active ,*mrs-loaded*)
+                    #+:mt
                     ("Transfer" :value transfer :active ,*mrs-loaded*)
                     ))))
     (when command
