@@ -74,7 +74,8 @@
 ;;; or constants
 
 (defun proper-name-or-pronoun-rel (rel-sort)
-  (member rel-sort *top-level-rel-types* :test #'eq))
+  ;;; test changed to equal, because rels are strings in some grammars
+  (member rel-sort *top-level-rel-types* :test #'equal))
 
 
 (defun get-full-handel-args-with-features (rel)
@@ -94,14 +95,20 @@
   
    
 (defun is-quant-rel (rel)
-  ;;; test is presence of a feature called BV!
+  ;;; test is presence of a feature called BV or membership
+  ;;; of *quant-rel-types*
   ;;; But also avoid including any "quantifiers" which are top-level rels,
   ;;; possibly including "the" (_def_rel) and demonstratives
-  (dolist (fvpair (rel-flist  rel))
-    (when (and (eq (fvpair-feature fvpair) *bv-feature*)
-               (not (member (rel-sort rel) *top-level-rel-types* 
-                            :test #'eq)))
-      (return t))))
+  (and
+   (if *quant-rel-types*
+       (member (rel-sort rel) *quant-rel-types* 
+               :test #'string-equal)
+       (dolist (fvpair (rel-flist rel))
+         (when (and (eq (fvpair-feature fvpair) *bv-feature*))
+           (return t))))
+   (not (member (rel-sort rel) *top-level-rel-types* 
+                :test #'eq))))
+
 
 (defvar *quant-list* nil)
 
@@ -205,10 +212,10 @@
   ;;; *top-level-variables*
   (let ((existing (assoc rel *unbound-vars-store* :test #'eq)))
     (if existing (cdr existing)
-      (let ((res
+      (let ((res (if (quick-is-quant-rel rel)
+                      nil
              (loop for fvp in (rel-flist  rel)
                   append 
-                  (unless (eq (fvpair-feature fvp) *bv-feature*)
                     (let ((value (fvpair-value fvp)))
                       (loop for el in (if (listp value) value (list value))
                           nconc

@@ -111,6 +111,8 @@ order in an MRS")
 
 (defparameter *bv-feature* (vsym "BV"))
 
+(defparameter *quant-rel-types* nil)
+
 (defparameter *scope-feat* (vsym "SCOPE"))
 
 
