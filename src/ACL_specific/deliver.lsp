@@ -61,5 +61,6 @@
    :print-startup-message nil
 
    :presto t
-   #-:mswindows :presto-build-lib 
-   #-:mswindows (dir-and-name target "lkb.lib")))
+   #-(or :mswindows (version>= 6 2)) :presto-build-lib 
+   #-(or :mswindows (version>= 6 2)) (dir-and-name target "lkb.lib")))
+
