@@ -210,24 +210,26 @@
 
 
 (defun compute-derivation-tree (edge &optional (offset 0))
-  (cond
-   ((null (edge-children edge))
-    (list (format nil "~(~a~)" (first (edge-lex-ids edge)))
-          offset (+ offset 1)
-          (list (format nil "~(~a~)" (edge-rule-number edge)) 
-                offset (+ offset 1))))
-   (t
-    (let* ((end offset)
-           (children
-            (loop 
-                for kid in (edge-children edge)
-                for derivation = (compute-derivation-tree kid end)
-                do
-                  (setf end (max end (third derivation)))
-                collect derivation)))
-      (nconc (list (format nil "~(~a~)" (edge-rule-number edge))
-                   offset end)
-             children)))))
+  (flet ((tree-node-label (edge)
+           (format nil "~(~a~)"
+              (if (rule-p (edge-rule edge))
+                 (rule-id (edge-rule edge)) (edge-rule edge)))))
+    (cond
+     ((null (edge-children edge))
+      (list (format nil "~(~a~)" (first (edge-lex-ids edge)))
+            offset (+ offset 1)
+            (list (tree-node-label edge) offset (+ offset 1))))
+     (t
+      (let* ((end offset)
+             (children
+              (loop
+                  for kid in (edge-children edge)
+                  for derivation = (compute-derivation-tree kid end)
+                  do
+                    (setf end (max end (third derivation)))
+                  collect derivation)))
+        (nconc (list (tree-node-label edge) offset end)
+               children))))))
 
 (defun parse-tsdb-sentence (user-input &optional trace)
    (multiple-value-prog1
