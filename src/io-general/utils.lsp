@@ -247,7 +247,8 @@
       (setf *lexicon* (make-instance 'cdb-lex-database)))
     (reset-morph-var)
     (clear-grammar)              ;; should clear everything that might not be
-    (clear-lex-rules)            ;; overridden, this should do for now    
+    (clear-lex-rules)            ;; overridden, this should do for now
+    (clear-idioms)
     (setf  *check-paths* nil)
     #+:preprocessor
     (clear-preprocessor))

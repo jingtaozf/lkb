@@ -14,6 +14,10 @@
 
 (defparameter *idiom-phrases-expanded* nil)
 
+(defun clear-idioms nil
+  (setf *idiom-phrases-expanded* nil)
+  (setf *idiom-phrases* nil))
+
 (defstruct idiom-phrase
   id
   tdfs
@@ -65,7 +69,11 @@ the phrase to be checked minus the LISZT (leave this for now)
         (let ((phrase-mrs (mrs::extract-mrs-from-fs (tdfs-indef phrase-tdfs))))
           (dolist (idiom *idiom-phrases-expanded*)
             (let ((idiom-mrs (idiom-phrase-mrs idiom)))
-              (when (idiom-phrase-match idiom-mrs phrase-mrs)
+              (when (and 
+                     (mrs::psoa-liszt idiom-mrs)
+                     (idiom-phrase-match idiom-mrs phrase-mrs))
+     #+:debug               (mrs::output-mrs1 idiom-mrs :simple t) 
+       #+:debug           (format t "~%~A" (car (idiom-phrase-id idiom)))
                 (return t))))))))
 
 (eval-when #+:ansi-eval-when (:load-toplevel :execute)

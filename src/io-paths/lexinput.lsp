@@ -256,8 +256,11 @@
      (clear-root-entries))))
 
 (defun finalize-psort-file (file-type)  
-  (when (eql file-type :idioms) 
-    (expand-idioms-phrases))
+;;;  (when (eql file-type :idioms) 
+;;;    (expand-idioms-phrases))
+;;; this should be called from the script
+;;; it requires that the mrs initialisation has been done 
+;;; for the particular grammar, which we can't tell from here
   (when (eql file-type :nodes) 
     (split-up-templates)))
 
