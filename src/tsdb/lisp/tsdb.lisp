@@ -821,6 +821,48 @@
                            derivation tree mrs)))
               (call-tsdb query language :cache cache))))))
 
+(defun write-edges (parse-id edges
+                    &optional (language *tsdb-data*)
+                    &key cache)
+  (when *tsdb-write-edge-p*
+    (loop
+        with *print-circle* = nil
+        with *print-level* = nil
+        with *print-length* = nil
+        with rawp = (and cache (eq (get-field :protocol cache) :raw))
+        for edge in edges
+        for e-id = (get-field+ :id edge -1)
+        for e-label =  (normalize-string 
+                        (get-field+ :label edge "") :escape rawp)
+        for e-score = (get-field+ :score edge "")
+        for e-start = (get-field+ :start edge -1)
+        for e-end = (get-field+ :end edge -1)
+        for e-status = (get-field+ :status edge -1)
+        for e-daughters = (normalize-string 
+                           (get-field+ :daughters edge "") :escape rawp)
+        do
+          (if rawp
+            (let ((stream (get-field :edge cache))
+                  (ofs *tsdb-ofs*))
+              (write e-id :stream stream) (write-char ofs stream)
+              (write parse-id :stream stream) (write-char ofs stream)
+              (write-string e-label stream) (write-char ofs stream)
+              (write-string e-score stream) (write-char ofs stream)
+              (write e-start :stream stream) (write-char ofs stream)
+              (write e-end :stream stream) (write-char ofs stream)
+              (write e-status :stream stream) (write-char ofs stream)
+              (write-string e-daughters stream)
+              (terpri stream)
+              (force-output stream)
+              (incf (get-field :count cache)))
+            (let* ((query (format
+                           nil
+                           "insert into edge values ~
+                            ~d ~d ~s ~s ~d ~d ~d ~s"
+                           e-id parse-id e-label e-score 
+                           e-start e-end e-status e-daughters)))
+              (call-tsdb query language :cache cache))))))
+
 (defun write-rules (parse-id statistics
                     &optional (language *tsdb-data*)
                     &key cache)

@@ -1150,6 +1150,10 @@
        parse-id 
        (get-field :results result) data
        :cache cache)
+      (write-edges
+       parse-id 
+       (get-field :chart result) data
+       :cache cache)
       (when (and *tsdb-rule-statistics-p* statistics)
         (if (eq *tsdb-rule-statistics-p* :raw)
           (write-rules

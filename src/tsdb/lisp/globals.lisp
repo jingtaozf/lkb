@@ -20,7 +20,7 @@
 
 (defparameter *tsdb-name* "[incr tsdb()]")
 
-(defparameter *tsdb-version* "1.9 (31-may-03)")
+(defparameter *tsdb-version* "2.0 (1-jun-03)")
 
 (defparameter
   *tsdb-application*
@@ -31,7 +31,7 @@
 
 (defparameter 
   *tsdb-home* 
-  (namestring (dir-append (get-sources-dir "tsdb")
+  (namestring (dir-append (get-sources-dir "tsdb") 
                           '(:relative "tsdb" "home"))))
 
 (defparameter 
@@ -55,6 +55,8 @@
 (defparameter *tsdb-write-parse-p* t)
 
 (defparameter *tsdb-write-result-p* t)
+
+(defparameter *tsdb-write-edge-p* t)
 
 (defparameter *tsdb-write-passive-edges-p* nil)
 
