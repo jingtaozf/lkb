@@ -5,7 +5,7 @@
   ;; return a string identifying the grammar that is currently in use, ideally
   ;; including relevant grammar-internal parameters of variation and a version.
   ;;
-  "norgram (jul-03)")
+  "norgram (oct-03)")
 
 (defun initialize-run (&key interactive 
                             exhaustive nanalyses
