@@ -35,7 +35,11 @@
       finally (return filename)))
 
 (defun ask-user-for-new-pathname (prompt)
-  (loop for filename = (clim:select-file clim-user:*lkb-top-frame* 
+  (loop for filename = (clim:select-file clim-user:*lkb-top-frame*
+					 #+:mswindows :dialog-type :save
+     ;;; fix for bug in Windows that disallows new file names
+     ;;; undocumented feature - see release notes for 5.0.1
+     ;;; (which doesn't explain what it does, but this seems to work ...)
 					 :title prompt
 					 :directory clim-user:*last-directory*)
       do (when filename
@@ -198,7 +202,7 @@
               (ask-for-strings-movable title new-prompt-init-pairs 
                                        expected-width choices)))))
 
-;;; temporary for ACL
+;;; temporary for ACL - doesn't work in Windows XP
 
 (defun ask-user-for-multiple-choice (question-string &rest args)
     (loop
@@ -206,9 +210,8 @@
           (clim:menu-choose args
                        :label question-string :associated-window
                         clim-user:*lkb-top-stream*)))
-    (when result 
-          (return result)))))
-  
+       (when result 
+	 (return result)))))
 
 ;;;
 ;;; Print options dialog
