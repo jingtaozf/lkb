@@ -1020,11 +1020,22 @@
 
 
 ;;;
+;;; _fix_me_
 ;;; functions to facilitate ambiguity packing: currently, hard-wire which parts
 ;;; of the structure have to go: everything below `CONT' (at all levels) except
 ;;; for `CONT|MESSAGE'.  this badly needs a generalization using both PAGE-type
 ;;; restrictors as well as a mechanism to extinct all occurences of a feature.
 ;;;                                                          (12-nov-99  -  oe)
+;;; --- it looks like we improved some of the above, with *packing-restrictor*
+;;; as a global naming features to be erased wherever they occur.  still, the
+;;; PAGE style restrictor (allowing full path specifications and re-entrancies
+;;; in the restrictor by using a restrictor dag as a `mask') would be a good
+;;; thing to have.  berthold, for the german grammar, reports the cannot get
+;;; full ROI from packing, since he would require a more powerful restrictor
+;;; to eliminate a feature in some context but not in others, since otherwise
+;;; there is too much inconsistency in the forest.  something to do with 
+;;; partial VP fronting, and he wants it for PET anyway, but still worth for us
+;;; to keep in mind.                                            (30-oct-04; oe)
 ;;;
 ;;; We also need to know about minimal types for feature values
 ;;; for packing.  The following code caches the values as accessed
