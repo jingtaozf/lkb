@@ -357,8 +357,23 @@
 
 ;; Highlight a list of objects, making the first one red
 
-(defconstant +red-flipping-ink+ 
+(defconstant +magenta-flipping-ink+ 
     (clim:make-flipping-ink clim:+green+ clim:+foreground-ink+))
+
+(defconstant +cyan-flipping-ink+ 
+    (clim:make-flipping-ink clim:+red+ clim:+foreground-ink+))
+
+(defconstant +blue-flipping-ink+ 
+    (clim:make-flipping-ink clim:+yellow+ clim:+foreground-ink+))
+
+(defconstant +green-flipping-ink+ 
+    (clim:make-flipping-ink clim:+magenta+ clim:+foreground-ink+))
+
+(defconstant +red-flipping-ink+ 
+    (clim:make-flipping-ink clim:+cyan+ clim:+foreground-ink+))
+
+(defconstant +yellow-flipping-ink+ 
+    (clim:make-flipping-ink clim:+blue+ clim:+foreground-ink+))
 
 (defun highlight-objects-mark (things frame)
   (let ((stream (clim:frame-standard-output frame)))
