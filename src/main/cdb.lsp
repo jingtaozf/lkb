@@ -122,13 +122,13 @@
 				 :if-does-not-exist :create))
 	    (error (condition)
 	      (format t "~%~A" condition)
-	      (error "~%Can't open database file ~A" filename)))
+	      (error "~%Can't open CDB file ~A: is directory present and writable?" filename)))
 	  ;; Write blank header
 	  (loop
 	      for i from 1 to 8
 	      do (write-byte 0 stream))
 	  (unless (file-position stream :end)
-	    (error "~%Error writing database file ~A" filename))
+	    (error "~%Error writing CDB file ~A" filename))
 	  (setf (cdb-mode cdb) :output))
       (error (condition)
 	(emergency-close cdb)
@@ -139,7 +139,7 @@
 
 (defun write-record (cdb key data)
   (unless (eq (cdb-mode cdb) :output)
-    (error "Database not open for output."))
+    (error "CDB database not open for output."))
   (with-slots (stream) cdb
     ;; Store in hash table as ( hash . pos )
     (let* ((h (hash key))
@@ -158,7 +158,7 @@
 
 (defun close-write (cdb)
   (unless (eq (cdb-mode cdb) :output)
-    (error "Database not open for output."))
+    (error "CDB database not open for output."))
   (let ((final (make-array '(256)))
 	(hash (make-array (list (loop for c across (cdb-count cdb)
 				    maximize c))))
@@ -228,14 +228,14 @@
 				 :direction :input
 				 :if-does-not-exist :error))
 	    (error (condition)
-	      (error "~%Error ~A in opening database file ~A" 
+	      (error "~%Error ~A in opening CDB file ~A: does file exist?" 
 		     condition filename)))
 	;; Read header
 	(let ((magic (cdb-read-string 3 stream t)))
 	  (unless (and (equal magic "CDB")
 		       (zerop (read-byte stream)))
 	    (setf stream (close stream))
-	    (error "~%Invalid CDB database ~A" filename))
+	    (error "~%Invalid CDB file ~A: has file been corrupted?" filename))
 	  ;; Read index
 	  (let ((count 0))
 	    (file-position stream (read-fixnum stream))
@@ -319,7 +319,7 @@
 
 (defun read-record (cdb key)
   (unless (eq (cdb-mode cdb) :input)
-    (error "Database not open for input."))
+    (error "CDB not open for input."))
   (with-slots (stream) cdb
     (let* ((h (hash key))
 	   (tbl-pos (car (aref (cdb-tables cdb) (logand 255 h))))
@@ -345,7 +345,7 @@
 
 (defun all-keys (cdb &optional (asciip *cdb-ascii-p*))
   (unless (eq (cdb-mode cdb) :input)
-    (error "Database not open for input."))
+    (error "CDB not open for input."))
   (with-slots (stream tables) cdb
     (let ((end (car (aref (cdb-tables cdb) 0)))
 	  (keys (make-hash-table :test #'equal 
