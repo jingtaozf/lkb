@@ -15,7 +15,8 @@ this outputs a full form lexicon, with all lexical rules applied
 so morphology and lexical rules can be ignored
 
 optional argument is a list of lexical ids - this is set by 
-batch parsing
+batch parsing.  The idea is to parse a (small) set of sentences and
+then only output the ids needed for those sentences
 
 (output-grules :lilfes "~aac/lilfes/lingo/grules.lil")
 
@@ -35,6 +36,21 @@ Parse nodes need to be added so we can understand the display.
 
 |#
 
+(defun get-directory-name (dir)
+  (if (eq #\/ (car (last (coerce dir 'list))))
+      dir
+      (concatenate 'string dir "/")))
+
+(defun output-all-for-lilfes (&optional dir)
+  (setf dir (cond (dir (get-directory-name dir))
+		  ((sys:getenv "LKB_OUTPUT_DIR")
+		   (get-directory-name (sys:getenv "LKB_OUTPUT_DIR")))
+		  (t "./")))
+  (output-types :lilfes (concatenate 'string dir "types.lil") t)
+  (output-lex-and-derived :lilfes (concatenate 'string dir "lex.lil"))
+  (output-grules :lilfes (concatenate 'string dir "grules.lil"))
+  (output-root :lilfes (concatenate 'string dir "root.lil")))
+
 ;;; very preliminary
 
 ;;; types can be in '' in the LilFeS syntax
@@ -49,14 +65,6 @@ Parse nodes need to be added so we can understand the display.
          ((eq type *toptype*) 'bot)
          ((eq type *string-type*) 'string)
          ((eq type 'true) 'tru)
-         ((eq type 'list-of-synsem-structs) 'list)
-         ((eq type 'list-ssm-strs) 'list)        
-;         ((eq type 'list-of-predications) '*diff-list*)
-;         ((eq type 'list-of-orths) '*diff-list*)
-         ((eq type 'ne-list-of-synsem-structs) 'cons)
-         ((eq type 'ne-lst-ssm-strs) 'cons)         
-         ((eq type 'ne-list-of-anything) 'cons)
-         ((eq type 'ne-list-any) 'cons)
          ;;; following are for the textbook grammar
          ((eq type '-) 'minus)
          ((eq type '+) 'plus)
@@ -64,45 +72,21 @@ Parse nodes need to be added so we can understand the display.
          ;;; these are for LinGO
          ((eq type 'follow) 'lingo_follow)
          ((eq type 'integer) 'lingo_integer)
+         ((eq type 'rule) 'lingo_rule)
          (t type))))
 
 (defun convert-lilfes-feature (feat)
   (cond ((eq feat (car *list-head*)) "hd")
         ((eq feat (car *list-tail*)) "tl")
+        ((eq feat 'ARG1) "'LINGO_ARG1'")
+        ((eq feat 'ARG2) "'LINGO_ARG2'")
+        ((eq feat 'ARG3) "'LINGO_ARG3'")
         (t (convert-iffy-characters feat))))
         
 
 (defun convert-iffy-characters (val)
-  #|
   ;;; for LilFeS 0.71 just escape the feature
   (format nil "'~A'" val))
-  |#
-  (let ((str (string val))
-          (char-bag nil))
-      (for char in (coerce str 'list)
-           do
-           (cond ((char= char #\-)
-                  (setf char-bag 
-                        (append (nreverse (coerce "HYPHEN" 'list))
-                                char-bag)))
-                 ((char= char #\*)
-                  (setf char-bag 
-                        (append (nreverse (coerce "ASTERIX" 'list))
-                                char-bag)))
-                 ((digit-char-p char) 
-                  (setf char-bag 
-                       (append 
-                        (nreverse 
-                         (coerce 
-                          (string-upcase
-                          (format nil "~R" 
-                                         (- (char-code char) 48))) 'list))
-                        char-bag)))
-                 ;;; alas, cannot use ~:@R here, because 0
-                 ;;; hadn't been invented then ...
-                 (t (push char char-bag))))
-      (coerce (nreverse char-bag) 'string)))
-
   
 (defparameter *lilfes-builtins*
   '("list" "nil" "cons" "bot" "string"))
@@ -126,9 +110,13 @@ Parse nodes need to be added so we can understand the display.
           ;;; non-sig-only-p version isn't correct yet
           ;;; not sure what to do with constraints
           (display-dag1 def 'lilfes stream nil t)))
-      (format stream "."))))
+      (format stream ".")
+      (when (equal lilfes-name "0-1-list")
+	(format stream "~%'0-1-list-nil' <- ['0-1-list', 'nil'].")))))
 
 (defun display-lilfes-signature (type def stream)
+;;; FIX - this needs to be altered for the new version
+;;; of lilfes
   (let ((feats (for feat in (top-level-features-of def)
                     filter
                     (if (eq (maximal-type-of feat) type)
@@ -152,6 +140,7 @@ Parse nodes need to be added so we can understand the display.
                                         value))))
 
 (defun output-instance-as-lilfes (name entry stream &optional class)
+  (when entry
   (let ((def (tdfs-indef (lex-or-psort-full-fs entry))))
     ;; assume no defaults
     ;; assume either a grammar rule, in which case
@@ -162,30 +151,52 @@ Parse nodes need to be added so we can understand the display.
       (let ((order-length (length (rule-order entry))))
         (cond ((eql order-length 2)
                (format stream "~%id_schema(\"~A\", " name)
-               (output-lilfes-spec stream entry 1))
+               (output-lilfes-spec stream def 1 name))
               ((eql order-length 3)
-               (format stream "~%binary_rule(\"~A\", " name)
-               (output-lilfes-spec stream entry 2))
+               (format stream "~%id_schema(\"~A\", " name)
+               (output-lilfes-spec stream def 2 name))
               (t (error "Rule order in ~A is ~A: only unary or binary expected"
-                        name order-length))))
-      (if (eql class :root)
-          (format stream "~%root(")
-        (format stream "~%lex(\"~A\", " name)))
-    (display-dag1 def 'lilfes stream)
-    (format stream ").~%")))
+                        name order-length)))
+	(format stream ",~%")
+	(display-dag1 def 'lilfes stream)
+	(format stream ",true, true).~%"))
+      (progn (if (eql class :root)
+		 (format stream "~%root(")
+	       (format stream "~%lex(\"~A\", " name))
+	     (display-dag1 def 'lilfes stream)
+	     (format stream ").~%"))))))
 
-(defun output-lilfes-spec (stream entry order)
+
+(defun output-lilfes-spec (stream def order name)
   (if (eql order 1)
-      (format stream "unary_rule \& ARC_DTR\[HEAD-DTR\]~%")
-    (progn 
-      (format stream "binary_rule \& NH_DIR\\~A &~%" 
-              (lilfes-rule-order entry))  
-      (format stream  "ARC_DTR\[HEAD-DTR\] &~%INP_DTR\[NON-HEAD-DTR"))))
+      (format stream "~%unary_rule \& ARC_DTR\\['HEAD-DTR'\\]")
+    (if (eql order 2)          
+	(progn 
+	  (format stream "~%binary_rule \& NH_DIR\\~A &~%" 
+		  (lilfes-rule-order def name))  
+	  (format stream "ARC_DTR\\['HEAD-DTR'\\] &~%INP_DTR\\['NON-HEAD-DTR'\\]"))
+      (error "Unrecognised order ~A in ~A" order name))))
 
+(defun lilfes-rule-order (rule-fs name)
+  (let ((nh-dtr (existing-dag-at-end-of rule-fs '(NON-HEAD-DTR)))
+	(h-dtr (existing-dag-at-end-of rule-fs '(HEAD-DTR))))
+    (when (and nh-dtr (not (eql nh-dtr 'no-way-through))
+	       h-dtr (not (eql h-dtr 'no-way-through)))
+	  (let ((first-dtr (existing-dag-at-end-of rule-fs '(ARGS FIRST))))
+	    (unless first-dtr
+		    (error "No first dtr in ~A" name))
+	    (cond ((and (eq first-dtr nh-dtr) 
+			(not (eq first-dtr h-dtr))) "left")
+		  ((and (eq first-dtr h-dtr)
+			(not (eq first-dtr nh-dtr))) "right")
+		  (t (error "~A has problems" name)))))))
+  
 
-(defun output-derived-instance-as-lilfes (string fs stream id1 id2)
+(defun output-derived-instance-as-lilfes (string fs stream)
   (let ((def (tdfs-indef fs)))
     ;; assume no defaults
-    (format stream "~%lexical_entry(\"string\", " string)
+    (format stream "~%lexical_entry(\"~A\", " string)
     (display-dag1 def 'lilfes stream)
     (format stream ").~%")))                 
+
+
