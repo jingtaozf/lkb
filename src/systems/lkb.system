@@ -128,13 +128,13 @@
 	       (:file "lex")          ; lexical structures, also templates etc
 	       #+plob 
                (:file "plex")         ; lexical database 
+               #+:ltemplates
+               (:file "ltemplates")   ; lexical templates (e.g. for cardinals)
+	       (:file "clex")         ; constant lexical database 
                #+:psql  
                (:file "psqllex")      ; Postgres interface for lexicon
                #+:psql
                (:file "lexport")      ; export of lexicon to file/db
-               #+:ltemplates
-               (:file "ltemplates")   ; lexical templates (e.g. for cardinals)
-	       (:file "clex")         ; constant lexical database 
                (:file "rules")        ; grammar and lexical rules
 	       (:file "parse")        ; chart parser
 	       (:file "active")       ; experimental key-driven (active) parser
