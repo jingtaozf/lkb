@@ -119,7 +119,7 @@
   ; so shouldn't be redefined for more complete scanner
    (let ((current-word nil)
          (current-sentence nil))
-      (for character in (coerce sentence-string 'list)
+      (loop for character in (coerce sentence-string 'list)
          do
          (cond ((char= character #\Space) 
                 (when current-word 
@@ -273,14 +273,14 @@
       (setf pathnames (list pathnames)))
     (with-package (:lkb)
       (read-irreg-form-strings 
-       (for pathname in pathnames
-            filter
+       (loop for pathname in pathnames
+            nconc
             (let ((res
                    (with-open-file (istream pathname
                                     :direction :input)
                      (read istream))))
               (when (and res (stringp res))
-                res)))))))
+                (list res))))))))
               
   
 ;;; utility for reloading
@@ -288,7 +288,7 @@
 (defun check-load-names (file-list &optional filetype)
   (let ((ok t))
     (if file-list
-      (for file in file-list
+      (loop for file in file-list
            do
            (unless
             (probe-file file)

@@ -12,12 +12,12 @@
     (if (null def)
         (if (cdr parents)
             (progn (format stream "= ~A" (string-downcase (car parents)))
-                   (for parent in (cdr parents)
+                   (loop for parent in (cdr parents)
                         do
                         (format stream " & ~A" (string-downcase parent))))
           (format stream "< ~A" (string-downcase (car parents))))
       (progn (format stream "= ~A" (string-downcase (car parents)))
-             (for parent in (cdr parents)
+             (loop for parent in (cdr parents)
                   do
                   (format stream " & ~A" (string-downcase parent)))
              (format stream " &")

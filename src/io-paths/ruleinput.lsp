@@ -43,7 +43,7 @@
   (setf *syntax-error* nil)
   (when (check-load-names *grammar-rule-file-list* "grammar rules")
     (let ((ovwr t))
-      (for grule-file in (reverse *grammar-rule-file-list*)
+      (loop for grule-file in (reverse *grammar-rule-file-list*)
            do
            (if (eql *lkb-system-version* :page)
                (read-tdl-grammar-file-aux grule-file ovwr)
@@ -73,13 +73,13 @@
              (or (null *morphology-rule-file-list*)
                  (check-load-names *morphology-rule-file-list* "morphology rules")))
       (let ((ovwr t) (movwr t))
-        (for lrule-file in *lexical-rule-file-list*
+        (loop for lrule-file in *lexical-rule-file-list*
              do
              (if (eql *lkb-system-version* :page)
                (read-tdl-lex-rule-file-aux lrule-file ovwr)
                (read-lex-rule-file-aux lrule-file ovwr))
              (setf ovwr nil))
-        (for mrule-file in *morphology-rule-file-list*
+        (loop for mrule-file in *morphology-rule-file-list*
              do
              (read-morph-file-aux mrule-file ovwr movwr)
              (setf movwr nil)))

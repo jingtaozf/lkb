@@ -427,9 +427,8 @@
   (when check-ind-defs-p
     (setf def-fs-set 
       (loop for fs in def-fs-set
-           nconc
-           (if (unifiable-wffs-p fs fixed-fs)
-	     (list fs)))))
+           when (unifiable-wffs-p fs fixed-fs)
+	   collect fs)))
   ;; we improve matters by chucking out structures which were incompatible
   ;; with the fixed-fs when check-ind-defs-p is true - if it isn't, we're
   ;; doing the first round and the tails are guaranteed to be compatible

@@ -80,7 +80,7 @@
   (let ((constraint nil)
         (def-alist nil))
       ;;; read-tdl-conjunction in tdltypeinput
-    (for unif in (read-tdl-conjunction istream name nil nil)
+    (loop for unif in (read-tdl-conjunction istream name nil nil)
          do
          (cond ((unification-p unif) (push unif constraint))
                ((consp unif)

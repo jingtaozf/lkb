@@ -135,7 +135,7 @@
 
 (defun graph-assign-depths (user-node node parents-visited node-daughter-function)
    (check-node-depth node)
-   (for user-daughter in (funcall node-daughter-function user-node)
+   (loop for user-daughter in (funcall node-daughter-function user-node)
       do
       (let ((daughter (gethash user-daughter *graph-node-table*)))
          (cond
@@ -190,7 +190,7 @@
 
 (defun graph-update-depths (node)
    (check-node-depth node)
-   (for daughter in (the list (graph-node-daughters node))
+   (loop for daughter in (the list (graph-node-daughters node))
       when (<= (graph-node-depth daughter) (graph-node-depth node))
       do
       (setf (graph-node-depth daughter) (1+ (graph-node-depth node)))
@@ -205,7 +205,7 @@
 ;;;
 
 (defun graph-add-dummy-nodes (node table)
-   (for daughter in (the list (graph-node-daughters node))
+   (loop for daughter in (the list (graph-node-daughters node))
       do
       (let ((depth (graph-node-depth daughter)))
          (when (>= depth (length (the simple-vector table)))
@@ -235,7 +235,7 @@
 
 
 (defun graph-connect-dummy-nodes (higher lower table reversep)
-   (for depth fixnum (1+ (graph-node-depth higher))
+   (loop for depth from (1+ (graph-node-depth higher))
       to (1- (graph-node-depth lower))
       do
       (let ((new
@@ -255,24 +255,24 @@
 ;;;
 
 (defun graph-assign-x-ordering (node-depths-table)
-   (for node in (the list (svref node-depths-table 0)) 
+   (loop for node in (the list (svref node-depths-table 0)) 
       do
       (setf (graph-node-relative-offset node) 0))
    (let ((max-depth
             (1- (length (the simple-vector node-depths-table)))))
-      (for iteration fixnum 1 to 2
+      (loop for iteration from 1 to 2
          do
-         (for depth fixnum 1 to max-depth
+         (loop for depth from 1 to max-depth
             do
             (graph-assign-x-ordering-up/down depth node-depths-table 1))
          (unless (eql iteration 2)
-            (for depth fixnum (1- max-depth) downto 0
+            (loop for depth from (1- max-depth) downto 0
                do
                (graph-assign-x-ordering-up/down depth node-depths-table -1))))))
 
 
 (defun graph-assign-x-ordering-up/down (depth node-depths-table direction)
-   (for node in (the list (svref node-depths-table depth))
+   (loop for node in (the list (svref node-depths-table depth))
       do 
       (let ((parents/children 
                (if (minusp direction) (graph-node-daughters node) 
@@ -281,7 +281,7 @@
             (if parents/children 
                (truncate
                   (let ((sum 0))
-                     (for parent/child in (the list parents/children)
+                     (loop for parent/child in (the list parents/children)
                         do 
                         (incf sum (graph-node-relative-offset parent/child)))
                      sum)
@@ -292,7 +292,7 @@
          #'(lambda (n1 n2)
              (< (graph-node-relative-offset n1) (graph-node-relative-offset n2)))))
    (let ((n 0))
-      (for node in (the list (svref node-depths-table depth))
+      (loop for node in (the list (svref node-depths-table depth))
          do 
          (when (eql n +maximum-pixel-dimension+)
             (error "Graph has too many nodes in a single level for ~S to handle."
@@ -305,15 +305,15 @@
 
 (defun graph-assign-x-positions (node-depths-table node-width-function 
       separation horizontalp)
-   (for node in (the list (svref node-depths-table 0))
+   (loop for node in (the list (svref node-depths-table 0))
       do
       (setf (graph-node-x node) 0))
    (let ((total-depth
             (1- (length (the simple-vector node-depths-table))))
          (max-width 0))
-      (for iteration fixnum 1 to 2
+      (loop for iteration from 1 to 2
          do
-         (for depth fixnum 1 to total-depth ; child <- mean of parents
+         (loop for depth from 1 to total-depth ; child <- mean of parents
             do
             (setq max-width
                (max max-width
@@ -323,7 +323,7 @@
                         (* separation 2)                   ; increase vertical separation
                         separation)                        ; at first 2 levels
                      horizontalp 1))))
-         (for depth fixnum (1- total-depth) downto 0 ; parent <- mean of children
+         (loop for depth from (1- total-depth) downto 0 ; parent <- mean of children
             do
             (when (or (not *type-display*)
                      ;; in type display - mid-point of children unless we've done 1
@@ -341,7 +341,7 @@
       ;; shift x coords back down to zero
       (let ((min-x most-positive-fixnum)
             (max-first-width 0))
-         (for depth fixnum 0 to total-depth
+         (loop for depth from 0 to total-depth
             do
             (unless horizontalp
                (let ((first-node (car (svref node-depths-table depth))))
@@ -349,13 +349,13 @@
                      (setq max-first-width
                         (max (get-node-width first-node node-width-function)
                            max-first-width)))))
-            (for node in (the list (svref node-depths-table depth))
+            (loop for node in (the list (svref node-depths-table depth))
                do
                (setq min-x (min min-x (graph-node-x node)))))
          (decf min-x (truncate (+ max-first-width separation) 2))
-         (for depth fixnum 0 to total-depth
+         (loop for depth from 0 to total-depth
             do
-            (for node in (the list (svref node-depths-table depth))
+            (loop for node in (the list (svref node-depths-table depth))
                do
                (decf (graph-node-x node) min-x)))
          (decf max-width min-x))
@@ -364,7 +364,7 @@
 
 (defun graph-assign-x-positions-up/down (depth node-depths-table
       node-width-function separation horizontalp direction &aux (last-x 0))
-   (for node in (the list (svref node-depths-table depth))
+   (loop for node in (the list (svref node-depths-table depth))
       do
       (let* ((parents/children
                (if (minusp direction) (graph-node-daughters node)
@@ -373,7 +373,7 @@
                (if parents/children
                   (truncate
                      (let ((sum 0))
-                        (for parent/child in (the list parents/children)
+                        (loop for parent/child in (the list parents/children)
                            do
                            (incf sum (graph-node-x parent/child)))
                         sum)
@@ -386,7 +386,7 @@
             #'(lambda (n1 n2) (< (graph-node-x n1) (graph-node-x n2))))))
    (let ((n 0) (prev-dummy-node-p nil)
          (dummy-separation (truncate (* separation 2) 3)))
-      (for node in (the list (svref node-depths-table depth))
+      (loop for node in (the list (svref node-depths-table depth))
          do
          (when
             (>= last-x
@@ -416,21 +416,21 @@
 (defun graph-assign-y-positions (node-depths-table node-width-function separation
       horizontalp)
    (let ((current 1))
-      (for depth fixnum 0 to
+      (loop for depth from 0 to
          (1- (length (the simple-vector node-depths-table)))
          do
          (when
             (>= current
                (- +maximum-pixel-dimension+ max-node-width max-node-height 17))
             (error "Graph is too deep for ~S to handle." 'graph-display-layout))
-         (for node in (the list (svref node-depths-table depth))
+         (loop for node in (the list (svref node-depths-table depth))
             do
             (setf (graph-node-y node) current))
          (setq current
             (+ current separation
                (if horizontalp
                   (let ((max-width 0))
-                     (for node in (the list (svref node-depths-table depth))
+                     (loop for node in (the list (svref node-depths-table depth))
                         do
                         (setq max-width
                            (max max-width
@@ -475,13 +475,13 @@
 (defun graph-display-horizontally (stream node-print-function link-draw-function
       node-width-function node-height node-depths-table)
    (let ((half-node-height (1- (truncate node-height 2))))
-      (for depth fixnum (if *type-display* 0 1)
+      (loop for depth from (if *type-display* 0 1)
                  to (1- (length (the simple-vector node-depths-table)))
          do
-         (for node in (the list (svref node-depths-table depth))
+         (loop for node in (the list (svref node-depths-table depth))
             do
             (when (or *type-display* (and *chart-display* (> depth 1)))
-               (for parent in (the list (graph-node-parents node))
+               (loop for parent in (the list (graph-node-parents node))
                   do
                   ;; x and y positions for nodes are top left of label
                   (funcall link-draw-function stream
@@ -513,11 +513,11 @@
 
 (defun graph-display-vertically (stream node-print-function link-draw-function
       node-width-function node-height node-depths-table)
-   (for depth fixnum 0 to (1- (length (the simple-vector node-depths-table)))
+   (loop for depth from 0 to (1- (length (the simple-vector node-depths-table)))
       do
-      (for node in (the list (svref node-depths-table depth))
+      (loop for node in (the list (svref node-depths-table depth))
          do
-         (for parent in (the list (graph-node-parents node))
+         (loop for parent in (the list (graph-node-parents node))
             do
             ;; x and y positions for nodes are in middle of top of label
             (funcall link-draw-function stream

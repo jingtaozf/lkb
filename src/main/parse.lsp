@@ -472,8 +472,8 @@
              :to to))
 
 (defun get-senses (stem-string)
-  (for entry in (get-unexpanded-lex-entry stem-string)
-       filter
+  (loop for entry in (get-unexpanded-lex-entry stem-string)
+       nconc
        (when (not (cdr (lex-or-psort-orth entry)))
          ;; exclude multi-words
          (let* ((id (lex-or-psort-id entry))
@@ -481,13 +481,14 @@
                 (tdfs (when expanded-entry 
                         (lex-or-psort-full-fs expanded-entry))))
            (when tdfs
+             (list
              (cons id
                    (cond
                     ((smember tdfs *lexical-entries-used*)
                      (copy-tdfs-completely tdfs))
                     (t 
                      (push tdfs *lexical-entries-used*)
-                     tdfs))))))))
+                     tdfs)))))))))
 
 ;;; get-multi-senses has to return a structure
 
@@ -502,15 +503,15 @@
 (defun add-multi-words (morph-poss right-vertex f)
   (let* ((multi-strings nil)
 	 (word-senses 
-          (for stem in (remove-duplicates 
-                        (for analysis in morph-poss
+          (loop for stem in (remove-duplicates 
+                        (loop for analysis in morph-poss
                              collect (car analysis)) :test #'equal)
 	       ;; make sure we have all the possible stems in case inflection
 	       ;; is going to be allowed on rightmost element but otherwise
 	       ;; the variable morph-poss is not used
                append
-               (for sense-record in (get-multi-senses stem right-vertex)
-                    filter
+               (loop for sense-record in (get-multi-senses stem right-vertex)
+                    nconc
                     (let* ((sense (sense-record-fs sense-record))
                            (lex-ids (sense-record-lex-ids sense-record))
                            (new-morph-res 
@@ -529,7 +530,7 @@
                       (if mrecs
 			  (progn
 			    (setf (sense-record-mrecs sense-record) mrecs)
-			    sense-record)))))))
+			    (list sense-record))))))))
     (dolist (sense-record word-senses)
       (let ((word (sense-record-word-string sense-record))
 	    (left-vertex (sense-record-left-vertex sense-record)))
@@ -553,7 +554,7 @@
 
 (defun get-multi-senses (stem-string right-vertex)
   (let* ((entries (get-unexpanded-lex-entry stem-string)))
-    (for entry in (sort entries #'(lambda (x y) 
+    (loop for entry in (sort entries #'(lambda (x y) 
                                     (> (length (lex-or-psort-orth x))
                                        (length (lex-or-psort-orth y)))))
          append
@@ -584,7 +585,7 @@
 		       (morph-edge-morph-results morph-entry)))
 		  (unless
                       (let ((some-ok nil))
-                        (for res in current-morph-res
+                        (loop for res in current-morph-res
                              do
                              (if (string-equal word-stem (car res))
                                  (progn (push (cdr res) rules)
@@ -597,10 +598,11 @@
                   (let ((current-morph-res 
                          (morph-edge-morph-results morph-entry)))
                     (unless
-                      (for res in current-morph-res
-                           some-satisfy
-                           (and (string-equal word-stem (car res))
-                                (null (cdr res))))
+                      (dolist (res current-morph-res)
+                        (when
+                            (and (string-equal word-stem (car res))
+                                 (null (cdr res)))
+                          (return t)))
                       ;; this assumes there are no null affixes 
                       ;; found by the morphology program
                       (setf ok nil)
@@ -623,7 +625,7 @@
 		     (full-word-string 
 		      (apply #'concatenate 'string 
 			     (nreverse (cdr amalgamated-words)))))
-                (for rule-set in (or rules (list nil))
+                (loop for rule-set in (or rules (list nil))
                      collect
                      (let ((left-vertex (- right-vertex (length entry-orth))))
                        (make-sense-record :word-string full-word-string
@@ -631,7 +633,7 @@
                                           :morph-res 
                                           (if rule-set
                                               (cons full-stem-string 
-                                                    (for rule-rec in rule-set
+                                                    (loop for rule-rec in rule-set
                                                          collect
                                                          (cons (car rule-rec)
                                                                (list full-word-string))))
@@ -671,7 +673,7 @@
   ;; will be nil in each case
   ;;
   (let ((transformed-entries 
-	 (for entry in entries
+	 (loop for entry in entries
 	      append
 	      (let ((fs (mrecord-fs entry))
 		    (fs-restricted (mrecord-fs-restricted entry))
@@ -683,12 +685,12 @@
 				   "~%Warning - probable circular lexical rule") 
 			   nil)
 		  (append
-		   (for rule in *parser-lexical-rules*
-			filter
+		   (loop for rule in *parser-lexical-rules*
+			nconc
 			(let ((result (apply-morph-rule 
 				       rule fs fs-restricted nil)))
 			  (if result 
-			      (make-mrecord :fs result
+			      (list (make-mrecord :fs result
 					    :lex-ids lex-ids
 					    :rules morph-rules 
 					    :history (cons
@@ -696,7 +698,7 @@
 						       :rule rule
 						       :fs fs
 						       :new-spelling nil)
-						      history)))))
+						      history))))))
 		   (when morph-rules
 		     (let* ((morph-rule-info (car morph-rules))
 			    (new-orth (cadr morph-rule-info))
@@ -1028,7 +1030,7 @@
       (when (tdfs-tail tdfs)
         (let ((path (create-path-from-feature-list
                      (if (listp flist) flist (list flist)))))
-          (for tail-element in (tdfs-tail tdfs)
+          (loop for tail-element in (tdfs-tail tdfs)
                do
                (push (add-path-to-tail path tail-element) tail))))
       (make-tdfs :indef indef-dag :tail tail)))
@@ -1050,7 +1052,7 @@
 			 (list *start-symbol*)))
 	(chart-index (aref *chart* end-vertex 0)))
     (when chart-index
-      (for item in (chart-entry-configurations chart-index)
+      (loop for item in (chart-entry-configurations chart-index)
 	   append
 	   (when (eql (chart-configuration-begin item) start-vertex)
 	     ;; root may be a list of (td)fs with the interpretation that
@@ -1086,8 +1088,8 @@
                 (list edge))))
 
 (defun create-new-root-edges (item start-symbols start-vertex end-vertex)
-  (for start-symbol in start-symbols        
-       filter
+  (loop for start-symbol in start-symbols        
+       nconc
        (let ((tdfs (get-tdfs-given-id 
                     start-symbol)))
          (if tdfs
@@ -1116,7 +1118,7 @@
                                    end-vertex
 				   ;; Don't (recursively) check for success
 				   nil)
-                     new-edge)))))))
+                     (list new-edge))))))))
 
 
 ;;; TTY printout of chart
@@ -1326,7 +1328,7 @@
             ;;                     (edge-count)
                                  *edge-id*))
                        (finish-output ostream))))))
-            (for lex-id in (collect-expanded-lex-ids *lexicon*)
+            (loop for lex-id in (collect-expanded-lex-ids *lexicon*)
                do
                (pushnew lex-id *lex-ids-used*))
             (setq raw-sentence (read-line istream nil 'eof))))
@@ -1355,7 +1357,7 @@
 ;;; used for testing the generation lexical lookup algorithm
 
 (defun retrieve-lex-from-parses nil
-  (for edge in *parse-record*
+  (loop for edge in *parse-record*
        collect
        (edge-lex-ids edge)))
 
@@ -1367,7 +1369,7 @@
   (if (or (cdr (edge-lex-ids edge-rec))
           (and (rule-p (edge-rule edge-rec))
                (not (lexical-rule-p (edge-rule edge-rec)))))
-      (for child in (edge-children edge-rec)
+      (loop for child in (edge-children edge-rec)
            append
            (collect-parse-base child))
     (list (cons (car (edge-lex-ids edge-rec))

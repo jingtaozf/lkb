@@ -73,7 +73,7 @@
    (setf *toptype* '*top*)
    (add-type-from-file '*top* nil nil nil nil)
    (let ((*readtable* (make-tdl-break-table)))
-      (for file-name in file-names
+      (loop for file-name in file-names
          do
          (format t "~%Reading in type file ~A" (pathname-name file-name))
          (force-output t)
@@ -107,7 +107,7 @@
 
 (defun read-tdl-patch-files-aux (file-names)
     (let ((*readtable* (make-tdl-break-table)))
-      (for file-name in file-names
+      (loop for file-name in file-names
          do
          (format t "~%Reading in type file ~A" 
                  (pathname-name file-name))
@@ -259,7 +259,7 @@
       ;;; path constraint with an empty path, for the special case of
       ;;; types we want to extract the type and put it on the parents
       ;;; list
-      (for unif in (read-tdl-conjunction istream name nil nil)
+      (loop for unif in (read-tdl-conjunction istream name nil nil)
            do
            (cond ((unification-p unif)
                   (if (null (path-typed-feature-list (unification-lhs unif)))
@@ -330,7 +330,7 @@
                    ;;; this assumes that we can keep
                    ;;; the persistance the same on all the bits
                    (if rest
-                     (for path2 in rest
+                     (loop for path2 in rest
                           do
                           (push (make-tdl-path-path-unif 
                                  path1 
@@ -494,7 +494,7 @@
     (loop
       (let* ((path-specs (read-tdl-attr-val istream name path-so-far in-default-p))
              (next-char (peek-char t istream nil 'eof)))
-        (for path-spec in path-specs
+        (loop for path-spec in path-specs
              do
              (push path-spec constraint))
         (unless (eql next-char #\,) (return))
@@ -738,12 +738,12 @@
 
 (defun make-tdl-template (name pars cons)
   (push (make-tdl-templ :name name
-                       :parameters (for par in pars 
+                       :parameters (loop for par in pars 
                                   collect
                                   (make-tdl-templ-parameter :name (car par)
                                                            :path (cadr par)))
                        :constraint 
-                       (for pv in cons
+                       (loop for pv in cons
                             collect
                             (make-tdl-templ-pv :path (car pv)
                                                :value (cadr pv))))
@@ -787,7 +787,7 @@
 
 (defun get-tdl-template-constraints (template-constraint path-so-far in-default-p)
   (let ((rev-p (reverse path-so-far)))
-    (for pv in template-constraint
+    (loop for pv in template-constraint
          collect
          (make-tdl-path-value-unif
           (append rev-p (tdl-templ-pv-path pv))

@@ -156,7 +156,7 @@
          
 (defun display-active-dpaths (dpath-list ostream)
    (let ((max-width 0))
-      (for unif in dpath-list
+      (loop for unif in dpath-list
          do
          (output-unif unif ostream t)
          (setf max-width (max max-width (current-position-x ostream))))
@@ -179,7 +179,7 @@
    ;;; this function is dedicated to my Mother and Father
    (let ((max-width 0))
    (format ostream "~%Parents = ")
-   (for parent in parents
+   (loop for parent in parents
       do
      (let ((start-pos (current-position ostream)))
         (with-bold-output ostream
@@ -476,7 +476,7 @@
 (defun print-fs-and-parents (print-stream fs title parents &optional shrunk)
    (display-title print-stream title)
    (format print-stream "~%Parents = ")
-   (for parent in parents
+   (loop for parent in parents
       do (format print-stream "~/FB/~(~A~)~/FP/   " parent))
    (format print-stream "~%")
    (display-dag1 fs (if shrunk 'swindow 'window) print-stream)
@@ -485,7 +485,7 @@
 (defun print-fs-and-paths (print-stream fs title dpath-list &optional shrunk)
    (display-title print-stream title)
    (display-dag1 fs (if shrunk 'swindow 'window) print-stream)
-   (for unif in dpath-list
+   (loop for unif in dpath-list
       do
       (output-unif unif print-stream nil))
    (terpri print-stream))

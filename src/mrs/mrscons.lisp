@@ -156,9 +156,8 @@ scopes of quantifiers.
   ;;; called in pre-processing, before bindings are relevant
   (let* ((h (get-var-num (rel-handel rel)))
          (qeqs (loop for qeq in *qeqs*
-                    nconc
-                    (if (eql h (qeq-right qeq))
-                        (list qeq)))))
+                    when (eql h (qeq-right qeq))
+                    collect qeq)))
     (when (cdr qeqs)
         (error "Multiple qeqs - condition should have been checked for"))
     (car qeqs)))

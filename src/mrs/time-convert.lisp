@@ -253,18 +253,17 @@
 
 (defun get-coindexed-mins (index minrels)
   (loop for minrel in minrels
-       nconc
-       (if (eql (get-var-num (get-rel-feature-value minrel *min-index-feature*))
-               (get-var-num index))
-           (list (get-rel-feature-value minrel *min-min-feature*)))))
+      when (eql 
+            (get-var-num (get-rel-feature-value minrel *min-index-feature*))
+            (get-var-num index))
+      collect (get-rel-feature-value minrel *min-min-feature*)))
 
 (defun get-coindexed-ampm-rels (index ampmrels)
   (let ((ampmspecs
          (loop for ampmrel in ampmrels
-              nconc
-              (if (eql (get-var-num (get-rel-feature-value ampmrel *ampm-index-feature*))
+              when (eql (get-var-num (get-rel-feature-value ampmrel *ampm-index-feature*))
                          (get-var-num index))
-                  (list (rel-sort ampmrel))))))         
+              collect (rel-sort ampmrel))))         
     (cond ((null ampmspecs) nil)
           ((cdr ampmspecs) 
            (struggle-on-error "~%Dual specification of AM and PM"))
@@ -277,10 +276,10 @@
 
 (defun get-coindexed-rel-rels (index relrels)
   (loop for relrel in relrels
-       nconc
-       (if (eql (get-var-num (get-rel-feature-value relrel *rel-hour-feature*))
-               (get-var-num index))
-           (list relrel))))
+       when
+       (eql (get-var-num (get-rel-feature-value relrel *rel-hour-feature*))
+            (get-var-num index))
+       collect relrel))
 
 
 (defun create-ctime-hour (base-hour am-pm)

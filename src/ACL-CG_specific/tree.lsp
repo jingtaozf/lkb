@@ -34,7 +34,7 @@
    ;; call hide-in-type-hierarchy-p on each type to see whether it should
    ;; be hidden
    (when (is-valid-type type)
-      (for name in *type-names*
+      (loop for name in *type-names*
         do 
         (unless (symbolp name)
            (let ((real-thing name))
@@ -73,7 +73,7 @@
       (when (and type-record
                  (not (member stream-name (type-shrunk-p type-record)))
                  (not (member stream-name (type-visible-p type-record))))
-         (for daughter in (type-daughters type-record)
+         (loop for daughter in (type-daughters type-record)
             do
             (propagate-visibility-in-type-tree daughter stream-name)))
       (pushnew stream-name (type-visible-p type-record))))
@@ -306,7 +306,7 @@
 (defun unshrink-ancestors (type-entry top-type stream-name)
    ;; can't just use type-ancestors list since we have to stop at top-type arg
    (unless (eql (type-name type-entry) top-type)
-      (for parent in (type-parents type-entry)
+      (loop for parent in (type-parents type-entry)
         do
         (let ((parent-entry (get-type-entry parent)))
            (setf (type-shrunk-p parent-entry) 

@@ -270,7 +270,7 @@
       (t subrules)))
 
 (defun hexify (elements position)
-   (for member in elements
+   (loop for member in elements
       when (listp member)
       collect
       (if 
@@ -323,21 +323,21 @@
       letter-set))
 
 (defun add-infix (new-rule) 
-   (for subrule in (morph-rule-subrules new-rule)
+   (loop for subrule in (morph-rule-subrules new-rule)
       do
       (add-infix-instance 
          (morph-rule-rule-name new-rule) 
          subrule)))
 
 (defun add-suffix (new-rule) 
-   (for subrule in (morph-rule-subrules new-rule)
+   (loop for subrule in (morph-rule-subrules new-rule)
       do
       (add-suffix-instance
          (morph-rule-rule-name new-rule) 
          subrule)))
 
 (defun add-prefix (new-rule) 
-   (for subrule in (morph-rule-subrules new-rule)
+   (loop for subrule in (morph-rule-subrules new-rule)
       do
       (add-prefix-instance 
          (morph-rule-rule-name new-rule) 
@@ -487,52 +487,54 @@
 	   (remove-suffix current-combinations))))
 	((null current-combinations) (cdr definites-list))
       (nconc definites-list
-	     (for morphological-possibility in current-combinations
+	     (loop for morphological-possibility in current-combinations
 		  when 
 		  (or
 		   (equal morphological-possibility 
 			  (remove-duplicates morphological-possibility 
 					     :test #'equal))
-		   (or
+                   (or
 		    (setf current-combinations 
 		      (remove morphological-possibility 
 			      current-combinations :test #'equal)) 
 		    nil))
-		  filter
+		  nconc
 		  (let* 
 		      ((root 
                         (implode (car morphological-possibility))) 
 		       (lexical (lookup-word *lexicon* root)))
-		    (and lexical
-			 (cons root 
-			       (cdr morphological-possibility)))))))))
+		    (if lexical
+			 (list (cons root 
+			       (cdr morphological-possibility))))))))))
 
 (defun remove-suffix (input-words)
-   (for entry in input-words
+   (loop for entry in input-words
       append
       (let ((node (suffix-tree-comp))
             (oldword (implode (car entry))))
-	(for residue on (reverse (car entry))
+	(loop for residue on (reverse (car entry))
             while node
             append
-            (setf node (ass-look-up node))
-            (and node
-               (let ((nodal-rules (l-tree-node-rules node)))
-                  (and nodal-rules
-                     (process-suffix 
-                        oldword
-                        (cdr residue) 
-                        nodal-rules 
-                        (cdr entry)))))))))
+              (progn 
+                (setf node (ass-look-up node))
+                (and node
+                     (let ((nodal-rules (l-tree-node-rules node)))
+                       (and nodal-rules
+                            (process-suffix 
+                             oldword
+                             (cdr residue) 
+                             nodal-rules 
+                             (cdr entry))))))))))
 
 (defun remove-prefix (input-words)
-   (for entry in input-words
+   (loop for entry in input-words
       append
       (let ((node (prefix-tree-comp))
             (oldword (implode (car entry)))) 
-         (for residue on (car entry)
+         (loop for residue on (car entry)
             while node
             append
+            (progn
             (setf node (ass-look-up node))
             (and node 
                (let ((nodal-rules (l-tree-node-rules node)))
@@ -541,21 +543,22 @@
                         oldword
                         (cdr residue) 
                         nodal-rules 
-                        (cdr entry)))))))))
+                        (cdr entry))))))))))
 
 (defun remove-infix (input-words)
    (let (prefixer)
-      (for entry in input-words
+      (loop for entry in input-words
          append
          (prog1
-            (for segment on (car entry)
+            (loop for segment on (car entry)
                append
                (prog1
                   (let ((node (infix-tree-comp))
                         (oldword (implode (car entry)))) 
-                     (for residue on segment
+                     (loop for residue on segment
                         while node
                         append
+                        (progn 
                         (setf node (ass-look-up node))
                         (and node 
                            (let ((nodal-rules (l-tree-node-rules node)))
@@ -565,14 +568,14 @@
                                     (cdr residue) 
                                     prefixer 
                                     nodal-rules 
-                                    (cdr entry)))))))
+                                    (cdr entry))))))))
                   (push (car segment) prefixer)))
             (setf prefixer nil)))))
 
 (defun process-suffix (oldword word new-rules old-rules)
   (let ((word (reverse word)))
-    (for rule in new-rules
-	 filter
+    (loop for rule in new-rules
+	 nconc
 	 (let ((new-word
 		(infix-remove 
 		 (prefix-remove 
@@ -586,15 +589,16 @@
 			       (nreverse repl))))
 		  (suffix-rule-prefix rule))
 		 (suffix-rule-infix rule))))
-	   (and (or word (suffix-rule-replacement rule))
-		new-word
+	   (if (and (or word (suffix-rule-replacement rule))
+                    new-word)
+               (list
 		(cons new-word
 		      (cons (list (suffix-rule-affix-name rule) oldword)
-			    old-rules)))))))
+			    old-rules))))))))
 
 (defun process-prefix (oldword word new-rules old-rules)
-   (for rule in new-rules
-      filter
+   (loop for rule in new-rules
+      nconc
       (let ((new-word
                (infix-remove 
                   (suffix-remove 
@@ -609,18 +613,20 @@
                         word)
                      (prefix-rule-suffix rule))
                   (prefix-rule-infix rule))))
-         (and 
+        (if
+            (and
             (or word (prefix-rule-replacement rule))
-            new-word
+            new-word)
+            (list
             (cons 
                new-word
                (cons 
                   (list (prefix-rule-affix-name rule) oldword)
-                  old-rules))))))
+                  old-rules)))))))
 
 (defun process-infix (oldword postamble preamble new-rules old-rules)
-   (for rule in new-rules
-      filter
+   (loop for rule in new-rules
+      nconc
       (let ((new-word
                (suffix-remove 
                   (prefix-remove 
@@ -636,14 +642,16 @@
                         postamble)
                      (infix-rule-prefix rule))
                   (infix-rule-suffix rule))))
-         (and 
+        (if
+            (and
             (or postamble preamble (infix-rule-replacement rule))
-            new-word
+            new-word)
+            (list
             (cons 
                new-word
                (cons 
                   (list (infix-rule-affix-name rule) oldword)
-                  old-rules))))))
+                  old-rules)))))))
 
 (defun suffix-remove (word suffix)
    (let* ((rem (second suffix))
@@ -693,12 +701,12 @@
    (add-morphemes (explode string) rule))
 
 (defun add-morphemes (word rule)
-   (for morphological-possibility in 
+   (loop for morphological-possibility in 
       (or
          (make-prefix word rule)
          (make-infix word rule)
          (make-suffix word rule))
-      filter
+      collect
       (cons 
          (implode (car morphological-possibility))
          (cdr morphological-possibility))))
@@ -713,14 +721,14 @@
          (reg-output 
 	  (process-suffix oldword
 			  r-input-word
-			  (for poss in (l-tree-node-rules node)
+			  (loop for poss in (l-tree-node-rules node)
 			       when (eq rule 
 					(suffix-rule-affix-name 
 					 poss))
 			       collect poss)
 			  nil))
          (output nil))
-    (for residue on r-input-word
+    (loop for residue on r-input-word
 	 while node
 	 do
 	 (setf node (ass-look-up node))
@@ -729,7 +737,7 @@
                      (process-suffix 
 		      oldword
 		      (cdr residue) 
-		      (for poss in (l-tree-node-rules node)
+		      (loop for poss in (l-tree-node-rules node)
 			   when (eql rule (suffix-rule-affix-name poss))
 			   collect poss)
                       nil)))
@@ -744,13 +752,13 @@
 	   (process-prefix 
                oldword
                input-word 
-               (for poss in (l-tree-node-rules node)
+               (loop for poss in (l-tree-node-rules node)
                   when (eql rule (prefix-rule-affix-name poss))
                   collect
                   poss)
                nil))
          (output nil))
-     (for residue on input-word
+     (loop for residue on input-word
           while node
           do
           (setf node (ass-look-up node))
@@ -759,7 +767,7 @@
                      (process-prefix 
                       oldword
                       (cdr residue) 
-                      (for poss in (l-tree-node-rules node)
+                      (loop for poss in (l-tree-node-rules node)
                            when (eql rule (prefix-rule-affix-name poss))
                            collect
                            poss)

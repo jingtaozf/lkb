@@ -252,7 +252,7 @@ introduces new features ~A" name new-features)
         (delete name (type-daughters parent-entry)))
       (setf (type-descendants parent-entry)
         (delete type-entry (type-descendants parent-entry) :test #'eq))
-      (for ancestor-entry in (type-ancestors parent-entry)
+      (loop for ancestor-entry in (type-ancestors parent-entry)
            do
            (setf (type-descendants ancestor-entry)
              (delete type-entry 
@@ -260,13 +260,12 @@ introduces new features ~A" name new-features)
                      :test #'eq))))))
 
 (defun new-features-in (unif-list)
-  (for unif in unif-list
+  (loop for unif in unif-list
        append
-       (for feature in (get-unif-features unif)
-            filter
-            (unless 
+       (loop for feature in (get-unif-features unif)
+            unless 
                 (maximal-type-of feature) ; i.e. it's already known
-              feature))))
+            collect feature)))
 
 (defun expand-leaf-type-entry (name parent type-entry)
   (let ((parent-entry (get-type-entry parent)))
@@ -305,7 +304,7 @@ introduces new features ~A" name new-features)
      (type-constraint parent-entry) name))
   (setf (type-tdfs entry)
     (make-tdfs :indef (type-constraint entry)
-               :tail (for element in (tdfs-tail (type-tdfs parent-entry))
+               :tail (loop for element in (tdfs-tail (type-tdfs parent-entry))
                           collect
                            element))))
      

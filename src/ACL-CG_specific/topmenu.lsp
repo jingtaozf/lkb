@@ -201,7 +201,7 @@
      
     
 (defun enable-defined-interactions (menu)
-   (for menu-item in 
+   (loop for menu-item in 
       (cg:menu-items menu)      
       do
       (let ((name (cg:name menu-item))
@@ -215,7 +215,7 @@
             )))))
 
 (defun disable-defined-interactions (menu)
-   (for menu-item in 
+   (loop for menu-item in 
       (cg:menu-items menu)      
       do
       (let ((name (cg:name menu-item))

@@ -57,7 +57,7 @@
          (when (or (eq (type-of-fs real-dag) *diff-list-type*)
                    (subtype-p (type-of-fs real-dag) *diff-list-type*))
            (check-diff-list dag-instance id path-so-far ostream))
-         (for label in (top-level-features-of real-dag)
+         (loop for label in (top-level-features-of real-dag)
               do
               (sanitize-aux (get-dag-value real-dag label)
                             id (cons label path-so-far) ostream))))))
@@ -111,7 +111,7 @@
 
 (defun batch-check-morphology (&optional plus-ids)
   ;;; generates all morphological forms
-  (for psort in *ordered-lex-list*
+  (loop for psort in *ordered-lex-list*
        do
        (gen-all-morphs psort (get-psort-entry psort) plus-ids)))   
 
@@ -128,11 +128,11 @@
    (when (> *number-of-applications* *maximal-lex-rule-applications*)
       (error "~%Probable circular lexical rule"))
    (let ((transformed-entries 
-            (for entry in entries
+            (loop for entry in entries
                append
-               (for rule in 
+               (loop for rule in 
                   (get-indexed-lrules entry)
-                  filter
+                  nconc
                   (let* ((spelling-rule-p
                                         (spelling-change-rule-p rule))
                          (new-morph 
@@ -150,7 +150,9 @@
                     (when (and result new-morph) 
                       (format t "~%~A" new-morph)
                       (when id (format t " ~A" id)))
-                    result)))))
+                    (if result
+                        (list
+                         result)))))))
       (if transformed-entries
           (try-all-morph-rules transformed-entries))))
 

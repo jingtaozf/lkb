@@ -179,13 +179,13 @@
 (defun display-active-parents (parents ostream)
   ;; this function is dedicated to my Mother and Father
   (format ostream "~%Parents = ")
-  (for parent in parents
+  (loop for parent in parents
        do
        (if (listp parent) ;; glbtypes are followed 
                           ;; by a list of real parents
            (progn
              (format ostream "[")
-             (for real-parent in parent
+             (loop for real-parent in parent
                   do
                   (display-actual-parent real-parent ostream))
              (format ostream "]"))
@@ -204,7 +204,7 @@
        
 (defun display-active-dpaths (dpath-list ostream)
   (let ((max-width 0))
-    (for unif in dpath-list
+    (loop for unif in dpath-list
 	 do
          (output-unif unif ostream t)
          (setf max-width (max max-width (current-position-x ostream))))

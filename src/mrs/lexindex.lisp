@@ -249,11 +249,10 @@
             (let* ((label-list (fs-arcs fs))
                    (string-values
                     (loop for pair in label-list
-                         nconc
-                         (if (member (car pair) 
-                                     *value-feats*)
-                             (list (create-type
-                              (fs-type (cdr pair))))))))
+                         when (member (car pair) *value-feats*)
+                         collect
+                         (create-type
+                              (fs-type (cdr pair))))))
               (when (cdr string-values)
                 (error "~%Multiple string values not expected in ~A
                       values ~A labels ~A" id string-values label-list)) 

@@ -68,7 +68,7 @@
 (defun reload-template-files nil
   (setf *syntax-error* nil)
   (when (check-load-names *template-file-list* 'template)
-    (for template-file in *template-file-list*
+    (loop for template-file in *template-file-list*
          do
          (if (eql *lkb-system-version* :page)
            (read-tdl-psort-file-aux template-file t)
@@ -78,7 +78,7 @@
 (defun reload-psort-files nil
   (setf *syntax-error* nil)
   (when (check-load-names *psort-file-list* 'psort)
-    (for psort-file in *psort-file-list*
+    (loop for psort-file in *psort-file-list*
          do
          (if (eql *lkb-system-version* :page)
            (read-tdl-psort-file-aux psort-file nil)

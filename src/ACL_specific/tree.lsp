@@ -49,7 +49,7 @@
 ;;; removed by the quit function, but doesn't seem to be necessary
 
 (defun close-existing-type-hierarchy-trees nil
-  (for frame in *type-hierarchy-frames*
+  (loop for frame in *type-hierarchy-frames*
        do
        (clim:execute-frame-command frame '(clim-user::com-close-to-replace)))
   (setf *type-hierarchy-frames* nil))
@@ -63,7 +63,7 @@
   ;; if show-all-p is true then we never hide any nodes. If it's false
   ;; then we call hide-in-type-hierarchy-p on each type to see whether
   ;; it should be hidden
-  (for name in *type-names*
+  (loop for name in *type-names*
        do 
        (unless (symbolp name)
          (let ((real-thing name))
@@ -86,7 +86,7 @@
    (let ((type-record (get-type-entry type)))
       (when (and (not (type-shrunk-p type-record))
                  (not (type-visible-p type-record)))
-         (for daughter in (type-daughters type-record)
+         (loop for daughter in (type-daughters type-record)
             do
             (propagate-visibility-in-type-tree daughter)))
       (setf (type-visible-p type-record) t)))
@@ -282,7 +282,7 @@
 (defun unshrink-ancestors (type-entry top-type)
   ;; can't just use type-ancestors list since we have to stop at top-type arg
   (unless (eql (type-name type-entry) top-type)
-    (for parent in (type-parents type-entry)
+    (loop for parent in (type-parents type-entry)
          do
          (let ((parent-entry (get-type-entry parent)))
 	   (when (type-shrunk-p parent-entry)

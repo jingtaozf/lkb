@@ -89,9 +89,9 @@
                              (list (cons feature val)))
                             ((listp val) 
                              (loop for val-el in val
-                                  nconc
-                                  (if (and (var-p val-el) (is-handel-var val-el))
-                                      (list (cons (fvpair-feature fvp) val-el)))))
+                                 when (and (var-p val-el) 
+                                           (is-handel-var val-el))
+                                 collect (cons (fvpair-feature fvp) val-el)))
                             (t nil))))))
           (push (cons rel res) *rel-handel-store*)
           res))))
@@ -439,14 +439,13 @@ printing routines -  convenient to make this global to keep printing generic")
     (setf *top-level-variables* nil)
     (let* ((rels (psoa-liszt mrsstruct))
            (hcons (psoa-h-cons mrsstruct))
-           (quant-rels (loop for rel in rels nconc (if (is-quant-rel rel) (list rel))))
+           (quant-rels (loop for rel in rels when (is-quant-rel rel) collect rel))
            (implicit-existentials (find-unbound-vars rels quant-rels))
                                         ; find-unbound-vars has the side effect of pushing variables which
                                         ; are in pronoun or name rels into *top-level-variables* 
            (free-variables (loop for var in implicit-existentials
-                                nconc
-                                (if (not (nonquantified-var-p var))
-                                    (list var)))))
+                                unless (nonquantified-var-p var)
+                                collect var)))
       (if free-variables
           (progn
             (unless *giving-demo-p*
@@ -468,12 +467,12 @@ printing routines -  convenient to make this global to keep printing generic")
                                                       (psoa-top-h mrsstruct) 
                                                       rels hcons)
                                                      rels nil nil nil nil)
-                 nconc
+                 unless (res-struct-other-rels result) 
                ;;; the bindings slot of the result is a bindings set, the
                ;;; other-rels is a set of `left over' rels
                ;;; we don't want any of these at the top level
-                 (if (not (res-struct-other-rels result)) 
-                   (list (res-struct-bindings result))))))))))
+                 collect
+                   (res-struct-bindings result))))))))
 
 (defstruct bindings-and-sisters
   bindings sisters pending-qeq)
@@ -663,22 +662,26 @@ or modulo some number of quantifiers
                    (pushnew (get-rel-handel-num rel) tmp)) tmp))
            (possible-top-rels 
             ; rels which aren't impossible and don't have impossible sisters 
-            (loop for rel in rels nconc 
-                 (unless (or (member rel impossible-top-rels :test #'eq)
+            (loop for rel in rels 
+                unless
+                 (or (member rel impossible-top-rels :test #'eq)
                              (member (get-rel-handel-num rel) 
-                                     impossible-handels)) 
-                   (list rel))))
+                                     impossible-handels))
+                 collect rel))
            (pending-top-rels ; rels which have same handel as pending-qeq
             (if pending-qeq
-                (loop for rel in possible-top-rels nconc
-                     (if (eql (get-rel-handel-num rel) pending-qeq) (list rel)))))
+                (loop for rel in possible-top-rels
+                    when (eql (get-rel-handel-num rel) pending-qeq) 
+                    collect rel)))
            (possible-quant-top-rels 
             (if pending-qeq
-             (loop for rel in possible-top-rels nconc 
-                  (if (quick-is-quant-rel rel) (list rel)))))
+                (loop for rel in possible-top-rels 
+                    when (quick-is-quant-rel rel) 
+                   collect rel)))
            (top-rels ; have the same handel as the top handel
-            (loop for rel in rels nconc
-                 (if (eql (get-rel-handel-num rel) top-handel) (list rel)))))
+            (loop for rel in rels
+                when (eql (get-rel-handel-num rel) top-handel) 
+                collect rel)))
       (if (if pending-qeq 
               (and  (or (not top-rels) *alex-mode*)
                    (or possible-quant-top-rels pending-top-rels))
@@ -712,9 +715,8 @@ or modulo some number of quantifiers
 (defun ordered-set-difference (lst to-go)
   ;; set-difference doesn't guarantee the order of results
   (loop for el in lst
-       nconc
-       (unless (member el to-go :test #'eq)
-           (list el))))
+       unless (member el to-go :test #'eq)
+       collect el))
 
 (defun ordered-insert (el lst)
   ;;; has to copy
@@ -782,10 +784,9 @@ or modulo some number of quantifiers
                   (new-bindings-and-sisters 
                    pendingless (list known-top-rels)
                    top-handel bindings nil pending-qeq)
-                  nconc
-                  (if (intersection possible-quants 
+                  when (intersection possible-quants 
                                     (bindings-and-sisters-sisters res))
-                      (list res))))))
+                  collect res))))
     (new-bindings-and-sisters other-possibles 
                               (list known-top-rels)
                               top-handel bindings nil nil)))
@@ -925,17 +926,15 @@ or modulo some number of quantifiers
               (push (cons handel (list rel))
                     clusters)))))
     (loop for cluster in clusters
-         nconc
-         (unless (member (car cluster) bad-handels)
-           (list (cdr cluster))))))
+         unless (member (car cluster) bad-handels)
+         collect (cdr cluster))))
              
 (defun generate-all-combinations (lst)
   (if (null lst) '(nil)
       (let ((subcombs (generate-all-combinations (cdr lst))))
         (append subcombs
                 (loop for subcomb in subcombs
-                     nconc
-                     (unless (dolist (trial (car lst))
+                     unless (dolist (trial (car lst))
                                   (when
                                       (dolist (sub subcomb)
                                        (when
@@ -943,7 +942,7 @@ or modulo some number of quantifiers
                                             trial sub)
                                          (return t)))
                                    (return t)))
-                       (list (cons (car lst) subcomb))))))))
+                      collect (cons (car lst) subcomb))))))
 
 
 ;;;; ******* Printing scoped structures *********
@@ -1015,11 +1014,10 @@ or modulo some number of quantifiers
         (struggle-on-error "Circular structure passed to output-scoped-mrs")
         nil)
     (let ((top-rels (loop for rel in rel-list
-                         nconc
-                         (if (eql 
+                         when (eql 
                               (get-true-var-num (rel-handel rel)) 
                               top-handel)
-                             (list rel)))))
+                         collect rel)))
       (when (null (list-length top-rels))
       ;;; list-length returns nil if top-rels is a cycle
         (struggle-on-error "Circular LISZT passed to output-scoped-mrs"))

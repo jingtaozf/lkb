@@ -8,9 +8,9 @@
 (defun find-redundancy (type)
   (let ((parents (type-parents (get-type-entry type))))
     (when (cdr parents)
-      (for parent in parents
+      (loop for parent in parents
            do
-           (for parent2 in parents
+           (loop for parent2 in parents
                 do
                 (when (and (not (eql parent parent2))
                            (member parent2 (get-ancestors (get-type-entry parent))))

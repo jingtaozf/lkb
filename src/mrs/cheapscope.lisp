@@ -31,7 +31,10 @@
 
 (defun find-cheap-leqs (mrsstruct)
   (let* ((rels (psoa-liszt mrsstruct)) 
-         (quant-rels (loop for rel in rels nconc (if (is-quant-rel rel) (list rel)))))
+         (quant-rels 
+          (loop for rel in rels 
+              when (is-quant-rel rel)
+              collect rel)))
     (append
      (loop for rel in rels
           append

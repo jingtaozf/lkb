@@ -66,17 +66,17 @@ at this point).
 
 (defun collect-lex-entries-from-mrs (psoa)
   (let* ((all-rels (psoa-liszt psoa))
-         (lex-rule-rels (loop for rel in all-rels nconc 
-                             (if (lex-rule-rel-p (rel-sort rel))
-                                 (list rel))))
+         (lex-rule-rels (loop for rel in all-rels
+                            when (lex-rule-rel-p (rel-sort rel))
+                            collect rel))
          ; specified by lexical rule
-         (lexical-rels (loop for rel in all-rels nconc 
-                             (if (lexical-rel-p (rel-sort rel))
-                                 (list rel))))
+         (lexical-rels (loop for rel in all-rels 
+                             when (lexical-rel-p (rel-sort rel))
+                             collect rel))
          ; specified in lexical entry
-         (grammar-rels (loop for rel in all-rels nconc 
-                            (if (grammar-rel-p (rel-sort rel))
-                                 (list rel))))
+         (grammar-rels (loop for rel in all-rels 
+                             when (grammar-rel-p (rel-sort rel))
+                             collect rel))
                                         ; specified in grammar rule
     ; these are not necessarily mutually exclusive classes
          (possibles 
@@ -281,9 +281,8 @@ at this point).
         ; in order found in lex entry
         (let ((found-rels
                (loop for target-rel in target-rels
-                    nconc
-                    (if (matches-rel-record target-rel lex-rel)
-                        (list target-rel)))))
+                    when (matches-rel-record target-rel lex-rel)
+                    collect target-rel)))
           (unless found-rels
             (setf ok nil)
             (return))
@@ -516,9 +515,8 @@ at this point).
                                 (apply #'append 
                                        (lkb::retrieve-lex-from-parses))))
                            (loop for empty in *empty-semantics-lexical-entries*
-                                nconc
-                                (if (member empty found-list)
-                                (list empty))))
+                                when (member empty found-list)
+                                collect empty))
                        *empty-semantics-lexical-entries*)))
         (instantiated-sets
           (loop for lex-id in real-ids
@@ -570,10 +568,9 @@ at this point).
                       collect
                       (let ((matching-rels
                              (loop for rel in rel-set
-                                  nconc
-                                  (if
-                                      (matches-rel-record rel main-rel-rec)
-                                      (list rel)))))
+                                  when
+                                   (matches-rel-record rel main-rel-rec)
+                                  collect rel)))
                         (unless matching-rels (return nil))
                         matching-rels))))
             (if rel-list

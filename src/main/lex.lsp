@@ -125,12 +125,17 @@
 
 
 (defun get-lex-entry (orth)
-  (for psort in (remove-duplicates (lookup-word *lexicon* orth))
-       filter (get-psort-entry psort)))
+  (loop for psort in (remove-duplicates (lookup-word *lexicon* orth))
+        nconc
+        (let ((entry (get-psort-entry psort)))
+          (if entry (list entry)))))
+                       
 
 (defun get-unexpanded-lex-entry (orth)
-  (for psort in (remove-duplicates (lookup-word *lexicon* orth))
-       filter (get-unexpanded-psort-entry psort)))
+  (loop for psort in (remove-duplicates (lookup-word *lexicon* orth))
+       nconc
+        (let ((entry (get-unexpanded-psort-entry psort)))
+          (if entry (list entry)))))
 
 (defun add-lex-from-file (orth sense-id fs-or-type defs)
   (let* ((lex-id (if orth (make-lex-id orth sense-id) sense-id))
@@ -156,12 +161,12 @@
   ;; returns a list of strings
   ;; doesn't do much error checking
   (let ((matching-unifs 
-         (for unif in unifs
-              filter
+         (loop for unif in unifs
+              nconc
               (if (unification-p unif)
 		  (let ((unif-lhs (unification-lhs unif)))
 		    (if (general-path-match unif-lhs *orth-path*)
-			unif))))))
+			(list unif)))))))
     (when matching-unifs
       (let ((n (length *orth-path*))
             (orth-strings nil))
@@ -174,8 +179,8 @@
               (t 
                (loop
                  (let ((exact-match
-                        (for unif in matching-unifs
-                             keep-first
+                        (dolist (unif matching-unifs)
+                           (when
                              (let* ((path (unification-lhs unif))
                                     (feats (path-typed-feature-list path)))
                                (if
@@ -190,7 +195,8 @@
                                                    (eq (type-feature-pair-feature 
                                                         nth-el)
                                                        (car *list-head*))))))
-                                   (u-value-p (unification-rhs unif)))))))
+                                   (u-value-p (unification-rhs unif))))
+                             (return unif)))))
                    (unless exact-match (return))
                    (push (car (u-value-types (unification-rhs exact-match)))
                          orth-strings)
@@ -302,7 +308,7 @@
 	 (indef (if fs (create-wffs fs))))
     (if indef
         (let* ((default-fss
-		   (for default-spec in default-specs
+		   (loop for default-spec in default-specs
 			collect
 			(make-equivalent-persistence-defaults 
 			 indef (car default-spec) (cdr default-spec) lex-id)))
@@ -463,9 +469,10 @@
 	       (probe-file *psorts-temp-index-file*))
 	      (file-write-date *psorts-temp-index-file*)))
 	 (last-file-date
-	  (apply #'max (for file in filenames
-			    filter
-			    (file-write-date file)))))
+	  (apply #'max (loop for file in filenames
+                           nconc
+                             (let ((date (file-write-date file)))
+                               (if date (list date)))))))
     (when (and cache-date last-file-date cache-index-date
 	       (> cache-date last-file-date) 
 	       (> cache-index-date last-file-date))

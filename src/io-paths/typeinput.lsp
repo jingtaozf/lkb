@@ -104,7 +104,7 @@
    (setf *type-file-list* file-names)
    (clear-types)
    (let ((*readtable* (make-path-notation-break-table)))
-      (for file-name in file-names
+      (loop for file-name in file-names
          do
          (format t "~%Reading in type file ~A" (pathname-name file-name))
          (with-open-file 
@@ -153,7 +153,7 @@
   (setf *syntax-error* nil)
   (when (check-load-names *leaf-type-file-list* 'leaf-type)
     (clear-leaf-types *leaf-types*)
-    (for file-name in (reverse *leaf-type-file-list*)
+    (loop for file-name in (reverse *leaf-type-file-list*)
          do
          (if (eql *lkb-system-version* :page)
 	     (read-tdl-leaf-type-file-aux file-name)
@@ -236,7 +236,7 @@
              name parents))
     (if (every #'symbolp parents)
       parents
-      (for parent in parents
+      (loop for parent in parents
            collect
            (if (symbolp parent) parent
                (convert-to-lkb-symbol parent))))))
@@ -262,7 +262,7 @@
                                       
 
 (defun add-enumerated-types (name daughter-list)
-   (for daughter in daughter-list
+   (loop for daughter in daughter-list
       do
       (add-type-from-file daughter (list name) nil nil nil)))
 
@@ -271,7 +271,7 @@
       (unless (and (listp daughter-list)
             (eql (car daughter-list) 'or))
          (error "Badly formed disjuction in ~A" name))
-      (for dtr in (cdr daughter-list)
+      (loop for dtr in (cdr daughter-list)
            collect
            (if (symbolp dtr) dtr
                (convert-to-lkb-symbol dtr)))))
@@ -320,7 +320,7 @@
             ((eq next-char #\() ; disjunction
              (let ((value (read istream)))
                (make-u-value :types
-                  (for type in value
+                  (loop for type in value
                        collect
                        (if (symbolp type) type
                            (convert-to-lkb-symbol type))))))

@@ -202,9 +202,9 @@
   (loop for edge in *gen-record*
       nconc
         (list
-       (fix-spelling
-        ;; in spell.lsp
-        (g-edge-leaves edge)))))
+         (fix-spelling
+          ;; in spell.lsp
+          (g-edge-leaves edge)))))
 
 (defun clear-gen-chart nil
    (setq *edge-id* 0)

@@ -81,7 +81,7 @@
                  (or expected-width 0))))
            (count 0)
            (prompt-init-items 
-              (for prompt-init-pair in prompt-init-pairs
+              (loop for prompt-init-pair in prompt-init-pairs
                  append
                  (make-prompt-init-dialog-items 
                     0 button-height prompt-width 

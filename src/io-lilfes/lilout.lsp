@@ -127,7 +127,7 @@ Parse nodes need to be added so we can understand the display.
 ;      (format t "'~A'~%" lilfes-name)
       (format stream "~%'~A' <- " lilfes-name)
       (format stream "['~A'" (convert-lilfes-type (car parents)))
-      (for parent in (cdr parents)
+      (loop for parent in (cdr parents)
            do
            (format stream ", '~A'" (convert-lilfes-type parent)))
       (format stream "]")
@@ -140,16 +140,15 @@ Parse nodes need to be added so we can understand the display.
 )))  ;; by yusuke  May. 21
 
 (defun display-lilfes-signature-and-constraint (type def stream)
-  (let ((feats (for feat in (top-level-features-of def)
-                    filter
-                    (if (eq (maximal-type-of feat) type)
-                        feat))))
+  (let ((feats (loop for feat in (top-level-features-of def)
+                    when (eq (maximal-type-of feat) type)
+                    collect feat)))
     (when feats
       (format stream " +~%[")
       (output-lilfes-fv-pair (car feats) 
                              (type-of-fs (get-dag-value def (car feats)))
                              stream)
-      (for feat in (cdr feats) 
+      (loop for feat in (cdr feats) 
            do
            (format stream ",~%")
            (output-lilfes-fv-pair feat

@@ -506,13 +506,13 @@
       (mapcar #'(lambda (arc) (dag-arc-attribute arc)) (dag-arcs dag))))
 
 (defun get-top-features-and-values (dag)
-    (for arc in (dag-arcs dag)
+    (loop for arc in (dag-arcs dag)
          collect
          (let ((type (dag-type (dag-arc-value arc))))
-         (cons (dag-arc-attribute arc)
-               (if (listp type)
-                   (car type)
-                 type)))))
+           (cons (dag-arc-attribute arc)
+                 (if (listp type)
+                     (car type)
+                   type)))))
 
 
 (defun get-dag-value (dag attribute)

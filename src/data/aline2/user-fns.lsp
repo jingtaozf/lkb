@@ -72,7 +72,7 @@
   (let* ((unifs nil)
 	(rule-orth-path (cons 'node *orth-path*))
         (tmp-orth-path rule-orth-path))
-    (for orth-value in (split-into-words orth)
+    (loop for orth-value in (split-into-words orth)
          do
          (let ((opath (create-path-from-feature-list 
                        (append tmp-orth-path *list-head*))))

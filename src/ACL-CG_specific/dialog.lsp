@@ -62,16 +62,17 @@
                 (or expected-width 0)))))
           (prompt-init-items 
             (let ((count 0))
-             (for prompt-init-pair in prompt-init-pairs
-                append
-               (incf count)
-                (make-prompt-init-dialog-items 
-                 'cg:editable-text button-height prompt-width 
-                   spacing
-                   value-width
-                   count
-                   (car prompt-init-pair)
-                   (cdr prompt-init-pair))))))
+             (loop for prompt-init-pair in prompt-init-pairs
+                 append
+                 (progn
+                   (incf count)
+                   (make-prompt-init-dialog-items 
+                    'cg:editable-text button-height prompt-width 
+                    spacing
+                    value-width
+                    count
+                    (car prompt-init-pair)
+                    (cdr prompt-init-pair)))))))
        (ask-for-strings-dialog title prompt-init-items prompt-width 
           value-width button-height spacing font))))
 
@@ -150,11 +151,12 @@
                    #'(lambda (&rest args) 
                        (let ((i 0))
                       (setf return-values 
-                         (for d-item in (cddr (cg:dialog-items request-dialog))
-                            filter 
-                           (incf i)
-                           (if (evenp i) 
-                               (cg:value d-item))))) 
+                         (loop for d-item in (cddr (cg:dialog-items request-dialog))
+                             nconc
+                               (progn
+                                 (incf i)
+                                 (if (evenp i) 
+                                     (list (cg:value d-item)))))))
                       (values t t)))
                 (cons
                 (aclwin:make-dialog-item :widget 'cg:button
@@ -202,17 +204,18 @@
                 (or expected-width 0))))
           (prompt-init-items 
             (let ((count 0))
-             (for prompt-init-pair in prompt-init-pairs
-                append
-                (incf count)
-                (make-prompt-init-dialog-items 
-                   'cg:lisp-text
-                   button-height prompt-width 
-                   spacing
-                   value-width
-                   count
-                   (car prompt-init-pair)
-                   (cdr prompt-init-pair))))))
+             (loop for prompt-init-pair in prompt-init-pairs
+                 append
+                   (progn
+                     (incf count)
+                     (make-prompt-init-dialog-items 
+                      'cg:lisp-text
+                      button-height prompt-width 
+                      spacing
+                      value-width
+                      count
+                      (car prompt-init-pair)
+                      (cdr prompt-init-pair)))))))
        (ask-for-strings-dialog title prompt-init-items prompt-width 
           value-width button-height spacing font))))
 

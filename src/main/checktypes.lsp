@@ -156,7 +156,7 @@
   ;;; added for the case where definitions are changed, but the hierarchy
   ;;; itself is unaltered
   (clear-types-for-patching-constraints)
-  (for name in *type-names*
+  (loop for name in *type-names*
          do
          (let* ((type-entry (get-type-entry name)))
            (when (leaf-type-p type-entry)
@@ -208,12 +208,12 @@
 (defun add-daughters-to-type-table nil
    ;; checks for correctness of parent specs
    (let ((ok t))
-      (for name in *type-names*
+      (loop for name in *type-names*
          do
          (let* ((type-entry (get-type-entry name))
                 (parents (type-parents type-entry)))
            ;;; type-parents gets reset by glb code
-           (for parent in parents
+           (loop for parent in parents
                 do
                 (let ((parent-entry (get-type-entry parent)))
                   (cond 
@@ -250,15 +250,14 @@
 ;;; active node then you have a cycle
 
 ;;; marks.lsp contains the marking structures and functions
-
+ 
 (defun mark-for-cycles (type-record)
-    (let ((ok t))
-      (unless (seen-node-p type-record) 
+  (or (seen-node-p type-record) 
+      (progn
         (mark-node-seen type-record)
-        (setf ok 
-          (for daughter in 
-               (type-daughters type-record)
-               all-satisfy
+        (not
+         (dolist (daughter (type-daughters type-record))
+           (unless 
                (let ((daughter-entry (get-type-entry daughter)))
                  (if (active-node-p daughter-entry)
                      (progn
@@ -270,8 +269,8 @@
                      (let ((inner-ok 
                             (mark-for-cycles daughter-entry)))
                        (unmark-node-active daughter-entry)
-                       inner-ok)))))))
-      ok))
+                       inner-ok))))
+             (return t)))))))
 
 
 ;;; checking for redundant links
@@ -289,9 +288,9 @@
   ;; this is here because it's used in the next phase
   ;; of checking
   (let ((ok t)
-        (daughters (for d in (type-daughters type-record)
+        (daughters (loop for d in (type-daughters type-record)
                          collect (get-type-entry d))))
-    (for daughter in daughters
+    (loop for daughter in daughters
          do
          (if (active-node-p daughter)
              (progn 
@@ -301,10 +300,12 @@
            (mark-node-active daughter)))
     (when ok
       (setf ok 
-        (for daughter in daughters
-             all-satisfy
-             (mark-for-redundancy daughter)))
-      (for daughter in daughters
+        (not
+         (dolist (daughter daughters)
+           (unless
+               (mark-for-redundancy daughter)
+             (return t)))))
+      (loop for daughter in daughters
            do
            (unmark-node-active daughter)))
     ok))
@@ -384,6 +385,7 @@
 ;;; representations and reduces the number of comparisons performed from
 ;;; ntypes^2 to (a^2 + b^2 + ...) where a,b,... are sizes of partitions
 
+
 (defun find-good-partitions (type)
   ;; AAC - Oct 12 1998 - faster version
   (let* ((type-entry (get-type-entry type))
@@ -396,22 +398,24 @@
 	   (find-good-partitions daughter))
         (let* ((descendants (type-descendants type-entry))
                (desc-names (mapcar #'type-name descendants)))
-          (when 
-	      (for descendant in descendants
-                   all-satisfy
-		   (or (seen-node-p descendant)
-		       (null (cdr (type-parents descendant)))
-                       (subsetp
-                          (type-parents descendant) desc-names :test #'eq)))
+          (when
+              (not
+               (dolist (descendant descendants)
+                 (unless
+                     (or (seen-node-p descendant)
+                         (null (cdr (type-parents descendant)))
+                         (subsetp
+                          (type-parents descendant) desc-names :test #'eq))
+                   (return t))))
             (let ((partition-nodes
-                   (for descendant in descendants
-                        filter
-			(when (not (seen-node-p descendant))
-			  (mark-node-seen descendant)
-			  descendant))))
+                   (loop for descendant in descendants
+                        when (not (seen-node-p descendant))
+			collect (progn (mark-node-seen descendant)
+			               descendant))))
 	      (when partition-nodes
 		 (push (partition-non-tree-config-types type-entry partition-nodes)
                     *partitions*)))))))))
+
 
 (defun partition-non-tree-config-types (top others)
    (let ((partition-types (cons top others))
@@ -739,7 +743,7 @@
 
 #|
   (let* ((true-dtrs (remove-duplicates 
-                     (for dtr in dtrs
+                     (loop for dtr in dtrs
                          append
                          (let ((dtr-entry (get-type-entry dtr)))
                            (if (type-glbp dtr-entry)
@@ -773,7 +777,7 @@
       ;; marking types when the constraint has been expanded
       ;;
       (determine-atomic-types)
-      (for node in *type-names*
+      (loop for node in *type-names*
          do
          (let ((type-entry (get-type-entry node)))
            (unless (leaf-type-p type-entry)
@@ -827,7 +831,7 @@
                           local-constraint)
                         (let ((local-appfeats 
                                  (top-level-features-of local-constraint)))
-                           (for feature in local-appfeats
+                           (loop for feature in local-appfeats
                               do 
                               (add-maximal-type feature node))))
                      ; no need to do inheritance when checking
@@ -906,7 +910,7 @@
   (let ((ok t)
         (*unify-debug-cycles* t))       ; turn on cyclic dag warning messages
     (unmark-type-table)
-    (for type-name in *type-names*
+    (loop for type-name in *type-names*
 	 do
 	 (unless (leaf-type-p (get-type-entry type-name))
 	   (unless 
@@ -1000,7 +1004,7 @@
       (unless (and already-ordered-p (seen-node-p type-record))
          (mark-node-seen type-record)
          (unless (type-enumerated-p type-record)
-            (for daughter in (type-daughters type-record)
+            (loop for daughter in (type-daughters type-record)
                do
                (inherit-display-ordering daughter sorted-ordered-features))))))
 
@@ -1041,7 +1045,7 @@
       ;; 4) yaduing the tdfs with the supertypes tdfs
       ;;  expanding these if necessary and marking types when 
       ;;  the constraint has been expanded
-      (for node in *type-names*
+      (loop for node in *type-names*
          do
          (let ((type-entry (get-type-entry node)))
            (unless (leaf-type-p type-entry)
@@ -1058,7 +1062,7 @@
                 (full-tdfs nil)
                 (default-specs (type-default-spec type-entry))
                 (default-fss
-                    (for default-spec in default-specs
+                    (loop for default-spec in default-specs
                          collect
                          (make-equivalent-persistence-defaults indef 
                                (car default-spec) (cdr default-spec) node))))               
@@ -1121,7 +1125,7 @@
 ;;;  (collect-tails node (tdfs-indef local-tdfs))
   (declare (ignore node))
   (let ((current-tail (tdfs-tail local-tdfs)))
-    (for parent in (type-parents type-entry)
+    (loop for parent in (type-parents type-entry)
          do
          (let ((parent-tdfs (expand-default-constraint parent
                                  (get-type-entry parent))))

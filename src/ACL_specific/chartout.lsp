@@ -15,7 +15,7 @@
   (invalidate-chart-commands)
   (when *main-chart-frame*
     (clim:execute-frame-command *main-chart-frame* '(clim-user::com-close-to-replace)))
-  (for frame in *sub-chart-window-frames*
+  (loop for frame in *sub-chart-window-frames*
        do
        (clim:execute-frame-command frame '(clim-user::com-close-to-replace)))
   (setf *main-chart-frame* nil)

@@ -56,11 +56,10 @@
       (let ((chart-entry (aref *chart* i 0)))
          (if (chart-entry-p chart-entry) 
             (let ((edge 
-                     (for config in (chart-entry-configurations chart-entry) 
-                        car-filter
-                        (let ((edge (chart-configuration-edge config)))
-                           (if (eql edge-id (edge-id edge))
-                              edge)))))
+                     (dolist (config (chart-entry-configurations chart-entry)) 
+                        (let ((inner-edge (chart-configuration-edge config)))
+                           (when (eql edge-id (edge-id inner-edge))
+                              (return inner-edge))))))
                (when edge (return edge))))))
    (find edge-id *morph-records* :key #'edge-id)))
 
@@ -134,7 +133,7 @@
   ; is set up by the code in tdllexinput.lsp
   (setf *label-display-templates* nil)
   (setf *meta-display-templates* nil)
-  (for tmpl in *category-display-templates*
+  (loop for tmpl in *category-display-templates*
        do
        (let* ((tmpl-entry (get-psort-entry tmpl))
               (tmpl-fs (if tmpl-entry 
@@ -243,12 +242,14 @@
   ;;; the test is whether all the `real' parts of the
   ;;; template fs (i.e. the bits apart from e.g. LABEL-NAME)
   ;;; unify with the node
-  (for feat in (get-real-templ-feats tmpl-fs)
-       all-satisfy
-       (let ((real-templ-fs (get-dag-value tmpl-fs feat))
-             (sub-fs (get-dag-value fs feat)))
-         (and sub-fs
-              (unifiable-wffs-p real-templ-fs sub-fs)))))
+  (not
+   (dolist (feat (get-real-templ-feats tmpl-fs))
+     (unless
+         (let ((real-templ-fs (get-dag-value tmpl-fs feat))
+               (sub-fs (get-dag-value fs feat)))
+           (and sub-fs
+                (unifiable-wffs-p real-templ-fs sub-fs)))
+       (return t)))))
 
 (defun meta-template-match-p (tmpl-fs fs)
   ;;; the test is whether all the parts of the

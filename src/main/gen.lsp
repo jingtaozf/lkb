@@ -84,12 +84,12 @@
                      (*reentrant-sets* nil))
                   (generalise-dags-1 dag1 dag2 result-dag nil)
                   ;; (mapc #'print *reentrant-sets*)
-                  (for reentrant-set in *reentrant-sets*
+                  (loop for reentrant-set in *reentrant-sets*
                      do 
                      (let ((first-path 
                              (create-path-from-feature-list
                                 (reverse (car reentrant-set)))))
-                        (for other-path in (cdr reentrant-set)
+                        (loop for other-path in (cdr reentrant-set)
                            do
                            (unify-paths first-path result-dag 
                               (create-path-from-feature-list (reverse other-path))
@@ -195,62 +195,6 @@
          (least-common-supertype
             (reduce #'least-common-supertype type1)
             (reduce #'least-common-supertype type2)))))
-
-
-#|
-;;; !!! not tested
-
-;;; equality
-
-(defun dag-equal-p (dag1 dag2)
-   (invalidate-visit-marks)
-   (mark-dag-with-backwards-paths dag1 t nil)
-   (mark-dag-with-backwards-paths dag2 nil nil)
-   (equal-wffs-p dag1 dag2))
-        
-(defun equal-wffs-p (dag1 dag2)
-   (let* ((real-dag1 (follow-pointers dag1))
-         (real-dag2 (follow-pointers dag2))
-         (reentrancy-difference 
-            (or (set-difference 
-                  (car (dag-visit real-dag1)) (cdr (dag-visit real-dag2))
-                  :test #'equal)
-               (set-difference 
-                  (car (dag-visit real-dag1)) (cdr (dag-visit real-dag2)) 
-                  :test #'equal))))
-      (unless reentrancy-difference
-         (if (equal-types (type-of-fs real-dag1)
-               (type-of-fs real-dag2))
-            (or (is-atomic real-dag1)
-               (and (null (set-exclusive-or (top-level-features-of real-dag1)
-                        (top-level-features-of real-dag2)))
-                  (for label in (top-level-features-of real-dag1)
-                     all-satisfy
-                     (let ((existing-dag1 (get-dag-value real-dag1 label))
-                           (existing-dag2 (get-dag-value real-dag2 label)))
-                        (if existing-dag2 
-                           (equal-wffs-p existing-dag1 existing-dag2))))))))))
-
-
-;;; Both this function, and subsume-type, below, implicitly assume that the 
-;;; type hierarchy may be incomplete.
-
-(defun equal-types (type1 type2)
-   (cond 
-      ((and (not (listp type1)) (not (listp type2))) 
-         (equal type1 type2))
-      ((not (listp type1)) (and (eql (length type2) 1)
-            (equal type1 (car type2))))
-      ((not (listp type2)) (and (eql (length type1) 1)
-            (equal type2 (car type1))))
-      (t (not (or (set-difference 
-                  type1 type2
-                  :test #'equal)
-               (set-difference 
-                  type2 type1
-                  :test #'equal))))))
-
-|#
 
 ;;; subsumption - first value true if dag1 subsumes dag2, second value true
 ;;; if reverse relation holds
@@ -388,9 +332,9 @@
          (type (type-of-fs real-dag)))
       (unless 
          (member (if (listp type) type (list type)) 
-            (for pred in predictions
-               filter 
-               (if (null (car pred)) (cdr pred))) :test #'equal)
+            (loop for pred in predictions
+               when (null (car pred))
+               collect (cdr pred)) :test #'equal)
          (push (make-unification 
                :lhs (create-path-from-feature-list (reverse path))
                :rhs (make-u-value :types 
@@ -403,7 +347,7 @@
                      (extract-paths-for-canonical-rep (constraint-of type) 
                         nil)
                      predictions)))
-            (for label in (top-level-features-of real-dag)
+            (loop for label in (top-level-features-of real-dag)
                do
                (let ((new-dag (get-dag-value real-dag label)))
                   (canonicalise-fs-aux new-dag 
@@ -411,10 +355,9 @@
                      (cons label path))))))))
 
 (defun update-predictions (predictions feature)
-   (for pred in predictions
-      filter
-      (if (eql (caar pred) feature)
-         (cons (cdar pred) (cdr pred)))))
+   (loop for pred in predictions
+      when (eql (caar pred) feature)
+      collect (cons (cdar pred) (cdr pred))))
 
 (defun extract-paths-for-canonical-rep (fs path)
    ;;; given a FS extracts a list of all paths in the form 
@@ -426,7 +369,7 @@
             (if (listp type) type (list type)))
             (unless
                (is-atomic real-dag)
-               (for label in (top-level-features-of real-dag)
+               (loop for label in (top-level-features-of real-dag)
                   append
                   (let ((new-dag (get-dag-value real-dag label)))
                      (extract-paths-for-canonical-rep new-dag
@@ -440,14 +383,14 @@
    (if path
    (let ((max-type (maximal-type-of (car path))))
       (unless max-type (error "~%Unknown feature ~A~%" (car path)))
-      (append (for type in (cons max-type
+      (append (loop for type in (cons max-type
                                  (mapcar #'type-name
                                          (retrieve-descendants max-type)))
-               filter 
+               nconc 
                (let ((type-rest (extract-paths-for-canonical-rep 
                            (constraint-of type) nil)))
                   (if (member (cons path value) type-rest :test #'equal)
-                     (cons (reverse path-so-far) (list type)))))
+                     (list (cons (reverse path-so-far) (list type))))))
          (query-canonical-rep (cdr path) value 
             (cons (car path) 
                path-so-far))))))

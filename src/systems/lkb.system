@@ -71,12 +71,6 @@
       :components
 	      ((:file "version")))
 
-     (:module "for"
-      :source-pathname "mrs"
-      :binary-pathname "mrs"
-      :components
-	      ((:file "for")))         ; for loop macros
-
      (:module "initialization"
       :source-pathname "main"
       :binary-pathname "main"

@@ -59,7 +59,7 @@
             (format ostream "<")
             (when ordered-list
               (output-type-feature-pair ostream (car ordered-list) active-p)
-              (for tfp in (cdr ordered-list)
+              (loop for tfp in (cdr ordered-list)
                    do
                    (format ostream ":" )
                    (output-type-feature-pair ostream tfp active-p)))
@@ -69,7 +69,7 @@
             (format ostream "<")
             (when ordered-list
               (format ostream " ~A " (car ordered-list))
-              (for feat in (cdr ordered-list)
+              (loop for feat in (cdr ordered-list)
                    do
                    (format ostream ":" )
                    (format ostream " ~A " feat)))

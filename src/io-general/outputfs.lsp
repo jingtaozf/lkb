@@ -592,7 +592,7 @@ macro definitions
 (defun convert-underscores-for-tex (at-val)
    (let ((value (format nil "~A" at-val))
          (char-bag nil))
-         (for char in (coerce value 'list)
+         (loop for char in (coerce value 'list)
             do
             (when (char= char #\_)
                (push #\\ char-bag))
@@ -824,11 +824,11 @@ macro definitions
 (defun set-up-display-settings (file-name)
    (with-open-file 
       (istream file-name :direction :input)
-      (for setting in-stream istream
+      (loop for setting in-stream istream
          do
          (unless (get-type-entry (car setting))
             (error "Type ~A not found" (car setting)))
-         (for path in (cdr setting)
+         (loop for path in (cdr setting)
             do
             (unless (listp path)
                (error "~A is not a valid path" path))

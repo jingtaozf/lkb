@@ -37,14 +37,14 @@
            (format stream "/")
            (setf tail-width 
                  (apply #'max
-                       (for tail-element in tail
+                       (loop for tail-element in tail
                             collect
                             (display-tail tail-element stream))))) 
          (apply #'max 
-                (cons 0 (for val in (list indef-width def-width
+                (cons 0 (loop for val in (list indef-width def-width
                                           tail-width)
-                             filter
-                             (if (integerp val) val))))))
+                            when (integerp val) 
+                            collect val)))))
 
 ;;; tails are displayed as
 ;;; specificity:  < path > = type
@@ -79,7 +79,7 @@
                                                (if (cdr value) 
                                                    value 
                                                  (car value)) nil t)))
-          (for path in (yadu-pp-paths path-rep)
+          (loop for path in (yadu-pp-paths path-rep)
                do
                (output-tail-features stream                        
                      (path-typed-feature-list path))))

@@ -41,7 +41,7 @@
   (when file-name 
     (with-open-file 
         (ostream file-name :direction :output :if-exists :supersede)
-      (for type-name in (sort-by-appearance-order
+      (loop for type-name in (sort-by-appearance-order
                          (copy-list
                           ; remove unaccessed leaf types
                           (remove-if-not 
@@ -70,7 +70,7 @@
     (with-open-file 
         (ostream file-name :direction :output :if-exists :supersede)
       (let ((count 0))
-        (for lex-name in (reverse *ordered-lex-list*)
+        (loop for lex-name in (reverse *ordered-lex-list*)
              do
              (if (> count 100)
                (progn (clear-expanded-lex)
@@ -113,7 +113,7 @@
           (unless (or ids-used *ordered-lex-list*)
             (cerror "Continue without lexicon" 
                     "No lexicon list - lexicon must be read in from scratch"))
-          (for lex-name in (or ids-used (reverse *ordered-lex-list*))
+          (loop for lex-name in (or ids-used (reverse *ordered-lex-list*))
                do            
                (if (> count 100)
                  (progn (clear-expanded-lex)
@@ -132,7 +132,7 @@
                               (list (cons nil lex-entry-fs)) 
                               nil)))
                       (idno 0))
-                 (for result-pair in result-list
+                 (loop for result-pair in result-list
                       do
                       (let* ((derivation 
                               (append (first result-pair) (list lex-name)))
@@ -303,7 +303,7 @@
          (infl-rules nil)
          (other-rules nil))
     (when (and category (not (equal category "?")))
-      (for rule in rule-list 
+      (loop for rule in rule-list 
            do
            (if (inflectional-rule-p rule)
                (push rule infl-rules)
@@ -329,7 +329,7 @@
          (infl (dag-inflected-p (tdfs-indef fs)))
          (other-rules nil))
     (declare (ignore type))
-    (for rule in rule-list 
+    (loop for rule in rule-list 
          do
          (if (inflectional-rule-p rule)
              (push rule infl-rules)
@@ -350,7 +350,7 @@
          (infl (dag-inflected-p (tdfs-indef fs)))
          (other-rules nil))
     (declare (ignore type))
-    (for rule in rule-list 
+    (loop for rule in rule-list 
          do
          (if (inflectional-rule-p rule)
              (push rule infl-rules)
@@ -385,7 +385,7 @@
   (when file-name 
     (with-open-file 
         (ostream file-name :direction :output :if-exists :supersede)
-        (for rule-name in (reverse *ordered-rule-list*)
+        (loop for rule-name in (reverse *ordered-rule-list*)
              do
              (let ((entry (get-grammar-rule-entry rule-name)))                  
                (case syntax
@@ -407,7 +407,7 @@
   (when file-name 
     (with-open-file 
         (ostream file-name :direction :output :if-exists :supersede)
-        (for rule-name in (reverse *ordered-lrule-list*)
+        (loop for rule-name in (reverse *ordered-lrule-list*)
              do
              (let ((entry (get-lex-rule-entry rule-name)))                  
                (case syntax
@@ -424,7 +424,7 @@
   (when file-name 
     (with-open-file 
         (ostream file-name :direction :output :if-exists :supersede)
-      (for root-symbol in (if (listp *start-symbol*) *start-symbol*
+      (loop for root-symbol in (if (listp *start-symbol*) *start-symbol*
                             (list *start-symbol*))
              do
              (let ((entry (get-psort-entry root-symbol)))   
@@ -447,14 +447,14 @@
   (let ((type-order-alist nil)
         (ok t))
     (setf *complete-order-alist* nil)
-    (for type in types
+    (loop for type in types
          do
         (let ((type-entry (get-type-entry type)))
           (when type-entry
             ;; ignore unused leaf types
             (let ((types-used (extract-used-types type)))
               (push (cons type types-used) type-order-alist)))))
-    (for type in types
+    (loop for type in types
          do
          (construct-all-ref-types type type-order-alist nil))
     (if ok
@@ -473,7 +473,7 @@
              (all-ref
               (remove-duplicates
                (append immediate-ref
-                       (for ref-type in immediate-ref
+                       (loop for ref-type in immediate-ref
                             append
                             (construct-all-ref-types ref-type type-order-alist
                                                      (cons type types-so-far)))))))
@@ -487,11 +487,11 @@
     (when type-entry 
       (let ((type-local-fs (type-local-constraint type-entry)))
         (when type-local-fs
-          (for feat in (top-level-features-of type-local-fs)
+          (loop for feat in (top-level-features-of type-local-fs)
                do
                (let ((internal-fs (get-dag-value type-local-fs feat)))
                  (collect-types-from-fs internal-fs))))
-        (for parent in (type-parents type-entry)
+        (loop for parent in (type-parents type-entry)
              do 
              (pushnew parent *res*))
         *res*))))
@@ -520,7 +520,7 @@
    (let ((ok t))
      (unmark-type-table)
      (determine-atomic-types)
-     (for node in *type-names*
+     (loop for node in *type-names*
           do
           (let ((type-entry (get-type-entry node)))
             (unless 
