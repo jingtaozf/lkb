@@ -73,7 +73,9 @@ proc tsdb_file {action {index -1}} {
           status "deleting file `$file' ... failed";
           after 1000;
         }; # if
-        after 500;
+        if {"$globals(user)" != "ebender"} {
+          after 500;
+        }; # if
       }; # foreach
       status "deleting directory `$old' ...";
       if {[catch {file delete -force -- $aold}]} {

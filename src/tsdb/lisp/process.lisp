@@ -643,7 +643,8 @@
            (i-input (get-field :i-input item))
            (i-wf (get-field :i-wf item))
            (o-ignore (get-field :o-ignore item))
-           (p-input (call-hook *tsdb-preprocessing-hook* i-input)))
+           (p-input (when (get-field :client run)
+                      (call-hook *tsdb-preprocessing-hook* i-input))))
 
       (cond 
        ((and o-ignore (tsdb-ignore-p o-ignore))
