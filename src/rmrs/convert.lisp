@@ -47,8 +47,9 @@
                  (rmrs-struct 
                     (mrs-to-rmrs mrs-struct)))
             (output-rmrs1 rmrs-struct 'xml ostream))
-      (format ostream
-              "~%<rmrs></rmrs>"))
+      ; (format ostream
+					;        "~%<rmrs></rmrs>")
+      )
     (format ostream "</S>~%")
     (finish-output ostream)))
 
@@ -64,8 +65,9 @@
                  (rmrs-struct 
                     (mrs-to-rmrs mrs-struct)))
             (output-rmrs1 rmrs-struct 'xml ostream))
-      (format ostream
-              "~%<rmrs></rmrs>"))
+;      (format ostream
+					;              "~%<rmrs></rmrs>")
+      )
     (finish-output ostream)))
 
 
@@ -233,9 +235,10 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
                               :test #'equal)
                       (var-type var)
                     "u")
-            :id (var-id var)))
-	    
-;;;	    :extra (rmrs-convert-var-extra (var-extra var))))
+            :id (var-id var)
+	    :extra (rmrs-convert-var-extra 
+		    (var-extra var) 
+		    *var-extra-mrs-compiled-table*)))
 
 ;;; conversion of extra values is going to be grammar specific
 ;;; and there's no guarantee that it can be done one-to-one
@@ -243,51 +246,195 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
 ;;; for now, code below works for current ERG - rationalize 
 ;;; this when we've got a better idea of what's going on
 
-#|
 
-(defparameter *var-extra-conversion-table-simple*
+;;; the table should be bidirectional - i.e. work for
+;;; RMRS to MRS too
+
+;;; (divisible . divisible)
+;;; (e.aspect.perf . refdistinct)
+;;; (e.aspect.progr . imr)
+
+;;; table below supplied by Melanie
+;;; should be moved to the grammar directory eventually
+
+(defparameter *var-extra-conversion-table*
 '(
- (divisible . divisible)
- (e.aspect.perf . refdistinct)
- (e.aspect.progr . imr)
- (e.tense . tense)))
+  ((png.gen fem) . (gender f))
+  ((png.gen masc) . (gender m))
+  ((png.gen andro) . (gender m-or-f))
+  ((png.gen neut) . (gender n))
 
-(defparameter *var-extra-conversion-table-complex*
-'(
- ((png.gen fem) . (gender f))
- ((png.gen masc) . (gender m))
- ((png.gen andro) . (gender m-or-f))
- ((png.gen neut) . (gender n))
- ((png.pn 3sg) . (pers 3))
- ((png.pn 3sg) .  (num sg))
- ((png.pn 3pl) . (pers 3))
- ((png.pn 3pl) . (num pl))
- ((png.pn 2per) .  (pers 2))
- ((png.pn 1pl) . (pers 1))
- ((png.pn 1pl) . (num pl))
- ((png.pn 1sg) . (pers 1))
- ((png.pn 1sg) . (num sg))
- ))
+  ((png.pn 1sg) . (AND (pers 1) (num sg)))
+  ((png.pn 2sg) . (AND (pers 1) (num sg)))
+  ((png.pn 3sg) . (AND (pers 3) (num sg)))
+  ((png.pn non1sg) . (AND (pers 2-or-3) (num sg)))
+  
+  ((png.pn 1pl) . (AND (pers 1) (num pl)))
+  ((png.pn 2pl) . (AND (pers 1) (num pl)))
+  ((png.pn 3pl) . (AND (pers 3) (num pl)))
+
+  ((png.pn 1per) .  (pers 1))
+  ((png.pn 2per) .  (pers 2))
+  ((png.pn 3per) .  (pers 3))
+
+  ((e.tense basic_tense) . (tense u))
+  ((e.tense no_tense) . (tense u))
+  ((e.tense nontense) . (tense u))
+  ((e.tense future) . (tense future))
+  ((e.tense present) . (tense present))
+  ((e.tense past) . (tense past))
+;;;  ((e.tense nonpresent) . (tense non-present))
+  ((e.tense nonpresent) . (tense u))
+  ;;; my version of the DTD doesn't have `non-present'
+  ;;; replace this with line above if using a DTD that does
+  ((e.tense nonpast) . (tense non-past))
+  
+ ;;; note the interpretation is intended to be that the 
+ ;;; first match is taken.  For RMRS->MRS conversion, there's
+ ;;; a sl problem in that nontense and no_tense are 
+ ;;; both possible values corresponding to (tense u)
+ ;;; and that this also corresponds to the `don't know'
+ ;;; case.  We therefore need to translate the RMRS `u'
+ ;;; into `basic_tense'
+  
+  ))
+
+;;; `compiled' table
+
+(defstruct var-conversion-table 
+  simple complex)
 
 
-(defun rmrs-convert-var-extra (extras)
-  (let ((converted nil))
+;;; tables is defined as a structure with simple and complex
+;;; entries, where simple is defined as simplex on the input
+;;; side (one fvp) and complex is a conjunction on the input side
+;;; (list of fvps)
+;;; Output will be a list of fvps (possibly singleton) 
+;;; in either case.
+
+
+;;; function for compilation of table
+
+(defun compile-var-extra-table (table rmrs-in-p)
+  (let ((simple nil)
+	(complex nil))
+    (dolist (entry table)
+      (let* ((input (if rmrs-in-p 
+			(cdr entry)
+		      (car entry)))
+	     (output (if rmrs-in-p 
+			(car entry)
+		       (cdr entry)))
+	     (new-output (make-var-table-output-side output rmrs-in-p)))
+	(if (eql (car input) 'AND)
+	    (push
+	     (cons 
+	      (loop for fvp in (cdr input)
+		  collect 
+		  (make-fvp-input-side (car fvp) (cadr fvp) rmrs-in-p))
+	      new-output)
+	     complex)
+	  (push
+	   (cons (make-fvp-input-side (car input) 
+				      (cadr input)
+				      rmrs-in-p)
+	    new-output)
+	   simple))))
+    (make-var-conversion-table :simple (nreverse simple)
+			       :complex (nreverse complex))))
+
+(defun make-fvp-input-side (feature value rmrs-in-p)
+  (let ((fstr (format nil "~A"  feature))
+	(vstr (format nil "~A"  value)))
+    (make-extrapair :feature (if rmrs-in-p (string-downcase fstr) (vsym fstr))
+		    :value (if rmrs-in-p (string-downcase vstr) (vsym vstr)))))
+
+
+(defun make-var-table-output-side (out rmrs-in-p)
+  (loop for fvp in (if (eql (car out) 'AND) 
+		       (cdr out)
+		     (list out))
+      collect
+	(let ((fstr (format nil "~A"  (car fvp)))
+	      (vstr (format nil "~A"  (cadr fvp))))
+	  (make-extrapair :feature (if rmrs-in-p (vsym fstr) 
+				     (string-downcase fstr))
+			  :value (if rmrs-in-p (vsym vstr) 
+				   (string-downcase vstr))))))
+
+;;; end compilation of table
+
+
+(defparameter *var-extra-mrs-compiled-table*
+    (compile-var-extra-table *var-extra-conversion-table* nil))
+
+;;; conversion functions - mostly generic for MRS <-> RMRS
+;;; calling function supplies the right table
+
+(defun rmrs-convert-var-extra (extras table)
+  (let ((converted nil)
+	(to-do-list nil))
     (dolist (extra extras)
-      (let* ((feat (extrapair-feature extra))
-	     (val (extrapair-value extra))
-	     (simple-transfer
-	      (assoc feat *var-extra-conversion-table-simple*)))
-	(if simple-transfer
-	    (push (make-extrapair :feature 
-				  (cdr simple-transfer)
-				  :value val)
-		  converted)
-	  (if (and (member feat *var-extra-conversion-table-complex*
-			   :key #'caar)
-		   )))))))
-			   
-|#		  
- 
+      (let ((simple-match
+	      (simple-var-extra-check
+	       extra
+	       (var-conversion-table-simple table))))
+	(if simple-match
+	  (setf converted (append converted simple-match))
+	  (push extra to-do-list))))
+    (multiple-value-bind (complex-match-results left-overs)
+	(complex-var-extra-check to-do-list 
+				 (var-conversion-table-complex
+				  table))
+      (when complex-match-results
+	(setf converted (append converted complex-match-results)))
+      (dolist (remainder left-overs)
+	(format t "~%~A unconverted" remainder)))
+    converted))
+	  
+(defun simple-var-extra-check (extra table)
+  (let ((feat (extrapair-feature extra))
+	(val (extrapair-value extra)))
+    (dolist (entry table)
+      (when (and (equal feat (extrapair-feature (car entry)))
+		 (equal val (extrapair-value (car entry))))
+	(return (cdr entry))))))
+    
+(defun complex-var-extra-check (remainder table)
+  (let ((converted nil))
+    (dolist (entry table)
+      (unless remainder (return))
+      (let ((matching (match-var-complex-entry (car entry) 
+					       remainder nil)))
+	(when matching
+	  (dolist (match matching)
+	    (setf remainder (remove match remainder)))
+	  (setf converted
+	    (append (cdr entry) converted)))))
+    converted))
+   
+(defun match-var-complex-entry (fvlist extras matches)
+  ;;; go through fvlist until all matched
+  ;;; returning items that have matched
+  (if fvlist
+      ;; got something left that needs matching
+      (if extras
+	  (let* ((to-match (car fvlist))
+		 (feat (extrapair-feature to-match))
+		 (val (extrapair-value to-match))
+		 (match-in-extras 
+		  (dolist (extra extras)
+		    (when (and (equal feat (extrapair-feature extra))
+			       (equal val (extrapair-value extra)))
+		      (return extra)))))
+	     (if match-in-extras
+		 (match-var-complex-entry (cdr fvlist)
+					  (remove match-in-extras extras)
+					  (cons match-in-extras matches))
+	       nil))
+	nil) ; no match
+    matches ; nothing left, so return matching extras
+    ))
 
 ;;; **************************************************
 ;;; ING handling
@@ -354,13 +501,17 @@ Errors won't be devastating anyway ...
 (defun report-rmrs-conversion-problems (problems)
   (dolist (problem problems)
     (format t "~%~A" problem)))
-    
 
-;;; (convert-rmrs-to-mrs *rmrs-debug*)
+;;; rmrs table - uses same global as MRS->RMRS conversion
+;;; but rearranges it so same lookup code can be used for both
 
-(defstruct semi-entry 
+(defparameter *var-extra-rmrs-compiled-table*
+    (compile-var-extra-table *var-extra-conversion-table* t))
+
+(defstruct semi-res 
   stringp fvpairs)
   
+;;; (convert-rmrs-to-mrs *rmrs-debug*)
 
 (defun convert-rmrs-to-mrs (rmrs)
   (let ((top-h (rmrs-top-h rmrs))
@@ -398,12 +549,12 @@ Errors won't be devastating anyway ...
 	 (semi-entries (find-semi-entries rmrs-pred)))
     (if semi-entries
 	(let*
-	    ((string-p (cond ((every #'(lambda (semi-entry)
-					 (semi-entry-stringp semi-entry))
+	    ((string-p (cond ((every #'(lambda (semi-res)
+					 (semi-res-stringp semi-res))
 				     semi-entries)
 			      t)
-			     ((every #'(lambda (semi-entry)
-					 (not (semi-entry-stringp semi-entry)))
+			     ((every #'(lambda (semi-res)
+					 (not (semi-res-stringp semi-res)))
 				     semi-entries)
 			      nil)
 			     (t (push 
@@ -447,9 +598,10 @@ Errors won't be devastating anyway ...
 		   val))))
 
 (defun convert-rmrs-to-mrs-variable (var)
-  ;;; FIX - conversion of extra values
   (make-var :id (var-id var)
-	    :type (var-type var)))
+	    :type (var-type var)
+	    :extra (rmrs-convert-var-extra (var-extra var) 
+					   *var-extra-rmrs-compiled-table*)))
 
 (defun convert-rmrs-pred-to-mrs (pred string-p)
   ;;; This encodes the following assumptions:
@@ -470,6 +622,9 @@ Errors won't be devastating anyway ...
 	  (vsym pred-string)))
     (vsym pred)))
 
+;;; object level semi is constructed via
+;;; index-for-generator and then (populate-semi *semi*)
+
 (defun find-semi-entries (pred)
   ;;; note that if there are multiple entries in the sem-i
   ;;; e.g. for open_V where the semi has open_V_1 and open_V_cause
@@ -482,7 +637,7 @@ Errors won't be devastating anyway ...
 			 (get-info-from-meta-semi pred))))
 	(loop for entry in semi-results
 	    collect
-	      (make-semi-entry :stringp (car entry)
+	      (make-semi-res :stringp (car entry)
 			       :fvpairs (cdr entry)))))
 
 ;;; meta-level semi
@@ -490,11 +645,15 @@ Errors won't be devastating anyway ...
 (defvar *meta-semi* nil)
 
 (defstruct meta-semi-entry
-  pred)
+  pred str)
 
 (defun get-info-from-meta-semi (pred)
-  (find pred *meta-semi* :test #'equal :key #'meta-semi-pred))
+  (loop for entry in *meta-semi*
+      when (equal (meta-semi-entry-str entry) pred)
+      collect 
+	(cons nil nil)))
 
+#+:lkb
 (defun make-meta-level-semi nil
   (setf *meta-semi* nil)
   (loop for type in (lkb::retrieve-descendants 'lkb::predsort)
@@ -502,5 +661,7 @@ Errors won't be devastating anyway ...
 		 (let ((name (lkb::type-name type)))
 		   (char-equal (elt (string name) 0) #\_)))
       do
-	(push (make-meta-semi-entry :pred (lkb::type-name type))
+	(push (make-meta-semi-entry :pred (lkb::type-name type)
+				    :str (string-downcase 
+					  (string (lkb::type-name type))))
 	      *meta-semi*)))
