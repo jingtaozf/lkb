@@ -23,6 +23,7 @@
 #include <sys/types.h>
 #include <sys/param.h>
 #include <errno.h>
+#include <string.h>
 extern int errno;
 
 #include "globals.h"
@@ -35,6 +36,7 @@ extern int errno;
 #  include <sys/times.h>
 #endif
 
+#define REDIRECT " </dev/null >/dev/null"
 
 
 /* it's only hacked code but i like it */
@@ -151,7 +153,8 @@ BOOL tsdb_value_substring(Tsdb_value *foo, Tsdb_value *bar) {
 /*  True if the pattern bar matches foo: If given the compiled pattern
     bar_pat, it matches with it instead. */
 
-BYTE tsdb_value_match(Tsdb_value *foo, Tsdb_value *bar,void* bar_pat) {
+BYTE tsdb_value_match(Tsdb_value *foo, Tsdb_value *bar,char mode,
+                      void* bar_pat) {
   BOOL answer=FALSE;
   int result;
   regex_t baz,*pattern;
@@ -161,7 +164,10 @@ BYTE tsdb_value_match(Tsdb_value *foo, Tsdb_value *bar,void* bar_pat) {
        pattern = (regex_t*) bar_pat;
      else { /* compile new pattern */
        pattern = &baz;
-       result = regcomp(pattern,bar->value.string,REG_EXTENDED);
+       if (mode==TSDB_IMATCH)
+         result = regcomp(pattern,bar->value.string,REG_EXTENDED|REG_ICASE);
+       else 
+         result = regcomp(pattern,bar->value.string,REG_EXTENDED);
        if (result!=0) {
          int s = regerror(result,pattern,NULL,0);
          {
@@ -491,8 +497,7 @@ Tsdb_key_list* tsdb_first_other_key(Tsdb_key_list* key_list)
 BOOL tsdb_value_satisfies(Tsdb_value* value1,Tsdb_value* operator,
                           Tsdb_value *value2) {
   BOOL answer;
-  int integer ;
-  char* string=NULL,*date=NULL;
+  char* string=NULL;
   
   if (value1->type!=value2->type) {
     /* error! */
@@ -500,11 +505,18 @@ BOOL tsdb_value_satisfies(Tsdb_value* value1,Tsdb_value* operator,
   } /* if */
 
   if (operator->value.operator==TSDB_MATCH) {
-    return tsdb_value_match(value1,value2,NULL);
+    return tsdb_value_match(value1,value2,0,NULL);
   }
   else
     if (operator->value.operator==TSDB_NOT_MATCH) {
-      return !tsdb_value_match(value1,value2,NULL);
+      return !tsdb_value_match(value1,value2,0,NULL);
+    }
+  if (operator->value.operator==TSDB_IMATCH) {
+     return tsdb_value_match(value1,value2,TSDB_IMATCH,NULL);
+  }
+   else
+    if (operator->value.operator==TSDB_NOT_IMATCH) {
+      return !tsdb_value_match(value1,value2,TSDB_IMATCH,NULL);
     }
   
   answer = tsdb_value_compare(value1,value2);
@@ -651,6 +663,26 @@ BOOL tsdb_satisfies_condition(Tsdb_tuple *tuple, Tsdb_node *condition,
     if(number) {
       fprintf(tsdb_error_stream,
               "satisfies_condition(): undefined operator '!~' on integers.\n");
+      answer = TRUE;
+    } /* if */
+    else {
+      answer = (strstr(string, tuple->fields[i]->value.string) == NULL);
+    } /* else */
+    break; 
+  case TSDB_IMATCH :
+    if(number) {
+      fprintf(tsdb_error_stream,
+              "satisfies_condition(): undefined operator '~~ on integers.\n");
+      answer = FALSE;
+    } /* if */
+    else {
+      answer = (strstr(string, tuple->fields[i]->value.string) != NULL);
+    } /* else */
+    break; 
+  case TSDB_NOT_IMATCH :
+    if(number) {
+      fprintf(tsdb_error_stream,
+              "satisfies_condition(): undefined operator '!~~' on integers.\n");
       answer = TRUE;
     } /* if */
     else {
@@ -941,7 +973,6 @@ Tsdb_key_list *tsdb_copy_key_list(Tsdb_key_list *key_list) {
 Tsdb_key_list *tsdb_new_copy_key_list(Tsdb_key_list *key_list) {
 
   Tsdb_key_list *new;
-  int i;
 
   new = (Tsdb_key_list *)malloc(sizeof(Tsdb_key_list));
   new->key = key_list->key;
@@ -1555,6 +1586,7 @@ BOOL tsdb_initialize() {
 
   char *foo;
   FILE *bar;
+  int len;
 #ifdef DEBUG
   int i, j;
 #endif
@@ -1627,42 +1659,52 @@ BOOL tsdb_initialize() {
       tsdb.pager = (char *)NULL;
     } /* if */
     else {
+      len = strlen(tsdb.pager)+1+strlen(REDIRECT);
       if(!strcmp(tsdb.pager, "nil") || !strcmp(tsdb.pager, "null")) {
         tsdb.pager = (char *)NULL;
       } /* if */
-      else if((bar = popen(tsdb.pager, "w")) == NULL) {
-        fprintf(tsdb_error_stream,
-                "initialize(): unaple to popen(3) `%s'.\n", tsdb.pager);
-        if((bar = popen(TSDB_PAGER, "w")) != NULL) {
-          free(tsdb.pager);
-          tsdb.pager = strdup("TSDB_PAGER");
-          pclose(bar);
-        } /* if */      
-        else if((bar = popen("more", "w")) != NULL) {
-          free(tsdb.pager);
-          tsdb.pager = strdup("more");
-          pclose(bar);
-        } /* if */
-        else if((bar = popen("less", "w")) != NULL) {
-          free(tsdb.pager);
-          tsdb.pager = strdup("less");
-          pclose(bar);
-        } /* if */
-        else if((bar = popen("page", "w")) != NULL) {
-          free(tsdb.pager);
-          tsdb.pager = strdup("page");
-          pclose(bar);
+      else {
+        char* pager = malloc(len);
+        strcpy(pager,tsdb.pager);
+        strcat(pager,REDIRECT);
+        if((bar = popen(pager, "w")) == NULL) {
+          fprintf(tsdb_error_stream,
+                  "initialize(): unaple to popen(3) `%s'.\n", tsdb.pager);
+          pager = realloc(pager,strlen(TSDB_PAGER + len));
+          strcpy(pager,TSDB_PAGER);
+          strcat(pager,REDIRECT);
+          if((bar = popen(pager, "w")) != NULL) {
+            free(pager);
+            free(tsdb.pager);
+            tsdb.pager = strdup("TSDB_PAGER");
+            pclose(bar);
+          } /* if */      
+          else if((bar = popen("more >/dev/null </dev/null", "w")) != NULL) {
+            free(tsdb.pager);
+            tsdb.pager = strdup("more");
+            pclose(bar);
+          } /* if */
+          else if((bar = popen("less >/dev/null </dev/null", "w")) != NULL) {
+            free(tsdb.pager);
+            tsdb.pager = strdup("less");
+            pclose(bar);
+          } /* if */
+          else if((bar = popen("page >/dev/null </dev/null", "w")) != NULL) {
+            free(tsdb.pager);
+            tsdb.pager = strdup("page");
+            pclose(bar);
+          } /* if */
+          else {
+            fprintf(tsdb_error_stream,
+                    "initialize(): "
+                    "unable to locate pager; check your `PATH' variable.\n");
+            free(tsdb.pager);
+            tsdb.pager = (char *)NULL;
+          } /* else */
         } /* if */
         else {
-          fprintf(tsdb_error_stream,
-                  "initialize(): "
-                  "unable to locate pager; check your `PATH' variable.\n");
-          free(tsdb.pager);
-          tsdb.pager = (char *)NULL;
+          pclose(bar);
         } /* else */
-      } /* if */
-      else {
-        pclose(bar);
       } /* else */
     } /* else */
   } /* if */
@@ -1696,6 +1738,13 @@ BOOL tsdb_initialize() {
   free(foo);
 
   tsdb_init_history(&tsdb);
+  
+  if (!(tsdb.translate_table=tsdb_translate_table())) {
+    fprintf(tsdb_error_stream,
+            "initialize(): can't create translate table.\n");
+    fflush(tsdb_error_stream);
+    
+  }
 
 #ifdef DEBUG
   if(tsdb.relations != NULL) {
@@ -1964,21 +2013,22 @@ float tsdb_timer(BYTE action) {
 |*
 |*****************************************************************************|
 |* <known bugs>
-|*
+|* it ain't even ready yet!
 \*****************************************************************************/
 
 BOOL tsdb_collect_tuples(Tsdb_selection* selection,Tsdb_tuple** tuples,
-                         Tsdb_key_list*** lists,int last,int size) {
-  int offset,i,j,n_tuples;
-  BOOL kaerb;
+                         Tsdb_key_list*** lists,int last,int* size) {
+  int offset,i,j=0,n_tuples;
+  BOOL kaerb,resized = 0;
   Tsdb_value* value;
-  Tsdb_key_list* new;
+  Tsdb_key_list* new,**temp;
+  /* automatic resizing of lists-array! 
+   */
+  if (last==*size) 
+    resized = TRUE;
 
-  for(n_tuples = 0; tuples != NULL && tuples[n_tuples] != NULL; n_tuples++);
+  n_tuples = selection->n_relations;
   for(i = 0, offset = 0; i < selection->n_relations; i++, offset += j) {
-#if defined(DEBUG) && defined(INSERT_INTO_SELECTION)
-    n_keys += selection->relations[i]->n_keys;
-#endif    
     for (j = 0; j < selection->relations[i]->n_keys; j++) {
       kaerb = FALSE;
       value = tuples[i]->fields[selection->relations[i]->keys[j]];
@@ -1987,17 +2037,49 @@ BOOL tsdb_collect_tuples(Tsdb_selection* selection,Tsdb_tuple** tuples,
       new->tuples = tuples;
       new->n_tuples = n_tuples;
       new->next = (Tsdb_key_list *)NULL;
-      lists[i][last] = new;
+      if (resized) {
+        temp = (Tsdb_key_list**)
+          realloc(lists[offset+j],(*size*2+1)*sizeof(Tsdb_key_list*));
+        if (temp)
+          lists[offset+j]=temp;
+        else 
+          return FALSE;
+      } /* if */
+      lists[offset+j][last] = new;
     } /* for j */
   } /* for i */
+  if (resized) 
+    *size*=2;
+
   last++;
   return TRUE;
 } /* tsdb_collect_tuples */
 
 
 
-int tsdb_keylist_compare(Tsdb_key_list* foo,Tsdb_key_list* bar) {
-  int i = tsdb_value_compare(foo->key,bar->key);
+BOOL tsdb_array_to_lists(Tsdb_selection* bar,Tsdb_key_list*** lists,
+                        int last,int size) {
+  int i,j;
+  Tsdb_key_list* foo;
+
+  for (i=0;i<bar->n_key_lists;i++) {
+    foo = lists[i][0];
+    bar->key_lists[i] = foo;
+    for (j=1;j<last;j++) {
+      foo->next = lists[i][j];
+      foo = lists[i][j];
+    }
+    foo->next = NULL;
+    free(lists[i]);
+  } /* for */
+  bar->length = size;
+  free(lists);
+  return TRUE;
+} /* tsdb_array_2_lists() */
+
+
+int tsdb_keylist_compare(Tsdb_key_list** foo,Tsdb_key_list** bar) {
+  int i = tsdb_value_compare((*foo)->key,(*bar)->key);
 
   switch(i) {
     case 1: return 0;
@@ -2249,6 +2331,12 @@ void tsdb_negate_node(Tsdb_node* node)
     break;
   case TSDB_NOT_MATCH: 
     node->node->value.operator = TSDB_MATCH ; 
+    break;
+ case TSDB_IMATCH:    
+    node->node->value.operator = TSDB_NOT_IMATCH; 
+    break;
+  case TSDB_NOT_IMATCH: 
+    node->node->value.operator = TSDB_IMATCH ; 
     break;
   default:
     fprintf(tsdb_error_stream," eh what??\n");
