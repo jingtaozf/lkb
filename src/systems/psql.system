@@ -3,6 +3,15 @@
 
 (in-package :make)
 
+#+(and allegro-version>= (version>= 6 0) (or :linux (and :sparc :svr4)))
+(cond 
+ ((probe-file "/usr/lib/libpq.so.3")
+  (pushnew :libpq.so.3 *features*))
+ ((probe-file "/usr/lib/libpq.so.2")
+  (pushnew :libpq.so.2 *features*))
+ (t
+  (format t "WARNING: Unable to determine current version of libpq.so~%         Please ensure current version of libpq.so.* is copied to ~a~a/libpq.so" (dir-append (get-sources-dir "psql") '(:relative "psql")) %system-binaries%)))
+
 (defsystem "psql"
    :source-pathname (dir-append (get-sources-dir "psql")
                                 '(:relative "psql"))
@@ -16,7 +25,14 @@
      :source-extension "so"
      :load-only t
      :components
-     ((:file "libpq")))
+     (
+      #+:libpq.so.3
+      (:file "libpq3")
+      #+:(and (not :libpq.so.3) :libpq.so.2)
+      (:file "libpq2")
+      #+:(and (not :libpq.so.3) (not :libpq.so.2))
+      (:file "libpq")
+      ))
 
     #+(and :allegro-version>= (version>= 6 0))
     (:module "interface"
