@@ -25,10 +25,12 @@
 				 '(:relative "tsdb"))
 
     :finally-do
-    #+(and :allegro (or :linux (and :sparc :svr4) :alpha) (not :slave))
+    #+(and :allegro (or :linux (and :sparc :svr4) :alpha) (not :slave)
+           (not :tty))
     (when (system:getenv "DISPLAY") 
       (funcall (symbol-function (read-from-string "tsdb::tsdb")) :podium))
-    #-(and :allegro (or :linux (and :sparc :svr4) :alpha) (not :slave))
+    #-(and :allegro (or :linux (and :sparc :svr4) :alpha) (not :slave)
+           (not :tty))
     nil
 
     :components
