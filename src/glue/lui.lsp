@@ -281,8 +281,8 @@
   (declare (special *gen-record* *gen-chart* *generator-input*))
   
   (loop
-      with edges (or edges *gen-record*)
-      with chart (or chart (copy-tree *gen-chart*))
+      with edges = (or edges *gen-record*)
+      with chart = (or chart (copy-tree *gen-chart*))
       with stream = (make-string-output-stream)
       initially 
         (lui-parameters :tree)
