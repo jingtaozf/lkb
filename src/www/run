@@ -20,13 +20,19 @@ unset DISPLAY
   date
   echo $GRAMMAR @ $PORT
   ( \
+    echo "(load \"${ROOT}/dot.clinit.cl\")"; \
     echo "(load \"${ROOT}/lkb/src/general/loadup.lisp\")"; \
     echo "(pushnew :lkb *features*)"; \
     echo "(pushnew :mrs *features*)"; \
     echo "(setf (system:getenv \"DISPLAY\") nil)"; \
     echo "(compile-system \"www\" :force t)"; \
+    echo "(setf lkb::*www-maximal-number-of-edges* 10000)"; \
+    echo "(tsdb:tsdb :info)"; \
+    echo "(load \"${ROOT}/dot.tsdbrc\")"; \
+    echo "(tsdb:tsdb :home \"${ROOT}/lkb/src/tsdb/home\")"; \
     echo "(read-script-file-aux \"${ROOT}/${GRAMMAR}/lkb/script\")"; \
-    echo "(tsdb::tsdb :cpu :www :file t)"; \
+    echo "(tsdb::tsdb :cpu :www :file t :count 4)"; \
+    echo "(tsdb::tsdb :cpu)"; \
     echo "(www::initialize :port ${PORT})"; \
     cat - \
   )  | ( cd /lingo/local/acl; ./alisp -I bclim.dxl -qq; )

@@ -393,11 +393,16 @@
          (cpu (and client (pvm::client-cpu client)))
          (tid (and client (pvm::client-tid client)))
          (protocol (and client (pvm::client-protocol client)))
+	 (tagger (when (pvm:cpu-p cpu) (pvm:cpu-tagger cpu)))
          (p-input (cond
                    ((and (pvm::cpu-p cpu) (pvm::cpu-preprocessor cpu))
-                    (tsdb::call-hook (pvm::cpu-preprocessor cpu) input))
+                    (tsdb::call-hook 
+		     (pvm::cpu-preprocessor cpu) input
+		     (when (consp tagger) tagger)))
                    (tsdb::*tsdb-preprocessing-hook*
-                    (tsdb::call-hook tsdb::*tsdb-preprocessing-hook* input))))
+                    (tsdb::call-hook
+		     tsdb::*tsdb-preprocessing-hook* input
+		     (when (consp tagger) tagger)))))
          (item (nconc item (acons :p-input p-input nil)))
          (nanalyses (if exhaustivep 0 1))
          (nresults (or nresults 0))

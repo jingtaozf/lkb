@@ -309,7 +309,7 @@
 (defun clear-preprocessor ()
   (setf *preprocessor* nil))
 
-(defun preprocess-for-pet (string tagger)
+(defun preprocess-for-pet (string &optional tagger)
   (if (and tagger (consp tagger) (keywordp (first tagger)))
     (multiple-value-bind (tokens length)
         (case (first tagger)
