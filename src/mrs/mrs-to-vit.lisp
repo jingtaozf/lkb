@@ -422,7 +422,7 @@ because of the likelyhood of changes in the grammar.
                             "only printing first 10" 
                           ""))
               (format t "~%WARNING: No valid scopes - invalid MRS structure "))
-            (for binding in (subseq binding-sets 0 10)
+            (for binding in (subseq binding-sets 0 (min (length binding-sets) 10))
                  do
                  (setf *canonical-bindings* (canonical-bindings binding))
                  (output-connected-mrs mrsstruct 'indexed)
