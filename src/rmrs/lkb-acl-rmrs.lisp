@@ -287,6 +287,103 @@
 				    comparison-record input))))
 
 
+;;; ****** Comparison of RMRSs based on data stored in the fine system
+
+#|
+
+We assume that we have a test suite which has been parsed using the ERG
+and by RASP.  What is stored in the fine system is the derivation in both 
+cases
+
+
+|#
+
+;;; temporary - set these interactively soon
+
+(defparameter *tsdb-directory1* "lingo/11-jun-04/mrs/04-06-16/lkb")
+
+(defparameter *tsdb-directory2* "rasp-rmrs")
+
+;;; Window showing sentences to compare
+
+(defun display-sentences-to-compare nil
+  (mrs::clear-rule-record)
+  ;;; temporary - set these interactively soon
+  (let ((*rasp-rmrs-gram-file*
+         (make-pathname 
+          :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
+          :name "gram14.1.rmrs"))
+        (*rasp-rmrs-tag-file*
+         (make-pathname :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
+	:name "lex14.1.rmrs")))
+    (mrs::read-rmrs-grammar *rasp-rmrs-gram-file*)
+    (mrs::read-rmrs-tag-templates *rasp-rmrs-tag-file*))
+  (let ((test-items (get-test-suite-sentences)))
+    (if test-items
+        (draw-active-list
+         test-items
+         "Test items"
+         (list
+          (cons "Compare RMRSs"
+                #'(lambda (item)
+                    (compare-rmrs-from-test-suite item)))))
+      (format t "~%Test suite items cannot be retrieved")))) 
+
+
+(defun compare-rmrs-from-test-suite (egnum)
+  (let* ((rasp-rmrs 
+          (get-tsdb-selected-rasp-rmrs egnum))
+          (erg-rmrs
+           (get-tsdb-selected-erg-rmrs egnum)))
+    (dolist (comparison-record (mrs::compare-rmrs erg-rmrs rasp-rmrs nil))
+      (lkb::show-mrs-rmrs-compare-window erg-rmrs rasp-rmrs 
+				    comparison-record "Foo"))))
+
+(defun get-test-suite-sentences nil
+  #+:tsdb
+  (loop
+      for item in (tsdb::analyze *tsdb-directory1*)
+      for id = (tsdb::get-field :i-id item)
+      for input = (tsdb::get-field :i-input item)
+      collect
+        (cons 
+         (format nil "~a: ~a" id input)
+         id))
+  #-:tsdb
+  nil)
+
+
+;;; FIX - add some error checking!
+
+(defun get-tsdb-selected-rasp-rmrs (item)
+  #+:tsdb
+  (let* ((data *tsdb-directory2*)
+         (frame (tsdb::browse-trees data :runp nil)))
+    (tsdb::browse-tree 
+     data item frame :runp nil)
+    (let ((tsdb-rasp-tree (edge-bar (first (compare-frame-edges frame)))))
+      (let ((mrs::*initial-rasp-num* nil)
+            (mrs::*rasp-xml-word-p* t)) ; FIX - RASP `script'
+        (mrs::construct-sem-for-tree tsdb-rasp-tree :rasp :quiet))))
+   #-:tsdb
+   nil) 
+
+(defun get-tsdb-selected-erg-rmrs (item)
+  #+:tsdb  
+  (let* ((data *tsdb-directory1*)
+         (frame (tsdb::browse-trees data :runp nil)))
+    (setf (lkb::compare-frame-mode frame) :modern)
+    ;;; force reconstruction of dags by browse-tree
+    (tsdb::browse-tree 
+     data item frame :runp nil)
+    (mrs::mrs-to-rmrs (mrs::extract-mrs
+                       (first (compare-frame-edges frame)))))
+  #-:tsdb
+  nil)
+    
+
+;;; end fine system stuff
+
 ;;; Utility fn
 
 (defun rmrs-for-sentence (input parse-number)
