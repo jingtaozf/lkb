@@ -12,6 +12,8 @@
   ;; except at end of word, when replace by #\space #\s
   #+:preprocessor
   (declare (special *preprocessor*))
+
+  #+:preprocessor
   (when *preprocessor*
     (return-from preprocess-sentence-string 
       (preprocess str :format :lkb :verbose nil)))
@@ -225,11 +227,14 @@
   ;;; so this hardwires the pathname
   (or
    #+(and :allegro :mswindows)
-   (if (system:getenv "TMP")
-     (let ((path (concatenate 'string (system:getenv "TMP") "\\")))
-       (ignore-errors (parse-namestring path)))
-     (when (system:getenv "TEMP")
-       (ignore-errors (parse-namestring (system:getenv "TEMP")))))
+   (let ((tmp
+          (if (system:getenv "TMP")
+            (let ((path (concatenate 'string (system:getenv "TMP") "\\")))
+              (ignore-errors (parse-namestring path)))
+            (when (system:getenv "TEMP")
+              (let ((path (concatenate 'string (system:getenv "TMP") "\\")))
+                (ignore-errors (parse-namestring path)))))))
+     (probe-file tmp))
   (let ((pathname  #-mcl (user-homedir-pathname)
                    #+mcl (make-pathname :directory "Macintosh HD"))
         (tmp-dir '("tmp")))
