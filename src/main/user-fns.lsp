@@ -207,15 +207,19 @@
 (defun set-temporary-lexicon-filenames nil
   ;;; grammars can redefine this to use different names
   (setf *psorts-temp-file* 
-    (make-pathname :name "templex" 
+    (make-pathname :name "templex"
+                   :host (pathname-host (lkb-tmp-dir))
                    :device (pathname-device (lkb-tmp-dir))
                    :directory (pathname-directory (lkb-tmp-dir))))
   (setf *psorts-temp-index-file* 
-    (make-pathname :name "templex-index" 
+    (make-pathname :name "templex-index"
+                   :host (pathname-host (lkb-tmp-dir))
                    :device (pathname-device (lkb-tmp-dir))
                    :directory (pathname-directory (lkb-tmp-dir))))
   (setf *leaf-temp-file* 
     (make-pathname :name "biglex-rels" 
+                   :host (pathname-host (lkb-tmp-dir))
+                   :device (pathname-device (lkb-tmp-dir))
                    :directory (pathname-directory (lkb-tmp-dir)))))
 
   
@@ -230,6 +234,4 @@
                                   '(synsem local cat head mod first local))))
       (and val
            (subtype-or-equal (type-of-fs val) 'intersective_mod))))
-
-
 

@@ -213,11 +213,13 @@
 
 (defun this-directory nil
   (make-pathname 
+   :host (pathname-host *load-truename*)
    :device (pathname-device *load-truename*)
    :directory (pathname-directory *load-truename*)))
 
 (defun parent-directory nil
   (make-pathname 
+   :host (pathname-host *load-truename*)
    :device (pathname-device *load-truename*)
    :directory (butlast (pathname-directory *load-truename*))))
 

@@ -100,6 +100,7 @@
       ;; Open database file
       (handler-case
 	  (setf stream (open filename
+                             #+:mswindows :mode #+:mswindows :binary         
 			     :direction :output
 			     :if-exists :supersede
 			     :if-does-not-exist :create))
@@ -192,6 +193,7 @@
       ;; Open database file
       (handler-case
 	  (setf stream (open filename
+                             #+:mswindows :mode #+:mswindows :binary
 			     :direction :input
 			     :if-does-not-exist :error))
 	(error (condition)

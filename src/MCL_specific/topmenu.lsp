@@ -110,7 +110,6 @@
 
 (defun lkb-exit-function (&optional dump)
   (declare (ignore dump))
-  ;; *** jac 8/24/99 (store-cached-lex *lexicon*)
   nil)
 
 

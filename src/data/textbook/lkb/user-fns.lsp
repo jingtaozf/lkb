@@ -95,10 +95,14 @@ FIRST))))
            "biglex")))
     (setf *psorts-temp-file* 
       (make-pathname :name prefix 
+                     :device (pathname-device (lkb-tmp-dir))
                      :directory (pathname-directory (lkb-tmp-dir))))
     (setf *psorts-temp-index-file* 
-      (make-pathname :name (concatenate 'string prefix "-index") 
+      (make-pathname :name (concatenate 'string prefix "-index")
+                     :device (pathname-device (lkb-tmp-dir))
                      :directory (pathname-directory (lkb-tmp-dir))))
     (setf *leaf-temp-file* 
       (make-pathname :name (concatenate 'string prefix "-rels")
+                     :device (pathname-device (lkb-tmp-dir))
                      :directory (pathname-directory (lkb-tmp-dir))))))
+    

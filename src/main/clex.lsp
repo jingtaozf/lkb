@@ -9,7 +9,9 @@
   ((psort-db :initform nil :accessor psort-db)
    (orth-db :initform nil :accessor orth-db)))
 
+
 (setf *lexicon* (make-instance 'cdb-lex-database))
+
 
 (defmethod lookup-word ((lexicon cdb-lex-database) orth &key (cache t))
   (declare (ignore cache))

@@ -346,7 +346,7 @@
 (defmethod lookup-word :around ((lexicon lex-database) orth &key (cache t))
   (cond ((gethash orth (slot-value lexicon 'lexical-entries)))
 	(t 
-	 (let ((value (call-next-method)))
+	 (let ((value (if (next-method-p) (call-next-method))))
 	   ;; If main lexicon doesn't have an entry, try the other lexicons
 	   (when (null value)
 	     (setf value
@@ -424,7 +424,7 @@
 (defclass simple-lex-database (lex-database)
   ((psorts-stream :initform nil)))
 
-#+ignore
+#+:ignore
 (setf *lexicon* (make-instance 'simple-lex-database))
 
 (defmethod lexicon-loaded-p ((lexicon simple-lex-database))
@@ -496,11 +496,13 @@
 			 psorts))
 	      (setf ok t))
 	  ;; if there's an error during the writing of the index file,
-	  ;; delete it
+          ;; delete it
+          #|
 	  (when (and (streamp psorts-stream)
 		     (open-stream-p psorts-stream))
 	    (finish-output psorts-stream)
-	    (close psorts-stream))
+            (close psorts-stream))
+            |#
 	  (unless ok
 	    (when (probe-file *psorts-temp-index-file*)
 	      (delete-file *psorts-temp-index-file*))))))))
