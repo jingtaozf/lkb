@@ -2,17 +2,15 @@
 
 (in-package "COMMON-LISP-USER")
 
-(delete-directory-and-files
- (make-pathname :directory (append sys-home '("bin" "lkb"))))
+(delete-directory-and-files (merge-pathnames #p"bin/lkb/" sys-home))
 
 (excl:generate-application 
  "lkb" 
- (make-pathname :directory (append sys-home '("bin" "lkb")))
+ (merge-pathnames #p"bin/lkb/" sys-home)
  (list :srecord
        :eli
        :sock
-       (make-pathname :directory (append sys-home '("src" "ACL_specific"))
-		      :name "build.lsp"))
+       (merge-pathnames #p"src/ACL_specific/build.lsp" sys-home))
  
  :opt-speed 3
  :newspace 3145728			; 3 meg newspace
@@ -43,7 +41,6 @@
  :print-startup-message nil
  
  :presto t
- :presto-build-lib (make-pathname 
-		    :directory (append sys-home '("bin" "lkb"))
-		    :name "lkb"))
+ :presto-build-lib (merge-pathnames #p"bin/lkb/lkb" sys-home))
+
 
