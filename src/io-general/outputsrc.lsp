@@ -151,12 +151,10 @@
 (defparameter *infl-rules* '(plur_noun_infl_rule third_sg_fin_verb_infl_rule
                              past_verb_infl_rule psp_verb_infl_rule 
                              subjunctive_verb_infl_rule prp_verb_infl_rule
-                             er_comp_adj_infl_rule est_super_adj_infl_rule
                              non_third_sg_fin_verb_infl_rule
+			     bse_verb_infl_rule
                              sing_noun_infl_rule pos_adj_infl_rule
                              no-affix_infl_rule -ly_infl_rule))
-
-                             
 
 (defun output-for-ebl (orth fs ostream rule-list base-id base-fs)
   (declare (ignore fs))
