@@ -1194,12 +1194,8 @@
 (defun html-compare (frame &key (stream t) (indentation 0))
   (let ((treep (or (not (integerp *tree-display-threshold*))
                    (<= (length (compare-frame-trees frame)) 
-                       *tree-display-threshold*)))
-        (mrsp (when (and *tree-display-semantics-p*
-                         (compare-frame-trees frame)
-                         (null (rest (compare-frame-trees frame))))
-                (let ((edge (ctree-edge (first (compare-frame-trees frame)))))
-                  (when (edge-dag edge) (mrs::extract-mrs edge))))))
+                       *tree-display-threshold*))))
+
     (format
      stream
      "~v,0t<table class=compare>~%~
@@ -1224,18 +1220,23 @@
        indentation)
       (html-trees frame :stream stream :indentation (+ indentation 6))
       (format stream "~%~v,0t    </td>~%" indentation))
-    (format
-     stream
-     "~v,0t    <td class=compare~:[Discriminants~;Mrs~] ~
-                   align=right valign=top>~%"
-     indentation mrsp)
-    (if (not mrsp)
-      
-      (html-discriminants 
-       frame :stream stream :onlyp (not treep) 
-       :indentation (+ indentation 6))
-      #+:mrs
-      (mrs::output-mrs1 mrsp 'mrs::html stream)))
+    (let ((mrsp (when (and *tree-display-semantics-p*
+                           (compare-frame-trees frame)
+                           (null (rest (compare-frame-trees frame))))
+                  (let ((edge (ctree-edge 
+                               (first (compare-frame-trees frame)))))
+                    (when (edge-dag edge) (mrs::extract-mrs edge))))))
+      (format
+       stream
+       "~v,0t    <td class=compare~:[Discriminants~;Mrs~] ~
+                     align=right valign=top>~%"
+       indentation mrsp)
+      (if (not mrsp)
+        (html-discriminants 
+         frame :stream stream :onlyp (not treep) 
+         :indentation (+ indentation 6))
+        #+:mrs
+        (mrs::output-mrs1 mrsp 'mrs::html stream))))
   (format
    stream
    "~v,0t    </td>~%~v,0t  </tr>~%~v,0t</table>"

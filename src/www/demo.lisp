@@ -360,85 +360,97 @@
                       (if query 
                         (lookup-form-value "profile" query)
                         (request-query-value "profile" request :post nil))))
-         (mode (lookup-form-value "mode" query))
-         (classicp (equal mode "classic"))
-         (display (lookup-form-value "display" query))
-         (concisep (or (null display) (equal display "concise")))
-         (orderedp (equal display "ordered"))
-         (fullp (equal display "full"))
          (action (lookup-form-value "action" query))
-         resetp)
+         (mode (lookup-form-value "mode" query))
+         (mode (and mode (intern (string-upcase mode) :keyword)))
+         (display (lookup-form-value "display" query))
+         (display (and display (intern (string-upcase display) :keyword)))
+         classicp concisep orderedp fullp)
 
-    (when (and profile (null frame))
+    ;;
+    ;; there are quite a few different ways for this function to be called ...
+    ;;
+    (cond
+     ;;
+     ;; first-time entry for browsing a (Redwoods-type) profile: construct a
+     ;; comparison frame, store it in the attic, and initialize everything.
+     ;;
+     ((and (null frame) profile)
       (setf frame (tsdb::browse-trees profile :runp nil))
       (setf index (www-store-object nil frame))
-      (setf classicp (eq (lkb::compare-frame-mode frame) :classic))
-      (setf concisep (eq (lkb::compare-frame-display frame) :concise))
-      (setf orderedp (eq (lkb::compare-frame-display frame) :ordered))
-      (setf fullp (eq (lkb::compare-frame-display frame) :full))
       (tsdb::browse-tree 
        profile (first (lkb::compare-frame-ids frame)) frame :runp nil))
-    
-    (when (member action '("back" "next") :test #'string-equal)
-      (let ((backp (string-equal action "back"))
-            (id (lkb::compare-frame-item frame)))
-        (loop
-            for ids on (lkb::compare-frame-ids frame)
-            when (or (and (null backp) (eql id (first ids)) (second ids))
-                     (and backp (eql id (second ids))))
-            do 
-              (tsdb::browse-tree 
-               profile (if backp (first ids) (second ids)) frame :runp nil)
-              (return))))
-    
-    (cond
-     (frame
-      (if mode
-        (let ((mode (intern (string-upcase (string mode)) :keyword)))
-          (unless (eq mode (lkb::compare-frame-mode frame))
-            (setf (lkb::compare-frame-mode frame) mode)
-            (lkb::set-up-compare-frame frame (lkb::compare-frame-edges frame))
-            (setf resetp t)))
-        (setf classicp (eq (lkb::compare-frame-mode frame) :classic)))
-
-      (when (and (not resetp) display)
-        (let ((display (intern (string-upcase display) :keyword)))
-          (unless (eq display (lkb::compare-frame-display frame))
-            (setf (lkb::compare-frame-display frame) display)
-            (lkb::update-trees frame))))
-      (unless resetp
-        (if (equal action "clear")
-          (lkb::reset-discriminants frame)
-          (loop
-              with discriminants = (lkb::compare-frame-discriminants frame)
-              with decisions = nil
-              for i from 0 to (length (lkb::compare-frame-discriminants frame))
-              for key = (format nil "~a" i)
-              for value = (lookup-form-value key query)
-              when (and value (not (equal value "?"))) do
-                (let ((value (when (equal value "+") t)))
-                  (push (cons i value) decisions))
-              finally
-                (loop
-                    for (i . value) in decisions
-                    for discriminant = (nth i discriminants)
-                    do
-                      (setf (lkb::discriminant-toggle discriminant) value)
-                      (setf (lkb::discriminant-state discriminant) value))
-                (lkb::recompute-in-and-out frame)
-                      (lkb::update-trees frame t)))))
-     ((integerp edges)
+     ;;
+     ;; interactive parse comparison from set of edges: again, construct a new
+     ;; comparison frame, store it in the attic, and initialize everything.
+     ;;
+     ((and (null frame) (integerp edges))
       (let ((edges (www-retrieve-object nil edges))
             (lkb::*tree-discriminants-mode* :modern)
             (lkb::*tree-display-threshold* 10))
         (when edges
           (setf frame (lkb::compare edges :runp nil))
-          (setf index (www-store-object nil frame))
-          (setf classicp (eq (lkb::compare-frame-mode frame) :classic))
-          (setf concisep (eq (lkb::compare-frame-display frame) :concise))
-          (setf orderedp (eq (lkb::compare-frame-display frame) :ordered))
-          (setf fullp (eq (lkb::compare-frame-display frame) :full))))))
+          (setf index (www-store-object nil frame)))))
+     ;;
+     ;; call-back from comparison form: perform whatever action was requested
+     ;; and update the comparison frame and our local variables accordingly.
+     ;; 
+     (frame
+      (cond
+       ;;
+       ;; while browsing a profile, move to previous or following item: from 
+       ;; the list of identifiers in the frame, find the appropriate position
+       ;; and re-initialize the compare frame
+       ;;
+       ((member action '("previous" "next") :test #'string-equal)
+        (let ((nextp (string-equal action "next"))
+              (id (lkb::compare-frame-item frame)))
+          (loop
+              for ids on (lkb::compare-frame-ids frame)
+              when (or (and nextp (eql id (first ids)) (second ids))
+                       (and (null nextp) (eql id (second ids))))
+              return (tsdb::browse-tree 
+                      profile (if nextp (second ids) (first ids)) frame 
+                      :runp nil))))
+       ((and mode (not (eq mode (lkb::compare-frame-mode frame))))
+        (setf (lkb::compare-frame-mode frame) mode)
+        (lkb::set-up-compare-frame frame (lkb::compare-frame-edges frame)))
 
+      ((and display (not (eq display (lkb::compare-frame-display frame))))
+       (setf (lkb::compare-frame-display frame) display)
+       (lkb::update-trees frame))
+      
+
+      ((string-equal action "clear")
+       (lkb::reset-discriminants frame))
+      (t
+       (loop
+           with discriminants = (lkb::compare-frame-discriminants frame)
+           with decisions = nil
+           for i from 0 to (length (lkb::compare-frame-discriminants frame))
+           for key = (format nil "~a" i)
+           for value = (lookup-form-value key query)
+           when (and value (not (equal value "?"))) do
+             (let ((value (when (equal value "+") t)))
+               (push (cons i value) decisions))
+           finally
+             (loop
+                 for (i . value) in decisions
+                 for discriminant = (nth i discriminants)
+                 do
+                   (setf (lkb::discriminant-toggle discriminant) value)
+                   (setf (lkb::discriminant-state discriminant) value))
+             (lkb::recompute-in-and-out frame)
+             (lkb::update-trees frame t))))))
+
+    (setf classicp (eq (lkb::compare-frame-mode frame) :classic))
+    (setf concisep (eq (lkb::compare-frame-display frame) :concise))
+    (setf orderedp (eq (lkb::compare-frame-display frame) :ordered))
+    (setf fullp (eq (lkb::compare-frame-display frame) :full))
+
+    #+:debug
+    (setf lkb::%frame% frame)
+    
     (with-http-response (request entity)
       (with-http-body (request entity
                        :external-format (excl:crlf-base-ef :utf-8))
@@ -472,12 +484,17 @@
                      ((:input 
                        :type "button" :name "close" :value "close"
                        :onClick "window.close()")))
+                    (:td "&nbsp;")
+                    (:td
+                     ((:input 
+                       :type "button" :name "save" :value "save"
+                       :disabled '||)))
                     (when profile
                       (html
                        (:td "&nbsp;")
                        (:td
                         ((:input 
-                          :type "submit" :name "action" :value "back")))
+                          :type "submit" :name "action" :value "previous")))
                        (:td "&nbsp;")
                        (:td
                         ((:input 
@@ -516,7 +533,9 @@
                         :if* fullp :selected :if* fullp '||)
                        "full")))))
                   :newline
-                  ((:input :type "hidden" :name "profile" :value profile))
+                  (when profile
+                    (html 
+                     ((:input :type "hidden" :name "profile" :value profile))))
                   ((:input :type "hidden" :name "frame" :value index))
                   :newline
                   (when frame
