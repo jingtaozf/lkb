@@ -1,0 +1,46 @@
+;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: MAKE -*-
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;        file: tsdb.system
+;;;      module:
+;;;     version: 0.0 -- 22-sep-95 (experimental)
+;;;  written by: oe, dfki saarbruecken
+;;; last update:
+;;;  updated by:
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; author            | date        | modification
+;;; ------------------|-------------|------------------------------------------
+;;;                   |             |
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+(in-package "MAKE")
+
+(defsystem "tsdb"
+    :source-pathname (dir-append (get-sources-dir "tsdb")
+				 '(:relative "tsdb"))
+    :binary-pathname (dir-append (get-binaries-dir "tsdb")
+				 '(:relative "tsdb"))
+    :components
+    ((:module "tsdb"
+      :source-pathname ""
+      :components
+      ((:file "tsdb-package")
+       #+:tdl (:file "tdl-patches")
+       (:file "globals")
+       (:file "utilities")
+       (:file "tsql")
+       #+:page (:file "page-interface")
+       #+:page (:file "chart")
+       #+:lkb (:file "lkb-interface")
+       (:file "tsdb")
+       (:file "commands")
+       #+(and allegro (or sunos unix)) (:file "server")
+       (:file "statistics")
+       #+:page (:file "page-commands")
+       #+(and allegro (or sunos unix)) (:file "podium"))))
+    :depends-on (#+:page "page" #+:lkb "lkb"))
+
+

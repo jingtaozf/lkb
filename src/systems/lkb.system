@@ -1,0 +1,142 @@
+(in-package "MAKE")
+
+(defparameter *lisp-specific-directory*
+    #+:allegro "ACL_specific"
+    #+:mcl "MCL_specific")
+
+(defsystem "lkb"
+    :source-pathname (get-sources-dir "lkb")
+    :binary-pathname (get-binaries-dir "lkb")
+    :source-extension "lsp"
+    :depends-on ()
+    :initially-do
+    (progn
+      #+:allegro (setf excl:*enable-package-locked-errors* nil)
+      (format 
+       t 
+       "~&;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;~%~
+        ;;; ann, remember to eliminate redefinitions of built-in types.~%~
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;~%"))
+    :finally-do
+    (progn
+      (pushnew :lingo *features*)
+      (pushnew :lkb *features*)
+      #+:allegro 
+      (let ((*package* (find-package "CLIM-USER")))
+	(clim-user::set-up-lkb-interaction :big))
+      #+:mcl
+      (cl-user::set-up-lkb-interaction :big))
+    :components
+    ((:module "one"
+              :source-pathname "main"
+	      :binary-pathname "main"
+	      :components
+	      ((:file "for")
+               (:file "initializations" :load-only t)
+               (:file "globals")))
+     (:module "two"
+              :source-pathname *lisp-specific-directory*
+	      :binary-pathname *lisp-specific-directory*
+	      :components
+	      ((:file "topmenu")
+               (:file "graphics")
+               (:file "misc")))
+     (:module "three"
+              :source-pathname "io-general"
+	      :binary-pathname "io-general"
+	      :components
+	      ((:file "menus")))
+     (:module "four"
+              :source-pathname "main"
+	      :binary-pathname "main"
+	      :components
+	      ((:file "types")
+               (:file "dag")
+               (:file "yadu")
+               (:file "gen")
+               (:file "structs")
+               (:file "user-fns")
+               (:file "marks")
+               (:file "checktypes")
+               (:file "leaf")))
+     (:module "five"
+              :source-pathname "io-paths"
+	      :binary-pathname "io-paths"
+	      :components
+	      ((:file "typeinput")
+               (:file "lexinput")
+               (:file "ruleinput")))
+     (:module "six"
+              :source-pathname "io-general"
+	      :binary-pathname "io-general"
+	      :components
+	      ((:file "outputfs")
+               (:file "outputtdfs")
+               (:file "toplevel")))
+     (:module "seven"
+              :source-pathname *lisp-specific-directory*
+	      :binary-pathname *lisp-specific-directory*
+	      :components
+	      ((:file "activefs")))
+     (:module "nine"
+              :source-pathname "main"
+	      :binary-pathname "main"
+	      :components
+	      ((:file "lex")
+               (:file "rules")
+               (:file "parse")
+               (:file "generate")))
+     (:module "ten"
+              :source-pathname *lisp-specific-directory*
+	      :binary-pathname *lisp-specific-directory*
+	      :components
+	      (#+:allegro (:file "graph")
+               #+:allegro (:file "emacs")
+               #+:mcl (:file "picwin")
+               #+:mcl (:file "picfield")
+               (:file "parseout")
+               (:file "chartout")
+               (:file "listout")
+               (:file "dialog")
+               (:file "tree")
+               #+:allegro (:file "compare")))
+     #+:mcl
+     (:module "eleven"
+              :source-pathname "io-general"
+	      :binary-pathname "io-general"
+	      :components
+	      ((:file "graph")))
+     (:module "twelve"
+              :source-pathname "main"
+	      :binary-pathname "main"
+	      :components
+	      ((:file "morph")
+               (:file "check-unif")
+               (:file "lkb-tsdb")))
+     (:module "thirteen"
+              :source-pathname "io-general"
+	      :binary-pathname "io-general"
+	      :components
+	      ((:file "tree-nodes")))
+     (:module "fourteen"
+              :source-pathname "io-tdl"
+	      :binary-pathname "io-tdl"
+	      :components
+	      ((:file "tdltypeinput")
+               (:file "tdloutput")
+               (:file "tdlruleinput")
+               (:file "tdllexinput")))
+     (:module "fiveteen"
+              :source-pathname "main"
+	      :binary-pathname "main"
+	      :components
+	      ((:file "batch-check")))
+     (:module "fourtytwo"
+              :source-pathname "io-general"
+	      :binary-pathname "io-general"
+	      :components
+	      ((:file "utils")))))
+
+
+
+

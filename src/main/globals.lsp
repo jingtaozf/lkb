@@ -7,7 +7,7 @@
 ;;;
 ;;; All functions have now been moved to user-fns.lsp
 
-(in-package :user)
+(in-package :cl-user)
 
 ;;; Keep track of all parameters that get defined, so we can have a way to
 ;;; edit them interactively

@@ -97,7 +97,7 @@
 
 (defun lkb-restart-function nil
   (read-psort-index-file)
-  (set-up-lkb-interaction :core)
+  (set-up-lkb-interaction :big)
   (enable-type-interactions))
         
  

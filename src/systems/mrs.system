@@ -1,0 +1,58 @@
+(in-package :make)
+
+#|
+;;; loading vitrification rules
+(when (fboundp 'read-mrs-rule-file-aux)
+    (read-mrs-rule-file-aux 
+     (make-pathname :name "dan-rules.mrs"
+                    :directory (append *lkb-source-dir* '("mrs" "data")))))
+|#
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defsystem "mrs"
+    :source-pathname (get-sources-dir "lkb")
+    :binary-pathname (get-binaries-dir "lkb")
+    :source-extension "lisp"
+    :depends-on ("lkb")
+    :components
+    ((:module "core"
+              :source-pathname "mrs"
+	      :binary-pathname "mrs"
+	      :components
+	      ((:file "lkb-mrs-package")
+	       (:file "mrsglobals")	; have to redefine most of these, but
+					; this is mostly done 
+					; by mrsglobals-eng  
+	       (:file "basemrs")	; MRS structures and printing 
+	       (:file "mrsoutput")	; constructing MRS from parse result  
+	       (:file "mrscorpus")	; checking equality etc
+	       (:file "interface")
+	       ;; following two files needed for scoping - can be excluded
+	       ;; for generation
+	       (:file "mrsresolve")	; resolving scope
+	       (:file "mrscons")	; constraints on scope
+	       ;; following five files for mrs to vit  - can be excluded 
+	       ;; for generation 
+	       (:file "vit")		; VIT structures
+	       (:file "mrs-to-vit")	; convert MRS to VIT
+	       (:file "time-convert")	; temporary code for converting
+					; times to VIT format
+					; needs fixing
+	       (:file "mrsmunge")	; manipulate MRS via rules
+					; currently for vitrifying - potential
+					; other uses
+	       (:file "mrsruleinput")	; creating rules for above
+					; requires LKB, but outputs compiled 
+					; rules which can be used without LKB
+	       ;; (:file "acl-mrs")     ; display etc in CLIM
+					; needs fixing
+	       (:file "mrsfns")		; from old mrsglobals
+	       (:file "mrsglobals-eng")	; globals for LinGO grammar
+	       (:file "lkbmrs")		; LKB specific - redefines
+					; some functions
+	       (:file "lexindex")	; LKB specific - indexing
+					; entries etc on semantics
+	       (:file "lexlookup")))))	; LKB specific - retrieving
+ 

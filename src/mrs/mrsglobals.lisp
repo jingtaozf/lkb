@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.2  1998/07/23 01:24:05  aac
+;; mrs equality and removing remnants of page packages
+;;
 ;; Revision 1.1  1998/06/24 17:15:11  aac
 ;; adding mrs code to source control
 ;;
@@ -29,6 +32,11 @@
 ;;; to be done: use (tdl::show-current-domain) rather than hardwire
 ;;; domain-package 
 ;;; the defaults are for German
+
+#+lkb
+(defun vsym (str) 
+  ;;; allow mrsglobals-eng file to be system independent
+  (intern (string-upcase str) "USER"))
 
 (defparameter *initial-semantics-path* 
   `(,(vsym "SYNSEM") ,(vsym "LOC") ,(vsym "CONT"))

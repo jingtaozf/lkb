@@ -1,0 +1,18 @@
+.menu.file                      create and maintain test suite databases; set tsdb(1) directories and options
+.menu.file.menu.reread          reread current database status (flush profile cache)
+.menu.file.menu.rename          rename current database (change directory name)
+.menu.file.menu.purge           purge all test run data from current database
+.menu.file.menu.delete          delete current database
+.menu.file.menu.create          create new database from test suite skeleton
+.menu.file.menu.directory       change tsdb(1) directory settings
+.menu.file.menu.options         change tsdb(1) and podium options
+.menu.file.menu.update          update tsdb(1) podium status
+.menu.file.menu.close           close all tsdb(1) client windows
+.menu.file.menu.quit            quit from tsdb(1) podium (why would you?)
+
+.menu.browse                    query and browse database schema and data from active (selected) database
+.menu.process                   load test suite vocabulary; start and control batch processing (a test run)
+.menu.analyze                   summarize or graph competence and performance profiles for current database
+.menu.compare                   compare competence or performance profiles across test runs (i.e. databases)
+.menu.detail                    compare test runs on a per-item basis; select attributes for intersection 
+.menu.help                      if only someone provided some help |:-{

@@ -1,0 +1,19 @@
+1101@C_Types_Imperatives@C_Types@C_Agreement@none@test@neutral@@dfki-baur@sep-95
+1102@C_Types_Interrogatives@C_Types@C_Agreement@none@test@neutral@@dfki-baur@sep-95
+1103@C_Types_Declaratives@C_Types@C_Agreement@none@test@neutral@@dfki-baur@sep-95
+1104@C_Types_Conditionals@C_Types@C_Agreement@none@test@neutral@@dfki-baur@sep-95
+11@C_Types@Types@C_Agreement@none@test@neutral@@dfki-baur@sep-95
+19@S_Negation@Negation@C_Complementation, C_Agreement, C_Word-Order, S_Types@none@test@neutral@declarative sentence: negation particles in all possible positions@dfki-klein@oct-95
+2201@C_Diathesis_PAssive@C_Diathesis@C_Complementation, C_Agreement, NP_Agreement@none@test@neutral@@dfki-baur@jun-95
+2202@C_Diathesis_Active@C_Diathesis@C_Complementation, C_Agreement, NP_Agreement@none@test@neutral@@dfki-baur@jun-95
+2301@C_Tense-Aspect-Modality@C_Tense-Aspect-Modality@C_Agreement, C_Word-Order@none@test@neutral@@dfki-baur@jun-95
+24@C_Complementation@Complementation@C_Agreement, NP_Agreement, C_Word-Order@none@test@neutral@@dfki-oe@sep-95
+26@C_Agreement@Agreement@C_Complementation, NP_Agreement, C_Word-Order@none@test@neutral@subject variations@dfki-klein@sep-95
+28@C_Coordination@Coordination@C_Complementation, C_Agreement, NP_Agreement@none@test@neutral@@dfki-oe@aug-95
+29@C_Negation@Negation@C_Complementation, C_Agreement, C_Word-Order, S_Types@none@test@neutral@subordinate clause: negation particles in all possible positions@dfki-klein@oct-95
+35@NP_Modification@Modification@NP_Agreement, NP_Word-Order@none@test@neutral@@dfki-klein@oct-95
+3601@NP_Agreement_(Adj)_N@Agreement@NP_Word-Order@none@test@neutral@complete noun paradigm in isolation and combined with complete adjective paradigm; mass nouns@dfki-klein@sep-95
+3602@NP_Agreement_Det_N@Agreement@none@none@test@neutral@complete noun paradigm combined with complete determiner paradigm@dfki-klein@sep-95
+3603@NP_Agreement_Det_Adj_N@Agreement@none@none@test@neutral@complete noun paradigm combined with complete determiner paradigm and complete adjective paradigm@dfki-klein@sep-95
+3604@NP_Agreement_(Det)_Adjs_N@Agreement@none@none@test@neutral@`wein' with and without determiner (`ein' or `der') combined with two and three adjectives@dfki-klein@sep-95
+39@NP_Negation@Negation@C_Complementation, C_Agreement, C_Word-Order, NP_Word-Order, NP_Agreement@none@test@neutral@negated noun phrases embedded into simple declarative sentence@dfki-klein@oct-95

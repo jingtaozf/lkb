@@ -1,7 +1,8 @@
 ;;; Graphical fs drawing 
 ;;; CL dialect specific
 
-(require 'quickdraw)
+(eval-when (:compile-toplevel :load-toplevel :execute)
+   (require 'quickdraw))
 
 ;;; SIMPLE DRAWING
 
