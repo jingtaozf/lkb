@@ -172,7 +172,7 @@
       :components
       ((:file "lsp")))
      
-     #+:mt
+     #+:multiprocessing
      (:module "translation"
        :source-pathname "mrs"
        :binary-pathname "mrs"
