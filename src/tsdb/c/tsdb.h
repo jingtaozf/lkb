@@ -87,7 +87,7 @@ extern void free(void *);
 #endif
 
 #ifndef TSDB_HOME
-#  define TSDB_HOME "/home/cl-home/oe/src/tsdb/"
+#  define TSDB_HOME "."
 #endif
 
 #ifndef TSDB_RELATIONS_FILE
@@ -306,6 +306,7 @@ BOOL tsdb_attribute_in_relation(Tsdb_relation *,char *);
 BOOL tsdb_attribute_in_selection(Tsdb_selection *, char *);
 int tsdb_relation_in_selection(Tsdb_selection* ,char* );
 void tsdb_info_relations(void);
+void tsdb_set(Tsdb_value *, Tsdb_value *);
 int tsdb_drop_table(Tsdb_value *);
 int tsdb_create_table(Tsdb_value *, Tsdb_field **);
 int tsdb_alter_table(Tsdb_value *, Tsdb_field **);

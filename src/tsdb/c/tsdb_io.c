@@ -128,7 +128,7 @@ FILE *tsdb_open_debug() {
   } /* if */
 
   fprintf(tsdb_error_stream,
-          "open_debug(): unable to open file `%s'.\n", tsdb.debug_file);
+          "open_debug(): unable to open `%s'.\n", tsdb.debug_file);
   return((FILE *)NULL);
 
 } /* tsdb_open_debug() */
@@ -454,7 +454,7 @@ void tsdb_print_relation(Tsdb_relation *relation, FILE *stream) {
   if(relation != NULL) {
     fprintf(stream, "%s:\n", relation->name);
     for(i = 0; i < relation->n_fields; i++) {
-      fprintf(stream, "\t%s %s",
+      fprintf(stream, "  %s %s",
               relation->fields[i],
               (relation->types[i] == TSDB_STRING ? ":string" : ":integer"));
       for(j = 0; j < relation->n_keys && i != relation->keys[j] ; j++);
@@ -566,7 +566,7 @@ FILE *tsdb_find_relations_file(char *mode) {
 
   if((file = fopen(tsdb.relations_file, mode )) == NULL) {
     fprintf(tsdb_error_stream,
-            "find_relations_file(): unable to open file `%s'.\n",
+            "find_relations_file(): unable to open `%s'.\n",
             tsdb.relations_file);
     fflush(tsdb_error_stream);
     return((FILE *)NULL);
@@ -586,7 +586,7 @@ FILE *tsdb_find_data_file(char *name, char *mode) {
 
   if((file = fopen(path, mode)) == NULL) {
     fprintf(tsdb_error_stream,
-            "find_data_file(): unable to open file `%s'.\n", path);
+            "find_data_file(): unable to open `%s'.\n", path);
     return((FILE *)NULL);
   } /* if */
   else {
@@ -727,7 +727,7 @@ int tsdb_write_relations() {
     r = fprintf(file,"%s:\n",relation->name);
     if (r==EOF) return 0;
     for (j=0,k=0;j<relation->n_fields;j++) {
-      r=fprintf(file,"\t%s ",relation->fields[j]);
+      r=fprintf(file,"  %s ",relation->fields[j]);
       switch (relation->types[j]) {
       case TSDB_INTEGER:
         r=fputs(":integer ",file);  

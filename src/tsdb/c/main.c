@@ -138,7 +138,12 @@ int main(int argc, char **argv) {
   } /* if */
 
   tsdb_parse_options(argc, argv);
-  tsdb_initialize();
+  if(!tsdb_initialize()) {
+#ifdef DEBUG
+    tsdb_close_debug(tsdb_debug_stream);
+#endif
+    exit(1);
+  } /* if */
 
   if(tsdb.status & TSDB_SERVER_MODE) {
     if(tsdb_server_initialize()) {

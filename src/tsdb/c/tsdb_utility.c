@@ -672,8 +672,13 @@ Tsdb_relation **tsdb_all_relations() {
   int i;
 
   if(tsdb.relations == NULL) {
-    if((input = tsdb_find_relations_file("r")) != NULL) {
-      for(i = 0; (relation = tsdb_read_relation(input)) != NULL; i++) {
+    if((input = tsdb_find_relations_file("r")) == NULL) {
+      return((Tsdb_relation **)NULL);
+    } /* if */
+    if((relation = tsdb_read_relation(input)) != NULL) {
+      for(i = 0;
+          relation != NULL;
+          relation = tsdb_read_relation(input), i++) {
         if(tsdb.relations == NULL) {
           tsdb.relations =
             (Tsdb_relation **)malloc(2 * sizeof(Tsdb_relation *));
@@ -689,6 +694,10 @@ Tsdb_relation **tsdb_all_relations() {
       return(tsdb.relations);
     } /* if */
     else {
+      fprintf(tsdb_error_stream,
+              "all_relations(): invalid relations file `%s'.\n",
+              tsdb.relations_file);
+      fflush(tsdb_error_stream);
       return((Tsdb_relation **)NULL);
     } /* else */  
   } /* if */
@@ -797,6 +806,7 @@ Tsdb_selection *tsdb_find_table(Tsdb_relation *relation) {
 |* so we won't free it!
 \*****************************************************************************/
 
+  Tsdb_selection *foo;
   int i;
 
   if(relation == NULL || relation->name == NULL || tsdb.relations == NULL) {
@@ -818,10 +828,15 @@ Tsdb_selection *tsdb_find_table(Tsdb_relation *relation) {
   } /* if */
 
   if(tsdb.data == NULL) {
-    tsdb.data = (Tsdb_selection **)malloc(2 * sizeof(Tsdb_selection *));
-    tsdb.data[0] = tsdb_read_table(relation, (Tsdb_node *)NULL);
-    tsdb.data[1] = (Tsdb_selection *)NULL;
-    return(tsdb.data[0]);
+    if((foo = tsdb_read_table(relation, (Tsdb_node *)NULL)) != NULL) {
+      tsdb.data = (Tsdb_selection **)malloc(2 * sizeof(Tsdb_selection *));
+      tsdb.data[0] = foo;
+      tsdb.data[1] = (Tsdb_selection *)NULL;
+      return(tsdb.data[0]);
+    } /* if */
+    else {
+      return((Tsdb_selection *)NULL);
+    } /* else */
   } /* if */
   else {
     for(i = 0;
@@ -829,11 +844,16 @@ Tsdb_selection *tsdb_find_table(Tsdb_relation *relation) {
         strcmp(tsdb.data[i]->relations[0]->name, relation->name);
         i++);
     if(tsdb.data[i] == NULL) {
-      tsdb.data =
-        (Tsdb_selection **)realloc(tsdb.data,
-                                   (i + 2) * sizeof(Tsdb_selection *));
-      tsdb.data[i] = tsdb_read_table(relation, (Tsdb_node *)NULL);
-      tsdb.data[i + 1] = (Tsdb_selection *)NULL;
+      if((foo = tsdb_read_table(relation, (Tsdb_node *)NULL)) != NULL) {
+        tsdb.data =
+          (Tsdb_selection **)realloc(tsdb.data,
+                                     (i + 2) * sizeof(Tsdb_selection *));
+        tsdb.data[i] = foo;
+        tsdb.data[i + 1] = (Tsdb_selection *)NULL;
+      } /* if */
+      else {
+        return((Tsdb_selection *)NULL);
+      } /* else */
     } /* if */
     return(tsdb.data[i]);
   } /* else */
@@ -1385,7 +1405,9 @@ BOOL tsdb_initialize() {
     } /* else */
   } /* if */
 
-  (void)tsdb_all_relations();
+  if(tsdb_all_relations() == NULL) {
+    return(FALSE);
+  } /* if */
 
 #ifdef DEBUG
   if(tsdb.relations != NULL) {

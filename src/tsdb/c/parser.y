@@ -84,7 +84,7 @@
                          y_tables 
 
 %type <tsdb_value> y_attribute
-                   y_tsdb_value
+                   y_value
                    y_table_name
                    y_operator
 
@@ -113,6 +113,8 @@ y_query :
   y_altering '.'
 |
   y_info '.'
+|
+  y_set '.'
 |
   y_exit '.'
 | 
@@ -170,31 +172,64 @@ y_deletion :
 ;
 
 y_retrieval :
-  Y_RETRIEVE y_attribute_list Y_WHERE y_condition {
-    tsdb_complex_retrieve(NULL, $2, $4);
-  }
-|
   Y_RETRIEVE y_attribute_list {
     tsdb_complex_retrieve(NULL, $2, NULL);
   }
 |
-  Y_RETRIEVE y_attribute_list Y_FROM y_attribute_list Y_WHERE y_condition {
-    tsdb_complex_retrieve($4, $2, $6);
+  Y_RETRIEVE y_attribute_list Y_WHERE y_condition {
+    tsdb_complex_retrieve(NULL, $2, $4);
   }
 |
   Y_RETRIEVE y_attribute_list Y_FROM y_attribute_list {
     tsdb_complex_retrieve($4, $2, NULL);
   }
 |
+  Y_RETRIEVE y_attribute_list Y_FROM y_attribute_list Y_WHERE y_condition {
+    tsdb_complex_retrieve($4, $2, $6);
+  }
+|
   Y_RETRIEVE '*' Y_WHERE y_condition {
     tsdb_complex_retrieve(NULL, NULL , $4);
+  }
+|
+  Y_RETRIEVE '*' Y_FROM y_attribute_list {
+    tsdb_complex_retrieve($4, NULL, NULL);
   }
 |
   Y_RETRIEVE '*' Y_FROM y_attribute_list Y_WHERE y_condition {
     tsdb_complex_retrieve($4, NULL, $6);
   }
-| Y_RETRIEVE '*' Y_FROM y_attribute_list {
-    tsdb_complex_retrieve($4, NULL, NULL);
+|
+  Y_RETRIEVE y_attribute_list Y_FROM Y_INTEGER {
+    Tsdb_value **from;
+    from = (Tsdb_value **)malloc(2 * sizeof(Tsdb_value *));
+    from[1] = tsdb_integer($4);
+    from[2] = (Tsdb_value *)NULL;
+    tsdb_complex_retrieve(&from[0], $2, (Tsdb_node *)NULL);
+  }
+|
+  Y_RETRIEVE y_attribute_list Y_FROM Y_INTEGER Y_WHERE y_condition {
+    Tsdb_value **from;
+    from = (Tsdb_value **)malloc(2 * sizeof(Tsdb_value *));
+    from[1] = tsdb_integer($4);
+    from[2] = (Tsdb_value *)NULL;
+    tsdb_complex_retrieve(&from[0], $2, $6);
+  }
+|
+  Y_RETRIEVE '*' Y_FROM Y_INTEGER {
+    Tsdb_value **from;
+    from = (Tsdb_value **)malloc(2 * sizeof(Tsdb_value *));
+    from[1] = tsdb_integer($4);
+    from[2] = (Tsdb_value *)NULL;
+    tsdb_complex_retrieve(&from[0], (Tsdb_value **)NULL, (Tsdb_node *)NULL);
+  }
+|
+  Y_RETRIEVE '*' Y_FROM Y_INTEGER Y_WHERE y_condition {
+    Tsdb_value **from;
+    from = (Tsdb_value **)malloc(2 * sizeof(Tsdb_value *));
+    from[1] = tsdb_integer($4);
+    from[2] = (Tsdb_value *)NULL;
+    tsdb_complex_retrieve(&from[0], (Tsdb_value **)NULL, $6);
   }
 ;
 
@@ -323,14 +358,14 @@ y_create_attribute :
 ;
 
 y_condition : 
-  y_attribute y_operator y_tsdb_value {
+  y_attribute y_operator y_value {
     $$ = (Tsdb_node *)malloc(sizeof(Tsdb_node));
     $$->left = tsdb_leaf($1);
     $$->node = $2;
     $$->right = tsdb_leaf($3);
    }
 |
-  Y_MATCH '(' y_attribute ',' y_tsdb_value ')' {
+  Y_MATCH '(' y_attribute ',' y_value ')' {
     $$ = (Tsdb_node *)malloc(sizeof(Tsdb_node));
     $$->left = tsdb_leaf($3);
     $$->node = tsdb_operator(TSDB_SUBSTRING);
@@ -402,16 +437,16 @@ y_value_list :
 ;
 
 y_values :
-  y_tsdb_value {
+  y_value {
     $$ = tsdb_singleton_value_array($1);
   }
 |
-   y_values y_tsdb_value {
+   y_values y_value {
     $$ = tsdb_value_array_append($1, $2);
   }
 ;
 
-y_tsdb_value :
+y_value :
   Y_STRING {
     $$ = tsdb_string($1);
   }
@@ -446,7 +481,7 @@ y_attribute_value_pairs :
 ;
 
 y_attribute_value_pair :
-  y_attribute Y_EQUAL y_tsdb_value {
+  y_attribute Y_EQUAL y_value {
     printf("y_attribute_value_pair\n");
   }
 ;
@@ -458,6 +493,12 @@ y_special :
 |
   Y_RELATIONS {
     $$ = "relations";
+  }
+;
+
+y_set :
+  Y_SET y_attribute y_value {
+    tsdb_set($2, $3);
   }
 ;
 

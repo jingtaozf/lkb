@@ -42,6 +42,29 @@ void tsdb_info_relations(void) {
   } /* if */
 } /* tsdb_info_relations() */
 
+void tsdb_set(Tsdb_value *variable, Tsdb_value *value) {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_set()
+|*     version: 
+|*  written by: oe, dfki saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|*
+\*****************************************************************************/
+
+  if(!strcmp(variable->value.identifier, "max-results")) {
+
+  } /* if */
+  else {
+    fprintf(tsdb_error_stream,
+            "set(): unknown variable `%s'.\n", variable->value.identifier);
+    fflush(tsdb_error_stream);
+  } /* else */
+} /* tsdb_set() */
+
 int tsdb_drop_table(Tsdb_value *table) {
   
   FILE *infp, *outfp;
@@ -257,7 +280,7 @@ int tsdb_insert(Tsdb_value *table,
       } /* else */
     } /* if */
     else {
-      return(TSDB_NO_DATA_FILE);
+      return(TSDB_NO_DATA);
     } /* else */
   } /* if */
   else {
@@ -620,6 +643,8 @@ int tsdb_complex_retrieve(Tsdb_value **relation_list,
 #endif
   
   for(i = 0; relation_list && relation_list[i]; i++) ;
+
+  /* TOM: FIX ME: gracefully handle missing data files ... */
 
   if (!attribute_list) { /* '*' for attribute list */
     if (relation_list) {
