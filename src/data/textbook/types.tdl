@@ -42,10 +42,8 @@ predication := feat-struc &
 
 list-of-indexes :< *list*.
 
-instloc :< *top*.
-
 index := feat-struc &
-  [ INSTLOC instloc ].
+  [ INSTLOC string ].
 
   real-index :< index.
      ref-index :< real-index.

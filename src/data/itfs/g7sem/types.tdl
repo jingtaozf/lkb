@@ -25,8 +25,7 @@ semantics := *top* &
 [ INDEX sement,
   RELS *dlist* ].
 
-instloc := *top*.
-sement := *top* & [ INSTLOC instloc ].
+sement := *top* & [ INSTLOC string ].
 
 event := sement.
 object := sement.

@@ -77,8 +77,7 @@ qeq := feat-struc &
 
 handle := index.
 
-instloc := *top*.
-index := *top* & [ INSTLOC instloc ].
+index := *top* & [ INSTLOC string ].
 entity := index.
 event := entity.
 object := entity.

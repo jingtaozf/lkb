@@ -26,8 +26,7 @@ semantics := feat-struc &
   KEY relation,
   RELS *dlist* ].
 
-instloc := *top*.
-index := *top* & [ INSTLOC instloc ].
+index := *top* & [ INSTLOC string ].
 event := index.
 object := index.
 

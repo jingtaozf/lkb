@@ -64,10 +64,8 @@ predication := feat-struc &
 
 ;;; instloc is needed solely for generation
 
-instloc := *top*.
-
 index := feat-struc &
-  [ INSTLOC instloc ].
+  [ INSTLOC string ].
 
      ref-index :< index.
      sit-index :< index. 

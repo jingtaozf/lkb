@@ -1,11 +1,5 @@
 (in-package "MRS")
 
-(defparameter *mrs-to-vit* nil)
-
-(defparameter *mrs-for-language* 'english)
-
-(defparameter *mrs-scoping* nil)
-
 (defparameter *initial-semantics-path* `(,(vsym "SEM") ))
 
 (defparameter *main-semantics-path* `(,(vsym "SEM") ,(vsym "RELS") ,(vsym "LIST")))
@@ -16,8 +10,6 @@
 
 (defparameter *rel-name-path* `(,(vsym "PRED") ))
 
-(defparameter *rel-name-path-only* t)
-
 (defparameter *dummy-relations* `(,(vsym "no_rel")))
 
 (defparameter *value-feats* `(,(vsym "NAME")))
@@ -26,7 +18,6 @@
   `(,(vsym "HOOK") ,(vsym "INDEX"))
   "path to get an index from a psoa")
 
-(defparameter *psoa-event-path* `(,(vsym "HOOK") ,(vsym "INDEX")))
 (defparameter *psoa-liszt-path* `(,(vsym "RELS") ,(vsym "LIST")))
 (defparameter *psoa-rh-cons-path* `(,(vsym "HCONS") ,(vsym "LIST")))
 
