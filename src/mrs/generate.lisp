@@ -10,12 +10,8 @@
 
 (defvar *gen-chart* nil)
 (defvar *gen-record* nil)
-(defvar *gen-chart-unifs* 0)
-(defvar *gen-chart-fails* 0)
 (defvar *non-intersective-rules* nil)
 (defvar *lexemes-allowed-orderings* nil)
-
-(defvar *gen-chart-generation-counter* 0)
 
 (defparameter *gen-adjunction-debug* nil)
 (defparameter *gen-equality-debug* nil)
@@ -41,8 +37,7 @@
 ;;; Functions on sets (of MRS relations)
 
 (defun gen-chart-set-intersection-p (lst1 lst2)
-  (loop for x in lst1
-      thereis (member x lst2 :test #'eq)))
+   (dolist (x lst1) (when (member x lst2 :test #'eq) (return t))))
 
 (defun gen-chart-subset-p (lst1 lst2)
    (dolist (x lst1 t) (unless (member x lst2 :test #'eq) (return nil))))
@@ -84,7 +79,7 @@
       (let*
          ((found-lex-list
             (apply #'append lex-results))
-         (filtered
+          (filtered
             (remove-if
              #'(lambda (x) 
                  (or ;(search "_CX" (string x)) ; *** contracted forms
@@ -134,7 +129,8 @@
   (unless *intersective-rule-names*
     (format t "~%Warning: no intersective rules defined"))
   (let ((*safe-not-to-copy-p* t)
-        (*gen-chart-unifs* 0) (*gen-chart-fails* 0)
+        (*filtered-tasks* 0) (*executed-tasks* 0) (*successful-tasks* 0) 
+        (*unifications* 0) (*copies* 0) 
         (*non-intersective-rules*
           ;; this is all rules for best-first mode
           (remove-if
@@ -154,6 +150,7 @@
                 (mapc #'(lambda (found) 
                           (let* ((lex-entry-fs (mrs::found-lex-inst-fs found))
                                  (word (extract-orth-from-fs lex-entry-fs)))
+                            (incf *copies*) ; each lex entry will be a copy
                             (with-agenda (when *gen-first-only-p* 
                                            (gen-lex-priority lex-entry-fs))
                               (gen-chart-add-inactive 
@@ -198,8 +195,8 @@
          ;; extract-string-from-gen-record looks after changes like
          ;; e.g. "a apple" -> "an apple"
          (extract-strings-from-gen-record)
-         *gen-chart-unifs* *gen-chart-fails*
-         act-tot inact-tot (+ act-tot inact-tot))))))
+         *filtered-tasks* *executed-tasks* *successful-tasks* *unifications* *copies*
+         act-tot inact-tot)))))
 
 (defun extract-strings-from-gen-record nil
   (for edge in *gen-record*
@@ -209,7 +206,6 @@
         (g-edge-leaves edge))))
 
 (defun clear-gen-chart nil
-   (incf *gen-chart-generation-counter*)
    (setq *edge-id* 0)
    (setq *gen-chart* nil)
    (setq *gen-record* nil))
@@ -228,7 +224,8 @@
       ;; containing a relation name that is not in input semantics, and that
       ;; no edge contains duplicates of exactly the same relation - now check
       ;; that we have generated all relations
-      (gen-chart-check-complete e input-sem) (dolist
+      (gen-chart-check-complete e input-sem)
+      (dolist
           (new
               (if *substantive-roots-p*
                  (gen-chart-root-edges e start-symbols)
@@ -326,7 +323,7 @@
 
 (defun gen-chart-dag-index (index-dag edge-id)
    (if index-dag
-      (let ((index (type-of-fs index-dag)))
+      (let ((index (unify-get-type index-dag))) ; may be called inside unif context
          (when (and (consp index) (null (cdr index)))
             ;; simplify single-item disjunction - doesn't need to be stored as
             ;; an atomic type and will speed up subsequent type lookup
@@ -542,62 +539,68 @@
 (defun gen-chart-try-unification (rule rule-tdfs daughter-path
                                   daughter-restricted daughter-index edge 
                                   needed mother-path &optional act)
-  ;; try unification corresponding to applying a grammar rule or incorporating
-  ;; inactive into an active edge
-  (when (and (check-rule-filter rule (g-edge-rule edge) daughter-index)
-             (restrictors-compatible-p daughter-restricted 
-                                       (g-edge-dag-restricted edge)))
-    (gen-chart-evaluate-unification
-      rule-tdfs daughter-path (g-edge-dag edge) needed mother-path act)))
+   ;; try unification corresponding to applying a grammar rule or incorporating
+   ;; inactive into an active edge
+   (if (and (check-rule-filter rule (g-edge-rule edge) daughter-index)
+            (restrictors-compatible-p daughter-restricted 
+                                      (g-edge-dag-restricted edge)))
+      (gen-chart-evaluate-unification
+         rule-tdfs daughter-path (g-edge-dag edge) needed mother-path act)
+      (progn (incf *filtered-tasks*) nil)))
 
 
-(defun gen-chart-evaluate-unification (rule-tdfs daughter-index fs needed
+(defun gen-chart-evaluate-unification (rule-tdfs daughter-path fs needed
                                        mother-path &optional act)
    ;; c.f. evaluate-unifications in parse.lsp
    ;; 
    ;; No orthography done here - it was done during the production of the
    ;; initial set of candidate lexical entries
    ;;
-   ;; unify path <daughter-index> of rule-tdfs with fs, then if needed is
+   ;; unify path <daughter-path> of rule-tdfs with fs, then if needed is
    ;; false return mother portion of rule-tdfs. Return as second value
    ;; the quick-check restrictor for the result, and if needed is true
    ;; return third value of semantic index for next needed daughter
    (when (functionp rule-tdfs)
-      ;; do the delayed unification, copy out result and stuff it back into
+      ;; redo the unification and delayed copy, stuffing result it back into
       ;; the active edge. Copy might fail due to circularity
       (setf (g-edge-dag act) (setq rule-tdfs (funcall rule-tdfs)))
-      (unless rule-tdfs (return-from gen-chart-evaluate-unification nil)))
+      (unless rule-tdfs
+         (decf *successful-tasks*)
+         (return-from gen-chart-evaluate-unification nil)))
    (with-unification-context (ignore)
-     (incf *gen-chart-unifs*)
+     (incf *executed-tasks*)
      (unless
         (setq rule-tdfs
            (yadu rule-tdfs
-              (create-temp-parsing-tdfs fs daughter-index)))
-        (incf *gen-chart-fails*)
+              (create-temp-parsing-tdfs fs daughter-path)))
+        ;(print (list (dag-type (tdfs-indef rule-tdfs)) daughter-path (dag-type (tdfs-indef fs))))
         (return-from gen-chart-evaluate-unification nil))
+     (incf *successful-tasks*)
      (if needed
-        ;; (let ((dag (copy-tdfs-elements rule-tdfs))) ; immediately copy active edge
-        ;;    (when dag
-        ;;      (values dag
-        ;;        (restrict-fs
-        ;;          (existing-dag-at-end-of (tdfs-indef dag) (first needed)))
-        ;;        (existing-dag-at-end-of
-        ;;          (tdfs-indef dag) (append (first needed) *semantics-index-path*)))))
+        #+:gen-immediate-copy
+        (let ((dag (copy-tdfs-elements rule-tdfs))) ; immediately copy active edge
+           (when dag
+              (values dag
+                 (restrict-fs
+                    (existing-dag-at-end-of (tdfs-indef dag) (first needed)))
+                 (gen-chart-dag-index
+                    (existing-dag-at-end-of
+                       (tdfs-indef dag) (append (first needed) *semantics-index-path*))
+                    nil))))
+        #-:gen-immediate-copy
         (values
-           ;; return a closure which when funcalled will perform the unification
-           ;; again - don't do copy yet since no guarantee we'll ever use it
+           ;; return a closure which when funcalled will replay the unification and
+           ;; perform copy - don't do copy yet since no guarantee we'll ever use it
            #'(lambda ()
-               (incf *gen-chart-unifs*)
                (with-unification-context (ignore)
-                 (copy-tdfs-elements
-                   (yadu rule-tdfs
-                     (create-temp-parsing-tdfs fs daughter-index)))))
+                  (copy-tdfs-elements ; does (incf *copies*) itself
+                     (yadu rule-tdfs
+                        (create-temp-parsing-tdfs fs daughter-path)))))
            (x-restrict-fs
               (x-existing-dag-at-end-of (tdfs-indef rule-tdfs) (first needed)))
            (gen-chart-dag-index
-              (deref-dag
-                 (x-existing-dag-at-end-of (tdfs-indef rule-tdfs)
-                    (append (first needed) *semantics-index-path*)))
+              (x-existing-dag-at-end-of (tdfs-indef rule-tdfs)
+                 (append (first needed) *semantics-index-path*))
               nil))
         (let ((dag (gen-chart-restrict-and-copy
                       (tdfs-at-end-of mother-path rule-tdfs))))
@@ -609,7 +612,7 @@
    ;; before copying otherwise their copies would be thrown away
    ;; immediately we have to check whether any of the deleted dags
    ;; contain a cycle - if so then the whole rule application should
-   ;; fail
+   ;; fail. C.f. parser function evaluate-unifications
    (let* ((real-dag (deref-dag (tdfs-indef dag)))
           (new (clone-dag real-dag))
           (arcs-to-check nil))
@@ -630,10 +633,10 @@
                         (make-dag :type *toptype* 
                                   :arcs arcs-to-check)))
                  (setf (dag-forward real-dag) new)
-                 (copy-tdfs-elements dag))))
+                 (copy-tdfs-elements dag)))) ; does (incf *copies*) itself
          (or res
            ;; charge copy failure to last successful unification
-           (progn (incf *gen-chart-fails*) nil))))))
+           (progn (decf *successful-tasks*) nil))))))
 
 
 ;;; Second phase, where intersective modifiers are introduced
@@ -725,8 +728,6 @@
     ;; find subsets of rels that are covered by some edge in edges
     (dolist (e edges)
       (let ((rels-covered (g-edge-rels-covered e)))
-        ;; was (sort (copy-list (g-edge-rels-covered e)) #'string< :key #'mrs::rel-sort)
-        ;; I don't know why - jac
         (when (gen-chart-subset-p rels-covered rels)
           (let ((entry (assoc rels-covered cache :test #'equal)))
             (if entry 
@@ -906,12 +907,12 @@
             as dtr-fs = (g-edge-dag dtr)
             do
             (progn
-               (incf *gen-chart-unifs*)
+               (incf *executed-tasks*)
                ;; it appears that these unifications seldom fail, so don't
                ;; bother applying the quick check here
                (setq unified-dag
                   (yadu unified-dag (create-temp-parsing-tdfs dtr-fs path)))
-               (unless unified-dag (incf *gen-chart-fails*))))
+               (when unified-dag (incf *successful-tasks*))))
          (when unified-dag
             (setq unified-dag
                (gen-chart-restrict-and-copy
