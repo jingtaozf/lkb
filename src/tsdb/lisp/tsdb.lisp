@@ -121,7 +121,7 @@
                  (null (gethash :mrs *statistics-readers*)))
         (setf (gethash :mrs *statistics-readers*) "mrs::read-mrs-from-string")
         (setf (gethash :mrs *statistics-browsers*) 
-          (if (find-package :mt)
+          (if (and (find-package :mt) (find-symbol "BROWSE-MRSS" :mt))
             "mt::browse-mrss"
             "mrs::browse-mrs"))
         (setf (gethash :mrs *statistics-predicates*) "mrs::safe-mrs-unequalp"))

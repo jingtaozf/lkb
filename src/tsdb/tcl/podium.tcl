@@ -889,11 +889,11 @@ proc main {} {
   .menu.trees.menu.switches add separator;
   .menu.trees.menu.switches add checkbutton \
     -label "Thinning Normalize" \
-    -variable globals(tree,thinning_normalize) \
+    -variable globals(tree,thinning_normalize_p) \
     -command {tsdb_set thinning_normalize_p};
   .menu.trees.menu.switches add checkbutton \
     -label "Thinning Export" \
-    -variable globals(tree,thinning_export) \
+    -variable globals(tree,thinning_export_p) \
     -command {tsdb_set thinning_export_p};
 
   menu .menu.trees.menu.variables -tearoff 0;

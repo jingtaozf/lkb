@@ -896,11 +896,11 @@ proc tsdb_set {variable {value ""}} {
       }
       thinning_normalize_p {
         set variable "*redwoods-thinning-normalize-p*";
-        set value [lispify_truth_value $globals(trees,thinning_normalize_p)];
+        set value [lispify_truth_value $globals(tree,thinning_normalize_p)];
       }
       thinning_export_p {
         set variable "*redwoods-thinning-export-p*";
-        set value [lispify_truth_value $globals(trees,thinning_export_p)];
+        set value [lispify_truth_value $globals(tree,thinning_export_p)];
       }
       cache_connections_p {
         set variable "*tsdb-cache-connections-p*";
