@@ -794,6 +794,10 @@
       with titems = 0
       with tritems = 0
       with tlength = 0
+      with trlength = 0
+      with tulength = 0
+      with talength = 0
+      with tslength = 0
       with twords = 0
       with trwords = 0
       with tuwords = 0
@@ -819,6 +823,10 @@
       do
         (loop
             with alength = 0
+            with arlength = 0
+            with aulength = 0
+            with aalength = 0
+            with aslength = 0
             with awords = 0
             with arwords = 0
             with auwords = 0
@@ -850,18 +858,22 @@
                 (incf aresults)
                 (cond
                  ((eql active 0) 
+                  (incf arlength ilength)
                   (incf arreadings ireadings)
                   (incf arwords iwords)
                   (incf arresults))
                  ((eql active 1)
+                  (incf aulength ilength)
                   (incf aureadings ireadings)
                   (incf auwords iwords)
                   (incf auresults))
                  ((and (numberp active) (> active 1))
+                  (incf aalength ilength)
                   (incf aareadings ireadings)
                   (incf aawords iwords)
                   (incf aaresults))
                  ((null active )
+                  (incf aslength ilength)
                   (incf asreadings ireadings)
                   (incf aswords iwords)
                   (incf asresults))))
@@ -869,6 +881,10 @@
               (push (cons (first aggregate)
                           (pairlis '(:items :restricted 
                                      :i-length 
+                                     :rlength
+                                     :ulength
+                                     :alength
+                                     :slength
                                      :words 
                                      :rwords
                                      :uwords
@@ -888,6 +904,10 @@
                                      :asesults)
                                    (list nitems nritems
                                          (divide alength nritems)
+                                         (divide arlength arresults)
+                                         (divide aulength auresults)
+                                         (divide aalength aaresults)
+                                         (divide aslength asresults)
                                          (divide awords nritems)
                                          (divide arwords arresults)
                                          (divide auwords auresults)
@@ -909,6 +929,10 @@
               (incf titems nitems)
               (incf tritems nritems)
               (incf tlength alength)
+              (incf trlength arlength)
+              (incf tulength aulength)
+              (incf talength aalength)
+              (incf tslength aslength)
               (incf twords awords)
               (incf trwords arwords)
               (incf tuwords auwords)
@@ -930,6 +954,10 @@
         (push (cons :total
                     (pairlis '(:items :restricted
                                :i-length
+                               :rlength
+                               :ulength
+                               :alength
+                               :slength
                                :words :l-stasks
                                :rwords
                                :uwords
@@ -948,6 +976,10 @@
                                :sresults)
                              (list titems tritems
                                    (divide tlength tritems)
+                                   (divide trlength trresults)
+                                   (divide tulength turesults)
+                                   (divide talength taresults)
+                                   (divide tslength tsresults)
                                    (divide twords tritems)
                                    (divide tlstasks tritems)
                                    (divide trwords trresults)

@@ -425,27 +425,38 @@
     (format
      stream
      "`~a'~%~%  ~
-      ~d items; ~d results; ~,2f words; ~,2f readings;~%    ~
-      rejected: ~d [~,2f ~,2f]~%    ~
-      unambiguous: ~d [~,2f ~,2f]~%    ~
-      ambiguous: ~d [~,2f ~,2f]~%    ~
-      unannotated: ~d [~,2f ~,2f]~%"
+      ~d items; ~d results; ~
+      ~,2f tokens; ~,2f words (~,2f); ~,2f readings;~%    ~
+      rejected: ~d [~,2f ~,2f (~,2f) ~,2f]~%    ~
+      unambiguous: ~d [~,2f ~,2f (~,2f) ~,2f]~%    ~
+      ambiguous: ~d [~,2f ~,2f (~,2f) ~,2f]~%    ~
+      unannotated: ~d [~,2f ~,2f (~,2f) ~,2f]~%"
      data
      (get-field :items total)
      (get-field :results total)
+     (get-field :i-length total)
      (get-field :words total)
+     (divide (get-field :words total) (get-field :i-length total))
      (get-field :analyses total)
      (get-field :rresults total)
+     (get-field :rlength total)
      (get-field :rwords total)
+     (divide (get-field :rwords total) (get-field :rlength total))
      (get-field :ranalyses total)
      (get-field :uresults total)
+     (get-field :ulength total)
      (get-field :uwords total)
+     (divide (get-field :uwords total) (get-field :ulength total))
      (get-field :uanalyses total)
      (get-field :aresults total)
+     (get-field :alength total)
      (get-field :awords total)
+     (divide (get-field :awords total) (get-field :alength total))
      (get-field :aanalyses total)
      (get-field :sresults total)
+     (get-field :slength total)
      (get-field :swords total)
+     (divide (get-field :swords total) (get-field :slength total))
      (get-field :sanalyses total))))
 
 (defun marty (data &key condition)
