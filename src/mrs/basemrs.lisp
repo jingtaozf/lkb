@@ -345,7 +345,7 @@
 				  handel-val event-val)
   (declare (ignore event-val))
   (with-slots (stream) mrsout
-    (format stream "TOP INDEX: ~A~%"
+    (format stream "TOP: ~A~%"
             handel-val)))
 
 (defmethod mrs-output-start-liszt ((mrsout indexed))
