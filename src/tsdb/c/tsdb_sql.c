@@ -280,7 +280,7 @@ int tsdb_insert(Tsdb_value *table,
       } /* else */
     } /* if */
     else {
-      return(TSDB_NO_DATA_FILE);
+      return(TSDB_NO_DATA);
     } /* else */
   } /* if */
   else {
@@ -715,7 +715,7 @@ int tsdb_complex_retrieve(Tsdb_value **relation_list,
               from_find = TRUE;
               selection = tsdb_find_table(a_relations[0]);
               if (!selection)
-                return NULL;
+                return(-1);
             }
             else {
               Tsdb_selection *temp;
