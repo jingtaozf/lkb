@@ -431,7 +431,8 @@
 (defun check-vit (vit &optional (as-string nil) (stream *terminal-io*))
   ;;; AAC - won't work with a CLIM window, so change 
   ;;; *standard-output* to *terminal-io*
-  (when (eql stream t) (setf stream *terminal-io*))
+  #+(and :allegro :clim)
+  (when (eql stream t) (setf stream excl::*initial-terminal-io*))
   #+(and :allegro :clim)
   (progn
    (with-open-file (vit-out "~/tmp/vitcheck" :direction :output

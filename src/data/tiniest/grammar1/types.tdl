@@ -1,0 +1,33 @@
+string := *top*.
+
+*list* := *top*.
+
+*ne-list* := *list* &
+ [ FIRST *top*,
+   REST *list* ].
+
+*null* := *list*.
+
+synsem-struc := *top* &
+[ CATEGORY cat ].
+
+cat := *top*.
+
+s := cat.
+
+np := cat.
+
+vp := cat.
+
+det := cat.
+
+n := cat.
+
+phrase := synsem-struc &
+[ ARGS *list* ].
+
+lexeme := synsem-struc &
+[ ORTH string ].
+
+root := phrase &
+[ CATEGORY s ].

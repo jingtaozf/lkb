@@ -257,7 +257,7 @@
     (setf *lkb-top-stream* (get-frame-pane *lkb-top-frame* 'display))
     (setf *lkb-top-process*
       (mp:process-run-function "start-lkb-frame" 
-                               #'run-lkb-top-menu frame *terminal-io*))
+                               #'run-lkb-top-menu frame excl::*initial-terminal-io*))
     ;; crude way of seeing whether this is being called when we already have a
     ;; grammar
     (when user::*current-grammar-load-file*

@@ -1,0 +1,33 @@
+this := lexeme &
+[ ORTH "this",
+  CATEGORY det ].
+
+these := lexeme &
+[ ORTH "these",
+  CATEGORY det ].
+
+sleep := lexeme &
+[ ORTH "sleep",
+  CATEGORY vp ].
+
+sleeps := lexeme &
+[ ORTH "sleeps",
+  CATEGORY vp ].
+
+snore := lexeme &
+[ ORTH "snore",
+  CATEGORY vp ].
+
+snores := lexeme &
+[ ORTH "snores",
+  CATEGORY vp ].
+
+dog := lexeme &
+[ ORTH "dog",
+  CATEGORY n ].
+
+dogs := lexeme &
+[ ORTH "dogs",
+  CATEGORY n ].
+
+

@@ -24,7 +24,11 @@
 
 (defparameter *grammar-directory* nil)
 
+#-:allegro
 (defparameter *lkb-background-stream* *terminal-io*)
+
+#+:allegro
+(defparameter *lkb-background-stream* excl::*initial-terminal-io*)
 
 (import '(enable-type-interactions disable-type-interactions))
 
