@@ -50,7 +50,7 @@
 ;; operations with CPU intensive processing, e.g., when expanding lots of
 ;; lexical entries.
 
-#+(or :allegro :lispworks)
+#+(or :allegro :lispworks :mcl)
 (defun process-queue (source sink)
   (let ((queue (make-queue)))
     (let ((child
@@ -70,7 +70,7 @@
 	      do (funcall sink item))
 	(mp:process-kill child)))))
 
-#-(or :allegro :lispworks)
+#-(or :allegro :lispworks :mcl)
 (defun process-queue (source sink)
   (loop for item = (funcall source)
       until (eq item :eof)
