@@ -26,7 +26,7 @@
       (format t "~%(caching all lexical records)")
       (cache-all-lex-records *lexicon*))
     (format t "~%Checking lexicon")
-    (format t "~%  - difference-list check starts at path ~a" start-path)
+;    (format t "~%  - difference-list check starts at path ~a" start-path)
     (dolist (id (collect-psort-ids *lexicon*))
       ;; alternatively - for lexicon only
       ;; (collect-psort-ids *lexicon*) 
@@ -35,10 +35,8 @@
 		       :start-path start-path)
       ))
   (when check-duplicates
-    (format t "~%CHECKING FOR DUPLICATE ENTRIES:~%")
-    (display-tdl-duplicates *lexicon*)
-    (format t "~%END OF DUPLICATE ENTRIES~%"))
-  (format t "~%(emptying cache)")
+    (display-tdl-duplicates *lexicon*))
+;  (format t "~%(emptying cache)")
   (empty-cache *lexicon*)
   (format t "~%Lexicon checked"))
 
@@ -59,15 +57,19 @@
            tdl-lex-sort 
            :key #'cdr 
            :test #'string=)))
-    (loop
-        for dup-set in tdl-lex-dup
-        do
-          (format t "~%")
-          (loop
-              for x in dup-set
-              do
-                (join-tdl x :stream t)
-                ))))
+    (when tdl-lex-dup
+      (format t "~%CHECKING FOR DUPLICATE ENTRIES:~%")
+      (loop
+          for dup-set in tdl-lex-dup
+          do
+            (format t "~%")
+            (loop
+                for x in dup-set
+                do
+                  (join-tdl x :stream t)
+                  ))
+      (format t "~%END OF DUPLICATE ENTRIES~%"))))
+      
 
 (defun check-lex-entry (id &key unexpandp
 				start-path)
