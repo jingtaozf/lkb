@@ -26,7 +26,8 @@
 
 (defparameter *ptree-level-sep* 12
   "Spacing between levels in the tree.")                    
-    
+
+
 ;;
 ;; Define a frame class for our parse tree window
 ;;
@@ -55,12 +56,10 @@
 	 (multiple-value-bind (s bold-p) 
 	     (get-string-for-edge node)
 	   (clim:with-text-face (stream (if bold-p :bold :roman))
-	     (let ((cont (get node 'edge-record)))
-	       (if cont
-		   (clim:with-output-as-presentation 
-		       (stream cont 'edge)
-		     (write-string s stream))
-		 (write-string s stream))))))
+	     (if (get node 'edge-record)
+		 (clim:with-output-as-presentation (stream node 'symbol)
+		   (write-string s stream))
+	       (write-string s stream)))))
      #'(lambda (node) (get node 'daughters))
      :graph-type :parse-tree
      :stream stream 
@@ -70,13 +69,6 @@
      :within-generation-separation *ptree-node-sep*
      :center-nodes nil)))
 
-(defun get-string-for-edge (edge-symbol)
-   (let ((edge-record (get edge-symbol 'edge-record)))
-      (if edge-record
-         (values (tree-node-text-string (or 
-                                    (find-category-abb (edge-dag edge-record))
-                                    (edge-category edge-record))) nil)
-         (values (tree-node-text-string edge-symbol) t))))
 
 ;;; menus
 
@@ -85,36 +77,33 @@
 ;;
 
 (define-parse-tree-command (com-parse-tree-menu)
-    ((edge-record 'edge :gesture :select))
-  (let* ((rule-name (edge-rule-number edge-record))
-	 (command (clim:menu-choose
-		  `((,(format nil "Edge ~A" (edge-id edge-record))
-		     :value edge)
-		    (,(format nil "Rule ~A" (or rule-name ""))
-		     :value rule)))))
-    (when command
-      (handler-case
-	  (ecase command
-	    (edge (display-fs (edge-dag edge-record)
-			    (format nil "Edge ~A ~A - FS" 
-				    (edge-id edge-record)
-				    (if (gen-chart-edge-p edge-record) 
-					"G" 
-				      "P")))
-		(display-edge-in-chart edge-record))
-	    (rule 
-	     (let* ((rule-name (edge-rule-number edge-record))
-		    (rule (or (get-grammar-rule-entry rule-name)
-			      (get-lex-rule-entry rule-name))))
-	       (if rule
-		   (display-fs (rule-full-fs rule)
-			       (format nil "~A" rule-name))
-		 (let ((alternative (get-tdfs-given-id rule-name)))
-		   (when alternative
-		     (display-fs alternative
-				 (format nil "~A" rule-name))))))))
-	(error (condition)
-	  (format clim-user:*lkb-top-stream*  
-		  "~%Error: ~A~%" condition))))))
+    ((edge-symbol 'symbol :gesture :select))
+  (let* ((edge-record (get edge-symbol 'edge-record))
+	 (edge-fs (get edge-symbol 'edge-fs))
+	 (rule-name (edge-rule-number edge-record)))
+    (pop-up-menu
+     `((,(format nil "Edge ~A" (edge-id edge-record))
+	:value edge)
+       (,(format nil "Rule ~A" (or rule-name ""))
+	:value rule))
+     (edge (display-fs edge-fs
+		       (format nil "Edge ~A ~A - Tree FS" 
+			       (edge-id edge-record)
+			       (if (gen-chart-edge-p edge-record) 
+				   "G" 
+				 "P")))
+	   (display-edge-in-chart edge-record))
+     (rule 
+      (let* ((rule-name (edge-rule-number edge-record))
+	     (rule (or (get-grammar-rule-entry rule-name)
+		       (get-lex-rule-entry rule-name))))
+	(if rule
+	    (display-fs (rule-full-fs rule)
+			(format nil "~A" rule-name))
+	  (let ((alternative (get-tdfs-given-id rule-name)))
+	    (when alternative
+	      (display-fs alternative
+			  (format nil "~A" rule-name))))))))))
+
 
 

@@ -4,6 +4,8 @@
 ;;; 
 ;;; Ann Copestake
 
+(in-package :user)
+
 ;;; generator output functions which are not dialect specific
 
 (defun show-gen-result nil
@@ -448,15 +450,17 @@
 ;;; to the graph package - then displays it with active nodes
 
 (defun display-parse-tree (edge display-in-chart-p)
-   (when display-in-chart-p (display-edge-in-chart edge))
-   (let ((edge-symbol (make-new-parse-tree edge 1)))
-      (draw-new-parse-tree edge-symbol 
-         (format nil "Edge ~A ~A" (edge-id edge) (if (gen-chart-edge-p edge) "G" "P"))
-         nil)))
+  (when display-in-chart-p 
+    (display-edge-in-chart edge))
+  (let ((edge-symbol (make-new-parse-tree edge 1)))
+    (draw-new-parse-tree edge-symbol 
+			 (format nil "Edge ~A ~A" (edge-id edge) 
+				 (if (gen-chart-edge-p edge) "G" "P"))
+			 nil)))
    
-
 (defun make-new-parse-tree (edge level)
-   (car (make-new-parse-tree1 edge level)))
+  (with-unification-context (nil)
+    (copy-parse-tree (rebuild-edge (car (make-new-parse-tree1 edge level))))))
 
 (defun make-new-parse-tree1 (edge level)
    ;; show active edge nodes at first level but not thereafter
@@ -482,7 +486,6 @@
             (list
                (make-lex-and-morph-tree edge-symbol edge 1))))))
 
-
 (defun make-lex-and-morph-tree (edge-symbol edge level)
    (let
       ((leaf-symbol (make-edge-symbol (car (edge-leaves edge)))))
@@ -494,6 +497,61 @@
                (make-lex-and-morph-tree leaf-symbol mdaughter (1+ level)))))
       edge-symbol))
 
+;;
+;; Reconstruct a parse from the chart
+;;
+
+(defmacro listify (thing)
+  (let ((place (gensym)))
+    `(let ((,place ,thing))
+       (if (listp ,place)
+	   ,place
+	 (list ,place)))))
+
+(defun rebuild-edge (edge-symbol)
+  (let* ((edge (get edge-symbol 'edge-record))
+	 (rule (when edge
+		 (or (get-grammar-rule-entry (edge-rule-number edge))
+		     (get-lex-rule-entry (edge-rule-number edge)))))
+	 (dtrs (mapcar #'rebuild-edge (get edge-symbol 'daughters))))
+    (when edge
+      (setf (get edge-symbol 'edge-fs)
+	(if (rule-p rule)
+	    (reapply-rule rule dtrs)
+	  (tdfs-indef (edge-dag edge))))))
+  edge-symbol)
+
+(defun reapply-rule (rule daughters)
+  (let ((rule-dag (copy-dag-completely (tdfs-indef (rule-full-fs rule))))
+	(rule-order (cdr (rule-order rule))))
+    (loop 
+	for path in rule-order
+	for dtr in daughters
+	do (when (get dtr 'edge-fs)
+	     (unify-dags (unify-paths-dag-at-end-of 
+			  (create-path-from-feature-list (listify path)) 
+			  rule-dag)
+			 (get dtr 'edge-fs))))
+    (unify-paths-dag-at-end-of 
+     (create-path-from-feature-list (listify (car (rule-order rule))))
+     rule-dag)))
+
+(defun copy-parse-tree (edge-symbol)
+  (when (get edge-symbol 'edge-fs)
+    (setf (get edge-symbol 'edge-fs) 
+      (make-tdfs :indef (copy-dag (get edge-symbol 'edge-fs)))))
+  (mapc #'copy-parse-tree (get edge-symbol 'daughters))
+  edge-symbol)
+
+(defun get-string-for-edge (edge-symbol)
+  (let ((edge-record (get edge-symbol 'edge-record)))
+     (if edge-record
+	 (progn
+	   (values (tree-node-text-string 
+		    (or (when (get edge-symbol 'edge-fs)
+			  (find-category-abb (get edge-symbol 'edge-fs)))
+			(edge-category edge-record))) nil))
+       (values (tree-node-text-string edge-symbol) t))))
 
 ;;; convert tree into a nested list - for simple printing of structure
 ;;; (dolist (parse *parse-record*) (pprint (parse-tree-structure parse)))
