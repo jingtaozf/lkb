@@ -834,14 +834,18 @@ FILE *tsdb_find_data_file(char *name, char *mode) {
       } /* if */
       free(command);
     } /* if */
-    fprintf(tsdb_error_stream,
-            "find_data_file(): unable to %s `%s[%s]' [%d].\n",
-            (mode[0] == 'r' ? "read" : "write"), foo, tsdb.suffix, errno);
+    if(!(tsdb.status & TSDB_QUIET)) {
+      fprintf(tsdb_error_stream,
+              "find_data_file(): unable to %s `%s[%s]' [%d].\n",
+              (mode[0] == 'r' ? "read" : "write"), foo, tsdb.suffix, errno);
+    } /* if */
     tsdb_free(foo);
 #else
-    fprintf(tsdb_error_stream,
-            "find_data_file(): unable to %s `%s' [%d].\n",
-            (mode[0] == 'r' ? "read" : "write"), path, errno);
+    if(!(tsdb.status & TSDB_QUIET)) {
+      fprintf(tsdb_error_stream,
+              "find_data_file(): unable to %s `%s' [%d].\n",
+              (mode[0] == 'r' ? "read" : "write"), path, errno);
+    } /* if */
 #endif
     tsdb_free(path);
     tsdb.error = TSDB_NO_DATA_ERROR;
