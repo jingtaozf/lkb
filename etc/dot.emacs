@@ -29,8 +29,12 @@
      (cond
       ((string-match "solaris" system-configuration) "solaris")
       ((string-match "linux" system-configuration) "linux")
-      ((string-match "windows" system-configuration) "windows"))
-     (if (string-match "windows" system-configuration) ".exe" "")))
+      ((or (string-match "windows" system-configuration)
+           (string-match "msvc" system-configuration)) "windows"))
+     (if (or (string-match "windows" system-configuration)
+             (string-match "msvc" system-configuration))
+       ".exe"
+       "")))
 
   (setq fi:common-lisp-directory lingo-home)
   (setq fi:lisp-evals-always-compile nil)
