@@ -297,10 +297,8 @@ BEGIN
 	END IF;
 
  	DELETE FROM revision_new;
-	-- hack: include version in select list to ensure fields come out right
-	-- unsafe assumption: if modstamp matches so does version
 	INSERT INTO revision_new
-		SELECT * FROM (SELECT DISTINCT name,userid,version,modstamp FROM public.temp EXCEPT SELECT name,userid,version,modstamp FROM public.revision) AS t1 NATURAL JOIN public.temp;
+		SELECT * FROM (SELECT DISTINCT name,userid,modstamp FROM public.temp EXCEPT SELECT name,userid,modstamp FROM public.revision) AS t1 NATURAL JOIN public.temp;
 	DROP INDEX temp_name_userid_modstamp;
 	DELETE FROM public.temp;
 	count_new := (SELECT count(*) FROM revision_new);
@@ -363,19 +361,15 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
--- temporary hack
-CREATE OR REPLACE FUNCTION public.next_version(text) RETURNS integer AS '
-DECLARE
-	i integer;
-BEGIN
-	i := (SELECT max(version) FROM revision_all);
-	RETURN i;
-END;
-' LANGUAGE plpgsql;
-	--x RECORD;
-	--FOR x IN EXECUTE \'SELECT COALESCE(1 + max(version),0) as v FROM revision_all WHERE name LIKE \' || quote_literal($1) || \' AND user=user\' LOOP 
-    	--	i := x.v;
-	--END LOOP;
+-- obsolete
+--CREATE OR REPLACE FUNCTION public.next_version(text) RETURNS integer AS '
+--DECLARE
+--	i integer;
+--BEGIN
+--	i := (SELECT max(version) FROM revision_all);
+--	RETURN i;
+--END;
+--' LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION public.size_current_grammar() RETURNS int AS '
 BEGIN

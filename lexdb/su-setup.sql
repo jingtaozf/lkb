@@ -39,7 +39,7 @@ CREATE OR REPLACE FUNCTION public.hide_schemas () RETURNS boolean AS
 --'
 --	SELECT public.hide_schemas2();
 --'
- LANGUAGE SQL SECURITY DEFINER;
+-- LANGUAGE SQL SECURITY DEFINER;
 
 -- fix works only for erg/default fields
 CREATE OR REPLACE FUNCTION public.dump_db_su(text) RETURNS text AS '
@@ -54,17 +54,13 @@ BEGIN
  	lexdb_versn := lexdb_version()::real;
 	RAISE INFO \'EXISTING LEXDB_VERSION: %\', lexdb_versn;
 
-	IF (lexdb_versn > 3.20) THEN
+	IF (lexdb_versn < 3.20) THEN
+		RAISE ERROR "LexDB fields have changed. Please recreate LexDB from grammar, or adjust fields manually.";
+	ELSEIF (lexdb_versn < 3.50) THEN
+		RAISE ERROR "LexDB fields have changed (version field is no longer used). Please recreate LexDB from grammar, or adjust fields using kill-version.sh script.";
+	ELSE 
 		CREATE TABLE temp_dump AS
-			SELECT * FROM public.revision ORDER BY name, userid, version;
-	ELSIF (lexdb_versn < 3.20) THEN
-		RAISE WARNING \'Field ordering has changed\';
-		CREATE TABLE temp_dump AS
-			SELECT name,userid,version,modstamp,orthkey,flags,type,orthography,keyrel,altkey,alt2key,keytag,altkeytag,compkey,ocompkey, pronunciation,complete,semclasses,preferences,classifier,selectrest,jlink,comments,exemplars,usages,lang,country,dialect,domains,genres,register,confidence,source FROM public.revision ORDER BY name, userid, version;
-	ELSIF ( lexdb_versn = 3.20 ) THEN
-		RAISE WARNING \'Field ordering has changed\';
-		CREATE TABLE temp_dump AS
-			SELECT name,userid,version,modstamp,orthkey,flags,f1,f2,f3,f4,f5,f6,f7,f8,f9 pronunciation,complete,semclasses,preferences,classifier,selectrest,jlink,comments,exemplars,usages,lang,country,dialect,domains,genres,register,confidence,source FROM public.revision ORDER BY name, userid, version;
+			SELECT * FROM public.revision ORDER BY name, userid, modstamp;
 	END IF;
 
 	RAISE INFO \'Dumping public.revision to file %\', dump_file_rev;

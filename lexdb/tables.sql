@@ -92,7 +92,6 @@ BEGIN
 	sql_qry := \'CREATE TABLE public.revision (
 		name TEXT NOT NULL,
 		userid TEXT DEFAULT user NOT NULL,
-		version INTEGER,
 		modstamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
 		orthkey TEXT NOT NULL,
 		flags INTEGER DEFAULT 0 NOT NULL
