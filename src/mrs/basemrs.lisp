@@ -100,8 +100,7 @@
   ;;; always constructed from the type and the id
   (unless (var-p var)
     (error "var expected ~A found" var))
-  (format nil "~(~A~)~A" (var-type var)
-	  (var-id var)))
+  (format nil "~(~A~)~A" (or (var-type var) "u") (var-id var)))
 
 ;;; macros moved from mrsresolve
 
@@ -1054,7 +1053,8 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
   (let* ((varname (read-mrs-atom istream))
          (existing (assoc varname *already-read-vars*))
          (var (or (cdr existing)
-                  (make-var :id (funcall *variable-generator*)))))
+                  (make-var :id (funcall *variable-generator*)
+                            :type (char varname 0)))))
     (unless existing 
       (push (cons varname var) *already-read-vars*))
     (let ((next-char (peek-char t istream nil 'eof)))
