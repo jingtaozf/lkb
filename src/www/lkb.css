@@ -11,6 +11,7 @@
   td.center {
     text-align: center;
   }
+
   table.mrsMrs {
     padding: 0.2em;
     border: solid;
@@ -51,6 +52,26 @@
     font-size: 16pt; 
   }
 
+  table.mrsProperties {
+    padding: 0.2em;
+    border: solid;
+    border-left: solid;
+    border-right: solid;
+    border-left-width: thin;
+    border-right-width: thin;
+    border-top: none;
+    border-bottom: none;
+    border-collapse: collapse;
+    background: #1a04a5;
+    color: #d8d6d6;
+  }
+  td.mrsPropertyFeature {
+    font-size: 8pt; font-style: normal; text-align: left; 
+  }
+  td.mrsPropertyValue {
+    font-size: 8pt; font-style: italic; text-align: right;
+  }
+
   table.tree {
     padding: 0.2em;
     color: #1a04a5;
@@ -89,9 +110,59 @@
     font-style: italic; 
   }
 
+  table.generatorOutputs {
+    border-collapse: collapse;
+    margin-top: 1em;
+    margin-bottom: 2em;
+    border: solid; border-width: thin; width: compute;
+  }
+
+  td.generatorOutput a:link, td.generatorOutput a:visited {
+    text-decoration: none;
+    background: #d8d6d6;
+    color: #2d2d2b;
+  }
+
+  td.generatorOutput a:active, td.generatorOutput a:hover {
+    text-decoration: none;
+    color: #d8d6d6;
+    background: #2d2d2b;
+  }
+
+  td.generatorOutputIndex {
+    background: #d8d6d6;
+    color: #2d2d2b;
+    text-align: center; vertical-align: middle;
+    padding: 0.2em;
+    border none;
+    font-weight: normal; font-size: 14pt;
+    font-family: helvetica, arial, sans-serif;
+  }
+
+  td.generatorOutput {
+    background: #d8d6d6;
+    color: #2d2d2b;
+    text-align: left; vertical-align: middle;
+    padding: 0.2em;
+    border none;
+    font-weight: normal; font-size: 14pt;
+    font-family: helvetica, arial, sans-serif;
+  }
+
+  td.generatorOutputScore {
+    background: #d8d6d6;
+    color: #2d2d2b;
+    text-align: right; vertical-align: middle;
+    padding: 0.2em;
+    border none;
+    font-weight: normal; font-size: 14pt;
+    font-family: helvetica, arial, sans-serif;
+  }
+
   table.results {
     border-collapse: collapse;
   }
+
   td.resultsNavigation {
     background: #d8d6d6;
     color: #2d2d2b;
@@ -112,15 +183,40 @@
     font-weight: normal; font-size: 12pt; 
     font-family: helvetica, arial, sans-serif;
   }
+
   td.resultsTree, td.resultsMrs {
     background: #d8d6d6;
+    color: #2d2d2b;
     text-align: center; vertical-align: top;
     padding: 0.2em;
     border-top: solid;
     border-bottom: solid;
     border-width: thin;
-    color: #2d2d2b;
   }
+
+  td.resultsDerivations {
+    background: #d8d6d6;
+    color: #2d2d2b;
+    text-align: center; vertical-align: center;
+    padding: 0.3em;
+    border-top: solid;
+    border-bottom: solid;
+    border-width: thin;
+  } 
+
+  table.resultsDerivations {
+    color: #1a04a5;
+    border: solid;
+    border-width: thin;
+  }
+
+  td.resultsDerivation {
+    color: #1a04a5;
+    text-align: center;
+    font-weight: normal; font-size: 10pt; 
+    font-family: helvetica, arial, sans-serif;
+  } 
+
 
   td.buttons { 
     font-weight: normal; font-size: 12pt; 
@@ -262,6 +358,11 @@
     font-size: 8pt; 
     font-family: helvetica, arial, sans-serif; 
   }
+
+  .navtext {
+    width: 100px;
+  }
+
 </style>
 
 

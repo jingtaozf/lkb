@@ -1,7 +1,8 @@
-function mrsVariableSelect(name)
+function mrsVariableSelect(name, text)
 {
 
   classSetColor('mrsVariable' + name, 'red');
+  writetxt(text);
 
 } // mrsVariableSelect()
 
@@ -9,6 +10,7 @@ function mrsVariableUnselect(name)
 {
 
   classSetColor('mrsVariable' + name, '#1a04a5');
+  writetxt(0);
 
 } // mrsVariableUnselect()
 
