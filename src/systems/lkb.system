@@ -16,13 +16,13 @@
     #-:allegro nil
     :finally-do
     #+(and :allegro :clim (not :tty))
-    (unless (and (boundp 'user::*building-image-p*)
-		 user::*building-image-p*)
+    (unless (and (boundp 'cl-user::*building-image-p*)
+		 cl-user::*building-image-p*)
       (let ((*package* (find-package "CLIM-USER")))
 	(clim-user::set-up-lkb-interaction :big)))
   #+(and :allegro :common-graphics (not :tty))
-    (unless (and (boundp 'user::*building-image-p*)
-		 user::*building-image-p*)
+    (unless (and (boundp 'cl-user::*building-image-p*)
+		 cl-user::*building-image-p*)
 	(cl-user::set-up-lkb-interaction :big))
     #+(and :mcl (not :tty))
     (cl-user::set-up-lkb-interaction :big)
