@@ -1,4 +1,5 @@
 ROOT = /eo/e7/apache/htdocs/src
+WROOT = c:/src
 DATE=`date "+%Y-%m-%d"`
 TARGET=/usr/local/apache/htdocs/lingo/ftp
 
@@ -132,21 +133,23 @@ lkb_solaris:
 	)
 
 lkb_windows:
-	${RM} -f ${ROOT}/.yes;
+	${RM} -f ${WROOT}/.yes;
 	( \
-	  echo "(load \"d:${ROOT}/lkb/src/general/loadup.lisp\")"; \
-	  echo "(load \"d:${ROOT}/lkb/src/ACL_specific/deliver.lsp\")"; \
-	) > d:/tmp/build.lisp
-	( cd e:/acl501; ./clim -qq -L d:/tmp/build.lisp \
-          && touch ${ROOT}/.yes; )
+	  echo "(load \"${WROOT}/lkb/src/general/loadup.lisp\")"; \
+	  echo "(load \"${WROOT}/lkb/src/ACL_specific/deliver.lsp\")"; \
+          echo "(excl:exit)"; \
+	) > c:/tmp/build.lisp
+	( cd c:/program\ files/acl61; ./clim.exe -qq -L c:/tmp/build.lisp \
+          && touch ${WROOT}/.yes; )
 	( \
-	  if [ ! -f ${ROOT}/.yes ]; then exit 1; fi; \
-	  cd ${ROOT}/lkb; \
-	  ${TAR} Svczf /d/tmp/lkb_windows.tgz \
+	  if [ ! -f ${WROOT}/.yes ]; then exit 1; fi; \
+	  cd ${WROOT}/lkb; \
+	  ${TAR} Svczf /c/tmp/lkb_windows.tgz \
               --exclude=".nfs*" \
 	      windows; \
-	  scp /d/tmp/lkb_windows.tgz eo:${TARGET}/${DATE}; \
-	)
+	  ${RM} -f /c/tmp/lkb_windows.zip; \
+          zip -r /c/tmp/lkb_windows.zip windows; )
+	scp /c/tmp/lkb_windows.tgz /c/tmp/lkb_windows.zip eo:${TARGET}/${DATE};
 
 lkb_documentation:
 	( \

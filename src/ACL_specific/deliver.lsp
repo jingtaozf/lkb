@@ -41,7 +41,7 @@
    :include-debugger nil
    :include-devel-env nil
    :include-ide nil
-   :include-common-graphics nil
+   #-:mswindows :include-common-graphics #-:mswindows nil
    :include-composer nil
    :include-xcw nil
 
@@ -57,8 +57,5 @@
    :print-startup-message nil
 
    :presto t
-   :presto-build-lib (dir-and-name target "lkb.lib")))
-
-
-
-
+   #-:mswindows :presto-build-lib 
+   #-:mswindows (dir-and-name target "lkb.lib")))

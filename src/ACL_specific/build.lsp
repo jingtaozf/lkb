@@ -26,7 +26,7 @@
 (require :foreign)
 (require :defftype)
 (require :process)
-#+(version>= 6 0) (require :sigio)
+#+(and (version>= 6 0) (not :mswindows)) (require :sigio)
 #+(version>= 6 0) (require :excl)
 (require :eli)
 (require :emacs)
