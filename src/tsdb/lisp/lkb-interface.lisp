@@ -95,6 +95,7 @@
                                  (make-broadcast-stream *standard-output* str)
                                str))
           (input (split-into-words (preprocess-sentence-string word))))
+     (declare (special *chasen-debug-p*))
      (parse input nil)
      (summarize-chart))))
 
@@ -162,7 +163,7 @@
               (*copies* 0)
               (*subsumptions* 0)
               tgc tcpu treal conses symbols others)
-         (declare (special *subsumptions*))
+         (declare (special *subsumptions*) (special *chasen-debug-p*))
          ;;
          ;; this really ought to be done in the parser ...  (30-aug-99  -  oe)
          ;;
