@@ -205,11 +205,25 @@
      (apply #'mrs-equalp mrs1 mrs2 '(t nil))
      (equal mrs1 mrs2))))
 
-(defun display-mrs (edge &optional mrs title)
+(defun display-mrs (edge &optional mrs title (format :simple))
   (if #+:lui (lkb::lui-status-p :mrs) #-:lui nil
     (let ((mrs (or mrs (lkb::edge-mrs edge) (extract-mrs edge))))
-      (when (psoa-p mrs) (lkb::lui-display-mrs mrs)))
-    (lkb::show-mrs-window edge mrs title)))
+      (when (psoa-p mrs) 
+        (lkb::lui-display-mrs mrs title format)))
+    (case format
+      (:simple
+       (lkb::show-mrs-window edge mrs title))
+      (:indexed 
+       (lkb::show-mrs-indexed-window edge mrs title))
+      (:prolog 
+       (lkb::show-mrs-prolog-window edge mrs title))
+      (:scoped 
+       (lkb::show-mrs-scoped-window edge mrs title))
+      (:robust 
+       (lkb::show-mrs-rmrs-window edge :mrs mrs :title title))
+      (t
+       (lkb::show-mrs-dependencies-window edge mrs title)))))
+
 
 (defparameter *mrs-default-display* :simple)
 

@@ -102,9 +102,55 @@
 (defmacro ed-linked-predicate (ed)
   `(format nil "~a~{:~a~}~@[(~a)~]" (ed-predicate ,ed) (ed-link ,ed)))
 
-(defun ed-output-psoa (psoa &key (stream t))
+(defun ed-output-psoa (psoa &key (stream t) (format :ascii))
   (if (psoa-p psoa)
-    (format stream "~a~%" (ed-convert-psoa psoa))
+    (case format
+      (:ascii
+       (format stream "~a~%" (ed-convert-psoa psoa)))
+      (:lui
+       (let ((attic (make-hash-table :test #'equal))
+             (id 0))
+         (labels ((record (object)
+                    (or (gethash object attic)
+                        (let ((n id))
+                          (setf (gethash object attic) n)
+                          (incf id)
+                          n))))
+           (let ((eds (ed-convert-psoa psoa)))
+             (format 
+              stream
+              "#X[~a \"{~(~a~)\" \":\" newline~%\"    \" #X["
+              (record (eds-top eds)) (eds-top eds))
+             (loop
+                 with firstp = t
+                 for ed in (eds-relations eds)
+                 do
+                   (format
+                    stream
+                    "~@[newline~*~] ~a \"~(~a~)\" \":~(~a~)[\" #X["
+                    (not firstp)
+                    (record (ed-id ed)) (ed-id ed) (ed-predicate ed))
+                   (setf firstp nil)
+                   (loop
+                       with firstp = t
+                       for (role . value) in (ed-arguments ed)
+                       do
+                         (format
+                          stream
+                          "~@[\", \" wrap ~*~]\"~a \" ~
+                           ~@[~a ~]~@[\"~(~a~)\" ~]\":~(~a~)~@[(~(~a~))~]\""
+                          (not firstp) role
+                          (and (ed-p value) (record (ed-id value)))
+                          (and (ed-p value) (ed-id value))
+                          (if (ed-p value) (ed-predicate value) value)
+                          (and (ed-p value) (ed-carg value)))
+                         (setf firstp nil)
+                       finally (format stream "] \"]\"~%"))
+                 finally 
+                   (format 
+                    stream
+                    "] newline \"}\"]~%~
+                     #M[]")))))))
     (format stream "{}~%")))
 
 #+:lkb

@@ -312,12 +312,11 @@
 
 (defun lui-show-tree (top &optional (input *sentence*)
                       &key morphs chart lspb (stream %lui-stream%))
-  (let* ((edge (if lspb (lspb-edge lspb) (get top 'edge-record)))
-         (tdfs (if lspb (lspb-dag lspb) (get top 'edge-fs)))
-         (lspb (or lspb
-                   (make-lspb
-                    :context lspb :input input :morphs morphs :chart chart
-                    :edge edge :dag tdfs)))
+  (let* ((edge (get top 'edge-record))
+         (tdfs (get top 'edge-fs))
+         (lspb (make-lspb
+                :context lspb :input input :morphs morphs :chart chart
+                :edge edge :dag tdfs))
          (daughters (get top 'daughters))
          (form (when (and daughters (null (rest daughters))
                           (null (get (first daughters) 'edge-record)))
@@ -480,6 +479,32 @@
                 (format stream "]~%")))
     (format stream "~a" %lui-eoc%)
     (format %lui-stream% "~a" (get-output-stream-string stream)))
+  (force-output %lui-stream%))
+
+(defun lui-display-mrs (mrs &optional title format)
+  (let* ((id (lsp-store-object nil (make-lspb :mrs mrs)))
+         (title (case format
+                  (:simple 
+                   (format nil "~@[~a ~]Simple MRS Display" title))
+                  (:dependencies
+                   (format 
+                    nil
+                    "~@[~a ~]Dependencies Display" title))))
+         (string (with-output-to-string (stream)
+                   (case format
+                     (:simple
+                      (format
+                       stream
+                       "parameter avm-collapsed-types [u h i e x]~a~%"
+                       %lui-eoc%)
+                      (format stream "avm ~d " id)
+                      (mrs::lui-dagify-mrs mrs :stream stream))
+                     (:dependencies
+                      (format stream "text 42 ")
+                      (mrs::ed-output-psoa
+                       mrs :stream stream :format :lui))))))
+    (format %lui-stream% string)
+    (format %lui-stream% " ~s~a~%" title %lui-eoc%))
   (force-output %lui-stream%))
 
 (defun lui-display-mrs (mrs)

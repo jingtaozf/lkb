@@ -505,19 +505,7 @@
                     ((edge-p (lspb-edge object))
                      (tdfs-indef (edge-dag (lspb-edge object))))))
               (mrs (and dag (mrs::extract-mrs-from-fs dag))))
-         (case view
-           (:simple
-            (mrs::display-mrs nil mrs title))
-           (:indexed 
-            (show-mrs-indexed-window nil mrs title))
-           (:prolog 
-            (show-mrs-prolog-window nil mrs title))
-           (:scoped 
-            (show-mrs-scoped-window nil mrs title))
-           (:robust 
-            (show-mrs-rmrs-window nil :mrs mrs :title title))
-           (t
-            (show-mrs-dependencies-window nil mrs title))))))))
+         (mrs::display-mrs nil mrs title (or view :dependencies)))))))
 
 (defun lsp-return (id stream edges format)
 
