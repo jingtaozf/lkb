@@ -11,6 +11,8 @@
 
 (defparameter *www-log* (format nil "/tmp/www.log.~a" (tsdb::current-user)))
 
+(defparameter *www-interrupt* nil)
+
 (defparameter *www-lkb-css*
   (make-pathname
    :directory (pathname-directory 
@@ -39,28 +41,59 @@
 
 (defvar %www-attic% (make-array 512))
 
-(defun initialize (&key (port *www-port*))
-  (setf %www-clients% 0)
-  (setf %www-object-counter% 0)
-  (setf %www-attic% (make-array 512))
-  (start :port port :external-format (excl:crlf-base-ef :utf-8))
+(defun initialize (&key (port *www-port*) pattern)
+  (let ((interrupt (format 
+                    nil 
+                    "/tmp/.aserve.~a.~a" 
+                    (tsdb::current-user) port)))
+    (unless (mp:process-p *www-interrupt*)
+      (flet ((check-interrupt () 
+               (loop
+                 (when (probe-file interrupt)
+                   (delete-file interrupt)
+                   (excl:exit))
+                 (sleep 5))))
+        (setf *www-interrupt*
+          (mp:process-run-function 
+           '(:name "aserve interrupt handler") #'check-interrupt))))
+    (setf %www-clients% 0)
+    (setf %www-object-counter% 0)
+    (setf %www-attic% (make-array 512))
+    ;;
+    ;; a first attempt at `session management': if we fail to grab the port we
+    ;; need, attempt to shut down the competing process (assuming it is a web
+    ;; server that unterstands our interrupt protocol), wait long enough for
+    ;; the interrupt handler to take effect, and try again.
+    ;;
+    (unless (ignore-errors
+             (start :port port :external-format (excl:crlf-base-ef :utf-8)))
+      (with-open-file (foo interrupt :direction :output :if-exists :supersede))
+      (sleep 10)
+      (start :port port :external-format (excl:crlf-base-ef :utf-8))))
+    
   (publish-file :path "/lkb.css" :file *www-lkb-css*)
   (publish-file :path "/lkb.js" :file *www-lkb-js*)
-  (publish :path "/erg"
-    :content-type "text/html"
-    :function #'(lambda (request entity) (www-erg request entity)))
-  (publish :path "/browse"
-    :content-type "text/html"
-    :function #'(lambda (request entity) (www-browse request entity)))
-  (publish :path "/podium"
-    :content-type "text/html"
-    :function #'(lambda (request entity) (www-podium request entity)))
-  (publish :path "/itsdb"
-    :content-type "text/html"
-    :function #'(lambda (request entity) (www-itsdb request entity)))
+
   (publish :path "/compare"
-    :content-type "text/html"
-    :function #'(lambda (request entity) (www-compare request entity))))
+   :content-type "text/html"
+   :function #'(lambda (request entity) (www-compare request entity)))
+
+  (cond
+   ((null pattern)
+    (publish :path "/erg"
+     :content-type "text/html"
+     :function #'(lambda (request entity) (www-erg request entity)))
+    (publish :path "/browse"
+      :content-type "text/html"
+      :function #'(lambda (request entity) (www-browse request entity))))
+   (t
+    (publish :path "/podium"
+      :content-type "text/html"
+      :function #'(lambda (request entity) 
+                    (www-podium request entity :pattern pattern)))
+    (publish :path "/itsdb"
+      :content-type "text/html"
+      :function #'(lambda (request entity) (www-itsdb request entity))))))
 
 (defun www-erg (request entity)
   #+:debug
@@ -74,9 +107,10 @@
           (let ((foo (lookup-form-value "exhaustivep" query)))
             (string-equal foo "all")))
          (output (lookup-form-value "output" query))
-         (treep (if (stringp output)
-                  (equal output "tree")
-                  (member "tree" output :test #'equal)))
+         (treep (or (null body)
+                    (if (stringp output)
+                      (equal output "tree")
+                      (member "tree" output :test #'equal))))
          (mrsp (or (null body) 
                    (if (stringp output)
                      (equal output "mrs")
@@ -629,7 +663,7 @@
                     (lkb::html-compare frame :stream *html-stream*))
                   (www-version *html-stream*))))))))))
 
-(defun www-podium (request entity)
+(defun www-podium (request entity &key pattern)
   #+:debug
   (setf %request% request %entity% entity)
   (let* ((method (request-method request))
@@ -688,7 +722,8 @@
                   :br :newline
                   ((:div :class "profiles")
                    (tsdb::tsdb-do-list 
-                    tsdb::*tsdb-home* :stream *html-stream* :format :html)))
+                    tsdb::*tsdb-home* :pattern pattern
+                    :stream *html-stream* :format :html)))
                  (www-version *html-stream*)))))))))
 
 (defun www-itsdb (request entity)
@@ -768,7 +803,7 @@
           (setf %www-attic% 
             (adjust-array %www-attic% (* %www-object-counter% 2))))
         n)))
-
+
   (defun www-retrieve-object (id n)
     (when (and (numberp n) (< n (array-total-size %www-attic%)))
       (mp:with-process-lock (lock)
