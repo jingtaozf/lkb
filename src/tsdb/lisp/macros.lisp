@@ -89,9 +89,9 @@
        (make-meter start end))))
 
 (defun time-a-funcall (timed-function report-function)
-   #+(and :allegro-version>= (not (version>= 6 0)))
+   #+(and :allegro-version>= (not (version>= 6 1)))
    (excl::time-a-funcall timed-function report-function)
-   #+(and :allegro-version>= (version>= 6 0))
+   #+(and :allegro-version>= (version>= 6 1))
    (excl::time-a-funcall report-function timed-function)
    #-:allegro
    (let* ((treal (get-internal-real-time))
