@@ -222,6 +222,7 @@
     (multiple-value-bind (foo condition)
       (ignore-errors
        (case (pop command)
+
          (tsdb 
           (if (find-package :tsdb)
             (let* ((symbol (find-symbol "LSP-PROCESS-EVENT" :tsdb))
@@ -232,6 +233,7 @@
                   (funcall function id command (when waitp stream)))
                 (setf return %lsp-invalid-module%)))
             (setf return %lsp-invalid-module%)))
+
          (mrs 
           (if (find-package :mrs)
             (let* ((symbol (find-symbol "LSP-PROCESS-EVENT" :mrs))
@@ -242,6 +244,7 @@
                   (funcall function id command (when waitp stream)))
                 (setf return %lsp-invalid-module%)))
             (setf return %lsp-invalid-module%)))
+
          (display
           (when client
             (setf (client-display client)
@@ -255,6 +258,7 @@
                t
                "[~d] lsp-process-event(): new DISPLAY is `~a'.~%"
                id (or (third (client-display client)) "local")))))
+
          (grammar
           (let ((script (pop command)))
             (when (probe-file script)
@@ -264,6 +268,7 @@
               (read-script-file-aux script)))
           #+:lui
           (unless id (format %lui-stream% "status ready~a~%" %lui-eoc%)))
+
          (parse
           (let* ((input (pop command))
                  (set (let ((foo (pop command))) 
@@ -307,6 +312,7 @@
                  (object (lsp-retrieve-object id location)))
             (when (and (second object) (member format '(:avm :tree)))
               (lsp-browse id (first object) (rest object) format))))
+
          (type
           (let* ((name (pop command))
                  (type (and name (get-type-entry name)))
@@ -327,11 +333,43 @@
                t
                "[~d] lsp-process-event(): invalid type identifier `~a'~%" 
                id name))))
+         
+         (unify
+          (let* ((tdfs1 (let ((n (pop command)))
+                          (when (numberp n) 
+                            (second (lsp-retrieve-object id n)))))
+                 (path1 (convert-path (pop command)))
+                 (tdfs2 (let ((n (pop command)))
+                          (when (numberp n) 
+                            (second (lsp-retrieve-object id n)))))
+                 (path2 (convert-path (pop command))))
+            (if (and (tdfs-p tdfs1) path1 (tdfs-p tdfs2) path2)
+              (with-unification-context (ignore)
+                (let* ((tdfs (tdfs-at-end-of path1 tdfs1))
+                       (*unify-debug* :return)
+                       (%failures% nil)
+                       (result (yadu! tdfs2 tdfs path2))
+                       (failures %failures%))
+                  (lui-display-fs 
+                   (if result
+                     (copy-tdfs-elements result)
+                     tdfs1)
+                   "Unification Result"
+                   42
+                   failures)))
+
+              (format
+               t
+               "[~d] lsp-process-event(): invalid unify arguments~%" 
+               id))))
+         
          (quit
           #+:lui
           (lui-shutdown))
+         
          (t
           (setf return %lsp-invalid-command%))))
+      
       (declare (ignore foo))
       (when condition
         (when *lsp-debug-p*
@@ -444,3 +482,11 @@
                   (string (with-output-to-string (stream)
                             (mrs::output-mrs1 mrs format stream))))
              (format stream " ~s" string))))))
+
+(defun convert-path (symbol)
+  (let ((*readtable* (copy-readtable))
+        (*package* (find-package :lkb)))
+    (set-syntax-from-char #\. #\space *readtable*)
+    (read-from-string (format nil "(~a)" symbol))))
+
+        

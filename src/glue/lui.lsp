@@ -74,12 +74,16 @@
       parameter empty-list-type ~a~a~%~
       parameter list-head ~a~a~%~
       parameter list-tail ~a~a~%~
+      parameter type-font #F[Helvetica ~a roman blue]~a~%~
+      parameter feature-font #F[Helvetica ~a roman black]~a~%~
       status ready~a~%"
      *list-type* %lui-eoc%
      *non-empty-list-type* %lui-eoc%
      *empty-list-type* %lui-eoc% 
      (first *list-head*) %lui-eoc%
      (first *list-tail*) %lui-eoc%
+     *fs-type-font-size* %lui-eoc%
+     *fs-type-font-size* %lui-eoc%
      %lui-eoc%)
     (force-output %lui-stream%)
     #-:clisp
@@ -199,15 +203,24 @@
         do (lui-show-tree daughter))
     (format %lui-stream% "]")))
 
-(defun lui-display-fs (tdfs title id)
+(defun lui-display-fs (tdfs title id &optional failures)
   (declare (ignore id))
   (let* ((id (lsp-store-object nil nil tdfs))
-         (dag (tdfs-indef tdfs)))
+         (dag (tdfs-indef tdfs))
+         (*package* (find-package :lkb)))
+    (format
+     %lui-stream%
+     "parameter type-font #F[Helvetica ~a roman blue]~a~%~
+      parameter feature-font #F[Helvetica ~a roman black]~a~%"
+     *fs-type-font-size* %lui-eoc%
+     *fs-type-font-size* %lui-eoc%)
     (let ((string (with-output-to-string (stream)
                     (format stream "avm ~d " id)
                     (display-dag1 dag 'linear stream))))
       (format %lui-stream% string))
-    (format %lui-stream% " ~s~a~%" title %lui-eoc%))
+    (format %lui-stream% " ~s~%" title)
+    (format %lui-stream% "~@[[~{~s~^ ~}]~]" failures)
+    (format %lui-stream% "~a" %lui-eoc%))
   (force-output %lui-stream%))
 
 (defun lui-display-mrs (mrs)
