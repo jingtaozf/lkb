@@ -1369,9 +1369,7 @@
 
 ;;; Parsing sentences from file
 
-(defun parse-sentences (&optional input-file (output-file 'unspec) 
-                                  run-file result-file)
-   (declare (ignore run-file result-file))
+(defun parse-sentences (&optional input-file (output-file 'unspec))
    (unless input-file 
       (setq input-file (ask-user-for-existing-pathname "Sentence file?")))
    (when
@@ -1389,8 +1387,10 @@
                (with-open-file (ostream output-file :direction :output
                                 :if-exists :supersede 
                                 :if-does-not-exist :create)
-                  (batch-parse-sentences istream ostream line))
-               (batch-parse-sentences istream output-file line))))))
+		 (batch-parse-sentences istream ostream line 
+					#'extract-fine-system-sentence))
+	      (batch-parse-sentences istream t line
+				     #'extract-fine-system-sentence))))))
 
 
 (defparameter *do-something-with-parse* nil)

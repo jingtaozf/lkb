@@ -447,4 +447,52 @@
                   (edge-from edge) (edge-to edge))))))
 
 
+#|
+(extract-fine-system-sentence "1@CSLI@formal@none@1@S@Abrams works.@1@2@@oe@8-sep-1999")
+|#
+
+(defun extract-fine-system-sentence (str)
+  ;;; "1@CSLI@formal@none@1@S@Abrams works.@1@2@@oe@8-sep-1999"
+  ;;; returns
+  ;;; "Abrams works."
+  (if (find #\@ str)
+      (let ((ampcount 0)
+	    (sstart nil) 
+	    (send nil))
+	(dotimes (n (length str)) 
+	  (let ((char (elt str n))) 
+	    (when (eql char #\@) 
+	      (setf ampcount (+ 1 ampcount))
+	      (when (eql ampcount 6)
+		(setf sstart (+ 1 n)))))
+	  (when (eql ampcount 7)
+	    (setf send n)
+	    (return)))
+	(if (and sstart send)
+	    (subseq str sstart send)
+	  str))
+    str))
+
+#|
+(compare-batch-parse-files "test1" "test2")
+|#
+
+(defun compare-batch-parse-files (file1 file2)
+  ;;; ignores edges
+  (with-open-file (istream1 file1 :direction :input)
+    (with-open-file (istream2 file2 :direction :input)
+      (loop 
+	(let ((str1 (read-line istream1))
+	      (str2 (read-line istream2)))
+	  (unless (and str1 str2) (return))
+	  (unless (equal (string-right-trim 
+			  '(#\0 #\1 #\2 #\3 #\4 #\5
+			    #\6 #\7 #\8 #\9)
+			  str1)
+			 (string-right-trim 
+			  '(#\0 #\1 #\2 #\3 #\4 #\5
+			    #\6 #\7 #\8 #\9)
+			  str2))
+	    (format t "~%~S~%~S" str1 str2)))))))
+
 
