@@ -143,6 +143,12 @@
   "size of font in dialogs"
   :user)
 
+(def-lkb-parameter *maximum-list-pane-items* 50
+  "maximum number of items in a list pane"
+  :user)
+
+
+
 ;;; Languages
 ;;; (not very useful in core LKB, maybe remove from here?)
 

@@ -199,6 +199,7 @@
                            "~%Partition size ~A" 
                            (length partition))
                    (fix-mglbs)))
+	 (setf *type-names* (sort *type-names* #'string-lessp))
          (unmark-type-table)
          (if *hierarchy-only-p*
                (expand-local-only-constraints)
