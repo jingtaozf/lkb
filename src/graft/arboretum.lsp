@@ -69,11 +69,12 @@
          (ag-parse-result (if (and symbol (symbol-value symbol))
                            (symbol-value symbol)
 			   (first *parse-record*))))
-  
-    (setf *found-configs* (make-hash-table :test #'equal))
-    (setf (gethash 'lex-ids *found-configs*) (edge-lex-ids ag-parse-result))
-    (put-subtrees-in-found-configs ag-parse-result)
-    (put-lex-yields-in-found-configs ag-parse-result)))
+
+    (when ag-parse-result
+      (setf *found-configs* (make-hash-table :test #'equal))
+      (setf (gethash 'lex-ids *found-configs*) (edge-lex-ids ag-parse-result))
+      (put-subtrees-in-found-configs ag-parse-result)
+      (put-lex-yields-in-found-configs ag-parse-result))))
 
 ;;; (ERB 2003-10-20) This also puts in configurations for active edges 
 ;;; (with at least one instantiated daughter).
