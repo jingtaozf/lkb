@@ -448,6 +448,10 @@ proc main {} {
     -variable globals(graph,tgc) \
     -command {update_graph_cascade tgc};
   .menu.analyze.menu.values add checkbutton \
+    -label "Parser Analyses (`readings')" \
+    -variable globals(graph,readings) \
+    -command {update_graph_cascade readings};
+  .menu.analyze.menu.values add checkbutton \
     -label "Filtered Tasks (`p-ftasks')" \
     -variable globals(graph,p-ftasks) \
     -command {update_graph_cascade p-ftasks};

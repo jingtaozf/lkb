@@ -874,7 +874,7 @@
                   (incf aareadings ireadings)
                   (incf aawords iwords)
                   (incf aaresults))
-                 ((null active )
+                 ((or (null active) (and (numberp active) (= active -1)))
                   (incf aslength ilength)
                   (incf asreadings ireadings)
                   (incf aswords iwords)

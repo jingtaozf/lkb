@@ -573,9 +573,9 @@ proc overlay_regression {graph {mode linear} {action "plot"} {xx ""} {yy ""}} {
   global globals;
 
   if {$action == "plot"} {
-    busy hold $graph;
-    busy config $graph -cursor $globals(busy_cursor);
-    update idletasks;
+#    busy hold $graph;
+#    busy config $graph -cursor $globals(busy_cursor);
+#    update idletasks;
   }; # if
 
   regsub -all "\\." $graph "_" name;

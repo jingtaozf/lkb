@@ -20,14 +20,14 @@
 (defun browse-trees (&optional (data *tsdb-data*)
                      &key (condition *statistics-select-condition*)
                           (cache *tsdb-cache-database-writes-p*)
-                          (verbose t)
+                          (verbose t) interactive
                           (stream *tsdb-io*)
-                          purge meter)
+                          strip meter)
 
   (declare (optimize (speed 3) (safety 0) (space 0)))
 
-  (when purge
-    (unless (do-import-database (find-tsdb-directory data) purge 
+  (when strip
+    (unless (do-import-database (find-tsdb-directory data) strip 
                                 :meter (when meter (make-meter 0 1))
                                 :except '("tree" "decision"))
       (return-from browse-trees nil)))
@@ -43,14 +43,17 @@
          (message (format 
                    nil 
                    "~a `~a' trees ..." 
-                   (if purge "purging" "browsing") data))
+                   (if strip "stripping" "browsing") data))
          (items (sort (copy-seq items) 
                       #'< :key #'(lambda (foo) (get-field :i-id foo))))
          (schema (read-database-schema data))
          (cache (when cache
-                  (create-cache (or purge data)
+                  (create-cache (or strip data)
                                 :schema schema :verbose verbose 
                                 :protocol cache)))
+         (gc-strategy 
+          (unless interactive
+            (install-gc-strategy nil :tenure nil :burst t :verbose t)))
          %client%)
     (declare (special %client%))
 
@@ -65,12 +68,9 @@
       (status :text message)
       (meter :value 0))
 
-    (when (or purge #+:expand t)
-      (install-gc-strategy nil :tenure nil :burst t :verbose t))
-    
     (loop
         with increment = (and meter (/ 1 (if items (length items) 1)))
-        with frame = (unless #-:expand purge #+:expand nil
+        with frame = (unless #-:expand strip #+:expand nil
                        (clim:make-application-frame 'lkb::compare-frame))
         with title = (format 
                       nil 
@@ -81,7 +81,7 @@
         initially
           #+:debug
           (setf *frame* frame)
-          (unless #-:expand purge #+:expand nil
+          (unless #-:expand strip #+:expand nil
             (setf (lkb::compare-frame-current-chart frame) nil)
             (setf (clim:frame-pretty-name frame) title)
             (setf (lkb::compare-frame-controller frame) *current-process*))
@@ -90,7 +90,7 @@
         for status = (when (integerp i-id) 
                        (browse-tree 
                         data i-id frame 
-                        :cache cache :title title :purge purge
+                        :cache cache :title title :strip strip
                         :verbose verbose :stream stream))
         for action = (get-field :status status)
         for offset = (or (get-field :offset status) 1)
@@ -109,7 +109,7 @@
              (when (eq action :save) (incf (aref annotated position)))
              (setf position 
                (if (= position (- nitems 1))
-                 (if #+:expand t #-:expand purge nil (- nitems 1))
+                 (if #+:expand t #-:expand strip nil (- nitems 1))
                  (+ position offset))))
             (:last (setf position (- nitems 1))))
         finally
@@ -118,13 +118,14 @@
             (mp:process-kill %client%)))
   
     (when cache (flush-cache cache :verbose verbose))
+    (when gc-strategy (restore-gc-strategy gc-strategy))
     (purge-profile-cache data)
     
     (when meter
       (status :text (format nil "~a done" message) :duration 10)
       (meter :value 1))))
 
-(defun browse-tree (data i-id frame &key title cache purge verbose stream)
+(defun browse-tree (data i-id frame &key title cache strip verbose stream)
   
   (declare (special %client%))
 
@@ -171,7 +172,7 @@
                          foo confidence version date user)
                         "")))
            (results (get-field :results item))
-           (edges (unless (or #-:expand purge #+:expand (null trees))
+           (edges (unless (or #-:expand strip #+:expand (null trees))
                     (loop
                         with edges
                         for result in results
@@ -199,14 +200,14 @@
                                  "parse-id == ~a && version == ~a" 
                                  parse-id version) 
                                 data)))
-           (discriminants (unless #-:expand purge #+:expand nil
+           (discriminants (unless #-:expand strip #+:expand nil
                             (reconstruct-discriminants decisions)))
            (lkb::*parse-record* edges))
       (declare (ignore active))
 
-      (when purge
+      (when strip
         (if trees
-          (write-tree purge (first trees) :cache cache)
+          (write-tree strip (first trees) :cache cache)
           (let* ((user (current-user))
                  (time (current-time :long :tsdb))
                  (tree (pairlis '(:parse-id 
@@ -215,10 +216,10 @@
                                 (list parse-id 
                                       0 -1 -1
                                       user time time ""))))
-            (write-tree purge tree :cache cache)))
+            (write-tree strip tree :cache cache)))
         (loop
             for decision in decisions
-            do (write-decision purge decision :cache cache))
+            do (write-decision strip decision :cache cache))
         #-:expand
         (return-from browse-tree (acons :status :save nil)))
 
@@ -300,7 +301,7 @@
                 for edge = (get tree 'lkb::edge-record)
                 for id = (when (lkb::edge-p edge) (lkb::edge-score edge))
                 do
-                  (write-preference (or purge data)
+                  (write-preference (or strip data)
                                     (pairlis '(:parse-id 
                                                :t-version :result-id)
                                              (list parse-id

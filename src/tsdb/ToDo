@@ -6,6 +6,8 @@
 open issues:
 ------------
 
+[02-jun-02] - analyze and fix sudden failure in curve fitting;
+
 [31-jan-00] - incorporate curve fitting in graph() PicTeX output;
 
 [01-sep-99] - change `gcs' field to :string; record complete information;

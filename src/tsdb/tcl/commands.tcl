@@ -435,8 +435,9 @@ proc tsdb_browse {code {condition ""} {globalp 1} {profile ""}} {
       return 0;
     }
     trees {
-      set command [format "(trees \"%s\" :condition \"%s\")" \
-                     $profile $condition];
+      set command [format "(trees \"%s\" :condition \"%s\" :interactive %s)" \
+                     $profile $condition \
+                     [lispify_truth_value [expr {! $globalp}]]];
       send_to_lisp :event $command;
       return 0;
     }

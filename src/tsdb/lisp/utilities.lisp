@@ -381,7 +381,7 @@
                      (make-pathname :directory data :name "item.gz"))
                     :ro)
                    (t :rw)))
-                 (chart
+                 (rulep
                   (unless skeletonp
                     (let ((n (tcount data "rule" :absolute t :quiet t)))
                       (and n (not (zerop n))))))
@@ -390,7 +390,7 @@
             (pairlis (list :database 
                            :path :status :items :parses :chart)
                      (list (namestring language) 
-                           data status items parses chart))))))))
+                           data status items parses rulep))))))))
 
 (defun subdirectories (path)
   (let* ((path (if (stringp path) path (namestring path)))

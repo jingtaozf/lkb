@@ -184,6 +184,10 @@ proc update_condition_cascade {{active ""} {context "condition"}} {
 
   global globals phenomena;
 
+  set fields {wellformed illformed 
+              analyzed ambiguous unanalyzed unproblematic
+              rejected resolved reduced unannotated};
+
   if {[regexp {^[0-9]+$} $active]} {
     set globals($context,null) 0;
   } elseif {$active == "wellformed"} {
@@ -195,15 +199,41 @@ proc update_condition_cascade {{active ""} {context "condition"}} {
   } elseif {$active == "analyzed"} {
     set globals($context,null) 0;
     set globals($context,unanalyzed) 0;
+    set globals($context,ambiguous) 0;
+  } elseif {$active == "ambiguous"} {
+    set globals($context,null) 0;
+    set globals($context,analyzed) 0;
+    set globals($context,unanalyzed) 0;
   } elseif {$active == "unanalyzed"} {
     set globals($context,null) 0;
     set globals($context,analyzed) 0;
+    set globals($context,ambiguous) 0;
   } elseif {$active == "unproblematic"} {
     set globals($context,null) 0;
+  } elseif {$active == "rejected"} {
+    set globals($context,null) 0;
+    set globals($context,resolved) 0;
+    set globals($context,reduced) 0;
+    set globals($context,unannotated) 0;
+  } elseif {$active == "resolved"} {
+    set globals($context,null) 0;
+    set globals($context,rejected) 0;
+    set globals($context,reduced) 0;
+    set globals($context,unannotated) 0;
+  } elseif {$active == "reduced"} {
+    set globals($context,null) 0;
+    set globals($context,rejected) 0;
+    set globals($context,resolved) 0;
+    set globals($context,unannotated) 0;
+  } elseif {$active == "unannotated"} {
+    set globals($context,null) 0;
+    set globals($context,rejected) 0;
+    set globals($context,resolved) 0;
+    set globals($context,reduced) 0;
   } elseif {$active == "null" || 
             ($active != "phenomena" && $globals($context,null))} {
     set globals($context,null) 1;
-    foreach i {wellformed illformed analyzed unanalyzed unproblematic} {
+    foreach i $fields {
       set globals($context,$i) 0;
     }; # foreach
     for {set i 0} {$i < $globals($context,size)} {incr i} {
@@ -217,7 +247,7 @@ proc update_condition_cascade {{active ""} {context "condition"}} {
     if {!$globals(phenomena,$context,all)} {
       set globals($context,null) 0;
     } else {
-      foreach i {wellformed illformed analyzed unanalyzed unproblematic} {
+      foreach i $fields {
         if {[info exists globals($context,$i)] && $globals($context,$i)} {
           set globals($context,null) 0;
         }; # if
@@ -268,6 +298,10 @@ proc update_condition_cascade {{active ""} {context "condition"}} {
       -variable globals($context,analyzed) \
       -command "update_condition_cascade analyzed $context";
     $menu add checkbutton \
+      -label "Ambiguous (`readings > 1')" \
+      -variable globals($context,ambiguous) \
+      -command "update_condition_cascade ambiguous $context";
+    $menu add checkbutton \
       -label "Unanalyzed (`readings = 0')" \
       -variable globals($context,unanalyzed) \
       -command "update_condition_cascade unanalyzed $context";
@@ -275,6 +309,24 @@ proc update_condition_cascade {{active ""} {context "condition"}} {
       -label "Unproblematic (`readings != -1')" \
       -variable globals($context,unproblematic) \
       -command "update_condition_cascade unproblematic $context";
+    $menu add separator
+
+    $menu add checkbutton \
+      -label "Rejected (`t-active = 0')" \
+      -variable globals($context,rejected) \
+      -command "update_condition_cascade rejected $context";
+    $menu add checkbutton \
+      -label "Resolved (`t-active = 1')" \
+      -variable globals($context,resolved) \
+      -command "update_condition_cascade resolved $context";
+    $menu add checkbutton \
+      -label "Reduced (`t-active > 1')" \
+      -variable globals($context,reduced) \
+      -command "update_condition_cascade reduced $context";
+    $menu add checkbutton \
+      -label "Unannotated (`t-active = -1')" \
+      -variable globals($context,unannotated) \
+      -command "update_condition_cascade unannotated $context";
 
     history_move $context end 1;
     for {set i 0} {$i < 10} {incr i} {
@@ -344,6 +396,15 @@ proc update_condition_cascade {{active ""} {context "condition"}} {
       }; # else
     }; # if
 
+    if {$globals($context,ambiguous)} {
+      if {$globals($context) == ""} {
+        set globals($context) [lispify_string "(readings > 1)"];
+      } else {
+        set globals($context) \
+          "$globals($context) and [lispify_string "(readings > 1)"]";
+      }; # else
+    }; # if
+
     if {$globals($context,unanalyzed)} {
       if {$globals($context) == ""} {
         set globals($context) [lispify_string "(readings = 0)"];
@@ -359,6 +420,42 @@ proc update_condition_cascade {{active ""} {context "condition"}} {
       } else {
         set globals($context) \
           "$globals($context) and [lispify_string "(readings != -1)"]";
+      }; # else
+    }; # if
+
+    if {$globals($context,rejected)} {
+      if {$globals($context) == ""} {
+        set globals($context) [lispify_string "(t-active == 0)"];
+      } else {
+        set globals($context) \
+          "$globals($context) and [lispify_string "(t-active == 0)"]";
+      }; # else
+    }; # if
+
+    if {$globals($context,resolved)} {
+      if {$globals($context) == ""} {
+        set globals($context) [lispify_string "(t-active == 1)"];
+      } else {
+        set globals($context) \
+          "$globals($context) and [lispify_string "(t-active == 1)"]";
+      }; # else
+    }; # if
+
+    if {$globals($context,reduced)} {
+      if {$globals($context) == ""} {
+        set globals($context) [lispify_string "(t-active > 1)"];
+      } else {
+        set globals($context) \
+          "$globals($context) and [lispify_string "(t-active > 1)"]";
+      }; # else
+    }; # if
+
+    if {$globals($context,unannotated)} {
+      if {$globals($context) == ""} {
+        set globals($context) [lispify_string "(t-active == -1)"];
+      } else {
+        set globals($context) \
+          "$globals($context) and [lispify_string "(t-active == -1)"]";
       }; # else
     }; # if
 
@@ -443,7 +540,7 @@ proc update_graph_cascade {code} {
   global globals;
 
   set fields {first total tcpu tgc 
-              p-ftasks p-etasks p-stasks 
+              readings p-ftasks p-etasks p-stasks 
               aedges pedges raedges rpedges
               trees utcpu uspace 
               subsumptions equivalence proactive retroactive
@@ -485,7 +582,7 @@ proc update_graph_cascade {code} {
     if {$globals(graph,values) != "tasks"} {
       set globals(graph,values) "";
     }; # if
-  } elseif {$code == "aedges" || $code == "pedges"
+  } elseif {$code == "readings" || $code == "aedges" || $code == "pedges"
             || $code == "raedges" || $code == "rpedges"} {
     foreach field {first total tcpu tgc p-ftasks p-etasks p-stasks} {
       set globals(graph,$field) 0;

@@ -407,7 +407,7 @@
                    (arguments (rest (rest arguments)))
                    (meter (make-meter 0 1))
                    (status (apply #'browse-trees
-                                  (append (list source :purge target)
+                                  (append (list source :strip target)
                                           arguments
                                           (list :meter meter)))))
               (if (null status)
