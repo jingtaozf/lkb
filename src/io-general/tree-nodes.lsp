@@ -4,8 +4,6 @@
 ;;; 
 ;;; Ann Copestake
 
-(in-package :user)
-
 ;;; generator output functions which are not dialect specific
 
 (defun show-gen-result nil
