@@ -233,6 +233,26 @@
         finally (return (unless (zerop n) n)))))
 
 ;;;
+;;; initially mostly for HTML output, though maybe of general utility?  LOGON
+;;; with its liberal use of the MRS framework has various `types' of EP, e.g.
+;;; :fragment relations used to sew together connected pieces of semantics in
+;;; robust mode, :token EPs (the low end of robustness: a piece of unanalyzed
+;;; source langguage), and punctuation EPs (which maybe could be :token EPs).
+;;; the following is intended as a user function, i.e. a way of adding colour
+;;; to the HTML output.                                        (3-nov-04; oe)
+;;;
+(defun determine-ep-class (ep)
+  (if (member (rel-pred ep) *semi-fragment-relations* :test #'equal)
+    :fragment
+    nil))
+
+;;;
+;;; for similar reasons, do roughly the same thing for the MRS as a whole.
+;;;
+(defun determine-mrs-class (mrs)
+  (when (fragmentp mrs) :fragment))
+
+;;;
 ;;; a couple of RMRS interface functions (mostly) for [incr tsdb()]; we started
 ;;; this collection in `rmrs/interface.lisp', but the ECL -- PET linking would
 ;;; be unhappy about duplicate file names, for a silly reason.
