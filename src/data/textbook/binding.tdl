@@ -71,33 +71,11 @@ arg_real-principle-spr-empty := word+arg_real &
 
 
 #|
-;;; I'm leaving this as an example of how to leave the GAP list open
-;;; to do more exotic extraction.  I'm going to limit the extraction to
-;;; single elements to help with parsing speed, and geneation undestandability.
+;;; I'm leaving this as an example of how to leave the GAP list can be left
+;;; too general.  I'm currently limiting extraction to topcial elements.
+;;; This helps with parsing speed, makes geneated senetences sensible.
 ;;; CCB
 
-:begin :instance.
-arg_real-principle-GAP1 :=  word+arg_real &
-[ SYN [ HEAD #head,
-        SPR #spr,  
-	COMPS #rest,
-	GAP [ LIST < #1 . #gap >,
-	      LAST #gap_last ] ],
-  SEM #sem,
-  ARG-ST #arg-st,
-
-  ARGS < word+arg_real & [ SYN [  HEAD #head,
-				  SPR #spr,
-				  COMPS < #1 . #rest >,
-				  GAP [ LIST #gap,
-					LAST #gap_last ] ],
-			   SEM #sem,
-			   ARG-ST #arg-st] > ].
-:end :instance.
-
-|#
-
-#|  Temoparially disabling GAP to speed things up -- CCB
 
 ;;;;;
 
@@ -174,7 +152,87 @@ arg_real-principle-GAP3 :=  word+arg_real &
 
 ;;;;;
 
+
+
 |#
+
+
+;;;;;
+
+:begin :instance.
+arg_real-principle-GAP1 :=  word+arg_real &
+[ SYN [ HEAD #head,
+        SPR #spr,  
+	COMPS #rest,
+	GAP <! #1 & [SYN [HEAD topic]] !> ],
+  SEM #sem,
+  ARG-ST #arg-st,
+
+  ARGS < word+arg_real & [ SYN [  HEAD #head,
+				  SPR #spr,
+				  COMPS < #1 . #rest >,
+				  GAP <! !> ],
+			   SEM #sem,
+			   ARG-ST #arg-st] > ].
+:end :instance.
+
+
+
+:begin :instance.
+arg_real-principle-GAP2 :=  word+arg_real &
+[ SYN [ HEAD #head,
+        SPR #spr,  
+	COMPS < #1 >,
+	GAP <! #2 & [SYN [HEAD topic]] !> ],
+  SEM #sem,
+  ARG-ST #arg-st,
+
+  ARGS < word+arg_real & [ SYN [  HEAD #head,
+				  SPR #spr,
+				  COMPS < #1, #2 >,
+				  GAP <! !> ],
+			   SEM #sem,
+			   ARG-ST #arg-st] > ].
+:end :instance.
+
+:begin :instance.
+arg_real-principle-GAP2b :=  word+arg_real &
+[ SYN [ HEAD #head,
+        SPR #spr,  
+	COMPS < #1, #3 >,
+	GAP <! #2 & [SYN [HEAD topic]] !> ],
+  SEM #sem,
+  ARG-ST #arg-st,
+
+  ARGS < word+arg_real & [ SYN [  HEAD topic & #head,
+				  SPR #spr,
+				  COMPS < #1, #2, #3 >,
+				  GAP <! !> ],
+			   SEM #sem,
+			   ARG-ST #arg-st] > ].
+:end :instance.
+
+
+:begin :instance.
+arg_real-principle-GAP3 :=  word+arg_real &
+[ SYN [ HEAD #head,
+        SPR #spr,  
+	COMPS < #1, #2 >,
+	GAP <! #3 & [SYN [HEAD topic]] !> ],
+  SEM #sem,
+  ARG-ST #arg-st,
+
+  ARGS < word+arg_real & [ SYN [  HEAD #head,
+				  SPR #spr,
+				  COMPS < #1, #2, #3 >,
+				  GAP <! !> ],
+			   SEM #sem,
+			   ARG-ST #arg-st] > ].
+:end :instance.
+
+;;;;;
+
+
 
 
 

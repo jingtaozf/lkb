@@ -64,7 +64,11 @@ verb := pos &
    NEG boolean,
    ANA false].
 
-nominal-cat := pos & 
+;;; Added "topic" to the heirarchy to restrict what can be topicalized
+;;; though the GAP and head-filler rules.  CCB
+topic :< pos.
+
+nominal-cat := topic & 
  [ AGR agr-cat,
    COUNT boolean ].
 
@@ -83,7 +87,7 @@ conj := pos &
 mod-type := *value* &
   [ MOD list-of-synsem-structs ].
 
-adv := pos & mod-type &
+adv := topic & mod-type &
  [ ANA false ].
 
 adj := pos & mod-type &
@@ -286,10 +290,26 @@ dummy-idiom-lxm := const-lxm &
 ; for dummy subjects and objects.  SMG
 
 ;;; Attempting to abrieviate the notation -- CCB
-;NP := synsem-struc &
-;[ SYN [ HEAD noun & [ CASE nom ],
-;	SPR < >,
-;	COMPS < >  ] ].
+NP := gram-cat &
+[ HEAD noun,
+  SPR < > ].
+
+N := gram-cat & 
+[ HEAD noun,
+  SPR < [ ] > ].
+
+VP := gram-cat &
+[ HEAD verb,
+  SPR < [ ] > ].
+
+V := gram-cat &
+[ HEAD verb ].
+
+S := gram-cat &
+[ HEAD verb,
+  SPR < >,
+  COMPS < > ].
+
 
 
 verb-lxm := infl-lxm & 
@@ -301,10 +321,13 @@ verb-lxm := infl-lxm &
    SEM [INDEX #1,
 	MODE prop,
 	RESTR <! predication & [SIT #1] !> ],
-   ARG-ST < [ SYN [ HEAD noun & [ FORM /l normal,
-   				  CASE nom ],
-	      SPR < >,
-	      COMPS < >  ] ],  ...  > ].
+   ARG-ST < [ SYN NP ], ... > ].
+
+
+; [ SYN [ HEAD noun & [ FORM /l normal,
+;   				  CASE nom ],
+;	      SPR < >,
+;	      COMPS < >  ] ],  ...  > ].
 
 iv-lxm := verb-lxm & iv-sem &
  [ ARG-ST < [ ] > ].
@@ -394,6 +417,7 @@ lexeme := lex-item &
  [ AFFIX mod_affix,
    ORTH #orth,
    SYN [ GAP <! !> ],
+   SEM [ RESTR /l <! !> ],
    ARGS < [ ORTH #orth ] > ].
 
 
@@ -449,6 +473,9 @@ label :=  synsem-struc &
    [ LABEL-NAME symbol ],
     status: label.
 
+phrase-label := label & phrase.
+
+word-label := label & word.
 
 meta := synsem-struc &
   [  META-PREFIX symbol,

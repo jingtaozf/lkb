@@ -572,6 +572,8 @@ on_1 := mkp-lxm &
 
 ; <<>>
 
+
+
 :begin :instance.
 on_2 := pdp-lxm &
 [ ORTH <! "on" !>,
@@ -915,8 +917,10 @@ rain_1 := verb-lxm &
 :begin :instance.
 keep_1 := verb-lxm &
 [ ORTH <! "keep" !>,
-  ARG-ST < [ ], [SYN [HEAD noun & [FORM f_tabs] ] ], [SYN [HEAD prep & [FORM f_on] ] ] >,
-  SEM  [ RESTR <! [ RELN r_observe ] !> ] ]. 
+  ARG-ST < [SEM [INDEX #1] ], [SYN [HEAD noun & [FORM f_tabs] ]  ], [SYN [HEAD prep & [FORM f_on] ], SEM [INDEX #2] ] >,
+  SEM  [ RESTR <! stv_pred & [ RELN r_observe,
+                               ACT #1,
+                               UND #2 ] !> ] ]. 
 :end :instance.
 
 ; <<>>
@@ -924,10 +928,17 @@ keep_1 := verb-lxm &
 :begin :instance.
 take_1 := verb-lxm &
 [ ORTH <! "take" !>,
-  ARG-ST < [ ], [SYN [HEAD noun & [FORM f_advantage] ] ], [SYN [HEAD prep & [FORM f_of,
-  	ANA #agr],
-  	SPR < > ] ] >,
-  SEM  [ RESTR <! [ RELN r_exploit ] !> ] ]. 
+  ARG-ST < [SEM [INDEX #1] ], [SYN [HEAD noun & [FORM f_advantage] ] ], 
+
+                        [SYN [HEAD prep & [FORM f_of,
+  	                      ANA #agr],
+  	                      SPR < > ],
+                         SEM [ INDEX #2 ] ] >,
+  SEM  [ INDEX #index,
+         RESTR <! stv_pred & [ RELN r_exploit,
+                               SIT #index,
+                               ACT #1,
+                               UND #2 ] !> ] ]. 
 :end :instance.
 
 ; <<>>
@@ -1656,6 +1667,14 @@ examine_1 := stv-lxm &
 ; <<>>
 
 :begin :instance.
+exploit_1 := stv-lxm &
+[ ORTH <! "exploit" !>,
+  SEM [ RESTR <! [ RELN r_exploit] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
 find_1 := stv-lxm &
 [ ORTH <! "find" !>,
   SEM [ RESTR <! [ RELN r_find] !> ] ].
@@ -1835,6 +1854,14 @@ love_1 := stv-lxm &
 meet_1 := stv-lxm &
 [ ORTH <! "meet" !>,
   SEM [ RESTR <! [ RELN r_meet] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+observe_1 := stv-lxm &
+[ ORTH <! "observe" !>,
+  SEM [ RESTR <! [ RELN r_observe] !> ] ].
 :end :instance.
 
 ; <<>>
@@ -3530,8 +3557,8 @@ table_1 := cn-lxm &
 ; <<>>
 
 :begin :instance.
-tabs_2 := cn-lxm &
-[ ORTH <! "tabs" !>,
+tab_2 := cn-lxm &
+[ ORTH <! "tab" !>,
   SEM [ RESTR <! [ RELN r_tabs] !> ] ].
 :end :instance.
 

@@ -88,9 +88,7 @@ bare-plural-rule := unary-grule &
 :end :instance.
 
 
-#|  
-;;; turn this back on when all of the cn lexical entries are correctly 
-;;; marked. CCB
+
 :begin :instance.
 bare-mass-noun-rule := unary-grule &
 [ SYN [ HEAD noun & [COUNT false,
@@ -106,8 +104,9 @@ bare-mass-noun-rule := unary-grule &
 	     COMPS #comps],
 	SEM #sem ] ].
 :end :instance.
-|#
 
+#|
+;;; This head filler rule allows for multiple extractions.
 :begin :instance.
 head-filler-rule := birule-headfinal-minusGAP &
 [  SYN [ SPR < >,
@@ -121,6 +120,22 @@ head-filler-rule := birule-headfinal-minusGAP &
 		      COMPS < >,
 		      GAP [ LIST *cons* & < #1 . #rest>,
 			    LAST *null* & #last ] ],
+       SEM [MODE prop ] ] ].
+:end :instance.
+|#
+
+
+:begin :instance.
+head-filler-rule := birule-headfinal-minusGAP &
+[  SYN [ SPR < >,
+	 COMPS < >,
+	 GAP <! !> ],
+
+   NH1 #1 & [ SYN [ GAP <! !> ] ],
+   H [ SYN [ HEAD verb & [ FORM fin ],
+		      SPR < >,
+		      COMPS < >,
+		      GAP <! #1 !> ],
        SEM [MODE prop ] ] ].
 :end :instance.
 

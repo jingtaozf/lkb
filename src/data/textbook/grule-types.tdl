@@ -26,7 +26,7 @@ head-feature-principle := grule & head-dtr-type &
 
    H [ SYN [ HEAD #head ] ] ].
 
-valence-principle :< grule.
+;valence-principle :< grule.
 ;;; CCB when we introduce defaults we should add the following
 ;;; constraints as the default for headed-rules.
 ; & head-dtr-type & 
@@ -44,8 +44,8 @@ semantic-inheritance-principle := grule & head-dtr-type &
 	     INDEX #index ] ] ].
 
 headed-rule := head-feature-principle & 
-               semantic-inheritance-principle & 
-	       valence-principle.
+               semantic-inheritance-principle.
+	
 
 
 semantic-compositionality-unary := grule &

@@ -18,114 +18,97 @@ slash := meta &
 
 :begin :instance.
 
-s := label & 
-  [  SYN [ HEAD verb,
-	  SPR < >,
-	  COMPS < > ],
+s-node := label & 
+  [  SYN S,
     LABEL-NAME "S" ].
 
 :end :instance.
 
 
-:begin :instance.
-
-np :=  label & 
-  [ SYN [ HEAD noun,
-	  SPR < > ],
-    LABEL-NAME "NP" ].
-
-:end :instance.
-
 
 :begin :instance.
-
-n := label & 
-  [ SYN [ HEAD noun,
-	  SPR < [ ] > ],
+n-node := word-label & 
+  [ SYN [ HEAD noun ],
     LABEL-NAME "N" ].
-
 :end :instance.
 
 
 :begin :instance.
-
-vp :=  label & 
-   [ SYN [ HEAD verb,
-	   SPR < [ ] > ],
-     LABEL-NAME "VP" ].
-
+nom-node :=  phrase-label & 
+  [ SYN [ HEAD noun,
+          SPR < [ ] > ],
+    LABEL-NAME "NOM" ].
 :end :instance.
 
 
 :begin :instance.
+np-node :=  phrase-label & 
+  [ SYN [ HEAD noun ],
+    LABEL-NAME "NP" ].
+:end :instance.
 
-v := label &
+
+
+:begin :instance.
+v-node := word-label &
   [ SYN [ HEAD verb ],
     LABEL-NAME "V" ].
-
 :end :instance.
 
 
 :begin :instance.
+vp-node :=  phrase-label & 
+   [ SYN [ HEAD verb ],
+     LABEL-NAME "VP" ].
+:end :instance.
 
-det := label &
+
+
+:begin :instance.
+det-node := label &
   [ SYN [ HEAD det ],
     LABEL-NAME "DET" ].
-
 :end :instance.
 
 
 :begin :instance.
-
-pp :=  label &
-  [ SYN [ HEAD prep,
-	  COMPS < > ],
-    LABEL-NAME "PP" ].
-
-:end :instance.
-
-
-:begin :instance.
-
-p := label &
-  [ SYN [ HEAD prep,
-	  COMPS < [ ] > ],
+p-node := word-label &
+  [ SYN [ HEAD prep ],
     LABEL-NAME "P" ].
-
 :end :instance.
 
 
 :begin :instance.
+pp-node :=  phrase-label &
+  [ SYN [ HEAD prep ],
+    LABEL-NAME "PP" ].
+:end :instance.
 
-adv := label &
+
+
+:begin :instance.
+adv-node := label &
   [ SYN [ HEAD adv ],
     LABEL-NAME "ADV" ].
-
 :end :instance.
 
 
 :begin :instance.
-
-adj := label &
+adj-node := label &
   [ SYN [ HEAD adj ],
     LABEL-NAME "ADJ" ].
-
 :end :instance.
 
 
 :begin :instance.
-
-comp := label &
+comp-node := label &
   [ SYN [ HEAD comp ],
     LABEL-NAME "COMP" ].
-
 :end :instance.
 
 
 :begin :instance.
-
-conj := label &
+conj-node := label &
   [ SYN [ HEAD conj ],
     LABEL-NAME "CONJ" ].
-
 :end :instance.

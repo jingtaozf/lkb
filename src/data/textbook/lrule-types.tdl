@@ -22,7 +22,9 @@ lrule-super :< lex-item.
 ; word+arg_real, and word+arg_real+ana_agr.  The latter two types correspond 
 ; fairly closely to the book's notion of Lexical-Structural Description.  CCB
  
-word+arg_real :< lrule-super.
+word+arg_real := lrule-super &
+[ ORTH #orth,
+  ARGS < [ ORTH #orth ] > ].
  
 ;word+arg_real+ana_agr :< lrule-super.
 

@@ -69,57 +69,73 @@ orv_pred :< scv_pred.
 ocv_pred := act_pred & und_pred & arg_pred.
 
 iv-sem := lex-item &
-[ SEM [ INDEX #ind,
-	RESTR <! iv_pred & [ SIT #ind,
+[ SEM [ INDEX #index,
+	RESTR <! iv_pred & [ SIT #index,
 			     ACT #1 ] !> ],
   ARG-ST < [ SEM [ INDEX #1 ] ] > ].
 
 piv-sem := lex-item &
-[ SEM [ INDEX #ind,
-	RESTR <! piv_pred & [ SIT #ind,
+[ SEM [ INDEX #index,
+	RESTR <! piv_pred & [ SIT #index,
 			      ACT #1, 
 			      THM #2 ] !> ],
   ARG-ST < [ SEM [ INDEX #1 ] ], [ SEM [ INDEX #2 ] ]  > ].
 
 ctv-sem := lex-item &
-[ SEM [ RESTR <! ctv_pred & [ ACT #1,
+[ SEM [ INDEX #index,
+        RESTR <! ctv_pred & [ SIT #index,
+                              ACT #1,
 			      ARG #2 ] !> ],
   ARG-ST < [ SEM [ INDEX #1 ] ], [ SEM [ INDEX #2 ] ] > ].
   
 stv-sem := lex-item &
-[ SEM [ RESTR <! stv_pred & [ ACT #1, 
+[ SEM [ INDEX #index,
+        RESTR <! stv_pred & [ SIT #index,
+                              ACT #1, 
 			      UND #2 ] !> ],
   ARG-ST < [SEM [INDEX #1 ] ], [ SEM [INDEX #2 ] ] > ].
 
 dtv-sem := lex-item &
-[ SEM [ RESTR <! dtv_pred & [ ACT #1, 
+[ SEM [ INDEX #index,
+        RESTR <! dtv_pred & [ SIT #index,
+			      ACT #1, 
 			      UND #2, 
 			      THM #3 ] !> ],
-  ARG-ST < [ SEM [ INDEX #1 ] ],  [ SEM [ INDEX #2 ] ], [ SEM [ INDEX #3 ] ] > ].
+  ARG-ST < [ SEM [ INDEX #1 ] ], [ SEM [ INDEX #2 ] ], [ SEM [ INDEX #3 ] ] > ].
   
 ptv-sem := lex-item &
- [ SEM [ RESTR <! dtv_pred & [ ACT #1, 
+ [ SEM [ INDEX #index,
+         RESTR <! dtv_pred & [ SIT #index,
+			       ACT #1, 
 			       UND #2, 
 			       THM #3 ] !> ],
    ARG-ST < [ SEM [ INDEX #1 ] ],  [ SEM [ INDEX #3 ] ],  [ SEM [ INDEX #2 ] ] > ].  
    
 srv-sem := lex-item &
-[ SEM [	RESTR <! srv_pred & [ ARG #3 ] !> ],
+[ SEM [	INDEX #index,
+        RESTR <! srv_pred & [ SIT #index,
+			      ARG #3 ] !> ],
   ARG-ST < #4 ,  [ SEM [INDEX #3] ] > ].
 
 scv-sem := lex-item &
-[ SEM [	RESTR <! scv_pred & [ ACT #1,
+[ SEM [ INDEX #index,
+       	RESTR <! scv_pred & [ SIT #index,
+			      ACT #1,
 			      ARG #3 ] !> ],
   ARG-ST < [ SEM [INDEX #1 ] ], [ SEM [INDEX #3] ] > ].
 
 ;;; Are the sematics right for this one?  It looks weird.  CCB		  
 orv-sem := lex-item &
-[ SEM [	RESTR <! orv_pred & [ ACT #1,
+[ SEM [ INDEX #index,
+       	RESTR <! orv_pred & [ SIT #index,
+			      ACT #1,
 			      ARG #3 ] !> ],
   ARG-ST < [ SEM [ INDEX #1 ] ],  [ ],  [SEM [INDEX #3] ] > ].
 
 ocv-sem := lex-item &
-[ SEM [ RESTR <! ocv_pred & [ ACT #1, 
+[ SEM [ INDEX #index,
+        RESTR <! ocv_pred & [ SIT #index,
+			      ACT #1, 
 			      UND #2,
 			      ARG #3 ] !> ],
   ARG-ST < [ SEM [ INDEX #1 ] ] , [ SEM [ INDEX #2 ] ], [ SEM [INDEX #3 ] ] > ].
