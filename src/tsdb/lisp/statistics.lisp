@@ -430,7 +430,13 @@
                                    (eql key (get-field :parse-id result)))
                         collect (pop results)))
                 when matches
-                do (nconc item (acons :results matches nil))))
+                do (nconc 
+                    item 
+                    (acons :results (sort 
+                                     matches #'< 
+                                     :key #'(lambda (foo)
+                                              (get-field :result-id foo)))
+                           nil))))
           (when trees
             (unless sorted 
               (setf sorted 
@@ -2318,8 +2324,19 @@
             (:tcl
              (format
               stream
-              "layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%"
-              (- row 1)))))
+              "layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%~
+               layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%"
+              (- row 1) row)
+             (format
+              stream
+              "cell ~d 1 -contents {~a} -format total~%~
+               cell ~d 2 -contents {-} -format total~%~
+               cell ~d 3 -contents {-} -format total~%~
+               cell ~d 4 -contents {-} -format total~%~
+               cell ~d 5 -contents {-} -format total~%~
+               cell ~d 6 -contents {-} -format total~%"
+              row (- row 2) row row row row row))))
+             
     (when meter
       (status :text (format nil "~a done" message) :duration 10)
       (meter :value 1))

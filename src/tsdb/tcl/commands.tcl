@@ -565,7 +565,7 @@ proc tsdb_browse {code {condition ""} {globalp 1} {profile ""} {goldp 0}} {
     runs {
       set attributes "(\"run-id\" \"r-comment\" \"run-comment\" \"platform\" \"application\" \"grammar\" \"avms\" \"sorts\" \"templates\" \"lexicon\" \"lrules\" \"rules\" \"user\" \"host\" \"start\" \"end\" \"items\" \"status\")";
       set relations "(\"run\")";
-      set condition "";
+      set condition nil;
     }
     parses {
       set attributes "(\"i-id\" \"i-input\" \"readings\" \"words\" \"first\" \"total\" \"tcpu\" \"tgc\" \"p-ftasks\" \"p-etasks\" \"p-stasks\" \"aedges\" \"pedges\"  \"raedges\" \"rpedges\" \"comment\")";
@@ -631,8 +631,16 @@ proc tsdb_browse {code {condition ""} {globalp 1} {profile ""} {goldp 0}} {
   }; # switch
 
   if {[info exists attributes]} {
-    set command [format "(select \"%s\" %s nil %s \"%s\")" \
+    if {$condition == ""} {
+      set command [format "(select \"%s\" %s nil %s)" \
+                   $profile $attributes $relations];
+    } elseif {$condition == "nil"} {
+      set command [format "(select \"%s\" %s nil %s \"\")" \
+                   $profile $attributes $relations];
+    } else {
+      set command [format "(select \"%s\" %s nil %s \"%s\")" \
                    $profile $attributes $relations $condition];
+    }; # else
     send_to_lisp :event $command;
   }; # if
   
@@ -1218,6 +1226,7 @@ proc tsdb_filters {} {
   set code "(";
   if {$globals(filters,sparseness)} { set code "$code :sparseness"; }
   if {$globals(filters,predicate)} { set code "$code :predicate"; }
+  if {$globals(filters,syntax)} { set code "$code :syntax"; }
   if {$globals(filters,scope)} { set code "$code :scope"; }
   if {$globals(filters,fragmentation)} { set code "$code :fragmentation"; }
   if {$globals(filters,connectivity)} { set code "$code :connectivity"; }

@@ -30,6 +30,20 @@
   `(or (rest (assoc ,field ,alist)) ,default))
 
 (defmacro find-tsdb-directory (language)
+  `(let* ((home (make-pathname :directory *tsdb-home*))
+          (suffix (pathname-directory (make-pathname :directory ,language)))
+          (path (append (pathname-directory home) (rest suffix)))
+          (data (make-pathname :directory path)))
+     (namestring data)))
+;;;
+;;; _fix_me_
+;;; for some weird reason, this was creating garbage strings when called from
+;;; inside tsdb-do-create() but not when called interactively; that makes it a
+;;; little hard to debug, but we did not need the generality of dir-append(),
+;;; anyway ...                                                  (28-feb-04; oe)
+;;;
+#+:mystery
+(defmacro find-tsdb-directory (language)
   `(let* ((data (dir-append (make-pathname :directory *tsdb-home*)
                             (list :relative ,language))))
      (namestring data)))

@@ -149,6 +149,7 @@
 
 (defun slave (&optional orphan)
 
+  (initialize-tsdb)
   (let* ((self (pvm_register t *pvm-debug-p*))
          (master (if orphan nil (pvm_parent)))
          (*package* (find-package "TSDB"))

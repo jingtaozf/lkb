@@ -18,6 +18,10 @@
 
 (in-package "TSDB")
 
+(defparameter *process-suppress-duplicates* '(:mrs))
+
+(defparameter *process-exhaustive-inputs-p* nil)
+
 (defparameter *process-scope-generator-input-p* nil)
 
 (defparameter *process-pretty-print-trace-p* t)
@@ -112,6 +116,14 @@
                          (find :pvm *features*)
                          (every #'(lambda (run)
                                     (get-field :client run)) runs)))
+             ;;
+             ;; _fix_me_
+             ;; for right now, hard-wire exhaustive input processing when doing
+             ;; transfer.                                        (4-mar-04; oe)
+             ;;
+             (*process-exhaustive-inputs-p* (if (eq type :transfer)
+                                              100
+                                              *process-exhaustive-inputs-p*))
              (*tsdb-trees-hook*
               (unless interactive
                 (if burst
@@ -242,7 +254,7 @@
                      (setf item 
                        (when run
                          (enrich-item run (pop items)
-                                      :parse-id i
+                                      :type type :parse-id i
                                       :verbose verbose :stream stream)))
                      (when item
                        (when (and verbose (not burst))
@@ -670,7 +682,7 @@
   (let ((tsdb (current-tsdb)))
     (append (pairlis '(:items :tsdb) (list 0 tsdb)) run)))
 
-(defun enrich-item (run item &key (parse-id 0) verbose stream)
+(defun enrich-item (run item &key (parse-id 0) type verbose stream)
   
   (when item
     (let* ((run-id (get-field :run-id run))
@@ -718,8 +730,10 @@
                             (floor (* *tsdb-edge-factor* o-edges))
                             *tsdb-maximal-number-of-edges*))))
           (append 
-           (pairlis '(:run-id :parse-id :gc :edges :o-input :p-input :tags) 
-                    (list run-id parse-id gc edges o-input p-input tags)) 
+           (pairlis '(:run-id :parse-id :type
+                      :gc :edges :o-input :p-input :tags) 
+                    (list run-id parse-id type
+                          gc edges o-input p-input tags)) 
            item)))))))
 
 (defun print-item (item &key (stream *tsdb-io*) result interactive)
@@ -735,6 +749,9 @@
          (i-wf (get-field+ :i-wf item 1))
          (gc (get-field :gc item))
          (edges (get-field :edges item))
+         (type (get-field :type item))
+         (inputs (when (smember type '(:transfer :generate))
+                   (get-field :results item)))
          (host (get-field :host result))
          (host (if (and host (stringp host)) 
                  (subseq host 0 (position #\. host))
@@ -750,6 +767,8 @@
      "(~a) `~:[*~;~]~a' ~:[~;:~]~:[~;=~][~@[~a~]]"
      i-id (= i-wf 1) i-input 
      (eq gc :local)  (eq gc :global) edges)
+    (when inputs
+      (format stream " {~a}" (length inputs)))
     (force-output stream)))
 
 (defun process-item (item &key trees-hook semantix-hook 
@@ -799,9 +818,10 @@
            (i-input (or (and interactive (get-field :o-input item))
                         (get-field :p-input item)
                         (get-field :i-input item)))
-           (mrs (when (smember type '(:transfer :generate))
-                  (let* ((reader (find-attribute-reader :mrs))
-                         (ranks (get-field :ranks item))
+           (reader (find-attribute-reader :mrs))
+           (mrs (when (and (smember type '(:transfer :generate))
+                           (null *process-exhaustive-inputs-p*))
+                  (let* ((ranks (get-field :ranks item))
                          (top (loop
                                   for rank in ranks
                                   for foo = (get-field :rank rank)
@@ -824,39 +844,95 @@
       (gc-statistics-reset)
       (setf i-load (unless interactive #+:pvm (load_average) #-:pvm nil))
       (setf result 
-        (case type
-          (:parse
-           (parse-item i-input 
-                       :edges edges
-                       :trace interactive
-                       :exhaustive exhaustive
-                       :nanalyses nanalyses
-                       :trees-hook trees-hook
-                       :semantix-hook semantix-hook
-                       :nresults nresults
-                       :burst burst))
-          (:transfer
-           (transfer-item mrs 
-                          :string i-input
-                          :edges edges
-                          :trace interactive
-                          :exhaustive exhaustive
-                          :nanalyses nanalyses
-                          :trees-hook trees-hook
-                          :semantix-hook semantix-hook
-                          :nresults nresults
-                          :burst burst))
-          (:generate
-           (generate-item mrs 
-                          :string i-input
-                          :edges edges
-                          :trace interactive
-                          :exhaustive exhaustive
-                          :nanalyses nanalyses
-                          :trees-hook trees-hook
-                          :semantix-hook semantix-hook
-                          :nresults nresults
-                          :burst burst))))
+        (if (and *process-exhaustive-inputs-p*
+                 (smember type '(:transfer :generate)))
+          (loop
+              for inputs in (get-field :results item)
+              for i from 1 to (if (numberp *process-exhaustive-inputs-p*)
+                                *process-exhaustive-inputs-p*
+                                (length inputs))
+              for mrs = (let ((mrs (get-field :mrs inputs)))
+                          (if (and reader (stringp mrs))
+                            (funcall reader mrs)
+                            mrs))
+              for result =
+                (case type
+                  (:parse
+                   (parse-item i-input 
+                               :edges edges
+                               :trace interactive
+                               :exhaustive exhaustive
+                               :nanalyses nanalyses
+                               :trees-hook trees-hook
+                               :semantix-hook semantix-hook
+                               :nresults nresults
+                               :burst burst))
+                  (:transfer
+                   (transfer-item mrs 
+                                  :string i-input
+                                  :edges edges
+                                  :trace interactive
+                                  :exhaustive exhaustive
+                                  :nanalyses nanalyses
+                                  :trees-hook trees-hook
+                                  :semantix-hook semantix-hook
+                                  :nresults nresults
+                                  :burst burst))
+                  (:generate
+                   (generate-item mrs 
+                                  :string i-input
+                                  :edges edges
+                                  :trace interactive
+                                  :exhaustive exhaustive
+                                  :nanalyses nanalyses
+                                  :trees-hook trees-hook
+                                  :semantix-hook semantix-hook
+                                  :nresults nresults
+                                  :burst burst)))
+              when (let ((readings (get-field :readings result)))
+                     (and (numberp readings) (> readings 0)))
+              return result
+              else collect result into results
+              finally (return (first results)))
+          (case type
+            (:parse
+             (parse-item i-input 
+                         :edges edges
+                         :trace interactive
+                         :exhaustive exhaustive
+                         :nanalyses nanalyses
+                         :trees-hook trees-hook
+                         :semantix-hook semantix-hook
+                         :nresults nresults
+                         :burst burst))
+            (:transfer
+             (transfer-item mrs 
+                            :string i-input
+                            :edges edges
+                            :trace interactive
+                            :exhaustive exhaustive
+                            :nanalyses nanalyses
+                            :trees-hook trees-hook
+                            :semantix-hook semantix-hook
+                            :nresults nresults
+                            :burst burst))
+            (:generate
+             (generate-item mrs 
+                            :string i-input
+                            :edges edges
+                            :trace interactive
+                            :exhaustive exhaustive
+                            :nanalyses nanalyses
+                            :trees-hook trees-hook
+                            :semantix-hook semantix-hook
+                            :nresults nresults
+                            :burst burst)))))
+      ;;
+      ;; this is a bit archaic: when between one or three global gc()s occured
+      ;; during processing, redo it (unless we were told not to).  this goes
+      ;; back to the days, where post-gc() cpu time (rehashing) would show as
+      ;; a significant skewing fact and inhibit reliable timing measures.
+      ;;
       (when (and (not *tsdb-minimize-gcs-p*) (not (eq gc :global))
                  (not interactive)
                  (>= (gc-statistics :global) 1) (<= (gc-statistics :global) 3))
@@ -964,10 +1040,11 @@
       when (message-p message)
       do
         (when *pvm-debug-p*
-          (format
-           t
-           "~&process-queue(): got message:~% `~s'~%"
-           message)
+          (with-standard-io-syntax
+            (format
+             t
+             "~&process-queue(): got message:~% `~s'~%"
+             message))
           (force-output))
         (let* ((tag (message-tag message))
                (remote (if (eql tag %pvm_task_fail%)
@@ -1113,9 +1190,10 @@
     (nconc result (acons :run-id (get-field :run-id item) nil)))
   
   (let* ((readings (get-field :readings result))
-         #+:null
          (results (get-field :results result)))
     
+    (when *process-suppress-duplicates*
+      (nconc result (acons :unique (length results) nil)))
     ;;
     ;; _fix_me_
     ;; find a reasonably efficient way of constructing a `score' relation when
@@ -1390,6 +1468,72 @@
 (defun run-tid (run)
   (let ((client (get-field :client run)))
     (and client (client-tid client))))
+
+(defun accumulate-results (results item &key type)
+  (declare (ignore item type))
+  (loop
+      for result in results
+      for readings = (get-field :readings result)
+      when (and (numberp readings) (> readings 0))
+      return result
+      finally (return (first results)))
+  #+:null
+  (let (successes errors)
+    (loop
+        for result in results
+        for readings = (get-field :readings result)
+        when (or (not (numberp readings)) (<= readings 0))
+        do (push result errors)
+        else do (push result successes))
+    (setf successes (nreverse successes))
+    (setf errors (nreverse errors))
+    (if successes
+      (loop
+          with result
+          for success in successes
+          do (adjoin-result success result)
+          finally (return result))
+      (first results))))
+
+(defun adjoin-result (result results)
+  (when (null results)
+    (return-from adjoin-result
+      (let ((n (loop
+                   for foo in (get-field :results result)
+                   for id = (get-field :result-id foo)
+                   when id maximize id)))
+        (acons :n n result))))
+  (loop
+      for key in '(:others :symbols :conses :treal :tcpu :tgc 
+                   :readings :pedges)
+      for value = (get-field key result)
+      when (numberp value) do
+        (let ((match (get-field :key results)))
+          (if (numberp match)
+            (incf (get-field :key results) value)
+            (nconc results (acons key value nil)))))
+  (let ((n (get-field :n results))
+        (match (get-field :results results)))
+    (if match
+      (nconc 
+       match
+       (loop
+           with baz = n
+           with foo = (get-field :results result)
+           for bar in foo
+           do 
+             (setf baz 
+               (max baz (incf (get-field :result-id bar) n)))
+           finally 
+             (setf (get-field :n results) baz)
+             (return results)))
+      (let ((foo (get-field :results result)))
+        (nconc results foo)
+        (setf (get-field :n results)
+          (loop
+              for foo in (get-field :results result)
+              for id = (get-field :result-id foo)
+              when id maximize id))))))
 
 (defun accumulate-rules (statistics)
   (declare (special %accumlated-rule-statistics%))

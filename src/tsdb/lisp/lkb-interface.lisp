@@ -302,7 +302,7 @@
                          with nresults = (if (<= nresults 0)
                                            (length *parse-record*)
                                            nresults)
-                         for i from 1
+                         for i from 0
                          for parse in (reverse *parse-record*)
                          for time = (if (integerp (first times))
                                       (round (* (- (pop times) start) 1000)
@@ -331,7 +331,7 @@
                                           time))))
                    (when (< nresults 0)
                      (loop
-                         for i from (length *parse-record*)
+                         for i from (- (length *parse-record*) 1)
                          for derivation in (rest (assoc :derivations summary))
                          for string = (with-standard-io-syntax
                                         (let ((*package* *lkb-package*))
@@ -454,7 +454,7 @@
                       with nresults = (if (<= nresults 0)
                                         (length *gen-record*)
                                         nresults)
-                      for i from 1
+                      for i from 0
                       for parse in *gen-record*
                       for string in strings
                       for derivation = (with-standard-io-syntax
@@ -512,8 +512,7 @@
                            edges derivations semantix-hook trees-hook
                            burst (nresults 0))
   (declare (ignore edges derivations string id exhaustive nanalyses
-                   semantix-hook trees-hook)
-           (special mt::*transfer-filter-p*))
+                   semantix-hook trees-hook))
 
   (let* ((*package* *lkb-package*)
          (stream (make-string-output-stream))
@@ -527,16 +526,16 @@
            (error "null or malformed input MRS"))
          (let* ((edges
                  (tsdb::time-a-funcall
-                  #'(lambda () (mt::transfer-mrs mrs :filterp nil))
+                  #'(lambda () 
+                      (mt::transfer-mrs mrs :filter nil :debug nil))
                   #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
                       (declare (ignore ignore))
                       (setf tgc (+ tgcu tgcs) tcpu (+ tu ts) treal tr
                             conses (* scons 8) symbols (* ssym 24) 
                             others sother))))
-                (partial (when mt::*transfer-filter-p*
-                           (loop
-                               for edge in edges
-                               when (mt::edge-source edge) collect edge)))
+                (partial (loop
+                             for edge in edges
+                             when (mt::edge-source edge) collect edge))
                 (unknown (loop
                              with result
                              for edge in partial
@@ -546,6 +545,9 @@
                                    for pred = (mrs::rel-pred ep)
                                    do (pushnew pred result :test #'equal))
                              finally (return (sort result #'string-lessp))))
+                (pedges (loop
+                            for edge in edges
+                            maximize (mt::edge-id edge)))
                 (*print-pretty* nil) (*print-level* nil) (*print-length* nil)
                 (output (if unknown
                           (format
@@ -559,20 +561,22 @@
            (setf edges 
              (loop 
                  for edge in edges 
-                 unless (and mt::*transfer-filter-p* (mt::edge-source edge))
+                 unless (mt::edge-source edge)
                  collect edge))
            
            `((:others . ,others) (:symbols . ,symbols) (:conses . ,conses)
              (:treal . ,treal) (:tcpu . ,tcpu) (:tgc . ,tgc)
              (:readings . ,readings)
+	     (:pedges . ,pedges)
              (:error . ,(pprint-error output))
+             (:unknown . ,unknown)
              (:results .
               ,(loop
                    with *package* = *lkb-package*
                    with nresults = (if (<= nresults 0)
                                      (length edges)
                                      nresults)
-                   for i from 1
+                   for i from 0
                    for edge in edges
                    for tree = (with-standard-io-syntax
                                 (let ((*package* *lkb-package*))

@@ -197,14 +197,17 @@ source "$globals(podium_home)commands.tcl";
 source "$globals(podium_home)input.tcl";
 source "$globals(podium_home)balloon.tcl";
 source "$globals(podium_home)copyleft.tcl";
-if {[file exists "$globals(podium_home)yy.tcl"]} {
-  source "$globals(podium_home)yy.tcl";
-}; # if
+
+# if {[file exists "$globals(podium_home)yy.tcl"]} {
+#  source "$globals(podium_home)yy.tcl";
+# }; # if
 
 if {[info exists globals(mtp)] && $globals(mtp) 
     &&[file exists "$globals(podium_home)mt.tcl"]} {
   source "$globals(podium_home)mt.tcl";
-}; # if
+} else {
+  set globals(mtp) false;
+}; # else
 #
 # log activity to trace file (for debugging)
 #
@@ -956,6 +959,7 @@ proc main {} {
   .menu.options.menu add cascade \
     -label "Result Filters" \
     -menu .menu.options.menu.filters;
+  .menu.options.menu add separator;
   .menu.options.menu add cascade \
     -label "Switches" -menu .menu.options.menu.switches;
 
@@ -1048,12 +1052,15 @@ proc main {} {
   .menu.options.menu.filters add checkbutton -label "MRS Predicate" \
     -variable globals(filters,predicate) \
     -command tsdb_filters -state disabled;
+  .menu.options.menu.filters add checkbutton -label "MRS Syntax" \
+    -variable globals(filters,syntax) \
+    -command tsdb_filters;
   .menu.options.menu.filters add checkbutton -label "MRS Scoping" \
     -variable globals(filters,scope) \
     -command tsdb_filters;
   .menu.options.menu.filters add checkbutton -label "MRS Fragmentation" \
     -variable globals(filters,fragmentation) \
-    -command tsdb_filters -state disabled;
+    -command tsdb_filters;
   .menu.options.menu.filters add checkbutton -label "MRS Connectivity" \
     -variable globals(filters,connectivity) \
     -command tsdb_filters -state disabled;

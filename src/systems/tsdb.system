@@ -61,9 +61,10 @@
                    (declare (ignore force))
                    (unless (probe-file 
                             (component-full-pathname component :source))
-                     (format t
-                             "~&; missing: `~a';~%"
-                             (component-full-pathname component :source))))))
+                     (format 
+                      t
+                      "~&; missing: `~a';~%"
+                      (component-full-pathname component :source))))))
       :components
       ((:file "Registration")
        (:file "ToDo")))

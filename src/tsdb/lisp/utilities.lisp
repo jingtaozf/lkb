@@ -473,6 +473,12 @@
       (close stream)
       size)))
 
+(defun directoryp (path)
+  #+(and :allegro-version>= (version>= 6 0))
+  (excl:probe-directory path)
+  #-(and :allegro-version>= (version>= 6 0))
+  (probe-file (make-pathname :directory path :name ".")))
+
 (defun subdirectories (path)
   (let* ((path (if (stringp path) path (namestring path)))
          (pattern (make-pathname :directory path :name :wild))
@@ -521,16 +527,28 @@
         (delete-file file))
       path)))
 
-(defun mkdir (path)
-  #+(and :allegro-version>= (version>= 5 0) :excl)
-  (return-from mkdir
-    (excl:make-directory path))
-  #+:unix
-  (return-from mkdir
-    (run-process (format nil "/bin/mkdir ~a" (namestring path)) :wait t))
-  (error 
-   "mkdir(): ~
-    unable to create directories on this platform; see `utilities.lisp'."))
+(defun mkdir (path &key parentp)
+  (if parentp
+    (loop
+        with path = (if (pathnamep path) path (make-pathname :directory path))
+        with directories = (pathname-directory path)
+        for i from (- (length directories) 2) downto 0
+        for directory = (merge-pathnames
+                         (make-pathname :directory (butlast directories i))
+                         path)
+        unless (probe-file directory) do (mkdir directory)
+        finally (return (probe-file path)))
+    (or
+     #+(and :allegro-version>= (version>= 5 0) :excl)
+     (return-from mkdir
+       (excl:make-directory path))
+     #+:unix
+     (return-from mkdir
+       (run-process (format nil "/bin/mkdir ~a" (namestring path)) :wait t))
+     (error 
+      "mkdir(): ~
+       unable to create directories on this platform; ~
+       see `utilities.lisp'."))))
 
 (defun directory2file (string)
   (substitute #\. *tsdb-slash* string :test #'char=))
@@ -579,7 +597,7 @@
                (with-open-file (foo file :direction :output 
                                 :if-exists :supersede))))))))
 
-(defun suggest-test-run-directory (skeleton)
+(defun suggest-test-run-directory (skeleton &key (absolute t))
   (let* ((grammar (current-grammar))
          (grammar (when (stringp grammar) grammar))
          (open (when (stringp grammar) (position #\( grammar)))
@@ -604,9 +622,10 @@
                              :fill-pointer 0)))
     (if (stringp template)
       (loop
-          initially (loop
-                        for c across *tsdb-home*
-                        do (vector-push-extend c result 42))
+          initially (when absolute
+                      (loop
+                          for c across *tsdb-home*
+                          do (vector-push-extend c result 42)))
           with skip = 0
           for c across template
           for special = (if control
@@ -635,8 +654,8 @@
           finally (return result))
       (format 
        nil 
-       "~a~a/~@[~a/~]~a/~a/~a" 
-       *tsdb-home* grammar version skeleton date system))))
+       "~:[~*~;~a~]~a/~@[~a/~]~a/~a/~a" 
+       absolute *tsdb-home* grammar version skeleton date system))))
 
 (defun list2tcl (list &key format)
   (let ((format (format nil "{~~{~a ~~}}" (or format "~s"))))

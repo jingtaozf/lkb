@@ -5,7 +5,7 @@
   ;; return a string identifying the grammar that is currently in use, ideally
   ;; including relevant grammar-internal parameters of variation and a version.
   ;;
-  (or (tsdb::clients-grammar) "norgram (jan-04)"))
+  (or (tsdb::clients-grammar) "norgram (mar-04)"))
 
 (defun tsdb::initialize-run (&key interactive 
                             exhaustive nanalyses
@@ -57,7 +57,8 @@
                         edges derivations semantix-hook trees-hook
                         burst (nresults 0))
   (declare (ignore id exhaustive nanalyses edges derivations 
-		   semantix-hook trees-hook burst))
+		   semantix-hook trees-hook burst)
+           (special tsdb::*process-suppress-duplicates*))
   ;;
   ;; send string through processor (i.e. parser) and return processing results.
   ;; the parameters are:
@@ -81,7 +82,8 @@
   ;;
   (multiple-value-bind (return condition)
       (#-:debug ignore-errors #+:debug progn
-       (let (tgc tcpu utcpu treal graph solutions)
+       (let ((filterp (member :mrs tsdb::*process-suppress-duplicates*))
+             tgc tcpu utcpu treal graph solutions)
          (tsdb::time-a-funcall
           #'(lambda () (setf graph (parse string trace)))
           #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
@@ -112,15 +114,30 @@
                     (list treal (+ tcpu utcpu) tcpu tgc
                           readings
                           (loop
+                              with mrss
                               with nresults = (if (<= nresults 0)
                                                 readings
                                                 (min readings nresults))
-                              for i from 1
+                              for i from 0
                               for solution in (nreverse solutions)
 			      for derivation =
 				(extract-c-structure graph solution)
-                              for mrs = (extract-mrs graph solution)
-                              while (>= (decf nresults) 0) collect
+                              for mrs =
+                                #+:mrs
+                                (let ((mrs (extract-mrs graph solution)))
+                                  (when (mrs::psoa-p mrs)
+                                    (unless (and filterp
+                                                 (member 
+                                                  mrs mrss 
+                                                  :test 
+                                                  #'tsdb::safe-mrs-equal-p))
+                                      (push mrs mrss)
+                                      (with-output-to-string (stream)
+                                        (mrs::output-mrs1 
+                                         mrs 'mrs::simple stream)))))
+                                #-:mrs
+                                nil
+                              while (and (>= (decf nresults) 0) mrs) collect
                                 (pairlis '(:result-id :derivation :mrs) 
 					 (list i derivation mrs))
 			      finally 

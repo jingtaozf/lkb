@@ -88,24 +88,27 @@
                          profile
                          :sort :run-id)
       for run = (first runs)
-      for date = (parse-date (get-field :start run))
+      for date = (ignore-errors (parse-date (get-field :start run)))
       for host = (get-field :host run)
       for types = (get-field :avms run)
       for lexicon = (get-field :lexicon run)
       for lrules = (get-field :lrules run)
       for rules = (+ (if (minus-one-p lrules) 0 lrules) (get-field :rules run))
-      collect (pairlis '(:profile :coverage :overgeneration :words :analyses
-                         ;;
-                         ;; _fix_me_
-                         ;; sort out uniform naming scheme one day ...
-                         ;;                            (31-aug-02; oe@taipei)
-                         :readings
-                         :pedges :aedges :rpedges :first :total
-                         :host :date :types :lexicon :rules)
-                       (list profile coverage overgeneration words analyses
-                             analyses
-                             pedges aedges rpedges first total
-                             host date types lexicon rules))))
+      when (null date) do
+        (format t "summarize-evolution(): invalid date on `~a'.~%" profile)
+      else collect 
+           (pairlis '(:profile :coverage :overgeneration :words :analyses
+                      ;;
+                      ;; _fix_me_
+                      ;; sort out uniform naming scheme one day ...
+                      ;;                            (31-aug-02; oe@taipei)
+                      :readings
+                      :pedges :aedges :rpedges :first :total
+                      :host :date :types :lexicon :rules)
+                    (list profile coverage overgeneration words analyses
+                          analyses
+                          pedges aedges rpedges first total
+                          host date types lexicon rules))))
 
 (defun graph-evolution (summaries &key (attributes '(:coverage))
                                        file (format :tcl) 

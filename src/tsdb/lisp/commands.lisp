@@ -206,7 +206,7 @@
 
 (defun tsdb (&optional action argument 
              &key condition run skeleton load 
-                  (file nil filep) (reset nil resetp) count)
+                  (file nil filep) (reset nil resetp) count target)
   
   (initialize-tsdb)
   (if (stringp action)
@@ -286,7 +286,7 @@
                                   (member argument (list nil t "")))
                             *tsdb-data*
                             argument)
-                          :condition condition :run-id run))
+                          :condition condition :run-id run :overwrite t))
         
         ((:vocabulary :voc :vo :v)
          (format *tsdb-io* "~&~%")
@@ -295,6 +295,14 @@
                                *tsdb-data*
                                argument) 
                              :condition condition :load (or load :quiet)))
+        
+        ((:compress :com :co)
+         (format *tsdb-io* "~&~%")
+         (tsdb-do-compress
+          (if (or (null argument) (member argument (list nil t "")))
+            *tsdb-data*
+            argument)
+          target))
         
         ((:help :hel :he)
          (format *tsdb-io* "~&~%")
@@ -671,27 +679,25 @@
              (name (string name))
              (new (if (or (equal name "")
                           (equal (elt name (- (length name) 1)) #\/))
-                    (let ((parent (find-tsdb-directory name)))
-                      (when (probe-file parent)
-                        (let* ((date (current-time :long :usa))
-                               (name (concatenate 'string name date)))
-                          (find-tsdb-directory name))))
+                    (let ((date (current-time :long :usa)))
+                      (find-tsdb-directory (format nil "~a~a" name date)))
                     (find-tsdb-directory name)))
              (skeleton (and skeleton-name (find-skeleton skeleton-name)))
              (old (when skeleton (find-skeleton-directory skeleton))))
-        (cond
-         ((probe-file new)
-          (if stream
+        (when (probe-file new)
+          (when stream
             (format 
              stream
              "tsdb(): database `~a' already exists.~%"
-             (string-trim '(#\/) (string-strip *tsdb-home* new)))
-            5))
+             (string-trim '(#\/) (string-strip *tsdb-home* new))))
+          (return-from tsdb-do-create 5))
+        (mkdir new :parentp t)
+        (cond
          ((null skeleton-name)
+          ;;
+          ;; create an emtpy (`null') skeleton, typically for capturing mode
+          ;;
           (when meter (meter :value (get-field :start meter)))
-          (unless (purge-directory new)
-            (when (probe-file new) (delete-file new))
-            (mkdir new))
           (let ((relations (make-pathname 
                             :directory (namestring *tsdb-skeleton-directory*)
                             :name *tsdb-relations-skeleton*))
@@ -717,13 +723,6 @@
              "tsdb(): unknown test suite skeleton `~a'.~%"
              skeleton-name)
             2))
-         ((null new)
-          (if stream
-            (format 
-             stream 
-             "tsdb(): no parent directory `~a' for new database `~a'.~%" 
-             name (current-time :long :usa))
-            3))
          ((not (probe-file old))
           (if stream
             (format 
@@ -731,13 +730,19 @@
              "tsdb(): no skeleton directory `~a'.~%"
              old)
             4))
-         
          (t
           (when meter (meter :value (get-field :start meter)))
-          (let ((status 
-                 (run-process 
-                  (format nil "cp -pr '~a' '~a'" old new) :wait t)))
-            (if (zerop status)
+          (let ((status
+                 (ignore-errors
+                  (loop
+                      with target = (pathname new)
+                      for file in (directory 
+                                   (make-pathname :directory old :name :wild))
+                      for name = (pathname-name file) 
+                      unless (member name '("CVS" "LVS") :test #'string=)
+                      do (cp file (merge-pathnames target file))
+                      finally (return t)))))
+            (if status
               (let ((imeter (madjust / meter 2)))
                 (when imeter (meter :value (get-field :end imeter)))
                 (when (select "i-id" :integer "item" nil new :absolute t)
@@ -756,6 +761,36 @@
                  "tsdb(): mysterious problems creating database `~a'.~%"
                  (string-trim '(#\/) (string-strip *tsdb-home* new)))
                 42))))))))
+
+(defun tsdb-do-compress (source target &key (stream *tsdb-io*))
+  (let* ((source (find-tsdb-directory source))
+         (cpp target)
+         (target (if target (find-tsdb-directory target) source))
+         (target (ignore-errors (mkdir target :parentp t))))
+    (if (pathnamep target)
+      (loop
+          with zipper = "gzip -9 -f"
+          for old in (directory (make-pathname :directory source :name :wild))
+          for name = (pathname-name old)
+          for type = (pathname-type old)
+          for new = (merge-pathnames target old)
+          unless (directoryp old)
+          do 
+            (when cpp (cp old new))
+            (unless (or (equal name "relations")
+                        (zerop (file-size old))
+                        (equal type "gz"))
+              (format
+               stream
+               "tsdb(): compressing `~a'.~%"
+               (string-strip *tsdb-home* (namestring new)))
+              (run-process 
+               (format nil "~a '~a'" zipper (namestring new))
+               :wait t)))
+      (format
+       stream
+       "tsdb(): invalid target directory `~a'.~%"
+       target))))
 
 (defun tsdb-do-help (command)
   

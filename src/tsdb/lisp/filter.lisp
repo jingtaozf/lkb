@@ -61,6 +61,47 @@
                         (< (/ size length) *filter-mrs-relations-ratio*)))
           do (push (list :sparseness size) (gethash id flags))))
     #+:mrs
+    (when (smember :syntax *filter-test*)
+      (loop
+          for result in (get-field :results item)
+          for id = (get-field :result-id result)
+          for mrs = (let ((mrs (get-field :mrs result)))
+                      (if (stringp mrs)
+                        (let ((mrs (mrs::read-mrs-from-string mrs)))
+                          (setf (get-field :mrs result) mrs))
+                        (and (mrs::psoa-p mrs) mrs)))
+          for nulls = nil
+          when mrs do
+            (loop
+                for ep in (mrs:psoa-liszt mrs)
+                nconc
+                  (loop
+                      for role in (mrs:rel-flist ep)
+                      for value = (mrs:fvpair-value role)
+                      when (or (null value) 
+                               (and (mrs::var-p value) 
+                                    (null (mrs:var-type value))))
+                      do (pushnew ep nulls)
+                      else when (mrs::var-p value) do
+                        (loop
+                            for extra in (mrs:var-extra value)
+                            when (null (mrs::extrapair-value extra))
+                            do (pushnew value nulls))))
+          when (or (null mrs) nulls)
+          do 
+            (let ((output (if nulls
+                            (format
+                             nil
+                             "dubious ~{`~(~a~)'~^, ~}"
+                             (loop
+                                 for null in nulls
+                                 when (mrs::var-p null)
+                                 collect (mrs::var-string null)
+                                 else when (mrs::rel-p null)
+                                 collect (mrs:rel-pred null)))
+                            "reader failure")))
+              (push (list :syntax output) (gethash id flags)))))
+    #+:mrs
     (when (smember :scope *filter-test*)
       (loop
           for result in (get-field :results item)
@@ -84,9 +125,24 @@
             (let* ((output (and verbose (get-output-stream-string stream)))
                    (output (normalize-string output))
                    (output (if (string= output "")
-                             "unknown error in make-scoped-mrs()"
+                             "no valid scopes"
                              output)))
               (push (list :scope output) (gethash id flags)))))
+    #+:mrs
+    (when (smember :fragmentation *filter-test*)
+      (loop
+          for result in (get-field :results item)
+          for id = (get-field :result-id result)
+          for mrs = (let ((mrs (get-field :mrs result)))
+                      (if (stringp mrs)
+                        (let ((mrs (mrs::read-mrs-from-string mrs)))
+                          (setf (get-field :mrs result) mrs))
+                        (and (mrs::psoa-p mrs) mrs)))
+          for fragments = (when mrs (mrs::fragmentp mrs))
+          when fragments
+          do 
+            (let ((output (format nil "~a fragment~p" fragments fragments)))
+              (push (list :fragmentation output) (gethash id flags)))))
     (unless (zerop (hash-table-count flags)) 
       (when verbose
         (format 
@@ -109,9 +165,25 @@
                         t 
                         "    sparseness: only ~a relation~p.~%"
                         (second foo) (second foo)))
+                      (:syntax
+                       (format 
+                        t 
+                        "    syntax: ~a.~%"
+                        (second foo)))
                       (:scope
                        (format 
                         t 
                         "    scoping: `~a'.~%"
+                        (second foo)))
+                      (:fragmentation
+                       (format 
+                        t 
+                        "    fragmentation: ~a.~%"
                         (second foo)))))))
-      item)))
+    item)))
+
+(defun safe-mrs-equal-p (mrs1 mrs2)
+  #+:mrs
+  (ignore-errors (apply #'mrs::mrs-equalp mrs1 mrs2 '(t nil)))
+  #-:mrs
+  nil)

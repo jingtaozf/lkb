@@ -320,8 +320,16 @@
     :return-type :integer)
 
 (defun pvm_transmit (tid tag form)
-  (let* ((*print-readably* nil)
+  ;;
+  ;; _fix_me_
+  ;; why did we, several years ago, not want *print-readably* on?  i can hardly
+  ;; see how that can be good?                                 (10-mar-04; oe)
+  ;;
+  (let* (#+:null
+         (*print-readably* nil)
+         #+:null
          (string (format nil "~s" form))
+         (string (with-standard-io-syntax (write-to-string form)))
          (status (_pvm_transmit tid tag string)))
     status))
 

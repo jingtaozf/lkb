@@ -52,10 +52,15 @@
 
 (defun init-podium ()
   (shutdown-podium)
-  (let* ((symbol (when (find-package :lkb)
+  (let* (#+:allegro
+         (display (system:getenv "DISPLAY"))
+         (symbol (when (find-package :lkb)
                    (find-symbol "*TREE-AUTOMATIC-UPDATE-P*" :lkb)))
          (delay (when symbol (symbol-value symbol)))
          foo)
+    #+:allegro
+    (when (or (null display) (equal display ""))
+      (return-from init-podium))
     (setf *tsdb-podium-windows* nil)
     (setf %tsdb-podium-pending-events% nil)
     (multiple-value-setq (*tsdb-wish-stream* foo *tsdb-wish-pid*)
@@ -309,6 +314,10 @@
                                (second return))))))
               (busy)
               (when path
+                ;;
+                ;; _fix_me_
+                ;; most of this should be in tsdb-do-create().  (27-feb-04; oe)
+                ;;
                 (let* ((path (string-right-trim (list *tsdb-slash*) path))
                        (parent (when (find *tsdb-slash* path)
                                  (subseq 
@@ -526,18 +535,22 @@
 
            (select
             (let* ((data (first arguments))
-                   (condition (fifth arguments))
-                   (condition (if (equal condition "") nil condition))
+                   (condition (or (fifth arguments)
+                                  *statistics-select-condition*))
+                   (condition (unless (equal condition "") condition))
                    (title 
                     (format nil "tsdb(1) `~a' Data~@[ [~a]~]" data condition))
                    (message "computing table layout and geometry ...")
-                   (items (apply (symbol-function action)
-                                 (append (rest arguments)
-                                         (list data 
-                                               :file file :format :tcl 
-                                               :sort t
-                                               :quiet t :status t
-                                               :meter (make-meter 0 1))))))
+                   (items (apply 
+                           (symbol-function action)
+                           (append (rest arguments)
+                                   (unless (fifth arguments)
+                                     (list *statistics-select-condition*))
+                                   (list data 
+                                         :file file :format :tcl 
+                                         :sort t
+                                         :quiet t :status t
+                                         :meter (make-meter 0 1))))))
               (cond
                ((zerop items)
                 (status :text (format 
