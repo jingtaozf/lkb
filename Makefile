@@ -27,13 +27,12 @@ update:
 	  ${CVS} update -P -d -R; \
 	  cd ${ROOT}/lkb; \
 	  ${CVS} update -P -d -R; \
-	  ${CVS} commit -f -m "auto-update for build" \
-            ${ROOT}/lkb/src/version.lsp; \
+	  ${CVS} commit -f -m "auto-update for build" ./src/version.lsp; \
 	  $(MAKE) all; \
 	) 2>&1 | ${TEE} ${ROOT}/lkb/log/build
 	( \
 	  cd ${ROOT}/lkb/log; \
-          mail -s "automated LKB build (${DATE})" oe@csli.stanford.edu \
+          mail -s "automated LKB build (${DATE})" lkb@lingo.stanford.edu \
             < build; \
 	  cvs commit -m "" build; \
 	)
