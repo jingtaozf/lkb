@@ -6,6 +6,26 @@
 ;;; Pembroke Street
 ;;; Cambridge, UK
 
+;; RPM - the default print-object method for structures in ACL uses format
+;; extensively and is much too slow to use to build up the templex file.  This
+;; replacement is a lot faster, but doesn't do any error checking and so it
+;; potentially risky.
+
+#+allegro
+(defmethod common-lisp:print-object ((instance structure-object) stream)
+  (let ((class (class-name (class-of instance))))
+    (write-string "#S(" stream)
+    (unless (eq (symbol-package class) *package*)
+      (write-string (package-name (symbol-package class)) stream)
+      (write-string "::" stream))
+    (write-string (symbol-name class) stream)
+    (dolist (slot (mapcar #'clos:slot-definition-name 
+                        (clos:class-slots (class-of instance))))
+      (write-string " :" stream)
+      (write-string (symbol-name slot) stream)
+      (write-char #\space stream)
+      (write (slot-value instance slot) :stream stream))
+    (write-char #\) stream)))
 
 
 (defstruct (basic-unification) lhs rhs)
