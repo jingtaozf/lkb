@@ -31,6 +31,7 @@
 ;;;
 ;;; on Windoze, Allegro CL fails to respect *default-pathname-defaults* :-{.
 ;;;
+#+:windows
 (excl:chdir (make-pathname :device (pathname-device *load-truename*)
 			   :directory '(:absolute)))
 
