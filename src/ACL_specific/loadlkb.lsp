@@ -51,7 +51,9 @@
          ("main" "rules")       ; generic CL
          ("io-paths" "ruleinput")       ; generic CL
          ("main" "parse")       ; generic CL
-         ("ACL_specific" "parseout")    ; some dialect specific - parse tree fns
+	 ("ACL_specific" "graph")	; dialect specific - tree drawing fns
+	
+	 ("ACL_specific" "parseout")	; some dialect specific - parse tree fns
          ("ACL_specific" "chartout") ; some dialect specific
          ("main" "morph")       ; generic CL
          ("ACL_specific" "dialog")
