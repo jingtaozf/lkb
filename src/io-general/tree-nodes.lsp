@@ -447,3 +447,31 @@
                (make-lex-and-morph-tree leaf-symbol mdaughter (1+ level)))))
       edge-symbol))
 
+
+;;; convert tree into a nested list - for simple printing of structure
+;;; (dolist (parse *parse-record*) (pprint (parse-tree-structure parse)))
+
+(defun parse-tree-structure (edge-record)
+   (let ((daughters (edge-children edge-record)))
+      (if daughters
+         (cons (tree-node-text-string
+                  (or (find-category-abb (edge-dag edge-record))
+                      (edge-category edge-record)))
+            (mapcar
+               #'(lambda (daughter)
+                   (if daughter
+                      (parse-tree-structure daughter)
+                      '||)) ; active chart edge daughter
+               daughters))
+         (if *dont-show-morphology*
+            (car (edge-leaves edge-record))
+            (cons (car (edge-leaves edge-record))
+               (morph-tree-structure
+                  (edge-rule-number edge-record) (edge-morph-history edge-record)))))))
+
+(defun morph-tree-structure (rule edge-record)
+   (if rule
+      (cons rule
+         (if edge-record
+            (morph-tree-structure nil (edge-morph-history edge-record))))))
+
