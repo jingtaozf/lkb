@@ -1,13 +1,13 @@
 SHELL = /bin/sh
 
 SOLARIS_LIBS = \
-   5lib/getloadavg.o -L5lib -lpvm3 -lsocket -lnsl -lkstat -lc
+   5lib/getloadavg.o -L../../../lib/solaris -lpvm3 -lsocket -lnsl -lkstat -lc
 
 LINUX_LIBS = \
-   llib/getloadavg.o -Lllib -lpvm3
+   llib/getloadavg.o -L../../../lib/linux -lpvm3
 
 OSF_LIBS = \
-    olib/getloadavg.o -Lolib -lpvm3 -lc
+    olib/getloadavg.o -L../../../lib/osf -lpvm3 -lc
 
 CP = cp
 CC = gcc -Wall -fpic -O6 -I../../../include
