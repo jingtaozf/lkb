@@ -1162,16 +1162,18 @@ Setting *first-only-p* to nil")
                      ;; let that function control the output
                      (when ostream
                        (let ((n (length *parse-record*)))
-                         (format ostream "~A ~A ~A~%" n 
-                                 (edge-count)
+                         (format ostream "~A ~A~%" n 
+            ;;                     (edge-count)
                                  *edge-id*))
                        (finish-output ostream))))))
             (for lex-id in (collect-expanded-lex-ids *lexicon*)
                do
                (pushnew lex-id *lex-ids-used*))
             (setq raw-sentence (read-line istream nil 'eof))))
-      (format t "~%;;; Finished test file~%;;; Total CPU time: ~A msecs~%" 
-          (- (get-internal-run-time) start-time))
+      (format t "~%;;; Finished test file")
+      (when ostream
+        (format ostream "~%;;; Total CPU time: ~A msecs~%" 
+                (- (get-internal-run-time) start-time)))
       (lkb-beep)))
 
 (defun edge-count nil
