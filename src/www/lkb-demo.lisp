@@ -9,7 +9,7 @@
 (defparameter *demo-version* "April 30, 1999")
 (defparameter *parser-log-file* "lkb-sentences.log")
 
-(www-utils:add-periodic-task "Flush lexicon" :daily '(clear-non-parents))
+(www-utils:add-periodic-task "Flush lexicon" :daily '(user::clear-non-parents))
 
 ;;***************************************************************************
 ;; Feature structure cache
