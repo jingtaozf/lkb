@@ -318,7 +318,7 @@
                  (object (lsp-retrieve-object id location)))
             (when (and object 
                        (member format '(:avm :edge :edges :chart :tree 
-                                        :entity :generate
+                                        :entity :generate :rephrase
                                         :mrs :dependencies)))
               (lsp-browse id context object format view))))
 
@@ -492,6 +492,12 @@
            (close-existing-chart-windows)
            (generate-from-mrs mrs)
            (show-gen-result))))
+      (:rephrase
+       (when (edge-p (lspb-edge object))
+         (let ((symbol (when (find-package :mt)
+                         (find-symbol "TRANSLATE" :mt))))
+           (when (and symbol (fboundp symbol))
+             (funcall symbol (lspb-edge object))))))
       ((:mrs :dependencies)
        (let* ((dag (cond
                     ((tdfs-p (lspb-dag object)) 

@@ -36,11 +36,6 @@
 		  make::bin-dir '(:relative "yzlui.app" "Contents" "MacOS")))
      :name "yzlui"))))
    
-(defparameter *lui-hidden-features*
-  '(ARG ARG0 ARG1 ARG2 ARG3 ARG4
-    MARG L-INDEX R-INDEX L-HNDL R-HNDL L-HANDEL R-HANDEL 
-    MAIN SUBORD ROLE HINST NHINST))
-
 (defparameter *lui-autonomy-p* nil)
 
 (defparameter *lui-debug-p* nil)
@@ -494,19 +489,6 @@
                      stream
                      "parameter avm-collapsed-types [u h i e x]~a~%"
                      %lui-eoc%)
-                    #+:null
-                    (when *lui-hidden-features*
-                      (format 
-                       stream 
-                       "parameter+ avm-collapsed-features ~a~a~%"
-                       (first *lui-hidden-features*) %lui-eoc%)
-                      (loop
-                          for foo in (rest *lui-hidden-features*)
-                          do
-                            (format 
-                             stream 
-                             "parameter+ avm-collapsed-features ~a~a~%"
-                             foo %lui-eoc%)))
                     (format stream "avm ~d " id)
                     (mrs::lui-dagify-mrs mrs :stream stream))))
       (format %lui-stream% string))
