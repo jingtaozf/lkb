@@ -8,6 +8,7 @@
 
 (pushnew :lkb *features*)
 (pushnew :mrs *features*)
+(pushnew :www *features*)
 
 (defsystem "www"
     :device (make-pathname :device cl-user::%sys-device%)

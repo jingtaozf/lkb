@@ -212,7 +212,7 @@
                (:file "parseout")           ; parse tree output
                (:file "chartout")           ; parse chart
                (:file "listout")            ; `active' lists
-               #+(and :allegro :clim) 
+               #+(or (and :allegro :clim) :www)
                (:file "compare")))          ; comparing parses
 
      #+:allegro
