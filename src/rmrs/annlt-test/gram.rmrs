@@ -1,14 +1,14 @@
 
 <rule>
-<name>VP/vp_pp</name>
+<name>V1/vp_pp</name>
 <dtrs>VP PP</dtrs>
 <head>VP</head>
 <semstruct>
-<hook><index>E</index></hook>
-<ep><realpred>ARGN</realpred><arg>E</arg><arg>E1</arg></ep>
+<hook><index>E</index><label>H</label></hook>
+<rarg><rargname>ARGN</rargname><label>H</label><arg>E1</arg></rarg>
 </semstruct>
 <eq>E1 PP.INDEX</eq>
-<eq>E VP.INDEX</eq>
+<eq>H VP.LABEL</eq>
 </rule>
 
 <rule>
@@ -16,16 +16,16 @@
 <dtrs>P NP</dtrs>
 <head>P</head>
 <semstruct>
-<hook><index>E</index></hook>
-<ep><realpred>ARG2</realpred><arg>E</arg><arg>X</arg></ep>
+<hook><index>E</index><label>H</label></hook>
+<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
 </semstruct>
 <eq>X NP.INDEX</eq>
-<eq>E P.INDEX</eq>
+<eq>H P.LABEL</eq>
 </rule>
 
 <rule>
-<name>T/txt-sc1/-+-</name>
-<dtrs>S</dtrs>
+<name>T/txt-sc1</name>
+<dtrs>S OPT OPT OPT OPT</dtrs>
 <head>S</head>
 </rule>
 
@@ -42,20 +42,14 @@
 </rule>
 
 <rule>
-<name>V/0</name>
-<dtrs>V</dtrs>
-<head>V</head>
-</rule>
-
-<rule>
 <name>A1/a</name>
 <dtrs>A</dtrs>
 <head>A</head>
 </rule>
 
 <rule>
-<name>NP/n1_name/-</name>
-<dtrs>N</dtrs>
+<name>NP/n1_name</name>
+<dtrs>OPT N</dtrs>
 <head>N</head>
 </rule>
 
@@ -66,22 +60,10 @@
 </rule>
 
 <rule>
-<name>S/sai/-</name>
-<dtrs>AUX S</dtrs>
-<head>S</head>
-<eq>AUX.INDEX S.INDEX</eq>
-</rule>
-
-<rule>
-<name>S/whnp_s</name>
-<dtrs>WHNP VP</dtrs>
-<head>VP</head>
-<semstruct>
-<hook><index>E</index></hook>
-<ep><realpred>ARGN</realpred><arg>E</arg><arg>X</arg></ep>
-</semstruct>
-<eq>X WHNP.INDEX</eq>
-<eq>E VP.INDEX</eq>
+<name>S/sai-be2</name>
+<dtrs>AUX OPT N2 OPT P2</dtrs>
+<head>N2</head>
+<eq>AUX.INDEX N2.INDEX</eq>
 </rule>
 
 <rule>
@@ -89,49 +71,57 @@
 <dtrs>NP VP</dtrs>
 <head>VP</head>
 <semstruct>
-<hook><index>E</index></hook>
-<ep><realpred>ARG1</realpred><arg>E</arg><arg>X</arg></ep>
+<hook><index>E</index><label>H</label></hook>
+<rarg><rargname>ARG1</rargname><label>H</label><arg>X</arg></rarg>
 </semstruct>
 <eq>X NP.INDEX</eq>
-<eq>E VP.INDEX</eq>
+<eq>H VP.LABEL</eq>
 </rule>
 
 <rule>
-<name>V/np</name>
+<name>V1/v_np</name>
 <dtrs>V NP</dtrs>
 <head>V</head>
 <semstruct>
-<hook><index>E</index></hook>
-<ep><realpred>ARG2</realpred><arg>E</arg><arg>X</arg></ep>
+<hook><index>E</index><label>H</label></hook>
+<rarg><rargname>ARG2</rargname><label>H</label><arg>X</arg></rarg>
 </semstruct>
 <eq>X NP.INDEX</eq>
-<eq>E V.INDEX</eq>
+<eq>H V.LABEL</eq>
 </rule>
 
 <rule>
-<name>N1/n1_nm/-</name>
+<name>N1/n-name_n1-name</name>
 <dtrs>N1 NM</dtrs>
 <head>N1</head>
+<semstruct>
+<hook><index>X</index><label>H1</label></hook>
+<ing><ing-a>H1</ing-a><ing-b>H2</ing-b></ing>
+</semstruct>
 <eq>NM.INDEX N1.INDEX</eq>
+<eq>X N1.INDEX</eq>
+<eq>H1 N1.LABEL</eq>
+<eq>H2 NM.LABEL</eq>
 </rule>
 
 <rule>
 <name>N1/ap_n1/-</name>
 <dtrs>ADJ N</dtrs>
 <head>N</head>
+<semstruct>
+<hook><index>X</index><label>H2</label></hook>
+<ing><ing-a>H1</ing-a><ing-b>H2</ing-b></ing>
+</semstruct>
 <eq>N.INDEX ADJ.INDEX</eq>
+<eq>X N.INDEX</eq>
+<eq>H1 ADJ.LABEL</eq>
+<eq>H2 N.LABEL</eq>
 </rule>
 
 <rule>
-<name>NP/name_n1</name>
+<name>NP/det_n1</name>
 <dtrs>DET N</dtrs>
 <head>N</head>
 <eq>N.INDEX DET.INDEX</eq>
 </rule>
 
-<rule>
-<name>NP/det_n</name>
-<dtrs>DET N</dtrs>
-<head>N</head>
-<eq>N.INDEX DET.INDEX</eq>
-</rule>

@@ -1,0 +1,573 @@
+<le>
+<tag>APP$</tag>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>X</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>AT</tag>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>X</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>AT1</tag>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>X</arg></ep>
+</semstruct>
+</le>
+
+; CC
+; CCB
+; CS
+; CSA
+; CSN
+; CST
+; CSW
+; DA
+; DA1
+; DA2
+; DA2R
+; DAR
+; DAT
+; DB
+; DB2
+; DD
+; DD1
+; DD2
+
+<le>
+<tag>DDQ</tag>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>X</arg></ep>
+</semstruct>
+</le>
+
+; DDQ$
+; DDQV
+; EX
+; ICS
+; IF
+
+<le>
+<tag>II</tag>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>E</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>IO</tag>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>E</arg></ep>
+</semstruct>
+</le>
+
+; IW
+; JA
+; JB
+; JBR
+; JBT
+
+<le>
+<tag>JJ</tag>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>X</arg></ep>
+</semstruct>
+</le>
+
+; JJR
+; JJT
+; JK
+; LE
+; MC 
+; MC-MC
+; MC1
+; MC2
+; MD
+; ND1
+
+
+<le>
+<tag>NN</tag>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>X</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NN1</tag>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>X</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NN2</tag>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>X</arg></ep>
+</semstruct>
+</le>
+
+; FW
+; FO
+
+<le>
+<tag>NNJ</tag>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>X</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNJ1</tag>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>X</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNJ2</tag>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>X</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNL</tag>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>X</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNL1</tag>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>X</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNL2</tag>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>X</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNO</tag>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>X</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNO2</tag>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>X</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNS</tag>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>X</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNS1</tag>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>X</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNS2</tag>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>X</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNSA1</tag>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>X</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNSB1</tag>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>X</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNSB2</tag>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>X</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNT1</tag>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>X</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNT2</tag>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>X</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNU</tag>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>X</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNU1</tag>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>X</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNU2</tag>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>X</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NP1</tag>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>X</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NP2</tag>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>X</arg></ep>
+</semstruct>
+</le>
+
+; NPD1
+; NPD2
+; NPM1
+; PN
+; PN1
+; PNQ0
+; PNQS
+; PNQV$
+; PNQVO
+; PNQVS
+; PP$
+; PPH1
+; PPHO1
+; PPHO2
+; PPHS1
+; PPHS2
+; PPIO1
+; PPIO2
+; PPIS1
+; PPIS2
+; PPX1
+; PPX2
+; PPY
+; RA
+; REX
+; RG
+; RGA
+; RGQ
+; RGQV
+; RRR
+; RRT
+; RT
+; TO
+; UH
+
+<le>
+<tag>VBO</tag>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>E</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VBDR</tag>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>E</arg></ep>
+</semstruct>
+</le>
+
+
+<le>
+<tag>VBDZ</tag>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>E</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VBG</tag>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>E</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VBM</tag>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>E</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VBN</tag>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>E</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VBR</tag>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>E</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VBZ</tag>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>E</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VDO</tag>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>E</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VDD</tag>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>E</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VDD</tag>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>E</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VDG</tag>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>E</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VDN</tag>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>E</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VDZ</tag>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>E</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VHO</tag>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>E</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VHD</tag>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>E</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VHG</tag>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>E</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VHN</tag>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>E</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VHZ</tag>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>E</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VM</tag>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>E</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VMK</tag>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>E</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VVD</tag>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>E</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VVG</tag>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>E</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VVN</tag>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>E</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VVN</tag>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>E</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VVZ</tag>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>E</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VVO</tag>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred></pred><label>H</label><arg>E</arg></ep>
+</semstruct>
+</le>
+
+; XX
+; ZZ1
+; ZZ2
+; $
+
+; punctuation
+
+; BCS
+; BTO
+; CF
+; MC$
+; MF
+; NC2
+; FA
+; FB
+; \&FW
+; \&FO
+; NNO1
+; NNT
+; NO
+; NPM2
+; PNX1
+; RGR
+; RGT
+; RPK
+; VVGK
+; VVNK

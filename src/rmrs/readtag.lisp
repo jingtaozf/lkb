@@ -14,9 +14,13 @@
   (let ((*readtable* (make-xml-break-table)))
     (with-open-file (istream file-name :direction :input)
       (loop
-        (let ((next-tag-template (read-rmrs-tag-template istream)))
-          (when (null next-tag-template) (return))
-          (add-rmrs-tag-template next-tag-template)))))
+        (let ((next-char (peek-char t istream nil 'eof)))
+          (when (eql next-char 'eof) (return))
+          (if (eql next-char #\;) 
+              (read-line istream)
+            (let ((next-tag-template (read-rmrs-tag-template istream)))
+              (when (null next-tag-template) (return))
+              (add-rmrs-tag-template next-tag-template)))))))
   (setf *tag-templates*
     (nreverse *tag-templates*))
   nil)

@@ -2,9 +2,18 @@
 
 ;;; final output structure
 
-(defstruct rmrs 
-  eps
+(defstruct (rmrs (:include basemrs))
+  rmrs-args 
+  in-groups
   bindings)
+
+(defstruct rmrs-arg
+  arg-type
+  label
+  val)
+
+(defstruct in-group
+  labels)
 
 ;;; the variables are replaced by canonical forms when 
 ;;; the structure is printed
@@ -12,11 +21,10 @@
 
 ;;; Building semantic structures via an algebra
 
-(defstruct semstruct
+(defstruct (semstruct (:include rmrs))
   hook
 ;;;  holes
-  eps
-  binding-list)
+)
 
 ;;; hook has an indices structure as a value
 ;;;
@@ -29,27 +37,12 @@
 ;;; preposition/particle distinction is made)
 ;;; for now, I'll try and do without holes
 ;;;
-;;; eps is a list of elementary predications
-;;; the structure defined like this for MRS compatability
-
-#|
-(defstruct ep
-  sort  ; relation name
-  flist)
-|#
-
-#|
-(defstruct (var)
-  name
-  type
-  extra ; useful for e.g. agreement values
-  id)
-|#
 
 
 (defstruct indices
   index
-  ;;; extarg - may be needed, even for the handle-free MRS
+  label
+  ;;; extarg
   )
 
 ;;; Rules
@@ -84,8 +77,9 @@
      :NAME "DEFAULT"
      :SEMSTRUCT
      (MAKE-SEMSTRUCT 
-      :HOOK (make-indices :index "U") 
-      :EPS (LIST (MAKE-EP :sort "DUMMY-PRED" 
+      :HOOK (make-indices :index "U" :label "H") 
+      :LISZT (LIST (MAKE-REL :sort "DUMMY-PRED"
+                            :handel "H"
                           :flist (LIST "U"))))))
 
 (defun dummy-pred-p (str)
@@ -94,15 +88,22 @@
 (defun make-dummy-pred nil
   "DUMMY-PRED")
 
+(defun make-default-hook nil
+  ;;; while reading in
+  (make-indices :index "U" :label "H"))
+
 (defparameter *rmrs-var-types*
-    '((#\e . :event)
-      (#\x . :object)
+    '((#\h . :handle)
+      (#\e . :event)
+      (#\x . :ref-ind)
       (#\u . :other)
+      (#\H . :handle)
       (#\E . :event)
-      (#\X . :object)
+      (#\X . :ref-ind)
       (#\U . :other)
+      (#\h . "HANDLE")
       (#\e . "EVENT")
-      (#\x . "OBJECT")
+      (#\x . "REF-IND")
       (#\u . "OTHER")))
       
 
@@ -125,9 +126,12 @@
   (let* ((semstruct
           (construct-sem-for-tree-aux tree))
          (canonical-bindings 
-          (close-bindings (semstruct-binding-list semstruct))))
+          (close-bindings (semstruct-bindings semstruct))))
     (output-rmrs1 (make-rmrs 
-                  :eps (semstruct-eps semstruct)
+                   :liszt (semstruct-liszt semstruct)
+                   :rmrs-args (semstruct-rmrs-args semstruct)
+                   :in-groups (semstruct-in-groups semstruct) 
+                   :h-cons (semstruct-h-cons semstruct) 
                   :bindings canonical-bindings)
                  'xml ostream)))
 
@@ -222,6 +226,8 @@
 
 (defvar *local-var-context* nil)
 
+(defvar *trace-rmrs-composition* nil)
+
 (defun compose (rule-name dtrs)
   ;;; compose takes a rule name and a list of daughters
   ;;; the rule name is looked up in *rule-instructions*
@@ -235,9 +241,15 @@
 	(dtr-hooks (loop for dtr in dtrs
 		       collect (semstruct-hook dtr)))
 	(dtr-eps (loop for dtr in dtrs
-		     append (semstruct-eps dtr)))
+		     append (semstruct-liszt dtr)))
+        (dtr-rargs (loop for dtr in dtrs
+                       append (semstruct-rmrs-args dtr)))
+        (dtr-ings (loop for dtr in dtrs
+                      append (semstruct-in-groups dtr)))
+        (dtr-hcons (loop for dtr in dtrs
+                      append (semstruct-h-cons dtr)))
 	(dtr-binding-list (loop for dtr in dtrs
-		     append (semstruct-binding-list dtr)))
+		     append (semstruct-bindings dtr)))
 	(semhead nil)
 	(semstruct nil)
 	(equalities nil))      	 
@@ -257,22 +269,46 @@
       (setf equalities 
 	(compute-equalities dtr-hooks
 			    (rmrs-rule-eqs rule-instruction))))
-    (make-semstruct :hook 
-		    (if semhead		; a number indicating the dtr
-			(semstruct-hook 
-			 (elt dtrs semhead))
-                      (if (and (not rule-instruction)
-                               (not (cdr dtrs)))
-                          (semstruct-hook (car dtrs))
+    (let ((semstruct-out
+           (make-semstruct :hook 
+                           (if semhead  ; a number indicating the dtr
+                               (semstruct-hook 
+                                (elt dtrs semhead))
+                             (if (and (not rule-instruction)
+                                      (not (cdr dtrs)))
+                                 (semstruct-hook (car dtrs))
                                 ;;; assume semhead is single dtr 
                                 ;;; if unary rule
-                        (generate-new-var "u")))
-		    :eps (if semstruct 
-			     (append 
-			      (semstruct-eps semstruct) dtr-eps)
-			   dtr-eps)
-		    :binding-list 
-		    (append equalities dtr-binding-list))))
+                               (make-default-running-hook)))
+                           :liszt (if semstruct 
+                                      (append 
+                                       (semstruct-liszt semstruct) dtr-eps)
+                                    dtr-eps)
+                           :rmrs-args 
+                           (if semstruct 
+                               (append 
+                                (semstruct-rmrs-args semstruct) dtr-rargs)
+                             dtr-rargs)
+                           :in-groups 
+                           (if semstruct 
+                               (append 
+                                (semstruct-in-groups semstruct) dtr-ings)
+                             dtr-ings)
+                           :h-cons 
+                           (if semstruct 
+                               (append 
+                                (semstruct-h-cons semstruct) dtr-hcons)
+                             dtr-hcons)
+                           :bindings 
+                           (append equalities dtr-binding-list))))
+      (when *trace-rmrs-composition*
+        (format t "~%Applying rule ~A" rule-name)
+        (unless rule-instruction
+          (format t " (not found)"))
+        (dolist (dtr dtrs)  
+          (internal-output-rmrs dtr 'compact t))
+        (internal-output-rmrs semstruct-out 'compact t))
+      semstruct-out)))
 
 ;;; Tag lookup
 ;;; 
@@ -328,44 +364,97 @@ goes to
 
 |#
 
-(defvar *var-count* 0)
+(defvar *rmrs-variable-generator* nil)
+
+(defun init-rmrs-variable-generator ()
+  (setf *rmrs-variable-generator* (create-variable-generator)))
 
 (defun initialize-rmrs-variables nil
-  (setf *var-count* 0))
+  (if *restart-variable-generator*
+        (init-rmrs-variable-generator)))
+
+(defun create-new-rmrs-var (type gen)
+  ;;; constructs a new variable of a given type
+  (let* ((idnumber (funcall gen))
+         (letter (find-var-letter type))
+         (variable-name (format nil "~A~A" letter idnumber)))
+    (if (eql type :handle)
+        (make-handle-var 
+         :name variable-name
+         :type 'handle
+         :id idnumber)
+    (make-var 
+     :name variable-name
+     :type type
+     :id idnumber))))
+
+(defun make-default-running-hook nil
+  (make-indices :index (create-new-rmrs-var 
+                        :other 
+                        *rmrs-variable-generator*)
+                :label (create-new-rmrs-var 
+                        :handle 
+                        *rmrs-variable-generator*)))
+
 
 (defun generate-new-var (name)
+  ;;; called from construct-new-semstruct
   ;;; name is a string - e.g. "e2"
+  ;;; takes a string and creates a new variable of the same type
   (or (rest (assoc name *local-var-context* :test #'equal))
       (let* ((var-type (find-var-type name))
-	     (id (incf *var-count*))
-	     (varstruct (make-var :id id :type var-type)))
+             (varstruct (create-new-rmrs-var var-type 
+                        *rmrs-variable-generator*)))
 	(push (cons name varstruct) *local-var-context*)
 	varstruct)))
 
+
 (defun construct-new-semstruct (semstruct &optional pred)
+  ;;; this is only called when we have a structure
+  ;;; corresponding to a read-in rule or tag
   ;;; *local-var-context* gets used when interpreting the eqs
   ;;; in the case of a rule
   ;;; pred should only be set in the case of a new tag
   (setf *local-var-context* nil)
   (let* ((new-hook (generate-new-hook (semstruct-hook semstruct))))
-    (make-semstruct :hook new-hook
-		    :eps
-		    (loop for old-ep in (semstruct-eps semstruct)
-			collect
-			  (make-ep :sort 
-				   (let ((old-pred (ep-sort old-ep)))
-				     (if (dummy-pred-p old-pred)
-					 pred
-				       old-pred))
-				   :flist
-				   (loop for old-arg in (ep-flist old-ep)
-					  collect
-					  (generate-new-var old-arg)))))))
+    (make-semstruct 
+     :hook new-hook
+     :liszt
+     (loop for old-ep in (semstruct-liszt semstruct)
+         collect
+           (make-rel :handel 
+                     (if (rel-handel old-ep)
+                         (generate-new-var (rel-handel old-ep))
+                       (create-new-rmrs-var :handle *rmrs-variable-generator*))
+                       :sort 
+                       (let ((old-pred (rel-sort old-ep)))
+                         (if (dummy-pred-p old-pred)
+                             pred
+                           old-pred))
+                       :flist
+                       (loop for old-arg in (rel-flist old-ep)
+                           collect
+                             (generate-new-var old-arg))))
+     :rmrs-args
+     (loop for old-rarg in (semstruct-rmrs-args semstruct)
+         collect
+           (make-rmrs-arg 
+            :arg-type (rmrs-arg-arg-type old-rarg)
+            :label (generate-new-var (rmrs-arg-label old-rarg))
+            :val (generate-new-var (rmrs-arg-val old-rarg))))
+     :in-groups
+     (loop for old-ing in (semstruct-in-groups semstruct)
+         collect
+           (make-in-group 
+            :labels
+            (loop for old-arg in (in-group-labels old-ing)
+                collect
+                  (generate-new-var old-arg)))))))
 
 (defun generate-new-hook (old-hook)
-  ;;; needs fixing if more than just an index
-  (make-indices :index 
-		(generate-new-var (indices-index old-hook))))
+  (make-indices 
+   :label (generate-new-var (indices-label old-hook))
+   :index (generate-new-var (indices-index old-hook))))
 
 (defun compute-equalities (dtr-hooks equalities)
   ;;; equality components in rules are either 
@@ -395,7 +484,124 @@ goes to
 	(cond ((equal (pointer-hook-el pointer)
 		      "INDEX") 
 	       (indices-index hook))
+              ((equal (pointer-hook-el pointer)
+		      "LABEL") 
+	       (indices-label hook))
 	      (t nil)))))
 
 	
+;;; rule lookup
 
+(defun lookup-instruction (rule-name)
+  ;;; first check for an exact match
+  ;;; failing this, check for a match ignoring the optional spec
+  ;;; If this is found, dtrs may need adjusting
+  (let ((rule (find rule-name *rule-instructions*
+         :test #'equal :key #'rmrs-rule-name)))
+    (if rule
+        (progn 
+          (increment-rule-record rule-name nil t)
+          rule)
+      (let ((base-name (remove-optional-spec rule-name)))
+        (if base-name
+            (let ((rule (find base-name *rule-instructions*
+                              :test #'equal :key #'rmrs-rule-name))
+                  (opt-dtrs (if base-name (find-opt-dtrs rule-name))))
+              (if rule
+                  (progn (increment-rule-record base-name opt-dtrs t)
+                         (rule-with-adjusted-dtrs rule opt-dtrs))
+                (progn (increment-rule-record base-name opt-dtrs nil)
+                       nil)))
+          (progn (increment-rule-record rule-name nil nil)
+                 nil))))))
+
+(defun remove-optional-spec (rule-name)
+  ;;; for rules of form N1/ap_n1/- return N1/ap_n1
+  ;;; if no optional spec, return nil (we should have found it already)
+  (let* ((slash-pos1 (position #\/ rule-name))
+         (slash-pos2 (if slash-pos1
+                         (position #\/ rule-name :start (+ 1 slash-pos1)))))
+    (if slash-pos2
+        (subseq rule-name 0 slash-pos2))))
+
+(defun find-opt-dtrs (rule-name)
+  ;;; given we've got something after the slash, return a list of ts and
+  ;;; nils
+  (let* ((slash-pos-end (position #\/ rule-name :from-end t))
+         (opt-dtr-str 
+          (subseq rule-name (+ 1 slash-pos-end))))
+    (loop for char in (coerce opt-dtr-str 'list)
+        collect
+        (cond ((eql char #\+) t)  
+              ((eql char #\-) nil)
+              (t (error "Unexpected character in optional part of ~A"
+                        rule-name))))))
+
+(defun rule-with-adjusted-dtrs (rule opt-dtrs)
+  (let ((new-rule (copy-rmrs-rule rule))
+        (rule-dtrs (rmrs-rule-dtrs rule)))
+    (setf (rmrs-rule-dtrs new-rule)
+      (loop for dtr in rule-dtrs
+          nconc
+            (if (not (member dtr '(opt opt*))) 
+                (list dtr)
+                (let ((next-opt (car opt-dtrs)))
+                   (setf opt-dtrs (cdr opt-dtrs))
+                   (if (null next-opt)
+                       nil
+                     (list dtr))))))
+    new-rule))
+      
+;;; recording rule use  
+          
+(defvar *known-rule-record* (make-hash-table :test #'equal))
+(defvar *unknown-rule-record* (make-hash-table :test #'equal))
+
+(defun clear-rule-record nil
+  (setf *known-rule-record* (make-hash-table :test #'equal))
+  (setf *unknown-rule-record* (make-hash-table :test #'equal)))
+
+(defun show-rule-record (knownp)
+  (maphash #'(lambda (key val)
+               (format t "~%~A " key)
+               (loop for rec in val
+                   do
+                     (let ((opt (car rec))
+                           (count (cdr rec)))
+                       (if opt
+                           (progn 
+                             (format t "~{~A~}" 
+                                     (loop for el in opt
+                                         collect 
+                                           (if el "+" "-")))
+                             (format t " ~A; " count))
+                         (format t "/ ~A" count)))))
+           (if knownp
+               *known-rule-record*
+             *unknown-rule-record*)))
+
+(defun increment-rule-record (rule-name opt-spec knownp)
+  (let* ((rule-table (if knownp *known-rule-record*
+                       *unknown-rule-record*))
+         (record (gethash rule-name rule-table)))
+    (if record
+        (let ((opt-part
+               (assoc opt-spec record :test #'equal)))
+          (if opt-part 
+              (incf (cdr opt-part))
+            (push (cons opt-spec 1) 
+                  (gethash rule-name rule-table))))
+      (setf (gethash rule-name rule-table)
+        (list (cons opt-spec 1))))))
+  
+(defun test-rule-record nil
+  (let ((foo *unknown-rule-record*))
+    (setf *unknown-rule-record* (make-hash-table :test #'equal))
+    (dotimes (n 10)
+      (increment-rule-record "foobar" nil nil))
+    (dotimes (n 5)
+      (increment-rule-record "foobar" '(t nil) nil))
+    (dotimes (n 22)
+      (increment-rule-record "foobar" '(t nil t) nil))
+    (show-rule-record nil)
+    (setf *unknown-rule-record* foo)))

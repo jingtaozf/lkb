@@ -20,17 +20,20 @@
       (setf tag (read istream))
       (setf token (peek-char t istream nil nil))
       (unless (eql token #\>)
-        (error "> expected and not found"))
+        (error "> expected and not found at position ~A" 
+               (file-position istream)))
       (read-char istream)
       tag)))
 		
 (defun check-for-end-tag (expected-tag istream)
   (let ((tag (read-next-tag istream)))
-    (unless tag (error "end tag ~A expected and not found" expected-tag))
+    (unless tag (error "end tag ~A expected and not found at position ~A" 
+                       expected-tag (file-position istream)))
     (let ((str (string tag)))
       (unless (and (char-equal (elt str 0) #\/)
                    (string-equal (subseq str 1) (string expected-tag)))
-        (error "end tag ~A expected and not found" expected-tag)))))
+        (error "end tag ~A expected and not found at position ~A" 
+               expected-tag (file-position istream))))))
         
 (defun read-string-to-tag (istream)
   ;;; reads characters up until a < as a string
