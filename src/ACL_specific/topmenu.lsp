@@ -46,7 +46,7 @@
 (defvar *lkb-menu* nil)
 
 ;; Classes for abstract menus, with methods for turning them into real
-;; clim or emacs menus
+;; clim (or emacs?) menus
 
 (defclass menu-thing () 
   ((menu-title :initarg :menu-title 
@@ -101,9 +101,9 @@
 
 ;; Process menu description
 
-(defgeneric construct-menu (menu type &optional rest))
+(defgeneric construct-menu (menu &optional rest))
 
-(defmethod construct-menu ((menu menu) (type (eql :clim)) &optional table)
+(defmethod construct-menu ((menu menu) &optional table)
   (let ((new-table (make-command-table 
 		    (intern (concatenate 'string "MENU-" (menu-title menu)))
 		    :errorp nil)))
@@ -115,11 +115,10 @@
 				    new-table
 				    :errorp nil)
     (mapc #'(lambda (submenu)
-	      (construct-menu submenu :clim new-table))
+	      (construct-menu submenu new-table))
 	  (menu-items menu))))
 
-(defmethod construct-menu ((menu menu-item) (type (eql :clim)) 
-			   &optional table)
+(defmethod construct-menu ((menu menu-item) &optional table)
   (let ((name (intern (concatenate 'string "COM-" (menu-title menu)))))
     (eval `(define-command (,name
 			    :menu ,(menu-title menu)
@@ -187,13 +186,7 @@
   (:full (create-lkb-system-menu)) 
   (:yadu (create-yadu-system-menu)))
   |#
-  (if (and nil #+:allegro (lep:lep-is-running))
-    (set-up-emacs-interaction)
-    (set-up-clim-interaction)))
-
-(defun set-up-emacs-interaction ()
-  #+:allegro
-  (lkb::add-lkb-menu (construct-menu *lkb-menu*)))
+  (set-up-clim-interaction))
 
 (defun set-up-clim-interaction ()
   ;; Flush old commands
@@ -236,7 +229,7 @@
     (frame-exit *application-frame*))
   ;; add correct menu items
   (dolist (submenu (menu-items *lkb-menu*))
-    (construct-menu submenu :clim 'lkb-top-command-table))
+    (construct-menu submenu 'lkb-top-command-table))
   ;; go to it
   (start-lkb-frame))
 
