@@ -2,16 +2,24 @@
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `licence.txt' for conditions.
 
-
 ;; Create a runtime image suitable for distribution
 
 (in-package :common-lisp-user)
 
 (let ((target (dir-append sys-home (list :relative mk::%system-binaries%))))
+  
   (when (probe-file target) (delete-directory-and-files target))
   #+(and :allegro-version>= (version>= 5 0) :excl)
   (ignore-errors (excl:make-directory path))
- 
+
+  ;;
+  ;; the way ACL (6.1, at least) does its library file copying, we need to be
+  ;; in the sys: directory, when we call generate-application(); later on, the
+  ;; loadup process will change back to the LKB source directory ... :-{.
+  ;;
+  #+:windows
+  (excl:chdir (translate-logical-pathname "sys:"))
+  
   (excl:generate-application 
    "lkb" 
    target

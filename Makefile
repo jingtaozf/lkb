@@ -155,6 +155,9 @@ lkb_windows:
 	${RM} -f ${WROOT}/.yes;
 	( \
 	  echo "(load \"${WROOT}/lkb/src/general/loadup.lisp\")"; \
+	  echo "(setf *default-pathname-defaults* "; \
+          echo "  (translate-logical-pathname \"sys:\"))"; \
+	  echo "(excl:chdir *default-pathname-defaults*)"; \
 	  echo "(load \"${WROOT}/lkb/src/ACL_specific/deliver.lsp\")"; \
           echo "(excl:exit)"; \
 	) > c:/tmp/build.lisp

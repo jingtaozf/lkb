@@ -31,7 +31,8 @@
 ;;;
 ;;; on Windoze, Allegro CL fails to respect *default-pathname-defaults* :-{.
 ;;;
-(excl:chdir (make-pathname :device (pathname-device *load-truename*)))
+(excl:chdir (make-pathname :device (pathname-device *load-truename*)
+			   :directory '(:absolute)))
 
 ;;;
 ;;; load the portable defsystem() from CMU
