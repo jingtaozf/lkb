@@ -43,7 +43,11 @@ predication := feat-struc &
 
 list-of-indexes :< *list*.
 
-index :< feat-struc.
+instloc :< *top*.
+
+index := feat-struc &
+  [ INSTLOC instloc ].
+
   real-index :< index.
      ref-index :< real-index.
      sit-index :< real-index. 
@@ -200,6 +204,7 @@ pdp-lxm := prep-lxm &
  [ SYN [ HEAD [ MOD < [SYN [HEAD norv] ] >,
 		ANA false ],
 	 SPR < [ ] > ],
+   SEM [ RESTR <! !> ],
    ARG-ST < [ SYN NP ], [ SYN NP ] > ].
 
 ;; If the ARG-ST isn't limited to things of type NP then that info
@@ -209,7 +214,8 @@ mkp-lxm := prep-lxm &
  [ SYN [ HEAD [ MOD < >,
 		P-OBJ < #1 > ],
 	 SPR < > ],
-   ARG-ST < #1 > ].
+   SEM [ RESTR <! !> ],
+   ARG-ST < #1 & [ SYN NP ] > ].
 ;   ARG-ST < #1 & [SEM [INDEX #2] ] > ].
 ;   SEM [ MODE ref,
 ;	 INDEX #2 & ref-index ] ].

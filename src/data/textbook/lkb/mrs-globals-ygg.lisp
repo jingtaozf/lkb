@@ -13,6 +13,8 @@
 
 (defparameter *main-semantics-path* `(,(vsym "SEM") ,(vsym "RESTR") ,(vsym "LIST")))
 
+(defparameter *construction-semantics-path* `(,(vsym "SEM") ,(vsym "RESTR") ,(vsym "LIST")))
+
 (defparameter *top-semantics-type* (vsym "RELN"))
 
 (defparameter *rel-name-path* `(,(vsym "RELN") ))

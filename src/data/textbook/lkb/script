@@ -12,7 +12,8 @@
            (lkb-pathname (parent-directory) "semantics.tdl")
            (lkb-pathname (parent-directory) "lrule-types.tdl")
            (lkb-pathname (parent-directory) "grule-types.tdl")
-           (lkb-pathname (parent-directory) "types.tdl"))
+           (lkb-pathname (parent-directory) "types.tdl")
+           (lkb-pathname (parent-directory) "mrsmunge.tdl"))
      (lkb-pathname (this-directory) "settings.lsp"))
 (read-tdl-lex-file-aux
      (lkb-pathname (parent-directory) "lexicon.tdl"))
@@ -27,6 +28,10 @@
           (lkb-pathname (parent-directory) "lrules.tdl"))
 (read-tdl-parse-node-file-aux 
           (lkb-pathname (parent-directory) "parse-nodes.tdl"))
+
+#+mrs(read-mrs-rule-file-aux 
+      (lkb-pathname (parent-directory) "genrules.mrs")
+      t)
 
 ; (time (batch-check-lexicon))
 
