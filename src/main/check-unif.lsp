@@ -324,15 +324,20 @@
 
 
 (defun restrictors-compatible-p (daughter-restricted child-restricted)
-  (dolist (dt daughter-restricted t)
-    (let ((ct (pop child-restricted)))
-      (cond
-       ((or (eq dt ct) (null dt) (null ct))) ; eq possibly avoids a function call
-       ((not (type-bit-representation-p dt)) ; a type - i.e. a symbol or disjunction (list)
-	(unless (find-gcsubtype dt ct)
-	  (return-from restrictors-compatible-p nil)))
-       ((eql (logand dt ct) 0)
-	(return-from restrictors-compatible-p nil))))))
+  (loop for dt in daughter-restricted
+      for ct in child-restricted
+      do
+	(cond
+	 ;; eq possibly avoids a function call
+	 ((or (eq dt ct) (null dt) (null ct))) 
+	 ;; a type - i.e. a symbol or disjunction (list)
+	 ((not (type-bit-representation-p dt)) 
+	  (unless (find-gcsubtype dt ct)
+	    (return-from restrictors-compatible-p nil)))
+	 ;; a bit vector
+	 ((zerop (logand (the fixnum dt) (the fixnum ct)))
+	  (return-from restrictors-compatible-p nil))))
+  t)
 
 ;;; Versions called dynamically inside the scope of a set of unifications
 
@@ -362,7 +367,7 @@
 	;; No bit vector encoding, so do type unification the hard way
 	(unless (find-gcsubtype dt ct)
 	  (return-from x-restrict-and-compatible-p nil)))
-       ((eql (logand dt ct) 0)
+       ((zerop (logand (the fixnum dt) (the fixnum ct)))
 	(return-from x-restrict-and-compatible-p nil))))))
 
 (defun x-existing-dag-at-end-of (dag labels-chain)
