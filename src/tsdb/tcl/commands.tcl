@@ -354,9 +354,9 @@ proc tsdb_browse {code {condition ""}} {
     }
     errors {
       if {$condition != ""} {
-        set condition "$condition and (errors != `')";
+        set condition "$condition and (error != `')";
       } else {
-        set condition "(errors != `')";
+        set condition "(error != `')";
       }; # else
       set attributes "(\"i-id\" \"i-input\" \"error\")";
       set relations "(\"item\" \"parse\")";

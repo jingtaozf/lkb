@@ -138,6 +138,7 @@
               (*maximum-number-of-edges* (if (or (null edges) (zerop edges))
                                            *maximum-number-of-edges*
                                            edges))
+              (*maximum-number-of-active-edges* *maximum-number-of-edges*)
               (*first-only-p* (not exhaustive))
               (*maximal-number-of-readings* (if (integerp readings)
                                               readings
@@ -360,10 +361,9 @@
 (defun parse-tsdb-sentence (user-input &optional trace)
   (multiple-value-prog1
       (let ((*dag-recycling-p* (null trace)))
-        (when *dag-recycling-p* (setf *dag-recycling-p* *dag-recycling-p*))
-        (parse user-input trace))
-      (when (fboundp *do-something-with-parse*)
-         (funcall *do-something-with-parse*))))
+        (when *dag-recycling-p* 
+          (reset-pools))
+        (parse user-input trace))))
 
 
 ;;;

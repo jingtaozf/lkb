@@ -51,9 +51,10 @@
                   (setf global-gc-p t)
                   #-(version>= 5 0)
                   (busy :gc :start)
-                  (when *tsdb-gc-message-p*
+                  (when (and *tsdb-gc-message-p* 
+                             (output-stream-p excl:*initial-terminal-io*))
                     (format 
-                     *terminal-io*
+                     excl:*initial-terminal-io*
                      "~&gc-after-hook(): ~d bytes were tenured; ~
                       triggering global gc().~%"
                      *tsdb-tenured-bytes*))
