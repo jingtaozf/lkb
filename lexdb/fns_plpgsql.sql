@@ -14,6 +14,9 @@ CREATE OR REPLACE FUNCTION public.dump_data() RETURNS boolean AS '
 DECLARE
 	backup_file_base text;
 BEGIN
+	IF NOT(reln_exists(\'public\',\'fields\')) THEN
+		CREATE TABLE public.fields (defn text);
+	END IF;
 	IF (reln_exists(\'public\',\'meta\')) THEN
 		backup_file_base := \'BACKUP-BEFORE-LEXDB-UPDATE\';
 		PERFORM dump_db_su(backup_file_base);
