@@ -237,6 +237,7 @@ typedef struct tsdb {
   char *debug_file;
 #endif
 
+  int command;
   Tsdb_history **history;
   int history_position;
   long history_size;
@@ -244,9 +245,6 @@ typedef struct tsdb {
 
 #if !defined(TSDB_C)
   extern Tsdb tsdb;
-
-  /* temporary hack before tom gets the fucking history working */
-  extern Tsdb_selection *tsdb_last_result;
 
   extern FILE *tsdb_default_stream;
   extern FILE *tsdb_error_stream;
@@ -322,7 +320,6 @@ BOOL tsdb_relations_are_equal(Tsdb_relation *, Tsdb_relation *);
 BOOL tsdb_initialize(void);
 void tsdb_parse_environment(void);
 BOOL tsdb_satisfies_condition(Tsdb_tuple *, Tsdb_node *, Tsdb_relation *);
-void tsdb_set_history_size(int);
 
 char *tsdb_join_key(Tsdb_relation *, Tsdb_relation *);
 char **tsdb_common_keys(Tsdb_relation *, Tsdb_relation *);

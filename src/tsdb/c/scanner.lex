@@ -404,7 +404,7 @@ TIME (\(|\[)?{HOUR}:{MINUTE}(:{SECOND})?(\)|\])?
   return(Y_DATE);
 }
 
-({THIRTY}[-/])?((0?[46])|(09)|(11))[-/]{YEAR}({WHITESPACE}{TIME})? {
+({THIRTY}[-/])?((0?[46])|(0?9)|(11))[-/]{YEAR}({WHITESPACE}{TIME})? {
   if(verbose_mode) {
     fprintf(stderr, "DATE\n");
   } /* if */

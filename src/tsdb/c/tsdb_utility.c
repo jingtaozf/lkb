@@ -1362,11 +1362,6 @@ void ignore() {
   ;
 }
 
-void tsdb_set_history_size(int size) {
-
-} /* tsdb_set_history_size() */
-
-
 BOOL tsdb_initialize() {
 
 /*****************************************************************************\

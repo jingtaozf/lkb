@@ -42,6 +42,7 @@ Tsdb tsdb = {
 #ifdef DEBUG
   (char *)NULL,            /* debug_file */
 #endif
+  -1,                      /* command */
   (Tsdb_history **)NULL,   /* history */
   -1,                      /* history_position */
   TSDB_HISTORY_SIZE        /* history_size */

@@ -36,12 +36,15 @@ void tsdb_info(Tsdb_value **value_list) {
   Tsdb_relation *foo;
   FILE *output;
   int i, j;
-  BOOL match;
+  BOOL match, pager;
 
   if(value_list != NULL) {
+    pager = TRUE;
     if((output = tsdb_open_pager()) == NULL) {
-      return;
+      output = tsdb_default_stream;
+      pager = FALSE;
     } /* if */
+
     for(i = 0, match = FALSE; value_list[i] != NULL; i++, match = FALSE) {
       switch(value_list[i]->type) {
         case TSDB_IDENTIFIER:
@@ -118,13 +121,29 @@ void tsdb_info(Tsdb_value **value_list) {
                     value_list[i]->value.identifier);
             fflush(tsdb_error_stream);
           } /* if */
+          if(!strncmp(value_list[i]->value.identifier, "tsdb_history_size", 16)
+             || !strncmp(value_list[i]->value.identifier, "history-size", 11)
+             || !strcmp(value_list[i]->value.identifier, "all")) {
+            fprintf(output,
+                    "tsdb maximum size of query result storage: %d.\n",
+                    tsdb.history_size);
+            match = TRUE;
+          } /* if */
+          if(!match) {
+            fprintf(tsdb_error_stream,
+                    "info(): invalid argument `%s'.\n",
+                    value_list[i]->value.identifier);
+            fflush(tsdb_error_stream);
+          } /* if */
           break;
         default:
           fprintf(tsdb_error_stream, "info(): invalid argument entity.\n");
           fflush(tsdb_error_stream);
       } /* switch */
     } /* for */
-    pclose(output);
+    if(pager) {
+      pclose(output);
+    } /* if */
   } /* if */
 } /* tsdb_info() */
 
@@ -174,18 +193,7 @@ void tsdb_set(Tsdb_value *variable, Tsdb_value *value) {
               "set(): invalid (non-integer) type for `max-results'.\n");
       fflush(tsdb_error_stream);
     } /* if */
-  else if(!strncmp(variable->value.identifier, "tsdb_history_size", 17)
-     || !strncmp(variable->value.identifier, "history-size", 12)) {
-    if(value->type != TSDB_INTEGER) {
-      fprintf(tsdb_error_stream,
-              "set(): invalid (non-integer) type for `max-results'.\n");
-      fflush(tsdb_error_stream);
-    } /* if */
-    else { /* history-size is ok */
-      tsdb_set_history_size(value->value.integer);
-    } /* else */
-  }
-  else {
+    else {
       if(value->value.integer < 0) {
         fprintf(tsdb_error_stream,
                 "set(): invalid value (%d) for `max-results'.\n",
@@ -194,6 +202,25 @@ void tsdb_set(Tsdb_value *variable, Tsdb_value *value) {
       } /* if */
       else {
         tsdb.max_results = value->value.integer;
+      } /* else */
+    } /* else */
+  } /* if */
+  else if(!strncmp(variable->value.identifier, "tsdb_history_size", 17)
+     || !strncmp(variable->value.identifier, "history-size", 12)) {
+    if(value->type != TSDB_INTEGER) {
+      fprintf(tsdb_error_stream,
+              "set(): invalid (non-integer) type for `history-size'.\n");
+      fflush(tsdb_error_stream);
+    } /* if */
+    else {
+      if(value->value.integer < 0) {
+        fprintf(tsdb_error_stream,
+                "set(): invalid value (%d) for `history-size'.\n",
+                value->value.integer);
+        fflush(tsdb_error_stream);
+      } /* if */
+      else {
+        tsdb.history_size = value->value.integer;
       } /* else */
     } /* else */
   } /* if */
@@ -911,13 +938,7 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
 
   /* now check the attributes for projections */
   tsdb_project(selection, attribute_list, report,(FILE *)NULL);
-  tsdb_last_result = selection;
   return(selection);
-
-  /* 
-     if (!from_find)
-     tsdb_free_selection(selection);
-   */
 
 } /* tsdb_complex_retrieve */
 
