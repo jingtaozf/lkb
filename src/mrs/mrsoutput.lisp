@@ -30,8 +30,9 @@
 ;;;    *psoa-rh-cons-path* - hcons structure
 ;;;    not in handle-free fragment
 ;;;
-;;; 5. *psoa-mode-path*   - mode (optional)
+;;; (5. *psoa-mode-path*   - mode (optional)
 ;;;    *psoa-info-s-path* - information structure (optional)
+;;;    both removed)
 ;;;
 ;;; 6. variables
 ;;;    a. variable equivalence is indicated by structure sharing
@@ -118,11 +119,8 @@ duplicate variables")
                       (path-value fs *psoa-top-h-path*)))
         (index-fs (path-value fs *psoa-index-path*))
         (liszt-fs (path-value fs *psoa-liszt-path*))
-	(mode-fs (if *psoa-mode-path* (path-value fs *psoa-mode-path*)))
         (h-cons-fs (if *psoa-rh-cons-path*
-                       (path-value fs *psoa-rh-cons-path*)))
-        (info-s-fs (if *psoa-info-s-path*
-                       (path-value fs *psoa-info-s-path*))))
+                       (path-value fs *psoa-rh-cons-path*))))
     (make-psoa
      :top-h (if top-h-fs
                 (create-variable top-h-fs
@@ -131,23 +129,13 @@ duplicate variables")
      :index (if (is-valid-fs index-fs)
                 (create-variable index-fs
                                  *variable-generator*))
-     :mode (if (is-valid-fs mode-fs) 
-	       (create-type
-                    (fs-type mode-fs)))
      :liszt (nreverse (construct-liszt liszt-fs
                                        nil
                                        *variable-generator*))
      :h-cons (nreverse (construct-h-cons h-cons-fs
                                          nil
-                                         *variable-generator*))
-     :info-s (if (is-valid-fs info-s-fs)
-                 (construct-info-s info-s-fs nil)))))
+                                         *variable-generator*)))))
 
-(defun construct-info-s (arg1 arg2)
-  ;;; Dummy function, to be redefined if someone wants information
-  ;;; structure
-  (declare (ignore arg1 arg2))
-  nil)
 
 ;;; ***************************************************
 ;;;
@@ -168,30 +156,24 @@ duplicate variables")
         nil))))
 
 (defun create-new-handle-var (gen)
-  (let* ((idnumber (funcall gen))
-         (variable-name (format nil "h~A" idnumber)))
+  (let* ((idnumber (funcall gen)))
     (make-handle-var 
-     :name variable-name
-     :type 'handle
+     :type "h"
      :id idnumber)))
 
 (defun create-variable (fs gen)
   (when (is-valid-fs fs)
     (let ((existing-variable (assoc fs *named-nodes*)))
       (if existing-variable (cdr existing-variable)
-        (let* ((idletter (determine-variable-type fs))
-               (idnumber (funcall gen))
-               (variable-name (format nil "~A~A" idletter idnumber))
-               (var-type (fs-type fs))
+        (let* ((idnumber (funcall gen))
+               (var-type (determine-variable-type fs))
                (extra (create-index-property-list fs))
-               (variable-identifier (cond ((equal idletter "h")
+               (variable-identifier (cond ((eql var-type :handle)
                                            (make-handle-var 
-                                            :name variable-name
                                             :type var-type 
                                             :extra extra 
                                             :id idnumber))
                                           (t (make-var 
-                                              :name variable-name 
                                               :type var-type
                                               :extra extra 
                                               :id idnumber)))))
@@ -206,12 +188,10 @@ duplicate variables")
            (extra (create-index-property-list fs))
            (variable-identifier (cond ((equal idletter "h")
                                        (make-handle-var 
-                                        :name :dummy
                                         :type var-type 
                                         :extra extra 
                                         :id :dummy))
                                       (t (make-var 
-                                          :name :dummy
                                           :type var-type
                                           :extra extra 
                                           :id :dummy)))))

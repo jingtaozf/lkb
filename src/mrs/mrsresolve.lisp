@@ -13,16 +13,15 @@
 
 
 (defmacro is-handel-var (var)
-    ;;; test is whether the string begins with #\h
+    ;;; test is whether the type is "h"
   `(and (var-p ,var)
-       (char-equal (elt (var-name ,var) 0) #\h)))
+       (equal (var-type ,var) "h")))
 
 
 (defmacro nonquantified-var-p (var)
-  ;;; true if the string identifier for the variable
-  ;;; begins with anything other than x
+  ;;; true if the type is anything other than x
   `(and (var-p ,var)
-       (not (char-equal (elt (var-name ,var) 0) #\x))))
+	(not (equal (var-type ,var) "x"))))
 
 
 ;;; Following three are wrappers for get-full-handel-args-with-features

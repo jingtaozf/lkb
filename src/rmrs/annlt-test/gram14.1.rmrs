@@ -630,7 +630,7 @@
 <hook><index>E</index><label>H1</label></hook>
 <ep><gpred>PRPSTN_M_REL</gpred><label>H1</label><var>H2</var></ep>
 <rarg><rargname>ARG1</rargname><label>H</label><var>X</var></rarg>
-<hcons hreln='qeq'><hi>H2</hi><lo>H</lo></hcons>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H</var></lo></hcons>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
@@ -657,7 +657,7 @@
 <hook><index>E</index><label>H1</label></hook>
 <ep><gpred>PRPSTN_M_REL</gpred><label>H1</label><var>H2</var></ep>
 <rarg><rargname>ARG1</rargname><label>H</label><var>X</var></rarg>
-<hcons hreln='qeq'><hi>H2</hi><lo>H</lo></hcons>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H</var></lo></hcons>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
@@ -2658,7 +2658,7 @@
 <semstruct>
 <hook><index>E</index><label>H1</label></hook>
 <ep><gpred>PRPSTN_M_REL</gpred><label>H1</label><var>H2</var></ep>
-<hcons hreln='qeq'><hi>H2</hi><lo>H</lo></hcons>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H</var></lo></hcons>
 </semstruct>
 <equalities><rv>H</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
 <equalities><rv>E</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
@@ -2874,7 +2874,7 @@
 <hook><index>X</index><label>H2</label></hook>
 <rarg><rargname>RSTR</rargname><label>H</label><var>H1</var></rarg>
 <rarg><rargname>BODY</rargname><label>H</label><var>H2</var></rarg>
-<hcons hreln='qeq'><hi>H1</hi><lo>H3</lo></hcons>
+<hcons hreln='qeq'><hi><var>H1</var></hi><lo><var>H3</var></lo></hcons>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>DET</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H</rv><dh><dtr>DET</dtr><he>LABEL</he></dh></equalities>
@@ -2911,7 +2911,7 @@
 <ep><gpred>BARE_DIV_Q_REL</gpred><label>H</label><var>X</var></ep>
 <rarg><rargname>RSTR</rargname><label>H</label><var>H1</var></rarg>
 <rarg><rargname>BODY</rargname><label>H</label><var>H2</var></rarg>
-<hcons hreln='qeq'><hi>H1</hi><lo>H3</lo></hcons>
+<hcons hreln='qeq'><hi><var>H1</var></hi><lo><var>H3</var></lo></hcons>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H3</rv><dh><dtr>N</dtr><he>LABEL</he></dh></equalities>

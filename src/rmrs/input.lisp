@@ -137,11 +137,9 @@
     (create-new-label-with-id (parse-integer (third tag)))))
 
 (defun create-new-label-with-id (idnumber)
-  (let* ((variable-name (format nil "h~A" idnumber)))
-        (make-handle-var 
-         :name variable-name
-         :type 'handle
-         :id idnumber)))
+  (make-handle-var 
+   :type "h"
+   :id idnumber))
 
 
 (defun read-rmrs-var (content)
@@ -178,10 +176,8 @@
 	 (construct-rmrs-var-extras (cddr extra-list))))))
 
 (defun create-new-var-with-id (idnumber str &optional extras)
-  (let* ((type (find-var-type str))
-         (variable-name (format nil "~A~A" str idnumber)))
+  (let* ((type (find-var-type str)))
         (make-var 
-         :name variable-name
          :type type
          :id idnumber
 	 :extra extras)))

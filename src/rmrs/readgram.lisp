@@ -170,16 +170,16 @@
 (defun read-rmrs-semstruct-in-g (content)
 ;;; <!ELEMENT ing (ing-a,ing-b) >
   (let ((ing-a nil) (ing-b nil))
-    (setf ing-a (read-rmrs-simple '|ing-a| (car content)))
-    (setf ing-b (read-rmrs-simple '|ing-b| (cadr content)))
+    (setf ing-a (read-rmrs-grammar-var (second (car content))))
+    (setf ing-b (read-rmrs-grammar-var (second (cadr content))))
     (make-in-group :labels (list (construct-grammar-var ing-a) 
                                  (construct-grammar-var ing-b)))))
 
 (defun read-rmrs-semstruct-qeq (content)
 ;;; <!ELEMENT hcons (hi, lo)>
   (let ((hi nil) (lo nil))
-    (setf hi (read-rmrs-simple '|hi| (car content)))
-    (setf lo (read-rmrs-simple '|lo| (cadr content)))
+    (setf hi (read-rmrs-grammar-var (second (car content))))
+    (setf lo (read-rmrs-grammar-var (second (cadr content))))
     (make-hcons :relation "qeq"
 		:scarg (construct-grammar-var hi) 
                 :outscpd (construct-grammar-var lo))))

@@ -11,38 +11,42 @@
 ;;; this is the basic MRS file, which defines the lisp structures
 ;;; used for internally encoding MRS.  
 
-;;; MRS structs
-;;; because I want to be able to do other things with MRSs besides
-;;; just printing them, this stuff defines a set of structures
-;;; for MRS.  Note that these structures are simple, because
-;;; reentrancies have been replaced by variables.
+;;; ideally handle and liszt should be renamed, but life's too short
 
 (defstruct (basemrs)
   top-h
   liszt
   h-cons)
 
-(defstruct (psoa (:include basemrs))
-  mode
-  index
-  info-s) ; information structure
+;;; rmrs is a substructure of this (see comp.lisp)
 
-;;; defined ep so there's a basic structure for EPs for RMRS
-;;; elaborated for MRS proper
+(defstruct (psoa (:include basemrs))
+  index)
+
+;;; psoa records an index - this really is the equivalent of the semstruct
+;;; in RMRS - the two should possibly be amalgamated and index should be
+;;; replaced by hook, when the code for displaying MRSs according to the
+;;; algebra is finally written
 
 ;;; I have changed the old `sort' to `pred' - the old name was 
 ;;; seriously confusing
 
-(defstruct ep
-  pred  ; relation name
-  flist)
-  
-(defstruct (rel (:include ep))
-  handel
+;;; ep removed again - was used for the `simple' RMRS
+;;; but that's no longer supported
+
+(defstruct (rel)
+  handel                               
+  pred					; relation name
+  flist
   parameter-strings                     ; copy of the relations with constant
-                                        ; values
+					; values, used in the generator
+                                        ; candidate for removal!
   extra)                                ; extra is a junk slot
                                         ; needed for the munging rules 
+
+;;; currently the cfrom and cto are just used in RMRS (plus in some
+;;; experimental MRS code that was never checked in) but defined here
+;;; since they will be needed
 
 (defstruct (char-rel (:include rel))
   cfrom
@@ -54,14 +58,13 @@
 
 ;;; feature is a symbol
 
-;;; value is either a constant (simple atom) or
+;;; value is either a constant or
 ;;; a var structure which contains a string plus a number 
 ;;; (unique to this MRS)
 
 (defstruct (var)
-  name
   type
-  extra ; useful for e.g. agreement values
+  extra ; e.g. agreement values
   id)
 
 (defstruct (extrapair)
@@ -71,19 +74,41 @@
 (defstruct (handle-var (:include var)))
 
 (defstruct (grammar-var (:include var)))
-;;; a sort of placeholder variable
+;;; a sort of placeholder variable used in RMRS code
 
 (defstruct (hcons)
   relation
   scarg
   outscpd)
 
-;;; information structure is a list of variables together
-;;; with values for focus
+;;; In an attempt to clean up a messy situation,
+;;; var-types are now all lower-case strings.  
+;;; Although I wouldn't generally use strings
+;;; to represent enumerated values, it saves 
+;;; considerable messing around to do so, which
+;;; seems more important than the minor efficiency
+;;; hit.  In effect, the inventory of var-types is
+;;; part of the SEM-I.  For now we have the
+;;; following (from the RMRS DTD)
+;;; (x|e|h|u|l)
+;;; the mapping from the ERG (currently in lkbmrs.lisp)
+;;; adds d, t, v and c
 
-(defstruct (info-struct)
-  variable
-  focus)
+(defun var-name (var)
+  ;;; always constructed from the type and the id
+  ;;; FIX - should be renamed to avoid confusion
+  ;;; when dependencies code is changed
+  (unless (var-p var)
+    (error "var expected ~A found" var))
+  (format nil "~A~A" (var-type var)
+	  (var-id var)))
+
+(defun handle-var-name (var)
+  ;;; FIX - remove when dependencies.lisp is changed
+  (unless (handle-var-p var)
+    (error "var expected ~A found" var))
+  (format nil "~A~A" (var-type var)
+	  (var-id var)))
 
 ;;; variable generator - moved from mrsoutput because it could
 ;;; potentially be called without that code having been read in
@@ -162,11 +187,6 @@
     (when index-val
       (format stream "~%  INDEX: ~(~a~)" index-val))))
 
-(defmethod mrs-output-mode ((mrsout simple) mode-val)
-  (with-slots (stream) mrsout
-    (when mode-val
-      (format stream "~%  MODE: ~A" mode-val))))
-
 (defmethod mrs-output-start-liszt ((mrsout simple))
   (with-slots (stream indentation) mrsout
     (format stream "~%  RELS: <")
@@ -236,20 +256,6 @@
   (with-slots (stream indentation) mrsout
     (format stream "~VT>" indentation)))
 
-(defmethod mrs-output-start-info-s ((mrsout simple))
-  (with-slots (stream) mrsout
-    (format stream "~%  INFO-S: <")))
-
-(defmethod mrs-output-info-s ((mrsout simple) focus var first-p)
-  (with-slots (stream indentation) mrsout
-    (unless first-p
-      (format stream "~%"))
-    (format stream "~VT~A ~A" 
-            (+ indentation 2) var focus)))
-
-(defmethod mrs-output-end-info-s ((mrsout simple))
-  (with-slots (stream indentation) mrsout
-    (format stream "~VT>" indentation)))
 
 (defmethod mrs-output-end-psoa ((mrsout simple))
   (with-slots (stream indentation) mrsout
@@ -297,10 +303,6 @@
 (defmethod mrs-output-index ((mrsout indexed) index-val)
   (with-slots (stream) mrsout
     (format stream "~(~a~)" index-val)))
-
-(defmethod mrs-output-mode ((mrsout indexed) mode-val)
-  (with-slots (stream) mrsout
-    (format stream "~A," mode-val)))
 
 (defmethod mrs-output-start-liszt ((mrsout indexed))
   (with-slots (stream) mrsout
@@ -380,22 +382,6 @@
   (with-slots (stream) mrsout
     (format stream "}")))
 
-(defmethod mrs-output-start-info-s ((mrsout indexed))
-  (with-slots (stream) mrsout
-    (format stream "~%{")))
-
-(defmethod mrs-output-info-s ((mrsout indexed) focus var first-p)
-  (with-slots (stream) mrsout
-    (unless first-p
-      (format stream ",~%"))
-    (format stream "~A ~A" 
-            var focus)))
-
-(defmethod mrs-output-end-info-s ((mrsout indexed))
-  (with-slots (stream) mrsout
-    (format stream "}")))
-
-
 (defmethod mrs-output-end-psoa ((mrsout indexed))
   (with-slots (stream) mrsout
     (format stream ">~%" )))
@@ -461,10 +447,6 @@ higher and lower are handle-variables
 (defmethod mrs-output-top-h ((mrsout prolog) handel-val)
   (with-slots (stream) mrsout
     (format stream "~(~a~)" handel-val)))
-
-(defmethod mrs-output-mode ((mrsout prolog) mode-val)
-  (with-slots (stream) mrsout
-    (format stream ",~A" mode-val)))
 
 (defmethod mrs-output-index ((mrsout prolog) index-val)
   (with-slots (stream) mrsout
@@ -600,9 +582,6 @@ higher and lower are handle-variables
         </td>~%" 
        index index index index))))
 
-(defmethod mrs-output-mode ((mrs html) mode)
-  (declare (ignore mode)))
-
 (defmethod mrs-output-start-liszt ((mrs html))
   (with-slots (stream nrows) mrs
     (format
@@ -713,13 +692,6 @@ higher and lower are handle-variables
   (with-slots (stream) mrs
     (format stream " }</td>~%")))
 
-(defmethod mrs-output-start-info-s ((mrs html)))
-
-(defmethod mrs-output-info-s ((mrs html) focus variable firstp)
-  (declare (ignore focus variable firstp)))
-
-(defmethod mrs-output-end-info-s ((mrs html)))
-
 (defmethod mrs-output-end-psoa ((mrs html))
   (with-slots (stream) mrs
     (format stream "</table>")))
@@ -776,9 +748,6 @@ higher and lower are handle-variables
   (mrs-output-top-h *mrs-display-structure* 
                     (find-var-name (psoa-top-h psoa) connected-p))
   (print-mrs-extra (psoa-top-h psoa))
-  (when (psoa-mode psoa)
-    (mrs-output-mode *mrs-display-structure* 
-		     (psoa-mode psoa)))
   (mrs-output-index *mrs-display-structure* 
                     (find-var-name (psoa-index psoa) connected-p))
   (print-mrs-extra (psoa-index psoa))
@@ -811,19 +780,6 @@ higher and lower are handle-variables
   (mrs-output-end-liszt *mrs-display-structure*)
   (when *rel-handel-path*
     (print-mrs-hcons (psoa-h-cons psoa) connected-p *mrs-display-structure*))
-  (when *psoa-info-s-path*
-    (mrs-output-start-info-s *mrs-display-structure*)
-    (let ((first-info-s t))
-      (loop for info-s in (psoa-info-s psoa)
-          do
-            (mrs-output-info-s 
-             *mrs-display-structure*
-             (info-struct-focus info-s)
-             (find-var-name 
-              (info-struct-variable info-s) connected-p)
-             first-info-s)
-            (setf first-info-s nil)))
-    (mrs-output-end-info-s *mrs-display-structure*))
   (mrs-output-end-psoa *mrs-display-structure*))
 
 (defun print-mrs-hcons (hcons-list connected-p display)
@@ -1074,8 +1030,7 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
   (let* ((varname (read-mrs-atom istream))
          (existing (assoc varname *already-read-vars*))
          (var (or (cdr existing)
-                  (make-var :name (string varname)
-                            :id (funcall *variable-generator*)))))
+                  (make-var :id (funcall *variable-generator*)))))
     (unless existing 
       (push (cons varname var) *already-read-vars*))
     (let ((next-char (peek-char t istream nil 'eof)))
@@ -1083,7 +1038,8 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
       (when (eql next-char #\[)
         (read-char istream)
         (let ((extra nil)
-              (var-type (read-mrs-atom istream)))
+              (var-type (string-downcase 
+			 (string (read-mrs-atom istream)))))
           (loop
             (let ((inner-next-char (peek-char t istream nil 'eof)))
               (when (eql inner-next-char 'eof) (error "Unexpected eof"))
@@ -1101,8 +1057,7 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
   (let* ((varname (read-mrs-atom istream))
          (existing (assoc varname *already-read-vars*))
          (var (or (cdr existing)
-                  (make-var :name (string varname)
-                            :id (gensym (string varname))))))
+                  (make-var :id (gensym (string varname))))))
     (unless existing 
       (push (cons varname var) *already-read-vars*))
     var))
@@ -1293,8 +1248,7 @@ VAR -> VARNAME[:CONSTNAME]*
   (let* ((varname (read-mrs-atom istream))
          (existing (assoc varname *already-read-vars*))
          (var (or (cdr existing)
-                  (make-var :name (string varname)
-                            :id (funcall *variable-generator*)))))
+                  (make-var :id (funcall *variable-generator*)))))
     (unless existing 
       (push (cons varname var) *already-read-vars*))
     (let ((extra nil))
@@ -1313,7 +1267,7 @@ VAR -> VARNAME[:CONSTNAME]*
               (progn 
                 (when (var-type var)
                   (error "Multiple type specs"))
-                (setf (var-type var) val))))))
+                (setf (var-type var) (string-downcase (string val))))))))
       (when extra
         (setf (var-extra var) extra)))
     var))

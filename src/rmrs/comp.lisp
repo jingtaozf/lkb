@@ -52,6 +52,9 @@
 ;;; preposition/particle distinction is made)
 ;;; for now, I'll try and do without holes
 ;;;
+;;; FIX - doing without holes won't work as soon as scopal modification 
+;;; (including negation) is treated properly.  But may be able to
+;;; get away with an `anchor' - single index - instead
 
 
 (defstruct indices
@@ -100,36 +103,18 @@
 
 ;;;;
 
+
+(defun find-var-type (str)
+  ;;; this is only used in grammar/lextag rmrs files
+  ;;; to abbreviate variables
+  ;;; It should never be used when reading in an MRS/RMRS file
+  (string-downcase (subseq str 0 1)))
+
+
 (defun construct-grammar-var (var-string &optional extras)
   (make-grammar-var :type (find-var-type var-string)
                     :id var-string
 		    :extra extras))
-
-(defparameter *rmrs-var-types*
-    '((#\h . :handle)
-      (#\e . :event)
-      (#\x . :ref-ind)
-      (#\u . :other)
-      (#\H . :handle)
-      (#\E . :event)
-      (#\X . :ref-ind)
-      (#\U . :other)
-      (#\h . "HANDLE")
-      (#\e . "EVENT")
-      (#\x . "REF-IND")
-      (#\u . "OTHER")))
-      
-
-(defun find-var-type (str)
-  (let ((letter (elt str 0)))
-    (or (cdr (assoc letter *rmrs-var-types*))
-        :other)))
-
-(defun find-var-letter (type)
-  (or (car (rassoc type *rmrs-var-types* :test #'equal))
-      (car (rassoc (string type) *rmrs-var-types* :test #'equal))
-      #\u))
-
 
 (defparameter *DEFAULT-TEMPLATE*
     (MAKE-RMRS-TAG-TEMPLATE
@@ -452,17 +437,13 @@ goes to
 
 (defun create-new-rmrs-var (type gen extras)
   ;;; constructs a new variable of a given type
-  (let* ((idnumber (funcall gen))
-         (letter (find-var-letter type))
-         (variable-name (format nil "~A~A" letter idnumber)))
-    (if (eql type :handle)
+  (let* ((idnumber (funcall gen)))
+    (if (equal type "h")
         (make-handle-var 
-         :name variable-name
-         :type 'handle
+         :type "h"
          :id idnumber
          :extra extras)
     (make-var 
-     :name variable-name
      :type type
      :id idnumber
      :extra extras))))

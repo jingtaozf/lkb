@@ -5,8 +5,90 @@
 
 ;;; see convert-const-parse-expression for one way of running this code
 
-;;; basemrs.lisp has been modified to define the information structure part of
-;;; the MRS and also defines print routines
+;;; basemrs.lisp was originally modified to define the information 
+;;; structure part of the MRS and to define print routines
+;;; this code has now been removed, though it'd be easy to reestablish 
+;;; it if necessary
+
+#|
+basemrs.lisp
+
+(defstruct (psoa (:include basemrs))
+  info-str
+  index)
+
+;;; information structure is a list of variables together
+;;; with values for focus
+
+(defstruct (info-struct)
+  variable
+  focus)
+
+(defmethod mrs-output-start-info-s ((mrsout simple))
+  (with-slots (stream) mrsout
+    (format stream "~%  INFO-S: <")))
+
+(defmethod mrs-output-info-s ((mrsout simple) focus var first-p)
+  (with-slots (stream indentation) mrsout
+    (unless first-p
+      (format stream "~%"))
+    (format stream "~VT~A ~A" 
+            (+ indentation 2) var focus)))
+
+(defmethod mrs-output-end-info-s ((mrsout simple))
+  (with-slots (stream indentation) mrsout
+    (format stream "~VT>" indentation)))
+
+
+
+(defmethod mrs-output-start-info-s ((mrsout indexed))
+  (with-slots (stream) mrsout
+    (format stream "~%{")))
+
+(defmethod mrs-output-info-s ((mrsout indexed) focus var first-p)
+  (with-slots (stream) mrsout
+    (unless first-p
+      (format stream ",~%"))
+    (format stream "~A ~A" 
+            var focus)))
+
+(defmethod mrs-output-end-info-s ((mrsout indexed))
+  (with-slots (stream) mrsout
+    (format stream "}")))
+
+
+(defmethod mrs-output-start-info-s ((mrs html)))
+
+(defmethod mrs-output-info-s ((mrs html) focus variable firstp)
+  (declare (ignore focus variable firstp)))
+
+(defmethod mrs-output-end-info-s ((mrs html)))
+
+
+;;; in print-psoa
+  (when *psoa-info-s-path*
+    (mrs-output-start-info-s *mrs-display-structure*)
+    (let ((first-info-s t))
+      (loop for info-s in (psoa-info-s psoa)
+          do
+            (mrs-output-info-s 
+             *mrs-display-structure*
+             (info-struct-focus info-s)
+             (find-var-name 
+              (info-struct-variable info-s) connected-p)
+             first-info-s)
+            (setf first-info-s nil)))
+    (mrs-output-end-info-s *mrs-display-structure*))
+
+mrsglobals.lisp
+;;; for information structure experiments
+
+(defparameter *psoa-info-s-path* NIL)
+
+(defparameter *istruct-var-path* NIL)
+
+(defparameter *istruct-focus-path* NIL)
+|#
 
 ;;; the following two functions are called from construct-mrs in mrsoutput.lisp
 ;;; Together with the globals in the mrsglobals file, they control

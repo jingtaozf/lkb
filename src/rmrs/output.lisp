@@ -503,7 +503,7 @@ for gram.dtd and tag.dtd
   (rmrs-output-var-fn 
    display
    (find-rmrs-var-id value bindings)
-   (find-var-letter (var-type value)))
+   (var-type value))
   (unless (member value *already-seen-rmrs-vars* :test #'eq)
     (push value *already-seen-rmrs-vars*)
     (rmrs-output-start-extra display)
@@ -522,7 +522,7 @@ for gram.dtd and tag.dtd
           (rmrs-output-hcons-start
            display (hcons-relation hcons))
 	  (print-rmrs-var 
-            (hcons-outscpd hcons) bindings display)
+            (hcons-scarg hcons) bindings display)
           (rmrs-output-hcons-next 
            display)
 	  (rmrs-output-label 

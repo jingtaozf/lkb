@@ -34,14 +34,13 @@
   liszt
   h-cons)
 
-(defstruct ep
-  pred  ; relation name
-  flist)
-
-(defstruct (rel (:include ep))
-  handel
+(defstruct (rel)
+  handel                               
+  pred					; relation name
+  flist
   parameter-strings                     ; copy of the relations with constant
-                                        ; values
+					; values, used in the generator
+                                        ; candidate for removal!
   extra)                                ; extra is a junk slot
                                         ; needed for the munging rules 
 
@@ -50,7 +49,6 @@
   cto)
 
 (defstruct (var)
-  name
   type
   extra ; useful for e.g. agreement values
   id)

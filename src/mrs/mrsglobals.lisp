@@ -43,10 +43,6 @@
   `(,(vsym "TOP-H"))
   "path to get the top handle from a psoa")
 
-(defparameter *psoa-mode-path* 
-  NIL
-  "path in grammars which make a distinction between prop etc")
-
 (defparameter *psoa-index-path* 
   `(,(vsym "INDEX"))
   "path to get an index from a psoa")
@@ -207,12 +203,6 @@ set in the code")
 (defparameter *alex-mode* nil
   "if t, allows scope to have specified relations")
 
-;;; for information structure experiments
 
-(defparameter *psoa-info-s-path* NIL)
-
-(defparameter *istruct-var-path* NIL)
-
-(defparameter *istruct-focus-path* NIL)
 
 
