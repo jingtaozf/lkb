@@ -2,6 +2,13 @@
 ;;; Tools to help build a tree bank
 ;;;
 
+
+;;;
+;;; ToDO
+;;;
+;;; - undo `Concise' and `Ordered' toggling; make them one-time only effect
+;;;
+
 (in-package :lkb)
 
 (def-lkb-parameter *preference-file* "~/grammar/parses.txt")
@@ -57,6 +64,8 @@
 
 (defun set-up-compare-frame (parses frame)
   (setf (compare-frame-decisions frame) (list (make-decision :type :start)))
+  (when (null (compare-frame-input frame))
+    (setf (compare-frame-input frame) (edge-leaves (car parses))))
   (let ((id 0))
     (setf (compare-frame-trees frame)
       (mapcar #'(lambda (p) 
@@ -242,6 +251,7 @@
 	   :accessor compare-frame-stream)
    (current-chart :initform nil
                   :accessor  compare-frame-current-chart)
+   (input :initform nil :accessor compare-frame-input)
    (version :initform nil :accessor compare-frame-version)
    (controller :initform nil :accessor compare-frame-controller))
   (:panes
@@ -362,12 +372,38 @@
       (update-trees frame t))))
 
 
+(define-compare-frame-command (com-reject-compare-frame :menu "Reject")
+    ()
+  (clim:with-application-frame (frame)
+    (record-decision (make-decision :type :reject) frame)
+    (recompute-in-and-out frame t)
+    (update-trees frame t)))
+
+
+#+:debug
+(define-compare-frame-command (com-invertr-compare-frame :menu "Invert")
+    ()
+  (clim:with-application-frame (frame)
+    (record-decision (make-decision :type :invert) frame)
+    (dolist (d (compare-frame-discrs frame))
+      (setf (discr-time d) (get-universal-time))
+      (setf (discr-state d) :unknown)
+      (setf (discr-toggle d)
+        (cond
+         ((eq (discr-toggle d) :uknown) :uknown)
+         ((null (discr-toggle d)) t)
+         (t nil))))
+      (recompute-in-and-out frame t)
+      (update-trees frame t)))
+
+
 (define-compare-frame-command (com-concise-compare-frame :menu "Concise")
     ()
   (clim:with-application-frame (frame)
     (let ((mode (compare-frame-mode frame)))
-      (declare (ignore mode))
-      (setf (compare-frame-mode frame) :concise)
+      (if (eq mode :concise)
+        (setf (compare-frame-mode frame) nil)
+        (setf (compare-frame-mode frame) :concise))
       (update-trees frame t))))
 
 
@@ -375,8 +411,9 @@
     ()
   (clim:with-application-frame (frame)
     (let ((mode (compare-frame-mode frame)))
-      (declare (ignore mode))
-      (setf (compare-frame-mode frame) :ordered)
+      (if (eq mode :ordered)
+        (setf (compare-frame-mode frame) nil)
+        (setf (compare-frame-mode frame) :ordered))
       (update-trees frame t))))
 
 
@@ -471,7 +508,6 @@
   (update-trees window))
 
 (defun propagate-discriminants (frame top toggle)
-  (setf *top* top)
   (loop
       for discriminant in (compare-frame-discrs frame)
       when (or (and toggle (member top (discr-in discriminant) :test #'eq))
@@ -492,7 +528,7 @@
           (setf (discr-toggle discriminant) :unknown)
           (setf (discr-time discriminant) (get-universal-time)))
         (setf (discr-state discriminant) nil))
-  (recompute-in-and-out frame))
+  (recompute-in-and-out frame t))
 
 (define-compare-frame-command (com-tree-menu)
     ((tree 'ptree :gesture :select))
@@ -563,9 +599,11 @@
             #'(lambda (foo bar)
                 (let ((foop (member (ptree-top foo) in :test #'eq))
                       (barp (member (ptree-top bar) in :test #'eq)))
-                  (or (and foop barp) (eq foop barp) 
-                      (and foop (null barp))))))))
-                                         
+                  (if (and foop (null barp))
+                    t
+                    (let ((foo (ptree-id foo))
+                          (bar (ptree-id bar)))
+                      (and (numberp foo) (numberp bar) (<= foo bar)))))))))
         (:concise
          (setf (compare-frame-trees window)
            (remove-if 
@@ -608,16 +646,26 @@
 
 (defun draw-compare-window (window stream)
   (let ((discrs (compare-frame-discrs window)))
-    (clim:updating-output (stream :cache-value t)
-      (format stream "[item # ~a] `~{~a~^ ~}'~%~%" 
-	      (compare-frame-item window)
-	      (edge-leaves (get (ptree-top (car (compare-frame-trees window)))
-				'edge-record))))
-    (clim:updating-output (stream) 
-      (format stream "~a parse~:p in, ~a parse~:p out~@[  ~a~]~%~%" 
-	      (length (compare-frame-in-parses window))
-	      (length (compare-frame-out-parses window))
-              (compare-frame-version window)))
+    (clim:updating-output (stream)
+      (format 
+       stream 
+       "~@[[item# ~a] ~]`~a'~%~%" 
+       (compare-frame-item window)
+       (compare-frame-input window)))
+    (let ((foo (compare-frame-version window)))
+      (when (and foo (not (equal foo "")))
+        (clim:updating-output (stream)
+          (format stream "~a~%~%" (compare-frame-version window)))))
+    (clim:updating-output 
+        (stream :cache-value (compare-frame-confidence window)) 
+      (format 
+       stream "~a parse~:p in; ~a parse~:p out~@[; ~a confidence~]~%~%" 
+       (length (compare-frame-in-parses window))
+       (length (compare-frame-out-parses window))
+       (let ((foo (compare-frame-confidence window)))
+         (when (and (integerp foo) (>= foo 0) (<= foo 3))
+           (aref #("zero" "low" "fair" "high") foo)))))
+    
     (clim:formatting-table (stream :x-spacing "X")
       (dolist (d discrs)
 	(clim:formatting-row (stream)
@@ -686,49 +734,55 @@
 	  (declare (ignore condition) )
 		   nil))
       (recompute-in-and-out clim:*application-frame* t)
-      (update-trees clim:*application-frame*))))
+      (update-trees clim:*application-frame* t))))
 
 ;; Apply inference rules from Carter (1997) until nothing changes
 
 (defun recompute-in-and-out (frame &optional resetp)
-  (setf (compare-frame-in-parses frame) (mapcar #'ptree-top 
-						(compare-frame-trees frame)))
-  (setf (compare-frame-out-parses frame) nil)
-  (when resetp
-    (loop
-        for d in (compare-frame-discrs frame)
-        do
-          (setf (discr-state d) (discr-toggle d))))
-  (let ((done-p nil))
-    (loop until done-p
-	do
-	  (setq done-p t)
-	  (dolist (d (compare-frame-discrs frame))
-	    (cond (;; R1
-		   (null (discr-state d))
-		   (mark-out (discr-in d) frame))
-		  (;; R2
-		   (eq (discr-state d) t)
-		   (mark-out (discr-out d) frame))))
-	  (setf (compare-frame-in-parses frame) 
-	    (set-difference (mapcar #'ptree-top (compare-frame-trees frame))
-			    (compare-frame-out-parses frame)
-			    :test #'eq))
-	  (dolist (d (compare-frame-discrs frame))
-	    (cond (;; R3
-		   (null (intersection (discr-in d) 
-				       (compare-frame-in-parses frame)
-				       :test #'eq))
-		   (when (discr-state d)
-		     (setf (discr-state d) nil)
-		     (setq done-p nil)))
-		  (;; R4
-		   (subsetp (compare-frame-in-parses frame) 
-			    (discr-in d)
-			    :test #'eq)
-		   (when (not (discr-state d))
-		     (setf (discr-state d) t)
-		     (setq done-p nil))))))))
+  (let ((decision (first (compare-frame-decisions frame))))
+    (if (and (decision-p decision) (eq (decision-type decision) :reject))
+      (setf (compare-frame-in-parses frame) nil
+            (compare-frame-out-parses frame) 
+            (mapcar #'ptree-top (compare-frame-otrees frame)))
+      (let ((done-p nil))
+        (setf (compare-frame-in-parses frame)
+          (mapcar #'ptree-top (compare-frame-otrees frame)))
+        (setf (compare-frame-out-parses frame) nil)
+        (when resetp
+          (loop
+              for d in (compare-frame-discrs frame)
+              do
+                (setf (discr-state d) (discr-toggle d))))
+        (loop until done-p
+            do
+              (setq done-p t)
+              (dolist (d (compare-frame-discrs frame))
+                (cond (;; R1
+                       (null (discr-state d))
+                       (mark-out (discr-in d) frame))
+                      (;; R2
+                       (eq (discr-state d) t)
+                       (mark-out (discr-out d) frame))))
+              (setf (compare-frame-in-parses frame) 
+                (set-difference 
+                 (mapcar #'ptree-top (compare-frame-trees frame))
+                 (compare-frame-out-parses frame)
+                 :test #'eq))
+              (dolist (d (compare-frame-discrs frame))
+                (cond (;; R3
+                       (null (intersection (discr-in d) 
+                                           (compare-frame-in-parses frame)
+                                           :test #'eq))
+                       (when (discr-state d)
+                         (setf (discr-state d) nil)
+                         (setq done-p nil)))
+                      (;; R4
+                       (subsetp (compare-frame-in-parses frame) 
+                                (discr-in d)
+                                :test #'eq)
+                       (when (not (discr-state d))
+                         (setf (discr-state d) t)
+                         (setq done-p nil))))))))))
 	
 (defun mark-out (parses frame)
   (dolist (p parses)

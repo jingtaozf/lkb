@@ -54,6 +54,9 @@
     (loop
         with increment = (and meter (/ 1 (if items (length items) 1)))
         with frame = (clim:make-application-frame 'lkb::compare-frame)
+        with title = (format 
+                      nil 
+                      "[incr tsdb()] Tree Selection~@[ @ `~a'~]" condition)
         with nitems = (length items)
         with annotated = (make-array nitems :initial-element 0)
         with position = 0
@@ -67,9 +70,11 @@
         for readings = (get-field :readings item)
         for status = (if (and (numberp threshold) (numberp readings)
                               (> readings threshold))
-                         (acons :status :skip nil)
+                       (acons :status :skip nil)
                        (and (integerp i-id) 
-                            (browse-tree data i-id frame :cache cache)))
+                            (browse-tree 
+                             data i-id frame 
+                             :cache cache :title title)))
         for action = (get-field :status status)
         while (and status (not (eq action :close)))
         do 
@@ -95,7 +100,7 @@
       (status :text (format nil "~a done" message) :duration 10)
       (meter :value 1))))
 
-(defun browse-tree (data i-id frame &key cache)
+(defun browse-tree (data i-id frame &key title cache)
   
   (declare (special %client%))
 
@@ -104,6 +109,7 @@
     (let* ((condition (format nil "i-id = ~a" i-id))
            (items (analyze data :thorough '(:derivation) :condition condition))
            (item (and (null (rest items)) (first items)))
+           (input (or (get-field :o-input item) (get-field :i-input item)))
            (parse-id (get-field :parse-id item))
            (trees (select '("parse-id" "t-version" "t-active"
                             "t-confidence" "t-author" "t-end")
@@ -134,7 +140,7 @@
                       (if (and (> version 0) user date)
                         (format
                          nil
-                         "[~a confidence; version ~d on ~a by `~a']"
+                         "(~a confidence; version ~d on ~a by `~a')"
                          confidence version date user)
                         "")))
            (results (get-field :results item))
@@ -149,17 +155,25 @@
            (discriminants (reconstruct-discrimininants data parse-id version))
            (lkb::*parse-record* edges))
       (declare (ignore active))
+      (setf (lkb::compare-frame-input frame) input)
       (setf (lkb::compare-frame-item frame) i-id)
       (setf (lkb::compare-frame-version frame) history)
       (setf (lkb::compare-frame-confidence frame) confidence)
       (setf (lkb::compare-frame-preset frame) discriminants)
       (lkb::set-up-compare-frame lkb::*parse-record* frame)
-      (if (null %client%)
+      (when (null %client%)
         (setf %client%
           (mp:run-function 
-           "[incr tsdb()] Tree Selection"
+           (or title "[incr tsdb()] Tree Selection")
            #'clim:run-frame-top-level frame))
-        (clim:redisplay-frame-panes frame :force-p t))
+        #+:debug
+        (when (find :compiler *features*)
+          (excl:advise mp:process-kill :after nil nil
+            `(when (and ,%client% (eq (first excl:arglist) ,%client%))
+               (ignore-errors 
+                (process-revoke-arrest-reason *current-process* :wait))))))
+
+      (clim:redisplay-frame-panes frame :force-p t)
       (process-add-arrest-reason *current-process* :wait)
       (let* ((decisions (lkb::compare-frame-decisions frame))
              (status (lkb::decision-type (first decisions))))
