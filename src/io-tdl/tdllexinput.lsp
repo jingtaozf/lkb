@@ -129,7 +129,7 @@
 	(istream file-name :direction :input)
       (format t "~%Reading in ~A file ~A"
 	      (cond ((eql file-type :nodes) "parse node")
-		    (file-type file-type)
+		    (file-type (string-downcase file-type))
 		    (t "entry"))
 	      (pathname-name file-name))
       (read-tdl-psort-stream istream file-type)))
