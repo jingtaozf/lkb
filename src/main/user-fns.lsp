@@ -10,13 +10,17 @@
   ;; except
   ;; for PAGE compatability, replace #\' by #\space
   ;; except at end of word, when replace by #\space #\s
-  #+:preprocessor
-  (declare (special *preprocessor*))
+  #+(or :preprocessor :xml)
+  (declare (special *preprocessor* *sppp-stream*))
 
   #+:preprocessor
   (when *preprocessor*
     (return-from preprocess-sentence-string 
       (preprocess str :format :lkb :verbose nil)))
+
+  #+:xml
+  (when *sppp-stream*
+    (return-from preprocess-sentence-string (sppp str)))
   
   (let ((in-word nil)
         (chars (coerce str 'list))

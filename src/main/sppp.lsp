@@ -27,9 +27,7 @@
 
 (defvar *sppp-stream* nil)
 
-(defparameter *sppp-application* 
-    "/usr/java/jdk1.3.1_07/bin/java ~
-       -cp /home/oe/src/celi net.dt.sophia.PipedServer")
+(defparameter *sppp-application* nil)
 
 (defparameter *sppp-input-buffer* 
   (make-array 4096 :element-type 'character :adjustable nil :fill-pointer 0))
