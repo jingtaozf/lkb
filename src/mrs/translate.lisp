@@ -16,9 +16,6 @@
 ;;;     is completely unspecific;
 ;;;   - without an input condition, a munging rule will never fire; currently,
 ;;;     always need to provide INPUT.RELS <! !> instead;
-;;;   - the type -- sort dichotomy in the MRS code is confusing; i should take
-;;;     out the variant that prints boths, and we should all agree that at the
-;;;     MRS level there can only be one predicate.
 ;;;
 
 (defun transfer (&optional (edge (first *parse-record*))

@@ -494,7 +494,9 @@
     old-rels))
 
 (defun make-name-in-correct-package (sym)
-    (vsym (string sym)))
+  (if (stringp sym)
+      sym
+    (vsym (string sym))))
 
 (defun make-value-in-package (value)
   (if (symbolp value)

@@ -57,7 +57,9 @@
     (clim:with-text-style (stream *bold*)
       (clim:with-output-as-presentation 
 	  (stream pred-rec 'mrs-type-thing)
-	(write-string (string-downcase val) stream)))))
+        (if (stringp val)
+          (format stream "~s" val)
+          (format stream "~(~a~)" val))))))
 
 (defun mrs-type-thing-command (mrs-type-thing)
   (let* ((type (mrs-type-thing-value mrs-type-thing))
