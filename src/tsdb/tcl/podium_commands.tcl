@@ -383,7 +383,7 @@ proc analyze_rules {} {
     }; # if
   }; # for
   if {![info exists index] 
-      || ![lindex $test_suites(index) 4]} {
+      || ![lindex $test_suites($index) 4]} {
     status [format "no chart data available for `%s' ... |:-\{" \
             $globals(data)] 10;
   } else {
