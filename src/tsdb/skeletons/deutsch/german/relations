@@ -208,3 +208,9 @@ update:
   u-pout :integer
   u-in :integer
   u-out :integer
+
+score:
+  parse-id :integer :key
+  result-id :integer
+  rank :integer
+  score :string
