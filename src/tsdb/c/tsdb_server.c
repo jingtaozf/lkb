@@ -30,7 +30,6 @@
 #endif
 
 extern int errno;
-extern BOOL quit;
 #if defined(SUNOS)
 
 void sigcld(int);
@@ -404,7 +403,7 @@ void tsdb_server_child(int socket) {
     } /* if */
   } /* else */
 
-  while((!quit)) {
+  while(!(tsdb.status & TSDB_QUIT)) {
     fflush(tsdb_default_stream);
     fflush(tsdb_error_stream);
     sprintf(prompt, "tsdb@%s (%d) # ", host, n_commands);
@@ -447,7 +446,7 @@ void tsdb_server_child(int socket) {
         } /* else */
       } /* if */
       else {
-        quit = TRUE;
+        tsdb.status |= TSDB_QUIT;
       } /* else */
     } /* if */
   } /* while */

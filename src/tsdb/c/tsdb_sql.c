@@ -581,9 +581,9 @@ Tsdb_selection* tsdb_join_one_relation(Tsdb_selection* selection,
   return(selection);
 } /* tsdb_join_one_relation */
 
-int tsdb_complex_retrieve(Tsdb_value **relation_list,
-                          Tsdb_value **attribute_list,
-                          Tsdb_node* conditions ) {
+Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
+                                      Tsdb_value **attribute_list,
+                                      Tsdb_node* conditions) {
 
 /*****************************************************************************\
 |*        file: 
@@ -622,7 +622,7 @@ int tsdb_complex_retrieve(Tsdb_value **relation_list,
 #endif
     attributes = (char **)malloc(s_attributes * sizeof(char *));
     if (!attributes) {
-      return(-1);
+      return((Tsdb_selection *)NULL);
     }
     attributes[0] = NULL;
     attributes
@@ -642,7 +642,7 @@ int tsdb_complex_retrieve(Tsdb_value **relation_list,
     if (kaerb) {
       if (attributes)
         free(attributes);
-      return -1;
+      return((Tsdb_selection *)NULL);
     } /* if */
   } /* if */
   else
@@ -661,14 +661,14 @@ int tsdb_complex_retrieve(Tsdb_value **relation_list,
    if (kaerb) {
      if (attributes)
        free(attributes);
-     return -1;
+     return((Tsdb_selection *)NULL);
    }
  } /* if */
 
   if (conditions) {
     selection = tsdb_complex_select(conditions, NULL);
     if (!selection) {
-      return;
+      return((Tsdb_selection *)NULL);
     }
   }
   /* now join with relations that aren't in */
@@ -680,8 +680,6 @@ int tsdb_complex_retrieve(Tsdb_value **relation_list,
   
   for(i = 0; relation_list && relation_list[i]; i++) ;
 
-  /* TOM: FIX ME: gracefully handle missing data files ... */
-
   if (!attribute_list) { /* '*' for attribute list */
     if (relation_list) {
       a_relations = (Tsdb_relation **)malloc((r+1)*sizeof(Tsdb_relation*));
@@ -691,7 +689,7 @@ int tsdb_complex_retrieve(Tsdb_value **relation_list,
       a_relations[i] = NULL;
       temp = tsdb_add_relations(selection,a_relations);
       if (!temp) {
-        return 0;
+        return((Tsdb_selection *)NULL);
       }
       if (temp!=selection) {
         if (selection) 
@@ -717,22 +715,22 @@ int tsdb_complex_retrieve(Tsdb_value **relation_list,
               from_find = TRUE;
               selection = tsdb_find_table(a_relations[0]);
               if (!selection)
-                return(-1);
-            }
+                return((Tsdb_selection *)NULL);
+            } /* if */
             else {
               Tsdb_selection *temp;
               temp = selection;
               selection = tsdb_join_one_relation(selection,a_relations);
               if (!selection) {
-                return 0;
-              } /* */
+                return((Tsdb_selection *)NULL);
+              } /* if */
               if (!from_find) {
                 tsdb_free_selection(temp);
-              }
+              } /* if */
               from_find = FALSE;
-            }
+            } /* else */
             a_relations[i+1]=NULL;
-          }
+          } /* if */
         } /* for */
         free(a_relations);
       } /* if */
@@ -742,25 +740,20 @@ int tsdb_complex_retrieve(Tsdb_value **relation_list,
   if (attributes)
     free(attributes);
 
-  /* TOM: CLEAN ME UP */
-
   /* now check the attributes for projections */
-  if (attribute_list) {
-    tsdb_project(selection, attribute_list, (FILE *)NULL);
-    if (!from_find)
-      tsdb_free_selection(selection);
-    return(selection->length);
-  } /* if */
-  else { /* selection with '*': show all attributes in the selection */
-    tsdb_project(selection,NULL, (FILE *)NULL);
-  }
-  if (!from_find)
-    tsdb_free_selection(selection);
-  return(0);
+  tsdb_project(selection, attribute_list, (FILE *)NULL);
+  tsdb_last_result = selection;
+  return(selection);
+
+  /* 
+     if (!from_find)
+     tsdb_free_selection(selection);
+   */
 
 } /* tsdb_complex_retrieve */
 
-void tsdb_project(Tsdb_selection *selection,Tsdb_value **attributes,FILE* stream)
+void tsdb_project(Tsdb_selection *selection,
+                  Tsdb_value **attributes, FILE* stream)
 {
   /* print attributes in order */
   int i, j, k,h,l,m, n, n_attributes,sum_attr=0, offset;

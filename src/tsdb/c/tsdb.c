@@ -21,8 +21,10 @@ void free(void *foo) {
 } /* free() */
 #endif
 
-Tsdb tsdb;
-Tsdb tdsb = { 
+/* temporary hack before tom gets the fucking history working */
+Tsdb_selection *tsdb_last_result = (Tsdb_selection *)NULL;
+
+Tsdb tsdb = { 
   0,                       /* status */
   (Tsdb_relation **)NULL,  /* relations */
   (Tsdb_selection **)NULL, /* data */
@@ -42,8 +44,8 @@ Tsdb tdsb = {
 #endif
 }; /* tsdb */
 
-FILE *tsdb_default_stream = (FILE *)NULL;
-FILE *tsdb_error_stream = (FILE *)NULL;
+FILE *tsdb_default_stream = TSDB_DEFAULT_STREAM;
+FILE *tsdb_error_stream = TSDB_ERROR_STREAM;
 #ifdef DEBUG
   FILE *tsdb_debug_stream = (FILE *)NULL;
 #endif

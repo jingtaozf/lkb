@@ -25,8 +25,6 @@ char tsdb_version[] = TSDB_VERSION;
 char tsdb_revision[] = "$Revision$";
 char tsdb_date[] = "$Date$";
 
-BOOL quit = FALSE;
-
 char *tsdb_commands[] = {
   "create table",
   "drop table",
@@ -96,33 +94,6 @@ int main(int argc, char **argv) {
   char host[512 + 1], prompt[80 + 1], *foo, *bar;
   int n_commands = 0;
 
-#ifdef DBMALLOC
-  /* union dbmalloptarg m;
-     m.str = "malloc_tsdb";
-     mallopt(MALLOC_ERRFILE,m);*/
-#endif
-
-  tsdb_default_stream = TSDB_DEFAULT_STREAM;
-  tsdb_error_stream = TSDB_ERROR_STREAM;
-
-  tsdb.status = 0;
-  tsdb.relations = (Tsdb_relation **)NULL;
-  tsdb.data = (Tsdb_selection **)NULL;
-  tsdb.input = (char *)NULL;
-  tsdb.home = (char *)NULL;
-  tsdb.relations_file = (char *)NULL;
-  tsdb.data_path = (char *)NULL;
-  tsdb.result_path = (char *)NULL;
-  tsdb.result_prefix = (char *)NULL;
-  tsdb.max_results = -1;
-  tsdb.server = (char *)NULL;
-  tsdb.port = 0;
-  tsdb.pager = (char *)NULL;
-  tsdb.query = (char *)NULL;
-#ifdef DEBUG
-  tsdb.debug_file = (char *)NULL;
-#endif
-
   if((foo = strdup(argv[0])) != NULL) {
     if((bar = strrchr(foo, TSDB_DIRECTORY_DELIMITER[0])) != NULL) {
       *bar = 0;
@@ -183,7 +154,7 @@ int main(int argc, char **argv) {
     
     sprintf(prompt, "tsdb@%s (%d) # ", host, n_commands);
     
-    while((!quit) && ((foo = readline(prompt)) != NULL)) {
+    while(!(tsdb.status & TSDB_QUIT) && ((foo = readline(prompt)) != NULL)) {
       if(*foo) {
         if(input == NULL) {
           input = strdup(foo);
@@ -418,12 +389,6 @@ void tsdb_usage() {
           "  `-version' --- current TSDB version.\n");
   fflush(tsdb_error_stream);
 } /* tsdb_usage() */
-
-void tsdb_quit(void) {
-
-  quit = TRUE;
-
-} /* tsdb_quit() */
 
 int initialize_readline(void) {
 

@@ -2159,3 +2159,20 @@ char *tsdb_user() {
     return((char *)NULL);
   } /* else */
 } /* tsdb_user() */
+
+void tsdb_quit(void) {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_quit()
+|*     version: 
+|*  written by: oe, dfki saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|*
+\*****************************************************************************/
+
+  tsdb.status |= TSDB_QUIT;
+
+} /* tsdb_quit() */

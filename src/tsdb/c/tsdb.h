@@ -32,6 +32,7 @@ extern void free(void *);
 
 #define TSDB_SERVER_MODE 1
 #define TSDB_CLIENT_MODE 2
+#define TSDB_QUIT 4
 
 #define TSDB_UNKNOWN_TYPE 0
 #define TSDB_INTEGER 1
@@ -183,11 +184,6 @@ typedef struct tsdb_tuple {
   Tsdb_value **fields;
 } Tsdb_tuple;
 
-typedef struct tsdb_history {
-  int command;
-  struct tsdb_selection *result;
-} Tsdb_history;
-
 typedef struct tsdb_key_list {
   struct tsdb_value *key;
   int n_tuples;
@@ -202,6 +198,11 @@ typedef struct tsdb_selection {
   struct tsdb_key_list **key_lists;
   int length;
 } Tsdb_selection;
+
+typedef struct tsdb_history {
+  int command;
+  struct tsdb_selection *result;
+} Tsdb_history;
 
 typedef struct tsdb {
   BYTE status;
@@ -231,6 +232,9 @@ typedef struct tsdb {
 
 #if !defined(TSDB_C)
   extern Tsdb tsdb;
+
+  /* temporary hack before tom gets the fucking history working */
+  extern Tsdb_selection *tsdb_last_result;
 
   extern FILE *tsdb_default_stream;
   extern FILE *tsdb_error_stream;
@@ -286,7 +290,7 @@ void tsdb_test_negation(Tsdb_value ** _list,Tsdb_node* );
 int tsdb_uniq_projection(char** ,int );
 Tsdb_node *tsdb_leaf(Tsdb_value *);
 
-extern void tsdb_save_changes(void) ;
+void tsdb_save_changes(void);
 
 BOOL tsdb_children_leaf(Tsdb_node* node);
 void tsdb_negate_node(Tsdb_node* node);
@@ -380,8 +384,8 @@ Tsdb_relation **tsdb_join_path(Tsdb_relation **, Tsdb_relation **);
 Tsdb_relation ***tsdb_real_join_path(Tsdb_relation **, int,
                                      Tsdb_relation *, int);
 Tsdb_selection *tsdb_simple_merge(Tsdb_selection *, Tsdb_selection *);
-Tsdb_selection* tsdb_conditional_retrieve(Tsdb_value **, Tsdb_value **,
-                                          Tsdb_node *);
+Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **, Tsdb_value **,
+                                      Tsdb_node *);
 
 int tsdb_server_initialize(void);
 void tsdb_server(void);
