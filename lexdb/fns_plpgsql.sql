@@ -2,40 +2,46 @@
 --- Benjamin Waldron;
 --- see `licence.txt' for conditions.
 
+---
+--- GENERAL LEXDB FUNCTIONS
+---
+
 --
 -- admin tasks
 --
 
-CREATE OR REPLACE FUNCTION public.mneum_f_map(text) RETURNS SETOF text_text AS '
+CREATE OR REPLACE FUNCTION public.dump_data() RETURNS boolean AS '
 DECLARE
-	x text_text;
+	backup_file_base text;
 BEGIN
-	FOR x IN
-		SELECT slot,field from defn where mode = \'_\' || $1
-		LOOP
-		RETURN NEXT x;
-	END LOOP;
-	RETURN;
+	IF (reln_exists(\'public\',\'meta\')) THEN
+		backup_file_base := \'BACKUP-BEFORE-LEXDB-UPDATE\';
+		PERFORM dump_db_su(backup_file_base);
+		DELETE FROM public.backup;
+		INSERT INTO public.backup VALUES (backup_file_base);
+		DROP TABLE public.revision CASCADE;
+	END IF;
+	RETURN true;
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.test_user(text) RETURNS SETOF text AS '
-DECLARE
-	x RECORD;
+CREATE OR REPLACE FUNCTION public.user_schema_initialized() RETURNS boolean AS '
 BEGIN
-	FOR x IN
-		SELECT * FROM public.meta WHERE var=\'user\' AND val = $1
-		LOOP
-		RETURN NEXT x.val;
-	END LOOP;
-	RETURN;
-END;
-' LANGUAGE plpgsql;
+	RETURN (SELECT (user IN (SELECT val FROM public.meta WHERE var=\'user\')));
+END;' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.create_schema(text) RETURNS boolean AS '
+CREATE OR REPLACE FUNCTION public.initialize_user_schema() RETURNS boolean AS '
+DECLARE
+	user_str text;
 BEGIN
-	EXECUTE \'CREATE SCHEMA \' || $1;
-	EXECUTE \'INSERT INTO public.meta VALUES (\'\'user\'\', \' || quote_literal($1) || \')\';
+	user_str := user;
+	IF user_schema_initialized() THEN
+		RETURN false;
+	END IF;
+	RAISE INFO \'Initializing user schema %\', user_str;
+
+	EXECUTE \'CREATE SCHEMA \' || user;
+	EXECUTE \'INSERT INTO public.meta VALUES (\'\'user\'\', \' || quote_literal(user) || \')\';
 	CREATE TABLE meta AS SELECT * FROM public.meta WHERE var=\'filter\';
 	
 	-- scratch
@@ -76,15 +82,15 @@ END;
 CREATE OR REPLACE FUNCTION public.initialize_current_grammar(text) RETURNS boolean AS '
 DECLARE
 	current_filter TEXT;
-	new_filter TEXT;
+	new_filter text;
 	m_time TEXT;
 	b_time TEXT;
 BEGIN
-	current_filter := (SELECT val FROM meta WHERE var=\'filter\');
 	new_filter := $1;
+	current_filter := (SELECT val FROM meta WHERE var=\'filter\' LIMIT 1);
 	IF new_filter=\'\' THEN
-		new_filter := current_filter;
-	ENd IF;
+		new_filter = current_filter;
+	END IF;
 	m_time := (SELECT mod_time());	
 	b_time := (SELECT build_time());	
 
@@ -97,9 +103,9 @@ BEGIN
   		CREATE OR REPLACE VIEW filtered
  		AS SELECT * 
   		FROM revision_all
-    		WHERE \' || $1 ;
+    		WHERE \' || new_filter ;
 	IF new_filter != current_filter THEN
- 		EXECUTE \'UPDATE meta SET val= \' || quote_literal($1) || \' WHERE var=\'\'filter\'\'\';
+ 		EXECUTE \'UPDATE meta SET val= \' || quote_literal(new_filter) || \' WHERE var=\'\'filter\'\'\';
 		RAISE INFO \'new filter: %\', new_filter;
 		RAISE INFO \'rebuilding db cache\';
    		EXECUTE \'SELECT build_current_grammar()\';
@@ -117,19 +123,19 @@ DECLARE
 	b_time text;
 BEGIN
 	-- we need "indices on the view" for reasons of efficicency...
-	raise info \'creating filtered_temp\';
+	RAISE DEBUG \'creating filtered_temp\';
 	CREATE TABLE filtered_temp AS SELECT * FROM filtered;
-	raise info \'creating index filtered_temp_i1\';
+	RAISE DEBUG \'creating index filtered_temp_i1\';
 	CREATE INDEX filtered_temp_i1 ON filtered_temp (name);
-	raise info \'creating index filtered_temp_i2\';
+	RAISE DEBUG \'creating index filtered_temp_i2\';
 	CREATE INDEX filtered_temp_i2 ON filtered_temp (modstamp);
 
 	-- recreate db cache
-	raise info \'emptying db cache\';
+	RAISE INFO \'emptying db cache\';
 	DELETE FROM current_grammar; 
 	PERFORM public.deindex_current_grammar();
 
-	raise info \'populating db cache\';
+	RAISE INFO \'populating db cache\';
 	INSERT INTO current_grammar 
   		SELECT fil.*
   		FROM 
@@ -147,7 +153,7 @@ BEGIN
 	DELETE FROM meta WHERE var=\'build_time\';
 	INSERT INTO meta VALUES (\'build_time\',current_timestamp);
 	b_time := (SELECT build_time());
-	raise info \'build time: %\', b_time;
+	RAISE DEBUG \'build time: %\', b_time;
 
 	RETURN true;
 END;'
@@ -157,7 +163,7 @@ CREATE OR REPLACE FUNCTION public.update_modstamp_priv() RETURNS text AS '
 DECLARE
 	mod_time text;
 BEGIN
-	RAISE INFO \'Updating timestamps...\';
+	RAISE DEBUG \'Updating timestamps...\';
 	DELETE FROM meta WHERE var=\'mod_time\';
 	mod_time := current_timestamp;
 	INSERT INTO meta VALUES (\'mod_time\',mod_time);
@@ -169,7 +175,7 @@ CREATE OR REPLACE FUNCTION public.update_modstamp_pub() RETURNS text AS '
 DECLARE
 	mod_time text;
 BEGIN
-	RAISE INFO \'Updating timestamps...\';
+	RAISE DEBUG \'Updating timestamps...\';
 	DELETE FROM public.meta WHERE var=\'mod_time\';
 	mod_time := current_timestamp;
 	INSERT INTO public.meta VALUES (\'mod_time\',mod_time);
@@ -201,19 +207,6 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.merge_all() RETURNS integer AS 
-'
-BEGIN
- PERFORM assert_db_owner();	
----- n o t e : must copy file to temp before invoking this code
-----           eg. COPY TO stdin from frontend
----- n o t e : must copy file to temp_defn before invoking this code
-----           eg. COPY TO stdin from frontend
- PERFORM merge_into_db2();
- PERFORM merge_defn();
-END;
-' LANGUAGE plpgsql;
-
 CREATE OR REPLACE FUNCTION public.merge_into_db2() RETURNS integer AS 
 '
 DECLARE
@@ -241,7 +234,6 @@ BEGIN
  		PERFORM public.index_public_revision();
 
 		PERFORM update_modstamp_pub();
-		--DELETE FROM meta WHERE var=\'semi_build_time\';
 	ELSE
 		RAISE INFO \'0 new entries\';
 	END IF;
@@ -270,7 +262,7 @@ BEGIN
  		DELETE FROM defn WHERE mode IN (SELECT DISTINCT mode FROM temp_defn);
 		INSERT INTO defn
   			SELECT * FROM temp_defn; 
- 		RAISE INFO \'Updating timestamps...\';
+ 		RAISE DEBUG \'Updating timestamps...\';
  		DELETE FROM public.meta WHERE var=\'mod_time\';
  		INSERT INTO public.meta VALUES (\'mod_time\',current_timestamp);
 		--DELETE FROM meta WHERE var=\'semi_build_time\';
@@ -336,22 +328,8 @@ BEGIN
 END;
  ' LANGUAGE plpgsql;
 
--- obsolete
-CREATE OR REPLACE FUNCTION public.lookup_word(text) RETURNS SETOF text AS '
-DECLARE
-	x RECORD;
-BEGIN
-	FOR x IN
-		SELECT name FROM current_grammar WHERE orthkey LIKE $1
-		LOOP
-		RETURN NEXT x.name;
-	END LOOP;
-	RETURN;
-END;
-' LANGUAGE plpgsql;
-
 --
--- entry editing
+-- 
 --
 
 CREATE OR REPLACE FUNCTION public.clear_scratch() RETURNS boolean AS '
@@ -445,7 +423,7 @@ DECLARE
 	sql_str text;
 BEGIN
 	sql_str := \'INSERT INTO revision ( name, \' || $2 || \' ) VALUES ( \' || quote_literal($1) || \', \' || $3 || \')\';
-	RAISE INFO \'%\', sql_str;
+	RAISE DEBUG \'%\', sql_str;
 	EXECUTE sql_str;
 	DELETE FROM current_grammar
 		WHERE name = $1 ;
@@ -480,9 +458,7 @@ BEGIN
 
 	INSERT INTO semi_mod (SELECT DISTINCT name,userid,version,CURRENT_TIMESTAMP FROM current_grammar JOIN semi_pred ON name=lex_id);
 
-	---
-	-- merge join is faster
-	---
+	-- coz merge join is faster
 	SET ENABLE_HASHJOIN TO false;
 
 RETURN true;
@@ -491,12 +467,8 @@ END;
 ' LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION public.semi_mod_time_private(text,text,int) RETURNS text AS '
-DECLARE
-	stamp text;
 BEGIN
-	--RAISE INFO \'SELECT modstamp FROM semi_mod WHERE (name,userid,version)=(%,%,%))\', $1, $2, $3;
-	stamp := (SELECT modstamp FROM semi_mod WHERE (name,userid,version)=($1,$2,$3));
-	RETURN stamp;
+	RETURN (SELECT modstamp FROM semi_mod WHERE (name,userid,version)=($1,$2,$3));
 END;
 ' LANGUAGE plpgsql;
 

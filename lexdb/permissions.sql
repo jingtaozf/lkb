@@ -1,3 +1,7 @@
+--- Copyright (c) 2003-2004 
+--- Fabre Lambeau, Stephan Oepen, Benjamin Waldron;
+--- see `licence.txt' for conditions.
+
 CREATE OR REPLACE FUNCTION public.set_permissions() RETURNS boolean AS '
 BEGIN
 

@@ -41,12 +41,12 @@
     :clear_scratch
     :commit_scratch
     :complete
-    :create_schema
     :db_owner
     :dump_db
     :dump_scratch_db
     :filter
     :initialize_current_grammar
+    :initialize_user_schema
     :lex_id_set 
     :lexdb_version
     :list_fields

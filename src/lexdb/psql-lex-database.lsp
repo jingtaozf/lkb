@@ -752,17 +752,11 @@
     count-new-dfn))
 
 (defmethod initialize-userschema ((lexicon psql-lex-database))
-  (unless
-      (sql-fn-get-val lexicon 
-		      :test_user 
-		      :args (list (user lexicon)))
-    (format t "~%(creating private space for user ~a)" (user lexicon))
-    (sql-fn-get-val lexicon 
-		    :create_schema 
-		    :args (list (user lexicon)))
-    #+:mwe
-    (if *postgres-mwe-enable*
-	(mwe-initialize-userschema lexicon))))
+  (sql-fn-get-val lexicon 
+		  :initialize_user_schema )
+  #+:mwe
+  (if *postgres-mwe-enable*
+      (mwe-initialize-userschema lexicon)))
 
 (defmethod semi-setup-pre ((lexicon psql-lex-database))  
   (sql-fn-get-val lexicon 

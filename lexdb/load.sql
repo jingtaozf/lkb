@@ -10,7 +10,8 @@
 \i tables.sql
 \i fns_plpgsql.sql
 
-SELECT create_backup_table();
+SELECT create_public_backup_table();
+SELECT public.dump_data();
 
-SELECT create_fields_table();
+SELECT create_public_fields_table();
 \copy default_fields FROM 'default-fields.tsv'

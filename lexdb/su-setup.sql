@@ -1,34 +1,44 @@
+--- Copyright (c) 2003-2004 
+--- Fabre Lambeau, Stephan Oepen, Benjamin Waldron;
+--- see `licence.txt' for conditions.
+
 CREATE FUNCTION "plpgsql_call_handler" () RETURNS LANGUAGE_HANDLER AS '$libdir/plpgsql' LANGUAGE C;
 CREATE TRUSTED LANGUAGE "plpgsql" HANDLER "plpgsql_call_handler";
 
+--
+--
+
 CREATE OR REPLACE FUNCTION public.hide_schemas2 () RETURNS boolean AS
  '
+DECLARE
+	x RECORD;
+	sql_str text;
 BEGIN
- DELETE FROM pg_catalog.pg_class WHERE relnamespace=(SELECT oid FROM pg_catalog.pg_namespace WHERE nspname LIKE \'tmp\\\\_tmp\\\\_%\');
- DELETE FROM pg_catalog.pg_namespace WHERE nspname LIKE \'tmp\\\\_tmp\\\\_%\';
- UPDATE pg_catalog.pg_namespace SET nspname=\'tmp_\' ||  nspname WHERE nspname IN (SELECT val FROM public.meta WHERE var=\'user\') OR nspname LIKE \'tmp\\\\_%\';
-DELETE FROM public.meta WHERE var=\'user\';
-RETURN true;
+	DELETE FROM pg_catalog.pg_class WHERE relnamespace=(SELECT oid FROM pg_catalog.pg_namespace WHERE nspname LIKE \'old\\\\_%\');
+	DELETE FROM pg_catalog.pg_namespace WHERE nspname LIKE \'old\\\\_%\';
+
+	IF server_version(\'7.4\') THEN
+		FOR x IN SELECT val FROM public.meta WHERE var=\'user\' LOOP
+			sql_str := \'ALTER SCHEMA \' || quote_ident(x.val) || \' RENAME TO old_\' || quote_ident(x.val);
+			RAISE INFO \'%\', sql_str;
+			EXECUTE sql_str;
+		END LOOP;
+	ELSE
+		UPDATE pg_catalog.pg_namespace SET nspname=\'old_\' ||  nspname WHERE nspname IN (SELECT val FROM public.meta WHERE var=\'user\');
+	END IF;
+	DELETE FROM public.meta WHERE var=\'user\';
+	RETURN true;
 END '
  LANGUAGE plpgsql SECURITY INVOKER;
 
+-- work-around
 CREATE OR REPLACE FUNCTION public.hide_schemas () RETURNS boolean AS
 '
-SELECT public.hide_schemas2();
-SELECT true;'
+	SELECT public.hide_schemas2();
+'
  LANGUAGE SQL SECURITY DEFINER;
 
-
-CREATE OR REPLACE FUNCTION remove_schema(text) RETURNS boolean AS
-'
-BEGIN
- EXECUTE \'DROP SCHEMA \' || $1 || \' CASCADE\';
- EXECUTE \'DELETE FROM public.meta WHERE var=\'\'user\'\' and val= \' || quote_literal($1) ;
-RETURN true;
-END;' 
-LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION dump_db_su(text) RETURNS text AS '
+CREATE OR REPLACE FUNCTION public.dump_db_su(text) RETURNS text AS '
 DECLARE
 	dump_file_rev text;
 	dump_file_dfn text;
@@ -74,18 +84,18 @@ BEGIN
 END;
 ' LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION restore_public_revision_su(text) RETURNS text AS '
+CREATE OR REPLACE FUNCTION public.restore_public_revision_su(text) RETURNS text AS '
 DECLARE
 	dump_file_rev text;
 BEGIN
- dump_file_rev := \'/tmp/lexdb-temp.rev.\' || $1;
- RAISE INFO \'Restoring public.revision from file %\', dump_file_rev;
- EXECUTE \'COPY public.revision FROM \' || quote_literal(dump_file_rev) ;
- RETURN dump_file_rev;
+	dump_file_rev := \'/tmp/lexdb-temp.rev.\' || $1;
+	RAISE INFO \'Restoring public.revision from file %\', dump_file_rev;
+	EXECUTE \'COPY public.revision FROM \' || quote_literal(dump_file_rev) ;
+	RETURN dump_file_rev;
 END;
 ' LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION restore_public_defn_su(text) RETURNS text AS '
+CREATE OR REPLACE FUNCTION public.restore_public_defn_su(text) RETURNS text AS '
 DECLARE
 	dump_file_dfn text;
 BEGIN
@@ -96,7 +106,18 @@ BEGIN
 END;
 ' LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION dump_multi_db(text) RETURNS boolean AS '
+CREATE OR REPLACE FUNCTION public.restore_public_fields_su(text) RETURNS text AS '
+DECLARE
+	dump_file_fld text;
+BEGIN
+ dump_file_fld := \'/tmp/lexdb-temp.fld.\' || $1;
+ RAISE INFO \'Restoring public.fields from file %\', dump_file_fld;
+ EXECUTE \'COPY public.fields FROM \' || quote_literal(dump_file_fld);
+ RETURN dump_file_fld;
+END;
+' LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION public.dump_multi_db(text) RETURNS boolean AS '
 BEGIN
 DELETE FROM temp_multi;
 INSERT INTO temp_multi
@@ -106,7 +127,7 @@ EXECUTE \'COPY temp_multi TO \' || $1 ;
 END;
 ' LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION merge_multi_into_db(text) RETURNS boolean AS '
+CREATE OR REPLACE FUNCTION public.merge_multi_into_db(text) RETURNS boolean AS '
 BEGIN
  DELETE FROM temp_multi;
  EXECUTE \' COPY temp_multi FROM \' || $1 ;

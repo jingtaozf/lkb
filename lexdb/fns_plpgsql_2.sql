@@ -1,6 +1,6 @@
----
----
----
+--- Copyright (c) 2003-2004 
+--- Fabre Lambeau, Stephan Oepen, Benjamin Waldron;
+--- see `licence.txt' for conditions.
 
 create table revision_all as select * from revision where null;
 CREATE OR REPLACE FUNCTION public.revision_new() RETURNS SETOF revision AS '
