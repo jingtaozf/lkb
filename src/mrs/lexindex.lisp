@@ -45,7 +45,7 @@
           (if construction-semantics-fs
               (extract-relations-from-liszt 
                construction-semantics-fs id 
-               *construction-semantics-path*))))
+               *construction-semantics-path* fs))))
     (if construction-rels
         (let* ((new-record
                 (make-semantics-record
@@ -172,7 +172,8 @@
          (main-semantics-fs (path-value fs *main-semantics-path*))
          (main-rels (if main-semantics-fs
                         (extract-relations-from-liszt 
-                         main-semantics-fs id *main-semantics-path*))))
+                         main-semantics-fs id 
+                         *main-semantics-path* fs))))
     (if main-rels
         (let* ((new-record
                 (make-semantics-record
@@ -194,7 +195,7 @@
 
 
 
-(defun extract-relations-from-liszt (fs id path)
+(defun extract-relations-from-liszt (fs id path old-fs)
   ;;; similar to the mrsoutput fn, construct-liszt
   (if (is-valid-fs fs)
       (let ((label-list (fs-arcs fs)))
@@ -207,17 +208,27 @@
                    (rest-part (assoc (car *liszt-rest-path*)
                                     label-list)))
               (if rel
-                  (cons rel
-                        (if rest-part
-                            (extract-relations-from-liszt
-                             (cdr rest-part) id path)
+                  (if (empty-diff-list-p fs path old-fs)
+                      (progn
+                        (format t 
+                                "~%Warning: ~A has an empty LISZT with a relation in it" id)
+                        nil)
+                    (cons rel
+                          (if rest-part
+                              (extract-relations-from-liszt
+                               (cdr rest-part) id path old-fs)
                             (format t 
-                                    "~%Warning: ~A has a defective ~A" id path)))
+                                    "~%Warning: ~A has a defective ~A" id path))))
                 (if rest-part
                     (progn
-                    (format t "~%Warning: ~A has a gap in its ~A" id path)
-                    nil))))))))
+                      (format t "~%Warning: ~A has a gap in its ~A" id path)
+                      nil))))))))
 
+(defun empty-diff-list-p (fs full-path oldfs)
+  (if (eql (car (last full-path)) user::*diff-list-list*)
+      (eq (path-value oldfs (append (butlast full-path) 
+                                    (list user::*diff-list-last*)))
+          fs)))
                   
 (defun extract-relation-from-fs (fs id)
   ;;; two cases - normal relation and string-valued relation
