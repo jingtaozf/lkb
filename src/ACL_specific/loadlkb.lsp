@@ -62,7 +62,8 @@
          ("main" "morph")       ; generic CL
          ("ACL_specific" "dialog")
          ("ACL_specific" "tree") ; some dialect specific - type hierarchy fns
-         ("main" "check-unif")  ; generic CL
+	 ("ACL_specific" "compare") ; some dialect specific - tree bank tool
+ 	 ("main" "check-unif")		; generic CL
          ("main" "lkb-tsdb")    ; generic CL
          ("io-general" "tree-nodes")
          ("io-tdl" "tdltypeinput")

@@ -499,3 +499,7 @@
             (if lex-rule-entry (rule-full-fs lex-rule-entry)
               (let ((type (get-type-entry fs-id)))
                 (if type (tdfs-of fs-id))))))))))
+
+#-allegro
+(defun compare-parses ()
+  nil)

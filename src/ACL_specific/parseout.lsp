@@ -65,7 +65,6 @@
 (defun draw-parse-tree (ptree-frame stream &key max-width max-height)
   (declare (ignore max-width max-height))
   (let ((node-tree (parse-tree-nodes ptree-frame)))
-    (setq x node-tree)
     (clim:format-graph-from-root
      node-tree
      #'(lambda (node stream)

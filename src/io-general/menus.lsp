@@ -27,6 +27,7 @@
 		      cl-user::show-chart 
 		      cl-user::print-chart
 		      cl-user::parse-sentences 
+		      cl-user::compare-parses
 		      ;; generate
 		      cl-user::generate-from-edge
                       cl-user::show-gen-result
@@ -110,7 +111,9 @@
                      (make-menu-item :name "Print chart"
                         :value 'print-chart)
                      (make-menu-item :name "Batch parse..."
-                        :value 'parse-sentences))
+  		        :value 'parse-sentences)
+		     (make-menu-item :name "Compare..."
+                        :value 'compare-parses))
                :available-p nil)
          (make-lkb-submenu-item :menu-title "Generate"
                  :menu-items                       
