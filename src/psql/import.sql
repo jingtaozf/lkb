@@ -122,3 +122,7 @@ CREATE FUNCTION next_version (text) RETURNS int
 DROP FUNCTION next_id();
 CREATE FUNCTION next_id () RETURNS int 
 	AS 'SELECT 1 + max(id) FROM erg;' LANGUAGE SQL;
+
+DROP FUNCTION retrieve_entries(text);
+CREATE FUNCTION retrieve_entries (text) RETURNS SETOF erg_max_version 
+	AS 'SELECT * FROM erg_max_version WHERE name IN (SELECT lookup_word($1));' LANGUAGE SQL;
