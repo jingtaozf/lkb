@@ -1,3 +1,7 @@
+;;; Copyright (c) 2003--2004
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see `licence.txt' for conditions.
+
 (in-package :mrs)
 
 (defun def-rmrs-print-operations (class indentation stream)
@@ -128,6 +132,10 @@
   (with-slots (stream) rmrsout
     (format stream "<label vid='~A'/>" label-id)))
 
+(defmethod rmrs-output-hcons-label ((rmrsout xml) label-id)
+  (with-slots (stream) rmrsout
+    (format stream "<label vid='~A'/>" label-id)))
+
 (defmethod rmrs-output-top-label ((rmrsout xml) label-id)
   (with-slots (stream) rmrsout
     (format stream "<label vid='~A'/>" label-id)))
@@ -248,6 +256,10 @@ for gram.dtd and tag.dtd
   (with-slots (stream) rmrsout
     (format stream "<label>~A</label>" label-id)))
 
+(defmethod rmrs-output-hcons-label ((rmrsout gramxml) label-id)
+  (with-slots (stream) rmrsout
+    (format stream "<label>~A</label>" label-id)))
+
 ;;; compact representation for tracing etc
 
 ;;; 
@@ -290,7 +302,7 @@ for gram.dtd and tag.dtd
 (defmethod rmrs-output-end-var ((rmrsout compact))
   (with-slots (stream) rmrsout
       (lkb::current-position stream)))
-;;; may need fixing for generality if current-position isn't
+;;; may need FIXing for generality if current-position isn't
 ;;; safe - also needs fixing to remove lkb specificity
 
 
@@ -316,9 +328,15 @@ for gram.dtd and tag.dtd
   (with-slots (stream) rmrsout
     (format stream "h~A," label-id)))
 
+(defmethod rmrs-output-hcons-label ((rmrsout compact) label-id)
+  (with-slots (stream) rmrsout
+    (format stream "h~A" label-id)
+    (lkb::current-position stream)))
+
 (defmethod rmrs-output-top-label ((rmrsout compact) label-id)
   (with-slots (stream indentation) rmrsout
-    (format stream "~VTh~A~%" indentation label-id)))
+    (format stream "~VTh~A~%" indentation label-id)
+    (lkb::current-position stream)))
 
 ;;; Parsonian arguments
 
@@ -330,7 +348,9 @@ for gram.dtd and tag.dtd
 
 (defmethod rmrs-output-end-rmrs-arg ((rmrsout compact))
   (with-slots (stream) rmrsout
-    (format stream ")~%")))
+    (format stream ")~%")
+    (lkb::current-position stream)))
+;;; FIX
 
 ;;; hcons
 
@@ -456,13 +476,32 @@ for gram.dtd and tag.dtd
     (format stream "~%~VT" indentation)
     (setf xpos (lkb::current-position-x stream))))
 
+(defmethod rmrs-output-top-label ((rmrsout compact-two) label-id)
+  (with-slots (stream indentation xpos) rmrsout
+    (format stream "~VTh~A~%" indentation label-id)
+    (lkb::make-position-record xpos
+      (lkb::current-position-y stream))))
+
+(defmethod rmrs-output-hcons-label ((rmrsout compact-two) label-id)
+  (with-slots (stream xpos) rmrsout
+    (format stream "h~A" label-id)
+    (lkb::make-position-record xpos
+      (lkb::current-position-y stream))))
+
 (defmethod rmrs-output-end-var ((rmrsout compact-two))
   (with-slots (stream xpos) rmrsout
     (lkb::make-position-record xpos
       (lkb::current-position-y stream))))
-;;; may need fixing for generality if current-position isn't
+;;; may need FIXing for generality if current-position isn't
 ;;; safe - also needs fixing to remove lkb specificity
 
+(defmethod rmrs-output-end-rmrs-arg ((rmrsout compact-two))
+  (with-slots (stream xpos) rmrsout
+    (let ((position
+	   (lkb::make-position-record xpos
+				      (lkb::current-position-y stream))))
+      (format stream ")~%")
+      position)))
 
 
 ;;; Actual printing function for robust mrs
@@ -476,7 +515,7 @@ for gram.dtd and tag.dtd
       (output-rmrs1 rmrs-instance device t)))
 
 (defun output-rmrs1 (rmrs-instance device stream 
-		     &optional grouping-p)
+		     &optional grouping-p pos-rec-p)
   ;;; changed to return a list of eps and their positions
   ;;; for calculation of comparison arrows 
   ;;; not used otherwise
@@ -488,6 +527,7 @@ for gram.dtd and tag.dtd
 				 (rmrs-cto rmrs-instance))
 	   (let ((positions
 		  (print-rmrs rmrs-instance grouping-p 
+			      pos-rec-p
 			      rmrs-display-structure)))
 	     (rmrs-output-end-fn rmrs-display-structure)
 	     positions))
@@ -499,7 +539,7 @@ for gram.dtd and tag.dtd
   (let ((rmrs-display-structure
 	 (def-rmrs-print-operations device 0 stream)))
     (cond ((rmrs-p rmrs-instance)         
-	   (print-rmrs rmrs-instance nil rmrs-display-structure))
+	   (print-rmrs rmrs-instance nil nil rmrs-display-structure))
 	  (t (rmrs-output-error-fn rmrs-display-structure 
 				   rmrs-instance)))))
 
@@ -511,7 +551,7 @@ for gram.dtd and tag.dtd
 
 (defparameter *already-seen-rmrs-ings* nil)
 
-(defun print-rmrs (rmrs grouping-p rmrs-display-structure)
+(defun print-rmrs (rmrs grouping-p pos-rec-p rmrs-display-structure)
   (setf *already-seen-rmrs-args* nil)
   (setf *already-seen-rmrs-vars* nil)
   (setf *already-seen-rmrs-hcons* nil)
@@ -524,39 +564,47 @@ for gram.dtd and tag.dtd
         (rmrs-in-groups (rmrs-in-groups rmrs))
         (bindings (if (semstruct-p rmrs)
                       (close-bindings (rmrs-bindings rmrs))
-                       (rmrs-bindings rmrs))))
+		    (rmrs-bindings rmrs)))
+	(pos-rec (if pos-rec-p (make-rmrs-position-record))))
     (when (and hook (not (indices-default hook)))
       (print-semstruct-hook hook 
                             bindings rmrs-display-structure))
     (unless hook
-      (rmrs-output-top-label rmrs-display-structure
-			     (if top-h
-				 (find-rmrs-var-id top-h bindings)
-			       (funcall
-				*rmrs-variable-generator*))))
-    (let ((positions
-	   (print-rmrs-eps eps bindings grouping-p 
-			   rmrs-args rmrs-in-groups
-			   rmrs-h-cons
-			   rmrs-display-structure)))
-      (loop for arg in rmrs-args
-	  unless (member arg *already-seen-rmrs-args*)
-	  do
-	    (print-rmrs-arg arg bindings nil rmrs-display-structure))
-      (loop for ing in rmrs-in-groups
-	  unless (member ing *already-seen-rmrs-ings*)
-	  do
-	    (print-rmrs-in-group ing bindings nil rmrs-display-structure))
-      (loop for hcons in rmrs-h-cons
-	  unless (member hcons *already-seen-rmrs-hcons*)
-	  do
-	    (print-rmrs-hcons hcons bindings nil rmrs-display-structure))
-      positions)))
+      (let ((top-pos (rmrs-output-top-label rmrs-display-structure
+			       (if top-h
+				   (find-rmrs-var-id top-h bindings)
+				 (funcall
+				  *rmrs-variable-generator*)))))
+	(when pos-rec-p
+	  (setf (rmrs-position-record-top pos-rec)
+	    top-pos))))
+    (print-rmrs-eps eps bindings grouping-p 
+		    rmrs-args rmrs-in-groups
+		    rmrs-h-cons
+		    rmrs-display-structure
+		    pos-rec)
+    ;;; assume that we only record positions for things we're grouping 
+    ;;; with eps because these are the only ones which will be matched
+    (loop for arg in rmrs-args
+	unless (member arg *already-seen-rmrs-args*)
+	do
+	  (print-rmrs-arg arg bindings nil rmrs-display-structure))
+    (loop for ing in rmrs-in-groups
+	unless (member ing *already-seen-rmrs-ings*)
+	do
+	  (print-rmrs-in-group ing bindings nil rmrs-display-structure))
+    (loop for hcons in rmrs-h-cons
+	unless (member hcons *already-seen-rmrs-hcons*)
+	do
+	  (print-rmrs-hcons hcons bindings nil rmrs-display-structure))
+    pos-rec))
 
 (defun print-rmrs-eps (eps bindings grouping-p rmrs-args 
-		       rmrs-in-groups rmrs-h-cons rmrs-display-structure)
+		       rmrs-in-groups rmrs-h-cons rmrs-display-structure
+		       pos-rec)
+  (let ((ep-pos nil) (arg-pos nil) (ing-pos nil) (hcons-pos nil))
     (loop for ep in eps
-        collect
+        do
 	  (let ((pred (rel-pred ep))
 		(handel-args nil))
 	    (rmrs-output-start-ep rmrs-display-structure
@@ -579,39 +627,64 @@ for gram.dtd and tag.dtd
 		   ;; checking should happen elsewhere
 		   ;; got to be a variable, not a constant
 		   ;; but could be a grammar variable
-		   (position 
-		    (print-rmrs-var value bindings rmrs-display-structure)))
+		   (pos (print-rmrs-var value bindings 
+					rmrs-display-structure)))
+	      ;;; position is actually recorded by rmrs-output-end-var
+	      (when pos-rec
+		(push
+		 (record-rmrs-position pos ep)
+		 ep-pos))
 	      (when (is-handel-var value)
 		(push (var-id value) handel-args))
-	      (rmrs-output-end-ep rmrs-display-structure)
-	      (when grouping-p
-		(loop for arg in rmrs-args
-		    when (eql-var-id (rmrs-arg-label arg) (rel-handel ep))
-		    do		
-		      (print-rmrs-arg arg bindings t rmrs-display-structure)
+	      (rmrs-output-end-ep rmrs-display-structure))
+	    (when grouping-p
+	      (loop for arg in rmrs-args
+		  when (eql-var-id (rmrs-arg-label arg) (rel-handel ep))
+		  do
+		    (let ((pos
+			   (print-rmrs-arg arg bindings t 
+					   rmrs-display-structure)))
 		      (push arg *already-seen-rmrs-args*)
 		      (when (is-handel-var (rmrs-arg-val arg))
 			(push (var-id (rmrs-arg-val arg))
-			      handel-args)))
-		(loop for ing in rmrs-in-groups
-		    when (eql-var-id (in-group-label-a ing) 
-				     (rel-handel ep))
-		    do		
-		      (print-rmrs-in-group ing 
-					   bindings t rmrs-display-structure)
-		      (push ing *already-seen-rmrs-ings*))
-		(loop for hcons in rmrs-h-cons
-		    when (member 
-			  (var-id (hcons-scarg hcons)) 
-			  handel-args)
-		    do		
-		      (print-rmrs-hcons hcons bindings t 
-					 rmrs-display-structure)
-		      (push hcons  *already-seen-rmrs-hcons*)))
-	      (if position
-		  (record-rmrs-position position ep))))))
+			      handel-args))
+		      (when pos-rec
+			(push
+			 (record-rmrs-position pos arg)
+			 arg-pos))))
+	      (loop for ing in rmrs-in-groups
+		  when (eql-var-id (in-group-label-a ing) 
+				   (rel-handel ep))
+		  do		
+		    (let ((pos
+			   (print-rmrs-in-group 
+			    ing 
+			    bindings t rmrs-display-structure)))
+		      (push ing *already-seen-rmrs-ings*)
+		      (when pos-rec
+			(push
+			 (record-rmrs-position pos ing)
+			 ing-pos))))
+	      (loop for hcons in rmrs-h-cons
+		  when (member 
+			(var-id (hcons-scarg hcons)) 
+			handel-args)
+		  do		
+		    (let ((pos
+			   (print-rmrs-hcons hcons bindings t 
+					     rmrs-display-structure)))
+		      (push hcons  *already-seen-rmrs-hcons*)
+		      (when pos-rec
+			(push
+			 (record-rmrs-position pos hcons)
+			 hcons-pos)))))))
+    (when pos-rec
+      (setf (rmrs-position-record-eps pos-rec) ep-pos)
+      (setf (rmrs-position-record-args pos-rec) arg-pos)
+      (setf (rmrs-position-record-ings pos-rec) ing-pos)
+      (setf (rmrs-position-record-hcons pos-rec) hcons-pos))
+    pos-rec))
 
-;;; FIX - redo this to record all positions of matchable things
 
 (defun print-rmrs-arg (arg bindings with-ep-p rmrs-display-structure)
   (rmrs-output-start-rmrs-arg rmrs-display-structure 
@@ -627,7 +700,8 @@ for gram.dtd and tag.dtd
       (rmrs-output-constant-fn 
        rmrs-display-structure
        value)))
-  (rmrs-output-end-rmrs-arg rmrs-display-structure))
+  (rmrs-output-end-rmrs-arg rmrs-display-structure) ; returns position
+  )
 
 
 (defun find-rmrs-var-id (var bindings)
@@ -661,11 +735,13 @@ for gram.dtd and tag.dtd
    (hcons-scarg hcons) bindings display)
   (rmrs-output-hcons-next 
    display)
-  (rmrs-output-label 
-   display
-   (find-rmrs-var-id (hcons-outscpd hcons)
-		     bindings))
-  (rmrs-output-hcons-end display))
+  (let ((pos
+	 (rmrs-output-hcons-label 
+	  display
+	  (find-rmrs-var-id (hcons-outscpd hcons)
+			    bindings))))
+    (rmrs-output-hcons-end display)
+    pos))
 
 
 (defun print-rmrs-in-group (in-g bindings with-ep-p display)
@@ -676,10 +752,12 @@ for gram.dtd and tag.dtd
    bindings display)
   (rmrs-output-ingroup-next
    display)
-  (print-rmrs-var 
-   (in-group-label-b in-g)
-   bindings display)
-  (rmrs-output-end-ingroup display))
+  (let ((pos
+	 (print-rmrs-var 
+	  (in-group-label-b in-g)
+	  bindings display)))
+    (rmrs-output-end-ingroup display)
+    pos))
 
 (defun print-semstruct-hook (hook bindings display)
   (semstruct-output-start-hook display)

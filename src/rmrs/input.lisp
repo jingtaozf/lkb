@@ -1,4 +1,4 @@
-;;; Copyright (c) 2003
+;;; Copyright (c) 2003--2004
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `licence.txt' for conditions.
 

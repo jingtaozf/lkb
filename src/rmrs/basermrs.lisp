@@ -1,4 +1,4 @@
-;;; Copyright (c) 2003
+;;; Copyright (c) 2003--2004
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `licence.txt' for conditions.
 
@@ -47,12 +47,15 @@
 
 ;;; added for comparison code
 
-(defstruct rmrs-position
-  position
-  ep)
+(defstruct rmrs-position-record 
+  top eps args ings hcons)
 
-(defun record-rmrs-position (position ep)
-  (make-rmrs-position
+(defstruct rmrs-object-position
+  position
+  object)
+
+(defun record-rmrs-position (position object)
+  (make-rmrs-object-position
    :position position
-   :ep ep))
+   :object object))
 

@@ -1,4 +1,4 @@
-;; Copyright (c) 2003
+;; Copyright (c) 2003--2004
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `licence.txt' for conditions.
 
@@ -88,47 +88,116 @@
         (clim:with-text-style (stream *normal*)
 	  (clim:with-output-recording-options (stream :draw nil :record t)
 	    (let  
-		((ep-pts1 (mrs::output-rmrs1 rmrs1 
-					     'mrs::compact-chars stream t)))
+		((pts1 (mrs::output-rmrs1 rmrs1 
+					     'mrs::compact-chars stream t t)))
 	      (move-to-x-y stream 0 0)
-	      (let ((ep-pts2
-		     (mrs::output-rmrs1 rmrs2 'mrs::compact-two stream t)))
-		(add-comparison-pointers stream ep-pts1 ep-pts2 
+	      (let ((pts2
+		     (mrs::output-rmrs1 rmrs2 'mrs::compact-two stream t t)))
+		(add-comparison-pointers stream pts1 pts2 
 					 comparison-record)))))
       (format stream "~%::: RMRS structures could not be extracted~%"))))
 
-(defun add-comparison-pointers (stream ep-pts1 ep-pts2 comparison-record)
-  (when (and ep-pts1 ep-pts2 comparison-record)
-    (loop for match in (mrs::rmrs-comparison-record-matched-rels comparison-record)
-	do
-	  (let* ((ep1 (mrs::match-rel-record-rel1 match))
-		 (found-ep1 (find ep1 ep-pts1 :key #'mrs::rmrs-position-ep))
-		 (ep2 (mrs::match-rel-record-rel2 match))
-		 (found-ep2 (find ep2 ep-pts2 :key #'mrs::rmrs-position-ep)))
-	    (when (and found-ep1 found-ep2)
-	      (let ((ep1-pos (mrs::rmrs-position-position found-ep1))
-		    (ep2-pos (mrs::rmrs-position-position found-ep2)))
-		(clim:draw-line* 
-		 stream
-		 (+ (position-x ep1-pos) 10)
-		 (+ (position-y ep1-pos) 10)
-		 (- (position-x ep2-pos) 10)
-		 (+ (position-y ep2-pos) 10)
-		 :ink (determine-comparison-line-colour
-		       (mrs::match-rel-record-pred-comp-status match)
-		       (mrs::match-rel-record-var-comp-status match)))))))))
+(defun add-comparison-pointers (stream pts1 pts2 comparison-record)
+  (when (and pts1 pts2 comparison-record
+	     (mrs::rmrs-comparison-record-matched-rels comparison-record))
+    ;;; assume nothing to add if no matched-rels
+    (let ((top-pt1 (mrs::rmrs-position-record-top pts1))
+	  (top-pt2 (mrs::rmrs-position-record-top pts2))
+	  (ep-pts1 (mrs::rmrs-position-record-eps pts1))
+	  (ep-pts2 (mrs::rmrs-position-record-eps pts2))
+	  (arg-pts1 (mrs::rmrs-position-record-args pts1))
+	  (arg-pts2 (mrs::rmrs-position-record-args pts2))
+	  (ing-pts1 (mrs::rmrs-position-record-ings pts1))
+	  (ing-pts2 (mrs::rmrs-position-record-ings pts2))
+	  (hcons-pts1 (mrs::rmrs-position-record-hcons pts1))
+	  (hcons-pts2 (mrs::rmrs-position-record-hcons pts2)))
+      (let ((match (mrs::rmrs-comparison-record-matched-top 
+		    comparison-record)))
+	(when match
+	  (let* ((l1 (mrs::match-top-record-label1 match))
+		 (l2 (mrs::match-top-record-label2 match))
+		 (ink (determine-comparison-line-colour match)))
+	    (draw-rmrs-matching-line l1 (list top-pt1)
+				     l2 (list top-pt2) 
+				     ink stream))))
+      (loop for match in 
+	    (mrs::rmrs-comparison-record-matched-rels comparison-record)
+	  do
+	    (let ((ep1 (mrs::match-rel-record-rel1 match))
+		  (ep2 (mrs::match-rel-record-rel2 match))
+		  (ink (determine-comparison-line-colour match)))
+	      (draw-rmrs-matching-line ep1 ep-pts1
+				       ep2 ep-pts2 ink stream)))
+      (loop for match in 
+	    (mrs::rmrs-comparison-record-matched-args comparison-record)
+	  do
+	    (let ((arg1 (mrs::match-arg-record-arg1 match))
+		  (arg2 (mrs::match-arg-record-arg2 match))
+		  (ink (determine-comparison-line-colour match)))
+	      (draw-rmrs-matching-line arg1 arg-pts1
+				       arg2 arg-pts2 ink stream)))
+      (loop for match in 
+	    (mrs::rmrs-comparison-record-matched-ings comparison-record)
+	  do
+	    (let ((ing1 (mrs::match-ing-record-ing1 match))
+		  (ing2 (mrs::match-ing-record-ing2 match))
+		  (ink (determine-comparison-line-colour match)))
+	      (draw-rmrs-matching-line ing1 ing-pts1
+				       ing2 ing-pts2 ink stream)))
+      (loop for match in 
+	    (mrs::rmrs-comparison-record-matched-hcons comparison-record)
+	  do
+	    (let ((hcons1 (mrs::match-hcons-record-hcons1 match))
+		  (hcons2 (mrs::match-hcons-record-hcons2 match))
+		  (ink (determine-comparison-line-colour match)))
+	      (draw-rmrs-matching-line hcons1 hcons-pts1
+				       hcons2 hcons-pts2 ink stream))))))
 		       
 
-(defun determine-comparison-line-colour (pred-comp-type var-comp-type)
+(defun draw-rmrs-matching-line (object1 pts1 object2 pts2 ink stream)
+  (let ((found-object1 (find object1 pts1 
+			     :key #'mrs::rmrs-object-position-object))
+	(found-object2 (find object2 pts2 
+			     :key #'mrs::rmrs-object-position-object)))
+    (when (and found-object1 found-object2)
+      (let ((object1-pos 
+	     (mrs::rmrs-object-position-position found-object1))
+	    (object2-pos 
+	     (mrs::rmrs-object-position-position found-object2)))
+	(clim:draw-line* 
+	 stream
+	 (+ (position-x object1-pos) 10)
+	 (+ (position-y object1-pos) 10)
+	 (- (position-x object2-pos) 10)
+	 (+ (position-y object2-pos) 10)
+	 :ink ink)))))
+	 
+(defun determine-comparison-line-colour (match)
   ;;; if we assume that the deep-grammar derived RMRS is
   ;;; in position 1, then the :sub2 and :comp cases are
   ;;; generally unexpected - hence use red/magenta for these
-  (declare (ignore var-comp-type))
-  (ecase pred-comp-type
-    (:equal +green-flipping-ink+)
-    (:sub1 +blue-flipping-ink+)
-    (:sub2 +red-flipping-ink+)
-    (:comp +magenta-flipping-ink+)))
+  (cond ((mrs::match-top-record-p match) +green-flipping-ink+)
+	((mrs::match-rel-record-p match)
+	 (let ((pred-comp-type (mrs::match-rel-record-pred-comp-status match))
+	       (var-comp-type (mrs::match-rel-record-var-comp-status match)))
+	   (declare (ignore var-comp-type))
+	   (ecase pred-comp-type
+	     (:equal +green-flipping-ink+)
+	     (:sub1 +blue-flipping-ink+)
+	     (:sub2 +red-flipping-ink+)
+	     (:comp +magenta-flipping-ink+))))
+	((mrs::match-arg-record-p  match)
+	 (let ((comp-type (mrs::match-arg-record-comp-status match)))
+	   (ecase comp-type
+	     (:equal +green-flipping-ink+)
+	     (:sub1 +blue-flipping-ink+)
+	     (:sub2 +red-flipping-ink+)
+	     (:comp +magenta-flipping-ink+))))
+	((mrs::match-ing-record-p match) +green-flipping-ink+)
+	((mrs::match-hcons-record-p match) +green-flipping-ink+)
+	(t (error "Unexpected record type ~A" match))))
+	
+	
     
 ;;; ************* Temporary !!!! ************************
 
