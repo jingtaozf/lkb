@@ -290,7 +290,7 @@
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><gpred>PROPER_Q_REL</gpred><label>H</label><var>X</var></ep>
-<rarg><rargname>RESTR</rargname><label>H</label><var>H2</var></rarg>
+<rarg><rargname>RSTR</rargname><label>H</label><var>H2</var></rarg>
 <rarg><rargname>BODY</rargname><label>H</label><var>H3</var></rarg>
 <ep><gpred>NAMED_REL</gpred><label>H1</label><var>X</var></ep>
 <rarg><rargname>CARG</rargname><label>H1</label><lemma/></rarg>
@@ -310,27 +310,223 @@
 ; NPD1
 ; NPD2
 ; NPM1
-; PN
-; PN1
-; PNQ0
-; PNQS
-; PNQV$
-; PNQVO
-; PNQVS
-; PP$
-; PPH1
-; PPHO1
-; PPHO2
-; PPHS1
-; PPHS2
-; PPIO1
-; PPIO2
-; PPIS1
-; PPIS2
-; PPX1
-; PPX2
-; PPY
-; RA
+-->
+
+<le>
+<tag>PN</tag>
+<documentation>none</documentation>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><gpred>NO_Q_REL</gpred><label>H</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H</label><var>H3</var></rarg>
+<ep><gpred>GENERIC_NONPRO_REL</gpred><label>H1</label><var>X</var></ep>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<le>
+<tag>PN1</tag>
+<documentation>somebody, everybody, one - so very underspecified</documentation>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><gpred>QUANT_REL</gpred><label>H</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H</label><var>H3</var></rarg>
+<ep><gpred>NON_TEMP_NOM_REL</gpred><label>H1</label><var>X</var></ep>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+<!--
+; PNQ0 - whom
+; PNQS - who
+; PNQV$ - whosever
+; PNQVO - whomsoever
+; PNQVS - whoever
+-->
+
+<le>
+<tag>PP$</tag>
+<documentation>hers, theirs ...</documentation>
+<semstruct>
+<hook><index>X1</index><label>H8</label></hook>
+<ep><gpred>DEF_Q_REL</gpred><label>H4</label><var>X1</var></ep>
+<rarg><rargname>RSTR</rargname><label>H4</label><var>H6</var></rarg>
+<rarg><rargname>BODY</rargname><label>H4</label><var>H7</var></rarg>
+<ep><gpred>GENERIC_NOM_REL</gpred><label>H5</label><var>X1</var></ep>
+<ep><gpred>BASIC_POSS_REL</gpred><label>H5</label><var>E</var></ep>
+<rarg><rargname>ARG1</rargname><label>H4</label><var>X</var></rarg>
+<rarg><rargname>ARG2</rargname><label>H4</label><var>X1</var></rarg>
+<ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<le>
+<tag>PPH1</tag>
+<documentation>it</documentation>
+<semstruct>
+<hook><index>X</index><label>H0</label></hook>
+<ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<le>
+<tag>PPHO1</tag>
+<documentation>him, her</documentation>
+<semstruct>
+<hook><index>X</index><label>H0</label></hook>
+<ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<le>
+<tag>PPHO2</tag>
+<documentation>them</documentation>
+<semstruct>
+<hook><index>X</index><label>H0</label></hook>
+<ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<le>
+<tag>PPHS1</tag>
+<documentation>he, she</documentation>
+<semstruct>
+<hook><index>X</index><label>H0</label></hook>
+<ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<le>
+<tag>PPHS2</tag>
+<documentation>they</documentation>
+<semstruct>
+<hook><index>X</index><label>H0</label></hook>
+<ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<le>
+<tag>PPIO1</tag>
+<documentation>me</documentation>
+<semstruct>
+<hook><index>X</index><label>H0</label></hook>
+<ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<le>
+<tag>PPIO2</tag>
+<documentation>us</documentation>
+<semstruct>
+<hook><index>X</index><label>H0</label></hook>
+<ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<le>
+<tag>PPIS1</tag>
+<documentation>I</documentation>
+<semstruct>
+<hook><index>X</index><label>H0</label></hook>
+<ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<le>
+<tag>PPIS2</tag>
+<documentation>we</documentation>
+<semstruct>
+<hook><index>X</index><label>H0</label></hook>
+<ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+
+<le>
+<tag>PPX1</tag>
+<documentation>himself ...</documentation>
+<semstruct>
+<hook><index>X</index><label>H0</label></hook>
+<ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<le>
+<tag>PPX2</tag>
+<documentation>eachother, one another, themselves</documentation>
+<semstruct>
+<hook><index>X</index><label>H0</label></hook>
+<ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<le>
+<tag>PPY</tag>
+<documentation>you</documentation>
+<semstruct>
+<hook><index>X</index><label>H0</label></hook>
+<ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<!--
+
+;;; end pronouns
+
+; RA - ago, p.m.
 ; REX
 ; RG
 ; RGA

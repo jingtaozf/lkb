@@ -1,8 +1,10 @@
 <!ELEMENT lex (le)*>
 
-<!ELEMENT le (tag, semstruct)>
+<!ELEMENT le (tag, (documentation)*, semstruct)>
 
 <!ELEMENT tag (#PCDATA)>
+
+<!ELEMENT documentation (#PCDATA)>
 
 <!ELEMENT semstruct (hook,(ep|rarg|ing)*)>
 

@@ -100,10 +100,12 @@
   ;;; always constructed from the type and the id
   (unless (var-p var)
     (error "var expected ~A found" var))
+  (if (grammar-var-p var)
+      (var-id var)
   (format 
    nil 
    "~@[~(~A~)~]~A" 
-   (when (var-id var) (or (var-type var) "u")) (var-id var)))
+   (when (var-id var) (or (var-type var) "u")) (var-id var))))
 
 ;;; macros moved from mrsresolve
 
@@ -137,13 +139,16 @@
 
 (defun eql-var-id (var1 var2)
   ;;; can't be macroized cos used where fn is required
-  (eql (var-id var1) (var-id var2)))
+  ;;; has to be `equal' since
+  ;;; used for grammar vars etc in RMRS composition code
+  ;;; where the id is a string
+  (equal (var-id var1) (var-id var2)))
 
 ;;;
 ;;; make debugging with MRSs a little easier: print very compact representation
 ;;; of object by default; set *mrs-raw-output-p* to see things in full glory.
 ;;;
-(defparameter *mrs-raw-output-p* nil)
+(defparameter *mrs-raw-output-p* t)
 
 (defmethod print-object ((object psoa) stream)
   (if *mrs-raw-output-p*
