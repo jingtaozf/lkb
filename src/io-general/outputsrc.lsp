@@ -219,7 +219,7 @@
           with successes = 0
           with failures = 0
           finally (return (cons successes failures))
-          for id in ids
+          for id in (remove-duplicates ids)
           for i from 1
           for entry = (get-psort-entry id)
           for tdfs = (and entry (lex-or-psort-full-fs entry))
