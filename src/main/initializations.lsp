@@ -126,7 +126,7 @@
       #+:allegro
       (tpl:setq-default *package* 
         (find-package (if (system:getenv "SSP") :ssp :lkb)))
-      (let ((display (system:getenv "DISPLAY"))
+      (let ((display #+:allegro (system:getenv "DISPLAY") #-:allegro nil)
             (*package* (find-package #+:clim :clim-user #-:clim :lkb)))
         (when (and (stringp display) (not (zerop (length display))))
           #+:clim

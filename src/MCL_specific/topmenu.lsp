@@ -135,7 +135,7 @@
       )))
 
 (defun lkb-restart-function nil
-  (read-psort-index-file)
+  ;;(read-psort-index-file)
   (set-up-lkb-interaction)
   ;; crude way of seeing whether this is being 
   ;; called when we already have a grammar

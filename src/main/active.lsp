@@ -132,7 +132,7 @@
                        for path in *chart-dependencies*
                        unless (evenp i) collect path into paths
                        finally (return paths))
-      with results = (make-array (length paths))
+      with results = (make-array (length paths) :initial-element nil)
       for task in tasks
       for configuration = (rest task)
       for edge = (chart-configuration-edge configuration)
@@ -958,7 +958,7 @@
              ;; we should return a list of fresh edges too.    (30-jan-03; oe)
              ;;
              (unless (vectorp (edge-dag-restricted edge))
-               (setf (edge-dag-restricted edge) (make-array n)))
+               (setf (edge-dag-restricted edge) (make-array n :initial-element nil)))
              (let* ((cache (edge-dag-restricted edge))
                     (entry (aref cache i))
                     #+:fdebug

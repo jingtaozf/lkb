@@ -6,14 +6,14 @@
 
 ;; A thread-safe first-in first-out queue
 
-#+(or :allegro :lispworks :mcl)
+#+(or :allegro :lispworks)
 (defmacro with-queue-lock ((queue) &body body)
   (let ((lock (gensym)))
     `(let ((,lock (queue-lock ,queue)))
        (mp:with-process-lock (,lock)
 	 ,@body))))
 
-#-(or :allegro :lispworks :mcl)
+#-(or :allegro :lispworks)
 (defmacro with-queue-lock ((queue) &body body)
   (declare (ignore queue))
   `(progn
@@ -26,7 +26,7 @@
 
 (defun make-queue ()
   (let ((queue (x-make-queue)))
-    #+(or :allegro :lispworks :mcl) (setf (queue-lock queue) (mp:make-process-lock))
+    #+(or :allegro :lispworks) (setf (queue-lock queue) (mp:make-process-lock))
     (setf (queue-head queue) (cons nil nil))
     (setf (queue-tail queue) (queue-head queue))
     queue))
@@ -54,7 +54,7 @@
 ;; operations with CPU intensive processing, e.g., when expanding lots of
 ;; lexical entries.
 
-#+(or :allegro :lispworks :mcl)
+#+(or :allegro :lispworks)
 (defun process-queue (source sink)
   (let ((queue (make-queue)))
     (let ((child
@@ -74,7 +74,7 @@
 	      do (funcall sink item))
 	(mp:process-kill child)))))
 
-#-(or :allegro :lispworks :mcl)
+#-(or :allegro :lispworks)
 (defun process-queue (source sink)
   (loop for item = (funcall source)
       until (eq item :eof)

@@ -87,7 +87,7 @@
 
 (defgeneric store-psort (lexicon id entry &optional orth))
 
-(defgeneric read-psort (lexicon id &key (cache) (recurse t)))
+(defgeneric read-psort (lexicon id &key cache recurse))
 
 (defgeneric unexpand-psort (lexicon id))
 
@@ -96,7 +96,7 @@
 ;;; identifiers of lexical items plus start symbols and node labels (for the
 ;;; time being, these are stored in the same namespace).
 ;;;
-(defgeneric collect-psort-ids (lexicon &key (cache t) (recurse t)))
+(defgeneric collect-psort-ids (lexicon &key cache recurse))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -590,7 +590,7 @@
 (defun psql-lexicon-enabled-p nil
   (when *psql-lexicon-parameters*
     (cond
-     ((common-lisp-user::featurep :psql) t)
+     ((member :psql *features*) t)
      (t
       (format t "~%WARNING: ignoring *psql-lexicon-parameters* (distribution is not :psql-enabled)")
       nil))))
