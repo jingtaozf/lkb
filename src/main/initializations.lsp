@@ -1,8 +1,5 @@
 (in-package :lkb)
 
-;;; the following is just for the Windows version because we're trying
-;;; to use the built-in project mechanism for that
-
 #+:mswindows
 (unless (find-package "MAKE") 
   (make-package "MAKE" :nicknames '("MK") :use '("COMMON-LISP")))
@@ -77,7 +74,9 @@
 
 
 (defun start-lkb ()
-  #+(or :clim :common-graphics :mcl)
+  ;;; this is a no-op in tty mode
+  #+(not :tty)
+  ;; (or :clim :common-graphics :mcl)
   (let ((building-image-p (find-symbol "*BUILDING-IMAGE-P*" :make)))
     (unless (and building-image-p (boundp building-image-p)
                  (symbol-value building-image-p))
