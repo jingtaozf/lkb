@@ -54,7 +54,7 @@
                                          *orth-path*)                    
                                         :rhs
                                         (make-u-value 
-                                         :types (list orth)))))))
+                                         :type orth))))))
       (when indef
         (setf indef (create-wffs indef))
         (when indef

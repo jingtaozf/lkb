@@ -32,7 +32,7 @@ phrase := syn-struc &
 
 head-initial := phrase &
 [ HEAD #head,
-  ARGS < [ HEAD #head ] ... > ].
+  ARGS < [ HEAD #head ], ... > ].
 
 head-final := phrase &
 [ HEAD #head,
