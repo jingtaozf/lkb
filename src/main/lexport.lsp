@@ -473,14 +473,11 @@
 	    ((typep rhs 'PATH)
 	     (incf c)
 	     (setf coindex (str-2-symb (format nil "#~a" c)))
-	     ;(setf coindex (str-2-symb (format nil "\\#~a" c)))
 	     (list
 	      (append (path-typed-feature-list lhs)
 		      coindex)
-		      ;'\#1)
 	      (append (path-typed-feature-list rhs)
 		      coindex))))))
-		      ;'\#1))))))
      unifs)))
 
 (defun unif-2-lists (unif)
@@ -591,7 +588,6 @@
        (format nil "~a ~a & ~a" 
 	       (string root) 
 	       (tdl-val-str (car a-branch))
-	       ;(make-string i :initial-element #\ )
 	       (p-2-tdl-aux i branches)))
       ((= len 1)
        (format nil "~a.~a" (string root) (p-2-tdl-2 i (first branches))))
@@ -619,7 +615,6 @@
       (format nil "[ ~a ]"
 	      (str-list-2-str
 	       (mapcar (lambda (x) (p-2-tdl-2 i x)) branches)
-	       ;(concatenate 'string ",~%" (make-string i :initial-element #\ ))))))))
 	       (format nil ",~%~a" (make-string i :initial-element #\ ))))))))
 
 (defun p-2-tdl-2-in-list (i x)
