@@ -9,6 +9,26 @@
 ;;; Postgres interface
 ;;;
 
+;;;
+;;; moved here from `src/main/initializations.lsp'.           (20-may-04; oe)
+;;;
+
+(defun psql-initialize ()
+  ;;
+  ;; make sure we `mark' the current universe as PSQL-enabled.
+  ;;
+  (pushnew :psql *features*)
+  (handler-case (load "libpq.so") 
+    (file-error () 
+      ;; some feedback to user
+      (format t ";   Warning: cannot load libpq.so")
+      (format t "~%;            (PSQL lexicon functionality will be unavailable)")
+      (format t "~%;            (hint: are the PostgreSQL libraries installed on your machine?)")
+      ;; need this for backward compatibility with ERG script
+      ;; (also a good idea anyway)
+      (setf *features* (remove :psql *features*)))))
+
+
 (defmethod make-field-map-slot ((lexicon psql-lex-database))
   ;; stores the mapping of fields to lex-entry structure slots
   (setf (fields-map lexicon)
