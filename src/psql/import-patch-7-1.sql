@@ -40,9 +40,6 @@ ON current_grammar (orthkey);
 CREATE UNIQUE INDEX current_grammar_name
 ON current_grammar (name); 
 
-CREATE INDEX current_grammar_orthkey
-ON current_grammar (orthkey); 
-
 ---
 --- temporary table
 ---
