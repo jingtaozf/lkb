@@ -810,13 +810,6 @@
 
 
 ;;; Second phase, where intersective modifiers are introduced
-;;;
-;;; find missing rels and look for sets of potential modifier edges that cover
-;;; them, then try inserting modifier edges into partial edge and recompute
-;;; nodes higher up in tree
-;;;
-;;; all edges created from now on have index *toptype* since we're not trying
-;;; to retrieve them from the chart
 
 (defun gen-chart-adjoin-modifiers (partial-edges input-rels possible-grules)
    (declare (ignore input-sem))
@@ -831,55 +824,53 @@
                         (if rule
                            (loop for i from 1 to (1- (length (rule-order rule)))
                                  collect i))))))
-            *intersective-rule-names*)))
+            *intersective-rule-names*))
+       (partial-extendable nil))
       (when *gen-adjunction-debug*
          (format t "~%Intersective inactive edges: ~:A" 
             (mapcar #'g-edge-id intersective-edges)))
-      (let
+      (let*
          ((mod-candidate-edges
             (gen-chart-active-mod-candidate-edges
-               intersective-edges possible-grules intersective-rules-and-daughters))
-          (partial-extendable nil)
-          (id 0))
+               intersective-edges possible-grules intersective-rules-and-daughters)))
+         ;; perform all possible adjunctions of modifiers into others e.g. to get nested PPs -- note that
+         ;; after doing this some of the modifiers may have supersets of rels-covered
+         ;; unpackable from them
+         (when *gen-adjunction-debug* (format t "~&Adjoining into adjuncts"))
+         (dolist (int mod-candidate-edges)
+            (gen-chart-insert-adjunction int
+               (remove-if-not
+                  #'(lambda (mod) (gen-chart-set-disjoint-p mod (g-edge-rels-covered int)))
+                  mod-candidate-edges :key #'g-edge-rels-covered)
+               nil))
+         ;; adjoin into partial analyses, considering only modifiers that do not have
+         ;; any overlap, and rejecting any partial analysis that couldn't be completed
+         ;; by any subset of modifiers available
          (dolist (partial partial-edges)
-            ;; adjoin into partial analysis
-            ;; reject any mod that overlaps with partial
-            ;; (print (list '--- (g-edge-id partial) (g-edge-leaves partial)))
+            (when *gen-adjunction-debug*
+               (format t "~&---~%Partial edge [~A] spanning ~:A" (g-edge-id partial)
+                  (g-edge-leaves partial)))
             ;; (print (gen-chart-set-rel-preds (g-edge-rels-covered partial)))
-            (let ((non-overlapping
+            (let
+               ((missing-rels
+                   (gen-chart-set-difference input-rels (g-edge-rels-covered partial)))
+                (non-overlapping
                    (remove-if-not
-                      #'(lambda (mod) (gen-chart-set-disjoint-p mod (g-edge-rels-covered partial)))
-                      mod-candidate-edges :key #'g-edge-rels-covered))
-                  (sub-adjoined nil))
-               (when non-overlapping
-                  (incf id)
-                  ;; adjoin into adjunct list, e.g. to get nested PPs
-                  (dolist (int non-overlapping)
-                     (setq sub-adjoined
-                        (gen-chart-insert-adjunction int
-                           (remove-if-not
-                              #'(lambda (mod) (gen-chart-set-disjoint-p mod (g-edge-rels-covered int)))
-                              non-overlapping :key #'g-edge-rels-covered)
-                           id sub-adjoined)))
-                  ;; union of mod rels must be equal to missing-rels, otherwise reject partial
-                  (let
-                     ((missing-rels
-                        (gen-chart-set-difference input-rels (g-edge-rels-covered partial))))
-                     ;; (print (list missing-rels (gen-chart-set-rel-preds missing-rels)))
-                     (when
-                        (and
-                           (gen-chart-set-equal-p missing-rels
-                              (reduce #'gen-chart-set-union non-overlapping
-                                 :key #'g-edge-rels-covered))
-                           (let ((adjoined
-                                   (gen-chart-insert-adjunction partial non-overlapping id sub-adjoined)))
-                               (and adjoined
-                                  (gen-chart-set-equal-p missing-rels
-                                     (reduce #'gen-chart-set-union adjoined :key #'g-edge-rels-covered)))))
+                      #'(lambda (mod)
+                           (gen-chart-set-disjoint-p mod (g-edge-rels-covered partial)))
+                      mod-candidate-edges :key #'g-edge-rels-covered)))
+               ;; (print (list missing-rels (gen-chart-set-rel-preds missing-rels)))
+               (when (and non-overlapping
+                        (gen-chart-set-equal-p missing-rels
+                           (reduce #'gen-chart-set-union
+                              non-overlapping :key #'g-edge-rels-covered)))
+                  (when *gen-adjunction-debug*
+                     (format t "~&Checking adjunction into partial edge"))
+                  (let ((adjoined
+                          (gen-chart-insert-adjunction partial non-overlapping nil)))
+                     (when adjoined
                         (when *gen-adjunction-debug*
-                           (format t
-"~&Partial edge [~A], id ~A, spanning ~:A~%   modifiers ~A" (g-edge-id partial) id
-                             (g-edge-leaves partial) (mapcar #'g-edge-id non-overlapping)))
+                           (format t "~&Successful modifiers ~A" (mapcar #'g-edge-id adjoined)))
                         (push partial partial-extendable))))))
          partial-extendable)))
 
@@ -949,9 +940,10 @@
        intersective-edges))
 
 
-;;;
+;;; Attempt to adjoin all possible of acts into forest with top node edge, recording
+;;; in list adjoined which of acts succeeded in adjoining at some point.
 
-(defun gen-chart-insert-adjunction (edge acts id adjoined)
+(defun gen-chart-insert-adjunction (edge acts adjoined)
    (unless (member nil (g-edge-children edge))
       ;; don't try to adjoin into the top of an active edge
       (dolist (act acts)
@@ -961,11 +953,11 @@
    (dolist (c (g-edge-children edge))
       (when c
          ;; don't try to adjoin into the needed daughter of an active edge
-         (setq adjoined (gen-chart-insert-adjunction c acts id adjoined))))
+         (setq adjoined (gen-chart-insert-adjunction c acts adjoined))))
    (dolist (p (g-edge-equivalent edge))
-      (setq adjoined (gen-chart-insert-adjunction p acts id adjoined)))
+      (setq adjoined (gen-chart-insert-adjunction p acts adjoined)))
    (dolist (p (g-edge-packed edge))
-      (setq adjoined (gen-chart-insert-adjunction p acts id adjoined)))
+      (setq adjoined (gen-chart-insert-adjunction p acts adjoined)))
    adjoined)
          
          
