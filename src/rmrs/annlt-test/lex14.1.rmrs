@@ -1,4 +1,5 @@
 <?xml version='1.0'?> <!DOCTYPE lex SYSTEM "/homes/aac10/lingo/newlkb/src/rmrs/tag.dtd" >
+
 <lex>
 <le>
 <tag>APP$</tag>
@@ -7,6 +8,7 @@
 <ep><pred/><label>H</label><var>X</var></ep>
 </semstruct>
 </le>
+
 <le>
 <tag>AT</tag>
 <semstruct>
@@ -14,6 +16,7 @@
 <ep><pred/><label>H</label><var>X</var></ep>
 </semstruct>
 </le>
+
 <le>
 <tag>AT1</tag>
 <semstruct>

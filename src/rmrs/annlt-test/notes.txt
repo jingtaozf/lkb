@@ -1,0 +1,5 @@
+the approach of not connecting the ltop of the determiner and the
+label of its relation does not translate into RMRS-RASP because we
+need access to the label to connect up the Nbar.  Hence, for now,
+pretend that the NP is headed by RULE, so we can disconnect the\
+label at that point ...
