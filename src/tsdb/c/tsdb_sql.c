@@ -618,7 +618,9 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
   if (conditions) {
 #if defined(DEBUG) && defined(TOM)
     tsdb_tree_print(conditions, tsdb_debug_stream);
+#endif
     tsdb_check_not(conditions);
+#if defined(DEBUG) && defined(TOM)
     tsdb_tree_print(conditions, tsdb_debug_stream);
 #endif
     attributes = (char **)malloc(s_attributes * sizeof(char *));
