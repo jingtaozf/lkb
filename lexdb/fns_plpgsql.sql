@@ -10,6 +10,18 @@
 -- admin tasks
 --
 
+CREATE OR REPLACE FUNCTION public.tmp_dir() RETURNS text AS '
+BEGIN
+ RETURN SELECT val FROM public.meta WHERE var=\'tmp-dir\';
+END;
+' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.tmp_base(text) RETURNS text AS '
+BEGIN
+ RETURN SELECT tmp_dir() || \'/\' || $1 || \'-temp.\';
+END;
+' LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION public.ext_fns() RETURNS SETOF text AS '
 DECLARE
 	x RECORD;

@@ -1,4 +1,4 @@
-;;; Copyright (c) 2001 -- 2004
+;; Copyright (c) 2001 -- 2004
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Ben Waldron;
 ;;;   see `licence.txt' for conditions.
 
@@ -485,7 +485,7 @@
   
 (defmethod set-lex-entry-aux ((lexicon psql-lex-database) (psql-le psql-lex-entry))
   ;;obsolete
-  (set-version psql-le lexicon) 
+  ;(set-version psql-le lexicon) 
 ;  (if *lexdb-dump-timestamp* 
 ;      (set-val psql-le :modstamp *lexdb-dump-timestamp*))
   (set-val psql-le :modstamp "NOW")

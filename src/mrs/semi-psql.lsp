@@ -29,7 +29,7 @@
 
 (defconstant *psql-semi-dump-base*
     (format nil "~a/semi.obj." 
-	    (make-pathname :directory (pathname-directory (lkb::lkb-tmp-dir)))))
+	    (make-pathname :directory (namestring (lkb::lkb-tmp-dir)))))
 
 (defun dump-*semi*-to-psql nil
   (dump-semi-to-psql *semi*))
@@ -38,8 +38,8 @@
   (populate-semi semi)
   (print-semi-db semi)
   (with-slots (lkb::host lkb::port lkb::user lkb::dbname) lexicon
-  (let* ((base (format nil "~a/semi.obj" 
-	    (make-pathname :directory (pathname-directory (lkb::lkb-tmp-dir))))))
+  (let* ((base (format nil "~asemi.obj" 
+	    (make-pathname :directory (namestring (lkb::lkb-tmp-dir))))))
     (lkb::semi-setup-pre lexicon)
     (load-db-table-from-file "semi_pred"
 			     (format nil "~a.~a" base "pred")

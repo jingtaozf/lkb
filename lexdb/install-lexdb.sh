@@ -10,8 +10,8 @@ fi
 export LEXDB=$1
 
 function drop_lexdb {
-    echo "dropping lexdb..."
-    dropdb -U lexdb $LEXDB;
+#    echo "dropping lexdb..."
+#    dropdb -U lexdb $LEXDB;
     echo "ABORTING..."
     exit;
 }  
@@ -22,7 +22,7 @@ if [ $? != 0 ] ; then exit; fi
 
 echo "createlang -U postgres plpgsql $LEXDB"
 createlang -U postgres plpgsql $LEXDB
-if [ $? != 0 ] ; then drop_lexdb; fi
+#if [ $? != 0 ] ; then drop_lexdb; fi
 
 if [ ! -f su-setup.sql ]; then echo "cannot find file su-setup.sql"; 
     echo "drop_lexdb"
@@ -49,7 +49,7 @@ if [ -f $2 ]; then
 	drop_lexdb; 
     fi
 
-    echo "psql -c "\copy fields from $2" -U lexdb $LEXDB"
+    echo "psql -c \"copy fields from $2\" -U lexdb $LEXDB"
     psql -c "\copy fields from $2" -U lexdb $LEXDB; 
     if [ $? != 0 ] ; then 
 	echo "drop_lexdb"

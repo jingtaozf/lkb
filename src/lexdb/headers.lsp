@@ -96,7 +96,7 @@
   ;; make sure we `mark' the current universe as PSQL-enabled.
   ;;
   (pushnew :psql *features*)
-  (handler-case (load-libpq-3) 
+  (handler-case (load-libpq) 
     (file-error () 
       ;; some feedback to user
       (format t ";   Warning: cannot load libpq.so")
@@ -106,6 +106,11 @@
       ;; (also a good idea anyway)
       (setf *features* (remove :psql *features*)))))
 
-(defun load-libpq-3 nil
+#-:mswindows
+(defun load-libpq nil
   (let (#+allegro (excl::*load-foreign-types* (cons "3" excl::*load-foreign-types*)))
     (load "libpq.so.3")))
+
+#+:mswindows
+(defun load-libpq nil
+    (load "libpq.dll"))

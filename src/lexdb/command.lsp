@@ -146,7 +146,7 @@
 (defun get-filename (rest &key (ending "") existing)
   (let* ((len-ending (length ending))
          (prompt (format nil "~a file?" ending))
-         (filename (cond
+         (filename (namestring (cond
 		    ((= (length rest) 0)
 		     (if existing
 			 (ask-user-for-existing-pathname prompt)
@@ -154,7 +154,7 @@
 		    ((= (length rest) 1)
 		     (first rest))
 		    (t
-		     (error "too many arguments"))))
+		     (error "too many arguments")))))
 	 (len-main (- (length filename) len-ending)))
     (cond
      ((and
@@ -164,3 +164,16 @@
      (t
       filename))))
 
+;(defun get-filename (rest &key (ending "") existing)
+;  (let* ((len-ending (length ending))
+;         (prompt (format nil "~a file?" ending))
+;         (filename (cond
+;		    ((= (length rest) 0)
+;		     (if existing
+;			 (ask-user-for-existing-pathname prompt)
+;		       (ask-user-for-new-pathname prompt)))
+;		    ((= (length rest) 1)
+;		     (first rest))
+;		    (t
+;		     (error "too many arguments")))))
+;    filename))

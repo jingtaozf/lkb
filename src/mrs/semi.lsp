@@ -475,12 +475,12 @@
       (error "no table ~a in ~a" name sdb)))))
 
 (defun print-sdb (sdb)
-  (let ((temp-dir (make-pathname :directory (pathname-directory (lkb::lkb-tmp-dir)))))
+  (let ((temp-dir (make-pathname :directory (namestring (lkb::lkb-tmp-dir)))))
     (mapc
      #'(lambda (x)
 	 (with-open-file 
 	     (stream
-	      (format nil "~a/semi.obj.~(~a~)" temp-dir (sdbt-name x))
+	      (format nil "~asemi.obj.~(~a~)" temp-dir (sdbt-name x))
 	      :direction :output 
 	      :if-exists :supersede)
 	   ;;(format t "~%writing table ~a..." (sdbt-name x))

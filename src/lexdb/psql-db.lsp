@@ -30,15 +30,19 @@
 		 (pg-rev (first pg-files))
 		 (pg-dfn (second pg-files))
 		 (pg-fld (third pg-files)))
-	    (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
-							 pg-rev
-							 revision-filename))
-	    (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
-							 pg-dfn
-							 defn-filename))
-	    (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
-							 pg-fld
-							 fld-filename))
+	    (system:copy-file pg-rev revision-filename :overwrite t)
+	    (system:copy-file pg-dfn defn-filename :overwrite t)
+	    (system:copy-file pg-fld fld-filename :overwrite t)
+	    
+;	    (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
+;							 pg-rev
+;							 revision-filename))
+;	    (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
+;							 pg-dfn
+;							 defn-filename))
+;	    (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
+;							 pg-fld
+;							 fld-filename))
 	    (when tdl
 	      (format t "~%(exporting filtered LexDB to TDL file ~a)" tdl-filename)
 	      (force-output)

@@ -48,16 +48,16 @@ DECLARE
 	lexdb_versn real;
 	base text;
 BEGIN
-	base := \'/tmp/lexdb-temp.\' || $1;
+	base := tmp_base(\'lexdb\') || $1;
 	dump_file_rev := base || \'.rev\';
 
  	lexdb_versn := lexdb_version()::real;
 	RAISE INFO \'EXISTING LEXDB_VERSION: %\', lexdb_versn;
 
 	IF (lexdb_versn < 3.20) THEN
-		RAISE ERROR "LexDB fields have changed. Please recreate LexDB from grammar, or adjust fields manually.";
+		--RAISE ERROR "LexDB fields have changed. Please recreate LexDB from grammar, or adjust fields manually.";
 	ELSEIF (lexdb_versn < 3.50) THEN
-		RAISE ERROR "LexDB fields have changed (version field is no longer used). Please recreate LexDB from grammar, or adjust fields using kill-version.sh script.";
+		--RAISE ERROR "LexDB fields have changed (version field is no longer used). Please recreate LexDB from grammar, or adjust fields using kill-version.sh script.";
 	ELSE 
 		CREATE TABLE temp_dump AS
 			SELECT * FROM public.revision ORDER BY name, userid, modstamp;
@@ -78,7 +78,8 @@ DECLARE
 	lexdb_versn real;
 	base text;
 BEGIN
-	base := \'/tmp/lexdb-temp.\' || $1;
+	base := tmp_base(\'lexdb\') || $1;
+--	base := \'/tmp/lexdb-temp.\' || $1;
 	dump_file_dfn := base || \'.dfn\';
 	dump_file_fld := base || \'.fld\';
 
@@ -100,7 +101,8 @@ DECLARE
 	dump_file_rev text;
 	base text;
 BEGIN
-	base := \'/tmp/lexdb-temp.\' || $1;
+	base := tmp_base(\'lexdb\') || $1;
+--	base := \'/tmp/lexdb-temp.\' || $1;
 	dump_file_rev := base || \'.rev\';
 
 	RAISE INFO \'Restoring public.revision from file %\', dump_file_rev;
@@ -114,7 +116,8 @@ DECLARE
 	dump_file_dfn text;
 	base text;
 BEGIN
-	base := \'/tmp/lexdb-temp.\' || $1;
+	base := tmp_base(\'lexdb\') || $1;
+--	base := \'/tmp/lexdb-temp.\' || $1;
 	dump_file_dfn := base || \'.dfn\';
 
 	RAISE INFO \'Restoring public.defn from file %\', dump_file_dfn;
@@ -128,7 +131,8 @@ DECLARE
 	dump_file_fld text;
 	base text;
 BEGIN
-	base := \'/tmp/lexdb-temp.\' || $1;
+	base := tmp_base(\'lexdb\') || $1;
+--	base := \'/tmp/lexdb-temp.\' || $1;
 	dump_file_fld := base || \'.fld\';
 
 	RAISE INFO \'Restoring public.fields from file %\', dump_file_fld;

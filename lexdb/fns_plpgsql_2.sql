@@ -63,7 +63,8 @@ DECLARE
 	x RECORD;
 BEGIN
 	FOR x IN
-		SELECT * FROM current_grammar as g NATURAL LEFT JOIN semi_mod as s WHERE g.modstamp > COALESCE(s.modstamp,\'-infinity\')
+		--SELECT * FROM current_grammar as g NATURAL LEFT JOIN semi_mod as s WHERE g.modstamp > COALESCE(s.modstamp,\'-infinity\')
+		SELECT g.* FROM current_grammar as g NATURAL LEFT JOIN semi_mod as s WHERE g.modstamp > COALESCE(s.modstamp,\'-infinity\')
 		LOOP
 		RETURN NEXT x;
 	END LOOP;
