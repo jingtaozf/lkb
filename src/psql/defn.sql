@@ -24,16 +24,16 @@ INSERT INTO defn VALUES ( 'mwe', 'unifs', 'keyrel', '(sem hook keypred)', 'mixed
 INSERT INTO defn VALUES ( 'mwe', 'unifs', 'compkey', '(sem keys --compkey)', 'symbol' );
 INSERT INTO defn VALUES ( 'mwe', 'unifs', 'ocompkey', '(sem keys --ocompkey)', 'symbol' );
 
-DELETE FROM defn WHERE mode = 'erg2';
-INSERT INTO defn VALUES ( 'erg2', 'id', 'name', '', 'symbol' );
-INSERT INTO defn VALUES ( 'erg2', 'orth', 'orthography', '', 'string-list' );
-INSERT INTO defn VALUES ( 'erg2', 'unifs', 'type', 'nil', 'symbol' );
-INSERT INTO defn VALUES ( 'erg2', 'unifs', 'orthography', '(stem)', 'string-fs' );
-INSERT INTO defn VALUES ( 'erg2', 'unifs', 'keyrel', '(synsem lkeys keyrel pred)', 'mixed' );
-INSERT INTO defn VALUES ( 'erg2', 'unifs', 'keytag', '(synsem lkeys keyrel carg)', 'string' ); 
-INSERT INTO defn VALUES ( 'erg2', 'unifs', 'altkey', '(synsem lkeys altkeyrel pred)', 'mixed' );
-INSERT INTO defn VALUES ( 'erg2', 'unifs', 'altkeytag', '(synsem lkeys altkeyrel carg)', 'string' );
-INSERT INTO defn VALUES ( 'erg2', 'unifs', 'alt2key', '(synsem lkeys alt2keyrel pred)', 'mixed' );
-INSERT INTO defn VALUES ( 'erg2', 'unifs', 'compkey', '(synsem lkeys --compkey)', 'symbol' );
-INSERT INTO defn VALUES ( 'erg2', 'unifs', 'ocompkey', '(synsem lkeys --ocompkey)', 'symbol' );
+DELETE FROM defn WHERE mode = 'erg';
+INSERT INTO defn VALUES ( 'erg', 'id', 'name', '', 'symbol' );
+INSERT INTO defn VALUES ( 'erg', 'orth', 'orthography', '', 'string-list' );
+INSERT INTO defn VALUES ( 'erg', 'unifs', 'type', 'nil', 'symbol' );
+INSERT INTO defn VALUES ( 'erg', 'unifs', 'orthography', '(stem)', 'string-fs' );
+INSERT INTO defn VALUES ( 'erg', 'unifs', 'keyrel', '(synsem lkeys keyrel pred)', 'mixed' );
+INSERT INTO defn VALUES ( 'erg', 'unifs', 'keytag', '(synsem lkeys keyrel carg)', 'string' ); 
+INSERT INTO defn VALUES ( 'erg', 'unifs', 'altkey', '(synsem lkeys altkeyrel pred)', 'mixed' );
+INSERT INTO defn VALUES ( 'erg', 'unifs', 'altkeytag', '(synsem lkeys altkeyrel carg)', 'string' );
+INSERT INTO defn VALUES ( 'erg', 'unifs', 'alt2key', '(synsem lkeys alt2keyrel pred)', 'mixed' );
+INSERT INTO defn VALUES ( 'erg', 'unifs', 'compkey', '(synsem lkeys --compkey)', 'symbol' );
+INSERT INTO defn VALUES ( 'erg', 'unifs', 'ocompkey', '(synsem lkeys --ocompkey)', 'symbol' );
 
