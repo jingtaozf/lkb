@@ -98,8 +98,7 @@
   ;;; Longer term, rules should be indexed by these categories.
    (or (cdr (assoc fs *cached-category-abbs*))
        (let ((abb
-              (if (and (eql *lkb-system-version* :page)
-                       (not *simple-tree-display*))
+              (if (not *simple-tree-display*)
                  (calculate-tdl-label fs)
                  (dolist (tmpl *category-display-templates*)
                     (let* ((tmpl-entry (get-psort-entry tmpl))
@@ -129,32 +128,33 @@
 ;;; Initialisation stuff
 
 (defun split-up-templates nil
+  (unless *simple-tree-display*
   ; called when *category-display-templates*
   ; is set up by the code in tdllexinput.lsp
-  (setf *label-display-templates* nil)
-  (setf *meta-display-templates* nil)
-  (loop for tmpl in *category-display-templates*
-       do
-       (let* ((tmpl-entry (get-psort-entry tmpl))
-              (tmpl-fs (if tmpl-entry 
-                           (tdfs-indef 
-                                  (lex-or-psort-full-fs tmpl-entry)))))
-         (if tmpl-fs 
-           (if (label-template-fs-p tmpl-fs)
-               (push (make-label-template
-                      :fs tmpl-fs 
-                      :label (get-string-path-value tmpl-fs *label-path*
-                                                   tmpl))
-                     *label-display-templates*)
-             (push (make-meta-template
-                    :fs tmpl-fs 
-                    :prefix (get-string-path-value tmpl-fs *prefix-path*
-                                                  tmpl)
-                    :suffix (get-string-path-value tmpl-fs *suffix-path*
-                                                  tmpl))
-                   *meta-display-templates*))
-           (format t "~%Warning: no valid fs for ~A" tmpl)))))
-
+    (setf *label-display-templates* nil)
+    (setf *meta-display-templates* nil)
+    (loop for tmpl in *category-display-templates*
+        do
+          (let* ((tmpl-entry (get-psort-entry tmpl))
+                 (tmpl-fs (if tmpl-entry 
+                              (tdfs-indef 
+                               (lex-or-psort-full-fs tmpl-entry)))))
+            (if tmpl-fs 
+                (if (label-template-fs-p tmpl-fs)
+                    (push (make-label-template
+                           :fs tmpl-fs 
+                           :label (get-string-path-value tmpl-fs *label-path*
+                                                         tmpl))
+                          *label-display-templates*)
+                  (push (make-meta-template
+                         :fs tmpl-fs 
+                         :prefix (get-string-path-value tmpl-fs *prefix-path*
+                                                        tmpl)
+                         :suffix (get-string-path-value tmpl-fs *suffix-path*
+                                                        tmpl))
+                        *meta-display-templates*))
+              (format t "~%Warning: no valid fs for ~A" tmpl))))))
+  
 
 (defun label-template-fs-p (fs)
   (let ((type (type-of-fs fs)))

@@ -119,6 +119,9 @@
 		    (t "psort"))
 	      (pathname-name file-name))
       (read-tdl-psort-stream istream templates-p)))
+  (when *simple-tree-display*
+    (setf *category-display-templates* 
+      (nreverse *category-display-templates*)))
   (if templates-p (split-up-templates)))
 
 (defun read-tdl-psort-stream (istream &optional templates-p) 
