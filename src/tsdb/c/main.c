@@ -155,7 +155,11 @@ int main(int argc, char **argv) {
     sprintf(prompt, "tsdb@%s (%d) # ", host, n_commands);
     
     while(!(tsdb.status & TSDB_QUIT) && ((foo = readline(prompt)) != NULL)) {
+      for(; *foo && isspace(*foo); foo++);
       if(*foo) {
+        for(bar = &foo[strlen(foo) - 1];
+            bar >= foo && isspace(*bar);
+            *bar = 0, bar--);
         if(input == NULL) {
           input = strdup(foo);
         } /* if */
@@ -165,7 +169,7 @@ int main(int argc, char **argv) {
           input = strcat(input, foo);
         } /* else */
         free(foo);
-        if(input != NULL && strchr(input, '.')) {
+        if(input != NULL && *input && input[strlen(input) - 1] == '.') {
           tsdb_parse(input);
           add_history(input);
           free(input);

@@ -1308,7 +1308,7 @@ BOOL tsdb_initialize() {
   char *foo;
   FILE *bar;
 #ifdef DEBUG
-  int i;
+  int i, j;
 #endif
 
 #ifdef DEBUG
@@ -1415,12 +1415,21 @@ BOOL tsdb_initialize() {
     foo = strcpy(foo, tsdb.data_path);
     foo = strcat(foo, tsdb.relations[i]->name);
     if(access(foo, R_OK)) {
-      free(foo);
-      fprintf(tsdb_error_stream,
-              "initialize(): unable to locate data file for relation `%s'.\n",
-              tsdb.relations[i]->name);
-      fflush(tsdb_error_stream);
-      return(FALSE);
+      if((j = creat(foo, 0666)) == -1) {
+        free(foo);
+        fprintf(tsdb_error_stream,
+                "initialize(): unable to create data file for `%s'.\n",
+                tsdb.relations[i]->name);
+        fflush(tsdb_error_stream);
+        return(FALSE);
+      } /* if */
+      else {
+        close(j);
+        fprintf(tsdb_error_stream,
+                "initialize(): creating empty data file for `%s'.\n",
+                tsdb.relations[i]->name);
+        fflush(tsdb_error_stream);
+      } /* else */
     } /* if */
   } /* for */
   free(foo);

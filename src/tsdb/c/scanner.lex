@@ -56,182 +56,182 @@ x [xX]
 y [yY]
 z [zZ]
 
-DIGIT           [0-9]
-NUMBER          [-+]?{DIGIT}+
-DELIM           [ \t\n]
-WHITESPACE      {DELIM}+
-QUOTE           (\")
-LETTER          [a-zA-Z]
-SPECIAL         [-_]
-IDENTIFIER      {LETTER}({LETTER}|{DIGIT}|{SPECIAL})*
-STRING          {QUOTE}[^"]*{QUOTE}
+DIGIT [0-9]
+NUMBER [-+]?{DIGIT}+
+DELIMITER [ \t\n]
+WHITESPACE {DELIMITER}+
+QUOTE (\")
+LETTER [a-zA-Z]
+SPECIAL [-_]
+IDENTIFIER {LETTER}({LETTER}|{DIGIT}|{SPECIAL})*
+STRING ({QUOTE}[^"]*{QUOTE})|`[^']*'
 
 %%
 
 {r}{e}{t}{r}{i}{e}{v}{e} {
   if(verbose_mode) {
-    fprintf(stderr, "Retrieve\n");
+    fprintf(stderr, "RETRIEVE\n");
   } /* if */
   return(Y_RETRIEVE);
 }
 
 {s}{e}{l}{e}{c}{t} {
   if(verbose_mode) {
-    fprintf(stderr, "Select\n");
+    fprintf(stderr, "SELECT\n");
   } /* if */
   return(Y_RETRIEVE);
 }
 
 {u}{p}{d}{a}{t}{e} {
   if(verbose_mode) {
-    fprintf(stderr, "Update\n");
+    fprintf(stderr, "UPDATE\n");
   } /* if */
   return(Y_UPDATE);
 }
 
 {i}{n}{s}{e}{r}{t} {
   if(verbose_mode) {
-    fprintf(stderr, "Insert\n");
+    fprintf(stderr, "INSERT\n");
   } /* if */
   return(Y_INSERT);
 }
 
 {d}{e}{l}{e}{t}{e} {
   if(verbose_mode) {
-    fprintf(stderr, "Delete\n");
+    fprintf(stderr, "DELETE\n");
   } /* if */
   return(Y_DELETE);
 }
 
 {d}{r}{o}{p} {
   if(verbose_mode) {
-    fprintf(stderr, "Drop\n");
+    fprintf(stderr, "DROP\n");
   } /* if */
   return(Y_DROP);
 }
 
 {c}{r}{e}{a}{t}{e} {
   if(verbose_mode) {
-    fprintf(stderr, "Create\n");
+    fprintf(stderr, "CREATE\n");
   } /* if */
   return(Y_CREATE);
 }
 
 {a}{l}{t}{e}{r} {
   if(verbose_mode) {
-    fprintf(stderr, "Alter\n");
+    fprintf(stderr, "ALTER\n");
   } /* if */
   return(Y_ALTER);
 }
 
 {i}{n}{f}{o} {
   if(verbose_mode) {
-    fprintf(stderr, "Info\n");
+    fprintf(stderr, "INFO\n");
   } /* if */
   return(Y_INFO);
 }
 
 {s}{e}{t} {
   if(verbose_mode) {
-    fprintf(stderr, "Set\n");
+    fprintf(stderr, "SET\n");
   } /* if */
   return(Y_SET);
 }
 
 {t}{a}{b}{l}{e} {
   if(verbose_mode) {
-    fprintf(stderr, "Table\n");
+    fprintf(stderr, "TABLE\n");
   } /* if */
   return(Y_TABLE);
 }
 
 {w}{h}{e}{r}{e} {
   if(verbose_mode) {
-    fprintf(stderr, "Where\n");
+    fprintf(stderr, "WHERE\n");
   } /* if */
   return(Y_WHERE);
 }
 
 {r}{e}{p}{o}{r}{t} {
   if(verbose_mode) {
-    fprintf(stderr, "Report\n");
+    fprintf(stderr, "REPORT\n");
   } /* if */
   return(Y_REPORT);
 }
 
 {a}{d}{d} {
   if(verbose_mode) {
-    fprintf(stderr, "Add\n");
+    fprintf(stderr, "ADD\n");
   } /* if */
   return(Y_ADD);
 }
 
 {f}{r}{o}{m} {
   if(verbose_mode) {
-    fprintf(stderr, "From\n");
+    fprintf(stderr, "FROM\n");
   } /* if */
   return(Y_FROM);
 }
 
 {i}{n}{t}{o} {
   if(verbose_mode) {
-    fprintf(stderr, "Into\n");
+    fprintf(stderr, "INTO\n");
   } /* if */
   return(Y_INTO);
 }
 
 {v}{a}{l}{u}{e}{s} {
   if(verbose_mode) {
-    fprintf(stderr, "Values\n");
+    fprintf(stderr, "VALUES\n");
   } /* if */
   return(Y_VALUES);
 }
 
 {r}{e}{l}{a}{t}{i}{o}{n}{s} {
   if(verbose_mode) {
-    fprintf(stderr, "Relations\n");
+    fprintf(stderr, "RELATIONS\n");
   } /* if */
   return(Y_RELATIONS);
 }
 
 {t}{e}{s}{t} {
   if(verbose_mode) {
-    fprintf(stderr, "Test\n");
+    fprintf(stderr, "TEST\n");
   } /* if */
   return(Y_TEST);
 }
 
 :{i}{n}{t}{e}{g}{e}{r} {
   if(verbose_mode) {
-    fprintf(stderr, "Integer Type\n");
+    fprintf(stderr, "INTEGER TYPE\n");
   } /* if */
   return(Y_INTEGER_TYPE);
 }
 
 :{s}{t}{r}{i}{n}{g} {
   if(verbose_mode) {
-    fprintf(stderr, "String Type\n");
+    fprintf(stderr, "STRING TYPE\n");
   } /* if */
   return(Y_STRING_TYPE);
 }
 
 :{k}{e}{y} {
   if(verbose_mode) {
-    fprintf(stderr, "Key\n");
+    fprintf(stderr, "KEY\n");
   } /* if */
   return(Y_KEY);
 }
 
 {m}{a}{t}{c}{h} {
   if(verbose_mode) {
-    fprintf(stderr, "Match\n");
+    fprintf(stderr, "MATCH\n");
   } /* if */
   return(Y_MATCH);
 }
 
 ({q}{u}{i}{t})|({e}{x}{i}{t})|({c}{i}{a}{o})|({b}{y}{e}) {
   if(verbose_mode) {
-    fprintf(stderr, "Quit\n");
+    fprintf(stderr, "QUIT\n");
   } /* if */
   return(Y_QUIT);
 }
@@ -239,21 +239,21 @@ STRING          {QUOTE}[^"]*{QUOTE}
 
 "<" {
   if(verbose_mode) {
-    fprintf(stderr, "Less\n");
+    fprintf(stderr, "LESS\n");
   } /* if */
   return(Y_LESS);
 }
 
 ">" {
   if(verbose_mode) {
-    fprintf(stderr, "Greater\n");
+    fprintf(stderr, "GREATER\n");
   } /* if */
   return(Y_GREATER);
 }
         
 "!=" {
   if(verbose_mode) {
-    fprintf(stderr, "Not_Equal\n");
+    fprintf(stderr, "NOT_EQUAL\n");
   } /* if */
   return(Y_NOT_EQUAL);
 }
@@ -284,6 +284,13 @@ STRING          {QUOTE}[^"]*{QUOTE}
     fprintf(stderr, "TILDA\n");
   } /* if */
   return(Y_TILDA);
+}
+        
+"!~" {
+  if(verbose_mode) {
+    fprintf(stderr, "NOT_TILDA\n");
+  } /* if */
+  return(Y_NOT_TILDA);
 }
         
 ({a}{n}{d})|"&"|"&&" {
@@ -329,8 +336,8 @@ STRING          {QUOTE}[^"]*{QUOTE}
   if(verbose_mode) {
     fprintf(stderr, "STRING\n");
   } /* if */
-  *(char *)strrchr(&yytext[1], '"') = 0;
-  yylval.string = (char *)strdup(&yytext[1]); /* Get rid of quotes */
+  yytext[strlen(&yytext[0]) - 1] = 0;
+  yylval.string = (char *)strdup(&yytext[1]);
   return(Y_STRING);
 }
 

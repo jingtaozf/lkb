@@ -34,6 +34,7 @@
 
 %token 
        Y_MATCH
+       Y_NOT_TILDA
        Y_TILDA
        Y_LESS
        Y_GREATER
@@ -473,6 +474,10 @@ y_operator :
 |
   Y_TILDA {
     $$ = tsdb_operator(TSDB_SUBSTRING);
+  }
+|
+  Y_NOT_TILDA {
+    $$ = tsdb_operator(TSDB_NOT_SUBSTRING);
   }
 ;
 
