@@ -20,6 +20,10 @@
 	(layout-node node (floor dx 2) (floor dy 2) dx dy))))
   (tree-recompute-extent graph))
 
+
+;; Calculate the width of the subtree rooted at node, and store in the node's
+;; GENERATION slot.
+
 (defun compute-widths (node dx)
   (with-slots (node-children) node
     (if node-children

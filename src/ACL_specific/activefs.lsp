@@ -96,7 +96,8 @@
               (make-fs-display-record :fs fs :title title :paths paths 
                                       :parents parents
                                       :lrout output-fs))
-        (mp:process-run-function "FS" 
+	(setf (clim:frame-pretty-name fs-window) title)
+	(mp:process-run-function "FS" 
                                  #'clim:run-frame-top-level
                                  fs-window)))
 
@@ -264,12 +265,17 @@
     (if (and (atom type) type-entry)
         (let
          ((command (clim:menu-choose
-                   '(("Hierarchy" :value hier)
-                     ("Help" :value help)
-                     ("Shrink/expand" :value shrink)
-                     ("Type definition" :value def)
-                     ("Expanded type" :value exp)
-                     ("Full structure" :value full)))))
+		    (append (when *type-hier-frame*
+			      '(("Hierarchy" :value hier)))
+			    (when (type-comment type-entry)
+			      '(("Help" :value help)))
+			    '(("Shrink/expand" :value shrink))
+			    (when (type-constraint type-entry)
+			      '(("Type definition" :value def)))
+			    (when (type-constraint type-entry)
+			      '(("Expanded type" :value exp)))
+			    (when full-tdfs
+			      '(("Full structure" :value full)))))))
          ; see CLIM 13-2 for making things inactive
     (when command
           (handler-case

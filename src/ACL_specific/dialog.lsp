@@ -80,58 +80,71 @@
 ;;; :ok and :cancel and a series of non-editable editable text
 ;;; pairs corresponding to the argument list
 ;;; When the ok box is clicked the amended vales are returned
-;;; when the cancel box is clicked nil is returned
+;;; when the cancel box is clicked the original defaults are returned
 ;;; The dialog box built is sized appropriately
 
 ;;; the following, extraordinarily messy function, is due
 ;;; to accepting-values being a macro
 
 
-(defun ask-for-strings-movable (title prompt-init-pairs &optional expected-width)
+(defun ask-for-strings-movable (title prompt-init-pairs 
+				&optional expected-width)
   (declare (special *temp-result* *abort-query*)
            (ignore expected-width))
   (setf *abort-query* nil)
-  (setf *temp-result* (for p-i-p in prompt-init-pairs
-                        collect (cdr p-i-p)))
-  ;;; this has to be a special, because eval doesn't take
-  ;;; any notice of lexical environment
+  (setf *temp-result* (loop for p-i-p in prompt-init-pairs
+			  collect (if (equal (cdr p-i-p) ":CHECK-BOX")
+				      nil ; Default for checkbox is nil
+				    (cdr p-i-p))))
+  ;; this has to be a special, because eval doesn't take any notice of lexical
+  ;; environment
   (let* ((count 0)
-        (accepting-values-body
-         (for p-i-p in prompt-init-pairs
-              append
-              (incf count)
-              (list '(terpri stream)
-               `(setf (elt *temp-result* ,(- count 1))
-                           (clim:accept 'string :stream stream
-                                   :default ,(cdr p-i-p)
-                                   :prompt ,(car p-i-p)))))))
+	 (accepting-values-body
+	  (for p-i-p in prompt-init-pairs
+	       append
+	       (incf count)
+	       (list '(terpri stream)
+		     `(setf (elt *temp-result* ,(- count 1))
+			(if (typep (elt *temp-result* ,(- count 1)) 'boolean)
+			    (clim:accept 'boolean :stream stream
+					 :default 
+					 (elt *temp-result* ,(- count 1))
+					 :prompt ,(car p-i-p)
+					 :view 'clim:toggle-button-view)
+			  (clim:accept 'string :stream stream
+				       :default 
+				       (elt *temp-result* ,(- count 1))
+				       :prompt ,(car p-i-p))))))))
+	 
     (eval
-         `(let ((stream t))
-               (restart-case
-                 ,(cons 'clim:accepting-values 
-                         (cons `(stream :own-window t 
-                                 :label ,title)
+     `(let ((stream t))
+	(restart-case
+	    ,(cons 'clim:accepting-values 
+		   (cons `(stream :own-window t 
+				  :label ,title
+				  :align-prompts :left)
                          (cdr accepting-values-body)))
-                 (abort () (setf *abort-query* t) nil))
-               (if *abort-query* nil *temp-result*)))))
+	  (abort () (setf *abort-query* t) nil))
+	(if *abort-query* nil *temp-result*)))))
      
 
 (defun ask-for-lisp-movable (title prompt-init-pairs &optional expected-width)
-;;; Procyon version called a special dialog item - no known equivalnet in MCL
-;;; so coerce the cdrs of the prompt-init pairs to strings and coerce the
-;;; results back to s-expressions
+  ;; Procyon version called a special dialog item - no known equivalnet in MCL
+  ;; so coerce the cdrs of the prompt-init pairs to strings and coerce the
+  ;; results back to s-expressions
   (let ((new-prompt-init-pairs 
          (mapcar #'(lambda (p-i-p)
                      (cons (car p-i-p) (format nil "~S" (cdr p-i-p))))
-             prompt-init-pairs))) 
-    (mapcar #'(lambda (x) (unless (equal x "") (read-from-string x)))
-            (ask-for-strings-movable title new-prompt-init-pairs expected-width))))
-
-
-
+		 prompt-init-pairs))) 
+    (mapcar #'(lambda (x) 
+		(unless (equal x "") 
+		  (if (typep x 'boolean)
+		      x
+		    (read-from-string x))))
+            (ask-for-strings-movable title new-prompt-init-pairs 
+				     expected-width))))
 
 ;;; temporary for ACL
-
 
 (defun ask-user-for-multiple-choice (question-string &rest args)
     (loop

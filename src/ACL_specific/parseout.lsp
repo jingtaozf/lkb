@@ -140,7 +140,7 @@
                          (ptree-node-pstruct node)))) s))
 	   (write-string (princ-to-string (ptree-node-name node)) s)))
      #'ptree-node-children
-     :graph-type :tree
+     :graph-type :parse-tree
      :stream stream 
      :merge-duplicates nil
      :orientation :vertical
