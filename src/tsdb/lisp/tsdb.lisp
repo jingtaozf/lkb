@@ -119,9 +119,11 @@
                                  (read stream nil nil))))
       (when (and (find-package :mrs) 
                  (null (gethash :mrs *statistics-readers*)))
-        (setf (gethash :mrs *statistics-readers*) 
-          "mrs::read-mrs-from-string")
-        (setf (gethash :mrs *statistics-browsers*) "mrs::browse-mrs")
+        (setf (gethash :mrs *statistics-readers*) "mrs::read-mrs-from-string")
+        (setf (gethash :mrs *statistics-browsers*) 
+          (if (find-package :mt)
+            "mt::browse-mrss"
+            "mrs::browse-mrs"))
         (setf (gethash :mrs *statistics-predicates*) "mrs::safe-mrs-unequalp"))
       (when (and (or (null action) (member action '(:cache :all))) cache)
         (load-cache :background background :name name :pattern pattern))))
@@ -251,6 +253,7 @@
                  result)))))))))
 
 (defun create-cache (data &key (protocol :cooked) (verbose t) schema allp)
+
   ;;
   ;; _fix_me_
   ;; make sure to not create a write cache (and thus no new files) on read-only

@@ -2337,12 +2337,23 @@
                   layout col def -m1 5 -r 2 -m2 5 -c black -j center~%~
                   layout row def -m1 5 -r 1 -m2 5 -c black -j center~%~
                   layout row 0 -m1 5 -r 2 -m2 5 -c black -j center~%"))
-              (if (stringp clashes)
+              (cond
+               ((stringp clashes)
                 (format
                  stream
                  "cell 1 1 -contents {~a} -format title~%~
                   layout row 2 -m1 5 -r 2 -m2 5 -c black -j center~%"
-                 clashes)
+                 clashes))
+               ;;
+               ;; _fix_me_
+               ;; we need a general way of distinguishing browsers that take a
+               ;; set of results rather than one at a time.    (30-oct-03; oe)
+               ;;
+               #+:mt
+               ((string-equal 
+                 (gethash :mrs *statistics-browsers*) "mt::browse-mrss")
+                (funcall browser clashes i-input))
+               (t
                 (loop
                     with *print-pretty* = nil
                     with *print-case* = :downcase
@@ -2366,9 +2377,10 @@
                         (format
                          stream
                          "layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%"
-                         i))))))
+                         i)))))))
            (when (and stream (or (stringp file) (stringp append)))
              (close stream)))))
+
       (:inspect
        (labels ((read-score (rank)
                   (let* ((score (get-field :score rank))
@@ -2395,6 +2407,7 @@
                 (inspect (list errors match others)))
            (browse-trees 
             source :condition condition :interactive t :inspect inspect))))
+
       (:reconstruct
        (let* ((i-id (get :i-id tag))
               (i-input (get :i-input tag))

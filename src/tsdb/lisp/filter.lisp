@@ -25,6 +25,7 @@
 ;;; - connectivity (often indicating a failure to bind individual arguments);
 ;;; - occurence of specific relations, e.g. `fragment_rel';
 ;;; - something more i thought of en route back from Bergen (17-oct-03).
+;;; - which most likely was to check for spurious ambiguity (equivalences).
 ;;;
 
 (in-package :tsdb)
@@ -80,7 +81,11 @@
                              result)))
           when (and mrs (null scopes))
           do 
-            (let ((output (and verbose (get-output-stream-string stream))))
+            (let* ((output (and verbose (get-output-stream-string stream)))
+                   (output (normalize-string output))
+                   (output (if (string= output "")
+                             "unknown error in make-scoped-mrs()"
+                             output)))
               (push (list :scope output) (gethash id flags)))))
     (unless (zerop (hash-table-count flags)) 
       (when verbose
@@ -108,5 +113,5 @@
                        (format 
                         t 
                         "    scoping: `~a'.~%"
-                        (normalize-string (second foo))))))))
+                        (second foo)))))))
       item)))
