@@ -447,7 +447,7 @@ BEGIN
  CREATE TABLE meta AS SELECT * FROM public.meta WHERE var=''filter'';
 -- scratch
  CREATE TABLE revision AS SELECT * FROM public.revision WHERE NULL;
- EXECUTE ''CREATE UNIQUE INDEX user_''''user''''_name_revision_userid
+ EXECUTE ''CREATE UNIQUE INDEX user_'' || user || ''_name_revision_userid
   ON revision (name,version,userid)''; 
 -- temp
  CREATE TABLE temp AS SELECT * FROM public.revision WHERE NULL;
