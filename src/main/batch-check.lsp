@@ -103,6 +103,9 @@
 
 (defun batch-check-morphology (&optional plus-ids)
   ;;; generates all morphological forms
+  ;;; plus-ids is a boolean value: if set to t, it 
+  ;;; also outputs the id of the base form and the rule 
+  ;;; used to generate the new form
   (loop for lexid in *ordered-lex-list*
        do
        (gen-all-morphs lexid (get-lex-entry-from-id lexid) plus-ids)))   
@@ -141,7 +144,7 @@
                                                      new-morph))))
                     (when (and result new-morph) 
                       (format t "~%~A" new-morph)
-                      (when id (format t " ~A" id)))
+                      (when id (format t " ~A ~A" id (rule-id rule))))
                     (if result
                         (list
                          result)))))))
