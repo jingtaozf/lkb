@@ -409,6 +409,16 @@ INSERT INTO revision
  (SELECT temp.* FROM (new_pkeys NATURAL JOIN temp));
        ' );
 
+INSERT INTO qrya VALUES ( 'add-to-db', 0, 'text' );
+INSERT INTO qry VALUES 
+       ( 'add-to-db', 1, 
+       '
+DELETE FROM temp;
+COPY temp FROM $0 DELIMITERS '','' WITH NULL AS '''';
+INSERT INTO revision 
+  (SELECT * FROM temp);
+       ' );
+
 INSERT INTO qrya VALUES ( 'merge-multi-into-db', 0, 'text' );
 INSERT INTO qry VALUES 
        ( 'merge-multi-into-db', 1, 
@@ -426,7 +436,7 @@ INSERT INTO qry VALUES
        '
 DELETE FROM temp;
 INSERT INTO temp
- (SELECT * FROM revision ORDER BY modstamp, name, userid, version);
+ (SELECT * FROM revision ORDER BY name, userid, version);
 COPY temp TO $0 DELIMITERS '','' WITH NULL AS '''';
 ' );
 

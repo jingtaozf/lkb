@@ -71,6 +71,8 @@
 
 (defvar *scratch-tdl-file* nil)
 
+(defvar *dump-filename* "~/tmp/lexicon.tmp.csv")
+
 (defun lexdb-fn (fn-name &rest rest)
   (if *psql-lexicon*
       (apply fn-name (cons *psql-lexicon* rest))))
@@ -940,6 +942,10 @@
   (setf filename (namestring (pathname filename)))
   (fn-get-records lexicon ''merge-into-db filename))
 
+(defmethod add-to-db ((lexicon psql-lex-database) filename)  
+  (setf filename (namestring (pathname filename)))
+  (fn-get-records lexicon ''add-to-db filename))
+
 (defmethod merge-multi-into-db ((lexicon psql-lex-database) filename)  
   (setf filename (namestring (pathname filename)))
   (fn-get-records lexicon ''merge-multi-into-db filename))
@@ -952,13 +958,38 @@
   (setf filename (namestring (pathname filename)))
   (dump-multi-db *psql-lexicon* filename))
 
+;(defun merge-into-psql-lexicon (filename)
+;  (setf filename (namestring (pathname filename)))
+;  (unless
+;      (and *psql-lexicon* (connection *psql-lexicon*))
+;    (initialize-psql-lexicon))
+;  (merge-into-db *psql-lexicon* filename)
+;  (initialize-psql-lexicon))
+
 (defun merge-into-psql-lexicon (filename)
   (setf filename (namestring (pathname filename)))
-  (unless
-      (and *psql-lexicon* (connection *psql-lexicon*))
-    (initialize-psql-lexicon))
-  (merge-into-db *psql-lexicon* filename)
-  (initialize-psql-lexicon))
+  (let* ((dump-filename *dump-filename*)
+	 (filename-sorted (format nil "~a.s" filename))
+	 (dump-filename-sorted (format nil "~a.s" dump-filename))
+	 (add-filename (format nil "~a.add" *dump-filename*))
+	 (command-str-sort-file (format nil "sort ~a > ~a" filename filename-sorted))
+	 (command-str-sort-dumpfile (format nil "sort ~a > ~a" dump-filename dump-filename-sorted))
+	 (command-str-add (format nil "diff ~a ~a | grep -e '^> ' | sed 's/^> //' > ~a" dump-filename-sorted filename-sorted add-filename))
+	 (command-str-rm-files (format nil "rm ~a & rm ~a & rm ~a & rm ~a" dump-filename filename-sorted dump-filename-sorted add-filename))
+	 )
+    (unless
+	(and *psql-lexicon* (connection *psql-lexicon*))
+      (initialize-psql-lexicon))
+    (format t "~%dumping current lexicon...")
+    (dump-psql-lexicon dump-filename)
+    (format t "~%sorting files...")
+    (common-lisp-user::run-shell-command command-str-sort-file)
+    (common-lisp-user::run-shell-command command-str-sort-dumpfile)
+    (format t "~%updating db...")
+    (common-lisp-user::run-shell-command command-str-add)
+    (add-to-db *psql-lexicon* add-filename)
+    (common-lisp-user::run-shell-command command-str-rm-files)
+    (initialize-psql-lexicon)))
 
 (defun merge-multi-into-psql-lexicon (filename)
   (setf filename (namestring (pathname filename)))
