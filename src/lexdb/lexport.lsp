@@ -30,11 +30,11 @@
 (defvar *postgres-export-separator* #\,)
 
 (defvar *postgres-export-version* 0)
-(defvar *postgres-export-timestamp* nil)
-(defvar *postgres-current-source*)
-(defvar *postgres-current-user*)
-(defvar *postgres-current-lang*)
-(defvar *postgres-current-country*)
+(defvar *postgres-export-timestamp* nil) ;;; see lexport.lsp
+(defvar *postgres-current-source* "?")
+(defvar *postgres-current-user* nil)
+(defvar *postgres-current-lang* nil)
+(defvar *postgres-current-country* nil)
 
 (defvar *postgres-export-multi-separately* nil)
 (defvar *postgres-export-multi-stream* t)
@@ -461,4 +461,62 @@
 (defun commit-scratch-lex nil
   (fn-get-val *psql-lexicon* ''commit-scratch)
   (empty-cache *psql-lexicon*))
+
+;;;
+;;; low-level stuff
+;;;
+
+;;; insert lex entry into db
+(defmethod set-lex-entry ((lexicon psql-lex-database) (psql-le psql-lex-entry))
+  (set-val psql-le :modstamp "NOW")
+  (set-val psql-le :userid (user lexicon))
+  (set-lex-entry-aux lexicon psql-le))
+  
+(defmethod set-lex-entry-aux ((lexicon psql-lex-database) (psql-le psql-lex-entry))
+  (set-version psql-le lexicon) 
+  (if *postgres-export-timestamp* (set-val psql-le :modstamp *postgres-export-timestamp*))
+  (let* ((symb-list '(:type :orthography :orthkey :keyrel :altkey :alt2key :keytag :altkeytag :compkey :ocompkey :comments :exemplars :lang :country :dialect :domains :genres :register :confidence :version :source :flags :modstamp :userid))
+	 (symb-list (remove-if #'(lambda (x) (or (null x) 
+						 (and (stringp x)
+						      (string= x ""))))
+			       symb-list
+			       :key #'(lambda (x) (retr-val psql-le x))))) 
+    (run-query lexicon 
+	       (make-instance 'sql-query
+		 :sql-string (format nil
+				     (fn lexicon 
+					 'update-entry 
+					 (retr-val psql-le :name) 
+					 (sql-select-list-str symb-list) 
+					 (sql-val-list-str symb-list psql-le)))))))
+
+;;;
+;;; top-level commands
+;;;
+
+(defun command-load-tdl-to-scratch nil
+  (catch 'abort 
+    (unless *psql-lexicon*
+      (error "~%no *psql-lexicon*!"))
+    (let ((filename (ask-user-for-existing-pathname "TDL file?")))
+      (when filename
+	(let ((lexicon (load-scratch-lex :filename filename)))
+	  (setf *postgres-current-source* 
+	    (ask-user-for-x 
+	     "Export Lexicon" 
+	     (cons "Source?" (or (extract-pure-source-from-source *postgres-current-source*) ""))))
+	  (unless *postgres-current-source* (throw 'abort 'source))
+	  (setf *postgres-current-lang* 
+	    (ask-user-for-x 
+	     "Export Lexicon" 
+	     (cons "Language code?" (or *postgres-current-lang* "EN"))))
+	  (unless *postgres-current-lang* (throw 'abort 'lang))
+	  (setf *postgres-current-country* 
+	    (ask-user-for-x 
+	     "Export Lexicon" 
+	     (cons "Country code?" (or *postgres-current-country* "UK"))))
+	  (unless *postgres-current-country* (throw 'abort 'country))
+	  (export-to-db lexicon *psql-lexicon*)
+	  (close-lex lexicon)
+	  (lkb-beep))))))
 
