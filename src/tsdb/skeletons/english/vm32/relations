@@ -62,7 +62,7 @@ item-set:
 
 run:
   run-id :integer :key                  # unique test run identifier
-  r-comment :string                     # descriptive narrative
+  run-comment :string                   # descriptive narrative
   platform :string                      # implementation platform (version)
   tsdb :string                          # tsdb(1) (version) used
   application :string                   # application (version) used
@@ -157,7 +157,7 @@ edge:
   parse-id :integer :key                # parse for this edge
   e-parser :string                      # `lexicon' or `syntax'
   e-name :string                        # edge label (as in `derivation')
-  e-type :string                        # item-itype() of this edge
+  e-type :string                        # item-tiype() of this edge
   e-status :integer                     # 0 : passive; 1 : active
   e-result :integer                     # 0 : nope; 1 : yup, result
   e-start :integer                      # start vertex for this edge
@@ -170,4 +170,23 @@ daughter:
   d-position :integer                   # position of this daughter
   d-id :integer                         # identifier of this daughter
 
+tree:
+  parse-id :integer :key
+  t-version :integer
+  t-active :integer :key
+  t-confidence :integer
+  t-author :string
+  t-start :date
+  t-end :date
+  t-comment :string
 
+decision:
+  parse-id :integer :key
+  version :integer
+  d-state :integer
+  d-type :integer
+  d-key :string
+  d-value :string
+  d-start :integer
+  d-end :integer
+  d-date :date

@@ -62,7 +62,7 @@ item-set:
 
 run:
   run-id :integer :key                  # unique test run identifier
-  r-comment :string                     # descriptive narrative
+  run-comment :string                   # descriptive narrative
   platform :string                      # implementation platform (version)
   tsdb :string                          # tsdb(1) (version) used
   application :string                   # application (version) used
