@@ -20,6 +20,17 @@
 
 ;;; "View"
 ;;;
+;;; "Type hierarchy" show-type-tree
+(defun show-type-tree nil
+   (let ((*last-type-name* *toptype*))
+      (declare (special *last-type-name*))
+      (multiple-value-bind (type show-all-p)
+             (ask-user-for-type nil '("Show all types?" . :check-box))
+         (when type
+            (let ((type-entry (get-type-entry type)))
+               (when type-entry 
+                  (create-type-hierarchy-tree type nil show-all-p)))))))
+
 ;;; "Type spec" show-type-spec
 (defun show-type-spec nil
    (let* ((type (ask-user-for-type))
@@ -121,14 +132,15 @@
 (defparameter *last-type-name* 'cat)
 
 (defun ask-user-for-type (&optional qstring)
-   (let ((possible-type-name
+   (let ((res
             (ask-for-lisp-movable "Current Interaction" 
-               (if qstring
-                  `((,qstring . ,*last-type-name*))  
-                  `(("Type?" . ,*last-type-name*))) 150)))
-      (when possible-type-name
-         (let* ((type (car possible-type-name))
-               (type-entry (get-type-entry type)))
+               `((,(or qstring "Type?") . ,*last-type-name*)
+                 ,@(if check-box-spec `(,check-box-spec)))
+               150)))
+      (when res
+         (let* ((type (car res))
+                (show-all-p (cadr res))
+                (type-entry (get-type-entry type)))
             (unless type-entry
                (format t "~%Type ~A is not defined" type)
                (setf type (ask-user-for-type)))
