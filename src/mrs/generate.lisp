@@ -43,8 +43,8 @@
 
 ;;; Functions on sets (of MRS relations) represented as integers
 
-(defun gen-chart-set-intersection-p (r1 r2)
-   (logtest r1 r2))
+(defun gen-chart-set-disjoint-p (r1 r2)
+   (not (logtest r1 r2)))
 
 (defmacro gen-chart-set-equal-p (r1 r2)
    `(= ,r1 ,r2))
@@ -218,7 +218,7 @@
   ;;   (return-from chart-generate nil))
   (setq %generator-lexical-items% found-lex-items)
   (unless *intersective-rule-names*
-    (format t "~%Warning: no intersective rules defined"))
+    (format t "~%Warning: no intersective rules defined") (force-output t))
   (let ((*safe-not-to-copy-p* t)
         (*filtered-tasks* 0) (*executed-tasks* 0) (*successful-tasks* 0) 
         (*unifications* 0) (*copies* 0) 
@@ -620,8 +620,8 @@
                ;; since it's cheaper - alternatively might help
                ;; longer sentences to change intersection test on lists to
                ;; and-ing of bit vectors since symbolic values not used
-               (not (gen-chart-set-intersection-p
-                       (g-edge-rels-covered act) (g-edge-rels-covered inact))))
+               (gen-chart-set-disjoint-p
+                  (g-edge-rels-covered act) (g-edge-rels-covered inact)))
            (if (car (g-edge-children act)) ; looking for inact on right (left done)
               (gen-chart-ordering-allowed-p
                  (g-edge-lexemes act) (g-edge-lexemes inact))
@@ -832,23 +832,24 @@
                                  collect i))))))
             *intersective-rule-names*)))
       (when *gen-adjunction-debug*
-         (format t "~%Intersective inactive edges ~:A" 
+         (format t "~%Intersective inactive edges: ~:A" 
             (mapcar #'g-edge-id intersective-edges)))
       (let
          ((mod-candidate-edges
             (gen-chart-active-mod-candidate-edges
                intersective-edges possible-grules intersective-rules-and-daughters)))
-         (dolist (partial partial-edges)
-            (when *gen-adjunction-debug*
-               (format t "~&---~%Partial edge [~A] spanning ~:A" (g-edge-id partial)
-                  (g-edge-leaves partial)))
+         (dolist (partial (append partial-edges intersective-edges))
+            ;(when *gen-adjunction-debug*
+            ;   (format t "~&---~%Partial edge [~A] spanning ~:A" (g-edge-id partial)
+            ;      (g-edge-leaves partial)))
             (let ((missing-rels
                     (gen-chart-set-difference input-rels (g-edge-rels-covered partial))))
-               (when *gen-adjunction-debug*
-                  (format t "~&Missing relations ~(~:A~)" 
-                     (gen-chart-set-rel-preds missing-rels)))
-               (gen-chart-insert-adjunction partial mod-candidate-edges))))
-      partial-edges))
+               (declare (ignore missing-rels))
+               ;(when *gen-adjunction-debug*
+               ;   (format t "~&Missing relations ~(~:A~)" 
+               ;      (gen-chart-set-rel-preds missing-rels)))
+               (gen-chart-insert-adjunction partial mod-candidate-edges input-rels)))))
+   partial-edges)
 
 
 (defun gen-chart-set-rel-preds (rels)
@@ -901,7 +902,8 @@
                                        (error "Intersective modification rule ~A is not ~
                                           binary branching" (rule-id rule)))
                                     (setf (g-edge-mod-index act)
-                                       (position path (cdr (rule-order rule)) :test #'eq))
+                                       (position (first (g-edge-needed act)) (cdr (rule-order rule))
+                                          :test #'eq))
                                     (when (functionp (g-edge-dag act))
                                        (setf (g-edge-dag act) (funcall (g-edge-dag act))))
                                     (gen-chart-add-with-index act index-dag)
@@ -917,18 +919,18 @@
 
 ;;;
 
-(defun gen-chart-insert-adjunction (edge acts)
+(defun gen-chart-insert-adjunction (edge acts input-rels)
    (unless (g-edge-baz edge)
       (dolist (act acts)
          (when (gen-chart-try-adjunction act edge)
             (push act (g-edge-baz edge))))
       (unless (g-edge-baz edge) (setf (g-edge-baz edge) t))
       (dolist (c (g-edge-children edge))
-         (gen-chart-insert-adjunction c acts))
+         (gen-chart-insert-adjunction c acts input-rels))
       (dolist (p (g-edge-equivalent edge))
-         (gen-chart-insert-adjunction p acts))
+         (gen-chart-insert-adjunction p acts input-rels))
       (dolist (p (g-edge-packed edge))
-         (gen-chart-insert-adjunction p acts))))
+         (gen-chart-insert-adjunction p acts input-rels))))
          
          
 (defun gen-chart-try-adjunction (act edge)
@@ -938,9 +940,12 @@
          (daughter-restricted (g-edge-dag-restricted act))
          (daughter-index (g-edge-mod-index act))
          (fs (g-edge-dag edge)))
-      (if (and (check-rule-filter rule (g-edge-rule edge) daughter-index)
-               (restrictors-compatible-p daughter-restricted 
-                                         (g-edge-dag-restricted edge)))
+      (if (and (gen-chart-set-disjoint-p
+                  (g-edge-rels-covered act) (g-edge-rels-covered edge))
+               (check-rule-filter
+                  rule (g-edge-rule edge) daughter-index)
+               (restrictors-compatible-p
+                  daughter-restricted (g-edge-dag-restricted edge)))
          (with-unification-context (ignore)
             (incf *executed-tasks*)
             (if
@@ -949,8 +954,10 @@
                (progn
                   (incf *successful-tasks*)
                   (when *gen-adjunction-debug*
-                     (format t "~&Adjoining active edge ~A into inactive edge ~A" 
-                        (g-edge-id act) (g-edge-id edge)))
+                     (format t
+"~&Adjoining active edge ~A covering ~A~%   into inactive edge ~A covering ~A" 
+                        (g-edge-id act) (g-edge-leaves act) (g-edge-id edge)
+                        (g-edge-leaves edge)))
                   t)
                nil))
          (progn (incf *filtered-tasks*) nil))))
