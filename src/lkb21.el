@@ -87,7 +87,7 @@
       (fi::menu "Complete grammar..."
 		'read-script-file :enable t))))
 
-(add-hook 'fi:lisp-mode-hook 
+(add-hook 'fi:inferior-common-lisp-mode-hook 
 	  (function (lambda ()
 		      (initialize-lkb-menu-bar-map))))
 
