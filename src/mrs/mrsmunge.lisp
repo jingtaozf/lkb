@@ -689,7 +689,7 @@
                 :id (intern (concatenate 'string 
                               (string 
                                (mrs-munge-rule-id rule))
-                              "-inv"))
+                              "-inv") :lkb)
                 :input-spec (mrs-munge-rule-output-spec rule)
                 :input-condition (mrs-munge-rule-input-condition rule)
                 :output-spec (mrs-munge-rule-input-spec rule))

@@ -76,31 +76,32 @@
 ;;; an entry point
 
 (defun generate-from-mrs (input-sem)
-  (clear-gen-chart)
-  (setf *cached-category-abbs* nil)
-  (multiple-value-bind (lex-results grules lex-orderings)
-      (mrs::collect-lex-entries-from-mrs input-sem)
-    (let*
-       ((found-lex-list
-          (apply #'append lex-results))
-       (filtered
-          (remove-if
-            #'(lambda (x) (or ;(search "_CX" (string x)) ; *** contracted forms
-                              (member x *duplicate-lex-ids* :test #'eq)))
-                              ; *** e.g. a -> an
-            found-lex-list
-            :key #'mrs::found-lex-lex-id)))
-       ;; (for lex in filtered
-       ;;    do
-       ;;    (format t "~%Id ~A, Lexical rules ~:A" (mrs::found-lex-lex-id lex)
-       ;;       (mrs::found-lex-rule-list lex)))
-       (if filtered
-          (chart-generate input-sem filtered grules lex-orderings)
+  (with-package (:lkb)
+    (clear-gen-chart)
+    (setf *cached-category-abbs* nil)
+    (multiple-value-bind (lex-results grules lex-orderings)
+        (mrs::collect-lex-entries-from-mrs input-sem)
+      (let*
+         ((found-lex-list
+            (apply #'append lex-results))
+         (filtered
+            (remove-if
+             #'(lambda (x) 
+                 (or ;(search "_CX" (string x)) ; *** contracted forms
+                  (member x *duplicate-lex-ids* :test #'eq))) ; *** e.g. a -> an
+              found-lex-list
+              :key #'mrs::found-lex-lex-id)))
+         ;; (for lex in filtered
+         ;;    do
+         ;;    (format t "~%Id ~A, Lexical rules ~:A" (mrs::found-lex-lex-id lex)
+         ;;       (mrs::found-lex-rule-list lex)))
+        (if filtered
+            (chart-generate input-sem filtered grules lex-orderings)
           (progn
             (format t "~%Some lexical entries could not be found from MRS ~
                        relations - has function index-for-generator been run ~
                        yet?")
-            nil)))))
+            nil))))))
 
 
 ;;; generate from an input MRS and a set of lexical entry FSs. Each entry

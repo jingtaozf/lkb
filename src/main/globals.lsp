@@ -119,6 +119,9 @@
 (def-lkb-parameter *packing-restrictor* nil
   "restrictor used when parsing with ambiguity packing")
 
+(def-lkb-parameter *rule-keys* nil
+  "assoc() list mapping rule identifier to position of key daughter")
+    
 ;;; Display 
 
 (def-lkb-parameter *display-type-hierarchy-on-load* t
@@ -192,7 +195,7 @@
 ;;; size of static pool used to cache safe dag instances (see `dag.lsp').
 ;;;
 ;;; if each dag instance has approximately 50 bytes, then we should be able to
-;;; affort some (static) 10 mbytes for pool storage.  once make-dag() runs out
+;;; affort some (static) 2.5 mbytes for pool storage.  once make-dag() runs out
 ;;; of pool instances, new structures will be allocated dynamically (and become
 ;;; garbage eventually).  hence, the initial pool size can be a crucial choice.
 ;;;

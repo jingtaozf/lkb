@@ -158,13 +158,9 @@
                       (incf idno)))))))))
 
 
-(defvar *dag-inflected-path* '(inflected))
-
 (defun dag-inflected-p (dag)
-  (let* ((key (existing-dag-at-end-of dag *dag-inflected-path*))
-         (type (and (dag-p key) (dag-type key))))
-    (when type
-      (or (eq type '+) (and (consp type) (eq (first type) '+))))))
+  (declare (ignore dag))
+  t)
 
 (defun inflectional-rule-p (object)
   (let* ((name (cond
@@ -275,7 +271,8 @@
                                      (yadu! rtdfs tdfs path))))
                          (entry (cons type (if result t :fail))))
                     (push entry (aref caches j))))))))
-                         
+
+
 (defun output-for-ebl (orth fs ostream rule-list base-id base-fs)
   (declare (ignore fs))
   (let* ((type (type-of-fs (tdfs-indef base-fs)))

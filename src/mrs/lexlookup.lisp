@@ -478,7 +478,7 @@ at this point).
                  (concatenate 'string
                               "%"
                               (string template)
-                              (princ-to-string number))))
+                              (princ-to-string number)) :lkb))
          (push instance
                (get template 'lkb::children))
          (setf (get instance 'lkb::root-template)

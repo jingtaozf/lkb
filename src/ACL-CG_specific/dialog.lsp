@@ -41,37 +41,39 @@
 ;;; when the cancel box is clicked nil is returned
 ;;; The dialog box built is sized appropriately
 
-(defun ask-for-strings-movable (title prompt-init-pairs &optional expected-width)
-   (let* ((spacing 10) (button-height 20) 
-         (font (lkb-dialog-font))
-         (title-width (+ 40 (cg:font-string-width 
-                              font title)))
-         (prompt-width (max (floor (/ title-width 2))
-            (+ 20
-            (find-maximum-string-width font "OK"
-               (mapcar #'car 
-                  prompt-init-pairs)))))
-         (value-width 
-            (max (floor (/ title-width 2))
-            (+ 20
-            (max (find-maximum-string-width font "CANCEL"
-                  (mapcar #'cdr 
-                     prompt-init-pairs))
-               (or expected-width 0)))))
-         (prompt-init-items 
-           (let ((count 0))
-            (for prompt-init-pair in prompt-init-pairs
-               append
-              (incf count)
-               (make-prompt-init-dialog-items 
-                'cg:editable-text button-height prompt-width 
-                  spacing
-                  value-width
-                  count
-                  (car prompt-init-pair)
-                  (cdr prompt-init-pair))))))
-      (ask-for-strings-dialog title prompt-init-items prompt-width 
-         value-width button-height spacing font)))
+(defun ask-for-strings-movable (title prompt-init-pairs 
+                                &optional expected-width)
+  (with-package (:lkb)
+    (let* ((spacing 10) (button-height 20) 
+          (font (lkb-dialog-font))
+          (title-width (+ 40 (cg:font-string-width 
+                               font title)))
+          (prompt-width (max (floor (/ title-width 2))
+             (+ 20
+             (find-maximum-string-width font "OK"
+                (mapcar #'car 
+                   prompt-init-pairs)))))
+          (value-width 
+             (max (floor (/ title-width 2))
+             (+ 20
+             (max (find-maximum-string-width font "CANCEL"
+                   (mapcar #'cdr 
+                      prompt-init-pairs))
+                (or expected-width 0)))))
+          (prompt-init-items 
+            (let ((count 0))
+             (for prompt-init-pair in prompt-init-pairs
+                append
+               (incf count)
+                (make-prompt-init-dialog-items 
+                 'cg:editable-text button-height prompt-width 
+                   spacing
+                   value-width
+                   count
+                   (car prompt-init-pair)
+                   (cdr prompt-init-pair))))))
+       (ask-for-strings-dialog title prompt-init-items prompt-width 
+          value-width button-height spacing font))))
 
 (defun find-maximum-string-width (font button-string string-list)
    (apply #'max 
@@ -80,7 +82,8 @@
                                    font val) 0))
          (cons button-string string-list))))
 
-(defun make-prompt-init-dialog-items (widget-type button-height prompt-width spacing
+(defun make-prompt-init-dialog-items (widget-type button-height 
+                                      prompt-width spacing
                                       value-width count prompt init)
    (list
        (aclwin:make-dialog-item :widget 'cg:static-text
@@ -129,89 +132,92 @@
              button-height))))))
 
 (defun ask-for-strings-dialog (title prompt-init-items prompt-width
-      value-width button-height spacing font)
-   (let ((request-dialog nil) (return-values nil)
-         (window-width (+ (* 3 spacing) prompt-width value-width))
-         (window-height 
-            (+ spacing (* (+ 1 (length prompt-init-items))
-                          (+ spacing button-height)))))                  
-      (setf request-dialog   
-         (cg:open-dialog
-            (cons
-               (aclwin:make-dialog-item :widget 'cg:button
-                  :title :ok
-                  :box (cg:make-box-relative spacing spacing
-                                             prompt-width button-height)
-                  :set-value-fn 
-                  #'(lambda (&rest args) 
-                      (let ((i 0))
-                     (setf return-values 
-                        (for d-item in (cddr (cg:dialog-items request-dialog))
-                           filter 
-                          (incf i)
-                          (if (evenp i) 
-                              (cg:value d-item))))) 
-                     (values t t)))
-               (cons
-               (aclwin:make-dialog-item :widget 'cg:button
-                  :title :cancel
-                  :box (cg:make-box-relative (+ spacing spacing prompt-width)
-                                             spacing
-                                             value-width button-height)
-                  :set-value-fn 
-                  #'(lambda (&rest args) 
-                     (setf return-values 
-                        :cancel)
-                     (values t t)))
-               prompt-init-items))
-            'cg:dialog
-            (lkb-parent-stream)
-            :pop-up-p nil
-            :title title
-            :font font
-            :user-shrinkable nil
-            :window-interior 
-            (cg:make-box-relative 60 90 window-width window-height)))
-      (loop (cg:process-pending-events)
-         (when return-values (close request-dialog) (return nil)))
-      (if (eql return-values :cancel) nil return-values)))
+                               value-width button-height spacing font)
+  (with-package (:lkb)
+    (let ((request-dialog nil) (return-values nil)
+          (window-width (+ (* 3 spacing) prompt-width value-width))
+          (window-height 
+             (+ spacing (* (+ 1 (length prompt-init-items))
+                           (+ spacing button-height)))))                  
+       (setf request-dialog   
+          (cg:open-dialog
+             (cons
+                (aclwin:make-dialog-item :widget 'cg:button
+                   :title :ok
+                   :box (cg:make-box-relative spacing spacing
+                                              prompt-width button-height)
+                   :set-value-fn 
+                   #'(lambda (&rest args) 
+                       (let ((i 0))
+                      (setf return-values 
+                         (for d-item in (cddr (cg:dialog-items request-dialog))
+                            filter 
+                           (incf i)
+                           (if (evenp i) 
+                               (cg:value d-item))))) 
+                      (values t t)))
+                (cons
+                (aclwin:make-dialog-item :widget 'cg:button
+                   :title :cancel
+                   :box (cg:make-box-relative (+ spacing spacing prompt-width)
+                                              spacing
+                                              value-width button-height)
+                   :set-value-fn 
+                   #'(lambda (&rest args) 
+                      (setf return-values 
+                         :cancel)
+                      (values t t)))
+                prompt-init-items))
+             'cg:dialog
+             (lkb-parent-stream)
+             :pop-up-p nil
+             :title title
+             :font font
+             :user-shrinkable nil
+             :window-interior 
+             (cg:make-box-relative 60 90 window-width window-height)))
+       (loop (cg:process-pending-events)
+          (when return-values (close request-dialog) (return nil)))
+       (if (eql return-values :cancel) nil return-values))))
 
 
 (defun ask-for-lisp-movable (title prompt-init-pairs &optional 
                               expected-width choices)
-   (declare (ignore choices))
-   ;; CLIM version uses choices when there's a specified list
-   ;; of things
-   (let* ((spacing 10) (button-height 20) 
-         (font (lkb-dialog-font))
-         (prompt-width 
-            (+ 20
-            (find-maximum-string-width font "OK"
-               (mapcar #'(lambda (x) (format nil "~S" (car x)))
-                  prompt-init-pairs))))
-         (value-width 
-            (+ 20
-            (max (find-maximum-string-width font "CANCEL"
-                  (mapcar #'(lambda (x) (format nil "~S" (cdr x))) 
-                     prompt-init-pairs))
-               (or expected-width 0))))
-         (prompt-init-items 
-           (let ((count 0))
-            (for prompt-init-pair in prompt-init-pairs
-               append
-               (incf count)
-               (make-prompt-init-dialog-items 
-                  'cg:lisp-text
-                  button-height prompt-width 
-                  spacing
-                  value-width
-                  count
-                  (car prompt-init-pair)
-                  (cdr prompt-init-pair))))))
-      (ask-for-strings-dialog title prompt-init-items prompt-width 
-         value-width button-height spacing font)))
+  (declare (ignore choices))
+  (with-package (:lkb)
+    ;; CLIM version uses choices when there's a specified list
+    ;; of things
+    (let* ((spacing 10) (button-height 20) 
+          (font (lkb-dialog-font))
+          (prompt-width 
+             (+ 20
+             (find-maximum-string-width font "OK"
+                (mapcar #'(lambda (x) (format nil "~S" (car x)))
+                   prompt-init-pairs))))
+          (value-width 
+             (+ 20
+             (max (find-maximum-string-width font "CANCEL"
+                   (mapcar #'(lambda (x) (format nil "~S" (cdr x))) 
+                      prompt-init-pairs))
+                (or expected-width 0))))
+          (prompt-init-items 
+            (let ((count 0))
+             (for prompt-init-pair in prompt-init-pairs
+                append
+                (incf count)
+                (make-prompt-init-dialog-items 
+                   'cg:lisp-text
+                   button-height prompt-width 
+                   spacing
+                   value-width
+                   count
+                   (car prompt-init-pair)
+                   (cdr prompt-init-pair))))))
+       (ask-for-strings-dialog title prompt-init-items prompt-width 
+          value-width button-height spacing font))))
 
 
 (defun ask-user-for-multiple-choice (title &rest args)
-  (cg:ask-user-for-choice-from-list title args))
+  (with-package (:lkb)
+    (cg:ask-user-for-choice-from-list title args)))
 

@@ -125,12 +125,12 @@
     (dolist (char feature-string)
       (if (char= char #\.)
           (when current-feat
-            (push (intern (coerce current-feat 'string))
+            (push (intern (coerce current-feat 'string) :lkb)
                   feats)
             (setf current-feat nil))
         (push char current-feat)))
     (when current-feat
-      (push (intern (coerce current-feat 'string))
+      (push (intern (coerce current-feat 'string) :lkb)
             feats))
     feats))
 
@@ -139,7 +139,7 @@
 (defun deasterisk (value)
   (let ((val-string (reverse (string value))))
     (if (char= (elt val-string 0) #\*)
-        (let ((new-type (intern (nreverse (subseq val-string 1)))))
+        (let ((new-type (intern (nreverse (subseq val-string 1)) :lkb)))
           (if (is-valid-type new-type)
               new-type
             value))

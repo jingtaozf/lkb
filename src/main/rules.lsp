@@ -282,6 +282,8 @@
                (arity (length daughters))
                (dag (tdfs-indef fs))
                (key (or
+                     (let ((key (rest (assoc id *rule-keys*))))
+                       (and (integerp key) (<= key arity) (- key 1)))
                      (loop
                          for path in daughters
                          for i from 0

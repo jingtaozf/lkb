@@ -189,17 +189,18 @@
   ;; Procyon version called a special dialog item - no known equivalnet in MCL
   ;; so coerce the cdrs of the prompt-init pairs to strings and coerce the
   ;; results back to s-expressions
-  (let ((new-prompt-init-pairs 
-         (mapcar #'(lambda (p-i-p)
-                     (cons (car p-i-p) (format nil "~S" (cdr p-i-p))))
-		 prompt-init-pairs))) 
-    (mapcar #'(lambda (x) 
-		(unless (equal x "") 
-		  (if (stringp x)
-		      (read-from-string x)
-		    x)))
-            (ask-for-strings-movable title new-prompt-init-pairs 
-				     expected-width choices))))
+  (with-package (:lkb)
+    (let ((new-prompt-init-pairs 
+           (mapcar #'(lambda (p-i-p)
+                       (cons (car p-i-p) (format nil "~S" (cdr p-i-p))))
+                   prompt-init-pairs))) 
+      (mapcar #'(lambda (x) 
+                  (unless (equal x "") 
+                    (if (stringp x)
+                        (read-from-string x)
+                      x)))
+              (ask-for-strings-movable title new-prompt-init-pairs 
+                                       expected-width choices)))))
 
 ;;; temporary for ACL
 

@@ -25,6 +25,9 @@
 #+:allegro-v4.2 (pushnew :cltl2 *features*)
 #+:ansi-cl (pushnew :cltl2 *features*)
 
+#+(and :linux86 (not :linux))
+(pushnew :linux *features*)
+
 ;;;
 ;;; load the portable defsystem() from CMU
 ;;;

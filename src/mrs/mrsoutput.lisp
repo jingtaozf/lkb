@@ -138,7 +138,7 @@
 
 (defun make-mrs-feature (flist)
   (if (cdr flist)
-      (intern (format nil "~A~{.~A~}" (car flist) (cdr flist)))
+      (intern (format nil "~A~{.~A~}" (car flist) (cdr flist)) :lkb)
     (car flist)))
 
 #+lkb
@@ -237,7 +237,7 @@
            (start-pos (- (length str) 6)))
       (if (and (> start-pos 0)
 	       (string-equal (subseq str start-pos) "_rel_a"))
-	  (intern (subseq str 0 (+ start-pos 4)))
+	  (intern (subseq str 0 (+ start-pos 4)) :lkb)
         sort))
     sort))
 

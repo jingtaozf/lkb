@@ -60,34 +60,36 @@
 ;;; when the cancel box is clicked nil is returned
 ;;; The dialog box built is sized appropriately
 
-(defun ask-for-strings-movable (title prompt-init-pairs &optional (expected-width 100))
-   (let* ((font (lkb-dialog-font))
-          (ascent (font-info font))
-          (spacing (+ ascent 4)) (button-height (+ ascent 6)) (button-width 74) 
-          (prompt-width
-             (+ 20
-                (find-maximum-string-width font 
-                   (mapcar #'car prompt-init-pairs))))
-          (value-width 
-             (+ 20
-                (max
-                   (find-maximum-string-width font 
-                      (mapcar #'cdr prompt-init-pairs))
-                (or expected-width 0))))
-          (count 0)
-          (prompt-init-items 
-             (for prompt-init-pair in prompt-init-pairs
-                append
-                (make-prompt-init-dialog-items 
-                   0 button-height prompt-width 
-                   spacing
-                   value-width
-                   (incf count)
-                   (car prompt-init-pair)
-                   (cdr prompt-init-pair)
-                   font))))
-      (ask-for-strings-dialog title prompt-init-items prompt-width 
-         value-width button-width button-height spacing font)))
+(defun ask-for-strings-movable (title prompt-init-pairs 
+                                &optional (expected-width 100))
+  (with-package (:lkb)
+    (let* ((font (lkb-dialog-font))
+           (ascent (font-info font))
+           (spacing (+ ascent 4)) (button-height (+ ascent 6)) (button-width 74) 
+           (prompt-width
+              (+ 20
+                 (find-maximum-string-width font 
+                    (mapcar #'car prompt-init-pairs))))
+           (value-width 
+              (+ 20
+                 (max
+                    (find-maximum-string-width font 
+                       (mapcar #'cdr prompt-init-pairs))
+                 (or expected-width 0))))
+           (count 0)
+           (prompt-init-items 
+              (for prompt-init-pair in prompt-init-pairs
+                 append
+                 (make-prompt-init-dialog-items 
+                    0 button-height prompt-width 
+                    spacing
+                    value-width
+                    (incf count)
+                    (car prompt-init-pair)
+                    (cdr prompt-init-pair)
+                    font))))
+       (ask-for-strings-dialog title prompt-init-items prompt-width 
+          value-width button-width button-height spacing font))))
 
 (defun find-maximum-string-width (font items)
    (apply #'max 
@@ -147,14 +149,16 @@
 
 
 (defun ask-for-strings-dialog (title prompt-init-items prompt-width
-                               value-width button-width button-height spacing font)
+                               value-width button-width 
+                               button-height spacing font)
   (let* ((request-dialog nil) (return-values nil)
          (title-width
             (+ 40 (string-width title font)))
          (ideal-width
             (max title-width
                (+ spacing spacing spacing
-                  (max (+ prompt-width value-width) (+ button-width button-width)))))
+                  (max (+ prompt-width value-width) 
+                       (+ button-width button-width)))))
          (ideal-height 
             (+ spacing
                (* (1+ (truncate (length prompt-init-items) 2))
@@ -167,7 +171,8 @@
           (make-instance 'dialog
             :window-type :document
             :window-title ""
-            :view-position (make-point (truncate (- *screen-width* window-width) 2) 60)
+            :view-position (make-point 
+                            (truncate (- *screen-width* window-width) 2) 60)
             :view-size (make-point window-width window-height)
             :view-font font
             :close-box-p nil
@@ -215,31 +220,33 @@
       (if (eql loop-return :cancel) nil loop-return))))
 
 
-(defun ask-for-lisp-movable (title prompt-init-pairs &optional expected-width choices)
+(defun ask-for-lisp-movable (title prompt-init-pairs 
+                             &optional expected-width choices)
    ;; Procyon version called a special dialog item - no known equivalnet in MCL
    ;; so coerce the cdrs of the prompt-init pairs to strings and coerce the
    ;; results back to s-expressions
-   (let ((new-prompt-init-pairs 
-          (mapcar #'(lambda (p-i-p)
-                      (cons (car p-i-p)
-                            (cond
-                               ((eq (cdr p-i-p) :check-box)
-                                 :check-box)
-                               ;; ugly way of passing in multiple choices - convert
-                               ;; to a typein-menu
-                               ((or choices (eq (cadr p-i-p) :typein-menu))
-                                 (cons :typein-menu
-                                    (mapcar #'(lambda (x) (format nil "~S" x))
-                                       (or choices (cddr p-i-p)))))
-                               (t (format nil "~A" (cdr p-i-p))))))
-             prompt-init-pairs))) 
-     (mapcar
-        #'(lambda (x)
-            (cond
-               ((symbolp x) x)
-               ((equal x "") nil)
-               (t (read-from-string x))))
-        (ask-for-strings-movable title new-prompt-init-pairs expected-width))))
+  (with-package (:lkb)
+    (let ((new-prompt-init-pairs 
+           (mapcar #'(lambda (p-i-p)
+                       (cons (car p-i-p)
+                             (cond
+                                ((eq (cdr p-i-p) :check-box)
+                                  :check-box)
+                                ;; ugly way of passing in multiple choices - convert
+                                ;; to a typein-menu
+                                ((or choices (eq (cadr p-i-p) :typein-menu))
+                                  (cons :typein-menu
+                                     (mapcar #'(lambda (x) (format nil "~S" x))
+                                        (or choices (cddr p-i-p)))))
+                                (t (format nil "~A" (cdr p-i-p))))))
+              prompt-init-pairs))) 
+      (mapcar
+         #'(lambda (x)
+             (cond
+                ((symbolp x) x)
+                ((equal x "") nil)
+                (t (read-from-string x))))
+         (ask-for-strings-movable title new-prompt-init-pairs expected-width)))))
 
 
 ;;; Bernie kludgy code rewritten for MCL
@@ -250,64 +257,67 @@
 ;;; - this never arises in the LKB currently anyway
 
 (defun ask-user-for-multiple-choice (question-string &rest args)
-  (let* ((font (lkb-dialog-font))
-         (remainder (mapcar #'(lambda (arg) (format nil "~S" arg)) args))
-         (button-width 
-          (max 60 
-               (+ 10
-                  (find-maximum-string-width font remainder))))
-         (spacing 10)
-         (button-height 18)
-         (request-dialog nil) (return-value nil)
-          (value nil) (count 0) (max-width 0)
-         (buttons nil) 
-         (current-width 0) 
-         (current-height 0))
-    ;;; First item is the default
-    ;;; Arrange subsequent items in a table
-    ;;; up to 4 items - all across
-    ;;; > 4 - in rows of 4 (could make this neater)
-    (loop 
-      (when (null remainder) (return))
-      (setf value (car remainder))
-      (setf remainder (cdr remainder))
-      (when value
-        (incf count)
-        (setf current-width 
-              (if (eql (mod count 4) 1)
-                spacing
-                (+ current-width spacing button-width)))
-        (setf max-width (max current-width max-width))
-        (when (and (not (eql count 1))
-                   (eql (mod count 4) 1))
-              (setf current-height (+ button-height current-height spacing)))
-        (push (make-dialog-item 'default-button-dialog-item
-                                (make-point (+ spacing current-width) 
-                                            (+ spacing current-height))
-                                (make-point button-width button-height)
-                                value
-                                #'(lambda (item)
-                                    (setf return-value (dialog-item-text item))
-                                    (window-close (view-container item)))
-                                :default-button (eql count 1))
-              buttons)))
-    (setf request-dialog   
-          (make-instance 'dialog
-            :window-type :document
-            :window-title question-string
-            :view-position '(:top 60)
-            :view-size (make-point (max (+ max-width button-width spacing spacing)
-                                        (+ (string-width question-string font) 20))
-                                   (+ current-height button-height spacing spacing))
-            :view-font font
-            :close-box-p nil
-            :view-subviews
-            (nreverse buttons)))
-    (loop (event-dispatch)         ; process other guff 
-          (when (null (wptr request-dialog)) 
-            (if return-value 
-              (return (read-from-string return-value))
-              (return nil))))))
+  (with-package (:lkb)
+    (let* ((font (lkb-dialog-font))
+           (remainder (mapcar #'(lambda (arg) (format nil "~S" arg)) args))
+           (button-width 
+            (max 60 
+                 (+ 10
+                    (find-maximum-string-width font remainder))))
+           (spacing 10)
+           (button-height 18)
+           (request-dialog nil) (return-value nil)
+            (value nil) (count 0) (max-width 0)
+           (buttons nil) 
+           (current-width 0) 
+           (current-height 0))
+      ;;; First item is the default
+      ;;; Arrange subsequent items in a table
+      ;;; up to 4 items - all across
+      ;;; > 4 - in rows of 4 (could make this neater)
+      (loop 
+        (when (null remainder) (return))
+        (setf value (car remainder))
+        (setf remainder (cdr remainder))
+        (when value
+          (incf count)
+          (setf current-width 
+                (if (eql (mod count 4) 1)
+                  spacing
+                  (+ current-width spacing button-width)))
+          (setf max-width (max current-width max-width))
+          (when (and (not (eql count 1))
+                     (eql (mod count 4) 1))
+                (setf current-height (+ button-height current-height spacing)))
+          (push (make-dialog-item 'default-button-dialog-item
+                                  (make-point (+ spacing current-width) 
+                                              (+ spacing current-height))
+                                  (make-point button-width button-height)
+                                  value
+                                  #'(lambda (item)
+                                      (setf return-value 
+                                        (dialog-item-text item))
+                                      (window-close (view-container item)))
+                                  :default-button (eql count 1))
+                buttons)))
+      (setf request-dialog   
+            (make-instance 'dialog
+              :window-type :document
+              :window-title question-string
+              :view-position '(:top 60)
+              :view-size (make-point 
+                          (max (+ max-width button-width spacing spacing)
+                               (+ (string-width question-string font) 20))
+                          (+ current-height button-height spacing spacing))
+              :view-font font
+              :close-box-p nil
+              :view-subviews
+              (nreverse buttons)))
+      (loop (event-dispatch)         ; process other guff 
+            (when (null (wptr request-dialog)) 
+              (if return-value 
+                (return (read-from-string return-value))
+                (return nil)))))))
 
 #|
 (ask-user-for-multiple-choice "Well?" "foobar" "wombat" "aardvark"
