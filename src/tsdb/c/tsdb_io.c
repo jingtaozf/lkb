@@ -449,17 +449,146 @@ void tsdb_print_selection(Tsdb_selection *selection, FILE *stream) {
 } /* tsdb_print_selection */
 
 
-void tsdb_print_projection(char** projection,int n,FILE *stream) {
-  int i,j;
+int find_next_format(char* format,int *pos) {
+  char* tmp;
+  int typ;
 
-  for (i=0,j=0;i<n;j++) {
-    if (projection[j]) {
-      i++;
-      fputs(projection[j],stream);
-      fputc('\n',stream);
+  tmp = strchr(format,'%');
+  if (!tmp) {
+    typ = -1;
+    *pos = -1;
+    return typ;
+  }
+  
+  switch (*(tmp+1)) {
+  case '%':
+    strcpy(tmp,tmp+1);
+    typ = find_next_format(tmp+1,pos);
+    *pos +=1;
+    break;
+  case 's':; case'd':; case'i':
+    typ = 1;
+    *pos = tmp-format;
+    break;
+  case '*':
+    typ = 2;
+    *pos = tmp-format;
+    break;
+  default:
+    typ = -1;
+    *pos = -1;
+    break;
+  } /* switch */
+  
+  return typ;
+  
+}  /* find_next_format() */
+
+void tsdb_print_projection(char** projection,int n,char* format,FILE *stream) {
+  int k,i=0,j,l,size,where=0,typ;
+  char **bar=NULL,*foo,*tmp,*praefix=NULL,*suffix=NULL;
+  /* report: 
+     %s \
+     %i | - %s here output
+     %d /
+     %* rest of projection
+     %% %
+     */
+
+  if (format) {
+    size = strlen(format)/2;
+    typ = find_next_format(format,&where);
+    tmp = format+where+2;
+    if (where<0) {
+      /* wahrscheinlich falscher Format-string */
     } /* if */
-  } /* for */
+    else {
+      bar = (char**)malloc(sizeof(char*)*(size+1));
+      if (where >0) {
+        praefix = strdup(format);
+        strncpy(praefix,format,where);
+        praefix[where]='\0';
+        if (typ==1) { /* s,i,d */
+          foo = format+where+2;
+          tmp = foo;
+          typ = find_next_format(tmp,&where);
+        }
+        else
+          if (typ==2) { /* * */
+            tmp = format+strlen(format);
+            where = -1;
+          } /* if */
+      } /* where > 0 */
+      for (; (where > -1) ;typ = find_next_format(tmp,&where)) {
+        bar[i]=strdup(tmp);
+        bar[i][where]='\0';
+        i++;
+        foo = tmp+where+2;
+        tmp = foo;
+      } /* for */
+      bar[i]=NULL;
+      if ((format+strlen(format))>foo) /* suffix! */ {
+        suffix = strdup(foo);
+      } /* if */
+    } /* else */
+  } /* if format */
+  
+  for(j=0;j<n;j++)
+    if (projection[j]) {
+      l=0;
+      tmp = projection[j];
+      while  ( strchr(tmp,TSDB_FS)) {
+        tmp++;l++;
+      }
+      break;
+    }
+  
+  if (l>i) {
+    fprintf(tsdb_error_stream," Wrong report string: %s \n",format);
+    fprintf(tsdb_error_stream," too many format specifications\n");
+    return;
+  }
+  if (!suffix)
+    suffix=strdup("");
+  if (!praefix)
+    praefix=strdup("");
+  
+  if (i>l) {
+    fprintf(tsdb_error_stream," Wrong report string: %s \n",format);
+    fprintf(tsdb_error_stream," too many format specifications\n");
+  }
+  else
+    for (j=0;j<n;j++) {
+      if (projection[j]) {
+        foo = projection[j];
+        fputs(praefix,stream);
+        for (k=0;k<i;k++) {
+          tmp = strchr(foo,TSDB_FS);
+          if (!tmp) {
+            k=i;
+          }
+          else {
+            *tmp='\0';
+          fputs(foo,stream);
+            *tmp=TSDB_FS;
+            foo = tmp+1;
+            fputs(bar[k],stream);
+          }
+        } /* for */
+        fputs(foo,stream);
+        fputs(suffix,stream);
+        fputc('\n',stream);
+      } /* if */
+    } /* for */
+  
   fflush(stream);
+  free(suffix);
+  free(praefix);
+  for (i=0;bar && bar[i];i++)
+    free(bar[i]);
+  if (bar)
+    free(bar);
+  
 } /* tsdb_print_projection() */
 
 

@@ -81,6 +81,7 @@ extern void free(void *);
 #define TSDB_QUERY_OPTION 11
 #define TSDB_USAGE_OPTION 12
 #define TSDB_VERSION_OPTION 13
+#define TSDB_HISTORY_OPTION 14
 
 #ifndef TSDB_PSEUDO_USER
 #  define TSDB_PSEUDO_USER "TSDB@tsdb"
@@ -238,7 +239,7 @@ typedef struct tsdb {
 
   Tsdb_history **history;
   int history_position;
-  int history_size;
+  long history_size;
 } Tsdb;
 
 #if !defined(TSDB_C)
@@ -298,7 +299,7 @@ void tsdb_print_node(Tsdb_node *, FILE *);
 void tsdb_print_tuple(Tsdb_tuple *, FILE *);
 void tsdb_print_key_list(Tsdb_key_list *, FILE *);
 void tsdb_print_join_path(Tsdb_relation **, FILE *);
-void tsdb_print_projection(char** ,int ,FILE *);
+void tsdb_print_projection(char** ,int,char* ,FILE *);
 void tsdb_print_selection(Tsdb_selection *, FILE *);
 void tsdb_test_negation(Tsdb_value ** _list,Tsdb_node* );
 int tsdb_uniq_projection(char** ,int );
@@ -321,6 +322,7 @@ BOOL tsdb_relations_are_equal(Tsdb_relation *, Tsdb_relation *);
 BOOL tsdb_initialize(void);
 void tsdb_parse_environment(void);
 BOOL tsdb_satisfies_condition(Tsdb_tuple *, Tsdb_node *, Tsdb_relation *);
+void tsdb_set_history_size(int);
 
 char *tsdb_join_key(Tsdb_relation *, Tsdb_relation *);
 char **tsdb_common_keys(Tsdb_relation *, Tsdb_relation *);
@@ -341,7 +343,7 @@ int tsdb_update(Tsdb_value *, Tsdb_node *);
 int tsdb_retrieve(Tsdb_value **, Tsdb_node *);
 
 
-void tsdb_project(Tsdb_selection*,Tsdb_value **,FILE* );
+void tsdb_project(Tsdb_selection*,Tsdb_value **,char*,FILE* );
 FILE *tsdb_find_relations_file(char *);
 FILE *tsdb_find_data_file(char *, char *);
 FILE* tsdb_open_result();
@@ -392,7 +394,7 @@ void tsdb_free_char_array(char** ,int);
 Tsdb_selection *tsdb_add_relations(Tsdb_selection* , Tsdb_relation** );
 Tsdb_selection *tsdb_join(Tsdb_selection *, Tsdb_selection *);
 Tsdb_selection *tsdb_select(Tsdb_selection *, Tsdb_node **,BYTE);
-Tsdb_selection *tsdb_complex_select(Tsdb_node *node,Tsdb_relation ** wanted);
+Tsdb_selection *tsdb_complex_select(Tsdb_node *node,Tsdb_value ** );
 Tsdb_selection *tsdb_complex_merge(Tsdb_selection *, Tsdb_selection *);
 Tsdb_selection *tsdb_merge(Tsdb_selection *, Tsdb_selection *);
 Tsdb_selection *tsdb_simple_join(Tsdb_selection *, Tsdb_selection *);

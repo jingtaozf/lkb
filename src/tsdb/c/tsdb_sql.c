@@ -174,7 +174,18 @@ void tsdb_set(Tsdb_value *variable, Tsdb_value *value) {
               "set(): invalid (non-integer) type for `max-results'.\n");
       fflush(tsdb_error_stream);
     } /* if */
-    else {
+  else if(!strncmp(variable->value.identifier, "tsdb_history_size", 17)
+     || !strncmp(variable->value.identifier, "history-size", 12)) {
+    if(value->type != TSDB_INTEGER) {
+      fprintf(tsdb_error_stream,
+              "set(): invalid (non-integer) type for `max-results'.\n");
+      fflush(tsdb_error_stream);
+    } /* if */
+    else { /* history-size is ok */
+      tsdb_set_history_size(value->value.integer);
+    } /* else */
+  }
+  else {
       if(value->value.integer < 0) {
         fprintf(tsdb_error_stream,
                 "set(): invalid value (%d) for `max-results'.\n",
@@ -497,7 +508,7 @@ int tsdb_delete(Tsdb_value *table, Tsdb_node *condition) {
 */
   if((relation = tsdb_find_relation(table->value.identifier)) != NULL) {
     wanted[0] = relation;
-    selection = tsdb_complex_select(condition,wanted);
+    selection = tsdb_complex_select(condition,NULL);
     if ((selection->n_relations!=1) ||
         (strcmp(relation->name,selection->relations[0]->name))){
       fprintf(tsdb_error_stream,"Wrong Specification of attributes!\n");
@@ -534,7 +545,8 @@ int tsdb_update(Tsdb_value *table, Tsdb_node *condition) {
   return(TSDB_OK);
 } /* tsdb_update */
 
-Tsdb_selection* tsdb_complex_select(Tsdb_node *node,Tsdb_relation ** wanted)
+Tsdb_selection* tsdb_complex_select(Tsdb_node *node,
+                                    Tsdb_value ** wanted_relations)
 {
   Tsdb_selection *left,*right,*result;
   Tsdb_relation *node_relation,**all_relations;
@@ -544,8 +556,8 @@ Tsdb_selection* tsdb_complex_select(Tsdb_node *node,Tsdb_relation ** wanted)
   if (node->node->type==TSDB_CONNECTIVE) {
     switch (node->node->value.connective) {
     case TSDB_OR:
-      left = tsdb_complex_select(node->left,wanted);
-      right = tsdb_complex_select(node->right,wanted);
+      left = tsdb_complex_select(node->left,wanted_relations);
+      right = tsdb_complex_select(node->right,wanted_relations);
       if (!left || !right) 
         return NULL;
       result = tsdb_complex_merge(left,right);
@@ -556,8 +568,8 @@ Tsdb_selection* tsdb_complex_select(Tsdb_node *node,Tsdb_relation ** wanted)
       tsdb_free_selection(right);
       break;
     case TSDB_AND:
-      left = tsdb_complex_select(node->left,wanted);
-      right = tsdb_complex_select(node->right,wanted);
+      left = tsdb_complex_select(node->left,wanted_relations);
+      right = tsdb_complex_select(node->right,wanted_relations);
       if (!left || !right) 
         return NULL;
       result = tsdb_join(left,right);
@@ -569,10 +581,10 @@ Tsdb_selection* tsdb_complex_select(Tsdb_node *node,Tsdb_relation ** wanted)
       break;
     case TSDB_NOT:
     case TSDB_NOT_NOT:
-      result = tsdb_complex_select(node->right,wanted);
+      result = tsdb_complex_select(node->right,wanted_relations);
       break;
     default:
-      result = tsdb_complex_select(node->left,wanted);
+      result = tsdb_complex_select(node->left,wanted_relations);
       break;
     } /* switch */
   } /* if */
@@ -587,17 +599,19 @@ Tsdb_selection* tsdb_complex_select(Tsdb_node *node,Tsdb_relation ** wanted)
       a[1]=NULL;
       a[0]=node;
       kaerb = FALSE;
-      if (wanted) {
-        for (i=0;!kaerb && wanted[i];i++)
+      if (wanted_relations) {
+        for (i=0;!kaerb && wanted_relations[i];i++)
           for (j=0;!kaerb && all_relations[j];j++) {
-            if (!strcmp(wanted[i]->name,all_relations[j]->name)) {
+            if (!strcmp(wanted_relations[i]->value.string,
+                        all_relations[j]->name)) {
               kaerb = TRUE;
             } /* if */
           } /* for */
       } /* if */
         
       if (kaerb)
-        node_relation = wanted[i];
+        node_relation = 
+          tsdb_find_relation(wanted_relations[i-1]->value.string);
       else
         node_relation = all_relations[0];
       result = tsdb_find_table(node_relation);
@@ -821,7 +835,7 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
  } /* if */
 
   if (conditions) {
-    selection = tsdb_complex_select(conditions, NULL);
+    selection = tsdb_complex_select(conditions, relation_list);
     if (!selection) {
       return((Tsdb_selection *)NULL);
     }
@@ -896,7 +910,7 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
     free(attributes);
 
   /* now check the attributes for projections */
-  tsdb_project(selection, attribute_list, (FILE *)NULL);
+  tsdb_project(selection, attribute_list, report,(FILE *)NULL);
   tsdb_last_result = selection;
   return(selection);
 
@@ -908,7 +922,9 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
 } /* tsdb_complex_retrieve */
 
 void tsdb_project(Tsdb_selection *selection,
-                  Tsdb_value **attributes, FILE* stream)
+                  Tsdb_value **attributes, 
+                  char* format,
+                  FILE* stream)
 {
   /* print attributes in order */
   int i, j, k,h,l,m, n, n_attributes,sum_attr=0, offset;
@@ -1027,14 +1043,14 @@ void tsdb_project(Tsdb_selection *selection,
 
   n  = tsdb_uniq_projection(projection,n);
   if((output = tsdb_open_pager()) != NULL) {
-    tsdb_print_projection(projection,n,output);
+    tsdb_print_projection(projection,n,format,output);
     pclose(output);
   } /* if */
   else {
-    tsdb_print_projection(projection, n, tsdb_default_stream);
+    tsdb_print_projection(projection, n,format, tsdb_default_stream);
   } /* else */
   if (output=tsdb_open_result()) {
-    tsdb_print_projection(projection,n,output);
+    tsdb_print_projection(projection,n,format, output);
     fclose(output);
   }
   tsdb_free_char_array(projection,n);

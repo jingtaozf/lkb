@@ -230,6 +230,7 @@ void tsdb_parse_options(int argc, char **argv) {
     {"usage", no_argument, 0, TSDB_USAGE_OPTION},
     {"help", no_argument, 0, TSDB_USAGE_OPTION},
     {"version", no_argument, 0, TSDB_VERSION_OPTION},
+    {"history-size",required_argument,0,TSDB_HISTORY_OPTION},
     {0, 0, 0, 0}
   }; /* struct option */
 
@@ -345,6 +346,23 @@ void tsdb_parse_options(int argc, char **argv) {
                 tsdb_rcs_strip(_tsdb_date, "Date"));
         exit(0);
         break;
+      case TSDB_HISTORY_OPTION:
+        if (optarg != NULL) {
+          if ((tsdb.history_size = strtol(optarg,&bar,10)) == 0 
+              && optarg == bar ) {
+            fprintf(tsdb_error_stream,
+                    "parse_options(): "
+                    "non-integer (`%s') argument to `-history-size'.\n",
+                    optarg);            
+            tsdb.history_size = -1;
+          } /* if */
+          /* further things are done in tsdb_initialize!! */
+        } 
+        else {
+          tsdb_usage();
+          exit(0);
+        }
+        break;
       } /* switch */
   } /* while */
 } /* tsdb_parse_options() */
@@ -388,6 +406,8 @@ void tsdb_usage() {
   fprintf(tsdb_error_stream,
           "  `-max-results[={_0_ | 1 | ...}]' "
           "--- maximum of stored query results;\n");
+  fprintf(tsdb_error_stream,
+          "  `-history-size=size' --- size of history buffer;\n");
 #ifdef DEBUG
   fprintf(tsdb_error_stream,
           "  `-debug-file=file' --- output file for debug information;\n");
