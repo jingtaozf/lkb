@@ -1,10 +1,12 @@
 (in-package "MAKE")
 
 (defparameter *lisp-specific-directory*
-    #+:allegro "ACL_specific"
+    #+(and :allegro :clim) "ACL_specific"
+    #+(and :allegro :common-graphics) "ACL-CG_specific"
     #+:mcl "MCL_specific")
 
 (defsystem "lkb"
+    :device (make-pathname :device cl-user::%sys-device%)
     :source-pathname (get-sources-dir "lkb")
     :binary-pathname (get-binaries-dir "lkb")
     :source-extension "lsp"
@@ -13,11 +15,15 @@
     #+:allegro (setf excl:*enable-package-locked-errors* nil)
     #-:allegro nil
     :finally-do
-    #+(and :allegro (not :tty))
+    #+(and :allegro :clim (not :tty))
     (unless (and (boundp 'user::*building-image-p*)
 		 user::*building-image-p*)
       (let ((*package* (find-package "CLIM-USER")))
 	(clim-user::set-up-lkb-interaction :big)))
+  #+(and :allegro :common-graphics (not :tty))
+    (unless (and (boundp 'user::*building-image-p*)
+		 user::*building-image-p*)
+	(cl-user::set-up-lkb-interaction :big))
     #+(and :mcl (not :tty))
     (cl-user::set-up-lkb-interaction :big)
     #+tty nil
@@ -106,15 +112,17 @@
               :source-pathname *lisp-specific-directory*
 	      :binary-pathname *lisp-specific-directory*
 	      :components
-	      (#+:allegro (:file "graph")   ; uses Allegro graph drawing
+	      ( 
+        #+(and :allegro :clim)(:file "graph")   ; uses Allegro graph drawing
                #+:mcl (:file "picwin")      ; low level 
                #+:mcl (:file "picfield")    ; low level
-	       (:file "activefs")           ; display FS in window
-               (:file "tree")               ; type hierarchy
-               (:file "parseout")           ; parse tree output
-               (:file "chartout")           ; parse chart
-               (:file "listout")            ; `active' lists
-               #+:allegro (:file "compare"))) ; comparing parses
+        #+(and :allegro :common-graphics)(:file "fsclasses") ; classes for display	       
+        (:file "activefs")           ; display FS in window
+             (:file "tree")               ; type hierarchy
+             (:file "parseout")           ; parse tree output
+             (:file "chartout")           ; parse chart
+             (:file "listout")            ; `active' lists
+             #+(and :allegro :clim) (:file "compare"))) ; comparing parses
      #+:allegro(:module "emacs-interface"              
                 :source-pathname *lisp-specific-directory*
 	        :binary-pathname *lisp-specific-directory*
@@ -129,7 +137,7 @@
                                             ; in parse/generate chart
                                             ; and tree drawing code         
 	       (:file "utils")              ; miscellany
-        #+(and :mcl (not :tty))
+        #+(and (not :clim) (not :tty))
                (:file "graph")))            ; JAC's graph package
      (:module "user utility functions"
               :source-pathname "main"

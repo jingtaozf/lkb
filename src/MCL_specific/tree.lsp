@@ -378,7 +378,8 @@
                    (if existing (top-type-node pane) *toptype*)))
             (when existing
                (if (or (eq type top-type)
-                       (member type (retrieve-descendants top-type) :test #'eq))
+                       (member type-entry 
+                         (retrieve-descendants top-type) :test #'eq))
                   (progn
                      ;; we want to see if type is not visible in this window.
                      ;; We can't just test for visible-p on the type since another

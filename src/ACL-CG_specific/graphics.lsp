@@ -61,18 +61,18 @@
 ;;; BOLD AND UNDERLINED OUTPUT
 
 (defmacro with-bold-output (ostream body)
-  `(let ((current-font (font ,ostream)))
-      (setf (font ,ostream) (vary-font current-font 
-                             :style (cons :bold (font-style current-font))))
+  `(let ((current-font (cg:font ,ostream)))
+      (setf (cg:font ,ostream) (cg:vary-font current-font 
+                             :style (cons :bold (cg:font-style current-font))))
       (eval ,body)
-      (setf (font ,ostream) current-font)))
+      (setf (cg:font ,ostream) current-font)))
 
 (defmacro with-underlined-output (ostream body)
-  `(let ((current-font (font ,ostream)))
-      (setf (font ,ostream) (vary-font current-font 
-                             :style (cons :underline (font-style current-font))))
+  `(let ((current-font (cg:font ,ostream)))
+      (setf (cg:font ,ostream) (cg:vary-font current-font 
+                             :style (cons :underline (cg:font-style current-font))))
       (eval ,body)
-      (setf (font ,ostream) current-font)))
+      (setf (cg:font ,ostream) current-font)))
 
 
 (defun lkb-y-or-n-p (strg)

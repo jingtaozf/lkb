@@ -70,25 +70,6 @@
                   (chosen-yes t)
                   (chosen-no nil)))))))
 
-;;; Becuase it's necessary to be able to move windows around
-;;; to examine entries etc before making decisions the ordinary
-;;; pop-up dialogs are unsuitable
-
-
-   ;; like y-or-n-p but allows windows to be moved around etc
-   ;; before making the choice
-   ;; If reverse-default is missing or nil then yes is the
-   ;; default option - otherwise no is
-   ;; request dialog is a continuous dialogue - so it appears
-   ;; as soon as open-dialog is called
-   ;; There are two buttons yes and no
-   ;; Clicking on either of these buttons or hitting return causes the
-   ;; loop to terminate and the appropriate value to be returned
-
-(defun y-or-n-p-movable (query-string &optional reverse-default)
-  ; temporary hack
-  (declare (ignore reverse-default))
-  (y-or-n-p-general query-string))
 
 ;;; ask-for-strings-movable takes a title and a list of 
 ;;; prompt . initial-value pairs

@@ -22,64 +22,93 @@
 
 (defvar *display-structure* nil)
 
-(defstruct (fs-output)
-   name error-fn start-fn end-fn indentation 
-   reentrant-value-fn reentrant-value-endfn reentrant-fn
-   atomic-fn start-fs label-fn end-fs 
-   shrunk-fn
-   (max-width-fn #'(lambda nil nil)))
- 
-(defun def-print-operations (device indentation stream)
-   (case device 
-      (linear (def-linear-print-operations indentation stream))
-      (lilfes (def-lilfes-print-operations indentation stream))
-      (tdl (def-tdl-print-operations indentation stream))
-      (simple (def-simple-print-operations indentation stream))
-      (edit (def-edit-print-operations indentation stream))
-      (tex (def-tex-print-operations indentation stream))
-      (shrunk (def-shrunk-print-operations stream))
-      (path (def-path-print-operations stream))
-      (path2 (def-path2-print-operations stream))))
+(defun def-print-operations (class indentation stream box)
+  (setf *display-structure* (make-instance class 
+					   :indentation indentation
+					   :stream stream :box box)))
 
+;;; 
+;;; Generic output-type class
+;;;
 
-(defun def-linear-print-operations (indentation stream)
-  (declare (ignore indentation))
-  (setf *display-structure*
-   (make-fs-output 
-      :name 'linear
-      :error-fn #'(lambda (dag-instance)
-         (format stream
+(defclass fs-output-type ()
+  ((indentation :initform 0 :initarg :indentation)
+   (stream :initarg :stream)
+   (box :initform nil :initarg :box)
+   (max-width :initform 0)))
+
+(defmethod fs-output-error-fn ((fsout fs-output-type) dag-instance)
+  (with-slots (stream) fsout
+    (format stream
             "~%::: ~A is not a dag...~%"
-            dag-instance))
-      :start-fn #'false      
-      :end-fn #'false
-      :reentrant-value-fn                 
-      #'(lambda (reentrant-pointer)
-         (format stream
+            dag-instance)))
+
+(defmethod fs-output-max-width-fn ((fsout fs-output-type))
+    (with-slots (max-width) fsout
+      max-width))
+
+(defmethod fs-output-reentrant-value-endfn ((fsout fs-output-type))
+   nil)
+
+(defmethod fs-output-shrinks ((fsout fs-output-type))
+   nil)
+
+(defmethod fs-output-no-need-to-display ((fsout fs-output-type) rpath)
+   (declare (ignore rpath))
+   (values nil nil nil nil))
+
+(defmethod fs-output-record-start 
+    ((fsout fs-output-type)  rpath flag pointer)
+   (declare (ignore flag pointer rpath))
+   nil)
+
+(defmethod fs-output-record-end ((fsout fs-output-type) rpath)
+   (declare (ignore rpath))
+   nil)
+
+;;; ********** linear operations ***********
+;;; - for cheap readable display of dags during tracing etc
+
+(defclass linear (fs-output-type) ())
+
+(defmethod fs-output-start-fn ((fsout linear))
+    nil)
+
+(defmethod fs-output-end-fn ((fsout linear))
+    nil)
+
+(defmethod fs-output-reentrant-value-fn ((fsout linear) reentrant-pointer)
+  (with-slots (stream) fsout
+    (format stream
             "<~A>= "
-            reentrant-pointer))
-      :reentrant-fn
-      #'(lambda (reentrant-pointer)
-         (format stream "<~A>" reentrant-pointer))
-      :atomic-fn
-      #'(lambda (atomic-value)              
-         (format stream "~(~A~)" (if (and (listp atomic-value) 
+            reentrant-pointer)))
+
+(defmethod fs-output-reentrant-fn ((fsout linear) reentrant-pointer)
+  (with-slots (stream) fsout
+    (format stream "<~A>" reentrant-pointer)))
+
+(defmethod fs-output-atomic-fn ((fsout linear) atomic-value)
+  (with-slots (stream) fsout
+    (format stream "~(~A~)" (if (and (listp atomic-value) 
                                              (null (cdr atomic-value)))
-                                      (car atomic-value) atomic-value)))
-      :start-fs
-      #'(lambda (type depth labels)
-          (declare (ignore depth labels))
-         (format stream "#D(~(~A~)" type))
-      :label-fn
-      #'(lambda (label depth)
-          (declare (ignore depth))
-         (format stream " ~A: " label))
-      :max-width-fn
-      #'(lambda nil 0)
-      :end-fs 
-      #'(lambda (terminal)
-          (declare (ignore terminal))
-         (format stream ")")))))
+                                      (car atomic-value) atomic-value))))
+
+(defmethod fs-output-start-fs ((fsout linear) type depth labels)
+  (declare (ignore depth labels))
+  (with-slots (stream) fsout
+    (format stream "#D(~(~A~)" type)))
+
+(defmethod fs-output-label-fn ((fsout linear) label depth old-x old-y path)
+   (declare (ignore depth old-x old-y path))  
+   (with-slots (stream) fsout
+    (format stream " ~A: " label)))
+
+(defmethod fs-output-end-fs ((fsout linear) terminal)
+  (declare (ignore terminal))
+  (with-slots (stream) fsout
+    (format stream ")")))
+
+;;; linear print is used by the following
 
 (defmethod print-object ((object dag) (stream t))
   ;; default dag structure output during lisp code tracing etc
@@ -92,91 +121,107 @@
     (display-dag1 object 'linear stream)))
 
 
-(defun def-tdl-print-operations (indentation stream)
-   (let ((indentation-vector (make-array '(3000)))
-         (new-fs-p t))
-  (setf *display-structure*
-   (make-fs-output 
-      :name 'tdl
-      :error-fn #'(lambda (dag-instance)
-         (format stream
-            "~%::: ~A is not a dag...~%"
-            dag-instance))
-      :start-fn #'(lambda nil (format stream "~V%" 1))      
-      :end-fn #'(lambda nil nil)
-      ;; was (format stream "~V%" 1))
-      :reentrant-value-fn                 
-      #'(lambda (reentrant-pointer)
-         (format stream
-            "~VT#~A & "
-            indentation
-            reentrant-pointer)
-         (setf indentation
-         (cond ((> indentation 53) (terpri stream) 3)
-            (t (+ 12 indentation)))))
-      :reentrant-fn
-      #'(lambda (reentrant-pointer)
-         (format stream "~VT#~A" indentation reentrant-pointer))
-      :atomic-fn
-      #'(lambda (atomic-value)
-         (if (or (stringp atomic-value) 
+;;; ******  TDL printing operations  **********
+
+(defclass tdl (fs-output-type) 
+    ((new-fs-p :accessor tdl-new-fs-p
+                      :initform t)
+     (indentation-vector :accessor edit-indentation-vector
+                      :initform (make-array '(3000)))))
+
+(defmethod fs-output-start-fn ((fsout tdl))
+    (with-slots (stream) fsout  
+      (format stream "~V%" 1)))
+   
+(defmethod fs-output-end-fn ((fsout tdl))
+    nil)
+
+(defmethod fs-output-reentrant-value-fn ((fsout tdl) reentrant-pointer)
+  (with-slots (stream indentation) fsout
+    (format stream
+      "~VT#~A & "
+      indentation
+      reentrant-pointer)
+    (setf indentation
+          (cond ((> indentation 53) (terpri stream) 3)
+                (t (+ 12 indentation))))))
+   
+(defmethod fs-output-reentrant-fn ((fsout tdl) reentrant-pointer)
+  (with-slots (stream indentation) fsout
+    (format stream "~VT#~A" indentation reentrant-pointer)))
+
+(defmethod fs-output-atomic-fn ((fsout tdl) atomic-value)
+  (with-slots (stream indentation) fsout
+    (if (or (stringp atomic-value) 
                  (and (listp atomic-value) (stringp (car atomic-value))))
            (format stream "~VT~S" indentation 
                    (if (listp atomic-value) (car atomic-value)
                                         atomic-value))
            (format stream "~VT~A" indentation 
                    (string-downcase (if (listp atomic-value) (car atomic-value)
-                                        atomic-value)))))
-      :start-fs
-      #'(lambda (type depth labels)
-          (declare (ignore labels))
-          (if (eql type *toptype*)
+                                        atomic-value))))))
+
+(defmethod fs-output-start-fs ((fsout tdl) type depth labels)
+  (declare (ignore labels))
+  (with-slots (stream indentation indentation-vector new-fs-p) fsout
+    (if (eql type *toptype*)
             (format stream "~VT[ " indentation)
             (if (stringp type)
               (format stream "~VT ~S & [ " indentation type)
               (format stream "~VT ~A & [ " indentation (string-downcase type))))
           (setf new-fs-p t)
-         (setf (aref indentation-vector depth) (+ indentation 2)))
-      :label-fn
-      #'(lambda (label depth)
+         (setf (aref indentation-vector depth) (+ indentation 2))))
+
+(defmethod fs-output-label-fn ((fsout tdl) label depth stored-x stored-y
+                               rpath) 
+   (declare (ignore stored-x stored-y rpath))
+   (with-slots (stream indentation indentation-vector new-fs-p) fsout
          (setf indentation (aref indentation-vector depth))
          (unless new-fs-p 
            (format stream ",~%~VT" indentation))
          (setf new-fs-p nil)
          (format stream "~A " label)
          (setf indentation (+ indentation 7))
-         (when (> indentation 65) (terpri stream) (setf indentation 1)))
-      :end-fs 
-      #'(lambda (terminal)
-          (declare (ignore terminal))
-         (format stream " ]")
-         (incf indentation))))))
+         (when (> indentation 65) (terpri stream) (setf indentation 1))))
 
-(defun def-lilfes-print-operations (indentation stream)
-  (declare (ignore indentation))
-   (let ((new-fs-p t))
-  (setf *display-structure*
-   (make-fs-output 
-      :name 'lilfes
-      :error-fn #'(lambda (dag-instance)
-         (format stream
-            "~%::: ~A is not a dag...~%"
-            dag-instance))
-      :start-fn #'(lambda nil nil)      
-      :end-fn #'(lambda nil nil)
-      :reentrant-value-fn                 
-      #'(lambda (reentrant-pointer)
-         (format stream
+(defmethod fs-output-end-fs ((fsout tdl) terminal)
+  (declare (ignore terminal))
+  (with-slots (stream indentation) fsout
+    (format stream " ]")
+         (incf indentation)))
+   
+
+;;; ******* LiLFeS printing operations ***********
+
+
+(defclass lilfes (fs-output-type) 
+    ((new-fs-p :accessor lilfes-new-fs-p
+                      :initform t)))
+
+(defmethod fs-output-start-fn ((fsout lilfes))
+    nil)
+   
+(defmethod fs-output-end-fn ((fsout lilfes))
+    nil)
+
+(defmethod fs-output-reentrant-value-fn ((fsout lilfes) reentrant-pointer)
+  (with-slots (stream) fsout
+    (format stream
             "($~A & "
-            reentrant-pointer))
+            reentrant-pointer)))
       ;; no terpris
-      :reentrant-value-endfn #'(lambda nil (format stream ")"))
-      :reentrant-fn
-      #'(lambda (reentrant-pointer)
-         (format stream "$~A" reentrant-pointer))
-      :atomic-fn
-      #'(lambda (atomic-value)
-         (if (or (stringp atomic-value) 
+
+(defmethod fs-output-reentrant-value-endfn ((fsout lilfes))
+   (with-slots (stream) fsout
+     (format stream ")")))
+   
+(defmethod fs-output-reentrant-fn ((fsout lilfes) reentrant-pointer)
+  (with-slots (stream) fsout
+    (format stream "$~A" reentrant-pointer)))
+
+(defmethod fs-output-atomic-fn ((fsout lilfes) atomic-value)
+  (with-slots (stream) fsout
+    (if (or (stringp atomic-value) 
                  (and (listp atomic-value) (stringp (car atomic-value))))
            (format stream "~S" 
                    (if (listp atomic-value) (car atomic-value)
@@ -185,266 +230,323 @@
                    (string-downcase
                     (convert-lilfes-type
                     (if (listp atomic-value) (car atomic-value)
-                                        atomic-value))))))
-      :start-fs
-      #'(lambda (type depth labels)
-          (declare (ignore labels depth))
-          (if (eql type *toptype*)
-            (format stream "(")
-            (if (stringp type)
-              (format stream "(~S & " type)
-              (format stream "('~A' & " 
-                      (string-downcase (convert-lilfes-type type)))))
-          (setf new-fs-p t))
-      :label-fn
-      #'(lambda (label depth)
-          (declare (ignore depth))
-         (unless new-fs-p 
-           (format stream " & "))
-         (setf new-fs-p nil)
-         (format stream "~A\\" (convert-lilfes-feature label)))
-      :end-fs 
-      #'(lambda (terminal)
-          (declare (ignore terminal))
-         (format stream ")"))))))
+                                        atomic-value)))))))
 
-;;; convert-lilfes-type etc are defined in lilout
-          
-             
-         
-(defun def-simple-print-operations (indentation stream)
-   (let ((indentation-vector (make-array '(3000))))
-  (setf *display-structure*
-   (make-fs-output 
-      :name 'simple
-      :error-fn #'(lambda (dag-instance)
-         (format stream
-            "~%::: ~A is not a dag...~%"
-            dag-instance))
-      :start-fn #'(lambda nil (format stream "~V%" 1))      
-      :end-fn #'(lambda nil (format stream "~V%" 1))
-      :reentrant-value-fn                 
-      #'(lambda (reentrant-pointer)
+
+(defmethod fs-output-start-fs ((fsout lilfes) type depth labels)
+  (declare (ignore labels depth))
+  (with-slots (stream new-fs-p) fsout
+    (if (eql type *toptype*)
+       (format stream "(")
+       (if (stringp type)
+          (format stream "(~S & " type)
+          (format stream "('~A' & " 
+            (string-downcase (convert-lilfes-type type)))))
+    (setf new-fs-p t)))
+
+(defmethod fs-output-label-fn ((fsout lilfes) label depth stored-x stored-y
+                               rpath) 
+   (declare (ignore depth stored-x stored-y rpath))
+   (with-slots (stream new-fs-p) fsout
+     (unless new-fs-p 
+        (format stream " & "))
+     (setf new-fs-p nil)
+     (format stream "~A\\" (convert-lilfes-feature label))))
+     
+(defmethod fs-output-end-fs ((fsout lilfes) terminal)
+  (declare (ignore terminal))
+  (with-slots (stream) fsout
+    (format stream ")")))
+
+;;; ***** simple print operations ************
+;;; used by tty display
+
+(defclass simple (fs-output-type) 
+    ((indentation-vector :accessor edit-indentation-vector
+                      :initform (make-array '(3000)))))
+
+(defmethod fs-output-start-fn ((fsout simple))
+    (with-slots (stream) fsout  
+      (format stream "~V%" 1)))
+   
+(defmethod fs-output-end-fn ((fsout simple))
+    (with-slots (stream) fsout  
+      (format stream "~V%" 1)))
+
+(defmethod fs-output-reentrant-value-fn ((fsout simple) reentrant-pointer)
+  (with-slots (stream indentation) fsout
          (format stream
             "~VT<~A> = "
             indentation
             reentrant-pointer)
          (setf indentation
          (cond ((> indentation 53) (terpri stream) 3)
-            (t (+ 12 indentation)))))
-      :reentrant-fn
-      #'(lambda (reentrant-pointer)
-         (format stream "~VT<~A>" indentation reentrant-pointer))
-      :atomic-fn
-      #'(lambda (atomic-value)              
-         (format stream "~VT~A" indentation atomic-value))
-      :start-fs
-      #'(lambda (type depth labels)
-          (declare (ignore labels))
-         (format stream "~VT[~A" indentation type)
-         (setf (aref indentation-vector depth) (+ indentation 2)))
-      :label-fn
-      #'(lambda (label depth)
-         (setf indentation (aref indentation-vector depth))
-         (format stream "~%~VT~A: " indentation label)
-         (setf indentation (+ indentation 7))
-         (when (> indentation 65) (terpri stream) (setf indentation 1)))
-      :end-fs 
-      #'(lambda (terminal)
-          (declare (ignore terminal))
-         (format stream "]")
-         (incf indentation))))))
+            (t (+ 12 indentation))))))
+
+(defmethod fs-output-reentrant-fn ((fsout simple) reentrant-pointer)
+  (with-slots (stream indentation) fsout
+    (format stream "~VT<~A>" indentation reentrant-pointer)))
+
+(defmethod fs-output-atomic-fn ((fsout simple) atomic-value)
+  (with-slots (stream indentation) fsout
+    (format stream "~VT~A" indentation atomic-value)))
+
+(defmethod fs-output-start-fs ((fsout simple) type depth labels)
+  (declare (ignore labels))
+  (with-slots (stream indentation indentation-vector) fsout
+    (format stream "~VT[~A" indentation type)
+    (setf (aref indentation-vector depth) (+ indentation 2))))
+
+(defmethod fs-output-label-fn ((fsout simple) label depth stored-x stored-y
+                               rpath) 
+   (declare (ignore stored-x stored-y rpath))
+   (with-slots (stream indentation indentation-vector) fsout
+     (setf indentation (aref indentation-vector depth))
+     (format stream "~%~VT~A: " indentation label)
+     (setf indentation (+ indentation 7))
+     (when (> indentation 65) (terpri stream) (setf indentation 1))))
+
+(defmethod fs-output-end-fs ((fsout simple) terminal)
+  (declare (ignore terminal))
+  (with-slots (stream indentation) fsout
+    (format stream "]")
+    (incf indentation)))
+
+
+;;; ***** `edit' print operations ************
+;;; are used by graphical display
+
+(defclass edit (fs-output-type) 
+    ((type-label-list :accessor edit-type-label-list
+                      :initform nil)
+     (indentation-vector :accessor edit-indentation-vector
+                      :initform (make-array '(3000)))))
+ 
+(defmethod fs-output-error-fn ((fsout edit) dag-instance)
+   (declare (ignore dag-instance))
+   (with-slots (stream) fsout
+     (format stream
+       "~%No feature structure~%")))
+
+                              
+(defmethod fs-output-start-fn ((fsout edit))
+    (with-slots (stream) fsout  
+      (format stream "~V%" 1)))
+   
+(defmethod fs-output-end-fn ((fsout edit))
+    (with-slots (stream) fsout  
+      (format stream "~V%" 1)))
+
+(defmethod fs-output-reentrant-value-fn ((fsout edit) reentrant-pointer)
+  (with-slots (stream indentation max-width) fsout
+    (move-to-x-y stream indentation (current-position-y stream))
+    (with-bold-output stream 
+      (let ((start-pos (current-position stream)))
+         (add-active-pointer stream start-pos reentrant-pointer t))) 
+    (setf indentation (current-position-x stream))
+    (setf max-width (max indentation max-width))))
+
+(defmethod fs-output-reentrant-fn ((fsout edit) reentrant-pointer)
+  (with-slots (stream indentation type-label-list max-width) fsout
+    (move-to-x-y stream indentation (current-position-y stream))
+    (with-bold-output stream
+      (let ((start-pos (current-position stream)))
+         (add-active-pointer stream start-pos reentrant-pointer nil))) 
+    (setf max-width (max (current-position-x stream) max-width))
+    (pop type-label-list)))
+
+(defmethod fs-output-atomic-fn ((fsout edit) atomic-value)
+  (with-slots (stream indentation type-label-list max-width) fsout
+    (let ((val
+           (if (cdr atomic-value) atomic-value 
+              (car atomic-value)))
+          (y-pos (current-position-y stream)))
+       (move-to-x-y stream indentation y-pos) 
+       ; make start-pos the actual place where the type label starts!!
+       (let ((start-pos (current-position stream)))
+          (add-type-and-active-fs-region stream start-pos type-label-list val nil t)
+          (setf max-width (max (current-position-x stream) max-width))
+          (pop type-label-list)))))
+
+(defmethod fs-output-start-fs ((fsout edit) type depth labels)
+  (declare (ignore labels))
+  (with-slots (stream indentation indentation-vector type-label-list
+                max-width) fsout
+    (let ((y-pos (current-position-y stream)))
+       (move-to-x-y stream indentation y-pos)
+       (write-char #\[ stream)
+       (let ((start-pos (current-position stream)))   
+          (add-type-and-active-fs-region stream start-pos type-label-list 
+           type nil nil)
+          (setf max-width (max (current-position-x stream) max-width))
+          (setf (aref indentation-vector depth) 
+                (+ indentation (stream-string-width stream "[")))))))
+
+(defmethod fs-output-shrunk-fn ((fsout edit) type) 
+   (with-slots (stream indentation type-label-list max-width) fsout
+     (let ((y-pos (current-position-y stream))
+           (start-pos (current-position stream)))
+        (move-to-x-y stream indentation y-pos)             
+        (add-type-and-active-fs-region stream start-pos 
+         type-label-list type t nil)
+        (frame-text-box stream start-pos (current-position stream))
+        (setf max-width (max (current-position-x stream) max-width))
+        (pop type-label-list))))
+
+(defmethod fs-output-shrinks ((fsout edit))
+   t)
+   
+(defmethod fs-output-label-fn ((fsout edit) label depth stored-x stored-y
+                               rpath) 
+   (with-slots (stream indentation indentation-vector 
+                 type-label-list max-width) fsout
+     (push label type-label-list)
+     (setf indentation (aref indentation-vector depth))         
+     (terpri stream)
+     ;; write-char #\newline goes wrong on PC
+     (if (and stored-x stored-y)
+        (move-to-x-y stream stored-x stored-y)
+        (move-to-x-y stream indentation (current-position-y stream)))
+     (store-fs-record-data-label stream rpath)
+     (let ((output-label (make-output-label label)))
+        (write-string output-label stream)
+        (write-string ": " stream))
+     (setf max-width (max (current-position-x stream) max-width))
+     (setf indentation (current-position-x stream))))
 
 (defun make-output-label (real-name)
   ;;; removed feature abbreviation facility - probably never used
-   (write-to-string real-name))
+   (write-to-string real-name :case :upcase))
 
 
-(defun def-edit-print-operations (indentation stream)
-   (let ((type-label-list nil)
-         (indentation-vector (make-array '(3000)))
-         (max-width 0))  ; was 100 - changed to 0 for tdfs
-  (setf *display-structure*
-   (make-fs-output 
-      :name 'edit
-      :error-fn #'(lambda (dag-instance)
-         (format stream
-            "~%No feature structure~%"
-            dag-instance)
-         nil)
-      :start-fn #'(lambda nil (format stream "~V%" 1))      
-      :end-fn #'(lambda nil (format stream "~V%" 1))
-      :reentrant-value-fn                 
-      #'(lambda (reentrant-pointer)
-          (move-to-x-y stream indentation (current-position-y stream))
-	  (with-bold-output stream 
-	    (let ((start-pos (current-position stream)))
-	      (add-active-pointer stream start-pos reentrant-pointer t))) 
-	  (setf indentation (current-position-x stream))
-	  (setf max-width (max indentation max-width)))
-      :reentrant-fn
-      #'(lambda (reentrant-pointer)
-         (move-to-x-y stream indentation (current-position-y stream))
-         (with-bold-output stream
-	   (let ((start-pos (current-position stream)))
-	     (add-active-pointer stream start-pos reentrant-pointer nil))) 
-         (setf max-width (max (current-position-x stream) max-width))
-         (pop type-label-list))
-      :atomic-fn
-      #'(lambda (atomic-value) 
-          (let ((val
-                 (if (cdr atomic-value) atomic-value 
-                     (car atomic-value)))
-                (y-pos (current-position-y stream)))
-            (move-to-x-y stream indentation y-pos) 
-            ; make start-pos the actual place where the type label starts!!
-            (let ((start-pos (current-position stream)))
-              (add-type-and-active-fs-region stream start-pos type-label-list val nil t)
-              (setf max-width (max (current-position-x stream) max-width))
-              (pop type-label-list))))
-      :shrunk-fn
-      #'(lambda (type) 
-         (let ((y-pos (current-position-y stream))
-               (start-pos (current-position stream)))
-            (move-to-x-y stream indentation y-pos)             
-            (add-type-and-active-fs-region stream start-pos 
-               type-label-list type t nil)
-            (frame-text-box stream start-pos (current-position stream))
-            (setf max-width (max (current-position-x stream) max-width))
-            (pop type-label-list)))
-      :start-fs
-      #'(lambda (type depth labels)
-          (declare (ignore labels))
-          (let ((y-pos (current-position-y stream)))
-            (move-to-x-y stream indentation y-pos)
-            (write-char #\[ stream)
-            (let ((start-pos (current-position stream)))   
-              (add-type-and-active-fs-region stream start-pos type-label-list 
-                                    type nil nil)
-              (setf max-width (max (current-position-x stream) max-width))
-              (setf (aref indentation-vector depth) 
-                    (+ indentation (stream-string-width stream "["))))))
-      :label-fn
-      #'(lambda (label depth)
-         (push label type-label-list)
-         (setf indentation (aref indentation-vector depth))         
-         (write-char #\newline stream)
-         (move-to-x-y stream indentation (current-position-y stream))
-         (let ((output-label (make-output-label label)))
-	   (write-string output-label stream)
-	   (write-string ": " stream))
-         (setf max-width (max (current-position-x stream) max-width))
-         (setf indentation (current-position-x stream)))
-      :max-width-fn
-      #'(lambda nil max-width)
-      :end-fs 
-      #'(lambda (terminal)
-          (declare (ignore terminal))
-         (setq type-label-list (cdr type-label-list))
-         (write-char #\] stream)
-         (setf indentation
-            (+ indentation (stream-string-width stream "]")))
-         (setf max-width (max (current-position-x stream) max-width)))))))
+(defmethod fs-output-end-fs ((fsout edit) terminal)
+  (declare (ignore terminal))
+  (with-slots (stream type-label-list indentation max-width) fsout
+    (setq type-label-list (cdr type-label-list))
+    (write-char #\] stream)
+    (setf indentation
+          (+ indentation (stream-string-width stream "]")))
+    (setf max-width (max (current-position-x stream) max-width))))
 
+;; following are to speed up redisplay e.g. when scrolling
 
-;;; outputting Antonio's TeX macros
+(defmethod fs-output-no-need-to-display ((fsout edit) rpath)
+   (with-slots (stream box) fsout
+     (store-fs-redisplay stream rpath box)))              
+              
+(defmethod fs-output-record-start 
+    ((fsout edit) rpath flag pointer)
+      (with-slots (stream) fsout
+        (store-fs-record-data stream rpath flag pointer)))
+
+(defmethod fs-output-record-end ((fsout edit) rpath)
+   (with-slots (stream) fsout
+        (store-fs-record-data-end stream rpath)))
+
+;;; ********* outputting Antonio's TeX macros  ***********
 ;;; \ has to be inserted into the format as a character ~C
-                     
-(defun def-tex-print-operations (indentation stream)
-   (let ((indentation-vector (make-array '(3000)))
-         (bracket-stack nil)
-         (unoutput-label nil))
-      ;; need to keep the last label around to use
-      ;; attvaltyp etc which take a label plus a value
-      ;; as arguments
-  (setf *display-structure*
-   (make-fs-output 
-      :name 'tex
-      :error-fn #'(lambda (dag-instance)
-         (format stream
-            "~%::: ~A is not a dag...~%"
-            dag-instance))
-      :start-fn 
-      #'(lambda nil 
-         (format stream "$"))  
-         ;; $   
-      :end-fn #'(lambda nil 
-         (format stream "$")
-         (format stream "~V%" 1))
-         ;; $
-         ;;
-      :reentrant-value-fn                 
-      #'(lambda (reentrant-pointer)
-         (format stream "\\\\~%~VT\\attval{~A}{\\ind{~A}}" 
+
+(defclass tex (fs-output-type) 
+    ((indentation-vector :accessor edit-indentation-vector
+                      :initform (make-array '(3000)))
+     (bracket-stack :accessor tex-bracket-stack :initform nil)
+     (unoutput-label :accessor tex-unoutput-label :initform nil)))
+
+(defmethod fs-output-start-fn ((fsout tex))
+   ;; $   
+    (with-slots (stream) fsout  
+      (format stream "$")))
+
+(defmethod fs-output-end-fn ((fsout tex))
+   ;; $   
+   ;;  
+    (with-slots (stream) fsout  
+      (format stream "$")
+      (format stream "~V%" 1)))
+
+(defmethod fs-output-reentrant-value-fn ((fsout tex) reentrant-pointer)
+   ;; \attval{label}{\ind{number}}\\
+  (with-slots (stream indentation unoutput-label) fsout
+    (format stream "\\\\~%~VT\\attval{~A}{\\ind{~A}}" 
             indentation (convert-values-for-tex unoutput-label) 
             reentrant-pointer)
          (setf unoutput-label nil)
          (setf indentation
          (cond ((> indentation 53) (terpri stream) 3)
-            (t (+ 12 indentation)))))
-         ;; \attval{label}{\ind{number}}\\
-      :reentrant-fn
-      #'(lambda (reentrant-pointer)
-         (format stream "\\\\~%~VT\\attval{~A}{\\ind{~A}}" 
-           indentation unoutput-label reentrant-pointer)
-        (setf unoutput-label nil))
-      :atomic-fn
-      #'(lambda (atomic-value) 
-         (if unoutput-label             
+            (t (+ 12 indentation))))))
+
+(defmethod fs-output-reentrant-fn ((fsout tex) reentrant-pointer)
+  (with-slots (stream indentation unoutput-label) fsout
+    (format stream "\\\\~%~VT\\attval{~A}{\\ind{~A}}" 
+      indentation unoutput-label reentrant-pointer)
+    (setf unoutput-label nil)))
+
+(defmethod fs-output-atomic-fn ((fsout tex) atomic-value)
+   ;; \attvaltyp{label}{value}\\
+  (with-slots (stream indentation unoutput-label) fsout
+    (if unoutput-label             
          (format stream "\\\\~%~VT\\attvaltyp{~A}{~(~A~)}" 
             indentation unoutput-label 
             (convert-values-for-tex atomic-value))
          (format stream "\\ \\ \\myvaluebold{~(~A~)}" 
             (convert-values-for-tex atomic-value)))
-         (setf unoutput-label nil))
-         ;; \attvaltyp{label}{value}\\
-      :shrunk-fn
-      #'(lambda (type) 
-         (if unoutput-label             
-         (format stream "\\\\~%~VT\\attvalshrunktyp{~A}{~(~A~)}" 
-           indentation unoutput-label type)
-        (format stream "\\ \\ \\boxvaluebold{~(~A~)}" 
-           type))
-        (setf unoutput-label nil))
-         ;; \attvalshrunktyp{label}{value}\\     
-      :start-fs
-      #'(lambda (type depth labels)
-         (cond 
-            ((and unoutput-label labels)
-               (format stream 
-                  "\\\\~%~VT\\attval{~A}{\\avmplus{\\att{~(~A~)}" 
-                  indentation unoutput-label type)
-               ;; \attval{label}{\avmplus{\att{type}\\
-               (push 2 bracket-stack)
-               (setf unoutput-label nil))
-            (labels
-               (format stream "~VT\\avmplus{\\att{~(~A~)}" 
-                  indentation type)
-               ;; \avmplus{\att{label}\\
-               (push 1 bracket-stack)
-               )
-            (unoutput-label 
-               (format stream 
-                  "\\\\~%~VT\\attvaltyp{~A}{~(~A~)}" 
-                  indentation unoutput-label type)
-               (setf unoutput-label nil)
-               (push 0 bracket-stack))
-            (t (format stream "~VT\\ \\ \\myvaluebold{~(~A~)}" 
-                  indentation type)
-               (push 0 bracket-stack))) 
-      (setf (aref indentation-vector depth) (+ indentation 2)))
-      :label-fn
-      #'(lambda (label depth)
-         (setf indentation (aref indentation-vector depth))
-         (setf indentation (+ indentation 7))
-         (setf unoutput-label label))
-      :end-fs 
-      #'(lambda (terminal)
-          (declare (ignore terminal))
-         (dotimes (x (pop bracket-stack))
-         (format stream "}")))
-         ))))
+         (setf unoutput-label nil)))
 
+(defmethod fs-output-shrunk-fn ((fsout tex) type) 
+   (with-slots (stream indentation unoutput-label) fsout
+     (if unoutput-label             
+        (format stream "\\\\~%~VT\\attvalshrunktyp{~A}{~(~A~)}" 
+          indentation unoutput-label type)
+        (format stream "\\ \\ \\boxvaluebold{~(~A~)}" 
+          type))
+     (setf unoutput-label nil)))
+
+(defmethod fs-output-shrinks ((fsout tex))
+   t)
+
+(defmethod fs-output-start-fs ((fsout tex) type depth labels)
+  (with-slots (stream indentation indentation-vector bracket-stack
+                unoutput-label) fsout
+    (cond 
+          ((and unoutput-label labels)
+           (format stream 
+             "\\\\~%~VT\\attval{~A}{\\avmplus{\\att{~(~A~)}" 
+             indentation unoutput-label type)
+           ;; \attval{label}{\avmplus{\att{type}\\
+           (push 2 bracket-stack)
+           (setf unoutput-label nil))
+          (labels
+           (format stream "~VT\\avmplus{\\att{~(~A~)}" 
+             indentation type)
+           ;; \avmplus{\att{label}\\
+           (push 1 bracket-stack))
+          (unoutput-label 
+           (format stream 
+             "\\\\~%~VT\\attvaltyp{~A}{~(~A~)}" 
+             indentation unoutput-label type)
+           (setf unoutput-label nil)
+           (push 0 bracket-stack))
+          (t (format stream "~VT\\ \\ \\myvaluebold{~(~A~)}" 
+               indentation type)
+            (push 0 bracket-stack))) 
+    (setf (aref indentation-vector depth) (+ indentation 2))))
+
+(defmethod fs-output-label-fn ((fsout tex) label depth stored-x stored-y
+                               rpath) 
+   (declare (ignore stored-x stored-y rpath))
+   (with-slots (stream indentation indentation-vector unoutput-label) fsout
+     (setf indentation (aref indentation-vector depth))
+     (setf indentation (+ indentation 7))
+     (setf unoutput-label label)))
+
+(defmethod fs-output-end-fs ((fsout tex) terminal)
+  (declare (ignore terminal))
+  (with-slots (stream bracket-stack) fsout
+    (dotimes (x (pop bracket-stack))
+       (format stream "}"))))
+
+
+;;; TeX support functions 
 
 (defun convert-values-for-tex (atomic-value)
    (if (listp atomic-value)
@@ -465,56 +567,67 @@
             (push char char-bag))
          (coerce (nreverse char-bag) 'string)))
 
+;;; ********** Paths *************
+
 ;;; Output paths in notation defined for types etc
 ;;; this is the original LKB version, with the type feature
 ;;; notation in the paths
 
-(defun def-path-print-operations (stream)
-   (let ((type-label-list nil)
-         (reentrant-vector (make-array '(3000))))
-    ;;; keep the current path
-    ;;; also keep the path to each reentrant node
-  (setf *display-structure*
-   (make-fs-output 
-      :name 'path
-      :error-fn #'(lambda (dag-instance)
-         (format stream
-            "~%::: ~A is not a dag...~%"
-            dag-instance))
-      :start-fn #'(lambda nil (format stream "~V%" 1))   
-      :end-fn #'(lambda nil (format stream ".~V%" 1))
-      :reentrant-value-fn                 
-      #'(lambda (reentrant-pointer)
-         (setf (aref reentrant-vector reentrant-pointer)
-            type-label-list))
-      :reentrant-fn
-      #'(lambda (reentrant-pointer)
-          (output-typed-list stream type-label-list)
-          (format stream " = ")
-          (output-typed-list stream 
-             (aref reentrant-vector reentrant-pointer))
-          (pop type-label-list)
-          (format stream "~%"))
-      :atomic-fn
-      #'(lambda (atomic-value) 
-         (output-typed-list stream type-label-list)             
-         (format stream " = ~A~%" atomic-value)
-         (pop type-label-list))
-      :start-fs
-      #'(lambda (type depth labels)
-          (declare (ignore depth labels))
-         (push type type-label-list))
-      :label-fn
-      #'(lambda (label depth)
-         (declare (ignore depth))
-         (push label type-label-list))
-      :end-fs 
-      #'(lambda (terminal)
-         (when terminal
-            (output-typed-list stream (cdr type-label-list))
-            (format stream " = ~A~%" (car type-label-list)))
-         (pop type-label-list)
-         (pop type-label-list))))))
+(defclass pathout (fs-output-type) 
+    ((reentrant-vector :accessor pathout-reentrant-vector                      
+      :initform (make-array '(3000)))
+     (type-label-list :accessor pathout-type-label-list
+       :initform nil)))
+
+
+(defmethod fs-output-start-fn ((fsout pathout))
+    (with-slots (stream) fsout  
+      (format stream "~V%" 1)))
+   
+(defmethod fs-output-end-fn ((fsout pathout))
+    (with-slots (stream) fsout  
+      (format stream ".~V%" 1)))
+
+(defmethod fs-output-reentrant-value-fn ((fsout pathout) reentrant-pointer)
+  (with-slots (reentrant-vector type-label-list) fsout
+    (setf (aref reentrant-vector reentrant-pointer)
+          type-label-list)))
+    
+(defmethod fs-output-reentrant-fn ((fsout pathout) reentrant-pointer)
+  (with-slots (stream type-label-list reentrant-vector) fsout
+    (output-typed-list stream type-label-list)
+    (format stream " = ")
+    (output-typed-list stream 
+     (aref reentrant-vector reentrant-pointer))
+    (pop type-label-list)
+    (format stream "~%")))
+
+(defmethod fs-output-atomic-fn ((fsout pathout) atomic-value)
+  (with-slots (stream type-label-list) fsout
+    (output-typed-list stream type-label-list)             
+    (format stream " = ~A~%" atomic-value)
+    (pop type-label-list)))
+
+(defmethod fs-output-start-fs ((fsout pathout) type depth labels)
+  (declare (ignore labels depth))
+  (with-slots (type-label-list) fsout
+    (push type type-label-list)))
+
+(defmethod fs-output-label-fn ((fsout pathout) label depth stored-x stored-y
+                               rpath) 
+   (declare (ignore depth stored-x stored-y rpath))
+   (with-slots (type-label-list) fsout
+     (push label type-label-list)))
+
+(defmethod fs-output-end-fs ((fsout pathout) terminal)
+  (with-slots (stream type-label-list) fsout
+    (when terminal
+       (output-typed-list stream (cdr type-label-list))
+       (format stream " = ~A~%" (car type-label-list)))
+    (pop type-label-list)
+    (pop type-label-list)))
+
+;;; support function
 
 (defun output-typed-list (stream type-label-list)
    (let ((ordered-list (reverse type-label-list)))
@@ -525,59 +638,72 @@
             (cddr ordered-list)))
       (format stream ">")))
 
+
+;;; **** another version of paths ******
+
 ;;; this is a simpler version, with no types on
 ;;; paths
 
-(defun def-path2-print-operations (stream)
-   (let ((type-label-list nil)
-         (reentrant-vector (make-array '(3000))))
-    ;;; keep the current path
-    ;;; also keep the path to each reentrant node
-  (setf *display-structure*
-   (make-fs-output 
-      :name 'path2
-      :error-fn #'(lambda (dag-instance)
-         (format stream
-            "~%::: ~A is not a dag...~%"
-            dag-instance))
-      :start-fn #'(lambda nil nil)   
-      :end-fn #'(lambda nil (format stream ".~V%" 1))
-      :reentrant-value-fn                 
-      #'(lambda (reentrant-pointer)
-         (setf (aref reentrant-vector reentrant-pointer)
-            type-label-list))
-      :reentrant-fn
-      #'(lambda (reentrant-pointer)          
-          (format stream "~%")
-          (output-typed-list2 stream type-label-list)
-          (format stream " = ")
-          (output-typed-list2 stream 
-             (aref reentrant-vector reentrant-pointer))
-          (pop type-label-list))
-      :atomic-fn
-      #'(lambda (atomic-value) 
-         (format stream "~%")
-         (output-typed-list2 stream type-label-list)             
-         (format stream " = ~(~A~)" (if (and (listp atomic-value) 
-                                             (null (cdr atomic-value)))
-                                      (car atomic-value) atomic-value))
-         (pop type-label-list))
-      :start-fs
-      #'(lambda (type depth labels)
-          (declare (ignore depth labels))
-         (push type type-label-list))
-      :label-fn
-      #'(lambda (label depth)
-         (declare (ignore depth))
-         (push label type-label-list))
-      :end-fs 
-      #'(lambda (terminal)
-         (when terminal
-            (format stream "~%")
-            (output-typed-list2 stream (cdr type-label-list))
-            (format stream " = ~(~A~)" (car type-label-list)))
-         (pop type-label-list)
-         (pop type-label-list))))))
+
+(defclass pathout2 (fs-output-type) 
+    ((reentrant-vector :accessor pathout2-reentrant-vector                      
+      :initform (make-array '(3000)))
+     (type-label-list :accessor pathout2-type-label-list
+       :initform nil)))
+
+
+(defmethod fs-output-start-fn ((fsout pathout2))
+    nil)
+   
+(defmethod fs-output-end-fn ((fsout pathout2))
+    (with-slots (stream) fsout  
+      (format stream ".~V%" 1)))
+
+(defmethod fs-output-reentrant-value-fn ((fsout pathout2) reentrant-pointer)
+  (with-slots (reentrant-vector type-label-list) fsout
+    (setf (aref reentrant-vector reentrant-pointer)
+            type-label-list)))
+    
+(defmethod fs-output-reentrant-fn ((fsout pathout2) reentrant-pointer)
+  (with-slots (stream type-label-list reentrant-vector) fsout
+    (format stream "~%")
+    (output-typed-list2 stream type-label-list)
+    (format stream " = ")
+    (output-typed-list2 stream 
+     (aref reentrant-vector reentrant-pointer))
+    (pop type-label-list)))
+
+(defmethod fs-output-atomic-fn ((fsout pathout2) atomic-value)
+  (with-slots (stream type-label-list) fsout
+    (format stream "~%")
+    (output-typed-list2 stream type-label-list)             
+    (format stream " = ~(~A~)" (if (and (listp atomic-value) 
+                                        (null (cdr atomic-value)))
+                                  (car atomic-value) atomic-value))
+    (pop type-label-list)))
+   
+   
+(defmethod fs-output-start-fs ((fsout pathout2) type depth labels)
+  (declare (ignore labels depth))
+  (with-slots (type-label-list) fsout
+    (push type type-label-list)))
+
+(defmethod fs-output-label-fn ((fsout pathout2) label depth stored-x stored-y
+                               rpath) 
+   (declare (ignore depth stored-x stored-y rpath))
+   (with-slots (type-label-list) fsout
+     (push label type-label-list)))
+
+(defmethod fs-output-end-fs ((fsout pathout2) terminal)
+  (with-slots (stream type-label-list) fsout
+    (when terminal
+       (format stream "~%")
+       (output-typed-list2 stream (cdr type-label-list))
+       (format stream " = ~(~A~)" (car type-label-list)))
+    (pop type-label-list)
+    (pop type-label-list)))
+
+;;; support fn 
 
 (defun output-typed-list2 (stream type-label-list)
    (let ((ordered-list (reverse type-label-list)))
@@ -590,68 +716,73 @@
          (format stream ": ~A " feat)))
       (format stream ">")))
 
+;;; ******** Output shrunkenness *********
 
-;;; Output shrunkenness 
 ;;; eg the way a feature structure is displayed is defined by
-;;; specifying a series of paths - with the interpretation that the
-;;; value of the display slot in the dag structure is to be set to
-;;; :shrunk
+;;; specifying a series of paths
 
-(defun def-shrunk-print-operations (stream)
-   (let ((label-list nil)
-         (shrunk-list nil))
-    ;;; keep the current path
-  (setf *display-structure*
-   (make-fs-output 
-      :name 'shrunk
-      :error-fn #'(lambda (dag-instance)
-         (format stream
-            "~%::: ~A is not a dag...~%"
-            dag-instance))
-      :start-fn #'(lambda nil nil)   
-      :end-fn #'(lambda nil nil)
-      :reentrant-value-fn                 
-      #'(lambda (reentrant-pointer)
-          (declare (ignore reentrant-pointer))
-         nil)
-      :reentrant-fn
-      #'(lambda (reentrant-pointer)
-          (declare (ignore reentrant-pointer))
-          (pop label-list))
-      :atomic-fn
-      #'(lambda (atomic-value) 
-          (declare (ignore atomic-value))
-         (pop label-list))
-      :shrunk-fn
-      #'(lambda (type)
-          (declare (ignore type))
-         (let ((ordered-list (reverse label-list)))
+(defclass shrunk (fs-output-type) 
+    ((label-list :accessor shrunk-label-list
+                      :initform nil)
+     (shrunk-list :accessor shrunk-shrunk-list
+                      :initform nil)))
+
+(defmethod fs-output-start-fn ((fsout shrunk))
+   nil)
+
+(defmethod fs-output-end-fn ((fsout shrunk))
+   nil)
+
+(defmethod fs-output-reentrant-value-fn ((fsout shrunk) reentrant-pointer)
+   (declare (ignore reentrant-pointer))
+   nil)
+
+(defmethod fs-output-reentrant-fn ((fsout shrunk) reentrant-pointer)
+   (declare (ignore reentrant-pointer))
+   (with-slots (label-list) fsout
+     (pop label-list)))
+
+(defmethod fs-output-atomic-fn ((fsout shrunk) atomic-value)
+   (declare (ignore atomic-value))
+   (with-slots (label-list) fsout
+     (pop label-list)))
+
+(defmethod fs-output-shrinks ((fsout shrunk))
+   t)
+
+(defmethod fs-output-shrunk-fn ((fsout shrunk) type)
+   (declare (ignore type))
+   (with-slots (label-list shrunk-list) fsout
+     (let ((ordered-list (reverse label-list)))
             (push ordered-list shrunk-list)
-            (pop label-list)))
-      :start-fs
-      #'(lambda (type depth labels)
-          (declare (ignore type depth labels))
+            (pop label-list))))
+
+(defmethod fs-output-start-fs ((fsout shrunk) type depth labels)
+   (declare (ignore type depth labels))
          nil)
-      :label-fn
-      #'(lambda (label depth)
-          (declare (ignore depth))          
-         (push label label-list))
-      :max-width-fn 
-      ;;; What a hack - just to get a value returned!
-      #'(lambda nil
-         shrunk-list)
-      :end-fs 
-      #'(lambda (terminal)
-          (declare (ignore terminal))
-         (pop label-list))))))
 
 
+(defmethod fs-output-label-fn ((fsout shrunk) 
+                               label depth stored-x stored-y
+                               rpath)
+   (declare (ignore depth stored-x stored-y rpath)) 
+   (with-slots (label-list) fsout
+     (push label label-list)))
+
+(defmethod fs-output-max-width-fn ((fsout shrunk))
+   ;;; need to return a value (nothing to do with max-width ...)
+   (with-slots (shrunk-list) fsout
+         shrunk-list))
+     
+(defmethod fs-output-end-fs ((fsout shrunk) terminal)
+  (declare (ignore terminal))
+      (with-slots (label-list) fsout
+        (pop label-list)))
 
 ;;;
 ;;; ************* Shrinking paths in types **********
 ;;; 
 
-;;; minor mods to the following two functions for TDFSs
 
 (def-lkb-parameter *shrunk-types* nil)
 (defvar *shrunk-local-dags* nil)
@@ -733,19 +864,19 @@ called on *toptype*.  This is for conversion of type constraints
 for PAGE and LiLFeS")
 
 (defun display-dag1 (dag-instance device stream &optional x-pos 
-                                  no-first-type)
-  (def-print-operations device (or x-pos 0) stream)
+                                  no-first-type box)
+  (def-print-operations device (or x-pos 0) stream box)
   (let ((*no-type* no-first-type))
     (cond ((dag-p dag-instance)
            (invalidate-visit-marks)
            (mark-dag-for-output dag-instance)
            (setf *reentrancy-pointer* 0)
-           (funcall (fs-output-start-fn *display-structure*))
+           (fs-output-start-fn *display-structure*)
            (print-dag dag-instance 0 nil)
-           (funcall (fs-output-end-fn *display-structure*))              
-           (funcall (fs-output-max-width-fn *display-structure*)))
-          (t (funcall (fs-output-error-fn *display-structure*) 
-                      dag-instance)))))
+           (fs-output-end-fn *display-structure*)              
+           (fs-output-max-width-fn *display-structure*))
+          (t (fs-output-error-fn *display-structure* 
+               dag-instance)))))
 
 (defun mark-dag-for-output (dag-instance)
    (let ((real-dag (follow-pointers dag-instance)))
@@ -761,58 +892,71 @@ for PAGE and LiLFeS")
 
 
 (defun print-dag (dag-instance depth rpath)
-   (let* ((real-dag (follow-pointers dag-instance))
-          (flag-value (dag-visit real-dag))
-          (new-rpath (cons (type-of-fs dag-instance) rpath)))
-      (declare (dynamic-extent new-rpath))
-      (cond 
-         ((equal flag-value 'double)
-            (setf (dag-visit real-dag)
-               *reentrancy-pointer*)
-            (incf *reentrancy-pointer*)
-            (funcall (fs-output-reentrant-value-fn *display-structure*) 
-               (dag-visit real-dag))                  
-            (print-dag-aux real-dag depth new-rpath)
-            (if (fs-output-reentrant-value-endfn *display-structure*)
-                (funcall (fs-output-reentrant-value-endfn *display-structure*))))
-         ((equal flag-value 'single)
-            (print-dag-aux real-dag depth new-rpath))
-         (t (funcall (fs-output-reentrant-fn *display-structure*) 
-               flag-value))))) 
+   (let* ((real-dag (follow-pointers dag-instance)))
+      (multiple-value-bind (dont-display-p stored-flag stored-pointer
+                             stored-label-pos)
+          (fs-output-no-need-to-display *display-structure* rpath)
+         (unless dont-display-p
+            (let
+             ((new-rpath (cons (type-of-fs real-dag) rpath))
+              (flag-value (or stored-flag (dag-visit real-dag))))
+             (declare (dynamic-extent new-rpath))
+             (fs-output-record-start *display-structure* rpath
+              flag-value *reentrancy-pointer*)
+             (cond 
+                   ((equal flag-value 'double)
+                    (setf (dag-visit real-dag)
+                          (or stored-pointer *reentrancy-pointer*))
+                    (incf *reentrancy-pointer*)
+                    (fs-output-reentrant-value-fn *display-structure*
+                     (dag-visit real-dag))                  
+                    (print-dag-aux real-dag depth new-rpath stored-label-pos)
+                    (fs-output-reentrant-value-endfn *display-structure*))
+                   ((equal flag-value 'single)
+                    (print-dag-aux real-dag depth new-rpath stored-label-pos))
+                   (t (fs-output-reentrant-fn *display-structure* 
+                        flag-value)))
+             (fs-output-record-end *display-structure* rpath))))))
   
-(defun print-dag-aux (real-dag depth rpath)
+(defun print-dag-aux (real-dag depth rpath stored-label-pos)
    (cond 
       ((is-atomic real-dag) 
-         (funcall (fs-output-atomic-fn *display-structure*)
+         (fs-output-atomic-fn *display-structure*
             (type-of-fs real-dag)))
-      ((and 
+      ((and (fs-output-shrinks *display-structure*) ; really should test for
+                                                    ; shrunk-fn method being defined
           ;; shrink it if it is locally specified as shrunk, or it's globally
           ;; specified and not overriden locally
           (or (member real-dag *shrunk-local-dags* :test #'eq)
               (and (find rpath *shrunk-types* :test #'print-dag-shrunk-match-p)
-                 (not (member real-dag *not-shrunk-local-dags* :test #'eq))))
-          (fs-output-shrunk-fn *display-structure*))
-         (funcall (fs-output-shrunk-fn *display-structure*)
+                 (not (member real-dag *not-shrunk-local-dags* :test #'eq)))))
+         (fs-output-shrunk-fn *display-structure*
             (dag-type real-dag)))
       (t 
          (let* 
             ((type (if *no-type* *toptype* (type-of-fs real-dag)))
              (labels (top-level-features-of real-dag))
-             (label-list (if labels (canonical-order type labels))))
+             (start-x nil) (start-y nil))
             (if labels
                (progn
-                  (funcall (fs-output-start-fs *display-structure*) 
+                  (fs-output-start-fs *display-structure* 
                      type depth labels)
-                  (for label in label-list
+                  (for label in (canonical-order type labels)
                      do
-                     (funcall (fs-output-label-fn *display-structure*) 
-                        label depth)
+                    (when stored-label-pos
+                         (setf start-x (caar stored-label-pos))
+                         (setf start-y (cdar stored-label-pos))
+                         (setf stored-label-pos 
+                               (cdr stored-label-pos)))
+                    (fs-output-label-fn *display-structure*
+                        label depth start-x start-y (cdr rpath))
                      (let ((new-rpath (cons label rpath)))
                         (declare (dynamic-extent new-rpath))
-                        (print-dag (get-dag-value real-dag label) (+ 1 depth) new-rpath)))
-                  (funcall (fs-output-end-fs *display-structure*)
+                        (print-dag (get-dag-value real-dag label) 
+                          (+ 1 depth) new-rpath)))
+                  (fs-output-end-fs *display-structure*
                      (null labels)))
-               (funcall (fs-output-atomic-fn *display-structure*)
+               (fs-output-atomic-fn *display-structure*
                   (list type))))))           
    (setf *no-type* nil))
 
@@ -842,67 +986,4 @@ for PAGE and LiLFeS")
        (sort (copy-list dag-attributes)
              #'(lambda (x y)
                 (member y (member x ordered-attributes))))))
-
-;;; not sure whether the following is being used any more
-
-(defun convert-dag-to-paths (dag-instance)   
-   (cond 
-      ((dag-p dag-instance)
-         (invalidate-visit-marks)
-         (mark-dag-for-output dag-instance)
-         (convert-dag-to-paths1 dag-instance nil))
-      (t (error "~A is not a dag" dag-instance))))
-
-
-;;; Output a dag as a list of unifications etc
-
-(defun convert-dag-to-paths1 (dag-instance path-so-far)
-   (let* ((real-dag (follow-pointers dag-instance))
-         (flag-value (dag-visit real-dag)))
-      (cond 
-         ((equal flag-value 'double)
-            (setf (dag-visit real-dag)
-               path-so-far)                             
-            (convert-dag-to-paths2 real-dag path-so-far))
-         ((equal flag-value 'single)
-            (convert-dag-to-paths2 real-dag path-so-far))
-         (t (list (make-unification :lhs (construct-path path-so-far)
-               :rhs (construct-path flag-value)))))))
-
-(defun convert-dag-to-paths2 (real-dag path-so-far)
-   (cond 
-      ((is-atomic real-dag) 
-         (list (make-unification :lhs (construct-path path-so-far)
-               :rhs (make-u-value :types
-                  (type-of-fs real-dag)))))
-      (t
-         (let 
-            ((labels (top-level-features-of real-dag)))
-            (cond (labels
-                  (push
-                     (dag-type real-dag) path-so-far)
-                  (for label in labels
-                     append
-                     (convert-dag-to-paths1 (get-dag-value real-dag label)
-                        (cons label path-so-far))))
-               (t (list (make-unification :lhs 
-                        (construct-path path-so-far)
-                        :rhs (make-u-value :types
-                           (list 
-                           (dag-type real-dag)))))))))))
-
-(defun construct-path (path)
-   ;;; takes a reversed list of alternating features and types 
-   ;;; and converts it into a valid path structure
-   ;;; eg (f2 t2 f1 t1) into the structure
-   ;;; equivalent to <t1 f1 : t2 f2>
-   (let ((typed-feature-list nil))
-      (loop (when (null path) (return))
-         (let* ((feature (pop path))
-               (type (pop path)))
-            (push (make-type-feature-pair :type type :feature feature)
-               typed-feature-list)))
-      (make-typed-path :typed-feature-list typed-feature-list)))
-
-
 

@@ -758,3 +758,20 @@
       (when valuep
          (write-string " = " stream))))
 
+;;; ******* Dummy functions - only used in Common Graphics version **********
+
+(defun store-fs-record-data (stream rpath flag pointer)
+  (declare (ignore stream rpath flag pointer))
+  nil)
+  
+(defun store-fs-record-data-label (stream rpath)
+  (declare (ignore stream rpath))
+  nil)
+    
+(defun store-fs-record-data-end (stream rpath)
+    (declare (ignore stream rpath))
+  nil)
+
+(defun store-fs-redisplay (stream rpath box)
+    (declare (ignore stream rpath box))
+    nil)

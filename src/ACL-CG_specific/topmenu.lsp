@@ -105,6 +105,7 @@
    (declare (ignore menu window))
    (funcall (aclwin:menu-item-value item)))
 
+; FIX
 ; ignore disabling for now and cleaning up the temp file
 ; also ignore dumping the image
 

@@ -16,7 +16,7 @@
      (lkb-pathname (this-directory) "settings.lsp"))
 (read-tdl-lex-file-aux 
      (lkb-pathname (parent-directory) "lexicon.tdl"))
-(read-tdl-grammar-file-aux 
+(read-tdl-lex-rule-file-aux 
 	(lkb-pathname (parent-directory) "binding.tdl"))
 (read-tdl-grammar-file-aux 
 	(lkb-pathname (parent-directory) "grules.tdl"))

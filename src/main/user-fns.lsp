@@ -177,9 +177,11 @@
   ;;; grammars can redefine this to use different names
   (setf *psorts-temp-file* 
     (make-pathname :name "templex" 
+                   :device (pathname-device (lkb-tmp-dir))
                    :directory (pathname-directory (lkb-tmp-dir))))
   (setf *psorts-temp-index-file* 
     (make-pathname :name "templex-index" 
+                   :device (pathname-device (lkb-tmp-dir))
                    :directory (pathname-directory (lkb-tmp-dir)))))  
   
 

@@ -29,13 +29,10 @@
 				thing file))))
 
 (defun redefine-type (definition)
-  (let ((*readtable* (make-tdl-break-table))
-	#-:tty(*standard-output* clim-user::*lkb-top-stream*))
+  (let ((*readtable* (make-tdl-break-table)))
     (with-input-from-string (istream definition)
       (read-tdl-type-stream istream t)))
-  (let ((*standard-output* #-:tty clim-user:*lkb-top-stream*
-                           #+:tty *standard-output*))
     (when (patch-type-table) 
       (canonicalise-feature-order)           
       (set-up-type-interactions)
-      t)))
+      t))

@@ -62,15 +62,16 @@
 
 (defun show-parse nil
   (if *parse-record*
-       #+:allegro(show-parse-tree-frame *parse-record*)
-       #-:allegro(progn 
+     (progn
+       #+(and :allegro :clim)(show-parse-tree-frame *parse-record*)
+       #-(and :allegro :clim) 
          (for edge in *parse-record*
               do
               (display-parse-tree edge nil))
-         (when (fboundp 'mrs::output-mrs-after-parse)
-           (funcall 'mrs::output-mrs-after-parse *parse-record*)))
-       ;;; replace old tree display with new frame in ACL
-       ;;; need to replicate in MCL
+      ;;; replace old tree display with new frame in ACL CLIM
+      ;;; FIX need to replicate in MCL and CG
+      (when (fboundp 'mrs::output-mrs-after-parse)
+         (funcall 'mrs::output-mrs-after-parse *parse-record*)))
      (progn
        (lkb-beep)
        (format t "~%No parses found"))))
@@ -616,27 +617,25 @@
 	      (edge-children edge))
       (let ((daughters (edge-children edge)))
          (list
-          (if 
-              (and *dont-show-lex-rules*
+          (if (and *dont-show-lex-rules*
                    (get-lex-rule-entry (edge-rule-number edge)))
-              (car (edge-leaves edge))
-              (if daughters
+             (car (edge-leaves edge))
+             (if daughters
                 (cons (tree-node-text-string
                        (or (find-category-abb (edge-dag edge))
                            (edge-category edge)))
-                      (mapcan
-                       #'(lambda (dtr)
-                           (if dtr
-                               (parse-tree-structure1 dtr (1+ level))
-                             ;; active chart edge daughter
-                             (list ""))) 
-                       daughters))
+                  (mapcan
+                   #'(lambda (dtr)
+                       (if dtr
+                          (parse-tree-structure1 dtr (1+ level))
+                          ;; active chart edge daughter
+                          (list ""))) 
+                   daughters))
                 (if *dont-show-morphology*
-                    (car (edge-leaves edge))
-                  (cons (car (edge-leaves edge))
-                        (morph-tree-structure
-                         (edge-rule-number edge) 
-                         (edge-morph-history edge))))))))))
+                   (car (edge-leaves edge))
+                   (cons (car (edge-leaves edge))
+                     (morph-tree-structure
+                      (edge-rule-number edge) (edge-morph-history edge))))))))))
 
 (defun morph-tree-structure (rule edge)
    (if rule

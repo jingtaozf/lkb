@@ -1599,9 +1599,21 @@ D
   (setf (component-host component)
 	(or (component-host component)
 	    (when parent (component-host parent))))
-  (setf (component-device component)
+#|
+   (setf (component-device component)
 	(or (component-device component)
 	    (when parent (component-device parent))))
+|# 
+  ;; AAC - the device really has to be evaluated to be of much use
+   (setf (component-device component)
+         (or 
+             (if (pathnamep (component-device component))
+                (component-device component)
+                (eval (component-device component)))
+             (if parent
+                (if (pathnamep (component-device parent))
+                   (component-device parent)
+                   (eval (component-device parent))))))
   ;; Set up extension defaults
   (setf (component-extension component :source)
 	(or (component-extension component :source) ; for local defaulting

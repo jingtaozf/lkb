@@ -21,19 +21,19 @@
 ;;; return the maximum width this has taken
       
 
-(defun display-dag2 (tdfs device stream) 
+(defun display-dag2 (tdfs device stream &optional box) 
   (let* ((*shrunk-local-dags* (tdfs-shrunk tdfs))
          (*not-shrunk-local-dags* (tdfs-not-shrunk tdfs))
          (indef-dag (tdfs-indef tdfs))
          (def-dag (yadu-winner tdfs))
          (tail (tdfs-tail tdfs))
-         (indef-width (display-dag1 indef-dag device stream))
+         (indef-width (display-dag1 indef-dag device stream nil nil box))
          (def-width 0)
          (tail-width 0))
          (when tail
            (format stream "/")
            (setf def-width
-            (display-dag1 def-dag device stream 0))
+            (display-dag1 def-dag device stream 0 nil box))
            (format stream "/")
            (setf tail-width 
                  (apply #'max

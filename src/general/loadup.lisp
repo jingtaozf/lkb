@@ -28,14 +28,21 @@
   #-:mcl (rest (butlast (pathname-directory *load-truename*) 2))
   #+:mcl '("macintosh hd" "newlkb"))
 
-
+(defparameter %sys-device%
+  (pathname-device *load-truename*))
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; --------------- END SITE-SPECIFIC INSTALLATION PARAMETERS -----------------
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defparameter sys-home (cons #-:lucid :absolute #+:lucid :root %sys-home%))
+(defparameter sys-home (make-pathname :device %sys-device%
+                         :directory (cons #-:lucid :absolute 
+                                      #+:lucid :root %sys-home%)))
+;;; AAC - turned this into a pathname, so it can include the device
 
-(defparameter general-dir (append sys-home '("src" "general")))
+(defparameter general-dir (append 
+                            (cons #-:lucid :absolute #+:lucid :root %sys-home%) 
+                            '("src" "general")))
 
 ;;;
 ;;; load several patches together with the the cmu version of defpackage() for
@@ -56,7 +63,8 @@
 
 #+:allegro
 (load
- (make-pathname :directory general-dir :name "allegro-patches"))
+ (make-pathname :device %sys-device%
+   :directory general-dir :name "allegro-patches"))
 
 #+:mcl
 (load
@@ -67,12 +75,14 @@
  (make-pathname :directory general-dir :name "clisp-patches"))
 
 (load
- (make-pathname :directory general-dir :name "loadup-library"))
+ (make-pathname :device %sys-device%
+   :directory general-dir :name "loadup-library"))
 
 (in-package "MAKE")
 
 (let ((dumping
-       (make-pathname :directory general-dir :name "dump" :type "lisp")))
+       (make-pathname :device cl-user::%sys-device% 
+         :directory general-dir :name "dump" :type "lisp")))
   (when (probe-file dumping) (load dumping)))
 
 (reset-module-status)

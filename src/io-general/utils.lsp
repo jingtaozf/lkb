@@ -172,7 +172,8 @@
           (*syntax-error* nil))
     (setf *current-grammar-load-file* file-name)
     (clear-almost-everything)
-    (load file-name)
+       (let ((*package* (find-package "CL-USER")))
+          (load file-name))
     (lkb-beep)
     (if *syntax-error*
         (format t "~%WARNING: syntax error(s) - check messages")
@@ -208,10 +209,12 @@
 
 (defun this-directory nil
   (make-pathname 
+   :device (pathname-device *load-truename*)
    :directory (pathname-directory *load-truename*)))
 
 (defun parent-directory nil
   (make-pathname 
+   :device (pathname-device *load-truename*)
    :directory (butlast (pathname-directory *load-truename*))))
 
 (defun lkb-pathname (directory name)
