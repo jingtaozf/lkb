@@ -184,7 +184,7 @@
         ~@[; ~a edges~]]</div>~%~
         <br>~%"
        (min readings *www-maximal-number-of-results*)
-       (min readings *www-maximal-number-of-results*) 
+       readings 
        readings time edges edges)
       (mp:with-process-lock (%www-visualize-lock%)
         (loop
