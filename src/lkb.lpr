@@ -2,105 +2,110 @@
 
 (in-package :common-graphics-user)
 
-(DEFPACKAGE :COMMON-LISP-USER (:EXPORT))
+(defpackage :common-lisp-user (:export))
 
-(DEFINE-PROJECT :NAME 'COMMON-LISP-USER::LKB
-  :APPLICATION-TYPE (INTERN "Standard EXE" (FIND-PACKAGE :KEYWORD))
-  :MODULES (LIST (MAKE-INSTANCE 'MODULE :NAME "mrs\\for.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME
+(define-project :name 'common-lisp-user::lkb
+  :application-type (intern "Standard EXE" (find-package :keyword))
+  :modules (list (make-instance 'module :name "version.lsp")
+                 (make-instance 'module :name "mrs\\for.lsp")
+                 (make-instance 'module :name "mrs\\for.lsp")
+                 (make-instance 'module :name
                                 "main\\initializations.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME "main\\globals.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME
+                 (make-instance 'module :name "main\\globals.lsp")
+                 (make-instance 'module :name
                                 "acl-cg_specific\\graphics.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME
+                 (make-instance 'module :name
                                 "acl-cg_specific\\misc.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME
+                 (make-instance 'module :name
                                 "acl-cg_specific\\topmenu.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME
+                 (make-instance 'module :name
                                 "acl-cg_specific\\dialog.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME "main\\types.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME "main\\dag.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME "main\\yadu.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME "main\\gen.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME "main\\structs.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME "main\\user-fns.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME "main\\marks.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME "main\\checktypes.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME "main\\leaf.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME "main\\lex.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME "main\\rules.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME "main\\parse.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME "main\\generate.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME "main\\morph.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME "main\\check-unif.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME "io-general\\menus.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME
+                 (make-instance 'module :name "main\\types.lsp")
+                 (make-instance 'module :name "main\\dag.lsp")
+                 (make-instance 'module :name "main\\yadu.lsp")
+                 (make-instance 'module :name "main\\gen.lsp")
+                 (make-instance 'module :name "main\\structs.lsp")
+                 (make-instance 'module :name "main\\user-fns.lsp")
+                 (make-instance 'module :name "main\\marks.lsp")
+                 (make-instance 'module :name "main\\checktypes.lsp")
+                 (make-instance 'module :name "main\\cdb.lsp")
+                 (make-instance 'module :name "main\\leaf.lsp")
+                 (make-instance 'module :name "main\\lex.lsp")
+                 (make-instance 'module :name "main\\clex.lsp")
+                 (make-instance 'module :name "main\\rules.lsp")
+                 (make-instance 'module :name "main\\parse.lsp")
+                 (make-instance 'module :name "main\\active.lsp")
+                 (make-instance 'module :name "main\\morph.lsp")
+                 (make-instance 'module :name "main\\check-unif.lsp")
+                 (make-instance 'module :name "io-general\\menus.lsp")
+                 (make-instance 'module :name "io-general\\async.lsp")
+                 (make-instance 'module :name
                                 "io-general\\outputfs.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME
+                 (make-instance 'module :name
                                 "io-general\\outputtdfs.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME
+                 (make-instance 'module :name
                                 "io-general\\outputsrc.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME
+                 (make-instance 'module :name
                                 "io-general\\toplevel.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME
+                 (make-instance 'module :name
                                 "io-paths\\typeinput.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME "io-paths\\lexinput.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME
+                 (make-instance 'module :name "io-paths\\lexinput.lsp")
+                 (make-instance 'module :name
                                 "io-paths\\ruleinput.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME "io-paths\\pathout.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME
+                 (make-instance 'module :name "io-paths\\pathout.lsp")
+                 (make-instance 'module :name
                                 "io-tdl\\tdltypeinput.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME "io-tdl\\tdloutput.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME
+                 (make-instance 'module :name "io-tdl\\tdloutput.lsp")
+                 (make-instance 'module :name
                                 "io-tdl\\tdlruleinput.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME
+                 (make-instance 'module :name
                                 "io-tdl\\tdllexinput.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME "io-lilfes\\lilout.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME
+                 (make-instance 'module :name "io-lilfes\\lilout.lsp")
+                 (make-instance 'module :name
                                 "acl-cg_specific\\fsclasses.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME
+                 (make-instance 'module :name
                                 "acl-cg_specific\\activefs.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME
+                 (make-instance 'module :name
                                 "acl-cg_specific\\tree.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME
+                 (make-instance 'module :name
                                 "acl-cg_specific\\parseout.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME
+                 (make-instance 'module :name
                                 "acl-cg_specific\\chartout.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME
+                 (make-instance 'module :name
                                 "acl-cg_specific\\listout.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME
+                 (make-instance 'module :name
                                 "acl-cg_specific\\emacs.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME
+                 (make-instance 'module :name
                                 "io-general\\tree-nodes.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME "io-general\\utils.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME "io-general\\graph.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME "main\\batch-check.lsp")
-                 (MAKE-INSTANCE 'MODULE :NAME "main\\debug.lsp"))
-  :PROJECTS NIL
-  :LIBRARIES NIL
-  :PACKAGE-NAME "COMMON-LISP-USER"
-  :MAIN-FORM NIL
-  :COMPILATION-UNIT T
-  :VERBOSE NIL
-  :PROGRAM-NAME "Allegro.Program"
-  :READABLE-PROGRAM-NAME "Allegro Program"
-  :RUNTIME-MODULES '(:CG :DRAG-AND-DROP :LISP-WIDGET
-                     :MULTI-PICTURE-BUTTON :COMMON-CONTROL
-                     :EDIT-IN-PLACE :OUTLINE :GRID :LISP-GROUP-BOX
-                     :HEADER-CONTROL :PROGRESS-INDICATOR-CONTROL
-                     :COMMON-STATUS-BAR :TAB-CONTROL :TRACKBAR-CONTROL
-                     :UP-DOWN-CONTROL :DDE :MCI :CARETS :HOTSPOTS
-                     :MENU-SELECTION :CHOOSE-LIST :DIRECTORY-LIST
-                     :COLOR-DIALOG :FIND-DIALOG :FONT-DIALOG
-                     :STRING-DIALOG :YES-NO-LIST-DIALOG
-                     :LIST-VIEW-CONTROL :OLE :OLE-SERVER :ACLWIN302)
-  :HELP-FILE-MODULE (MAKE-INSTANCE 'BUILD-MODULE :NAME "")
-  :SPLASH-FILE-MODULE (MAKE-INSTANCE 'BUILD-MODULE :NAME "")
-  :ICON-FILE-MODULE (MAKE-INSTANCE 'BUILD-MODULE :NAME "")
-  :INCLUDE-FLAGS '(:COMPILER :TOP-LEVEL)
-  :BUILD-FLAGS '(:EXIT-AFTER-BUILD :ALLOW-DEBUG)
-  :OLD-SPACE-SIZE 256000
-  :NEW-SPACE-SIZE 6144
-  :ON-INITIALIZATION 'COMMON-LISP-USER::SET-UP-LKB-INTERACTION)
+                 (make-instance 'module :name "io-general\\utils.lsp")
+                 (make-instance 'module :name "io-general\\graph.lsp")
+                 (make-instance 'module :name "main\\batch-check.lsp")
+                 (make-instance 'module :name "main\\debug.lsp"))
+  :projects nil
+  :libraries nil
+  :package-name "COMMON-LISP-USER"
+  :main-form nil
+  :compilation-unit t
+  :verbose nil
+  :program-name "Allegro.Program"
+  :readable-program-name "Allegro Program"
+  :runtime-modules '(:cg :drag-and-drop :lisp-widget
+                     :multi-picture-button :common-control
+                     :edit-in-place :outline :grid :lisp-group-box
+                     :header-control :progress-indicator-control
+                     :common-status-bar :tab-control :trackbar-control
+                     :up-down-control :dde :mci :carets :hotspots
+                     :menu-selection :choose-list :directory-list
+                     :color-dialog :find-dialog :font-dialog
+                     :string-dialog :yes-no-list-dialog
+                     :list-view-control :ole :ole-server :aclwin302)
+  :help-file-module (make-instance 'build-module :name "")
+  :splash-file-module (make-instance 'build-module :name "")
+  :icon-file-module (make-instance 'build-module :name "")
+  :include-flags '(:compiler :top-level)
+  :build-flags '(:exit-after-build :allow-debug)
+  :old-space-size 256000
+  :new-space-size 6144
+  :on-initialization 'common-lisp-user::set-up-lkb-interaction)
 
 ;; End of Project Definition
