@@ -25,6 +25,10 @@
 
 (def-lkb-parameter *tree-comparison-threshold* 50)
 
+(def-lkb-parameter *tree-inhibit-tree-display-p* nil)
+
+(def-lkb-parameter *tree-use-node-labels-p* t)
+
 ;;; **********************************************************************
 ;;; Collect differences among a set of parses
 
@@ -95,7 +99,8 @@
 	(daughters (get parse 'daughters)))
     (cond (record
 	   (let* ((leaves (edge-leaves record))
-		  (label (find-category-abb fs))
+		  (label (when *tree-use-node-labels-p* 
+			   (find-category-abb fs)))
 		  (item (edge-rule record))
 		  (rule (if (rule-p item) (rule-id item) item))
 		  (yield (apply #'concatenate 
@@ -105,7 +110,8 @@
 					    leaves))))
                   (start (edge-from record))
                   (end (edge-to record)))
-	     (add-discriminant frame label yield :constituent top start end)
+             (when label
+               (add-discriminant frame label yield :constituent top start end))
 	     (if (stringp rule)
                (progn
                  (add-discriminant frame
@@ -216,6 +222,7 @@
 
 (defun set-up-compare-frame (parses frame)
 
+  (setf *cached-category-abbs* nil)
   (setf (compare-frame-decisions frame) (list (make-decision :type :start)))
   (when (and (numberp *tree-comparison-threshold*)
              (> (length parses) *tree-comparison-threshold*)
@@ -490,6 +497,11 @@
     (setf (compare-frame-mode frame) nil)
     (update-trees frame t)))
 
+(define-compare-frame-command (com-toggle-compare-frame :menu "Toggle")
+    ()
+  (clim:with-application-frame (frame)
+    (setf *tree-inhibit-tree-display-p* (not *tree-inhibit-tree-display-p*))
+    (update-trees frame t)))
 
 (define-compare-frame-command (com-confidence-compare-frame :menu "Confidence")
     ()
@@ -548,39 +560,40 @@
 (defun draw-trees-window (window stream)
   (setf (compare-frame-trees-stream window) stream)
 
-  
-  (clim:formatting-table (stream :x-spacing "XX")
-    (dolist (tree (compare-frame-trees window))
-      (setf (ptree-ink tree) clim:+foreground-ink+)
-      (setf (ptree-output-record tree)
-        (clim:with-new-output-record (stream)
-          (clim:with-output-recording-options (stream :record t)
-            (clim:formatting-row (stream)
-              (clim:formatting-cell (stream :align-x :center :align-y :top)
-                (clim:with-text-style (stream (clim:parse-text-style 
-                                               '(:sans-serif :bold 14)))
-                  (format stream "~%[~a]" (ptree-id tree))))
-              (clim:formatting-cell (stream :align-x :left :align-y :center)
-                (clim:with-output-as-presentation 
-                    (stream tree 'ptree :single-box t)
-                  (clim:format-graph-from-root
-                   (ptree-top tree)
-                   #'(lambda (node stream)
-                       (multiple-value-bind (s bold-p) 
-                           (get-string-for-edge node)
-                         (clim:with-text-face (stream (if bold-p :bold :roman))
-                           (write-string s stream))))
-                   #'(lambda (node) (get node 'daughters))
-                   :graph-type :parse-tree
-                   :stream stream 
-                   :merge-duplicates nil
-                   :orientation :vertical
-                   :generation-separation 7
-                   :move-cursor t
-                   :within-generation-separation 7
-                   :center-nodes nil)))
-              (terpri stream)))))))
-  (update-trees window))
+  (unless *tree-inhibit-tree-display-p*
+    (clim:formatting-table (stream :x-spacing "XX")
+      (dolist (tree (compare-frame-trees window))
+        (setf (ptree-ink tree) clim:+foreground-ink+)
+        (setf (ptree-output-record tree)
+          (clim:with-new-output-record (stream)
+            (clim:with-output-recording-options (stream :record t)
+              (clim:formatting-row (stream)
+                (clim:formatting-cell (stream :align-x :center :align-y :top)
+                  (clim:with-text-style (stream (clim:parse-text-style 
+                                                 '(:sans-serif :bold 14)))
+                    (format stream "~%[~a]" (ptree-id tree))))
+                (clim:formatting-cell (stream :align-x :left :align-y :center)
+                  (clim:with-output-as-presentation 
+                      (stream tree 'ptree :single-box t)
+                    (clim:format-graph-from-root
+                     (ptree-top tree)
+                     #'(lambda (node stream)
+                         (multiple-value-bind (s bold-p) 
+                             (get-string-for-edge node)
+                           (clim:with-text-face (stream 
+                                                 (if bold-p :bold :roman))
+                             (write-string s stream))))
+                     #'(lambda (node) (get node 'daughters))
+                     :graph-type :parse-tree
+                     :stream stream 
+                     :merge-duplicates nil
+                     :orientation :vertical
+                     :generation-separation 7
+                     :move-cursor t
+                     :within-generation-separation 7
+                     :center-nodes nil)))
+                (terpri stream)))))))
+    (update-trees window)))
 
 (defun propagate-discriminants (frame top toggle)
   (loop
@@ -669,7 +682,7 @@
           (in (compare-frame-in-parses window)))
       (loop
           for tree in (compare-frame-trees window)
-          do
+          when (ptree-output-record tree) do
             (clim:clear-output-record (ptree-output-record tree)))
       (loop
           for discriminant in (compare-frame-discrs window)
@@ -727,7 +740,7 @@
                                    (ptree-top tree)))
                           clim:+green+)
                          (t clim:+foreground-ink+))))
-          (unless (eq ink (ptree-ink tree))
+          (unless (or *tree-inhibit-tree-display-p* (eq ink (ptree-ink tree)))
             (setf (ptree-ink tree) ink)
             (recolor-tree (ptree-output-record tree) ink)
             (clim:replay (ptree-output-record tree) stream)))))))
