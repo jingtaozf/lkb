@@ -60,6 +60,17 @@
            shrunk-p visible-p          ; for display in type hierarchy
            real-parents)
            
+(defmethod common-lisp:print-object ((instance type) stream)
+  (if *print-readably*
+      ;; print so object can be read back into lisp
+      (call-next-method)
+    ;; usual case
+    (progn 
+      (write-string "#Type<" stream)
+      (write-string (string (type-name instance)) stream)
+      (write-char #\> stream))))
+
+
 (defstruct (leaf-type (:include type))
   (expanded-p nil))
         
@@ -74,8 +85,6 @@
 (defvar *types-changed* nil)
 (defvar *lexicon-changed* nil)
 
-(defvar *leaf-types* nil)
-
 (defvar *type-reload-p* nil)
 
 (defun clear-types nil
@@ -87,17 +96,11 @@
    ; don't build large type table to start off with
    (setf *ordered-type-list* nil)
    (setf *ordered-glbtype-list* nil)
-   (setf *leaf-types* nil)
+   (clear-leaf-types *leaf-types*)
    (clear-feature-table)
    (clear-expanded-lex)
 #+:allegro (when (and *gc-before-reload* *type-reload-p*) (gc t))
    (setf *type-reload-p* t))
-
-(defun clear-leaf-types nil
-  (for leaf-type in *leaf-types*
-       do
-       (setf (gethash leaf-type *types*) nil)))
-
 
 (defun clear-types-for-patching-constraints nil
    (clear-type-cache)
@@ -169,7 +172,7 @@
       (error "~%Unknown type ~A" name)))
 
 (defun set-type-entry (name new-entry)
-   (setf (gethash name *types*) new-entry))
+  (setf (gethash name *types*) new-entry))
 
 (defun remove-type-entry (name)
   ;;; effectively invalidates type but
@@ -503,9 +506,10 @@
       
 
 
-;;; Try to reduce the amount of space used by the expanded type hierarchy
+;; Remove obsolete pointers from type constraints so that the garbage
+;; collector can purge the structures they point to.
 
-(defun compress-types nil
+(defun gc-types nil
   (maphash #'(lambda (name type)
 	       (declare (ignore name))
 	       (when (type-tdfs type)
@@ -513,6 +517,8 @@
 	       (compress-dag (type-constraint type))
 	       (compress-dag (type-local-constraint type)))
 	   *types*))
+
+;;; Try to reduce the amount of space used by the expanded type hierarchy
 
 (defun clear-glbs nil
   (compress-types)
@@ -530,7 +536,8 @@
 
 (defun purge-constraints nil
   (compress-types)
-  (let* ((leaves (mapcar #'(lambda (x) (gethash x *types*)) *leaf-types*))
+  (let* ((leaves (mapcar #'(lambda (x) (gethash x *types*)) 
+			 (slot-value *leaf-types* leaf-types)))
 	 (parents 
 	  (union (reduce #'union (mapcar #'type-real-parents leaves))
 		 (reduce #'union (mapcar #'type-template-parents leaves))))

@@ -212,7 +212,8 @@
                 ;;; earlier stages are unchanged
                (when (expand-type-hierarchy-defaults)
                  (format t "~%Type file checked successfully")
-                 (clear-type-cache)     ; not for consistency, but for efficiency
+		 (gc-types)
+                 (clear-type-cache)	; not for consistency, but for efficiency
                  t)))))))))
 
 
