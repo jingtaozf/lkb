@@ -53,7 +53,7 @@
     (apply 'export-lexicon-to-file2 rest)))
 
 (defun export-lexicon-to-file2 (&key 
-				(dir *postgres-user-temp-dir*)
+				(dir (postgres-user-temp-dir))
 				file 
 				(separator *postgres-export-separator*)
 				(lexicon *lexicon*)
@@ -346,7 +346,7 @@
 ;;; export to .tdl file
 ;;;
 
-(defun export-lexicon-to-tdl (&key (dir *postgres-user-temp-dir*)
+(defun export-lexicon-to-tdl (&key (dir (postgres-user-temp-dir))
 				   file 
 				   (lexicon *lexicon*))
     (unless file

@@ -66,7 +66,8 @@
 (defvar *psql-lexicon-parameters*) ;; define in GRAMMAR/globals.lsp
 
 (defvar *postgres-temp-filename* nil)
-(defvar *postgres-user-temp-dir* 
+
+(defun postgres-user-temp-dir nil  
     (make-pathname :directory (pathname-directory (lkb-tmp-dir))))
 
 (defvar *psql-db-version* "3.08")
