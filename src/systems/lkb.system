@@ -13,14 +13,11 @@
     #+:allegro (setf excl:*enable-package-locked-errors* nil)
     :finally-do
     (progn
-;      (pushnew :lingo *features*)
-      (pushnew :lkb *features*)
       #+:allegro 
       (let ((*package* (find-package "CLIM-USER")))
-	(clim-user::set-up-lkb-interaction :core))
-      ; big for big grammar
+	(clim-user::set-up-lkb-interaction :big))
       #+:mcl
-      (cl-user::set-up-lkb-interaction :core))
+      (cl-user::set-up-lkb-interaction :big))
     :components
     ((:module "one"
               :source-pathname "main"
