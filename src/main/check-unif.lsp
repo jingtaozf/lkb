@@ -232,7 +232,7 @@
                ((types (cons type (retrieve-descendants type)))
                 (len (length types)))
                ;; (format t "~%Feature ~A, number of possible types ~A" feat len)
-               (if (<= len (integer-length most-positive-fixnum))
+               (if (<= len (integer-length most-positive-fixnum)) ; restrict to fixnum
                   (mapcar
                      #'(lambda (d)
                           (cons d
@@ -246,6 +246,13 @@
                      types)
                   freq)))
          freq)))
+
+
+(defmacro type-bit-representation-p (x)
+   ;; mcl produces inline code for ccl:fixnump, but not integerp - and we know
+   ;; that the bit representation is < most-positive-fixnum
+   #+mcl `(ccl:fixnump ,x)
+   #-mcl `(integerp ,x))
 
 
 #|
@@ -295,7 +302,7 @@
       (let ((ct (pop child-restricted)))
          (cond
             ((or (eq dt ct) (null dt) (null ct))) ; eq possibly avoids a function call
-            ((not (integerp dt))
+            ((not (type-bit-representation-p dt)) ; a type - i.e. a symbol or disjunction (list)
                (unless (find-gcsubtype dt ct)
                   (return-from restrictors-compatible-p nil)))
             ((eql (logand dt ct) 0)
@@ -324,7 +331,7 @@
             (ct (pop child-restricted)))
          (cond
             ((or (eq dt ct) (null dt) (null ct))) ; eq possibly avoids a function call
-            ((not (integerp dt))
+            ((not (type-bit-representation-p dt))
                (unless (find-gcsubtype dt ct)
                   (return-from x-restrict-and-compatible-p nil)))
             ((eql (logand dt ct) 0)

@@ -319,9 +319,10 @@
                (full-greatest-common-subtype type1-index type2)
             (when (and subtype type1-atomic-p) (setq subtype (list subtype)))
             (typecase entry
-               ((or cons null)
-                  (if (> (length entry) 15)
-                     ;; convert alist into a hash table since it's got quite big
+               ((or cons null) ; entry is an alist
+                  (if (> (length entry) 7)
+                     ;; convert alist into a hash table since it's got bigger than
+                     ;; an average empirical break-even point for gethash vs assoc
                      (let ((new (make-hash-table :test #'eq :size (* (length entry) 2))))
                         (dolist (item entry)
                            (setf (gethash (car item) new) (cdr item)))
@@ -329,9 +330,9 @@
                         (setf (gethash type1-index *type-cache*) new))
                      ;; add to end of list since it's likely to be less frequent (maybe)
                      (setf (gethash type1-index *type-cache*)
-                        (nconc (gethash type1-index *type-cache*)
+                        (nconc entry
                            (list (cons type2 (cons subtype constraintp)))))))
-               (t
+               (t ; entry is a hash table
                   (setf (gethash type2 entry) (cons subtype constraintp))))
             (values subtype constraintp)))))
 
