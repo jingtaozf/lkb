@@ -143,7 +143,7 @@
 (defun parse-item (string 
                    &key id exhaustive trace
                         readings edges derivations semantix-hook trees-hook
-                        burst nderivations)
+                        burst (nderivations 0))
   (declare (ignore derivations #-:packing id))
   
   (multiple-value-bind (return condition)
