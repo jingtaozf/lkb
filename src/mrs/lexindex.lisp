@@ -234,7 +234,7 @@
   ;;; two cases - normal relation and string-valued relation
   (if (is-valid-fs fs)
       (let* ((reln_type (extract-relation-type fs))
-             (real-type (create-type reln_type)))
+             (real-type (base-create-type reln_type)))
         (when real-type
             (when (listp real-type)
               (error "~%Disjunction not expected in ~A" id))
