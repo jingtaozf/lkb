@@ -354,7 +354,7 @@
       initially (format stream "predicates:~%~%")
       for (pred . rels) in predicates
       do 
-	(setf pred pred) ;; to avoid compiler warning
+	(setf pred pred) ;; prevent compiler warning
 	(print-predicate-full
 	  rels  :generalizep generalizep :stream stream))))
 
@@ -372,53 +372,29 @@
 (defstruct sdbt
   name
   (rows (make-hash-table))
-  last)
+  last
+  (id-struc (make-hash-table :test #'equalp))
+  )
 
 (defmethod clear ((sdbt sdbt))
-  (with-slots (rows last) sdbt
+  (with-slots (rows last id-struc) sdbt
     (clrhash rows)
     (setf last nil))
+    (clrhash (sdbt-id-struc sdbt))
   sdbt)
 
 (defmethod print-object ((object sdbt) stream)
   (let (
 	(keys-c (hash-table-count (sdbt-rows object)))
+	(hashed-c (hash-table-count (sdbt-id-struc object)))
 	)
       (format
        stream
-       "#[SDBT ~a: ~a key~p]"
-       (sdbt-name object)
+       "#[SDBT ~a: ~a key~p ~a hashed]"
+       (sdbt-name object) 
        keys-c keys-c
+       hashed-c
        )))
-
-(defstruct sdb
-  (tables (list
-	   (make-sdbt :name 'pred)
-	   (make-sdbt :name 'frame :last 0)
-	   (make-sdbt :name 'var :last 0)
-	   (make-sdbt :name 'extra :last 0)
-	   )))
-
-(defmethod clear ((sdb sdb))
-  (with-slots (tables) sdb
-    (mapc #'clear tables)
-    sdb))
-
-(defun sdb-table (sdb table-name)
-  (or
-   (car (member table-name (sdb-tables sdb) :test #'eq :key #'sdbt-name))
-   (error "unknown table name: ~a" table-name)))
-
-(defun update-table (sdb sdbt)
-  (with-slots (name) sdbt
-  (let ((foo
-	 (member name
-		 (sdb-tables sdb) 
-		 :test #'eq
-		 :key #'sdbt-name)))
-    (if foo
-	(setf (car foo) sdbt)
-      (error "no table ~a in ~a" name sdb)))))
 
 (defun next-counter (sdbt)
   (with-slots (last) sdbt
@@ -427,24 +403,6 @@
 (defun sdbt-rows-hash (row sdbt)
   (push row (gethash (car row) sdbt))
   sdbt)
-
-(defun print-sdb (sdb)
-  (let ((temp-dir (make-pathname :directory (pathname-directory (lkb::lkb-tmp-dir)))))
-    (mapc
-     #'(lambda (x)
-	 (with-open-file 
-	     (stream
-	      (format nil "~a/semi.obj.~(~a~)" temp-dir (sdbt-name x))
-	      :direction :output 
-	      :if-exists :supersede)
-	   (format t "~%writing table ~a..." (sdbt-name x))
-	   (print-sdbt x :stream stream)))
-     (sdb-tables sdb))))
-    
-(defun load-sdb (sdb dbname)
-  (mapcar #'(lambda (x)
-	      (load-sdbt x dbname))
-	  (sdb-tables sdb)))
 
 (defun load-sdbt (sdbt dbname)
   (clear sdbt)
@@ -469,12 +427,61 @@
 		     rows))
 	   (sdbt-rows sdbt)))
 
+(defstruct sdb
+  (tables (list
+	   (make-sdbt :name 'pred)
+	   (make-sdbt :name 'frame :last 0)
+	   (make-sdbt :name 'var :last 0)
+	   (make-sdbt :name 'extra :last 0)))
+  (leaf-hash (make-hash-table :test #'equal))
+  )
+
+(defmethod clear ((sdb sdb))
+  (with-slots (tables leaf-hash) sdb
+    (mapc #'clear tables)
+    (clrhash leaf-hash)
+    sdb))
+
+(defun sdb-table (sdb table-name)
+  (or
+   (car (member table-name (sdb-tables sdb) :test #'eq :key #'sdbt-name))
+   (error "unknown table name: ~a" table-name)))
+
+(defun update-table (sdb sdbt)
+  (with-slots (name) sdbt
+  (let ((foo
+	 (member name
+		 (sdb-tables sdb) 
+		 :test #'eq
+		 :key #'sdbt-name)))
+    (if foo
+	(setf (car foo) sdbt)
+      (error "no table ~a in ~a" name sdb)))))
+
+(defun print-sdb (sdb)
+  (let ((temp-dir (make-pathname :directory (pathname-directory (lkb::lkb-tmp-dir)))))
+    (mapc
+     #'(lambda (x)
+	 (with-open-file 
+	     (stream
+	      (format nil "~a/semi.obj.~(~a~)" temp-dir (sdbt-name x))
+	      :direction :output 
+	      :if-exists :supersede)
+	   (format t "~%writing table ~a..." (sdbt-name x))
+	   (print-sdbt x :stream stream)))
+     (sdb-tables sdb))))
+    
+(defun load-sdb (sdb dbname)
+  (mapcar #'(lambda (x)
+	      (load-sdbt x dbname))
+	  (sdb-tables sdb)))
+
 ;; for now...
 (defvar *sdb* (make-sdb))
 
 (defun print-semi-db (semi)
   (loop
-      with sdb = (make-sdb)
+      with sdb = (setf *sdb*(make-sdb))
       initially (format t "~%preparing semi-db tables...~%")
       for record being each hash-value in (semi-lexicon semi)
       do (process-record-db record sdb)
@@ -509,8 +516,13 @@
 ;;;          .flist = role-list
 (defun load-relations-db (rows sdb)
   (loop
+      with leaf-hash = (sdb-leaf-hash sdb)
       for row in rows
-      for pred = (second row)
+      for pred = (let* ((pred-raw (second row))
+			(pred-hash (gethash pred-raw leaf-hash)))
+		   (or
+		    pred-hash
+		    (setf (gethash pred-raw leaf-hash) pred-raw)))
       for frame-id = (third row)
       collect
 	(make-rel :pred pred
@@ -525,12 +537,21 @@
       with frame-t = (sdb-table sdb 'frame)
       with frame-r = (sdbt-rows frame-t)
       with rows = (gethash frame-id frame-r)
+      with leaf-hash = (sdb-leaf-hash sdb)
       for row in rows
       for slot = (second row)
-      for str = (third row)
+      for str = (let* ((str-raw (third row))
+		       (str-hash (gethash str-raw leaf-hash)))
+		   (or
+		    str-hash
+		    (setf (gethash  str-raw leaf-hash) str-raw)))
       for symb = (fourth row)
       for var-id = (fifth row)
-      for type = (sixth row)
+      for type = (let* ((type-raw (sixth row))
+		       (type-hash (gethash type-raw leaf-hash)))
+		   (or
+		    type-hash
+		    (setf (gethash type-raw leaf-hash) type-raw)))
       for slot-val = (cond
 		      ((and str (null symb) (null var-id))
 		       str)
@@ -538,7 +559,8 @@
 		       symb)
 		      ((and (null str) (null symb) var-id)
 		       (make-var :type type
-				      :extra (load-extra-list-db var-id sdb)))
+				 :extra (load-extra-list-db var-id sdb)
+				 :id :dummy))
 		      (t
 		       (error "(str,symb,var-id)=(~a,~a,~a)"
 			      str symb var-id)))
@@ -580,24 +602,35 @@
 
 (defun process-record-db (record sdb)
   (let* ((pred-t (sdb-table sdb 'pred))
-	(frame-t (sdb-table sdb 'frame))
-	(var-t (sdb-table sdb 'var))
-	(extra-t (sdb-table sdb 'extra))
-	
-	(pred-r (sdbt-rows pred-t))
-	(frame-r (sdbt-rows frame-t))
-	(var-r (sdbt-rows var-t))
-	(extra-r (sdbt-rows extra-t)))
+	 (frame-t (sdb-table sdb 'frame))
+	 (var-t (sdb-table sdb 'var))
+	 (extra-t (sdb-table sdb 'extra))
+	 
+	 (pred-r (sdbt-rows pred-t))
+	 (frame-r (sdbt-rows frame-t))
+	 (var-r (sdbt-rows var-t))
+	 (extra-r (sdbt-rows extra-t))
+	 
+	 ;(pred-h (sdbt-id-struc pred-t))
+	 (frame-h (sdbt-id-struc frame-t))
+	 (var-h (sdbt-id-struc var-t))
+	 (extra-h (sdbt-id-struc extra-t))
+	 )
     (loop
 	with lex-id = (semantics-record-id record)
 	with rels = (semantics-record-relations record)
 	for rel in rels
 	for pred = (rel-base-pred rel)
 	for frame = (rel-base-flist rel)
-	for frame-id = (next-counter frame-t)
+	for frame-hashed = (gethash frame frame-h)
+	for frame-id = (or frame-hashed (next-counter frame-t))
 	for pred-row = (list lex-id pred frame-id)
 	do
 	  (sdbt-rows-hash pred-row pred-r)
+	if frame-hashed
+	unless frame-hashed
+	do
+	  (setf (gethash frame frame-h) frame-id)
 	  (loop
 	      for role in frame
 	      for slot = (fvpair-feature role)
@@ -613,22 +646,31 @@
 		   (sdbt-rows-hash frame-row frame-r))
 		  (var-base
 		   (let* ((var slot-val)
-			  (var-id (next-counter var-t))
+			  (var-hashed (gethash var var-h))
+			  (var-id (or var-hashed (next-counter var-t)))
 			  (type (var-base-type var)))
 		     (setf frame-row (list frame-id slot nil nil var-id type))
 		     (sdbt-rows-hash  frame-row frame-r)
-		     (loop
-			 with extra-list = (var-base-extra var)
-			 for extra in extra-list
-			 for extra-id = (next-counter extra-t)
-			 for var-row = (list var-id extra-id)
-			 for extra-feature = (extrapair-feature extra)
-			 for extra-value = (extrapair-value extra)
-			 for extra-row = (list extra-id extra-feature extra-value)
-			 do
-			   (sdbt-rows-hash  var-row var-r)
-			   (sdbt-rows-hash  extra-row extra-r)
-			   ))))))))
+		     (unless var-hashed
+		       (setf (gethash var var-h) var-id)
+		       (loop
+			   with extra-list = (var-base-extra var)
+			   for extra in extra-list
+			   for extra-hashed = (gethash extra extra-h)
+			   for extra-id = (or extra-hashed (next-counter extra-t))
+			   for var-row = (list var-id extra-id)
+			   for extra-feature = (extrapair-feature extra)
+			   for extra-value = (extrapair-value extra)
+			   for extra-row = (list extra-id extra-feature extra-value)
+			   do
+			     (sdbt-rows-hash  var-row var-r)
+			   if extra-hashed
+			   unless extra-hashed
+			   do
+			     (setf (gethash extra extra-h) extra-id)
+			     (sdbt-rows-hash  extra-row extra-r)
+			     ))))))))
+    sdb)
 		   
 ;;; aux fns
 

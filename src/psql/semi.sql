@@ -13,25 +13,25 @@ DROP TABLE semi_extra CASCADE;
 CREATE TABLE semi_pred (
  lex_id text NOT NULL,
  pred_id text NOT NULL,
- frame_id int PRIMARY KEY
+ frame_id int NOT NULL
 );
 
 CREATE TABLE semi_frame (
- frame_id int NOT NULL REFERENCES semi_pred (frame_id),
+ frame_id int NOT NULL,
  slot text NOT NULL,
  str text,
  symb text,
- var_id int UNIQUE,
+ var_id int,
  type text
 );
 
 CREATE TABLE semi_var (
  var_id int NOT NULL,
- extra_id int PRIMARY KEY
+ extra_id int NOT NULL
 );
 
 CREATE TABLE semi_extra (
- extra_id int NOT NULL REFERENCES semi_var (extra_id),
+ extra_id int NOT NULL,
  feat text NOT NULL,
  val text NOT NULL
 );
@@ -63,6 +63,6 @@ SET ENABLE_HASHJOIN TO false;
 CREATE OR REPLACE VIEW semi_obj AS
  SELECT * FROM
   semi_pred NATURAL JOIN
-  semi_frame NATURAL JOIN
+  semi_frame NATURAL LEFT JOIN
   semi_var NATURAL LEFT JOIN
   semi_extra;
