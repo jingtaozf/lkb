@@ -11,8 +11,6 @@ cvs server: Updating pet
 cvs server: Updating .
 cvs server: Updating doc
 cvs server: Updating lkb
-P lkb/globals.lsp
-P lkb/script
 cvs server: Updating pet
 cvs server: Updating .
 cvs server: Updating lkb
@@ -28,7 +26,6 @@ cvs server: Updating .
 M Makefile
 cvs server: Updating bin
 cvs server: Updating bin/linux
-U bin/linux/yzlui
 cvs server: Updating bin/solaris
 cvs server: Updating etc
 cvs server: Updating include
@@ -162,8 +159,6 @@ cvs server: Updating src/.nasl/www
 cvs server: Updating src/ACL-CG_specific
 cvs server: Updating src/ACL_specific
 P src/ACL_specific/build.lsp
-P src/ACL_specific/compare.lsp
-P src/ACL_specific/parseout.lsp
 cvs server: Updating src/MCL_specific
 cvs server: Updating src/data
 cvs server: Updating src/data/Dikran
@@ -264,22 +259,14 @@ cvs server: Updating src/fasl/mrs
 cvs server: Updating src/general
 cvs server: Updating src/glue
 cvs server: Updating src/graft
-U src/graft/arboretum.lsp
 cvs server: Updating src/io-general
-P src/io-general/menus.lsp
 cvs server: Updating src/io-lilfes
 cvs server: Updating src/io-paths
 cvs server: Updating src/io-tdl
 cvs server: Updating src/lexdb
 cvs server: Updating src/lexicon
 cvs server: Updating src/main
-P src/main/lex.lsp
-P src/main/parse.lsp
-P src/main/rules.lsp
 cvs server: Updating src/mrs
-P src/mrs/generate.lisp
-P src/mrs/lexlookup.lisp
-P src/mrs/mrsoutput.lisp
 cvs server: Updating src/mrs/data
 cvs server: Updating src/mt
 cvs server: Updating src/non-core
@@ -294,8 +281,6 @@ cvs server: Updating src/rmrs
 cvs server: Updating src/rmrs/annlt-test
 cvs server: Updating src/rmrs/test1
 cvs server: Updating src/systems
-P src/systems/lkb.system
-P src/systems/mrs.system
 cvs server: Updating src/tproving
 cvs server: Updating src/tsdb
 cvs server: Updating src/tsdb/TeX
@@ -395,7 +380,7 @@ cvs server: Updating src/www/linux
 cvs server: Updating src/xml
 Checking in ./src/version.lsp;
 /lingo/CVS/newlkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.309; previous revision: 1.308
+new revision: 1.310; previous revision: 1.309
 done
 make[1]: Entering directory `/lingo/www/aserve/eo/lkb'
 ( \
@@ -1400,7 +1385,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-6.2 [Linux (x86)] (Apr 24, 2004 14:19)
+6.2 [Linux (x86)] (Apr 24, 2004 14:25)
 Copyright (C) 1985-2002, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -1788,6 +1773,7 @@ T
 ;; Note: Switching the following external-formats to runtime mode
 ;;       since prebuilt filled templates for them were found and loaded:
 ;;       ':UNICODE-BASE' 
+;   Loading /lingo/www/aserve/eo/lkb/src/systems/mt.system
 ;   Loading /lingo/www/aserve/eo/lkb/src/systems/mrs.system
 ;   Loading /lingo/www/aserve/eo/lkb/src/systems/lkb.system
 ;   Loading /lingo/www/aserve/eo/lkb/src/systems/ppcre.system
@@ -2382,6 +2368,43 @@ T
 ;;; Writing fasl file /lingo/www/aserve/eo/lkb/src/.l6cl/mrs/semi.fasl
 ;;; Fasl write complete
 ;   Libfasl loading /lingo/www/aserve/eo/lkb/src/.l6cl/mrs/semi.fasl
+;   Loading /lingo/www/aserve/eo/lkb/src/mt/mt-package.lisp
+;   Loading /lingo/www/aserve/eo/lkb/src/mt/version.lisp
+;   Loading /lingo/www/aserve/eo/lkb/src/mt/mrsglobals.lisp
+;;; Compiling file /lingo/www/aserve/eo/lkb/src/mt/globals.lisp
+;;; Writing fasl file /lingo/www/aserve/eo/lkb/src/.l6cl/mt/globals.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/aserve/eo/lkb/src/.l6cl/mt/globals.fasl
+;;; Compiling file /lingo/www/aserve/eo/lkb/src/mt/patches.lisp
+;;; Writing fasl file /lingo/www/aserve/eo/lkb/src/.l6cl/mt/patches.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/aserve/eo/lkb/src/.l6cl/mt/patches.fasl
+;;; Compiling file /lingo/www/aserve/eo/lkb/src/mt/mrs.lisp
+;;; Writing fasl file /lingo/www/aserve/eo/lkb/src/.l6cl/mt/mrs.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/aserve/eo/lkb/src/.l6cl/mt/mrs.fasl
+;;; Compiling file /lingo/www/aserve/eo/lkb/src/mt/transfer.lisp
+;;; Writing fasl file
+;;;   /lingo/www/aserve/eo/lkb/src/.l6cl/mt/transfer.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/aserve/eo/lkb/src/.l6cl/mt/transfer.fasl
+;;; Compiling file /lingo/www/aserve/eo/lkb/src/mt/translate.lisp
+;;; Writing fasl file
+;;;   /lingo/www/aserve/eo/lkb/src/.l6cl/mt/translate.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/aserve/eo/lkb/src/.l6cl/mt/translate.fasl
+;;; Compiling file /lingo/www/aserve/eo/lkb/src/mt/clim.lisp
+;;; Writing fasl file /lingo/www/aserve/eo/lkb/src/.l6cl/mt/clim.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/aserve/eo/lkb/src/.l6cl/mt/clim.fasl
+;;; Compiling file /lingo/www/aserve/eo/lkb/src/mt/semi.lisp
+;;; Writing fasl file /lingo/www/aserve/eo/lkb/src/.l6cl/mt/semi.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/aserve/eo/lkb/src/.l6cl/mt/semi.fasl
+;;; Compiling file /lingo/www/aserve/eo/lkb/src/mt/lm.lisp
+;;; Writing fasl file /lingo/www/aserve/eo/lkb/src/.l6cl/mt/lm.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/aserve/eo/lkb/src/.l6cl/mt/lm.fasl
 
 NIL 
  #|
@@ -2405,7 +2428,7 @@ NIL
  (REQUIRE :NOCOMPILER)
  |#
 ; Libfasl from bundle code/nocompiler.fasl.
-102611272 bytes have been tenured, next gc will be global.
+100921752 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 
 T 
@@ -3188,7 +3211,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/gc.fasl
 ;;; Compiling file /lingo/www/aserve/eo/lkb/src/tsdb/lisp/yy.lisp
-gc-after-hook(): local; new: 1496992; old: 253368; pending: 40; efficiency: 84.
+gc-after-hook(): local; new: 1496976; old: 253368; pending: 24; efficiency: 83.
 ;;; Writing fasl file /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/yy.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/yy.fasl
@@ -3206,14 +3229,14 @@ gc-after-hook(): local; new: 1496992; old: 253368; pending: 40; efficiency: 84.
 ; Fast loading
 ;    /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/tnt-interface.fasl
 ;;; Compiling file /lingo/www/aserve/eo/lkb/src/tsdb/lisp/redwoods.lisp
-gc-after-hook(): local; new: 2168976; old: 57904; pending: 0; efficiency: 86.
-gc-after-hook(): local; new: 1345976; old: 318048; pending: 0; efficiency: 89.
+gc-after-hook(): local; new: 2169064; old: 57904; pending: 0; efficiency: 88.
+gc-after-hook(): local; new: 1345952; old: 318048; pending: 0; efficiency: 90.
 ;;; Writing fasl file
 ;;;   /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/redwoods.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/redwoods.fasl
 ;;; Compiling file /lingo/www/aserve/eo/lkb/src/tsdb/lisp/lsp.lisp
-gc-after-hook(): local; new: 613904; old: 341488; pending: 0; efficiency: 90.
+gc-after-hook(): local; new: 613920; old: 341488; pending: 0; efficiency: 90.
 ;;; Writing fasl file /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/lsp.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/lsp.fasl
@@ -3230,7 +3253,7 @@ gc-after-hook(): local; new: 613904; old: 341488; pending: 0; efficiency: 90.
 ;;; Fasl write complete
 ; Fast loading /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/pcfg.fasl
 ;;; Compiling file /lingo/www/aserve/eo/lkb/src/tsdb/lisp/maxent.lisp
-gc-after-hook(): local; new: 1062272; old: 109984; pending: 0; efficiency: 84.
+gc-after-hook(): local; new: 1062240; old: 109984; pending: 0; efficiency: 83.
 ;;; Writing fasl file
 ;;;   /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/maxent.fasl
 ;;; Fasl write complete
