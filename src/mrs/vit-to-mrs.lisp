@@ -567,16 +567,19 @@ with an ARG4 without changing the relation type
   'cl-user::*top*)
 
 (defun make-pers-num (pers num)
-  (let* ((real-pers (and (not (eql (car pers) 'cl-user::*top*)) (car pers)))
-         (real-num (and (not (eql (car num) 'cl-user::*top*)) (car num)))
+  (let* ((real-pers (if (not (eql (car pers) 'cl-user::*top*)) (car pers)))
+         (real-num (if (not (eql (car num) 'cl-user::*top*)) (car num)))
          (val
     (cond ((and real-pers real-num)
            (intern (concatenate 'string (format nil "~A" real-pers)
                                 (format nil "~A" real-num))
                    :cl-user))
           (real-pers (intern (concatenate 'string (format nil "~A" real-pers)
-                                "PER"))
-                     :cl-user)
+                                "PER")
+                             :cl-user))
+          (real-num (intern (concatenate 'string "3" 
+                                         (format nil "~A" real-num))
+                     :cl-user))
           (t nil))))
     (if val
         (make-fvpair :feature 
@@ -587,12 +590,13 @@ with an ARG4 without changing the relation type
 (defun make-extra-paths (pred val second-val)
   (for local in (list val second-val)
        filter
-       (multiple-value-bind (mrspath mrsvalue)
-           (lookup-vit-to-mrs-extra pred local)
-         (when (and mrspath mrsvalue)
-           (make-fvpair :feature 
-                        (cl-user::create-typed-path-from-feature-list mrspath)
-                        :value mrsvalue)))))
+       (when local
+         (multiple-value-bind (mrspath mrsvalue)
+             (lookup-vit-to-mrs-extra pred local)
+           (when (and mrspath mrsvalue)
+             (make-fvpair :feature 
+                          (cl-user::create-typed-path-from-feature-list mrspath)
+                          :value mrsvalue))))))
   
 
 (defun lookup-vit-to-mrs-extra (pred val)
@@ -609,6 +613,17 @@ with an ARG4 without changing the relation type
    ((and (string-equal (string pred) "prontype")
            (string-equal (string val) "std"))
     (values '(cl-user::prontype) 'cl-user::std_pron))
+   ((and (string-equal (string pred) "prontype")
+           (string-equal (string val) "demon"))
+    (values '(cl-user::prontype) 'cl-user::std_pron))
+   ;;; FIX - grammar mismatch
+   ((and (string-equal (string pred) "prontype")
+           (string-equal (string val) "event"))
+    (values '(cl-user::prontype) 'cl-user::std_pron))
+   ;;; FIX??
+   ((and (string-equal (string pred) "prontype")
+           (string-equal (string val) "third"))
+    (values '(cl-user::png cl-user::pn) 'cl-user::3SG*))
    ((string-equal (string pred) "gend")
     (cond ((string-equal (string val) "masc")
            (values '(cl-user::png cl-user::gen) 'cl-user::masc))
