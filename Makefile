@@ -43,10 +43,14 @@ all: lkb erg matrix spanish itsdb
 #
 # link structure on CSLI LinGO ftp(1) site
 #
-links:
-	for i in ${LINKS}; do \
-	  ${LN} ${TARGET}/${DATE}/$${i} ${TARGET}; \
-	done
+links: 
+	( \
+	  cd ${TARGET}; \
+	  for i in ${LINKS}; do \
+	    ${RM} $${i}; \
+	    ${LN} ./${DATE}/$${i}; \
+	  done \
+	)
 
 #
 # LKB grammar development environment
