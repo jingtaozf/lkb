@@ -71,14 +71,25 @@
    (edge
       (:constructor make-edge
                     (&key id score category rule dag odag 
-                          (dag-restricted (restrict-fs (tdfs-indef dag)))
+                          (dag-restricted (when dag
+                                            (restrict-fs (tdfs-indef dag))))
                           leaves lex-ids parents children morph-history 
-                          spelling-change from to
+                          spelling-change from to label
                           #+:packing packed #+:packing equivalent 
                           #+:packing frozen)))
    id score category rule dag odag dag-restricted leaves lex-ids
-   parents children morph-history spelling-change from to
+   parents children morph-history spelling-change from to label
    #+:packing packed #+:packing equivalent #+:packing frozen)
+
+(defmethod print-object ((instance edge) stream)
+  (format 
+   stream 
+   "#[`~(~a~)' edge # ~a <~{~a~^ ~}>]"
+   (let ((rule (edge-rule instance)))
+     (if (stringp rule) rule (rule-id rule)))
+   (edge-id instance) (loop 
+                          for child in (edge-children instance)
+                          collect (edge-id child))))
 
 (defstruct
    (mrecord

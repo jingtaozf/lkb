@@ -446,9 +446,12 @@
 				 (if (g-edge-p edge) "G" "P"))
 			 nil)))
    
-(defun make-new-parse-tree (edge level)
-  (with-unification-context (nil)
-    (copy-parse-tree (rebuild-edge (car (make-new-parse-tree1 edge level))))))
+(defun make-new-parse-tree (edge level &optional labelp)
+  (let ((tree (with-unification-context (nil)
+                (copy-parse-tree 
+                 (rebuild-edge (car (make-new-parse-tree1 edge level)))))))
+    (when labelp (label-parse-tree tree))
+    tree))
 
 (defun make-new-parse-tree1 (edge level)
   ;; show active edge nodes at first level but not thereafter
@@ -533,19 +536,27 @@
   (mapc #'copy-parse-tree (get edge-symbol 'daughters))
   edge-symbol)
 
+(defun label-parse-tree (symbol)
+  (get-string-for-edge symbol)
+  (loop
+      for daughter in (get symbol 'daughters)
+      do 
+        (label-parse-tree daughter)))
+
 (defun get-string-for-edge (edge-symbol)
   (let* ((edge-record (get edge-symbol 'edge-record))
          (edge-fs (get edge-symbol 'edge-fs))
          (label (if edge-record
                   (tree-node-text-string
-                   (or (when edge-fs (find-category-abb edge-fs))
+                   (or (edge-label edge-record)
+                       (when edge-fs (find-category-abb edge-fs))
                        (edge-category edge-record)))
                   (tree-node-text-string edge-symbol))))
     ;;
-    ;; record edge label in spare slot: `odag' is only ever used within the
-    ;; (active, packing) parser.                          (9-apr-01  -  oe)
+    ;; record edge label in edge; at least the tree comparison machinery will
+    ;; expect to find it here.
     ;;
-    (when edge-record (setf (edge-odag edge-record) label))
+    (when edge-record (setf (edge-label edge-record) label))
     (values label (if edge-record nil t))))
 
 

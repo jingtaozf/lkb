@@ -130,7 +130,8 @@
 	       (:file "active")       ; experimental key-driven (active) parser
                (:file "brackets")     ; partial bracketing constraints
                (:file "morph")        ; morphographemics
-               (:file "check-unif"))) ; for efficiency 
+               (:file "check-unif")     ; for efficiency 
+               (:file "discriminants")))
 
      (:module "various io"
       :source-pathname "io-general"
