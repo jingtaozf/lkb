@@ -88,13 +88,6 @@
       (setf (lkb::compare-frame-ids frame) 
         (loop for item in items collect (get-field :i-id item))))
     
-    (when (functionp *statistics-result-filter*)
-      (setf items
-        (loop
-            for item in items
-            for result = (funcall *statistics-result-filter* item)
-            when result collect result)))
-    
     (when meter
       (status :text message)
       (meter :value 0))

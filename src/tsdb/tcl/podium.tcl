@@ -31,7 +31,7 @@ if {![info exists globals(data)]} {
   set globals(data) "";
 }; # if
 if {![info exists globals(encoding)]} {
-  set globals(encoding) "";
+  set globals(encoding) "utf-8";
 }; # if
 if {![info exists globals(balloons)]} {
   set globals(balloons) "$globals(podium_home)balloons";
@@ -77,6 +77,10 @@ set globals(menu_font) {Helvetica 14 bold};
 set globals(process,type) :parse;
 if {![info exists globals(process,protocol)]} {
   set globals(process,protocol) 1;
+}; # if
+
+if {![info exists globals(readers,mrs)]} {
+  set globals(readers,mrs) nil;
 }; # if
 
 set globals(graph,by) :i-length;
@@ -922,8 +926,11 @@ proc main {} {
     -label "Aggregation Parameters" -command aggregate_input;
   .menu.options.menu add separator;
   .menu.options.menu add cascade \
-    -label "Result Filter" \
-    -menu .menu.options.menu.filter;
+    -label "Result Readers" \
+    -menu .menu.options.menu.readers;
+  .menu.options.menu add cascade \
+    -label "Result Filters" \
+    -menu .menu.options.menu.filters;
   .menu.options.menu add cascade \
     -label "Switches" -menu .menu.options.menu.switches;
 
@@ -995,11 +1002,33 @@ proc main {} {
     -variable globals(aggregate_dimension) -value :space \
     -command {tsdb_set aggregate_dimension};
 
-  menu .menu.options.menu.filter -tearoff 0
-  .menu.options.menu.update add command -label "MRS Scoping" \
-      -command [list tsdb_filter scoping];
-  .menu.options.menu.update add command -label "ED Extraction" \
-      -command [list tsdb_filter dependencies];
+  menu .menu.options.menu.readers -tearoff 0
+  .menu.options.menu.readers add radiobutton -label "MRS (None)" \
+    -variable globals(readers,mrs) -value nil \
+    -command tsdb_readers;
+  .menu.options.menu.readers add radiobutton -label "MRS (Simple)" \
+    -variable globals(readers,mrs) -value "\"mrs::read-mrs-from-string\"" \
+    -command tsdb_readers;
+  .menu.options.menu.readers add radiobutton -label "MRS (Robust)" \
+    -variable globals(readers,mrs) -value "\"mrs::read-rmrs-from-string\"" \
+    -command tsdb_readers;
+  .menu.options.menu.readers add radiobutton -label "MRS (XML)" \
+    -variable globals(readers,mrs) -value "xml" \
+    -command tsdb_readers -state disabled;
+
+  menu .menu.options.menu.filters -tearoff 0
+  .menu.options.menu.filters add checkbutton -label "MRS Sparseness" \
+    -variable globals(filters,sparseness) \
+    -command tsdb_filters;
+  .menu.options.menu.filters add checkbutton -label "MRS Scoping" \
+    -variable globals(filters,scope) \
+    -command tsdb_filters;
+  .menu.options.menu.filters add checkbutton -label "MRS Fragmentation" \
+    -variable globals(filters,fragmentation) \
+    -command tsdb_filters -state disabled;
+  .menu.options.menu.filters add checkbutton -label "MRS Connectivity" \
+    -variable globals(filters,connectivity) \
+    -command tsdb_filters -state disabled;
 
   menu .menu.options.menu.switches -tearoff 0
   .menu.options.menu.switches add checkbutton \

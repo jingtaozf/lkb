@@ -91,6 +91,9 @@
 
 (defun initialize-tsdb (&optional cache &key action background name pattern)
   
+  (declare (special *statistics-readers* *statistics-browsers* 
+                    *statistics-predicates*))
+  
   (unless (and *tsdb-initialized-p* (null action))
     (let* ((*tsdb-initialized-p* t)
            (tsdbrc (dir-and-name (user-homedir-pathname) ".tsdbrc"))
@@ -108,6 +111,12 @@
         (setf *tsdb-skeletons* (with-open-file (stream index 
                                                 :direction :input)
                                  (read stream nil nil))))
+      (when (and (find-package :mrs) 
+                 (null (gethash :mrs *statistics-readers*)))
+        (setf (gethash :mrs *statistics-readers*) 
+          "mrs::read-mrs-from-string")
+        (setf (gethash :mrs *statistics-browsers*) "mrs::browse-mrs")
+        (setf (gethash :mrs *statistics-predicates*) "mrs::safe-mrs-unequalp"))
       (when (and (or (null action) (member action '(:cache :all))) cache)
         (load-cache :background background :name name :pattern pattern))))
   (unless action (setf *tsdb-initialized-p* t)))

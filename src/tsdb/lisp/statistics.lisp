@@ -94,7 +94,7 @@
 (defparameter *statistics-aggregate-maximum* 
   (min 20000 array-total-size-limit))
 
-(defparameter *statistics-result-filter* nil)
+(defparameter *statistics-result-filter* #'mrs-result-filter)
 
 (defparameter *statistics-critical-line-threshold* 500)
 
@@ -262,7 +262,8 @@
       (error "profile-granularity(): invalid `~a'" data)))))
 
 (defun analyze (data 
-                &key condition meter message thorough trees extras (readerp t)
+                &key condition meter message thorough trees extras 
+                     (readerp t) filter
                      score gold sloppyp scorep)
 
   (declare (optimize (speed 3) (safety 0) (space 0)))
@@ -271,12 +272,20 @@
                     (format nil "retrieving `~a' data ..." data)))
          (extras (and extras t))
          (trees (and trees t))
-         (foo (if (consp thorough) (format nil "~{~(~a~)~^#~}" thorough) "t"))
+         (filter (when (and filter
+                            (functionp *statistics-result-filter*)
+                            *filter-test*)
+                   (format 
+                    nil
+                    "~{~(~a~)~^+~}~@[+~a~]"
+                    *filter-test* *filter-mrs-relations-ratio*)))
          (key (format 
                nil 
                "~a~@[ @ ~a~]~@[ # ~a~]~@[~* : trees~]~
-                ~@[~* : extras~]~@[ on ~a~@[ (scores)~]~]" 
-               data condition foo trees extras
+                ~@[ for ~a~]~@[~* : extras~]~@[ on ~a~@[ (scores)~]~]" 
+               data condition 
+               (if (consp thorough) (format nil "~{~(~a~)~^#~}" thorough) "t")
+               trees filter extras
                (cond
                 ((stringp score) score)
                 (score "itself")
@@ -438,7 +447,14 @@
             (rank-items sorted :gold gold :score score :condition condition 
                         :sloppyp sloppyp :scorep scorep)))
         
-        (setf (gethash key *tsdb-profile-cache*) result)))
+        (when filter
+          (setf result 
+            (loop
+                for item in result
+                for foo = (funcall *statistics-result-filter* item)
+                when foo collect foo))
+        (setf (gethash key *tsdb-profile-cache*) result))))
+
     (when meter 
       (meter :value (get-field :end meter))
       (when message 
@@ -2128,20 +2144,13 @@
           (if (stringp data) 
             (analyze data 
                      :condition condition :thorough thorough
-                     :meter meter :message t)
+                     :filter t :meter meter :message t)
             data))
          (message (format nil "generating `~a' result view ..." data))
          (stream (create-output-stream file append))
          (items (sort (copy-seq items) 
                       #'< :key #'(lambda (foo) (get-field :i-id foo)))))
 
-    (when (functionp *statistics-result-filter*)
-      (setf items
-        (loop
-            for item in items
-            for result = (funcall *statistics-result-filter* item)
-            when result collect result)))
-    
     (when meter
       (when (> (length items) *statistics-critical-line-threshold*)
         (send-to-podium "tsdb_beep" :wait t)

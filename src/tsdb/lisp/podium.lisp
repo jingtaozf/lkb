@@ -98,6 +98,11 @@
       set globals(tree,delay) ~a~%~
       set globals(tree,thinning_normalize_p) ~:[0~;1~]~%~
       set globals(tree,thinning_export_p) ~:[0~;1~]~%~
+      ~@[set globals(readers,mrs) {~s}~%~]~
+      set globals(filter,sparseness) ~:[0~;1~]~%~
+      set globals(filter,scope) ~:[0~;1~]~%~
+      set globals(filter,fragmentation) ~:[0~;1~]~%~
+      set globals(filter,connectivity) ~:[0~;1~]~%~
       set globals(cache_connections_p) ~:[0~;1~]~%~
       set globals(gc_p) ~(~a~)~%~
       set globals(tenure_p) ~:[0~;1~]~%~%"
@@ -126,6 +131,11 @@
      delay (if (numberp delay) delay 0)
      *redwoods-thinning-normalize-p*
      *redwoods-thinning-export-p*
+     (gethash :mrs *statistics-readers*)
+     (smember :sparseness *filter-test*)
+     (smember :scope *filter-test*)
+     (smember :fragmentation *filter-test*)
+     (smember :connectivity *filter-test*)
      *tsdb-cache-connections-p*
      *tsdb-gc-p*
      *tsdb-tenure-p*)
@@ -219,9 +229,20 @@
                                           *tsdb-cache-connections-p*))
                          *tsdb-cache-connections-p*)
                 (close-connections :data (symbol-value symbol)))
-              (when (or (null package) (find-package package))
-                (set (intern symbol (or package :tsdb)) value))
+              (if (atom symbol)
+                (when (or (null package) (find-package package))
+                  (set (intern symbol (or package :tsdb)) value))
+                (let ((property (first symbol))
+                      (attribute (second symbol)))
+                  (case property
+                    (:reader
+                     (setf (gethash attribute *statistics-readers*) value))
+                    (:predicate
+                     (setf (gethash attribute *statistics-predicates*) value))
+                    (:browser
+                     (setf (gethash attribute *statistics-browsers*) value)))))
               (when (eq symbol '*tsdb-home*)
+                (close-connections)
                 (setf *tsdb-profile-cache* 
                   (make-hash-table :size 42 :test #'equal)))))
 

@@ -299,7 +299,7 @@
                      (loop
                          with *package* = *lkb-package*
                          with nresults = (if (<= nresults 0)
-                                             (length *parse-record*)
+                                           (length *parse-record*)
                                            nresults)
                          for i from 1
                          for parse in (reverse *parse-record*)

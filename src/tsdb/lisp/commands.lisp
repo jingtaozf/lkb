@@ -50,8 +50,8 @@
                         (format nil "(~a) && (readings >= 1)" condition))
                       condition))
          (results (when mrs
-                    (select '("i-id" "parse-id" "result-id" "mrs")
-                            '(:integer :integer :integer :string)
+                    (select '("i-id" "parse-id" "result-id" "derivation" "mrs")
+                            '(:integer :integer :integer :string :string)
                             '("parse" "result")
                             condition
                             mrs

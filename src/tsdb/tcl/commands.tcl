@@ -1136,18 +1136,34 @@ proc tsdb_trees {action} {
 
 }; # tsdb_trees()
 
-proc tsdb_filter {code} {
+proc tsdb_readers {} {
 
   global globals;
 
-  switch $code {
-    scoping {
-    }
-    dependencies {
+  switch $globals(readers,mrs) {
+    nil -
+    "\"mrs::read-mrs-from-string\"" -
+    "\"mrs::read-rmrs-from-string\"" {
+      set command "(set (:reader :mrs) $globals(readers,mrs))";
+      send_to_lisp :event $command;
     }
   }; # switch
 
-}; # if
+}; # tsdb_readers()
+
+proc tsdb_filters {} {
+
+  global globals;
+
+  set code "(";
+  if {$globals(filters,sparseness)} { set code "$code :sparseness"; }
+  if {$globals(filters,scope)} { set code "$code :scope"; }
+  if {$globals(filters,fragmentation)} { set code "$code :fragmentation"; }
+  if {$globals(filters,connectivity)} { set code "$code :connectivity"; }
+  set code "$code)";
+  tsdb_set "*filter-test*" $code;
+
+}; # tsdb_filters()
 
 proc tsdb_switch {code} {
 
