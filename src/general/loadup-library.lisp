@@ -378,6 +378,8 @@ lists of the form (<modulename> <version no.> <:active-or-NIL>)")
 ;;; these paths will be set by reset-system-paths()
 
 (defparameter bin-dir NIL)
+(defparameter include-dir NIL)
+(defparameter lib-dir NIL)
 (defparameter tmp-dir NIL)
 (defparameter grammar-dir NIL)
 (defparameter *source-grammar* NIL)
@@ -390,6 +392,10 @@ lists of the form (<modulename> <version no.> <:active-or-NIL>)")
     (dir-append (user-homedir-pathname) '(:relative "tmp")))
   (setq bin-dir
 	(dir-append sys-home (list :relative "bin" %system-binaries%)))
+  (setq include-dir
+	(dir-append sys-home (list :relative "include")))
+  (setq lib-dir
+	(dir-append sys-home (list :relative "lib" %system-binaries%)))
   (setq grammar-dir
 	(dir-append (get-sources-dir "grammar") '(:relative "grammar"))))
 
@@ -424,7 +430,7 @@ warnings to print. 0: no warnings,
      reset-system-paths
      *directories-list*
      module-loaded-p
-     general-dir tmp-dir bin-dir *source-grammar*
+     general-dir tmp-dir bin-dir include-dir lib-dir *source-grammar*
      gen-compile-and-load-operation
      gen-load-file-operation
      run-process
