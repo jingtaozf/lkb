@@ -135,8 +135,10 @@ ns-wh-int-cl := wh-int-cl & binary-construction &
 ; reprise-in-situ-interrogative-clause (rep-int-cl)
 rep-int-cl := is-int-cl & unary-construction &
 [ SS.LOC.CONT.PROP.SOA.NUCL.MSG-ARG #1,
-  HD-DTR.SS.LOC.CONT #1 ].
+  HD-DTR.SS [LOC.CONT #1,
+             SLASH.LIST e-list-of-locals ]].
 
+;;;jtb 06/29/01 just testing.
 
 
 ; direct-interrogative-clause (dir-int-cl)
