@@ -125,6 +125,8 @@
        #+(or :lkb :mrs)
        (:file "ptb")
        #+(or :lkb :mrs)
+       (:file "rasp")
+       #+(or :lkb :mrs)
        (:file "pcfg")
        #+(or :lkb :mrs)
        (:file "maxent")))
