@@ -29,6 +29,8 @@
  ((:path . "vm13") (:content . "VerbMobil CD # 13"))
  ((:path . "vm31") (:content . "VerbMobil CD # 31"))
  ((:path . "vm32") (:content . "VerbMobil CD # 32"))
+ ((:path . "spark") (:content . "Unbalanced Spark of Corpora Extracts"))
+ ((:path . "charge") (:content . "Unbalanced Charge of Corpora Extracts"))
  ((:path . "fuse") (:content . "Balanced Fuse of Corpora Extracts"))
  ((:path . "blend") (:content . "Balanced Blend of Corpora Extracts"))
  ((:path . "aged") (:content . "Aged VerbMobil Data"))

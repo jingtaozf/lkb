@@ -1476,9 +1476,6 @@
                               spartanp (scorep t) (n 1) test loosep
                               (format :latex))
   
-  #+:debug
-  (setf %data% data %gold% gold)
-  
   ;;
   ;; score results in .data. against ground truth in .gold.  operates in
   ;; several slightly distinct modes: (i) using the implicit parse ranking in
@@ -1502,8 +1499,9 @@
                             :condition condition :gold gold 
                             :readerp (eq test :derivation))
                    gold))
-         (gaggregates (aggregate-by-analogy gitems aggregates))
+         (gaggregates (aggregate-by-analogy gitems aggregates :loosep t))
          results)
+
     (loop
         with tnitems = 0
         with tnscores = 0
@@ -1531,8 +1529,16 @@
               for i-id = (get-field :i-id item)
               for length = (get-field :i-length item)
               for readings = (get-field :readings item)
-              for gitem = (when (= (get-field :i-id (first gdata)) i-id)
-                            (pop gdata))
+              for gitem = (loop
+			      for gitem = (first gdata)
+			      while (and gitem
+					 (< (get-field :i-id gitem) i-id))
+			      do (pop gdata)
+			      finally
+				(return 
+				  (let ((foo (get-field :i-id (first gdata))))
+				    (when (and foo (= foo i-id))
+				      (pop gdata)))))
               do
                 (multiple-value-bind (i score loosep)
                     (score-item item gitem :test test :n n :loosep loosep)

@@ -811,8 +811,7 @@
             result))))))
 
 (defun aggregate-by-analogy (data analogon
-                             &key condition (key :i-id)
-                                  meter)
+                             &key condition (key :i-id) loosep meter)
   
   (when meter (meter :value (get-field :start meter)))
   (labels ((find! (value items key)
@@ -830,8 +829,8 @@
                           for item in items
                           for value = (get-field key item)
                           for match = (find! value data key)
-                          unless match return nil
-                          else collect match)
+                          when match collect match
+			  else unless loosep return nil)
         when analogy
         collect (list* (first sample) (second sample) analogy)
         finally
