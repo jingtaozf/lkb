@@ -206,6 +206,10 @@
                 (setf others (append others (list (fvpair-value fvp))))))))
     (list args others)))  
 
+#|
+;; This definition is outdated with regard to the special-label-hack, since
+;; handles are no longer on the rel-flist.  Still need this hack, apparently,
+;; for support=stat.
 (defun collect-all-handel-vars (rels)
   ;;; Given a set of relations, this returns the list of labels and of
   ;;; groups (i.e. labels which turn up more than once)
@@ -236,6 +240,37 @@
               (if (member (var-id var) except-list)
                   t
                 (pushnew (var-id var) group-list)))))
+    (values label-list group-list)))
+|#
+
+(defun collect-all-handel-vars (rels)
+  ;;; Given a set of relations, this returns the list of labels and of
+  ;;; groups (i.e. labels which turn up more than once)
+  ;;; a bit redundant, given that we're using the scoping code,
+  ;;; but I don't want to mess with that unnecessarily
+  ;;; label-list now is a assoc-list (handel . label)
+  ;;; WK: now we treat every handel as a group
+  (let ((label-list nil)
+        (group-list nil)
+        (except-list nil))
+    (loop for rel in rels
+         do
+          (let ((var (rel-handel rel))
+                (label (rel-label rel))
+                (sp-rel (assoc (rel-sort rel)
+                               *vm-special-label-hack-list*)))
+            (when (var-p var)
+              (pushnew (cons (var-id var) 
+                             (if (var-p label)
+                                 (var-id label))) 
+                       label-list)
+              (if sp-rel
+                  (let* ((arg (rel-handel rel)))
+                    (when (is-handel-var arg)
+                      (push (var-id arg) except-list)
+                      (setf group-list (delete (var-id arg) group-list))
+		      )))
+	      (pushnew (var-id var) group-list))))
     (values label-list group-list)))
 
 
@@ -352,7 +387,7 @@
           (when (and vit standalone)
             (write-vit-pretty t (horrible-hack-2 vit))
             (format t "~%"))
-	  ;(check-vit vit)
+	  (check-vit vit)
           vit))
     (let ((vit (german-mrs-to-vit mrs-psoa)))
       (when standalone
@@ -545,18 +580,24 @@
 
 ;;; for VM sid comes from the parser and is stored in *segment-id*
 (defun construct-segment-description (mrs)
-  (make-p-term :predicate "vitID"
-               :args (list (if *segment-id*
-                               *segment-id*
-                             (let ((lang (case *mrs-for-language*
-                                           (german '(ge syntaxger))
-                                           (english '(en syntaxeng))
-                                           (japanese '(jp syntaxjap))
-                                           (t '(de syntaxger)))))
-                               (make-sid :sourcelanguage (first lang)
-                                         :currentlanguage (first lang)
-                                         :sender (second lang))))
-                           (collect-whg-id-labels (psoa-wgliszt mrs)))))
+  (let* ((whg-id-labels (collect-whg-id-labels (psoa-wgliszt mrs)))
+	 (first-word-id (when whg-id-labels (whg-id-id (first whg-id-labels))))
+	 (last-word-id (when whg-id-labels (whg-id-id (first 
+						       (last whg-id-labels))))))
+    (make-p-term :predicate "vitID"
+		 :args (list (if *segment-id*
+				 *segment-id*
+			       (let ((lang (case *mrs-for-language*
+					     (german '(ge syntaxger))
+					     (english '(en syntaxeng))
+					     (japanese '(jp syntaxjap))
+					     (t '(de syntaxger)))))
+				 (make-sid :sourcelanguage (first lang)
+					   :currentlanguage (first lang)
+					   :begintime first-word-id
+					   :endtime last-word-id
+					   :sender (second lang))))
+			     whg-id-labels))))
 
 (defun collect-whg-id-labels (wg-liszt)
   (if wg-liszt
@@ -587,7 +628,9 @@
 ;;; we also treat sentence mood (message) here
 (defun construct-main-label (mrs vit mood labels)
   (let* ((tophandel (convert-mrs-val-to-vit (psoa-top-h mrs) labels))
-         (mainlabel (convert-mrs-val-to-vit (psoa-handel mrs) labels))
+         (mainlabel (convert-mrs-val-to-vit (if (mrs-language '(english))
+						(psoa-key-h mrs)
+					      (psoa-handel mrs)) labels))
          (index (convert-mrs-val-to-vit (psoa-index mrs) labels))
          (tophole tophandel)
 ;         (leq (make-p-term :predicate 'leq
@@ -977,9 +1020,8 @@
 	     (top-handel (get-var-num (psoa-handel mrs-psoa)))
 	     (all-rels (psoa-liszt mrs-psoa))
 	     (rels (loop for rel in all-rels
-		       appending (unless (assoc (rel-sort rel)
-						*vm-special-label-hack-list*)
-				   (list rel)))))
+		       appending 
+				   (list rel))))
   ;;; Equalities are just calculated from the bindings
   ;;; initially, don't bother to distinguish between equalities that 
   ;;; correspond to equalities in VIT and those that correspond to groupings

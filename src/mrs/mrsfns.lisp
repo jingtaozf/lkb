@@ -33,27 +33,33 @@
 						(first binding-sets)))
 		    (output-scoped-mrs mrs-struct :stream stream))))))))
 
+#|
 (defun expand-tsdb-results (result-file dest-file &optional (vitp nil))
-  (excl::run-shell-command (format nil "sort -n < ~A | sed -f ~A > ~A" 
-				   result-file
-				   "~/grammar/tsdb/tsnlpsed"
-				   (concatenate 'string result-file ".out")))
-  (let ((*raw-mrs-output-p* nil))
+  (let ((sent-list
+	 (tsdb::select "(parse-id i-input)" :string "(item result)" nil 
+		       result-file))
+	(tree-list
+	 (tsdb::select "(parse-id tree)" :string "(item result)" nil 
+		       result-file))
+	(mrs-list
+	 (tsdb::select "(parse-id mrs)" :string "(item result)" nil result-file))
+	(*raw-mrs-output-p* nil))
     (with-open-file 
-	(istream (concatenate 'string result-file ".out") :direction :input)
-     (with-open-file 
 	(ostream dest-file :direction :output :if-exists :supersede)
-      (do ((sent-num (read istream nil 'eof))
-	   (sent (read istream nil 'eof))
-	   (mrs (read istream nil 'eof))
-	   (sep2 (read-char istream nil 'eof))
-	   (tree (read istream nil 'eof))
-	   )
-	  ((eql sent-num 'eof) nil)
-	(format t "~%~A" sent)
-	(format ostream "~%~A~%" sent)
-        (output-parse-tree tree ostream)
-	(if vitp
+    (loop for rawsent in sent-list
+	  as rawtree in tree-list
+          as rawmrs in mrs-list
+	do (let* ((sentstr (cdar rawsent))
+		  (sent (subseq sentstr (1+ (position #\@ sentstr))))
+		  (treestr (cdar rawtree))
+		  (tree (read-from-string 
+			 (subseq treestr (1+ (position #\@ treestr)))))
+		  (mrsstr (cdar rawmrs))
+		  (mrs (subseq mrsstr (1+ (position #\@ mrsstr)))))
+	     (format t "~%~A" sent)
+	     (format ostream "~%String: ~A~%" sent)
+	     (output-parse-tree tree ostream)
+	     (if vitp
 	    #|
 	    (progn
 	      (multiple-value-bind 
@@ -68,19 +74,42 @@
 	      (finish-output ostream)
 	      (check-vit mrs t ostream)
 	      (format ostream "~%"))
-	  (format ostream "~%~A~%" mrs))
-	(setf sent-num (read istream nil 'eof)
-	      sent (read istream nil 'eof)
-	      sep (read-char istream nil 'eof)
-	      mrs (read istream nil 'eof)
-	      sep (read-char istream nil 'eof)
-	      tree (read istream nil 'eof)))))))
+	  (format ostream "~%~A~%" mrs)))))))
+|#
 
-(defun get-vit-strings (parse-list)
-  (loop for parse in parse-list
-        collecting
-	(let* ((fs (get-parse-fs parse))
-               (sem-fs (path-value fs *initial-semantics-path*)))
+#+page
+(defun get-vit-strings (parse)
+  (setf *mrs-wg-liszt* (loop for form in (main::output-stream main::*scanner*)
+			   collect
+			     (list (string-left-trim "'"
+					     (main::typed-item-form form)))))
+  (when parse 
+    (let* ((fs (if (eq (type-of parse) 'pg::combo-item)
+		   (get-parse-fs-alt parse)
+		 (get-parse-fs parse)))
+	   (sem-fs (path-value fs *initial-semantics-path*)))
+      (if (is-valid-fs sem-fs)
+	  (let* ((mrs-struct1 (sort-mrs-struct (construct-mrs sem-fs)))
+		 (mrs-struct (if (boundp '*ordered-mrs-rule-list*)
+				 (munge-mrs-struct mrs-struct1
+						   *ordered-mrs-rule-list*)
+			       mrs-struct1)))
+	    (multiple-value-bind (vit binding-sets)
+		(mrs-to-vit mrs-struct)
+	      (with-output-to-string (stream) 
+		(format nil "~S" (write-vit stream 
+					    (horrible-hack-2 vit))))))))))
+
+#+page
+(defun get-vit-strings-from-phrases (parse)
+  (setf *mrs-wg-liszt* (loop for form in (main::output-stream main::*scanner*)
+                             collect
+                               (list (string-left-trim "'"
+					 (main::typed-item-form form)))))
+  (let* ((fs (if (eq (type-of parse) 'pg::combo-item)
+		 (get-parse-fs-alt parse)
+	       (get-parse-fs parse)))
+	 (sem-fs (path-value fs *initial-semantics-path*)))
           (if (is-valid-fs sem-fs)
               (let* ((mrs-struct1 (sort-mrs-struct (construct-mrs sem-fs)))
 		     (mrs-struct (if (boundp '*ordered-mrs-rule-list*)
@@ -91,28 +120,15 @@
 		     (mrs-to-vit mrs-struct)
 		   (with-output-to-string (stream) 
 		     (format nil "~S" (write-vit stream 
-						 (horrible-hack-2 vit))))))))))
-
-(defun get-vit-strings-from-phrases (parse)
-  (let* ((fs (get-parse-fs parse))
-               (sem-fs (path-value fs *initial-semantics-path*)))
-          (if (is-valid-fs sem-fs)
-              (let* ((mrs-struct1 (sort-mrs-struct (construct-mrs sem-fs)))
-		     (mrs-struct (if (boundp '*ordered-mrs-rule-list*)
-				     (munge-mrs-struct mrs-struct1
-						       *ordered-mrs-rule-list*)
-				   mrs-struct1)))
-		 (multiple-value-bind (vit binding-sets)
-		     (mrs-to-vit mrs-struct t)
-		   (with-output-to-string (stream) 
-		     (format nil "~S" (write-vit stream 
 						 (horrible-hack-2 vit)))))))))
 
-#+page(defun extract-and-output (parse-list)
+#+page
+(defun extract-and-output (parse-list)
   (let ((*print-circle* nil))
     (setf *mrs-wg-liszt* (loop for form in (main::output-stream main::*scanner*)
                              collect
-                               (list (main::typed-item-form form))))
+                               (list (string-left-trim "'"
+					 (main::typed-item-form form)))))
     (loop for parse in parse-list
         do
           (let* ((fs (get-parse-fs parse))

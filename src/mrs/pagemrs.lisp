@@ -59,6 +59,11 @@
 	(lexicon::cfs-fs (car (main::typed-item-args parse)))
       (cfs-fs (pg::combo-item-cfs parse)))))
 
+(defun get-parse-fs-alt (parse)
+  (if (string-equal "1" (subseq user::*page-version* 0 1))
+      (lexicon::cfs-fs (pg::u-item-cfs parse))
+    (lexicon::cfs-fs (pg::combo-item-cfs parse))))
+
 (defun output-parse-tree (tree ostream)
   (trees::kh-parse-tree tree :stream ostream))
 

@@ -28,7 +28,8 @@
   liszt
   h-cons
   message
-  wgliszt)
+  wgliszt
+  key-h)
 
 
 (defstruct (rel)

@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.14  1998/10/07 20:54:19  danf
+;; Added support for VM word latices
+;;
 ;; Revision 1.13  1998/10/07 00:13:23  aac
 ;; patch for PAGE bug
 ;;
@@ -204,7 +207,9 @@
                   (liszt-fs (path-value fs *psoa-liszt-path*))
                   (h-cons-fs (path-value fs *psoa-rh-cons-path*))
                   (message-fs (path-value fs *psoa-message-path*))
-                  (wgliszt-fs (path-value fs *psoa-wgliszt-path*)))
+                  (wgliszt-fs (path-value fs *psoa-wgliszt-path*))
+		  (key-h-fs (path-value fs *key-handel-path*))
+		  )
               (make-psoa
                :handel (create-variable (if (mrs-language '(english))
                                             top-h-fs
@@ -227,7 +232,9 @@
                :wgliszt (nreverse (construct-wgliszt 
                                    wgliszt-fs
                                    *variable-generator*
-                                   *mrs-wg-liszt*)))))))
+                                   *mrs-wg-liszt*))
+	       :key-h (create-variable key-h-fs
+                                        *variable-generator*))))))
 
 
 

@@ -2,10 +2,15 @@
 
 (pushnew :mrs *features*)
 
+#+page
 (defpackage "MRS"
-  #+acl(:use "COMMON-LISP" "COMMON-LISP-USER" "USER")
+  #+acl(:use "COMMON-LISP" "COMMON-LISP-USER" "USER" "LEX")
   #-acl(:use "COMMON-LISP" "COMMON-LISP-USER")
   )
+
+#+lkb
+(defpackage "MRS"
+  (:use "COMMON-LISP" "COMMON-LISP-USER" "USER"))
 
 (in-package "MRS")
 
