@@ -496,52 +496,50 @@
 ;;; cpu time. The functions looks a bit odd but that's because they're
 ;;; optimised
 
-(defvar *wanted* nil)
-     
 (defun check-lbs-from-top (x y)
   (let ((xdescendants (type-descendants x))
         (ydescendants (type-descendants y)))
     (unless (or (member y xdescendants :test #'eq) 
                 (member x ydescendants :test #'eq))
-      (let ((*wanted* nil))
-	(find-highest-intersections xdescendants ydescendants nil)
-	(when (cdr *wanted*) *wanted*)))))
+      (let ((wanted (find-highest-intersections xdescendants ydescendants)))
+	(when (cdr wanted) wanted)))))
 
-
-(defun find-highest-intersections (xs ys intersectp)
-   ;; find set of highest intersections between 2 sets of types - intersectp
-   ;; records whether any intersection has been detected. If there hasn't,
-   ;; test first if the next type in xs is a member of ys. If there has,
-   ;; then quickest strategy is to see whether type has been marked (i.e. is
-   ;; a descendent of an intersect point) so need not even be tested for
-   ;; membership of ys. (In former case the member test must come first
-   ;; otherwise type lookup slows things down) At the end, collect highest
-   ;; intersections and unmark the types in xs. A type can only have been
-   ;; marked if intersectp is true, since intersectp is true for every type
-   ;; in xs that is in ys (either it's true on entry, or it's set to true
-   ;; after the member test in the second branch of the if test)
-  (when xs
-    (let ((type (car xs)))
-      (when 
-	  (if intersectp
-	      ;; specialise order of tests depending on intersectp
-	      (and (not (seen-node-p type))
-		   (member type ys :test #'eq))
-	    (and (member type ys :test #'eq)
-		 (setq intersectp t)
-		 (not (seen-node-p type))))
-	(mark-node-seen type)
-	(dolist (desc (type-descendants type))
-	  (mark-node-active-and-seen desc)))
-      (find-highest-intersections (cdr xs) ys intersectp)
-      (cond ((null intersectp))
-	    ((not (seen-node-p type)))
-	    ((not (active-node-p type))
-	     ;; seen but not active, so is a highest intersection
-	     (push type *wanted*)
-	     (clear-marks type))
-	    (t (clear-marks type))))))
-
+(defun find-highest-intersections (xs ys)
+  ;; find set of highest intersections between 2 sets of types - intersectp
+  ;; records whether any intersection has been detected. If there hasn't, test
+  ;; first if the next type in xs is a member of ys. If there has, then
+  ;; quickest strategy is to see whether type has been marked (i.e. is a
+  ;; descendent of an intersect point) so need not even be tested for
+  ;; membership of ys. (In former case the member test must come first
+  ;; otherwise type lookup slows things down) At the end, collect highest
+  ;; intersections and unmark the types in xs. A type can only have been
+  ;; marked if intersectp is true, since intersectp is true for every type in
+  ;; xs that is in ys (either it's true on entry, or it's set to true after
+  ;; the member test in the second branch of the if test)
+  (let ((intersectp nil)
+	(result nil))
+    (mapc #'(lambda (type)
+	      (when (if intersectp
+			;; specialise order of tests depending on intersectp
+			(and (not (seen-node-p type))
+			     (member type ys :test #'eq))
+		      (and (member type ys :test #'eq)
+			   (setq intersectp t)
+			   (not (seen-node-p type))))
+		(mark-node-seen type)
+		(dolist (desc (type-descendants type))
+		  (mark-node-active-and-seen desc))))
+	  xs)
+    (unless (null intersectp)
+      (mapc #'(lambda (type)
+		(cond ((not (seen-node-p type)))
+		      ((not (active-node-p type))
+		       ;; seen but not active, so is a highest intersection
+		       (push type result)
+		       (clear-marks type))
+		      (t (clear-marks type))))
+	    xs))
+    result))
 
 ;;;; July 1996 new stuff to fix mglbs
 
