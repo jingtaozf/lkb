@@ -33,7 +33,8 @@
   ;; a field :context can be included in the run structure and will be passed
   ;; as the first parameter to finalize-run() upon completion.
   ;;
-  )
+  (parse "sov!" nil)
+  nil)
   
 (defun finalize-run (context &key custom)
   (declare (ignore context custom))
@@ -108,9 +109,12 @@
                                                 (min readings nresults))
                               for i from 1
                               for solution in (nreverse solutions)
+			      for derivation =
+				(extract-c-structure graph solution)
                               for mrs = (extract-mrs graph solution)
                               while (>= (decf nresults) 0) collect
-                                (pairlis '(:result-id :mrs) (list i mrs))
+                                (pairlis '(:result-id :derivation :mrs) 
+					 (list i derivation mrs))
 			      finally 
 				(unless (zerop (solution graph))
 				  (free-graph-solution 
