@@ -254,7 +254,7 @@
 		     :display-time t))))))
   (:layouts
    (default display))
-  (:geometry :width 500 :height 200)
+  (:geometry :width 550 :height 200)
   (:command-table lkb-top-command-table))
 
 (defun start-lkb-frame ()
