@@ -162,19 +162,18 @@
    (scratch 'glbtype)
    (format t "~%Checking type hierarchy")
    (setf *type-names* (collect-type-names))
-   (prog1
-      (when *toptype*
-        (when 
-          (add-daughters-to-type-table)
-          (when (check-for-cycles-etc *toptype*)
-            (unmark-type-table)
-            (format t "~%Checking for unique greatest lower bounds") 
-            (setf *partition* nil)
-            (find-good-partitions *toptype*)
-            (unmark-type-table)
-            (for partition in *partition*
-                 do
-                 (check-for-unique-glbs partition)
+   (when *toptype*
+     (when 
+         (add-daughters-to-type-table)
+       (when (check-for-cycles-etc *toptype*)
+         (unmark-type-table)
+         (format t "~%Checking for unique greatest lower bounds") 
+         (setf *partition* nil)
+         (find-good-partitions *toptype*)
+         (unmark-type-table)
+         (for partition in *partition*
+              do
+              (check-for-unique-glbs partition)
                  ;;; partition is now a list of lists of types
                  (when *glbsets* 
                    (unmark-type-table)
@@ -182,20 +181,21 @@
                            "~%Partition size ~A" 
                            (length partition))
                    (fix-mglbs)))
-            (unmark-type-table)
-            (format t "~%Expanding constraints")
-            (when (expand-and-inherit-constraints)
-              (format t "~%Making constraints well formed")
-              (when (strongly-type-constraints)
-                (format t "~%Optimising unification check paths") 
-                (optimise-check-unif-paths)
+         (unmark-type-table)
+         (format t "~%Expanding constraints")
+         (when (expand-and-inherit-constraints)
+           (format t "~%Making constraints well formed")
+           (when (strongly-type-constraints)
+             (format t "~%Optimising unification check paths") 
+             (optimise-check-unif-paths)
                 ;;; YADU --- extra expansion stage
                 ;;; earlier stages are unchanged
-                (format t "~%Expanding defaults") 
-                (when (expand-type-hierarchy-defaults)
-                  (format t "~%Type file checked successfully")
-                  t))))))
-     (clear-type-cache))) ; not for consistency, but for efficiency
+             (format t "~%Expanding defaults") 
+             (when (expand-type-hierarchy-defaults)
+               (format t "~%Type file checked successfully")
+               (clear-type-cache) ; not for consistency, but for efficiency
+               t)))))))
+
 
 (defun patch-type-table nil
   ;;; added for the case where definitions are changed, but the hierarchy
@@ -288,10 +288,10 @@
 ;;; marks.lsp contains the marking structures and functions
 
 (defun mark-for-cycles (type-record)
-   (let ((ok t)
-         (daughters (mapcar #'(lambda (d) (get-type-entry d))
-               (type-daughters type-record))))
-      (unless (seen-node-p type-record) 
+   (let ((ok t))
+     (unless (seen-node-p type-record) 
+       (let ((daughters (mapcar #'(lambda (d) (get-type-entry d))
+                                (type-daughters type-record))))
          (mark-node-seen type-record)
          (for daughter in daughters
             do
@@ -308,7 +308,7 @@
                   (mark-for-cycles daughter)))
             (for daughter in daughters
                do
-               (unmark-node-active daughter))))
+               (unmark-node-active daughter)))))
       ok))
 
 (defun scan-table nil
