@@ -259,3 +259,59 @@
     (split-into-words 
      (preprocess-sentence-string str)))))
 
+
+;;;
+;;;
+;;;
+
+(defun duplicates (l &key (test #'equal) (key #'identity))
+  (let ((out))
+    (loop
+        for x in l
+        with x-key
+        with prev
+        with prev-key
+        with dup-set
+        do
+          (setf x-key (apply key (list x)))
+          (setf prev-key (apply key (list prev)))
+          (cond
+           ((apply test (list x-key prev-key))
+            (unless dup-set (setf dup-set (list prev)))
+            (push x dup-set))
+           (t
+            (if dup-set
+                (push dup-set out))
+            (setf dup-set nil)))
+          (setf prev x)
+        finally
+          (if dup-set
+              (push dup-set out)))
+    out))
+
+(defun join-tdl (x &key (stream nil))
+  (format stream "~a := ~a~%" (car x) (cdr x)))
+
+(defun display-tdl-duplicates (lexicon)
+  (let* ((tdl-lex
+          (mapcar (lambda (x) 
+                    (let ((x (read-psort lexicon x)))
+                      (cons (tdl-val-str (lex-entry-id x))
+                            (to-tdl-body x))))
+                  (collect-psort-ids lexicon)))
+         (tdl-lex-sort 
+          (sort tdl-lex #'string< :key #'cdr))
+         (tdl-lex-dup
+          (duplicates  
+           tdl-lex-sort 
+           :key #'cdr 
+           :test #'string=)))
+    (loop
+        for dup-set in tdl-lex-dup
+        do
+          (format t "~%")
+          (loop
+              for x in dup-set
+              do
+                (join-tdl x :stream t)
+                ))))

@@ -599,11 +599,20 @@
       (ostream filename :direction :output :if-exists :supersede)
     (export-to-tdl lexicon ostream)))
 
+;(defmethod to-tdl ((x lex-entry))
+;  (format 
+;   nil "~%~a := ~a.~%"
+;   (tdl-val-str (lex-entry-id x))
+;   (p-2-tdl (pack-unifs (lex-entry-unifs x)))))
+	  
 (defmethod to-tdl ((x lex-entry))
   (format 
    nil "~%~a := ~a.~%"
    (tdl-val-str (lex-entry-id x))
-   (p-2-tdl (pack-unifs (lex-entry-unifs x)))))
+   (to-tdl-body x)))
+	  
+(defmethod to-tdl-body ((x lex-entry))
+  (p-2-tdl (pack-unifs (lex-entry-unifs x))))
 	  
 ;; copy of p-2-tdl-2 w/o root
 (defun p-2-tdl (branches)
