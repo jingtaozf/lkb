@@ -8,7 +8,6 @@
 
 (defvar *postgres-temp-filename* nil)
 
-(defvar *psql-lkb-version* "2.00")
 (defvar *psql-lexdb-compat-version* "3.3")
 (defvar *psql-port-default* 5432)
 
@@ -35,8 +34,7 @@
 
 (defvar *postgres-debug-stream*)
 
-(defvar *postgres-sql-fns*)
-(setf *postgres-sql-fns*
+(defvar *postgres-sql-fns*
   '(
     :clear_scratch
     :commit_scratch

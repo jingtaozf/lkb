@@ -632,7 +632,7 @@
 ;;;
 
 (defmethod get-db-version ((lexicon psql-lex-database))
-  (caar (records (run-query *lexicon* (make-instance 'sql-query :sql-string "SELECT val FROM public.meta WHERE var=\'db-version\' LIMIT 1")))))
+  (caar (records (run-query lexicon (make-instance 'sql-query :sql-string "SELECT val FROM public.meta WHERE var=\'db-version\' LIMIT 1")))))
   ;(sql-fn-get-val lexicon :lexdb_version))
     
 (defmethod get-filter ((lexicon psql-lex-database))
