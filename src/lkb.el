@@ -12,7 +12,9 @@
 
 (defun lkb-21 nil
 
-(defvar lkb-menu-installed nil)
+(setq lkb-menu-installed nil)
+(make-variable-buffer-local 'lkb-menu-installed)
+
 (defvar *handled-types* '(list number string symbol))
 
 ;;;
@@ -137,6 +139,14 @@
 (add-hook 'fi:inferior-common-lisp-mode-hook 
 	  (function (lambda ()
 		      (install-lkb-menu fi:inferior-common-lisp-mode-map))))
+
+(add-hook 'fi:common-lisp-mode-hook 
+	  (function (lambda ()
+		      (install-lkb-menu fi:common-lisp-mode-map))))
+
+(add-hook 'tdl-mode-hook 
+	  (function (lambda ()
+		      (install-lkb-menu tdl-mode-map))))
 
 )
 

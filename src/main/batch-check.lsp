@@ -22,6 +22,7 @@
 (defun batch-check-lexicon (&optional (unexpandp t))
   (let ((*batch-mode* t)
 	(start-path (get-diff-list-start-path)))
+    #+:psql
     (when (typep *lexicon* 'psql-lex-database)
       (format t "~%(caching all lexical entries)")
       (cache-all-lex-entries *lexicon*))
@@ -48,7 +49,7 @@
       (when unexpandp (unexpand-psort *lexicon* id))))
   (format t "~%Lexicon checked")
   (when (typep *lexicon* 'psql-lex-database)
-    (format *postgres-debug-stream* "~%(clearing cache)")
+    (format t "~%(clearing cache)")
     (empty-cache *lexicon*)))
 
 
@@ -159,6 +160,27 @@
                          result)))))))
       (if transformed-entries
           (try-all-morph-rules transformed-entries))))
+
+;;;
+;;; dag access
+;;;
+
+(defun dag-path-val (path dag)
+  (cond
+   ((null dag)
+    nil)
+   ((null path)
+    dag)
+   (t
+    (dag-path-val
+     (cdr path)
+     (cdr (assoc (car path) (dag-arcs dag)))))))
+
+(defun dag-path-type (path dag)
+  (let ((val (dag-path-val path dag)))
+    (if (typep val 'dag)
+        (dag-type val)
+      nil)))
 
 
 

@@ -101,27 +101,6 @@
 	(subseq split-pred 1 4))))))
 
 ;;;
-;;; dag access
-;;;
-
-(defun dag-path-val (path dag)
-  (cond
-   ((null dag)
-    nil)
-   ((null path)
-    dag)
-   (t
-    (dag-path-val
-     (cdr path)
-     (cdr (assoc (car path) (dag-arcs dag)))))))
-
-(defun dag-path-type (path dag)
-  (let ((val (dag-path-val path dag)))
-    (if (typep val 'dag)
-        (dag-type val)
-      nil)))
-
-;;;
 ;;; fields from dag leaves
 ;;;
 
