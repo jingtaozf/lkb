@@ -41,6 +41,9 @@
 (defvar *successful-tasks* 0)
 (defvar *contemplated-tasks* 0)
 (defvar *filtered-tasks* 0)
+(declaim (type fixnum *executed-tasks* *successful-tasks* 
+	       *contemplated-tasks* *filtered-tasks*))
+
 (defvar *parser-rules* nil)
 (defvar *parser-lexical-rules* nil)
 
@@ -373,19 +376,6 @@
              :spelling-change (when history 
 				(mhistory-new-spelling (car history)))))
 
-;; RPM (18-Aug-1998) This originally just marked lexical entries as unsafe, so
-;; as soon as they successfully unified with something they'd get copied.  That
-;; doesn't work if you have the same lexical entry appearing twice as daughters
-;; of a single rule (as in "Kim gave Sandy Sandy") Our solution is to copy all
-;; lexical entries no matter what, but this runs the risk of copying lexical
-;; entries which never wind up being part of an edge in the chart.  
-
-;(defmacro protect (fs)
-;  `(copy-tdfs-completely ,fs))
-
-(defmacro protect (fs)
-  fs)
-
 (defun get-senses (stem-string)
   (let* (;;(*safe-not-to-copy-p* nil)
          (entries (get-unexpanded-lex-entry 
@@ -399,7 +389,7 @@
                      (get-psort-entry id)))
                (when expanded-entry
                  (cons id 
-		       (protect (lex-or-psort-full-fs expanded-entry)))))))))
+		       (lex-or-psort-full-fs expanded-entry))))))))
 
 ;;; get-multi-senses has to return a structure
 
@@ -550,9 +540,8 @@
                                             (list full-stem-string))
                                           :lex-ids (list (lex-or-psort-id
                                                           expanded-entry))
-                                          :fs (protect 
-                                               (lex-or-psort-full-fs 
-                                                expanded-entry)))))))))))))
+                                          :fs (lex-or-psort-full-fs 
+					       expanded-entry))))))))))))
 
 
 (defun construct-morph-history (lex-ids history)
@@ -808,42 +797,52 @@
           (if first-failed-p nil t))))))
 
 
-(defun evaluate-unifications (rule child-fs-list &optional nu-orth child-edge-list backwardp)
+(defun evaluate-unifications (rule child-fs-list 
+			      &optional nu-orth child-edge-list backwardp)
   ;; An additional optional argument is given. This is the new orthography if
   ;; the unification relates to a morphological process. If it is present, it
   ;; is inserted in the resulting fs
   (let*
       ((current-tdfs (rule-full-fs rule))
        (rule-daughter-order
-          (if backwardp (rule-daughters-order-reversed rule) (cdr (rule-order rule))))
+	(if backwardp 
+	    (rule-daughters-order-reversed rule) 
+	  (cdr (rule-order rule))))
        (n -1)
-       (new-orth-fs (if nu-orth (get-orth-tdfs nu-orth))))
+       (new-orth-fs (when nu-orth
+		      (get-orth-tdfs nu-orth))))
     ;; shouldn't strictly do this here because we may not need it but
     ;; otherwise we get a nested unification context error - cache the values
     ;; for a word, so it's not reconstructed only wasted if the morphology is
     ;; wrong
+    (declare (type fixnum n))
     (with-unification-context (ignore)
       (dolist (rule-feat rule-daughter-order)
-         (incf n)
-         (let ((child-edge (pop child-edge-list)))
-           (cond
-	     ((eql n 0))
-             ((x-restrict-and-compatible-p
-	       (if (listp rule-feat)
-		   (x-existing-dag-at-end-of 
-		    (tdfs-indef current-tdfs) rule-feat)
-	         (x-get-dag-value (tdfs-indef current-tdfs) rule-feat))
-	       (edge-dag-restricted child-edge)))
-	     (t (incf *filtered-tasks*)
-	        (return-from evaluate-unifications nil))))
-         (incf *executed-tasks*)
-         (if (setq current-tdfs
+	(incf n)
+	(let ((child-edge (pop child-edge-list)))
+	  (cond
+	   ((zerop n))
+	   ((x-restrict-and-compatible-p
+	     (if (listp rule-feat)
+		 (x-existing-dag-at-end-of 
+		  (tdfs-indef current-tdfs) rule-feat)
+	       (x-get-dag-value (tdfs-indef current-tdfs) rule-feat))
+	     (edge-dag-restricted child-edge)))
+	   (t (incf *filtered-tasks*)
+	      (return-from evaluate-unifications nil))))
+	(incf *executed-tasks*)
+	(let ((child (pop child-fs-list)))
+	  ;; If two daughters are eq, the subgraph sharing code in the unifier
+	  ;; may cause spurious coreferences in the result
+	  (when (member child child-fs-list :test #'eq)
+	    (setq child (copy-tdfs-completely child)))
+	  (if (setq current-tdfs
 		(yadu current-tdfs
-		      (create-temp-parsing-tdfs (pop child-fs-list)
-						rule-feat)))
-	     (incf *successful-tasks*)
-	     (return-from
-                evaluate-unifications (values nil (eql n 0))))) ; first attempt failed?
+		      (create-temp-parsing-tdfs child rule-feat)))
+	      (incf *successful-tasks*)
+	    (return-from
+		evaluate-unifications 
+	      (values nil (eql n 0))))))	; first attempt failed?
       ;; if (car (rule-order rule)) is NIL - tdfs-at-end-of will return the
       ;; entire structure
       (let ((result (tdfs-at-end-of (car (rule-order rule)) current-tdfs)))
