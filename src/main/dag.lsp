@@ -402,7 +402,6 @@
                            (unify1 dag1 constraint path)))
                      ;; dag1 might just have been forwarded so dereference it again
                      (setq dag1 (deref-dag dag1)))
-                  (setf (dag-copy dag1) :inside)
                   ;; cases for each of dag1 and dag2 where they have no arcs
                   ;; just considering straightforward use of unify1: if we've previously
                   ;; visited a node with no arcs then it must have
@@ -418,8 +417,9 @@
                         (setf (dag-forward dag2) dag1))
                      (t
                         (setf (dag-forward dag2) dag1)
-                        (unify-arcs dag1 dag2 path)))
-                  (setf (dag-copy dag1) nil))))
+                        (setf (dag-copy dag1) :inside)
+                        (unify-arcs dag1 dag2 path)
+                        (setf (dag-copy dag1) nil))))))
          (progn
             (when *unify-debug*
                (format t "~%Unification of ~A and ~A failed at path < ~{~A ~^: ~}>" 
