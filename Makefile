@@ -165,7 +165,6 @@ lkb_windows:
 	      windows; \
 	  ${RM} -f /c/tmp/lkb_windows.zip; \
           zip -r /c/tmp/lkb_windows.zip windows; )
-#	scp /c/tmp/lkb_windows.tgz /c/tmp/lkb_windows.zip eo:${TARGET}/${DATE};
 	scp /c/tmp/lkb_windows.tgz /c/tmp/lkb_windows.zip oe@lingo:/tmp;
 
 lkb_documentation:
