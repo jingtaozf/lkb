@@ -235,3 +235,36 @@
       (and val
            (subtype-or-equal (type-of-fs val) 'intersective_mod))))
 
+
+;;; The following function needs to be called if there is a disrepancy between
+;;; the checkpaths construction and application
+
+(defun check-path-convert (check-paths)
+  (let ((new-paths nil)
+        (combined-paths nil))
+    ;; Remove [ ARGS.REST...FIRST ] prefix from paths
+    (dolist (thing check-paths)
+      (let ((path (car thing))
+	    (count (cdr thing)))
+	(if (eql (car path) 'ARGS)
+	    (let ((rest (cdr path)))
+	      (if (eql (car rest) 'FIRST)
+		  (push (cons (cdr rest) count)
+			new-paths)
+		(if (and (eql (car rest) 'REST)
+			 (eql (cadr rest) 'FIRST))
+		    (push (cons (cddr rest) count) new-paths)
+		  (if (and (eql (car rest) 'REST)
+			   (eql (cadr rest) 'REST)
+			   (eql (caddr rest) 'FIRST))
+		      (push (cons (cdddr rest) count) new-paths)
+		    (error "Unexpected path ~A" path)))))
+	  (push (cons path count) new-paths))))
+    ;; Combine the weights for any paths that became identical after removing
+    ;; the prefix
+    (dolist (np new-paths)
+      (let ((existing (assoc (car np) combined-paths :test #'equal)))
+	(if existing 
+	    (setf (cdr existing) (+ (cdr existing) (cdr np)))
+	  (push np combined-paths))))
+    (sort combined-paths #'> :key #'cdr)))
