@@ -3,13 +3,14 @@
 ;;; Globals - freed of VM specific stuff
 
 (defparameter *giving-demo-p* nil)
+;; when set, this avoids error and warning messages
 
 (defparameter *mrs-results-check* nil)
 ;; mrscorpus and mrsfns - causes results to be checked against
-;; previous stored results
+;; previous stored results.  Currently non-operational.
 
 (defparameter *mrs-scoping* nil)
-;; interface control - causes scoping code to be run
+;; interface control - causes scoping code to be run when set
 
 (defparameter *mrs-output-p* nil)
 ;; interface control - causes MRS code to be run
@@ -20,12 +21,16 @@
 
 (defparameter *initial-semantics-path* 
   `(,(vsym "SYNSEM") ,(vsym "LOCAL") ,(vsym "CONT"))
-  "Following this path gets you to the MRS structure")
+  "Following this path into a sign gets you to the MRS structure")
 
 (defparameter *rel-name-path*
     `(,(vsym "PRED"))
   "path within a rel to get the predicate name 
    (type of rel may be used instead)")
+;;; i.e., this is a default location for a predicate name within
+;;; a relation - if this path doesn't have a value, the type of the
+;;; relation is used instead.  This is designed for the situation
+;;; where some relations have PREDs and others don't.
 
 (defparameter *rel-handel-path*
     `(,(vsym "HANDEL"))
@@ -47,9 +52,11 @@
     `(,(vsym "H-CONS") ,(vsym "LIST"))
   "path to get a list of handle constraints from a root psoa")
 
-(defparameter *sc-arg-feature* (vsym "SC-ARG"))
+(defparameter *sc-arg-feature* (vsym "SC-ARG")
+  "the feature in a qeq that leads to the first argument")
 
-(defparameter *outscpd-feature* (vsym "OUTSCPD"))
+(defparameter *outscpd-feature* (vsym "OUTSCPD")
+  "the feature in a qeq that leads to the second argument")
 
 ;;; generic paths
 
@@ -117,15 +124,29 @@ order in an MRS")
    WARNING - do not set when processing in batch mode")
 
 (defparameter *dummy-relations* nil)
+;;; this allows the LISZT to contain relations that
+;;; have no effect on the MRS.  The type of the relation should be
+;;; specified
 
-(defparameter *main-semantics-path* nil)
+(defparameter *main-semantics-path* nil
+  "the path into a lexical entry which gives the list of
+   relations - typically (append *initially-semantics-path* '(LISZT LIST))")
 
-(defparameter *construction-semantics-path* nil)
+(defparameter *construction-semantics-path* nil
+  "the path into a rule/construction which gives the
+   semantics specific to that construction")
 
-(defparameter *top-semantics-type* nil)
+(defparameter *top-semantics-type* nil
+  "the highest type in the hierarchy under which all
+   rels are found")
 
 (defparameter *top-semantics-entry* nil
-  "set in lexutils")
+  "set in lexutils - not user-settable")
+
+;;; INSTLOC is a feature that should appear on all feature structures
+;;; representing variables (handles etc)  It is needed by the generator
+;;; as a location for a constant value that distinguishes different
+;;; variables.  
 
 (defparameter *instloc-type* (vsym "INSTLOC"))
 
@@ -133,10 +154,10 @@ order in an MRS")
 
 (defparameter *rel-name-path-only* nil
   "if set, the indexing code only looks for the rel on the
-   rel-name-path")
+   rel-name-path and not at the type of the relation")
 
 
-;;; for munging
+;;; for munging - not user-settable
 
 (defparameter *ordered-mrs-rule-list* nil)
 
@@ -144,21 +165,31 @@ order in an MRS")
 
 ;;; for scoping
 
+;;; not user-settable
 (defvar *canonical-bindings* nil
 "global variable which is set to the current set of bindings for the
 printing routines -  convenient to make this global to keep printing generic")
 
+
 ;;; set in mrsglobals-eng
 
-(defvar *top-level-rel-types* nil)
+(defvar *top-level-rel-types* nil
+  "the types of any relations which introduce variables
+which need not be scoped - pronouns etc")
 
 (defvar *top-level-variables* nil
-  "the variables which correspond to pronouns or proper names")
+  "the variables which correspond to pronouns -
+set in the code")
 
 ;;; to control scoping or cheap scope
 
 (defvar *fragment-p* nil
-  "if t for a parse, cheapscope is not called")
+  "if t for a parse, cheapscope is not called - not user settable")
+
+
+;;; the following are needed only for the detection of fragments
+;;; indicated in the LinGO gramar by the value of ROOT
+
 
 (defvar *root-path* nil)
 
