@@ -1526,7 +1526,7 @@
         for mrss = (loop
                        for result in results
                        for mrs = (get-field :mrs result)
-                       when mrs collect mrs)
+                       when (and mrs (not (equal mrs ""))) collect mrs)
         for dtag = (intern (gensym "") :keyword)
         for mtag = (intern (gensym "") :keyword)
         when (= (- row 1) (* separator 10))
