@@ -42,6 +42,7 @@
 (defvar *contemplated-tasks* 0)
 (defvar *filtered-tasks* 0)
 (defvar *parser-rules* nil)
+(defvar *parser-lexical-rules* nil)
 
 (defvar *cached-orth-str-list* nil)
 
@@ -231,7 +232,8 @@
     (let ((*safe-not-to-copy-p* t)
 	  (*executed-tasks* 0) (*successful-tasks* 0)
 	  (*contemplated-tasks* 0) (*filtered-tasks* 0)
-          (*parser-rules* (get-matching-rules nil nil)))
+          (*parser-rules* (get-matching-rules nil nil))
+          (*parser-lexical-rules* (get-matching-lex-rules nil)))
       (with-parser-lock ()
 	(flush-heap *agenda*)
 	(clear-chart)
@@ -559,7 +561,7 @@
 				   "~%Warning - probable circular lexical rule") 
 			   nil)
 		  (append
-		   (for rule in (get-matching-lex-rules fs)
+		   (for rule in *parser-lexical-rules*
 			filter
 			(let ((result (apply-morph-rule 
 				       rule fs fs-restricted nil)))
@@ -682,6 +684,9 @@
 	    (when entry
 	      (dolist (config (chart-entry-configurations entry))
 		(unless
+                  ;; inner recusive call returns nil in cases when first unif
+                  ;; attempt fails - if this happens there's no point continuing
+                  ;; with other alternatives here
                   (try-grammar-rule-left rule
 				         (cdr rule-restricted-list)
 				         (chart-configuration-begin config)
@@ -982,8 +987,8 @@
 
 ;;; Parsing sentences from file
 
-(defun parse-sentences (&optional input-file parse-file run-file result-file)
-  (declare (ignore run-file result-file))
+(defun parse-sentences (&optional input-file (output-file 'unspec) run-file result-file)
+   (declare (ignore run-file result-file))
    (unless input-file 
       (setq input-file (ask-user-for-existing-pathname "Sentence file?")))
    (when
@@ -991,18 +996,15 @@
          (or (probe-file input-file)
             (error "Input file ~A does not exist" input-file)))
       (with-open-file (istream input-file :direction :input)
+         (when (eq output-file 'unspec)
+            (setq output-file (ask-user-for-new-pathname "Output file?"))
+            (unless output-file (return-from parse-sentences)))
          (let ((line (read-line istream nil 'eof)))
-            (cond
-               ((eq line 'eof))
-;;               ((eql (count #\@ line) 11)
-;;                                        ; must be 12 fields in tsdb input
-;;                (if (fboundp 'get-test-run-information)
-;;                    (parse-tsdb-sentences1
-;;                     istream line parse-file result-file run-file)
-;;                 (batch-parse-sentences istream line parse-file
-;;                                         #'get-tsdb-sentence)))
-               (t
-                  (batch-parse-sentences istream line parse-file)))))))
+            (if output-file
+               (with-open-file (ostream output-file :direction :output
+                                :if-exists :supersede :if-does-not-exist :create)
+                  (batch-parse-sentences istream ostream line))
+               (batch-parse-sentences istream nil line))))))
 
 
 (defparameter *do-something-with-parse* nil)
@@ -1013,31 +1015,26 @@
 
 (defparameter *ostream* nil)
 
-(defun batch-parse-sentences (istream raw-sentence parse-file &optional access-fn)
-  (setf *lex-ids-used* nil)
-  (let* ((output-file 
-            (or parse-file (ask-user-for-new-pathname "Output file?")))
-         (nsent 0)
+(defun batch-parse-sentences (istream ostream raw-sentence &optional access-fn)
+   (setf *lex-ids-used* nil)
+   (clear-type-cache)
+   (format t "~%;;; Parsing test file") (finish-output t)
+   (let ((nsent 0)
          (start-time (get-internal-run-time)))
-     (unless output-file (return-from batch-parse-sentences nil))
-     (clear-type-cache)
-     (with-open-file (ostream output-file :direction :output
-                      :if-exists :supersede :if-does-not-exist :create)
-        (format t "~%;;; Parsing test file") (finish-output t)
-        (loop
-           (when (eql raw-sentence 'eof) (return))
-           (incf nsent)
-           (when (eql (rem nsent 50) 1)
-              (clear-expanded-lex))      ; try and avoid image increasing
-                                         ; at some speed cost
-           (let ((interim-sentence (if access-fn (apply access-fn (list raw-sentence))
+      (loop
+         (when (eql raw-sentence 'eof) (return))
+         (incf nsent)
+         (when (eql (rem nsent 50) 1)
+            (clear-expanded-lex))      ; try and avoid image increasing
+                                       ; at some speed cost
+         (let ((interim-sentence (if access-fn (apply access-fn (list raw-sentence))
                                      raw-sentence)))
-             (unless (fboundp *do-something-with-parse*)
-                     ;;; if we're doing something else, let that function
-                     ;;; control the output
-               (format ostream "~A~%" interim-sentence)
-               (finish-output ostream))
-             (let ((sentence (string-trim '(#\Space #\Tab) interim-sentence)))
+            (unless (fboundp *do-something-with-parse*)
+               ;; if we're doing something else, let that function control the output
+               (when ostream
+                  (format ostream "~A~%" interim-sentence)
+                  (finish-output ostream)))
+            (let ((sentence (string-trim '(#\Space #\Tab) interim-sentence)))
                (unless (equal sentence "")
                  (let* ((munged-string 
                          (if (fboundp 'preprocess-sentence-string)
@@ -1053,18 +1050,18 @@
                        (error (condition)
                               (format t  "~%Error: ~A caused by ~A~%" condition user-input))) 
                    (unless (fboundp *do-something-with-parse*)
-                     ;;; if we're doing something else, let that function
-                     ;;; control the output
-                     (let ((n (length *parse-record*)))
-                       (format ostream "  ~R parse~:[s~;~] found~%" n (= n 1))
-                       (finish-output ostream))))))
-             (for lex-id in (collect-expanded-lex-ids *lexicon*)
-                  do
-                  (pushnew lex-id *lex-ids-used*))
-             (setq raw-sentence (read-line istream nil 'eof))))
-        (format t "~%;;; Finished test file~%;;; Total CPU time: ~A msecs~%" 
-                (- (get-internal-run-time) start-time))
-        (lkb-beep))))
+                      ;; if we're doing something else, let that function control the output
+                      (when ostream
+                         (let ((n (length *parse-record*)))
+                            (format ostream "  ~R parse~:[s~;~] found~%" n (= n 1))
+                            (finish-output ostream)))))))
+            (for lex-id in (collect-expanded-lex-ids *lexicon*)
+               do
+               (pushnew lex-id *lex-ids-used*))
+            (setq raw-sentence (read-line istream nil 'eof))))
+      (format t "~%;;; Finished test file~%;;; Total CPU time: ~A msecs~%" 
+          (- (get-internal-run-time) start-time))
+      (lkb-beep)))
 
 
 ;;; extracting a list of lexical entries used in a parse
