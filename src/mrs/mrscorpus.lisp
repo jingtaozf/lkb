@@ -420,7 +420,7 @@
                       for extra in extra2
                       unless (member (extrapair-feature extra) filter)
                       collect extra)
-                  extra1)))
+                  extra2)))
     (and (eql (length extra1) (length extra2))
          (every #'(lambda (tp1)
                     (some 
