@@ -1816,10 +1816,29 @@ BOOL tsdb_insert_into_selection(Tsdb_selection *selection,
 
 } /* tsdb_insert_into_selection() */
 
-int tsdb_uniq_projection(char** projection,int n) {
-  int i,j,d=0;
+int comp(char **a,char**b) {
+  return(strcmp(*a,*b));
+}
 
-  qsort((char*)projection,n,sizeof(char*),(int(*)())strcmp);
+
+int tsdb_uniq_projection(char** projection,int n) {
+  int result,i,j,d=0;
+#if defined(TOM) && defined(DEBUG)
+  fprintf(tsdb_debug_stream,"qsort\n");
+  for (i=0;i<n;i++) {
+    fprintf(tsdb_debug_stream,"%s\n",projection[i]);
+  }
+  fflush(tsdb_debug_stream);
+#endif
+  result = qsort(projection,n,sizeof(char*),(int(*)())comp);
+#if defined(TOM) && defined(DEBUG)
+  fprintf(tsdb_debug_stream,"qsort\n");
+  for (i=0;i<n;i++) {
+    fprintf(tsdb_debug_stream,"%s\n",projection[i]);
+  }
+  fflush(tsdb_debug_stream);
+#endif
+
   for (i=0,j=1;j<n;j++) {
     if (!strcmp(projection[i],projection[j])) {
       free(projection[j]);
