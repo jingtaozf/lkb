@@ -393,9 +393,9 @@ void tsdb_print_tuples(Tsdb_tuple **tuples,FILE* stream){
 void tsdb_print_key_list(Tsdb_key_list *list, FILE *stream) {
 
   Tsdb_key_list *next;
-  int i;
+  int i,j;
 
-  for(next = list; next != NULL; next = next->next) {
+  for(j=0,next = list; next != NULL; next = next->next,j++) {
     for(i = 0; i < next->n_tuples; i++) {
       tsdb_print_tuple(next->tuples[i], stream);
       if(i + 1 < next->n_tuples) {
