@@ -6,90 +6,17 @@
 
 ;;; Add an LKB menu to the emacs menu bar
 
+(defvar lkb-menu-installed nil)
 (defvar *handled-types* '(list number string symbol))
 
-;; unusual return values cause system to hang...
+;;;
+;;; interface to common lisp
+;;;
+
+;; unusual return values cause system to hang, so only allow types
+;; specified in *handled-types*
 (defun eval-in-lisp (str)
 	 (fi:eval-in-lisp "(let ((x %s)) (if (eval (cons 'or (mapcar #'(lambda (y) (typep x y)) '%s))) x '!!!unhandled-type!!!))" str *handled-types*))
-
-(defun name-keymap (str) 
-  (cons str (make-sparse-keymap str)))
-
-(defun initialize-lkb-menu-bar-map ()
-  (let* ((map fi:inferior-common-lisp-mode-map))
-    (define-key map [menu-bar lkb] (name-keymap "LKB"))
-
-    (define-key map [menu-bar lkb redefine-type]
-      (fi::menu "Redefine type"
-		'redefine-type :enable '(eval-in-lisp "*current-grammar-load-file*")))
-    
-    (define-key map [menu-bar lkb break] (name-keymap "---"))
-    
-    (define-key map [menu-bar lkb generate] (name-keymap "Generate"))
-    (define-key map [menu-bar lkb generate index]
-      (fi::menu "Index"
-		'index-for-generator :enable '(eval-in-lisp "*current-grammar-load-file*")))
-    (define-key map [menu-bar lkb generate show_chart]
-      (fi::menu "Show chart"
-		'show-gen-chart :enable '(eval-in-lisp "*current-grammar-load-file*")))
-    (define-key map [menu-bar lkb generate redisplay]
-      (fi::menu "Redisplay realization"
-		'show-gen-result :enable '(eval-in-lisp "*current-grammar-load-file*")))
-    (define-key map [menu-bar lkb generate from_edge]
-      (fi::menu "Generate..."
-		'generate-from-edge :enable '(eval-in-lisp "*current-grammar-load-file*")))
-        
-    (define-key map [menu-bar lkb parse] (name-keymap "Parse"))
-    (define-key map [menu-bar lkb parse batch_parse]
-      (fi::menu "Batch parse..."
-		'parse-sentences-batch :enable '(eval-in-lisp "*current-grammar-load-file*")))
-    (define-key map [menu-bar lkb parse print_chart]
-      (fi::menu "Print chart"
-		'print-chart :enable '(eval-in-lisp "*current-grammar-load-file*")))
-    (define-key map [menu-bar lkb parse show_chart]
-      (fi::menu "Show chart"
-		'show-chart :enable '(eval-in-lisp "*current-grammar-load-file*")))
-    (define-key map [menu-bar lkb parse redisplay_parse]
-      (fi::menu "Redisplay parse"
-		'show-parse :enable '(eval-in-lisp "*current-grammar-load-file*")))
-    (define-key map [menu-bar lkb parse parse_input]
-      (fi::menu "Parse input..."
-		  'clim-user::do-parse-batch :enable '(eval-in-lisp "*current-grammar-load-file*")))
-    
-    (define-key map [menu-bar lkb view] (name-keymap "View"))
-    (define-key map [menu-bar lkb view lexical_rule]
-      (fi::menu "Lexical rule..."
-		'show-lex-rule :enable '(eval-in-lisp "*current-grammar-load-file*")))
-    (define-key map [menu-bar lkb view grammar_rule]
-      (fi::menu "Grammar rule..."
-		'show-grammar-rule :enable '(eval-in-lisp "*current-grammar-load-file*")))
-    (define-key map [menu-bar lkb view word_entries]
-      (fi::menu "Word entries..."
-		'show-words :enable '(eval-in-lisp "*current-grammar-load-file*")))
-    (define-key map [menu-bar lkb view lex_entry]
-      (fi::menu "Lex entry..."
-		'show-lex :enable '(eval-in-lisp "*current-grammar-load-file*")))
-    (define-key map [menu-bar lkb view type_expanded]
-      (fi::menu "Expanded type..."
-		'show-type :enable '(eval-in-lisp "*current-grammar-load-file*")))
-    (define-key map [menu-bar lkb view type_definition]
-      (fi::menu "Type definition..."
-		'show-type-spec :enable '(eval-in-lisp "*current-grammar-load-file*")))
-    (define-key map [menu-bar lkb view type_hierarchy]
-      (fi::menu "Type hierarchy..."
-		'show-type-tree :enable '(eval-in-lisp "*current-grammar-load-file*")))
-    
-    (define-key map [menu-bar lkb load] (name-keymap "Load"))
-    (define-key map [menu-bar lkb load reload]
-      (fi::menu "Reload grammar"
-		'reload-script-file :enable '(eval-in-lisp "*current-grammar-load-file*")))
-    (define-key map [menu-bar lkb load complete]
-      (fi::menu "Complete grammar..."
-		'read-script-file :enable t))))
-
-(add-hook 'fi:inferior-common-lisp-mode-hook 
-	  (function (lambda ()
-		      (initialize-lkb-menu-bar-map))))
 
 (defun define-lisp-commands (commands)
   (dolist (com commands)
@@ -115,3 +42,93 @@
     (eval-in-lisp (format "(lkb::redefine-type \"%s\")" 
 			  (buffer-substring beg (min (1+ end) (point-max)))))
     (goto-char pos)))
+
+;;;
+;;; menu construction
+;;;
+
+(defun install-lkb-menu (map)
+  (unless lkb-menu-installed
+    (install-lkb-menu-aux map)
+    (setf lkb-menu-installed t)))
+
+(defun install-lkb-menu-aux (map)
+  (define-key map [menu-bar lkb] (name-keymap "LKB"))
+  ;;
+  ;; begin level 1
+  (define-key map [menu-bar lkb redefine-type]
+    (fi::menu "Redefine type"
+	      'redefine-type :enable '(eval-in-lisp "*current-grammar-load-file*")))  
+  (define-key map [menu-bar lkb break] (name-keymap "---"))
+  (define-key map [menu-bar lkb generate] (name-keymap "Generate"))
+  (define-key map [menu-bar lkb parse] (name-keymap "Parse"))
+  (define-key map [menu-bar lkb view] (name-keymap "View"))
+  (define-key map [menu-bar lkb load] (name-keymap "Load"))
+  ;;
+  ;; begin level 2
+  ;; (generate)
+  (define-key map [menu-bar lkb generate index]
+    (fi::menu "Index"
+	      'index-for-generator :enable '(eval-in-lisp "*current-grammar-load-file*")))
+  (define-key map [menu-bar lkb generate show_chart]
+    (fi::menu "Show chart"
+	      'show-gen-chart :enable '(eval-in-lisp "*current-grammar-load-file*")))
+  (define-key map [menu-bar lkb generate redisplay]
+    (fi::menu "Redisplay realization"
+	      'show-gen-result :enable '(eval-in-lisp "*current-grammar-load-file*")))
+  (define-key map [menu-bar lkb generate from_edge]
+    (fi::menu "Generate..."
+	      'generate-from-edge :enable '(eval-in-lisp "*current-grammar-load-file*")))
+  ;; (parse)
+  (define-key map [menu-bar lkb parse batch_parse]
+    (fi::menu "Batch parse..."
+	      'parse-sentences-batch :enable '(eval-in-lisp "*current-grammar-load-file*")))
+  (define-key map [menu-bar lkb parse print_chart]
+    (fi::menu "Print chart"
+	      'print-chart :enable '(eval-in-lisp "*current-grammar-load-file*")))
+  (define-key map [menu-bar lkb parse show_chart]
+    (fi::menu "Show chart"
+	      'show-chart :enable '(eval-in-lisp "*current-grammar-load-file*")))
+  (define-key map [menu-bar lkb parse redisplay_parse]
+    (fi::menu "Redisplay parse"
+	      'show-parse :enable '(eval-in-lisp "*current-grammar-load-file*")))
+  (define-key map [menu-bar lkb parse parse_input]
+    (fi::menu "Parse input..."
+	      'clim-user::do-parse-batch :enable '(eval-in-lisp "*current-grammar-load-file*")))
+  ;; (view)
+  (define-key map [menu-bar lkb view lexical_rule]
+    (fi::menu "Lexical rule..."
+	      'show-lex-rule :enable '(eval-in-lisp "*current-grammar-load-file*")))
+  (define-key map [menu-bar lkb view grammar_rule]
+    (fi::menu "Grammar rule..."
+	      'show-grammar-rule :enable '(eval-in-lisp "*current-grammar-load-file*")))
+  (define-key map [menu-bar lkb view word_entries]
+    (fi::menu "Word entries..."
+	      'show-words :enable '(eval-in-lisp "*current-grammar-load-file*")))
+  (define-key map [menu-bar lkb view lex_entry]
+    (fi::menu "Lex entry..."
+	      'show-lex :enable '(eval-in-lisp "*current-grammar-load-file*")))
+  (define-key map [menu-bar lkb view type_expanded]
+    (fi::menu "Expanded type..."
+	      'show-type :enable '(eval-in-lisp "*current-grammar-load-file*")))
+  (define-key map [menu-bar lkb view type_definition]
+    (fi::menu "Type definition..."
+	      'show-type-spec :enable '(eval-in-lisp "*current-grammar-load-file*")))
+  (define-key map [menu-bar lkb view type_hierarchy]
+    (fi::menu "Type hierarchy..."
+	      'show-type-tree :enable '(eval-in-lisp "*current-grammar-load-file*")))
+  ;; (load)
+  (define-key map [menu-bar lkb load reload]
+    (fi::menu "Reload grammar"
+	      'reload-script-file :enable '(eval-in-lisp "*current-grammar-load-file*")))
+  (define-key map [menu-bar lkb load complete]
+    (fi::menu "Complete grammar..."
+	      'read-script-file :enable t)))
+
+(defun name-keymap (str) 
+  (cons str (make-sparse-keymap str)))
+
+(add-hook 'fi:inferior-common-lisp-mode-hook 
+	  (function (lambda ()
+		      (install-lkb-menu fi:inferior-common-lisp-mode-map))))
+
