@@ -4,6 +4,8 @@
 ;;; 
 ;;; Ann Copestake
 
+(in-package :cl-user)
+
 ;;; generator output functions which are not dialect specific
 
 (defun show-gen-result nil
@@ -65,7 +67,9 @@
          (display-parse-tree edge nil)
          (when (fboundp 'mrs::output-mrs-after-parse)
            (funcall 'mrs::output-mrs-after-parse *parse-record*)))
-     (format t "~%No parses found")))
+     (progn
+       (lkb-beep)
+       (format t "~%No parses found"))))
 
 #|     
      (let ((possible-edge-name

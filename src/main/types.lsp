@@ -7,6 +7,7 @@
 ;;; July 1996 - cacheing glbs
 ;;; structure mod to allow glbs to be calculated 
 
+(in-package :cl-user)
 
 ;;;
 ;;; For each type we need:
@@ -63,7 +64,6 @@
 
 (defvar *types-changed* nil)
 (defvar *lexicon-changed* nil)
-(defvar *sign-types* nil)
 
 (defvar *leaf-types* nil)
 
@@ -72,13 +72,12 @@
 (defun clear-types nil
    (disable-type-interactions)
    (setf *toptype* nil)
-   (setf *sign-types* nil)
    (clrhash *types*)
    (setf *leaf-types* nil)
    (clear-type-cache)
    (clear-feature-table)
    (clear-expanded-lex)
-#+:allegro(when *type-reload-p* (gc t))
+#+(and :allegro :lingo) (when *type-reload-p* (gc t))
    (setf *type-reload-p* t))
      
 
@@ -95,20 +94,6 @@
          (setf (type-visible-p entry) nil))
       *types*))
 
-; slightly kludgy function for parser compilation
-
-(defun get-possible-sign-types nil
-   (or *sign-types*
-      (let ((sign-entry (get-type-entry *sign-type*)))
-         (if sign-entry 
-            (setf *sign-types* 
-               (cons *sign-type* (get-descendants sign-entry)))
-            (maphash 
-               #'(lambda (type value)
-                  (declare (ignore value))
-                  (push type *sign-types*))
-               *types*))
-         *sign-types*)))
 
 ; turn some of the following into macros when everything seems to work OK
 

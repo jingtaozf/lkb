@@ -8,6 +8,8 @@
 ;;; Pembroke Street
 ;;; Cambridge, UK
 
+(in-package :cl-user)
+
 ;;; There are 2 entry points: graph-display-layout and graph-display-output.
 ;;; See file ':worksheet.lsp' for some example calls. More detailed 
 ;;; documentation to follow.

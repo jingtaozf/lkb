@@ -3,6 +3,8 @@
 ;;; No use or redistribution without permission.
 ;;; 
 
+(in-package :cl-user)
+
 ;;; Feb 1998 - removed fairly useless indexing scheme
 ;;;            currently stubs for a better one, which will have to be implemented by
 ;;;            defining get-indexed-lrules and get-indexed-rules sensibly

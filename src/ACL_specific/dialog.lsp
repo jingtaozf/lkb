@@ -89,7 +89,7 @@
 ;;; when the cancel box is clicked, nil is returned
 ;;; The dialog box built is sized appropriately
 
-#+allegro-v4.3.1
+#+(and :allegro (not (version>= 5 0)))
 (defun ask-for-strings-movable (title prompt-init-pairs &optional width)
   (let* ((history nil)
 	 (stream t)
@@ -144,7 +144,7 @@
     ;; User selected "OK", so return the result
     result))
 
-#+allegro-v5.0
+#+(and :allegro (version>= 5 0))
 (clim:define-application-frame lkb-dialog ()
   ((prompt-init-pairs :initform nil
 		      :accessor dialog-pairs)
@@ -160,7 +160,7 @@
   (:layouts
    (default dialog)))
 
-#+allegro-v5.0
+#+(and :allegro (version>= 5 0))
 (defun ask-for-strings-movable (title prompt-init-pairs &optional width)
   (let ((frame (clim:make-application-frame 'lkb-dialog)))
     (setf (clim:frame-pretty-name frame) title)
@@ -169,7 +169,7 @@
     (catch 'dialog
 	(clim:run-frame-top-level frame))))
 
-#+allegro-v5.0
+#+(and :allegro (version>= 5 0))
 (defun display-dialog (frame stream &key max-width max-height)
   (declare (ignore max-width max-height))
   (let* ((history nil)
@@ -253,7 +253,7 @@
 (defvar *print-scale* nil)
 (defvar *print-filename* "~")
 
-#+allegro-v4.3.1
+#+(and :allegro (not (version>= 5 0)))
 (defun get-print-options ()
   (let ((destination *print-destination*)
 	(orientation *print-orientation*)
@@ -306,3 +306,4 @@
     (setq *print-filename* file)
     (values *print-destination* *print-orientation* *print-scale* 
 	    *print-filename*)))
+

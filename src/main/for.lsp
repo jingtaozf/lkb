@@ -7,6 +7,8 @@
 ;;; Added in-stream (as in Procyon Common Lisp) AAC 9 April 1990
 ;;; Added on (as in Procyon Common Lisp) AAC 12 October 1993
 
+(in-package :cl-user)
+
 (export '(for in do collect collect-reversed nconc filter
           some-satisfy keep-first car-filter append keep-if
           keep-unless all-satisfy none-satisfy from to

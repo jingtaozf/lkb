@@ -2,6 +2,8 @@
 ;;; No use or redistribution without permission.
 ;;;
 
+(in-package :cl-user)
+
 ;;; Input from lexical entry and psort/template files
 ;;; in TDL format
 

@@ -2,6 +2,8 @@
 ;;; No use or redistribution without permission.
 ;;; 
 
+(in-package :cl-user)
+
 ;;; Displaying FSs in a variety of ways
 ;;; Window functions are in activefs.lsp which is not 
 ;;; Lisp-independent

@@ -2,6 +2,8 @@
 ;;; No use or redistribution without permission.
 ;;; 
 
+(in-package :cl-user)
+
 ;;; Modified for YADU
 ;;;
 ;;; MCL port
@@ -26,6 +28,8 @@
   (let ((file-name 
          (ask-user-for-existing-pathname "Script file?")))
     (when file-name
+      (clear-grammar)                   ; should clear everything that might not be
+      (setf  *check-paths* nil)         ; overridden, this should do for now
       (load file-name))))
 
 
@@ -301,7 +305,7 @@
 ;;; "Parse Input" do-parse
 
 
-(defparameter *last-parses* '("it annoys Kim that she loves the books"))
+(defparameter *last-parses* '("Kim sleeps"))
 
 
 (defun do-parse nil

@@ -2,6 +2,8 @@
 ;;; No use or redistribution without permission.
 ;;;
 
+(in-package :cl-user)
+
 ;;; TDFS display
 
 ;;; Jan 1997 - moved from yadu.lsp

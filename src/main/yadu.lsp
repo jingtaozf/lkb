@@ -7,6 +7,8 @@
 ;;; Cambridge, UK
 ;;; and several other places ...
 
+(in-package :cl-user)
+
 ;;; YADU
 
 ;;; YADU data structures

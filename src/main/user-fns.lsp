@@ -1,5 +1,6 @@
 ;;; User defined functions - from old globals file
 
+(in-package :cl-user)
 
 (defun make-sense-unifications (sense-string id language)
    ;; < orth : hd > = sense
@@ -75,8 +76,7 @@
 ;;; trying to apply a rule which affects spelling and
 ;;; which should therefore only be applied by the morphology
 ;;; system.  
-;;; Old test was for something which was a subtype of
-;;; *morph-rule-type* - this tests for 
+;;; this version tests for
 ;;; < NEEDS-AFFIX > = true
 ;;; in the rule
   (let ((affix (get-dag-value (rule-full-fs rule) 'needs-affix)))

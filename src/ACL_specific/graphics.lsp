@@ -214,7 +214,7 @@
 
 ;; Add a [Print] button
 
-#+(and :ignore allegro-v4.3.1)
+#+(and :ignore (and :allegro (not (version>= 5 0))))
 (define-lkb-frame-command (com-print-frame :menu "Print") 
     ()
   (clim:with-application-frame (frame)

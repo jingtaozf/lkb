@@ -54,11 +54,9 @@
   
 ;;; Parsing
 
-(def-lkb-parameter *chart-limit* 100)
+(def-lkb-parameter *maximum-number-of-edges* 3000)
 
-(def-lkb-parameter *sign-type* 'sign
-   "a special type wrt parsing - rule indexing is checked for its
-   descendants")
+(def-lkb-parameter *chart-limit* 100)
 
 (def-lkb-parameter *mother-feature* 0
    "The feature giving the mother in a grammar rule")
@@ -67,15 +65,8 @@
    "a feature path - a head daughter in a rule may be identified by
     having the same value for this path as the mother")
 
-;;; value is 'node for YADU
-
 (def-lkb-parameter *start-symbol* 'sign
    "a type which specifies the type of any valid parse")
-
-(def-lkb-parameter *morph-rule-type* 'morph-rule
-   "lexical rules of this type will not be applied
-   by the parser because it currently has no morphological
-   component")
 
 (def-lkb-parameter *maximal-lex-rule-applications* 7
    "The number of lexical rule applications which may be made

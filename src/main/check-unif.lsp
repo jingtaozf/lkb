@@ -2,6 +2,8 @@
 ;;; No use or redistribution without permission.
 ;;; 
 
+(in-package :cl-user)
+
 ;;; *check-paths* is the parameter set in user file. This is used to construct value
 ;;; of *check-paths-optimised* which is what is used internally
 

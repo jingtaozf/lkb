@@ -1,6 +1,9 @@
 ;;; Copyright Ann Copestake 1998 All Rights Reserved.
 ;;; No use or redistribution without permission.
 ;;;
+
+(in-package :cl-user)
+
 ;;;
 ;;; Leaf types - these functions are effectively simplified versions
 ;;; of those in checktypes.lsp, but that file was getting too large

@@ -188,6 +188,12 @@ run:
          (finalize-test-run environment))))
 
 
+(defun get-tsdb-sentence (line)
+  (multiple-value-bind (item sentence)
+      (parse-tsdb-sentence-read line)
+      (declare (ignore item))
+      sentence))
+
 (defun parse-tsdb-sentence-read (line)
    (flet ((position-nth (char str n)
             (dotimes (ind (length str))

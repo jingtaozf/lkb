@@ -6,6 +6,8 @@
 ;;; CSLI, Stanford University
 ;;; No use or redistribution without permission.
 
+(in-package :cl-user)
+
 #+mcl
 (progn ; for space profiling and similar investigation
 (defparameter aa 0)

@@ -2,6 +2,9 @@
 ;;; No use or redistribution without permission.
 ;;; modified for defaults 1995
 ;;; 
+
+(in-package :cl-user)
+
 ;;; removed read-checked-type-file
 ;;; display-setting stuff is currently commented out
 

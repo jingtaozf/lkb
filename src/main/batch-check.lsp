@@ -1,5 +1,7 @@
 ;;; Functions for checking instances are well formed
 
+(in-package :cl-user)
+
 (defun batch-check-lexicon (&optional path-name)
 ; name is a misnomer - actually check all instances
   (let ((error-file (or path-name 

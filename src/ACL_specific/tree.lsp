@@ -286,7 +286,7 @@
     (setf (get name 'daughters) nil))
   (clear-type-visibility)
   (propagate-visibility-in-type-tree type)
-  (let ((node (car (make-new-type-tree type show-all-p)))
+  (let ((node (car (make-new-type-tree type show-all-p t)))
 	(*davinci-nodes* (make-hash-table :test #'equal)))
     (with-open-file (stream "~/test.daVinci" :direction :output 
 		     :if-exists :supersede)

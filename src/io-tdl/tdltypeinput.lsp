@@ -1,6 +1,8 @@
 ;;; Copyright Ann Copestake 1996 All Rights Reserved.
 ;;; No use or redistribution without permission.
 
+(in-package :cl-user)
+
 ;;; 1997 - added status stuff so that we can read files without
 ;;; modification to get rid of this
 
@@ -59,6 +61,7 @@
       (for file-name in file-names
          do
          (format t "~%Reading in type file ~A" file-name)
+         (force-output t)
          (with-open-file 
             (istream file-name :direction :input)
             (read-tdl-type-stream istream)))) 

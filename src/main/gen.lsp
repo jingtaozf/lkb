@@ -11,6 +11,7 @@
 ;;;
 ;;; Rewritten for new unifier
 
+(in-package :cl-user)
 
 ;;; generalisation, equality and subsumption of fs
 

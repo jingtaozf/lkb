@@ -2,6 +2,8 @@
 ;;; No use or redistribution without permission.
 ;;; 
 
+(in-package :cl-user)
+
 ;;; Checking the type hierarchy to see if it meets 
 ;;; the various constraints
 
@@ -213,7 +215,7 @@
            (setf (type-constraint-mark type-entry) nil)          
            (setf (type-local-constraint type-entry) nil)))
   (unmark-type-table)  
-  #+allegro (gc t) ; try and force it to reclaim space before we refill it
+  #+(and :allegro :lingo) (gc t) ; try and force it to reclaim space before we refill it
   (format t "~%Expanding constraints")
   (when (expand-and-inherit-constraints)
     (format t "~%Making constraints well formed")
@@ -855,8 +857,12 @@
                                 (setf (cdr app-prev-tail) (cdr app-tail))
                                 (setf (cdr app-tail) parent-ordered)
                                 (setq parent-ordered app-tail)
-                                (return-from found nil)))))))))
-      (setf (type-appfeats type-record) ordered-features)
+                                (return-from found nil))))))))
+          (sorted-ordered-features (if (and *feature-ordering* ordered-features)
+                                       (fix-feature-ordering ordered-features
+                                                             *feature-ordering*)
+                                     ordered-features)))
+      (setf (type-appfeats type-record) sorted-ordered-features)
       ;; don't process children if this type has been visited previously and its
       ;; feature ordering wasn't changed this time around
       ;(print (list type already-ordered-p (seen-node-p type-record)))
@@ -865,8 +871,16 @@
          (unless (type-enumerated-p type-record)
             (for daughter in (type-daughters type-record)
                do
-               (inherit-display-ordering daughter ordered-features))))))
+               (inherit-display-ordering daughter sorted-ordered-features))))))
 
+(defun fix-feature-ordering (feats feature-order)
+  (sort feats
+               #'(lambda (x y)
+                   (let ((x-list (member x feature-order)))
+                     (if x-list
+                         (member y x-list))))))
+
+; should be stable-sort, but seems to be buggy in ACL
 
 ;;; Stuff below here is new for YADU
 ;;; Checking defaults

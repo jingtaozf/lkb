@@ -1,3 +1,4 @@
+(in-package :cl-user)
 
 #|
 (dolist (type *type-names*)
@@ -54,7 +55,8 @@
                            (format t 
                          "~%Warning: setting constraint of ~A to have ~A as type"
                           node node))
-                        (set-type local-constraint node)
+                        (setq local-constraint 
+                              (destructively-retype-dag local-constraint node))
                         (setf (type-local-constraint type-entry)
                                 local-constraint)
                         )

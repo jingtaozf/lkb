@@ -1,3 +1,5 @@
+(in-package :cl-user)
+
 ;;; Record source locations for things, and provide an interface to
 ;;; display sources in emacs
 

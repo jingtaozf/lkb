@@ -5,6 +5,8 @@
 ;;;            - output-lexicon etc removed
 ;;;            - get-psort-type removed (not called)
 
+(in-package :cl-user)
+
 ;;; Lexical entries and psort storage etc
 
 ;;; Lexical entries are indexed by orthography (string)

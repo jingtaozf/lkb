@@ -8,15 +8,19 @@
     :source-pathname (get-sources-dir "lkb")
     :binary-pathname (get-binaries-dir "lkb")
     :source-extension "lsp"
+    :depends-on ()
+    :initially-do
+    #+:allegro (setf excl:*enable-package-locked-errors* nil)
     :finally-do
     (progn
-      (pushnew :lingo *features*)
+;      (pushnew :lingo *features*)
       (pushnew :lkb *features*)
       #+:allegro 
       (let ((*package* (find-package "CLIM-USER")))
-	(clim-user::set-up-lkb-interaction :big))
+	(clim-user::set-up-lkb-interaction :core))
+      ; big for big grammar
       #+:mcl
-      (cl-user::set-up-lkb-interaction :big))
+      (cl-user::set-up-lkb-interaction :core))
     :components
     ((:module "one"
               :source-pathname "main"

@@ -2,6 +2,8 @@
 ;;; No use or redistribution without permission.
 ;;;
 
+(in-package :cl-user)
+
 ;;; Input from lexical rule and construction files
 ;;; in TDL format
 
@@ -25,7 +27,7 @@
 (defun read-tdl-lex-rule-file-aux (file-name ovwr)
   (setf *ordered-rule-list* nil)
   (when (fboundp 'reset-cached-lex-entries)
-   (reset-cached-lex-entries)) ; in constraints.lsp  
+   (funcall 'reset-cached-lex-entries)) ; in constraints.lsp  
   (when ovwr (clear-lex-rules) )    
   (read-tdl-lex-or-grammar-rule-file file-name t)
   (format t "~%Lexical rule file read"))   
@@ -46,6 +48,9 @@
          (cond ((eql next-char #\;) 
                  (read-line istream))
                ; one line comments
+               ((eql next-char #\%) 
+                 (read-line istream))
+               ; Bernie morphology
                ((eql next-char #\:) 
                  (read-tdl-declaration istream))
                ; declarations like :begin :type
@@ -67,13 +72,17 @@
        (unless (eql next-char2 #\=)
             (error "~%Incorrect syntax following rule name ~A" id))   
        (read-char istream)
-       (setf non-def
-             (read-tdl-lex-avm-def istream id))
-       (check-for #\. istream id)
-       (process-unif-list id non-def nil entry *rule-persistence*)
-       (when (rule-full-fs entry)
-         (if lexical
-             (progn (pushnew id *ordered-lrule-list*)
-                    (add-lexical-rule id entry))
-           (progn (pushnew id *ordered-rule-list*)
-                  (add-grammar-rule id entry)))))))
+       (let ((next-char3 (peek-char t istream nil 'eof)))
+         (when (eql next-char3 #\%)
+           (read-line istream))
+         ; ignore Bernie morphology
+         (setf non-def
+               (read-tdl-lex-avm-def istream id))
+         (check-for #\. istream id)
+         (process-unif-list id non-def nil entry *rule-persistence*)
+         (when (rule-full-fs entry)
+           (if lexical
+               (progn (pushnew id *ordered-lrule-list*)
+                      (add-lexical-rule id entry))
+             (progn (pushnew id *ordered-rule-list*)
+                    (add-grammar-rule id entry))))))))

@@ -3,6 +3,7 @@
 ;;; No use or redistribution without permission.
 ;;; 
 
+(in-package :cl-user)
 
 ;;; Port to MCL - moved dialect specific display stuff to parseout.lsp
 
@@ -96,8 +97,11 @@
 (defvar *edge-id* 0)
 
 (defun next-edge nil
-   (incf *edge-id*)
-   *edge-id*)
+  (when (> *edge-id* *maximum-number-of-edges*)
+    (error "~%Probable runaway rule: parse/generate aborted 
+             (see documentation of *maximum-number-of-edges*)"))
+  (incf *edge-id*)
+  *edge-id*)
 
 (defvar *morphs* (make-array (list *chart-limit*) :initial-element nil))
 
@@ -660,7 +664,8 @@
           (tail nil))
       (unify-list-path flist indef-dag (tdfs-indef tdfs))
       (when (tdfs-tail tdfs)
-        (let ((path (create-path-from-feature-list (listify flist))))
+        (let ((path (create-path-from-feature-list
+                     (if (listp flist) flist (list flist)))))
           (for tail-element in (tdfs-tail tdfs)
                do
                (push (add-path-to-tail path tail-element) tail))))
@@ -789,16 +794,20 @@
          (let ((line (read-line istream nil 'eof)))
             (cond
                ((eq line 'eof))
-               ((eql (count #\@ line) 11) ; must be 12 fields in tsdb input
-                  (parse-tsdb-sentences1
-                     istream line parse-file result-file run-file))
+               ((eql (count #\@ line) 11)
+                                        ; must be 12 fields in tsdb input
+                (if (fboundp 'get-test-run-information)
+                    (parse-tsdb-sentences1
+                     istream line parse-file result-file run-file)
+                  (batch-parse-sentences istream line parse-file
+                                         #'get-tsdb-sentence)))
                (t
                   (batch-parse-sentences istream line parse-file)))))))
 
 
 (defparameter *do-something-with-parse* nil)
 
-(defun batch-parse-sentences (istream raw-sentence parse-file)
+(defun batch-parse-sentences (istream raw-sentence parse-file &optional access-fn)
   (let* ((output-file 
             (or parse-file (ask-user-for-new-pathname "Output file?")))
          (start-time (get-universal-time)))
@@ -807,22 +816,24 @@
                       :if-exists :supersede :if-does-not-exist :create)
         (loop
            (when (eql raw-sentence 'eof) (return))
-           (format ostream "~A~%" raw-sentence)
-           (finish-output ostream)
-           (let ((sentence (string-trim '(#\Space #\Tab) raw-sentence)))
-              (unless (equal sentence "")
+           (let ((interim-sentence (if access-fn (apply access-fn (list raw-sentence))
+                                     raw-sentence)))
+             (format ostream "~A~%" interim-sentence)
+             (finish-output ostream)
+             (let ((sentence (string-trim '(#\Space #\Tab) interim-sentence)))
+               (unless (equal sentence "")
                  (let ((user-input 
-                         (split-into-words 
-                            (preprocess-sentence-string sentence))))
-                    (parse user-input nil)
-                    (when (fboundp *do-something-with-parse*)
-                       (funcall *do-something-with-parse*))
-                    (let ((n (length *parse-record*)))
-                       (format ostream "  ~R parse~:[s~;~] found~%" n (= n 1))
-                       (finish-output ostream)))))
-           (setq raw-sentence (read-line istream nil 'eof)))
-        (format ostream "Total elapsed time: ~A secs~%" 
-           (- (get-universal-time) start-time)))))
+                        (split-into-words 
+                         (preprocess-sentence-string sentence))))
+                   (parse user-input nil)
+                   (when (fboundp *do-something-with-parse*)
+                     (funcall *do-something-with-parse*))
+                   (let ((n (length *parse-record*)))
+                     (format ostream "  ~R parse~:[s~;~] found~%" n (= n 1))
+                     (finish-output ostream)))))
+             (setq raw-sentence (read-line istream nil 'eof)))
+           (format ostream "Total elapsed time: ~A secs~%" 
+                   (- (get-universal-time) start-time))))))
 
 
 ;;; extracting a list of lexical entries used in a parse

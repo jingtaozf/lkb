@@ -6,6 +6,8 @@
 ;;; Pembroke Street
 ;;; Cambridge, UK
 
+(in-package :cl-user)
+
 ;;; modified aac Dec 1994 to allow script to read in morphological data
 ;;;              Dec 1995 changed 'morph-rule to *morph-rule-type*
 ;;;              Feb 1996 changed test to allow for subtypes of *morph-rule-type*
@@ -14,6 +16,7 @@
 ;;; should have the type *morph-rule-type* indicated by the bare atom
 ;;; immediately following the rule name
 
+;;; August 1998 - dropped test for *morph-rule-type*
 
 ;;; Tree & Rule structure defs
 
@@ -163,8 +166,7 @@
             ;; next rule.
             (let ((next-char (peek-char t istream nil 'eof)))
                (when (eql next-char 'eof) (return-from outer))
-               (if (eql next-char #\;
-                     )
+               (if (eql next-char #\;)
                   (read-line istream)
                   (if (eql next-char #\%)
                      (let* ((string-thing (read-line istream))
@@ -172,7 +174,7 @@
                                  nil 'eof :start 1)))
                         (cond
                            ((eql form 'eof) (error "~%Bad file"))
-                           ((not (listp form)) (error "~Bad line"))
+                           ((not (listp form)) (error "~%Bad line"))
                            ((eql (car form) 'letter-set)
                               (setf *letter-set-list*
                                  (letter-set-add form 
@@ -185,23 +187,22 @@
 
 (defun morph-item-process (istream)
    (let ((id (lkb-read istream nil))
-         (type (lkb-read istream nil))
+         (type (if (eql *lkb-system-version* :page)
+                   (progn (read-line istream) nil)
+                 ; read the :=
+                   (lkb-read istream nil)))
          (current-set *letter-set-list*)
          method-list)
-      (when (or (eql type *morph-rule-type*)
-                (subtype-p type *morph-rule-type*))
-        ;;; added the possibility of the rule type being a subtype
-        ;;; of *morph-rule-type* 
-        ;;; AAC Feb 1996
-         (block outer
+     ;;; don't check type of type
+        (declare (ignore type))         
+        (block outer
             (loop
                ;; Within each rule, if there is a set of percent marked
                ;; headers, add them as morphological rules.
                (let ((next-char (peek-char t istream nil 'eof)))
                   (when (eql next-char 'eof) 
-                     (error "~%Incomplete rule definition for %A" id))
-                  (if (eql next-char #\;
-                        )
+                     (error "~%Incomplete rule definition for ~A" id))
+                  (if (eql next-char #\;)
                      (read-line istream)
                      (if (eql next-char #\%)
                         (let ((string-thing (read-line istream))
@@ -222,14 +223,17 @@
                                        (append method-list 
                                           (list form))))
                                  (setf start-pos end-value))))
-                        (return-from outer)))))))
+                        (return-from outer))))))
       ;; Tidy up by scanning to the end of the rule
       (let ((*readtable*
                (define-break-characters 
                   '(#\% #\;
                      #\< #\> #\= #\: #\.))))         
          (loop
-            (when (eql (read istream nil #\.) #\.) (return))))
+            (when (eql (read-char istream nil #\.) #\.)
+              (let ((next-char (peek-char nil istream nil #\space)))
+                (when (whitespacep next-char)
+                  (return))))))
       ;; Then compile the morphological rules
       (when method-list
          (morph-input 

@@ -3,7 +3,7 @@
 
 ;;; Functions moved from io-paths/typeinput.lsp
 
-
+(in-package :cl-user)
 
 (defun check-for (character istream name)
    (let ((next-char (peek-char t istream nil 'eof)))

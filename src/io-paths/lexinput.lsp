@@ -6,6 +6,7 @@
 ;;; facilities for templates for trees and quick-check need 
 ;;; to be added back in
 
+(in-package :cl-user)
 
 ;;; Input from lexical entry and psort files
 
