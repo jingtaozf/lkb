@@ -1822,7 +1822,7 @@ int comp(char **a,char**b) {
 
 
 int tsdb_uniq_projection(char** projection,int n) {
-  int result,i,j,d=0;
+  int i,j,d=0;
 #if defined(TOM) && defined(DEBUG)
   fprintf(tsdb_debug_stream,"qsort\n");
   for (i=0;i<n;i++) {
@@ -1830,7 +1830,7 @@ int tsdb_uniq_projection(char** projection,int n) {
   }
   fflush(tsdb_debug_stream);
 #endif
-  result = qsort(projection,n,sizeof(char*),(int(*)())comp);
+  qsort(projection,n,sizeof(char*),(int(*)())comp);
 #if defined(TOM) && defined(DEBUG)
   fprintf(tsdb_debug_stream,"qsort\n");
   for (i=0;i<n;i++) {
