@@ -12,6 +12,8 @@ TEE=tee
 
 update:
 	( \
+	  cd ${ROOT}/erg; \
+	  ${CVS} update -P -d -R; \
 	  cd ${ROOT}/matrix; \
 	  ${CVS} update -P -d -R; \
 	  cd ${ROOT}/spanish; \
@@ -89,6 +91,7 @@ lkb_linux_om@lineara:
 	  echo "(load \"${ROOT}/lkb/src/general/loadup.lisp\")"; \
 	  echo "(load \"${ROOT}/lkb/src/ACL_specific/deliver.lsp\")"; \
 	  echo "(pushnew :lkb *features*)"; \
+	  echo "(pushnew :mrs *features*)"; \
 	  echo "(setf make::*building-image-p* t)"; \
 	  echo "(setf (system:getenv \"DISPLAY\") nil)"; \
 	  echo "(compile-system \"tsdb\" :force t)"; \
@@ -119,6 +122,7 @@ lkb_solaris:
 	  echo "(load \"${ROOT}/lkb/src/general/loadup.lisp\")"; \
 	  echo "(load \"${ROOT}/lkb/src/ACL_specific/deliver.lsp\")"; \
 	  echo "(pushnew :lkb *features*)"; \
+	  echo "(pushnew :mrs *features*)"; \
 	  echo "(setf make::*building-image-p* t)"; \
 	  echo "(setf (system:getenv \"DISPLAY\") nil)"; \
 	  echo "(compile-system \"tsdb\" :force t)"; \
@@ -170,8 +174,7 @@ erg:
 	  ${TAR} Svczf ${TARGET}/${DATE}/erg.tgz \
 	      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
               --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
-	      --exclude="pet*" --exclude="tsdb*" \
-	      --exclude="*.fasl" \
+	      --exclude="tsdb*" --exclude="*.fasl" \
 	      erg; \
 	)
 
@@ -216,20 +219,22 @@ itsdb: itsdb_binaries itsdb_libraries itsdb_source \
 itsdb_binaries:
 	( \
 	  cd ${ROOT}/lkb; \
+	  find src/.sacl -type f -exec touch {} \; ; \
 	  tar Svczf ${TARGET}/${DATE}/itsdb_solaris.tgz \
 	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" \
-	      bin/solaris/tsdb bin/solaris/swish++ bin/solaris/.swish++ \
+	      bin/solaris/tsdb bin/solaris/swish++ \
 	      bin/solaris/pvmd3 bin/solaris/pvm \
 	      src/pvm/solaris/*.so src/tsdb/solaris/*.so \
 	      src/.sacl/pvm src/.sacl/tsdb; \
 	)
 	( \
 	  cd ${ROOT}/lkb; \
+	  find src/.l6cl -type f -exec touch {} \; ; \
 	  tar Svczf ${TARGET}/${DATE}/itsdb_linux.tgz \
 	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" \
-	      bin/linux/tsdb bin/linux/swish++ bin/linux/.swish++ \
+	      bin/linux/tsdb bin/linux/swish++ \
 	      bin/linux/pvmd3 bin/linux/pvm \
 	      src/pvm/linux/*.so src/tsdb/linux/*.so \
 	      src/.l6cl/pvm src/.l6cl/tsdb; \
