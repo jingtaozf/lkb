@@ -27,7 +27,7 @@
       (:type
        (format 
         stream 
-        "#U[type ~:[-1~*~;~a~] ~:[.~*~;~{~a~^.~}~] ~
+        "#U[type ~:[-1~*~;~a~] ~:[.~*~;\"~{~a~^.~}\"~] ~
             ~:[top~*~;~a~] ~:[top~*~;~a~] ~:[-1~*~;~a~]]"
         (failure-id object) (failure-id object)
         (failure-path object) (failure-path object)
@@ -37,7 +37,7 @@
       (:cycle
        (format 
         stream 
-        "#U[cycle ~:[-1~*~;~a~] ~:[.~*~;~{~a~^.~}~] ~:[.~*~;~{~a~^.~}~] ~
+        "#U[cycle ~:[-1~*~;~a~] ~:[.~*~;\"~{~a~^.~}\"~] ~:[.~*~;~{~a~^.~}~] ~
             ~:[-1~*~;~a~]]"
         (failure-id object) (failure-id object) 
         (failure-path object) (failure-path object)
@@ -46,7 +46,7 @@
       (:constraint
        (format 
         stream 
-        "#U[constraint ~:[-1~*~;~a~] ~:[.~*~;~{~a~^.~}~] ~
+        "#U[constraint ~:[-1~*~;~a~] ~:[.~*~;\"~{~a~^.~}\"~] ~
            ~:[top~*~;~a~] ~:[top~*~;~a~] ~:[top~*~;~a~] ~:[-1~*~;~a~]]"
         (failure-id object) (failure-id object)
         (failure-path object) (failure-path object)
@@ -57,7 +57,7 @@
 
 (defun debug-yadu! (tdfs1 tdfs2 path)
   #+:debug
-  (setf %tdfs1 tdfs1 %tdfs2 tdfs2)
+  (setf %tdfs1 tdfs1 %tdfs2 tdfs2 %path path)
   (with-unification-context (ignore)
     (let* ((dag1 (tdfs-indef tdfs1))
            (tdfs2 (create-temp-parsing-tdfs tdfs2 path))

@@ -173,18 +173,26 @@
   
 (defun lui-show-parses (edges &optional (input *sentence*))
   (loop
+      with stream = (make-string-output-stream)
+      initially
+        (format 
+         stream "group ~d ~s~a~%"
+         (length edges) (or input "Processing Result(s)") %lui-eoc%)
       for i from 1
       for title = (format nil "`~a' Parse Tree # ~d" input i)
       for edge in edges 
       for top = (make-new-parse-tree edge 1)
       for id = (lsp-store-object nil input top)
       do
-        (format %lui-stream% "tree ~d " id)
-        (lui-show-tree top input)
-        (format %lui-stream% " ~s~a~%" title %lui-eoc%))
+        (format stream "tree ~d " id)
+        (lui-show-tree top input :stream stream)
+        (format stream " ~s~a~%" title %lui-eoc%)
+      finally
+        (format %lui-stream% "~a" (get-output-stream-string stream)))
   (force-output %lui-stream%))
 
-(defun lui-show-tree (top &optional (input *sentence*))
+(defun lui-show-tree (top &optional (input *sentence*)
+                      &key (stream %lui-stream%))
   (let* ((edge (get top 'edge-record))
          (tdfs (get top 'edge-fs))
          (daughters (get top 'daughters))
@@ -197,11 +205,11 @@
          (rule (if (rule-p (edge-rule edge))
                  (rule-id (edge-rule edge))
                  (string-downcase (string (first (edge-lex-ids edge)))))))
-    (format %lui-stream% "#T[~a ~s ~s ~a ~a " id label form n rule)
+    (format stream "#T[~a ~s ~s ~a ~a " id label form n rule)
     (loop
         for daughter in (if form (get (first daughters) 'daughters) daughters)
-        do (lui-show-tree daughter))
-    (format %lui-stream% "]")))
+        do (lui-show-tree daughter input :stream stream))
+    (format stream "]")))
 
 (defun lui-display-fs (tdfs title id &optional failures)
   (declare (ignore id))
@@ -218,6 +226,8 @@
                     (format stream "avm ~d " id)
                     (display-dag1 dag 'linear stream))))
       (format %lui-stream% string))
+    #+:null
+    (format %lui-stream% " ~s~%" path)
     (format %lui-stream% " ~s~%" title)
     (format %lui-stream% "~@[[~{~s~^ ~}]~]" failures)
     (format %lui-stream% "~a" %lui-eoc%))
@@ -249,7 +259,7 @@
 (defun lui-status-p (key)
   (when (and (streamp %lui-stream%) (open-stream-p %lui-stream%))
     (case key
-      #+:null
+      #-:null
       (:tree (streamp %lui-stream%))
       #-:null
       (:avm (streamp %lui-stream%))

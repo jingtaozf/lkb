@@ -395,7 +395,7 @@
 
 (defun lsp-make-readtable ()
   (let ((readtable (copy-readtable)))
-    (set-syntax-from-char #\. #\- readtable)))
+    readtable))
 
 (defun lsp-find-client (id)
   (loop
@@ -485,6 +485,8 @@
   (let ((*readtable* (copy-readtable))
         (*package* (find-package :lkb)))
     (set-syntax-from-char #\. #\space *readtable*)
-    (read-from-string (format nil "(~a)" symbol))))
+    (read-from-string (if (stringp symbol) 
+                        symbol
+                        (format nil "(~a)" symbol)))))
 
         
