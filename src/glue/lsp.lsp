@@ -435,6 +435,7 @@
         (rest bucket)))))
 
 (defun lsp-browse (id context object format view &key title)
+  (declare (ignore context))
   #+:debug
   (setf %context context %object object %format format %view view)
   (let ((title (or title (format
