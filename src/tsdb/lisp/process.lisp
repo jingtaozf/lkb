@@ -715,13 +715,19 @@
                           (call-hook (cpu-reader cpu) i-input))))
            (o-input (when (and (stringp o-input) (not (string= o-input "")))
                       o-input))
+	   (tagger (when (cpu-p cpu) (cpu-tagger cpu)))
            (p-input (cond
                      ((and (cpu-p cpu) (cpu-preprocessor cpu))
-                      (call-hook (cpu-preprocessor cpu) i-input))
+                      (call-hook 
+		       (cpu-preprocessor cpu) i-input 
+		       (when (consp tagger) tagger)))
                      (*tsdb-preprocessing-hook*
-                      (call-hook *tsdb-preprocessing-hook* i-input))))
+                      (call-hook 
+		       *tsdb-preprocessing-hook* i-input
+		       (when (consp tagger) tagger)))))
 	   (tags (cond
-		  ((and (cpu-p cpu) (cpu-tagger cpu))
+		  ((and (cpu-p cpu) (cpu-tagger cpu)
+			(not (consp (cpu-tagger cpu))))
 		   (call-hook (cpu-tagger cpu) i-input))
 		  (*tsdb-tagging-hook*
 		   (call-hook *tsdb-tagging-hook* i-input)))))
