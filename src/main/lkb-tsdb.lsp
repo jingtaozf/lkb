@@ -59,30 +59,40 @@ e.g.
 ;;; Parsing sentences from file
 ;;; (parse-tsdb-sentences "Macintosh HD:lkb99-expt:big:grammar:tsdb:csli:item" "Macintosh HD:lkb99-expt:big:parsenew" "Macintosh HD:lkb99-expt:big:resultnew")
 ;;; (parse-tsdb-sentences "Macintosh HD:lkb99-expt:big:item1" "Macintosh HD:lkb99-expt:big:parsenew1" "Macintosh HD:lkb99-expt:big:resultnew1")
+;;; (parse-tsdb-sentences)
 
 (defun parse-tsdb-sentences (&optional input-file parse-file result-file)
    (unless input-file 
       (setq input-file (ask-user-for-existing-pathname "Sentence file?")))
-   (when input-file
-      (unless parse-file 
-         (setq parse-file (ask-user-for-new-pathname "Parse file?")))
-      (when parse-file
-         (unless result-file 
-            (setq result-file (ask-user-for-new-pathname "Result file?")))
-         (when result-file
-            (when (probe-file parse-file) (delete-file parse-file))
-            (when (probe-file result-file) (delete-file result-file))
+   (when
+      (and input-file
+         (or (probe-file input-file) (error "Input file ~A does not exist" input-file)))
+      (when
+         (or parse-file
+            (progn
+               (setq parse-file (ask-user-for-new-pathname "Parse file?"))
+               (and parse-file
+                  (or (not (probe-file parse-file)) (delete-file parse-file)))))
+         (when
+            (or result-file
+               (progn
+                  (setq result-file (ask-user-for-new-pathname "Result file?"))
+                  (and result-file
+                     (or (not (probe-file result-file)) (delete-file result-file)))))
+            (format t "~%~A: ~A -> ~A, ~A..." 'parse-tsdb-sentences
+               input-file parse-file result-file)
+            (finish-output)
             (let ((start-time (get-internal-run-time))
                   #+mcl (start-gc-time (gctime))
                   )
                (with-open-file (istream input-file :direction :input)
                   (parse-tsdb-sentences1 istream parse-file result-file))
-               (format t "~%Total CPU time: ~A secs"
-                  (truncate (- (get-internal-run-time) start-time)
+               (format t "~%~%Total CPU time: ~A secs"
+                  (round (- (get-internal-run-time) start-time)
                      internal-time-units-per-second))
                #+mcl
                (format t " (includes ~A secs GC)"
-                  (truncate (- (gctime) start-gc-time)
+                  (round (- (gctime) start-gc-time)
                      internal-time-units-per-second))
                )))))
 
@@ -90,47 +100,60 @@ e.g.
 (defun parse-tsdb-sentences1 (istream parse-file result-file &aux (nsent 0))
    ;; open and close output files for each sentence, so if run fails we have all
    ;; results in them until that point
-   (loop
-      (multiple-value-bind (id words)
-            (parse-tsdb-sentence-read (read-line istream nil 'eof))
-         (when (eq id 'eof) (return))
-         (incf nsent)
-         ;; (when (eql (rem nsent 50) 1) (print nsent) (gc) (room))
-         (if (> (length words) *chart-limit*)
-            (format t "~%Sentence ~A too long" id)
-            (let ((*safe-not-to-copy-p* t)
-                  (*parse-unifs* 0)
-                  (start (get-internal-run-time)))
-               (clear-chart)
-               (add-morphs-to-morphs words)
-               (add-words-to-chart)
-               (setf *parse-record*
-                  (find-spanning-edges 0 (length words)))
-;               (cache-structures)
-               (uncache-lexical-entries) ; *** remove all cached lexical entries
-               (let ((n 0)
-                     (time
-                        (truncate (* (- (get-internal-run-time) start) 10) ; tenths of secs
-                           internal-time-units-per-second))
-                     (*print-pretty* nil))
-                  (with-open-file (ostream parse-file :direction :output
-                                     :if-exists :append :if-does-not-exist :create)
-                     (format ostream "~@{~A~^@~}~%"
-                        id 1 id (length *parse-record*) time time -1 -1 -1 -1 -1 -1
-                        -1 -1 *parse-unifs* -1 -1 -1 -1 -1 -1 -1
-                        (multiple-value-bind (sec min hour day mon year)
-                             (decode-universal-time (get-universal-time))
-                           (format nil "~A-~A-~A ~A:~A:~A" day
-                              (aref #("jan" "feb" "mar" "apr" "may" "jun" "jul" "aug" "sep"
-                                      "oct" "nov" "dec") (1- mon)) year hour min sec))
-                        ""))
-                  (with-open-file (ostream result-file :direction :output
-                                     :if-exists :append :if-does-not-exist :create)
-                     (dolist (parse *parse-record*)
-                        (format ostream "~A@~A@~A@~A@@@-1@-1@@~S@~%"
-                           id n time *edge-id* (parse-tree-structure parse))
-                        (setq time 0) ; zero time for all parses after first
-                        (incf n)))))))))
+   (clear-type-cache)
+   (unwind-protect
+      (loop
+         (multiple-value-bind (id words)
+               (parse-tsdb-sentence-read (read-line istream nil 'eof))
+            (when (eq id 'eof) (return))
+            (incf nsent)
+            ;; (when (eql (rem nsent 50) 1) (print nsent) (gc) (room))
+            (when (eql (rem nsent 50) 1)
+               ;; remove all cached lexical entries at start and after every 50 sentences
+               (uncache-lexical-entries))
+            (if (> (length words) *chart-limit*)
+               (error "Sentence ~A too long" id)
+               (let ((start (get-internal-run-time)))
+                  (multiple-value-bind (unifs fails)
+                        (parse-tsdb-sentence words)
+                     (declare (ignore fails))
+                     (let ((n 0)
+                           (time ; in tenths of secs
+                              (round (* (- (get-internal-run-time) start) 10)
+                                 internal-time-units-per-second))
+                           (*print-pretty* nil))
+                        (with-open-file (ostream parse-file :direction :output
+                                           :if-exists :append :if-does-not-exist :create)
+                           (format ostream "~@{~A~^@~}~%"
+                              id 1 id (length *parse-record*) time time -1 -1 -1 -1 -1 -1
+                              -1 *edge-id* unifs -1 -1 -1 -1 -1 -1 -1
+                              (multiple-value-bind (sec min hour day mon year)
+                                   (decode-universal-time (get-universal-time))
+                                 (format nil "~A-~A-~A ~2,'0D:~2,'0D:~2,'0D" day
+                                    (aref #("jan" "feb" "mar" "apr" "may" "jun" "jul"
+                                            "aug" "sep" "oct" "nov" "dec") (1- mon))
+                                    year hour min sec))
+                              ""))
+                        (with-open-file (ostream result-file :direction :output
+                                           :if-exists :append :if-does-not-exist :create)
+                           (dolist (parse *parse-record*)
+                              (format ostream "~A@~A@~A@~A@@@-1@-1@@~S@~%"
+                                 id n time *edge-id* (parse-tree-structure parse))
+                              (setq time 0) ; zero time for all parses after first
+                              (incf n)))))))))
+     (uncache-lexical-entries)))
+
+
+(defun parse-tsdb-sentence (user-input)
+   (let ((*safe-not-to-copy-p* t)
+         (*parse-unifs* 0) (*parse-fails* 0))
+        (clear-chart)
+        (add-morphs-to-morphs user-input)
+        (add-words-to-chart)
+        (setf *parse-record*
+        (find-spanning-edges 0 (length user-input)))
+;        (cache-structures)
+        (values *parse-unifs* *parse-fails*)))
 
 
 (defun parse-tsdb-sentence-read (line)
