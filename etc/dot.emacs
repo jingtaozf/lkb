@@ -1,6 +1,28 @@
 ;;; Hey, emacs, this file is -*- Emacs-Lisp -*- ... got that?
 
-(defconst lingo-home "/afs/ir.stanford.edu/users/o/e/oepen/src/lkb")
+;;;
+;;; make sure this file is included from your personal `~/.emacs', e.g. put the
+;;; following towards the end of `~/.emacs' (and uncomment these, of course):
+;;;
+;;;   (if (getenv "DELPHINROOT")
+;;;     (let ((root (or (substitute-in-file-name "$DELPHINROOT")
+;;;                     "/afs/ir.stanford.edu/users/o/e/oepen/src/lingo")))
+;;;       (if (file-exists-p (format "%s/dot.emacs" root))
+;;;         (load (format "%s/dot.emacs" root) nil t t))))
+;;;
+;;; in other words, either set the shell environment variable `DELPHINROOT' to
+;;; the root directory of your installation tree (e.g. `~/delphin' for most
+;;; people), then make sure to also export that variable (see the bash(1) or
+;;; tcsh(1) on-line documentation), log out and back in (so that changes to the
+;;; shell configuration take effect), and then launch emacs(1).  alternatively,
+;;; skip the shell configuration part and make sure that the absolute path in
+;;; the second part of the or() statement above is correct.
+;;; 
+;;; please try not to make changes to _this_ file, so that on future upgrades
+;;; you can safely move to a later version.
+;;;
+
+(defconst lingo-home "/afs/ir.stanford.edu/users/o/e/oepen/src/lingo")
 
 (defmacro when (condition &rest body)
   (list 'and condition (cons 'progn body)))
@@ -15,7 +37,7 @@
   ;; set up .load-path., load and configure emacs -- lisp interface
   ;;
   (let ((eli (format "%s/eli" lingo-home))
-        (lkb (format "%s/src" lingo-home)))
+        (lkb (format "%s/lkb/src" lingo-home)))
     (unless (member eli load-path)
       (setq load-path (cons eli load-path)))
     (unless (member lkb load-path)
@@ -24,7 +46,7 @@
   (fset 'lisp-mode (symbol-function 'common-lisp-mode))
   (setq fi:common-lisp-image-name 
     (format
-     "%s/%s/lkb%s"
+     "%s/lkb/%s/lkb%s"
      lingo-home
      (cond
       ((string-match "solaris" system-configuration) "solaris")
@@ -77,8 +99,8 @@
     (fi:eval-in-lisp
      (format 
       "(and
-        (load \"%s/src/general/defsystem.lisp\")
-        (load \"%s/src/general/loadup.lisp\")
+        (load \"%s/lkb/src/general/defsystem.lisp\")
+        (load \"%s/lkb/src/general/loadup.lisp\")
         (load-system \"tsdb\")
         nil)"
       lingo-home lingo-home))))
