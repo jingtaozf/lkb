@@ -80,6 +80,26 @@
   ;;; i.e. the output of one rule may feed the input of another.
   ;;; Rules are applied in order and are not applied recursively
   (setf *original-variables* nil)
+  (dolist (rule rules)
+    (let ((results
+           (match-mrs-rule mrsstruct 
+                           (mrs-munge-rule-input-spec rule))))
+      (dolist (result results)
+        (setf mrsstruct
+              (alter-mrs-struct mrsstruct result
+                                (mrs-munge-rule-output-spec 
+                                 rule))))))
+  mrsstruct)
+
+
+#|
+
+(defun munge-mrs-struct (mrsstruct rules)
+  ;;; takes an mrs structure and a set of rules
+  ;;; converts the mrs structure according to the rules, in order
+  ;;; i.e. the output of one rule may feed the input of another.
+  ;;; Rules are applied in order and are not applied recursively
+  (setf *original-variables* nil)
   (let ((structures (list mrsstruct)))
     (dolist (rule rules)
       (setf structures
@@ -97,6 +117,7 @@
                      (list structure))))))
     structures))
 
+|#
 
 (defun match-mrs-rule (mrs input-spec)
   ;;; first match top-h etc, if specified, in order to produce

@@ -399,36 +399,43 @@ because of the likelyhood of changes in the grammar.
               (write-vit-pretty t (horrible-hack-2 vit)))
             (format t "~%****************************************"))))))
 
-;;; function to call from PAGE interface
+;;; function to call from PAGE or LKB interface
 
-(defun mrs-to-vit-convert (mrsstruct &optional (standalone t))
+(defun mrs-to-vit-convert (mrs-psoa &optional (standalone t))
   (if (eq *mrs-for-language* 'english)
-      (multiple-value-bind 
-          (vit binding-sets)
-          (mrs-to-vit mrsstruct)
-        (setf *canonical-bindings* nil)
-        (when standalone
-          (format t "~%Unscoped form")
-          (output-mrs mrsstruct 'indexed)
+      (let ((mrsstruct
+             (if (boundp '*ordered-mrs-rule-list*)
+                 (munge-mrs-struct mrs-psoa *ordered-mrs-rule-list*)
+             mrs-psoa)))
+        (multiple-value-bind 
+            (vit binding-sets)
+            (mrs-to-vit mrsstruct)
+          (setf *canonical-bindings* nil)
+          (when standalone
+            (format t "~%Unscoped form")
+            (output-mrs mrsstruct 'indexed)
             ;;; then try and find sets of bindings which will give a fully scoped 
             ;;; structure, and output the results
-          (if binding-sets
-              (format t "~%Scoped form(s)")
-            (format t "~%WARNING: Invalid MRS structure"))
-          (for binding in binding-sets
-               do
-               (setf *canonical-bindings* (canonical-bindings binding))
-               (output-connected-mrs mrsstruct 'indexed)
-               (output-scoped-mrs mrsstruct)))
-        (when (and vit standalone)
-          (write-vit-pretty t (horrible-hack-2 vit))
-          (format t "~%"))
+            (if binding-sets
+                (format t "~%~A scoped form(s) ~A" (length binding-sets)
+                        (if (> (length binding-sets) 10)
+                            "only printing first 10" 
+                          ""))
+              (format t "~%WARNING: No valid scopes - invalid MRS structure "))
+            (for binding in (subseq binding-sets 0 10)
+                 do
+                 (setf *canonical-bindings* (canonical-bindings binding))
+                 (output-connected-mrs mrsstruct 'indexed)
+                 (output-scoped-mrs mrsstruct)))
+          (when (and vit standalone)
+            (write-vit-pretty t (horrible-hack-2 vit))
+            (format t "~%"))
 	  (check-vit vit)
-          vit)
-    (let ((vit (german-mrs-to-vit mrsstruct)))
+          vit))
+    (let ((vit (german-mrs-to-vit mrs-psoa)))
       (when standalone
         (format t "~%Unscoped form")
-        (output-mrs mrsstruct 'indexed))
+        (output-mrs mrs-psoa 'indexed))
       (when (and vit standalone)
         (write-vit-pretty t vit)
         (format t "~%"))
@@ -463,14 +470,14 @@ because of the likelyhood of changes in the grammar.
     (setf (vit-scope vit) new-scope)
     vit))
 
-(defun mrs-to-vit (raw-mrs-psoa)
+(defun mrs-to-vit (vitrified-mrs)
   ;;; first we produce all scoped structures, using the code in mrsresolve.lsp
   ;;; we also collect up all the var structures for the handels
   (clear-temporary-dbs)
   (setf *current-vit* (make-vit))
-  (let* ((unstrung-psoa (mrs-unstring-psoa raw-mrs-psoa))
-         ; Because VIT stuff doesn't like strings
-         ; old code assumed string types would be converted to
+  (let* ((unstrung-psoa (mrs-unstring-psoa vitrified-mrs))
+         ; Because VIT stuff doesn't like strings.
+         ; The old code assumed string types would be converted to
          ; symbols on construction of the MRS, but this 
          ; loses information
          (mrs-psoa (if (mrs-language '(english))

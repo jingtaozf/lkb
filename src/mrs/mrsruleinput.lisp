@@ -20,16 +20,14 @@
 
 ;;; Conversion rules
 
-#|
+
 
 (defun read-mrs-rule-file nil  
    (let* ((file-name 
             (ask-user-for-existing-pathname "Rule file?")))
       (when file-name
-        (let ((*tdl-expanded-syntax-function* 
-               #'read-mrs-rule-expanded-syntax))
-         (read-mrs-rule-file-aux file-name)))))
-|#
+         (read-mrs-rule-file-aux file-name))))
+
 
 (defparameter *mrs-rule-fs-list* nil 
   "list of rules expressed as fs for debugging")
@@ -37,7 +35,9 @@
 
 (defun read-mrs-rule-file-aux (file-name)
    (clear-mrs-rules)
-   (let ((*readtable* (make-tdl-break-table)))
+  (let ((*tdl-expanded-syntax-function* 
+         #'read-mrs-rule-expanded-syntax)
+        (*readtable* (make-tdl-break-table)))
       (with-open-file 
          (istream file-name :direction :input)
          (format t "~%Reading in rule file")
@@ -109,11 +109,11 @@
 
 
 (defun read-mrs-rule-expanded-syntax (istream name path-so-far)
-  ;;; stuff starting with %
+  ;;; stuff starting with ^
   ;;; intended to be value of *tdl-expanded-syntax-function*
   ;;; and thus to be called in tdltypeinput
-  (unless (eql (read-char istream) #\%)
-    (error "~%read-mrs-rule-expanded-syntax called without initial % in ~A" 
+  (unless (eql (read-char istream) #\^)
+    (error "~%read-mrs-rule-expanded-syntax called without initial ^ in ~A" 
            name))
   (let* ((next-char (peek-char t istream nil 'eof))
          (value (read istream)))
