@@ -19,6 +19,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <termios.h>
+#include <unistd.h>
+#include <stdlib.h>
 #include <errno.h>
 extern int errno;
 #include <readline/readline.h>
@@ -133,7 +135,6 @@ char **tsdb_completion(char *, int, int);
 char *tsdb_command_generate(char *, int);
 char *tsdb_others_generate(char *, int);
 int initialize_readline(void);
-BOOL tsdb_command(char *);
 
 int main(int argc, char **argv) {
 
@@ -518,7 +519,9 @@ void tsdb_parse_options(int argc, char **argv) {
         break;
 #endif
       case TSDB_PAGER_OPTION:
-        if(optarg != NULL) {
+        if(optarg != NULL
+           && strcmp(optarg, "off")
+           && strcmp(optarg, "null")) {
           tsdb.pager = strdup(optarg);
         } /* if */
         else {
@@ -807,6 +810,7 @@ char *tsdb_readline(char *prompt) {
 int initialize_readline(void) {
 
   rl_attempted_completion_function = (CPPFunction *)tsdb_completion;
+  return(0);
 
 } /* initialize_readline */
 
@@ -1093,23 +1097,3 @@ char *tsdb_others_generate(char *text, int state) {
   return((char *)NULL);
 
 } /* tsdb_others_generate() */
-
-BOOL tsdb_command(char *command) {
-
-  int num_quotes = 0;
-  
-  while(*command) {
-    if(*command == '"')
-      num_quotes++;
-  } /* while */
-  
-  if((num_quotes % 2) != 0) {
-    fprintf(stderr, "\ttsdb: quotes mismatch.\n");
-    return(FALSE);
-  } /* if */
-  else {
-    if(command[strlen(command) - 1] == '.')
-      return(TRUE);
-  } /* else */
-    
-} /* tsdb_command() */

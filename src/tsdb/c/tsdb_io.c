@@ -433,7 +433,7 @@ void tsdb_print_selection(Tsdb_selection *selection, FILE *stream) {
 
 #ifdef DEBUG
   Tsdb_relation *foo;
-  int i, j, k;
+  int i, j;
 #endif
   
   if(selection != NULL
@@ -780,10 +780,12 @@ FILE *tsdb_find_relations_file(char *mode) {
   FILE *file;
 
   if((file = fopen(tsdb.relations_file, mode )) == NULL) {
-    fprintf(tsdb_error_stream,
-            "find_relations_file(): unable to open `%s' [%d].\n",
-            tsdb.relations_file, errno);
-    fflush(tsdb_error_stream);
+    if(!(tsdb.status & TSDB_QUIET)) {
+      fprintf(tsdb_error_stream,
+              "find_relations_file(): unable to open `%s' [%d].\n",
+              tsdb.relations_file, errno);
+      fflush(tsdb_error_stream);
+    } /* if */
     return((FILE *)NULL);
   } /* if */
   return(file);
@@ -1500,7 +1502,6 @@ int tsdb_save_changes(BOOL implicit) {
 \*****************************************************************************/
 
   int i = 0, status;
-  char c;
   Tsdb_selection *selection;
 
   if(tsdb.status & TSDB_READ_ONLY) {
@@ -1562,7 +1563,8 @@ int tsdb_lock(BOOL flag) {
 |*
 \*****************************************************************************/
 
-  char *user, *host;
+
+  char *user;
 
   user = tsdb_user();
 

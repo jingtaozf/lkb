@@ -43,6 +43,7 @@ Tsdb_history *tsdb_alloc_history() {
   } /* if */
   bar->command = -1;
   bar->result = NULL;
+  bar->unique_tuples = -1;
   return(bar);
 
 } /* tsdb_alloc_history() */
@@ -139,7 +140,7 @@ void tsdb_set_history_size(int size) {
   
 } /* tsdb_set_history_size() */
 
-void tsdb_add_to_history(Tsdb_selection *s) {
+void tsdb_add_to_history(Tsdb_selection *s, int n) {
 
   Tsdb_history *foo = tsdb.history[(_history_position)];
   int pos;
@@ -166,6 +167,7 @@ void tsdb_add_to_history(Tsdb_selection *s) {
   tsdb.history[pos]->command = tsdb.command;
   tsdb.history[pos]->query = tsdb.query;
   tsdb.history[pos]->result = s;
+  tsdb.history[pos]->unique_tuples = n;
 
   _history_position = pos;
 

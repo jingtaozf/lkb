@@ -745,7 +745,7 @@ int yywrap() {
 
 } /* yywrap() */
 
-yyerror(char *s) {
+int yyerror(char *s) {
  
   fprintf(tsdb_error_stream,
           "yyparse(): parse error; check the tsdb(1) syntax.\n");

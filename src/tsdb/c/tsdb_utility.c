@@ -500,7 +500,6 @@ Tsdb_key_list* tsdb_first_other_key(Tsdb_key_list* key_list)
 BOOL tsdb_value_satisfies(Tsdb_value* value1,Tsdb_value* operator,
                           Tsdb_value *value2) {
   BOOL answer;
-  char* string=NULL;
   
   if (value1->type!=value2->type) {
     /* error! */
@@ -1775,22 +1774,26 @@ BYTE tsdb_initialize() {
                       tsdb.relations[i]->name);
               fflush(tsdb_error_stream);
             } /* if */
-            return(TSDB_NO_DATA_ERROR);
-          } /* if */
-          if((j = creat(foo, 0666)) == -1) {
-            free(foo);
-            fprintf(tsdb_error_stream,
-                    "initialize(): unable to create data file for `%s'.\n",
-                    tsdb.relations[i]->name);
-            fflush(tsdb_error_stream);
-            return(TSDB_NO_DATA_ERROR);
+            if(tsdb.status & TSDB_VERIFY) {
+              return(TSDB_NO_DATA_ERROR);
+            } /* if */
           } /* if */
           else {
-            close(j);
-            fprintf(tsdb_error_stream,
-                    "initialize(): creating empty data file for `%s'.\n",
-                    tsdb.relations[i]->name);
-            fflush(tsdb_error_stream);
+            if((j = creat(foo, 0666)) == -1) {
+              free(foo);
+              fprintf(tsdb_error_stream,
+                      "initialize(): unable to create data file for `%s'.\n",
+                      tsdb.relations[i]->name);
+              fflush(tsdb_error_stream);
+              return(TSDB_NO_DATA_ERROR);
+            } /* if */
+            else {
+              close(j);
+              fprintf(tsdb_error_stream,
+                      "initialize(): creating empty data file for `%s'.\n",
+                      tsdb.relations[i]->name);
+              fflush(tsdb_error_stream);
+            } /* else */
           } /* else */
 #ifdef COMPRESSED_DATA
         } /* else */

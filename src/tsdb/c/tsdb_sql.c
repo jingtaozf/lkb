@@ -223,7 +223,13 @@ int tsdb_info(Tsdb_value **value_list, char *redirection) {
                         ":%s", bar->result->relations[j]->name);
               } /* for */
               fprintf(output,
-                      "' (%d record(s)).", bar->result->length);
+                      "' (%d record(s)", bar->result->length);
+              if(bar->unique_tuples > 0) {
+                fprintf(output, 
+                        "; %d unique projection(s)", 
+                        bar->unique_tuples);
+              } /* if */
+              fprintf(output, ").");
             } /* if */
             fprintf(output, "\n");
             fflush(output);
@@ -1418,14 +1424,17 @@ int tsdb_retrieve(Tsdb_value **relation_list,
 |* retrieve function to be called by the parser.
 \*****************************************************************************/
 
-  Tsdb_selection* result ;
+  Tsdb_selection* result;
+  int unique_tuples;
 
+  unique_tuples = -1;
   tsdb.errno = TSDB_OK;
 
   if((result = tsdb_complex_retrieve(relation_list,
                                      attribute_list, conditions,
-                                     report, redirection)) != NULL) {
-    tsdb_add_to_history(result);
+                                     report, redirection,
+                                     &unique_tuples)) != NULL) {
+    tsdb_add_to_history(result, unique_tuples);
   } /* if */
 
 #if defined(DEBUG) && defined(TOM)
@@ -1443,7 +1452,8 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
                                       Tsdb_value **attribute_list,
                                       Tsdb_node* conditions,
                                       char *report,
-                                      char *redirection) {
+                                      char *redirection,
+                                      int *unique_tuples) {
 
 /*****************************************************************************\
 |*        file: 
@@ -1666,17 +1676,18 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
 
   if(redirection != NULL 
      && (output = tsdb_open_output(redirection)) != NULL) {
-    tsdb_project(selection, attribute_list, report, output);
+    *unique_tuples = tsdb_project(selection, attribute_list, report, output);
     fclose(output);
   } /* if */
   else {
     if(tsdb.output == NULL 
        && (output = tsdb_open_pager()) != NULL) {
-      tsdb_project(selection, attribute_list, report, output);
+      *unique_tuples = tsdb_project(selection, attribute_list, report, output);
       pclose(output);
     } /* if */
     else {
-      tsdb_project(selection, attribute_list, report, tsdb_default_stream);
+      *unique_tuples 
+        = tsdb_project(selection, attribute_list, report, tsdb_default_stream);
       fflush(tsdb_default_stream);
     } /* else */
   } /* else */
@@ -1684,10 +1695,10 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
 
 } /* tsdb_complex_retrieve */
 
-void tsdb_project(Tsdb_selection *selection,
-                  Tsdb_value **attributes, 
-                  char* format,
-                  FILE* stream) {
+int tsdb_project(Tsdb_selection *selection,
+                 Tsdb_value **attributes, 
+                 char* format,
+                 FILE* stream) {
 
 /*****************************************************************************\
 |*        file: 
@@ -1771,7 +1782,8 @@ void tsdb_project(Tsdb_selection *selection,
           fprintf(tsdb_error_stream, ":%s", selection->relations[i]->name);
         } /* for */
         fprintf(tsdb_error_stream, ".\n");
-        return;
+        tsdb.errno = TSDB_UNKNOWN_ATTRIBUTE_ERROR;
+        return(-1);
       }      
     } /* for */ 
     /* attribute[k] will be printed from relation r[k] and field f[k] */
@@ -1801,9 +1813,10 @@ void tsdb_project(Tsdb_selection *selection,
     for (n=0,list = selection->key_lists[0]; 
          list!=NULL; list=list->next,n++) {
       projection[n]=tsdb_sprint_key_list(list,r,f,n_attributes);
-      if (!projection[n])
-        return;
-      
+      if (!projection[n]) {
+        tsdb.errno = TSDB_UNKNOWN_ERROR;
+        return(-1);
+      } /* if */
     } /* for key_list */
   } /* if */
 
@@ -1842,6 +1855,8 @@ void tsdb_project(Tsdb_selection *selection,
   tsdb_free_char_array(projection,n);
   free(r);
   free(f);
+  return((tsdb.status & TSDB_UNIQUELY_PROJECT) ? n : -1);
+
 } /* tsdb_project() */
 
 
