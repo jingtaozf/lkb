@@ -531,13 +531,19 @@
 
 (defun get-string-for-edge (edge-symbol)
   (let* ((edge-record (get edge-symbol 'edge-record))
-         (edge-fs (get edge-symbol 'edge-fs)))
-     (if edge-record
-	 (progn
-	   (values (tree-node-text-string 
-		    (or (when edge-fs (find-category-abb edge-fs))
-			(edge-category edge-record))) nil))
-       (values (tree-node-text-string edge-symbol) t))))
+         (edge-fs (get edge-symbol 'edge-fs))
+         (label (if edge-record
+                  (tree-node-text-string
+                   (or (when edge-fs (find-category-abb edge-fs))
+                       (edge-category edge-record)))
+                  (tree-node-text-string edge-symbol))))
+    ;;
+    ;; record edge label in spare slot: `odag' is only ever used within the
+    ;; (active, packing) parser.                          (9-apr-01  -  oe)
+    ;;
+    (when edge-record (setf (edge-odag edge-record) label))
+    (values label (if edge-record nil t))))
+
 
 (defun edge-mod-edge-p (edge-symbol1 edge-symbol2)
    (eq (get edge-symbol1 'edge-mod-edge) edge-symbol2))
