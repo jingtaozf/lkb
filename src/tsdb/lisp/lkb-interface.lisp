@@ -368,7 +368,8 @@
                       &key id string exhaustive nanalyses trace
                            edges derivations semantix-hook trees-hook
                            burst (nresults 0))
-  (declare (ignore derivations string id trees-hook))
+  (declare (ignore derivations string id trees-hook)
+           (special tsdb::*process-scope-generator-input-p*))
 
   (let* ((*package* *lkb-package*)
          (*maximum-number-of-edges* (if (or (null edges) (zerop edges))
@@ -394,13 +395,15 @@
         (ignore-errors
          (when (or (null mrs) (not (mrs::psoa-p mrs)))
            (error "null or malformed input MRS"))
-         (unless (mrs::make-scoped-mrs mrs)
+         (unless (or (null tsdb::*process-scope-generator-input-p*)
+                     (mrs::make-scoped-mrs mrs))
            (error "input MRS does not scope"))
          (multiple-value-bind (strings f-tasks e-tasks s-tasks
                                unifications copies aedges pedges)
              (tsdb::time-a-funcall
               #'(lambda ()
-                  (generate-from-mrs mrs))
+                  (let (#+:pooling (*dag-recycling-p* (null trace)))
+                    (generate-from-mrs mrs)))
               #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
                   (declare (ignore ignore))
                   (setf tgc (+ tgcu tgcs) tcpu (+ tu ts) treal tr
@@ -427,11 +430,13 @@
                              (funcall 
                               (symbol-function (find-symbol "POOL-GARBAGE"))
                               pool)))
-                  (comment 
-                   #+:pooling
-                   (format nil "(:pool . ~d) (:garbage . ~d)" position garbage)
-                   #-:pooling
-                   ""))
+                  (comment (format nil "~{~(~s~)~^ ~}" %generator-statistics%))
+                  #+:pooling
+                  (comment
+                   (format 
+                    nil 
+                    "~a (:pool . ~d) (:garbage . ~d)" 
+                    comment position garbage)))
              `((:others . ,others) (:symbols . ,symbols) (:conses . ,conses)
                 (:treal . ,treal) (:tcpu . ,tcpu) (:tgc . ,tgc)
                 (:pedges . ,pedges) (:aedges . ,aedges)
@@ -465,9 +470,7 @@
                                  (list i mrs tree string
                                        derivation size))))))))
       (unless trace 
-        (clear-gen-chart)
-        (reset-pools :forcep t)
-        (release-temporary-storage))
+        (release-temporary-storage :task :generate))
     
       (append
        (when condition
@@ -488,7 +491,7 @@
      ((string-equal string limit :end1 n)
       (format nil "edge limit (~a)" *maximum-number-of-edges*))
      ((search index string)
-      (subseq string 0 (max (- (search index string) 1) 0)))
+      "unknown input relation(s): generator may be uninitialized")
      (t string))))
 
 #-:mt
@@ -562,6 +565,7 @@
            (pairlis '(:readings :condition :error)
                     (list -1 (unless burst condition) error))))
        return))))
+
 
 (defun compute-derivation-tree (edge)
   (labels ((edge-label (edge)
@@ -824,37 +828,38 @@
 ;;; need to explicitly reset all scratch slots.
 ;;;
 
-(defun release-temporary-storage (&optional edges)
+(defun release-temporary-storage (&key (task :parse))
   (invalidate-marks)
   (invalidate-visit-marks)
   #+:pooling
   (reset-pools :compressp t)
-  (if edges
-    (loop
-        for edge in edges
-        for odag = #+:packing (edge-odag edge) #-:packing nil
-        for tdfs = (if (dag-p odag) odag (edge-dag edge))
-        for dag = (tdfs-indef tdfs)
-        unless (safe-dag-p dag) do (compress-dag dag))
-    (loop
-        for i from 0 to (- *chart-limit* 1)
-        for entry = (aref *chart* i 0)
-        while (chart-entry-p entry)
-        do
-          (loop
-              for configuration in (chart-entry-configurations entry)
-              for edge = (chart-configuration-edge configuration)
-              for odag = #+:packing (edge-odag edge) #-:packing nil
-              for tdfs = (if (dag-p odag) odag (edge-dag edge))
-              for dag = (tdfs-indef tdfs)
-              unless (safe-dag-p dag) do (compress-dag dag))
-        finally
-          (loop 
-              for edge in *morph-records* do
-                (compress-dag (tdfs-indef (edge-dag edge))))
-          (clear-chart)
-          (clear-achart)
-          (setf *parse-times* nil)))
+  (case task
+    (:parse
+     (loop
+         for i from 0 to (- *chart-limit* 1)
+         for entry = (aref *chart* i 0)
+         while (chart-entry-p entry)
+         do
+           (loop
+               for configuration in (chart-entry-configurations entry)
+               for edge = (chart-configuration-edge configuration)
+               for odag = #+:packing (edge-odag edge) #-:packing nil
+               for tdfs = (if (dag-p odag) odag (edge-dag edge))
+               for dag = (tdfs-indef tdfs)
+               unless (safe-dag-p dag) do (compress-dag dag))
+         finally
+           (loop 
+               for edge in *morph-records* do
+                 (compress-dag (tdfs-indef (edge-dag edge))))
+           (clear-chart)
+           (clear-achart)
+           (setf *parse-times* nil)))
+    (:generate
+     (loop
+         for item in %generator-lexical-items%
+         for tdfs = (mrs::found-lex-inst-fs item)
+         when (tdfs-p tdfs) do (compress-dag (tdfs-indef tdfs)))
+     (clear-gen-chart)))
   (loop
       for rule in (get-matching-lex-rules nil)
       for tdfs = #+:restrict
@@ -876,7 +881,8 @@
           when (dag-p dag) do (compress-dag dag))
       (let* ((tdfs (get-tdfs-given-id *start-symbol*))
              (dag (and tdfs (tdfs-indef tdfs))))
-        (when (dag-p dag) (compress-dag dag))))))
+        (when (dag-p dag) (compress-dag dag)))))
+  (excl:gc))
                   
 ;;;
 ;;; interface functions for reconstruction of derivations (in UDF --- unified

@@ -18,6 +18,8 @@
 
 (in-package "TSDB")
 
+(defparameter *process-scope-generator-input-p* nil)
+
 (defparameter *process-pretty-print-trace-p* t)
 
 (defparameter *process-raw-print-trace-p* nil)
