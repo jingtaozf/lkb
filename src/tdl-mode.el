@@ -1,24 +1,46 @@
-;;; TDL-Mode for emacs 19 / epoch  12/23/93  18:20
-;;; Ulrich Schaefer DFKI/DISCO; based on slant-mode.el by Jochen Bedersdorfer
+;;; TDL-Mode --- Emacs commands for editing Type Definition Language files
+
+;; Author: Ulrich Schaefer DFKI/DISCO; based on slant-mode.el by Jochen Bedersdorfer
+;; Extended by Rob Malouf, Frederik Fouvry and Francis Bond
+;; Maintainer: Francis Bond <bond@ieee.org>
+;; Keywords: languages tdl modes
+
+;; This code is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation; either version 2, or (at your option)
+;; any later version.
+
+;; tdl-mode is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with GNU Emacs; see the file COPYING.  If not, write to the
+;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+;; Boston, MA 02111-1307, USA.
+
+;;;Commentary:
+
+;; To enter tdl-mode automatically put it in your path, load it and
+;; add something like:
+;; (add-to-list 'auto-mode-alist '("\\.tdl\\'" . tdl-mode))
+;; (add-to-list 'auto-mode-alist '("\\.set\\'" . tdl-mode))
+;;
+;; to add a menu of definitions try the following - 
+;;
+;; (add-hook 'tdl-mode-hook
+;;          (function (lambda ()
+;;                     (imenu-add-to-menubar "Index"))))
+
+(eval-when-compile
+  '(require 'font-lock))
 
 (defvar tdl-mode nil)
 
 (defvar tdl-mode-abbrev-table nil
   "Abbrev table in use in TDL-mode buffers.")
 (define-abbrev-table 'tdl-mode-abbrev-table ())
-
-;;;STUFF FOR MINOR MODE (not used)
-;;;(add-hook 'fi:lisp-mode-hook
-;;;  (function (lambda ()  ...)))
-;;;
-;;;(or (assq 'tdl-mode minor-mode-alist)
-;;;              (setq minor-mode-alist
-;;;                    (cons '(tdl-mode " tdl") minor-mode-alist)))
-;;;
-;;;(defun tdl-mode (&optional arg)
-;;;  (setq tdl-mode
-;;;    (if (null arg) (not tdl-mode)
-;;;      (> (prefix-numeric-value arg) 0))))
 
 (defvar tdl-mode-map ()
   "Keymap used in TDL mode.")
@@ -93,15 +115,52 @@ with no args, if that value is non-nil."
   (kill-all-local-variables)
   (use-local-map tdl-mode-map)
   (setq major-mode 'tdl-mode)
-  (setq mode-name "tdl")
+  (setq mode-name "TDL")
   (setq local-abbrev-table tdl-mode-abbrev-table)
   (set-syntax-table tdl-mode-syntax-table)
+  (make-local-variable 'comment-start)
+  (setq comment-start ";")
+  (make-local-variable 'comment-style)
+  (setq comment-style "plain")
   (make-local-variable 'basic-indent)
   (setq basic-indent 0)
   (make-local-variable 'bracks-left)
   (setq bracks-left 0)
+  (make-local-variable 'font-lock-defaults)
+  (make-local-variable 'font-lock-keywords)
+  (setq font-lock-defaults
+	(list
+	 '(":end" ":begin" ":instance" ":type" ":template" ":status" ":include")
+	  nil t '(("+-*_!%~#". "w") ("<" . "(") (">" . ")")
+		 (".&," . ".") (";" . "<") ("\n" . ">"))
+	  nil))
+
+  (make-local-variable 'imenu-generic-expression)
+  (setq imenu-generic-expression
+	'((nil
+	   "^:begin\\s-*:instance\\s-*:status\\s-*:\\([a-zA-Z0-9_-]+\\)\\s-*\\." 1)
+	  ("Definitions" "^\\([a-zA-Z0-9_&!*+-]+\\)\\s-*:=" 1)))
   (run-hooks 'tdl-mode-hook))
 
+(if (>= emacs-major-version 20)
+      ;;; add keywords (only for modern emacs)
+    (progn
+      (font-lock-add-keywords
+       'tdl-mode
+       ;; real keywords are already in font-lock-defaults
+       '(("\\*[a-zA-Z0-9---_+%]+\\*" . font-lock-type-face)             ; general types
+	 ("\\(@[a-zA-Z0-9---_]+\\)[ \t\n]*(" (1 font-lock-keyword-face)) ; template calls
+	 ("\\b[$][a-zA-Z0-9---_]+\\b" . font-lock-variable-name-face) ; template variables
+	 ("[#][a-zA-Z0-9---_]+" . font-lock-variable-name-face)         ; re-entrancies
+	 ("\\(\\[\\|,\\)[ \t\n]*\\([a-zA-Z0-9---_.]+\\)\\b" (2 font-lock-builtin-face)) ; features
+	 ("^[ \t\n]*\\([a-zA-Z0-9---_]+\\)[ \t\n]*\\((\\|:[<=]\\)" 
+	  (1  font-lock-function-name-face))	; template names and types being defined
+	 ("'[a-zA-Z0-9---_]+" . font-lock-string-face) ; single quoted predicates
+	 ("\\(:[=<]\\|&\\)"    . font-lock-constant-face) ; background syntax
+	 ("#|\\(|[^#]\\|[^|]\\)*|#" . (0 font-lock-comment-face t)))) ; comments
+      ;; If this is on font-lock-global-modes, then tdl-mode has been loaded ...
+      (eval-after-load "font-lock"
+	'(add-to-list 'font-lock-global-modes 'tdl-mode))))
 
 (defun tdl-compute-ubound ()
   (beginning-of-line)
@@ -386,3 +445,20 @@ with no args, if that value is non-nil."
       (setq char (aref string i)))
     newstring))
 
+;; TODO
+;; add link to show type in hierarchy on request...
+;;    - bind mouse-button-2 with word-at-point to show-type-tree
+
+
+;;;STUFF FOR MINOR MODE (not used)
+;;;(add-hook 'fi:lisp-mode-hook
+;;;  (function (lambda ()  ...)))
+;;;
+;;;(or (assq 'tdl-mode minor-mode-alist)
+;;;              (setq minor-mode-alist
+;;;                    (cons '(tdl-mode " tdl") minor-mode-alist)))
+;;;
+;;;(defun tdl-mode (&optional arg)
+;;;  (setq tdl-mode
+;;;    (if (null arg) (not tdl-mode)
+;;;      (> (prefix-numeric-value arg) 0))))
