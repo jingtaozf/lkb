@@ -7,46 +7,102 @@
 
 ;;; now requires basemrs.lisp for structures and printing
 ;;; requires mrsglobals.lisp for global variables for paths etc.
+
 (in-package :mrs)
 
-(defun remove-trailing-periods (sentence-string)
-  (string-right-trim '(#\Space #\.) sentence-string))
+;;; Assumptions about the grammar
+;;;
+;;; 1. fragmentness is indicated by *root-path* not being
+;;;    *true-type*
+;;;
+;;; 2. There is a single `semantic' feature structure
+;;; which can be used to build the MRS at the end of
+;;;  *initial-semantics-path*
+;;;
+;;; 3. *psoa-index-path* - variable 
+;;;    *psoa-liszt-path* - list of relations
+;;;
+;;; 4. *psoa-top-h-path* - handle variable 
+;;;    *psoa-rh-cons-path* - hcons structure
+;;;    not in handle-free fragment
+;;;
+;;; 5. *psoa-mode-path*   - mode (optional)
+;;;    *psoa-info-s-path* - information structure (optional)
+;;;
+;;; 6. variables
+;;;    a. variable equivalence is indicated by structure sharing
+;;;    (assumed to mean same lisp structure - see *named-nodes*)
+;;;    b. determine-variable-type controls the letter used
+;;;    to type the variable - see below
+;;;    c. `extra' information associated with a variable is
+;;;    built using create-index-property-list
+;;;    all extra information must be represented by a path
+;;;    with an atomic value terminating it
+;;;    all features are valid as extras, except those which are in 
+;;;    *ignored-extra-features*
+;;;
+;;; 7. liszt and relations
+;;;    a. represented via a first/rest structure (*first-path* and
+;;;    *rest-path*)
+;;;    b. relation handel - *rel-handel-path* (not for hfree MRS)
+;;;    c. relation predicate is either 
+;;;       value of first element of *rel-name-path* 
+;;;                  OR, if this doesn't exist
+;;;       type of fs
+;;;    d. arguments represented by features
+;;;       (features ignored if member of *ignored-sem-features*)
+;;;       if they are members of *value-feats* then assumed
+;;;       to have a constant value - otherwise variable
+;;;       features are ordered by *feat-priority-list*
+;;;       this is relevant for the feature-free MRS rep
+;;;
+;;; 8. hcons
+;;;    hcons is a list - relationship is represented by the
+;;;    type of the list element - two arguments, represented
+;;;    by *sc-arg-feature* and *outscpd-feature*
+;;;    anything else is ignored
 
-;;; First necessary to retrive the structure from the result of
+;;; ********************************************************
+;;;
+;;; Entry points and globals
+;;;
+;;; First necessary to retrieve the structure from the result of
 ;;; a parse.  The FS returned will have an initial path to get to
 ;;; the MRS *initial-semantics-path*
 ;;; Following this gets you to a psoa structure
 ;;; 
 
-(defun extract-mrs (parse &optional generator-p)
+(defun extract-mrs (parse)
+  ;;; takes whatever structure the parser returns
   (setf *fragment-p* nil)
   (let* ((fs (get-parse-fs parse))
-         ;; get-parse-fs also sets *fragment-p*
-         ;; which controls whether the scoping code is run
-         ;;
-         ;; the synlabel mechanism, apparently, is no longer required; ann
-         ;; says she wants to look into this sometime  (28-mar-00  -  oe)
-         ;; 
-         ;; have removed synlabel - aac
+         ;; get-parse-fs is system specific
          (sem-fs (path-value fs *initial-semantics-path*)))
+    (setf *fragment-p* (is-fragment-fs fs))
+    ;; *fragment-p* controls whether the scoping code is run
     (if (is-valid-fs sem-fs)
-        (construct-mrs sem-fs
-                       nil generator-p))))
+        (construct-mrs sem-fs nil))))
 
 (defun is-fragment-fs (fs)
-  (and *root-path* *false-type*
-  (let ((root-value (path-value fs *root-path*)))
-    (if root-value 
-        (not
-         (eql (fs-type root-value) *true-type*))))))
-  
+  ;;; grammar specific
+  (and *root-path* *true-type*
+       (let ((root-value (path-value fs *root-path*)))
+         (if root-value 
+             (not
+              (eql (fs-type root-value) *true-type*))))))
 
-(defparameter *named-nodes* nil)
+(defparameter *named-nodes* nil
+  "an alist so that if a feature structure representing a variable is shared, the same variable will be used each time it is encountered")
+
+;;; variables get unique names via the variable generator
+;;; which can be passed as a parameter
+
 (defvar *restart-variable-generator* t
-    "if t the variable counter is restarted for each sentence")
+  "if t the variable counter is restarted for each sentence
+This is set to nil for work on discourse to avoid spurious 
+duplicate variables")
 
-(defun construct-mrs (fs &optional existing-variable-generator generator-p)
-  (declare (ignore generator-p))
+(defun construct-mrs (fs &optional existing-variable-generator)
   (if existing-variable-generator
       (setf *variable-generator* existing-variable-generator)
     (if *restart-variable-generator*
@@ -79,9 +135,21 @@
      :info-s (if (is-valid-fs info-s-fs)
                  (construct-info-s info-s-fs nil)))))
 
+(defun construct-info-s (arg1 arg2)
+  ;;; Dummy function, to be redefined if someone wants information
+  ;;; structure
+  (declare (ignore arg1 arg2))
+  nil)
 
-;; Allow NIL argument to get-var-num
+;;; ***************************************************
+;;;
+;;; Variables
+;;;
+;;; ***************************************************
+
+
 (defun get-var-num (var-struct)
+  ;; Allow NIL argument
   (when (var-p var-struct)
     (var-id var-struct)))
 
@@ -91,17 +159,14 @@
       (if existing-variable (cdr existing-variable)
         nil))))
 
-(defun create-variable (fs gen &optional type)
-  ;; optional type argument allows for
-  ;; the case where PAGE doesn't type the top-handel
-  ;; as a handel
+(defun create-variable (fs gen)
   (when (is-valid-fs fs)
     (let ((existing-variable (assoc fs *named-nodes*)))
       (if existing-variable (cdr existing-variable)
         (let* ((idletter (determine-variable-type fs))
                (idnumber (funcall gen))
                (variable-name (format nil "~A~A" idletter idnumber))
-               (var-type (or type (fs-type fs)))
+               (var-type (fs-type fs))
                (extra (create-index-property-list fs))
                (variable-identifier (cond ((equal idletter "h")
                                            (make-handle-var 
@@ -117,11 +182,30 @@
           (push (cons fs variable-identifier) *named-nodes*)
           variable-identifier)))))
 
-;;; The `extra' information on variables is now represented
+(defun create-indexing-variable (fs)
+  ;;; this is called when we are building an mrs structure for indexing
+  (when (is-valid-fs fs)
+    (let* ((idletter (determine-variable-type fs))
+           (var-type (fs-type fs))
+           (extra (create-index-property-list fs))
+           (variable-identifier (cond ((equal idletter "h")
+                                       (make-handle-var 
+                                        :name :dummy
+                                        :type var-type 
+                                        :extra extra 
+                                        :id :dummy))
+                                      (t (make-var 
+                                          :name :dummy
+                                          :type var-type
+                                          :extra extra 
+                                          :id :dummy)))))
+      variable-identifier)))
+
+;;; The `extra' information on variables is represented
 ;;; as a structure consisting of a combination of feature
 ;;; (possibly consisting of a composite structure created
 ;;; by interposing `.' between features)
-;;; and an atomic value.  We no longer attempt to maintain
+;;; and an atomic value.  We do not maintain
 ;;; intermediate types on the path - all relevant information
 ;;; must be contained in the atomic types
 
@@ -145,8 +229,6 @@
                 :feature (make-mrs-feature (reverse path-so-far))
                 :value (create-type 
                         (fs-type fs)))))))))
-
-
 
 (defun make-mrs-feature (flist)
   (if (cdr flist)
@@ -172,6 +254,12 @@
           ;; Assume coordination structure
           (t "v"))))
 
+;;; ****************************************************
+;;;
+;;; LISZT construction
+;;;
+;;; ****************************************************
+
 
 (defun construct-liszt (fs rels-list variable-generator)
   (if (is-valid-fs fs)
@@ -182,107 +270,109 @@
                     (rest-part (assoc (car *rest-path*)
                                       label-list)))
                 (if (and first-part rest-part)
-                    (progn
-                      (push (create-rel-struct
-                             (cdr first-part)
-                             variable-generator)
-                            rels-list)
+                    (let ((rel-struct
+                           (create-rel-struct
+                            (cdr first-part)
+                            variable-generator nil)))
+                      (when rel-struct
+                        (push rel-struct
+                              rels-list))
                       (construct-liszt
                        (cdr rest-part)
                        rels-list variable-generator))
                   rels-list))
             rels-list))))
 
-(defun create-rel-struct (fs variable-generator)
+;;; defined so it can also be used by the lexicon indexing
+;;; code
+
+(defun create-rel-struct (fs variable-generator indexing-p)
+  ;;; indexing-p is set if this is being called when we're indexing lexical
+  ;;; entries
   (if (is-valid-fs fs)
-      (let* ((label-list (fs-arcs fs))
-             (handel-pair (if *rel-handel-path*
-                              (assoc (car *rel-handel-path*)
-                                 label-list)))
-             (pred (assoc (car *rel-name-path*)
+      (let* ((handel-pair (if (not indexing-p)
+                              (extract-handel-pair-from-rel-fs fs)))
+             (handle-var (if handel-pair
+                             (create-variable
+                              (cdr handel-pair)
+                              variable-generator)))
+             (pred (create-type (extract-pred-from-rel-fs fs)))
+             (fvps (extract-fvps-from-rel-fs fs variable-generator indexing-p))
+             (parameter-strings (get-fvps-parameter-strings fvps)))
+        (unless (member pred *dummy-relations*)
+          (make-rel :sort pred
+                    :handel handle-var
+                    :flist fvps
+                    :parameter-strings parameter-strings)))))
+;;; FIX?? flist may be wrong way round
+
+(defun get-fvps-parameter-strings (fvps)
+  (loop for fvp in fvps
+        for feat = (fvpair-feature fvp)
+        when (member feat *value-feats*)
+        collect fvp))
+
+(defun extract-handel-pair-from-rel-fs (fs)
+  (let ((label-list (fs-arcs fs)))
+    (if *rel-handel-path*
+        (assoc (car *rel-handel-path*)
+               label-list))))
+
+(defun extract-pred-from-rel-fs (rel-fs)
+    (let* ((label-list (fs-arcs rel-fs))
+           (pred (assoc (car *rel-name-path*)
                           label-list))
-             (pred-type (if pred (fs-type (rest pred))))
-             (rel nil))
-        (setf rel (make-rel :sort
-                            (create-type (if (and pred-type
-                                                  (not 
-                                                   (is-top-type pred-type)))
-                                             pred-type
-                                            (fs-type fs)))
-                            :handel (if handel-pair
-                                        (create-variable
-                                         (cdr handel-pair)
-                                         variable-generator))))
-        (loop for feat-val in 
-              (sort (remove pred 
-                            (remove handel-pair label-list))
-                    #'feat-sort-func)
-            do
-              (let ((feature (car feat-val)))
-                (unless (member feature *ignored-sem-features*)
-                  (setf (rel-flist rel) 
-                    (cons (make-fvpair :feature feature
-                                       :value 
-                                       (if (member (car feat-val)
-                                                   *value-feats*)
-                                           (create-type
-                                            (fs-type (cdr feat-val))) 
-                                         (create-variable
-                                          (cdr feat-val)
-                                          variable-generator)))
-                          (rel-flist rel))))))
-        (setf (rel-flist rel) (reverse (rel-flist rel)))
-        rel)))
+           (pred-type (if pred (fs-type (rest pred)))))
+      (if (and pred-type
+               (not 
+                (is-top-type pred-type)))
+          pred-type
+        (fs-type rel-fs))))
 
+(defun extract-fvps-from-rel-fs (rel-fs variable-generator indexing-p)
+  (let* ((label-list (fs-arcs rel-fs))
+         (reduced-list
+          (loop for fvp in label-list
+              for feature = (car fvp)
+              for value = (cdr fvp)
+              unless (or (member feature *ignored-sem-features*)
+                         (eql feature (car *rel-handel-path*))
+                         (eql feature (car *rel-name-path*)))
+              collect 
+                (make-fvpair :feature feature
+                             :value 
+                             (if (member feature *value-feats*)
+                                 (create-type (fs-type value))
+                               (if indexing-p
+                                   (create-indexing-variable value)   
+                                 (create-variable
+                                  value
+                                  variable-generator)))))))
+    (sort reduced-list #'feat-sort-func)))
 
-#+lkb
 (defun create-type (sort)
-  (horrible-hack-3 sort))
-
-(defun horrible-hack-3 (sort)
-  ;;; this hack would not be necessary if the grammar used
-  ;;; a persistent default.  It converts a type of the form
-  ;;; Xrel_a into Xrel.  This is needed for preposition
-  ;;; fragments because abstract relations get removed
-  ;;; by munging rules.  This would be cleaner if someone would
-  ;;; define the PAGE interface consistently - as it is, we have to
-  ;;; rely on the typographic convention
-  (if (and (symbolp sort)
-	   (not (numberp sort)))
-    (let* ((str (string sort))
-           (start-pos (- (length str) 6)))
-      (if (and (> start-pos 0)
-	       (string-equal (subseq str start-pos) "_rel_a"))
-	  (intern (subseq str 0 (+ start-pos 4)) :lkb)
-        sort))
-    sort))
+  ;;; currently a no-op but kept
+  ;;; because we keep needing to mess around when we create types
+  sort)
 
 (defun feat-sort-func (fvp1 fvp2)
-  (let* ((feat1 (if (fvpair-p fvp1) 
-                    (fvpair-feature fvp1)
-                    (car fvp1)))
-         (feat2 (if (fvpair-p fvp2) 
-                    (fvpair-feature fvp2)
-                    (car fvp2)))
-         (remlist (member feat1 *feat-priority-list*)))
+  (let ((feat1 (fvpair-feature fvp1))
+         (feat2 (fvpair-feature fvp2)))
+    (feat-order-func feat1 feat2)))
+
+(defun feat-order-func (feat1 feat2)
+  (let ((remlist (member feat1 *feat-priority-list*)))
     (if remlist (or (member feat2 remlist)
                     (not (member feat2 *feat-priority-list*)))
       (unless (member feat2 *feat-priority-list*)
-              (string-lessp feat1 feat2)))))
+        (string-lessp feat1 feat2)))))
 
-#+lkb
-(defun create-word-identifier (id gen)
-  (if id
-      (let ((val (if (stringp id)
-                     id
-                   (create-type (fs-type (rest id))))))
-        (if (or (numberp val)
-                (stringp val)
-                (and (symbolp val)
-                     (member (elt (string-downcase val) 0) '(#\R))))
-            val
-          (funcall gen)))
-    (funcall gen)))
+
+;;; *******************************************************
+;;;
+;;; HCONS
+;;;
+;;; *******************************************************
 
 (defun construct-h-cons (fs constr-list variable-generator)
   (if (is-valid-fs fs)
