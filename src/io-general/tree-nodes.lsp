@@ -148,7 +148,8 @@
   ;;; Longer term, rules should be indexed by these categories.
    (or (cdr (assoc fs *cached-category-abbs*))
        (let ((abb
-              (if (eql *lkb-system-version* :page)
+              (if (and (eql *lkb-system-version* :page)
+                       (not *simple-tree-display*))
                  (calculate-tdl-label fs)
                  (dolist (tmpl *category-display-templates*)
                     (let* ((tmpl-entry (get-psort-entry tmpl))

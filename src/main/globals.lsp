@@ -163,6 +163,9 @@
 
 ;;; Parse tree node labels
 
+(defparameter *simple-tree-display* nil
+  "turn off PAGE style labels")
+
 ;;; these are actually only used when in PAGE compatability mode
 
 ;;; the path where the name string is stored
