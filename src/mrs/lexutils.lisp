@@ -89,7 +89,10 @@
 		 (mrs::extract-lexical-relations2 entry)
 	       (format t "~%No feature structure for ~A~%" 
 		       (lex-entry-id entry))))
-	   (unexpand-psort *lexicon* (lex-entry-id entry))))
+	   ;;; (bmw) prevent software error...
+;;;(unexpand-psort *lexicon* (lex-entry-id entry))
+	   (forget-psort *lexicon* (lex-entry-id entry))
+	   ))
       (mrs::check-for-redundant-filter-rules)))
   (setf *batch-mode* nil))
 
