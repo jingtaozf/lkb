@@ -240,9 +240,7 @@ if [ "${os}" == "linux.x86.32" ]; then
 fi
 
 #
-# in a similarly (overly) helpful spirit, install a `dot.emacs' that should be
-# suitable for inclusion in a per-user `.emacs' file.  also, see whether there
-# is any evidence of conflicting settings in `.emacs'.
+# finally, instruct users on how to set-up their local start-up files
 #
 echo
 echo "add the following to the file \`~/.bashrc' in your home directory:"
@@ -253,6 +251,8 @@ echo "to permanently record the root directory of your DELPH-IN installation;"
 echo "if you are a (t)csh(1) user, use \`setenv' rather than \`export'; e.g."
 echo 
 echo "  setenv DELPHINHOME ${DELPHINHOME}"
+echo
+echo "in the file \`~/.cshrc' (or \`~/.tcshrc') in your home directory."
 echo
 echo "to run the LKB and [incr tsdb()] from within emacs(1), add the following"
 echo "to the file \`.emacs' in your home directory:"
