@@ -83,12 +83,18 @@
   (successes 0))
 
 (defvar *active-edge-id* 0)
-(declaim (type fixnum *active-edge-id*))
+(defvar *maximum-number-of-active-edges* nil)
+(declaim (type fixnum *active-edge-id* *maximum-number-of-active-edges*))
+
 
 (defun next-active-edge ()
-  (when (> (abs *active-edge-id*) *maximum-number-of-active-edges*)
+  (when (> (abs *active-edge-id*) 
+           (or *maximum-number-of-active-edges* *maximum-number-of-edges*))
      (error "next-active-edge(): ~
-             edge limit exhausted (see *maximum-number-of-active-edges*)"))
+             edge limit exhausted (see `~a')"
+            (if *maximum-number-of-active-edges*
+              "*maximum-number-of-active-edges*"
+              "*maximum-number-of-edges*")))
   (decf *active-edge-id*))
 
 (defvar *achart* (make-array (list *chart-limit* 2)))

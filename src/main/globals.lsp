@@ -78,11 +78,7 @@
 (def-lkb-parameter *maximum-number-of-edges* 500 
   "limits the size of the parse chart" :user)
 
-(def-lkb-parameter *maximum-number-of-active-edges* 3000 
-  "limits the size of the active parse chart" :user)
-
-(declaim (type fixnum *maximum-number-of-edges*)
-         (type fixnum *maximum-number-of-active-edges*))
+(declaim (type fixnum *maximum-number-of-edges*))
 
 (def-lkb-parameter *chart-limit* 100)
 

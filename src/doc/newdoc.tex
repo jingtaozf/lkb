@@ -9732,6 +9732,11 @@ is likely to indicate a rule which is applying circularly
 But this value must be increased to at least 2000 for large scale grammars
 with a lot of ambiguity.  May be set interactively.
 % UPDATE point - maximum-number-of-active-edges, but not in released version
+% i would rather consider this a parser-internal parameter; i have just changed
+% the default to `nil' meaning that the value of *maximum-number-of-edges* is
+% used instead.  unless we have a good theory of how to limit active edges in
+% correlation to inactive edges, i would rather not have this in the user
+% interface.                                            (26-mar-00  -  oe)
 \item[*maximum-number-of-tasks*, 50000]
 A limit on the number of tasks that can be put on the agenda.  This 
 limit is only
