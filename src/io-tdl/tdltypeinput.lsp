@@ -236,7 +236,7 @@
            (setf *amend-error* t))
          (add-type-from-file name (list parent) nil nil nil))
        (let ((next-char (peek-char t istream nil 'eof)))
-         (unless (eql next-char #\.)
+         (when (eql next-char #\,)
            (read-tdl-status-info istream name)))))
 
 (defparameter *tdl-coreference-table* (make-hash-table))
@@ -284,17 +284,23 @@
           (amend-type-from-file name parents constraint def-alist nil)
           (setf *amend-error* t))
         (add-type-from-file name parents constraint def-alist nil))
-      (let ((next-char (peek-char t istream nil 'eof)))
-        (unless (eql next-char #\.)
-          (read-tdl-status-info istream name)))))
+      (when (eql (peek-char t istream nil 'eof) #\,)
+          (read-tdl-status-info istream name))))
 
 (defun read-tdl-status-info (istream name)
+  ;;; 
+  ;;; Status -> status: status-name
+  ;;;
   (read-char istream)
   (let* ((status-indicator (read istream))
          (break-char (read istream))
          (status-type (read istream)))
+    (unless (and (eql status-indicator 'status)
+             (eql  break-char #\:))
+      (lkb-read-cerror istream "Unrecognised symbol ~A when reading ~A" status-indicator name)
+      (ignore-rest-of-entry istream name))
     (push (cons name
-                (format nil "~%~A~A ~A" 
+                (format nil "~A~A ~A" 
                         status-indicator break-char status-type))
           *tdl-status-info*)))
 
@@ -376,7 +382,12 @@
              (ignore-rest-of-entry istream name))
            (check-for #\/ istream name)
            (let ((persist (lkb-read istream t)))
-             (read-tdl-term istream name path-so-far persist)))
+             (if path-so-far
+                 (cons
+                  (make-tdl-path-value-unif (reverse path-so-far) *toptype* nil)
+                  ;; need to add non-default path too
+                  (read-tdl-term istream name path-so-far persist))
+              (read-tdl-term istream name path-so-far persist)))) 
           (t  
            (let ((res1 (read-tdl-term istream name path-so-far nil))
                  (next-char2 (peek-char t istream nil 'eof)))
