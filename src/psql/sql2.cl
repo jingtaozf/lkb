@@ -36,3 +36,8 @@
 		   filename
 		   :direction :input)
     (stdin-command-istream con sql-str istream)))
+
+(defun connect-db-with-handler (&rest rest)
+  (handler-case
+      (apply #'connect-db rest)
+    (simple-error () (error "PostgreSQL functionality not loaded"))))
