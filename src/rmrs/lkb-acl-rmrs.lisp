@@ -300,9 +300,9 @@ cases
 
 ;;; temporary - set these interactively soon
 
-(defparameter *tsdb-directory1* "lingo/11-jun-04/mrs/04-06-16/lkb")
+(defparameter *tsdb-directory1* "jabberwocky/lingo/28-05-04/lkb")
 
-(defparameter *tsdb-directory2* "rasp-rmrs")
+(defparameter *tsdb-directory2* "jabberwocky/rasp/25-05-04/lkb")
 
 ;;; Window showing sentences to compare
 
@@ -350,14 +350,15 @@ cases
           (get-tsdb-selected-rasp-rmrs egnum))
          (erg-rmrs
           (get-tsdb-selected-erg-rmrs egnum)))
-    (dolist (comparison-record (mrs::compare-rmrs erg-rmrs rasp-rmrs t))
-      ;; use string position
-      (lkb::show-mrs-rmrs-compare-window erg-rmrs rasp-rmrs 
-                                         comparison-record sentence)))
-  #-:tsdb  
-  (declare (ignore record))
-  #-:tsdb 
-  nil)
+    (when (and rasp-rmrs erg-rmrs)
+      (dolist (comparison-record (mrs::compare-rmrs erg-rmrs rasp-rmrs t))
+        ;; use string position
+        (lkb::show-mrs-rmrs-compare-window erg-rmrs rasp-rmrs 
+                                           comparison-record sentence))))
+    #-:tsdb  
+    (declare (ignore record))
+    #-:tsdb 
+    nil)
 
 (defun find-cfrom-hack (from)
   (let ((word (nth from *characterisation-hack*)))
