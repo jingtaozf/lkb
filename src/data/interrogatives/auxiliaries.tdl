@@ -1,5 +1,14 @@
-;;; CCB - Needs the idosyncratic information that not outscopes the
-;;; content of won't's compliment.  See pg.24 of the English Aux paper.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Ginzburgh and Sag (2002) Implementation
+;;; Copyright (c) 2001-2002, John Beavers, Chris Callison Burch, and Ivan Sag
+;;; see license.txt (distributed with LKB) for details
+;;;
+;;; Filename: auxiliaries.tdl
+;;; Purpose: Lexical definitions for auxiliaries and polar adverbials.  
+;;;          This is a lexeme file and not a type file.
+;;; Last modified: 05/11/02 by John Beavers (JTB)
+;;; Notes:
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; I removed [ FORM fin ] because it excludes won't from the
 ;;; pol-int-cl consturction, since inter-cl specifies that the verb be [

@@ -1,3 +1,19 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Ginzburgh and Sag (2002) Implementation
+;;; Copyright (c) 2001-2002, John Beavers, Chris Callison-Burch, and Ivan Sag
+;;; see license.txt (distributed with LKB) for details
+;;;
+;;; Filename: change-history
+;;; Purpose: Here's another old log file that Chris had lying around.  
+;;;          This one's pretty cool, because it shows two things:  
+;;;               a) Chris can't spell 
+;;;               b) Chris has never met a return key that he liked.
+;;;          Gawd I hope he never sees that!  :)
+;;; Last modified: God/Knows/When by Chris Callison-Burch (CCB)
+;;; Notes:
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
 5/22/2000
 Added the hd-modifier-ph construction.  Also, constrained where the feature MOD appears to aviod overgeneration, as observed in  "Who the hell loves Kim?".  The modifier value of "hell" shown in the Wh-Interroagatives section of the Basic Interrogative Constructions chapter says that it's modifying a word.  I've got my hd-mod rule working on phrases.... is there any reason to favor one analysis over the other?
 

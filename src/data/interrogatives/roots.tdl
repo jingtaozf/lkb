@@ -1,3 +1,15 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Ginzburgh and Sag (2002) Implementation
+;;; Copyright (c) 2001-2002, John Beavers, Chris Callison Burch, and Ivan Sag
+;;; see license.txt (distributed with LKB) for details
+;;;
+;;; Filename: roots.tdl
+;;; Purpose: Contains root definition.  All acceptable parses must unify 
+;;;          with this.  This is a leaf not a type file.
+;;; Last modified: 05/11/02 by John Beavers (JTB)
+;;; Notes:
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;;; CCB -- Should this also be SUBJ <>, COMPS <>, or will the [ IC
 ;;; true ] constraint cover it.  It appears that the SUNJ <> COMPS <> are
 ;;; needed`, yes.  Try parsing "Kim could sleep" without that constraint.

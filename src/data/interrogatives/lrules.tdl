@@ -1,2 +1,15 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Ginzburgh and Sag (2002) Implementation
+;;; Copyright (c) 2001-2002, John Beavers, Chris Callison Burch, and Ivan Sag
+;;; see license.txt (distributed with LKB) for details
+;;;
+;;; Filename: lrules.tdl
+;;; Purpose: Lexical rules, except we don't have any that aren't 
+;;;          inflectional (in inflr.tdl), or rather, we DO have some 
+;;;          that aren't inflectional but we put them in inflr.tdl anyway!
+;;; Last modified: 05/11/02 by John Beavers (JTB)
+;;; Notes:
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;;;Will ultimately include lexical rules
 

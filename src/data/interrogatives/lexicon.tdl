@@ -1,3 +1,16 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Ginzburgh and Sag (2002) Implementation
+;;; Copyright (c) 2001-2002, John Beavers, Chris Callison Burch, and Ivan Sag
+;;; see license.txt (distributed with LKB) for details
+;;;
+;;; Filename: lexicon.tdl
+;;; Purpose: Lexical items, except auxiliaries (which are in auxiliaries.tdl) 
+;;;          and wh-words (which are in wh-words.tdl).  This is a lexeme file 
+;;;          and not a type file.
+;;; Last modified: 05/11/02 by John Beavers (JTB)
+;;; Notes:
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;;; PUNCTUATION
 
 dot := punctuation & 

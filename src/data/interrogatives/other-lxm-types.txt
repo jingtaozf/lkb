@@ -1,3 +1,13 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Ginzburgh and Sag (2002) Implementation
+;;; Copyright (c) 2001-2002, John Beavers, Chris Callison-Burch, and Ivan Sag
+;;; see license.txt (distributed with LKB) for details
+;;;
+;;; Filename: other-lexeme-types.tdl
+;;; Purpose: I have no idea what this file was for.  Anyway, it's old.
+;;; Last modified: God/Knows/When by Chris Callison-Burch (CCB)
+;;; Notes:
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 dummy-idiom-lxm := lexeme & 
  [ SS.LOC.CAT [ HEAD noun & [ ANA false ], 
