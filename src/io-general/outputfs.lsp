@@ -788,6 +788,7 @@
 (defvar *shrunk-local-dags* nil)
 (defvar *not-shrunk-local-dags* nil)
 
+#|
 (defun set-up-display-settings (file-name)
    (with-open-file 
       (istream file-name :direction :input)
@@ -800,8 +801,15 @@
             (unless (listp path)
                (error "~A is not a valid path" path))
             (pushnew (nconc (reverse path) (list (car setting))) *shrunk-types*
-               :test #'equal)))))
+		     :test #'equal)))))
+|#
 
+(defun set-up-display-settings (filename)
+  (when (and filename
+	     (probe-file filename))
+    (with-open-file (stream filename 
+		     :direction :input)
+      (setf *shrunk-types* (read stream)))))
 
 (defun set-dag-display-value (fs f-list action type-fs-display)
    (let* ((sub-dag

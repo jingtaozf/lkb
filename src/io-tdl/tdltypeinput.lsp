@@ -88,7 +88,7 @@
      (let ((ok 
             (when (check-type-table) 
               (canonicalise-feature-order)
-              (when (and settings-file (probe-file settings-file))
+              (when settings-file
                 (set-up-display-settings settings-file))
               (set-up-type-interactions)
               t)))

@@ -464,32 +464,16 @@
   (let ((filename
          (or *display-settings-file*
              (ask-user-for-new-pathname 
-              "Save type display settings to?"))))
+              "Save type display settings to?")))
+	(*print-pretty* nil)
+	(*print-readably* t))
     (when filename
-      (unmark-type-table)
-      (with-open-file (stream filename :direction :output 
+      (with-open-file (stream filename 
+		       :direction :output 
                        :if-exists :supersede)
-        (output-type-display *toptype* stream))
-      (unmark-type-table))))
+	(print *shrunk-types* stream)))))
 
-(defun output-type-display (type ostream)
-   (let ((type-record (get-type-entry type)))
-      (unless (seen-node-p type-record) 
-         (mark-node-seen type-record)
-         (let ((shrunk-paths 
-                  (display-dag1 (type-constraint type-record) 'shrunk t)))
-            ;; doesn't print anything!
-            (when shrunk-paths
-               (format ostream 
-                  "~%(~A ~%~{~A~%~})" type shrunk-paths)))
-         (unless (type-enumerated-p type-record)
-            (for daughter in (type-daughters type-record)
-               do
-               (output-type-display daughter ostream))))))
+(defun load-display-settings (filename)
+  (set-up-display-settings
+   (ask-user-for-existing-pathname "Load type display settings from?")))
 
-(defun load-display-settings nil
-   (let ((filename (ask-user-for-existing-pathname 
-                    "Load type display settings from?")))
-     (when filename
-       (setf *display-settings-file* filename)
-       (set-up-display-settings filename))))
