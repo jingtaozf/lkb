@@ -340,14 +340,16 @@
 	     (hook-ltop hook2)
 	     nil 
 	     bindings))
-	  (if (setf bindings
-		(variables-equal 
-		 (hook-xarg hook1)
-		 (hook-xarg hook2)
-		 nil
-		 bindings))
-	      bindings
-	      (mrs-comparison-output "Mismatch in xarg"))
+	  (if (and (hook-xarg hook1) (hook-xarg hook2))
+	      (if (setf bindings
+		    (variables-equal 
+		     (hook-xarg hook1)
+		     (hook-xarg hook2)
+		     nil
+		     bindings))
+		  bindings
+		(mrs-comparison-output "Mismatch in xarg"))
+	    bindings)
 	(mrs-comparison-output "Mismatch in ltop"))
     (mrs-comparison-output "Mismatch in index")))
 
@@ -389,6 +391,11 @@
 			 nil nil)))
     (cond ((null index-bindings)     
 	   (mrs-comparison-output "Mismatch in index variables"))
+	  ((and (not (hook-xarg non-head-hook))
+		(not (hook-xarg head-hook)))
+	   (list (append (car index-bindings) 
+			   (car ltop-bindings))
+		   nil))
 	  ((null xarg-bindings)
 	   (mrs-comparison-output "Mismatch in xarg variables"))
 	  ((null ltop-bindings)
@@ -412,7 +419,8 @@
 
 (defun canonicalise-sement-hook (hook bindings)
   (canonicalise-sement-variable (hook-index hook) bindings)
-  (canonicalise-sement-variable (hook-xarg hook) bindings)
+  (when (hook-xarg hook)			   
+    (canonicalise-sement-variable (hook-xarg hook) bindings))
   (canonicalise-sement-variable (hook-ltop hook) bindings)
   hook)
 
