@@ -521,11 +521,12 @@ void tsdb_parse_options(int argc, char **argv) {
       case TSDB_PAGER_OPTION:
         if(optarg != NULL
            && strcmp(optarg, "off")
+           && strcmp(optarg, "nil")
            && strcmp(optarg, "null")) {
           tsdb.pager = strdup(optarg);
         } /* if */
         else {
-          tsdb.pager = (char *)NULL;
+          tsdb.pager = strdup("null");
         } /* else */
         break;
       case TSDB_QUIET_OPTION:
