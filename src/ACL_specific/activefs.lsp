@@ -121,7 +121,6 @@
            (paths (fs-display-record-paths fs-record))
            (fudge 20)
 	   (max-width 0))
-      (incf x)
       (silica:inhibit-updating-scroll-bars (stream)
         (clim:with-text-style (stream *type-font-spec*)
 	  (clim:with-output-recording-options (stream :draw nil :record t)
@@ -176,6 +175,92 @@
 	(stream t 'symbol)
       (format stream "~%~A~%" title))))
 
+
+;;; Support for interactive unification check
+
+(defvar *fs1* nil)
+(defvar *path1* nil)
+
+(defun frame-dag (frame)
+  (let ((fs (fs-display-record-fs (active-fs-window-fs frame))))
+    (if (tdfs-p fs)
+	(tdfs-indef fs)
+      fs)))
+
+(defun select-fs (frame type-thing)
+  (let ((sel (find-object (clim:frame-standard-output frame) 
+			  #'(lambda (e) 
+			      (eq e type-thing)))))
+    (setq *fs1* (frame-dag frame))
+    (setq *path1* (reverse (type-thing-type-label-list type-thing)))
+    (unhighlight-class frame)
+    (highlight-objects (clim:output-record-children sel) frame)))
+
+(defun try-unify-fs (frame type-thing)
+  (let* ((fs2 (frame-dag frame))
+	 (path2 (reverse (type-thing-type-label-list type-thing))))
+    (with-output-to-top ()
+      (unify-paths-with-fail-messages 
+       (create-path-from-feature-list *path1*)
+       *fs1*
+       (create-path-from-feature-list path2)
+       fs2
+     ;;; was copied, but shouldn't be necessary
+       :selected1 *path1* :selected2 path2)
+      (terpri))
+    (setq *fs1* nil)
+    (unhighlight-class frame)))
+
+;;; Search for coreferences in a feature structure
+
+(defstruct pointer
+  label valuep)
+
+(defun add-active-pointer (stream position pointer valuep)
+  (declare (ignore position))
+  (clim:with-output-as-presentation (stream (make-pointer :label pointer
+							  :valuep valuep)
+					    'pointer)
+    (format stream "<~A>" pointer))
+  (when valuep
+    (write-string " = " stream)))
+
+(define-active-fs-window-command (com-pointer-menu)
+    ((pointer 'pointer :gesture :select))
+  (clim:with-application-frame (frame)
+    (pop-up-menu
+     (append (unless (pointer-valuep pointer)
+	       '(("Find value" :value value)))
+	     '(("Find next" :value next)))
+     ;; Find where the value of a pointer is
+     (value (let ((sel (clim:output-record-children
+			(find-object (clim:frame-standard-output frame) 
+				     #'(lambda (p) 
+					 (and (pointer-p p)
+					      (and (eql (pointer-label pointer)
+							(pointer-label p))
+						   (pointer-valuep p))))))))
+	      (scroll-to (car sel) (clim:frame-standard-output frame))
+	      (setq *fs1* nil)
+	      (highlight-objects sel frame)))
+     ;; Find the next use of a pointer after this one
+     (next (let* ((found nil)
+		  (rec (find-object (clim:frame-standard-output frame) 
+				   #'(lambda (p) 
+				       (if (eq pointer p)
+					   (progn
+					     (setq found t)
+					     nil)
+					 (when found
+					   (and (pointer-p p)
+						(eql (pointer-label pointer)
+						     (pointer-label p))))))))
+		  (sel (when rec
+			 (clim:output-record-children rec))))
+	     (when sel
+	       (scroll-to (car sel) (clim:frame-standard-output frame))
+	       (setq *fs1* nil)
+	       (highlight-objects sel frame)))))))
 
 ;;; ***** Pop up menu creation *****
 ;;;
@@ -345,88 +430,3 @@
 				"Psort name already used")
 	      (store-as-psort fs)))))))
 
-;;; Support for interactive unification check
-
-(defvar *fs1* nil)
-(defvar *path1* nil)
-
-(defun frame-dag (frame)
-  (let ((fs (fs-display-record-fs (active-fs-window-fs frame))))
-    (if (tdfs-p fs)
-	(tdfs-indef fs)
-      fs)))
-
-(defun select-fs (frame type-thing)
-  (let ((sel (find-object (clim:frame-standard-output frame) 
-			  #'(lambda (e) 
-			      (eq e type-thing)))))
-    (setq *fs1* (frame-dag frame))
-    (setq *path1* (reverse (type-thing-type-label-list type-thing)))
-    (unhighlight-class frame)
-    (highlight-objects (clim:output-record-children sel) frame)))
-
-(defun try-unify-fs (frame type-thing)
-  (let* ((fs2 (frame-dag frame))
-	 (path2 (reverse (type-thing-type-label-list type-thing))))
-    (with-output-to-top ()
-      (unify-paths-with-fail-messages 
-       (create-path-from-feature-list *path1*)
-       *fs1*
-       (create-path-from-feature-list path2)
-       fs2
-     ;;; was copied, but shouldn't be necessary
-       :selected1 *path1* :selected2 path2)
-      (terpri))
-    (setq *fs1* nil)
-    (unhighlight-class frame)))
-
-;;; Search for coreferences in a feature structure
-
-(defstruct pointer
-  label valuep)
-
-(defun add-active-pointer (stream position pointer valuep)
-  (declare (ignore position))
-  (clim:with-output-as-presentation (stream (make-pointer :label pointer
-							  :valuep valuep)
-					    'pointer)
-    (format stream "<~A>" pointer))
-  (when valuep
-    (write-string " = " stream)))
-
-(define-active-fs-window-command (com-pointer-menu)
-    ((pointer 'pointer :gesture :select))
-  (clim:with-application-frame (frame)
-    (pop-up-menu
-     (append (unless (pointer-valuep pointer)
-	       '(("Find value" :value value)))
-	     '(("Find next" :value next)))
-     ;; Find where the value of a pointer is
-     (value (let ((sel (clim:output-record-children
-			(find-object (clim:frame-standard-output frame) 
-				     #'(lambda (p) 
-					 (and (pointer-p p)
-					      (and (eql (pointer-label pointer)
-							(pointer-label p))
-						   (pointer-valuep p))))))))
-	      (scroll-to (car sel) (clim:frame-standard-output frame))
-	      (setq *fs1* nil)
-	      (highlight-objects sel frame)))
-     ;; Find the next use of a pointer after this one
-     (next (let* ((found nil)
-		  (rec (find-object (clim:frame-standard-output frame) 
-				   #'(lambda (p) 
-				       (if (eq pointer p)
-					   (progn
-					     (setq found t)
-					     nil)
-					 (when found
-					   (and (pointer-p p)
-						(eql (pointer-label pointer)
-						     (pointer-label p))))))))
-		  (sel (when rec
-			 (clim:output-record-children rec))))
-	     (when sel
-	       (scroll-to (car sel) (clim:frame-standard-output frame))
-	       (setq *fs1* nil)
-	       (highlight-objects sel frame)))))))
