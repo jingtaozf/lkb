@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.4  1998/08/24 21:59:14  oe
+;; committing minor changes contributed by the manager; make MRS work for PAGE ...
+;;
 ;; Revision 1.3  1998/08/12 01:38:30  malouf
 ;; Change to DFKI directory structure and add tsdb.
 ;;
@@ -180,13 +183,14 @@ for extra features for using the extra-features of a relation")
 ;;; names; arg refers to a label which according to spme unaccountable
 ;;; principles of transfer must be base label
 
-(defparameter *vm-special-label-hack-list*
-    `((,(vsym "support_rel") . 1)
-      (,(vsym "nominalize-rel") . 1)
-       (,(vsym "nominalize_rel") . 1)
-       (,(vsym "support-rel") . 1)))
+(defparameter *vm-special-label-hack-list* nil)
 
-(defparameter *complex-extra-feats* `(,(vsym "VIT") ,(vsym "PNG")))
+;    `((,(vsym "support_rel") . 1)
+;      (,(vsym "nominalize-rel") . 1)
+;       (,(vsym "nominalize_rel") . 1)
+;       (,(vsym "support-rel") . 1)))
+
+(defparameter *complex-extra-feats* `(,(vsym "VIT")))
 
 ;;; The following globals replace stuff hardwired into mrsoutput.lisp
 ;;; features
@@ -260,6 +264,8 @@ for extra features for using the extra-features of a relation")
 (defparameter *mrs-output-p* nil)
 (defparameter *raw-mrs-output-p* nil)
 
+;;; display of extra features in an MRS
+
 (defparameter *mrs-extra-display* nil)
 
 ;;; take VM arg role control out of package MAIN
@@ -267,4 +273,17 @@ for extra features for using the extra-features of a relation")
 (defvar *VM-arg-roles-only-p* nil)
 (defvar *VM-arg-roles* nil)
 (defvar *suppressed-VM-arg-roles* nil)
+
+;;; for generation - real values in mrsglobals-eng
+
+(defparameter *dummy-relations* nil)
+
+(defparameter *main-semantics-path* nil)
+
+(defparameter *construction-semantics-path* nil)
+
+(defparameter *external-semantics-path* nil)
+
+(defparameter *message-semantics-path* nil)
+
 

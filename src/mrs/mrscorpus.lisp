@@ -128,49 +128,126 @@
 
 ;;; *bindings* is an assoc list of variable numbers
 
-(defun mrs-equalp (mrs1 mrs2 &optional syntactic-p)
+(defun mrs-equalp (mrs1 mrs2 &optional syntactic-p noisy-p)
   (setf *bindings* nil)
-  (and (variables-equal (psoa-handel mrs1)
-                        (psoa-handel mrs2) syntactic-p)
-       (variables-equal (psoa-index mrs1)
-                        (psoa-index mrs2) syntactic-p)
-       (mrs-liszts-equal-p (psoa-liszt mrs1)
-                           (psoa-liszt mrs2) syntactic-p)
-       (or (not syntactic-p)
-           (hcons-equal-p (psoa-h-cons mrs1)
-                        (psoa-h-cons mrs2)))))
+  (if (variables-equal (psoa-handel mrs1)
+                       (psoa-handel mrs2) syntactic-p)
+       (if (variables-equal (psoa-index mrs1)
+                            (psoa-index mrs2) syntactic-p)
+           (if (mrs-liszts-equal-p (psoa-liszt mrs1)
+                                   (psoa-liszt mrs2) 
+                                   syntactic-p 
+                                   noisy-p)
+               (if 
+                   (or (not syntactic-p)
+                       (hcons-equal-p (psoa-h-cons mrs1)
+                                      (psoa-h-cons mrs2)))
+                   t
+                 (progn 
+                   (when noisy-p
+                     (format t "~%hcons difference ~A ~A"
+                             (psoa-h-cons mrs1)
+                             (psoa-h-cons mrs2)))
+                   nil))
+                 ;; difference in rels reported by
+                 ;; mrs-liszts-equal-p
+             nil)
+         (progn 
+           (when noisy-p
+             (format t "~%index difference ~A ~A"
+                     (psoa-index mrs1)
+                     (psoa-index mrs2))
+             nil)))
+    (progn 
+      (when noisy-p
+        (format t "~%handel difference ~A ~A"
+                (psoa-handel mrs1)
+                (psoa-handel mrs2)))
+      nil)))
 
 
-(defun mrs-liszts-equal-p (orig-liszt1 orig-liszt2 syntactic-p)
+(defun mrs-liszts-equal-p (orig-liszt1 orig-liszt2 syntactic-p 
+                                       &optional noisy-p)
   (let ((liszt1 (sort-mrs-struct-liszt orig-liszt1))
         (liszt2 (sort-mrs-struct-liszt orig-liszt2)))
   (and (eql (length liszt1) (length liszt2))
        (loop for rel1 in liszt1
              as rel2 in liszt2
-             always
-             (and (eql (rel-sort rel1) (rel-sort rel2))
-                  (variables-equal (rel-handel rel1) 
-                                   (rel-handel rel2) syntactic-p)
-                  (let ((fv1 (rel-flist rel1))
-                        (fv2 (rel-flist rel2)))
-                    (and (eql (length fv1) (length fv2))
+           always
+             (if
+                 (mrs-relations-equal-p rel1 rel2 syntactic-p noisy-p)
+                 t
+               (progn
+                 (when noisy-p
+                   (format t "~%Relations differ ~A ~A" rel1 rel2))
+                 nil))))))
+
+
+(defun mrs-relations-equal-p (rel1 rel2 syntactic-p noisy-p)
+  (if (eql (rel-sort rel1) (rel-sort rel2))
+      (if (variables-equal (rel-handel rel1) 
+                           (rel-handel rel2) syntactic-p)
+          (let ((fv1 (rel-flist rel1))
+                (fv2 (rel-flist rel2)))
+            (if (eql (length fv1) (length fv2))
                          ;;; assumes canonical feature ordering
-                         (loop for fvpair1 in fv1
-                               as fvpair2 in fv2
-                             always 
-                               (and (eql (fvpair-feature fvpair1)
-                                         (fvpair-feature fvpair2))
-                                    (if
-                                        (member
-                                         (fvpair-feature fvpair1)
-                                         *value-feats*)
-                                        (equal
-                                         (fvpair-value fvpair1)
-                                         (fvpair-value fvpair2))
-                                      (variables-equal
-                                       (fvpair-value fvpair1)
-                                       (fvpair-value fvpair2)
-                                       syntactic-p)))))))))))
+                (loop for fvpair1 in fv1
+                    as fvpair2 in fv2
+                    always 
+                      (mrs-fvpair-equal-p fvpair1 fvpair2 
+                                          syntactic-p noisy-p))
+              (progn (when noisy-p
+                       (format t "~%Feature numbers differ ~A ~A" 
+                               fv1 fv2))
+                     nil)))        
+        (progn (when noisy-p
+                 (format t "~%Handels differ ~A ~A" 
+                         (rel-handel rel1) 
+                         (rel-handel rel2))
+                 nil))) 
+    (progn (when noisy-p
+             (format t "~%Sorts differ ~A ~A" 
+                     (rel-sort rel1) 
+                     (rel-sort rel2))
+             nil))))
+
+
+
+
+
+(defun mrs-fvpair-equal-p (fvpair1 fvpair2 syntactic-p noisy-p)
+  (if (eql (fvpair-feature fvpair1)
+           (fvpair-feature fvpair2))
+      (if (member (fvpair-feature fvpair1)
+                  *value-feats*)
+          (if (equal (fvpair-value fvpair1)
+                     (fvpair-value fvpair2))
+              t
+            (progn
+              (when noisy-p
+                (format 
+                 t "~%Values differ ~A ~A" 
+                 (fvpair-value fvpair1)
+                 (fvpair-value fvpair2)))
+              nil))
+        (if (variables-equal
+             (fvpair-value fvpair1)
+             (fvpair-value fvpair2)
+             syntactic-p)
+            t
+          (progn 
+            (when noisy-p
+              (format 
+               t "~%Variables differ ~A ~A" 
+               (fvpair-value fvpair1)
+               (fvpair-value fvpair2)))
+            nil)))
+    (progn (when noisy-p
+             (format 
+              t "~%Features differ ~A ~A" 
+              (fvpair-feature fvpair1)
+              (fvpair-feature fvpair2))))))
+
 
 (defun variables-equal (var1 var2 syntactic-p)
   (or (eq var1 var2)

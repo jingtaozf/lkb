@@ -35,7 +35,7 @@
 ;;; segment descriptions with defaults for standalone
 (defstruct (sid (:print-function print-sid-term))
   (turnnumber 1)
-  (channel 'a)
+  (channel 's)
   (sourcelanguage 'de)
   (begintime 0)
   (endtime 10)

@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.5  1998/08/24 21:59:14  oe
+;; committing minor changes contributed by the manager; make MRS work for PAGE ...
+;;
 ;; Revision 1.4  1998/07/23 01:24:04  aac
 ;; mrs equality and removing remnants of page packages
 ;;
@@ -302,29 +305,9 @@
 ;  '((,(vsym "nominalize_rel . 2))
 
 
-;;; features for extracting semantics from expanded lexical entries
-
-
-(defparameter *dummy-relations* `(,(vsym "NO_REL")))
-
-(defparameter *main-semantics-path* 
-  `(,(vsym "SYNSEM") ,(vsym "LOCAL") ,(vsym "CONT") 
-    ,(vsym "LISZT") ,(vsym "LIST")))
-
-(defparameter *construction-semantics-path*
-  `(,(vsym "C-CONT") ,(vsym "LISZT") ,(vsym "LIST")))
-
-(defparameter *external-semantics-path*
-  `(,(vsym "SYNSEM") ,(vsym "LOCAL") ,(vsym "CONT")
-    ,(vsym "ECONT") ,(vsym "LISZT") ,(vsym "LIST")))
-
-(defparameter *message-semantics-path*
-  `(,(vsym "SYNSEM") ,(vsym "LOCAL") ,(vsym "CONT") ,(vsym "MESSAGE")
-    ,(vsym "LIST")))
-
 ;;; display of extra features in an MRS
 
-(defparameter *mrs-extra-display* 
+(setf *mrs-extra-display* 
   `((,(vsym "PNG") . "")
     (,(vsym "PN") . "")
     (,(vsym "VITTENSE") . "")
@@ -335,3 +318,24 @@
     (,(vsym "VREF") . "")
     (,(vsym "VTYPE")  . "")
     (,(vsym "FUN") . "")))
+
+
+;;; features for extracting semantics from expanded lexical entries
+
+(setf *dummy-relations* `(,(vsym "NO_REL")))
+
+(setf *main-semantics-path* 
+  `(,(vsym "SYNSEM") ,(vsym "LOCAL") ,(vsym "CONT") 
+    ,(vsym "LISZT") ,(vsym "LIST")))
+
+(setf *construction-semantics-path*
+  `(,(vsym "C-CONT") ,(vsym "LISZT") ,(vsym "LIST")))
+
+(setf *external-semantics-path*
+  `(,(vsym "SYNSEM") ,(vsym "LOCAL") ,(vsym "CONT")
+    ,(vsym "ECONT") ,(vsym "LISZT") ,(vsym "LIST")))
+
+(setf *message-semantics-path*
+  `(,(vsym "SYNSEM") ,(vsym "LOCAL") ,(vsym "CONT") ,(vsym "MESSAGE")
+    ,(vsym "LIST")))
+

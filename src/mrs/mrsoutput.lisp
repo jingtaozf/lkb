@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.8  1998/08/24 21:59:14  oe
+;; committing minor changes contributed by the manager; make MRS work for PAGE ...
+;;
 ;; Revision 1.7  1998/08/23 15:12:35  oe
 ;; use #-(or :lkb :lingo) in fs2vit() because :lingo is only defined once the
 ;; grammar has actually been loaded.  if you want to distinguish the PAGE used at
@@ -222,8 +225,6 @@
 ;;; WK: the extras for the VIT simply collect the feature structures associated
 ;;; with the INDEXes for VIT conversion
 ;;; this works presently nice for the German grammar but not English
-;;; new is the introduction of group labels; for compatibility with other code
-;;; printed as handels; this must be cleaned up later
 (defun create-variable (fs gen)
   (when (is-valid-fs fs)
     #-pagelite
@@ -232,21 +233,13 @@
       (if existing-variable (cdr existing-variable)
         (let* ((idletter (determine-variable-type fs))
                (idnumber (funcall gen))
-               (variable-name (if (equal idletter "g")
-                                  (format nil "h~A" idnumber)
-                                (format nil "~A~A" idletter idnumber)))
+               (variable-name (format nil "~A~A" idletter idnumber))
                (var-type (fs-type fs))
                (extra (create-index-property-list fs))
 ;;; create-index-property list is defived
 ;;; differently for LKB and PAGE versions - abbreviations are
 ;;; moved to output routines in basemrs 
-               (variable-identifier (cond ((equal idletter "g")
-                                           (make-group-var 
-                                            :name variable-name
-                                            :type var-type 
-                                            :extra extra 
-                                            :id idnumber))
-                                          ((equal idletter "h")
+               (variable-identifier (cond ((equal idletter "h")
                                            (make-handle-var 
                                             :name variable-name
                                             :type var-type 
@@ -351,7 +344,7 @@
     (cond ((equal-or-subtype type *event-type*) "e")
           ((equal-or-subtype type *eventtime-type*) "t")
           ((equal-or-subtype type *handle-type*) "h")  
-          ((equal-or-subtype type *group_lab-type*) "g")  
+;          ((equal-or-subtype type *group_lab-type*) "g")  
           ((equal-or-subtype type *hole-type*) "h")
           ((equal-or-subtype type *label-type*) "h")
           ((equal-or-subtype type *ref-ind-type*) "x")

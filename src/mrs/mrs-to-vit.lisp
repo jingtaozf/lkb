@@ -14,117 +14,9 @@
 
 (in-package "MRS")
 
-#|
+(defvar *mrs2vit-version* "$Revision$")
 
-here is an example of a lispified MRS (slightly faked compared to the actual grammar output
-in order to illustrate some stuff succinctly)
 
-#S(PSOA :HANDEL #S(VAR :NAME "h1" :EXTRA NIL :ID 1)
-             :INDEX #S(VAR :NAME "e2" :EXTRA "(E:t3, R:t3, S:t4)" :ID 2)
-             :LISZT
-             (#S(REL :SORT PRPSTN_REL :HANDEL #S(VAR :NAME "h1" :EXTRA NIL :ID 1)
-                     :FLIST (#S(FVPAIR :FEATURE SOA :VALUE #S(VAR :NAME "h5" :EXTRA NIL :ID 5))))
-              #S(REL :SORT _EVERY_REL :HANDEL #S(VAR :NAME "h6" :EXTRA NIL :ID 6)
-                     :FLIST (#S(FVPAIR :FEATURE BV :VALUE #S(VAR :NAME "x9" :EXTRA "(3SG_N)" :ID 9))
-                             #S(FVPAIR :FEATURE RESTR :VALUE #S(VAR :NAME "h8" :EXTRA NIL :ID 8))
-                             #S(FVPAIR :FEATURE SCOPE :VALUE #S(VAR :NAME "h7" :EXTRA NIL :ID 7))))
-              #S(REL :SORT _DOG_N_REL :HANDEL #S(VAR :NAME "h10" :EXTRA NIL :ID 10)
-                     :FLIST (#S(FVPAIR :FEATURE INST :VALUE #S(VAR :NAME "x9" :EXTRA "(3SG_N)" :ID 9))))
-              #S(REL :SORT _CHASE_V_REL :HANDEL #S(VAR :NAME "h11" :EXTRA NIL :ID 11)
-                     :FLIST (#S(FVPAIR :FEATURE EVENT :VALUE #S(VAR :NAME "e2" :EXTRA "(E:t3, R:t3, S:t4)" :ID 2))
-                             #S(FVPAIR :FEATURE ACT :VALUE #S(VAR :NAME "x9" :EXTRA "(3SG_N)" :ID 9))
-                             #S(FVPAIR :FEATURE UND :VALUE #S(VAR :NAME "x12" :EXTRA "(3SG_N)" :ID 12))))
-              #S(REL :SORT TEMP_PREC_REL :HANDEL #S(VAR :NAME "h11" :EXTRA NIL :ID 11)
-                     :FLIST (#S(FVPAIR :FEATURE EVENT1 :VALUE #S(VAR :NAME "t3" :EXTRA NIL :ID 3))
-                             #S(FVPAIR :FEATURE LATER :VALUE #S(VAR :NAME "t4" :EXTRA NIL :ID 4))))
-              #S(REL :SORT _SOME_INDIV_REL :HANDEL #S(VAR :NAME "h13" :EXTRA NIL :ID 13)
-                     :FLIST (#S(FVPAIR :FEATURE BV :VALUE #S(VAR :NAME "x12" :EXTRA "(3SG_N)" :ID 12))
-                             #S(FVPAIR :FEATURE RESTR :VALUE #S(VAR :NAME "h15" :EXTRA NIL :ID 15))
-                             #S(FVPAIR :FEATURE SCOPE :VALUE #S(VAR :NAME "h14" :EXTRA NIL :ID 14))))
-              #S(REL :SORT _CAT_N_REL :HANDEL #S(VAR :NAME "h16" :EXTRA NIL :ID 16)
-                     :FLIST (#S(FVPAIR :FEATURE INST :VALUE #S(VAR :NAME "x12" :EXTRA "(3SG_N)" :ID 12))))
-              #S(REL :SORT _BLACK_ADJ_REL :HANDEL #S(VAR :NAME "h16" :EXTRA NIL :ID 16)
-                     :FLIST (#S(FVPAIR :FEATURE INST :VALUE #S(VAR :NAME "x12" NIL :ID 12)))))
-             :H-CONS
-             (#S(HCONS :SCARG #S(VAR :NAME "h5" :EXTRA NIL :ID 5)
-                       :CANDS (#S(VAR :NAME "h13" :EXTRA NIL :ID 13)
-                               #S(VAR :NAME "h6" :EXTRA NIL :ID 6)
-                               #S(VAR :NAME "h11" :EXTRA NIL :ID 11))
-                       :OUTSCPD NIL)
-              #S(HCONS :SCARG #S(VAR :NAME "h8" :EXTRA NIL :ID 8)
-                       :CANDS (#S(VAR :NAME "h10" :EXTRA NIL :ID 10))
-                       :OUTSCPD NIL)
-              #S(HCONS :SCARG #S(VAR :NAME "h6" :EXTRA NIL :ID 6)
-                       :CANDS NIL
-                       :OUTSCPD #S(VAR :NAME "h10" :EXTRA NIL :ID 10))
-              #S(HCONS :SCARG #S(VAR :NAME "h15" :EXTRA NIL :ID 15)
-                       :CANDS (#S(VAR :NAME "h16" :EXTRA NIL :ID 16))
-                       :OUTSCPD NIL)
-              #S(HCONS :SCARG #S(VAR :NAME "h13" :EXTRA NIL :ID 13)
-                       :CANDS NIL
-                       :OUTSCPD #S(VAR :NAME "h16" :EXTRA NIL :ID 16))
-              #S(HCONS :SCARG #S(VAR :NAME "h13" :EXTRA NIL :ID 13)
-                       :CANDS NIL
-                       :OUTSCPD #S(VAR :NAME "h6" :EXTRA NIL :ID 6))))
-
-The parts of the VIT that we are attempting to generate from this are:
-1. Semantics
-2. Main condition
-3. Scope
-
-We should also be able to generate
-
-4. Tenseandaspect
-5. Syntax
-
-I ignore tense and aspect for now, since there may well be changes
-Syntax looks a bit tedious but reasonably trivial, so I am leaving this to later
-
-Here is what I think the target VIT semantics would be (ignoring the issues
-involved in translation of relation names etc):
-
-        :SEMANTICS (#S(P-TERM :PREDICATE PRPSTN_REL :ARGS (L1 H5))
-                    #S(P-TERM :PREDICATE EVERY_REL :ARGS (L6 I9 H8 H7)) 
-                    #S(P-TERM :PREDICATE DOG_REL :ARGS (L10 I9)) 
-                    #S(P-TERM :PREDICATE CHASE_REL :ARGS (L11 I2))
-                    #S(P-TERM :PREDICATE ARG2 :ARGS (L11 I2 I9))
-                    #S(P-TERM :PREDICATE ARG3 :ARGS (L11 I2 I12))
-                    #S(P-TERM :PREDICATE SOME_REL :ARGS (L13 I12 H15 H14)) 
-                    #S(P-TERM :PREDICATE CAT_REL :ARGS (L161 I12)) 
-                    #S(P-TERM :PREDICATE BLACK_REL :ARGS (L162 I12)))
-        :MAIN-CONDITION L1
-        :SCOPE (#S(P-TERM :PREDICATE IN_G :ARGS (L161 L16))
-                #S(P-TERM :PREDICATE IN_G :ARGS (L162 L16))
-                #S(P-TERM :PREDICATE EQ :ARGS (L10 H8))
-                #S(P-TERM :PREDICATE EQ :ARGS (L16 H15))
-                #S(P-TERM :PREDICATE EQ :ARGS (L13 H5))
-                #S(P-TERM :PREDICATE EQ :ARGS (L6 H14))
-                #S(P-TERM :PREDICATE EQ :ARGS (L11 H7))
-                #S(P-TERM :PREDICATE LEQ :ARGS (L11 H7))
-                #S(P-TERM :PREDICATE LEQ :ARGS (L11 H14))
-                etc etc
-
-what's happening here, beside the trivial rearrangement of structures is:
-1. renaming variables - MRS x's and e's collapse to i, h's go to l's when they're
-   labelling known rels.  Since we are effectively making the distinction between
-   holes and labels in the MRS scoping stuff anyway, I have added a parameter to 
-   the structure for handel variables to record if they are label handels
-2. splitting the chase_rel into a Parsons style representation
-3. changing the labels of black_rel and cat_rel so they are distinct
-- this requires that we add grouping statements in scope -
-old style would be group(L15,[L151, L152]), new style is in_g(L151,L15), in_g(L152,L15)
-4. Adding scoping statements of the form LEQ or EQ
-- in this example, the `outscoped' constraint has actually disambiguated the structure
-Since the simplest technique (and possibly the only technique) for converting
-the scope conditions currently used in MRS to VIT is to expand all structures and then
-deduce the constraints, a plausible idea is to generate ALL
-the possible LEQ and EQ statements.  Obviously this may not correspond to the output of a 
-particular grammar - this however is going to be true of any mechanism.  (Even if
-we use LEQs in MRS, the _precise_ leqs generated will depend to some extent on assumptions
-about syntax.)  It's not worth devoting too much effort to sorting out the current situation,
-because of the likelyhood of changes in the grammar.
-
-|#
 ;;; hash table form semdbs:
 
 (defvar *vit-semdb* (make-hash-table :test #'eq))
@@ -132,30 +24,16 @@ because of the likelyhood of changes in the grammar.
 (defstruct semdbitem
   gramrel
   vitrel
-  relsort
   args
   extra)
-
-(defstruct vitarg
-  gramrole
-  vitrole
-  vitsort)
 
 ;;; I assume that args is a list of the parameters 
 ;;; needs extension as the information becomes available from SemDB
 (defun create-db-item (arglist)
   (make-semdbitem :gramrel (first arglist)
                   :vitrel (second arglist)
-                  :relsort (third arglist)
-                  :args (if (fourth arglist)
-                               (loop for arg in (fourth arglist)
-                                   collect
-                                     (make-vitarg :gramrole (first arg)
-                                                  :vitrole (second arg)
-                                                  :vitsort (when (third arg)
-                                                             (third arg)))))
+                  :args (fourth arglist)
                   :extra (subseq arglist 4)))
-
 
 (defun insert-db-item (&rest args)
   (let ((item (create-db-item args)))
@@ -224,35 +102,40 @@ because of the likelyhood of changes in the grammar.
   (setf *group-members* nil
         *vit-instances* nil
         *hole-label-eqs* nil
-        *used-handel-labels* nil))
+        *used-handel-labels* nil
+        *top-level-variables* nil))
 
-;;; here with fixed package
+;;; provisions for binary operators required?
+(defun convert-complex-types (type)
+  "transform possibly complex TDL-types into prolog"
+  (cond ((atom type) type)
+        ((consp type)
+         (case (car type)
+           (:and (make-p-term :predicate "'&'"
+                               :args (convert-complex-types (rest type))))
+           (:or (make-p-term :predicate "';'"
+                              :args (convert-complex-types (rest type))))
+           (:not (make-p-term :predicate "'~'"
+                              :args (convert-complex-types (rest type))))
+           (t (cons (convert-complex-types (car type))
+                    (convert-complex-types (rest type))))
+           ))
+        (t nil)))
+
 (defun p-symbol (&rest args)
   "Concatenate symbols or strings to form an interned symbol"
   (intern (format nil "~{~a~}" args) "MRS"))
 
-;;; pred1 is assumed to be a symbol in the grammar domain
-;;; at present the DBs do not appear appropriate to the purpose
-(defun insert-predicate-translation (pred1 pred2 
-                                     &optional 
-                                     (domain (tdl-show-current-domain)))
-  (let ((dompred (find-symbol (string pred1) domain)))
-    (setf (gethash (if dompred
-                       dompred
-                     pred1) *vit-semdb*) pred2)))
-
-;;; table lookup noch einbauen
-(defun get-vit-predicate-name (relname)
-  (let ((dbitem (get-db-item relname)))
-    (if dbitem
-        (semdbitem-vitrel dbitem)
-      (let* ((rel1 (if *sem-relation-suffix*
-                       (remove-name-suffix relname *sem-relation-suffix*)
-                     relname))
-             (rel2 (if *sem-relation-prefix*
-                       (remove-name-prefix rel1 *sem-relation-prefix*)
-                     rel1)))
-        (string-trim "*" rel2)))))
+(defun get-vit-predicate-name (relname dbitem)
+  (if (semdbitem-p dbitem)
+      (semdbitem-vitrel dbitem)
+    (let* ((rel1 (if *sem-relation-suffix*
+                     (remove-name-suffix relname *sem-relation-suffix*)
+                   relname))
+           (rel2 (if *sem-relation-prefix*
+                     (remove-name-prefix rel1 *sem-relation-prefix*)
+                   rel1)))
+      (string-trim "*" rel2))))
 
 (defun collect-values-from-rel (rel)
   ;;; returns the values from a relation (other than the handel)
@@ -265,7 +148,7 @@ because of the likelyhood of changes in the grammar.
 
 (defun get-arg-role (var)
   (if (var-p var)
-      (cond ((mrs-language '(german japanese))
+      (cond ((mrs-language '(japanese))
              (let ((throle (find *throle-feature*
                                   (var-extra var) 
                                   :key #'fvpair-feature)))
@@ -286,20 +169,25 @@ because of the likelyhood of changes in the grammar.
 
 (defun optional-var-p (var)
   (and (var-p var)
-       (eql (elt (var-name var) 0) '#\v)))       
+       (eql (elt (var-name var) 0) '#\v)))    
 
-(defun collect-args-and-values-from-rel (rel)
+(defun collect-args-and-values-from-rel (rel dbitem)
   ;;; returns the values from a relation (other than the handel)
   ;;; split up in those for arg-relations and normal
   ;;; note that this returns the entire structures (necessary because
   ;;; of identification of sorts of variables)
   (let ((args nil)
-        (others nil))
+        (others nil)
+        (dbargs (if (semdbitem-p dbitem)
+                    (semdbitem-args dbitem))))
     (loop for fvp in (rel-flist rel)
              do
           (let* ((value (fvpair-value fvp))
                  (feat (fvpair-feature fvp))
-                 (def (assoc feat *mrs-arg-features*))
+                 ;;; this treats *mrs-arg-features* as default for mismatches
+  ;;; between semdb and grammar:
+                 (def (or (assoc feat dbargs)
+                          (assoc feat *mrs-arg-features*)))
                  (arg (if def
                           (or (and (consp (rest def))
                                    (first (rest def)))
@@ -311,7 +199,7 @@ because of the likelyhood of changes in the grammar.
                    ;; args assoc-Liste (arg . var)
                   (setf args (acons arg value args))
                 (setf others (append others (list (fvpair-value fvp))))))))
-    (list args others)))
+    (list args others)))  
 
 (defun collect-all-handel-vars (rels)
   ;;; Given a set of relations, this returns the list of labels and of
@@ -329,14 +217,6 @@ because of the likelyhood of changes in the grammar.
                 (label (rel-label rel))
                 (sp-rel (assoc (rel-sort rel)
                                *vm-special-label-hack-list*)))
-;           (unless (is-handel-var var)
-;             (error "~%Relation ~A has incorrect handel ~A"
-;                    (rel-sort rel) var))
-;;           (cond ((assoc (var-id var) label-list)
-;;                  (pushnew (var-id var) group-list))
-;;                 ((group-var-p var)
-;;                  (pushnew (var-id var) group-list))
-            ;;                 (t t))
             (when (var-p var)
               (pushnew (cons (var-id var) 
                              (if (var-p label)
@@ -364,6 +244,22 @@ because of the likelyhood of changes in the grammar.
                          (not (is-handel-var var)))
                     (pushnew var instances))))
     instances))
+
+;;; returns list of free "individual" variables
+;;; only x and v variables are candidates, not e's and d's
+;;; perhaps to 'logical' for Vits: it might be that a variable which is used
+;;; more than once in Vits counts as unbound
+(defun collect-unbound-vars (mrs)
+  (setf *top-level-variables* nil)
+  (let* ((rels (psoa-liszt mrs))
+         (quant-rels (for rel in rels filter (if (is-quant-rel rel) rel)))
+         (implicit-existentials (find-unbound-vars rels quant-rels))
+         (free nil))
+    (for var in implicit-existentials
+         do
+         (if (member (elt (var-name var) 0) '(#\x #\v))
+             (pushnew var free :key #'var-id)))
+    free))
 
 ;;; ***** Main code *******
 
@@ -431,7 +327,7 @@ because of the likelyhood of changes in the grammar.
           (when (and vit standalone)
             (write-vit-pretty t (horrible-hack-2 vit))
             (format t "~%"))
-	  (check-vit vit)
+	    (check-vit vit)
           vit))
     (let ((vit (german-mrs-to-vit mrs-psoa)))
       (when standalone
@@ -562,6 +458,7 @@ because of the likelyhood of changes in the grammar.
                                                   mrs-psoa
                                                   *current-vit* mood labels)
               (vit-scope *current-vit*) (append groups scope (vit-scope *current-vit*)))
+      (add-unbounds-to-vit mrs-psoa *current-vit*)
         (values *current-vit*
                 binding-sets)))))
 
@@ -598,6 +495,7 @@ because of the likelyhood of changes in the grammar.
                                   *current-vit* mood labels)
             (vit-scope *current-vit*) (append groups scope 
                                               (vit-scope *current-vit*)))
+      (add-unbounds-to-vit mrs *current-vit*)
       *current-vit*)))
 
 ;;; for VM sid comes from the parser and is stored in *segment-id*
@@ -717,9 +615,10 @@ because of the likelyhood of changes in the grammar.
                                       groups 
                                       labels 
                                       (rel-label rel)))
-         (args (collect-args-and-values-from-rel rel))
+         (dbitem (get-db-item (rel-sort rel)))
+         (args (collect-args-and-values-from-rel rel dbitem))
          (pred (make-p-term :predicate 
-               (get-vit-predicate-name (rel-sort rel))
+               (get-vit-predicate-name (rel-sort rel) dbitem)
                :args 
                (cons label
                      (loop for val in (second args)
@@ -824,26 +723,31 @@ because of the likelyhood of changes in the grammar.
     hole))
                  
 (defun create-special-relations (val fvp inst)
-  (if (and (eq (fvpair-feature fvp) *vit-sort-feature*) ; temporary hack
-           (member (fvpair-value fvp) *vm-ignored-sort-list*))
-      nil
-    (cond ((eq (first val) t)
-           (list (funcall (p-symbol 'make- (first (rest val)))
+  (cond ((eq (first val) t)
+         (list (funcall (p-symbol 'make- (first (rest val)))
+                        :instance inst
+                        :args (list (convert-complex-types 
+                                     (fvpair-value fvp))))))
+        ((eq (first val) 'others)
+         (list (funcall (p-symbol 'make- (first (first (rest val))))
+                        :instance inst
+                        :args (rest (first (rest val))))))
+        ((eq (first (rest val)) 'call)
+         (list (apply (first (first (rest (rest val))))
+                      (rest (first (rest (rest val)))))))
+        ((symbolp (first (rest val)))
+         (list (funcall (p-symbol 'make- (first (rest val)))
+                        :instance inst
+                        :args (list (fvpair-value fvp)))))
+        (t (loop for form in (rest val)
+               collect
+                 (funcall (p-symbol 'make- (first form))
                           :instance inst
-                          :args (list (fvpair-value fvp)))))
-          ((eq (first val) 'others)
-           (list (funcall (p-symbol 'make- (first (first (rest val))))
-                          :instance inst
-                          :args (rest (first (rest val))))))
-          ((symbolp (first (rest val)))
-           (list (funcall (p-symbol 'make- (first (rest val)))
-                          :instance inst
-                          :args (list (fvpair-value fvp)))))
-          (t (loop for form in (rest val)
-                 collect
-                   (funcall (p-symbol 'make- (first form))
-                            :instance inst
-                            :args (rest form)))))))
+                          :args (if (eq (second form) 'call)
+                                    (list (apply (first (first (rest (rest
+                                                                      form))))
+                                                 (rest (first (rest (rest form))))))
+                                  (rest form)))))))
 
 (defun get-transformation-table-value (fval values)
     (dolist (val values)
@@ -948,6 +852,17 @@ because of the likelyhood of changes in the grammar.
   (dolist (group groups)
     (if (member label (rest group))
         (return (first group)))))
+
+(defun add-unbounds-to-vit (mrs vit)
+  (let ((unbound (collect-unbound-vars mrs)))
+    (when unbound
+      (setf (vit-discourse vit)
+        (append 
+         (for var in unbound
+           collect
+           (make-p-term :predicate 'unbound
+                        :args (list (intern (format nil "I~A" (var-id var))))))
+         (vit-discourse vit))))))
 
 ;; ********* Construction of scope and of groupings ***********
 
