@@ -178,7 +178,7 @@
          (*do-something-with-parse* nil))
     (declare (special *chasen-debug-p*))
     (multiple-value-bind (return condition)
-      (ignore-errors
+      (#-:debug ignore-errors #+:debug progn
        (let* ((sent
                (split-into-words (preprocess-sentence-string string)))
               (str (make-string-output-stream)) ; capture any warning messages
@@ -450,22 +450,27 @@
                 (:comment . ,comment)
                 (:results .
                  ,(loop
+                      with parses = *gen-record*
                       with *package* = *lkb-package*
                       with nresults = (if (<= nresults 0)
-                                        (length *gen-record*)
+                                        (length strings)
                                         nresults)
                       for i from 0
-                      for parse in *gen-record*
                       for string in strings
-                      for derivation = (with-standard-io-syntax
-                                         (let ((*package* *lkb-package*))
-                                           (write-to-string
-                                            (compute-derivation-tree parse) 
-                                            :case :downcase)))
-                      for size = (parse-tsdb-count-nodes parse)
+                      for parse = (pop parses)
+                      for derivation = (if parse
+                                         (with-standard-io-syntax
+                                           (let ((*package* *lkb-package*))
+                                             (write-to-string
+                                              (compute-derivation-tree parse) 
+                                              :case :downcase)))
+                                         "")
+                      for size = (if parse (parse-tsdb-count-nodes parse) -1)
                       for tree = #-:null (format nil "~{~a~^ ~}" string)
                                  #+:null (tsdb::call-hook trees-hook parse)
-                      for mrs = (tsdb::call-hook semantix-hook parse)
+                      for mrs = (if parse
+                                  (tsdb::call-hook semantix-hook parse)
+                                  "")
                       while (>= (decf nresults) 0) collect
                         (pairlis '(:result-id :mrs :tree :string
                                    :derivation :size)
@@ -510,7 +515,7 @@
 (defun tsdb::transfer-item (mrs
                       &key id string exhaustive nanalyses trace
                            edges derivations semantix-hook trees-hook
-                           burst (nresults 0))
+                           burst (nresults 0) (fragmentp t))
   (declare (ignore edges derivations string id exhaustive nanalyses
                    semantix-hook trees-hook))
 
@@ -524,12 +529,13 @@
         (ignore-errors
          (when (or (null mrs) (not (mrs::psoa-p mrs)))
            (error "null or malformed input MRS"))
-         (when (mrs::fragmentp mrs)
+         (when (and (null fragmentp) (mrs::fragmentp mrs))
            (error "fragmented input MRS"))
          (let* ((edges
                  (tsdb::time-a-funcall
                   #'(lambda () 
-                      (mt::transfer-mrs mrs :filter nil :debug nil))
+                      (mt::transfer-mrs
+                       mrs :filter nil :debug nil :preemptive t))
                   #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
                       (declare (ignore ignore))
                       (setf tgc (+ tgcu tgcs) tcpu (+ tu ts) treal tr
@@ -946,8 +952,8 @@
         (make-edge :id id :category (and tdfs (indef-type-of-tdfs tdfs))
                    :rule form :leaves (list form) :lex-ids ids
                    :dag tdfs :from start :to end
-                   :cfrom (mrs::find-cfrom-hack start)
-                   :cto (mrs::find-cto-hack start))))))
+                   :cfrom nil #-:logon (find-cfrom-hack start)
+                   :cto nil #-:logon (find-cto-hack start))))))
 
 (defun tsdb::find-affix (type)
   (let* ((*package* *lkb-package*)
@@ -1036,13 +1042,6 @@
                    :children (list preterminal))
         (values nil %failure%)))))
 
-;;;
-;;; _fix_me_
-;;; obsolete this function (fix in `redwoods.lisp').          (3-nov-03; oe)
-;;;
-(defun tsdb::reconstruct-mrs (id mrs length)
-  (make-edge :id id :mrs mrs :from 0 :to length))
-
 ;;;
 ;;; RMRS comparison
 ;;; 

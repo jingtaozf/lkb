@@ -20,7 +20,7 @@
 
 (defparameter *tsdb-name* "[incr tsdb()]")
 
-(defparameter *tsdb-version* "2.0 (14-jul-04; beta)")
+(defparameter *tsdb-version* "2.0 (30-oct-04; beta)")
 
 (defparameter
   *tsdb-application*
@@ -172,7 +172,13 @@
 
 (defparameter *redwoods-update-exact-p* nil)
 
+(defparameter *redwoods-update-flag-p* t)
+
 (defparameter *redwoods-agreement-exact-p* t)
+
+(defparameter *redwoods-score-similarity-p* nil)
+
+(defparameter *redwoods-use-item-sets-p* t)
 
 (defparameter *redwoods-thinning-export-p* nil)
 

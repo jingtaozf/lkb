@@ -19,6 +19,10 @@
 
 (defparameter *inflectional-rule-suffix* "_infl_rule")
 
+(defparameter *derivations-comparison-level* :all)
+
+(defparameter *derivations-preterminals-equivalent-test* nil)
+
 (defparameter *derivations-ignore-leafs-p* t)
 
 (defparameter *derivations-reconstructor* nil)
@@ -100,37 +104,64 @@
     (when (string-equal root *inflectional-rule-suffix* :start1 break)
       (subseq root 0 break))))
 
-(defun derivation-equal (gold blue)
-  (cond
-   ((and (null gold) (null blue)) t)
-   ((stringp gold)
-    (cond 
-     ((stringp blue) (string-equal gold blue))
-     ((symbolp blue) (string-equal gold (symbol-name blue)))))
-   ((symbolp gold)
-    (cond 
-     ((symbolp blue) (eq gold blue))
-     ((integerp blue) (string-equal (symbol-name gold) (format nil "~d" blue)))
-     ((stringp blue) (string-equal (symbol-name gold) blue))))
-   ((integerp gold)
-    (cond 
-     ((symbolp blue) (eq (intern (format nil "~d" gold) :tsdb) blue))
-     ((integerp blue) (= gold blue))
-     ((stringp blue) (string-equal (format nil "~d" gold) blue))))
-   ((or (null (derivation-daughters gold)) (null (derivation-daughters blue)))
-    (if *derivations-ignore-leafs-p*
-      t
-      (let* ((gleafs (derivation-leafs gold))
-             (bleafs (derivation-leafs blue)))
-        (every #'(lambda (gold blue)
-                   (and (stringp gold) (stringp blue)
-                        (string-equal gold blue)))
-               gleafs bleafs))))
-   (t
-    (and (derivation-equal (derivation-root gold) (derivation-root blue))
-         (every #'derivation-equal 
-                (derivation-daughters gold) 
-                (derivation-daughters blue))))))
+(defun derivation-equal (gold blue 
+                         &optional (level *derivations-comparison-level*))
+  (labels ((node-equal (gold blue)
+             (cond
+              ((stringp gold)
+               (cond 
+                ((stringp blue) (string-equal gold blue))
+                ((symbolp blue) (string-equal gold (symbol-name blue)))))
+              ((symbolp gold)
+               (cond 
+                ((symbolp blue) (eq gold blue))
+                ((integerp blue) 
+                 (string-equal (symbol-name gold) (format nil "~d" blue)))
+                ((stringp blue) 
+                 (string-equal (symbol-name gold) blue))))
+              ((integerp gold)
+               (cond 
+                ((symbolp blue) 
+                 (eq (intern (format nil "~d" gold) :tsdb) blue))
+                ((integerp blue) (= gold blue))
+                ((stringp blue) 
+                 (string-equal (format nil "~d" gold) blue)))))))
+    (cond
+     ((and (null gold) (null blue)) t)
+     ((and (atom gold) (atom blue)) (node-equal gold blue))
+     ((or (null (derivation-daughters gold)) 
+          (null (derivation-daughters blue)))
+      (if *derivations-ignore-leafs-p*
+        t
+        (let* ((gleafs (derivation-leafs gold))
+               (bleafs (derivation-leafs blue)))
+          (every #'(lambda (gold blue)
+                     (and (stringp gold) (stringp blue)
+                          (string-equal gold blue)))
+                 gleafs bleafs))))
+     ;;
+     ;; _fix_me_
+     ;; to insert equivalence testing of lexemes rasonably efficiently, we need
+     ;; to look ahead and determine whether we current nodes are preterminals,
+     ;; i.e. have exactly one generation of descendants.  i am inclined to redo
+     ;; the derivation format, or at least move to a UDF 1.1 variant that made
+     ;; more of this explicit (and maybe had room for additional bits, e.g. an
+     ;; indication of surface positions).                        (8-aug-04; oe)
+     ;;
+     ((when *derivations-preterminals-equivalent-test*
+        (or (null (derivation-daughters (first (derivation-daughters gold))))
+            (null (derivation-daughters (first (derivation-daughters blue))))))
+      (funcall 
+       *derivations-preterminals-equivalent-test* 
+       (derivation-root gold) (derivation-root blue)))
+     (t
+      (when (or (eq level :yield)
+                (derivation-equal 
+                 (derivation-root gold) (derivation-root blue) level))
+        (loop
+            for daughter1 in (derivation-daughters gold)
+            for daughter2 in (derivation-daughters blue)
+            always (derivation-equal daughter1 daughter2 level)))))))
 
 ;;;
 ;;; functionality to reconstruct derivation trees and report nature of failure
@@ -217,10 +248,10 @@
       (when derivation
         (if (numberp (first derivation))
           (catch :fail
-            (reconstruct-derivation derivation dagp))
+            (reconstruct-derivation derivation dagp t))
           (reconstruct-cfg-derivation derivation))))))
 
-(defun reconstruct-derivation (derivation &optional (dagp t))
+(defun reconstruct-derivation (derivation &optional (dagp t) topp)
   (declare (special %derivation-offset%))
   #+:debug
   (pprint (list %derivation-offset% derivation))
@@ -318,6 +349,10 @@
                                              result failure))))))))))))
     (when (and *reconstruct-cache* edge)
       (push edge (gethash id *reconstruct-cache*)))
+    #+:lkb
+    (when (and topp (null (lkb::edge-string edge)))
+      (setf (lkb::edge-string edge) 
+        (format nil "~{~a~^ ~}" (lkb::fix-spelling (lkb::edge-leaves edge)))))
     edge))
 
 ;;;

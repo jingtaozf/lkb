@@ -409,7 +409,7 @@
                              (subseq directory prefix))
               when (and suffix
                         (or (null name) (string= name suffix))
-                        (or (null pattern) (search pattern suffix)))
+                        (or (null pattern) (cl-ppcre::scan pattern suffix)))
               collect suffix))
          (increment (when (and directories meter)
                       (/ (mduration meter) (+ (length directories) 1))))

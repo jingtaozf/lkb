@@ -51,6 +51,9 @@
 (defvar %tsdb-podium-background-process% nil)
 
 (defun init-podium ()
+
+  (declare (special *derivations-comparison-level*))
+  
   (shutdown-podium)
   (let* (#+:allegro
          (display (system:getenv "DISPLAY"))
@@ -99,10 +102,13 @@
       set globals(maximal_number_of_analyses) ~d~%~
       set globals(maximal_number_of_edges) ~d~%~
       set globals(maximal_number_of_results) ~d~%~
+      set globals(detail,derivations) ~(~s~)~%~
       set globals(tree,updatep) ~:[0~;1~]~%~
       set globals(tree,delay) ~a~%~
       set globals(tree,update,exactp) ~:[0~;1~]~%~
+      set globals(tree,update,flagp) ~:[0~;1~]~%~
       set globals(tree,compare,exactp) ~:[0~;1~]~%~
+      set globals(tree,use_item_sets_p) ~:[0~;1~]~%~
       set globals(tree,thinning_normalize_p) ~:[0~;1~]~%~
       set globals(tree,thinning_export_p) ~:[0~;1~]~%~
       ~@[set globals(readers,mrs) {~s}~%~]~
@@ -136,9 +142,12 @@
      *tsdb-maximal-number-of-analyses*
      *tsdb-maximal-number-of-edges* 
      *tsdb-maximal-number-of-results*
+     *derivations-comparison-level*
      delay (if (numberp delay) delay 0)
      *redwoods-update-exact-p*
+     *redwoods-update-flag-p*
      *redwoods-agreement-exact-p*
+     *redwoods-use-item-sets-p*
      *redwoods-thinning-normalize-p*
      *redwoods-thinning-export-p*
      (gethash :mrs *statistics-readers*)

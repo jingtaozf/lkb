@@ -16,13 +16,19 @@
 
 (defparameter *maxent-ngram-back-off-p* t)
 
+(defparameter *maxent-lm-p* 100)
+
 (defparameter *maxent-frequency-threshold* 0)
 
 (defparameter *maxent-random-sample-size* 1000)
 
-(defparameter *maxent-iterations* 100)
+(defparameter *maxent-method* :tao_lmvm)
 
-(defparameter *maxent-relative-tolerance* 0.0001)
+(defparameter *maxent-iterations* nil)
+
+(defparameter *maxent-relative-tolerance* 1e-7)
+
+(defparameter *maxent-variance* 1e2)
 
 (defparameter *maxent-options*
   '(*maxent-collapse-irules-p*
@@ -32,10 +38,29 @@
     *maxent-ngram-size*
     *maxent-ngram-tag*
     *maxent-ngram-back-off-p*
+    *maxent-lm-p*
     *maxent-frequency-threshold*
-    *maxent-random-sample-size*))
+    *maxent-random-sample-size*
+    *maxent-method*
+    *maxent-iterations*
+    *maxent-relative-tolerance*
+    *maxent-variance*))
     
 (defparameter *maxent-debug-p* t)
+
+(defun mem-environment ()
+  (format 
+   nil
+   "~:[-~;+~]CP ~:[-~;+~]PT ~:[-~;+~]AE ~
+    NS[~a] NS[~a] NT[~(~a~)] ~:[-~;+~]NB ~:[-~;+~]LM ~
+    FT[~a] RS[~a] MM[~(~a~)] MI[~a] RT[~a] VA[~a]"
+   *maxent-collapse-irules-p* *maxent-use-preterminal-types-p*
+   *maxent-lexicalization-p* *maxent-active-edges-p*
+   *maxent-ngram-size* *maxent-ngram-tag*
+   *maxent-ngram-back-off-p* *maxent-lm-p*
+   *maxent-frequency-threshold* *maxent-random-sample-size*
+   *maxent-method* (or *maxent-iterations* 0) 
+   *maxent-relative-tolerance* *maxent-variance*))
 
 (defstruct (feature) 
   code 
@@ -59,7 +84,7 @@
   (weights (make-array 512 :initial-element 0.0))
   (count 0)
   (size 512)
-  (file (format nil "/tmp/.mem.~a.mee" (current-user)))
+  (file (format nil "/tmp/.mem.~a.~a.mee" (current-user) (current-pid)))
   stream)
 
 (defmethod print-object ((object mem) stream)
@@ -269,10 +294,13 @@
 		       (let ((model (make-mem)))
 			 (initialize-mem model)
 			 model))
+      with table = (mem-table model)
+      with code = (symbol-to-code '(3) table)
       for item in items
       for iid = (get-field :i-id item)
       for readings = (get-field :readings item)
       when (and (integerp readings) (> readings 0)) do
+        #+:null
 	(format 
 	 stream
 	 "~&[~a] estimate-mem(): item # ~a (~a reading~p);~%"
@@ -303,13 +331,17 @@
 	    for result in results
 	    for rid = (get-field :result-id result)
 	    for frequency = (if (member rid active :test #'=) 1 0)
+            for lm = (get-field :lm result)
 	    for derivation = (when  (or (not sample)
                                         (or (not (zerop frequency))
                                             (member rid sample :test #'=)))
                                (get-field :derivation result))
 	    for edge = (when derivation
 			 (or (get-field :edge result)
-			     (reconstruct derivation nil)))
+                             (let* ((edge (reconstruct derivation nil))
+                                    (string (lkb::edge-string edge)))
+                               (nconc result (acons :string string nil))
+                               edge)))
 	    for event = (when edge (edge-to-event edge model))
 	    while (or (not sample) 
                       (< i (+ *maxent-random-sample-size* (length active))))
@@ -320,27 +352,47 @@
 	       (current-time :long :short) iid rid)
 	      (return)
 	    when event do 
+              (when lm
+                (record-feature 
+                 (make-feature :code code :count lm) event model))
 	      (setf (event-id event) rid)
 	      (setf (event-frequency event) frequency)
 	      (record-event event context)
               (incf i)
 	    finally
-            (record-context context model)
-	    (format 
-	     stream
-	     "~&[~a] estimate-mem(): ~d ~@[[of ~a] ~]~
-              event~p (~d active) for item # ~d;~%" 
-	     (current-time :long :short) i (and sample n) 
-             i (length active) iid)) 
+              (record-context context model)
+              (format 
+               stream
+               "~&[~a] estimate-mem(): item # ~d: ~d ~@[[of ~a] ~]~
+                event~p (~d active);~%" 
+               (current-time :long :short) iid i (and sample n) 
+               i (length active))) 
       finally
 	(when estimatep
-	  (let* ((out (format nil "/tmp/.mem.~a.mew" (current-user)))
+	  (let* ((out (format 
+                       nil
+                       "/tmp/.mem.~a.~a.mew" (current-user) (current-pid)))
+                 (variances (when  (numberp *maxent-variance*)
+                              (let ((name (format 
+                                           nil
+                                           "/tmp/.mem.~a.~a.mev"
+                                           (current-user)
+                                           (current-pid))))
+                                (with-open-file (stream name
+                                                 :direction :output
+                                                 :if-exists :supersede)
+                                  (format stream "~,4f" *maxent-variance*))
+                                name)))
 		 (command (format 
 			   nil 
 			   "estimate -events_in ~a -params_out ~a~
-                              ~@[ -max_it ~a~]~@[ -frtol ~a~]"
+                              ~@[ -method ~(~a~)~]~
+                              ~@[ -max_it ~a~]~@[ -frtol ~a~]~
+                              ~@[ -variances ~a~]"
 			   (mem-file model) out
-                           *maxent-iterations* *maxent-relative-tolerance*))
+                           *maxent-method*
+                           *maxent-iterations* *maxent-relative-tolerance*
+                           variances))
 		 (output (if *maxent-debug-p* nil "/dev/null")))
 	    (force-output (mem-stream model))
 	    (close (mem-stream model))
@@ -494,12 +546,17 @@
                 instance)))
     (t (error "edge-root(): unknown rule in edge ~a~%" edge))))
                 
-(defun mem-score-edge (edge model &key recursivep)
+(defun mem-score-edge (edge model &key recursivep lm)
   (if (and (not recursivep) 
            (eq (lkb::edge-foo edge) model) (numberp (lkb::edge-score edge)))
     (lkb::edge-score edge)
     (let* ((codes (edge-to-codes edge model))
-           (ngrams (unless recursivep (edge-to-ngrams edge model))))
+           (ngrams (unless recursivep (edge-to-ngrams edge model)))
+           (score (if (numberp lm)
+                    (let* ((table (mem-table model))
+                           (code (symbol-to-code '(3) table)))
+                      (* (score-feature code model) lm))
+                    0)))
       (setf (lkb::edge-score edge)
         (+ (loop
                for code in codes
@@ -507,11 +564,33 @@
            (loop
                for code in ngrams
                sum (score-feature code model))
+           score
            (loop
                for edge in (lkb::edge-children edge)
                sum (mem-score-edge edge model :recursivep t)))))))
 
+(defun mem-item-enhancer (item)
+  (when *maxent-lm-p*
+    (loop
+        with foo
+        with results = (get-field :results item)
+        with strings = (loop
+                           for result in results
+                           for string = (get-field :tree result)
+                           when string 
+                           collect string 
+                           and do (push result foo))
+        with scores = (mt::lm-score-strings strings)
+        for result in (nreverse foo)
+        for score = (/ (rest (pop scores)) *maxent-lm-p*)
+        do (nconc result (acons :lm score nil))))
+  item)
+
 (defun mem-score-task (task model)
+  ;;
+  ;; _fix_me_
+  ;; the following seem to not use have an integer first() in their features.
+  ;;                                                           (27-oct-04; oe)
   (cond
    ((lkb::chart-configuration-p task)
     (mem-score-edge (lkb::chart-configuration-edge task) model))
@@ -583,5 +662,3 @@
         (decf size)
       while (> size 0)
       finally (return sample)))
-
-                 

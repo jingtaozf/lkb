@@ -184,7 +184,7 @@
 (defun find-attribute-label (attribute)
   (case attribute
     (:i-length "string length")
-    (:readings "parser analyses")
+    (:readings "distinct analyses")
     (:first "first reading")
     (:total "all readings")
     (:tcpu "total cpu time")
@@ -303,9 +303,8 @@
          pfields ptypes result)
     #+:debug
     (format t "~&analyze(): `~a'~%" key)
-    (when meter
-      (when message (status :text message))
-      (meter :value (get-field :start meter)))
+    (when message (status :text message))
+    (when meter (meter :value (get-field :start meter)))
     (loop while (eq (setf result (gethash key *tsdb-profile-cache*)) :seized))
     (unless result
       (setf (gethash key *tsdb-profile-cache*) :seized)
@@ -481,10 +480,8 @@
                   when foo collect foo))))
         (setf (gethash key *tsdb-profile-cache*) result)))
 
-    (when meter 
-      (meter :value (get-field :end meter))
-      (when message 
-        (status :text (format nil "~a done" message) :duration 2)))
+    (when message (status :text (format nil "~a done" message) :duration 2))
+    (when meter (meter :value (get-field :end meter)))
     result))
 
 (defun rank-items (items &key gold score condition sloppyp scorep)
@@ -1273,7 +1270,7 @@
           \\multicolumn{~d}{|c|}~%    {\\bf `~a' ~a Profile}\\\\~%  ~
           \\hline\\hline~%  ~
           & {\\bf  total} & {\\bf ~a} & {\\bf word} & {\\bf lexical}~%    ~
-            & {\\bf parser} & {\\bf total} & {\\bf overall}\\\\~%  ~
+            & {\\bf distinct} & {\\bf total} & {\\bf overall}\\\\~%  ~
           {\\bf ~a} & {\\bf items} & {\\bf items} & {\\bf string}~%    ~
             & {\\bf items} & {\\bf analyses} & {\\bf results}~%    ~
             & {\\bf coverage}\\\\~%  ~
@@ -1308,7 +1305,7 @@
          cell 1 3 -contents \"~a\\nitems\\n#\" -format title~%~
          cell 1 4 -contents \"word\\nstring\\n\\330\" -format title~%~
          cell 1 5 -contents \"lexical\\nitems\\n\\330\" -format title~%~
-         cell 1 6 -contents \"parser\\nanalyses\\n\\330\" -format title~%~
+         cell 1 6 -contents \"distinct\\nanalyses\\n\\330\" -format title~%~
          cell 1 7 -contents \"total\\nresults\\n#\" -format title~%~
          cell 1 8 -contents \"overall\\ncoverage\\n%\" -format title~%~%"
         alabel (if (= wf 1) "positive" "negative"))))
@@ -1463,9 +1460,9 @@
             & \\multicolumn{4}{|c|}{\\bf ~a}~%    ~
             & \\multicolumn{4}{|c|}{\\bf ~a}\\\\~%  ~
             {\\bf ~a} ~
-            & {\\bf lexical} & {\\bf parser} ~
+            & {\\bf lexical} & {\\bf analyses} ~
             & {\\bf in} & {\\bf out}~%    ~
-            & {\\bf lexical} & {\\bf parser} ~
+            & {\\bf lexical} & {\\bf analyses} ~
             & {\\bf in} & {\\bf out}\\\\~%  ~
             & $\\phi$ & $\\phi$ & \\% & \\%~%   ~
             & $\\phi$ & $\\phi$ & \\% & \\%\\\\~%  ~
@@ -1498,9 +1495,9 @@
             region 1 2 1 5 -contents {~a} -format title -hor_justify center~%~
             region 1 6 1 9 -contents {~a} -format title -hor_justify center~%"
            alabel alabel olabel nlabel)
-          (do ((labels '("lexical\\n\\330" "parser\\n\\330" 
+          (do ((labels '("lexical\\n\\330" "analyses\\n\\330" 
                          "in\\n\\330" "out\\n\\330"
-                         "lexical\\n\\330" "parser\\n\\330" 
+                         "lexical\\n\\330" "analyses\\n\\330" 
                          "in\\n\\330" "out\\n\\330")
                         (rest labels))
                (i 2 (+ i 1)))

@@ -305,7 +305,7 @@
     :arguments nil
     :return-type :integer)
 #+(and (not :pvm) (not :allegro-version>=))
-(defun getpid () (random (expt 2 15)))
+(defun current-pid () (random (expt 2 15)))
 
 (defun current-time (&key long treal tcpu)
   (case long
@@ -401,7 +401,9 @@
         ((>= n (expt 2 10)) (format nil "~,1fK" (/ n (expt 2 10))))
         (t (format nil "~d" n))))
 
-(defun create-output-stream (file &optional append &key (encoding :utf-8))
+(defun create-output-stream (file 
+                             &optional append 
+                             &key (encoding :utf-8) format)
   #-(and :allegro-version>= (version>= 6 0))
   (declare (ignore encoding))
   (let ((stream
@@ -422,6 +424,8 @@
     (unless (or (eq stream file) (eq stream append) (eq stream *tsdb-io*))
       (setf (stream-external-format stream) 
         (excl:find-external-format encoding)))
+    (when (eq format :xml)
+      (format stream "<?xml version=\"1.0\" encoding=\"~(~a~)\"?>~%" encoding))
     stream))
 
 (defun verify-tsdb-directory (language &key absolute skeletonp)

@@ -165,6 +165,7 @@ set globals(evolution,all) {
 set globals(evolution,coverage) 1;
 
 set globals(tree,model) :mem;
+set globals(tree,loosep) 1;
 set globals(tree,nfold) 10;
 set globals(tree,beam) 1;
 set globals(tree,scorep) true;
@@ -746,6 +747,16 @@ proc main {} {
   .menu.compare.menu.switches add checkbutton \
     -label "Best Parse Only" \
     -variable globals(detail,bestp);
+  .menu.compare.menu.switches add separator;
+  .menu.compare.menu.switches add radiobutton \
+    -label "Complete Derivation" \
+    -command {tsdb_set derivations_comparison_level} \
+    -variable globals(detail,derivations) -value :all;
+  .menu.compare.menu.switches add radiobutton \
+    -label "Preterminal Yield" \
+    -command {tsdb_set derivations_comparison_level} \
+    -variable globals(detail,derivations) -value :yield;
+  .menu.compare.menu.switches add separator;
   .menu.compare.menu.switches add checkbutton \
     -label "Analogy Aggregation" \
     -variable globals(analogy_aggregation_p) \
@@ -876,6 +887,10 @@ proc main {} {
     -label "Automatic Update" \
     -variable globals(tree,updatep) -command {tsdb_set automatic_update_p};
   .menu.trees.menu.switches add checkbutton \
+    -label "Update Flag Failures" \
+    -variable globals(tree,update,flagp) \
+    -command {tsdb_set update_flag_p};
+  .menu.trees.menu.switches add checkbutton \
     -label "Update Exact Match" \
     -variable globals(tree,update,exactp) \
     -command {tsdb_set update_exact_p};
@@ -890,6 +905,9 @@ proc main {} {
   .menu.trees.menu.switches add radiobutton \
     -label "Simple PCFG" \
     -variable globals(tree,model) -value :pcfg;
+  .menu.trees.menu.switches add radiobutton \
+    -label "String N-Grams" \
+    -variable globals(tree,model) -value :ngram;
   .menu.trees.menu.switches add radiobutton \
     -label "MEM Tagger" \
     -variable globals(tree,model) -value :tag;
@@ -910,10 +928,22 @@ proc main {} {
   .menu.trees.menu.switches add radiobutton \
     -label "Result Equivalence" \
     -variable globals(tree,comparison) -value :derivation;
+  .menu.trees.menu.switches add radiobutton \
+    -label "Complete Derivation" \
+    -command {tsdb_set derivations_comparison_level} \
+    -variable globals(detail,derivations) -value :all;
+  .menu.trees.menu.switches add radiobutton \
+    -label "Preterminal Yield" \
+    -command {tsdb_set derivations_comparison_level} \
+    -variable globals(detail,derivations) -value :yield;
   .menu.trees.menu.switches add separator;
   .menu.trees.menu.switches add checkbutton \
-    -label "Ambiguous Trees" \
+    -label "Use Ambiguous Trees" \
     -variable globals(tree,loosep);
+  .menu.trees.menu.switches add checkbutton \
+    -label "Item Set Boundaries" \
+    -command {tsdb_set use_item_sets_p} \
+    -variable globals(tree,use_item_sets_p);
   .menu.trees.menu.switches add separator;
   .menu.trees.menu.switches add checkbutton \
     -label "Thinning Normalize" \

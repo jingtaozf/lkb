@@ -294,6 +294,7 @@
                          :exhaustive ,exhaustive
                          :nanalyses ,nanalyses
                          :nresults ,nresults
+                         :trees-hook :local :semantix-hook :local
                          :verbose nil :interactive nil :burst t)
                        nil
                        :key :process-item
@@ -343,5 +344,6 @@
                                     (or (get-field :score foo) 0))))
                     results)))
     (when results
+      (nconc item (acons :unique (length results) nil))
       (setf (get-field :results item) results))
     item))

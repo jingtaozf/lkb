@@ -5,7 +5,7 @@
   ;; return a string identifying the grammar that is currently in use, ideally
   ;; including relevant grammar-internal parameters of variation and a version.
   ;;
-  (or (tsdb::clients-grammar) "norgram (jul-04)"))
+  (or (tsdb::clients-grammar) "norgram (10-nov-04)"))
 
 (defun tsdb::initialize-run (&key interactive 
                             exhaustive nanalyses
@@ -124,7 +124,6 @@
 			      for derivation =
 				(extract-c-structure graph solution)
                               for mrs =
-                                #+:mrs
                                 (let ((mrs (extract-mrs graph solution)))
                                   (when (mrs::psoa-p mrs)
                                     (unless (and filterp
@@ -138,12 +137,14 @@
                                       (with-output-to-string (stream)
                                         (mrs::output-mrs1 
                                          mrs 'mrs::simple stream)))))
-                                #-:mrs
-                                nil
-                              while (and (>= (decf nresults) 0) mrs) collect
+                              when mrs do (decf nresults)
+                              and collect
                                 (pairlis '(:result-id :derivation :mrs) 
 					 (list i derivation mrs))
-			      finally 
+                              while (and solution (>= nresults 0))
+			      finally
+                                #+:debug
+                                (setf %mrss mrss)
 				(unless (zerop (solution graph))
 				  (free-graph-solution 
 				   (graph-address graph))))

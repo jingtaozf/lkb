@@ -867,6 +867,10 @@ proc tsdb_set {variable {value ""}} {
         set variable "*tsdb-tenure-p*";
         set value [lispify_truth_value $globals(tenure_p)];
       }
+      derivations_comparison_level {
+        set variable "*derivations-comparison-level*";
+        set value $globals(detail,derivations)
+      }
       exclude_tgc_p {
         set variable "*statistics-exclude-tgc-p*";
         #
@@ -893,6 +897,14 @@ proc tsdb_set {variable {value ""}} {
         } else {
           set value [lispify_truth_value 0];
         }; # else
+      }
+      use_item_sets_p {
+        set variable "*redwoods-use-item-sets-p*";
+        set value [lispify_truth_value $globals(tree,use_item_sets_p)];
+      }
+      update_flag_p {
+        set variable "*redwoods-update-flag-p*";
+        set value [lispify_truth_value $globals(tree,update,flagp)];
       }
       update_exact_p {
         set variable "*redwoods-update-exact-p*";

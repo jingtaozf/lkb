@@ -1,3 +1,5 @@
+set globals(copyleft,key) 42;
+
 proc copyleft {action} {
  
   global globals;

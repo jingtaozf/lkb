@@ -124,7 +124,7 @@
              ;; transfer.                                        (4-mar-04; oe)
              ;;
              (*process-exhaustive-inputs-p* (if (eq type :transfer)
-                                              50
+                                              200
                                               *process-exhaustive-inputs-p*))
              (*tsdb-trees-hook*
               (unless interactive
@@ -815,7 +815,13 @@
         (:error (setf (client-status client) :error) :error))))
   
    ((null client)
-    (let* ((run-id (get-field :run-id item))
+    (let* ((trees-hook (if (eq trees-hook :local)
+                         *tsdb-trees-hook*
+                         trees-hook))
+           (semantix-hook (if (eq semantix-hook :local)
+                            *tsdb-semantix-hook*
+                            semantix-hook))
+           (run-id (get-field :run-id item))
            (parse-id (get-field :parse-id item))
            (i-id (get-field :i-id item)) 
            (i-input (or (and interactive (get-field :o-input item))
