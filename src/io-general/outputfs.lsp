@@ -809,7 +809,7 @@
 	     (probe-file filename))
     (with-open-file (stream filename 
 		     :direction :input)
-      (setf *shrunk-types* (read stream)))))
+      (setf *shrunk-types* (read stream nil nil)))))
 
 (defun set-dag-display-value (fs f-list action type-fs-display)
    (let* ((sub-dag

@@ -195,7 +195,7 @@
   (unwind-protect
       (run-frame-top-level frame)
     (when *complete-lisp-close*
-      (user::store-cached-lex user::*lexicon*)
+      ;;(user::store-cached-lex user::*lexicon*)
       (excl:exit 0 :no-unwind t))))
 
 (defun restart-lkb-function nil

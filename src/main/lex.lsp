@@ -405,6 +405,22 @@
 	(t (some #'(lambda (lex) (read-psort lex id :cache nil))
 		 (extra-lexicons lexicon)))))
 
+(defmethod collect-expanded-lex-ids :around ((lexicon lex-database))
+  (let ((ids nil))
+    (maphash #'(lambda (id value)
+                 (when (and value (lex-or-psort-full-fs value)
+			    (lex-or-psort-orth value))
+		   (push id ids)))
+	     (slot-value lexicon 'temp-psorts))
+    (nconc ids (call-next-method))))
+
+(defmethod unexpand-psort :around ((lexicon lex-database) id)
+  (with-slots (temp-psorts) lexicon
+    (let ((entry (gethash id temp-psorts)))
+      (if entry
+	  (setf (lex-or-psort-full-fs entry) nil)
+	(call-next-method)))))
+
 (defmethod clear-lex :around ((lexicon lex-database) &optional no-delete)
   (when (fboundp 'reset-cached-lex-entries)
     (funcall 'reset-cached-lex-entries))
