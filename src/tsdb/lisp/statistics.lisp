@@ -2350,8 +2350,9 @@
                ;; set of results rather than one at a time.    (30-oct-03; oe)
                ;;
                #+:mt
-               ((string-equal 
-                 (gethash :mrs *statistics-browsers*) "mt::browse-mrss")
+               ((and (eq field :mrs)
+                     (string-equal 
+                      (gethash :mrs *statistics-browsers*) "mt::browse-mrss"))
                 (funcall browser clashes i-input))
                (t
                 (loop

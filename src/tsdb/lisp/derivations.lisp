@@ -326,16 +326,19 @@
                                     append (lkb::edge-leaves edge)))))))
 
 (defun qtree (derivation &key (stream t))
-  (let ((root (derivation-root derivation))
-        (daughters (derivation-daughters derivation)))
-    (if (null daughters)
-      (format stream "\\leaf{~a}~%" root)
+  (let ((root (if (atom derivation) derivation (derivation-root derivation)))
+        (daughters (unless (atom derivation)
+                     (derivation-daughters derivation))))
+    (cond
+     ((null daughters)
+      (format stream "\\leaf{~a}~%" root))
+     (t
       (loop
           for daughter in daughters
           do
             (qtree daughter :stream stream)
           finally
-             (format stream "\\branch{~d}{~a}~%" (length daughters) root)))))
+             (format stream "\\branch{~d}{~a}~%" (length daughters) root))))))
 
 ;;;
 ;;; install conversion routine and equality predicate for derivations (uniform

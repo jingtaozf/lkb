@@ -134,7 +134,7 @@ proc tsdb_file {action {index -1}} {
           }; # if
           if {$name != "relations" && [file size $target] > 0} {
             status "compressing file `$name' ...";
-            if {"$globals(user)" != "bender" || "$globals(user)" != "danf"} {
+            if {"$globals(user)" != "bender" && "$globals(user)" != "danf"} {
               after 300;
             }; # if
             if {[catch [eval "exec $globals(zipper) $target"]]} {
