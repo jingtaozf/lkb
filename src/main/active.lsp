@@ -30,8 +30,10 @@
 ;;; arguments, i.e. rule or active plus passive item).
 ;;;
 
-(pushnew :agenda *features*)
-
+(eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
+           #-:ansi-eval-when (load eval compile)
+  (pushnew :agenda *features*))
+
 (defparameter *hyper-activity* nil)
 
 (defstruct (active-chart-configuration (:include chart-configuration))
@@ -45,6 +47,7 @@
 (defstruct (arule (:include rule))
   rhs)
 
+#+:agenda
 (defparameter *aagenda* (make-heap))
 (defparameter *arules* nil)
 
@@ -121,11 +124,12 @@
     ;; additionally, we have to initialize the second *chart* dimension indexed
     ;; by start positions.
     ;;
+    #+:agenda
+    (flush-heap *aagenda*)
     (loop 
       for i from 0 to (1- *chart-limit*)
       do 
         (setf (aref *achart* i 0) nil (aref *achart* i 1) nil))
-    (flush-heap *aagenda*)
     (loop
         for i from 0 to (- *chart-limit* 1)
         for entry = (aref *chart* i 0)
@@ -145,6 +149,7 @@
     ;; now run the main parser loop: until we empty the agenda (or hell freezes
     ;; over) apply the fundamental rule of chart parsing.
     ;;
+    #+:agenda
     (loop
         until (empty-heap *aagenda*)
         for task = (heap-extract-max *aagenda*)

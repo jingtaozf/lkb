@@ -361,7 +361,9 @@
                nil)))))
 
 (defun existing-dag-at-end-of-with-error (dag-instance labels-chain)
-   (or (existing-dag-at-end-of dag-instance labels-chain)
+  (or (if *within-unification-context-p*
+        (x-existing-dag-at-end-of (deref-dag dag-instance) labels-chain)
+        (existing-dag-at-end-of dag-instance labels-chain))
        (error "dag not found at end of path ~:A" labels-chain)))
 
 
