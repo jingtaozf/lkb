@@ -1,5 +1,11 @@
 <?xml version='1.0'?> <!DOCTYPE lex SYSTEM "/homes/aac10/lingo/newlkb/src/rmrs/tag.dtd" >
 
+<!--
+Dec 2003 AAC
+Some sort of entry added for the most common tags.  Started
+systematically going through semtestsuite adding grammar preds etc
+-->
+
 <lex>
 <le>
 <tag>APP$</tag>
@@ -847,6 +853,23 @@
 
 <!--
 ; punctuation
+, 
+\;
+:
+!
+?
+-
+(
+)
+.
+\.\.\. 
+/
+"
+
+; 20 tags only needed for training on pretagged data -- not in
+; seclarge.lex so not assigned to untagged data
+
+AAC - I'm assuming I don't need these?
 
 ; BCS
 ; BTO

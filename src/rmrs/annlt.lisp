@@ -358,3 +358,179 @@
                namestring)))
     qno))
   
+;;; *********** code for `parsing' tsg rules **************
+;;;
+;;; This is very crude - the idea is to output
+;;;
+;;; <rule>
+;;; <name>N1/n_n1</name>
+;;; <dtrs><dtr>N1</dtr><dtr>OPT</dtr><dtr>N2</dtr></dtrs>
+;;; <head>N2</head>
+;;; </rule>
+;;;
+;;; from
+;;; 
+;;; PSRULE N1/n_n1 : N1[POSS -] --> N0[POSS -, NTYPE NORM] (+pco) 
+;;;                                 H1[NTYPE NORM, MOD -, -ta].
+;;; Mostly from the name but need the rest to get OPTS
+;;;
+;;;
+;;; need to treat NG opt specially eventually
+
+(defun make-tsg-break-table nil 
+  (lkb::define-break-characters '(#\[ #\] #\.)))
+
+#|
+(mrs::parse-tsg-file "rmrs/annlt-test/tsg-frag"  
+		     "rmrs/annlt-test/tsg-frag.out")
+|#
+
+(defun parse-tsg-file (ifile ofile)
+  (with-open-file (istream ifile :direction :input)
+    (with-open-file (ostream ofile :direction :output
+		     :if-exists :supersede)
+      (let ((*readtable* (make-tsg-break-table)))
+	(loop (let ((next-char (peek-char t istream nil 'eof)))
+		(when (eql next-char 'eof) (return))
+		(cond ((eql next-char #\;) 
+		       (read-line istream))
+					; one line comments
+		      (t (multiple-value-bind
+			     (name mother dtr-strs dtrs)
+			     (parse-tsg-rule istream)
+			   (unless name
+			     (return))
+			   (output-skeleton-tsg-rule 
+			    name mother dtr-strs dtrs
+			    ostream))))))))))
+
+(defun output-skeleton-tsg-rule (name mother dtr-strs dtrs 
+				 ostream)
+  ;;; can't tell for sure which the head is,
+  ;;; except for unary rules
+  (let* ((real-dtr-names (construct-tsg-dtr-names dtr-strs))
+	 (names real-dtr-names)
+	 (next-name nil))
+    (format ostream "~%<rule>")
+    (format ostream "~%<name>~A</name>" name)
+    (format ostream "~%<dtrs>")
+    (dolist (dtr dtrs)
+      (unless dtr
+	(setf next-name (car names))
+	(setf names (cdr names)))
+      (format ostream "<dtr>~A</dtr>" (if dtr "OPT" next-name))) 
+    (format ostream "</dtrs>")
+    (format ostream "~%<head>~A<head>" 
+	    (or (guess-tsg-head mother real-dtr-names)
+		"FIX_ME"))
+    (format ostream "~%</rule>")
+    (finish-output ostream)))
+
+(defun construct-tsg-dtr-names (dtr-strs)
+  (let ((types nil))
+    (loop for dtr-str in dtr-strs
+      collect
+      (let* ((type (elt dtr-str 0))
+	     (type-count (assoc type types)))
+	(if type-count
+	    (let ((count (cdr type-count)))
+	      (setf (cdr type-count)
+		(+ 1 count))
+	      (format nil "~A~A" type count))
+	  (let ((count 1))
+	    (push (cons type count)
+		  types)
+	    (format nil "~A" type)))))))
+
+(defun guess-tsg-head (mother real-dtr-names)
+  (declare (ignore mother)) ;;; FIX later
+  (if (cdr real-dtr-names)
+      nil
+    (car real-dtr-names)))
+    
+
+(defun parse-tsg-rule (istream)
+  (let ((dtrs nil))
+    (lkb::check-for-string "PSRULE" istream)
+    (multiple-value-bind (name mother dtr-strs)
+	(parse-tsg-name istream)
+      (lkb::check-for-string ":" istream)
+      (parse-tsg-non-opt istream)
+      (lkb::check-for-string "-->" istream)
+      (setf dtrs (parse-tsg-dtrs istream))
+      (lkb::check-for-string "." istream)
+      (values name mother dtr-strs dtrs))))
+
+(defun parse-tsg-name (istream)
+  ;;; given N1/n_n1 
+  ;;; outputs "N1/n_n1" "N1" ("n" "n1")
+  (let ((mlist nil)
+	(mother nil)
+	(dtrs nil)
+	(dlist nil)
+	(full nil))
+    (peek-char t istream nil nil)
+    (loop (let ((next-char (peek-char nil istream nil 'eof)))
+               (push next-char full)		
+	    (cond ((eql next-char 'eof) (error "End of file in name"))
+		  ((eql next-char #\/)
+		   (read-char istream)
+		   (return))
+		  (t (read-char istream)
+		   (push next-char mlist)))))
+    (setf mother (coerce (nreverse mlist) 'string))
+    (loop (let ((next-char (peek-char nil istream nil 'eof)))
+	    (cond ((eql next-char 'eof) (error "End of file in name"))
+		  ((eql next-char #\space) 
+		   (push (coerce (nreverse dlist) 'string)
+			 dtrs)
+		   (setf dlist nil)
+		   (return))
+		  ((eql next-char #\_)
+		   (push next-char full)
+		   (read-char istream)
+		   (unless dlist
+		     (error "Empty dtr"))
+		   (push (coerce (nreverse dlist) 'string)
+			 dtrs)
+		   (setf dlist nil))
+		  (t (push next-char dlist)
+		     (push next-char full)
+		     (read-char istream)))))
+    (values (coerce (nreverse full) 'string)
+	    mother
+	    (nreverse dtrs))))
+
+(defun parse-tsg-non-opt (istream)
+  (let* ((name (read istream nil nil))
+	 (new-char (peek-char t istream nil nil)))
+    (declare (ignore name))
+    (when (eql new-char #\[)
+      (let ((next (peek-char #\] istream nil nil)))
+	(unless next
+	  (error "File ends inside []"))
+	(read-char istream)))))
+     
+(defun parse-tsg-dtrs (istream)
+  ;;; count the dtrs, return the opts
+  ;;; warn if there's a +
+  (let ((dtrs nil))
+    (loop 
+      (let ((next-char (peek-char t istream nil nil)))
+	(cond ((null next-char) (return))
+	      ((eql next-char #\.) (return))
+	      ((char= next-char #\()
+	       (read-char istream)
+	       (parse-tsg-non-opt istream)
+	       (lkb::check-for-string ")" istream)
+	       (let ((next-char (peek-char t istream nil nil)))
+		 (when (eql next-char #\+)
+		   (read-char istream)
+		   (format t "Warning + in rule at ~A" 
+			   (file-position istream))))
+	       (push t dtrs))
+	      (t (parse-tsg-non-opt istream)
+		 (push nil dtrs)))))
+    dtrs))
+
+

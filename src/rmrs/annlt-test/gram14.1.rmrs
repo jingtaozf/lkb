@@ -1,5 +1,15 @@
 <?xml version='1.0'?> <!DOCTYPE gram SYSTEM "/homes/aac10/lingo/newlkb/src/rmrs/gram.dtd" >
 <gram>
+
+<!-- Some incomplete rules have FIX comment, but this isn't systematic
+-->
+
+<!-- First come the punctuation rules
+Nothing done with semantics for the pure punctuation ones
+since current ERG has no punctuation treatment
+- just mark the head as the non-punctuation thing.  
+-->
+
 <rule>
 <name>T/txt-ph1</name>
 <dtrs><dtr>S</dtr><dtr>PUN</dtr></dtrs>
@@ -50,6 +60,7 @@
 
 <rule>
 <name>T/txt-sc2</name>
+<comment>FIX</comment>
 <dtrs><dtr>S1</dtr><dtr>OPT*</dtr><dtr>S2</dtr></dtrs>
 <head>S2</head>
 </rule>
@@ -110,24 +121,28 @@
 
 <rule>
 <name>NP/npquo_s</name>
+<comment>FIX</comment>
 <dtrs><dtr>NP</dtr><dtr>OPT</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>NP/squo_s</name>
+<comment>FIX</comment>
 <dtrs><dtr>S1</dtr><dtr>OPT</dtr><dtr>S2</dtr></dtrs>
 <head>S2</head>
 </rule>
 
 <rule>
 <name>S/npqo_vp</name>
+<comment>FIX</comment>
 <dtrs><dtr>NP</dtr><dtr>PUN</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>S/sqo_vp</name>
+<comment>FIX</comment>
 <dtrs><dtr>S1</dtr><dtr>OPT</dtr><dtr>S2</dtr></dtrs>
 <head>S2</head>
 </rule>
@@ -164,27 +179,35 @@
 
 <rule>
 <name>Tcl/interj_c_s</name>
+<comment>FIX</comment>
 <dtrs><dtr>IJ</dtr><dtr>OPT*</dtr><dtr>PUN</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>Tcl/s_c_interj</name>
+<comment>FIX</comment>
 <dtrs><dtr>S</dtr><dtr>PUN</dtr><dtr>IJ</dtr><dtr>OPT*</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>Tcl/interj_d_s</name>
+<comment>FIX</comment>
 <dtrs><dtr>IJ</dtr><dtr>OPT*</dtr><dtr>PUN</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 </rule>
 
 <rule>
 <name>Tcl/s_d_interj</name>
+<comment>FIX</comment>
 <dtrs><dtr>S</dtr><dtr>PUN</dtr><dtr>IJ</dtr><dtr>OPT*</dtr></dtrs>
 <head>S</head>
 </rule>
+
+<!--
+; text adjunct - don't think there's much we can do with the semantics
+-->
 
 <rule>
 <name>T/s_leta</name>
@@ -277,6 +300,14 @@
 <head>A</head>
 </rule>
 
+<!-- end TA dtr rules
+-->
+
+<!-- text adjunct phrase types - can't think of much to do with
+these, either ...
+-->
+
+
 <rule>
 <name>Taph/colon</name>
 <dtrs><dtr>PUN</dtr><dtr>TPH</dtr></dtrs>
@@ -312,6 +343,10 @@
 <dtrs><dtr>PUN1</dtr><dtr>TPH</dtr><dtr>PUN2</dtr></dtrs>
 <head>TPH</head>
 </rule>
+
+<!--
+; text adjunct clause types 
+-->
 
 <rule>
 <name>Tacl/colon1</name>
@@ -361,6 +396,9 @@
 <head>N</head>
 </rule>
 
+<!-- ; Text units, should look at these sometime re named entities
+-->
+
 <rule>
 <name>Tph/np</name>
 <dtrs><dtr>OPT</dtr><dtr>OPT*</dtr><dtr>N</dtr></dtrs>
@@ -404,7 +442,12 @@
 <head>A</head>
 </rule>
 
+<!-- ************************************************
+the main grammar S rules
 
+I'm not sure what my motivation was for some of these ARGN things
+needs investigation - FIX to use anchors anyway - AAC Dec 2003
+-->
 
 <rule>
 <name>S/pp_s</name>
@@ -516,6 +559,12 @@
 <head>S</head>
 </rule>
 
+<!--
+; echo, vocative, refl, tag S,NP or NP,S rules and other messiness
+Could do something about the semantics of these, but not
+common enough to be a priority
+-->
+
 <rule>
 <name>S/s_np-voc</name>
 <dtrs><dtr>S</dtr><dtr>PUN</dtr><dtr>N</dtr></dtrs>
@@ -624,19 +673,37 @@
 <head>S</head>
 </rule>
 
+<!--
+; ****************************************************
+; main clausal rules
+
+FIX - systematize the anchors
+
+all S/ things should have probably have no anchor,
+although I'm not sure anything much will go wrong if this
+isn't done
+
+all NPs treated as subjects - i.e. ARG1 - linked to anchor of VP
+(main verb).  This will presumably go wrong under some circumstances
+like where there's really a gap in the S but leaving underspecified 
+isn't really an option, unless we introduce some sort of two stage
+semantics.
+-->
+
 <rule>
 <name>S/np_vp</name>
 <dtrs><dtr>NP</dtr><dtr>VP</dtr></dtrs>
 <head>RULE</head>
 <semstruct>
 <hook><index>E</index><label>H1</label></hook>
+<slots><noanchor/></slots>
 <ep><gpred>PRPSTN_M_REL</gpred><label>H1</label><var>H2</var></ep>
-<rarg><rargname>ARG1</rargname><label>H2</label><var>X</var></rarg>
+<rarg><rargname>ARG1</rargname><label>H3</label><var>X</var></rarg>
 <hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H</var></lo></hcons>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
-<equalities><rv>H2</rv><dh><dtr>VP</dtr><he>ANCHOR</he></dh></equalities>
+<equalities><rv>H3</rv><dh><dtr>VP</dtr><he>ANCHOR</he></dh></equalities>
 <equalities><rv>E</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
 </rule>
 
@@ -646,11 +713,18 @@
 <head>VP</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG1</rargname><label>H</label><var>X</var></rarg>
+<slots><noanchor/></slots>
+<ep><gpred>PRPSTN_M_REL</gpred><label>H1</label><var>H2</var></ep>
+<rarg><rargname>ARG1</rargname><label>H3</label><var>X</var></rarg>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H3</rv><dh><dtr>VP</dtr><he>ANCHOR</he></dh></equalities>
+<equalities><rv>E</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
 </rule>
+
+<!-- ; small clauses, but rare 
+-->
 
 <rule>
 <name>S/np-poss_vp</name>
@@ -658,13 +732,15 @@
 <head>RULE</head>
 <semstruct>
 <hook><index>E</index><label>H1</label></hook>
+<slots><noanchor/></slots>
 <ep><gpred>PRPSTN_M_REL</gpred><label>H1</label><var>H2</var></ep>
-<rarg><rargname>ARG1</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG1</rargname><label>H3</label><var>X</var></rarg>
 <hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H</var></lo></hcons>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
 <equalities><rv>E</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H3</rv><dh><dtr>VP</dtr><he>ANCHOR</he></dh></equalities>
 </rule>
 
 
@@ -674,6 +750,7 @@
 <head>VP</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
+<slots><noanchor/></slots>
 <rarg><rargname>ARG1</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
@@ -691,6 +768,9 @@
 <equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
 </rule>
+
+<!-- ; raising type clausal rules rare
+-->
 
 <rule>
 <name>S/scomp_vp-r</name>
@@ -716,12 +796,19 @@
 <head>V2</head>
 </rule>
 
+<!--
+; locative/heavy inversion rare (cld restrict H1 to `be', but `appear'?)
+-->
+
 <rule>
 <name>S/pp_vp-r</name>
 <dtrs><dtr>PP</dtr><dtr>V2</dtr></dtrs>
 <head>V2</head>
 </rule>
 
+<!--
+; rel cl hack? - rare
+-->
 
 <rule>
 <name>S/s_be_s-r</name>
@@ -729,12 +816,21 @@
 <head>S2</head>
 </rule>
 
+<!--
+; be subj raising
+-->
 
 <rule>
 <name>S/s-wh_be_vp-r</name>
 <dtrs><dtr>S1</dtr><dtr>V</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
+
+<!--
+; subj-aux inversion
+
+; next rule shld block S/comp as dgter but no comp feat 
+-->
 
 <rule>
 <name>S/sai</name>
@@ -766,11 +862,19 @@
 <head>PT</head>
 </rule>
 
+<!--
+; Sbar / complements
+-->
+
 <rule>
 <name>S/comp</name>
 <dtrs><dtr>CP</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 </rule>
+
+<!--
+; unbounded dependencies hacks, means relcls are root Ss 
+-->
 
 <rule>
 <name>S/np-wh_s-gap</name>
@@ -790,6 +894,10 @@
 <head>S</head>
 </rule>
 
+<!--
+; ellipsis -- hacks (V usu aux so cld be restricted, but rare)
+-->
+
 <rule>
 <name>S/np-wh_np_aux-r</name>
 <dtrs><dtr>NP1</dtr><dtr>NP2</dtr><dtr>OPT</dtr><dtr>V</dtr><dtr>OPT</dtr></dtrs>
@@ -802,17 +910,31 @@
 <head>V</head>
 </rule>
 
+<!--
+; `what if...'
+-->
+
 <rule>
 <name>S/what_pp-if</name>
 <dtrs><dtr>DT</dtr><dtr>PP</dtr></dtrs>
 <head>PP</head>
 </rule>
 
+<!--
+; imperatives -- INV `marks' imperative here (shld be IMP so that IMP
+; and INV - can coordinate, see below) 
+-->
+
 <rule>
 <name>S/imp</name>
 <dtrs><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
+
+<!--
+; S coord -- added with oblig comma without conj, use -r to relax bindings
+; all *coord rules are unheaded to allow for CONJ1 @c on mother
+-->
 
 <rule>
 <name>S/cj-beg_s</name>
@@ -849,6 +971,14 @@
 <dtrs><dtr>S1</dtr><dtr>OPT</dtr><dtr>S2</dtr></dtrs>
 <head>S1</head>
 </rule>
+
+<!--
+; ***********************************
+; V1 complement rules 
+; rule name convention is /v_c1_c2_cn, p=particle, pp=prep phrase, etc
+;
+; odd rules -- prts + make sense of, take advtg of
+-->
 
 <rule>
 <name>V/v_prt</name>
@@ -2348,7 +2478,10 @@
 <equalities><rv>H1</rv><dh><dtr>S</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
-
+<!--
+*******************************************
+; VP postmod rules
+-->
 
 <rule>
 <name>V1/adv_vp</name>
@@ -2488,6 +2621,14 @@
 <head>V</head>
 </rule>
 
+<!--
+; *********************************************
+; auxiliaries a special case for subcat etc
+; lots of optional elements to deal with interleaved / heavy shifted
+; adverbials (ap,pp) and negation
+; 
+; be rules (incl. copular `be')
+-->
 
 <rule>
 <name>V1/be_ppart</name>
@@ -2623,6 +2764,10 @@
 <head>N</head>
 </rule>
 
+<!--
+; do rules (incl. main vb `do')
+-->
+
 <rule>
 <name>V1/do_bse</name>
 <dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>VP</dtr></dtrs>
@@ -2665,6 +2810,10 @@
 <head>VP</head>
 </rule>
 
+<!--
+; inf to
+-->
+
 <rule>
 <name>V1/to_bse</name>
 <dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>VP</dtr></dtrs>
@@ -2683,6 +2832,10 @@
 <dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
+
+<!--
+; have rules
+-->
 
 <rule>
 <name>V1/have_ppart</name>
@@ -2773,6 +2926,10 @@
 <dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
+
+<!--
+; had better / best but *had worse etc
+-->
 
 <rule>
 <name>V1/have_adver_bse</name>
