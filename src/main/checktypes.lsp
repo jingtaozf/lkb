@@ -56,7 +56,7 @@
       (when (and *templates* (cdr parents))
         (for parent in parents
              do
-             (if (member parent *templates*)
+             (if (member parent *templates* :test #'eq)
                (push parent template-parents)
                (push parent real-parents)))
         (unless real-parents
@@ -73,7 +73,7 @@
                   :enumerated-p (if daughters t))))
          (create-mark-field new-type)
          (when (null parents)
-            (when (and *toptype* (not (eql *toptype* name)))
+            (when (and *toptype* (not (eq *toptype* name)))
                (error "Two top types ~A and ~A have been defined" 
                   *toptype* name))
             (setf *toptype* name))
@@ -128,16 +128,18 @@
          (let ((dtr-entry (get-type-entry dtr)))
            (setf (type-parents dtr-entry)
                  (cons new-type (set-difference (type-parents dtr-entry) 
-                                                parents)))
-           (setf descendants (union descendants (type-descendants dtr-entry)))
+                                                parents :test #'eq)))
+           (setf descendants (union descendants 
+                                    (type-descendants dtr-entry) :test #'eq))
            (push dtr descendants)))
     (for parent in parents
          do
          (let ((par-entry (get-type-entry parent)))
            (setf (type-daughters par-entry)
                  (cons new-type (set-difference (type-daughters par-entry) 
-                                              daughters)))
-           (setf ancestors (union ancestors (type-ancestors par-entry)))
+                                              daughters :test #'eq)))
+           (setf ancestors (union ancestors 
+                                  (type-ancestors par-entry) :test #'eq))
            (push parent ancestors)))
     (setf (type-descendants new-type-entry) descendants)
     (setf (type-ancestors new-type-entry) ancestors)
@@ -242,7 +244,9 @@
                   do
                   (let ((parent-entry (get-type-entry parent)))
                      (cond (parent-entry 
-                           (pushnew name (type-daughters parent-entry)))
+                           (pushnew name 
+                                    (type-daughters parent-entry)
+                                    :test #'eq))
                         (t (setf ok nil)
                            (format t
                               "~%~A specified to have non-existent parent ~A"
@@ -594,7 +598,7 @@
       (dolist (x1 (remove (car ok1) tset2 :test #'eq))
         (when
           (dolist (y1 (remove (cdr ok1) tset1 :test #'eq))
-            (when (or (eql x1 y1) 
+            (when (or (eq x1 y1) 
                       (member y1 (retrieve-ancestors x1) :test #'eq))
               (setf ok2 t)
               (return ok2)))
@@ -704,8 +708,8 @@
                   (t    
                      (when local-constraint
                         (unless 
-                           (or (eql (type-of-fs local-constraint) *toptype*)
-                              (eql (type-of-fs local-constraint) node))
+                           (or (eq (type-of-fs local-constraint) *toptype*)
+                              (eq (type-of-fs local-constraint) node))
                            (format t 
                               "~%Warning: setting constraint of ~A to have ~A as type"
                               node node))
@@ -850,7 +854,7 @@
    (let* ((type-record (get-type-entry type))
           (already-ordered-p t)
           (ordered-features 
-             (if (every #'eql (type-appfeats type-record) parent-feature-order)
+             (if (every #'eq (type-appfeats type-record) parent-feature-order)
                 (type-appfeats type-record)
                 (let ((parent-ordered nil)
                       (appfeats (cons nil (type-appfeats type-record))))
@@ -862,7 +866,7 @@
                          (do ((app-prev-tail appfeats (cdr app-prev-tail))
                               (app-tail (cdr appfeats) (cdr app-tail)))
                              ((null app-tail))
-                             (when (eql (car app-tail) parent-feat)
+                             (when (eq (car app-tail) parent-feat)
                                 (setf (cdr app-prev-tail) (cdr app-tail))
                                 (setf (cdr app-tail) parent-ordered)
                                 (setq parent-ordered app-tail)
