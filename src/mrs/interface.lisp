@@ -36,6 +36,8 @@
 
 (defvar *mrs-discourse* nil)
 
+(defparameter *regurgitate* nil)
+
 (defun treat-mrs (mrs-struct simplep stream)
   (format stream "~%~A " lkb::*sentence*)
   (setf *mrs-debug* mrs-struct)
@@ -50,6 +52,8 @@
 	   (output-mrs1 mrs-struct 'prolog pro-out)))
         (*rmrs-xml* 
          (output-rmrs1 (simple-mrs-to-rmrs mrs-struct) 'xml stream))
+        (*regurgitate*
+         (output-mrs1 mrs-struct 'simple-indexed stream))
         (t (output-mrs1 mrs-struct 'simple stream))))
 
 (defun process-mrs-struct (mrs-psoa sentence maximum simplep stream)

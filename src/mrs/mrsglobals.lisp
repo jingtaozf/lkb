@@ -85,7 +85,7 @@
   "A not-necessarily-complete list of features that determines printing
 order in an MRS")
 
-(defparameter *ignored-sem-features* nil
+(defparameter *ignored-sem-features* `( ,(vsym "IDIOMP"))
   "A list of features which are ignored completely")
 
 (defparameter *ignored-extra-features* `( ,(vsym "INSTLOC"))

@@ -448,3 +448,35 @@
                            (variables-equal v1 v2 t bindings))
                        l2))
                   l1))))
+
+
+;;; for idioms
+
+(defvar *unmatched-rels* nil)
+
+(defun mrs-subset-p (subset-mrs superset-mrs syntactic-p)
+  (setf *unmatched-rels* nil)
+  (let* ((subset-liszt (psoa-liszt subset-mrs))
+         (superset-liszt (psoa-liszt superset-mrs))
+         (liszt1 (sort-mrs-struct-liszt subset-liszt))
+        (liszt2 (sort-mrs-struct-liszt superset-liszt)))
+    (values (mrs-liszts-subset-aux-p liszt1 liszt2 syntactic-p nil)
+            *unmatched-rels*)))
+
+(defun mrs-liszts-subset-aux-p (subset-liszt1 superset-liszt2 syntactic-p 
+                                bindings)
+  (or (null subset-liszt1)
+      (and superset-liszt2
+           (let ((binding-copy (copy-tree bindings))
+                 (rel1 (car subset-liszt1))
+                 (rel2 (car superset-liszt2)))
+             (if
+                 (mrs-relation-set-equal-p rel1 rel2 
+                                           syntactic-p nil binding-copy)
+                 (mrs-liszts-subset-aux-p (cdr subset-liszt1)
+                                          (cdr superset-liszt2) 
+                                          syntactic-p binding-copy)
+               (progn (push rel2 *unmatched-rels*)
+                      (mrs-liszts-subset-aux-p subset-liszt1
+                                               (cdr superset-liszt2)
+                                               syntactic-p bindings)))))))

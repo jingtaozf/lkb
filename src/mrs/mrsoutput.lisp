@@ -77,10 +77,12 @@
 
 (defun extract-mrs (parse)
   ;;; takes whatever structure the parser returns
-  (setf *fragment-p* nil)
-  (let* ((fs (get-parse-fs parse))
-         ;; get-parse-fs is system specific
-         (sem-fs (path-value fs *initial-semantics-path*)))
+  (let ((fs (get-parse-fs parse)))
+             ;; get-parse-fs is system specific
+    (extract-mrs-from-fs fs)))
+         
+(defun extract-mrs-from-fs (fs)
+  (let ((sem-fs (path-value fs *initial-semantics-path*)))
     (setf *fragment-p* (is-fragment-fs fs))
     ;; *fragment-p* controls whether the scoping code is run
     (if (is-valid-fs sem-fs)
@@ -121,8 +123,10 @@ duplicate variables")
         (info-s-fs (if *psoa-info-s-path*
                        (path-value fs *psoa-info-s-path*))))
     (make-psoa
-     :top-h (create-variable top-h-fs
-                             *variable-generator*)
+     :top-h (if top-h-fs
+                (create-variable top-h-fs
+                                 *variable-generator*)
+                (create-new-handle-var *variable-generator*))
      :index (if (is-valid-fs index-fs)
                 (create-variable index-fs
                                  *variable-generator*))
@@ -162,6 +166,13 @@ duplicate variables")
       (if existing-variable (cdr existing-variable)
         nil))))
 
+(defun create-new-handle-var (gen)
+  (let* ((idnumber (funcall gen))
+         (variable-name (format nil "h~A" idnumber)))
+    (make-handle-var 
+     :name variable-name
+     :id idnumber)))
+  
 (defun create-variable (fs gen)
   (when (is-valid-fs fs)
     (let ((existing-variable (assoc fs *named-nodes*)))

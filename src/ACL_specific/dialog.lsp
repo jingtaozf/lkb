@@ -5,7 +5,6 @@
 (in-package :lkb)
 
 ;;; Most of the functions in here are implementation specific
-;;; This has been extensively modified for MCL
 
 ;;; Dialogs
 ;;; Some general purpose functions
@@ -112,6 +111,7 @@
 				   (t (cdr p-i-p))))))
     (restart-case
 	(clim:accepting-values (stream :own-window t 
+;                                       :roman 18
 				       :scroll-bars (when 
 							(> (length result) 10)
 						      :vertical)

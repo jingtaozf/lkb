@@ -383,7 +383,14 @@
   (with-slots (stream) mrsout
     (format stream ">~%" )))
 
+;;; dropping the `extra' stuff
 
+(defclass simple-indexed (indexed)
+  ())
+
+(defmethod mrs-output-extra-val  ((mrsout simple-indexed) val)
+  (declare (ignore val))
+  nil)
 
 ;;; 
 ;;; prolog output-type class
