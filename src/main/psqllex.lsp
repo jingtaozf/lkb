@@ -894,7 +894,10 @@
   
   
 (defmethod fn ((lexicon psql-lex-database) fn-name &rest rest)
-  (eval (append (list (cdr (assoc fn-name (fns lexicon)))) rest)))
+  (let ((lex-fn (assoc fn-name (fns lexicon))))
+    (if lex-fn
+	(eval (append (list (cdr lex-fn)) rest))
+      (error "Embedded-SQL fn ~a not defined. Is the latest embedded-code.sql loaded into the LexDB?" fn-name))))
   
 (defmethod sql-next-version ((lexicon psql-lex-database) id)
   (fn lexicon 'next-version id))
