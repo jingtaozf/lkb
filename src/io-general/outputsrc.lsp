@@ -139,8 +139,12 @@
                         (:ebl
                          (output-for-ebl orth fs ostream (car result-pair)
                                          lex-name lex-entry-fs))
-                        (:chic
+			(:chic
                          (output-for-chic orth fs ostream (car result-pair) 
+                                          lex-name lex-entry-fs 
+                                          (lex-or-psort-infl-pos lex-entry) stem))
+                        (:pet
+                         (output-for-pet orth fs ostream (car result-pair) 
                                           lex-name lex-entry-fs 
                                           (lex-or-psort-infl-pos lex-entry)))
                         (t (error "Unsupported syntax specifier ~A"
@@ -183,7 +187,7 @@
     (when type
       (or (eq type '+) (and (consp type) (eq (first type) '+))))))
 
-(defun output-for-chic (orth fs ostream rule-list base-id base-fs infl-pos)
+(defun output-for-pet (orth fs ostream rule-list base-id base-fs infl-pos)
   (let* ((type (type-of-fs (tdfs-indef base-fs)))
          (infl-rules nil)
          (infl (dag-inflected-p (tdfs-indef fs)))
@@ -205,6 +209,41 @@
                   (if infl-rules (first infl-rules))
                   (if infl-pos infl-pos 0)
                   (length (split-into-words orth)))))))
+
+
+(defun strip-infl-suffix (derivation)
+  (let* ((root (cond
+                ((stringp derivation) derivation)
+                ((symbolp derivation) (symbol-name derivation))
+		(t
+                 (error 
+                  "strip-infl-suffix(): invalid call `~s'." 
+                  derivation))))
+         (break (max 0 (- (length root) (length "_infl_rule")))))
+    (when (string-equal root "_infl_rule" :start1 break)
+      (subseq root 0 break))))
+
+(defun output-for-chic (orth fs ostream rule-list base-id base-fs 
+                             infl-pos stem)
+  (let* ((type (type-of-fs (tdfs-indef base-fs)))
+         (infl-rules nil)
+         (infl (dag-inflected-p (tdfs-indef fs)))
+         (other-rules nil))
+    (declare (ignore type))
+    (for rule in rule-list 
+         do
+         (if (member rule *infl-rules*)
+             (push rule infl-rules)
+           (push rule other-rules)))
+    (unless other-rules
+      (if infl
+          (format ostream 
+                  "\"~(~S~)\" ~(~S~) ~(~S~) ~(~S~)~%" 
+                  base-id
+                  (if infl-pos (nth (- infl-pos 1) 
+                                    (split-into-words orth)) orth)
+                  (first stem)
+                  (strip-infl-suffix (first infl-rules)))))))
 
 (defvar *cat-type-cache* (make-hash-table))
 
