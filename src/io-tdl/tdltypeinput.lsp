@@ -390,7 +390,7 @@
                   (read-tdl-term istream name path-so-far persist))
               (read-tdl-term istream name path-so-far persist)))) 
           (t  
-           (let ((res1 (read-tdl-term istream name path-so-far nil))
+           (let ((res1 (read-tdl-term istream name path-so-far in-default-p))
                  (next-char2 (peek-char t istream nil 'eof)))
                (cond ((eql next-char2 'eof) 
                       (lkb-read-cerror istream
