@@ -301,12 +301,39 @@
     (or (re-search-forward "</rmrs>" nil t)
                  (point-max)))
 
-; following is commented out because it may overlap with other commands
+(defun select-rmrs (arg)
+  (interactive "P")
+  (let ((beg 0)
+        (end 0)
+        (pos (point)))
+    (setq beg (calc-begin-of-rmrs-expression))
+    (goto-char pos)
+    (setq end (calc-end-of-rmrs-expression))
+    (eval-in-lisp (format "(lkb::select-rmrs-from-emacs \"%s\")" 
+			  (buffer-substring beg (min (1+ end) (point-max)))))
+    (goto-char pos)))
+
+(defun generate-from-rmrs (arg)
+  (interactive "P")
+  (let ((beg 0)
+        (end 0)
+        (pos (point)))
+    (setq beg (calc-begin-of-rmrs-expression))
+    (goto-char pos)
+    (setq end (calc-end-of-rmrs-expression))
+    (eval-in-lisp (format "(lkb::generate-rmrs-from-emacs \"%s\")" 
+			  (buffer-substring beg (min (1+ end) (point-max)))))
+    (goto-char pos)))
+
+; following are commented out because they may overlap with other commands
 ; which people use
 ; however, I can't see any way of making this non-global unless
 ; we agree an extension for rmrs files etc
 
 ; (global-set-key "\C-cr" 'display-rmrs)
+; (global-set-key "\C-cs" 'select-rmrs)
+; (global-set-key "\C-cg" 'generate-from-rmrs)
+
 
 ;;; MRS display utility
 
