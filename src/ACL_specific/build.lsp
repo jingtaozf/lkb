@@ -46,6 +46,24 @@
 #+(version>= 6 2) (require :euc)
 #+(version>= 6 2) (require :ffcompat)
 
+;;;
+;;; [spr27650] apparently the runtime bundle does not include (all) external
+;;; formats; to work around that, for now, preload everything. (22-may-03; oe)
+;;;
+#+(version>= 6 2)
+(loop
+    for ef in '("1250" "1251" "1252" "1253" "1254" "1255" "1256" "1257" "1258"
+                "874" "932" "936" "949" "950" "big5" "crcrlf" "crlf" "e-cr" 
+                "e-crcrlf" "e-crlf" "emacs-mule" "euc" "fat" "gb2312" 
+                "iso-2022-jp" "iso8859-1" "iso8859-14" "iso8859-15" "iso8859-2"
+                "iso8859-3" "iso8859-4" "iso8859-5" "iso8859-6" "iso8859-7" 
+                "iso8859-8" "iso8859-9" "jis" "koi8-r" "latin-14" "latin-15" 
+                "latin-2" "latin-3" "latin-4" "latin-5" "latin-6" "latin-7" 
+                "latin-8" "latin-9" "latin1" "latin14" "latin15" "latin2"
+                "latin3" "latin4" "latin5" "latin6" "latin7" "latin8" "latin9"
+                "shiftjis" "ujis" "unicode" "utf8" "void")
+    do (excl::find-external-format (intern ef :keyword)))
+
 (setq make::*building-image-p* t)
 (setq make:*compile-during-load* t)
 (compile-system "mrs" :force t)
