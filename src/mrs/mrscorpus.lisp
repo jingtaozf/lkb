@@ -366,7 +366,7 @@
            (if syntactic-p
              (equal (var-type var1) (var-type var2))
              (if (and (var-type var1) (var-type var2))
-               (compatible-types (var-type var1) (var-type var2))
+               (compatible-var-types (var-type var1) (var-type var2))
                t))
            (or (null *mrs-equalp-properties-p*)
                (if syntactic-p
@@ -375,6 +375,10 @@
            (bindings-equal (get-var-num var1)
                            (get-var-num var2) bindings))))
 
+
+(defun compatible-var-types (var-type1 var-type2)
+  ;;; FIX - should allow for underspecified values
+  (equal var-type1 var-type2))
 
 (defun compatible-extra-vals (extra1 extra2)
   ;;; this version is for generation, where we assume we need
