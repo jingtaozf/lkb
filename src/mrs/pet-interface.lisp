@@ -104,11 +104,39 @@
           (let ((glb (pet_glb code1 code2)))
             (unless (= glb %pet-bottom%) (pet-code-to-type glb)))))))
 
-(defun fs-to-mrs (fs)
+(defun fs-to-mrs (fs &optional (mode 'simple))
   (when (fixnump fs)
-    (let* ((%pet-types% nil)
-           (%pet-features% nil)
-           (mrs (extract-mrs-from-fs fs)))
-      (if (psoa-p mrs)
-        (output-mrs1 mrs 'simple t)
-        (format t "fs-to-mrs(): unable to extract MRS from fs # ~a.~%" fs)))))
+    (ignore-errors
+     (let* ((%pet-types% nil)
+            (%pet-features% nil)
+            (psoa (extract-mrs-from-fs fs)))
+       (if (psoa-p psoa)
+         (let* ((mode 
+                 (typecase mode
+                   (symbol (intern (string-upcase (symbol-name mode)) :mrs))
+                   (string (intern (string-upcase mode) :mrs))))
+                (result  
+                 (with-output-to-string (stream)
+                   (case mode
+                     ((simple indexed prolog html)
+                      (output-mrs1 psoa mode stream))
+                     (scoped
+                      (let ((scopes (make-scoped-mrs psoa)))
+                        (loop
+                            for scope in scopes
+                            do
+                              (let ((*canonical-bindings* 
+                                     (canonical-bindings scope)))
+                                (mrs::output-scoped-mrs 
+                                 psoa :stream stream)))))
+                     (eds
+                      (ed-output-psoa psoa :stream stream))
+                     ((rmrs xml)
+                      (let ((rmrs (mrs-to-rmrs psoa)))
+                        (when (rmrs-p rmrs)
+                          (output-rmrs1 
+                           rmrs 
+                           (if (eq mode 'rmrs) 'compact 'xml) 
+                           stream))))))))
+           (when (and result (not (string= result ""))) result))
+         (format t "fs-to-mrs(): unable to extract MRS from fs # ~a.~%" fs))))))
