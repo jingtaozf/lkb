@@ -1345,10 +1345,10 @@
     (let ((dag (make-dag :type *non-empty-list-type*)))
       (setf (dag-arcs dag)
         (list
-         (lkb::make-dag-arc
+         (make-dag-arc
           :attribute (first *list-head*)
           :value (first dags))
-         (lkb::make-dag-arc
+         (make-dag-arc
           :attribute (first *list-tail*)
           :value (list-to-dag (rest dags)))))
       dag)))
