@@ -97,22 +97,6 @@
 ;; be worth it to investigate perfect hashing someday, but for now this works
 ;; pretty well.
 
-;;;
-;;; _fix_me_
-;;; using Allegro CL 6.0 and the Japanese grammar, multiple entries map to the
-;;; same hash key; under these circumstances, only one of the entries can be
-;;; retrieved using its orthography.  it seems unlikely that the CDB code is
-;;; intended to require unique hash keys?                   (30-jul-01  -  oe)
-;;;
-#+:null
-(defun hash (key)
-  (let ((h 5381))
-    (loop for c across #-:ics key #+:ics (excl:string-to-octets key)
-	do
-	  (setq h (ldb (byte 32 0) (+ h (ash h 5))))
-	  (setq h (logxor h #-:ics (char-code c) #+:ics c)))
-    h))
-
 
 (defun hash (key)
   (let ((h 5381))
@@ -291,25 +275,6 @@
       (cons key data))))
 
 ;; Search hash table for a matching entry
-
-#+:null
-(defun scan-forward (stream key hash origin start end not-first)
-  (let (h)
-    (loop 
-	do 
-	  (when (eql end (file-position stream))
-	    (file-position stream origin))
-	  (when (and not-first (eql start (file-position stream)))
-	    (return-from scan-forward nil))
-	  (setf not-first t)
-	  (setf h (read-fixnum stream))
-	  (cond ((zerop h) (return-from scan-forward nil))
-		((eql hash h) (return))
-		(t (read-fixnum stream)))))
-  ;; If we get here, we must have found the record
-  (let ((result (grab-record (read-fixnum stream) stream)))
-    (when (equal (car result) key)
-      (cdr result))))
 
 (defun scan-forward (stream key hash origin start end not-first)
   (loop 
