@@ -106,8 +106,6 @@
     entry))
 
 (defun clear-expanded-lex nil
-  (when (fboundp 'reset-cached-lex-entries)
-    (funcall 'reset-cached-lex-entries)) ; in constraints.lsp
   (dolist (id (collect-expanded-lex-ids *lexicon*))
     (unexpand-psort *lexicon* id)))
 
@@ -412,8 +410,6 @@
 	(call-next-method)))))
 
 (defmethod clear-lex :around ((lexicon lex-database) &optional no-delete)
-  (when (fboundp 'reset-cached-lex-entries)
-    (funcall 'reset-cached-lex-entries))
   (when (fboundp 'clear-generator-lexicon)
     (funcall 'clear-generator-lexicon))
   (clrhash (slot-value lexicon 'lexical-entries))
