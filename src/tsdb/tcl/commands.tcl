@@ -351,9 +351,9 @@ proc tsdb_browse {code {condition ""} {globalp 1} {profile ""}} {
       set relations "(\"item\" \"parse\")";
     }
     results {
-      tsdb_beep;
-      status "no diplay mode available for `result' relation |:-\{" 5;
-      return 1;
+      set command [format "(results \"%s\")" $profile];
+      send_to_lisp :event $command;
+      return 0;
     }
     errors {
       if {$condition != ""} {

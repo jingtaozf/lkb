@@ -297,7 +297,7 @@ proc main {} {
   .menu.browse.menu add command \
       -label "Parses" -command {tsdb_browse parses ""}
   .menu.browse.menu add command \
-      -state disabled -label "Results" -command {tsdb_browse results ""}
+      -label "Results" -command {tsdb_browse results ""}
   .menu.browse.menu add command \
     -label "Errors" -command {tsdb_browse errors ""}
   .menu.browse.menu add separator

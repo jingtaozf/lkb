@@ -626,6 +626,7 @@ proc make_new_item {canvas row col optionarrayname {tags ""} } {
 	    [list tsdb_process selection $o(source) $o(key)];
     }; # if
     if {[info exists o(action)] && [info exists o(tag)]} {
+      $canvas itemconfigure $item -fill red;
       $canvas bind $item <Double-Button> \
         [list tsdb_execute $o(action) $o(tag)];
     }; # if
