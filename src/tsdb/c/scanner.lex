@@ -57,7 +57,7 @@ y [yY]
 z [zZ]
 
 DIGIT           [0-9]
-NUMBER          {DIGIT}+
+NUMBER          [-+]?{DIGIT}+
 DELIM           [ \t\n]
 WHITESPACE      {DELIM}+
 QUOTE           (\")
