@@ -322,28 +322,54 @@ cases
                       #-:tsdb nil))
     (if test-items
         (draw-active-list
-         test-items
+         (loop for record in test-items
+               collect
+               (cons 
+                (format nil "~a: ~a" (car record) (cdr record))
+                record))
          "Test items"
          (list
           (cons "Compare RMRSs"
-                #'(lambda (item)
-                    (compare-rmrs-from-test-suite item)))))
+                #'(lambda (record)
+                    (compare-rmrs-from-test-suite record)))))
       (format t "~%Test suite items cannot be retrieved")))) 
 
 
-(defun compare-rmrs-from-test-suite (egnum)
+(defparameter *characterisation-hack* nil)
+
+(defun compare-rmrs-from-test-suite (record)
   #+:tsdb  
-  (let* ((rasp-rmrs 
+  (let* ((egnum (car record))
+         (sentence (cdr record))
+         (*characterisation-hack*
+          (if *characterize-p*
+              (let ((words (preprocess-sentence-string sentence)))
+                (if (chared-word-p (car words))
+                    words))))
+         (rasp-rmrs 
           (get-tsdb-selected-rasp-rmrs egnum))
          (erg-rmrs
           (get-tsdb-selected-erg-rmrs egnum)))
-    (dolist (comparison-record (mrs::compare-rmrs erg-rmrs rasp-rmrs nil))
+    (dolist (comparison-record (mrs::compare-rmrs erg-rmrs rasp-rmrs t))
+      ;; use string position
       (lkb::show-mrs-rmrs-compare-window erg-rmrs rasp-rmrs 
-                                         comparison-record "Foo")))
+                                         comparison-record sentence)))
   #-:tsdb  
   (declare (ignore egnum))
   #-:tsdb 
   nil)
+
+(defun find-cfrom-hack (from)
+  (let ((word (nth from *characterisation-hack*)))
+    (if word
+        (chared-word-cfrom word)
+      -1)))
+
+(defun find-cto-hack (to)
+  (let ((word (nth to *characterisation-hack*)))
+    (if word
+        (chared-word-cto word)
+      -1)))
 
 ;;; end fine system stuff
 
