@@ -124,10 +124,11 @@
                    :view-font font
                    :menu-position :right
                    :menu-items
-                   (mapcar
+                   (mapcan
                       #'(lambda (s)
-                          (make-instance 'typein-menu-item                
-                             :menu-item-title s))
+                          (when (< (length s) 256)
+                             (list
+                                (make-instance 'typein-menu-item :menu-item-title s))))
                       (cdr init)))
                 ; MCL 2.0.1 doesn't have typein-menu
                 (make-dialog-item 'editable-text-dialog-item
@@ -198,7 +199,7 @@
                                          (list (dialog-item-text d-item)))
                                       ((and (find-class 'typein-menu nil)
                                             (typep d-item 'typein-menu))
-                                       ; old MCL won't have this type 
+                                         ; old MCL won't have this type 
                                          (list (dialog-item-text
                                                 (ccl::typein-editable-text d-item))))
                                       ((typep d-item 'check-box-dialog-item)
