@@ -1,5 +1,5 @@
 ROOT = /eo/e7/apache/htdocs/src
-WROOT = m:/src
+WROOT = m:/src/lingo
 DATE = `date "+%Y-%m-%d"`
 TARGET = /usr/local/apache/htdocs/lingo/ftp
  
@@ -169,7 +169,8 @@ lkb_windows:
 	      windows; \
 	  ${RM} -f /c/tmp/lkb_windows.zip; \
           zip -r /c/tmp/lkb_windows.zip windows; )
-	scp /c/tmp/lkb_windows.tgz /c/tmp/lkb_windows.zip eo:${TARGET}/${DATE};
+#	scp /c/tmp/lkb_windows.tgz /c/tmp/lkb_windows.zip eo:${TARGET}/${DATE};
+	scp /c/tmp/lkb_windows.tgz /c/tmp/lkb_windows.zip lingo:/tmp;
 
 lkb_documentation:
 	( \
