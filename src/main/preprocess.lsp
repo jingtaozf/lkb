@@ -90,18 +90,25 @@
                          (source (subseq line 1 start))
                          (target (subseq line end))
                          (scanner
-                          (ppcre:create-scanner (if (eq type :replace)
-                                                  source
-                                                  (format nil "^~a$" source))))
+                          (ignore-errors
+                           (ppcre:create-scanner 
+                            (if (eq type :replace)
+                              source
+                              (format nil "^~a$" source)))))
                          (match (make-fsr :type type :source source
                                           :scanner scanner :target target)))
-                    (if (eq type :replace)
-                      (push match (fspp-global fspp))
-                      (push match (fspp-local fspp))))
+                    (if scanner
+                      (if (eq type :replace)
+                        (push match (fspp-global fspp))
+                        (push match (fspp-local fspp)))
+                      (format
+                       t
+                       "read-preprocessor(): [~d] invalid pattern `~a'~%"
+                       n source))
                   (format
                    t
                    "read-preprocessor(): [~d] invalid `~a'~%"
-                   n line)))
+                   n line))))
                (t
                 (format
                  t
@@ -153,6 +160,13 @@
                 ;; seems, we would have to use scan() and then glue together
                 ;; the result from parsing .target. and filling in register
                 ;; matches as needed :-{.                     (31-jan-03; oe)
+                ;;
+                ;;
+                ;; _fix_me_
+                ;; to do ersatzes properly, they should no longer be available
+                ;; to subsequent rule processing: presumably, we should build
+                ;; an ersatzing table and use non-string tokens (indices into
+                ;; the table) instead.                         (1-feb-03; oe)
                 ;;
                 (push (list type (if (eq type :ersatz) token match)) extra)
                 (when (eq type :ersatz) (setf token match))
