@@ -469,6 +469,13 @@ printing routines -  convenient to make this global to keep printing generic")
 
 (defvar *quant-rels* nil)
 
+
+#+lkb
+(cl-user::def-lkb-parameter *scoping-call-limit* 10000
+  "for MRS scoping machinery - maximum number of calls"
+  :user)
+
+#-lkb
 (defparameter *scoping-call-limit* 10000)
 
 (defvar *top-top* nil)
