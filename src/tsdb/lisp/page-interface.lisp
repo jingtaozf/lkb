@@ -155,21 +155,22 @@
     storage))
 
 (defun finalize-test-run (storage)
-  (let ((parser (pg::get-parser :syntax))
-        (environment (get :environment storage)))
-    (dolist (pair environment)
-      (case (first pair)
-        (pg::parser-stat-rules
-         (when parser
-           (setf (pg::parser-stat-rules parser) (rest pair))))
-        (pg::ebl-parser-name-rule-fn 
-         (when parser
-           (setf (pg::ebl-parser-name-rule-fn parser) (rest pair))))
-        (pg::ebl-parser-external-signal-fn
-         (when parser
-           (setf (pg::ebl-parser-external-signal-fn parser) (rest pair))))
-        (t
-         (set (first pair) (rest pair)))))))
+  (ignore-errors
+   (let ((parser (pg::get-parser :syntax))
+         (environment (get :environment storage)))
+     (dolist (pair environment)
+       (case (first pair)
+         (pg::parser-stat-rules
+          (when parser
+            (setf (pg::parser-stat-rules parser) (rest pair))))
+         (pg::ebl-parser-name-rule-fn 
+          (when parser
+            (setf (pg::ebl-parser-name-rule-fn parser) (rest pair))))
+         (pg::ebl-parser-external-signal-fn
+          (when parser
+            (setf (pg::ebl-parser-external-signal-fn parser) (rest pair))))
+         (t
+          (set (first pair) (rest pair))))))))
 
 (defun parse-item (string &key exhaustive
                                (edges 0) trace derivations
@@ -217,8 +218,8 @@
                                   (setf tgc (+ tgcu tgcs)
                                         tcpu (+ tu ts)
                                         treal tr
-                                        conses scons
-                                        symbols ssym
+                                        conses (* scons 8)
+                                        symbols (* ssym 24)
                                         others sother)))
       
       (setf (main::trace-p main::*parser*) tracep)
@@ -625,7 +626,6 @@
                                    (second (main::typed-item-args titem)))))))
     (pairlis '(:words :l-stasks) (list words lstasks))))
 
-
 ;;;
 ;;; maximal-number-of-tasks-exceeded-p() is installed as external-signal-fn()
 ;;; in the syntax parser (because the :taskslice mechanism) is not readily
@@ -652,3 +652,160 @@
            (executed (and statistics (stats-executed statistics))))
       (when (and (integerp limit) (>= executed limit))
         (format nil "task limit (~a)" executed)))))
+
+;;;
+;;; functionality to reconstruct derivation trees and report nature of failure
+;;; when unification clashes.
+;;;
+;;; some of this, actually, is generic and should go into `utilities.lisp' or
+;;; elsewhere.  plus an equality predicate on derivations that ignores the
+;;; PAGE -- LKB difference in handling affixation is needed.  we want to come
+;;; back to this sometime soon.                                  (11-mar-99)
+;;;
+;;; rob, should somebody suggest you provide similar functionality for the LKB,
+;;; i recomment we synchronize before you go ahead ...
+;;;
+
+(defun reconstruct-item (i-id i-input derivation)
+  (let* ((result (reconstruct derivation))
+         (*package* (find-package "DISCO")))
+    (cond
+     ((and (combo-item-p result) (cfs-p (combo-item-cfs)))
+      (call-fegramed (cfs-fs (combo-item-cfs result))))
+     (t
+      (format
+       t
+       "~&~%(~d) `~a'~%~%  ~s~%~%"
+       i-id i-input (first result))
+      (case (third result)
+        (:noentry
+         (format t "  no lexical entry ~a.~%" (fourth result)))
+        (:norule
+         (format t "  no rule ~a.~%" (fourth result)))
+        (t
+         (format
+          t
+          "  ~(~a~) in daughter # ~d;~%  path: "
+          (first (third result)) (second result))
+         (if (eq (first (third result)) :cycle)
+           (format
+            t
+            "`~{~a~^|~}'.~%"
+            (second (third result)))
+           (let* ((clash (rest (third result)))
+                  (path (first clash))
+                  (one (second clash))
+                  (two (third clash)))
+             (format
+              t
+              "`~{~a~^|~}'~%  values: `~(~a~)' vs. `~(~a~)'.~%"
+              path one two)))))
+      (format t "~%")))))
+            
+(defmacro derivation-root (derivation)
+  `(first ,derivation))
+
+(defmacro derivation-start (derivation)
+  `(second ,derivation))
+
+(defmacro derivation-end (derivation)
+  `(third ,derivation))
+
+(defmacro derivation-daughters (derivation)
+  `(rest (rest (rest ,derivation))))
+
+(defun reconstruct (derivation)
+  (catch :fail
+    (reconstruct-derivation derivation)))
+
+(defun reconstruct-derivation (derivation)
+  (let* ((root (derivation-root derivation))
+         (daughters (derivation-daughters derivation)))
+    (cond
+     ((and (= (length daughters) 1)
+           (null (derivation-daughters (first daughters))))
+      (let* ((surface (derivation-root (first daughters)))
+             (entry (find-lexical-entry surface root)))
+        (if entry
+          entry
+          (throw :fail
+            (list derivation
+                  0
+                  :noentry
+                  (format nil "`~a' (`~a')" root surface))))))
+     (t
+      (let* ((items
+              (loop
+                  for daughter in daughters
+                  for item = (reconstruct-derivation daughter)
+                  collect item))
+             (rule (find-rule root)))
+        (if (null rule)
+          (throw :fail
+            (list derivation 0 :norule
+                  (format nil "`~a'" root)))
+          (let* ((csli-unify::*unify-debug* :return)
+                 (csli-unify::%failure% nil)
+                 (result (instantiate-rule rule items)))
+            (if (item-p result)
+              result
+              (throw :fail
+                (list derivation result csli-unify::%failure%))))))))))
+
+(defun find-lexical-entry (form instance)
+  (let ((items (main::lex-lookup form))
+        (name (intern (if (stringp instance)
+                        (string-upcase instance)
+                        instance)
+                      lex::*lex-package*)))
+    (find name items :key #'pg::combo-item-index)))
+
+(defun find-rule (instance)
+  (let ((name (intern (if (stringp instance)
+                        (string-upcase instance)
+                        instance)
+                      lex::*lex-package*)))
+    (or
+     (find name (combo-parser-lex-rules (get-parser :lexicon))
+           :key #'combo-item-index)
+     (find name (combo-parser-syn-rules (get-parser :syntax))
+           :key #'combo-item-index))))
+
+(defun instantiate-rule (rule items)
+  (let* ((itype (combo-item-itype rule))
+         (parser (get-parser (if (eq itype :lex-rule) :lexicon :syntax)))
+         (result (cfs-fs (combo-item-cfs rule)))
+         (status 0))
+      
+    (loop
+        while result
+        for item in items
+        for i from 0
+        do
+          (setf status i)
+          (setf result 
+            (unify
+             result
+            (cfs-fs (combo-item-cfs item))
+             (append *args-prefix* (fslist-nth-path i)))))
+
+    (when (and result (combo-parser-result-restrictor parser))
+      (setf result
+        (restrict result
+                  (rest (combo-parser-result-restrictor parser))
+                  (first (combo-parser-result-restrictor parser)))))
+
+    (if result
+      (make-combo-item
+       :start (item-start (first items))
+       :end (item-end (first (last items)))
+       :daughters (make-array 
+                    (length (combo-item-rhs rule))
+                   :initial-contents items)
+       :cfs (make-cfs :fs result)
+       :key (item-key rule)
+       :label (item-label rule)
+       :index (combo-item-index rule)
+       :itype itype
+       :ruletype (item-ruletype rule))
+      status)))

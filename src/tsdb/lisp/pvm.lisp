@@ -110,6 +110,7 @@
              ((and (eq (first content) :register)
                    (eq (second content) (task-tid task)))
               (setf (task-status task) :ready)
+              (setf (task-protocol task) (third content))
               (format
                *tsdb-io*
                "initialize-cpus(): `~a' registered as tid <~d>.~%"
@@ -148,7 +149,7 @@
       (when master
        (pvm_transmit
         master %pvm_lisp_message%
-        (list :register self)))
+        (list :register self :lisp)))
       (when *pvm-debug-p*
         (format 
          t 

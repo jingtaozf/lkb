@@ -111,18 +111,20 @@
     (concatenate 'string string ".")))
 
 (defun normalize-string (string)
-  (let* ((string (nsubstitute #\Space #\Newline string))
-         (string (nsubstitute #\# #\@ string))
-         (string 
-          (if (> (length string) 2)
-            (reduce #'(lambda (x y)
-                        (if (and (eq x #\Space)
-                                 (eq (char (string y) 0) #\Space))
-                            (string y)
-                          (concatenate 'string (string x) (string y))))
-                    string :from-end t)
-            string)))
-    (string-trim '(#\Space #\Tab) string)))
+  (if string
+    (let* ((string (nsubstitute #\Space #\Newline string))
+           (string (nsubstitute #\# #\@ string))
+           (string 
+            (if (> (length string) 2)
+              (reduce #'(lambda (x y)
+                          (if (and (eq x #\Space)
+                                   (eq (char (string y) 0) #\Space))
+                              (string y)
+                            (concatenate 'string (string x) (string y))))
+                      string :from-end t)
+              string)))
+      (string-trim '(#\Space #\Tab) string))
+    ""))
 
 (defun string-strip (prefix string)
   (if (search prefix string)
@@ -252,9 +254,9 @@
       (list current recent past))))
 
 (defun pprint-memory-usage (result &optional (separator #\Space))
-  (let* ((conses (* (or (get-field :conses result) 0) 8))
-         (symbols (* (or (get-field :symbols result) 0) 24))
-         (others (get-field :others result))
+  (let* ((conses (get-field+ :conses result 0))
+         (symbols (get-field+ :symbols result 0))
+         (others (get-field+ :others result 0))
          (total (+ conses symbols others)))
     (concatenate 'string
       (pprint-potentially-large-integer conses)

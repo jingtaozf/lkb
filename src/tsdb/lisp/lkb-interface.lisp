@@ -96,6 +96,7 @@
                                          *maximum-number-of-edges*
                                          edges))
             (*first-only-p* (not exhaustive))
+            (*do-something-with-parse* nil)
              (sent
               (split-into-words (preprocess-sentence-string string)))
              (str (make-string-output-stream)) ; capture any warning messages
@@ -112,8 +113,8 @@
                  (setq tgc (+ tgcu tgcs)
                        tcpu (+ tu ts)
                        treal tr
-                       conses scons
-                       symbols ssym
+                       conses (* scons 8)
+                       symbols (* ssym 24)
                        others sother)))
             #-allegro
             (multiple-value-prog1

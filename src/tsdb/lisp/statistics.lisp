@@ -201,20 +201,19 @@
                    (find "parse" relations :key #'first :test #'string=))))
     (cond 
      ((null run) :historic)
-     ((not (find "aedges" (rest parse) :key #'first :test #'string=))
-      :ancient)
-     ((find "end" (rest run) :key #'first :test #'string=)
-      :feb-99)
-     (t
-      :aug-98))))
+     ((not (find "aedges" (rest parse) :key #'first :test #'string=)) 0)
+     ((find "environment" (rest run) :key #'first :test #'string=) 9903)
+     ((find "end" (rest run) :key #'first :test #'string=) 9902)
+     (t 9808))))
 
-(defun analyze (language &key condition meter message concise)
+(defun analyze (language &key condition meter message thorough)
 
-  (let* ((message (when message
+  (let* ((thorough (and thorough 
+                        (loop for symbol in thorough
+                            collect (format nil "~(~a~)" symbol))))
+         (message (when message
                     (format nil "retrieving `~a' data ..." language)))
-         (key (if (or (null condition) (equal condition ""))
-                language
-                (concatenate 'string language "@" condition)))
+         (key (format nil "~a @ ~a ~a" language condition thorough))
          (relations (read-database-schema language))
          (parse (rest (find "parse" relations :key #'first :test #'string=)))
          pfields ptypes data)
@@ -224,13 +223,13 @@
     (loop while (eq (setf data (gethash key *tsdb-profile-cache*)) :seized))
     (unless data
       (setf (gethash key *tsdb-profile-cache*) :seized)
-      (do* ((fields '("i-id" "readings" 
+      (do* ((fields '("i-id" "parse-id" "readings" 
                       "first" "total" "tcpu" "tgc"
                       "p-etasks" "p-stasks" "p-ftasks"
                       "unifications" "copies"
                       "conses" "symbols" "others"
                       "words" "l-stasks"
-                      "aedges" "pedges" "raedges" "rpedges"
+                      "edges" "aedges" "pedges" "raedges" "rpedges"
                       "gcs" "error")
                     (rest fields))
             (field (first fields) (first fields)))
@@ -240,33 +239,55 @@
             (push (first match) pfields)
             (push (second match) ptypes))))
       (unwind-protect
-        (let* ((pmeter (madjust * meter (if concise 0.4 0.5)))
-               (imeter (madjust + (madjust * meter (if concise 0.1 0.25)) 
-                                (mduration pmeter)))
-               (rmeter (if concise
+        (let* ((pmeter (and meter (madjust * meter (if  0.4 0.5))))
+               (imeter (when meter
+                         (madjust + (madjust * meter (if thorough 0.1 0.25)) 
+                                  (mduration pmeter))))
+               (rmeter (if thorough
                          (madjust + (madjust * meter 0.4) 
                                   (+ (mduration pmeter) (mduration imeter)))
-                         (make-meter 0 0)))
-               (ameter (madjust + (madjust * meter (if concise 0.1 0.25)) 
-                                (+ (mduration pmeter) 
-                                   (mduration rmeter)
-                                   (mduration imeter))))
+                         (and meter (make-meter 0 0))))
+               (ameter (when meter
+                         (madjust + (madjust * meter (if thorough 0.1 0.25)) 
+                                  (+ (mduration pmeter) 
+                                     (mduration rmeter)
+                                     (mduration imeter)))))
                (parse (select pfields ptypes "parse" condition language
                               :meter pmeter :sort :i-id))
                (item (select '("i-id" "i-input" "i-length" "i-wf")
                              '(:integer :string :integer :integer)
                              "item" condition language 
                              :meter imeter :sort :i-id))
-               (result (when concise
-                         (select '("parse-id" "result-id" "time" 
-                                   "r-ctasks" "r-ftasks" "r-etasks" "r-stasks")
-                                 '(:integer :integer :integer 
-                                   :integer :integer :integer :integer)
-                                 condition language 
-                                 :meter rmeter :sort :parse-id)))
+               (results (when thorough
+                          (select (append '("parse-id" "result-id") thorough)
+                                  nil "result" condition language 
+                                  :meter rmeter :sort :parse-id)))
                (all (njoin parse item :i-id :meter ameter)))
-          (declare (ignore result))
-          (setf data all))
+          (setf data all)
+          (when results
+            ;;
+            ;; _fix_me_
+            ;; this is sort of hacky: since we fail to guarantee unique parse
+            ;; ids, the corresponding run id would have to be included in the
+            ;; `result' relation; as it stands, this is not the case |:-(.
+            ;; until we get his fixed, it hard-wires the assumption that we
+            ;; will not use the same profile to represent multiple test runs.
+            ;;                                          (10-mar-99  -  oe)
+            (loop
+                with all = (copy-list all)
+                for item in (sort all #'< :key #'(lambda (foo)
+                                                   (get-field :parse-id foo)))
+                for key = (get-field :parse-id item)
+                for matches =
+                  (when (eql key (get-field :parse-id (first results)))
+                    (loop
+                        for result = (first results)
+                        while (and result 
+                                   (eql key (get-field :parse-id result)))
+                        collect (pop results)))
+                when matches
+                do (nconc item (acons :results matches nil)))))
+                  
         (setf (gethash key *tsdb-profile-cache*) data)))
     (when meter 
       (meter :value (get-field :end meter))
@@ -414,7 +435,7 @@
           (analyze-aggregates name))))))
 
 (defun purge-profile-cache (data)
-  (let ((end (length data)))
+  (let ((end (unless (eq data :all) (length data))))
     (maphash #'(lambda (key foo)
                  (declare (ignore foo))
                  (when (or (eq data :all) 
@@ -441,6 +462,7 @@
                   language))
          (items (if (eq dimension :space)
                   (loop 
+                      with format = (profile-granularity language)
                       for item in items
                       for conses = (get-field :conses item)
                       for symbols = (get-field :symbols item)
@@ -449,7 +471,9 @@
                                              (>= conses 0)
                                              (>= symbols 0)
                                              (>= others 0))
-                                    (+ (* 8 conses) (* 24 symbols) others))
+                                    (if (>= format 9903)
+                                      (+ conses symbols others)
+                                      (+ (* conses 8) (* symbols 24) others)))
                       when (>= space lower)
                       collect (cons (cons :space space) item))
                   (remove-if #'(lambda (foo)
@@ -1009,6 +1033,29 @@
        (when (or (stringp file) (stringp append)) (close stream))
        0))))
 
+(defun intersect-results (oitem nitem fields)
+  (loop
+      with oresults = (get-field :results oitem)
+      with nresults = (get-field :results nitem)
+      for field in fields
+      for predicate = (find-attribute-predicate field)
+      for ovalues = (loop for result in oresults 
+                        collect (get-field field result))
+      for nvalues = (loop for result in nresults 
+                        collect (get-field field result))
+      for oplus = (loop
+                      for ovalue in ovalues
+                      unless (member ovalue nvalues :test-not predicate)
+                      collect ovalue and
+                      do (setf nvalues (delete ovalue nvalues :count 1)))
+
+      for nplus = (loop
+                      for nvalue in nvalues
+                      unless (member nvalue ovalues :test-not predicate)
+                      collect nvalue and
+                      do (setf ovalues (delete nvalue ovalues :count 1)))
+      collect (cons oplus nplus)))
+
 (defun compare-in-detail (olanguage nlanguage
                           &key (condition *statistics-select-condition*)
                                (show '(:i-input :i-wf))
@@ -1024,17 +1071,23 @@
          (show (cons :i-id show))
          (shows (length show))
          (compare (if (atom compare) (list compare) compare))
+         (thorough (intersection '(:derivation :mrs) compare))
+         (compare (set-difference compare thorough :test #'equal))
          (predicates (map 'list #'find-attribute-predicate compare))
          (compares (length compare))
          (oitems
           (if (stringp olanguage) 
-            (analyze olanguage :condition condition :meter ometer :message t)
+            (analyze olanguage 
+                     :condition condition :thorough thorough
+                     :meter ometer :message t)
             olanguage))
          (oitems (sort (copy-seq oitems) 
                        #'< :key #'(lambda (foo) (get-field :i-id foo))))
          (nitems
           (if (stringp nlanguage) 
-            (analyze nlanguage :condition condition :meter nmeter :message t)
+            (analyze nlanguage 
+                     :condition condition :thorough thorough
+                     :meter nmeter :message t)
             nlanguage))
          (stream (create-output-stream file append))
          (nitems (sort (copy-seq nitems) 
@@ -1068,6 +1121,7 @@
         shows (+ shows compares) (+ shows compares compares)
         (+ shows 1) (+ shows compares) olabel
         (+ shows compares 1) (+ shows compares compares) nlabel)
+          
        (do ((show show (rest show))
             (i 1 (+ i 1)))
            ((null show))
@@ -1101,7 +1155,27 @@
            region 2 ~d 2 ~d -contents \"~(~a~)\" -format title ~
              -hor_justify center~%"
           i (first compare)
-          i i (first compare)))))
+          i i (first compare)))
+       
+       (loop
+           for field in thorough
+           for i from (+ shows compares compares 1) by 2
+           do
+             (format
+              stream
+              "region 1 ~d 1 ~d -contents \"~(~a~)\" -format title ~
+               -hor_justify center~%"
+              i (+ i 1) field)
+             (format
+              stream
+              "cell 2 ~d -contents \"~(~a~)\" -format title~%~
+               cell 2 ~d -contents \"~(~a~)\" -format title~%"
+              i olabel (+ i 1) nlabel)
+           finally
+             (format
+              stream
+              "layout col ~d -m1 5 -r 2 -m2 5 -c black -j right~%"
+              (+ i 2)))))
     
     ;;
     ;; my first attempt at loop()ing (if bernd knew |:-) (28-jul-98 - oe@csli)
@@ -1146,7 +1220,8 @@
                  (ncompare (map 'list 
                              #'(lambda (attribute)
                                  (get-field attribute nitem))
-                             compare)))
+                             compare))
+                 clashes)
 
             (cond 
              ((and (eql oi-id ni-id)
@@ -1155,13 +1230,17 @@
               ;; two items of same identifier have equal values for all .show.
               ;; attributes (as they should |:-)
               ;;
-              (when (loop
-                        for predicate in predicates 
-                        for ovalue in ocompare
-                        for nvalue in ncompare
-                        when (funcall predicate ovalue nvalue)
-                        do (return t)
-                        finally (return nil))
+              (setf clashes (intersect-results oitem nitem thorough))
+              (when (or (some #'(lambda (clash)
+                                  (or (first clash) (rest clash)))
+                              clashes)
+                        (loop
+                            for predicate in predicates 
+                            for ovalue in ocompare
+                            for nvalue in ncompare
+                            when (funcall predicate ovalue nvalue)
+                            do (return t)
+                            finally (return nil)))
                 (case format
                   (:tcl
                    (do ((show show (rest show))
@@ -1184,7 +1263,43 @@
                      (format
                       stream
                       "cell ~d ~d -contents ~s -format data~%"
-                      row j (first acompare)))))
+                      row j (first acompare)))
+                   (loop
+                       for j from (+ shows compares compares 1) by 2
+                       for field in thorough
+                       for (oclash . nclash) in clashes
+                       for otag = (intern (gensym "") :keyword)
+                       for ntag = (intern (gensym "") :keyword)
+                       do
+                         ;;
+                         ;; _fix_me_
+                         ;; this creates a potential memory leak: as soon as
+                         ;; the window for this table is destroyed, there will
+                         ;; be no further reference to the (tag) symbols used
+                         ;; to store data on the lisp side.  yet, the values
+                         ;; associated with the symbol properties will never
+                         ;; become unbound.                   (11-mar-99)
+                         ;;
+                         (setf (get :source otag) olanguage)
+                         (setf (get :contrast otag) nlanguage)
+                         (setf (get :i-id otag) oi-id)
+                         (setf (get :i-input otag) (get-field :i-input oitem))
+                         (setf (get :field otag) field)
+                         (setf (get :value otag) oclash)
+                         (setf (get :source ntag) nlanguage)
+                         (setf (get :contrast ntag) olanguage)
+                         (setf (get :i-id ntag) ni-id)
+                         (setf (get :i-input ntag) (get-field :i-input nitem))
+                         (setf (get :field ntag) field)
+                         (setf (get :value ntag) nclash)
+                         (format
+                          stream
+                          "cell ~d ~d -contents ~s -format data ~
+                           -action browse -tag ~a~%~
+                           cell ~d ~d -contents ~s -format data ~
+                           -action browse -tag ~a~%"
+                          row j (length oclash) otag
+                          row (+ j 1) (length nclash) ntag))))
                 (incf row))
               (pop oitems)
               (pop nitems))
@@ -1251,14 +1366,71 @@
     
     (when (or (stringp file) (stringp append)) (close stream))))
 
+(defun execute-tag (action tag &key (format :tcl) file append)
+
+  (let* ((tag (intern tag :keyword)))
+
+    (case action
+      (:browse
+       (let* ((clashes (get :value tag))
+              (stream (create-output-stream file append)))
+         (when clashes
+           (case format
+             (:tcl
+              (when *statistics-tcl-formats* 
+                (format stream *statistics-tcl-formats*))
+              (format
+               stream
+               "layout col def -m1 5 -r 2 -m2 5 -c black -j center~%~
+                layout row def -m1 5 -r 1 -m2 5 -c black -j center~%~
+                layout row 0 -m1 5 -r 2 -m2 5 -c black -j center~%")
+              (loop
+                  for clash in clashes
+                  for i from 1
+                  for ntag = (intern (gensym "") :keyword)
+                  do
+                    (setf (get :i-id ntag) (get :i-id tag))
+                    (setf (get :i-input ntag) (get :i-input tag))
+                    (setf (get :source ntag) (get :source tag))
+                    (setf (get :derivation ntag) clash)
+                    (format
+                     stream
+                     "cell ~d 1 -contents {~a} -format title ~
+                      -action reconstruct -tag ~a~%"
+                     i clash ntag)
+                  finally
+                    (format
+                     stream
+                     "layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%"
+                     i))))
+           (when (or (stringp file) (stringp append)) (close stream)))))
+      (:reconstruct
+       (let* ((i-id (get :i-id tag))
+              (i-input (get :i-input tag))
+              (derivation (get :derivation tag))
+              (derivation (if (stringp derivation) 
+                            (read-from-string derivation) 
+                            derivation)))
+         ;;
+         ;; _fix_me_
+         ;; now that the number of host platform is steadily growing (+ 2 in
+         ;; about half a year), all application-specific code should really go
+         ;; into the interface file.                            (12-mar-99)
+         ;;
+         #+:lkb
+         (declare (ignore i-id i-input derivation))
+         #+:page
+         (pg::reconstruct-item i-id i-input derivation))))))
+  
 (defun summarize-performance-parameters (items
-                                         &key restrictor (format :feb-99))
+                                         &key restrictor (format 9902))
 
   (let ((itemtotal 0)
         (readingstotal 0)
         (etaskstotal 0)
         (staskstotal 0)
         (ftaskstotal 0)
+        (edgestotal 0)
         (aedgestotal 0)
         (pedgestotal 0)
         (raedgestotal 0)
@@ -1290,6 +1462,9 @@
              (ftaskss (map 'list #'(lambda (foo)
                                      (get-field+ :p-ftasks foo -1))
                            data))
+             (edgess (map 'list #'(lambda (foo)
+                                    (get-field+ :edges foo -1))
+                           data))
              (aedgess (map 'list #'(lambda (foo)
                                      (get-field+ :aedges foo -1))
                            data))
@@ -1309,10 +1484,10 @@
              (firsts (map 'list #'(lambda (foo)
                                     (if (eql foo -1)
                                       -1
-                                      (/ foo (case format
-                                               (:ancient 10)
-                                               (:aug-98 100)
-                                               (:feb-99 1000)))))
+                                      (/ foo (cond
+                                              ((zerop format) 10)
+                                              ((= format 9808) 100)
+                                              ((>= format 9902) 1000)))))
                           (remove nil firsts)))
              (totals (map 'list #'(lambda (foo)
                                     (get-field :total foo))
@@ -1320,43 +1495,48 @@
              (totals (map 'list #'(lambda (foo)
                                     (if (eql foo -1)
                                       -1
-                                      (/ foo (case format
-                                               (:ancient 10)
-                                               (:aug-98 100)
-                                               (:feb-99 1000)))))
+                                      (/ foo (cond
+                                              ((zerop format) 10)
+                                              ((= format 9808) 100)
+                                              ((>= format 9902) 1000)))))
                           totals))
              (tcpus (map 'list #'(lambda (foo) (get-field :tcpu foo))
                          data))
              (tcpus (map 'list #'(lambda (foo)
                                     (if (eql foo -1)
                                       -1
-                                      (/ foo (case format
-                                               (:ancient 10)
-                                               (:aug-98 100)
-                                               (:feb-99 1000)))))
+                                      (/ foo (cond
+                                              ((zerop format) 10)
+                                              ((= format 9808) 100)
+                                              ((>= format 9902) 1000)))))
                           tcpus))
              (tgcs (map 'list #'(lambda (foo) (get-field :tgc foo))
                         data))
              (tgcs (map 'list #'(lambda (foo)
                                     (if (eql foo -1)
                                       -1
-                                      (/ foo (case format
-                                               (:ancient 10)
-                                               (:aug-98 100)
-                                               (:feb-99 1000)))))
+                                      (/ foo (cond
+                                              ((zerop format) 10)
+                                              ((= format 9808) 100)
+                                              ((>= format 9902) 1000)))))
                           tgcs))
              (space (map 'list #'(lambda (foo)
                                    (let ((conses (get-field :conses foo))
                                          (symbols (get-field :symbols foo))
                                          (others (get-field :others foo)))
                                      (if (and conses symbols others)
-                                       (+ (* 8 conses) (* 24 symbols) others)
+                                       (if (>= format 9903)
+                                         (+ conses symbols others)
+                                         (+ (* conses 8) 
+                                            (* symbols 24) 
+                                            others))
                                        -1)))
                          data)))
         (push (cons (first phenomenon)
                     (pairlis '(:items :readingss
                                :p-etasks :p-stasks
                                :p-ftasks 
+                               :edges
                                :aedges :pedges 
                                :raedges :rpedges
                                :first :total 
@@ -1365,6 +1545,7 @@
                              (list items readingss
                                    (average etaskss) (average staskss)
                                    (average ftaskss) 
+                                   (average edgess)
                                    (average aedgess) (average pedgess)
                                    (average raedgess) (average rpedgess)
                                    (average firsts) (average totals)
@@ -1376,6 +1557,7 @@
         (incf etaskstotal (sum etaskss))
         (incf staskstotal (sum staskss))
         (incf ftaskstotal (sum ftaskss))
+        (incf edgestotal (sum edgess))
         (incf aedgestotal (sum aedgess))
         (incf pedgestotal (sum pedgess))
         (incf raedgestotal (sum raedgess))
@@ -1390,6 +1572,7 @@
                                :p-etasks
                                :p-stasks
                                :p-ftasks
+                               :edges 
                                :aedges 
                                :pedges 
                                :raedges
@@ -1403,6 +1586,7 @@
                                (divide etaskstotal itemtotal)
                                (divide staskstotal itemtotal)
                                (divide ftaskstotal itemtotal)
+                               (divide edgestotal itemtotal)
                                (divide aedgestotal itemtotal)
                                (divide pedgestotal itemtotal)
                                (divide raedgestotal itemtotal)
@@ -1493,8 +1677,11 @@
                  (filter (float (* 100 (divide ftasks (+ etasks ftasks)))))
                  (aedges (round (get-field :aedges data)))
                  (pedges (round (get-field :pedges data)))
-                 (edges (+ (if (>= aedges 0) aedges 0) 
-                           (if (>= pedges 0) pedges 0)))
+                 (edges (round (get-field :edges data)))
+                 (edges (if (and edges (>= edges 0))
+                          edges
+                          (+ (if (>= aedges 0) aedges 0) 
+                             (if (>= pedges 0) pedges 0))))
                  (first (float (get-field :first data)))
                  (total (float (get-field :total data)))
                  (tcpu (float (get-field :tcpu data)))
@@ -1537,8 +1724,11 @@
            (filter (float (* 100 (divide ftasks (+ etasks ftasks)))))
            (aedges (round (get-field :aedges data)))
            (pedges (round (get-field :pedges data)))
-           (edges (+ (if (>= aedges 0) aedges 0) 
-                     (if (>= pedges 0) pedges 0)))
+           (edges (round (get-field :edges data)))
+           (edges (if (and edges (>= edges 0))
+                    edges
+                    (+ (if (>= aedges 0) aedges 0) 
+                       (if (>= pedges 0) pedges 0))))
            (first (float (get-field :first data)))
            (total (float (get-field :total data)))
            (tcpu (float (get-field :tcpu data)))
@@ -2180,5 +2370,3 @@
                  :passives :actives :successes :executed :filtered)
                (list (map 'list #'first rules)
                      passives actives successes executed filtered)))))
-
-

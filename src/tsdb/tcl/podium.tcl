@@ -126,7 +126,7 @@ set compare_in_detail(source) "";
 set compare_in_detail(phenomena,all) 1;
 set compare_in_detail(show,i-input) 1;
 set compare_in_detail(compare,all) {
-  words readings first total pedges rpedges gcs error
+  words readings first total pedges rpedges gcs error derivation mrs
 }; # compare_in_detail(compare,all)
 foreach attribute $compare_in_detail(compare,all) {
   set compare_in_detail(compare,$attribute) 0;

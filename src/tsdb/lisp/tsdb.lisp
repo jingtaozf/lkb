@@ -76,9 +76,10 @@
              (query (concatenate 'string query redirection ".")))
         (when (and output (probe-file output)) (delete-file output))
         (with-open-file (stream file :direction :output
-                         :if-exists :overwrite
+                         :if-exists :supersede
                          :if-does-not-exist :create)
-          (format stream "~a~%" query))
+          (format stream "~a~%" query)
+          (force-output stream))
         (multiple-value-bind (stream foo pid)
           (run-process
             command :wait nil
@@ -105,7 +106,13 @@
                       (sleep 0.1)
                       (multiple-value-setq (status epid) (sys:os-wait t pid))
                       (when (null epid) (incf i))
-                    while (and (< i 42) (not status))))
+                    while (and (< i 100) (not status))
+                    finally
+                      (when (>= i 100)
+                        (format
+                         *tsdb-io*
+                         "call-tsdb(): failed to salvage tsdb(1) child ~d~%"
+                         pid))))
               (when (probe-file output)
                 (unless *tsdb-debug-mode-p*
                   (delete-file file))
@@ -312,6 +319,7 @@
            (platform (normalize-string (get-field :platform result)))
            (tsdb (normalize-string (get-field :tsdb result)))
            (application (normalize-string (get-field :application result)))
+           (context (normalize-string (get-field :context result)))
            (grammar (normalize-string (get-field :grammar result)))
            (avms (get-field+ :avms result -1))
            (sorts (get-field+ :sorts result -1))
@@ -325,18 +333,19 @@
            (start (get-field :start result))
            (end (get-field :end result))
            (items (get-field+ :items result -1))
+           (status (normalize-string (get-field+ :status result "")))
            (query
             (format
              nil
              "insert into run values ~
               ~d ~s ~
-              ~s ~s ~s ~s ~
+              ~s ~s ~s ~s ~s ~
               ~d ~d ~d ~d ~d ~d ~
-              ~s ~s ~s ~a ~a ~d"
+              ~s ~s ~s ~a ~a ~d ~s"
              run-id comment 
-             platform tsdb application grammar
+             platform tsdb application context grammar
              avms sorts templates lexicon lrules rules
-             user host os start end items)))
+             user host os start end items status)))
       (call-tsdb query language :cache cache))))
 
 (defun write-parse (result language
@@ -374,6 +383,7 @@
            (a-load (if a-load (round (* 100 a-load)) -1))
            (date (current-time :long t))
            (error (normalize-string (get-field+ :error result "")))
+           (comment (normalize-string (get-field+ :comment result "")))
            (query "insert into parse values")
            (query
             (format
@@ -386,7 +396,7 @@
               ~d ~d ~
               ~d ~d ~d ~
               ~d ~d ~d ~
-              ~a ~s"
+              ~a ~s ~s"
              query
              parse-id run-id i-id
              readings first total tcpu tgc treal
@@ -396,7 +406,7 @@
              unifications copies
              conses symbols others
              gcs i-load a-load
-             date error)))
+             date error comment)))
       (call-tsdb query language :cache cache))))
 
 (defun write-results (parse-id results

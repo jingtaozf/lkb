@@ -141,7 +141,7 @@
             (delete-file interrupt)
             (format
              stream
-             "do-vocabulary(): abort on external interrupt signal.~%")
+             "do-vocabulary(): received external interrupt signal.~%")
             (when meter 
               (status :text (format nil "~a interrupt" message) :duration 5))
             (return-from tsdb-do-vocabulary))

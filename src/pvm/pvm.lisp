@@ -6,7 +6,7 @@
 (defconstant %pvm_no_parent% -23)
 (defconstant %pvm_task_fail% 42)
 (defconstant %pvm_lisp_message% 50)
-
+(defconstant %pvm_c_message% 51)
 (defparameter 
   *pvm*
   (format
@@ -24,7 +24,7 @@
 (defparameter *pvm-pending-events* nil)
 
 (defstruct cpu host spawn options initialize architecture class threshold)
-(defstruct task tid task cpu form status load)
+(defstruct task tid task cpu protocol form status load)
 
 (defun make-tmp-file (prefix)
   (let ((file (format 
@@ -269,7 +269,7 @@
       (loop
           for message = (pvm_poll tid %pvm_lisp_message% block)
           when (eq message :error)
-          return nil
+          return :error
           when (and (message-p message)
                     (eql (message-tag message) %pvm_lisp_message%)
                     (eq (first (message-content message)) :return)

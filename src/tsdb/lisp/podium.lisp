@@ -554,6 +554,38 @@
                                    '(:data :command)
                                    (list data (cons action arguments))))
                           *tsdb-podium-windows*))))))
+           
+           (execute
+            (let* ((tag (second arguments))
+                   (tag (and tag (intern tag :keyword)))
+                   (data (get :source tag))
+                   (contrast (get :contrast tag))
+                   (field (get :field tag))
+                   (i-id (get :i-id tag))
+                   (title (format 
+                           nil 
+                           "`~(~a~)' clashes for `~a' (vs. `~a)' [i-id == ~a]"
+                           field data contrast i-id))
+                   (message "computing table layout and geometry ..."))
+              (apply #'execute-tag
+                     (append arguments (list :file file)))
+              (when (probe-file file)
+                (status :text message)
+                (let ((return 
+                        (send-to-podium 
+                         (format 
+                          nil 
+                          "showtable ~s \".~(~a~)\" ~s {~a}" 
+                          file (gensym "") data title)
+                         :wait t)))
+                  (when (and (equal (first return) :ok) 
+                             (equal (first (second return)) :graph))
+                    (push (append (second return)
+                                  (pairlis 
+                                   '(:data :command)
+                                   (list data (cons 'execute-tag arguments))))
+                          *tsdb-podium-windows*))))
+              (status :text (format nil "~a done" message) :duration 2)))
 
            (close
             (if (second command)
@@ -673,8 +705,7 @@
        (when condition 
          (beep)
          (status :text "error processing tsdb(1) podium event" :duration 10)
-         (when *tsdb-debug-mode-p*
-           (format *tsdb-io* "podium-loop(): ~s~%" condition))))
+         (format *tsdb-io* "podium-loop(): ~s~%" condition)))
       (unless (eq (first (second form)) 'quit)
         (busy :action :release))))
 

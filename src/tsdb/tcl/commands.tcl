@@ -340,11 +340,11 @@ proc tsdb_browse {code condition} {
       set relations "(\"phenomenon\")";
     }
     runs {
-      set attributes "(\"run-id\" \"comment\" \"platform\" \"application\" \"grammar\" \"avms\" \"sorts\" \"templates\" \"lexicon\" \"lrules\" \"rules\" \"user\" \"host\" \"start\" \"end\" \"items\")";
+      set attributes "(\"run-id\" \"comment\" \"platform\" \"application\" \"grammar\" \"avms\" \"sorts\" \"templates\" \"lexicon\" \"lrules\" \"rules\" \"user\" \"host\" \"start\" \"end\" \"items\" \"status\")";
       set relations "(\"run\")";
     }
     parses {
-      set attributes "(\"i-id\" \"i-input\" \"readings\" \"words\" \"first\" \"total\" \"tcpu\" \"tgc\" \"p-ftasks\" \"p-etasks\" \"p-stasks\" \"aedges\" \"pedges\"  \"raedges\" \"rpedges\")";
+      set attributes "(\"i-id\" \"i-input\" \"readings\" \"words\" \"first\" \"total\" \"tcpu\" \"tgc\" \"p-ftasks\" \"p-etasks\" \"p-stasks\" \"aedges\" \"pedges\"  \"raedges\" \"rpedges\" \"comment\")";
       set relations "(\"item\" \"parse\")";
     }
     results {
@@ -461,6 +461,22 @@ proc tsdb_process {code {data ""} {key ""}} {
 }; # tsdb_process()
 
 
+proc tsdb_execute {code tag} {
+
+  global globals;
+
+  switch $code {
+    browse {
+      send_to_lisp :event "(execute :$code |$tag|)";
+    }
+    reconstruct {
+      send_to_lisp :event "(execute :$code |$tag|)";
+    }
+  }; # switch
+
+}; # tsdb_execute()
+
+
 proc tsdb_abort {} {
 
   global globals;
@@ -528,7 +544,7 @@ proc analyze_rules {view} {
   }; # for
   if {![info exists index] 
       || ![lindex $test_suites($index) 4]} {
-    status [format "no chart data available for `%s' ... |:-\{" \
+    status [format "no rule data available for `%s' ... |:-\{" \
             $globals(data)] 10;
   } else {
     set attributes "(";

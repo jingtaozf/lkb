@@ -33,7 +33,16 @@
   
   (initialize-tsdb)
   
-  
+  (unless (or (null vocabulary) interactive
+              (and (find :pvm *features*)
+                   (find-symbol "*PVM-TASKS*")
+                   (symbol-value (find-symbol "*PVM-TASKS*"))))
+    (unless (tsdb-do-vocabulary data 
+                                :condition condition :load :quiet 
+                                :meter (make-meter 0 1)
+                                :interrupt interrupt)
+      (return-from tsdb-do-process)))
+                   
   (when (and overwrite (not interactive))
     (purge-test-run data :action :purge))
 
@@ -64,7 +73,7 @@
              (parse-id 
               (unless interactive
                 (+ (largest-parse-id run-id data :verbose verbose) 1)))
-             (runs (create-test-runs 
+             (runs (create-runs 
                     data run-id 
                     :comment comment :gc gc 
                     :tasks (when (find-symbol "*PVM-TASKS*")
@@ -93,48 +102,49 @@
         
         (when meter 
           (status :text (format nil "~a done" imessage)))
-          
-        (when (and vocabulary (not burst) (not interactive))
-          (unless (tsdb-do-vocabulary data 
-                                      :condition condition :load :quiet 
-                                      :meter (make-meter 0.02 1)
-                                      :interrupt interrupt))
-          (return-from tsdb-do-process))
-                   
-        (when meter 
+        (sleep 0.5)
+        (when meter
           (status :text pmessage)
           (meter :value (get-field :start pmeter)))
-        
+
         (unwind-protect
-            (progn;ignore-errors
+            (ignore-errors
              (catch :break
                (loop
-                   until (or (null runs)
-                             (and (not burst) (null items))
-                             (and (null items)
-                                  (null (find-if #'consp runs 
-                                                 :key #'run-status))))
                    with result = nil
                    with item = nil
+                   for busy = (loop
+                                  for run in runs
+                                  when (consp (run-status run))
+                                  collect run)
+                   for idle = (loop
+                                  for run in runs
+                                  when (eq (run-status run) :ready)
+                                  collect run)
+                   until (or (and (not burst) (null items))
+                             (and burst (null busy) (null idle))
+                             (and (null items) (null busy)))
                    for i = (or parse-id 0) then (+ i 1)
-                   for run = (if burst
-                               (find-if #'task-idle-p runs
-                                        :key #'(lambda (run)
-                                                 (get-field :task run)))
-                               (first runs))
+                   for run = (if burst (first idle) (first runs))
                                                             
                    do
                      (when (interrupt-p interrupt)
-                       (setf abort t)
                        (format
                         stream
-                        "do-process(): abort on external interrupt signal.~%")
+                        "do-process(): ~
+                         received external interrupt signal~
+                         ~:[~*~; (~d active task~:p)~].~%"
+                        busy (length busy))
+                       (when items
+                         (loop
+                             for run in runs
+                             do (nconc run (acons :status :interrupt nil))))
                        (force-output stream)
-                       (throw :break nil))
+                       (setf abort t)
+                       (setf items nil))
                      
-                     (when (or (null run) (null items))
+                     (when (and burst busy (or (null run) (null items)))
                        (let* ((status (process-queue runs :stream stream))
-                              (corpses (get-field :corpses status))
                               (pending (get-field :pending status))
                               (ready (get-field :ready status))
                               (item (get-field :item status))
@@ -147,12 +157,8 @@
                              (store-result data result :cache cache))
                            (when ready (incf (get-field :items ready)))
                            (when increment (meter-advance increment)))
-                         (when corpses
-                           (loop
-                               for corpse in corpses
-                               do (setf runs (delete corpse runs))))
                          (when pending
-                           (setf items (append pending items)))
+                           (unless abort (setf items (append pending items))))
                          (if ready 
                            (setf run ready)
                            (throw :break nil))))
@@ -160,14 +166,13 @@
                      (setf item 
                        (when run
                          (enrich-item run (pop items)
+                                      :parse-id i
                                       :verbose verbose :stream stream)))
                      (when item
                        (when (and verbose (not burst))
                          (print-item item :stream stream))
                        (setf result
                          (process-item item
-                                       :run-id (get-field :run-id run)
-                                       :parse-id i
                                        :trees-hook trees-hook 
                                        :semantix-hook semantix-hook
                                        :stream stream
@@ -176,7 +181,10 @@
                        (cond
                         ((eq result :ok))
                         ((eq result :error)
-                         (setf runs (delete run runs)))
+                         (let ((task (get-field :task run))
+                               (end (current-time :long t)))
+                           (when task (setf (task-status task) :error))
+                           (nconc run `((:end . ,end)))))
                         ((consp result)
                          (when verbose
                            (print-result result :stream stream))
@@ -196,9 +204,10 @@
               (status :text (format nil "~a done" pmessage) :duration 5)
               (meter :value (get-field :end meter)))))))))
 
-(defun create-test-runs (data run-id &key comment gc 
-                                          tasks interactive)
-  (if tasks
+(defun create-runs (data run-id &key comment 
+                                     gc (tenure *tsdb-tenure-p*)
+                                     tasks interactive)
+  (if (and tasks (null interactive))
     (let ((tasks (remove-if-not #'task-idle-p tasks))
           runs)
       (when tasks
@@ -206,18 +215,20 @@
             for task in tasks
             for tid = (task-tid task)
             for i = run-id then (+ i 1)
-            for status = (revaluate 
-                          tid 
-                          `(create-test-run 
-                            ,data ,i 
-                            :comment ,comment :gc ,gc 
-                            :interactive nil)
-                          nil
-                          :key :create-test-runs)
+            for status = (if (eq (task-protocol task) :lisp)
+                           (revaluate 
+                            tid 
+                            `(create-run 
+                              ,data ,i 
+                              :comment ,comment :gc ,gc :tenure ,tenure
+                              :interactive nil)
+                            nil
+                            :key :create-run)
+                           (create_run tid data i comment interactive))
             when (eq status :ok)
             do
               (setf (task-status task) :create)
-              (push (list (cons :task task)) runs)
+              (push (enrich-run (list (cons :task task))) runs)
             else 
             do
               (setf (task-status task) :error)
@@ -225,7 +236,7 @@
               (when *pvm-debug-p*
                 (format
                  t
-                 "~&create-test-runs(): ~
+                 "~&create-runs(): ~
                   transmission error; disabling <~d>.~%"
                  tid)
                 (force-output)))
@@ -239,7 +250,7 @@
               (when *pvm-debug-p*
                 (format
                  t
-                 "~&create-test-runs(): got message:~% `~a'~%"
+                 "~&create-runs(): got message:~% `~s'~%"
                  message)
                 (force-output))
               (let* ((tag (message-tag message))
@@ -257,7 +268,7 @@
                     (when (and (task-p task) (cpu-p (task-cpu task)))
                       (format
                        *tsdb-io*
-                       "~&create-test-runs(): client exit on `~a' <~a>.~%"
+                       "~&create-runs(): client exit on `~a' <~a>.~%"
                        (cpu-host (task-cpu task)) remote)
                       (force-output *tsdb-io*))))
                  
@@ -265,18 +276,18 @@
                   (when *pvm-debug-p*
                     (format
                      t
-                     "~&create-test-runs(): ~
+                     "~&create-runs(): ~
                       ignoring message from alien <~d>.~%"
                      remote)
                     (force-output)))
 
                  ((eql tag %pvm_lisp_message%)
                   (if (and (eq (first content) :return)
-                           (eq (second content) :create-test-runs))
-                    (let ((stub (find task runs 
-                                      :key #'(lambda (run)
-                                               (get-field :task run))))
-                          (run (third content)))
+                           (eq (second content) :create-run))
+                    (let* ((stub (find task runs 
+                                       :key #'(lambda (run)
+                                                (get-field :task run))))
+                           (run (third content)))
                       (when (and stub (consp run))
                         (nconc stub run)
                         (setf (task-status task) :ready)
@@ -284,7 +295,7 @@
                     (when *pvm-debug-p*
                       (format
                        t
-                       "~&create-test-runs(): ~
+                       "~&create-runs(): ~
                         ignoring unexpected message from <~d>.~%"
                        remote)
                       (force-output))))
@@ -293,41 +304,50 @@
                   (when *pvm-debug-p*
                     (format
                      t
-                     "~&create-test-runs(): ~
+                     "~&create-runs(): ~
                       ignoring dubious message from <~d>.~%"
                      remote)
                     (force-output))))))))
     
-    (list (create-test-run data run-id 
-                           :comment comment :gc gc 
-                           :interactive interactive))))
+    (list (enrich-run (create-run data run-id 
+                                  :comment comment :gc gc 
+                                  :interactive interactive)))))
 
-(defun create-test-run (data run-id &key comment gc interactive)
+(defun create-run (data run-id &key comment 
+                                    gc (tenure *tsdb-tenure-p*)
+                                    interactive)
+  
   (let* ((environment (initialize-test-run :interactive interactive))
          (start (current-time :long t))
-         (gc-strategy (unless interactive (install-gc-strategy gc)))
+         (gc-strategy (unless interactive 
+                        (install-gc-strategy gc :tenure tenure)))
          (gc (get-field :gc gc-strategy))
          (user (current-user))
          (comment (or comment "null"))
          (platform (current-platform))
          (grammar (current-grammar))
-         (tsdb (current-tsdb))
          (host (current-host))
          (os (current-os))
-         (run (pairlis (list :data :run-id :comment 
-                             :platform :tsdb :grammar
-                             :user :host :os :start :items
+         (run (pairlis (list :data :run-id :comment
+                             :platform :grammar
+                             :user :host :os :start
                              :environment :gc-strategy :gc)
-                       (list data run-id comment 
-                             platform tsdb grammar
-                             user host os start 0
+                       (list data run-id comment
+                             platform grammar
+                             user host os start
                              environment gc-strategy gc))))
     (append run (get-test-run-information))))
 
-(defun enrich-item (run item &key verbose stream)
+(defun enrich-run (run)
+  
+  (let ((tsdb (current-tsdb)))
+    (append (pairlis '(:items :tsdb) (list 0 tsdb)) run)))
+
+(defun enrich-item (run item &key (parse-id 0) verbose stream)
   
   (when item
-    (let* ((i-id (get-field :i-id item)) 
+    (let* ((run-id (get-field :run-id run))
+           (i-id (get-field :i-id item)) 
            (i-input (get-field :i-input item))
            (i-wf (get-field :i-wf item))
            (o-ignore (get-field :o-ignore item))
@@ -354,7 +374,10 @@
                           (if (and o-edges (not (= o-edges -1)))
                             (floor (* *tsdb-edge-factor* o-edges))
                             *tsdb-maximal-number-of-edges*))))
-          (append (pairlis '(:gc :edges) (list gc edges)) item)))))))
+          (append 
+           (pairlis '(:run-id :parse-id :gc :edges) 
+                    (list run-id parse-id gc edges)) 
+           item)))))))
 
 (defun print-item (item &key (stream *tsdb-io*) result)
   
@@ -369,9 +392,10 @@
                  host))
          (load (get-field :a-load result)))
 
-    (if (and host load)
-      (format stream "~&[~a ~,1f] " host load)
+    (if (or host load)
+      (format stream "~&[~@[~a~]~@[ ~,1f~]] " host load)
       (format stream "~&"))
+
     (format 
      stream 
      "(~a) `~:[*~;~]~a' ~:[~;:~]~:[~;=~][~a]"
@@ -379,31 +403,35 @@
      (eq gc :local)  (eq gc :global) edges)
     (force-output stream)))
 
-(defun process-item (item &key (run-id 0) (parse-id 0)
-                               trees-hook semantix-hook 
+(defun process-item (item &key trees-hook semantix-hook 
                                (stream *tsdb-io*)
                                (verbose t)
                                task
+                               (exhaustive *tsdb-exhaustive-p*)
                                interactive burst)
 
-  (if task
-
+  (cond
+   ((task-p task)
     (let* ((tid (task-tid task))
-           (status (revaluate 
-                    tid 
-                    `(process-item
-                      (quote ,item)
-                      :run-id ,run-id :parse-id ,parse-id
-                      :trees-hook ,trees-hook :semantix-hook ,semantix-hook
-                      :verbose nil :interactive nil :burst t)
-                    nil
-                    :key :process-item
-                    :verbose nil)))
+           (status (if (eq (task-protocol task) :lisp)
+                     (revaluate 
+                      tid 
+                      `(process-item
+                        (quote ,item)
+                        :trees-hook ,trees-hook :semantix-hook ,semantix-hook
+                        :verbose nil :interactive nil :burst t)
+                      nil
+                      :key :process-item
+                      :verbose nil)
+                     (process_item tid item exhaustive interactive))))
       (case status
         (:ok (setf (task-status task) item) :ok)
-        (:error (setf (task-status task) :error) :error)))
-
-    (let* ((i-id (get-field :i-id item)) 
+        (:error (setf (task-status task) :error) :error))))
+  
+   ((null task)
+    (let* ((run-id (get-field :run-id item))
+           (parse-id (get-field :parse-id item))
+           (i-id (get-field :i-id item)) 
            (i-input (get-field :i-input item))
            (gc (get-field :gc item))
            (edges (get-field :edges item))
@@ -417,7 +445,7 @@
                      (first (load-average))))
       (setf result (parse-item i-input :edges edges
                                :trace interactive
-                               :exhaustive *tsdb-exhaustive-p*
+                               :exhaustive exhaustive
                                :trees-hook trees-hook
                                :semantix-hook semantix-hook
                                :burst burst))
@@ -440,7 +468,7 @@
         (setf i-load (first (load-average)))
         (setf result (parse-item i-input :edges edges
                                  :trace interactive
-                                 :exhaustive *tsdb-exhaustive-p*
+                                 :exhaustive exhaustive
                                  :trees-hook trees-hook
                                  :semantix-hook semantix-hook
                                  :burst burst)))
@@ -482,21 +510,23 @@
           (let ((statistics (pg::summarize-rules)))
             (when statistics
               (push (cons :statistics statistics) result)))))
-      result)))
+      result))))
 
 (defun process-queue (runs &key (verbose t) (stream *tsdb-io*))
 
   (loop
-      while runs
-      with corpses = nil
+      while (find-if #'consp runs :key #'run-status)
       with pending = nil
       for message = (pvm_poll -1 -1 1)
+      finally
+        (return (pairlis '(:pending :ready) 
+                         (list pending (find :ready runs :key #'run-status))))
       when (message-p message)
       do
         (when *pvm-debug-p*
           (format
            t
-           "~&process-queue(): got message:~% `~a'~%"
+           "~&process-queue(): got message:~% `~s'~%"
            message)
           (force-output))
         (let* ((tag (message-tag message))
@@ -507,22 +537,22 @@
                (content (message-content message))
                (run (find remote runs :key #'run-tid))
                (task (get-field :task run))
-               (item (when task (task-status task))))
+               (item (and task (task-status task)))
+               (host (and (task-p task) (cpu-p (task-cpu task))
+                          (cpu-host (task-cpu task)))))
 
         (cond
          ((eql tag %pvm_task_fail%)
-          (when (consp item) (push item pending))
+          (when (consp item)
+            (let* ((fail (pairlis '(:host :corpse) (list host remote))))
+              (push item pending)
+              (when verbose
+                (print-item item :stream stream :result fail)
+                (print-result fail :stream stream))))
           (when run
-            (push run corpses)
-            (setf runs (delete run runs))
+            (nconc run `((:end . ,(current-time :long t))))
             (when (task-p task)
-              (setf (task-status task) :exit))
-            (when (and (task-p task) (cpu-p (task-cpu task)))
-              (format
-               *tsdb-io*
-               "~&process-queue(): client exit on `~a' <~a>.~%"
-               (cpu-host (task-cpu task)) remote)
-              (force-output *tsdb-io*))))
+              (setf (task-status task) :exit))))
                  
          ((null run)
           (when verbose
@@ -538,21 +568,20 @@
           (if (eq (first content) :return)
             (case (second content)
               (:process-item
-               (let* ((result (third content))
-                      (host (cpu-host (task-cpu task))))
+               (let* ((result (third content)))
                  (setf (task-status task) :ready)
                  (return-from process-queue
-                   (pairlis '(:corpses :pending :ready 
+                   (pairlis '(:pending :ready 
                               :item :result)
-                            (list corpses pending run 
+                            (list pending run 
                                   item (acons :host host result))))))
-              (:create-test-runs
+              (:create-run
                (let ((ready (third content)))
                  (when (consp ready)
                    (setf (task-status task) :ready)
                    (return-from process-queue
-                     (pairlis '(:corpses :pending :ready)
-                              (list corpses pending (nconc run ready)))))))
+                     (pairlis '(:pending :ready)
+                              (list pending (nconc run ready)))))))
               (t
                (when verbose
                  (format
@@ -582,7 +611,7 @@
          (words (get-field :words result))
          (tcpu (/ (get-field+ :tcpu result 0) 1000))
          (tgc (/ (get-field+ :tgc result 0) 1000))
-           (first (/ (get-field+ :first result 0) 1000))
+         (first (/ (get-field+ :first result 0) 1000))
          (total (/ (get-field+ :total result 0) 1000))
          (aedges (get-field :aedges result))
          (pedges (get-field :pedges result))
@@ -590,46 +619,59 @@
                   (+ aedges pedges)
                   -1))
          (timeup (get-field :timeup result))
-         (unifications (get-field :unifications result))
-         (copies (get-field :copies result))
+         (unifications (get-field+ :unifications result 0))
+         (copies (get-field+ :copies result 0))
          (gc (get-field :gc result))
-         (gcs (get-field :gcs result)))
+         (gcs (get-field :gcs result))
+         (corpse (get-field :corpse result)))
 
-    (if readings
-      (case readings
-        (0 (format 
-            stream 
-            " ---~:[~; time up:~] ~
-             (~,1f~:[~*~;:~,1f~]|~,1f s) ~
-             <~d:~d>~
-             ~:[ {~d:~d}~;~2*~] ~
-             (~a) [~:[~;=~]~d].~%" 
-            timeup 
-            tcpu (>= tgc 0.1) tgc total
-            words edges 
-            (or (= unifications copies 0)
-                (= unifications copies -1))
-            unifications copies 
-            (pprint-memory-usage result) gc gcs))
-        (-1 (format 
-             stream 
-             " --- error: ~a.~%" 
-             (get-field :error result)))
-        (t (format 
-            stream 
-            " ---~:[~; time up:~] ~a ~
-             (~,1f~:[~*~;:~,1f~]|~,1f:~,1f s) ~
-             <~d:~d>~
-             ~:[ {~d:~d}~;~2*~] ~
-             (~a) [~:[~;=~]~d].~%" 
-            timeup readings 
-            tcpu (>= tgc 0.1) tgc first total 
-            words edges 
-            (or (= unifications copies 0)
-                (= unifications copies -1))
-            unifications copies 
-            (pprint-memory-usage result) gc gcs)))
-      (format stream ".~%"))
+    (cond
+     ((eql readings 0)
+      (format 
+       stream 
+       " ---~:[~; time up:~] ~
+        (~,1f~:[~*~;:~,1f~]|~,1f s) ~
+        <~d:~d>~
+        ~:[ {~d:~d}~;~2*~] ~
+        (~a)~
+        ~:[~*~*~; [~:[~;=~]~d]~].~%" 
+       timeup 
+       tcpu (>= tgc 0.1) tgc total
+       words edges 
+       (or (= unifications copies 0)
+           (= unifications copies -1))
+       unifications copies 
+       (pprint-memory-usage result) 
+       gcs gc gcs))
+     ((eql readings -1)
+      (format 
+       stream 
+       " --- error: ~a.~%" 
+       (get-field :error result)))
+     ((and (integerp readings) (> readings 0))
+      (format 
+       stream 
+       " ---~:[~; time up:~] ~a ~
+        (~,1f~:[~*~;:~,1f~]|~,1f:~,1f s) ~
+        <~d:~d>~
+        ~:[ {~d:~d}~;~2*~] ~
+        (~a)~
+        ~:[~*~*~; [~:[~;=~]~d]~].~%" 
+       timeup readings 
+       tcpu (>= tgc 0.1) tgc first total 
+       words edges 
+       (or (= unifications copies 0)
+           (= unifications copies -1))
+       unifications copies 
+       (pprint-memory-usage result) 
+       gcs gc gcs))
+     (corpse
+      (format
+       stream
+       " --- task exit <~d>.~%"
+       corpse))
+     (t
+      (format stream ".~%")))
     (force-output stream)))
 
 (defun store-result (data result &key cache)
@@ -653,10 +695,12 @@
 (defun complete-test-runs (data runs &key cache interactive)
   (loop
       for run in runs
-      for end = (complete-test-run run)
+      for end = (or (get-field :end run) (complete-test-run run))
+      for status = (or (get-field :status run) (run-status run) :complete)
       when (> (length run) 1)
       do
-        (push (cons :end (or end (current-time :long t))) run)
+        (push (cons :end end) run)
+        (push (cons :status (format nil "~(~a~)" status)) run)
         (unless interactive (write-run run data :cache cache))))
 
 (defun complete-test-run (run)
@@ -665,20 +709,25 @@
           (gc-strategy (get-field :gc-strategy run))
           (task (get-field :task run)))
       (cond
-       ((and task (task-p task))
+       ((task-p task)
         (let* ((tid (task-tid task))
-               (status (revaluate 
-                        tid 
-                        `(complete-test-run
-                          (quote ,(pairlis '(:environment :gc-strategy)
-                                           (list environment gc-strategy))))
-                        5
-                        :key :complete-test-run
-                        :verbose nil)))
-          (if (stringp status)
+               (status (if (eq (task-protocol task) :lisp)
+                         (revaluate 
+                          tid 
+                          `(complete-test-run
+                            (quote ,(pairlis '(:environment :gc-strategy)
+                                             (list environment gc-strategy))))
+                          1
+                          :key :complete-test-run
+                          :verbose nil)
+                         (complete_test_run tid (get-field :run-id run) 1))))
+          (cond
+           ((stringp status)
             (setf (task-status task) :ready)
-            (setf (task-status task) :error))
-          status))
+            status)
+           (t
+            (setf (task-status task) :error)
+            (current-time :long t)))))
        (t
         (finalize-test-run environment)
         (when gc-strategy (restore-gc-strategy gc-strategy))
