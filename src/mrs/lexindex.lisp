@@ -1,5 +1,11 @@
 (in-package "USER")
 
+(defun index-for-generator nil
+  (index-lexicon)
+  (index-lexical-rules)
+  (mrs::instantiate-null-semantic-items))
+ 
+
 (defun index-lexicon nil
   (mrs::clear-semantic-indices)
    (setf *batch-mode* t)

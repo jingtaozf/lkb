@@ -484,6 +484,47 @@ at this point).
 ;;; case 2: case marking prepositions - these are licensed by a specific
 ;;; verb which will explicitly mention a particular relation
 
+;;; null semantics lexical entries - instantiate a global with the
+;;; result of all the lexical rule applications.
+;;; This is called as part of the indexing mechanism
+
+(defvar *null-semantics-found-items* nil)
+
+(defun filter-null-semantics (id-list)
+  ;;; temporary hack
+  (for id in id-list
+       filter
+       (unless (search "conj" (string id) :test #'char-equal)
+         id)))
+
+(defun instantiate-null-semantic-items nil
+  (setf *null-semantics-found-items* 
+        (let ((real-ids (filter-null-semantics  
+                         *empty-semantics-lexical-entries*)))
+          (for lex-id in real-ids
+               collect
+               (let* ((lex-e (user::get-psort-entry lex-id))
+                      (base-fs (user::lex-or-psort-full-fs lex-e))
+                      (new-found-str
+                       (make-found-lex :lex-id lex-id :inst-fs base-fs)))
+                 (setf user::*number-of-applications* 0)
+                 (cons new-found-str
+                       (let ((res-fs-and-rules 
+                              (user::try-all-lexical-rules 
+                               (list (cons nil (found-lex-inst-fs new-found-str)))
+                               *contentful-lrs*)))
+         ;;; the ignored list - temporary measure to
+         ;;; to take advantage of existing try-all-lexical-rules
+                         (for pair in res-fs-and-rules
+                              collect
+                              (let ((lr-str (copy-found-lex new-found-str)))
+                                (setf (found-lex-inst-fs lr-str) (cdr pair))
+                                (setf (found-lex-rule-list lr-str) (car pair))
+                                lr-str)))))))))
+
+
+
+
 ;;; Root types and grammar rules
 ;;;
 ;;; A set of lexical entries may be a match for an input structure
