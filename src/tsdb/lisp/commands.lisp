@@ -103,7 +103,12 @@
     (when (eq load :collect) (setf %tsdb-lexical-preterminals% nil))
     (when strings
       (format stream "~%")
-      #+:lkb (uncache-lexicon)
+      ;;
+      ;; _fix_me_
+      ;; how dare we call a client-specific function in general code?
+      ;;                                                (16-jul-00  -  oe)
+      ;;
+      #+(and :lkb (not :sltg)) (uncache-lexicon)
       (dolist (string strings words)
         (do* ((i (position-if #'(lambda (c) (member c whitespace)) string)
                  (position-if #'(lambda (c) (member c whitespace)) string))

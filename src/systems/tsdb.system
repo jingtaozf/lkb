@@ -83,10 +83,12 @@
        (:file "macros")
        #+:page 
        (:file "tdl-patches")
-       #+:lkb 
+       #+(and :lkb (not :sltg))
        (:file "lkb-interface")
        #+:anlt 
        (:file "anlt-interface")
+       #+:sltg
+       (:file "sltg-interface")
        (:file "globals")
        (:file "utilities")
        #+(and :allegro (or :linux (and :sparc :svr4) :alpha)) 
