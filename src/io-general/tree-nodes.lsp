@@ -496,17 +496,18 @@
 	for path in (cdr (rule-order rule))
         for dtr in daughters
 	as dtr-fs = (get dtr 'edge-fs)
-	do (when dtr-fs
+	do 
+          (when dtr-fs
 	     (setf rule-dag
-	       (yadu rule-dag (create-temp-parsing-tdfs dtr-fs path)))))
-    (unless rule-dag (error "Unifications failed to reunify"))
+	       (yadu rule-dag (create-temp-parsing-tdfs dtr-fs path)))    
+             (unless rule-dag (error "Unifications failed to reunify when drawing parse tree"))))
     ;; Re-do spelling change
     (let ((orth-fs (when nu-orth 
 		     (copy-tdfs-completely (get-orth-tdfs nu-orth))))
           (mother-fs (tdfs-at-end-of (car (rule-order rule)) rule-dag)))
       (when orth-fs
 	(setf mother-fs (yadu mother-fs orth-fs)))
-      (unless mother-fs (error "Orthography failed to reunify"))
+      (unless mother-fs (error "Orthography failed to reunify when drawing parse tree"))
       ;; Return the result
       mother-fs)))
 
