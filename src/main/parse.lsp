@@ -629,7 +629,7 @@
          ;; if (car (rule-order rule)) is NIL - tdfs-at-end-of
          ;; will return the entire structure
          (let ((result (tdfs-at-end-of (car (rule-order rule)) current-tdfs)))
-           (when nu-orth
+           (when new-orth-fs
              (setf result
                (yadu result new-orth-fs))) 
            (when result
@@ -665,17 +665,16 @@
 
 
 (defun create-temp-parsing-tdfs (tdfs flist)
-  (let ((indef-dag (create-dag))
-        (tail nil)
-        (path (create-path-from-feature-list 
-               (if (listp flist)
-                   flist 
-                 (list flist)))))
-    (unify-paths path indef-dag (make-path) (tdfs-indef tdfs))
-    (for tail-element in (tdfs-tail tdfs)
-         do
-         (push (add-path-to-tail path tail-element) tail))
-    (make-tdfs :indef indef-dag :tail tail)))
+  (if (null flist) tdfs
+    (let ((indef-dag (create-dag))
+          (tail nil))
+      (unify-list-path flist indef-dag (tdfs-indef tdfs))
+      (when (tdfs-tail tdfs)
+        (let ((path (create-path-from-feature-list (listify flist))))
+          (for tail-element in (tdfs-tail tdfs)
+               do
+               (push (add-path-to-tail path tail-element) tail))))
+      (make-tdfs :indef indef-dag :tail tail))))
 
 (defun get-orth-tdfs (str)
   (or (cdr (assoc str *cached-orth-str-list* :test #'equal))

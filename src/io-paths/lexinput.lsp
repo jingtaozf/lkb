@@ -67,13 +67,12 @@
                  (> cache-index-date file-date))
             (progn (setf ok t)
                    (format t "~%Reading in cached lexicon")
-                   (clear-lex)
+                   (clear-lex t)
                    (handler-case 
                        (read-psort-index-file)
                      (error (condition)
                        (format t "~%Error: ~A~%" condition)
-                       (delete-file *psorts-temp-file*)
-                       (delete-file *psorts-temp-index-file*)
+                       (delete-temporary-lexicon-files)
                        (setf ok nil)))
                    (if ok
                        (format t "~%Cached lexicon read")

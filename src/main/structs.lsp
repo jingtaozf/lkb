@@ -236,6 +236,7 @@
      #+(and mcl powerpc)(incf ff (CCL::%HEAP-BYTES-ALLOCATED))))
 
 
+
 (defun unify-paths-dag-at-end-of1 (dag-instance labels-chain)
    (let ((real-dag
            ;; can get called with null path and dag-instance=nil
@@ -295,6 +296,35 @@
                                     (cdr labels-chain)))))))
                   (format t "~%Invalid type ~A" next-type)))))))
 
+;;; called from parse.lsp - create-temp-parsing-tdfs
+
+(defun unify-list-path (flist big-fs little-fs)
+  ;;; take a new-fs and a path - either a single feature or a 
+  ;;; list of features, but not nil
+  ;;; and creates the path, putting the little-fs at the end
+  (let ((dag1
+         (if (listp flist)
+             (unify-new-paths big-fs flist)
+           (let ((one-step-down 
+                  (create-typed-dag *toptype*)))
+             (push
+              (make-dag-arc :attribute flist
+                            :value one-step-down)
+              (dag-comp-arcs big-fs))
+             one-step-down))))
+    (unify-dags dag1 little-fs)))
+
+(defun unify-new-paths (dag-instance labels-chain)
+  (if labels-chain
+      (let ((next-feature (car labels-chain))
+            (one-step-down 
+             (create-typed-dag *toptype*)))
+        (push
+         (make-dag-arc :attribute next-feature
+                       :value one-step-down)
+         (dag-comp-arcs dag-instance))
+        (unify-new-paths one-step-down (cdr labels-chain)))
+      dag-instance))
 
 ;;; To be called (only) outside context of a (set of) unifications. We can't
 ;;; by default create subdags at end of path if not there since that would

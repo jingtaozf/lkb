@@ -63,9 +63,7 @@
 (defun close-temporary-lexicon-file nil
    (when (and (streamp *psorts-stream*)
               (open-stream-p *psorts-stream*))
-      (close *psorts-stream*))
-   (when (probe-file *psorts-temp-file*)
-      (delete-file *psorts-temp-file*)))
+      (close *psorts-stream*)))
 
 (defun store-temporary-psort (id fs)
    (unless (gethash id *psorts*)
@@ -161,10 +159,7 @@
         (finish-output *psorts-stream*)
         (close *psorts-stream*))
       (unless ok
-        (when (probe-file *psorts-temp-file*)
-          (delete-file *psorts-temp-file*))
-        (when (probe-file *psorts-temp-index-file*)
-          (delete-file *psorts-temp-index-file*))))))
+        (delete-temporary-lexicon-files)))))
         
 
 (defun read-psort-index-file nil
@@ -202,7 +197,7 @@
    (and (streamp *psorts-stream*)
         (open-stream-p *psorts-stream*)))
 
-(defun clear-lex nil
+(defun clear-lex (&optional no-delete)
   (when (fboundp 'reset-cached-lex-entries)
    (reset-cached-lex-entries)) ; in constraints.lsp
   (clrhash *lexical-entries*)
@@ -210,7 +205,15 @@
   (when (fboundp 'clear-lexicon-indices)
    (clear-lexicon-indices))
   (setf *language-lists* nil)
-  (close-temporary-lexicon-file))
+  (close-temporary-lexicon-file)
+  (unless no-delete
+    (delete-temporary-lexicon-files)))
+
+(defun delete-temporary-lexicon-files nil
+  (when (probe-file *psorts-temp-file*)
+    (delete-file *psorts-temp-file*))
+  (when (probe-file *psorts-temp-index-file*)
+    (delete-file *psorts-temp-index-file*)))
 
 (defun clear-expanded-lex nil
   (when (fboundp 'reset-cached-lex-entries)
