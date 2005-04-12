@@ -19,11 +19,13 @@
       empty-cache
       fields
       get-field-size-map
+      get-value-set
       id-to-tdl-str
       lookup
       new-entries
       record-to-tdl
       retrieve-head-record-str
+      set-lex-entry
       set-lex-entry-from-record
       scratch-records))
  
