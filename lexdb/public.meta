@@ -1,4 +1,4 @@
-db-version	3.55
+db-version	3.60
 supported-server	7.4
 supported-server	8.0
 filter	TRUE
