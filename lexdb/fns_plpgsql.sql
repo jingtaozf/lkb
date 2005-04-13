@@ -1,4 +1,4 @@
---- Copyright (c) 2003-2004 
+--- Copyright (c) 2003-2005
 --- Benjamin Waldron;
 --- see `licence.txt' for conditions.
 
@@ -12,13 +12,13 @@
 
 CREATE OR REPLACE FUNCTION public.tmp_dir() RETURNS text AS '
 BEGIN
- RETURN SELECT val FROM public.meta WHERE var=\'tmp-dir\';
+ RETURN (SELECT val FROM public.meta WHERE var=\'tmp-dir\' LIMIT 1);
 END;
 ' LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION public.tmp_base(text) RETURNS text AS '
 BEGIN
- RETURN SELECT tmp_dir() || \'/\' || $1 || \'-temp.\';
+ RETURN tmp_dir() || \'/\' || $1 || \'-temp.\';
 END;
 ' LANGUAGE plpgsql;
 
@@ -95,7 +95,7 @@ BEGIN
 		CREATE TABLE public.fields (defn text);
 	END IF;
 	IF (reln_exists(\'public\',\'revision\')) THEN
-		backup_file_base := \'BACKUP-BEFORE-LEXDB-UPDATE\';
+		backup_file_base := tmp_base(\'lexdb\') || \'BACKUP-BEFORE-LEXDB-UPDATE\';
 		PERFORM dump_db_su(backup_file_base);
 		DELETE FROM public.backup;
 		INSERT INTO public.backup VALUES (backup_file_base);
@@ -363,13 +363,13 @@ END;
 
 CREATE OR REPLACE FUNCTION dump_db() RETURNS text AS '
 BEGIN
- RETURN dump_db_su(user);
+ RETURN dump_db_su2(user);
 END;
 ' LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION dump_db_dfn_fld() RETURNS text AS '
 BEGIN
- RETURN dump_db_dfn_fld_su(user);
+ RETURN dump_db_dfn_fld_su2(user);
 END;
 ' LANGUAGE plpgsql;
 

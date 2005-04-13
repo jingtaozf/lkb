@@ -6,7 +6,6 @@
 -- create tables
 --
 
---SELECT public.clean_up();
 SELECT public.create_public_meta_table();
 SELECT public.create_public_revision_table();
 SELECT public.create_public_defn_table();

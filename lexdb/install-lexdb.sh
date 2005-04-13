@@ -73,14 +73,12 @@ if [ $? != 0 ] ; then
     echo "drop_lexdb"
     drop_lexdb; 
 fi
-
+    
 # set lexdb tmp dir
 if [ "$OSTYPE" = "cygwin" ]; then
-    echo "psql -c \"delete from public.meta where var='tmp-dir'; insert into public.meta values ('tmp-dir','C:\tmp')\" -U lexdb erg"
-    psql -c "delete from public.meta where var='tmp-dir'; insert into public.meta values ('tmp-dir','C:\tmp')" -U lexdb erg
+    echo "psql -U lexdb -c \"delete from public.meta where var='tmp-dir'; insert into public.meta values ('tmp-dir','C:\tmp')\" $LEXDB"
+    psql -U lexdb -c "delete from public.meta where var='tmp-dir'; insert into public.meta values ('tmp-dir','C:\tmp')" $LEXDB
 else
-    echo "psql -c \"delete from public.meta where var='tmp-dir'; insert into public.meta values ('tmp-dir','/tmp')\" -U lexdb erg"
-    psql -c "delete from public.meta where var='tmp-dir'; insert into public.meta values ('tmp-dir','/tmp')" -U lexdb erg
+    echo "psql -U lexdb -c \"delete from public.meta where var='tmp-dir'; insert into public.meta values ('tmp-dir','/tmp')\" $LEXDB"
+    psql -U lexdb -c "delete from public.meta where var='tmp-dir'; insert into public.meta values ('tmp-dir','/tmp')" $LEXDB
 fi
-
-    

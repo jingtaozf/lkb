@@ -1,4 +1,4 @@
---- Copyright (c) 2003-2004 
+--- Copyright (c) 2003-2005
 --- Fabre Lambeau, Stephan Oepen, Benjamin Waldron;
 --- see `licence.txt' for conditions.
 
@@ -42,13 +42,19 @@ CREATE OR REPLACE FUNCTION public.hide_schemas () RETURNS boolean AS
 -- LANGUAGE SQL SECURITY DEFINER;
 
 -- fix works only for erg/default fields
+CREATE OR REPLACE FUNCTION dump_db_su_2(text) RETURNS text AS '
+BEGIN
+ RETURN dump_db_su(tmp_base(\'lexdb\') || $1);
+END;
+' LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION public.dump_db_su(text) RETURNS text AS '
 DECLARE
 	dump_file_rev text;
 	lexdb_versn real;
 	base text;
 BEGIN
-	base := tmp_base(\'lexdb\') || $1;
+	base := $1;
 	dump_file_rev := base || \'.rev\';
 
  	lexdb_versn := lexdb_version()::real;
@@ -71,6 +77,12 @@ BEGIN
 END;
 ' LANGUAGE plpgsql SECURITY DEFINER;
 
+CREATE OR REPLACE FUNCTION dump_db_dfn_fld_su2(text) RETURNS text AS '
+BEGIN
+ RETURN dump_db_dfn_fld_su(tmp_base(\'lexdb\') || $1);
+END;
+' LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION public.dump_db_dfn_fld_su(text) RETURNS text AS '
 DECLARE
 	dump_file_dfn text;
@@ -78,7 +90,7 @@ DECLARE
 	lexdb_versn real;
 	base text;
 BEGIN
-	base := tmp_base(\'lexdb\') || $1;
+	base := $1;
 --	base := \'/tmp/lexdb-temp.\' || $1;
 	dump_file_dfn := base || \'.dfn\';
 	dump_file_fld := base || \'.fld\';
@@ -101,8 +113,8 @@ DECLARE
 	dump_file_rev text;
 	base text;
 BEGIN
-	base := tmp_base(\'lexdb\') || $1;
---	base := \'/tmp/lexdb-temp.\' || $1;
+	base := $1;
+	-- base := tmp_base(\'lexdb\') || $1;
 	dump_file_rev := base || \'.rev\';
 
 	RAISE INFO \'Restoring public.revision from file %\', dump_file_rev;
@@ -116,8 +128,8 @@ DECLARE
 	dump_file_dfn text;
 	base text;
 BEGIN
-	base := tmp_base(\'lexdb\') || $1;
---	base := \'/tmp/lexdb-temp.\' || $1;
+	base := $1;
+	--base := tmp_base(\'lexdb\') || $1;
 	dump_file_dfn := base || \'.dfn\';
 
 	RAISE INFO \'Restoring public.defn from file %\', dump_file_dfn;
@@ -131,8 +143,8 @@ DECLARE
 	dump_file_fld text;
 	base text;
 BEGIN
-	base := tmp_base(\'lexdb\') || $1;
---	base := \'/tmp/lexdb-temp.\' || $1;
+	base := $1;
+	--base := tmp_base(\'lexdb\') || $1;
 	dump_file_fld := base || \'.fld\';
 
 	RAISE INFO \'Restoring public.fields from file %\', dump_file_fld;
