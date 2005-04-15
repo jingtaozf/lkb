@@ -18,3 +18,6 @@
 
 (defparameter *ref-ind-type* (vsym "object"))
 
+(defparameter *psoa-index-path* 
+  `(,(vsym "INDEX"))
+  "path to get the hook's index from an mrs")
