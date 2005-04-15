@@ -20,4 +20,4 @@
 
 (defparameter *psoa-index-path* 
   `(,(vsym "INDEX"))
-  "path to get the hook's index from an mrs")
+  "path to get the index from an mrs")
