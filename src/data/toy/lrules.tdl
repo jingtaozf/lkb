@@ -1,0 +1,73 @@
+;;; Hey, emacs, this file is -*- Mode: tdl; -*- ... got that?
+
+;;;
+;;; dative shift: derive NP--PP complementation pattern from double-NP lexeme.
+;;; we continue to use the specific lexeme types for the two argument frames,
+;;; but still need to make sure the orthography and (in principle, at least,
+;;; e.g. once our lexicon included ditransitives with idiosyncratic properties)
+;;; HEAD features are passed up to the output of the rule.
+;;;
+
+dative-shift-lrule := verb-lxm-ditransitive-np-pp &
+[ ORTH #orth,
+  HEAD #head,
+  COMPS < [], [ HEAD.PFORM "to" ] >,
+  ARGS < verb-lxm-ditransitive-np-np & [ ORTH #orth, HEAD #head ] > ].
+
+
+;;;
+;;; agentive nominalization: with an agentive suffix (`-er'), derive a deverbal
+;;; noun that, optionally, preserves some of the argument structure.  we need
+;;; two variants of this rule, one for instransitives, another one for strict
+;;; transitives and ditransitives; here, we add an optional `of' PP and raise
+;;; any complements of the input but the first (which already corresponds to 
+;;; the internal argument of the `of' PP).  to allow all of
+;;;
+;;;   the renter of the appartment to the alien
+;;;   the renter of the appartment
+;;;   the renter to the alien
+;;;   the renter
+;;;
+;;; we mark all complements on the derived lexeme as optional, taking advantage
+;;; of the fact that the lexicon marks all NP complements as obligatory (i.e.
+;;; [ OPT - ] and underspecifies OPT on non-NP complements (hence, making them
+;;; optional), i.e.
+;;;
+;;;   Kim rented the alien an appartment.
+;;;   Kim rented an appartment to the alien.
+;;;   Kim rented an appartment.
+;;;   *Kim rented the alien.    [assuming the same role assignment as above]
+;;;
+;;; the optional-list constraint on the REST of the COMPS of the input lexeme
+;;; will also prevent spurious ambiguity with an agentive derived from the
+;;; double-NP variants; in other words, `give' has to undergo the dative shift
+;;; rule before it can feed into the agentive rule.
+;;;
+
+%(letter-set (!e abcdfghijklmnopqrstuvwxyz))
+
+agentive-lrule-0 :=
+%suffix (e er) (!e !eer)
+noun-lxm-count-intransitive &
+[ ARGS < verb-lxm-intransitive > ].
+
+agentive-lrule-1 :=
+%suffix (e er) (!e !eer)
+noun-lxm-count-transitive &
+[ COMPS optional-list &
+        [ FIRST phrase & [ HEAD prep & [ PFORM "of" ] ],
+          REST #rest ],
+  ARGS < verb-lxm & 
+         [ COMPS [ FIRST [ HEAD noun ],
+                   REST optional-list & #rest ] ] > ].
+
+;;;
+;;; at last, the universal grinder: there was dog all over the road ...
+;;;
+grinding-lrule := noun-lxm &
+[ ORTH #orth,
+  HEAD [ AGR #agr, DIV - ],
+  SPR #spr,
+  COMPS #comps,
+  ARGS < noun-lxm-count & 
+         [ ORTH #orth, HEAD.AGR #agr, SPR #spr, COMPS #comps ] > ].

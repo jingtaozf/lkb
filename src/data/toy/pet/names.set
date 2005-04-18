@@ -1,0 +1,15 @@
+;;;
+;;; types and features interpreted by PET (mostly for list decomposition)
+;;;
+special-name-top := "*top*".
+special-name-symbol := "*string*".
+special-name-string := "*string*".
+special-name-cons := "*ne-list*".
+special-name-list := "*list*".
+special-name-nil := "*null*".
+special-name-difflist := "*dlist*".
+special-name-attr-args := "ARGS".
+special-name-attr-first := "FIRST".
+special-name-attr-rest := "REST".
+special-name-attr-list := "LIST".
+special-name-attr-last := "LAST".

@@ -1,0 +1,39 @@
+;;; Hey, emacs, this file is -*- Mode: tdl; -*- ... got that?
+
+%(letter-set (!c bdfglmnprstz))
+%(letter-set (!s abcdefghijklmnopqrtuvwxyz))
+%(letter-set (!a abcdefghijklmnopqrstuvwxyz))
+%(letter-set (!t bcdfghjklmnpqrstvwxz))
+%(letter-set (!v aeiou))
+
+null-irule :=
+word &
+[ ORTH #1,
+  ARGS < const-lxm  & [ ORTH #1 ] > ].
+
+noun-non-3sing-irule := 
+%suffix (!s !ss) (!ss !ssses) (ss sses)
+non-3sing-word &
+[ HEAD.DIV +,
+  ARGS < noun-lxm > ].
+
+noun-3sing-irule := 
+3sing-word &
+[ ORTH #1,
+  HEAD.DIV -,
+  ARGS < noun-lxm & [ ORTH #1 ] > ].
+
+verb-non-3sing-irule :=
+non-3sing-word &
+[ ORTH #1,
+  ARGS < verb-lxm & [ ORTH #1 ] > ].
+
+verb-3sing-irule :=
+%suffix (!s !ss) (!ss !ssses) (ss sses)
+3sing-word &
+[ ARGS < verb-lxm > ].
+
+verb-past-irule :=
+%suffix (* ed) (!ty !tied) (e ed) (!t!v!c !t!v!c!ced) (give gave)
+word &
+[ ARGS < verb-lxm > ].

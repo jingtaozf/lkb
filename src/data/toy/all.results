@@ -1,0 +1,82 @@
+1 The dog barks. 1 11
+2 *Dog barks. 0 6
+3 *The dog bark. 0 10
+4 The dog chased the cat. 1 18
+5 *The dog chased cat. 0 12
+6 *The dog chased. 0 9
+7 *The dog barks the cat. 0 18
+8 The cat chased the aardvark. 1 18
+9 The dog gave the cat the aardvark. 1 32
+10 The dog gave the cat. 1 23
+11 *The dog chased the cat the aardvark. 0 25
+12 *The dog gave. 0 12
+13 *Dog gave the cat the aardvark. 0 26
+14 *The dog gave cat the aardvark. 0 22
+15 *The dog gave the cat aardvark. 0 26
+16 The dog gave the aardvark to the cat. 4 46
+17 *The dog gave to the cat. 0 22
+18 *The dog gave the cat to aardvark. 0 28
+19 *The dog gave to the cat the aardvark. 0 29
+20 *The dog chased to the cat. 0 19
+21 *To the dog gave the cat the aardvark. 0 35
+22 The dog gave the cat near the aardvark. 3 44
+23 The dog barks. 1 11
+24 *The dog bark. 0 10
+25 *The dogs barks. 0 10
+26 The dogs bark. 1 11
+27 The dog chased the cat. 1 18
+28 The dogs chased the cat. 1 18
+29 Those dogs bark. 1 11
+30 *Those dog barks. 0 9
+31 *Those dogs barks. 0 10
+32 *That dogs barks. 0 9
+33 The dog barks near the cat. 1 23
+34 That dog barks near the cat near those dogs. 2 40
+35 The dog near the cat barks. 1 24
+36 That dog chased the cat near those dogs. 2 34
+37 *That dog chased near the cat those dogs. 0 26
+38 The fierce dog barks. 1 15
+39 The fierce dogs bark. 1 15
+40 *The dog fierce barks. 0 13
+41 The dog chased that fierce cat. 1 22
+42 *The dog chased fierce that cat. 0 19
+43 The fierce angry dog barks. 1 19
+44 The fierce dog near the cat barks. 1 29
+45 *The fierce near the cat dog barks. 0 22
+46 *The the fierce dog barks. 0 18
+47 *The fierce the cat dog barks. 0 19
+48 The angry dog near the cat chased that fierce fierce dog. 1 44
+49 The angry dog near the cat near that fierce dog barks. 2 54
+50 The dog barks happily. 1 17
+51 The dog happily barks. 1 15
+52 Happily the dog barks. 1 15
+53 *The happily dog barks. 0 12
+54 The dog happily chased the cat. 1 22
+55 *The dog chased happily the cat. 0 19
+56 The dog barks happily near the cat. 1 29
+57 The barker barks. 1 12
+58 The barker near the cat barks. 1 25
+59 The barkers bark. 1 12
+60 *The barkers barks. 0 11
+61 *The barker the dog barks. 0 19
+62 *The dog barker barks. 0 14
+63 *The the dog barker barks. 0 17
+64 *The near the dog barker barks. 0 20
+65 *The barkeer barks. 0 6
+66 The barker of the dog barks. 1 25
+67 The chaser barks. 1 12
+68 The chasers bark. 1 12
+69 *The chasers barks. 0 11
+70 The chaser of the aardvark barks. 2 28
+71 The chaser of the aardvark near the cat barks. 4 52
+72 *The chaseer barks. 0 6
+73 The giver barks. 1 14
+74 The giver of the cat barks. 3 35
+75 The giver of the cat to the dog barks. 10 80
+76 The giver to the dog barks. 3 34
+
+;;; Total CPU time: 920 msecs
+
+;;; Mean edges: 21.29
+
+;;; Mean parses: 0.86

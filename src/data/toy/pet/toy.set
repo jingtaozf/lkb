@@ -1,0 +1,43 @@
+encoding := utf-8.
+
+include "names".
+
+;; status values that mark various rule types and lexical entries
+rule-status-values := rule.
+lexrule-status-values := lex-rule.
+lexentry-status-values := lex-entry. 
+
+;; path to the list of arguments in a rule
+rule-args-path := ARGS.
+
+orth-path := "ORTH.LIST.FIRST".
+
+;; type to mark boolean value `true'
+true-type := +.
+
+start-symbols := $root.
+
+;;
+;; word-breaking characters in tokenization --- treated as whitespace
+;;
+;;punctuation-characters := "?!.,<>{}[]+*`_:()'/-;".
+
+;;
+;; suppress results of regular morphology rules if irregular form exists
+;;
+irregular-forms-only.
+
+;lex-entries-can-fail.
+
+;;
+;; names of attributes not to pass from daughter to mother in parsing
+;;
+deleted-daughters := ARGS.
+
+head-dtr-path := HEAD-DTR.
+
+;;;
+;;; as of august 2003, PET includes ECL and the generic (R)MRS code; hence, we
+;;; need to include the MRS settings from the grammar.
+;;;
+;postload-lisp-files := "lkb/mrsglobals.lsp".

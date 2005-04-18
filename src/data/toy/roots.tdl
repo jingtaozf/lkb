@@ -1,0 +1,15 @@
+;;; Hey, emacs, this file is -*- mode: tdl -*- ... got that?
+
+;;;
+;;; `start symbol' of the grammar (see *start-symbol* in `globals.lsp'); 
+;;;
+;;; Based on this type, the LKB system validates each complete analysis of an
+;;; input string to unify with the constraints on this type, thus checking for
+;;; `sentence-hood' (currently, only specifier-saturated verbal projections are
+;;; accepted as sentences).
+;;;
+
+root := phrase &
+[ HEAD verb,
+  SPR <>,
+  COMPS <> ].

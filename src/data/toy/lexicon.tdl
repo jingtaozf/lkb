@@ -1,0 +1,44 @@
+the := det-lxm &
+[ ORTH<! "the" !> ].
+
+that := det-lxm-3sing &
+[ ORTH<! "that" !> ].
+
+those := det-lxm-non-3sing &
+[ ORTH<! "those" !> ].
+
+dog := noun-lxm-intransitive &
+[ ORTH<! "dog" !> ].
+
+cat := noun-lxm-intransitive &
+[ ORTH<! "cat" !> ].
+
+aardvark := noun-lxm-intransitive &
+[ ORTH<! "aardvark" !> ].
+
+bark := verb-lxm-intransitive &
+[ ORTH<! "bark" !> ].
+
+chase := verb-lxm-strict-transitive &
+[ ORTH<! "chase" !> ].
+
+give := verb-lxm-ditransitive-np-np &
+[ ORTH<! "give" !> ].
+
+near := prep-lxm &
+[ ORTH<! "near" !> ].
+
+of := prep-lxm &
+[ ORTH<! "of" !> ].
+
+to := prep-lxm &
+[ ORTH<! "to" !> ].
+
+fierce := adj-lxm &
+[ ORTH<! "fierce" !> ].
+
+angry := adj-lxm &
+[ ORTH<! "angry" !> ].
+
+happily := adv-lxm &
+[ ORTH<! "happily" !> ].

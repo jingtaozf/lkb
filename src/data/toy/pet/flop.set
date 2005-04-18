@@ -1,0 +1,28 @@
+include "names".
+
+;;;
+;;; file(s) to load before and after the core of the grammar, as specified in
+;;; the main grammar load file.
+;;;
+preload-files := "".
+postload-files := "".
+
+;; to complete names from irregs.tab
+irregs-file := "".
+lex-rule-suffix := "_INFL_RULE".
+
+affixes-are-instances.
+
+;; file that contains version information
+;; this file is lexed according to TDL syntax, then the string following
+;; `version_string' is taken as the version of the grammar
+version-file := "Version.lisp".
+version-string := "*grammar-version*".
+
+;; types to ignore for full expansion (specified by status values), typically
+;; the lexicon
+dont-expand := lex-entry.
+
+;; `pseudo' types outside the type hierarchy. these are ignored for
+;; appropriateness, expansion etc.
+pseudo-types := $qc_paths_set $qc_paths_traditional.

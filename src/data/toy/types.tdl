@@ -1,0 +1,256 @@
+;;; Hey, emacs, this file is -*- Mode: tdl; -*- ... got that?
+
+;;;
+;;; the type hierachy, introducing sub-types and appropriate features
+;;;
+
+
+feat-struc := *top*.
+
+expression := feat-struc & 
+[ HEAD pos,
+  OPT *bool*,
+  SPR *list*,
+  COMPS *list*,
+  ARGS *list* ].
+
+
+;;;
+;;; hierarchy of HEAD values: introduce HEAD features on subtypes as needed and
+;;; distinguish potential pre- and post-modifiers (i.e. adjectives and adverbs
+;;; vs. prepositions and adverbs, respectively) and class of heads that allow
+;;; modification (i.e. nominal and verbal projections).
+;;;
+
+pos := feat-struc &
+[ MOD *list* ].
+
+agr-pos := pos &
+[ AGR pernum ].
+
+det := agr-pos &
+[ MOD <> ].
+
+modifiee := agr-pos.
+
+noun := modifiee &
+[ MOD <>, DIV *bool* ].
+
+verb := modifiee &
+[ MOD <> ].
+
+premodifier := pos.
+
+postmodifier := pos.
+
+prep := postmodifier &
+[ MOD < phrase & [ HEAD modifiee, SPR < [] >, COMPS optional-list ] >,
+  PFORM *string* ].
+
+adj := premodifier &
+[ MOD < phrase & [ HEAD noun, SPR < [] >, COMPS optional-list ] > ].
+
+adv := premodifier & postmodifier &
+[ MOD < phrase & [ HEAD verb, COMPS optional-list ] > ].
+
+
+;;;
+;;; sharply segregate lexemes from other categories (i.e. words and phrases):
+;;; the latter we call `syn-struc' and use this type to require all phrases to 
+;;; block lexemes as daughters.  use a parameterized list type to enforce the
+;;; `syn-struc' constraint on all daughters in all phrases, where a
+;;; parameterized list is a subtype of *list* all of whose elements are
+;;; constrained in the same way, by imposing the constraint on the FIRST
+;;; element of the list, and requiring the REST of the list, in turn, to be of
+;;; this same parameterized list type. 
+;;; 
+
+syn-struc := expression.
+
+syntactic-list := *list*.
+
+syntactic-ne-list := syntactic-list & *ne-list* & 
+[ FIRST syn-struc,
+  REST syntactic-list ].
+
+syntactic-null := syntactic-list & *null*.
+
+;;;
+;;; use another parameterized list type to deploy underspecification in our
+;;; account of optionality: complements can be marked for optionality by means
+;;; of the OPT feature (where underspecification of OPT will be compatible with
+;;; [ OPT + ] and, thus, be considered optional).  using a parameterized type
+;;; `list of optional structures', we can recast our notion of saturation as
+;;; [ COMPS optional-list ]: an empty list will satisify this constraint (and
+;;; unify to `optional-null'), and so will a non-empty list provided that all
+;;; remaining elements are compatible with the [ OPT + ] requirement that the
+;;; recursive list type propagates through all tails and, accordingly, to all
+;;; elements.
+;;;
+
+optional-list := *list*.
+
+optional-ne-list := optional-list & *ne-list* &
+[ FIRST [ OPT + ],
+  REST optional-list ].
+
+optional-null := optional-list & *null*.
+
+;;;
+;;; encode person and number information in a single hierarchy (value of AGR).
+;;;
+
+pernum := feat-struc.
+
+3sing := pernum.
+
+non-3sing := pernum.
+
+
+;;;
+;;; hierarchy of phrases: distinguish along one dimension, for now, viz. the
+;;; relative position of the head in each construction.  provide an additional
+;;; boolean feature --PM (`post-modified') for phrases to prevent spurious 
+;;; ambiguity for, say, `fierce dog near the cat'.  since we end up stipulating
+;;; an arbitrary constraint (pre- prior to post-modification in this case), it
+;;; could be hard to defend this feature linguistically; thus the `--' prefix.
+;;;
+
+phrase := syn-struc &
+[ --PM *bool*,
+  ARGS syntactic-list ].
+
+head-initial := phrase &
+[ HEAD #head,
+  ARGS [ FIRST [ HEAD #head ] ] ].
+
+head-final := phrase &
+[ HEAD #head,
+  ARGS < expression, [ HEAD #head ] > ].
+
+;;;
+;;; hierarchy of lexical types: use multiple inheritance to cross-classify 
+;;; along two dimensions: valence and agreement.
+;;;
+
+lex-item := expression &
+[ ORTH *dlist* ].
+
+lexeme := lex-item.
+
+intransitive-lxm := lexeme &
+[ COMPS <> ].
+
+;;;
+;;; in the lexicon, mark all NP complements as obligatory, aka [ OPT - ], while
+;;; PP complements tend to be optional.  just underspecify OPT for the latter.
+;;;
+transitive-lxm := lexeme &
+[ COMPS < phrase & [ HEAD noun, OPT -, SPR <>, COMPS optional-list ] > ].
+
+ditransitive-np-np-lxm := lexeme &
+[ COMPS < phrase & [ HEAD noun, OPT -, SPR <>, COMPS optional-list ], 
+          phrase & [ HEAD noun, OPT -, SPR <>, COMPS optional-list ] > ].
+
+ditransitive-np-pp-lxm := lexeme &
+[ COMPS < phrase & [ HEAD noun, OPT -, SPR <>, COMPS optional-list ],
+          phrase & [ HEAD prep, SPR <>, COMPS optional-list ] > ].
+
+noun-lxm := lexeme &
+[ HEAD noun & [ AGR #agr ],
+  SPR < phrase & 
+        [ HEAD det & [ AGR #agr ], SPR <>, COMPS optional-list ] > ].
+
+noun-lxm-intransitive := noun-lxm & intransitive-lxm.
+
+noun-lxm-transitive := noun-lxm &
+[ COMPS < phrase & [ HEAD prep ], ... > ].
+
+verb-lxm := lexeme &
+[ HEAD verb & [ AGR #agr ],
+  SPR < phrase & 
+        [ HEAD noun & [ AGR #agr ], SPR <>, COMPS optional-list ] > ].
+
+verb-lxm-intransitive := verb-lxm & intransitive-lxm.
+
+verb-lxm-strict-transitive := verb-lxm & transitive-lxm.
+
+verb-lxm-ditransitive-np-np := verb-lxm & ditransitive-np-np-lxm.
+
+verb-lxm-ditransitive-np-pp := verb-lxm & ditransitive-np-pp-lxm.
+
+const-lxm := lexeme.
+
+det-lxm := intransitive-lxm & const-lxm &
+[ HEAD det,
+  SPR <> ].
+
+det-lxm-3sing := det-lxm &
+[ HEAD.AGR 3sing ].
+
+det-lxm-non-3sing := det-lxm &
+[ HEAD.AGR non-3sing ].
+
+prep-lxm := transitive-lxm & const-lxm &
+[ ORTH <! #orth !>,
+  HEAD prep & [ PFORM #orth ],
+  SPR <> ].
+
+adj-lxm := intransitive-lxm & const-lxm &
+[ HEAD adj,
+  SPR <> ].
+
+adv-lxm := intransitive-lxm & const-lxm &
+[ HEAD adv,
+  SPR <> ].
+
+word := lex-item & syn-struc &
+[ HEAD #head,
+  SPR #spr,
+  COMPS #comps,
+  ARGS < lexeme & [ HEAD #head, SPR #spr, COMPS #comps ] > ].
+
+3sing-word := word &
+[ HEAD.AGR 3sing ].
+
+non-3sing-word := word &
+[ HEAD.AGR non-3sing ].
+
+;;;
+;;; a few `non-linguistic' types: the top type for all strings (i.e. type names
+;;; enclosed in double quotes; no need to declare strings individually) and the
+;;; hierarchy of list types (using a FIRST -- REST encoding for list elements
+;;; and list tails, respectively).
+;;;
+
+*string* := *top*.
+
+*list* := *top*.
+
+*ne-list* := *list* &
+ [ FIRST *top*,
+   REST *list* ].
+
+*null* := *list*.
+
+*bool* := *top*.
+
++ := *bool*.
+
+- := *bool*.
+
+
+;;;
+;;; difference list types
+;;;
+
+*dlist* := *top* &
+[ LIST *list*,
+  LAST *list* ].
+
+*null-dlist* := *dlist* &
+[ LIST #last,
+  LAST #last ].
+
+*ne-dlist* := *dlist* &
+[ LIST *ne-list* ].

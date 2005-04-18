@@ -1,0 +1,15 @@
+(defparameter *grammar-version* "Toy Grammar")
+(lkb-load-lisp (this-directory) "globals.lsp")
+(lkb-load-lisp (this-directory) "user-fns.lsp")
+(read-tdl-type-files-aux
+     (list (lkb-pathname (parent-directory) "types.tdl")))
+(read-tdl-lex-file-aux 
+     (lkb-pathname (parent-directory) "lexicon.tdl"))
+(batch-check-lexicon)
+(read-tdl-grammar-file-aux 
+     (lkb-pathname (parent-directory) "rules.tdl"))
+
+(read-morph-file-aux (lkb-pathname (parent-directory) "irules.tdl"))
+(read-morph-file-aux (lkb-pathname (parent-directory) "lrules.tdl"))
+
+(read-tdl-psort-file-aux (lkb-pathname (parent-directory) "roots.tdl"))

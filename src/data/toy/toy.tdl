@@ -1,0 +1,23 @@
+:begin :type.
+:include "types".
+:end :type.
+
+:begin :instance :status lex-entry.
+:include "lexicon".
+:end :instance.
+
+:begin :instance :status rule.
+:include "rules".
+:end :instance.
+
+:begin :instance :status lex-rule.
+:include "lrules".
+:include "irules".
+:end :instance.
+
+:begin :instance.
+:include "roots".
+:end :instance.
+
+
+

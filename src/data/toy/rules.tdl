@@ -1,0 +1,58 @@
+;;; Hey, emacs, this file is -*- Mode: tdl; -*- ... got that?
+
+
+head-complement-rule-0 := head-initial & 
+[ SPR #spr,
+  COMPS #comps,
+
+  ARGS < word & [ SPR #spr, COMPS #comps & <> ] > ].
+
+
+head-complement-rule-1 := head-initial &
+[ SPR #spr, 
+  COMPS #rest,   
+
+  ARGS < [ SPR #spr,
+	   COMPS [ FIRST #1, REST #rest ] ],  
+         #1 > ].
+
+
+head-complement-rule-2 := head-initial & 
+[ SPR #spr,
+  COMPS #rest,
+
+  ARGS < [ SPR #spr, COMPS [ FIRST [ OPT + ], REST #rest ] ] > ].
+
+
+specifier-head-rule := head-final &
+[ SPR <>,
+  COMPS #comps,
+
+  ARGS < #1,
+         phrase &
+         [ SPR < #1 >, COMPS #comps & <> ] > ]. 
+
+
+bare-np-rule := head-initial &
+[ SPR <>,
+  COMPS #comps,
+
+  ARGS < phrase &
+         [ HEAD.DIV +, SPR < [ HEAD det ] >, COMPS #comps & <> ] > ]. 
+
+
+modifier-head-rule := head-final &
+[ SPR #spr,
+  COMPS #comps,
+
+  ARGS < phrase & [ HEAD premodifier & [ MOD < #1 > ] ],
+         #1 & [ SPR #spr, COMPS #comps, --PM - ] > ].
+
+
+head-modifier-rule := head-initial &
+[ SPR #spr,
+  COMPS #comps,
+  --PM +,
+
+  ARGS < #1 & [ SPR #spr, COMPS #comps ],
+         phrase & [ HEAD postmodifier & [ MOD < #1 > ] ] > ].
