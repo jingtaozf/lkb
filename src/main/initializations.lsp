@@ -148,9 +148,6 @@
 
 (defun start-lkb (&optional runtimep)
 
-  (let* ((lkbrc (dir-and-name (user-homedir-pathname) ".lkbrc")))
-    (with-package (:lkb) (when (probe-file lkbrc) (load lkbrc))))
-
   ;;
   ;; unless we are creating a run-time image or operate in [incr tsdb()] slave
   ;; mode, initialize various subsystems and the GUI.
@@ -159,6 +156,9 @@
     (unless (or (and building-image-p (boundp building-image-p)
                      (symbol-value building-image-p))
                 (find :slave *features*))
+
+      (let* ((lkbrc (dir-and-name (user-homedir-pathname) ".lkbrc")))
+        (with-package (:lkb) (when (probe-file lkbrc) (load lkbrc))))
       
       ;;
       ;; for runtime binaries, reset mk::bin-dir et al. according to current
