@@ -87,7 +87,7 @@
     :return-type :integer)
 
 #-:allegro-version>=
-(defun getpid () (random (expt 2 15)))
+(defun current-pid () (random (expt 2 15)))
 
 #+(version>= 5 0)
 (def-foreign-call pvm_mytid (:void) :returning :int)
@@ -259,12 +259,19 @@
     :arguments '(string integer)
     :return-type :integer)
 
-(let* ((size 4096)
+(let* ((limit (or #+(and :allegro-version>= (version>= 7 0) (not :64bit))
+                  (expt 2 24)
+                  #+(and :allegro-version>= (version>= 7 0) :64bit)
+                  (expt 2 26)
+                  array-total-size-limit))
+       (size 4096)
        (output (make-array 
                 (+ size 1) :element-type 'character :allocation :static))
        #+:ics
        (output (excl:lispval-other-to-address output)))
   (defun pvm_poll (tid tag block)
+    #+:null
+    (format t "pvm-poll(): limit: ~a~%" limit)
     (let* ((block (cond ((null block) 0)
                         ((numberp block) (round block))
                         (t -1)))
@@ -275,7 +282,7 @@
        ((zerop status) nil)
        ((< status 0) :error)
        ((> status size)
-        (if (>= (+ status 4096) (- array-total-size-limit 2))
+        (if (>= (+ status 4096) (- limit 2))
           (when *pvm-debug-p*
             (format 
              t 
@@ -298,7 +305,7 @@
             (when (integerp output) (excl:aclfree output))
             (setf output 
               #-:ics new #+:ics (excl:lispval-other-to-address new))
-            (setf size (array-total-size new))))
+            (setf size (- (array-total-size new) 1))))
         (let ((status (pvm_collect output size)))
           (if (< status 0)
             :error
