@@ -156,17 +156,8 @@
   (let ((entry (read-psort *lexicon* id :cache cache)))
     entry))
 
-;; ??? shouldn't this simply clear the psorts hash(es) as below ???
 (defun clear-expanded-lex nil
-  (dolist (id (collect-expanded-lex-ids *lexicon*))
-    (forget-psort *lexicon* id)))
-
-;(defun clear-expanded-lex (&optional (lexicon *lexicon*))
-;  (with-slots (psorts) lexicon
-;    (clrhash psorts)
-;    (mapcar #'(lambda (x) (clear-expanded-lex x))
-;	    (extra-lexicons lexicon)))))
-
+  (empty-cache *lexicon*))
 
 (defun clear-non-parents nil
   (format t "~%Removing cached lexical entries")
@@ -604,18 +595,17 @@
 	     (slot-value lexicon 'psorts))
     ids))
 
-;;; forget-psort is generally better
-(defmethod unexpand-psort ((lexicon lex-database) id)
-  "remove cached entry from lexicon providing a value only (eg. first lexicon with non-:empty in cache)"
-  (let* ((id-lexicon (lexicon-for-id lexicon id))
-	 (psorts 
-	  (cond
-	   (id-lexicon
-	    (slot-value id-lexicon 'psorts))
-	   (t 
-	    (return-from unexpand-psort)))))
-    (remhash id psorts)
-    psorts))
+;(defmethod unexpand-psort ((lexicon lex-database) id)
+;  "remove cached entry from lexicon providing a value only (eg. first lexicon with non-:empty in cache)"
+;  (let* ((id-lexicon (lexicon-for-id lexicon id))
+;	 (psorts 
+;	  (cond
+;	   (id-lexicon
+;	    (slot-value id-lexicon 'psorts))
+;	   (t 
+;	    (return-from unexpand-psort)))))
+;    (remhash id psorts)
+;    psorts))
 
 (defmethod lexicon-for-id ((lexicon lex-database) id)
   (if (read-psort lexicon id :recurse nil) 
@@ -625,6 +615,8 @@
 (defmethod forget-psort ((lexicon lex-database) id)
   "remove cached entry (can be :empty) from all lexicons"
   (remhash id (slot-value lexicon 'psorts))
+  (and (next-method-p) 
+	      (call-next-method))
   (some #'(lambda (x) (forget-psort x id)) (extra-lexicons lexicon)))
 
 ;;--

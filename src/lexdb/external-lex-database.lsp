@@ -8,9 +8,10 @@
 ;;; --- external-lex-database methods
 ;;;
 
-(defmethod collect-expanded-lex-ids ((lexicon external-lex-database))
-  ;(error "collect-expanded-lex-ids(): invalid method on PostGreSQL lexicon")
-  )
+;(defmethod collect-expanded-lex-ids ((lexicon external-lex-database))
+;  (let (cached-lex-ids)
+;    (maphash #'(lambda (x y) (unless (eq :empty y) (pushnew x cached-lex-ids))) (slot-value *lexicon* 'record-cache))
+;    cached-lex-ids))
 
 (defmethod close-lex ((lexicon external-lex-database) &key in-isolation delete)
   (declare (ignore in-isolation delete))
@@ -26,3 +27,9 @@
   (declare (ignore recurse))
   (with-slots (record-cache) lexicon
     (clrhash record-cache)))
+
+(defmethod forget-psort ((lexicon external-lex-database) id)
+  "remove cached entry (can be :empty)"
+  (remhash id (slot-value lexicon 'record-cache))
+  (and (next-method-p) 
+	      (call-next-method)))

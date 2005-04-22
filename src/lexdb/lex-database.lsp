@@ -40,7 +40,7 @@
   (mapc
    #'(lambda (id)
        (format stream "~a" (to-tdl (read-psort lexicon id :new-instance t)))
-       (unexpand-psort lexicon id))
+       (forget-psort lexicon id))
    (sort (copy-list lex-ids)
 	 #'(lambda (x y) (string< (2-str x) (2-str y)))))
   (when (typep lexicon 'psql-lex-database)

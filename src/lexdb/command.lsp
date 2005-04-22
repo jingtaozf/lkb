@@ -168,14 +168,21 @@
 ;;; dump small (tdl) lexicon of entries collected by tsdb
 ;;;
 
-(defmethod dump-small-lexicon (&key filename)
-  (unless filename
-    (let ((template (pathname (namestring (first (slot-value *lexicon* 'source-files))))))
-      (setf filename
-	(make-pathname :directory (pathname-directory template)
-		       :name (format nil "~a-small" (pathname-name template))
-		       :type "tdl"))))
-  (format t "(dumping small tdl lexicon to file: ~a)" filename)
-  (export-to-tdl-to-file *lexicon* filename :lex-ids *lex-ids-used*))
+(defmethod dump-small-lexicon (&key file)
+  (unless *lex-ids-used* (error "*lex-ids-used* is empty"))
+  (unless file
+    (setf file
+      (cond
+       ((typep *lexicon* 'cdb-lex-database)
+	(let ((template (pathname (namestring (first (slot-value *lexicon* 'source-files))))))
+	  (make-pathname :directory (pathname-directory template)
+			 :name (format nil "~a-small" (pathname-name template))
+			 :type "tdl")))
+       (t
+	(make-pathname :directory (pathname-directory (lkb-tmp-dir))
+		       :name "lexicon-small"
+		       :type "tdl")))))
+  (format t "(dumping small tdl lexicon [~a entries] to file: ~a)" (length *lex-ids-used*) file)
+  (export-to-tdl-to-file *lexicon* file :lex-ids *lex-ids-used*))
 
 

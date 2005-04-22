@@ -1119,4 +1119,3 @@
 
 (defmethod record-orth (raw-record cols (lexicon psql-lex-database))
   (get-val (second (assoc :orth (fields-map lexicon))) raw-record cols))
-
