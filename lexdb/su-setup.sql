@@ -42,7 +42,7 @@ CREATE OR REPLACE FUNCTION public.hide_schemas () RETURNS boolean AS
 -- LANGUAGE SQL SECURITY DEFINER;
 
 -- fix works only for erg/default fields
-CREATE OR REPLACE FUNCTION dump_db_su_2(text) RETURNS text AS '
+CREATE OR REPLACE FUNCTION dump_db_su2(text) RETURNS text AS '
 BEGIN
  RETURN dump_db_su(tmp_base(\'lexdb\') || $1);
 END;
@@ -61,9 +61,9 @@ BEGIN
 	RAISE INFO \'EXISTING LEXDB_VERSION: %\', lexdb_versn;
 
 	IF (lexdb_versn < 3.20) THEN
-		--RAISE ERROR "LexDB fields have changed. Please recreate LexDB from grammar, or adjust fields manually.";
+		RAISE EXCEPTION \'LexDB fields have changed. Please recreate LexDB from grammar, or adjust fields manually.\';
 	ELSEIF (lexdb_versn < 3.50) THEN
-		--RAISE ERROR "LexDB fields have changed (version field is no longer used). Please recreate LexDB from grammar, or adjust fields using kill-version.sh script.";
+		RAISE EXCEPTION \'LexDB fields have changed (version field is no longer used). Please recreate LexDB from grammar, or adjust fields manually.\';
 	ELSE 
 		CREATE TABLE temp_dump AS
 			SELECT * FROM public.revision ORDER BY name, userid, modstamp;
