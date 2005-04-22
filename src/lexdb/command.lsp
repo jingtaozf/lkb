@@ -164,16 +164,18 @@
      (t
       filename))))
 
-;(defun get-filename (rest &key (ending "") existing)
-;  (let* ((len-ending (length ending))
-;         (prompt (format nil "~a file?" ending))
-;         (filename (cond
-;		    ((= (length rest) 0)
-;		     (if existing
-;			 (ask-user-for-existing-pathname prompt)
-;		       (ask-user-for-new-pathname prompt)))
-;		    ((= (length rest) 1)
-;		     (first rest))
-;		    (t
-;		     (error "too many arguments")))))
-;    filename))
+;;;
+;;; dump small (tdl) lexicon of entries collected by tsdb
+;;;
+
+(defmethod dump-small-lexicon (&key filename)
+  (unless filename
+    (let ((template (pathname (namestring (first (slot-value *lexicon* 'source-files))))))
+      (setf filename
+	(make-pathname :directory (pathname-directory template)
+		       :name (format nil "~a-small" (pathname-name template))
+		       :type "tdl"))))
+  (format t "(dumping small tdl lexicon to file: ~a)" filename)
+  (export-to-tdl-to-file *lexicon* filename :lex-ids *lex-ids-used*))
+
+

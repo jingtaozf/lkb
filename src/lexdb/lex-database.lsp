@@ -25,22 +25,23 @@
     (export-to-db-dump lexicon ostream)))
 
 ;; dump lexicon to file (TDL format)
-(defmethod export-to-tdl-to-file ((lexicon lex-database) filename)
+(defmethod export-to-tdl-to-file ((lexicon lex-database) filename &key lex-ids)
   (setf filename (namestring (pathname filename)))
   (with-open-file 
       (ostream filename :direction :output :if-exists :supersede)
-    (export-to-tdl lexicon ostream)))
+    (export-to-tdl lexicon ostream :lex-ids lex-ids)))
 
-(defmethod export-to-tdl ((lexicon lex-database) stream)
+(defmethod export-to-tdl ((lexicon lex-database) stream &key lex-ids)
   (when (typep lexicon 'psql-lex-database)
     (format t "~%(caching all lexical records)")
     (cache-all-lex-records lexicon)
     (format t "~%(caching complete)"))
+  (unless lex-ids (setf lex-ids (collect-psort-ids lexicon)))
   (mapc
    #'(lambda (id)
        (format stream "~a" (to-tdl (read-psort lexicon id :new-instance t)))
        (unexpand-psort lexicon id))
-   (sort (collect-psort-ids lexicon) 
+   (sort (copy-list lex-ids)
 	 #'(lambda (x y) (string< (2-str x) (2-str y)))))
   (when (typep lexicon 'psql-lex-database)
     (format t "~%(emptying cache)")
