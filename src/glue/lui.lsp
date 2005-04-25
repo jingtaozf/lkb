@@ -36,7 +36,7 @@
 		  make::bin-dir '(:relative "yzlui.app" "Contents" "MacOS")))
      :name "yzlui"))))
    
-(defparameter *lui-autonomy-p* nil)
+(defparameter *lui-autonomy-p* t)
 
 (defparameter *lui-debug-p* nil)
 
