@@ -5,6 +5,7 @@
 %(letter-set (!a abcdefghijklmnopqrstuvwxyz))
 %(letter-set (!t bcdfghjklmnpqrstvwxz))
 %(letter-set (!v aeiou))
+%(letter-set (!. abcdefghijklmnopqrstuvwxyz))
 
 null-irule :=
 word &
@@ -37,3 +38,10 @@ verb-past-irule :=
 %suffix (* ed) (!ty !tied) (e ed) (!t!v!c !t!v!c!ced) (give gave)
 word &
 [ ARGS < verb-lxm > ].
+
+punct-period-irule :=
+%suffix (!. !..)
+punct-word &
+[ PUNCT period-punct,
+  ARGS < [ PUNCT no-punct ] > ].  
+

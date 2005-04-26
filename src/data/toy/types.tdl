@@ -12,7 +12,8 @@ expression := feat-struc &
   OPT *bool*,
   SPR *list*,
   COMPS *list*,
-  ARGS *list* ].
+  ARGS *list*,
+  PUNCT punct ].
 
 
 ;;;
@@ -136,7 +137,8 @@ head-final := phrase &
 lex-item := expression &
 [ ORTH *dlist* ].
 
-lexeme := lex-item.
+lexeme := lex-item &
+[ PUNCT no-punct ].
 
 intransitive-lxm := lexeme &
 [ COMPS <> ].
@@ -208,13 +210,17 @@ word := lex-item & syn-struc &
 [ HEAD #head,
   SPR #spr,
   COMPS #comps,
-  ARGS < lexeme & [ HEAD #head, SPR #spr, COMPS #comps ] > ].
+  ARGS < [ HEAD #head, SPR #spr, COMPS #comps ] > ].
 
 3sing-word := word &
-[ HEAD.AGR 3sing ].
+[ HEAD.AGR 3sing,
+  PUNCT #punct,
+  ARGS < lexeme & [ PUNCT #punct ] > ].
 
 non-3sing-word := word &
-[ HEAD.AGR non-3sing ].
+[ HEAD.AGR non-3sing,
+  PUNCT #punct,
+  ARGS < lexeme & [ PUNCT #punct ] > ].
 
 ;;;
 ;;; a few `non-linguistic' types: the top type for all strings (i.e. type names
@@ -254,3 +260,18 @@ non-3sing-word := word &
 
 *ne-dlist* := *dlist* &
 [ LIST *ne-list* ].
+
+punct := *top*.
+no-punct := punct.
+period-punct := punct.
+
+punct-word := word &
+[ HEAD #head,
+  OPT #opt,
+  SPR #spr,
+  COMPS #comp,
+  ARGS < word &
+         [ HEAD #head,
+           OPT #opt,
+           SPR #spr,
+           COMPS #comp ] > ].

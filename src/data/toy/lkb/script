@@ -13,3 +13,5 @@
 (read-morph-file-aux (lkb-pathname (parent-directory) "lrules.tdl"))
 
 (read-tdl-psort-file-aux (lkb-pathname (parent-directory) "roots.tdl"))
+
+(read-preprocessor (lkb-pathname (parent-directory) "preprocessor.fsr"))

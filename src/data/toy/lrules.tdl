@@ -48,12 +48,12 @@ dative-shift-lrule := verb-lxm-ditransitive-np-pp &
 
 agentive-lrule-0 :=
 %suffix (e er) (!e !eer)
-noun-lxm-count-intransitive &
+noun-lxm-intransitive &
 [ ARGS < verb-lxm-intransitive > ].
 
 agentive-lrule-1 :=
 %suffix (e er) (!e !eer)
-noun-lxm-count-transitive &
+noun-lxm-transitive &
 [ COMPS optional-list &
         [ FIRST phrase & [ HEAD prep & [ PFORM "of" ] ],
           REST #rest ],
@@ -69,5 +69,7 @@ grinding-lrule := noun-lxm &
   HEAD [ AGR #agr, DIV - ],
   SPR #spr,
   COMPS #comps,
-  ARGS < noun-lxm-count & 
-         [ ORTH #orth, HEAD.AGR #agr, SPR #spr, COMPS #comps ] > ].
+  ARGS < noun-lxm & 
+         [ ORTH #orth, HEAD [ AGR #agr,
+                              DIV + ], SPR #spr, COMPS #comps ] > ].
+
