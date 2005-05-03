@@ -96,6 +96,10 @@
                              (concatenate 'string word-string "_rel"))))))
 
 
+(defun instantiate-generic-lexical-entry (gle surface)
+  (declare (ignore gle surface)))
+
+
 (defun make-orth-tdfs (orth)
   (let ((unifs nil)
         (tmp-orth-path *orth-path*))
