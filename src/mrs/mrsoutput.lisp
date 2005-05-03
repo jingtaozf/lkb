@@ -364,9 +364,8 @@ duplicate variables")
 
 (defun extract-pred-from-rel-fs (rel-fs &key rawp)
     (let* ((label-list (fs-arcs rel-fs))
-           (pred (assoc (car *rel-name-path*)
-                          label-list))
-           (pred-type (if pred (fs-type (rest pred)))))
+           (pred (rest (assoc (car *rel-name-path*) label-list)))
+           (pred-type (if pred (fs-type pred))))
       (when rawp (return-from extract-pred-from-rel-fs pred))
       (if (and pred-type
                (not (is-top-type pred-type))
