@@ -1,6 +1,11 @@
 (defparameter *grammar-version* "Toy Grammar")
 (lkb-load-lisp (this-directory) "globals.lsp")
 (lkb-load-lisp (this-directory) "user-fns.lsp")
+
+(load-irregular-spellings 
+ (list
+  (lkb-pathname (parent-directory) "irregs.tab")))
+
 (read-tdl-type-files-aux
      (list (lkb-pathname (parent-directory) "types.tdl")))
 (read-tdl-lex-file-aux 

@@ -6,6 +6,7 @@
 %(letter-set (!t bcdfghjklmnpqrstvwxz))
 %(letter-set (!v aeiou))
 %(letter-set (!. abcdefghijklmnopqrstuvwxyz))
+%(letter-set (!b \!))
 
 null-irule :=
 word &
@@ -40,8 +41,38 @@ word &
 [ ARGS < verb-lxm > ].
 
 punct-period-irule :=
-%suffix (!. !..)
+%suffix (!. !.\.)
 punct-word &
 [ PUNCT period-punct,
+  ARGS < [ PUNCT no-punct ] > ].  
+
+punct-qmark-irule :=
+%suffix (!. !.?)
+punct-word &
+[ PUNCT qmark-punct,
+  ARGS < [ PUNCT no-punct ] > ].  
+
+punct-semicolon-irule :=
+%suffix (!. !.\;)
+punct-word &
+[ PUNCT semicolon-punct,
+  ARGS < [ PUNCT no-punct ] > ].  
+
+punct-colon-irule :=
+%suffix (!. !.\:)
+punct-word &
+[ PUNCT colon-punct,
+  ARGS < [ PUNCT no-punct ] > ].  
+
+punct-comma-irule :=
+%suffix (!. !.\,)
+punct-word &
+[ PUNCT comma-punct,
+  ARGS < [ PUNCT no-punct ] > ].  
+
+punct-bang-irule :=
+%suffix (!. !.!b)
+punct-word &
+[ PUNCT colon-punct,
   ARGS < [ PUNCT no-punct ] > ].  
 

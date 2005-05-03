@@ -264,6 +264,10 @@ non-3sing-word := word &
 punct := *top*.
 no-punct := punct.
 period-punct := punct.
+qmark-punct := punct.
+semicolon-punct := punct.
+colon-punct := punct.
+comma-punct := punct.
 
 punct-word := word &
 [ HEAD #head,

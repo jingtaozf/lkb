@@ -42,3 +42,7 @@ angry := adj-lxm &
 
 happily := adv-lxm &
 [ ORTH<! "happily" !> ].
+
+sleep := verb-lxm-intransitive &
+[ ORTH<! "sleep" !> ].
+
