@@ -1007,7 +1007,8 @@
        (length solutions) (length solutions)))
     solutions))
 
-(defun unify-mtr-component (mrs1 mrs2 &optional solution &key (disjointp t))
+(defun unify-mtr-component (mrs1 mrs2 &optional solution 
+                            &key (disjointp t) subsumesp)
   (if (null mrs2)
     (list solution)
     (let* ((solution (if solution (copy-solution solution) (make-solution)))
@@ -1015,7 +1016,7 @@
            (top2 (mrs:psoa-top-h mrs2)))
       (transfer-trace :part :top)
       (unless (or (null mrs::*rel-handel-path*)
-                  (unify-values top1 top2 solution))
+                  (unify-values top1 top2 solution :subsumesp subsumesp))
         ;;
         ;; trace
         ;;
@@ -1023,14 +1024,16 @@
       (let* ((index1 (mrs:psoa-index mrs1))
              (index2 (mrs:psoa-index mrs2)))
         (transfer-trace :part :index)
-        (unless (unify-values index1 index2 solution)
+        (unless (unify-values index1 index2 solution :subsumesp subsumesp)
           ;;
           ;; trace
           ;;
           (return-from unify-mtr-component)))
       (let* ((eps1 (mrs:psoa-liszt mrs1))
              (eps2 (mrs:psoa-liszt mrs2))
-             (solutions (unify-epss eps1 eps2 solution :disjointp disjointp)))
+             (solutions (unify-epss
+                         eps1 eps2 solution
+                         :disjointp disjointp :subsumesp subsumesp)))
         (unless solutions
           ;;
           ;; trace
@@ -1047,7 +1050,9 @@
                (solutions
                 (loop
                     for solution in solutions
-                    append (unify-hconss hcons1 hcons2 solution))))
+                    append (unify-hconss
+                            hcons1 hcons2 solution
+                            :subsumesp subsumesp))))
           (unless solutions
             ;;
             ;; trace
@@ -1055,7 +1060,7 @@
             (return-from unify-mtr-component))
           solutions)))))
 
-(defun unify-epss (eps1 eps2 solution &key (disjointp t))
+(defun unify-epss (eps1 eps2 solution &key (disjointp t) subsumesp)
   ;;
   ;; we must not destructively modify .solution. --- assume that unify-eps()
   ;; will always copy its input parameter first.  require that all elements of
@@ -1070,13 +1075,15 @@
               (loop
                   for ep1 in eps1
                   for result = (unify-eps 
-                                ep1 ep2 solution :disjointp disjointp)
+                                ep1 ep2 solution
+                                :disjointp disjointp :subsumesp subsumesp)
                   when result collect result)))
         (when solutions
           (loop
               for solution in solutions
               nconc (unify-epss 
-                     eps1 (rest eps2) solution :disjointp disjointp)))))))
+                     eps1 (rest eps2) solution
+                     :disjointp disjointp :subsumesp subsumesp)))))))
 
 ;;;
 ;;; in unifying two sets of EPs, i believe we are assuming that no EP can be
@@ -1086,17 +1093,19 @@
 ;;; both, so there should be no need to have a duplicate EP (targetting just
 ;;; one EP in the input MRS) spread out over those two.       (23-oct-03; oe)
 ;;;
-(defun unify-eps (ep1 ep2 solution &key (disjointp t))
+(defun unify-eps (ep1 ep2 solution &key (disjointp t) subsumesp)
 
   (transfer-trace :part (cons ep1 ep2))
   (unless (when disjointp 
             (or (retrieve-ep ep1 solution) (retrieve-ep ep2 solution)))
     (let* ((solution (copy-solution solution))
            (pred (unify-preds 
-                  (mrs::rel-pred ep1) (mrs::rel-pred ep2) solution))
+                  (mrs::rel-pred ep1) (mrs::rel-pred ep2) solution
+                  :subsumesp subsumesp))
            (label (when pred
                     (unify-values 
-                     (mrs:rel-handel ep1) (mrs:rel-handel ep2) solution))))
+                     (mrs:rel-handel ep1) (mrs:rel-handel ep2) solution
+                     :subsumesp subsumesp))))
       (when (and pred (or (null mrs::*rel-handel-path*) label))
         (loop
             with flist1 = (mrs:rel-flist ep1)
@@ -1108,7 +1117,8 @@
             for role1 = (find feature flist1 :key #'mrs:fvpair-feature)
             for role2 = (find feature flist2 :key #'mrs:fvpair-feature)
             unless (unify-values 
-                    (mrs:fvpair-value role1) (mrs:fvpair-value role2) solution)
+                    (mrs:fvpair-value role1) (mrs:fvpair-value role2) solution
+                    :subsumesp subsumesp)
             do (return-from unify-eps))
         
         ;;
@@ -1132,7 +1142,9 @@
               (align-eps ep1 ep2 solution)
               (return solution))))))
 
-(defun unify-hconss (hconss1 hconss2 solution)
+(defun unify-hconss (hconss1 hconss2 solution &key subsumesp)
+  (declare (ignore subsumesp))
+  
   ;;
   ;; we must not destructively modify .solution. --- assume that unify-hcons()
   ;; will always copy its input parameter first.
@@ -1169,7 +1181,9 @@
               nconc (unify-hconss hconss1 (rest hconss2) solution)))))
     (unless hconss2 (list solution))))
 
-(defun unify-hcons (hcons1 hcons2 solution)
+(defun unify-hcons (hcons1 hcons2 solution &key subsumesp)
+  (declare (ignore subsumesp))
+
   ;;
   ;; okay, here is the current (22-jan-04) rationale about HCONS unification;
   ;; all handles in HCONS must occur somewhere else in the input MRS (this is
@@ -1194,7 +1208,9 @@
       (align-hconss hcons1 hcons2 solution)
       solution)))
 
-(defun unify-values (variable1 variable2 solution &key strictp)
+(defun unify-values (variable1 variable2 solution &key strictp subsumesp)
+  (declare (ignore subsumesp))
+
   (let* ((value1 (if (mrs::var-p variable1) 
                    (retrieve-variable variable1 solution)
                    variable1))
@@ -1259,7 +1275,9 @@
           (forward-variable value2 new solution)
           new))))))
 
-(defun unify-types (type1 type2 &key internp special)
+(defun unify-types (type1 type2 &key internp special subsumesp)
+  (declare (ignore subsumesp))
+
   (let* ((type1 (if internp (intern (string-upcase type1) :lkb) type1))
          (type2 (if internp (intern (string-upcase type2) :lkb) type2))
          (glb (case special
@@ -1270,7 +1288,9 @@
                       (lkb::greatest-common-subtype type1 type2))))))
     (when glb (if internp (string-downcase (string glb)) glb))))
 
-(defun unify-extras (extras1 extras2)
+(defun unify-extras (extras1 extras2 &key subsumesp)
+  (declare (ignore subsumesp))
+
   (let* ((common (intersect 
                   extras1 extras2 :key #'mrs::extrapair-feature :test #'eq))
          (result
@@ -1299,7 +1319,9 @@
         do (push extra result))
     result))
 
-(defun unify-preds (pred1 pred2 solution)
+(defun unify-preds (pred1 pred2 solution &key subsumesp)
+  (declare (ignore subsumesp))
+
   ;;
   ;; _fix_me_
   ;; what about PREDs that stand in a subsumption relation?  presumably, we
