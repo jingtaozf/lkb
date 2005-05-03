@@ -162,6 +162,7 @@
                (:file "check-unif")   ; for efficiency 
                (:file "discriminants")
                (:file "unfill-dag")   ; unfilled feature structures
+               (:file "generics")
                #+:preprocessor       
                (:file "preprocess")))
 
