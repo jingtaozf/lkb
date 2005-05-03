@@ -118,6 +118,8 @@
   (list
    (list (mrs::vsym "e") 
          (cons (mrs::vsym "E.ASPECT.PERF") (mrs::vsym "-"))
+         (cons (mrs::vsym "E.ASPECT.STATIVE") (mrs::vsym "-"))
+         (cons (mrs::vsym "E.TENSE") (mrs::vsym "untensed"))
          #+:null
          (cons (mrs::vsym "E.MOOD") (mrs::vsym "indicative")))))
 
@@ -133,6 +135,7 @@
    (cons (mrs::vsym "MARK") nil)
    (cons (mrs::vsym "DITCH") nil)
    (cons (mrs::vsym "DIV") nil)
+   (cons (mrs::vsym "GRIND") nil)
    (cons (mrs::vsym "PSVTYPE") nil)
    (cons (mrs::vsym "ADDRESS") nil)
    (cons (mrs::vsym "ASPECT-PROTRACTED") nil)
@@ -715,7 +718,17 @@
          (%transfer-edge-id% 0)
          (%transfer-clones% nil)
          (%transfer-original-variables% nil)
-         (mrs (let ((*transfer-skolemize-p* t)) (clone-mrs mrs)))
+         (mrs (let ((*transfer-skolemize-p* t)
+                    ;;
+                    ;; _fix_me_
+                    ;; generalize global parameters, so as to have separate
+                    ;; settings for each transfer phrase, probably.
+                    ;;                                          (2-may-05; oe)
+                    (defaults
+                     (list
+                      (list (mrs::vsym "x") 
+                            (cons (mrs::vsym "GRIND") (mrs::vsym "-"))))))
+                (mrs::fill-mrs (clone-mrs mrs) defaults)))
          (n (loop
                 for variable in %transfer-clones%
                 maximize (or (mrs:var-id (first variable)) 0)

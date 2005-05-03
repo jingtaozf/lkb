@@ -129,6 +129,7 @@
     (let ((command (clim:menu-choose
                     '(("Test" :value :test :active t)
                       ("Scope" :value :scope :active t)
+                      ("MRS" :value :mrs :active t)
                       ("Indexed" :value :indexed :active t)
                       ("Dependencies" :value :dependencies :active t)
                       ("Fragment" :value :fragment :active t)
@@ -168,6 +169,14 @@
                 (mrs (if (edge-p mrs) (edge-mrs mrs) mrs))
                 (title (format nil "~a - Scopes" (transfer-title frame))))
            (lkb::show-mrs-scoped-window nil mrs title)))
+        
+        (:mrs
+         (let* ((mrs (nth (mrs-transfer-i frame) 
+                          (or (mrs-transfer-stack frame) 
+                              (mrs-transfer-edges frame))))
+                (mrs (if (edge-p mrs) (edge-mrs mrs) mrs))
+                (title (format nil "~a - MRS" (transfer-title frame))))
+           (lkb::show-mrs-window nil mrs title)))
         
         (:indexed
          (let* ((mrs (nth (mrs-transfer-i frame) 
@@ -559,4 +568,4 @@
             (setf previous id)))))))
 
 (defun mrs-transfer-font ()
-  '(:sans-serif :roman 10))
+  '(:sans-serif :roman 12))
