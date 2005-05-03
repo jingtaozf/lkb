@@ -510,8 +510,31 @@ at this point).
 ;;; result of all the lexical rule applications.
 
 (defun instantiate-null-semantic-items (input-sem lrules)
-  (let* ((real-ids (if lkb::*gen-rule-list*
-                     (genpredict-mrs-struct input-sem lkb::*gen-rule-list*)
+  (let* ((real-ids (cond
+                    #+:mt
+                    ((mt::transfer-rule-sets :trigger)
+                     (let ((triggers (mt::transfer-mrs
+                                      input-sem :filter nil :task :trigger)))
+                       ;;
+                       ;; _fix_me_
+                       ;; while we are not _yet_ Skolemizing generator edges
+                       ;; retrieved from semantically vacuous entries, at least
+                       ;; make sure to avoid duplicates.  in the next round, we
+                       ;; hope to have the trigger rules include an OUTPUT that
+                       ;; can serve to Skolemize the LTOP and INDEX (and at 
+                       ;; some point hopefully XARG).      (3-may-05; oe & dan)
+                       ;;
+                       (remove-duplicates
+                        (loop
+                            for edge in triggers
+                            for mtr = (mt::edge-rule edge)
+                            for id = (mt::mtr-trigger mtr)
+                            when (and id
+                                      (not (smember id *duplicate-lex-ids*)))
+                            collect id))))
+                    (lkb::*gen-rule-list*
+                     (genpredict-mrs-struct input-sem lkb::*gen-rule-list*))
+                    (t
                      (if *null-semantics-hack-p*
                        (let ((found-list 
                               (apply #'append 
@@ -520,7 +543,7 @@ at this point).
                              for empty in *empty-semantics-lexical-entries*
                              when (member empty found-list)
                              collect empty))
-                       *empty-semantics-lexical-entries*)))
+                       *empty-semantics-lexical-entries*))))
         (instantiated-sets
           (loop for lex-id in real-ids
                nconc

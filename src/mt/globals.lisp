@@ -4,6 +4,8 @@
 
 (defparameter *transfer-lexicon* nil)
 
+(defparameter *transfer-triggers* (make-hash-table))
+
 (defparameter *transfer-result-filter* '(:complete))
 
 (defparameter *mtr-filter-path* (list (mrs::vsym "FILTER")))
@@ -23,6 +25,8 @@
 (defparameter *mtr-equal-path* (list (mrs::vsym "EQUAL")))
 
 (defparameter *mtr-subsume-path* (list (mrs::vsym "SUBSUME")))
+
+(defparameter *mtr-trigger-path* (list (mrs::vsym "TRIGGER")))
 
 (defconstant *mtr-skolem-property* (mrs::vsym "SKOLEM"))
 

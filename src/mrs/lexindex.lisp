@@ -433,8 +433,9 @@ we assume that there will generally only be one feature
                  id pred))
           (add-semantics-record id new-record)
   	  )
-      (progn (unless
-               (member id *gen-rule-ids*)
+      (progn (unless (or #+:mt
+                         (gethash id mt::*transfer-triggers*)
+                         (member id *gen-rule-ids*))
                (format t 
                        "~%Warning: ~A has no semantics and no filter rule" id))
              (pushnew id *empty-semantics-lexical-entries*)))))

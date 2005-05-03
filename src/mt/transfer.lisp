@@ -169,14 +169,35 @@
      (mtr-context object) (mtr-input object) (mtr-filter object) 
      (mtr-output object) (mtr-defaults object))))
 
-(defmacro mtrs-filter-p (mtr)
-  `(getf (mtrs-flags ,mtr) :filter))
+(defmacro mtrs-filter-p (mtrs)
+  `(getf (mtrs-flags ,mtrs) :filter))
+
+(defmacro mtrs-recurse-p (mtrs)
+  `(getf (mtrs-flags ,mtrs) :recurse))
+
+(defmacro mtrs-subsume-p (mtrs)
+  `(getf (mtrs-flags ,mtrs) :subsume))
+
+(defmacro mtrs-task (mtrs)
+  `(getf (mtrs-flags ,mtrs) :task))
 
 (defmacro mtr-optional-p (mtr)
   `(getf (mtr-flags ,mtr) :optional))
 
 (defmacro mtr-fail-p (mtr)
   `(getf (mtr-flags ,mtr) :fail))
+
+(defun mtr-trigger (mtr)
+  (loop
+      for (value . key) in (mtr-special mtr)
+      when (eq key :trigger) return value))
+
+(defun transfer-rule-sets (&optional task)
+  (loop
+      for mtrs in *transfer-rule-sets*
+      for foo = (mtrs-task mtrs)
+      when (or (null task) (null foo) (eq task foo))
+      collect mtrs))
 
 (defstruct (edge (:constructor make-edge-x))
   (id (let ((n %transfer-edge-id%)) (incf %transfer-edge-id%) n))
@@ -315,7 +336,7 @@
 
 (defun read-transfer-rules (files &optional name 
                             &key (filter nil filterp)
-                                 optional)
+                                 reset task optional (recurse t) subsume)
 
   ;;
   ;; _fix_me_
@@ -330,6 +351,8 @@
               for feature in (lkb::appropriate-features-of name)
               do (pushnew feature %transfer-variable-features%))))
 
+  (when reset (initialize-transfer))
+  
   ;;
   ;; protect general MRS code from ending up using our variable generator, as
   ;; construct-mrs() makes a global assignment :-(.            (27-jan-04; oe)
@@ -417,14 +440,18 @@
                           (let ((rule (convert-dag-to-mtr 
                                        lhs constants copies 
                                        rhs id
-                                       :optional optional)))
+                                       :optional optional
+                                       :task task)))
                             (when rule 
                               (record-mtr rule)
                               (push rule rules))))))))))
         finally 
           (let ((mtrs (make-mtrs :id id :mtrs (nreverse rules))))
+            (setf (getf (mtrs-flags mtrs) :recurse) recurse)
             (setf (getf (mtrs-flags mtrs) :filter)
               (if filterp filter t))
+            (when task (setf (getf (mtrs-flags mtrs) :task) task))
+            (when subsume (setf (getf (mtrs-flags mtrs) :subsume) subsume))
             (setf *transfer-rule-sets* 
               (append *transfer-rule-sets* (list mtrs)))))))
 
@@ -494,7 +521,7 @@
           (return (values lhss constants copies rhss)))))
 
 (defun convert-dag-to-mtr (lhs constants copies rhs id 
-                           &key optional)
+                           &key optional task)
   ;;
   ;; _fix_me_
   ;; give some thought to variable types: authors of transfer rules might well
@@ -566,7 +593,7 @@
                     (remove :obligatory flags)))
            (special (and dag 
                          (not (vacuous-constraint-p *mtr-flags-path* dag))
-                         (convert-dag-to-special dag))))
+                         (convert-dag-to-special dag :id id))))
            
       ;;
       ;; for later postprocessing, look up relations that were requested for
@@ -583,7 +610,7 @@
              path)
           else do (push ep %transfer-copy-eps%))
       
-      (unless (or output rhs)
+      (unless (or output rhs (eq task :trigger))
         ;;
         ;; warn: rule with no output specification
         ;;
@@ -632,9 +659,10 @@
       (pushnew :fail flags))
     flags))
 
-(defun convert-dag-to-special (dag)
+(defun convert-dag-to-special (dag &key id)
   (let ((equal (lkb::existing-dag-at-end-of dag *mtr-equal-path*))
         (subsume (lkb::existing-dag-at-end-of dag *mtr-subsume-path*))
+        (trigger (mrs::path-value dag *mtr-trigger-path*))
         special)
     (when (lkb::dag-p equal)
       (loop
@@ -668,6 +696,10 @@
                  "~&convert-dag-to-special(): ~
                   no match for SUBSUME element # ~a.~%"
                  i)))))
+    (when (mrs::is-valid-fs trigger)
+      (let ((le (mrs::vsym (mrs::fs-type trigger))))
+        (push id (gethash le *transfer-triggers*))
+        (push (cons le :trigger) special)))
     special))
 
 (defun vacuous-constraint-p (path dag)
@@ -693,6 +725,7 @@
 ;;;
 (defun initialize-transfer ()
   (setf *transfer-rule-sets* nil)
+  (setf *transfer-triggers* (make-hash-table))
   ;;
   ;; _fix_me_
   ;; make the transfer lexicon a structure, actually.          (19-jul-04; oe)
@@ -707,7 +740,8 @@
 
 (defun transfer-mrs (mrs &key (filter *transfer-filter-p*) 
                               (preemptive *transfer-preemptive-filter-p*)
-                              (debug t))
+                              (debug t)
+                              task)
   #+:debug
   (setf %mrs% mrs)
   (setf %transfer-edges% nil)
@@ -734,10 +768,14 @@
                 maximize (or (mrs:var-id (first variable)) 0)
                 do (push (rest variable) %transfer-original-variables%))))
     (multiple-value-bind (result condition)
-        (#-:debug ignore-errors #+:debug progn
+        (progn; #-:debug ignore-errors #+:debug progn
          (transfer-mrs2 
           (list (make-edge :mrs mrs :n n)) 
-          *transfer-rule-sets*))
+          (loop
+              for mtrs in *transfer-rule-sets*
+              for foo = (mtrs-task mtrs)
+              when (or (null task) (null foo) (eq task foo))
+              collect mtrs)))
       (when condition
         (unless debug (error condition))
         #+:clim
@@ -786,6 +824,8 @@
   (loop
       with result
       with filter = (or filter (mtrs-filter-p mtrs))
+      with recurse = (mtrs-recurse-p mtrs)
+      with subsume = (mtrs-subsume-p mtrs)
       with agenda = (list edge)
       with all = (mtrs-mtrs mtrs)
       initially
@@ -825,23 +865,23 @@
             for mtr in mtrs
             for optionalp = (member :optional (mtr-flags mtr))
             while resultp
-            for edges = (apply-mtr task mtr)
-            when (and edges (not optionalp)) do (setf resultp nil)
+            for edges = (apply-mtr task mtr :subsumesp subsume)
+            when (and edges (not optionalp) recurse) do (setf resultp nil)
             do (loop 
                    for edge in edges 
-                   unless (packed-edge-p edge)
+                   unless (and recurse (packed-edge-p edge))
                    do 
                      #+:debug
                      (format
                       *transfer-debug-stream*
                       "apply-mtrs(): >> ~a~%"
                       edge)
-                     #+:null
-                     (unless optionalp (setf resultp nil))
                      (push edge %transfer-chart%)
-                     (push edge agenda))
+                     (if recurse
+                       (push edge agenda)
+                       (push edge result)))
             finally 
-              (when resultp 
+              (when (and resultp recurse)
                 #+:debug
                 (format
                  *transfer-debug-stream*
@@ -875,10 +915,10 @@
           ;;
           (return (stable-sort result #'> :key #'edge-depth)))))
 
-(defun apply-mtr (edge mtr)
+(defun apply-mtr (edge mtr &key subsumesp)
   (loop
       with %transfer-variable-id% = (edge-n edge)
-      for solution in (unify-mtr (edge-mrs edge) mtr)
+      for solution in (unify-mtr (edge-mrs edge) mtr :subsumesp subsumesp)
       for mrs = (expand-solution (edge-mrs edge) mtr solution)
       collect (make-edge 
                :rule mtr :mrs mrs :daughter edge 
@@ -920,7 +960,7 @@
 ;;; not sure that this is still relevant, at least not in interesting ways, as
 ;;; we are reasonably close to a notion of unification now     (24-oct-03; oe)
 ;;;
-(defun unify-mtr (mrs mtr)
+(defun unify-mtr (mrs mtr &key subsumesp)
   #+:debug
   (format
    *transfer-debug-stream*
@@ -932,7 +972,7 @@
          (input (mtr-input mtr))
          solutions)
     (transfer-trace :component :context)
-    (setf solutions (unify-mtr-component mrs context))
+    (setf solutions (unify-mtr-component mrs context nil :subsumesp subsumesp))
     (unless solutions
       ;;
       ;; trace
@@ -948,7 +988,8 @@
       (setf solutions
         (loop
             for solution in solutions
-            append (unify-mtr-component mrs input solution)))
+            append (unify-mtr-component
+                    mrs input solution :subsumesp subsumesp)))
       #+:debug
       (format 
        t 
@@ -965,7 +1006,7 @@
             with hcons1 = (mrs:psoa-h-cons mrs)
             with hcons2 = (mrs:psoa-h-cons context)
             for solution in solutions
-            nconc (unify-hconss hcons1 hcons2 solution)))
+            nconc (unify-hconss hcons1 hcons2 solution :subsumesp subsumesp)))
       #+:debug
       (format 
        t 
@@ -982,7 +1023,7 @@
             with hcons1 = (mrs:psoa-h-cons mrs)
             with hcons2 = (mrs:psoa-h-cons input)
             for solution in solutions
-            nconc (unify-hconss hcons1 hcons2 solution)))
+            nconc (unify-hconss hcons1 hcons2 solution :subsumesp subsumesp)))
       #+:debug
       (format 
        t 
@@ -998,7 +1039,8 @@
       (setf solutions
         (loop
             for solution in solutions
-            unless (unify-mtr-component mrs filter solution)
+            unless (unify-mtr-component
+                    mrs filter solution :subsumesp subsumesp)
             collect solution))
       #+:debug
       (format 
@@ -1111,7 +1153,18 @@
             with flist1 = (mrs:rel-flist ep1)
             with flist2 = (mrs:rel-flist ep2)
             with intersection 
-            = (intersect flist1 flist2 :key #'mrs:fvpair-feature)
+            = (let ((foo (intersect flist1 flist2 :key #'mrs:fvpair-feature)))
+                ;;
+                ;; in subsumption mode, make sure all roles from the second EP
+                ;; (originally part of an MTR) are present in the target EP.
+                ;;
+                (when subsumesp
+                  (loop
+                      for role in flist2
+                      for feature = (mrs:fvpair-feature role)
+                      unless (find feature flist1 :key #'mrs:fvpair-feature)
+                      do (return-from unify-eps)))
+                foo)
             for role in intersection
             for feature = (mrs:fvpair-feature role)
             for role1 = (find feature flist1 :key #'mrs:fvpair-feature)
@@ -1143,8 +1196,6 @@
               (return solution))))))
 
 (defun unify-hconss (hconss1 hconss2 solution &key subsumesp)
-  (declare (ignore subsumesp))
-  
   ;;
   ;; we must not destructively modify .solution. --- assume that unify-hcons()
   ;; will always copy its input parameter first.
@@ -1173,16 +1224,17 @@
              (solutions
               (loop
                   for hcons1 in hconss1
-                  for result = (unify-hcons hcons1 hcons2 solution)
+                  for result = (unify-hcons
+                                hcons1 hcons2 solution :subsumesp subsumesp)
                   when result collect result)))
         (when solutions
           (loop
               for solution in solutions
-              nconc (unify-hconss hconss1 (rest hconss2) solution)))))
+              nconc (unify-hconss
+                     hconss1 (rest hconss2) solution :subsumesp subsumesp)))))
     (unless hconss2 (list solution))))
 
 (defun unify-hcons (hcons1 hcons2 solution &key subsumesp)
-  (declare (ignore subsumesp))
 
   ;;
   ;; okay, here is the current (22-jan-04) rationale about HCONS unification;
@@ -1199,17 +1251,16 @@
   (let* ((solution (copy-solution solution))
          (harg (unify-values
                 (mrs:hcons-scarg hcons1) (mrs:hcons-scarg hcons2) 
-                solution :strictp t))
+                solution :strictp t :subsumesp subsumesp))
          (larg (when harg
                  (unify-values
                   (mrs:hcons-outscpd hcons1) (mrs:hcons-outscpd hcons2)
-                  solution :strictp t))))
+                  solution :strictp t :subsumesp subsumesp))))
     (when larg 
       (align-hconss hcons1 hcons2 solution)
       solution)))
 
 (defun unify-values (variable1 variable2 solution &key strictp subsumesp)
-  (declare (ignore subsumesp))
 
   (let* ((value1 (if (mrs::var-p variable1) 
                    (retrieve-variable variable1 solution)
@@ -1244,8 +1295,9 @@
       (string-equal value1 value2))
      ((and (or (stringp value1) (symbolp value1))
            (or (stringp value2) (symbolp value2)))
-      (unify-types value1 value2 :special special))
-     ((and (null value1) (not (member special '(:equal :subsume))))
+      (unify-types value1 value2 :special special :subsumesp subsumesp))
+     ((and (null value1)
+           (not subsumesp) (member special '(:equal :subsume) :test #'eq))
       value2)
      ((and (not (mrs::var-p value1)) (mrs::var-p value2))
       (forward-variable value2 value1 solution)
@@ -1254,9 +1306,10 @@
      (t
       (let* ((type (unify-types 
                     (mrs::var-type value1) (mrs::var-type value2) 
-                    :internp t :special special))
+                    :internp t :special special :subsumesp subsumesp))
              (extras (unify-extras
-                      (mrs:var-extra value1) (mrs:var-extra value2)))
+                      (mrs:var-extra value1) (mrs:var-extra value2)
+                      :subsumesp subsumesp))
              (new (when (and type (listp extras)) 
                     (new-variable type extras))))
         ;;
@@ -1276,21 +1329,27 @@
           new))))))
 
 (defun unify-types (type1 type2 &key internp special subsumesp)
-  (declare (ignore subsumesp))
 
   (let* ((type1 (if internp (intern (string-upcase type1) :lkb) type1))
          (type2 (if internp (intern (string-upcase type2) :lkb) type2))
-         (glb (case special
-                (:equal (and (eq type1 type2) type1))
-                (:subsume (and (lkb::subtype-or-equal type1 type2) type1))
+         (glb (cond
+                ((eq special :equal) (and (eq type1 type2) type1))
+                ((or (eq special :subsume) subsumesp)
+                 (and (lkb::subtype-or-equal type1 type2) type1))
                 (t               
                  (and (lkb::is-valid-type type1) (lkb::is-valid-type type2)
                       (lkb::greatest-common-subtype type1 type2))))))
     (when glb (if internp (string-downcase (string glb)) glb))))
 
 (defun unify-extras (extras1 extras2 &key subsumesp)
-  (declare (ignore subsumesp))
 
+  (when subsumesp
+    (loop
+        for extra in extras2
+        for feature = (mrs::extrapair-feature extra)
+        unless (find feature extras1 :key #'mrs::extrapair-feature :test #'eq)
+        do (return-from unify-extras :fail)))
+  
   (let* ((common (intersect 
                   extras1 extras2 :key #'mrs::extrapair-feature :test #'eq))
          (result
@@ -1303,7 +1362,7 @@
               for value = (if (and (stringp value1) (stringp value2)
                                    (string-equal value1 value2))
                             value1
-                            (unify-types value1 value2))
+                            (unify-types value1 value2 :subsumesp subsumesp))
               unless value do (return-from unify-extras :fail)
               else collect (mrs::make-extrapair 
                             :feature feature :value value))))
