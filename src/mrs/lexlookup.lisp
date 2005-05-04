@@ -530,7 +530,8 @@ at this point).
                             for mtr = (mt::edge-rule edge)
                             for id = (mt::mtr-trigger mtr)
                             when (and id
-                                      (not (smember id *duplicate-lex-ids*)))
+                                      (not (lkb::smember
+                                            id lkb::*duplicate-lex-ids*)))
                             collect id))))
                     (lkb::*gen-rule-list*
                      (genpredict-mrs-struct input-sem lkb::*gen-rule-list*))
