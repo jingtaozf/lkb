@@ -406,6 +406,9 @@ we assume that there will generally only be one feature
 ;;; Note that rels are kept in the order they have in the entries
 
 (defun extract-lexical-relations (lex-entry)
+  #+:mt
+  (declare (special mt::*transfer-triggers*))
+  
   (let* ((fs (tdfs-indef (lex-entry-full-fs lex-entry)))
          (id  (lex-entry-id lex-entry))
          (main-semantics-fs (path-value fs *main-semantics-path*))
