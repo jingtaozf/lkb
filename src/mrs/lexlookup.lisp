@@ -510,9 +510,12 @@ at this point).
 ;;; result of all the lexical rule applications.
 
 (defun instantiate-null-semantic-items (input-sem lrules)
+  #+:mt
+  (declare (special mt::*transfer-triggers*))
   (let* ((real-ids (cond
                     #+:mt
-                    ((mt::transfer-rule-sets :trigger)
+                    ((and (hash-table-p mt::*transfer-triggers*)
+                          (> (hash-table-count mt::*transfer-triggers*) 0))
                      (let ((triggers (mt::transfer-mrs
                                       input-sem :filter nil :task :trigger)))
                        ;;
