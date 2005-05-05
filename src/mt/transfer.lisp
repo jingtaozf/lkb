@@ -648,6 +648,8 @@
       when node do (mrs::create-variable node generator)))
 
 (defun convert-dag-to-flags (dag)
+  #+:debug
+  (setf %dag dag)
   (let* ((optional (mrs::path-value dag *mtr-optional-path*))
          (fail (mrs::path-value dag *mtr-fail-path*))
          flags)
@@ -768,7 +770,7 @@
                 maximize (or (mrs:var-id (first variable)) 0)
                 do (push (rest variable) %transfer-original-variables%))))
     (multiple-value-bind (result condition)
-        (progn; #-:debug ignore-errors #+:debug progn
+        (#-:debug ignore-errors #+:debug progn
          (transfer-mrs2 
           (list (make-edge :mrs mrs :n n)) 
           (loop
