@@ -1,16 +1,12 @@
+U README
 U Version.lisp
-U auxverbs.tdl
 U fundamentals.tdl
-U lexdb.fld
+U letypes.tdl
 U lexdb.rev
-U lexicon-small.tdl
 U lexicon.tdl
-U lexrules.tdl
 U lextypes.tdl
-U rondane.fsr
 U syntax.tdl
 ? Version.lisp.fasl
-U data/genrules.mrs
 U gold/csli/decision.gz
 U gold/csli/item-phenomenon.gz
 U gold/csli/item.gz
@@ -21,6 +17,22 @@ U gold/csli/result.gz
 U gold/csli/run.gz
 U gold/csli/tree.gz
 U gold/csli/update.gz
+U gold/dt-faqs/decision.gz
+U gold/dt-faqs/item.gz
+U gold/dt-faqs/parse.gz
+U gold/dt-faqs/preference.gz
+U gold/dt-faqs/result.gz
+U gold/dt-faqs/run.gz
+U gold/dt-faqs/tree.gz
+U gold/dt-faqs/update.gz
+U gold/ecoc/decision.gz
+U gold/ecoc/item.gz
+U gold/ecoc/parse.gz
+U gold/ecoc/preference.gz
+U gold/ecoc/result.gz
+U gold/ecoc/run.gz
+U gold/ecoc/tree.gz
+U gold/ecoc/update.gz
 U gold/hike/decision.gz
 U gold/hike/item.gz
 U gold/hike/parse.gz
@@ -29,6 +41,25 @@ U gold/hike/result.gz
 U gold/hike/run.gz
 U gold/hike/tree.gz
 U gold/hike/update.gz
+U gold/logic/analysis
+U gold/logic/decision.gz
+U gold/logic/edge
+U gold/logic/item-phenomenon.gz
+U gold/logic/item-set
+U gold/logic/item.gz
+U gold/logic/output
+U gold/logic/parameter
+U gold/logic/parse.gz
+U gold/logic/phenomenon.gz
+U gold/logic/preference.gz
+U gold/logic/relations
+U gold/logic/result.gz
+U gold/logic/rule
+U gold/logic/run.gz
+U gold/logic/score
+U gold/logic/set
+U gold/logic/tree.gz
+U gold/logic/update.gz
 U gold/mrs/decision.gz
 U gold/mrs/item.gz
 U gold/mrs/parse.gz
@@ -37,26 +68,35 @@ U gold/mrs/result.gz
 U gold/mrs/run.gz
 U gold/mrs/tree.gz
 U gold/mrs/update.gz
+U gold/rondane/decision.gz
+U gold/rondane/item.gz
+U gold/rondane/parse.gz
+U gold/rondane/preference.gz
+U gold/rondane/result.gz
+U gold/rondane/run.gz
+U gold/rondane/tree.gz
+U gold/rondane/update.gz
+U gold/trec/decision.gz
+U gold/trec/item.gz
+U gold/trec/parse.gz
+U gold/trec/preference.gz
+U gold/trec/result.gz
+U gold/trec/run.gz
+U gold/trec/tree.gz
+U gold/trec/update.gz
 U lkb/globals.lsp
-U lkb/mrsglobals.lsp
-U lkb/patches.lsp
 U lkb/script
-U lkb/user-fns.lsp
 ? lkb/checkpaths.lsp.fasl
 ? lkb/globals.lsp.fasl
 ? lkb/mrs-initialization.lsp.fasl
 ? lkb/mt.lsp.fasl
 ? lkb/patches.lsp.fasl
 ? lkb/user-fns.lsp.fasl
-U labels.tdl
-U matrix.tdl
-U doc/ijcnlp05/modules.bib
 ? doc
 ? linux.x86.32
 ? man
 M log/build
 ? src/.l7cl
-U src/mrs/lexindex.lisp
 U src/mrs/lexlookup.lisp
 ? src/tsdb/home/log
 ? src/tsdb/home/redwoods
@@ -69,7 +109,7 @@ U src/mrs/lexlookup.lisp
 **********
 Checking in ./src/version.lsp;
 /lingo/CVS/lkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.391; previous revision: 1.390
+new revision: 1.392; previous revision: 1.391
 done
 make[1]: Entering directory `/lingo/build/lkb'
 ( \
@@ -1116,7 +1156,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-7.0 [Linux (x86)] (May 4, 2005 9:34)
+7.0 [Linux (x86)] (May 5, 2005 6:02)
 Copyright (C) 1985-2004, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -2968,7 +3008,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/gc.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/yy.lisp
-gc-after-hook(): local; new: 950984; old: 150672; pending: 80; efficiency: 95.
+gc-after-hook(): local; new: 950744; old: 150680; pending: 72; efficiency: 94.
 ;;; Writing fasl file /lingo/build/lkb/src/.l7cl/tsdb/yy.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/yy.fasl
@@ -2981,13 +3021,13 @@ gc-after-hook(): local; new: 950984; old: 150672; pending: 80; efficiency: 95.
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/derivations.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/tnt-interface.lisp
-gc-after-hook(): local; new: 1149320; old: 11520; pending: 0; efficiency: 94.
+gc-after-hook(): local; new: 1149344; old: 11520; pending: 0; efficiency: 94.
 ;;; Writing fasl file /lingo/build/lkb/src/.l7cl/tsdb/tnt-interface.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/tnt-interface.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/redwoods.lisp
-gc-after-hook(): local; new: 1582632; old: 4432; pending: 0; efficiency: 95.
-gc-after-hook(): local; new: 1132888; old: 130112; pending: 0; efficiency: 95.
+gc-after-hook(): local; new: 1582536; old: 4432; pending: 0; efficiency: 93.
+gc-after-hook(): local; new: 1132808; old: 130112; pending: 0; efficiency: 94.
 ;;; Writing fasl file /lingo/build/lkb/src/.l7cl/tsdb/redwoods.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/redwoods.fasl
@@ -3004,7 +3044,7 @@ gc-after-hook(): local; new: 1132888; old: 130112; pending: 0; efficiency: 95.
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/rasp.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/pcfg.lisp
-gc-after-hook(): local; new: 1199136; old: 18432; pending: 0; efficiency: 93.
+gc-after-hook(): local; new: 1199248; old: 18304; pending: 0; efficiency: 93.
 ;;; Writing fasl file /lingo/build/lkb/src/.l7cl/tsdb/pcfg.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/pcfg.fasl
@@ -3204,6 +3244,26 @@ erg/gold/rondane/score
 erg/gold/rondane/set
 erg/gold/rondane/tree.gz
 erg/gold/rondane/update.gz
+erg/gold/logic/
+erg/gold/logic/analysis
+erg/gold/logic/decision.gz
+erg/gold/logic/edge
+erg/gold/logic/item-phenomenon.gz
+erg/gold/logic/item-set
+erg/gold/logic/item.gz
+erg/gold/logic/output
+erg/gold/logic/parameter
+erg/gold/logic/parse.gz
+erg/gold/logic/phenomenon.gz
+erg/gold/logic/preference.gz
+erg/gold/logic/relations
+erg/gold/logic/result.gz
+erg/gold/logic/rule
+erg/gold/logic/run.gz
+erg/gold/logic/score
+erg/gold/logic/set
+erg/gold/logic/tree.gz
+erg/gold/logic/update.gz
 erg/lkb/
 erg/lkb/xmlify.lsp
 erg/lkb/checkpaths.items
