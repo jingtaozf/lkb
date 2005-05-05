@@ -146,7 +146,7 @@
        #-:sbcl (mp:process-kill process)))))
 
 (defun lui-parameters (&optional style)
-  (unless style
+  (when (or (null style) (eq style :all))
     (format
      %lui-stream%
      "parameter list-type ~a~a~%~
@@ -270,41 +270,9 @@
       do
         (setf (lspb-id lspb) id)
         (format stream "tree ~d " id)
-        (lui-show-tree top input :lspb lspb :stream stream)
-        (format stream " ~s~a~%" title %lui-eoc%)
-      finally
-        (format %lui-stream% "~a" (get-output-stream-string stream)))
-  (force-output %lui-stream%))
-
-(defun lui-show-gen-result (&optional edges chart)
-
-  (declare (special *gen-record* *gen-chart* *generator-input*))
-  
-  (loop
-      with edges = (or edges *gen-record*)
-      with chart = (or chart (copy-tree *gen-chart*))
-      with stream = (make-string-output-stream)
-      initially 
-        (lui-parameters :tree)
-        (format
-         stream
-         "group ~d ~s~a~%"
-         (length edges)
-         "Realization Result(s)"
-         %lui-eoc%)
-      for i from 1
-      for title = (format nil "Realization Tree # ~d" i)
-      for edge in edges 
-      for top = (make-new-parse-tree edge 1)
-      for tdfs = (get top 'edge-fs)
-      for lspb = (make-lspb
-                  :chart chart :mrs *generator-input*
-                  :edge edge :dag tdfs)
-      for id = (lsp-store-object nil lspb)
-      do
-        (setf (lspb-id lspb) id)
-        (format stream "tree ~d " id)
-        (lui-show-tree top nil :lspb lspb :stream stream)
+        (lui-show-tree
+         top input :lspb lspb
+         :morphs morphs :chart chart :stream stream)
         (format stream " ~s~a~%" title %lui-eoc%)
       finally
         (format %lui-stream% "~a" (get-output-stream-string stream)))
@@ -321,7 +289,9 @@
          (form (when (and daughters (null (rest daughters))
                           (null (get (first daughters) 'edge-record)))
                  (get-string-for-edge (first daughters))))
-         (id (or (lspb-id lspb) (lsp-store-object nil lspb)))
+         (id (or (lspb-id lspb) (let ((id (lsp-store-object nil lspb)))
+                                  (setf (lspb-id lspb) id)
+                                  id)))
          (label (get-string-for-edge top))
          (n (edge-id edge))
          (rule (if (rule-p (edge-rule edge))
@@ -340,6 +310,7 @@
   (let* ((id (lsp-store-object nil (make-lspb :dag tdfs)))
          (dag (tdfs-indef tdfs))
          (*package* (find-package :lkb)))
+    
     (lui-parameters :avm)
     (let ((string (with-output-to-string (stream)
                     (format stream "avm ~d " id)
@@ -356,15 +327,17 @@
                                  (chart (copy-array *chart*))
                                  (morphs (copy-array *morphs*)))
   
-  (let ((stream (make-string-output-stream))
-        (nvertices (loop 
-                       for i from 0 for foo across morphs 
-                       when (null foo) return i)))
+  (let* ((stream (make-string-output-stream))
+         (root (make-lspb :input input :chart chart :morphs morphs))
+         (id (lsp-store-object nil root))
+         (nvertices (loop 
+                        for i from 0 for foo across morphs 
+                        when (null foo) return i)))
     (lui-parameters :chart)
     (format
      stream
      "chart ~d ~d ~s~%"
-     -1 nvertices
+     id nvertices
      (if input (format nil "`~a' (Chart)" input) "Chart View"))
 
     (loop
@@ -389,17 +362,9 @@
                     :input input :morphs morphs :chart chart :edge edge)
         for key = (lsp-store-object nil lspb)
         for id = (edge-id edge)
-        for name
-        = (format 
-           nil 
-           "~a[~a]"
-           (tree-node-text-string (find-category-abb (edge-dag edge)))
-           id)
-        for label = (typecase (edge-rule edge)
-                      (string (first (edge-lex-ids edge)))
-                      (symbol (edge-rule edge))
-                      (rule (rule-id (edge-rule edge)))
-                      (t :unknown))
+        for name = (lui-chart-edge-name edge)
+        for label = (lui-chart-edge-label edge)
+        do (push key (lspb-children root))
         when (and (numberp from) (numberp to)) do
           (format 
            stream
@@ -448,17 +413,9 @@
                           :edge edge)
               for key = (lsp-store-object nil lspb)
               for id = (edge-id edge)
-              for name 
-              = (format 
-                 nil 
-                 "~a[~a]"
-                 (tree-node-text-string (find-category-abb (edge-dag edge)))
-                 id)
-              for label = (typecase (edge-rule edge)
-                            (string (first (edge-lex-ids edge)))
-                            (symbol (edge-rule edge))
-                            (rule (rule-id (edge-rule edge)))
-                            (t :unknown))
+              for name = (lui-chart-edge-name edge)
+              for label = (lui-chart-edge-label edge)
+              do (push key (lspb-children root))
               when (and (numberp from) (numberp to)) do
                 (format 
                  stream
@@ -478,7 +435,88 @@
                       do (format stream " ~a" i)))
                 (format stream "]~%")))
     (format stream "~a" %lui-eoc%)
-    (format %lui-stream% "~a" (get-output-stream-string stream)))
+    (format %lui-stream% "~a" (get-output-stream-string stream))
+    (force-output %lui-stream%)
+    id))
+
+(defun lui-chart-event (id format object)
+  (when (and (lspb-p object) (edge-p (lspb-edge object))
+             (numberp (edge-id (lspb-edge object))))
+    (format
+     %lui-stream%
+     "chart ~d event ~(~a~) ~d~a~%"
+     id (if (eq format :edges) :highlight :restrict)
+     (edge-id (lspb-edge object)) %lui-eoc%)
+    (force-output %lui-stream%)))
+
+(defun lui-show-gen-result (&optional edges chart)
+
+  (declare (special *gen-record* *gen-chart* *generator-input*))
+  
+  (loop
+      with edges = (or edges *gen-record*)
+      with chart = (or chart (copy-tree *gen-chart*))
+      with stream = (make-string-output-stream)
+      for i from 0
+      for edge in edges 
+      for string = (g-edge-string edge)
+      for lspb = (make-lspb
+                  :chart chart :mrs *generator-input*
+                  :edge edge)
+      initially (format stream "text -42 #X[~%")
+      do
+        (lsp-store-object nil lspb)
+        (format stream "  #X[~d \"~{~a~^ ~}\"] newline~%" i string)
+      collect (cons i lspb) into lspbs
+      finally
+        (format stream "]~%")
+        (loop
+            for (i . lspb) in lspbs
+            do
+              (format
+               stream
+               "  #M[ \"Tree\" \"browse ~d ~d tree\" ~d ]~%"
+               (lspb-id lspb) (lspb-id lspb) i)
+              (format
+               stream
+               "  #M[ \"AVM\" \"browse ~d ~d avm\" ~d ]~%"
+               (lspb-id lspb) (lspb-id lspb) i)
+              (format
+               stream
+               "  #M[ \"MRS\" \"browse ~d ~d mrs\" ~d ]~%"
+               (lspb-id lspb) (lspb-id lspb) i))
+        (format stream "  ~s~a~%" "Realization Result(s)" %lui-eoc%)
+        (format %lui-stream% "~a" (get-output-stream-string stream)))
+
+  #+:null
+  (loop
+      with edges = (or edges *gen-record*)
+      with chart = (or chart (copy-tree *gen-chart*))
+      with stream = (make-string-output-stream)
+      initially 
+        (lui-parameters :tree)
+        (format
+         stream
+         "group ~d ~s~a~%"
+         (length edges)
+         "Realization Result(s)"
+         %lui-eoc%)
+      for i from 1
+      for title = (format nil "Realization Tree # ~d" i)
+      for edge in edges 
+      for top = (make-new-parse-tree edge 1)
+      for tdfs = (get top 'edge-fs)
+      for lspb = (make-lspb
+                  :chart chart :mrs *generator-input*
+                  :edge edge :dag tdfs)
+      for id = (lsp-store-object nil lspb)
+      do
+        (setf (lspb-id lspb) id)
+        (format stream "tree ~d " id)
+        (lui-show-tree top nil :lspb lspb :stream stream)
+        (format stream " ~s~a~%" title %lui-eoc%)
+      finally
+        (format %lui-stream% "~a" (get-output-stream-string stream)))
   (force-output %lui-stream%))
 
 (defun lui-display-mrs (mrs &optional title format)

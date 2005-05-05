@@ -56,12 +56,14 @@
 
 (defparameter %lsp-attic% (make-array 512))
 
+(defparameter %lsp-free-list% nil)
+
 (defstruct client
   id socket stream process
   (display #+:clim clim:*default-server-path* #-:clim nil))
 
 (defstruct lspb
-  id context input morphs chart edge dag mrs)
+  id context input morphs chart edge dag mrs children)
 
 #-(or :clisp :sbcl)
 (defun lsp-initialize ()
@@ -70,6 +72,7 @@
     (socket:make-socket :connect :passive :local-port *lsp-port*))
   (setf %lsp-object-counter% 0)
   (setf %lsp-attic% (make-array 512))
+  (setf %lsp-free-list% nil)
   %lsp-socket%)
 
 #-(or :clisp :sbcl)
@@ -375,6 +378,14 @@
                t
                "[~d] lsp-process-event(): invalid unify arguments~%" 
                id))))
+         
+         ((forget tree avm text chart)
+          (let* ((n (pop command))
+                 (action (let ((foo (pop command)))
+                           (and foo (intern (string foo) :keyword)))))
+            (when (or (null action) (eq action :forget))
+              (lsp-forget-object nil n))))
+          
          (quit
           #+:lui
           (lui-shutdown))
@@ -423,11 +434,12 @@
       when (equal id (client-id client)) return client))
 
 (defun lsp-store-object (id object &key globalp)
-  (let ((n %lsp-object-counter%))
-    (setf (aref %lsp-attic% n) (cons (if globalp -1 id) object))
-    (incf %lsp-object-counter%)
+  (let ((n (or (pop %lsp-free-list%) (incf %lsp-object-counter%))))
     (when (>= %lsp-object-counter% (array-total-size %lsp-attic%))
       (setf %lsp-attic% (adjust-array %lsp-attic% (* %lsp-object-counter% 2))))
+    (setf (aref %lsp-attic% n) (cons (if globalp -1 id) object))
+    (when (and (lspb-p object) (null (lspb-id object)))
+      (setf (lspb-id object) n))
     n))
 
 (defun lsp-retrieve-object (id n)
@@ -436,9 +448,19 @@
       (when (or (equal (first bucket) -1) (equal (first bucket) id))
         (rest bucket)))))
 
+(defun lsp-forget-object (id n)
+  (when (and (numberp n) (>= n 0) (< n (array-total-size %lsp-attic%)))
+    (let ((bucket (aref %lsp-attic% n)))
+      (when (or (equal (first bucket) -1) (equal (first bucket) id))
+        (loop
+            for child in (lspb-children (rest bucket))
+            do (lsp-forget-object id child))
+        (setf (aref %lsp-attic% n) nil)
+        (push n %lsp-free-list%)))))
+
 (defun lsp-browse (id context object format view &key title)
   (declare (ignore context))
-  #+:debug
+  #-:debug
   (setf %context context %object object %format format %view view)
   (let ((title (or title (format
                           nil
@@ -457,17 +479,16 @@
            (display-fs (edge-dag (lspb-edge object)) title))
          (display-fs 
           (cond
-           ((edge-p (lspb-edge object)) (edge-dag (lspb-edge object)))
-           ((tdfs-p (lspb-dag object)) (lspb-dag object)))
+           ((tdfs-p (lspb-dag object)) (lspb-dag object))
+           ((edge-p (lspb-edge object)) (edge-dag (lspb-edge object))))
           title)))
-      ((:edge :edges)
+      ((:chart :edges)
        (when (and (lspb-morphs object) (lspb-chart object))
          (let ((*morphs* (lspb-morphs object))
-               (*chart* (lspb-chart object)))
-           (show-chart)
-	   #+:null
-           (when (edge-p (lspb-edge object)) 
-             (display-edge-in-chart (lspb-edge object))))))
+               (*chart* (lspb-chart object))
+               (id (show-chart)))
+           (when (numberp id)
+             (lui-chart-event id format object)))))
       (:entity
        (when (and (lspb-p object) (edge-p (lspb-edge object)))
          (let ((edge (lspb-edge object)))

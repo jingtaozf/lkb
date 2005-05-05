@@ -206,7 +206,7 @@
                     (format stream " ~a: " feature)
                     (dagify-variable value)
                   else do
-                    (format stream " ~a: ~a" feature value))
+                    (format stream " ~a: ~s" feature value))
               (format stream "] ~a:" rest)
               (incf n)
             finally 

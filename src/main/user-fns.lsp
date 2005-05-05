@@ -333,3 +333,31 @@
   (and fs
        (let ((fs-type (type-of-fs fs)))
          (eql fs-type 'false))))
+
+
+;;;
+;;; the following two functions allow customization of how edges are displayed
+;;; in the LUI chart browser (not the traditional LKB chart window).  for each
+;;; edge, two properties are relevant: (a) its `name' and (b) its `label'; both
+;;; should be strings, where name should be a relatively short, yet contentful
+;;; identifier used as the primary representation of edges in chart cell, and
+;;; label can be a longer string shown in the pop-up area on mouse-over.
+;;;
+(defun lui-chart-edge-name (edge)
+  (format 
+   nil 
+   "~a[~a]"
+   (tree-node-text-string (find-category-abb (edge-dag edge))) 
+   (edge-id edge)))
+
+
+(defun lui-chart-edge-label (edge)
+  (format
+   nil
+   "~a"
+   (typecase (edge-rule edge)
+     (string (first (edge-lex-ids edge)))
+     (symbol (edge-rule edge))
+     (rule (rule-id (edge-rule edge)))
+     (t :unknown))))
+
