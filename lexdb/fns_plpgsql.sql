@@ -555,7 +555,7 @@ END;
 -- fix me?
 CREATE OR REPLACE FUNCTION public.semi_mod_time_private(text,text,int) RETURNS text AS '
 BEGIN
-	RETURN (SELECT modstamp FROM semi_mod WHERE (name,userid,modstamp0)=($1,$2,$3));
+	RETURN (SELECT modstamp FROM semi_mod WHERE (name,userid,modstamp)=($1,$2,$3));
 END;
 ' LANGUAGE plpgsql;
 

@@ -208,7 +208,7 @@ BEGIN
 	CREATE INDEX semi_frame_var_id ON semi_frame (var_id);
 	CREATE INDEX semi_var_var_id ON semi_var (var_id);
 	CREATE INDEX semi_extra_extra_id ON semi_extra (extra_id);
-	CREATE INDEX semi_mod_name_userid_modstamp0 ON semi_mod (name,userid,modstamp0);
+	CREATE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modstamp);
 RETURN true;
 END;
 ' LANGUAGE plpgsql;
@@ -222,7 +222,7 @@ BEGIN
 	DROP INDEX semi_frame_var_id CASCADE;
 	DROP INDEX semi_var_var_id CASCADE;
 	DROP INDEX semi_extra_extra_id CASCADE;
-	DROP INDEX semi_mod_name_userid_modstamp0 CASCADE;
+	DROP INDEX semi_mod_name_userid_modstamp CASCADE;
 RETURN true;
 END;
 ' LANGUAGE plpgsql;
@@ -262,8 +262,8 @@ BEGIN
 	CREATE TABLE semi_mod (
 		name text,
 		userid text,
-		modstamp0 TIMESTAMP WITH TIME ZONE,
-		modstamp TIMESTAMP WITH TIME ZONE
+		modstamp TIMESTAMP WITH TIME ZONE,
+		modstamp0 TIMESTAMP WITH TIME ZONE
 	);
 
 	PERFORM semi_create_indices();

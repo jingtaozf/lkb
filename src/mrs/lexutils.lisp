@@ -35,8 +35,8 @@
     (format t "~%Indexing complete")
     nil))
 
-;;; retrieve SEM-I from psql-lexicon if possible
-;;; if not, recompile semantic indices as per normal
+;;; recompile semantic indices as per normal
+;;; dump to lexdb if exists
 (defun index-lexicon nil
   (when (typep *lexicon* 'psql-lex-database)
     (format t "~%(caching all lexical records)")
