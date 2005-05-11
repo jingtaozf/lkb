@@ -54,18 +54,23 @@
     (unless mrs::*top-semantics-entry*
       (error "~%No entry found for top semantics type ~A" 
 	     mrs::*top-semantics-type*))
-    (let ((ids-table (make-hash-table :test #'eq)) 
-	  (ids nil))
-      ;; because of multiple lexical entries, an id may be indexed by
-      ;; multiple orthographies
-      (dolist (word (lex-words *lexicon*))
-	(dolist (inst (lookup-word *lexicon* word :cache nil))
-	  (setf (gethash inst ids-table) t)))
-      (maphash
-       #'(lambda (id val) 
-	   (declare (ignore val)) 
-	   (push id ids))
-       ids-table)
+
+    ;;; (bmw) obfuscated code...
+    ;;    (let ((ids-table (make-hash-table :test #'eq)) 
+    ;;	  (ids nil))
+    ;;      ;; because of multiple lexical entries, an id may be indexed by
+    ;;      ;; multiple orthographies
+    ;;      (dolist (word (lex-words *lexicon*))
+    ;;	(dolist (inst (lookup-word *lexicon* word :cache nil))
+    ;;	  (setf (gethash inst ids-table) t)))
+    ;;      (maphash
+    ;;       #'(lambda (id val) 
+    ;;	   (declare (ignore val)) 
+    ;;	   (push id ids))
+    ;;       ids-table)
+      
+    (let ((ids (collect-psort-ids *lexicon*)))
+
       (process-queue
        #'(lambda ()
 	   (let ((id (pop ids)))

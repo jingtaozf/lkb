@@ -32,11 +32,16 @@ CREATE OR REPLACE FUNCTION public.retrieve_all_entries() RETURNS SETOF revision 
 ' LANGUAGE sql;
 drop table current_grammar;
 
+-- abandon 'lower'ed orthkey: 'lower' incompatible with Lisp's downcase
+-- so we must:
+--  * ensure all db entries are in appropriate case
+--  * convert orthkeys to appropriate case before entering db universe
 CREATE OR REPLACE FUNCTION public.retrieve_entries_by_orthkey(text) RETURNS SETOF revision AS '
 DECLARE
 	x RECORD;
 BEGIN
 	FOR x IN
+		--EXECUTE \'SELECT * FROM current_grammar WHERE orthkey LIKE lower(\' || quote_literal($1) || \')\'
 		EXECUTE \'SELECT * FROM current_grammar WHERE orthkey LIKE \' || quote_literal($1)
 		LOOP
 		RETURN NEXT x;

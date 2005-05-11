@@ -10,8 +10,6 @@
 
 (defmethod lookup-word ((lexicon psql-lex-database) orth &key (cache t))
   (with-slots (lexical-entries) lexicon
-  (setf orth 
-    (string-downcase orth))
   (let ((hashed (gethash orth lexical-entries)))
     (cond 
      (hashed
@@ -26,12 +24,14 @@
 	    (if value value :EMPTY)))
 	value))))))
 
+;; orthkey must be mapped to normalized form before entering PSQL universe
 (defmethod lookup-word-no-cache ((lexicon psql-lex-database) orth)
   (declare (ignore cache))
   (if (connection lexicon)
       (let* ((table (sql-fn-get-records lexicon 
 					:retrieve_entries_by_orthkey 
-					:args (list (sql-like-text orth)) 
+					:args (list (sql-like-text 
+						     (normalize-orthkey orth))) 
 					:fields (grammar-fields lexicon)))
 	     (ids (lookup-word-aux2 lexicon table)))
 	ids)))
@@ -43,19 +43,19 @@
 	unless (gethash orth lexical-entries)
 	collect orth)))
 
-(defmethod cache-words ((lexicon psql-lex-database) list-orth)
-  (declare (ignore cache))
-  (let* ((dc-list-orth (mapcar #'string-downcase list-orth))
-	 (uc-list-orth (uncached-orthkeys lexicon dc-list-orth))
-	 )
-    (if (connection lexicon)
-	(let* ((table (sql-fn-get-records-union lexicon 
-						:retrieve_entries_by_orthkey 
-						:list-args (mapcar
-							    #'(lambda (x) (list (sql-like-text x)))
-							    uc-list-orth)
-						:fields (grammar-fields lexicon))))
-	  (when table (lookup-words-cache lexicon table uc-list-orth))))))
+;(defmethod cache-words ((lexicon psql-lex-database) list-orth)
+;  (declare (ignore cache))
+;  (let* ((dc-list-orth (mapcar #'string-downcase list-orth))
+;	 (uc-list-orth (uncached-orthkeys lexicon dc-list-orth))
+;	 )
+;    (if (connection lexicon)
+;	(let* ((table (sql-fn-get-records-union lexicon 
+;						:retrieve_entries_by_orthkey 
+;						:list-args (mapcar
+;							    #'(lambda (x) (list (sql-like-text x)))
+;							    uc-list-orth)
+;						:fields (grammar-fields lexicon))))
+;	  (when table (lookup-words-cache lexicon table uc-list-orth))))))
 
 (defun prune-quotes (str)
   (let ((len (length str)))

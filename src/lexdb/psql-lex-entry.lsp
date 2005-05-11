@@ -54,4 +54,4 @@
 	  (retr-val le raw-orth-field)))))
 
 (defmethod lexicon-le-orthkey ((lexicon psql-lex-database) (le psql-lex-entry))
-  (car (last (get-raw-orth lexicon le))))
+  (normalize-orthkey (car (last (get-raw-orth lexicon le)))))

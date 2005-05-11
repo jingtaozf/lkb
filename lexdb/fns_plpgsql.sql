@@ -503,6 +503,7 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
+-- orthkey must enter db universe in normalized form (case)
 -- Total runtime: 4.259 ms
 CREATE OR REPLACE FUNCTION public.update_entry(text,text,text) RETURNS boolean AS '
 DECLARE
@@ -511,6 +512,11 @@ BEGIN
 	sql_str := \'INSERT INTO revision ( name, \' || $2 || \' ) VALUES ( \' || quote_literal($1) || \', \' || $3 || \')\';
 	RAISE DEBUG \'%\', sql_str;
 	EXECUTE sql_str;
+
+	--sql_str := \'UPDATE revision SET orthkey=lower(orthkey) WHERE ( name, \' || $2 || \' ) = ( \' || quote_literal($1) || \', \' || $3 || \')\'; 
+	--RAISE DEBUG \'%\', sql_str;
+	--EXECUTE sql_str;
+
 	DELETE FROM current_grammar
 		WHERE name = $1 ;
 	INSERT INTO current_grammar

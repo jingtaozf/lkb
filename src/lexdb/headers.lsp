@@ -18,8 +18,8 @@
 (defvar *lexdb-dump-user* nil)
 (defvar *lexdb-dump-lang* nil)
 (defvar *lexdb-dump-country* nil)
-;; set this to nil to prevent tdl dump accompanying lexdb dump
-(defvar *lexdb-dump-tdl* t)
+;; set this to t to force tdl dump to accompany lexdb dump
+(defvar *lexdb-dump-tdl* nil)
 ;; obsolete after 3.33
 (defvar *lexdb-message-old-server* "PostgreSQL server version is ~a. Please upgrade to version ~a or above.")
 (defvar *lexdb-message-old-lkb* "Your LexDB version (~a) is incompatible with this LKB version (requires v. ~ax). Try obtaining a more recent LKB binary.")

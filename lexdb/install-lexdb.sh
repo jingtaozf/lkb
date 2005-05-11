@@ -1,13 +1,15 @@
-# Copyright (c) 2004 
+# Copyright (c) 2004-2005 
 # Benjamin Waldron;
 # see `licence.txt' for conditions.
 
 if [ -z "$2" ]; then 
-    echo usage: $0 DBNAME FIELDS-FILE
+    echo usage: $0 DBNAME FLD-FILE [CREATEDB-OPTIONS]
     exit
 fi
 
 export LEXDB=$1
+export FIELDS_FILE=$2
+export CREATEDB_OPTIONS=$3
 
 function drop_lexdb {
 #    echo "dropping lexdb..."
@@ -16,8 +18,8 @@ function drop_lexdb {
     exit;
 }  
 
-echo "createdb -U lexdb $LEXDB"
-createdb -U lexdb $LEXDB
+echo "createdb $CREATEDB_OPTIONS -U lexdb $LEXDB"
+createdb $CREATEDB_OPTIONS -U lexdb $LEXDB
 if [ $? != 0 ] ; then exit; fi
 
 echo "createlang -U postgres plpgsql $LEXDB"
@@ -40,8 +42,8 @@ if [ $? != 0 ] ; then
     drop_lexdb; 
 fi
 
-if [ -f $2 ]; then 
-    echo "taking field defns from file $2";
+if [ -f $FIELDS_FILE ]; then 
+    echo "taking field defns from file $FIELDS_FILE";
     echo "psql -c 'delete from fields' -U lexdb $LEXDB"
     psql -c 'delete from fields' -U lexdb $LEXDB; 
     if [ $? != 0 ] ; then 
@@ -49,15 +51,15 @@ if [ -f $2 ]; then
 	drop_lexdb; 
     fi
 
-    echo "psql -c \"copy fields from $2\" -U lexdb $LEXDB"
-    psql -c "\copy fields from $2" -U lexdb $LEXDB; 
+    echo "psql -c \"copy fields from $FIELDS_FILE\" -U lexdb $LEXDB"
+    psql -c "\copy fields from $FIELDS_FILE" -U lexdb $LEXDB; 
     if [ $? != 0 ] ; then 
 	echo "drop_lexdb"
 	drop_lexdb; 
     fi
 
 else
-    echo "cannot find file $2";
+    echo "cannot find file $FIELDS_FILE";
     for x in `seq 1 10`; do echo wait $x; done  
     echo "drop_lexdb"
     drop_lexdb;

@@ -1,4 +1,4 @@
-;;; Copyright (c) 2001 -- 2004
+;;; Copyright (c) 2001 -- 2005
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Ben Waldron;
 ;;;   see `licence.txt' for conditions.
 
@@ -309,11 +309,11 @@
    (t
     (error "unhandled value: ~a" path-str))))
 
-;; unused?
-(defun get-orthkey (orth-list)
-  (string-downcase 
-   (or (car (last orth-list))
-       "")))
+;;; unused?
+;(defun get-orthkey (orth-list)
+;  (string-downcase 
+;   (or (car (last orth-list))
+;       "")))
 
 ;;;
 ;;; MWE stuff

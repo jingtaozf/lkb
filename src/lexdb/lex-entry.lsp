@@ -5,7 +5,7 @@
 (in-package :lkb)
 
 (defmethod orthkey ((x lex-entry))
-  (car (last (slot-value x 'orth))))
+  (normalize-orthkey (car (last (slot-value x 'orth)))))
   
 (defmethod copy-slots ((x lex-entry) fields-map)
   "copy slots for use in destructive operations"

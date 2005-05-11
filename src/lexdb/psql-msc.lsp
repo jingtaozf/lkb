@@ -8,6 +8,9 @@
 ;;; Miscellaneous functions
 ;;;
 
+(defun normalize-orthkey (x)
+  (string-downcase x))
+
 ;(defun alist-val (feat alist &key test)
 ;  (if test
 ;      (cdr (assoc feat alist :test test))
