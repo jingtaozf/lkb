@@ -1,5 +1,5 @@
-;;; Copyright (c) 2001 -- 2004
-;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Ben Waldron;
+;;; Copyright (c) 2001 -- 2005
+;;;   Ben Waldron, John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `licence.txt' for conditions.
 
 (in-package :lkb)
@@ -12,15 +12,11 @@
 
 (defvar *lexdb-major-version* "3.6")
 (defvar *lexdb-dump-skip-stream* t)
-;(defvar *lexdb-dump-version* 0)
-;(defvar *lexdb-dump-timestamp* nil)
 (defvar *lexdb-dump-source* "?")
 (defvar *lexdb-dump-user* nil)
 (defvar *lexdb-dump-lang* nil)
 (defvar *lexdb-dump-country* nil)
-;; set this to t to force tdl dump to accompany lexdb dump
-(defvar *lexdb-dump-tdl* nil)
-;; obsolete after 3.33
+(defvar *lexdb-dump-tdl* nil) ;; set this to t to force tdl dump to accompany lexdb dump
 (defvar *lexdb-message-old-server* "PostgreSQL server version is ~a. Please upgrade to version ~a or above.")
 (defvar *lexdb-message-old-lkb* "Your LexDB version (~a) is incompatible with this LKB version (requires v. ~ax). Try obtaining a more recent LKB binary.")
 (defvar *lexdb-message-old-lexdb* "Your LexDB version (~a) is incompatible with this LKB version (requires v. ~ax). You must load updated setup files. See http://www.cl.cam.ac.uk/~~bmw20/DT/initialize-db.html")
