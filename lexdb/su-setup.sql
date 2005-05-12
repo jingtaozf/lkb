@@ -1,5 +1,5 @@
 --- Copyright (c) 2003-2005
---- Fabre Lambeau, Stephan Oepen, Benjamin Waldron;
+--- Benjamin Waldron, Fabre Lambeau, Stephan Oepen;
 --- see `licence.txt' for conditions.
 
 --
@@ -40,13 +40,6 @@ CREATE OR REPLACE FUNCTION public.hide_schemas () RETURNS boolean AS
 --	SELECT public.hide_schemas2();
 --'
 -- LANGUAGE SQL SECURITY DEFINER;
-
--- fix works only for erg/default fields
-CREATE OR REPLACE FUNCTION dump_db_su2(text) RETURNS text AS '
-BEGIN
- RETURN dump_db_su(tmp_base(\'lexdb\') || $1);
-END;
-' LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION public.dump_db_su(text) RETURNS text AS '
 DECLARE

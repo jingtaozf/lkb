@@ -8,6 +8,9 @@
 ;;; Miscellaneous functions
 ;;;
 
+(defun absolute-namestring (format str)
+  (namestring (pathname (format nil format str))))
+
 (defun normalize-orthkey (x)
   (string-downcase x))
 

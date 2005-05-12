@@ -1,5 +1,5 @@
---- Copyright (c) 2003-2004 
---- Fabre Lambeau, Stephan Oepen, Benjamin Waldron;
+--- Copyright (c) 2003-2005 
+--- Benjamin Waldron, Fabre Lambeau, Stephan Oepen;
 --- see `licence.txt' for conditions.
 
 CREATE OR REPLACE FUNCTION public.set_permissions() RETURNS boolean AS '
@@ -7,6 +7,7 @@ BEGIN
 
 GRANT SELECT ON public.defn TO PUBLIC;
 GRANT SELECT ON public.meta TO PUBLIC;
+GRANT SELECT ON public.fields TO PUBLIC;
 GRANT SELECT ON public.revision TO PUBLIC;
 GRANT INSERT ON public.revision TO PUBLIC;
 GRANT SELECT ON public.revision_new TO PUBLIC;

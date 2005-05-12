@@ -31,7 +31,7 @@
       (format t "~%~%Please wait: dumping lexical database ~a to files ~a.*" 
 	      (dbname *psql-lexicon*) filename)
       (force-output)
-      (time (dump-psql-lexicon filename :tdl *lexdb-dump-tdl*))
+      (time (dump-psql-lexicon *psql-lexicon* filename :tdl *lexdb-dump-tdl*))
       (format t " ...done")
       (lkb-beep))))
   

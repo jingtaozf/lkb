@@ -74,7 +74,8 @@
 		       :if-exists :supersede :if-does-not-exist :create)
 	(unless (typep *psql-lexicon* 'psql-lex-database)
 	  (error "please initialize *psql-lexicon*"))
-	  (dump-dfn-fld *psql-lexicon* file)
+	(dump-dfn *psql-lexicon* file)
+	(dump-fld *psql-lexicon* file)
 	(export-to-db-dump-to-file lexicon rev-file)))
   (format t "~%export complete")
   (when recurse

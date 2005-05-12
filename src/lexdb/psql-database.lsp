@@ -98,6 +98,13 @@
       (error "psql-database ~s has no active connection." database))
     (execute connection command :in (list filename))))
 
+;; run command with stdout = filename
+(defmethod run-command-stdout ((database psql-database) command filename)
+  (with-slots (connection) database
+    (unless connection
+      (error "psql-database ~s has no active connection." database))
+    (execute connection command :out (list filename))))
+
 (defmethod run-command ((database psql-database) command)
   (with-slots (connection) database
     (unless connection
@@ -305,14 +312,17 @@
 		   :if-exists :rename)
     (copy-out-stream conn ostr)))
 		  
+;;TO_DO: move to PQputCopyData
+;; coz getline etc. are 'Obsolete Functions for COPY'
+
+(defparameter *c-str-len* 1000) ;;must be >150 (WHY???)
 (defun copy-out-stream (conn ostream)
-  (let* ((c-str-len 10)
-	 (c-str (ff::string-to-native 
-		 (make-string c-str-len))))
+  (let* ((c-str (ff::string-to-native 
+		 (make-string *c-str-len*))))
     (unwind-protect
 	(do* ((line 
-	       (getline conn c-str c-str-len) 
-	       (getline conn c-str c-str-len)))
+	       (getline conn c-str *c-str-len*) 
+	       (getline conn c-str *c-str-len*)))
 	    ((string= line "\\."))
 	  (write-line line ostream)))
     (excl::aclfree c-str)

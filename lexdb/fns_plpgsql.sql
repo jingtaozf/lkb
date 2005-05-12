@@ -124,6 +124,9 @@ BEGIN
 	EXECUTE \'INSERT INTO public.meta VALUES (\'\'user\'\', \' || quote_literal(user) || \')\';
 	CREATE TABLE meta AS SELECT * FROM public.meta WHERE var=\'filter\';
 	
+	-- temp
+ 	CREATE TABLE temp AS SELECT * FROM public.revision WHERE NULL;
+ 
 	-- scratch
  	CREATE TABLE revision AS SELECT * FROM public.revision WHERE NULL;
  	EXECUTE \'CREATE UNIQUE INDEX user_\' || user || \'_name_revision_userid ON revision (name,userid,modstamp)\'; 
@@ -361,11 +364,23 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION dump_db() RETURNS text AS '
+
+CREATE OR REPLACE FUNCTION public.dump_rev() RETURNS boolean AS '
+DECLARE
+	dump_file_rev text;
+	lexdb_versn real;
+	base text;
 BEGIN
- RETURN dump_db_su2(user);
+	RAISE INFO \'creating ordered copy of public.revision in temp\';
+	DELETE FROM temp;
+	INSERT INTO temp SELECT * FROM public.revision ORDER BY name, userid, modstamp;
+	--RAISE INFO \'dumping temp to database stdout\';
+	--COPY temp TO stdout;
+
+	RETURN true;
 END;
 ' LANGUAGE plpgsql;
+
 
 CREATE OR REPLACE FUNCTION dump_db_dfn_fld() RETURNS text AS '
 BEGIN

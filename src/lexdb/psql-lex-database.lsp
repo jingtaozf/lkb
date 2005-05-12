@@ -960,7 +960,7 @@
 ;;
 
 (defmethod merge-into-lexicon ((lexicon psql-lex-database) filename)
-  "reconnect as db owner and merge new data into lexdb"
+  "connect as db owner and merge new data into lexdb"
   (with-slots (dbname host port) lexicon
     (unless dbname
       (error "please set :dbname"))
@@ -975,26 +975,18 @@
       (when
 	  (catch :sql-error
 	    (progn
-	      (let* ((rev-filename 
-		      (absolute-namestring "~a.rev" 
-					   filename))
-		     (dfn-filename 
-		      (absolute-namestring "~a.dfn" 
-					   filename)))
+	      (let* ((rev-filename (absolute-namestring "~a.rev" filename))
+		     (dfn-filename (absolute-namestring "~a.dfn" filename)))
 		(if (probe-file rev-filename)
-		    (setf count-new 
-		      (merge-into-db conn-db-owner 
-				     rev-filename))
+		    (setf count-new (merge-into-db conn-db-owner rev-filename))
 		  (format t "~%WARNING: no file ~a" rev-filename))
 		(cond
 		 ((probe-file dfn-filename)
-		  (merge-defn conn-db-owner 
-			      dfn-filename)
+		  (merge-defn conn-db-owner dfn-filename)
 		  (make-field-map-slot lexicon))
 		 (t
 		  (format t "~%WARNING: no file ~a" dfn-filename)))
-		nil
-		)))
+		nil)))
 	(format t "~%Merge new entries aborted...")
 	(lkb-beep))
       (if (equal count-new 0)
@@ -1119,3 +1111,40 @@
 
 (defmethod record-orth (raw-record cols (lexicon psql-lex-database))
   (get-val (second (assoc :orth (fields-map lexicon))) raw-record cols))
+
+;;
+;;
+;;
+
+(defmethod dump-psql-lexicon ((lexdb psql-lex-database) filebase &key tdl)
+  (format t "~%(dumping LexDB)")
+  (force-output)
+  (dump-rev lexdb filebase)
+  (dump-dfn lexdb filebase)
+  (dump-fld lexdb filebase)
+  (when tdl (dump-tdl filebase))
+  t)
+
+(defmethod dump-rev ((lexdb psql-lex-database) filebase)
+  (run-command-stdout lexdb "SELECT * FROM dump_rev(); COPY temp TO stdout" 
+		      (namestring (pathname (format nil "~a.rev" 
+							      filebase))))
+  t)
+
+(defmethod dump-dfn ((lexdb psql-lex-database) filebase)
+  (run-command-stdout lexdb "COPY defn TO stdout" 
+		      (namestring (pathname (format nil "~a.dfn" 
+							      filebase))))
+  t)
+
+(defmethod dump-fld ((lexdb psql-lex-database) filebase)
+  (run-command-stdout lexdb "COPY fields TO stdout" 
+		      (namestring (pathname (format nil "~a.fld" 
+							      filebase))))
+  t)
+
+(defmethod dump-tdl ((lexdb psql-lex-database) filebase)
+  (let ((tdl-file (namestring (pathname (format nil "~a.~a.tdl" filebase (get-filter lexdb))))))
+    (format t "~%(exporting filtered ~a LexDB to TDL file ~a)" (dbname lexdb) tdl-file)
+    (force-output)
+    (export-to-tdl-to-file lexdb tdl-file)))
