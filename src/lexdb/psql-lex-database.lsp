@@ -43,29 +43,13 @@
 	unless (gethash orth lexical-entries)
 	collect orth)))
 
-;(defmethod cache-words ((lexicon psql-lex-database) list-orth)
-;  (declare (ignore cache))
-;  (let* ((dc-list-orth (mapcar #'string-downcase list-orth))
-;	 (uc-list-orth (uncached-orthkeys lexicon dc-list-orth))
-;	 )
-;    (if (connection lexicon)
-;	(let* ((table (sql-fn-get-records-union lexicon 
-;						:retrieve_entries_by_orthkey 
-;						:list-args (mapcar
-;							    #'(lambda (x) (list (sql-like-text x)))
-;							    uc-list-orth)
-;						:fields (grammar-fields lexicon))))
-;	  (when table (lookup-words-cache lexicon table uc-list-orth))))))
-
 (defun prune-quotes (str)
   (let ((len (length str)))
     (subseq str 1 (1- len))))
 
 (defmethod lookup-words-cache ((lexicon psql-lex-database) table uc-list-orth)
   (with-slots (psorts lexical-entries record-cache fields-map) lexicon
-    (let ((name-field (second (assoc :id fields-map)))
-	  ;(temp-hash (make-hash-table :test #'equal))
-	  )
+    (let ((name-field (second (assoc :id fields-map))))
       (mapc #'(lambda (x)
 		(unless (gethash x lexical-entries)
 		  (setf (gethash x lexical-entries) :empty)))
@@ -79,9 +63,6 @@
 	  for columns = (cdr cols)
 	  for id = (str-2-symb (get-val name-field record columns))
 	  do
-	    ;(format t "~%~% rec= ~a" rec)
-	    ;(format t "~% id= ~a" id)
-	    ;; cache id record-cache
 	    (unless (gethash id record-cache)
 	      (setf (gethash id record-cache) 
 		record))
@@ -295,7 +276,6 @@
   
 ;; lexicon is open
 (defmethod load-lex-from-files ((lexicon psql-lex-database) file-names syntax)
-  ;;  (setf *lex-file-list* file-names) ;;fix_me
   (setf *ordered-lex-list* nil) ;;fix_me
   (cond
    ((check-load-names file-names 'lexical)
@@ -418,15 +398,9 @@
 	       (dbname lexicon) (fields-tb lexicon)))
 
 (defmethod get-internal-table-defn ((lexicon psql-lex-database))
-  ;;(if (string>= (lexdb-version lexicon)
-;;		"3.31")
       (sql-fn-get-records lexicon 
 			  :return_field_info2 
-			  :args (list "public" "revision"))
-    ;;(get-records lexicon 
-;;		 "SELECT attname, typname, atttypmod FROM pg_catalog.pg_attribute AS attribute JOIN (SELECT * FROM pg_catalog.pg_class WHERE relname='revision') AS class ON attribute.attrelid=class.relfilenode JOIN pg_catalog.pg_type AS type ON (type.typelem=attribute.atttypid);")
-    ;;)
-  )
+			  :args (list "public" "revision")))
 
 (defmethod get-field-size-map ((lexicon psql-lex-database))
   (let* ((table (get-internal-table-defn lexicon))
@@ -484,10 +458,6 @@
   (set-lex-entry-aux lexicon psql-le))
   
 (defmethod set-lex-entry-aux ((lexicon psql-lex-database) (psql-le psql-lex-entry))
-  ;;obsolete
-  ;(set-version psql-le lexicon) 
-;  (if *lexdb-dump-timestamp* 
-;      (set-val psql-le :modstamp *lexdb-dump-timestamp*))
   (set-val psql-le :modstamp "NOW")
   (let* ((symb-list (copy-list (fields lexicon)))
 	 (symb-list (remove :name symb-list))
@@ -698,7 +668,6 @@
   (caar 
    (get-raw-records lexicon 
 		    "SELECT val FROM public.meta WHERE var='db-version' LIMIT 1")))
-  ;(sql-fn-get-val lexicon :lexdb_version))
     
 (defmethod get-filter ((lexicon psql-lex-database))
   (sql-fn-get-val lexicon :filter))
@@ -871,10 +840,7 @@
 ;; appropriate fields
 (defmethod sql-fn-string ((lexicon psql-lex-database) fn &key args fields)
   (with-slots (lexdb-version ext-fns) lexicon
-    (when ;;(and 
-	  ;; (string>= lexdb-version "3.34")
-	   (not (member fn ext-fns))
-	   ;;)
+    (when (not (member fn ext-fns))
       (error "~a not `LexDB external function'" fn))
     (unless fields
       (setf fields '(:*)))
@@ -1040,8 +1006,6 @@
 			(list
 			 (cons :orthkey (orthkey x))
 			 (cons :userid *lexdb-dump-user*)
-;			 (cons :version (2-str *lexdb-dump-version*))
-;			 (cons :modstamp *lexdb-dump-timestamp*)
 			 (cons :modstamp "NOW")
 			 (cons :lang *lexdb-dump-lang*)
 			 (cons :country *lexdb-dump-country*)

@@ -180,7 +180,6 @@
 	       #+:psql (:file "command")
 	       #+:psql (:file "psqllex")      ; Postgres lexical source
                (:file "psql-msc")     ; misc lexdb functions
-               #+:psql (:file "psql-db")      ; Postgres DB interface
                #+:psql (:file "psql-emacs")   ; Postgres-Emacs interface
                #+:psql (:file "psql-mwe")     ; Postgres MWE extensions
                #+:psql (:file "lexport")      ; export lexicon in various formats

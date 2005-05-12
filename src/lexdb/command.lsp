@@ -1,5 +1,5 @@
 ;;; Copyright (c) 2001 -- 2004
-;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Ben Waldron;
+;;;   Ben Waldron, John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `licence.txt' for conditions.
 
 (in-package :lkb)
@@ -184,5 +184,3 @@
 		       :type "tdl")))))
   (format t "(dumping small tdl lexicon [~a entries] to file: ~a)" (length *lex-ids-used*) file)
   (export-to-tdl-to-file *lexicon* file :lex-ids *lex-ids-used*))
-
-

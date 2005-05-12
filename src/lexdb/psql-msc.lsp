@@ -1,5 +1,5 @@
-;;; Copyright (c) 2002-2003 
-;;;   Ann Copestake, Fabre Lambeau, Stephan Oepen, Ben Waldron;
+;;; Copyright (c) 2002 - 2005
+;;;   Ben Waldron, Ann Copestake, Fabre Lambeau, Stephan Oepen;
 ;;;   see `licence.txt' for conditions.
 
 (in-package :lkb)
@@ -14,14 +14,8 @@
 (defun normalize-orthkey (x)
   (string-downcase x))
 
-;(defun alist-val (feat alist &key test)
-;  (if test
-;      (cdr (assoc feat alist :test test))
-;  (cdr (assoc feat alist))))
-
 (defun get-val (field raw-record cols)
   (nth (position field cols) raw-record))
-;(cdr (assoc field record :test #'equal)))
 
 (defun string-2-mxd-list-on-spc (&rest rest)
   (mapcar #'str-to-mixed
@@ -194,4 +188,3 @@
 	  (equal :empty list-w-empty))
       (list val)
     (cons val list-w-empty)))
-

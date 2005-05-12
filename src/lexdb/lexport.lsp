@@ -1,5 +1,5 @@
-;;; Copyright (c) 2001 -- 2004
-;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Ben Waldron;
+;;; Copyright (c) 2001 -- 2005
+;;;   Ben Waldron, John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `licence.txt' for conditions.
 
 ;;; export lexicon in various formats
@@ -51,19 +51,13 @@
 		(format nil "~a/~a" dir 
 			(or name (name lexicon) "unknown")))))
 	(*lexdb-dump-source* *lexdb-dump-source*)
-	;(*lexdb-dump-timestamp* *lexdb-dump-timestamp*)
 	(rev-file (format nil "~a.rev" file))
 	(skip-file (format nil "~a.skip" file)))
     (unless use-defaults
       ;; extra data in db entries
       (setf *lexdb-dump-source* (get-current-source))
-      ;(setf *lexdb-dump-timestamp* (extract-date-from-source *lexdb-dump-source*))
-      
       (query-for-username)
-;      (query-for-modstamp-username)
-      (query-for-meta-fields)
-      ;(get-export-version)
-      )
+      (query-for-meta-fields))
     
     (format t "~%~%Please wait: exporting lexicon ~a to REV file ~a" (name lexicon) rev-file)
     (format t "~%   (skip file: ~a)" skip-file)
@@ -159,26 +153,6 @@
   (car (ask-for-strings-movable head 
 			   (list promptDcons))))
 
-;; obsolete
-;(defun get-export-version nil
-;  (let ((old-val *lexdb-dump-version*)
-;	(new-val))
-;    (loop
-;	until (integerp new-val)
-;	do
-;	  (let ((version-str (ask-user-for-x 
-;			      "Export Lexicon" 
-;			      (cons "Version?" (num-2-str old-val)))))
-;	    (if (null version-str)
-;		(throw 'abort 'version))
-;	    (setf new-val
-;	      (multiple-value-bind (a b)
-;		  (parse-integer version-str
-;				 :junk-allowed t)
-;		(and (= b (length version-str))
-;		     a)))))
-;    (setf *lexdb-dump-version* new-val)))
-  
 (defun extract-date-from-source (source)
   (if (not (stringp source))
       (format t "WARNING: unable to determine modstamp for grammar")
@@ -215,13 +189,7 @@
      (cons "Country code?" (or *lexdb-dump-country* "UK"))))
   (unless *lexdb-dump-country* (throw 'abort 'country))) 
 
-;(defun query-for-modstamp-username nil
 (defun query-for-username nil
-;  (setf *lexdb-dump-timestamp* 
-;    (ask-user-for-x 
-;     "Export Lexicon" 
-;     (cons "Modstamp?" (or *lexdb-dump-timestamp* "1990-01-01"))))
-;  (unless *lexdb-dump-timestamp* (throw 'abort 'modstamp))
   (setf *lexdb-dump-user* 
     (ask-user-for-x 
      "Export Lexicon" 
