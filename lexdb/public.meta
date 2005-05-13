@@ -1,8 +1,8 @@
 db-version	3.70
-supported-server	7.4
-supported-server	8.0
+supported-psql-server	7.4
+supported-psql-server	8.0
 filter	TRUE
-ext-fn	check_server_version
+ext-fn	check_psql_server_version
 ext-fn	clear_scratch
 ext-fn	commit_scratch
 ext-fn	complete

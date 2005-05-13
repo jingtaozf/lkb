@@ -1,5 +1,5 @@
---- Copyright (c) 2003-2004 
---- Fabre Lambeau, Stephan Oepen, Benjamin Waldron;
+--- Copyright (c) 2003 - 2005 
+--- Benjamin Waldron, Fabre Lambeau, Stephan Oepen;
 --- see `licence.txt' for conditions.
 
 CREATE OR REPLACE FUNCTION fn_exists(text,text) RETURNS boolean AS '
@@ -113,7 +113,7 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION server_version(text) RETURNS boolean AS '
+CREATE OR REPLACE FUNCTION psql_server_version(text) RETURNS boolean AS '
 DECLARE
 	x text;
 BEGIN
@@ -124,9 +124,9 @@ END;
 ' LANGUAGE plpgsql;
 
 -- if server version then ...
-CREATE OR REPLACE FUNCTION if_server_version(text,text,text) RETURNS text AS '
+CREATE OR REPLACE FUNCTION if_psql_server_version(text,text,text) RETURNS text AS '
 BEGIN
-	IF server_version($1) THEN
+	IF psql_server_version($1) THEN
 		EXECUTE $2;
 		RETURN true;
 	ELSE

@@ -35,16 +35,16 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.server_version() RETURNS text AS '
+CREATE OR REPLACE FUNCTION public.psql_server_version() RETURNS text AS '
 	select split_part((select version()),\' \',2)
 ' LANGUAGE sql;
 
-CREATE OR REPLACE FUNCTION public.supported_server_versions() RETURNS SETOF text AS '
+CREATE OR REPLACE FUNCTION public.supported_psql_server_versions() RETURNS SETOF text AS '
 DECLARE
 	x RECORD;
 BEGIN
 	FOR x IN
-		SELECT val FROM public.meta WHERE var=\'supported-server\'
+		SELECT val FROM public.meta WHERE var=\'supported-psql-server\'
 		LOOP
 		RETURN NEXT x.val;
 	END LOOP;
@@ -52,7 +52,7 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.check_server_version() RETURNS SETOF text AS '
+CREATE OR REPLACE FUNCTION public.check_psql_server_version() RETURNS SETOF text AS '
 DECLARE
 	supported text;
 	actual text;
@@ -62,20 +62,20 @@ DECLARE
 	message text;
 	x RECORD;
 BEGIN
-	SELECT * INTO supported FROM public.supported_server_versions();
-	actual := server_version();
+	SELECT * INTO supported FROM public.supported_psql_server_versions();
+	actual := psql_server_version();
 	release := split_part(actual,\'.\',1);
 	major := split_part(actual,\'.\',2);
 	release_major := release || \'.\' || major;
 
-	IF (SELECT count(*) FROM public.supported_server_versions() WHERE supported_server_versions=release_major)=0 THEN
+	IF (SELECT count(*) FROM public.supported_psql_server_versions() WHERE supported_psql_server_versions=release_major)=0 THEN
 		message := \'Unsupported PSQL Server version (\' || actual || \')\';
 		RAISE WARNING \'%\', message;
 		RETURN NEXT message;
 
 		message := \'Supported PSQL Server versions: \';
-		FOR x IN SELECT * FROM supported_server_versions() LOOP
-			message := message || x.supported_server_versions || \'.x \';
+		FOR x IN SELECT * FROM supported_psql_server_versions() LOOP
+			message := message || x.supported_psql_server_versions || \'.x \';
 		END LOOP;
 
 		RAISE WARNING \'%\', message;
@@ -87,23 +87,23 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.dump_data() RETURNS boolean AS '
-DECLARE
-	backup_file_base text;
-BEGIN
-	IF NOT(reln_exists(\'public\',\'fld\')) THEN
-		CREATE TABLE public.fld (dfn text);
-	END IF;
-	IF (reln_exists(\'public\',\'rev\')) THEN
-		backup_file_base := tmp_base(\'lexdb\') || \'BACKUP-BEFORE-LEXDB-UPDATE\';
-		PERFORM dump_db_su(backup_file_base);
-		DELETE FROM public.backup;
-		INSERT INTO public.backup VALUES (backup_file_base);
-		DROP TABLE public.rev CASCADE;
-	END IF;
-	RETURN true;
-END;
-' LANGUAGE plpgsql;
+--CREATE OR REPLACE FUNCTION public.dump_data() RETURNS boolean AS '
+--DECLARE
+--	backup_file_base text;
+--BEGIN
+--	IF NOT(reln_exists(\'public\',\'fld\')) THEN
+--		CREATE TABLE public.fld (dfn text);
+--	END IF;
+--	IF (reln_exists(\'public\',\'rev\')) THEN
+--		backup_file_base := tmp_base(\'lexdb\') || \'BACKUP-BEFORE-LEXDB-UPDATE\';
+--		PERFORM dump_db_su(backup_file_base);
+--		DELETE FROM public.backup;
+--		INSERT INTO public.backup VALUES (backup_file_base);
+--		DROP TABLE public.rev CASCADE;
+--	END IF;
+--	RETURN true;
+--END;
+--' LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION public.user_schema_initialized() RETURNS boolean AS '
 BEGIN

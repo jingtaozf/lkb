@@ -6,15 +6,15 @@
 -- table creation functions
 --
 
-CREATE OR REPLACE FUNCTION public.create_public_backup_table() RETURNS boolean AS '
-BEGIN
-	IF (reln_exists(\'public\',\'backup\')) THEN
-		DROP TABLE public.backup CASCADE;
-	END IF;
-	CREATE TABLE backup (b text);
-	RETURN true;
-END;
-' LANGUAGE plpgsql;
+--CREATE OR REPLACE FUNCTION public.create_public_backup_table() RETURNS boolean AS '
+--BEGIN
+--	IF (reln_exists(\'public\',\'backup\')) THEN
+--		DROP TABLE public.backup CASCADE;
+--	END IF;
+--	CREATE TABLE backup (b text);
+--	RETURN true;
+--END;
+--' LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION public.create_public_meta_table() RETURNS boolean AS '
 BEGIN
@@ -57,29 +57,29 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.create_public_fld_table() RETURNS boolean AS '
-DECLARE
-	backup_file_base text;
-BEGIN
-	IF (reln_exists(\'public\',\'fld\')) THEN
-		DROP TABLE public.fld CASCADE;
-	END IF;
-	CREATE TABLE public.fld (dfn text);
-
-	IF (reln_exists(\'public\',\'backup\')) THEN
-		backup_file_base := (SELECT b FROM public.backup LIMIT 1);
-		IF backup_file_base IS NOT NULL THEN
-			PERFORM restore_public_fld_su(backup_file_base);
-		END IF;
-	END IF;
-
-	IF (reln_exists(\'public\',\'default_fld\')) THEN
-		DROP TABLE public.default_fld CASCADE;
-	END IF;
-	CREATE TABLE public.default_fld (dfn text);
-	RETURN true;
-END;
-' LANGUAGE plpgsql;
+--CREATE OR REPLACE FUNCTION public.create_public_fld_table() RETURNS boolean AS '
+--DECLARE
+--	backup_file_base text;
+--BEGIN
+--	IF (reln_exists(\'public\',\'fld\')) THEN
+--		DROP TABLE public.fld CASCADE;
+--	END IF;
+--	CREATE TABLE public.fld (dfn text);
+--
+--	IF (reln_exists(\'public\',\'backup\')) THEN
+--		backup_file_base := (SELECT b FROM public.backup LIMIT 1);
+--		IF backup_file_base IS NOT NULL THEN
+--			PERFORM restore_public_fld_su(backup_file_base);
+--		END IF;
+--	END IF;
+--
+--	IF (reln_exists(\'public\',\'default_fld\')) THEN
+--		DROP TABLE public.default_fld CASCADE;
+--	END IF;
+--	CREATE TABLE public.default_fld (dfn text);
+--	RETURN true;
+--END;
+--' LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION public.create_public_rev_table() RETURNS boolean AS '
 DECLARE
@@ -136,7 +136,7 @@ BEGIN
 	CREATE INDEX public_rev_name_modstamp ON public.rev (name, modstamp);
 	CREATE INDEX public_rev_name
 		ON public.rev (name varchar_ops); 
-	PERFORM if_server_version(\'7.4\', \'CREATE INDEX public_rev_name_pattern ON public.rev (name varchar_pattern_ops)\', \'CREATE INDEX public_rev_name_pattern ON public.rev (name)\');
+	PERFORM if_psql_server_version(\'7.4\', \'CREATE INDEX public_rev_name_pattern ON public.rev (name varchar_pattern_ops)\', \'CREATE INDEX public_rev_name_pattern ON public.rev (name)\');
 	RETURN true;
 END;
 ' LANGUAGE plpgsql;
@@ -160,7 +160,7 @@ BEGIN
 	CREATE UNIQUE INDEX lex_name ON lex (name varchar_ops);
  	CREATE INDEX lex_orthkey ON lex (orthkey varchar_ops); 
 
- 	IF server_version(\'7.4\') THEN
+ 	IF psql_server_version(\'7.4\') THEN
 		CREATE UNIQUE INDEX lex_name_pattern ON lex (name varchar_pattern_ops);
 		CREATE INDEX lex_orthkey_pattern ON lex (orthkey varchar_pattern_ops);
  	ELSE

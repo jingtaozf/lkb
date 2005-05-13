@@ -606,7 +606,7 @@
 (defmethod check-server-version ((lexicon psql-lex-database))
   (cond
    ((string>= (lexdb-version lexicon) "3.34")
-    (let ((texts (sql-fn-get-vals lexicon :check_server_version)))
+    (let ((texts (sql-fn-get-vals lexicon :check_psql_server_version)))
       (when texts
 	(format t "~%WARNING: ~a" (str-list-2-str texts :sep-c #\Newline)))))
    (t
