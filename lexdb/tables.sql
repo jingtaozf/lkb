@@ -16,46 +16,46 @@
 --END;
 --' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.create_public_meta_table() RETURNS boolean AS '
-BEGIN
-	IF (reln_exists(\'public\',\'meta\')) THEN
-		PERFORM public.hide_schemas();
-		DROP TABLE public.meta CASCADE;
-	END IF;
-	CREATE TABLE public.meta (
-		var text,
-		val text);
-	RETURN true;
-END;
-' LANGUAGE plpgsql;
+--CREATE OR REPLACE FUNCTION public.create_public_meta_table() RETURNS boolean AS '
+--BEGIN
+--	IF (reln_exists(\'public\',\'meta\')) THEN
+--		PERFORM public.hide_schemas();
+--		DROP TABLE public.meta CASCADE;
+--	END IF;
+--	CREATE TABLE public.meta (
+--		var text,
+--		val text);
+--	RETURN true;
+--END;
+--' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.create_public_dfn_table() RETURNS boolean AS '
-DECLARE
-	backup_file_base text;
-BEGIN
-	IF (reln_exists(\'public\',\'dfn\')) THEN
-		DROP TABLE public.dfn CASCADE;
-	END IF;	
-	CREATE TABLE public.dfn (
-			mode TEXT,
-			slot TEXT,
-			field TEXT,
-			path TEXT,
-			type TEXT,
-		PRIMARY KEY (mode,slot, field));
-
-	--
-	-- restore from backup
-	--
-	IF (reln_exists(\'public\',\'backup\')) THEN
-		backup_file_base := (SELECT b FROM public.backup LIMIT 1);
-		IF backup_file_base IS NOT NULL THEN
-			PERFORM restore_public_dfn_su(backup_file_base);
-		END IF;
-	END IF;
-	RETURN true;
-END;
-' LANGUAGE plpgsql;
+--CREATE OR REPLACE FUNCTION public.create_public_dfn_table() RETURNS boolean AS '
+--DECLARE
+--	backup_file_base text;
+--BEGIN
+--	IF (reln_exists(\'public\',\'dfn\')) THEN
+--		DROP TABLE public.dfn CASCADE;
+--	END IF;	
+--	CREATE TABLE public.dfn (
+--			mode TEXT,
+--			slot TEXT,
+--			field TEXT,
+--			path TEXT,
+--			type TEXT,
+--		PRIMARY KEY (mode,slot, field));
+--
+--	--
+--	-- restore from backup
+--	--
+--	IF (reln_exists(\'public\',\'backup\')) THEN
+--		backup_file_base := (SELECT b FROM public.backup LIMIT 1);
+--		IF backup_file_base IS NOT NULL THEN
+--			PERFORM restore_public_dfn_su(backup_file_base);
+--		END IF;
+--	END IF;
+--	RETURN true;
+--END;
+--' LANGUAGE plpgsql;
 
 --CREATE OR REPLACE FUNCTION public.create_public_fld_table() RETURNS boolean AS '
 --DECLARE
@@ -81,14 +81,42 @@ END;
 --END;
 --' LANGUAGE plpgsql;
 
+--CREATE OR REPLACE FUNCTION public.create_public_rev_table() RETURNS boolean AS '
+--DECLARE
+--	backup_file_base text;
+--	sql_qry text;
+--BEGIN
+--	IF (reln_exists(\'public\',\'rev\')) THEN
+--		DROP TABLE public.rev CASCADE;
+--	END IF;
+--	sql_qry := \'CREATE TABLE public.rev (
+--		name TEXT NOT NULL,
+--		userid TEXT DEFAULT user NOT NULL,
+--		modstamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+--		orthkey TEXT NOT NULL,
+--		flags INTEGER DEFAULT 0 NOT NULL
+--		\' || field_dfn_text() || \' ) \';
+--
+--	RAISE DEBUG \'%\', sql_qry;
+--	EXECUTE sql_qry;
+--
+--	IF (reln_exists(\'public\',\'backup\')) THEN
+--		backup_file_base := (SELECT b FROM public.backup LIMIT 1);
+--		IF backup_file_base IS NOT NULL THEN
+--			PERFORM restore_public_rev_su(backup_file_base);
+--		END IF;
+--	END IF;
+--
+--	PERFORM public.index_public_rev();
+--
+--	RETURN TRUE;
+--END;
+--' LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION public.create_public_rev_table() RETURNS boolean AS '
 DECLARE
-	backup_file_base text;
 	sql_qry text;
 BEGIN
-	IF (reln_exists(\'public\',\'rev\')) THEN
-		DROP TABLE public.rev CASCADE;
-	END IF;
 	sql_qry := \'CREATE TABLE public.rev (
 		name TEXT NOT NULL,
 		userid TEXT DEFAULT user NOT NULL,
@@ -99,33 +127,24 @@ BEGIN
 
 	RAISE DEBUG \'%\', sql_qry;
 	EXECUTE sql_qry;
-
-	IF (reln_exists(\'public\',\'backup\')) THEN
-		backup_file_base := (SELECT b FROM public.backup LIMIT 1);
-		IF backup_file_base IS NOT NULL THEN
-			PERFORM restore_public_rev_su(backup_file_base);
-		END IF;
-	END IF;
-
 	PERFORM public.index_public_rev();
-
 	RETURN TRUE;
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.create_bc_tmp_tables() RETURNS boolean AS '
-BEGIN
-	IF (reln_exists(\'public\',\'tmp\')) THEN
-		DROP TABLE public.tmp CASCADE;
-	END IF;
-	IF (reln_exists(\'public\',\'rev_new\')) THEN
-		DROP TABLE public.rev_new CASCADE;
-	END IF;
-	CREATE TABLE public.tmp AS SELECT * FROM public.rev WHERE NULL;
-	CREATE TABLE public.rev_new AS SELECT * FROM public.rev WHERE NULL;
-	RETURN true;
-END;
-' LANGUAGE plpgsql;
+--CREATE OR REPLACE FUNCTION public.create_bc_tmp_tables() RETURNS boolean AS '
+--BEGIN
+--	IF (reln_exists(\'public\',\'tmp\')) THEN
+--		DROP TABLE public.tmp CASCADE;
+--	END IF;
+--	IF (reln_exists(\'public\',\'rev_new\')) THEN
+--		DROP TABLE public.rev_new CASCADE;
+--	END IF;
+--	CREATE TABLE public.tmp AS SELECT * FROM public.rev WHERE NULL;
+--	CREATE TABLE public.rev_new AS SELECT * FROM public.rev WHERE NULL;
+--	RETURN true;
+--END;
+--' LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION public.index_public_rev() RETURNS boolean AS '
 BEGIN
