@@ -58,14 +58,14 @@ fi
 ## load field definitions
 if [ -f $FLD_FILE ]; then 
     echo "taking field defns from file $FLD_FILE";
-    echo "psql -c 'delete from fields' -U lexdb $LEXDB"
-    psql -c 'delete from fields' -U lexdb $LEXDB; 
+    echo "psql -c 'delete from public.fld' -U lexdb $LEXDB"
+    psql -c 'delete from fld' -U lexdb $LEXDB; 
     if [ $? != 0 ] ; then 
 	echo "drop_lexdb"
 	drop_lexdb; 
     fi
-    echo "psql -c \"copy fields from $FLD_FILE\" -U lexdb $LEXDB"
-    psql -c "\copy fields from $FLD_FILE" -U lexdb $LEXDB; 
+    echo "psql -c \"copy public.fld from $FLD_FILE\" -U lexdb $LEXDB"
+    psql -c "\copy fld from $FLD_FILE" -U lexdb $LEXDB; 
     if [ $? != 0 ] ; then 
 	echo "drop_lexdb"
 	drop_lexdb; 

@@ -1,4 +1,4 @@
-;;; Copyright (c) 2001 -- 2004
+;;; Copyright (c) 2001 -- 2005
 ;;;   Ben Waldron, John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `licence.txt' for conditions.
 
@@ -110,23 +110,23 @@
   (format t " ...done")
   (lkb-beep))
 
-(defun command-vacuum-current-grammar nil
+(defun command-vacuum-lex nil
   (unless (and
 	   (typep *psql-lexicon* 'psql-lex-database)
 	   (connection *psql-lexicon*))
     (error "please initialize PSQL lexicon"))
   (time
-   (vacuum-current-grammar *psql-lexicon*))
+   (vacuum-lex *psql-lexicon*))
   (format t " ...done")
   (lkb-beep)  )
 
-(defun command-vacuum-public-revision nil
+(defun command-vacuum-public-rev nil
   (unless (and
 	   (typep *psql-lexicon* 'psql-lex-database)
 	   (connection *psql-lexicon*))
     (error "please initialize PSQL lexicon"))
   (time
-   (vacuum-public-revision *psql-lexicon*))
+   (vacuum-public-rev *psql-lexicon*))
   (format t " ...done")
   (lkb-beep))
 

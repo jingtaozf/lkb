@@ -1,4 +1,4 @@
-;;; Copyright (c) 2003-2004 Ben Waldron
+;;; Copyright (c) 2003 - 2005 Ben Waldron
 ;;; see licence.txt for conditions
 
 ;; Portions copyright (c) 1996, 1997, 1999, 2000, 2001 Free Software Foundation, Inc.
@@ -371,7 +371,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 
 (defun lexdb-view-scratch-aux nil
   (let ((buffer *lexdb-scratch-buffer*)
-	(priv-recs (cle-get-private-revisions)))
+	(priv-recs (cle-get-private-revs)))
     (if (get-buffer buffer)
 	(kill-buffer buffer))
     (with-current-buffer (get-buffer-create buffer)
@@ -521,7 +521,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   ;;(terpri)
   (cle-store-record record-in)
   (cle-empty-psql-cache)
-  (princ (format " revision saved to LexDB %s " (cle-dbname))))
+  (princ (format " rev saved to LexDB %s " (cle-dbname))))
 
 (defun lexdb-lookup-aux2 (field-kw val-str)
   (let ((ids (cle-lookup field-kw val-str)))
@@ -729,7 +729,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
     (setf val-str (cle-lisp-str val-str)))
   (cle-eval-lexdb 'lookup field-kw val-str))
   
-(defun cle-get-private-revisions ()
+(defun cle-get-private-revs ()
   (cle-eval-lexdb 'scratch-records))
 
 (defun cle-complete (field-kw val-str)

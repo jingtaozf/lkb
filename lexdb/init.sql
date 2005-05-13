@@ -1,5 +1,5 @@
---- Copyright (c) 2003-2004 
---- Fabre Lambeau, Stephan Oepen, Benjamin Waldron;
+--- Copyright (c) 2003 - 2005 
+--- Benjamin Waldron, Fabre Lambeau, Stephan Oepen;
 --- see `licence.txt' for conditions.
 
 --
@@ -7,9 +7,9 @@
 --
 
 SELECT public.create_public_meta_table();
-SELECT public.create_public_revision_table();
-SELECT public.create_public_defn_table();
-SELECT public.create_bc_temp_tables();
+SELECT public.create_public_rev_table();
+SELECT public.create_public_dfn_table();
+SELECT public.create_bc_tmp_tables();
 \copy public.meta from 'public.meta'
 
 --

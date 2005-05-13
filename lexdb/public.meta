@@ -1,4 +1,4 @@
-db-version	3.65
+db-version	3.70
 supported-server	7.4
 supported-server	8.0
 filter	TRUE
@@ -9,16 +9,16 @@ ext-fn	complete
 ext-fn	db_owner
 ext-fn	dump-rev
 ext-fn	filter
-ext-fn	initialize_current_grammar
+ext-fn	initialize_lex
 ext-fn	initialize_user_schema
 ext-fn	lex_id_set
 ext-fn	lexdb_version
-ext-fn	list_fields
+ext-fn	list_fld
 ext-fn	lookup_general
 ext-fn	lookup_general_null
 ext-fn	lookup_word
 ext-fn	merge_into_db2
-ext-fn	merge_defn
+ext-fn	merge_dfn
 ext-fn	mneum_f_map
 ext-fn	orthography_set
 ext-fn	retrieve_all_entries
@@ -26,8 +26,8 @@ ext-fn	retrieve_current_timestamp
 ext-fn	retrieve_entries_by_orthkey
 ext-fn	retrieve_entry
 ext-fn	retrieve_head_entry
-ext-fn	revision_new
-ext-fn	retrieve_private_revisions
+ext-fn	rev_new
+ext-fn	retrieve_private_revs
 ext-fn	retrieve_semi_extra
 ext-fn	retrieve_semi_frame
 ext-fn	retrieve_semi_pred
@@ -37,7 +37,7 @@ ext-fn	semi_out_of_date
 ext-fn	semi_setup_post
 ext-fn	semi_setup_pre
 ext-fn	semi_up_to_date_p
-ext-fn	size_current_grammar
+ext-fn	size_lex
 ext-fn	test_user
 ext-fn	update_entry
 ext-fn	user_read_only_p

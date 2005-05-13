@@ -1,18 +1,18 @@
---- Copyright (c) 2003-2004 
---- Fabre Lambeau, Stephan Oepen, Benjamin Waldron;
+--- Copyright (c) 2003 - 2005 
+--- Benjamin Waldron, Fabre Lambeau, Stephan Oepen;
 --- see `licence.txt' for conditions.
 
 -- bmw20 26.11.04
 -- convert sql fns w/ args to plpgsql with use of EXECUTE
 --  (avoid major performance inadequacy) 
 
-create table revision_all as select * from revision where null;
-CREATE OR REPLACE FUNCTION public.revision_new() RETURNS SETOF revision AS '
-	SELECT * FROM revision_new
+create table rev_all as select * from rev where null;
+CREATE OR REPLACE FUNCTION public.rev_new() RETURNS SETOF rev AS '
+	SELECT * FROM rev_new
 ' LANGUAGE sql;
-drop table revision_all;
+drop table rev_all;
 
-CREATE OR REPLACE FUNCTION public.retrieve_head_entry(text) RETURNS SETOF revision AS '
+CREATE OR REPLACE FUNCTION public.retrieve_head_entry(text) RETURNS SETOF rev AS '
 DECLARE
 	x RECORD;
 BEGIN
@@ -26,23 +26,23 @@ END;
 
 ' LANGUAGE plpgsql;
 
-create table current_grammar as select * from revision where null;
-CREATE OR REPLACE FUNCTION public.retrieve_all_entries() RETURNS SETOF revision AS '
-	SELECT * FROM current_grammar
+create table lex as select * from rev where null;
+CREATE OR REPLACE FUNCTION public.retrieve_all_entries() RETURNS SETOF rev AS '
+	SELECT * FROM lex
 ' LANGUAGE sql;
-drop table current_grammar;
+drop table lex;
 
 -- abandon 'lower'ed orthkey: 'lower' incompatible with Lisp's downcase
 -- so we must:
 --  * ensure all db entries are in appropriate case
 --  * convert orthkeys to appropriate case before entering db universe
-CREATE OR REPLACE FUNCTION public.retrieve_entries_by_orthkey(text) RETURNS SETOF revision AS '
+CREATE OR REPLACE FUNCTION public.retrieve_entries_by_orthkey(text) RETURNS SETOF rev AS '
 DECLARE
 	x RECORD;
 BEGIN
 	FOR x IN
-		--EXECUTE \'SELECT * FROM current_grammar WHERE orthkey LIKE lower(\' || quote_literal($1) || \')\'
-		EXECUTE \'SELECT * FROM current_grammar WHERE orthkey LIKE \' || quote_literal($1)
+		--EXECUTE \'SELECT * FROM lex WHERE orthkey LIKE lower(\' || quote_literal($1) || \')\'
+		EXECUTE \'SELECT * FROM lex WHERE orthkey LIKE \' || quote_literal($1)
 		LOOP
 		RETURN NEXT x;
 	END LOOP;
@@ -50,12 +50,12 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.retrieve_entry(text) RETURNS SETOF revision AS '
+CREATE OR REPLACE FUNCTION public.retrieve_entry(text) RETURNS SETOF rev AS '
 DECLARE
 	x RECORD;
 BEGIN
 	FOR x IN
-		EXECUTE \'SELECT * FROM current_grammar WHERE name LIKE \' || quote_literal($1)
+		EXECUTE \'SELECT * FROM lex WHERE name LIKE \' || quote_literal($1)
 		LOOP
 		RETURN NEXT x;
 	END LOOP;
@@ -63,13 +63,13 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.semi_out_of_date() RETURNS SETOF revision AS '
+CREATE OR REPLACE FUNCTION public.semi_out_of_date() RETURNS SETOF rev AS '
 DECLARE
 	x RECORD;
 BEGIN
 	FOR x IN
-		--SELECT * FROM current_grammar as g NATURAL LEFT JOIN semi_mod as s WHERE g.modstamp > COALESCE(s.modstamp,\'-infinity\')
-		SELECT g.* FROM current_grammar as g NATURAL LEFT JOIN semi_mod as s WHERE g.modstamp > COALESCE(s.modstamp0,\'-infinity\')
+		--SELECT * FROM lex as g NATURAL LEFT JOIN semi_mod as s WHERE g.modstamp > COALESCE(s.modstamp,\'-infinity\')
+		SELECT g.* FROM lex as g NATURAL LEFT JOIN semi_mod as s WHERE g.modstamp > COALESCE(s.modstamp0,\'-infinity\')
 		LOOP
 		RETURN NEXT x;
 	END LOOP;
@@ -77,12 +77,12 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.retrieve_private_revisions() RETURNS SETOF revision AS '
+CREATE OR REPLACE FUNCTION public.retrieve_private_revs() RETURNS SETOF rev AS '
 DECLARE
 	x RECORD;
 BEGIN
 	FOR x IN
-		SELECT * FROM revision
+		SELECT * FROM rev
 		LOOP
 		RETURN NEXT x;
 	END LOOP;

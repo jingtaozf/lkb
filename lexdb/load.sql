@@ -1,5 +1,5 @@
---- Copyright (c) 2003-2004 
---- Fabre Lambeau, Stephan Oepen, Benjamin Waldron;
+--- Copyright (c) 2003 - 2005 
+--- Benjamin Waldron;
 --- see `licence.txt' for conditions.
 
 --
@@ -13,7 +13,7 @@
 SELECT public.create_public_backup_table();
 SELECT public.dump_data();
 
-SELECT public.create_public_fields_table();
+SELECT public.create_public_fld_table();
 
 -- obsolete
-\copy default_fields FROM 'default-fields.tsv'
+--\copy default_fld FROM 'default-fld.tsv'

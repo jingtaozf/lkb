@@ -1,5 +1,5 @@
---- Copyright (c) 2003-2005
---- Fabre Lambeau, Stephan Oepen, Benjamin Waldron;
+--- Copyright (c) 2003 - 2005
+--- Benjamin Waldron, Fabre Lambeau, Stephan Oepen;
 --- see `licence.txt' for conditions.
 
 --
@@ -29,14 +29,14 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.create_public_defn_table() RETURNS boolean AS '
+CREATE OR REPLACE FUNCTION public.create_public_dfn_table() RETURNS boolean AS '
 DECLARE
 	backup_file_base text;
 BEGIN
-	IF (reln_exists(\'public\',\'defn\')) THEN
-		DROP TABLE public.defn CASCADE;
+	IF (reln_exists(\'public\',\'dfn\')) THEN
+		DROP TABLE public.dfn CASCADE;
 	END IF;	
-	CREATE TABLE public.defn (
+	CREATE TABLE public.dfn (
 			mode TEXT,
 			slot TEXT,
 			field TEXT,
@@ -50,52 +50,52 @@ BEGIN
 	IF (reln_exists(\'public\',\'backup\')) THEN
 		backup_file_base := (SELECT b FROM public.backup LIMIT 1);
 		IF backup_file_base IS NOT NULL THEN
-			PERFORM restore_public_defn_su(backup_file_base);
+			PERFORM restore_public_dfn_su(backup_file_base);
 		END IF;
 	END IF;
 	RETURN true;
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.create_public_fields_table() RETURNS boolean AS '
+CREATE OR REPLACE FUNCTION public.create_public_fld_table() RETURNS boolean AS '
 DECLARE
 	backup_file_base text;
 BEGIN
-	IF (reln_exists(\'public\',\'fields\')) THEN
-		DROP TABLE public.fields CASCADE;
+	IF (reln_exists(\'public\',\'fld\')) THEN
+		DROP TABLE public.fld CASCADE;
 	END IF;
-	CREATE TABLE public.fields (defn text);
+	CREATE TABLE public.fld (dfn text);
 
 	IF (reln_exists(\'public\',\'backup\')) THEN
 		backup_file_base := (SELECT b FROM public.backup LIMIT 1);
 		IF backup_file_base IS NOT NULL THEN
-			PERFORM restore_public_fields_su(backup_file_base);
+			PERFORM restore_public_fld_su(backup_file_base);
 		END IF;
 	END IF;
 
-	IF (reln_exists(\'public\',\'default_fields\')) THEN
-		DROP TABLE public.default_fields CASCADE;
+	IF (reln_exists(\'public\',\'default_fld\')) THEN
+		DROP TABLE public.default_fld CASCADE;
 	END IF;
-	CREATE TABLE public.default_fields (defn text);
+	CREATE TABLE public.default_fld (dfn text);
 	RETURN true;
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.create_public_revision_table() RETURNS boolean AS '
+CREATE OR REPLACE FUNCTION public.create_public_rev_table() RETURNS boolean AS '
 DECLARE
 	backup_file_base text;
 	sql_qry text;
 BEGIN
-	IF (reln_exists(\'public\',\'revision\')) THEN
-		DROP TABLE public.revision CASCADE;
+	IF (reln_exists(\'public\',\'rev\')) THEN
+		DROP TABLE public.rev CASCADE;
 	END IF;
-	sql_qry := \'CREATE TABLE public.revision (
+	sql_qry := \'CREATE TABLE public.rev (
 		name TEXT NOT NULL,
 		userid TEXT DEFAULT user NOT NULL,
 		modstamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
 		orthkey TEXT NOT NULL,
 		flags INTEGER DEFAULT 0 NOT NULL
-		\' || field_defn_text() || \' ) \';
+		\' || field_dfn_text() || \' ) \';
 
 	RAISE DEBUG \'%\', sql_qry;
 	EXECUTE sql_qry;
@@ -103,101 +103,86 @@ BEGIN
 	IF (reln_exists(\'public\',\'backup\')) THEN
 		backup_file_base := (SELECT b FROM public.backup LIMIT 1);
 		IF backup_file_base IS NOT NULL THEN
-			PERFORM restore_public_revision_su(backup_file_base);
+			PERFORM restore_public_rev_su(backup_file_base);
 		END IF;
 	END IF;
 
-	PERFORM public.index_public_revision();
+	PERFORM public.index_public_rev();
 
 	RETURN TRUE;
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.create_bc_temp_tables() RETURNS boolean AS '
+CREATE OR REPLACE FUNCTION public.create_bc_tmp_tables() RETURNS boolean AS '
 BEGIN
-	IF (reln_exists(\'public\',\'temp\')) THEN
-		DROP TABLE public.temp CASCADE;
+	IF (reln_exists(\'public\',\'tmp\')) THEN
+		DROP TABLE public.tmp CASCADE;
 	END IF;
-	IF (reln_exists(\'public\',\'revision_new\')) THEN
-		DROP TABLE public.revision_new CASCADE;
+	IF (reln_exists(\'public\',\'rev_new\')) THEN
+		DROP TABLE public.rev_new CASCADE;
 	END IF;
-	CREATE TABLE public.temp AS SELECT * FROM public.revision WHERE NULL;
-	CREATE TABLE public.revision_new AS SELECT * FROM public.revision WHERE NULL;
+	CREATE TABLE public.tmp AS SELECT * FROM public.rev WHERE NULL;
+	CREATE TABLE public.rev_new AS SELECT * FROM public.rev WHERE NULL;
 	RETURN true;
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.index_public_revision() RETURNS boolean AS '
+CREATE OR REPLACE FUNCTION public.index_public_rev() RETURNS boolean AS '
 BEGIN
  	RAISE INFO \'Creating indices...\';
-	ALTER TABLE public.revision ADD PRIMARY KEY (name,userid,modstamp);
-	CREATE INDEX public_orthkey ON public.revision (orthkey); 
-	CREATE UNIQUE INDEX name_modstamp ON public.revision (name,modstamp); 
-	CREATE INDEX public_revision_name_modstamp ON public.revision (name, modstamp);
-	CREATE INDEX public_revision_name
-		ON public.revision (name varchar_ops); 
-	PERFORM if_server_version(\'7.4\', \'CREATE INDEX public_revision_name_pattern ON public.revision (name varchar_pattern_ops)\', \'CREATE INDEX public_revision_name_pattern ON public.revision (name)\');
+	ALTER TABLE public.rev ADD PRIMARY KEY (name,userid,modstamp);
+	CREATE INDEX public_orthkey ON public.rev (orthkey); 
+	CREATE UNIQUE INDEX name_modstamp ON public.rev (name,modstamp); 
+	CREATE INDEX public_rev_name_modstamp ON public.rev (name, modstamp);
+	CREATE INDEX public_rev_name
+		ON public.rev (name varchar_ops); 
+	PERFORM if_server_version(\'7.4\', \'CREATE INDEX public_rev_name_pattern ON public.rev (name varchar_pattern_ops)\', \'CREATE INDEX public_rev_name_pattern ON public.rev (name)\');
 	RETURN true;
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.deindex_public_revision() RETURNS boolean AS '
+CREATE OR REPLACE FUNCTION public.deindex_public_rev() RETURNS boolean AS '
 BEGIN
  	RAISE INFO \'Dropping indices...\';
  	DROP INDEX public_orthkey;
  	DROP INDEX name_modstamp;
-	DROP INDEX public_revision_name_modstamp;
-	DROP INDEX public_revision_name;
-	DROP INDEX public_revision_name_pattern;
-	ALTER TABLE public.revision DROP CONSTRAINT revision_pkey;
+	DROP INDEX public_rev_name_modstamp;
+	DROP INDEX public_rev_name;
+	DROP INDEX public_rev_name_pattern;
+	ALTER TABLE public.rev DROP CONSTRAINT rev_pkey;
 	RETURN true;
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.index_current_grammar() RETURNS boolean AS '
+CREATE OR REPLACE FUNCTION public.index_lex() RETURNS boolean AS '
 BEGIN
 	RAISE INFO \'indexing db cache\';
-	CREATE UNIQUE INDEX current_grammar_name ON current_grammar (name varchar_ops);
- 	CREATE INDEX current_grammar_orthkey ON current_grammar (orthkey varchar_ops); 
+	CREATE UNIQUE INDEX lex_name ON lex (name varchar_ops);
+ 	CREATE INDEX lex_orthkey ON lex (orthkey varchar_ops); 
 
  	IF server_version(\'7.4\') THEN
-		CREATE UNIQUE INDEX current_grammar_name_pattern ON current_grammar (name varchar_pattern_ops);
-		CREATE INDEX current_grammar_orthkey_pattern ON current_grammar (orthkey varchar_pattern_ops);
+		CREATE UNIQUE INDEX lex_name_pattern ON lex (name varchar_pattern_ops);
+		CREATE INDEX lex_orthkey_pattern ON lex (orthkey varchar_pattern_ops);
  	ELSE
-		CREATE UNIQUE INDEX current_grammar_name_pattern ON current_grammar (name);
-		CREATE INDEX current_grammar_orthkey_pattern ON current_grammar (orthkey);
+		CREATE UNIQUE INDEX lex_name_pattern ON lex (name);
+		CREATE INDEX lex_orthkey_pattern ON lex (orthkey);
  	END IF; 
 	RETURN true;
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.deindex_current_grammar() RETURNS boolean AS '
+CREATE OR REPLACE FUNCTION public.deindex_lex() RETURNS boolean AS '
 BEGIN
 	RAISE INFO \'deindexing db cache\';
-	DROP INDEX current_grammar_name;
- 	DROP INDEX current_grammar_orthkey; 
+	DROP INDEX lex_name;
+ 	DROP INDEX lex_orthkey; 
 
-	DROP INDEX current_grammar_name_pattern;
-	DROP INDEX current_grammar_orthkey_pattern;
+	DROP INDEX lex_name_pattern;
+	DROP INDEX lex_orthkey_pattern;
 
 	RETURN true;
 END;
 ' LANGUAGE plpgsql;
-
-----
----- clean up obsolete structures
-----
---CREATE OR REPLACE FUNCTION public.clean_up() RETURNS boolean AS '
---BEGIN
---	IF (reln_exists(\'public\',\'qry\')) THEN
---		DROP TABLE public.qry CASCADE;
---	END IF;
---	IF (reln_exists(\'public\',\'qrya\')) THEN
---		DROP TABLE public.qrya CASCADE;
---	END IF;
---	RETURN true;
---END;
---' LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION semi_create_indices() RETURNS boolean AS '
 BEGIN
@@ -299,27 +284,22 @@ END;
 --
 --
 
-CREATE OR REPLACE FUNCTION field_defn_text() RETURNS text AS '
+CREATE OR REPLACE FUNCTION field_dfn_text() RETURNS text AS '
 DECLARE
 	x RECORD;
 	t text;
 BEGIN
 
-	IF (reln_exists(\'public\',\'fields\') 
+	IF (reln_exists(\'public\',\'fld\') 
 			AND 
-			(SELECT count(*) FROM public.fields)>0) THEN
-		RAISE INFO \'Using field defns found in public.fields\';
-		FOR x IN SELECT defn FROM fields LOOP
+			(SELECT count(*) FROM public.fld)>0) THEN
+		RAISE INFO \'Using field defns found in public.fld\';
+		FOR x IN SELECT dfn FROM fld LOOP
 			t := COALESCE(t,\'\');
-			t:= t || \',\n \' || x.defn;
+			t:= t || \',\n \' || x.dfn;
 		END LOOP;
 	ELSE
-		-- obsolete
-		RAISE INFO \'Using field defns found in public.default_fields\';
-		FOR x IN SELECT defn FROM default_fields LOOP
-			t := COALESCE(t,\'\');
-			t:= t || \',\n \' || x.defn;
-		END LOOP;		
+		RAISE EXCEPTION \'\n*\n*\n* no field definitions provided! (TABLE public.fld IS EMPTY)\n*\n*\';
 	END IF;
 	RETURN t;
 END;
