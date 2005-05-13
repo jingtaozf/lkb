@@ -119,7 +119,7 @@
   (let* ((lexicon *psql-lexicon*)
 	(filter (get-filter lexicon)))
     (sql-fn-get-records lexicon 
-			:clear_scratch)
+			:clear_rev)
     (empty-cache *lexicon*)
     (reconnect lexicon) ;; work around server bug
     (sql-fn-get-records lexicon 
@@ -128,7 +128,7 @@
 
 (defun commit-scratch-lex nil
   (sql-fn-get-val *psql-lexicon* 
-		  :commit_scratch)
+		  :commit_rev)
   (empty-cache *psql-lexicon*))
 
 (defun load-tdl-from-scratch (filename)

@@ -440,7 +440,7 @@
 
 (defmethod current-timestamp ((lexicon psql-lex-database))
   (sql-fn-get-val lexicon 
-		  :retrieve_current_timestamp))
+		  :current_timestamp))
 
 ;;;
 ;;; low-level
@@ -604,16 +604,18 @@
       nil))))
 
 (defmethod check-server-version ((lexicon psql-lex-database))
-  (cond
-   ((string>= (lexdb-version lexicon) "3.34")
+  ;(cond
+   ;((string>= (lexdb-version lexicon) "3.34")
     (let ((texts (sql-fn-get-vals lexicon :check_psql_server_version)))
       (when texts
 	(format t "~%WARNING: ~a" (str-list-2-str texts :sep-c #\Newline)))))
-   (t
-    (let ((server-version (get-server-version lexicon)))
-      (unless (string>= server-version "7.3")
-	(format t "~%WARNING: ")
-	(format t *lexdb-message-old-server* server-version "7.4.x"))))))
+    ;))
+;)
+;   (t
+;    (let ((server-version (get-server-version lexicon)))
+;      (unless (string>= server-version "7.3")
+;	(format t "~%WARNING: ")
+;	(format t *lexdb-message-old-server* server-version "7.4.x"))))))
 
 (defmethod initialize-lex ((lexicon psql-lex-database))
   (when (open-lex lexicon)
@@ -650,15 +652,16 @@
   (when (connection-ok lexicon)
     (setf (lexdb-version lexicon) 
       (get-db-version lexicon))
-    (when (string>= (lexdb-version lexicon) "3.34")
-      (get-ext-fns lexicon))
+    ;(when (string>= (lexdb-version lexicon) "3.34")
+      (get-pub-fns lexicon)
+      ;)
     t))	
 
-(defmethod get-ext-fns ((lexicon psql-lex-database)) 
-  (setf (ext-fns lexicon)
+(defmethod get-pub-fns ((lexicon psql-lex-database)) 
+  (setf (pub-fns lexicon)
     (mapcar #'(lambda (x)
 		(str-2-keyword (car x)))
-	    (get-raw-records lexicon "SELECT * FROM ext_fns()"))))
+	    (get-raw-records lexicon "SELECT * FROM pub_fns()"))))
 
 ;;;
 ;;;
@@ -667,7 +670,7 @@
 (defmethod get-db-version ((lexicon psql-lex-database))
   (caar 
    (get-raw-records lexicon 
-		    "SELECT val FROM public.meta WHERE var='db-version' LIMIT 1")))
+		    "SELECT val FROM public.meta WHERE var='lexdb-version' LIMIT 1")))
     
 (defmethod get-filter ((lexicon psql-lex-database))
   (sql-fn-get-val lexicon :filter))
@@ -771,7 +774,7 @@
 		     rev-filename)
   (let ((count-new
 	 (str-2-num
-	  (sql-fn-get-val lexicon :merge_into_db2))))
+	  (sql-fn-get-val lexicon :merge_rev_from_tmp))))
     (format t "~%(~a new rev entries)" count-new)
     (unless (equal 0 count-new)
       (vacuum-public-rev lexicon))
@@ -787,7 +790,7 @@
 		     dfn-filename)
   (let ((count-new-dfn 
 	 (str-2-num 
-	  (sql-fn-get-val lexicon :merge_dfn))))
+	  (sql-fn-get-val lexicon :merge_dfn_from_tmp_dfn))))
     (run-command lexicon "DROP TABLE tmp_dfn")
     (format t "~%(~a new field mappings)" count-new-dfn)
     count-new-dfn))
@@ -839,8 +842,8 @@
 ;; return sql code to call db function and return
 ;; appropriate fields
 (defmethod sql-fn-string ((lexicon psql-lex-database) fn &key args fields)
-  (with-slots (lexdb-version ext-fns) lexicon
-    (when (not (member fn ext-fns))
+  (with-slots (lexdb-version pub-fns) lexicon
+    (when (not (member fn pub-fns))
       (error "~a not `LexDB external function'" fn))
     (unless fields
       (setf fields '(:*)))
@@ -1090,7 +1093,7 @@
   t)
 
 (defmethod dump-rev ((lexdb psql-lex-database) filebase)
-  (run-command-stdout lexdb "SELECT * FROM dump_rev(); COPY tmp TO stdout" 
+  (run-command-stdout lexdb "SELECT * FROM dump_rev_to_tmp(); COPY tmp TO stdout" 
 		      (namestring (pathname (format nil "~a.rev" 
 							      filebase))))
   t)

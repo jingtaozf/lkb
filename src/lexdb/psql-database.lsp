@@ -140,12 +140,12 @@
       port)))
 
 ;;; returns version, eg. "7.3.2"
-(defmethod get-server-version ((lexicon psql-database))
-  (unless (string< (lexdb-version lexicon) "3.34")
-    (error "obsolete function call"))
-  (let ((version-str 
-	 (caar (get-raw-records lexicon "SELECT * FROM VERSION()"))))
-    (second (split-on-char version-str))))
+;(defmethod get-server-version ((lexicon psql-database))
+;  (unless (string< (lexdb-version lexicon) "3.34")
+;    (error "obsolete function call"))
+;  (let ((version-str 
+;	 (caar (get-raw-records lexicon "SELECT * FROM VERSION()"))))
+;    (second (split-on-char version-str))))
 
 ;; unused?
 (defmethod update-pgpass-file ((lexicon psql-database))
