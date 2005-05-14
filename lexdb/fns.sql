@@ -14,18 +14,6 @@ CREATE OR REPLACE FUNCTION public.list_fld() RETURNS SETOF text AS '
 	SELECT t1 FROM return_field_info(\'public\',\'rev\');
 ' LANGUAGE sql;
 
---CREATE OR REPLACE FUNCTION public.tmp_dir() RETURNS text AS '
---BEGIN
--- RETURN (SELECT val FROM public.meta WHERE var=\'tmp-dir\' LIMIT 1);
---END;
---' LANGUAGE plpgsql;
-
---CREATE OR REPLACE FUNCTION public.tmp_base(text) RETURNS text AS '
---BEGIN
--- RETURN tmp_dir() || \'/\' || $1 || \'-tmp.\';
---END;
---' LANGUAGE plpgsql;
-
 CREATE OR REPLACE FUNCTION public.pub_fns() RETURNS SETOF text AS '
 DECLARE
 	x RECORD;
@@ -395,13 +383,6 @@ BEGIN
 	RETURN true;
 END;
 ' LANGUAGE plpgsql;
-
-
---CREATE OR REPLACE FUNCTION dump_db_dfn_fld() RETURNS text AS '
---BEGIN
--- RETURN dump_db_dfn_fld_su2(user);
---END;
---' LANGUAGE plpgsql;
 
 --
 --
