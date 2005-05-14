@@ -14,7 +14,7 @@ export FLD_FILE=$2
 export CREATEDB_OPTIONS=$3
 
 ## default settings
-if ! [ $CREATEDB_OPTIONS ]; then 
+if [ -n "$CREATEDB_OPTIONS" ]; then 
     export CREATEDB_OPTIONS="-E UNICODE"; 
     echo 'using default CREATEDB_OPTIONS="-E UNICODE"';
 fi

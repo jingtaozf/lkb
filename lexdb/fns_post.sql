@@ -4,13 +4,11 @@
 
 -- bmw20 26.11.04
 -- convert sql fns w/ args to plpgsql with use of EXECUTE
---  (avoid major performance inadequacy) 
+--  (avoid major performance problem) 
 
-create table rev_all as select * from rev where null;
 CREATE OR REPLACE FUNCTION public.rev_new() RETURNS SETOF rev AS '
 	SELECT * FROM rev_new
 ' LANGUAGE sql;
-drop table rev_all;
 
 CREATE OR REPLACE FUNCTION public.retrieve_head_entry(text) RETURNS SETOF rev AS '
 DECLARE
@@ -68,7 +66,6 @@ DECLARE
 	x RECORD;
 BEGIN
 	FOR x IN
-		--SELECT * FROM lex as g NATURAL LEFT JOIN semi_mod as s WHERE g.modstamp > COALESCE(s.modstamp,\'-infinity\')
 		SELECT g.* FROM lex as g NATURAL LEFT JOIN semi_mod as s WHERE g.modstamp > COALESCE(s.modstamp0,\'-infinity\')
 		LOOP
 		RETURN NEXT x;
@@ -89,4 +86,3 @@ BEGIN
 	RETURN;
 END;
 ' LANGUAGE plpgsql;
-

@@ -10,30 +10,38 @@
 -- admin tasks
 --
 
-CREATE OR REPLACE FUNCTION public.tmp_dir() RETURNS text AS '
-BEGIN
- RETURN (SELECT val FROM public.meta WHERE var=\'tmp-dir\' LIMIT 1);
-END;
-' LANGUAGE plpgsql;
+CREATE OR REPLACE FUNCTION public.list_fld() RETURNS SETOF text AS '
+	SELECT t1 FROM return_field_info(\'public\',\'rev\');
+' LANGUAGE sql;
 
-CREATE OR REPLACE FUNCTION public.tmp_base(text) RETURNS text AS '
-BEGIN
- RETURN tmp_dir() || \'/\' || $1 || \'-tmp.\';
-END;
-' LANGUAGE plpgsql;
+--CREATE OR REPLACE FUNCTION public.tmp_dir() RETURNS text AS '
+--BEGIN
+-- RETURN (SELECT val FROM public.meta WHERE var=\'tmp-dir\' LIMIT 1);
+--END;
+--' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.ext_fns() RETURNS SETOF text AS '
+--CREATE OR REPLACE FUNCTION public.tmp_base(text) RETURNS text AS '
+--BEGIN
+-- RETURN tmp_dir() || \'/\' || $1 || \'-tmp.\';
+--END;
+--' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.pub_fns() RETURNS SETOF text AS '
 DECLARE
 	x RECORD;
 BEGIN
 	FOR x IN
-		SELECT val FROM public.meta WHERE var=\'ext-fn\'
+		SELECT val FROM public.meta WHERE var=\'pub-fn\'
 		LOOP
 		RETURN NEXT x.val;
 	END LOOP;
 	RETURN;
 END;
 ' LANGUAGE plpgsql;
+
+--
+-- psql server version
+--
 
 CREATE OR REPLACE FUNCTION public.psql_server_version() RETURNS text AS '
 	select split_part((select version()),\' \',2)
@@ -87,53 +95,48 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
---CREATE OR REPLACE FUNCTION public.dump_data() RETURNS boolean AS '
---DECLARE
---	backup_file_base text;
---BEGIN
---	IF NOT(reln_exists(\'public\',\'fld\')) THEN
---		CREATE TABLE public.fld (dfn text);
---	END IF;
---	IF (reln_exists(\'public\',\'rev\')) THEN
---		backup_file_base := tmp_base(\'lexdb\') || \'BACKUP-BEFORE-LEXDB-UPDATE\';
---		PERFORM dump_db_su(backup_file_base);
---		DELETE FROM public.backup;
---		INSERT INTO public.backup VALUES (backup_file_base);
---		DROP TABLE public.rev CASCADE;
---	END IF;
---	RETURN true;
---END;
---' LANGUAGE plpgsql;
+--
+-- user schema setup
+--
 
-CREATE OR REPLACE FUNCTION public.user_schema_initialized() RETURNS boolean AS '
+CREATE OR REPLACE FUNCTION public.user_schema_init_p() RETURNS boolean AS '
 BEGIN
 	RETURN (SELECT (user IN (SELECT val FROM public.meta WHERE var=\'user\')));
 END;' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.register_user_schema(text) RETURNS boolean AS '
+DECLARE
+	user_str text;
+BEGIN
+	user_str := $1;
+	EXECUTE \'INSERT INTO public.meta VALUES (\'\'user\'\', \' || quote_literal(user_str) || \')\';
+	RETURN true;
+END;
+' LANGUAGE plpgsql SECURITY DEFINER;;
 
 CREATE OR REPLACE FUNCTION public.initialize_user_schema() RETURNS boolean AS '
 DECLARE
 	user_str text;
 BEGIN
 	user_str := user;
-	IF user_schema_initialized() THEN
+	IF user_schema_init_p() THEN
 		RETURN false;
 	END IF;
 	RAISE INFO \'Initializing user schema %\', user_str;
 
 	EXECUTE \'CREATE SCHEMA \' || user;
-	EXECUTE \'INSERT INTO public.meta VALUES (\'\'user\'\', \' || quote_literal(user) || \')\';
-	CREATE TABLE meta AS SELECT * FROM public.meta WHERE var=\'filter\';
 	
-	-- tmp
+	PERFORM public.register_user_schema(user_str);
+	--EXECUTE \'INSERT INTO public.meta VALUES (\'\'user\'\', \' || quote_literal(user) || \')\';
+	
+	--tables
+	CREATE TABLE meta AS SELECT * FROM public.meta WHERE var=\'filter\';
  	CREATE TABLE tmp AS SELECT * FROM public.rev WHERE NULL;
  
-	-- scratch
  	CREATE TABLE rev AS SELECT * FROM public.rev WHERE NULL;
  	EXECUTE \'CREATE UNIQUE INDEX user_\' || user || \'_name_rev_userid ON rev (name,userid,modstamp)\'; 
 
-	-- lex
  	CREATE TABLE lex AS SELECT * FROM public.rev WHERE NULL;
-
  	PERFORM public.index_lex();
 
 	-- views
@@ -152,15 +155,19 @@ BEGIN
 			UNION 
  			SELECT * FROM rev;
 
-	-- mod time
-	PERFORM update_modstamp_priv();
+	-- register mod time
+	PERFORM register_modstamp_priv();
 
-	-- semi
+	-- semi setup
 	PERFORM create_tables_semi();
 	
 	RETURN true;
 END;
 ' LANGUAGE plpgsql;
+
+--
+--
+--
 
 CREATE OR REPLACE FUNCTION public.initialize_lex(text) RETURNS boolean AS '
 DECLARE
@@ -242,7 +249,11 @@ BEGIN
 END;'
 LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.update_modstamp_priv() RETURNS text AS '
+--
+--
+--
+
+CREATE OR REPLACE FUNCTION public.register_modstamp_priv() RETURNS text AS '
 DECLARE
 	mod_time text;
 BEGIN
@@ -254,7 +265,7 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.update_modstamp_pub() RETURNS text AS '
+CREATE OR REPLACE FUNCTION public.register_modstamp_pub() RETURNS text AS '
 DECLARE
 	mod_time text;
 BEGIN
@@ -265,6 +276,10 @@ BEGIN
 	RETURN mod_time;
 END;
 ' LANGUAGE plpgsql SECURITY DEFINER;
+
+--
+--
+--
 
 CREATE OR REPLACE FUNCTION public.mod_time_private() RETURNS text AS '
 BEGIN
@@ -290,15 +305,17 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.merge_into_db2() RETURNS integer AS 
+--
+--
+--
+
+CREATE OR REPLACE FUNCTION public.merge_rev_from_tmp() RETURNS integer AS 
 '
 DECLARE
 	count_new int;
 	num_dups int;
 BEGIN
 	PERFORM assert_db_owner();	
-	---- n o t e : must copy file to public.tmp before invoking this code
-	----           eg. COPY TO stdin from frontend
 
 	RAISE INFO \'Selecting new entries to merge...\';
  	CREATE INDEX tmp_name_userid_modstamp on public.tmp (name, userid, modstamp);
@@ -326,7 +343,7 @@ BEGIN
  
  		PERFORM public.index_public_rev();
 
-		PERFORM update_modstamp_pub();
+		PERFORM register_modstamp_pub();
 	ELSE
 		RAISE INFO \'0 new entries\';
 	END IF;
@@ -334,14 +351,12 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.merge_dfn() RETURNS integer AS 
+CREATE OR REPLACE FUNCTION public.merge_dfn_from_tmp_dfn() RETURNS integer AS 
 '
 DECLARE
 	num_new int;
 BEGIN
  	PERFORM assert_db_owner();	
-	---- n o t e : must copy file to public.tmp_dfn before invoking this code
-	----           eg. COPY TO stdin from frontend
 
  	num_new := (SELECT count(*) FROM 
              		(SELECT * FROM public.tmp_dfn EXCEPT
@@ -364,8 +379,11 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
+--
+--
+--
 
-CREATE OR REPLACE FUNCTION public.dump_rev() RETURNS boolean AS '
+CREATE OR REPLACE FUNCTION public.dump_rev_to_tmp() RETURNS boolean AS '
 DECLARE
 	dump_file_rev text;
 	lexdb_versn real;
@@ -374,19 +392,20 @@ BEGIN
 	RAISE INFO \'creating ordered copy of public.rev in tmp\';
 	DELETE FROM tmp;
 	INSERT INTO tmp SELECT * FROM public.rev ORDER BY name, userid, modstamp;
-	--RAISE INFO \'dumping tmp to database stdout\';
-	--COPY tmp TO stdout;
-
 	RETURN true;
 END;
 ' LANGUAGE plpgsql;
 
 
-CREATE OR REPLACE FUNCTION dump_db_dfn_fld() RETURNS text AS '
-BEGIN
- RETURN dump_db_dfn_fld_su2(user);
-END;
-' LANGUAGE plpgsql;
+--CREATE OR REPLACE FUNCTION dump_db_dfn_fld() RETURNS text AS '
+--BEGIN
+-- RETURN dump_db_dfn_fld_su2(user);
+--END;
+--' LANGUAGE plpgsql;
+
+--
+--
+--
 
 CREATE OR REPLACE FUNCTION public.size_lex() RETURNS int AS '
 BEGIN
@@ -396,7 +415,7 @@ END;
 
 CREATE OR REPLACE FUNCTION public.lexdb_version() RETURNS text AS '
 BEGIN
-	RETURN ( SELECT val FROM public.meta WHERE var=\'db-version\' LIMIT 1 );
+	RETURN ( SELECT val FROM public.meta WHERE var=\'lexdb-version\' LIMIT 1 );
 END;
 ' LANGUAGE plpgsql;
 
@@ -407,12 +426,15 @@ END;
 ' LANGUAGE plpgsql;
 
 
-CREATE OR REPLACE FUNCTION public.retrieve_current_timestamp() RETURNS text AS '
+CREATE OR REPLACE FUNCTION public.current_timestamp() RETURNS text AS '
 BEGIN
 	RETURN current_timestamp;
 END;
 ' LANGUAGE plpgsql;
 
+--
+--
+--
 
 CREATE OR REPLACE FUNCTION public.user_read_only_p(text) RETURNS boolean AS '
 BEGIN
@@ -437,22 +459,26 @@ END;
 -- 
 --
 
-CREATE OR REPLACE FUNCTION public.clear_scratch() RETURNS boolean AS '
+CREATE OR REPLACE FUNCTION public.clear_rev() RETURNS boolean AS '
 BEGIN
 	DELETE FROM rev;
-	PERFORM update_modstamp_priv();
+	PERFORM register_modstamp_priv();
 	RETURN TRUE;
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.commit_scratch() RETURNS boolean AS '
+CREATE OR REPLACE FUNCTION public.commit_rev() RETURNS boolean AS '
 BEGIN
 	INSERT INTO public.rev (SELECT * FROM rev);
-	PERFORM update_modstamp_pub();
-	PERFORM clear_scratch();
+	PERFORM register_modstamp_pub();
+	PERFORM clear_rev();
 	RETURN true;
 END;
 ' LANGUAGE plpgsql;
+
+--
+--
+--
 
 CREATE OR REPLACE FUNCTION public.complete(text,text) RETURNS SETOF text AS '
 DECLARE
@@ -527,7 +553,7 @@ BEGIN
 	INSERT INTO lex
 		SELECT * FROM active WHERE name = $1 LIMIT 1;
 
-	PERFORM update_modstamp_priv();
+	PERFORM register_modstamp_priv();
 	RETURN TRUE;
 END;
 ' LANGUAGE plpgsql;
@@ -576,8 +602,3 @@ BEGIN
 	RETURN ( SELECT mod_time() < (SELECT min(modstamp) FROM semi_pred ));
 END;
 ' LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION public.list_fld() RETURNS SETOF text AS '
-	SELECT t1 FROM return_field_info(\'public\',\'rev\');
-' LANGUAGE sql;
-

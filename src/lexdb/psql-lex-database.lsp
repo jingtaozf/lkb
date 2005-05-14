@@ -604,18 +604,9 @@
       nil))))
 
 (defmethod check-server-version ((lexicon psql-lex-database))
-  ;(cond
-   ;((string>= (lexdb-version lexicon) "3.34")
     (let ((texts (sql-fn-get-vals lexicon :check_psql_server_version)))
       (when texts
 	(format t "~%WARNING: ~a" (str-list-2-str texts :sep-c #\Newline)))))
-    ;))
-;)
-;   (t
-;    (let ((server-version (get-server-version lexicon)))
-;      (unless (string>= server-version "7.3")
-;	(format t "~%WARNING: ")
-;	(format t *lexdb-message-old-server* server-version "7.4.x"))))))
 
 (defmethod initialize-lex ((lexicon psql-lex-database))
   (when (open-lex lexicon)
@@ -652,9 +643,7 @@
   (when (connection-ok lexicon)
     (setf (lexdb-version lexicon) 
       (get-db-version lexicon))
-    ;(when (string>= (lexdb-version lexicon) "3.34")
       (get-pub-fns lexicon)
-      ;)
     t))	
 
 (defmethod get-pub-fns ((lexicon psql-lex-database)) 
@@ -675,12 +664,12 @@
 (defmethod get-filter ((lexicon psql-lex-database))
   (sql-fn-get-val lexicon :filter))
 
-;; obsolete
-(defmethod next-version (id (lexicon psql-lex-database))
-  (let* ((res (sql-fn-get-val lexicon 
-			      :next_version 
-			      :args (list (sql-like-text id)))))
-    (str-2-num res 0)))
+;;; obsolete
+;(defmethod next-version (id (lexicon psql-lex-database))
+;  (let* ((res (sql-fn-get-val lexicon 
+;			      :next_version 
+;			      :args (list (sql-like-text id)))))
+;    (str-2-num res 0)))
 
 (defmethod build-lex ((lexicon psql-lex-database))
   (build-lex-aux lexicon)
