@@ -2,6 +2,8 @@
 --- Benjamin Waldron, Fabre Lambeau, Stephan Oepen;
 --- see `licence.txt' for conditions.
 
+-- TABLE fld HAS BEEN LOADED
+
 --
 -- create tables
 --

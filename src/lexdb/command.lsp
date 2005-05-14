@@ -7,31 +7,31 @@
 ;;; LexDB menu commands
 ;;;
 
-(defun command-merge-into-psql-lexicon (&rest rest)
+(defun command-merge-into-lexdb (&rest rest)
   (unless (and
-	   (typep *psql-lexicon* 'psql-lex-database)
-	   (connection *psql-lexicon*))
+	   (typep *lexdb* 'psql-lex-database)
+	   (connection *lexdb*))
     (error "please initialize PSQL lexicon"))
   (let ((filename (get-filename rest :ending ".rev" :existing t)))
     (when filename
       (format t "~%~%Please wait: merging files ~a.* into lexical database ~a" 
-	      filename (dbname *psql-lexicon*))
+	      filename (dbname *lexdb*))
       (force-output)
-      (time (merge-into-lexicon *psql-lexicon* filename))
+      (time (merge-into-lexicon *lexdb* filename))
       (format t " ...done")
       (lkb-beep))))
 
-(defun command-dump-psql-lexicon (&rest rest)
+(defun command-dump-lexdb (&rest rest)
   (unless (and
-	   (typep *psql-lexicon* 'psql-lex-database)
-	   (connection *psql-lexicon*))
+	   (typep *lexdb* 'psql-lex-database)
+	   (connection *lexdb*))
     (error "please initialize PSQL lexicon"))
   (let ((filename (get-filename rest :ending ".rev" :existing nil)))
     (when filename
       (format t "~%~%Please wait: dumping lexical database ~a to files ~a.*" 
-	      (dbname *psql-lexicon*) filename)
+	      (dbname *lexdb*) filename)
       (force-output)
-      (time (dump-psql-lexicon *psql-lexicon* filename :tdl *lexdb-dump-tdl*))
+      (time (dump-lexdb *lexdb* filename :tdl *lexdb-dump-tdl*))
       (format t " ...done")
       (lkb-beep))))
   
@@ -46,22 +46,22 @@
       (format t " ...done")
       (lkb-beep))))
   
-(defun command-set-filter-psql-lexicon (&rest rest)
+(defun command-set-filter-lexdb (&rest rest)
   (unless (and
-	   (typep *psql-lexicon* 'psql-lex-database)
-	   (connection *psql-lexicon*))
+	   (typep *lexdb* 'psql-lex-database)
+	   (connection *lexdb*))
     (error "please initialize PSQL lexicon"))
   (time
-   (apply 'set-filter *psql-lexicon* rest))
+   (apply 'set-filter *lexdb* rest))
   (format t " ...done")
   (lkb-beep))
 
 (defun command-clear-scratch nil
   (unless (and
-	   (typep *psql-lexicon* 'psql-lex-database)
-	   (connection *psql-lexicon*))
+	   (typep *lexdb* 'psql-lex-database)
+	   (connection *lexdb*))
     (error "please initialize PSQL lexicon"))
-  (let ((count-priv (length (show-scratch *psql-lexicon*))))
+  (let ((count-priv (length (show-scratch *lexdb*))))
     (format t "~%~%Please wait: clearing ~a entries from private space" count-priv)
     (force-output)
     (when (> count-priv 0)
@@ -72,10 +72,10 @@
 
 (defun command-commit-scratch nil
   (unless (and
-	   (typep *psql-lexicon* 'psql-lex-database)
-	   (connection *psql-lexicon*))
+	   (typep *lexdb* 'psql-lex-database)
+	   (connection *lexdb*))
     (error "please initialize PSQL lexicon"))
-  (let ((count-priv (length (show-scratch *psql-lexicon*))))
+  (let ((count-priv (length (show-scratch *lexdb*))))
     (format t "~%~%Please wait: moving ~a private entries to public space"
 	    count-priv)
     (force-output)
@@ -87,12 +87,12 @@
 
 (defun command-show-scratch nil
   (unless (and
-	   (typep *psql-lexicon* 'psql-lex-database)
-	   (connection *psql-lexicon*))
+	   (typep *lexdb* 'psql-lex-database)
+	   (connection *lexdb*))
     (error "please initialize PSQL lexicon"))
   (let ((scratch
 	 (mapcar #'(lambda (x) (car x)) 
-		 (show-scratch *psql-lexicon*))))
+		 (show-scratch *lexdb*))))
     (format t "~%~%Contents of scratch (~a entries): ~a"
 	    (length scratch) scratch)
     (format t " ...done")
@@ -100,8 +100,8 @@
 
 (defun command-index-new-lex-entries nil
   (unless (and
-	   (typep *psql-lexicon* 'psql-lex-database)
-	   (connection *psql-lexicon*))
+	   (typep *lexdb* 'psql-lex-database)
+	   (connection *lexdb*))
     (error "please initialize PSQL lexicon"))
   (format t "~%~%Please wait: indexing new lexical entries for generator")
   (force-output)
@@ -112,28 +112,28 @@
 
 (defun command-vacuum-lex nil
   (unless (and
-	   (typep *psql-lexicon* 'psql-lex-database)
-	   (connection *psql-lexicon*))
+	   (typep *lexdb* 'psql-lex-database)
+	   (connection *lexdb*))
     (error "please initialize PSQL lexicon"))
   (time
-   (vacuum-lex *psql-lexicon*))
+   (vacuum-lex *lexdb*))
   (format t " ...done")
   (lkb-beep)  )
 
 (defun command-vacuum-public-rev nil
   (unless (and
-	   (typep *psql-lexicon* 'psql-lex-database)
-	   (connection *psql-lexicon*))
+	   (typep *lexdb* 'psql-lex-database)
+	   (connection *lexdb*))
     (error "please initialize PSQL lexicon"))
   (time
-   (vacuum-public-rev *psql-lexicon*))
+   (vacuum-public-rev *lexdb*))
   (format t " ...done")
   (lkb-beep))
 
 (defun command-load-tdl-to-scratch (&rest rest)
   (unless (and
-	   (typep *psql-lexicon* 'psql-lex-database)
-	   (connection *psql-lexicon*))
+	   (typep *lexdb* 'psql-lex-database)
+	   (connection *lexdb*))
     (error "please initialize PSQL lexicon"))
   (let ((filename (get-filename rest :ending ".tdl" :existing t)))
     (when filename

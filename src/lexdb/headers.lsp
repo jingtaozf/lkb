@@ -4,22 +4,25 @@
 
 (in-package :lkb)
 
-(defvar *psql-lexicon* nil) ;; -> *lexdb* ??
-;;(def-lkb-parameter *psql-lexicon-parameters* nil :user) ;; see main/globals.lsp
+(defvar *lexdb* nil)
+;;(def-lkb-parameter *lexdb-params* nil :user) ;; see main/globals.lsp
 
 (defvar *psql-database-connect-timeout* 30)
 (defvar *psql-database-port* 5432)
 
 (defvar *lexdb-major-version* "3.8")
+
 (defvar *lexdb-dump-skip-stream* t)
 (defvar *lexdb-dump-source* "?")
 (defvar *lexdb-dump-user* nil)
 (defvar *lexdb-dump-lang* nil)
 (defvar *lexdb-dump-country* nil)
+
 (defvar *lexdb-dump-tdl* nil) ;; set this to t to force tdl dump to accompany lexdb dump
 (defvar *lexdb-message-old-server* "PostgreSQL server version is ~a. Please upgrade to version ~a or above.")
 (defvar *lexdb-message-old-lkb* "Your LexDB version (~a) is incompatible with this LKB version (requires v. ~ax). Try obtaining a more recent LKB binary.")
 (defvar *lexdb-message-old-lexdb* "Your LexDB version (~a) is incompatible with this LKB version (requires v. ~ax). You must load updated setup files. See http://www.cl.cam.ac.uk/~~bmw20/DT/initialize-db.html")
+
 ;; map from obsolete names of field-map types
 (defvar *lexdb-fmtype-alt*
     '((string . str)
@@ -51,8 +54,7 @@
    (fields :initform nil :accessor fields)))
 
 (defclass psql-database ()
-  (
-   (dbname :initform nil :accessor dbname :initarg :dbname)
+  ((dbname :initform nil :accessor dbname :initarg :dbname)
    (host :initform "localhost" :accessor host :initarg :host)
    (user :initform (user-name) :accessor user :initarg :user)
    (password :initform "" :accessor password :initarg :password)
@@ -83,8 +85,8 @@
   (defun LKB::MAKE-INSTANCE-PSQL-LEX-ENTRY (&rest foo) (declare (ignore foo)))
   (defun LKB::TO-DB-DUMP (&rest foo) (declare (ignore foo))
     (error "Please compile with :psql"))
-  (defun LKB::LOAD-PSQL-LEXICON-FROM-SCRIPT (&rest foo) (declare (ignore foo))
-    (error "Please set *psql-lexicon-parameters* to NIL"))
+  (defun LKB::LOAD-LEXDB-FROM-SCRIPT (&rest foo) (declare (ignore foo))
+    (error "Please set *lexdb-params* to NIL"))
   )
 
 (defun psql-initialize ()
@@ -102,7 +104,7 @@
       ;; (also a good idea anyway)
       (setf *features* (remove :psql *features*)))))
 
-#-:mswindows
+#+:linux
 (defun load-libpq nil
   (let (#+allegro (excl::*load-foreign-types* (cons "3" excl::*load-foreign-types*)))
     (load "libpq.so.3")))

@@ -1,5 +1,5 @@
-;;; Copyright (c) 2003-2004
-;;;   Ben Waldron;
+;;; Copyright (c) 2003-2005
+;;;   Benjamin Waldron;
 ;;;   see `licence.txt' for conditions.
 
 
@@ -34,7 +34,7 @@
 (defun dump-*semi*-to-psql nil
   (dump-semi-to-psql *semi*))
 
-(defmethod dump-semi-to-psql ((semi semi) &key (lexicon lkb::*psql-lexicon*))
+(defmethod dump-semi-to-psql ((semi semi) &key (lexicon lkb::*lexdb*))
   (populate-semi semi)
   (print-semi-db semi)
   (with-slots (lkb::host lkb::port lkb::user lkb::dbname) lexicon
@@ -60,10 +60,10 @@
 (defun populate-*semi*-from-psql nil
   (populate-semi-from-psql *semi*))
 
-(defmethod populate-semi-from-psql ((semi semi) &key (psql-lexicon lkb::*psql-lexicon*))
+(defmethod populate-semi-from-psql ((semi semi) &key (lexdb lkb::*lexdb*))
   (close-semi semi)
   (let ((sdb (make-sdb)))
-    (load-sdb sdb psql-lexicon)
+    (load-sdb sdb lexdb)
     (populate-semantic-table sdb)
     (populate-semi semi))
   semi)
@@ -81,9 +81,9 @@
   *semantic-table*)
 
 #+:null
-(defun prepare-cached-lexicon-index (&key (psql-lexicon lkb::*psql-lexicon*))
+(defun prepare-cached-lexicon-index (&key (lexdb lkb::*lexdb*))
   (setf *sdb* (make-sdb))
-  (load-sdb *sdb* psql-lexicon)
+  (load-sdb *sdb* lexdb)
   (populate-relation-index *sdb*)
   (make-semi))
 

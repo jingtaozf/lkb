@@ -6,7 +6,7 @@
 
 ;; dump non-LexDB lexicon to file (DB format)
 (defmethod export-to-db-dump ((lexicon lex-database) stream)
-    (unless (connection *psql-lexicon*)
+    (unless (connection *lexdb*)
       (error "no connection to LexDB"))
     (mapc 
      #'(lambda (x) 
@@ -15,7 +15,7 @@
 					   :recurse nil
 					   :cache nil
 					   :new-instance t) 
-			       *psql-lexicon*)))
+			       *lexdb*)))
      (collect-psort-ids lexicon :recurse nil)))
 
 (defmethod export-to-db-dump-to-file ((lexicon lex-database) filename)

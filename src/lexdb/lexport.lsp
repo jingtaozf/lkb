@@ -66,10 +66,10 @@
 		       skip-file
 		       :direction :output 
 		       :if-exists :supersede :if-does-not-exist :create)
-	(unless (typep *psql-lexicon* 'psql-lex-database)
-	  (error "please initialize *psql-lexicon*"))
-	(dump-dfn *psql-lexicon* file)
-	(dump-fld *psql-lexicon* file)
+	(unless (typep *lexdb* 'psql-lex-database)
+	  (error "please initialize *lexdb*"))
+	(dump-dfn *lexdb* file)
+	(dump-fld *lexdb* file)
 	(export-to-db-dump-to-file lexicon rev-file)))
   (format t "~%export complete")
   (when recurse
@@ -116,7 +116,7 @@
     lexicon))
 
 (defun close-scratch-lex nil
-  (let* ((lexicon *psql-lexicon*)
+  (let* ((lexicon *lexdb*)
 	(filter (get-filter lexicon)))
     (sql-fn-get-records lexicon 
 			:clear_rev)
@@ -127,23 +127,23 @@
 			:args (list filter))))
 
 (defun commit-scratch-lex nil
-  (sql-fn-get-val *psql-lexicon* 
+  (sql-fn-get-val *lexdb* 
 		  :commit_rev)
-  (empty-cache *psql-lexicon*))
+  (empty-cache *lexdb*))
 
 (defun load-tdl-from-scratch (filename)
-  (let ((psql-lexicon *psql-lexicon*))
+  (let ((lexdb *lexdb*))
     (catch 'abort 
-      (unless psql-lexicon
-	(error "~%psql-lexicon is NULL"))
+      (unless lexdb
+	(error "~%lexdb is NULL"))
       (let ((lexicon (load-scratch-lex :filename filename)))
 	(query-for-meta-fields)
-	(reconnect psql-lexicon);; work around server bug
+	(reconnect lexdb);; work around server bug
 	(time 
-         (export-to-db lexicon psql-lexicon))
+         (export-to-db lexicon lexdb))
 	(close-lex lexicon)
 	(format t "~%(private space: ~a entries)" 
-		(length (show-scratch psql-lexicon)))))))
+		(length (show-scratch lexdb)))))))
 
 ;;;
 ;;; get meta-level fields

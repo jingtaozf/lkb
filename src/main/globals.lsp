@@ -1,5 +1,5 @@
-;;; Copyright (c) 1991--2002
-;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;; Copyright (c) 1991--2005
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron;
 ;;;   see licence.txt for conditions.
 ;;;
 ;;; This is the base globals file because parameters have to be
@@ -303,8 +303,8 @@
 (def-lkb-parameter *pos-sensitive-rmrs-p* nil
   "Controls whether the interactive RMRS comparison is sensitive to character position")
 
-(def-lkb-parameter *psql-lexicon-parameters* nil
-  "settings specific to lexical database"
+(def-lkb-parameter *lexdb-params* nil
+  "parameter settings for lexical database"
   :user)
 
 (defparameter *recording-word* nil

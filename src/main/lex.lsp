@@ -1,4 +1,4 @@
-;;; Copyright (c) 1991--2004
+;;; Copyright (c) 1991--2005
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Ben Waldron;
 ;;;   see `licence.txt' for conditions.
 
@@ -27,7 +27,7 @@
 
 (defvar *lexicon-in*)
 (defvar *verbose-lex-lookup-word* nil)
-(defvar *psql-lexicon*)
+(defvar *lexdb*)
 (defvar *postgres-mwe-enable*)
 
 (defclass lex-database () 
@@ -625,18 +625,18 @@
   (second (member keyword list)))
 
 ;; this can't go in psqllex
-(defun psql-lexicon-enabled-p nil
-  (when *psql-lexicon-parameters*
+(defun lexdb-enabled-p nil
+  (when *lexdb-params*
     (cond
      ((member :psql *features*) t)
      (t
-      (format t "~%WARNING: ignoring *psql-lexicon-parameters* (distribution is not :psql-enabled)")
+      (format t "~%WARNING: ignoring *lexdb-params* (distribution is not :psql-enabled)")
       nil))))
 
 ;; this can't go in psqllex
 (defun mwe-lexicon-enabled-p nil
   (and
-   (psql-lexicon-enabled-p)
+   (lexdb-enabled-p)
    *postgres-mwe-enable*))
 
 ;;;

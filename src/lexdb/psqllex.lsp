@@ -67,54 +67,54 @@
     (make-pathname :directory (pathname-directory (lkb-tmp-dir))))
 
 ;; call from script file
-(defun load-psql-lexicon-from-script nil
+(defun load-lexdb-from-script nil
   (close-lex *lexicon*)
-  (when *psql-lexicon-parameters*
-    (unless (initialize-psql-lexicon)
+  (when *lexdb-params*
+    (unless (initialize-lexdb)
       (error "~%Load lexicon aborted"))
-    (setf *lexicon* *psql-lexicon*)))
+    (setf *lexicon* *lexdb*)))
   
-(defun initialize-psql-lexicon 
+(defun initialize-lexdb 
     (&key
-     (dbname (or (extract-param :dbname *psql-lexicon-parameters*)
-		 (extract-param :db *psql-lexicon-parameters*) ;;backwards compat
-		 (and *psql-lexicon* (dbname *psql-lexicon*))))
-     (host (extract-param :host *psql-lexicon-parameters*))
-     (table (extract-param :table *psql-lexicon-parameters*))
-     (port (extract-param :port *psql-lexicon-parameters*))
-     (user (extract-param :user *psql-lexicon-parameters*))
-     (semi (extract-param :semi *psql-lexicon-parameters*)))
+     (dbname (or (extract-param :dbname *lexdb-params*)
+		 (extract-param :db *lexdb-params*) ;;backwards compat
+		 (and *lexdb* (dbname *lexdb*))))
+     (host (extract-param :host *lexdb-params*))
+     (table (extract-param :table *lexdb-params*))
+     (port (extract-param :port *lexdb-params*))
+     (user (extract-param :user *lexdb-params*))
+     (semi (extract-param :semi *lexdb-params*)))
   ;; ensure backwards compat
   (setf dbname
-    (or dbname (extract-param :db *psql-lexicon-parameters*)))
+    (or dbname (extract-param :db *lexdb-params*)))
   (unless dbname
-    (error "please set :dbname in *psql-lexicon-parameters*"))
+    (error "please set :dbname in *lexdb-params*"))
   (let ((part-of))
     ;; we will create a new lexicon then insert it into the lexicon hierarchy as
-    ;; a replacement for *psql-lexicon*
-    (if *psql-lexicon*
-        (setf part-of (part-of *psql-lexicon*))
-      (setf *psql-lexicon*
+    ;; a replacement for *lexdb*
+    (if *lexdb*
+        (setf part-of (part-of *lexdb*))
+      (setf *lexdb*
 	(make-instance 'psql-lex-database)))
-    (setf (dbname *psql-lexicon*) dbname)
-    (if host (setf (host *psql-lexicon*) host))
-    (if user (setf (user *psql-lexicon*) user))
-    (if port (setf (port *psql-lexicon*) port))
-    (setf (semi *psql-lexicon*) semi)
+    (setf (dbname *lexdb*) dbname)
+    (if host (setf (host *lexdb*) host))
+    (if user (setf (user *lexdb*) user))
+    (if port (setf (port *lexdb*) port))
+    (setf (semi *lexdb*) semi)
     ;; use of table is obsolete
     (cond 
      (table
-      (setf (fields-tb *psql-lexicon*) table))
+      (setf (fields-tb *lexdb*) table))
      (t
-      (setf (fields-tb *psql-lexicon*) (dbname *psql-lexicon*))))
+      (setf (fields-tb *lexdb*) (dbname *lexdb*))))
     ;; insert into lexicon hierarchy
-    (when (initialize-lex *psql-lexicon*)
-      (mapcar #'(lambda (x) (link *psql-lexicon* x)) part-of)
-      *psql-lexicon*)))
+    (when (initialize-lex *lexdb*)
+      (mapcar #'(lambda (x) (link *lexdb* x)) part-of)
+      *lexdb*)))
 
 (defun open-psql-lex (&rest rest)
   "obsolete (keep for script file compatibility)"
-  (apply 'open-psql-lexicon rest))
+  (apply 'open-lexdb rest))
 
 ;; read-psort ->
 ;;; create slot entry

@@ -1,5 +1,5 @@
-;;; Copyright (c) 1991 -- 2004;
-;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;; Copyright (c) 1991 -- 2005;
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron;
 ;;;   see `licence.txt' for conditions.
 
 
@@ -41,15 +41,15 @@
 		      lkb::toggle-rmrs
                       lkb::toggle-rmrs-xml
 		      lkb::compare-rmrs-interactive
-                      ;; lexical db
-                      lkb::command-merge-into-psql-lexicon
-                      lkb::command-dump-psql-lexicon
+                      ;; lexdb
+                      lkb::command-merge-into-lexdb
+                      lkb::command-dump-lexdb
                       lkb::command-export-lexicon-to-tdl
                       lkb::command-load-tdl-to-scratch
                       lkb::command-clear-scratch
                       lkb::command-commit-scratch		      
                       lkb::command-show-scratch		      
-                      lkb::command-set-filter-psql-lexicon		      
+                      lkb::command-set-filter-lexdb		      
 		      lkb::command-index-new-lex-entries
 		      lkb::command-vacuum-current-grammar
 		      lkb::command-vacuum-public-revision
@@ -313,7 +313,7 @@
                      )
                    :available-p :always))
          #+:psql
-         (when lkb::*psql-lexicon-parameters*
+         (when lkb::*lexdb-params*
            ;;
            ;; in case loading the PSQL library failed at start-up, an image may
            ;; have reverted itself to a sans-PSQL state.
@@ -323,11 +323,11 @@
                  :menu-items                       
                  (list 
                   (make-menu-item :name "Merge new entries"
-                                  :value 'command-merge-into-psql-lexicon
+                                  :value 'command-merge-into-lexdb
                                   ;:available-p :always
 				  )
                   (make-menu-item :name "Dump"
-                                  :value 'command-dump-psql-lexicon
+                                  :value 'command-dump-lexdb
                                   ;:available-p :always
 				  )
                   (make-menu-item :name "Dump (TDL format)"
@@ -335,7 +335,7 @@
                                   ;:available-p :always
 				  )
                   (make-menu-item :name "Filter"
-                                  :value 'command-set-filter-psql-lexicon
+                                  :value 'command-set-filter-lexdb
                                   ;:available-p :always
 				  )
                   (make-menu-item :name "Import TDL entries"

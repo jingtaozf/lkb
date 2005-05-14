@@ -9,7 +9,7 @@
 (in-package :lkb)
 
 (defconstant *lexdb-emacs-other-fns*
-    '(initialize-psql-lexicon
+    '(initialize-lexdb
       lexdb-fn))
 
 (defconstant *lexdb-emacs-lexdb-fns*
@@ -32,8 +32,8 @@
 (defun lexdb-fn (fn-name &rest rest)
   (unless (member fn-name *lexdb-emacs-lexdb-fns*)
     (error "~a not in *lexdb-emacs-lexdb-fns*" fn-name))
-  (if *psql-lexicon*
-      (apply fn-name (cons *psql-lexicon* rest))))
+  (if *lexdb*
+      (apply fn-name (cons *lexdb* rest))))
 
 (defun field-size-elt (raw-rec cols)
   (let ((attname (get-val :ATTNAME raw-rec cols))

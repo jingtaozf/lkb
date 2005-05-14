@@ -11,3 +11,5 @@
 \i fns.sql
 
 CREATE TABLE public.fld (dfn text);
+
+-- NOW LOAD TABLE fld !

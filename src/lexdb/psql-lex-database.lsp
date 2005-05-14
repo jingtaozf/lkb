@@ -949,7 +949,7 @@
 	(lkb-beep))
       (if (equal count-new 0)
 	  (empty-cache lexicon)
-	(initialize-psql-lexicon))
+	(initialize-lexdb))
       (disconnect conn-db-owner))))
 
 (defmethod merge-into-lexicon-dfn ((lexicon psql-lex-database) filename)
@@ -1072,7 +1072,7 @@
 ;;
 ;;
 
-(defmethod dump-psql-lexicon ((lexdb psql-lex-database) filebase &key tdl)
+(defmethod dump-lexdb ((lexdb psql-lex-database) filebase &key tdl)
   (format t "~%(dumping LexDB)")
   (force-output)
   (dump-rev lexdb filebase)

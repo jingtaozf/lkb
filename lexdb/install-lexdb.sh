@@ -50,10 +50,10 @@ echo "createlang -U postgres plpgsql $LEXDB"
 createlang -U postgres plpgsql $LEXDB
 #if [ $? != 0 ] ; then abort; fi
 
-## load DB superuser setup script
-echo psql -f su-setup.sql -U postgres $LEXDB
-psql -f su-setup.sql -U postgres $LEXDB
-if [ $? != 0 ] ; then abort; fi
+### load DB superuser setup script
+#echo psql -f su-setup.sql -U postgres $LEXDB
+#psql -f su-setup.sql -U postgres $LEXDB
+#if [ $? != 0 ] ; then abort; fi
 
 ## load 'lexdb' DB user setup script (part 1)
 echo "psql -f load.sql -U lexdb $LEXDB"
@@ -62,9 +62,10 @@ if [ $? != 0 ] ; then abort; fi
 
 ## load field definitions
 echo "taking field defns from file $FLD_FILE";
-echo "psql -c 'delete from public.fld' -U lexdb $LEXDB"
-psql -c 'delete from fld' -U lexdb $LEXDB; 
-if [ $? != 0 ] ; then abort; fi
+
+#echo "psql -c 'delete from public.fld' -U lexdb $LEXDB"
+#psql -c 'delete from fld' -U lexdb $LEXDB; 
+#if [ $? != 0 ] ; then abort; fi
 
 echo "psql -c \"copy public.fld from $FLD_FILE\" -U lexdb $LEXDB"
 psql -c "\copy fld from $FLD_FILE" -U lexdb $LEXDB; 
