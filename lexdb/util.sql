@@ -162,3 +162,15 @@ BEGIN
  	RETURN true;
 END;
 ' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.user_is_db_owner_p() RETURNS boolean AS 
+'
+DECLARE
+	uid int;
+	db_uid int;
+BEGIN
+	uid := (select usesysid from pg_catalog.pg_user where usename=user);
+	db_uid := (select datdba from pg_catalog.pg_database where datname=current_database());
+ 	RETURN (uid = db_uid);
+END;
+' LANGUAGE plpgsql;

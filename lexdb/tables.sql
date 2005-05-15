@@ -29,12 +29,12 @@ CREATE OR REPLACE FUNCTION public.index_public_rev() RETURNS boolean AS '
 BEGIN
  	RAISE INFO \'Creating indices...\';
 	ALTER TABLE public.rev ADD PRIMARY KEY (name,userid,modstamp);
-	CREATE INDEX public_orthkey ON public.rev (orthkey); 
+	CREATE INDEX rev_orthkey ON public.rev (orthkey); 
 	CREATE UNIQUE INDEX name_modstamp ON public.rev (name,modstamp); 
-	CREATE INDEX public_rev_name_modstamp ON public.rev (name, modstamp);
-	CREATE INDEX public_rev_name
+	CREATE INDEX rev_name_modstamp ON public.rev (name, modstamp);
+	CREATE INDEX rev_name
 		ON public.rev (name varchar_ops); 
-	PERFORM if_psql_server_version(\'7.4\', \'CREATE INDEX public_rev_name_pattern ON public.rev (name varchar_pattern_ops)\', \'CREATE INDEX public_rev_name_pattern ON public.rev (name)\');
+	PERFORM if_psql_server_version(\'7.4\', \'CREATE INDEX rev_name_pattern ON public.rev (name varchar_pattern_ops)\', \'CREATE INDEX rev_name_pattern ON public.rev (name)\');
 	RETURN true;
 END;
 ' LANGUAGE plpgsql;
@@ -42,11 +42,11 @@ END;
 CREATE OR REPLACE FUNCTION public.deindex_public_rev() RETURNS boolean AS '
 BEGIN
  	RAISE INFO \'Dropping indices...\';
- 	DROP INDEX public_orthkey;
+ 	DROP INDEX rev_orthkey;
  	DROP INDEX name_modstamp;
-	DROP INDEX public_rev_name_modstamp;
-	DROP INDEX public_rev_name;
-	DROP INDEX public_rev_name_pattern;
+	DROP INDEX rev_name_modstamp;
+	DROP INDEX rev_name;
+	DROP INDEX rev_name_pattern;
 	ALTER TABLE public.rev DROP CONSTRAINT rev_pkey;
 	RETURN true;
 END;

@@ -103,32 +103,45 @@ END;
 ' LANGUAGE plpgsql SECURITY DEFINER;;
 
 CREATE OR REPLACE FUNCTION public.initialize_user_schema() RETURNS boolean AS '
-DECLARE
-	user_str text;
 BEGIN
-	user_str := user;
 	IF user_schema_init_p() THEN
 		RETURN false;
 	END IF;
-	RAISE INFO \'Initializing user schema %\', user_str;
 
-	EXECUTE \'CREATE SCHEMA \' || user;
-	
-	PERFORM public.register_user_schema(user_str);
-	--EXECUTE \'INSERT INTO public.meta VALUES (\'\'user\'\', \' || quote_literal(user) || \')\';
+	-- db owner has no private schema
+	IF user_is_db_owner_p() THEN
+		RETURN false;
+	END IF;
+
+	EXECUTE \'CREATE SCHEMA \' || user;	
+	EXECUTE \'GRANT USAGE ON SCHEMA \' || user || \' TO lexdb\';	
+	PERFORM public.register_user_schema(user);
 	
 	--tables
 	CREATE TABLE meta AS SELECT * FROM public.meta WHERE var=\'filter\';
  	CREATE TABLE tmp AS SELECT * FROM public.rev WHERE NULL;
  
  	CREATE TABLE rev AS SELECT * FROM public.rev WHERE NULL;
- 	EXECUTE \'CREATE UNIQUE INDEX user_\' || user || \'_name_rev_userid ON rev (name,userid,modstamp)\'; 
+ 	EXECUTE \'CREATE UNIQUE INDEX rev_name_userid_modstamp ON rev (name,userid,modstamp)\'; 
+	GRANT SELECT ON rev TO lexdb;
+	
+	CREATE TABLE rev_key AS SELECT * FROM public.rev_key WHERE NULL;
+	GRANT SELECT ON rev_key TO lexdb;
 
  	CREATE TABLE lex AS SELECT * FROM public.rev WHERE NULL;
  	PERFORM public.index_lex();
+	CREATE TABLE lex_key AS SELECT * FROM public.rev_key WHERE NULL;
 
 	-- views
- 	CREATE VIEW filtered AS SELECT * FROM public.rev WHERE NULL;
+	CREATE VIEW rev_all
+		AS SELECT * FROM public.rev 
+			UNION 
+ 			SELECT * FROM rev;
+	CREATE VIEW rev_key_all
+		AS SELECT * FROM public.rev_key 
+			UNION 
+ 			SELECT * FROM rev_key;
+ 	CREATE VIEW filtered AS SELECT * FROM rev_all WHERE NULL;
  	CREATE VIEW active
 		AS SELECT fil.*
  			FROM 
@@ -138,13 +151,9 @@ BEGIN
  					FROM filtered
 					GROUP BY name) AS t1)
 			WHERE flags=1;
-	CREATE VIEW rev_all
-		AS SELECT * FROM public.rev 
-			UNION 
- 			SELECT * FROM rev;
 
 	-- register mod time
-	PERFORM register_modstamp_priv();
+	PERFORM register_modstamp();
 
 	-- semi setup
 	PERFORM create_tables_semi();
@@ -157,7 +166,7 @@ END;
 --
 --
 
-CREATE OR REPLACE FUNCTION public.initialize_lex(text) RETURNS boolean AS '
+CREATE OR REPLACE FUNCTION public.update_lex(text) RETURNS boolean AS '
 DECLARE
 	current_filter TEXT;
 	new_filter text;
@@ -200,21 +209,22 @@ CREATE OR REPLACE FUNCTION public.build_lex () RETURNS boolean AS
 DECLARE
 	b_time text;
 BEGIN
-	-- we need "indices on the view" for reasons of efficicency...
+	-- we need "indices on the view" for reasons of efficiency...
 	RAISE DEBUG \'creating filtered_tmp\';
 	CREATE TABLE filtered_tmp AS SELECT * FROM filtered;
-	RAISE DEBUG \'creating index filtered_tmp_i1\';
-	CREATE INDEX filtered_tmp_i1 ON filtered_tmp (name);
-	RAISE DEBUG \'creating index filtered_tmp_i2\';
-	CREATE INDEX filtered_tmp_i2 ON filtered_tmp (modstamp);
+	RAISE DEBUG \'creating index filtered_tmp_name\';
+	CREATE INDEX filtered_tmp_name ON filtered_tmp (name);
+	RAISE DEBUG \'creating index filtered_tmp_modstamp\';
+	CREATE INDEX filtered_tmp_modstamp ON filtered_tmp (modstamp);
 
-	-- recreate db cache
-	RAISE INFO \'emptying db cache\';
+	-- recreate lex
+	RAISE INFO \'emptying lex\';
 	DELETE FROM lex; 
 	PERFORM public.deindex_lex();
 
-	RAISE INFO \'populating db cache\';
+	RAISE INFO \'populating lex\';
 	INSERT INTO lex 
+		-- =active, but faster lookup
   		SELECT fil.*
   		FROM 
    		(filtered_tmp AS fil
@@ -226,6 +236,10 @@ BEGIN
 	PERFORM public.index_lex();
 
 	DROP TABLE filtered_tmp;
+
+	INSERT INTO lex_key
+		SELECT rev_key_all.* 
+		FROM rev_key_all JOIN lex USING (name,userid,modstamp);
 
 	-- set build time 
 	DELETE FROM meta WHERE var=\'build_time\';
@@ -241,7 +255,7 @@ LANGUAGE plpgsql;
 --
 --
 
-CREATE OR REPLACE FUNCTION public.register_modstamp_priv() RETURNS text AS '
+CREATE OR REPLACE FUNCTION public.register_modstamp() RETURNS text AS '
 DECLARE
 	mod_time text;
 BEGIN
@@ -253,17 +267,17 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.register_modstamp_pub() RETURNS text AS '
-DECLARE
-	mod_time text;
-BEGIN
-	RAISE DEBUG \'Updating timestamps...\';
-	DELETE FROM public.meta WHERE var=\'mod_time\';
-	mod_time := current_timestamp;
-	INSERT INTO public.meta VALUES (\'mod_time\',mod_time);
-	RETURN mod_time;
-END;
-' LANGUAGE plpgsql SECURITY DEFINER;
+--CREATE OR REPLACE FUNCTION public.register_modstamp_pub() RETURNS text AS '
+--DECLARE
+--	mod_time text;
+--BEGIN
+--	RAISE DEBUG \'Updating timestamps...\';
+--	DELETE FROM public.meta WHERE var=\'mod_time\';
+--	mod_time := current_timestamp;
+--	INSERT INTO public.meta VALUES (\'mod_time\',mod_time);
+--	RETURN mod_time;
+--END;
+--' LANGUAGE plpgsql SECURITY DEFINER;
 
 --
 --
@@ -331,7 +345,7 @@ BEGIN
  
  		PERFORM public.index_public_rev();
 
-		PERFORM register_modstamp_pub();
+		PERFORM register_modstamp();
 	ELSE
 		RAISE INFO \'0 new entries\';
 	END IF;
@@ -360,9 +374,7 @@ BEGIN
   			SELECT * FROM public.tmp_dfn; 
  		RAISE DEBUG \'Updating timestamps...\';
  		DELETE FROM public.meta WHERE var=\'mod_time\';
- 		INSERT INTO public.meta VALUES (\'mod_time\',current_timestamp);
-		--DELETE FROM meta WHERE var=\'semi_build_time\';
-	END IF;
+ 		INSERT INTO public.meta VALUES (\'mod_time\',current_timestamp);	END IF;
  	RETURN num_new;
 END;
 ' LANGUAGE plpgsql;
@@ -443,15 +455,17 @@ END;
 CREATE OR REPLACE FUNCTION public.clear_rev() RETURNS boolean AS '
 BEGIN
 	DELETE FROM rev;
-	PERFORM register_modstamp_priv();
+	DELETE FROM rev_key;
+	PERFORM register_modstamp();
 	RETURN TRUE;
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.commit_rev() RETURNS boolean AS '
+CREATE OR REPLACE FUNCTION public.commit_rev(text) RETURNS boolean AS '
 BEGIN
-	INSERT INTO public.rev (SELECT * FROM rev);
-	PERFORM register_modstamp_pub();
+	EXECUTE \'INSERT INTO public.rev (SELECT * FROM \' || $1 || \'.rev)\';
+	EXECUTE \'INSERT INTO public.rev_key (SELECT * FROM \' || $1 || \'.rev_key)\';
+	PERFORM register_modstamp();
 	PERFORM clear_rev();
 	RETURN true;
 END;
@@ -517,6 +531,7 @@ END;
 
 -- orthkey must enter db universe in normalized form (case)
 -- Total runtime: 4.259 ms
+-- update rev_key before this call...
 CREATE OR REPLACE FUNCTION public.update_entry(text,text,text) RETURNS boolean AS '
 DECLARE
 	sql_str text;
@@ -525,16 +540,13 @@ BEGIN
 	RAISE DEBUG \'%\', sql_str;
 	EXECUTE sql_str;
 
-	--sql_str := \'UPDATE rev SET orthkey=lower(orthkey) WHERE ( name, \' || $2 || \' ) = ( \' || quote_literal($1) || \', \' || $3 || \')\'; 
-	--RAISE DEBUG \'%\', sql_str;
-	--EXECUTE sql_str;
+	DELETE FROM lex WHERE name = $1 ;
+	INSERT INTO lex SELECT * FROM active WHERE name = $1 LIMIT 1;
 
-	DELETE FROM lex
-		WHERE name = $1 ;
-	INSERT INTO lex
-		SELECT * FROM active WHERE name = $1 LIMIT 1;
+	DELETE FROM lex_key WHERE name = $1 ;
+	INSERT INTO lex_key SELECT rev_key_all.* FROM rev_key_all JOIN active USING (name,userid,modstamp) WHERE name = $1;
 
-	PERFORM register_modstamp_priv();
+	PERFORM register_modstamp();
 	RETURN TRUE;
 END;
 ' LANGUAGE plpgsql;
@@ -581,5 +593,11 @@ END;
 CREATE OR REPLACE FUNCTION public.semi_up_to_date_p() RETURNS boolean AS '
 BEGIN
 	RETURN ( SELECT mod_time() < (SELECT min(modstamp) FROM semi_pred ));
+END;
+' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.rev_key_p() RETURNS boolean AS '
+BEGIN
+	RETURN ( (SELECT count(*) FROM rev_key) > 0 );
 END;
 ' LANGUAGE plpgsql;

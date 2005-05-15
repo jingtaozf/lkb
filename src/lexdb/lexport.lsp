@@ -127,8 +127,9 @@
 			:args (list filter))))
 
 (defun commit-scratch-lex nil
-  (sql-fn-get-val *lexdb* 
-		  :commit_rev)
+  (with-lexdb-user-lexdb (lex *lexdb*)
+    (sql-fn-get-val lex :commit_rev
+		    :args (list (user *lexdb*))))
   (empty-cache *lexdb*))
 
 (defun load-tdl-from-scratch (filename)

@@ -9,7 +9,7 @@ pub-fn	complete
 pub-fn	db_owner
 pub-fn	dump-rev
 pub-fn	filter
-pub-fn	initialize_lex
+pub-fn	update_lex
 pub-fn	initialize_user_schema
 pub-fn	lex_id_set
 pub-fn	lexdb_version
@@ -43,3 +43,5 @@ pub-fn	update_entry
 pub-fn	user_read_only_p
 pub-fn	value_set
 pub-fn	version
+pub-fn	rev_key_p
+pub_fn	register_modstamp

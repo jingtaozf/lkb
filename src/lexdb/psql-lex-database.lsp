@@ -125,16 +125,19 @@
 (defmethod generate-lex-orthkeys-if-necc ((lex psql-lex-database))
   (generate-orthkeys-if-necc lex)
   (with-lexdb-user-lexdb (lex2 lex)
-    (generate-orthkeys-if-necc lex2)))
+    (generate-orthkeys-if-necc lex2))
+  (update-lex lex))
 
 (defmethod generate-orthkeys-if-necc ((lex psql-lex-database))
   (unless (rev-key-p lex)
     (generate-orthkeys lex)))
 
 (defmethod generate-orthkeys ((lex psql-lex-database))
+  (sql-fn-get-val lex :register_modstamp)
   (run-command-stdin lex "COPY rev_key FROM stdin"
 		     (make-string-input-stream 
-		      (generate-orthkeys-COPY-str lex))))
+		      (generate-orthkeys-COPY-str lex)))
+  (sql-fn-get-val lex :register_modstamp))
 
 (defmethod generate-orthkeys-COPY-str ((lex psql-lex-database))
   (let* ((orth-raw-mapping (assoc :orth (fields-map lex)))
@@ -723,7 +726,7 @@
 
 (defmethod initialize-lex ((lexicon psql-lex-database))
   (when (open-lex lexicon)
-    (build-lex lexicon)))
+    (update-lex lexicon)))
   
 (defmethod vacuum-lex ((lexicon psql-database) &key verbose)
   (let ((command
@@ -777,15 +780,8 @@
 (defmethod get-filter ((lexicon psql-lex-database))
   (sql-fn-get-val lexicon :filter))
 
-;;; obsolete
-;(defmethod next-version (id (lexicon psql-lex-database))
-;  (let* ((res (sql-fn-get-val lexicon 
-;			      :next_version 
-;			      :args (list (sql-like-text id)))))
-;    (str-2-num res 0)))
-
-(defmethod build-lex ((lexicon psql-lex-database))
-  (build-lex-aux lexicon)
+(defmethod update-lex ((lexicon psql-lex-database))
+  (update-lex-aux lexicon)
   (cond
    ((null (semi lexicon))
     nil)
@@ -801,7 +797,7 @@
     (format t "~%WARNING: no lexical entries indexed for generator")))
   lexicon)
 
-(defmethod build-lex-aux ((lexicon psql-lex-database))
+(defmethod update-lex-aux ((lexicon psql-lex-database))
   (reconnect lexicon) ;; work around server bug
   (cond 
    ((not (user-read-only-p lexicon (user lexicon)))
@@ -1163,7 +1159,7 @@
        (to-db (read-psort lexicon x :recurse nil :new-instance t) 
 	      lexdb))
    (collect-psort-ids lexicon :recurse nil))
-  (build-lex-aux lexdb))
+  (update-lex-aux lexdb))
 
 (defmethod record-id (raw-record cols (lexicon psql-lex-database))
   (str-2-symb (get-val :name raw-record cols)))  

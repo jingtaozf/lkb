@@ -19,7 +19,7 @@ function abort {
 }  
 
 ## default settings
-if [ -n "$CREATEDB_OPTIONS" ]; then 
+if [ -z "$CREATEDB_OPTIONS" ]; then 
     export CREATEDB_OPTIONS="-E UNICODE"; 
     echo 'using default CREATEDB_OPTIONS="-E UNICODE"';
 fi
@@ -29,9 +29,6 @@ if [ ! -f $FLD_FILE ]; then
     echo "cannot find file $FLD_FILE";
     #for x in `seq 1 10`; do echo wait $x; done  
     abort;
-fi
-if [ ! -f su-setup.sql ]; then
-    echo "cannot find file $PWD/su-setup.sql"; abort; 
 fi
 if [ ! -f load.sql ]; then 
     echo "cannot find file $PWD/load.sql"; abort; 
@@ -50,11 +47,6 @@ echo "createlang -U postgres plpgsql $LEXDB"
 createlang -U postgres plpgsql $LEXDB
 #if [ $? != 0 ] ; then abort; fi
 
-### load DB superuser setup script
-#echo psql -f su-setup.sql -U postgres $LEXDB
-#psql -f su-setup.sql -U postgres $LEXDB
-#if [ $? != 0 ] ; then abort; fi
-
 ## load 'lexdb' DB user setup script (part 1)
 echo "psql -f load.sql -U lexdb $LEXDB"
 psql -f load.sql -U lexdb $LEXDB
@@ -62,10 +54,6 @@ if [ $? != 0 ] ; then abort; fi
 
 ## load field definitions
 echo "taking field defns from file $FLD_FILE";
-
-#echo "psql -c 'delete from public.fld' -U lexdb $LEXDB"
-#psql -c 'delete from fld' -U lexdb $LEXDB; 
-#if [ $? != 0 ] ; then abort; fi
 
 echo "psql -c \"copy public.fld from $FLD_FILE\" -U lexdb $LEXDB"
 psql -c "\copy fld from $FLD_FILE" -U lexdb $LEXDB; 
