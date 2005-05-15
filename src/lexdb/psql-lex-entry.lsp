@@ -28,15 +28,6 @@
 	  (setf (cdr fv-pair) v)
 	(push (cons f v) fv-pairs)))))
 
-;; obsolete
-;;; set version to next val
-;(defmethod set-version ((psql-le psql-lex-entry) (lexicon psql-lex-database))
-;  (set-val psql-le 
-;	   :version 
-;	   (next-version 
-;	    (retr-val psql-le :name) 
-;	    lexicon)))
-
 ;;; prepare val list for SQL INSERT INTO query
 (defun ordered-val-list (symb-list psql-le)
   (if (null symb-list) (error (format nil "non-null list expected")))

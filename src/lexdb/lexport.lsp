@@ -123,7 +123,7 @@
     (empty-cache *lexicon*)
     (reconnect lexicon) ;; work around server bug
     (sql-fn-get-records lexicon 
-			:initialize_lex 
+			:update_lex 
 			:args (list filter))))
 
 (defun commit-scratch-lex nil

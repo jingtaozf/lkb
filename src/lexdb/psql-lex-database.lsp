@@ -8,6 +8,19 @@
 ;; --- psql-lex-database methods
 ;;;
 
+(defmacro with-lexdb-user-lexdb ((lexdb-lexdb lexdb) &body body)
+  `(with-slots (dbname host port fields-tb) ,lexdb
+     (let ((,lexdb-lexdb
+	    (make-instance 'psql-lex-database
+	      :dbname dbname
+	      :fields-tb fields-tb
+	      :host host
+	      :port port
+	      :user (sql-fn-get-val ,lexdb :db_owner))))
+       (open-lex ,lexdb-lexdb)
+       ,@body
+       (disconnect ,lexdb-lexdb))))
+  
 (defmethod lookup-word ((lexicon psql-lex-database) orth &key (cache t))
   (with-slots (lexical-entries) lexicon
   (let ((hashed (gethash orth lexical-entries)))
@@ -97,18 +110,119 @@
 (defmethod lex-words ((lexicon psql-lex-database))
   (let* ((orth-raw-mapping (assoc :orth (fields-map lexicon)))
 	 (orth-raw-value-mapping (fourth orth-raw-mapping))
-	 (raw-orth-field (second orth-raw-mapping))
+	 (raw-orth-field-str (2-str (second orth-raw-mapping)))
 	 (values 
-	  (get-value-set lexicon (2-str raw-orth-field))))
+	  (get-value-set lexicon raw-orth-field-str)))
     (mapcan 
      #'(lambda (x) 
 	 (mapcar #'string-upcase
-		 (car (work-out-value
-		       orth-raw-value-mapping
-		       x))))
+		 (car (work-out-value orth-raw-value-mapping x))))
      values)))
 
-;
+(defmethod rev-key-p ((lex psql-lex-database))
+  (string= "t" (sql-fn-get-val lex :rev_key_p)))
+  
+(defmethod generate-lex-orthkeys-if-necc ((lex psql-lex-database))
+  (generate-orthkeys-if-necc lex)
+  (with-lexdb-user-lexdb (lex2 lex)
+    (generate-orthkeys-if-necc lex2)))
+
+(defmethod generate-orthkeys-if-necc ((lex psql-lex-database))
+  (unless (rev-key-p lex)
+    (generate-orthkeys lex)))
+
+(defmethod generate-orthkeys ((lex psql-lex-database))
+  (run-command-stdin lex "COPY rev_key FROM stdin"
+		     (make-string-input-stream 
+		      (generate-orthkeys-COPY-str lex))))
+
+(defmethod generate-orthkeys-COPY-str ((lex psql-lex-database))
+  (let* ((orth-raw-mapping (assoc :orth (fields-map lex)))
+	 (orth-raw-value-mapping (fourth orth-raw-mapping))
+	 (raw-orth-field-str (2-str (second orth-raw-mapping)))
+       
+	 (numo-t (get-records lex
+			      (format nil "SELECT name,userid,modstamp,~a FROM rev"
+				      raw-orth-field-str)))
+	 (recs (recs numo-t)))
+    (join-str-lines
+      (mapcar #'to-psql-COPY-rec
+	      (mapcan
+	       #'(lambda (z) 
+		   (mapcar #'(lambda (x)
+			       (list (first z) (second z) (third z) x))
+			   (mapcar #'normalize-orthkey
+				   (car (work-out-value orth-raw-value-mapping (fourth z))))))
+	       recs)))))
+
+(defparameter *newline-str* (string (code-char 10)))
+(defun join-str-lines (lines)
+  (if (null lines) ""
+    (apply #'concatenate 'string
+	   (cons (car lines)
+		 (loop
+		     for line in (cdr lines)
+		     collect *newline-str*
+		     collect line)))))
+      
+	 
+
+(defun to-psql-COPY-rec (lst &key (delim-char #\tab) (null "\\N"))
+  (cond
+   ((null lst)
+    "")
+   (t
+    (apply #'concatenate 'string 
+	   (cons (psql-COPY-val (car lst) :delim-char delim-char :null null)
+		 (loop
+		     with delim = (string delim-char)
+		     for x in (cdr lst)
+		     collect delim
+		     collect (psql-COPY-val x :delim-char delim-char :null null)))))))
+  
+
+(defun psql-COPY-val (val &key (delim-char #\tab) (null "\\N"))
+  (cond
+   ((null val)
+    null)
+   (t
+    (coerce
+     (loop
+	 with str = (2-str val)
+	 for i from 0 to (1- (length str))
+	 for char = (aref str i)
+	 for code = (char-code char)
+	 when (= code 8)
+	 collect #\\
+	 and collect #\b
+	 else when (= code 9)
+	 collect #\\
+	 and collect #\t
+	 else when (= code 10)
+	 collect #\\
+	 and collect #\n
+	 else when (= code 11)
+	 collect #\\
+	 and collect #\v
+	 else when (= code 12)
+	 collect #\\
+	 and collect #\f
+	 else when (= code 13)
+	 collect #\\
+	 and collect #\r
+	 else when (eq char #\\)
+	 collect #\\
+	 and collect #\\
+	 else when (eq char delim-char)
+	 collect #\\
+	 and collect delim-char
+	 else	 
+	 collect char)
+     'string))))
+   
+  
+;;;
+  
 
 (defmethod collect-psort-ids ((lexicon psql-lex-database) &key (cache t) (recurse t))
   (declare (ignore recurse))
@@ -325,7 +439,7 @@
     (reconnect lexicon) ;; must reconnect to avoid server bug...
     (force-output)
     (sql-fn-get-val lexicon 
-		    :initialize_lex 
+		    :update_lex 
 		    :args (list filter))
     (empty-cache lexicon)))
 
@@ -570,7 +684,6 @@
     (setf lexdb-version nil)
     (if (next-method-p) (call-next-method))))
 
-;(defvar *lexdb-tmp-lexicon*)
 (defmethod open-lex ((lexicon psql-lex-database) &key name parameters)
   (declare (ignore parameters)) 
   (with-slots (lexdb-version dbname host user connection) 
@@ -693,7 +806,7 @@
   (cond 
    ((not (user-read-only-p lexicon (user lexicon)))
     (sql-fn-get-raw-records lexicon 
-			    :initialize_lex 
+			    :update_lex 
 			    :args (list (get-filter lexicon))))
    (t
     (format t "~%(user ~a has read-only privileges)" (user lexicon))))    
@@ -756,11 +869,11 @@
   (sql-fn-get-raw-records lexicon :retrieve_private_revs))
 
 (defmethod merge-into-db ((lexicon psql-lex-database) rev-filename)  
-  (run-command-stdin lexicon 
-		     (format nil "~a;~%~a;" 
-			     "DELETE FROM tmp" 
-			     "COPY tmp FROM stdin") 
-		     rev-filename)
+  (run-command-stdin-from-file lexicon 
+			       (format nil "~a;~%~a;" 
+				       "DELETE FROM tmp" 
+				       "COPY tmp FROM stdin") 
+			       rev-filename)
   (let ((count-new
 	 (str-2-num
 	  (sql-fn-get-val lexicon :merge_rev_from_tmp))))
@@ -774,9 +887,9 @@
 	  (run-command lexicon "CREATE TABLE tmp_dfn AS SELECT * FROM dfn WHERE NULL;"))
     (run-command lexicon "DROP TABLE tmp_dfn")
     (run-command lexicon "CREATE TABLE tmp_dfn AS SELECT * FROM dfn WHERE NULL ;"))
-  (run-command-stdin lexicon 
-		     "COPY tmp_dfn FROM stdin" 
-		     dfn-filename)
+  (run-command-stdin-from-file lexicon 
+			       "COPY tmp_dfn FROM stdin" 
+			       dfn-filename)
   (let ((count-new-dfn 
 	 (str-2-num 
 	  (sql-fn-get-val lexicon :merge_dfn_from_tmp_dfn))))
@@ -919,28 +1032,19 @@
 
 (defmethod merge-into-lexicon ((lexicon psql-lex-database) filename)
   "connect as db owner and merge new data into lexdb"
-  (with-slots (dbname host port) lexicon
-    (unless dbname
-      (error "please set :dbname"))
-    (let ((conn-db-owner 
-	   (make-instance 'psql-lex-database
-	     :dbname dbname
-	     :host host
-	     :port port
-	     :user (sql-fn-get-val lexicon :db_owner)))
-	  (count-new 0))
-      (connect conn-db-owner)
+  (with-lexdb-user-lexdb (lexdb2 lexicon)
+    (let ((count-new 0))
       (when
 	  (catch :sql-error
 	    (progn
 	      (let* ((rev-filename (absolute-namestring "~a.rev" filename))
 		     (dfn-filename (absolute-namestring "~a.dfn" filename)))
 		(if (probe-file rev-filename)
-		    (setf count-new (merge-into-db conn-db-owner rev-filename))
+		    (setf count-new (merge-into-db lexdb2 rev-filename))
 		  (format t "~%WARNING: no file ~a" rev-filename))
 		(cond
 		 ((probe-file dfn-filename)
-		  (merge-dfn conn-db-owner dfn-filename)
+		  (merge-dfn lexdb2 dfn-filename)
 		  (make-field-map-slot lexicon))
 		 (t
 		  (format t "~%WARNING: no file ~a" dfn-filename)))
@@ -949,8 +1053,7 @@
 	(lkb-beep))
       (if (equal count-new 0)
 	  (empty-cache lexicon)
-	(initialize-lexdb))
-      (disconnect conn-db-owner))))
+	(initialize-lexdb)))))
 
 (defmethod merge-into-lexicon-dfn ((lexicon psql-lex-database) filename)
   "reconnect as db owner and merge new dfn into lexdb"
@@ -1078,25 +1181,25 @@
   (dump-rev lexdb filebase)
   (dump-dfn lexdb filebase)
   (dump-fld lexdb filebase)
-  (when tdl (dump-tdl filebase))
+  (when tdl (dump-tdl lexdb filebase))
   t)
 
 (defmethod dump-rev ((lexdb psql-lex-database) filebase)
-  (run-command-stdout lexdb "SELECT * FROM dump_rev_to_tmp(); COPY tmp TO stdout" 
-		      (namestring (pathname (format nil "~a.rev" 
-							      filebase))))
+  (run-command-stdout-to-file lexdb "SELECT * FROM dump_rev_to_tmp(); COPY tmp TO stdout" 
+			      (namestring (pathname (format nil "~a.rev" 
+							    filebase))))
   t)
 
 (defmethod dump-dfn ((lexdb psql-lex-database) filebase)
-  (run-command-stdout lexdb "COPY dfn TO stdout" 
-		      (namestring (pathname (format nil "~a.dfn" 
-							      filebase))))
+  (run-command-stdout-to-file lexdb "COPY dfn TO stdout" 
+			      (namestring (pathname (format nil "~a.dfn" 
+							    filebase))))
   t)
 
 (defmethod dump-fld ((lexdb psql-lex-database) filebase)
-  (run-command-stdout lexdb "COPY fld TO stdout" 
-		      (namestring (pathname (format nil "~a.fld" 
-							      filebase))))
+  (run-command-stdout-to-file lexdb "COPY fld TO stdout" 
+			      (namestring (pathname (format nil "~a.fld" 
+							    filebase))))
   t)
 
 (defmethod dump-tdl ((lexdb psql-lex-database) filebase)

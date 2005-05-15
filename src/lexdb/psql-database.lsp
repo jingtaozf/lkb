@@ -92,18 +92,29 @@
     (execute connection sql-string :tup t)))
 
 ;; run command with stdin = filename
-(defmethod run-command-stdin ((database psql-database) command filename)
-  (with-slots (connection) database
+(defmethod run-command-stdin-from-file ((db psql-database) command filename)
+  (with-open-file (istr filename
+		   :direction :input)
+    (run-command-stdin db command istr)))
+
+(defmethod run-command-stdin ((db psql-database) command istrm)
+  (with-slots (connection) db
     (unless connection
-      (error "psql-database ~s has no active connection." database))
-    (execute connection command :in (list filename))))
+      (error "psql-database ~s has no active connection." db))
+    (execute connection command :in (list istrm))))
 
 ;; run command with stdout = filename
-(defmethod run-command-stdout ((database psql-database) command filename)
-  (with-slots (connection) database
+(defmethod run-command-stdout-to-file ((db psql-database) command filename)
+  (with-open-file (ostrm filename
+		   :direction :output
+		   :if-exists :rename)
+    (run-command-stdout db command ostrm)))
+
+(defmethod run-command-stdout ((db psql-database) command ostrm)
+  (with-slots (connection) db
     (unless connection
-      (error "psql-database ~s has no active connection." database))
-    (execute connection command :out (list filename))))
+      (error "psql-database ~s has no active connection." db))
+    (execute connection command :out (list ostrm))))
 
 (defmethod run-command ((database psql-database) command)
   (with-slots (connection) database
@@ -252,13 +263,13 @@
 	  (:PGRES_COPY_OUT 
 	   (unless out
 	     (error "unexpected `COPY OUT' data transfer operation from PSQL DB ~a" (pq:db conn)))
-	   (copy-out-filename conn (car out))
+	   (copy-out-stream conn (car out))
 	   (setf out (cdr out))
 	   )
 	  (:PGRES_COPY_IN 
 	   (unless in
 	     (error "unexpected `COPY IN' data transfer operation sent from PSQL DB ~a" (pq:db conn)))
-	   (copy-in-filename conn (car in))
+	   (copy-in-stream conn (car in))
 	   (setf in (cdr in))	     
 	   )
 	  (:PGRES_NON_FATAL_ERROR
@@ -274,11 +285,6 @@
       (pq:clear result)
       nil)))
 
-(defun copy-in-filename (conn filename)
-  (with-open-file (istr filename
-		   :direction :input)
-    (copy-in-stream conn istr)))
-		  
 (defun copy-in-stream (conn istream)
   (do* ((line (read-line istream nil) (read-line istream nil)))
       ((null line))
@@ -298,28 +304,21 @@
     ;;(format t "~%PSQL ~a" error-message)
     (throw :sql-error (cons :putline "endcopy failed")))) 
 
-(defun copy-out-filename (conn filename)
-  (with-open-file (ostr filename
-		   :direction :output
-		   :if-exists :rename)
-    (copy-out-stream conn ostr)))
-		  
 ;;TO_DO: move to PQputCopyData
 ;; coz getline etc. are 'Obsolete Functions for COPY'
 
-(defparameter *c-str-len* 1000) ;;must be >150 (WHY???)
+(defparameter *psql-c-str-len* 1000) ;;must be >150 (WHY???)
 (defun copy-out-stream (conn ostream)
   (let* ((c-str (ff::string-to-native 
-		 (make-string *c-str-len*))))
+		 (make-string *psql-c-str-len*))))
     (unwind-protect
 	(do* ((line 
-	       (getline conn c-str *c-str-len*) 
-	       (getline conn c-str *c-str-len*)))
+	       (getline conn c-str *psql-c-str-len*) 
+	       (getline conn c-str *psql-c-str-len*)))
 	    ((string= line "\\."))
 	  (write-line line ostream)))
     (excl::aclfree c-str)
-    (endcopy conn)
-    ))
+    (endcopy conn)))
 
 (defun getline (conn c-str len)
   (loop

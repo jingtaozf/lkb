@@ -340,10 +340,10 @@
     raw-rows))
 
 (defun load-db-table-from-file (table-name file-name lexicon)
-  (lkb::run-command-stdin lexicon 
-		     (format nil "DELETE FROM ~a; ~% COPY ~a FROM stdin;"
-			     table-name
-			     table-name) 
-		     file-name))
+  (lkb::run-command-stdin-from-file lexicon 
+				    (format nil "DELETE FROM ~a; ~% COPY ~a FROM stdin;"
+					    table-name
+					    table-name) 
+				    file-name))
 
   
