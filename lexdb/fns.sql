@@ -120,6 +120,7 @@ BEGIN
 	--tables
 	CREATE TABLE meta AS SELECT * FROM public.meta WHERE var=\'filter\';
  	CREATE TABLE tmp AS SELECT * FROM public.rev WHERE NULL;
+ 	CREATE TABLE tmp_key AS SELECT * FROM public.rev_key WHERE NULL;
  
  	CREATE TABLE rev AS SELECT * FROM public.rev WHERE NULL;
  	EXECUTE \'CREATE UNIQUE INDEX rev_name_userid_modstamp ON rev (name,userid,modstamp)\'; 
@@ -131,6 +132,7 @@ BEGIN
  	CREATE TABLE lex AS SELECT * FROM public.rev WHERE NULL;
  	PERFORM public.index_lex();
 	CREATE TABLE lex_key AS SELECT * FROM public.rev_key WHERE NULL;
+ 	PERFORM public.index_lex_key();
 
 	-- views
 	CREATE VIEW rev_all
@@ -237,9 +239,12 @@ BEGIN
 
 	DROP TABLE filtered_tmp;
 
+	PERFORM public.deindex_lex_key();
+	DELETE FROM lex_key;
 	INSERT INTO lex_key
 		SELECT rev_key_all.* 
 		FROM rev_key_all JOIN lex USING (name,userid,modstamp);
+	PERFORM public.index_lex_key();
 
 	-- set build time 
 	DELETE FROM meta WHERE var=\'build_time\';
@@ -311,7 +316,7 @@ END;
 --
 --
 
-CREATE OR REPLACE FUNCTION public.merge_rev_from_tmp() RETURNS integer AS 
+CREATE OR REPLACE FUNCTION public.merge_public_rev_rev_key_from_tmp_tmp_key() RETURNS integer AS 
 '
 DECLARE
 	count_new int;
@@ -342,7 +347,8 @@ BEGIN
 
 		RAISE INFO \'Inserting new % entries...\', count_new;
 		INSERT INTO public.rev SELECT * FROM rev_new;
- 
+		INSERT INTO public.rev_key SELECT tmp_key.* FROM tmp_key JOIN rev_new USING (name,userid,modstamp); 
+
  		PERFORM public.index_public_rev();
 
 		PERFORM register_modstamp();
@@ -383,15 +389,16 @@ END;
 --
 --
 
-CREATE OR REPLACE FUNCTION public.dump_rev_to_tmp() RETURNS boolean AS '
-DECLARE
-	dump_file_rev text;
-	lexdb_versn real;
-	base text;
+CREATE OR REPLACE FUNCTION public.dump_public_rev_rev_key_to_tmp_tmp_key() RETURNS boolean AS '
 BEGIN
 	RAISE INFO \'creating ordered copy of public.rev in tmp\';
 	DELETE FROM tmp;
 	INSERT INTO tmp SELECT * FROM public.rev ORDER BY name, userid, modstamp;
+
+	RAISE INFO \'creating ordered copy of public.rev_key in tmp_key\';
+	DELETE FROM tmp_key;
+	INSERT INTO tmp_key SELECT * FROM public.rev_key ORDER BY name, userid, modstamp,key;
+
 	RETURN true;
 END;
 ' LANGUAGE plpgsql;
@@ -466,7 +473,7 @@ BEGIN
 	EXECUTE \'INSERT INTO public.rev (SELECT * FROM \' || $1 || \'.rev)\';
 	EXECUTE \'INSERT INTO public.rev_key (SELECT * FROM \' || $1 || \'.rev_key)\';
 	PERFORM register_modstamp();
-	PERFORM clear_rev();
+	--PERFORM clear_rev();
 	RETURN true;
 END;
 ' LANGUAGE plpgsql;
@@ -531,18 +538,27 @@ END;
 
 -- orthkey must enter db universe in normalized form (case)
 -- Total runtime: 4.259 ms
--- update rev_key before this call...
+-- update_entry, update rev_key manually, update_entry2
 CREATE OR REPLACE FUNCTION public.update_entry(text,text,text) RETURNS boolean AS '
 DECLARE
 	sql_str text;
 BEGIN
-	sql_str := \'INSERT INTO rev ( name, \' || $2 || \' ) VALUES ( \' || quote_literal($1) || \', \' || $3 || \')\';
+	DELETE FROM tmp;
+	sql_str := \'INSERT INTO tmp ( name, \' || $2 || \' ) VALUES ( \' || quote_literal($1) || \', \' || $3 || \')\';
 	RAISE DEBUG \'%\', sql_str;
 	EXECUTE sql_str;
+	
+	INSERT INTO rev SELECT * FROM tmp LIMIT 1;
 
 	DELETE FROM lex WHERE name = $1 ;
 	INSERT INTO lex SELECT * FROM active WHERE name = $1 LIMIT 1;
 
+	RETURN TRUE;
+END;
+' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.update_entry_2(text) RETURNS boolean AS '
+BEGIN
 	DELETE FROM lex_key WHERE name = $1 ;
 	INSERT INTO lex_key SELECT rev_key_all.* FROM rev_key_all JOIN active USING (name,userid,modstamp) WHERE name = $1;
 

@@ -39,8 +39,7 @@ DECLARE
 	x RECORD;
 BEGIN
 	FOR x IN
-		--EXECUTE \'SELECT * FROM lex WHERE orthkey LIKE lower(\' || quote_literal($1) || \')\'
-		EXECUTE \'SELECT * FROM lex WHERE orthkey LIKE \' || quote_literal($1)
+		EXECUTE \'SELECT lex.* FROM lex JOIN lex_key USING (name,userid,modstamp) WHERE lex_key.key LIKE \' || quote_literal($1)
 		LOOP
 		RETURN NEXT x;
 	END LOOP;

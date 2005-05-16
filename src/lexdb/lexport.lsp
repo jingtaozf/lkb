@@ -115,23 +115,6 @@
     (load-lex-from-files lexicon (list filename) :tdl)
     lexicon))
 
-(defun close-scratch-lex nil
-  (let* ((lexicon *lexdb*)
-	(filter (get-filter lexicon)))
-    (sql-fn-get-records lexicon 
-			:clear_rev)
-    (empty-cache *lexicon*)
-    (reconnect lexicon) ;; work around server bug
-    (sql-fn-get-records lexicon 
-			:update_lex 
-			:args (list filter))))
-
-(defun commit-scratch-lex nil
-  (with-lexdb-user-lexdb (lex *lexdb*)
-    (sql-fn-get-val lex :commit_rev
-		    :args (list (user *lexdb*))))
-  (empty-cache *lexdb*))
-
 (defun load-tdl-from-scratch (filename)
   (let ((lexdb *lexdb*))
     (catch 'abort 

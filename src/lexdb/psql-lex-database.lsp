@@ -122,41 +122,46 @@
 (defmethod rev-key-p ((lex psql-lex-database))
   (string= "t" (sql-fn-get-val lex :rev_key_p)))
   
-(defmethod generate-lex-orthkeys-if-necc ((lex psql-lex-database))
-  (generate-orthkeys-if-necc lex)
+(defmethod generate-lex-orthkeys-if-nec ((lex psql-lex-database))
+  (generate-orthkeys-if-nec lex)
   (with-lexdb-user-lexdb (lex2 lex)
-    (generate-orthkeys-if-necc lex2))
+    (generate-orthkeys-if-nec lex2))
   (update-lex lex))
 
-(defmethod generate-orthkeys-if-necc ((lex psql-lex-database))
+(defmethod generate-orthkeys-if-nec ((lex psql-lex-database))
   (unless (rev-key-p lex)
     (generate-orthkeys lex)))
 
-(defmethod generate-orthkeys ((lex psql-lex-database))
+(defmethod generate-orthkeys ((lex psql-lex-database) &key (table :rev))
   (sql-fn-get-val lex :register_modstamp)
   (run-command-stdin lex "COPY rev_key FROM stdin"
 		     (make-string-input-stream 
-		      (generate-orthkeys-COPY-str lex)))
+		      (generate-orthkeys-COPY-str lex :table table)))
   (sql-fn-get-val lex :register_modstamp))
 
-(defmethod generate-orthkeys-COPY-str ((lex psql-lex-database))
+(defmethod generate-orthkeys-COPY-str ((lex psql-lex-database) &key (table :rev))
   (let* ((orth-raw-mapping (assoc :orth (fields-map lex)))
-	 (orth-raw-value-mapping (fourth orth-raw-mapping))
 	 (raw-orth-field-str (2-str (second orth-raw-mapping)))
        
 	 (numo-t (get-records lex
-			      (format nil "SELECT name,userid,modstamp,~a FROM rev"
-				      raw-orth-field-str)))
+			      (format nil "SELECT name,userid,modstamp,~a FROM ~a"
+				      raw-orth-field-str
+				      table)))
 	 (recs (recs numo-t)))
     (join-str-lines
-      (mapcar #'to-psql-COPY-rec
-	      (mapcan
-	       #'(lambda (z) 
-		   (mapcar #'(lambda (x)
-			       (list (first z) (second z) (third z) x))
-			   (mapcar #'normalize-orthkey
-				   (car (work-out-value orth-raw-value-mapping (fourth z))))))
-	       recs)))))
+     (mapcar #'to-psql-COPY-rec
+	     (rev-to-rev-key lex recs)))))
+
+(defmethod rev-to-rev-key ((lex psql-lex-database) recs)
+  (let* ((orth-raw-mapping (assoc :orth (fields-map lex)))
+	 (orth-raw-value-mapping (fourth orth-raw-mapping)))
+    (mapcan
+     #'(lambda (z) 
+	 (mapcar #'(lambda (x)
+		     (list (first z) (second z) (third z) x))
+		 (mapcar #'normalize-orthkey
+			 (car (work-out-value orth-raw-value-mapping (fourth z))))))
+     recs)))
 
 (defparameter *newline-str* (string (code-char 10)))
 (defun join-str-lines (lines)
@@ -574,9 +579,9 @@
   (set-val psql-le :userid (user lexicon))
   (set-lex-entry-aux lexicon psql-le))
   
-(defmethod set-lex-entry-aux ((lexicon psql-lex-database) (psql-le psql-lex-entry))
+(defmethod set-lex-entry-aux ((lex psql-lex-database) (psql-le psql-lex-entry))
   (set-val psql-le :modstamp "NOW")
-  (let* ((symb-list (copy-list (fields lexicon)))
+  (let* ((symb-list (copy-list (fields lex)))
 	 (symb-list (remove :name symb-list))
 	 (symb-list (remove-duplicates symb-list))
 	 (symb-list (remove-if 
@@ -585,14 +590,17 @@
 					    (string= x ""))))
 		     symb-list
 		     :key #'(lambda (x) (retr-val psql-le x))))) 
-    (sql-fn-get-val lexicon
-		    :update_entry
+    (sql-fn-get-val lex :update_entry
 		    :args (list (retr-val psql-le :name)
 				symb-list
 				(ordered-val-list symb-list psql-le)))
+    (generate-orthkeys lex :table :tmp)
+    (sql-fn-get-val lex :update_entry_2
+		    :args (list (retr-val psql-le :name)))
+    		 
     (unless
 	(check-lex-entry (str-2-symb (retr-val psql-le :name))
-			 lexicon)
+			 lex)
       (error "Invalid lexical entry ~a -- see Lisp buffer output" (retr-val psql-le :name)))))
 
 #+:mwe
@@ -864,18 +872,17 @@
 (defmethod scratch-records ((lexicon psql-lex-database))
   (sql-fn-get-raw-records lexicon :retrieve_private_revs))
 
-(defmethod merge-into-db ((lexicon psql-lex-database) rev-filename)  
-  (run-command-stdin-from-file lexicon 
-			       (format nil "~a;~%~a;" 
-				       "DELETE FROM tmp" 
-				       "COPY tmp FROM stdin") 
-			       rev-filename)
+(defmethod merge-into-db ((lex psql-lex-database) rev-filename)  
+  (run-command lex "DELETE FROM tmp")
+  (run-command lex "DELETE FROM tmp_key")
+  (run-command-stdin-from-file lex "COPY tmp FROM stdin" rev-filename)
+  (run-command-stdin-from-file lex "COPY tmp_key FROM stdin" (concatenate 'string rev-filename "_key"))
   (let ((count-new
 	 (str-2-num
-	  (sql-fn-get-val lexicon :merge_rev_from_tmp))))
+	  (sql-fn-get-val lex :merge_public_rev_rev_key_from_tmp_tmp_key))))
     (format t "~%(~a new rev entries)" count-new)
     (unless (equal 0 count-new)
-      (vacuum-public-rev lexicon))
+      (vacuum-public-rev lex))
     count-new))
 
 (defmethod merge-dfn ((lexicon psql-lex-database) dfn-filename)  
@@ -1030,23 +1037,18 @@
   "connect as db owner and merge new data into lexdb"
   (with-lexdb-user-lexdb (lexdb2 lexicon)
     (let ((count-new 0))
-      (when
-	  (catch :sql-error
-	    (progn
-	      (let* ((rev-filename (absolute-namestring "~a.rev" filename))
-		     (dfn-filename (absolute-namestring "~a.dfn" filename)))
-		(if (probe-file rev-filename)
-		    (setf count-new (merge-into-db lexdb2 rev-filename))
-		  (format t "~%WARNING: no file ~a" rev-filename))
-		(cond
-		 ((probe-file dfn-filename)
-		  (merge-dfn lexdb2 dfn-filename)
-		  (make-field-map-slot lexicon))
-		 (t
-		  (format t "~%WARNING: no file ~a" dfn-filename)))
-		nil)))
-	(format t "~%Merge new entries aborted...")
-	(lkb-beep))
+      (let* ((rev-filename (absolute-namestring "~a.rev" filename))
+	     (dfn-filename (absolute-namestring "~a.dfn" filename)))
+	(if (probe-file rev-filename)
+	    (setf count-new (merge-into-db lexdb2 rev-filename))
+	  (format t "~%WARNING: no file ~a" rev-filename))
+	(cond
+	 ((probe-file dfn-filename)
+	  (merge-dfn lexdb2 dfn-filename)
+	  (make-field-map-slot lexicon))
+	 (t
+	  (format t "~%WARNING: no file ~a" dfn-filename)))
+	nil)
       (if (equal count-new 0)
 	  (empty-cache lexicon)
 	(initialize-lexdb)))))
@@ -1180,9 +1182,13 @@
   (when tdl (dump-tdl lexdb filebase))
   t)
 
-(defmethod dump-rev ((lexdb psql-lex-database) filebase)
-  (run-command-stdout-to-file lexdb "SELECT * FROM dump_rev_to_tmp(); COPY tmp TO stdout" 
+(defmethod dump-rev ((lex psql-lex-database) filebase)
+  (sql-fn-get-val lex :dump_public_rev_rev_key_to_tmp_tmp_key)
+  (run-command-stdout-to-file lex "COPY tmp TO stdout" 
 			      (namestring (pathname (format nil "~a.rev" 
+							    filebase))))
+  (run-command-stdout-to-file lex "COPY tmp_key TO stdout" 
+			      (namestring (pathname (format nil "~a.rev_key" 
 							    filebase))))
   t)
 
@@ -1203,3 +1209,18 @@
     (format t "~%(exporting filtered ~a LexDB to TDL file ~a)" (dbname lexdb) tdl-file)
     (force-output)
     (export-to-tdl-to-file lexdb tdl-file)))
+
+(defmethod commit-private-rev ((lex psql-lex-database)) 
+  (with-lexdb-user-lexdb (lex2 lex)
+    (sql-fn-get-val lex2 :commit_rev :args (list (user lex))))
+  (sql-fn-get-records lex :clear_rev)
+  (empty-cache lex))
+
+(defmethod close-private-rev ((lex psql-lex-database))
+  (sql-fn-get-records lex :clear_rev)
+  (empty-cache lex)
+  (reconnect lex) ;; work around server bug
+  (sql-fn-get-records lex 
+		      :update_lex 
+		      :args (list (get-filter lex))))
+

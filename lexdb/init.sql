@@ -26,6 +26,7 @@ CREATE TABLE public.dfn (
 		type TEXT,
 	PRIMARY KEY (mode,slot,field));
 CREATE TABLE public.tmp AS SELECT * FROM public.rev WHERE NULL;
+CREATE TABLE public.tmp_key AS SELECT * FROM public.rev_key WHERE NULL;
 CREATE TABLE public.rev_new AS SELECT * FROM public.rev WHERE NULL;
 \copy public.meta from 'meta.tsv'
 

@@ -46,9 +46,9 @@
                       lkb::command-dump-lexdb
                       lkb::command-export-lexicon-to-tdl
                       lkb::command-load-tdl-to-scratch
-                      lkb::command-clear-scratch
-                      lkb::command-commit-scratch		      
-                      lkb::command-show-scratch		      
+                      lkb::command-clear-private-rev
+                      lkb::command-commit-private-rev		      
+                      lkb::command-show-private-rev      
                       lkb::command-set-filter-lexdb		      
 		      lkb::command-index-new-lex-entries
 		      lkb::command-vacuum-current-grammar
@@ -342,16 +342,16 @@
                                   :value 'command-load-tdl-to-scratch
                                   ;:available-p :always
 				  )
-                  (make-menu-item :name "Display private entries"
-                                  :value 'command-show-scratch
+                  (make-menu-item :name "Display private rev"
+                                  :value 'command-show-private-rev
                                   ;:available-p :always
 				  )
-                  (make-menu-item :name "Commit private entries"
-                                  :value 'command-commit-scratch
+                  (make-menu-item :name "Commit private rev"
+                                  :value 'command-commit-private-rev
                                   ;:available-p :always
 				  )
-                  (make-menu-item :name "Clear private entries"
-                                  :value 'command-clear-scratch
+                  (make-menu-item :name "Clear private rev"
+                                  :value 'command-clear-private-rev
                                   ;:available-p :always
 				  )
                   (make-menu-item :name "Index new lex entries"

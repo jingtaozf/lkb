@@ -56,7 +56,7 @@
   (format t " ...done")
   (lkb-beep))
 
-(defun command-clear-scratch nil
+(defun command-clear-private-rev nil
   (unless (and
 	   (typep *lexdb* 'psql-lex-database)
 	   (connection *lexdb*))
@@ -66,11 +66,11 @@
     (force-output)
     (when (> count-priv 0)
       (time
-       (close-scratch-lex)))
+       (close-private-rev *lexdb*)))
     (format t " ...done")
     (lkb-beep)))
 
-(defun command-commit-scratch nil
+(defun command-commit-private-rev nil
   (unless (and
 	   (typep *lexdb* 'psql-lex-database)
 	   (connection *lexdb*))
@@ -81,11 +81,11 @@
     (force-output)
     (when (> count-priv 0)
       (time
-       (commit-scratch-lex)))
+       (commit-private-rev *lexdb*)))
     (format t " ...done")
     (lkb-beep)))
 
-(defun command-show-scratch nil
+(defun command-show-private-rev nil
   (unless (and
 	   (typep *lexdb* 'psql-lex-database)
 	   (connection *lexdb*))

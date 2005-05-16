@@ -82,6 +82,22 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION public.index_lex_key() RETURNS boolean AS '
+BEGIN
+	RAISE INFO \'indexing lex_key\';
+	CREATE INDEX lex_key_key ON lex_key (key);
+	RETURN true;
+END;
+' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.deindex_lex_key() RETURNS boolean AS '
+BEGIN
+	RAISE INFO \'deindexing lex_keye\';
+	DROP INDEX lex_key_key;
+	RETURN true;
+END;
+' LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION semi_create_indices() RETURNS boolean AS '
 BEGIN
  	RAISE DEBUG \'Creating SEMI indices...\';
