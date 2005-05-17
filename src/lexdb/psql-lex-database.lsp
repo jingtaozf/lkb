@@ -302,7 +302,7 @@
    ((connection lexicon)
     (let* ((id-str (2-str id))
 	   (table (sql-fn-get-records lexicon
-					:retrieve_head_entry
+					:retrieve_entry
 					:fields reqd-fields
 					:args (list (sql-like-text id-str)))))
       
@@ -521,7 +521,7 @@
 
 (defmethod get-internal-table-dfn ((lexicon psql-lex-database))
       (sql-fn-get-records lexicon 
-			  :return_field_info2 
+			  :return_field_info 
 			  :args (list "public" "rev")))
 
 (defmethod get-field-size-map ((lexicon psql-lex-database))
@@ -866,7 +866,7 @@
 
 (defmethod show-scratch ((lexicon psql-lex-database))
   (sql-fn-get-raw-records lexicon 
-			  :retrieve_private_revs
+			  :rev
 			  :fields (list :name :userid :modstamp)))
 
 (defmethod scratch-records ((lexicon psql-lex-database))

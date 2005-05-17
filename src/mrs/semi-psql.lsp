@@ -1,4 +1,4 @@
-;;; Copyright (c) 2003-2005
+;;; Copyright (c) 2003 - 2005
 ;;;   Benjamin Waldron;
 ;;;   see `licence.txt' for conditions.
 
@@ -8,10 +8,10 @@
 (defun load-sdbt (sdbt dbname)
   (clear sdbt)
   (let* ((sql-fn (case (sdbt-name sdbt)
-		   ('pred :retrieve_semi_pred)
-		   ('frame :retrieve_semi_frame)
-		   ('var :retrieve_semi_var)
-		   ('extra :retrieve_semi_extra)))
+		   ('pred :semi_pred)
+		   ('frame :semi_frame)
+		   ('var :semi_var)
+		   ('extra :semi_extra)))
 	 (records
 	  (lkb::sql-fn-get-raw-records dbname
 				      sql-fn)))

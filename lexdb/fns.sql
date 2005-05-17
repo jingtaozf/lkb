@@ -11,7 +11,7 @@
 --
 
 CREATE OR REPLACE FUNCTION public.list_fld() RETURNS SETOF text AS '
-	SELECT t1 FROM return_field_info(\'public\',\'rev\');
+	SELECT t1 FROM return_field_info2(\'public\',\'rev\');
 ' LANGUAGE sql;
 
 CREATE OR REPLACE FUNCTION public.pub_fns() RETURNS SETOF text AS '
@@ -271,18 +271,6 @@ BEGIN
 	RETURN mod_time;
 END;
 ' LANGUAGE plpgsql;
-
---CREATE OR REPLACE FUNCTION public.register_modstamp_pub() RETURNS text AS '
---DECLARE
---	mod_time text;
---BEGIN
---	RAISE DEBUG \'Updating timestamps...\';
---	DELETE FROM public.meta WHERE var=\'mod_time\';
---	mod_time := current_timestamp;
---	INSERT INTO public.meta VALUES (\'mod_time\',mod_time);
---	RETURN mod_time;
---END;
---' LANGUAGE plpgsql SECURITY DEFINER;
 
 --
 --

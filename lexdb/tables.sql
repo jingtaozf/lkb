@@ -164,19 +164,19 @@ BEGIN
 		semi_var NATURAL LEFT JOIN
 		semi_extra;
 
-	CREATE OR REPLACE FUNCTION retrieve_semi_pred() RETURNS SETOF semi_pred AS \'
+	CREATE OR REPLACE FUNCTION semi_pred() RETURNS SETOF semi_pred AS \'
 		SELECT * FROM semi_pred;
 	\' LANGUAGE sql;
 
-	CREATE OR REPLACE FUNCTION retrieve_semi_frame() RETURNS SETOF semi_frame AS \'
+	CREATE OR REPLACE FUNCTION semi_frame() RETURNS SETOF semi_frame AS \'
 		SELECT * FROM semi_frame;
 	\' LANGUAGE sql;
 
-	CREATE OR REPLACE FUNCTION retrieve_semi_var() RETURNS SETOF semi_var AS \'
+	CREATE OR REPLACE FUNCTION semi_var() RETURNS SETOF semi_var AS \'
 		SELECT * FROM semi_var;
 	\' LANGUAGE sql;
 
-	CREATE OR REPLACE FUNCTION retrieve_semi_extra() RETURNS SETOF semi_extra AS \'
+	CREATE OR REPLACE FUNCTION semi_extra() RETURNS SETOF semi_extra AS \'
 		SELECT * FROM semi_extra;
 	\' LANGUAGE sql;
 
