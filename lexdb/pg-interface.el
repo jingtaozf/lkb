@@ -154,7 +154,7 @@
 (defvar *lexdb-scratch-buffer*)
 (defvar *lexdb-slot-len*)
 
-(setf *lexdb-read-only* '(:version :userid :modstamp :orthkey))
+(setf *lexdb-read-only* '(:version :userid :modstamp))
 (setf *lexdb-hidden* nil)
 (setf *lexdb-minibuffer-max* 80)
 (setf *lexdb-active-id-ring* nil)
@@ -514,9 +514,9 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 
 (defun lexdb-store-record (record-in)
   (if (equal (cdr (assoc :name record-in)) "")
-      (error "cannot commit record with no NAME"))
-  (if (equal (cdr (assoc :flags record-in)) "")
-      (error "cannot commit record with no FLAGS"))
+      (error "cannot commit record with no NAME field"))
+  (if (equal (cdr (assoc :dead record-in)) "")
+      (error "cannot commit record with no DEAD field"))
   (princ "please wait... ")
   ;;(terpri)
   (cle-store-record record-in)

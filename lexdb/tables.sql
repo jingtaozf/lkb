@@ -14,8 +14,7 @@ BEGIN
 		name TEXT NOT NULL,
 		userid TEXT DEFAULT user NOT NULL,
 		modstamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-		orthkey TEXT NOT NULL,
-		flags INTEGER DEFAULT 0 NOT NULL
+		dead BOOLEAN DEFAULT \\\'0\\\' NOT NULL
 		\' || field_dfn_text() || \' ) \';
 
 	RAISE DEBUG \'%\', sql_qry;
@@ -29,7 +28,6 @@ CREATE OR REPLACE FUNCTION public.index_public_rev() RETURNS boolean AS '
 BEGIN
  	RAISE INFO \'Creating indices...\';
 	ALTER TABLE public.rev ADD PRIMARY KEY (name,userid,modstamp);
-	CREATE INDEX rev_orthkey ON public.rev (orthkey); 
 	CREATE UNIQUE INDEX name_modstamp ON public.rev (name,modstamp); 
 	CREATE INDEX rev_name_modstamp ON public.rev (name, modstamp);
 	CREATE INDEX rev_name
@@ -42,7 +40,6 @@ END;
 CREATE OR REPLACE FUNCTION public.deindex_public_rev() RETURNS boolean AS '
 BEGIN
  	RAISE INFO \'Dropping indices...\';
- 	DROP INDEX rev_orthkey;
  	DROP INDEX name_modstamp;
 	DROP INDEX rev_name_modstamp;
 	DROP INDEX rev_name;
@@ -56,14 +53,11 @@ CREATE OR REPLACE FUNCTION public.index_lex() RETURNS boolean AS '
 BEGIN
 	RAISE INFO \'indexing db cache\';
 	CREATE UNIQUE INDEX lex_name ON lex (name varchar_ops);
- 	CREATE INDEX lex_orthkey ON lex (orthkey varchar_ops); 
 
  	IF psql_server_version(\'7.4\') THEN
 		CREATE UNIQUE INDEX lex_name_pattern ON lex (name varchar_pattern_ops);
-		CREATE INDEX lex_orthkey_pattern ON lex (orthkey varchar_pattern_ops);
  	ELSE
 		CREATE UNIQUE INDEX lex_name_pattern ON lex (name);
-		CREATE INDEX lex_orthkey_pattern ON lex (orthkey);
  	END IF; 
 	RETURN true;
 END;
@@ -73,11 +67,7 @@ CREATE OR REPLACE FUNCTION public.deindex_lex() RETURNS boolean AS '
 BEGIN
 	RAISE INFO \'deindexing db cache\';
 	DROP INDEX lex_name;
- 	DROP INDEX lex_orthkey; 
-
 	DROP INDEX lex_name_pattern;
-	DROP INDEX lex_orthkey_pattern;
-
 	RETURN true;
 END;
 ' LANGUAGE plpgsql;

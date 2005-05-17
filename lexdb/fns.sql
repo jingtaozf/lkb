@@ -143,16 +143,16 @@ BEGIN
 		AS SELECT * FROM public.rev_key 
 			UNION 
  			SELECT * FROM rev_key;
- 	CREATE VIEW filtered AS SELECT * FROM rev_all WHERE NULL;
- 	CREATE VIEW active
+ 	CREATE VIEW filt AS SELECT * FROM rev_all WHERE NULL;
+ 	CREATE VIEW head
 		AS SELECT fil.*
  			FROM 
- 			(filtered AS fil
+ 			(filt AS fil
  			NATURAL JOIN 
  				(SELECT name, max(modstamp) AS modstamp 
- 					FROM filtered
+ 					FROM filt
 					GROUP BY name) AS t1)
-			WHERE flags=1;
+			WHERE dead=\'0\';
 
 	-- register mod time
 	PERFORM register_modstamp();
@@ -189,7 +189,7 @@ BEGIN
 
 	-- set (new) filter
  	EXECUTE \'
-  		CREATE OR REPLACE VIEW filtered
+  		CREATE OR REPLACE VIEW filt
  		AS SELECT * 
   		FROM rev_all
     		WHERE \' || new_filter ;
@@ -212,12 +212,12 @@ DECLARE
 	b_time text;
 BEGIN
 	-- we need "indices on the view" for reasons of efficiency...
-	RAISE DEBUG \'creating filtered_tmp\';
-	CREATE TABLE filtered_tmp AS SELECT * FROM filtered;
-	RAISE DEBUG \'creating index filtered_tmp_name\';
-	CREATE INDEX filtered_tmp_name ON filtered_tmp (name);
-	RAISE DEBUG \'creating index filtered_tmp_modstamp\';
-	CREATE INDEX filtered_tmp_modstamp ON filtered_tmp (modstamp);
+	RAISE DEBUG \'creating filt_tmp\';
+	CREATE TABLE filt_tmp AS SELECT * FROM filt;
+	RAISE DEBUG \'creating index filt_tmp_name\';
+	CREATE INDEX filt_tmp_name ON filt_tmp (name);
+	RAISE DEBUG \'creating index filt_tmp_modstamp\';
+	CREATE INDEX filt_tmp_modstamp ON filt_tmp (modstamp);
 
 	-- recreate lex
 	RAISE INFO \'emptying lex\';
@@ -226,18 +226,18 @@ BEGIN
 
 	RAISE INFO \'populating lex\';
 	INSERT INTO lex 
-		-- =active, but faster lookup
+		-- =head, but faster lookup
   		SELECT fil.*
   		FROM 
-   		(filtered_tmp AS fil
+   		(filt_tmp AS fil
    		NATURAL JOIN 
     		(SELECT name, max(modstamp) AS modstamp 
-      			FROM filtered_tmp
+      			FROM filt_tmp
       		GROUP BY name) AS t1)
-  	WHERE flags=1;
+  	WHERE dead=\'0\';
 	PERFORM public.index_lex();
 
-	DROP TABLE filtered_tmp;
+	DROP TABLE filt_tmp;
 
 	PERFORM public.deindex_lex_key();
 	DELETE FROM lex_key;
@@ -536,8 +536,7 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
--- orthkey must enter db universe in normalized form (case)
--- Total runtime: 4.259 ms
+-- Total runtime was: 4.259 ms
 -- update_entry, update rev_key manually, update_entry2
 CREATE OR REPLACE FUNCTION public.update_entry(text,text,text) RETURNS boolean AS '
 DECLARE
@@ -551,16 +550,17 @@ BEGIN
 	INSERT INTO rev SELECT * FROM tmp LIMIT 1;
 
 	DELETE FROM lex WHERE name = $1 ;
-	INSERT INTO lex SELECT * FROM active WHERE name = $1 LIMIT 1;
+	INSERT INTO lex SELECT * FROM head WHERE name = $1 LIMIT 1;
 
 	RETURN TRUE;
 END;
 ' LANGUAGE plpgsql;
 
+-- orthkey must enter db universe in normalized form (case)
 CREATE OR REPLACE FUNCTION public.update_entry_2(text) RETURNS boolean AS '
 BEGIN
 	DELETE FROM lex_key WHERE name = $1 ;
-	INSERT INTO lex_key SELECT rev_key_all.* FROM rev_key_all JOIN active USING (name,userid,modstamp) WHERE name = $1;
+	INSERT INTO lex_key SELECT rev_key_all.* FROM rev_key_all JOIN head USING (name,userid,modstamp) WHERE name = $1;
 
 	PERFORM register_modstamp();
 	RETURN TRUE;

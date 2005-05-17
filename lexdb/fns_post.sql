@@ -15,7 +15,7 @@ DECLARE
 	x RECORD;
 BEGIN
 	FOR x IN
-		EXECUTE \'SELECT * FROM filtered WHERE name LIKE \' || quote_literal($1) || \' AND modstamp=(SELECT max(modstamp) FROM filtered WHERE name LIKE \' || quote_literal($1) || \') LIMIT 1\'
+		EXECUTE \'SELECT * FROM filt WHERE name LIKE \' || quote_literal($1) || \' AND modstamp=(SELECT max(modstamp) FROM filt WHERE name LIKE \' || quote_literal($1) || \') LIMIT 1\'
 		LOOP
 		RETURN NEXT x;
 	END LOOP;

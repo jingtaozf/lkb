@@ -70,6 +70,7 @@
 	  (error "please initialize *lexdb*"))
 	(dump-dfn *lexdb* file)
 	(dump-fld *lexdb* file)
+	(dump-meta *lexdb* file)
 	(export-to-db-dump-to-file lexicon rev-file)))
   (format t "~%export complete")
   (when recurse

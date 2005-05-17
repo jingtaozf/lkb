@@ -1097,14 +1097,14 @@
 				   (extract-field s x fields-map)))
 			 extraction-fields)
 			(list
-			 (cons :orthkey (orthkey x))
+			 ;;(cons :orthkey (orthkey x))
 			 (cons :userid *lexdb-dump-user*)
 			 (cons :modstamp "NOW")
 			 (cons :lang *lexdb-dump-lang*)
 			 (cons :country *lexdb-dump-country*)
 			 (cons :confidence 1)
 			 (cons :source *lexdb-dump-source*)
-			 (cons :flags 1))))
+			 (cons :flags "f"))))
 	   (ordered-field-vals (ordered-symb-val-list fields field-vals))
 	   (line 
 	    (format nil "~a~%" 
@@ -1143,7 +1143,7 @@
 				 :lang *lexdb-dump-lang*
 				 :source (extract-pure-source-from-source *lexdb-dump-source*)
 				 :confidence 1
-				 :flags 1
+				 :dead "f"
 				 )))))
       (cond
        ((null (cdr (assoc :unifs s)))
@@ -1153,7 +1153,7 @@
        (format t "~%skipping super-rich entry:~%~a" (to-tdl x))
        nil)))))
   
-;; WARNING: not suited to batch import!
+;; not suited to batch import!
 ;; import lexicon to LexDB
 (defmethod export-to-db ((lexicon lex-database) (lexdb psql-lex-database))
   (mapc
@@ -1179,6 +1179,7 @@
   (dump-rev lexdb filebase)
   (dump-dfn lexdb filebase)
   (dump-fld lexdb filebase)
+  (dump-meta lexdb filebase)
   (when tdl (dump-tdl lexdb filebase))
   t)
 
@@ -1193,14 +1194,20 @@
   t)
 
 (defmethod dump-dfn ((lexdb psql-lex-database) filebase)
-  (run-command-stdout-to-file lexdb "COPY dfn TO stdout" 
+  (run-command-stdout-to-file lexdb "COPY public.dfn TO stdout" 
 			      (namestring (pathname (format nil "~a.dfn" 
 							    filebase))))
   t)
 
 (defmethod dump-fld ((lexdb psql-lex-database) filebase)
-  (run-command-stdout-to-file lexdb "COPY fld TO stdout" 
+  (run-command-stdout-to-file lexdb "COPY public.fld TO stdout" 
 			      (namestring (pathname (format nil "~a.fld" 
+							    filebase))))
+  t)
+
+(defmethod dump-meta ((lexdb psql-lex-database) filebase)
+  (run-command-stdout-to-file lexdb "COPY public.meta TO stdout" 
+			      (namestring (pathname (format nil "~a.meta" 
 							    filebase))))
   t)
 
