@@ -23,7 +23,7 @@
   (or (getenv "DELPHINHOME") "/afs/ir.stanford.edu/users/o/e/oepen/src/lingo"))
 
 (defconst allegro-home 
-  (or (getenv "ACL_HOME") "/usr/local/acl"))
+  (or (getenv "ACL_HOME") "/lingo/local/acl"))
 
 (defconst allegro-locale
   (or (getenv "ACL_LOCALE") "en_US.UTF-8"))
@@ -81,7 +81,20 @@
         ("\\.tdl$" . tdl-mode)
         ("\\.mrs$" . tdl-mode)
         ("\\.system$" . common-lisp-mode))
-      auto-mode-alist)))
+      auto-mode-alist))
+
+  ;;
+  ;; add LKB-specific library directory to LD_LIBRARY_PATH, in case the Motif
+  ;; libraries are not installed locally.
+  ;;
+  (let ((old (getenv "LD_LIBRARY_PATH"))
+        (new (format
+              "LD_LIBRARY_PATH=%s/lkb/lib/%s"
+              delphin-home (system-binaries))))
+    (setq process-environment
+      (cons
+       (if old (format "%s:%s" new old) new)
+       process-environment))))
 
 (defun lkb (&optional prefix)
   (interactive "P")
@@ -104,11 +117,14 @@
   (setq fi:common-lisp-image-file
     (format "%s/lkb/%s/lkb.dxl" delphin-home (system-binaries)))
 
+  (setq fi:common-lisp-image-arguments (list "-locale" allegro-locale))
+
   ;;
   ;; start up inferior lisp process
   ;;
   (let ((process-connection-type nil))
     (fi:common-lisp)))
+
 
 (defun japanese (&optional prefix)
   (interactive "P")
@@ -145,6 +161,7 @@
   (let ((process-connection-type nil))
     (fi:common-lisp)))
 
+
 (defun lisp (&optional prefix)
   (interactive "P")
 
@@ -168,6 +185,7 @@
 
   (let ((process-connection-type nil))
     (fi:common-lisp)))
+
 
 ;;;
 ;;; [incr tsdb()] add-on system; assumes the precompiled binaries are installed
