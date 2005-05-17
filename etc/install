@@ -94,6 +94,7 @@ if [ "$OSTYPE" = "linux" -o "$OSTYPE" = "linux-gnu" ]; then
   #
   if uname -i > /dev/null 2>&1; then
     cpu=$(uname -i)
+    if [ "${cpu}" = "unknown" ]; then cpu=$(uname -m); fi
   else
     cpu=$(uname -m)
   fi
@@ -236,6 +237,7 @@ if [ "${os}" == "linux.x86.32" ]; then
   ( \
     cd lib/${os}; \
     ${WGET} http://lingo.stanford.edu/ftp/lib/linux/libXm.so.2; \
+    ${WGET} http://lingo.stanford.edu/ftp/lib/linux/libXm.so.3; \
   )
 fi
 
