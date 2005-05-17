@@ -221,7 +221,7 @@ fi
 # if it were right, install our own and suggest that the user that they tell
 # their shell how to find it.  this all is a little iffy ...
 #
-if [ "${os}" == "linux.x86.32" ]; then
+if [ false -a "${os}" == "linux.x86.32" ]; then
   if [ -e /usr/X11R6/lib/libXm.so.2 ]; then
     link=$(${LS} -l /usr/X11R6/lib/libXm.so.2 | grep -i "lesstif")
     if [ -n "${link}" ]; then

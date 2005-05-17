@@ -64,9 +64,9 @@ if [ "${os%%.*}" == "linux" -o "$os" == "solaris" ]; then
   # path; put ourselves at the front to avoid collisions with other libraries.
   #
   if [ -z "${LD_LIBRARY_PATH}" ]; then
-    LD_LIBRARY_PATH=${DELPHINHOME}/lib/${os};
+    LD_LIBRARY_PATH=${DELPHINHOME}/lkb/lib/${os};
   else
-    LD_LIBRARY_PATH=${DELPHINHOME}/lib/${os}:${LD_LIBRARY_PATH};
+    LD_LIBRARY_PATH=${DELPHINHOME}/lkb/lib/${os}:${LD_LIBRARY_PATH};
   fi
   export LD_LIBRARY_PATH;
 fi
