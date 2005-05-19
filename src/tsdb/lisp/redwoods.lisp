@@ -99,8 +99,10 @@
           (unless (or interactive (null runp))
             (install-gc-strategy 
              nil :tenure *tsdb-tenure-p* :burst t :verbose t)))
+	 (display (let ((foo (getenv "DISPLAY")))
+		    (and (stringp foo) (not (string= foo "")) foo)))
          (frame (unless #-:expand strip #+:expand nil
-                  (if runp
+                  (if (and runp display)
                     (clim:make-application-frame 'lkb::compare-frame)
                     (clim:make-application-frame 
                      'lkb::compare-frame :frame-manager nil))))
@@ -146,13 +148,13 @@
                               data i-id frame 
                               :gold gold :strip strip :bestp bestp 
                               :inspect inspect :exactp exactp
-                              :cache cache :title title
+                              :cache cache :title title :display display
                               :verbose verbose :stream stream)))
                           (browse-tree 
                            data i-id frame 
                            :gold gold :strip strip :bestp bestp 
                            :inspect inspect :exactp exactp
-                           :cache cache :title title
+                           :cache cache :title title :display display
                            :verbose verbose :stream stream)))
           for action = (get-field :status status)
           for offset = (or (get-field :offset status) 1)
@@ -210,7 +212,7 @@
 (defun browse-tree (data i-id frame &key gold strip bestp 
                                          inspect exactp subset
                                          title cache verbose 
-                                         (runp t) stream)
+                                         (runp t) display stream)
   
   (declare (special %client%))
   
@@ -560,14 +562,14 @@
                  (derivation-equal derivation gderivation) do
               (push edge (lkb::compare-frame-exact frame))))
 
-      (when (and runp (null %client%))
+      (when (and runp display (null %client%))
         (setf %client%
           (mp:run-function 
            (or title "[incr tsdb()] Tree Selection")
            #'lkb::run-compare-frame frame)))
 
       (let ((status (lkb::set-up-compare-frame 
-                     frame lkb::*parse-record* :runp runp)))
+                     frame lkb::*parse-record* :runp runp :display display)))
 
         ;;
         ;; _fix_me_

@@ -117,7 +117,12 @@
   (clim:run-frame-top-level frame))
 
 (defun set-up-compare-frame (frame edges 
-                             &key (runp (compare-frame-runp frame)) input)
+                             &key (runp (compare-frame-runp frame)) 
+				  input
+				  (display (let ((foo (getenv "DISPLAY")))
+					     (and (stringp foo) 
+						  (not (string= foo "")) 
+						  foo))))
 
   (setf *cached-category-abbs* nil)
 
@@ -149,7 +154,7 @@
   ;; large sets of edges can take some time (and memory :-{) to display; query
   ;; for user confirmation before moving on.
   ;;
-  (when (and runp
+  (when (and runp display
              (integerp *tree-comparison-threshold*)
              (> (length edges) *tree-comparison-threshold*)
              (or *tree-automatic-update-p*
@@ -165,7 +170,7 @@
     (record-decision (make-decision :type :skip) frame)
     (return-from set-up-compare-frame :skip))
 
-  (when runp (frame-cursor frame :vertical-scroll))
+  (when (and runp display) (frame-cursor frame :vertical-scroll))
   ;;
   ;; _fix_me_
   ;; probably, we should move this further down, untial after extraction of
@@ -333,11 +338,11 @@
   ;; always update tree and discriminant state here: this will cause the frame
   ;; to redraw both lower panes.
   ;; 
-  (when runp
+  (when (and runp display)
     (clim::redisplay-frame-pane frame 'top :force-p t)
     (clim::redisplay-frame-pane frame 'comment :force-p t)
     (clim::redisplay-frame-pane frame 'status :force-p t))
-  (update-trees frame)
+  (when display (update-trees frame))
 
   ;;
   ;; _fix_me_
@@ -352,7 +357,7 @@
     (return-from set-up-compare-frame :skip))
 
   (setf (compare-frame-gactive frame) nil)
-  (when runp (frame-cursor frame :default)))
+  (when (and runp display) (frame-cursor frame :default)))
 
 (defstruct decision
   type
