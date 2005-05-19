@@ -75,8 +75,8 @@
               (smember type '(:transfer :generate))
               interactive
               (and (find :pvm *features*)
-                   (find-symbol "*PVM-CLIENTS*")
-                   (symbol-value (find-symbol "*PVM-CLIENTS*"))))
+                   (find-symbol "*PVM-CLIENTS*" :tsdb)
+                   (symbol-value (find-symbol "*PVM-CLIENTS*" :tsdb))))
     (unless (tsdb-do-vocabulary data 
                                 :condition condition :load :quiet 
                                 :meter (make-meter 0 1)
@@ -122,11 +122,11 @@
              (parse-id 
               (unless interactive
                 (+ (largest-parse-id run-id data :verbose verbose) 1)))
+             (clients (when (find-symbol "*PVM-CLIENTS*" :tsdb)
+                        (symbol-value (find-symbol "*PVM-CLIENTS*" :tsdb))))
              (runs (create-runs 
                     data run-id 
-                    :comment comment :gc gc 
-                    :clients (when (find-symbol "*PVM-CLIENTS*")
-                               (symbol-value (find-symbol "*PVM-CLIENTS*")))
+                    :comment comment :gc gc :clients clients
                     :interactive interactive :verbose verbose
                     :stream stream :interrupt interrupt))
              (burst (and (not interactive)

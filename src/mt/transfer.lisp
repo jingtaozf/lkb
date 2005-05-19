@@ -65,6 +65,8 @@
 ;;; match operators like :null and :exact to test for specific values.
 ;;;                                                           (9-jan-04; oe)
 (defparameter %transfer-properties-accumulator%
+  #-:logon nil
+  #+:logon
   (list
    (cons 
     (mrs::vsym "x")
@@ -114,7 +116,9 @@
      (list (mrs::vsym "-") (mrs::vsym "-"))
      (list nil (mrs::vsym "-"))))))
 
-(defparameter %transfer-properties-defaults% 
+(defparameter %transfer-properties-defaults%
+  #-:logon nil
+  #+:logon
   (list
    (list (mrs::vsym "e") 
          (cons (mrs::vsym "E.ASPECT.PERF") (mrs::vsym "-"))
@@ -124,6 +128,8 @@
          (cons (mrs::vsym "E.MOOD") (mrs::vsym "indicative")))))
 
 (defparameter %transfer-properties-filter%
+  #-:logon nil
+  #+:logon
   (list
    (cons (mrs::vsym "NATGEND") (mrs::vsym "PNG.GEN"))
    (cons (mrs::vsym "TENSE") (mrs::vsym "E.TENSE"))
@@ -145,6 +151,8 @@
    (cons (mrs::vsym "ASPECT-INCHOATIVE") nil)))
 
 (defparameter %transfer-values-filter%
+  #-:logon nil
+  #+:logon
   (list
    (cons (mrs::vsym "pres") (mrs::vsym "present"))
    (cons (mrs::vsym "m") (mrs::vsym "masc"))

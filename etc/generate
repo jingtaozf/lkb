@@ -2,7 +2,7 @@
 
 unset DISPLAY
 
-ROOT="${HOME}/src"
+ROOT="${HOME}/src/lingo"
 
 date=$(date "+%Y-%m-%d")
 
