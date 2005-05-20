@@ -453,6 +453,7 @@
 (setf *error-descriptions* (make-hash-table :test #'eq))
 (setf (gethash 'mal_third_sg_fin_verb_infl_rule *error-descriptions*) "There is a verb which does not agree with its subject.")
 (setf (gethash 'mal_non_third_sg_fin_verb_infl_rule *error-descriptions*) "There is a verb which does not agree with its subject.")
+(setf (gethash 'mal_plur_noun_infl_rule *error-descriptions*) "There is a lack of number agreement with the singular noun.")
 (setf (gethash 'bare_np_sg *error-descriptions*) "There is a noun which is missing a determiner.")
 (setf (gethash 'mal_advadd *error-descriptions*) "There is a misplaced adverb.")
 (setf (gethash 'mal_sailr *error-descriptions*) "Subject-verb inversion is only possible with auxiliary verbs.")
@@ -464,6 +465,7 @@
 (setf (gethash 'mal_va_doesnt_neg_pres_le *error-descriptions*) "There is a verb which does not agree with its subject.")
 (setf (gethash 'mal_va_dont_neg_pres_le *error-descriptions*) "There is a verb which does not agree with its subject.")
 (setf (gethash 'mal_va_do_fin_le *error-descriptions*) "There is a verb which does not agree with its subject.")
+(setf (gethash 'mal_det_part_div_le *error-descriptions*) "There is a noun which should not combine with the determiner 'a/an'.")
 
 ;; lookup-error-description takes a rule-id and looks for
 ;; an error description tied to that rule in *error-descriptions*

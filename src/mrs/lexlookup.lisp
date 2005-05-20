@@ -594,50 +594,56 @@ at this point).
 ;;; Similar to lexical rules, but they are passed to the parser
 ;;; rather than applied here
 
-
 (defun find-possible-rules (rel-set lexicalp)
-  (let ((all
-         (append 
-          (loop 
-              for rule-record in (if lexicalp 
-                                   *contentful-lrs*
-                                   *contentful-grs*)
-              append
-                (let ((rule (if lexicalp 
-                                (lkb::get-lex-rule-entry 
-                                 (semantics-record-id rule-record))
-                              (lkb::get-grammar-rule-entry 
-                               (semantics-record-id rule-record))))
-                      (main-rels
-                       (semantics-record-relations rule-record)))
-                  (let ((rel-list
-                         (loop for main-rel-rec in main-rels
+  (let* ((all
+          (append 
+           (loop 
+               for rule-record in (if lexicalp 
+                                    *contentful-lrs*
+                                    *contentful-grs*)
+               append
+                 (let ((rule (if lexicalp 
+                                 (lkb::get-lex-rule-entry 
+                                  (semantics-record-id rule-record))
+                               (lkb::get-grammar-rule-entry 
+                                (semantics-record-id rule-record))))
+                       (main-rels
+                        (semantics-record-relations rule-record)))
+                   (let ((rel-list
+                          (loop for main-rel-rec in main-rels
+                              collect
+                                (let ((matching-rels
+                                       (loop for rel in rel-set
+                                           when
+                                             (matches-rel-record
+                                              rel main-rel-rec)
+                                           collect rel)))
+                                  (unless matching-rels (return nil))
+                                  matching-rels))))
+                     (if rel-list
+                         (loop for rel-comb-and-fs in 
+                               (apply-rels-to-base 
+                                nil (lkb::rule-full-fs rule)
+                                rel-list *construction-semantics-path*)
                              collect
-                               (let ((matching-rels
-                                      (loop for rel in rel-set
-                                          when
-                                            (matches-rel-record
-                                             rel main-rel-rec)
-                                          collect rel)))
-                                 (unless matching-rels (return nil))
-                                 matching-rels))))
-                    (if rel-list
-                        (loop for rel-comb-and-fs in 
-                              (apply-rels-to-base 
-                               nil (lkb::rule-full-fs rule)
-                               rel-list *construction-semantics-path*)
-                            collect
-                              (make-new-found-rule rule (car rel-comb-and-fs)
-                                                   (cdr rel-comb-and-fs)))
-                      (if (null main-rels)
-                        (list (make-new-found-rule 
-                               rule (lkb::rule-full-fs rule)
-                               nil)))))))
-         (if lexicalp *contentless-lrs* *contentless-grs*))))
+                               (make-new-found-rule rule (car rel-comb-and-fs)
+                                                    (cdr rel-comb-and-fs)))
+                       (if (null main-rels)
+                         (list (make-new-found-rule 
+                                rule (lkb::rule-full-fs rule)
+                                nil)))))))
+          (if lexicalp *contentless-lrs* *contentless-grs*)))
+         (active (loop
+                     for rule in all
+                     unless (member
+                             (lkb::rule-id rule)
+                             lkb::*gen-ignore-rules*
+                             :test #'eq)
+                     collect rule)))
     #-:arboretum
-    all
+    active
     #+:arboretum
-    (loop for rule in all 
+    (loop for rule in active 
         for mal-rule-p = (lkb::mal-rule-p rule)
         when (or (null mal-rule-p) lkb::*gen-mal-active-p*)
         collect rule)))

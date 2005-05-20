@@ -298,6 +298,12 @@
 (defparameter *duplicate-lex-ids* nil
   "temporary expedient to avoid generating dual forms")
 
+;;;
+;;; temporary expedient: allow the ERG to not use select rules (currently, ones
+;;; putting on punctuation recursively) in generation.    (20-may-05; dpf & oe)
+;;;
+(defparameter *gen-ignore-rules* nil)
+
 ;;; RMRS interactive globals
 
 (def-lkb-parameter *pos-sensitive-rmrs-p* nil
