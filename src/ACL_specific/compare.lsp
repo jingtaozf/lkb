@@ -276,7 +276,8 @@
                   (format excl:*initial-terminal-io* "~%"))))
 
   (setf (compare-frame-edges frame) edges)
-  (recompute-in-and-out frame t)
+  (unless (compare-frame-exact frame)
+    (recompute-in-and-out frame t))
 
   ;;
   ;; when running in `exact match' update mode, adjust discriminants and most

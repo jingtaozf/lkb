@@ -13,22 +13,27 @@ int enable_gc_cursor(int pid) {
     tsdb_wish_pid = pid;
   } /* if */
   return(tsdb_wish_pid);
+
 } /* enable_gc_cursor() */
 
 int gc_start(int type) {
+
 #ifdef SIGTTIN
   if(tsdb_wish_pid > 0) {
     return(kill(tsdb_wish_pid, SIGTTIN));
   } /* if */
 #endif
   return(-1);
+
 } /* gc_start() */
 
 int gc_end(int type) {
+
 #ifdef SIGTTOU
   if(tsdb_wish_pid > 0) {
     return(kill(tsdb_wish_pid, SIGTTOU));
   } /* if */
 #endif
   return(-1);
+
 } /* gc_end() */

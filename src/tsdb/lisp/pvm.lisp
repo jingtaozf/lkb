@@ -64,8 +64,8 @@
   (initialize-tsdb)
   (when reset
     (setf *pvm-clients*
-      (case reset
-        (:class
+      (cond
+        ((eq reset :class)
          (loop
              with classes = (if (consp classes) classes (list classes))
              with allp = (member :all classes :test #'eq)
@@ -81,7 +81,7 @@
         ;; add :task mode, killing off everything that intersects in its :task
         ;; slot with one of the target cpus identified by .classes.
         ;;                                                      (4-jul-04; oe)
-        (t
+        ((eq reset t)
          (pvm_quit)
          (pvm_start :user (current-user))
          (sleep 2)
@@ -165,7 +165,7 @@
               (setf (client-protocol client) (third content))
               (format
                stream
-               "~await-for-clients(): `~a' registered as tid <~d>.~%"
+               "~await-for-clients(): `~a' registered as tid <~x>.~%"
                prefix (cpu-host (client-cpu client)) (client-tid client))
               (when (and block (eql (client-tid client) block))
                 (return-from wait-for-clients client)))
@@ -190,21 +190,21 @@
 (defun evaluate (form)
   (eval form))
 
-(defun slave (&optional orphan)
+(defun slave (&optional orphan &key self master)
 
   (initialize-tsdb)
-  (let* ((self (pvm_register t *pvm-debug-p*))
-         (master (if orphan nil (pvm_parent)))
+  (let* ((self (or self (pvm_register t *pvm-debug-p*)))
+         (master (or master (if orphan nil (pvm_parent))))
          (*package* (find-package "TSDB"))
          (*print-readably* nil))
-  
+
     (unless (and (not orphan)
                  (or (= master %pvm_no_parent%)
                      (<= master 0)))
       (when master
-       (pvm_transmit
-        master %pvm_lisp_message%
-        (list :register self :lisp)))
+        (pvm_transmit
+         master %pvm_lisp_message%
+         (list :register self :lisp)))
       (when *pvm-debug-p*
         (format 
          t 
@@ -271,13 +271,15 @@
                          (wait 5))
 
   ;;
-  ;; zero out :edge fields, if any, since they are not remote readable
+  ;; zero out :edge or :tree fields, if any, since they are not remote readable
   ;;
   (when (listp item)
     (loop
         for result in (get-field :results item)
         for edge = (assoc :edge result)
-        when edge do (setf (rest edge) nil)))
+        for tree = (assoc :tree result)
+        when edge do (setf (rest edge) nil)
+        when (and nil tree) do (setf (rest tree) nil)))
 
   (let* ((item (if (stringp item)
                  (pairlis '(:i-id :parse-id :i-input) 

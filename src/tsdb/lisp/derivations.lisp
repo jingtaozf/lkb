@@ -38,6 +38,16 @@
 
 (defparameter *derivations-preterminals-equivalent-test* nil)
 
+(defparameter *derivations-yield-skews* 
+  #-:logon nil
+  #+:logon
+  '(semicolon_pct bang_pct sq_pct dq_punct dq_punct2 lparen_pct rparen_pct
+    hyphen_punct_left hyphen_punct_right 
+    dbl_hyphen_punct_left dbl_hyphen_punct_right
+    comma_punct_left comma_punct_right comma_punct_coord punct_3dots_l
+    punct_3dots_r s_dash_pct s_dbl_dash_pct colon_pct s_colon_pct
+    leftq_pct))
+
 (defparameter *derivations-ignore-leafs-p* t)
 
 (defparameter *derivations-reconstructor* nil)
@@ -80,6 +90,15 @@
     (+ 1 (loop 
              for son in (derivation-daughters derivation)
              maximize (derivation-depth son)))))
+
+(defun derivation-yield (derivation)
+  (unless (null derivation)
+    (let ((daughters (derivation-daughters derivation)))
+      (if (null (derivation-daughters (first daughters)))
+        (list (derivation-root derivation))
+        (loop 
+            for daughter in daughters
+            nconc (derivation-yield daughter))))))
 
 (defun derivation-leafs (derivation)
   (unless (null derivation)
@@ -142,6 +161,24 @@
                 ((stringp blue) 
                  (string-equal (format nil "~d" gold) blue)))))))
     (cond
+     ((eq level :yield)
+      (let* ((gyield (derivation-yield gold))
+             (gyield (if (functionp *derivations-yield-skews*)
+                       (remove-if *derivations-yield-skews* gyield)
+                       (remove-if
+                        #'(lambda (foo)
+                            (member
+                             foo *derivations-yield-skews* :test #'string=))
+                        gyield)))
+             (byield (derivation-yield blue))
+             (byield (if (functionp *derivations-yield-skews*)
+                       (remove-if *derivations-yield-skews* byield)
+                       (remove-if
+                        #'(lambda (foo)
+                            (member
+                             foo *derivations-yield-skews* :test #'string=))
+                       byield))))
+        (equal gyield byield)))
      ((and (null gold) (null blue)) t)
      ((and (atom gold) (atom blue)) (node-equal gold blue))
      ((or (null (derivation-daughters gold)) 
@@ -154,25 +191,9 @@
                      (and (stringp gold) (stringp blue)
                           (string-equal gold blue)))
                  gleafs bleafs))))
-     ;;
-     ;; _fix_me_
-     ;; to insert equivalence testing of lexemes rasonably efficiently, we need
-     ;; to look ahead and determine whether the current nodes are preterminals,
-     ;; i.e. have exactly one generation of descendants.  i am inclined to redo
-     ;; the derivation format, or at least move to a UDF 1.1 variant that made
-     ;; more of this explicit (and maybe had room for additional bits, e.g. an
-     ;; indication of surface positions).                        (8-aug-04; oe)
-     ;;
-     ((when *derivations-preterminals-equivalent-test*
-        (or (null (derivation-daughters (first (derivation-daughters gold))))
-            (null (derivation-daughters (first (derivation-daughters blue))))))
-      (funcall 
-       *derivations-preterminals-equivalent-test* 
-       (derivation-root gold) (derivation-root blue)))
      (t
-      (when (or (eq level :yield)
-                (derivation-equal 
-                 (derivation-root gold) (derivation-root blue) level))
+      (when (derivation-equal 
+             (derivation-root gold) (derivation-root blue) level)
         (loop
             for daughter1 in (derivation-daughters gold)
             for daughter2 in (derivation-daughters blue)

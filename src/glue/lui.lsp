@@ -519,7 +519,7 @@
         (format %lui-stream% "~a" (get-output-stream-string stream)))
   (force-output %lui-stream%))
 
-(defun lui-display-mrs (mrs &optional title format)
+(defun lui-display-mrs (mrs &optional title (format :simple))
   (let* ((id (lsp-store-object nil (make-lspb :mrs mrs)))
          (title (case format
                   (:simple 

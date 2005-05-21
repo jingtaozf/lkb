@@ -148,7 +148,7 @@
   #+:oe
   '(:trees :utcpu :uspace 
     :subsumptions :equivalence :proactive :retroactive
-    :frozen :failures)
+    :frozen :failures :ltcpu :ltgc :gtcpu :gtgc :atcpu :atgc)
   #-:oe
   nil)
 
@@ -2478,8 +2478,8 @@
       with nfields = (length fields)
       with rank = (- nfields 1)
       with values = (make-array nfields :element-type 'integer)
-      with totals = (make-array nfields :element-type 'integer 
-                                :initial-element 0)
+      with totals = (make-array 
+                     nfields :element-type 'integer :initial-element 0)
       with aitems = 0
       with aanalyzed = 0
       with result = nil
@@ -2540,6 +2540,10 @@
                                (if (minus-one-p others) 0 others))))))
                   when (eq field :first) do
                     (when (> readings 0) (incf (aref values i) value))
+#|
+                  when (smember field extras) do
+                    (unless (<= 0 value) (incf (aref values i) value))
+|#
                   else do
                     (incf (aref values i) value)))
         (incf aitems items) (incf aanalyzed analyzed)

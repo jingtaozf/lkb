@@ -270,8 +270,6 @@
        #+:ics
        (output (excl:lispval-other-to-address output)))
   (defun pvm_poll (tid tag block)
-    #+:null
-    (format t "pvm-poll(): limit: ~a~%" limit)
     (let* ((block (cond ((null block) 0)
                         ((numberp block) (round block))
                         (t -1)))

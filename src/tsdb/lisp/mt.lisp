@@ -49,13 +49,21 @@
            (emptyp (string)
              (cl-ppcre:scan "^[ \\t]*$" string))
            (strip-identifier (string)
+             (or
+              (multiple-value-bind (start end) 
+                  (cl-ppcre:scan "^[0-9]+[a-z]\\. " string)
+                (declare (ignore start))
+                (and (numberp end) (subseq string end)))
+              (multiple-value-bind (start end) 
+                  (cl-ppcre:scan "^\\[[0-9]{4}[a-z]\\] " string)
+                (declare (ignore start))
+                (and (numberp end) (subseq string end)))
+              string))
+           (fragmentp (string)
              (multiple-value-bind (start end) 
-                 (cl-ppcre:scan "^[0-9]+[a-z]\\. " string)
+                 (cl-ppcre:scan "^[ ]*\\^" string)
                (declare (ignore start))
-               
-               (if (numberp end)
-                 (subseq string end)
-                 string))))
+               (values (if (numberp end) (subseq string end) string) end))))
     (let* ((*tsdb-io* (if (eq *tsdb-io* t) *terminal-io* *tsdb-io*))
            (output (create-output-stream file nil :encoding encoding))
            (capture (when (stringp xml)
@@ -90,7 +98,7 @@
             do
               (incf i)
               (let* ((result (translate-string
-                              (strip-identifier source)
+                              (fragmentp (strip-identifier source))
                               :id i :targets targets :stream tee))
                      (parsep (let ((foo (get-field :readings result)))
                                (and (numberp foo) (> foo 0))))
@@ -134,47 +142,117 @@
         (format capture "~%</run>~%")
         (when (stringp xml) (close capture))))))
 
-(defun translate-string (input &key id targets (stream *tsdb-io*))
+(defun translate-string (input &key id targets nhypotheses
+                                    (stream *tsdb-io*)
+                                    (format :ascii)
+                                    index)
 
-  (format
-   stream
-   "[~a]~@[ (~a)~] |~a|"
-   (current-time :long :short) id input)
-
+  ;;
+  ;; in HTML mode, use extra cell (instead of a container and margins) to get
+  ;; better dynamic rendering (in Mozilla, at least).          (25-jan-05; oe)
+  ;;
+  (case format
+    (:ascii
+     (format
+      stream
+      "[~a]~@[ (~a)~] |~a|"
+      (current-time :long :short) id input))
+    (:html
+     (format
+      stream
+      "<table class=\"flow\" border=0>~%~
+       <tr><td class=\"flowTopBorder\" colspan=5></td>~%~
+       <tr><td class=\"flowLeftBorder\"></td>~
+           <td class=\"flow\" colspan=3>[~a]~@[ (~a)~] |~a|"
+      (current-time :long :short) id input)))
+  (force-output stream)
+  
   (let ((start (get-internal-real-time))
         (parse (pvm-process input :parse :wait 30)))
-    (print-result parse :stream stream)
+    (print-result parse :stream stream :format format :index index)
+    (case format
+      (:html
+       (nconc parse (acons :www index nil)) (incf index)
+       (format stream "</td><td class=flowRightBorder></td>~%")))
+    (force-output stream)
+    
     (loop
         with analyses = (get-field :results parse)
+        with n = (if (and (numberp nhypotheses) (> nhypotheses 0))
+                   nhypotheses
+                   (length analyses))
         with transfers
         with translations
         with ntransfers = 0
         with nrealizations = 0
         with ntranslations = 0
         with best = 0
+        for i from 1 to n
         for result in analyses
         for pid = (get-field :result-id result)
         for transfer = (pvm-process parse :transfer :result-id pid)
         for realizations = nil
         do
           (incf ntransfers (length (get-field :results transfer)))
-          (format
-           stream
-           "|~%|-[~a] # ~a"
-           (current-time :long :since :treal start) pid)
-          (print-result transfer :stream stream)
+          (case format
+            (:ascii
+             (format
+              stream
+              "|~%|-[~a] # ~a"
+              (current-time :long :since :treal start) pid))
+            (:html
+             (format
+              stream
+              "<tr><td class=\"flowLeftBorder\"></td>~
+                   <td class=\"flowLeft\"></td><td colspan=2></td>~%~
+                   <td class=\"flowRightBorder\"></td>~
+               <tr><td class=\"flowLeftBorder\"></td>~
+                   <td class=\"flowLeft\"><img src=\"1x20.jpg\"></td>~
+                   <td class=\"flow\" colspan=2>[~a] # ~a"
+               (current-time :long :since :treal start) pid)))
+          (print-result transfer :stream stream :format format :index index)
+          (case format
+            (:html
+             (nconc transfer (acons :www index nil)) (incf index)
+             (format stream "</td><td class=\"flowRightBorder\"></td>~%")))
+          (force-output stream)
           (loop
+              with analyses = (get-field :results transfer)
+              with n = (if (and (numberp nhypotheses) (> nhypotheses 0))
+                         nhypotheses
+                         (length analyses))
+              for i from 1 to n
               for result in (get-field :results transfer)
               for tid = (get-field :result-id result)
               for realization = 
                 (pvm-process transfer :generate :result-id tid :rankp t)
               do
                 (incf nrealizations (length (get-field :results realization)))
-                (format
-                 stream
-                 "| |~%| |-[~a] # ~a"
-                 (current-time :long :since :treal start) tid)
-                (print-result realization :stream stream)
+                (case format
+                  (:ascii
+                   (format
+                    stream
+                    "| |~%| |-[~a] # ~a"
+                    (current-time :long :since :treal start) tid))
+                  (:html
+                   (format
+                    stream
+                    "<tr><td class=\"flowLeftBorder\"></td>~
+                         <td class=\"flowLeft\"></td>~
+                         <td class=\"flowLeft\"></td><td></td>~
+                         <td class=\"flowRightBorder\"></td>~%~
+                     <tr><td class=\"flowLeftBorder\"></td>~
+                         <td class=\"flowLeft\"></td>~
+                         <td class=\"flowLeft\"><img src=\"1x20.jpg\"></td>~
+                         <td class=\"flow\">[~a] # ~a"
+                    (current-time :long :since :treal start) tid)))
+                (print-result realization :stream stream :index index)
+                (case format
+                  (:html
+                   (nconc realization (acons :www index nil)) (incf index)
+                   (format 
+                    stream
+                    "</td><td class=\"flowRightBorder\"></td>~%")))
                 (loop
                     with results = (get-field :results realization)
                     for result in results
@@ -189,16 +267,30 @@
                     when (numberp bleu) do (setf best (max best bleu))
                     do
                       (nconc result (acons :bleu bleu nil))
-                      (format
-                       stream
-                       "| |   |~a| [~@[~,1f~]] <~@[~,2f~]>~%"
-                       tree score bleu)
+                      (case format
+                        (:ascii
+                         (format
+                          stream
+                          "| |   |~a| [~@[~,1f~]] <~@[~,2f~]>~%"
+                          tree score bleu))
+                        (:html
+                         (format
+                          stream
+                          "<tr><td class=\"flowLeftBorder\"></td>~
+                               <td class=\"flowLeft\"></td>~
+                               <td class=\"flowLeft\"></td>~
+                               <td class=\"flow\">    ~
+                                 |~a| [~@[~,1f~]] <~@[~,2f~]></td>~
+                               <td class=\"flowRightBorder\"></td>~%"
+                          tree score bleu)))
+                      (force-output stream)
                     when (and (stringp tree) (numberp score))
                     do
                       (push (pairlis '(:pid :tid :rid :string :score :bleu)
                                      (list pid tid rid tree score bleu))
                             translations)
                       (incf ntranslations))
+                (force-output stream)
                 (push realization realizations))
           (push 
            (acons :realizations (nreverse realizations) transfer)
@@ -227,23 +319,62 @@
           (loop
               initially
                 (let ((n (length translations)))
-                  (format
-                   stream
-                   "|~%|< |~a|~@[ (~a)~] --- ~a x ~a x ~a = ~
-                    ~:[~*~a~;~a [~a]~]~%"
-                   input id 
-                   (length analyses) ntransfers nrealizations
-                   (not (= ntranslations n)) n ntranslations))
+                  (case format
+                    (:ascii
+                     (format
+                      stream
+                      "|~%|< |~a|~@[ (~a)~] --- ~a x ~a x ~a = ~
+                       ~:[~*~a~;~a [~a]~]~%"
+                      input id 
+                      (length analyses) ntransfers nrealizations
+                      (not (= ntranslations n)) n ntranslations))
+                    (:html
+                     (format
+                      stream
+                      "<tr><td class=\"flowLeftBorder\"></td>~
+                           <td class=\"flow\" colspan=3>&nbsp;</td>~
+                           <td class=\"flowRightBorder\"></td>~%~
+                       <tr><td class=\"flowLeftBorder\"></td>~
+                           <td class=\"flow\" colspan=3>~
+                             |< |~a|~@[ (~a)~] --- ~a x ~a x ~a = ~
+                             ~:[~*~a~;~a [~a]~]</td>~
+                           <td class=\"flowRightBorder\"></td>~%"
+                      input id 
+                      (length analyses) ntransfers nrealizations
+                      (not (= ntranslations n)) n ntranslations))))
               for translation in translations
               do
-                (format
-                 stream
-                 "|> |~@[~a~]| [~@[~,1f~]] <~@[~,2f~]> (~a:~a:~a).~%"
-                 (get-field :string translation) 
-                 (get-field :score translation) (get-field :bleu translation)
-                 (get-field :pid translation)
-                 (get-field :tid translation)
-                 (get-field :rid translation)))
+                (case format
+                  (:ascii
+                   (format
+                    stream
+                    "|> |~@[~a~]| [~@[~,1f~]] <~@[~,2f~]> (~a:~a:~a).~%"
+                    (get-field :string translation) 
+                    (get-field :score translation) 
+                    (get-field :bleu translation)
+                    (get-field :pid translation)
+                    (get-field :tid translation)
+                    (get-field :rid translation)))
+                  (:html
+                   (format
+                    stream
+                    "<tr><td class=\"flowLeftBorder\"></td>~
+                         <td class=\"flow\" colspan=3>~
+                           |> |~@[~a~]| [~@[~,1f~]] ~
+                           <~@[~,2f~]> (~a:~a:~a).</td>~
+                         <td class=\"flowRightBorder\"></td>~%"
+                    (get-field :string translation) 
+                    (get-field :score translation) 
+                    (get-field :bleu translation)
+                    (get-field :pid translation)
+                    (get-field :tid translation)
+                    (get-field :rid translation)))))
+          (case format
+            (:html
+             (format 
+              stream 
+              "<tr><td class=\"flowBottomBorder\" colspan=5></td></table~%")))
+
           (force-output stream)
           (return (append (pairlis '(:transfers :translations
                                      :bleu)
@@ -406,6 +537,123 @@
         do (format stream "~a  </result>~%" prefix))
     (format stream "~a</item>~%" prefix)
     (force-output stream)))
+
+
+(defun translate-item (string
+                       &key id exhaustive nanalyses trace
+                            edges derivations semantix-hook trees-hook
+                            burst (nresults 0))
+  (declare (ignore exhaustive derivations id edges
+                   semantix-hook trees-hook nresults))
+  
+  (let* ((stream (make-string-output-stream))
+         (log (make-string-output-stream))
+         (*standard-output* 
+          (if trace (make-broadcast-stream *standard-output* stream) stream))
+         (start (get-internal-run-time)) stop)
+
+    (multiple-value-bind (return condition)
+        (ignore-errors
+         (when (or (not (stringp string)) (string= string ""))
+           (error "null or malformed input string"))
+         (loop
+             for task in '(:parse :transfer :generate)
+             do
+               (unless (loop
+                           for client in *pvm-clients*
+                           for cpu = (client-cpu client)
+                           when (and (smember task (cpu-task cpu))
+                                     (eq (client-status client) :ready))
+                           return client)
+                 (error "no ~(~a~) PVM client" task)))
+         
+         (let* ((item (translate-string
+                       string :nhypotheses nanalyses :stream log))
+                (tgc 0) (tcpu 0) (treal 0) (conses 0) (symbols 0) (others 0)
+                (total 0) (readings 0) outputs (errors "") 
+                (nparses 0) (ntransfers 0) (nrealizations 0))
+           
+           (setf stop (get-internal-run-time))
+                
+           (incf total (get-field+ :total item 0))
+           (incf tgc (get-field+ :tgc item 0))
+           (incf tcpu (get-field+ :tcpu item 0))
+           (incf treal (get-field+ :treal item 0))
+           (incf conses (get-field+ :conses item 0))
+           (incf symbols (get-field+ :symbols item 0))
+           (incf others (get-field+ :others item 0))
+           
+           (let ((error (get-field :error item)))
+             (when (and error (not (equal error "")))
+               (setf errors (format nil "[]:|~a|" error))))
+           
+           (loop
+               for transfer in (get-field :transfers item)
+               for result in (get-field :results item)
+               for pid = (get-field :result-id result)
+               do
+                 (incf nparses)
+                 (incf total (get-field+ :total transfer 0))
+                 (incf tgc (get-field+ :tgc transfer 0))
+                 (incf tcpu (get-field+ :tcpu transfer 0))
+                 (incf treal (get-field+ :treal transfer 0))
+                 (incf conses (get-field+ :conses transfer 0))
+                 (incf symbols (get-field+ :symbols transfer 0))
+                 (incf others (get-field+ :others transfer 0))
+                 (let ((error (get-field :error transfer)))
+                   (when (and error (not (equal error "")))
+                     (setf errors 
+                       (format nil "~a [~a]:|~a|" errors pid error))))
+                 (loop
+                     for realization in (get-field :realizations transfer)
+                     for result in (get-field :results transfer)
+                     for tid = (get-field :result-id result)
+                     do
+                       (incf ntransfers)
+                       (incf total (get-field+ :total realization 0))
+                       (incf tgc (get-field+ :tgc realization 0))
+                       (incf tcpu (get-field+ :tcpu realization 0))
+                       (incf treal (get-field+ :treal realization 0))
+                       (incf conses (get-field+ :conses realization 0))
+                       (incf symbols (get-field+ :symbols realization 0))
+                       (incf others (get-field+ :others realization 0))
+                       (let ((error (get-field :error realization)))
+                         (when (and error (not (equal error "")))
+                           (setf errors 
+                             (format 
+                              nil
+                              "~a [~a:~a]:|~a|"
+                              errors pid tid error))))
+                       (loop
+                           for result in (get-field :results realization)
+                           do
+                             (incf nrealizations)
+                             (push (acons :result-id readings result) outputs)
+                             (incf readings))))
+           `((:others . ,others) (:symbols . ,symbols) (:conses . ,conses)
+             (:treal . ,treal) (:tcpu . ,tcpu) (:tgc . ,tgc)
+             (:readings . ,readings) (:total . ,total) (:error . ,errors)
+             (:comment . ,(format 
+                           nil
+                           "(:nanalyses . ~a) (:ntransfers . ~a) ~
+                            (:nrealizations . ~a) (:ntranslations . ~a)"
+                           nparses ntransfers nrealizations
+                           (length (get-field :translations item))))
+             (:trace . ,(get-output-stream-string log))
+             (:results . ,outputs))))
+           
+      (unless stop (setf stop (get-internal-run-time)))
+
+      (append
+       (when condition
+         (let ((error (normalize-string 
+                       (format nil "~a" condition)))
+               (total (round 
+                       (* (- stop start) 1000) 
+                       internal-time-units-per-second)))
+           (pairlis '(:readings :condition :error :total)
+                    (list -1 (unless burst condition) error total))))
+       return))))
 
 #+:clim
 (let ((history '("Ask vil kunne reise.")))

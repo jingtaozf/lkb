@@ -422,7 +422,6 @@
 (defparameter *nc-plus_rel* (vsym "PLUS_REL"))
 (defparameter *nc-const_rel* (vsym "CONST_REL"))
 (defparameter *nc-integer_rel* (vsym "INTEGER_REL"))
-(defparameter *nc-min-const_rel* (vsym "MINUTE_REL"))
 (defparameter *nc-term1* (vsym "TERM1"))
 (defparameter *nc-term2* (vsym "TERM2"))
 (defparameter *nc-factor1* (vsym "FACTOR1"))
@@ -436,17 +435,8 @@
 (defun plus_rel-p (pred)
   (eq pred *nc-plus_rel*))
 
-;;;
-;;; _fix_me_
-;;; if PAGE was slightly more appropriate, this would be unnecessary.
-;;;
-
-(defun const_min_rel-p (pred)
-  (eq pred *nc-min-const_rel*))
-
 (defun const_rel-p (pred)
   (or (eq pred *nc-const_rel*) 
-      (eq pred *nc-min-const_rel*)
       (eq pred *nc-integer_rel*)))
 
 (defun number-convert (mrs)
@@ -475,16 +465,17 @@
                                ((plus_rel-p pred) *nc-term2*)
                                ((times_rel-p pred) *nc-factor2*)))
                        (term1 (get-rel-feature-value operator key1))
-                       (const1 (find-const-by-handle term1 additions constants))
+                       (const1 (find-const-by-handle 
+                                term1 additions constants))
                        (value1 (get-rel-feature-value const1 *nc-const_value*))
                        (term2 (get-rel-feature-value operator key2))
-                       (const2 (find-const-by-handle term2 additions constants))
+                       (const2 (find-const-by-handle 
+                                term2 additions constants))
                        (value2 (get-rel-feature-value const2 *nc-const_value*))
                        (value (and value1 value2
                                    (compute-value operator value1 value2))))
                   (when value
-                    (push (make-constant handel arg value
-					 (const_min_rel-p (rel-pred const1)))
+                    (push (make-constant handel arg value)
 			  additions)
                     (push operator deletions)
                     (push const1 deletions)
@@ -524,11 +515,9 @@
      ((plus_rel-p pred) (+ term1 term2))
      ((times_rel-p pred) (* term1 term2)))))
 
-(defun make-constant (handel arg value minute-p)
+(defun make-constant (handel arg value)
   (make-rel
-   :pred (if minute-p 
-	     *nc-min-const_rel*
-	   *nc-const_rel*)
+   :pred *nc-const_rel*
    :handel handel
    :flist (list  
            (make-fvpair :feature *nc-arg* :value arg)

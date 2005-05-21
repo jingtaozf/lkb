@@ -32,6 +32,7 @@
     (index-lexicon)
     (index-lexical-rules)
     (index-grammar-rules)
+    (index-generics)
     (format t "~%Indexing complete")
     nil))
 

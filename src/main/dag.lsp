@@ -150,7 +150,7 @@
 ;;; some general thoughts on dag recycling:
 ;;;
 ;;; processing typically is organized in discrete intervals, e.g. parsing one
-;;; sentence or generating from one input.  within one interval large amounts
+;;; sentence or generating from one input.  within one interval, large amounts
 ;;; of temporary data are created that mostly become garbage as the interval
 ;;; is completed.  a big chunk of garbage results from dag nodes allocated in
 ;;; the unifier.  after one parse is completed, say, and the chart is emptied,

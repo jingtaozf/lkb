@@ -137,6 +137,7 @@
    (cons (mrs::vsym "PROG") (mrs::vsym "E.ASPECT.PROGR"))
    (cons (mrs::vsym "PERF") (mrs::vsym "E.ASPECT.PERF"))
    (cons (mrs::vsym "STATIVE") (mrs::vsym "E.ASPECT.STATIVE"))
+   (cons (mrs::vsym "PSVTYPE") nil)
    (cons *mtr-skolem-property* nil)
    (cons (mrs::vsym "MARK") nil)
    (cons (mrs::vsym "DITCH") nil)
@@ -771,7 +772,10 @@
                     (defaults
                      (list
                       (list (mrs::vsym "x") 
-                            (cons (mrs::vsym "GRIND") (mrs::vsym "-"))))))
+                            (cons (mrs::vsym "GRIND") (mrs::vsym "-")))
+                      (list (mrs::vsym "e") 
+                            (cons (mrs::vsym "PSVTYPE")
+                                  (mrs::vsym "active"))))))
                 (mrs::fill-mrs (clone-mrs mrs) defaults)))
          (n (loop
                 for variable in %transfer-clones%

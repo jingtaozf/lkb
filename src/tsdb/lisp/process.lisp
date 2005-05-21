@@ -47,6 +47,8 @@
 
 (defparameter *process-sort-profile-p* t)
 
+(defparameter *process-fan-out-log* nil)
+
 (defparameter %graft-aligned-generation-hack% nil)
 
 (defun tsdb-do-process (data
@@ -60,7 +62,8 @@
                              (stream *tsdb-io*)
                              (type *process-default-task*) gold
                              overwrite interactive 
-                             meter podium interrupt)
+                             meter podium interrupt
+                             (fan *process-fan-out-log*))
   (declare (ignore podium))
   
   (initialize-tsdb)
@@ -72,7 +75,7 @@
      data))
   
   (unless (or (null vocabulary) 
-              (smember type '(:transfer :generate))
+              (smember type '(:transfer :generate :translate))
               interactive
               (and (find :pvm *features*)
                    (find-symbol "*PVM-CLIENTS*" :tsdb)
@@ -91,6 +94,14 @@
                   (output (create-output-stream output))
                   (interactive (make-string-output-stream))
                   (t stream)))
+         (fan (or fan
+                  (when (eq type :translate)
+                    (merge-pathnames
+                     (user-homedir-pathname)
+                     (make-pathname 
+                      :name (directory2file data)
+                      :type "fan")))))
+         (log (and fan (create-output-stream fan)))
          (*tsdb-gc-message-p* nil)
          (condition (if (equal condition "") nil condition))
          (imessage (format nil "preparing `~a' test run ..." data))
@@ -126,6 +137,7 @@
                         (symbol-value (find-symbol "*PVM-CLIENTS*" :tsdb))))
              (runs (create-runs 
                     data run-id 
+                    :type type
                     :comment comment :gc gc :clients clients
                     :interactive interactive :verbose verbose
                     :stream stream :interrupt interrupt))
@@ -183,6 +195,12 @@
         (when (and burst runs)
           (install-gc-strategy nil :tenure nil :burst t :verbose verbose))
         
+        (when log
+          (format
+           log
+           ";;;~%;;; `~a'~%;;; fan-out batch (~a@~a; ~a).~%;;;~%~%"
+           data (current-user) (current-host) (current-time :long :pretty)))
+        
         (unwind-protect
             (#-:debug ignore-errors #+:debug progn
              (catch :break
@@ -235,10 +253,11 @@
                              (enrich-result result item :verbose verbose)))
                          (when (and item result)
                            (when verbose
-                             (print-item item 
-                                         :stream stream :result result
-                                         :interactive interactive)
-                             (print-result result :stream stream))
+                             (print-item
+                              item 
+                              :stream stream :result result
+                              :interactive interactive)
+                             (print-result result :stream stream :log log))
                            (unless interactive
                              (store-result data result :cache cache))
                            (when ready (incf (get-field :items ready)))
@@ -275,8 +294,9 @@
                                       :verbose verbose :stream stream)))
                      (when item
                        (when (and verbose (not burst))
-                         (print-item item 
-                                     :stream stream :interactive interactive))
+                         (print-item
+                          item :stream stream
+                          :interactive interactive))
                        (setf result
                          (process-item item
                                        :type type
@@ -296,7 +316,7 @@
                          (setf result 
                            (enrich-result result item :verbose verbose))
                          (when verbose
-                           (print-result result :stream stream))
+                           (print-result result :stream stream :log log))
                          (unless interactive
                            (store-result data result :cache cache))
                          (incf (get-field :items run))
@@ -313,6 +333,10 @@
             (flush-cache cache :verbose verbose 
                          :sort *process-sort-profile-p*))
           (unless interactive (format stream "~&"))
+          (when (and (stringp output) (open-stream-p stream))
+            (close stream))
+          (when (and (stringp fan) (open-stream-p log))
+            (close log))
           (when meter
             (if abort
               (status :text (format nil "~a interrupt" pmessage) :duration 5)
@@ -536,15 +560,23 @@
         (when cache (flush-cache cache :verbose verbose))
         (format stream "~&~%")))))
 
-(defun create-runs (data run-id &key comment 
+(defun create-runs (data run-id &key comment type
                                      gc (tenure *tsdb-tenure-p*)
                                      clients interactive verbose
                                      (protocol *pvm-protocol*)
                                      stream interrupt)
-  (if (and clients (null interactive))
-    (let ((clients (remove-if-not #'client-idle-p clients))
-          runs)
-      (when clients
+  
+  (let ((clients (unless interactive
+                   (loop
+                       for client in clients
+                       for cpu = (client-cpu client)
+                       when (and cpu (client-idle-p client)
+                                 (or (null (cpu-task cpu))
+                                     (eq (cpu-task cpu) type)
+                                     (smember type (cpu-task cpu))))
+                       collect client))))
+    (if clients
+      (let (runs)
         (loop
             for client in clients
             for tid = (client-tid client)
@@ -653,12 +685,12 @@
                "create-runs(): ~
                 external interrupt signal.~%")
               (force-output stream)
-              (return-from create-runs runs))))
-    
-    (list (enrich-run (create-run data run-id 
+              (return-from create-runs runs)))
+      
+      (list (enrich-run (create-run data run-id 
                                   :comment comment :gc gc 
                                   :interactive interactive 
-                                  :verbose verbose :protocol protocol)))))
+                                  :verbose verbose :protocol protocol))))))
 
 (defun create-run (data run-id 
                    &key comment 
@@ -809,21 +841,29 @@
                                interactive burst)
 
   (cond
-   ((and client (eq type :parse) (client-p client))
+   ((and client (smember type '(:parse :translate)) (client-p client))
     (let* ((nanalyses (if exhaustive 
                         0 
                         (if (and (integerp nanalyses) (>= nanalyses 1))
                           nanalyses
                           1)))
            (tid (client-tid client))
+           #+(and :null :allegro-version>= (version>= 6 0))
+           (ef (let ((old (excl:locale-external-format excl:*locale*))
+                     (new (when *pvm-encoding*
+                            (excl:find-external-format *pvm-encoding*))))
+                 (when (excl::external-format-p new)
+                   (setf (excl:locale-external-format excl:*locale*) new)
+                   old)))
            (status (if (eq (client-protocol client) :lisp)
                      (revaluate 
                       tid 
                       `(process-item
                         (quote ,item)
+                        :type ,type
                         :trees-hook ,trees-hook 
                         :semantix-hook ,semantix-hook
-                        :nanalyses ,nanalyses
+                        :exhaustive ,exhaustive :nanalyses ,nanalyses
                         :nresults ,nresults
                         :verbose nil :interactive nil :burst t)
                       nil
@@ -831,6 +871,8 @@
                       :verbose nil)
                      (process_item 
                       tid item nanalyses nresults interactive))))
+      #+(and :null :allegro-version>= (version>= 6 0))
+      (when ef (setf (excl:locale-external-format excl:*locale*) ef))
       (case status
         (:ok (setf (client-status client) item) :ok)
         (:error (setf (client-status client) :error) :error))))
@@ -895,16 +937,6 @@
                             mrs))
               for result =
                 (case type
-                  (:parse
-                   (parse-item i-input 
-                               :edges edges
-                               :trace interactive
-                               :exhaustive exhaustive
-                               :nanalyses nanalyses
-                               :trees-hook trees-hook
-                               :semantix-hook semantix-hook
-                               :nresults nresults
-                               :burst burst))
                   (:transfer
                    (transfer-item mrs 
                                   :string i-input
@@ -964,7 +996,17 @@
                             :trees-hook trees-hook
                             :semantix-hook semantix-hook
                             :nresults nresults
-                            :burst burst)))))
+                            :burst burst))
+            (:translate
+             (translate-item i-input
+                             :edges edges
+                             :trace interactive
+                             :exhaustive exhaustive
+                             :nanalyses nanalyses
+                             :trees-hook trees-hook
+                             :semantix-hook semantix-hook
+                             :nresults nresults
+                             :burst burst)))))
       ;;
       ;; this is a bit archaic: when between one or three global gc()s occured
       ;; during processing, redo it (unless we were told not to).  this goes
@@ -1017,7 +1059,17 @@
                             :trees-hook trees-hook
                             :semantix-hook semantix-hook
                             :nresults nresults
-                            :burst burst)))))
+                            :burst burst))
+            (:translate
+             (translate-item i-input
+                             :edges edges
+                             :trace interactive
+                             :exhaustive exhaustive
+                             :nanalyses nanalyses
+                             :trees-hook trees-hook
+                             :semantix-hook semantix-hook
+                             :nresults nresults
+                             :burst burst)))))
 
       #+:allegro
       (when (and (= (get-field+ :readings result -1) -1)
@@ -1041,12 +1093,18 @@
              (old (gc-statistics :old))
              (total (length (gc-statistics :efficiency)))
              (efficiency (round (average (gc-statistics :efficiency))))
-             (comment (format 
-                       nil 
-                       "~a (:global ~d) (:scavenge ~d) ~
-                        (:new ~d) (:old ~d) ~
-                        (:efficiency ~d) (:total ~d)"
-                       comment global scavenge new old efficiency total))
+             ;;
+             ;; no point doing the gc() statistics in :translation mode, as it
+             ;; will always dispatch all of the work to further PVM clients
+             ;;
+             (comment (if (eq type :translate)
+                        comment
+                        (format 
+                         nil 
+                         "~a (:global . ~d) (:scavenge . ~d) ~
+                          (:new . ~d) (:old . ~d) ~
+                          (:efficiency . ~d) (:total . ~d)"
+                         comment global scavenge new old efficiency total)))
              (a-load #+:pvm (load_average) #-:pvm nil))
         (when (and (integerp others) (< others -1))
           (push (cons :others (+ (expt 2 32) others)) result))
@@ -1065,6 +1123,8 @@
 (defun process-queue (runs 
                       &key client (verbose t) (stream *tsdb-io*) interrupt)
 
+  #+:debug
+  (setf %runs runs)
   (loop
       with tid = (if client (client-tid client) -1)
       while (or (find-if #'consp runs :key #'run-status) 
@@ -1254,7 +1314,9 @@
         (or wealth (acons :error (format nil "~a" condition) result)))
       result)))
 
-(defun print-result (result &key (stream *tsdb-io*))
+(defun print-result (result &key (stream *tsdb-io*) format index log)
+
+  (declare (ignore format))
   (let* ((readings (get-field :readings result))
          (unique (get-field :unique result))
          (words (get-field :words result))
@@ -1282,41 +1344,50 @@
       (format 
        stream 
        " ---~:[~; time up:~] ~
+        ~@[<a href=\"/view?item=~a\" target=\"_blank\" ~
+              onclick=\"return __pageInitializedP__\">~]~
         (~,2f~:[~*~;:~,2f~]|~,2f s) ~
         <~@[~d~]:~@[~d~]>~
         ~:[ {~d:~d}~;~2*~] ~
         (~a)~
-        ~:[~*~*~; [~:[~;=~]~d]~].~%" 
-       timeup 
+        ~:[~*~*~; [~:[~;=~]~d]~]~@[</a>~].~%" 
+       timeup index
        tcpu (>= tgc 0.1) tgc total
        words edges 
        (or (= unifications copies 0)
            (= unifications copies -1))
        unifications copies 
        (pprint-memory-usage result) 
-       gcs gc gcs))
+       gcs gc gcs index))
      ((or (and (null readings) error) (eql readings -1))
       (format 
        stream 
-       " --- error: ~a.~%" 
-       (normalize-string (get-field :error result))))
+       " --- ~@[<a href=\"/view?item=~a\" target=\"_blank\" ~
+                   onclick=\"return __pageInitializedP__\">~]~
+       error: ~a~@[</a>~].~%" 
+       index 
+       (normalize-string (get-field :error result)) index))
      ((and (integerp readings) (> readings 0))
       (format 
        stream 
-       " ---~:[~; time up:~] ~:[~*~a~;~a [~a]~] ~
+       " ---~:[~; time up:~] ~
+        ~@[<a href=\"/view?item=~a\" target=\"_blank\" ~
+              onclick=\"return __pageInitializedP__\">~]~
+        ~:[~*~a~;~a [~a]~] ~
         (~,2f~:[~*~;:~,2f~]|~,2f:~,2f s) ~
         <~@[~d~]:~@[~d~]>~
         ~:[ {~d:~d}~;~2*~] ~
         (~a)~
-        ~:[~*~*~; [~:[~;=~]~d]~].~%" 
-       timeup (and unique (not (eql unique readings))) unique readings 
+        ~:[~*~*~; [~:[~;=~]~d]~]~@[</a>~].~%" 
+       timeup index
+       (and unique (not (eql unique readings))) unique readings 
        tcpu (>= tgc 0.1) tgc first total 
        words edges 
        (or (= unifications copies 0)
            (= unifications copies -1))
        unifications copies 
        (pprint-memory-usage result) 
-       gcs gc gcs))
+       gcs gc gcs index))
      (corpse
       (format
        stream
@@ -1326,7 +1397,12 @@
       (format stream ".~%"))
      (t
       (format stream ".~%")))
-    (force-output stream)))
+    (force-output stream)
+    
+    (when log
+      (let ((trace (get-field :trace result))) 
+        (when trace (format log "~a~%" trace)))
+      (force-output log))))
 
 (defun store-result (data result &key cache)
   (let* ((parse-id (get-field :parse-id result))

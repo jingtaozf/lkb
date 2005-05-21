@@ -657,7 +657,7 @@
            do
              (format
                  stream
-                 "~&~%~a- `~(~a~)' (pid: ~a --- tid: <~a>) ~
+                 "~&~%~a- `~(~a~)' (pid: ~a --- tid: ~x) ~
                   [~(~:[~a~;~{~a~^ | ~}~]~)]~%~
                   ~a  command: `~a';~%~
                   ~a  status: ~(~a~) --- protocol: ~(~a~);~%"

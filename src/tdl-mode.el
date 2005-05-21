@@ -59,8 +59,8 @@
   (define-key tdl-mode-map "\177" 'backward-delete-char-untabify)
   (define-key tdl-mode-map "\C-c;" 'comment-region)
   (define-key tdl-mode-map "\e\034" 'tdl-indent-region)
-  (define-key tdl-mode-map "\t" 'tdl-indent-command)
-  (define-key tdl-mode-map [double-down-mouse-1] 'tdl-show-type))
+  (define-key tdl-mode-map "\t" 'tdl-indent-command))
+;  (define-key tdl-mode-map [double-down-mouse-1] 'tdl-show-type))
 
 (defvar tdl-mode-syntax-table nil
   "Syntax table in use in TDL-mode buffers.")

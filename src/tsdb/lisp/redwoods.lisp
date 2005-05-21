@@ -415,18 +415,19 @@
                           "~&[~a] browse-tree(): retrieved ~a gold tree~p.~%"
                           (current-time :long :short) 
                           (length gtrees) (length gtrees))
-                         (select '("parse-id" "t-version"
-                                   "d-state" "d-type" "d-key" "d-value" 
-                                   "d-start" "d-end" "d-date")
-                                 '(:integer :integer
-                                   :integer :integer :string :string 
-                                   :integer :integer :date)
-                                 "decision" 
-                                 (format 
-                                  nil 
-                                  "parse-id == ~a && t-version == ~a" 
-                                  parse-id gversion) 
-                                 gold)))
+                         (unless exactp
+                           (select '("parse-id" "t-version"
+                                     "d-state" "d-type" "d-key" "d-value" 
+                                     "d-start" "d-end" "d-date")
+                                   '(:integer :integer
+                                     :integer :integer :string :string 
+                                     :integer :integer :date)
+                                   "decision" 
+                                   (format 
+                                    nil 
+                                    "parse-id == ~a && t-version == ~a" 
+                                    parse-id gversion) 
+                                   gold))))
            (gdiscriminants (when gdecisions
                              #+:allegro
                              (format
@@ -555,11 +556,7 @@
             initially (setf (lkb::compare-frame-exact frame) nil)
             for edge in lkb::*parse-record*
             for derivation = (lkb::edge-bar edge)
-            when #+:null
-                 (and edge gedge
-                      (equal (lkb::edge-lex-ids edge)
-                             (lkb::edge-lex-ids gedge)))
-                 (derivation-equal derivation gderivation) do
+            when (derivation-equal derivation gderivation) do
               (push edge (lkb::compare-frame-exact frame))))
 
       (when (and runp display (null %client%))
@@ -1529,6 +1526,10 @@
                       (if *redwoods-score-similarity-p* 1 0)))
          (i 2))
 
+    ;;
+    ;; _fix_me_
+    ;; the :random values appear bogus; debug this further.     (13-may-05; oe)
+    ;;
     #+:null
     (let ((total (rest (rest (find :total aggregates :key #'first)))))
       (format
@@ -1738,7 +1739,7 @@
                   i (+ 7 j) k)))
          (format stream "~%"))))
     (when (or (stringp file) (stringp append)) (close stream))))
-
+ 
 (defun summarize-scores (data &optional (gold data)
                          &key (condition *statistics-select-condition*)
                               spartanp (scorep t) (n 1) test loosep
@@ -1842,18 +1843,18 @@
                      (and (zerop i) similarity)
                      (and (> i 0) i) (get-field :i-input gitem))
                     (loop
-                        with ranks = (get-field :ranks gitem)
+                        with granks = (get-field :ranks gitem)
                         for i from 1 to n
                         do
                           (loop
-                              for rank in ranks
-                              when (= (get-field :rank rank) i)
+                              for grank in granks
+                              when (= (get-field :rank grank) i)
                               do
                                 (format
                                  trace
                                  "  < [~a] {~a} |~a|~%"
-                                 (get-field :result-id rank)
-                                 i (get-field :tree rank))))
+                                 (get-field :result-id grank)
+                                 i (get-field :tree grank))))
                     (loop
                         for rank in (get-field :ranks item)
                         for score = (let ((foo (get-field :score rank)))
@@ -1863,7 +1864,7 @@
                         do
                           (format
                            trace
-                           "  > [~a] {~a} ~@[<~,1f>~] |~a|~%"
+                           "  > [~a] {~a} ~@[<~,6f>~] |~a|~%"
                            (get-field :result-id rank)
                            (get-field :rank rank)
                            score
@@ -2023,6 +2024,13 @@
                                            collect rank)
                          for rank in ranks
                          do
+                           ;;
+                           ;; _fix_me_
+                           ;; this is not quite what is common in MT usages of
+                           ;; BLEU and related measures: a more charitable way
+                           ;; of computing the overall score here would be to
+                           ;; maximize over all references.    (10-may-05; oe)
+                           ;;
                            (loop
                                for grank in granks
                                for score = (call-raw-hook 
@@ -2739,8 +2747,7 @@
                      &key (condition *statistics-select-condition*) data
                           (nfold 10) (type :mem) model
                           (stream *tsdb-io*) (cache :raw) (verbose t)
-                          interrupt meter)
-  
+                          interrupt meter)  
   (format
    stream
    "~&[~a] rank-profile:() `~a' -->~%                           `~a'~%"
@@ -3027,10 +3034,10 @@
           with environment = (copy-list (experiment-environment experiment))
           for symbol = (pop environment)
           for value = (pop environment)
-          while (and symbol value) do
-            (when (boundp symbol)
+          while symbol do
+                (when (boundp symbol)
               (push (cons symbol (symbol-value symbol)) save))
-            (set symbol value))
+                (set symbol value))
       (rank-profile
        (or (experiment-source experiment) (experiment-target experiment))
        (experiment-target experiment)
@@ -3140,7 +3147,7 @@
                               tolerance variance ngrams)
                 for experiment
                 = (make-experiment
-                   :source "gold/lkb.g.s" :skeleton "hike"
+                   :source "gold/hike.oct-04.4-apr" :skeleton "hike"
                    :target target
                    :nfold 10
                    :environment 
@@ -3165,10 +3172,54 @@
     finally (return experiments))
 
 #+:null
+(loop
+    with experiments
+    with active-edges-p = t
+    with ngram-backkoff-p = t
+    for variance in '(1e1 1e2 1e3 1e4 1e5)
+    do
+      (loop
+          for tolerance in '(1e-7 1e-6 1e-5 1e-4)
+          do
+            (loop
+                for ngrams in '(0)
+                do
+                  (loop
+                      for grandparenting in '(0 1)
+                      do
+                        (loop
+                            for lm in '(0)
+                            for target = (format
+                                          nil
+                                          "mem.10.~a.~a.~:[0~;1~].~e.~e.~ 
+                                          ~:[0~;1~].~a"
+                                          lm ngrams ngram-backkoff-p
+                                          tolerance variance
+                                          ngram-backkoff-p grandparenting)
+                            for experiment
+                            = (make-experiment
+                               :source "gold/hike.oct-04.g"
+                               :skeleton "hike"
+                               :target target
+                               :nfold 10
+                               :environment 
+                               `(*maxent-active-edges-p* ,active-edges-p
+                                 *maxent-grandparenting* ,grandparenting
+                                 *maxent-relative-tolerance* ,tolerance
+                                 *maxent-variance* ,variance
+                                 *maxent-ngram-size* ,ngrams
+                                 *maxent-ngram-back-off-p* ,ngram-backkoff-p
+                                 *maxent-lm-p* ,lm))
+                            do
+                              (run-experiment experiment)
+                              (push experiment experiments)))))
+    finally (return experiments))
+
+#+:null
 (with-open-file (stream "/tmp/scores.r"
                  :direction :output :if-exists :supersede)
   (loop
-      with gold = "gold/lkb.g.s"
+      with gold = "gold/hike.oct-04.g"
       with *redwoods-score-similarity-p* = #'bleu-similarity
       for db in (find-tsdb-directories *tsdb-home* :pattern "^mem")
       for name = (let ((name (get-field :database db)))
@@ -3198,4 +3249,3 @@
            name
            folds lm ngrams aep threshold variance)
           (force-output stream))))
-

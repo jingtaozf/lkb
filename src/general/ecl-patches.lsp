@@ -51,8 +51,8 @@
 (define-language :lisp
   :compiler #'ecl-compile-file
   :loader #'load
-  :source-extension (car *filename-extensions*)
-  :binary-extension (cdr *filename-extensions*))
+  :source-extension (first *filename-extensions*)
+  :binary-extension (rest *filename-extensions*))
 
 (defun ecl-initialize ()
   (setf %object-files% nil)

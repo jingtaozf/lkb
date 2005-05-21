@@ -15,9 +15,29 @@
 ;;; License for more details.
 ;;; 
 
+;;;
+;;; some notes on the encoding of features: to make sure we operate in separate
+;;; namespaces for the various feature templates, each feature is prefixed with
+;;; an integer identifying the feature type (aka template), viz.
+;;;
+;;;   1: local derivational configuration; a subtree of depth one taken from 
+;;;      the derivation; e.g. [1 0 hspec det_poss_my_le noptcomp]; the second
+;;;      integer indicates the amount of grandparenting used, where parent 
+;;;      labels will precede the root of the local configuration.
+;;;   2: `active' local derivational configuration; similar to type 1, but for
+;;;      sub-sets of the daughters (corresponding to active edges), determined
+;;;      by rule instantiation order (the .rhs. slot in LKB rule structures),
+;;;      e.g. [2 0 hspec noptcomp].
+;;;   3: n-gram features; e.g. [3 3 "saw" ^ n_proper_le v_np_trans_le]
+;;;   4: preterminal-only n-gram features; like type 3, but without the surface
+;;;      form; e.g. [4 "saw" ^ n_proper_le v_np_trans_le].
+;;;  42: language model score; the second integer is the number of bins used 
+;;;      (if any), and the third the divisor used in scaling (*maxent-lm-p*), 
+;;;      e.g. [42 0 100]
+;;;
 (in-package :tsdb)
 
-(defparameter *maxent-collapse-irules-p* nil)
+(defparameter *maxent-grandparenting* 2)
 
 (defparameter *maxent-use-preterminal-types-p* t)
 
@@ -46,7 +66,7 @@
 (defparameter *maxent-variance* 1e2)
 
 (defparameter *maxent-options*
-  '(*maxent-collapse-irules-p*
+  '(*maxent-grandparenting*
     *maxent-use-preterminal-types-p*
     *maxent-lexicalization-p*
     *maxent-active-edges-p*
@@ -66,13 +86,13 @@
 (defun mem-environment ()
   (format 
    nil
-   "~:[-~;+~]CP ~:[-~;+~]PT ~:[-~;+~]AE ~
-    NS[~a] NS[~a] NT[~(~a~)] ~:[-~;+~]NB ~:[-~;+~]LM ~
+   "GP[~a] ~:[-~;+~]PT ~:[-~;+~]AE ~
+    NS[~a] NS[~a] NT[~(~a~)] ~:[-~;+~]NB LM~:[0~*~;~a~] ~
     FT[~a] RS[~a] MM[~(~a~)] MI[~a] RT[~a] VA[~a]"
-   *maxent-collapse-irules-p* *maxent-use-preterminal-types-p*
+   *maxent-grandparenting* *maxent-use-preterminal-types-p*
    *maxent-lexicalization-p* *maxent-active-edges-p*
    *maxent-ngram-size* *maxent-ngram-tag*
-   *maxent-ngram-back-off-p* *maxent-lm-p*
+   *maxent-ngram-back-off-p* *maxent-lm-p* *maxent-lm-p*
    *maxent-frequency-threshold* *maxent-random-sample-size*
    *maxent-method* (or *maxent-iterations* 0) 
    *maxent-relative-tolerance* *maxent-variance*))
@@ -315,7 +335,7 @@
 			 (initialize-mem model)
 			 model))
       with table = (mem-table model)
-      with code = (symbol-to-code '(3) table)
+      with code = (symbol-to-code (list 42 0 *maxent-lm-p*) table)
       for item in items
       for iid = (get-field :i-id item)
       for readings = (get-field :readings item)
@@ -359,7 +379,8 @@
 	    for edge = (when derivation
 			 (or (get-field :edge result)
                              (let* ((edge (reconstruct derivation nil))
-                                    (string (lkb::edge-string edge)))
+                                    (string (when (lkb::edge-p edge)
+                                              (lkb::edge-string edge))))
                                (nconc result (acons :string string nil))
                                edge)))
 	    for event = (when edge (edge-to-event edge model))
@@ -424,15 +445,20 @@
 		       (probe-file out))
 	      (read-weights model out))))
 	(return model)))
-
-(defun edge-to-event (edge model &key (event (make-event) eventp))
+
+(defun edge-to-event (edge model
+                      &key (event (make-event) eventp)
+                           (parents '(^)))
 
   (loop
+      with parents 
+      = (when (> *maxent-grandparenting* 0)
+          (append (last parents (- *maxent-grandparenting* 1)) (list edge)))
       for edge in (lkb::edge-children edge)
       do
-        (edge-to-event edge model :event event))
+        (edge-to-event edge model :event event :parents parents))
   
-  (let* ((codes (edge-to-codes edge model))
+  (let* ((codes (edge-to-codes edge parents model))
          (ngrams (unless eventp (edge-to-ngrams edge model))))
     (loop
         for code in codes
@@ -442,37 +468,50 @@
         do (record-feature (make-feature :code code) event model)))
 
   event)
-
-(defun edge-to-codes (edge model)
+
+(defun edge-to-codes (edge parents model)
   (let* ((table (mem-table model))
          (root (edge-root edge))
+         (parents (loop
+                      for parent in parents
+                      collect (if (lkb::edge-p parent)
+                                (edge-root parent)
+                                parent)))
          (daughters (or (lkb::edge-children edge)
                         (let ((foo (lkb::edge-morph-history edge)))
-                          (and foo (list foo)))))
-         (irulep (lkb::inflectional-rule-p root)))
+                          (and foo (list foo))))))
     (cond
+     ;;
+     ;; see whether we have extracted features from this edge before; if so,
+     ;; re-use cache of earlier results (safe-guarded by .model. identity).
+     ;;
      ((and (eq (lkb::edge-foo edge) model) (consp (lkb::edge-bar edge)))
       (lkb::edge-bar edge))
+     ;;
+     ;; at the terminal yield of a derivation, things are relatively simple:
+     ;; create one feature for the local configuration at the yield, plus as
+     ;; many as are possible to derive from grandparenting, i.e. prefixing the
+     ;; tuple corresponding to the local feature with all suffixes of .parents.
+     ;;
      ((null daughters)
-      (let* ((feature (cons 1 (cons root (lkb::edge-leaves edge))))
-             (code (symbol-to-code feature table)))
-        (setf (lkb::edge-head edge) root)
+      (let* ((feature (cons root (lkb::edge-leaves edge)))
+             (codes (list (symbol-to-code (list* 1 0 feature) table))))
+        (loop
+            for i from 1 to (min (length parents) *maxent-grandparenting*)
+            for iparents = (last parents i)
+            for code = (symbol-to-code
+                        (append (list 1 i) iparents feature)
+                        table)
+            do (push code codes))
+        (when *maxent-lexicalization-p* (setf (lkb::edge-head edge) root))
         (setf (lkb::edge-foo edge) model)
-        (setf (lkb::edge-bar edge) (list code))))
-     ((and *maxent-collapse-irules-p* irulep)
-      (let* ((extra (loop
-                        for daughter = (first daughters)
-                        then (first (lkb::edge-children daughter))
-                        while daughter
-                        collect (edge-root daughter)))
-             (feature (nconc (list 1 root)
-                             extra 
-                             (list (first (lkb::edge-leaves edge)))))
-             (code (symbol-to-code feature table)))
-        (setf (lkb::edge-head edge) (first (last extra)))
-        (setf (lkb::edge-foo edge) model)
-        (setf (lkb::edge-bar edge) (list code))))
+        (setf (lkb::edge-bar edge) codes)))
      (t
+      ;;
+      ;; _fix_me_
+      ;; lexicalized features, presumably, should use a separate identifier;
+      ;; the complete lexicalization set-up needs testing.      (3-apr-05; oe)
+      ;;
       (when *maxent-lexicalization-p*
         ;;
         ;; decorate local edge with head lexicalization information: find the
@@ -486,22 +525,32 @@
           (setf (lkb::edge-head edge) (lkb::edge-head (nth key daughters)))))
       (let* ((roots (loop
                         for edge in daughters
-                        for root = (edge-root edge)
-                        for head = (lkb::edge-head edge)
-                        nconc (cons root (when *maxent-lexicalization-p*
-                                           (list head)))))
+                        collect (edge-root edge)))
              (head (lkb::edge-head edge))
              (feature (cons root roots))
-             (codes (if *maxent-lexicalization-p*
-                      (list (symbol-to-code (cons 1 (cons head feature)) table)
-                            (symbol-to-code (cons 1 feature) table))
-                      (list (symbol-to-code (cons 1 feature) table)))))
+             (codes (nconc
+                     (when *maxent-lexicalization-p*
+                       (list (symbol-to-code (list* 1 0 head feature) table)))
+                     (list (symbol-to-code (list* 1 0 feature) table)))))
+        
+        (loop
+            for i from 1 to (min (length parents) *maxent-grandparenting*)
+            for iparents = (last parents i)
+            for code = (symbol-to-code
+                        (append (list 1 i) iparents feature)
+                        table)
+            do (push code codes))
+
         ;;
         ;; include (back-off, in a sense) features for partially instantiated
         ;; constituents (corresponding to active edges in the parser): for
         ;; the rule instantiation order .rhs., for each prefix, extract the
         ;; (sub-)sets of corresponding daughters, perform head lexicalization
         ;; if necessary, and add the resulting features to .codes.
+        ;;
+        ;; _fix_me_
+        ;; not quite sure what to do about grandparenting; would it make sense
+        ;; on these `active edges' too?                          (3-apr-05; oe)
         ;;
         (when *maxent-active-edges-p*
           (loop
@@ -510,20 +559,17 @@
               for foo = (ith-n rhs 1 i)
               for roots = (loop
                               for j in foo
-                              for root = (edge-root (nth j daughters))
-                              for head = (lkb::edge-head (nth j daughters))
-                              nconc (cons root (when *maxent-lexicalization-p*
-                                                 (list head))))
+                              collect (edge-root (nth j daughters)))
               for feature = (cons root roots)
               when *maxent-lexicalization-p* do
                 (push
-                 (symbol-to-code (cons 2 (cons head feature)) table)
+                 (symbol-to-code (list* 2 0 head feature) table)
                  codes)
               do
-                (push (symbol-to-code (cons 2 feature) table) codes)))
+                (push (symbol-to-code (list* 2 0 feature) table) codes)))
         (setf (lkb::edge-foo edge) model)
         (setf (lkb::edge-bar edge) codes))))))
-
+
 (defun edge-to-ngrams (edge model)
   
   (loop
@@ -551,8 +597,9 @@
             to *maxent-ngram-size*
             for form = (nth (- i 1) forms)
             for itags = (ith-n tags 1 i)
-            when form do
-              (push (symbol-to-code (cons form itags) table) result))
+            when (and form (not (and (= i 1) (smember form '(^ $))))) do
+              (push (symbol-to-code (list* 3 i form itags) table) result)
+              (push (symbol-to-code (list* 4 i itags) table) result))
       finally 
         (setf (lkb::edge-foo edge) model)
         (setf (lkb::edge-baz edge) result)
@@ -569,15 +616,17 @@
                 
 (defun mem-score-edge (edge 
                        &optional (model %model%) 
-                       &key recursivep lm)
+                       &key (parents '(^)) recursivep lm)
+
   (if (and (not recursivep) 
            (eq (lkb::edge-foo edge) model) (numberp (lkb::edge-score edge)))
     (lkb::edge-score edge)
-    (let* ((codes (edge-to-codes edge model))
+    (let* ((codes (edge-to-codes edge parents model))
            (ngrams (unless recursivep (edge-to-ngrams edge model)))
            (score (if (numberp lm)
                     (let* ((table (mem-table model))
-                           (code (symbol-to-code '(3) table)))
+                           (code
+                            (symbol-to-code (list 42 0 *maxent-lm-p*) table)))
                       (* (score-feature code model) lm))
                     0)))
       (setf (lkb::edge-score edge)
@@ -589,13 +638,18 @@
                sum (score-feature code model))
            score
            (loop
+               with parents 
+               = (when (> *maxent-grandparenting* 0)
+                   (append
+                    (last parents (- *maxent-grandparenting* 1)) (list edge)))
                for edge in (or (lkb::edge-children edge)
                                (let ((foo (lkb::edge-morph-history edge)))
                                  (and foo (list foo))))
-               sum (mem-score-edge edge model :recursivep t)))))))
+               sum (mem-score-edge
+                    edge model :recursivep t :parents parents)))))))
 
 (defun mem-item-enhancer (item)
-  (when *maxent-lm-p*
+  (when (and (numberp *maxent-lm-p*) (not (= *maxent-lm-p* 0)))
     (loop
         with foo
         with results = (get-field :results item)
@@ -614,7 +668,7 @@
 (defun mem-score-task (task model)
   ;;
   ;; _fix_me_
-  ;; the following seem to not use have an integer first() in their features.
+  ;; the following seem to not have an integer first() in their features.
   ;;                                                           (27-oct-04; oe)
   (cond
    ((lkb::chart-configuration-p task)
@@ -665,7 +719,7 @@
                       collect (edge-root edge))
                   (lkb::edge-leaves edge)))
          (feature (cons (edge-root edge) roots))
-         (code (symbol-to-code (cons 1 feature) table)))
+         (code (symbol-to-code (list* 1 0 feature) table)))
     (score-feature code model)))
 
 (defconstant e (exp 1d0))

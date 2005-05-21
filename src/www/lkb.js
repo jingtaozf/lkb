@@ -1,5 +1,7 @@
 var __console__ = null;
 
+var __pageInitializedP__= false;
+
 function debug(string) {
 
   if(__console__ == null || __console__.closed) {
@@ -36,10 +38,15 @@ function messenger() {
 
   atInitialize();
   window.focus();
+  enableElement('analyze');
+  enableElement('translate');
+  // defaultStatus += " " + window.title;
   if(false) {
     var foo = document.getElementById("main");
     if (foo && foo.target) defaultStatus += " " + foo.target;
   } // if
+
+  __pageInitializedP__ = true;
 
 } // messenger()
 
@@ -50,6 +57,23 @@ function setTarget(context, string) {
   if(foo && foo.target) foo.target = string;
 
 } // formTarget()
+
+
+function enableElement(id) {
+  var foo = document.getElementById(id);
+  if(foo && foo.disabled) foo.disabled = false;
+} // enableElement()
+
+
+function getElementbyClass(name){
+  var i = 0;
+  var matches = new Array();
+
+  var all = (document.all ? document.all : document.getElementsByTagName("*"));
+  for(i = 0; i < all.length; i++) {
+    if(all[i].className == name) matches[i++] = all[i];
+  } // for
+} // getElementbyClass()
 
 
 //

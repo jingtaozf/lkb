@@ -434,6 +434,50 @@
     font-family: helvetica, arial, sans-serif; 
   }
 
+  table.flow { 
+    font-weight: normal; font-size: 12pt; 
+    border-collapse: collapse; 
+    color: #1a04a5;
+    background: #d8d6d6; 
+    margin-top: 0.8em; margin-bottom: 0.8em;
+    margin-left: 0.9em; margin-right: 0.9em;
+    width: compute;
+  }
+  td.flowTopBorder { 
+    border-top: solid; border-left: solid; border-right: solid; 
+    border-width: thin; padding-top: 1em; border-color: black;
+  }
+  td.flowBottomBorder { 
+    border-bottom: solid; border-left: solid; border-right: solid; 
+    border-width: thin; padding-bottom: 1em; border-color: black;
+  }
+  td.flowLeftBorder { 
+    border-left: solid; border-width: thin; padding-left: 1em;
+    border-color: black;
+  }
+  td.flowRightBorder { 
+    border-right: solid; border-width: thin; padding-left: 1em;
+    border-color: black;
+  }
+  td.flow { 
+    margin: 0px; padding: 0px; white-space: pre;
+  }
+  td.flowLeft { 
+    border-left: solid; border-width: 1; border-color: black;
+    margin: 0px; padding: 0px;
+    height: 0.8ex;
+  }
+  table.flow a:link, table.flow a:visited, table.flow a:active { 
+    color: #1a04a5;
+    background: #d8d6d6; 
+    text-decoration: none; 
+  }
+  table.flow a:hover { 
+    background: #1a04a5;
+    color: #d8d6d6; 
+    text-decoration: none; 
+  } 
+
   .navtext {
     width: 100px;
   }

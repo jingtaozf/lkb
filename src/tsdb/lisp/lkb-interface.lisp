@@ -181,8 +181,7 @@
                            nil
                            (if (integerp nanalyses)
                              (or (zerop nanalyses) nanalyses)
-                             (if (integerp *first-only-p*) 
-                                *first-only-p* 1))))
+                             (if (integerp *first-only-p*) *first-only-p* 1))))
          (*do-something-with-parse* nil))
     (declare (special *chasen-debug-p*))
     (multiple-value-bind (return condition)
@@ -950,22 +949,31 @@
 (defun tsdb::find-lexical-entry (form instance &optional id start end (dagp t))
 
   (let* ((*package* *lkb-package*)
-         (name (intern (if (stringp instance)
-                         (string-upcase instance)
-                         instance)
-                       *lkb-package*))
+         (name (string-upcase (string instance)))
+         (n (length name))
+         (bracket (position #\[ name))
+         (prefix (if (and bracket (char= (char name (- n 1)) #\]))
+                   (subseq name 0 bracket)
+                   name))
+         (surface (when bracket
+                    (subseq name (+ bracket 1) (- n 1))))
+         (name (intern prefix *lkb-package*))
          (instance (ignore-errors (get-unexpanded-psort-entry name))))
     (when instance 
-      (let* ((tdfs (when (smember dagp '(:word t))
-                    (copy-tdfs-completely 
-                     (lex-entry-full-fs (get-lex-entry-from-id name)))))
-            (tdfs-with-word (if *recording-word*
-                                (unify-in-word tdfs form)
-                              tdfs))
-            (ids (list (lex-entry-id instance))))
+      (let* ((instance (if (smember dagp '(:word t))
+                         (get-lex-entry-from-id name)
+                         instance))
+             (tdfs (when (smember dagp '(:word t))
+                     (if surface
+                       (instantiate-generic-lexical-entry instance surface)
+                       (copy-tdfs-completely (lex-entry-full-fs instance)))))
+             (tdfs (if *recording-word*
+                     (unify-in-word tdfs form)
+                     tdfs))
+             (ids (list (lex-entry-id instance))))
         (make-edge :id id :category (and tdfs (indef-type-of-tdfs tdfs))
                    :rule form :leaves (list form) :lex-ids ids
-                   :dag tdfs-with-word :from start :to end
+                   :dag tdfs :from start :to end
                    #-:logon :cfrom #-:logon (mrs::find-cfrom-hack start)
                    #-:logon :cto #-:logon (mrs::find-cto-hack start))))))
 

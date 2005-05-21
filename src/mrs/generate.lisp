@@ -135,8 +135,21 @@
                             (parse-integer type-name
                                :start s :end (or e (length type-name)))
                             vars)))
-                (dolist (arc (dag-arcs dag))
-                   (setq vars (sem-vars-in-dag (dag-arc-value arc) vars))))
+               (dolist (arc (dag-arcs dag))
+                 ;;
+                 ;; when we are not packing, all variables would seem to remain
+                 ;; accessible in the FS reconstruction of the MRS, i.e. below
+                 ;; RELS and HCONS; thus, simulate FS restriction here.
+                 ;;                                              (9-jan-05; oe)
+                 ;; _fix_me_
+                 ;; think more about this: an erroneously set restrictor could
+                 ;; cause people surprising results; if they were not packing
+                 ;; anyway, why should they care about the restrictor?
+                 ;;                                             (20-mar-05; oe)
+                 (unless (or *gen-packing-p*
+                             (smember 
+                              (dag-arc-attribute arc) *packing-restrictor*))
+                   (setq vars (sem-vars-in-dag (dag-arc-value arc) vars)))))
              vars)))
       (if *gen-filtering-p*
          (sem-vars-in-dag (tdfs-indef tdfs) nil)
@@ -468,15 +481,23 @@
                          ;; for semantic equality in unpacking, since otherwise
                          ;; the n-best counting may end up wrong.
                          ;;
+                         ;; _fix_me_
+                         ;; this all badly interacts with the `filter' mode for
+                         ;; using the post-generation semantics test, since it 
+                         ;; is not really clear which notion of n-best to use
+                         ;; then.  for now, risk calling the test twice on each
+                         ;; result in filter mode (see result selection below).
+                         ;;                                     (27-jan-05; oe)
                          (selectively-unpack-edges
                           (loop
                               for edge in candidates
                               when (gen-chart-check-covering edge input-rels)
                               collect edge)
                           nanalyses
-                          :test #'(lambda (edge)
-                                    (gen-chart-check-compatible 
-                                     edge input-sem))))
+                          :test (unless *bypass-equality-check*
+                                  #'(lambda (edge)
+                                      (gen-chart-check-compatible 
+                                       edge input-sem)))))
                         (t
                          (loop
                              for edge in candidates
@@ -485,7 +506,8 @@
                       (consistent
                        (loop
                            for edge in complete
-                           when (or *gen-packing-p*
+                           when (or (and *gen-packing-p*
+                                         (null *bypass-equality-check*))
                                     (gen-chart-check-compatible 
                                      edge input-sem))
                            collect edge)))
@@ -576,6 +598,12 @@
 ;;            (when *sem-debugging*
 ;;              (mrs::output-mrs input-sem 'mrs::simple)
 ;;              (mrs::output-mrs mrs 'mrs::simple))  
+        #+:null
+        (ignore-errors
+         (mt::unify-mtr-component
+          (if *gen-equate-qeqs-p* (mrs::equate-all-qeqs mrs) mrs)
+          input-sem))
+        #-:null
         (mrs::mrs-equalp 
          (if *gen-equate-qeqs-p* (mrs::equate-all-qeqs mrs) mrs)
          input-sem nil *debugging* 
