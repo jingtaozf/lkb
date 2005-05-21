@@ -7,13 +7,13 @@
 (defmethod orthkey ((x lex-entry))
   (normalize-orthkey (car (last (slot-value x 'orth)))))
   
-(defmethod copy-slots ((x lex-entry) fields-map)
+(defmethod copy-slots ((x lex-entry) dfn)
   "copy slots for use in destructive operations"
   (let* ((slot-names
 	  (remove-duplicates
 	   (mapcar 
 	    #'first
-	    fields-map)))
+	    dfn)))
 	 (slots
 	  (mapcar 
 	   #'(lambda (s)

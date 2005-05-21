@@ -51,13 +51,13 @@
       (when (u-value-p rhs)
         (u-value-type rhs)))))
 
-(defun extract-field (x field-kw &optional fields-map)
+(defun extract-field (x field-kw &optional dfn)
   (unless *lexdb*
     (error "*lexdb* is unset"))
   (if (stringp field-kw)
       (setf field-kw (str-2-keyword field-kw)))
-  (let* ((fields-map (or fields-map (fields-map *lexdb*)))
-	 (mapping (find field-kw fields-map :key #'second :test 'equal)))
+  (let* ((dfn (or dfn (dfn *lexdb*)))
+	 (mapping (find field-kw dfn :key #'second :test 'equal)))
     (if mapping
         (extract-field2 x (first mapping) (third mapping) (fourth mapping))
       "")))

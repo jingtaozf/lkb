@@ -37,7 +37,7 @@
 
 
 (defmethod get-raw-orth ((lexicon psql-lex-database) (le psql-lex-entry))
-  (let* ((orth-raw-mapping (assoc :orth (fields-map lexicon)))
+  (let* ((orth-raw-mapping (assoc :orth (dfn lexicon)))
 	 (orth-raw-value-mapping (fourth orth-raw-mapping))
 	 (raw-orth-field (second orth-raw-mapping)))
     (car (work-out-value

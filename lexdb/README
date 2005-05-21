@@ -30,4 +30,3 @@ mwe.sql          - multi-word entry functions (BROKEN)
 remove-orthkey-field.el - Emacs Lisp function to be called to convert
                           .rev files from pre LexDB 4.0 format
 
-

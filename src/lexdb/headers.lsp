@@ -50,7 +50,7 @@
    (fields-tb 
     :initform nil :accessor fields-tb :initarg :fields-tb)
    ;; a-list for mapping the lexicon-table fields to the psort-or-lex structure
-   (fields-map :initform nil :accessor fields-map)
+   (dfn :initform nil :accessor dfn)
    (fields :initform nil :accessor fields)))
 
 (defclass psql-database ()

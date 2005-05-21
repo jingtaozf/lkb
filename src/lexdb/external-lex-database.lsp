@@ -11,9 +11,9 @@
 (defmethod close-lex ((lexicon external-lex-database) &key in-isolation delete)
   (declare (ignore in-isolation delete))
   (with-slots 
-      (fields-map fields-tb lex-tb) 
+      (dfn fields-tb lex-tb) 
       lexicon
-    (setf fields-map nil))
+    (setf dfn nil))
   (if (next-method-p) (call-next-method)))
 
 (defmethod empty-cache ((lexicon external-lex-database) &key recurse)

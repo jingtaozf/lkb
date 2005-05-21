@@ -11,13 +11,13 @@
   (unless (and
 	   (typep *lexdb* 'psql-lex-database)
 	   (connection *lexdb*))
-    (error "please initialize PSQL lexicon"))
+    (error "please initialize-LexDB"))
   (let ((filename (get-filename rest :ending ".rev" :existing t)))
     (when filename
-      (format t "~%~%Please wait: merging files ~a.* into lexical database ~a" 
+      (format t "~%~%please wait: merging files ~a.* into lexical database ~a" 
 	      filename (dbname *lexdb*))
       (force-output)
-      (time (merge-into-lexicon *lexdb* filename))
+      (time (merge-into-lexdb *lexdb* filename))
       (format t " ...done")
       (lkb-beep))))
 
@@ -25,10 +25,10 @@
   (unless (and
 	   (typep *lexdb* 'psql-lex-database)
 	   (connection *lexdb*))
-    (error "please initialize PSQL lexicon"))
+    (error "please initialize-LexDB"))
   (let ((filename (get-filename rest :ending ".rev" :existing nil)))
     (when filename
-      (format t "~%~%Please wait: dumping lexical database ~a to files ~a.*" 
+      (format t "~%~%please wait: dumping lexical database ~a to files ~a.*" 
 	      (dbname *lexdb*) filename)
       (force-output)
       (time (dump-lexdb *lexdb* filename :tdl *lexdb-dump-tdl*))
@@ -39,7 +39,7 @@
   (let ((filename (get-filename rest :ending ".tdl" :existing nil)))
     (when filename
       (setf filename (format nil "~a.tdl" filename))
-      (format t "~%~%Please wait: exporting lexicon to TDL file")
+      (format t "~%~%please wait: exporting lexicon to TDL file")
       (force-output)
       (time 
        (export-lexicon-to-tdl :file filename))
@@ -50,7 +50,7 @@
   (unless (and
 	   (typep *lexdb* 'psql-lex-database)
 	   (connection *lexdb*))
-    (error "please initialize PSQL lexicon"))
+    (error "please initialize-LexDB"))
   (time
    (apply 'set-filter *lexdb* rest))
   (format t " ...done")
@@ -60,9 +60,9 @@
   (unless (and
 	   (typep *lexdb* 'psql-lex-database)
 	   (connection *lexdb*))
-    (error "please initialize PSQL lexicon"))
+    (error "please initialize-LexDB"))
   (let ((count-priv (length (show-scratch *lexdb*))))
-    (format t "~%~%Please wait: clearing ~a entries from private space" count-priv)
+    (format t "~%~%please wait: clearing ~a entries from private space" count-priv)
     (force-output)
     (when (> count-priv 0)
       (time
@@ -74,9 +74,9 @@
   (unless (and
 	   (typep *lexdb* 'psql-lex-database)
 	   (connection *lexdb*))
-    (error "please initialize PSQL lexicon"))
+    (error "please initialize-LexDB"))
   (let ((count-priv (length (show-scratch *lexdb*))))
-    (format t "~%~%Please wait: moving ~a private entries to public space"
+    (format t "~%~%please wait: moving ~a private entries to public space"
 	    count-priv)
     (force-output)
     (when (> count-priv 0)
@@ -89,11 +89,11 @@
   (unless (and
 	   (typep *lexdb* 'psql-lex-database)
 	   (connection *lexdb*))
-    (error "please initialize PSQL lexicon"))
+    (error "please initialize-LexDB"))
   (let ((scratch
 	 (mapcar #'(lambda (x) (car x)) 
 		 (show-scratch *lexdb*))))
-    (format t "~%~%Contents of scratch (~a entries): ~a"
+    (format t "~%~%contents of scratch (~a entries): ~a"
 	    (length scratch) scratch)
     (format t " ...done")
     (lkb-beep)))
@@ -102,8 +102,8 @@
   (unless (and
 	   (typep *lexdb* 'psql-lex-database)
 	   (connection *lexdb*))
-    (error "please initialize PSQL lexicon"))
-  (format t "~%~%Please wait: indexing new lexical entries for generator")
+    (error "please initialize-LexDB"))
+  (format t "~%~%please wait: indexing new lexical entries for generator")
   (force-output)
   (time
    (index-new-lex-entries *lexicon*))
@@ -114,7 +114,7 @@
   (unless (and
 	   (typep *lexdb* 'psql-lex-database)
 	   (connection *lexdb*))
-    (error "please initialize PSQL lexicon"))
+    (error "please initialize-LexDB"))
   (time
    (vacuum-lex *lexdb*))
   (format t " ...done")
@@ -124,7 +124,7 @@
   (unless (and
 	   (typep *lexdb* 'psql-lex-database)
 	   (connection *lexdb*))
-    (error "please initialize PSQL lexicon"))
+    (error "please initialize-LexDB"))
   (time
    (vacuum-public-rev *lexdb*))
   (format t " ...done")
@@ -134,11 +134,11 @@
   (unless (and
 	   (typep *lexdb* 'psql-lex-database)
 	   (connection *lexdb*))
-    (error "please initialize PSQL lexicon"))
+    (error "please initialize-LexDB"))
   (let ((filename (get-filename rest :ending ".tdl" :existing t)))
     (when filename
       (setf filename (format nil "~a.tdl" filename))
-      (format t "~%~%Please wait: importing TDL entries")
+      (format t "~%~%please wait: importing TDL entries")
       (load-tdl-from-scratch filename)
       (format t " ...done")
       (lkb-beep))))
