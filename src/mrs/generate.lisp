@@ -598,12 +598,6 @@
 ;;            (when *sem-debugging*
 ;;              (mrs::output-mrs input-sem 'mrs::simple)
 ;;              (mrs::output-mrs mrs 'mrs::simple))  
-        #+:null
-        (ignore-errors
-         (mt::unify-mtr-component
-          (if *gen-equate-qeqs-p* (mrs::equate-all-qeqs mrs) mrs)
-          input-sem))
-        #-:null
         (mrs::mrs-equalp 
          (if *gen-equate-qeqs-p* (mrs::equate-all-qeqs mrs) mrs)
          input-sem nil *debugging* 
