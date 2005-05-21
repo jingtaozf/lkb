@@ -130,6 +130,7 @@
 
 (defmethod generate-orthkeys-if-nec ((lex psql-lex-database))
   (unless (rev-key-p lex)
+    (format t "~%(generating orthkeys for user ~a)" (user lex))
     (generate-orthkeys lex)))
 
 (defmethod generate-orthkeys ((lex psql-lex-database) &key (table :rev))
@@ -876,13 +877,19 @@
   (run-command lex "DELETE FROM tmp")
   (run-command lex "DELETE FROM tmp_key")
   (run-command-stdin-from-file lex "COPY tmp FROM stdin" rev-filename)
-  (run-command-stdin-from-file lex "COPY tmp_key FROM stdin" (concatenate 'string rev-filename "_key"))
+  (let ((rev-key-filename (concatenate 'string rev-filename "_key")))
+    (if (probe-file rev-key-filename)
+	(run-command-stdin-from-file lex "COPY tmp_key FROM stdin" rev-key-filename)
+      (with-lexdb-user-lexdb (lex2 lex)
+	(run-command lex2 "DELETE FROM rev_key"))))
   (let ((count-new
 	 (str-2-num
 	  (sql-fn-get-val lex :merge_public_rev_rev_key_from_tmp_tmp_key))))
     (format t "~%(~a new rev entries)" count-new)
     (unless (equal 0 count-new)
       (vacuum-public-rev lex))
+    (with-lexdb-user-lexdb (lex2 lex)
+      (generate-orthkeys-if-nec lex2))
     count-new))
 
 (defmethod merge-dfn ((lexicon psql-lex-database) dfn-filename)  
