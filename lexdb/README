@@ -1,0 +1,33 @@
+This directory contains the files required to set up and maintain a lexical
+database (LexDB) hosted within a PostgreSQL server.
+
+For documentation see the wiki: 
+
+http://wiki.delph-in.net/moin/LkbLexDb
+
+FILES:
+
+install-lexdb.sh - setup script
+
+pg-interface.el  - LexDB-Emacs interface (Emacs Lisp)
+
+load.sql	 - SQL script called by install-lexdb.sh
+init.sql         - SQL script called by install-lexdb.sh
+permissions.sql  - SQL script called by install-lexdb.sh
+tables.sql       - SQL script called by install-lexdb.sh
+util.sql         - misc PostgreSQL function definitions
+fns.sql          - PostgreSQL function definitions
+fns_post.sql     - PostgreSQL function definitions
+meta.tsv         - initial contents of meta field
+
+example.dfn      - sample .dfn definitions
+example.fld      - sample .fld definitions
+
+lexdb-local.sql  - sample file for local lexdb function redefinitions
+
+mwe.sql          - multi-word entry functions (BROKEN)
+
+remove-orthkey-field.el - Emacs Lisp function to be called to convert
+                          .rev files from pre LexDB 4.0 format
+
+
