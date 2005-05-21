@@ -79,7 +79,7 @@
 2413@C_Complementation_subj(NP)_V_p-obj-inf(VP-inf)@C_Complementation@C_Agreement,C_Wordorder,NP_Agreement,NP_Wordorder@none@test@neutral@Verbs subcategorizing for an infinitive introduced by a preposition (valency:2)@issco@jan-95
 2414@C_Complementation_subj(NP)_v-comp(PRON-neuter)_V@C_Complementation@C_Agreement,C_Wordorder,NP_Agreement,NP_Wordorder@none@test@neutral@Pronoun is meant to replace an infinitive (VP_inf) (valency:2)@issco@jan-95
 2414@C_Complementation_subj(NP)_v-comp(PRON-neuter)_V@C_Complementation@C_Agreement,C_Wordorder,NP_Agreement,NP_Wordorder@none@test@neutral@Pronoun is meant to replace an infinitive introduced by a preposition (VP_de-inf) (valency:2)@issco@jan-95
-2414@C_Complementation_subj(NP)_v-comp(PRON-neuter)_V@C_Complementation@C_Agreement,C_Wordorder,NP_Agreement,NP_Wordorder@none@test@neutral@Pronoun is meant to replace an infinitive introduced by a preposition(VP_à-inf/VP_par-inf) (valency:2)@issco@jan-95
+2414@C_Complementation_subj(NP)_v-comp(PRON-neuter)_V@C_Complementation@C_Agreement,C_Wordorder,NP_Agreement,NP_Wordorder@none@test@neutral@Pronoun is meant to replace an infinitive introduced by a preposition(VP_Ã -inf/VP_par-inf) (valency:2)@issco@jan-95
 2414@C_Complementation_subj(NP)_v-comp(PRON-neuter)_V@C_Complementation@C_Agreement,C_Wordorder,NP_Agreement,NP_Wordorder@none@test@neutral@Pronoun is meant to replace an infinitive introduced by a preposition(VP_de-inf) (valency:2)@issco@jan-95
 2415@C_Complementation_subj(NP)_V-copula_subj-pred(attribute)@C_Complementation@C_Agreement,C_Wordorder,NP_Agreement,NP_Wordorder,PP_Wordorder@none@test@neutral@Predicative verbs subcategorizing for an attribute (valency:2)@issco@may-95
 2415@C_Complementation_subj(NP)_V-copula_subj-pred(attribute)@C_Complementation@C_Agreement,C_Wordorder,NP_Agreement,NP_Wordorder@none@test@neutral@Predicative verbs subcategorizing for an ADJ-attribute (valency:2)@issco@may-95
@@ -157,10 +157,10 @@
 4402@AP_Complementation_ADJ_C-cpl(que)@AP_Complementation@AP_Wordorder,PP_Complementation,PP_Wordorder,C_Complementation,C_Wordorder,C_Agreement@none@test@neutral@@issco@jan-95
 4403@AP_Complementation_ADJ_PP-inf@AP_Complementation@AP_Wordorder,PP_Complementation,PP_Wordorder@none@test@neutral@@issco@jan-95
 4404@AP_Complementation_ADJ_PP_PP-inf@AP_Complementation@AP_Wordorder,PP_Complementation,PP_Wordorder@none@test@neutral@@issco@jan-95
-6801@PP_Coordination_1-coord(et)_prep(de/à/en)@PP_Coordination@PP_Wordorder,PP_Complementation@none@test@neutral@@issco@jul-95
-6801@PP_Coordination_1-coord(et)_prep(de/à/en)@PP_Coordination@PP_Wordorder@none@test@neutral@@issco@jul-95
+6801@PP_Coordination_1-coord(et)_prep(de/Ã /en)@PP_Coordination@PP_Wordorder,PP_Complementation@none@test@neutral@@issco@jul-95
+6801@PP_Coordination_1-coord(et)_prep(de/Ã /en)@PP_Coordination@PP_Wordorder@none@test@neutral@@issco@jul-95
 6802@PP_Coordination_1-coord(et)_mixed-prepositions@PP_Coordination@PP_Wordorder,PP_Complementation@none@test@neutral@@issco@jul-95
-6803@PP_Coordination_1-coord(et)@PP_Coordination@PP_Wordorder,PP_Complementation@none@test@neutral@This subphenomenon tests for all the prepositions except for ``à'',``de'' and ``en'' (cf. PP_Coordination_1-coord(et)_prep(de/à/en))@issco@jul-95
-6804@PP_Coordination_1-coord(ou)_prep(de/à/en)@PP_Coordination@PP_Wordorder,PP_Complementation@none@test@neutral@@issco@jul-95
+6803@PP_Coordination_1-coord(et)@PP_Coordination@PP_Wordorder,PP_Complementation@none@test@neutral@This subphenomenon tests for all the prepositions except for ``Ã '',``de'' and ``en'' (cf. PP_Coordination_1-coord(et)_prep(de/Ã /en))@issco@jul-95
+6804@PP_Coordination_1-coord(ou)_prep(de/Ã /en)@PP_Coordination@PP_Wordorder,PP_Complementation@none@test@neutral@@issco@jul-95
 6805@PP_Coordination_1-coord(ou)_mixed-prepositions@PP_Coordination@PP_Wordorder,PP_Complementation@none@test@neutral@@issco@jul-95
-6806@PP_Coordination_1-coord(ou)@PP_Coordination@PP_Wordorder,PP_Complementation@none@test@neutral@This subphenomenon tests for all the prepositions except for ``à'',``de'' and ``en'' (cf. PP_Coordination_1-coord(ou)_prep(de/à/en))@issco@jul-95
+6806@PP_Coordination_1-coord(ou)@PP_Coordination@PP_Wordorder,PP_Complementation@none@test@neutral@This subphenomenon tests for all the prepositions except for ``Ã '',``de'' and ``en'' (cf. PP_Coordination_1-coord(ou)_prep(de/Ã /en))@issco@jul-95

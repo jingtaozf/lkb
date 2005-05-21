@@ -6,9 +6,9 @@
 3@@error@agreement clash@@
 4@@error@agreement clash@@
 5@0:1@person@2@Du@personal pronoun as subject of regular weak verb paradigm
-5@1:2@person@2@schl‰fst@
+5@1:2@person@2@schl√§fst@
 5@0:1@number@sg@Du@
-5@1:2@number@sg@schl‰fst@
+5@1:2@number@sg@schl√§fst@
 6@@error@agreement clash@@
 7@0:1@person@2@Du@personal pronoun as subject of regular weak verb paradigm
 7@1:2@person@2@schlafe@imperative form
@@ -17,16 +17,16 @@
 8@@error@agreement clash@@
 9@@error@agreement clash@@
 10@0:1@person@3@Er@personal pronoun as subject of regular weak verb paradigm,  no differences in verb form with subject "es"
-10@1:2@person@3@schl‰ft@
+10@1:2@person@3@schl√§ft@
 10@0:1@number@sg@Er@
-10@1:2@number@sg@schl‰ft@
+10@1:2@number@sg@schl√§ft@
 11@@error@agreement clash@@
 12@@error@agreement clash@@
 13@@error@agreement clash@@
 14@0:1@person@3@Sie@personal pronoun as subject of regular weak verb paradigm
-14@1:2@person@3@schl‰ft@
+14@1:2@person@3@schl√§ft@
 14@0:1@number@sg@Sie@
-14@1:2@number@sg@schl‰ft@
+14@1:2@number@sg@schl√§ft@
 15@@error@agreement clash@@
 16@@error@agreement clash@@
 17@0:1@person@3@Sie@personal pronoun as subject of regular weak verb paradigm; same lexical form for sg and pl
@@ -41,18 +41,18 @@
 20@@error@agreement clash@@
 21@@error@agreement clash@@
 22@0:1@person@2@Ihr@personal pronoun as subject of regular weak verb paradigm
-22@1:2@person@2@schl‰ft@
+22@1:2@person@2@schl√§ft@
 22@0:1@number@pl@Ihr@
-22@1:2@number@pl@schl‰ft@
+22@1:2@number@pl@schl√§ft@
 23@@error@agreement clash@@
 24@@error@agreement clash@@
 25@@error@agreement clash@@
 26@0:1@person@3@Es@personal pronoun as subject of regular weak verb paradigm
-26@1:2@person@3@schl‰ft@
+26@1:2@person@3@schl√§ft@
 26@0:1@number@sg@Es@
-26@1:2@number@sg@schl‰ft@
+26@1:2@number@sg@schl√§ft@
 27@0:2@number@sg@Der Manager@simple NP's; 3.person
-27@2:3@number@sg@schl‰ft@
+27@2:3@number@sg@schl√§ft@
 28@0:2@number@pl@Die Manager@simple NP's; 3.person
 28@2:3@number@pl@schlafen@
 29@@error@agreement clash@@
@@ -60,8 +60,8 @@
 31@@error@agreement clash@@
 32@@error@agreement clash@@
 33@0:2@number@sg@Der Manager@copula construction; demands normally number agreement between subj and subj-pred; unmarked word order
-33@2:3@number@sg@ist@Der Manager ist der Pr‰sident.
-33@3:5@number@sg@der Pr‰sident@
+33@2:3@number@sg@ist@Der Manager ist der Pr√§sident.
+33@3:5@number@sg@der Pr√§sident@
 34@@error@agreement clash@@
 35@0:3@number@pl@Peter und Hans@copula construction; demands normally number agreement between subj and subj-pred; unmarked word order; coordinated names
 35@3:4@number@pl@sind@
@@ -93,15 +93,15 @@
 42@@error@agreement clash@@
 43@0:1@person@2@Du@copula construction with personal pronoun; demands normally number agreement between subj and subj-pred; pronoun
 43@1:2@person@2@bist@
-43@2:4@person@3@der Pr‰sident@
+43@2:4@person@3@der Pr√§sident@
 43@0:1@number@sg@Du@
 43@1:2@number@sg@bist@
-43@2:4@number@sg@der Pr‰sident@
+43@2:4@number@sg@der Pr√§sident@
 44@@error@agreement clash@@
 45@3:4@person@2@du@copula construction with personal pronoun; demands normally number agreement between subj and subj-pred; pronoun
 45@2:3@person@2@bist@
-45@0:2@person@3@Der Pr‰sident@
-45@0:2@number@sg@Der Pr‰sident@
+45@0:2@person@3@Der Pr√§sident@
+45@0:2@number@sg@Der Pr√§sident@
 45@2:3@number@sg@bist@
 45@3:4@number@sg@du@
 46@@error@agreement clash@@
@@ -149,47 +149,47 @@
 57@@error@agreement clash@@
 58@0:2@number@sg@Der Gewinner@copula construction; demands normally number agreement between subj and subj-pred
 58@2:3@number@sg@ist@
-58@3:5@number@sg@die Gesch‰ftsleitung@
+58@3:5@number@sg@die Gesch√§ftsleitung@
 59@0:2@number@sg@Der Gewinner@copula construction; demands normally number agreement between subj and subj-pred
 59@2:3@number@sg@ist@
-59@3:5@number@sg@die Gesch‰ftsleitung@
+59@3:5@number@sg@die Gesch√§ftsleitung@
 60@0:2@number@sg@Die Gewinner@copula construction; demands normally number agreement between subj and subj-pred
 60@2:3@number@pl@sind@
-60@3:5@number@sg@die Gesch‰ftsleitung@
+60@3:5@number@sg@die Gesch√§ftsleitung@
 61@@error@agreement clash@@
 62@4:7@number@sg@ein guter Platz@copula construction; demands normally number agreement between subj and subj-pred; adverbials
 62@3:4@number@sg@ist@
 63@8:11@number@sg@ein guter Platz@copula construction; demands normally number agreement between subj and subj-pred; adverbials
 63@7:8@number@sg@ist@
 64@@error@agreement clash@@
-65@8:10@number@pl@gute Pl‰tze@copula construction; demands normally number agreement between subj and subj-pred; adverbials
+65@8:10@number@pl@gute Pl√§tze@copula construction; demands normally number agreement between subj and subj-pred; adverbials
 65@7:8@number@pl@sind@
-66@0:3@number@sg@Eine Handvoll Pr‰sidenten@measure construction
-66@3:4@number@sg@schl‰ft@
-67@0:3@number@sg@Eine Handvoll Pr‰sidenten@measure construction;no number agreement but possible
+66@0:3@number@sg@Eine Handvoll Pr√§sidenten@measure construction
+66@3:4@number@sg@schl√§ft@
+67@0:3@number@sg@Eine Handvoll Pr√§sidenten@measure construction;no number agreement but possible
 67@3:4@number@pl@schlafen@
-68@0:4@number@sg@Die Mehrzahl der Pr‰sidenten@measure construction
-68@4:5@number@sg@schl‰ft@
-69@0:4@number@sg@Die Mehrzahl der Pr‰sidenten@measure construction;no number agreement but possible
+68@0:4@number@sg@Die Mehrzahl der Pr√§sidenten@measure construction
+68@4:5@number@sg@schl√§ft@
+69@0:4@number@sg@Die Mehrzahl der Pr√§sidenten@measure construction;no number agreement but possible
 69@4:5@number@pl@schlafen@
-70@0:3@number@sg@Ein Dutzend Pr‰sidenten@measure construction
-70@3:4@number@sg@schl‰ft@
+70@0:3@number@sg@Ein Dutzend Pr√§sidenten@measure construction
+70@3:4@number@sg@schl√§ft@
 71@@error@agreement clash@@
 72@0:3@number@sg@Ein Kilogramm Zucker@measure construction
-72@3:4@number@sg@gen¸gt@
+72@3:4@number@sg@gen√ºgt@
 73@0:3@subj@3-sg@Ein Kilogramm Zucker@measure construction
-73@3:4@v@3-pl@gen¸gen@no number agreement
+73@3:4@v@3-pl@gen√ºgen@no number agreement
 73@@error@agreement clash@@
 74@0:3@number@sg@Ein Kilogramm Erbsen@measure construction;no number agreement but possible
-74@3:4@number@pl@gen¸gen@
+74@3:4@number@pl@gen√ºgen@
 75@0:3@number@sg@Ein Kilogramm Erbsen@measure construction
-75@3:4@number@sg@gen¸gt@
+75@3:4@number@sg@gen√ºgt@
 76@0:3@number@pl@Zwei Kilogramm Zucker@measure construction
-76@3:4@number@pl@gen¸gen@
+76@3:4@number@pl@gen√ºgen@
 77@0:3@number@pl@Zwei Kilogramm Zucker@measure construction;no grammatical number agreement but possible
-77@3:4@number@sg@gen¸gt@
+77@3:4@number@sg@gen√ºgt@
 78@0:3@number@sg@Eine Handvoll Zucker@measure construction
-78@3:4@number@sg@gen¸gt@
+78@3:4@number@sg@gen√ºgt@
 79@@error@agreement clash@@
 80@0:4@number@pl@Beide , Forschung und Lehre@apposition
 80@4:5@number@pl@sind@
@@ -211,7 +211,7 @@
 90@2:3@number@pl@schlafen@
 91@@error@agreement clash@@
 92@0:2@number@sg@Ein Paar@measure construction
-92@2:3@number@sg@schl‰ft@
+92@2:3@number@sg@schl√§ft@
 93@@error@agreement clash@@
 94@0:1@number@pl@Wenige@indefinite pronouns
 94@1:2@number@pl@schlafen@
@@ -219,15 +219,15 @@
 96@0:1@number@pl@Keine@indefinite pronouns
 96@1:2@number@pl@schlafen@
 97@0:1@number@sg@Keine@indefinite pronouns
-97@1:2@number@sg@schl‰ft@
+97@1:2@number@sg@schl√§ft@
 98@0:1@number@sg@Keiner@indefinite pronouns
-98@1:2@number@sg@schl‰ft@
+98@1:2@number@sg@schl√§ft@
 99@@error@agreement clash@@
 100@0:1@number@sg@Alles@indefinite pronouns
-100@1:2@number@sg@schl‰ft@
+100@1:2@number@sg@schl√§ft@
 101@@error@agreement clash@@
 102@0:1@number@sg@Irgendjemand@indefinite pronouns
-102@1:2@number@sg@schl‰ft@
+102@1:2@number@sg@schl√§ft@
 103@@error@agreement clash@@
 104@0:1@number@sg@Nichts@indefinite pronouns
 104@1:2@number@sg@ist@
@@ -235,9 +235,9 @@
 106@0:1@number@pl@Jene@demonstrative pronoun
 106@1:2@number@pl@schlafen@
 107@0:1@number@sg@Jene@demonstrative pronoun
-107@1:2@number@sg@schl‰ft@
+107@1:2@number@sg@schl√§ft@
 108@0:1@number@sg@Jener@demonstrative pronoun
-108@1:2@number@sg@schl‰ft@
+108@1:2@number@sg@schl√§ft@
 109@@error@agreement clash@@
 110@0:3@number@sg@Keiner der Manager@Complex NP's (with attributive noun in genitive)
 110@1:2@number@sg@der@
@@ -261,7 +261,7 @@
 122@@error@agreement clash@@
 123@@error@agreement clash@@
 124@0:1@subj@sg@Wer@question  pronoun
-124@1:2@number@sg@schl‰ft@
+124@1:2@number@sg@schl√§ft@
 125@@error@agreement clash@@
 126@0:1@number@sg@Was@question pronoun
 126@1:2@number@sg@stimmt@
@@ -278,13 +278,13 @@
 131@3:4@number@pl@schlafen@
 132@@error@agreement clash@@
 133@0:4@person@2@Du und er , ihr@coordinated structure; only pronouns; if the subject is built of several pronouns the verb will be in plural; 1.person has priority to 2.person and 2.person has priority to 3.person;the plural pronouns can be inserted to mark the person
-133@4:5@person@2@schl‰ft@
+133@4:5@person@2@schl√§ft@
 133@0:4@number@pl@Du und er , ihr@
-133@4:5@number@pl@schl‰ft@
+133@4:5@number@pl@schl√§ft@
 134@0:3@person@2@Du und er@coordinated structure; only pronouns; if the subject is built of several pronouns the verb will be in plural; 1.person has priority to 2.person and 2.person has priority to 3.person;the plural pronouns can be inserted to mark the person
-134@3:4@person@3@schl‰ft@grammatical agreement but not so common
+134@3:4@person@3@schl√§ft@grammatical agreement but not so common
 134@0:3@number@pl@Du und er@
-134@3:4@number@sg@schl‰ft@
+134@3:4@number@sg@schl√§ft@
 135@0:3@person@2@Du und er@coordinated structure; only pronouns; if the subject is built of several pronouns the verb will be in plural; 1.person has priority to 2.person and 2.person has priority to 3.person;the plural pronouns can be inserted to mark the person
 135@3:4@person@3@schlafen@no grammatical agreement but common
 135@0:3@number@pl@Du und er@
@@ -320,9 +320,9 @@
 146@3:4@number@pl@schlafen@
 147@@error@agreement clash@@
 148@0:3@person@2@Ihr und er@coordinated structure; only pronouns; if the subject is built of several pronouns the verb will be in plural; 1.person has priority to 2.person and 2.person has priority to 3.person;the plural pronouns can be inserted to mark the person
-148@3:4@person@2@schl‰ft@
+148@3:4@person@2@schl√§ft@
 148@0:3@number@pl@Ihr und er@
-148@3:4@number@pl@schl‰ft@
+148@3:4@number@pl@schl√§ft@
 149@0:3@person@2@Ihr und er@coordinated subject only pronouns; if the subject is built of several pronouns the verb will be in plural; 1.person has priority to 2.person and 2.person has priority to 3.person;the plural pronouns can be inserted to mark the person
 149@3:4@person@3@schlafen@
 149@0:3@number@pl@Ihr und er@
@@ -333,9 +333,9 @@
 150@4:5@number@pl@schlafen@
 151@@error@agreement clash@@
 152@0:4@person@2@Der Manager und du@coordinated structure; pronouns and NP's in 3.person; if the subject is built of several pronouns the verb will be in plural; 1.person has priority to 2.person and 2.person has priority to 3.person;the plural pronouns can be inserted to mark the person
-152@4:5@person@2@schl‰ft@person agreement but not so common without plural pronoun
+152@4:5@person@2@schl√§ft@person agreement but not so common without plural pronoun
 152@0:4@number@pl@Der Manager und du@
-152@4:5@number@pl@schl‰ft@
+152@4:5@number@pl@schl√§ft@
 153@@error@agreement clash@@
 154@0:4@person@2@Der Manager und du@coordinated structure; pronouns and NP's in 3.person; if the subject is built of several pronouns the verb will be in plural; 1.person has priority to 2.person and 2.person has priority to 3.person;the plural pronouns can be inserted to mark the person
 154@4:5@person@3@schlafen@no person agreement but possible
@@ -344,22 +344,22 @@
 155@0:5@number@pl@Der Manager und der Berater@coordinated structure;  NP's in 3.person;  plural concept
 155@5:6@number@pl@schlafen@
 156@@error@agreement clash@@
-157@0:7@number@pl@Der Manager , der Berater und der Pr‰sident@coordinated structure;  NP's in 3.person;  plural concept
+157@0:7@number@pl@Der Manager , der Berater und der Pr√§sident@coordinated structure;  NP's in 3.person;  plural concept
 157@7:8@number@pl@schlafen@
 158@0:5@number@pl@Der Bedarf und das Angebot@coordinated structure;  NP's in 3.person;  singular possible if reference to one subject element
 158@5:6@number@sg@steigt@
 159@0:5@number@pl@Der Bedarf und das Angebot@coordinated structure;  NP's in 3.person;  singular possible if reference to one subject element
 159@5:6@number@pl@steigen@
 160@0:4@number@pl@Der Berater und jedermann@coordinated structure;  NP's in 3.person;  singular possible with inclusive expression
-160@4:5@number@sg@schl‰ft@
+160@4:5@number@sg@schl√§ft@
 161@0:4@number@pl@Der Berater und jedermann@coordinated structure;  NP's in 3.person;  singular possible with inclusive expression
 161@4:5@number@pl@schlafen@
-162@0:4@number@pl@Die Gesch‰ftsleitung und damit@coordinated structure;  NP's in 3.person;  singular possible with inclusive expression
+162@0:4@number@pl@Die Gesch√§ftsleitung und damit@coordinated structure;  NP's in 3.person;  singular possible with inclusive expression
 162@4:5@number@pl@auch@
-163@0:4@number@pl@Die Gesch‰ftsleitung und damit@coordinated structure;  NP's in 3.person;  singular possible with inclusive expression
+163@0:4@number@pl@Die Gesch√§ftsleitung und damit@coordinated structure;  NP's in 3.person;  singular possible with inclusive expression
 163@4:5@number@sg@auch@
 164@0:3@number@pl@Jung und alt@coordinated structure;  NP's in 3.person; single concept (synesis); singular possible
-164@3:4@number@sg@schl‰ft@
+164@3:4@number@sg@schl√§ft@
 165@0:3@number@pl@Jung und alt@coordinated structure;  NP's in 3.person; single concept (synesis); singular possible
 165@3:4@number@pl@schlafen@
 166@0:7@number@pl@Der alte Manager und der junge Manager@coordinated structure;  NP's in 3.person;
@@ -367,11 +367,11 @@
 167@0:6@number@pl@Der alte und der junge Manager@coordinated structure;  NP's in 3.person;  elipses in NP's
 167@6:7@number@pl@schlafen@
 168@0:6@number@pl@Der alte und der junge Manager@coordinated structure;  NP's in 3.person;  elipses in NP's; singular possible
-168@6:7@number@sg@schl‰ft@
+168@6:7@number@sg@schl√§ft@
 169@0:6@number@pl@Der alte Manager und der junge@coordinated structure;  NP's in 3.person;  elipses in NP's; singular possible
 169@6:7@number@pl@schlafen@
 170@0:6@number@pl@Der alte Manager und der junge@coordinated structure;  NP's in 3.person;  elipses in NP's; singular possible
-170@6:7@number@sg@schl‰ft@
+170@6:7@number@sg@schl√§ft@
 171@0:8@number@pl@Die theoretische und die praktische Lehre sind wichtig@coordinated structure;  NP's in 3.person;  elipses in NP's (only first noun deleted); semantic unit; grammatical agreement
 171@8:9@number@pl@Die theoretische und die praktische Lehre sind wichtig@
 172@0:8@number@pl@Die theoretische und die praktische Lehre ist wichtig@coordinated structure;  NP's in 3.person;  elipses in NP's (only first noun deleted); semantic unit; semantic agreement
@@ -385,11 +385,11 @@
 176@0:6@number@sg@Die Vor- und Nachbereitung des Tests@coordinated structure;  nouns in 3.person; eliptic compound; NP preferably analyzed as singular
 176@6:7@number@pl@sind@
 177@0:5@number@pl@Jeder Manager und jeder Berater@coordinated structure;  NP's in 3.person with indefinite determiners; preferably semantic agreement
-177@5:6@number@sg@schl‰ft@
+177@5:6@number@sg@schl√§ft@
 178@0:5@number@pl@Jeder Manager und jeder Berater@coordinated structure;  NP's in 3.person with indefinite determiners; preferably semantic agreement
 178@5:6@number@pl@schlafen@
 179@0:3@number@pl@Jeder und jede@coordinated structure;  NP's built of  indefinite pronouns; preferably semantic agreement
-179@3:4@number@sg@schl‰ft@
+179@3:4@number@sg@schl√§ft@
 180@0:3@number@pl@Jeder und jede@coordinated structure;  NP's built of  indefinite pronouns; preferably semantic agreement
 180@3:4@number@pl@schlafen@
 181@0:3@number@pl@Ich oder du@disjunctive structure; only personal pronouns; 1.person has priority to 2. and 2.person has priority to 3.; verb regularly in plural or number of the closest subject element
@@ -398,9 +398,9 @@
 181@3:4@person@1@schlafen@
 182@@error@agreement clash@@
 183@0:3@person@1@Ich oder du@disjunctive structure; only personal pronouns; 1.person has priority to 2. and 2.person has priority to 3.; verb regularly in plural or number of the closest subject element
-183@3:4@person@2@schl‰fst@
+183@3:4@person@2@schl√§fst@
 183@0:3@number@pl@Ich oder du@
-183@3:4@number@sg@schl‰fst@
+183@3:4@number@sg@schl√§fst@
 184@@error@agreement clash@@
 185@0:3@person@1@Du oder ich@disjunctive structure; only personal pronouns; 1.person has priority to 2. and 2.person has priority to 3.; verb regularly in plural or number of the closest subject element
 185@3:4@person@1@schlafe@
@@ -411,41 +411,41 @@
 186@0:3@number@pl@Ich oder er@
 186@3:4@number@pl@schlafen@
 187@0:3@person@1@Ich oder er@disjunctive structure; only personal pronouns; 1.person has priority to 2. and 2.person has priority to 3.; verb regularly in plural or number of the closest subject element
-187@3:4@person@3@schl‰ft@
+187@3:4@person@3@schl√§ft@
 187@0:3@number@pl@Ich oder er@
-187@3:4@number@sg@schl‰ft@
+187@3:4@number@sg@schl√§ft@
 188@0:3@person@1@Er oder ich@disjunctive structure; only personal pronouns; 1.person has priority to 2. and 2.person has priority to 3.; verb regularly in plural or number of the closest subject element
 188@3:4@person@1@schlafe@
 188@0:3@number@pl@Er oder ich@
 188@3:4@number@pl@schlafe@
 189@0:3@person@2@Du oder er@disjunctive structure; only personal pronouns; 1.person has priority to 2. and 2.person has priority to 3.; verb regularly in plural or number of the closest subject element
-189@3:4@person@3@schl‰ft@
+189@3:4@person@3@schl√§ft@
 189@0:3@number@pl@Du oder er@
-189@3:4@number@sg@schl‰ft@
+189@3:4@number@sg@schl√§ft@
 190@0:3@person@2@Du oder er@disjunctive structure; only personal pronouns; 1.person has priority to 2. and 2.person has priority to 3.; verb regularly in plural or number of the closest subject element
 190@3:4@person@3@schlafen@
 190@0:3@number@pl@Du oder er@
 190@3:4@number@pl@schlafen@
 191@0:3@person@2@Er oder du@disjunctive structure; only personal pronouns; 1.person has priority to 2. and 2.person has priority to 3.; verb regularly in plural or number of the closest subject element
-191@3:4@person@2@schl‰fst@
+191@3:4@person@2@schl√§fst@
 191@0:3@number@pl@Er oder du@
-191@3:4@number@sg@schl‰fst@
+191@3:4@number@sg@schl√§fst@
 192@0:3@person@3@Sie oder er@disjunctive structure; only personal pronouns; 1.person has priority to 2. and 2.person has priority to 3.; verb regularly in plural or number of the closest subject element
 192@3:4@person@3@schlafen@
 192@0:3@number@pl@Sie oder er@
 192@3:4@number@pl@schlafen@
 193@0:3@person@3@Sie oder er@disjunctive structure; only personal pronouns; 1.person has priority to 2. and 2.person has priority to 3.; verb regularly in plural or number of the closest subject element
-193@3:4@person@3@schl‰ft@
+193@3:4@person@3@schl√§ft@
 193@0:3@number@pl@Sie oder er@
-193@3:4@number@sg@schl‰ft@
+193@3:4@number@sg@schl√§ft@
 194@0:3@person@1@Wir oder ihr@disjunctive structure; only personal pronouns; 1.person has priority to 2. and 2.person has priority to 3.; verb regularly in plural or number of the closest subject element
 194@3:4@person@1@schlafen@
 194@0:3@number@pl@Wir oder ihr@
 194@3:4@number@pl@schlafen@
 195@0:3@person@1@Wir oder ihr@disjunctive structure; only personal pronouns; 1.person has priority to 2. and 2.person has priority to 3.; verb regularly in plural or number of the closest subject element
-195@3:4@person@2@schl‰ft@
+195@3:4@person@2@schl√§ft@
 195@0:3@number@pl@Wir oder ihr@
-195@3:4@number@pl@schl‰ft@
+195@3:4@number@pl@schl√§ft@
 196@0:3@person@1@Ihr oder wir@disjunctive structure; only personal pronouns; 1.person has priority to 2. and 2.person has priority to 3.; verb regularly in plural or number of the closest subject element
 196@3:4@person@1@schlafen@
 196@0:3@number@pl@Ihr oder wir@
@@ -455,9 +455,9 @@
 197@0:3@number@pl@Ich oder ihr@
 197@3:4@number@pl@schlafen@
 198@0:3@person@1@Ich oder ihr@disjunctive structure; only personal pronouns; 1.person has priority to 2. and 2.person has priority to 3.; verb regularly in plural or number of the closest subject element
-198@3:4@person@2@schl‰ft@
+198@3:4@person@2@schl√§ft@
 198@0:3@number@pl@Ich oder ihr@
-198@3:4@number@pl@schl‰ft@
+198@3:4@number@pl@schl√§ft@
 199@0:3@person@1@Ihr oder ich@disjunctive structure; only personal pronouns; 1.person has priority to 2. and 2.person has priority to 3.; verb regularly in plural or number of the closest subject element
 199@3:4@person@1@schlafen@
 199@0:3@number@pl@Ihr oder ich@
@@ -471,9 +471,9 @@
 201@0:3@number@pl@Du oder wir@
 201@3:4@number@pl@schlafen@
 202@0:3@person@1@Wir oder du@disjunctive structure; only personal pronouns; 1.person has priority to 2. and 2.person has priority to 3.; verb regularly in plural or number of the closest subject element
-202@3:4@person@2@schl‰fst@
+202@3:4@person@2@schl√§fst@
 202@0:3@number@pl@Wir oder du@
-202@3:4@number@sg@schl‰fst@
+202@3:4@number@sg@schl√§fst@
 203@0:3@person@1@Wir oder du@disjunctive structure; only personal pronouns; 1.person has priority to 2. and 2.person has priority to 3.; verb regularly in plural or number of the closest subject element
 203@3:4@person@1@schlafen@
 203@0:3@number@pl@Wir oder du@
@@ -483,44 +483,44 @@
 204@0:3@number@pl@Wir oder er@
 204@3:4@number@pl@schlafen@
 205@0:3@person@1@Wir oder er@disjunctive structure; only personal pronouns; 1.person has priority to 2. and 2.person has priority to 3.; verb regularly in plural or number of the closest subject element
-205@3:4@person@3@schl‰ft@
+205@3:4@person@3@schl√§ft@
 205@0:3@number@pl@Wir oder er@
-205@3:4@number@sg@schl‰ft@
+205@3:4@number@sg@schl√§ft@
 206@0:3@person@1@Er oder wir@disjunctive structure; only personal pronouns; 1.person has priority to 2. and 2.person has priority to 3.; verb regularly in plural or number of the closest subject element; verb could also be 3.person plural
 206@3:4@person@1@schlafen@
 206@0:3@number@pl@Er oder wir@
 206@3:4@number@pl@schlafen@
 207@0:3@person@2@Ihr oder er@disjunctive structure; only personal pronouns; 1.person has priority to 2. and 2.person has priority to 3.; verb regularly in plural or number of the closest subject element
-207@3:4@person@3@schl‰ft@
+207@3:4@person@3@schl√§ft@
 207@0:3@number@pl@Ihr oder er@
-207@3:4@number@sg@schl‰ft@
+207@3:4@number@sg@schl√§ft@
 208@0:3@person@2@Ihr oder er@disjunctive structure; only personal pronouns; 1.person has priority to 2. and 2.person has priority to 3.; verb regularly in plural or number of the closest subject element
 208@3:4@person@3@schlafen@
 208@0:3@number@pl@Ihr oder er@
 208@3:4@number@pl@schlafen@
 209@0:3@person@2@Er oder ihr@disjunctive structure; only personal pronouns; 1.person has priority to 2. and 2.person has priority to 3.; verb regularly in plural or number of the closest subject element
-209@3:4@person@3@schl‰ft@
+209@3:4@person@3@schl√§ft@
 209@0:3@number@pl@Er oder ihr@
-209@3:4@number@sg@schl‰ft@
-210@0:5@number@pl@Der Manager oder der Pr‰sident@disjunctive structure; NP's in 3.person; verb regularly in plural or number of the closest subject element
+209@3:4@number@sg@schl√§ft@
+210@0:5@number@pl@Der Manager oder der Pr√§sident@disjunctive structure; NP's in 3.person; verb regularly in plural or number of the closest subject element
 210@5:6@number@pl@schlafen@
-211@0:5@number@pl@Der Manager oder der Pr‰sident@disjunctive structure; NP's in 3.person; verb regularly in plural or number of the closest subject element
-211@5:6@number@sg@schl‰ft@
+211@0:5@number@pl@Der Manager oder der Pr√§sident@disjunctive structure; NP's in 3.person; verb regularly in plural or number of the closest subject element
+211@5:6@number@sg@schl√§ft@
 212@0:4@number@pl@Alle oder der Manager@disjunctive structure; Pronouns and NP's in 3.person; verb regularly in plural or number of the closest subject element
-212@4:5@number@sg@schl‰ft@
+212@4:5@number@sg@schl√§ft@
 213@0:4@number@pl@Alle oder der Manager@disjunctive structure; Pronouns and NP's in 3.person; verb regularly in plural or number of the closest subject element
 213@4:5@number@pl@schlafen@
 214@0:6@number@sg@Nicht der Manager , sondern der Berater@connecting elements; "nicht nur, sondern auch"/ "nicht, sondern"; eliptic constructions; singular form; each single subject element important
-214@6:7@number@sg@schl‰ft@
+214@6:7@number@sg@schl√§ft@
 215@@error@agreement clash@@
 216@0:6@number@pl@Weder der Manager noch der Berater@connecting elements; "weder-noch"/"sowie"; eliptic construction; plural form more common if subject preceeds finite verb
 216@6:7@number@pl@schlafen@
 217@0:6@number@pl@Weder der Manager noch der Berater@connecting elements; "weder-noch"/"sowie"; eliptic construction; plural form more common if subject preceeds finite verb
-217@6:7@number@sg@schl‰ft@
+217@6:7@number@sg@schl√§ft@
 218@0:5@number@pl@Der Manager sowie der Berater@connecting elements; "weder-noch"/"sowie"; eliptic construction; plural form more common if subject preceeds finite verb
 218@5:6@number@pl@schlafen@
 219@0:5@number@pl@Der Manager sowie der Berater@connecting elements; "weder-noch"/"sowie"; eliptic construction; plural form more common if subject preceeds finite verb
-219@5:6@number@sg@schl‰ft@
+219@5:6@number@sg@schl√§ft@
 220@3:8@number@pl@der Manager sowie der Berater@connecting elements; "weder-noch"/"sowie"; eliptic construction; singular form more common if subject follows finite verb
 220@2:3@number@sg@kennt@
 221@3:8@number@pl@der Manager sowie der Berater@connecting elements; "weder-noch"/"sowie"; eliptic construction; singular form more common if subject follows finite verb
@@ -528,84 +528,84 @@
 222@0:7@number@pl@Sowohl der Manager als auch der Berater@connecting elements; "sowohl als/wie (auch)" eliptic construction; plural form more common; singular possible
 222@7:8@number@pl@schlafen@
 223@0:7@number@pl@Sowohl der Manager als auch der Berater@connecting elements; "sowohl als/wie (auch)" eliptic construction; plural form more common; singular possible
-223@7:8@number@sg@schl‰ft@
-224@0:5@number@sg@Ich , die ich m¸de bin@personal pronoun with relative clause (inserted personal pronoun); if relative pronoun refers to 1. or 2. person in a relative clause which directly follows the reference object the personal pronoun will be inserted into the relative clause; if the personal pronoun is deleted the relative pronoun and the verb are in 3.person (rare; tends to be ungrammatical)
+223@7:8@number@sg@schl√§ft@
+224@0:5@number@sg@Ich , die ich m√ºde bin@personal pronoun with relative clause (inserted personal pronoun); if relative pronoun refers to 1. or 2. person in a relative clause which directly follows the reference object the personal pronoun will be inserted into the relative clause; if the personal pronoun is deleted the relative pronoun and the verb are in 3.person (rare; tends to be ungrammatical)
 224@5:6@number@sg@schlafe@
-224@0:5@person@1@Ich , die ich m¸de bin@
+224@0:5@person@1@Ich , die ich m√ºde bin@
 224@5:6@person@1@schlafe@
-225@0:5@number@sg@Ich , die m¸de ist , schl‰ft@personal pronoun with relative clause; if relative pronoun refers to 1. or 2. person in a relative clause which directly follows the reference object the personal pronoun will be inserted into the relative clause; if the personal pronoun is deleted the relative pronoun and the verb are in 3.person (rare; tends to be ungrammatical)
-225@5:6@number@sg@Ich , die m¸de ist , schl‰ft@
-225@0:5@person@1@Ich , die m¸de ist , schl‰ft@
-225@5:6@person@3@Ich , die m¸de ist , schl‰ft@
+225@0:5@number@sg@Ich , die m√ºde ist , schl√§ft@personal pronoun with relative clause; if relative pronoun refers to 1. or 2. person in a relative clause which directly follows the reference object the personal pronoun will be inserted into the relative clause; if the personal pronoun is deleted the relative pronoun and the verb are in 3.person (rare; tends to be ungrammatical)
+225@5:6@number@sg@Ich , die m√ºde ist , schl√§ft@
+225@0:5@person@1@Ich , die m√ºde ist , schl√§ft@
+225@5:6@person@3@Ich , die m√ºde ist , schl√§ft@
 226@@error@agreement clash@@if personal pronoun inserted into relative clause the personal pronoun and the verb must agree in person
 227@@error@agreement clash@@if personal pronoun not inserted into relative clause the verb must be in 3.person
-228@0:5@person@2@Du , der du m¸de bist@personal pronoun with relative clause; if relative pronoun refers to 1. or 2. person in a relative clause which directly follows the reference object the personal pronoun will be inserted into the relative clause;if the personal pronoun is deleted the relative pronoun and the verb are in 3.person (rare; tends to be ungrammatical)
-228@5:6@person@2@schl‰fst@
-228@0:5@number@sg@Du , der du m¸de bist@
-228@5:6@number@sg@schl‰fst@
-229@0:5@person@2@Du , der m¸de ist , schl‰ft@personal pronoun with relative clause; if relative pronoun refers to 1. or 2. person in a relative clause which directly follows the reference object the personal pronoun will be inserted into the relative clause;if the personal pronoun is deleted the relative pronoun and the verb are in 3.person (rare; tends to be ungrammatical)
-229@5:6@person@3@Du , der m¸de ist , schl‰ft@
-229@0:5@number@sg@Du , der m¸de ist , schl‰ft@
-229@5:6@number@sg@Du , der m¸de ist , schl‰ft@
-230@0:5@person@1@Wir , die wir m¸de sind@personal pronoun with relative clause; if relative pronoun refers to 1. or 2. person in a relative clause which directly follows the reference object the personal pronoun will be inserted into the relative clause;if the personal pronoun is deleted the relative pronoun and the verb are in 3.person (rare; tends to be ungrammatical); verbform could also be 3.person plural
+228@0:5@person@2@Du , der du m√ºde bist@personal pronoun with relative clause; if relative pronoun refers to 1. or 2. person in a relative clause which directly follows the reference object the personal pronoun will be inserted into the relative clause;if the personal pronoun is deleted the relative pronoun and the verb are in 3.person (rare; tends to be ungrammatical)
+228@5:6@person@2@schl√§fst@
+228@0:5@number@sg@Du , der du m√ºde bist@
+228@5:6@number@sg@schl√§fst@
+229@0:5@person@2@Du , der m√ºde ist , schl√§ft@personal pronoun with relative clause; if relative pronoun refers to 1. or 2. person in a relative clause which directly follows the reference object the personal pronoun will be inserted into the relative clause;if the personal pronoun is deleted the relative pronoun and the verb are in 3.person (rare; tends to be ungrammatical)
+229@5:6@person@3@Du , der m√ºde ist , schl√§ft@
+229@0:5@number@sg@Du , der m√ºde ist , schl√§ft@
+229@5:6@number@sg@Du , der m√ºde ist , schl√§ft@
+230@0:5@person@1@Wir , die wir m√ºde sind@personal pronoun with relative clause; if relative pronoun refers to 1. or 2. person in a relative clause which directly follows the reference object the personal pronoun will be inserted into the relative clause;if the personal pronoun is deleted the relative pronoun and the verb are in 3.person (rare; tends to be ungrammatical); verbform could also be 3.person plural
 230@5:6@person@1@schlafen@
-230@0:5@number@pl@Wir , die wir m¸de sind@
+230@0:5@number@pl@Wir , die wir m√ºde sind@
 230@5:6@number@pl@schlafen@
-231@0:4@person@1@Wir , die m¸de sind@personal pronoun with relative clause; if relative pronoun refers to 1. or 2. person in a relative clause which directly follows the reference object the personal pronoun will be inserted into the relative clause;if the personal pronoun is deleted the relative pronoun and the verb are in 3.person (rare; tends to be ungrammatical); verbform could also be 3.person plural
+231@0:4@person@1@Wir , die m√ºde sind@personal pronoun with relative clause; if relative pronoun refers to 1. or 2. person in a relative clause which directly follows the reference object the personal pronoun will be inserted into the relative clause;if the personal pronoun is deleted the relative pronoun and the verb are in 3.person (rare; tends to be ungrammatical); verbform could also be 3.person plural
 231@4:5@person@1@schlafen@
-231@0:5@number@pl@Wir , die m¸de sind , schlafen@
+231@0:5@number@pl@Wir , die m√ºde sind , schlafen@
 231@4:5@number@pl@schlafen@
-232@0:5@person@2@Ihr , die ihr m¸de seid@personal pronoun with relative clause; if relative pronoun refers to 1. or 2. person in a relative clause which directly follows the reference object the personal pronoun will be inserted into the relative clause;if the personal pronoun is deleted the relative pronoun and the verb are in 3.person (rare; tends to be ungrammatical)
-232@5:6@person@2@schl‰ft@
-232@0:5@number@pl@Ihr , die ihr m¸de seid@
-232@5:6@number@pl@schl‰ft@
-233@0:5@person@2@Ihr , die m¸de sind , schlafen@personal pronoun with relative clause; if relative pronoun refers to 1. or 2. person in a relative clause which directly follows the reference object the personal pronoun will be inserted into the relative clause;if the personal pronoun is deleted the relative pronoun and the verb are in 3.person (rare; tends to be ungrammatical)
-233@5:6@person@3@Ihr , die m¸de sind , schlafen@
-233@0:5@number@pl@Ihr , die m¸de sind , schlafen@
-233@5:6@number@pl@Ihr , die m¸de sind , schlafen@
-234@0:5@person@3@Er , der er m¸de ist@personal pronoun with relative clause; if relative pronoun refers to 1. or 2. person in a relative clause which directly follows the reference object the personal pronoun will be inserted into the relative clause;if the personal pronoun is deleted the relative pronoun and the verb are in 3.person (rare; tends to be ungrammatical)
-234@5:6@person@3@schl‰ft@
-234@0:5@number@sg@Er , der er m¸de ist@
-234@5:6@number@sg@schl‰ft@
-235@0:4@person@3@Er , der m¸de ist@personal pronoun with relative clause; if relative pronoun refers to 1. or 2. person in a relative clause which directly follows the reference object the personal pronoun will be inserted into the relative clause;if the personal pronoun is deleted the relative pronoun and the verb are in 3.person (rare; tends to be ungrammatical)
-235@4:5@person@3@schl‰ft@
-235@0:5@number@sg@Er , der m¸de ist , schl‰ft@
-235@4:5@number@sg@schl‰ft@
+232@0:5@person@2@Ihr , die ihr m√ºde seid@personal pronoun with relative clause; if relative pronoun refers to 1. or 2. person in a relative clause which directly follows the reference object the personal pronoun will be inserted into the relative clause;if the personal pronoun is deleted the relative pronoun and the verb are in 3.person (rare; tends to be ungrammatical)
+232@5:6@person@2@schl√§ft@
+232@0:5@number@pl@Ihr , die ihr m√ºde seid@
+232@5:6@number@pl@schl√§ft@
+233@0:5@person@2@Ihr , die m√ºde sind , schlafen@personal pronoun with relative clause; if relative pronoun refers to 1. or 2. person in a relative clause which directly follows the reference object the personal pronoun will be inserted into the relative clause;if the personal pronoun is deleted the relative pronoun and the verb are in 3.person (rare; tends to be ungrammatical)
+233@5:6@person@3@Ihr , die m√ºde sind , schlafen@
+233@0:5@number@pl@Ihr , die m√ºde sind , schlafen@
+233@5:6@number@pl@Ihr , die m√ºde sind , schlafen@
+234@0:5@person@3@Er , der er m√ºde ist@personal pronoun with relative clause; if relative pronoun refers to 1. or 2. person in a relative clause which directly follows the reference object the personal pronoun will be inserted into the relative clause;if the personal pronoun is deleted the relative pronoun and the verb are in 3.person (rare; tends to be ungrammatical)
+234@5:6@person@3@schl√§ft@
+234@0:5@number@sg@Er , der er m√ºde ist@
+234@5:6@number@sg@schl√§ft@
+235@0:4@person@3@Er , der m√ºde ist@personal pronoun with relative clause; if relative pronoun refers to 1. or 2. person in a relative clause which directly follows the reference object the personal pronoun will be inserted into the relative clause;if the personal pronoun is deleted the relative pronoun and the verb are in 3.person (rare; tends to be ungrammatical)
+235@4:5@person@3@schl√§ft@
+235@0:5@number@sg@Er , der m√ºde ist , schl√§ft@
+235@4:5@number@sg@schl√§ft@
 236@0:4@number@sg@Wer den Computer hat@free relative clauses;  verb must be singular
-236@4:5@number@sg@schl‰ft@
+236@4:5@number@sg@schl√§ft@
 237@0:4@number@sg@Was den Manager interessiert@free relative clauses; verb must be singular
 237@4:5@number@sg@funktioniert@
 238@0:4@number@sg@Was der Manager tut@free relative clauses;  verb must be singular
 238@4:5@number@sg@funktioniert@
 239@@error@agreement clash@@finite verb of main clause must be 3.person singular
 240@0:4@number@sg@Wen der Manager einstellt@free relative clauses;  verb must be singular
-240@4:5@number@sg@schl‰ft@
-241@0:4@number@sg@Wem der Test gef‰llt@free relative clauses;  verb must be singular
-241@4:5@number@sg@schl‰ft@
+240@4:5@number@sg@schl√§ft@
+241@0:4@number@sg@Wem der Test gef√§llt@free relative clauses;  verb must be singular
+241@4:5@number@sg@schl√§ft@
 242@0:4@number@sg@Was gut ist , ist@free relative clauses;  verb must be singular
 242@4:5@number@sg@der@
 243@3:4@number@pl@sind@free relative clauses;  verb must be singular
 243@4:6@number@pl@die Computer@
 244@0:4@number@sg@Wie der Test funktioniert@free relative clauses;  verb must be singular
 244@4:5@number@sg@interessiert@
-245@0:4@number@sg@Wo der Berater schl‰ft@free relative clauses;  verb must be singular
+245@0:4@number@sg@Wo der Berater schl√§ft@free relative clauses;  verb must be singular
 245@4:5@number@sg@interessiert@
-246@0:4@number@sg@Wann der Berater schl‰ft@free relative clauses;  verb must be singular
+246@0:4@number@sg@Wann der Berater schl√§ft@free relative clauses;  verb must be singular
 246@4:5@number@sg@interessiert@
 247@0:7@number@sg@Einer der Manager , der einen Computer hat@indefinite pronoun, genitive NP and restrictive relative clause; "einer" doesn't show the difference between restrictive and non-restrictive
-247@7:8@number@sg@schl‰ft@
+247@7:8@number@sg@schl√§ft@
 248@0:7@number@sg@Einer der Manager , die einen Computer haben@indefinite pronoun, genitive NP and restrictive relative clause; "einer" doesn't show the difference between restrictive and non-restrictive
-248@7:8@number@sg@schl‰ft@
+248@7:8@number@sg@schl√§ft@
 249@0:7@number@sg@Derjenige der Manager , der einen Computer hat@indefinite pronoun, genitive NP with demonstrative determiner and restrictive relative clause; refers to nominative
-249@7:8@number@sg@schl‰ft@
+249@7:8@number@sg@schl√§ft@
 250@@error@agreement clash@@
 251@0:7@number@sg@Einer dieser Manager , die einen Computer haben@indefinite pronoun, genitive NP with demonstrative determiner with non-restrictive relative clause (refers to genitive)
 252@@error@agreement clash@@
 253@0:2@number@sg@Zu schlafen@Subject Infinitive; verb always in singular
-253@2:3@number@sg@gef‰llt@
+253@2:3@number@sg@gef√§llt@
 254@@error@agreement clash@@verb must be in singular
 255@0:5@number@sg@Zu schlafen und zu testen@Subject Infinitive; two coordinated infinitives; verb always in singular
-255@5:6@number@sg@gef‰llt@
+255@5:6@number@sg@gef√§llt@
 256@0:1@number@sg@Es@Passive; subjectless passives with "es" as grammatical subject
 256@1:2@number@sg@wird@
 257@@error@agreement clash@@verb must be in singular
@@ -616,114 +616,114 @@
 260@2:4@number@sg@der Test@
 261@@error@agreement clash@@
 262@0:1@number@sg@Es@Correlate constructions with "es"
-262@1:2@number@sg@gef‰llt@
+262@1:2@number@sg@gef√§llt@
 263@@error@agreement clash@@
-264@0:4@number@sg@Daﬂ der Manager kommt@Subject clauses ("daﬂ"); verb must be singular
+264@0:4@number@sg@Da√ü der Manager kommt@Subject clauses ("da√ü"); verb must be singular
 264@4:5@number@sg@stimmt@
 265@@error@agreement clash@@verb must be in singular
 266@0:4@number@sg@Ob der Manager kommt@Subject clauses ("ob"); verb must be singular
 266@4:5@number@sg@stimmt@
-267@0:4@number@sg@Daﬂ der Manager kommt@Subject clauses ("daﬂ"); two coordinated clauses; verb must be singular
+267@0:4@number@sg@Da√ü der Manager kommt@Subject clauses ("da√ü"); two coordinated clauses; verb must be singular
 267@4:5@number@sg@und@
 268@2:3@number@sg@friert@Impersonal Construction; no subject; verb must be in singular
 269@2:3@number@sg@friert@Impersonal Construction; no subject; verb must be in singular
 270@@error@agreement clash@@verb must be in singular
-271@0:2@number@pl@Die Pr‰sidenten@no longer an impersonal construction
+271@0:2@number@pl@Die Pr√§sidenten@no longer an impersonal construction
 271@2:3@number@pl@frieren@
 272@0:1@number@sg@Der@demonstrative pronoun
-272@1:2@number@sg@schl‰ft@
+272@1:2@number@sg@schl√§ft@
 273@0:1@number@sg@Die@demonstrative pronoun
-273@1:2@number@sg@schl‰ft@
+273@1:2@number@sg@schl√§ft@
 274@0:1@number@sg@Das@demonstrative pronoun
-274@1:2@number@sg@schl‰ft@
+274@1:2@number@sg@schl√§ft@
 275@0:1@number@sg@Dieser@demonstrative pronoun
-275@1:2@number@sg@schl‰ft@
+275@1:2@number@sg@schl√§ft@
 276@0:1@number@sg@Diese@demonstrative pronoun
-276@1:2@number@sg@schl‰ft@
+276@1:2@number@sg@schl√§ft@
 277@0:1@number@pl@Diese@demonstrative pronoun
 277@1:2@number@pl@schlafen@
 278@0:1@number@sg@Dieses@demonstrative pronoun
-278@1:2@number@sg@schl‰ft@
+278@1:2@number@sg@schl√§ft@
 279@0:1@number@pl@Diejenigen@demonstrative pronoun
 279@1:2@number@pl@schlafen@
 280@0:1@number@pl@Diesselben@demonstrative pronoun
 280@1:2@number@pl@schlafen@
 281@0:1@number@sg@Jenes@demonstrative pronoun
-281@1:2@number@sg@schl‰ft@
+281@1:2@number@sg@schl√§ft@
 282@0:1@number@sg@Derjenige@demonstrative pronoun
-282@1:2@number@sg@schl‰ft@
+282@1:2@number@sg@schl√§ft@
 283@0:1@number@sg@Diejenige@demonstrative pronoun
-283@1:2@number@sg@schl‰ft@
+283@1:2@number@sg@schl√§ft@
 284@0:1@number@sg@Dasjenige@demonstrative pronoun
-284@1:2@number@sg@schl‰ft@
+284@1:2@number@sg@schl√§ft@
 285@0:1@number@sg@Dieselbe@demonstrative pronoun
-285@1:2@number@sg@schl‰ft@
+285@1:2@number@sg@schl√§ft@
 286@0:1@number@sg@Dasselbe@demonstrative pronoun
-286@1:2@number@sg@schl‰ft@
+286@1:2@number@sg@schl√§ft@
 287@0:1@number@pl@Solche@demonstrative pronoun
 287@1:2@number@pl@schlafen@
 288@0:1@number@sg@Meiner@possessive pronoun
-288@1:2@number@sg@schl‰ft@
+288@1:2@number@sg@schl√§ft@
 289@0:1@number@sg@Meine@possessive pronoun
-289@1:2@number@sg@schl‰ft@
+289@1:2@number@sg@schl√§ft@
 290@0:1@number@pl@Meine@possessive pronoun
 290@1:2@number@pl@schlafen@
 291@0:1@number@sg@Meines@possessive pronoun
-291@1:2@number@sg@schl‰ft@
+291@1:2@number@sg@schl√§ft@
 292@0:1@number@sg@Meins@possessive pronoun
-292@1:2@number@sg@schl‰ft@
+292@1:2@number@sg@schl√§ft@
 293@0:1@number@sg@Jeder@indefinite pronoun
-293@1:2@number@sg@schl‰ft@
+293@1:2@number@sg@schl√§ft@
 294@0:1@number@sg@Jede@indefinite pronoun
-294@1:2@number@sg@schl‰ft@
+294@1:2@number@sg@schl√§ft@
 295@0:1@number@sg@Jedes@indefinite pronoun
-295@1:2@number@sg@schl‰ft@
+295@1:2@number@sg@schl√§ft@
 296@0:1@number@sg@Jemand@indefinite pronoun
-296@1:2@number@sg@schl‰ft@
+296@1:2@number@sg@schl√§ft@
 297@0:1@number@sg@Etwas@indefinite pronoun
-297@1:2@number@sg@schl‰ft@
+297@1:2@number@sg@schl√§ft@
 298@0:1@number@pl@Mehrere@indefinite  pronoun
 298@1:2@number@pl@schlafen@
 299@0:1@number@pl@Manche@indefinite pronoun
-299@1:2@number@pl@schl‰ft@
+299@1:2@number@pl@schl√§ft@
 300@0:1@number@sg@Einer@indefinite  pronoun
-300@1:2@number@sg@schl‰ft@
+300@1:2@number@sg@schl√§ft@
 301@0:1@number@sg@Eine@indefinite  pronoun
-301@1:2@number@sg@schl‰ft@
+301@1:2@number@sg@schl√§ft@
 302@0:1@number@sg@Eines@indefinite  pronoun
-302@1:2@number@sg@schl‰ft@
+302@1:2@number@sg@schl√§ft@
 303@0:1@number@sg@Eins@indefinite  pronoun
-303@1:2@number@sg@schl‰ft@
+303@1:2@number@sg@schl√§ft@
 304@0:1@number@sg@Nichts@indefinite  pronoun
-304@1:2@number@sg@schl‰ft@
+304@1:2@number@sg@schl√§ft@
 305@0:1@number@sg@Niemand@indefinite  pronoun
-305@1:2@number@sg@schl‰ft@
+305@1:2@number@sg@schl√§ft@
 306@0:1@number@sg@Keines@indefinite pronoun
-306@1:2@number@sg@schl‰ft@
+306@1:2@number@sg@schl√§ft@
 307@0:1@number@sg@Keins@indefinite  pronoun
-307@1:2@number@sg@schl‰ft@
+307@1:2@number@sg@schl√§ft@
 308@0:1@number@sg@Man@indefinite  pronoun
-308@1:2@number@sg@schl‰ft@
+308@1:2@number@sg@schl√§ft@
 309@0:2@number@sg@Ein jemand@DET and indefinite pronoun
-309@2:3@number@sg@schl‰ft@
+309@2:3@number@sg@schl√§ft@
 310@0:2@number@sg@Ein niemand@DET and indefinite pronoun
-310@2:3@number@sg@schl‰ft@
+310@2:3@number@sg@schl√§ft@
 311@0:2@number@sg@Ein solcher@DET and indefinte pronoun
-311@2:3@number@sg@schl‰ft@
+311@2:3@number@sg@schl√§ft@
 312@0:2@number@sg@Ein jeder@DET and indefinte pronoun
-312@2:3@number@sg@schl‰ft@
+312@2:3@number@sg@schl√§ft@
 313@0:2@number@sg@Ein mancher@DET and indefinte pronoun
-313@2:3@number@sg@schl‰ft@
+313@2:3@number@sg@schl√§ft@
 314@0:2@number@sg@Ein nichts@DET and indefinte pronoun
-314@2:3@number@sg@schl‰ft@
+314@2:3@number@sg@schl√§ft@
 315@0:2@number@sg@Der eine@DET and indefinte pronoun
-315@2:3@number@sg@schl‰ft@
+315@2:3@number@sg@schl√§ft@
 316@0:2@number@sg@Das meine@DET and possessive pronoun
-316@2:3@number@sg@schl‰ft@
+316@2:3@number@sg@schl√§ft@
 317@0:2@number@sg@Dieser jemand@DET and indefinte pronoun
-317@2:3@number@sg@schl‰ft@
+317@2:3@number@sg@schl√§ft@
 318@0:2@number@sg@Dieser niemand@DET and indefinte pronoun
-318@2:3@number@sg@schl‰ft@
+318@2:3@number@sg@schl√§ft@
 319@0:1@number@pl@Beide@indefinite pronouns
 319@1:2@number@pl@schlafen@
 320@@error@agreement clash@@
@@ -806,13 +806,13 @@
 395@1:2@number@sg@ist@
 396@@error@agreement clash@@
 397@0:2@number@sg@Der Manager@
-397@6:7@number@sg@schl‰ft@
+397@6:7@number@sg@schl√§ft@
 398@@error@agreement clash@@
 399@2:3@number@sg@ist@
 400@@error@agreement clash@@
 401@2:3@number@sg@ist@
 402@8:9@number@pl@schlafen@
-402@0:8@number@pl@Der Manager oder der Pr‰sident oder der Berater@
+402@0:8@number@pl@Der Manager oder der Pr√§sident oder der Berater@
 403@@@@@
 403@@error@agreement clash@@
 404@@n_complements@1@@
@@ -872,11 +872,11 @@
 431@@n_complements@2@@
 431@@frame@subj (NP_nom-sg), subj-pred (COMP_np)@@
 432@@n_complements@2@@
-432@@frame@subj (NP_nom-sg), p-obj(¸ber) (PP)@@
+432@@frame@subj (NP_nom-sg), p-obj(√ºber) (PP)@@
 433@@n_complements@2@@
 433@@frame@subj (NP_nom-sg), p-obj(gegen) (PP)@@
 434@@n_complements@2@@
-434@@frame@subj (NP_nom-sg), p-obj(f¸r) (PP)@@
+434@@frame@subj (NP_nom-sg), p-obj(f√ºr) (PP)@@
 435@@n_complements@2@@
 435@@frame@subj (NP_nom-sg), p-obj(um) (PP)@@
 436@@n_complements@2@@
@@ -904,9 +904,9 @@
 447@@n_complements@3@@
 447@@frame@subj (NP_nom-sg), obj (NP_acc-sg), p-obj(auf) (PP)@@
 448@@n_complements@3@@
-448@@frame@subj (NP_nom-sg), obj (NP_acc-sg), p-obj(f¸r) (PP)@@
+448@@frame@subj (NP_nom-sg), obj (NP_acc-sg), p-obj(f√ºr) (PP)@@
 449@@n_complements@3@@
-449@@frame@subj (NP_nom-sg), obj (NP_acc-sg), p-obj(f¸r ())@@
+449@@frame@subj (NP_nom-sg), obj (NP_acc-sg), p-obj(f√ºr ())@@
 450@@n_complements@3@@
 450@@frame@subj (NP_nom-sg), obj (NP_acc-sg), p-obj(an) (PP)@@
 451@@n_complements@3@@
@@ -1016,39 +1016,39 @@
 503@@n_complements@2@@
 503@@frame@subj (NP_pn), subj-pred (COMP_np)@@
 504@@n_complements@1@@
-504@@frame@subj (C_cpl(daﬂ)-vfinal)@@
+504@@frame@subj (C_cpl(da√ü)-vfinal)@@
 505@@n_complements@2@@
-505@@frame@subj (NP_nom-sg), s-comp (C_cpl(daﬂ)-vfinal)@@
+505@@frame@subj (NP_nom-sg), s-comp (C_cpl(da√ü)-vfinal)@@
 506@@n_complements@2@@
-506@@frame@subj (NP_nom-sg), s-comp (C_cpl(daﬂ)-vfinal)@@
+506@@frame@subj (NP_nom-sg), s-comp (C_cpl(da√ü)-vfinal)@@
 507@@n_complements@2@@
-507@@frame@subj (NP_nom-sg), s-comp (C_cpl(daﬂ)-vfinal)@@
+507@@frame@subj (NP_nom-sg), s-comp (C_cpl(da√ü)-vfinal)@@
 508@@n_complements@2@@
-508@@frame@subj (NP_nom-sg), s-comp (C_cpl(daﬂ)-vfinal)@@
+508@@frame@subj (NP_nom-sg), s-comp (C_cpl(da√ü)-vfinal)@@
 509@@n_complements@2@@
-509@@frame@subj (NP_nom-sg), s-comp (C_cpl(daﬂ)-vfinal)@@
+509@@frame@subj (NP_nom-sg), s-comp (C_cpl(da√ü)-vfinal)@@
 510@@n_complements@2@@
-510@@frame@subj (NP_nom-sg), s-comp (C_cpl(daﬂ)-vfinal)@@
+510@@frame@subj (NP_nom-sg), s-comp (C_cpl(da√ü)-vfinal)@@
 511@@n_complements@2@@
-511@@frame@subj (C_cpl(daﬂ)-vfinal), obj (NP_acc-sg)@@
+511@@frame@subj (C_cpl(da√ü)-vfinal), obj (NP_acc-sg)@@
 512@@n_complements@2@@
-512@@frame@subj (C_cpl(daﬂ)-vfinal), obj (NP_acc-sg)@@
+512@@frame@subj (C_cpl(da√ü)-vfinal), obj (NP_acc-sg)@@
 513@@n_complements@2@@
-513@@frame@subj (C_cpl(daﬂ)-vfinal), iobj (NP_dat-sg)@@
+513@@frame@subj (C_cpl(da√ü)-vfinal), iobj (NP_dat-sg)@@
 514@@n_complements@2@@
-514@@frame@subj (C_cpl(daﬂ)-vfinal), iobj (NP_dat-sg)@@
+514@@frame@subj (C_cpl(da√ü)-vfinal), iobj (NP_dat-sg)@@
 515@@n_complements@2@@
-515@@frame@subj (C_cpl(daﬂ)-vfinal), iobj (NP_dat-sg)@@
+515@@frame@subj (C_cpl(da√ü)-vfinal), iobj (NP_dat-sg)@@
 516@@n_complements@2@@
-516@@frame@subj (C_cpl(daﬂ)-vfinal), iobj (NP_gen-sg)@@
+516@@frame@subj (C_cpl(da√ü)-vfinal), iobj (NP_gen-sg)@@
 517@@n_complements@2@@
-517@@frame@subj (C_cpl(daﬂ)-vfinal), p-obj(aus) (PP)@@
+517@@frame@subj (C_cpl(da√ü)-vfinal), p-obj(aus) (PP)@@
 518@@n_complements@2@@
-518@@frame@subj (C_cpl(daﬂ)-vfinal), subj-pred-adj (ADJ)@@
+518@@frame@subj (C_cpl(da√ü)-vfinal), subj-pred-adj (ADJ)@@
 519@@n_complements@3@@
-519@@frame@subj (NP_nom-sg), p-obj(aus) (PP), s-comp (C_cpl(daﬂ)-vfinal)@@
+519@@frame@subj (NP_nom-sg), p-obj(aus) (PP), s-comp (C_cpl(da√ü)-vfinal)@@
 520@@n_complements@3@@
-520@@frame@subj (C_cpl(daﬂ)-vfinal), obj (NP_acc-sg), obj-pred-adj (ADJ)@@
+520@@frame@subj (C_cpl(da√ü)-vfinal), obj (NP_acc-sg), obj-pred-adj (ADJ)@@
 521@@n_complements@2@@
 521@@frame@subj (NP_nom-sg), p-obj(auf) (ADV_pron-cor)@@
 522@@n_complements@2@@
@@ -1060,7 +1060,7 @@
 525@@n_complements@2@@
 525@@frame@subj (NP_nom-sg), p-obj(gegen) (ADV_pron-cor)@@
 526@@n_complements@2@@
-526@@frame@subj (NP_nom-sg), p-obj(f¸r) (ADV_pron-cor)@@
+526@@frame@subj (NP_nom-sg), p-obj(f√ºr) (ADV_pron-cor)@@
 527@@n_complements@2@@
 527@@frame@subj (NP_nom-sg), p-obj(zu) (ADV_pron-cor)@@
 528@@n_complements@2@@
@@ -1074,7 +1074,7 @@
 532@@n_complements@3@@
 532@@frame@subj (NP_nom-sg), obj (NP_acc-sg), p-obj(an) (ADV_pron-cor)@@
 533@@n_complements@3@@
-533@@frame@subj (NP_nom-sg), iobj (NP_acc-sg), p-obj(f¸r) (ADV_pron-cor)@@
+533@@frame@subj (NP_nom-sg), iobj (NP_acc-sg), p-obj(f√ºr) (ADV_pron-cor)@@
 534@@n_complements@3@@
 534@@frame@subj (NP_nom-sg), obj (PRON_expl-cor), obj-pred (COMP_np)@@
 535@@n_complements@3@@
@@ -1098,7 +1098,7 @@
 544@@n_complements@2@@
 544@@frame@subj (NP_nom-sg), p-obj(auf) (ADV_pron-cor)@@
 545@@n_complements@3@@
-545@@frame@subj (NP_nom-sg), iobj (NP_acc-sg), p-obj(f¸r) (ADV_pron-cor)@@
+545@@frame@subj (NP_nom-sg), iobj (NP_acc-sg), p-obj(f√ºr) (ADV_pron-cor)@@
 546@@n_complements@3@@
 546@@frame@subj (NP_nom-sg), obj (NP_acc-sg), p-obj-auf (ADV_pron-cor)@@
 547@@n_complements@2@@
@@ -1142,7 +1142,7 @@
 566@@n_complements@2@@
 566@@frame@subj (NP_nom-sg), p-obj(zu) (ADV_pron-cor)@@
 567@@n_complements@2@@
-567@@frame@subj (NP_nom-sg), p-obj(f¸r) (ADV_pron-cor)@@
+567@@frame@subj (NP_nom-sg), p-obj(f√ºr) (ADV_pron-cor)@@
 568@@n_complements@2@@
 568@@frame@subj (NP_nom-sg), p-obj(auf) (ADV_pron-cor)@@
 569@@n_complements@2@@
@@ -1152,7 +1152,7 @@
 571@@n_complements@2@@
 571@@frame@subj (NP_nom-sg), p-ob(-auf) (ADV_pron-cor)@@
 572@@n_complements@2@@
-572@@frame@subj (NP_nom-sg), p-obj(f¸r) (ADV_pron-cor)@@
+572@@frame@subj (NP_nom-sg), p-obj(f√ºr) (ADV_pron-cor)@@
 573@@n_complements@2@@
 573@@frame@subj (NP_nom-sg), obj (PRON-expl-cor)@@
 574@@n_complements@2@@
@@ -1240,9 +1240,9 @@
 615@@n_complements@1@@
 615@@frame@subj (NP_nom-sg)@@
 616@@n_complements@2@@
-616@@frame@subj (NP_nom-sg), s-comp (C_cpl(daﬂ)-vfinal)@@
+616@@frame@subj (NP_nom-sg), s-comp (C_cpl(da√ü)-vfinal)@@
 617@@n_complements@3@@
-617@@frame@subj (NP_nom-sg), iobj (NP_dat-sg), s-comp (C_cpl(daﬂ)-vfinal)@@
+617@@frame@subj (NP_nom-sg), iobj (NP_dat-sg), s-comp (C_cpl(da√ü)-vfinal)@@
 618@@n_complements@2@@
 618@@frame@subj (NP_nom-sg), p-obj-temp (PP)@@
 619@@n_complements@2@@
@@ -1400,11 +1400,11 @@
 695@@n_complements@2@@
 695@@frame@subj (NP_nom-sg), obj (NP_acc-sg)@@
 696@@n_complements@2@@
-696@@frame@subj (NP_nom-sg), p-obj(f¸r) (PP)@@
+696@@frame@subj (NP_nom-sg), p-obj(f√ºr) (PP)@@
 697@@n_complements@2@@
 697@@frame@subj (NP_nom-sg), obj (NP_acc-sg)@@
 698@@n_complements@2@@
-698@@frame@subj (NP_nom-sg), p-obj(f¸r) (PP)@@
+698@@frame@subj (NP_nom-sg), p-obj(f√ºr) (PP)@@
 699@@n_complements@1@@
 699@@frame@subj (NP_nom-sg)@@
 700@@n_complements@2@@
@@ -1554,29 +1554,29 @@
 772@@n_complements@1@@
 772@@frame@subj (NP_nom-sg)@@
 773@@n_complements@1@@
-773@@frame@s-comp (C_cpl(daﬂ)-vfinal)@@
+773@@frame@s-comp (C_cpl(da√ü)-vfinal)@@
 774@@n_complements@1@@
-774@@frame@subj (C_cpl(daﬂ)-vfinal)@@
+774@@frame@subj (C_cpl(da√ü)-vfinal)@@
 775@@n_complements@1@@
-775@@frame@subj (C_cpl(daﬂ)-vfinal)@@
+775@@frame@subj (C_cpl(da√ü)-vfinal)@@
 776@@n_complements@1@@
-776@@frame@subj (C_cpl(daﬂ)-vfinal)@@
+776@@frame@subj (C_cpl(da√ü)-vfinal)@@
 777@@n_complements@1@@
-777@@frame@subj (C_cpl(daﬂ)-vfinal)@@
+777@@frame@subj (C_cpl(da√ü)-vfinal)@@
 778@@n_complements@1@@
-778@@frame@subj (C_cpl(daﬂ)-vfinal)@@
+778@@frame@subj (C_cpl(da√ü)-vfinal)@@
 779@@n_complements@1@@
-779@@frame@s-comp (C_cpl(daﬂ)-vfinal)@@
+779@@frame@s-comp (C_cpl(da√ü)-vfinal)@@
 780@@n_complements@1@@
-780@@frame@subj (C_cpl(daﬂ)-vfinal)@@
+780@@frame@subj (C_cpl(da√ü)-vfinal)@@
 781@@n_complements@2@@
 781@@frame@subj (NP_nom-sg), p-obj-aus (PP)@@
 782@@n_complements@2@@
-782@@frame@subj (NP_nom-sg), s-comp (C_cpl(daﬂ)-vfinal)@@
+782@@frame@subj (NP_nom-sg), s-comp (C_cpl(da√ü)-vfinal)@@
 783@@n_complements@1@@
 783@@frame@subj (NP_nom-sg)@@
 784@@n_complements@2@@
-784@@frame@subj (C_cpl(daﬂ)-vfinal), obj-pred (ADJ)@@
+784@@frame@subj (C_cpl(da√ü)-vfinal), obj-pred (ADJ)@@
 785@@n_complements@1@@
 785@@frame@subj (NP_nom-sg)@@
 786@@n_complements@1@@
@@ -1612,7 +1612,7 @@
 801@@n_complements@2@@
 801@@frame@subj (NP_nom-sg), iobj (NP_acc-sg)@@
 802@@n_complements@2@@
-802@@frame@subj (NP_nom-sg), p-obj(f¸r) (ADV_pron-cor)@@
+802@@frame@subj (NP_nom-sg), p-obj(f√ºr) (ADV_pron-cor)@@
 803@@n_complements@1@@
 803@@frame@subj (NP_nom-sg)@@
 804@@n_complements@2@@
@@ -1650,7 +1650,7 @@
 820@@n_complements@1@@
 820@@frame@subj (NP_nom-sg)@@
 821@@n_complements@2@@
-821@@frame@subj (NP_nom-sg), p-obj(f¸r) (ADV_pron-cor)@@
+821@@frame@subj (NP_nom-sg), p-obj(f√ºr) (ADV_pron-cor)@@
 822@@n_complements@2@@
 822@@frame@subj (NP_nom-sg), p-obj(auf) (ADV_pron-cor)@@
 823@@n_complements@1@@
