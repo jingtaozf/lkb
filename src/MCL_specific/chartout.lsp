@@ -238,7 +238,9 @@
 
 
 (defun highlight-chart-edge-subs (edge pane)
-   (dolist (subsumed-edge (edge-children edge))
+   (dolist (subsumed-edge
+              (if (edge-morph-history edge) (list (edge-morph-history edge))
+                 (edge-children edge)))
       (when subsumed-edge
          (let ((record (display-chart-edge-record subsumed-edge pane)))
             (when record ; check that not an active edge suppressed in display
@@ -251,7 +253,9 @@
           ;; path from e recursively through children to edge?
           (and e
              (or (eq e edge)
-                (some #'highlight-chart-edge-path-p (edge-children e))))))
+                (some #'highlight-chart-edge-path-p (edge-children e))
+                (and (edge-morph-history e)
+                     (highlight-chart-edge-path-p (edge-morph-history e)))))))
       (dolist (record (chart-records pane))
          (when (highlight-chart-edge-path-p (chart-record-edge record))
             (highlight-chart-edge record pane)))))

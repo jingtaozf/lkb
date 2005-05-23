@@ -422,15 +422,18 @@
 	 (and e				; don't blow up on active edges
 	      (or (eq e edge)
 		  (eq edge (edge-morph-history e))
-		  (some #'super-chart-edge-path-p 
-			(edge-children e)))))
+		  (some #'super-chart-edge-path-p (edge-children e))
+		  (and (edge-morph-history e)
+		       (super-chart-edge-path-p (edge-morph-history e))))))
        (sub-chart-edge-path-p (e edge)
 	 ;; path from edge recursively through children to e?
 	 (and edge
 	      (or (eq e edge)
 		  (eq e (edge-morph-history edge))
 		  (some #'(lambda (c) (sub-chart-edge-path-p e c)) 
-			(edge-children edge))))))
+			(edge-children edge))
+		  (and (edge-morph-history edge)
+		       (sub-chart-edge-path-p e (edge-morph-history edge)))))))
     (cond
      ((not (or (null (get node 'chart-edge-contents))
 	       (super-chart-edge-path-p (get node 'chart-edge-contents))
