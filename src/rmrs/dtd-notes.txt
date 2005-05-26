@@ -13,7 +13,8 @@ v - verb
 n - noun
 a - adjective or adverb (i.e. supertype of j and r)
 j - adjective
-r - adjective or adverb (i.e. supertype of j and r)- adverb
+r - adverb 
+s - verbal noun (used in Japanese and Korean)
 p - preposition
 q - quantifier (needs to be distinguished for scoping code)
 x - other closed class
