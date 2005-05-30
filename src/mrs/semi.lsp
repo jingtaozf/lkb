@@ -387,7 +387,26 @@
       do 
 	(setf pred pred) ;; prevent compiler warning
 	(print-predicate-full
-	  rels  :generalizep generalizep :stream stream))))
+	 rels  :generalizep generalizep :stream stream))))
+
+(defun lookup-semi (id)
+  (print-predicate-full 
+   (slot-value (gethash id (slot-value *semi* 'lexicon)) 'relations))
+  (lkb::with-package (:lkb) (print-comps-info (extract-comps-info-by-id id)))
+  nil)
+
+(defun print-comps-info (comps-info)
+  (mapcar #'print-comps-info2 comps-info))
+  
+(defun print-comps-info2 (x)
+  (format t "~%~%COMPS ==  ~a (opt ~a) ~a" 
+	  (cdr (assoc :rel x))
+	  (cdr (assoc :opt x))
+	  (print-coslot (cdr (assoc :coslot x)))))
+
+(defun print-coslot (x)
+  (mapcan #'(lambda (y) (list (format nil "~a: ~a " (cdr y) (car y))))
+	      x))
 
 (defun print-predicate-full (rels &key generalizep (stream t))
   (declare (ignore generalizep))
@@ -529,7 +548,8 @@
 			     frame-id 
 			     (2-symb pred) 
 			     (if (stringp pred) 'T 'F)
-			     "NOW")
+;;			     "NOW"
+			     )
 	do
 	  (sdbt-rows-hash pred-row pred-r)
 	unless frame-hashed

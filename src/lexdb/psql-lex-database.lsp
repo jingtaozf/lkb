@@ -108,16 +108,20 @@
 
 ;;; (used to index for generator)
 (defmethod lex-words ((lex psql-lex-database))
-  (let* ((orth-raw-mapping (assoc :orth (dfn lex)))
-	 (orth-raw-value-mapping (fourth orth-raw-mapping))
-	 (raw-orth-field-str (2-str (second orth-raw-mapping)))
-	 (values 
-	  (get-value-set lex raw-orth-field-str)))
-    (mapcan 
-     #'(lambda (x) 
-	 (mapcar #'string-upcase
-		 (car (work-out-value orth-raw-value-mapping x))))
-     values)))
+  (mapcar #'(lambda (x) (string-upcase (car x)))
+	  (get-raw-records *lexdb* "select distinct key from rev_key_all")))
+
+;(defmethod lex-words ((lex psql-lex-database))
+;  (let* ((orth-raw-mapping (assoc :orth (dfn lex)))
+;	 (orth-raw-value-mapping (fourth orth-raw-mapping))
+;	 (raw-orth-field-str (2-str (second orth-raw-mapping)))
+;	 (values 
+;	  (get-value-set lex raw-orth-field-str)))
+;    (mapcan 
+;     #'(lambda (x) 
+;	 (mapcar #'string-upcase
+;		 (car (work-out-value orth-raw-value-mapping x))))
+;     values)))
 
 (defmethod rev-key-p ((lex psql-lex-database))
   (string= "t" (sql-fn-get-val lex :rev_key_p)))
@@ -806,7 +810,8 @@
     (format t "~%(loading SEM-I into memory)")
     (unless (mrs::semi-p 
 	     (catch :sql-error
-	       (mrs::populate-*semi*-from-psql)))
+	       (mrs::populate-*semi*-from-psql)
+	       ))
       (format t "~% (unable to retrieve database SEM-I)"))
     (index-lexical-rules)
     (index-grammar-rules))
@@ -913,7 +918,7 @@
 	 (str-2-num 
 	  (sql-fn-get-val lex :merge_dfn_from_tmp_dfn))))
     (run-command lex "DROP TABLE tmp_dfn")
-    (format t "~%(~a new field mappings)" count-new-dfn)
+    (format t "~%(~a new dfn entries)" count-new-dfn)
     count-new-dfn))
 
 (defmethod initialize-userschema ((lex psql-lex-database))

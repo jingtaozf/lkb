@@ -57,6 +57,27 @@
     semi
     )))
 
+(defmethod semi-files-to-psql ((semi semi) &key (lexicon lkb::*lexdb*))
+  (with-slots (lkb::host lkb::port lkb::user lkb::dbname) lexicon
+  (let* ((base (format nil "~asemi.obj" 
+	    (make-pathname :directory (namestring (lkb::lkb-tmp-dir))))))
+    (lkb::semi-setup-pre lexicon)
+    (load-db-table-from-file "semi_pred"
+			     (format nil "~a.~a" base "pred")
+			     lexicon)
+    (load-db-table-from-file "semi_frame"
+			     (format nil "~a.~a" base "frame")
+			     lexicon)
+    (load-db-table-from-file "semi_var"
+			     (format nil "~a.~a" base "var")
+			     lexicon)
+    (load-db-table-from-file "semi_extra"
+			     (format nil "~a.~a" base "extra")
+			     lexicon)
+    (lkb::semi-setup-post lexicon)
+    semi
+    )))
+
 (defun populate-*semi*-from-psql nil
   (populate-semi-from-psql *semi*))
 
