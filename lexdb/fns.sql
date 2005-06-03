@@ -509,6 +509,8 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
+
+
 CREATE OR REPLACE FUNCTION public.value_set(text) RETURNS SETOF text AS '
 DECLARE
 	x RECORD;
@@ -559,6 +561,7 @@ END;
 -- semi
 --
 
+-- -> drop_semi()
 CREATE OR REPLACE FUNCTION semi_setup_pre() RETURNS boolean AS '
 BEGIN
 	PERFORM semi_drop_indices();
@@ -572,6 +575,7 @@ RETURN true;
 END;
 ' LANGUAGE plpgsql;
 
+-- -> create_semi()
 CREATE OR REPLACE FUNCTION semi_setup_post() RETURNS boolean AS '
 BEGIN
 	PERFORM semi_create_indices();
@@ -593,10 +597,10 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
-
 CREATE OR REPLACE FUNCTION public.semi_up_to_date_p() RETURNS boolean AS '
 BEGIN
-	RETURN ( SELECT mod_time() < (SELECT min(modstamp) FROM semi_pred ));
+	RETURN ( SELECT mod_time() < (SELECT min(modstamp0) FROM semi_mod ));
+--	RETURN ( SELECT mod_time() < (SELECT min(modstamp) FROM semi_pred ));
 END;
 ' LANGUAGE plpgsql;
 

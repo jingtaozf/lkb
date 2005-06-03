@@ -319,6 +319,20 @@
    (t
     (format t "~%WARNING: no connection to psql-lex-database"))))
 
+(defmethod retrieve-record-ium ((lex psql-lex-database) id name modstamp &optional reqd-fields)
+  (cond
+   ((connection lex)
+    (let* ((table (sql-fn-get-records lex
+				      :retrieve_entry_ium
+				      :fields reqd-fields
+				      :args (list id name modstamp))))
+      
+      (if (> (length (recs table)) 1)
+	  (error (format nil "too many records returned"))
+	(dot (cols table) (first (recs table))))))
+   (t
+    (format t "~%WARNING: no connection to psql-lex-database"))))
+
 (defmethod grammar-fields ((lex psql-lex-database))
   (unless (dfn lex)
     (complain-no-dfn lex)
@@ -550,6 +564,58 @@
 				  sql-fn
 				  :args args)))
     (mapcar #'car records)))
+
+;;
+
+(defmethod lookup3 ((lex psql-lex-database) field-kw val-str)
+  (let* ((sql-fn (if val-str
+		    :lookup_general3
+		   :lookup_general3_null))
+	 (field-str (2-str field-kw))
+	 (args (if val-str
+		   (list field-str (sql-like-text val-str))
+		 (list field-str)))
+	 (records
+	  (sql-fn-get-raw-records lex
+				  sql-fn
+				  :args args
+				  :fields '(:name :userid :modstamp))))
+    ;(mapcar #'car records)
+    records
+    ))
+
+(defmethod lookup-rev-all ((lex psql-lex-database) field-kw val-str)
+  (let* ((sql-fn (if val-str
+		    :lookup_general3_rev_all
+		   :lookup_general3_rev_all_null))
+	 (field-str (2-str field-kw))
+	 (args (if val-str
+		   (list field-str (sql-like-text val-str))
+		 (list field-str)))
+	 (records
+	  (sql-fn-get-raw-records lex
+				  sql-fn
+				  :args args
+				  :fields '(:name :userid :modstamp))))
+    ;(mapcar #'car records)
+    records
+    ))
+
+;;
+
+;(defmethod lookup-rev-all ((lex psql-lex-database) field-kw val-str)
+;  (let* ((sql-fn (if val-str
+;		    :lookup_general_rev_all
+;		   :lookup_general_null_rev_all))
+;	 (field-str (2-str field-kw))
+;	 (args (if val-str
+;		   (list field-str (sql-like-text val-str))
+;		 (list field-str)))
+;	 (records
+;	  (sql-fn-get-raw-records lex
+;				  sql-fn
+;				  :args args)))
+;    (mapcar #'car records)))
   
 (defmethod complete ((lex psql-lex-database) field-kw val-str)
   (mapcar #'car 
@@ -884,7 +950,7 @@
 			  :fields (list :name :userid :modstamp)))
 
 (defmethod scratch-records ((lex psql-lex-database))
-  (sql-fn-get-raw-records lex :retrieve_private_revs))
+  (sql-fn-get-raw-records lex :rev))
 
 (defmethod merge-into-db ((lex psql-lex-database) rev-filename)  
   (run-command lex "DELETE FROM tmp")

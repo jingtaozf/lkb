@@ -3,15 +3,16 @@
 # see `licence.txt' for conditions.
 
 ## script usage
-if [ -z "$2" ]; then 
-    echo usage: $0 DBNAME FLD-FILE [CREATEDB-OPTIONS]
+if [ -z "$3" ]; then 
+    echo usage: $0 DBNAME FLD-FILE DFN-FILE [CREATEDB-OPTIONS]
     exit
 fi
 
 ## grab script parameters
 export LEXDB=$1
 export FLD_FILE=$2
-export CREATEDB_OPTIONS=$3
+export DFN_FILE=$3
+export CREATEDB_OPTIONS=$4
 
 function abort {
     echo "ABORTING..."
@@ -26,9 +27,10 @@ fi
 
 ## check for files
 if [ ! -f $FLD_FILE ]; then
-    echo "cannot find file $FLD_FILE";
-    #for x in `seq 1 10`; do echo wait $x; done  
-    abort;
+    echo "cannot find file $FLD_FILE"; abort;
+fi
+if [ ! -f $DFN_FILE ]; then
+    echo "cannot find file $DFN_FILE"; abort;
 fi
 if [ ! -f load.sql ]; then 
     echo "cannot find file $PWD/load.sql"; abort; 
@@ -56,11 +58,16 @@ if [ $? != 0 ] ; then abort; fi
 echo "taking field defns from file $FLD_FILE";
 
 echo "psql -c \"copy public.fld from $FLD_FILE\" -U lexdb $LEXDB"
-psql -c "\copy fld from $FLD_FILE" -U lexdb $LEXDB; 
+psql -c "\copy public.fld from $FLD_FILE" -U lexdb $LEXDB; 
 if [ $? != 0 ] ; then abort; fi
 
 ## load 'lexdb' DB user setup script (part 2)
 echo "psql -f init.sql -U lexdb $LEXDB"
 psql -f init.sql -U lexdb $LEXDB
 if [ $? != 0 ] ; then abort; fi
+
+echo "psql -c \"copy public.dfn from $DFN_FILE\" -U lexdb $LEXDB"
+psql -c "\copy public.dfn from $DFN_FILE" -U lexdb $LEXDB; 
+if [ $? != 0 ] ; then abort; fi
+
 

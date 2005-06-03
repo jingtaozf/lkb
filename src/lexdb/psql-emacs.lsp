@@ -12,7 +12,7 @@
     '(initialize-lexdb
       lexdb-fn))
 
-(defconstant *lexdb-emacs-lexdb-fns*
+(defparameter *lexdb-emacs-lexdb-fns*
     '(complete
       connection
       dbname
@@ -22,12 +22,19 @@
       get-value-set
       id-to-tdl-str
       lookup
+      lookup-rev-all
       new-entries
       record-to-tdl
       retrieve-head-record-str
+      retrieve-record-ium
       set-lex-entry
       set-lex-entry-from-record
-      scratch-records))
+      scratch-records
+      get-records
+      sql-fn-get-records
+      sql-fn-get-raw-records
+      lookup3
+))
  
 (defun lexdb-fn (fn-name &rest rest)
   (unless (member fn-name *lexdb-emacs-lexdb-fns*)

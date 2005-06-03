@@ -15,7 +15,9 @@
 (defun encode-mixed-as-str (val)
   (cond
    ((null val)
-    "")
+;;bmw
+    ;;    "")
+    nil)
    ((symbolp val)
     (let ((val-str (symb-2-str val)))
       (if (and (> (length val-str) 0)
@@ -30,7 +32,9 @@
 (defun encode-string-as-str (val)
   (cond
    ((null val)
-    "")
+    ;;bmw
+    ;;    "")
+    nil)
    ((stringp val)
     (format nil "\"~a\"" val))
    (t
@@ -60,7 +64,8 @@
 	 (mapping (find field-kw dfn :key #'second :test 'equal)))
     (if mapping
         (extract-field2 x (first mapping) (third mapping) (fourth mapping))
-      "")))
+      nil)))
+;      "")))
 	 
 (defun extract-field2 (x key path type)
   (extract-value-by-path x key (get-path path) type))
@@ -80,7 +85,10 @@
   (encode-string-as-str (extract-atom-by-path x key path)))
 
 (defun extract-sym-by-path (x key path)
-  (symb-2-str (extract-atom-by-path x key path)))
+  (let ((val (extract-atom-by-path x key path)))
+    (if val (symb-2-str val)
+      nil)))
+;;  (symb-2-str (extract-atom-by-path x key path)))
 
 (defun extract-mixed-rawlst-by-path (x key path)
   (mixed-list-2-str (extract-raw-list x key path)))

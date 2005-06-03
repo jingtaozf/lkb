@@ -124,8 +124,8 @@ BEGIN
 		pred_id text NOT NULL,
 		frame_id int NOT NULL,
 		pred_txt text NOT NULL,
-		string_p boolean NOT NULL,
-		modstamp TIMESTAMP WITH TIME ZONE
+		string_p boolean NOT NULL
+		--modstamp TIMESTAMP WITH TIME ZONE --obsolete
 	);
 
 	CREATE TABLE semi_frame (
@@ -158,6 +158,13 @@ BEGIN
 	PERFORM semi_create_indices();
 
 	CREATE OR REPLACE VIEW semi_obj AS
+		SELECT lex_id,pred_id, slot, str, type, feat, val FROM
+		semi_pred NATURAL JOIN
+		semi_frame NATURAL LEFT JOIN
+		semi_var NATURAL LEFT JOIN
+		semi_extra;
+
+	CREATE OR REPLACE VIEW semi_obj2 AS
 		SELECT * FROM
 		semi_pred NATURAL JOIN
 		semi_frame NATURAL LEFT JOIN

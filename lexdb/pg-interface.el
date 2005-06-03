@@ -10,7 +10,7 @@
 
 ;;; Add a PG menu to the emacs menu bar
 
-(defvar *lexdb-pg-interface-version* "2.04")
+(defvar *lexdb-pg-interface-version* "2.05")
 
 (require 'widget)
 
@@ -150,6 +150,7 @@
 (defvar *lexdb-hidden*)
 (defvar *lexdb-minibuffer-max*)
 (defvar *lexdb-active-id-ring*)
+(defvar *lexdb-active-ium-ring*)
 (defvar *lexdb-new-entries-buffer*)
 (defvar *lexdb-scratch-buffer*)
 (defvar *lexdb-slot-len*)
@@ -158,6 +159,7 @@
 (setf *lexdb-hidden* nil)
 (setf *lexdb-minibuffer-max* 80)
 (setf *lexdb-active-id-ring* nil)
+(setf *lexdb-active-ium-ring* nil)
 (setf *lexdb-new-entries-buffer* "*lexdb-merged*")
 (setf *lexdb-scratch-buffer* "*lexdb-scratch*")
 (setf *lexdb-slot-len* 13)
@@ -211,20 +213,25 @@
     ;;
     ;; level 1
     (define-key map [menu-bar LexDB view-scratch]
-      '(menu-item "View scratch" lexdb-view-scratch 
-		  :keys "M-vs"
+      '(menu-item "View private rev" lexdb-view-private-rev
+		  :keys "M-vpr"
 		  :enable (cle-connection)))
     (define-key map [menu-bar LexDB next-id]
-      '(menu-item "Next id" lexdb-advance-id 
+;      '(menu-item "Next id" lexdb-advance-id 
+      '(menu-item "Next id" lexdb-advance-ium 
 		  :keys "M-n"
 		  :enable (cle-connection)))
     (define-key map [menu-bar LexDB search]
       '(menu-item "Search ids" lexdb-search-field-val 
 		  :keys "M-s"
 		  :enable (cle-connection)))
-    (define-key map [menu-bar LexDB cross-ref]
-      '(menu-item "Cross reference ids" lexdb-lookup 
-		  :keys "M-TAB"
+    (define-key map [menu-bar LexDB cross-ref-lex]
+      '(menu-item "Cross reference ids (lex)" lexdb-lookup 
+		  :keys "M-TAB l"
+		  :enable (cle-connection)))
+    (define-key map [menu-bar LexDB cross-ref-rev]
+      '(menu-item "Cross reference ids (rev)" lexdb-lookup-rev-all 
+		  :keys "C-TAB r"
 		  :enable (cle-connection)))
     (define-key map [menu-bar LexDB break] (lexdb-make-name-keymap "---"))
     (define-key map [menu-bar LexDB commit]
@@ -245,13 +252,15 @@
 
 (defun make-lexdb-keymap nil
   (let ((map (make-sparse-keymap)))
-    (define-key map "\M-vs" 'lexdb-view-scratch)
+    (define-key map "\M-vpr" 'lexdb-view-private-rev)
     (define-key map "\M-va" 'lexdb-view-merge-add)
     (define-key map "\C-l" 'lexdb-load-record)
     (define-key map "\C-c" 'lexdb-commit-record)
     (define-key map "\C-n" 'lexdb-normalize-buffer)
-    (define-key map "\M-\t" 'lexdb-lookup)
-    (define-key map "\M-n" 'lexdb-advance-id)
+    (define-key map "\M-\tl" 'lexdb-lookup)
+    (define-key map "\M-\tr" 'lexdb-lookup-rev-all)
+;    (define-key map "\M-n" 'lexdb-advance-id)
+    (define-key map "\M-n" 'lexdb-advance-ium)
     (define-key map "\M-s" 'lexdb-search-field-val)
     (define-key map "\t" 'lexdb-complete-field)
     (setq lexdb-mode-map (append map 'widget-field-keymap))))
@@ -307,13 +316,21 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (interactive)
   (lexdb-lookup-aux))
 
+(defun lexdb-lookup-rev-all ()
+  (interactive)
+  (lexdb-lookup-rev-all-aux))
+
 (defun lexdb-advance-id ()
   (interactive)
   (lexdb-advance-id-aux))
 
-(defun lexdb-view-scratch ()
+(defun lexdb-advance-ium ()
   (interactive)
-  (lexdb-view-scratch-aux))
+  (lexdb-advance-ium-aux))
+
+(defun lexdb-view-private-rev()
+  (interactive)
+  (lexdb-view-private-rev-aux))
 
 (defun lexdb-view-merge-add ()
   (interactive)
@@ -337,12 +354,28 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 		  (l:normalize val-str))
       (error "not in an editable field"))))
 
+;(defun lexdb-advance-id-aux nil
+;  (when *lexdb-active-id-ring*
+;    (lexdb-load-record-aux (car *lexdb-active-id-ring*))
+;    (setf *lexdb-active-id-ring*
+;	  (cdr *lexdb-active-id-ring*))
+;    (princ *lexdb-active-id-ring*)
+;    t))
+    
 (defun lexdb-advance-id-aux nil
   (when *lexdb-active-id-ring*
     (lexdb-load-record-aux (car *lexdb-active-id-ring*))
     (setf *lexdb-active-id-ring*
 	  (cdr *lexdb-active-id-ring*))
     (princ *lexdb-active-id-ring*)
+    t))
+    
+(defun lexdb-advance-ium-aux nil
+  (when *lexdb-active-ium-ring*
+    (lexdb-load-record3-aux (car *lexdb-active-ium-ring*))
+    (setf *lexdb-active-ium-ring*
+	  (cdr *lexdb-active-ium-ring*))
+    (princ *lexdb-active-ium-ring*)
     t))
     
 (defun lexdb-collect-field-lines (records fields)
@@ -369,7 +402,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 		     records
 		     "")))
 
-(defun lexdb-view-scratch-aux nil
+(defun lexdb-view-private-rev-aux nil
   (let ((buffer *lexdb-scratch-buffer*)
 	(priv-recs (cle-get-private-revs)))
     (if (get-buffer buffer)
@@ -441,6 +474,13 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 		  (l:widget-val-normd widget))
       (error "not in an editable field"))))
 
+(defun lexdb-lookup-rev-all-aux nil
+  (let* ((widget (widget-field-find (point))))
+    (if widget
+	  (lexdb-lookup-rev-all-aux2 (l:widget-to-field-kw widget)
+		  (l:widget-val-normd widget))
+      (error "not in an editable field"))))
+
 (defun lexdb-normalize-buffer-aux (buffer)
   (lexdb-update-record-from-buffer buffer)
   (let ((record lexdb-record)
@@ -456,6 +496,21 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 
 (defun lexdb-load-record-aux (id)
   (let ((record (lexdb-retrieve-record id))
+	(tdl lexdb-tdl))
+    (if (equal id "") 
+	(setf id "?new?"))
+    (setf buffer (format "%s" id))
+    (if (get-buffer buffer)
+	(kill-buffer buffer))
+    (with-current-buffer (get-buffer-create buffer)
+      (lexdb-mode)
+      (setf lexdb-record record)
+      (setf lexdb-tdl tdl)
+     (lexdb-display-record buffer))))
+
+(defun lexdb-load-record3-aux (ium)
+  (let ((record (lexdb-retrieve-record3 ium))
+	(id (car ium))
 	(tdl lexdb-tdl))
     (if (equal id "") 
 	(setf id "?new?"))
@@ -512,6 +567,18 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 			""))
     (setf lexdb-record (cons fields sizes))))
 
+(defun lexdb-retrieve-record3 (ium)
+  (let ((fields (cle-retrieve-record-fields3 ium))
+	(id (car ium))
+	(sizes (cle-retrieve-record-sizes)))
+    (setf *lexdb-record-features* (set-difference (cle-retrieve-record-features) *lexdb-hidden*))
+    (unless fields
+      (princ (format "%s not found! " ium))
+      (setf fields (l:make-empty-record id)))
+    (setf lexdb-tdl (or (cle-retrieve-tdl (cdr (assoc :name fields)))
+			""))
+    (setf lexdb-record (cons fields sizes))))
+
 (defun lexdb-store-record (record-in)
   (if (equal (cdr (assoc :name record-in)) "")
       (error "cannot commit record with no NAME field"))
@@ -523,11 +590,35 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (cle-empty-psql-cache)
   (princ (format " rev saved to LexDB %s " (cle-dbname))))
 
+;(defun lexdb-lookup-aux2 (field-kw val-str)
+;  (let ((ids (cle-lookup field-kw val-str)))
+;    (l:princ-list ids)
+;    (if ids
+;	(setf *lexdb-active-id-ring* (make-ring ids)))))
+
 (defun lexdb-lookup-aux2 (field-kw val-str)
-  (let ((ids (cle-lookup field-kw val-str)))
-    (l:princ-list ids)
+  (let* ((iums (cle-lookup field-kw val-str))
+	 (ids (mapcar #'car iums))
+	)
+    ;(l:princ-list ids)
+    (l:princ-list iums)
     (if ids
-	(setf *lexdb-active-id-ring* (make-ring ids)))))
+	(setf *lexdb-active-id-ring* (make-ring ids)))
+    (if iums
+	(setf *lexdb-active-ium-ring* (make-ring iums)))
+))
+
+(defun lexdb-lookup-rev-all-aux2 (field-kw val-str)
+  (let* ((iums (cle-lookup-rev-all field-kw val-str))
+	 (ids (mapcar #'car iums))
+	)
+    ;(l:princ-list ids)
+    (l:princ-list iums)
+    (if ids
+	(setf *lexdb-active-id-ring* (make-ring ids)))
+    (if iums
+	(setf *lexdb-active-ium-ring* (make-ring iums)))
+))
 
 ;;;
 ;;; lexdb util fns
@@ -702,6 +793,13 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 (defun cle-retrieve-record-fields (id)
   (cle-eval-lexdb 'retrieve-head-record-str (cle-lisp-str id)))
 
+(defun cle-retrieve-record-fields3 (ium)
+  (cle-eval-lexdb 'retrieve-record-ium 
+		  (cle-lisp-str (first ium))
+		  (cle-lisp-str (second ium))
+		  (cle-lisp-str (third ium))
+		  ))
+
 (defun cle-retrieve-tdl (id)
   (cle-eval-lexdb 'id-to-tdl-str (cle-lisp-str id)))
 
@@ -727,7 +825,21 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (if (or (string= val-str "") (null val-str))
       (setf val-str nil)
     (setf val-str (cle-lisp-str val-str)))
-  (cle-eval-lexdb 'lookup field-kw val-str))
+;  (cle-eval-lexdb 'sql-fn-get-raw-records :lookup_general3 
+;		  :args (list field-kw val-str)
+;		  :fields '(:name :userid :modstamp)))
+  (cle-eval-lexdb 'lookup3 field-kw val-str))
+;  (cle-eval-lexdb 'lookup field-kw val-str))
+  
+(defun cle-lookup-rev-all (field-kw val-str)
+  (if (or (string= val-str "") (null val-str))
+      (setf val-str nil)
+    (setf val-str (cle-lisp-str val-str)))
+;  (cle-eval-lexdb 'sql-fn-get-raw-records :lookup_general3 
+;		  :args (list field-kw val-str)
+;		  :fields '(:name :userid :modstamp)))
+  (cle-eval-lexdb 'lookup-rev-all field-kw val-str))
+;  (cle-eval-lexdb 'lookup field-kw val-str))
   
 (defun cle-get-private-revs ()
   (cle-eval-lexdb 'scratch-records))
