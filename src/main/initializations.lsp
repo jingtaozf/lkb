@@ -186,9 +186,9 @@
       ;; loading from source can then get PSQL in return for the :psql feature,
       ;; someone running a binary, can set the PSQL environment variable.
       ;;
+      ;; (bmw - 05jun05) use global *lexdb-params* instead of above test
       #+:psql
-      (when (or (find :psql *features*) (system:getenv "PSQL"))
-        (psql-initialize))
+      (psql-initialize)
 
       ;;
       ;; no graphics when in :tty mode

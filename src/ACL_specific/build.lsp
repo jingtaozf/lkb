@@ -72,7 +72,7 @@
 ;;; include PSQL and LUI support code (both disabled by default, though) on 
 ;;; those platforms where we support them
 ;;;
-#+(and (version>= 6 0) :linux86)
+#+(and (version>= 6 0) (or :linux86 :windows :solaris))
 (pushnew :psql *features*)
 #+(and (version>= 6 0) (or :linux86 :solaris))
 (pushnew :lui *features*)
@@ -87,7 +87,9 @@
 ;;; strategy we use for turning on the LUI).  hence, drop :psql feature now and
 ;;; leave it to start-lkb() to initialize PSQL and put it back on if requested.
 ;;;
-(setf *features* (delete :psql *features*))
+;;; (bmw - 05jun05) the global *lexdb-params* achieves this purpose more 
+;;;                 cleanly
+;;(setf *features* (delete :psql *features*))
 
 (setf excl:*restart-init-function* 
   #'(lambda () (lkb::start-lkb t)))
