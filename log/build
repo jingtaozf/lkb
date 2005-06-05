@@ -1,101 +1,93 @@
-U Version.lisp
-U fundamentals.tdl
 U lexdb.dfn
-U lexdb.fld
-U lexdb.meta
-U lexdb.rev
-U lexdb.rev_key
-U lexicon.tdl
-U lexrules.tdl
-U lextypes.tdl
-U syntax.tdl
 ? Version.lisp.fasl
-U data/genrules.mrs
-U gold/csli/decision.gz
-U gold/csli/item-phenomenon.gz
-U gold/csli/item.gz
-U gold/csli/parse.gz
-U gold/csli/phenomenon.gz
-U gold/csli/preference.gz
-U gold/csli/result.gz
-U gold/csli/run.gz
-U gold/csli/tree.gz
-U gold/csli/update.gz
-U gold/dt-faqs/decision.gz
-U gold/dt-faqs/item.gz
-U gold/dt-faqs/parse.gz
-U gold/dt-faqs/preference.gz
-U gold/dt-faqs/result.gz
-U gold/dt-faqs/run.gz
-U gold/dt-faqs/tree.gz
-U gold/dt-faqs/update.gz
-U gold/ecoc/decision.gz
-U gold/ecoc/item.gz
-U gold/ecoc/parse.gz
-U gold/ecoc/preference.gz
-U gold/ecoc/result.gz
-U gold/ecoc/run.gz
-U gold/ecoc/tree.gz
-U gold/ecoc/update.gz
-U gold/hike/decision.gz
-U gold/hike/item.gz
-U gold/hike/parse.gz
-U gold/hike/preference.gz
-U gold/hike/result.gz
-U gold/hike/run.gz
-U gold/hike/tree.gz
-U gold/hike/update.gz
-U gold/logic/decision.gz
-U gold/logic/item-phenomenon.gz
-U gold/logic/item.gz
-U gold/logic/parse.gz
-U gold/logic/phenomenon.gz
-U gold/logic/preference.gz
-U gold/logic/result.gz
-U gold/logic/run.gz
-U gold/logic/tree.gz
-U gold/logic/update.gz
-U gold/mrs/decision.gz
-U gold/mrs/item.gz
-U gold/mrs/parse.gz
-U gold/mrs/preference.gz
-U gold/mrs/result.gz
-U gold/mrs/run.gz
-U gold/mrs/tree.gz
-U gold/mrs/update.gz
-U gold/rondane/decision.gz
-U gold/rondane/item.gz
-U gold/rondane/parse.gz
-U gold/rondane/preference.gz
-U gold/rondane/result.gz
-U gold/rondane/run.gz
-U gold/rondane/tree.gz
-U gold/rondane/update.gz
-U gold/trec/decision.gz
-U gold/trec/item.gz
-U gold/trec/parse.gz
-U gold/trec/preference.gz
-U gold/trec/result.gz
-U gold/trec/run.gz
-U gold/trec/tree.gz
-U gold/trec/update.gz
-U lkb/mrs-initialization.lsp
-U lkb/patches.lsp
-U lkb/script
 ? lkb/checkpaths.lsp.fasl
 ? lkb/globals.lsp.fasl
 ? lkb/mrs-initialization.lsp.fasl
 ? lkb/mt.lsp.fasl
 ? lkb/patches.lsp.fasl
 ? lkb/user-fns.lsp.fasl
-U pet/common.set
 ? doc
 ? linux.x86.32
 ? man
+U etc/generate
+U lexdb/README
+U lexdb/fns.sql
+U lexdb/fns_post.sql
+U lexdb/install-lexdb-cygwin.sh
+U lexdb/install-lexdb.sh
+U lexdb/meta.tsv
+U lexdb/pg-interface.el
+U lexdb/tables.sql
+U lib/linux.x86.64/libXm.so.2
+U lib/linux.x86.64/libXm.so.3
 M log/build
+U src/tdl-mode.el
 ? src/.l7cl
+U src/ACL_specific/build.lsp
+U src/ACL_specific/compare.lsp
+U src/MCL_specific/chartout.lsp
+U src/general/ecl-patches.lsp
+U src/glue/lsp.lsp
+U src/glue/lui.lsp
+U src/graft/arboretum.lsp
+U src/io-general/tree-nodes.lsp
+U src/lexdb/command.lsp
+U src/lexdb/external-lex-database.lsp
+U src/lexdb/extract.lsp
+U src/lexdb/headers.lsp
+U src/lexdb/lex-entry.lsp
+U src/lexdb/psql-emacs.lsp
+U src/lexdb/psql-lex-database.lsp
+U src/lexdb/psql-lex-entry.lsp
+U src/main/dag.lsp
+U src/main/globals.lsp
+U src/main/initializations.lsp
+U src/mrs/generate.lisp
+U src/mrs/lexlookup.lisp
+U src/mrs/lexutils.lisp
+U src/mrs/semi-psql.lsp
+U src/mrs/semi.lsp
+U src/mrs/time-convert.lisp
+cvs update: src/mt/bnc.blm is no longer in the repository
+U src/mt/transfer.lisp
+U src/mt/version.lisp
+U src/ppcre/errors.lisp
+U src/pvm/pvm.lisp
+U src/rmrs/dtd-notes.txt
+U src/tsdb/capi/gc.c
 ? src/tsdb/home/log
 ? src/tsdb/home/redwoods
+U src/tsdb/lisp/allegro.lisp
+U src/tsdb/lisp/capi.lisp
+U src/tsdb/lisp/commands.lisp
+U src/tsdb/lisp/derivations.lisp
+U src/tsdb/lisp/globals.lisp
+U src/tsdb/lisp/lkb-interface.lisp
+U src/tsdb/lisp/maxent.lisp
+U src/tsdb/lisp/mt.lisp
+U src/tsdb/lisp/process.lisp
+U src/tsdb/lisp/pvm.lisp
+U src/tsdb/lisp/redwoods.lisp
+U src/tsdb/lisp/statistics.lisp
+U src/tsdb/skeletons/deutsch/german/analysis
+U src/tsdb/skeletons/deutsch/german/item
+U src/tsdb/skeletons/deutsch/german/parameter
+U src/tsdb/skeletons/english/cell/item
+U src/tsdb/skeletons/espanol/banca/item
+U src/tsdb/skeletons/francaise/french/analysis
+U src/tsdb/skeletons/francaise/french/item
+U src/tsdb/skeletons/francaise/french/parameter
+U src/tsdb/skeletons/francaise/french/phenomenon
+U src/tsdb/skeletons/norsk/base/item
+U src/tsdb/skeletons/norsk/base/item-phenomenon
+U src/tsdb/skeletons/norsk/base/phenomenon
+U src/tsdb/skeletons/norsk/enkel/item
+U src/tsdb/skeletons/norsk/mrs/item
+U src/tsdb/skeletons/norsk/tur/item
+U src/tsdb/tcl/podium.tcl
+U src/www/demo.lisp
+U src/www/lkb.css
+U src/www/lkb.js
 **********
 
   Remember to update the version number:
@@ -105,7 +97,7 @@ M log/build
 **********
 Checking in ./src/version.lsp;
 /lingo/CVS/lkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.394; previous revision: 1.393
+new revision: 1.395; previous revision: 1.394
 done
 make[1]: Entering directory `/lingo/build/lkb'
 ( \
@@ -299,7 +291,6 @@ make[1]: Entering directory `/lingo/build/lkb'
 ./src/mrs/lexindex.lisp
 ./src/mrs/algebra.lisp
 ./src/mt/
-./src/mt/bnc.blm
 ./src/mt/transfer.lisp
 ./src/mt/lm.lisp
 ./src/mt/mrsglobals.lisp
@@ -1073,14 +1064,16 @@ lexdb/tables.sql
 lexdb/fns_post.sql
 lexdb/init.sql
 lexdb/util.sql
+lexdb/README
+lexdb/meta.tsv
 lexdb/load.sql
 lexdb/install-lexdb.sh
 lexdb/permissions.sql
 lexdb/example.fld
 lexdb/lexdb-local.sql
 lexdb/mwe.sql
-lexdb/meta.tsv
 lexdb/remove-orthkey-field.el
+lexdb/install-lexdb-cygwin.sh
 etc/
 etc/install
 etc/dot.bashrc
@@ -1146,7 +1139,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-7.0 [Linux (x86)] (May 17, 2005 16:56)
+7.0 [Linux (x86)] (Jun 5, 2005 6:29)
 Copyright (C) 1985-2004, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -1847,12 +1840,6 @@ Warning: Variable #:G21836 is never used.
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l7cl/glue/dag.fasl
 ;;; Compiling file /lingo/build/lkb/src/glue/lsp.lsp
-; While compiling LSP-BROWSE:
-Warning: variable CONTEXT is used yet it was declared ignored
-Warning: Free reference to undeclared variable %CONTEXT assumed special.
-Warning: Free reference to undeclared variable %OBJECT assumed special.
-Warning: Free reference to undeclared variable %FORMAT assumed special.
-Warning: Free reference to undeclared variable %VIEW assumed special.
 ;;; Writing fasl file /lingo/build/lkb/src/.l7cl/glue/lsp.fasl
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l7cl/glue/lsp.fasl
@@ -2166,7 +2153,7 @@ NIL
  (DISCARD-ALL-SOURCE-FILE-INFO)
  |#
 
-#<EQUAL hash-table with 0 entries @ #x4475fd12> 
+#<EQUAL hash-table with 0 entries @ #x4475fd0a> 
  #|
 ; Fast loading from bundle code/who.fasl.
  (DISCARD-LOCAL-NAME-INFO)
@@ -2178,7 +2165,7 @@ NIL
  |#
 ; Fast loading /lingo/local/acl/code/nocompiler.001
 ;;; Installing nocompiler patch, version 1
-125365528 bytes have been tenured, next gc will be global.
+114176512 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 
 T 
@@ -2607,12 +2594,6 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/glue/dag.fasl
 ;;; Compiling file /lingo/build/lkb/src/glue/lsp.lsp
-; While compiling LSP-BROWSE:
-Warning: variable CONTEXT is used yet it was declared ignored
-Warning: Free reference to undeclared variable %CONTEXT assumed special.
-Warning: Free reference to undeclared variable %OBJECT assumed special.
-Warning: Free reference to undeclared variable %FORMAT assumed special.
-Warning: Free reference to undeclared variable %VIEW assumed special.
 ;;; Writing fasl file /lingo/build/lkb/src/.l7cl/glue/lsp.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/glue/lsp.fasl
@@ -2956,7 +2937,7 @@ Warning: Free reference to undeclared variable %VIEW assumed special.
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/process.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/commands.lisp
-8538736 bytes have been tenured, next gc will be global.
+8641104 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/build/lkb/src/.l7cl/tsdb/commands.fasl
 ;;; Fasl write complete
@@ -2997,8 +2978,8 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Writing fasl file /lingo/build/lkb/src/.l7cl/tsdb/yy.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/yy.fasl
+gc-after-hook(): local; new: 629856; old: 4904; pending: 1368; efficiency: 95.
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/mt.lisp
-gc-after-hook(): local; new: 1637520; old: 8704; pending: 72; efficiency: 94.
 ;;; Writing fasl file /lingo/build/lkb/src/.l7cl/tsdb/mt.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/mt.fasl
@@ -3007,13 +2988,13 @@ gc-after-hook(): local; new: 1637520; old: 8704; pending: 72; efficiency: 94.
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/derivations.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/tnt-interface.lisp
+gc-after-hook(): local; new: 1241304; old: 9360; pending: 0; efficiency: 94.
 ;;; Writing fasl file /lingo/build/lkb/src/.l7cl/tsdb/tnt-interface.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/tnt-interface.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/redwoods.lisp
-gc-after-hook(): local; new: 4223632; old: 5560; pending: 0; efficiency: 89.
-gc-after-hook(): local; new: 1197944; old: 2936; pending: 40; efficiency: 93.
-gc-after-hook(): local; new: 1700752; old: 131696; pending: 0; efficiency: 94.
+gc-after-hook(): local; new: 1420088; old: 2840; pending: 0; efficiency: 95.
+gc-after-hook(): local; new: 3733920; old: 117368; pending: 0; efficiency: 90.
 ;;; Writing fasl file /lingo/build/lkb/src/.l7cl/tsdb/redwoods.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/redwoods.fasl
@@ -3030,11 +3011,11 @@ gc-after-hook(): local; new: 1700752; old: 131696; pending: 0; efficiency: 94.
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/rasp.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/pcfg.lisp
+gc-after-hook(): local; new: 1408112; old: 1280; pending: 40; efficiency: 92.
 ;;; Writing fasl file /lingo/build/lkb/src/.l7cl/tsdb/pcfg.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/pcfg.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/maxent.lisp
-gc-after-hook(): local; new: 1523048; old: 520; pending: 72; efficiency: 93.
 ;;; Writing fasl file /lingo/build/lkb/src/.l7cl/tsdb/maxent.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/maxent.fasl
@@ -3043,8 +3024,7 @@ gc-after-hook(): local; new: 1523048; old: 520; pending: 72; efficiency: 93.
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/tagger.fasl
 (#<MODULE: tsdb>)
-CL-USER(11): ; killing "scheduler work-out [spr19158]"...
-; Exiting
+CL-USER(11): ; Exiting
 make[2]: Leaving directory `/lingo/build/lkb'
 ( \
   if [ ! -f /lingo/build//.yes ]; then exit 1; fi; \
@@ -3786,6 +3766,8 @@ lib/linux.x86.64/
 lib/linux.x86.64/libitsdb.a
 lib/linux.x86.64/libitsdb.so
 lib/linux.x86.64/libpvm3.a
+lib/linux.x86.64/libXm.so.2
+lib/linux.x86.64/libXm.so.3
 man/
 man/man1/
 man/man1/aimk.1
@@ -5305,6 +5287,8 @@ src/tsdb/skeletons/norsk/tur/relations
 src/tsdb/skeletons/norsk/base/
 src/tsdb/skeletons/norsk/base/item
 src/tsdb/skeletons/norsk/base/relations
+src/tsdb/skeletons/norsk/base/item-phenomenon
+src/tsdb/skeletons/norsk/base/phenomenon
 src/tsdb/skeletons/norsk/Relations
 src/tsdb/skeletons/norsk/Index.lisp
 src/tsdb/home/
