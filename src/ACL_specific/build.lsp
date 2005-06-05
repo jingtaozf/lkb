@@ -72,7 +72,7 @@
 ;;; include PSQL and LUI support code (both disabled by default, though) on 
 ;;; those platforms where we support them
 ;;;
-#+(and (version>= 6 0) (or :linux86 :windows :solaris))
+#+(and (version>= 6 0) (or :linux86 :mswindows :solaris))
 (pushnew :psql *features*)
 #+(and (version>= 6 0) (or :linux86 :solaris))
 (pushnew :lui *features*)
