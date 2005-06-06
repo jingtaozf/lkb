@@ -326,35 +326,36 @@
                            "~%Lexical rule application failed")))))))))
 
 (defun apply-lex-rules (&optional id)
-   (let* ((lex (or id (ask-user-for-lex)))
+  (let* ((lex (or id (ask-user-for-lex)))
          (lex-entry (if lex (get-lex-entry-from-id lex)))
          (lex-entry-fs
-            (if lex-entry (lex-entry-full-fs lex-entry))))
-      (when lex-entry-fs 
-         (setf *number-of-applications* 0)
-         (let ((result-list
-                  (try-all-lexical-rules 
-                     (list (cons nil lex-entry-fs)))))
-            (cond (result-list
-                   (draw-active-list
-                    (mapcar #'(lambda (result-pair)
-                                (let ((string 
-                                       (format nil "~(~A~) ~{+ ~A~}" 
-                                               lex 
-                                               (reverse 
-                                                (car result-pair)))))
-                                  (cons string (cons string
-                                                     (cdr result-pair)))))
-                            result-list)
-                    "Lexical rule results"
-                    (list
-                         (cons 
-                          "Feature structure"
-                          #'(lambda (display-pair)
-                              (display-fs (cdr display-pair)
-                                          (car display-pair)))))))
-               (t (format t 
-                     "~%No applicable lexical rules")))))))
+	  (if lex-entry (lex-entry-full-fs lex-entry))))
+    (when lex-entry-fs 
+      (setf *number-of-applications* 0)
+      (let ((result-list
+	     (try-all-lexical-rules 
+	      (list (cons nil lex-entry-fs)))))
+	(cond (result-list
+	       (draw-active-list
+		(mapcar #'(lambda (result-pair)
+			    (let ((string 
+				   (format nil "~(~A~) ~{+ ~A~} = ~(~A~)" 
+					   lex 
+					   (reverse 
+					    (car result-pair))
+					   (extract-orth-from-fs (cdr result-pair)))))
+			      (cons string (cons string
+						 (cdr result-pair)))))
+			result-list)
+		"Lexical rule results"
+		(list
+		 (cons 
+		  "Feature structure"
+		  #'(lambda (display-pair)
+		      (display-fs (cdr display-pair)
+				  (car display-pair)))))))
+	      (t (format t 
+			 "~%No applicable lexical rules")))))))
 
 
 
