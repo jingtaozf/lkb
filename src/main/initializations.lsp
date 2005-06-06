@@ -180,13 +180,7 @@
              (port (parse-integer lui :junk-allowed t)))
         (when lui (lui-initialize :port port :runtimep runtimep)))
 
-      ;;
-      ;; in the following, the featurep() test makes sense, since our run-time
-      ;; images, by default, drop the :psql feature after the build.  someone
-      ;; loading from source can then get PSQL in return for the :psql feature,
-      ;; someone running a binary, can set the PSQL environment variable.
-      ;;
-      ;; (bmw - 05jun05) use global *lexdb-params* instead of above test
+      ;; (bmw - 05jun05) use global *lexdb-params* to activate LexDB
       #+:psql
       (psql-initialize)
 

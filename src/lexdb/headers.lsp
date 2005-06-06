@@ -90,25 +90,32 @@
   )
 
 (defun psql-initialize ()
-  ;;
-  ;; make sure we `mark' the current universe as PSQL-enabled.
-  ;;
-  (pushnew :psql *features*)
-  (handler-case (load-libpq) 
-    (file-error () 
-      ;; some feedback to user
-      (format t ";   Warning: cannot load libpq.so")
-      (format t "~%;            (PSQL lexicon functionality will be unavailable)")
-      (format t "~%;            (hint: are the PostgreSQL libraries installed on your machine?)")
-      ;; need this for backward compatibility with ERG script
-      ;; (also a good idea anyway)
-      (setf *features* (remove :psql *features*)))))
+  (load-libpq))
 
-#+:linux
 (defun load-libpq nil
-  (let (#+allegro (excl::*load-foreign-types* (cons "3" excl::*load-foreign-types*)))
-    (load "libpq.so.3")))
-
-#+:mswindows
-(defun load-libpq nil
-    (load "libpq.dll"))
+  #+:linux
+  (handler-case 
+      (load "libpq.so")
+    (file-error ()
+      (handler-case 
+	  (let (#+allegro (excl::*load-foreign-types* (cons "4" excl::*load-foreign-types*)))
+	    (load "libpq.so.4"))
+	(file-error ()
+	  (handler-case 
+	      (let (#+allegro (excl::*load-foreign-types* (cons "3" excl::*load-foreign-types*)))
+		(load "libpq.so.3"))
+	    (file-error ()
+	      (format t ";   Warning: cannot load libpq.so")
+	      (format t "~%;            (Is the PostgreSQL library file installed on your machine? If so, please load it manually.)")))))))
+  #+:mswindows
+  (handler-case 
+      (load "libpq.dll")    
+    (file-error ()
+      (format t ";   Warning: cannot load libpq.dll")
+      (format t "~%;            (Is the PostgreSQL library file installed on your machine? If so, please load it manually.)")))
+  #-(or :linux :mswindows)
+  (handler-case 
+      (load "libpq.so")    
+    (file-error ()
+      (format t ";   Warning: cannot load libpq library")
+      (format t "~%;            (Is the PostgreSQL library file installed on your machine? If so, please load it manually.)"))))

@@ -68,12 +68,16 @@
 (setq make:*compile-during-load* t)
 
 (pushnew :lkb *features*)
-;;;
-;;; include PSQL and LUI support code (both disabled by default, though) on 
-;;; those platforms where we support them
-;;;
-#+(and (version>= 6 0) (or :linux86 :mswindows :solaris))
+
+  ;; (bmw - 06jun04)
+  ;; activate PSQL/LexDB code (no longer OS specific)
+  ;;
 (pushnew :psql *features*)
+
+;;;
+;;; include LUI support code (disabled by default, though) on 
+;;; those platforms supported
+;;;
 #+(and (version>= 6 0) (or :linux86 :solaris))
 (pushnew :lui *features*)
 
