@@ -41,20 +41,19 @@
 
 ;; lexicon is open...
 ;; opens cached lexicon for reading
-(defmethod read-cached-lex ((lexicon cdb-lex-database) filenames)
-  (unless (open-p lexicon)
-    (error "lexicon is not open"))
-  (with-slots (temp-file temp-index-file) lexicon
+(defmethod read-cached-lex ((lex cdb-lex-database) filenames)
+  (unless (open-p lex)
+    (error "lexicon (~a) is not open" (name lex)))
+  (with-slots (temp-file temp-index-file) lex
     (cond
      ((up-to-date-p filenames (list temp-file temp-index-file))
-      (format t "~%Reading in cached lexicon")
-      (if (name lexicon) (format t " (~a)" (name lexicon)))
-      (when (open-read lexicon)
-        (setf (source-files lexicon) filenames)
+      (format t "~%Reading in cached lexicon (~a)" (name lex))
+      (when (open-read lex)
+        (setf (source-files lex) filenames)
 	(format t "~%Cached lexicon read")
 	t))
      (t
-      (format t "~%Cached lexicon missing or out-of-date: reading lexicon source files")
+      (format t "~%Cached lexicon (~a) missing or out-of-date: reading lexicon source files" (name lex))
       nil))))
   
 ;; lexicon is open...

@@ -69,10 +69,13 @@
 ;; call from script file
 (defun load-lexdb-from-script nil
   (close-lex *lexicon*)
-  (when *lexdb-params*
+  (cond
+   (*lexdb-params*
     (unless (initialize-lexdb)
       (error "~%Load lexicon aborted"))
-    (setf *lexicon* *lexdb*)))
+    (setf *lexicon* *lexdb*))
+   (t
+   (error "to use the LexDB you must set *lexdb-params*"))))
   
 (defun initialize-lexdb 
     (&key

@@ -632,8 +632,9 @@
     (cons (list "userid" "name" "modstamp") records)))
 
 (defmethod current-timestamp ((lex psql-lex-database))
-  (sql-fn-get-val lex 
-		  :current_timestamp))
+  (caar (get-raw-records *lexdb* "SELECT current_timestamp")))
+;  (sql-fn-get-val lex 
+;		  :current_timestamp))
 
 ;;;
 ;;; low-level
@@ -1171,7 +1172,7 @@
       (disconnect conn-db-owner))))
 
 
-(defmethod to-db-dump ((x lex-entry) (lex psql-lex-database))
+(defmethod to-db-dump-rev ((x lex-entry) (lex psql-lex-database) &key (skip-stream t))
   "provide line entry for lex db import file"
   (with-slots (dfn fields) lex
     (let* ((s (copy-slots x dfn))
@@ -1186,7 +1187,7 @@
 			(list
 			 ;;(cons :orthkey (orthkey x))
 			 (cons :userid *lexdb-dump-user*)
-			 (cons :modstamp "NOW")
+			 (cons :modstamp *lexdb-dump-timestamp*)
 			 (cons :lang *lexdb-dump-lang*)
 			 (cons :country *lexdb-dump-country*)
 			 (cons :confidence 1)
@@ -1209,7 +1210,7 @@
        ((null (cdr (assoc :unifs s)))
 	line)
        (t
-	(format *lexdb-dump-skip-stream* "~a" (to-tdl x))
+	(format skip-stream "~a" (to-tdl x))
 	"")))))
 
 (defmethod to-db ((x lex-entry) (lex psql-lex-database))

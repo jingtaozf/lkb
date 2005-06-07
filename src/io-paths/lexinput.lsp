@@ -159,7 +159,7 @@
     (set-temporary-lexicon-filenames)
     (unless
         (open-lex *lexicon*
-                  :name "main_lexicon"
+                  :name "main"
                   :parameters (list *psorts-temp-file* *psorts-temp-index-file*))
       (error "Operation aborted"))
     (unless (read-cached-lex *lexicon* filenames)

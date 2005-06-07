@@ -38,7 +38,7 @@
    ((stringp val)
     (format nil "\"~a\"" val))
    (t
-    (error "unhandled type: ~a" val))))
+    (error "~a is not of type string" val))))
 ;;;
 ;;; extract grammatical fields
 ;;;

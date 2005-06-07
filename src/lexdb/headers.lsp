@@ -14,6 +14,7 @@
 
 (defvar *lexdb-dump-skip-stream* t)
 (defvar *lexdb-dump-source* "?")
+(defvar *lexdb-dump-timestamp* nil)
 (defvar *lexdb-dump-user* nil)
 (defvar *lexdb-dump-lang* nil)
 (defvar *lexdb-dump-country* nil)

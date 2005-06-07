@@ -30,11 +30,7 @@
 (defun export-lexicon (&rest rest)
   (apply 'export-lexicon-to-file rest))
 
-(defun export-lexicon-to-file (&rest rest)
-  (catch 'abort 
-    (apply 'export-lexicon-to-file-aux rest)))
-
-(defun export-lexicon-to-file-aux (&key 
+(defun export-lexicon-to-file (&key 
 				(dir (postgres-user-temp-dir))
 				name 
 				(lexicon *lexicon*)
@@ -45,39 +41,45 @@
     (format t "ignoring :recurse (ommit :name to enable :recurse)")
     (setf recurse nil))
   (when (typep lexicon 'psql-lex-database)
-    (error "use 'merge' command to export LexDB"))
-  (let* ((file (namestring
-	       (pathname
-		(format nil "~a/~a" dir 
-			(or name (name lexicon) "unknown")))))
-	(*lexdb-dump-source* *lexdb-dump-source*)
-	(rev-file (format nil "~a.rev" file))
-	(skip-file (format nil "~a.skip" file)))
-    (unless use-defaults
-      ;; extra data in db entries
-      (setf *lexdb-dump-source* (get-current-source))
-      (query-for-username)
-      (query-for-meta-fields))
-    
-    (format t "~%~%Please wait: exporting lexicon ~a to REV file ~a" (name lexicon) rev-file)
+    (error "use \"merge\" command to export psql lexical database"))
+  (unless (typep *lexdb* 'psql-lex-database)
+    (error "please initialize *lexdb*"))
+  (setf *lexdb-dump-source* (extract-pure-source-from-source (get-current-source)))
+  (unless use-defaults
+    (query-for-username)
+    (query-for-meta-fields))
+  (let* ((file-base (namestring
+		     (pathname
+		      (format nil "~a/~a" dir *lexdb-dump-source*))))
+	 rev-file)
+    (dump-dfn *lexdb* file-base)
+    (dump-fld *lexdb* file-base)
+    (dump-meta *lexdb* file-base)
+    (setf rev-file (namestring (pathname (format nil "~a.rev" file-base))))
+    (format t "~%exporting lexical entries to dump file ~a" rev-file)
+    (with-open-file (rev-stream 
+		     rev-file
+		     :direction :output 
+		     :if-exists :supersede :if-does-not-exist :create)
+      (export-lexicon-to-file-aux lexicon rev-stream file-base)
+      (when recurse
+	(mapcar #'(lambda (x) 
+		    (export-lexicon-to-file-aux x rev-stream file-base))
+		(extra-lexicons lexicon)))
+      ))
+  (lkb-beep))
+
+(defun export-lexicon-to-file-aux (lexicon rev-stream file-base)
+  (let ((*lexdb-dump-timestamp* (current-timestamp *lexdb*))
+	(*lexdb-dump-source* (format nil "~a.~a" *lexdb-dump-source* (name lexicon)))
+	(skip-file (namestring (pathname (format nil "~a.~a.skip" file-base (name lexicon))))))
+    (setf *lexdb-dump-timestamp* *lexdb-dump-timestamp*)
     (format t "~%   (skip file: ~a)" skip-file)
-    
-      (with-open-file (*lexdb-dump-skip-stream* 
-		       skip-file
-		       :direction :output 
-		       :if-exists :supersede :if-does-not-exist :create)
-	(unless (typep *lexdb* 'psql-lex-database)
-	  (error "please initialize *lexdb*"))
-	(dump-dfn *lexdb* file)
-	(dump-fld *lexdb* file)
-	(dump-meta *lexdb* file)
-	(export-to-db-dump-to-file lexicon rev-file)))
-  (format t "~%export complete")
-  (when recurse
-    (mapcar 
-     #'(lambda (x) 
-	 (export-lexicon :lexicon x :dir dir :recurse t :use-defaults t))
-     (extra-lexicons lexicon))))
+    (with-open-file (skip-stream 
+		     skip-file
+		     :direction :output 
+		     :if-exists :supersede :if-does-not-exist :create)
+      (export-to-db-dump-rev lexicon rev-stream :skip-stream skip-stream))))
 
 ;;;
 ;;; export to .tdl file
@@ -122,7 +124,7 @@
       (unless lexdb
 	(error "~%lexdb is NULL"))
       (let ((lexicon (load-scratch-lex :filename filename)))
-	(query-for-meta-fields)
+	(query-for-meta-fields lexicon)
 	(reconnect lexdb);; work around server bug
 	(time 
          (export-to-db lexicon lexdb))
@@ -156,12 +158,12 @@
     (if (and version (boundp version))
 	(symbol-value version)
       (format t "WARNING: no *GRAMMAR-VERSION* defined!"))))
-
+  
 (defun query-for-meta-fields nil
   (setf *lexdb-dump-source* 
     (ask-user-for-x 
      "Export Lexicon" 
-     (cons "Source?" (or (extract-pure-source-from-source *lexdb-dump-source*) ""))))
+     (cons "Source?" (or *lexdb-dump-source* ""))))
   (unless *lexdb-dump-source* (throw 'abort 'source))
   (setf *lexdb-dump-lang* 
     (ask-user-for-x 
