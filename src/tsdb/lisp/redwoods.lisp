@@ -1384,6 +1384,9 @@
                 (smember :avm *redwoods-export-values*))
           nil
           lkb::*deleted-daughter-features*)
+      with i-input = (get-field :i-input item)
+      with i-id = (get-field :i-id item)
+      with i-comment = (get-field :i-comment item)
       with parse-id = (get-field :parse-id item)
       with results = (get-field :results item)
       for i from 1
@@ -1410,6 +1413,7 @@
                      tree))
       for dag = (and edge (lkb::tdfs-indef (lkb::edge-dag edge)))
       for mrs = (and edge (mrs::extract-mrs edge))
+      for ident = (format nil "~a @ ~a~@[ @ ~a~]" i-id result-id i-comment)
       when (zerop (mod i 100)) do (clrhash *reconstruct-cache*)
       when dag do
         (format 
@@ -1446,7 +1450,9 @@
           (format stream "~%"))
         (when (or (eq *redwoods-export-values* :all)
                   (smember :xml *redwoods-export-values*))
-          (mrs::output-rmrs1 (mrs::mrs-to-rmrs mrs) 'mrs::xml stream)
+          (mrs::output-rmrs1
+           (mrs::mrs-to-rmrs mrs)
+           'mrs::xml stream nil nil i-input ident)
           (format stream "~%"))
         (when (or (eq *redwoods-export-values* :all)
                   (smember :dependencies *redwoods-export-values*))

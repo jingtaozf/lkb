@@ -40,10 +40,13 @@
 ;;;          cfrom CDATA #REQUIRED
 ;;;          cto   CDATA #REQUIRED >
 
-(defmethod rmrs-output-start-fn ((rmrsout xml) cfrom cto)
+(defmethod rmrs-output-start-fn ((rmrsout xml) cfrom cto
+                                 &optional surface ident)
   (with-slots (stream) rmrsout
-    (format stream "~%<rmrs cfrom='~A' cto='~A'>~%" (or cfrom -1)
-	    (or cto -1))))
+    (format
+     stream
+     "~%<rmrs cfrom='~A' cto='~A'~@[ surface=~s~]~@[ ident=~s~]>~%"
+     (or cfrom -1) (or cto -1) surface ident)))
 
 (defmethod rmrs-output-end-fn ((rmrsout xml))
   (with-slots (stream) rmrsout
@@ -276,8 +279,9 @@ for gram.dtd and tag.dtd
 
 (defclass compact (rmrs-output-type) ())
 
-(defmethod rmrs-output-start-fn ((rmrsout compact) cfrom cto)
-  (declare (ignore cfrom cto))
+(defmethod rmrs-output-start-fn ((rmrsout compact) cfrom cto
+                                 &optional surface ident)
+  (declare (ignore cfrom cto surface ident))
   (with-slots (stream) rmrsout
     (format stream "~%")))
 
@@ -505,8 +509,9 @@ for gram.dtd and tag.dtd
   ((xpos :initform 0 :initarg :xpos)))
 
 #+:lkb
-(defmethod rmrs-output-start-fn ((rmrsout compact-two) cfrom cto)
-  (declare (ignore cfrom cto))
+(defmethod rmrs-output-start-fn ((rmrsout compact-two) cfrom cto
+                                 &optional surface ident)
+  (declare (ignore cfrom cto surface ident))
   (with-slots (stream indentation xpos) rmrsout
     (setf indentation (+ indentation 70))
     (format stream "~%~VT" indentation)
@@ -560,7 +565,7 @@ for gram.dtd and tag.dtd
       (output-rmrs1 rmrs-instance device t)))
 
 (defun output-rmrs1 (rmrs-instance device stream 
-		     &optional grouping-p pos-rec-p)
+		     &optional grouping-p pos-rec-p surface ident)
   ;;; changed to return a list of eps and their positions
   ;;; for calculation of comparison arrows 
   ;;; not used otherwise
@@ -569,7 +574,8 @@ for gram.dtd and tag.dtd
     (cond ((rmrs-p rmrs-instance)         
 	   (rmrs-output-start-fn rmrs-display-structure 
 				 (rmrs-cfrom rmrs-instance)
-				 (rmrs-cto rmrs-instance))
+				 (rmrs-cto rmrs-instance)
+                                 surface ident)
 	   (let ((positions
 		  (print-rmrs rmrs-instance grouping-p 
 			      pos-rec-p
