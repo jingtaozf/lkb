@@ -152,8 +152,7 @@
              (append initial-features
                      (extract-mrs-path
                       (mrs::extrapair-feature fvp))))
-            :rhs (make-u-value :type
-                               (deasterisk value))))))
+            :rhs (make-u-value :type value)))))
 
 (defun extract-mrs-path (dotted-feature)
   (let ((feature-string (nreverse (coerce (string dotted-feature) 'list)))
@@ -171,45 +170,7 @@
             feats))
     feats))
 
-  
-
-(defun deasterisk (value)
-  (let ((val-string (reverse (string value))))
-    (if (char= (elt val-string 0) #\*)
-        (let ((new-type (intern (nreverse (subseq val-string 1)) :lkb)))
-          (if (is-valid-type new-type)
-              new-type
-            value))
-      value)))
-  #|
-  (or
-   (and (not (stringp value))
-        (let* ((ancestors (mapcar #'ltype-name (retrieve-ancestors value)))
-               (strict-type
-                (if ancestors
-                    (find-strict-type (cons value ancestors)))))
-          (if strict-type
-              (greatest-common-subtype strict-type value))))
-   value))
-|#
-   
-(defparameter *strict-pairs*
-    '((pernum . strict_sort)
-      (gender . strict_sort)
-      (mood . strict_sort)
-      (tense . strict_sort)))
-      
-(defun find-strict-type (types)
-  (dolist (type types)
-    (let ((strict-type
-           (dolist (strp *strict-pairs*)
-             (when (eq type (car strp))
-               (return (cdr strp))))))
-      (when strict-type
-        (return strict-type)))))
-       
-
-
+;;; old hack for asterisk types removed
 
 ;;; from lexlookup
 

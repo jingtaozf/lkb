@@ -165,7 +165,6 @@
      "unpack-edge(): ~a~%" edge)
     
     (let ((children (edge-children edge))
-          (morphology (edge-morph-history edge))
           (adjuncts 
            ;;
            ;; adjoined modifiers may themselves be packed; for now, unpack them
@@ -247,19 +246,6 @@
                (loop
                    for edge in (edge-equivalent edge)
                    nconc (unpack-edge! edge))))
-       ;;
-       ;; given the (idiosyncratic) LKB representation of rule applications
-       ;; that affect the surface form, this is just a variant of the general
-       ;; case where we have children.
-       ;;
-       (morphology
-        (explode! 
-         (loop
-             with decompositions = (unpack-edge! morphology)
-             for decomposition in decompositions
-             for instantiation = (instantiate edge (list decomposition))
-             when instantiation collect instantiation)
-         adjuncts))
        ;;
        ;; the (default) recursive case: for each daughter, unfold it and build
        ;; list of unfolding results, one per daughter.  then compute all ways
@@ -545,9 +531,7 @@
     (setf (edge-unpacking edge) (make-unpacking)))
   
   (let ((unpacking (edge-unpacking edge))
-        (children (or (edge-children edge)
-                      (let ((morphology (edge-morph-history edge)))
-                        (and morphology (list morphology))))))
+        (children (edge-children edge)))
 
     (when (null children)
       (let ((decomposition (make-decomposition :lhs edge)))

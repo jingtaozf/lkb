@@ -647,9 +647,10 @@
            (lexemes (when (g-edge-p edge) (g-edge-lexemes edge))))
       
       (cond
-       ((edge-morph-history edge)
-        (list id (edge-label edge) score start end
-              (compute-derivation-tree (edge-morph-history edge))))
+       ;;bmw
+       ;;((edge-morph-history edge)
+       ;; (list id (edge-label edge) score start end
+       ;;       (compute-derivation-tree (edge-morph-history edge))))
 
        #+:mrs
        ((and (g-edge-p edge) lexemes
@@ -690,9 +691,13 @@
       for i from 0 to (- *chart-limit* 1)
       for entry = (aref *chart* i 0)
       thereis
-        (and (chart-entry-p entry)
+        (and
+	 ;;bmw
+	 ;;(chart-entry-p entry)
              (loop
-                 for configuration in (chart-entry-configurations entry)
+	       ;;bmw
+	       ;;for configuration in (chart-entry-configurations entry)
+                 for configuration in entry
                  for candidate = (chart-configuration-edge configuration)
                  when (or (and edge (eq edge candidate))
                           (and id (eq id (edge-id candidate))))
@@ -719,17 +724,22 @@
          (setq distinct-parse-edges (parse-tsdb-distinct-edges p distinct-parse-edges)))
       (dotimes (vertex (- *chart-limit* 1))
          (when (aref *chart* (+ 1 vertex) 0)
-           (dolist (config (chart-entry-configurations 
-                            (aref *chart* (+ 1 vertex) 0)))
+	   ;;bmw
+	   ;;(dolist (config (chart-entry-configurations 
+	   ;;                 (aref *chart* (+ 1 vertex) 0)))
+	   (dolist (config (aref *chart* (+ 1 vertex) 0))
              (when (lexical-rule-p (edge-rule (chart-configuration-edge config)))
                 (incf successful-lrule-applications)))))
       (values successful-lrule-applications (length distinct-parse-edges)
-         (reduce #'+ (map 'vector
-                      #'(lambda (x)
-                          (if (morph-edge-p x) 
-                            (length (morph-edge-morph-results x)) 
-                            0))
-                      *morphs*)))))
+	      ;;bmw
+	      ;;(reduce #'+ (map 'vector
+              ;;        #'(lambda (x)
+              ;;            (if (morph-edge-p x) 
+              ;;              (length (morph-edge-morph-results x)) 
+              ;;              0))
+	      ;;        *morphs*))
+	      0
+	 )))
 
 (defun summarize-chart (&key derivationp)
   (loop
@@ -741,10 +751,13 @@
       for i from 0 to (- *chart-limit* 1)
       for entry = (aref *chart* i 0)
       sum (length (aref *achart* i 0)) into aedges
-      when (chart-entry-p entry)
+      ;;bmw
+      ;; when (chart-entry-p entry)
       do
         (loop
-            for configuration in (chart-entry-configurations entry)
+	  ;;bmw
+	  ;;for configuration in (chart-entry-configurations entry)
+            for configuration in entry
             for edge = (chart-configuration-edge configuration)
             for rule = (edge-rule edge)
             for tdfs = (edge-dag edge)
@@ -757,12 +770,14 @@
                ((and (rule-p rule) (tsdb::inflectional-rule-p (rule-id rule)))
                 (incf i-stasks)
                 (incf words)
-                (when (edge-morph-history edge)
-                  (let* ((child (edge-morph-history edge))
-                         (tdfs (edge-dag child))
-                         (dag (and tdfs (tdfs-indef tdfs))))
-                    (when (and dag (dag-inflected-p dag))
-                      (incf words)))))
+		;;bmw
+                ;;(when (edge-morph-history edge)
+                ;;  (let* ((child (edge-morph-history edge))
+                ;;         (tdfs (edge-dag child))
+                ;;         (dag (and tdfs (tdfs-indef tdfs))))
+                ;;    (when (and dag (dag-inflected-p dag))
+                ;;      (incf words))))
+		)
                ((rule-p rule)
                 (incf pedges)
                 (when (lexical-rule-p rule) (incf l-stasks)))
@@ -786,10 +801,13 @@
       for i from 0 to (- *chart-limit* 1)
       for entry in (reverse *gen-chart*)
       sum (length (aref *achart* i 0)) into aedges
-      when (chart-entry-p entry)
+      ;;bmw
+      ;;when (chart-entry-p entry)
       do
         (loop
-            for configuration in (chart-entry-configurations entry)
+	  ;;bmw
+	  ;;for configuration in (chart-entry-configurations entry)
+            for configuration in entry
             for edge = (chart-configuration-edge configuration)
             for rule = (edge-rule edge)
             for tdfs = (edge-dag edge)
@@ -802,12 +820,14 @@
                ((and (rule-p rule) (tsdb::inflectional-rule-p (rule-id rule)))
                 (incf i-stasks)
                 (incf words)
-                (when (edge-morph-history edge)
-                  (let* ((child (edge-morph-history edge))
-                         (tdfs (edge-dag child))
-                         (dag (and tdfs (tdfs-indef tdfs))))
-                    (when (and dag (dag-inflected-p dag))
-                      (incf words)))))
+		;;bmw
+                ;;(when (edge-morph-history edge)
+                ;;  (let* ((child (edge-morph-history edge))
+                ;;         (tdfs (edge-dag child))
+                ;;         (dag (and tdfs (tdfs-indef tdfs))))
+                ;;    (when (and dag (dag-inflected-p dag))
+                ;;      (incf words))))
+		)
                ((rule-p rule)
                 (incf pedges)
                 (when (lexical-rule-p rule) (incf l-stasks)))
@@ -886,19 +906,23 @@
      (loop
          for i from 0 to (- *chart-limit* 1)
          for entry = (aref *chart* i 0)
-         while (chart-entry-p entry)
+	 ;;bmw
+	 ;;while (chart-entry-p entry)
          do
            (loop
-               for configuration in (chart-entry-configurations entry)
+	     ;;bmw
+	     ;;for configuration in (chart-entry-configurations entry)
+               for configuration in entry
                for edge = (chart-configuration-edge configuration)
                for odag = (edge-odag edge)
                for tdfs = (if (dag-p odag) odag (edge-dag edge))
                for dag = (tdfs-indef tdfs)
                unless (safe-dag-p dag) do (compress-dag dag))
          finally
-           (loop 
-               for edge in *morph-records* do
-                 (compress-dag (tdfs-indef (edge-dag edge))))
+	   ;;bmw
+           ;;(loop 
+           ;;    for edge in *morph-records* do
+           ;;      (compress-dag (tdfs-indef (edge-dag edge))))
            (clear-chart)
            (clear-achart)
            (setf *parse-times* nil)))

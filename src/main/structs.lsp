@@ -78,6 +78,7 @@
          (make-type-feature-pair :type *toptype*
             :feature f))))
 
+;; called from mrs::create-unifs-for-rel
 (defun make-pv-unif (path1 type)
   (make-unification :lhs (create-typed-path-from-feature-list path1)
                     :rhs (make-u-value :type type)))
@@ -111,6 +112,21 @@
         (loop for fvp in (typed-path-typed-feature-list path)
              collect
              (type-feature-pair-feature fvp)))))
+
+(defun get-type-from-unifs (unifs)
+  ;;; A utility function called from the parser in order to allow
+  ;;; a precheck on morphological edges.  It relies for its
+  ;;; utility on the convention that most of the lexical entry fs comes
+  ;;; from a type.
+  (loop for unif in unifs
+       do
+	(when (and (basic-unification-p unif)
+		   (path-p (basic-unification-lhs unif))
+		   (null (path-typed-feature-list 
+			  (basic-unification-lhs unif)))
+		   (u-value-p (basic-unification-rhs unif)))
+	  (return (u-value-type (basic-unification-rhs unif))))))
+
 
 (defun eval-any-leaf-types (unifs)
   (loop for unif in unifs

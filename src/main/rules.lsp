@@ -17,16 +17,16 @@
 ;;; Modified 03/93 to incorporate LKB morphology system - BEMJ
 ;;;
 
-
 ;;; All rules are feature structures which are special in that they used
 ;;; differently from lexical entries, but they are constructed 
-;;; by specifying types (and possibly psorts) in exactly the same way
+;;; by specifying types in exactly the same way
 ;;; Rule entries thus consist of an identifier plus a series of
-;;; unifications etc (which we will assume are non-default for the time
-;;; being).  All rules have a mother and one or more daughters; lexical
-;;; rules are special in that they are unary, and possibly in other respects
-;;; but this is set up in the types.
-
+;;; unifications etc.  
+;;; All rules have a mother and one or more daughters 
+;;; lexical rules are special only in that they may 
+;;; a) have associated spelling changes (morphological rules)
+;;; b) apply `before' morphological rules
+;;; 
 
 (defvar *rules* (make-hash-table :test #'eq))
 
@@ -59,15 +59,26 @@
   daughters-restricted-reversed
   daughters-apply-order
   order
-  rhs ;; list of indices into `order' --- for key-driven parsing
-  daughters-order-reversed
-  apply-filter
-  apply-index
-  head)
-
 ;;; order is an ordered list of the paths that get at mother and daughters
 ;;; e.g. 0 1 2
 ;;; nil (ARGS HD) (ARGS TL HD)
+  rhs ;; list of indices into `order' --- for key-driven parsing
+  daughters-order-reversed
+  apply-filter ;;; rule filter
+  apply-index ;;; rule filter
+  feeders ;;; slot used in construction of lrfsm
+  lrfsm ;;; generalisation of filter for lexical rules
+  head
+  orthographemicp)
+  
+;;bmw
+(defmethod print-object ((inst rule) stream)
+  (format stream "#[rule ~S ~:[~;o~]]" 
+	  (rule-id inst)
+	  (rule-orthographemicp inst)
+	  ))
+
+;;; Accessing
 
 (defun get-lex-rule-entry (name)
    (gethash name *lexical-rules*))
@@ -78,22 +89,14 @@
 (defun get-indexed-lrules (tdfs &optional test-fn)
   ;; don't return any rules with satisfy test-fn (if specified)
   (declare (ignore tdfs))
-  (let ((result nil))
-    (maphash #'(lambda (key value)
-                 (declare (ignore key))
-                 (unless
-                    (or (redundancy-rule-p value)
-                        (and test-fn (funcall test-fn value))
-                        (and *current-language*
-                             (not (eq *current-language* 
-                                      (rule-language value)))))
-                    (push value result)))
-           *lexical-rules*)
-    result))
+  (get-rules-internal test-fn *lexical-rules*))
 
 (defun get-indexed-rules (tdfs &optional test-fn)
   ;; don't return any rules with satisfy test-fn (if specified)
   (declare (ignore tdfs))
+  (get-rules-internal test-fn *rules*))
+
+(defun get-rules-internal (test-fn rule-set)
   (let ((result nil))
     (maphash #'(lambda (key value)
                  (declare (ignore key))
@@ -104,7 +107,7 @@
                              (not (eq *current-language* 
                                       (rule-language value)))))
                     (push value result)))
-           *rules*)
+           rule-set)
     result))
 
 
@@ -120,17 +123,16 @@
 	     (get-lex-rule-entry (rule-id x)))
     t))
 
-
-(defun apply-lexical-rule (rule-name fs)
-   (let ((lex-rule (get-lex-rule-entry rule-name)))
-      (unless lex-rule
-         (error "Unknown lexical rule ~A" rule-name))
-      (evaluate-unifications lex-rule
-         (list fs))))
+;;; **************************************************
+;;;
+;;; Application of lexical rules
+;;;
+;;; **************************************************
 
 (defparameter *number-of-applications* 0)
 
 (defun try-all-lexical-rules (entries &optional ignore-list)
+  ;;; this is now just called interactively etc, not by the parser
    ;;; entries are pairs with list of rules applied plus result
    (incf *number-of-applications*)
    (when (> *number-of-applications* *maximal-lex-rule-applications*)
@@ -163,6 +165,9 @@
 
 
 (defun construct-new-morph (entry rule)
+#+:debug  (format t "~%construct-new-morph: ~A ~A" 
+		   (extract-orth-from-fs 
+		    (cdr entry)) (rule-id rule))
   (let ((new-morph
          (full-morph-generate 
           (extract-orth-from-fs 
@@ -171,6 +176,13 @@
     (if new-morph
         (car (mapcar #'car new-morph)))))
     
+;;; **************************************************
+;;;
+;;; Accessing rules for parsing
+;;;
+;;; **************************************************
+
+
 
 (defun get-matching-rules (rhd-fs &optional no-unary)
   #+:arboretum
@@ -206,8 +218,7 @@
     all))
 
 (defun get-matching-lex-rules (rhd-fs)
-   (get-indexed-lrules rhd-fs #'spelling-change-rule-p))
-
+  (get-indexed-lrules rhd-fs #'spelling-change-rule-p))
 
 (defun apply-lex-interactive (lex lex-entry-fs lex-rule)
   (declare (ignore lex))
@@ -229,11 +240,15 @@
     (evaluate-unifications lex-rule
                            (list lex-entry-fs))))
 
-
+;;; *************************************************************
+;;;
 ;;; adding rules - function called from tdlruleinput and ruleinput
+;;;
+;;; *************************************************************
 
-(defun add-grammar-rule (id non-def def rule-persistence lexical-p)
-  (let ((entry (make-rule :id id)))
+(defun add-grammar-rule (id non-def def rule-persistence
+                         lexical-p &optional orthographemicp)
+  (let ((entry (make-rule :id id :orthographemicp orthographemicp)))
     (setf (rule-unifs entry) non-def)
     (setf (rule-def-unifs entry) def)
     (when (gethash id (if lexical-p *lexical-rules* *rules*))
@@ -378,8 +393,29 @@
         (def (rule-def-unifs rule)))
     (expand-rule id rule non-def def *description-persistence* lexical-p)))
 
+;;; **********************************************
+;;;
+;;; Irregular morphophonology
+;;;
+;;; **********************************************
 
-;;; Irregular morphology
+;;; Currently we have a format where there is a file with
+;;; a big string with entries such as
+;;;
+;;; aliases PLUR_NOUN alias
+;;;
+;;; and more sensibly we also have the lexdb (FIX - confirm this?)
+;;; 
+;;; load-irregular-spellings  is in utils.lsp
+;;; this calls read-irreg-form-strings (below)
+
+;;; For analysis, the irregular forms are indexed by irregular-form 
+;;; in *irregular-forms*: the values are lists of the form
+;;; ("STEM" (rule "IRREG"))
+;;; (this was in order to match the output of the old morph-analyse)
+;;;
+;;; For generation, the forms are indexed by stem and the values are
+;;; (rule . "IRREG")
 
 (defvar *irregular-forms* (make-hash-table :test #'equal))
 
@@ -399,39 +435,41 @@
 
 (defun full-morph-generate (stem rule)
   (setf stem (string-upcase stem))
-  (let ((irreg-form (gen-irreg-morphs stem rule)))
-    (if irreg-form
-        (list (list irreg-form (list rule stem)))
-        (morph-generate stem rule))))
+  (list (list 
+	 (let ((irreg-form (gen-irreg-morphs stem rule)))
+	   (or irreg-form (morph-generate stem rule)))
+	 (list rule stem))))
+      ;;; prefer irregular spellings (i.e., always get
+      ;;; dreamt rather than dreamed)
 
 
 (defun filter-for-irregs (reg-list)
   ;;; called from parse.lsp
-;;; remove anything from the regular morphology results which corresponds
-;;; to the application of a rule to a stem corresponding to one of 
-;;; the irregular forms
+  ;;; input is a list of  ("A" (RULE1 "AB") (RULE2 "ABC"))
+  ;;; as old morph analyse
+  ;;; if *irregular-forms-only-p*  is set this will
+  ;;; remove anything from the regular morphology results which corresponds
+  ;;; to the application of a rule to a stem corresponding to one of 
+  ;;; the irregular forms (i.e. we won't parse `eated' or `dreamed'
+  ;;; unless these are added specifically to the irregular forms)
   (if *irregular-forms-only-p* 
       (loop for reg in reg-list
-           nconc
-           (let* ((stem (car reg))
-                  (first-rule (caadr reg))
-                  (irreg-stems 
-                   (gethash stem *irregular-forms-gen*))
-                  (irreg-rules (mapcar #'car irreg-stems)))
-             (if (and irreg-stems first-rule
-                      (member first-rule irreg-rules))
-                 nil
-               (list reg))))
+           unless
+           (let ((stem (car reg))
+                 (first-rule (caadr reg)))
+	     (morph-matches-irreg-p stem first-rule))
+	  collect reg)
     reg-list))
 
+(defun morph-matches-irreg-p (stem rule)
+    ;;; returns t if stem and rule are in irregs
+    (let* ((irreg-stems 
+	    (gethash stem *irregular-forms-gen*))
+	   (irreg-rules (mapcar #'car irreg-stems)))
+      (and irreg-stems rule
+	   (member rule irreg-rules))))
 
-#|
-(load-irregular-spellings "Macintosh HD:newlkb:src:data:Dikran:irregs.tab")
-
-(load-irregular-spellings "~aac/grammar/irregs.tab")
- 
-(find-irregular-morphs "has")
-|#
+;;; 
 
 (defun read-irreg-form-strings (strings)
   ;;; caller has checked these are actual strings
@@ -476,8 +514,30 @@
     (intern (concatenate 'string (string rule-name) *lex-rule-suffix*))
     (intern rule-name)))
 
+;;; the following strips the standard affix - used in chart output
 
+(defun concise-rule-name (rule-name)
+  (let ((str (string rule-name)))
+    (if *lex-rule-suffix*
+	(let ((suffix-pos (- (length str)
+			     (length *lex-rule-suffix*))))
+	  (if 
+	      (equal (subseq str suffix-pos)
+		     *lex-rule-suffix*)
+	      (subseq str 0 suffix-pos)
+	    str))
+      str)))
+
+
+;;; **************************************************************
+;;;
 ;;; DISCO-style rule filter (build-rule-filter)
+;;;
+;;; **************************************************************
+
+;;; the rule-filter is implemented by associating an array with each rule
+;;; with one diminsion being the number of daughters and the other dimension
+;;; corresponding to an index for each rule.   
 
 (defun build-rule-filter nil
   (unless (find :vanilla *features*)
@@ -524,6 +584,7 @@
 
 (defun check-rule-filter (rule test arg)
   ;; can test fill argth daughter of rule?
+  ;; argth starting at 0 
   (let ((filter (rule-apply-filter rule)))
     (if (and filter (not (stringp test)))
 	(aref (the (simple-array t (* *)) filter) 
@@ -531,43 +592,247 @@
 	      arg)
       t)))
 
+;;; For lexical/morphological rule application we need
+;;; to test whether there is any sequence of lexical/morphological
+;;; rules that can link two given rules because the morphophonology
+;;; specifies a partial tree.
+;;; In general we can think of rules as constructing an FSM.
+;;; For now, we built a reachability table from the rule-filter.
+;;; FIX  - Eventually we want to test lexical types to see where they plug in
+;;; and perhaps also start associating probabilities with FSMs.
 
-(defun rules-to-xml  (&key (stream t) file)
-  (let ((stream (if file
-                  (open file
-                        :direction :output :if-exists :supersede
-                        :if-does-not-exist :create)
-                  stream)))
-    (loop
-        for rule being each hash-value in *rules*
-        for id = (rule-id rule)
-        for tdfs = (rule-full-fs rule)
-        for type = (and tdfs (indef-type-of-tdfs tdfs))
-        for key = (first (rule-rhs rule))
-        for head = (let* ((daughters (rest (rule-order rule)))
-                          (dag (tdfs-indef tdfs))
-                          (head (existing-dag-at-end-of dag '(head-dtr))))
-                     (when head
-                       (loop
-                           for path in daughters
-                           for i from 0
-                           for daughter = (existing-dag-at-end-of dag path)
-                           when (eq daughter head)
-                           return i)))
-        when (and id type key) do
-          (format
-           stream
-           "<instance name=\"~(~a~)\" type=\"~(~a~)\" ~
-             ~@[head=\"~d\" ~] key=\"~d\" status=\"rule\"/>~%"
-           id type head key))
-    (loop
-        for rule being each hash-value in *lexical-rules*
-        for id = (rule-id rule)
-        for tdfs = (rule-full-fs rule)
-        for type = (and tdfs (indef-type-of-tdfs tdfs))
-        when (and id type) do
-          (format
-           stream
-           "<instance name=\"~(~a~)\" type=\"~(~a~)\" status=\"~a\"/>~%"
-           id type (if (inflectional-rule-p id) "irule" "lrule")))
-    (when file (close stream))))
+;;; the rule-filter is implemented by associating an array with each rule
+;;; with one diminsion being the number of daughters and the other dimension
+;;; corresponding to an index for each rule.   
+;;; So for lexical rule A and B - if lexical rule A has index n and 
+;;; A could be a daughter of B, then B's apply-filter will have t
+;;; as the value of cell (1,n).  For the sake of simplicity
+;;; we use the same index for the rules in the lrfsm.  
+;;;
+;;; For each rule, find all possible immediate feeders and store a 
+;;; list of these.
+;;; For each rule, look at feeders' arrays and set these values on 
+;;; the new rule array, recursing as needed.  If we find ourselves in a cycle, 
+;;; we have to stop recursing.  We record we're not done, and will
+;;; reexplore that branch (see below).  This means that, although
+;;; the code works when there are cycles, it could be very expensive to
+;;; compute the fsm.
+
+(defparameter *spelling-rule-feed-cache* nil)
+
+(defparameter *cyclic-lr-list* nil)
+
+(defun build-lrfsm nil
+  (let ((lrlist nil)
+	(revindex nil)
+	(nrules nil))
+    (setf *spelling-rule-feed-cache* nil)
+    (setf *cyclic-lr-list* nil)
+    (maphash #'(lambda (k v)
+		 (declare (ignore k))
+		 (unless nrules
+		   (setf nrules (array-dimension (rule-apply-filter v) 0)))
+		 (setf (rule-feeders v) nil)
+		 (setf (rule-lrfsm v) 
+		   (make-array (list nrules) :initial-element :unk)) 
+		 (push v lrlist)
+		 (push (cons (rule-apply-index v) v) revindex))
+	     *lexical-rules*)
+    (maphash #'(lambda (k v)
+		 (declare (ignore k))
+		 ;;; looking at rule v, rules which feed it can be
+		 ;;; found
+		 (dotimes (i nrules)
+		   (when 
+		       (aref (rule-apply-filter v) i 0)
+		     (push (assoc i revindex)
+			   (rule-feeders v)))))
+	     *lexical-rules*)
+;;; e.g., A can feed B, B can feed C, C can feed D, A can feed C
+;;; rule-feeders of A - nil
+;;;                 B - (A)
+;;;                 C - (B A)
+;;;                 D - (C)
+    (when lrlist
+      (build-lrfsm-aux (car lrlist) (cdr lrlist) nrules nil)
+      (dolist (crule *cyclic-lr-list*)
+	(format t "~%Warning: ~A can feed itself" (rule-id crule)))
+      (dolist (lr lrlist)
+       (complete-lrfsm lr nrules)))))
+
+#|
+suppose A can feed B, B can feed C, C can feed D, A can feed C
+and D can feed B (so there's a cycle)
+
+;;; rule-feeders of A - nil
+;;;                 B - (A D)
+;;;                 C - (B A)
+;;;                 D - (C) 
+
+;;; desired result
+;;;
+   --- A     B     C     D
+   A   nil   nil   nil   nil
+   B   t     t     t     t
+   C   t     t     t     t
+   D   t     t     t     t
+|#
+
+
+(defun build-lrfsm-aux (lr remainder nrules in-progress)
+  ;;; looking at rule lr, set the lrfsm values
+  ;;; to t for each feeder and to t for each feeder's feeder
+  ;;; if feeder is done.  If not done, recurse on feeder.
+  ;;; Test for done is whether rule-feeders is :done
+  (let ((feeders (rule-feeders lr)))
+    (unless (eql feeders :done)
+      (let ((lrfsm (rule-lrfsm lr))
+	    (todo nil))
+	(dolist (feeder feeders)
+	  (let ((frule (cdr feeder))
+		(fnum (car feeder)))
+	    	;;; set the feeder index
+	    (setf (aref lrfsm fnum) t)
+	    (if (member frule in-progress)
+		;; we're in a cycle, so the feeder fsm isn't complete
+		;; stop, but record we're not done
+		(progn
+		  (pushnew frule *cyclic-lr-list*)
+		  (push feeder todo))
+	    ;; otherwise find the feeder fsm, recursing if necessary
+	      (progn 
+		(build-lrfsm-aux frule nil nrules 
+				 (cons lr in-progress))
+		;; propagate the feeder values
+		(dotimes (i nrules)
+		  (when (eql (aref (rule-lrfsm frule) i) t)
+		    (setf (aref lrfsm i) t)))
+		;; if there's a cycle further back, record we're
+		;; not done
+		(unless (eql (rule-feeders frule) :done)
+		  (push feeder todo))))))
+	(if todo
+	    (setf (rule-feeders lr) todo)
+	  ;;; we've found a cycle in the feeders, so we can't complete yet
+	  (progn
+	    (dotimes (i nrules)
+	      (when (eql (aref lrfsm i) :unk)
+		(setf (aref lrfsm i) nil)))
+	    (setf (rule-feeders lr) :done)))))
+    (when remainder 
+      (build-lrfsm-aux (car remainder)
+		       (cdr remainder) nrules nil))))
+
+(defun complete-lrfsm (lr nrules)
+  ;;; go through the cases we haven't been able to complete because
+  ;;; of cycles and set values.
+  (let ((feeders (rule-feeders lr)))
+    (unless (eql feeders :done)
+      (let ((lrfsm (rule-lrfsm lr)))
+	(dolist (feeder feeders)
+	  (let ((frule (cdr feeder)))
+		;; propagate the feeder values
+		(dotimes (i nrules)
+		  (when (eql (aref (rule-lrfsm frule) i) t)
+		    (setf (aref lrfsm i) t)))))
+	(dotimes (i nrules)
+	  (when (eql (aref lrfsm i) :unk)
+	    (setf (aref lrfsm i) nil)))
+	(setf (rule-feeders lr) :done)))))
+
+			  
+(defun check-lrfsm (rule test)
+ #+:pdebug (format t "~%Can ~A be a descendant of ~A? " (rule-id test)
+		   (rule-id rule))
+  ;; can test be a descendant of rule 
+  (let ((filter (rule-lrfsm rule)))
+    (if filter
+	(let ((res 
+	       (aref filter (rule-apply-index test))))
+	  #+:pdebug (if res (format t "Yes")  (format t "No"))
+	  res)
+      (progn 
+	#+:pdebug (format t "Don't know") 
+	t))))
+
+(defun print-lrfsm (&key (stream t))
+  (let ((rule-list nil))
+    (maphash #'(lambda (k v)
+		 (declare (ignore k))
+		 (push v rule-list))
+	     *lexical-rules*)
+    (format stream "~%Specified feeding relationships~% Descendant      Mother")
+    ;;; FIX - can't remember how to tab!
+    (dolist (rule1 rule-list)
+      (dolist (rule2 rule-list)
+	(let ((feeds (check-lrfsm rule2 rule1)))
+	  (when feeds
+	    (format stream "~% ~A ~A" 
+		    (rule-id rule1) (rule-id rule2))))))))
+
+
+
+
+(defun spelling-rule-feeds-p (rule-id)
+  ;;; use the lrfsm to check whether anything can feed this rule.
+  ;;; cache the results
+  (let ((seen (assoc rule-id *spelling-rule-feed-cache*)))
+    (if seen (cdr seen)
+      (let ((spelling-rules nil))
+	(maphash #'(lambda (k v)
+		     (declare (ignore k))
+		     (when (spelling-change-rule-p v)
+		       (push v spelling-rules)))
+		 *lexical-rules*)
+	(let ((feeder-p
+	       (dolist (srule spelling-rules)
+		 (when 
+		     (check-lrfsm 
+		      (get-lex-rule-entry rule-id)
+		      srule)
+		   (return t)))))
+	  (push (cons rule-id feeder-p)
+		*spelling-rule-feed-cache*)
+	  feeder-p)))))
+
+;;; *********************************************************
+;;;
+;;; Filter for lexical types and rules
+;;;
+;;; *********************************************************
+
+;;; the idea is to check whether the lexical type is compatible
+;;; either with the given rule or with any lexical rules in the lrfsm 
+;;; that can feed that rule
+
+(defparameter *lex-type-filter* nil)
+
+(defstruct lex-type-filter
+  rule-tests)
+;;; rule tests is an a-list with rules paired with boolean values
+
+(defun check-lex-type-filter (entry rule)
+  (declare (ignore entry rule))
+  t)
+  #|
+  (let ((lex-type
+	 (get-type-from-unifs (lex-entry-unifs entry))))
+    (if lex-type
+	(let ((type-filter-entry (gethash lex-type *lex-type-filter*)))
+	  (if type-filter-entry
+	      (let ((checked-p
+		     (assoc rule (lex-type-filter-rule-tests type-filter-entry))))
+		(if checked-p 
+		    (cdr checked-p)
+		  (push (cons rule (check-type-with-rule lex-type rule))
+			(lex-type-filter-rule-tests type-filter-entry))))
+	    (setf (gethash lex-type *lex-type-filter*)
+	      (make-lex-type-filter
+	       :rule-tests
+	       (list 
+		(cons rule (check-type-with-rule lex-type rule)))))))
+      t))) ; can't identify a type so the filter is no use
+|#
+
+;;; rules-to-xml moved to io-general/outputsrc.lsp since this is where
+;;; all other output functions live

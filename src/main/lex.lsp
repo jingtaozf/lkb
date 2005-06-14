@@ -182,17 +182,6 @@
 		    nil 
 		    "~A is not a valid structure identifier" psort)))))))))))
 
-(defun get-type-from-lex-id (id)
-  ;;; Utility function for MPhillies
-  ;;; just returns nil if it doesn't find anything suitable
-  ;;; since they may perhaps want to call it on things
-  ;;; which may not be valid
-  (let ((entry (get-lex-entry-from-id id)))
-    (if entry
-        (let ((tdfs (lex-entry-full-fs entry)))
-          (if (tdfs-p tdfs)
-              (indef-type-of-tdfs tdfs))))))
-
 (defun get-lex-entry (orth)
   (loop 
       for psort in (remove-duplicates (lookup-word *lexicon* orth))

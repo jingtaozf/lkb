@@ -228,6 +228,8 @@
         (enable-grammar-reload-interactions)
       (clear-almost-everything)
       (load file-name)
+      (build-rule-filter)
+      (build-lrfsm)
       #+:lui
       (when (lui-status-p) (lui-parameters))
       (lkb-beep)
@@ -400,9 +402,17 @@
   (let ((stream lkb::*lkb-background-stream*))
     (print-chart :stream stream)))
 
+(defun print-token-chart-toplevel nil
+  (let ((stream lkb::*lkb-background-stream*))
+    (print-tchart :stream stream)))
+
 (defun print-gen-chart-toplevel nil
   (let ((stream lkb::*lkb-background-stream*))
     (print-gen-chart :stream stream)))
+
+(defun print-lrfsm-toplevel nil
+  (let ((stream lkb::*lkb-background-stream*))
+    (print-lrfsm :stream stream)))
 
 ;;; Output of derivation trees
 
@@ -437,9 +447,7 @@
 
 (defun deriv-tree-compute-derivation-tree (edge)
   (let ((edge-children 
-         (or (edge-children edge) 
-             (if (edge-morph-history edge)
-                 (list (edge-morph-history edge))))))
+         (edge-children edge))) 
     (if edge-children
       (let* ((start *chart-limit*)
              (end 0)

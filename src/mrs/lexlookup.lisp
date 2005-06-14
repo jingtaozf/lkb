@@ -376,7 +376,7 @@ at this point).
                                 (lkb::construct-new-morph entry rule)))
                              (result
                               (when (or (not spelling-rule-p) new-morph)
-                                ;; allow morphographemics to block generation
+                                ;; allow orthophonology to block generation
                                 (lkb::apply-morph-rule 
                                  rule fs fs-restricted new-morph))))
                         (if result
@@ -666,6 +666,7 @@ at this point).
    :apply-filter (lkb::rule-apply-filter rule)
    :apply-index (lkb::rule-apply-index rule)
    :head (lkb::rule-head rule)
+   :orthographemicp (lkb::rule-orthographemicp rule)
    :main-rels rels))
 
 

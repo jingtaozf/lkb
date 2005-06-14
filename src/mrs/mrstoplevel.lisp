@@ -46,7 +46,7 @@
     #+:mrs
     (mrs::browse-mrs *generator-input*)))
 
-#-tty
+#-:tty
 (defun show-gen-edge (&optional id)
   (let ((possible-edge-name
          (if (numberp id)
@@ -69,7 +69,7 @@
 
 ;;; Graphical display of generator chart (show-gen-chart) (show-gen-chart t)
 
-#-tty
+#-:tty
 (defun show-gen-chart (&optional all-p) 
    (if *gen-chart*
       (let ((root (make-symbol "")))
@@ -138,7 +138,7 @@
 
 (defparameter *last-generate-from-edge* nil)
 
-#-tty
+#-:tty
 (defun generate-from-edge nil
   (let ((possible-edge-name 
          (ask-for-lisp-movable 
@@ -152,7 +152,7 @@
 	    (really-generate-from-edge parser-edge)
 	  (show-message-window (format nil "No parser edge ~A" (car possible-edge-name))))))))
 
-#-tty
+#-:tty
 (defun really-generate-from-edge (parser-edge)    
   (let* ((input-sem (mrs::extract-mrs parser-edge)))
     (with-output-to-top ()
@@ -166,7 +166,7 @@
            (format nil "Could not extract valid MRS from edge ~A"
 	      (edge-id parser-edge)))))))
 
-#-tty
+#-:tty
 (defun toggle-mrs-base nil
   (setf mrs::*mrs-base-output-p* (not mrs::*mrs-base-output-p*)))
 
@@ -190,7 +190,7 @@
 ;;; (make-menu-item :name "Generate..."
 ;;;                        :value 'generate-from-edge)
 
-(defun do-generate-tty (&optional edge-name)
+(defun do-generate-tty (&optional edge-name debug-p)
    (let ((possible-edge-name 
             (or edge-name *last-generate-from-edge* *edge-id*)))
       (when possible-edge-name
@@ -202,7 +202,8 @@
                   (if (mrs::psoa-liszt input-sem)
                      (progn
                         (format t "~&Generating from parser edge ~A" possible-edge-name)
-                        (generate-from-mrs input-sem)
+                        (if debug-p (generate-from-mrs-internal input-sem)
+			  (generate-from-mrs input-sem))
                         (show-gen-result-tty))
                      (format t "~&Could not extract any MRS relations from edge ~A"
                         possible-edge-name)))

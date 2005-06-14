@@ -58,6 +58,9 @@
 
 (defparameter %lsp-free-list% nil)
 
+;;bmw 14jun05
+(defvar *morphs*)
+
 (defstruct client
   id socket stream process
   (display #+:clim clim:*default-server-path* #-:clim nil))

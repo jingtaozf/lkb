@@ -36,7 +36,6 @@
 ;;;
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
            #-:ansi-eval-when (load eval compile)
-  (pushnew :agenda *features*)
   (pushnew :retroactivity *features*))
 
 (defparameter *hyper-activity-p* t)
@@ -195,11 +194,11 @@
 
 (defmacro passives-by-start (position)
   `(let ((entry (aref *chart* ,position 1)))
-     (and entry (chart-entry-configurations entry))))
+     entry))
 
 (defmacro passives-by-end (position)
   `(let ((entry (aref *chart* ,position 0)))
-     (and entry (chart-entry-configurations entry))))
+     entry))
 
 (defmacro actives-by-start (position)
   `(aref *achart* ,position 1))
@@ -213,14 +212,14 @@
           (by-start (aref *chart* start 1))
           (by-end (aref *chart* end 0)))
      (when by-start
-       (setf (chart-entry-configurations by-start)
+       (setf (aref *chart* start 1)
          (delete ,configuration 
-                 (chart-entry-configurations by-start)
+                 by-start
                  :test #'eq :count 1)))
      (when by-end
-       (setf (chart-entry-configurations by-end)
+       (setf (aref *chart* end 0)
          (delete ,configuration 
-                 (chart-entry-configurations by-end)
+                 by-end
                  :test #'eq :count 1)))))
 
 (defmacro inapplicablep (rule arule position)
@@ -232,9 +231,10 @@
      (incf *filtered-tasks*)))
 
 (defun lexical-task (priority passive)
-  #-:agenda
-  (declare (ignore priority))
   
+  #+:adebug
+  (print-trace :lexical-task passive)
+
   (when *chart-packing-p*
     (let* ((edge (chart-configuration-edge passive)))
       ;;
@@ -253,8 +253,7 @@
             for edge = (chart-configuration-edge passive) then child
             for child
             = (if (edge-children edge)
-                (first (edge-children edge))
-                (edge-morph-history edge))
+                (first (edge-children edge)))
             while child
             finally 
               (unless (edge-odag edge) 
@@ -262,19 +261,15 @@
         (setf (edge-dag edge) (copy-tdfs-partially (edge-dag edge)))
         (setf (edge-dag-restricted edge)
           (restrict-fs (tdfs-indef (edge-dag edge)))))))
-  #+:agenda
   (cond 
    ((or *first-only-p* *chart-dependencies*)
     (heap-insert *agenda* 
                  (if *scoring-hook* (funcall *scoring-hook* passive) priority)
                  passive))
    (t
-    (fundamental4passive passive)))
-  #-:agenda
-  (fundamental4passive passive))
+    (fundamental4passive passive))))
 
 (defmacro rule-and-passive-task (rule passive)
-  #+:agenda
   `(cond
     (*first-only-p*
      (let* ((task (cons ,rule ,passive))
@@ -289,14 +284,9 @@
        (heap-insert 
         *agenda* priority (cons ,rule ,passive))))
     (t
-     (process-rule-and-passive (cons ,rule ,passive))))
-  #-:agenda
-  `(process-rule-and-passive ,rule ,passive))
+     (process-rule-and-passive (cons ,rule ,passive)))))
 
 (defmacro active-and-passive-task (active passive arule)
-  #-:agenda
-  (declare (ignore arule))
-  #+:agenda
   `(cond
     (*first-only-p*
      (let* ((task (cons ,active ,passive))
@@ -311,9 +301,7 @@
             (priority (- end (/ start *maximal-vertex*))))
        (heap-insert *agenda* priority (cons ,active ,passive))))
     (t
-     (process-active-and-passive (cons ,active ,passive))))
-  #-:agenda
-  `(process-active-and-passive ,active ,passive))
+     (process-active-and-passive (cons ,active ,passive)))))
 
 (defun complete-chart ()
 
@@ -323,20 +311,19 @@
   ;; back to non-agenda mode, unless required otherwise (in best-first mode).
   ;;
   (let ((*chart-dependencies* *chart-dependencies*))
+    
     ;;
     ;; the chart reduction after lexical look-up only works when we are using
     ;; an agenda, such that the lexical look-up phase is completed before we 
     ;; start actual parsing.  i should probably eliminate many of these 
     ;; conditionals and just make the agenda-driven mode the default.
     ;;                                                        (24-oct-02 ; oe)
-    #+:agenda
     (when *chart-dependencies* (reduce-chart))
 
     ;;
     ;; now run the main parser loop: until we empty the agenda (or hell
     ;; freezes over) apply the fundamental rule of chart parsing.
     ;;
-    #+:agenda
     (when (or *first-only-p* *chart-packing-p*)
       (loop
           until (empty-heap *agenda*)
@@ -362,7 +349,20 @@
       with edge = (chart-configuration-edge passive)
       with begin = (chart-configuration-begin passive)
       with end = (chart-configuration-end passive)
-      for rule in *parser-rules*
+      with orthographemics = (edge-partial-tree edge)
+      for rule in (if orthographemics
+                    (let* ((next (first (first orthographemics)))
+                           (rule (get-lex-rule-entry next)))
+                      (unless next
+                        (error
+                         "postulate(): ~a requires unknown rule `~(~a~)'.~%"
+                         next))
+                      (cons rule
+                            (loop
+                                for foo in *parser-lexical-rules*
+                                when (check-lrfsm rule foo)
+                                collect foo)))
+                    *parser-rules*)
       for rhs = (rule-rhs rule)
       for open = (rest rhs)
       for key = (first rhs)
@@ -385,8 +385,7 @@
   (print-trace :fundamental4active active)
   
   (let ((begin (chart-configuration-begin active))
-        (end (chart-configuration-end active))
-        (done (active-chart-configuration-done active)))
+        (end (chart-configuration-end active)))
     ;;
     ;; add .active. to active chart (indexed by start and end vertex)
     ;;
@@ -405,8 +404,10 @@
                          (passives-by-start end)
                          (passives-by-end begin))
         for pedge = (chart-configuration-edge passive)
-        unless (or (eq passive done) (edge-frozen pedge)) do
-          (if (and (check-rule-filter arule (edge-rule pedge) key)
+        unless (edge-frozen pedge) do
+          (if (and (not (edge-partial-tree pedge))
+		   (not (edge-partial-tree aedge))
+		   (check-rule-filter arule (edge-rule pedge) key)
                    (restrictors-compatible-p
                     avector
                     (edge-dag-restricted pedge)))
@@ -435,13 +436,11 @@
     ;; is somewhat awkward here.
     ;;
     (if (aref *chart* end 0)
-      (push passive (chart-entry-configurations (aref *chart* end 0)))
-      (setf (aref *chart* end 0)
-        (make-chart-entry :configurations (list passive))))
+      (push passive (aref *chart* end 0))
+      (setf (aref *chart* end 0) (list passive)))
     (if (aref *chart* begin 1)
-      (push passive (chart-entry-configurations (aref *chart* begin 1)))
-      (setf (aref *chart* begin 1)
-        (make-chart-entry :configurations (list passive))))
+      (push passive (aref *chart* begin 1))
+      (setf (aref *chart* begin 1) (list passive)))
     ;;
     ;; check to see whether .passive. is a complete parsing result; trigger
     ;; non-local exit when the maximal number of readings (to compute) has
@@ -468,7 +467,9 @@
         when (active-chart-configuration-forwardp active) do
           (let* ((aedge (chart-configuration-edge active))
                  (key (first (active-chart-configuration-open active))))
-            (if (and (check-rule-filter (edge-rule aedge) prule key)
+            (if (and (not (edge-partial-tree pedge))
+		     (not (edge-partial-tree aedge))
+		     (check-rule-filter (edge-rule aedge) prule key)
                      (restrictors-compatible-p
                       (edge-dag-restricted aedge)
                       pvector))
@@ -479,7 +480,9 @@
         unless (active-chart-configuration-forwardp active) do
           (let* ((aedge (chart-configuration-edge active))
                  (key (first (active-chart-configuration-open active))))
-            (if (and (check-rule-filter (edge-rule aedge) prule key)
+            (if (and (not (edge-partial-tree pedge))
+		     (not (edge-partial-tree aedge))
+		     (check-rule-filter (edge-rule aedge) prule key)
                      (restrictors-compatible-p
                       (edge-dag-restricted aedge)
                       pvector))
@@ -600,30 +603,30 @@
                 (freeze oedge (edge-id edge)))))
         finally (return nil))))
 
-(defun process-rule-and-passive #+:agenda (task)
-                                #-:agenda (rule passive)
+(defun process-rule-and-passive (task)
 
   #+:adebug
-  (print-trace :process-rule-and-passive 
-               #+:agenda (first task) #-:agenda rule
-               #+:agenda (rest task) #-:agenda passive)
-  (when (edge-frozen (chart-configuration-edge #+:agenda (rest task)
-                                               #-:agenda passive))
+  (print-trace :process-rule-and-passive (first task) (rest task))
+  (when (edge-frozen (chart-configuration-edge (rest task)))
     (return-from process-rule-and-passive nil))
   
-  (let* (#+:agenda (rule (first task))
+  (let* ((rule (first task))
          (rtdfs (if *chart-packing-p* (rule-rtdfs rule) (rule-full-fs rule)))
          (rhs (rule-rhs rule)) (open (rest rhs)) (key (first rhs))
          (daughters (rest (rule-order rule))) (path (nth key daughters))
-         #+:agenda (passive (rest task))
+         (passive (rest task))
          (edge (chart-configuration-edge passive)) (ptdfs (edge-dag edge))
-         (generation *unify-generation*)
-         atdfs nedge)
+         (orthographemics (edge-partial-tree edge))
+         (otdfs (when (and (rule-orthographemicp rule)
+                           (stringp (second (first orthographemics))))
+                  (make-orth-tdfs (second (first orthographemics)))))
+         nedge)
     (with-unification-context (ignore)
       (incf *executed-tasks*)
       (let* ((tdfs (yadu! rtdfs ptdfs path)))
         (when tdfs
           (let* ((root (tdfs-at-end-of (first (rule-order rule)) tdfs))
+                 (root (if otdfs (yadu root otdfs) root))
                  (vector (if open
                            (tdfs-qc-vector
                             tdfs (nth (first open) daughters))
@@ -634,7 +637,6 @@
                            (copy-tdfs-elements tdfs))
                          (restrict-and-copy-tdfs root))))
             (when copy
-              (setf atdfs tdfs)
               (setf nedge
                 (make-edge :id (if open (next-active-edge) (next-edge))
                            :category (indef-type-of-tdfs
@@ -642,7 +644,10 @@
                            :rule rule :children (list edge)
                            :dag copy :dag-restricted vector
                            :lex-ids (copy-list (edge-lex-ids edge))
-                           :leaves (copy-list (edge-leaves edge)))))))))
+                           :leaves (copy-list (edge-leaves edge))
+                           :partial-tree (if (rule-orthographemicp rule)
+                                           (rest orthographemics)
+                                           orthographemics))))))))
     (when nedge
       (incf *successful-tasks*)
       (let ((begin (chart-configuration-begin passive))
@@ -650,44 +655,15 @@
         (cond
          (open
           (let* ((forwardp (< key (first open)))
-                 (passive (when  *hyper-activity-p*
-                            (loop
-                                with key = (first open)
-                                for passive in (if forwardp 
-                                                 (passives-by-start end)
-                                                 (passives-by-end begin))
-                                for pedge = (chart-configuration-edge passive)
-                                when (and (null (edge-frozen pedge))
-                                          (check-rule-filter 
-                                           rule (edge-rule pedge) key)
-                                          (restrictors-compatible-p
-                                           (edge-dag-restricted nedge)
-                                           (edge-dag-restricted pedge)))
-                                return passive)))
                  (active (make-active-chart-configuration 
                           :begin begin :end end :edge nedge
-                          :open open :forwardp forwardp
-                          :done passive)))
+                          :open open :forwardp forwardp)))
             ;;
             ;; _mystery_
             ;; it seems active edges are not recorded in the parent relation, 
             ;; so will never be be frosted.  right now, uc and i fail to
             ;; explain why that should be unnecessary.         (27-may-03; oe)
             ;;
-            ;;
-            ;; this is _truly_ experimental: to take full advantage of that
-            ;; hyper-active strategy, we want to extend a new active edge
-            ;; right after it was built.  hence, reset the generation counter
-            ;; to what was in effect when .nedge. was derived.
-            ;;
-            (when passive
-              #+:adebug
-              (print-trace :extend active passive)
-              (let ((*unify-generation* generation))
-                #+:agenda
-                (process-active-and-passive (cons active passive) atdfs)
-                #-:agenda
-                (process-active-and-passive active passive atdfs)))
             (fundamental4active active)))
          (t
           (when *chart-packing-p*
@@ -699,33 +675,28 @@
           (fundamental4passive
            (make-chart-configuration :begin begin :end end :edge nedge))))))))
 
-(defun process-active-and-passive #+:agenda (task &optional atdfs)
-                                  #-:agenda (active passive &optional atdfs)
+(defun process-active-and-passive (task)
 
   #+:adebug
-  (print-trace :process-active-and-passive 
-               #+:agenda (first task) #-:agenda active
-               #+:agenda (rest task) #-:agenda passive)
+  (print-trace :process-active-and-passive(first task) (rest task))
 
   (when (and *chart-packing-p*
-             (or (edge-frozen (chart-configuration-edge 
-                               #+:agenda (rest task) #-:agenda passive))
+             (or (edge-frozen (chart-configuration-edge (rest task)))
                  (loop
                      for edge in (edge-children 
-                                  (chart-configuration-edge 
-                                   #+:agenda (first task) #-:agenda active))
+                                  (chart-configuration-edge (first task)))
                      thereis (edge-frozen edge))))
     (return-from process-active-and-passive nil))
 
-  (let* (#+:agenda (active (first task))
+  (let* ((active (first task))
          (key (first (active-chart-configuration-open active)))
          (open (rest (active-chart-configuration-open active)))
          (forwardp (active-chart-configuration-forwardp active))
          (aedge (chart-configuration-edge active))
          (achildren (edge-children aedge))
-         (atdfs (or atdfs (edge-dag aedge))) (arule (edge-rule aedge))
+         (atdfs (edge-dag aedge)) (arule (edge-rule aedge))
          (daughters (rest (rule-order arule))) (path (nth key daughters))
-         #+:agenda (passive (rest task))
+         (passive (rest task))
          (pedge (chart-configuration-edge passive)) (ptdfs (edge-dag pedge))
          (nedge
           (with-unification-context (ignore)
@@ -862,6 +833,7 @@
            (label (debug-label object))
            (edge (chart-configuration-edge object))
            (id (edge-id edge))
+;	   (partial-tree (edge-partial-tree edge))
            (children (loop 
                          for child in (edge-children edge)
                          collect (edge-id child)))

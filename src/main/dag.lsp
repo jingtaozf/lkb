@@ -1243,7 +1243,7 @@
 (defun find-type-of-fs (real-dag current-type id path)
    (let* ((existing-features (top-level-features-of real-dag))
           (possible-type 
-            (if existing-features 
+	   (if existing-features
                (maximal-type-of-list existing-features)
                *toptype*)))
       (cond

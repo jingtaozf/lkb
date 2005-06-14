@@ -1,28 +1,28 @@
-;;; Copyright (c) 1991-2003
+;;; Copyright (c) 1991-2005
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `licence.txt' for conditions.
 
+;;; AAC April 2005 - rationalisation of morphology and MWEs 
+;;; - also preparation for chart output from tokeniser
+
+;;; Notes 1. removed ltemplates - I don't have a grammar etc to test
+;;; this mechanism, but I rather think it will be superseded by the
+;;; new approach when we get this fully implemented
+;;; 2. sensible messages when missing lexical entries (or unknown words)
+;;; 3. more or less minor FIXes as below (unify-in)
 
 (in-package :lkb)
 
 ;;; This file implements the chart parser.
-;;; A rule is applied in a standard fashion (see below). In case a mother node
-;;; can be constructed, the dags of the daughter nodes (which are already) 
-;;; recorded in the chart) are unified, following the constraints specified 
-;;; by the unification patterns on the rule. The process of  unification 
-;;; either blocks the actual application of the rule (due to  failure to meet
-;;; constraints), or triggers a success (in which case the new dag - the 
-;;; result of the unification) is associated with the node constructed for the
-;;; mother. This information is recorded in the chart, and the process 
-;;; continues.
-;;;      The chart itself is kept and can be displayed by the top level
-;;; commands.
 
 ;;; The chart structure
 ;;;
-;;; The chart is an array indexed by the vertex number 
+;;; The chart is an array indexed by the vertex number
+;;;
+;;; v 0 gives edges ending at vertex v
+;;; v 1 gives edges starting at vertex v
+;;; 
 ;;; This is slightly inelegant in that the size of the array is set.
-;;; Vertices are integers, not atoms.
 
 (defvar *executed-tasks* 0)
 (defvar *successful-tasks* 0)
@@ -36,46 +36,83 @@
 
 ;;; *chart-limit* is defined in globals.lsp
 
+(defparameter *tchart-max* 0
+  "set by the tokeniser to the maximum vertex in the tchart")
+
+(defparameter *chart-max* 0
+  "set by the stem edge addition code to the maximum vertex in the chart")
+
+(defvar *chart-dependencies*)
+    
 (defvar *chart-generation-counter* 0
   "a counter used by the user interface to make sure parse tree windows 
    etc have the current chart")
 
 (defvar *chart* (make-array (list *chart-limit* 2))) 
 
+(defvar *tchart* (make-array (list *chart-limit* 2))) 
+;;; for now it seems best to keep the token and morphophonology
+;;; chart separate from the `real' one.  It seems possible that
+;;; the number of vertices in *chart* may end up being
+;;; greater than the number in *tchart* if we allow compounding.
+;;; Keeping the charts distinct also avoids having to filter
+;;; out the token edges and the morphop edges.
+
 (defvar *parse-record* nil)
 
-;;; *chart* is a vector of chart-entry structures - one for each end vertex
-
-(defstruct (chart-entry) configurations)
-
-;;; chart-entry-configurations is a list of chart-configurations
+;;; *chart* contains lists of chart-configurations
 
 (defstruct (chart-configuration) 
-    begin edge roots end)
-
+  begin edge roots end)
+;;; this is specialised for the active parser (see active.lsp)
 ;;; begin is a vertex - edge is an edge 
 
 ;;; an edge is a structure
-;;; it has the following properties
+;;; it has the following properties:
+;;; id - unique
+;;; score - for best-first
 ;;; category - eg S VP etc - now a type
 ;;; rule - either the word (storms etc) or the grammar rule itself which has
-;;; been applied to create that edge  
+;;;        been applied to create that edge  
 ;;; dag - the dag associated with the constituent
+;;; odag - something to do with packing?
+;;; dag-restricted - for packing
 ;;; leaves - orthography of whatever this edge has been formed from
 ;;; lex-ids - like leaves, but identifiers of whole structures
+;;; parents - for active parsing
 ;;; children - daughter edges
+;;; tchildren - token daughter edges (for debugging)
+;;; orth-tdfs - fs containing orthography
+;;; partial-tree - specification of affixes etc
+;;; from - vertex
+;;; to - vertex
+;;; label - ?
+;;; head - used in maxent.lisp
+;;; cfrom - character position
+;;; cto - character position
+;;; string - original string - potentially redundant
+;;;          because it could be recovered from cfrom and cto
+;;;          but useful to keep it locally
+;;; mrs - generation etc
 ;;;
 ;;; `foo,' `bar', and `baz' are junk slots for various pieces of code (e.g. the
 ;;; Redwoods annotation tool and PCFG estimation) to use at their discretion.
 ;;;                                                           (28-oct-02; oe)
+;;; packed 
+;;; equivalent 
+;;; frozen 
+;;; adjuncts 
+;;; unpacking
+
 (defstruct
    (edge
       (:constructor make-edge-x
                     (&key id score category rule dag odag 
                           (dag-restricted (when dag
                                             (restrict-fs (tdfs-indef dag))))
-                          leaves lex-ids parents children morph-history 
-                          spelling-change orth-tdfs
+                          leaves lex-ids parents children tchildren
+                          orth-tdfs
+			  partial-tree
                           (from (when (edge-p (first children))
                                   (edge-from (first children))))
                           (to (when (edge-p (first (last children)))
@@ -91,9 +128,15 @@
                           foo bar baz
                           packed equivalent frozen adjuncts unpacking)))
    id score category rule dag odag dag-restricted leaves lex-ids
-   parents children morph-history spelling-change orth-tdfs from to label head
+   parents children tchildren orth-tdfs partial-tree from to label head
    cfrom cto string mrs foo bar baz
    packed equivalent frozen adjuncts unpacking)
+
+(defstruct (token-edge (:include edge))
+  word)
+
+(defstruct (morpho-stem-edge (:include edge))
+  word stem current entries partial-p) 
 
 (defparameter *characterize-p* nil)
 
@@ -106,6 +149,9 @@
 			    (edge-cto new-edge)))
     new-edge))
 
+(defmethod print-object ((instance chart-configuration) stream)
+  (format stream "[~S ~S]" (chart-configuration-edge instance)
+	  (chart-configuration-roots instance)))
 
 (defmethod print-object ((instance edge) stream)
   (format 
@@ -122,18 +168,27 @@
        for child in (edge-children instance)
        collect (if (edge-p child) (edge-id child) "_"))))
 
-(defstruct
-   (mrecord
-      (:constructor make-mrecord
-                    (&key fs (fs-restricted (restrict-fs (tdfs-indef fs)))
-                          lex-ids rules history)))
-   fs fs-restricted lex-ids rules history)
+(defmethod print-object ((instance token-edge) stream)
+  (format 
+   stream 
+   "#[Token edge # ~d: ~S ~S ~S]"
+   (token-edge-id instance)
+   (token-edge-word instance)
+   (token-edge-from instance)
+   (token-edge-to instance)))
 
-(defstruct 
-  (mhistory)
-  rule
-  fs
-  new-spelling orth-tdfs)
+(defmethod print-object ((instance morpho-stem-edge) stream)
+  (format 
+   stream 
+   "#[Morph edge # ~d: ~S ~S ~S ~S ~S ~A]"
+   (morpho-stem-edge-id instance)
+   (morpho-stem-edge-word instance)
+   (morpho-stem-edge-current instance)
+   (morpho-stem-edge-from instance)
+   (morpho-stem-edge-to instance)
+   (morpho-stem-edge-partial-tree instance)
+   (morpho-stem-edge-partial-p instance)))
+
 
 (defvar *edge-id* 0)
 
@@ -163,24 +218,6 @@
             (see documentation for *maximum-number-of-edges*)"))
   (incf *edge-id*))
 
-(defvar *morphs* (make-array (list *chart-limit*) :initial-element nil))
-
-;;; *morphs* is added, paralleling *chart* to allow for
-;;; multi-word entries (including non-decomposable idioms).
-;;; multi-word entries may have affixation on any member
-;;; but they span several vertices.  It's therefore
-;;; necessary to treat them as individual words with respect to
-;;; the orthographemic component, and to record the results of that
-;;; on a structure, so that putative multiword entries can be checked
-;;; when we get to the rightmost element.
-
-(defstruct (morph-edge)
-   id word morph-results cfrom cto)
-
-;;;
-
-(defvar *morph-records* nil)
-
 ;;;
 ;;; keep track of lexical items used in each parse: whenever we use the same
 ;;; lexical entry the second time, we better copy it first to avoid spurious
@@ -191,9 +228,13 @@
 ;;;
 (defvar *lexical-entries-used* nil)
 
+;;; *****************************************************************
+;;;
 ;;; Agenda stuff - the agenda is represented as a heap (as in of Cormen,
 ;;; Leiserson, and Rivest).  The heap is a tree stored in an array: the car of
 ;;; each array element is its key and the cdr is the value.
+;;;
+;;; ******************************************************************
 
 (defmacro parent (i)
   `(the fixnum (floor (the fixnum ,i) 2)))
@@ -296,28 +337,21 @@
 ;;; now that we have tested the active parser a bit (and people had the time
 ;;; to get used to the idea of active parsing :-), turn it on by default.
 ;;;                                                        (20-jan-00  -  oe)
-;;;
 (defparameter *active-parsing-p* t)
-
-
-;;; *morph-records* is just so that the morphological history
-;;; (i.e. inflection, derivation rules and any zero-morpheme rules
-;;; interspersed among them) can be displayed
 
 (defun clear-chart nil
    (incf *chart-generation-counter*)
    (setf *parse-record* nil) 
    (loop for i from 0 upto (1- *chart-limit*)
        do (setf (aref *chart* i 0) nil)
-	  (setf (aref *chart* i 1) nil))
-   (fill *morphs* nil)
-   (setf *morph-records* nil)
+	  (setf (aref *tchart* i 0) nil)
+	  (setf (aref *chart* i 1) nil)
+	  (setf (aref *tchart* i 1) nil))
+   (setf *tchart-max* 0)
+   (setf *chart-max* 0)
    (setf *edge-id* 0)
    (setf %edge-allowance% 0)
    (when *active-parsing-p* (clear-achart)))
-
-;;; Entry point to this group of functions is parse which is passed the
-;;; sentence as a list of strings and is called from the top level
 
 (defvar *cached-category-abbs* nil
   "variable used in output to avoid recomputation of tree nodes")
@@ -345,6 +379,92 @@
 
 (defvar *brackets-list* nil)
 
+;;; ****************************************************************
+;;;
+;;; Entry point to this group of functions is parse which is passed the
+;;; sentence as a list of strings and is called from the top level
+;;;
+;;; ****************************************************************
+
+;;; Revised approach to tokenisation, morphology and MWES
+;;; AAC April 2005
+;;; The chart is used for all of these replacing various
+;;; subsidiary structures.  
+;;; 
+;;; The standard system has four phases:
+;;; 
+;;; Phase 1 - token list is used to instantiate the chart
+;;; for simple tokenisers.  For more complex cases, the tokeniser
+;;; outputs a chart (possibly in XML if a separate tokeniser).
+;;; *tchart* is instantiated with token-edges
+;;;
+;;; Phase 2 - the morphophonology component instantiates the
+;;; chart with possible stems plus affixes.  In the revised
+;;; version of the LKB this is done on a rule-by-rule basis.
+;;; *tchart* is instantiated with morpho-stem edges
+;;; The edges are associated with a partially specified derivation tree. 
+;;; In the case where an external morphophonology component operates
+;;; (such as sppp) *tchart* is instantiated with morpho-stem-edges
+;;; with stem set
+;;; 
+;;; Phase 3 - lexical lookup including MWE lookup
+;;; - instantiate *chart* with normal edges
+;;;
+;;; Phase 4 - parsing - application of morphosyntax and lexical rules
+;;; along with grammar rules.  The morphosyntax rules respect
+;;; the partially specified derivation tree from phase 2.
+;;; Instantiate the chart with edges
+;;;
+;;; The following are possible variations (in principle)
+;;;
+;;; Input source:
+;;; 1a) user input from LKB
+;;; 1b) real input (with markup)
+;;; 1c) test suite input
+;;; 
+;;; Preprocessor:
+;;; 2a) tokens only: `standard' preprocessor (strings)
+;;;                : `char' preprocessor (marked up with character positions)
+;;; 2b) tokens and external morphophonology
+;;;  i) partial-tree morphology (current sppp case)
+;;;     :with-tokeniser-partial-tree 
+;;;  ii) `word' morphosyntax
+;;;       i.e., morphology specified as a chart with morphemes separated
+;;;     :with-tokeniser-retokenise
+;;; Partial tree morphology (for 2a case):
+;;; 3a) (new) internal LKB morphology (one rule at a time)
+;;;     the default
+;;; 3b) external morphology (one rule at a time)
+;;;     :external-rule-by-rule 
+;;; 3c) external morphology (full partial tree, as old LKB)
+;;;     :external-partial-tree
+
+(defun check-morph-options (input)
+  ;;; make sure that plausible functions have been specified
+  ;;; try and deal with all ickinesses until interface is 
+  ;;; clarified here
+  (unless (member *morph-option*
+		  '(:default :external-rule-by-rule 
+		    :external-partial-tree :with-tokeniser-partial-tree  
+		    :with-tokeniser-retokenise))
+    (format t "~%Unrecognised *morph-option* switch ~A: resetting to default"
+	    *morph-option*)
+    (setf *morph-option* :default))
+  (when (consp (first input))
+    ;;; current test for sppp
+    (setf *morph-option* :with-tokeniser-partial-tree))
+  (if (or (eql *morph-option* :external-rule-by-rule)
+	    (eql *morph-option* :external-partial-tree))
+    (unless *foreign-morph-fn*
+      (format t "~%*morph-option* ~A requires external morphology function 
+*foreign-morph-fn* which is not supplied - resetting *morph-option* to default"
+	      *morph-option*)
+      (setf *morph-option* :default))
+    (when *foreign-morph-fn*
+      (format t "~%*morph-option* ~A requires *foreign-morph-fn* to be nil - resetting it"
+	      *morph-option*)
+      (setf *foreign-morph-fn* nil))))  
+
 (defun parse (bracketed-input &optional 
                               (show-parse-p *show-parse-p*) 
                               (first-only-p *first-only-p*))
@@ -353,6 +473,7 @@
   ;;   - input bracketing is only available in passive mode;
   ;;   - passive best-first restricted to unary and binary rules.
   ;;
+  (check-morph-options bracketed-input)
   (let* ((*active-parsing-p* (if *bracketing-p* nil *active-parsing-p*))
          (first-only-p (if (and first-only-p 
                                 (null *active-parsing-p*)
@@ -399,8 +520,18 @@
           (setf *cached-category-abbs* nil)
           (setf *parse-record* nil)
           (setf *parse-times* (list (get-internal-run-time)))
-          (let ((*safe-not-to-copy-p* #-:cle t #+:cle nil))
-            (add-morphs-to-morphs user-input)
+          (let ((*safe-not-to-copy-p* t))
+	    (instantiate-chart-with-tokens user-input)
+	    (ecase *morph-option*
+	      (:default (instantiate-chart-with-morphop))
+	      (:external-rule-by-rule 
+	       (instantiate-chart-with-morphop))
+	      ;;; *foreign-morph-fn* is set and will be called
+	      (:external-partial-tree
+	       (instantiate-chart-with-morpho-stem-edges))
+	      (:with-tokeniser-partial-tree nil)
+	      (:with-tokeniser-retokenise nil))
+	    (instantiate-chart-with-stems-and-multiwords)
             (catch :best-first
               (add-words-to-chart (and first-only-p (null *active-parsing-p*)
                                        (cons 0 (length user-input))))
@@ -421,6 +552,13 @@
         (values *executed-tasks* *successful-tasks* 
                 *contemplated-tasks* *filtered-tasks*)))))
 
+
+;;; *****************************************************
+;;;
+;;; Tokenisation
+;;;
+;;; *****************************************************
+
 (defstruct chared-word
   word
   cfrom
@@ -429,9 +567,12 @@
 (defun set-characterization (dag cfrom cto)
   (declare (ignore dag cfrom cto)))
 
-(defun add-morphs-to-morphs (preprocessed-input)
+(defun instantiate-chart-with-tokens (preprocessed-input)
+  ;;; this is for the trivial case where the
+  ;;; input is a list with no ambiguity about token boundaries
+  ;;; FIX - we need a better method of switching here
   (if (consp (first preprocessed-input))
-    (sppp-setup-morphs preprocessed-input)
+      (sppp-setup-morphs preprocessed-input)
     (let ((current 0)
 	  (xml-p (chared-word-p (first preprocessed-input))))
       (dolist (token preprocessed-input)
@@ -446,173 +587,455 @@
 	       (cto (if xml-p
 			  (chared-word-cto token)
 			-1))
-               (new (+ current 1))
-                (morph-poss 
-                 (union
-                  (filter-for-irregs
-                   (remove-duplicates
-                    (morph-analyse word)
-                    :test #'equalp))
-                  ;; filter is in rules.lsp
-                  (find-irregular-morphs word) :test #'equalp)))
-          (unless #+:ltemplates (template-p word) #-:ltemplates nil
-            (unless morph-poss 
-              (format t "~%Word `~A' is not in lexicon." word)
-              (when *unknown-word-types* 
-                (format t " Using unknown word mechanism."))))
-          ;;
-          ;; this test seems unnecessary, as later on there is a test for
-          ;; coverage over the full string of tokens (`to-be-accounted-for');
-          ;; furthermore, failure to create (zero-inflection) morph edges here
-          ;; prevents us from efficient retrieval of lexical entries: moving 
-          ;; to the PSQL lexical database, we want to be able to pull out 
-          ;; multi-word lexical entries by just one of their tokens (i.e. the
-          ;; inflected one, by default the last token for English).  hence, 
-          ;; for input like `ad hoc' it must be possible for look-up to fail
-          ;; on `ad' and later retrieve the multi-word entry when we process
-          ;; `hoc'.  this seems to work okay, though some further inspection 
-          ;; of related code, particularly the *unknown-word-types* mechanics,
-          ;; (and more testing :-) would seem in order.  (22-oct-02; oe & dan)
-          ;; 
-          (when #-:null t #+:null (or morph-poss *unknown-word-types*)
-            (setf (aref *morphs* current)
-              (make-morph-edge :id current :word base-word 
-                               :morph-results 
-                               (or morph-poss (list (list word)))
-			       :cfrom cfrom
-			       :cto cto))
-            (setf current new)))))))
+               (new (+ current 1)))
+	  (add-token-edge base-word word current new cfrom cto)
+	  (setf current new))))))
 
-(defun add-words-to-chart (f)
-  (let ((current 0)
-        (to-be-accounted-for (make-array (list *chart-limit*) 
-                                          :initial-element nil)))
-     ;; to-be-accounted for is needed because we cannot tell that a word is
-     ;; impossible until after the whole sentence has been processed because
-     ;; it may be part of a multi-word
-     (loop
-       (let ((morph-poss (aref *morphs* current)))
-         (when (null morph-poss)
-           (return nil))
-         (incf current)
-         (multiple-value-bind (ind-results multi-strings)
-	     (add-word (morph-edge-word morph-poss)
-		       (morph-edge-morph-results morph-poss) current
-		       f (morph-edge-cfrom morph-poss)
-		       (morph-edge-cto morph-poss))
-           (unless (or ind-results multi-strings)
-             (setf (aref to-be-accounted-for current)
-	       (morph-edge-word morph-poss)))
-	   ;; record the fact we haven't analysed this word
-           (dolist (mstr multi-strings)
-	     ;; wipe the record for multi-words which allow for it
-	     (let ((words (split-into-words mstr)))
-	       (dotimes (x (length words))
-		 (setf (aref to-be-accounted-for (- current x)) 
-		   nil)))))))
-     (dotimes (y current)
-       (when (aref to-be-accounted-for y)
-         (format t "~%No sign can be constructed for `~(~a~)'" 
-                 (aref to-be-accounted-for y))))))
-
-
-(defun add-word (local-word morph-poss right-vertex f cfrom cto)
-  ;; get-senses returns a list of conses of ids and dags corresponding to the
-  ;; word senses - the type of the dag is used to do the indexing
-  (let* ((multi-results (add-multi-words morph-poss right-vertex f cfrom cto))
-         (word-senses 
-          (if #+:ltemplates (template-p local-word) #-:ltemplates nil
-            #+:ltemplates
-            (let* ((template (retrieve-template local-word))
-                   (surface (or (get-template-surface template) local-word))
-                   (tdfs (when template (instantiate-template template))))
-              (when tdfs
-                (setf local-word surface)
-                (list (make-mrecord :lex-ids (list (intern local-word))
-                                    :fs tdfs
-                                    :rules nil))))
-            #-:ltemplates nil
-            (loop for morph-res in morph-poss
-                append
-                  (loop for sense in (get-senses (car morph-res))
-                      append
-                        (let ((fs (if *recording-word*
-                                      (unify-in-word (cdr sense) local-word)
-                                    (cdr sense))))
-                          (if (cdr morph-res)
-                              (apply-all-lexical-and-morph-rules 
-                               (list (make-mrecord :lex-ids (list (car sense))
-                                                   :fs fs 
-                                                   :rules (cdr morph-res)))
-                               f)
-                            (list (make-mrecord :lex-ids (list (car sense))
-                                                :fs fs
-                                                :rules nil)))))))))
-    (dolist (mrec word-senses)
-      (let* ((lex-ids (mrecord-lex-ids mrec))
-             (sense (mrecord-fs mrec))
-             (history (mrecord-history mrec))
-             (edge (construct-lex-edge sense history local-word lex-ids
-                                       (- right-vertex 1) right-vertex
-				       cfrom cto)))
-        (if *active-parsing-p*
-          (let ((configuration (make-chart-configuration
-                                :begin (- right-vertex 1) :end right-vertex
-                                :edge edge)))
-            (lexical-task (lex-priority mrec) configuration))
-          (with-agenda (when f (lex-priority mrec))
-            (activate-context (- right-vertex 1) edge right-vertex f)))))
-    ;; add-multi-words is mostly for side effects, but want to check if we've
-    ;; found something, and produce correct error messages, so we return the
-    ;; strings found
-    (values word-senses multi-results)))
-
-(defun unify-in-word (tdfs word-string)
-  (declare (ignore word-string))
-  tdfs)
+(defun instantiate-token-chart (chart-spec)
+  ;;; so far this is only for testing
+  ;;; chart-spec should be a list each element of which is
+  ;;; a list
+  ;;; (left-vertex right-vertex cfrom cto string)
+  (clear-chart)
+  (dolist (edge-spec chart-spec)
+    (add-token-edge (string-upcase (fifth edge-spec))
+		    (fifth edge-spec)
+		    (first edge-spec)
+		    (second edge-spec)
+		    (third edge-spec)
+		    (fourth edge-spec))))
     
-
-(defun construct-lex-edge (sense history word lex-ids from to cfrom cto)
-  #+ignore (format t "~%Construct word ~A" word)
-  (make-edge :id (next-edge) 
-             :category (indef-type-of-tdfs sense) 
-             :rule (if history
-                      (mhistory-rule (car history))
-		      word)
-             :dag sense
-             :leaves (list word)
-             :lex-ids lex-ids
-             :morph-history (construct-morph-history word lex-ids 
-                                                     history from to cfrom cto)
-             :spelling-change (when history 
-				(mhistory-new-spelling (car history)))
-             :orth-tdfs (when history (mhistory-orth-tdfs (car history)))
-             :from from
-             :to to
-	     :cfrom cfrom
-	     :cto cto))
+(defun add-token-edge (base-word word from to cfrom cto)
+  (when (> to *tchart-max*)
+    (setf *tchart-max* to))
+  (let ((existing-ccs (aref *tchart* to 0))
+	(edge (make-token-edge :id (next-edge)
+			       :string base-word
+			       :word word
+			       :leaves (list base-word)
+			       :from from
+			       :to to
+			       :cfrom cfrom
+			       :cto cto)))
+    (unless (token-edge-match edge existing-ccs)
+      (let ((cc (make-chart-configuration :begin from
+					  :edge edge
+					  :end to)))
+	  (push cc (aref *tchart* to 0))
+	  (push cc (aref *tchart* from 1))))))
 
 
-(defun get-senses (stem-string)
-  #+:arboretum
-  (declare (special *mal-active-p*))
-  (let ((entries
-         (loop for entry in (get-unexpanded-lex-entry stem-string)
-             nconc
-               (when (not (cdr (lex-entry-orth entry)))
-                 ;; exclude multi-words
-                 (let* ((id (lex-entry-id entry))
-                        (expanded-entry (get-lex-entry-from-id id))
-                        (tdfs (when expanded-entry 
-                                (lex-entry-full-fs expanded-entry))))
-                   (when (and tdfs
-                              #+:arboretum
-                              (or *mal-active-p* 
-                                  (not (mal-lex-entry-p expanded-entry))))
-                     (list
-                      (cons id (copy-lex-fs-as-needed tdfs)))))))))
-    (or entries
-        (generate-unknown-word-entries stem-string))))
+(defun token-edge-match (edge cclist)
+  (member-if  #'(lambda (x)
+		       (and (eql (edge-from edge) 
+				 (chart-configuration-begin x))
+			    (eql (edge-to edge) 
+				 (chart-configuration-end x))
+			    (equal (token-edge-word edge)
+				   (token-edge-word
+				    (chart-configuration-edge x)))))
+	      cclist))
+				  
+
+
+
+;;; *****************************************************
+;;;
+;;; Morphophonology
+;;;
+;;; *****************************************************
+
+;;; We have a chart instantiated with token-edges
+;;; This phase calls the LKB built-in spelling component (or some other 
+;;; morphological engine), which ultimately provides a stem and a tree of
+;;; rules to apply to it.
+;;; The revised LKB morph code does this one rule at a time but the case
+;;; where a complete analysis is done in one step is also supported.
+;;;
+;;; default *morph-option* (i.e., :default)
+
+(defun instantiate-chart-with-morphop nil
+  (dotimes (current *tchart-max*)
+    (let ((token-ccs (aref *tchart* current 1)))
+      (dolist (token-cc token-ccs)
+	(let* ((token-edge (chart-configuration-edge token-cc))
+	       (word (token-edge-word token-edge))
+	       (irregs (find-irregular-morphs word)))
+	  (dolist (morph-spec irregs)
+	    (let ((stem (car morph-spec))
+		  (partial-tree (cdr morph-spec)))
+	      	  ;;; add the irregular edges
+	      (add-morpho-stem-edge-from-token-edge 
+	       stem partial-tree
+	       token-edge nil) ;; nil indicates this is complete
+	      ;;;
+	      ;;; when the irregular form involves no
+	      ;;; effect on the stem, we add the stem edge as 
+	      ;;; well here
+	      (when (and (not (cdr partial-tree))
+			 (equal stem (second (car partial-tree))))
+		(add-morpho-stem-edge-from-token-edge 
+		 stem nil
+		 token-edge nil))))
+	  (add-morpho-partial-edges 
+	   word nil
+	   (token-edge-from token-edge)
+	   (token-edge-to token-edge)
+	   token-edge))))))
+
+;;; The reason to add the edges is to have something that can be
+;;; checked to avoid recomputation.  e.g. if we're analysing
+;;; something which could be STEM+m1+m2+m3 or STEM+m1+m2+m4
+;;; we don't need to redo the STEM+m1+m2 part
+;;; 
+
+;;; FIX - it would probably make sense to pack edges by
+;;; combining partial trees
+
+#|
+   e.g., suppose s corresponds to two rules, pl and 3psg
+         ing to ing, ise to ise and this is
+ 0   called on "THEORISINGS" with rules nil, then
+ 1     recurse on "THEORISING" with rules (pl)
+ 2       recurse on "THEORISE" with rules (ing pl)
+ 3         recurse on "THEORY" with rules (ise ing pl)
+             coming back up
+ 3         add-morpho-stem-edge a "THEORY", partial-p
+ 3         add-new-partial-morph-edge b "THEORY", partial-p (ise) dtr a
+ 2	 add-morpho-stem-edge c "THEORISE", partial-p
+ 2	 add-new-partial-morph-edge d "THEORISE", partial-p (ing) dtr c 
+ 2	 add-new-partial-morph-edge e "THEORY", partial-p (ise ing) dtr b
+ 1     add-morpho-stem-edge f "THEORISING", partial-p
+ 1     add-new-partial-morph-edge g "THEORISING", not partial-p (pl) dtr f
+ 1     add-new-partial-morph-edge h "THEORISE", not partial-p (ing pl) dtr d
+ 1     add-new-partial-morph-edge i "THEORY", not partial-p (ise ing pl) dtr e
+ 0
+ 1     recurse on "THEORISING" with rules (3psg)
+ 1     find edges d, e, f
+ 1     add-new-partial-morph-edge g "THEORISING", not partial-p (3sg) dtr f
+ 1     add-new-partial-morph-edge h "THEORISE", not partial-p (ing 3sg) dtr d
+ 1     add-new-partial-morph-edge i "THEORY", not partial-p (ise ing 3sg) dtr e
+ 0     add-morpho-stem-edge j "THEORISINGS", not partial-p
+ or something like that ...
+ |#
+	 
+(defun add-morpho-partial-edges (unanalysed rules from to token-edge)
+#+:pdebug  (format t "~%add-morpho-partial-edges: ~A ~A" unanalysed rules)
+  (let ((daughter-edges
+	 (morpho-partial-edge-match from to unanalysed
+				    (aref *tchart* from 1))))
+        ;;; if already seen "THEORISING", we don't need to
+        ;;; recurse further, we just add in our rules to the 
+        ;;; partial-trees on the collected edges
+    (unless daughter-edges
+      (let ((last-rule-id (caar rules)))
+	(when (if last-rule-id (spelling-rule-feeds-p last-rule-id) t)  
+	  ;;; no point continuing to morph-analyse if there's no
+	  ;;; rule that changes morphology that can feed the
+	  ;;; one we've seen
+	  (let* ((one-steps (if *foreign-morph-fn*
+				(apply *foreign-morph-fn* (list unanalysed))
+			      (one-step-morph-analyse unanalysed))))
+;;; (one-step-morph-analyse "CANNED") or the foreign function returns
+;;; (("CAN" . PAST-V_IRULE))
+	(dolist (morph-pair one-steps)
+	  (let* ((possible-stem (car morph-pair))
+		 (rule (cdr morph-pair)))
+	    (unless (or (and *irregular-forms-only-p* 
+			     (morph-matches-irreg-p possible-stem rule))
+			(and rules
+			     (not (check-lrfsm 
+				   (get-lex-rule-entry last-rule-id)
+				   (get-lex-rule-entry rule)))))
+	      (dolist (edge (add-morpho-partial-edges possible-stem 
+						      (cons 
+						       (list rule unanalysed) 
+						       rules) 
+						      from to
+						      token-edge))
+		(push edge daughter-edges))))))))
+      (let ((new-edge
+	     (add-morpho-stem-edge-from-token-edge 
+	      unanalysed nil token-edge (if rules t nil))))
+	(when new-edge (push new-edge daughter-edges))))
+    ;;; end of fresh analysis
+    (if rules
+	(loop for daughter-edge in daughter-edges
+	    collect
+	      (add-new-partial-morph-edge daughter-edge rules 
+					  from to))
+      daughter-edges)))
+
+(defun add-new-partial-morph-edge (daughter-edge rules from to)
+  ;;; This is used in the rule-by-rule case when we've got a stem
+  ;;; In effect, we are now building up from the stem
+  ;;; adding edges bottom-up.  
+  (let* ((new-edge (make-morpho-stem-edge
+			:id (next-edge)
+			:word (morpho-stem-edge-word daughter-edge)
+			:current (second (car rules))
+			:string (morpho-stem-edge-string daughter-edge)
+			:stem (morpho-stem-edge-stem daughter-edge)
+			:partial-tree
+			(append (morpho-stem-edge-partial-tree daughter-edge)
+				(list (car rules)))
+			:leaves 
+			(morpho-stem-edge-leaves daughter-edge)
+			:children (list daughter-edge)
+			:partial-p (if (cdr rules) t nil)
+			:from from
+			:to to
+			:cfrom (morpho-stem-edge-cfrom daughter-edge)
+			:cto (morpho-stem-edge-cto daughter-edge)))
+	 (cc (make-chart-configuration 
+	      :begin from
+	      :edge new-edge
+	      :end to)))
+	(push cc (aref *tchart* from 1))
+	(push cc (aref *tchart* to 0))
+	new-edge))
+
+(defun morpho-partial-edge-match (from to unanalysed cclist)
+  (loop for x in cclist
+      when
+	(and (eql from (chart-configuration-begin x))
+	     (eql to (chart-configuration-end x))
+	     (morpho-stem-edge-p (chart-configuration-edge x))
+	     (equal unanalysed
+		    (morpho-stem-edge-current
+		     (chart-configuration-edge x))))
+      collect (chart-configuration-edge x)))
+
+
+(defun add-morpho-stem-edge-from-token-edge (stem partial-tree token-edge partial-p)  
+  ;;; this is called from the version with the rule-by-rule morphology
+  ;;; (for the irregs and as the base case with regular morphology)
+  ;;; it is also called when we have a version of morphology
+  ;;; giving full partial trees and we're using the tokeniser
+  ;;; :external-partial-tree is the value of *morph-option*
+  ;;; But most of the work is done in add-morpho-stem-edge
+  ;;; which is called from the sppp stuff (i.e. external
+  ;;; tokeniser and partial tree morphology)
+  ;;;
+  ;;; partial-p is set when this edge is added from inside the
+  ;;; recursive add-morpho-partial-edges - this indicates that
+  ;;; rules specified by the morphological analysis are missing
+  (let ((from (token-edge-from token-edge))
+	(to (token-edge-to token-edge))
+	(word (token-edge-word token-edge))
+	(string (token-edge-string token-edge))
+	(cfrom (token-edge-cfrom token-edge))
+	(cto (token-edge-cto token-edge))
+	(tleaves (token-edge-leaves token-edge)))
+    (add-morpho-stem-edge
+     stem partial-tree from to word string cfrom cto 
+     tleaves token-edge partial-p)))
+
+(defun add-morpho-stem-edge (stem partial-tree 
+			     from to word string cfrom cto tleaves
+			     tedge partial-p)
+  ;;; copy most of token-edge
+  ;;; add partial-tree and stem
+  ;;; put into chart at same places
+  (if
+      (and (lookup-word *lexicon* stem)
+	   (or (not (cdr partial-tree))
+	       (not (member *morph-option* '(:external-partial-tree 
+					     :with-tokeniser-partial-tree)))
+		    ;; this is checked elsewhere if we're proceeding
+		    ;; rule-by-rule
+	       (check-rule-filter-morph partial-tree string))
+	   (not (morpho-stem-edge-match from to stem partial-tree 
+				   (aref *tchart* from 1))))
+      (let* ((new-edge (make-morpho-stem-edge
+			:id (next-edge)
+			:word word
+			:string string
+			:stem stem
+			:current stem
+			:partial-tree partial-tree
+			:leaves tleaves
+			:children (if (token-edge-p tedge)
+				      (list tedge))
+			:from from
+			:to to
+			:cfrom cfrom
+			:cto cto
+			:partial-p partial-p))
+	     (cc (make-chart-configuration :begin from
+					   :edge new-edge
+					   :end to)))
+	(push cc (aref *tchart* from 1))
+	(push cc (aref *tchart* to 0))
+	new-edge)
+    nil))
+
+(defun morpho-stem-edge-match (from to stem partial-tree cclist)
+  (dolist (x cclist)
+    (when
+	(and (eql from (chart-configuration-begin x))
+	     (eql to (chart-configuration-end x))
+	     (morpho-stem-edge-p (chart-configuration-edge x))
+	     (equal stem
+		    (morpho-stem-edge-stem
+		     (chart-configuration-edge x)))
+	     (tree-equal partial-tree
+			 (edge-partial-tree
+			  (chart-configuration-edge x))))
+      (return-from morpho-stem-edge-match t))))
+
+
+
+;;; *************************************************************
+;;;
+;;; This alternative version is for the one step morphophonology case
+;;; where the foreign-morph-fn returns a full partial-tree 
+;;; and a stem - this is called when
+;;; :external-partial-tree is the value of *morph-option*
+
+(defun instantiate-chart-with-morpho-stem-edges nil
+  (dotimes (current *tchart-max*)
+    (let ((token-ccs (aref *tchart* current 1)))
+      (dolist (token-cc token-ccs)
+	(let* ((token-edge (chart-configuration-edge token-cc))
+	       (word (token-edge-word token-edge))
+	       (morph-specs
+		(union
+		 (filter-for-irregs
+		  (remove-duplicates
+		   (apply *foreign-morph-fn*
+			  (list word))
+		   :test #'equalp))
+		 ;; filter-for-irregs is in rules.lsp
+		 (find-irregular-morphs word) :test #'equalp)))
+	  (dolist (morph-spec morph-specs)
+	    (add-morpho-stem-edge-from-token-edge 
+	     (car morph-spec)
+	     (cdr morph-spec)
+	     token-edge nil)))))))
+
+;;; *foreign-morph-fn* is assumed to return something like
+;;; ("A" (RULE1 "AB") (RULE2 "ABC"))
+;;; as the old morph-analyse did
+
+(defun check-rule-filter-morph (rule-info-list string)
+  ;;; this is called with a list of rules that will be
+  ;;; tried later on in the parser proper
+  ;;; make sure we can get actual rules, and if we can
+  ;;; filter impossible combinations now according to the
+  ;;; rule filter
+  ;;;
+  (let ((rules 
+	 (loop for rule-info in rule-info-list
+	     collect
+	       (let* ((rule-id (first rule-info))
+		      (rule-entry (get-lex-rule-entry rule-id)))
+		 (or rule-entry
+		     (progn 
+		       (format t 
+			       "~%Warning: rule ~A specified by ~
+                                       morphology for ~A was not found"
+			       rule-id string)
+		       (return-from check-rule-filter-morph nil)))))))
+    (check-rule-filter-morph-aux rules)))
+	
+(defun check-rule-filter-morph-aux (rule-list)
+  (if (cdr rule-list)
+      (let ((first-rule (car rule-list)))
+	(dolist (other (cdr rule-list))
+	  (unless (check-lrfsm other first-rule)
+	    (return-from check-rule-filter-morph-aux nil)))
+	t)
+    t))
+	
+;;; *****************************************************
+;;;
+;;; Lexical lookup and MWEs
+;;;
+;;; *****************************************************
+
+	
+;;; multi-word entries may have affixation on any member
+;;; but they span several vertices.  It's therefore
+;;; necessary to treat them as individual words with respect to
+;;; the spelling component.
+;;; Putative multiword entries are checked
+;;; when we get to the rightmost element.
+	
+(defun instantiate-chart-with-stems-and-multiwords nil
+  (dotimes (current *tchart-max*)
+    (dolist (cc (aref *tchart* current 1))
+      (let ((edge (chart-configuration-edge cc)))
+	(when (and (morpho-stem-edge-p edge)
+		   (not (morpho-stem-edge-partial-p edge)))
+	  (add-single-and-multiple-senses edge)))))
+  ;;; FIX - the active-parser doesn't necessarily
+  ;;; put the stem edges directly onto the chart - need
+  ;;; to find out how else to check them
+  (unless (and *active-parsing-p*
+	       (or *first-only-p* *chart-dependencies*))
+      (check-stem-coverage *tchart-max*)))
+
+(defun add-single-and-multiple-senses (morpho-stem-edge)
+  ;;; (format t "~%add-single-and-multiple-senses: ~A ~A" (edge-from morpho-stem-edge) (edge-to morpho-stem-edge))
+  (let* ((to (edge-to morpho-stem-edge))
+	 (edge-stem (morpho-stem-edge-stem morpho-stem-edge))
+	 (from (edge-from morpho-stem-edge))
+	(cfrom (edge-cfrom morpho-stem-edge))
+	 (cto (edge-cto morpho-stem-edge))
+	 (partial-tree (edge-partial-tree morpho-stem-edge))
+	 (edge-string (edge-string morpho-stem-edge))
+	 (edge-entries (get-unexpanded-lex-entry edge-stem)))
+    ;;; FIX when the precheck code is written the entries
+    ;;; will be on the edges
+    (dolist (entry edge-entries)
+      (let ((entry-orth-list (mapcar #'string-upcase (lex-entry-orth entry)))) 
+	(if (cdr entry-orth-list)
+	    ;; multi-word
+	    (check-multi-word entry-orth-list
+			      edge-stem
+			      edge-string entry 
+			      from to cto partial-tree morpho-stem-edge)
+	(add-stem-edge edge-stem
+	 edge-string from to cfrom cto partial-tree entry morpho-stem-edge))))))
+	     ;;; FIX - put back unify-in
+
+(defun add-stem-edge (edge-stem
+		      edge-string from to cfrom cto partial-tree entry dtr)
+    #+:arboretum (declare (special *mal-active-p*))
+    (let* ((expanded-entry (get-lex-entry-from-id (lex-entry-id entry))))
+      (when (and expanded-entry
+		 #+:arboretum
+		 (or *mal-active-p* 
+		     (not (mal-lex-entry-p expanded-entry))))
+	(let* ((new-fs
+	       (copy-lex-fs-as-needed
+		(lex-entry-full-fs entry)))
+	       (new-edge
+		(make-edge :id (next-edge) 
+			   :category (indef-type-of-tdfs new-fs)
+			   :rule edge-stem
+			   :dag new-fs
+			   :leaves (list edge-string)
+			   :lex-ids (list (lex-entry-id entry))
+			   :from from
+			   :to to
+			   :tchildren (list dtr)
+			   :partial-tree partial-tree
+			   :string edge-string
+			   :cfrom cfrom
+			   :cto cto))
+	       (cc (make-chart-configuration :begin from
+					     :edge new-edge
+					     :end to)))
+	  (when (> to *chart-max*)
+            (setf *chart-max* to))
+          (cond
+           (*active-parsing-p*
+            (lexical-task (lex-priority new-edge) cc))
+           (t
+            (push cc (aref *chart* from 1))
+            (push cc (aref *chart* to 0))))))))
 
 (defun copy-lex-fs-as-needed (tdfs)
   (cond
@@ -624,287 +1047,247 @@
     (push tdfs *lexical-entries-used*)
     tdfs)))
 
-;;; get-multi-senses has to return a structure
-
-(defstruct (sense-record)
-  word-string
-  cfrom
-  left-vertex
-  lex-ids
-  fs
-  morph-res
-  mrecs)
-  
-(defun add-multi-words (morph-poss right-vertex f cfrom cto)
-  (declare (ignore cfrom))
-  (let* ((multi-strings nil)
-	 (word-senses 
-          (loop for stem in (remove-duplicates 
-                        (loop for analysis in morph-poss
-                             collect (car analysis)) :test #'equal)
-	       ;; make sure we have all the possible stems in case inflection
-	       ;; is going to be allowed on rightmost element but otherwise
-	       ;; the variable morph-poss is not used
-               append
-               (loop for sense-record in (get-multi-senses stem right-vertex)
-                    nconc
-                     (let* ((sense 
-                             (copy-lex-fs-as-needed
-                              (sense-record-fs sense-record)))
-                            (new-fs (if *recording-word*
-                                        (unify-in-word 
-                                         sense 
-                                         (sense-record-word-string 
-                                          sense-record))
-                                      sense))
-                           (lex-ids (sense-record-lex-ids sense-record))
-                           (new-morph-res 
-                            (sense-record-morph-res sense-record))
-                           (mrecs 
-                            (if (cdr new-morph-res)
-				(apply-all-lexical-and-morph-rules 
-				 (list (make-mrecord :fs new-fs 
-						     :lex-ids lex-ids
-						     :rules 
-						     (cdr new-morph-res)))
-				 f)
-                              (list (make-mrecord :fs new-fs 
-                                                  :lex-ids lex-ids      
-                                                  :rules nil)))))
-                      (if mrecs
-			  (progn
-			    (setf (sense-record-mrecs sense-record) mrecs)
-			    (list sense-record))))))))
-    (dolist (sense-record word-senses)
-      (let ((word (sense-record-word-string sense-record))
-	    (left-vertex (sense-record-left-vertex sense-record))
-	    (cfrom (sense-record-cfrom sense-record)))
-	(push word multi-strings)
-	(dolist (mrec (sense-record-mrecs sense-record))
-	  (let* ((sense (mrecord-fs mrec))
-                 (lex-ids (mrecord-lex-ids mrec))
-                 (history (mrecord-history mrec))
-                 (edge (construct-lex-edge sense history word lex-ids
-                                           left-vertex right-vertex 
-					   cfrom cto)))
-            (if *active-parsing-p*
-              (let ((configuration (make-chart-configuration
-                                    :begin left-vertex :end right-vertex
-                                    :edge edge)))
-                (lexical-task (lex-priority mrec) configuration))
-              (with-agenda (when f (lex-priority mrec))
-                (activate-context left-vertex edge right-vertex f)))))))
-    ;; return multi-strings, so we know what's been found
-    multi-strings))
-
-
-(defun get-multi-senses (stem-string right-vertex)
-  (let* ((entries (get-unexpanded-lex-entry stem-string)))
-    (loop for entry in (sort entries #'(lambda (x y) 
-                                    (> (length (lex-entry-orth x))
-                                       (length (lex-entry-orth y)))))
-         append
-         (if (cdr (lex-entry-orth entry))
-	     (check-multi-word stem-string entry right-vertex
-			       (lex-entry-id entry))))))
-
-
-(defun check-multi-word (stem unexpanded-entry right-vertex id)
-  (let ((entry-orth (lex-entry-orth unexpanded-entry))
-        (ok t)
-        (rules nil)
-	(cfrom nil)
-        (amalgamated-stems nil)
-        (amalgamated-words nil)
-        (inflection-position (lex-entry-infl-pos unexpanded-entry))) 
-    (when (< right-vertex (length entry-orth))
+(defun check-multi-word (entry-orth-list edge-stem
+			 edge-string unexpanded-entry from to cto 
+			 partial-tree dtr)
+  ;;; we have a possible match on a multiword
+  ;;; i.e., something which corresponds to multiple tokens
+  ;;; according to the tokeniser.  For every valid multiword
+  ;;; we find, we will add an edge to the chart via add-stem-edge
+  ;;;
+  ;;; a multiword entry gives a list of stems
+  ;;;
+  (let* ((inflection-position (lex-entry-infl-pos unexpanded-entry))
+	 (number-of-words (length entry-orth-list))
+	 (to-be-accounted-for (reverse entry-orth-list))
+	 (current-entry-stem (car to-be-accounted-for)))
+    (unless (string-equal current-entry-stem edge-stem)
+      (return-from check-multi-word nil))
+    ;; only check multi-words when we have the rightmost
+    (when (< to number-of-words)
       (return-from check-multi-word nil)) ; too near start of sentence
-    (when (string-equal (car (last entry-orth)) stem)
-      ;; only check multi-words when we have the rightmost
-      (let ((current-vertex (- right-vertex (length entry-orth)))
-	    (current-position 1))
-	(dolist (word-stem entry-orth)
-	  (let* ((morph-entry (aref *morphs* current-vertex))
-		 (existing-word (morph-edge-word morph-entry)))
-	    (unless cfrom
-	      (setf cfrom (morph-edge-cfrom morph-entry)))
-	    (if (eql current-position inflection-position)
-		;; inflection allowed here
-		(let ((current-morph-res 
-		       (morph-edge-morph-results morph-entry)))
-		  (unless
-                      (let ((some-ok nil))
-                        (loop for res in current-morph-res
-                             do
-                             (if (string-equal word-stem (car res))
-                                 (progn (push (cdr res) rules)
-                                        (setf some-ok t))))
-                        some-ok)
-		    (setf ok nil)
-		    (return)))
-	      ;; else cannot be inflected        
-	      (if (string-equal word-stem existing-word)
-                  (let ((current-morph-res 
-                         (morph-edge-morph-results morph-entry)))
-                    (unless
-                      (dolist (res current-morph-res)
-                        (when
-                            (and (string-equal word-stem (car res))
-                                 (null (cdr res)))
-                          (return t)))
-                      ;; this assumes there are no null affixes 
-                      ;; found by the morphology program
-                      (setf ok nil)
-                      (return)))
-                (progn
-                  (setf ok nil)
-                  (return))))
-	    (push word-stem amalgamated-stems)
-	    (push " " amalgamated-stems)
-	    (push existing-word amalgamated-words)
-	    (push " " amalgamated-words)
-	    (incf current-vertex)
-	    (incf current-position)))
-	(when ok
-	  (let ((expanded-entry (get-lex-entry-from-id id)))
-	    (when expanded-entry
-	      (let* ((full-stem-string 
-		      (apply #'concatenate 'string 
-			     (nreverse (cdr amalgamated-stems))))
-		     (full-word-string 
-		      (apply #'concatenate 'string 
-			     (nreverse (cdr amalgamated-words)))))
-                (loop for rule-set in (or rules (list nil))
-                     collect
-                     (let ((left-vertex (- right-vertex (length entry-orth))))
-                       (make-sense-record :word-string full-word-string
-                                          :left-vertex left-vertex
-					  :cfrom cfrom
-                                          :morph-res 
-                                          (if rule-set
-                                              (cons full-stem-string 
-                                                    (loop for rule-rec in rule-set
-                                                         collect
-                                                         (cons (car rule-rec)
-                                                               (list full-word-string))))
-;;; this isn't quite right - if there are multiple affixes,
-;;; the effect will be to put the fully inflected form on all of
-;;; them.  FIX sometime.                                            
-                                            (list full-stem-string))
-                                          :lex-ids (list (lex-entry-id
-                                                          expanded-entry))
-                                          :fs (lex-entry-full-fs 
-					       expanded-entry))))))))))))
+    ;; because of tokeniser ambiguity this is not a perfect check
+    ;; but the more complex cases will be caught below
+    (when (and partial-tree
+	       (not (eql inflection-position number-of-words)))
+      (return-from check-multi-word nil)) ; inflection not allowed here
+    (check-multi-and-add-edges entry-orth-list (cdr to-be-accounted-for) from
+			 nil to cto inflection-position
+			 unexpanded-entry 
+			 partial-tree edge-string dtr)))
+			 
 
-
-(defun construct-morph-history (word lex-ids history from to cfrom cto)
-  ;; the rule on an edge refers `back' i.e. to the way it was constructed, so
-  ;; when this is called, the rule and the new spelling (if any) of the
-  ;; current-record have already been put into an edge
-  (when history
-    (let* ((current-record (car history))
-	   (fs (mhistory-fs current-record))
-	   (new-edge (construct-lex-edge fs (cdr history) word lex-ids
-                                         from to cfrom cto)))
-      (push new-edge *morph-records*)
-      new-edge)))
-    
-
-
-(defun apply-all-lexical-and-morph-rules (entries f)
-  ;; This function applies morphological rules, possibly interleaved with
-  ;; lexical rules, but terminating when the last morphologically significant
-  ;; rule has been applied, since the parser will take care of the rest
+(defun check-multi-and-add-edges (entry-orth-list remaining-words 
+			    from cfrom to cto inflection-position 
+				  unexpanded-entry 
+				  partial-tree amalgamated-string dtr)
+  ;; check we have some match on each element
+  ;; and find partial tree(s) on inflected position
+  ;; this is called initially when we've got a match on the rightmost
+  ;; element.  We add edges for each match.  Note that because
+  ;; tokenisation is now non-deterministic, and because
+  ;; there may be ambiguity in the morphology, we may end up with several
+  ;; edges being added.  
+  ;; e.g. ("a" "b" "c") as entry-orth-list with inflection
+  ;; position 2 would match a set of contiguous edges where 
+  ;; edge 1 had stem "a" and no partial tree
+  ;; edge 2 had stem "b" and an optional partial tree
+  ;; edge 3 we already know has stem "c" when this is called
   ;;
-  ;; entries is a list of mrecords - current-fs, morph-rule-ids, history (the
-  ;; history is nil initially, then a list of mhistory structures)
+  ;; Note that, despite the name `inflection position' an MWE like 
+  ;; "chest pain" would match "chest painless" (if the inflection position
+  ;; was set to 2 and there was a productive affix "less", despite the 
+  ;; fact that "less" would be derivational.  This would have to be controlled
+  ;; by the grammar (presumably by whatever mechanism was used to block 
+  ;; derivation occurring in the wrong place anyway).
   ;;
-  ;; the function returns a list of such mrecords, though the second element
-  ;; will be nil in each case
-  ;;
-  (let ((transformed-entries 
-	 (loop for entry in entries
-	      append
-	      (let* ((fs (mrecord-fs entry))
-                     (fs-restricted (mrecord-fs-restricted entry))
-                     (lex-ids (mrecord-lex-ids entry))
-                     (morph-rules (mrecord-rules entry))
-                     (history (mrecord-history entry))
-                     (daughter (if history
-                                 (mhistory-rule (first history))
-                                 (first lex-ids))))
-		(if (>=  (length history) *maximal-lex-rule-applications*)
-		    (progn (format t 
-				   "~%Warning - probable circular lexical rule") 
-			   nil)
-		  (append
-		   (loop for rule in *parser-lexical-rules*
-			nconc
-			(let ((result (apply-morph-rule 
-				       rule fs fs-restricted nil daughter)))
-			  (if result 
-			      (list (make-mrecord :fs result
-					    :lex-ids lex-ids
-					    :rules morph-rules 
-					    :history (cons
-						      (make-mhistory 
-						       :rule rule
-						       :fs fs
-						       :new-spelling nil)
-						      history))))))
-		   (when morph-rules
-		     (let* ((morph-rule-info (car morph-rules))
-			    (new-orth (cadr morph-rule-info))
-                            (orth-tdfs (when new-orth 
-                                         (make-orth-tdfs new-orth)))
-			    (rule-id (car morph-rule-info))
-			    (rule-entry (get-lex-rule-entry rule-id))
-			    (result
-			     (if rule-entry
-				 (apply-morph-rule
-				  rule-entry fs fs-restricted orth-tdfs
-                                  daughter))))
-		       (unless rule-entry
-			 (format t 
-				 "~%Warning: rule ~A specified by ~
+  (if remaining-words
+      (let ((ccs (aref *tchart* from 0))
+	    (entry-stem (car remaining-words)))
+	(dolist (cc ccs)
+	  (let ((edge (chart-configuration-edge cc)))
+	      (when
+		  (and 
+		   (morpho-stem-edge-p edge)
+		   (not (morpho-stem-edge-partial-p edge))
+		   (equal entry-stem (morpho-stem-edge-stem edge))
+		   (if (eql (length remaining-words)
+			    inflection-position)
+		       (progn 
+			 (setf partial-tree 
+			   (morpho-stem-edge-partial-tree edge))
+			 t)
+		     (not (morpho-stem-edge-partial-tree edge))))
+		(check-multi-and-add-edges 
+		 entry-orth-list (cdr remaining-words) (edge-from edge)
+		 (edge-cfrom edge)
+		 to cto inflection-position unexpanded-entry 
+		 partial-tree
+		 (concatenate 'string (edge-string edge) " "
+			      amalgamated-string)
+		 dtr)))))
+    (add-stem-edge
+     (format nil "~{~A ~}" entry-orth-list)
+     amalgamated-string
+     ;; FIX - when cfrom cto is universal we can replace this
+     ;; by a lookup in the original characters.  Currently
+     ;; this is a bit of a hack since
+     ;; we just guess that the strings of the individual words
+     ;; were split by spaces.
+     from to cfrom cto partial-tree 
+     unexpanded-entry dtr)))
+
+;;; **************************************************
+;;;
+;;; Unknown words / messages about missing words
+;;;
+;;; **************************************************
+
+#|
+
+The idea is to allow for ambiguity in the token input.  We scan
+initially, recording how far we can get in res-array, which stores
+t at index n if there is a potential span between 0 and n.  If we get
+to a point where there's a gap, we generate a warning and perhaps
+an unknown word, treat the gap as filled and go on from there.
+
+|#
+
+(defun check-stem-coverage (max)
+  (let ((res-array (make-array (list (+ max 1)) :initial-element nil)))
+    (setf (aref res-array 0) t)
+    (check-stem-coverage-aux 0 res-array)
+    (generate-messages-and-unknown-words res-array max)))
+
+(defun generate-messages-and-unknown-words (res-array max-dim)
+ ;;; (format t "~% generate-messages-and-unknown-words ~A" res-array)
+  (unless (aref res-array max-dim)
+    (dotimes (current (+ 1 max-dim))
+      (unless (aref res-array current)
+	(let ((token-ccs (aref *tchart* current 0)))
+	  (dolist (cc token-ccs)
+	    (let ((token-entry (chart-configuration-edge cc)))
+	      (format t "~%No analysis found corresponding to token ~A" 
+		      (token-edge-word token-entry)))))
+	      ;;;    FIX    (generate-unknown-word-entries stem-string)
+	(setf (aref res-array current) t)
+	(check-stem-coverage-aux current res-array)
+	(generate-messages-and-unknown-words res-array max-dim)
+	(return)))))
+      
+
+(defun check-stem-coverage-aux (start res-array)
+  ;;; (format t "~%check-stem-coverage-aux ~A ~A" start res-array)
+  (let ((stem-ccs
+	 (aref *chart* start 1))
+	(end-points nil))
+    (dolist (cc stem-ccs)
+;;;      (pprint cc)
+      (let ((end-point (chart-configuration-end cc)))
+	(unless (member end-point end-points)
+	  (push end-point end-points)
+	  (setf (aref res-array end-point) t))))
+    (dolist (end end-points)
+      (check-stem-coverage-aux end res-array))))
+  
+
+;;; *****************************************************
+;;;
+;;; Morphosyntax
+;;;
+;;; Morphological and lexical rule application
+;;;
+;;; *****************************************************
+
+;;; We now have a chart with edges corresponding to stems which
+;;; may need some morphological rules to be added.
+;;; This is complicated because the morphological rules can be 
+;;; interleaved with arbitrary numbers of lexical rules.
+;;; 
+;;; We want to combine this with parsing proper.  
+;;; Ordinary grammar rules are not allowed to apply to things with a 
+;;; partial-tree.  Spelling-change rules are only allowed to apply
+;;; when the next thing on the partial-tree is them.  Lexical
+;;; rules can apply any time.
+
+(defun find-spelling-info (edge)
+  (let* ((partial-tree (edge-partial-tree edge)))
+    ;;; list of (rule "FORM")
+    (if partial-tree
+	(let* ((current-rule-info (first partial-tree))
+	       (new-orth (second current-rule-info))
+	       (orth-tdfs (when new-orth 
+			    (make-orth-tdfs new-orth)))
+	       (rule-id (first current-rule-info))
+	       (rule-entry (get-lex-rule-entry rule-id)))
+	  (if rule-entry
+	      (values rule-entry orth-tdfs (rest partial-tree))
+	    (progn 
+	      (format t 
+		      "~%Warning: rule ~A specified by ~
                                        morphology was not found"
-				 rule-id))
-		       (when result 
-			 (list (make-mrecord 
-                                :fs result 
-                                :lex-ids lex-ids
-                                :rules (cdr morph-rules)
-                                :history (cons (make-mhistory 
-                                                :rule rule-entry
-                                                :fs fs
-                                                :new-spelling new-orth
-                                                :orth-tdfs orth-tdfs)
-                                               history))))))))))))
-    (if transformed-entries
-	(append (remove-if #'mrecord-rules transformed-entries)
-		(apply-all-lexical-and-morph-rules 
-		 (remove-if-not #'mrecord-rules transformed-entries) f)))))
+		      rule-id)
+	      nil))))))
+	  
 
+(defun apply-immediate-spelling-rule (rule orth-tdfs remaining-tree 
+				      left-vertex child-edge right-vertex f)
+;;; this is a special case of apply-immediate-grammar-rule
+  #+:pdebug
+  (format
+   t
+   "~&apply-immediate-spelling-rule(): `~(~a~) <-- ~d~^ [~d -- ~d]"
+   (rule-id rule) (edge-id child-edge) left-vertex right-vertex)
+  (if 
+      (and (check-rule-filter rule (edge-rule child-edge) 0)
+	   (restrictors-compatible-p 
+	    (car (rule-daughters-restricted-reversed rule))
+				     (edge-dag-restricted 
+				      child-edge)))
+      (multiple-value-bind (unification-result first-failed-p)
+	  (evaluate-unifications rule (list (edge-dag child-edge))
+				 orth-tdfs)
+        (if unification-result
+            (let* ((new-edge 
+                    (make-edge :id (next-edge)
+                               :category (indef-type-of-tdfs unification-result)
+                               :rule rule
+                               :children (list child-edge)
+                               :dag unification-result 
+                               :lex-ids (edge-lex-ids child-edge)
+                               :leaves (edge-leaves child-edge)
+			       :partial-tree remaining-tree)))
+              #+pdebug (format t " ... success.~%")
+              (activate-context left-vertex new-edge right-vertex f)
+              t)
+          (progn
+            #+pdebug (format t " ... ~:[fail~;throw~].~%" first-failed-p)
+            (if first-failed-p nil t))))))
 
-(defun apply-morph-rule (rule fs fs-restricted new-orth &optional daughter)
-  #-:debug 
-  (declare (ignore daughter))
-  ;;
-  ;; _fix_me_
-  ;; 
-  (let* ((qc (restrictors-compatible-p 
-              (car (rule-daughters-restricted rule)) fs-restricted))
-         (result (and qc (evaluate-unifications rule (list fs) new-orth))))
-    #+:debug
-    (when qc
-      (format
-       t
-       "apply-morph-rule(): ~a + ~a: ~:[nil~;t~] ~:[nil~;t~]~%"
-       (rule-id rule) 
-       (if (rule-p daughter) (rule-id daughter) daughter)
-       qc result))
-    result))
+;;; **************************************************************
+;;;
+;;; Parsing
+;;;
+;;; *************************************************************
 
+(defun add-words-to-chart (f)
+  (dotimes (current *chart-max*)
+    (let ((stem-ccs (aref *chart* (1+ current) 0)))
+      (dolist (stem-cc stem-ccs)
+	(let ((edge (chart-configuration-edge stem-cc)))
+	  (add-word edge f 
+		    (chart-configuration-begin stem-cc)
+		    (1+ current)))))))
+
+(defun add-word (edge f left-vertex right-vertex)
+  (declare (ignore left-vertex))
+  (unless *active-parsing-p*
+    (with-agenda (when f (lex-priority edge))
+      (activate-context-no-add (edge-from edge) edge right-vertex f))))
+
+(defun unify-in-word (tdfs word-string)
+  (declare (ignore word-string))
+  tdfs)
 
 (defun activate-context (left-vertex edge right-vertex f)
   #+:pdebug
@@ -914,48 +1297,55 @@
    (edge-id edge) left-vertex right-vertex)
 
   (add-to-chart left-vertex edge right-vertex f)
-  (dolist (rule *parser-rules*)
-    ;; grammar rule application is attempted when we've got all the bits
-    (try-grammar-rule-left rule
-                           ;; avoid a call to reverse here in a fairly tight loop
-                           (rule-daughters-restricted-reversed rule)
-                           left-vertex
-                           right-vertex
-                           (list edge)
-                           f
-                           (1- (length (the list (rule-daughters-apply-order rule)))))
-    ;; when we don't build up the chart in strict left-to-right
-    ;; order (as when we're doing a best-first search), we need to
-    ;; check for rule applying to the right as well as to the left.
-    ;; WARNING: this will only work correctly if all rules are no
-    ;; more than binary branching!!
-    (when (and f (cdr (rule-daughters-restricted rule)))
-      (try-grammar-rule-right rule
-                              (rule-daughters-restricted rule)
-                              left-vertex
-                              right-vertex
-                              (list edge)
-                              f 0))))
+  (activate-context-no-add left-vertex edge right-vertex f)) 
+  
+(defun activate-context-no-add (left-vertex edge right-vertex f) 
+  ;; when we have a partial-tree specification on the edge, one
+  ;; option is the corresponding morphological rule
+  ;; When this is applied, the new edge has a record 
+  ;; that removes that element from the partial-tree
+  (multiple-value-bind (spelling-rule orth-tdfs remaining-morph) 
+      (find-spelling-info edge)
+    (when spelling-rule
+      (apply-immediate-spelling-rule spelling-rule orth-tdfs remaining-morph
+				     left-vertex edge right-vertex f))
+    (dolist (rule (if spelling-rule 
+		      (loop for lr in *parser-lexical-rules*
+			  when (check-lrfsm spelling-rule lr)
+			  collect lr)
+		    *parser-rules*))
+      ;; when we have a partial-tree specification, we have all
+      ;; lexical rules here and no parser rules
+      ;;
+      ;; grammar rule application is attempted 
+      ;; when we've got all the bits
+      (try-grammar-rule-left rule
+			     ;; avoid a call to reverse here in a fairly tight loop
+			     (rule-daughters-restricted-reversed rule)
+			     left-vertex
+			     right-vertex
+			     (list edge)
+			     f
+			     (1- (length (the list (rule-daughters-apply-order rule)))))
+      ;; when we don't build up the chart in strict left-to-right
+      ;; order (as when we're doing a best-first search), we need to
+      ;; check for rule applying to the right as well as to the left.
+      ;; WARNING: this will only work correctly if all rules are no
+      ;; more than binary branching!!
+      (when (and f (cdr (rule-daughters-restricted rule)))
+	(try-grammar-rule-right rule
+				(rule-daughters-restricted rule)
+				left-vertex
+				right-vertex
+				(list edge)
+				f 0)))))
 
 
 (defun add-to-chart (left edge right f)
-  ;; Find an existing chart-entry structure if there is one and add a
-  ;; new chart-configuration to it, otherwise build up a new
-  ;; chart-entry
-  (let ((item (aref *chart* right 0))
-	(config (make-chart-configuration :begin left :edge edge :end right)))
-    (if item 
-	(push config (chart-entry-configurations item))
-      (setf (aref *chart* right 0)
-	(make-chart-entry :configurations (list config))))
-    ;; When doing a best-first parse, we need to index chart edges
-    ;; by both the end vertex and the start vertex
-    (when f
-      (let ((item2 (aref *chart* left 1)))
-	(if item2
-	    (push config (chart-entry-configurations item2))
-	  (setf (aref *chart* left 1)
-	    (make-chart-entry :configurations (list config))))))
+  (let ((config (make-chart-configuration :begin left :edge edge :end right)))
+    (push config (aref *chart* right 0))
+    ;; index chart edges by the start vertex too
+    (push config (aref *chart* left 1))
     ;; Did we just find a parse?
     (when (and f (eql left (car f))
 	       (eql right (cdr f)))
@@ -971,11 +1361,9 @@
 (defun try-grammar-rule-left (rule rule-restricted-list left-vertex 
 			      right-vertex child-edge-list f n)
   ;; Application of a grammar rule: Every time an edge is added to the chart,
-  ;; a check is made to see whether its addition triggers a rule application.
-  ;; (That is whether it has a category corresponding to the rightmost
-  ;; daughter of a grammar rule - checked before calling apply-grammar-rule
-  ;; and whether edges corresponding to the other daughter categories are
-  ;; already on the chart.)  If yes collect the dags associated with the
+  ;; a check is made to see whether its addition passes the rule application
+  ;; filter.
+  ;; If yes collect the dags associated with the
   ;; children, perform the unifications specified by the rule, and if the
   ;; unification(s) succeed, create a new edge (for the mother), record its
   ;; dag and associated information, add this to the chart, and invoke the
@@ -993,36 +1381,39 @@
 	   (restrictors-compatible-p (car rule-restricted-list) 
 				     (edge-dag-restricted 
 				      (car child-edge-list))))
-      (if (cdr rule-restricted-list)
+      (if (cdr rule-restricted-list) ;; we need more daughters
 	  (let ((entry (aref (the (simple-array t (* *)) *chart*) 
 			     left-vertex 0)))
 	    (if entry
-	      (dolist (config (chart-entry-configurations entry) t)
-		(unless
-		  ;; inner recusive call returns nil in cases when first
-                  ;; unif attempt fails - if this happens there's no point
-		  ;; continuing with other alternatives here
-		  (try-grammar-rule-left 
-                   rule
-                   (cdr rule-restricted-list)
-                   (chart-configuration-begin config)
-                   right-vertex
-                   (cons (chart-configuration-edge config) child-edge-list)
-                   f (1- n))
-                  #+:pdebug
-                  (format
-                   t
-                   "~&try-grammar-rule-left(): ~
+		(dolist (config entry t)
+		  (unless (edge-partial-tree 
+			   (chart-configuration-edge config))
+		    (unless
+			;; inner recusive call returns nil in cases when first
+			;; unif attempt fails - if this happens there's no point
+			;; continuing with other alternatives here
+			(try-grammar-rule-left 
+			 rule
+			 (cdr rule-restricted-list)
+			 (chart-configuration-begin config)
+			 right-vertex
+			 (cons (chart-configuration-edge config) child-edge-list)
+			 f (1- n))
+		      #+:pdebug
+		      (format
+		       t
+		       "~&try-grammar-rule-left(): ~
                     `~(~a~) [~d] <-- ~{~d~^ ~} [~d -- ~d] ... throw~%"
-                   (rule-id rule) (length rule-restricted-list)
-                   (loop for e in  child-edge-list collect (edge-id e))
-                   left-vertex right-vertex)
-                  #-:vanilla (return-from try-grammar-rule-left nil)
-                  ;; nil returned from the inner call is a signal
-                  ;; that unification of the edge we're triggering off
-                  ;; failed, so success with any combination is impossible
-                  #+:vanilla t))
-              t)) ;; must return t, because we don't want an outer
+		       (rule-id rule) (length rule-restricted-list)
+		       (loop for e in  child-edge-list collect (edge-id e))
+		       left-vertex right-vertex)
+		      #-:vanilla (return-from try-grammar-rule-left nil)
+		      ;; nil returned from the inner call is a signal
+		      ;; that unification of the edge we're triggering off
+		      ;; failed, so success with any combination is impossible
+		      #+:vanilla t)))
+	      t))
+                  ;; must return t, because we don't want an outer
                   ;; loop to throw 
 	;; we've got all the bits
 	(with-agenda (when f (rule-priority rule))
@@ -1043,19 +1434,21 @@
 	  (let ((entry (aref (the (simple-array t (* *)) *chart*)
                              right-vertex 1)))
 	    (if entry
-	      (dolist (config (chart-entry-configurations entry) t)
-		(unless
-                  (try-grammar-rule-right
-                   rule
-                   (cdr rule-restricted-list)
-                   left-vertex
-                   (chart-configuration-end config)
-                   (cons (chart-configuration-edge config) child-edge-list)
-                   f (1+ n))
-                  #-:vanilla
-                  (return-from try-grammar-rule-right nil)
-                  #+:vanilla t))
-                t))
+		(dolist (config entry t)
+		  (unless (edge-partial-tree 
+			    (chart-configuration-edge config))
+		    (unless
+			(try-grammar-rule-right
+			 rule
+			 (cdr rule-restricted-list)
+			 left-vertex
+			 (chart-configuration-end config)
+			 (cons (chart-configuration-edge config) child-edge-list)
+			 f (1+ n))
+		      #-:vanilla
+		      (return-from try-grammar-rule-right nil)
+		      #+:vanilla t)))
+	      t))
 	;; we've got all the bits
 	(with-agenda (when f (rule-priority rule))
 	  (apply-immediate-grammar-rule rule left-vertex right-vertex 
@@ -1105,8 +1498,11 @@
                                         #'(lambda (child)
                                             (copy-list (edge-leaves child)))
                                         edge-list)
-			       :from left-vertex
-			       :to right-vertex)))
+			       :partial-tree 
+			       (edge-partial-tree (first edge-list))
+			       ;; should be unary-rule if there is a partial
+			       ;; tree (worry about compounds later ...)
+			       )))
               #+pdebug (format t " ... success.~%")
               (activate-context left-vertex new-edge right-vertex f)
               t)
@@ -1127,24 +1523,11 @@
 	    (rule-daughters-order-reversed rule) 
 	  (cdr (rule-order rule))))
        (n -1)
-       ;;
-       ;; _fix_me_
-       ;; the entire `nu-orth' mechanism is, hmm, a little baroque: results of
-       ;; make-orth-tdfs() are cached (presumably so they can be retrieved from
-       ;; within a unification context, apparently in tree reconstruction) and
-       ;; cause grief when attempting to construct a (display) tree for an edge
-       ;; after the orthography TDFS cache has been cleared (e.g. by parsing).
-       ;; personally, i believe that the cache should go and everybody in their
-       ;; right minds will cache those TDFSs within the edge.  however, since a
-       ;; number of other functions rely on evaluate-unifications(), allow both
-       ;; a string of TDFS as the value for .nu-orth. here :-{.  (7-aug-03; oe)
-       ;; 
        (new-orth-fs (when nu-orth
                       (if (tdfs-p nu-orth) nu-orth (make-orth-tdfs nu-orth)))))
     ;; shouldn't strictly do this here because we may not need it but
     ;; otherwise we get a nested unification context error - cache the values
-    ;; for a word, so it's not reconstructed only wasted if the morphology is
-    ;; wrong
+    ;; for an edge
     (declare (type fixnum n))
     (with-unification-context (ignore)
       (dolist (rule-feat rule-daughter-order)
@@ -1224,7 +1607,13 @@
                (push (add-path-to-tail path tail-element) tail))))
       (make-tdfs :indef indef-dag :tail tail))))
 
-;;; evaluate-unifications-with-fail-messages - temporarily removed
+
+
+;;; ***********************************************************
+;;;
+;;; Finishing off
+;;;
+;;; **********************************************************
 
 (defun find-spanning-edges (start-vertex end-vertex)
   ;; Returns all edges between two vertices and checks for root conditions -
@@ -1232,11 +1621,12 @@
   (let ((start-symbols (if (listp *start-symbol*)
 			   *start-symbol*
 			 (list *start-symbol*)))
-	(chart-index (aref *chart* end-vertex 0)))
-    (when chart-index
-      (loop for item in (chart-entry-configurations chart-index)
+	(configs (aref *chart* end-vertex 0)))
+      (loop for item in configs
 	   append
-	   (when (eql (chart-configuration-begin item) start-vertex)
+	    (when 
+		(and (eql (chart-configuration-begin item) start-vertex)
+		     (not (edge-partial-tree (chart-configuration-edge item))))
 	     ;; root may be a list of (td)fs with the interpretation that
 	     ;; if any of them match the parse is OK
 	     (if (null start-symbols)
@@ -1244,13 +1634,14 @@
 	       (if *substantive-roots-p*
 		   (create-new-root-edges item start-symbols
 					  start-vertex end-vertex)
-		 (filter-root-edges item start-symbols))))))))
+		 (filter-root-edges item start-symbols)))))))
 
 ;; Decide if a single edge is a successful parse (when looking for the
 ;; first parse only).
 
 (defun find-spanning-edge (item start-vertex end-vertex)
-  (when (eql (chart-configuration-begin item) start-vertex)
+  (when (and (eql (chart-configuration-begin item) start-vertex)
+	     (not (edge-partial-tree (chart-configuration-edge item))))
     (let ((start-symbols (if (listp *start-symbol*)
                            *start-symbol*
                            (list *start-symbol*))))
@@ -1315,44 +1706,53 @@
 				   nil)
                      (list new-edge))))))))
 
-
+;;; ***************************************************************
+;;;
 ;;; TTY printout of chart
 ;;; chart edges are ordered on: right vertex, left vertex, edge id
+;;;
+;;; ***************************************************************
 
 (defun print-chart (&key frozen concise (stream t))
   (format stream "~% > chart dump:~%")
   (loop
-      for i from 1 to *chart-limit*
-      while (print-chart-entry i (aref *chart* i 0) 
-                               :frozen frozen :concise concise :stream stream))
+      for i from 1 to *chart-max*
+      do (print-chart-entry i (aref *chart* i 0) 
+			    :frozen frozen :concise concise :stream stream))
+  (terpri))
+
+(defun print-tchart (&key frozen concise (stream t))
+  (format stream "~% > token/spelling chart dump:~%")
+  (loop
+      for i from 1 to *tchart-max*
+      do (print-chart-entry i (aref *tchart* i 0) 
+			    :frozen frozen :concise concise :stream stream))
   (terpri))
 
 (defun print-chart-entry (vertex item &key frozen concise (stream t))
-  (if item 
-    (progn
-      (terpri)
-      (dolist
-         (configuration
-            (sort (copy-list (chart-entry-configurations item))
-               #'(lambda (span1 span2)
-                   (cond
-                      ((eql (chart-configuration-begin span1)
-                          (chart-configuration-begin span2))
-                         (< (edge-id (chart-configuration-edge span1))
-                            (edge-id (chart-configuration-edge span2))))
-                      (t
+  (when item 
+    (terpri)
+    (dolist
+	(configuration
+            (sort (copy-list item)
+		  #'(lambda (span1 span2)
+		      (cond
+		       ((eql (chart-configuration-begin span1)
+			     (chart-configuration-begin span2))
+			(< (edge-id (chart-configuration-edge span1))
+			   (edge-id (chart-configuration-edge span2))))
+		       (t
                         (< (chart-configuration-begin span1)
                            (chart-configuration-begin span2)))))))
-        (print-chart-item configuration vertex 
-                          :frozen frozen :concise concise :stream stream))
-      t)
-    (aref *morphs* vertex)))      ; return t if we might be in the middle
-                                  ; of a multi word
+      (print-chart-item configuration vertex 
+			:frozen frozen :concise concise :stream stream))))
+
 
 (defun print-chart-item (item 
                          &optional end 
                          &key (frozen nil frozenp)
                               concise (stream t))
+  (declare (ignore concise))
   (let ((edge (if (edge-p item) item (chart-configuration-edge item)))
         (begin (unless (edge-p item) (chart-configuration-begin item)))
         (roots (unless (edge-p item) (chart-configuration-roots item))))
@@ -1362,10 +1762,23 @@
        "~&~:[~2*~;~A-~A ~][~A] ~A => ~A~A  [~{~A~^ ~}]"
        (and begin end) begin end
        (edge-id edge)
-       (if concise (concise-edge-label edge) (edge-category edge))
+       (if (token-edge-p edge) 
+	   (token-edge-word edge)
+	 (if (morpho-stem-edge-p edge)
+	     (format nil "~A+~{~A ~}" (morpho-stem-edge-stem edge) 
+		     (mapcar #'(lambda (rule-spec)
+				 (concise-rule-name (car rule-spec)))
+			     (morpho-stem-edge-partial-tree edge)))
+	   (concise-edge-label edge)))
        (edge-leaves edge)
-       (if roots "*" "")
-       (loop for child in (edge-children edge) collect (edge-id child)))
+       (cond 
+	;; ((token-edge-p edge) " T")
+	((and (morpho-stem-edge-p edge) 
+	      (morpho-stem-edge-partial-p edge))" p")
+	(roots "*")
+	(t ""))
+       (or (loop for child in (edge-children edge) collect (edge-id child))
+	   (loop for child in (edge-tchildren edge) collect (edge-id child))))
       (format
        t
        "~:[~2*~; ~:[+~;~]~d~]"
@@ -1409,7 +1822,12 @@
     (rule-id (edge-rule edge)) 
     (first (edge-lex-ids edge))))
 
-;;; Parsing sentences from file
+;;; **************************************************************
+;;;
+;;; Parsing sentences from file (when the fine system is just too
+;;; much ...)
+;;;
+;;; **************************************************************
 
 (defun parse-sentences (&optional input-file (output-file 'unspec))
    (unless input-file 
@@ -1553,6 +1971,13 @@
    found)
 
 
+;;; *************************************************************
+;;;
+;;; generator utilities and structures 
+;;;
+;;; ************************************************************
+
+
 ;;; extracting a list of lexical entries used in a parse
 ;;; used for testing the generation lexical lookup algorithm
 
@@ -1580,20 +2005,8 @@
     (error "~%Should be unary edge ~A" edge-rec))
   (if (edge-children edge-rec)
     (cons (rule-id (edge-rule edge-rec))
-          (collect-unary-rule-names (car (edge-children edge-rec))))
-    (if (edge-morph-history edge-rec)
-        (cons (rule-id (edge-rule edge-rec))
-              (collect-morph-history-rule-names 
-               (edge-morph-history edge-rec))))))
+          (collect-unary-rule-names (car (edge-children edge-rec))))))
 
-(defun collect-morph-history-rule-names (edge-rec)
-  (if (edge-morph-history edge-rec)
-      (cons (rule-id (edge-rule edge-rec))
-            (collect-morph-history-rule-names 
-             (edge-morph-history edge-rec)))))
-
-
-;;; generator structures 
 
 (defstruct (dotted-edge (:include edge))
    res ; feature name of mother in rule dag in active edges
@@ -1612,3 +2025,25 @@
    inaccessible ; indices accessible in edges used to derive this edge but which no longer are
    )
 
+;;; This is now only used by the generator
+;;; but - FIX - is oe calling this somewhere unknown?  What is the
+;; optional daughter for?
+
+(defun apply-morph-rule (rule fs fs-restricted new-orth &optional daughter)
+  #-:debug 
+  (declare (ignore daughter))
+  ;;
+  ;; _fix_me_
+  ;; 
+  (let* ((qc (restrictors-compatible-p 
+              (car (rule-daughters-restricted rule)) fs-restricted))
+         (result (and qc (evaluate-unifications rule (list fs) new-orth))))
+    #+:debug
+    (when qc
+      (format
+       t
+       "apply-morph-rule(): ~a + ~a: ~:[nil~;t~] ~:[nil~;t~]~%"
+       (rule-id rule) 
+       (if (rule-p daughter) (rule-id daughter) daughter)
+       qc result))
+    result))

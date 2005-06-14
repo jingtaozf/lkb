@@ -90,3 +90,8 @@ order in an MRS")
 ;;; following is for naming of slots
 (defparameter *non-slot-features* '(lkb::SEM lkb::cont lkb::HOOK lkb::SYNSEM 
 				    lkb::LOCAL lkb::cat lkb::val lkb::head))
+
+(defparameter *fix-spelling-fn* 'lkb::fix-spelling)
+
+
+

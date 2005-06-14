@@ -75,7 +75,9 @@
                       lkb::load-display-settings
                       ;; debug
                       lkb::print-chart-toplevel
+		      lkb::print-token-chart-toplevel
                       lkb::print-gen-chart-toplevel
+		      lkb::print-lrfsm-toplevel
                       lkb::batch-check-lexicon
 		      ;; options
 		      lkb::get-parameters
@@ -294,8 +296,13 @@
                                                  :value 'find-type-from-features :available-p :grammar)
                                  (make-menu-item :name "Print parser chart"
                                                  :value 'print-chart-toplevel :available-p :grammar)
+				 (make-menu-item :name "Print token chart"
+                                                 :value 'print-token-chart-toplevel :available-p :grammar)
                                  (make-menu-item :name "Print generator chart"
-                                                 :value 'print-gen-chart-toplevel :available-p :mrs)))
+                                                 :value 'print-gen-chart-toplevel :available-p :mrs)
+				 (make-menu-item :name "Print lexical rule FSM"
+                                                 :value 'print-lrfsm-toplevel :available-p :mrs)
+				 ))
          (make-lkb-submenu-item :menu-title "Advanced"
                  :menu-items 
                    (list                     

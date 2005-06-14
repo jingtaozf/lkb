@@ -106,7 +106,7 @@
   (if ovwr 
     (setf *morphology-rule-file-list* (list filename))
     (pushnew filename *morphology-rule-file-list* :test #'equal))
-  (morph-file-read-aux filename movwr)
+  (when movwr (reset-morph-var))
   (if (eql *lkb-system-version* :page)
     (read-tdl-lex-rule-file-aux filename ovwr)
     (read-lex-rule-file-aux filename ovwr)))

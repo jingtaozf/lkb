@@ -195,10 +195,7 @@
          (string (edge-category edge)) yield :constituent top start end)))
       (loop
           for child in (edge-children edge)
-          do (extract-discriminants-from-edge child top :mode mode))
-      (when (edge-morph-history edge)
-        (extract-discriminants-from-edge 
-         (edge-morph-history edge) top :mode mode)))
+          do (extract-discriminants-from-edge child top :mode mode)))
     #+:mrs
     (let* ((eds (mrs::ed-convert-edge edge))
            (triples (mrs::ed-explode eds)))

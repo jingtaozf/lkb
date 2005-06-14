@@ -1,4 +1,4 @@
-;;; Copyright (c) 1991--2003
+;;; Copyright (c) 1991--2005
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `licence.txt' for conditions.
 
@@ -43,22 +43,16 @@
 
 
 (defun find-edge-given-id (edge-id)
-  (or
-   (dotimes (i *chart-limit*)
-      (let ((chart-entry (aref *chart* i 0)))
-         (if (chart-entry-p chart-entry) 
-            (let ((edge 
-                     (dolist (config (chart-entry-configurations chart-entry)) 
-                        (let ((inner-edge (chart-configuration-edge config)))
-                           (when (eql edge-id (edge-id inner-edge))
-                              (return inner-edge))))))
-               (when edge (return edge))))))
-   (find edge-id *morph-records* :key #'edge-id)))
-
+   (dotimes (i *chart-max*)
+      (let ((configs (aref *chart* i 1)))
+	(dolist (config configs)
+	  (let ((edge (chart-configuration-edge config)))
+	    (when (eql edge-id (edge-id edge))
+	      (return-from find-edge-given-id edge)))))))
 
 ;;; called from display-parse-tree
 
-(defun make-edge-symbol (edge-id &optional morph-p)
+(defun make-edge-symbol (edge-id)
   ;; create it uninterned so data put on to its property list doesn't hang
   ;; around after all other references to it have gone
   ;;
@@ -70,7 +64,7 @@
   (make-symbol
    (if (stringp edge-id)
      edge-id
-     (format nil "~A~A" (if morph-p 'medge 'edge) edge-id))))
+     (format nil "~A~A" 'edge edge-id))))
 
 ;;; labelling parse tree nodes --- code for handling the
 ;;; templates
@@ -311,20 +305,23 @@
 
 #-tty
 (defun show-chart nil 
-  (if (aref *morphs* 0) ; anything in chart?
+  (if (> *chart-max* 0) ; anything in chart?
     (if #+:lui (lui-status-p :chart) #-:lui nil
       #+:lui (lui-show-chart) #-:lui nil
       (let ((root (make-symbol "")))
+	(declare (special *chart-debug*))
+	(setf *chart-debug* root)
         (setf (get root 'root) t)
         (setf (get root 'chart-edge-descendents)
           (make-array *chart-limit* :initial-element nil))
-        (let*
-            ((end (create-chart-pointers root))
-             (word-alt-sets
+	(create-chart-pointers root)
+        (let
+            ((word-alt-sets
               ;; each element is a set to allow for multi-word lexical entries 
               ;; at each position in input
               (coerce 
-               (subseq (get root 'chart-edge-descendents) 0 end) 'list)))
+               (subseq (get root 'chart-edge-descendents) 0 *chart-max*) 
+	       'list)))
           (setf (get root 'chart-edge-descendents)
             (apply #'append word-alt-sets))
           (adjust-chart-pointers root)
@@ -341,28 +338,24 @@
   ;; local one (per-string position) from lexical items to symbols, neither
   ;; set of symbols interned - so we don't end up hanging on to old edges
   (let ((edge-symbols nil))
-    (dotimes (vertex (1- *chart-limit*))
-      (when (aref *chart* (1+ vertex) 0)
-	(dolist (span (chart-entry-configurations 
-		       (aref *chart* (1+ vertex) 0)))
-	  (let ((e (chart-configuration-edge span)))
+    (dotimes (vertex *chart-max*)
+      (dolist (cc (aref *chart* vertex 1)) ; from edges
+	(let ((e (chart-configuration-edge cc)))
 	    (push (cons (edge-id e) (make-edge-symbol (edge-id e)))
-		  edge-symbols)))))
-    (dotimes (vertex (1- *chart-limit*))
-      (if (aref *chart* (1+ vertex) 0) 
-	  (create-chart-pointers1 (1+ vertex) root edge-symbols)
-	(unless (aref *morphs* (1+ vertex))
-	  (return vertex))))))
+		  edge-symbols))))
+    (dotimes (vertex *chart-max*)
+      (create-chart-pointers1 vertex root edge-symbols))))
 
-(defun create-chart-pointers1 (right-vertex root edge-symbols)
+(defun create-chart-pointers1 (left-vertex root edge-symbols)
   (let ((lex-pairs nil))
-    (dolist (span (chart-entry-configurations (aref *chart* right-vertex 0)))
+    (dolist (cc (aref *chart* left-vertex 1))
       (let*
-	  ((e (chart-configuration-edge span))
+	  ((e (chart-configuration-edge cc))
 	   (edge-symbol (cdr (assoc (edge-id e) edge-symbols))))
 	(setf (get edge-symbol 'chart-edge-span) ; needed for mcl chart display
-	   (format nil "~A-~A" 
-	      (chart-configuration-begin span) right-vertex))
+	  (format nil "~A-~A" 
+		  left-vertex
+		  (chart-configuration-end cc))) 
 	(setf (get edge-symbol 'chart-edge-contents) e)
 	;; (print (lexical-rule-p (edge-rule e)))
 	(if (edge-children e)
@@ -379,20 +372,15 @@
 		  (get (cdr pair) 'chart-edge-descendents))
 	    (pushnew (cdr pair)
 		     (aref (get root 'chart-edge-descendents) 
-			   (1- right-vertex)))))))))
+			   left-vertex))))))))
 
 (defun create-morph-edges (edge edge-symbol)
-  (let ((mdaughter (edge-morph-history edge)))
-    (if (and *show-lex-rules*
-	     *show-morphology*
-	     mdaughter)
-	(let ((leaf-symbol (make-edge-symbol (car (edge-leaves edge)))))
-	  (setf (get leaf-symbol 'chart-edge-span) 
-	    (get edge-symbol 'chart-edge-span))
-	  (setf (get leaf-symbol 'chart-edge-contents) mdaughter)
-	  (setf (get leaf-symbol 'chart-edge-descendents) (list edge-symbol))
-	  (create-morph-edges mdaughter leaf-symbol))
-      edge-symbol)))
+  (let ((leaf-symbol (make-edge-symbol (car (edge-leaves edge)))))
+    (setf (get leaf-symbol 'chart-edge-span) 
+      (get edge-symbol 'chart-edge-span))
+    (setf (get leaf-symbol 'chart-edge-descendents) (list edge-symbol))
+    edge-symbol))
+
 
 ;; Update chart to respect *show-morphology* and *show-lex-rules*
 
@@ -421,19 +409,23 @@
 	 ;; path from e recursively through children to edge?
 	 (and e				; don't blow up on active edges
 	      (or (eq e edge)
-		  (eq edge (edge-morph-history e))
+		  ;;bmw - 14jun05
+		  ;;(eq edge (edge-morph-history e))
 		  (some #'super-chart-edge-path-p (edge-children e))
-		  (and (edge-morph-history e)
-		       (super-chart-edge-path-p (edge-morph-history e))))))
+		  ;;bmw - 14jun05
+		  ;;(and (edge-morph-history e)
+		  ;;     (super-chart-edge-path-p (edge-morph-history e)))
+		  )))
        (sub-chart-edge-path-p (e edge)
 	 ;; path from edge recursively through children to e?
 	 (and edge
 	      (or (eq e edge)
-		  (eq e (edge-morph-history edge))
 		  (some #'(lambda (c) (sub-chart-edge-path-p e c)) 
 			(edge-children edge))
-		  (and (edge-morph-history edge)
-		       (sub-chart-edge-path-p e (edge-morph-history edge)))))))
+		  ;;bmw - 14jun05
+		  ;;(and (edge-morph-history edge)
+		  ;;     (sub-chart-edge-path-p e (edge-morph-history edge)))
+		  ))))
     (cond
      ((not (or (null (get node 'chart-edge-contents))
 	       (super-chart-edge-path-p (get node 'chart-edge-contents))
@@ -498,21 +490,15 @@
 			  ;; active chart edge daughter
 			  (list (make-symbol ""))))
 		    daughters)
-	  (make-lex-and-morph-tree edge 1)))
+	  (make-lex-and-morph-tree edge)))
       (when (and (g-edge-p edge) (g-edge-mod-index edge))
          (setf (get edge-symbol 'edge-mod-edge)
             ;; !!! assume modification is only binary branching
             (nth (if (eql (g-edge-mod-index edge) 0) 1 0) (get edge-symbol 'daughters))))
       (list edge-symbol))))
   
-(defun make-lex-and-morph-tree (edge level)
-  (let ((leaf-symbol (make-edge-symbol (car (edge-leaves edge))))
-	(mdaughter (edge-morph-history edge)))
-    (when (> level 1) 
-      (setf (get leaf-symbol 'edge-record) edge))
-    (when mdaughter
-      (setf (get leaf-symbol 'daughters)
-	(make-lex-and-morph-tree mdaughter (1+ level))))
+(defun make-lex-and-morph-tree (edge)
+  (let ((leaf-symbol (make-edge-symbol (car (edge-leaves edge)))))
     (list leaf-symbol)))
 
 ;;
@@ -621,13 +607,6 @@
 	  (loop for dtr in daughters
                collect (parse-tree-structure1 dtr complete-p)))))
 
-(defun morph-tree-structure (rule edge)
-   (if rule
-      (cons (if (rule-p rule) (rule-id rule) rule)
-         (if edge
-            (morph-tree-structure nil (edge-morph-history edge))))))
-
-
 ;; Find the children of a node, respecting various conditional display flags
 
 (defun find-children (node)
@@ -725,9 +704,7 @@
 
 (defun html-tree (edge &key tree (indentation 0) color (stream t))
   (labels ((depth (edge)
-             (let ((children (or (edge-children edge) 
-                                 (when (edge-morph-history edge)
-                                   (list (edge-morph-history edge))))))
+             (let ((children (edge-children edge))) 
                (if (null children)
                  1
                  (+ 1 (loop
@@ -747,9 +724,7 @@
                (let* ((root (label edge))
                       (from (edge-from edge))
                       (to (edge-to edge))
-                      (children (or (edge-children edge)
-                                    (let ((foo (edge-morph-history edge)))
-                                      (when foo (list foo)))))
+                      (children (edge-children edge))
                       (children (unless recursivep
                                   (loop
                                       for child in children
@@ -828,7 +803,7 @@
 ;;;
 
 (defun construct-chart-no-display nil 
-  (if (aref *morphs* 0) ; anything in chart?
+  (if (> *chart-max* 0) ; anything in chart?
     (let ((root (make-symbol "")))
       (setf (get root 'root) t)
       (setf (get root 'chart-edge-descendents)

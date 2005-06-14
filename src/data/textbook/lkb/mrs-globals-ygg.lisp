@@ -35,3 +35,14 @@ SEM [sem-struc
 (defparameter *psoa-liszt-path* `(,(vsym "RESTR") ,(vsym "LIST")))
 (defparameter *psoa-rh-cons-path* nil)
 
+(defparameter *fix-spelling-fn* 'lkb::fix-spelling)
+
+;;; for generation to work, we set the following
+
+;;; we can only generate from the results of parsing because we have no filter 
+;;; rules
+(defparameter *null-semantics-hack-p* t)
+
+;;; the equality check currently (May 2005) doesn't work with the
+;;; handle-free MRS.  This needs to be fixed.
+(defparameter lkb::*bypass-equality-check* t)

@@ -248,8 +248,9 @@
          (bindings (variables-equal (psoa-top-h mrs1)
                                     (psoa-top-h mrs2) syntactic-p nil)))
     (if (or bindings (null *rel-handel-path*))
-       (if (setf bindings (variables-equal (psoa-index mrs1)
-                            (psoa-index mrs2) syntactic-p bindings))
+	(if (setf bindings 
+		  (variables-equal (psoa-index mrs1)
+				   (psoa-index mrs2) syntactic-p bindings))
            (if (setf bindings (mrs-liszts-equal-p (psoa-liszt mrs1)
                                    (psoa-liszt mrs2) 
                                    syntactic-p 

@@ -5,7 +5,7 @@
 %(letter-set (!v aeiou))
 
 past-v_irule :=
-%suffix (* ed) (!ty !tied) (e ed) (!t!v!c !t!v!c!ced) (give gave)
+%suffix (* ed) (e ed) (!ty !tied) (!t!v!c !t!v!c!ced) (give gave)
 past-verb. 
 
 non3sg-v_irule :=

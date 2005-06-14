@@ -200,9 +200,7 @@
 	       (rule-record (if rule (assoc rule *rule-algebra-table* 
 					    :test #'string-equal)))) ; lose packages
 	  (if rule
-	      (let ((dtrs (if (lkb::edge-morph-history edge-record)
-			      (list (lkb::edge-morph-history edge-record))
-			    (lkb::edge-children edge-record))))
+	      (let ((dtrs (lkb::edge-children edge-record)))
 		(if rule-record    
 		    (let* ((edge-sements (loop for dtr in dtrs
 					     when (and (lkb::edge-p dtr)
@@ -464,17 +462,17 @@
                      lkb::*ostream*  t)))
     (format ostream "~%~A~%" sentence)
     (loop
-	for i from 1 to lkb::*chart-limit*
-	while (check-algebra-chart-entry i (aref lkb::*chart* i 0) 
+	for i from 0 to lkb::*chart-max*
+	while (check-algebra-chart-entry (aref lkb::*chart* i 1) 
 					 ostream))))
   
 
-(defun check-algebra-chart-entry (vertex item stream)
+(defun check-algebra-chart-entry (item stream)
   (if item 
     (progn
       (dolist
          (configuration
-            (sort (copy-list (lkb::chart-entry-configurations item))
+            (sort (copy-list item)
                #'(lambda (span1 span2)
                    (cond
                       ((eql (lkb::chart-configuration-begin span1)
@@ -484,9 +482,7 @@
                       (t
                         (< (lkb::chart-configuration-begin span1)
                            (lkb::chart-configuration-begin span2)))))))
-        (check-algebra-chart-item configuration stream))
-      t)
-    (aref lkb::*morphs* vertex)))
+        (check-algebra-chart-item configuration stream)))))
 
 (defun check-algebra-chart-item (item stream)
   (let* ((edge (if (lkb::edge-p item) 

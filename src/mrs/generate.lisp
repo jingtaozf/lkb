@@ -540,7 +540,11 @@
 (defun extract-strings-from-gen-record nil
   (loop 
       for edge in *gen-record*
-      for string = (fix-spelling (g-edge-leaves edge)) ;; in spell.lsp
+      for string = (if (and mrs::*fix-spelling-fn*
+			    (fboundp mrs::*fix-spelling-fn*))
+		       (funcall mrs::*fix-spelling-fn* 
+				(g-edge-leaves edge))
+		       (g-edge-leaves edge)) 
       do (setf (edge-string edge) string)
       collect string))
 

@@ -478,8 +478,10 @@
                                 (edge-root parent)
                                 parent)))
          (daughters (or (lkb::edge-children edge)
-                        (let ((foo (lkb::edge-morph-history edge)))
-                          (and foo (list foo))))))
+			;;bmw - 14jun05
+                        ;;(let ((foo (lkb::edge-morph-history edge)))
+                        ;;  (and foo (list foo)))
+			)))
     (cond
      ;;
      ;; see whether we have extracted features from this edge before; if so,
@@ -643,8 +645,10 @@
                    (append
                     (last parents (- *maxent-grandparenting* 1)) (list edge)))
                for edge in (or (lkb::edge-children edge)
-                               (let ((foo (lkb::edge-morph-history edge)))
-                                 (and foo (list foo))))
+			       ;;bmw - 14jun05
+                               ;;(let ((foo (lkb::edge-morph-history edge)))
+                               ;;  (and foo (list foo)))
+			       )
                sum (mem-score-edge
                     edge model :recursivep t :parents parents)))))))
 

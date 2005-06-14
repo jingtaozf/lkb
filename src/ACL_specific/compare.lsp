@@ -75,8 +75,7 @@
     ;;
     (loop
         for i from 1 to (- *chart-limit* 1)
-        for entry = (aref *chart* i 0)
-        for configurations = (and entry (chart-entry-configurations entry))
+        for configurations = (aref *chart* i 0)
         do
           (loop
               for configuration in configurations

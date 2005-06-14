@@ -76,6 +76,16 @@
 
 (def-lkb-parameter *gc-before-reload* nil)
 
+;;; Morphology
+
+(def-lkb-parameter *morph-option* :default
+    "possible values are :default, :external-rule-by-rule 
+   :external-partial-tree, :with-tokeniser-partial-tree,  
+   :with-tokeniser-retokenise")
+
+(def-lkb-parameter *foreign-morph-fn* nil
+  "alternative to built in LKB morphology")
+
 ;;; Parsing
 
 (defparameter *maximum-number-of-tasks* 200000

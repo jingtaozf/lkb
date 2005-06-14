@@ -44,8 +44,7 @@
         (format t "~%Reading in ~Arules file ~A" 
                 (if lexical "lexical " "")
                 (pathname-name file-name))
-        (read-tdl-rule-stream istream lexical)))
-   (build-rule-filter))
+        (read-tdl-rule-stream istream lexical))))
 
 
 (defun read-tdl-rule-stream (istream lexical) 
@@ -56,7 +55,8 @@
                  (read-line istream))
                ; one line comments
                ((eql next-char #\%) 
-                 (read-line istream))
+		(read-morphology-letter-set
+                 istream))
                ; Bernie morphology
                ((eql next-char #\:) 
                  (read-tdl-declaration istream))
@@ -86,11 +86,13 @@
           "~%Incorrect syntax following rule name ~A" id)
          (ignore-rest-of-entry istream id))
        (read-char istream)
-       (let ((next-char3 (peek-char t istream nil 'eof)))
-         (when (eql next-char3 #\%)
-           (read-line istream))
-         ; ignore Bernie morphology
+       (let* ((next-char3 (peek-char t istream nil 'eof))
+              (orthographemicp (eql next-char3 #\%)))
+         (when orthographemicp
+           (read-morphology-affix id istream))
          (multiple-value-bind (non-def def)
              (read-tdl-lex-avm-def istream id)
            (check-for #\. istream id)
-           (add-grammar-rule id non-def def *description-persistence* lexical))))))
+           (add-grammar-rule
+            id non-def def *description-persistence*
+            lexical orthographemicp))))))

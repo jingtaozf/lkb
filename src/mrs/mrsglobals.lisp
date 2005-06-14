@@ -347,4 +347,9 @@ set in the code")
 
 (defparameter *non-slot-features* nil)
 
-    
+
+;;; generator spelling fixing - nil by default
+;;; but can be set to 'lkb::fix-spelling for a/an - see spell.lisp
+;;; this is no longer used in the ERG
+
+(defparameter *fix-spelling-fn* nil)

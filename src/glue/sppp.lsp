@@ -33,7 +33,7 @@
 ;;; - write DTD and experiment with validating parser; the way we dissect the
 ;;;   parsed XML feels overly clumsy for the time being.
 ;;; - add more tracing and debugging support; currently grammarians need to
-;;;   know to inspect *morphs* and run the preprocessor stand-alone to debug
+;;;   know to inspect *tchart* and run the preprocessor stand-alone to debug
 ;;;   the integration.
 ;;; - investigate ways of allowing tokenization ambiguity; presumably, this 
 ;;;   would have to be part of a full refactoring of the LKB preprocessing and
@@ -106,11 +106,13 @@
                                    inflection *lex-rule-suffix*)
                                   :lkb))
             collect (cons stem (when irule (list (list irule form)))))
-      for edge = (make-morph-edge 
-                  :id i :word form :morph-results analyses
-                  :cfrom from :cto to)
       do
-        (setf (aref *morphs* i) edge)))
+	;;; FIX - silliness here in packaging up and splitting apart
+	;;; but let's get it working first
+	(dolist (morph-poss analyses)
+	  (add-morpho-stem-edge (car morph-poss) (cdr morph-poss) i (+ 1 i) 
+				form form from to nil nil nil))))
+
 
 (defun sppp (text &key (stream *sppp-stream*))
 

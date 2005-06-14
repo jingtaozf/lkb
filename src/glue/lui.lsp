@@ -21,6 +21,9 @@
 
 (in-package :lkb)
 
+;;bmw 14jun05
+(defvar *morph-records*)
+
 (defparameter *lui-application*
   (format
    nil 
@@ -340,15 +343,16 @@
      id nvertices
      (if input (format nil "`~a' (Chart)" input) "Chart View"))
 
-    (loop
-        for key downfrom -1
-        for from from 0
-        for morph across morphs
-        while morph do
-          (format 
-           stream
-           "  #E[~a ~a ~a ~a ~s \"\" []]~%"
-           key key from #+:null (+ from 1) -1 (morph-edge-word morph)))
+    ;;bmw - 14jun05
+    ;;(loop
+    ;;    for key downfrom -1
+    ;;    for from from 0
+    ;;    for morph across morphs
+    ;;    while morph do
+    ;;      (format 
+    ;;       stream
+    ;;       "  #E[~a ~a ~a ~a ~s \"\" []]~%"
+    ;;       key key from #+:null (+ from 1) -1 (morph-edge-word morph)))
 
     ;;
     ;; given the (archaic) treatment of orthography-changing rules in the LKB,
@@ -373,8 +377,10 @@
           (loop
               for child in (edge-children edge)
               do (format stream " ~a" (edge-id child)))
-          (when (edge-morph-history edge)
-            (format stream " ~a"(edge-id (edge-morph-history edge))))
+          ;;bmw - 14jun05
+	  ;;(when (edge-morph-history edge)
+          ;;  (format stream " ~a"(edge-id (edge-morph-history edge))))
+	  
           ;;
           ;; for lexemes, generate pseudo daughters list in terms of token ids
           ;;
@@ -388,8 +394,11 @@
         for to from 0 to (min nvertices *chart-limit*)
         for configurations 
         = (let ((entry (aref chart to 0)))
-            (when (chart-entry-p entry)
-              (sort (copy-list (chart-entry-configurations entry))
+	    ;;bmw - 14jun05
+	    ;;(when (chart-entry-p entry)
+            ;;  (sort (copy-list (chart-entry-configurations entry))
+            (when (chart-configuration-p entry)
+              (sort (copy-list entry)
                     #'(lambda (span1 span2)
                         (cond
                          ((eql (chart-configuration-begin span1)
@@ -424,8 +433,10 @@
                 (loop
                     for child in (edge-children edge)
                     do (format stream " ~a" (edge-id child)))
-                (when (edge-morph-history edge)
-                  (format stream " ~a"(edge-id (edge-morph-history edge))))
+		;;bmw - 14jun05
+		;;(when (edge-morph-history edge)
+                ;;  (format stream " ~a"(edge-id (edge-morph-history edge))))
+		
                 ;;
                 ;; for lexemes, generate pseudo daughters list again
                 ;;

@@ -274,10 +274,8 @@
                                                     (edge-id edge)))))))
       (append (when record 
 		(list record))
-	      (if (edge-morph-history edge)
-		  (collect-subs (edge-morph-history edge) stream)
 		(mapcan #'(lambda (x) (collect-subs x stream))
-			(edge-children edge)))))))
+			(edge-children edge))))))
 
 (defun collect-supers (edge frame stream)
   (when (edge-p edge)
@@ -286,7 +284,6 @@
          ;; path from e recursively through children to edge?
          (and (edge-p e)
               (or (eq e edge)
-                  (eq (edge-morph-history e) edge)
                   (some #'highlight-chart-edge-path-p (edge-children e))))))
     (loop for record in (chart-window-edges frame)
 	appending

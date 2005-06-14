@@ -1,134 +1,72 @@
-;;; Copyright (c) 1993 Bernard Jones - see licence.txt for conditions
+;;; Copyright (c) 1993-2005
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;;   Bernard Jones
+;;;   see `licence.txt' for conditions.
 
 (in-package :lkb)
 
-;;; modified aac Dec 1994 to allow script to read in morphological data
-;;;              Dec 1995 changed 'morph-rule to *morph-rule-type*
-;;;              Feb 1996 changed test to allow for subtypes of *morph-rule-type*
+;;; The built-in morphophonological component
+;;; 
 
-;;; note - file format DEMANDS that the morphological rule
-;;; should have the type *morph-rule-type* indicated by the bare atom
-;;; immediately following the rule name
+;;; AAC April 2005 - the time has finally arrived to try and sort this out!
+;;; A complete rational reconstruction is easier than 
+;;; looking at the old code
+;;;
+;;; Get rid of all the recursive stuff here and turn it
+;;; into a system which can be used to put an edge onto the LKB
+;;; *tchart*.  
+;;;
+;;; For now, get rid of infix (which probably didn't work anyway)
+;;; and (temporarily unless speed is OK) forget about letter trees
+;;;
+;;; integrated reading into the relevant function in the lex rule reader
+;;; which should support a more flexible positioning of the % declarations
+;;;
+;;; FIX - support old LKB format too - not that important
 
-;;; August 1998 - dropped test for *morph-rule-type*
+(defstruct letter-set 
+  var char letters)
+;;; e.g., %(letter-set (!c bdfglmnprstz))
+;;; goes to var !c, char #\c, and letters (#\b #\d etc)
+;;; var is used in order to have a relatively readable way of associating
+;;; a binding with a letter set.
 
-;;; Tree & Rule structure defs
+(defstruct letter-wild-card
+  char letters)
+;;; e.g., %(wild-card (?c bdf))
 
-(defstruct l-tree-node branches rules parent)
-(defstruct tree-set 
-   (suff-comp (make-l-tree-node)) 
-   (suff-root (make-l-tree-node))
-   (pre-comp (make-l-tree-node)) 
-   (pre-root (make-l-tree-node)) 
-   (in-comp (make-l-tree-node)) 
-   (in-root (make-l-tree-node)))
-(defstruct suffix-rule affix-name replacement prefix infix)
-(defstruct infix-rule affix-name replacement prefix suffix)
-(defstruct prefix-rule affix-name replacement suffix infix)
-(defstruct morph-rule rule-type rule-name subrules)
+(defstruct morph-rule 
+  class name subrules)
+;;; class is prefix or suffix
+;;; name is the id of the rule
+;;; e.g., 3sg-v_irule
+;;;
+;;; 3sg-v_irule :=
+;;; %suffix (!s !ss) (!ss !ssses) (ss sses)
+;;; sing-verb.
+;;;
+;;; each pattern like (!s !ss) is a separate subrule
+
+(defstruct morph-subrule
+  under surface)
+;;; subrules map surface to underlying forms
+;;; internally under and surface are a list 
+;;; containing characters of letter set structures
 
 ;;; Global variable initialisation
-(defvar *morph-trees* (make-tree-set))
-(defmacro suffix-tree-comp nil `(tree-set-suff-comp *morph-trees*)) 
-(defmacro prefix-tree-comp nil `(tree-set-pre-comp *morph-trees*))
-(defmacro infix-tree-comp nil `(tree-set-in-comp *morph-trees*))
-(defmacro suffix-tree-root nil `(tree-set-suff-root *morph-trees*)) 
-(defmacro prefix-tree-root nil `(tree-set-pre-root *morph-trees*))
-(defmacro infix-tree-root nil `(tree-set-in-root *morph-trees*))
+
+(defvar *morph-rule-set* nil)
+
 (defvar *letter-set-list* nil)
+
+(defvar *letter-wild-card-list* nil)
 
 ;;; Reset function 
 (defun reset-morph-var () 
-  (setf *morph-trees* (make-tree-set))
-  (setf *letter-set-list* nil))
+  (setf *morph-rule-set* nil)
+  (setf *letter-set-list* nil)
+  (setf *letter-wild-card-list* nil))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;; Initialisation and macro definition
-;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defmacro a-list-search-update (key-list node)
-   `(if (car ,key-list) 
-      (or (cdr (assoc (car ,key-list) (l-tree-node-branches ,node))) 
-         (cdr 
-            (assoc (car ,key-list) 
-               (push 
-                  (cons (car ,key-list) 
-                     (make-l-tree-node :parent 
-                        (cons (car ,key-list) ,node))) 
-                  (l-tree-node-branches ,node)))))
-      ,node))
-
-(defmacro ass-look-up (where)
-  `(cdr 
-     (assoc (car residue) (l-tree-node-branches ,where) :test #'eq)))
-
-(defmacro my-coerce (symbol-in)
-  `(cond ((null ,symbol-in) nil)
-	 (t (remove '#\* (coerce (string-upcase ,symbol-in) 'list)))))
-
-(defmacro suffix-args nil `(subseq instance 4 6))
-           
-(defmacro infix-args nil `(subseq instance 2 4))
-
-(defmacro prefix-args nil `(subseq instance 0 2))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;; Functions to do macro character unbinding
-;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defun chrexp (list)
-   (mapcar 
-      #'(lambda (y) 
-         (remove '* 
-            (mapcar #'(lambda (x) (intern (string x) :lkb)) 
-               (coerce (string y) 'list))))
-      list))
-
-(defun scanmac (list)
-   (let (ret-list)
-      (dolist (element list (remove-duplicates ret-list :key #'car))
-         (loop
-            (when (equal '! (pop element)) 
-               (push (list (pop element) (gensym)) ret-list))
-            (unless element (return))))))
-
-(defun macro-unbind (rule l-set)
-   (let*
-      ((nurule (chrexp rule))
-         (a-list (scanmac nurule))
-         (m-rule 
-            (list 
-               (mapcar 
-                  #'(lambda (y)
-                     (remove '! 
-                        (mapl 
-                           #'(lambda (x) 
-                              (when (equal '! (car x)) 
-                                 (setf (cadr x) 
-                                    (cadr (assoc (cadr x) a-list))))) 
-                           y))) 
-                  nurule))))
-      (dolist (macro a-list m-rule)
-         (setf m-rule
-            (apply #'append 
-               (mapcar 
-                  #'(lambda (w) 
-                     (mapcar
-                        #'(lambda (z)
-                           (mapcar 
-                              #'(lambda (v)
-                                 (substitute w (cadr macro) v)) 
-                              z))
-                        m-rule))
-                  (cadr (assoc (car macro) l-set))))))))
-
-;;; Utility function connected with morph-rule compilation
-
-(defun lenfail (lis num)
-   (dolist (elem lis) (or (eq (length elem) num) (return t))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -136,109 +74,73 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;; minor mods for consistency/user friendliness!  AAC
- 
-(defun morph-file-compile ()
-   (let* ((ovwr (lkb-y-or-n-p "Overwrite any existing morphological structures?"))
-          (filename (ask-user-for-existing-pathname "Morphological rules")))
-      (when filename
-         (morph-file-read-aux filename ovwr))))
+(defun read-morphology-letter-set (istream)
+  ;;; e.g. %(letter-set (!c bdfglmnprstz))
+  ;;; or   %(wild-card (?c bdf))
+  (let* ((*readtable* (copy-readtable nil))
+	 ;; this restores the initial readtable
+	 ;; necesary because ! etc may be break characters
+	 ;; This is now called from within a TDL reader.
+	 (string-thing (read-line istream))
+	 (form
+	  (with-package (:lkb)
+	    (read-from-string string-thing nil :eof 
+		     :start
+		     (position '#\( string-thing)))))
+    (cond
+     ((eql form :eof) (error "~%Incomplete letter set"))
+     ((not (listp form)) 
+      (error "~%Illformed morphological specification ~S: letter set expected" string-thing))
+     ((eql (car form) 'letter-set)
+      (push
+       (create-letter-set (second form)) 
+       *letter-set-list*))
+     ((eql (car form) 'wild-card)
+      (push
+       (create-letter-wild-card (second form)) 
+       *letter-wild-card-list*))
+     (t (error "~%Illformed morphological specification ~S: letter set expected" string-thing)))))
 
-(defun morph-file-read-aux (filename ovwr)
-   (when ovwr
-      (reset-morph-var))
-   (with-open-file 
-        (istream filename
-         :direction :input)
-      (format t "~%Loading morphological data from ~A" 
-              (pathname-name filename))
-      (block outer
-        (loop
-          ;; Go through the file - ignore comments.
-          ;; If a percent sign occurs outside a rule,
-          ;; it must be a new letter set definition - 
-          ;; process it - failing that, process the 
-          ;; next rule.
-          (let ((next-char (peek-char t istream nil :eof)))
-            (when (eql next-char :eof) (return-from outer))
-            (if (eql next-char #\;)
-              (read-line istream)
-              (if (eql next-char #\%)
-                (let* ((string-thing (read-line istream))
-                       (form
-                        (with-package (:lkb)
-                          (read-from-string string-thing 
-                                            nil :eof :start 1))))
-                  (cond
-                   ((eql form :eof) (error "~%Bad file"))
-                   ((not (listp form)) (error "~%Bad line"))
-                   ((eql (car form) 'letter-set)
-                    (setf *letter-set-list*
-                      (letter-set-add form 
-                                      *letter-set-list*)))
-                   (t (error "~%Wrong type of command"))))          
-                (morph-item-process istream))))))))
-
-
-
-(defun morph-item-process (istream)
-   (let ((id (lkb-read istream nil))
-         (type (if (eql *lkb-system-version* :page)
-                   (progn (read-line istream) nil)
-                 ; read the :=
-                   (lkb-read istream nil)))
-         (current-set *letter-set-list*)
-         method-list)
-     ;;; don't check type of type
-        (declare (ignore type))         
-        (block outer
-            (loop
-               ;; Within each rule, if there is a set of percent marked
-               ;; headers, add them as morphological rules.
-               (let ((next-char (peek-char t istream nil :eof)))
-                  (when (eql next-char :eof) 
-                     (error "~%Incomplete rule definition for ~A" id))
-                  (if (eql next-char #\;)
-                     (read-line istream)
-                     (if (eql next-char #\%)
-                        (let ((string-thing (read-line istream))
-                              (start-pos 1))
-                           (loop
-                              (with-package (:lkb)
-                                (multiple-value-bind (form end-value)
-                                  (read-from-string string-thing nil 
-                                     :eof :start start-pos)
-                                  (when (eql form :eof) (return))
-                                  (if 
-                                     (and 
-                                        (listp form) 
-                                        (eql (car form) 'letter-set))
-                                     (setf current-set 
-                                        (letter-set-add form 
-                                           current-set))
-                                     (setf method-list 
-                                        (append method-list 
-                                           (list form))))
-                                  (setf start-pos end-value)))))
-                        (return-from outer))))))
-      ;; Tidy up by scanning to the end of the rule
-      (let ((*readtable*
-               (define-break-characters 
-                  '(#\% #\;
-                     #\< #\> #\= #\: #\.))))         
-         (loop
-            (when (eql (read-char istream nil #\.) #\.)
-              (let ((next-char (peek-char nil istream nil #\space)))
-                (when (whitespacep next-char)
-                  (return))))))
-      ;; Then compile the morphological rules
-      (when method-list
-         (morph-input 
-            (structify 
-               (list 
-                  (car method-list) 
-                  (cons id (cdr method-list))))
-            current-set))))
+(defun read-morphology-affix (id istream)
+  ;;; e.g., %suffix (!s !ss) (!ss !ssses) (ss sses)
+  ;;; called with id which is the rule name (e.g., 3sg-v_irule)
+  (let* ((*readtable* (copy-readtable nil))
+	 (string-thing (read-line istream))
+	 (start-pos 1) ;; ignore the %
+	 (method-list nil)
+	 (class nil))
+    (loop
+      (with-package (:lkb)
+	(multiple-value-bind (form end-value)
+	    (read-from-string string-thing nil 
+			      :eof :start start-pos)
+	  (when (eql form :eof) (return))
+	  ;; this did allow local letter sets
+	  ;; but I've removed this
+	  ;;;
+	  ;;; first set class to prefix or suffix, then loop
+	  ;;; reading subrules
+	  (if class 
+	      (push form method-list)
+	    (progn 
+	      (unless (or (eql form 'suffix)
+			  (eql form 'prefix))
+		(error "~%Incorrect morphology specification ~A: suffix or prefix expected"
+		       string-thing))
+	      (setf class form)))
+	  (setf start-pos end-value))))
+    ;;; note that the subrule list ends up reversed: this is what is wanted
+    ;;; because the most specific subrules will occur first in the rule
+    ;;; structure.  subrules are checked in order and only the most
+    ;;; specific applicable rule that matches the stem is used 
+    ;;; (obviously when we're parsing we don't know the stem, so this
+    ;;; requires returning all subrules that match)
+    (morph-input 
+     class 
+     id 
+     method-list
+     *letter-set-list*
+     *letter-wild-card-list*)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -247,202 +149,145 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun create-letter-set (new-rule)
+  ;;; e.g., input is (!c bdfglmnprstz))
+  (let* ((set (car new-rule))
+	 (rule-name (coerce (string set) 'list))
+	 (rule-set (second new-rule)))
+    (unless (and (eql (car rule-name) #\!) 
+		 (not (cddr rule-name)))
+      (error "~%letter-set does not correspond to a single character ~A"
+	     new-rule))
+    (make-letter-set :var set
+		     :char (second rule-name)
+		     :letters (coerce (string rule-set) 'list))))
+
+(defun create-letter-wild-card (new-rule)
+  ;;; e.g., input is (?c bdf))
+  (let* ((set (car new-rule))
+	 (rule-name (coerce (string set) 'list))
+	 (rule-set (second new-rule)))
+    (unless (and (eql (car rule-name) #\?) 
+		 (not (cddr rule-name)))
+      (error "~%wild-card does not correspond to a single character ~A"
+	     new-rule))
+    (make-letter-wild-card 
+		     :char (second rule-name)
+		     :letters (coerce (string rule-set) 'list))))
+
+
 ;;; Turn rules into a rule-structure
-(defun structify (rule)
-   (make-morph-rule
-      :rule-type (car rule)
-      :rule-name (caadr rule)
-      :subrules (hexa-expand (cdadr rule) (car rule))))
 
-;;; Make two element subrules into 6 element ones
-(defun hexa-expand (subrules name)
-   (cond 
-      ((eq name 'letter-set) (car subrules))
-      ((eq name 'suffix) (hexify subrules 4))
-      ((eq name 'infix) (hexify subrules 2))
-      ((eq name 'prefix) (hexify subrules 0))
-      (t subrules)))
+(defun morph-input (class name subrules l-set w-set)
+  (unless subrules (error "~%No subrules"))
+  (let ((subrule-structs 
+	 (loop for pair in subrules
+	     nconc
+	       ;; e.g. (!ty !tied) - surface is second
+	       (let* ((surface (affix-explode (second pair) l-set w-set))
+		      (underlying (affix-explode (first pair) l-set w-set))
+		      (surface-wild
+		       (collect-wildcard-letters surface underlying
+						 name))
+		      (underlying-wild
+		       (collect-wildcard-letters underlying surface
+						 name)))
+		 (if (null surface)
+		     (progn (format t "~%Warning: pattern with no affixation ignored in ~A" name)
+			    nil)
+		   (if (or surface-wild underlying-wild)
+		       (expand-morph-subrules surface underlying
+					      surface-wild
+					      underlying-wild class)
+		     (list
+		      (create-morph-subrule surface underlying class))))))))
+    (push
+     (make-morph-rule
+      :class class
+      :name name
+      :subrules subrule-structs) 
+     *morph-rule-set*)))
 
-(defun hexify (elements position)
-   (loop for member in elements
-      when (listp member)
-      collect
-      (if 
-         (eq (length member) 2) 
-         (replace 
-            (copy-list '(* * * * * *)) 
-            member 
-            :start1 position)
-         member)))
+(defun collect-wildcard-letters (pattern other rulename)
+  (loop for thing in pattern
+      when (or
+	    (letter-wild-card-p thing)
+	    (and (letter-set-p thing)
+		  (not (member thing other))))
+      collect 
+	(if (letter-set-p thing)
+	    (progn 
+	      (format t "~%Warning: legacy mode - treating unmatched letterset !~A in ~A as wild-card" (letter-set-char thing) rulename)
+	      thing)
+	  thing)))
 
-(defun morph-input (rule *l-set*)
-   (declare (special *l-set*))
-   (cond 
-      ((null (morph-rule-subrules rule)) (error "~%No subrules"))
-      ((lenfail (morph-rule-subrules rule) 6) 
-         (error "~%Subrules incorrectly formatted"))
-      ((eq (morph-rule-rule-type rule) 'suffix) 
-         (setf (morph-rule-subrules rule) 
-            (apply #'append 
-               (mapcar #'(lambda (x) (macro-unbind x *l-set*)) 
-                  (morph-rule-subrules rule))))
-         (add-suffix rule))
-      ((eq (morph-rule-rule-type rule) 'prefix)
-         (setf (morph-rule-subrules rule) 
-            (apply #'append 
-               (mapcar #'(lambda (x) (macro-unbind x *l-set*)) 
-                  (morph-rule-subrules rule))))
-         (add-prefix rule))
-      ((eq (morph-rule-rule-type rule) 'infix) 
-         (setf (morph-rule-subrules rule) 
-            (apply #'append 
-               (mapcar #'(lambda (x) (macro-unbind x *l-set*)) 
-                  (morph-rule-subrules rule))))
-         (add-infix rule))
-      (t (error "~%Unspecified rule type"))))
+(defun create-morph-subrule (surface underlying class)
+  ;;; reverse the specs for suffixes to make application more efficient
+    (make-morph-subrule
+     :surface (if (eql class 'suffix) 
+		  (reverse surface) surface)
+     :under (if (eql class 'suffix) 
+		(reverse underlying) underlying)))
 
-(defun letter-set-add (new-rule letter-set)
-   (push
-      (append 
-         (last 
-            (mapcar #'(lambda (x) (intern (string x) :lkb))
-               (coerce 
-                  (string (caadr new-rule)) 
-                  'list)))
-         (list
-            (mapcar #'(lambda (x) (intern (string x) :lkb))
-               (coerce 
-                  (string (cadadr new-rule)) 
-                  'list))))
-      letter-set))
+(defun affix-explode (affix-spec l-set w-set)
+  ;;; This code returns a list of character-specs
+  ;;; replacing * with nothing, !x with the corresponding letter-set
+  ;;; structure and ?z with wild-card structure.  
+  ;;; Other characters are unchanged.
+  ;;; e.g. * -> nil
+  ;;;      ed -> (#\e #\d)
+  ;;;      !t!v!c -> < three letter set records >
+  (let ((chars (coerce (string affix-spec) 'list))
+	(new-spec nil))
+    (loop
+      (unless chars (return nil))
+      (let ((char (car chars)))
+	(setf chars (cdr chars))
+	(cond ((char-equal char #\*) nil)
+	      ((char-equal char #\!) 
+	       (let ((char-set (find (car chars)
+				     l-set :key #'letter-set-char)))
+		 (unless char-set
+		   (error "~%undefined character set ~A" (car chars)))
+		 (push char-set new-spec)
+		 (setf chars (cdr chars))))
+	      ((char-equal char #\?) 
+	       (let ((char-set (find (car chars)
+				     w-set :key #'letter-wild-card-char)))
+		 (unless char-set
+		   (error "~%undefined wild card ~A" (car chars)))
+		 (push char-set new-spec)
+		 (setf chars (cdr chars))))
+	      (t (push char new-spec)))))
+    (nreverse new-spec)))
+	  
 
-(defun add-infix (new-rule) 
-   (loop for subrule in (morph-rule-subrules new-rule)
-      do
-      (add-infix-instance 
-         (morph-rule-rule-name new-rule) 
-         subrule)))
+(defun expand-morph-subrules (surface underlying surface-wild underlying-wild
+			      class)
+  (let ((subrules nil)
+	(surface-char-set (expand-morph-set surface surface-wild))
+	(underlying-char-set (expand-morph-set underlying underlying-wild)))
+    (dolist (surface-pattern surface-char-set)
+      (dolist (underlying-pattern underlying-char-set)
+	(push 
+	 (create-morph-subrule surface-pattern underlying-pattern class)
+	 subrules)))
+    subrules))
 
-(defun add-suffix (new-rule) 
-   (loop for subrule in (morph-rule-subrules new-rule)
-      do
-      (add-suffix-instance
-         (morph-rule-rule-name new-rule) 
-         subrule)))
-
-(defun add-prefix (new-rule) 
-   (loop for subrule in (morph-rule-subrules new-rule)
-      do
-      (add-prefix-instance 
-         (morph-rule-rule-name new-rule) 
-         subrule)))
-
-(defun add-suffix-instance (rule-name instance)
-   (let (comp-node root-rule)
-      (do 
-         ((letters (cdr (reverse (sixth instance))) (cdr letters)) 
-            (tree 
-               (a-list-search-update (reverse (sixth instance)) 
-                  (suffix-tree-comp)) 
-               (a-list-search-update letters tree)))
-         ((null letters) 
-            (setf comp-node tree)
-            (setf (l-tree-node-rules tree)
-                  (cons
-                   (make-suffix-rule :affix-name rule-name :replacement 
-                     (do 
-                        ((lletters 
-                              (cdr (reverse (fifth instance))) 
-                              (cdr lletters)) 
-                           (ttree 
-                              (a-list-search-update 
-                                 (reverse (fifth instance)) 
-                                 (suffix-tree-root)) 
-                              (a-list-search-update lletters ttree)))
-                        ((null lletters) 
-                           (setf root-rule 
-                              (make-suffix-rule 
-                                 :affix-name rule-name 
-                                 :replacement nil 
-                                 :prefix (reverse (prefix-args)) 
-                                 :infix (reverse (infix-args))))
-                           (setf (l-tree-node-rules ttree) 
-                              (cons root-rule 
-                                 (l-tree-node-rules ttree)))
-                           ttree)) 
-                     :prefix (prefix-args) :infix (infix-args)) 
-                   (l-tree-node-rules tree)))))
-      (setf (suffix-rule-replacement root-rule) comp-node)))
-
-(defun add-infix-instance (rule-name instance)
-   (let (comp-node root-rule)
-      (do 
-         ((letters (cdr (fourth instance)) (cdr letters)) 
-            (tree 
-               (a-list-search-update (fourth instance) 
-                  (infix-tree-comp)) 
-               (a-list-search-update letters tree)))
-         ((null letters) 
-            (setf comp-node tree)
-            (setf (l-tree-node-rules tree) 
-               (cons 
-                  (make-infix-rule :affix-name rule-name :replacement 
-                     (do 
-                        ((lletters (cdr (third instance)) 
-                              (cdr lletters)) 
-                           (ttree 
-                              (a-list-search-update (third instance) 
-                                 (infix-tree-root)) 
-                              (a-list-search-update lletters ttree)))
-                        ((null lletters) 
-                           (setf root-rule 
-                              (make-infix-rule 
-                                 :affix-name rule-name 
-                                 :replacement nil 
-                                 :prefix (reverse (prefix-args)) 
-                                 :suffix (reverse (suffix-args))))
-                           (setf (l-tree-node-rules ttree) 
-                              (cons root-rule 
-                                 (l-tree-node-rules ttree)))
-                           ttree)) 
-                     :prefix (prefix-args) :suffix (suffix-args)) 
-                  (l-tree-node-rules tree)))))
-      (setf (infix-rule-replacement root-rule) comp-node)))
-
-(defun add-prefix-instance (rule-name instance)
-   (let (comp-node root-rule)
-      (do 
-         ((letters (cdr (second instance)) (cdr letters)) 
-            (tree 
-               (a-list-search-update (second instance) 
-                  (prefix-tree-comp)) 
-               (a-list-search-update letters tree)))
-         ((null letters) 
-            (setf comp-node tree)
-            (setf (l-tree-node-rules tree) 
-               (cons 
-                  (make-prefix-rule :affix-name rule-name :replacement 
-                     (do 
-                        ((lletters (cdr (first instance)) 
-                              (cdr lletters)) 
-                           (ttree 
-                              (a-list-search-update (first instance) 
-                                 (prefix-tree-root)) 
-                              (a-list-search-update lletters ttree)))
-                        ((null lletters) 
-                           (setf root-rule 
-                              (make-prefix-rule 
-                                 :affix-name rule-name 
-                                 :replacement nil 
-                                 :infix (reverse (infix-args)) 
-                                 :suffix (reverse (suffix-args))))
-                           (setf (l-tree-node-rules ttree) 
-                              (cons root-rule 
-                                 (l-tree-node-rules ttree)))
-                           ttree)) 
-                     :infix (infix-args) :suffix (suffix-args)) 
-                  (l-tree-node-rules tree)))))
-      (setf (prefix-rule-replacement root-rule) comp-node)))
+(defun expand-morph-set (pattern wild)
+  (let ((wild-letter (car wild)))
+    (if wild-letter
+	(let* ((letters (if (letter-wild-card-p wild-letter)
+			    (letter-wild-card-letters wild-letter)
+			  (letter-set-letters wild-letter)))
+	       (replaced-patterns 
+		(loop for char in letters
+		    collect
+		      (substitute char wild-letter pattern :count 1))))
+	  (loop for replaced-pattern in replaced-patterns
+	      nconc
+		(expand-morph-set replaced-pattern (cdr wild))))
+      (list pattern))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -450,362 +295,138 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+;;; This is called from the parser with an uppercase string.  
+;;; We attempt to find any applicable affixes and return a list
+;;; for each one that works.  Each element is a pair of the form with 
+;;; the affix removed (according to the rules) plus the name of the rule
+;;; associated with the affix.  
+;;; e.g., given "CANNED" this might return (("CAN" . past-v_irule)
+;;;                                          ("CANN" . past-v_irule))
+;;;     "CANS" -> (("CAN" . 3sg-v_irule) ("CAN" . pl-noun_irule))
+;;;     "CANNINGS" -> (("CANNING" . 3sg-v_irule) ("CANNING" . pl-noun_irule))
+;;;     "UNCANNED" -> (("CANNED" . un_rule) ("UNCAN" . past-v_irule)
+;;;                    ("UNCAN" . past-v_irule))
 ;;;
-;;; impose an upper limit on orthographemic rules feeding each other; for at
-;;; least one grammar (NorSource), a moderate rule set was eagerly segmenting
-;;; forms into thousands of morphological hypotheses, which caused the lexical
-;;; rule machinery (which we should redo at some point) noticeable strain.
-;;;
-;;; _fix_me_
-;;; to do this properly, it should be worked into remove-morphemes() et al.
-;;;                                                            (14-jul-03; oe)
-;;; well, i did that much, but i would much rather rewrite the code than work
-;;; out exactly how things work ...                            (22-aug-03; oe)
-;;;
-(defparameter *maximal-morphological-rule-depth* nil)
+;;; No check is done for stems - this is purely based on the affixes
+;;; and spelling rules.  Only one level is stripped at a time.
+;;; The assumption is that all the checking is done by the calling code.
 
-(defmacro maximal-irule-depth-p (hypothesis)
-  `(and (numberp *maximal-morphological-rule-depth*)
-        (>= (length ,hypothesis) *maximal-morphological-rule-depth*)))
+(defun one-step-morph-analyse (string)
+  (let* ((input-chars (coerce string 'list))
+	 (analysis-results nil)
+	 (suffix-set (reverse input-chars)))
+    ;;; use reversed input if we're checking a suffix
+    (dolist (rule *morph-rule-set*)
+      (let ((suffix-p (eql (morph-rule-class rule) 'suffix))
+	    (rule-name (morph-rule-name rule)))
+	(dolist (subrule (morph-rule-subrules rule))
+	  (multiple-value-bind (matchp unmatched bindings)
+	      (match-rule-letters (if suffix-p suffix-set input-chars)
+				  (morph-subrule-surface subrule)
+				  nil)
+	    ;;; bindings are set so that e.g.
+	    ;;; when the subrule says (!t!v!c !t!v!c!ced) and the input
+	    ;;; is "TAPPED" we get ((!t . #\t) (!v . #\a) (!c . #\p))
+	    ;;; Bindings must be consistent.
+	    ;;; Bindings are then used when recreating the input form.
+	    (when matchp
+	      (let ((new-form 
+		     (create-other-morph-form unmatched 
+					     (morph-subrule-under subrule)
+					     bindings suffix-p)))
+		  (push (cons new-form rule-name)
+			analysis-results)))))))
+    (remove-duplicates 
+     analysis-results :test #'equalp)))
 
-(defun explode (string)
-  (let ((result nil)
-	(length (length string)))
-    (do ((index (1- length) (1- index)))
-	((= index -1) result)
-      (let ((val (aref string index)))
-	(when val
-	  (push (intern (string val) :lkb) result))))))
+(defun match-rule-letters (next-input rule-spec binding-list)
+  (cond ((null rule-spec) (values t next-input binding-list))
+	;;; matched everything - we're done
+	((null next-input) nil) 
+	;;; letters left in the subrule but no input left - fail
+	((letter-set-p (car rule-spec))
+	 (let ((new-bindings 
+		(match-letter-set (car next-input)
+				  (car rule-spec) binding-list)))
+	   (if new-bindings
+	       (match-rule-letters (cdr next-input)
+				   (cdr rule-spec)
+				   new-bindings))))
+	;;; letter set - must respect any previous bindings
+	;;; if none and the match works, add to bindings
+	((eql (car next-input) (car rule-spec))
+	 (match-rule-letters (cdr next-input)
+			     (cdr rule-spec)  binding-list))
+	;;; characters match - recurse on the rest
+	(t nil)))
 
-(defun implode (list)
-  (let* ((len (length list))
-	 (res (make-string len)))
-    (loop for c in list
-	for i upfrom 0
-	do (setf (schar res i) (character c)))
-    res))
+(defun match-letter-set (input-letter letter-set bindings)
+  ;;; returns bindings (possibly updated) if successful, nil otherwise
+  (let* ((var (letter-set-var letter-set))
+	 (already-bound (assoc var bindings)))
+    (if already-bound 
+	(if (eql input-letter (cdr already-bound))
+	    bindings ;; bound and OK
+	  nil) ;; bound to something else
+      ; else unbound
+      (if (member input-letter (letter-set-letters letter-set))
+	  ; matches letter set
+	  (cons (cons (letter-set-var letter-set) input-letter)
+		bindings) ; add to bindings
+	nil)))) ; input not member of letter set
 
-(defun morph-analyse (string)
-  ;; everything is assumed to be already upcase
-  (let ((hypotheses (remove-morphemes (explode string))))
-    (if (numberp *maximal-morphological-rule-depth*)
-      (remove-if #'(lambda (foo)
-                     (> (length foo) 
-                        (+ *maximal-morphological-rule-depth* 1)))
-                 hypotheses)
-      hypotheses)))
+(defun create-other-morph-form (unmatched other bindings suffix-p)
+  ;;; we've got a match 
+  ;;; unmatched are the letters we didn't get to,
+  ;;; other is the spec for the other side of the subrule
+  ;;; (i.e., the underlying form if we're analysing and the surface
+  ;;; form if we're generating)
+  ;;; bindings tell us how to replace letter sets, suffix-p tells
+  ;;; us which end to put the letters!
+  (let* ((new-letters
+	  (append 
+	   (if bindings
+	       (loop for letter in other
+		   collect
+		     (if (letter-set-p letter)
+			 (cdr (assoc (letter-set-var letter) bindings))
+		       ;; no error testing here - assume
+		       ;; rules have been checked to make sure
+		       ;; we won't end up with an unbound letter set here
+		       letter))
+	     other)
+	   unmatched))
+	 (ordered-letters (if suffix-p (reverse new-letters) new-letters)))
+    (coerce ordered-letters 'string)))
 
-;;(setf *lexdb-lookup-words-union* t)
-(defun remove-morphemes (word &key (lexicon *lexicon*))
-  (let ((definites-list (copy-list '(nil))))
-    (do ((current-combinations
-	  (list (list word))
-	  (append
-	   (remove-prefix current-combinations)
-	   (remove-infix current-combinations)
-	   (remove-suffix current-combinations))))
-	((null current-combinations) (cdr definites-list))
-      ;;;
-      ;;; lexdb caching of all words looked up below provides not gain 
-      ;;;
-      ;;(when (and (typep lexicon 'psql-lex-database) *lexdb-lookup-words-union*)
-      ;;	(let ((words (myremdup (mapcar #'(lambda (x) (implode (car x))) current-combinations) #'string< #'equal)))
-      ;;  (when words 
-      ;;    (cache-words lexicon words))))
-      (nconc definites-list
-	     (loop for morphological-possibility in current-combinations
-		 when 
-		   (or
-		    (equal morphological-possibility 
-			   (remove-duplicates morphological-possibility 
-					      :test #'equal))
-		    (or
-		     (setf current-combinations 
-		       (remove morphological-possibility 
-			       current-combinations :test #'equal)) 
-		     nil))
-		 nconc
-		   (let* 
-		       ((root 
-			 (implode (car morphological-possibility))) 
-			(lexical (lookup-word lexicon root)))
-		     (if lexical
-			 (list (cons root 
-				     (cdr morphological-possibility))))))))))
-
-(defun remove-suffix (input-words)
-   (loop for entry in input-words
-       unless (maximal-irule-depth-p (rest entry))
-       append
-      (let ((node (suffix-tree-comp))
-            (oldword (implode (car entry))))
-	(loop for residue on (reverse (car entry))
-            while node
-            append
-              (progn 
-                (setf node (ass-look-up node))
-                (and node
-                     (let ((nodal-rules (l-tree-node-rules node)))
-                       (and nodal-rules
-                            (process-suffix 
-                             oldword
-                             (cdr residue) 
-                             nodal-rules 
-                             (cdr entry))))))))))
-
-(defun remove-prefix (input-words)
-  (loop for entry in input-words
-      unless (maximal-irule-depth-p (rest entry))
-      append
-      (let ((node (prefix-tree-comp))
-            (oldword (implode (car entry)))) 
-         (loop for residue on (car entry)
-            while node
-            append
-            (progn
-            (setf node (ass-look-up node))
-            (and node 
-               (let ((nodal-rules (l-tree-node-rules node)))
-                  (and nodal-rules
-                     (process-prefix 
-                        oldword
-                        (cdr residue) 
-                        nodal-rules 
-                        (cdr entry))))))))))
-
-(defun remove-infix (input-words)
-   (let (prefixer)
-     (loop for entry in input-words
-         unless (maximal-irule-depth-p (rest entry))
-         append
-         (prog1
-            (loop for segment on (car entry)
-               append
-               (prog1
-                  (let ((node (infix-tree-comp))
-                        (oldword (implode (car entry)))) 
-                     (loop for residue on segment
-                        while node
-                        append
-                        (progn 
-                        (setf node (ass-look-up node))
-                        (and node 
-                           (let ((nodal-rules (l-tree-node-rules node)))
-                              (and nodal-rules
-                                 (process-infix 
-                                    oldword
-                                    (cdr residue) 
-                                    prefixer 
-                                    nodal-rules 
-                                    (cdr entry))))))))
-                  (push (car segment) prefixer)))
-            (setf prefixer nil)))))
-
-(defun process-suffix (oldword word new-rules old-rules)
-  (let ((word (reverse word)))
-    (loop for rule in new-rules
-	 nconc
-	 (let ((new-word
-		(infix-remove 
-		 (prefix-remove 
-		  (append word
-			  (do ((repl nil 
-				     (cons (car (l-tree-node-parent eert)) 
-					   repl))
-			       (eert (suffix-rule-replacement rule) 
-				     (cdr (l-tree-node-parent eert))))
-			      ((null (l-tree-node-parent eert)) 
-			       (nreverse repl))))
-		  (suffix-rule-prefix rule))
-		 (suffix-rule-infix rule))))
-	   (if (and (or word (suffix-rule-replacement rule))
-                    new-word)
-               (list
-		(cons new-word
-		      (cons (list (suffix-rule-affix-name rule) oldword)
-			    old-rules))))))))
-
-(defun process-prefix (oldword word new-rules old-rules)
-   (loop for rule in new-rules
-      nconc
-      (let ((new-word
-               (infix-remove 
-                  (suffix-remove 
-                     (append 
-                        (do 
-                           ((repl nil 
-                                 (cons (car (l-tree-node-parent eert)) 
-                                    repl))
-                              (eert (prefix-rule-replacement rule) 
-                                 (cdr (l-tree-node-parent eert))))
-                           ((null (l-tree-node-parent eert)) repl)) 
-                        word)
-                     (prefix-rule-suffix rule))
-                  (prefix-rule-infix rule))))
-        (if
-            (and
-            (or word (prefix-rule-replacement rule))
-            new-word)
-            (list
-            (cons 
-               new-word
-               (cons 
-                  (list (prefix-rule-affix-name rule) oldword)
-                  old-rules)))))))
-
-(defun process-infix (oldword postamble preamble new-rules old-rules)
-   (loop for rule in new-rules
-      nconc
-      (let ((new-word
-               (suffix-remove 
-                  (prefix-remove 
-                     (append 
-                        (reverse preamble) 
-                        (do 
-                           ((repl nil 
-                                 (cons (car (l-tree-node-parent eert)) 
-                                    repl))
-                              (eert (infix-rule-replacement rule) 
-                                 (cdr (l-tree-node-parent eert))))
-                           ((null (l-tree-node-parent eert)) repl))
-                        postamble)
-                     (infix-rule-prefix rule))
-                  (infix-rule-suffix rule))))
-        (if
-            (and
-            (or postamble preamble (infix-rule-replacement rule))
-            new-word)
-            (list
-            (cons 
-               new-word
-               (cons 
-                  (list (infix-rule-affix-name rule) oldword)
-                  old-rules)))))))
-
-(defun suffix-remove (word suffix)
-   (let* ((rem (second suffix))
-         (pos (search rem word)))
-      (if rem
-         (and (eq pos (- (length word) (length rem)))
-            (append
-               (buttail word pos)
-               (car suffix)))
-         word)))
-
-(defun buttail (word pos)
-  ;;; Bernie left this undefined - it is apparently never called
-  ;;; when running the morph system with the LKB, so this function
-  ;;; is just to avoid annoying warning messages 
-  (format t "~%Warning: function BUTTAIL finally got called with args ~A ~A"
-          word pos)
-  nil)
-
-(defun prefix-remove (word prefix)
-   (let ((rem (second prefix)))
-      (if rem
-         (and (eq 0 (search rem word))
-            (append 
-               (car prefix) 
-               (nthcdr (length rem) word)))
-         word)))
-
-(defun infix-remove (word infix)
-   (let* ((rem (second infix))
-         (pos (search rem word)))
-      (if rem
-         (and pos
-            (append
-               (buttail word pos)
-               (car infix)
-               (nthcdr (+ pos (length rem)) word)))
-         word)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Functions for morphological generation
 ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun morph-generate (string rule)
-   (add-morphemes (explode string) rule))
-
-(defun add-morphemes (word rule)
-   (loop for morphological-possibility in 
-      (or
-         (make-prefix word rule)
-         (make-infix word rule)
-         (make-suffix word rule))
-      collect
-      (cons 
-         (implode (car morphological-possibility))
-         (cdr morphological-possibility))))
-   
-;;; AAC - changed the following two functions
-;;; June 1998, but have no confidence they are working correctly!
-
-(defun make-suffix (input-word rule)
-  (let* ((node (suffix-tree-root))
-         (oldword (implode input-word))
-	 (r-input-word (reverse input-word))
-         (reg-output 
-	  (process-suffix oldword
-			  r-input-word
-			  (loop for poss in (l-tree-node-rules node)
-			       when (eq rule 
-					(suffix-rule-affix-name 
-					 poss))
-			       collect poss)
-			  nil))
-         (output nil))
-    (loop for residue on r-input-word
-	 while node
-	 do
-	 (setf node (ass-look-up node))
-	 (and node
-	      (let ((new-output 
-                     (process-suffix 
-		      oldword
-		      (cdr residue) 
-		      (loop for poss in (l-tree-node-rules node)
-			   when (eql rule (suffix-rule-affix-name poss))
-			   collect poss)
-                      nil)))
-		(when new-output (setf output new-output)))))
-     (or output reg-output)))
-
-(defun make-prefix (input-word rule)
-   (let* ((node (prefix-tree-root))
-	  (oldword 
-	   (implode input-word))
-	  (reg-output 
-	   (process-prefix 
-               oldword
-               input-word 
-               (loop for poss in (l-tree-node-rules node)
-                  when (eql rule (prefix-rule-affix-name poss))
-                  collect
-                  poss)
-               nil))
-         (output nil))
-     (loop for residue on input-word
-          while node
-          do
-          (setf node (ass-look-up node))
-          (and node
-               (let ((new-output 
-                     (process-prefix 
-                      oldword
-                      (cdr residue) 
-                      (loop for poss in (l-tree-node-rules node)
-                           when (eql rule (prefix-rule-affix-name poss))
-                           collect
-                           poss)
-                      nil)))
-              (if new-output (setf output new-output)))))   
-     (or output reg-output)))
-
-;;; Currently dubious, hence not instnatiated...
-
-(defun make-infix (input-word rule) 
-  (declare (ignore rule input-word))
-  nil) 
+(defun morph-generate (string rule-name)
+  ;;; for instance given "CAN" and PAST-V_IRULE
+  ;;; this should output "CANNED"
+  ;;; This works in just the same way as analysis, with surface
+  ;;; and underlying sides swapped, except that we typically
+  ;;; know the rule for generation.  This in turn means that
+  ;;; while the analysis side cannot sensibly have a null affix
+  ;;; the generation side often will.
+  ;;; When we are generating, we accept the first matching subrule only.
+  (let* ((input-chars (coerce string 'list))
+	 (rule (find rule-name *morph-rule-set* :key #'morph-rule-name))
+	 (rule-class (morph-rule-class rule))
+	 (suffix-p (eql rule-class 'suffix)))
+    (dolist (subrule (morph-rule-subrules rule))
+      (multiple-value-bind (matchp unmatched bindings)
+	  (match-rule-letters (if suffix-p (reverse input-chars) input-chars)
+			      (morph-subrule-under subrule)
+			      nil)
+	(when matchp
+	  (let ((new-form 
+		 (create-other-morph-form unmatched 
+					 (morph-subrule-surface subrule)
+					 bindings suffix-p)))
+	    (return new-form)))))))
