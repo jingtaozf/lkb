@@ -99,7 +99,7 @@
                                                            :available-p :always)
                                            (make-menu-item :name "Reload grammar"
                                                            :value 'reload-script-file 
-                                                           :available-p :grammar-file))
+                                                           :available-p :grammar))
                                           :available-p :always)
                    (make-lkb-submenu-item :menu-title "View"
                                           :menu-items
@@ -121,7 +121,7 @@
                                            (make-menu-item :name "Lexical rule..."
                                                            :value 'show-lex-rule)
                                            )
-                                          :available-p :always)
+                                          :available-p :grammar)
                    (make-lkb-submenu-item :menu-title "Parse"
                                           :menu-items                       
                                           (list 
@@ -174,7 +174,7 @@
                                      :value 'read-script-file :available-p :always)
                      (make-menu-item :name "Reload grammar"
                                      :value 'reload-script-file 
-                                     :available-p :grammar-file)
+                                     :available-p :grammar)
                      #|
                      (make-menu-item :name "Reload leaf types"
                                      :value 'reload-leaf-files
@@ -214,7 +214,7 @@
                      (make-menu-item :name "All words"
                         :value 'display-lex-words)
                      )
-               :available-p :always)
+               :available-p :grammar)
          (make-lkb-submenu-item :menu-title "Parse"
                  :menu-items                       
                   (list 
@@ -318,7 +318,7 @@
 ;                        :value 'output-type-file 
 ;                        :available-p :grammar)
                      )
-                   :available-p :always))
+                   :available-p :grammar))
          #+:psql
          (when lkb::*lexdb-params*
            ;;

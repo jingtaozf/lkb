@@ -436,10 +436,13 @@
                (interactive-unification-check))))))
 
 
-#-(or :clim :www)
-(defun compare-parses (&optional edges)
-  (declare (ignore edges))
-  nil)
+; The corresponding menu item should get disabled - it shouldn't available and
+; quietly not do anything
+;#-(or :clim :www)
+;(defun compare-parses (&optional edges)
+;  (declare (ignore edges))
+;  nil)
+
 
 ;;
 ;; Interactively set parameters

@@ -21,9 +21,6 @@
 
 (defvar *lkb-menu-type* :core)
 
-(defvar *lkb-menu-disabled-list* nil
-  "Kludge because of MCL bug!!!!")
-
 (defvar *lkb-menu-grammar-file-list* nil)
 
 (defvar *lkb-menu-mrs-list* nil)
@@ -33,48 +30,32 @@
 ;;; eval-enqueue puts things on the toploop queue
 ;;; they can therefore be interupted etc
 
-(defun make-menu-item (&key name value available-p)
-  (let ((menu 
+(defun make-menu-item (&key name value (available-p :grammar))
+  (let* ((available-p
+          (if (fboundp value) available-p nil)) ; function may not exist
+         (menu 
           (make-instance 'menu-item :menu-item-title  name
                         :menu-item-action 
                         #'(lambda nil (eval-enqueue `(,value))) 
                         :disabled (not (eql available-p :always)))))
-    (unless (or (eql available-p :always) 
-                (and (eql available-p :grammar-file)
-                     *current-grammar-load-file*))
-      (push menu *lkb-menu-disabled-list*))
-    (when (eql available-p :grammar-file)
+    (when (eql available-p :grammar)
       (push menu *lkb-menu-grammar-file-list*))
     (when (eql available-p :mrs) 
       (push menu *lkb-menu-mrs-list*))
     menu))
 
-#|
-;;; The following function doesn't work - there's a bug 
-;;; which causes menus to be enabled when they are added to
-;;; the menu bar even though menu-enabled-p still returns
-;;; nil.  In this state it is not possible to disable the menu
-;;; via menu-disable - see bug.lsp
 
- (defun make-lkb-submenu-item (&key menu-title menu-items available-p)
+ (defun make-lkb-submenu-item (&key menu-title menu-items (available-p :grammar))
   (let ((menu (make-instance 'menu :menu-title menu-title
                              :menu-items menu-items)))
-    (unless available-p 
+    (unless (eql available-p :always)
       (menu-disable menu))
-    menu))
-
-;;; Alternative kludge is below
-|#
-
-
-(defun make-lkb-submenu-item (&key menu-title menu-items available-p)
-  (let ((menu (make-instance 'menu :menu-title menu-title
-                             :menu-items menu-items)))
-    (unless (eql available-p :always) 
-      (push menu *lkb-menu-disabled-list*))
+    (when (eql available-p :grammar) 
+      (push menu *lkb-menu-grammar-file-list*))
     (when (eql available-p :mrs) 
       (push menu *lkb-menu-mrs-list*))
     menu))
+
 
 (defvar *lkb-menu* nil)
 
@@ -83,17 +64,17 @@
   (set-up-lkb-interaction))
 
 (defun shrink-lkb-menu nil
-  (setf lkb::*lkb-menu-type* :core)
+  (setf *lkb-menu-type* :core)
   (set-up-lkb-interaction))
 
 (defun set-up-lkb-interaction (&optional system-type)
   (unless system-type 
     (setf system-type (or *lkb-menu-type* :core)))
   (when *lkb-menu*
-   (menu-deinstall *lkb-menu*))  ; reset if we've loaded the 
+   (menu-deinstall *lkb-menu*)) ; reset if we've loaded the 
                                 ; LKB before in this session
-  (setf *lkb-menu-disabled-list* nil)
-  (setf *lkb-menu-mrs-list* nil)
+  (setq *lkb-menu-grammar-file-list* nil)
+  (setq *lkb-menu-mrs-list* nil)
   (ecase system-type
     (:core (create-mini-lkb-system-menu))
     (:big  (create-big-lkb-system-menu))   
@@ -101,14 +82,9 @@
 ;;;    (:yadu (create-yadu-system-menu))
     )
   (menu-install *lkb-menu*)
-  (unless *current-grammar-load-file*
-     (dolist (submenu *lkb-menu-disabled-list*)
-        (menu-item-disable submenu)) ; get round bug by disabling after
-                                     ; installation, but only if
-                                     ; we don't have a grammar
-        )
-  (when *current-grammar-load-file* 
-    (enable-type-interactions))
+  (disable-type-interactions)
+  (when *current-grammar-load-file*
+     (enable-type-interactions))
   (pushnew 'lkb-exit-function *lisp-cleanup-functions*))
 
 (defun lkb-exit-function (&optional dump)
@@ -140,7 +116,7 @@
   (set-up-lkb-interaction)
   ;; crude way of seeing whether this is being 
   ;; called when we already have a grammar
-  (when *current-grammar-load-file* ; *** jac 2/15/99
+  (when *current-grammar-load-file*
     (enable-type-interactions))
   )
 
@@ -150,18 +126,17 @@
  
 (defun enable-type-interactions nil
    ;; called when a type file has been read in successfully
-   ;; use the kludge
-   (dolist (submenu *lkb-menu-disabled-list*)
-      (if 
-         (or lkb::*mrs-loaded* (not (member submenu *lkb-menu-mrs-list*)))
-         (menu-item-enable submenu))))
+   (enable-grammar-reload-interactions)
+   (enable-mrs-interactions))
 
 (defun disable-type-interactions nil
    ;; called when a type file has been cleared
    ;; disables everthing that was originally disabled
-   ;; use the kludge
-   (dolist (submenu *lkb-menu-disabled-list*)
+   (dolist (submenu *lkb-menu-grammar-file-list*)
+      (menu-item-disable submenu))
+   (dolist (submenu *lkb-menu-mrs-list*)
       (menu-item-disable submenu)))
+
 
 (defun enable-grammar-reload-interactions nil
    ;; called when a script file load has been attempted
@@ -172,6 +147,7 @@
   (when lkb::*mrs-loaded*
     (dolist (submenu *lkb-menu-mrs-list*)
       (menu-item-enable submenu))))
+
 
 ;;; functions called from top level menu which are time
 ;;; consuming - don't need to do anything special for MCL?
