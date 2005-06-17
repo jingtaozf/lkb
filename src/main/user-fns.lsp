@@ -250,14 +250,16 @@
 		   (parse-namestring (system:getenv "TEMP"))))))))
 		  
      (when (and (pathnamep tmp) (ignore-errors (directory tmp))) tmp))
-  (let ((pathname  #-mcl (user-homedir-pathname)
-                   #+mcl (make-pathname :directory "Macintosh HD"))
-        (tmp-dir '("tmp")))
+  (let ((pathname #-(and :mcl (not :openmcl)) (user-homedir-pathname)
+                  #+(and :mcl (not :openmcl)) (ccl::findfolder #$kOnSystemDisk #$kCurrentUserFolderType))
+        (tmp-dir #-:mcl '("tmp")
+                 #+:mcl '("Documents" "tmp")))
     (make-pathname
      :host (pathname-host pathname) :device (pathname-device pathname)
      :directory (append (pathname-directory pathname) tmp-dir)
      :name (pathname-name pathname) :type (pathname-type pathname)
      :version (pathname-version pathname)))))
+
 
 (defun set-temporary-lexicon-filenames nil
   ;;; grammars can redefine this to use different names

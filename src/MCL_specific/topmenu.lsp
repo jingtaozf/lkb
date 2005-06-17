@@ -106,8 +106,10 @@
       (clear-type-cache)
       (unexpand-leaf-types)
       (pushnew 'lkb-exit-function *lisp-cleanup-functions*)
+      ;;
       (save-application pathname
-         :excise-compiler (not (y-or-n-p-general "Include lisp compiler in image?")))
+         :excise-compiler (not (y-or-n-p-general "Include lisp compiler in image?"))
+         :size (* 384 1024 1024)) ; 384 MB so as not to fill up a 512MB machine
       ;; lisp quits now so no tidying up to do
       )))
 

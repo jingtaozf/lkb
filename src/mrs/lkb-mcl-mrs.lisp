@@ -9,14 +9,11 @@
 ;;;
 ;;; using standard text editing (Fred) windows
 
-(defparameter *show-mrs-prolog-p* nil)
-
-(defun show-mrs-window (edge)
-  (let ((mrsstruct (mrs::extract-mrs edge))
+(defun show-mrs-window (edge &optional mrs title)
+  (let ((mrsstruct (or mrs (edge-mrs edge) (mrs::extract-mrs edge)))
         (stream (make-instance 'fred-window
-                  :window-title
-                  (show-mrs-window-title edge
-                     (if *show-mrs-prolog-p* "Prolog MRS" "Simple MRS"))
+                  :window-title (or title (show-mrs-window-title edge "Simple MRS"))
+                  :view-size (make-point 500 600)
                   :scratch-p t
                   :wrap-p t)))
     (if mrsstruct
@@ -25,10 +22,11 @@
         (format stream "~%::: MRS structure could not be extracted~%"))
     (show-mrs-update-window stream)))
 
-(defun show-mrs-indexed-window (edge)
-  (let ((mrsstruct (mrs::extract-mrs edge))
+(defun show-mrs-indexed-window (edge &optional mrs title)
+  (let ((mrsstruct (or mrs (edge-mrs edge) (mrs::extract-mrs edge)))
         (stream (make-instance 'fred-window
-                  :window-title (show-mrs-window-title edge "Indexed MRS")
+                  :window-title (or title (show-mrs-window-title edge "Indexed MRS"))
+                  :view-size (make-point 500 300)
                   :scratch-p t
                   :wrap-p t)))
     (if mrsstruct
@@ -36,11 +34,12 @@
         (format stream "~%::: MRS structure could not be extracted~%"))
     (show-mrs-update-window stream)))
 
-(defun show-mrs-scoped-window (edge)
-  (let* ((mrsstruct (mrs::extract-mrs edge))
+(defun show-mrs-scoped-window (edge &optional mrs title)
+  (let* ((mrsstruct (or mrs (edge-mrs edge) (mrs::extract-mrs edge)))
          (binding-sets (mrs::make-scoped-mrs mrsstruct))
          (stream (make-instance 'fred-window
-                   :window-title (show-mrs-window-title edge "Scoped MRS")
+                   :window-title (or title (show-mrs-window-title edge "Scoped MRS"))
+                   :view-size (make-point 700 300)
                    :scratch-p t
                    :wrap-p t)))
     (if binding-sets
@@ -53,8 +52,10 @@
 
 
 (defun show-mrs-window-title (edge type)
-  (format nil "Edge ~A ~A - ~A"
-     (edge-id edge) (if (g-edge-p edge) "G" "P") type))
+   (if edge
+      (format nil "Edge ~A ~A - ~A"
+         (edge-id edge) (if (g-edge-p edge) "G" "P") type)
+      type))
 
 (defun show-mrs-update-window (stream)
   (file-position stream 0)

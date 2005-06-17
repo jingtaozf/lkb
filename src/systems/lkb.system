@@ -37,7 +37,10 @@
 
   ;; (bmw - 06jun04)
   ;; activate PSQL/LexDB code (no longer OS specific)
+  ;; (jac - 17jun05)
+  ;; ... but it's certainly lisp implementation specific
   ;;
+  #+:allegro
   (pushnew :psql *features*)
 
   ;;
