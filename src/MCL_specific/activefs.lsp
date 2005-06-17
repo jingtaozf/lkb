@@ -185,11 +185,15 @@
 
 ;;; some redundancy here - clean up sometime
 
+(defparameter +fs-window-view-width+ 2400)
+(defparameter +fs-window-view-height+ 32000)
+
 (defun display-basic-fs (fs title &optional parents paths old-window id)
    (when old-window (erase-region old-window (clip-region old-window)))
    (let ((fs-window 
             (make-instance 'picture-field-window
-               :view-font (lkb-type-font) :view-size #@(1600 32000))))
+               :view-font (lkb-type-font)
+               :view-size (make-point +fs-window-view-width+ +fs-window-view-height+))))
       (display-fs-main fs-window fs title parents paths
          old-window id)))
 
@@ -236,41 +240,45 @@
 (defun display-fs-main (fs-window fs title parents paths &optional
                         existing-window id)
    (draw-active-title fs-window fs title parents paths id)
-   (let* ((parents-width (if parents 
-               (display-active-parents parents fs-window) 0))
+   (let ((parents-width (if parents 
+              (display-active-parents parents fs-window) 0))
          (dag-width (or (if (tdfs-p fs) (display-dag2 fs 'edit fs-window)
                               (display-dag1 fs 'edit fs-window)) 0))
-         (path-width (if paths (display-active-dpaths paths fs-window) 0))
-         (max-width (max dag-width path-width parents-width 100)))
-      (terpri fs-window)
-      (let* ((full-height (max 150 (+ 10 (point-v (current-position fs-window)))))
-             ; + 10 is a fudge factor for YADU tails
-             (page-height (min full-height (- *screen-height* 100)))
-             (page-width 
-              (min (- *screen-width* 100)
-                 (max (+ 30 max-width)
-                    (+ (if (ccl:osx-p) 110 80) (string-width title (lkb-title-font))))))
-             (fields (fields fs-window))
-             (pict (window-close fs-window))
-             (real-window
-                (if existing-window
-                   (let ((w (view-container existing-window)))
-                      (ccl::kill-picture (ccl::pict-data (ccl::my-scroller w)))
-                      (setf (ccl::pict-data (ccl::my-scroller w)) pict)
-                      (setf (slot-value existing-window 'ccl::field-size) ; !!! ugh
-                         (make-point page-width full-height))
-                      (ccl::update-scroll-bars existing-window :length t :position t)
-                      (reinitialize-instance w
-                         :view-size (make-point page-width full-height))
-                      w)
-                   (make-instance 'active-fs-window
-                      :window-title title
-                      :pict pict
-                      :view-font (lkb-type-font)
-                      :view-position (find-best-position)
-                      :field-size (make-point page-width full-height)
-                      :close-box-p t
-                      :view-size (make-point page-width page-height)))))
+         (path-width (if paths (display-active-dpaths paths fs-window) 0)))
+      (let*
+         ((max-x (max dag-width path-width parents-width 100))
+          (full-width (min max-x +fs-window-view-width+))
+          (page-width 
+             (min (- *screen-width* 100)
+                (max (+ 30 full-width)
+                   (+ (if (ccl:osx-p) 110 80) (string-width title (lkb-title-font))))))
+          (max-y (point-v (current-position fs-window)))
+          (full-height
+             (max 150
+                (+ (if (<= 0 max-y +fs-window-view-height+) max-y +fs-window-view-height+)
+                   10))) ; + 10 is a fudge factor for YADU tails
+          (page-height (min full-height (- *screen-height* 100)))
+          (fields (fields fs-window))
+          (pict (window-close fs-window))
+          (real-window
+             (if existing-window
+                (let ((w (view-container existing-window)))
+                   (ccl::kill-picture (ccl::pict-data (ccl::my-scroller w)))
+                   (setf (ccl::pict-data (ccl::my-scroller w)) pict)
+                   (setf (slot-value existing-window 'ccl::field-size) ; !!! ugh
+                      (make-point full-width full-height))
+                   (ccl::update-scroll-bars existing-window :length t :position t)
+                   (reinitialize-instance w
+                      :view-size (make-point page-width page-height))
+                   w)
+                (make-instance 'active-fs-window
+                   :window-title title
+                   :pict pict
+                   :view-font (lkb-type-font)
+                   :view-position (find-best-position)
+                   :field-size (make-point full-width full-height)
+                   :close-box-p t
+                   :view-size (make-point page-width page-height)))))
         (set-associated-fs (ccl::my-scroller real-window) fs title paths parents
            (if existing-window
               (fs-display-record-type-fs-display
@@ -303,7 +311,8 @@
 
 (defun add-type-and-active-fs-region (stream start-pos type-label-list val
                                       shrunk-p atomic-p &optional top-box full-tdfs)
-   (with-bold-output stream (format stream "~(~A~)" val))
+   (with-bold-output stream
+      (write-string (string-downcase (string val)) stream))
    (add-active-fs-region stream start-pos (current-position stream) type-label-list val
       shrunk-p atomic-p top-box full-tdfs))
 
@@ -387,13 +396,13 @@
      :menu-item-action
      #'(lambda ()
          (display-type-in-tree type))
-     :disabled (not (ltype-constraint type-entry)))
+     :disabled (not (type-constraint type-entry)))
    (make-instance 'menu-item
      :menu-item-title "Help"
      :menu-item-action
      #'(lambda ()
-         (display-type-comment type (ltype-comment type-entry)))
-     :disabled (not (ltype-comment type-entry)))
+         (display-type-comment type (type-comment type-entry)))
+     :disabled (not (type-comment type-entry)))
    (make-instance 'menu-item
      :menu-item-title "Shrink/expand"
                :menu-item-action #'(lambda ()
@@ -743,7 +752,7 @@
 
 (defun add-active-pointer (stream position pointer ignore valuep)
    (declare (ignore ignore))
-   (format stream "<~A>" pointer)
+   (write-char #\< stream) (princ pointer stream) (write-char #\> stream)
    (let ((record
             (make-reentrancy-click-field :view-pos position
                :end-pos (current-position stream)

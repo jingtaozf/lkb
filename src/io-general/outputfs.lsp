@@ -457,8 +457,8 @@
      (let ((output-label (concatenate 'string (symbol-name label)
 				      ": ")))
         (write-string output-label stream))
-     (setf max-width (max (current-position-x stream) max-width))
-     (setf indentation (current-position-x stream))))
+     (setf indentation (current-position-x stream))
+     (setf max-width (max indentation max-width))))
 
 (defun make-output-label (real-name)
   ;;; removed feature abbreviation facility - probably never used
