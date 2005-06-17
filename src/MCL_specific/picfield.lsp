@@ -27,8 +27,11 @@
   (declare (ignore initargs view-position))
   (setf (other-junk self) other-junk)
   (setf (shrunk-p self) shrunk-p)
+  (when (> (length item-string) 120)
+     (setq item-string (subseq item-string 0 120))) ; avoid running into an internal menu width limit
   (set-view-size self
-    (+ (string-width (or item-string "") (or item-font (view-font self))) 5) ; kludge otherwise stops short
+    (+ (string-width (or item-string "") (or item-font (view-font self)))
+       5) ; kludge so active region long enough
     (+ (lkb::font-ascent self) (lkb::font-descent self))))
 
 
