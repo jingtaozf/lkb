@@ -17,3 +17,5 @@ extern int capi_register(int (*)(char *, int, char *, int, int, char *),
                          int (*)(char *),
                          int (*)(int, char *));
 extern int slave(void);
+extern int client_open_item_summary();
+extern int client_send_item_summary();
