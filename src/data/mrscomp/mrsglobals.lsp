@@ -18,6 +18,8 @@
   `(,(vsym "HOOK") ,(vsym "INDEX"))
   "path to get an index from a psoa")
 
+(defparameter *psoa-top-h-path* nil)
+
 (defparameter *psoa-liszt-path* `(,(vsym "RELS") ,(vsym "LIST")))
 (defparameter *psoa-rh-cons-path* `(,(vsym "HCONS") ,(vsym "LIST")))
 
@@ -34,9 +36,12 @@
   "the feature in a qeq that leads to the second argument")
 
 (defparameter *feat-priority-list*  
-    `( ,(vsym "HNDL") ,(vsym "INDEX"))
+    `( ,(vsym "LTOP") ,(vsym "INDEX") ,(vsym "LBL") ,(vsym "BV")
+       ,(vsym "ARG0") ,(vsym "ARG1") ,(vsym "ARG2") ,(vsym "ARG3") 
+       ,(vsym "RESTR") ,(vsym "BODY"))
   "A not-necessarily-complete list of features that determines printing
-order in an MRS")
+order in the MRS output routines and also determines the order
+of variables in the indexed representation")
 
 (defparameter *top-level-rel-types* 
     '("it_rel" "she_rel"))
