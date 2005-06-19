@@ -19,6 +19,9 @@ aardvark := noun-lxm-intransitive &
 bark := verb-lxm-intransitive &
 [ ORTH<! "bark" !> ].
 
+sleep := verb-lxm-intransitive &
+[ ORTH<! "sleep" !> ].
+
 chase := verb-lxm-strict-transitive &
 [ ORTH<! "chase" !> ].
 

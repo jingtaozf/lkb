@@ -1,5 +1,7 @@
 ;;; Hey, emacs, this file is -*- Mode: common-lisp; -*- ... got that?
 
+(in-package :lkb)
+
 ;;;
 ;;; a set of functions that facilitate user-level customization of the LKB.
 ;;;

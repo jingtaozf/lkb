@@ -12,7 +12,7 @@
      (lkb-pathname (parent-directory) "lexicon.tdl"))
 (batch-check-lexicon)
 (read-tdl-grammar-file-aux 
-     (lkb-pathname (parent-directory) "rules.tdl"))
+ (lkb-pathname (parent-directory) "rules.tdl"))
 
 (read-morph-file-aux (lkb-pathname (parent-directory) "irules.tdl"))
 (read-morph-file-aux (lkb-pathname (parent-directory) "lrules.tdl"))
