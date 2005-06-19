@@ -16,7 +16,10 @@
 (defstruct (basemrs)
   top-h
   liszt
-  h-cons)
+  h-cons
+  a-cons)
+
+;;; a-cons added to allow for constraints on attachment
 
 ;;; rmrs is a substructure of this (see basermrs.lisp)
 
@@ -104,7 +107,22 @@
 
 ;;; relation is one of "qeq", "lheq" or "outscopes" as in the rmrs.dtd
 ;;; the code for grammar read in must convert the type to one
-;;; of these
+;;; of these.  although at the moment, only qeqs are supported.
+
+;;; The following structures are for attachment constraints as used
+;;; by Berthold.
+;;; The phrase to be attached supplies a pair of index and label,
+;;; and the target is a set of such pairs.
+;;; These are stored on a-cons
+
+(defstruct (disj-cons)
+  index-lbl
+  target)
+
+(defstruct (index-lbl)
+  index
+  lbl)
+
 
 ;;; In an attempt to clean up a messy situation,
 ;;; var-types are now all lower-case strings.  
@@ -244,6 +262,26 @@
 (defmethod mrs-output-end-fvpair-fn ((mrsout output-type))
     nil)
 
+(defmethod mrs-output-start-a-cons ((mrsout output-type))
+  nil)
+
+(defmethod mrs-output-disj-cons-spec ((mrsout output-type) first-p)
+  (declare (ignore first-p))
+  nil)
+
+(defmethod mrs-output-disj-cons-start-target ((mrsout output-type))
+  nil)
+
+(defmethod mrs-output-disj-cons-end-target ((mrsout output-type))
+  nil)
+
+(defmethod mrs-output-end-a-cons ((mrsout output-type))
+  nil)
+
+(defmethod mrs-output-ilp ((mrsout output-type) var1 var2 first-p)
+  (declare (ignore var1 var2 first-p))
+  nil)
+
 ;;; 
 ;;; simple output-type class
 ;;;
@@ -349,6 +387,35 @@
 (defmethod mrs-output-end-h-cons ((mrsout simple))
   (with-slots (stream) mrsout
     (format stream " >")))
+
+#| output is e.g.,
+ACONS: <x1,h4> in <<x2,h3>,<x5,h6>>, <x11,h41> in <<x21,h31>,<x51,h61>>
+|#
+
+(defmethod mrs-output-start-a-cons ((mrsout simple))
+  (with-slots (stream indentation) mrsout
+    (format stream "~%~VT  ACONS: " indentation)))
+
+(defmethod mrs-output-disj-cons-spec ((mrsout simple) first-acons)
+  (with-slots (stream indentation) mrsout
+    (format stream "~A " (if first-acons "" ",") indentation)))
+
+(defmethod mrs-output-disj-cons-start-target ((mrsout simple))
+  (with-slots (stream indentation) mrsout
+    (format stream " in <" indentation)))
+
+(defmethod mrs-output-disj-cons-end-target ((mrsout simple))
+  (with-slots (stream indentation) mrsout
+    (format stream ">" indentation)))
+
+(defmethod mrs-output-ilp ((mrsout simple) var1 var2 position)
+  ;;; position can be :spec, :first-target or :target
+  (with-slots (stream indentation) mrsout
+    (format stream "~A<~A,~A>" (if (eql position :target) "," "") var1 var2)))
+
+(defmethod mrs-output-end-a-cons ((mrsout simple))
+  (with-slots (stream) mrsout
+    (format stream "")))
 
 
 (defmethod mrs-output-end-psoa ((mrsout simple))
@@ -1137,6 +1204,8 @@ extras have to be sorted out later
   (mrs-output-end-liszt *mrs-display-structure*)
   (when *rel-handel-path*
     (print-mrs-hcons (psoa-h-cons psoa) connected-p *mrs-display-structure*))
+  (when (psoa-a-cons psoa)
+    (print-mrs-acons (psoa-a-cons psoa) connected-p *mrs-display-structure*))
   (mrs-output-end-psoa *mrs-display-structure*))
 
 (defun print-rel (rel first-rel connected-p display)
@@ -1220,6 +1289,33 @@ extras have to be sorted out later
     ;; will have appeared elsewhere
     (mrs-output-end-h-cons display))
 
+(defun print-mrs-acons (acons-list connected-p display)
+  (mrs-output-start-a-cons display)
+  (let ((first-acons t))
+    (loop for acons in acons-list
+	do
+	  (mrs-output-disj-cons-spec display first-acons)
+	  (print-mrs-ilp
+	   (disj-cons-index-lbl acons)
+	   connected-p :spec display)
+	  (mrs-output-disj-cons-start-target display)
+	  (let ((first-el :first-target))
+	    (dolist (target (disj-cons-target acons))
+	      (print-mrs-ilp target connected-p first-el display)
+	      (setf first-el :target)))
+	  (mrs-output-disj-cons-end-target display)
+	  (setf first-acons nil))
+  (mrs-output-end-a-cons display)))
+
+(defun print-mrs-ilp (ilp connected-p first-p display)
+  (mrs-output-ilp 
+   display
+   (find-var-name 
+    (index-lbl-index ilp) connected-p) 
+   (find-var-name 
+    (index-lbl-lbl ilp) connected-p)
+   first-p))
+   
 
 (defun print-mrs-extra (var &key (display-to *mrs-display-structure*))
   (when (and (var-base-p var) (var-base-type var) (var-base-extra var))
@@ -1889,7 +1985,10 @@ VAR -> VARNAME[:CONSTNAME]*
           (print-rel rel first-rel nil *mrs-display-structure*)
 	  (setf first-rel nil)))
   (mrs-output-end-liszt *mrs-display-structure*)
-  (print-mrs-hcons (psoa-h-cons sement) nil *mrs-display-structure*))
+  (print-mrs-hcons (psoa-h-cons sement) nil *mrs-display-structure*)
+  (when (psoa-a-cons sement)
+    (print-mrs-acons (psoa-a-cons sement) nil *mrs-display-structure*)))
+  
 
 (defun print-hook (hook display)
   (let ((index (hook-index hook))
@@ -1912,5 +2011,115 @@ VAR -> VARNAME[:CONSTNAME]*
 	    (mrs-output-slot-name display (slot-name slot)) 
             (setf first-slot nil)))
     (mrs-output-end-slots display))
+
+
+;;; ****************************************************************
+;;;
+;;; Copying an MRS completely
+;;;
+;;; ****************************************************************
+
+(defun copy-psoa-completely (psoa)
+  ;;; this does not fully copy `extra', parameter strings etc
+  ;;; since we assume that those will not be modified
+  (unless (psoa-p psoa)
+    (error "~%~A is not a psoa structure"))
+  (let ((mostly-new (copy-psoa-liszt-completely psoa nil)))
+    (setf (psoa-index mostly-new)
+      (copy-var (psoa-index mostly-new)))
+    (setf (psoa-top-h mostly-new)
+      (copy-var (psoa-top-h mostly-new)))
+    (setf (psoa-h-cons mostly-new)
+      (loop for hcons-el in (psoa-h-cons mostly-new)
+	  collect
+	    (copy-hcons-element hcons-el)))
+    mostly-new))
+  
+(defun copy-psoa-liszt-completely (psoa no-var-copy-p)
+      ;;; existing fns in mrsresolve don't want copied qeqs
+      ;;; or copied variables
+  (let ((copy-mrsstruct (copy-psoa psoa)))
+    (setf (psoa-liszt copy-mrsstruct)
+      (loop for rel in (psoa-liszt copy-mrsstruct)
+	  collect
+	    (let* ((new-rel (copy-rel rel))
+		   (new-flist (loop for fvp in (rel-flist new-rel)
+				  collect
+				    (if no-var-copy-p
+					(copy-fvpair fvp)
+				      (copy-fvpair-completely fvp)))))
+	      (unless no-var-copy-p
+		(setf (rel-handel new-rel)
+		  (copy-var (rel-handel new-rel))))
+	      (setf (rel-flist new-rel)
+		new-flist)
+	      new-rel)))
+    copy-mrsstruct))
+
+(defun copy-hcons-element (hcons-el)
+  (let ((copied-hcons
+	 (copy-hcons hcons-el)))
+    (setf (hcons-scarg copied-hcons)
+      (copy-var (hcons-scarg copied-hcons)))
+    (setf (hcons-outscpd copied-hcons)
+      (copy-var (hcons-outscpd copied-hcons)))
+    copied-hcons))
+
+(defun copy-fvpair-completely (fvp)
+  (let ((copy-fvp (copy-fvpair fvp)))
+    (when (var-p (fvpair-value copy-fvp))
+      (setf (fvpair-value copy-fvp)
+	(copy-var (fvpair-value copy-fvp))))
+    copy-fvp))
+      
+
+
+;;; ****************************************************************
+;;;
+;;; Replacing variables in an MRS destructively
+;;;
+;;; ****************************************************************
+
+;;; cf rmrs/comp.lisp 
+;;; destrctive
+
+(defun canonicalise-sement-hook (hook bindings)
+  (canonicalise-basemrs-variable (hook-index hook) bindings)
+  (when (hook-xarg hook)			   
+    (canonicalise-basemrs-variable (hook-xarg hook) bindings))
+  (canonicalise-basemrs-variable (hook-ltop hook) bindings)
+  hook)
+
+(defun canonicalise-sement-slots (slots bindings)
+  (dolist (slot slots)
+    (canonicalise-sement-hook (slot-hook slot) bindings))
+  slots)
+
+;;; 
+
+(defun canonicalise-basemrs-liszt (liszt bindings)
+  (dolist (ep liszt)
+    (canonicalise-basemrs-variable (rel-handel ep) bindings)
+    (dolist (fvp (rel-flist ep))
+      (let ((value (fvpair-value fvp)))
+	(when (var-p value) 
+	  (canonicalise-basemrs-variable value bindings)))))
+  liszt)
+
+
+(defun canonicalise-basemrs-variable (var bindings)
+  (let* ((var-id (var-id var))
+	 (replace-value (cdr (assoc var-id bindings))))
+    (when replace-value
+	(setf (var-id var) replace-value))))
+
+(defun canonicalise-basemrs-hcons-list (hcons-list bindings)
+  (dolist (hcons hcons-list)
+    (canonicalise-basemrs-variable
+     (hcons-scarg hcons) bindings)
+    (canonicalise-basemrs-variable
+     (hcons-outscpd hcons) bindings))
+  hcons-list)
+
 
 

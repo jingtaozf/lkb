@@ -103,6 +103,22 @@
 (defparameter *qeq-type* (vsym "qeq")
   "the fs type associated with a qeq relation")
 
+
+(defparameter *psoa-a-cons-path*
+    `(,(vsym "ACONS") ,(vsym "LIST"))
+  "path to get a list of attachment constraints from an mrs fs")
+
+(defparameter *mod-spec-type* (vsym "ISECT-MOD")
+  "the fs type associated with a modifier attachment relation")
+
+(defparameter *mod-anc* (vsym "MOD-ANC")
+  "the feature in the mod spec that leads to the modifier anchor")
+
+(defparameter *target-ancs-path* 
+    `(,(vsym "TARGET-ANCS") ,(vsym "LIST"))
+  "the path in the mod spec that leads to the target list")
+
+
 ;;; generic paths
 
 (defparameter *first-path*  `(,(vsym "FIRST"))

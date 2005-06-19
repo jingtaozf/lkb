@@ -419,7 +419,7 @@ printing routines -  convenient to make this global to keep printing generic")
 
 (defvar *cached-scope-structures* 
     (make-hash-table :test #'equal))
-
+  
 (defun make-scoped-mrs (mrsstruct)
   (when *rel-handel-path*
     (clear-scope-memos)
@@ -1075,11 +1075,14 @@ or modulo some number of quantifiers
 ;;; Making a single scoped MRS
 
 #| For the MRSs produced by the ERG, ignoring (for now) any
-constraints other than qeqs - any scopable MRS
+constraints other than qeqs - hypothesise that any scopable MRS
 will have a scoped structure which corresponds to replacing all of the
 qeqs with eqs, apart from the top one, and inserting in the topmost
 position all the quantifiers in the order required by the variables
 in their restrictors.
+
+This is in fact not true, but the exceptions are so infrequent that
+this may still be useful!
 |#
 
 #|
@@ -1173,35 +1176,14 @@ in their restrictors.
 |#
 
 (defun equate-all-qeqs (mrsstruct)
-  (let ((copy-mrsstruct (copy-psoa mrsstruct)))
-    (setf (psoa-liszt copy-mrsstruct)
-      (loop for rel in (psoa-liszt copy-mrsstruct)
-	  collect
-	    (let* ((new-rel (copy-rel rel))
-		   (new-flist (loop for fvp in (rel-flist new-rel)
-				  collect
-				    (copy-fvpair fvp))))
-	      (setf (rel-flist new-rel)
-		new-flist)
-	      new-rel)))
-    (let*
-	((qeq-list (psoa-h-cons copy-mrsstruct))
+  (let* ((copy-mrsstruct (copy-psoa-liszt-completely mrsstruct t))
+         (qeq-list (psoa-h-cons copy-mrsstruct))
 	 (equated-struct (equate-qeqs qeq-list copy-mrsstruct)))
-      equated-struct)))
+      equated-struct))
 
 (defun produce-one-scope (mrsstruct)
   ;;; returns nil in the case where something goes wrong
-  (let ((copy-mrsstruct (copy-psoa mrsstruct)))
-    (setf (psoa-liszt copy-mrsstruct)
-      (loop for rel in (psoa-liszt copy-mrsstruct)
-	  collect
-	    (let* ((new-rel (copy-rel rel))
-		   (new-flist (loop for fvp in (rel-flist new-rel)
-				  collect
-				    (copy-fvpair fvp))))
-	      (setf (rel-flist new-rel)
-		new-flist)
-	      new-rel)))
+  (let ((copy-mrsstruct (copy-psoa-liszt-completely mrsstruct t)))
     (multiple-value-bind 
 	(top-qeq top-qeq-hole-fvp) 
 	(find-top-qeq-hole copy-mrsstruct)

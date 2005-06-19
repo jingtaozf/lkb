@@ -281,17 +281,17 @@
 			    (remove slot-record (sement-slots head-dtr))
 			    head-eqs)
 			    :liszt
-			    (append (canonicalise-sement-liszt
+			    (append (canonicalise-basemrs-liszt
 				     (sement-liszt head-dtr)
 				     head-eqs)
-				    (canonicalise-sement-liszt
+				    (canonicalise-basemrs-liszt
 				     (sement-liszt non-head-dtr)
 				     non-head-eqs))
 			    :h-cons 
-			    (append (canonicalise-sement-hcons-list
+			    (append (canonicalise-basemrs-hcons-list
 				     (sement-h-cons head-dtr)
 				     head-eqs)
-				    (canonicalise-sement-hcons-list
+				    (canonicalise-basemrs-hcons-list
 				     (sement-h-cons non-head-dtr)
 				     non-head-eqs)))
 	    (mrs-comparison-output "Hook and slot incompatible")))
@@ -402,47 +402,10 @@
 			   (car ltop-bindings))
 		   nil)))))
 
-
 ;;; ******** Code to reset variables to canonical ids *********
-;;; cf rmrs/comp.lisp 
-;;; destrctive
-
-(defun canonicalise-sement-hook (hook bindings)
-  (canonicalise-sement-variable (hook-index hook) bindings)
-  (when (hook-xarg hook)			   
-    (canonicalise-sement-variable (hook-xarg hook) bindings))
-  (canonicalise-sement-variable (hook-ltop hook) bindings)
-  hook)
-
-(defun canonicalise-sement-slots (slots bindings)
-  (dolist (slot slots)
-    (canonicalise-sement-hook (slot-hook slot) bindings))
-  slots)
-
-(defun canonicalise-sement-liszt (liszt bindings)
-  (dolist (ep liszt)
-    (canonicalise-sement-variable (rel-handel ep) bindings)
-    (dolist (fvp (rel-flist ep))
-      (let ((value (fvpair-value fvp)))
-	(when (var-p value) 
-	  (canonicalise-sement-variable value bindings)))))
-  liszt)
+;;; moved to basemrs.lisp
 
 
-(defun canonicalise-sement-variable (var bindings)
-  (let* ((var-id (var-id var))
-	 (replace-value (cdr (assoc var-id bindings))))
-    (when replace-value
-	(setf (var-id var) replace-value))))
-
-(defun canonicalise-sement-hcons-list (hcons-list bindings)
-  (dolist (hcons hcons-list)
-    (canonicalise-sement-variable
-     (hcons-scarg hcons) bindings)
-    (canonicalise-sement-variable
-     (hcons-outscpd hcons) bindings))
-  hcons-list)
-  
 ;;; Checking an entire parse
 ;;;
 ;;; The code is called on each edge in a chart

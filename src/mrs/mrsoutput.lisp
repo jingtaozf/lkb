@@ -65,6 +65,11 @@
 ;;;    hcons is a list - relationship is represented by the
 ;;;    type of the list element - two arguments, represented
 ;;;    by *sc-arg-feature* and *outscpd-feature*
+;;;
+;;;    also allow for isect case: where there's a modifier anchor
+;;;    consisting of a handle.index pair and a list of target pairs
+;;;    interpreted as a disjunction.
+;;;
 ;;;    anything else is ignored
 
 ;;; ********************************************************
@@ -133,6 +138,8 @@ duplicate variables")
          (liszt-fs (path-value fs *psoa-liszt-path*))
          (h-cons-fs (when *psoa-rh-cons-path*
                       (path-value fs *psoa-rh-cons-path*)))
+	 (a-cons-fs (when *psoa-a-cons-path*
+                      (path-value fs *psoa-a-cons-path*)))
          (psoa
           (unfill-mrs
            (make-psoa
@@ -143,15 +150,22 @@ duplicate variables")
                      ;; in handle-free mode, why should we hallucinate a dummy
                      ;; handle?  it will fail in mrs-equal-p(), at least, when
                      ;; compared to a structure serialized and read back in.
-                     ;;                                        (23-feb-05; oe)
-                     #+:null
-                     (create-new-handle-var *variable-generator*))
+		     ;;                                        (23-feb-05; oe)
+		     ;; this isn't really for handle-free mode! 
+		     ;; use hcons path as a test for whether we've 
+		     ;; got handles but don't have a top-h 
+		     ;; this was conspiring to cause mrscomp
+		     ;; grammar to fail to scope - aac - june 05
+                     (if *rel-handel-path*
+			 (create-new-handle-var *variable-generator*)))
             :index (when (is-valid-fs index-fs)
                      (create-variable index-fs *variable-generator*))
             :liszt (nreverse (construct-liszt 
                               liszt-fs nil *variable-generator*))
             :h-cons (nreverse (construct-h-cons 
-                               h-cons-fs nil *variable-generator*))))))
+                               h-cons-fs nil *variable-generator*))
+	    :a-cons (nreverse (construct-a-cons
+			       a-cons-fs nil *variable-generator*))))))
     (push (cons fs psoa) *all-nodes*)
     psoa))
 
@@ -469,20 +483,138 @@ duplicate variables")
 (defun create-constr-struct (fs variable-generator)
   (if (is-valid-fs fs)
       (let* ((label-list (fs-arcs fs))
-             (rel (create-hcons-relation (fs-type fs)))
-             (scarg (assoc  *sc-arg-feature* label-list))
-             (outscpd (assoc *outscpd-feature* label-list)))
-        (make-hcons 
-           :relation rel
-           :scarg (when scarg
-                    (create-variable (cdr scarg) variable-generator))
-           :outscpd (when outscpd
-                      (create-variable (cdr outscpd) variable-generator))))))
+	     (rel (create-hcons-relation (fs-type fs)))
+	     (scarg (assoc  *sc-arg-feature* label-list))
+	     (outscpd (assoc *outscpd-feature* label-list)))
+	(make-hcons 
+	 :relation rel
+	 :scarg (when scarg
+		  (create-variable (cdr scarg) variable-generator))
+	 :outscpd (when outscpd
+		    (create-variable (cdr outscpd) 
+				     variable-generator))))))
 
 (defun create-hcons-relation (type)
   (cond ((eql type *qeq-type*) "qeq")
         (t (error "Unknown relation type ~A"))))
 
+
+
+
+;;; *******************************************************
+;;;
+;;; ACONS (attachment constraints - experimental, for Berthold
+;;;
+;;; *******************************************************
+
+#|
+  ACONS - is a diff-list of structures 
+
+  [ isect-mod
+  MOD-ANC [ index-lbl-pair
+            INDEX index
+	    LTOP handle ]
+  TARGET-ANCS <! [ index-lbl-pair
+                   INDEX index
+                   LTOP handle ] ... !> ]
+
+in mrsglobals.lsp
+
+*mod-spec-type* - "isect-mod"
+  "the fs type associated with a modifier attachment relation"
+
+*mod-anc* - "mod-anc"
+  "the feature in the mod spec that leads to the modifier anchor")
+
+*target-ancs* - "target-ancs"
+"the feature in the mod spec that leads to the target list"
+
+the mod-anc is an index-lbl-pair - the target-ancs are a diff list of these
+
+*index-path* 
+
+*ltop-path*
+|#
+
+
+(defun construct-a-cons (fs constr-list variable-generator)
+  (if (is-valid-fs fs)
+      (let ((label-list (fs-arcs fs)))
+        (if label-list
+            (let ((first-part (assoc (car *first-path*)
+                                     label-list))
+                  (rest-part (assoc (car *rest-path*)
+                                    label-list)))
+              (if (and first-part rest-part)
+		  (let ((acons-str 
+			 (create-aconstr-struct
+			  (cdr first-part)
+			  variable-generator)))
+		    (when acons-str
+		      (push acons-str constr-list)
+		      (construct-a-cons
+		       (cdr rest-part)
+		       constr-list variable-generator)))
+                constr-list))
+          constr-list))))
+
+
+(defun create-aconstr-struct (fs variable-generator)  
+  (if (is-valid-fs fs)
+      (let ((label-list (fs-arcs fs))
+	    (cons-type (fs-type fs)))
+	(if (eql cons-type *mod-spec-type*)
+	    (let* ((mod-anc-fs (assoc *mod-anc* label-list))
+		   (mod-anc-struct 
+		    (create-index-lbl-pair (cdr mod-anc-fs) variable-generator))
+		   (target-anc-fs (path-value fs 
+					       *target-ancs-path*))
+		   (target-anc-list 
+		    (create-target-anc-list target-anc-fs 
+					    nil variable-generator)))
+	      (if (and mod-anc-struct target-anc-list)
+		  (make-disj-cons 
+		   :index-lbl mod-anc-struct
+		   :target target-anc-list)))))))
+
+(defun create-index-lbl-pair (fs variable-generator)
+  (if (is-valid-fs fs)
+      (let* ((label-list (fs-arcs fs))
+	     (index (assoc (car *index-path*) label-list))
+	     (lbl (assoc (car *ltop-path*) label-list)))
+	(if (and index lbl)
+	    (make-index-lbl 
+	     :index (create-variable (cdr index) variable-generator)
+	     :lbl (create-variable (cdr lbl) 
+				   variable-generator))))))
+
+(defun create-target-anc-list (fs constr-list variable-generator)
+  (if (is-valid-fs fs)
+      (let ((label-list (fs-arcs fs)))
+        (if label-list
+            (let ((first-part (assoc (car *first-path*)
+                                     label-list))
+                  (rest-part (assoc (car *rest-path*)
+                                    label-list)))
+              (if (and first-part rest-part)
+                  (progn
+                    (push (create-index-lbl-pair
+                           (cdr first-part)
+                           variable-generator)
+                          constr-list)
+                    (create-target-anc-list
+                     (cdr rest-part)
+                     constr-list variable-generator))
+                constr-list))
+          constr-list))))
+
+
+
+;;; ************************************************************
+;;;
+;;; Other bits
+;;;
+;;; ************************************************************
 
 (defun determine-variable-type (fs)
   (let ((type (create-type (fs-type fs))))

@@ -91,9 +91,12 @@
       (format stream "~%Unscoped form")
       (output-mrs1 mrsstruct 'indexed stream)
       (setf *canonical-bindings* nil)
-      (let ((binding-sets (make-scoped-mrs mrsstruct)))
-        (show-some-scoped-structures mrsstruct binding-sets
-                                     stream maximum)))))
+      (let ((disj-structs (disj-test-mrs mrsstruct)))
+	(loop for disj-struct in disj-structs
+	    do
+	      (let ((binding-sets (make-scoped-mrs disj-struct)))
+		(show-some-scoped-structures disj-struct binding-sets
+					     stream maximum)))))))
 
 
 ;;;

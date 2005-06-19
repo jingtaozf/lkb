@@ -1,10 +1,12 @@
 ;;; Copyright (c) 1998-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
 ;;; see licence.txt for conditions
 
-;;; code for coping with h-cons information
+;;; code for coping with h-cons and a-cons information
 ;;;
 
 (in-package "MRS")
+
+;;; qeq constraints
 
 (defvar *qeqs* nil)
 
@@ -253,4 +255,106 @@ scopes of quantifiers.
                  (return t))))
          (return t)))))
             
-        
+
+;;; **************************************************************
+;;;
+;;; outscopes constraints
+;;; 
+;;; **************************************************************
+
+;;; **************************************************************
+;;; disjunctive constraints
+;;;
+;;; **************************************************************
+
+#|
+
+A disjunctive constraint specifies a handle index pair such that
+h1.x1 has to be equated with one of h2.x2,h3.x3 ... hn.xn
+
+Complication is that we have to set the index value too.
+
+For initial testing purposes, try implementing this by resetting
+the index and handle values to each of the possibilities and
+then generating scoped forms as usual.
+
+(with-open-file (istream "foo.mrs" :direction :input)
+  (setf *foo* (car (read-mrs-stream istream)))
+  (let ((test-dc (make-disj-cons :index-lbl (make-index-lbl :index 202 :lbl 208)
+				 :target (list (make-index-lbl :index 2 :lbl 8)
+					       (make-index-lbl :index 4 :lbl 7)
+					       (make-index-lbl :index 9 :lbl 13)))))
+    (push test-dc (psoa-a-cons *foo*))
+    (dolist (mrs
+		(disj-test-mrs *foo*)))))
+;      (output-mrs1 mrs 'simple t))))
+|#
+
+
+(defstruct (possible-disj)
+  spec
+  target)
+
+(defun expand-disj-cons (disj-cons)
+  (let ((spec (disj-cons-index-lbl disj-cons)))
+    (loop for pair in (disj-cons-target disj-cons)
+	collect
+	  (make-possible-disj
+	   :spec spec
+	   :target pair))))
+
+(defun disj-test-mrs (mrs)
+  (let ((disj-cons (loop for acons-el in (basemrs-a-cons mrs)
+			 collect
+			 (expand-disj-cons acons-el))))
+    (if disj-cons
+	(let ((disj-cons-permutations (all-combinations disj-cons)))
+	  (loop for disj-cons-possibility in disj-cons-permutations
+	    nconc
+	    (let ((reset-mrs (reset-mrs-for-disj-cons 
+			      disj-cons-possibility mrs)))
+	      (if reset-mrs
+		  (list reset-mrs)))))
+      (list mrs))))
+
+(defun all-combinations (list-of-lists)
+  ;;; given e.g. '((a b) (1 2) (x y z)), this produces
+  ;;; ((a 1 x) (a 1 y) ... (b 2 z)
+  ;;; this is actually create-all-rel-sequences from
+  ;;; mrs/lexlookup.lisp, but copied here cos that may 
+  ;;; get specialised at some point (or indeed implemented sanely)
+  (if (null list-of-lists)
+      nil
+    (loop for el in (car list-of-lists)
+        nconc
+          (let ((combinations (all-combinations (cdr list-of-lists))))
+            (if combinations
+                (loop for combination in combinations
+                    collect (cons el combination))
+              (list (list el)))))))
+
+(defun reset-mrs-for-disj-cons (dclist mrs)
+  ;;; dclist is a list of possible-disj structures
+  ;;; all of which must be applied
+  (setf mrs (copy-psoa-completely mrs))
+  (dolist (pd dclist)
+    (let* ((spec (possible-disj-spec pd))
+	   (target (possible-disj-target pd))
+	   (old-index (var-id (index-lbl-index spec)))
+	   (old-handle (var-id (index-lbl-lbl spec)))
+	   (new-index (var-id (index-lbl-index target)))
+	   (new-handle (var-id (index-lbl-lbl target)))
+	   (bindings (list (cons old-index new-index)
+			   (cons old-handle new-handle))))
+      (canonicalise-basemrs-variable (psoa-index mrs)
+				     bindings)
+      (canonicalise-basemrs-variable (psoa-top-h mrs)
+				     bindings)
+      (canonicalise-basemrs-liszt (basemrs-liszt mrs)
+				  bindings)
+      (canonicalise-basemrs-hcons-list
+       (basemrs-h-cons mrs)
+       bindings)))
+  mrs)
+	  
+
