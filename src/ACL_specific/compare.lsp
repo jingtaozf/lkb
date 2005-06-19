@@ -753,6 +753,7 @@
                     '("No" :value no :active t)
                     '("Enlarged Tree" :value show)
                     (list "MRS" :value 'mrs :active mrsp)
+		    (list "RMRS" :value 'rmrs :active mrsp)
                     (list "Indexed MRS" :value 'indexed :active mrsp)
                     (list "Scoped MRS" :value 'scoped :active mrsp)
                     (list "Dependencies" :value 'dependencies :active mrsp)
@@ -800,6 +801,9 @@
             (mrs
              (when edge
                (ignore-errors (funcall 'show-mrs-window edge))))
+	    (rmrs 
+	     (when edge
+	       (ignore-errors (funcall 'show-mrs-rmrs-window edge))))
             (indexed
              (when edge
                (ignore-errors (funcall 'show-mrs-indexed-window edge))))

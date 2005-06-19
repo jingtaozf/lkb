@@ -356,6 +356,7 @@
             ;; funcall avoids undefined function warnings
             (generate (funcall 'really-generate-from-edge (prtree-edge tree)))
             (mrs (funcall 'show-mrs-window (prtree-edge tree)))
+	    (rmrs (funcall 'show-mrs-window (prtree-edge tree)))
             (indexed (funcall 'show-mrs-indexed-window (prtree-edge tree)))
             (prolog (funcall 'show-mrs-prolog-window (prtree-edge tree)))
             (scoped (funcall 'show-mrs-scoped-window (prtree-edge tree)))
