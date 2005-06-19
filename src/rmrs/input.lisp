@@ -99,7 +99,10 @@
              (eql (second tag) '|cfrom|)
              (eql (fourth tag) '|cto|)
              (or (not (sixth tag)) 
-                 (eql (sixth tag) '|surface|)))
+                 (eql (sixth tag) '|surface|))
+	     (or (not (eighth tag)) 
+                 (eql (eighth tag) '|base|)))
+      ;;; base is allowed but ignored
       (error "Malformed ep ~A" content))
     (setf body (loop for x in body
 		   unless (xml-whitespace-string-p x)
