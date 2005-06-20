@@ -250,8 +250,7 @@
 		   (parse-namestring (system:getenv "TEMP"))))))))
 		  
      (when (and (pathnamep tmp) (ignore-errors (directory tmp))) tmp))
-  (let ((pathname #-(and :mcl (not :openmcl)) (user-homedir-pathname)
-                  #+(and :mcl (not :openmcl)) (ccl::findfolder #$kOnSystemDisk #$kCurrentUserFolderType))
+  (let ((pathname (user-homedir-pathname))
         (tmp-dir #-:mcl '("tmp")
                  #+:mcl '("Documents" "tmp")))
     (make-pathname

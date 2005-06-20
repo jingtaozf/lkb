@@ -29,30 +29,6 @@
   (pushnew :ansi-eval-when *features*))
 
 
-;;;
-;;; Such that (user-homedir-pathname) will return just the drive MCL is on.
-;;;
-
-(setf ccl::*user-homedir-pathname*
-      (make-pathname
-       :directory (subseq (pathname-directory (mac-default-directory)) 0 2)))
-
-;;;
-;;; load the portable defsystem() from CMU
-;;;
-
-#-:mk-defsystem
-(load (make-pathname :directory general-dir :name "defsystem"))
-
-(in-package "MAKE")
-
-(defparameter %binary-dir-name% 
-  ".masl")
-
-(defparameter %system-binaries%
-  "mac")
-
-
 ;;; Aliases for multiprocessing functions
 
 (defpackage :mp (:use "COMMON-LISP")
@@ -81,12 +57,25 @@
   (setf (symbol-function 'process-revoke-arrest-reason) 
         (symbol-function 'ccl:process-disable-arrest-reason)))
 
+(in-package :cl-user)
+
+
+;;;
+;;; load the portable defsystem() from CMU
+;;;
+
+#-:mk-defsystem
+(load (make-pathname :directory general-dir :name "defsystem"))
+
+(in-package "MAKE")
+
+(defparameter %binary-dir-name% 
+  ".masl")
+
+(defparameter %system-binaries%
+  "mac")
 
 ;;; Unix system functions not in MCL -- simulate them
-
-(defpackage :system (:nicknames "SYS") (:use "COMMON-LISP")
-   (:export "USER-NAME" "GETENV"))
-(in-package :system)
 
 (eval-when (:execute :load-toplevel :compile-toplevel)
   (setf (symbol-function 'user-name) 
@@ -95,9 +84,27 @@
         (symbol-function 'ccl:false)))
 
 
+;;; User's home directory pathname (i.e. ~/) -- user-homedir-pathname
+;;; doesn't return anything useful by default
+
+(in-package :ccl)
+
+(let ((*warn-if-redefine-kernel* nil))
+(defun user-homedir-pathname (&optional host)
+   (declare (ignore host)) 
+   (ccl::findfolder #$kOnSystemDisk #$kCurrentUserFolderType))
+)
+
+
 ;;; Set preferred memory allocation for saved images (400MB)
 
 (ccl::set-preferred-size-resource (* 400 1024 1024))
+
+
+;;; Fix so that linefeed is taken to end a comment, as well as newline
+;;; (default for newline is CR on Mac, c.f. LF on unix).
+
+(setq ccl::*linefeed-equals-newline* t)
 
 
 ;;; Modify the behaviour of read-line so that the #\linefeed character
@@ -145,11 +152,39 @@
       (aref ccl::*format-char-table* (char-code #\Return)))
 
 
-;;; ccl::*do-unix-hack* fixes the comment reader to also understand linefeeds
-;;; as line terminators for opening a text file for editing in Fred.
+;;; ccl::*do-unix-hack* fixes Fred to try to deduce whether a file
+;;; uses #\linefeed as EOL and if Fred so decides, it will convert
+;;; #\linefeed to #\return in the Fred buffer so a person can read it. If the file
+;;; is written, the substitution will be reversed.
 ;;;
 ;;; (N.B. There is also a Fred command c-x c-f that changes the line endings
-;;; for the whole buffer from #\Linefeed to #\Newline. Thus a person using
-;;; Fred can at least read Mac OS X files with unix line conventions)
+;;; for the buffer from #\Linefeed to #\Newline)
 
 (setq ccl::*do-unix-hack* t)
+
+
+;;; More OS X-like behaviour
+
+; track scroll in Fred (text editor and listener) windows
+(setq *fred-track-thumb-p* t)
+
+; standard OSX application switch behaviour for windows
+(setq ccl:*dont-bring-all-windows-front* t)
+
+; execute all becomes command-option-E (was command-H)
+(set-command-key ccl::*execute-item* '(:option #\E))
+
+; command-H hides application
+(ccl::set-hide-command-key :modifier nil)
+
+; command-option-H does "Hide Others" like e.g. BBEdit
+(ccl::set-hide-command-key :others t :modifier :option)
+
+; keep window control buttons active on inactive windows (standard OSX)
+(setq ccl:*disable-bubbles-on-inactive-windows* nil)
+
+
+;;; Use more CPU than only around 50% when in background
+
+(setq ccl:*background-sleep-ticks* nil) 
+

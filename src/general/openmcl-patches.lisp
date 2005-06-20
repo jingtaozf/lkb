@@ -32,13 +32,6 @@
 (pushnew :linux *features*)
 
 ;;;
-;;; such that (user-homedir-pathname) will return just the drive MCL is on.
-;;;
-(setf ccl::*user-homedir-pathname*
-  (make-pathname
-   :directory (subseq (pathname-directory (mac-default-directory)) 0 2)))
-
-;;;
 ;;; load the portable defsystem() from CMU
 ;;;
 #-:mk-defsystem
@@ -62,6 +55,8 @@
 (defparameter %system-binaries% 
   #+(and :powerpc :linux) "linux.ppc.32"
   #+(and :powerpc :darwin) "macos.ppc.32")
+
+(in-package :cl-user)
 
 ;;;
 ;;; the Allegro CL style run-shell-command() (since acl is home sweet home):
@@ -139,3 +134,6 @@
     (symbol-function 'ccl:remote-port))
   (setf (symbol-function 'ipaddr-to-hostname) 
     (symbol-function 'ccl:ipaddr-to-hostname)))
+
+(in-package :cl-user)
+
