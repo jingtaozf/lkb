@@ -56,4 +56,6 @@
    endcopy
    
    sql-error
+   
+   set-client-encoding
    )) 

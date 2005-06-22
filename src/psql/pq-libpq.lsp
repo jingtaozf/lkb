@@ -3,6 +3,9 @@
 ;;;   see `licence.txt' for conditions.
 
 ;; interface to libpq (PostgreSQL version 7.4)
+;;  for libpq documentation see the chapter "libpq - C Library"
+;;  in the PostgreSQL manual
+
 
 (in-package :pq)
 
@@ -83,13 +86,14 @@
   :returning PGconn
   :strings-convert t)
 
-;; PQsetdbLogin (use PQconnectdb instead)
+;; PQsetdbLogin obsolete
 ;; PQsetdb obsolete
 
 ;(def-foreign-call (connect-start "PQconnectStart")
 ;    ((conninfo (* :char)))
 ;  :returning PGconn)
 
+;; PQconnectStart unused
 ;; PQconnectPoll unused
 ;; PQconndefaults unused
 
@@ -155,6 +159,11 @@
     ((conn (* PGconn)))
   :returning :int)
 
+;;-7.4
+(def-foreign-call (server-version "PQserverVersion")
+    ((conn (* PGconn)))
+  :returning :int)
+
 (def-foreign-call (error-message "PQerrorMessage")
     ((conn (* PGconn)))
   :returning ((* :char)))
@@ -171,6 +180,8 @@
 
 ;; COMMAND EXECUTION FUNCTIONS
 
+;; MAIN FUNCTIONS
+
 ;; may return null pointer (treat as PGRES_FATAL_ERROR)
 ;; returns result of last command
 (def-foreign-call (exec "PQexec")
@@ -180,6 +191,8 @@
 
 ;;-7.3
 ;; PQexecParams unused
+;;-7.3
+;; PQprepare
 ;;-7.3
 ;; PQexecPrepared unused
 
@@ -323,19 +336,32 @@
 ;;PQisnonblocking not used
 ;;PQflush not used
 
+;; CANCELLING QUERIES IN PROGRESS
+
+;;-7.4
+;;PQgetCancel
+;;-7.4
+;;PQfreeCancel
+;;-7.4
+;;PQcancel
+;;-7.4
+;;PQrequestCancel
+
 ;; THE FAST-PATH INTERFACE
 
 ;; PQfn obsolete
 
 ;; ASYNCHRONOUS NOTIFICATION
 
-;; PQnotifies unused
+;; PQnotify unused
 
 ;; FUNCTIONS ASSOCIATED WITH THE COPY COMMAND
 
 ;; (already defined)
 ;; PQnfields
 ;; PQbinarytuples
+;;-7.4
+;;PGfformat
 
 ;; FUNCTIONS FOR SENDING COPY DATA
 
@@ -451,3 +477,21 @@
 
 ;; hostname:port:database:username:password
 
+;; CHARACTER SET SUPPORT
+
+;;8.0
+
+(def-foreign-call (set-client-encoding "PQsetClientEncoding")
+    ((conn (* PGconn)) (encoding (* :char)))
+  :returning :int
+  :strings-convert t)
+
+(def-foreign-call (client-encoding "PQsetClientEncoding")
+    ((conn (* PGconn)))
+  :returning :int
+  :strings-convert t)
+
+(def-foreign-call (pg-encoding-to-char "pg_encoding_to_char")
+    ((encoding-id :int))
+  :returning ((* :char))
+  :strings-convert t)

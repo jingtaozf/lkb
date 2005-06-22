@@ -7,6 +7,8 @@
 (defvar *lexdb* nil)
 ;;(def-lkb-parameter *lexdb-params* nil :user) ;; see main/globals.lsp
 
+(defvar *lexdb-locale* (excl::find-locale "C.utf8"))
+
 (defvar *psql-database-connect-timeout* 30)
 (defvar *psql-database-port* 5432)
 

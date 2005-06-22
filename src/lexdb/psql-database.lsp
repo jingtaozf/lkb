@@ -8,6 +8,10 @@
 ;;; --- psql-database methods
 ;;;
 
+(defmacro with-lexdb-locale (&body body)
+  `(let ((excl::*locale* *lexdb-locale*))
+     ,@body))
+  
 (defmethod connect ((lexicon psql-database)) 
   (disconnect lexicon)
   (do ((conn (connect-aux lexicon)
@@ -59,8 +63,22 @@
 	   (format nil "user=~a " (sql-embedded-text user))
 	   (and password 
 		(format nil "password=~a" (sql-embedded-text password))))))
+      (unless (check-libpq-protocol-version connection)
+	(disconnect lexicon))
+      (pq:set-client-encoding connection "UNICODE")
       (when (connection-ok lexicon)
 	t))))
+
+(defparameter *lexdb-libpq-protocol-supported* 3)
+(defun check-libpq-protocol-version (connection)
+  (let ((version (pq:protocol-version connection)))
+    (cond
+     ((= version *lexdb-libpq-protocol-supported*)
+      t)
+     (t
+      (finish-db connection)
+      (format t "~&unsupported libpq protocol (~a)" version)
+      nil))))
 
 (defmethod disconnect ((lexicon psql-database))
   (with-slots (connection) lexicon
@@ -193,6 +211,7 @@
 ;;; defuns
 ;;;
 
+;; fix_me: use pq:escape-string
 (defun sql-embedded-text (str)
   (format nil "'~a'" (sql-embedded-text-aux str)))
 
@@ -232,7 +251,9 @@
 	 (cols (and col 
 		    (loop
 			for c below nfields
-			collect (2-kw (pq:fname result c)))))
+			collect (2-kw 
+				 (with-lexdb-locale (pq:fname result c))
+				 ))))
 	 (ntuples (pq:ntuples result))
 	 (recs (loop
 		   for r below ntuples
@@ -240,14 +261,15 @@
 		     (loop
 			 for c below nfields
 			 collect
-			   (pq:getvalue result r c)))))
+			   (with-lexdb-locale (pq:getvalue result r c))
+			   ))))
     (list recs cols)))
 
 (defun 2-kw (str)
   (intern (string-upcase str) :keyword))
 
 (defun execute (conn sql-str &key com tup out in)
-  (let* ((result (pq:exec conn sql-str))
+  (let* ((result (with-lexdb-locale (pq:exec conn sql-str)))
 	 (status-kw (result-status-kw result)))
     (unwind-protect
 	(case status-kw
@@ -273,11 +295,11 @@
 	   (setf in (cdr in))	     
 	   )
 	  (:PGRES_NON_FATAL_ERROR
-	   (let ((error-message (pq:result-error-message result)))
+	   (let ((error-message (with-lexdb-locale (pq:result-error-message result))))
 	     (format t "~%WARNING: (pgres error) ~a" error-message))
 	   nil)
 	  (:PGRES_FATAL_ERROR
-	   (let ((error-message (pq:result-error-message result)))
+	   (let ((error-message (with-lexdb-locale (pq:result-error-message result))))
 	     (format t "~%PSQL ~a" error-message)
 	     (throw :sql-error (cons status-kw error-message))))
 	  (t
@@ -293,7 +315,7 @@
   (endcopy conn))
 
 (defun putline (conn line)
-  (unless (= 0 (pq:putline conn (format nil "~a~%" line)))
+  (unless (= 0 (with-lexdb-locale (pq:putline conn (format nil "~a~%" line))))
     ;; fix_me
     ;;(format t "~%PSQL ~a" error-message)
     (throw :sql-error (cons :putline "unable to send string")))) 
@@ -323,7 +345,7 @@
 (defun getline (conn c-str len)
   (loop
       for i = (pq:getline conn c-str len)
-      for line = (concatenate 'string line (ff::native-to-string c-str))
+      for line = (concatenate 'string line (with-lexdb-locale (ff::native-to-string c-str)))
       while (= i 1)
       finally (return line)))
 
@@ -345,9 +367,12 @@
   (equal (conn-status-kw (connection lexicon)) :CONNECTION_OK))
 
 (defun error-msg (conn)
-  (pq:error-message conn))
+  (with-lexdb-locale (pq:error-message conn)))
 
 (defun connect-db (conninfo)
+  (with-lexdb-locale (connect-db2 conninfo)))
+
+(defun connect-db2 (conninfo)
   (handler-case
       (pq:connectdb conninfo)
     (simple-error () (error "PostgreSQL functionality not available~% (perhaps load libpq.so?)"))))
