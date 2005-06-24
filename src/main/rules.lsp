@@ -653,10 +653,10 @@
 		     ;; lex/morph rules have single daughter
 		     (let ((feeder (assoc i revindex-lrules)))
 		       (if feeder
-		       (push feeder (rule-feeders v))
-		       (format t "~&Warning: Non-lexical rule ~a potentially feeds lexical rule ~a" 
-			       (rule-id (cdr (assoc i revindex-rules))) (rule-id v))
-		       )))))
+			   (push feeder (rule-feeders v))
+			 (format t "~&Warning: Non-lexical rule ~a potentially feeds lexical rule ~a" 
+				 (rule-id (cdr (assoc i revindex-rules))) (rule-id v))
+			 )))))
 	     *lexical-rules*)
 ;;; e.g., A can feed B, B can feed C, C can feed D, A can feed C
 ;;; rule-feeders of A - nil
@@ -775,13 +775,12 @@ and D can feed B (so there's a cycle)
 		 (declare (ignore k))
 		 (push v rule-list))
 	     *lexical-rules*)
-    (format stream "~%Specified feeding relationships~% Descendant      Mother")
-    ;;; FIX - can't remember how to tab!
+    (format stream "~%Specified feeding relationships~% Descendant~10,10@TMother")
     (dolist (rule1 rule-list)
       (dolist (rule2 rule-list)
 	(let ((feeds (check-lrfsm rule2 rule1)))
 	  (when feeds
-	    (format stream "~% ~A ~A" 
+	    (format stream "~% ~A~1,10@T~A" 
 		    (rule-id rule1) (rule-id rule2))))))))
 
 
