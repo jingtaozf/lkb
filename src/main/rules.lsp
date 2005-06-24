@@ -1,4 +1,4 @@
-;;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; Copyright (c) 1991-2005 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron
 ;;; see licence.txt for conditions
 
 
@@ -24,9 +24,8 @@
 ;;; unifications etc.  
 ;;; All rules have a mother and one or more daughters 
 ;;; lexical rules are special only in that they may 
-;;; a) have associated spelling changes (morphological rules)
-;;; b) apply `before' morphological rules
-;;; 
+;;; have associated spelling changes (morphological rules)
+
 
 (defvar *rules* (make-hash-table :test #'eq))
 
@@ -71,7 +70,6 @@
   head
   orthographemicp)
   
-;;bmw
 (defmethod print-object ((inst rule) stream)
   (format stream "#[rule ~S ~:[~;o~]]" 
 	  (rule-id inst)
@@ -404,7 +402,7 @@
 ;;;
 ;;; aliases PLUR_NOUN alias
 ;;;
-;;; and more sensibly we also have the lexdb (FIX - confirm this?)
+;;; and more sensibly we should also have the lexdb (TODO)
 ;;; 
 ;;; load-irregular-spellings  is in utils.lsp
 ;;; this calls read-irreg-form-strings (below)
@@ -450,7 +448,7 @@
   ;;; if *irregular-forms-only-p*  is set this will
   ;;; remove anything from the regular morphology results which corresponds
   ;;; to the application of a rule to a stem corresponding to one of 
-  ;;; the irregular forms (i.e. we won't parse `eated' or `dreamed'
+  ;;; the regular forms (i.e. we won't parse `eated' or `dreamed'
   ;;; unless these are added specifically to the irregular forms)
   (if *irregular-forms-only-p* 
       (loop for reg in reg-list
@@ -535,9 +533,11 @@
 ;;;
 ;;; **************************************************************
 
-;;; the rule-filter is implemented by associating an array with each rule
-;;; with one diminsion being the number of daughters and the other dimension
-;;; corresponding to an index for each rule.   
+;;; eg. see paper http://www.aclweb.org/anthology/P99-1061
+
+;;; the rule-filter is implemented by associating an array with each rule with 
+;;; - the first dimension corresponding to an index for each rule
+;;; - the second dimension corresponding to an index for each daughter
 
 (defun build-rule-filter nil
   (unless (find :vanilla *features*)
@@ -572,10 +572,11 @@
                 do
                   (with-unification-context (ignore)
                     (when
+			;;test-tdfs in dtr posn compatible with rule-tdfs
                         (yadu rule-tdfs
                               (create-temp-parsing-tdfs
                                (if (eq test-tdfs rule-tdfs)
-                                 (copy-tdfs-completely test-tdfs)
+				   (copy-tdfs-completely test-tdfs)
                                  test-tdfs)
                                dtr))
                       (setf (aref filter test-index arg) t))))))
@@ -624,7 +625,8 @@
 
 (defun build-lrfsm nil
   (let ((lrlist nil)
-	(revindex nil)
+	(revindex-lrules nil)
+	(revindex-rules nil)
 	(nrules nil))
     (setf *spelling-rule-feed-cache* nil)
     (setf *cyclic-lr-list* nil)
@@ -636,17 +638,25 @@
 		 (setf (rule-lrfsm v) 
 		   (make-array (list nrules) :initial-element :unk)) 
 		 (push v lrlist)
-		 (push (cons (rule-apply-index v) v) revindex))
+		 (push (cons (rule-apply-index v) v) revindex-lrules))
 	     *lexical-rules*)
+    (maphash #'(lambda (k v)
+		 (declare (ignore k))
+		 (push (cons (rule-apply-index v) v) revindex-rules))
+	     *rules*)
     (maphash #'(lambda (k v)
 		 (declare (ignore k))
 		 ;;; looking at rule v, rules which feed it can be
 		 ;;; found
 		 (dotimes (i nrules)
-		   (when 
-		       (aref (rule-apply-filter v) i 0)
-		     (push (assoc i revindex)
-			   (rule-feeders v)))))
+		   (when (aref (rule-apply-filter v) i 0)
+		     ;; lex/morph rules have single daughter
+		     (let ((feeder (assoc i revindex-lrules)))
+		       (if feeder
+		       (push feeder (rule-feeders v))
+		       (format t "~&Warning: Non-lexical rule ~a potentially feeds lexical rule ~a" 
+			       (rule-id (cdr (assoc i revindex-rules))) (rule-id v))
+		       )))))
 	     *lexical-rules*)
 ;;; e.g., A can feed B, B can feed C, C can feed D, A can feed C
 ;;; rule-feeders of A - nil
@@ -689,28 +699,7 @@ and D can feed B (so there's a cycle)
       (let ((lrfsm (rule-lrfsm lr))
 	    (todo nil))
 	(dolist (feeder feeders)
-	  (let ((frule (cdr feeder))
-		(fnum (car feeder)))
-	    	;;; set the feeder index
-	    (setf (aref lrfsm fnum) t)
-	    (if (member frule in-progress)
-		;; we're in a cycle, so the feeder fsm isn't complete
-		;; stop, but record we're not done
-		(progn
-		  (pushnew frule *cyclic-lr-list*)
-		  (push feeder todo))
-	    ;; otherwise find the feeder fsm, recursing if necessary
-	      (progn 
-		(build-lrfsm-aux frule nil nrules 
-				 (cons lr in-progress))
-		;; propagate the feeder values
-		(dotimes (i nrules)
-		  (when (eql (aref (rule-lrfsm frule) i) t)
-		    (setf (aref lrfsm i) t)))
-		;; if there's a cycle further back, record we're
-		;; not done
-		(unless (eql (rule-feeders frule) :done)
-		  (push feeder todo))))))
+	  (build-lrfsm-aux-process-feeders feeder lrfsm nrules in-progress todo lr))
 	(if todo
 	    (setf (rule-feeders lr) todo)
 	  ;;; we've found a cycle in the feeders, so we can't complete yet
@@ -722,6 +711,31 @@ and D can feed B (so there's a cycle)
     (when remainder 
       (build-lrfsm-aux (car remainder)
 		       (cdr remainder) nrules nil))))
+    
+(defun build-lrfsm-aux-process-feeders (feeder lrfsm nrules in-progress todo lr)    
+    (let ((frule (cdr feeder))
+	  (fnum (car feeder)))
+	    	;;; set the feeder index
+      (setf (aref lrfsm fnum) t)
+      (if (member frule in-progress)
+	  ;; we're in a cycle, so the feeder fsm isn't complete
+	  ;; stop, but record we're not done
+	  (progn
+	    (pushnew frule *cyclic-lr-list*)
+	    (push feeder todo))
+	;; otherwise find the feeder fsm, recursing if necessary
+	(progn 
+	  (build-lrfsm-aux frule nil nrules 
+			   (cons lr in-progress))
+	  ;; propagate the feeder values
+	  (dotimes (i nrules)
+	    (when (eql (aref (rule-lrfsm frule) i) t)
+	      (setf (aref lrfsm i) t)
+	      ))
+	  ;; if there's a cycle further back, record we're
+	  ;; not done
+	  (unless (eql (rule-feeders frule) :done)
+	    (push feeder todo))))))
 
 (defun complete-lrfsm (lr nrules)
   ;;; go through the cases we haven't been able to complete because
