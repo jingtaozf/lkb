@@ -63,10 +63,10 @@
 	   (format nil "user=~a " (sql-embedded-text user))
 	   (and password 
 		(format nil "password=~a" (sql-embedded-text password))))))
-      (unless (check-libpq-protocol-version connection)
-	(disconnect lexicon))
-      (pq:set-client-encoding connection "UNICODE")
       (when (connection-ok lexicon)
+	(unless (check-libpq-protocol-version connection)
+	  (disconnect lexicon))
+	(pq:set-client-encoding connection "UNICODE")
 	t))))
 
 (defparameter *lexdb-libpq-protocol-supported* 3)
