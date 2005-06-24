@@ -223,7 +223,7 @@
                     (window-close (view-container item))))
              prompt-init-items)))
     (let ((loop-return 
-           (loop (event-dispatch)          
+           (loop (event-dispatch) (sleep 0.2)
                  (when (null (wptr request-dialog)) 
                    (if return-values 
                      (return return-values)
@@ -328,7 +328,7 @@
               :close-box-p nil
               :view-subviews
               (nreverse buttons)))
-      (loop (event-dispatch)         ; process other guff 
+      (loop (event-dispatch) (sleep 0.2)        ; process other guff 
             (when (null (wptr request-dialog)) 
               (if return-value 
                 (return (read-from-string return-value))
