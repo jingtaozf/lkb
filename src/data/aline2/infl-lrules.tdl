@@ -6,6 +6,7 @@
 %(letter-set (!s abcdefghijklmnopqrtuvwxyz))
 %(letter-set (!t bcdfghjklmnpqrstvwxz))
 %(letter-set (!a abcdefghijklmnopqrstuvwxyz))
+%(letter-set (!v aeiou))
 
 
 pl-n-irule :=
@@ -122,7 +123,6 @@ lrule-infl &
 				NUMBER-ARGS #na,
 				PERMUTED-ARGS #na],
 		  ACTIVE3 #active3]]].
-
 
 prprt-v-irule :=
 %suffix (!t!v!c !t!v!c!cing) (* ing) (e ing) (ie ying)

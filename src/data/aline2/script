@@ -1,3 +1,5 @@
+;; THIS GRAMMAR IS BROKEN
+
 (lkb-load-lisp (this-directory) "globals.lsp")
 #+mrs(lkb-load-lisp (this-directory) "mrs-globals-ygg.lisp")
 (lkb-load-lisp (this-directory) "user-fns.lsp")
