@@ -6,7 +6,6 @@
 %(letter-set (!t bcdfghjklmnpqrstvwxz))
 %(letter-set (!v aeiou))
 %(letter-set (!. abcdefghijklmnopqrstuvwxyz))
-%(letter-set (!b \!))
 
 null-irule :=
 word &
@@ -71,7 +70,7 @@ punct-word &
   ARGS < [ PUNCT no-punct ] > ].  
 
 punct-bang-irule :=
-%suffix (!. !.!b)
+%suffix (!. !.\\!)
 punct-word &
 [ PUNCT colon-punct,
   ARGS < [ PUNCT no-punct ] > ].  

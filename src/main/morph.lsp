@@ -98,7 +98,7 @@
     (cond
      ((eql form :eof) (error "~%Incomplete letter set"))
      ((not (listp form)) 
-      (error "~%Illformed morphological specification ~S: letter set expected" string-thing))
+      (error "~%Illformed morphological specification ~S" string-thing))
      ((eql (car form) 'letter-set)
       (push
        (create-letter-set (second form)) 
@@ -107,7 +107,7 @@
       (push
        (create-letter-wild-card (second form)) 
        *letter-wild-card-list*))
-     (t (error "~%Illformed morphological specification ~S: letter set expected" string-thing)))))
+     (t (error "~%Illformed morphological specification ~S" string-thing)))))
 
 (defun read-morphology-affix (id istream)
   ;;; e.g., %suffix (!s !ss) (!ss !ssses) (ss sses)
@@ -162,10 +162,11 @@
   (let* ((set (car new-rule))
 	 (rule-name (coerce (string set) 'list))
 	 (rule-set (second new-rule)))
-    (unless (and (eql (car rule-name) #\!) 
-		 (not (cddr rule-name)))
-      (error "~%letter-set does not correspond to a single character ~A"
-	     new-rule))
+    (unless (and (eql (car rule-name) *letter-set-character-set-char*) 
+		 (null (third rule-name)))
+      (error "letter-set should be written as ~a~a not ~a~a"
+	     *letter-set-character-set-char* (second rule-name)
+	     (car rule-name) (coerce (cdr rule-name) 'string)))
     (make-letter-set :var set
 		     :char (second rule-name)
 		     :letters (coerce (string rule-set) 'list))))
@@ -175,10 +176,11 @@
   (let* ((set (car new-rule))
 	 (rule-name (coerce (string set) 'list))
 	 (rule-set (second new-rule)))
-    (unless (and (eql (car rule-name) #\?) 
-		 (not (cddr rule-name)))
-      (error "~%wild-card does not correspond to a single character ~A"
-	     new-rule))
+    (unless (and (eql (car rule-name) *letter-set-wild-card-char*) 
+		 (null (third rule-name)))
+      (error "wild-card should be written as ~a~a not ~a~a"
+	     *letter-set-wild-card-char* (second rule-name)
+	     (car rule-name) (coerce (cdr rule-name) 'string)))
     (make-letter-wild-card 
 		     :char (second rule-name)
 		     :letters (coerce (string rule-set) 'list))))
