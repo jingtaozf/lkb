@@ -24,12 +24,20 @@
 ;;;
 ;;; FIX - support old LKB format too - not that important
 
+(defparameter *letter-set-escape-char* #\\)
+(defparameter *letter-set-null-char* #\*)
+(defparameter *letter-set-character-set-char* #\!)
+(defparameter *letter-set-wild-card-char* #\?)
+
 (defstruct letter-set 
   var char letters)
 ;;; e.g., %(letter-set (!c bdfglmnprstz))
 ;;; goes to var !c, char #\c, and letters (#\b #\d etc)
 ;;; var is used in order to have a relatively readable way of associating
 ;;; a binding with a letter set.
+
+(defmethod print-object ((x letter-set) stream)
+  (format stream "#[letter-set ~a]" (letter-set-var x)))
 
 (defstruct letter-wild-card
   char letters)
@@ -243,24 +251,46 @@
       (unless chars (return nil))
       (let ((char (car chars)))
 	(setf chars (cdr chars))
-	(cond ((char-equal char #\*) nil)
-	      ((char-equal char #\!) 
-	       (let ((char-set (find (car chars)
-				     l-set :key #'letter-set-char)))
-		 (unless char-set
-		   (error "~%undefined character set ~A" (car chars)))
-		 (push char-set new-spec)
-		 (setf chars (cdr chars))))
-	      ((char-equal char #\?) 
-	       (let ((char-set (find (car chars)
-				     w-set :key #'letter-wild-card-char)))
-		 (unless char-set
-		   (error "~%undefined wild card ~A" (car chars)))
-		 (push char-set new-spec)
-		 (setf chars (cdr chars))))
-	      (t (push char new-spec)))))
+	(cond 
+	 ;; escape character
+	 ((char-equal char *letter-set-escape-char*)
+	  (setf char (car chars))
+	  (setf chars (cdr chars))
+	  (if (null char)
+	      (error "nothings following escape character '~a' in '~a'"
+		     *letter-set-escape-char* affix-spec))
+	  (push char new-spec))
+	 ;; null character
+	 ((char-equal char *letter-set-null-char*) nil)
+	 ;; letter-set variable
+	 ((char-equal char *letter-set-character-set-char*) 
+	  (setf char (car chars))
+	  (setf chars (cdr chars))
+	  (if (null char)
+	      (error "nothings following character set character '~a' in '~a'"
+		     *letter-set-character-set-char* affix-spec))
+	  (let ((char-set (find char
+				l-set :key #'letter-set-char)))
+	    (unless char-set
+	      (error "~%undefined character set ~a~A in '~a'" 
+		     *letter-set-character-set-char* char affix-spec))
+	    (push char-set new-spec)))
+	 ;; wild card
+	 ((char-equal char *letter-set-wild-card-char*) 
+	  (setf char (car chars))
+	  (setf chars (cdr chars))
+	  (if (null char)
+	      (error "nothings following wild card character '~a' in '~a'"
+		     *letter-set-wild-card-char* affix-spec))
+	  (let ((char-set (find char
+				w-set :key #'letter-wild-card-char)))
+	    (unless char-set
+	      (error "~%undefined wild card ~a~A in '~a'" 
+		     *letter-set-wild-card-char* char affix-spec))
+	    (push char-set new-spec)))
+	 (t (push char new-spec)))))
     (nreverse new-spec)))
-	  
+
 
 (defun expand-morph-subrules (surface underlying surface-wild underlying-wild
 			      class)

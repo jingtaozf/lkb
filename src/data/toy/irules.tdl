@@ -47,7 +47,7 @@ punct-word &
   ARGS < [ PUNCT no-punct ] > ].  
 
 punct-qmark-irule :=
-%suffix (!. !.?)
+%suffix (!. !.\\?)
 punct-word &
 [ PUNCT qmark-punct,
   ARGS < [ PUNCT no-punct ] > ].  
