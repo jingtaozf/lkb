@@ -1281,7 +1281,8 @@
                      (or path "/lingo/oe/tmp") (directory2file data))
       with lkb::*chart-packing-p* = nil
       with *reconstruct-cache* = (make-hash-table :test #'eql)
-      with items = (analyze data :thorough '(:derivation) :condition condition)
+      with items = (analyze
+                    data :thorough '(:derivation :mrs) :condition condition)
       with increment = (when (and meter items)
                          (/ (- (get-field :end meter) (get-field :start meter))
                             (length items) 1))
@@ -1411,11 +1412,14 @@
                         (+ parse-id offset)
                         result-id))
                      tree))
-      for dag = (and edge (lkb::tdfs-indef (lkb::edge-dag edge)))
-      for mrs = (and edge (mrs::extract-mrs edge))
+      for dag = (and edge (let ((tdfs (lkb::edge-dag edge)))
+                            (and (lkb::tdfs-p tdfs)
+                                 (lkb::tdfs-indef tdfs))))
+      for mrs = (or (get-field :mrs result)
+                    (and edge (mrs::extract-mrs edge)))
       for ident = (format nil "~a @ ~a~@[ @ ~a~]" i-id result-id i-comment)
       when (zerop (mod i 100)) do (clrhash *reconstruct-cache*)
-      when dag do
+      when (or dag mrs) do
         (format 
          stream 
          "[~d:~d] ~:[(active)~;(inactive)~]~%~%" 
