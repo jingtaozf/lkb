@@ -354,7 +354,12 @@
 		  #'(lambda (display-pair)
 		      (display-fs (cdr display-pair)
 				  (car display-pair)))))))
-	      (t (format t 
+	      (t 
+	       (lkb-beep)
+	       (format #+:clim
+		       clim-user::*lkb-top-stream*
+		       #-:clim
+		       t
 			 "~%No applicable lexical rules")))))))
 
 
