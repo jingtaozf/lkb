@@ -1170,10 +1170,8 @@
       (empty-cache lex)
       (disconnect conn-db-owner))))
 
-
-(defmethod to-db-dump-rev ((x lex-entry) (lex psql-lex-database) &key (skip-stream t))
-  "provide line entry for lex db import file"
-  (with-slots (dfn fields) lex
+(defmethod get-field-vals ((x lex-entry) (lex psql-lex-database))
+  (with-slots (dfn) lex
     (let* (;; copy slots as we will destructively delete during processing
 	   (s (copy-slots x dfn))
 	   ;; perhaps should warn about duplicates?
@@ -1190,9 +1188,7 @@
 			 extraction-fields))
 	   ;; convert any remaining unifs into raw tdl fragment
 	   (skip (unifs-to-tdl-body (cdr (assoc :unifs s))))
-	   (skip (if (string= skip "")
-		     nil
-		   skip))
+	   (skip (if (string= skip "") nil skip))
 	   ;; necessary fields
 	   (hard-coded-field-vals (list
 				   (cons :userid *lexdb-dump-user*)
@@ -1209,72 +1205,71 @@
 	   ;; combine all field values
 	   (field-vals (append extraction-field-vals
 			       hard-coded-field-vals
-			       other-field-vals))
-	   ;; construct ordered a-list of field values
-	   ;; fields not in LexDB silently ignored
-	   (ordered-field-vals (ordered-symb-val-list fields field-vals))
-	   ;; construct CVS copy line
-	   (line 
-	    (format nil "~a~%" 
-		    (str-list-2-line
-		     (mapcar
-		      #'(lambda (x)
-			  (let ((val (cdr x)))
-			    (if val
-				(2-str val)
-			      nil)))
-		      ordered-field-vals)
-		     :sep-c #\tab
-		     :null-str "\\N"))))
-      (cond
-       ;; no components of lex entry skipped
-       ((null skip)
+			       other-field-vals)))
+      ;; construct ordered a-list of field values
+      ;; fields not in LexDB silently ignored
+      field-vals)))
+  
+
+(defmethod to-db-dump-rev ((x lex-entry) (lex psql-lex-database) &key (skip-stream t))
+  "provide line entry for lex db import file"
+  (let* (;;ordered a-list of field values
+	 (field-vals (get-field-vals x lex))
+	 (skip (cdr (assoc :_tdl field-vals)))
+	 (name (cdr (assoc :name field-vals)))
+	 (ordered-field-vals (ordered-symb-val-list (fields lex) field-vals))
+	 ;; construct CVS copy line
+	 (line 
+	  (format nil "~a~%" 
+		  (str-list-2-line
+		   (mapcar
+		    #'(lambda (x)
+			(let ((val (cdr x)))
+			  (if val
+			      (2-str val)
+			    nil)))
+		    ordered-field-vals)
+		   :sep-c #\tab
+		   :null-str "\\N"))))
+    (cond
+     ;; no components of lex entry skipped
+     ((null skip)
+      line)
+     ;; component(s) skipped, but :skip field available in db
+     ((member :_tdl (fields lex))
+      (format t "~&Unhandled TDL in lex entry ~a: ~%~t~a~%~%" name skip)
+      (format t "~&;; Unhandled TDL fragment in ~a placed in _tdl field as unstructured text" name)
 	line)
-       ;; component(s) skipped, but :skip field available in db
-       ((member :_tdl fields)
-	(format t "~&Unhandled TDL in lex entry ~a: ~%~t~a~%~%"
-		(cdr (assoc :name ordered-field-vals))
-		skip)
-	(format skip-stream "~&;; Unhandled TDL in lex entry ~a placed in LexDB _tdl field"
-		(cdr (assoc :name ordered-field-vals)))
-	line)
-       ;; component(s) skipped and no :skip field in db
-       (t
-	(format t "~&Unhandled TDL in lex entry ~a: ~%~t~a~%~%"
-		(cdr (assoc :name ordered-field-vals))
-		skip)
-	(format skip-stream "~a" (to-tdl x))
-	"")))))
-      
+     ;; component(s) skipped and no :skip field in db
+     (t
+      (format t "~&~%Lex entry ~a skipped due to unhandled TDL fragment: ~%~t~a~%" name skip)
+      (format skip-stream "~a" (to-tdl x))
+      ""))))
+
 (defmethod to-db ((x lex-entry) (lex psql-lex-database))
   "insert lex-entry into lex db (user scratch space)"
-  (with-slots (dfn) lex
-    (let* ((s (copy-slots x dfn))
-	   (extraction-fields (remove-duplicates
-			       (cons :name (grammar-fields lex))))
-	   (extracted-fields
-	    (mapcan 
-	     #'(lambda (x) (list x (extract-field s x dfn)))
-	     extraction-fields))
-	 
-	   (psql-le
-	    (apply #'make-instance-psql-lex-entry
-		   (append extracted-fields
-			   (list :country *lexdb-dump-country*
-				 :lang *lexdb-dump-lang*
-				 :source (extract-pure-source-from-source *lexdb-dump-source*)
-				 :confidence 1
-				 :dead "f"
-				 )))))
-      (cond
-       ((null (cdr (assoc :unifs s)))
-	(set-lex-entry lex psql-le)
-	(empty-cache lex))
-       (t
-       (format t "~%skipping super-rich entry:~%~a" (to-tdl x))
-       nil)))))
-  
-;; not suited to batch import!
+  (let* (;;ordered a-list of field values
+	 (field-vals (get-field-vals x lex))
+	 (skip (cdr (assoc :_tdl field-vals)))
+	 (name (cdr (assoc :name field-vals)))
+	 (ordered-field-vals (ordered-symb-val-list (fields lex) field-vals))
+	 (psql-le (make-instance 'psql-lex-entry :fv-pairs ordered-field-vals)))	 
+    (cond
+     ;; no components of lex entry skipped
+     ((null skip)
+      (set-lex-entry lex psql-le)
+      (empty-cache lex))
+     ;; component(s) skipped, but :skip field available in db
+     ((member :_tdl (fields lex))
+      (format t "~&;; Unhandled TDL fragment in ~a placed in _tdl field as unstructured text" name)
+      (set-lex-entry lex psql-le)
+      (empty-cache lex))
+     ;; component(s) skipped and no :skip field in db
+     (t
+      (format t "~&~%Lex entry ~a skipped due to unhandled TDL fragment: ~%~t~a~%" name skip)
+      nil))))
+
+;; NOTE: not suited to batch import
 ;; import lex to LexDB
 (defmethod export-to-db ((lex lex-database) (lexdb psql-lex-database))
   (mapc

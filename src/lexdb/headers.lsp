@@ -77,6 +77,10 @@
 (defclass psql-lex-entry ()
   ((fv-pairs :initarg :fv-pairs)))
 
+(defmethod print-object ((inst psql-lex-entry) stream)
+  (format stream "#[psql-lex-entry ~S]" 
+	  (slot-value inst 'fv-pairs)))
+
 ;;; temporary
 #-:psql
 (progn

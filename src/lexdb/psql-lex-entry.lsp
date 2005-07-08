@@ -8,10 +8,6 @@
 ;;; --- psql-lex-entry methods
 ;;;
 
-(defun make-instance-psql-lex-entry (&rest rest)
-  (make-instance 'psql-lex-entry
-    :fv-pairs (kwl2alist rest)))
-
 (defmethod clear-vals ((le psql-lex-entry))
   (setf (slot-value le 'fv-pairs) 
     nil))

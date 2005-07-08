@@ -48,15 +48,6 @@
 (defun extract-param (param param-list)
   (second (assoc param param-list)))
 
-(defun kwl2alist (l)
-  (loop
-      while l
-      collect (let ((kw (pop l))
-		    (v (pop l)))
-		(unless (keywordp kw)
-		  (error "kwl2alist input format"))
-		(cons kw v))))
-
 (defun un-keyword (keyword-symb)
   (str-2-symb (symb-2-str keyword-symb)))
 
