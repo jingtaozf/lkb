@@ -337,10 +337,12 @@
   (unless (dfn lex)
     (complain-no-dfn lex)
     (error "operation aborted"))
-  (remove-duplicates 
-   (mapcar #'cadr 
-	   (dfn lex))
-   :test #'equal))
+  (let ((g-fields
+	 (remove-duplicates 
+	  (mapcar #'second (dfn lex)))))
+    (when (member :_tdl (fields lex))
+      (pushnew :_tdl g-fields))
+    g-fields))
 
 ;
 
@@ -372,42 +374,39 @@
   (apply #'make-lex-entry 
 	 (make-strucargs lex raw-record cols)))
 
+;; provide args to make-lex-entry
 (defmethod make-strucargs ((lex psql-lex-database) raw-record cols)
-  (let* 
-      ((strucslots 
-	(loop 
-	    for (slot-key slot-field slot-path slot-type) in (dfn lex)
-	    for slot-value-list = (work-out-value slot-type 
-						  (get-val slot-field raw-record cols)
-						  :path (work-out-rawlst slot-path))
-	    when slot-value-list
-	    append (mapcar 
-		    #'(lambda (x) (make-strucargs-aux slot-key x slot-path)) 
-		    slot-value-list)))
-       ;; groups slots with same key together in a list
-       (strucargs 
-	(loop
-	    for unique-slot in (remove-duplicates (mapcar #'car strucslots))
-	    append
-	      (list unique-slot 
-		    (let ((values 
-			   (loop 
-			       for (psort-slot psort-value) 
-			       in strucslots
-			       when (eql psort-slot unique-slot)
-			       collect psort-value)))
-		      (if (> (list-length values) 1)
-			  values
-			(car values)))))))
-    (let ((orth-str (second (member :orth strucargs))))
-      (if (and (listp orth-str) 
-	       (cdr orth-str))
-	  ;; infl-pos is only relevant for multi-word entries
-	  (setf strucargs
-	    (append 
-	     (list :infl-pos (find-infl-pos nil orth-str nil))
-	     strucargs))))
-    strucargs))
+  ;; make a-list with empty values
+  (let* ((strucargs 
+	 (mapcar #'(lambda (x) (list x)) 
+		 (remove-duplicates (mapcar #'first (dfn *lexdb*))))))
+    ;; instantiate values in a messy way
+    ;; fix_me
+    (loop 
+	for (slot-key slot-field slot-path slot-type) in (dfn lex)
+	for slot-value-list = (work-out-value slot-type 
+					      (get-val slot-field raw-record cols)
+					      :path (work-out-rawlst slot-path))
+	when slot-value-list
+	do 
+	  (setf (cdr (assoc slot-key strucargs))
+	    (append (cdr (assoc slot-key strucargs))
+		    (mapcar #'(lambda (x) (make-strucargs-aux x slot-path)) 
+			    slot-value-list))))
+    ;; messy
+    (let ((unifs (cdr (assoc :unifs strucargs)))
+	  (id (cadr (assoc :id strucargs)))
+	  (orth (cadr (assoc :orth strucargs))))
+      ;; if using :_tdl field (undecomposed TDL) the raw tdl contributes to lex entry
+      (when (member :_tdl (fields lex))
+	(setf unifs 
+	  (append unifs (tdl-to-unifs (get-val :_tdl raw-record cols)))))
+      ;; finally, build the list of arguments
+      (list :unifs unifs
+	    :id id
+	    :orth orth
+	    :infl-pos (and (> (length orth) 1)
+			   (find-infl-pos nil orth nil))))))
 
 (defmethod record-to-tdl ((lex psql-lex-database) record)
   (let ((cols (mapcar #'car record))
@@ -529,7 +528,7 @@
 		       (or (cdr (assoc (car type) *lexdb-fmtype-alt*))
 			   (car type)))
 		     (list slot field path type)))
-	       (get-raw-records lex (format nil "SELECT slot,field,path,type FROM dfn WHERE mode='~a';" (fields-tb lex))))
+	       (get-raw-records lex (format nil "SELECT slot,field,path,type FROM dfn WHERE mode='~a' OR mode IS NULL" (fields-tb lex))))
        #'(lambda (x y) (declare (ignore y)) (eq (car x) :unifs))))
     (if (null dfn)
 	(complain-no-dfn lex))
@@ -1175,28 +1174,49 @@
 (defmethod to-db-dump-rev ((x lex-entry) (lex psql-lex-database) &key (skip-stream t))
   "provide line entry for lex db import file"
   (with-slots (dfn fields) lex
-    (let* ((s (copy-slots x dfn))
-	   (extraction-fields (remove-duplicates
-			       (cons :name (grammar-fields lex))))
-	   (field-vals (append
-			(mapcar 
+    (let* (;; copy slots as we will destructively delete during processing
+	   (s (copy-slots x dfn))
+	   ;; perhaps should warn about duplicates?
+	   (extraction-fields 
+	    (remove :_tdl
+		    (remove-duplicates
+		     (cons :name (grammar-fields lex)))))
+	   ;; extract field values from tdl structure 
+	   ;; and remove unifs as they are found
+	   (extraction-field-vals (mapcar 
 			 #'(lambda (x) 
 			     (cons x
 				   (extract-field s x dfn)))
-			 extraction-fields)
-			(list
-			 ;;(cons :orthkey (orthkey x))
-			 (cons :userid *lexdb-dump-user*)
-			 (cons :modstamp *lexdb-dump-timestamp*)
-			 (cons :lang *lexdb-dump-lang*)
-			 (cons :country *lexdb-dump-country*)
-			 (cons :confidence 1)
-			 (cons :source *lexdb-dump-source*)
-			 (cons :dead "f"))))
+			 extraction-fields))
+	   ;; convert any remaining unifs into raw tdl fragment
+	   (skip (unifs-to-tdl-body (cdr (assoc :unifs s))))
+	   (skip (if (string= skip "")
+		     nil
+		   skip))
+	   ;; necessary fields
+	   (hard-coded-field-vals (list
+				   (cons :userid *lexdb-dump-user*)
+				   (cons :modstamp *lexdb-dump-timestamp*)
+				   (cons :dead "f")
+				   (cons :_tdl skip)))
+	   ;; additional (useful) fields
+	   ;; if not all fields occur in LexDB they will be silently ignored
+	   (other-field-vals (list
+			      (cons :lang *lexdb-dump-lang*)
+			      (cons :country *lexdb-dump-country*)
+			      (cons :confidence 1)
+			      (cons :source *lexdb-dump-source*)))
+	   ;; combine all field values
+	   (field-vals (append extraction-field-vals
+			       hard-coded-field-vals
+			       other-field-vals))
+	   ;; construct ordered a-list of field values
+	   ;; fields not in LexDB silently ignored
 	   (ordered-field-vals (ordered-symb-val-list fields field-vals))
+	   ;; construct CVS copy line
 	   (line 
 	    (format nil "~a~%" 
-		    (str-list-2-str
+		    (str-list-2-line
 		     (mapcar
 		      #'(lambda (x)
 			  (let ((val (cdr x)))
@@ -1206,13 +1226,26 @@
 		      ordered-field-vals)
 		     :sep-c #\tab
 		     :null-str "\\N"))))
-      (cond 
-       ((null (cdr (assoc :unifs s)))
+      (cond
+       ;; no components of lex entry skipped
+       ((null skip)
 	line)
+       ;; component(s) skipped, but :skip field available in db
+       ((member :_tdl fields)
+	(format t "~&Unhandled TDL in lex entry ~a: ~%~t~a~%~%"
+		(cdr (assoc :name ordered-field-vals))
+		skip)
+	(format skip-stream "~&;; Unhandled TDL in lex entry ~a placed in LexDB _tdl field"
+		(cdr (assoc :name ordered-field-vals)))
+	line)
+       ;; component(s) skipped and no :skip field in db
        (t
+	(format t "~&Unhandled TDL in lex entry ~a: ~%~t~a~%~%"
+		(cdr (assoc :name ordered-field-vals))
+		skip)
 	(format skip-stream "~a" (to-tdl x))
 	"")))))
-
+      
 (defmethod to-db ((x lex-entry) (lex psql-lex-database))
   "insert lex-entry into lex db (user scratch space)"
   (with-slots (dfn) lex

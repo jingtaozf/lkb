@@ -35,8 +35,32 @@
 (defmethod to-tdl ((x null)) nil)
 
 (defmethod to-tdl-body ((x lex-entry))
-  (p-2-tdl (pack-unifs (lex-entry-unifs x))))
+  (unifs-to-tdl-body (lex-entry-unifs x)))
+
+;; map unifs to tdl (fragment) text
+(defmethod unifs-to-tdl-body (unifs)
+  ;; return empy string if no unifs
+  (if (null unifs) 
+      (return-from unifs-to-tdl-body ""))
+  (if (member nil unifs 
+	      :key (lambda (x) (path-typed-feature-list (unification-lhs x))))
+      ;; TDL = type & ...
+      (p-2-tdl (pack-unifs unifs))
+    ;; TDL = ...
+    (p-2-tdl-aux 0 (pack-unifs unifs))))
 	  
+;; map tdl (fragment) text to unifs
+(defun tdl-to-unifs (tdl-fragment)
+  ;; fix_me: unless the string does contain a non-empty tdl fragment we will throw an error later
+  (unless (and (stringp tdl-fragment)
+	       (> (length tdl-fragment) 0))
+    (return-from tdl-to-unifs))
+  ;; assume fragment non-empty...
+  (let ((*readtable* (make-tdl-break-table)))
+    (read-tdl-lex-avm-def (make-string-input-stream 
+			   (concatenate 'string tdl-fragment "."))
+			  nil)))
+
 (defun extract-pure-source-from-source (source)
   (let* ((end (position #\( source :test #'equal))
 	 (pure-source (and end (< 1 end)

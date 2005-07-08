@@ -654,8 +654,8 @@
 		     (let ((feeder (assoc i revindex-lrules)))
 		       (if feeder
 			   (push feeder (rule-feeders v))
-			 (format t "~&Warning: Non-lexical rule ~a potentially feeds lexical rule ~a" 
-				 (rule-id (cdr (assoc i revindex-rules))) (rule-id v))
+			 ;; bmw - warning disabled
+			 ;;(format t "~&Warning: Non-lexical rule ~a potentially feeds lexical rule ~a" (rule-id (cdr (assoc i revindex-rules))) (rule-id v))
 			 )))))
 	     *lexical-rules*)
 ;;; e.g., A can feed B, B can feed C, C can feed D, A can feed C

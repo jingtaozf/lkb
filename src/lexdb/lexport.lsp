@@ -41,7 +41,7 @@
     (format t "ignoring :recurse (ommit :name to enable :recurse)")
     (setf recurse nil))
   (when (typep lexicon 'psql-lex-database)
-    (error "use \"merge\" command to export psql lexical database"))
+    (error "This command is for use only with a non-LexDB lexicon. You should use instead the \"Merge new entries\" command found under the LexDB menu if you want to create dump files for your current LexDB."))
   (unless (typep *lexdb* 'psql-lex-database)
     (error "please initialize *lexdb*"))
   (setf *lexdb-dump-source* (extract-pure-source-from-source (get-current-source)))

@@ -118,7 +118,7 @@
 ;; copy of p-2-tdl-2 w/o root
 (defun p-2-tdl (branches)
   (unless branches
-    (error "non-null value expected"))
+    (return-from p-2-tdl ""))
   (let* ((a-branch-flag (not (cdr (first branches))))
 	 (a-branches)
 	 (len)

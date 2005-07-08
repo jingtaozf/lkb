@@ -465,6 +465,7 @@
 	      *morph-option*)
       (setf *foreign-morph-fn* nil))))  
 
+;; eg. (parse ("the" "dog" "barks"))
 (defun parse (bracketed-input &optional 
                               (show-parse-p *show-parse-p*) 
                               (first-only-p *first-only-p*))
@@ -485,6 +486,7 @@
                            Disabling best-first mode: setting ~
                            *first-only-p* to `nil'.~%")
                          first-only-p)))
+    ;; eg. user-input -> ("the" "dog" "barks")
     (multiple-value-bind (user-input brackets-list)
         (if *bracketing-p*
           (initialise-bracket-list bracketed-input)
@@ -521,6 +523,7 @@
           (setf *parse-record* nil)
           (setf *parse-times* (list (get-internal-run-time)))
           (let ((*safe-not-to-copy-p* t))
+	    ;; instantiate token chart
 	    (instantiate-chart-with-tokens user-input)
 	    (ecase *morph-option*
 	      (:default (instantiate-chart-with-morphop))
@@ -567,12 +570,18 @@
 (defun set-characterization (dag cfrom cto)
   (declare (ignore dag cfrom cto)))
 
+;;eg. (instantiate-chart-with-tokens ("The" "dog" "barks"))
+;; calls: (add-token-edge "The" "THE" 0 1 nil nil)
+;;        (add-token-edge "dog" "DOG" 0 1 nil nil)
+;;        (add-token-edge "the" "BARKS" 0 1 nil nil)
+;; returns: nil
 (defun instantiate-chart-with-tokens (preprocessed-input)
   ;;; this is for the trivial case where the
   ;;; input is a list with no ambiguity about token boundaries
   ;;; FIX - we need a better method of switching here
   (if (consp (first preprocessed-input))
       (sppp-setup-morphs preprocessed-input)
+    ;; default case
     (let ((current 0)
 	  (xml-p (chared-word-p (first preprocessed-input))))
       (dolist (token preprocessed-input)
@@ -604,7 +613,9 @@
 		    (second edge-spec)
 		    (third edge-spec)
 		    (fourth edge-spec))))
-    
+
+;; eg. (add-token-edge "The" "THE" 0 1 nil nil)
+;; 
 (defun add-token-edge (base-word word from to cfrom cto)
   (when (> to *tchart-max*)
     (setf *tchart-max* to))

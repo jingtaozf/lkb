@@ -310,12 +310,13 @@
 (defun copy-in-stream (conn istream)
   (do* ((line (read-line istream nil) (read-line istream nil)))
       ((null line))
-    (putline conn line))
-  (putline conn "\\.")
+    (with-lexdb-locale (putline conn line)))
+  (with-lexdb-locale (putline conn "\\."))
   (endcopy conn))
 
 (defun putline (conn line)
-  (unless (= 0 (with-lexdb-locale (pq:putline conn (format nil "~a~%" line))))
+  (unless (= 0 (with-lexdb-locale 
+		   (pq:putline conn (format nil "~a~%" line))))
     ;; fix_me
     ;;(format t "~%PSQL ~a" error-message)
     (throw :sql-error (cons :putline "unable to send string")))) 

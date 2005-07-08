@@ -23,3 +23,7 @@
 (defun enable-grammar-reload-interactions nil
   (clim-user::enable-grammar-reload-interactions))
 
+;; macro to bind *locale*
+(defmacro with-locale (locale &body body)
+  `(let ((excl::*locale* ,locale))
+     ,@body))

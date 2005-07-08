@@ -687,6 +687,21 @@
        collect #\\
        collect c)))
   
+(defun escape-sql-copy-string (esc-char string)
+  (implode-from-chars
+   (loop
+       for i from 0 to (1- (length string))
+       for c = (aref string i)
+       if (eq c #\Backspace) collect #\\ and collect #\b
+       else if (eq c #\Page) collect #\\ and collect #\f
+       else if  (eq c #\Return) collect #\\ and collect #\r
+       else if (eq c #\Newline) collect #\\ and collect #\n
+       else if (eq c #\Tab) collect #\\ and collect #\t
+       else if (eq c #\vt) collect #\\ and collect #\v
+       else if (eq c #\\) collect #\\ and collect #\\
+       else if (eq c esc-char) collect #\\ and collect c
+       else collect c)))
+  
 (defun replace-char (string &key from to)
   (unless (and
 	   (characterp from)
@@ -711,6 +726,30 @@
       finally
 	(return res)))
 
+;; map string list to CVS copy line
+(defun str-list-2-line (str-list &key (sep-c #\Tab) (null-str "\\N"))
+  (unless (listp str-list)
+    (error "list argument expected"))
+  (let ((sep (string sep-c)))
+    (cond
+     ;; return empty line if empty string list
+     ((null str-list) "")
+     ;; build line
+     ;; sep-c separates values
+     ;; values are null-str or escape-sql-copy-string'd vals
+     (t (apply 'concatenate
+	       (cons
+		'string
+		(cons
+		 (escape-sql-copy-string sep-c (pop str-list))
+		 (mapcan #'(lambda (x) 
+			     (list sep
+				   (if x 
+				       (escape-sql-copy-string sep-c x)
+				     null-str)
+				   ))
+			 str-list))))))))
+  
 (defun str-list-2-str (str-list &key (sep-c #\Space)
 				     (null-str ":null:")
 				     (esc t))

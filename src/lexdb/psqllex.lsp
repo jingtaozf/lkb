@@ -121,29 +121,27 @@
 
 ;; read-psort ->
 ;;; create slot entry
-(defun make-strucargs-aux (slot-key slot-value slot-path)
+(defun make-strucargs-aux (slot-value slot-path)
   (cond
    ;;: nil path => no unification
    ((equal slot-path "")
-    (list slot-key slot-value))
+    slot-value)
    ;;: atomic value => simple case
    ((atom slot-value)
-    (list slot-key
-	  (make-unification
+    (make-unification
 	   :lhs (make-path 
 		 :typed-feature-list 
 		 (work-out-rawlst slot-path))
-	   :rhs (make-u-value :type slot-value))))
+	   :rhs (make-u-value :type slot-value)))
    ;;: list. eg. (rest first "word") => (... rest first) has val "word"  
    ((listp slot-value)
-    (list slot-key
-	  (make-unification
+    (make-unification
 	   :lhs (make-path 
 		 :typed-feature-list 
 		 (append
 		  (work-out-rawlst slot-path)
 		  (reverse (cdr (reverse slot-value)))))
-	   :rhs (make-rhs-val (car (last slot-value))))))
+	   :rhs (make-rhs-val (car (last slot-value)))))
    (T (error "unhandled input"))))
   
 (defun make-rhs-val (x)
