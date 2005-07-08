@@ -144,6 +144,7 @@
   (let ((new-edge
 	 (apply #'make-edge-x rest)))
     (when *characterize-p*
+      ;; [set characterization does nothing]
       (set-characterization (edge-dag new-edge)
 			    (edge-cfrom new-edge)
 			    (edge-cto new-edge)))
@@ -574,7 +575,7 @@
 ;; calls: (add-token-edge "The" "THE" 0 1 nil nil)
 ;;        (add-token-edge "dog" "DOG" 0 1 nil nil)
 ;;        (add-token-edge "the" "BARKS" 0 1 nil nil)
-;; returns: nil
+;; returns: *tchart*
 (defun instantiate-chart-with-tokens (preprocessed-input)
   ;;; this is for the trivial case where the
   ;;; input is a list with no ambiguity about token boundaries
@@ -598,7 +599,8 @@
 			-1))
                (new (+ current 1)))
 	  (add-token-edge base-word word current new cfrom cto)
-	  (setf current new))))))
+	  (setf current new)))))
+  *tchart*)
 
 (defun instantiate-token-chart (chart-spec)
   ;;; so far this is only for testing
@@ -667,35 +669,43 @@
 
 (defun instantiate-chart-with-morphop nil
   (dotimes (current *tchart-max*)
+    ;; for each left vertex in chart
     (let ((token-ccs (aref *tchart* current 1)))
+      ;; collect edges incident on vertex
       (dolist (token-cc token-ccs)
+	;; for each such edge
 	(let* ((token-edge (chart-configuration-edge token-cc))
 	       (word (token-edge-word token-edge))
 	       (irregs (find-irregular-morphs word)))
-	  (dolist (morph-spec irregs)
-	    (let ((stem (car morph-spec))
-		  (partial-tree (cdr morph-spec)))
-	      	  ;;; add the irregular edges
-	      (add-morpho-stem-edge-from-token-edge 
-	       stem partial-tree
-	       token-edge nil) ;; nil indicates this is complete
-	      ;;;
-	      ;;; when the irregular form involves no
-	      ;;; effect on the stem, we add the stem edge as 
-	      ;;; well here
-	      (when (and (not (cdr partial-tree))
-			 (equal stem (second (car partial-tree))))
-		(add-morpho-stem-edge-from-token-edge 
-		 stem nil
-		 token-edge nil))))
+	  (add-morpho-irreg-edges-from-token-edge token-edge irregs)
 	  (add-morpho-partial-edges 
 	   word nil
 	   (token-edge-from token-edge)
 	   (token-edge-to token-edge)
-	   token-edge))))))
+	   token-edge)))))
+  *tchart*)
 
+(defun add-morpho-irreg-edges-from-token-edge (token-edge irregs)
+  (dolist (morph-spec irregs)
+    ;; for each irregular morph found
+    (let ((stem (car morph-spec))
+	  (partial-tree (cdr morph-spec)))
+      ;; add the irregular edge
+      (add-morpho-stem-edge-from-token-edge 
+       stem partial-tree
+       token-edge nil) ;; nil indicates this is complete
+      ;;
+      ;; When the irregular form involves no
+      ;; effect on the stem, we add the stem edge as 
+      ;; well here.
+      (when (and (not (cdr partial-tree))
+		 (equal stem (second (car partial-tree))))
+	(add-morpho-stem-edge-from-token-edge 
+	 stem nil
+	 token-edge nil))))) ;; nil indicates this is complete
+  
 ;;; The reason to add the edges is to have something that can be
-;;; checked to avoid recomputation.  e.g. if we're analysing
+;;; checked to avoid recomputation.  E.g. if we're analysing
 ;;; something which could be STEM+m1+m2+m3 or STEM+m1+m2+m4
 ;;; we don't need to redo the STEM+m1+m2 part
 ;;; 
@@ -819,35 +829,29 @@
 
 
 (defun add-morpho-stem-edge-from-token-edge (stem partial-tree token-edge partial-p)  
-  ;;; this is called from the version with the rule-by-rule morphology
-  ;;; (for the irregs and as the base case with regular morphology)
-  ;;; it is also called when we have a version of morphology
+  ;;; This is called from the version with the rule-by-rule morphology
+  ;;; (for the irregs and as the base case with regular morphology).
+  ;;; It is also called when we have a version of morphology
   ;;; giving full partial trees and we're using the tokeniser
-  ;;; :external-partial-tree is the value of *morph-option*
+  ;;; (:external-partial-tree is the value of *morph-option*).
   ;;; But most of the work is done in add-morpho-stem-edge
   ;;; which is called from the sppp stuff (i.e. external
-  ;;; tokeniser and partial tree morphology)
+  ;;; tokeniser and partial tree morphology).
   ;;;
   ;;; partial-p is set when this edge is added from inside the
-  ;;; recursive add-morpho-partial-edges - this indicates that
-  ;;; rules specified by the morphological analysis are missing
-  (let ((from (token-edge-from token-edge))
-	(to (token-edge-to token-edge))
-	(word (token-edge-word token-edge))
-	(string (token-edge-string token-edge))
-	(cfrom (token-edge-cfrom token-edge))
-	(cto (token-edge-cto token-edge))
-	(tleaves (token-edge-leaves token-edge)))
+  ;;; recursive add-morpho-partial-edges - This indicates that
+  ;;; rules specified by the morphological analysis are missing.
+  (with-slots (from to word string cfrom cto leaves) token-edge
     (add-morpho-stem-edge
      stem partial-tree from to word string cfrom cto 
-     tleaves token-edge partial-p)))
+     leaves token-edge partial-p)))
 
 (defun add-morpho-stem-edge (stem partial-tree 
 			     from to word string cfrom cto tleaves
 			     tedge partial-p)
-  ;;; copy most of token-edge
-  ;;; add partial-tree and stem
-  ;;; put into chart at same places
+  ;;; Copy most of token-edge
+  ;;; Add partial-tree and stem
+  ;;; Put into chart at same places
   (if
       (and (lookup-word *lexicon* stem)
 	   (or (not (cdr partial-tree))
@@ -856,8 +860,8 @@
 		    ;; this is checked elsewhere if we're proceeding
 		    ;; rule-by-rule
 	       (check-rule-filter-morph partial-tree string))
-	   (not (morpho-stem-edge-match from to stem partial-tree 
-				   (aref *tchart* from 1))))
+	   (not (morpho-stem-edge-match 
+		 from to stem partial-tree partial-p (aref *tchart* from 1))))
       (let* ((new-edge (make-morpho-stem-edge
 			:id (next-edge)
 			:word word
@@ -881,19 +885,24 @@
 	new-edge)
     nil))
 
-(defun morpho-stem-edge-match (from to stem partial-tree cclist)
+;; cclist = edges leaving 'from'
+(defun morpho-stem-edge-match (from to stem partial-tree partial-p cclist)
   (dolist (x cclist)
+    ;; for each edge
     (when
 	(and (eql from (chart-configuration-begin x))
 	     (eql to (chart-configuration-end x))
 	     (morpho-stem-edge-p (chart-configuration-edge x))
+	     (eq partial-p
+		 (morpho-stem-edge-partial-p
+		     (chart-configuration-edge x)))
 	     (equal stem
 		    (morpho-stem-edge-stem
 		     (chart-configuration-edge x)))
 	     (tree-equal partial-tree
 			 (edge-partial-tree
 			  (chart-configuration-edge x))))
-      (return-from morpho-stem-edge-match t))))
+      (return-from morpho-stem-edge-match x))))
 
 
 
@@ -930,14 +939,14 @@
 ;;; as the old morph-analyse did
 
 (defun check-rule-filter-morph (rule-info-list string)
-  ;;; this is called with a list of rules that will be
-  ;;; tried later on in the parser proper
-  ;;; make sure we can get actual rules, and if we can
+  ;;; This is called with a list of rules that will be
+  ;;; tried later on in the parser proper.
+  ;;; Make sure we can get actual rules, and, if we can,
   ;;; filter impossible combinations now according to the
-  ;;; rule filter
+  ;;; rule filter.
   ;;;
   (let ((rules 
-	 (loop for rule-info in rule-info-list
+	 (loop for rule-info in rule-info-list ;;= partial-tree
 	     collect
 	       (let* ((rule-id (first rule-info))
 		      (rule-entry (get-lex-rule-entry rule-id)))
