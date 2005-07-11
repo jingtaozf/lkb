@@ -171,8 +171,17 @@
                (:file "discriminants")
                (:file "unfill-dag")   ; unfilled feature structures
                (:file "generics")
-               #+:preprocessor       
-               (:file "preprocess")))
+	       ))
+
+     (:module "preprocess"
+      :source-pathname "preprocess"
+      :binary-pathname "preprocess"
+      :components
+      (#+:preprocessor       
+       (:file "preprocess")
+       #+:preprocessor
+       (:file "texti")			; text interface
+       ))  
 
      (:module "lexdb"
       :source-pathname "lexdb"

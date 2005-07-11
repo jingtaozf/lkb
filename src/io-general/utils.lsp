@@ -126,7 +126,8 @@
 			 (let ((type (get-type-entry fs-id)))
 			   (if type (tdfs-of fs-id)))))))))))))
 
-	  
+;; strings of WORDS separated by 1+ spc chars
+;; -> list of WORDS
 (defun split-into-words (sentence-string)
   (if (listp sentence-string)
     sentence-string
