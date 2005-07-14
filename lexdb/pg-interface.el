@@ -8,10 +8,13 @@
 ;; the Free Software Foundation; either version 2, or (at your option)
 ;; any later version.
 
+
+
 ;;; Add a PG menu to the emacs menu bar
 
 (defvar *lexdb-pg-interface-version* "2.05")
 
+(require 'cl)      ; we use some common-lisp idioms
 (require 'widget)
 
 (eval-when-compile
