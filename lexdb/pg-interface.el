@@ -234,7 +234,7 @@
 		  :enable (cle-connection)))
     (define-key map [menu-bar LexDB cross-ref-rev]
       '(menu-item "Cross reference ids (rev)" lexdb-lookup-rev-all 
-		  :keys "C-TAB r"
+		  :keys "M-TAB r"
 		  :enable (cle-connection)))
     (define-key map [menu-bar LexDB break] (lexdb-make-name-keymap "---"))
     (define-key map [menu-bar LexDB commit]
