@@ -92,13 +92,20 @@
     (or dbname (extract-param :db *lexdb-params*)))
   (unless dbname
     (error "please set :dbname in *lexdb-params*"))
-  (let ((part-of))
+  (let (part-of extra-lexicons)
     ;; we will create a new lexicon then insert it into the lexicon hierarchy as
     ;; a replacement for *lexdb*
-    (if *lexdb*
-        (setf part-of (part-of *lexdb*))
+    (cond
+     ((typep *lexdb* 'psql-lex-database)
+      (setf part-of (part-of *lexdb*))
+      (setf (part-of *lexdb*) nil) ;; to avoid unlinking
+      (setf extra-lexicons (extra-lexicons *lexdb*))
+      (setf (extra-lexicons *lexdb*) nil) ;; to avoid unlinking
+      )
+     (t 
       (setf *lexdb*
-	(make-instance 'psql-lex-database)))
+	(make-instance 'psql-lex-database))))
+    
     (setf (dbname *lexdb*) dbname)
     (if host (setf (host *lexdb*) host))
     (if user (setf (user *lexdb*) user))
@@ -113,6 +120,7 @@
     ;; insert into lexicon hierarchy
     (when (initialize-lex *lexdb*)
       (mapcar #'(lambda (x) (link *lexdb* x)) part-of)
+      (mapcar #'(lambda (x) (link x *lexdb*)) extra-lexicons)      
       *lexdb*)))
 
 (defun open-psql-lex (&rest rest)

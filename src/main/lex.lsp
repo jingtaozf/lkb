@@ -39,7 +39,7 @@
       ;;; cache results of read-psort
       ;;; :empty records cases where read-psort returned nil
       ;;; (to distinguish from cases where value not cached)
-   (extra-lexicons :initform nil :reader extra-lexicons) ;: use link/unlink to write
+   (extra-lexicons :initform nil :accessor extra-lexicons)
    (extra-mode :initform *lex-database-default-extra-mode* :accessor extra-mode)
    (part-of :initform nil :accessor part-of)
    (invalid-p :initform t :accessor invalid-p)
