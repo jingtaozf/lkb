@@ -52,7 +52,7 @@
 	with subs = (cons 0 (append (ppcre:all-matches "]]>" str)
 				    (list (length str))))
 	while subs
-	do (print subs)
+	;;do (print subs)
 	collect "]]&gt;"
 	collect "<![CDATA["
 	collect (subseq str (pop subs) (pop subs))
@@ -108,21 +108,26 @@
 (defun char-offset-to-xpointer (i)
   (unless (integerp i)
     (error "char offset must be integer"))
-  (format nil "/1/~a" i))
+  (format nil "/1/1/~a" i))
+
+(defun xpointer-to-char-offset (xp)
+  (unless (stringp xp)
+    (error "expected XPointer as string"))
+  (unless (and (>= (length xp) 5)
+	       (string= (subseq xp 0 5) "/1/1/"))
+    ;;temporary hack
+    (return-from xpointer-to-char-offset -1)
+    (error "unhandled XPointer ~a (work in progress)" xp))
+  (read-from-string (subseq xp 5)))
 
 ;; assume for now XML root element contains only CDATA
 (defun XPointer-range (xml xrange)
   (let ((x-from (car xrange))
 	(x-to (cdr xrange)))
-    (unless (and (stringp x-from)
-		 (stringp x-to)
-		 (string= (subseq x-from 0 3) "/1/")
-		 (string= (subseq x-to 0 3 )"/1/"))
-      (error "unhandled XPointers ~a ~a (work in progress" x-from x-to))
     (let* ((p-xml (net.xml.parser:parse-xml xml))
 	   (text (second (car (member '|text| p-xml :key #'car))))
-	   (c-from (read-from-string (subseq x-from 3)))
-	   (c-to (read-from-string (subseq x-to 3)))
+	   (c-from (xpointer-to-char-offset x-from))
+	   (c-to (xpointer-to-char-offset x-to))
 	   )
       (unless (and (>= c-from 0)
 		   (<= c-to (length text)))
@@ -162,12 +167,160 @@
 (defun tchart-to-maf-wordforms (tchart)
   (tchart-to-maf tchart :wordforms t))
 
-#+:null
 (defun maf-to-tchart (xml)
-  
-  )
+  (let* ((lxml (net.xml.parser:parse-xml xml))
+	 (lxml-e (pop lxml)))
+    ;; check for <?xml version="1.0" ...>
+    (unless (and (eq :xml (lxml-pi-name lxml-e))
+		 (string= "1.0" (lxml-pi-attr lxml-e "version" :keyword t)))
+      (error "expected XML version 1.0: got ~a" lxml-e))
+    ;; check for <!DOCTYPE maf ...>
+    (setf lxml-e (pop lxml))
+    (unless (and (eq :doctype (lxml-pi-name lxml-e))
+		 (eq (intern "maf" :keyword) (second lxml-e)))
+      (error "expected DOCTYPE maf: got ~a" lxml-e))
+    ;; now process maf element
+   (setf lxml-e (pop lxml))
+   (unless (eq (intern "maf")
+	       (lxml-elt-name lxml-e))
+     (error "expected lxml root element maf: got ~a" lxml-e))
+   (unless (string= "XPointer"
+		    (lxml-elt-attr lxml-e "addressing"))
+     (error "Unhandled addressing attribute in ~a" lxml-e))
+   
+   #+:null
+   (setf *token-vertex* 0)
+   
+   lxml-e
+    ))
 
-(defun tchart-to-maf (tchart &key wordforms)
+(defun fsm-lxml-to-medges (lxml)
+  (unless (eq (intern "fsm") (lxml-elt-name lxml))
+    (error "fsm lxml element expected: got ~a" lxml))
+  (let ((init (lxml-elt-attr lxml "init"))
+	(final (lxml-elt-attr lxml "final"))
+	(states (loop
+		    for x in (cdr lxml)
+		    when (eq (intern "state")
+			     (lxml-elt-name x))
+		    collect x))
+	(transitions (loop
+		    for x in (cdr lxml)
+		    when (eq (intern "transition")
+			     (lxml-elt-name x))
+			 collect x)))
+    (check-state-declared init states)
+    (check-state-declared final states)
+    (mapcar #'(lambda (x)
+		(check-state-declared
+		 (lxml-elt-attr x "source") states))
+	    transitions)
+    (mapcar #'(lambda (x)
+		(check-state-declared
+		 (lxml-elt-attr x "target") states))
+	    transitions)
+    
+    transitions))
+
+(defun check-state-declared (id states)
+    (unless
+	(member id states 
+		:test #'string=
+		:key #'(lambda (x)
+			 (lxml-elt-attr x "id")))
+      (error "state ~a referenced but not explicitly declared in ~a"
+	     id states)))
+  
+
+(defvar *token-vertex* 0)
+(defun token-lxml-to-tedge (lxml)
+  (unless (eq (intern "token") (lxml-elt-name lxml))
+    (error "token lxml element expected: got ~a" lxml))
+  (let* ((id (lxml-elt-attr lxml "id"))
+	 (from (lxml-elt-attr lxml "from"))
+	 (to (lxml-elt-attr lxml "to"))
+	 (value (lxml-elt-attr lxml "value"))
+	 
+	 (e-id (token-lxml-id-to-token-edge-id id))
+	 (e-to (incf *token-vertex*))
+	 (e-from (1- e-to)))
+    (make-token-edge 
+     :id e-id
+     :from e-from
+     :to e-to
+     :string value
+     :cfrom (xpointer-to-char-offset from)
+     :cto (xpointer-to-char-offset to)
+     :word (string-upcase value)
+     :leaves (list value))))
+
+(defun token-lxml-id-to-token-edge-id (lxml-id)
+  (let ((val (read-from-string (subseq lxml-id 1))))
+    (unless (integerp val)
+      (error "token edge id could not be extracted from token maf id ~a"
+	     val))
+    val))  
+
+(defun lxml-elt-p (x)
+  (listp x))
+
+(defun lxml-elt-name (lxml-elt)
+  (unless (lxml-elt-p lxml-elt)
+    (error "lxml element expected: got ~a" lxml-elt))
+  (let ((car (car lxml-elt)))
+    (typecase car
+      (symbol car)
+      (list (car car))
+     (t (error "expected symbol or list as car of lxml element: got ~a" car)))))      
+
+(defun lxml-elt-attr (lxml-elt attrib-str &key keyword)
+  (unless (lxml-elt-p lxml-elt)
+    (error "lxml element expected: got ~a" lxml-elt))
+  (unless (stringp attrib-str)
+    (error "string name of lxml attribute expected: got ~a" attrib-str))
+  (let ((attrib (if keyword
+		    (intern attrib-str :keyword)
+		  (intern attrib-str)))
+	(car (car lxml-elt)))
+    (typecase car
+     (symbol nil)
+     (list (second (member attrib (cdr car))))
+     (t (error "expected symbol or list as car of lxml element: got ~a" car)))))
+       
+(defun lxml-pi-name (lxml-pi)
+  (unless (lxml-pi-p lxml-pi)
+    (error "lxml element expected: got ~a" lxml-pi))
+  (let ((car (car lxml-pi)))
+    (typecase car
+      (symbol car)
+      (list (car car))
+     (t (error "expected symbol or list as car of lxml element: got ~a" car)))))      
+
+(defun lxml-pi-p (x)
+  (listp x))
+
+(defun lxml-pi-attr (lxml-pi attrib-str &key keyword)
+  (unless (lxml-pi-p lxml-pi)
+    (error "lxml element expected: got ~a" lxml-pi))
+  (unless (stringp attrib-str)
+    (error "string name of lxml attribute expected: got ~a" attrib-str))
+  (let ((attrib (if keyword
+		    (intern attrib-str :keyword)
+		  (intern attrib-str))))
+    (second (member attrib (cdr lxml-pi)))))
+        
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+(defun tchart-to-maf (tchart &key (wordforms t))
   (let* ((strm (make-string-output-stream))
 	 (tedges (get-tedges tchart))
 	 (medges (get-medges tchart))
@@ -188,7 +341,7 @@
 (defun fsm-xml (tedges medges)
   (let* ((strm (make-string-output-stream))
 	 (v-min (loop for x in tedges minimize (edge-from x)))
-	 (v-max (loop for x in tedges maximize (edge-from x)))
+	 (v-max (1+ (loop for x in tedges maximize (edge-from x))))
 	 )
     (format strm "<fsm init='v~a' final='v~a'>" v-min v-max)
     
@@ -205,17 +358,40 @@
     ))
 
 (defun medge-to-transition-xml (medge)
-  (with-slots (from to string stem) medge
+  (with-slots (from to string stem partial-tree) medge
     (concatenate 'string
       (format nil "<transition source='v~a' target='v~a'>" from to)
-      (format nil "<wordForm form='~a' tag='' tokens='~a'>" string (edge-to-tokens medge))
+      (format nil "<wordForm form='~a' tag='~a' tokens='~a'>" 
+	      string (cadr partial-tree) (edge-to-tokens medge))
       (format nil "<fs>")
       (format nil "<f name='orth'>")
       (format nil "<string>~a</string>" stem)
       (format nil "</f>")
+      (if partial-tree
+	  (format nil "~a" (partial-tree-to-fs partial-tree)))
       (format nil "</fs>")
       (format nil "</wordForm>")
       (format nil "</transition>"))))
+
+;; only handles simplest case
+(defun partial-tree-to-fs (p-tree)
+  (unless 
+      (and (= 1 (length p-tree))
+	   (= 2 (length (car p-tree)))
+	   (symbolp (first (car p-tree)))
+	   (stringp (second (car p-tree))))
+    (error "at present we only handle partial-trees of form ((RULE \"ORTH\"))"))
+    (concatenate 'string
+      (format nil "<f name='partial-tree'>")
+      (format nil "<f name='rule'>")
+      (format nil "<string>~a</string>" (first (car p-tree)))
+      (format nil "</f>")
+      (format nil "<f name='orth'>")
+      (format nil "<string>~a</string>" (second (car p-tree)))
+      (format nil "</f>")
+      (format nil "</f>")
+      ))
+  
 
 (defun edge-to-tokens (edge)
   (cond
