@@ -365,7 +365,7 @@
              (funcall 'show-mrs-dependencies-window (prtree-edge tree)))
             (rephrase
              (let ((symbol (when (find-package :mt)
-                             (find-symbol "TRANSLATE" :mt))))
+                             (find-symbol "REPHRASE" :mt))))
                (when (and symbol (fboundp symbol))
                  (funcall symbol (prtree-edge tree))))))
         (storage-condition (condition)

@@ -6,7 +6,7 @@
 
 (defparameter *generator-server* nil)
 
-(defparameter *translate-other-p* nil)
+(defparameter *translate-grid* nil)
 
 ;;;
 ;;; transfer-based MT prototype from the Gothenburg -- Oslo train.  many things
@@ -20,30 +20,14 @@
 ;;;     always need to provide INPUT.RELS <! !> instead;
 ;;;
 
-(defun transfer (&optional (edge (first *parse-record*))
-                 &key (file (merge-pathnames
-			     (lkb-tmp-dir)
-			     (format
-			      nil
-			      ".transfer.~a.~:[1~;2~]"
-			      (current-user) *translate-other-p*))))
-  (let* ((*package* (find-package :lkb))
-         (rules (reverse *ordered-mrs-rule-list*))
-         (input (or (edge-mrs edge) (mrs::extract-mrs edge)))
-         (output (and input (mrs::munge-mrs-struct input rules))))
-    (when output
-      (with-open-file (stream file :direction :output
-                       :if-exists :supersede)
-        (mrs::output-mrs1 output 'mrs::simple stream))
-      (mrs::browse-mrs output "Transfer Result"))))
 
 (defun translate (&key serverp (gcp t)
                        (file (merge-pathnames
 			      (lkb-tmp-dir)
 			      (format
 			       nil
-			       ".transfer.~a.~:[2~;1~]"
-			       (current-user) *translate-other-p*))))
+			       ".transfer.~a.~(~a~)"
+			       (current-user) (first *translate-grid*)))))
   #-:allegro
   (declare (ignore gcp))
   (when serverp 
@@ -55,8 +39,8 @@
 			    (lkb-tmp-dir)
 			    (format 
 			     nil 
-			     "generate.debug.~a.~:[1~;2~]" 
-			     (current-user) *translate-other-p*))
+			     "generate.debug.~a.~(~a~)" 
+			     (current-user) (first *translate-grid*)))
                        :direction :output 
                        :if-exists :append :if-does-not-exist :create)
         (let* ((log (make-broadcast-stream 
@@ -159,8 +143,8 @@
 			  (lkb-tmp-dir)
 			  (format 
 			   nil 
-			   "generate.debug.~a.~:[1~;2~]" 
-			   (current-user) *translate-other-p*))
+			   "generate.debug.~a.~(~a~)" 
+			   (current-user) (first *translate-grid*)))
                      :direction :output :if-exists :supersede)))
   ;;
   ;; tune Allegro CL gc() performance to initially tenure everything (assuming

@@ -112,15 +112,19 @@
                       (or (mrs-transfer-stack frame)
                           (mrs-transfer-edges frame))))
            (mrs (edge-mrs edge))
-           (file (merge-pathnames
-		  (lkb::lkb-tmp-dir)
-		  (format
-		   nil
-		   ".transfer.~a.~:[1~;2~]"
-		   (lkb::current-user) lkb::*translate-other-p*)))
            (*package* (find-package :lkb)))
-      (with-open-file (stream file :direction :output :if-exists :supersede)
-        (mrs::output-mrs1 mrs 'mrs::simple stream)))))
+      (loop
+          for target in (rest lkb::*translate-grid*)
+          for file = (merge-pathnames
+                      (lkb::lkb-tmp-dir)
+                      (format
+                       nil
+                       ".transfer.~a.~(~a~)"
+                       (lkb::current-user) target))
+          do
+            (with-open-file (stream file :direction :output
+                             :if-exists :supersede)
+              (mrs::output-mrs1 mrs 'mrs::simple stream))))))
 
 
 (define-mrs-transfer-command (com-transfer-mrs-debug :name "Debug" :menu t)

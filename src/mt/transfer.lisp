@@ -771,8 +771,10 @@
                     ;;                                          (2-may-05; oe)
                     (defaults
                      (list
+                      #+:logon
                       (list (mrs::vsym "x") 
                             (cons (mrs::vsym "GRIND") (mrs::vsym "-")))
+                      #+:logon
                       (list (mrs::vsym "e") 
                             (cons (mrs::vsym "PSVTYPE")
                                   (mrs::vsym "active"))))))

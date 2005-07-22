@@ -659,10 +659,10 @@
                           :begin begin :end end :edge nedge
                           :open open :forwardp forwardp)))
             ;;
-            ;; _mystery_
+            ;; _fix_me_
             ;; it seems active edges are not recorded in the parent relation, 
-            ;; so will never be be frosted.  right now, uc and i fail to
-            ;; explain why that should be unnecessary.         (27-may-03; oe)
+            ;; so will never be frosted.  right now, uc and i fail to explain
+            ;; why that should be unnecessary.                 (27-may-03; oe)
             ;;
             (fundamental4active active)))
          (t

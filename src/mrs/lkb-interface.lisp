@@ -239,3 +239,41 @@
                   for i from 1 to n
                   do (format stream "]"))))
       (format stream "]"))))
+
+(defun lui-indexed-mrs (mrs &key (stream t))
+  (let ((attic (make-hash-table :test #'equal))
+        (id 0))
+    (labels ((newp (object) (not (gethash object attic)))
+             (record (object)
+               (or (gethash object attic)
+                   (let ((n id))
+                     (setf (gethash object attic) n)
+                     (incf id)
+                     n)))
+             (output (variable stream)
+               (when (var-p variable)
+                 (format stream "\"~(~a~)\"" (var-string variable)))))
+      (format stream "#X[~a " (record (psoa-top-h mrs)))
+      (output (psoa-top-h mrs) stream)
+      (format stream "\" \"~a " (record (psoa-index mrs)))
+      (output (psoa-index mrs) stream)
+      (format stream " newline~%\"{\" #X[")
+      (loop
+          for ep in (psoa-liszt mrs)
+          for label = (rel-handel ep)
+          for pred = (rel-pred ep)
+          do
+            (format stream "#X[~a "(record label))
+            (output label stream)
+            (format stream " \":~(~a~)(\"" pred)
+            (loop
+                for role in (rel-flist ep)
+                for value = (fvpair-value role)
+                unless (eq role (first (rel-flist ep))) do
+                  (format stream " \" \"")
+                when (var-p value) do
+                  (format stream " ~a " (record value))
+                  (output value stream)
+                else do
+                  (format stream "\"~a\"" value))
+            (format stream ")] newline~%    ")))))

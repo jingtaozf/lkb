@@ -1,25 +1,12 @@
 Aiming for a commonly-accepted (pre-standard) diagnostic and evaluation
 methodology and technology, wide dissemination and assessment of the 
 [incr tsdb()] package is most desirable.  Thus, the software (in source code)
-and data are made available to the general public, free of royalties, for
-academic or other non-commercial use, including deployment in corporate
-environments.
+and data are made available to the general public, free of royalties, under
+the GNU Lesser General Public License (LGPL).
 
 To provide feedback on the distribution of the package, [incr tsdb()] users
-are encouraged to register (see below) and relay comments, bug reports or
+are encouraged to register (see below) and relay comments, bug reports, or
 suggestion for improvement to the contact address given below.  
-
-While unregistered, the package is fully functional but, after several minutes
-of continuous use, a log message is generated and sent to a central protocol
-server (at Saarbruecken University).  This notification message only contains
-information about the version of [incr tsdb()] used and the name of the
-machine it is run on.  However, because of the transmission protocol used over
-the InterNet, additional information becomes available to the protocol server,
-viz. the time of [incr tsdb()] usage (when the message is generated) and the
-account used (the originator of the protocol message).  
-
-Registering the software will effectively suppress all message generation for
-all future uses.
 
 As part of the installation or at a later time (e.g. once you found the
 package to be useful for your purposes), it is recommended that you register
@@ -31,45 +18,6 @@ voluntary registration is to provide feedback to the author and to allow
 requested, registered users will be added to the [incr tsdb()] maling list.
 The maling list is used by the author to announce major version upgrades as
 they become available; it is very low traffic.
-
-Registration proceeds as follows
-
-  (a) make yourself known to the author: send email to the contact address
-      containing information about the user name(s) and machine name(s) that
-      you want to register; if you want to register for an entire InterNet
-      domain (i.e. a wildcard machine name) or a group of users (i.e. all
-      accounts for some host or domain), please give an estimate of the
-      expected size of either set; 
-  (b) receive one or multiple [incr tsdb()] license keys for your site by
-      email; 
-  (c) add the license key(s), in exactly the same format as they were
-      received, to the file `Keys' in the `src/tsdb' subdirectory of your
-      installation; e.g. 
-
-        *       *.coli.uni-sb.de        OE1234567890
-        stefan  *.dfki.uni-sb.de        OE1234567890
-        uc      *.dfki.uni-sb.de        OE1234567890
-        *       eo.stanford.edu         OE1234567890
-        *       eoan.stanford.edu       OE1234567890
-        malouf  gerund                  OE1234567890
-        aac     anstac                  OE1234567890
-
-      alternatively, e.g. if you have no write access to the [incr tsdb()]
-      source tree at your site, you can set the license key from the file
-      `~/.podiumrc' (see the section `Customization' in the User & Reference
-      Manual) in your home directory; e.g.
-
-        set globals(copyleft,key) OE1234567890;
-
-On start-up, the main [incr tsdb()] interaction window will display a
-copyright message that reflects the status of the current copy; it will
-either display a message like
-
-  --- Registered Copy [OE1234567890] ---
-
-confirming the registration and the license key currently in use, or
-notify the user about the pending protocol message that will be
-generated after several minutes of continuous use.
 
 Contact Address
 

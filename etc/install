@@ -64,7 +64,7 @@ while [ $# -gt 0 ]; do
     ;;
     -r|--redwoods)
       TSDBHOME=${DELPHINHOME}/lkb/src/tsdb/home;
-      shift;
+      shift 1;
     ;;
     *)
       echo "install: invalid parameter \`${1}'.";

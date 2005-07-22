@@ -519,7 +519,7 @@
       (:rephrase
        (when (edge-p (lspb-edge object))
          (let ((symbol (when (find-package :mt)
-                         (find-symbol "TRANSLATE" :mt))))
+                         (find-symbol "REPHRASE" :mt))))
            (when (and symbol (fboundp symbol))
              (funcall symbol (lspb-edge object))))))
       ((:mrs :dependencies)
