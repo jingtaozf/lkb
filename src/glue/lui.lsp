@@ -21,9 +21,6 @@
 
 (in-package :lkb)
 
-;;bmw 14jun05
-(defvar *morph-records*)
-
 (defparameter *lui-application*
   (format
    nil 
@@ -244,8 +241,8 @@
   (format %lui-stream% "message ~s~a~%" string %lui-eoc%))
   
 (defun lui-show-parses (edges &optional (input *sentence*) 
-                                        (chart (copy-array *chart*))
-                                        (morphs (copy-array *morphs*)))
+                                        (tchart (copy-array *tchart*))
+                                        (chart (copy-array *chart*)))
   (loop
       with stream = (make-string-output-stream)
       initially
@@ -267,7 +264,7 @@
       for top = (make-new-parse-tree edge 1)
       for tdfs = (get top 'edge-fs)
       for lspb = (make-lspb
-                  :input input :morphs morphs :chart chart
+                  :input input :tchart tchart :chart chart
                   :edge edge :dag tdfs)
       for id = (lsp-store-object nil lspb)
       do
@@ -275,18 +272,18 @@
         (format stream "tree ~d " id)
         (lui-show-tree
          top input :lspb lspb
-         :morphs morphs :chart chart :stream stream)
+         :tchart tchart :chart chart :stream stream)
         (format stream " ~s~a~%" title %lui-eoc%)
       finally
         (format %lui-stream% "~a" (get-output-stream-string stream)))
   (force-output %lui-stream%))
 
 (defun lui-show-tree (top &optional (input *sentence*)
-                      &key morphs chart lspb (stream %lui-stream%))
+                      &key tchart chart lspb (stream %lui-stream%))
   (let* ((edge (get top 'edge-record))
          (tdfs (get top 'edge-fs))
          (lspb (make-lspb
-                :context lspb :input input :morphs morphs :chart chart
+                :context lspb :input input :tchart tchart :chart chart
                 :edge edge :dag tdfs))
          (daughters (get top 'daughters))
          (form (when (and daughters (null (rest daughters))
@@ -305,7 +302,7 @@
         for daughter in (if form (get (first daughters) 'daughters) daughters)
         do (lui-show-tree
             daughter input
-            :morphs morphs :chart chart :lspb lspb :stream stream))
+            :tchart tchart :chart chart :lspb lspb :stream stream))
     (format stream "]")))
 
 (defun lui-display-fs (tdfs title id &optional failures)
@@ -327,15 +324,13 @@
   (force-output %lui-stream%))
 
 (defun lui-show-chart (&optional (input *sentence*)
-                                 (chart (copy-array *chart*))
-                                 (morphs (copy-array *morphs*)))
+                                 (tchart (copy-array *tchart*))
+                                 (chart (copy-array *chart*)))
   
   (let* ((stream (make-string-output-stream))
-         (root (make-lspb :input input :chart chart :morphs morphs))
+         (root (make-lspb :input input :tchart tchart :chart chart))
          (id (lsp-store-object nil root))
-         (nvertices (loop 
-                        for i from 0 for foo across morphs 
-                        when (null foo) return i)))
+         (nvertices (max *tchart-max* *chart-max*)))
     (lui-parameters :chart)
     (format
      stream
@@ -343,71 +338,33 @@
      id nvertices
      (if input (format nil "`~a' (Chart)" input) "Chart View"))
 
-    ;;bmw - 14jun05
-    ;;(loop
-    ;;    for key downfrom -1
-    ;;    for from from 0
-    ;;    for morph across morphs
-    ;;    while morph do
-    ;;      (format 
-    ;;       stream
-    ;;       "  #E[~a ~a ~a ~a ~s \"\" []]~%"
-    ;;       key key from #+:null (+ from 1) -1 (morph-edge-word morph)))
-
-    ;;
-    ;; given the (archaic) treatment of orthography-changing rules in the LKB,
-    ;; some edges are more equal than others (i.e. not in the chart).
-    ;;
     (loop
-        for edge in *morph-records*
-        for to = (edge-to edge)
-        for from = (edge-from edge)
-        for lspb = (make-lspb
-                    :input input :morphs morphs :chart chart :edge edge)
-        for key = (lsp-store-object nil lspb)
-        for id = (edge-id edge)
-        for name = (lui-chart-edge-name edge)
-        for label = (lui-chart-edge-label edge)
-        do (push key (lspb-children root))
-        when (and (numberp from) (numberp to)) do
+        for key downfrom -1
+        for from from 0 to (- nvertices 1)
+        for token = (loop
+                        for configuration in (aref *tchart* from 1)
+                        for edge = (when (chart-configuration-p configuration)
+                                     (chart-configuration-edge configuration))
+                        when (token-edge-p edge) return edge)
+        when token do
           (format 
            stream
-           "  #E[~a ~:[-1~;~a~] ~a ~a ~s \"~(~a~)\" []"
-           key id id from to name label)
-          (loop
-              for child in (edge-children edge)
-              do (format stream " ~a" (edge-id child)))
-          ;;bmw - 14jun05
-	  ;;(when (edge-morph-history edge)
-          ;;  (format stream " ~a"(edge-id (edge-morph-history edge))))
-	  
-          ;;
-          ;; for lexemes, generate pseudo daughters list in terms of token ids
-          ;;
-          (when (stringp (edge-rule edge))
-            (loop
-                for i from (- (+ from 1)) downto (- to)
-                do (format stream " ~a" i)))
-          (format stream "]~%"))
-                    
+           "  #E[~a ~a ~a ~a ~(~s~) \"\" []]~%"
+           key key from #+:null (+ from 1) -1 (token-edge-word token)))
+
     (loop
         for to from 0 to (min nvertices *chart-limit*)
         for configurations 
-        = (let ((entry (aref chart to 0)))
-	    ;;bmw - 14jun05
-	    ;;(when (chart-entry-p entry)
-            ;;  (sort (copy-list (chart-entry-configurations entry))
-            (when (chart-configuration-p entry)
-              (sort (copy-list entry)
-                    #'(lambda (span1 span2)
-                        (cond
-                         ((eql (chart-configuration-begin span1)
-                               (chart-configuration-begin span2))
-                          (< (edge-id (chart-configuration-edge span1))
-                             (edge-id (chart-configuration-edge span2))))
-                         (t
-                          (< (chart-configuration-begin span1)
-                             (chart-configuration-begin span2))))))))
+        = (sort (copy-list (aref chart to 0))
+                #'(lambda (span1 span2)
+                    (cond
+                     ((eql (chart-configuration-begin span1)
+                           (chart-configuration-begin span2))
+                      (< (edge-id (chart-configuration-edge span1))
+                         (edge-id (chart-configuration-edge span2))))
+                     (t
+                      (< (chart-configuration-begin span1)
+                         (chart-configuration-begin span2))))))
         do
           (loop
               for configuration in configurations
@@ -418,7 +375,7 @@
                            (edge-from configuration)
                            (chart-configuration-begin configuration))
               for lspb = (make-lspb
-                          :input input :morphs morphs :chart chart
+                          :input input :tchart tchart :chart chart
                           :edge edge)
               for key = (lsp-store-object nil lspb)
               for id = (edge-id edge)
@@ -433,10 +390,6 @@
                 (loop
                     for child in (edge-children edge)
                     do (format stream " ~a" (edge-id child)))
-		;;bmw - 14jun05
-		;;(when (edge-morph-history edge)
-                ;;  (format stream " ~a"(edge-id (edge-morph-history edge))))
-		
                 ;;
                 ;; for lexemes, generate pseudo daughters list again
                 ;;
@@ -468,65 +421,37 @@
       with edges = (or edges *gen-record*)
       with chart = (or chart (copy-tree *gen-chart*))
       with stream = (make-string-output-stream)
-      for i from 0
+      with context = (make-lspb)
+      with last = (first (last edges))
       for edge in edges 
-      for string = (g-edge-string edge)
+      for string = (format nil "~{~a~^ ~}" (g-edge-string edge))
       for lspb = (make-lspb
                   :chart chart :mrs *generator-input*
-                  :edge edge)
-      initially (format stream "text -42 #X[~%")
+                  :edge edge :input string)
+      initially
+        (lsp-store-object nil context)
+        (format stream "text ~a #X[" (lspb-id context))
       do
-        (lsp-store-object nil lspb)
-        (format stream "  #X[~d \"~{~a~^ ~}\"] newline~%" i string)
-      collect (cons i lspb) into lspbs
+        (push (lsp-store-object nil lspb) (lspb-children context))
+        (format
+         stream
+         "  #X[~d \"~a\"] ~:[newline~;]~]~%"
+         (lspb-id lspb) string (eq edge last))
+      collect lspb into lspbs
       finally
-        (format stream "]~%")
         (loop
-            for (i . lspb) in lspbs
+            for lspb in lspbs
+            for id = (lspb-id lspb)
             do
               (format
                stream
-               "  #M[ \"Tree\" \"browse ~d ~d tree\" ~d ]~%"
-               (lspb-id lspb) (lspb-id lspb) i)
-              (format
-               stream
-               "  #M[ \"AVM\" \"browse ~d ~d avm\" ~d ]~%"
-               (lspb-id lspb) (lspb-id lspb) i)
-              (format
-               stream
-               "  #M[ \"MRS\" \"browse ~d ~d mrs\" ~d ]~%"
-               (lspb-id lspb) (lspb-id lspb) i))
+               "  #M[\"Tree\" \"browse ~d ~d tree\"~%     ~
+                     \"AVM\" \"browse ~d ~d avm\"~%     ~
+                     \"Simple MRS\" \"browse ~d ~d mrs simple\" ~d]~%     ~
+                     \"Indexed MRS\" \"browse ~d ~d mrs indexed\" ~d]~%     ~
+                     \"Dependencies\" \"browse ~d ~d dependencies\" ~d]~%"
+               id id id id id id id))
         (format stream "  ~s~a~%" "Realization Result(s)" %lui-eoc%)
-        (format %lui-stream% "~a" (get-output-stream-string stream)))
-
-  #+:null
-  (loop
-      with edges = (or edges *gen-record*)
-      with chart = (or chart (copy-tree *gen-chart*))
-      with stream = (make-string-output-stream)
-      initially 
-        (lui-parameters :tree)
-        (format
-         stream
-         "group ~d ~s~a~%"
-         (length edges)
-         "Realization Result(s)"
-         %lui-eoc%)
-      for i from 1
-      for title = (format nil "Realization Tree # ~d" i)
-      for edge in edges 
-      for top = (make-new-parse-tree edge 1)
-      for tdfs = (get top 'edge-fs)
-      for lspb = (make-lspb
-                  :chart chart :mrs *generator-input*
-                  :edge edge :dag tdfs)
-      for id = (lsp-store-object nil lspb)
-      do
-        (setf (lspb-id lspb) id)
-        (format stream "tree ~d " id)
-        (lui-show-tree top nil :lspb lspb :stream stream)
-        (format stream " ~s~a~%" title %lui-eoc%)
-      finally
         (format %lui-stream% "~a" (get-output-stream-string stream)))
   (force-output %lui-stream%))
 
@@ -535,6 +460,8 @@
          (title (case format
                   (:simple 
                    (format nil "~@[~a ~]Simple MRS Display" title))
+                  (:simple 
+                   (format nil "~@[~a ~]Indexed MRS Display" title))
                   (:dependencies
                    (format 
                     nil
@@ -548,6 +475,9 @@
                        %lui-eoc%)
                       (format stream "avm ~d " id)
                       (mrs::lui-dagify-mrs mrs :stream stream))
+                     (:indexed
+                      
+                      )
                      (:dependencies
                       (format stream "text 42 ")
                       (mrs::ed-output-psoa

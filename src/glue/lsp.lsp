@@ -58,15 +58,12 @@
 
 (defparameter %lsp-free-list% nil)
 
-;;bmw 14jun05
-(defvar *morphs*)
-
 (defstruct client
   id socket stream process
   (display #+:clim clim:*default-server-path* #-:clim nil))
 
 (defstruct lspb
-  id context input morphs chart edge dag mrs children)
+  id context input tchart chart edge dag mrs children)
 
 #-(or :clisp :sbcl)
 (defun lsp-initialize ()
@@ -486,8 +483,8 @@
            ((edge-p (lspb-edge object)) (edge-dag (lspb-edge object))))
           title)))
       ((:chart :edges)
-       (when (and (lspb-morphs object) (lspb-chart object))
-         (let ((*morphs* (lspb-morphs object))
+       (when (and (lspb-tchart object) (lspb-chart object))
+         (let ((*tchart* (lspb-tchart object))
                (*chart* (lspb-chart object))
                (id (show-chart)))
            (when (numberp id)
@@ -569,5 +566,3 @@
     (read-from-string (if (stringp symbol) 
                         symbol
                         (format nil "(~a)" symbol)))))
-
-        
