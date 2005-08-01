@@ -686,7 +686,8 @@
 	      (eq c #\\))
        collect #\\
        collect c)))
-  
+
+#+:psql
 (defun escape-sql-copy-string (esc-char string)
   (implode-from-chars
    (loop

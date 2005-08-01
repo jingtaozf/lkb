@@ -56,7 +56,7 @@
   #+(and :powerpc :linux) "linux.ppc.32"
   #+(and :powerpc :darwin) "macos.ppc.32")
 
-(in-package :cl-user)
+;(in-package :cl-user)
 
 ;;;
 ;;; the Allegro CL style run-shell-command() (since acl is home sweet home):
