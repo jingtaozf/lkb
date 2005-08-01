@@ -179,7 +179,7 @@
       :components
       (#+:preprocessor       
        (:file "preprocess")
-       #+:preprocessor
+       #+(and :xml :preprocessor)
        (:file "texti")			; text interface
        ))  
 
