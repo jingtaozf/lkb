@@ -39,7 +39,7 @@
       (:cycle
        (format 
         stream 
-        "#U[cycle ~:[-1~*~;~a~] [~:[~*~;~{~a~^ ~}~] ~:[.~*~;~{~a~^.~}~] ~
+        "#U[cycle ~:[-1~*~;~a~] [~:[~*~;~{~a~^ ~}~]] [~:[~*~;~{~a~^ ~}~]] ~
             ~:[-1~*~;~a~]]"
         (failure-id object) (failure-id object) 
         (failure-path object) (failure-path object)
@@ -73,15 +73,18 @@
   #+:debug
   (setf %dag1 dag1 %dag2 dag2)
   (debug-unify1 dag1 dag2 nil) 
-  (copy-dag dag1))
+  (debug-copy-dag dag1))
 
 (defun debug-unify1 (dag1 dag2 path)
   (setf dag1 (deref-dag dag1))
   (setf dag2 (deref-dag dag2))
-  (cond
-   ((eq (dag-copy dag1) :inside)
-    (push (make-failure :nature :cycle :suffix (reverse path)) %failures%))
-   ((not (eq dag1 dag2)) (debug-unify2 dag1 dag2 path)))
+  (when (dag-copy dag1)
+    (let* ((prefix (reverse (dag-copy dag1)))
+           (suffix (subseq (reverse path) (length prefix)))
+           (failure
+            (make-failure :nature :cycle :path prefix :suffix suffix)))
+      (push failure %failures%)))
+  (unless (eq dag1 dag2) (debug-unify2 dag1 dag2 path))
   dag1)
 
 (defun debug-unify2 (dag1 dag2 path)
@@ -112,7 +115,7 @@
           (nconc %failures% failures)))
       (setf dag1 (deref-dag dag1))
       (setf (dag-forward dag2) dag1)
-      (setf (dag-copy dag1) :inside)
+      (setf (dag-copy dag1) path)
       (debug-unify-arcs dag1 dag2 path)
       (setf (dag-copy dag1) nil))
      (t
@@ -164,3 +167,36 @@
           (push arc2 new-arcs))
     (when new-arcs
       (setf (dag-comp-arcs dag1) new-arcs))))
+
+(defun debug-copy-dag (dag &optional path)
+  (let ((dag (deref-dag dag))
+        (copy (dag-copy dag)))
+    (cond
+     ((dag-p copy) copy)
+     ((consp copy)
+      ;;
+      ;; _fix_me_
+      ;; no need to do cycle detection here, we think.  debug-unify1() should
+      ;; have done it already; at least i cannot quickly think of a way for a
+      ;; cycle to escape that test ... why would we not be doing it inside the
+      ;; unifier for production use?                            (2-aug-05; oe)
+      ;;
+      #+:null
+      (let* ((prefix (reverse (first copy)))
+             (suffix (subseq (reverse path) (length prefix)))
+             (failure
+              (make-failure :nature :cycle :path prefix :suffix suffix)))
+        (push failure %failures%))
+      (setf (dag-copy dag) (rest (dag-copy dag))))
+     (t
+      (let ((new (make-dag :type (unify-get-type dag))))
+        (setf (dag-copy dag) (cons path new))
+        (setf (dag-arcs new)
+          (loop
+              for arc in (append (dag-arcs dag) (dag-comp-arcs dag))
+              for feature = (dag-arc-attribute arc)
+              for copy = (let ((path (cons feature path)))
+                           (declare (dynamic-extent path))
+                           (debug-copy-dag (dag-arc-value arc) path))
+              collect (make-dag-arc :attribute feature :value copy)))
+        (setf (dag-copy dag) new))))))
