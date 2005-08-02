@@ -424,7 +424,7 @@
       with context = (make-lspb)
       with last = (first (last edges))
       for edge in edges 
-      for string = (format nil "~{~a~^ ~}" (g-edge-string edge))
+      for string = (format nil "~{~(~a~)~^ ~}" (g-edge-string edge))
       for lspb = (make-lspb
                   :chart chart :mrs *generator-input*
                   :edge edge :input string)
@@ -491,7 +491,7 @@
     (format %lui-stream% " ~s~a~%" title %lui-eoc%))
   (force-output %lui-stream%))
 
-(defun lui-status-p (&optional key)
+(defun lui-status-p (&optional key format)
   (when (and (streamp %lui-stream%) (open-stream-p %lui-stream%))
     (if (null key)
       (streamp %lui-stream%)
@@ -505,7 +505,8 @@
         #-:null
         (:realization (streamp %lui-stream%))
         #-:null
-        (:mrs (streamp %lui-stream%))))))
+        (:mrs (and (streamp %lui-stream%)
+                   (member format '(:simple :indexed :dependencies))))))))
 
 (defun copy-array (array)
   (let ((dimensions (array-dimensions array))

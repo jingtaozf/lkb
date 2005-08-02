@@ -454,7 +454,8 @@
 (defun lsp-forget-object (id n)
   (when (and (numberp n) (>= n 0) (< n (array-total-size %lsp-attic%)))
     (let ((bucket (aref %lsp-attic% n)))
-      (when (or (equal (first bucket) -1) (equal (first bucket) id))
+      (when (and (or (equal (first bucket) -1) (equal (first bucket) id))
+                 (lspb-p (rest bucket)))
         (loop
             for child in (lspb-children (rest bucket))
             do (lsp-forget-object id child))

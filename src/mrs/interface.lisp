@@ -209,7 +209,7 @@
      (equal mrs1 mrs2))))
 
 (defun display-mrs (edge &optional mrs title (format :simple))
-  (if #+:lui (lkb::lui-status-p :mrs) #-:lui nil
+  (if #+:lui (lkb::lui-status-p :mrs format) #-:lui nil
     (let ((mrs (or mrs (lkb::edge-mrs edge) (extract-mrs edge))))
       (when (psoa-p mrs) 
         (lkb::lui-display-mrs mrs title format)))

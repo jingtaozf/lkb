@@ -267,13 +267,15 @@
       (output (psoa-top-h mrs) stream)
       (format stream " \" \" ~a " (record (psoa-index mrs)))
       (output (psoa-index mrs) stream)
-      (format stream " newline~%\"{\" #X[")
+      (format stream " newline~%\"{ \" #X[")
       (loop
-          for ep in (psoa-liszt mrs)
+          with eps = (psoa-liszt mrs)
+          with last = (first (last eps))
+          for ep in eps
           for label = (rel-handel ep)
           for pred = (rel-pred ep)
           do
-            (format stream "#X[~a "(record label))
+            (format stream "#X[~a " (record label))
             (output label stream)
             (format stream " \":~(~a~)(\"" pred)
             (loop
@@ -287,6 +289,26 @@
                     (output value stream newp))
                 else do
                   (format stream "\"~a\"" value))
-            (format stream " \")\" ] newline~%    "))
-      (format stream "] \"}\"]~%"))))
-
+            (format stream " \")\" ]~@[ newline~]~%    " (not (eq ep last))))
+      (format stream "] \" }\" newline~% \"{ \" #X[")
+      (loop
+          for hcons in (psoa-h-cons mrs)
+          for type = (hcons-relation hcons)
+          for hi = (hcons-scarg hcons)
+          for lo = (hcons-outscpd hcons)
+          do
+            (format stream "#X[~a " (record hi))
+            (output hi stream)
+            (format
+             stream
+             " \" ~(~a~) \" "
+             (cond
+              ((not (stringp type)) "=?")
+              ((string-equal type "qeq") "=q")
+              ((string-equal type "leq") "<q")
+              ((string-equal type "geq") ">q")
+              (t "=?")))
+            (format stream "~a " (record lo))
+            (output lo stream)
+            (format stream "] \" \" wrap~%"))
+      (format stream "] \"}\" ]"))))
