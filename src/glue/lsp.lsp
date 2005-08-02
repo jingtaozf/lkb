@@ -369,7 +369,10 @@
                 (lui-display-fs 
                  result
                  (if failures 
-                   (format nil "Unification Failure~p" (length failures))
+                   (format
+                    nil
+                    "Unification Failure~p (~a)"
+                    (length failures) (length failures))
                    "Unification Result")
                  42
                  failures))

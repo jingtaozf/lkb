@@ -431,6 +431,11 @@
       initially
         (lsp-store-object nil context)
         (format stream "text ~a #X[" (lspb-id context))
+        (unless edges
+          (if (typep %generator-condition% 'error)
+            (let ((condition (format nil "~a" %generator-condition%)))
+              (format stream "\"~a\" ]" (normalize-string condition)))
+            (format stream "no realizations found")))
       do
         (push (lsp-store-object nil lspb) (lspb-children context))
         (format
@@ -447,10 +452,10 @@
                stream
                "  #M[\"Tree\" \"browse ~d ~d tree\"~%     ~
                      \"AVM\" \"browse ~d ~d avm\"~%     ~
-                     \"Simple MRS\" \"browse ~d ~d mrs simple\" ~d]~%     ~
-                     \"Indexed MRS\" \"browse ~d ~d mrs indexed\" ~d]~%     ~
+                     \"Simple MRS\" \"browse ~d ~d mrs simple\" ~d~%     ~
+                     \"Indexed MRS\" \"browse ~d ~d mrs indexed\" ~d~%     ~
                      \"Dependencies\" \"browse ~d ~d dependencies\" ~d]~%"
-               id id id id id id id))
+               id id id id id id id id id id id id id))
         (format stream "  ~s~a~%" "Realization Result(s)" %lui-eoc%)
         (format %lui-stream% "~a" (get-output-stream-string stream)))
   (force-output %lui-stream%))
@@ -460,7 +465,7 @@
          (title (case format
                   (:simple 
                    (format nil "~@[~a ~]Simple MRS Display" title))
-                  (:simple 
+                  (:indexed 
                    (format nil "~@[~a ~]Indexed MRS Display" title))
                   (:dependencies
                    (format 
@@ -476,8 +481,8 @@
                       (format stream "avm ~d " id)
                       (mrs::lui-dagify-mrs mrs :stream stream))
                      (:indexed
-                      
-                      )
+                      (format stream "text 42 ")
+                      (mrs::lui-indexed-mrs mrs :stream stream))
                      (:dependencies
                       (format stream "text 42 ")
                       (mrs::ed-output-psoa

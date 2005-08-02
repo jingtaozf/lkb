@@ -194,7 +194,7 @@
             for label = (rel-handel ep)
             for pred = (rel-pred ep)
             do
-              (format stream " #D[~(~a~) ~a: #D[~(~a~)" cons first pred)
+              (format stream " #D[~(~s~) ~a: #D[~(~a~)" cons first pred)
               (when label 
                 (format stream " LBL: ")
                 (dagify-variable label))
@@ -250,12 +250,22 @@
                      (setf (gethash object attic) n)
                      (incf id)
                      n)))
-             (output (variable stream)
+             (output (variable stream &optional (newp t))
                (when (var-p variable)
-                 (format stream "\"~(~a~)\"" (var-string variable)))))
+                 (format stream "\"~(~a~)\"" (var-string variable))
+                 (when (and newp (var-extra variable))
+                   (format stream " \"{\"")
+                   (loop
+                       for extra in (var-extra variable)
+                       do
+                         (format
+                          stream
+                          " \" ~(~a~)\""
+                          (extrapair-value extra)))
+                   (format stream " \" }\"")))))
       (format stream "#X[~a " (record (psoa-top-h mrs)))
       (output (psoa-top-h mrs) stream)
-      (format stream "\" \"~a " (record (psoa-index mrs)))
+      (format stream " \" \" ~a " (record (psoa-index mrs)))
       (output (psoa-index mrs) stream)
       (format stream " newline~%\"{\" #X[")
       (loop
@@ -270,10 +280,13 @@
                 for role in (rel-flist ep)
                 for value = (fvpair-value role)
                 unless (eq role (first (rel-flist ep))) do
-                  (format stream " \" \"")
+                  (format stream " \", \"")
                 when (var-p value) do
-                  (format stream " ~a " (record value))
-                  (output value stream)
+                  (let ((newp (newp value)))
+                    (format stream " ~a " (record value))
+                    (output value stream newp))
                 else do
                   (format stream "\"~a\"" value))
-            (format stream ")] newline~%    ")))))
+            (format stream " \")\" ] newline~%    "))
+      (format stream "] \"}\"]~%"))))
+

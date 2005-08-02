@@ -28,6 +28,7 @@
 (defparameter %generator-lexical-items% nil)
 (defparameter %generator-unknown-eps% nil)
 (defparameter %generator-statistics% nil)
+(defparameter %generator-condition% nil)
 
 ;;;
 ;;; given all the new parameters we have just introduced, attempt to make sure
@@ -245,6 +246,7 @@
     (mt::generate-from-fragmented-mrs mrs :signal signal)
     (handler-case (generate-from-mrs-internal mrs :nanalyses nanalyses)
       (condition (condition)
+        (setf %generator-condition% condition)
         (if signal
           (error condition)
           (warn (format nil "~a" condition)))))))
