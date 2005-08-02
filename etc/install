@@ -182,7 +182,7 @@ for i in erg.tgz matrix.tgz spanish.tgz; do
   echo -n "install: \`${i}' ...";
   ( cd Archives; ${WGET} http://lingo.stanford.edu/ftp/${build}/${i}; )
   if [ -f Archives/${i} ]; then
-    ( cd lkb; ${GUNZIP} ${DELPHINHOME}/Archives/${i} | ${TAR}; )
+    ( cd ${DELPHINHOME}; ${GUNZIP} ${DELPHINHOME}/Archives/${i} | ${TAR}; )
     echo " done.";
   else
     echo " missing.";
