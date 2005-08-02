@@ -415,7 +415,8 @@
 
 (defun lui-show-gen-result (&optional edges chart)
 
-  (declare (special *gen-record* *gen-chart* *generator-input*))
+  (declare (special *gen-record* *gen-chart* 
+                    *generator-input* %generator-condition%))
   
   (loop
       with edges = (or edges *gen-record*)
