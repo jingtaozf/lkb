@@ -12,7 +12,7 @@ parameter avm-collapsed-features [ARGS]
 parameter avm-hidden-types []
 parameter avm-collapsed-types [non_local]
 parameter avm-bar-font #F[Helvetica 12 roman black]
-parameter avm-type-font #F[Helvetica 12 roman blue]
+parameter avm-type-font #F[Helvetica 12 bold blue]
 parameter avm-feature-font #F[Helvetica 12 roman black]
 parameter avm-tag-font #F[Helvetica 12 roman green]
 parameter avm-structure-bracket-color #C[8448 9448 33792]
@@ -22,16 +22,16 @@ parameter avm-tag-box-color green
 #
 # the summary browser for trees, showing all trees in a single window
 #
-parameter tree-summary-bar-font #F[Helvetica 9 roman black]
-parameter tree-summary-node-font #F[Helvetica 9 roman black]
-parameter tree-summary-surface-font #F[Helvetica 9 oblique black]
+parameter tree-summary-bar-font #F[Helvetica 10 roman black]
+parameter tree-summary-node-font #F[Helvetica 10 roman black]
+parameter tree-summary-surface-font #F[Helvetica 10 italic black]
 
 #
 # the detailed tree browser, showing one single tree at a time
 #
 parameter tree-detail-bar-font #F[Helvetica 14 roman black]
 parameter tree-detail-node-font #F[Helvetica 14 roman black]
-parameter tree-detail-surface-font #F[Helvetica 14 roman black]
+parameter tree-detail-surface-font #F[Helvetica 14 italic black]
 
 #
 # the chart browser
