@@ -162,25 +162,42 @@
 (defmethod rev-to-rev-key ((lex psql-lex-database) recs)
   (let* ((orth-raw-mapping (assoc :orth (dfn lex)))
 	 (orth-raw-value-mapping (fourth orth-raw-mapping)))
-    (mapcan
-     #'(lambda (z) 
-	 (mapcar #'(lambda (x)
-		     (list (first z) (second z) (third z) x))
-		 (mapcar #'normalize-orthkey
-			 (car (work-out-value orth-raw-value-mapping (fourth z))))))
-     recs)))
+    (loop
+	for rec in recs
+	append 
+	  (loop
+	    for key in (mapcar #'normalize-orthkey
+			       (car (work-out-value orth-raw-value-mapping (fourth rec))))
+	      collect
+		(list (first rec) (second rec) (third rec) key)))))
 
 (defparameter *newline-str* (string (code-char 10)))
 (defun join-str-lines (lines)
   (if (null lines) ""
-    (apply #'concatenate 'string
-	   (cons (car lines)
-		 (loop
-		     for line in (cdr lines)
-		     collect *newline-str*
-		     collect line)))))
+    (loop
+	with strm = (make-string-output-stream)
+	for line in lines
+	do
+	  (princ line strm)
+	  (terpri strm)
+	finally
+	  (return (get-output-stream-string strm)))))
       
-	 
+
+;(defun to-psql-COPY-rec (lst &key (delim-char #\tab) (null "\\N"))
+;  (cond
+;   ((null lst)
+;    "")
+;   (t
+;    (let ((s (make-string-output-stream)))
+;      (princ (psql-COPY-val (pop lst) :delim-char delim-char :null null) s)
+;      (loop
+;	  for l in lst
+;	  do
+;	    (princ delim-char s)
+;	    (princ (psql-COPY-val l :delim-char delim-char :null null) s)
+;	  finally
+;	    (return (get-output-stream-string s)))))))
 
 (defun to-psql-COPY-rec (lst &key (delim-char #\tab) (null "\\N"))
   (cond
@@ -195,7 +212,7 @@
 		     collect delim
 		     collect (psql-COPY-val x :delim-char delim-char :null null)))))))
   
-
+   
 (defun psql-COPY-val (val &key (delim-char #\tab) (null "\\N"))
   (cond
    ((null val)
@@ -204,8 +221,7 @@
     (coerce
      (loop
 	 with str = (2-str val)
-	 for i from 0 to (1- (length str))
-	 for char = (aref str i)
+	 for char across str
 	 for code = (char-code char)
 	 when (= code 8)
 	 collect #\\
@@ -234,8 +250,7 @@
 	 else	 
 	 collect char)
      'string))))
-   
-  
+
 ;;;
   
 
