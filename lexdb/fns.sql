@@ -183,9 +183,9 @@ BEGIN
 	m_time := (SELECT mod_time());	
 	b_time := (SELECT build_time());	
 
-	RAISE INFO \'current filter: %\', current_filter;
-	RAISE INFO \'build time: %\', b_time;
-	RAISE INFO \'mod time: %\', m_time;
+	RAISE DEBUG \'current filter: %\', current_filter;
+	RAISE DEBUG \'build time: %\', b_time;
+	RAISE DEBUG \'mod time: %\', m_time;
 
 	-- set (new) filter
  	EXECUTE \'
@@ -195,11 +195,11 @@ BEGIN
     		WHERE \' || new_filter ;
 	IF new_filter != current_filter THEN
  		EXECUTE \'UPDATE meta SET val= \' || quote_literal(new_filter) || \' WHERE var=\'\'filter\'\'\';
-		RAISE INFO \'new filter: %\', new_filter;
-		RAISE INFO \'rebuilding db cache\';
+		RAISE DEBUG \'new filter: %\', new_filter;
+		RAISE INFO \'rebuilding lex table\';
    		EXECUTE \'SELECT build_lex()\';
 	ELSIF mod_time() > build_time() THEN
-		RAISE INFO \'rebuilding db cache\';
+		RAISE INFO \'rebuilding private lex table\';
    		EXECUTE \'SELECT build_lex()\';
  	END IF;
  	RETURN true;
@@ -220,11 +220,11 @@ BEGIN
 	CREATE INDEX filt_tmp_modstamp ON filt_tmp (modstamp);
 
 	-- recreate lex
-	RAISE INFO \'emptying lex\';
+	RAISE DEBUG \'emptying lex\';
 	DELETE FROM lex; 
 	PERFORM public.deindex_lex();
 
-	RAISE INFO \'populating lex\';
+	RAISE DEBUG \'populating lex\';
 	INSERT INTO lex 
 		-- =head, but faster lookup
   		SELECT fil.*
@@ -312,7 +312,7 @@ DECLARE
 BEGIN
 	PERFORM assert_db_owner();	
 
-	RAISE INFO \'Selecting new entries to merge...\';
+	RAISE DEBUG \'Selecting new entries to merge...\';
  	CREATE INDEX tmp_name_userid_modstamp on public.tmp (name, userid, modstamp);
 
 	-- check for duplicates in public.tmp
@@ -333,7 +333,7 @@ BEGIN
 	IF count_new > 0 THEN
  		PERFORM public.deindex_public_rev();
 
-		RAISE INFO \'Inserting new % entries...\', count_new;
+		RAISE DEBUG \'Inserting new % entries...\', count_new;
 		INSERT INTO public.rev SELECT * FROM rev_new;
 		INSERT INTO public.rev_key SELECT tmp_key.* FROM tmp_key JOIN rev_new USING (name,userid,modstamp); 
 
@@ -341,7 +341,7 @@ BEGIN
 
 		PERFORM register_modstamp();
 	ELSE
-		RAISE INFO \'0 new entries\';
+		RAISE DEBUG \'0 new entries\';
 	END IF;
  RETURN count_new;
 END;
@@ -359,10 +359,10 @@ BEGIN
                			SELECT * FROM dfn) AS t1
              			NATURAL JOIN public.tmp_dfn);
 
- 	RAISE INFO \'% new field mappings\', num_new;
+ 	RAISE DEBUG \'% new dfn entries\', num_new;
 
 	IF num_new > 0 THEN
- 		RAISE INFO \'Updating table...\';
+ 		RAISE DEBUG \'Updating table...\';
  		DELETE FROM dfn WHERE mode IN (SELECT DISTINCT mode FROM public.tmp_dfn);
 		INSERT INTO dfn
   			SELECT * FROM public.tmp_dfn; 
@@ -379,11 +379,11 @@ END;
 
 CREATE OR REPLACE FUNCTION public.dump_public_rev_rev_key_to_tmp_tmp_key() RETURNS boolean AS '
 BEGIN
-	RAISE INFO \'creating ordered copy of public.rev in tmp\';
+	RAISE DEBUG \'creating ordered copy of public.rev in tmp\';
 	DELETE FROM tmp;
 	INSERT INTO tmp SELECT * FROM public.rev ORDER BY name, userid, modstamp;
 
-	RAISE INFO \'creating ordered copy of public.rev_key in tmp_key\';
+	RAISE DEBUG \'creating ordered copy of public.rev_key in tmp_key\';
 	DELETE FROM tmp_key;
 	INSERT INTO tmp_key SELECT * FROM public.rev_key ORDER BY name, userid, modstamp,key;
 

@@ -26,7 +26,7 @@ END;
 
 CREATE OR REPLACE FUNCTION public.index_public_rev() RETURNS boolean AS '
 BEGIN
- 	RAISE INFO \'Creating indices...\';
+ 	RAISE DEBUG \'Creating indices...\';
 	ALTER TABLE public.rev ADD PRIMARY KEY (name,userid,modstamp);
 	CREATE UNIQUE INDEX name_modstamp ON public.rev (name,modstamp); 
 	CREATE INDEX rev_name_modstamp ON public.rev (name, modstamp);
@@ -39,7 +39,7 @@ END;
 
 CREATE OR REPLACE FUNCTION public.deindex_public_rev() RETURNS boolean AS '
 BEGIN
- 	RAISE INFO \'Dropping indices...\';
+ 	RAISE DEBUG \'Dropping indices...\';
  	DROP INDEX name_modstamp;
 	DROP INDEX rev_name_modstamp;
 	DROP INDEX rev_name;
@@ -51,7 +51,7 @@ END;
 
 CREATE OR REPLACE FUNCTION public.index_lex() RETURNS boolean AS '
 BEGIN
-	RAISE INFO \'indexing db cache\';
+	RAISE DEBUG \'indexing db cache\';
 	CREATE UNIQUE INDEX lex_name ON lex (name varchar_ops);
 
  	IF psql_server_version(\'7.4\') THEN
@@ -65,7 +65,7 @@ END;
 
 CREATE OR REPLACE FUNCTION public.deindex_lex() RETURNS boolean AS '
 BEGIN
-	RAISE INFO \'deindexing db cache\';
+	RAISE DEBUG \'deindexing db cache\';
 	DROP INDEX lex_name;
 	DROP INDEX lex_name_pattern;
 	RETURN true;
@@ -74,7 +74,7 @@ END;
 
 CREATE OR REPLACE FUNCTION public.index_lex_key() RETURNS boolean AS '
 BEGIN
-	RAISE INFO \'indexing lex_key\';
+	RAISE DEBUG \'indexing lex_key\';
 	CREATE INDEX lex_key_key ON lex_key (key);
 	RETURN true;
 END;
@@ -82,7 +82,7 @@ END;
 
 CREATE OR REPLACE FUNCTION public.deindex_lex_key() RETURNS boolean AS '
 BEGIN
-	RAISE INFO \'deindexing lex_keye\';
+	RAISE DEBUG \'deindexing lex_keye\';
 	DROP INDEX lex_key_key;
 	RETURN true;
 END;
@@ -118,7 +118,7 @@ END;
 
 CREATE OR REPLACE FUNCTION create_tables_semi() RETURNS boolean AS '
 BEGIN
- 	RAISE INFO \'Creating SEMI structures...\';
+ 	RAISE DEBUG \'Creating SEMI structures...\';
 	CREATE TABLE semi_pred (
 		lex_id text NOT NULL,
 		pred_id text NOT NULL,
@@ -204,7 +204,7 @@ BEGIN
 	IF (reln_exists(\'public\',\'fld\') 
 			AND 
 			(SELECT count(*) FROM public.fld)>0) THEN
-		RAISE INFO \'Using field defns found in public.fld\';
+		RAISE DEBUG \'Using field defns found in public.fld\';
 		FOR x IN SELECT dfn FROM fld LOOP
 			t := COALESCE(t,\'\');
 			t:= t || \',\n \' || x.dfn;
