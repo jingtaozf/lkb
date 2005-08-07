@@ -23,9 +23,9 @@
 (defvar *lexdb-dump-country* nil)
 
 (defvar *lexdb-dump-tdl* nil) ;; set this to t to force tdl dump to accompany lexdb dump
-(defvar *lexdb-message-old-server* "PostgreSQL server version is ~a. Please upgrade to version ~a or above.")
-(defvar *lexdb-message-old-lkb* "Your LexDB version (~a) is incompatible with this LKB version (requires v. ~ax). Try obtaining a more recent LKB binary.")
-(defvar *lexdb-message-old-lexdb* "Your LexDB version (~a) is incompatible with this LKB version (requires v. ~ax). You must load updated setup files. See http://www.cl.cam.ac.uk/~~bmw20/DT/initialize-db.html")
+(defvar *lexdb-message-old-server* "(LexDB) PostgreSQL server version is ~a. Please upgrade to version ~a or above.")
+(defvar *lexdb-message-old-lkb* "(LexDB) Your LexDB version (~a) is incompatible with this LKB version (requires v. ~ax). Try obtaining a more recent LKB binary.")
+(defvar *lexdb-message-old-lexdb* "(LexDB) Your LexDB version (~a) is incompatible with this LKB version (requires v. ~ax). You must load updated setup files. See http://www.cl.cam.ac.uk/~~bmw20/DT/initialize-db.html")
 
 ;; map from obsolete names of field-map types
 (defvar *lexdb-fmtype-alt*
@@ -113,17 +113,17 @@
 	      (let (#+allegro (excl::*load-foreign-types* (cons "3" excl::*load-foreign-types*)))
 		(load "libpq.so.3"))
 	    (file-error ()
-	      (format t ";   Warning: cannot load libpq.so")
+	      (format t ";   Warning: (LexDB) cannot load libpq.so")
 	      (format t "~%;            (Is the PostgreSQL library file installed on your machine? If so, please load it manually.)")))))))
   #+:mswindows
   (handler-case 
       (load "libpq.dll")    
     (file-error ()
-      (format t ";   Warning: cannot load libpq.dll")
+      (format t ";   Warning: (LexDB) cannot load libpq.dll")
       (format t "~%;            (Is the PostgreSQL library file installed on your machine? If so, please load it manually.)")))
   #-(or :linux :mswindows)
   (handler-case 
       (load "libpq.so")    
     (file-error ()
-      (format t ";   Warning: cannot load libpq library")
+      (format t ";   Warning: (LexDB) cannot load libpq library")
       (format t "~%;            (Is the PostgreSQL library file installed on your machine? If so, please load it manually.)"))))

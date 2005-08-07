@@ -34,9 +34,9 @@
 
 (defmethod export-to-tdl ((lexicon lex-database) stream &key lex-ids)
   (when (typep lexicon 'psql-lex-database)
-    (format t "~%(caching all lexical records)")
+    (format t "~&(LexDB) caching all lexical records")
     (cache-all-lex-records lexicon)
-    (format t "~%(caching complete)"))
+    (format t "~&(LexDB) caching complete"))
   (unless lex-ids (setf lex-ids (collect-psort-ids lexicon)))
   (mapc
    #'(lambda (id)
@@ -45,7 +45,7 @@
    (sort (copy-list lex-ids)
 	 #'(lambda (x y) (string< (2-str x) (2-str y)))))
   (when (typep lexicon 'psql-lex-database)
-    (format t "~%(emptying cache)")
+    (format t "~&(LexDB) emptying cache")
     (empty-cache lexicon)))
 
 (defmethod id-to-tdl-str ((lexicon lex-database) id)

@@ -14,7 +14,7 @@
     (error "please initialize-LexDB"))
   (let ((filename (get-filename rest :ending ".rev" :existing t)))
     (when filename
-      (format t "~&Merging files ~a.* into lexical database ~a ..." 
+      (format t "~&(LexDB) merging files ~a.* into lexical database ~a ..." 
 	      filename (dbname *lexdb*))
       (force-output)
       (time (merge-into-lexdb *lexdb* filename))
@@ -27,7 +27,7 @@
     (error "please initialize-LexDB"))
   (let ((filename (get-filename rest :ending ".rev" :existing nil)))
     (when filename
-      (format t "~&Dumping lexical database ~a to files ~a.* ..." 
+      (format t "~&(LexDB) dumping lexical database ~a to files ~a.* ..." 
 	      (dbname *lexdb*) filename)
       (force-output)
       (time (dump-lexdb *lexdb* filename :tdl *lexdb-dump-tdl*))
@@ -37,7 +37,7 @@
   (let ((filename (get-filename rest :ending ".tdl" :existing nil)))
     (when filename
       (setf filename (format nil "~a.tdl" filename))
-      (format t "~&Exporting lexicon to TDL file...")
+      (format t "~&(LexDB) exporting lexicon to TDL file...")
       (force-output)
       (time 
        (export-lexicon-to-tdl :file filename))
@@ -58,7 +58,7 @@
 	   (connection *lexdb*))
     (error "please initialize-LexDB"))
   (let ((count-priv (length (show-scratch *lexdb*))))
-    (format t "~&Clearing ~a entries from private 'rev' table and updating 'lex' table" count-priv)
+    (format t "~&(LexDB) clearing ~a entries from private 'rev' table and updating 'lex' table" count-priv)
     (force-output)
     (when (> count-priv 0)
       (time
@@ -71,7 +71,7 @@
 	   (connection *lexdb*))
     (error "please initialize-LexDB"))
   (let ((count-priv (length (show-scratch *lexdb*))))
-    (format t "~&Moving ~a private entries to public 'rev' table..."
+    (format t "~&(LexDB) moving ~a private entries to public 'rev' table..."
 	    count-priv)
     (force-output)
     (when (> count-priv 0)
@@ -87,7 +87,7 @@
   (let ((scratch
 	 (mapcar #'(lambda (x) (car x)) 
 		 (show-scratch *lexdb*))))
-    (format t "~&Contents of scratch (~a entries): ~a"
+    (format t "~&(LexDB) contents of scratch (~a entries): ~a"
 	    (length scratch) scratch)
     (lkb-beep)))
 
@@ -96,29 +96,20 @@
 	   (typep *lexdb* 'psql-lex-database)
 	   (connection *lexdb*))
     (error "please initialize-LexDB"))
-  (format t "~&Indexing new lexical entries for generator...")
+  (format t "~&(LexDB) indexing new lexical entries for generator...")
   (force-output)
   (time
    (index-new-lex-entries *lexicon*))
   (lkb-beep))
 
-(defun command-vacuum-lex nil
-  (unless (and
-	   (typep *lexdb* 'psql-lex-database)
-	   (connection *lexdb*))
-    (error "please initialize-LexDB"))
-  (time
-   (vacuum-lex *lexdb*))
-  (lkb-beep))
-
-(defun command-vacuum-public-rev nil
-  (unless (and
-	   (typep *lexdb* 'psql-lex-database)
-	   (connection *lexdb*))
-    (error "please initialize-LexDB"))
-  (time
-   (vacuum-public-rev *lexdb*))
-  (lkb-beep))
+;(defun command-vacuum nil
+;  (unless (and
+;	   (typep *lexdb* 'psql-lex-database)
+;	   (connection *lexdb*))
+;    (error "please initialize-LexDB"))
+;  (time
+;   (vacuum *lexdb*))
+;  (lkb-beep))
 
 (defun command-load-tdl-to-scratch (&rest rest)
   (unless (and
@@ -128,7 +119,7 @@
   (let ((filename (get-filename rest :ending ".tdl" :existing t)))
     (when filename
       (setf filename (format nil "~a.tdl" filename))
-      (format t "~&Importing TDL entries...")
+      (format t "~&(LexDB) importing TDL entries...")
       (load-tdl-to-private-rev filename)
       (lkb-beep))))
 
@@ -171,5 +162,5 @@
 	(make-pathname :directory (pathname-directory (lkb-tmp-dir))
 		       :name "lexicon-small"
 		       :type "tdl")))))
-  (format t "(dumping small tdl lexicon [~a entries] to file: ~a)" (length *lex-ids-used*) file)
+  (format t "~&(LexDB) dumping small tdl lexicon [~a entries] to file: ~a" (length *lex-ids-used*) file)
   (export-to-tdl-to-file *lexicon* file :lex-ids *lex-ids-used*))

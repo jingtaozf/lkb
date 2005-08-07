@@ -51,8 +51,6 @@
                       lkb::command-show-private-rev      
                       lkb::command-set-filter-lexdb		      
 		      lkb::command-index-new-lex-entries
-		      lkb::command-vacuum-lex
-		      lkb::command-vacuum-public-rev
                        ;; generate
                       lkb::show-gen-result
                       lkb::show-generator-input
@@ -364,14 +362,6 @@
                   (make-menu-item :name "Index new lex entries"
                                   :value 'command-index-new-lex-entries
                                   :available-p :mrs
-				  )
-                  (make-menu-item :name "Vacuum (private)"
-                                  :value 'command-vacuum-lex
-                                  ;:available-p :always
-				  )
-                  (make-menu-item :name "Vacuum (public)"
-                                  :value 'command-vacuum-public-rev
-                                  ;:available-p :always
 				  )
                   )
 		 :available-p :always)))

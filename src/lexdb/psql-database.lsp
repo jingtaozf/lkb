@@ -77,7 +77,7 @@
       t)
      (t
       (finish-db connection)
-      (format t "~&unsupported libpq protocol (~a)" version)
+      (format t "~&(LexDB) unsupported libpq protocol (~a)" version)
       nil))))
 
 (defmethod disconnect ((lexicon psql-database))
@@ -182,7 +182,7 @@
     (unless (member entry
 		    pgpass-entries
 		    :test 'string=)
-      (format t "(updating ~~/.pgpass)")
+      (format t "(LexDB) updating ~~/.pgpass")
       (with-open-file 
 	  (fstream
 	   "~/.pgpass"
@@ -274,7 +274,7 @@
     (unwind-protect
 	(case status-kw
 	  (:PGRES_EMPTY_QUERY 
-	   (format t  "~%WARNING: empty query sent to PSQL DB ~a" (pq:db conn)))
+	   (format t  "~%(LexBD) WARNING:  empty query sent to PSQL DB ~a" (pq:db conn)))
 	  (:PGRES_COMMAND_OK
 	   (if com t
 	     (error "unexpected `command returning no data' sent to PSQL DB ~a" (pq:db conn))))
@@ -296,11 +296,11 @@
 	   )
 	  (:PGRES_NON_FATAL_ERROR
 	   (let ((error-message (with-lexdb-locale (pq:result-error-message result))))
-	     (format t "~%WARNING: (pgres error) ~a" error-message))
+	     (format t "~%(LexBD) WARNING:  (postgres error) ~a" error-message))
 	   nil)
 	  (:PGRES_FATAL_ERROR
 	   (let ((error-message (with-lexdb-locale (pq:result-error-message result))))
-	     (format t "~%PSQL ~a" error-message)
+	     (format t "~%(LexDB) (postgres ERROR) ~a" error-message)
 	     (throw :sql-error (cons status-kw error-message))))
 	  (t
 	   (error "unhandled result status")))

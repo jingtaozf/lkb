@@ -19,7 +19,30 @@
 	      :user (sql-fn-get-val ,lexdb :db_owner))))
        (open-lex ,lexdb-lexdb)
        ,@body
-       (disconnect ,lexdb-lexdb))))
+       (close-lex ,lexdb-lexdb))))
+  
+(defmacro with-lexdb-user-x ((user lexdb-lexdb lexdb) &body body)
+  `(with-slots (dbname host port fields-tb) ,lexdb
+     (let ((,lexdb-lexdb
+	    (make-instance 'psql-lex-database
+	      :dbname dbname
+	      :fields-tb fields-tb
+	      :host host
+	      :port port
+	      :user ,user)))
+       (open-lex ,lexdb-lexdb)
+       ,@body
+       (close-lex ,lexdb-lexdb))))
+  
+(defmacro lexdb-time ((start-msg end-msg) &body body)
+  `(let (time)
+    (format t "~&(LexDB) ~a ..." ,start-msg)
+    (force-output)
+    (setf time (get-internal-real-time))
+    ,@body
+    (format t "~&(LexDB) ~a [~F sec]" ,end-msg 
+	    (/ (- (get-internal-real-time) time) internal-time-units-per-second))
+    ))
   
 (defmethod lookup-word ((lex psql-lex-database) orth &key (cache t))
   (with-slots (lexical-entries) lex
@@ -126,25 +149,32 @@
 (defmethod rev-key-p ((lex psql-lex-database))
   (string= "t" (sql-fn-get-val lex :rev_key_p)))
   
-(defmethod generate-lex-orthkeys-if-nec ((lex psql-lex-database))
-  (generate-orthkeys-if-nec lex)
-  (with-lexdb-user-lexdb (lex2 lex)
-    (generate-orthkeys-if-nec lex2))
-  (update-lex lex))
+;(defmethod generate-lex-orthkeys-if-nec ((lex psql-lex-database))
+;  (generate-orthkeys-if-nec lex)
+;  (with-lexdb-user-lexdb (lex2 lex)
+;    (generate-orthkeys-if-nec lex2))
+;  (update-lex lex))
 
-(defmethod generate-orthkeys-if-nec ((lex psql-lex-database))
-  (unless (rev-key-p lex)
-    (format t "~%(generating orthkeys for user ~a)" (user lex))
-    (generate-orthkeys lex)))
+;(defmethod generate-orthkeys-if-nec ((lex psql-lex-database))
+;  (unless (rev-key-p lex)
+;    (format t "~&(LexDB) generating orthkeys for user ~a" (user lex))
+;    (generate-orthkeys lex)))
 
-(defmethod generate-orthkeys ((lex psql-lex-database) &key (table :rev))
-  (sql-fn-get-val lex :register_modstamp)
-  (run-command-stdin lex "COPY rev_key FROM stdin"
-		     (make-string-input-stream 
-		      (generate-orthkeys-COPY-str lex :table table)))
-  (sql-fn-get-val lex :register_modstamp))
+(defmethod regenerate-orthkeys ((lex psql-lex-database))
+  (run-command lex "DELETE FROM rev_key")
+  (generate-missing-orthkeys :from :rev))
 
-(defmethod generate-orthkeys-COPY-str ((lex psql-lex-database) &key (table :rev))
+(defmethod generate-missing-orthkeys ((lex psql-lex-database) 
+				      &key (from "rev natural left join rev_key where rev_key.key is null"))
+  (lexdb-time ("generating missing keys" "done generating missing keys")
+	      (let ((new-rev-key-lines (generate-orthkeys-COPY-str lex :from from)))
+		(when new-rev-key-lines
+		  (run-command-stdin lex "COPY rev_key FROM stdin"
+				     (make-string-input-stream new-rev-key-lines))))))
+
+(defmethod generate-orthkeys-COPY-str ((lex psql-lex-database) &key from)
+  (unless from
+    (error "no :from string specified"))
   (unless (dfn lex)
     (error "no dfn definitions available"))
   (let* ((orth-raw-mapping (assoc :orth (dfn lex)))
@@ -153,11 +183,15 @@
 	 (numo-t (get-records lex
 			      (format nil "SELECT name,userid,modstamp,~a FROM ~a"
 				      raw-orth-field-str
-				      table)))
-	 (recs (recs numo-t)))
-    (join-str-lines
-     (mapcar #'to-psql-COPY-rec
-	     (rev-to-rev-key lex recs)))))
+				      from)))
+	 (recs (recs numo-t))
+	 (len-recs (length recs)))
+    (when (> len-recs 0)
+      (format t "~&(LexDB) ~a keyless entries" len-recs)
+      (sql-fn-get-val lex :register_modstamp)
+      (join-str-lines
+       (mapcar #'to-psql-COPY-rec
+	       (rev-to-rev-key lex recs))))))
 
 (defmethod rev-to-rev-key ((lex psql-lex-database) recs)
   (let* ((orth-raw-mapping (assoc :orth (dfn lex)))
@@ -287,7 +321,7 @@
 			:retrieve_all_entries
 			:fields reqd-fields))
    (t
-    (format t "~%WARNING: no connection to psql-lex-database"))))    
+    (format t "~&(LexDB) WARNING:  no connection to psql-lex-database"))))    
     
 (defmethod retrieve-raw-record ((lex psql-lex-database) id &key (cache t) reqd-fields)
   (with-slots (record-cache) lex
@@ -311,10 +345,10 @@
 						   :fields reqd-fields
 						   :args (list (sql-like-text id-str)))))
       (if (> (length column-records) 1)
-	  (error (format nil "too many records returned"))
+	  (error (format nil " too many records returned"))
 	(first column-records))))
    (t
-    (format t "~%WARNING: no connection to psql-lex-database"))))
+    (format t "~&(LexDB) WARNING:  no connection to psql-lex-database"))))
 
 (defmethod retrieve-head-record-str ((lex psql-lex-database) id &optional reqd-fields)
   (retrieve-head-record lex (str-2-symb id) reqd-fields))
@@ -332,7 +366,7 @@
 	  (error (format nil "too many records returned"))
 	(dot (cols table) (first (recs table))))))
    (t
-    (format t "~%WARNING: no connection to psql-lex-database"))))
+    (format t "~&(LexDB) WARNING:  no connection to psql-lex-database"))))
 
 (defmethod retrieve-record-ium ((lex psql-lex-database) id name modstamp &optional reqd-fields)
   (cond
@@ -346,7 +380,7 @@
 	  (error (format nil "too many records returned"))
 	(dot (cols table) (first (recs table))))))
    (t
-    (format t "~%WARNING: no connection to psql-lex-database"))))
+    (format t "~&(LexDB) WARNING:  no connection to psql-lex-database"))))
 
 (defmethod grammar-fields ((lex psql-lex-database))
   (unless (dfn lex)
@@ -463,17 +497,17 @@
 	   (t
 	    (error "too many arguments")))))
     (when (catch :sql-error
-	    (format t "~%~%Please wait: recreating database cache for new filter")
+	    (format t "~&(LexDB) recreating lex table")
 	    (force-output)
 	    (unless (set-filter-aux lex filter)
-	      (format t "~%(LexDB filter unchanged)")
+	      (format t "~&(LexDB) filter unchanged")
 	      (return-from set-filter))
 	    nil)
       (lkb-beep)
       (set-filter lex))
-    (format t "~%(lexdb filter: ~a )" 
+    (format t "~&(LexDB) filter = ~a" 
 	    (get-filter lex))
-    (format t "~%(active lexical entries: ~a )" 
+    (format t "~&(LexDB) active entries in lex table = ~a" 
 	    (sql-fn-get-val lex :size_lex))))
 
 (defmethod set-filter-aux ((lex psql-lex-database) filter)
@@ -550,7 +584,7 @@
     dfn))
 
 (defmethod complain-no-dfn ((lex psql-lex-database))
-  (format t "~%(no dfn entries in ~a)" (dbname lex)))
+  (format t "~&(LexDB) no dfn entries found in ~a" (dbname lex)))
 
 (defmethod get-internal-table-dfn ((lex psql-lex-database))
       (sql-fn-get-records lex 
@@ -654,9 +688,9 @@
 ;;; low-level
 ;;;
 
-(defmethod set-lex-entry-from-record ((lex psql-lex-database) fv-pairs)
-  (set-lex-entry lex
-		 (make-instance 'psql-lex-entry :fv-pairs fv-pairs)))
+;(defmethod set-lex-entry-from-record ((lex psql-lex-database) fv-pairs)
+;  (set-lex-entry lex
+;		 (make-instance 'psql-lex-entry :fv-pairs fv-pairs)))
 
 ;;; insert lex entry into db
 (defmethod set-lex-entry ((lex psql-lex-database) (psql-le psql-lex-entry))
@@ -679,8 +713,8 @@
     (sql-fn-get-val lex :update_entry
 		    :args (list (retr-val psql-le :name)
 				symb-list
-				(ordered-val-list symb-list psql-le)))
-    (generate-orthkeys lex :table :tmp)
+				(ordered-val-list symb-list psql-le))) ;; tmp contains new entry only
+    (generate-missing-orthkeys lex :from :tmp) ;; use new entry stored in tmp
     (sql-fn-get-val lex :update_entry_2
 		    :args (list (retr-val psql-le :name)))
     		 
@@ -777,30 +811,31 @@
 
 (defmethod close-lex ((lex psql-lex-database) &key in-isolation delete)
   (declare (ignore in-isolation delete))
-  (with-slots (lexdb-version semi) lex
+  (with-slots (lexdb-version semi dbname host user connection) lex
+;    (if connection
+;	(format t "~&closing connection to lexical database ~a(~a)@~a:~a" 
+;	    dbname user host (true-port lex)))
     (setf lexdb-version nil)
     (if (next-method-p) (call-next-method))))
 
 (defmethod open-lex ((lex psql-lex-database) &key name parameters)
   (declare (ignore parameters)) 
-  (with-slots (dbname host user connection) 
-      lex
+  (with-slots (dbname host user connection) lex
     (close-lex lex)    
-    (format t "~%connecting to lexical database ~a@~a:~a" 
-	    dbname host (true-port lex))
+;    (format t "~&opening connection to lexical database ~a(~a)@~a:~a" 
+;	    dbname user host (true-port lex))
     (force-output)
-    ;;(setf *lexdb-tmp-lexicon* lex)
     (setf (name lex) name)
     (or (open-lex-aux lex)
-	(format t "~%unable to connect to ~s:~%  ~a" dbname
-	      (error-msg connection)))))
+	(format t "~&unable to open connection to lexical database ~a(~a)@~a:~a (~a)" 
+		dbname user host (true-port lex)
+		(error-msg connection))
+	)))
 
 (defmethod open-lex-aux ((lex psql-lex-database)) 
   (with-slots (dbname host user) 
       lex
     (when (connect lex)
-      (format t "~%~tconnected as user ~a" user)
-      (format t "~%~topening ~a" dbname)
       (check-psql-server-version lex)
       (check-lexdb-version lex)
       (make-field-map-slot lex)
@@ -824,38 +859,28 @@
 (defmethod check-psql-server-version ((lex psql-lex-database))
     (let ((texts (sql-fn-get-vals lex :check_psql_server_version)))
       (when texts
-	(format t "~%WARNING: ~a" (str-list-2-str texts :sep-c #\Newline)))))
+	(format t "~&(LexDB) WARNING: ~a" (str-list-2-str texts :sep-c #\Newline)))))
 
 (defmethod initialize-lex ((lex psql-lex-database))
   (when (open-lex lex)
+    (with-slots (dbname user host) lex
+        (format t "~&(LexDB) connected to LexDB ~a@~a:~a as database user ~a" 
+		dbname host (true-port lex) user))
     (update-lex lex)))
   
-(defmethod vacuum-lex ((lex psql-database) &key verbose)
-  (let ((command
-	 (if verbose
-	     "vacuum full analyze verbose lex"
-	   "vacuum full analyze lex")))
-    (format t "~%~%Please wait: vacuuming private table")
-    (force-output)
-    (run-command lex command)))
+;(defmethod vacuum-rev-rev-key ((lex psql-database) &key verbose)
+;  (format t "~&(LexDB) Please wait: vacuuming private rev")
+;  (if verbose
+;	 (run-command lex "vacuum full analyze verbose rev")
+;       (run-command lex "vacuum full analyze rev")))
 
-(defmethod vacuum-public-rev ((lex psql-lex-database) &key verbose)
-  (with-slots (dbname host port) lex
-    (let ((l2 (make-instance 'psql-database
-		:dbname dbname
-		:host host
-		:port port
-		:user (sql-fn-get-val lex :db_owner)))
-	  (command
-	   (if verbose
-	       "vacuum full analyze verbose public.rev"    
-	     "vacuum full analyze public.rev")))
-      (format t "~%~%Please wait: vacuuming public table")
-      (force-output)
-      (connect l2)
-      (run-command l2 command)
-      (disconnect l2))))
-
+;(defmethod vacuum-public-rev-rev-key ((lex psql-lex-database) &key verbose)
+;  (with-lexdb-user-lexdb (lex2 lex)
+;    (format t "~&(LexDB) Please wait: vacuuming public rev")
+;    (if verbose
+;	 (run-command lex2 "vacuum full analyze verbose public.rev")
+;       (run-command lex2 "vacuum full analyze public.rev"))))
+  
 (defmethod connect ((lex psql-lex-database)) 
   (if (next-method-p) (call-next-method))
   (when (connection-ok lex)
@@ -883,37 +908,41 @@
   (sql-fn-get-val lex :filter))
 
 (defmethod update-lex ((lex psql-lex-database))
-  (update-lex-aux lex)
+  (vacuum lex)
+  (lexdb-time ("updating 'lex' table" "done updating 'lex' table")
+	      (update-lex-aux lex))
+  (vacuum lex)
   (cond
    ((null (semi lex))
     nil)
    ((semi-up-to-date-p lex)
-    (format t "~%(loading SEM-I into memory)")
-    (unless (mrs::semi-p 
-	     (catch :sql-error
-	       (mrs::populate-*semi*-from-psql)
-	       ))
-      (format t "~% (unable to retrieve database SEM-I)"))
+    (unless 
+	    (lexdb-time ("loading SEM-I into memory" "done loading SEM-I into memory")
+			(mrs::semi-p 
+			 (catch :sql-error
+			   (mrs::populate-*semi*-from-psql)
+			   )))
+      (format t "~&(LexDB) unable to retrieve database SEM-I"))
     (index-lexical-rules)
     (index-grammar-rules))
    (t
-    (format t "~%WARNING: no lexical entries indexed for generator")))
+    (format t "~&(LexDB) WARNING:  no lexical entries indexed for generator")))
   lex)
 
 (defmethod update-lex-aux ((lex psql-lex-database))
-  (reconnect lex) ;; work around server bug
-  (cond 
-   ((not (user-read-only-p lex (user lex)))
-    (sql-fn-get-raw-records lex 
-			    :update_lex 
-			    :args (list (get-filter lex))))
-   (t
-    (format t "~%(user ~a has read-only privileges)" (user lex))))    
-  (format t "~%(LexDB filter: ~a )" (get-filter lex))
+    (reconnect lex) ;; work around server bug
+    (cond 
+     ((not (user-read-only-p lex (user lex)))
+      (sql-fn-get-raw-records lex 
+			      :update_lex 
+			      :args (list (get-filter lex))))
+     (t
+      (format t "~&(LexDB) user ~a has read-only privileges" (user lex))))    
+  (format t "~&(LexDB) filter = ~a " (get-filter lex))
   (let ((size (sql-fn-get-val lex :size_lex)))
     (if (string= "0" size)
-	(format t "~%WARNING: 0 entries passed the LexDB filter" size)
-      (format t "~%(active lexical entries: ~a )" size)))
+	(format t "~&(LexDB) WARNING:  0 entries passed the LexDB filter" size)
+      (format t "~&(LexDB) active entries in lex table = ~a" size)))
   (empty-cache lex))
 
 ;;;
@@ -922,7 +951,7 @@
 
 (defmethod index-new-lex-entries ((lex psql-lex-database))
   (let ((semi-out-of-date (semi-out-of-date lex)))
-    (format t "~%(indexing ~a entries)" (length semi-out-of-date))
+    (format t "~&(LexDB) indexing ~a entries" (length semi-out-of-date))
     (when semi-out-of-date
       (mrs::populate-*semi*-from-psql)
       (index-lexical-rules)
@@ -941,7 +970,7 @@
     (if (and new-fs 
 	     (not (eq new-fs :fail)))
 	(mrs::extract-lexical-relations entry)
-      (format t "~%No feature structure for ~A~%" 
+      (format t "~&No feature structure for ~A~%" 
 	      (lex-entry-id entry))))
     (forget-psort lex lexid))
 
@@ -967,25 +996,35 @@
 (defmethod scratch-records ((lex psql-lex-database))
   (sql-fn-get-raw-records lex :rev))
 
-(defmethod merge-into-db ((lex psql-lex-database) rev-filename)  
+(defmethod merge-rev-rev-key ((lex psql-lex-database) rev-filename)
+  ;; empty temporary tables
   (run-command lex "DELETE FROM tmp")
   (run-command lex "DELETE FROM tmp_key")
-  (run-command-stdin-from-file lex "COPY tmp FROM stdin" rev-filename)
-  (let ((rev-key-filename (concatenate 'string rev-filename "_key")))
-    (if (probe-file rev-key-filename)
-	(run-command-stdin-from-file lex "COPY tmp_key FROM stdin" rev-key-filename)
-      (with-lexdb-user-lexdb (lex2 lex)
-	(run-command lex2 "DELETE FROM rev_key"))))
-  (let ((count-new
-	 (str-2-num
-	  (sql-fn-get-val lex :merge_public_rev_rev_key_from_tmp_tmp_key))))
-    (format t "~%(~a new rev entries)" count-new)
-    (unless (equal 0 count-new)
-      (vacuum-public-rev lex))
-    (with-lexdb-user-lexdb (lex2 lex)
+  (with-lexdb-user-lexdb (lex2 lex)
+    ;; vacuum at start
+    (vacuum lex2)
+    (let ((rev-key-filename (concatenate 'string rev-filename "_key"))
+	  count-new)
+      ;;;
+      ;; populate temporary tables
+      ;;;
+      (lexdb-time ("populating temporary tables" "done populating temporary tables")
+		  (run-command-stdin-from-file lex "COPY tmp FROM stdin" rev-filename)
+		  (if (probe-file rev-key-filename)
+		      (run-command-stdin-from-file lex "COPY tmp_key FROM stdin" rev-key-filename)))
+      ;;;
+      ;; update main tables
+      ;;;
+      (lexdb-time ("copying into 'rev' and 'rev_key' tables" "done copying into 'rev' and 'rev_key' tables")
+		  (sql-fn-get-val lex :merge_public_rev_rev_key_from_tmp_tmp_key)    
+		  (setf count-new (read-from-string (caar (get-raw-records *lexdb* "SELECT count(*) from rev_new")))))
+      
+      (format t "~&(LexDB) ~a new 'rev' entries" count-new)
       (make-field-map-slot lex2)
-      (time (generate-orthkeys-if-nec lex2)))
-    count-new))
+      (generate-missing-orthkeys lex2)
+      ;; vacuum at end
+      (vacuum lex2)
+      count-new)))
 
 (defmethod merge-dfn ((lex psql-lex-database) dfn-filename)  
   (when (catch :sql-error 
@@ -999,7 +1038,7 @@
 	 (str-2-num 
 	  (sql-fn-get-val lex :merge_dfn_from_tmp_dfn))))
     (run-command lex "DROP TABLE tmp_dfn")
-    (format t "~%(~a new dfn entries)" count-new-dfn)
+    (format t "~&(LexDB) ~a new dfn entries" count-new-dfn)
     count-new-dfn))
 
 (defmethod initialize-userschema ((lex psql-lex-database))
@@ -1137,23 +1176,45 @@
 
 (defmethod merge-into-lexdb ((lex psql-lex-database) filename)
   "connect as db owner and merge new data into lexdb"
-  (with-lexdb-user-lexdb (lexdb2 lex)
-    (let ((count-new 0))
-      (let* ((rev-filename (absolute-namestring "~a.rev" filename))
-	     (dfn-filename (absolute-namestring "~a.dfn" filename)))
-	(if (probe-file rev-filename)
-	    (setf count-new (merge-into-db lexdb2 rev-filename))
-	  (format t "~%WARNING: no file ~a" rev-filename))
-	(cond
-	 ((probe-file dfn-filename)
-	  (merge-dfn lexdb2 dfn-filename)
-	  (make-field-map-slot lex))
-	 (t
-	  (format t "~%WARNING: no file ~a" dfn-filename)))
-	nil)
-      (if (equal count-new 0)
+  (with-lexdb-user-lexdb (lex2 lex)
+    (let* ((rev-filename (absolute-namestring "~a.rev" filename))
+	   (dfn-filename (absolute-namestring "~a.dfn" filename))
+	   count-new)
+      ;; dfn table
+      (cond
+       ((probe-file dfn-filename)
+	(merge-dfn lex2 dfn-filename)
+	(make-field-map-slot lex))
+       (t
+	(format t "~&(LexDB) WARNING:  cannot find file ~a" dfn-filename)))
+      ;; rev/rev_key tables
+      (cond
+       ((probe-file rev-filename)
+	(merge-rev-rev-key lex2 rev-filename)
+	(setf count-new (read-from-string (caar (get-raw-records *lexdb* "SELECT count(*) from rev_new")))))
+       (t
+	(format t "~&(LexDB) WARNING:  cannot find file ~a" rev-filename)))
+      (if (or (null count-new) (equal count-new 0))
 	  (empty-cache lex)
-	(initialize-lexdb)))))
+	(initialize-lexdb))
+      )))
+
+(defmethod vacuum ((lex psql-lex-database))
+  (let (time)
+    (format t "~&(LexDB) performing vacuum/analyze on database (as user ~a)..." (user lex))
+    (force-output)
+    (setf time (get-internal-real-time))
+    (run-command lex "vacuum full analyze")
+    (format t "~&(LexDB) vacuum/analyze complete [~F sec]" 
+	    (/ (- (get-internal-real-time) time) internal-time-units-per-second))
+    ))
+
+;(defmethod vacuum-analyze ((lex psql-lex-database))
+;  (with-lexdb-user-lexdb (lex2 lex)
+;    (format t "~&(LexDB) analyze vacuuming database (as user ~a)..." (user lex2))
+;      (time (run-command lex2 "vacuum analyze")))
+;  (format t "~&(LexDB) analyze vacuuming database (as user ~a)..." (user lex))
+;  (time (run-command lex "vacuum analyze")))
 
 (defmethod merge-into-lexicon-dfn ((lex psql-lex-database) filename)
   "reconnect as db owner and merge new dfn into lexdb"
@@ -1181,7 +1242,7 @@
 		  (format t "~%WARNING: no file ~a" dfn-filename)))
 		nil
 		)))
-	(format t "Merge new .dfn entries aborted..."))
+	(format t "~&(LexDB) merge new dfn entries aborted ..."))
       (empty-cache lex)
       (disconnect conn-db-owner))))
 
@@ -1252,12 +1313,12 @@
       line)
      ;; component(s) skipped, but :skip field available in db
      ((member :_tdl (fields lex))
-      (format t "~&Unhandled TDL in lex entry ~a: ~%~t~a~%~%" name skip)
-      (format t "~&;; Unhandled TDL fragment in ~a placed in _tdl field as unstructured text" name)
+      (format t "~&(LexDB) Unhandled TDL in lex entry ~a: ~%~t~a~%~%" name skip)
+      (format t "~&;; (LexDB) Unhandled TDL fragment in ~a placed in _tdl field as unstructured text" name)
 	line)
      ;; component(s) skipped and no :skip field in db
      (t
-      (format t "~&~%Lex entry ~a skipped due to unhandled TDL fragment: ~%~t~a~%" name skip)
+      (format t "~&~%(LexDB) Lex entry ~a skipped due to unhandled TDL fragment: ~%~t~a~%" name skip)
       (format skip-stream "~a" (to-tdl x))
       ""))))
 
@@ -1276,12 +1337,12 @@
       (empty-cache lex))
      ;; component(s) skipped, but :skip field available in db
      ((member :_tdl (fields lex))
-      (format t "~&;; Unhandled TDL fragment in ~a placed in _tdl field as unstructured text" name)
+      (format t "~&;; (LexDB) Unhandled TDL fragment in ~a placed in _tdl field as unstructured text" name)
       (set-lex-entry lex psql-le)
       (empty-cache lex))
      ;; component(s) skipped and no :skip field in db
      (t
-      (format t "~&~%Lex entry ~a skipped due to unhandled TDL fragment: ~%~t~a~%" name skip)
+      (format t "~&~%(LexDB) Lex entry ~a skipped due to unhandled TDL fragment: ~%~t~a~%" name skip)
       nil))))
 
 ;; NOTE: not suited to batch import
@@ -1344,7 +1405,7 @@
 
 (defmethod dump-tdl ((lexdb psql-lex-database) filebase)
   (let ((tdl-file (namestring (pathname (format nil "~a.~a.tdl" filebase (get-filter lexdb))))))
-    (format t "~%(exporting filtered ~a LexDB to TDL file ~a)" (dbname lexdb) tdl-file)
+    (format t "~&(LexDB) exporting filtered ~a LexDB to TDL file ~a" (dbname lexdb) tdl-file)
     (force-output)
     (export-to-tdl-to-file lexdb tdl-file)))
 

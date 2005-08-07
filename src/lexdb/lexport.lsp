@@ -38,7 +38,7 @@
 				(recurse t))
   "export to db dump file format"
   (when (and name recurse)
-    (format t "ignoring :recurse (ommit :name to enable :recurse)")
+    (format t "ignoring :recurse keyword to export-lexicon-to-file (ommit :name to enable :recurse)")
     (setf recurse nil))
   (when (typep lexicon 'psql-lex-database)
     (error "This command is for use only with a non-LexDB lexicon. You should use instead the \"Merge new entries\" command found under the LexDB menu if you want to create dump files for your current LexDB."))
@@ -56,7 +56,7 @@
     (dump-fld *lexdb* file-base)
     (dump-meta *lexdb* file-base)
     (setf rev-file (namestring (pathname (format nil "~a.rev" file-base))))
-    (format t "~%exporting lexical entries to dump file ~a" rev-file)
+    (format t "~&(LexDB) exporting lexical entries to dump file ~a" rev-file)
     (with-open-file (rev-stream 
 		     rev-file
 		     :direction :output 
@@ -74,7 +74,7 @@
 	(*lexdb-dump-source* (format nil "~a.~a" *lexdb-dump-source* (name lexicon)))
 	(skip-file (namestring (pathname (format nil "~a.~a.skip" file-base (name lexicon))))))
     (setf *lexdb-dump-timestamp* *lexdb-dump-timestamp*)
-    (format t "~%   (skip file: ~a)" skip-file)
+    (format t "~&(LexDB)   skip file: ~a" skip-file)
     (with-open-file (skip-stream 
 		     skip-file
 		     :direction :output 
@@ -93,7 +93,7 @@
                 (pathname 
                  (format nil "~a/~a.tdl" dir 
                          (or (name lexicon) "unknown"))))))
-  (format t "~%(export filename: ~a)" file)
+  (format t "~&(LexDB) export filename: ~a" file)
   (export-to-tdl-to-file lexicon file))
 
 ;;;
@@ -129,7 +129,7 @@
 	(time 
          (export-to-db lexicon lexdb))
 	(close-lex lexicon)
-	(format t "~%(private space: ~a entries)" 
+	(format t "~&(LexDB) private space: ~a entries" 
 		(length (show-scratch lexdb)))))))
 
 ;;;
@@ -142,14 +142,14 @@
 
 (defun extract-date-from-source (source)
   (if (not (stringp source))
-      (format t "WARNING: unable to determine modstamp for grammar")
+      (format t "(LexDB) WARNING:  unable to determine modstamp for grammar")
     (let* ((start (position #\( source :test #'equal))
 	   (end (position #\) source :test #'equal))
 	   (date (and start end (< (1+ start) end)
 		      (subseq source (1+ start) end))))
       (if date
 	  date
-	(format t "WARNING: unable to determine modstamp for grammar")))))
+	(format t "(LexDB) WARNING:  unable to determine modstamp for grammar")))))
       
 (defun get-current-source nil
   (let ((version (or (and (find-package :lkb)
