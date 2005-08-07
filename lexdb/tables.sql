@@ -15,14 +15,40 @@ BEGIN
 		userid TEXT DEFAULT user NOT NULL,
 		modstamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
 		dead BOOLEAN DEFAULT \\\'0\\\' NOT NULL
-		\' || field_dfn_text() || \' ) \';
-
-	RAISE DEBUG \'%\', sql_qry;
+		\' || soft_rev_field_definitions() || \' ) \';
 	EXECUTE sql_qry;
 	PERFORM public.index_public_rev();
 	RETURN TRUE;
 END;
 ' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION soft_rev_field_definitions() RETURNS text AS '
+DECLARE
+	x RECORD;
+	t text;
+BEGIN
+	IF (reln_exists(\'public\',\'fld\') 
+			AND 
+			(SELECT count(*) FROM public.fld)>0) THEN
+		RAISE DEBUG \'Using field defns found in public.fld\';
+		FOR x IN SELECT dfn FROM fld LOOP
+			t := COALESCE(t,\'\');
+			t:= t || \',\n \' || x.dfn;
+		END LOOP;
+	ELSE
+		RAISE EXCEPTION \'\n*\n*\n* no field definitions provided! (TABLE public.fld IS EMPTY)\n*\n*\';
+	END IF;
+	RETURN t;
+END;
+' LANGUAGE plpgsql;
+
+--
+-- public.rev indexes:
+--   name_modstamp
+--   rev_name_modstamp
+--   rev_name
+--   rev_pattern
+--
 
 CREATE OR REPLACE FUNCTION public.index_public_rev() RETURNS boolean AS '
 BEGIN
@@ -49,6 +75,12 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
+--
+-- lex indexes:
+--       lex_name
+--       lex_name_pattern
+--
+
 CREATE OR REPLACE FUNCTION public.index_lex() RETURNS boolean AS '
 BEGIN
 	RAISE DEBUG \'indexing db cache\';
@@ -72,6 +104,11 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
+--
+-- lex_key indexes:
+--   lex_key_key
+--
+
 CREATE OR REPLACE FUNCTION public.index_lex_key() RETURNS boolean AS '
 BEGIN
 	RAISE DEBUG \'indexing lex_key\';
@@ -87,6 +124,38 @@ BEGIN
 	RETURN true;
 END;
 ' LANGUAGE plpgsql;
+
+--
+-- private rev indexes:
+--   rev_name_userid_modstamp
+--
+
+CREATE OR REPLACE FUNCTION public.index_rev() RETURNS boolean AS '
+BEGIN
+	RAISE DEBUG \'indexing rev\';
+	EXECUTE \'CREATE UNIQUE INDEX rev_name_userid_modstamp ON rev (name,userid,modstamp)\';
+	RETURN true;
+END;
+' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.deindex_rev() RETURNS boolean AS '
+BEGIN
+	RAISE DEBUG \'deindexing lex_keye\';
+	DROP INDEX rev_name_userid_modstamp;
+	RETURN true;
+END;
+' LANGUAGE plpgsql;
+
+--
+-- semi indexes:
+--  semi_pred_lex_id
+--  semi_pred_pred_id
+--  semi_frame_frame_id
+--  semi_frame_var_id
+--  semi_var_var_id
+--  semi_extra_extra_id
+--  semi_mod_name_userid_modstamp
+--
 
 CREATE OR REPLACE FUNCTION semi_create_indices() RETURNS boolean AS '
 BEGIN
@@ -125,7 +194,6 @@ BEGIN
 		frame_id int NOT NULL,
 		pred_txt text NOT NULL,
 		string_p boolean NOT NULL
-		--modstamp TIMESTAMP WITH TIME ZONE --obsolete
 	);
 
 	CREATE TABLE semi_frame (
@@ -164,55 +232,29 @@ BEGIN
 		semi_var NATURAL LEFT JOIN
 		semi_extra;
 
-	CREATE OR REPLACE VIEW semi_obj2 AS
-		SELECT * FROM
-		semi_pred NATURAL JOIN
-		semi_frame NATURAL LEFT JOIN
-		semi_var NATURAL LEFT JOIN
-		semi_extra;
+	--CREATE OR REPLACE VIEW semi_obj2 AS
+	--	SELECT * FROM
+	--	semi_pred NATURAL JOIN
+	--	semi_frame NATURAL LEFT JOIN
+	--	semi_var NATURAL LEFT JOIN
+	--	semi_extra;
 
-	CREATE OR REPLACE FUNCTION semi_pred() RETURNS SETOF semi_pred AS \'
-		SELECT * FROM semi_pred;
-	\' LANGUAGE sql;
+	--CREATE OR REPLACE FUNCTION semi_pred() RETURNS SETOF semi_pred AS \'
+	--	SELECT * FROM semi_pred;
+	--\' LANGUAGE sql;
 
-	CREATE OR REPLACE FUNCTION semi_frame() RETURNS SETOF semi_frame AS \'
-		SELECT * FROM semi_frame;
-	\' LANGUAGE sql;
+	--CREATE OR REPLACE FUNCTION semi_frame() RETURNS SETOF semi_frame AS \'
+	--	SELECT * FROM semi_frame;
+	--\' LANGUAGE sql;
 
-	CREATE OR REPLACE FUNCTION semi_var() RETURNS SETOF semi_var AS \'
-		SELECT * FROM semi_var;
-	\' LANGUAGE sql;
+	--CREATE OR REPLACE FUNCTION semi_var() RETURNS SETOF semi_var AS \'
+	--	SELECT * FROM semi_var;
+	--\' LANGUAGE sql;
 
-	CREATE OR REPLACE FUNCTION semi_extra() RETURNS SETOF semi_extra AS \'
-		SELECT * FROM semi_extra;
-	\' LANGUAGE sql;
+	--CREATE OR REPLACE FUNCTION semi_extra() RETURNS SETOF semi_extra AS \'
+	--	SELECT * FROM semi_extra;
+	--\' LANGUAGE sql;
 
 	RETURN true;
 END;
 ' LANGUAGE plpgsql;
-
---
---
---
-
-CREATE OR REPLACE FUNCTION field_dfn_text() RETURNS text AS '
-DECLARE
-	x RECORD;
-	t text;
-BEGIN
-
-	IF (reln_exists(\'public\',\'fld\') 
-			AND 
-			(SELECT count(*) FROM public.fld)>0) THEN
-		RAISE DEBUG \'Using field defns found in public.fld\';
-		FOR x IN SELECT dfn FROM fld LOOP
-			t := COALESCE(t,\'\');
-			t:= t || \',\n \' || x.dfn;
-		END LOOP;
-	ELSE
-		RAISE EXCEPTION \'\n*\n*\n* no field definitions provided! (TABLE public.fld IS EMPTY)\n*\n*\';
-	END IF;
-	RETURN t;
-END;
-' LANGUAGE plpgsql;
-

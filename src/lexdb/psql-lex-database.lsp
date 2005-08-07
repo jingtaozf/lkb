@@ -165,14 +165,15 @@
   (generate-missing-orthkeys :from :rev))
 
 (defmethod generate-missing-orthkeys ((lex psql-lex-database) 
-				      &key (from "rev natural left join rev_key where rev_key.key is null"))
+				      &key (from "rev natural left join rev_key where rev_key.key is null")
+					   quiet)
   (lexdb-time ("generating missing keys" "done generating missing keys")
-	      (let ((new-rev-key-lines (generate-orthkeys-COPY-str lex :from from)))
+	      (let ((new-rev-key-lines (generate-orthkeys-COPY-str lex :from from :quiet quiet)))
 		(when new-rev-key-lines
 		  (run-command-stdin lex "COPY rev_key FROM stdin"
 				     (make-string-input-stream new-rev-key-lines))))))
 
-(defmethod generate-orthkeys-COPY-str ((lex psql-lex-database) &key from)
+(defmethod generate-orthkeys-COPY-str ((lex psql-lex-database) &key from quiet)
   (unless from
     (error "no :from string specified"))
   (unless (dfn lex)
@@ -188,7 +189,7 @@
 	 (len-recs (length recs)))
     (when (> len-recs 0)
       (format t "~&(LexDB) ~a keyless entries" len-recs)
-      (sql-fn-get-val lex :register_modstamp)
+      (unless quiet (sql-fn-get-val lex :register_mod_time))
       (join-str-lines
        (mapcar #'to-psql-COPY-rec
 	       (rev-to-rev-key lex recs))))))
@@ -306,7 +307,7 @@
 
 (defmethod collect-psort-ids-aux ((lex psql-lex-database))
   (let ((query-res 
-	 (sql-fn-get-raw-records lex :lex_id_set)))
+	 (get-raw-records lex "SELECT DISTINCT name FROM lex")))
     (mapcar 
      #'(lambda (x) 
 	 (str-2-symb (car x)))
@@ -681,16 +682,14 @@
 
 (defmethod current-timestamp ((lex psql-lex-database))
   (caar (get-raw-records *lexdb* "SELECT current_timestamp")))
-;  (sql-fn-get-val lex 
-;		  :current_timestamp))
 
 ;;;
 ;;; low-level
 ;;;
 
-;(defmethod set-lex-entry-from-record ((lex psql-lex-database) fv-pairs)
-;  (set-lex-entry lex
-;		 (make-instance 'psql-lex-entry :fv-pairs fv-pairs)))
+(defmethod set-lex-entry-from-record ((lex psql-lex-database) fv-pairs)
+  (set-lex-entry lex
+		 (make-instance 'psql-lex-entry :fv-pairs fv-pairs)))
 
 ;;; insert lex entry into db
 (defmethod set-lex-entry ((lex psql-lex-database) (psql-le psql-lex-entry))
@@ -714,7 +713,7 @@
 		    :args (list (retr-val psql-le :name)
 				symb-list
 				(ordered-val-list symb-list psql-le))) ;; tmp contains new entry only
-    (generate-missing-orthkeys lex :from :tmp) ;; use new entry stored in tmp
+    (generate-missing-orthkeys lex :from :tmp :quiet t) ;; use new entry stored in tmp
     (sql-fn-get-val lex :update_entry_2
 		    :args (list (retr-val psql-le :name)))
     		 
@@ -893,7 +892,8 @@
   (setf (pub-fns lex)
     (mapcar #'(lambda (x)
 		(str-2-keyword (car x)))
-	    (get-raw-records lex "SELECT * FROM pub_fns()"))))
+	    (get-raw-records lex "SELECT val FROM public.meta WHERE var='pub-fn'"))))
+;	    (get-raw-records lex "SELECT * FROM pub_fns()"))))
 
 ;;;
 ;;;
