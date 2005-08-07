@@ -150,6 +150,7 @@ BEGIN
  			SELECT * FROM rev_key;
 
  	CREATE VIEW filt AS SELECT * FROM rev_all WHERE NULL;
+	CREATE TABLE filt_tmp AS SELECT * FROM filt WHERE NULL;
 
  	CREATE VIEW head
 		AS SELECT fil.*
@@ -212,7 +213,7 @@ DECLARE
 	b_time text;
 BEGIN
 	-- we need a table in order to build and use indexes ...
-	CREATE TABLE filt_tmp AS SELECT * FROM filt;
+	INSERT INTO filt_tmp SELECT * FROM filt;
 	CREATE INDEX filt_tmp_name ON filt_tmp (name);
 	CREATE INDEX filt_tmp_modstamp ON filt_tmp (modstamp);
 
@@ -232,7 +233,9 @@ BEGIN
   		WHERE dead=\'0\';
 	PERFORM public.index_lex();
 
-	DROP TABLE filt_tmp;
+	DROP INDEX filt_tmp_name;
+	DROP INDEX filt_tmp_modstamp;
+	DELETE FROM filt_tmp;
 
 	-- recreate lex_key
 	PERFORM public.deindex_lex_key();
@@ -448,7 +451,7 @@ END;
 -- 
 --
 
--- this could be done more intelligently so that build_lex is not triggered
+-- this could be done more intelligently so that a full build_lex is not triggered
 CREATE OR REPLACE FUNCTION public.clear_rev() RETURNS boolean AS '
 BEGIN
 	DELETE FROM rev;
@@ -463,7 +466,6 @@ BEGIN
 	EXECUTE \'INSERT INTO public.rev (SELECT * FROM \' || $1 || \'.rev)\';
 	EXECUTE \'INSERT INTO public.rev_key (SELECT * FROM \' || $1 || \'.rev_key)\';
 	PERFORM register_mod_time();
-	--PERFORM clear_rev();
 	RETURN true;
 END;
 ' LANGUAGE plpgsql;
@@ -536,7 +538,6 @@ DECLARE
 BEGIN
 	DELETE FROM tmp;
 	sql_str := \'INSERT INTO tmp ( name, \' || $2 || \' ) VALUES ( \' || quote_literal($1) || \', \' || $3 || \')\';
-	RAISE DEBUG \'%\', sql_str;
 	EXECUTE sql_str;
 	
 	INSERT INTO rev SELECT * FROM tmp LIMIT 1;

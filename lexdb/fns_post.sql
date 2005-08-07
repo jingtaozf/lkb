@@ -29,8 +29,6 @@ CREATE OR REPLACE FUNCTION public.retrieve_all_entries() RETURNS SETOF rev AS '
 ' LANGUAGE sql;
 drop table lex;
 
--- abandon 'lower'ed orthkey: 'lower' incompatible with Lisp's downcase
--- so we must:
 --  * ensure all db entries are in appropriate case
 --  * convert orthkeys to appropriate case before entering db universe
 CREATE OR REPLACE FUNCTION public.retrieve_entries_by_orthkey(text) RETURNS SETOF rev AS '
