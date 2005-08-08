@@ -1282,7 +1282,8 @@
       with lkb::*chart-packing-p* = nil
       with *reconstruct-cache* = (make-hash-table :test #'eql)
       with items = (analyze
-                    data :thorough '(:derivation :mrs) :condition condition)
+                    data :thorough '(:derivation :mrs)
+                    :condition condition :commentp t)
       with increment = (when (and meter items)
                          (/ (- (get-field :end meter) (get-field :start meter))
                             (length items) 1))
