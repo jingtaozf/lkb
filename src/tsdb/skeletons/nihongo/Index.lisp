@@ -23,4 +23,7 @@
  ((:path . "ginkougyou") (:content . "Hand-Constructed Banking Data"))
  ((:path . "hizuke") (:content . "Date Expressions"))
  ((:path . "suuji") (:content . "Number Expressions"))
- ((:path . "faqs") (:content . "Online Banking FAQ Sample")))
+ ((:path . "faqs") (:content . "Online Banking FAQ Sample"))
+ ((:path . "shiken") (:content . "Embryonic UiO MT Test Suite")))
+
+ 
