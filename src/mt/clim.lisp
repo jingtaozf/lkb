@@ -133,7 +133,7 @@
     (let ((command (clim:menu-choose
                     '(("Test" :value :test :active t)
                       ("Scope" :value :scope :active t)
-                      ("MRS" :value :mrs :active t)
+                      ("Simple" :value :mrs :active t)
                       ("Indexed" :value :indexed :active t)
                       ("Dependencies" :value :dependencies :active t)
                       ("Fragment" :value :fragment :active t)

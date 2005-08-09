@@ -21,6 +21,8 @@
 
 (defparameter *transfer-filter-p* t)
 
+(defparameter *transfer-interlingua-predicates* nil)
+
 (defparameter *transfer-debug-p* t)
 
 (defparameter *transfer-preemptive-filter-p* nil)
@@ -124,7 +126,6 @@
          (cons (mrs::vsym "E.ASPECT.PERF") (mrs::vsym "-"))
          (cons (mrs::vsym "E.ASPECT.STATIVE") (mrs::vsym "-"))
          (cons (mrs::vsym "E.TENSE") (mrs::vsym "untensed"))
-         #+:null
          (cons (mrs::vsym "E.MOOD") (mrs::vsym "indicative")))))
 
 (defparameter %transfer-properties-filter%
@@ -200,6 +201,9 @@
   (loop
       for (value . key) in (mtr-special mtr)
       when (eq key :trigger) return value))
+
+(defun interlingua-predicate-p (pred)
+  (member pred *transfer-interlingua-predicates* :test #'equal))
 
 (defun transfer-rule-sets (&optional task)
   (loop
@@ -452,7 +456,7 @@
                                        :optional optional
                                        :task task)))
                             (when rule 
-                              (record-mtr rule)
+                              (record-mtr (compile-mtr rule))
                               (push rule rules))))))))))
         finally 
           (let ((mtrs (make-mtrs :id id :mtrs (nreverse rules))))
@@ -603,7 +607,7 @@
            (special (and dag 
                          (not (vacuous-constraint-p *mtr-flags-path* dag))
                          (convert-dag-to-special dag :id id))))
-           
+      
       ;;
       ;; for later postprocessing, look up relations that were requested for
       ;; OUTPUT copy, and record them in their MTR.
@@ -719,6 +723,41 @@
          (type (lkb::minimal-type-for feature))
          (constraint (and type (lkb::constraint-of type))))
     (lkb::dag-subsumes-p dag constraint)))
+
+(defun compile-mtr (mtr)
+  #-:ppcre
+  mrs
+  #+:ppcre
+  (labels ((compile (mrs)
+             (when mrs
+               (loop
+                   for ep in (mrs:psoa-liszt mrs)
+                   for pred = (mrs:rel-pred ep)
+                   when (and (stringp pred) (eq (char pred 0) #\~)) do 
+                     (setf (mrs:rel-pred ep)
+                       (ppcre::create-scanner (subseq pred 1)))
+                   do
+                     (loop
+                         for role in (mrs:rel-flist ep)
+                         for value = (mrs:fvpair-value role)
+                         when (and (stringp value) (eq (char value 0) #\~)) do
+                           (setf (mrs:fvpair-value role)
+                             (ppcre::create-scanner (subseq value 1)))
+                         when (mrs::var-p value) do
+                           (loop
+                               for extra in (mrs:var-extra value)
+                               for value = (mrs::extrapair-value extra)
+                               when (and (stringp value)
+                                         (eq (char value 0) #\~))
+                               do
+                                 (setf (mrs::extrapair-value extra)
+                                   (ppcre::create-scanner
+                                    (subseq value 1)))))))
+             mrs))
+    (compile (mtr-filter mtr))
+    (compile (mtr-input mtr))
+    (compile (mtr-context mtr))
+    mtr))
 
 (defun record-mtr (mtr)
   (when (and *transfer-lexicon* (mrs::psoa-p (mtr-input mtr)))
@@ -851,7 +890,9 @@
               with source = (first *transfer-lexicon*)
               for ep in (mrs:psoa-liszt (edge-mrs edge))
               for pred = (mrs:rel-pred ep)
-              unless (gethash pred source) do (push ep unknown)
+              unless (or (gethash pred source)
+                         (interlingua-predicate-p pred))
+              do (push ep unknown)
               finally
                 (when unknown
                   (error
@@ -909,7 +950,11 @@
           (return
             (stable-sort 
              (loop
-                 with eps = (mrs:psoa-liszt (edge-mrs edge))
+                 with eps = (loop
+                                for ep in (mrs:psoa-liszt (edge-mrs edge))
+                                unless (interlingua-predicate-p
+                                        (mrs::rel-pred ep))
+                                collect ep)
                  for edge in result
                  for source = (intersection 
                                (mrs:psoa-liszt (edge-mrs edge)) eps 
@@ -1286,9 +1331,6 @@
                    (retrieve-variable variable2 solution)
                    variable2))
          (forwardp2 (not (eq variable2 value2)))
-         (expression (and (stringp variable2)
-                          (eq (char variable2 0) #\~)
-                          (subseq variable2 1)))
          (special (loop
                       for special in (mtr-special (current-mtr))
                       when (eq variable2 (first special))
@@ -1299,9 +1341,10 @@
      ((and (numberp value1) (numberp value2))
       (= value1 value2))
      #+:ppcre
-     (expression (ppcre::scan 
-                  expression 
-                  (if (symbolp value1) (format nil "~(~a~)" value1) value1)))
+     ((functionp variable2)
+      (ppcre::scan 
+       variable2
+       (if (symbolp value1) (format nil "~(~a~)" value1) value1)))
      
      ;;
      ;; _fix_me_
@@ -1404,16 +1447,14 @@
   ;;
   (let ((pred2 (if (mrs::var-p pred2) 
                  (retrieve-variable pred2 solution)
-                 pred2))
-        (expression (and (stringp pred2)
-                         (eq (char pred2 0) #\~)
-                         (subseq pred2 1))))
+                 pred2)))
 
     (cond
      #+:ppcre
-     (expression (ppcre::scan 
-                  expression 
-                  (if (symbolp pred1) (format nil "~(~a~)" pred1) pred1)))
+     ((functionp pred2)
+      (ppcre::scan 
+       pred2
+       (if (symbolp pred1) (format nil "~(~a~)" pred1) pred1)))
      ((mrs::var-p pred2)
       (forward-variable pred2 pred1 solution)
       pred1)
@@ -1938,6 +1979,7 @@
     result))
 
 (defun intersect (set1 set2 &key (key #'identity) (test #'eql))
+  ;;
   ;; much like intersection(), except guarantee that all elements returned are
   ;; taken from .set1.
   ;;
