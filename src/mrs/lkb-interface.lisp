@@ -170,7 +170,7 @@
                        for extra in (var-extra variable)
                        for feature = (extrapair-feature extra)
                        for value = (extrapair-value extra)
-                       do (format stream " ~a: ~(~a~)" feature value)
+                       do (format stream " ~a: ~(\"~a\"~)" feature value)
                        finally
                          (when (var-extra variable) (format stream "]"))
                          (setf (gethash variable cache) variable)))

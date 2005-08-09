@@ -507,7 +507,8 @@
         (:realization (streamp %lui-stream%))
         #-:null
         (:mrs (and (streamp %lui-stream%)
-                   (member format '(:simple :indexed :dependencies))))))))
+                   (or (null format)
+                       (member format '(:simple :indexed :dependencies)))))))))
 
 (defun copy-array (array)
   (let ((dimensions (array-dimensions array))
