@@ -134,32 +134,9 @@
   (mapcar #'(lambda (x) (string-upcase (car x)))
 	  (get-raw-records *lexdb* "select distinct key from rev_key_all")))
 
-;(defmethod lex-words ((lex psql-lex-database))
-;  (let* ((orth-raw-mapping (assoc :orth (dfn lex)))
-;	 (orth-raw-value-mapping (fourth orth-raw-mapping))
-;	 (raw-orth-field-str (2-str (second orth-raw-mapping)))
-;	 (values 
-;	  (get-value-set lex raw-orth-field-str)))
-;    (mapcan 
-;     #'(lambda (x) 
-;	 (mapcar #'string-upcase
-;		 (car (work-out-value orth-raw-value-mapping x))))
-;     values)))
-
 (defmethod rev-key-p ((lex psql-lex-database))
   (string= "t" (sql-fn-get-val lex :rev_key_p)))
   
-;(defmethod generate-lex-orthkeys-if-nec ((lex psql-lex-database))
-;  (generate-orthkeys-if-nec lex)
-;  (with-lexdb-user-lexdb (lex2 lex)
-;    (generate-orthkeys-if-nec lex2))
-;  (update-lex lex))
-
-;(defmethod generate-orthkeys-if-nec ((lex psql-lex-database))
-;  (unless (rev-key-p lex)
-;    (format t "~&(LexDB) generating orthkeys for user ~a" (user lex))
-;    (generate-orthkeys lex)))
-
 (defmethod regenerate-orthkeys ((lex psql-lex-database))
   (run-command lex "DELETE FROM rev_key")
   (generate-missing-orthkeys :from :rev))
@@ -498,7 +475,7 @@
 	   (t
 	    (error "too many arguments")))))
     (when (catch :sql-error
-	    (format t "~&(LexDB) recreating lex table")
+	    (format t "~&(LexDB) recreating 'lex' table")
 	    (force-output)
 	    (unless (set-filter-aux lex filter)
 	      (format t "~&(LexDB) filter unchanged")
@@ -508,7 +485,7 @@
       (set-filter lex))
     (format t "~&(LexDB) filter = ~a" 
 	    (get-filter lex))
-    (format t "~&(LexDB) active entries in lex table = ~a" 
+    (format t "~&(LexDB) active entries in 'lex' table = ~a" 
 	    (sql-fn-get-val lex :size_lex))))
 
 (defmethod set-filter-aux ((lex psql-lex-database) filter)
@@ -646,26 +623,11 @@
 				  sql-fn
 				  :args args
 				  :fields '(:name :userid :modstamp))))
-    ;(mapcar #'car records)
     records
     ))
 
 ;;
 
-;(defmethod lookup-rev-all ((lex psql-lex-database) field-kw val-str)
-;  (let* ((sql-fn (if val-str
-;		    :lookup_general_rev_all
-;		   :lookup_general_null_rev_all))
-;	 (field-str (2-str field-kw))
-;	 (args (if val-str
-;		   (list field-str (sql-like-text val-str))
-;		 (list field-str)))
-;	 (records
-;	  (sql-fn-get-raw-records lex
-;				  sql-fn
-;				  :args args)))
-;    (mapcar #'car records)))
-  
 (defmethod complete ((lex psql-lex-database) field-kw val-str)
   (mapcar #'car 
 	  (sql-fn-get-raw-records lex 
@@ -811,9 +773,6 @@
 (defmethod close-lex ((lex psql-lex-database) &key in-isolation delete)
   (declare (ignore in-isolation delete))
   (with-slots (lexdb-version semi dbname host user connection) lex
-;    (if connection
-;	(format t "~&closing connection to lexical database ~a(~a)@~a:~a" 
-;	    dbname user host (true-port lex)))
     (setf lexdb-version nil)
     (if (next-method-p) (call-next-method))))
 
@@ -821,8 +780,6 @@
   (declare (ignore parameters)) 
   (with-slots (dbname host user connection) lex
     (close-lex lex)    
-;    (format t "~&opening connection to lexical database ~a(~a)@~a:~a" 
-;	    dbname user host (true-port lex))
     (force-output)
     (setf (name lex) name)
     (or (open-lex-aux lex)
@@ -839,7 +796,6 @@
       (check-lexdb-version lex)
       (make-field-map-slot lex)
       (initialize-userschema lex)
-      ;;(generate-orthkeys-if-nec lex)
       lex)))
 
 (defmethod check-lexdb-version ((lex psql-lex-database))
@@ -867,19 +823,6 @@
 		dbname host (true-port lex) user))
     (update-lex lex)))
   
-;(defmethod vacuum-rev-rev-key ((lex psql-database) &key verbose)
-;  (format t "~&(LexDB) Please wait: vacuuming private rev")
-;  (if verbose
-;	 (run-command lex "vacuum full analyze verbose rev")
-;       (run-command lex "vacuum full analyze rev")))
-
-;(defmethod vacuum-public-rev-rev-key ((lex psql-lex-database) &key verbose)
-;  (with-lexdb-user-lexdb (lex2 lex)
-;    (format t "~&(LexDB) Please wait: vacuuming public rev")
-;    (if verbose
-;	 (run-command lex2 "vacuum full analyze verbose public.rev")
-;       (run-command lex2 "vacuum full analyze public.rev"))))
-  
 (defmethod connect ((lex psql-lex-database)) 
   (if (next-method-p) (call-next-method))
   (when (connection-ok lex)
@@ -893,7 +836,6 @@
     (mapcar #'(lambda (x)
 		(str-2-keyword (car x)))
 	    (get-raw-records lex "SELECT val FROM public.meta WHERE var='pub-fn'"))))
-;	    (get-raw-records lex "SELECT * FROM pub_fns()"))))
 
 ;;;
 ;;;
@@ -942,7 +884,7 @@
   (let ((size (sql-fn-get-val lex :size_lex)))
     (if (string= "0" size)
 	(format t "~&(LexDB) WARNING:  0 entries passed the LexDB filter" size)
-      (format t "~&(LexDB) active entries in lex table = ~a" size)))
+      (format t "~&(LexDB) active entries in 'lex' table = ~a" size)))
   (empty-cache lex))
 
 ;;;
@@ -1209,13 +1151,6 @@
 	    (/ (- (get-internal-real-time) time) internal-time-units-per-second))
     ))
 
-;(defmethod vacuum-analyze ((lex psql-lex-database))
-;  (with-lexdb-user-lexdb (lex2 lex)
-;    (format t "~&(LexDB) analyze vacuuming database (as user ~a)..." (user lex2))
-;      (time (run-command lex2 "vacuum analyze")))
-;  (format t "~&(LexDB) analyze vacuuming database (as user ~a)..." (user lex))
-;  (time (run-command lex "vacuum analyze")))
-
 (defmethod merge-into-lexicon-dfn ((lex psql-lex-database) filename)
   "reconnect as db owner and merge new dfn into lexdb"
   (with-slots (dbname host port) lex
@@ -1313,7 +1248,7 @@
       line)
      ;; component(s) skipped, but :skip field available in db
      ((member :_tdl (fields lex))
-      (format t "~&(LexDB) Unhandled TDL in lex entry ~a: ~%~t~a~%~%" name skip)
+      (format t "~&(LexDB) Unhandled TDL fragment in lexical entry ~a: ~%~t~a~%~%" name skip)
       (format t "~&;; (LexDB) Unhandled TDL fragment in ~a placed in _tdl field as unstructured text" name)
 	line)
      ;; component(s) skipped and no :skip field in db
