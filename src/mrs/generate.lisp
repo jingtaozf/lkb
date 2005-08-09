@@ -496,10 +496,12 @@
                               when (gen-chart-check-covering edge input-rels)
                               collect edge)
                           nanalyses
-                          :test (unless *bypass-equality-check*
-                                  #'(lambda (edge)
-                                      (gen-chart-check-compatible 
-                                       edge input-sem)))))
+                          :test #'(lambda (edge)
+                                    (and
+                                       (gen-filter-root-edges (list edge)) 
+                                       (or *bypass-equality-check*
+                                           (gen-chart-check-compatible 
+                                            edge input-sem))))))
                         (t
                          (loop
                              for edge in candidates
@@ -659,23 +661,7 @@
                       thereis (unifiable-wffs-p
                                (tdfs-indef root)
                                (tdfs-indef (g-edge-dag edge))))
-      when match collect edge)
-  ;; c.f. filter-root-edges in parse.lsp
-  ;;
-  ;; _fix_me_
-  ;; this version gives us duplicate results with multiple start symbols.
-  ;;                                                          (23-apr-04; oe)
-  #+:null
-   (loop for start-symbol in start-symbols
-      nconc
-      (let ((root-spec (get-tdfs-given-id start-symbol)))
-         (if root-spec
-            (loop for edge in edges
-               nconc
-               (if (unifiable-wffs-p
-                      (tdfs-indef root-spec) (tdfs-indef (g-edge-dag edge)))
-                  (list edge)))))))
-
+      when match collect edge))
 
 ;;; Chart indexing - on *semantics-index-path* values. May be full types or
 ;;; instance types. Seem to be mostly disjoint if not eq, so don't bother using
