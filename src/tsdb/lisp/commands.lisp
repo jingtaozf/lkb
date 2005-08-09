@@ -594,7 +594,8 @@
         i (first phenomena))))))
 
 (defun tsdb-do-cpus (&key (action :list) (format :ascii) host
-                         (stream *tsdb-io*) (prefix "  "))
+                          (stream *tsdb-io*) (prefix "  "))
+  (declare (ignore host))
   
   (case action
     (:list
