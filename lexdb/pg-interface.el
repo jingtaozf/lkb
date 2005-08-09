@@ -346,16 +346,18 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 			  (l:widget-val-normd (widget-field-find (point))))))
   (lexdb-search-field-val-aux val-str))
 
+;; advance cursor to start of next widget
+;; or else to start of first widget
 (defun widget-advance nil
   (interactive)
   (let* ((widget 
 	   (widget-field-find (point)))
 	 (widgets (mapcar #'cdr lexdb-fw-map))
 	 (widget (second (member widget widgets))))
+    (unless widget (setf widget (first widgets)))
     (if widget
 	(set-window-point (selected-window) 
-			  (widget-get widget :from))
-      (princ "No more records"))))
+			  (widget-get widget :from)))))
 
 ;;;
 ;;; main functions
