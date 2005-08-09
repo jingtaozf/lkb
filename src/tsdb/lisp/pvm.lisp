@@ -52,6 +52,7 @@
 (defun initialize-cpus (&key cpus
                              (classes '(:all))
                              (reset t)
+                             host
                              count
                              block
                              (file (format 
@@ -105,9 +106,10 @@
         (loop
             for i from 1 to (or count 1)
             for tid = (when (or allp (intersection class classes))
-                        (pvm_create (cpu-spawn cpu) (cpu-options cpu)
-                                    :host (cpu-host cpu) 
-                                    :architecture (cpu-architecture cpu)))
+                        (pvm_create
+                         (cpu-spawn cpu) (cpu-options cpu)
+                         :host (if (stringp host) host (cpu-host cpu))
+                         :architecture (cpu-architecture cpu)))
             for task = (when (and (integerp tid) (> tid 0)) (tid-status tid))
             when (and tid (null task))
             do

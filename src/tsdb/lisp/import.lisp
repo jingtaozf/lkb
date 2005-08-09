@@ -102,6 +102,7 @@
     (file data &key 
                (format :ascii)
                absolute
+               target
                (create t)
                (overwrite t)
                (origin (or *import-origin* "unknown"))
@@ -123,7 +124,10 @@
                    (madjust + (madjust * meter 0.3) (mduration rmeter))))
          (ipmeter (when meter 
                     (madjust + (madjust * meter 0.3) 
-                             (+ (mduration rmeter) (mduration imeter))))))
+                             (+ (mduration rmeter) (mduration imeter)))))
+         (tpath (if absolute (namestring target) (find-tsdb-directory target)))
+         (tifile (make-pathname :directory tpath :name "item"))
+         (tstatus (verify-tsdb-directory tpath :absolute t)))
 
     (cond
      ((null (probe-file file))
@@ -133,17 +137,17 @@
        file)
       1)
      ((and (null status) (null create))
-      (format
-       *tsdb-io*
-       "import-items(): invalid database `~a'.~%"
-       data)
+      (format *tsdb-io* "import-items(): invalid database `~a'.~%" data)
       2)
      ((eq (get-field :status status) :ro)
-      (format
-       *tsdb-io*
-       "import-items(): read-only database `~a'.~%"
-       data)
+      (format *tsdb-io* "import-items(): read-only database `~a'.~%" data)
       3)
+     ((and (null tstatus) (null create))
+      (format *tsdb-io* "import-items(): invalid database `~a'.~%" target)
+      12)
+     ((eq (get-field :status tstatus) :ro)
+      (format *tsdb-io* "import-items(): read-only database `~a'.~%" target)
+      13)
      (t
       (when (and create 
                  (or (null status)
@@ -164,15 +168,40 @@
             (return-from do-import-items 4)))
           
         (select "i-id" :integer "item" nil path :absolute t))
+      (when (and create 
+                 (or (null tstatus)
+                     (not (find "item" (read-database-schema tpath :absolute t)
+                                :test #'string= :key #'first))))
+        (unless (purge-directory tpath)
+          (when (probe-file tpath) (delete-file tpath))
+          (mkdir tpath))
+        (let ((relations 
+               (make-pathname :directory (namestring *tsdb-skeleton-directory*)
+                              :name *tsdb-relations-skeleton*))
+              (target (make-pathname :directory tpath :name "relations")))
+          (unless (cp relations target)
+            (format
+             *tsdb-io*
+             "import-items(): invalid skeleton root; check `~a'.~%"
+             (namestring *tsdb-skeleton-directory*))
+            (return-from do-import-items 14)))
+          
+        (select "i-id" :integer "item" nil tpath :absolute t))
+      
       (when overwrite 
         (with-open-file (foo ifile :direction :output
                          :if-does-not-exists :create 
-                         :if-exists :supersede)))
+                         :if-exists :supersede))
+        (when tifile
+          (with-open-file (foo tifile :direction :output
+                           :if-does-not-exists :create 
+                           :if-exists :supersede))))
       (let* ((ids (select "i-id" :integer "item" nil path :absolute t))
              (ids (map 'list #'(lambda (foo) (get-field :i-id foo)) ids))
              (ids (remove nil ids))
              (base (if ids (+ 1 (apply #'max ids)) 1)))
-        (multiple-value-bind (item phenomenon item-phenomenon parse result)
+        (multiple-value-bind (item phenomenon item-phenomenon parse result
+                              titem)
             (case format
               (:ascii
                (read-items-from-ascii-file file
@@ -185,6 +214,13 @@
                                            :separator separator
                                            :pseparator pseparator
                                            :meter rmeter))
+              (:bitext
+               (read-items-from-bitext-file
+                file
+                :base base :origin origin :register register
+                :difficulty difficulty :category category
+                :comment comment :separator separator :pseparator pseparator
+                :meter rmeter))
               (:rasp
                (read-items-from-rasp-file file
                                           :base base
@@ -210,6 +246,7 @@
                       :absolute t :meter ipmeter))
             (when parse (insert path "parse" parse :absolute t))
             (when result (insert path "result" result :absolute t))
+            (when titem (insert tpath "item" titem :absolute t))
             item)
            (t 4))))))))
 
@@ -327,6 +364,136 @@
       (values 
        (nreverse item) (nreverse phenomenon) (nreverse item-phenomenon)))))
 
+(defun read-items-from-bitext-file (file &key (base 1)
+                                              (origin "unknown")
+                                              (register "formal")
+                                              (difficulty 1)
+                                              (category "")
+                                              comment
+                                              (separator ";;")
+                                              (pseparator ";;;")
+                                              (p-id 1)
+                                              meter)
+  
+  (when meter (meter :value (get-field :start meter)))
+  (let* ((lines (and meter (get-field :lines (wc file))))
+         (increment (when (and lines (> lines 0))
+                      (/ (mduration meter) lines)))
+         (stream (open file :direction :input :if-does-not-exist :error))
+         (format "none")
+         (author (current-user))
+         (date (current-time))
+         (index 0)
+         (delta 0)
+         item phenomenon item-phenomenon titem)
+    (when stream
+      (decf p-id)
+      (loop
+          with context = :newline
+          for i from 1
+          for line = (read-line stream nil nil)
+          while line
+          for string = (string-trim '(#\Space #\Tab #\Return) line)
+          for commentp = (let ((n (position #\; string)))
+                           (and (numberp n) (zerop n)))
+          for length = (if commentp 0 (length string))
+          for pseparation = (search pseparator string)
+          when increment do (meter-advance increment)
+          when (and pseparation (zerop pseparation)) do
+            (let* ((string (subseq string (length pseparator)))
+                   (p-name (string-trim '(#\Space #\Tab) string)))
+              (unless (zerop (length p-name))
+                (incf p-id)
+                (push (pairlis '(:p-id :p-name :p-author :p-date) 
+                               (list p-id p-name author date))
+                      phenomenon)))
+            (setf context :phenomenon)
+            (setf delta 0)
+          else when (zerop length) do
+            (setf context :newline)
+            (setf delta 0)
+          else unless (zerop length) do
+            (multiple-value-bind (string id)
+                (strip-identifier string)
+              (unless (numberp id)
+                (setf id (if (eq context :item)
+                           (+ (* index 10) (incf delta))
+                           (* (incf index) 10))))
+              (multiple-value-bind (offset extras)
+                  (classify-item string)
+                (let* ((string (subseq string offset))
+                       (break (when separator 
+                                (search
+                                 separator string 
+                                 :test #'string= :from-end t)))
+                       (comment 
+                        (format
+                         nil
+                         "~@[~a~]~@[ ~a~]"
+                         comment
+                         (when break
+                           (normalize-string 
+                            (subseq string (+ break (length separator)))))))
+                       (string (if break
+                                 (subseq string 0 (max break 0)) 
+                                 string))
+                       (input (string-trim '(#\Space #\Tab) string))
+                       (oinput 
+                        (when (find-attribute-reader :i-input)
+                          (funcall (find-attribute-reader :i-input) input))))
+                  (multiple-value-bind (ninput length)
+                      (normalize-item (or oinput input))
+                    (unless (zerop length)
+                      (let* ((category
+                              (get-field+ :category extras category))
+                             (wf (cond
+                                  ((get-field :illformed extras) 0)
+                                  (t 1)))
+                             (targetp (not (zerop (mod id 10)))))
+                        (if targetp
+                          (push (pairlis '(:i-id 
+                                           :i-origin :i-register :i-format
+                                           :i-difficulty :i-category :i-input
+                                           :i-wf :i-length :i-comment
+                                           :i-author :i-date)
+                                         (list id
+                                               origin register format
+                                               difficulty category 
+                                               (if oinput input ninput) wf
+                                               length comment author date))
+                                titem)
+                          (push (pairlis '(:i-id 
+                                           :i-origin :i-register :i-format
+                                           :i-difficulty :i-category :i-input
+                                           :i-wf
+                                           :i-length :i-comment :i-author
+                                           :i-date)
+                                         (list id
+                                               origin register format
+                                               difficulty category 
+                                               (if oinput input ninput) wf
+                                               length comment author date))
+                                item)))
+                      (when phenomenon
+                        (push (pairlis '(:ip-id :i-id :p-id
+                                         :ip-author :ip-date)
+                                       (list base id p-id
+                                             author date))
+                              item-phenomenon)
+                        (incf base)))))))
+            (setf context :item))
+
+      (close stream)
+      (when meter (meter :value (get-field :end meter)))
+      (values
+       ;;
+       ;; _fix_me_
+       ;; until we keep track of phenomena data for the target too, no point in
+       ;; returning the partial truth.                           (5-jun-05; oe)
+       ;;
+       (nreverse item) nil nil nil nil
+       (nreverse titem) nil nil))))
+
 (defun normalize-item (string)
   (flet ((punctuationp (char)
            (and *import-tsnlp-style-p*
@@ -369,6 +536,30 @@
           (call-safe-hook *tsdb-preprocessing-hook* string)))
       (setf foo foo)
       (values (string-right-trim '(#\Space) result) (or n -1)))))
+
+(defun strip-identifier (string)
+  (multiple-value-bind (start end) 
+      (cl-ppcre:scan "^[0-9]+[a-z]\\. " string)
+    (unless start
+      (multiple-value-setq (start end)
+        (cl-ppcre:scan "^\\[[0-9]{4}[a-z]\\] " string)))
+    (if (numberp end)
+      (let ((suffix (subseq string end))
+            (id (or (parse-integer string :start 1 :junk-allowed t) 0))
+            (offset (or (case (when (>= end 3) (char string (- end 3)))
+                          (#\a 0)
+                          (#\b 1)
+                          (#\c 2)
+                          (#\d 3)
+                          (#\e 4)
+                          (#\f 5)
+                          (#\g 6)
+                          (#\h 7)
+                          (#\i 8)
+                          (#\j 9))
+                        0)))
+        (values suffix (+ (* id 10) offset)))
+      string)))
 
 (defun classify-item (string)
   (let ((result nil)

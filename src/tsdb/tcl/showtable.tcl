@@ -658,6 +658,9 @@ proc make_new_item {canvas row col optionarrayname {tags ""} } {
   set item [eval $canvas create text -100 -100 -text \$c \
                          $format($o(format)) -tag \"$o(format) $tags\" \
                          -anchor w];
+  if {[info exists o(color)]} {
+    $canvas itemconfigure $item -fill $o(color);
+  }; # if
 
   if {[info exists o(key)] && [info exists o(source)]} {
     $canvas bind $item <Double-Button> \

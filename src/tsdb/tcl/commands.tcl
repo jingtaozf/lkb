@@ -224,7 +224,7 @@ proc tsdb_import {code} {
 
   global globals;
 
-  if {$code == "ascii" || $code == "rasp"} {
+  if {$code == "ascii" || $code == "bitext" || $code == "rasp"} {
     if {![input "item file:" [pwd] "" import]} {
       set source $globals(input);
       if {![file isfile $source] || ![file readable $source]} {
@@ -234,7 +234,12 @@ proc tsdb_import {code} {
       }; # if
       history_add import $source;
 
-      if {![input "new database:" "" $globals(home) profile]} {
+      if {$code == "bitext"} {
+        set prompt "new source database:";
+      } else {
+        set prompt "new database:";
+      }; # else
+      if {![input $prompt "" $globals(home) profile]} {
         set atarget $globals(input);
         set target [string_strip $globals(home) $atarget];
         if {$target == ""} {
@@ -254,13 +259,46 @@ proc tsdb_import {code} {
           status "error creating parent directory `$parent'" 10;
           return;
         }; # if
-
         history_add profile $target;
-        set command \
-          [format \
-           "(import :items \"%s\" \"%s\" :format :%s)" \
-           $source $target $code];
-        send_to_lisp :event $command;
+
+        if {$code == "bitext"} {
+          set prompt "new target database:";
+          if {![input $prompt "" $globals(home) profile]} {
+            set attarget $globals(input);
+            set ttarget [string_strip $globals(home) $attarget];
+            if {$ttarget == ""} {
+              tsdb_beep;
+              status "invalid name for target database" 10;
+              return;
+            }; # if
+            if {[file exists $attarget]} {
+              tsdb_beep;
+              status "database `$ttarget' already exists" 10;
+              return;
+            }; # if
+            set tparent \
+              [string range \
+               $attarget 0 [string last $globals(slash) $attarget]];
+            if {[catch {file mkdir $tparent}]} {
+              tsdb_beep;
+              status "error creating parent directory `$tparent'" 10;
+              return;
+            }; # if
+
+            history_add profile $ttarget;
+            set command \
+                [format \
+                 "(import :items \"%s\" \"%s\" :format :%s :target \"%s\")" \
+                 $source $target $code $ttarget];
+            send_to_lisp :event $command;
+          }; # if
+        } else {
+          set command \
+              [format \
+               "(import :items \"%s\" \"%s\" :format :%s)" \
+               $source $target $code];
+          send_to_lisp :event $command;
+        }; # else
       }; # if
     }; # if
   } else {

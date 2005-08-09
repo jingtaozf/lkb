@@ -2175,8 +2175,6 @@
                             (format :tcl)
                             file append meter)
 
-  (declare (optimize (speed 3) (safety 0) (space 0)))
-
   ;;
   ;; _fix_me_
   ;; with large numbers of results, retrieval of all trees or MRSs can take
@@ -2187,10 +2185,10 @@
                       (concatenate 'string "(readings >= 1) && " condition)
                       "readings >= 1"))
          (items
-          (if (stringp data) 
+          (if (stringp data)
             (analyze data 
                      :condition condition :thorough thorough
-                     :filter t :meter meter :message t)
+                     :filter t :extras t :meter meter :message (and meter t))
             data))
          (message (format nil "generating `~a' result view ..." data))
          (stream (create-output-stream file append))
@@ -2239,7 +2237,7 @@
         with indices = (loop
                            with indices
                            for field in '(:i-id :i-input :o-input 
-                                          :readings :results)
+                                          :readings :results :nfragments)
                            for i from 0
                            do
                              (setf (getf indices field) i)
@@ -2247,11 +2245,12 @@
         for row from 2 by 1
         for item in items
         for values = (loop
-                         with values = (make-array 5)
+                         with values = (make-array 6)
                          for pair in item
                          for key = (first pair)
-                         when (getf indices key) do
-                           (setf (aref values (getf indices key)) (rest pair))
+                         for index = (getf indices key)
+                         when index do
+                           (setf (aref values index) (rest pair))
                          finally (return values))
           
         for i-id = (aref values (getf indices :i-id))
@@ -2259,6 +2258,7 @@
         for o-input = (aref values (getf indices :o-input))
         for readings = (aref values (getf indices :readings))
         for results = (aref values (getf indices :results))
+        for nfragments = (aref values (getf indices :nfragments))
         for derivations = (loop
                               for result in results
                               for derivation = (get-field :derivation result)
@@ -2329,11 +2329,11 @@
                 row (tcl-escape-braces (or o-input i-input))))
              (format
               stream
-              "cell ~d 3 -contents {~a} -format data~%~
+              "cell ~d 3 -contents {~a}~:[~; -color blue~] -format data~%~
                cell ~d 4 -contents {~a} -format data -action browse -tag ~a~%~
                cell ~d 5 -contents {~a} -format data -action browse -tag ~a~%~
                cell ~d 6 -contents {~a} -format data -action browse -tag ~a~%"
-              row readings
+              row readings (and (numberp nfragments) (> nfragments 0))
               row (length derivations) dtag
               row (length mrss) mtag
               row (length trees) ttag)))

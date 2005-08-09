@@ -15,6 +15,8 @@
 ;;; License for more details.
 ;;; 
 
+(defparameter tsdb::*tsdb-maximal-number-of-fragments* 5)
+
 (defun tsdb::current-grammar ()
   ;;
   ;; return a string identifying the grammar that is currently in use, ideally
@@ -126,14 +128,18 @@
 		      (setf utcpu (- (+ tu ts) (+ tgcu tgcs)))
 		      (incf treal tr))))
                 (fragments 0))
-           (pairlis '(:treal :total :tcpu :tgc :readings :results :fragments)
+           (pairlis '(:treal :total :tcpu :tgc :readings
+                      :results :fragments :comment)
                     (list treal (+ tcpu utcpu) tcpu tgc
                           readings
                           (loop
                               with mrss
-                              with nresults = (if (<= nresults 0)
-                                                readings
-                                                (min readings nresults))
+                              with nresults 
+                              = (if (fragment-analysis-p graph)
+                                  tsdb::*tsdb-maximal-number-of-fragments*
+                                  (if (<= nresults 0)
+                                     readings
+                                    (min readings nresults)))
                               for i from 0
                               for solution in (nreverse solutions)
 			      for derivation =
@@ -156,14 +162,15 @@
                               and collect
                                 (pairlis '(:result-id :derivation :mrs) 
 					 (list i derivation mrs))
-                              while (and solution (>= nresults 0))
+                              while (and solution (> nresults 0))
 			      finally
                                 #+:debug
                                 (setf %mrss mrss)
 				(unless (zerop (solution graph))
 				  (free-graph-solution 
 				   (graph-address graph))))
-                          fragments)))))
+                          fragments
+                          (format nil "(:nfragments . ~d)" fragments))))))
 
     (append
      (when condition

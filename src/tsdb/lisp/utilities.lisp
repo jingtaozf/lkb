@@ -515,18 +515,21 @@
     (when contents
       (cons path (mapcan #'subdirectories contents)))))
 
-(defun cp (source target)
+(defun cp (source target &key (mode :supersede))
   (when (probe-file source)
     (with-open-file (in source :direction :input
                      :element-type '(unsigned-byte 8))
-      (with-open-file (out target :direction :output
-                       :if-does-not-exist :create
-                       :if-exists :supersede
-                       :element-type '(unsigned-byte 8))
+      (let ((out (if (and (streamp target) (open-stream-p target))
+                   target
+                   (open target :direction :output
+                         :if-does-not-exist :create
+                         :if-exists mode
+                         :element-type '(unsigned-byte 8)))))
         (loop
             for c = (read-byte in nil nil)
             while c
-            do (write-byte c out))))
+            do (write-byte c out))
+        (unless (and (streamp target) (open-stream-p target)) (close out))))
     target))
 
 (defun wc (file)

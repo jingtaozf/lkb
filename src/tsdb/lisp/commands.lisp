@@ -219,7 +219,7 @@
     (length items)))
 
 (defun tsdb (&optional action argument 
-             &key condition run skeleton load gold
+             &key condition run skeleton load gold host
                   (file nil filep) (reset nil resetp) count target)
   
   (initialize-tsdb)
@@ -252,16 +252,16 @@
            (cond
             ((and filep resetp)
              (initialize-cpus :classes argument :count count
-                              :file file :reset reset
+                              :file file :reset reset :host host
                               :stream *tsdb-io* :prefix "  "))
             (filep 
-             (initialize-cpus :classes argument :count count  
+             (initialize-cpus :classes argument :count count :host host
                               :file file :stream *tsdb-io* :prefix "  "))
             (resetp
-             (initialize-cpus :classes argument :count count
+             (initialize-cpus :classes argument :count count :host host
                               :reset reset :stream *tsdb-io* :prefix "  "))
             (t
-             (initialize-cpus :classes argument :count count 
+             (initialize-cpus :classes argument :count count :host host
                               :stream *tsdb-io* :prefix "  ")))))
          (format *tsdb-io* "~&~%"))
          
@@ -593,7 +593,7 @@
         "set phenomena(~d) ~s;~%"
         i (first phenomena))))))
 
-(defun tsdb-do-cpus (&key (action :list) (format :ascii)
+(defun tsdb-do-cpus (&key (action :list) (format :ascii) host
                          (stream *tsdb-io*) (prefix "  "))
   
   (case action
@@ -657,11 +657,11 @@
            do
              (format
                  stream
-                 "~&~%~a- `~(~a~)' (pid: ~a --- tid: ~x) ~
+                 "~&~%~a- `~(~a~)' (pid: ~a --- tid: ~d [~x]) ~
                   [~(~:[~a~;~{~a~^ | ~}~]~)]~%~
                   ~a  command: `~a';~%~
                   ~a  status: ~(~a~) --- protocol: ~(~a~);~%"
-                 prefix host pid tid
+                 prefix host pid tid tid
                  (consp type) type
                  prefix spawn
                  prefix status protocol))))))

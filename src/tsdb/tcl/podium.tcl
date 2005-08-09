@@ -24,7 +24,7 @@ exec $HOME/delphin/lkb/bin/linux.x86.32/swish++ "$0" "$@"
 if {![info exists itsdb_root]} {
   set itsdb_root [expr {[info exists env(HOSTNAME)] 
                         && ![string first "mt" $env(HOSTNAME)]
-                        ? "/logon/oe/src/lkb" 
+                        ? "/logon/oe/src/test/lingo/lkb" 
                         : "/home/oe/src/lkb"}];
 }; # if
 #
@@ -377,6 +377,8 @@ proc main {} {
   menu .menu.file.menu.import -tearoff 0
   .menu.file.menu.import add command -label "Test Items" \
     -command {tsdb_import ascii};
+  .menu.file.menu.import add command -label "Bi-Text Items" \
+    -command {tsdb_import bitext};
   .menu.file.menu.import add command -label {[incr tsdb()] Profile} \
     -command {tsdb_import database};
   .menu.file.menu.import add command -label "RASP Trees" \
