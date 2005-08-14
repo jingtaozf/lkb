@@ -71,6 +71,9 @@
 		      lkb::output-type-file 
                       lkb::output-display-settings
                       lkb::load-display-settings
+                      ;; MAF
+                      lkb::print-maf-tokens
+                      lkb::print-maf-wordforms
                       ;; debug
                       lkb::print-chart-toplevel
 		      lkb::print-token-chart-toplevel
@@ -366,19 +369,28 @@
                   )
 		 :available-p :always)))
          (list
-	    (make-lkb-submenu-item 
-	     :menu-title "Options"
-	     :menu-items                       
-	     (list 
-              (make-menu-item :name "Shrink menu"
-                                    :value 'shrink-lkb-menu :available-p :always)
-	      (make-menu-item :name "Set options ..."
-			      :available-p :always
-			      :value 'get-parameters)
-              (make-menu-item :name "Save display settings..."
-                                                           :value 'output-display-settings)
-              (make-menu-item :name "Load display options..."
-                                                           :value 'load-display-settings))
-	     :available-p :always))))))
+	  (make-lkb-submenu-item 
+	   :menu-title "MAF"
+	   :menu-items
+	   (list
+	    (make-menu-item :name "Print MAF tokens"
+			    :value 'print-maf-tokens)
+	    (make-menu-item :name "Print MAF wordforms"
+			    :value 'print-maf-wordforms)
+	    ))
+	  (make-lkb-submenu-item 
+	   :menu-title "Options"
+	   :menu-items                       
+	   (list 
+	    (make-menu-item :name "Shrink menu"
+			    :value 'shrink-lkb-menu :available-p :always)
+	    (make-menu-item :name "Set options ..."
+			    :available-p :always
+			    :value 'get-parameters)
+	    (make-menu-item :name "Save display settings..."
+			    :value 'output-display-settings)
+	    (make-menu-item :name "Load display options..."
+			    :value 'load-display-settings))
+	   :available-p :always))))))
 
 

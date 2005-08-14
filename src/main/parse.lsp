@@ -58,6 +58,8 @@
 ;;; Keeping the charts distinct also avoids having to filter
 ;;; out the token edges and the morphop edges.
 
+(defun make-tchart nil (make-array (list *chart-limit* 2)))
+
 (defvar *parse-record* nil)
 
 ;;; *chart* contains lists of chart-configurations
@@ -130,7 +132,8 @@
    id score category rule dag odag dag-restricted leaves lex-ids
    parents children tchildren orth-tdfs partial-tree from to label head
    cfrom cto string mrs foo bar baz
-   packed equivalent frozen adjuncts unpacking)
+   packed equivalent frozen adjuncts unpacking
+   xfrom xto)
 
 (defstruct (token-edge (:include edge))
   word)
@@ -555,7 +558,6 @@
         (when show-parse-p (show-parse))
         (values *executed-tasks* *successful-tasks* 
                 *contemplated-tasks* *filtered-tasks*)))))
-
 
 ;;; *****************************************************
 ;;;
@@ -1741,11 +1743,11 @@ an unknown word, treat the gap as filled and go on from there.
 			    :frozen frozen :concise concise :stream stream))
   (terpri))
 
-(defun print-tchart (&key frozen concise (stream t))
+(defun print-tchart (&key frozen concise (stream t) (tchart *tchart*))
   (format stream "~% > token/spelling chart dump:~%")
   (loop
       for i from 1 to *tchart-max*
-      do (print-chart-entry i (aref *tchart* i 0) 
+      do (print-chart-entry i (aref tchart i 0) 
 			    :frozen frozen :concise concise :stream stream))
   (terpri))
 

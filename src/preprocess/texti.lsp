@@ -5,16 +5,30 @@
 (in-package :lkb)
 
 (defvar *token-id* 0)
+(defvar *token-vertex* 0)
 
 ;;;
 
+;; input xml must have NO superfluous space
 (defun pretty-print-xml (xml)
   (coerce
    (loop
+       with i = -1
+       with last
+       with last2
        for c across xml
-       if (char= #\< c)
-       append (list #\Newline)
-       append (list c))
+       if (and (char= #\< last) (char= #\/ c)) do (decf i)
+       if (and (char= #\< last) (or (null last2) (char= #\> last2)))
+       append (list #\Newline) into x and
+       append (loop for n from 1 to i
+		  collect #\Space) into x
+       if (and (char= #\< last) (char= #\/ c)) do (decf i)
+       if (and (char= #\< last) (char= #\! c)) do (decf i)
+       if (and (char= #\/ last) (char= #\> c)) do (decf i)
+       if (char= #\< c) do (incf i)
+       if last append (list last) into x
+       do (setf last2 last) (setf last c)
+       finally (return (append x (list c))))
    'string))
   
 
@@ -23,6 +37,7 @@
 ;;;
 
 ;; map text string into well-formed XML
+;; NOTE: preprocess-sentence-string is embedded here until we can fix it to handle character positions
 (defun basic-text-to-basic-xml (text-str)
   ;; todo: fix preprocess-sentence-string to preserve char offsets
   ;;        and move this to basic-xml-to-maf-tokens
@@ -32,7 +47,7 @@
     ;; todo: xml declaration belongs in serialize-xml function due to 'encoding'
     (format strm "<?xml version='1.0' encoding='UTF8'?>")
     (format strm "<text>")
-    (format strm "~a" (wrap-cdata text-str))
+    (format strm "~a" (xml-escape text-str))
     (format strm "</text>")
     (get-output-stream-string strm)))
 
@@ -43,7 +58,20 @@
 	 (x-to (char-offset-to-xpointer (length text)))
 	 (xrange (cons x-from x-to)))
     (XPointer-range xml xrange)))
-  
+
+;; escape string for use as XML text
+(defun xml-escape (str)
+  (coerce 
+   (loop
+       for c across str
+       if (char= #\" c) append '(#\& #\q #\u #\o #\t #\;)
+       else if (char= #\' c) append '(#\& #\a #\p #\o #\s #\;)
+       else if (char= #\& c) append '(#\& #\a #\m #\p #\;)
+       else if (char= #\< c) append '(#\& #\l #\t #\;)
+       else if (char= #\> c) append '(#\& #\g #\t #\;)
+       else append (list c))
+   'string))
+
 ;; return CDATA-wrapped text
 (defun wrap-cdata (str)
   (concatenate-strings
@@ -52,7 +80,6 @@
 	with subs = (cons 0 (append (ppcre:all-matches "]]>" str)
 				    (list (length str))))
 	while subs
-	;;do (print subs)
 	collect "]]&gt;"
 	collect "<![CDATA["
 	collect (subseq str (pop subs) (pop subs))
@@ -65,6 +92,48 @@
 ;;;
 ;;; BASIC XML TO MAF TOKENS
 ;;; also MAF TOKENS <-> TCHART
+
+
+;; CLIM display routines
+(defun print-maf-tokens nil
+  (let ((frame (clim:make-application-frame 'xml-maf-tokens)))
+    (clim:run-frame-top-level frame)))
+
+
+(defun print-maf-wordforms nil
+  (let ((frame (clim:make-application-frame 'xml-maf-tokens)))
+    (clim:run-frame-top-level frame)))
+
+
+(defun disp-xml-maf-tokens (mframe stream &key max-width max-height)
+  (declare (ignore mframe max-width max-height))
+  (if *tchart*
+      (clim:with-text-style (stream (lkb-parse-tree-font))
+	(format stream "~a" (pretty-print-xml (tchart-to-maf-tokens *tchart*))))
+    (format stream "No tchart (please parse something first).")))
+
+(define-lkb-frame xml-maf-tokens
+    ()
+  :display-function 'disp-xml-maf-tokens 
+  :width 400 
+  :height 400)
+
+(define-lkb-frame xml-maf-wordforms
+    ()
+  :display-function 'disp-xml-maf-tokens 
+  :width 400 
+  :height 400)
+
+(defun disp-xml-maf-wordforms (mframe stream &key max-width max-height)
+  (declare (ignore mframe max-width max-height))
+  (if *tchart*
+      (clim:with-text-style (stream (lkb-parse-tree-font))
+	(format stream "~a" (pretty-print-xml (tchart-to-maf-wordforms *tchart*))))
+    (format stream "No tchart (please parse something first).")))
+
+;; end of CLIM display routines
+
+;; TODO: LUI display???
 
 (defun tchart-to-maf-tokens (tchart)
   (tchart-to-maf tchart))
@@ -161,13 +230,20 @@
 ;;;
 
 ;;;
-;;; *tchart* -> maf-wordforms.xml
+;;; tchart -> maf-wordforms.xml
 ;;;
 
 (defun tchart-to-maf-wordforms (tchart)
   (tchart-to-maf tchart :wordforms t))
 
+;;;
+;;; MAF to tchart mapping
+;;;
+
 (defun maf-to-tchart (xml)
+  (setf *tchart* (make-tchart))
+  (setf *tchart-max* 0)
+  
   (let* ((lxml (net.xml.parser:parse-xml xml))
 	 (lxml-e (pop lxml)))
     ;; check for <?xml version="1.0" ...>
@@ -181,19 +257,57 @@
       (error "expected DOCTYPE maf: got ~a" lxml-e))
     ;; now process maf element
    (setf lxml-e (pop lxml))
-   (unless (eq (intern "maf")
-	       (lxml-elt-name lxml-e))
-     (error "expected lxml root element maf: got ~a" lxml-e))
-   (unless (string= "XPointer"
-		    (lxml-elt-attr lxml-e "addressing"))
-     (error "Unhandled addressing attribute in ~a" lxml-e))
    
-   #+:null
    (setf *token-vertex* 0)
    
-   lxml-e
-    ))
+   (maf-lxml-to-tchart lxml-e)
+   )
+  *tchart*)
 
+(defun maf-lxml-to-tchart (lxml)
+  (unless (eq (intern "maf")
+	      (lxml-elt-name lxml))
+    (error "expected lxml root element maf: got ~a" lxml))
+  (unless (string= "XPointer"
+		   (lxml-elt-attr lxml "addressing"))
+    (error "Unhandled addressing attribute in ~a" lxml))
+  ;; date ignored
+  ;; language ignored
+  (let* ((contents (cdr lxml))
+	 (tokens (loop
+		    for x in contents
+		    when (eq (intern "token")
+			     (lxml-elt-name x))
+		     collect x))
+	 (tedges (mapcar #'token-lxml-to-tedge tokens))
+	 (fsms (loop
+		   for x in contents
+		   when (eq (intern "fsm")
+			    (lxml-elt-name x))
+		   collect x))
+	 )
+    (unless (= 1 (length fsms))
+      (error "Multiple fsm elements are not handled at present"))
+    ;; create tedges
+    (place-tedges-in-tchart tedges)
+    )
+  )
+
+(defun place-tedges-in-tchart (tedges)
+  (loop
+      for tedge in tedges
+      for from = (edge-from tedge)
+      for to = (edge-to tedge)
+      for cc = (make-chart-configuration :begin from
+					 :end to
+					 :edge tedge)
+      do
+	(setf (aref *tchart* to 0) (push cc (aref *tchart* to 0)))
+	(setf (aref *tchart* from 1) (push cc (aref *tchart* to 1)))
+	(when (> to *tchart-max*)
+	  (setf *tchart-max* to))))
+	
+	  
 (defun fsm-lxml-to-medges (lxml)
   (unless (eq (intern "fsm") (lxml-elt-name lxml))
     (error "fsm lxml element expected: got ~a" lxml))
@@ -232,7 +346,7 @@
 	     id states)))
   
 
-(defvar *token-vertex* 0)
+;; we assume for now that tokens are presented in edge order
 (defun token-lxml-to-tedge (lxml)
   (unless (eq (intern "token") (lxml-elt-name lxml))
     (error "token lxml element expected: got ~a" lxml))
@@ -249,8 +363,8 @@
      :from e-from
      :to e-to
      :string value
-     :cfrom (xpointer-to-char-offset from)
-     :cto (xpointer-to-char-offset to)
+     :xfrom (xpointer-to-char-offset from)
+     :xto (xpointer-to-char-offset to)
      :word (string-upcase value)
      :leaves (list value))))
 
@@ -260,6 +374,8 @@
       (error "token edge id could not be extracted from token maf id ~a"
 	     val))
     val))  
+
+;;
 
 (defun lxml-elt-p (x)
   (listp x))
@@ -309,17 +425,10 @@
 		  (intern attrib-str))))
     (second (member attrib (cdr lxml-pi)))))
         
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+;;;
+;;; tchart to MAF mapping
+;;;
+
 (defun tchart-to-maf (tchart &key (wordforms t))
   (let* ((strm (make-string-output-stream))
 	 (tedges (get-tedges tchart))
@@ -438,7 +547,7 @@
 
 (defun get-tedges (tchart)
   (loop
-      for i from 1 to *tchart-max*
+      for i from 1 to (1- *chart-limit*)
       for ccs-incident = (aref tchart  i 0)
       append
 	(loop
@@ -449,7 +558,7 @@
 
 (defun get-medges (tchart)
   (loop
-      for i from 1 to *tchart-max*
+      for i from 1 to (1- *chart-limit*)
       for ccs-incident = (aref tchart  i 0)
       append
 	(loop
@@ -457,3 +566,105 @@
 	    for edge = (chart-configuration-edge cc)
 	    when (morpho-stem-edge-p edge)
 	    collect edge)))
+
+;;;
+
+(defun parse-from-maf (maf &optional 
+			   (show-parse-p *show-parse-p*) 
+			   (first-only-p *first-only-p*))
+  
+  ;(check-morph-options bracketed-input)
+  (let* ((*active-parsing-p* (if *bracketing-p* nil *active-parsing-p*))
+         (first-only-p (if (and first-only-p 
+                                (null *active-parsing-p*)
+                                (greater-than-binary-p))
+                         (format 
+                          t 
+                          "~&Passive best-first mode only available for ~
+                           unary and binary rules.~%~
+                           Disabling best-first mode: setting ~
+                           *first-only-p* to `nil'.~%")
+                         first-only-p)))
+    ;; eg. user-input -> ("the" "dog" "barks")
+    ;(multiple-value-bind (user-input brackets-list)
+    ;    (if *bracketing-p*
+    ;      (initialise-bracket-list bracketed-input)
+    ;      (values bracketed-input nil))
+
+    ;(when (> (length user-input) *chart-limit*)
+    ;    (error "~%Sentence `~a' too long - ~A words maximum ~
+    ;            (see documentation for *chart-limit*)" 
+					;           user-input *chart-limit*))
+    (clear-chart)
+    (maf-to-tchart maf)
+      (let* (;(*brackets-list* brackets-list)
+	     (len-tokens (apply #'max 
+				(mapcar #'token-edge-to 
+					(get-tedges *tchart*))))
+	    (*executed-tasks* 0) (*successful-tasks* 0)
+            (*contemplated-tasks* 0) (*filtered-tasks* 0)
+            (*parser-rules* (get-matching-rules nil nil))
+            (*parser-lexical-rules* (get-matching-lex-rules nil))
+            (*lexical-entries-used* nil)
+            (*minimal-vertex* 0)
+            (*maximal-vertex* len-tokens)
+            ;;
+            ;; shadow global variable to allow best-first mode to decrement for
+            ;; each result found; eliminates need for additional result count.
+            ;;                                              (22-jan-00  -  oe)
+            (*first-only-p*
+             (cond
+              ((null first-only-p) nil)
+              ((and (numberp first-only-p) (zerop first-only-p)) nil)
+              ((numberp first-only-p) first-only-p)
+              (t 1))))
+        (declare (special *minimal-vertex* *maximal-vertex*))
+        (with-parser-lock ()
+          (flush-heap *agenda*)
+          ;(clear-chart)
+          (setf *cached-category-abbs* nil)
+          (setf *parse-record* nil)
+          (setf *parse-times* (list (get-internal-run-time)))
+          (let ((*safe-not-to-copy-p* t))
+	    ;(break)
+	    ;(instantiate-chart-with-tokens user-input)
+	    (ecase *morph-option*
+	      (:default (instantiate-chart-with-morphop))
+	      (:external-rule-by-rule 
+	       (instantiate-chart-with-morphop))
+	      ;;; *foreign-morph-fn* is set and will be called
+	      (:external-partial-tree
+	       (instantiate-chart-with-morpho-stem-edges))
+	      (:with-tokeniser-partial-tree nil)
+	      (:with-tokeniser-retokenise nil))
+	    ;(break)
+	    (instantiate-chart-with-stems-and-multiwords)
+            ;(catch :best-first
+              (add-words-to-chart (and first-only-p (null *active-parsing-p*)
+                                       (cons 0
+					     len-tokens
+					     ;(length user-input)
+					     )))
+              (if *active-parsing-p*
+                (complete-chart)
+                (loop 
+                    until (empty-heap *agenda*)
+                    do (funcall (heap-extract-max *agenda*))))
+	      ;)
+            (unless first-only-p
+              ;;
+              ;; best-first (passive or active mode) has already done this
+              ;; incrementally in the parse loop
+              ;;
+              (setf *parse-record* 
+                (find-spanning-edges 0 
+				     len-tokens
+				     ;(length user-input)
+				     ))))
+          (push (get-internal-run-time) *parse-times*))
+        (when show-parse-p (show-parse))
+        (values *executed-tasks* *successful-tasks* 
+                *contemplated-tasks* *filtered-tasks*))
+      ;)
+    ))
+
