@@ -136,7 +136,7 @@
    xfrom xto)
 
 (defstruct (token-edge (:include edge))
-  word)
+  word maf-id)
 
 (defstruct (morpho-stem-edge (:include edge))
   word stem current entries partial-p) 

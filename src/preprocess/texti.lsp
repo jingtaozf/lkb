@@ -93,50 +93,8 @@
 ;;; BASIC XML TO MAF TOKENS
 ;;; also MAF TOKENS <-> TCHART
 
-
-;; CLIM display routines
-(defun print-maf-tokens nil
-  (let ((frame (clim:make-application-frame 'xml-maf-tokens)))
-    (clim:run-frame-top-level frame)))
-
-
-(defun print-maf-wordforms nil
-  (let ((frame (clim:make-application-frame 'xml-maf-tokens)))
-    (clim:run-frame-top-level frame)))
-
-
-(defun disp-xml-maf-tokens (mframe stream &key max-width max-height)
-  (declare (ignore mframe max-width max-height))
-  (if *tchart*
-      (clim:with-text-style (stream (lkb-parse-tree-font))
-	(format stream "~a" (pretty-print-xml (tchart-to-maf-tokens *tchart*))))
-    (format stream "No tchart (please parse something first).")))
-
-(define-lkb-frame xml-maf-tokens
-    ()
-  :display-function 'disp-xml-maf-tokens 
-  :width 400 
-  :height 400)
-
-(define-lkb-frame xml-maf-wordforms
-    ()
-  :display-function 'disp-xml-maf-tokens 
-  :width 400 
-  :height 400)
-
-(defun disp-xml-maf-wordforms (mframe stream &key max-width max-height)
-  (declare (ignore mframe max-width max-height))
-  (if *tchart*
-      (clim:with-text-style (stream (lkb-parse-tree-font))
-	(format stream "~a" (pretty-print-xml (tchart-to-maf-wordforms *tchart*))))
-    (format stream "No tchart (please parse something first).")))
-
-;; end of CLIM display routines
-
-;; TODO: LUI display???
-
-(defun tchart-to-maf-tokens (tchart)
-  (tchart-to-maf tchart))
+(defun tchart-to-maf-tokens (&optional (tchart *tchart*))
+  (tchart-to-maf tchart :wordforms nil))
 
 (defun basic-xml-to-maf-tokens (xml)
   (setf *token-id* 0)
@@ -233,7 +191,7 @@
 ;;; tchart -> maf-wordforms.xml
 ;;;
 
-(defun tchart-to-maf-wordforms (tchart)
+(defun tchart-to-maf-wordforms (&optional (tchart *tchart*))
   (tchart-to-maf tchart :wordforms t))
 
 ;;;
@@ -262,7 +220,8 @@
    
    (maf-lxml-to-tchart lxml-e)
    )
-  *tchart*)
+  *tchart*
+  )
 
 (defun maf-lxml-to-tchart (lxml)
   (unless (eq (intern "maf")
@@ -285,22 +244,28 @@
 		   when (eq (intern "fsm")
 			    (lxml-elt-name x))
 		   collect x))
-	 )
-    (unless (= 1 (length fsms))
-      (error "Multiple fsm elements are not handled at present"))
+	 (fsm1 (first fsms))
+	 medges)
     ;; create tedges
-    (place-tedges-in-tchart tedges)
+    (place-edges-in-tchart tedges)
+    
+    (unless (> 2 (length fsms))
+      (error "Multiple fsm elements are not handled at present"))
+    (setf medges (if fsm1 (fsm-lxml-to-medges fsm1)))
+    (place-edges-in-tchart medges)
+    medges
     )
   )
 
-(defun place-tedges-in-tchart (tedges)
+;; to do: replace global *tchart* + *tchart-max* + ??? with objects
+(defun place-edges-in-tchart (edges)
   (loop
-      for tedge in tedges
-      for from = (edge-from tedge)
-      for to = (edge-to tedge)
+      for edge in edges
+      for from = (edge-from edge)
+      for to = (edge-to edge)
       for cc = (make-chart-configuration :begin from
 					 :end to
-					 :edge tedge)
+					 :edge edge)
       do
 	(setf (aref *tchart* to 0) (push cc (aref *tchart* to 0)))
 	(setf (aref *tchart* from 1) (push cc (aref *tchart* to 1)))
@@ -308,44 +273,6 @@
 	  (setf *tchart-max* to))))
 	
 	  
-(defun fsm-lxml-to-medges (lxml)
-  (unless (eq (intern "fsm") (lxml-elt-name lxml))
-    (error "fsm lxml element expected: got ~a" lxml))
-  (let ((init (lxml-elt-attr lxml "init"))
-	(final (lxml-elt-attr lxml "final"))
-	(states (loop
-		    for x in (cdr lxml)
-		    when (eq (intern "state")
-			     (lxml-elt-name x))
-		    collect x))
-	(transitions (loop
-		    for x in (cdr lxml)
-		    when (eq (intern "transition")
-			     (lxml-elt-name x))
-			 collect x)))
-    (check-state-declared init states)
-    (check-state-declared final states)
-    (mapcar #'(lambda (x)
-		(check-state-declared
-		 (lxml-elt-attr x "source") states))
-	    transitions)
-    (mapcar #'(lambda (x)
-		(check-state-declared
-		 (lxml-elt-attr x "target") states))
-	    transitions)
-    
-    transitions))
-
-(defun check-state-declared (id states)
-    (unless
-	(member id states 
-		:test #'string=
-		:key #'(lambda (x)
-			 (lxml-elt-attr x "id")))
-      (error "state ~a referenced but not explicitly declared in ~a"
-	     id states)))
-  
-
 ;; we assume for now that tokens are presented in edge order
 (defun token-lxml-to-tedge (lxml)
   (unless (eq (intern "token") (lxml-elt-name lxml))
@@ -360,11 +287,12 @@
 	 (e-from (1- e-to)))
     (make-token-edge 
      :id e-id
+     :maf-id id
      :from e-from
      :to e-to
      :string value
-     :xfrom (xpointer-to-char-offset from)
-     :xto (xpointer-to-char-offset to)
+     :xfrom from
+     :xto to
      :word (string-upcase value)
      :leaves (list value))))
 
@@ -375,10 +303,168 @@
 	     val))
     val))  
 
+(defvar *tchart-max-edge-id*)
+(defun fsm-lxml-to-medges (lxml)
+  (unless (eq (intern "fsm") (lxml-elt-name lxml))
+    (error "fsm lxml element expected: got ~a" lxml))
+  (let ((init (lxml-elt-attr lxml "init"))
+	(final (lxml-elt-attr lxml "final"))
+	(states (loop
+		    for x in (cdr lxml)
+		    when (eq (intern "state")
+			     (lxml-elt-name x))
+		    collect x))
+	(transitions (loop
+		    for x in (cdr lxml)
+		    when (eq (intern "transition")
+			     (lxml-elt-name x))
+			 collect x))
+	medges)
+    (check-state-declared init states)
+    (check-state-declared final states)
+    (mapcar #'(lambda (x)
+		(check-state-declared
+		 (lxml-elt-attr x "source") states))
+	    transitions)
+    (mapcar #'(lambda (x)
+		(check-state-declared
+		 (lxml-elt-attr x "target") states))
+	    transitions)
+    (setf *tchart-max-edge-id* 
+      (apply #'max (mapcar #'edge-id (get-edges *tchart*))))
+    (setf medges (mapcar #'transition-to-medge transitions))
+    medges))
+
+(defun tokens-str-to-children (tokens-str tedges)
+  (unless tokens-str
+    (error "tokens-str is null"))
+  (unless tedges
+    (error "tedges is null"))
+  (mapcar #'(lambda (x)
+	      (token-maf-id-to-token-edge x tedges))
+	  (split-str-on-spc tokens-str)))
+
+(defun leaf-edges-from (leaf-edges)
+  (unless leaf-edges
+    (error "leaf-edges is null"))
+  (apply #'min (mapcar #'edge-from leaf-edges)))
+
+(defun leaf-edges-to (leaf-edges)
+  (unless leaf-edges
+    (error "leaf-edges is null"))
+  (apply #'max (mapcar #'edge-to leaf-edges)))
+
+;; assume xpoint order is string order for now
+(defun leaf-edges-xfrom (leaf-edges)
+  (unless leaf-edges
+    (error "leaf-edges is null"))
+  (loop
+      with xmin
+      for edge in leaf-edges
+      for xfrom = (edge-xfrom edge)
+      when (string< xfrom xmin)
+      do (setf xmin xfrom)
+      finally (return xmin)))
+
+(defun leaf-edges-xto (leaf-edges)
+  (unless leaf-edges
+    (error "leaf-edges is null"))
+  (loop
+      with xmax
+      for edge in leaf-edges
+      for xto = (edge-xto edge)
+      when (string> xto xmax)
+      do (setf xmax xto)
+      finally (return xmax)))
+
+(defun transition-to-medge (lxml)
+  (unless (eq (intern "transition") (lxml-elt-name lxml))
+    (error "transition lxml element expected instead of ~a" lxml))
+  ;; assume tedges already in chart
+  (let* ((tedges (get-tedges *tchart*))
+	 
+	 ;(source (lxml-elt-attr lxml "source"))
+	 ;(target (lxml-elt-attr lxml "target"))
+	 
+	 (wordForms (loop
+			for x in (cdr lxml)
+			when (eq (intern "wordForm")
+				 (lxml-elt-name x))
+			collect x))
+	 (wordForm1 (first wordForms))
+	 (form (lxml-elt-attr wordForm1 "form"))
+	 ;; tag ignored for now
+	 ;;(tag (lxml-elt-attr wordForm1 "tag"))
+	 (tokens-str (lxml-elt-attr wordForm1 "tokens"))
+	 (children (tokens-str-to-children tokens-str tedges))
+	 (leaf-edges children) ;;for now
+	 (leaf-strings (mapcar #'edge-string leaf-edges))
+	 (from (leaf-edges-from leaf-edges))
+	 (to (leaf-edges-to leaf-edges))
+	 (xfrom (leaf-edges-xfrom leaf-edges))
+	 (xto (leaf-edges-xto leaf-edges))
+	 (string form)
+	 (word (string-upcase form))
+	 (current (string-upcase form))
+	 
+	 (fss (loop
+		  for x in (cdr wordForm1)
+		  when (eq (intern "fs")
+			   (lxml-elt-name x))
+		  collect x))
+	 (fs1 (first fss))
+	 (f-stem (find "stem" (cdr fs1) :key #'(lambda (x) (lxml-elt-attr x "name")) :test #'string=))
+	 (f-partial-tree (find "partial-tree" (cdr fs1) :key #'(lambda (x) (lxml-elt-attr x "name")) :test #'string=))
+	 (stem (if f-stem (lxml-elt-val f-stem)))
+	 (partial-tree (if f-partial-tree (read-from-string (lxml-elt-val f-partial-tree))))
+	 )
+    
+    (unless (= 1 (length wordForms))
+      (error "Multiple wordForm elements inside a transition element are not handled"))
+    (unless (= 1 (length fss))
+      (error "Multiple fs elements inside a wordForm element are not handled"))
+    (make-morpho-stem-edge 
+     :id (incf *tchart-max-edge-id*)
+     :children children
+     :leaves leaf-strings
+     :from from
+     :to to
+     :string string
+     :word word
+     :current current
+     :stem stem
+     :partial-tree partial-tree
+     :xfrom xfrom
+     :xto xto
+     )))
+
+(defun split-str-on-spc (str)
+  (mapcar #'car (split-on-spc str)))
+
+(defun token-maf-id-to-token-edge (maf-id tedges)
+  (find maf-id tedges :key #'token-edge-maf-id :test #'string=))
+
+(defun check-state-declared (id states)
+    (unless
+	(member id states 
+		:test #'string=
+		:key #'(lambda (x)
+			 (lxml-elt-attr x "id")))
+      (error "state ~a referenced but not explicitly declared in ~a"
+	     id states)))
+  
+
 ;;
 
 (defun lxml-elt-p (x)
   (listp x))
+
+(defun lxml-elt-val (lxml-elt)
+  (unless (lxml-elt-p lxml-elt)
+    (error "lxml element expected: got ~a" lxml-elt))
+  (unless (= (length (cdr lxml-elt)) 1)
+    (error "we handle only simple string values"))
+  (second lxml-elt))
 
 (defun lxml-elt-name (lxml-elt)
   (unless (lxml-elt-p lxml-elt)
@@ -429,7 +515,7 @@
 ;;; tchart to MAF mapping
 ;;;
 
-(defun tchart-to-maf (tchart &key (wordforms t))
+(defun tchart-to-maf (&optional (tchart *tchart*) &key (wordforms t))
   (let* ((strm (make-string-output-stream))
 	 (tedges (get-tedges tchart))
 	 (medges (get-medges tchart))
@@ -459,8 +545,9 @@
 	do (format strm "<state id='v~a'/>" i))
     
     (loop
-      for x in medges
-	do (format strm "~a" (medge-to-transition-xml x)))
+	for medge in medges
+	when (not (morpho-stem-edge-partial-p medge))
+	do (format strm "~a" (medge-to-transition-xml medge)))
     
     (format strm "</fsm>")
     (get-output-stream-string strm)
@@ -471,55 +558,91 @@
     (concatenate 'string
       (format nil "<transition source='v~a' target='v~a'>" from to)
       (format nil "<wordForm form='~a' tag='~a' tokens='~a'>" 
-	      string (cadr partial-tree) (edge-to-tokens medge))
+	      string 
+	      (cl-ppcre:regex-replace "_INFL_RULE$" (string (caar partial-tree)) "") 
+	      (edge-to-tokens-id-str medge))
       (format nil "<fs>")
-      (format nil "<f name='orth'>")
-      (format nil "<string>~a</string>" stem)
-      (format nil "</f>")
+      (format nil "~a" (stem-to-fs stem))
       (if partial-tree
 	  (format nil "~a" (partial-tree-to-fs partial-tree)))
       (format nil "</fs>")
       (format nil "</wordForm>")
       (format nil "</transition>"))))
 
-;; only handles simplest case
+;; store as lisp list text
 (defun partial-tree-to-fs (p-tree)
-  (unless 
-      (and (= 1 (length p-tree))
-	   (= 2 (length (car p-tree)))
-	   (symbolp (first (car p-tree)))
-	   (stringp (second (car p-tree))))
-    (error "at present we only handle partial-trees of form ((RULE \"ORTH\"))"))
-    (concatenate 'string
-      (format nil "<f name='partial-tree'>")
-      (format nil "<f name='rule'>")
-      (format nil "<string>~a</string>" (first (car p-tree)))
-      (format nil "</f>")
-      (format nil "<f name='orth'>")
-      (format nil "<string>~a</string>" (second (car p-tree)))
-      (format nil "</f>")
-      (format nil "</f>")
-      ))
+  (concatenate 'string
+    (format nil "<f name='partial-tree'>")
+    (xml-escape (format nil "~S" p-tree))
+    (format nil "</f>")
+    ))
+  
+(defun stem-to-fs (stem)
+  (concatenate 'string
+    (format nil "<f name='stem'>")
+    (xml-escape (format nil "~a" stem))
+    (format nil "</f>")
+    ))
+  
+;;; only handles simplest case
+;(defun partial-tree-to-fs (p-tree)
+;  (unless 
+;      (and (= 1 (length p-tree))
+;	   (= 2 (length (car p-tree)))
+;	   (symbolp (first (car p-tree)))
+;	   (stringp (second (car p-tree))))
+;    (error "at present we only handle partial-trees of form ((RULE \"ORTH\"))"))
+;    (concatenate 'string
+;      (format nil "<f name='partial-tree'>")
+;      (format nil "<f name='rule'>")
+;      (format nil "<string>~a</string>" (first (car p-tree)))
+;      (format nil "</f>")
+;      (format nil "<f name='orth'>")
+;      (format nil "<string>~a</string>" (second (car p-tree)))
+;      (format nil "</f>")
+;      (format nil "</f>")
+;      ))
   
 
-(defun edge-to-tokens (edge)
+;(defun edge-to-tokens (edge)
+;  (cond
+;   ((token-edge-p edge)
+;    (format nil "t~a" (edge-id edge)))
+;   (t
+;    (concatenate-strings
+;     (cdr 
+;      (loop
+;	  with children = (or (edge-children edge)
+;			      (edge-tchildren edge)
+;			      (error "children or tchildren expected in edge ~a" edge))
+;	  with tedges = (extract-descendent-tedges children)
+;	  for tedge in tedges 
+;	  for id = (edge-id tedge)
+;	  collect " "
+;	  collect (format nil "t~a" id))
+;      )))))
+
+(defun edge-to-leaf-token-edges (edge)
   (cond
    ((token-edge-p edge)
-    (format nil "t~a" (edge-id edge)))
+    (edge-id edge))
    (t
-    (concatenate-strings
-     (cdr 
-      (loop
-	  with children = (or (edge-children edge)
-			      (edge-tchildren edge)
-			      (error "children or tchildren expected in edge ~a" edge))
-	  with tedges = (extract-descendent-tedges children)
-	  for tedge in tedges 
-	  for id = (edge-id tedge)
-	  collect " "
-	  collect (format nil "t~a" id))
-      )))))
-	  
+    (loop
+	with children = (or (edge-children edge)
+			    (edge-tchildren edge)
+			    (error "children or tchildren expected in edge ~a" edge))
+	with tedges = (extract-descendent-tedges children)
+	for tedge in tedges 
+	collect tedge
+    ))))
+
+(defun edge-to-tokens-id-str (edge)
+  (concatenate-strings
+   (cdr
+    (loop
+	for tedge in (edge-to-leaf-token-edges edge)
+	collect " "
+	collect (format nil "t~a" (edge-id tedge))))))
 	  
 
 (defun extract-descendent-tedges (children)
@@ -545,7 +668,18 @@
 	  (format nil "?~a?" to)
 	  string)))
 
-(defun get-tedges (tchart)
+(defun get-edges (&optional (tchart *tchart*))
+  (loop
+      for i from 1 to (1- *chart-limit*)
+      for ccs-incident = (aref tchart  i 0)
+      append
+	(loop
+	    for cc in ccs-incident
+	    for edge = (chart-configuration-edge cc)
+	    when (edge-p edge)
+	    collect edge)))
+
+(defun get-tedges (&optional (tchart *tchart*))
   (loop
       for i from 1 to (1- *chart-limit*)
       for ccs-incident = (aref tchart  i 0)
@@ -556,7 +690,7 @@
 	    when (token-edge-p edge)
 	    collect edge)))
 
-(defun get-medges (tchart)
+(defun get-medges (&optional (tchart *tchart*))
   (loop
       for i from 1 to (1- *chart-limit*)
       for ccs-incident = (aref tchart  i 0)
@@ -569,10 +703,11 @@
 
 ;;;
 
-(defun parse-from-maf (maf &optional 
+(defun parse-from-maf (maf &optional (maf-mode :tokens)
 			   (show-parse-p *show-parse-p*) 
-			   (first-only-p *first-only-p*))
-  
+			   (first-only-p *first-only-p*)
+			   )
+  (print maf-mode)
   ;(check-morph-options bracketed-input)
   (let* ((*active-parsing-p* (if *bracketing-p* nil *active-parsing-p*))
          (first-only-p (if (and first-only-p 
@@ -628,15 +763,16 @@
           (let ((*safe-not-to-copy-p* t))
 	    ;(break)
 	    ;(instantiate-chart-with-tokens user-input)
-	    (ecase *morph-option*
-	      (:default (instantiate-chart-with-morphop))
-	      (:external-rule-by-rule 
-	       (instantiate-chart-with-morphop))
+	    (unless (eq maf-mode :wordforms)
+	      (ecase *morph-option*
+		(:default (instantiate-chart-with-morphop))
+		(:external-rule-by-rule 
+		 (instantiate-chart-with-morphop))
 	      ;;; *foreign-morph-fn* is set and will be called
-	      (:external-partial-tree
-	       (instantiate-chart-with-morpho-stem-edges))
-	      (:with-tokeniser-partial-tree nil)
-	      (:with-tokeniser-retokenise nil))
+		(:external-partial-tree
+		 (instantiate-chart-with-morpho-stem-edges))
+		(:with-tokeniser-partial-tree nil)
+		(:with-tokeniser-retokenise nil)))
 	    ;(break)
 	    (instantiate-chart-with-stems-and-multiwords)
             ;(catch :best-first
@@ -668,3 +804,43 @@
       ;)
     ))
 
+;; CLIM display routines
+(defun print-maf-tokens nil
+  (let ((frame (clim:make-application-frame 'xml-maf-tokens)))
+    (clim:run-frame-top-level frame)))
+
+
+(defun print-maf-wordforms nil
+  (let ((frame (clim:make-application-frame 'xml-maf-tokens)))
+    (clim:run-frame-top-level frame)))
+
+
+(defun disp-xml-maf-tokens (mframe stream &key max-width max-height)
+  (declare (ignore mframe max-width max-height))
+  (if *tchart*
+      (clim:with-text-style (stream (lkb-parse-tree-font))
+	(format stream "~a" (pretty-print-xml (tchart-to-maf-tokens *tchart*))))
+    (format stream "No tchart (please parse something first).")))
+
+(define-lkb-frame xml-maf-tokens
+    ()
+  :display-function 'disp-xml-maf-tokens 
+  :width 400 
+  :height 400)
+
+(define-lkb-frame xml-maf-wordforms
+    ()
+  :display-function 'disp-xml-maf-tokens 
+  :width 400 
+  :height 400)
+
+(defun disp-xml-maf-wordforms (mframe stream &key max-width max-height)
+  (declare (ignore mframe max-width max-height))
+  (if *tchart*
+      (clim:with-text-style (stream (lkb-parse-tree-font))
+	(format stream "~a" (pretty-print-xml (tchart-to-maf-wordforms *tchart*))))
+    (format stream "No tchart (please parse something first).")))
+
+;; end of CLIM display routines
+
+;; TODO: LUI display???
