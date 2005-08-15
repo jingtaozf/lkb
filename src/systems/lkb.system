@@ -180,7 +180,9 @@
       (#+:preprocessor       
        (:file "preprocess")
        #+(and :xml :preprocessor)
+       (:file "lxml")
        (:file "texti")			; text interface
+       (:file "disp")
        ))  
 
      (:module "lexdb"

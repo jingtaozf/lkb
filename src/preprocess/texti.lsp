@@ -6,31 +6,7 @@
 
 (defvar *token-id* 0)
 (defvar *token-vertex* 0)
-
-;;;
-
-;; input xml must have NO superfluous space
-(defun pretty-print-xml (xml)
-  (coerce
-   (loop
-       with i = -1
-       with last
-       with last2
-       for c across xml
-       if (and (char= #\< last) (char= #\/ c)) do (decf i)
-       if (and (char= #\< last) (or (null last2) (char= #\> last2)))
-       append (list #\Newline) into x and
-       append (loop for n from 1 to i
-		  collect #\Space) into x
-       if (and (char= #\< last) (char= #\/ c)) do (decf i)
-       if (and (char= #\< last) (char= #\! c)) do (decf i)
-       if (and (char= #\/ last) (char= #\> c)) do (decf i)
-       if (char= #\< c) do (incf i)
-       if last append (list last) into x
-       do (setf last2 last) (setf last c)
-       finally (return (append x (list c))))
-   'string))
-  
+(defvar *maf-lang* "en.US")
 
 ;;;
 ;;; BASIC TEXT <-> BASIC XML
@@ -54,37 +30,11 @@
 (defun basic-xml-to-basic-text (xml)
   (let* ((p-xml (net.xml.parser:parse-xml xml))
 	 (text (second (car (member '|text| p-xml :key #'car))))
-	 (x-from (char-offset-to-xpointer 0))
-	 (x-to (char-offset-to-xpointer (length text)))
+	 (x-from (char-offset-to-xpoint 0))
+	 (x-to (char-offset-to-xpoint (length text)))
 	 (xrange (cons x-from x-to)))
-    (XPointer-range xml xrange)))
+    (Xpoint-range xml xrange)))
 
-;; escape string for use as XML text
-(defun xml-escape (str)
-  (coerce 
-   (loop
-       for c across str
-       if (char= #\" c) append '(#\& #\q #\u #\o #\t #\;)
-       else if (char= #\' c) append '(#\& #\a #\p #\o #\s #\;)
-       else if (char= #\& c) append '(#\& #\a #\m #\p #\;)
-       else if (char= #\< c) append '(#\& #\l #\t #\;)
-       else if (char= #\> c) append '(#\& #\g #\t #\;)
-       else append (list c))
-   'string))
-
-;; return CDATA-wrapped text
-(defun wrap-cdata (str)
-  (concatenate-strings
-   (cdr 
-    (loop 
-	with subs = (cons 0 (append (ppcre:all-matches "]]>" str)
-				    (list (length str))))
-	while subs
-	collect "]]&gt;"
-	collect "<![CDATA["
-	collect (subseq str (pop subs) (pop subs))
-	collect "]]>"))))
-  
 (defun concatenate-strings (x)
   (apply #'concatenate
 	 (cons 'string x)))
@@ -96,27 +46,47 @@
 (defun tchart-to-maf-tokens (&optional (tchart *tchart*))
   (tchart-to-maf tchart :wordforms nil))
 
+(defun get-timestamp nil
+  (multiple-value-bind
+      (second minute hour date month year dummy1 dummy2 dummy3)
+      (decode-universal-time (get-universal-time) 0)
+    (+ dummy1 dummy2 dummy3)
+    (format nil "~2,'0d:~2,'0d:~2,'0d ~d/~2,'0d/~d (UTC)"
+	    hour
+	    minute
+	    second
+	    month
+	    date
+	    year)))
+
+(defun maf-header nil
+  (format nil
+	  "<maf addressing='Xpoint' creator='lkb-maf-tokens' date='~a' language='en.US'>" 
+	  (xml-escape (get-timestamp)) 
+	  (xml-escape (format nil "~a" *maf-lang*))))
+
+;; preprocess-sentence-string cannot be used here untilwe fix it to return xpoints
 (defun basic-xml-to-maf-tokens (xml)
   (setf *token-id* 0)
   (let* ((p-xml (net.xml.parser:parse-xml xml))
 	 (text (second (car (member '|text| p-xml :key #'car))))
-	 (x-from (char-offset-to-xpointer 0))
-	 (x-to (char-offset-to-xpointer (length text)))
+	 (x-from (char-offset-to-xpoint 0))
+	 (x-to (char-offset-to-xpoint (length text)))
 	 (xrange (cons x-from x-to))
 	 (x-ranges (mapcar #'cdr (split-on-spc
 				  ;(preprocess-sentence-string 
-				   (XPointer-range xml xrange)
+				   (Xpoint-range xml xrange)
 				  ; )
 				  )))
 	 (strm (make-string-output-stream)))
     (format strm "<?xml version='1.0' encoding='UTF8'?>")
     (format strm "<!DOCTYPE maf SYSTEM 'maf.dtd' [<!ENTITY text SYSTEM 'text.xml'>]>")
-    (format strm "<maf addressing='XPointer' creator='lkb-maf-tokens' date='2005-07-11' language='en.US'>")
+    (format strm "~a" (maf-header))
     (mapcar #'(lambda (x) 
 		(format strm "~a"
 			(xrange-to-token xml 
-					 (cons(char-offset-to-xpointer (first x)) 
-					      (char-offset-to-xpointer (second x))))))
+					 (cons (char-offset-to-xpoint (first x)) 
+					       (char-offset-to-xpoint (second x))))))
 	    x-ranges)
     (format strm "</maf>")
     (get-output-stream-string strm)))
@@ -127,38 +97,38 @@
 	  (next-token-id)
 	  (car xrange)
 	  (cdr xrange)
-	  (XPointer-range xml xrange)))
+	  (Xpoint-range xml xrange)))
 
 (defun next-token-id nil
   (format nil "t~a" (incf *token-id*)))
  
-(defun char-offset-to-xpointer (i)
+(defun char-offset-to-xpoint (i)
   (unless (integerp i)
     (error "char offset must be integer"))
-  (format nil "/1/1/~a" i))
+  (format nil "/1/1.~a" i))
 
-(defun xpointer-to-char-offset (xp)
+(defun xpoint-to-char-offset (xp)
   (unless (stringp xp)
-    (error "expected XPointer as string"))
+    (error "expected Xpoint as string"))
   (unless (and (>= (length xp) 5)
-	       (string= (subseq xp 0 5) "/1/1/"))
+	       (string= (subseq xp 0 5) "/1/1."))
     ;;temporary hack
-    (return-from xpointer-to-char-offset -1)
-    (error "unhandled XPointer ~a (work in progress)" xp))
+    (return-from xpoint-to-char-offset -1)
+    (error "unhandled Xpoint ~a (work in progress)" xp))
   (read-from-string (subseq xp 5)))
 
 ;; assume for now XML root element contains only CDATA
-(defun XPointer-range (xml xrange)
+(defun Xpoint-range (xml xrange)
   (let ((x-from (car xrange))
 	(x-to (cdr xrange)))
     (let* ((p-xml (net.xml.parser:parse-xml xml))
 	   (text (second (car (member '|text| p-xml :key #'car))))
-	   (c-from (xpointer-to-char-offset x-from))
-	   (c-to (xpointer-to-char-offset x-to))
+	   (c-from (xpoint-to-char-offset x-from))
+	   (c-to (xpoint-to-char-offset x-to))
 	   )
       (unless (and (>= c-from 0)
 		   (<= c-to (length text)))
-	(error "XPointer out of range"))
+	(error "Xpoint out of range"))
       (subseq text c-from c-to))))
 
 ;; return list of (WORD-STRING FROM TO)
@@ -172,7 +142,7 @@
        with from = 0
        for c in c-list
        for i from 1 to (length c-list) 
-       if (char= c #\Space) collect (list (coerce (nreverse c-list-word) 'string) from i) into words
+       if (char= c #\Space) collect (list (coerce (nreverse c-list-word) 'string) from (1- i)) into words
        and do (setf from i)
        and do (setf c-list-word nil)
        else do (push c c-list-word)
@@ -202,7 +172,8 @@
   (setf *tchart* (make-tchart))
   (setf *tchart-max* 0)
   
-  (let* ((lxml (net.xml.parser:parse-xml xml))
+  (let* ((lxml (discard-whitespace 
+		(net.xml.parser:parse-xml xml)))
 	 (lxml-e (pop lxml)))
     ;; check for <?xml version="1.0" ...>
     (unless (and (eq :xml (lxml-pi-name lxml-e))
@@ -215,19 +186,15 @@
       (error "expected DOCTYPE maf: got ~a" lxml-e))
     ;; now process maf element
    (setf lxml-e (pop lxml))
-   
    (setf *token-vertex* 0)
-   
-   (maf-lxml-to-tchart lxml-e)
-   )
-  *tchart*
-  )
+   (maf-lxml-to-tchart lxml-e))
+  *tchart*)
 
 (defun maf-lxml-to-tchart (lxml)
   (unless (eq (intern "maf")
 	      (lxml-elt-name lxml))
     (error "expected lxml root element maf: got ~a" lxml))
-  (unless (string= "XPointer"
+  (unless (string= "Xpoint"
 		   (lxml-elt-attr lxml "addressing"))
     (error "Unhandled addressing attribute in ~a" lxml))
   ;; date ignored
@@ -248,14 +215,11 @@
 	 medges)
     ;; create tedges
     (place-edges-in-tchart tedges)
-    
     (unless (> 2 (length fsms))
       (error "Multiple fsm elements are not handled at present"))
     (setf medges (if fsm1 (fsm-lxml-to-medges fsm1)))
     (place-edges-in-tchart medges)
-    medges
-    )
-  )
+    medges))
 
 ;; to do: replace global *tchart* + *tchart-max* + ??? with objects
 (defun place-edges-in-tchart (edges)
@@ -271,7 +235,6 @@
 	(setf (aref *tchart* from 1) (push cc (aref *tchart* to 1)))
 	(when (> to *tchart-max*)
 	  (setf *tchart-max* to))))
-	
 	  
 ;; we assume for now that tokens are presented in edge order
 (defun token-lxml-to-tedge (lxml)
@@ -303,7 +266,7 @@
 	     val))
     val))  
 
-(defvar *tchart-max-edge-id*)
+(defvar *tchart-max-edge-id*) ;; belongs in object
 (defun fsm-lxml-to-medges (lxml)
   (unless (eq (intern "fsm") (lxml-elt-name lxml))
     (error "fsm lxml element expected: got ~a" lxml))
@@ -354,15 +317,14 @@
     (error "leaf-edges is null"))
   (apply #'max (mapcar #'edge-to leaf-edges)))
 
-;; assume xpoint order is string order for now
 (defun leaf-edges-xfrom (leaf-edges)
   (unless leaf-edges
     (error "leaf-edges is null"))
   (loop
-      with xmin
-      for edge in leaf-edges
-      for xfrom = (edge-xfrom edge)
-      when (string< xfrom xmin)
+      with xmin = (token-edge-xfrom (pop leaf-edges))
+      for tedge in leaf-edges
+      for xfrom = (token-edge-xfrom tedge)
+      when (x< xfrom xmin)
       do (setf xmin xfrom)
       finally (return xmin)))
 
@@ -370,22 +332,29 @@
   (unless leaf-edges
     (error "leaf-edges is null"))
   (loop
-      with xmax
-      for edge in leaf-edges
-      for xto = (edge-xto edge)
-      when (string> xto xmax)
+      with xmax = (token-edge-xto (pop leaf-edges))
+      for tedge in leaf-edges
+      for xto = (token-edge-xto tedge)
+      do (print xto)
+      when (x> xto xmax)
       do (setf xmax xto)
       finally (return xmax)))
+
+;; assume xpoint order is string order for now
+(defun x< (x y)
+  (string< x y))
+
+(defun x> (x y)
+  (string> x y))
+
+(defun x= (x y)
+  (string= x y))
 
 (defun transition-to-medge (lxml)
   (unless (eq (intern "transition") (lxml-elt-name lxml))
     (error "transition lxml element expected instead of ~a" lxml))
   ;; assume tedges already in chart
   (let* ((tedges (get-tedges *tchart*))
-	 
-	 ;(source (lxml-elt-attr lxml "source"))
-	 ;(target (lxml-elt-attr lxml "target"))
-	 
 	 (wordForms (loop
 			for x in (cdr lxml)
 			when (eq (intern "wordForm")
@@ -401,8 +370,6 @@
 	 (leaf-strings (mapcar #'edge-string leaf-edges))
 	 (from (leaf-edges-from leaf-edges))
 	 (to (leaf-edges-to leaf-edges))
-	 (xfrom (leaf-edges-xfrom leaf-edges))
-	 (xto (leaf-edges-xto leaf-edges))
 	 (string form)
 	 (word (string-upcase form))
 	 (current (string-upcase form))
@@ -416,8 +383,7 @@
 	 (f-stem (find "stem" (cdr fs1) :key #'(lambda (x) (lxml-elt-attr x "name")) :test #'string=))
 	 (f-partial-tree (find "partial-tree" (cdr fs1) :key #'(lambda (x) (lxml-elt-attr x "name")) :test #'string=))
 	 (stem (if f-stem (lxml-elt-val f-stem)))
-	 (partial-tree (if f-partial-tree (read-from-string (lxml-elt-val f-partial-tree))))
-	 )
+	 (partial-tree (if f-partial-tree (read-from-string (lxml-elt-val f-partial-tree)))))
     
     (unless (= 1 (length wordForms))
       (error "Multiple wordForm elements inside a transition element are not handled"))
@@ -434,8 +400,6 @@
      :current current
      :stem stem
      :partial-tree partial-tree
-     :xfrom xfrom
-     :xto xto
      )))
 
 (defun split-str-on-spc (str)
@@ -452,64 +416,6 @@
 			 (lxml-elt-attr x "id")))
       (error "state ~a referenced but not explicitly declared in ~a"
 	     id states)))
-  
-
-;;
-
-(defun lxml-elt-p (x)
-  (listp x))
-
-(defun lxml-elt-val (lxml-elt)
-  (unless (lxml-elt-p lxml-elt)
-    (error "lxml element expected: got ~a" lxml-elt))
-  (unless (= (length (cdr lxml-elt)) 1)
-    (error "we handle only simple string values"))
-  (second lxml-elt))
-
-(defun lxml-elt-name (lxml-elt)
-  (unless (lxml-elt-p lxml-elt)
-    (error "lxml element expected: got ~a" lxml-elt))
-  (let ((car (car lxml-elt)))
-    (typecase car
-      (symbol car)
-      (list (car car))
-     (t (error "expected symbol or list as car of lxml element: got ~a" car)))))      
-
-(defun lxml-elt-attr (lxml-elt attrib-str &key keyword)
-  (unless (lxml-elt-p lxml-elt)
-    (error "lxml element expected: got ~a" lxml-elt))
-  (unless (stringp attrib-str)
-    (error "string name of lxml attribute expected: got ~a" attrib-str))
-  (let ((attrib (if keyword
-		    (intern attrib-str :keyword)
-		  (intern attrib-str)))
-	(car (car lxml-elt)))
-    (typecase car
-     (symbol nil)
-     (list (second (member attrib (cdr car))))
-     (t (error "expected symbol or list as car of lxml element: got ~a" car)))))
-       
-(defun lxml-pi-name (lxml-pi)
-  (unless (lxml-pi-p lxml-pi)
-    (error "lxml element expected: got ~a" lxml-pi))
-  (let ((car (car lxml-pi)))
-    (typecase car
-      (symbol car)
-      (list (car car))
-     (t (error "expected symbol or list as car of lxml element: got ~a" car)))))      
-
-(defun lxml-pi-p (x)
-  (listp x))
-
-(defun lxml-pi-attr (lxml-pi attrib-str &key keyword)
-  (unless (lxml-pi-p lxml-pi)
-    (error "lxml element expected: got ~a" lxml-pi))
-  (unless (stringp attrib-str)
-    (error "string name of lxml attribute expected: got ~a" attrib-str))
-  (let ((attrib (if keyword
-		    (intern attrib-str :keyword)
-		  (intern attrib-str))))
-    (second (member attrib (cdr lxml-pi)))))
         
 ;;;
 ;;; tchart to MAF mapping
@@ -522,7 +428,8 @@
 	 )
     (format strm "<?xml version='1.0' encoding='UTF8'?>")
     (format strm "<!DOCTYPE maf SYSTEM 'maf.dtd' [<!ENTITY text SYSTEM 'text.xml'>]>")
-    (format strm "<maf addressing='XPointer' creator='lkb-maf-wordforms' date='2005-07-11' language='en.US'>")
+    (format strm "~a" (maf-header))
+
     ;; xml token elements
     (mapcar #'(lambda (x)
 		(format strm "~a"
@@ -550,8 +457,7 @@
 	do (format strm "~a" (medge-to-transition-xml medge)))
     
     (format strm "</fsm>")
-    (get-output-stream-string strm)
-    ))
+    (get-output-stream-string strm)))
 
 (defun medge-to-transition-xml (medge)
   (with-slots (from to string stem partial-tree) medge
@@ -559,7 +465,9 @@
       (format nil "<transition source='v~a' target='v~a'>" from to)
       (format nil "<wordForm form='~a' tag='~a' tokens='~a'>" 
 	      string 
-	      (cl-ppcre:regex-replace "_INFL_RULE$" (string (caar partial-tree)) "") 
+	      (if (caar partial-tree)
+		  (cl-ppcre:regex-replace "_INFL_RULE$" (string (caar partial-tree)) "")
+		"")
 	      (edge-to-tokens-id-str medge))
       (format nil "<fs>")
       (format nil "~a" (stem-to-fs stem))
@@ -574,15 +482,13 @@
   (concatenate 'string
     (format nil "<f name='partial-tree'>")
     (xml-escape (format nil "~S" p-tree))
-    (format nil "</f>")
-    ))
+    (format nil "</f>")))
   
 (defun stem-to-fs (stem)
   (concatenate 'string
     (format nil "<f name='stem'>")
     (xml-escape (format nil "~a" stem))
-    (format nil "</f>")
-    ))
+    (format nil "</f>")))
   
 ;;; only handles simplest case
 ;(defun partial-tree-to-fs (p-tree)
@@ -633,8 +539,7 @@
 			    (error "children or tchildren expected in edge ~a" edge))
 	with tedges = (extract-descendent-tedges children)
 	for tedge in tedges 
-	collect tedge
-    ))))
+	collect tedge))))
 
 (defun edge-to-tokens-id-str (edge)
   (concatenate-strings
@@ -643,7 +548,6 @@
 	for tedge in (edge-to-leaf-token-edges edge)
 	collect " "
 	collect (format nil "t~a" (edge-id tedge))))))
-	  
 
 (defun extract-descendent-tedges (children)
   (loop
@@ -660,13 +564,12 @@
 	  (list child)))))
 
 (defun tedge-to-token-xml (tedge)
-  ;; todo: escape attribute val strings
-  (with-slots (id from to string) tedge
-  (format nil "<token id='t~a' from='~a' to='~a' value='~a'/>"
-	  id 
-	  (format nil "?~a?" from) 
-	  (format nil "?~a?" to)
-	  string)))
+  (with-slots (id xfrom xto string) tedge
+  (format nil "<token id='~a' from='~a' to='~a' value='~a'/>"
+	  (xml-escape (format nil "t~a" id))
+	  (xml-escape (or xfrom "?")) 
+	  (xml-escape (or xto "?"))
+	  (xml-escape string))))
 
 (defun get-edges (&optional (tchart *tchart*))
   (loop
@@ -704,10 +607,8 @@
 ;;;
 
 (defun parse-from-maf (maf &optional (maf-mode :tokens)
-			   (show-parse-p *show-parse-p*) 
-			   (first-only-p *first-only-p*)
-			   )
-  (print maf-mode)
+				     (show-parse-p *show-parse-p*) 
+				     (first-only-p *first-only-p*))
   ;(check-morph-options bracketed-input)
   (let* ((*active-parsing-p* (if *bracketing-p* nil *active-parsing-p*))
          (first-only-p (if (and first-only-p 
@@ -761,7 +662,6 @@
           (setf *parse-record* nil)
           (setf *parse-times* (list (get-internal-run-time)))
           (let ((*safe-not-to-copy-p* t))
-	    ;(break)
 	    ;(instantiate-chart-with-tokens user-input)
 	    (unless (eq maf-mode :wordforms)
 	      (ecase *morph-option*
@@ -773,7 +673,6 @@
 		 (instantiate-chart-with-morpho-stem-edges))
 		(:with-tokeniser-partial-tree nil)
 		(:with-tokeniser-retokenise nil)))
-	    ;(break)
 	    (instantiate-chart-with-stems-and-multiwords)
             ;(catch :best-first
               (add-words-to-chart (and first-only-p (null *active-parsing-p*)
@@ -804,43 +703,3 @@
       ;)
     ))
 
-;; CLIM display routines
-(defun print-maf-tokens nil
-  (let ((frame (clim:make-application-frame 'xml-maf-tokens)))
-    (clim:run-frame-top-level frame)))
-
-
-(defun print-maf-wordforms nil
-  (let ((frame (clim:make-application-frame 'xml-maf-tokens)))
-    (clim:run-frame-top-level frame)))
-
-
-(defun disp-xml-maf-tokens (mframe stream &key max-width max-height)
-  (declare (ignore mframe max-width max-height))
-  (if *tchart*
-      (clim:with-text-style (stream (lkb-parse-tree-font))
-	(format stream "~a" (pretty-print-xml (tchart-to-maf-tokens *tchart*))))
-    (format stream "No tchart (please parse something first).")))
-
-(define-lkb-frame xml-maf-tokens
-    ()
-  :display-function 'disp-xml-maf-tokens 
-  :width 400 
-  :height 400)
-
-(define-lkb-frame xml-maf-wordforms
-    ()
-  :display-function 'disp-xml-maf-tokens 
-  :width 400 
-  :height 400)
-
-(defun disp-xml-maf-wordforms (mframe stream &key max-width max-height)
-  (declare (ignore mframe max-width max-height))
-  (if *tchart*
-      (clim:with-text-style (stream (lkb-parse-tree-font))
-	(format stream "~a" (pretty-print-xml (tchart-to-maf-wordforms *tchart*))))
-    (format stream "No tchart (please parse something first).")))
-
-;; end of CLIM display routines
-
-;; TODO: LUI display???

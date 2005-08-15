@@ -132,11 +132,10 @@
    id score category rule dag odag dag-restricted leaves lex-ids
    parents children tchildren orth-tdfs partial-tree from to label head
    cfrom cto string mrs foo bar baz
-   packed equivalent frozen adjuncts unpacking
-   xfrom xto)
+   packed equivalent frozen adjuncts unpacking)
 
 (defstruct (token-edge (:include edge))
-  word maf-id)
+  word maf-id xfrom xto)
 
 (defstruct (morpho-stem-edge (:include edge))
   word stem current entries partial-p) 
@@ -1781,7 +1780,7 @@ an unknown word, treat the gap as filled and go on from there.
     (when (or (null frozenp) (eq (edge-frozen edge) frozen))
       (format 
        stream 
-       "~&~:[~2*~;~A-~A ~][~A] ~A => ~A~A  [~{~A~^ ~}]"
+       "~&~:[~2*~;~A-~A ~][~A] ~A => ~A~A [~{~A~^ ~}]"
        (and begin end) begin end
        (edge-id edge)
        (if (token-edge-p edge) 
@@ -1810,35 +1809,39 @@ an unknown word, treat the gap as filled and go on from there.
       ;; if applicable, print out compact summary of packings (9-aug-99  -  oe)
       ;;
       (when (or (edge-equivalent edge) (edge-packed edge))
-        (let ((edge (first (or (edge-equivalent edge) (edge-packed edge)))))
-          (format 
-           stream 
-           " { [~d < ~{~d~^ ~}" 
-           (edge-id edge) 
-           (loop for child in (edge-children edge) collect (edge-id child))))
-        (loop
-            for edge in (rest (edge-equivalent edge)) do
-              (format 
-               stream 
-               "; ~d < ~{~d~^ ~}"
-               (edge-id edge) 
-               (loop 
-                   for child in (edge-children edge) 
-                   collect (edge-id child))))
-        (loop
-            for edge in (if (edge-equivalent edge)
-                          (edge-packed edge)   
-                          (rest (edge-packed edge))) do
-              (format 
-               stream 
-               "; ~d < ~{~d~^ ~}"
-               (edge-id edge) 
-               (loop 
-                   for child in (edge-children edge) 
-                   collect (edge-id child))))
-        (format stream "]"))
+	(let ((edge (first (or (edge-equivalent edge) (edge-packed edge)))))
+	  (format 
+	   stream 
+	   " { [~d < ~{~d~^ ~}" 
+	   (edge-id edge) 
+	   (loop for child in (edge-children edge) collect (edge-id child))))
+	(loop
+	    for edge in (rest (edge-equivalent edge)) do
+	      (format 
+	       stream 
+	       "; ~d < ~{~d~^ ~}"
+	       (edge-id edge) 
+	       (loop 
+		   for child in (edge-children edge) 
+		   collect (edge-id child))))
+	(loop
+	    for edge in (if (edge-equivalent edge)
+			    (edge-packed edge)   
+			  (rest (edge-packed edge))) do
+	      (format 
+	       stream 
+	       "; ~d < ~{~d~^ ~}"
+	       (edge-id edge) 
+	       (loop 
+		   for child in (edge-children edge) 
+		   collect (edge-id child))))
+	(format stream "]"))
+      (when (token-edge-p edge)
+	(with-slots (xfrom xto) edge
+	  (format t "~:[~2*~; [~A x ~A] ~]"
+		  (and xfrom xto) xfrom xto)))
       (format stream "~%"))))
-      
+
 (defun concise-edge-label (edge)
   (if (rule-p (edge-rule edge))
     (rule-id (edge-rule edge)) 
