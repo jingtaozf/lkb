@@ -181,8 +181,10 @@
        (:file "preprocess")
        #+(and :xml :preprocessor)
        (:file "lxml")
+       #+(and :xml :preprocessor)
        (:file "texti")			; text interface
-       (:file "disp")
+       #+:clim 
+       (:file "disp-clim")
        ))  
 
      (:module "lexdb"
