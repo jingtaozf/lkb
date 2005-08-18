@@ -44,7 +44,7 @@
 	    (/ (- (get-internal-real-time) time) internal-time-units-per-second))
     ))
   
-(defmethod lookup-word ((lex psql-lex-database) orth &key (cache t))
+(defmethod lookup-word ((lex psql-lex-database) orth &key (cache *lookup-word-cache-p*))
   (with-slots (lexical-entries) lex
   (let ((hashed (gethash orth lexical-entries)))
     (cond 
