@@ -242,7 +242,7 @@
 ;; reading
 ;;
 
-(defmethod lookup-word ((lexicon cdb-lex-database) orth &key (cache *lookup-word-cache-p*))
+(defmethod lookup-word ((lexicon cdb-lex-database) orth &key (cache *lexicon-lexical-entries-cache-p*))
   (unless (open-read-p lexicon)
     (error "lexicon is not open for reading"))
   (let ((hashed (gethash orth 
@@ -339,7 +339,7 @@
   (close-read-write lexicon)
   lexicon)
 
-(defmethod set-lexical-entry ((lexicon cdb-lex-database) orth id new-entry &key (cache *lookup-word-cache-p*))
+(defmethod set-lexical-entry ((lexicon cdb-lex-database) orth id new-entry &key (cache *lexicon-lexical-entries-cache-p*))
   (declare (ignore cache))
   (unless (open-write-p lexicon)
     (error "lexicon is not open for writing"))

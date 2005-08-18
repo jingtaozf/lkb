@@ -29,7 +29,7 @@
 (defvar *verbose-lex-lookup-word* nil)
 (defvar *lexdb*)
 (defvar *postgres-mwe-enable*)
-(defvar *lookup-word-cache-p* t)
+(defvar *lexicon-lexical-entries-cache-p* t)
 
 (defclass lex-database () 
   ((lexical-entries :initform (make-hash-table :test #'equal))
@@ -473,7 +473,7 @@
 ;;;  General lexicon methods
 ;;;
 
-(defmethod lookup-word :around ((lexicon lex-database) orth &key (cache *lookup-word-cache-p*))
+(defmethod lookup-word :around ((lexicon lex-database) orth &key (cache *lexicon-lexical-entries-cache-p*))
   (let* ((value (if (next-method-p) (call-next-method)))
 	   (mode (extra-mode lexicon))
 	   (extra 
@@ -521,7 +521,7 @@
      (apply #'append (mapcar #'(lambda (x) x) ids)) 
      :test #'equal)))
 
-(defmethod set-lexical-entry ((lexicon lex-database) orth id new-entry &key (cache *lookup-word-cache-p*))
+(defmethod set-lexical-entry ((lexicon lex-database) orth id new-entry &key (cache *lexicon-lexical-entries-cache-p*))
   (store-psort lexicon id new-entry orth)
   (when cache
     (with-slots (lexical-entries) lexicon
