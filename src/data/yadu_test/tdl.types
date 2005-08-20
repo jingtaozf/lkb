@@ -145,3 +145,17 @@ nested := ne-list &
        TL [ HD [ HD /l #1,
                  TL e-list ],
             TL e-list ]]].
+
+
+;;; Nixon overriding higher value
+
+n1 := *top* &
+[ NULL boolean /l false ].
+
+n2 := n1 &
+[ NULL boolean /l true ].
+
+n3 := n1 &
+[ NULL boolean /l false ].
+
+n4 := n2 & n3.
