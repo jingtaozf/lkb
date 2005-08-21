@@ -1,0 +1,26 @@
+;;; basic file with realistic morphophon patterns
+;;; see comments in lexicon file about what should and should not work
+
+%(letter-set (!c bdfglmnprstz))
+%(letter-set (!s abcdefghijklmnopqrtuvwxyz))
+%(letter-set (!t bcdfghjklmnpqrstvwxz))
+%(letter-set (!v aeiou))
+
+ed-suffix := 
+%suffix (* ed) (!ty !tied) (e ed) (!t!v!c !t!v!c!ced) 
+[ CATEG cat2,
+  ARGS < [ CATEG cat1 ] > ].
+
+;;; note that this pattern overgenerates - `hated' gets one analysis
+;;; corresponding to `hate' and another for `hat' - unless the
+;;; *most-specific-only-p* global is set to t
+
+s-suffix := 
+%suffix (!s !ss) (!ss !ssses) (ss sses) (!ty !ties) (ch ches) (sh shes) (x xes) (z zes)
+[ CATEG cat2,
+  ARGS < [ CATEG cat1 ] > ].
+
+un-prefix := 
+%prefix (* un)
+[ CATEG cat3,
+  ARGS < [ CATEG cat2 ] > ].

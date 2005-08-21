@@ -1,0 +1,42 @@
+;;; for rule filter construction test - see comments
+;;; in rules.lsp wrt build-lrfsm, repeated below
+
+;;; suppose A can feed B, B can feed C, C can feed D, A can feed C
+;;; and D can feed B (so there's a cycle)
+
+;;; rule-feeders of A - nil
+;;;                 B - (A D)
+;;;                 C - (B A)
+;;;                 D - (C) 
+
+;;; desired result
+;;;
+#|
+   --- A     B     C     D
+   A   nil   nil   nil   nil
+   B   t     t     t     t
+   C   t     t     t     t
+   D   t     t     t     t
+|#
+
+rule-a :=
+[ ORTH #1,
+  CATEG cat5,
+  ARGS < [ ORTH #1, CATEG cat4 ] > ].
+
+rule-b :=
+[ ORTH #1,
+  CATEG cat6,
+  ARGS < [ ORTH #1, CATEG cat5 ] > ].
+
+rule-c :=
+[ ORTH #1,
+  CATEG cat7,
+  ARGS < [ ORTH #1, CATEG cat5or6 ] > ].
+
+rule-d :=
+[ ORTH #1,
+  CATEG cat5,
+  ARGS < [ ORTH #1, CATEG cat7 ] > ].
+
+

@@ -1,0 +1,23 @@
+;;; this file contains some possible errors
+;;; the complete file should read in, with appropriate error messages
+;;; and the WARNING at the end of the load as with errors in type files etc
+
+not-allowed :=
+%prefix (a *)
+[ CATEG cat1,
+  ARGS < [ CATEG cat0 ] > ].
+
+not-allowed1 :=
+%prefix
+[ CATEG cat1,
+  ARGS < [ CATEG cat0 ] > ].
+
+not-allowed2 :=
+%prifix (* a)
+[ CATEG cat1,
+  ARGS < [ CATEG cat0 ] > ].
+
+not-allowed3 :=
+%prefix (* ?a)
+[ CATEG cat1,
+  ARGS < [ CATEG cat0 ] > ].

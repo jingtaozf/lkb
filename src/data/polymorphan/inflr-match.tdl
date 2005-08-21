@@ -1,0 +1,73 @@
+;;; a set of rules which demonstrate the difference between the wild-card
+;;; and the variable notation, and also test the ability of the system 
+;;; to deal with rules with affix specification but
+;;; no overall morphological effects
+
+%(letter-set (!w ab))
+%(wild-card (?w ab))
+
+;;; matching and matching2 will only apply to things beginning with
+;;; a or b but will return the same string when they do apply.
+;;; Note that unlike lexical rules these show up in the token-chart
+;;; Such rules should only be used if it's necessary to restrict
+;;; application of a rule to things with a particular spelling -
+;;; I cannot think of any good examples in English.
+
+matching :=
+%prefix (!w !w)
+[ CATEG cat2,
+  ARGS < [ CATEG cat1 ] > ].
+
+matching2 :=
+%prefix (!w !w)
+[ CATEG cat3,
+  ARGS < [ CATEG cat2 ] > ].
+
+;;; wildcard expands out into 4 rules b / b, a / b, b / a, a / a
+;;; the order of these subrules is not defined.  This means that
+;;; when used with *most-specific-only-p* set, the results will be different
+;;; depending on the expansion order which is unlikely to be useful
+;;; Hence the use of wildcards is discouraged when *most-specific-only-p*  
+;;; is used.  
+
+wildcard :=
+%prefix (?w ?w)
+[ CATEG cat1,
+  ARGS < [ CATEG cat0 ] > ].
+
+;;; in order to allow old grammars to run, an unmatched letter set is 
+;;; treated as though it were a wildcard
+
+legacy :=
+%prefix (* !w)
+[ CATEG cat1,
+  ARGS < [ CATEG cat0 ] > ].
+
+;;; however it should be rewritten as follows
+
+legacy-ok :=
+%prefix (* ?w)
+[ CATEG cat1,
+  ARGS < [ CATEG cat0 ] > ].
+
+;;; depending on the order of expansion, the wildcard
+;;; pattern may be equivalent to either alternative 
+;;; given below when *most-specific-only-p* is set
+
+alternative1 :=
+%prefix (* a) (* b)
+[ CATEG cat1,
+  ARGS < [ CATEG cat0 ] > ].
+
+alternative2 :=
+%prefix (* b) (* a)
+[ CATEG cat1,
+  ARGS < [ CATEG cat0 ] > ].
+
+;;; end is just so we can check that the rules with no morphological
+;;; effect are being handled correctly.  
+
+end :=
+%suffix (* c)
+[ CATEG cat4,
+  ARGS < [ CATEG cat3 ] > ].

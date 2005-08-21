@@ -1,0 +1,23 @@
+;;; file for checking that escape characters are working as expected
+
+%(letter-set (!p !?))
+%(letter-set (!f ~`!@#$%^&*(\)-_=+{}[]|\\;:'",<.>/?\1))
+
+;;; (show-letter-sets) should give
+;;; !F (~ ` ! @ # $ % ^ & * ( ) - _ = + { } [ ] | \ ; : ' " , < . > / ? 1)
+;;; no spaces, ) has to be escaped with \ -  \ has to be \\
+;;; escaping other characters is harmless - \ is just ignored
+;;; everything ends up upper case
+
+escape :=
+%suffix (* ~`\!@#$%^&\*(\)-_=+{}[]|\\;:'",<.>/\?\1)
+[ CATEG cat2,
+  ARGS < [ CATEG cat1 ] > ].
+
+;;; rule above is for testing escape - ?!)* have to be escaped by \
+;;; for \ use \\.  other characters may be escaped without harm
+;;; should return
+;;; ESCAPE SUFFIX       UNDERLYING / SURFACE
+;;;                     / ~`!@#$%^&*()-_=+{}[]|\;:'",<.>/?1
+
+

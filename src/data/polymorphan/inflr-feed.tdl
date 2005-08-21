@@ -1,0 +1,41 @@
+;;; these rules are for testing the feeding filter
+;;; When they are loaded then 
+;;; it should be possible to analyse rainaz (no const-rule)
+;;; rainax (licenced by const-rule and const-rule2)
+;;; but not rainaw, because we can't get to cat4 except via a rule
+;;; with a morphological effect.
+
+mrule-a :=
+%suffix (* a)
+[ CATEG cat1,
+  ARGS < [ CATEG cat0 ] > ].
+
+mrule-z :=
+%suffix (* z)
+[ CATEG cat2,
+  ARGS < [ CATEG cat1 ] > ].
+
+mrule-q :=
+%suffix (* q)
+[ CATEG cat3,
+  ARGS < [ CATEG cat2 ] > ].
+
+mrule-x :=
+%suffix (* x)
+[ CATEG cat4,
+  ARGS < [ CATEG cat3 ] > ].
+
+mrule-w :=
+%suffix (* w)
+[ CATEG cat5,
+  ARGS < [ CATEG cat4 ] > ].
+
+const-rule :=
+[ ORTH #1,
+  CATEG cat2,
+  ARGS < [ ORTH #1, CATEG cat1 ] > ].
+
+const-rule2 :=
+[ ORTH #1,
+  CATEG cat3,
+  ARGS < [ ORTH #1, CATEG cat2 ] > ].

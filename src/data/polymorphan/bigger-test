@@ -1,0 +1,7 @@
+
+VARK 1 1 0 0 2
+
+Probable runaway morphological rule in
+((BIGGER AARD) (SMALLER AARDARD) (BIGGER AARD) (SMALLER AARDARD)
+ (BIGGER AARD) (SMALLER AARDARD) (BIGGER AARD)):
+analysis aborted (see documentation for *maximal-lex-rule-applications*)

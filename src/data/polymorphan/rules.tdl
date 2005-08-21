@@ -1,0 +1,6 @@
+;;; Rules
+syntax-rule := sign &
+[ CATEG cat3,
+  ARGS [ FIRST [ CATEG cat1 ],
+         REST [ FIRST [ CATEG cat2 ],
+                REST *null* ]]] .

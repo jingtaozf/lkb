@@ -1,0 +1,15 @@
+
+Specified feeding relationships
+ Descendant                   Mother
+ RULE-D                       RULE-D
+ RULE-D                       RULE-B
+ RULE-D                       RULE-C
+ RULE-A                       RULE-D
+ RULE-A                       RULE-B
+ RULE-A                       RULE-C
+ RULE-B                       RULE-D
+ RULE-B                       RULE-B
+ RULE-B                       RULE-C
+ RULE-C                       RULE-D
+ RULE-C                       RULE-B
+ RULE-C                       RULE-C

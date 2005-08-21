@@ -1,0 +1,21 @@
+;;; a sequence of applications of 
+;;; bigger and smaller will result, up to the maximum
+;;; set in *maximal-lex-rule-applications*) e.g., 
+;;; Error: 
+;;; Probable runaway morphological rule in
+;;;       ((SMALLER ARDARD) (BIGGER ARD) (SMALLER ARDARD) (BIGGER ARD)
+;;;        (SMALLER ARDARD) (BIGGER ARD) (MATCHING3 ARD)):
+;;;       analysis aborted (see documentation for
+;;;       *maximal-lex-rule-applications*)
+
+smaller := 
+%suffix (ard ardard)
+[ CATEG cat1,
+  ARGS < [ CATEG cat3 ] > ].
+
+bigger := 
+%suffix (ardard ard) (arkark ark) 
+[ CATEG cat3,
+  ARGS < [ CATEG cat1 ] > ].
+
+

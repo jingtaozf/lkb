@@ -1,0 +1,54 @@
+;;; following examples test the pattern in ed-rule
+
+;;; if *most-specific-only-p* nil
+;;; expected ed- analyses 
+;;; rained, partied, partyed, coyed, duped, dupeed, hated (2), hatted, hateed
+;;;
+;;; failing ed- analyses
+;;; raind, rainned, rainied, coyd, coyyed, dupped, dupd
+;;;
+;;; if *most-specific-only-p* t
+;;; expected ed- analyses 
+;;; rained, partied, coyed, duped, hated (1), hatted
+
+
+rain := sign &
+[ ORTH < "rain" > ].
+
+party := sign &
+[ ORTH < "party" > ].
+
+coy := sign &
+[ ORTH < "coy" > ].
+
+dupe := sign &
+[ ORTH < "dupe" > ].
+
+hat := sign &
+[ ORTH < "hat" > ].
+
+hate := sign &
+[ ORTH < "hate" > ].
+
+write := sign &
+[ ORTH < "write" > ].
+
+dream := sign &
+[ ORTH < "dream" > ].
+
+hit := sign &
+[ ORTH < "hit" > ].
+
+
+;;; end ed-suffix test examples
+
+aardvark := sign &
+[ ORTH < "aardvark" > ].
+
+aard := sign &
+[ ORTH < "aard" > ].
+
+varkark := sign &
+[ ORTH < "varkark" > ].
+
+

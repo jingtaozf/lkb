@@ -1,0 +1,30 @@
+
+MATCHING PREFIX     UNDERLYING / SURFACE
+                    !W / !W
+MATCHING2 PREFIX    UNDERLYING / SURFACE
+                    !W / !W
+WILDCARD PREFIX     UNDERLYING / SURFACE
+                    B / B
+                    A / B
+                    B / A
+                    A / A
+LEGACY PREFIX       UNDERLYING / SURFACE
+                     / B
+                     / A
+LEGACY-OK PREFIX    UNDERLYING / SURFACE
+                     / B
+                     / A
+ALTERNATIVE1 PREFIX  UNDERLYING / SURFACE
+                     / B
+                     / A
+ALTERNATIVE2 PREFIX  UNDERLYING / SURFACE
+                     / A
+                     / B
+END SUFFIX          UNDERLYING / SURFACE
+                     / C
+AAARD 24 24 0 0 6
+AARD 10 10 0 0 6
+BARD 6 6 0 0 6
+AAARD 6 6 0 0 2
+AARD 4 4 0 0 2
+BARD 6 6 0 0 5

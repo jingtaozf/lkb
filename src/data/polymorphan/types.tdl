@@ -1,0 +1,76 @@
+;;; For the sake of this grammar, we require a minimal system that
+;;; can be used to check:
+;;; a) rule feeding (controlled via PLOB and CATEG)
+;;; b) correct interaction of partial tree specifications
+;;; c) MWEs
+;;;
+;;; I am deliberately not making a lexeme / word distinction
+;;; since this isn't supposed to be built into the LKB.
+;;;
+;;; We need some syntax rules for testing, especially for the
+;;; active parser (including messages about missing words)
+;;;
+
+sign := *top* & 
+[ ORTH *list*,
+  CATEG cat,
+  ARGS *list* ].
+
+cat := *top*.
+
+cat0or1 := cat.
+
+cat2or3 := cat.
+
+cat0 := cat0or1.
+
+cat1 := cat0or1.
+
+cat2 := cat2or3.
+
+cat3 := cat2or3.
+
+;;; following is for rules designed to test the rule filter construction
+
+cat4 := cat.
+
+cat5or6 := cat.
+
+cat5 := cat5or6.
+
+cat6 := cat5or6.
+
+cat7 := cat.
+
+boolean := *top*.
+
++ := boolean.
+
+- := boolean.
+
+;;;
+;;; standard types
+;;;
+
+string := *top*.
+
+*list* := *top*.
+
+*ne-list* := *list* &
+ [ FIRST *top*,
+   REST *list* ].
+
+*null* := *list*.
+
+*dlist* := *top* &
+[ LIST *list*,
+  LAST *list* ].
+
+*null-dlist* := *dlist* &
+[ LIST #last,
+  LAST #last ].
+
+*ne-dlist* := *dlist* &
+[LIST *ne-list* ].
+
+
