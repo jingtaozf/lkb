@@ -91,7 +91,8 @@
     (if ovwr 
         (setf *lexical-rule-file-list* (list file-name))
       (pushnew file-name *lexical-rule-file-list* :test #'equal)))
-  (when ovwr (setf *ordered-lrule-list* nil))
+  (when ovwr (setf *ordered-lrule-list* nil)
+	(setf *ordered-sprule-list* nil))
   (when ovwr (clear-lex-rules) )    
   (read-lex-or-grammar-rule-file file-name t)
   (format t "~%Lexical rule file read"))   
