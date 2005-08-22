@@ -33,6 +33,7 @@
 
 (defvar *ordered-rule-list* nil)
 (defvar *ordered-lrule-list* nil)
+(defvar *ordered-sprule-list* nil)
 
 (defun clear-grammar nil
   (setf *ordered-rule-list* nil)
@@ -44,6 +45,7 @@
 
 (defun clear-lex-rules nil
   (setf *ordered-lrule-list* nil)
+  (setf *ordered-sprule-list* nil)
   (when (fboundp 'reset-cached-lex-entries)
     (funcall 'reset-cached-lex-entries))
   (when (fboundp 'clear-generator-lrules)
@@ -66,7 +68,9 @@
   apply-filter ;;; rule filter
   apply-index ;;; rule filter
   feeders ;;; slot used in construction of lrfsm
-  lrfsm ;;; generalisation of filter for lexical rules
+  lrfsm	;;; generalisation of filter for lexical rules
+  nospfeeders
+  nospfsm ;;; yet another, with only non-spelling rules
   head
   orthographemicp)
   
@@ -261,7 +265,10 @@
     (when fs
       (setf (rule-rtdfs rule) (copy-tdfs-partially fs))
       (if lexical-p 
-        (pushnew id *ordered-lrule-list*)
+	  (progn
+	    (pushnew id *ordered-lrule-list*)
+	    (when (spelling-change-rule-p rule)
+	      (pushnew id *ordered-sprule-list*)))
         (pushnew id *ordered-rule-list*))
       (let ((f-list
              (mapcar #'(lambda (x) (if (listp x) x (list x)))
@@ -402,7 +409,7 @@
 ;;;
 ;;; aliases PLUR_NOUN alias
 ;;;
-;;; and more sensibly we should also have the lexdb (TODO)
+;;; and more sensibly we should also have the lexdb (TODO - FIX)
 ;;; 
 ;;; load-irregular-spellings  is in utils.lsp
 ;;; this calls read-irreg-form-strings (below)
@@ -420,7 +427,21 @@
 (defvar *irregular-forms-gen* (make-hash-table :test #'equal))
 
 (defun find-irregular-morphs (word)
-  (gethash word *irregular-forms*))
+  ;;; called by default morphological analyser
+  (loop for result in
+	(gethash word *irregular-forms*)
+      collect
+	(cons (first result) (caadr result))))
+
+(defun full-morph-generate (stem rule)
+  (setf stem (string-upcase stem))
+  (list (list 
+	 (let ((irreg-form (gen-irreg-morphs stem rule)))
+	   (or irreg-form (morph-generate stem rule)))
+	 (list rule stem))))
+      ;;; prefer irregular spellings (i.e., always get
+      ;;; dreamt rather than dreamed if only dreamt is in irregulars -
+      ;;; if both are in, prefer the first)
 
 (defun gen-irreg-morphs (stem rule)
   ;;; assumes only one answer which is clearly wrong, but until we
@@ -431,18 +452,27 @@
           (gethash stem *irregular-forms-gen*))))
     (cdr (assoc rule irreg)))) 
 
-(defun full-morph-generate (stem rule)
-  (setf stem (string-upcase stem))
-  (list (list 
-	 (let ((irreg-form (gen-irreg-morphs stem rule)))
-	   (or irreg-form (morph-generate stem rule)))
-	 (list rule stem))))
-      ;;; prefer irregular spellings (i.e., always get
-      ;;; dreamt rather than dreamed)
 
+(defun morph-matches-irreg-list (stem rule)
+  ;;; returns a list of surface forms corresponding to
+  ;;; stem and rule in irregs
+  ;;; called by morph-not-blocked-p in parse.lsp
+  (if (and stem rule)
+      (let ((irreg-stems 
+	     (gethash stem *irregular-forms-gen*)))
+	(loop for rec in irreg-stems
+	    when (eql rule (car rec))
+	    collect (cdr rec)))))
+
+
+;;; old irregular handling code - still used if there's an
+;;; external function returning a complete partial tree
+
+(defun find-irregular-morphs-old (word)
+  (gethash word *irregular-forms*))
 
 (defun filter-for-irregs (reg-list)
-  ;;; called from parse.lsp
+  ;;; called from parse.lsp, but not now used by the default code
   ;;; input is a list of  ("A" (RULE1 "AB") (RULE2 "ABC"))
   ;;; as old morph analyse
   ;;; if *irregular-forms-only-p*  is set this will
@@ -461,12 +491,15 @@
 
 (defun morph-matches-irreg-p (stem rule)
     ;;; returns t if stem and rule are in irregs
-    (let* ((irreg-stems 
-	    (gethash stem *irregular-forms-gen*))
-	   (irreg-rules (mapcar #'car irreg-stems)))
-      (and irreg-stems rule
-	   (member rule irreg-rules))))
+  (if (and stem rule)
+      (let ((irreg-stems 
+	     (gethash stem *irregular-forms-gen*)))
+	(dolist (rec irreg-stems)
+	  (when (eql rule (car rec))
+	    (return t))))))
 
+;;;
+;;; Loading irregulars
 ;;; 
 
 (defun read-irreg-form-strings (strings)
@@ -540,6 +573,7 @@
 ;;; - the second dimension corresponding to an index for each daughter
 
 (defun build-rule-filter nil
+  (format t "~%Building rule filter")
   (unless (find :vanilla *features*)
     (let ((max-arity 0)
           (nrules 0)
@@ -619,27 +653,70 @@
 ;;; the code works when there are cycles, it could be very expensive to
 ;;; compute the fsm.
 
+;;; We also need a version of the fsm where we're only interested in the 
+;;; case where non-spelling rules connect two rules.
+
+(defparameter *lrstruct-list* nil)
+(defparameter *spstruct-list* nil)
+(defparameter *nospstruct-list* nil)
+
+(defparameter *check-nosp-feeding-cache* nil)
 (defparameter *spelling-rule-feed-cache* nil)
 
 (defparameter *cyclic-lr-list* nil)
 
+(defun coindexed-orth-paths (rule)
+  ;;; this function tests whether the mother and first daughter
+  ;;; have coindexed ORTH values.  This is bad news in a spelling rule.
+  ;;; FIX - not very happy that this function is robust - it probably doesn't
+  ;;; work to test for coindexation this way if the value is an atomic FS
+  ;;; hence test for list type
+  (let* ((rule-fs (tdfs-indef (rule-full-fs rule)))
+	 (lp (establish-linear-precedence rule-fs))
+	 (mother-path (first lp))
+	 (d1-path (second lp))
+	 (morth (existing-dag-at-end-of rule-fs 
+					(append mother-path *orth-path*)))
+	 (dorth (existing-dag-at-end-of rule-fs 
+					(append d1-path *orth-path*))))
+    (and morth dorth 
+	 (eql (type-of-fs morth) *list-type*)
+	 (eq morth dorth))))
+
 (defun build-lrfsm nil
-  (let ((lrlist nil)
+  (format t "~%Building lr connections table")
+  (let ((lrlist nil) 
 	(revindex-lrules nil)
 	(revindex-rules nil)
+	(nosprules nil)
+	(sprules nil)
 	(nrules nil))
     (setf *spelling-rule-feed-cache* nil)
     (setf *cyclic-lr-list* nil)
+    (setf *check-nosp-feeding-cache* nil)
+    (setf *lrstruct-list* nil)
+    (setf *spstruct-list* nil)
+    (setf *nospstruct-list* nil)
     (maphash #'(lambda (k v)
 		 (declare (ignore k))
 		 (unless nrules
 		   (setf nrules (array-dimension (rule-apply-filter v) 0)))
 		 (setf (rule-feeders v) nil)
+		 (setf (rule-nospfeeders v) nil)
+		 (setf (rule-nospfsm v) 
+		   (make-array (list nrules) :initial-element :unk))
 		 (setf (rule-lrfsm v) 
 		   (make-array (list nrules) :initial-element :unk)) 
 		 (push v lrlist)
-		 (push (cons (rule-apply-index v) v) revindex-lrules))
+		 (push (cons (rule-apply-index v) v) revindex-lrules)
+		 (if (spelling-change-rule-p v)
+		     (push v sprules)
+		   (push v nosprules)))
 	     *lexical-rules*)
+    (dolist (sprule sprules)
+      (when (coindexed-orth-paths sprule)
+	(setf *syntax-error* t)
+	(format t "~%Error: ~A is being treated as a spelling rule but has ORTH values coindexed~%this may crash the parser" (rule-id sprule))))
     (maphash #'(lambda (k v)
 		 (declare (ignore k))
 		 (push (cons (rule-apply-index v) v) revindex-rules))
@@ -652,10 +729,10 @@
 		   (when (aref (rule-apply-filter v) i 0)
 		     ;; lex/morph rules have single daughter
 		     (let ((feeder (assoc i revindex-lrules)))
-		       (if feeder
-			   (push feeder (rule-feeders v))
-			 ;; bmw - warning disabled
-			 ;;(format t "~&Warning: Non-lexical rule ~a potentially feeds lexical rule ~a" (rule-id (cdr (assoc i revindex-rules))) (rule-id v))
+		       (when feeder
+			 (when (member (cdr feeder) nosprules)
+			   (push feeder (rule-nospfeeders v)))
+			 (push feeder (rule-feeders v))
 			 )))))
 	     *lexical-rules*)
 ;;; e.g., A can feed B, B can feed C, C can feed D, A can feed C
@@ -664,11 +741,26 @@
 ;;;                 C - (B A)
 ;;;                 D - (C)
     (when lrlist
-      (build-lrfsm-aux (car lrlist) (cdr lrlist) nrules nil)
+      (format t "~%Constructing main lr table")
+      (setf *lrstruct-list* lrlist)
+      (setf *spstruct-list* sprules)
+      (setf *nospstruct-list* nosprules)
+      ;;; three globals set because they are useful later on
+      (build-lrfsm-aux (car lrlist) (cdr lrlist) nrules nil 'feeders 'lrfsm)
+      (when nosprules
+	(format t "~%Constructing lr table for non-morphological rules")
+	(build-lrfsm-aux (car nosprules) (cdr nosprules) nrules nil 
+			 'nospfeeders 'nospfsm))
       (dolist (crule *cyclic-lr-list*)
-	(format t "~%Warning: ~A can feed itself" (rule-id crule)))
+	(unless (member (rule-id crule) *known-cyclic-rules*)
+	  ;;; grammar writer can choose to disable this message
+	  (format t "~%Warning: ~A can feed itself" (rule-id crule))))
+      (format t "~%Completing lr table")
       (dolist (lr lrlist)
-       (complete-lrfsm lr nrules)))))
+	(complete-lrfsm lr nrules 'feeders 'lrfsm))
+      (when nosprules
+	(dolist (lr nosprules)
+	  (complete-lrfsm lr nrules 'nospfeeders 'nospfsm))))))
 
 #|
 suppose A can feed B, B can feed C, C can feed D, A can feed C
@@ -689,30 +781,43 @@ and D can feed B (so there's a cycle)
 |#
 
 
-(defun build-lrfsm-aux (lr remainder nrules in-progress)
+  ;;; generalised so it works for both the full lrfsm
+  ;;; when it will be called with feeder-slot = feeders
+  ;;;                        and  fsm-slot = lrfsm
+  ;;; and the no spelling rule variant 
+  ;;; when it will be called with feeder-slot = nospfeeders
+  ;;;                        and  fsm-slot = nospfsm
+
+
+(defun build-lrfsm-aux (lr remainder nrules in-progress 
+			feeder-slot fsm-slot)
   ;;; looking at rule lr, set the lrfsm values
   ;;; to t for each feeder and to t for each feeder's feeder
   ;;; if feeder is done.  If not done, recurse on feeder.
   ;;; Test for done is whether rule-feeders is :done
-  (let ((feeders (rule-feeders lr)))
+  (let ((feeders (slot-value lr feeder-slot)))
+;;;    (pprint feeders)
     (unless (eql feeders :done)
-      (let ((lrfsm (rule-lrfsm lr))
+      (let ((lrfsm (slot-value lr fsm-slot))
 	    (todo nil))
 	(dolist (feeder feeders)
-	  (build-lrfsm-aux-process-feeders feeder lrfsm nrules in-progress todo lr))
+	  (setf todo
+	    (build-lrfsm-aux-process-feeders feeder lrfsm nrules in-progress todo lr feeder-slot fsm-slot)))
+#+:debug	(when todo (format t "~%Cycle ~A, current feeders ~A" 
+			todo (rule-feeders lr)))
 	(if todo
-	    (setf (rule-feeders lr) todo)
+	      (setf (slot-value lr feeder-slot) todo)
 	  ;;; we've found a cycle in the feeders, so we can't complete yet
 	  (progn
 	    (dotimes (i nrules)
 	      (when (eql (aref lrfsm i) :unk)
 		(setf (aref lrfsm i) nil)))
-	    (setf (rule-feeders lr) :done)))))
+	    (setf (slot-value lr feeder-slot) :done)))))
     (when remainder 
       (build-lrfsm-aux (car remainder)
-		       (cdr remainder) nrules nil))))
+		       (cdr remainder) nrules nil feeder-slot fsm-slot))))
     
-(defun build-lrfsm-aux-process-feeders (feeder lrfsm nrules in-progress todo lr)    
+(defun build-lrfsm-aux-process-feeders (feeder lrfsm nrules in-progress todo lr feeder-slot fsm-slot)    
     (let ((frule (cdr feeder))
 	  (fnum (car feeder)))
 	    	;;; set the feeder index
@@ -722,37 +827,38 @@ and D can feed B (so there's a cycle)
 	  ;; stop, but record we're not done
 	  (progn
 	    (pushnew frule *cyclic-lr-list*)
-	    (push feeder todo))
+	    (pushnew feeder todo))
 	;; otherwise find the feeder fsm, recursing if necessary
 	(progn 
 	  (build-lrfsm-aux frule nil nrules 
-			   (cons lr in-progress))
+			   (cons lr in-progress) feeder-slot fsm-slot)
 	  ;; propagate the feeder values
 	  (dotimes (i nrules)
-	    (when (eql (aref (rule-lrfsm frule) i) t)
+	    (when (eql (aref (slot-value frule fsm-slot) i) t)
 	      (setf (aref lrfsm i) t)
 	      ))
 	  ;; if there's a cycle further back, record we're
 	  ;; not done
-	  (unless (eql (rule-feeders frule) :done)
-	    (push feeder todo))))))
+	  (unless (eql (slot-value frule feeder-slot) :done)
+	    (pushnew feeder todo))))
+      todo))
 
-(defun complete-lrfsm (lr nrules)
+(defun complete-lrfsm (lr nrules feeder-slot fsm-slot)
   ;;; go through the cases we haven't been able to complete because
   ;;; of cycles and set values.
-  (let ((feeders (rule-feeders lr)))
+  (let ((feeders (slot-value lr feeder-slot)))
     (unless (eql feeders :done)
-      (let ((lrfsm (rule-lrfsm lr)))
+      (let ((lrfsm (slot-value lr fsm-slot)))
 	(dolist (feeder feeders)
 	  (let ((frule (cdr feeder)))
 		;; propagate the feeder values
 		(dotimes (i nrules)
-		  (when (eql (aref (rule-lrfsm frule) i) t)
+		  (when (eql (aref (slot-value frule fsm-slot) i) t)
 		    (setf (aref lrfsm i) t)))))
 	(dotimes (i nrules)
 	  (when (eql (aref lrfsm i) :unk)
 	    (setf (aref lrfsm i) nil)))
-	(setf (rule-feeders lr) :done)))))
+	(setf (slot-value lr feeder-slot) :done)))))
 
 			  
 (defun check-lrfsm (rule test)
@@ -769,44 +875,69 @@ and D can feed B (so there's a cycle)
 	#+:pdebug (format t "Don't know") 
 	t))))
 
+(defun check-nosp-feeding (rule test)
+  ;;; this is a bit more complex.  rule and test should both be
+  ;;; sp rules (this is called on the morphophon stuff)
+  ;;; We want to see if either there's a direct feeding relationship
+  ;;; or some chain of non-spelling rules between them.  
+  ;;; We memoise the calls to this
+  (let* ((rule-known (assoc rule *check-nosp-feeding-cache*))
+	 (known (if rule-known (assoc test (cdr rule-known)))))
+    (if known
+	(cdr known)
+      (let* ((direct-feed (check-rule-filter rule test 0))
+	     (res (or direct-feed
+		      (indirect-lr-feed rule test))))
+	;;; cache result
+	(let ((testres (cons test res))
+	      (rule-knowns (assoc rule *check-nosp-feeding-cache*)))
+	  (if rule-knowns
+	      (push testres (cdr rule-knowns))
+	    (push (cons rule (list testres)) *check-nosp-feeding-cache*)))
+	;;; and return it ...
+	res))))
+
+(defun indirect-lr-feed (rule test)
+  (let ((rule-in nil)
+	(test-out nil))
+    (dolist (inter *nospstruct-list*)
+      (when (check-rule-filter rule inter 0)
+	(push inter rule-in))
+      (when (check-rule-filter inter test 0)
+	(push inter test-out)))
+    (dolist (inter1 rule-in)
+      (when
+	  (dolist (inter2 test-out)
+	    (when (or (eq inter1 inter2)
+		      (check-lrfsm inter1 inter2))
+	      (return t)))
+	(return t)))))
+    
+  
+
 (defun print-lrfsm (&key (stream t))
-  (let ((rule-list nil))
-    (maphash #'(lambda (k v)
-		 (declare (ignore k))
-		 (push v rule-list))
-	     *lexical-rules*)
-    (format stream "~%Specified feeding relationships~% Descendant~10,10@TMother")
-    (dolist (rule1 rule-list)
-      (dolist (rule2 rule-list)
-	(let ((feeds (check-lrfsm rule2 rule1)))
-	  (when feeds
-	    (format stream "~% ~A~1,10@T~A" 
-		    (rule-id rule1) (rule-id rule2))))))))
-
-
-
+  (format stream "~%Specified feeding relationships~% Descendant~30TMother")
+  (dolist (rule1 *lrstruct-list*)
+    (dolist (rule2 *lrstruct-list*)
+      (let ((feeds (check-lrfsm rule2 rule1)))
+	(when feeds
+	  (format stream "~% ~A~30T~A" 
+		  (rule-id rule1) (rule-id rule2)))))))
 
 (defun spelling-rule-feeds-p (rule-id)
   ;;; use the lrfsm to check whether anything can feed this rule.
   ;;; cache the results
   (let ((seen (assoc rule-id *spelling-rule-feed-cache*)))
     (if seen (cdr seen)
-      (let ((spelling-rules nil))
-	(maphash #'(lambda (k v)
-		     (declare (ignore k))
-		     (when (spelling-change-rule-p v)
-		       (push v spelling-rules)))
-		 *lexical-rules*)
-	(let ((feeder-p
-	       (dolist (srule spelling-rules)
-		 (when 
-		     (check-lrfsm 
-		      (get-lex-rule-entry rule-id)
-		      srule)
-		   (return t)))))
-	  (push (cons rule-id feeder-p)
-		*spelling-rule-feed-cache*)
-	  feeder-p)))))
+      (let* ((rule-entry (get-lex-rule-entry rule-id))
+	     (feeder-p
+	      (dolist (srule *spstruct-list*)
+		(when 
+		    (check-lrfsm rule-entry srule)
+		  (return t)))))
+	(push (cons rule-id feeder-p)
+	      *spelling-rule-feed-cache*)
+	feeder-p))))
 
 ;;; *********************************************************
 ;;;

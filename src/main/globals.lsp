@@ -86,6 +86,10 @@
 (def-lkb-parameter *foreign-morph-fn* nil
   "alternative to built in LKB morphology")
 
+(defparameter *known-cyclic-rules* nil
+  "to allow disabling of warning messages about possible cycles -
+ advanced users only")
+
 ;;; Parsing
 
 (defparameter *maximum-number-of-tasks* 200000
@@ -142,7 +146,14 @@
 
 (def-lkb-parameter *irregular-forms-only-p* nil
   "if this is set, the parser will not parse regular spellings
-   if there is an irregular spelling (eated, dreamed)")
+   if there is an irregular spelling (eated, dreamed)
+   Consider replacing with *most-specific-only-p*")
+
+(def-lkb-parameter *most-specific-only-p* nil
+  "if this is set, the parser will not parse regular spellings
+   if there is an irregular spelling (eated, dreamed) and will only
+   accept the most specific pattern in a subrule.")
+
 
 (def-lkb-parameter *unknown-word-types* nil
   "if this is set, the user-fn make-unknown-word-sense-unifications

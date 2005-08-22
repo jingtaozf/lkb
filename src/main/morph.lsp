@@ -18,16 +18,21 @@
 ;;;
 ;;; For now, get rid of infix (which probably didn't work anyway)
 ;;; and (temporarily unless speed is OK) forget about letter trees
+;;; (August - speed seems OK, no need for letter trees)
 ;;;
 ;;; integrated reading into the relevant function in the lex rule reader
 ;;; which should support a more flexible positioning of the % declarations
 ;;;
-;;; FIX - support old LKB format too - not that important
 
-(defparameter *letter-set-escape-char* #\\)
-(defparameter *letter-set-null-char* #\*)
-(defparameter *letter-set-character-set-char* #\!)
-(defparameter *letter-set-wild-card-char* #\?)
+#| 
+ code assumes #\\ is escape character
+              #\* is null character
+              #\! introduces a letter set
+	      #\? a wild card character
+
+these were variables but this code might not work if they were changed,
+to something unexpected, so don't give people the temptation!
+|#
 
 (defstruct letter-set 
   var char letters)
@@ -69,6 +74,49 @@
 
 (defvar *letter-wild-card-list* nil)
 
+;;; 
+
+(defun in-morph-rule-set-p (rule)
+  (member (rule-id rule) *morph-rule-set* :key #'morph-rule-name))
+
+;;; printing functions: mostly for debugging purposes
+
+(defun show-letter-sets (&key (stream t))
+  (dolist (ls (reverse *letter-set-list*))
+    (format stream "~%~A ~A" (letter-set-var ls) (letter-set-letters ls))))
+
+(defun show-wildcard-sets (&key (stream t))
+  (dolist (ls (reverse *letter-wild-card-list*))
+    (format stream "~%~A ~A" 
+	    (letter-wild-card-char ls) 
+	    (letter-wild-card-letters ls))))
+
+(defun show-morph-rules (&key (stream t))
+  (dolist (mr (reverse *morph-rule-set*))
+    (format stream "~%~A ~A ~20TUNDERLYING / SURFACE"
+	    (morph-rule-name mr)
+	    (morph-rule-class mr) 
+	    )
+    (dolist (subrule (morph-rule-subrules mr))
+      (format stream "~%~20T")
+      (show-morph-subpattern 
+       (morph-subrule-under subrule) 
+       (morph-rule-class mr) stream)
+      (format stream " / ")
+      (show-morph-subpattern 
+       (morph-subrule-surface subrule) 
+       (morph-rule-class mr) stream))))
+
+
+(defun show-morph-subpattern (pattern class stream)
+  (let ((printstr (loop for char in (if (eql class 'suffix)
+					(reverse pattern) pattern)
+		      collect
+			(if (letter-set-p char) (letter-set-var char)
+			  char))))
+  (format stream "~{~A~}" (or printstr '("")))))
+
+
 ;;; Reset function 
 (defun reset-morph-var () 
   (setf *morph-rule-set* nil)
@@ -82,120 +130,270 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun make-morphology-notation-table nil
+  (let ((temporary-readtable (copy-readtable nil)))
+;;; (set-syntax-from-char to-char #\* temporary-readtable temporary-readtable)
+;;; can be used to make to-char `normal' but I don't think this is needed now
+    temporary-readtable))
+
+
+
 (defun read-morphology-letter-set (istream)
   ;;; e.g. %(letter-set (!c bdfglmnprstz))
   ;;; or   %(wild-card (?c bdf))
-  (let* ((*readtable* (copy-readtable nil))
+  (let* ((*readtable* (make-morphology-notation-table))
 	 ;; this restores the initial readtable
-	 ;; necesary because ! etc may be break characters
+	 ;; necessary because ! etc may be break characters
 	 ;; This is now called from within a TDL reader.
-	 (string-thing (read-line istream))
-	 (form
-	  (with-package (:lkb)
-	    (read-from-string string-thing nil :eof 
-		     :start
-		     (position '#\( string-thing)))))
-    (cond
-     ((eql form :eof) (error "~%Incomplete letter set"))
-     ((not (listp form)) 
-      (error "~%Illformed morphological specification ~S" string-thing))
-     ((eql (car form) 'letter-set)
-      (push
-       (create-letter-set (second form)) 
-       *letter-set-list*))
-     ((eql (car form) 'wild-card)
-      (push
-       (create-letter-wild-card (second form)) 
-       *letter-wild-card-list*))
-     (t (error "~%Illformed morphological specification ~S" string-thing)))))
+	 (string-thing (read-line istream nil nil))
+	 (start-pos
+	  (if string-thing
+	      (position '#\( string-thing)))
+	 (main-string (if start-pos (subseq string-thing (+ 1 start-pos))))
+	 (real-start-pos (if main-string (position '#\( main-string)))
+	 (real-string (if real-start-pos 
+			  (string-upcase
+			   (subseq main-string (+ 1 real-start-pos))))))
+    (if real-string 
+	(cond 
+	 ((string-equal (subseq main-string 0 10) "letter-set")
+	  (let ((var (parse-letter-set-var real-string)))
+	    (when var
+	      (push
+	       (create-letter-set 
+		var 
+		(parse-letter-set-letters real-string))
+	       *letter-set-list*))))
+	 ((string-equal (subseq main-string 0 9) "wild-card")
+	  (let ((var (parse-wild-card-var real-string)))
+	    (when var
+	      (push
+	       (create-letter-wild-card 
+		var 
+		(parse-letter-set-letters real-string))
+	       *letter-wild-card-list*))))
+	 (t (morph-read-cerror (format nil "~%Illformed morphological specification ~S: letter-set or wild-card expected" string-thing))))
+      (morph-read-cerror 
+       (format nil "~%Incomplete or malformed letter set specification ~S ignored" 
+	       string-thing)))))
+
+  
+(defun parse-letter-set-var (str)
+  ;;; expecting ! followed by a single character
+  (let* ((pling-pos (position #\! str))
+	 (next-char (if pling-pos (elt str (+ 2 pling-pos)))))
+    (if (and pling-pos (whitespacep next-char))
+	(subseq str 0 2)
+      (morph-read-cerror
+	(format nil "~%Incorrectly written letter set in ~A" str)))))
+      
+
+(defun parse-wild-card-var (str)
+  ;;; expecting ! followed by a single character
+  (let* ((pling-pos (position #\? str))
+	 (next-char (if pling-pos (elt str (+ 2 pling-pos)))))
+    (if (and pling-pos (whitespacep next-char))
+	(subseq str 0 2)
+      (morph-read-cerror 
+	     (format nil "~%Incorrectly written wild card set in ~A" str)))))
+
+(defun parse-letter-set-letters (str)
+  ;;; takes a string and returns a list of all characters it contains
+  ;;; a ) is taken as the end of the string, unless there's a \ in
+  ;;; front of it.  \\ is needed to include \.  whitespace is ignored
+  (let ((initial-chars (coerce (subseq str 2) 'list))
+	(chars nil)
+	(escape-p nil))
+    (dolist (char initial-chars)
+      (cond ((whitespacep char) (setf escape-p nil))
+	    ((char= char #\\) (if escape-p 
+				  (progn (pushnew char chars) (setf escape-p nil))
+				(setf escape-p t)))
+	    ((char= char #\)) (if escape-p 
+				  (progn (pushnew char chars) (setf escape-p nil))
+				(return)))
+	    (t (setf escape-p nil) (pushnew char chars))))
+    (nreverse chars)))
+
 
 (defun read-morphology-affix (id istream)
   ;;; e.g., %suffix (!s !ss) (!ss !ssses) (ss sses)
   ;;; called with id which is the rule name (e.g., 3sg-v_irule)
-  (let* ((*readtable* (copy-readtable nil))
+  (let* ((*readtable* (make-morphology-notation-table))
 	 (string-thing (read-line istream))
-	 (start-pos 1) ;; ignore the %
 	 (method-list nil)
-	 (class nil))
-    (loop
-      (with-package (:lkb)
-	(multiple-value-bind (form end-value)
-	    (read-from-string string-thing nil 
-			      :eof :start start-pos)
-	  (when (eql form :eof) (return))
-	  ;; this did allow local letter sets
-	  ;; but I've removed this
-	  ;;;
-	  ;;; first set class to prefix or suffix, then loop
-	  ;;; reading subrules
-	  (if class 
-	      (push form method-list)
-	    (progn 
-	      (unless (or (eql form 'suffix)
-			  (eql form 'prefix))
-		(error "~%Incorrect morphology specification ~A: suffix or prefix expected"
-		       string-thing))
-	      (setf class form)))
-	  (setf start-pos end-value))))
+	 (class (read-affix-class string-thing))
+	 (pattern-start (position #\( string-thing :start 1))
+	 (toanalyse 
+	  (if pattern-start (string-upcase 
+			     (subseq string-thing (+ 1 pattern-start))))))
+    (cond ((and pattern-start class)
+	   (loop 
+	     (unless toanalyse (return nil))
+	     (multiple-value-bind (pattern end-pos)
+		 (read-morphology-pattern toanalyse id)
+	       ;; errors checked inside read-morph-pattern
+	       (unless end-pos (return nil))
+	       (push pattern method-list)
+	       (setf pattern-start (position #\( toanalyse :start end-pos))
+	       (unless pattern-start (return nil))
+	       (setf toanalyse (subseq  toanalyse (+ 1 pattern-start)))))
     ;;; note that the subrule list ends up reversed: this is what is wanted
     ;;; because the most specific subrules will occur first in the rule
     ;;; structure.  subrules are checked in order and only the most
     ;;; specific applicable rule that matches the stem is used 
     ;;; (obviously when we're parsing we don't know the stem, so this
     ;;; requires returning all subrules that match)
-    (morph-input 
-     class 
-     id 
-     method-list
-     *letter-set-list*
-     *letter-wild-card-list*)))
+	   (morph-input 
+	    class 
+	    id 
+	    method-list))
+	  ((null pattern-start)
+	   (morph-read-cerror 
+	    (format nil "~%Problem in ~A: no patterns" id)))
+	  (t (morph-read-cerror 
+	     (format nil "~%Problem in ~A: not specified as suffix or prefix" id)))))) 
+
+(defun read-affix-class (str)
+  ;;; takes a string beginning %suffix or %prefix
+  (cond ((string-equal str "suffix" :start1 1 :end1 7) 'suffix)
+        ((string-equal str "prefix" :start1 1 :end1 7) 'prefix)
+	(t
+	 (morph-read-cerror
+	  (format nil "~%Incorrect morphology specification ~A: suffix or prefix expected"
+		 str)))))
+
+(defun read-morphology-pattern (str id)
+  ;;; takes something like "(* a) (* \!) (* \*;)"
+  ;;; and returns a pattern corresponding to the first element
+  ;;; plus the position of the ) closing the pattern 
+  ;;; note that ( and ) can be escaped
+  ;;; since this reader has to explode anyway, replaces affix-explode
+  ;;; and returns two lists of character-specs
+  ;;; replacing * with nothing, !x with the corresponding letter-set
+  ;;; structure and ?z with wild-card structure.  
+  ;;; Other characters are unchanged.
+  ;;; e.g. * -> nil
+  ;;;      ed -> (#\e #\d)
+  ;;;      !t!v!c -> < three letter set records >
+    (let ((initial-chars (coerce str 'list))
+	  (escape-p nil)
+	  (part1 nil)
+	  (part2 nil)
+	  (part1-p t)
+	  (letter-set-p nil)
+	  (wild-card-p nil)
+	  (count 0))
+      (dolist (char initial-chars)
+	(incf count)
+	(cond ((whitespacep char)
+	       (cond ((not part1-p)
+		      (morph-read-cerror
+		       (format nil "~%Unexpected character ~A in ~A" char id)))
+		     (letter-set-p
+		      (morph-read-cerror
+		       (format nil "~%Nothing following character set character '~a' in ~a"
+			      #\! id)))
+		     (wild-card-p
+		      (morph-read-cerror
+		       (format nil "~%Nothing following character set character '~a' in ~a"
+			      #\? id)))
+		     (t ;; assume in surface part of pattern
+		      (setf escape-p nil)
+		      (setf part1-p nil))))
+	      ((char= char #\\)
+	       (if escape-p 
+		   (progn (if part1-p (push char part1) (push char part2))
+			  (setf escape-p nil))
+		 (setf escape-p t)))
+	      ((char-equal char #\*) 
+	       (if escape-p 
+		   (progn (if part1-p (push char part1) (push char part2))
+			  (setf escape-p nil))
+		 nil))
+	      ((char-equal char #\!)
+	       (if escape-p 
+		   (progn (if part1-p (push char part1) (push char part2))
+			  (setf escape-p nil))
+		 (setf letter-set-p t)))
+	      ((char-equal char #\?)
+	       (if escape-p 
+		   (progn (if part1-p (push char part1) (push char part2))
+			  (setf escape-p nil))
+		 (setf wild-card-p t)))
+	      ((char= char #\)) 
+	       (if escape-p 
+		   (progn (if part1-p (push char part1) (push char part2))
+			  (setf escape-p nil))
+		 (return)))
+	      (letter-set-p 
+	       (let ((ls (letter-set-for-char char id)))
+		 (when ls
+		   (if part1-p (push ls part1) (push ls part2))
+		   (setf letter-set-p nil))))
+	      (wild-card-p 
+	       (let ((ls (wild-char-set-for-char char id)))
+		 (when ls
+		   (if part1-p (push ls part1) (push ls part2))
+		   (setf wild-card-p nil))))
+	      (t (setf escape-p nil) 
+		 (if part1-p (push char part1) (push char part2)))))
+      (cond (letter-set-p (morph-read-cerror 
+			  (format nil "~%Nothing following character set character '~a' in ~a"
+				  #\! id)))
+	     (wild-card-p (morph-read-cerror 
+			  (format nil "~%Nothing following character set character '~a' in ~a"
+				  #\? id)))
+	     (t (values (cons (nreverse part1) (nreverse part2))
+			count)))))
+
+(defun letter-set-for-char (char id)
+  (let ((char-set (find char
+			*letter-set-list*
+			:key #'letter-set-char)))
+    (or char-set
+	(morph-read-cerror
+	  (format nil "~%Undefined letter set `~a~A' in ~a" 
+		  #\! char id)))))
+
+(defun wild-char-set-for-char (char str)
+  (let ((char-set (find char
+			*letter-wild-card-list* 
+			:key #'letter-wild-card-char)))
+    (or char-set
+	(morph-read-cerror 
+	  (format nil "~%Undefined wild card `~a~A' in ~a" 
+		  #\? char str)))))
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
 ;;; Morphological rule compilation functions
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun create-letter-set (new-rule)
-  ;;; e.g., input is (!c bdfglmnprstz))
-  (let* ((set (car new-rule))
-	 (rule-name (coerce (string set) 'list))
-	 (rule-set (second new-rule)))
-    (unless (and (eql (car rule-name) *letter-set-character-set-char*) 
-		 (null (third rule-name)))
-      (error "letter-set should be written as ~a~a not ~a~a"
-	     *letter-set-character-set-char* (second rule-name)
-	     (car rule-name) (coerce (cdr rule-name) 'string)))
+(defun create-letter-set (set rule-set)
+  ;;; e.g., input is !c (#\d #\b)
+  (let* ((char (elt set 1)))
     (make-letter-set :var set
-		     :char (second rule-name)
-		     :letters (coerce (string rule-set) 'list))))
+		     :char char
+		     :letters rule-set)))
 
-(defun create-letter-wild-card (new-rule)
-  ;;; e.g., input is (?c bdf))
-  (let* ((set (car new-rule))
-	 (rule-name (coerce (string set) 'list))
-	 (rule-set (second new-rule)))
-    (unless (and (eql (car rule-name) *letter-set-wild-card-char*) 
-		 (null (third rule-name)))
-      (error "wild-card should be written as ~a~a not ~a~a"
-	     *letter-set-wild-card-char* (second rule-name)
-	     (car rule-name) (coerce (cdr rule-name) 'string)))
-    (make-letter-wild-card 
-		     :char (second rule-name)
-		     :letters (coerce (string rule-set) 'list))))
-
+(defun create-letter-wild-card (set rule-set)
+  ;;; e.g., input is ?c (#\d #\b)
+  (let* ((char (elt set 1)))
+    (make-letter-wild-card :char char
+		     :letters rule-set)))
 
 ;;; Turn rules into a rule-structure
 
-(defun morph-input (class name subrules l-set w-set)
-  (unless subrules (error "~%No subrules"))
+(defun morph-input (class name subrules)
   (let ((subrule-structs 
 	 (loop for pair in subrules
 	     nconc
 	       ;; e.g. (!ty !tied) - surface is second
-	       (let* ((surface (affix-explode (second pair) l-set w-set))
-		      (underlying (affix-explode (first pair) l-set w-set))
+	       (let* ((surface (cdr pair))
+		      (underlying (car pair))
 		      (surface-wild
 		       (collect-wildcard-letters surface underlying
 						 name))
@@ -203,20 +401,23 @@
 		       (collect-wildcard-letters underlying surface
 						 name)))
 		 (if (null surface)
-		     (progn (format t "~%Warning: pattern with no affixation ignored in ~A" name)
-			    nil)
+		     (morph-read-cerror
+		       (format nil "~%Error: pattern with no affixation ignored in ~A" name))
 		   (if (or surface-wild underlying-wild)
 		       (expand-morph-subrules surface underlying
 					      surface-wild
 					      underlying-wild class)
 		     (list
 		      (create-morph-subrule surface underlying class))))))))
-    (push
-     (make-morph-rule
-      :class class
-      :name name
-      :subrules subrule-structs) 
-     *morph-rule-set*)))
+    (if subrule-structs
+	(push
+	 (make-morph-rule
+	  :class class
+	  :name name
+	  :subrules subrule-structs) 
+	 *morph-rule-set*)
+      (morph-read-cerror
+	(format nil "~%Error: no valid morphological patterns in ~A: rule-ignored" name)))))
 
 (defun collect-wildcard-letters (pattern other rulename)
   (loop for thing in pattern
@@ -238,60 +439,6 @@
 		  (reverse surface) surface)
      :under (if (eql class 'suffix) 
 		(reverse underlying) underlying)))
-
-(defun affix-explode (affix-spec l-set w-set)
-  ;;; This code returns a list of character-specs
-  ;;; replacing * with nothing, !x with the corresponding letter-set
-  ;;; structure and ?z with wild-card structure.  
-  ;;; Other characters are unchanged.
-  ;;; e.g. * -> nil
-  ;;;      ed -> (#\e #\d)
-  ;;;      !t!v!c -> < three letter set records >
-  (let ((chars (coerce (string affix-spec) 'list))
-	(new-spec nil))
-    (loop
-      (unless chars (return nil))
-      (let ((char (car chars)))
-	(setf chars (cdr chars))
-	(cond 
-	 ;; escape character
-	 ((char-equal char *letter-set-escape-char*)
-	  (setf char (car chars))
-	  (setf chars (cdr chars))
-	  (if (null char)
-	      (error "nothings following escape character '~a' in '~a'"
-		     *letter-set-escape-char* affix-spec))
-	  (push char new-spec))
-	 ;; null character
-	 ((char-equal char *letter-set-null-char*) nil)
-	 ;; letter-set variable
-	 ((char-equal char *letter-set-character-set-char*) 
-	  (setf char (car chars))
-	  (setf chars (cdr chars))
-	  (if (null char)
-	      (error "nothings following character set character '~a' in '~a'"
-		     *letter-set-character-set-char* affix-spec))
-	  (let ((char-set (find char
-				l-set :key #'letter-set-char)))
-	    (unless char-set
-	      (error "~%undefined character set ~a~A in '~a'" 
-		     *letter-set-character-set-char* char affix-spec))
-	    (push char-set new-spec)))
-	 ;; wild card
-	 ((char-equal char *letter-set-wild-card-char*) 
-	  (setf char (car chars))
-	  (setf chars (cdr chars))
-	  (if (null char)
-	      (error "nothings following wild card character '~a' in '~a'"
-		     *letter-set-wild-card-char* affix-spec))
-	  (let ((char-set (find char
-				w-set :key #'letter-wild-card-char)))
-	    (unless char-set
-	      (error "~%undefined wild card ~a~A in '~a'" 
-		     *letter-set-wild-card-char* char affix-spec))
-	    (push char-set new-spec)))
-	 (t (push char new-spec)))))
-    (nreverse new-spec)))
 
 
 (defun expand-morph-subrules (surface underlying surface-wild underlying-wild
@@ -396,7 +543,7 @@
 (defun match-letter-set (input-letter letter-set bindings)
   ;;; returns bindings (possibly updated) if successful, nil otherwise
   (let* ((var (letter-set-var letter-set))
-	 (already-bound (assoc var bindings)))
+	 (already-bound (assoc var bindings :test #'equal)))
     (if already-bound 
 	(if (eql input-letter (cdr already-bound))
 	    bindings ;; bound and OK
@@ -422,7 +569,8 @@
 	       (loop for letter in other
 		   collect
 		     (if (letter-set-p letter)
-			 (cdr (assoc (letter-set-var letter) bindings))
+			 (cdr (assoc (letter-set-var letter) 
+				     bindings :test #'equal))
 		       ;; no error testing here - assume
 		       ;; rules have been checked to make sure
 		       ;; we won't end up with an unbound letter set here

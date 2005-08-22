@@ -28,8 +28,10 @@
 (defvar *successful-tasks* 0)
 (defvar *contemplated-tasks* 0)
 (defvar *filtered-tasks* 0)
+(defvar *morph-agenda-tasks* 0)
 (declaim (type fixnum *executed-tasks* *successful-tasks* 
-	       *contemplated-tasks* *filtered-tasks*))
+	       *contemplated-tasks* *filtered-tasks* *morph-agenda-tasks*
+	       ))
 
 (defvar *parser-rules* nil)
 (defvar *parser-lexical-rules* nil)
@@ -138,7 +140,7 @@
   word maf-id xfrom xto)
 
 (defstruct (morpho-stem-edge (:include edge))
-  word stem current entries partial-p) 
+  word stem current) 
 
 (defparameter *characterize-p* nil)
 
@@ -183,14 +185,13 @@
 (defmethod print-object ((instance morpho-stem-edge) stream)
   (format 
    stream 
-   "#[Morph edge # ~d: ~S ~S ~S ~S ~S ~A]"
+   "#[Morph edge # ~d: ~S ~S ~S ~S ~A]"
    (morpho-stem-edge-id instance)
    (morpho-stem-edge-word instance)
    (morpho-stem-edge-current instance)
    (morpho-stem-edge-from instance)
    (morpho-stem-edge-to instance)
-   (morpho-stem-edge-partial-tree instance)
-   (morpho-stem-edge-partial-p instance)))
+   (morpho-stem-edge-partial-tree instance)))
 
 
 (defvar *edge-id* 0)
@@ -503,6 +504,7 @@
       (let ((*brackets-list* brackets-list)
             (*executed-tasks* 0) (*successful-tasks* 0)
             (*contemplated-tasks* 0) (*filtered-tasks* 0)
+	    (*morph-agenda-tasks* 0)
             (*parser-rules* (get-matching-rules nil nil))
             (*parser-lexical-rules* (get-matching-lex-rules nil))
             (*lexical-entries-used* nil)
@@ -556,7 +558,8 @@
           (push (get-internal-run-time) *parse-times*))
         (when show-parse-p (show-parse))
         (values *executed-tasks* *successful-tasks* 
-                *contemplated-tasks* *filtered-tasks*)))))
+                *contemplated-tasks* *filtered-tasks* 
+		*morph-agenda-tasks*)))))
 
 ;;; *****************************************************
 ;;;
@@ -666,7 +669,45 @@
 ;;; The revised LKB morph code does this one rule at a time but the case
 ;;; where a complete analysis is done in one step is also supported.
 ;;;
-;;; default *morph-option* (i.e., :default)
+
+;;; partial-tree handling
+;;; 
+;;;
+;;; FIX 
+;;; currently we assume that a partial tree is in fact a
+;;; list of partial-tree nodes, but this will have to change
+;;; when we allow for compounding.  To try and make this simpler
+;;; the code mostly abstracts from the partial tree encoding details
+;;; search for WARNING for exceptions
+
+(defmacro make-pt-node (rule str)
+  `(list ,rule ,str))
+
+(defmacro pt-node-rule (ptnode)
+  `(car ,ptnode))
+
+(defmacro pt-node-string (ptnode)
+  `(cadr ,ptnode))
+
+(defmacro add-pt-node-to-tree (ptnode partial-tree)
+  ;;; sometimes called with partial-tree being nil
+  `(cons ,ptnode ,partial-tree))
+
+(defmacro max-one-deep-p (partial-tree)
+  ;;; may be called with partial-tree being nil
+  `(not (cdr ,partial-tree)))
+
+(defmacro partial-trees-equal (partial-tree1 partial-tree2)
+  `(tree-equal ,partial-tree1 ,partial-tree2))
+
+;;; end partial tree handling
+    
+;;; start of code specific to default *morph-option* (i.e., :default)
+;;; or :external-rule-by-rule 
+
+(defparameter *morph-agenda* nil)
+
+(defparameter *morphophon-cache* nil)
 
 (defun instantiate-chart-with-morphop nil
   (dotimes (current *tchart-max*)
@@ -676,160 +717,336 @@
       (dolist (token-cc token-ccs)
 	;; for each such edge
 	(let* ((token-edge (chart-configuration-edge token-cc))
-	       (word (token-edge-word token-edge))
-	       (irregs (find-irregular-morphs word)))
-	  (add-morpho-irreg-edges-from-token-edge token-edge irregs)
+	       (word (token-edge-word token-edge)))
 	  (add-morpho-partial-edges 
-	   word nil
-	   (token-edge-from token-edge)
-	   (token-edge-to token-edge)
+	   word
 	   token-edge)))))
   *tchart*)
-
-(defun add-morpho-irreg-edges-from-token-edge (token-edge irregs)
-  (dolist (morph-spec irregs)
-    ;; for each irregular morph found
-    (let ((stem (car morph-spec))
-	  (partial-tree (cdr morph-spec)))
-      ;; add the irregular edge
-      (add-morpho-stem-edge-from-token-edge 
-       stem partial-tree
-       token-edge nil) ;; nil indicates this is complete
-      ;;
-      ;; When the irregular form involves no
-      ;; effect on the stem, we add the stem edge as 
-      ;; well here.
-      (when (and (not (cdr partial-tree))
-		 (equal stem (second (car partial-tree))))
-	(add-morpho-stem-edge-from-token-edge 
-	 stem nil
-	 token-edge nil))))) ;; nil indicates this is complete
   
-;;; The reason to add the edges is to have something that can be
-;;; checked to avoid recomputation.  E.g. if we're analysing
-;;; something which could be STEM+m1+m2+m3 or STEM+m1+m2+m4
-;;; we don't need to redo the STEM+m1+m2 part
-;;; 
-
-;;; FIX - it would probably make sense to pack edges by
-;;; combining partial trees
 
 #|
-   e.g., suppose s corresponds to two rules, pl and 3psg
-         ing to ing, ise to ise and this is
- 0   called on "THEORISINGS" with rules nil, then
- 1     recurse on "THEORISING" with rules (pl)
- 2       recurse on "THEORISE" with rules (ing pl)
- 3         recurse on "THEORY" with rules (ise ing pl)
-             coming back up
- 3         add-morpho-stem-edge a "THEORY", partial-p
- 3         add-new-partial-morph-edge b "THEORY", partial-p (ise) dtr a
- 2	 add-morpho-stem-edge c "THEORISE", partial-p
- 2	 add-new-partial-morph-edge d "THEORISE", partial-p (ing) dtr c 
- 2	 add-new-partial-morph-edge e "THEORY", partial-p (ise ing) dtr b
- 1     add-morpho-stem-edge f "THEORISING", partial-p
- 1     add-new-partial-morph-edge g "THEORISING", not partial-p (pl) dtr f
- 1     add-new-partial-morph-edge h "THEORISE", not partial-p (ing pl) dtr d
- 1     add-new-partial-morph-edge i "THEORY", not partial-p (ise ing pl) dtr e
- 0
- 1     recurse on "THEORISING" with rules (3psg)
- 1     find edges d, e, f
- 1     add-new-partial-morph-edge g "THEORISING", not partial-p (3sg) dtr f
- 1     add-new-partial-morph-edge h "THEORISE", not partial-p (ing 3sg) dtr d
- 1     add-new-partial-morph-edge i "THEORY", not partial-p (ise ing 3sg) dtr e
- 0     add-morpho-stem-edge j "THEORISINGS", not partial-p
- or something like that ...
- |#
-	 
-(defun add-morpho-partial-edges (unanalysed rules from to token-edge)
-#+:pdebug  (format t "~%add-morpho-partial-edges: ~A ~A" unanalysed rules)
-  (let ((daughter-edges
-	 (morpho-partial-edge-match from to unanalysed
-				    (aref *tchart* from 1))))
-        ;;; if already seen "THEORISING", we don't need to
-        ;;; recurse further, we just add in our rules to the 
-        ;;; partial-trees on the collected edges
-    (unless daughter-edges
-      (let ((last-rule-id (caar rules)))
-	(when (if last-rule-id (spelling-rule-feeds-p last-rule-id) t)  
+Redoing this from the initial version:
+
+Partial-tree is a set of partial trees
+(although for now, unpack when we add a stem edge because I don't want to 
+rewrite the rest of the code immediately)
+
+ complication 1 - analyses that have no morphological effect, contributed by
+ irregular forms (or otherwise)
+
+ call on "BET" with rules nil - find passive, psp, past
+    recurse on BET with rules (passive psp past) - if nothing can feed 
+    any of these rules, we will stop there
+
+    complication 2 - rules that extend the length of the string - 
+    e.g. Spanish stems are longer than the inflected forms.  
+    As with null effects, this doesn't matter unless we get into a 
+    recursive situation.
+
+    complication 3 - as we're analysing, we want to block impossible 
+    analyses based on the rule feeding, but when we return to a string 
+    having analysed with different rules, we may need to redo.  
+    This led to a potential bug in the old code.
+
+If affixes always shortened the string, we could order them so that we
+never revisited a string we'd analysed.  i.e. we could search breadth first,
+longest string first.  This isn't the case, but it's probably close enough
+that the potential reanalysis won't hurt.
+
+Use an agenda so that we can investigate possibilities breadth first.
+
+Abstract example:
+
+initial agenda contains
+
+((str (nil)))
+
+this is popped
+
+(morph-analyse-reg-irreg str) =>
+((str1 . r1a)
+ (str1 . r1b)
+ (str2 . r2a)
+ (str2 . r2b)
+ (str . r3a)
+ (str . r3b))
+
+In the agenda, these are packed and sort by length of string - 
+assume str1 > str and str2 < str 
+
+for the special case where the morphological analysis allows a 
+zero affixation, we bypassing the agenda mechanism and
+add them as partial trees to give the set of partial trees 
+(nil (r2a.str) (r2b.str))
+
+(note r1a.str is an abbreviation for (r1a str) here - i.e. the 
+      nodes in partial trees are actually lists of rule and form)
+note also that we need to have the element nil in the partial-tree-set
+
+suppose that r1a feeds r2a.str and r1b.str feeds r2a.str but none 
+of the others feed
+
+agenda
+
+((str1 ((r1a.str) (r1b.str) (r1a.str r2a.str) (r1b.str r2a.str))
+ (str2 ((r2a.str) (r2b.str))))
+
+str1 is top, so we investigate it.  
+
+agenda is
+
+((str2 ((r2a.str) (r2b.str))))
+
+since we pop
+
+Suppose:
+(morph-analyse-reg-irreg str1) =>
+
+((str2 . r2c))
+
+We add to the agenda for str2
+
+((str2 ((r2a.str) (r2b.str) (r2c.str1 r1a.str) (r2c.str1 r1b.str))))
+
+Because the morphophonology could have affixed forms that were shorter
+than the stem, we can't guarantee not to redo work.  For instance,
+in the example above, suppose
+
+(morph-analyse-reg-irreg str2) =>
+((str1 . r2d))
+
+we've taken str1 off the agenda, so we'll end up reanalysing it.
+However, the morphophon results are cached, so the effects are 
+relatively limited.
+
+|#
+
+;;; Morphology agenda
+
+(defmacro make-morph-agenda-item (str partial-tree-set)
+  `(cons ,str ,partial-tree-set))
+
+(defmacro morph-agenda-string (agenda-item)
+  `(car ,agenda-item))
+
+(defmacro morph-agenda-partial-tree-set (agenda-item)
+  `(cdr ,agenda-item))
+
+(defmacro morph-agenda-latest-rules (agenda-item)
+   ;;; WARNING: assumes partial tree is a list!
+  `(loop for pt in (morph-agenda-partial-tree-set ,agenda-item)
+	 collect (pt-node-rule (car pt))))
+
+(defun morph-agenda-match (str)
+  (dolist (item *morph-agenda*)
+    (when (string-equal str (morph-agenda-string item))
+      (return item))))
+
+(defun insert-morph-agenda-item (str partial-tree-set)
+  ;;; if the string matches an existing item, then add the
+  ;;; partial trees into that record.  Otherwise, insert
+  ;;; in string length order, longest first
+  (incf *morph-agenda-tasks*)
+    (if *morph-agenda* 
+	(let* ((strlength (length str))
+	       (checked nil)
+	       (new-agenda
+		(do ((remainder *morph-agenda* (cdr remainder)))
+		    ((not remainder) nil)
+		  (let ((item (car remainder)))
+		    (cond ((> strlength (length (morph-agenda-string item)))
+			   (return 
+			     (append (nreverse checked)
+				     (list
+				      (make-morph-agenda-item 
+				       str 
+				       partial-tree-set))
+				     remainder)))
+			  ((string-equal str (morph-agenda-string item))
+			   (setf (morph-agenda-partial-tree-set item)
+			     (append partial-tree-set
+				     (morph-agenda-partial-tree-set item)))
+			   ;;; don't think we need to test for duplicates here
+			   (return *morph-agenda*))
+			  (t 
+			   (push item checked)))))))
+	  (setf *morph-agenda* 
+	    (or new-agenda 
+		(nreverse 
+		 (cons (make-morph-agenda-item str partial-tree-set)
+		       checked)))))
+	  (setf *morph-agenda* 
+	    (list 
+	     (make-morph-agenda-item str partial-tree-set)))))
+
+;;; end agenda functions
+
+;;; Main code
+
+(defun add-morpho-partial-edges (unanalysed token-edge)
+  (setf *morph-agenda* nil)
+  (setf *morphophon-cache* nil)
+  (insert-morph-agenda-item unanalysed (list nil))
+  (loop (unless *morph-agenda* (return nil))
+    (let* ((agenda-item (pop *morph-agenda*)))
+      (analyse-agenda-item agenda-item token-edge))))
+  
+(defun analyse-agenda-item (agenda-item token-edge)
+  (let* ((unanalysed (morph-agenda-string agenda-item))
+	 (partial-tree-set (morph-agenda-partial-tree-set agenda-item))
+	 (last-rule-ids (morph-agenda-latest-rules agenda-item))
+	 (partial-trees-plus-nulls partial-tree-set))
+    (when (dolist (last-rule-id last-rule-ids)
+	    (when
+		(or (null last-rule-id)
+		    (spelling-rule-feeds-p last-rule-id)) 
+	      (return t)))
 	  ;;; no point continuing to morph-analyse if there's no
 	  ;;; rule that changes morphology that can feed the
-	  ;;; one we've seen
-	  (let* ((one-steps (if *foreign-morph-fn*
-				(apply *foreign-morph-fn* (list unanalysed))
-			      (one-step-morph-analyse unanalysed))))
-;;; (one-step-morph-analyse "CANNED") or the foreign function returns
-;;; (("CAN" . PAST-V_IRULE))
+	  ;;; one we've seen     
+      (let ((one-steps (morph-analyse-reg-irreg unanalysed)))
+	(setf partial-trees-plus-nulls
+	  (null-morphophon-combinations unanalysed
+	   (loop for morph-pair in one-steps
+	       when (string-equal (car morph-pair) unanalysed)
+	       collect (cdr morph-pair))
+	   partial-tree-set))
+;;; (morph-analyse-reg-irreg "CANNED") returns
+;;; (("CAN" . PAST-V_IRULE) ("CAN" . PSP-V_IRULE) ("CANNED" . MY_RULE))
+;;; the new analyses get merged here with each other and the agenda
 	(dolist (morph-pair one-steps)
-	  (let* ((possible-stem (car morph-pair))
-		 (rule (cdr morph-pair)))
-	    (unless (or (and *irregular-forms-only-p* 
-			     (morph-matches-irreg-p possible-stem rule))
-			(and rules
-			     (not (check-lrfsm 
-				   (get-lex-rule-entry last-rule-id)
-				   (get-lex-rule-entry rule)))))
-	      (dolist (edge (add-morpho-partial-edges possible-stem 
-						      (cons 
-						       (list rule unanalysed) 
-						       rules) 
-						      from to
-						      token-edge))
-		(push edge daughter-edges))))))))
-      (let ((new-edge
-	     (add-morpho-stem-edge-from-token-edge 
-	      unanalysed nil token-edge (if rules t nil))))
-	(when new-edge (push new-edge daughter-edges))))
-    ;;; end of fresh analysis
-    (if rules
-	(loop for daughter-edge in daughter-edges
-	    collect
-	      (add-new-partial-morph-edge daughter-edge rules 
-					  from to))
-      daughter-edges)))
+	  (unless (string-equal (car morph-pair) unanalysed)
+	    (let* ((newstr (car morph-pair))
+		   (rule (cdr morph-pair))
+		   (rule-entry (or (get-lex-rule-entry rule)
+				   (error "~%Rule ~A returned from morph analyser is undefined (error in grammar loading?)" rule)))
+		   (ptnode (make-pt-node rule unanalysed))
+		   (new-partial-tree-set
+			(loop for partial-tree in partial-trees-plus-nulls
+			    when
+			      (or 
+				  (null partial-tree)
+				  (check-nosp-feeding 
+				   (get-lex-rule-entry 
+				    (pt-node-rule (car partial-tree)))
+			       ;;; WARNING
+				   rule-entry))
+			    collect 
+			      (progn 
+				(when (>= (length partial-tree)
+					  *maximal-lex-rule-applications*)
+				  (error "~%Probable runaway morphological rule in ~A: analysis aborted ~
+            (see documentation for *maximal-lex-rule-applications*)" partial-tree))
+				(add-pt-node-to-tree ptnode partial-tree)))))
+	      (when new-partial-tree-set
+		(insert-morph-agenda-item newstr new-partial-tree-set)))))))
+    (add-as-unanalysed unanalysed token-edge partial-trees-plus-nulls)))
+    
+(defun add-as-unanalysed (unanalysed token-edge partial-tree-set)
+  ;;; try and terminate the recursion, recording the analyses via
+  ;;; the partial tree mechanism.  Unpack the partial trees and add a 
+  ;;; new edge for each for now.
+  (when (lookup-word *lexicon* unanalysed)
+    (dolist (partial-tree partial-tree-set)
+      (add-morpho-stem-edge-from-token-edge unanalysed partial-tree 
+					    token-edge))))
 
-(defun add-new-partial-morph-edge (daughter-edge rules from to)
-  ;;; This is used in the rule-by-rule case when we've got a stem
-  ;;; In effect, we are now building up from the stem
-  ;;; adding edges bottom-up.  
-  (let* ((new-edge (make-morpho-stem-edge
-			:id (next-edge)
-			:word (morpho-stem-edge-word daughter-edge)
-			:current (second (car rules))
-			:string (morpho-stem-edge-string daughter-edge)
-			:stem (morpho-stem-edge-stem daughter-edge)
-			:partial-tree
-			(append (morpho-stem-edge-partial-tree daughter-edge)
-				(list (car rules)))
-			:leaves 
-			(morpho-stem-edge-leaves daughter-edge)
-			:children (list daughter-edge)
-			:partial-p (if (cdr rules) t nil)
-			:from from
-			:to to
-			:cfrom (morpho-stem-edge-cfrom daughter-edge)
-			:cto (morpho-stem-edge-cto daughter-edge)))
-	 (cc (make-chart-configuration 
-	      :begin from
-	      :edge new-edge
-	      :end to)))
-	(push cc (aref *tchart* from 1))
-	(push cc (aref *tchart* to 0))
-	new-edge))
+(defun morph-analyse-reg-irreg (unanalysed)
+  (or (cdr (assoc unanalysed 
+		  *morphophon-cache* :test #'string-equal))
+      (let* ((res
+	     (if *foreign-morph-fn*
+		 (apply *foreign-morph-fn* (list unanalysed))
+	       (append (find-irregular-morphs unanalysed)
+		       (one-step-morph-analyse unanalysed))))
+	     (filtered-res 
+	      (loop for poss in res
+		  when 
+		    (morph-not-blocked-p unanalysed (car poss)
+					 (cdr poss))
+		  collect poss)))
+	(push (cons unanalysed filtered-res) *morphophon-cache*)
+	filtered-res)))
 
-(defun morpho-partial-edge-match (from to unanalysed cclist)
-  (loop for x in cclist
-      when
-	(and (eql from (chart-configuration-begin x))
-	     (eql to (chart-configuration-end x))
-	     (morpho-stem-edge-p (chart-configuration-edge x))
-	     (equal unanalysed
-		    (morpho-stem-edge-current
-		     (chart-configuration-edge x))))
-      collect (chart-configuration-edge x)))
+(defun morph-not-blocked-p (surface underlying rule)
+  ;;; given a pattern (* ed) (!ty !tied) (e ed) (!t!v!c !t!v!c!ced) 
+  ;;; we may only want to match the most specific case
+  ;;; for instance, given `hated' we don't want to match this to the
+  ;;; stem `hat' because it should have the (!t!v!c !t!v!c!ced) pattern
+  ;;; Similarly, if we have an irregular form `slept' we don't
+  ;;; want to match `sleeped'
+  ;;; *irregular-forms-only-p* (if only for backward compatibility)
+  (or *foreign-morph-fn*
+      ;;; we assume no blocking with external morphology
+      (if (or *most-specific-only-p* *irregular-forms-only-p*)
+	  (let* ((irreg-surface-list
+		  (morph-matches-irreg-list underlying rule)))
+	    (if irreg-surface-list
+	    ;;; only OK if the specified form is one of the irregular
+	    ;;; forms
+		(member surface irreg-surface-list :test #'equal)
+	      ;; no irreg form
+	      (if *most-specific-only-p*
+	      ;;; then we need to see if we have the most specific pattern
+	      ;;; which we can just get by calling morph-generate
+	      ;;; A more sophisticated version might allow multiple results
+	      ;;; here
+		  (let ((most-specific
+			 (morph-generate underlying rule)))
+		    (equal surface most-specific))
+	      ;;; otherwise only *irregular-forms-only-p*
+	      ;;; is set and we're only blocking by irregulars, so 
+	      ;;; we're OK here
+		t)))
+    ;;; we're not doing any blocking so it's OK
+	t)))
+	  
 
+(defun null-morphophon-combinations (unanalysed null-rules partial-tree-set)
+  ;;; we have a set of rules that can apply to a string without
+  ;;; morphophonological effect.  While such rules would normally be
+  ;;; specified as lexical, special cases of morphophonologically active
+  ;;; rules (irregulars in particular) may arise here.  We filter these
+  ;;; out from the usual agenda mechanism, to prevent looping.
+  ;;; 
+  ;;; returns a set of partial-trees
+    (append partial-tree-set
+	    (apply-morph-null-rules partial-tree-set null-rules
+				    unanalysed)))
+				    
 
-(defun add-morpho-stem-edge-from-token-edge (stem partial-tree token-edge partial-p)  
+(defun apply-morph-null-rules (partial-tree-set null-rules unanalysed)
+  (let ((new-pt-set
+	 (loop for null-rule in null-rules
+	     for rule-entry = (get-lex-rule-entry null-rule)
+	     for ptnode = (list null-rule unanalysed)
+	     nconc
+	       (loop for partial-tree in partial-tree-set
+		   when
+		     (or (null partial-tree)
+			 (check-nosp-feeding
+			  (get-lex-rule-entry 
+			   (pt-node-rule (car partial-tree)))
+			       ;;; WARNING
+			  rule-entry))
+		   collect
+		     (progn 
+		       (when (>= (length partial-tree)
+				 *maximal-lex-rule-applications*)
+			 (error "~%Probable runaway morphological rule in ~A: analysis aborted ~
+            (see documentation for *maximal-lex-rule-applications*)" partial-tree))
+		       (add-pt-node-to-tree ptnode partial-tree))))))
+    (if new-pt-set
+	(append new-pt-set
+		(apply-morph-null-rules new-pt-set
+					null-rules unanalysed))
+      nil)))
+
+  
+
+;;; end stuff specific to the :default and :external-rule-by-rule case
+
+(defun add-morpho-stem-edge-from-token-edge (stem partial-tree token-edge)  
   ;;; This is called from the version with the rule-by-rule morphology
   ;;; (for the irregs and as the base case with regular morphology).
   ;;; It is also called when we have a version of morphology
@@ -838,31 +1055,32 @@
   ;;; But most of the work is done in add-morpho-stem-edge
   ;;; which is called from the sppp stuff (i.e. external
   ;;; tokeniser and partial tree morphology).
-  ;;;
-  ;;; partial-p is set when this edge is added from inside the
-  ;;; recursive add-morpho-partial-edges - This indicates that
-  ;;; rules specified by the morphological analysis are missing.
+  ;;; The macro with-slots establishes a lexical environment for 
+  ;;; referring to the slots in token-edge as though they were variables
+  ;;; with the given slot name.  
   (with-slots (from to word string cfrom cto leaves) token-edge
     (add-morpho-stem-edge
      stem partial-tree from to word string cfrom cto 
-     leaves token-edge partial-p)))
+     leaves token-edge)))
 
 (defun add-morpho-stem-edge (stem partial-tree 
 			     from to word string cfrom cto tleaves
-			     tedge partial-p)
+			     tedge)
+  ;;; this is the (re)entry point for the sppp code
+  ;;;
   ;;; Copy most of token-edge
   ;;; Add partial-tree and stem
   ;;; Put into chart at same places
   (if
-      (and (lookup-word *lexicon* stem)
-	   (or (not (cdr partial-tree))
-	       (not (member *morph-option* '(:external-partial-tree 
-					     :with-tokeniser-partial-tree)))
-		    ;; this is checked elsewhere if we're proceeding
-		    ;; rule-by-rule
-	       (check-rule-filter-morph partial-tree string))
-	   (not (morpho-stem-edge-match 
-		 from to stem partial-tree partial-p (aref *tchart* from 1))))
+      (and 
+       (or (member *morph-option* '(:default :external-rule-by-rule))
+	   ;;; if we're proceeding rule by rule we've already
+	   ;;; done this checking
+	   (and (lookup-word *lexicon* stem)
+		(or (max-one-deep-p partial-tree)
+		    (check-rule-filter-morph partial-tree string))))
+       (not (morpho-stem-edge-match 
+		 from to stem partial-tree (aref *tchart* from 1))))
       (let* ((new-edge (make-morpho-stem-edge
 			:id (next-edge)
 			:word word
@@ -876,8 +1094,7 @@
 			:from from
 			:to to
 			:cfrom cfrom
-			:cto cto
-			:partial-p partial-p))
+			:cto cto))
 	     (cc (make-chart-configuration :begin from
 					   :edge new-edge
 					   :end to)))
@@ -887,20 +1104,17 @@
     nil))
 
 ;; cclist = edges leaving 'from'
-(defun morpho-stem-edge-match (from to stem partial-tree partial-p cclist)
+(defun morpho-stem-edge-match (from to stem partial-tree cclist)
   (dolist (x cclist)
     ;; for each edge
     (when
 	(and (eql from (chart-configuration-begin x))
 	     (eql to (chart-configuration-end x))
 	     (morpho-stem-edge-p (chart-configuration-edge x))
-	     (eq partial-p
-		 (morpho-stem-edge-partial-p
-		     (chart-configuration-edge x)))
 	     (equal stem
 		    (morpho-stem-edge-stem
 		     (chart-configuration-edge x)))
-	     (tree-equal partial-tree
+	     (partial-trees-equal partial-tree
 			 (edge-partial-tree
 			  (chart-configuration-edge x))))
       (return-from morpho-stem-edge-match x))))
@@ -928,28 +1142,34 @@
 			  (list word))
 		   :test #'equalp))
 		 ;; filter-for-irregs is in rules.lsp
-		 (find-irregular-morphs word) :test #'equalp)))
+		 (find-irregular-morphs-old word) :test #'equalp)))
 	  (dolist (morph-spec morph-specs)
 	    (add-morpho-stem-edge-from-token-edge 
 	     (car morph-spec)
 	     (cdr morph-spec)
-	     token-edge nil)))))))
+	     token-edge)))))))
 
 ;;; *foreign-morph-fn* is assumed to return something like
 ;;; ("A" (RULE1 "AB") (RULE2 "ABC"))
 ;;; as the old morph-analyse did
 
-(defun check-rule-filter-morph (rule-info-list string)
-  ;;; This is called with a list of rules that will be
+;;; *************************************************************
+;;; this stuff is only for the case where we have not done the
+;;; morphophonology rule by rule
+
+
+(defun check-rule-filter-morph (partial-tree string)
+  ;;; This is called with a partial-tree that will be
   ;;; tried later on in the parser proper.
   ;;; Make sure we can get actual rules, and, if we can,
   ;;; filter impossible combinations now according to the
   ;;; rule filter.
   ;;;
-  (let ((rules 
-	 (loop for rule-info in rule-info-list ;;= partial-tree
+  ;;; WARNING: assumes partial tree is a list!
+  (let ((rule-entries 
+	 (loop for rule-info in partial-tree
 	     collect
-	       (let* ((rule-id (first rule-info))
+	       (let* ((rule-id (pt-node-rule rule-info))
 		      (rule-entry (get-lex-rule-entry rule-id)))
 		 (or rule-entry
 		     (progn 
@@ -958,20 +1178,22 @@
                                        morphology for ~A was not found"
 			       rule-id string)
 		       (return-from check-rule-filter-morph nil)))))))
-    (check-rule-filter-morph-aux rules)))
+    (check-rule-filter-morph-aux rule-entries)))
 	
 (defun check-rule-filter-morph-aux (rule-list)
   (if (cdr rule-list)
       (let ((first-rule (car rule-list)))
 	(dolist (other (cdr rule-list))
-	  (unless (check-lrfsm other first-rule)
+	  (unless (check-nosp-feeding other first-rule)
 	    (return-from check-rule-filter-morph-aux nil)))
 	t)
     t))
-	
+
+;;; end of Phase 2 code
+
 ;;; *****************************************************
 ;;;
-;;; Lexical lookup and MWEs
+;;; Lexical lookup and MWEs - Phase 3
 ;;;
 ;;; *****************************************************
 
@@ -987,12 +1209,11 @@
   (dotimes (current *tchart-max*)
     (dolist (cc (aref *tchart* current 1))
       (let ((edge (chart-configuration-edge cc)))
-	(when (and (morpho-stem-edge-p edge)
-		   (not (morpho-stem-edge-partial-p edge)))
+	(when (morpho-stem-edge-p edge)
 	  (add-single-and-multiple-senses edge)))))
   ;;; FIX - the active-parser doesn't necessarily
   ;;; put the stem edges directly onto the chart - need
-  ;;; to find out how else to check them
+  ;;; to find out how else to check them to get warning messages
   (unless (and *active-parsing-p*
 	       (or *first-only-p* *chart-dependencies*))
       (check-stem-coverage *tchart-max*)))
@@ -1130,7 +1351,6 @@
 	      (when
 		  (and 
 		   (morpho-stem-edge-p edge)
-		   (not (morpho-stem-edge-partial-p edge))
 		   (equal entry-stem (morpho-stem-edge-stem edge))
 		   (if (eql (length remaining-words)
 			    inflection-position)
@@ -1214,7 +1434,7 @@ an unknown word, treat the gap as filled and go on from there.
 
 ;;; *****************************************************
 ;;;
-;;; Morphosyntax
+;;; Morphosyntax interaction with phase 4
 ;;;
 ;;; Morphological and lexical rule application
 ;;;
@@ -1232,14 +1452,15 @@ an unknown word, treat the gap as filled and go on from there.
 ;;; rules can apply any time.
 
 (defun find-spelling-info (edge)
+  ;;; WARNING - assumes partial tree is a list
   (let* ((partial-tree (edge-partial-tree edge)))
     ;;; list of (rule "FORM")
     (if partial-tree
 	(let* ((current-rule-info (first partial-tree))
-	       (new-orth (second current-rule-info))
+	       (new-orth (pt-node-string current-rule-info))
 	       (orth-tdfs (when new-orth 
 			    (make-orth-tdfs new-orth)))
-	       (rule-id (first current-rule-info))
+	       (rule-id (pt-node-rule current-rule-info))
 	       (rule-entry (get-lex-rule-entry rule-id)))
 	  (if rule-entry
 	      (values rule-entry orth-tdfs (rest partial-tree))
@@ -1287,7 +1508,7 @@ an unknown word, treat the gap as filled and go on from there.
 
 ;;; **************************************************************
 ;;;
-;;; Parsing
+;;; Parsing - Phase 4 proper
 ;;;
 ;;; *************************************************************
 
@@ -1523,6 +1744,7 @@ an unknown word, treat the gap as filled and go on from there.
 			       (edge-partial-tree (first edge-list))
 			       ;; should be unary-rule if there is a partial
 			       ;; tree (worry about compounds later ...)
+			       ;; WARNING
 			       )))
               #+pdebug (format t " ... success.~%")
               (activate-context left-vertex new-edge right-vertex f)
@@ -1788,14 +2010,13 @@ an unknown word, treat the gap as filled and go on from there.
 	 (if (morpho-stem-edge-p edge)
 	     (format nil "~A+~{~A ~}" (morpho-stem-edge-stem edge) 
 		     (mapcar #'(lambda (rule-spec)
-				 (concise-rule-name (car rule-spec)))
+				 (concise-rule-name (pt-node-rule rule-spec)))
 			     (morpho-stem-edge-partial-tree edge)))
+	   ;;; WARNING - assume partial-tree is a list
 	   (concise-edge-label edge)))
        (edge-leaves edge)
        (cond 
 	;; ((token-edge-p edge) " T")
-	((and (morpho-stem-edge-p edge) 
-	      (morpho-stem-edge-partial-p edge))" p")
 	(roots "*")
 	(t ""))
        (or (loop for child in (edge-children edge) collect (edge-id child))

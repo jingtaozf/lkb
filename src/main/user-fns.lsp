@@ -168,11 +168,10 @@
 ;;; trying to apply a rule which affects spelling and
 ;;; which should therefore only be applied by the morphology
 ;;; system.  
-;;; this version tests for
-;;; < NEEDS-AFFIX > = true
-;;; in the rule
-  (let ((affix (get-dag-value (tdfs-indef (rule-full-fs rule)) 'needs-affix)))
-    (and affix (bool-value-true affix))))
+  (unless (eql *morph-option* :default)
+    (error "~%This code assumes that the LKB morphophonology analyser is in use,so will only work if *morph-option* is set to :default - please 
+redefine the function spelling-change-rule-p as appropriate"))
+  (in-morph-rule-set-p rule))
 
 (defun redundancy-rule-p (rule)
 ;;; a function which is used to prevent the parser 
