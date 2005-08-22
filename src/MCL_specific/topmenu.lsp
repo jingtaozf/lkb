@@ -157,6 +157,4 @@
 (defun parse-sentences-batch nil
   (parse-sentences))
 
-(defun do-parse-batch nil
-  (do-parse))
 

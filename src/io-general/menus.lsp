@@ -30,6 +30,7 @@
                       ;; parse
                       #+:ltemplates
                       lkb::parse-with-preprocessor
+		      lkb::do-parse
 		      lkb::show-parse 
 		      lkb::show-chart 
 		      lkb::compare-parses
@@ -127,7 +128,7 @@
                                           :menu-items                       
                                           (list 
                                            (make-menu-item :name "Parse input..."
-                                                           :value 'do-parse-batch)
+                                                           :value 'do-parse)
                                            (make-menu-item :name "Redisplay parse"
                                                            :value 'show-parse)
                                            (make-menu-item :name "Show parse chart"
@@ -220,7 +221,7 @@
                  :menu-items                       
                   (list 
                      (make-menu-item :name "Parse input..."
-                        :value 'do-parse-batch)
+                        :value 'do-parse)
                      #+:ltemplates
                      (make-menu-item :name "Parse file..."
                         :value 'parse-with-preprocessor)

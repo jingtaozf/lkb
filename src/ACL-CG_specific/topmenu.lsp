@@ -234,7 +234,5 @@
   ;;; for MCL this can just be parse-sentences
   (mp:process-run-function "Batch parse" #'parse-sentences))
 
-(defun do-parse-batch nil
-  ;;; for MCL this can just be do-parse
-  (mp:process-run-function "Parse" #'do-parse))
+
 

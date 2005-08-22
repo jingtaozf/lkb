@@ -378,15 +378,6 @@
   ;;; for MCL this can just be parse-sentences
   (mp:run-function "Batch parse" #'lkb::parse-sentences))
 
-#|
-(defun do-parse-batch nil
-  ;;; for MCL this can just be do-parse
-  (mp:run-function "Parse" #'lkb::do-parse))
-|#
-
-(defun do-parse-batch nil
-  (lkb::do-parse))
-
 ;; Direct output to LKB window, if present
 
 (defun invoke-with-output-to-top (body)
