@@ -37,6 +37,13 @@
                        (file-position istream))
                  rest)))
 
+(defun morph-read-cerror (string)
+  ;;; variant of above for morphology rules
+  (setf *syntax-error* t)
+  (format t "~A" string)
+  nil)
+  
+
 (defun ignore-rest-of-entry (istream name)
   ;;; called after a continuable error
   ;;; looks for . followed by a newline etc, 
@@ -235,7 +242,7 @@
       (when (lui-status-p) (lui-parameters))
       (lkb-beep)
       (if *syntax-error*
-        (format t "~%WARNING: syntax error(s) - check messages")
+        (format t "~%WARNING: error(s) - check messages")
         (format t "~%Grammar input complete~%"))))))
 
 
