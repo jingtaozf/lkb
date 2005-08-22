@@ -4,7 +4,8 @@
 ;;; handling and morphology components of the LKB.  
 ;;; This code calls the script in such a way as to load different
 ;;; versions of the rules and then calls appropriate tests, writing the
-;;; results to a file.  This is compared to a reference version.
+;;; results to a file.  This can be compared to a reference version
+;;; - e.g., the version checked into CVS using cvs diff
 
 (defparameter *infl-variant* "basic")
 
