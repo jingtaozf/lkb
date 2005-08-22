@@ -351,12 +351,12 @@
       with end = (chart-configuration-end passive)
       with orthographemics = (edge-partial-tree edge)
       for rule in (if orthographemics
-                    (let* ((next (first (first orthographemics)))
+                    (let* ((next (pt-node-rule (first orthographemics)))
                            (rule (get-lex-rule-entry next)))
                       (unless next
                         (error
                          "postulate(): ~a requires unknown rule `~(~a~)'.~%"
-                         next))
+                         passive next))
                       (cons rule
                             (loop
                                 for foo in *parser-lexical-rules*

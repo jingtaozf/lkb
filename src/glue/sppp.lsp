@@ -111,7 +111,7 @@
 	;;; but let's get it working first
 	(dolist (morph-poss analyses)
 	  (add-morpho-stem-edge (car morph-poss) (cdr morph-poss) i (+ 1 i) 
-				form form from to nil nil nil))))
+				form form from to nil nil))))
 
 
 (defun sppp (text &key (stream *sppp-stream*))
