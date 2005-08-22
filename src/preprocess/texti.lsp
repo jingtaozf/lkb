@@ -453,7 +453,8 @@
     
     (loop
 	for medge in medges
-	when (not (morpho-stem-edge-partial-p medge))
+;;;     partial-p has gone - AAC
+;;;	when (not (morpho-stem-edge-partial-p medge))
 	do (format strm "~a" (medge-to-transition-xml medge)))
     
     (format strm "</fsm>")
