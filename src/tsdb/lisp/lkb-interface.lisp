@@ -203,13 +203,14 @@
          ;;
          (setf *sentence* string)
          (reset-packings)
-         (multiple-value-bind (e-tasks s-tasks c-tasks f-tasks)
+         (multiple-value-bind (e-tasks s-tasks c-tasks f-tasks m-tasks)
              (tsdb::time-a-funcall
               #'(lambda () (parse-tsdb-sentence sent trace))
               #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
                  (declare (ignore ignore))
                  (setq tgc (+ tgcu tgcs) tcpu (+ tu ts) treal tr
                        conses (* scons 8) symbols (* ssym 24) others sother)))
+	  (declare (ignore m-tasks))
           (let* ((*print-pretty* nil) (*print-level* nil) (*print-length* nil)
                  (output (get-output-stream-string str))
                  (unifications *unifications*)
