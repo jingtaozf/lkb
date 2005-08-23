@@ -12,7 +12,7 @@
 
 ;;; Add a PG menu to the emacs menu bar
 
-(defvar *lexdb-pg-interface-version* "2.06")
+(defvar *lexdb-pg-interface-version* "2.07")
 
 (require 'cl)      ; we use some common-lisp idioms
 (require 'widget)

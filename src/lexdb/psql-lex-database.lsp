@@ -1142,11 +1142,17 @@
       )))
 
 (defmethod vacuum ((lex psql-lex-database))
-  (let (time)
+  (let (time client-min-messages)
     (format t "~&(LexDB) performing vacuum/analyze on database (as user ~a)..." (user lex))
     (force-output)
     (setf time (get-internal-real-time))
+    (setf client-min-messages 
+      (caar (recs (get-records *lexdb* "show client_min_messages;"))))
+    (run-command lex "set client_min_messages to error") 
     (run-command lex "vacuum full analyze")
+    (run-command lex (format nil
+			     "set client_min_messages to ~a" 
+			     client-min-messages))
     (format t "~&(LexDB) vacuum/analyze complete [~F sec]" 
 	    (/ (- (get-internal-real-time) time) internal-time-units-per-second))
     ))
