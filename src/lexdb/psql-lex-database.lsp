@@ -132,23 +132,31 @@
 ;;; (used to index for generator)
 (defmethod lex-words ((lex psql-lex-database))
   (mapcar #'(lambda (x) (string-upcase (car x)))
-	  (get-raw-records *lexdb* "select distinct key from rev_key_all")))
+	  (get-raw-records *lexdb* "select distinct key from lex_key")))
+;	  (get-raw-records *lexdb* "select distinct key from rev_key_all")))
 
-(defmethod rev-key-p ((lex psql-lex-database))
-  (string= "t" (sql-fn-get-val lex :rev_key_p)))
+;(defmethod rev-key-p ((lex psql-lex-database))
+;  (string= "t" (sql-fn-get-val lex :rev_key_p)))
   
 (defmethod regenerate-orthkeys ((lex psql-lex-database))
-  (run-command lex "DELETE FROM rev_key")
-  (generate-missing-orthkeys :from :rev))
+;  (run-command lex "DELETE FROM rev_key")
+  (run-command lex "DELETE FROM lex_key")
+  (get-raw-records lex "SELECT * FROM public.deindex_lex_key()")
+  (generate-missing-orthkeys lex :from :lex :to :lex_key)
+  (get-raw-records lex "SELECT * FROM public.index_lex_key()")  
+  )
 
 (defmethod generate-missing-orthkeys ((lex psql-lex-database) 
-				      &key (from "rev natural left join rev_key where rev_key.key is null")
+				      &key 
+				      ;(from "rev natural left join rev_key where rev_key.key is null")
+				      (from "lex natural left join lex_key where lex_key.key is null")
+				      (to :lex_key)
 					   quiet)
   (lexdb-time ("generating missing keys" "done generating missing keys")
-	      (let ((new-rev-key-lines (generate-orthkeys-COPY-str lex :from from :quiet quiet)))
-		(when new-rev-key-lines
-		  (run-command-stdin lex "COPY rev_key FROM stdin"
-				     (make-string-input-stream new-rev-key-lines))))))
+	      (let ((new-key-lines (generate-orthkeys-COPY-str lex :from from :quiet quiet)))
+		(when new-key-lines
+		  (run-command-stdin lex (format nil "COPY ~a FROM stdin" to)
+				     (make-string-input-stream new-key-lines))))))
 
 (defmethod generate-orthkeys-COPY-str ((lex psql-lex-database) &key from quiet)
   (unless from
@@ -493,9 +501,11 @@
 	      (equal (get-filter lex) filter))
     (reconnect lex) ;; must reconnect to avoid server bug...
     (force-output)
-    (sql-fn-get-val lex 
-		    :update_lex 
-		    :args (list filter))
+    (and
+     (sql-fn-get-val lex 
+		     :update_lex 
+		     :args (list filter))
+     (regenerate-orthkeys lex))
     (empty-cache lex)))
 
 ;;;
@@ -637,9 +647,11 @@
 
 ;; called from pg-interface
 (defmethod new-entries ((lex psql-lex-database))
-  (let ((records (sql-fn-get-raw-records lex 
-				  :rev_new
-				  :fields '(:userid :name :modstamp))))
+;  (let ((records (sql-fn-get-raw-records lex 
+;				  :rev_new
+;				  :fields '(:userid :name :modstamp))))
+  (let ((records (get-raw-records lex
+				  (format nil "SELECT userid,name,modstamp FROM public.tmp"))))
     (cons (list "userid" "name" "modstamp") records)))
 
 (defmethod current-timestamp ((lex psql-lex-database))
@@ -676,8 +688,8 @@
 				symb-list
 				(ordered-val-list symb-list psql-le))) ;; tmp contains new entry only
     (generate-missing-orthkeys lex :from :tmp :quiet t) ;; use new entry stored in tmp
-    (sql-fn-get-val lex :update_entry_2
-		    :args (list (retr-val psql-le :name)))
+;    (sql-fn-get-val lex :update_entry_2
+;		    :args (list (retr-val psql-le :name)))
     		 
     (unless
 	(check-lex-entry (str-2-symb (retr-val psql-le :name))
@@ -875,9 +887,12 @@
     (reconnect lex) ;; work around server bug
     (cond 
      ((not (user-read-only-p lex (user lex)))
-      (sql-fn-get-raw-records lex 
-			      :update_lex 
-			      :args (list (get-filter lex))))
+      (and
+       (sql-fn-get-raw-records lex 
+			       :update_lex 
+			       :args (list (get-filter lex)))
+       (regenerate-orthkeys lex))
+      )
      (t
       (format t "~&(LexDB) user ~a has read-only privileges" (user lex))))    
   (format t "~&(LexDB) filter = ~a " (get-filter lex))
@@ -938,32 +953,35 @@
 (defmethod scratch-records ((lex psql-lex-database))
   (sql-fn-get-raw-records lex :rev))
 
-(defmethod merge-rev-rev-key ((lex psql-lex-database) rev-filename)
+(defmethod merge-rev ((lex psql-lex-database) rev-filename)
   ;; empty temporary tables
   (run-command lex "DELETE FROM tmp")
-  (run-command lex "DELETE FROM tmp_key")
+  ;(run-command lex "DELETE FROM tmp_key")
   (with-lexdb-user-lexdb (lex2 lex)
     ;; vacuum at start
     (vacuum lex2)
-    (let ((rev-key-filename (concatenate 'string rev-filename "_key"))
-	  count-new)
+    (let (
+	  ;(rev-key-filename (concatenate 'string rev-filename "_key"))
+	  count-new
+	  )
       ;;;
       ;; populate temporary tables
       ;;;
       (lexdb-time ("populating temporary tables" "done populating temporary tables")
 		  (run-command-stdin-from-file lex "COPY tmp FROM stdin" rev-filename)
-		  (if (probe-file rev-key-filename)
-		      (run-command-stdin-from-file lex "COPY tmp_key FROM stdin" rev-key-filename)))
+		  ;(if (probe-file rev-key-filename)
+		  ;    (run-command-stdin-from-file lex "COPY tmp_key FROM stdin" rev-key-filename))
+		  )
       ;;;
       ;; update main tables
       ;;;
-      (lexdb-time ("copying into 'rev' and 'rev_key' tables" "done copying into 'rev' and 'rev_key' tables")
-		  (sql-fn-get-val lex :merge_public_rev_rev_key_from_tmp_tmp_key)    
-		  (setf count-new (read-from-string (caar (get-raw-records *lexdb* "SELECT count(*) from rev_new")))))
+      (lexdb-time ("copying into 'rev' table" "done copying into 'rev' table")
+		  (sql-fn-get-val lex :merge_public_rev_from_tmp)    
+		  (setf count-new (read-from-string (caar (get-raw-records *lexdb* "SELECT count(*) from public.tmp")))))
       
       (format t "~&(LexDB) ~a new 'rev' entries" count-new)
       (make-field-map-slot lex2)
-      (generate-missing-orthkeys lex2)
+      ;(generate-missing-orthkeys lex2)
       ;; vacuum at end
       (vacuum lex2)
       count-new)))
@@ -1129,11 +1147,11 @@
 	(make-field-map-slot lex))
        (t
 	(format t "~&(LexDB) WARNING:  cannot find file ~a" dfn-filename)))
-      ;; rev/rev_key tables
+      ;; rev table
       (cond
        ((probe-file rev-filename)
-	(merge-rev-rev-key lex2 rev-filename)
-	(setf count-new (read-from-string (caar (get-raw-records *lexdb* "SELECT count(*) from rev_new")))))
+	(merge-rev lex2 rev-filename)
+	(setf count-new (read-from-string (caar (get-raw-records *lexdb* "SELECT count(*) from public.tmp")))))
        (t
 	(format t "~&(LexDB) WARNING:  cannot find file ~a" rev-filename)))
       (if (or (null count-new) (equal count-new 0))
@@ -1317,13 +1335,13 @@
   t)
 
 (defmethod dump-rev ((lex psql-lex-database) filebase)
-  (sql-fn-get-val lex :dump_public_rev_rev_key_to_tmp_tmp_key)
+  (sql-fn-get-val lex :dump_public_rev_to_tmp)
   (run-command-stdout-to-file lex "COPY tmp TO stdout" 
 			      (namestring (pathname (format nil "~a.rev" 
 							    filebase))))
-  (run-command-stdout-to-file lex "COPY tmp_key TO stdout" 
-			      (namestring (pathname (format nil "~a.rev_key" 
-							    filebase))))
+;  (run-command-stdout-to-file lex "COPY tmp_key TO stdout" 
+;			      (namestring (pathname (format nil "~a.rev_key" 
+;							    filebase))))
   t)
 
 (defmethod dump-dfn ((lexdb psql-lex-database) filebase)
@@ -1360,7 +1378,10 @@
   (sql-fn-get-records lex :clear_rev)
   (empty-cache lex)
   (reconnect lex) ;; work around server bug
-  (sql-fn-get-records lex 
-		      :update_lex 
-		      :args (list (get-filter lex))))
+  (and
+   (sql-fn-get-records lex 
+		       :update_lex 
+		       :args (list (get-filter lex)))
+   (regenerate-orthkeys lex))
+  )
 

@@ -15,19 +15,6 @@ CREATE OR REPLACE FUNCTION public.list_fld() RETURNS SETOF text AS '
 	SELECT t1 FROM return_field_info2(\'public\',\'rev\');
 ' LANGUAGE sql;
 
---CREATE OR REPLACE FUNCTION public.pub_fns() RETURNS SETOF text AS '
---DECLARE
---	x RECORD;
---BEGIN
---	FOR x IN
---		SELECT val FROM public.meta WHERE var=\'pub-fn\'
---		LOOP
---		RETURN NEXT x.val;
---	END LOOP;
---	RETURN;
---END;
---' LANGUAGE plpgsql;
-
 --
 -- psql server version
 --
@@ -123,19 +110,19 @@ BEGIN
 	INSERT INTO meta VALUES (\'build_time\',\'\');
  	
 	CREATE TABLE tmp AS SELECT * FROM public.rev WHERE NULL;
- 	CREATE TABLE tmp_key AS SELECT * FROM public.rev_key WHERE NULL;
  
  	CREATE TABLE rev AS SELECT * FROM public.rev WHERE NULL;
- 	--EXECUTE \'CREATE UNIQUE INDEX rev_name_userid_modstamp ON rev (name,userid,modstamp)\';
 	PERFORM index_rev(); 
 	GRANT SELECT ON rev TO lexdb;
-	
-	CREATE TABLE rev_key AS SELECT * FROM public.rev_key WHERE NULL;
-	GRANT SELECT ON rev_key TO lexdb;
 
  	CREATE TABLE lex AS SELECT * FROM public.rev WHERE NULL;
  	PERFORM index_lex();
-	CREATE TABLE lex_key AS SELECT * FROM public.rev_key WHERE NULL;
+	CREATE TABLE lex_key (
+		name TEXT NOT NULL,
+		userid TEXT DEFAULT user NOT NULL,
+		modstamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+		key text NOT NULL
+		);
  	PERFORM index_lex_key();
 
 	-- views
@@ -143,11 +130,6 @@ BEGIN
 		AS SELECT * FROM public.rev 
 			UNION 
  			SELECT * FROM rev;
-
-	CREATE VIEW rev_key_all
-		AS SELECT * FROM public.rev_key 
-			UNION 
- 			SELECT * FROM rev_key;
 
  	CREATE VIEW filt AS SELECT * FROM rev_all WHERE NULL;
 	CREATE TABLE filt_tmp AS SELECT * FROM filt WHERE NULL;
@@ -200,10 +182,12 @@ BEGIN
 	IF new_filter != current_filter THEN
  		EXECUTE \'UPDATE meta SET val= \' || quote_literal(new_filter) || \' WHERE var=\'\'filter\'\'\';
    		EXECUTE \'SELECT build_lex()\';
+		RETURN true;
 	ELSIF mod_time() > build_time() THEN
    		EXECUTE \'SELECT build_lex()\';
+		RETURN true;
  	END IF;
- 	RETURN true;
+ 	RETURN false;
 END;
 ' LANGUAGE plpgsql;
 
@@ -237,21 +221,8 @@ BEGIN
 	DROP INDEX filt_tmp_modstamp;
 	DELETE FROM filt_tmp;
 
-	-- recreate lex_key
-	PERFORM public.deindex_lex_key();
-	DELETE FROM lex_key;
-	INSERT INTO lex_key
-		SELECT rev_key_all.* 
-		FROM rev_key_all JOIN lex USING (name,userid,modstamp);
-	PERFORM public.index_lex_key();
-
 	-- set build time 
 	PERFORM register_build_time();
-
-	--DELETE FROM meta WHERE var=\'build_time\';
-	--INSERT INTO meta VALUES (\'build_time\',current_timestamp);
-	--b_time := (SELECT build_time());
-	--RAISE DEBUG \'build time: %\', b_time;
 
 	RETURN true;
 END;'
@@ -311,7 +282,7 @@ END;
 --
 --
 
-CREATE OR REPLACE FUNCTION public.merge_public_rev_rev_key_from_tmp_tmp_key() RETURNS integer AS 
+CREATE OR REPLACE FUNCTION public.merge_public_rev_from_tmp() RETURNS integer AS 
 '
 DECLARE
 	count_new int;
@@ -327,20 +298,15 @@ BEGIN
 		RAISE EXCEPTION \'Entries to merge contain % duplicated instance(s) of <name,userid,modstamp>\', num_dups;
 	END IF;
 
- 	DELETE FROM rev_new;
-	INSERT INTO rev_new
---		SELECT * FROM (SELECT DISTINCT name,userid,modstamp FROM public.tmp EXCEPT SELECT name,userid,modstamp FROM public.rev) AS t1 NATURAL JOIN public.tmp;
-		SELECT * FROM (SELECT name,userid,modstamp FROM public.tmp EXCEPT SELECT name,userid,modstamp FROM public.rev) AS t1 NATURAL JOIN public.tmp;
+	DELETE FROM tmp WHERE (name,userid,modstamp) IN (SELECT name,userid,modstamp FROM rev);
 	DROP INDEX tmp_name_userid_modstamp;
-	DELETE FROM public.tmp;
 
-	count_new := (SELECT count(*) FROM rev_new);
+	count_new := (SELECT count(*) FROM tmp);
 	IF count_new > 0 THEN
  		PERFORM public.deindex_public_rev();
 
 		RAISE DEBUG \'Inserting new % entries into public.rev\', count_new;
-		INSERT INTO public.rev SELECT * FROM rev_new;
-		INSERT INTO public.rev_key SELECT tmp_key.* FROM tmp_key JOIN rev_new USING (name,userid,modstamp); 
+		INSERT INTO public.rev SELECT * FROM tmp;
 
  		PERFORM public.index_public_rev();
 		PERFORM register_mod_time();
@@ -370,7 +336,6 @@ BEGIN
  		DELETE FROM dfn WHERE mode IN (SELECT DISTINCT mode FROM public.tmp_dfn);
 		INSERT INTO dfn
   			SELECT * FROM public.tmp_dfn;
-		--PERFORM register_mod_time();
  	END IF;
  	RETURN num_new;
 END;
@@ -380,15 +345,11 @@ END;
 --
 --
 
-CREATE OR REPLACE FUNCTION public.dump_public_rev_rev_key_to_tmp_tmp_key() RETURNS boolean AS '
+CREATE OR REPLACE FUNCTION public.dump_public_rev_to_tmp() RETURNS boolean AS '
 BEGIN
 	RAISE DEBUG \'creating ordered copy of public.rev in tmp\';
 	DELETE FROM tmp;
 	INSERT INTO tmp SELECT * FROM public.rev ORDER BY name, userid, modstamp;
-
-	RAISE DEBUG \'creating ordered copy of public.rev_key in tmp_key\';
-	DELETE FROM tmp_key;
-	INSERT INTO tmp_key SELECT * FROM public.rev_key ORDER BY name, userid, modstamp,key;
 
 	RETURN true;
 END;
@@ -417,12 +378,6 @@ END;
 ' LANGUAGE plpgsql;
 
 
---CREATE OR REPLACE FUNCTION public.current_timestamp() RETURNS text AS '
---BEGIN
---	RETURN current_timestamp;
---END;
---' LANGUAGE plpgsql;
-
 --
 --
 --
@@ -434,19 +389,6 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
---CREATE OR REPLACE FUNCTION public.lex_id_set() RETURNS SETOF text AS '
---DECLARE
---	x RECORD;
---BEGIN
---	FOR x IN
---		SELECT DISTINCT name FROM lex
---		LOOP
---		RETURN NEXT x.name;
---	END LOOP;
---	RETURN;
---END;
--- ' LANGUAGE plpgsql;
-
 --
 -- 
 --
@@ -455,7 +397,6 @@ END;
 CREATE OR REPLACE FUNCTION public.clear_rev() RETURNS boolean AS '
 BEGIN
 	DELETE FROM rev;
-	DELETE FROM rev_key;
 	PERFORM register_mod_time();
 	RETURN TRUE;
 END;
@@ -464,7 +405,6 @@ END;
 CREATE OR REPLACE FUNCTION public.commit_rev(text) RETURNS boolean AS '
 BEGIN
 	EXECUTE \'INSERT INTO public.rev (SELECT * FROM \' || $1 || \'.rev)\';
-	EXECUTE \'INSERT INTO public.rev_key (SELECT * FROM \' || $1 || \'.rev_key)\';
 	PERFORM register_mod_time();
 	RETURN true;
 END;
@@ -531,7 +471,6 @@ END;
 ' LANGUAGE plpgsql;
 
 -- Total runtime was: 4.259 ms
--- update_entry, update rev_key manually, update_entry2
 CREATE OR REPLACE FUNCTION public.update_entry(text,text,text) RETURNS boolean AS '
 DECLARE
 	sql_str text;
@@ -544,16 +483,8 @@ BEGIN
 
 	DELETE FROM lex WHERE name = $1 ;
 	INSERT INTO lex SELECT * FROM head WHERE name = $1 LIMIT 1;
-
-	RETURN TRUE;
-END;
-' LANGUAGE plpgsql;
-
--- orthkey must enter db universe in normalized form (case)
-CREATE OR REPLACE FUNCTION public.update_entry_2(text) RETURNS boolean AS '
-BEGIN
 	DELETE FROM lex_key WHERE name = $1 ;
-	INSERT INTO lex_key SELECT rev_key_all.* FROM rev_key_all JOIN head USING (name,userid,modstamp) WHERE name = $1;
+	-- lex_keys for name=$1 must be added immediately after calling this fn
 
 	RETURN TRUE;
 END;
@@ -603,11 +534,5 @@ CREATE OR REPLACE FUNCTION public.semi_up_to_date_p() RETURNS boolean AS '
 BEGIN
 	RETURN ( SELECT mod_time() < (SELECT min(modstamp0) FROM semi_mod ));
 --	RETURN ( SELECT mod_time() < (SELECT min(modstamp) FROM semi_pred ));
-END;
-' LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION public.rev_key_p() RETURNS boolean AS '
-BEGIN
-	RETURN ( (SELECT count(*) FROM rev_key) > 0 );
 END;
 ' LANGUAGE plpgsql;

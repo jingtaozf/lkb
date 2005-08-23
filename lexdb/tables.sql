@@ -119,7 +119,7 @@ END;
 
 CREATE OR REPLACE FUNCTION public.deindex_lex_key() RETURNS boolean AS '
 BEGIN
-	RAISE DEBUG \'deindexing lex_keye\';
+	RAISE DEBUG \'deindexing lex_key\';
 	DROP INDEX lex_key_key;
 	RETURN true;
 END;
@@ -140,7 +140,7 @@ END;
 
 CREATE OR REPLACE FUNCTION public.deindex_rev() RETURNS boolean AS '
 BEGIN
-	RAISE DEBUG \'deindexing lex_keye\';
+	RAISE DEBUG \'deindexing rev\';
 	DROP INDEX rev_name_userid_modstamp;
 	RETURN true;
 END;
@@ -238,22 +238,6 @@ BEGIN
 	--	semi_frame NATURAL LEFT JOIN
 	--	semi_var NATURAL LEFT JOIN
 	--	semi_extra;
-
-	--CREATE OR REPLACE FUNCTION semi_pred() RETURNS SETOF semi_pred AS \'
-	--	SELECT * FROM semi_pred;
-	--\' LANGUAGE sql;
-
-	--CREATE OR REPLACE FUNCTION semi_frame() RETURNS SETOF semi_frame AS \'
-	--	SELECT * FROM semi_frame;
-	--\' LANGUAGE sql;
-
-	--CREATE OR REPLACE FUNCTION semi_var() RETURNS SETOF semi_var AS \'
-	--	SELECT * FROM semi_var;
-	--\' LANGUAGE sql;
-
-	--CREATE OR REPLACE FUNCTION semi_extra() RETURNS SETOF semi_extra AS \'
-	--	SELECT * FROM semi_extra;
-	--\' LANGUAGE sql;
 
 	RETURN true;
 END;

@@ -6,23 +6,6 @@
 -- convert sql fns w/ args to plpgsql with use of EXECUTE
 --  (avoid major performance problem) 
 
-CREATE OR REPLACE FUNCTION public.rev_new() RETURNS SETOF rev AS '
-	SELECT * FROM rev_new
-' LANGUAGE sql;
-
---CREATE OR REPLACE FUNCTION public.retrieve_head_entry(text) RETURNS SETOF rev AS '
---DECLARE
---	x RECORD;
---BEGIN
---	FOR x IN
---		EXECUTE \'SELECT * FROM filt WHERE name LIKE \' || quote_literal($1) || \' AND modstamp=(SELECT max(modstamp) FROM filt WHERE name LIKE \' || quote_literal($1) || \') LIMIT 1\'
---		LOOP
---		RETURN NEXT x;
---	END LOOP;
---	RETURN;
---END;
---' LANGUAGE plpgsql;
-
 create table lex as select * from rev where null;
 CREATE OR REPLACE FUNCTION public.retrieve_all_entries() RETURNS SETOF rev AS '
 	SELECT * FROM lex

@@ -15,7 +15,5 @@ GRANT SELECT ON public.fld TO PUBLIC;
 GRANT SELECT ON public.meta TO PUBLIC;
 GRANT SELECT ON public.dfn TO PUBLIC;
 GRANT SELECT ON public.rev TO PUBLIC;
-GRANT SELECT ON public.rev_key TO PUBLIC;
-GRANT SELECT ON public.rev_new TO PUBLIC;
 
 SELECT public.set_db_permissions();

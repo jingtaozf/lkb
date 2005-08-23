@@ -12,12 +12,6 @@ CREATE TABLE public.meta (
 	var text,
 	val text);
 SELECT public.create_public_rev_table();
-CREATE TABLE public.rev_key (
-		name TEXT NOT NULL,
-		userid TEXT DEFAULT user NOT NULL,
-		modstamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-		key text NOT NULL
-		);
 CREATE TABLE public.dfn (
 		mode TEXT,
 		slot TEXT,
@@ -26,8 +20,6 @@ CREATE TABLE public.dfn (
 		type TEXT,
 	PRIMARY KEY (mode,slot,field));
 CREATE TABLE public.tmp AS SELECT * FROM public.rev WHERE NULL;
-CREATE TABLE public.tmp_key AS SELECT * FROM public.rev_key WHERE NULL;
-CREATE TABLE public.rev_new AS SELECT * FROM public.rev WHERE NULL;
 \copy public.meta from 'meta.tsv'
 
 --
