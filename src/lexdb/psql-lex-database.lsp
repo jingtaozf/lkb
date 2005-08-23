@@ -133,13 +133,8 @@
 (defmethod lex-words ((lex psql-lex-database))
   (mapcar #'(lambda (x) (string-upcase (car x)))
 	  (get-raw-records *lexdb* "select distinct key from lex_key")))
-;	  (get-raw-records *lexdb* "select distinct key from rev_key_all")))
-
-;(defmethod rev-key-p ((lex psql-lex-database))
-;  (string= "t" (sql-fn-get-val lex :rev_key_p)))
   
 (defmethod regenerate-orthkeys ((lex psql-lex-database))
-;  (run-command lex "DELETE FROM rev_key")
   (run-command lex "DELETE FROM lex_key")
   (get-raw-records lex "SELECT * FROM public.deindex_lex_key()")
   (generate-missing-orthkeys lex :from :lex :to :lex_key)
@@ -148,7 +143,6 @@
 
 (defmethod generate-missing-orthkeys ((lex psql-lex-database) 
 				      &key 
-				      ;(from "rev natural left join rev_key where rev_key.key is null")
 				      (from "lex natural left join lex_key where lex_key.key is null")
 				      (to :lex_key)
 					   quiet)
@@ -203,22 +197,6 @@
 	finally
 	  (return (get-output-stream-string strm)))))
       
-
-;(defun to-psql-COPY-rec (lst &key (delim-char #\tab) (null "\\N"))
-;  (cond
-;   ((null lst)
-;    "")
-;   (t
-;    (let ((s (make-string-output-stream)))
-;      (princ (psql-COPY-val (pop lst) :delim-char delim-char :null null) s)
-;      (loop
-;	  for l in lst
-;	  do
-;	    (princ delim-char s)
-;	    (princ (psql-COPY-val l :delim-char delim-char :null null) s)
-;	  finally
-;	    (return (get-output-stream-string s)))))))
-
 (defun to-psql-COPY-rec (lst &key (delim-char #\tab) (null "\\N"))
   (cond
    ((null lst)
@@ -647,9 +625,6 @@
 
 ;; called from pg-interface
 (defmethod new-entries ((lex psql-lex-database))
-;  (let ((records (sql-fn-get-raw-records lex 
-;				  :rev_new
-;				  :fields '(:userid :name :modstamp))))
   (let ((records (get-raw-records lex
 				  (format nil "SELECT userid,name,modstamp FROM public.tmp"))))
     (cons (list "userid" "name" "modstamp") records)))
@@ -688,9 +663,6 @@
 				symb-list
 				(ordered-val-list symb-list psql-le))) ;; tmp contains new entry only
     (generate-missing-orthkeys lex :from :tmp :quiet t) ;; use new entry stored in tmp
-;    (sql-fn-get-val lex :update_entry_2
-;		    :args (list (retr-val psql-le :name)))
-    		 
     (unless
 	(check-lex-entry (str-2-symb (retr-val psql-le :name))
 			 lex)
@@ -956,22 +928,15 @@
 (defmethod merge-rev ((lex psql-lex-database) rev-filename)
   ;; empty temporary tables
   (run-command lex "DELETE FROM tmp")
-  ;(run-command lex "DELETE FROM tmp_key")
   (with-lexdb-user-lexdb (lex2 lex)
     ;; vacuum at start
     (vacuum lex2)
-    (let (
-	  ;(rev-key-filename (concatenate 'string rev-filename "_key"))
-	  count-new
-	  )
+    (let (count-new)
       ;;;
       ;; populate temporary tables
       ;;;
       (lexdb-time ("populating temporary tables" "done populating temporary tables")
-		  (run-command-stdin-from-file lex "COPY tmp FROM stdin" rev-filename)
-		  ;(if (probe-file rev-key-filename)
-		  ;    (run-command-stdin-from-file lex "COPY tmp_key FROM stdin" rev-key-filename))
-		  )
+		  (run-command-stdin-from-file lex "COPY tmp FROM stdin" rev-filename))
       ;;;
       ;; update main tables
       ;;;
@@ -981,7 +946,6 @@
       
       (format t "~&(LexDB) ~a new 'rev' entries" count-new)
       (make-field-map-slot lex2)
-      ;(generate-missing-orthkeys lex2)
       ;; vacuum at end
       (vacuum lex2)
       count-new)))
@@ -1339,9 +1303,6 @@
   (run-command-stdout-to-file lex "COPY tmp TO stdout" 
 			      (namestring (pathname (format nil "~a.rev" 
 							    filebase))))
-;  (run-command-stdout-to-file lex "COPY tmp_key TO stdout" 
-;			      (namestring (pathname (format nil "~a.rev_key" 
-;							    filebase))))
   t)
 
 (defmethod dump-dfn ((lexdb psql-lex-database) filebase)
