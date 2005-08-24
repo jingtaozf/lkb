@@ -164,10 +164,21 @@
 	    (sql-embedded-text x)))))
 
 (defmethod get-field-info ((db psql-database) schema table)
-  (get-raw-records db
-		   (format nil
-			   "SELECT attname, typname, atttypmod FROM (SELECT attname, atttypmod, atttypid FROM pg_catalog.pg_attribute WHERE attrelid=return_oid(~a,~a)) AS a JOIN pg_catalog.pg_type AS t ON (typelem=atttypid)"
-			   (quote-literal db schema)
+  (get-records db
+	       (format nil
+		       "SELECT attname, typname, atttypmod FROM (SELECT attname, atttypmod, atttypid FROM pg_catalog.pg_attribute WHERE attrelid=return_oid(~a,~a)) AS a JOIN pg_catalog.pg_type AS t ON (typelem=atttypid)"
+		       (quote-literal db schema)
+			   (quote-literal db table)
+			   )))
+
+(defmethod get-field-info2 ((db psql-database) schema table)
+  (get-records db
+	       (format nil
+		       "SELECT a.attname::text as field, pg_catalog.format_type(a.atttypid, a.atttypmod) as type
+	FROM pg_catalog.pg_attribute a
+	WHERE a.attrelid = return_oid(~a,~a) AND a.attnum > 0 AND NOT a.attisdropped
+	ORDER BY a.attnum"
+		       (quote-literal db schema)
 			   (quote-literal db table)
 			   )))
 

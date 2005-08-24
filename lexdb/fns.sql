@@ -359,11 +359,11 @@ END;
 --
 --
 
-CREATE OR REPLACE FUNCTION public.size_lex() RETURNS int AS '
-BEGIN
-	RETURN ( SELECT count(*) FROM lex );
-END;
-' LANGUAGE plpgsql;
+--CREATE OR REPLACE FUNCTION public.size_lex() RETURNS int AS '
+--BEGIN
+--	RETURN ( SELECT count(*) FROM lex );
+--END;
+--' LANGUAGE plpgsql;
 
 --CREATE OR REPLACE FUNCTION public.lexdb_version() RETURNS text AS '
 --BEGIN
@@ -382,12 +382,12 @@ END;
 --
 --
 
--- read-only permissions should be done properly
-CREATE OR REPLACE FUNCTION public.user_read_only_p(text) RETURNS boolean AS '
-BEGIN
-	RETURN (SELECT $1 IN (SELECT val FROM public.meta WHERE var=\'user-read-only\'));
-END;
-' LANGUAGE plpgsql;
+---- read-only permissions should be done properly
+--CREATE OR REPLACE FUNCTION public.user_read_only_p(text) RETURNS boolean AS '
+--BEGIN
+--	RETURN (SELECT $1 IN (SELECT val FROM public.meta WHERE var=\'user-read-only\'));
+--END;
+--' LANGUAGE plpgsql;
 
 --
 -- 
@@ -455,20 +455,20 @@ END;
 
 
 
-CREATE OR REPLACE FUNCTION public.value_set(text) RETURNS SETOF text AS '
-DECLARE
-	x RECORD;
-	sql_str text;
-BEGIN
-	sql_str := \'SELECT DISTINCT \' || quote_ident($1) || \'::text AS foo FROM rev_all WHERE \' || quote_ident($1) || \' IS NOT NULL\';
-	FOR x IN
-		EXECUTE sql_str
-		LOOP
-		RETURN NEXT x.foo;
-	END LOOP;
-	RETURN;
-END;
-' LANGUAGE plpgsql;
+--CREATE OR REPLACE FUNCTION public.value_set(text) RETURNS SETOF text AS '
+--DECLARE
+--	x RECORD;
+--	sql_str text;
+--BEGIN
+--	sql_str := \'SELECT DISTINCT \' || quote_ident($1) || \'::text AS foo FROM rev_all WHERE \' || quote_ident($1) || \' IS NOT NULL\';
+--	FOR x IN
+--		EXECUTE sql_str
+--		LOOP
+--		RETURN NEXT x.foo;
+--	END LOOP;
+--	RETURN;
+--END;
+--' LANGUAGE plpgsql;
 
 -- Total runtime was: 4.259 ms
 CREATE OR REPLACE FUNCTION public.update_entry(text,text,text) RETURNS boolean AS '
@@ -494,34 +494,33 @@ END;
 -- semi
 --
 
--- -> drop_semi()
-CREATE OR REPLACE FUNCTION semi_setup_pre() RETURNS boolean AS '
-BEGIN
-	PERFORM semi_drop_indices();
+---- -> drop_semi()
+--CREATE OR REPLACE FUNCTION semi_setup_pre() RETURNS boolean AS '
+--BEGIN
+--	PERFORM semi_drop_indices();
+--
+--	DELETE FROM semi_pred;
+--	DELETE FROM semi_frame;
+--	DELETE FROM semi_var;
+--	DELETE FROM semi_extra;
+--	DELETE FROM semi_mod;
+--RETURN true;
+--END;
+--' LANGUAGE plpgsql;
 
-	DELETE FROM semi_pred;
-	DELETE FROM semi_frame;
-	DELETE FROM semi_var;
-	DELETE FROM semi_extra;
-	DELETE FROM semi_mod;
-RETURN true;
-END;
-' LANGUAGE plpgsql;
-
--- -> create_semi()
-CREATE OR REPLACE FUNCTION semi_setup_post() RETURNS boolean AS '
-BEGIN
-	PERFORM semi_create_indices();
-
-	INSERT INTO semi_mod (SELECT DISTINCT name,userid,lex.modstamp,CURRENT_TIMESTAMP FROM lex JOIN semi_pred ON name=lex_id);
-
-	-- coz merge join is faster
-	SET ENABLE_HASHJOIN TO false;
-
-RETURN true;
-END;
-
-' LANGUAGE plpgsql;
+---- -> create_semi()
+--CREATE OR REPLACE FUNCTION semi_setup_post() RETURNS boolean AS '
+--BEGIN
+--	PERFORM semi_create_indices();
+--
+--	INSERT INTO semi_mod (SELECT DISTINCT name,userid,lex.modstamp,CURRENT_TIMESTAMP FROM lex JOIN semi_pred ON name=lex_id);
+--
+--	-- coz merge join is faster
+--	SET ENABLE_HASHJOIN TO false;
+--
+--RETURN true;
+--END;
+--' LANGUAGE plpgsql;
 
 -- fix me?
 CREATE OR REPLACE FUNCTION public.semi_mod_time_private(text,text,int) RETURNS text AS '
@@ -530,9 +529,9 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.semi_up_to_date_p() RETURNS boolean AS '
-BEGIN
-	RETURN ( SELECT mod_time() < (SELECT min(modstamp0) FROM semi_mod ));
---	RETURN ( SELECT mod_time() < (SELECT min(modstamp) FROM semi_pred ));
-END;
-' LANGUAGE plpgsql;
+--CREATE OR REPLACE FUNCTION public.semi_up_to_date_p() RETURNS boolean AS '
+--BEGIN
+--	RETURN ( SELECT mod_time() < (SELECT min(modstamp0) FROM semi_mod ));
+----	RETURN ( SELECT mod_time() < (SELECT min(modstamp) FROM semi_pred ));
+--END;
+--' LANGUAGE plpgsql;

@@ -87,12 +87,12 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.return_field_info2(text,text) RETURNS SETOF text_2 AS '
-SELECT a.attname::text as field, pg_catalog.format_type(a.atttypid, a.atttypmod) as type
-	FROM pg_catalog.pg_attribute a
-	WHERE a.attrelid = return_oid($1,$2) AND a.attnum > 0 AND NOT a.attisdropped
-	ORDER BY a.attnum
-' LANGUAGE sql;
+--CREATE OR REPLACE FUNCTION public.return_field_info2(text,text) RETURNS SETOF text_2 AS '
+--SELECT a.attname::text as field, pg_catalog.format_type(a.atttypid, a.atttypmod) as type
+--	FROM pg_catalog.pg_attribute a
+--	WHERE a.attrelid = return_oid($1,$2) AND a.attnum > 0 AND NOT a.attisdropped
+--	ORDER BY a.attnum
+--' LANGUAGE sql;
 
 --CREATE OR REPLACE FUNCTION public.return_field_info(text,text) RETURNS SETOF attname_typename_atttypmod AS '
 --	SELECT attname, typname, atttypmod FROM (SELECT attname, atttypmod, atttypid FROM pg_catalog.pg_attribute WHERE attrelid=return_oid($1,$2)) AS a JOIN pg_catalog.pg_type AS t ON (typelem=atttypid);
