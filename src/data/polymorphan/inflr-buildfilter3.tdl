@@ -1,0 +1,246 @@
+;;; the pathological case where every rule feeds every other
+
+rule-a :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-b :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-c :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-d :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-e :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-f :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-g :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-h :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+
+rule-i :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-j :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-k :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-l :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-m :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-n :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-o :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-p :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+
+rule-q :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-r :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-s :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-t :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-u :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-v :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-w :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-x :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+
+rule-aa :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-ab :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-ac :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-ad :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-ae :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-af :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-ag :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-ah :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+
+rule-ai :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-aj :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-ak :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-al :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-am :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-an :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-ao :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-ap :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+
+rule-aq :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-ar :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-as :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-at :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-au :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-av :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-aw :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].
+
+rule-ax :=
+[ ORTH #1,
+  CATEG cat,
+  ARGS < [ ORTH #1, CATEG cat ] > ].

@@ -1,0 +1,60 @@
+;;; for rule filter construction test - two cycles, linked
+;;; with a couple of feeders and spurs
+
+rule-a :=
+[ ORTH #1,
+  CATEG cat5,
+  ARGS < [ ORTH #1, CATEG cat4 ] > ].
+
+;;; 
+
+rule-b :=
+[ ORTH #1,
+  CATEG cat6,
+  ARGS < [ ORTH #1, CATEG cat5 ] > ].
+
+rule-c :=
+[ ORTH #1,
+  CATEG cat7,
+  ARGS < [ ORTH #1, CATEG cat6 ] > ].
+
+rule-d :=
+[ ORTH #1,
+  CATEG cat5,
+  ARGS < [ ORTH #1, CATEG cat7 ] > ].
+
+;;;
+
+rule-e :=
+[ ORTH #1,
+  CATEG cat1,
+  ARGS < [ ORTH #1, CATEG cat0 ] > ].
+
+rule-f :=
+[ ORTH #1,
+  CATEG cat2,
+  ARGS < [ ORTH #1, CATEG cat1 ] > ].
+
+rule-g :=
+[ ORTH #1,
+  CATEG cat0,
+  ARGS < [ ORTH #1, CATEG cat2] > ].
+
+;;;
+
+rule-h :=
+[ ORTH #1,
+  CATEG cat5,
+  ARGS < [ ORTH #1, CATEG cat1 ] > ].
+
+;;;
+
+rule-i :=
+[ ORTH #1,
+  CATEG cat5,
+  ARGS < [ ORTH #1, CATEG cat3 ] > ].
+
+rule-j :=
+[ ORTH #1,
+  CATEG cat6,
+  ARGS < [ ORTH #1, CATEG cat3 ] > ].

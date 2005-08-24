@@ -72,6 +72,29 @@
   ;;; should get warnings on load
     (print-lrfsm :stream ostream))
   ;;;
+  ;;; "buildfilter2"
+  ;;;
+  (with-open-file (ostream "data/polymorphan/buildfilter2-test" :direction :output
+		   :if-does-not-exist :create :if-exists :supersede)
+    (setf *infl-variant* "buildfilter2")
+    (read-script-file-aux "data/polymorphan/script")
+  ;;; should get warnings on load
+    (print-lrfsm :stream ostream))
+  ;;;
+  ;;; "buildfilter3"
+  ;;;
+  (with-open-file (ostream "data/polymorphan/buildfilter3-test" :direction :output
+		   :if-does-not-exist :create :if-exists :supersede)
+    (setf *infl-variant* "buildfilter3")
+    (read-script-file-aux "data/polymorphan/script")
+  ;;; this is 48 rules that can all feed everything so
+  ;;; should get 48 warnings on load
+    (dolist (rule1 *lrstruct-list*)
+      (dolist (rule2 *lrstruct-list*)
+	(unless (check-lrfsm rule2 rule1)
+	  (format ostream "~%Error ~A and ~A not found as feeding" 
+		  (rule-id rule1) (rule-id rule2))))))
+  ;;;
   ;;; "escape"
   ;;;
   (with-open-file (ostream "data/polymorphan/escape-test" :direction :output
@@ -88,6 +111,7 @@
 		   :if-does-not-exist :create :if-exists :supersede)
     (setf *infl-variant* "feed")
     (read-script-file-aux "data/polymorphan/script")
+    (print-lrfsm :stream ostream)
     (dolist (word '(rainaz rainax rainaw))
       (multiple-value-bind (et st ct ft mt)
 	  (do-parse-tty (string word))
