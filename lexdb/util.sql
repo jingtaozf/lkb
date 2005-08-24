@@ -87,18 +87,6 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
---CREATE OR REPLACE FUNCTION public.return_field_info2(text,text) RETURNS SETOF text_2 AS '
---SELECT a.attname::text as field, pg_catalog.format_type(a.atttypid, a.atttypmod) as type
---	FROM pg_catalog.pg_attribute a
---	WHERE a.attrelid = return_oid($1,$2) AND a.attnum > 0 AND NOT a.attisdropped
---	ORDER BY a.attnum
---' LANGUAGE sql;
-
---CREATE OR REPLACE FUNCTION public.return_field_info(text,text) RETURNS SETOF attname_typename_atttypmod AS '
---	SELECT attname, typname, atttypmod FROM (SELECT attname, atttypmod, atttypid FROM pg_catalog.pg_attribute WHERE attrelid=return_oid($1,$2)) AS a JOIN pg_catalog.pg_type AS t ON (typelem=atttypid);
---' LANGUAGE sql;
-
-
 CREATE OR REPLACE FUNCTION public.return_type(text,text,text) RETURNS text AS '
 DECLARE
 	table_oid integer;
@@ -135,18 +123,6 @@ BEGIN
  	END IF;
 END;
 ' LANGUAGE plpgsql;
-
---CREATE OR REPLACE FUNCTION public.db_owner() RETURNS text AS 
---'
---DECLARE
---	uid int;
---	uname text;
---BEGIN
---	uid := (select datdba from pg_catalog.pg_database where datname=current_database());
---	uname := (select usename from pg_catalog.pg_user where usesysid=uid);
--- RETURN uname;
---END;
---' LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION public.assert_db_owner() RETURNS boolean AS 
 '

@@ -220,7 +220,6 @@
 		  :keys "M-vpr"
 		  :enable (cle-connection)))
     (define-key map [menu-bar LexDB next-id]
-;      '(menu-item "Next id" lexdb-advance-id 
       '(menu-item "Next id" lexdb-advance-ium 
 		  :keys "M-n"
 		  :enable (cle-connection)))

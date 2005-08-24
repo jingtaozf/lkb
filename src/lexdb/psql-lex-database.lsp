@@ -17,7 +17,6 @@
 	      :host host
 	      :port port
 	      :user (db-owner ,lexdb))))
-;	      :user (sql-fn-get-val ,lexdb :db_owner))))
        (open-lex ,lexdb-lexdb)
        ,@body
        (close-lex ,lexdb-lexdb))))
@@ -69,27 +68,9 @@
 	      (get-records lex
 			   (format nil "SELECT ~a FROM (SELECT lex.* FROM lex JOIN lex_key USING (name,userid,modstamp) WHERE lex_key.key LIKE ~a) AS foo"
 				   (fields-str (grammar-fields lex))
-				   (quote-literal lex (sql-like-text (normalize-orthkey orth)))))
-				   
-;	      (sql-fn-get-records lex 
-;				  :retrieve_entries_by_orthkey 
-;				  :args (list (sql-like-text 
-;					       (normalize-orthkey orth))) 
-;				  :fields (grammar-fields lex))
-	      )
+				   (quote-literal lex (sql-like-text (normalize-orthkey orth))))))
 	     (ids (lookup-word-aux2 lex table)))
 	ids)))
-
-;(defmethod lookup-word-no-cache ((lex psql-lex-database) orth)
-;  (declare (ignore cache))
-;  (if (connection lex)
-;      (let* ((table (sql-fn-get-records lex 
-;					:retrieve_entries_by_orthkey 
-;					:args (list (sql-like-text 
-;						     (normalize-orthkey orth))) 
-;					:fields (grammar-fields lex)))
-;	     (ids (lookup-word-aux2 lex table)))
-;	ids)))
 
 (defmethod uncached-orthkeys ((lex psql-lex-database) list-orth)
   (with-slots (lexical-entries) lex
@@ -157,8 +138,7 @@
   (run-command lex "DELETE FROM lex_key")
   (get-raw-records lex "SELECT * FROM public.deindex_lex_key()")
   (generate-missing-orthkeys lex :from :lex :to :lex_key)
-  (get-raw-records lex "SELECT * FROM public.index_lex_key()")  
-  )
+  (get-raw-records lex "SELECT * FROM public.index_lex_key()"))
 
 (defmethod generate-missing-orthkeys ((lex psql-lex-database) 
 				      &key 
@@ -186,10 +166,6 @@
 	 (len-recs (length recs)))
     (when (> len-recs 0)
       (format t "~&(LexDB) ~a keyless entries" len-recs)
-      ;(unless quiet
-	;(sql-get-val *lexdb* "SELECT register_mod_time()")
-	;;(sql-fn-get-val lex :register_mod_time)
-	;)
       (join-str-lines
        (mapcar #'to-psql-COPY-rec
 	       (rev-to-rev-key lex recs))))))
@@ -306,11 +282,7 @@
 		 (format nil "SELECT ~a FROM lex"
 			 (concat-str
 			  (mapcar #'string reqd-fields)
-			  :sep-c #\,)))
-    ;(sql-fn-get-records lex
-	;		:retrieve_all_entries
-	;		:fields reqd-fields)
-    )
+			  :sep-c #\,))))
    (t
     (format t "~&(LexDB) WARNING:  no connection to psql-lex-database"))))
 
@@ -339,12 +311,7 @@
    ((connection lex)
     (let* ((id-str (symb-2-str id))
 	   (column-records 
-	    (recs (retrieve-entry lex (sql-like-text id-str) :reqd-fields reqd-fields))
-;	    (sql-fn-get-raw-records lex
-;				    :retrieve_entry
-;				    :fields reqd-fields
-;				    :args (list (sql-like-text id-str)))
-	    ))
+	    (recs (retrieve-entry lex (sql-like-text id-str) :reqd-fields reqd-fields))))
       (if (> (length column-records) 1)
 	  (error (format nil " too many records returned"))
 	(first column-records))))
@@ -359,12 +326,7 @@
    ((connection lex)
     (let* ((id-str (2-str id))
 	   (table 
-	    (retrieve-entry lex (sql-like-text id-str) :reqd-fields reqd-fields)
-;	    (sql-fn-get-records lex
-;				:retrieve_entry
-;				:fields reqd-fields
-;				:args (list (sql-like-text id-str)))
-		  ))
+	    (retrieve-entry lex (sql-like-text id-str) :reqd-fields reqd-fields)))
       
       (if (> (length (recs table)) 1)
 	  (error (format nil "too many records returned"))
@@ -382,12 +344,7 @@
 				 (fields-str reqd-fields)
 				 (quote-literal lex id)
 				 (quote-literal lex name)
-				 (quote-literal lex modstamp)))
-	    ;(sql-fn-get-records lex
-		;		:retrieve_entry_ium
-		;		:fields reqd-fields
-		;		:args (list id name modstamp))
-	    ))
+				 (quote-literal lex modstamp)))))
       
       (if (> (length (recs table)) 1)
 	  (error (format nil "too many records returned"))
@@ -605,9 +562,6 @@
 
 (defmethod get-internal-table-dfn ((lex psql-lex-database))
   (get-field-info lex "public" "rev"))  
-;      (sql-fn-get-records lex 
-;			  :return_field_info 
-;			  :args (list "public" "rev")))
 
 (defmethod get-field-size-map ((lex psql-lex-database))
   (let* ((table (get-internal-table-dfn lex))
@@ -616,36 +570,6 @@
     (mapcar 
      #'(lambda (x) (field-size-elt x cols)) 
      recs)))
-
-;(defmethod lookup-name ((lex psql-lex-database) field-kw val-str)
-;  (mapcar 
-;   #'car
-;   (cond
-;    (val-str
-;     (get-raw-records lex 
-;		      (format nil "SELECT name FROM lex WHERE ~a ILIKE ~a"
-;			      (quote-ident lex field-kw)
-;			      (quote-literal lex val-str))))
-;    (t
-;     (get-raw-records lex 
-;		      (format nil "SELECT name FROM lex WHERE ~a IS NULL"
-;			      (quote-ident lex field-kw)))))))
-
-;(defmethod lookup ((lex psql-lex-database) field-kw val-str)
-;  (let* ((sql-fn (if val-str
-;		    :lookup_general
-;		   :lookup_general_null))
-;	 (field-str (2-str field-kw))
-;	 (args (if val-str
-;		   (list field-str (sql-like-text val-str))
-;		 (list field-str)))
-;	 (records
-;	  (sql-fn-get-raw-records lex
-;				  sql-fn
-;				  :args args)))
-;    (mapcar #'car records)))
-
-;;
 
 (defmethod lookup ((lex psql-lex-database) field-kw val-str &key (ret-flds "*") (from "lex"))
   (cond
@@ -664,39 +588,6 @@
 (defmethod lookup-rev-all ((lex psql-lex-database) field-kw val-str &key (ret-flds "*"))
   (lookup lex field-kw val-str :ret-flds ret-flds :from "rev_all"))
 
-;(defmethod lookup3 ((lex psql-lex-database) field-kw val-str)
-;  (let* ((sql-fn (if val-str
-;		    :lookup_general3
-;		   :lookup_general3_null))
-;	 (field-str (2-str field-kw))
-;	 (args (if val-str
-;		   (list field-str (sql-like-text val-str))
-;		 (list field-str)))
-;	 (records
-;	  (sql-fn-get-raw-records lex
-;				  sql-fn
-;				  :args args
-;				  :fields '(:name :userid :modstamp))))
-;    ;(mapcar #'car records)
-;    records
-;    ))
-
-;(defmethod lookup-rev-all ((lex psql-lex-database) field-kw val-str)
-;  (let* ((sql-fn (if val-str
-;		    :lookup_general3_rev_all
-;		   :lookup_general3_rev_all_null))
-;	 (field-str (2-str field-kw))
-;	 (args (if val-str
-;		   (list field-str (sql-like-text val-str))
-;		 (list field-str)))
-;	 (records
-;	  (sql-fn-get-raw-records lex
-;				  sql-fn
-;				  :args args
-;				  :fields '(:name :userid :modstamp))))
-;    records
-;    ))
-
 ;;
 
 (defmethod list-fld ((lex psql-lex-database))
@@ -712,13 +603,6 @@
 			     (format nil
 				     "SELECT DISTINCT ~a AS field FROM lex WHERE ~a ILIKE ~a"
 				     qi-field qi-field ql-val)))))
-
-;(defmethod complete ((lex psql-lex-database) field-kw val-str)
-;  (mapcar #'car 
-;	  (sql-fn-get-raw-records lex 
-;				  :complete 
-;				  :args (list (symb-2-str field-kw)
-;					      (sql-like-text val-str)))))
 
 ;; called from pg-interface
 (defmethod new-entries ((lex psql-lex-database))
@@ -866,8 +750,7 @@
     (or (open-lex-aux lex)
 	(format t "~&unable to open connection to lexical database ~a(~a)@~a:~a (~a)" 
 		dbname user host (true-port lex)
-		(error-msg connection))
-	)))
+		(error-msg connection)))))
 
 (defmethod open-lex-aux ((lex psql-lex-database)) 
   (with-slots (dbname host user) 
@@ -905,11 +788,6 @@
     (unless (member actual supported :test #'string=)
       (format t "~&(LexDB) WARNING: Unsupported PSQL server version ~a.~% Supported versions are: ~a)" actual supported))))
 
-;(defmethod check-psql-server-version ((lex psql-lex-database))
-;    (let ((texts (sql-fn-get-vals lex :check_psql_server_version)))
-;      (when texts
-;	(format t "~&(LexDB) WARNING: ~a" (str-list-2-str texts :sep-c #\Newline)))))
-
 (defmethod initialize-lex ((lex psql-lex-database))
   (when (open-lex lex)
     (with-slots (dbname user host) lex
@@ -942,7 +820,6 @@
     
 (defmethod get-filter ((lex psql-lex-database))
   (sql-get-val lex "SELECT val FROM meta WHERE var='filter'"))  
-;  (sql-fn-get-val lex :filter))
 
 (defmethod update-lex ((lex psql-lex-database))
   (vacuum lex)
@@ -980,9 +857,7 @@
       (format t "~&(LexDB) user ~a has read-only privileges" (user lex))))    
   (format t "~&(LexDB) filter = ~a " (get-filter lex))
   (let ((size
-	 (sql-get-val lex "SELECT count(*) FROM lex")
-	 ;(sql-fn-get-val lex :size_lex)
-	 ))
+	 (sql-get-val lex "SELECT count(*) FROM lex")))
     (if (string= "0" size)
 	(format t "~&(LexDB) WARNING:  0 entries passed the LexDB filter" size)
       (format t "~&(LexDB) active entries in 'lex' table = ~a" size)))
@@ -1024,9 +899,7 @@
 (defmethod get-fields ((lex psql-lex-database))
   (mapcar 
    #'(lambda (x) (intern (string-upcase x) :keyword))
-;   #'(lambda (x) (intern (string-upcase (car x)) :keyword))
    (list-fld lex)))
-;   (sql-fn-get-raw-records lex :list_fld)))
 
 (defmethod user-read-only-p ((lex psql-lex-database) user-str)
   (string= "t"
@@ -1034,20 +907,12 @@
 			(format nil 
 				"SELECT ~a IN (SELECT val FROM public.meta WHERE var=\'user-read-only\')"
 				(quote-literal lex user-str)))))
-	   ;(sql-fn-get-val lex :user_read_only_p 
-	;		   :args (list user-str))
 
 (defmethod show-scratch ((lex psql-lex-database))
   (get-raw-records lex "SELECT name,userid,modstamp FROM rev"))
 
-;(defmethod show-scratch ((lex psql-lex-database))
-;  (sql-fn-get-raw-records lex 
-;			  :rev
-;			  :fields (list :name :userid :modstamp)))
-
 (defmethod scratch-records ((lex psql-lex-database))
   (get-raw-records lex "SELECT * FROM rev"))
-;  (sql-fn-get-raw-records lex :rev))
 
 (defmethod merge-rev ((lex psql-lex-database) rev-filename)
   ;; empty temporary tables
@@ -1097,20 +962,15 @@
 
 (defmethod semi-setup-pre ((lex psql-lex-database))  
   (reconnect lex)
-  (run-command lex "SELECT semi_drop_indices(); DELETE FROM semi_pred; DELETE FROM semi_frame; DELETE FROM semi_var; DELETE FROM semi_extra; DELETE FROM semi_mod;")
-  ;(sql-fn-get-val lex :semi_setup_pre)
-  )
+  (run-command lex "SELECT semi_drop_indices(); DELETE FROM semi_pred; DELETE FROM semi_frame; DELETE FROM semi_var; DELETE FROM semi_extra; DELETE FROM semi_mod;"))
   
 (defmethod semi-setup-post ((lex psql-lex-database))  
   (reconnect lex)
-  (run-command lex "SELECT semi_create_indices(); INSERT INTO semi_mod (SELECT DISTINCT name,userid,lex.modstamp,CURRENT_TIMESTAMP FROM lex JOIN semi_pred ON name=lex_id); SET ENABLE_HASHJOIN TO false;")
-  ;(sql-fn-get-val lex :semi_setup_post)
-  )
+  (run-command lex "SELECT semi_create_indices(); INSERT INTO semi_mod (SELECT DISTINCT name,userid,lex.modstamp,CURRENT_TIMESTAMP FROM lex JOIN semi_pred ON name=lex_id); SET ENABLE_HASHJOIN TO false;"))
  
 (defmethod semi-up-to-date-p ((lex psql-lex-database))  
   (string= "t"
 	   (sql-get-val lex "SELECT mod_time() < (SELECT min(modstamp0) FROM semi_mod )")))
-	   ;(sql-fn-get-val lex :semi_up_to_date_p)))
   
 ;; returns record-ids
 (defmethod semi-out-of-date ((lex psql-lex-database))
@@ -1120,11 +980,7 @@
 	    (get-records lex 
 			 (format nil
 				 "SELECT ~a FROM (SELECT g.* FROM lex as g NATURAL LEFT JOIN semi_mod as s WHERE g.modstamp > COALESCE(s.modstamp0,\'-infinity\')) AS foo"
-				 (fields-str cols))
-				 ))
-	    ;(sql-fn-get-records lex 
-		;		:semi_out_of_date
-		;		:fields cols)
+				 (fields-str cols))))
 	   (recs (recs table)))
       ;; cache records
       (mapcar
@@ -1144,10 +1000,6 @@
 	    (get-raw-records lex
 			     (format nil "SELECT DISTINCT ~a::text AS foo FROM rev_all WHERE ~a IS NOT NULL"
 				     qi-field qi-field)))))
-	  ;(sql-fn-get-raw-records lex
-		;		  :value_set
-		;		  :args (list (2-str field)))
-					;))
 
 (defun fields-str (fields)
   (concat-str
@@ -1281,8 +1133,7 @@
 			     "set client_min_messages to ~a" 
 			     client-min-messages))
     (format t "~&(LexDB) vacuum/analyze complete [~F sec]" 
-	    (/ (- (get-internal-real-time) time) internal-time-units-per-second))
-    ))
+	    (/ (- (get-internal-real-time) time) internal-time-units-per-second))))
 
 (defmethod db-owner ((lex psql-lex-database))
   (let* ((uid (sql-get-val lex "SELECT datdba FROM pg_catalog.pg_database WHERE datname=current_database()"))
@@ -1302,7 +1153,6 @@
 	     :host host
 	     :port port
 	     :user (db-owner lex))))
-;	     :user (sql-fn-get-val lex :db_owner))))
       (connect conn-db-owner)
       (when
 	  (catch :sql-error
@@ -1493,12 +1343,6 @@
   (get-raw-records lex "SELECT register_mod_time()")
   (empty-cache lex))
 
-;(defmethod commit-private-rev ((lex psql-lex-database)) 
-;  (with-lexdb-user-lexdb (lex2 lex)
-;    (sql-fn-get-val lex2 :commit_rev :args (list (user lex))))
-;  (sql-fn-get-records lex :clear_rev)
-;  (empty-cache lex))
-
 (defmethod close-private-rev ((lex psql-lex-database))
   (run-command lex "DELETE FROM rev")
   (get-raw-records lex "SELECT register_mod_time()")
@@ -1508,18 +1352,5 @@
    (sql-fn-get-records lex 
 		       :update_lex 
 		       :args (list (get-filter lex)))
-   (regenerate-orthkeys lex))
-  )
-
-;(defmethod close-private-rev ((lex psql-lex-database))
-;  (sql-fn-get-records lex :clear_rev)
-;  (empty-cache lex)
-;  (reconnect lex) ;; work around server bug
-;  (and
-;   (sql-fn-get-records lex 
-;		       :update_lex 
-;		       :args (list (get-filter lex)))
-;   (regenerate-orthkeys lex))
-;  )
-
+   (regenerate-orthkeys lex)))
 
