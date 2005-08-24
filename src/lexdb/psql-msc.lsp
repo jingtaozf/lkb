@@ -22,6 +22,9 @@
    (apply #'string-2-str-list-on-spc rest)))
 
 (defun string-2-str-list-on-spc (string &key (esc t))
+  (string-2-str-list string :sep #\Space :esc esc))
+
+(defun string-2-str-list (string &key (sep #\Space) (esc t))
   (loop
       with res
       with flag
@@ -32,7 +35,7 @@
 	(setf flag nil)
       else do
 	   (cond
-	     ((eq #\Space c)
+	     ((eq sep c)
 	      (push (implode-from-chars (reverse word-chars)) res)
 	      (setf word-chars nil))
 	     ((and (eq #\\ c) esc)

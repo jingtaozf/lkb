@@ -109,7 +109,14 @@
       (error "psql-database ~s has no active connection." database))
     (execute connection sql-string :tup t)))
 
-;; run command with stdin = filename
+(defmethod sql-get-val ((db psql-database) sql-string)
+  (let ((recs (get-raw-records db sql-string)))
+    (unless (and (= 1 (length recs))
+		 (= 1 (length (car recs))))
+      (error "single value expected from query: ~a~%  got: ~a" sql-string recs))
+    (caar recs)))
+
+  ;; run command with stdin = filename
 (defmethod run-command-stdin-from-file ((db psql-database) command filename)
   (with-open-file (istr filename
 		   :direction :input)
@@ -139,6 +146,30 @@
     (unless connection
       (error "psql-database ~s has no active connection." database))
     (execute connection command :com t)))
+
+(defmethod quote-ident ((db psql-database) x)
+  (unless (stringp x)
+    (setf x (string-downcase (string x))))
+  (caar 
+   (get-raw-records db
+    (format nil "SELECT quote_ident(~a)" 
+	    (sql-embedded-text x)))))
+
+(defmethod quote-literal ((db psql-database) x)
+  (unless (stringp x)
+    (setf x (string-downcase (string x))))
+  (caar 
+   (get-raw-records db
+    (format nil "SELECT quote_literal(~a)" 
+	    (sql-embedded-text x)))))
+
+(defmethod get-field-info ((db psql-database) schema table)
+  (get-raw-records db
+		   (format nil
+			   "SELECT attname, typname, atttypmod FROM (SELECT attname, atttypmod, atttypid FROM pg_catalog.pg_attribute WHERE attrelid=return_oid(~a,~a)) AS a JOIN pg_catalog.pg_type AS t ON (typelem=atttypid)"
+			   (quote-literal db schema)
+			   (quote-literal db table)
+			   )))
 
 ;;;
 ;;;

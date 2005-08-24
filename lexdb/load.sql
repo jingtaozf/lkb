@@ -6,6 +6,8 @@
 -- function definitions
 --
 
+SET client_min_messages TO warning;
+
 \i util.sql
 \i tables.sql
 \i fns.sql

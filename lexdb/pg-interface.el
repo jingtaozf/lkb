@@ -827,7 +827,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (if (or (string= val-str "") (null val-str))
       (setf val-str nil)
     (setf val-str (cle-lisp-str val-str)))
-  (cle-eval-lexdb 'lookup3 field-kw val-str))
+  (cle-eval-lexdb 'lookup field-kw val-str))
   
 (defun cle-lookup-rev-all (field-kw val-str)
   (if (or (string= val-str "") (null val-str))

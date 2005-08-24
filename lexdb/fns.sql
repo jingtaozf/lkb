@@ -11,65 +11,65 @@
 --
 
 -- returns field names in public.rev
-CREATE OR REPLACE FUNCTION public.list_fld() RETURNS SETOF text AS '
-	SELECT t1 FROM return_field_info2(\'public\',\'rev\');
-' LANGUAGE sql;
+--CREATE OR REPLACE FUNCTION public.list_fld() RETURNS SETOF text AS '
+--	SELECT t1 FROM return_field_info2(\'public\',\'rev\');
+--' LANGUAGE sql;
 
 --
 -- psql server version
 --
 
-CREATE OR REPLACE FUNCTION public.psql_server_version() RETURNS text AS '
-	select split_part((select version()),\' \',2)
-' LANGUAGE sql;
+--CREATE OR REPLACE FUNCTION public.psql_server_version() RETURNS text AS '
+--	select split_part((select version()),\' \',2)
+--' LANGUAGE sql;
 
-CREATE OR REPLACE FUNCTION public.supported_psql_server_versions() RETURNS SETOF text AS '
-DECLARE
-	x RECORD;
-BEGIN
-	FOR x IN
-		SELECT val FROM public.meta WHERE var=\'supported-psql-server\'
-		LOOP
-		RETURN NEXT x.val;
-	END LOOP;
-	RETURN;
-END;
-' LANGUAGE plpgsql;
+--CREATE OR REPLACE FUNCTION public.supported_psql_server_versions() RETURNS SETOF text AS '
+--DECLARE
+--	x RECORD;
+--BEGIN
+--	FOR x IN
+--		SELECT val FROM public.meta WHERE var=\'supported-psql-server\'
+--		LOOP
+--		RETURN NEXT x.val;
+--	END LOOP;
+--	RETURN;
+---END;
+--'- LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.check_psql_server_version() RETURNS SETOF text AS '
-DECLARE
-	supported text;
-	actual text;
-	release text;
-	major text;
-	release_major text;
-	message text;
-	x RECORD;
-BEGIN
-	SELECT * INTO supported FROM public.supported_psql_server_versions();
-	actual := psql_server_version();
-	release := split_part(actual,\'.\',1);
-	major := split_part(actual,\'.\',2);
-	release_major := release || \'.\' || major;
-
-	IF (SELECT count(*) FROM public.supported_psql_server_versions() WHERE supported_psql_server_versions=release_major)=0 THEN
-		message := \'Unsupported PSQL Server version (\' || actual || \')\';
-		RAISE WARNING \'%\', message;
-		RETURN NEXT message;
-
-		message := \'Supported PSQL Server versions: \';
-		FOR x IN SELECT * FROM supported_psql_server_versions() LOOP
-			message := message || x.supported_psql_server_versions || \'.x \';
-		END LOOP;
-
-		RAISE WARNING \'%\', message;
-		RETURN NEXT message;
-		RETURN;
-	ELSE
-		RETURN;
-	END IF;
-END;
-' LANGUAGE plpgsql;
+--CREATE OR REPLACE FUNCTION public.check_psql_server_version() RETURNS SETOF text AS '
+--DECLARE
+--	supported text;
+--	actual text;
+--	release text;
+--	major text;
+--	release_major text;
+--	message text;
+--	x RECORD;
+--BEGIN
+--	SELECT * INTO supported FROM public.supported_psql_server_versions();
+--	actual := psql_server_version();
+--	release := split_part(actual,\'.\',1);
+--	major := split_part(actual,\'.\',2);
+--	release_major := release || \'.\' || major;
+--
+--	IF (SELECT count(*) FROM public.supported_psql_server_versions() WHERE supported_psql_server_versions=release_major)=0 THEN
+--		message := \'Unsupported PSQL Server version (\' || actual || \')\';
+--		RAISE WARNING \'%\', message;
+--		RETURN NEXT message;
+--
+--		message := \'Supported PSQL Server versions: \';
+--		FOR x IN SELECT * FROM supported_psql_server_versions() LOOP
+--			message := message || x.supported_psql_server_versions || \'.x \';
+--		END LOOP;
+--
+--		RAISE WARNING \'%\', message;
+--		RETURN NEXT message;
+--		RETURN;
+--	ELSE
+--		RETURN;
+--	END IF;
+--END;
+--' LANGUAGE plpgsql;
 
 --
 -- user schema setup
@@ -365,17 +365,17 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.lexdb_version() RETURNS text AS '
-BEGIN
-	RETURN ( SELECT val FROM public.meta WHERE var=\'lexdb-version\' LIMIT 1 );
-END;
-' LANGUAGE plpgsql;
+--CREATE OR REPLACE FUNCTION public.lexdb_version() RETURNS text AS '
+--BEGIN
+--	RETURN ( SELECT val FROM public.meta WHERE var=\'lexdb-version\' LIMIT 1 );
+--END;
+--' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.filter() RETURNS text AS '
-BEGIN
-	RETURN ( SELECT val FROM meta WHERE var=\'filter\' LIMIT 1 );
-END;
-' LANGUAGE plpgsql;
+--CREATE OR REPLACE FUNCTION public.filter() RETURNS text AS '
+--BEGIN
+--	RETURN ( SELECT val FROM meta WHERE var=\'filter\' LIMIT 1 );
+--END;
+--' LANGUAGE plpgsql;
 
 
 --
@@ -393,65 +393,65 @@ END;
 -- 
 --
 
--- this could be done more intelligently so that a full build_lex is not triggered
-CREATE OR REPLACE FUNCTION public.clear_rev() RETURNS boolean AS '
-BEGIN
-	DELETE FROM rev;
-	PERFORM register_mod_time();
-	RETURN TRUE;
-END;
-' LANGUAGE plpgsql;
+---- this could be done more intelligently so that a full build_lex is not triggered
+--CREATE OR REPLACE FUNCTION public.clear_rev() RETURNS boolean AS '
+--BEGIN
+--	DELETE FROM rev;
+--	PERFORM register_mod_time();
+--	RETURN TRUE;
+--END;
+--' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.commit_rev(text) RETURNS boolean AS '
-BEGIN
-	EXECUTE \'INSERT INTO public.rev (SELECT * FROM \' || $1 || \'.rev)\';
-	PERFORM register_mod_time();
-	RETURN true;
-END;
-' LANGUAGE plpgsql;
+--CREATE OR REPLACE FUNCTION public.commit_rev(text) RETURNS boolean AS '
+--BEGIN
+--	EXECUTE \'INSERT INTO public.rev (SELECT * FROM \' || $1 || \'.rev)\';
+--	PERFORM register_mod_time();
+--	RETURN true;
+--END;
+--' LANGUAGE plpgsql;
 
 --
 --
 --
 
-CREATE OR REPLACE FUNCTION public.complete(text,text) RETURNS SETOF text AS '
-DECLARE
-	x RECORD;
-	sql_str text;
-BEGIN
-	sql_str := \'SELECT DISTINCT \' || quote_ident($1) || \' AS field FROM lex WHERE \' || quote_ident($1) || \' ILIKE \' || quote_literal($2) || \' || \'\'%\'\' \';
-	FOR x IN EXECUTE sql_str LOOP 
-     	  RETURN NEXT x.field;
- 	END LOOP;
-	RETURN;
-END;
-' LANGUAGE plpgsql;
+--CREATE OR REPLACE FUNCTION public.complete(text,text) RETURNS SETOF text AS '
+--DECLARE
+--	x RECORD;
+--	sql_str text;
+--BEGIN
+--	sql_str := \'SELECT DISTINCT \' || quote_ident($1) || \' AS field FROM lex WHERE \' || quote_ident($1) || \' ILIKE \' || quote_literal($2) || \' || \'\'%\'\' \';
+--	FOR x IN EXECUTE sql_str LOOP 
+--     	  RETURN NEXT x.field;
+-- 	END LOOP;
+--	RETURN;
+--END;
+--' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.lookup_general(text,text) RETURNS SETOF text AS '
-DECLARE
-	x RECORD;
-	sql_str text;
-BEGIN
-	sql_str := \'SELECT name FROM lex WHERE \' || quote_ident($1) || \' ILIKE \' || quote_literal($2);
-	FOR x IN EXECUTE sql_str LOOP 
-     	  RETURN NEXT x.name;
- 	END LOOP;	
-	RETURN;
-END;
-' LANGUAGE plpgsql;
+--CREATE OR REPLACE FUNCTION public.lookup_general(text,text) RETURNS SETOF text AS '
+--DECLARE
+--	x RECORD;
+--	sql_str text;
+--BEGIN
+--	sql_str := \'SELECT name FROM lex WHERE \' || quote_ident($1) || \' ILIKE \' || quote_literal($2);
+--	FOR x IN EXECUTE sql_str LOOP 
+--     	  RETURN NEXT x.name;
+-- 	END LOOP;	
+--	RETURN;
+--END;
+--' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.lookup_general_null(text) RETURNS SETOF text AS '
-DECLARE
-	x RECORD;
-	sql_str text;
-BEGIN
-	sql_str := \'SELECT name FROM lex WHERE \' || quote_ident($1) || \' IS NULL \';
-	FOR x IN EXECUTE sql_str LOOP 
-     	  RETURN NEXT x.name;
- 	END LOOP;	
-	RETURN;
-END;
-' LANGUAGE plpgsql;
+--CREATE OR REPLACE FUNCTION public.lookup_general_null(text) RETURNS SETOF text AS '
+--DECLARE
+--	x RECORD;
+--	sql_str text;
+--BEGIN
+--	sql_str := \'SELECT name FROM lex WHERE \' || quote_ident($1) || \' IS NULL \';
+--	FOR x IN EXECUTE sql_str LOOP 
+--     	  RETURN NEXT x.name;
+--	END LOOP;	
+--	RETURN;
+--END;
+--' LANGUAGE plpgsql;
 
 
 

@@ -16,7 +16,8 @@
 	      :fields-tb fields-tb
 	      :host host
 	      :port port
-	      :user (sql-fn-get-val ,lexdb :db_owner))))
+	      :user (db-owner ,lexdb))))
+;	      :user (sql-fn-get-val ,lexdb :db_owner))))
        (open-lex ,lexdb-lexdb)
        ,@body
        (close-lex ,lexdb-lexdb))))
@@ -565,38 +566,66 @@
      #'(lambda (x) (field-size-elt x cols)) 
      recs)))
 
-(defmethod lookup ((lex psql-lex-database) field-kw val-str)
-  (let* ((sql-fn (if val-str
-		    :lookup_general
-		   :lookup_general_null))
-	 (field-str (2-str field-kw))
-	 (args (if val-str
-		   (list field-str (sql-like-text val-str))
-		 (list field-str)))
-	 (records
-	  (sql-fn-get-raw-records lex
-				  sql-fn
-				  :args args)))
-    (mapcar #'car records)))
+;(defmethod lookup-name ((lex psql-lex-database) field-kw val-str)
+;  (mapcar 
+;   #'car
+;   (cond
+;    (val-str
+;     (get-raw-records lex 
+;		      (format nil "SELECT name FROM lex WHERE ~a ILIKE ~a"
+;			      (quote-ident lex field-kw)
+;			      (quote-literal lex val-str))))
+;    (t
+;     (get-raw-records lex 
+;		      (format nil "SELECT name FROM lex WHERE ~a IS NULL"
+;			      (quote-ident lex field-kw)))))))
+
+;(defmethod lookup ((lex psql-lex-database) field-kw val-str)
+;  (let* ((sql-fn (if val-str
+;		    :lookup_general
+;		   :lookup_general_null))
+;	 (field-str (2-str field-kw))
+;	 (args (if val-str
+;		   (list field-str (sql-like-text val-str))
+;		 (list field-str)))
+;	 (records
+;	  (sql-fn-get-raw-records lex
+;				  sql-fn
+;				  :args args)))
+;    (mapcar #'car records)))
 
 ;;
 
-(defmethod lookup3 ((lex psql-lex-database) field-kw val-str)
-  (let* ((sql-fn (if val-str
-		    :lookup_general3
-		   :lookup_general3_null))
-	 (field-str (2-str field-kw))
-	 (args (if val-str
-		   (list field-str (sql-like-text val-str))
-		 (list field-str)))
-	 (records
-	  (sql-fn-get-raw-records lex
-				  sql-fn
-				  :args args
-				  :fields '(:name :userid :modstamp))))
-    ;(mapcar #'car records)
-    records
-    ))
+(defmethod lookup ((lex psql-lex-database) field-kw val-str &key (ret-flds "*"))
+  (cond
+   (val-str
+    (get-raw-records lex 
+		     (format nil "SELECT ~a FROM lex WHERE ~a ILIKE ~a"
+			     ret-flds
+			     (quote-ident lex field-kw)
+			      (quote-literal lex val-str))))
+   (t
+    (get-raw-records lex 
+		     (format nil "SELECT ~a FROM lex WHERE ~a IS NULL"
+			     ret-flds
+			     (quote-ident lex field-kw))))))
+
+;(defmethod lookup3 ((lex psql-lex-database) field-kw val-str)
+;  (let* ((sql-fn (if val-str
+;		    :lookup_general3
+;		   :lookup_general3_null))
+;	 (field-str (2-str field-kw))
+;	 (args (if val-str
+;		   (list field-str (sql-like-text val-str))
+;		 (list field-str)))
+;	 (records
+;	  (sql-fn-get-raw-records lex
+;				  sql-fn
+;				  :args args
+;				  :fields '(:name :userid :modstamp))))
+;    ;(mapcar #'car records)
+;    records
+;    ))
 
 (defmethod lookup-rev-all ((lex psql-lex-database) field-kw val-str)
   (let* ((sql-fn (if val-str
@@ -616,12 +645,25 @@
 
 ;;
 
+(defmethod list-fld ((lex psql-lex-database))
+  (mapcar #'car
+	  (get-field-info lex "public" "rev")))
+
 (defmethod complete ((lex psql-lex-database) field-kw val-str)
-  (mapcar #'car 
-	  (sql-fn-get-raw-records lex 
-				  :complete 
-				  :args (list (symb-2-str field-kw)
-					      (sql-like-text val-str)))))
+  (let ((qi-field (quote-ident lex (symb-2-str field-kw)))
+	(ql-val (quote-literal lex (format nil "~a%" val-str))))
+    (mapcar #'car
+	    (get-raw-records lex
+			     (format nil
+				     "SELECT DISTINCT ~a AS field FROM lex WHERE ~a ILIKE ~a"
+				     qi-field qi-field ql-val)))))
+
+;(defmethod complete ((lex psql-lex-database) field-kw val-str)
+;  (mapcar #'car 
+;	  (sql-fn-get-raw-records lex 
+;				  :complete 
+;				  :args (list (symb-2-str field-kw)
+;					      (sql-like-text val-str)))))
 
 ;; called from pg-interface
 (defmethod new-entries ((lex psql-lex-database))
@@ -796,9 +838,22 @@
       (error *lexdb-message-old-lexdb* lexdb-version *lexdb-major-version*)))))
 
 (defmethod check-psql-server-version ((lex psql-lex-database))
-    (let ((texts (sql-fn-get-vals lex :check_psql_server_version)))
-      (when texts
-	(format t "~&(LexDB) WARNING: ~a" (str-list-2-str texts :sep-c #\Newline)))))
+  (let* ((supported
+	  (mapcar #'car
+		  (get-raw-records lex "SELECT val FROM public.meta WHERE var='supported-psql-server'")))
+	 (actual-full (caar (get-raw-records lex "SELECT split_part((SELECT version()),' ',2)")))
+	 (actual-full-l (string-2-str-list actual-full :sep #\.))
+	 (actual (concatenate 'string 
+		   (nth 0 actual-full-l)
+		   "."
+		   (nth 1 actual-full-l))))
+    (unless (member actual supported :test #'string=)
+      (format t "~&(LexDB) WARNING: Unsupported PSQL server version ~a.~% Supported versions are: ~a)" actual supported))))
+
+;(defmethod check-psql-server-version ((lex psql-lex-database))
+;    (let ((texts (sql-fn-get-vals lex :check_psql_server_version)))
+;      (when texts
+;	(format t "~&(LexDB) WARNING: ~a" (str-list-2-str texts :sep-c #\Newline)))))
 
 (defmethod initialize-lex ((lex psql-lex-database))
   (when (open-lex lex)
@@ -831,7 +886,8 @@
 		    "SELECT val FROM public.meta WHERE var='lexdb-version' LIMIT 1")))
     
 (defmethod get-filter ((lex psql-lex-database))
-  (sql-fn-get-val lex :filter))
+  (sql-get-val lex "SELECT val FROM meta WHERE var='filter'"))  
+;  (sql-fn-get-val lex :filter))
 
 (defmethod update-lex ((lex psql-lex-database))
   (vacuum lex)
@@ -909,8 +965,10 @@
 
 (defmethod get-fields ((lex psql-lex-database))
   (mapcar 
-   #'(lambda (x) (intern (string-upcase (car x)) :keyword))
-   (sql-fn-get-raw-records lex :list_fld)))
+   #'(lambda (x) (intern (string-upcase x) :keyword))
+;   #'(lambda (x) (intern (string-upcase (car x)) :keyword))
+   (list-fld lex)))
+;   (sql-fn-get-raw-records lex :list_fld)))
 
 (defmethod user-read-only-p ((lex psql-lex-database) user-str)
   (string= "t" 
@@ -1139,6 +1197,13 @@
 	    (/ (- (get-internal-real-time) time) internal-time-units-per-second))
     ))
 
+(defmethod db-owner ((lex psql-lex-database))
+  (let* ((uid (sql-get-val lex "SELECT datdba FROM pg_catalog.pg_database WHERE datname=current_database()"))
+	 (uname (sql-get-val lex 
+			     (concatenate 'string
+			       "SELECT usename FROM pg_catalog.pg_user WHERE usesysid=" (quote-literal lex uid)))))
+    uname))
+
 (defmethod merge-into-lexicon-dfn ((lex psql-lex-database) filename)
   "reconnect as db owner and merge new dfn into lexdb"
   (with-slots (dbname host port) lex
@@ -1149,7 +1214,8 @@
 	     :dbname dbname
 	     :host host
 	     :port port
-	     :user (sql-fn-get-val lex :db_owner))))
+	     :user (db-owner lex))))
+;	     :user (sql-fn-get-val lex :db_owner))))
       (connect conn-db-owner)
       (when
 	  (catch :sql-error
@@ -1329,14 +1395,28 @@
     (force-output)
     (export-to-tdl-to-file lexdb tdl-file)))
 
+;; todo: escape
 (defmethod commit-private-rev ((lex psql-lex-database)) 
   (with-lexdb-user-lexdb (lex2 lex)
-    (sql-fn-get-val lex2 :commit_rev :args (list (user lex))))
-  (sql-fn-get-records lex :clear_rev)
+    (get-raw-records lex 
+		     (format nil 
+			     "INSERT INTO public.rev (SELECT * FROM ~a)" 
+			     (quote-ident lex (concatenate 'string 
+						(user lex) ".rev"))))
+    (get-raw-records lex "SELECT * from register_mod_time()"))
+  (run-command lex "DELETE FROM rev")
+  (get-raw-records lex "SELECT * from register_mod_time()")
   (empty-cache lex))
 
+;(defmethod commit-private-rev ((lex psql-lex-database)) 
+;  (with-lexdb-user-lexdb (lex2 lex)
+;    (sql-fn-get-val lex2 :commit_rev :args (list (user lex))))
+;  (sql-fn-get-records lex :clear_rev)
+;  (empty-cache lex))
+
 (defmethod close-private-rev ((lex psql-lex-database))
-  (sql-fn-get-records lex :clear_rev)
+  (run-command lex "DELETE FROM rev")
+  (get-raw-records lex "SELECT * from register_mod_time()")
   (empty-cache lex)
   (reconnect lex) ;; work around server bug
   (and
@@ -1345,4 +1425,16 @@
 		       :args (list (get-filter lex)))
    (regenerate-orthkeys lex))
   )
+
+;(defmethod close-private-rev ((lex psql-lex-database))
+;  (sql-fn-get-records lex :clear_rev)
+;  (empty-cache lex)
+;  (reconnect lex) ;; work around server bug
+;  (and
+;   (sql-fn-get-records lex 
+;		       :update_lex 
+;		       :args (list (get-filter lex)))
+;   (regenerate-orthkeys lex))
+;  )
+
 

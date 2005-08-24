@@ -68,32 +68,32 @@ END;
 
 --
 
-CREATE OR REPLACE FUNCTION public.lookup_general3(text,text) RETURNS SETOF rev AS '
-DECLARE
-	x RECORD;
-	sql_str text;
-BEGIN
-	sql_str := \'SELECT * FROM lex WHERE \' || quote_ident($1) || \' ILIKE \' || quote_literal($2);
-	FOR x IN 
-		EXECUTE sql_str LOOP 
-     	  RETURN NEXT x;
- 	END LOOP;	
-	RETURN;
-END;
-' LANGUAGE plpgsql;
+--CREATE OR REPLACE FUNCTION public.lookup_general3(text,text) RETURNS SETOF rev AS '
+--DECLARE
+--	x RECORD;
+--	sql_str text;
+--BEGIN
+--	sql_str := \'SELECT * FROM lex WHERE \' || quote_ident($1) || \' ILIKE \' || quote_literal($2);
+--	FOR x IN 
+--		EXECUTE sql_str LOOP 
+--     	  RETURN NEXT x;
+-- 	END LOOP;	
+--	RETURN;
+--END;
+--' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.lookup_general3_null(text) RETURNS SETOF rev AS '
-DECLARE
-	x RECORD;
-	sql_str text;
-BEGIN
-	sql_str := \'SELECT * FROM lex WHERE \' || quote_ident($1) || \' IS NULL \';
-	FOR x IN EXECUTE sql_str LOOP 
-     	  RETURN NEXT x;
- 	END LOOP;	
-	RETURN;
-END;
-' LANGUAGE plpgsql;
+--CREATE OR REPLACE FUNCTION public.lookup_general3_null(text) RETURNS SETOF rev AS '
+--DECLARE
+--	x RECORD;
+--	sql_str text;
+--BEGIN
+--	sql_str := \'SELECT * FROM lex WHERE \' || quote_ident($1) || \' IS NULL \';
+--	FOR x IN EXECUTE sql_str LOOP 
+--     	  RETURN NEXT x;
+-- 	END LOOP;	
+--	RETURN;
+--END;
+--' LANGUAGE plpgsql;
 
 ---
 

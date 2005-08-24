@@ -33,7 +33,6 @@
       get-records
       sql-fn-get-records
       sql-fn-get-raw-records
-      lookup3
 ))
  
 (defun lexdb-fn (fn-name &rest rest)

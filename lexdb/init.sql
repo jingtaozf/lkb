@@ -8,6 +8,8 @@
 -- create tables
 --
 
+SET client_min_messages TO warning;
+
 CREATE TABLE public.meta (
 	var text,
 	val text);
