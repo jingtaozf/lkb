@@ -68,6 +68,7 @@
   apply-filter ;;; rule filter
   apply-index ;;; rule filter
   feeders ;;; slot used in construction of lrfsm
+  allfed ;;; slot used in construction of lrfsm for spelling and nosp
   lrfsm	;;; generalisation of filter for lexical rules
   nospfeeders
   nospfsm ;;; yet another, with only non-spelling rules
@@ -627,34 +628,57 @@
 	      arg)
       t)))
 
-;;; For lexical/morphological rule application we need
-;;; to test whether there is any sequence of lexical/morphological
-;;; rules that can link two given rules because the morphophonology
-;;; specifies a partial tree.
-;;; In general we can think of rules as constructing an FSM.
-;;; For now, we built a reachability table from the rule-filter.
-;;; FIX  - Eventually we want to test lexical types to see where they plug in
-;;; and perhaps also start associating probabilities with FSMs.
+#|
 
-;;; the rule-filter is implemented by associating an array with each rule
-;;; with one diminsion being the number of daughters and the other dimension
-;;; corresponding to an index for each rule.   
-;;; So for lexical rule A and B - if lexical rule A has index n and 
-;;; A could be a daughter of B, then B's apply-filter will have t
-;;; as the value of cell (1,n).  For the sake of simplicity
-;;; we use the same index for the rules in the lrfsm.  
+For lexical/morphological rule application we need
+to test whether there is any sequence of lexical/morphological
+rules that can link two given rules because the morphophonology
+specifies a partial tree.
+In general we can think of rules as constructing an FSM.
+For now, we built a reachability table from the rule-filter.
+FIX  - Eventually we want to test lexical types to see where they plug in
+and perhaps also start associating probabilities with FSMs.
+
+the rule-filter is implemented by associating an array with each rule
+with one diminsion being the number of daughters and the other dimension
+corresponding to an index for each rule.   
+So for lexical rule A and B - if lexical rule A has index n and 
+A could be a daughter of B, then B's apply-filter will have t
+as the value of cell (1,n).  For the sake of simplicity
+we use the same index for the rules in the lrfsm.  
 ;;;
-;;; For each rule, find all possible immediate feeders and store a 
-;;; list of these.
-;;; For each rule, look at feeders' arrays and set these values on 
-;;; the new rule array, recursing as needed.  If we find ourselves in a cycle, 
-;;; we have to stop recursing.  We record we're not done, and will
-;;; reexplore that branch (see below).  This means that, although
-;;; the code works when there are cycles, it could be very expensive to
-;;; compute the fsm.
+For each rule, find all possible immediate feeders and store a 
+list of these.  We also have a slot in each rule for the lrfsm
+and a slot for the things the rule is known to feed (as found during 
+search by the algorithm).  This slot is allfed
 
-;;; We also need a version of the fsm where we're only interested in the 
-;;; case where non-spelling rules connect two rules.
+pseudocode
+
+for rule in rulelist
+
+(build-lrfsm-aux rule nil)
+
+(defun build-lrfsm-aux (rule fed) 
+  (let ((newfed (set-difference fed (rule-allfed rule))))
+	(when newfed
+	  update all the fsms in newfed
+          (setf (rule-allfed rule) (union newfed (rule-allfed rule)))
+	  (for descendant in (rule-feeders rule)
+	       (build-lrfsm-aux descendant (rule-allfed rule))))))
+
+complete-lrfsm by setting all :unk to nil in each rule
+
+in the worst case, this code will do n^2 set-difference and union operations
+each on two lists of order n.  
+Test case in polymorphan is with 48 rules which can all feed eachother.
+
+Thanks to John Bowler for help with this.
+|#
+
+;;; We also need a version of the fsm where we're only interested in
+;;; the case where non-spelling rules connect two rules.  This is
+;;; currently done by building an fsm with just non-spelling rules
+;;; which uses two more slots (but reuses the ancestor slot)
 
 (defparameter *lrstruct-list* nil)
 (defparameter *spstruct-list* nil)
@@ -690,7 +714,11 @@
 	(revindex-rules nil)
 	(nosprules nil)
 	(sprules nil)
-	(nrules nil))
+	(nrules nil)
+	(fedrules nil)
+	(unfedrules nil)
+	(nospfedrules nil)
+	(nospunfedrules nil))
     (setf *spelling-rule-feed-cache* nil)
     (setf *cyclic-lr-list* nil)
     (setf *check-nosp-feeding-cache* nil)
@@ -706,7 +734,8 @@
 		 (setf (rule-nospfsm v) 
 		   (make-array (list nrules) :initial-element :unk))
 		 (setf (rule-lrfsm v) 
-		   (make-array (list nrules) :initial-element :unk)) 
+		   (make-array (list nrules) :initial-element :unk))
+		 (setf (rule-allfed v) nil)
 		 (push v lrlist)
 		 (push (cons (rule-apply-index v) v) revindex-lrules)
 		 (if (spelling-change-rule-p v)
@@ -728,56 +757,80 @@
 		 (dotimes (i nrules)
 		   (when (aref (rule-apply-filter v) i 0)
 		     ;; lex/morph rules have single daughter
-		     (let ((feeder (assoc i revindex-lrules)))
+		     (let ((feeder (cdr (assoc i revindex-lrules))))
 		       (when feeder
-			 (when (member (cdr feeder) nosprules)
+			 (when (and
+				(member v nosprules)
+				(member feeder nosprules))
 			   (push feeder (rule-nospfeeders v)))
 			 (push feeder (rule-feeders v))
-			 )))))
+			     )))))
 	     *lexical-rules*)
+    (dolist (v lrlist)
+      (if (rule-feeders v)
+	  (push v fedrules)
+	(push v unfedrules)))
+    (dolist (v nosprules)
+      (if (rule-nospfeeders v)
+	  (push v nospfedrules)
+	(push v nospunfedrules)))
 ;;; e.g., A can feed B, B can feed C, C can feed D, A can feed C
 ;;; rule-feeders of A - nil
 ;;;                 B - (A)
 ;;;                 C - (B A)
 ;;;                 D - (C)
     (when lrlist
-      (format t "~%Constructing main lr table")
       (setf *lrstruct-list* lrlist)
       (setf *spstruct-list* sprules)
       (setf *nospstruct-list* nosprules)
       ;;; three globals set because they are useful later on
-      (build-lrfsm-aux (car lrlist) (cdr lrlist) nrules nil 'feeders 'lrfsm)
+      #|
+      ;; commented out because it seems we don't need the complete
+      ;; lrfsm and constructing it is slow in some cases
+      (format t "~%Constructing main lr table")
+      (dolist (rule (append unfedrules fedrules))
+	(dolist (feeder (rule-feeders rule))
+	  (build-lrfsm-aux 
+	   feeder nrules (list rule) 'feeders 'lrfsm)))
+      (dolist (lr lrlist)
+	(setf (rule-allfed lr) nil)
+	(complete-lrfsm lr nrules 'lrfsm))
+	|#
       (when nosprules
 	(format t "~%Constructing lr table for non-morphological rules")
-	(build-lrfsm-aux (car nosprules) (cdr nosprules) nrules nil 
-			 'nospfeeders 'nospfsm))
-      (dolist (crule *cyclic-lr-list*)
-	(unless (member (rule-id crule) *known-cyclic-rules*)
-	  ;;; grammar writer can choose to disable this message
-	  (format t "~%Warning: ~A can feed itself" (rule-id crule))))
-      (format t "~%Completing lr table")
-      (dolist (lr lrlist)
-	(complete-lrfsm lr nrules 'feeders 'lrfsm))
-      (when nosprules
+	(dolist (rule (append nospunfedrules nospfedrules))
+	  (dolist (feeder (rule-nospfeeders rule))
+	    (build-lrfsm-aux 
+	     feeder nrules (list rule) 'nospfeeders 'nospfsm)))
 	(dolist (lr nosprules)
-	  (complete-lrfsm lr nrules 'nospfeeders 'nospfsm))))))
+	  (complete-lrfsm lr nrules 'nospfsm))))))
 
 #|
-suppose A can feed B, B can feed C, C can feed D, A can feed C
+suppose A can feed B, B can feed C, C can feed D
 and D can feed B (so there's a cycle)
 
-;;; rule-feeders of A - nil
-;;;                 B - (A D)
-;;;                 C - (B A)
-;;;                 D - (C) 
+rule-feeders of A - nil
+B - (D A)
+C - (B)
+D - (C) 
 
-;;; desired result
-;;;
+The problem occurs that when we are checking what feeds B
+(say) and we check the D branch first.  We record that D feeds B,
+recurse on D, record that C feeds D, recurse on C and find we're at B.
+
+the desired result is:
+
    --- A     B     C     D
    A   nil   nil   nil   nil
    B   t     t     t     t
    C   t     t     t     t
    D   t     t     t     t
+
+note: problematic case in ERG that caused last version to loop
+seemed to involve two linked cycles.  Added a test case for this to
+polymorphan and also one for the pathological case where all rules feed 
+eachother.
+
 |#
 
 
@@ -789,78 +842,38 @@ and D can feed B (so there's a cycle)
   ;;;                        and  fsm-slot = nospfsm
 
 
-(defun build-lrfsm-aux (lr remainder nrules in-progress 
-			feeder-slot fsm-slot)
-  ;;; looking at rule lr, set the lrfsm values
-  ;;; to t for each feeder and to t for each feeder's feeder
-  ;;; if feeder is done.  If not done, recurse on feeder.
-  ;;; Test for done is whether rule-feeders is :done
-  (let ((feeders (slot-value lr feeder-slot)))
-;;;    (pprint feeders)
-    (unless (eql feeders :done)
-      (let ((lrfsm (slot-value lr fsm-slot))
-	    (todo nil))
-	(dolist (feeder feeders)
-	  (setf todo
-	    (build-lrfsm-aux-process-feeders feeder lrfsm nrules in-progress todo lr feeder-slot fsm-slot)))
-#+:debug	(when todo (format t "~%Cycle ~A, current feeders ~A" 
-			todo (rule-feeders lr)))
-	(if todo
-	      (setf (slot-value lr feeder-slot) todo)
-	  ;;; we've found a cycle in the feeders, so we can't complete yet
-	  (progn
-	    (dotimes (i nrules)
-	      (when (eql (aref lrfsm i) :unk)
-		(setf (aref lrfsm i) nil)))
-	    (setf (slot-value lr feeder-slot) :done)))))
-    (when remainder 
-      (build-lrfsm-aux (car remainder)
-		       (cdr remainder) nrules nil feeder-slot fsm-slot))))
-    
-(defun build-lrfsm-aux-process-feeders (feeder lrfsm nrules in-progress todo lr feeder-slot fsm-slot)    
-    (let ((frule (cdr feeder))
-	  (fnum (car feeder)))
-	    	;;; set the feeder index
-      (setf (aref lrfsm fnum) t)
-      (if (member frule in-progress)
-	  ;; we're in a cycle, so the feeder fsm isn't complete
-	  ;; stop, but record we're not done
-	  (progn
-	    (pushnew frule *cyclic-lr-list*)
-	    (pushnew feeder todo))
-	;; otherwise find the feeder fsm, recursing if necessary
-	(progn 
-	  (build-lrfsm-aux frule nil nrules 
-			   (cons lr in-progress) feeder-slot fsm-slot)
-	  ;; propagate the feeder values
-	  (dotimes (i nrules)
-	    (when (eql (aref (slot-value frule fsm-slot) i) t)
-	      (setf (aref lrfsm i) t)
-	      ))
-	  ;; if there's a cycle further back, record we're
-	  ;; not done
-	  (unless (eql (slot-value frule feeder-slot) :done)
-	    (pushnew feeder todo))))
-      todo))
+(defun build-lrfsm-aux (lr nrules in-progress feeder-slot fsm-slot)
+  (let* ((all-fed (rule-allfed lr))
+	 (feeders (slot-value lr feeder-slot))
+	 (rule-index (rule-apply-index lr))
+	 (newfed (set-difference in-progress all-fed :test #'eq)))
+    (when newfed
+      (setf (rule-allfed lr) (union in-progress all-fed :test #'eq))
+      (dolist (fedrule newfed)
+	(let ((fed-lrfsm (slot-value fedrule fsm-slot)))
+	  (setf (aref fed-lrfsm rule-index) t))) ;; mark the feeding	    
+      (dolist (frule feeders)
+	(when (member frule in-progress)
+	  ;; we've found a cycle
+	  (unless (member frule *cyclic-lr-list*)
+	    (push frule *cyclic-lr-list*)
+	    (unless (member (rule-id frule) *known-cyclic-rules*)
+	  ;;; grammar writer can choose to disable this message
+	      (format t "~%Warning: ~A can feed itself" 
+		      (rule-id frule)))))
+	  ;; regardless of whether we're in a cycle, we keep going,
+	;; because we may have more fed things to add
+	(build-lrfsm-aux 
+	 frule nrules (cons lr (rule-allfed lr)) feeder-slot fsm-slot)))))
 
-(defun complete-lrfsm (lr nrules feeder-slot fsm-slot)
-  ;;; go through the cases we haven't been able to complete because
-  ;;; of cycles and set values.
-  (let ((feeders (slot-value lr feeder-slot)))
-    (unless (eql feeders :done)
-      (let ((lrfsm (slot-value lr fsm-slot)))
-	(dolist (feeder feeders)
-	  (let ((frule (cdr feeder)))
-		;; propagate the feeder values
-		(dotimes (i nrules)
-		  (when (eql (aref (slot-value frule fsm-slot) i) t)
-		    (setf (aref lrfsm i) t)))))
-	(dotimes (i nrules)
-	  (when (eql (aref lrfsm i) :unk)
-	    (setf (aref lrfsm i) nil)))
-	(setf (slot-value lr feeder-slot) :done)))))
+(defun complete-lrfsm (lr nrules fsm-slot)
+  (let ((lrfsm (slot-value lr fsm-slot)))
+    (dotimes (i nrules)
+      (when (eql (aref lrfsm i) :unk)
+	(setf (aref lrfsm i) nil)))))
 
-			  
+#|
+
 (defun check-lrfsm (rule test)
  #+:pdebug (format t "~%Can ~A be a descendant of ~A? " (rule-id test)
 		   (rule-id rule))
@@ -874,6 +887,25 @@ and D can feed B (so there's a cycle)
       (progn 
 	#+:pdebug (format t "Don't know") 
 	t))))
+
+|#
+
+(defun check-nospfsm (rule test)
+ #+:pdebug (format t "~%Can ~A be a descendant of ~A? " (rule-id test)
+		   (rule-id rule))
+  ;; can test be a descendant of rule 
+  (let ((filter (rule-nospfsm rule)))
+    (if filter
+	(let ((res 
+	       (aref filter (rule-apply-index test))))
+	  #+:pdebug (if res (format t "Yes")  (format t "No"))
+	  res)
+      (progn 
+	#+:pdebug (format t "Don't know") 
+	t))))
+
+;;; FIX - probably better to turn the following into proper tables
+
 
 (defun check-nosp-feeding (rule test)
   ;;; this is a bit more complex.  rule and test should both be
@@ -909,12 +941,22 @@ and D can feed B (so there's a cycle)
       (when
 	  (dolist (inter2 test-out)
 	    (when (or (eq inter1 inter2)
-		      (check-lrfsm inter1 inter2))
+		      (check-nospfsm inter1 inter2))
 	      (return t)))
 	(return t)))))
-    
-  
 
+(defun check-sp-lr-feeding (rule test)
+  ;;; and yet another one - for the case where a morphological
+  ;;; rule is tested against a nosp rule to see if they are linked
+  ;;; directly or by nosp rules
+  (or (check-rule-filter rule test 0)
+      (dolist (inter *nospstruct-list*)
+	(when (check-rule-filter rule inter 0)
+	  (when (check-nospfsm inter test)
+	    (return t))))))
+		
+  
+#|
 (defun print-lrfsm (&key (stream t))
   (format stream "~%Specified feeding relationships~% Descendant~30TMother")
   (dolist (rule1 *lrstruct-list*)
@@ -923,6 +965,29 @@ and D can feed B (so there's a cycle)
 	(when feeds
 	  (format stream "~% ~A~30T~A" 
 		  (rule-id rule1) (rule-id rule2)))))))
+|#
+
+;;; called by print-lrfsm-toplevel
+;;; and by testing code in polymorphan
+
+(defun print-nospfsm (&key (stream t))
+  (format stream "~%Specified feeding relationships~% Descendant~30TMother")
+  (dolist (rule1 *nospstruct-list*)
+    (dolist (rule2 *nospstruct-list*)
+      (let ((feeds (check-nospfsm rule2 rule1)))
+	(when feeds
+	  (format stream "~% ~A~30T~A" 
+		  (rule-id rule1) (rule-id rule2)))))))
+
+(defun print-nospfeeding (&key (stream t))
+  (format stream "~%Specified feeding relationships~% Descendant~30TMother")
+  (dolist (rule1 *spstruct-list*)
+    (dolist (rule2 *spstruct-list*)
+      (let ((feeds (check-nosp-feeding rule2 rule1)))
+	(when feeds
+	  (format stream "~% ~A~30T~A" 
+		  (rule-id rule1) (rule-id rule2)))))))
+
 
 (defun spelling-rule-feeds-p (rule-id)
   ;;; use the lrfsm to check whether anything can feed this rule.
@@ -933,7 +998,7 @@ and D can feed B (so there's a cycle)
 	     (feeder-p
 	      (dolist (srule *spstruct-list*)
 		(when 
-		    (check-lrfsm rule-entry srule)
+		    (check-nosp-feeding rule-entry srule)
 		  (return t)))))
 	(push (cons rule-id feeder-p)
 	      *spelling-rule-feed-cache*)

@@ -360,7 +360,7 @@
                       (cons rule
                             (loop
                                 for foo in *parser-lexical-rules*
-                                when (check-lrfsm rule foo)
+                                when (check-sp-lr-feeding rule foo)
                                 collect foo)))
                     *parser-rules*)
       for rhs = (rule-rhs rule)

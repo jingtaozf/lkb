@@ -1551,9 +1551,9 @@ an unknown word, treat the gap as filled and go on from there.
     (when spelling-rule
       (apply-immediate-spelling-rule spelling-rule orth-tdfs remaining-morph
 				     left-vertex edge right-vertex f))
-    (dolist (rule (if spelling-rule 
+    (dolist (rule (if spelling-rule
 		      (loop for lr in *parser-lexical-rules*
-			  when (check-lrfsm spelling-rule lr)
+			  when (check-sp-lr-feeding spelling-rule lr)
 			  collect lr)
 		    *parser-rules*))
       ;; when we have a partial-tree specification, we have all

@@ -420,7 +420,7 @@
 
 (defun print-lrfsm-toplevel nil
   (let ((stream lkb::*lkb-background-stream*))
-    (print-lrfsm :stream stream)))
+    (print-nospfsm :stream stream)))
 
 ;;; Output of derivation trees
 
