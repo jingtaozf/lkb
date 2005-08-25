@@ -1,23 +1,11 @@
 
 Specified feeding relationships
  Descendant                   Mother
- MRULE-A                      CONST-RULE
- MRULE-A                      MRULE-W
- MRULE-A                      CONST-RULE2
  MRULE-A                      MRULE-Q
  MRULE-A                      MRULE-X
  MRULE-A                      MRULE-Z
- CONST-RULE                   MRULE-W
- CONST-RULE                   CONST-RULE2
- CONST-RULE                   MRULE-Q
- CONST-RULE                   MRULE-X
- CONST-RULE2                  MRULE-W
- CONST-RULE2                  MRULE-X
- MRULE-Q                      MRULE-W
  MRULE-Q                      MRULE-X
  MRULE-X                      MRULE-W
- MRULE-Z                      MRULE-W
- MRULE-Z                      CONST-RULE2
  MRULE-Z                      MRULE-Q
  MRULE-Z                      MRULE-X
 RAINAZ 3 3 0 3 3

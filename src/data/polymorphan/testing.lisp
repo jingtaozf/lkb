@@ -70,7 +70,7 @@
     (setf *infl-variant* "buildfilter")
     (read-script-file-aux "data/polymorphan/script")
   ;;; should get warnings on load
-    (print-lrfsm :stream ostream))
+    (print-nospfsm :stream ostream))
   ;;;
   ;;; "buildfilter2"
   ;;;
@@ -79,7 +79,7 @@
     (setf *infl-variant* "buildfilter2")
     (read-script-file-aux "data/polymorphan/script")
   ;;; should get warnings on load
-    (print-lrfsm :stream ostream))
+    (print-nospfsm :stream ostream))
   ;;;
   ;;; "buildfilter3"
   ;;;
@@ -111,7 +111,7 @@
 		   :if-does-not-exist :create :if-exists :supersede)
     (setf *infl-variant* "feed")
     (read-script-file-aux "data/polymorphan/script")
-    (print-lrfsm :stream ostream)
+    (print-nospfeeding :stream ostream)
     (dolist (word '(rainaz rainax rainaw))
       (multiple-value-bind (et st ct ft mt)
 	  (do-parse-tty (string word))
