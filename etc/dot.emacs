@@ -191,6 +191,35 @@
     (fi:common-lisp)))
 
 
+(defun korean (&optional prefix)
+  (interactive "P")
+
+  (allegro)
+  (let ((encoding 'euc-kr))
+    (set-language-environment 'korean)
+    (setq default-buffer-file-coding-system encoding)
+    (setq default-process-coding-system (cons encoding encoding)))
+
+  (setq fi:common-lisp-image-name 
+    (format
+     "%s/lkb/%s/lkb%s"
+     delphin-home
+     (system-binaries)
+     (if (or (string-match "windows" system-configuration)
+             (string-match "mingw-nt" system-configuration)
+             (string-match "msvc" system-configuration))
+       ".exe"
+       "")))
+
+  (setq fi:common-lisp-image-file
+    (format "%s/lkb/%s/lkb.dxl" delphin-home (system-binaries)))
+
+  (setq fi:common-lisp-image-arguments (list "-locale" "ko_KR.EUC"))
+
+  (let ((process-connection-type nil))
+    (fi:common-lisp)))
+
+
 (defun lisp (&optional prefix)
   (interactive "P")
 
