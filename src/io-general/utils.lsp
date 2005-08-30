@@ -525,4 +525,67 @@
 			  str2))
 	    (format t "~%~S~%~S" str1 str2)))))))
 
+;;; interpreting *cvs-version* and testing its value (probably mostly 
+;;; in scripts)
+;;;
+;;; the idea is to call these functions with times written using the same
+;;; format as the *cvs-version* because I imagine this will
+;;; usually be used by people who have checked the version.lisp file
+;;; e.g., (lkb-version-equal-p "2005/08/28 19:31:05")
+;;;
+;;; These functions should work on versions of the lkb after sometime in 2000
+;;; 
+;;; I considered adding a facility to just specify a date without a time, 
+;;; but this might lead to confusing results when there's multiple versions 
+;;; on one date so it seems better to try and enforce precision.
 
+(defun lkb-version-after-p (time-str)
+  (let ((cvs-time (decode-cvs-version-time))
+	(supplied-time (decode-time-string time-str)))
+    (if supplied-time
+	(if cvs-time
+	    (> cvs-time supplied-time))
+      (format t "~%Cannot interpret time ~A" time-str))))
+
+(defun lkb-version-before-p (time-str)
+  (let ((cvs-time (decode-cvs-version-time))
+	(supplied-time (decode-time-string time-str)))
+    (if supplied-time
+	(if cvs-time
+	    (< cvs-time supplied-time))
+      (format t "~%Cannot interpret time ~A" time-str))))
+
+(defun lkb-version-equal-p (time-str)
+  (let ((cvs-time (decode-cvs-version-time))
+	(supplied-time (decode-time-string time-str)))
+    (if supplied-time
+	(if cvs-time
+	    (= cvs-time supplied-time))
+      (format t "~%Cannot interpret time ~A" time-str))))
+
+(defun decode-cvs-version-time nil
+  (let ((cvs-str *cvs-version*))
+    (if (and cvs-str (stringp cvs-str))
+	(let ((time-str (subseq cvs-str 7 (- (length cvs-str) 2))))
+	  (decode-time-string time-str)))))
+
+(defun decode-time-string (time-str)
+  (let* ((slash1 (position #\/ time-str))
+	 (slash2 (if slash1 (position #\/ time-str 
+				      :start (+ 1 slash1))))
+	 (space (if slash2 (position #\space time-str)))
+	 (colon1 (if space (position #\: time-str)))
+	 (colon2 (if colon1 (position #\: time-str 
+				      :start (+ 1 colon1)))))
+    (if colon1
+	(let ((second (parse-integer (subseq time-str (+ 1 colon2))))
+	      (minute (parse-integer (subseq time-str (+ 1 colon1) colon2)))
+	      (hour (parse-integer (subseq time-str (+ 1 space) colon1)))
+	      (date (parse-integer (subseq time-str (+ 1 slash2) space)))
+	      (month (parse-integer (subseq time-str (+ 1 slash1) slash2)))
+	      (year (parse-integer (subseq time-str 0 slash1))))
+	  (apply #'encode-universal-time 
+		 (list second minute hour date month year))))))
+	  
+	  
+	  
