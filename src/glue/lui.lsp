@@ -53,6 +53,8 @@
 (defparameter %lui-eoc% (format nil " ~a" #\page))
 
 (defun lui-initialize (&key runtimep port)
+  (declare (ignore runtimep))
+  
   (lui-shutdown)
   (setf *lui-application*
     (format
