@@ -83,7 +83,9 @@
                       lkb::batch-check-lexicon
 		      ;; options
 		      lkb::get-parameters
-                      lkb::find-type-from-features)))
+                      lkb::find-type-from-features
+		      
+		      lkb::*maf-menu*)))
 
 ;;; Menus moved to here from topmenu.lsp, since they can be
 ;;; treated as independent between ACL and MCL
@@ -369,16 +371,18 @@
 				  )
                   )
 		 :available-p :always)))
-         (list
-	  (make-lkb-submenu-item 
-	   :menu-title "MAF"
-	   :menu-items
-	   (list
-	    (make-menu-item :name "Print MAF tokens"
-			    :value 'print-maf-tokens)
-	    (make-menu-item :name "Print MAF wordforms"
-			    :value 'print-maf-wordforms)
-	    ))
+	 (and lkb::*maf-menu*
+	      (list
+	       (make-lkb-submenu-item 
+		:menu-title "MAF"
+		:menu-items
+		(list
+		 (make-menu-item :name "Print MAF tokens"
+				 :value 'print-maf-tokens)
+		 (make-menu-item :name "Print MAF wordforms"
+				 :value 'print-maf-wordforms)
+		 ))))
+	 (list
 	  (make-lkb-submenu-item 
 	   :menu-title "Options"
 	   :menu-items                       

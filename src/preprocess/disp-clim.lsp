@@ -4,6 +4,8 @@
 
 (in-package :lkb)
 
+(defparameter *maf-menu* nil)
+
 ;; CLIM display routines
 (defun print-maf-tokens nil
   (let ((frame (clim:make-application-frame 'xml-maf-tokens)))
@@ -11,7 +13,7 @@
 
 
 (defun print-maf-wordforms nil
-  (let ((frame (clim:make-application-frame 'xml-maf-tokens)))
+  (let ((frame (clim:make-application-frame 'xml-maf-wordforms)))
     (clim:run-frame-top-level frame)))
 
 
@@ -30,7 +32,7 @@
 
 (define-lkb-frame xml-maf-wordforms
     ()
-  :display-function 'disp-xml-maf-tokens 
+  :display-function 'disp-xml-maf-wordforms 
   :width 400 
   :height 400)
 
