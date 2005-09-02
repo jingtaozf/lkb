@@ -54,14 +54,13 @@
 
 (defun lui-initialize (&key runtimep port)
   (lui-shutdown)
-  (when runtimep
-    (setf *lui-application*
-      (format
-       nil 
-       "exec ~a -p"
-       (namestring 
-        (make-pathname 
-         :directory (pathname-directory make::bin-dir) :name "yzlui")))))
+  (setf *lui-application*
+    (format
+     nil 
+     "exec ~a -p"
+     (namestring 
+      (make-pathname 
+       :directory (pathname-directory make::bin-dir) :name "yzlui"))))
   (if port
     (let* ((socket (socket:make-socket :connect :passive :local-port port))
            (stream (socket:accept-connection socket :wait t))

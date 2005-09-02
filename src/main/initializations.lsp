@@ -180,7 +180,6 @@
              (port (parse-integer lui :junk-allowed t)))
         (when lui (lui-initialize :port port :runtimep runtimep)))
 
-      ;; (bmw - 05jun05) use global *lexdb-params* to activate LexDB
       #+:psql
       (psql-initialize)
 

@@ -85,7 +85,8 @@
                   :wait t :output "/dev/null" :error-output "/dev/null"))
     #+:allegro
     (sys:os-wait nil *sppp-pid*)
-    (setf *sppp-pid* nil)))
+    (setf *sppp-pid* nil)
+    (setf *morph-option* :default)))
 
 (defun sppp-setup-morphs (tokens)
   (loop
@@ -94,7 +95,7 @@
       for form = (rest (assoc :form token))
       for from = (or (rest (assoc :from token)) -1)
       for to = (or (rest (assoc :to token)) -1)
-      for analyses = 
+      do
         (loop
             for analysis in (rest (assoc :analyses token))
             for stem = (string-upcase (rest (assoc :stem analysis)))
@@ -105,14 +106,10 @@
                                    "~@:(~a~)~a" 
                                    inflection *lex-rule-suffix*)
                                   :lkb))
-            collect (cons stem (when irule (list (list irule form)))))
-      do
-	;;; FIX - silliness here in packaging up and splitting apart
-	;;; but let's get it working first
-	(dolist (morph-poss analyses)
-	  (add-morpho-stem-edge (car morph-poss) (cdr morph-poss) i (+ 1 i) 
-				form form from to nil nil))))
-
+            do
+              (add-morpho-stem-edge
+               stem (when irule (list (list irule form)))
+               i (+ 1 i) form form from to nil nil))))
 
 (defun sppp (text &key (stream *sppp-stream*))
 

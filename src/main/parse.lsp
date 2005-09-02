@@ -1100,6 +1100,7 @@ relatively limited.
 					   :end to)))
 	(push cc (aref *tchart* from 1))
 	(push cc (aref *tchart* to 0))
+        (setf *tchart-max* (max *tchart-max* to))
 	new-edge)
     nil))
 
