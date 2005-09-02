@@ -250,7 +250,7 @@ noun-lxm := non-quant-lexeme &
   SEM [ HOOK.INDEX object ] ].
 
 pronm-lxm := const-lxm &
-[ HEAD noun & [AGR /l 3sing, FORM /l norm],
+[ HEAD det & [AGR /l 3sing, FORM /l norm],
   SPR <>,
   COMPS <>,
   SEM [ HOOK.INDEX object] ].
