@@ -9,6 +9,10 @@
 ;;; escaping other characters is harmless - \ is just ignored
 ;;; everything ends up upper case
 
+;;; letter set names must be a single character - they can be anything other
+;;; than ?!)* or \.  They should not have escape characters in them when 
+;;; they occur.
+
 escape :=
 %suffix (* ~`\!@#$%^&\*(\)-_=+{}[]|\\;:'",<.>/\?\1)
 [ CATEG cat2,
