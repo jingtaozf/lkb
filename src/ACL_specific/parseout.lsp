@@ -125,6 +125,9 @@
        ("Sement"
 	:value sement
 	:active ,(mrs::algebra-available-p))
+       ("Rule sement"
+	:value rule-sement
+	:active ,(mrs::algebra-available-p))
        ("Check algebra"
 	:value check-algebra
 	:active ,(mrs::algebra-available-p)) 
@@ -183,16 +186,30 @@
                           (format nil "~A" item)
                           item))))))
      (sement       
+      ;;; we have to use the tdfs as used by the parser here, because
+      ;;; otherwise we have things on the rels list that shouldn't be 
+      ;;; there because of the diff list
       (let ((parse-tdfs (and (edge-p edge-record) (edge-dag edge-record))))
         (when (tdfs-p parse-tdfs)
-	  (show-mrs-sement-window parse-tdfs edge-record
+	  (show-mrs-sement-window parse-tdfs edge-fs edge-record
 				  (format nil "Edge ~A ~A - Sement" 
+					  (edge-id edge-record)
+					  (if (g-edge-p edge-record) "G" "P"))))))
+     (rule-sement       
+      ;;; this is to get the contribution of the rule - for cases where
+      ;;; it has a c-cont
+      (let ((rule-tdfs (and (edge-p edge-record) 
+			    (rule-p (edge-rule edge-record))
+			    (rule-full-fs (edge-rule edge-record)))))
+        (when (tdfs-p rule-tdfs)
+	  (show-mrs-rule-sement-window rule-tdfs
+				  (format nil "Edge ~A ~A - Rule sement" 
 					  (edge-id edge-record)
 					  (if (g-edge-p edge-record) "G" "P"))))))
      (check-algebra       
       (let ((parse-tdfs (if (edge-p edge-record) (edge-dag edge-record))))
         (when (tdfs-p parse-tdfs)
-	  (show-mrs-sement-check-window parse-tdfs edge-record
+	  (show-mrs-sement-check-window parse-tdfs edge-fs edge-record
 				  (format nil "Edge ~A ~A - algebra check" 
 					  (edge-id edge-record)
 					  (if (g-edge-p edge-record) "G" "P")))))) 

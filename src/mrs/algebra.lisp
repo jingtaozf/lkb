@@ -11,27 +11,48 @@
 (in-package :mrs)
 
 (defun algebra-available-p nil
+  ;;; this table has to be defined in a grammar for any of this to work
   *rule-algebra-table*)
 
 ;;; FIX
 ;;; variable naming - we would like this to be constant over a parse
 ;;; this implies calling the algebra construction code in such a way
 ;;; that variables are recognised as equivalent between phrases.
-;;; The best way to do this is probably to do something INSTLOC-like
-;;; but ignore for now.
-;;; There's also an issue about the interaction between this and the standard
-;;; MRS extraction code, again ignored for now.
+;;; This would be the case if we were using the single reconstructed FS from
+;;; parse tree, but if we do that, then the RELS that appear on the diff list
+;;; include things which shouldn't be on that node.  We might get round that, 
+;;; but there will be other shared things too A possible solution is
+;;; to exploit the *named-nodes* mechanism, store an alist of fs / variable
+;;; name pairs associated with a window, and when we create a variable, 
+;;; to look up that path in the reconstructed FS and use it to find the 
+;;; variable.  I have added in appropriate arguments from the calling
+;;; functions in lkb-acl-mrs.lisp and so on, but actually writing this
+;;; code would be complicated.
 
-(defun extract-sement (parse-fs &optional start-num)
+;;; There's also an issue about the interaction between this and the standard
+;;; MRS extraction code, again ignored for now.  In other words, we 
+;;; need to make sure that there won't be a screw up if we call the MRS
+;;; extraction code after having done this because of the *named-nodes*
+;;; or whatever.
+
+(defun extract-sement (parse-fs reconstructed-fs &optional start-num)
+  (declare (ignore reconstructed-fs))
   (initialise-algebra start-num)
   (let ((sement 
 	 (extract-algebra-from-fs (lkb::tdfs-indef parse-fs))))
     sement))
 
-(defun extract-and-check-sement (parse-fs edge-record)
+(defun extract-rule-sement (rule-fs &optional start-num)
+  (initialise-algebra start-num)
+  (let ((sement 
+	 (extract-algebra-from-rule-fs (lkb::tdfs-indef rule-fs))))
+    sement))
+
+(defun extract-and-check-sement (parse-fs reconstructed-fs edge-record)
   (initialise-algebra)
   (let ((sement 
-	 (extract-algebra-from-fs (lkb::tdfs-indef parse-fs))))
+	 (extract-algebra-from-fs (lkb::tdfs-indef parse-fs)
+				  (lkb::tdfs-indef reconstructed-fs))))
     (check-algebra sement edge-record)))
 
 (defun initialise-algebra (&optional dtr-num)
@@ -43,7 +64,8 @@
   (setf *all-nodes* nil)
   (setf *named-nodes* nil))
 
-(defun extract-algebra-from-fs (fs)
+(defun extract-algebra-from-fs (fs &optional reconstructed-fs)
+  (declare (ignore reconstructed-fs))
   ;;; components are
   ;;; a) hook
   ;;; b) slots
@@ -53,13 +75,21 @@
     (if (is-valid-fs sem-fs)
         (construct-algebra-sement sem-fs fs))))
 
+(defun extract-algebra-from-rule-fs (fs)
+  (let ((sem-fs (path-value fs *c-cont-path*)))
+    (if (is-valid-fs sem-fs)
+        (construct-algebra-sement sem-fs fs))))
 
 (defun construct-algebra-sement (sem-fs full-fs)
   (let* ((hook-fs (path-value sem-fs *hook-path*))
          (liszt-fs (path-value sem-fs *psoa-liszt-path*))
          (h-cons-fs (path-value sem-fs *psoa-rh-cons-path*)))
-    (unless (and hook-fs liszt-fs h-cons-fs)
-      (error "Missing algebra components"))
+    (unless hook-fs 
+      (error "Missing hook"))
+    (unless liszt-fs 
+      (error "Missing rels"))
+    (unless  h-cons-fs
+      (error "Missing handle constraints"))
     (let* ((hook (construct-algebra-hook hook-fs nil))
 	   (rels (nreverse (construct-liszt 
 			    liszt-fs nil *variable-generator*)))
@@ -67,13 +97,22 @@
 	   (hcons (nreverse (construct-h-cons 
 			     h-cons-fs nil *variable-generator*)))
 	         	  ;;; construct-h-cons in mrsoutput
-	   (slots (construct-algebra-slots full-fs)))
+	   (slots (construct-algebra-slots 
+		   full-fs 
+		   *algebra-ignore-paths*
+		  *algebra-ignore-feats*)))
       ;;; let* because slots construction assumes other variables
       ;;; are already found to allow pruning of unused `slots'
       (make-sement :hook hook :slots slots
 		   :liszt rels :h-cons hcons))))
 
 (defun construct-algebra-hook (fs in-slot-p)
+  ;;; this code is called when we originally create the hook,
+  ;;; and also from inside the slot creation code (when in-slot-p 
+  ;;; will be true).  The assoc
+  ;;; of named-nodes is only relevant in the latter case - we are
+  ;;; checking that the variables are coindexed with something since
+  ;;; otherwise this is not an interesting slot.
   (let ((index-fs
 	 (path-value fs *index-path*))
 	(ltop-fs 
@@ -96,7 +135,8 @@
 		   (create-variable xarg-fs *variable-generator*))))))
 
 
-(defun construct-algebra-slots (fs)
+(defun construct-algebra-slots (fs slot-ignore-paths 
+					     slot-ignore-features)
   ;;; the code for the generator and the SEM-I that do fairly
   ;;; similar things don't quite do what's wanted.  
   ;;; This code walks over a feature structure, finding all
@@ -112,15 +152,14 @@
   ;;;
   ;;; C-CONT is an issue
   (let ((slot-alist
-	 (lkb::collect-subdags-for-type fs 
-					*hook-type* 
-					*algebra-ignore-feats*
-					*algebra-ignore-paths*)))
+	 (lkb::collect-subdags-for-type fs *hook-type* 
+					slot-ignore-features 
+					slot-ignore-paths)))
     (loop for slot in slot-alist
 	for slot-hook = (construct-algebra-hook (car slot) t)
 			;;; returns nil if slot hook isn't coindexed with
 			;;; anything in rels or the main hook
-			;;; ? do we allow slots just for coindexation
+			;;; ?FIX do we allow slots just for coindexation
 			;;; with other slots?  if so, this will 
 			;;; incorrectly cause them to be deleted
 	when slot-hook
@@ -190,7 +229,8 @@
 	(count 0))
     ;;; count is used as a starting count for variable numbering -
     ;;; the first daughter variables start at 1000, next at 2000 and so
-    ;;; on.  This prevents name clashes.
+    ;;; on.  This prevents name clashes - assuming we don't have
+    ;;; really long MRSs ...
     (if (lkb::edge-p edge-record)
 	(let* ((rule-struct (lkb::edge-rule edge-record))
 	       (*mrs-comparison-output-control* :save)
@@ -219,23 +259,25 @@
 					      head slots order)))
 		      (if reconstructed-sement
 			  (compare-sements reconstructed-sement sement)
-			(mrs-comparison-output "Cannot reconstruct sement")))
+			(mrs-comparison-output 
+			 :message "Cannot reconstruct sement")))
 		  (if (cdr dtrs)
       ;;; can't find rule
 		      (mrs-comparison-output 
-		       "Warning: Non-unary rule ~A missing ~%from algebra table" rule)
+		       :message "Warning: Non-unary rule ~A missing ~%from algebra table" rule)
 		    (mrs-comparison-output 
-		     "Unary rule ~A not in algebra table: ~%algebra OK unless C-CONT" rule))))
+		     :message "Unary rule ~A not in algebra table: ~%algebra OK unless C-CONT" rule))))
 	    (mrs-comparison-output 
-	     "Sement corresponds to lexical entry: no check done"))))
-    (values *mrs-comparison-output-messages* reconstructed-sement)))
+	     :message "Sement corresponds to lexical entry: no check done"))))
+    (values (nreverse *mrs-comparison-output-messages*) 
+	    reconstructed-sement sement)))
 	  
 
 (defun reconstruct-sement (dtr-sements head slots order)
   (unless (and (integerp head) (>= head 0))
     (error "Invalid head ~A" head))
   (if (eql head 0)
-      (mrs-comparison-output "Can't deal with C-CONT heads yet")
+      (mrs-comparison-output :message "Can't deal with C-CONT heads yet")
     (let ((head-dtr (elt dtr-sements (- head 1))))
       (unless head-dtr
 	(error "No head ~A in dtr-sements" head))
@@ -294,8 +336,8 @@
 				    (canonicalise-basemrs-hcons-list
 				     (sement-h-cons non-head-dtr)
 				     non-head-eqs)))
-	    (mrs-comparison-output "Hook and slot incompatible")))
-      (mrs-comparison-output "Slot not found"))))
+	    (mrs-comparison-output :message "Hook and slot incompatible")))
+      (mrs-comparison-output :message "Slot not found"))))
 
 (defun compare-sements (sement1 sement2)
   (let ((bindings nil))
@@ -312,7 +354,7 @@
 				 (sement-h-cons sement2)
 				 bindings))
 		bindings
-	      (mrs-comparison-output "~%hcons difference ~A ~A"
+	      (mrs-comparison-output :hcons
 				     (sement-h-cons sement1)
 				     (sement-h-cons sement2)))
 	  nil)				; message comes from mrs-liszt-equal-p
@@ -338,10 +380,10 @@
 		     nil
 		     bindings))
 		  bindings
-		(mrs-comparison-output "Mismatch in xarg"))
+		(mrs-comparison-output :message "Mismatch in xarg"))
 	    bindings)
-	(mrs-comparison-output "Mismatch in ltop"))
-    (mrs-comparison-output "Mismatch in index")))
+	(mrs-comparison-output :message "Mismatch in ltop"))
+    (mrs-comparison-output :message "Mismatch in index")))
 
 (defun equate-sement-hooks (head-hook non-head-hook)
   ;;; this checks for compatibility of variable types (via variables-equal)
@@ -380,16 +422,16 @@
 			 (hook-xarg head-hook)
 			 nil nil)))
     (cond ((null index-bindings)     
-	   (mrs-comparison-output "Mismatch in index variables"))
+	   (mrs-comparison-output :message "Mismatch in index variables"))
 	  ((and (not (hook-xarg non-head-hook))
 		(not (hook-xarg head-hook)))
 	   (list (append (car index-bindings) 
 			   (car ltop-bindings))
 		   nil))
 	  ((null xarg-bindings)
-	   (mrs-comparison-output "Mismatch in xarg variables"))
+	   (mrs-comparison-output  :message "Mismatch in xarg variables"))
 	  ((null ltop-bindings)
-	   (mrs-comparison-output "Mismatch in ltop variables"))
+	   (mrs-comparison-output  :message "Mismatch in ltop variables"))
 	  ((eql-var-id (hook-index non-head-hook) (hook-xarg non-head-hook))
 	   ;;; case d - the more complicated one
 	   ;;; take index as canonical

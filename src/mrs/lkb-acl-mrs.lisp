@@ -31,7 +31,9 @@
     ((messages :initform nil
 	       :accessor mrs-sement-algebra-messages)
      (sement :initform nil
-	    :accessor mrs-sement-algebra-sement))
+	     :accessor mrs-sement-algebra-sement)
+     (actual-sement :initform nil
+	    :accessor mrs-sement-algebra-actual-sement))
   :display-function 'show-mrs-sement-messages
   :width *parse-window-width* 
   :height *parse-window-height*)
@@ -156,9 +158,15 @@
     (setf (clim:frame-pretty-name mframe) (or title "Indexed MRS"))
     (clim:run-frame-top-level mframe)))
 
-(defun show-mrs-sement-window (parse-fs edge-record title)
+(defun show-mrs-sement-window (parse-fs reconstructed-fs edge-record title)
   (declare (ignore edge-record))
-  (let ((sement (mrs::extract-sement parse-fs)))
+  (let ((sement (mrs::extract-sement parse-fs reconstructed-fs)))
+    (mp:run-function "Sement MRS"
+		     #'show-mrs-sement-window-really sement title)))
+
+(defun show-mrs-rule-sement-window (rule-fs title)
+  (declare (ignore edge-record))
+  (let ((sement (mrs::extract-rule-sement rule-fs)))
     (mp:run-function "Sement MRS"
      #'show-mrs-sement-window-really sement title)))
 
@@ -169,19 +177,22 @@
     (setf (clim:frame-pretty-name mframe) (or title "Sement"))
     (clim:run-frame-top-level mframe)))
 
-(defun show-mrs-sement-check-window (parse-fs edge-record title)
-  (multiple-value-bind (messages sement)
-      (mrs::extract-and-check-sement parse-fs edge-record)
+(defun show-mrs-sement-check-window (parse-fs reconstructed-fs edge-record title)
+  (multiple-value-bind (messages reconstructed-sement actual-sement)
+      (mrs::extract-and-check-sement parse-fs reconstructed-fs edge-record)
     (mp:run-function "Sement check"
 		     #'show-mrs-sement-check-window-really 
-		     messages sement title)))
+		     messages reconstructed-sement actual-sement title)))
 
-(defun show-mrs-sement-check-window-really (messages sement title)
+(defun show-mrs-sement-check-window-really (messages reconstructed-sement 
+					    actual-sement title)
   (let ((mframe (clim:make-application-frame 'mrs-sement-check)))
     (setf (mrs-sement-algebra-messages mframe) 
       messages)
     (setf (mrs-sement-algebra-sement mframe) 
-      sement)
+      reconstructed-sement)
+    (setf (mrs-sement-algebra-actual-sement mframe) 
+      actual-sement)
     (setf (clim:frame-pretty-name mframe) (or title "Check algebra"))
     (clim:run-frame-top-level mframe)))
 
@@ -269,15 +280,21 @@
 (defun show-mrs-sement-messages (mframe stream &key max-width max-height)
   (declare (ignore max-width max-height))
   (let ((messages (mrs-sement-algebra-messages mframe))
+	(actual-sement (mrs-sement-algebra-actual-sement mframe))
 	(sement (mrs-sement-algebra-sement mframe)))
     (clim:with-text-style (stream (lkb-parse-tree-font))
       (if sement
 	  (clim:with-text-style (stream (lkb-parse-tree-font))
+	    (format stream "~%Reconstructed sement~%")
 	    (mrs::output-algebra-sement1 sement 'mrs::simple-indexed stream))
 	(format stream "~%::: Sement structure could not be extracted~%"))
       (if messages
+	  (clim:with-text-style (stream (lkb-parse-tree-font))
 	    (dolist (message messages)
-	      (format stream "~%~A" message stream))
+	      (mrs::do-comparison-message message 'mrs::simple-indexed stream))
+	    (format stream "~%~%Extracted sement~%")
+	    (mrs::output-algebra-sement1 
+	     actual-sement 'mrs::simple-indexed stream))
 	(format stream "~%::: Sement structure checked without problems~%")))))
 
 

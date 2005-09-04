@@ -210,14 +210,16 @@ which need not be scoped - pronouns etc.  Not used in current ERG")
    WARNING - do not set when processing in batch mode")
 
 (defparameter *main-semantics-path* 
-    `(,(vsym "SYNSEM") ,(vsym "LOCAL") ,(vsym "CONT") 
-		       ,(vsym "RELS") ,(vsym "LIST"))
+    (append *initial-semantics-path*  *psoa-liszt-path*)
   "the path into a lexical entry which gives the list of
    relations - typically (append *initial-semantics-path* 
    *psoa-liszt-path*)")
 
+(defparameter *c-cont-path* 
+    `(,(vsym "C-CONT")))
+
 (defparameter *construction-semantics-path* 
-  `(,(vsym "C-CONT") ,(vsym "RELS") ,(vsym "LIST"))
+  (append *c-cont-path* *psoa-liszt-path*)
   "the path into a rule/construction which gives the
    semantics specific to that construction")
 
@@ -357,11 +359,17 @@ set in the code")
 
 (defparameter *rule-algebra-table* nil)
 
-(defparameter *algebra-ignore-feats* nil)
+;;; fix to use vsym later
 
-(defparameter *algebra-ignore-paths* nil)
+(defparameter *algebra-ignore-feats* '(lkb::arg-s))
 
-(defparameter *non-slot-features* nil)
+(defparameter *algebra-ignore-paths* '(
+				       (lkb::c-cont)
+				       (lkb::synsem lkb::local lkb::cont)
+				       (lkb::nh-dtr) (lkb::hd-dtr)))
+
+(defparameter *non-slot-features* '(lkb::cont lkb::HOOK lkb::SYNSEM 
+				    lkb::LOCAL lkb::cat lkb::val lkb::head))
 
 
 ;;; generator spelling fixing - nil by default
