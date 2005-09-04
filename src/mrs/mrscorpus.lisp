@@ -217,12 +217,58 @@
 
 (defun mrs-comparison-output (&rest args)
   (cond ((eql *mrs-comparison-output-control* :noisy-p)
-	 (apply #'format t args))
+	 (do-comparison-message args 'mrs::simple-indexed t))
 	((eql *mrs-comparison-output-control* :save)
-	 (push (apply #'format nil args) *mrs-comparison-output-messages*))
+	 (push args *mrs-comparison-output-messages*))
 	(t nil))
   nil)
-	
+
+(defun do-comparison-message (args device stream)
+  (def-print-operations device 0 stream)
+  (format stream "~%")
+  (if (eql (car args) :message)
+      (apply #'format stream (rest args))
+    (let ((real-args (rest args))
+	  (display *mrs-display-structure*))
+      (ecase (car args)
+	(:value
+	 (format stream "~%Values differ: ")
+	 (dolist (value real-args)
+	   (format stream " ")
+	   (if (var-p value)
+	       (mrs-output-var-fn display
+				  (find-var-name value nil))
+	     (mrs-output-atomic-fn display value))))
+	(:feature
+	 (format stream "~%Features differ: ~A ~A" (first real-args)
+		 (second real-args)))
+	(:hcons
+	 (format stream "~%Hcons differ")
+	 (dolist (h real-args)
+	   (print-mrs-hcons h nil display)))
+	(:index
+	 (format stream "~%Indices differ")
+	 (dolist (h real-args)
+	   (format stream " ")
+	   (mrs-output-var-fn 
+	    display
+	    (find-var-name h nil))))
+	(:handle
+	 (format stream "~%Labels differ")
+	 (dolist (h real-args)
+	   (format stream " ")
+	   (mrs-output-rel-handel
+	    display
+	    (find-var-name h nil))))
+	(:relset 
+	 (format stream "~%Relations differ")
+	 (dolist (relset real-args)
+	   (format stream "~%")
+	   (dolist (rel relset)
+	     (print-rel rel t nil display))))
+	(:predicate (format stream "~%Predicates differ ~A ~A" 
+			    (first real-args) (second real-args)))))))
+
 ;;; need sort-mrs-hcons
 
 ;;; bindings is a list of assoc lists of variable numbers
@@ -260,16 +306,16 @@
                        (setf bindings (hcons-equal-p (psoa-h-cons mrs1)
                                       (psoa-h-cons mrs2) bindings)))
                    bindings
-		 (mrs-comparison-output "~%hcons difference ~A ~A"
+		 (mrs-comparison-output :hcons
 					(psoa-h-cons mrs1)
 					(psoa-h-cons mrs2)))
                  ;; difference in rels reported by
                  ;; mrs-liszts-equal-p
              nil)
-	 (mrs-comparison-output "~%index difference ~A ~A"
+	 (mrs-comparison-output :index
 				(psoa-index mrs1)
 				(psoa-index mrs2)))
-        (mrs-comparison-output "~%handel difference ~A ~A"
+        (mrs-comparison-output :handel
                 (psoa-top-h mrs1)
                 (psoa-top-h mrs2)))))
 
@@ -279,7 +325,7 @@
   (let ((liszt1 (sort-mrs-struct-liszt orig-liszt1))
         (liszt2 (sort-mrs-struct-liszt orig-liszt2)))
     (unless (eql (length liszt1) (length liszt2))
-      (mrs-comparison-output "~%Difference in RELS (bags of EPs)")
+      (mrs-comparison-output :message "Difference in RELS (bags of EPs)")
       (return-from mrs-liszts-equal-p))
     (if (loop for rel1 in liszt1
             as rel2 in liszt2
@@ -288,19 +334,20 @@
                     (mrs-relation-set-equal-p 
                      rel1 rel2 syntactic-p bindings))
                 bindings 
-		(mrs-comparison-output "~%Relations differ ~A ~A" rel1 rel2)))
+		(mrs-comparison-output :relset
+				       rel1 rel2)))
         bindings)))
 
 (defun mrs-relation-set-equal-p (relset1 relset2 syntactic-p bindings)
   (and (eql (length relset1) (length relset2))
-       (let ((*mrs-comparison-output-control* nil))
+;;;       (let ((*mrs-comparison-output-control* nil))
 	 (loop for rel-alt1 in relset1
 	     append
 	       (loop for rel-alt2 in relset2
 		   append
 		     (let ((new-bindings (copy-tree bindings)))
 		       (mrs-relations-equal-p rel-alt1 rel-alt2
-					      syntactic-p new-bindings)))))))
+					      syntactic-p new-bindings))))))
 
 (defun mrs-relations-equal-p (rel1 rel2 syntactic-p bindings)
   (if (equal (rel-pred rel1) (rel-pred rel2))
@@ -334,14 +381,13 @@
                             (mrs-fvpair-equal-p fvpair1 fvpair2 
                                                 syntactic-p bindings)))
                     bindings)
-	      (mrs-comparison-output "~%Feature numbers differ ~A ~A" 
-				     fv1 fv2)))
+	      (mrs-comparison-output :message "Feature numbers differ")))
 	    ;;; else handels not ok
-	    (mrs-comparison-output "~%Handels differ ~A ~A" 
+	    (mrs-comparison-output :handel
 				   (rel-handel rel1) 
 				   (rel-handel rel2)))
     ;; else predicates not ok
-	(mrs-comparison-output "~%Predicates differ ~A ~A" 
+	(mrs-comparison-output :predicate
 			       (rel-pred rel1) 
 			       (rel-pred rel2))))
 
@@ -357,7 +403,7 @@
           (if (equal (fvpair-value fvpair1)
                      (fvpair-value fvpair2))
               bindings
-	    (mrs-comparison-output "~%Values differ ~A ~A" 
+	    (mrs-comparison-output :value 
 				   (fvpair-value fvpair1)
 				   (fvpair-value fvpair2)))
         (if (setf bindings 
@@ -366,10 +412,10 @@
                (fvpair-value fvpair2)
                syntactic-p bindings))
             bindings
-              (mrs-comparison-output "~%Variables differ ~A ~A" 
+              (mrs-comparison-output :value
 				     (fvpair-value fvpair1)
 				     (fvpair-value fvpair2))))
-             (mrs-comparison-output "~%Features differ ~A ~A" 
+             (mrs-comparison-output :feature
               (fvpair-feature fvpair1)
               (fvpair-feature fvpair2))))
 
