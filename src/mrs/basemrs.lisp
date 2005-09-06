@@ -2039,12 +2039,14 @@ VAR -> VARNAME[:CONSTNAME]*
 	(copy-hcons-element hcons-el)))
 
 (defun copy-psoa-liszt-completely (psoa no-var-copy-p)
-      ;;; existing fns in mrsresolve don't want copied qeqs
-      ;;; or copied variables
+  ;;; Note - this takes a full mrs and just copies the liszt
+  ;;; existing fns in mrsresolve don't want copied qeqs
+  ;;; or copied variables
   (let ((copy-mrsstruct (copy-psoa psoa)))
     (setf (psoa-liszt copy-mrsstruct)
       (copy-liszt-completely (psoa-liszt copy-mrsstruct) 
-			     no-var-copy-p))))
+			     no-var-copy-p))
+    copy-mrsstruct))
 
 (defun copy-liszt-completely (liszt no-var-copy-p)
   (loop for rel in liszt
