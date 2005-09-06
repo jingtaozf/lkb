@@ -331,36 +331,49 @@
          (lex-entry-fs
 	  (if lex-entry (lex-entry-full-fs lex-entry))))
     (when lex-entry-fs 
-      (setf *number-of-applications* 0)
-      (let ((result-list
-	     (try-all-lexical-rules 
-	      (list (cons nil lex-entry-fs)))))
-	(cond (result-list
-	       (draw-active-list
-		(mapcar #'(lambda (result-pair)
-			    (let ((string 
-				   (format nil "~(~A~) ~{+ ~A~} = ~(~A~)" 
-					   lex 
-					   (reverse 
-					    (car result-pair))
-					   (extract-orth-from-fs (cdr result-pair)))))
-			      (cons string (cons string
-						 (cdr result-pair)))))
-			result-list)
-		"Lexical rule results"
-		(list
-		 (cons 
-		  "Feature structure"
-		  #'(lambda (display-pair)
-		      (display-fs (cdr display-pair)
-				  (car display-pair)))))))
-	      (t 
-	       (lkb-beep)
-	       (format #+:clim
-		       clim-user::*lkb-top-stream*
-		       #-:clim
-		       t
-			 "~%No applicable lexical rules")))))))
+      (apply-or-reapply-lex-rules lex-entry-fs lex))))
+      
+(defun apply-or-reapply-lex-rules (fs lex)
+  (setf *number-of-applications* 0)
+  (let* ((*maximal-lex-rule-applications* 1)
+	 (result-list
+	  (try-all-lexical-rules 
+	   (list (cons nil fs)))))
+    (if result-list
+	   (draw-active-list
+	    (mapcar #'(lambda (result-pair)
+			(let* ((done (format nil "~(~A~) ~{+ ~A~}" 
+				       lex 
+				       (reverse 
+					(car result-pair))))
+			       (string 
+			       (format nil "~A = ~(~A~)" 
+				       done
+				       (extract-orth-from-fs 
+					(cdr result-pair)))))
+			  (cons string (cons string
+					     (cons done
+						   (cdr result-pair))))))
+		    result-list)
+	    "Lexical rule results"
+	    (list
+	     (cons 
+	      "Apply all lex rules"
+	      #'(lambda (display-res)
+		  (apply-or-reapply-lex-rules
+			       (cddr display-res) (cadr display-res))))
+	     (cons 
+	      "Feature structure"
+	      #'(lambda (display-res)
+		  (display-fs (cddr display-res)
+			      (car display-res))))))
+	  (progn
+	   (lkb-beep)
+	   (format #+:clim
+		   clim-user::*lkb-top-stream*
+		   #-:clim
+		   t
+		   "~%No applicable lexical rules")))))
 
 
 

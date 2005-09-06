@@ -135,36 +135,44 @@
 (defparameter *number-of-applications* 0)
 
 (defun try-all-lexical-rules (entries &optional ignore-list)
-  ;;; this is now just called interactively etc, not by the parser
-   ;;; entries are pairs with list of rules applied plus result
+  ;;; this is now just called interactively 
+  ;;; and by output-lex-and-derived, but not by the parser
+  ;;; entries are pairs with list of rules applied plus result
+  ;;; With a large grammar, this can easily go beserk
+  ;;; and the test for the standard *maximal-lex-rule-applications* is not
+  ;;; constraining enough.  I have therefore changed the interface
+  ;;; so this is called with *maximal-lex-rule-applications* let
+  ;;; to 1 so it only applies once.  The interface then allows
+  ;;; the user to investigate further applications on particular
+  ;;; results.
    (incf *number-of-applications*)
-   (when (> *number-of-applications* *maximal-lex-rule-applications*)
-      (error "~%Probable circular lexical rule"))
-   (let ((transformed-entries 
+   (unless (> *number-of-applications* *maximal-lex-rule-applications*)
+     (let ((transformed-entries 
             (loop for entry in entries
-               append
-               (loop for rule in 
-                  (get-indexed-lrules (cdr entry)
-                     #'(lambda (rule) (member (rule-id rule) ignore-list)))
-                  nconc
-                  (let* ((spelling-rule-p (spelling-change-rule-p rule))
-                         (new-morph 
-                              (if spelling-rule-p
-                                  (construct-new-morph entry rule)))
-                         (result
-                          (if (or (not spelling-rule-p) new-morph)
-                              ; allow morphographemics to block generation
-                              (evaluate-unifications rule
-                                                     (list (cdr entry))
-                                                     new-morph))))
-                     (if result 
-                         (list
-                          (cons 
-                           (cons (rule-id rule) (car entry))
-                              result))))))))
-      (if transformed-entries
-         (append transformed-entries
-            (try-all-lexical-rules transformed-entries ignore-list)))))
+		append
+		  (loop for rule in 
+			(get-indexed-lrules 
+			 (cdr entry)
+			 #'(lambda (rule) (member (rule-id rule) ignore-list)))
+		      nconc
+			(let* ((spelling-rule-p (spelling-change-rule-p rule))
+			       (new-morph 
+				(if spelling-rule-p
+				    (construct-new-morph entry rule)))
+			       (result
+				(if (or (not spelling-rule-p) new-morph)
+					; allow morphographemics to block generation
+				    (evaluate-unifications rule
+							   (list (cdr entry))
+							   new-morph))))
+			  (if result 
+			      (list
+			       (cons 
+				(cons (rule-id rule) (car entry))
+				result))))))))
+       (if transformed-entries
+	   (append transformed-entries
+		   (try-all-lexical-rules transformed-entries ignore-list))))))
 
 
 (defun construct-new-morph (entry rule)
@@ -224,6 +232,7 @@
   (get-indexed-lrules rhd-fs #'spelling-change-rule-p))
 
 (defun apply-lex-interactive (lex lex-entry-fs lex-rule)
+  ;;; called by apply-lex
   (declare (ignore lex))
   (if 
       ;; modification to check whether a particular 
