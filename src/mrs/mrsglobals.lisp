@@ -355,18 +355,15 @@ set in the code")
    - specified by the grammar")
 
 
-;;; for algebra
-
-(defparameter *rule-algebra-table* nil)
-
-;;; fix to use vsym later
+;;; for algebra - fix to use vsym later
 
 (defparameter *algebra-ignore-feats* '(lkb::arg-s))
 
 (defparameter *algebra-ignore-paths* '(
 				       (lkb::c-cont)
 				       (lkb::synsem lkb::local lkb::cont)
-				       (lkb::nh-dtr) (lkb::hd-dtr)))
+				       (lkb::nh-dtr) (lkb::hd-dtr)
+				       (lkb::dtr)))
 
 (defparameter *non-slot-features* '(lkb::cont lkb::HOOK lkb::SYNSEM 
 				    lkb::LOCAL lkb::cat lkb::val lkb::head))

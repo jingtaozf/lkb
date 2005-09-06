@@ -287,14 +287,17 @@
 	  (clim:with-text-style (stream (lkb-parse-tree-font))
 	    (format stream "~%Reconstructed sement~%")
 	    (mrs::output-algebra-sement1 sement 'mrs::simple-indexed stream))
-	(format stream "~%::: Sement structure could not be extracted~%"))
+	(format stream "~%::: No sement structure was reconstructed~%"))
       (if messages
 	  (clim:with-text-style (stream (lkb-parse-tree-font))
 	    (dolist (message messages)
 	      (mrs::do-comparison-message message 'mrs::simple-indexed stream))
-	    (format stream "~%~%Extracted sement~%")
-	    (mrs::output-algebra-sement1 
-	     actual-sement 'mrs::simple-indexed stream))
+	    (if actual-sement
+		(progn
+		  (format stream "~%~%Extracted sement~%")
+		  (mrs::output-algebra-sement1 
+		   actual-sement 'mrs::simple-indexed stream))
+	      (format stream "~%~%No extracted sement~%")))
 	(format stream "~%::: Sement structure checked without problems~%")))))
 
 

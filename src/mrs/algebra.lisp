@@ -10,9 +10,7 @@
 
 (in-package :mrs)
 
-(defun algebra-available-p nil
-  ;;; this table has to be defined in a grammar for any of this to work
-  *rule-algebra-table*)
+(defun algebra-available-p nil nil)
 
 ;;; FIX
 ;;; variable naming - we would like this to be constant over a parse
@@ -48,12 +46,50 @@
 	 (extract-algebra-from-rule-fs (lkb::tdfs-indef rule-fs))))
     sement))
 
+(defstruct (reconstruction-result)
+  match-p reconstructed-sement messages)
+
 (defun extract-and-check-sement (parse-fs reconstructed-fs edge-record)
   (initialise-algebra)
-  (let ((sement 
-	 (extract-algebra-from-fs (lkb::tdfs-indef parse-fs)
-				  (lkb::tdfs-indef reconstructed-fs))))
-    (check-algebra sement edge-record)))
+  (let* ((sement 
+	  (extract-algebra-from-fs (lkb::tdfs-indef parse-fs)
+				   (lkb::tdfs-indef reconstructed-fs)))
+	 (all-compares
+	  (check-algebra sement edge-record))
+	 (good-matches
+	  (loop for res in all-compares
+	      when (reconstruction-result-match-p res)
+	      collect res))
+	 (messages nil)
+	 (reconstructed-sement nil))
+    (if good-matches
+	(let* ((first-match (car good-matches))
+	       (first-match-messages 
+		(reverse
+		 (reconstruction-result-messages first-match))))  
+	  (setf messages 
+	    (if (cdr good-matches)
+	        (cons '(:message "Multiple matches on algebra - showing first")
+		      first-match-messages)
+	      first-match-messages))
+	  (setf reconstructed-sement 
+	    (reconstruction-result-reconstructed-sement first-match)))
+      (if all-compares
+	  (let* ((first-res (car all-compares))
+		 (first-res-messages 
+		  (reverse
+		   (reconstruction-result-messages first-res))))  
+	    (setf messages 
+	      (cons
+	       (if (cdr all-compares)
+		   '(:message "No good matches on algebra - showing first reconstruction")
+		 '(:message "No good matches on algebra - showing reconstruction"))
+	       first-res-messages))
+	    (setf reconstructed-sement 
+	      (reconstruction-result-reconstructed-sement first-res)))
+	(setf messages (list '(:message "No results returned")))))
+    (values messages reconstructed-sement sement)))	      
+
 
 (defun initialise-algebra (&optional dtr-num)
   (unless (and *hook-path*
@@ -216,130 +252,132 @@
 ;;; Checking that the algebra is obeyed
 
 ;;; Check an individual rule application.
-;;; This relies on *rule-algebra-table* which should be specified
-;;; in the mrsglobals file for the grammar for now
 ;;;
 ;;; We reconstruct the daughter sements and then see if the
 ;;; mother sement we construct according to the algebra matches the
 ;;; sement we actually get from the feature structure.
 
-(defun check-algebra (sement edge-record)
-  (setf *mrs-comparison-output-messages* nil)
-  (let ((reconstructed-sement nil)
-	(count 0))
+
+(defun check-algebra (actual-sement edge-record)
+  ;;; returns a list of reconstruction-results
+  (unless (lkb::edge-p edge-record)
+    (error "~%Edge expected"))
+  (let* ((count 0)
     ;;; count is used as a starting count for variable numbering -
     ;;; the first daughter variables start at 1000, next at 2000 and so
-    ;;; on.  This prevents name clashes - assuming we don't have
-    ;;; really long MRSs ...
-    (if (lkb::edge-p edge-record)
-	(let* ((rule-struct (lkb::edge-rule edge-record))
-	       (*mrs-comparison-output-control* :save)
+    ;;; on.  This prevents name clashes
+	 (rule-struct (lkb::edge-rule edge-record))
+	 (*mrs-comparison-output-control* :save))
 	       ;;; comparison messages are stored up and output
 	       ;;; in a window etc at the end
-	       (rule (if (lkb::rule-p rule-struct) (lkb::rule-id rule-struct))) 
-	       (rule-record (if rule (assoc rule *rule-algebra-table* 
-					    :test #'string-equal)))) ; lose packages
-	  (if rule
-	      (let ((dtrs (lkb::edge-children edge-record)))
-		(if rule-record    
-		    (let* ((edge-sements (loop for dtr in dtrs
-					     when (and (lkb::edge-p dtr)
-						       (lkb::edge-dag dtr))
-					     collect
-					       (progn
-						 (setf count (+ count 1000))
-						 (extract-sement
-						  (lkb::edge-dag dtr) count))))
-			   (head (cadr rule-record))
-			   (slots (caddr rule-record))
-			   (order (cadddr rule-record)))
-		      (when edge-sements
-			(setf reconstructed-sement
-			  (reconstruct-sement edge-sements
-					      head slots order)))
-		      (if reconstructed-sement
-			  (compare-sements reconstructed-sement sement)
-			(mrs-comparison-output 
-			 :message "Cannot reconstruct sement")))
-		  (if (cdr dtrs)
-      ;;; can't find rule
-		      (mrs-comparison-output 
-		       :message "Warning: Non-unary rule ~A missing ~%from algebra table" rule)
-		    (mrs-comparison-output 
-		     :message "Unary rule ~A not in algebra table: ~%algebra OK unless C-CONT" rule))))
-	    (mrs-comparison-output 
-	     :message "Sement corresponds to lexical entry: no check done"))))
-    (values (nreverse *mrs-comparison-output-messages*) 
-	    reconstructed-sement sement)))
-	  
+    (if (and rule-struct (lkb::rule-p rule-struct))
+	(let* ((dtrs (lkb::edge-children edge-record))
+	       (edge-sements 
+		(loop for dtr in dtrs
+		    when (and (lkb::edge-p dtr) (lkb::edge-dag dtr))
+		    collect
+		      (progn (setf count (+ count 1000))
+			     (extract-sement (lkb::edge-dag dtr) count))))
+	       (rule-sement (extract-rule-sement
+			     (lkb::rule-full-fs rule-struct) (+ count 1000)))
+	       (dtr-sements 
+		(if edge-sements
+		    (if (sement-liszt rule-sement)
+			(cons rule-sement edge-sements)
+		      edge-sements)))
+	       (reconstructed-sements
+		(reconstruct-sements actual-sement dtr-sements)))
+		;;; reconstruct-sements builds alternatives
+		;;; and then tests them against the actual sement
+	  (or reconstructed-sements
+	      (list 
+	       (make-reconstruction-result 
+		:match-p nil :reconstructed-sement nil 
+		:messages
+		(list '(:message "Cannot reconstruct sement"))))))
+      (list 
+       (make-reconstruction-result 
+	:match-p t
+	:reconstructed-sement nil 
+	:messages
+	(list '(:message 
+		"Sement corresponds to lexical entry: no check done")))))))
 
-(defun reconstruct-sement (dtr-sements head slots order)
-  (unless (and (integerp head) (>= head 0))
-    (error "Invalid head ~A" head))
-  (if (eql head 0)
-      (mrs-comparison-output :message "Can't deal with C-CONT heads yet")
-    (let ((head-dtr (elt dtr-sements (- head 1))))
-      (unless head-dtr
-	(error "No head ~A in dtr-sements" head))
-      (cond ((= (length dtr-sements) 3)
-	  ;;; allowing for quaternary etc really needs
-	  ;;; recursive fn here
-	     (if order
-		 (let* ((first-dtr (elt dtr-sements (- (car order) 1)))
-			(next-dtr (elt dtr-sements (- (cadr order) 1)))
-		     ;;; worry about error checking later ...
-			(first-slot (car slots))
-			(next-slot (cadr slots))
-			(new-sement
-			 (binary-sement-construct head-dtr first-dtr
-						  first-slot)))
-		   (if new-sement
-		       (binary-sement-construct new-sement next-dtr
-						next-slot)))
-	       (error "Ternary rule and no order")))
-	    ((= (length dtr-sements) 2)
-	     (let ((non-head-dtr (car (remove head-dtr dtr-sements)))) 
-	       (binary-sement-construct
-		head-dtr non-head-dtr (car slots))))
-	    ((= (length dtr-sements) 1)
-	     head-dtr)
-	    (t (error "Rule must be max ternary"))))))
-
-(defun binary-sement-construct (head-dtr non-head-dtr slot)
-  (let ((slot-record (find slot (sement-slots head-dtr) 
-			   :key #'slot-name :test #'string-equal)))
-    (if slot-record
-	(let* ((slot-hook (slot-hook slot-record))
-	       (equalities (equate-sement-hooks 
-			    slot-hook (sement-hook non-head-dtr)))
-	       (head-eqs (cadr equalities))
-	       (non-head-eqs (car equalities)))
-	  (if equalities
-	      (make-sement :hook (canonicalise-sement-hook
-				  (sement-hook head-dtr)
-				  head-eqs)
-			   :slots 
-			   (canonicalise-sement-slots
-			    (remove slot-record (sement-slots head-dtr))
-			    head-eqs)
-			    :liszt
-			    (append (canonicalise-basemrs-liszt
-				     (sement-liszt head-dtr)
+(defun reconstruct-sements (actual-sement dtr-sements)
+  (let* ((possible-results
+	 (cond ((cddr dtr-sements)
+	 ;;; ternary and above rules (or binary plus c-cont)
+		(do-binary-sement-splits dtr-sements))
+	       ((cdr dtr-sements)
+		(binary-combine-sements dtr-sements))
+	       (t (list (car dtr-sements))))))
+    (loop for result in possible-results
+	collect
+	  (progn
+	    (setf *mrs-comparison-output-messages* nil)
+	    (let ((match-p (compare-sements result actual-sement))) 
+	      (make-reconstruction-result 
+	       :match-p match-p
+	       :reconstructed-sement result
+	       :messages
+	       *mrs-comparison-output-messages*))))))
+	
+(defun do-binary-sement-splits (dtr-sements)
+  ;;; if there is more than one dtr (real, or c-cont)
+  ;;; we have to try different tree structures here
+  ;;; trying doing this in an entirely undirected fashion ...
+  (if (cddr dtr-sements)
+      (loop for poss in dtr-sements
+	  nconc
+	    (loop for res in 
+		  (do-binary-sement-splits (remove poss dtr-sements))
+		nconc
+		  (binary-combine-sements (list poss res))))
+    (binary-combine-sements dtr-sements)))
+	    
+(defun binary-combine-sements (dtr-sements)
+  ;;; should be called only when there are two elements in dtr-sements 
+  (loop for head-dtr in dtr-sements
+      nconc
+	(let* ((non-head-dtr (first (remove head-dtr dtr-sements)))
+  ;;; when we're calling this, we don't know for sure which 
+  ;;; slot is going to be filled.  So we try out all possibilities.
+	       (slots (sement-slots head-dtr))
+	       (sement-results nil))
+	  (dolist (slot-record slots)
+	    (let* ((slot-hook (slot-hook slot-record))
+		   (equalities (equate-sement-hooks 
+				slot-hook (sement-hook non-head-dtr)))
+		   (head-eqs (cadr equalities))
+		   (non-head-eqs (car equalities)))
+	      (when equalities
+		(push
+		 (make-sement :hook (canonicalise-sement-hook
+				     (sement-hook head-dtr)
 				     head-eqs)
-				    (canonicalise-basemrs-liszt
-				     (sement-liszt non-head-dtr)
-				     non-head-eqs))
-			    :h-cons 
-			    (append (canonicalise-basemrs-hcons-list
-				     (sement-h-cons head-dtr)
-				     head-eqs)
-				    (canonicalise-basemrs-hcons-list
-				     (sement-h-cons non-head-dtr)
-				     non-head-eqs)))
-	    (mrs-comparison-output :message "Hook and slot incompatible")))
-      (mrs-comparison-output :message "Slot not found"))))
+			      :slots 
+			      (canonicalise-sement-slots
+			       (remove slot-record slots)
+			       head-eqs)
+			      :liszt
+			      (append (canonicalise-basemrs-liszt
+				       (sement-liszt head-dtr)
+				       head-eqs)
+				      (canonicalise-basemrs-liszt
+				       (sement-liszt non-head-dtr)
+				       non-head-eqs))
+			      :h-cons 
+			      (append (canonicalise-basemrs-hcons-list
+				       (sement-h-cons head-dtr)
+				       head-eqs)
+				      (canonicalise-basemrs-hcons-list
+				       (sement-h-cons non-head-dtr)
+				       non-head-eqs)))
+		 sement-results))))
+	  sement-results)))
 
 (defun compare-sements (sement1 sement2)
+  ;;; this ignores slots, currently at least
   (let ((bindings nil))
     (if (setf bindings (sement-hooks-equal-p (sement-hook sement1)
 					     (sement-hook sement2) bindings))
@@ -506,6 +544,8 @@
 	(if sement
 	  (let ((messages
 		 (check-algebra sement edge)))
+	    ;;; this needs to be fixed because of changes to
+	    ;;; what check-algebra returns
 	    (when messages
 		(format stream "Edge ~A~%" edge-id)
 		(dolist (message messages)
