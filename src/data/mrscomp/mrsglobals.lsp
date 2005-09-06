@@ -52,37 +52,6 @@ of variables in the indexed representation")
 
 (defparameter *scope-feat* (vsym "BODY"))
 
-(defparameter *rule-algebra-table*
-    '((head-complement-rule-0  1 nil)
-      (head-complement-rule-1  1 (COMPS1))
-      (head-complement-rule-2  1 (COMPS1 COMPS2) (2 3))
-      (head-specifier-rule  2 (SPR1))
-      (determiner-head-rule  1 (SPEC))
-      (head-modifier-rule 2 (MOD1))
-      (modifier-head-rule 1 (MOD1))
-      (noun-modifier-rule 1 nil)
-      (bare-pl-noun-rule 0 (DTR1))
-      (passive-rule 1 nil) ; modifies slots
-      (inversion-rule 1 nil)		; ditto
-      (coord-rule 1 nil)		; wrong ...
-      (head-gap-rule-1 1 nil) ; modifies slots
-      (head-gap-rule-2 1 (COMP2))		; modifies slots
-      (head-gap-rule-3 1 (COMP1))	; modifies slots
-      (head-filler-rule 2 (GAP1))
-      (dative-shift-lrule 1 nil)	; modifies slots
-      (past-v_irule 1 nil)
-      (non3sg-v_irule 1 nil)
-      (non3sg-v-regular_irule 1 nil)
-      (3sg-v_irule 1 nil)
-      (pres-part-v_irule 1 nil)
-      (past-part-v_irule 1 nil)
-      (infl-v_irule 1 nil)
-      (pl-noun_irule 1 nil) 
-      (sg-noun_irule 1 nil)
-      (const-pump 1 nil)))
-      
-;;;  rule-name   semhead slot
-
 ;;; parameters for slot detection
 
 (defparameter *algebra-ignore-feats* '(lkb::arg-s lkb::kcmp))
