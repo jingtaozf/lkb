@@ -9,7 +9,9 @@
 ? linux.x86.32
 ? man
 M log/build
+U src/version.lsp
 ? src/.l7cl
+U src/mrs/basemrs.lisp
 ? src/tsdb/home/log
 ? src/tsdb/home/redwoods
 **********
@@ -21,7 +23,7 @@ M log/build
 **********
 Checking in ./src/version.lsp;
 /lingo/CVS/lkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.407; previous revision: 1.406
+new revision: 1.409; previous revision: 1.408
 done
 make[1]: Entering directory `/lingo/build/lkb'
 ( \
@@ -1092,7 +1094,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-7.0 [Linux (x86)] (Sep 6, 2005 6:08)
+7.0 [Linux (x86)] (Sep 6, 2005 14:29)
 Copyright (C) 1985-2004, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -2120,7 +2122,7 @@ NIL
  (DISCARD-ALL-SOURCE-FILE-INFO)
  |#
 
-#<EQUAL hash-table with 0 entries @ #x4475fd3a> 
+#<EQUAL hash-table with 0 entries @ #x4475fc8a> 
  #|
 ; Fast loading from bundle code/who.fasl.
  (DISCARD-LOCAL-NAME-INFO)
@@ -2132,7 +2134,7 @@ NIL
  |#
 ; Fast loading /lingo/local/acl/code/nocompiler.001
 ;;; Installing nocompiler patch, version 1
-124649440 bytes have been tenured, next gc will be global.
+122033280 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 
 T 
@@ -2958,7 +2960,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/yy.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/mt.lisp
-gc-after-hook(): local; new: 1899776; old: 594576; pending: 0; efficiency: 93.
+gc-after-hook(): local; new: 1899776; old: 594576; pending: 0; efficiency: 94.
 ;;; Writing fasl file /lingo/build/lkb/src/.l7cl/tsdb/mt.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/mt.fasl
