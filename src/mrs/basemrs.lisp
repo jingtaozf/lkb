@@ -2030,31 +2030,37 @@ VAR -> VARNAME[:CONSTNAME]*
     (setf (psoa-top-h mostly-new)
       (copy-var (psoa-top-h mostly-new)))
     (setf (psoa-h-cons mostly-new)
-      (loop for hcons-el in (psoa-h-cons mostly-new)
-	  collect
-	    (copy-hcons-element hcons-el)))
+      (copy-psoa-hcons (psoa-h-cons mostly-new)))
     mostly-new))
-  
+
+(defun copy-psoa-hcons (hcons)
+  (loop for hcons-el in hcons
+      collect
+	(copy-hcons-element hcons-el)))
+
 (defun copy-psoa-liszt-completely (psoa no-var-copy-p)
       ;;; existing fns in mrsresolve don't want copied qeqs
       ;;; or copied variables
   (let ((copy-mrsstruct (copy-psoa psoa)))
     (setf (psoa-liszt copy-mrsstruct)
-      (loop for rel in (psoa-liszt copy-mrsstruct)
-	  collect
-	    (let* ((new-rel (copy-rel rel))
-		   (new-flist (loop for fvp in (rel-flist new-rel)
-				  collect
-				    (if no-var-copy-p
-					(copy-fvpair fvp)
-				      (copy-fvpair-completely fvp)))))
-	      (unless no-var-copy-p
-		(setf (rel-handel new-rel)
-		  (copy-var (rel-handel new-rel))))
-	      (setf (rel-flist new-rel)
-		new-flist)
-	      new-rel)))
-    copy-mrsstruct))
+      (copy-liszt-completely (psoa-liszt copy-mrsstruct) 
+			     no-var-copy-p))))
+
+(defun copy-liszt-completely (liszt no-var-copy-p)
+  (loop for rel in liszt
+      collect
+	(let* ((new-rel (copy-rel rel))
+	       (new-flist (loop for fvp in (rel-flist new-rel)
+			      collect
+				(if no-var-copy-p
+				    (copy-fvpair fvp)
+				  (copy-fvpair-completely fvp)))))
+	  (unless no-var-copy-p
+	    (setf (rel-handel new-rel)
+	      (copy-var (rel-handel new-rel))))
+	  (setf (rel-flist new-rel)
+	    new-flist)
+	  new-rel)))
 
 (defun copy-hcons-element (hcons-el)
   (let ((copied-hcons
@@ -2072,7 +2078,17 @@ VAR -> VARNAME[:CONSTNAME]*
 	(copy-var (fvpair-value copy-fvp))))
     copy-fvp))
       
+(defun copy-sement-hook (hook)
+  (make-hook
+  :index (copy-var (hook-index hook))
+  :ltop (copy-var (hook-ltop hook))
+  :xarg (copy-var (hook-xarg hook))))
 
+(defun copy-sement-slots (slots)
+  (loop for slot in slots
+      collect
+	(make-slot :hook (copy-sement-hook (slot-hook slot))
+		   :name (slot-name slot))))
 
 ;;; ****************************************************************
 ;;;

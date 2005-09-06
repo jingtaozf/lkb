@@ -257,7 +257,7 @@
 	 (format stream "~%Labels differ")
 	 (dolist (h real-args)
 	   (format stream " ")
-	   (mrs-output-rel-handel
+	   (mrs-output-var-fn
 	    display
 	    (find-var-name h nil))))
 	(:relset 
@@ -315,7 +315,7 @@
 	 (mrs-comparison-output :index
 				(psoa-index mrs1)
 				(psoa-index mrs2)))
-        (mrs-comparison-output :handel
+        (mrs-comparison-output :handle
                 (psoa-top-h mrs1)
                 (psoa-top-h mrs2)))))
 
@@ -383,7 +383,7 @@
                     bindings)
 	      (mrs-comparison-output :message "Feature numbers differ")))
 	    ;;; else handels not ok
-	    (mrs-comparison-output :handel
+	    (mrs-comparison-output :handle
 				   (rel-handel rel1) 
 				   (rel-handel rel2)))
     ;; else predicates not ok

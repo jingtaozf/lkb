@@ -60,35 +60,16 @@
 	  (loop for res in all-compares
 	      when (reconstruction-result-match-p res)
 	      collect res))
-	 (messages nil)
-	 (reconstructed-sement nil))
-    (if good-matches
-	(let* ((first-match (car good-matches))
-	       (first-match-messages 
-		(reverse
-		 (reconstruction-result-messages first-match))))  
-	  (setf messages 
+	 (global-messages 
+	  (if good-matches
 	    (if (cdr good-matches)
-	        (cons '(:message "Multiple matches on algebra - showing first")
-		      first-match-messages)
-	      first-match-messages))
-	  (setf reconstructed-sement 
-	    (reconstruction-result-reconstructed-sement first-match)))
-      (if all-compares
-	  (let* ((first-res (car all-compares))
-		 (first-res-messages 
-		  (reverse
-		   (reconstruction-result-messages first-res))))  
-	    (setf messages 
-	      (cons
-	       (if (cdr all-compares)
-		   '(:message "No good matches on algebra - showing first reconstruction")
-		 '(:message "No good matches on algebra - showing reconstruction"))
-	       first-res-messages))
-	    (setf reconstructed-sement 
-	      (reconstruction-result-reconstructed-sement first-res)))
-	(setf messages (list '(:message "No results returned")))))
-    (values messages reconstructed-sement sement)))	      
+	        (list "Multiple matches on algebra")
+	      (list "Match on algebra"))
+	    (if all-compares
+		 '("No good matches on algebra")
+	      (list "No results returned")))))
+    (values global-messages (or good-matches all-compares)
+				sement)))
 
 
 (defun initialise-algebra (&optional dtr-num)
@@ -314,6 +295,9 @@
     (loop for result in possible-results
 	collect
 	  (progn
+;	    (format t "~%~%")
+;	    (mrs::output-algebra-sement1 
+;		   result 'mrs::simple-indexed t)
 	    (setf *mrs-comparison-output-messages* nil)
 	    (let ((match-p (compare-sements result actual-sement))) 
 	      (make-reconstruction-result 
@@ -351,27 +335,33 @@
 		   (head-eqs (cadr equalities))
 		   (non-head-eqs (car equalities)))
 	      (when equalities
-		(push
-		 (make-sement :hook (canonicalise-sement-hook
-				     (sement-hook head-dtr)
-				     head-eqs)
-			      :slots 
-			      (canonicalise-sement-slots
-			       (remove slot-record slots)
-			       head-eqs)
+		  (push
+		   (make-sement :hook (canonicalise-sement-hook
+				       (copy-sement-hook
+					(sement-hook head-dtr))
+				       head-eqs)
+				:slots 
+				(canonicalise-sement-slots
+				 (copy-sement-slots
+				  (remove slot-record slots))
+				 head-eqs)
 			      :liszt
 			      (append (canonicalise-basemrs-liszt
-				       (sement-liszt head-dtr)
+				       (copy-liszt-completely
+					(sement-liszt head-dtr) nil)
 				       head-eqs)
 				      (canonicalise-basemrs-liszt
-				       (sement-liszt non-head-dtr)
+				       (copy-liszt-completely
+				       (sement-liszt non-head-dtr) nil)
 				       non-head-eqs))
 			      :h-cons 
 			      (append (canonicalise-basemrs-hcons-list
-				       (sement-h-cons head-dtr)
+				       (copy-psoa-hcons 
+					(sement-h-cons head-dtr))
 				       head-eqs)
 				      (canonicalise-basemrs-hcons-list
-				       (sement-h-cons non-head-dtr)
+				       (copy-psoa-hcons 
+				       (sement-h-cons non-head-dtr))
 				       non-head-eqs)))
 		 sement-results))))
 	  sement-results)))

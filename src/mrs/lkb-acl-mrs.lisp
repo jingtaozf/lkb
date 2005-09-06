@@ -28,13 +28,13 @@
   :height *parse-window-height*)
 
 (define-lkb-frame mrs-sement-check
-    ((messages :initform nil
-	       :accessor mrs-sement-algebra-messages)
-     (sement :initform nil
-	     :accessor mrs-sement-algebra-sement)
+    ((global-messages :initform nil
+	     :accessor mrs-sement-algebra-global-messages)
+     (results :initform nil
+	     :accessor mrs-sement-algebra-results)
      (actual-sement :initform nil
 	    :accessor mrs-sement-algebra-actual-sement))
-  :display-function 'show-mrs-sement-messages
+  :display-function 'show-mrs-sement-check-results
   :width *parse-window-width* 
   :height *parse-window-height*)
 
@@ -178,19 +178,19 @@
     (clim:run-frame-top-level mframe)))
 
 (defun show-mrs-sement-check-window (parse-fs reconstructed-fs edge-record title)
-  (multiple-value-bind (messages reconstructed-sement actual-sement)
+  (multiple-value-bind (global-messages results actual-sement)
       (mrs::extract-and-check-sement parse-fs reconstructed-fs edge-record)
     (mp:run-function "Sement check"
 		     #'show-mrs-sement-check-window-really 
-		     messages reconstructed-sement actual-sement title)))
+		     global-messages results actual-sement title)))
 
-(defun show-mrs-sement-check-window-really (messages reconstructed-sement 
+(defun show-mrs-sement-check-window-really (global-messages results
 					    actual-sement title)
   (let ((mframe (clim:make-application-frame 'mrs-sement-check)))
-    (setf (mrs-sement-algebra-messages mframe) 
-      messages)
-    (setf (mrs-sement-algebra-sement mframe) 
-      reconstructed-sement)
+    (setf (mrs-sement-algebra-global-messages mframe) 
+      global-messages)
+    (setf (mrs-sement-algebra-results mframe) 
+      results)
     (setf (mrs-sement-algebra-actual-sement mframe) 
       actual-sement)
     (setf (clim:frame-pretty-name mframe) (or title "Check algebra"))
@@ -277,28 +277,42 @@
           (mrs::output-algebra-sement1 sement 'mrs::simple-indexed stream))
       (format stream "~%::: Sement structure could not be extracted~%"))))
 
-(defun show-mrs-sement-messages (mframe stream &key max-width max-height)
+;;; results are reconstruction-result structures as defined in algebra.lisp
+#|
+(defstruct (reconstruction-result)
+  match-p reconstructed-sement messages)
+|#
+
+(defun show-mrs-sement-check-results (mframe stream &key max-width max-height)
+  ;;; messages all come from extract and check sement
   (declare (ignore max-width max-height))
-  (let ((messages (mrs-sement-algebra-messages mframe))
+  (let ((global-messages (mrs-sement-algebra-global-messages mframe))
 	(actual-sement (mrs-sement-algebra-actual-sement mframe))
-	(sement (mrs-sement-algebra-sement mframe)))
+	(results (mrs-sement-algebra-results mframe)))
     (clim:with-text-style (stream (lkb-parse-tree-font))
-      (if sement
-	  (clim:with-text-style (stream (lkb-parse-tree-font))
-	    (format stream "~%Reconstructed sement~%")
-	    (mrs::output-algebra-sement1 sement 'mrs::simple-indexed stream))
-	(format stream "~%::: No sement structure was reconstructed~%"))
-      (if messages
-	  (clim:with-text-style (stream (lkb-parse-tree-font))
-	    (dolist (message messages)
-	      (mrs::do-comparison-message message 'mrs::simple-indexed stream))
-	    (if actual-sement
-		(progn
-		  (format stream "~%~%Extracted sement~%")
+      (dolist (message global-messages)
+	(format stream "~%~A" message))
+      (if results
+	  (progn
+	    (format stream "~%Reconstructed sement(s)~%~%")
+	    (dolist (result results)
+	      (let ((sement (mrs::reconstruction-result-reconstructed-sement
+			     result))
+		    (messages (mrs::reconstruction-result-messages
+			       result)))
+		(when sement
 		  (mrs::output-algebra-sement1 
-		   actual-sement 'mrs::simple-indexed stream))
-	      (format stream "~%~%No extracted sement~%")))
-	(format stream "~%::: Sement structure checked without problems~%")))))
+		   sement 'mrs::simple-indexed stream))
+		(format stream "~%~%")
+		(dolist (message messages)
+		  (mrs::do-comparison-message message 'mrs::simple-indexed stream)))))
+	(format stream "~%::: No sement structure was reconstructed~%"))
+      (if actual-sement
+	  (progn
+	    (format stream "~%Extracted sement~%")
+	    (mrs::output-algebra-sement1 
+	     actual-sement 'mrs::simple-indexed stream))
+	(format stream "~%~%No extracted sement~%")))))
 
 
 (defun show-mrs-prolog (mframe stream &key max-width max-height)

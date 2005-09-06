@@ -359,11 +359,13 @@ set in the code")
 
 (defparameter *algebra-ignore-feats* '(lkb::arg-s))
 
-(defparameter *algebra-ignore-paths* '(
-				       (lkb::c-cont)
-				       (lkb::synsem lkb::local lkb::cont)
-				       (lkb::nh-dtr) (lkb::hd-dtr)
-				       (lkb::dtr)))
+(defparameter *algebra-ignore-paths* 
+    '(
+      (lkb::c-cont)
+      (lkb::synsem lkb::local lkb::cont)
+      (lkb::nh-dtr) (lkb::hd-dtr)
+      (lkb::dtr)))
+
 
 (defparameter *non-slot-features* '(lkb::cont lkb::HOOK lkb::SYNSEM 
 				    lkb::LOCAL lkb::cat lkb::val lkb::head))
