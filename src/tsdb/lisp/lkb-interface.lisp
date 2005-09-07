@@ -930,6 +930,14 @@
 ;;;
 ;;;
 
+;;;
+;;; _fix_me_
+;;; rewrite from scratch; avoid destructive replacements but use the unifier
+;;; instead, i.e. create suitable LNK values, then walk through a sub-dag, test
+;;; LNK values for some trigger type, and unify as appropriate.  that way, when
+;;; we are within a unification context, things will just be healthy, and when
+;;; not, we should establish one and copy upon completion.       (7-sep-05; oe)
+;;;
 (defun characterize (tdfs from to)
   (let ((*safe-not-to-copy* nil))
     (declare (special *safe-not-to-copy*))

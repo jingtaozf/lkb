@@ -15,16 +15,16 @@
 
 (defparameter *eds-pretty-print-p* t)
 
-(defparameter *eds-include-quantifiers-p* nil)
+(defparameter *eds-include-quantifiers-p* t)
 
 (defparameter *eds-include-vacuous-relations-p* nil)
 
-(defparameter *eds-message-relation* (vsym "MESSAGE"))
+(defparameter *eds-message-relation* (vsym "message_m_rel"))
 
-(defparameter *eds-fragment-relation* (vsym "UNKNOWN_REL"))
+(defparameter *eds-fragment-relation* (vsym "unknown_rel"))
 
 (defparameter *eds-bleached-relations*
-  (list (vsym "SELECTED_REL") (vsym "DEG_REL")))
+  (list (vsym "selected_rel") (vsym "deg_rel")))
 
 (defparameter %eds-variable-counter% 0)
 
@@ -37,9 +37,8 @@
 (defparameter %eds-relevant-features% 
   '("ARG" "ARG1" "ARG2" "ARG3" "ARG4" "BV" "SOA"
     "CONST_VALUE" "CARG" "TERM1" "TERM2" "FACTOR1" "FACTOR2"
-    "MARG" "L-INDEX" "R-INDEX" 
-    "L-HNDL" "R-HNDL"  "L-HANDEL" "R-HANDEL" "MAIN" "SUBORD" "ROLE"
-    "HINST" "NHINST"))
+    "MARG" "L-INDEX" "R-INDEX" "L-HNDL" "R-HNDL"  "L-HANDEL" "R-HANDEL"
+    "MAIN" "SUBORD" "ROLE" "HINST" "NHINST"))
 
 (defstruct eds
   top relations hcons raw status)
@@ -85,7 +84,7 @@
           (format
            stream 
            "~(~a~):~(~a~)[" 
-           (ed-id object) (ed-predicate object))
+           (ed-id object) (ed-linked-predicate object))
         for (role . value) in (ed-arguments object)
         do
           (format 
@@ -100,7 +99,9 @@
     (call-next-method)))
 
 (defmacro ed-linked-predicate (ed)
-  `(format nil "~a~{:~a~}~@[(~a)~]" (ed-predicate ,ed) (ed-link ,ed)))
+  `(if (stringp (ed-link ,ed))
+     (format nil "~a<~a>" (ed-predicate ,ed) (ed-link ,ed))
+     (format nil "~a~@[<~{~a~^ ~}>~]" (ed-predicate ,ed) (ed-link ,ed))))
 
 (defun ed-output-psoa (psoa &key (stream t) (format :ascii))
   (if (psoa-p psoa)
@@ -192,7 +193,11 @@
                    for fvpair in flist
                    when (member (fvpair-feature fvpair) carg :test #'eq)
                    return (fvpair-value fvpair)))
-         (link (rel-link relation)))
+         (link (let* ((link (rel-link relation))
+                      (from (and (char-rel-p relation)
+                                 (char-rel-cfrom relation)))
+                      (to (and from (char-rel-cto relation))))
+                 (or link (and from to (format nil "~a:~a" from to))))))
     (make-ed :handle handle :id id :link link
              :predicate predicate :carg carg :raw relation)))
 
@@ -249,9 +254,10 @@
           for feature = (fvpair-feature fvpair)
           when (eq feature (vsym "EVENT"))
           do (setf event (fvpair-value fvpair))
-          when (or (eq feature (vsym "INST")) 
-                   (eq feature (vsym "ARG0"))
-                   (eq feature (vsym "C-ARG")))
+          when (unless (ed-message-p relation)
+                 (or (eq feature (vsym "INST")) 
+                     (eq feature (vsym "ARG0"))
+                     (eq feature (vsym "C-ARG"))))
           do (setf instance (fvpair-value fvpair)))
       (let* ((name (or
                     (and instance (var-p instance) (var-string instance))
@@ -274,8 +280,7 @@
                         (or (equal name handle) 
                             (and (ed-handle-p qeq) 
                                  (equal (var-string qeq) handle))))
-              collect ed
-              into candidates
+              collect ed into candidates
               finally 
                 (return
                   (if selectp
@@ -298,8 +303,14 @@
               for id = (unless (or (ed-bleached-p ed)
                                    (ed-quantifier-p ed))
                          (ed-id ed))
-              when (and selectp (equal name id)) return ed
-              when (equal name id) collect ed))
+              when (equal name id) collect ed into candidates
+              finally 
+                (return
+                  (if selectp
+                    (if (and candidates (null (rest candidates)))
+                      (first candidates)
+                      (ed-select-representative candidates))
+                    candidates))))
          ((stringp variable) variable)))))
 
 (defun ed-select-representative (eds)
@@ -369,11 +380,18 @@
   (let ((flist (rel-flist (ed-raw ed))))
     (find *scope-feat* flist :key #'fvpair-feature)))
 
-(defun ed-message-p (ed)
+(defun ed-message-p (thing)
   (when *eds-message-relation*
-    (let ((type (ed-predicate ed)))
-      (or (eq type *eds-message-relation*)
-          (ignore-errors (equal-or-subtype type *eds-message-relation*))))))
+    (typecase thing
+      (ed
+       (let ((type (ed-predicate thing)))
+         (or (eq type *eds-message-relation*)
+             (ignore-errors (equal-or-subtype type *eds-message-relation*)))))
+      (rel
+       (let ((type (rel-pred thing)))
+         (or (eq type *eds-message-relation*)
+             (ignore-errors
+              (equal-or-subtype type *eds-message-relation*))))))))
 
 (defun ed-fragment-p (ed)
   (when *eds-fragment-relation*
