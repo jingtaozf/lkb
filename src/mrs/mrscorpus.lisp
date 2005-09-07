@@ -349,8 +349,17 @@
 		       (mrs-relations-equal-p rel-alt1 rel-alt2
 					      syntactic-p new-bindings))))))
 
+(defparameter *special-hack-for-message-types-p* nil)
+;;; a temporary expedient (I hope) to allow the algebra checking to
+;;; go through despite the differences in message types
+;;; produced by the current ERG
+
 (defun mrs-relations-equal-p (rel1 rel2 syntactic-p bindings)
-  (if (equal (rel-pred rel1) (rel-pred rel2))
+  (if (or (equal (rel-pred rel1) (rel-pred rel2))
+	  (and *special-hack-for-message-types-p*
+	       (subtype-p (rel-pred rel1) 'lkb::message_m_rel)
+	       (subtype-p (rel-pred rel2) 'lkb::message_m_rel)
+	       (compatible-types (rel-pred rel1) (rel-pred rel2))))
       ;; then predicates ok
       (if (setf bindings 
             (if (or (rel-handel rel1) (rel-handel rel2))
@@ -444,7 +453,7 @@
    (equal var-type1 "u")
    (equal var-type2 "u")
    (and (equal var-type1 "e") (equal var-type2 "i"))
-   (and (equal var-type1 "e") (equal var-type2 "x"))
+   (and (equal var-type1 "x") (equal var-type2 "i"))
    (and (equal var-type1 "i") (equal var-type2 "e"))
    (and (equal var-type1 "i") (equal var-type2 "x"))))
 
