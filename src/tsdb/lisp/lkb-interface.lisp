@@ -926,6 +926,24 @@
   #+:tty
   nil)
 
+;;;
+;;;
+;;;
+
+(defun characterize (tdfs from to)
+  (let ((*safe-not-to-copy* nil))
+    (declare (special *safe-not-to-copy*))
+    (when (and (tdfs-p tdfs)
+               (integerp from) (> from -1) (integerp to) (> to -1))
+      (let* ((replacements (list (cons 'cfrom (format nil "~a" from))
+                                 (cons 'cto (format nil "~a" to))))
+	     (dag (tdfs-indef tdfs))
+	     (new (replace-dag-types
+                   dag (append
+                        mrs::*initial-semantics-path* mrs::*psoa-liszt-path*) 
+                   replacements)))
+	(when new (setf (tdfs-indef tdfs) new))))))
+
 (defun tsdb::find-lexical-entry (form instance &optional id start end (dagp t))
 
   (let* ((*package* *lkb-package*)
@@ -947,9 +965,7 @@
                      (if surface
                        (instantiate-generic-lexical-entry instance surface)
                        (copy-tdfs-completely (lex-entry-full-fs instance)))))
-             (tdfs (if *recording-word*
-                     (unify-in-word tdfs form)
-                     tdfs))
+             (tdfs (if *recording-word* (unify-in-word tdfs form) tdfs))
              (ids (list (lex-entry-id instance))))
         (make-edge :id id :category (and tdfs (indef-type-of-tdfs tdfs))
                    :rule form :leaves (list form) :lex-ids ids
@@ -996,6 +1012,10 @@
               (setf status i)
               (setf result (yadu! result tdfs path))
             finally
+              (when (and result *characterize-p*)
+                (characterize
+                 result
+                 (edge-from (first edges)) (edge-to (first (last edges)))))
               (setf result (and result (restrict-and-copy-tdfs result))))))
     (if (or result (null dagp))
       (make-edge :id id :category (and result (indef-type-of-tdfs result))
@@ -1013,7 +1033,7 @@
       (values status %failure%))))
 
 (defun tsdb::instantiate-preterminal (preterminal mrule 
-                                &optional id start end (dagp t))
+                                      &optional id start end (dagp t))
   ;;
   ;; _fix_me_
   ;; this hardwires some assumptions about how affixation is carried out. 
@@ -1033,7 +1053,9 @@
            (tdfs (when dagp (edge-dag preterminal)))
            (result (when (and rtdfs tdfs)
                      (yadu! rtdfs tdfs '(args first))))
-           (copy (and result (restrict-and-copy-tdfs result))))
+           (copy (when result
+                   (when *characterize-p* (characterize result start end))
+                   (restrict-and-copy-tdfs result))))
       (if (or copy (null dagp))
         (make-edge :id id :category (and copy (indef-type-of-tdfs copy))
                    :rule mrule 

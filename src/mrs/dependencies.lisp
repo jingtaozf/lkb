@@ -314,6 +314,12 @@
   (or 
    (loop
        for ed in eds
+       unless (or (ed-message-p ed)
+                  (char= (char (ed-id ed) 0) #\_)) collect ed into candidates
+       finally (when (and candidates (null (rest candidates)))
+                 (return (first candidates))))
+   (loop
+       for ed in eds
        unless (char= (char (ed-id ed) 0) #\_) collect ed into candidates
        finally (when (and candidates (null (rest candidates)))
                  (return (first candidates))))
