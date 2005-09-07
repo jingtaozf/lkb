@@ -1,0 +1,36 @@
+<!ELEMENT pet-input-chart ( w | ne )* >
+<!-- base input token -->
+<!ELEMENT w ( surface, path*, pos*, typeinfo* ) >
+<!-- bmw: pos is not defined... <pos tag="ADV" prio="1.00000e+1"/> -->
+<!ATTLIST w 
+        id ID #REQUIRED
+        cstart NMTOKEN #REQUIRED
+        cend NMTOKEN #REQUIRED
+        prio CDATA #IMPLIED
+        constant (yes | no) "no" >
+<!-- constant "yes" means: do not analyse, i.e., if the tag contains
+no typeinfo, no lexical item will be build by the token -->
+<!-- The surface string -->
+<!ELEMENT surface ( #PCDATA ) >
+<!-- numbers that encode valid paths through the input graph (optional) -->
+<!ELEMENT path EMPTY >
+<!ATTLIST path 
+        num NMTOKEN #REQUIRED >
+<!-- every typeinfo generates a lexical token -->
+<!ELEMENT typeinfo ( stem, infl*, fsmod* ) >
+<!ATTLIST typeinfo 
+        id ID #REQUIRED 
+        prio CDATA #IMPLIED 
+        baseform (yes | no) "yes" >
+<!-- Baseform yes: lexical base form; no: type name -->
+<!-- lexical base form or type name -->
+<!ELEMENT stem ( #PCDATA ) >
+<!-- type name of an inflection rule-->
+<!ELEMENT infl EMPTY >
+<!ATTLIST infl 
+        name CDATA #REQUIRED >
+<!-- put type value under path into the lexical feature structure -->
+<!ELEMENT fsmod EMPTY >
+<!ATTLIST fsmod 
+        path CDATA #REQUIRED 
+        value CDATA #REQUIRED >
