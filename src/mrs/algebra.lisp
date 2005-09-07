@@ -10,7 +10,11 @@
 
 (in-package :mrs)
 
-(defun algebra-available-p nil nil)
+(defun algebra-available-p nil 
+    (and *hook-path*
+	 *psoa-liszt-path*
+	 *psoa-rh-cons-path*))
+
 
 ;;; FIX
 ;;; variable naming - we would like this to be constant over a parse
@@ -166,9 +170,7 @@
   ;;; when we're done (e.g., ignore -- paths)
   ;;; 2. don't worry about OPT etc.  The slot will be registered
   ;;; as a slot at the location where it exists.  The algebra
-  ;;; checking code will have to ensure legitimacy of slot removal.
-  ;;;
-  ;;; C-CONT is an issue
+  ;;; checking code will allow slot removal.
   (let ((slot-alist
 	 (lkb::collect-subdags-for-type fs *hook-type* 
 					slot-ignore-features 
@@ -266,9 +268,12 @@
 			     (lkb::rule-full-fs rule-struct) (+ count 1000)))
 	       (dtr-sements 
 		(if edge-sements
-		    (if (sement-liszt rule-sement)
-			(cons rule-sement edge-sements)
-		      edge-sements)))
+		    (loop for poss-dtr in (cons rule-sement edge-sements)
+			when (or (sement-liszt poss-dtr)
+				 (sement-slots poss-dtr))
+			collect poss-dtr)))
+	       ;; allow rule to be counted if it has a liszt
+	       ;; discard things like `it' in `it rained'
 	       (reconstructed-sements
 		(reconstruct-sements actual-sement dtr-sements)))
 		;;; reconstruct-sements builds alternatives
@@ -288,7 +293,8 @@
 		"Sement corresponds to lexical entry: no check done")))))))
 
 (defun reconstruct-sements (actual-sement dtr-sements)
-  (let* ((possible-results
+  (let* ((*mrs-comparison-output-control* nil)
+	 (possible-results
 	 (cond ((cddr dtr-sements)
 	 ;;; ternary and above rules (or binary plus c-cont)
 		(do-binary-sement-splits dtr-sements))
@@ -315,17 +321,20 @@
   ;;; trying doing this in an entirely undirected fashion ...
   (if (cddr dtr-sements)
       (loop for poss in dtr-sements
-	  nconc
-	    (loop for res in 
-		  (do-binary-sement-splits (remove poss dtr-sements))
-		nconc
-		  (binary-combine-sements (list poss res))))
+	  append
+	    (let ((rest-of-tree
+		   (do-binary-sement-splits (remove poss dtr-sements))))
+	      (let ((possibilities
+		     (loop for res in rest-of-tree
+			 append
+			   (binary-combine-sements (list poss res)))))
+		possibilities)))
     (binary-combine-sements dtr-sements)))
 	    
 (defun binary-combine-sements (dtr-sements)
   ;;; should be called only when there are two elements in dtr-sements 
   (loop for head-dtr in dtr-sements
-      nconc
+      append
 	(let* ((non-head-dtr (first (remove head-dtr dtr-sements)))
   ;;; when we're calling this, we don't know for sure which 
   ;;; slot is going to be filled.  So we try out all possibilities.
@@ -339,35 +348,37 @@
 		   (non-head-eqs (car equalities)))
 	      (when equalities
 		  (push
-		   (make-sement :hook (canonicalise-sement-hook
+		   (make-sement 
+		    :hook (canonicalise-sement-hook
 				       (copy-sement-hook
-					(sement-hook head-dtr))
-				       head-eqs)
-				:slots 
-				(canonicalise-sement-slots
-				 (copy-sement-slots
-				  (remove slot-record slots))
-				 head-eqs)
-			      :liszt
-			      (append (canonicalise-basemrs-liszt
-				       (copy-liszt-completely
-					(sement-liszt head-dtr) nil)
-				       head-eqs)
-				      (canonicalise-basemrs-liszt
-				       (copy-liszt-completely
-				       (sement-liszt non-head-dtr) nil)
-				       non-head-eqs))
-			      :h-cons 
-			      (append (canonicalise-basemrs-hcons-list
-				       (copy-psoa-hcons 
-					(sement-h-cons head-dtr))
-				       head-eqs)
-				      (canonicalise-basemrs-hcons-list
-				       (copy-psoa-hcons 
-				       (sement-h-cons non-head-dtr))
+					(sement-hook head-dtr)) head-eqs)
+		    :slots 
+		    (canonicalise-sement-slots
+		     (copy-sement-slots
+		      (remove slot-record slots)) head-eqs)
+		    :liszt
+		    (append (canonicalise-basemrs-liszt
+			     (copy-liszt-completely
+			      (sement-liszt head-dtr) nil) head-eqs)
+			    (canonicalise-basemrs-liszt
+			     (copy-liszt-completely
+			      (sement-liszt non-head-dtr) nil) non-head-eqs))
+		    :h-cons 
+		    (append (canonicalise-basemrs-hcons-list
+			     (copy-psoa-hcons 
+			      (sement-h-cons head-dtr)) head-eqs)
+			    (canonicalise-basemrs-hcons-list
+			     (copy-psoa-hcons (sement-h-cons non-head-dtr))
 				       non-head-eqs)))
-		 sement-results))))
-	  sement-results)))
+		   sement-results))))
+	  #|
+	  (unless sement-results
+	    (dolist (sement dtr-sements)
+	      (format t "~%")
+	      (mrs::output-algebra-sement1 sement 'mrs::simple-indexed t)))
+	      |#
+	  sement-results)
+	))
 
 (defun compare-sements (sement1 sement2)
   ;;; this ignores slots, currently at least

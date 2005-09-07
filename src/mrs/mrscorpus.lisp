@@ -438,11 +438,16 @@
 
 (defun compatible-var-types (var-type1 var-type2)
   ;;; FIX - should allow for underspecified values
+  ;;; we really must clean this up!
   (or 
    (equal var-type1 var-type2)
    (equal var-type1 "u")
-   (equal var-type2 "u")))
-   
+   (equal var-type2 "u")
+   (and (equal var-type1 "e") (equal var-type2 "i"))
+   (and (equal var-type1 "e") (equal var-type2 "x"))
+   (and (equal var-type1 "i") (equal var-type2 "e"))
+   (and (equal var-type1 "i") (equal var-type2 "x"))))
+
 
 (defun compatible-extra-vals (extra1 extra2)
   ;;; this version is for generation, where we assume we need
