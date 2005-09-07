@@ -355,20 +355,22 @@ set in the code")
    - specified by the grammar")
 
 
-;;; for algebra - fix to use vsym later
+;;; for algebra
 
-(defparameter *algebra-ignore-feats* '(lkb::arg-s))
+(defparameter *algebra-ignore-feats* `(,(vsym "ARG-S")))
 
 (defparameter *algebra-ignore-paths* 
-    '(
-      (lkb::c-cont)
-      (lkb::synsem lkb::local lkb::cont)
-      (lkb::nh-dtr) (lkb::hd-dtr)
-      (lkb::dtr)))
+    `(
+      (,(vsym "C-CONT"))
+      (,(vsym "SYNSEM") ,(vsym "LOCAL") ,(vsym "CONT"))
+      (,(vsym "NH-DTR"))
+      (,(vsym "HD-DTR"))
+      (,(vsym "DTR"))))
 
 
-(defparameter *non-slot-features* '(lkb::cont lkb::HOOK lkb::SYNSEM 
-				    lkb::LOCAL lkb::cat lkb::val lkb::head))
+(defparameter *non-slot-features* 
+    `(,(vsym "CONT") ,(vsym "HOOK") ,(vsym "SYNSEM")
+      ,(vsym "LOCAL") ,(vsym "CAT") ,(vsym "VAL") ,(vsym "HEAD")))
 
 
 ;;; generator spelling fixing - nil by default
