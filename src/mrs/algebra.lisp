@@ -499,6 +499,8 @@
 (defparameter lkb::*do-something-with-parse* 'mrs::check-algebra-on-chart)
 |#
 
+(defparameter *algebra-problems* nil)
+
 (defun check-algebra-on-chart nil
   ;;; packing must not be used
   (let ((sentence lkb::*sentence*)
@@ -506,11 +508,14 @@
                           (streamp lkb::*ostream*) 
                           (output-stream-p lkb::*ostream*)) 
                      lkb::*ostream*  t)))
-    (format ostream "~%~A~%" sentence)
+    (setf *algebra-problems* nil)
+    (format ostream "~%~A" sentence)
     (loop
 	for i from 0 to lkb::*chart-max*
 	while (check-algebra-chart-entry (aref lkb::*chart* i 1) 
-					 ostream))))
+					 ostream))
+    (unless *algebra-problems*
+      (format ostream "~%   No algebra problems detected"))))
   
 
 (defun check-algebra-chart-entry (item stream)
@@ -545,13 +550,16 @@
       (let ((sement 
 	     (extract-algebra-from-fs (lkb::tdfs-indef parse-fs))))
 	(if sement
-	  (let ((messages
-		 (check-algebra sement edge)))
-	    ;;; this needs to be fixed because of changes to
-	    ;;; what check-algebra returns
-	    (when messages
-		(format stream "Edge ~A~%" edge-id)
-		(dolist (message messages)
-		  (format stream "~A~%" message stream))))
+	  (let* ((all-compares
+		  (check-algebra sement edge))
+		 (good-matches
+		  (loop for res in all-compares
+		      when (reconstruction-result-match-p res)
+		      collect res)))
+	    (unless good-matches
+	        (setf *algebra-problems* t)
+		(format stream "~%   Problem on Edge ~A" edge-id)))
+	  (progn 
+	    (setf *algebra-problems* t)
 	  (format stream 
-		  "~%Edge ~A: Sement structure could not be extracted" edge-id))))))
+		  "~%   Edge ~A: Sement structure could not be extracted" edge-id)))))))
