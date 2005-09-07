@@ -1296,6 +1296,7 @@
       for item in items
       for i-wf = (get-field :i-wf item)
       for input = (or (get-field :o-input item) (get-field :i-input item))
+      for i-comment = (get-field :i-comment item)
       for parse-id = (get-field :parse-id item)
       for results = (let ((results (get-field :results item)))
                       (sort (copy-list results) #'< 
@@ -1348,15 +1349,15 @@
            data (current-user) (current-host) (current-time :long :pretty))
           (format 
            stream
-           "[~d] (~a of ~d) {~d} `~a'~%~a~%"
+           "[~d] (~a of ~d) {~d} `~a'~@[ [~a]~]~%~a~%"
            (+ parse-id offset)
            (if version (length active) "all") (length results) i-wf
-           input #\page)
+           input i-comment #\page)
           
           (export-tree item active :offset offset :stream stream)
           (unless *redwoods-thinning-export-p*
-            (export-tree item active 
-                         :complementp t :offset offset :stream stream))
+            (export-tree
+             item active :complementp t :offset offset :stream stream))
 
           (force-output stream)
           (close stream)

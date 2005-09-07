@@ -98,10 +98,10 @@
           (format stream "]"))
     (call-next-method)))
 
-(defmacro ed-linked-predicate (ed)
-  `(if (stringp (ed-link ,ed))
-     (format nil "~a<~a>" (ed-predicate ,ed) (ed-link ,ed))
-     (format nil "~a~@[<~{~a~^ ~}>~]" (ed-predicate ,ed) (ed-link ,ed))))
+(defun ed-linked-predicate (ed)
+  (if (stringp (ed-link ed))
+    (format nil "~a<~a>" (ed-predicate ed) (ed-link ed))
+    (format nil "~a~@[<~{~a~^ ~}>~]" (ed-predicate ed) (ed-link ed))))
 
 (defun ed-output-psoa (psoa &key (stream t) (format :ascii))
   (if (psoa-p psoa)

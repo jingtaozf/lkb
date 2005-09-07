@@ -66,6 +66,10 @@ while [ $# -gt 0 ]; do
       TSDBHOME=${DELPHINHOME}/lkb/src/tsdb/home;
       shift 1;
     ;;
+    -j|--jacy)
+      JACY="http://www.delph-in.net/jacy/japanese.tar.gz"
+      shift;
+    ;;
     *)
       echo "install: invalid parameter \`${1}'.";
       exit 1;
@@ -189,6 +193,17 @@ for i in erg.tgz matrix.tgz spanish.tgz; do
   fi
 done
 
+#
+# some grammars remain optional packages, for right now.
+#
+if [ -n "${JACY}" ]; then
+  echo -n "install: \`japanese.tar.gz' ...";
+  ( cd Archives; ${WGET} -O japanese.tgz ${JACY}; )
+  ${GUNZIP} ${DELPHINHOME}/Archives/japanese.tgz | ${TAR};
+  echo " done.";
+fi
+
+#
 #
 # on demand, also get the Redwoods treebanks and corresponding versions of the 
 # ERG; by default, only get the latest growth (currently the fifth).

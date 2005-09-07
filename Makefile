@@ -1,6 +1,6 @@
 ROOT = /lingo/build/
 SROOT = ${HOME}/class/src
-LROOT = ${HOME}/src/lingo
+LROOT = ${HOME}/src/delphin
 WROOT = c:/src
 DATE = `date "+%Y-%m-%d"`
 TARGET = /lingo/www/lingo/ftp
