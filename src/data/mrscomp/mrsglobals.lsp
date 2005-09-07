@@ -10,7 +10,7 @@
 
 (defparameter *rel-name-path* `(,(vsym "PRED") ))
 
-(defparameter *dummy-relations* `(,(vsym "no_rel")))
+(defparameter *dummy-relations* `("no_rel"))
 
 (defparameter *value-feats* `(,(vsym "NAME")))
 
