@@ -2,37 +2,37 @@
 <!DOCTYPE pet-input-chart SYSTEM "pic.dtd">
 <?xml-stylesheet type="text/xsl" href="pic2maf.xsl"?>
 <pet-input-chart>
-<w id="W0" cstart="1" cend="3" constant="yes">
-<surface>Kim</surface>
-</w>
-<w id="W1" cstart="5" cend="9" constant="yes">
-<surface>Novak</surface>
-</w>
-<ne id="NE0" prio="1.0">
+  <w id="W0" cstart="1" cend="3" constant="yes">
+    <surface>Kim</surface>
+  </w>
+  <w id="W1" cstart="5" cend="9" constant="yes">
+    <surface>Novak</surface>
+  </w>
+  <ne id="NE0" prio="1.0">
 <ref id="W0"/>
 <ref id="W1"/>
 <pos tag="PN" prio="1.0"/>
 <typeinfo id="TNE0" baseform="no">
-<stem>$generic_name</stem>
-<fsmod path="SYNSEM.LOCAL.HEAD.FORM" value="Kim Novak"/>
-</typeinfo>
+      <stem>$generic_name</stem>
+      <fsmod path="SYNSEM.LOCAL.HEAD.FORM" value="Kim Novak"/>
+    </typeinfo>
 </ne>
-<w id="W2" cstart="11" cend="16" constant="yes">
-<surface>sleeps</surface>
-<!-- pos should be inside typeinfo -->
-<pos tag="VVFIN" prio="7.80000e-1"/>
-<pos tag="NN" prio="2.30000e-2"/>
-<typeinfo id="W1A1">
-<stem>sleep</stem>
-<infl name="$third_sg_fin_verb_infl_rule"/>
-</typeinfo>
-<typeinfo id="W1A2">
-<stem>sleep</stem>
-<infl name="$plur_noun_infl_rule"/>
-</typeinfo>
-</w>
-<w id="W3" cstart="18" cend="22">
-<surface>badly</surface>
-<pos tag="ADV" prio="1.00000e+1"/>
-</w>
+  <w id="W2" cstart="11" cend="16" constant="yes">
+    <surface>sleeps</surface>
+    <!-- pos should be inside typeinfo -->
+    <pos tag="VVFIN" prio="7.80000e-1"/>
+    <pos tag="NN" prio="2.30000e-2"/>
+    <typeinfo id="W1A1">
+      <stem>sleep</stem>
+      <infl name="$third_sg_fin_verb_infl_rule"/>
+    </typeinfo>
+    <typeinfo id="W1A2">
+      <stem>sleep</stem>
+      <infl name="$plur_noun_infl_rule"/>
+    </typeinfo>
+  </w>
+  <w id="W3" cstart="18" cend="22">
+    <surface>badly</surface>
+    <pos tag="ADV" prio="1.00000e+1"/>
+  </w>
 </pet-input-chart>

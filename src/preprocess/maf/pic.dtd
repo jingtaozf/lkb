@@ -34,3 +34,13 @@ no typeinfo, no lexical item will be build by the token -->
 <!ATTLIST fsmod 
         path CDATA #REQUIRED 
         value CDATA #REQUIRED >
+<!-- bmw: ne not defined
+  <ne id="NE0" prio="1.0">
+<ref id="W0"/>
+<ref id="W1"/>
+<pos tag="PN" prio="1.0"/>
+<typeinfo id="TNE0" baseform="no">
+      <stem>$generic_name</stem>
+      <fsmod path="SYNSEM.LOCAL.HEAD.FORM" value="Kim Novak"/>
+    </typeinfo>
+</ne> -->

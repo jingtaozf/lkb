@@ -63,8 +63,22 @@
       <xsl:apply-templates mode="wf-state"/>
 
       <xsl:call-template name="transition-w">
-        <xsl:with-param name="source" select="_START_"/>
         <xsl:with-param name="list" select="w"/>
+        <xsl:with-param name="w-list" select="w"/>
+      </xsl:call-template>
+
+      <xsl:call-template name="transition-w-pos">
+        <xsl:with-param name="list" select="w/pos"/>
+        <xsl:with-param name="w-list" select="w"/>
+      </xsl:call-template>
+
+      <xsl:call-template name="transition-w-typeinfo">
+        <xsl:with-param name="list" select="w/typeinfo"/>
+        <xsl:with-param name="w-list" select="w"/>
+      </xsl:call-template>
+
+      <xsl:call-template name="transition-ne">
+        <xsl:with-param name="list" select="ne"/>
         <xsl:with-param name="w-list" select="w"/>
       </xsl:call-template>
 
@@ -72,7 +86,7 @@
   </xsl:template>
 
   <xsl:template match="w" mode="wf-state">
-        <xsl:element name="state">
+    <xsl:element name="state">
       <xsl:attribute name="id"><xsl:value-of select="@id"/></xsl:attribute>
     </xsl:element>
   </xsl:template>
@@ -84,53 +98,173 @@
   <xsl:template name="transition-w">
     <xsl:param name="list"/>
     <xsl:param name="w-list"/>
-    <xsl:variable name="first" select="$list[1]"/>
-    <xsl:variable name="rest" select="$list[position()!=1]"/>
-        <xsl:element name="transition">
+    <xsl:for-each select="$list">      
+    <xsl:element name="transition">
       <xsl:attribute name="source">
         <xsl:call-template name="source">
-          <xsl:with-param name="w-id" select="$first/@id"/>
+          <xsl:with-param name="w-id" select="@id"/>
           <xsl:with-param name="w-list" select="$w-list"/>
         </xsl:call-template>
       </xsl:attribute>
       <xsl:attribute name="target">
-        <xsl:value-of select="$first/@id"/>
+        <xsl:value-of select="@id"/>
       </xsl:attribute>
       <xsl:element name="wordForm">
         <xsl:attribute name="form">
-          <xsl:value-of select="$first/surface"/>
+          <xsl:value-of select="surface"/>
         </xsl:attribute>
         <xsl:attribute name="tag"/>
         <xsl:attribute name="tokens">
-          <xsl:value-of select="$first/@id"/>
+          <xsl:value-of select="@id"/>
         </xsl:attribute>
         <xsl:element name="fs">
-          <xsl:element name="f">
-            <xsl:attribute name="name">metaPic</xsl:attribute>
-            <xsl:if test="$first/@constant">
-            <xsl:element name="f"><xsl:attribute name="name">constant</xsl:attribute><xsl:value-of select="$first/@constant"/></xsl:element>              
+          <!--xsl:element name="f">
+            <xsl:attribute name="name">metaPic</xsl:attribute-->
+            <xsl:if test="@constant">
+            <xsl:element name="f"><xsl:attribute name="name">constant</xsl:attribute><xsl:value-of select="@constant"/></xsl:element>              
             </xsl:if>
-            <xsl:if test="$first/@prio">
-            <xsl:element name="f"><xsl:attribute name="name">prio</xsl:attribute><xsl:value-of select="$first/@prio"/></xsl:element>
+            <xsl:if test="@prio">
+            <xsl:element name="f"><xsl:attribute name="name">prio-w</xsl:attribute><xsl:value-of select="@prio"/></xsl:element>
             </xsl:if>
-            <xsl:apply-templates select="$first/pos"/>
-          </xsl:element>
+          <!--/xsl:element-->
         </xsl:element>
       </xsl:element>
     </xsl:element>
-    <xsl:if test="$rest">
-      <xsl:call-template name="transition-w">
-        <xsl:with-param name="list" select="$rest"/>
-        <xsl:with-param name="w-list" select="$w-list"/>
-      </xsl:call-template>
-    </xsl:if>
+    </xsl:for-each>
   </xsl:template>
 
-  <xsl:template match="pos">
+ <xsl:template name="transition-w-pos">
+    <xsl:param name="list"/>
+    <xsl:param name="w-list"/>
+    <xsl:for-each select="$list">      
+    <xsl:element name="transition-POS">
+      <xsl:attribute name="source">
+        <xsl:call-template name="source">
+          <xsl:with-param name="w-id" select="../@id"/>
+          <xsl:with-param name="w-list" select="$w-list"/>
+        </xsl:call-template>
+      </xsl:attribute>
+      <xsl:attribute name="target">
+        <xsl:value-of select="../@id"/>
+      </xsl:attribute>
+      <xsl:element name="wordForm">
+        <xsl:attribute name="form">
+          <xsl:value-of select="../surface"/>
+        </xsl:attribute>
+        <xsl:attribute name="tag">
+          <xsl:value-of select="@tag"/>
+        </xsl:attribute>
+        <xsl:attribute name="tokens">
+          <xsl:value-of select="../@id"/>
+        </xsl:attribute>
+        <xsl:element name="fs">
+          <!--xsl:element name="f">
+            <xsl:attribute name="name">metaPic</xsl:attribute-->
+            <xsl:if test="@prio">
+            <xsl:element name="f"><xsl:attribute name="name">prio-pos</xsl:attribute><xsl:value-of select="@prio"/></xsl:element>
+            </xsl:if>
+          <!--/xsl:element-->
+        </xsl:element>
+      </xsl:element>
+    </xsl:element>
+    </xsl:for-each>
+  </xsl:template>
+
+ <xsl:template name="transition-w-typeinfo">
+   <!-- ignore typeinfo/@id for now -->
+    <xsl:param name="list"/>
+    <xsl:param name="w-list"/>
+    <xsl:for-each select="$list">      
+    <xsl:element name="transition-TYPEINFO">
+      <xsl:attribute name="source">
+        <xsl:call-template name="source">
+          <xsl:with-param name="w-id" select="../@id"/>
+          <xsl:with-param name="w-list" select="$w-list"/>
+        </xsl:call-template>
+      </xsl:attribute>
+      <xsl:attribute name="target">
+        <xsl:value-of select="../@id"/>
+      </xsl:attribute>
+      <xsl:element name="wordForm">
+        <xsl:attribute name="form">
+          <xsl:value-of select="../surface"/>
+        </xsl:attribute>
+        <xsl:attribute name="tag"/>
+        <xsl:attribute name="tokens">
+          <xsl:value-of select="../@id"/>
+        </xsl:attribute>
+        <xsl:element name="fs">
+          <xsl:apply-templates select="." mode="fs"/>
+        </xsl:element>
+      </xsl:element>
+    </xsl:element>
+    </xsl:for-each>
+  </xsl:template>
+
+  <xsl:template match="typeinfo" mode="fs">
+    <xsl:element name="f"><xsl:attribute name="name">stem</xsl:attribute><xsl:value-of select="stem"/></xsl:element>
+    <xsl:apply-templates select="infl" mode="fs"/>
+    <xsl:apply-templates select="fsmod" mode="fs"/>
+    <!--xsl:element name="f">
+      <xsl:attribute name="name">metaPic</xsl:attribute-->
+      <xsl:if test="@prio">
+        <xsl:element name="f"><xsl:attribute name="name">prio-typeinfo</xsl:attribute><xsl:value-of select="@prio"/></xsl:element>
+      </xsl:if>
+      <xsl:if test="@baseform">
+        <xsl:element name="f"><xsl:attribute name="name">baseform</xsl:attribute><xsl:value-of select="@baseform"/></xsl:element>
+      </xsl:if>
+    <!--/xsl:element-->
+  </xsl:template>
+
+  <xsl:template name="transition-ne">
+    <!-- ignore @id for now -->
+    <xsl:param name="list"/>
+    <xsl:param name="w-list"/>
+    <xsl:for-each select="$list">      
+    <xsl:element name="transition-NE">
+      <xsl:attribute name="source">
+        <!--xsl:call-template name="source-multi">
+          <xsl:with-param name="w-id" select="ref/@id"/>
+          <xsl:with-param name="w-list" select="$w-list"/>
+        </xsl:call-template-->
+      </xsl:attribute>
+      <xsl:attribute name="target">
+        <!--xsl:call-template name="target-multi">
+          <xsl:with-param name="w-id" select="ref/@id"/>
+          <xsl:with-param name="w-list" select="$w-list"/>
+        </xsl:call-template-->
+      </xsl:attribute>
+      <xsl:element name="wordForm">
+        <!-- ommit form -->
+        <xsl:attribute name="tag">
+          <xsl:value-of select="pos/@tag"/>
+        </xsl:attribute>
+        <xsl:attribute name="tokens">
+          <xsl:value-of select="ref/@id"/>
+        </xsl:attribute>
+        <xsl:element name="fs">
+          <!--xsl:element name="f">
+            <xsl:attribute name="name">metaPic</xsl:attribute-->
+            <xsl:if test="pos/@prio">
+              <xsl:element name="f"><xsl:attribute name="name">prio-pos</xsl:attribute><xsl:value-of select="pos/@prio"/></xsl:element>
+            </xsl:if>
+          <!--/xsl:element-->
+          <xsl:apply-templates select="typeinfo" mode="fs"/>
+        </xsl:element>
+      </xsl:element>
+    </xsl:element>
+    </xsl:for-each>
+  </xsl:template>
+
+  <xsl:template match="infl" mode="fs">
+    <xsl:element name="f"><xsl:attribute name="name">infl</xsl:attribute><xsl:value-of select="@name"/></xsl:element>
+  </xsl:template>
+
+  <xsl:template match="fsmod" mode="fs">
     <xsl:element name="f">
-      <xsl:attribute name="name">pos</xsl:attribute>
-      <xsl:element name="f"><xsl:attribute name="name">tag</xsl:attribute><xsl:value-of select="@tag"/></xsl:element>
-      <xsl:element name="f"><xsl:attribute name="name">prio</xsl:attribute><xsl:value-of select="@prio"/></xsl:element>
+      <xsl:attribute name="name">fsmod</xsl:attribute>
+      <xsl:element name="f"><xsl:attribute name="name">path</xsl:attribute><xsl:value-of select="@path"/></xsl:element>
+      <xsl:element name="f"><xsl:attribute name="name">value</xsl:attribute><xsl:value-of select="@value"/></xsl:element>
     </xsl:element>
   </xsl:template>
 
