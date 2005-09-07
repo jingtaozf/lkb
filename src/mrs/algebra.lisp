@@ -293,15 +293,14 @@
 		"Sement corresponds to lexical entry: no check done")))))))
 
 (defun reconstruct-sements (actual-sement dtr-sements)
-  (let* ((*mrs-comparison-output-control* nil)
-	 (possible-results
-	 (cond ((cddr dtr-sements)
+  (loop for result in 	  
+	(let ((*mrs-comparison-output-control* nil))
+	  (cond ((cddr dtr-sements)
 	 ;;; ternary and above rules (or binary plus c-cont)
-		(do-binary-sement-splits dtr-sements))
-	       ((cdr dtr-sements)
-		(binary-combine-sements dtr-sements))
-	       (t (list (car dtr-sements))))))
-    (loop for result in possible-results
+		 (do-binary-sement-splits dtr-sements))
+		((cdr dtr-sements)
+		 (binary-combine-sements dtr-sements))
+		(t (list (car dtr-sements)))))
 	collect
 	  (progn
 ;	    (format t "~%~%")
@@ -313,7 +312,7 @@
 	       :match-p match-p
 	       :reconstructed-sement result
 	       :messages
-	       *mrs-comparison-output-messages*))))))
+	       *mrs-comparison-output-messages*)))))
 	
 (defun do-binary-sement-splits (dtr-sements)
   ;;; if there is more than one dtr (real, or c-cont)
