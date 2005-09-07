@@ -300,16 +300,17 @@
 			     result))
 		    (messages (mrs::reconstruction-result-messages
 			       result)))
+		(format stream "~%")
 		(when sement
 		  (mrs::output-algebra-sement1 
 		   sement 'mrs::simple-indexed stream))
-		(format stream "~%~%")
+		(format stream "~%")
 		(dolist (message messages)
 		  (mrs::do-comparison-message message 'mrs::simple-indexed stream)))))
 	(format stream "~%::: No sement structure was reconstructed~%"))
       (if actual-sement
 	  (progn
-	    (format stream "~%Extracted sement~%")
+	    (format stream "~%~%Extracted sement~%")
 	    (mrs::output-algebra-sement1 
 	     actual-sement 'mrs::simple-indexed stream))
 	(format stream "~%~%No extracted sement~%")))))

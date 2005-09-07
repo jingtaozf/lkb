@@ -38,6 +38,7 @@
   (initialise-algebra start-num)
   (let ((sement 
 	 (extract-algebra-from-fs (lkb::tdfs-indef parse-fs))))
+;;;    (mrs::output-algebra-sement1 sement 'mrs::simple-indexed t)
     sement))
 
 (defun extract-rule-sement (rule-fs &optional start-num)
@@ -258,7 +259,9 @@
 		    when (and (lkb::edge-p dtr) (lkb::edge-dag dtr))
 		    collect
 		      (progn (setf count (+ count 1000))
-			     (extract-sement (lkb::edge-dag dtr) count))))
+			     (extract-sement (lkb::edge-dag dtr) 
+					     nil
+					     count))))
 	       (rule-sement (extract-rule-sement
 			     (lkb::rule-full-fs rule-struct) (+ count 1000)))
 	       (dtr-sements 
