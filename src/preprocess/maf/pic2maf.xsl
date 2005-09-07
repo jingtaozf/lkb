@@ -118,15 +118,12 @@
           <xsl:value-of select="@id"/>
         </xsl:attribute>
         <xsl:element name="fs">
-          <!--xsl:element name="f">
-            <xsl:attribute name="name">metaPic</xsl:attribute-->
-            <xsl:if test="@constant">
+          <xsl:if test="@constant">
             <xsl:element name="f"><xsl:attribute name="name">constant</xsl:attribute><xsl:value-of select="@constant"/></xsl:element>              
-            </xsl:if>
-            <xsl:if test="@prio">
+          </xsl:if>
+          <xsl:if test="@prio">
             <xsl:element name="f"><xsl:attribute name="name">prio-w</xsl:attribute><xsl:value-of select="@prio"/></xsl:element>
-            </xsl:if>
-          <!--/xsl:element-->
+          </xsl:if>
         </xsl:element>
       </xsl:element>
     </xsl:element>
@@ -158,12 +155,9 @@
           <xsl:value-of select="../@id"/>
         </xsl:attribute>
         <xsl:element name="fs">
-          <!--xsl:element name="f">
-            <xsl:attribute name="name">metaPic</xsl:attribute-->
-            <xsl:if test="@prio">
+          <xsl:if test="@prio">
             <xsl:element name="f"><xsl:attribute name="name">prio-pos</xsl:attribute><xsl:value-of select="@prio"/></xsl:element>
-            </xsl:if>
-          <!--/xsl:element-->
+          </xsl:if>
         </xsl:element>
       </xsl:element>
     </xsl:element>
@@ -205,17 +199,14 @@
     <xsl:element name="f"><xsl:attribute name="name">stem</xsl:attribute><xsl:value-of select="stem"/></xsl:element>
     <xsl:apply-templates select="infl" mode="fs"/>
     <xsl:apply-templates select="fsmod" mode="fs"/>
-    <!--xsl:element name="f">
-      <xsl:attribute name="name">metaPic</xsl:attribute-->
-      <xsl:if test="@prio">
-        <xsl:element name="f"><xsl:attribute name="name">prio-typeinfo</xsl:attribute><xsl:value-of select="@prio"/></xsl:element>
-      </xsl:if>
-      <xsl:if test="@baseform">
-        <xsl:element name="f"><xsl:attribute name="name">baseform</xsl:attribute><xsl:value-of select="@baseform"/></xsl:element>
-      </xsl:if>
-    <!--/xsl:element-->
+    <xsl:if test="@prio">
+      <xsl:element name="f"><xsl:attribute name="name">prio-typeinfo</xsl:attribute><xsl:value-of select="@prio"/></xsl:element>
+    </xsl:if>
+    <xsl:if test="@baseform">
+      <xsl:element name="f"><xsl:attribute name="name">baseform</xsl:attribute><xsl:value-of select="@baseform"/></xsl:element>
+    </xsl:if>
   </xsl:template>
-
+  
   <xsl:template name="transition-ne">
     <!-- ignore @id for now -->
     <xsl:param name="list"/>
@@ -223,16 +214,16 @@
     <xsl:for-each select="$list">      
     <xsl:element name="transition-NE">
       <xsl:attribute name="source">
-        <!--xsl:call-template name="source-multi">
-          <xsl:with-param name="w-id" select="ref/@id"/>
+        <xsl:call-template name="source-multi">
+          <xsl:with-param name="w-ids" select="ref/@id"/>
           <xsl:with-param name="w-list" select="$w-list"/>
-        </xsl:call-template-->
+        </xsl:call-template>
       </xsl:attribute>
       <xsl:attribute name="target">
-        <!--xsl:call-template name="target-multi">
+        <xsl:call-template name="target-multi">
           <xsl:with-param name="w-id" select="ref/@id"/>
           <xsl:with-param name="w-list" select="$w-list"/>
-        </xsl:call-template-->
+        </xsl:call-template>
       </xsl:attribute>
       <xsl:element name="wordForm">
         <!-- ommit form -->
@@ -243,19 +234,16 @@
           <xsl:value-of select="ref/@id"/>
         </xsl:attribute>
         <xsl:element name="fs">
-          <!--xsl:element name="f">
-            <xsl:attribute name="name">metaPic</xsl:attribute-->
-            <xsl:if test="pos/@prio">
-              <xsl:element name="f"><xsl:attribute name="name">prio-pos</xsl:attribute><xsl:value-of select="pos/@prio"/></xsl:element>
+          <xsl:if test="pos/@prio">
+            <xsl:element name="f"><xsl:attribute name="name">prio-pos</xsl:attribute><xsl:value-of select="pos/@prio"/></xsl:element>
             </xsl:if>
-          <!--/xsl:element-->
-          <xsl:apply-templates select="typeinfo" mode="fs"/>
+            <xsl:apply-templates select="typeinfo" mode="fs"/>
+          </xsl:element>
         </xsl:element>
       </xsl:element>
-    </xsl:element>
     </xsl:for-each>
   </xsl:template>
-
+  
   <xsl:template match="infl" mode="fs">
     <xsl:element name="f"><xsl:attribute name="name">infl</xsl:attribute><xsl:value-of select="@name"/></xsl:element>
   </xsl:template>
@@ -267,6 +255,14 @@
       <xsl:element name="f"><xsl:attribute name="name">value</xsl:attribute><xsl:value-of select="@value"/></xsl:element>
     </xsl:element>
   </xsl:template>
+
+  <xsl:template name="source-multi">
+    <xsl:param name="w-ids"/>
+    <xsl:param name="w-list"/>...</xsl:template>
+
+  <xsl:template name="target-multi">
+    <xsl:param name="w-ids"/>
+    <xsl:param name="w-list"/>...</xsl:template>
 
   <xsl:template name="source">
     <xsl:param name="w-id"/>
