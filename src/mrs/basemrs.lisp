@@ -2084,7 +2084,7 @@ VAR -> VARNAME[:CONSTNAME]*
   (make-hook
   :index (copy-var (hook-index hook))
   :ltop (copy-var (hook-ltop hook))
-  :xarg (copy-var (hook-xarg hook))))
+  :xarg (if (hook-xarg hook) (copy-var (hook-xarg hook)))))
 
 (defun copy-sement-slots (slots)
   (loop for slot in slots

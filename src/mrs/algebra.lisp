@@ -268,14 +268,21 @@
 			     (lkb::rule-full-fs rule-struct) (+ count 1000)))
 	       (dtr-sements 
 		(if edge-sements
-		    (loop for poss-dtr in (cons rule-sement edge-sements)
+		    (loop for poss-dtr in 
+			  (if rule-sement
+			      (cons rule-sement edge-sements)
+			    edge-sements)
 			when (or (sement-liszt poss-dtr)
 				 (sement-slots poss-dtr))
 			collect poss-dtr)))
 	       ;; allow rule to be counted if it has a liszt
 	       ;; discard things like `it' in `it rained'
 	       (reconstructed-sements
-		(reconstruct-sements actual-sement dtr-sements)))
+		(reconstruct-sements actual-sement 
+				     (or 
+				      dtr-sements edge-sements))))
+	  ;;; don't want to discard `it' if that's all we've got
+	  ;;;
 		;;; reconstruct-sements builds alternatives
 		;;; and then tests them against the actual sement
 	  (or reconstructed-sements
@@ -387,9 +394,6 @@
 	(if (setf bindings (mrs-liszts-equal-p (sement-liszt sement1)
 					       (sement-liszt sement2) 
 					       nil bindings))
-	    ;;; should be t here instead of nil
-	    ;;; to make the check `syntactic' (i.e. fussy)
-	    ;;; but FIX to make `u's into `x's is needed first
 	    (if (setf bindings
 		  (hcons-equal-p (sement-h-cons sement1)
 				 (sement-h-cons sement2)

@@ -306,7 +306,7 @@ duplicate variables")
            (parameter-strings (get-fvps-parameter-strings fvps))
            (cfrom (extract-cfrom-from-rel-fs fs))
            (cto (extract-cto-from-rel-fs fs)))
-      (unless (member pred *dummy-relations*)
+      (unless (member pred *dummy-relations* :test #'equal)
         (let ((ep (make-char-rel 
                    :pred pred
                    :handel handle-var
