@@ -11,9 +11,20 @@
 M log/build
 U src/version.lsp
 ? src/.l7cl
+U src/data/mrscomp/mrsglobals.lsp
+U src/mrs/algebra.lisp
 U src/mrs/basemrs.lisp
+U src/mrs/dependencies.lisp
+U src/mrs/lkb-acl-mrs.lisp
+U src/mrs/mrscorpus.lisp
+U src/mrs/mrsglobals.lisp
+U src/mrs/mrsoutput.lisp
+U src/preprocess/maf/pic.dtd
+U src/preprocess/maf/pic.xml
+U src/preprocess/maf/pic2maf.xsl
 ? src/tsdb/home/log
 ? src/tsdb/home/redwoods
+U src/tsdb/lisp/lkb-interface.lisp
 **********
 
   Remember to update the version number:
@@ -23,7 +34,7 @@ U src/mrs/basemrs.lisp
 **********
 Checking in ./src/version.lsp;
 /lingo/CVS/lkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.409; previous revision: 1.408
+new revision: 1.411; previous revision: 1.410
 done
 make[1]: Entering directory `/lingo/build/lkb'
 ( \
@@ -328,6 +339,10 @@ make[1]: Entering directory `/lingo/build/lkb'
 ./src/preprocess/texti.lsp
 ./src/preprocess/disp-clim.lsp
 ./src/preprocess/lxml.lsp
+./src/preprocess/maf/
+./src/preprocess/maf/pic.dtd
+./src/preprocess/maf/pic.xml
+./src/preprocess/maf/pic2maf.xsl
 ./src/lkb.el
 ( \
   cd /lingo/build//lkb; \
@@ -1094,7 +1109,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-7.0 [Linux (x86)] (Sep 6, 2005 14:29)
+7.0 [Linux (x86)] (Sep 7, 2005 12:23)
 Copyright (C) 1985-2004, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -2134,7 +2149,7 @@ NIL
  |#
 ; Fast loading /lingo/local/acl/code/nocompiler.001
 ;;; Installing nocompiler patch, version 1
-122033280 bytes have been tenured, next gc will be global.
+121489280 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 
 T 
@@ -2960,7 +2975,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/yy.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/mt.lisp
-gc-after-hook(): local; new: 1899776; old: 594576; pending: 0; efficiency: 94.
+gc-after-hook(): local; new: 1853552; old: 594576; pending: 0; efficiency: 93.
 ;;; Writing fasl file /lingo/build/lkb/src/.l7cl/tsdb/mt.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/mt.fasl
@@ -2973,8 +2988,8 @@ gc-after-hook(): local; new: 1899776; old: 594576; pending: 0; efficiency: 94.
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/tnt-interface.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/redwoods.lisp
-gc-after-hook(): local; new: 1335672; old: 9416; pending: 0; efficiency: 95.
-gc-after-hook(): local; new: 2752864; old: 6864; pending: 0; efficiency: 94.
+gc-after-hook(): local; new: 1325216; old: 9416; pending: 1048; efficiency: 95.
+gc-after-hook(): local; new: 2666016; old: 6864; pending: 0; efficiency: 94.
 ;;; Writing fasl file /lingo/build/lkb/src/.l7cl/tsdb/redwoods.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/redwoods.fasl
@@ -2995,7 +3010,7 @@ gc-after-hook(): local; new: 2752864; old: 6864; pending: 0; efficiency: 94.
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/pcfg.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/maxent.lisp
-gc-after-hook(): local; new: 1324568; old: 278032; pending: 0; efficiency: 94.
+gc-after-hook(): local; new: 1321160; old: 278032; pending: 48; efficiency: 93.
 ;;; Writing fasl file /lingo/build/lkb/src/.l7cl/tsdb/maxent.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/maxent.fasl
