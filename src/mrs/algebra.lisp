@@ -166,8 +166,8 @@
   ;;; feature.  The HOOK is taken to be a slot, the path name
   ;;; is used to generate the slot name.
   ;;; 1. reentrancy - if we've seen the HOOK before, store 
-  ;;; all paths that lead to it and decide on the best name
-  ;;; when we're done (e.g., ignore -- paths)
+  ;;; all paths that lead to it and decide on the name
+  ;;; when we're done
   ;;; 2. don't worry about OPT etc.  The slot will be registered
   ;;; as a slot at the location where it exists.  The algebra
   ;;; checking code will allow slot removal.
@@ -194,8 +194,8 @@
   ;;; COMPS1 etc
   ;;;
   ;;; in the case of multiple paths leading to the same 
-  ;;; HOOK, we distinguish between uninteresting cases (e.g. features beginning
-  ;;; with `--') and interesting cases, such as control where
+  ;;; HOOK, we distinguish between uninteresting cases
+  ;;; and interesting cases, such as control where
   ;;; e.g. try shares its SPR hook with the COMP1 SPR1 hook (because
   ;;; the whole SPR is shared)
   ;;; given ((SPR FIRST SEM HOOK)(COMPS REST FIRST SPR FIRST SEM HOOK))
