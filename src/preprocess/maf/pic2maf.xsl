@@ -25,7 +25,7 @@
   <xsl:template match="pet-input-chart">
     <xsl:element name="maf">
       <xsl:attribute name="addressing">CharPos</xsl:attribute>
-      <xsl:attribute name="creator">pic2maf-wf.xsl</xsl:attribute>
+      <xsl:attribute name="creator">pic2maf.xsl</xsl:attribute>
       <xsl:attribute name="date">...</xsl:attribute>
       <xsl:attribute name="language">en.US</xsl:attribute>
       <xsl:apply-templates mode="token"/>
@@ -52,8 +52,8 @@
 
   <xsl:template match="pet-input-chart" mode="wf">
     <xsl:element name="fsm">
-      <xsl:attribute name="init">...</xsl:attribute>
-      <xsl:attribute name="final">...</xsl:attribute>
+      <xsl:attribute name="init">_START_</xsl:attribute>
+      <xsl:attribute name="final"><xsl:value-of select="w[last()]/@id"/></xsl:attribute>
 
       <xsl:element name="state">
         <xsl:attribute name="id">_START_</xsl:attribute>
@@ -108,13 +108,10 @@
     <xsl:param name="typeinfo-list"/>
     <xsl:param name="w"/>
     <xsl:param name="w-list"/>
-
     <xsl:variable name="pos-first" select="$pos-list[1]"/>
     <xsl:variable name="pos-rest" select="$pos-list[position()!=1]"/>
-
     <xsl:variable name="typeinfo-first" select="$typeinfo-list[1]"/>
     <xsl:variable name="typeinfo-rest" select="$typeinfo-list[position()!=1]"/>
-
     <xsl:element name="transition">
       <xsl:attribute name="source">
         <xsl:call-template name="source">
@@ -142,14 +139,11 @@
           <xsl:if test="$w/@prio">
             <xsl:element name="f"><xsl:attribute name="name">prio-w</xsl:attribute><xsl:value-of select="$w/@prio"/></xsl:element>
           </xsl:if>
-        </xsl:element>
-        <xsl:element name="fs">
           <xsl:apply-templates select="$pos-first" mode="fs"/>
           <xsl:apply-templates select="$typeinfo-first" mode="fs"/>
         </xsl:element>
       </xsl:element>
     </xsl:element>
-
     <xsl:if test="$pos-rest or $typeinfo-rest">
       <xsl:call-template name="transition-w-pos_typeinfo-aux">
         <xsl:with-param name="pos-list" select="$pos-rest"/>
@@ -158,7 +152,6 @@
         <xsl:with-param name="w-list" select="$w-list"/>
       </xsl:call-template>
     </xsl:if>
-
   </xsl:template>
 
   <!-- assume at most 1 pos and 1 typrinfo in ne element -->

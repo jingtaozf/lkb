@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+    <!--
+    
+    DTD for Morpho-Syntaxic Annotation Framework
+    
+  -->
+
+<!ENTITY % fs-SYSTEM 'INCLUDE'>
+<!ENTITY % fs-PUBLIC 'IGNORE'>
+
+<![%fs-SYSTEM[
+        <!ENTITY % dtd-fs SYSTEM "fs.dtd">
+]]>
+<![%fs-PUBLIC[
+        <!ENTITY % dtd-fs PUBLIC "-//DTD fs//DTD//EN" "http://www.tc37sc4.org/dtd/fs.dtd">
+]]>
+%dtd-fs;
+
+
+  <!ELEMENT msa         ((token | wordForm | wordFormAlt | fsm)+) >
+
+  <!ELEMENT token       (#PCDATA) >
+  <!ATTLIST token       value CDATA #IMPLIED
+                        from IDREF #IMPLIED
+                        to IDREF #IMPLIED
+                        id ID #IMPLIED>
+
+  <!ELEMENT wordForm    (fs | wordForm | token)*>
+  <!ATTLIST wordForm    tokens IDREFS #IMPLIED
+                        entry CDATA #IMPLIED
+                        tag CDATA #IMPLIED>
+                        
+
+  <!ELEMENT wordFormAlt (wordForm+)>
+         
+  <!ELEMENT fsm         ((state | transition | token)+)>
+  <!ATTLIST fsm         initial IDREF #REQUIRED
+                        finals  IDREFS #REQUIRED>
+
+  <!ELEMENT state       EMPTY>
+  <!ATTLIST state       id ID #REQUIRED>
+
+  <!ELEMENT transition  (wordFormAlt | wordForm)>
+  <!ATTLIST transition  from IDREF #REQUIRED
+                        to IDREF #REQUIRED>
+
+
