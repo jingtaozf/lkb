@@ -372,6 +372,11 @@ set in the code")
     `(,(vsym "CONT") ,(vsym "HOOK") ,(vsym "SYNSEM")
       ,(vsym "LOCAL") ,(vsym "CAT") ,(vsym "VAL") ,(vsym "HEAD")))
 
+(defvar *allow-sloppy-message-matching-p* nil
+  "temporary expedient (I hope) to allow for the current ERG
+obtaining message predicates in complicated ways - should be nil for 
+grammars that don't do this")
+
 
 ;;; generator spelling fixing - nil by default
 ;;; but can be set to 'lkb::fix-spelling for a/an - see spell.lisp

@@ -139,16 +139,34 @@
 ;;; so we have to return sets in this case, and check
 ;;; compatability pairwise
 
+
+(defparameter *special-hack-for-message-types-p* nil)
+;;; a temporary expedient (I hope) to allow the algebra checking to
+;;; go through despite the differences in message types
+;;; produced by the current ERG
+
 (defun sort-mrs-struct-liszt (liszt)
   (let ((new-liszt 
          (combine-similar-relations liszt nil #'similar-relations-p)))
    (sort new-liszt
          #'(lambda (relset1 relset2)
              (let ((rel1 (car relset1)) (rel2 (car relset2)))
-               (or (string-lessp (rel-pred rel1) (rel-pred rel2))
-                   (and (string-equal (rel-pred rel1) (rel-pred rel2))
-                        (value-feats-lessp (rel-flist rel1)
-                                           (rel-flist rel2)))))))))
+               (if *special-hack-for-message-types-p*
+		   (cond ((subtype-p (rel-pred rel1) 'lkb::message_m_rel) 
+			  t)
+			 ((subtype-p (rel-pred rel2) 'lkb::message_m_rel) 
+			  nil)
+			 (t (or
+			     (string-lessp (rel-pred rel1) (rel-pred rel2))
+			     (and (string-equal (rel-pred rel1) (rel-pred rel2))
+				  (value-feats-lessp (rel-flist rel1)
+						     (rel-flist rel2))))))
+		 (or
+		  (string-lessp (rel-pred rel1) (rel-pred rel2))
+		  (and (string-equal (rel-pred rel1) (rel-pred rel2))
+		       (value-feats-lessp (rel-flist rel1)
+					  (rel-flist rel2))))))))))
+		 
 
 (defun combine-similar-relations (liszt result-so-far test-fn)
   (if (null liszt)
@@ -165,9 +183,12 @@
                                  (push (cons test-rel similar)
 				       result-so-far)
 				 test-fn))))
-  
+
 (defun similar-relations-p (rel1 rel2)
-  (and (string-equal (rel-pred rel1) (rel-pred rel2))
+  (and (or (string-equal (rel-pred rel1) (rel-pred rel2))
+	   (and *special-hack-for-message-types-p*
+	       (subtype-p (rel-pred rel1) 'lkb::message_m_rel)
+	       (subtype-p (rel-pred rel2) 'lkb::message_m_rel)))
        (let ((fv1 (rel-flist rel1))
              (fv2 (rel-flist rel2)))
          (if (eql (length fv1) (length fv2))
@@ -349,10 +370,6 @@
 		       (mrs-relations-equal-p rel-alt1 rel-alt2
 					      syntactic-p new-bindings))))))
 
-(defparameter *special-hack-for-message-types-p* nil)
-;;; a temporary expedient (I hope) to allow the algebra checking to
-;;; go through despite the differences in message types
-;;; produced by the current ERG
 
 (defun mrs-relations-equal-p (rel1 rel2 syntactic-p bindings)
   (if (or (equal (rel-pred rel1) (rel-pred rel2))
