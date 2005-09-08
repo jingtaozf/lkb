@@ -1949,6 +1949,12 @@ VAR -> VARNAME[:CONSTNAME]*
   (with-slots (stream) mrsout
     (format stream "~a" name)))
 
+(defclass active-slot (simple-indexed)
+  ())
+
+(defmethod mrs-output-slot-name ((mrsout active-slot) name)
+  (with-slots (stream) mrsout
+    (lkb::slot-region stream name)))
 
 (defmethod mrs-output-end-slots ((mrsout indexed))
   (with-slots (stream) mrsout

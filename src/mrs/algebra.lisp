@@ -272,8 +272,11 @@
 			  (if rule-sement
 			      (cons rule-sement edge-sements)
 			    edge-sements)
-			when (or (sement-liszt poss-dtr)
-				 (sement-slots poss-dtr))
+			when ;;; (sement-liszt poss-dtr)
+			     ;;; possibly need to FIX this
+			     
+			    (or (sement-liszt poss-dtr)
+				 (sement-slots poss-dtr)) 
 			collect poss-dtr)))
 	       ;; allow rule to be counted if it has a liszt
 	       ;; discard things like `it' in `it rained'
@@ -340,55 +343,101 @@
 (defun binary-combine-sements (dtr-sements)
   ;;; should be called only when there are two elements in dtr-sements 
   (loop for head-dtr in dtr-sements
-      append
+      nconc
 	(let* ((non-head-dtr (first (remove head-dtr dtr-sements)))
   ;;; when we're calling this, we don't know for sure which 
   ;;; slot is going to be filled.  So we try out all possibilities.
-	       (slots (sement-slots head-dtr))
-	       (sement-results nil))
-	  (dolist (slot-record slots)
-	    (let* ((slot-hook (slot-hook slot-record))
-		   (equalities (equate-sement-hooks 
-				slot-hook (sement-hook non-head-dtr)))
-		   (head-eqs (cadr equalities))
-		   (non-head-eqs (car equalities)))
-	      (when equalities
-		  (push
-		   (make-sement 
-		    :hook (canonicalise-sement-hook
-				       (copy-sement-hook
-					(sement-hook head-dtr)) head-eqs)
-		    :slots 
-		    (canonicalise-sement-slots
-		     (copy-sement-slots
-		      (remove slot-record slots)) head-eqs)
-		    :liszt
-		    (append (canonicalise-basemrs-liszt
-			     (copy-liszt-completely
-			      (sement-liszt head-dtr) nil) head-eqs)
-			    (canonicalise-basemrs-liszt
-			     (copy-liszt-completely
-			      (sement-liszt non-head-dtr) nil) non-head-eqs))
-		    :h-cons 
-		    (append (canonicalise-basemrs-hcons-list
-			     (copy-psoa-hcons 
-			      (sement-h-cons head-dtr)) head-eqs)
-			    (canonicalise-basemrs-hcons-list
-			     (copy-psoa-hcons (sement-h-cons non-head-dtr))
-				       non-head-eqs)))
-		   sement-results))))
+	       (slots (sement-slots head-dtr)))
+	  (loop for slot-record in slots
+	        for new-sement =
+		   (make-sement-from-sements 
+		    slot-record head-dtr non-head-dtr slots nil)
+	      when new-sement
+	      collect new-sement))))
+	     
 	  #|
-	  (unless sement-results
 	    (dolist (sement dtr-sements)
 	      (format t "~%")
 	      (mrs::output-algebra-sement1 sement 'mrs::simple-indexed t)))
 	      |#
-	  sement-results)
-	))
+
+(defun make-sement-from-sements (slot-record head-dtr 
+				 non-head-dtr slots interactive-p)
+  (let* ((slot-hook (slot-hook slot-record))
+	 (equalities (equate-sement-hooks 
+		      slot-hook (sement-hook non-head-dtr)))
+	 (head-eqs (cadr equalities))
+	 (non-head-eqs (car equalities)))
+    (when interactive-p
+      (format t 
+	      "~%Attempt to match ~A (~A) with hook ~A: ~A"
+	      (make-readable-hook slot-hook)
+	      (slot-name slot-record)
+	      (make-readable-hook (sement-hook non-head-dtr))
+	      (if equalities "succeeded" "failed")))
+    (if equalities
+	(make-sement 
+	 :hook (canonicalise-sement-hook
+		(copy-sement-hook
+		 (sement-hook head-dtr)) head-eqs)
+	 :slots 
+	 (canonicalise-sement-slots
+	  (copy-sement-slots
+	   (remove slot-record slots)) head-eqs)
+	 :liszt
+	 (append (canonicalise-basemrs-liszt
+		  (copy-liszt-completely
+		   (sement-liszt head-dtr) nil) head-eqs)
+		 (canonicalise-basemrs-liszt
+		  (copy-liszt-completely
+		   (sement-liszt non-head-dtr) nil) non-head-eqs))
+	 :h-cons 
+	 (append (canonicalise-basemrs-hcons-list
+		  (copy-psoa-hcons 
+		   (sement-h-cons head-dtr)) head-eqs)
+		 (canonicalise-basemrs-hcons-list
+		  (copy-psoa-hcons (sement-h-cons non-head-dtr))
+		  non-head-eqs))))))
+
+;;; Interactive application
+
+(defparameter *slot-selection* nil)
+
+(defun select-sement-slot-interactive (name sement)
+  (setf  *slot-selection* (cons name sement)))
+
+(defun select-sement-dtr-interactive (sement)
+  ;;; only active if *slot-selection* 
+  (let ((res (binary-combine-sements-interactive 
+	      (cdr *slot-selection*) (car *slot-selection*) sement)))
+    (when res
+      (lkb::show-mrs-sement-result-window res))))
+
+(defun binary-combine-sements-interactive (head-dtr slot-name non-head-dtr)
+  (let* ((slots (sement-slots head-dtr))
+	 (slot-record (find slot-name slots :key #'slot-name :test #'equal)))
+    (if slot-record
+	(make-sement-from-sements slot-record head-dtr 
+				  non-head-dtr slots t))))
+
+(defun make-readable-hook (hook) 
+  ;;; for debugging
+  (let ((index (hook-index hook))
+	(ltop (hook-ltop hook))
+	(xarg (hook-xarg hook))) 
+    (format nil "[~(~a~),~(~a~),~(~a~)]" 
+	    (var-string ltop) 
+	    (var-string index) 
+	    (if xarg (var-string xarg)
+	      "_"))))
+
+;;; end interactive stuff
 
 (defun compare-sements (sement1 sement2)
   ;;; this ignores slots, currently at least
-  (let ((bindings nil))
+  (let ((bindings nil)
+	(*special-hack-for-message-types-p* 
+	 *allow-sloppy-message-matching-p*))
     (if (setf bindings (sement-hooks-equal-p (sement-hook sement1)
 					     (sement-hook sement2) bindings))
 	(if (setf bindings (mrs-liszts-equal-p (sement-liszt sement1)
@@ -551,7 +600,8 @@
 	 (rule-struct (lkb::edge-rule edge)))
     (when (and parse-fs (lkb::rule-p rule-struct))
       (initialise-algebra)
-      (let ((sement 
+      (let ((rule-id (lkb::rule-id rule-struct))
+	    (sement 
 	     (extract-algebra-from-fs (lkb::tdfs-indef parse-fs))))
 	(if sement
 	  (let* ((all-compares
@@ -562,7 +612,8 @@
 		      collect res)))
 	    (unless good-matches
 	        (setf *algebra-problems* t)
-		(format stream "~%   Problem on Edge ~A" edge-id)))
+		(format stream "~%   Problem on Edge ~A (rule ~A)" 
+			edge-id rule-id)))
 	  (progn 
 	    (setf *algebra-problems* t)
 	  (format stream 

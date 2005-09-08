@@ -91,6 +91,8 @@
        mrsstruct
        'mrs::mrs-xml file-name))))
 
+;;; for menus associated with types
+
 (defstruct mrs-type-thing value)
 
 (define-mrs-simple-command (com-type-mrs-menu)
@@ -130,6 +132,40 @@
        (exp (show-type-aux type type-entry))))))
     
 
+;;; for menus associated with slots in sements
+
+(define-mrs-sement-command (com-output-sement 
+			    :menu "Combine with slot") 
+    ()
+  (mrs::select-sement-dtr-interactive 
+   (mrs-sement-mrsstruct clim:*application-frame*)))
+
+(defstruct slot-thing value)
+
+(define-mrs-sement-command (com-slot-menu)
+    ((slot-thing 'slot-thing :gesture :select))
+  (let ((name (slot-thing-value slot-thing)))
+    (when name
+      (clim:with-application-frame (frame)
+	(pop-up-menu
+	 `(("Select slot" :value slot-select))
+	 (slot-select (mrs::select-sement-slot-interactive 
+		       name 
+		       (mrs-sement-mrsstruct frame))))))))
+
+(defun slot-region (stream name)
+  ;;; called from the display functions
+  (let ((pred-rec
+         (make-slot-thing :value name)))
+    (clim:with-text-style (stream *bold*)
+      (clim:with-output-as-presentation 
+	  (stream pred-rec 'slot-thing)
+        (if (stringp name)
+          (format stream "~s" name)
+          (format stream "~(~a~)" name))))))
+
+    
+;;; windows
 
 (defun show-mrs-window (edge &optional mrs title)
   (let ((mrs (or mrs (edge-mrs edge) (mrs::extract-mrs edge))))
@@ -163,6 +199,11 @@
   (let ((sement (mrs::extract-sement parse-fs reconstructed-fs)))
     (mp:run-function "Sement MRS"
 		     #'show-mrs-sement-window-really sement title)))
+
+(defun show-mrs-sement-result-window (sement)
+  (mp:run-function "Sement MRS"
+		   #'show-mrs-sement-window-really sement 
+		   "Resulting sement"))
 
 (defun show-mrs-rule-sement-window (rule-fs title)
   (declare (ignore edge-record))
@@ -274,7 +315,7 @@
   (let ((sement (mrs-sement-mrsstruct mframe)))
     (if sement
         (clim:with-text-style (stream (lkb-parse-tree-font))
-          (mrs::output-algebra-sement1 sement 'mrs::simple-indexed stream))
+          (mrs::output-algebra-sement1 sement 'mrs::active-slot stream))
       (format stream "~%::: Sement structure could not be extracted~%"))))
 
 ;;; results are reconstruction-result structures as defined in algebra.lisp
