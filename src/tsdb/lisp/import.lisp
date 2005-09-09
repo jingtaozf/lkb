@@ -125,9 +125,12 @@
          (ipmeter (when meter 
                     (madjust + (madjust * meter 0.3) 
                              (+ (mduration rmeter) (mduration imeter)))))
-         (tpath (if absolute (namestring target) (find-tsdb-directory target)))
-         (tifile (make-pathname :directory tpath :name "item"))
-         (tstatus (verify-tsdb-directory tpath :absolute t)))
+         (tpath (when target
+                  (if absolute
+                    (namestring target)
+                    (find-tsdb-directory target))))
+         (tifile (and tpath (make-pathname :directory tpath :name "item")))
+         (tstatus (and tpath (verify-tsdb-directory tpath :absolute t))))
 
     (cond
      ((null (probe-file file))
@@ -168,7 +171,7 @@
             (return-from do-import-items 4)))
           
         (select "i-id" :integer "item" nil path :absolute t))
-      (when (and create 
+      (when (and create tpath
                  (or (null tstatus)
                      (not (find "item" (read-database-schema tpath :absolute t)
                                 :test #'string= :key #'first))))
