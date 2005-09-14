@@ -43,7 +43,7 @@
   (when (typep lexicon 'psql-lex-database)
     (error "This command is for use only with a non-LexDB lexicon. You should use instead the \"Merge new entries\" command found under the LexDB menu if you want to create dump files for your current LexDB."))
   (unless (typep *lexdb* 'psql-lex-database)
-    (error "please initialize *lexdb*"))
+    (error "Please open a connection to the LexDB. Eg. (initialize-lexdb :dbname \"MY_LEXDB\")"))
   (setf *lexdb-dump-source* (extract-pure-source-from-source (get-current-source)))
   (unless use-defaults
     (query-for-username)
