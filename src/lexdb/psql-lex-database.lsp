@@ -851,8 +851,7 @@
        (sql-fn-get-raw-records lex 
 			       :update_lex 
 			       :args (list (get-filter lex)))
-       (regenerate-orthkeys lex))
-      )
+       (generate-missing-orthkeys lex)))
      (t
       (format t "~&(LexDB) user ~a has read-only privileges" (user lex))))    
   (format t "~&(LexDB) filter = ~a " (get-filter lex))
