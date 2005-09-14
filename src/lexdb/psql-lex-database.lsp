@@ -145,7 +145,7 @@
 				      &key 
 				      (from "lex natural left join lex_key where lex_key.key is null")
 				      (to :lex_key))
-  (lexdb-time ("generating missing keys" "done generating missing keys")
+  (lexdb-time ("ensuring 'lex_key' table up-to-date" "done ensuring 'lex_key' table up-to-date")
 	      (let ((new-key-lines (generate-orthkeys-COPY-str lex :from from)))
 		(if new-key-lines
 		    (run-command-stdin lex (format nil "COPY ~a FROM stdin" to)
@@ -824,10 +824,8 @@
   (sql-get-val lex "SELECT val FROM meta WHERE var='filter'"))  
 
 (defmethod update-lex ((lex psql-lex-database))
-  (vacuum lex)
-  (lexdb-time ("updating 'lex' table" "done updating 'lex' table")
-	      (update-lex-aux lex))
-  (vacuum lex)
+  (unless (quick-load lex)
+    (update-lex-aux lex))
   (cond
    ((null (semi lex))
     nil)
@@ -846,16 +844,14 @@
   lex)
 
 (defmethod update-lex-aux ((lex psql-lex-database))
-    (reconnect lex) ;; work around server bug
-    (cond 
-     ((not (user-read-only-p lex (user lex)))
-      (and
-       (sql-fn-get-raw-records lex 
-			       :update_lex 
-			       :args (list (get-filter lex)))
-       (generate-missing-orthkeys lex)))
-     (t
-      (format t "~&(LexDB) user ~a has read-only privileges" (user lex))))    
+  (reconnect lex) ;; work around server bug
+  (if 
+      (or 
+       (lexdb-time 
+	("ensuring 'lex' table up-to-date" "done ensuring 'lex' table up-to-date")
+	(string= "t" (sql-fn-get-val lex :update_lex :args (list (get-filter lex)))))
+       (generate-missing-orthkeys lex))
+      (vacuum lex))
   (format t "~&(LexDB) filter = ~a " (get-filter lex))
   (let ((size
 	 (sql-get-val lex "SELECT count(*) FROM lex")))
@@ -901,13 +897,6 @@
   (mapcar 
    #'(lambda (x) (intern (string-upcase x) :keyword))
    (list-fld lex)))
-
-(defmethod user-read-only-p ((lex psql-lex-database) user-str)
-  (string= "t"
-	   (sql-get-val lex 
-			(format nil 
-				"SELECT ~a IN (SELECT val FROM public.meta WHERE var=\'user-read-only\')"
-				(quote-literal lex user-str)))))
 
 (defmethod show-scratch ((lex psql-lex-database))
   (get-raw-records lex "SELECT name,userid,modstamp FROM rev"))

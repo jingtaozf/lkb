@@ -327,15 +327,17 @@
 	  (:PGRES_COPY_OUT 
 	   (unless out
 	     (error "unexpected `COPY OUT' data transfer operation from PSQL DB ~a" (pq:db conn)))
-	   (copy-out-stream conn (car out))
-	   (setf out (cdr out))
-	   )
+	   (loop
+	       for ostrm in out
+	       do (copy-out-stream conn ostrm))
+	   t)
 	  (:PGRES_COPY_IN 
 	   (unless in
 	     (error "unexpected `COPY IN' data transfer operation sent from PSQL DB ~a" (pq:db conn)))
-	   (copy-in-stream conn (car in))
-	   (setf in (cdr in))	     
-	   )
+	   (loop
+	     for istrm in in
+	       do (copy-in-stream conn istrm))
+	   t)
 	  (:PGRES_NON_FATAL_ERROR
 	   (let ((error-message (with-lexdb-locale (pq:result-error-message result))))
 	     (format t "~%(LexBD) WARNING:  (postgres error) ~a" error-message))
@@ -345,7 +347,8 @@
 	     (format t "~%(LexDB) (postgres ERROR) ~a" error-message)
 	     (throw :sql-error (cons status-kw error-message))))
 	  (t
-	   (error "unhandled result status")))
+	   (error "unhandled result status")
+	   nil))
       (pq:clear result)
       nil)))
 

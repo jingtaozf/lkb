@@ -86,7 +86,9 @@
      (table (extract-param :table *lexdb-params*))
      (port (extract-param :port *lexdb-params*))
      (user (extract-param :user *lexdb-params*))
-     (semi (extract-param :semi *lexdb-params*)))
+     (semi (extract-param :semi *lexdb-params*))
+     (quick-load (extract-param :quick-load *lexdb-params*))
+     )
   ;; ensure backwards compat
   (setf dbname
     (or dbname (extract-param :db *lexdb-params*)))
@@ -111,6 +113,7 @@
     (if user (setf (user *lexdb*) user))
     (if port (setf (port *lexdb*) port))
     (setf (semi *lexdb*) semi)
+    (setf (quick-load *lexdb*) quick-load)
     ;; use of table is obsolete
     (cond 
      (table

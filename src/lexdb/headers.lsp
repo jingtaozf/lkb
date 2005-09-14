@@ -68,7 +68,9 @@
 (defclass psql-lex-database (psql-database external-lex-database)
   ((lexdb-version :initform nil :accessor lexdb-version)
    (pub-fns :initform nil :accessor pub-fns)
-   (semi :initform nil :accessor semi)))
+   (semi :initform nil :accessor semi)
+   (quick-load :initform nil :accessor quick-load)
+   ))
 
 (defclass psql-database-table ()
   ((recs :initarg :recs :accessor recs)
