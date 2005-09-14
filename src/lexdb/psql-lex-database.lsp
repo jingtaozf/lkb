@@ -845,13 +845,16 @@
 
 (defmethod update-lex-aux ((lex psql-lex-database))
   (reconnect lex) ;; work around server bug
-  (if 
-      (or 
-       (lexdb-time 
-	("ensuring 'lex' table up-to-date" "done ensuring 'lex' table up-to-date")
-	(string= "t" (sql-fn-get-val lex :update_lex :args (list (get-filter lex)))))
-       (generate-missing-orthkeys lex))
-      (vacuum lex))
+
+  (let (vac)
+    (if (lexdb-time 
+	 ("ensuring 'lex' table up-to-date" "done ensuring 'lex' table up-to-date")
+	 (string= "t" (sql-fn-get-val lex :update_lex :args (list (get-filter lex)))))
+	(setf vac t))
+    (if (generate-missing-orthkeys lex)
+	(setf vac t))
+    (if vac (vacuum lex)))
+	
   (format t "~&(LexDB) filter = ~a " (get-filter lex))
   (let ((size
 	 (sql-get-val lex "SELECT count(*) FROM lex")))
@@ -1344,12 +1347,13 @@
    (run-command lex "CREATE TABLE tmp_name (name TEXT, PRIMARY KEY (name))")
    (run-command lex "INSERT INTO tmp_name SELECT DISTINCT name FROM rev")
    
+   ;; delete rev entries
+   (run-command lex "DELETE FROM rev")
+
    ;; store filtered revisiosn with name in above
    (run-command lex "DELETE FROM filt_tmp")
    (run-command lex (format nil "INSERT INTO filt_tmp SELECT * FROM rev_all WHERE name IN (SELECT name FROM tmp_name) AND ~a" (get-filter lex)))
    
-   ;; delete rev entries
-   (run-command lex "DELETE FROM rev")
    ;; delete potentially affected lex/lex_key entries
    (run-command lex "DELETE FROM lex WHERE name IN (SELECT name FROM tmp_name)")
    (run-command lex "DELETE FROM lex_key WHERE name IN (SELECT name FROM tmp_name)")
