@@ -35,13 +35,14 @@
        (close-lex ,lexdb-lexdb))))
   
 (defmacro lexdb-time ((start-msg end-msg) &body body)
-  `(let (time)
+  `(let (time out)
     (format t "~&(LexDB) ~a ..." ,start-msg)
     (force-output)
     (setf time (get-internal-real-time))
-    ,@body
+    (setf out (progn ,@body))
     (format t "~&(LexDB) ~a [~F sec]" ,end-msg 
 	    (/ (- (get-internal-real-time) time) internal-time-units-per-second))
+    out
     ))
   
 (defmethod lookup-word ((lex psql-lex-database) orth &key (cache *lexicon-lexical-entries-cache-p*))
@@ -146,9 +147,10 @@
 				      (to :lex_key))
   (lexdb-time ("generating missing keys" "done generating missing keys")
 	      (let ((new-key-lines (generate-orthkeys-COPY-str lex :from from)))
-		(when new-key-lines
-		  (run-command-stdin lex (format nil "COPY ~a FROM stdin" to)
-				     (make-string-input-stream new-key-lines))))))
+		(if new-key-lines
+		    (run-command-stdin lex (format nil "COPY ~a FROM stdin" to)
+				       (make-string-input-stream new-key-lines))
+		  ))))
 
 (defmethod generate-orthkeys-COPY-str ((lex psql-lex-database) &key from)
   (unless from
@@ -164,8 +166,8 @@
 				      from)))
 	 (recs (recs numo-t))
 	 (len-recs (length recs)))
+    (format t "~&(LexDB) ~a keyless entries" len-recs)
     (when (> len-recs 0)
-      (format t "~&(LexDB) ~a keyless entries" len-recs)
       (join-str-lines
        (mapcar #'to-psql-COPY-rec
 	       (rev-to-rev-key lex recs))))))
@@ -491,7 +493,7 @@
      (sql-fn-get-val lex 
 		     :update_lex 
 		     :args (list filter))
-     (regenerate-orthkeys lex))
+     (generate-missing-orthkeys lex))
     (empty-cache lex)))
 
 ;;;
@@ -1332,24 +1334,44 @@
     (export-to-tdl-to-file lexdb tdl-file)))
 
 (defmethod commit-private-rev ((lex psql-lex-database)) 
+  ;; insert into public.rev and register public modtime
   (with-lexdb-user-lexdb (lex2 lex)
     (run-command lex2 
 		     (format nil 
 			     "INSERT INTO public.rev (SELECT * FROM ~a.rev)" 
 			     (quote-ident lex (user lex))))
     (get-raw-records lex "SELECT register_mod_time()"))
+  ;; delete contents of private rev
   (run-command lex "DELETE FROM rev")
-  (get-raw-records lex "SELECT register_mod_time()")
+  ;;(get-raw-records lex "SELECT register_mod_time()")
   (empty-cache lex))
 
-(defmethod close-private-rev ((lex psql-lex-database))
-  (run-command lex "DELETE FROM rev")
-  (get-raw-records lex "SELECT register_mod_time()")
-  (empty-cache lex)
-  (reconnect lex) ;; work around server bug
-  (and
-   (sql-fn-get-records lex 
-		       :update_lex 
-		       :args (list (get-filter lex)))
-   (regenerate-orthkeys lex)))
-
+(defmethod clear-private-rev ((lex psql-lex-database))
+  (lexdb-time 
+   ("clearing private rev..." "done clearing private rev")
+   (empty-cache lex)
+   
+   ;; store names of deleted revisions
+   (run-command lex "CREATE TABLE tmp_name (name TEXT, PRIMARY KEY (name))")
+   (run-command lex "INSERT INTO tmp_name SELECT DISTINCT name FROM rev")
+   
+   ;; store filtered revisiosn with name in above
+   (run-command lex "DELETE FROM filt_tmp")
+   (run-command lex (format nil "INSERT INTO filt_tmp SELECT * FROM rev_all WHERE name IN (SELECT name FROM tmp_name) AND ~a" (get-filter lex)))
+   
+   ;; delete rev entries
+   (run-command lex "DELETE FROM rev")
+   ;; delete potentially affected lex/lex_key entries
+   (run-command lex "DELETE FROM lex WHERE name IN (SELECT name FROM tmp_name)")
+   (run-command lex "DELETE FROM lex_key WHERE name IN (SELECT name FROM tmp_name)")
+   ;;(sql-get-val lex "SELECT public.deindex_lex()") ;;generally quicker not to bother
+   (run-command lex "DROP TABLE tmp_name")
+   
+   ;; update lex entries
+   (run-command lex "INSERT INTO lex SELECT fil.* FROM (filt_tmp AS fil NATURAL JOIN (SELECT name, max(modstamp) AS modstamp FROM filt_tmp GROUP BY name) AS t1) WHERE dead=\'0\'")
+   ;;;(sql-get-val lex "SELECT register_mod_time()")
+   ;;(sql-get-val lex "SELECT public.index_lex()") ;;generally quicker not to bother
+   
+   (reconnect lex) ;; work around server bug
+   ;; update lex_key entries
+   (generate-missing-orthkeys lex)))

@@ -1,4 +1,4 @@
-lexdb-version	4.60
+lexdb-version	4.61
 supported-psql-server	7.4
 supported-psql-server	8.0
 filter	TRUE

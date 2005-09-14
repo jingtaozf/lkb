@@ -136,9 +136,14 @@ BEGIN
 	CREATE INDEX filt_tmp_name ON filt_tmp (name);
 	CREATE INDEX filt_tmp_modstamp ON filt_tmp (modstamp);
 
+	-- empty lex_key
+	PERFORM public.deindex_lex_key();
+	DELETE FROM lex_key;
+	PERFORM public.index_lex_key();
+
 	-- recreate lex
-	DELETE FROM lex; 
 	PERFORM public.deindex_lex();
+	DELETE FROM lex; 
 
 	INSERT INTO lex 
 		-- =head, but faster lookup

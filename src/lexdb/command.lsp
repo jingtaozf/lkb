@@ -62,7 +62,7 @@
     (force-output)
     (when (> count-priv 0)
       (time
-       (close-private-rev *lexdb*)))
+       (clear-private-rev *lexdb*)))
     (lkb-beep)))
 
 (defun command-commit-private-rev nil
