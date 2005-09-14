@@ -168,8 +168,6 @@ LANGUAGE plpgsql;
 --
 
 CREATE OR REPLACE FUNCTION public.register_build_time() RETURNS bool AS '
-DECLARE
-	mod_time text;
 BEGIN
 	UPDATE meta SET val=current_timestamp WHERE var=\'build_time\';
 	RETURN true;
@@ -177,8 +175,6 @@ END;
 ' LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION public.register_mod_time() RETURNS text AS '
-DECLARE
-	mod_time text;
 BEGIN
 	UPDATE meta SET val=current_timestamp WHERE var=\'mod_time\';
 	RETURN true;
