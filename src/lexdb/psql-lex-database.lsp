@@ -631,7 +631,6 @@
   (set-lex-entry-aux lex psql-le))
   
 (defmethod set-lex-entry-aux ((lex psql-lex-database) (psql-le psql-lex-entry))
-  (set-val psql-le :modstamp "NOW")
   (let* ((symb-list (copy-list (fields lex)))
 	 (symb-list (remove :name symb-list))
 	 (symb-list (remove-duplicates symb-list))
