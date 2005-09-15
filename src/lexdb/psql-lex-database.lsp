@@ -1110,7 +1110,7 @@
 	(format t "~&(LexDB) WARNING:  cannot find file ~a" rev-filename)))
       (if (or (null count-new) (equal count-new 0))
 	  (empty-cache lex)
-	(initialize-lexdb))
+	(update-lex-aux lex))
       )))
 
 (defmethod vacuum ((lex psql-lex-database))
