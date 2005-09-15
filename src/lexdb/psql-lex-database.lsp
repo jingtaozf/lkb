@@ -1350,7 +1350,7 @@
    ;; delete rev entries
    (run-command lex "DELETE FROM rev")
 
-   ;; store filtered revisiosn with name in above
+   ;; store filtered revisions with name in above
    (run-command lex "DELETE FROM filt_tmp")
    (run-command lex (format nil "INSERT INTO filt_tmp SELECT * FROM rev_all WHERE name IN (SELECT name FROM tmp_name) AND ~a" (get-filter lex)))
    

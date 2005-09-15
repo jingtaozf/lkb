@@ -132,6 +132,7 @@ DECLARE
 	b_time text;
 BEGIN
 	-- we need a table in order to build and use indexes ...
+	DELETE FROM filt_tmp;
 	INSERT INTO filt_tmp SELECT * FROM filt;
 	CREATE INDEX filt_tmp_name ON filt_tmp (name);
 	CREATE INDEX filt_tmp_modstamp ON filt_tmp (modstamp);
