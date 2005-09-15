@@ -145,7 +145,7 @@
 				      &key 
 				      (from "lex natural left join lex_key where lex_key.key is null")
 				      (to :lex_key))
-  (lexdb-time ("ensuring 'lex_key' table up-to-date" "done ensuring 'lex_key' table up-to-date")
+  (lexdb-time ("ensuring 'lex_key' table is up-to-date" "done ensuring 'lex_key' table is up-to-date")
 	      (let ((new-key-lines (generate-orthkeys-COPY-str lex :from from)))
 		(if new-key-lines
 		    (run-command-stdin lex (format nil "COPY ~a FROM stdin" to)
@@ -477,9 +477,9 @@
 	    nil)
       (lkb-beep)
       (set-filter lex))
-    (format t "~&(LexDB) filter = ~a" 
+    (format t "~&(LexDB) filter: ~a" 
 	    (get-filter lex))
-    (format t "~&(LexDB) active entries in 'lex' table = ~a" 
+    (format t "~&(LexDB) active entries in 'lex' table: ~a" 
 	    ;(sql-fn-get-val lex :size_lex)
 	    (sql-get-val lex "SELECT count(*) FROM lex")
 	    )))
@@ -847,19 +847,19 @@
 
   (let (vac)
     (if (lexdb-time 
-	 ("ensuring 'lex' table up-to-date" "done ensuring 'lex' table up-to-date")
+	 ("ensuring 'lex' table is up-to-date" "done ensuring 'lex' table is up-to-date")
 	 (string= "t" (sql-fn-get-val lex :update_lex :args (list (get-filter lex)))))
 	(setf vac t))
     (if (generate-missing-orthkeys lex)
 	(setf vac t))
     (if vac (vacuum lex)))
 	
-  (format t "~&(LexDB) filter = ~a " (get-filter lex))
+  (format t "~&(LexDB) filter: ~a " (get-filter lex))
   (let ((size
 	 (sql-get-val lex "SELECT count(*) FROM lex")))
     (if (string= "0" size)
 	(format t "~&(LexDB) WARNING:  0 entries passed the LexDB filter" size)
-      (format t "~&(LexDB) active entries in 'lex' table = ~a" size)))
+      (format t "~&(LexDB) active entries in 'lex' table: ~a" size)))
   (empty-cache lex))
 
 ;;;
@@ -1326,20 +1326,29 @@
 
 (defmethod commit-private-rev ((lex psql-lex-database)) 
   ;; insert into public.rev and register public modtime
-  (with-lexdb-user-lexdb (lex2 lex)
-    (run-command lex2 
-		     (format nil 
-			     "INSERT INTO public.rev (SELECT * FROM ~a.rev)" 
-			     (quote-ident lex (user lex))))
-    (get-raw-records lex "SELECT register_mod_time()"))
-  ;; delete contents of private rev
-  (run-command lex "DELETE FROM rev")
-  ;;(get-raw-records lex "SELECT register_mod_time()")
+  (with-lexdb-user-lexdb (lex-public lex)
+    (run-command lex-public 
+     (format nil "INSERT INTO public.rev (SELECT * FROM ~a.rev)" 
+	     (quote-ident lex (user lex))))
+    (cond
+     ;; lex was up-to-date, and remains so
+     ((and
+       (string> (sql-get-val lex "SELECT val FROM meta WHERE var='build_time'")
+		(sql-get-val lex "SELECT val FROM public.meta WHERE var='mod_time'"))
+       (string> (sql-get-val lex "SELECT val FROM meta WHERE var='build_time'")
+		(sql-get-val lex "SELECT val FROM meta WHERE var='mod_time'")))
+      (get-raw-records lex-public "SELECT register_mod_time()")
+      (run-command lex "DELETE FROM rev")
+      (get-raw-records lex "SELECT register_mod_time()")
+      (get-raw-records lex "SELECT register_build_time()"))
+     ;; lex was not up to date
+     (t
+      (get-raw-records lex-public "SELECT register_mod_time()")
+      (run-command lex "DELETE FROM rev")
+      (get-raw-records lex "SELECT register_mod_time()"))))
   (empty-cache lex))
 
 (defmethod clear-private-rev ((lex psql-lex-database))
-  (lexdb-time 
-   ("clearing private rev..." "done clearing private rev")
    (empty-cache lex)
    
    ;; store names of deleted revisions
@@ -1360,10 +1369,12 @@
    (run-command lex "DROP TABLE tmp_name")
    
    ;; update lex entries
-   (run-command lex "INSERT INTO lex SELECT fil.* FROM (filt_tmp AS fil NATURAL JOIN (SELECT name, max(modstamp) AS modstamp FROM filt_tmp GROUP BY name) AS t1) WHERE dead=\'0\'")
-   ;;;(sql-get-val lex "SELECT register_mod_time()")
+   (lexdb-time 
+    ("updating 'lex' table" "done updating 'lex' table")
+    (run-command lex "INSERT INTO lex SELECT fil.* FROM (filt_tmp AS fil NATURAL JOIN (SELECT name, max(modstamp) AS modstamp FROM filt_tmp GROUP BY name) AS t1) WHERE dead=\'0\'")
+    )
    ;;(sql-get-val lex "SELECT public.index_lex()") ;;generally quicker not to bother
    
    (reconnect lex) ;; work around server bug
    ;; update lex_key entries
-   (generate-missing-orthkeys lex)))
+   (generate-missing-orthkeys lex))

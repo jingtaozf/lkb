@@ -333,7 +333,7 @@
             (make-lkb-submenu-item :menu-title "LexDB"
                  :menu-items                       
                  (list 
-                  (make-menu-item :name "Merge new entries"
+                  (make-menu-item :name "Load ('rev' entries)"
                                   :value 'command-merge-into-lexdb
                                   ;:available-p :always
 				  )
@@ -341,31 +341,31 @@
                                   :value 'command-dump-lexdb
                                   ;:available-p :always
 				  )
-                  (make-menu-item :name "Dump (TDL format)"
+                  (make-menu-item :name "Export (TDL file)"
                                   :value 'command-export-lexicon-to-tdl
                                   ;:available-p :always
 				  )
-                  (make-menu-item :name "Filter"
+                  (make-menu-item :name "Set Filter"
                                   :value 'command-set-filter-lexdb
                                   ;:available-p :always
 				  )
-                  (make-menu-item :name "Import TDL entries"
+                  (make-menu-item :name "Import (TDL file)"
                                   :value 'command-load-tdl-to-scratch
                                   ;:available-p :always
 				  )
-                  (make-menu-item :name "Display private rev"
+                  (make-menu-item :name "Display private 'rev'"
                                   :value 'command-show-private-rev
                                   ;:available-p :always
 				  )
-                  (make-menu-item :name "Commit private rev"
+                  (make-menu-item :name "Commit private 'rev'"
                                   :value 'command-commit-private-rev
                                   ;:available-p :always
 				  )
-                  (make-menu-item :name "Clear private rev"
+                  (make-menu-item :name "Clear private 'rev'"
                                   :value 'command-clear-private-rev
                                   ;:available-p :always
 				  )
-                  (make-menu-item :name "Index new lex entries"
+                  (make-menu-item :name "Index new 'lex' entries"
                                   :value 'command-index-new-lex-entries
                                   :available-p :mrs
 				  )
