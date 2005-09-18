@@ -471,6 +471,7 @@
   (let* ((*print-readably* t)
 	 (params (mapcan #'(lambda (p)
 			     ;; Skip things we won't be able to read back in
+			     ;; (bmw) these skipped params are _lost_ when saving to file
 			     (handler-case
 				 (list 
 				  (cons (format nil "~S" p) 
@@ -482,26 +483,26 @@
       (loop for p in params
 	  for r in result
 	  do (setf (symbol-value (read-from-string (car p)))
-	       (read-from-string r))))
-    (unless *user-params-file*
-      (setf *user-params-file* 
-        (ask-user-for-new-pathname "File to save parameters?")))
-    (when *user-params-file*
-      (handler-case 
-          (with-open-file
-              (ostream *user-params-file* :direction :output
-               :if-exists :supersede)
-            (format ostream ";;; Automatically generated file - do not edit!")
-            (loop for p in params
-                for r in result
-                do
-                  (format ostream "~%(defparameter ~S '~S)"
-                          (read-from-string (car p))
-                          (read-from-string r))))
-        (file-error (condition)
-          (format t "~%Parameters not saved to file ~A
-                      ~A" *user-params-file* condition))))))
-
+	       (read-from-string r)))
+      (unless *user-params-file*
+	(setf *user-params-file* 
+	  (ask-user-for-new-pathname "File to save parameters?")))
+      (when *user-params-file*
+	(handler-case 
+	    (with-open-file
+		(ostream *user-params-file* :direction :output
+		 :if-exists :supersede)
+	      (format ostream ";;; Automatically generated file - do not edit!")
+	      (loop for p in params
+		  for r in result
+		  do
+		    (format ostream "~%(defparameter ~S '~S)"
+			    (read-from-string (car p))
+			    (read-from-string r))))
+	  (file-error (condition)
+	    (format t "~%Parameters not saved to file ~A
+                      ~A" *user-params-file* condition)))))))
+  
 ;;
 ;; Save and load shrunk paths in display settings file
 ;;
