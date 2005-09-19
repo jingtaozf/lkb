@@ -12,7 +12,7 @@
 
 ;;; Add a PG menu to the emacs menu bar
 
-(defvar *lexdb-pg-interface-version* "2.10")
+(defvar *lexdb-pg-interface-version* "2.11")
 
 (require 'cl)      ; we use some common-lisp idioms
 (require 'widget)
@@ -161,7 +161,6 @@
 (setf *lexdb-read-only* '(:version :userid :modstamp))
 (setf *lexdb-hidden* nil)
 (setf *lexdb-minibuffer-max* 80)
-;(setf *lexdb-active-id-ring* nil)
 (setf *lexdb-active-ium-size* 0)
 (setf *lexdb-active-ium-ring* nil)
 (setf *lexdb-new-entries-buffer* "*lexdb-merged*")
@@ -192,14 +191,14 @@
 ;; unusual return values cause system to hang...
 (defun cle-eval (str)
   (condition-case descr
-	 (fi:eval-in-lisp "(let* ((x %s))
+      (fi:eval-in-lisp "(let* ((x %s))
   (if (eval 
        (cons 'or 
 	     (mapcar #'(lambda (y) (typep x y)) '%s)))
       x '!!!unhandled-type!!!))" 
-			  str *cle-handled-types*)
-      (error (princ (format "%s" descr))
-	     (sit-for 4))))
+		       str *cle-handled-types*)
+    (error (princ (format "%s" descr))
+	   (sit-for 4))))
 
 ;;;
 ;;; menu items
@@ -213,7 +212,7 @@
     ;;
     ;; top level
     (define-key map [menu-bar LexDB] (lexdb-make-name-keymap "LexDB"))
-
+    
     ;;
     ;; level 1
     (define-key map [menu-bar LexDB view-scratch]
@@ -351,7 +350,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 (defun widget-advance nil
   (interactive)
   (let* ((widget 
-	   (widget-field-find (point)))
+	  (widget-field-find (point)))
 	 (widgets (mapcar #'cdr lexdb-fw-map))
 	 (widget (second (member widget widgets))))
     (unless widget (setf widget (first widgets)))
@@ -366,11 +365,11 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 (defun lexdb-search-field-val-aux (val-str)
   (let* ((widget (widget-field-find (point))))
     (if widget
-	  (lexdb-lookup-aux2 (l:widget-to-field-kw widget)
-			     (l:normalize val-str)
-			     "lex")
+	(lexdb-lookup-aux2 (l:widget-to-field-kw widget)
+			   (l:normalize val-str)
+			   "lex")
       (error "not in an editable field"))))
-    
+
 (defun lexdb-advance-ium-aux nil
   (when *lexdb-active-ium-ring*
     (lexdb-load-record3-aux (car *lexdb-active-ium-ring*))
@@ -378,13 +377,13 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 	  (cdr *lexdb-active-ium-ring*))
     (l:princ-ring *lexdb-active-ium-ring* *lexdb-active-ium-size* #'car)
     t))
-    
+
 (defun lexdb-collect-field-lines (records fields)
   (let ((pos -1))
     (mapcar '(lambda (x)
-		  (setf pos (1+ pos))
-		  (lexdb-collect-field-line records x pos))
-	       fields)))
+	       (setf pos (1+ pos))
+	       (lexdb-collect-field-line records x pos))
+	    fields)))
 
 (defun lexdb-string-slot (str len)
   (cond 
@@ -397,9 +396,9 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (format "%s%s" 
 	  (lexdb-string-slot (symbol-name field) 20)
 	  (mapconcat '(lambda (x) 
-		     (let ((val (nth pos x)))
-		       (lexdb-string-slot val *lexdb-slot-len*) 
-		       )) 
+			(let ((val (nth pos x)))
+			  (lexdb-string-slot val *lexdb-slot-len*) 
+			  )) 
 		     records
 		     "")))
 
@@ -413,7 +412,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
       (insert (mapconcat 'identity
 			 (lexdb-collect-field-lines priv-recs *lexdb-record-features*)
 			 "\n")))
-	      
+    
     (switch-to-buffer buffer)))
 
 (defun lexdb-view-merge-add-aux nil
@@ -426,11 +425,11 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
        #'insert 
        (mapcar 
 	#'(lambda (x)
-	     'bold
-	     (format "%s:%s\t%s\n"
-		     (nth 0 x)
-		     (nth 1 x)
-		     (nth 2 x)))
+	    'bold
+	    (format "%s:%s\t%s\n"
+		    (nth 0 x)
+		    (nth 1 x)
+		    (nth 2 x)))
 	(cdr 
 	 (cle-new-entries)))))
     (switch-to-buffer buffer)))
@@ -446,8 +445,8 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 (defun lexdb-complete-field-aux nil
   (let* ((widget (widget-field-find (point))))
     (if widget
-	  (lexdb-complete-field-aux2
-	   (l:widget-to-field-kw widget))
+	(lexdb-complete-field-aux2
+	 (l:widget-to-field-kw widget))
       (error "not in an editable field"))))
 
 (defun lexdb-complete-field-aux2 (field-kw)
@@ -501,7 +500,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
       (lexdb-mode)
       (setf lexdb-record record)
       (setf lexdb-tdl tdl)
-     (lexdb-display-record buffer))))
+      (lexdb-display-record buffer))))
 
 (defun lexdb-load-record3-aux (ium)
   (let ((record (lexdb-retrieve-record3 ium))
@@ -516,7 +515,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
       (lexdb-mode)
       (setf lexdb-record record)
       (setf lexdb-tdl tdl)
-     (lexdb-display-record buffer))))
+      (lexdb-display-record buffer))))
 
 (defun lexdb-display-record (buffer)
   (with-current-buffer buffer
@@ -535,7 +534,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 		   lexdb-tdl)
     (widget-setup)
     lexdb-fw-map))
-   
+
 (defun lexdb-update-record-from-buffer (buffer)
   (with-current-buffer buffer
     (mapcar #'(lambda (x) (update-from-widget x (car lexdb-record)))
@@ -550,7 +549,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
       (if (null record-elt) 
 	  (error "feature not found in record"))
       (setf (cdr record-elt) val))))
-      
+
 (defun lexdb-retrieve-record (id)
   (let ((fields (cle-retrieve-record-fields id))
 	(sizes (cle-retrieve-record-sizes)))
@@ -587,11 +586,9 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 
 (defun lexdb-lookup-aux2 (field-kw val-str from)
   (let* ((iums (cle-lookup field-kw val-str "name,userid,modstamp" from)))
-    (when iums
-	(setf *lexdb-active-ium-size* (length iums))
-	(setf *lexdb-active-ium-ring* (make-ring iums)))
-    (l:princ-ring *lexdb-active-ium-ring* *lexdb-active-ium-size* #'car)
-    ))
+    (setf *lexdb-active-ium-size* (length iums))
+    (setf *lexdb-active-ium-ring* (make-ring iums))
+    (l:princ-ring *lexdb-active-ium-ring* *lexdb-active-ium-size* #'car)))
 
 ;;;
 ;;; lexdb util fns
@@ -602,10 +599,10 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 	  (mapcar #'(lambda (x) (cons x (make-string 0 ?x)))
 		  *lexdb-record-features*))
 	 (name-elt (assoc :name record)))
-  (when name-elt
-    (setf (cdr name-elt)
-	  (l:val-str id)))
-  record))
+    (when name-elt
+      (setf (cdr name-elt)
+	    (l:val-str id)))
+    record))
 
 (defun l:minibuffer-complete-dyn (&rest rest)
   (interactive)
@@ -644,15 +641,15 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (l:val-str (cdr record-elt)))
 
 (defun l:val-str (val)
-    (cond
-     ((stringp val)
-      val)
-     ((numberp val)
-      (format "%s" val))
-     ((null val)
-      "")
-     (t
-      (error "unhandled field value type"))))
+  (cond
+   ((stringp val)
+    val)
+   ((numberp val)
+    (format "%s" val))
+   ((null val)
+    "")
+   (t
+    (error "unhandled field value type"))))
 
 (defun l:widget-val-normd (widget)
   (l:normalize 
@@ -701,22 +698,22 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (let* ((feat (car x))
 	 (feat-str (kw2str feat))
 	 (val (cdr x)))
-  (cons 
-   feat
-   (progn 
-     (widget-insert "\n"
-		    (make-string (max 0 (- 15 (length feat-str))) ? ) 
-		    (upcase feat-str) 
-		    ": ")
-     (cond
-      ((member feat *lexdb-read-only*)
-       (widget-insert val))
-      (t
-       (widget-create 'editable-field-fixed-size
-		      :size (min 50 (l:field-size feat))
-		      :keymap nil
-		      :value-face nil
-		      val)))))))
+    (cons 
+     feat
+     (progn 
+       (widget-insert "\n"
+		      (make-string (max 0 (- 15 (length feat-str))) ? ) 
+		      (upcase feat-str) 
+		      ": ")
+       (cond
+	((member feat *lexdb-read-only*)
+	 (widget-insert val))
+	(t
+	 (widget-create 'editable-field-fixed-size
+			:size (min 50 (l:field-size feat))
+			:keymap nil
+			:value-face nil
+			val)))))))
 
 (defun l:fw-pair-2-fv-pair (x)
   (cons
@@ -753,7 +750,9 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (mapconcat #'(lambda (x) x) (remove "" (split-string str)) " "))
 
 (defun make-ring (l)
-  (setf (cdr (last l)) l))
+  (and 
+   l
+   (setf (cdr (last l)) l)))
 
 ;;;
 ;;; allegro lisp interface fns
@@ -798,10 +797,10 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (cle-eval-lexdb 'id-to-tdl-str (cle-lisp-str id)))
 
 (defun cle-retrieve-record-sizes nil
-   (cle-eval-lexdb 'get-field-size-map))
+  (cle-eval-lexdb 'get-field-size-map))
 
 (defun cle-retrieve-record-features nil
-   (cle-eval-lexdb 'fields))
+  (cle-eval-lexdb 'fields))
 
 (defun cle-store-record (record-in)
   (cle-eval-lexdb 'set-lex-entry-from-record (cle-lisp-list record-in)))
@@ -824,13 +823,13 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (setf ret-flds (cle-lisp-str ret-flds))
   (setf from (cle-lisp-str from))
   (cle-eval-lexdb 'lookup field-kw val-str :ret-flds ret-flds :from from))
-  
+
 (defun cle-lookup-rev-all (field-kw val-str)
   (if (or (string= val-str "") (null val-str))
       (setf val-str nil)
     (setf val-str (cle-lisp-str val-str)))
   (cle-eval-lexdb 'lookup-rev-all field-kw val-str))
-  
+
 (defun cle-get-private-revs ()
   (cle-eval-lexdb 'scratch-records))
 
