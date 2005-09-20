@@ -639,14 +639,20 @@
 				       (and (stringp x)
 					    (string= x ""))))
 		     symb-list
-		     :key #'(lambda (x) (retr-val psql-le x))))) 
+		     :key #'(lambda (x) (retr-val psql-le x))))
+	 (name (retr-val psql-le :name)))
+    (unless (string= name (symb-2-str (str-2-symb name)))
+      (format t "(LexDB) WARNING: lex id ~a should be written ~a" 
+	      name (symb-2-str (str-2-symb name)))
+      (lkb-beep)
+      (setf name (symb-2-str (str-2-symb name))))
     (sql-fn-get-val lex :update_entry
-		    :args (list (retr-val psql-le :name)
+		    :args (list name
 				symb-list
 				(ordered-val-list symb-list psql-le))) ;; tmp contains new entry only
     (generate-missing-orthkeys lex :from :tmp) ;; use new entry stored in tmp
     (unless
-	(check-lex-entry (str-2-symb (retr-val psql-le :name))
+	(check-lex-entry (str-2-symb name)
 			 lex)
       (error "Invalid lexical entry ~a -- see Lisp buffer output" (retr-val psql-le :name)))))
 

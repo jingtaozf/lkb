@@ -12,7 +12,7 @@
 
 ;;; Add a PG menu to the emacs menu bar
 
-(defvar *lexdb-pg-interface-version* "2.11")
+(defvar *lexdb-pg-interface-version* "2.12")
 
 (require 'cl)      ; we use some common-lisp idioms
 (require 'widget)
@@ -489,11 +489,10 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
       (goto-char pos))))
 
 (defun lexdb-load-record-aux (id)
-  (let ((record (lexdb-retrieve-record id))
-	(tdl lexdb-tdl))
-    (if (equal id "") 
-	(setf id "?new?"))
-    (setf buffer (format "%s" id))
+  (let* ((record (lexdb-retrieve-record id))
+	 (name (cdr (assoc :name (car record))))
+	 (tdl lexdb-tdl))
+    (setf buffer (or name "?unknown record?"))
     (if (get-buffer buffer)
 	(kill-buffer buffer))
     (with-current-buffer (get-buffer-create buffer)
