@@ -100,32 +100,29 @@
   )
 
 (defun psql-initialize ()
-  (load-libpq))
+  (unless (libpq-p)
+    #+:linux
+    (let (#+allegro 
+	  (excl::*load-foreign-types* 
+	   (append '("3" "4") excl::*load-foreign-types*))
+	  )
+      (load-libpq '("libpq.so" "libpq.so.4" "libpq.so.3")))
+    #+:mswindows
+    (load-libpq '("libpq.dll"))
+    #-(or :linux :mswindows)
+    (load-libpq nil)))
 
-(defun load-libpq nil
-  #+:linux
-  (handler-case 
-      (load "libpq.so")
-    (file-error ()
-      (handler-case 
-	  (let (#+allegro (excl::*load-foreign-types* (cons "4" excl::*load-foreign-types*)))
-	    (load "libpq.so.4"))
-	(file-error ()
-	  (handler-case 
-	      (let (#+allegro (excl::*load-foreign-types* (cons "3" excl::*load-foreign-types*)))
-		(load "libpq.so.3"))
-	    (file-error ()
-	      (format t ";   Warning: (LexDB) cannot load libpq.so")
-	      (format t "~%;            (Is the PostgreSQL library file installed on your machine? If so, please load it manually.)")))))))
-  #+:mswindows
-  (handler-case 
-      (load "libpq.dll")    
-    (file-error ()
-      (format t ";   Warning: (LexDB) cannot load libpq.dll")
-      (format t "~%;            (Is the PostgreSQL library file installed on your machine? If so, please load it manually.)")))
-  #-(or :linux :mswindows)
-  (handler-case 
-      (load "libpq.so")    
-    (file-error ()
-      (format t ";   Warning: (LexDB) cannot load libpq library")
-      (format t "~%;            (Is the PostgreSQL library file installed on your machine? If so, please load it manually.)"))))
+(defun load-libpq (lib-names)
+  (cond
+   (lib-names
+    (handler-case (load (car lib-names))
+      (file-error ()
+	(format t "; ... [file not found]")
+	(load-libpq (cdr lib-names)))))
+   (t
+    (format t ";   Warning: (LexDB) cannot load PostgreSQL client library")
+    (format t "~%;            (Is the PostgreSQL library file installed on your machine? If so, please load it manually.)"))))
+
+;; see if calling pq:connectdb returns an error
+(defun libpq-p nil
+  (handler-case (and (pq:connectdb "") t) (t () nil)))

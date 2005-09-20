@@ -92,6 +92,7 @@
      (semi (extract-param :semi *lexdb-params*))
      (quick-load (extract-param :quick-load *lexdb-params*))
      )
+  (psql-initialize)
   ;; ensure backwards compat
   (setf dbname
     (or dbname (extract-param :db *lexdb-params*)))

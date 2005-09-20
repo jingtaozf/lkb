@@ -180,9 +180,6 @@
              (port (parse-integer lui :junk-allowed t)))
         (when lui (lui-initialize :port port :runtimep runtimep)))
 
-      #+:psql
-      (psql-initialize)
-
       ;;
       ;; no graphics when in :tty mode
       ;;
