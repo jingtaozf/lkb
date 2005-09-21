@@ -93,28 +93,35 @@ to something unexpected, so don't give people the temptation!
 
 (defun show-morph-rules (&key (stream t))
   (dolist (mr (reverse *morph-rule-set*))
-    (format stream "~%~A ~A ~20TUNDERLYING / SURFACE"
-	    (morph-rule-name mr)
-	    (morph-rule-class mr) 
-	    )
-    (dolist (subrule (morph-rule-subrules mr))
-      (format stream "~%~20T")
-      (show-morph-subpattern 
-       (morph-subrule-under subrule) 
-       (morph-rule-class mr) stream)
-      (format stream " / ")
-      (show-morph-subpattern 
-       (morph-subrule-surface subrule) 
-       (morph-rule-class mr) stream))))
+    (with-slots (name) mr
+      (format stream "~&~%~a" (string-downcase (string name)))
+      (pprint-morph-rule name :stream stream))))
+
+(defun pprint-morph-rule (morph-rule-name &key (stream t))
+  (with-slots (name class subrules) 
+      (find morph-rule-name *morph-rule-set* :key #'morph-rule-name)
+    (let ((s (make-string-output-stream)))
+      (format s "~% %~a" class)
+      (loop
+	  for subrule in subrules
+	  do
+	    (format s "~%~2T~a / ~a"
+		    (show-morph-subpattern (morph-subrule-under subrule) class)
+		    (show-morph-subpattern (morph-subrule-surface subrule) class))
+	  finally
+	    (if stream 
+		(princ (get-output-stream-string s))
+	      (return (get-output-stream-string s)))))))
 
 
-(defun show-morph-subpattern (pattern class stream)
+(defun show-morph-subpattern (pattern class)
   (let ((printstr (loop for char in (if (eql class 'suffix)
 					(reverse pattern) pattern)
 		      collect
-			(if (letter-set-p char) (letter-set-var char)
-			  char))))
-  (format stream "~{~A~}" (or printstr '("")))))
+			(if (letter-set-p char) 
+			    (letter-set-var char)
+			  (char-downcase char)))))
+     (format nil "~{~A~}" (or printstr '("")))))
 
 
 ;;; Reset function 
