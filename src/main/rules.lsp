@@ -155,7 +155,12 @@
 			 (cdr entry)
 			 #'(lambda (rule) (member (rule-id rule) ignore-list)))
 		      nconc
-			(let* ((spelling-rule-p (spelling-change-rule-p rule))
+			(let* ((spelling-rule-p 
+				(and 
+				 (spelling-change-rule-p rule)
+				 ;; (bmw) fix_me
+				 (in-morph-rule-set-p rule)
+				 ))
 			       (new-morph 
 				(if spelling-rule-p
 				    (construct-new-morph entry rule)))
