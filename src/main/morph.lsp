@@ -101,7 +101,7 @@ to something unexpected, so don't give people the temptation!
   (with-slots (name class subrules) 
       (find morph-rule-name *morph-rule-set* :key #'morph-rule-name)
     (let ((s (make-string-output-stream)))
-      (format s "~% %~a" class)
+      (format s "~% %~a (UNDERLYING / SURFACE)" class)
       (loop
 	  for subrule in subrules
 	  do
