@@ -151,7 +151,7 @@
     (let* ((fs-record (active-fs-window-fs window))
            (fs (fs-display-record-fs fs-record))
            (title (fs-display-record-title fs-record))
-           ;;(id (fs-display-record-id fs-record))
+           (id (fs-display-record-id fs-record))
            (parents (fs-display-record-parents fs-record))
            (paths (fs-display-record-paths fs-record))
            (fudge 20)
@@ -160,8 +160,10 @@
         (clim:with-text-style (stream *normal*)
 	  (clim:with-output-recording-options (stream :draw nil :record t)
 	    (draw-active-title stream fs title parents paths)
-	    ;;(when (member id *morph-rule-set* :key #'morph-rule-name)
-	    ;;  (draw-morph-rule stream id))
+	    (when (and
+		   *show-spelling-rules*
+		   (member id *morph-rule-set* :key #'morph-rule-name))
+	      (draw-morph-rule stream id))
 	    (when parents 
 	      (setf max-width (+ fudge 
 				 (display-active-parents parents stream))))
@@ -223,11 +225,11 @@
 	(stream t 'symbol)
       (format stream "~%~A~%" title))))
 
-;(defun draw-morph-rule (stream id)
-;  (clim:with-text-style (stream (make-active-fs-title-font-spec))
-;    (format stream "~&")
-;    (show-morph-rule id :stream stream)
-;    (format stream "~&")))
+(defun draw-morph-rule (stream id)
+  (clim:with-text-style (stream (make-active-fs-title-font-spec))
+    (format stream "~&")
+    (pprint-morph-rule id :stream stream)
+    (format stream "~&")))
 
 ;;; Support for interactive unification check
 
@@ -431,7 +433,7 @@
      #+:allegro
      (source (edit-source id))
 ;     (spelling-rule 
-;      (show-morph-rule 
+;      (pprint-morph-rule 
 ;		     id 
 ;		     :stream excl::*initial-terminal-io* 
 ;		     ;#+:clim clim-user::*lkb-top-stream* #-:clim t

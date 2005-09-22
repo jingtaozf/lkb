@@ -337,4 +337,8 @@
 (defparameter *recording-word* nil
   "if used this is set to a feature which should occur in the MRS relation with value *toptype*")
 
+(def-lkb-parameter *show-spelling-rules* t
+  "if set, spelling rule (if it exists) is shown when displaying a lexical rule"
+  :user)
+
 ;;; 'ORIGSTR
