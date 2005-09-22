@@ -53,31 +53,41 @@
   (lkb-beep))
 
 (defun command-clear-private-rev nil
-  (unless (and
-	   (typep *lexdb* 'psql-lex-database)
-	   (connection *lexdb*))
-    (error "please initialize-LexDB"))
-  (let ((count-priv (length (show-scratch *lexdb*))))
-    (format t "~&(LexDB) clearing ~a entries from private 'rev' table and updating 'lex' table" count-priv)
-    (force-output)
-    (when (> count-priv 0)
-      (time
-       (clear-private-rev *lexdb*)))
-    (lkb-beep)))
+  (let* ((lex *lexdb*)
+	 (rev-size (table-size lex :rev)))
+    (unless (and
+	     (typep lex 'psql-lex-database)
+	     (connection lex))
+      (error "please initialize-LexDB"))
+    (cond 
+     ((= rev-size 0)
+      (format t "~&(LexDB) contents of scratch (0 entries): NIL")
+      (lkb-beep))
+     (t
+      (when (y-or-n-p-general 
+	     (format nil "Confirm CLEAR all ~a entries from private 'rev'?" rev-size))
+	(lexdb-time ("clearing private 'rev'" "done clearing private 'rev'")
+		    (clear-private-rev lex))
+	(lkb-beep))))))
 
 (defun command-commit-private-rev nil
+  (let* ((lex *lexdb*)
+	 (rev-size (table-size lex :rev)))
   (unless (and
-	   (typep *lexdb* 'psql-lex-database)
-	   (connection *lexdb*))
+	   (typep lex 'psql-lex-database)
+	   (connection lex))
     (error "please initialize-LexDB"))
-  (let ((count-priv (length (show-scratch *lexdb*))))
-    (format t "~&(LexDB) moving ~a private entries to public 'rev' table..."
-	    count-priv)
-    (force-output)
-    (when (> count-priv 0)
-      (time
-       (commit-private-rev *lexdb*)))
-    (lkb-beep)))
+  (cond
+     ((= rev-size 0)
+      (format t "~&(LexDB) contents of scratch (0 entries): NIL")
+      (lkb-beep))
+     (t
+      (when (y-or-n-p-general 
+	     (format nil "Confirm COMMIT private 'rev' to 'public.rev'?"))
+	(lexdb-time ("committing private 'rev' to 'public.rev'" 
+		     "done committing private 'rev' to 'public.rev'")
+       (commit-private-rev lex))
+      (lkb-beep))))))
 
 (defun command-show-private-rev nil
   (unless (and

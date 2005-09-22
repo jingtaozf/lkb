@@ -1332,29 +1332,44 @@
 
 (defmethod commit-private-rev ((lex psql-lex-database)) 
   ;; insert into public.rev and register public modtime
-  (with-lexdb-user-lexdb (lex-public lex)
-    (run-command lex-public 
-     (format nil "INSERT INTO public.rev (SELECT * FROM ~a.rev)" 
-	     (quote-ident lex (user lex))))
-    (cond
-     ;; lex was up-to-date, and remains so
-     ((and
-       (string> (sql-get-val lex "SELECT val FROM meta WHERE var='build_time'")
-		(sql-get-val lex "SELECT val FROM public.meta WHERE var='mod_time'"))
-       (string> (sql-get-val lex "SELECT val FROM meta WHERE var='build_time'")
-		(sql-get-val lex "SELECT val FROM meta WHERE var='mod_time'")))
-      (get-raw-records lex-public "SELECT register_mod_time()")
-      (run-command lex "DELETE FROM rev")
-      (get-raw-records lex "SELECT register_mod_time()")
-      (get-raw-records lex "SELECT register_build_time()"))
-     ;; lex was not up to date
-     (t
-      (get-raw-records lex-public "SELECT register_mod_time()")
-      (run-command lex "DELETE FROM rev")
-      (get-raw-records lex "SELECT register_mod_time()"))))
-  (empty-cache lex))
+  (let* ((qi-user (quote-ident lex (user lex)))
+	 (new-rev-sql 
+	  (format nil "SELECT * FROM ~a.rev WHERE (name,modstamp) IN (SELECT name, max(modstamp) AS modstamp FROM ~a.rev GROUP BY name)" qi-user qi-user)))
+    (with-lexdb-user-lexdb (lex-public lex)
+      (format t "~%(LexDB) updating 'public.rev' with ~a new entries from private 'rev'"
+	      (sql-get-val lex (format nil "SELECT count(*) FROM (~a) AS a" new-rev-sql)))
+      (run-command lex-public 
+					;     (format nil "INSERT INTO public.rev (SELECT * FROM ~a.rev)" 
+		   (format nil "INSERT INTO public.rev ~a" new-rev-sql ))
+      (cond
+       ;; lex was up-to-date, and remains so
+       ((and
+	 (string> (sql-get-val lex "SELECT val FROM meta WHERE var='build_time'")
+		  (sql-get-val lex "SELECT val FROM public.meta WHERE var='mod_time'"))
+	 (string> (sql-get-val lex "SELECT val FROM meta WHERE var='build_time'")
+		  (sql-get-val lex "SELECT val FROM meta WHERE var='mod_time'")))
+	(get-raw-records lex-public "SELECT register_mod_time()")
+	(run-command lex "DELETE FROM rev")
+	(get-raw-records lex "SELECT register_mod_time()")
+	(get-raw-records lex "SELECT register_build_time()"))
+       ;; lex was not up to date
+       (t
+	(get-raw-records lex-public "SELECT register_mod_time()")
+	(run-command lex "DELETE FROM rev")
+	(get-raw-records lex "SELECT register_mod_time()"))))
+    (empty-cache lex)))
+
+(defmethod table-size ((lex psql-lex-database) table)
+  (str-2-num 
+   (sql-get-val *lexdb* 
+		(format nil "SELECT count(*) FROM ~a" table))))
 
 (defmethod clear-private-rev ((lex psql-lex-database))
+  (unless (> (table-size lex :rev)
+	     0)
+    (format t "~%(LexDB) private 'rev' is already empty")
+    (return-from clear-private-rev nil))
+  
    (empty-cache lex)
    
    ;; store names of deleted revisions
