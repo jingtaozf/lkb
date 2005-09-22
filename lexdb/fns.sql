@@ -285,6 +285,7 @@ END;
 CREATE OR REPLACE FUNCTION public.dump_public_rev_to_tmp() RETURNS boolean AS '
 BEGIN
 	RAISE DEBUG \'creating ordered copy of public.rev in tmp\';
+	SET TIME ZONE 00; -- ensure timestamps realised in normalised form (for CVS)
 	DELETE FROM tmp;
 	INSERT INTO tmp SELECT * FROM public.rev ORDER BY name, userid, modstamp;
 
