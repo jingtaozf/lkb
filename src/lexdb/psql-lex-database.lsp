@@ -1364,6 +1364,12 @@
    (sql-get-val *lexdb* 
 		(format nil "SELECT count(*) FROM ~a" table))))
 
+(defmethod table-head-count ((lex psql-lex-database) table)
+  (str-2-num 
+   (sql-get-val *lexdb* 
+		(format nil "SELECT count(*) FROM ~a WHERE (name,modstamp) IN (SELECT name, max(modstamp) AS modstamp FROM ~a GROUP BY name)" table table))))
+
+
 (defmethod clear-private-rev ((lex psql-lex-database))
   (unless (> (table-size lex :rev)
 	     0)
