@@ -166,7 +166,7 @@
 				      from)))
 	 (recs (recs numo-t))
 	 (len-recs (length recs)))
-    (format t "~&(LexDB) ~a keyless entries" len-recs)
+    (format t "~&(LexDB) [~a keyless entries]" len-recs)
     (when (> len-recs 0)
       (join-str-lines
        (mapcar #'to-psql-COPY-rec
