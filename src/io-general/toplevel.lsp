@@ -335,7 +335,9 @@
       
 (defun apply-or-reapply-lex-rules (fs lex)
   (setf *number-of-applications* 0)
-  (let* ((*maximal-lex-rule-applications* 1)
+  (let* ((*maximal-lex-rule-applications* 
+	  (if *lex-rule-show-one-step* 1
+	    *maximal-lex-rule-applications*))
 	 (result-list
 	  (try-all-lexical-rules 
 	   (list (cons nil fs)))))
@@ -347,10 +349,15 @@
 				       (reverse 
 					(car result-pair))))
 			       (string 
+;			       (format nil "~(~A~) = ~A" 
+;				       (extract-orth-from-fs 
+;					(cdr result-pair))
+;				       done)
 			       (format nil "~A = ~(~A~)" 
 				       done
 				       (extract-orth-from-fs 
-					(cdr result-pair)))))
+					(cdr result-pair)))
+			       ))
 			  (cons string (cons string
 					     (cons done
 						   (cdr result-pair))))))

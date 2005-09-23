@@ -219,6 +219,9 @@
 (def-lkb-parameter *maximum-list-pane-items* 150
   "maximum number of items in a list pane")
 
+(def-lkb-parameter *lex-rule-show-one-step* t
+  "if set, lexical rule application will be show one step at a time")
+
 ;;; YADU
 
 (def-lkb-parameter *description-persistence* 'l
