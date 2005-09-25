@@ -624,13 +624,13 @@
 		 (make-instance 'psql-lex-entry :fv-pairs fv-pairs)))
 
 ;;; insert lex entry into db
-(defmethod set-lex-entry ((lex psql-lex-database) (psql-le psql-lex-entry))
+(defmethod set-lex-entry ((lex psql-lex-database) (psql-le psql-lex-entry) &key (gen-key t) )
   (set-val psql-le :orthkey (lexicon-le-orthkey lex psql-le))
   (set-val psql-le :modstamp "NOW")
   (set-val psql-le :userid (user lex))
-  (set-lex-entry-aux lex psql-le))
+  (set-lex-entry-aux lex psql-le :gen-key gen-key))
   
-(defmethod set-lex-entry-aux ((lex psql-lex-database) (psql-le psql-lex-entry))
+(defmethod set-lex-entry-aux ((lex psql-lex-database) (psql-le psql-lex-entry) &key (gen-key t) )
   (let* ((symb-list (copy-list (fields lex)))
 	 (symb-list (remove :name symb-list))
 	 (symb-list (remove-duplicates symb-list))
@@ -650,7 +650,8 @@
 		    :args (list name
 				symb-list
 				(ordered-val-list symb-list psql-le))) ;; tmp contains new entry only
-    (generate-missing-orthkeys lex :from :tmp) ;; use new entry stored in tmp
+    (when gen-key 
+      (generate-missing-orthkeys lex :from :tmp)) ;; use new entry stored in tmp
     (unless
 	(check-lex-entry (str-2-symb name)
 			 lex)
@@ -1257,12 +1258,12 @@
     (cond
      ;; no components of lex entry skipped
      ((null skip)
-      (set-lex-entry lex psql-le)
+      (set-lex-entry lex psql-le :gen-key nil)
       (empty-cache lex))
      ;; component(s) skipped, but :skip field available in db
      ((member :_tdl (fields lex))
       (format t "~&;; (LexDB) Unhandled TDL fragment in ~a placed in _tdl field as unstructured text" name)
-      (set-lex-entry lex psql-le)
+      (set-lex-entry lex psql-le :gen-key nil)
       (empty-cache lex))
      ;; component(s) skipped and no :skip field in db
      (t

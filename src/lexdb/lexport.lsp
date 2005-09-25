@@ -118,6 +118,7 @@
     (load-lex-from-files lexicon (list filename) :tdl)
     lexicon))
 
+;; todo: this is very inefficient
 (defun load-tdl-to-private-rev (filename)
   (let ((lexdb *lexdb*))
     (catch 'abort 
