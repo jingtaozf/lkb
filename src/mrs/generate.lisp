@@ -147,9 +147,10 @@
                  ;; cause people surprising results; if they were not packing
                  ;; anyway, why should they care about the restrictor?
                  ;;                                             (20-mar-05; oe)
-                 (unless (or *gen-packing-p*
-                             (smember 
-                              (dag-arc-attribute arc) *packing-restrictor*))
+                 (when (or *gen-packing-p*
+                           (not (smember 
+                                 (dag-arc-attribute arc)
+                                 *packing-restrictor*)))
                    (setq vars (sem-vars-in-dag (dag-arc-value arc) vars)))))
              vars)))
       (if *gen-filtering-p*
