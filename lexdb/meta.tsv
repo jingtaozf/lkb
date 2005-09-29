@@ -1,11 +1,5 @@
-lexdb-version	4.72
+lexdb-version	4.80
 supported-psql-server	7.4
 supported-psql-server	8.0
 filter	TRUE
 mod_time	-infinity
-pub-fn	update_lex
-pub-fn	initialize_user_schema
-pub-fn	merge_public_rev_from_tmp
-pub-fn	merge_dfn_from_tmp_dfn
-pub-fn	update_entry
-pub-fn	dump_public_rev_to_tmp

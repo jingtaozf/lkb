@@ -133,7 +133,7 @@ END;
 CREATE OR REPLACE FUNCTION public.index_rev() RETURNS boolean AS '
 BEGIN
 	RAISE DEBUG \'indexing rev\';
-	EXECUTE \'CREATE UNIQUE INDEX rev_name_userid_modstamp ON rev (name,userid,modstamp)\';
+	EXECUTE \'CREATE UNIQUE INDEX rev_name ON rev (name)\';
 	RETURN true;
 END;
 ' LANGUAGE plpgsql;
@@ -141,7 +141,7 @@ END;
 CREATE OR REPLACE FUNCTION public.deindex_rev() RETURNS boolean AS '
 BEGIN
 	RAISE DEBUG \'deindexing rev\';
-	DROP INDEX rev_name_userid_modstamp;
+	DROP INDEX rev_name;
 	RETURN true;
 END;
 ' LANGUAGE plpgsql;
@@ -185,6 +185,43 @@ RETURN true;
 END;
 ' LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION create_table_lex_key() RETURNS boolean AS '
+BEGIN
+	CREATE TABLE lex_key (
+		name TEXT NOT NULL,
+		userid TEXT DEFAULT user NOT NULL,
+		modstamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+		key text NOT NULL
+		);
+RETURN true;
+END;
+' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION create_view_rev_all() RETURNS boolean AS '
+BEGIN
+	CREATE VIEW rev_all
+		AS SELECT * FROM public.rev 
+			UNION 
+ 			SELECT * FROM rev;
+RETURN true;
+END;
+' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION create_view_head() RETURNS boolean AS '
+BEGIN
+ 	CREATE VIEW head
+		AS SELECT fil.*
+ 			FROM 
+ 			(filt AS fil
+ 			NATURAL JOIN 
+ 				(SELECT name, max(modstamp) AS modstamp 
+ 					FROM filt
+					GROUP BY name) AS t1)
+			WHERE dead=\'0\';
+RETURN true;
+END;
+' LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION create_tables_semi() RETURNS boolean AS '
 BEGIN
  	RAISE DEBUG \'Creating SEMI structures...\';
@@ -223,7 +260,7 @@ BEGIN
 		modstamp0 TIMESTAMP WITH TIME ZONE
 	);
 
-	PERFORM semi_create_indices();
+	--PERFORM semi_create_indices();
 
 	CREATE OR REPLACE VIEW semi_obj AS
 		SELECT lex_id,pred_id, slot, str, type, feat, val FROM

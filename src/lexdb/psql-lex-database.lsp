@@ -20,7 +20,8 @@
        (open-lex ,lexdb-lexdb)
        ,@body
        (close-lex ,lexdb-lexdb))))
-  
+
+#+:null
 (defmacro with-lexdb-user-x ((user lexdb-lexdb lexdb) &body body)
   `(with-slots (dbname host port fields-tb) ,lexdb
      (let ((,lexdb-lexdb
@@ -42,8 +43,7 @@
     (setf out (progn ,@body))
     (format t "~&(LexDB) ~a [~F sec]" ,end-msg 
 	    (/ (- (get-internal-real-time) time) internal-time-units-per-second))
-    out
-    ))
+    out))
   
 (defmethod lookup-word ((lex psql-lex-database) orth &key (cache *lexicon-lexical-entries-cache-p*))
   (with-slots (lexical-entries) lex
@@ -73,6 +73,7 @@
 	     (ids (lookup-word-aux2 lex table)))
 	ids)))
 
+#+:null
 (defmethod uncached-orthkeys ((lex psql-lex-database) list-orth)
   (with-slots (lexical-entries) lex
     (loop
@@ -80,10 +81,12 @@
 	unless (gethash orth lexical-entries)
 	collect orth)))
 
+#+:null
 (defun prune-quotes (str)
   (let ((len (length str)))
     (subseq str 1 (1- len))))
 
+#+:null
 (defmethod lookup-words-cache ((lex psql-lex-database) table uc-list-orth)
   (with-slots (psorts lexical-entries record-cache dfn) lex
     (let ((name-field (second (assoc :id dfn))))
@@ -91,7 +94,6 @@
 		(unless (gethash x lexical-entries)
 		  (setf (gethash x lexical-entries) :empty)))
 	    uc-list-orth)
-      
       (loop
 	  with cols = (cols table)
 	  for rec in (recs table)
@@ -149,8 +151,7 @@
 	      (let ((new-key-lines (generate-orthkeys-COPY-str lex :from from)))
 		(if new-key-lines
 		    (run-command-stdin lex (format nil "COPY ~a FROM stdin" to)
-				       (make-string-input-stream new-key-lines))
-		  ))))
+				       (make-string-input-stream new-key-lines))))))
 
 (defmethod generate-orthkeys-COPY-str ((lex psql-lex-database) &key from)
   (unless from
@@ -471,7 +472,8 @@
     (when (catch :sql-error
 	    (format t "~&(LexDB) recreating 'lex' table")
 	    (force-output)
-	    (unless (set-filter-aux lex filter)
+	    (reconnect lex)
+	    (unless (update-filter lex filter)
 	      (format t "~&(LexDB) filter unchanged")
 	      (return-from set-filter))
 	    nil)
@@ -480,21 +482,15 @@
     (format t "~&(LexDB) filter: ~a" 
 	    (get-filter lex))
     (format t "~&(LexDB) active entries in 'lex' table: ~a" 
-	    ;(sql-fn-get-val lex :size_lex)
-	    (sql-get-val lex "SELECT count(*) FROM lex")
-	    )))
+	    (sql-get-num lex "SELECT count(*) FROM lex"))))
 
-(defmethod set-filter-aux ((lex psql-lex-database) filter)
-  (unless (or (null filter) 
-	      (equal (get-filter lex) filter))
-    (reconnect lex) ;; must reconnect to avoid server bug...
-    (force-output)
-    (and
-     (sql-fn-get-val lex 
-		     :update_lex 
-		     :args (list filter))
-     (generate-missing-orthkeys lex))
-    (empty-cache lex)))
+;(defmethod set-filter-aux ((lex psql-lex-database) filter)
+;  (unless (or (null filter) 
+;	      (equal (get-filter lex) filter))
+;    (reconnect lex) ;; must reconnect to avoid server bug...
+;    (force-output)
+;    (update-filter lex filter)
+;    ))
 
 ;;;
 ;;; cache
@@ -613,15 +609,14 @@
     (cons (list "userid" "name" "modstamp") records)))
 
 (defmethod current-timestamp ((lex psql-lex-database))
-  (caar (get-raw-records *lexdb* "SELECT current_timestamp")))
+  (caar (get-raw-records lex "SELECT current_timestamp")))
 
 ;;;
 ;;; low-level
 ;;;
 
 (defmethod set-lex-entry-from-record ((lex psql-lex-database) fv-pairs)
-  (set-lex-entry lex
-		 (make-instance 'psql-lex-entry :fv-pairs fv-pairs)))
+  (set-lex-entry lex (make-instance 'psql-lex-entry :fv-pairs fv-pairs)))
 
 ;;; insert lex entry into db
 (defmethod set-lex-entry ((lex psql-lex-database) (psql-le psql-lex-entry) &key (gen-key t) )
@@ -632,7 +627,7 @@
   
 (defmethod set-lex-entry-aux ((lex psql-lex-database) (psql-le psql-lex-entry) &key (gen-key t) )
   (let* ((symb-list (copy-list (fields lex)))
-	 (symb-list (remove :name symb-list))
+	 ;(symb-list (remove :name symb-list))
 	 (symb-list (remove-duplicates symb-list))
 	 (symb-list (remove-if 
 		     #'(lambda (x) (or (null x) 
@@ -646,102 +641,23 @@
 	      name (symb-2-str (str-2-symb name)))
       (lkb-beep)
       (setf name (symb-2-str (str-2-symb name))))
-    (sql-fn-get-val lex :update_entry
-		    :args (list name
-				symb-list
-				(ordered-val-list symb-list psql-le))) ;; tmp contains new entry only
+    (update-entry lex symb-list psql-le)
     (when gen-key 
-      (generate-missing-orthkeys lex :from :tmp)) ;; use new entry stored in tmp
+      (generate-missing-orthkeys lex))
+;      (generate-missing-orthkeys lex :from :tmp))
     (unless
 	(check-lex-entry (str-2-symb name)
 			 lex)
       (error "Invalid lexical entry ~a -- see Lisp buffer output" (retr-val psql-le :name)))))
 
-#+:mwe
-(defmethod mwe-initialize-lex ((lex psql-lex-database))
-  (mwe-initialize-userschema lex))
-
-#+:mwe
-(defmethod mwe-initialize-userschema ((lex psql-lex-database))
-  (format t "~%(mwe initializing private schema)")
-  (sql-fn-get-records lex 
-		      :mwe_initialize_schema))
-
 ;;;
 ;;; postgres interface
 ;;;
 
-#+:mwe
-(defmethod mwe-retrieve-id-set ((lex psql-lex-database))
-  (mapcar
-   #'(lambda (x) (str-2-symb (car x))) 
-   (sql-fn-get-raw-records lex 
-			   :mwe_retrieve_id_set)))
-
-#+:mwe
-(defmethod mwe-retrieve-type ((lex psql-lex-database) mwe-id)
-  (str-2-symb 
-   (sql-fn-get-val lex 
-			   :mwe_retrieve_type (symb-2-str mwe-id))))
-
-#+:mwe
-(defmethod mwe-retrieve-keyrels ((lex psql-lex-database) mwe-id)
-  (let* ((raw-results 
-	  (sql-fn-get-records lex 
-			      :mwe_retrieve_keyrels (symb-2-str mwe-id)))
-	 (s (make-sequence 'vector (length raw-results))))
-    (mapcar #'(lambda (x) 
-		(setf (aref s (1- (str-2-num (get-assoc-val :slot x))))
-		  (str-to-mixed (get-assoc-val :keyrel x))))
-	    raw-results
-	    )))
-
-#+:mwe
-(defmethod dump-multi-db ((lex psql-lex-database) filename)  
-  (setf filename (namestring (pathname filename)))
-  (sql-fn-get-records lex 
-		      :dump_multi_db filename))
-
-#+:mwe
-(defmethod merge-multi-into-db ((lex psql-lex-database) filename)  
-  (setf filename (namestring (pathname filename)))
-  (sql-fn-get-records lex 
-		      :merge_multi_into_db filename))
-
-#+:mwe
-(defmethod mwe-to-tdl ((lex psql-lex-database) mwe-id)
-  (format 
-   nil "~%~a := ~a.~%"
-   (tdl-val-str mwe-id)
-   (p-2-tdl (mwe-build-P-list (mwe-retrieve-type lex mwe-id)
-			      (mapcar #'(lambda (x) (cons 'PRED (list (list x))))
-				      (mwe-retrieve-keyrels lex mwe-id))))))
 	     
 ;;;
 ;;; script file fn
 ;;;
-
-#+:mwe
-(defmethod mwe-read-roots ((lex psql-lex-database))
-  (format  t "~%Loading MWE roots from lexical database ~a" (dbname lex))
-  (let ((*readtable* (make-tdl-break-table)))
-    (mapcar 
-     #'(lambda (x)
-	 (with-input-from-string (istream (mwe-to-tdl lex x))
-	   (read-tdl-psort-stream istream :root)))
-     (mwe-retrieve-id-set lex)))
-  (finalize-psort-file :root))
-
-#+:mwe
-(defmethod mwe-read-root-entry ((lex psql-lex-database) mwe-id)
-  (let ((*readtable* (make-tdl-break-table)))
-    (with-input-from-string (istream (mwe-to-tdl lex mwe-id))
-      (read-tdl-psort-stream istream :root))))
-
-#+:mwe
-(defmethod reload-roots-mwe ((lex psql-lex-database))
-    (mwe-read-roots lex)
-    (format  t "~%MWE roots reloaded from lexical database ~a" (dbname lex)))
 
 (defmethod close-lex ((lex psql-lex-database) &key in-isolation delete)
   (declare (ignore in-isolation delete))
@@ -766,8 +682,10 @@
     (when (connect lex)
       (check-psql-server-version lex)
       (check-lexdb-version lex)
-      (make-field-map-slot lex)
-      (initialize-userschema lex)
+      (unless
+	  (sql-get-bool lex "SELECT user_is_db_owner_p()")
+	(make-field-map-slot lex)
+	(initialize-user-schema lex))
       lex)))
 
 (defmethod check-lexdb-version ((lex psql-lex-database))
@@ -808,9 +726,10 @@
   (when (connection-ok lex)
     (setf (lexdb-version lex) 
       (get-db-version lex))
-      (get-pub-fns lex)
+      ;(get-pub-fns lex)
     t))	
 
+#+:null
 (defmethod get-pub-fns ((lex psql-lex-database)) 
   (setf (pub-fns lex)
     (mapcar #'(lambda (x)
@@ -840,8 +759,7 @@
 	    (lexdb-time ("loading SEM-I into memory" "done loading SEM-I into memory")
 			(mrs::semi-p 
 			 (catch :sql-error
-			   (mrs::populate-*semi*-from-psql)
-			   )))
+			   (mrs::populate-*semi*-from-psql))))
       (format t "~&(LexDB) unable to retrieve database SEM-I"))
     (index-lexical-rules)
     (index-grammar-rules))
@@ -851,23 +769,198 @@
 
 (defmethod update-lex-aux ((lex psql-lex-database))
   (reconnect lex) ;; work around server bug
-
-  (let (vac)
-    (if (lexdb-time 
-	 ("ensuring 'lex' table is up-to-date" "done ensuring 'lex' table is up-to-date")
-	 (string= "t" (sql-fn-get-val lex :update_lex :args (list (get-filter lex)))))
-	(setf vac t))
-    (if (generate-missing-orthkeys lex)
-	(setf vac t))
-    (if vac (vacuum lex)))
-	
+  (lexdb-time 
+   ("ensuring 'lex' table is up-to-date" "done ensuring 'lex' table is up-to-date")
+   (update-filter lex nil))
   (format t "~&(LexDB) filter: ~a " (get-filter lex))
-  (let ((size
-	 (sql-get-val lex "SELECT count(*) FROM lex")))
-    (if (string= "0" size)
+  (let ((size (sql-get-num lex "SELECT count(*) FROM lex")))
+    (if (= 0 size)
 	(format t "~&(LexDB) WARNING:  0 entries passed the LexDB filter" size)
       (format t "~&(LexDB) active entries in 'lex' table: ~a" size)))
   (empty-cache lex))
+
+(defmethod filter ((lex psql-lex-database))
+  (sql-get-val lex "SELECT val FROM meta WHERE var='filter'"))
+
+(defmethod update-filter ((lex psql-lex-database) new-filter)
+  (let ((old-filter (filter lex))
+	(mod-time-public (mod-time-public lex))
+	(build-time (build-time lex)))
+    (cond
+     ((and new-filter
+	   (not (string= new-filter old-filter)))  
+      (run-command lex 
+		   (format nil "CREATE OR REPLACE VIEW filt AS SELECT * FROM rev_all WHERE ~a" new-filter))
+      (run-command lex 
+		   (format nil "UPDATE meta SET val=~a WHERE var='filter'" 
+			   (quote-literal lex new-filter)))
+      (build-lex lex)
+      t)
+     ((string> mod-time-public build-time)
+      (build-lex lex)
+      t)
+     (t
+      nil))))
+
+(defmethod build-lex ((lex psql-lex-database))
+  ;;
+  (run-command lex "DELETE FROM tmp")
+  (run-command lex "INSERT INTO tmp SELECT * FROM filt")
+  (run-command lex "CREATE INDEX tmp_name ON tmp (name)")
+  (run-command lex "CREATE INDEX tmp_modstamp ON tmp (modstamp)")
+  
+  ;;
+  (sql-get-bool lex "SELECT public.deindex_lex()")
+  (run-command lex "DELETE FROM lex")
+  (run-command lex "INSERT INTO lex SELECT fil.* FROM (tmp AS fil NATURAL JOIN (SELECT name, max(modstamp) AS modstamp FROM tmp GROUP BY name) AS t1) WHERE dead='0'")
+  (sql-get-bool lex "SELECT public.index_lex()")
+  
+  ;;
+  (run-command lex "DROP INDEX tmp_name")
+  (run-command lex "DROP INDEX tmp_modstamp")
+  
+  ;;
+  (sql-get-bool lex "SELECT public.deindex_lex_key()")
+  (run-command lex "DELETE FROM lex_key")
+  (sql-get-bool lex "SELECT public.index_lex_key()")
+  
+  ;;
+  (register-build-time lex)
+  
+  ;;
+  (generate-missing-orthkeys lex)
+  (vacuum lex)
+  (empty-cache lex)
+  t)
+
+(defmethod register-user-schema ((lex psql-lex-database) user)
+  (with-lexdb-user-lexdb (lex-o lex)
+   (run-command lex-o 
+		(format nil "INSERT INTO public.meta VALUES ('user',~a)"
+			(quote-literal lex user)))))
+
+(defmethod initialize-user-schema ((lex psql-lex-database))
+  (cond
+   ((sql-get-bool lex "SELECT (user IN (SELECT val FROM public.meta WHERE var='user'))")
+    (format t "~&(LexDB) user schema already registered!")
+    nil)
+   ((sql-get-bool lex "SELECT user_is_db_owner_p()")
+    (error "~&(LexDB) db owner is not allowed to initialize user schema!")
+    nil)
+   (t
+  ;;
+  (let* ((user (sql-get-val lex "SELECT user"))
+	 (qi-user (quote-ident lex user)))
+    (run-command lex (format nil "CREATE SCHEMA ~a" qi-user))
+    (run-command lex (format nil "GRANT USAGE ON SCHEMA ~a TO lexdb" qi-user))
+    (register-user-schema lex user)
+    
+    ;;
+    (run-command lex "CREATE TABLE meta AS SELECT * FROM public.meta WHERE NULL")
+    (run-command lex "INSERT INTO meta VALUES ('filter','NULL')")
+    (run-command lex "INSERT INTO meta VALUES ('mod_time','')")
+    (run-command lex "INSERT INTO meta VALUES ('build_time','')")
+
+    ;;
+    (run-command lex "CREATE TABLE tmp AS SELECT * FROM public.rev WHERE NULL")
+    (run-command lex "GRANT SELECT ON tmp TO lexdb")
+    
+    (run-command lex "CREATE TABLE rev AS SELECT * FROM public.rev WHERE NULL")
+    (run-command lex "GRANT SELECT ON rev TO lexdb")
+    (sql-get-bool lex "SELECT index_rev()")
+    
+    ;;
+    (run-command lex "CREATE TABLE lex AS SELECT * FROM public.rev WHERE NULL")
+    (sql-get-bool lex "SELECT index_lex()")
+    (sql-get-bool lex "SELECT create_table_lex_key()")
+    (sql-get-bool lex "SELECT index_lex_key()")
+    
+    ;;
+    (register-mod-time lex)
+    (register-build-time lex)
+
+    ;;
+    (sql-get-bool lex "SELECT create_view_rev_all()")
+    (run-command lex "CREATE VIEW filt AS SELECT * FROM rev_all WHERE NULL")
+    (sql-get-bool lex "SELECT create_view_head()")    
+    
+    ;;
+    (sql-get-bool lex "SELECT create_tables_semi()")
+    (sql-get-bool lex "SELECT semi_create_indices()"))
+  t)))
+
+(defmethod register-build-time ((lex psql-lex-database))
+  (run-command lex "UPDATE meta SET val=current_timestamp WHERE var='build_time'"))
+
+(defmethod register-mod-time ((lex psql-lex-database))
+  (run-command lex "UPDATE meta SET val=current_timestamp WHERE var='mod_time'"))
+
+(defmethod mod-time-private ((lex psql-lex-database))
+  (sql-get-val lex "SELECT val FROM meta WHERE var='mod_time'"))
+
+(defmethod mod-time-public ((lex psql-lex-database))
+  (sql-get-val lex "SELECT val FROM public.meta WHERE var='mod_time'"))
+
+(defmethod build-time ((lex psql-lex-database))
+  (sql-get-val lex "SELECT val FROM meta WHERE var='build_time'"))
+
+(defmethod merge-public-rev-from-tmp ((lex psql-lex-database))
+  (sql-get-bool lex "SELECT assert_db_owner()")
+  
+  (run-command lex "CREATE INDEX tmp_name_userid_modstamp on public.tmp (name, userid, modstamp)")
+  (let ((num-dups (sql-get-num lex "SELECT count(*) FROM (SELECT name,userid,modstamp, count(*) FROM public.tmp GROUP BY name,userid,modstamp HAVING count(*)>1) AS foo"))
+	count-new)
+    (unless (= 0 num-dups)
+      (error "Entries to merge contain ~a duplicated instance(s) of <name,userid,modstamp>" num-dups))
+    (run-command lex "DELETE FROM tmp WHERE (name,userid,modstamp) IN (SELECT name,userid,modstamp FROM rev)")
+    (run-command lex "DROP INDEX tmp_name_userid_modstamp")
+    (setf count-new (sql-get-num lex "SELECT count(*) FROM tmp"))
+
+    (format t "~&(LexDB) ~a new rev entries" count-new)
+    (unless (= 0 count-new)
+      (sql-get-bool lex "SELECT public.deindex_public_rev()")
+      (run-command lex "INSERT INTO public.rev SELECT * FROM tmp")
+      (sql-get-bool lex "SELECT public.index_public_rev()")
+      (register-mod-time lex))))
+
+(defmethod merge-dfn-from-tmp-dfn ((lex psql-lex-database))
+  (sql-get-bool lex "SELECT assert_db_owner()")
+  
+  ;;
+  (run-command lex "DELETE FROM dfn WHERE mode IN (SELECT DISTINCT mode FROM tmp_dfn)")
+  (run-command lex "INSERT INTO dfn SELECT * FROM tmp_dfn"))
+  
+(defmethod dump-public-rev-to-tmp ((lex psql-lex-database))
+  (run-command lex "SET TIME ZONE 00")
+  (run-command lex "DELETE FROM tmp")
+  (run-command lex "INSERT INTO tmp SELECT * FROM public.rev ORDER BY name,userid,modstamp"))
+
+(defmethod update-entry ((lex psql-lex-database) symb-list psql-le)
+  (let ((ql-name (quote-literal lex (retr-val psql-le :name))))
+    (run-command lex 
+		 (format nil "DELETE FROM rev WHERE name=~a" ql-name))
+    (run-command lex 
+		 (format nil "INSERT INTO rev ~a VALUES ~a" 
+			 (sql-list symb-list 
+				   #'(lambda (x) (quote-ident lex x)))
+			 (sql-list (ordered-val-list symb-list psql-le) 
+				   #'(lambda (x) (quote-literal lex x)))))
+		 
+    (run-command lex 
+		 (format nil "DELETE FROM lex WHERE name=~a" ql-name))
+    (run-command lex 
+		 (format nil "INSERT INTO lex SELECT * FROM head WHERE name = ~a" ql-name))
+    (run-command lex 
+		 (format nil "DELETE FROM lex_key WHERE name = ~a" ql-name))))
+  
+(defmethod semi-mod-time-private ((lex psql-lex-database) psql-le)
+  (sql-get-val 
+   lex 
+   (format nil "SELECT modstamp FROM semi_mod WHERE ~a=~a" 
+	   (sql-list '(:name :userid :modstamp) 
+		     #'(lambda (x) (quote-ident lex x)))
+	   (sql-list (ordered-val-list '(:name :userid :modstamp) psql-le) 
+		     #'(lambda (x) (quote-literal lex x))))))
 
 ;;;
 ;; semi
@@ -914,12 +1007,13 @@
   (get-raw-records lex "SELECT * FROM rev"))
 
 (defmethod merge-rev ((lex psql-lex-database) rev-filename)
-  ;; empty temporary tables
-  (run-command lex "DELETE FROM tmp")
-  (with-lexdb-user-lexdb (lex2 lex)
-    ;; vacuum at start
-    (vacuum lex2)
-    (let (count-new)
+  (let (count-new)
+    ;; empty temporary tables
+					;(run-command lex "DELETE FROM tmp")
+    (with-lexdb-user-lexdb (lex2 lex)
+      (run-command lex2 "DELETE FROM tmp")
+      ;; vacuum at start
+      (vacuum lex2)
       ;;;
       ;; populate temporary tables
       ;;;
@@ -929,8 +1023,9 @@
       ;; update main tables
       ;;;
       (lexdb-time ("copying into 'rev' table" "done copying into 'rev' table")
-		  (sql-fn-get-val lex :merge_public_rev_from_tmp)    
-		  (setf count-new (read-from-string (caar (get-raw-records *lexdb* "SELECT count(*) from public.tmp")))))
+					;(sql-fn-get-val lex :merge_public_rev_from_tmp)    
+		  (merge-public-rev-from-tmp lex)    
+		  (setf count-new (sql-get-val lex2 "SELECT count(*) from public.tmp")))
       
       (format t "~&(LexDB) ~a new 'rev' entries" count-new)
       (make-field-map-slot lex2)
@@ -939,25 +1034,9 @@
       count-new)))
 
 (defmethod merge-dfn ((lex psql-lex-database) dfn-filename)  
-  (when (catch :sql-error 
-	  (run-command lex "CREATE TABLE tmp_dfn AS SELECT * FROM dfn WHERE NULL;"))
-    (run-command lex "DROP TABLE tmp_dfn")
-    (run-command lex "CREATE TABLE tmp_dfn AS SELECT * FROM dfn WHERE NULL ;"))
-  (run-command-stdin-from-file lex 
-			       "COPY tmp_dfn FROM stdin" 
-			       dfn-filename)
-  (let ((count-new-dfn 
-	 (str-2-num 
-	  (sql-fn-get-val lex :merge_dfn_from_tmp_dfn))))
-    (run-command lex "DROP TABLE tmp_dfn")
-    (format t "~&(LexDB) ~a new dfn entries" count-new-dfn)
-    count-new-dfn))
-
-(defmethod initialize-userschema ((lex psql-lex-database))
-  (sql-fn-get-val lex :initialize_user_schema )
-  #+:mwe
-  (if *postgres-mwe-enable*
-      (mwe-initialize-userschema lex)))
+  (run-command lex "DELETE FROM tmp_dfn")
+  (run-command-stdin-from-file lex "COPY tmp_dfn FROM stdin" dfn-filename)
+  (merge-dfn-from-tmp-dfn lex))
 
 (defmethod semi-setup-pre ((lex psql-lex-database))  
   (reconnect lex)
@@ -967,9 +1046,14 @@
   (reconnect lex)
   (run-command lex "SELECT semi_create_indices(); INSERT INTO semi_mod (SELECT DISTINCT name,userid,lex.modstamp,CURRENT_TIMESTAMP FROM lex JOIN semi_pred ON name=lex_id); SET ENABLE_HASHJOIN TO false;"))
  
-(defmethod semi-up-to-date-p ((lex psql-lex-database))  
-  (string= "t"
-	   (sql-get-val lex "SELECT mod_time() < (SELECT min(modstamp0) FROM semi_mod )")))
+(defmethod semi-up-to-date-p ((lex psql-lex-database))
+  (and
+   (string< 
+    (mod-time-public lex)
+    (sql-get-val lex "SELECT min(modstamp0) FROM semi_mod"))
+   (string< 
+    (mod-time-private lex)
+    (sql-get-val lex "SELECT min(modstamp0) FROM semi_mod"))))
   
 ;; returns record-ids
 (defmethod semi-out-of-date ((lex psql-lex-database))
@@ -1007,6 +1091,7 @@
 
 ;; return sql code to call db function and return
 ;; appropriate fields
+#+:null
 (defmethod sql-fn-string ((lex psql-lex-database) fn &key args fields)
   (with-slots (lexdb-version pub-fns) lex
     (when (not (member fn pub-fns))
@@ -1043,6 +1128,13 @@
 					     ))
 			 str-list))))))))
 
+(defun sql-list (l quote-fn)
+  (format nil "(~a)"
+    (concat-str
+     (mapcar quote-fn l)
+     :sep-c #\,)))
+
+#+:null
 (defun sql-fn-arg (x)
   (cond
    ((stringp x)
@@ -1057,13 +1149,12 @@
    (t
     (2-str x))))
 
+#+:null
 (defmethod sql-fn-get-records ((lex psql-lex-database) fn &key args fields)
   (get-records lex
 	       (sql-fn-string lex fn :args args :fields fields)))
 
-;;;
-;;; this approach is not right
-;;;
+#+:null
 (defmethod sql-fn-get-records-union ((lex psql-lex-database) fn &key list-args fields)
   (when list-args
     (let* ((first-arg (pop list-args))
@@ -1079,13 +1170,16 @@
 				 list-args)))))
       (get-records lex sql-str))))
 
+#+:null
 (defmethod sql-fn-get-raw-records ((lex psql-lex-database) fn &key args fields)
   (get-raw-records lex
 		   (sql-fn-string lex fn :args args :fields fields)))
-  
+
+#+:null
 (defmethod sql-fn-get-val ((lex psql-lex-database) fn &key args fields)
   (caar (sql-fn-get-raw-records lex fn :args args :fields fields)))
-  
+
+#+:null
 (defmethod sql-fn-get-vals ((lex psql-lex-database) fn &key args fields)
   (mapcar #'car
 	  (sql-fn-get-raw-records lex fn :args args :fields fields)))
@@ -1116,8 +1210,7 @@
 	(format t "~&(LexDB) WARNING:  cannot find file ~a" rev-filename)))
       (if (or (null count-new) (equal count-new 0))
 	  (empty-cache lex)
-	(update-lex-aux lex))
-      )))
+	(update-lex-aux lex)))))
 
 (defmethod vacuum ((lex psql-lex-database))
   (let (time client-min-messages)
@@ -1301,7 +1394,7 @@
   t)
 
 (defmethod dump-rev ((lex psql-lex-database) filebase)
-  (sql-fn-get-val lex :dump_public_rev_to_tmp)
+  (dump-public-rev-to-tmp lex)
   (run-command-stdout-to-file lex "COPY tmp TO stdout" 
 			      (namestring (pathname (format nil "~a.rev" 
 							    filebase))))
@@ -1333,76 +1426,50 @@
 
 (defmethod commit-private-rev ((lex psql-lex-database)) 
   ;; insert into public.rev and register public modtime
-  (let* ((qi-user (quote-ident lex (user lex)))
-	 (new-rev-sql 
-	  (format nil "SELECT * FROM ~a.rev WHERE (name,modstamp) IN (SELECT name, max(modstamp) AS modstamp FROM ~a.rev GROUP BY name)" qi-user qi-user)))
+  (let* ((qi-user (quote-ident lex (user lex))))
     (with-lexdb-user-lexdb (lex-public lex)
       (format t "~%(LexDB) updating 'public.rev' with ~a new entries from private 'rev'"
-	      (sql-get-val lex (format nil "SELECT count(*) FROM (~a) AS a" new-rev-sql)))
-      (run-command lex-public 
-					;     (format nil "INSERT INTO public.rev (SELECT * FROM ~a.rev)" 
-		   (format nil "INSERT INTO public.rev ~a" new-rev-sql ))
-      (cond
-       ;; lex was up-to-date, and remains so
-       ((and
-	 (string> (sql-get-val lex "SELECT val FROM meta WHERE var='build_time'")
-		  (sql-get-val lex "SELECT val FROM public.meta WHERE var='mod_time'"))
-	 (string> (sql-get-val lex "SELECT val FROM meta WHERE var='build_time'")
-		  (sql-get-val lex "SELECT val FROM meta WHERE var='mod_time'")))
-	(get-raw-records lex-public "SELECT register_mod_time()")
-	(run-command lex "DELETE FROM rev")
-	(get-raw-records lex "SELECT register_mod_time()")
-	(get-raw-records lex "SELECT register_build_time()"))
-       ;; lex was not up to date
-       (t
-	(get-raw-records lex-public "SELECT register_mod_time()")
-	(run-command lex "DELETE FROM rev")
-	(get-raw-records lex "SELECT register_mod_time()"))))
-    (empty-cache lex)))
+	      (sql-get-num lex (format nil "SELECT count(*) FROM rev")))
+      (sync-rev lex)
+      (run-command lex-public (format nil "INSERT INTO public.rev SELECT * FROM ~a.rev" qi-user)))
+    (empty-cache lex))) ;;??
+
+(defmethod lex-up-to-date-p ((lex psql-lex-database)) 
+  (string> (build-time lex)
+	   (mod-time-public lex)))
+
+(defmethod sync-rev ((lex psql-lex-database)) 
+  (unless (lex-up-to-date-p lex)
+    (update-lex-aux lex))
+  
+  (run-command lex "UPDATE rev SET modstamp='NOW'")
+  (run-command lex "DELETE FROM lex WHERE name IN (SELECT name FROM rev)")
+  (run-command lex "INSERT INTO lex SELECT * FROM head WHERE name IN (SELECT name FROM rev)")
+  (run-command lex "DELETE FROM lex_key WHERE name IN (SELECT name FROM rev)")
+  (generate-missing-orthkeys lex))
 
 (defmethod table-size ((lex psql-lex-database) table)
-  (str-2-num 
-   (sql-get-val *lexdb* 
-		(format nil "SELECT count(*) FROM ~a" table))))
+  (sql-get-num *lexdb* 
+	       (format nil "SELECT count(*) FROM ~a" table)))
 
 (defmethod table-head-count ((lex psql-lex-database) table)
-  (str-2-num 
-   (sql-get-val *lexdb* 
-		(format nil "SELECT count(*) FROM ~a WHERE (name,modstamp) IN (SELECT name, max(modstamp) AS modstamp FROM ~a GROUP BY name)" table table))))
+  (sql-get-num *lexdb* 
+	       (format nil "SELECT count(*) FROM ~a WHERE (name,modstamp) IN (SELECT name, max(modstamp) AS modstamp FROM ~a GROUP BY name)" table table)))
 
 
 (defmethod clear-private-rev ((lex psql-lex-database))
-  (unless (> (table-size lex :rev)
-	     0)
+  (unless (> (table-size lex :rev) 0)
     (format t "~%(LexDB) private 'rev' is already empty")
     (return-from clear-private-rev nil))
-  
    (empty-cache lex)
-   
-   ;; store names of deleted revisions
-   (run-command lex "CREATE TABLE tmp_name (name TEXT, PRIMARY KEY (name))")
-   (run-command lex "INSERT INTO tmp_name SELECT DISTINCT name FROM rev")
-   
-   ;; delete rev entries
-   (run-command lex "DELETE FROM rev")
-
-   ;; store filtered revisions with name in above
-   (run-command lex "DELETE FROM filt_tmp")
-   (run-command lex (format nil "INSERT INTO filt_tmp SELECT * FROM rev_all WHERE name IN (SELECT name FROM tmp_name) AND ~a" (get-filter lex)))
-   
-   ;; delete potentially affected lex/lex_key entries
-   (run-command lex "DELETE FROM lex WHERE name IN (SELECT name FROM tmp_name)")
-   (run-command lex "DELETE FROM lex_key WHERE name IN (SELECT name FROM tmp_name)")
-   ;;(sql-get-val lex "SELECT public.deindex_lex()") ;;generally quicker not to bother
-   (run-command lex "DROP TABLE tmp_name")
-   
-   ;; update lex entries
+   (run-command lex "DELETE FROM tmp")
+   (run-command lex 
+		(format nil "INSERT INTO tmp SELECT * FROM public.rev WHERE name IN (SELECT name FROM rev) AND ~a" (get-filter lex))) ;; public.rev not rev_all
+   (run-command lex "DELETE FROM lex WHERE name IN (SELECT name FROM rev)")
+   (run-command lex "DELETE FROM lex_key WHERE name IN (SELECT name FROM rev)")
+   (run-command lex "DELETE FROM rev") ;; now safe to delete
    (lexdb-time 
     ("updating 'lex' table" "done updating 'lex' table")
-    (run-command lex "INSERT INTO lex SELECT fil.* FROM (filt_tmp AS fil NATURAL JOIN (SELECT name, max(modstamp) AS modstamp FROM filt_tmp GROUP BY name) AS t1) WHERE dead=\'0\'")
-    )
-   ;;(sql-get-val lex "SELECT public.index_lex()") ;;generally quicker not to bother
-   
+    (run-command lex "INSERT INTO lex SELECT fil.* FROM (tmp AS fil NATURAL JOIN (SELECT name, max(modstamp) AS modstamp FROM tmp GROUP BY name) AS t1) WHERE dead=\'0\'"))
    (reconnect lex) ;; work around server bug
-   ;; update lex_key entries
    (generate-missing-orthkeys lex))

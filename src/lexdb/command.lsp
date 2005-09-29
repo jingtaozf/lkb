@@ -83,7 +83,7 @@
       (lkb-beep))
      (t
       (when (y-or-n-p-general 
-	     (format nil "Confirm COMMIT ~a entries to private 'rev' to 'public.rev'?"
+	     (format nil "Confirm COMMIT ~a entries from private 'rev' to 'public.rev'?"
 		     (table-head-count lex :rev)))
 	(lexdb-time ("committing private 'rev' to 'public.rev'" 
 		     "done committing private 'rev' to 'public.rev'")

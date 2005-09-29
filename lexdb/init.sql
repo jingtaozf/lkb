@@ -21,6 +21,7 @@ CREATE TABLE public.dfn (
 		path TEXT,
 		type TEXT,
 	PRIMARY KEY (mode,slot,field));
+CREATE TABLE public.tmp_dfn AS SELECT * FROM public.dfn WHERE NULL;
 CREATE TABLE public.tmp AS SELECT * FROM public.rev WHERE NULL;
 \copy public.meta from 'meta.tsv'
 

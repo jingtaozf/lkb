@@ -116,6 +116,17 @@
       (error "single value expected from query: ~a~%  got: ~a" sql-string recs))
     (caar recs)))
 
+(defmethod sql-get-bool ((db psql-database) sql-string)
+  (let ((x (sql-get-val db sql-string)))
+    (cond
+     ((string= "t" x) t)
+     ((string= "f" x) nil)
+     (t (error "cannot decode SQL bool val")))))
+  
+(defmethod sql-get-num ((db psql-database) sql-string)
+  (let ((x (sql-get-val db sql-string)))
+    (str-2-num x)))
+
   ;; run command with stdin = filename
 (defmethod run-command-stdin-from-file ((db psql-database) command filename)
   (with-open-file (istr filename
@@ -149,7 +160,7 @@
 
 (defmethod quote-ident ((db psql-database) x)
   (unless (stringp x)
-    (setf x (string-downcase (string x))))
+    (setf x (string-downcase (2-str x))))
   (caar 
    (get-raw-records db
     (format nil "SELECT quote_ident(~a)" 
@@ -157,7 +168,7 @@
 
 (defmethod quote-literal ((db psql-database) x)
   (unless (stringp x)
-    (setf x (string-downcase (string x))))
+    (setf x (string-downcase (2-str x))))
   (caar 
    (get-raw-records db
     (format nil "SELECT quote_literal(~a)" 
