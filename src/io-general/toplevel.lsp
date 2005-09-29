@@ -348,11 +348,13 @@
 				       lex 
 				       (reverse 
 					(car result-pair))))
-			       (string 
-;			       (format nil "~(~A~) = ~A" 
-;				       (extract-orth-from-fs 
-;					(cdr result-pair))
-;				       done)
+			       (string
+				#+:bmw
+			       (format nil "~(~A~) = ~A" 
+				       (extract-orth-from-fs 
+					(cdr result-pair))
+				       done)
+			       #-:bmw
 			       (format nil "~A = ~(~A~)" 
 				       done
 				       (extract-orth-from-fs 
