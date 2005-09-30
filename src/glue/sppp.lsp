@@ -216,6 +216,10 @@
              (second attributes))))))
 
 (defun xml-escape-string (string)
+  (xml-escape string)) ;; (bmw) xml-escape is faster (+simpler)
+
+#+:null
+(defun xml-escape-string (string)
   (if (and string (stringp string))
     (loop
         with padding = 128

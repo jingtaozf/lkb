@@ -371,6 +371,7 @@
 				  )
                   )
 		 :available-p :always)))
+	 #+:maf
 	 (and lkb::*maf-menu*
 	      (list
 	       (make-lkb-submenu-item 

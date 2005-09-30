@@ -41,6 +41,7 @@
    'string))
 
 ;; return CDATA-wrapped text
+#+:preprocessor
 (defun wrap-cdata (str)
   (concatenate-strings
    (cdr 

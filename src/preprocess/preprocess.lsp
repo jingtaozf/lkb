@@ -1,8 +1,8 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: LKB -*-
 
 
-;;; Copyright (c) 2000--2002
-;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;; Copyright (c) 2000--2005
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Ben Waldron;
 ;;;   see `licence.txt' for conditions.
 
 
@@ -72,13 +72,13 @@
    "#[FSPP (~d global, ~d token-level rules @ `~a')]"
    (length (fspp-global object)) (length (fspp-local object)) 
    (fspp-tokenizer object)))
-
+
 (defstruct fsr
   type
   source
   scanner
   target)
-
+
 (defun read-preprocessor (file &key (fspp (make-fspp) fsppp))
   (when (probe-file file)
     (with-open-file (stream file :direction :input)
@@ -97,6 +97,7 @@
             when (and c (not (char= c #\;))) do
               (multiple-value-bind (start end) (ppcre:scan separator line)
                 (cond
+		 ;; @ version
                  ((char= c #\@)
                   (let* ((version (subseq line 1 end))
                          (version (if (string= version "$Date: " :end1 7)
@@ -104,6 +105,7 @@
                                     version)))
                     (setf (fspp-version fspp) 
                       (string-trim '(#\Space) version))))
+		 ;; < import
                  ((char= c #\<)
                   (let* ((name (subseq line 1 end))
                          (file (or (probe-file name)
@@ -114,9 +116,14 @@
                          t
                          "read-preprocessor(): [~d] unable to include `~a'~%"
                          n name))))
+		 ;; : tokenizer
                  ((char= c #\:)
                   (let ((tokenizer (subseq line 1 end)))
                     (setf (fspp-tokenizer fspp) tokenizer)))
+		 ;; ! replace
+		 ;; - substitute
+		 ;; + augment
+		 ;; ^ ersatz
                  ((member c '(#\! #\- #\+ #\^) :test #'char=)
                   (if (and start end)
                     (let* ((type (case c
@@ -160,7 +167,7 @@
                   (nreverse (fspp-local fspp))))
               (unless fsppp (format t "~a~%" fspp))
               (return (if fsppp fspp (setf *preprocessor* fspp))))))))
-
+
 (defun preprocess (string &key (preprocessor *preprocessor*) 
                                (globalp t) (tokenp t)
                                (verbose *preprocessor-debug-p*)
@@ -281,7 +288,7 @@
                        (values (format nil "~{~a~^ ~}" tokens) length))))
               (:list
                (values (nreverse result) length)))))))
-
+
 (defun escape-string (string &key (syntax :c))
   (declare (ignore syntax))
            
@@ -305,10 +312,10 @@
         finally
           (return result))
     ""))
-
+
 (defun clear-preprocessor ()
   (setf *preprocessor* nil))
-
+
 (defun preprocess-for-pet (string &optional tagger)
   (if (and tagger (consp tagger) (keywordp (first tagger)))
     (multiple-value-bind (tokens length)
@@ -330,10 +337,10 @@
           finally 
             (return (values (format nil "~{~a~^ ~}" tokens) length))))
     (preprocess string :format :pet :verbose nil)))
-
+
 (defparameter *tagger-application*
   '((:tnt "tnt -z100 /user/oe/src/tnt/models/wsj -")))
-
+
 (defun tag-tnt (tokens &optional run &key (n 1))
   (labels ((commentp (string)
              (and (>= (length string) 2)
