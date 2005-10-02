@@ -29,6 +29,10 @@
 
 (in-package :make)
 
+;; (bmw) activate later...
+;#+(and :allegro (version>= 7 0))
+;(push :use-acl-regexp2-engine *features*)
+
 (pushnew :ppcre *features*)
 
 (defsystem "ppcre"

@@ -65,7 +65,7 @@
 	  (xml-escape (get-timestamp)) 
 	  (xml-escape (format nil "~a" *maf-lang*))))
 
-;; preprocess-sentence-string cannot be used here untilwe fix it to return xpoints
+;; preprocess-sentence-string cannot be used here until we fix it to return xpoints
 (defun basic-xml-to-maf-tokens (xml)
   (setf *token-id* 0)
   (let* ((p-xml (net.xml.parser:parse-xml xml))

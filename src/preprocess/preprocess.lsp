@@ -11,6 +11,7 @@
 ;;;      module: input preprocessing mimicry (collection of rough utilities)
 ;;;     version: 0.0 (30-jan-03)
 ;;;  written by: oe, csli stanford
+;;;              bmw, cambridge
 ;;; last update: 
 ;;;  updated by: 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -171,24 +172,24 @@
 (defun preprocess (string &key (preprocessor *preprocessor*) 
                                (globalp t) (tokenp t)
                                (verbose *preprocessor-debug-p*)
-                               (format :pet))
-
+                               (format :list))
+  ;; if no preprocessor defined...
   (when (null preprocessor)
     (return-from preprocess (and (eq format :lkb) string)))
-  
+  ;; process string globally
   (when globalp
     (setf string 
       (preprocess-global string (fspp-global preprocessor)
 			 :verbose verbose)))
-  
+  ;; process tokens
   (multiple-value-bind (result length)
       (preprocess-tokens (ppcre:split (fspp-tokenizer preprocessor) string) 
 			 (fspp-local preprocessor)
 			 :tokenp tokenp
 			 :verbose verbose)
-    
+    ;; get output in desired format
     (format-preprocessed-output
-     (nreverse (tokens-to-result result :format format))
+     (nreverse (tokens-to-result (nreverse result) :format format))
      length format)))
 
 (defun preprocess-global (string global &key verbose)
@@ -221,40 +222,47 @@
 	    for scanner = (fsr-scanner rule)
 	    for target = (fsr-target rule)
 	    for match = (ppcre:regex-replace scanner token target)
+			;;
+			;; _fix_me_
+			;; regex-replace() always returns a fresh string, even if the
+			;; pattern did _not_ match; to make this more efficient, it
+			;; seems, we would have to use scan() and then glue together
+			;; the result from parsing .target. and filling in register
+			;; matches as needed :-{.                     (31-jan-03; oe)
+			;;
 	    when (and (eq verbose :trace) (not (string= token match))) do
 	      (format
 	       t
 	       "~&|~a|~%  |~a|~%  |~a|~%~%"
 	       (fsr-source rule) token match)
-	    when (eq type :substitute) do
-	      (setf token match)
-	    else unless (string= token match) do
-	      ;;
-	      ;; _fix_me_
-	      ;; regex-replace() always returns a fresh string, even if the
-	      ;; pattern did _not_ match; to make this more efficient, it
-	      ;; seems, we would have to use scan() and then glue together
-	      ;; the result from parsing .target. and filling in register
-	      ;; matches as needed :-{.                     (31-jan-03; oe)
-	      ;;
-	      ;;
-	      ;; _fix_me_
-	      ;; to do ersatzes properly, they should no longer be available
-	      ;; to subsequent rule processing: presumably, we should build
-	      ;; an ersatzing table and use non-string tokens (indices into
-	      ;; the table) instead.                         (1-feb-03; oe)
-	      ;;
-	      (push (list type (if (eq type :ersatz) token match)) extra)
-	      (when (eq type :ersatz) (setf token match))
+	    do
+	      (case type
+		(:ersatz
+		 ;;
+		 ;; _fix_me_
+		 ;; to do ersatzes properly, they should no longer be available
+		 ;; to subsequent rule processing: presumably, we should build
+		 ;; an ersatzing table and use non-string tokens (indices into
+		 ;; the table) instead.                         (1-feb-03; oe)
+		 ;;
+		 (unless (string= token match)
+		   (push (list type token) extra)
+		   (setf token match)))
+		(:augment
+		 (unless (string= token match)
+		   (push (list type match) extra)))
+		(:substitute
+		 (setf token match))
+		(t
+		 (error "unhandled type: ~a" type)))
 	    finally
 	      (push (cons token extra) result))
       finally
 	(return (values result length))))
 
-(defun tokens-to-result (result &key verbose 
+(defun tokens-to-result (tokens &key verbose 
 				     format) ;;get rid of this
   (loop
-      with tokens = (nreverse result)
       with result = nil
       with i = 0
       with id = 41
@@ -308,8 +316,10 @@
 	finally 
 	  (return
 	    (values (format nil "~{~a~^ ~}" tokens) length))))
+   ((eq format :pic)
+    (error "not implemented"))
    ((eq format :maf)
-    (error "TO DO"))
+    (error "not implemented"))
    ((eq format :list)
     (values result length))
    (t
@@ -362,7 +372,7 @@
           collect token into tokens
           finally 
             (return (values (format nil "~{~a~^ ~}" tokens) length))))
-    (preprocess string :format :pet :verbose nil)))
+    (preprocess string :format :yy :verbose nil)))
 
 (defparameter *tagger-application*
   '((:tnt "tnt -z100 /user/oe/src/tnt/models/wsj -")))
