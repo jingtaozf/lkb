@@ -334,6 +334,12 @@
   (when (agenda-data agenda)
     (decf (agenda-size agenda))
     (rest (pop (agenda-data agenda)))))
+
+(defun agenda-if (test agenda &key key)
+  (loop
+      for entry in (agenda-data agenda)
+      when (funcall test (if key (funcall key (rest entry)) (rest entry)))
+      return entry))
 
 (defstruct unpacking
   decompositions hypotheses instantiations
@@ -360,6 +366,12 @@
 (defmacro decomposition-indices-done-p (decomposition indices)
   `(member ,indices (decomposition-done ,decomposition) :test #'equal))
 
+(defun indices<= (indices1 indices2)
+  (loop
+      for index1 in indices1
+      for index2 in indices2
+      always (<= index1 index2)))
+
 (defstruct hypothesis
   score decomposition indices daughters edge)
 
@@ -369,18 +381,37 @@
    "#[H ~a~@[ ~a~]]"
    (hypothesis-indices object) (hypothesis-edge object)))
 
-(defun selectively-unpack-edges (edges &optional n &key test)
+(defun selectively-unpack-edges (edges &optional n &key test robustp)
 
+  #+:logon
+  (declare (ignore n))
   #+:debug
   (setf %edges edges)
 
   (unless edges (return-from selectively-unpack-edges))
-  (if (or (null n) (not (numberp n)) (<= n 0) (null *unpacking-scoring-hook*))
+  ;;
+  ;; _fix_me_
+  ;; it turns out that, for generation with the sep-05 version of the ERG, we
+  ;; often cannot selectively unpack in finite time :-{.  presumably, part of
+  ;; the problem is a very large number of failures in unpacking, and possibly
+  ;; too large a number of hypotheses that we generate.  i remember woodley
+  ;; running into similar problems during his visit to oslo, so make this a
+  ;; priority to sort out once LOGON 0.5 has been released.  the corresponding
+  ;; PR is LOGON generation/290.                               (21-sep-05; oe)
+  ;;
+  (if #+:logon t
+      #-:logon
+      (or (null n) (not (numberp n)) (<= n 0) (null *unpacking-scoring-hook*))
     (let ((edges (unpack-edges edges)))
       (if test
-        (loop
-            for edge in edges
-            when (funcall test edge) collect edge)
+        (or
+         (loop
+             for edge in edges
+             when (funcall test edge) collect edge)
+         (when robustp
+           (loop
+               for edge in edges
+               when (or (eq robustp t) (funcall robustp edge)) collect edge)))
         edges))
     ;;
     ;; ignore genuinely frozen edges; now that we are into the unpacking
@@ -395,18 +426,27 @@
                        unless (and (edge-frozen edge)
                                    (minusp (edge-frozen edge)))
                        collect edge))
-           (representative (first active)))
+           (representative (first active))
+           candidates)
       (hypothesize-edge representative 0 :top (or (rest active) t))
-      (loop
-          for i from 0
-          for hypothesis = (hypothesize-edge representative i)
-          for new = (when hypothesis 
-                      (let ((edge (instantiate-hypothesis hypothesis)))
-                        (when (and edge 
-                                   (or (null test) (funcall test edge)))
-                          edge)))
-          while (and hypothesis (>= n 1))
-          when new do (decf n) and collect new))))
+      (or
+       (loop
+           for i from 0
+           for hypothesis = (hypothesize-edge representative i)
+           for new = (when hypothesis 
+                       (let ((edge (instantiate-hypothesis hypothesis)))
+                         (when edge
+                           (if (or (null test) (funcall test edge))
+                             edge
+                             (when robustp
+                               (push edge candidates)
+                               nil)))))
+           while (and hypothesis (>= n 1))
+           when new do (decf n) and collect new)
+       (when robustp
+         (loop
+             for edge in candidates
+             when (or (eq robustp t) (funcall robustp edge)) collect edge))))))
 
 (defun hypothesize-edge (edge i &key top agenda)
   ;;
@@ -498,7 +538,16 @@
               with decomposition = (hypothesis-decomposition hypothesis)
               for indices in indiceses
               for daughters 
-              = (unless (decomposition-indices-done-p decomposition indices)
+              = (unless (or (decomposition-indices-done-p
+                             decomposition indices)
+                            (agenda-if
+                             #'(lambda (foo)
+                                 (and (eq
+                                       (hypothesis-decomposition foo)
+                                       decomposition)
+                                      (indices<=
+                                       (hypothesis-indices foo) indices)))
+                             agenda))
                   (loop
                       for edge in (decomposition-rhs decomposition)
                       for i in indices
@@ -517,7 +566,7 @@
                 (format t "~%>> ~a~%~%" new)
                 (decomposition-record-indices decomposition indices)
                 (agenda-insert 
-                  agenda (score-hypothesis new) new))
+                 agenda (score-hypothesis new) new))
           (setf (unpacking-hypotheses unpacking)
             (nconc (unpacking-hypotheses unpacking) (list hypothesis)))
           hypothesis)))))

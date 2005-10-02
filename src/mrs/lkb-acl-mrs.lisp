@@ -169,7 +169,7 @@
 
 (defun show-mrs-window (edge &optional mrs title)
   (let ((mrs (or mrs (edge-mrs edge) (mrs::extract-mrs edge))))
-    (if #+:lui (lui-status-p :mrs) #-:lui nil
+    (if #+:lui (lui-status-p :mrs :simple) #-:lui nil
       (lui-display-mrs mrs)
       (mp:run-function "Simple MRS" #'show-mrs-window-really edge mrs title))))
 
@@ -184,8 +184,10 @@
 
 (defun show-mrs-indexed-window (edge &optional mrs title)
   (let ((mrs (or mrs (edge-mrs edge) (mrs::extract-mrs edge))))
-    (mp:run-function "Indexed MRS"
-     #'show-mrs-indexed-window-really edge mrs title)))
+    (if #+:lui (lui-status-p :mrs :indexed) #-:lui nil
+      (lui-display-mrs mrs title :indexed)
+      (mp:run-function
+       "Indexed MRS" #'show-mrs-indexed-window-really edge mrs title))))
 
 (defun show-mrs-indexed-window-really (edge &optional mrs title)
   (let ((mframe (clim:make-application-frame 'mrs-indexed)))

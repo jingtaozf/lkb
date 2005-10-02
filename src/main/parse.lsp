@@ -205,7 +205,7 @@
 ;;; are also included in the edge count, but we could dispose of them when we
 ;;; move on into unpacking.                                    (26-nov-04; oe)
 ;;;
-(defparameter *unpack-edge-allowance* 50000)
+(defparameter *unpack-edge-allowance* 25000)
 
 (defparameter %edge-allowance% 0)
 

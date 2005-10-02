@@ -2,12 +2,95 @@
 
 (defparameter *semis* nil)
 
+(defparameter %semi% nil)
+
 (defstruct semi
+  name
   signature
   (roles (make-hash-table))
   (predicates (make-hash-table :test #'equal))
   (properties (make-hash-table)))
 
+(defstruct spe
+  ep lexicon)
+
+(defmacro lookup-predicate (predicate semi)
+  `(gethash ,predicate (semi-predicates ,semi)))
+
+(defun read-semi (file &key (encoding :utf-8))
+  (let* ((file (pathname file))
+         (name (format
+                nil
+                "~a~@[.~a~]"
+                (pathname-name file) (pathname-type file)))
+         (semi (make-semi :name name)))
+    (with-open-file (stream file :direction :input)
+      #+:allegro
+      (setf (stream-external-format stream)
+        (excl:find-external-format encoding))
+      (loop
+          with *readtable* = (lkb::make-tdl-break-table)
+          with context = :top
+          for c = (peek-char t stream nil nil)
+          while c do
+            (cond
+             ((char= c #\;) (read-line stream))
+             ;;
+             ;; _fix_me_
+             ;; this should do full detection of `#|' comments instead.
+             ;;                                         (8-oct-03; oe)
+             ((char= c #\#) (lkb::read-tdl-comment stream))
+             (t
+              (case context
+                (:top
+                 (let* ((line (read-line stream nil nil))
+                        (key (ignore-errors (read-from-string line nil nil))))
+                   (when (eq (intern key :keyword) :predicates)
+                     (setf context :predicates))))
+                (:predicates
+                 (let* ((line (read-line stream nil nil))
+                        (pred (ignore-errors (read-from-string line nil nil))))
+                   (when pred
+                     (let* ((ep (make-ep :pred pred))
+                            (spe (make-spe :ep ep)))
+                       (push
+                        spe
+                        (lookup-predicate pred semi)))))))))))
+    (setf %semi% semi)))
+
+(let ((arg1 (mrs::vsym "ARG1")))
+  (defun test-semi-compliance (mrs
+                               &optional (semi %semi%)
+                               &key tags)
+
+    (loop
+        with tags = (loop for tag in tags collect (format nil "_~a_" tag))
+        for ep in (mrs:psoa-liszt mrs)
+        for pred = (mrs::rel-pred ep)
+        unless (or
+                (when tags
+                  (loop
+                      with pred = (string pred)
+                      for tag in tags
+                      never (search tag pred :test #'string-equal)))
+                ;;
+                ;; _fix_me_
+                ;; while for NorGram we only have adjectives, restrict test for
+                ;; _a_ predicates to those whose ARG1 is of type `x'.
+                ;;                                              (24-sep-05; oe)
+                #+:logon
+                (when (search "_a" pred  :test #'string-equal)
+                  (loop
+                      for role in (mrs:rel-flist ep)
+                      when (eq (mrs:fvpair-feature role) arg1)
+                      return (let ((value (mrs:fvpair-value role)))
+                               (when (mrs::var-p value)
+                                 (not (string-equal
+                                       (mrs:var-type value)
+                                       *semi-x-type*))))))
+                (lookup-predicate pred semi))
+        collect ep)))
+  
 (defmethod print-object ((object semi) stream)
   (if %transfer-raw-output-p%
     (call-next-method)

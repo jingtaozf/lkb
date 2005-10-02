@@ -59,6 +59,8 @@
 
 (defparameter %transfer-original-variables% nil)
 
+(defparameter %transfer-input-defaults% nil)
+
 ;;;
 ;;; _fix_me_
 ;;; the following are stop-gap solutions and, presumably, should be replaced
@@ -66,100 +68,13 @@
 ;;; manipulating variable properties destructively and taking advantage of
 ;;; match operators like :null and :exact to test for specific values.
 ;;;                                                           (9-jan-04; oe)
-(defparameter %transfer-properties-accumulator%
-  #-:logon nil
-  #+:logon
-  (list
-   (cons 
-    (mrs::vsym "x")
-    (list
-     (list (mrs::vsym "PERS") (mrs::vsym "NUM") (mrs::vsym "PNG.PN"))
-     (list (mrs::vsym "1") (mrs::vsym "sg") (mrs::vsym "1sg"))
-     (list (mrs::vsym "1") (mrs::vsym "pl") (mrs::vsym "1pl"))
-     (list (mrs::vsym "1") nil (mrs::vsym "1per"))
-     (list (mrs::vsym "2") (mrs::vsym "sg") (mrs::vsym "2sg"))
-     (list (mrs::vsym "2") (mrs::vsym "pl") (mrs::vsym "2pl"))
-     (list (mrs::vsym "2") nil (mrs::vsym "2per"))
-     (list (mrs::vsym "3") (mrs::vsym "sg") (mrs::vsym "3sg"))
-     (list (mrs::vsym "3") (mrs::vsym "pl") (mrs::vsym "3pl"))
-     (list (mrs::vsym "3") nil (mrs::vsym "3per"))
-     ;;
-     ;; _fix_me_
-     ;; the second `nil' in the following seems superfluous.    (8-feb-04; oe)
-     ;;
-     (list nil (mrs::vsym "sg") nil (mrs::vsym "pernum"))
-     (list nil (mrs::vsym "pl") nil (mrs::vsym "pernum"))))
-   (cons 
-    (mrs::vsym "x")
-    (list
-     (list (mrs::vsym "NATGEND") (mrs::vsym "PNG.GEN"))
-     (list (mrs::vsym "m") (mrs::vsym "masc"))
-     (list (mrs::vsym "f") (mrs::vsym "fem"))
-     (list (mrs::vsym "n") (mrs::vsym "neut"))
-     (list nil (mrs::vsym "gender"))))
-   (cons
-    (mrs::vsym "e")
-    (list
-     (list (mrs::vsym "TENSE") (mrs::vsym "E.TENSE"))
-     (list (mrs::vsym "pres") (mrs::vsym "present"))
-     (list (mrs::vsym "fut") (mrs::vsym "future"))
-     (list (mrs::vsym "notense") (mrs::vsym "untensed"))
-     (list nil (mrs::vsym "tense"))))
-   (cons
-    (mrs::vsym "e")
-    (list
-     (list (mrs::vsym "MOOD") (mrs::vsym "E.MOOD"))
-     (list nil (mrs::vsym "indicative"))))
-   (cons
-    (mrs::vsym "e")
-    (list
-     (list (mrs::vsym "PROG") (mrs::vsym "E.ASPECT.PROGR"))
-     (list (mrs::vsym "+") (mrs::vsym "+"))
-     (list (mrs::vsym "-") (mrs::vsym "-"))
-     (list nil (mrs::vsym "-"))))))
+(defparameter %transfer-properties-accumulator% nil)
 
-(defparameter %transfer-properties-defaults%
-  #-:logon nil
-  #+:logon
-  (list
-   (list (mrs::vsym "e") 
-         (cons (mrs::vsym "E.ASPECT.PERF") (mrs::vsym "-"))
-         (cons (mrs::vsym "E.ASPECT.STATIVE") (mrs::vsym "-"))
-         (cons (mrs::vsym "E.TENSE") (mrs::vsym "untensed"))
-         (cons (mrs::vsym "E.MOOD") (mrs::vsym "indicative")))))
+(defparameter %transfer-properties-defaults% nil)
 
-(defparameter %transfer-properties-filter%
-  #-:logon nil
-  #+:logon
-  (list
-   (cons (mrs::vsym "NATGEND") (mrs::vsym "PNG.GEN"))
-   (cons (mrs::vsym "TENSE") (mrs::vsym "E.TENSE"))
-   (cons (mrs::vsym "MOOD") (mrs::vsym "E.MOOD"))
-   (cons (mrs::vsym "PROG") (mrs::vsym "E.ASPECT.PROGR"))
-   (cons (mrs::vsym "PERF") (mrs::vsym "E.ASPECT.PERF"))
-   (cons (mrs::vsym "STATIVE") (mrs::vsym "E.ASPECT.STATIVE"))
-   (cons (mrs::vsym "PSVTYPE") nil)
-   (cons *mtr-skolem-property* nil)
-   (cons (mrs::vsym "MARK") nil)
-   (cons (mrs::vsym "DITCH") nil)
-   (cons (mrs::vsym "DIV") nil)
-   (cons (mrs::vsym "GRIND") nil)
-   (cons (mrs::vsym "PSVTYPE") nil)
-   (cons (mrs::vsym "ADDRESS") nil)
-   (cons (mrs::vsym "ASPECT-PROTRACTED") nil)
-   (cons (mrs::vsym "ASPECT-STATIVE") nil)
-   (cons (mrs::vsym "ASPECT-TELIC") nil)
-   (cons (mrs::vsym "ASPECT-BOUNDED") nil)
-   (cons (mrs::vsym "ASPECT-INCHOATIVE") nil)))
+(defparameter %transfer-properties-filter% nil)
 
-(defparameter %transfer-values-filter%
-  #-:logon nil
-  #+:logon
-  (list
-   (cons (mrs::vsym "pres") (mrs::vsym "present"))
-   (cons (mrs::vsym "m") (mrs::vsym "masc"))
-   (cons (mrs::vsym "f") (mrs::vsym "fem"))
-   (cons (mrs::vsym "n") (mrs::vsym "neut"))))
+(defparameter %transfer-values-filter% nil)
 
 (defstruct mtrs
   id mtrs flags)
@@ -190,6 +105,9 @@
 
 (defmacro mtrs-task (mtrs)
   `(getf (mtrs-flags ,mtrs) :task))
+
+(defmacro mtrs-edges (mtrs)
+  `(getf (mtrs-flags ,mtrs) :edges))
 
 (defmacro mtr-optional-p (mtr)
   `(getf (mtr-flags ,mtr) :optional))
@@ -319,7 +237,9 @@
   ;;
   (if (mrs::var-p variable)
     (let ((new (getf (solution-variables solution) variable)))
-      (if new (retrieve-variable new solution) variable))
+      (if (and new (not (eq new variable)))
+        (retrieve-variable new solution)
+        variable))
     variable))
 
 (defun align-eps (old new solution)
@@ -349,7 +269,7 @@
 
 (defun read-transfer-rules (files &optional name 
                             &key (filter nil filterp)
-                                 reset task optional (recurse t) subsume)
+                                 reset task optional (recurse t) subsume edges)
 
   ;;
   ;; _fix_me_
@@ -371,6 +291,7 @@
   ;; construct-mrs() makes a global assignment :-(.            (27-jan-04; oe)
   ;;
   (let* ((mrs::*variable-generator* mrs::*variable-generator*)
+         (mrs::%mrs-roles-filter% nil)
          (files (if (listp files) files (list files)))
          (id (if (stringp name) 
                name 
@@ -463,7 +384,8 @@
             (setf (getf (mtrs-flags mtrs) :recurse) recurse)
             (setf (getf (mtrs-flags mtrs) :filter)
               (if filterp filter t))
-            (when task (setf (getf (mtrs-flags mtrs) :task) task))
+            (when task (setf (mtrs-task mtrs) task))
+            (when edges (setf (mtrs-edges mtrs) edges))
             (when subsume (setf (getf (mtrs-flags mtrs) :subsume) subsume))
             (setf *transfer-rule-sets* 
               (append *transfer-rule-sets* (list mtrs)))))))
@@ -753,10 +675,19 @@
                                  (setf (mrs::extrapair-value extra)
                                    (ppcre::create-scanner
                                     (subseq value 1)))))))
+             mrs)
+           (unfill (mrs)
+             (when mrs
+               (loop
+                   for ep in (mrs:psoa-liszt mrs)
+                   for pred = (mrs:rel-pred ep)
+                   when (eq pred mrs::*top-semantics-type*)
+                   do (setf (mrs:rel-pred ep) nil)))
              mrs))
     (compile (mtr-filter mtr))
     (compile (mtr-input mtr))
     (compile (mtr-context mtr))
+    (unfill (mtr-defaults mtr))
     mtr))
 
 (defun record-mtr (mtr)
@@ -802,22 +733,8 @@
          (%transfer-edge-id% 0)
          (%transfer-clones% nil)
          (%transfer-original-variables% nil)
-         (mrs (let ((*transfer-skolemize-p* t)
-                    ;;
-                    ;; _fix_me_
-                    ;; generalize global parameters, so as to have separate
-                    ;; settings for each transfer phrase, probably.
-                    ;;                                          (2-may-05; oe)
-                    (defaults
-                     (list
-                      #+:logon
-                      (list (mrs::vsym "x") 
-                            (cons (mrs::vsym "GRIND") (mrs::vsym "-")))
-                      #+:logon
-                      (list (mrs::vsym "e") 
-                            (cons (mrs::vsym "PSVTYPE")
-                                  (mrs::vsym "active"))))))
-                (mrs::fill-mrs (clone-mrs mrs) defaults)))
+         (mrs (let ((*transfer-skolemize-p* t))
+                (mrs::fill-mrs (clone-mrs mrs) %transfer-input-defaults%)))
          (n (loop
                 for variable in %transfer-clones%
                 maximize (or (mrs:var-id (first variable)) 0)
@@ -863,6 +780,9 @@
          (mrs2 (edge-mrs edge2)))
     (and (= (edge-depth edge1) (edge-depth edge2))
          (= (logior vector2 vector1) vector2)
+         #+:logon
+         (mrs= mrs1 mrs2 :properties (list *mtr-skolem-property*))
+         #-:logon
          (ignore-errors
            (mrs::mrs-equalp mrs1 mrs2 t nil (list *mtr-skolem-property*))))))
 
@@ -878,6 +798,7 @@
   (push edge %transfer-chart%)
   (loop
       with result
+      with *transfer-edge-limit* = (or (mtrs-edges mtrs) *transfer-edge-limit*)
       with filter = (or filter (mtrs-filter-p mtrs))
       with recurse = (mtrs-recurse-p mtrs)
       with subsume = (mtrs-subsume-p mtrs)
@@ -1439,7 +1360,7 @@
 
 (defun unify-preds (pred1 pred2 solution &key subsumesp)
   (declare (ignore subsumesp))
-
+  
   ;;
   ;; _fix_me_
   ;; what about PREDs that stand in a subsumption relation?  presumably, we
@@ -1884,6 +1805,16 @@
                        :value (if (mrs::var-p value) 
                                 (postprocess-variable value)
                                 value))))
+            collect copy))
+      (setf (mrs:psoa-h-cons mrs)
+        (loop
+            for hcons in (mrs:psoa-h-cons mrs)
+            for copy = (mrs::make-hcons :relation (mrs:hcons-relation hcons))
+            do
+              (setf (mrs:hcons-scarg copy)
+                (postprocess-variable (mrs:hcons-scarg hcons)))
+              (setf (mrs:hcons-outscpd copy)
+                (postprocess-variable (mrs:hcons-outscpd hcons)))
             collect copy))
       (mrs::fill-mrs (mrs::unfill-mrs mrs) %transfer-properties-defaults%))))
 

@@ -23,7 +23,10 @@
                    for foo in (first sets)
                    nconc (loop
                              for bar in rests
-                             collect (append foo (cons separator bar)))))))
+                             collect (format
+                                      nil
+                                      "~a ~a ~a"
+                                      foo separator bar))))))
     (let* ((fragments (discriminate-fragments mrs))
            (fragments (loop
                           for fragment in fragments
@@ -59,7 +62,7 @@
                 (if surface
                   (values (list (list surface)) 0 0 0 0 0 0 0)
                   (lkb::generate-from-mrs fragment :signal nil))
-              (push (or strings (list (list "..."))) outputs)
+              (push (or strings (list "...")) outputs)
               (add tftasks ftasks) (add tetasks etasks) (add tstasks stasks)
               (add tunifications unifications) (add tcopies copies)
               (add taedges aedges) (add tpedges pedges)
@@ -79,9 +82,14 @@
       (setf (lkb::packings-equivalent lkb::*packings*) tequivalent)
       (setf (lkb::packings-proactive lkb::*packings*) tproactive)
       (setf (lkb::packings-retroactive lkb::*packings*) tretroactive)
-      (values
-       (cross-product (nreverse outputs))
-       tftasks tetasks tstasks tunifications tcopies taedges tpedges))))
+      (let ((strings (cross-product (nreverse outputs))))
+        (setf lkb::*gen-record*
+          (loop
+              for string in strings
+              collect (lkb::make-edge :string string)))
+        (values
+         strings
+         tftasks tetasks tstasks tunifications tcopies taedges tpedges)))))
 
 (defun discriminate-fragments (mrs)
   (loop

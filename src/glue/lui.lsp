@@ -426,7 +426,9 @@
       with context = (make-lspb)
       with last = (first (last edges))
       for edge in edges 
-      for string = (format nil "~{~(~a~)~^ ~}" (g-edge-string edge))
+      for string = (if (consp (g-edge-string edge))
+                     (format nil "~{~a~^ ~}" (g-edge-string edge))
+                     (g-edge-string edge))
       for lspb = (make-lspb
                   :chart chart :mrs *generator-input*
                   :edge edge :input string)
@@ -437,7 +439,7 @@
           (if (typep %generator-condition% 'error)
             (let ((condition (format nil "~a" %generator-condition%)))
               (format stream "\"~a\" ]" (normalize-string condition)))
-            (format stream "no realizations found")))
+            (format stream "\"no realizations found\"]")))
       do
         (push (lsp-store-object nil lspb) (lspb-children context))
         (format

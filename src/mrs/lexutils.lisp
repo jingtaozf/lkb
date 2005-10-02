@@ -28,6 +28,14 @@
 ;;; something is altered ...
 
 (defun index-for-generator nil
+  (clear-generator-index)
+  (if mrs::*top-semantics-type*
+    (setf mrs::*top-semantics-entry*
+      (get-type-entry mrs::*top-semantics-type*))
+    (progn
+      (cerror "~A will be used (indexing may be inefficient)" 
+               "~%No *top-semantics-type* defined" *toptype*)
+      (setf mrs::*top-semantics-entry* (get-type-entry *toptype*)))) 
   (unless (eq (check-generator-environment) :error)
     (index-lexicon)
     (index-lexical-rules)
@@ -36,62 +44,46 @@
     (format t "~%Indexing complete")
     nil))
 
-;;; recompile semantic indices as per normal
-;;; dump to lexdb if exists
 (defun index-lexicon nil
+  ;;
+  ;; recompile semantic indices as per normal; dump to lexdb if exists
+  ;;
   (when (typep *lexicon* 'psql-lex-database)
     (format t "~%(caching all lexical records)")
     (cache-all-lex-records-orth *lexicon*))
-  (format t "~% (recompiling semantic indices)")
-  (mrs::clear-semantic-indices)
-  (let ((*batch-mode* t))
-    (if mrs::*top-semantics-type*
-	(setf mrs::*top-semantics-entry* 
-	  (get-type-entry mrs::*top-semantics-type*))
-      (progn (cerror "~A will be used (indexing may be inefficient)" 
-		     "~%No *top-semantics-type* defined" *toptype*)
-	     (setf mrs::*top-semantics-entry*
-	       (get-type-entry *toptype*))))
-    (unless mrs::*top-semantics-entry*
-      (error "~%No entry found for top semantics type ~A" 
-	     mrs::*top-semantics-type*))
+  
+  (unless #+:logon (mrs::restore-semantic-indices) #-:logon nil
+    (format t "~% (recompiling semantic indices)")
+    (mrs::clear-semantic-indices)
+    (let ((*batch-mode* t))
+      (unless mrs::*top-semantics-entry*
+        (error "~%No entry found for top semantics type ~A" 
+               mrs::*top-semantics-type*))
 
-;    ;; (bmw) obfuscated code...
-;        (let ((ids-table (make-hash-table :test #'eq)) 
-;   	  (ids nil))
-;          ;; because of multiple lexical entries, an id may be indexed by
-;          ;; multiple orthographies
-;          (dolist (word (lex-words *lexicon*))
-;    	(dolist (inst (lookup-word *lexicon* word :cache nil))
-;    	  (setf (gethash inst ids-table) t)))
-;          (maphash
-;           #'(lambda (id val) 
-;    	   (declare (ignore val)) 
-;    	   (push id ids))
-;           ids-table)
-      
-    (let ((ids (collect-psort-ids *lexicon*)))
+      (let ((ids (collect-psort-ids *lexicon*)))
 
-      (process-queue
-       #'(lambda ()
-	   (let ((id (pop ids)))
-	     (if id
-		 (read-psort *lexicon* id :cache nil)
-	       :eof)))
-       #'(lambda (entry)
-	   (expand-psort-entry entry)
-	   (let ((new-fs (lex-entry-full-fs entry)))
-	     (if (and new-fs 
-		      (not (eq new-fs :fail)))
-		 (mrs::extract-lexical-relations entry)
-	       (format t "~%No feature structure for ~A~%" 
-		       (lex-entry-id entry))))
-	   (forget-psort *lexicon* (lex-entry-id entry))
-	   ))
-      (mrs::check-for-redundant-filter-rules)))
-  (setf *batch-mode* nil)
-  (when (typep *lexicon* 'psql-lex-database)
-    (mrs::dump-semi-to-psql mrs::*semi*)))
+        (process-queue
+         #'(lambda ()
+             (let ((id (pop ids)))
+               (if id
+                   (read-psort *lexicon* id :cache nil)
+                 :eof)))
+         #'(lambda (entry)
+             (expand-psort-entry entry)
+             (let ((new-fs (lex-entry-full-fs entry)))
+               (if (and new-fs 
+                        (not (eq new-fs :fail)))
+                   (mrs::extract-lexical-relations entry)
+                 (format t "~%No feature structure for ~A~%" 
+                         (lex-entry-id entry))))
+             (forget-psort *lexicon* (lex-entry-id entry))))
+        
+        (mrs::check-for-redundant-filter-rules)))
+    (when (typep *lexicon* 'psql-lex-database)
+      (mrs::dump-semi-to-psql mrs::*semi*))
+    #+:logon
+    (when (typep lkb::*lexicon* 'lkb::cdb-lex-database)
+      (mrs::serialize-semantics-indices))))
 
 (defun get-compatible-rels (reltype)
   (or (gethash reltype *get-compatible-rels-memo*)

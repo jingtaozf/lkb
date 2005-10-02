@@ -17,7 +17,8 @@
   top-h
   liszt
   h-cons
-  a-cons)
+  a-cons
+  vcs)
 
 ;;; a-cons added to allow for constraints on attachment
 
@@ -282,6 +283,10 @@
   (declare (ignore var1 var2 first-p))
   nil)
 
+(defmethod mrs-output-vcs ((mrsout output-type) vcs)
+  (declare (ignore vcs))
+  nil)
+
 ;;; 
 ;;; simple output-type class
 ;;;
@@ -417,6 +422,14 @@ ACONS: <x1,h4> in <<x2,h3>,<x5,h6>>, <x11,h41> in <<x21,h31>,<x51,h61>>
   (with-slots (stream) mrsout
     (format stream "")))
 
+(defmethod mrs-output-vcs ((mrs simple) vcs)
+  (with-slots (stream indentation) mrs
+    (format stream "~%~vt  VCS: < " indentation)
+    (loop
+        for foo in vcs
+        do (format stream "~(~a~) " foo))
+    (format stream ">")))
+           
 
 (defmethod mrs-output-end-psoa ((mrsout simple))
   (with-slots (stream indentation) mrsout
@@ -1206,6 +1219,8 @@ extras have to be sorted out later
     (print-mrs-hcons (psoa-h-cons psoa) connected-p *mrs-display-structure*))
   (when (psoa-a-cons psoa)
     (print-mrs-acons (psoa-a-cons psoa) connected-p *mrs-display-structure*))
+  (when (psoa-vcs psoa)
+    (print-mrs-vcs (psoa-vcs psoa) *mrs-display-structure*))
   (mrs-output-end-psoa *mrs-display-structure*))
 
 (defun print-rel (rel first-rel connected-p display)
@@ -1316,6 +1331,9 @@ extras have to be sorted out later
     (index-lbl-lbl ilp) connected-p)
    first-p))
    
+(defun print-mrs-vcs (vcs display)
+  (mrs-output-vcs display vcs))
+  
 
 (defun print-mrs-extra (var &key (display-to *mrs-display-structure*))
   (when (and (var-base-p var) (var-base-type var) (var-base-extra var))
@@ -1446,11 +1464,13 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
            (index (read-mrs-index istream))
            (liszt (read-mrs-liszt istream))
            (hcons (if *rel-handel-path* (read-mrs-hcons istream)))
+           (vcs (ignore-errors (read-mrs-vcs istream)))
            (psoa
             (make-psoa :top-h ltop
                        :index index
                        :liszt liszt
-                       :h-cons hcons)))
+                       :h-cons hcons
+                       :vcs vcs)))
       (mrs-check-for #\] istream)
       (unfill-mrs psoa))))
 
@@ -1489,7 +1509,7 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
         (push (read-mrs-rel istream)
               rels)))
     (mrs-check-for #\> istream)
-    rels))
+    (nreverse rels)))
 
 (defun read-mrs-hcons (istream)
   ;; HCONS -> hcons: < QEQ* >
@@ -1509,6 +1529,18 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
               cons)))
     (mrs-check-for #\> istream)
     cons))
+
+(defun read-mrs-vcs (stream)
+  (mrs-check-for #\V stream)
+  (mrs-check-for #\C stream)
+  (mrs-check-for #\S stream)
+  (mrs-check-for #\: stream)
+  (mrs-check-for #\< stream)
+  (loop
+      for c = (peek-char t stream nil nil)
+      when (null c) do (error "Unexpected eof")
+      when (char= c #\>) do (read-char stream) and return vcs
+      collect (read-mrs-atom stream) into vcs))
 
 (defun read-mrs-rel (istream)
 ;;;  REL -> [ PREDNAME handel: VAR FEATPAIR* ]
@@ -1849,8 +1881,11 @@ VAR -> VARNAME[:CONSTNAME]*
 ;;;
 (defparameter %mrs-extras-filter% nil)
 
-(defun unfill-mrs (mrs &optional (filter %mrs-extras-filter%))
-  (when filter
+(defparameter %mrs-roles-filter% nil)
+
+(defun unfill-mrs (mrs &optional (filter %mrs-extras-filter%)
+                                 (roles %mrs-roles-filter%))
+  (when (or filter roles)
     (labels ((unfill-variable (variable)
                (when (var-p variable)
                  (setf (var-extra variable)
@@ -1867,10 +1902,13 @@ VAR -> VARNAME[:CONSTNAME]*
       (loop
           for ep in (psoa-liszt mrs)
           do
-            (loop
-                for role in (rel-flist ep)
-                for value = (fvpair-value role)
-                do (unfill-variable value)))))
+            (setf (rel-flist ep)
+              (loop
+                  for role in (rel-flist ep)
+                  for value = (fvpair-value role)
+                  do (unfill-variable value)
+                  unless (member (fvpair-feature role) roles)
+                  collect role)))))
   mrs)
 
 ;;;

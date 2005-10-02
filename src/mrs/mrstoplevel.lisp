@@ -20,8 +20,12 @@
            (sort
               (mapcar
                  #'(lambda (edge)
-                     (cons (format nil "~{~A~^ ~}" 
-                                   (fix-spelling (g-edge-leaves edge)))
+                     (cons (if (stringp (edge-string edge))
+                             (edge-string edge)
+                             (format
+                              nil
+                              "~{~A~^ ~}" 
+                              (fix-spelling (g-edge-leaves edge))))
                         edge))
                  *gen-record*)
               #'string-lessp :key #'car)

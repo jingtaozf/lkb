@@ -62,7 +62,8 @@
 
 (defparameter *semi-punctuation-relations*
   (list "comma_rel" "period_rel" "exclamation_point_rel" "question_mark_rel"
-        (mrs::vsym "comma_rel") (mrs::vsym "period_rel")
+        (mrs::vsym "comma_rel") (mrs::vsym "hyphen_rel")
+        (mrs::vsym "period_rel")
         (mrs::vsym "exclamation_point_rel") (mrs::vsym "question_mark_rel")))
 
 (defparameter *semi-token-relations*

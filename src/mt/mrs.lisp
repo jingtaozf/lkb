@@ -7,7 +7,7 @@
   label pred roles)
 
 (defstruct (role)
-  feature value)
+  feature value optional)
 
 (defstruct (variable)
   type id properties)

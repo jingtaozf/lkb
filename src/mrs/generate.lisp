@@ -13,6 +13,7 @@
 (defparameter *gen-equate-qeqs-p* nil)
 
 (defparameter *gen-scoring-hook* nil)
+(defparameter *gen-extract-surface-hook* nil)
 (defparameter *gen-filtering-debug* nil)
 (defparameter *gen-adjunction-debug* nil)
 (defparameter *gen-equality-debug* nil)
@@ -227,7 +228,7 @@
              (with-slots (eps) condition
                (format
                 stream
-                "unknown predicates: ~{|~(~a~)|~^, ~}"
+                "invalid predicates: ~{|~(~a~)|~^, ~}"
                 (loop
                     with result
                     for ep in eps
@@ -235,6 +236,14 @@
                     finally (when result
                               (return (sort result #'string-lessp)))))))))
 
+(define-condition generation/compliance-ambiguity (error) 
+  ((mrss :initarg :mrss :initform nil))
+  (:report (lambda (condition stream) 
+             (with-slots (mrss) condition
+               (format
+                stream
+                "grammar compliance ambiguity: ~a outputs"
+                (length mrss))))))
 
 ;;; Interface to generator - take an input MRS, ask for instantiated lexical
 ;;; items, instantiated and uninstantiated rules that might be applicable,
@@ -243,6 +252,13 @@
 ;;; it into generation proper. Do it also in chart-generate since that is also
 ;;; an entry point
 (defun generate-from-mrs (mrs &key signal nanalyses)
+  (setf %generator-condition% nil)
+  #+:logon
+  (let ((compliance (mt::transfer-mrs mrs :filter nil :task :comply)))
+    (when (rest compliance)
+      (error 'generation/compliance-ambiguity :mrss compliance))
+    (when compliance
+      (setf mrs (mt::edge-mrs (first compliance)))))
   (if (mrs::fragmentp mrs)
     (mt::generate-from-fragmented-mrs mrs :signal signal)
     (handler-case (generate-from-mrs-internal mrs :nanalyses nanalyses)
@@ -491,6 +507,16 @@
                          ;; then.  for now, risk calling the test twice on each
                          ;; result in filter mode (see result selection below).
                          ;;                                     (27-jan-05; oe)
+                         ;;
+                         ;; see whether we can have some cake and eat some: add
+                         ;; robust flag to selectively-unpack-edges(), so as to
+                         ;; return all candidate edges (that failed the test),
+                         ;; in case none were found to satisfy it.  allow us to
+                         ;; pass in another predicate as the value of :robustp,
+                         ;; in order to further select among those candidates.
+                         ;; the net result will be exhaustive unpacking, in all
+                         ;; cases where no candidates pass the test.
+                         ;;                                     (21-sep-05; oe)
                          (selectively-unpack-edges
                           (loop
                               for edge in candidates
@@ -499,10 +525,13 @@
                           nanalyses
                           :test #'(lambda (edge)
                                     (and
-                                       (gen-filter-root-edges (list edge)) 
-                                       (or *bypass-equality-check*
-                                           (gen-chart-check-compatible 
-                                            edge input-sem))))))
+                                       (gen-filter-root-edges (list edge))
+                                       (gen-chart-check-compatible 
+                                        edge input-sem)))
+                          :robustp (when (eq *bypass-equality-check* :filter)
+                                     #'(lambda (edge)
+                                         (gen-filter-root-edges
+                                          (list edge))))))
                         (t
                          (loop
                              for edge in candidates
@@ -511,8 +540,10 @@
                       (consistent
                        (loop
                            for edge in complete
-                           when (or (and *gen-packing-p*
-                                         (null *bypass-equality-check*))
+                           when (or *gen-packing-p*
+                                    (and *bypass-equality-check*
+                                         (not (eq *bypass-equality-check*
+                                                  :filter)))
                                     (gen-chart-check-compatible 
                                      edge input-sem))
                            collect edge)))
@@ -545,11 +576,12 @@
 (defun extract-strings-from-gen-record nil
   (loop 
       for edge in *gen-record*
-      for string = (if (and mrs::*fix-spelling-fn*
-			    (fboundp mrs::*fix-spelling-fn*))
-		       (funcall mrs::*fix-spelling-fn* 
-				(g-edge-leaves edge))
-		       (g-edge-leaves edge)) 
+      for string = (cond
+                    ((fboundp *gen-extract-surface-hook*)
+                     (funcall *gen-extract-surface-hook* edge))
+                    ((fboundp mrs::*fix-spelling-fn*)
+                     (funcall mrs::*fix-spelling-fn* (g-edge-leaves edge)))
+                    (t (g-edge-leaves edge)))
       do (setf (edge-string edge) string)
       collect string))
 
@@ -607,9 +639,16 @@
 ;;            (when *sem-debugging*
 ;;              (mrs::output-mrs input-sem 'mrs::simple)
 ;;              (mrs::output-mrs mrs 'mrs::simple))  
+        #+:logon
+        (mt::compare-mrss
+         (if *gen-equate-qeqs-p* (mrs::equate-all-qeqs mrs) mrs)
+         input-sem
+         :type :subsumption)
+        #-:logon
         (mrs::mrs-equalp 
          (if *gen-equate-qeqs-p* (mrs::equate-all-qeqs mrs) mrs)
-         input-sem nil *debugging* 
+         input-sem
+         nil *debugging* 
          (not (eq *bypass-equality-check* :filter))))))
 
 

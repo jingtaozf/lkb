@@ -371,6 +371,22 @@
 	       keys)
       key-list)))
 
+(defun all-records (cdb &optional (asciip *cdb-ascii-p*))
+  (unless (eq (cdb-mode cdb) :input) (error "CDB not open for input."))
+  (with-slots (stream tables) cdb
+    (let ((end (car (aref (cdb-tables cdb) 0)))
+          records)
+      (file-position stream 8)
+      (loop
+          while (< (file-position stream) end)
+	  do 
+	    (let* ((klength (read-fixnum stream))
+                   (dlength (read-fixnum stream))
+                   (key (cdb-read-string klength stream asciip))
+                   (datum (cdb-read-string dlength stream asciip)))
+              (push (cons key datum) records)))
+      records)))
+
 ;; close database appropriately
 (defun close-cdb (cdb)
   (cond

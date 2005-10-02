@@ -398,7 +398,7 @@ at this point).
 (defun apply-rels-to-base (lex-id base-fs rel-list path)
   ;;;
   ;;; _fix_me_
-  ;;; for `variable-arity' predicates (like give and preprositions that are in
+  ;;; for `variable-arity' predicates (like give and prepositions that are in
   ;;; the lexicon as adverbs too, e.g. around) investigate skolemizing keyed
   ;;; off the lexical entry, or some other way of making sure that roles in the
   ;;; lexical entry that have no correspondence in the input MRS are specified

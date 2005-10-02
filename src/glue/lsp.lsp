@@ -361,8 +361,10 @@
                                 (lspb-dag lspb))))))
                  (path2 (pop command)))
             (if (and (tdfs-p tdfs1) (tdfs-p tdfs2))
-              (let* ((tdfs (tdfs-at-end-of path1 (copy-tdfs-elements tdfs1)))
-                     (*unify-debug* :return)
+              (let* ((tdfs (tdfs-at-end-of
+                            path1
+                            (with-unification-context (ignore)
+                              (copy-tdfs-elements tdfs1))))
                      (%failures% nil)
                      (result (debug-yadu! tdfs2 tdfs path2))
                      (failures %failures%))

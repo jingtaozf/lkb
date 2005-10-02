@@ -48,7 +48,7 @@
                       when (eq (mrs:fvpair-feature role) *generics-carg*)
                       return (mrs:fvpair-value role))
       for gle in (rest %generics-index%)
-      when (eq pred (gle-pred gle))
+      when (equal pred (gle-pred gle))
       do
         (let ((id (intern (format nil "~@:(~a[~a]~)" (gle-id gle) carg) :lkb)))
           (if (get-lex-entry-from-id id)

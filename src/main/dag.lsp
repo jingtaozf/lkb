@@ -1064,7 +1064,16 @@
                         (smember (first path) *packing-restrictor*)))
            (type (if restrictp
                    (minimal-type-for (first path))
-                   (dag-type old)))
+                   ;;
+                   ;; _fix_me_
+                   ;; experiment more with generalizing the null path, since
+                   ;; the ERG has a distinct top-level type on each rule, i.e.
+                   ;; we will never pack two edges unless they were built from
+                   ;; the same rule; see the comment in `fs.cpp' in PET too.
+                   ;;                                          (21-sep-05; oe)
+                   (if #+:logon (null path) #-:logon nil
+                     *toptype*
+                     (dag-type old))))
            (arcs (unless restrictp
                    (loop
                        for arc in (dag-arcs old)
