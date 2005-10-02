@@ -648,7 +648,7 @@
                                           templates :test #'string-equal)))
                          (when (= (length templates) 1) (first templates)))
                        *tsdb-instance-template*))
-         (result (make-array 42 
+         (result (make-array 256
                              :element-type 'character 
                              :adjustable t
                              :fill-pointer 0)))

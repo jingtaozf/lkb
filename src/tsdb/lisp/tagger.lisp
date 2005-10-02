@@ -101,10 +101,7 @@
 (defun estimate-tagger (items &key (stream *tsdb-io*) model (estimatep t))
 
   (loop
-      with model = (or model 
-                       (let ((model (make-mem)))
-                         (initialize-mem model)
-                         model))
+      with model = (or model (make-mem))
       for item in items
       for iid = (get-field :i-id item)
       for i from 1

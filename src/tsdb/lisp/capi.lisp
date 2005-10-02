@@ -71,7 +71,9 @@
 (defun process_item (tid item nanalyses nresults interactive)
   
   (let* ((i-id (get-field :i-id item))
-         (i-input (or (get-field :p-input item) (get-field :i-input item)))
+         (i-input (or (get-field :mrs item)
+                      (get-field :p-input item)
+                      (get-field :i-input item)))
          (parse-id (get-field :parse-id item))
          (edges (or (get-field :edges item) -1))
          (interactive (if interactive 1 0))

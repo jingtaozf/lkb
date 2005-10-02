@@ -263,8 +263,4 @@
     item)))
 
 (defun safe-mrs-equal-p (mrs1 mrs2)
-  #-:mrs (declare (ignore mrs1 mrs2))
-  #+:mrs
-  (ignore-errors (apply #'mrs::mrs-equalp mrs1 mrs2 '(t nil)))
-  #-:mrs
-  nil)
+  (ignore-errors (mt::mrs= mrs1 mrs2)))

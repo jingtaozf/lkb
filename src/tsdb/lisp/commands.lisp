@@ -51,8 +51,10 @@
                         :unique nil :sort :i-id
                         :meter imeter))
          (outputs (unless *tsdb-ignore-output-p*
-                    (select '("i-id" "o-ignore" "o-wf" "o-gc" "o-edges")
-                        '(:integer :string :integer :integer :integer)
+                    (select '("i-id" "o-ignore" "o-surface"
+                              "o-wf" "o-gc" "o-edges")
+                            '(:integer :string :string
+                              :integer :integer :integer)
                         "output"
                         (unless mrs condition)
                         data
@@ -72,15 +74,29 @@
                             :unique nil :sort :i-id)))
          (all (loop
                   for item in items
+                  for iid = (get-field :i-id item)
                   for length = (get-field+ :i-length item 0)
-                  for output = (or (unless *tsdb-ignore-output-p*
-                                     (find (get-field :i-id item)
-                                           outputs
-                                           :key #'(lambda (foo)
-                                                    (get-field :i-id foo))))
-                                   (pairlis '(:o-ignore :o-wf :o-gc :o-edges)
-                                            '("" -1 -1 -1)))
-                  do (nconc item output)
+                  for ogc = -2 for oedges = -2
+                  for output
+                  = (unless *tsdb-ignore-output-p*
+                      (loop
+                          for record in (member
+                                         iid outputs
+                                         :key #'(lambda (foo)
+                                                  (get-field :i-id foo)))
+                          while (= (get-field :i-id record) iid)
+                          do 
+                            (setf ogc (max ogc (get-field+ :o-gc record -1)))
+                            (setf oedges
+                              (max oedges (get-field+ :o-edges record -1)))
+                          collect record))
+                  do
+                    (nconc
+                     item
+                     (pairlis '(:o-gc :o-edges :output)
+                              (list (and (> ogc -2) ogc)
+                                    (and (> oedges 2) oedges)
+                                    output)))
                   when (> length 0) collect item)))
     (when results
       (setf all
@@ -219,8 +235,8 @@
     (length items)))
 
 (defun tsdb (&optional action argument 
-             &key condition run skeleton load gold host
-                  (file nil filep) (reset nil resetp) count target)
+             &key condition run skeleton load gold host wait
+                  (file nil filep) (reset nil resetp) count target error)
   
   (initialize-tsdb)
   (if (stringp action)
@@ -248,21 +264,33 @@
            (tsdb-do-cpus :action :active :stream *tsdb-io*))
           ((member argument '(:active :list :kill))
            (tsdb-do-cpus :action argument :stream *tsdb-io*))
-         (t
-           (cond
-            ((and filep resetp)
-             (initialize-cpus :classes argument :count count
-                              :file file :reset reset :host host
-                              :stream *tsdb-io* :prefix "  "))
-            (filep 
-             (initialize-cpus :classes argument :count count :host host
-                              :file file :stream *tsdb-io* :prefix "  "))
-            (resetp
-             (initialize-cpus :classes argument :count count :host host
-                              :reset reset :stream *tsdb-io* :prefix "  "))
-            (t
-             (initialize-cpus :classes argument :count count :host host
-                              :stream *tsdb-io* :prefix "  ")))))
+          (t
+           (let ((clients
+                  (cond
+                   ((and filep resetp)
+                    (initialize-cpus
+                     :classes argument :count count :wait wait :host host
+                     :file file :reset reset :stream *tsdb-io* :prefix "  "))
+                   (filep 
+                    (initialize-cpus
+                     :classes argument :count count :wait wait :host host
+                     :file file :stream *tsdb-io* :prefix "  "))
+                   (resetp
+                    (initialize-cpus
+                     :classes argument :count count :wait wait :host host
+                     :reset reset :stream *tsdb-io* :prefix "  "))
+                   (t
+                    (initialize-cpus
+                     :classes argument :count count :wait wait :host host
+                     :stream *tsdb-io* :prefix "  ")))))
+             (when (and (eq error :exit) (< (length clients) (or count 1)))
+               #+:allegro
+               (excl:exit 0 :no-unwind t)
+               #+:lispworks
+               (lw:quit :ignore-errors-p t)
+               #-(or :allegro :lispworks)
+               (error
+                "no known mechanism to shutdown Lisp (see `commands.lisp'")))))
          (format *tsdb-io* "~&~%"))
          
         ((:info :inf)
@@ -284,7 +312,8 @@
         ((:skeletons :ske :sk :s)
          (cond
           ((stringp argument)
-           (tsdb-do-set (quote *tsdb-skeleton-directory*) argument))
+           (tsdb-do-set (quote *tsdb-skeleton-directory*) argument)
+           (tsdb-do-skeletons nil))
           (t
            (format *tsdb-io* "~&~%")
            (tsdb-do-skeletons nil))))
@@ -658,7 +687,7 @@
            do
              (format
                  stream
-                 "~&~%~a- `~(~a~)' (pid: ~a --- tid: ~d [~x]) ~
+                 "~&~%~a- `~(~a~)' (pid: ~a --- tid: <~x> [~d]) ~
                   [~(~:[~a~;~{~a~^ | ~}~]~)]~%~
                   ~a  command: `~a';~%~
                   ~a  status: ~(~a~) --- protocol: ~(~a~);~%"

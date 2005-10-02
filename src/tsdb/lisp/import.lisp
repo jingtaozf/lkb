@@ -158,7 +158,7 @@
                                 :test #'string= :key #'first))))
         (unless (purge-directory path)
           (when (probe-file path) (delete-file path))
-          (mkdir path))
+          (mkdir path :parentp t))
         (let ((relations 
                (make-pathname :directory (namestring *tsdb-skeleton-directory*)
                               :name *tsdb-relations-skeleton*))
@@ -203,7 +203,8 @@
              (ids (map 'list #'(lambda (foo) (get-field :i-id foo)) ids))
              (ids (remove nil ids))
              (base (if ids (+ 1 (apply #'max ids)) 1)))
-        (multiple-value-bind (item phenomenon item-phenomenon parse result
+        (multiple-value-bind (item phenomenon item-phenomenon output
+                              parse result
                               titem)
             (case format
               (:ascii
@@ -247,9 +248,12 @@
               (insert path "phenomenon" phenomenon :absolute t)
               (insert path "item-phenomenon" item-phenomenon 
                       :absolute t :meter ipmeter))
+            (when output
+              (insert path "output" output :absolute t))
             (when parse (insert path "parse" parse :absolute t))
             (when result (insert path "result" result :absolute t))
-            (when titem (insert tpath "item" titem :absolute t))
+            (when (and titem tpath)
+              (insert tpath "item" titem :absolute t))
             item)
            (t 4))))))))
 
@@ -388,11 +392,12 @@
          (date (current-time))
          (index 0)
          (delta 0)
-         item phenomenon item-phenomenon titem)
+         item phenomenon item-phenomenon output titem)
     (when stream
       (decf p-id)
       (loop
           with context = :newline
+          with rid with rinput
           for i from 1
           for line = (read-line stream nil nil)
           while line
@@ -414,6 +419,7 @@
             (setf delta 0)
           else when (zerop length) do
             (setf context :newline)
+            (setf rid nil) (setf rinput nil)
             (setf delta 0)
           else unless (zerop length) do
             (multiple-value-bind (string id)
@@ -422,68 +428,79 @@
                 (setf id (if (eq context :item)
                            (+ (* index 10) (incf delta))
                            (* (incf index) 10))))
+              (when (eq context :newline) (setf rid id))
               (multiple-value-bind (offset extras)
                   (classify-item string)
-                (let* ((string (subseq string offset))
-                       (break (when separator 
-                                (search
-                                 separator string 
-                                 :test #'string= :from-end t)))
-                       (comment 
-                        (format
-                         nil
-                         "~@[~a~]~@[ ~a~]"
-                         comment
-                         (when break
-                           (normalize-string 
-                            (subseq string (+ break (length separator)))))))
-                       (string (if break
-                                 (subseq string 0 (max break 0)) 
-                                 string))
-                       (input (string-trim '(#\Space #\Tab) string))
-                       (oinput 
-                        (when (find-attribute-reader :i-input)
-                          (funcall (find-attribute-reader :i-input) input))))
-                  (multiple-value-bind (ninput length)
-                      (normalize-item (or oinput input))
-                    (unless (zerop length)
-                      (let* ((category
-                              (get-field+ :category extras category))
-                             (wf (cond
-                                  ((get-field :illformed extras) 0)
-                                  (t 1)))
-                             (targetp (not (zerop (mod id 10)))))
-                        (if targetp
-                          (push (pairlis '(:i-id 
-                                           :i-origin :i-register :i-format
-                                           :i-difficulty :i-category :i-input
-                                           :i-wf :i-length :i-comment
-                                           :i-author :i-date)
-                                         (list id
-                                               origin register format
-                                               difficulty category 
-                                               (if oinput input ninput) wf
-                                               length comment author date))
-                                titem)
-                          (push (pairlis '(:i-id 
-                                           :i-origin :i-register :i-format
-                                           :i-difficulty :i-category :i-input
-                                           :i-wf
-                                           :i-length :i-comment :i-author
-                                           :i-date)
-                                         (list id
-                                               origin register format
-                                               difficulty category 
-                                               (if oinput input ninput) wf
-                                               length comment author date))
-                                item)))
-                      (when phenomenon
-                        (push (pairlis '(:ip-id :i-id :p-id
-                                         :ip-author :ip-date)
-                                       (list base id p-id
-                                             author date))
-                              item-phenomenon)
-                        (incf base)))))))
+                (when (get-field :paragraph extras) (setf rid nil))
+                (when rid
+                  (let* ((string (subseq string offset))
+                         (break (when separator 
+                                  (search
+                                   separator string 
+                                   :test #'string= :from-end t)))
+                         (comment 
+                          (format
+                           nil
+                           "~@[~a~]~@[ ~a~]"
+                           comment
+                           (when break
+                             (normalize-string 
+                              (subseq string (+ break (length separator)))))))
+                         (string (if break
+                                   (subseq string 0 (max break 0)) 
+                                   string))
+                         (input (string-trim '(#\Space #\Tab) string))
+                         (oinput 
+                          (when (find-attribute-reader :i-input)
+                            (funcall (find-attribute-reader :i-input) input))))
+                    (multiple-value-bind (ninput length)
+                        (normalize-item (or oinput input))
+                      (unless (zerop length)
+                        (let* ((category
+                                (get-field+ :category extras category))
+                               (wf (cond
+                                    ((get-field :illformed extras) 0)
+                                    (t 1)))
+                               (targetp (not (zerop (mod id 10)))))
+                          (cond
+                           (targetp
+                            (push (pairlis '(:i-id 
+                                             :i-origin :i-register :i-format
+                                             :i-difficulty :i-category :i-input
+                                             :i-wf :i-length :i-comment
+                                             :i-author :i-date)
+                                           (list id
+                                                 origin register format
+                                                 difficulty category 
+                                                 (if oinput input ninput) wf
+                                                 length (or rinput comment)
+                                                 author date))
+                                  titem)
+                            (push (pairlis '(:i-id :o-surface)
+                                           (list rid
+                                                 (if oinput input ninput)))
+                                  output))
+                           (t
+                            (push (pairlis '(:i-id 
+                                             :i-origin :i-register :i-format
+                                             :i-difficulty :i-category :i-input
+                                             :i-wf
+                                             :i-length :i-comment :i-author
+                                             :i-date)
+                                           (list id
+                                                 origin register format
+                                                 difficulty category 
+                                                 (if oinput input ninput) wf
+                                                 length comment author date))
+                                  item)
+                            (setf rinput (if oinput input ninput)))))
+                        (when phenomenon
+                          (push (pairlis '(:ip-id :i-id :p-id
+                                           :ip-author :ip-date)
+                                         (list base id p-id
+                                               author date))
+                                item-phenomenon)
+                          (incf base))))))))
             (setf context :item))
 
       (close stream)
@@ -494,7 +511,7 @@
        ;; until we keep track of phenomena data for the target too, no point in
        ;; returning the partial truth.                           (5-jun-05; oe)
        ;;
-       (nreverse item) nil nil nil nil
+       (nreverse item) nil nil (nreverse output) nil nil
        (nreverse titem) nil nil))))
 
 (defun normalize-item (string)
@@ -545,10 +562,11 @@
       (cl-ppcre:scan "^[0-9]+[a-z]\\. " string)
     (unless start
       (multiple-value-setq (start end)
-        (cl-ppcre:scan "^\\[[0-9]{4}[a-z]\\] " string)))
+        (cl-ppcre:scan "^\\[[0-9]{4}[a-z]\\]( |$)" string))
+      (when (numberp start) (incf start)))
     (if (numberp end)
       (let ((suffix (subseq string end))
-            (id (or (parse-integer string :start 1 :junk-allowed t) 0))
+            (id (or (parse-integer string :start start :junk-allowed t) 0))
             (offset (or (case (when (>= end 3) (char string (- end 3)))
                           (#\a 0)
                           (#\b 1)
@@ -567,41 +585,44 @@
 (defun classify-item (string)
   (let ((result nil)
         (offset 0))
-    (loop
-        for stablep = t
-        do
-          (loop
-              for (mark . key) in *import-marks*
-              when (char= (char string offset) mark) do
-                (push (cons key t) result)
-                (incf offset)
-                (setf stablep nil))
-        until stablep)
-    (loop
-        with length = (length string)
-        for key in *import-email-headers*
-        for end = (min length (+ offset (length key)))
-        when (string= string key :start1 offset :end1 end) do
-          (push (cons :category "EH") result)
-          (push (cons :header t) result)
-          (when (string-equal key "From " :start1 offset :end1 end)
-            (push (cons :header :envelope) result))
-          (when (string-equal key "From:" :start1 offset :end1 end)
-            (push (cons :header :from) result)
-            (let ((value (subseq string (+ offset 5))))
-              (push (cons :author (normalize-string value)) result)))
-          (when (string-equal key "Subject:" :start1 offset :end1 end)
-            (push (cons :header :subject) result)
-            (let* ((start (position #\# string :from-end t))
-                   (index (when start
-                            (read-from-string 
-                             string nil nil :start (+ start 1)))))
-              (when (integerp index)
-                (push (cons :index index) result)))))
-    (unless (get-field :category result)
-      (cond
-       ((get-field :illformed result)
-        (push (cons :category "") result))
-       ((get-field :incomplete result)
-        (push (cons :category "XP") result))))
+    (unless (string= string "")
+      (loop
+          for stablep = t
+          do
+            (loop
+                for (mark . key) in *import-marks*
+                when (char= (char string offset) mark) do
+                  (push (cons key t) result)
+                  (incf offset)
+                  (setf stablep nil))
+          until stablep)
+      (when (string-equal (subseq string offset) "<p>")
+        (setf result (acons :paragraph t nil)))
+      (loop
+          with length = (length string)
+          for key in *import-email-headers*
+          for end = (max (- (min length (+ offset (length key))) 1) 0)
+          when (string= string key :start1 offset :end1 end) do
+            (push (cons :category "EH") result)
+            (push (cons :header t) result)
+            (when (string-equal key "From " :start1 offset :end1 end)
+              (push (cons :header :envelope) result))
+            (when (string-equal key "From:" :start1 offset :end1 end)
+              (push (cons :header :from) result)
+              (let ((value (subseq string (+ offset 5))))
+                (push (cons :author (normalize-string value)) result)))
+            (when (string-equal key "Subject:" :start1 offset :end1 end)
+              (push (cons :header :subject) result)
+              (let* ((start (position #\# string :from-end t))
+                     (index (when start
+                              (read-from-string 
+                               string nil nil :start (+ start 1)))))
+                (when (integerp index)
+                  (push (cons :index index) result)))))
+      (unless (get-field :category result)
+        (cond
+         ((get-field :illformed result)
+          (push (cons :category "") result))
+         ((get-field :incomplete result)
+          (push (cons :category "XP") result)))))
     (values offset result)))

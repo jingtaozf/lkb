@@ -110,15 +110,16 @@
 (defun gold-hook (old new)
   (when *tsdb-gold-hook* (call-hook *tsdb-gold-hook* old new)))
 
-(defun initialize-tsdb (&optional cache &key action background name pattern)
+(defun initialize-tsdb (&optional cache
+                        &key rc action background name pattern)
   
   (declare (special *tsdb-podium-home* *tsdb-podium* *tsdb-wish-application*
                     *statistics-readers* *statistics-browsers* 
                     *statistics-predicates*))
   
-  (unless (and *tsdb-initialized-p* (null action))
+  (unless (and *tsdb-initialized-p* (null action) (null rc))
     (let* ((*tsdb-initialized-p* t)
-           (tsdbrc (dir-and-name (user-homedir-pathname) ".tsdbrc"))
+           (tsdbrc (or rc (dir-and-name (user-homedir-pathname) ".tsdbrc")))
            (index (make-pathname :directory  *tsdb-skeleton-directory*
                                  :name *tsdb-skeleton-index*)))
       (when (and (or (null action) (member action '(:paths :all))))
@@ -514,18 +515,6 @@
        tree-id))
     tree-id))
 
-(defun select-o-derivations (language &key item)
-  (let* ((condition (when item (format nil "i-id = ~d" item)))
-         (derivations 
-          (select "o-derivation" :string "output" condition language))
-         (derivations
-          (and derivations
-               (map 'list #'(lambda (tuple) (get-field :o-derivation tuple))
-                    derivations))))
-    (and derivations
-         (map 'list (lambda (string) (read-from-string string nil))
-              derivations))))
-
 (defun select-derivations (language &key item)
   (let* ((condition (when item (format nil "i-id = ~d" item)))
          (derivations 
@@ -900,8 +889,11 @@
         for r-pedges = (get-field+ :r-pedges result -1)
         for derivation = (normalize-string 
                           (get-field :derivation result) :escape rawp)
+        for surface = (normalize-string
+                       (get-field :surface result) :escape rawp)
         for tree = (normalize-string (get-field :tree result) :escape rawp)
         for mrs = (normalize-string (get-field :mrs result) :escape rawp)
+        for grade = (normalize-string (get-field :grade result) :escape rawp)
         do
           (if rawp
             (let ((stream (get-field :result cache))
@@ -917,20 +909,22 @@
               (write r-aedges :stream stream) (write-char ofs stream)
               (write r-pedges :stream stream) (write-char ofs stream)
               (write-string derivation stream) (write-char ofs stream)
+              (write-string surface stream) (write-char ofs stream)
               (write-string tree stream) (write-char ofs stream)
-              (write-string mrs stream) 
+              (write-string mrs stream)  (write-char ofs stream)
+              (write-string grade stream) 
               (terpri stream)
               (force-output stream)
               (incf (get-field :count cache)))
             (let* ((query (format
                            nil
                            "insert into result values ~
-                            ~d ~d ~d ~d ~d ~d ~d ~d ~d ~d ~s ~s ~s"
+                            ~d ~d ~d ~d ~d ~d ~d ~d ~d ~d ~s ~s ~s ~s ~s"
                            parse-id result-id
                            time
                            r-ctasks r-ftasks r-etasks r-stasks
                            size r-aedges r-pedges
-                           derivation tree mrs)))
+                           derivation surface tree mrs grade)))
               (call-tsdb query language :cache cache))))))
 
 (defun write-edges (parse-id edges

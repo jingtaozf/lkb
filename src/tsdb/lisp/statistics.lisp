@@ -261,24 +261,36 @@
                    (find "run" relations :key #'first :test #'string=)))
          (parse (and relations
                      (find "parse" relations :key #'first :test #'string=)))
+         (result (and relations
+                      (find "result" relations :key #'first :test #'string=)))
          (edge (and relations
                      (find "edge" relations :key #'first :test #'string=)))
          (update (and relations
                       (find "update" relations :key #'first :test #'string=))))
     (cond 
-     ((null run) :historic)
+     ((null run)
+      -1)
      ((or (not (find "aedges" (rest parse) :key #'first :test #'string=))
-          (not (find "end" (rest run) :key #'first :test #'string=))) 0)
-     ((not (find "environment" (rest run) :key #'first :test #'string=)) 9902)
-     ((null update) 9903)
+          (not (find "end" (rest run) :key #'first :test #'string=)))
+      0)
+     ((not (find "environment" (rest run) :key #'first :test #'string=))
+      9902)
+     ((null update)
+      9903)
      ((and update 
            (find "e-epsilons" (rest edge) 
-                 :key #'first :test #'string=)) 200210)
+                 :key #'first :test #'string=))
+      200210)
      ((and update 
            (not (find "e-parents" (rest edge) 
-                      :key #'first :test #'string=))) 200305)
-     ((and update 
-           (find "e-parents" (rest edge) :key #'first :test #'string=)) 200306)
+                      :key #'first :test #'string=)))
+      200305)
+     ((and update
+           (find "e-parents" (rest edge) :key #'first :test #'string=)
+           (not (find "surface" (rest result) :key #'first :test #'string=)))
+      200306)
+     ((find "surface" (rest result) :key #'first :test #'string=)
+      200509)
      (t
       (error "profile-granularity(): invalid `~a'" data)))))
 

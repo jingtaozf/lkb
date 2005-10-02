@@ -225,7 +225,7 @@
               for result in (get-field :results transfer)
               for tid = (get-field :result-id result)
               for realization = 
-                (pvm-process transfer :generate :result-id tid :rankp t)
+                (pvm-process transfer :generate :result-id tid)
               do
                 (incf nrealizations (length (get-field :results realization)))
                 (case format
@@ -266,12 +266,12 @@
                                  :source input))
                     when (numberp bleu) do (setf best (max best bleu))
                     do
-                      (nconc result (acons :bleu bleu nil))
+                      (nconc result (pairlis '(:bleu :grade) (list bleu bleu)))
                       (case format
                         (:ascii
                          (format
                           stream
-                          "| |   |~a| [~@[~,1f~]] <~@[~,2f~]>~%"
+                          "| |   |~a| [~@[~,2f~]] <~@[~,2f~]>~%"
                           tree score bleu))
                         (:html
                          (format
@@ -280,7 +280,7 @@
                                <td class=\"flowLeft\"></td>~
                                <td class=\"flowLeft\"></td>~
                                <td class=\"flow\">    ~
-                                 |~a| [~@[~,1f~]] <~@[~,2f~]></td>~
+                                 |~a| [~@[~,2f~]] <~@[~,2f~]></td>~
                                <td class=\"flowRightBorder\"></td>~%"
                           tree score bleu)))
                       (force-output stream)
@@ -315,7 +315,7 @@
           (setf translations
             (sort
              translations
-             #'< :key #'(lambda (foo) (get-field :score foo))))
+             #'> :key #'(lambda (foo) (get-field :score foo))))
           (loop
               initially
                 (let ((n (length translations)))
@@ -348,7 +348,7 @@
                   (:ascii
                    (format
                     stream
-                    "|> |~@[~a~]| [~@[~,1f~]] <~@[~,2f~]> (~a:~a:~a).~%"
+                    "|> |~@[~a~]| [~@[~,2f~]] <~@[~,2f~]> (~a:~a:~a).~%"
                     (get-field :string translation) 
                     (get-field :score translation) 
                     (get-field :bleu translation)
@@ -360,7 +360,7 @@
                     stream
                     "<tr><td class=\"flowLeftBorder\"></td>~
                          <td class=\"flow\" colspan=3>~
-                           |> |~@[~a~]| [~@[~,1f~]] ~
+                           |> |~@[~a~]| [~@[~,2f~]] ~
                            <~@[~,2f~]> (~a:~a:~a).</td>~
                          <td class=\"flowRightBorder\"></td>~%"
                     (get-field :string translation) 
@@ -383,6 +383,9 @@
                           parse)))))
 
 (defun xmlify-run (&key (stream t) (prefix ""))
+  
+                 
+               
   (let* ((user (current-user))
          (date (current-time :long :pretty))
          (host (current-host))
@@ -392,21 +395,9 @@
          (itsdb (current-tsdb))
          (lkb (subseq lkb::*cvs-version* 7 (- (length lkb::*cvs-version*) 2)))
          (grammar (current-grammar))
-         (analysis (loop
-                       for client in *pvm-clients*
-                       for cpu = (client-cpu client)
-                       when (smember :parse (cpu-task cpu))
-                       return (cpu-grammar cpu)))
-         (transfer (loop
-                       for client in *pvm-clients*
-                       for cpu = (client-cpu client)
-                       when (smember :transfer (cpu-task cpu))
-                       return (cpu-grammar cpu)))
-         (realization (loop
-                          for client in *pvm-clients*
-                          for cpu = (client-cpu client)
-                          when (smember :generate (cpu-task cpu))
-                          return (cpu-grammar cpu))))
+         (analysis (remote-grammar :parse))
+         (transfer (remote-grammar :transfer))
+         (realization (remote-grammar :generate)))
     (format stream "<run>~%~%")
     (format
      stream
@@ -472,7 +463,7 @@
           do
             (format
              stream
-             "~a  <output score=\"~,1f\"~@[ bleu=\"~,4f\"~]>~a</output>~%"
+             "~a  <output score=\"~,2f\"~@[ bleu=\"~,4f\"~]>~a</output>~%"
              prefix score bleu string)))
 
     ;;
@@ -499,6 +490,7 @@
         for edges = (get-field :pedges item)
         for string = (when (eq type :realization) (get-field :tree result))
         for score = (get-field :score result)
+        for bleu = (get-field :bleu result)
         for transfer = (pop transfers)
         for realization = (pop realizations)
         for mrs = nil
@@ -510,14 +502,14 @@
         do 
           (format
            stream
-           "~a  <result id=\"~a\"~@[ edges=\"~a\"~]~@[ score=\"~,1f\"~]>~%"
+           "~a  <result id=\"~a\"~@[ edges=\"~a\"~]~@[ score=\"~,4f\"~]>~%"
            prefix id edges score)
         when string
         do
           (format
            stream
-           "~a    <output>~a</output>~%"
-           prefix (normalize-string string) prefix)
+           "~a    <output~@[ bleu=\"~,4f\"~]>~a</output>~%"
+           prefix bleu (normalize-string string) prefix)
         when mrs
         do
           (let ((output (with-output-to-string (stream)
@@ -542,7 +534,7 @@
 (defun translate-item (string
                        &key id exhaustive nanalyses trace
                             edges derivations semantix-hook trees-hook
-                            burst (nresults 0))
+                            burst (nresults 0) targets)
   (declare (ignore exhaustive derivations id edges
                    semantix-hook trees-hook nresults))
   
@@ -568,10 +560,13 @@
                  (error "no ~(~a~) PVM client" task)))
          
          (let* ((item (translate-string
-                       string :nhypotheses nanalyses :stream log))
+                       string :nhypotheses nanalyses :stream log
+                       :targets targets))
                 (tgc 0) (tcpu 0) (treal 0) (conses 0) (symbols 0) (others 0)
                 (total 0) (readings 0) outputs (errors "") 
-                (nparses 0) (ntransfers 0) (nrealizations 0))
+                (nparses 0) (ntransfers 0) (nrealizations 0)
+                (nfragments (get-field :fragments item))
+                (ntranslations (length (get-field :translations item))))
            
            (setf stop (get-internal-run-time))
                 
@@ -630,6 +625,7 @@
                              (incf nrealizations)
                              (push (acons :result-id readings result) outputs)
                              (incf readings))))
+           
            `((:others . ,others) (:symbols . ,symbols) (:conses . ,conses)
              (:treal . ,treal) (:tcpu . ,tcpu) (:tgc . ,tgc)
              (:readings . ,readings) (:total . ,total) (:error . ,errors)
@@ -637,10 +633,12 @@
                            nil
                            "(:nanalyses . ~a) (:ntransfers . ~a) ~
                             (:nrealizations . ~a) (:ntranslations . ~a)"
-                           nparses ntransfers nrealizations
-                           (length (get-field :translations item))))
+                           nparses ntransfers nrealizations ntranslations))
              (:trace . ,(get-output-stream-string log))
-             (:results . ,outputs))))
+             (:results . ,outputs)
+             (:fragments . ,nfragments)
+             (:fan . ,(list nparses ntransfers nrealizations ntranslations))
+             (:bleu . ,(get-field :bleu item)))))
            
       (unless stop (setf stop (get-internal-run-time)))
 

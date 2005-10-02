@@ -388,7 +388,9 @@
        (:file "lexindex")               ; LKB specific - indexing
                                         ; entries etc on semantics
        (:file "lexlookup")              ; LKB specific - retrieving
-       (:file "genpredict")))           ; LKB specific - null semantics
+       (:file "genpredict")             ; LKB specific - null semantics
+       #+:logon
+       (:file "serialize")))            ; simple generator index cache
 
      (:module "generator"
       :source-pathname "mrs"
@@ -503,10 +505,7 @@
      ;; and now for the add-on MT facilities, assuming both the LKB and MRS
      ;; code is available (the original `mt.system').
      ;;
-     
      (:module "mt"
-      #+:logon :proclamations 
-      #+:logon (optimize (safety 3) (speed 0) (debug 3) (space 0))
       :source-pathname "mt"
       :binary-pathname "mt"
       :source-extension "lisp"
@@ -518,11 +517,11 @@
        (:file "patches")
        (:file "mrs")
        (:file "transfer")
+       (:file "comparison")
        (:file "translate")
        #+:clim
        (:file "clim")
        (:file "semi")
        (:file "fragments")
-       #+(and :preprocessor :multiprocessing (not :mswindows))
-	;; looks Linux specific and doesn't compile on Windows
+       #+(and :multiprocessing :linux)
        (:file "lm")))))

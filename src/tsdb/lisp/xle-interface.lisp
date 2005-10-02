@@ -22,7 +22,7 @@
   ;; return a string identifying the grammar that is currently in use, ideally
   ;; including relevant grammar-internal parameters of variation and a version.
   ;;
-  (or (tsdb::clients-grammar) "norgram (nov-04)"))
+  (or (tsdb::clients-grammar) "norgram (knut)"))
 
 (defun tsdb::initialize-run (&key interactive 
                             exhaustive nanalyses
@@ -74,7 +74,7 @@
                         edges derivations semantix-hook trees-hook
                         burst (nresults 0))
   (declare (ignore id exhaustive nanalyses edges derivations 
-		   semantix-hook trees-hook burst)
+                   semantix-hook trees-hook burst)
            (special tsdb::*process-suppress-duplicates*))
   ;;
   ;; send string through processor (i.e. parser) and return processing results.
@@ -100,6 +100,7 @@
   (multiple-value-bind (return condition)
       (#-:debug ignore-errors #+:debug progn
        (let ((filterp (member :mrs tsdb::*process-suppress-duplicates*))
+             (semi (when (mt::semi-p mt::%semi%) mt::%semi%))
              tgc tcpu utcpu treal graph solutions)
          (tsdb::time-a-funcall
           #'(lambda () (setf graph (parse string trace)))
@@ -108,9 +109,9 @@
               (setf tgc (+ tgcu tgcs) tcpu (+ tu ts) treal tr)))
          (let* ((*print-pretty* nil) (*print-level* nil) (*print-length* nil)
                 (readings 
-		 (tsdb::time-a-funcall
-		  #'(lambda () 
-		      (loop
+                 (tsdb::time-a-funcall
+                  #'(lambda () 
+                      (loop
                           ;;
                           ;; _fix_me_
                           ;; find a better way of not having to keep all the
@@ -118,23 +119,23 @@
                           ;; solutions here and then rebuild them in the loop
                           ;; below extracting results.         (29-oct-03; oe)
                           ;;
-			  for solution = (solution 
+                          for solution = (solution 
                                           (get-next-solution graph nil))
-			  while (not (zerop solution)) 
-			  do (push solution solutions)
-			  count 1))
-		  #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
-		      (declare (ignore scons ssym sother ignore))
-		      (setf utcpu (- (+ tu ts) (+ tgcu tgcs)))
-		      (incf treal tr))))
-                (fragments 0))
+                          while (not (zerop solution)) 
+                          do (push solution solutions)
+                          count 1))
+                  #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
+                      (declare (ignore scons ssym sother ignore))
+                      (setf utcpu (- (+ tu ts) (+ tgcu tgcs)))
+                      (incf treal tr))))
+                (nfragments 0)
+                mrss unknown)
            (pairlis '(:treal :total :tcpu :tgc :readings
-                      :results :fragments :comment)
+                      :results :nresults :fragments :comment :error)
                     (list treal (+ tcpu utcpu) tcpu tgc
                           readings
                           (loop
-                              with mrss
-                              with nresults 
+                              with n 
                               = (if (fragment-analysis-p graph)
                                   tsdb::*tsdb-maximal-number-of-fragments*
                                   (if (<= nresults 0)
@@ -142,10 +143,12 @@
                                     (min readings nresults)))
                               for i from 0
                               for solution in (nreverse solutions)
-			      for derivation =
-				(extract-c-structure graph solution)
+                              for derivation =
+                                (extract-c-structure graph solution)
                               for mrs =
-                                (let ((mrs (extract-mrs graph solution)))
+                                (let ((mrs (extract-mrs graph solution))
+                                      (mt::*mrs-comparison-ignore-roles*
+                                       (list (mrs::vsym "LNK"))))
                                   (when (mrs::psoa-p mrs)
                                     (unless (and filterp
                                                  (member 
@@ -153,24 +156,42 @@
                                                   :test 
                                                   #'tsdb::safe-mrs-equal-p))
                                       (when (mrs::fragmentp mrs)
-                                        (incf fragments))
-                                      (push mrs mrss)
-                                      (with-output-to-string (stream)
-                                        (mrs::output-mrs1 
-                                         mrs 'mrs::simple stream)))))
-                              when mrs do (decf nresults)
+                                        (incf nfragments))
+                                      (let ((errors
+                                             (when semi
+                                               (mt::test-semi-compliance
+                                                mrs semi
+                                                :tags '("q" "n" "a")))))
+                                        (cond
+                                         ((null errors)
+                                          (push mrs mrss)
+                                          (with-output-to-string (stream)
+                                            (mrs::output-mrs1 
+                                             mrs 'mrs::simple stream)))
+                                         (t
+                                          (loop
+                                              for error in errors
+                                              do (pushnew
+                                                  (mrs::rel-pred error)
+                                                  unknown
+                                                  :test #'equal))))))))
+                              when mrs do (decf n)
                               and collect
                                 (pairlis '(:result-id :derivation :mrs) 
-					 (list i derivation mrs))
-                              while (and solution (> nresults 0))
-			      finally
+                                         (list i derivation mrs))
+                              while (and solution (> n 0))
+                              finally
                                 #+:debug
                                 (setf %mrss mrss)
-				(unless (zerop (solution graph))
-				  (free-graph-solution 
-				   (graph-address graph))))
-                          fragments
-                          (format nil "(:nfragments . ~d)" fragments))))))
+                                (unless (zerop (solution graph))
+                                  (free-graph-solution 
+                                   (graph-address graph))))
+                          (length mrss) nfragments
+                          (format nil "(:nfragments . ~d)" nfragments)
+                          (format
+                           nil
+                           "~@[unknown SEM-I predicates: ~{|~(~a~)|~^, ~}~]"
+                           unknown))))))
 
     (append
      (when condition

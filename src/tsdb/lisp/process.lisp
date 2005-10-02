@@ -39,6 +39,8 @@
 
 (defparameter *process-exhaustive-inputs-p* nil)
 
+(defparameter *process-client-retries* 0)
+
 (defparameter *process-scope-generator-input-p* nil)
 
 (defparameter *process-pretty-print-trace-p* t)
@@ -48,6 +50,12 @@
 (defparameter *process-sort-profile-p* t)
 
 (defparameter *process-fan-out-log* nil)
+
+(defparameter *process-fan-out-xml* nil)
+
+(defparameter %process-run-id% -1)
+
+(defparameter %accumulated-mt-statistics% nil)
 
 (defparameter %graft-aligned-generation-hack% nil)
 
@@ -63,12 +71,13 @@
                              (type *process-default-task*) gold
                              overwrite interactive 
                              meter podium interrupt
-                             (fan *process-fan-out-log*))
+                             (fan *process-fan-out-log*)
+                             (xml *process-fan-out-xml*))
   (declare (ignore podium))
   
   (initialize-tsdb)
 
-  (when (< (profile-granularity data) 200306)
+  (when (< (profile-granularity data) 200509)
     (format
      stream
      "~%tsdb-do-process(): out-of-date profile `~a'.~%"
@@ -101,7 +110,16 @@
                      (make-pathname 
                       :name (directory2file data)
                       :type "fan")))))
-         (log (and fan (create-output-stream fan)))
+         (fstream (and fan (create-output-stream fan)))
+         (xml (or xml
+                  #+:null
+                  (when (eq type :translate)
+                    (merge-pathnames
+                     (user-homedir-pathname)
+                     (make-pathname 
+                      :name (directory2file data)
+                      :type "xml")))))
+         (xstream (and xml (create-output-stream xml))) 
          (*tsdb-gc-message-p* nil)
          (condition (if (equal condition "") nil condition))
          (imessage (format nil "preparing `~a' test run ..." data))
@@ -109,8 +127,15 @@
          (imeter (when meter (madjust * meter 0.02)))
          (pmeter (when meter
                    (madjust + (madjust * meter 0.98) (mduration imeter))))
-         items abort %accumlated-rule-statistics%)
-    (declare (special %accumlated-rule-statistics%))
+         items abort %accumulated-rule-statistics%)
+    (declare (special %accumulated-rule-statistics%))
+
+    (when (eq type :translate)
+      (setf %accumulated-mt-statistics%
+        (pairlis '(:total
+                   :pcount :pfcount :tcount :tfcount :rcount :rfcount
+                   :tbleu)
+                 (list 0 0 0 0 0 0 0 0))))
 
     (when meter
       (meter :value (get-field :start imeter))
@@ -125,18 +150,19 @@
                       (create-cache data 
                                     :schema schema :verbose verbose 
                                     :protocol cache)))
-             (run-id 
+             (%process-run-id%
               (or run-id 
                   (if interactive
                     0
                     (+ (largest-run-id data :verbose verbose) 1))))
              (parse-id 
               (unless interactive
-                (+ (largest-parse-id run-id data :verbose verbose) 1)))
+                (+ (largest-parse-id
+                    %process-run-id% data :verbose verbose) 1)))
              (clients (when (find-symbol "*PVM-CLIENTS*" :tsdb)
                         (symbol-value (find-symbol "*PVM-CLIENTS*" :tsdb))))
              (runs (create-runs 
-                    data run-id 
+                    data
                     :type type
                     :comment comment :gc gc :clients clients
                     :interactive interactive :verbose verbose
@@ -195,14 +221,16 @@
         (when (and burst runs)
           (install-gc-strategy nil :tenure nil :burst t :verbose verbose))
         
-        (when log
+        (when fstream
           (format
-           log
+           fstream
            ";;;~%;;; `~a'~%;;; fan-out batch (~a@~a; ~a).~%;;;~%~%"
            data (current-user) (current-host) (current-time :long :pretty)))
         
+        (when xstream (xmlify-run :stream xstream))
+        
         (unwind-protect
-            (#-:debug ignore-errors #+:debug progn
+            (progn;#-:debug ignore-errors #+:debug progn
              (catch :break
                (loop
                    with result = nil
@@ -257,7 +285,8 @@
                               item 
                               :stream stream :result result
                               :interactive interactive)
-                             (print-result result :stream stream :log log))
+                             (print-result result :stream stream :log fstream))
+                           (when xstream (xmlify-item result :stream xstream))
                            (unless interactive
                              (store-result data result :cache cache))
                            (when ready (incf (get-field :items ready)))
@@ -285,6 +314,7 @@
                           ((null ready)
                            (throw :break nil))
                           (ready
+                           (pushnew ready runs)
                            (setf run ready)))))
 
                      (setf item 
@@ -316,7 +346,8 @@
                          (setf result 
                            (enrich-result result item :verbose verbose))
                          (when verbose
-                           (print-result result :stream stream :log log))
+                           (print-result result :stream stream :log fstream))
+                         (when xstream (xmlify-item result :stream xstream))
                          (unless interactive
                            (store-result data result :cache cache))
                          (incf (get-field :items run))
@@ -335,8 +366,10 @@
           (unless interactive (format stream "~&"))
           (when (and (stringp output) (open-stream-p stream))
             (close stream))
-          (when (and (stringp fan) (open-stream-p log))
-            (close log))
+          (when (and (stringp fan) (open-stream-p fstream))
+            (close fstream))
+          (when (and (stringp xml) (open-stream-p xstream))
+            (close xstream))
           (when meter
             (if abort
               (status :text (format nil "~a interrupt" pmessage) :duration 5)
@@ -397,17 +430,17 @@
             (symbol (symbol-function *tsdb-result-hook*))
             (function *tsdb-result-hook*)))
          (i-id (largest-i-id data :verbose verbose))
-         (run-id (+ (largest-run-id data :verbose verbose) 1))
-         (parse-id (largest-parse-id run-id data :verbose verbose))
+         (%process-run-id% (+ (largest-run-id data :verbose verbose) 1))
+         (parse-id (largest-parse-id %process-run-id% data :verbose verbose))
          (run (pairlis (list :data :run-id :comment
                              :user :host :os :start)
-                       (list data run-id comment
+                       (list data %process-run-id% comment
                              nil nil nil (current-time :long :tsdb))))
          (run (enrich-run run))
          (mode "passive mode (<Control-G> to abort)")
          (nitems 0)
-         (%accumlated-rule-statistics% nil))
-    (declare (special %accumlated-rule-statistics%))
+         (%accumulated-rule-statistics% nil))
+    (declare (special %accumulated-rule-statistics%))
     
     (when status
       (status 
@@ -560,18 +593,18 @@
         (when cache (flush-cache cache :verbose verbose))
         (format stream "~&~%")))))
 
-(defun create-runs (data run-id &key comment type
-                                     gc (tenure *tsdb-tenure-p*)
-                                     clients interactive verbose
-                                     (protocol *pvm-protocol*)
-                                     stream interrupt)
+(defun create-runs (data &key comment type
+                              gc (tenure *tsdb-tenure-p*)
+                              clients interactive verbose
+                              (protocol *pvm-protocol*)
+                              stream interrupt)
   
   (let ((clients (unless interactive
                    (loop
                        for client in clients
                        for cpu = (client-cpu client)
                        when (and cpu (client-idle-p client)
-                                 (or (null (cpu-task cpu))
+                                 (or (null type) (null (cpu-task cpu))
                                      (eq (cpu-task cpu) type)
                                      (smember type (cpu-task cpu))))
                        collect client))))
@@ -582,23 +615,24 @@
             for tid = (client-tid client)
             for cpu = (client-cpu client)
             for custom = (and (cpu-p cpu) (cpu-create cpu))
-            for i = run-id then (+ i 1)
             for status = (if (eq (client-protocol client) :lisp)
                            (revaluate 
                             tid 
                             `(create-run 
-                              ,data ,i 
+                              ,data ,%process-run-id%
                               :comment ,comment :gc ,gc :tenure ,tenure
                               :interactive nil :verbose ,verbose 
                               :protocol ,protocol :custom ,custom)
                             nil
                             :key :create-run)
                            (create_run 
-                            tid data i comment interactive protocol custom))
+                            tid data %process-run-id%
+                            comment interactive protocol custom))
             when (eq status :ok)
             do
               (setf (client-status client) :create)
               (push (enrich-run (list (cons :client client))) runs)
+              (incf %process-run-id%)
             else 
             do
               (setf (client-status client) :error)
@@ -607,7 +641,7 @@
                 (format
                  t
                  "~&create-runs(): ~
-                  transmission error; disabling <~d>.~%"
+                  transmission error; disabling <~x>.~%"
                  tid)
                 (force-output)))
         (loop
@@ -638,8 +672,8 @@
                     (when (and (client-p client) (cpu-p (client-cpu client)))
                       (format
                        *tsdb-io*
-                       "~&create-runs(): client exit on `~a' <~a>.~%"
-                       (cpu-host (client-cpu client)) remote)
+                       "~&create-runs(): client exit on `~a' <~x>.~%"
+                       (client-host client) remote)
                       (force-output *tsdb-io*))))
                  
                  ((null client)
@@ -647,7 +681,7 @@
                     (format
                      t
                      "~&create-runs(): ~
-                      ignoring message from alien <~d>.~%"
+                      ignoring message from alien <~x>.~%"
                      remote)
                     (force-output)))
 
@@ -666,7 +700,7 @@
                       (format
                        t
                        "~&create-runs(): ~
-                        ignoring unexpected message from <~d>.~%"
+                        ignoring unexpected message from <~x>.~%"
                        remote)
                       (force-output))))
 
@@ -675,7 +709,7 @@
                     (format
                      t
                      "~&create-runs(): ~
-                      ignoring dubious message from <~d>.~%"
+                      ignoring dubious message from <~x>.~%"
                      remote)
                     (force-output)))))
             else when (interrupt-p interrupt)
@@ -687,10 +721,12 @@
               (force-output stream)
               (return-from create-runs runs)))
       
-      (list (enrich-run (create-run data run-id 
-                                  :comment comment :gc gc 
-                                  :interactive interactive 
-                                  :verbose verbose :protocol protocol))))))
+      (let ((run-id %process-run-id%))
+        (incf %process-run-id%)
+        (list (enrich-run (create-run
+                           data run-id
+                           :comment comment :gc gc :interactive interactive 
+                           :verbose verbose :protocol protocol)))))))
 
 (defun create-run (data run-id 
                    &key comment 
@@ -738,7 +774,6 @@
            (i-id (get-field :i-id item)) 
            (i-input (get-field :i-input item))
            (i-wf (get-field :i-wf item))
-           (o-ignore (get-field :o-ignore item))
            (parse-id (if (>= parse-id i-id) parse-id i-id))
            (client (get-field :client run))
            (cpu (and client (client-cpu client)))
@@ -762,34 +797,38 @@
 			(not (consp (cpu-tagger cpu))))
 		   (call-hook (cpu-tagger cpu) i-input))
 		  (*tsdb-tagging-hook*
-		   (call-hook *tsdb-tagging-hook* i-input)))))
+		   (call-hook *tsdb-tagging-hook* i-input))))
+           (strikes (get-field+ :strikes item 0)))
 
-      (cond 
-       ((and o-ignore (tsdb-ignore-p o-ignore))
-        (when verbose
-          (format
-           stream
-           "~&(~a) `~:[*~;~]~a' --- skip (`o-ignore' is `~a').~%"
-           i-id (= i-wf 1) i-input o-ignore)
-          (force-output stream))
-        nil)
-       (t
-        (let* ((o-gc (get-field :o-gc item))
-               (o-gc (cond ((eql o-gc 0) nil)
-                           ((eql o-gc 1) :local)
-                           ((eql o-gc 2) :global)))
-               (gc (or (get-field :gc item) o-gc (get-field :gc run)))
-               (o-edges (get-field :o-edges item))
-               (edges (or (get-field :edges item)
-                          (if (and o-edges (not (= o-edges -1)))
-                            (floor (* *tsdb-edge-factor* o-edges))
-                            *tsdb-maximal-number-of-edges*))))
-          (append 
-           (pairlis '(:run-id :parse-id :type
-                      :gc :edges :o-input :p-input :tags) 
-                    (list run-id parse-id type
-                          gc edges o-input p-input tags)) 
-           item)))))))
+      (loop
+          for output in (get-field :output item)
+          for ignore = (get-field :o-ignore output)
+          when (and ignore (tsdb-ignore-p ignore))
+          do
+            (when verbose
+              (format
+               stream
+               "~&(~a) `~:[*~;~]~a' --- skip (`o-ignore' is `~a').~%"
+               i-id (= i-wf 1) i-input ignore)
+              (force-output stream))
+            (return-from enrich-item))
+
+      (let* ((o-gc (get-field :o-gc item))
+             (o-gc (cond ((eql o-gc 0) nil)
+                         ((eql o-gc 1) :local)
+                         ((eql o-gc 2) :global)))
+             (gc (or (get-field :gc item) o-gc (get-field :gc run)))
+             (o-edges (get-field :o-edges item))
+             (edges (or (get-field :edges item)
+                        (if (and o-edges (not (= o-edges -1)))
+                          (floor (* *tsdb-edge-factor* o-edges))
+                          *tsdb-maximal-number-of-edges*))))
+        (append 
+         (pairlis '(:run-id :parse-id :type :strikes
+                    :gc :edges :o-input :p-input :tags) 
+                  (list run-id parse-id type strikes
+                        gc edges o-input p-input tags)) 
+         item)))))
 
 (defun print-item (item &key (stream *tsdb-io*) result interactive)
   (declare (ignore interactive))
@@ -811,7 +850,9 @@
          (host (if (and host (stringp host)) 
                  (subseq host 0 (position #\. host))
                  host))
-         (load (get-field :a-load result)))
+         (load (get-field :a-load result))
+         (strikes (let ((foo (get-field :strikes item)))
+                    (and (numberp foo) (> foo 0) foo))))
 
     (if (or host load)
       (format stream "~&[~@[~a~]~@[ ~,1f~]] " host load)
@@ -824,6 +865,8 @@
      (eq gc :local)  (eq gc :global) edges)
     (when inputs
       (format stream " {~a}" (length inputs)))
+    (when strikes
+      (format stream " <~a>" strikes))
     (force-output stream)))
 
 (defun process-item (item &key trees-hook semantix-hook 
@@ -840,8 +883,25 @@
                                result-id
                                interactive burst)
 
+  (let ((strikes (get-field :strikes item)))
+    (when (and (numberp strikes) (numberp *process-client-retries*)
+               (> strikes *process-client-retries*))
+      (when (and verbose
+                 client (client-p client)
+                 (smember type '(:parse :generate :translate)))
+        (print-item item :stream stream :interactive interactive))
+      (return-from process-item
+        (pairlis '(:readings :error)
+                 (list -1
+                       (format
+                        nil
+                        "maximum number of strikes exhausted (~a)"
+                        strikes))))))
+        
   (cond
-   ((and client (smember type '(:parse :translate)) (client-p client))
+   ((and client
+         (smember type '(:parse :generate :translate))
+         (client-p client))
     (let* ((nanalyses (if exhaustive 
                         0 
                         (if (and (integerp nanalyses) (>= nanalyses 1))
@@ -855,6 +915,33 @@
                  (when (excl::external-format-p new)
                    (setf (excl:locale-external-format excl:*locale*) new)
                    old)))
+           (reader (find-attribute-reader :mrs))
+           (mrs (when (smember type '(:transfer :generate))
+                  (let* ((id
+                          (if (numberp result-id)
+                            result-id
+                            (unless *process-exhaustive-inputs-p*
+                              (loop
+                                  for rank in (get-field :ranks item)
+                                  when (eql (get-field :rank rank) 1)
+                                  return (get-field :result-id rank)))))
+                         (result
+                          (when id
+                            (loop
+                                for result in (get-field :results item)
+                                when (eql (get-field :result-id result) id)
+                                return result)))
+                         (mrs (get-field :mrs result)))
+                    (if (and reader (stringp mrs))
+                      (funcall reader mrs)
+                      mrs))))
+           (mrs (when mrs
+                  (typecase mrs
+                    (string mrs)
+                    #+:lkb
+                    (mrs::psoa
+                     (with-output-to-string (stream)
+                       (mrs::output-mrs1 mrs 'mrs::simple stream))))))
            (status (if (eq (client-protocol client) :lisp)
                      (revaluate 
                       tid 
@@ -870,7 +957,8 @@
                       :key :process-item
                       :verbose nil)
                      (process_item 
-                      tid item nanalyses nresults interactive))))
+                      tid (nconc item (acons :mrs mrs nil))
+                      nanalyses nresults interactive))))
       #+(and :null :allegro-version>= (version>= 6 0))
       (when ef (setf (excl:locale-external-format excl:*locale*) ef))
       (case status
@@ -914,6 +1002,13 @@
                     (if (and reader (stringp mrs))
                       (funcall reader mrs)
                       mrs))))
+           (targets (when (smember type '(:translate))
+                      (loop
+                          for output in (get-field :output item)
+                          for surface = (get-field :o-surface output)
+                          when (and (stringp surface)
+                                    (not (string= surface "")))
+                          collect surface)))
            (gc (get-field :gc item))
            (edges (get-field :edges item))
            result i-load)
@@ -926,6 +1021,12 @@
       (setf result 
         (if (and (smember type '(:transfer :generate))
                  (null mrs))
+          ;;
+          ;; _fix_me_
+          ;; there appears to be some duplication of the MRS determination code
+          ;; a little up, and of some of the processing calls further down; try
+          ;; to clean this up one day.                          (18-sep-05; oe)
+          ;;
           (loop
               for inputs in (get-field :results item)
               for i from 1 to (if (numberp *process-exhaustive-inputs-p*)
@@ -1006,7 +1107,8 @@
                              :trees-hook trees-hook
                              :semantix-hook semantix-hook
                              :nresults nresults
-                             :burst burst)))))
+                             :burst burst
+                             :targets targets)))))
       ;;
       ;; this is a bit archaic: when between one or three global gc()s occured
       ;; during processing, redo it (unless we were told not to).  this goes
@@ -1069,7 +1171,8 @@
                              :trees-hook trees-hook
                              :semantix-hook semantix-hook
                              :nresults nresults
-                             :burst burst)))))
+                             :burst burst
+                             :targets targets)))))
 
       #+:allegro
       (when (and (= (get-field+ :readings result -1) -1)
@@ -1153,13 +1256,14 @@
                (run (find remote runs :key #'run-tid))
                (client (or client (get-field :client run)))
                (item (and client (client-status client)))
-               (host (and (client-p client) (cpu-p (client-cpu client))
-                          (cpu-host (client-cpu client)))))
+               (host (and (client-p client) (client-host client))))
 
         (cond
          ((eql tag %pvm_task_fail%)
           (when (consp item)
             (let* ((fail (pairlis '(:host :corpse) (list host remote))))
+              (when (get-field :strikes item)
+                (incf (get-field :strikes item)))
               (push item pending)
               (when verbose
                 (print-item item :stream stream :result fail)
@@ -1167,13 +1271,24 @@
           (when run
             (nconc run `((:end . ,(current-time :long :tsdb)))))
           (when (client-p client)
-            (setf (client-status client) :exit)))
+            (setf (client-status client) :exit)
+            (when (and *process-client-retries* client)
+              (let* ((cpu (client-cpu client))
+                     (clients (initialize-cpus
+                               :cpus (list cpu) :reset nil :block t)))
+                (when run
+                  (nconc
+                   runs
+                   (create-runs
+                    (get-field :data run)
+                    :comment (get-field :comment run) :gc (get-field :gc run)
+                    :protocol (get-field :protocol run) :clients clients)))))))
                  
          ((null client)
           (when verbose
             (format
              stream
-             "~&process-queue(): ignoring message from alien <~d>.~%"
+             "~&process-queue(): ignoring message from alien <~x>.~%"
              remote)
             (force-output stream))
           (push message *pvm-pending-events*))
@@ -1204,14 +1319,14 @@
                  (format
                   stream
                   "~&process-queue(): ~
-                   ignoring unexpected message from <~d>.~%"
+                   ignoring unexpected message from <~x>.~%"
                   remote)
                  (force-output stream))))
             (when verbose
               (format
                stream
                "~&process-queue(): ~
-                ignoring dubious message from <~d>.~%"
+                ignoring dubious message from <~x>.~%"
                remote message)
               (force-output stream))))
 
@@ -1220,7 +1335,7 @@
             (format
              stream
              "~&process-queue(): ~
-             ignoring dubious message from <~d>.~%"
+             ignoring dubious message from <~x>.~%"
              remote message)))))
       else when (interrupt-p interrupt)
       do
@@ -1266,7 +1381,7 @@
               (format
                stream
                "~&receive-item(): ~
-                ignoring unexpected message from <~d>.~%"
+                ignoring unexpected message from <~x>.~%"
                remote)
               (force-output stream)))))
       when (interrupt-p interrupt) do (return (acons :interrupt t nil))))
@@ -1308,17 +1423,21 @@
         for result-id = (get-field :result-id result)
         for score = (get-field :score result))
                     
-    (if (and *tsdb-result-hook* (integerp readings) (> readings 0))
+    (when (and *tsdb-result-hook* (integerp readings) (> readings 0))
       (multiple-value-bind (wealth condition)
           (ignore-errors (funcall *tsdb-result-hook* result))
-        (or wealth (acons :error (format nil "~a" condition) result)))
-      result)))
+        (setf result 
+          (or wealth (acons :error (format nil "~a" condition) result)))))
+    (when (get-field :fan result)
+      (accumulate-mt-statistics result))
+
+    result))
 
 (defun print-result (result &key (stream *tsdb-io*) format index log)
 
   (declare (ignore format))
   (let* ((readings (get-field :readings result))
-         (unique (get-field :unique result))
+         (unique (or (get-field :unique result) (get-field :nresults result)))
          (words (get-field :words result))
          (tcpu (/ (get-field+ :tcpu result 0) 1000))
          (tgc (/ (get-field+ :tgc result 0) 1000))
@@ -1334,6 +1453,7 @@
          (timeup (get-field :timeup result))
          (unifications (get-field+ :unifications result 0))
          (copies (get-field+ :copies result 0))
+         (fragments (get-field :fragments result))
          (gc (get-field :gc result))
          (gcs (get-field :gcs result))
          (error (get-field :error result))
@@ -1350,7 +1470,7 @@
         <~@[~d~]:~@[~d~]>~
         ~:[ {~d:~d}~;~2*~] ~
         (~a)~
-        ~:[~*~*~; [~:[~;=~]~d]~]~@[</a>~].~%" 
+        ~:[~*~*~; [~:[~;=~]~d]~]~@[<`/a>~].~%" 
        timeup index
        tcpu (>= tgc 0.1) tgc total
        words edges 
@@ -1359,7 +1479,9 @@
        unifications copies 
        (pprint-memory-usage result) 
        gcs gc gcs index))
-     ((or (and (null readings) error) (eql readings -1))
+     ((or (and error (null readings))
+          (and error (numberp unique) (zerop unique))
+          (eql readings -1))
       (format 
        stream 
        " --- ~@[<a href=\"/view?item=~a\" target=\"_blank\" ~
@@ -1373,13 +1495,14 @@
        " ---~:[~; time up:~] ~
         ~@[<a href=\"/view?item=~a\" target=\"_blank\" ~
               onclick=\"return __pageInitializedP__\">~]~
-        ~:[~*~a~;~a [~a]~] ~
+        ~:[~;^~]~:[~*~a~;~a [~a]~] ~
         (~,2f~:[~*~;:~,2f~]|~,2f:~,2f s) ~
         <~@[~d~]:~@[~d~]>~
         ~:[ {~d:~d}~;~2*~] ~
         (~a)~
         ~:[~*~*~; [~:[~;=~]~d]~]~@[</a>~].~%" 
        timeup index
+       (and (integerp fragments) (> fragments 0))
        (and unique (not (eql unique readings))) unique readings 
        tcpu (>= tgc 0.1) tgc first total 
        words edges 
@@ -1391,7 +1514,7 @@
      (corpse
       (format
        stream
-       " --- client exit <~d>.~%"
+       " --- client exit <~x>.~%"
        corpse))
      ((null readings)
       (format stream ".~%"))
@@ -1401,7 +1524,30 @@
     
     (when log
       (let ((trace (get-field :trace result))) 
-        (when trace (format log "~a~%" trace)))
+        (when trace (format log "~a" trace))
+        (when %accumulated-mt-statistics%
+          (let ((pcount (get-field :pcount %accumulated-mt-statistics%))
+                (pfcount (get-field :pfcount %accumulated-mt-statistics%))
+                (tcount (get-field :tcount %accumulated-mt-statistics%))
+                (tfcount (get-field :tfcount %accumulated-mt-statistics%))
+                (rcount (get-field :rcount %accumulated-mt-statistics%))
+                (rfcount (get-field :rfcount %accumulated-mt-statistics%))
+                (total (get-field :total %accumulated-mt-statistics%))
+                (tbleu (get-field :tbleu %accumulated-mt-statistics%)))
+            (format
+             log
+             "|= ~a:~a of ~a {~,1f+~,1f}; ~
+              ~a:~a of ~a:~a {~,1f ~,1f}; ~
+              ~a:~a of ~a:~a {~,1f ~,1f} @ ~a of ~a {~,1f} <~,2f ~,2f>.~%"
+             pcount pfcount total
+             (per-cent pcount total) (per-cent pfcount total)
+             tcount tfcount pcount pfcount
+             (per-cent tcount pcount) (per-cent tfcount pfcount)
+             rcount rfcount tcount tfcount
+             (per-cent rcount tcount) (per-cent rfcount tfcount)
+             (+ rcount rfcount) total (per-cent (+ rcount rfcount) total)
+             (divide tbleu total) (divide tbleu (+ rcount rfcount)))))
+        (format log "~%"))
       (force-output log))))
 
 (defun store-result (data result &key cache)
@@ -1442,7 +1588,7 @@
     (room) (excl:gc) (room)))
 
 (defun complete-runs (data runs &key cache interactive stream interrupt)
-  (declare (special %accumlated-rule-statistics%))
+  (declare (special %accumulated-rule-statistics%))
   (setf %graft-aligned-generation-hack% nil)
   (loop
       for run in runs
@@ -1458,8 +1604,8 @@
               completion)
         (unless interactive 
           (write-run (append completion run) data :cache cache)))
-  (when (and (null interactive) %accumlated-rule-statistics%)
-    (write-rules -1 %accumlated-rule-statistics% data :cache cache)))
+  (when (and (null interactive) %accumulated-rule-statistics%)
+    (write-rules -1 %accumulated-rule-statistics% data :cache cache)))
 
 (defun complete-run (run &key stream interrupt custom)
   (when (get-field :run-id run)
@@ -1552,7 +1698,14 @@
 
   (loop
       with *reconstruct-cache* = (make-hash-table :test #'eql)
-      for parse in (or (get-field :results result) result)
+      for parse in (or (get-field :results result)
+                       ;;
+                       ;; _fix_me_
+                       ;; not sure why this function appears to be overloaded
+                       ;; to either operate on a `complete' result or just the
+                       ;; :results value; consider dropping this branch.
+                       ;;                                      (31-aug-05; oe)
+                       (and (consp (first (first result))) result))
       for derivation = (get-field :derivation parse)
       for tree = (get-field :tree parse)
       for mrs = (get-field :mrs parse)
@@ -1651,8 +1804,8 @@
               when id maximize id))))))
 
 (defun accumulate-rules (statistics)
-  (declare (special %accumlated-rule-statistics%))
-  (if %accumlated-rule-statistics%
+  (declare (special %accumulated-rule-statistics%))
+  (if %accumulated-rule-statistics%
     (loop
         for rule in statistics
         for name = (get-field+ :rule rule "")
@@ -1662,7 +1815,7 @@
         for actives = (get-field :actives rule)
         for passives = (get-field :passives rule)
         for arule = (loop
-                        for arule in %accumlated-rule-statistics%
+                        for arule in %accumulated-rule-statistics%
                         for aname = (get-field+ :rule arule "")
                         thereis (when (equal name aname) arule))
         for afiltered = (get-field :filtered arule)
@@ -1681,4 +1834,34 @@
             (incf (get-field :actives arule) actives))
           (when (and passives apassives)
             (incf (get-field :passives arule) passives)))
-    (setf %accumlated-rule-statistics% statistics)))
+    (setf %accumulated-rule-statistics% statistics)))
+
+(defun accumulate-mt-statistics (result)
+  (when %accumulated-mt-statistics%
+    (incf (get-field :total %accumulated-mt-statistics%))
+    (let* ((fragmentp (let ((foo (get-field :fragments result)))
+                        (and (numberp foo) (> foo 0))))
+           (fan (get-field :fan result))
+           (nanalyses (first fan))
+           (ntransfers (second fan))
+           (nrealizations (third fan))
+           (bleu (get-field :bleu result)))
+      (when (numberp bleu)
+        (incf (get-field :tbleu %accumulated-mt-statistics%) bleu))
+      (when (and (numberp nanalyses) (numberp ntransfers)
+                 (numberp nrealizations))
+        (when (> nanalyses 0)
+          (incf
+           (get-field
+            (if fragmentp :pfcount :pcount)
+            %accumulated-mt-statistics%))
+          (when (> ntransfers 0)
+            (incf
+             (get-field
+              (if fragmentp :tfcount :tcount)
+              %accumulated-mt-statistics%))
+            (when (> nrealizations 0)
+              (incf
+               (get-field
+                (if fragmentp :rfcount :rcount)
+                %accumulated-mt-statistics%)))))))))

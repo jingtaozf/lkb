@@ -368,9 +368,11 @@
                            edges derivations semantix-hook trees-hook
                            burst (nresults 0))
   (declare (ignore exhaustive derivations string id trees-hook)
-           (special tsdb::*process-scope-generator-input-p*))
+           (special tsdb::*process-scope-generator-input-p*
+                    tsdb::*process-suppress-duplicates*))
 
   (let* ((*package* *lkb-package*)
+         (filterp (member :tree tsdb::*process-suppress-duplicates*))
          (*maximum-number-of-edges* (if (or (null edges) (zerop edges))
                                       *maximum-number-of-edges*
                                       edges))
@@ -405,6 +407,24 @@
                         conses (* scons 8) symbols (* ssym 24) 
                         others sother)))
 
+           ;;
+           ;; score all edges, including using the LM feature, and re-order the
+           ;; global *gen-record*; really, the generator should do this itself.
+           ;;
+           #+:logon
+           (when (tsdb::mem-p tsdb::%model%)
+             (let* ((lms (when mt::*lm-model*
+                           (mt::lm-score-strings strings)))
+                    (scores
+                     (loop
+                         for edge in *gen-record*
+                         collect (tsdb::mem-score-edge edge :lm (pop lms)))))
+               (loop
+                   for edge in *gen-record*
+                   for score in scores
+                   do (setf (edge-score edge) score)))
+             (setf *gen-record* (sort *gen-record* #'> :key #'edge-score)))
+           
            (let* ((*print-pretty* nil) (*print-level* nil) (*print-length* nil)
                   (output (get-output-stream-string stream))
                   (words (length %generator-lexical-items%))
@@ -443,7 +463,8 @@
                    (format 
                     nil 
                     "~a (:pool . ~d) (:garbage . ~d)" 
-                    comment position garbage)))
+                    comment position garbage))
+                  surfaces)
              `((:others . ,others) (:symbols . ,symbols) (:conses . ,conses)
                (:treal . ,treal) (:tcpu . ,tcpu) (:tgc . ,tgc)
                (:pedges . ,pedges) (:aedges . ,aedges)
@@ -458,11 +479,12 @@
                      with edges = *gen-record*
                      with *package* = *lkb-package*
                      with nresults = (if (<= nresults 0)
-                                       (length strings)
+                                       (length edges)
                                        nresults)
                      for i from 0
-                     for string in strings
-                     for edge = (pop edges)
+                     for edge in edges
+                     for surface = (edge-string edge)
+                     for score = (edge-score edge)
                      for derivation = (if edge
                                         (with-standard-io-syntax
                                           (let ((*package* *lkb-package*))
@@ -471,16 +493,17 @@
                                              :case :downcase)))
                                         "")
                      for size = (if edge (parse-tsdb-count-nodes edge) -1)
-                     for tree = #-:null (format nil "~{~a~^ ~}" string)
-                                #+:null (tsdb::call-hook trees-hook edge)
                      for mrs = (if edge
                                  (tsdb::call-hook semantix-hook edge)
                                  "")
-                     while (>= (decf nresults) 0) collect
-                       (pairlis '(:result-id :mrs :tree
-                                  :derivation :size)
-                                (list i mrs tree
-                                      derivation size))))))))
+                     while (>= (decf nresults) 0)
+                     unless (when filterp
+                              (member surface surfaces :test #'equal))
+                     collect (pairlis '(:result-id :mrs :tree :surface
+                                        :derivation :score :size)
+                                      (list i mrs surface surface
+                                            derivation score size))
+                     and do (push surface surfaces)))))))
 
       (unless stop (setf stop (get-internal-run-time)))
 
@@ -822,7 +845,8 @@
                 (setq n (parse-tsdb-count-nodes1 (dag-arc-value arc) n))))
           n))
       (invalidate-visit-marks)
-      (parse-tsdb-count-nodes1 (tdfs-indef (edge-dag edge)) 0)))
+      (when (edge-dag edge)
+        (parse-tsdb-count-nodes1 (tdfs-indef (edge-dag edge)) 0))))
 
 ;;;
 ;;; abstract from recent changes in LKB lexicon interface (28-jan-99  -  oe)

@@ -38,6 +38,12 @@
   (pushnew :itsdb *features*)
 
   ;;
+  ;; for LOGON use, at least, assume AllegroCache is available
+  ;;
+  #+:logon
+  (pushnew :acache *features*)
+  
+  ;;
   ;; the Alvey Tools package, unfortunately, comes without a unique feature to
   ;; identify it; invent one and hope for integration with future releases.
   ;;                                                      (22-nov-99  -  oe)
@@ -52,6 +58,8 @@
 				 '(:relative "tsdb"))
     :binary-pathname (dir-append (get-binaries-dir "tsdb")
 				 '(:relative "tsdb"))
+
+    #+:acache :initially-do #+:acache (require :acache)
 
     :finally-do
     #+(and :allegro (or :linux (and :sparc :svr4) :alpha) (not :slave))
@@ -112,7 +120,7 @@
        (:file "sltg-interface")
        #+:xle
        (:file "xle-interface")
-       #+(or :dummy (not (or :lkb :page :annlt :sltg :xle :dummy)))
+       #+(or :dummy (not (or :lkb :page :annlt :sltg :xle)))
        (:file "dummy-interface")
        (:file "globals")
        (:file "utilities")
@@ -156,7 +164,7 @@
        (:file "pcfg")
        #+:lkb
        (:file "maxent")
-       #+:lkb
+       #+:null
        (:file "tagger")))
      
      #+:dfki
@@ -197,8 +205,8 @@
        (:file "balloons" :source-extension ""))))
     
     :depends-on (#+(and :allegro (or :linux (and :sparc :svr4) :alpha)) "pvm"
+                 #+(and :allegro (or :linux (and :sparc :svr4) :alpha)) "bdb"
 		 #+(and :mrs (not :lkb)) "mrs"
 		 #+:lkb "lkb"
                  #-:lkb "ppcre"
 		 #+:page "page"))
-

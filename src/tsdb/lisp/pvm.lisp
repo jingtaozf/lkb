@@ -55,10 +55,10 @@
                              host
                              count
                              block
-                             (file (format 
-                                    nil 
-                                    "/tmp/pvm.debug.~a"
-                                    (current-user)))
+                             wait
+                             (file
+                              (format nil "/tmp/pvm.debug.~a" (current-user))
+                              filep)
                              (prefix "")
                              (stream *tsdb-io*))
 
@@ -88,7 +88,7 @@
          (sleep 2)
          (setf *pvm-master* (pvm_register file *pvm-debug-p*))
          nil))))
-  (when (and file (null reset))
+  (when (and filep (null reset))
     (format
      stream
      "~&~ainitialize-cpus(): ignoring (protocol) `file' argument (no reset).~%"
@@ -97,6 +97,8 @@
   ;; first, create as many clients as we have cpus ...
   ;;
   (loop
+      with tag = (gensym)
+      with result
       with classes = (if (consp classes) classes (list classes))
       with allp = (member :all classes :test #'eq)
       for cpu in (or cpus *pvm-cpus*)
@@ -105,33 +107,58 @@
       do
         (loop
             for i from 1 to (or count 1)
+            for node = (if (stringp host) host (cpu-host cpu))
             for tid = (when (or allp (intersection class classes))
                         (pvm_create
                          (cpu-spawn cpu) (cpu-options cpu)
-                         :host (if (stringp host) host (cpu-host cpu))
-                         :architecture (cpu-architecture cpu)))
+                         :host node :architecture (cpu-architecture cpu)))
             for task = (when (and (integerp tid) (> tid 0)) (tid-status tid))
             when (and tid (null task))
             do
               (format
                stream
-               "~ainitialize-cpus(): `~a' communication error [~d].~%"
-               prefix (cpu-host cpu) tid)
+               "~ainitialize-cpus(): `~a' communication error <~x>.~%"
+               prefix node tid)
             when task
             do
-              (push (make-client :tid tid :task task :cpu cpu :status :start)
-                    *pvm-clients*)
+              (let ((client (make-client
+                             :tid tid :task task :cpu cpu :host node
+                             :status (list :start tag (get-universal-time)))))
+              (push client *pvm-clients*)
+              (push client result)
               (when block
-                (wait-for-clients :block tid :prefix prefix :stream stream))))
-  ;;
-  ;; ... then, wait for them to register (start talking) with us.
-  ;;
-  (wait-for-clients :prefix prefix :stream stream))
+                (wait-for-clients
+                 :block tid :wait wait :prefix prefix :stream stream))))
+      finally
+        ;;
+        ;; ... then, wait for them to register (start talking) with us.
+        ;;
+        (wait-for-clients :wait wait :prefix prefix :stream stream)
+        ;;
+        ;; attempt to shut down clients that we attempted to start but somehow
+        ;; failed to bring (fully) on-line.
+        ;;
+        (setf *pvm-clients*
+          (loop
+              for client in *pvm-clients*
+              for status = (client-status client)
+              when (and (consp status)
+                        (eq (first status) :start)
+                        (eq (second status) tag))
+              do (kill-client client)
+              else collect client))
+        (return (intersection *pvm-clients* result))))
 
-(defun wait-for-clients (&key block (prefix "  ") (stream *tsdb-io*))
+(defun wait-for-clients (&key block wait (prefix "  ") (stream *tsdb-io*))
   (loop
-      while (and *pvm-clients* 
-                 (find :start *pvm-clients* :key #'client-status))
+      while (loop
+                with now = (get-universal-time)
+                for client in *pvm-clients*
+                for status = (client-status client)
+                thereis (and (consp status)
+                             (eq (first status) :start)
+                             (or (null wait)
+                                 (< (- now (third status)) wait))))
       for message = (pvm_poll -1 -1 1)
       when (message-p message)
       do
@@ -146,8 +173,8 @@
               (when (and (client-p client) (cpu-p (client-cpu client)))
                 (format
                  stream
-                 "~&~await-for-clients(): client exit for `~a' <~a>~%"
-                 prefix (cpu-host (client-cpu client)) remote))
+                 "~&~await-for-clients(): client exit for `~a' <~x>~%"
+                 prefix (client-host client) remote))
               (setf *pvm-clients* (delete client *pvm-clients*))))
            
            ((null client)
@@ -155,7 +182,7 @@
               (format
                stream
                "~&~await-for-clients(): ~
-                ignoring message from alien <~d>:~%~s~%~%"
+                ignoring message from alien <~x>:~%~s~%~%"
                prefix remote message)
               (force-output)))
            
@@ -163,12 +190,18 @@
             (cond
              ((and (eq (first content) :register)
                    (eq (second content) (client-tid client)))
-              (setf (client-status client) :ready)
-              (setf (client-protocol client) (third content))
-              (format
-               stream
-               "~await-for-clients(): `~a' registered as tid <~x>.~%"
-               prefix (cpu-host (client-cpu client)) (client-tid client))
+              (multiple-value-bind (minutes seconds)
+                  (floor
+                   (- (get-universal-time) (third (client-status client)))
+                   60)
+                (setf (client-status client) :ready)
+                (setf (client-protocol client) (third content))
+                (format
+                 stream
+                 "~await-for-clients(): ~
+                  `~a' registered as tid <~x> [~a:~a].~%"
+                 prefix (client-host client) (client-tid client)
+                 minutes seconds))
               (when (and block (eql (client-tid client) block))
                 (return-from wait-for-clients client)))
              (t
@@ -176,7 +209,7 @@
                 (format
                  stream
                  "~&~await-for-clients(): ~
-                  ignoring unexpected message from <~d>:~%~s~%~%"
+                  ignoring unexpected message from <~x>:~%~s~%~%"
                  prefix remote message)
                 (force-output)))))
 
@@ -185,7 +218,7 @@
               (format
                stream
                "~&~await-for-clients(): ~
-                ignoring dubious message from <~d>:~%~s~%~%"
+                ignoring dubious message from <~x>:~%~s~%~%"
                stream remote message)
               (force-output)))))))
 
@@ -210,7 +243,7 @@
       (when *pvm-debug-p*
         (format 
          t 
-         "slave(): tid ~d~@[ (parent ~d)~] waiting for requests.~%" 
+         "slave(): tid <~x>~@[ (parent <~x>)~] waiting for requests.~%" 
          self master master)
         (force-output))
       (loop 
@@ -269,7 +302,6 @@
                             *tsdb-maximal-number-of-results*)) 
                          (i-id 0) (parse-id 0)
                          result-id
-                         rankp
                          (wait 5))
 
   ;;
@@ -326,7 +358,7 @@
                (if (rest (assoc :pending status))
                  (pairlis '(:readings :error)
                           (list -1 
-                                (format nil "PVM client exit (tid # ~a)" tid)))
+                                (format nil "PVM client exit <~x>" tid)))
                  ;;
                  ;; _fix_me_
                  ;; this is how things used to be in the web demo; is it really
@@ -338,7 +370,7 @@
              (setf (client-status client) :error)
              (pairlis '(:readings :error)
                       (list 
-                       -1 (format nil "PVM internal error (tid # ~a)" tid))))
+                       -1 (format nil "PVM internal error <~x>" tid))))
             (:null
              (pairlis '(:readings :error)
                       (list 
@@ -346,24 +378,23 @@
                        (format 
                         nil 
                         "maximum number of active sessions exhausted"))))))
-         (results (get-field :results item))
-         (results (if (and rankp (eq type :generate))
-                    (let* ((strings
-                            (loop
-                                for result in results
-                                collect (get-field :tree result)))
-                           #+:lkb
-                           (strings (mt::lm-score-strings strings)))
-                      (loop
-                          for result in results
-                          for foo in strings
-                          do (nconc result (acons :score (rest foo) nil)))
-                      (stable-sort
-                       results
-                       #'< :key #'(lambda (foo) 
-                                    (or (get-field :score foo) 0))))
-                    results)))
+         (results (get-field :results item)))
     (when results
       (nconc item (acons :unique (length results) nil))
       (setf (get-field :results item) results))
     item))
+
+(defun remote-grammar (task)
+  (let ((translator (loop
+                        for client in *pvm-clients*
+                        for cpu = (client-cpu client)
+                        when (and (eq (client-status client) :ready)
+                                  (smember :translate (cpu-task cpu)))
+                        return client)))
+    (if translator 
+      (revaluate (client-tid translator) `(remote-grammar ,task))
+      (loop
+          for client in *pvm-clients*
+          for cpu = (client-cpu client)
+          when (smember task (cpu-task cpu))
+          return (cpu-grammar cpu)))))
