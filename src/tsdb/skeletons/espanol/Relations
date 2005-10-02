@@ -146,6 +146,7 @@ output:
   o-wf :integer                         # application-specific grammaticality
   o-gc :integer                         # maximal number of garbage collections
   o-derivation :string                  # expected derivation
+  o-surface :string                     # expected surface form (i.e. string)
   o-tree :string                        # expected phrase structure tree
   o-mrs :string                         # expected mrs
   o-edges :integer                      # maximal number of edges to build
