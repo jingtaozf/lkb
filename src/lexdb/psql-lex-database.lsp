@@ -685,7 +685,8 @@
       (unless
 	  (sql-get-bool lex "SELECT user_is_db_owner_p()")
 	(make-field-map-slot lex)
-	(initialize-user-schema lex))
+	(unless (sql-get-bool lex "SELECT (user IN (SELECT val FROM public.meta WHERE var='user'))")
+	  (initialize-user-schema lex)))
       lex)))
 
 (defmethod check-lexdb-version ((lex psql-lex-database))
