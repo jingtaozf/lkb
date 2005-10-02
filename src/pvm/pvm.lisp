@@ -57,10 +57,11 @@
 (defstruct cpu 
   host spawn options encoding
   architecture class task threshold name grammar template
+  edges results 
   preprocessor tagger reader
   create complete)
 
-(defstruct client tid cpu task protocol form status load)
+(defstruct client tid cpu task protocol form status load host)
 
 (defun current-user ()
   (or #+(and :allegro-version>= (version>= 5 0)) 

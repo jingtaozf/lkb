@@ -1,8 +1,8 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: LKB -*-
 
 
-;;; Copyright (c) 2000--2005
-;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Ben Waldron;
+;;; Copyright (c) 2000--2002
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `licence.txt' for conditions.
 
 
@@ -11,7 +11,6 @@
 ;;;      module: input preprocessing mimicry (collection of rough utilities)
 ;;;     version: 0.0 (30-jan-03)
 ;;;  written by: oe, csli stanford
-;;;              bmw, cambridge
 ;;; last update: 
 ;;;  updated by: 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -57,9 +56,9 @@
 
 (in-package :lkb)
 
-(defvar *preprocessor-debug-p* t)
+(defparameter *preprocessor-debug-p* t)
 
-(defvar *preprocessor* nil)
+(defparameter *preprocessor* nil)
 
 (defstruct fspp
   version
@@ -73,22 +72,22 @@
    "#[FSPP (~d global, ~d token-level rules @ `~a')]"
    (length (fspp-global object)) (length (fspp-local object)) 
    (fspp-tokenizer object)))
-
+
 (defstruct fsr
   type
   source
   scanner
   target)
-
-(defun read-preprocessor (file &key (fspp (make-fspp) fsppp))
+
+(defun read-preprocessor (file &key (fspp (make-fspp) fsppp) (prefix ""))
   (when (probe-file file)
     (with-open-file (stream file :direction :input)
       (let* ((path (pathname file))
              (type (pathname-type path)))
         (format 
          t 
-         "~&Reading preprocessor rules `~a~@[.~a~]'~%" 
-         (pathname-name path) type)
+         "~&~aread-preprocessor(): reading file `~a~@[.~a~]'.~%" 
+         prefix (pathname-name path) type)
         (loop
             with separator = (ppcre:create-scanner "\\t+")
             for n from 1
@@ -98,7 +97,6 @@
             when (and c (not (char= c #\;))) do
               (multiple-value-bind (start end) (ppcre:scan separator line)
                 (cond
-		 ;; @ version
                  ((char= c #\@)
                   (let* ((version (subseq line 1 end))
                          (version (if (string= version "$Date: " :end1 7)
@@ -106,25 +104,20 @@
                                     version)))
                     (setf (fspp-version fspp) 
                       (string-trim '(#\Space) version))))
-		 ;; < import
                  ((char= c #\<)
                   (let* ((name (subseq line 1 end))
                          (file (or (probe-file name)
                                    (probe-file (merge-pathnames name path)))))
                     (if file
-                      (read-preprocessor file :fspp fspp)
+                      (read-preprocessor
+                       file :fspp fspp :prefix (format nil "~a  " prefix))
                         (format
                          t
-                         "read-preprocessor(): [~d] unable to include `~a'~%"
-                         n name))))
-		 ;; : tokenizer
+                         "~aread-preprocessor(): [~d] unable to include `~a'~%"
+                         prefix n name))))
                  ((char= c #\:)
                   (let ((tokenizer (subseq line 1 end)))
                     (setf (fspp-tokenizer fspp) tokenizer)))
-		 ;; ! replace
-		 ;; - substitute
-		 ;; + augment
-		 ;; ^ ersatz
                  ((member c '(#\! #\- #\+ #\^) :test #'char=)
                   (if (and start end)
                     (let* ((type (case c
@@ -148,17 +141,17 @@
                           (push match (fspp-local fspp)))
                         (format
                          t
-                         "read-preprocessor(): [~d] invalid pattern `~a'~%"
-                         n source(preprocess "The dog--barked." :format :list))))
+                         "~aread-preprocessor(): [~d] invalid pattern `~a'~%"
+                         prefix n source)))
                     (format
                      t
-                     "read-preprocessor(): [~d] invalid `~a'~%"
-                     n line)))
+                     "~aread-preprocessor(): [~d] invalid `~a'~%"
+                     prefix n line)))
                  (t
                   (format
                    t
-                   "read-preprocessor(): [~d] ~
-                    ignoring unknown rule type `~a'~%"
+                   "~aread-preprocessor(): [~d] ~
+                    prefix ignoring unknown rule type `~a'~%"
                    n c))))
             when (null line) do
               (unless fsppp
@@ -168,163 +161,128 @@
                   (nreverse (fspp-local fspp))))
               (unless fsppp (format t "~a~%" fspp))
               (return (if fsppp fspp (setf *preprocessor* fspp))))))))
-
+
 (defun preprocess (string &key (preprocessor *preprocessor*) 
                                (globalp t) (tokenp t)
                                (verbose *preprocessor-debug-p*)
-                               (format :list))
-  ;; if no preprocessor defined...
+                               (format :pet))
+
   (when (null preprocessor)
     (return-from preprocess (and (eq format :lkb) string)))
-  ;; process string globally
-  (when globalp
-    (setf string 
-      (preprocess-global string (fspp-global preprocessor)
-			 :verbose verbose)))
-  ;; process tokens
-  (multiple-value-bind (result length)
-      (preprocess-tokens (ppcre:split (fspp-tokenizer preprocessor) string) 
-			 (fspp-local preprocessor)
-			 :tokenp tokenp
-			 :verbose verbose)
-    ;; get output in desired format
-    (format-preprocessed-output
-     (nreverse (tokens-to-result (nreverse result) :format format))
-     length format)))
-
-(defun preprocess-global (string global &key verbose)
-  (loop
-      for rule in global
-      for scanner = (fsr-scanner rule)
-      for target = (fsr-target rule)
-      for match = (ppcre:regex-replace-all scanner string target)
-      when (and (eq verbose :trace) (not (string= string match))) do
-	(format
+  
+  (let ((tokenizer (and preprocessor (fspp-tokenizer preprocessor)))
+        (global (and preprocessor (fspp-global preprocessor)))
+        (local (and preprocessor (fspp-local preprocessor)))
+        (length 0)
+        result)
+    (when globalp
+      (loop
+          for rule in global
+          for scanner = (fsr-scanner rule)
+          for target = (fsr-target rule)
+          for match = (ppcre:regex-replace-all scanner string target)
+          when (and (eq verbose :trace) (not (string= string match))) do
+            (format
              t
              "~&|~a|~%  |~a|~%  |~a|~%~%"
              (fsr-source rule) string match)
-      do
-	(setf string match)
-      finally
-	(return string)))
-
-(defun preprocess-tokens (tokens local &key tokenp verbose)
-  (loop
-      with result
-      with length = 0
-      for token in tokens
-      unless (string= token "") do
-	(incf length)
-	(loop
-	    with extra = nil
-	    for rule in (when tokenp local)
-	    for type = (fsr-type rule)
-	    for scanner = (fsr-scanner rule)
-	    for target = (fsr-target rule)
-	    for match = (ppcre:regex-replace scanner token target)
-			;;
-			;; _fix_me_
-			;; regex-replace() always returns a fresh string, even if the
-			;; pattern did _not_ match; to make this more efficient, it
-			;; seems, we would have to use scan() and then glue together
-			;; the result from parsing .target. and filling in register
-			;; matches as needed :-{.                     (31-jan-03; oe)
-			;;
-	    when (and (eq verbose :trace) (not (string= token match))) do
-	      (format
-	       t
-	       "~&|~a|~%  |~a|~%  |~a|~%~%"
-	       (fsr-source rule) token match)
-	    do
-	      (case type
-		(:ersatz
-		 ;;
-		 ;; _fix_me_
-		 ;; to do ersatzes properly, they should no longer be available
-		 ;; to subsequent rule processing: presumably, we should build
-		 ;; an ersatzing table and use non-string tokens (indices into
-		 ;; the table) instead.                         (1-feb-03; oe)
-		 ;;
-		 (unless (string= token match)
-		   (push (list type token) extra)
-		   (setf token match)))
-		(:augment
-		 (unless (string= token match)
-		   (push (list type match) extra)))
-		(:substitute
-		 (setf token match))
-		(t
-		 (error "unhandled type: ~a" type)))
-	    finally
-	      (push (cons token extra) result))
-      finally
-	(return (values result length))))
-
-(defun tokens-to-result (tokens &key verbose 
-				     format) ;;get rid of this
-  (loop
-      with result = nil
-      with i = 0
-      with id = 41
-      for (form . extra) in tokens
-      for surface = (or (second (find :ersatz extra :key #'first)) form)
-      for start = i
-      for end = (incf i)
-      do
-	(push (list (incf id) start end form surface) result)
-	(unless (eq format :lkb)
-	  (loop
-	      for (type form) in extra
-	      unless (eq type :ersatz) do 
-		(push (list (incf id) start end form form) result)))
-      when verbose do
-	(format t "  (~a) [~a:~a] |~a|" id start end form)
-	(loop
-	    for foo in extra
-	    for type = (case (first foo)
-			 (:substitute #\-)
-			 (:augment #\+)
-			 (:ersatz #\^))
-	    for form = (second foo)
-	    do (format t " {~c |~a|}" type form)
-	    finally (format t "~%"))
-      finally 
-	(return result)))
-
-(defun format-preprocessed-output (result length &optional (format :list))
-  (cond
-   ((eq format :lkb)
+          do
+            (setf string match)))
     (loop
-	for i = -1
-	for token in result
-	for start = (second token)
-	for form = (fourth token)
-	unless (= start i) collect form into forms
-	finally 
-	  (return (values (format nil "~{~a~^ ~}" forms)
-			  (length forms)))))
-   ((or (eq format :yy)
-	(eq format :pet)) ;; use :yy instead
+        with tokens = (ppcre:split tokenizer string)
+        for token in tokens
+        unless (string= token "") do
+          (incf length)
+          (loop
+              with extra = nil
+              for rule in (when tokenp local)
+              for type = (fsr-type rule)
+              for scanner = (fsr-scanner rule)
+              for target = (fsr-target rule)
+              for match = (ppcre:regex-replace scanner token target)
+              when (and (eq verbose :trace) (not (string= token match))) do
+                (format
+                 t
+                 "~&|~a|~%  |~a|~%  |~a|~%~%"
+                 (fsr-source rule) token match)
+              when (eq type :substitute) do
+                (setf token match)
+              else unless (string= token match) do
+                ;;
+                ;; _fix_me_
+                ;; regex-replace() always returns a fresh string, even if the
+                ;; pattern did _not_ match; to make this more efficient, it
+                ;; seems, we would have to use scan() and then glue together
+                ;; the result from parsing .target. and filling in register
+                ;; matches as needed :-{.                     (31-jan-03; oe)
+                ;;
+                ;;
+                ;; _fix_me_
+                ;; to do ersatzes properly, they should no longer be available
+                ;; to subsequent rule processing: presumably, we should build
+                ;; an ersatzing table and use non-string tokens (indices into
+                ;; the table) instead.                         (1-feb-03; oe)
+                ;;
+                (push (list type (if (eq type :ersatz) token match)) extra)
+                (when (eq type :ersatz) (setf token match))
+                
+              finally
+                (push (cons token extra) result)))
     (loop
-	for (id start end form surface) in result
-	for token = (format 
-		     nil 
-		     "(~d, ~d, ~d, 1, \"~a\" \"~a\", 0, \"null\")" 
-		     id start end 
-		     (escape-string form) (escape-string surface))
-	collect token into tokens
-	finally 
-	  (return
-	    (values (format nil "~{~a~^ ~}" tokens) length))))
-   ((eq format :pic)
-    (error "not implemented"))
-   ((eq format :maf)
-    (error "not implemented"))
-   ((eq format :list)
-    (values result length))
-   (t
-    (error "unhandled format argument: ~a" format))))
-
+        with tokens = (nreverse result)
+        with result = nil
+        with i = 0
+        with id = 41
+        for (form . extra) in tokens
+        for surface = (or (second (find :ersatz extra :key #'first)) form)
+        for start = i
+        for end = (incf i)
+        do
+          (push (list (incf id) start end form surface) result)
+          (unless (eq format :lkb)
+            (loop
+                for (type form) in extra
+                unless (eq type :ersatz) do 
+                  (push (list (incf id) start end form form) result)))
+        when verbose do
+          (format t "  (~a) [~a:~a] |~a|" id start end form)
+          (loop
+              for foo in extra
+              for type = (case (first foo)
+                           (:substitute #\-)
+                           (:augment #\+)
+                           (:ersatz #\^))
+              for form = (second foo)
+              do (format t " {~c |~a|}" type form)
+              finally (format t "~%"))
+        finally 
+          (return
+            (case format
+              (:lkb
+               (loop
+                   for i = -1
+                   for token in (nreverse result)
+                   for start = (second token)
+                   for form = (fourth token)
+                   unless (= start i) collect form into forms
+                   finally 
+                     (return (values (format nil "~{~a~^ ~}" forms)
+                                     (length forms)))))
+              (:pet
+               (loop
+                   for (id start end form surface) in (nreverse result)
+                   for token = (format 
+                                nil 
+                                "(~d, ~d, ~d, 1, \"~a\" \"~a\", 0, \"null\")" 
+                                id start end 
+                                (escape-string form) (escape-string surface))
+                   collect token into tokens
+                   finally 
+                     (return
+                       (values (format nil "~{~a~^ ~}" tokens) length))))
+              (:list
+               (values (nreverse result) length)))))))
+
 (defun escape-string (string &key (syntax :c))
   (declare (ignore syntax))
            
@@ -348,10 +306,10 @@
         finally
           (return result))
     ""))
-
+
 (defun clear-preprocessor ()
   (setf *preprocessor* nil))
-
+
 (defun preprocess-for-pet (string &optional tagger)
   (if (and tagger (consp tagger) (keywordp (first tagger)))
     (multiple-value-bind (tokens length)
@@ -372,11 +330,11 @@
           collect token into tokens
           finally 
             (return (values (format nil "~{~a~^ ~}" tokens) length))))
-    (preprocess string :format :yy :verbose nil)))
-
+    (preprocess string :format :pet :verbose nil)))
+
 (defparameter *tagger-application*
   '((:tnt "tnt -z100 /user/oe/src/tnt/models/wsj -")))
-
+
 (defun tag-tnt (tokens &optional run &key (n 1))
   (labels ((commentp (string)
              (and (>= (length string) 2)
