@@ -19,7 +19,6 @@
 ;; version) or write to the Free Software Foundation, Inc., 59 Temple Place,
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
-;; $Id$
 
 (in-package :net.xml.parser)
 
@@ -148,7 +147,7 @@
 
 (defun next-dtd-token (tokenbuf
 		       external include-count external-callback)
-  (declare #+:null (:fbound parse-default-value) (optimize (speed 3) (safety 1)))
+  (declare (optimize (speed 3) (safety 1)))
   (macrolet ((add-to-entity-buf (entity-symbol p-value)
 	       `(progn
 		  (push (make-tokenbuf :cur 0 :max (length ,p-value) :data ,p-value)
@@ -2397,7 +2396,7 @@
     ))
 
 (defun external-param-reference (tokenbuf old-coll external-callback)
-  (declare #+:null (:fbound next-token) (ignorable old-coll) (optimize (speed 3) (safety 1)))
+  (declare (ignorable old-coll) (optimize (speed 3) (safety 1)))
   (setf (iostruct-seen-parameter-reference tokenbuf) t)
   (macrolet ((add-to-entity-buf (entity-symbol p-value)
 	       `(progn

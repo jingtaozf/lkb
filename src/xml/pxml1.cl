@@ -19,9 +19,7 @@
 ;; version) or write to the Free Software Foundation, Inc., 59 Temple Place,
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
-;; $Id$
-
-;; Change Log 
+;; Change Log
 ;;
 ;; 10/14/00 add namespace support; xml-error fix
 
@@ -270,7 +268,6 @@
 (defun unicode-check (p tokenbuf)
   (declare (ignorable tokenbuf) (optimize (speed 3) (safety 1)))
   ;; need no-OO check because external format support isn't completely done yet
-  #+allegro
   (when (not (typep p 'string-input-simple-stream))
     #+(version>= 6 0 pre-final 1)
     (let ((format (ignore-errors (excl:sniff-for-unicode p))))
@@ -412,7 +409,7 @@
     (xml-error "XML declaration tag does not include correct 'encoding' or 'standalone' attribute"))
   (when (and (fourth val) (string= "standalone" (symbol-name (fourth val))))
     (if* (equal (fifth val) "yes") then
-	   (setf (iostruct-standalonep tokenbuf) t)
+	    (setf (iostruct-standalonep tokenbuf) t)
      elseif (not (equal (fifth val) "no")) then
 	    (xml-error "XML declaration tag does not include correct 'standalone' attribute value")))
   (dotimes (i (length (third val)))
@@ -422,16 +419,26 @@
 		 (not (member c '(#\. #\_ #\- #\:)))
 		 )
 	(xml-error "XML declaration tag does not include correct 'version' attribute value"))))
-  (when (and (fourth val) (eql :encoding (fourth val)))
-    (dotimes (i (length (fifth val)))
-      (let ((c (schar (fifth val) i)))
-	(when (and (not (alpha-char-p c))
-		   (if* (> i 0) then
-			   (and (not (digit-char-p c))
-				(not (member c '(#\. #\_ #\-))))
-		      else t))
-	  (xml-error "XML declaration tag does not include correct 'encoding' attribute value")))))
-  )
+  (if* (and (fourth val) (eql :encoding (fourth val)))
+     then (dotimes (i (length (fifth val)))
+	    (let ((c (schar (fifth val) i)))
+	      (when (and (not (alpha-char-p c))
+			 (if* (> i 0) then
+				 (and (not (digit-char-p c))
+				      (not (member c '(#\. #\_ #\-))))
+			    else t))
+		(xml-error "XML declaration tag does not include correct 'encoding' attribute value"))))
+	  ;; jkf 3/26/02 
+	  ;; if we have a stream we're reading from set its external-format
+	  ;; to the encoding
+	  ;; note - tokenbuf is really an iostruct, not a tokenbuf
+	  (if* (tokenbuf-stream (iostruct-tokenbuf tokenbuf))
+	     then (setf (stream-external-format 
+			 (tokenbuf-stream (iostruct-tokenbuf tokenbuf)))
+		    (find-external-format (fifth val))))
+			 
+    
+	  ))
 
 (defun xml-error (text)
   (declare (optimize (speed 3) (safety 1)))
