@@ -1,5 +1,4 @@
 ? Version.lisp.fasl
-U lkb/patches.lsp
 ? lkb/checkpaths.lsp.fasl
 ? lkb/globals.lsp.fasl
 ? lkb/mrs-initialization.lsp.fasl
@@ -9,39 +8,10 @@ U lkb/patches.lsp
 ? doc
 ? linux.x86.32
 ? man
-U lexdb/fns.sql
-U lexdb/meta.tsv
-U lexdb/pg-interface.el
-U lexdb/util.sql
 M log/build
-U src/version.lsp
 ? src/.l7cl
-U src/ACL_specific/activefs.lsp
-U src/ACL_specific/parseout.lsp
-U src/io-general/menus.lsp
-U src/io-general/toplevel.lsp
-U src/lexdb/command.lsp
-U src/lexdb/headers.lsp
-U src/lexdb/lexport.lsp
-U src/lexdb/psql-database.lsp
-U src/lexdb/psql-lex-database.lsp
-U src/lexdb/psqllex.lsp
-U src/main/globals.lsp
-U src/main/initializations.lsp
-U src/main/morph.lsp
-U src/main/rules.lsp
-U src/mrs/algebra.lisp
-U src/mrs/basemrs.lisp
-U src/mrs/lkb-acl-mrs.lisp
-U src/mrs/mrscorpus.lisp
-U src/mrs/mrsglobals.lisp
-U src/preprocess/maf/maf.dtd
-U src/preprocess/maf/pic.dtd
-U src/preprocess/maf/pic2maf.xsl
 ? src/tsdb/home/log
 ? src/tsdb/home/redwoods
-U src/tsdb/lisp/import.lisp
-U src/tsdb/lisp/redwoods.lisp
 **********
 
   Remember to update the version number:
@@ -51,7 +21,7 @@ U src/tsdb/lisp/redwoods.lisp
 **********
 Checking in ./src/version.lsp;
 /lingo/CVS/lkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.427; previous revision: 1.426
+new revision: 1.431; previous revision: 1.430
 done
 make[1]: Entering directory `/lingo/build/lkb'
 ( \
@@ -243,11 +213,13 @@ make[1]: Entering directory `/lingo/build/lkb'
 ./src/mrs/time-convert.lisp
 ./src/mrs/lexindex.lisp
 ./src/mrs/algebra.lisp
+./src/mrs/serialize.lisp
 ./src/mt/
 ./src/mt/transfer.lisp
 ./src/mt/lm.lisp
-./src/mt/mrsglobals.lisp
 ./src/mt/mrs.lisp
+./src/mt/mrsglobals.lisp
+./src/mt/scrub.pl
 ./src/mt/patches.lisp
 ./src/mt/version.lisp
 ./src/mt/clim.lisp
@@ -255,6 +227,7 @@ make[1]: Entering directory `/lingo/build/lkb'
 ./src/mt/translate.lisp
 ./src/mt/semi.lisp
 ./src/mt/globals.lisp
+./src/mt/comparison.lisp
 ./src/ppcre/
 ./src/ppcre/api.lisp
 ./src/ppcre/closures.lisp
@@ -1127,7 +1100,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-7.0 [Linux (x86)] (Sep 23, 2005 15:01)
+7.0 [Linux (x86)] (Oct 2, 2005 19:08)
 Copyright (C) 1985-2004, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -1535,7 +1508,7 @@ T
 ;   Fast loading /lingo/build/lkb/src/.l7cl/ppcre/packages.fasl
 ;;; Compiling file /lingo/build/lkb/src/ppcre/specials.lisp
 ; While compiling (:TOP-LEVEL-FORM "specials.lisp" 4254):
-Warning: Variable #:G22344 is never used.
+Warning: Variable #:G22462 is never used.
 ;;; Writing fasl file /lingo/build/lkb/src/.l7cl/ppcre/specials.fasl
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l7cl/ppcre/specials.fasl
@@ -2122,6 +2095,10 @@ Warning: Variable #:G22344 is never used.
 ;;; Writing fasl file /lingo/build/lkb/src/.l7cl/mt/transfer.fasl
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l7cl/mt/transfer.fasl
+;;; Compiling file /lingo/build/lkb/src/mt/comparison.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l7cl/mt/comparison.fasl
+;;; Fasl write complete
+;   Fast loading /lingo/build/lkb/src/.l7cl/mt/comparison.fasl
 ;;; Compiling file /lingo/build/lkb/src/mt/translate.lisp
 ;;; Writing fasl file /lingo/build/lkb/src/.l7cl/mt/translate.fasl
 ;;; Fasl write complete
@@ -2131,6 +2108,8 @@ Warning: Variable #:G22344 is never used.
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l7cl/mt/clim.fasl
 ;;; Compiling file /lingo/build/lkb/src/mt/semi.lisp
+; While compiling (:TOP-LEVEL-FORM "semi.lisp" 1997):
+Warning: Variable ARG1 is never used.
 ;;; Writing fasl file /lingo/build/lkb/src/.l7cl/mt/semi.fasl
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l7cl/mt/semi.fasl
@@ -2167,7 +2146,7 @@ NIL
  |#
 ; Fast loading /lingo/local/acl/code/nocompiler.001
 ;;; Installing nocompiler patch, version 1
-120443824 bytes have been tenured, next gc will be global.
+125799632 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 
 T 
@@ -2300,7 +2279,7 @@ CL-USER(10): ; Loading /lingo/build/lkb/src/systems/tsdb.system
 ; Fast loading /lingo/build/lkb/src/.l7cl/ppcre/packages.fasl
 ;;; Compiling file /lingo/build/lkb/src/ppcre/specials.lisp
 ; While compiling (:TOP-LEVEL-FORM "specials.lisp" 4254):
-Warning: Variable #:G28082 is never used.
+Warning: Variable #:G28106 is never used.
 ;;; Writing fasl file /lingo/build/lkb/src/.l7cl/ppcre/specials.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/ppcre/specials.fasl
@@ -2351,7 +2330,7 @@ Warning: Variable #:G28082 is never used.
 ; Fast loading /lingo/build/lkb/src/.l7cl/ppcre/api.fasl
 ; Loading /lingo/build/lkb/src/systems/pxml.system
 ;;; Compiling file /lingo/build/lkb/src/xml/pxml0.cl
-8538560 bytes have been tenured, next gc will be global.
+8554336 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/build/lkb/src/.l7cl/xml/pxml0.fasl
 ;;; Fasl write complete
@@ -2361,7 +2340,7 @@ See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/xml/pxml1.fasl
 ;;; Compiling file /lingo/build/lkb/src/xml/pxml3.cl
-11267120 bytes have been tenured, next gc will be global.
+10534672 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/build/lkb/src/.l7cl/xml/pxml3.fasl
 ;;; Fasl write complete
@@ -2423,6 +2402,8 @@ See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/main/gen.fasl
 ;;; Compiling file /lingo/build/lkb/src/main/structs.lsp
+17432832 bytes have been tenured, next gc will be global.
+See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/build/lkb/src/.l7cl/main/structs.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/main/structs.fasl
@@ -2439,8 +2420,6 @@ See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/main/checktypes.fasl
 ;;; Compiling file /lingo/build/lkb/src/main/cdb.lsp
-16832576 bytes have been tenured, next gc will be global.
-See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/build/lkb/src/.l7cl/main/cdb.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/main/cdb.fasl
@@ -2890,6 +2869,10 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Writing fasl file /lingo/build/lkb/src/.l7cl/mt/transfer.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/mt/transfer.fasl
+;;; Compiling file /lingo/build/lkb/src/mt/comparison.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l7cl/mt/comparison.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l7cl/mt/comparison.fasl
 ;;; Compiling file /lingo/build/lkb/src/mt/translate.lisp
 ;;; Writing fasl file /lingo/build/lkb/src/.l7cl/mt/translate.fasl
 ;;; Fasl write complete
@@ -2899,6 +2882,8 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/mt/clim.fasl
 ;;; Compiling file /lingo/build/lkb/src/mt/semi.lisp
+; While compiling (:TOP-LEVEL-FORM "semi.lisp" 1997):
+Warning: Variable ARG1 is never used.
 ;;; Writing fasl file /lingo/build/lkb/src/.l7cl/mt/semi.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/mt/semi.fasl
@@ -2993,7 +2978,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/yy.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/mt.lisp
-gc-after-hook(): local; new: 1759096; old: 610152; pending: 72; efficiency: 93.
+gc-after-hook(): local; new: 2601040; old: 336040; pending: 0; efficiency: 94.
 ;;; Writing fasl file /lingo/build/lkb/src/.l7cl/tsdb/mt.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/mt.fasl
@@ -3006,8 +2991,8 @@ gc-after-hook(): local; new: 1759096; old: 610152; pending: 72; efficiency: 93.
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/tnt-interface.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/redwoods.lisp
-gc-after-hook(): local; new: 1325192; old: 9416; pending: 1048; efficiency: 95.
-gc-after-hook(): local; new: 2557176; old: 6864; pending: 0; efficiency: 94.
+gc-after-hook(): local; new: 3737608; old: 9416; pending: 0; efficiency: 89.
+gc-after-hook(): local; new: 1769584; old: 6920; pending: 0; efficiency: 95.
 ;;; Writing fasl file /lingo/build/lkb/src/.l7cl/tsdb/redwoods.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/redwoods.fasl
@@ -3020,6 +3005,7 @@ gc-after-hook(): local; new: 2557176; old: 6864; pending: 0; efficiency: 94.
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/ptb.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/rasp.lisp
+gc-after-hook(): local; new: 1286768; old: 278360; pending: 0; efficiency: 94.
 ;;; Writing fasl file /lingo/build/lkb/src/.l7cl/tsdb/rasp.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/rasp.fasl
@@ -3028,14 +3014,15 @@ gc-after-hook(): local; new: 2557176; old: 6864; pending: 0; efficiency: 94.
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/pcfg.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/maxent.lisp
-gc-after-hook(): local; new: 1309952; old: 278032; pending: 0; efficiency: 93.
 ;;; Writing fasl file /lingo/build/lkb/src/.l7cl/tsdb/maxent.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/maxent.fasl
-;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/tagger.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l7cl/tsdb/tagger.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l7cl/tsdb/tagger.fasl
+Warning: While compiling these undefined functions were referenced:
+         TSDB::TAG-SCORE-EDGE from position 131134 in
+           /lingo/build/lkb/src/tsdb/lisp/redwoods.lisp
+         TSDB::ESTIMATE-TAGGER from position 118134 in
+           /lingo/build/lkb/src/tsdb/lisp/redwoods.lisp, 131134 in
+           /lingo/build/lkb/src/tsdb/lisp/redwoods.lisp
 (#<MODULE: tsdb>)
 CL-USER(11): ; Exiting
 make[2]: Leaving directory `/lingo/build/lkb'
@@ -5256,6 +5243,27 @@ src/tsdb/skeletons/english/Relations
 src/tsdb/skeletons/english/trec9/
 src/tsdb/skeletons/english/trec9/item
 src/tsdb/skeletons/english/trec9/relations
+src/tsdb/skeletons/english/jh0/
+src/tsdb/skeletons/english/jh0/item
+src/tsdb/skeletons/english/jh0/relations
+src/tsdb/skeletons/english/jh1/
+src/tsdb/skeletons/english/jh1/item
+src/tsdb/skeletons/english/jh1/relations
+src/tsdb/skeletons/english/jh2/
+src/tsdb/skeletons/english/jh2/item
+src/tsdb/skeletons/english/jh2/relations
+src/tsdb/skeletons/english/jh3/
+src/tsdb/skeletons/english/jh3/item
+src/tsdb/skeletons/english/jh3/relations
+src/tsdb/skeletons/english/jh4/
+src/tsdb/skeletons/english/jh4/item
+src/tsdb/skeletons/english/jh4/relations
+src/tsdb/skeletons/english/jh5/
+src/tsdb/skeletons/english/jh5/item
+src/tsdb/skeletons/english/jh5/relations
+src/tsdb/skeletons/english/shiken/
+src/tsdb/skeletons/english/shiken/item
+src/tsdb/skeletons/english/shiken/relations
 src/tsdb/skeletons/espanol/
 src/tsdb/skeletons/espanol/banca/
 src/tsdb/skeletons/espanol/banca/item
@@ -5291,6 +5299,9 @@ src/tsdb/skeletons/nihongo/suuji/item
 src/tsdb/skeletons/nihongo/suuji/relations
 src/tsdb/skeletons/nihongo/Index.lisp
 src/tsdb/skeletons/nihongo/Relations
+src/tsdb/skeletons/nihongo/shiken/
+src/tsdb/skeletons/nihongo/shiken/item
+src/tsdb/skeletons/nihongo/shiken/relations
 src/tsdb/skeletons/norsk/
 src/tsdb/skeletons/norsk/enkel/
 src/tsdb/skeletons/norsk/enkel/item
@@ -5301,6 +5312,7 @@ src/tsdb/skeletons/norsk/mrs/relations
 src/tsdb/skeletons/norsk/tur/
 src/tsdb/skeletons/norsk/tur/item
 src/tsdb/skeletons/norsk/tur/relations
+src/tsdb/skeletons/norsk/tur/output
 src/tsdb/skeletons/norsk/base/
 src/tsdb/skeletons/norsk/base/item
 src/tsdb/skeletons/norsk/base/relations
@@ -5308,6 +5320,30 @@ src/tsdb/skeletons/norsk/base/item-phenomenon
 src/tsdb/skeletons/norsk/base/phenomenon
 src/tsdb/skeletons/norsk/Relations
 src/tsdb/skeletons/norsk/Index.lisp
+src/tsdb/skeletons/norsk/jh0/
+src/tsdb/skeletons/norsk/jh0/item
+src/tsdb/skeletons/norsk/jh0/output
+src/tsdb/skeletons/norsk/jh0/relations
+src/tsdb/skeletons/norsk/jh1/
+src/tsdb/skeletons/norsk/jh1/item
+src/tsdb/skeletons/norsk/jh1/output
+src/tsdb/skeletons/norsk/jh1/relations
+src/tsdb/skeletons/norsk/jh2/
+src/tsdb/skeletons/norsk/jh2/item
+src/tsdb/skeletons/norsk/jh2/output
+src/tsdb/skeletons/norsk/jh2/relations
+src/tsdb/skeletons/norsk/jh3/
+src/tsdb/skeletons/norsk/jh3/item
+src/tsdb/skeletons/norsk/jh3/output
+src/tsdb/skeletons/norsk/jh3/relations
+src/tsdb/skeletons/norsk/jh4/
+src/tsdb/skeletons/norsk/jh4/item
+src/tsdb/skeletons/norsk/jh4/output
+src/tsdb/skeletons/norsk/jh4/relations
+src/tsdb/skeletons/norsk/jh5/
+src/tsdb/skeletons/norsk/jh5/item
+src/tsdb/skeletons/norsk/jh5/output
+src/tsdb/skeletons/norsk/jh5/relations
 src/tsdb/home/
 src/tsdb/home/lingo/
 src/tsdb/home/lingo/nov-98/
