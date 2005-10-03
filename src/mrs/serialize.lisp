@@ -1,5 +1,16 @@
 (in-package :mrs)
 
+;;;
+;;; when using CDBs for lexicon storage, serialize generator indices (which are
+;;; expensive to compute) for later restoration.  for now, read back the entire
+;;; index into core, though we could rather be pulling entries out of the CDB
+;;; on demand; rework the look-up routines one day, to encapsulate things more.
+;;;
+;;; _fix_me_
+;;; right now, we only dump *relation-index* and *semantic-table*, omitting
+;;; *rel-semdb* (which only needed when reading indexed MRSs, which, for all i
+;;; i know, is never done).                                     (2-oct-05; oe)
+;;;
 (defparameter lkb::*predicates-temp-file* nil)
 
 (defparameter lkb::*semantics-temp-file* nil)

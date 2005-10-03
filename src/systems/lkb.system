@@ -15,6 +15,21 @@
 ;;; to force non-graphics mode, if this seems desirable for some reason.
 ;;;
 
+
+;;;
+;;; ultimately, all compile-time configurations (by means of *features*) that
+;;; affect more than just one file should go here (together with a comment on
+;;; what each feature does); with features added in individual files, we still
+;;; need to worry about load() order.
+;;;
+;;;   - :psql -- support for (external) PostGreSQL-based lexical database;
+;;;   - :preprocessor -- include RE library and enable preprocessor support;
+;;;   - :xml -- include XML parser and enable simple preprocessing protocol;
+;;;   - :lsp -- Linguistic Server Protocol (also used for LUI communication);
+;;;   - :pooling -- enable recycling of high-frequency objects (dags, for now);
+;;;   - :vanilla -- run passive parser in pure CKY mode: disable `left-corner'
+;;;                 optimization, rule filter, and quick check.
+;;;
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
            #-:ansi-eval-when (load eval compile)
 
@@ -28,6 +43,18 @@
   (pushnew :xml *features*)
 
   ;;
+  ;; always allow `pooling' (aka LKB-internal explicit memory management) for
+  ;; heavily used object types (primarily dags during unification).
+  ;;
+  (pushnew :pooling *features*)
+
+  ;;
+  ;; always include finite-state preprocessing support (even though there is
+  ;; more work to be done on this).                           (25-feb-05; oe)
+  ;;
+  (pushnew :preprocessor *features*)
+
+  ;;
   ;; activate the LUI support code for supported environments
   ;;
   #+(or (and :allegro :linux86) 
@@ -35,10 +62,8 @@
         (and :sbcl :x86 :linux))
   (pushnew :lui *features*)
 
-  ;; (bmw - 06jun04)
-  ;; activate PSQL/LexDB code (no longer OS specific)
-  ;; (jac - 17jun05)
-  ;; ... but it's certainly lisp implementation specific
+  ;;
+  ;; activate PSQL (used in the lexical database) support when running on ACL
   ;;
   #+:allegro
   (pushnew :psql *features*)
@@ -49,33 +74,18 @@
   (pushnew :mrs *features*)
   (pushnew :mt *features*))
 
-  ;;
-  (pushnew :preprocessor *features*)
-
 ;;;
-;;; ultimately, all compile-time configurations (by means of *features*) that
-;;; affect more than just one file should go here (together with a comment on
-;;; what each feature does); with features added in individual files, we still
-;;; need to worry about load() order.
+;;; next, test some common feature dependencies; add additional features where
+;;; appropriate.  note the separate eval-when(), as feature presence is tested
+;;; at read time: to see the effects of everything up to this point, a separate
+;;; s-expression is needed here.
 ;;;
-;;;   - :psql -- support for (external) PostGreSQL-based lexical database;
-;;;   - :ltemplates -- lexical templates: see `src/main/ltemplates.lsp';
-;;;   - :preprocessor -- include RE library and enable preprocessor support;
-;;;   - :xml -- include XML parser and enable simple preprocessing protocol;
-;;;   - :lsp -- Linguistic Server Protocol (also used for LUI communication);
-;;;   - :pooling -- enable recycling of high-frequency objects (dags, for now);
-;;;   - :packing -- enable code for chart packing under (partial) subsumption;
-;;;   - :vanilla -- run passive parser in pure CKY mode: disable `left-corner'
-;;;                 optimization, rule filter, and quick check.
-;;;
-
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
            #-:ansi-eval-when (load eval compile)
   #+(and :allegro (version>= 6 0))
   (pushnew :xml *features*)
   #+(or :lui (and :allegro (version>= 6 0)))
   (pushnew :lsp *features*)
-  (pushnew :pooling *features*)
   #+(and :xml :preprocessor)
   (pushnew :maf *features*)
   (pushnew :maftest *features*)
