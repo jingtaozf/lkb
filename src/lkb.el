@@ -1,7 +1,7 @@
-;;;
+;;; -*- mode:emacs-lisp -*-
 ;;; Copyright (c) 1998-2004
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, 
-;;;   Benjamin Waldron; see `licence.txt' for conditions
+;;;   Benjamin Waldron, Francis Bond; see `licence.txt' for conditions
 ;;;
 
 ;;; bmw (sep 03)
@@ -29,18 +29,6 @@
 (defun eval-in-lisp (str)
 	 (fi:eval-in-lisp "(let ((x %s)) (if (eval (cons 'or (mapcar #'(lambda (y) (typep x y)) '%s))) x '!!!unhandled-type!!!))" str *handled-types*))
 
-(defun define-lisp-commands (commands)
-  (dolist (com commands)
-    (eval `(defun ,com ()
-	     (interactive ())
-	     (eval-in-lisp ,(format "(%s)" com))))))
-
-(define-lisp-commands 
-    '(read-script-file reload-script-file show-type-tree show-type-spec 
-      show-type show-lex show-words show-grammar-rule show-lex-rule 
-      clim-user::do-parse-batch show-parse show-chart print-chart 
-      parse-sentences-batch generate-from-edge show-gen-result show-gen-chart 
-      index-for-generator))
 			 
 ;;;
 ;;; menu construction
@@ -59,6 +47,7 @@
     (fi::menu "Redefine type"
 	      'redefine-type))  
   (define-key map [menu-bar lkb break] (name-keymap "---"))
+  (define-key map [menu-bar lkb lexicon] (name-keymap "Lexicon"))
   (define-key map [menu-bar lkb generate] (name-keymap "Generate"))
   (define-key map [menu-bar lkb parse] (name-keymap "Parse"))
   (define-key map [menu-bar lkb view] (name-keymap "View"))
@@ -66,9 +55,22 @@
   ;;
   ;; begin level 2
   ;; (generate)
+  (define-key map [menu-bar lkb lexicon batch_check]
+    (fi::menu "Batch Check Lexicon"
+	      'batch-check-lexicon))
+  (define-key map [menu-bar lkb lexicon load_tdl]
+    (fi::menu "Import TDL Entries to LexDB"
+	      'command-load-tdl-to-scratch))
+  ;; (generate)
   (define-key map [menu-bar lkb generate index]
     (fi::menu "Index"
 	      'index-for-generator))
+  (define-key map [menu-bar lkb generate print_chart]
+    (fi::menu "Print chart input"
+	      'print-gen-chart-input))
+  (define-key map [menu-bar lkb generate print_chart]
+    (fi::menu "Print chart"
+	      'print-gen-chart))
   (define-key map [menu-bar lkb generate show_chart]
     (fi::menu "Show chart"
 	      'show-gen-chart))
@@ -190,6 +192,8 @@
        ["Generate..." generate-from-edge t]
        ["Redisplay realization" show-gen-result t]
        ["Show chart" show-gen-chart t]
+       ["Print chart" print-gen-chart t]
+       ["Print chart input" print-gen-chart-input t]
        ["Index" index-for-generator t])
       "---"
       ["Redefine type" redefine-type t]
@@ -203,6 +207,10 @@
 	  (function (lambda ()
 		      (fi::install-menubar lkb-menu))))
 
+)
+;;; end pre-21 mode
+
+;;; identical in both
 (defun define-lisp-commands (commands)
   (dolist (com commands)
     (eval `(defun ,com ()
@@ -213,10 +221,16 @@
     '(read-script-file reload-script-file show-type-tree show-type-spec 
       show-type show-lex show-words show-grammar-rule show-lex-rule 
       clim-user::do-parse-batch show-parse show-chart print-chart 
-      parse-sentences-batch generate-from-edge show-gen-result show-gen-chart 
-      index-for-generator))
-)
-;;; end pre-21 mode
+      parse-sentences-batch generate-from-edge 
+      ;; generator commands
+      show-gen-result 
+      show-gen-chart print-gen-chart
+      print-gen-chart-input
+      index-for-generator
+      ;; lexicon commands
+      batch-check-lexicon
+      command-load-tdl-to-scratch))
+
 
 (if
     (and (boundp 'emacs-major-version)
@@ -257,6 +271,10 @@
 			  "\C-cl" 'lkb-show-words)
 		      (define-key fi:inferior-common-lisp-mode-map 
 			  "\C-cL" 'lkb-show-words-expanded)
+		      (define-key fi:inferior-common-lisp-mode-map 
+			  "\C-cu" 'lkb-tsdb-cpu)
+		      (define-key fi:inferior-common-lisp-mode-map 
+			  "\C-cr" 'lkb-mt-interactive)
 		      )))
 
 (defun lkb-do-parse ()
@@ -279,6 +297,20 @@
   (goto-char (point-max))
   (insert-string "(lkb::show-word-aux-tty \"\" t)")
   (backward-char 4))
+
+(defun lkb-tsdb-cpu ()
+    "prompt for [incr tsdb()] cpu"
+  (interactive)
+  (goto-char (point-max))
+  (insert-string "(tsdb::tsdb :cpu : :file t)")
+  (backward-char 9))
+
+(defun lkb-mt-interactive ()
+    "prompt for [incr tsdb()] cpu"
+  (interactive)
+  (goto-char (point-max))
+  (insert-string "(mt::parse-interactively \"\")")
+  (backward-char 2))
 
 ;;; RMRS display utility
 
