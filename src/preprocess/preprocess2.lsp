@@ -191,7 +191,7 @@
 			   :verbose verbose))
     ;; process tokens
     (multiple-value-bind (result length)
-	(preprocess-tokens (ppcre:split (fspp-tokenizer preprocessor) (text x)) 
+	(preprocess-tokens (x-split (fspp-tokenizer preprocessor) x) 
 			   (fspp-local preprocessor)
 			   :tokenp tokenp
 			   :verbose verbose)
@@ -199,7 +199,8 @@
       (format-preprocessed-output
        (nreverse (tokens-to-result (nreverse result) :format format))
        length format))
-    x))
+;    x
+    ))
 
 (defun preprocess-global-x (x &optional (global (slot-value *preprocessor* 'global)) &key verbose)
   (with-slots (text char-map) x
@@ -218,20 +219,25 @@
 	finally
 	  (return x))))
 
-(defun preprocess-tokens (tokens local &key tokenp verbose)
+(defun preprocess-tokens (x-l &optional (local (slot-value *preprocessor* 'local)) &key tokenp verbose)
   (loop
       with result
+      with token
       with length = 0
-      for token in tokens
-      unless (string= token "") do
+      for x in x-l
+      unless (string= (text x) "") do
 	(incf length)
+	(setf token x)
 	(loop
 	    with extra = nil
 	    for rule in (when tokenp local)
 	    for type = (fsr-type rule)
 	    for scanner = (fsr-scanner rule)
 	    for target = (fsr-target rule)
-	    for match = (ppcre:regex-replace scanner token target)
+	    for x-match = (make-instance 'preprocessed-x 
+			    :text (text x)
+			    :char-map (char-map x))
+	    do (x-regex-replace scanner x-match target)
 			;;
 			;; _fix_me_
 			;; regex-replace() always returns a fresh string, even if the
@@ -240,11 +246,11 @@
 			;; the result from parsing .target. and filling in register
 			;; matches as needed :-{.                     (31-jan-03; oe)
 			;;
-	    when (and (eq verbose :trace) (not (string= token match))) do
+	    when (and (eq verbose :trace) (not (equalp x x-match))) do
 	      (format
 	       t
 	       "~&|~a|~%  |~a|~%  |~a|~%~%"
-	       (fsr-source rule) token match)
+	       (fsr-source rule) (text x) (text x-match))
 	    do
 	      (case type
 		(:ersatz
@@ -255,14 +261,14 @@
 		 ;; an ersatzing table and use non-string tokens (indices into
 		 ;; the table) instead.                         (1-feb-03; oe)
 		 ;;
-		 (unless (string= token match)
-		   (push (list type token) extra)
-		   (setf token match)))
+		 (unless (string= (text x) (text x-match))
+		   (push (list :ersatz x) extra)
+		   (setf token x-match)))
 		(:augment
-		 (unless (string= token match)
-		   (push (list type match) extra)))
+		 (unless (string= (text x) (text x-match))
+		   (push (list :augment x-match) extra)))
 		(:substitute
-		 (setf token match))
+		 (setf token x-match))
 		(t
 		 (error "unhandled type: ~a" type)))
 	    finally
@@ -486,7 +492,15 @@
 
 (defclass preprocessed-x ()
   ((text :initform nil :accessor text :initarg :text)
-   (char-map :initform nil :accessor char-map)))
+   (char-map :initform nil :accessor char-map :initarg :char-map)))
+
+(defmethod print-object ((object preprocessed-x) stream)
+  (with-slots (text char-map) object
+      (format 
+       stream 
+       "|~a|:~a"
+       text char-map
+       )))
 
 (defun make-preprocessed-x (str)
   (let ((x (make-instance 'preprocessed-x :text str)))
@@ -557,6 +571,22 @@
 (defun my-aref (x y)
   (aref x y))
 
+(defun update-char-map (replacements x)
+  (setf (char-map x)
+    (loop
+	with char-map = (char-map x)
+	with last = 0
+	for r in replacements
+      for start = (repl-match-start r)
+	for end = (repl-match-end r)
+      for sub-char-map = (repl-sub-char-map r)
+			 ;; unmatched portion of string
+	append (subseq char-map last start) into new-char-map 
+	append sub-char-map into new-char-map
+	do (setf last end)
+	finally
+	  (return (append new-char-map (subseq char-map last (length char-map)))))))
+
 (defun x-regex-replace-all (scanner x target)
   (with-slots (text char-map) x
     (let ((repl-l (make-repl-list)))
@@ -574,47 +604,36 @@
 	       (update-char-map list x)))))
   x)
 
-(defun update-char-map (replacements x)
-  (setf (char-map x)
-    (loop
-	with char-map = (char-map x)
-	with last = 0
-	for r in replacements
-      for start = (repl-match-start r)
-	for end = (repl-match-end r)
-      for sub-char-map = (repl-sub-char-map r)
-			 ;; unmatched portion of string
-	append (subseq char-map last start) into new-char-map 
-	append sub-char-map into new-char-map
-	do (setf last end)
-	finally
-	  (return (append new-char-map (subseq char-map last (length char-map)))))))
+(defun x-regex-replace (scanner x target)
+  (with-slots (text char-map) x
+    (let ((repl-l (make-repl-list)))
+      (setf (text x)
+	(cl-ppcre:regex-replace 
+	 scanner text 
+	 #'(lambda (a b c d e f g) 
+	     (catch-repl a b c d e f g 
+			 :replace-string target 
+			 :repl-l repl-l
+			 :char-map char-map))))
+      (with-slots (list) repl-l
+	     (when list
+	       (setf list (reverse list))
+	       (update-char-map list x)))))
+  x)
 
-#+:null
-(defmethod regex-replace-all-x (scanner (x preprocessed-x) target)
+(defun x-split (scanner x)
   (with-slots (text char-map) x
     (loop
-	with ranges = (append '(0) (cl-ppcre:all-matches scanner text) (list (length text)))
-	with c = -1
-	with last = 0
-	for j from 0 to (1- (/ (length ranges) 2))
-	for i = (* j 2)
-	for start = (nth i ranges)
-	for end = (nth (1+ i) ranges)
-	for local = (cl-ppcre:regex-replace scanner text target :start last :end start)
-	collect local into text-l
-	collect (subseq text start end) into text-l 
+	with ranges = (append '(0)
+			      (cl-ppcre:all-matches scanner text)
+			      (list (length text)))
+	with start
+	with end
+	while ranges
 	do
-	  (setf c (+ c start (- last)))
-	  (setf last end)
-	append (loop for k from 1 to (length local)
-		   collect nil)
-	into char-map-new
-	append (loop for k from (1+ start) to end
-		   collect (char-map-lookup (incf c) char-map))
-	into char-map-new
-	finally
-	  (setf text (concatenate-strings text-l))
-	  (setf char-map char-map-new))
-    x))
-  
+	  (setf start (pop ranges))
+	  (setf end (pop ranges))
+	collect 
+	  (make-instance 'preprocessed-x
+	    :text (subseq text start end)
+	    :char-map (subseq char-map start end)))))
