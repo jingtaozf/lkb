@@ -61,7 +61,7 @@
 
 (defun maf-header nil
   (format nil
-	  "<maf addressing='Xpoint' creator='lkb-maf-tokens' date='~a' language='en.US'>" 
+	  "<?xml version='1.0' encoding='UTF8'?><!DOCTYPE maf SYSTEM 'maf.dtd' [<!ENTITY text SYSTEM 'text.xml'>]><maf addressing='Xpoint' creator='lkb-maf-tokens' date='~a' language='en.US'>" 
 	  (xml-escape (get-timestamp)) 
 	  (xml-escape (format nil "~a" *maf-lang*))))
 
@@ -79,8 +79,6 @@
 				  ; )
 				  )))
 	 (strm (make-string-output-stream)))
-    (format strm "<?xml version='1.0' encoding='UTF8'?>")
-    (format strm "<!DOCTYPE maf SYSTEM 'maf.dtd' [<!ENTITY text SYSTEM 'text.xml'>]>")
     (format strm "~a" (maf-header))
     (mapcar #'(lambda (x) 
 		(format strm "~a"
@@ -426,8 +424,8 @@
 	 (tedges (get-tedges tchart))
 	 (medges (get-medges tchart))
 	 )
-    (format strm "<?xml version='1.0' encoding='UTF8'?>")
-    (format strm "<!DOCTYPE maf SYSTEM 'maf.dtd' [<!ENTITY text SYSTEM 'text.xml'>]>")
+    ;(format strm "<?xml version='1.0' encoding='UTF8'?>")
+    ;(format strm "<!DOCTYPE maf SYSTEM 'maf.dtd' [<!ENTITY text SYSTEM 'text.xml'>]>")
     (format strm "~a" (maf-header))
 
     ;; xml token elements
@@ -610,97 +608,63 @@
 (defun parse-from-maf (maf &optional (maf-mode :tokens)
 				     (show-parse-p *show-parse-p*) 
 				     (first-only-p *first-only-p*))
-  ;(check-morph-options bracketed-input)
   (let* ((*active-parsing-p* (if *bracketing-p* nil *active-parsing-p*))
          (first-only-p (if (and first-only-p 
                                 (null *active-parsing-p*)
                                 (greater-than-binary-p))
-                         (format 
-                          t 
-                          "~&Passive best-first mode only available for ~
+			   (format 
+			    t 
+			    "~&Passive best-first mode only available for ~
                            unary and binary rules.~%~
                            Disabling best-first mode: setting ~
                            *first-only-p* to `nil'.~%")
                          first-only-p)))
-    ;; eg. user-input -> ("the" "dog" "barks")
-    ;(multiple-value-bind (user-input brackets-list)
-    ;    (if *bracketing-p*
-    ;      (initialise-bracket-list bracketed-input)
-    ;      (values bracketed-input nil))
-
-    ;(when (> (length user-input) *chart-limit*)
-    ;    (error "~%Sentence `~a' too long - ~A words maximum ~
-    ;            (see documentation for *chart-limit*)" 
-					;           user-input *chart-limit*))
     (clear-chart)
-    (maf-to-tchart maf)
-      (let* (;(*brackets-list* brackets-list)
-	     (len-tokens (apply #'max 
-				(mapcar #'token-edge-to 
-					(get-tedges *tchart*))))
-	    (*executed-tasks* 0) (*successful-tasks* 0)
-            (*contemplated-tasks* 0) (*filtered-tasks* 0)
-            (*parser-rules* (get-matching-rules nil nil))
-            (*parser-lexical-rules* (get-matching-lex-rules nil))
-            (*lexical-entries-used* nil)
-            (*minimal-vertex* 0)
-            (*maximal-vertex* len-tokens)
-            ;;
-            ;; shadow global variable to allow best-first mode to decrement for
-            ;; each result found; eliminates need for additional result count.
-            ;;                                              (22-jan-00  -  oe)
-            (*first-only-p*
-             (cond
-              ((null first-only-p) nil)
-              ((and (numberp first-only-p) (zerop first-only-p)) nil)
-              ((numberp first-only-p) first-only-p)
-              (t 1))))
-        (declare (special *minimal-vertex* *maximal-vertex*))
-        (with-parser-lock ()
-          (flush-heap *agenda*)
-          ;(clear-chart)
-          (setf *cached-category-abbs* nil)
-          (setf *parse-record* nil)
-          (setf *parse-times* (list (get-internal-run-time)))
-          (let ((*safe-not-to-copy-p* t))
-	    ;(instantiate-chart-with-tokens user-input)
-	    (unless (eq maf-mode :wordforms)
-	      (ecase *morph-option*
-		(:default (instantiate-chart-with-morphop))
-		(:external-rule-by-rule 
-		 (instantiate-chart-with-morphop))
+    (maf-to-tchart maf) ;; instantiate chart with tokens (+ wordforms if available)
+    (let* ((len-tokens (apply #'max (mapcar #'token-edge-to (get-tedges *tchart*))))
+	   (*executed-tasks* 0) (*successful-tasks* 0)
+	   (*contemplated-tasks* 0) (*filtered-tasks* 0)
+	   (*parser-rules* (get-matching-rules nil nil))
+	   (*parser-lexical-rules* (get-matching-lex-rules nil))
+	   (*lexical-entries-used* nil)
+	   (*minimal-vertex* 0)
+	   (*maximal-vertex* len-tokens)
+	   (*first-only-p*
+	    (cond
+	     ((null first-only-p) nil)
+	     ((and (numberp first-only-p) (zerop first-only-p)) nil)
+	     ((numberp first-only-p) first-only-p)
+	     (t 1))))
+      (declare (special *minimal-vertex* *maximal-vertex*))
+      (with-parser-lock ()
+	(flush-heap *agenda*)
+	(setf *cached-category-abbs* nil)
+	(setf *parse-record* nil)
+	(setf *parse-times* (list (get-internal-run-time)))
+	(let ((*safe-not-to-copy-p* t))
+	  (unless (eq maf-mode :wordforms)
+	    (ecase *morph-option*
+	      (:default (instantiate-chart-with-morphop))
+	      (:external-rule-by-rule 
+	       (instantiate-chart-with-morphop))
 	      ;;; *foreign-morph-fn* is set and will be called
-		(:external-partial-tree
-		 (instantiate-chart-with-morpho-stem-edges))
-		(:with-tokeniser-partial-tree nil)
-		(:with-tokeniser-retokenise nil)))
-	    (instantiate-chart-with-stems-and-multiwords)
-            ;(catch :best-first
-              (add-words-to-chart (and first-only-p (null *active-parsing-p*)
-                                       (cons 0
-					     len-tokens
-					     ;(length user-input)
-					     )))
-              (if *active-parsing-p*
-                (complete-chart)
-                (loop 
-                    until (empty-heap *agenda*)
-                    do (funcall (heap-extract-max *agenda*))))
-	      ;)
-            (unless first-only-p
-              ;;
-              ;; best-first (passive or active mode) has already done this
-              ;; incrementally in the parse loop
-              ;;
-              (setf *parse-record* 
-                (find-spanning-edges 0 
-				     len-tokens
-				     ;(length user-input)
-				     ))))
-          (push (get-internal-run-time) *parse-times*))
-        (when show-parse-p (show-parse))
-        (values *executed-tasks* *successful-tasks* 
-                *contemplated-tasks* *filtered-tasks*))
-      ;)
-    ))
+	      (:external-partial-tree
+	       (instantiate-chart-with-morpho-stem-edges))
+	      (:with-tokeniser-partial-tree nil)
+	      (:with-tokeniser-retokenise nil)))
+	  (instantiate-chart-with-stems-and-multiwords)
+	  (add-words-to-chart (and first-only-p (null *active-parsing-p*)
+                                       (cons 0 len-tokens)))
+	  (if *active-parsing-p*
+	      (complete-chart)
+	    (loop 
+		until (empty-heap *agenda*)
+		do (funcall (heap-extract-max *agenda*))))
+	  (unless first-only-p
+	    (setf *parse-record* 
+	      (find-spanning-edges 0 len-tokens))))
+	(push (get-internal-run-time) *parse-times*))
+      (when show-parse-p (show-parse))
+      (values *executed-tasks* *successful-tasks* 
+	      *contemplated-tasks* *filtered-tasks*))))
 
