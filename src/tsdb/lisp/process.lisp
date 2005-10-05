@@ -81,7 +81,8 @@
     (format
      stream
      "~%tsdb-do-process(): out-of-date profile `~a'.~%"
-     data))
+     data)
+    (return-from tsdb-do-process))
   
   (unless (or (null vocabulary) 
               (smember type '(:transfer :generate :translate))
@@ -230,7 +231,7 @@
         (when xstream (xmlify-run :stream xstream))
         
         (unwind-protect
-            (progn;#-:debug ignore-errors #+:debug progn
+            (#-:debug ignore-errors #+:debug progn
              (catch :break
                (loop
                    with result = nil

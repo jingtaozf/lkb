@@ -65,6 +65,14 @@
 
   (initialize-tsdb)
   (when strip
+  
+    (when (< (profile-granularity data) 200509)
+      (format
+       stream
+       "~%browse-trees(): out-of-date profile `~a'.~%"
+       data)
+      (return-from browse-trees))
+  
     (unless (do-import-database (find-tsdb-directory data) strip 
                                 :meter (when meter (make-meter 0 1))
                                 :except (append
