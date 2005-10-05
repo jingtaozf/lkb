@@ -153,10 +153,13 @@
           results)))))
 
 (defparameter *scrub-binary* 
+  #+:logon
   (namestring
    (merge-pathnames
     (dir-append (get-sources-dir "tsdb") '(:relative "mt"))
-    (make-pathname :name "scrub" :type "pl"))))
+    (make-pathname :name "scrub" :type "pl")))
+  #-:logon
+  nil)
 
 (defparameter *scrub-stream* nil)
 
@@ -196,13 +199,15 @@
         (setf foo foo))))
 
   (defun scrub-strings (strings)
-    (mp:with-process-lock (lock)
-      (when (null *scrub-stream*) (scrub-initialize))
-      (loop
-          for string in strings
-          do 
-            (format *scrub-stream* "~a~%" string)
-            (force-output *scrub-stream*)
-            collect (read-line *scrub-stream* nil nil)))))
+    (if *scrub-binary*
+      (mp:with-process-lock (lock)
+        (when (null *scrub-stream*) (scrub-initialize))
+        (loop
+            for string in strings
+            do 
+              (format *scrub-stream* "~a~%" string)
+              (force-output *scrub-stream*)
+              collect (read-line *scrub-stream* nil nil)))
+      strings)))
 
 ;;;pick up. check/diff the oovs from the 2,3 and 4..

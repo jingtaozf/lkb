@@ -73,8 +73,8 @@
        t
        "serialize-semantics-indices(): error: `~a'~%"
        condition)
-      (when (probe-file forward) (delete-file forward))
-      (when (probe-file backward) (delete-file backward))
+      (when (and forward (probe-file forward)) (delete-file forward))
+      (when (and backward (probe-file backward)) (delete-file backward))
       nil)))
 
 (defun unserialize-semantics-indices
@@ -119,7 +119,11 @@
    (hash-table-count *semantic-table*)))
 
 (defun restore-semantic-indices ()
-  (when (typep lkb::*lexicon* 'lkb::cdb-lex-database)
+  (when (and (typep lkb::*lexicon* 'lkb::cdb-lex-database)
+             lkb::*predicates-temp-file*
+             (probe-file lkb::*predicates-temp-file*)
+             lkb::*semantics-temp-file*
+             (probe-file lkb::*predicates-temp-file*))
     (with-slots (lkb::source-files) lkb::*lexicon*
       (when (lkb::up-to-date-p
              lkb::source-files

@@ -4,17 +4,19 @@
 # sample script to fake the Simple PreProcessing Protocol (use with the ERG)
 #
 
+path=$(dirname $0)
+if [ "${path#./}" != "${path}" ]; then
+  path="$(pwd)/${path#./}"
+fi
+if [ "${path#/}" = "${path}" ]; then
+  if [ "${path}" = "." ]; then
+    path="$(pwd)";
+  else 
+    path="$(pwd)/${path}"
+  fi
+fi
+
 while read -d '' foo; do
-  echo "${foo}" > /tmp/sppp.log
-  echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-  echo "<segment>"
-  echo "  <token form=\"kim\" from=\"0\" to=\"3\">"
-  echo "    <analysis inflection=\"zero\" stem=\"kim\"/>"
-  echo "  </token>"
-  echo "  <token form=\"sleeps\" from=\"4\" to=\"10\">"
-  echo "    <analysis inflection=\"plur_noun\" stem=\"sleep\"/>"
-  echo "    <analysis inflection=\"third_sg_fin_verb\" stem=\"sleep\"/>"
-  echo "  </token>"
-  echo "</segment>"
+  cat ${path}/erg.sppp
   echo ""
 done

@@ -639,17 +639,10 @@
 ;;            (when *sem-debugging*
 ;;              (mrs::output-mrs input-sem 'mrs::simple)
 ;;              (mrs::output-mrs mrs 'mrs::simple))  
-        #+:logon
         (mt::compare-mrss
          (if *gen-equate-qeqs-p* (mrs::equate-all-qeqs mrs) mrs)
          input-sem
-         :type :subsumption)
-        #-:logon
-        (mrs::mrs-equalp 
-         (if *gen-equate-qeqs-p* (mrs::equate-all-qeqs mrs) mrs)
-         input-sem
-         nil *debugging* 
-         (not (eq *bypass-equality-check* :filter))))))
+         :type :subsumption))))
 
 
 (defun gen-chart-root-edges (edges start-symbols)

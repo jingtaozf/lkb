@@ -399,7 +399,6 @@
                                         ; entries etc on semantics
        (:file "lexlookup")              ; LKB specific - retrieving
        (:file "genpredict")             ; LKB specific - null semantics
-       #+:logon
        (:file "serialize")))            ; simple generator index cache
 
      (:module "generator"

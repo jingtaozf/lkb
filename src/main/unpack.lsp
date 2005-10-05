@@ -383,8 +383,6 @@
 
 (defun selectively-unpack-edges (edges &optional n &key test robustp)
 
-  #+:logon
-  (declare (ignore n))
   #+:debug
   (setf %edges edges)
 
@@ -399,9 +397,7 @@
   ;; priority to sort out once LOGON 0.5 has been released.  the corresponding
   ;; PR is LOGON generation/290.                               (21-sep-05; oe)
   ;;
-  (if #+:logon t
-      #-:logon
-      (or (null n) (not (numberp n)) (<= n 0) (null *unpacking-scoring-hook*))
+  (if (or (null n) (not (numberp n)) (<= n 0) (null *unpacking-scoring-hook*))
     (let ((edges (unpack-edges edges)))
       (if test
         (or

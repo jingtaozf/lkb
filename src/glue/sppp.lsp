@@ -93,23 +93,36 @@
       for i from 0
       for token in tokens
       for form = (rest (assoc :form token))
+      for start = (or (rest (assoc :start token)) -1)
+      for end = (or (rest (assoc :end token)) -1)
       for from = (or (rest (assoc :from token)) -1)
       for to = (or (rest (assoc :to token)) -1)
+      do (add-token-edge form (string-upcase form) start end from to)
       do
         (loop
             for analysis in (rest (assoc :analyses token))
             for stem = (string-upcase (rest (assoc :stem analysis)))
             for inflection = (rest (assoc :inflection analysis))
-            for irule = (unless (string= inflection "zero")
-                          (intern (format 
-                                   nil 
-                                   "~@:(~a~)~a" 
-                                   inflection *lex-rule-suffix*)
-                                  :lkb))
-            do
+            for rules = (rest (assoc :rules analysis))
+            when rules do
               (add-morpho-stem-edge
-               stem (when irule (list (list irule form)))
-               i (+ 1 i) form form from to nil nil))))
+               stem
+               (loop
+                   for rule in rules
+                   collect (list (rest (assoc :id rule))
+                                 (rest (assoc :form rule))))
+               i (+ 1 i) form form start end from to)
+            else do
+              (let ((irule (unless (or (null inflection)
+                                       (string= inflection "zero"))
+                             (intern (format 
+                                      nil 
+                                      "~@:(~a~)~a" 
+                                      inflection *lex-rule-suffix*)
+                                     :lkb))))
+                (add-morpho-stem-edge
+                 stem (when irule (list (list irule form)))
+                 i (+ 1 i) form form start end from to)))))
 
 (defun sppp (text &key (stream *sppp-stream*))
 
@@ -146,7 +159,7 @@
                    (return n)
                  while c do (vector-push c *sppp-input-buffer*))))
       (when (and (numberp n) (> n 1))
-        (multiple-value-bind (pxml condition) 
+        (multiple-value-bind (xml condition) 
             (ignore-errors
              (xml:parse-xml (string-trim '(#\newline) *sppp-input-buffer*)))
           (if condition
@@ -154,8 +167,8 @@
              t
              "sppp(): error parsing XML (~a characters)~%"
              n)
-            (when (eq (first (second pxml)) '|segment|)
-              (sppp-process-segment (rest (second pxml))))))))))
+            (when (eq (first (second xml)) '|segment|)
+              (sppp-process-segment (rest (second xml))))))))))
 
 (defun sppp-process-segment (segment)
   (loop
@@ -195,13 +208,30 @@
       with form = (sppp-xml-get base '|form|)
       for element in (rest token)
       when (consp element) do
-        (let* ((base (first element))
-               (stem (sppp-xml-get base '|stem|))
-               (inflection (sppp-xml-get base '|inflection|)))
-          (push (pairlis '(:stem :inflection) (list stem inflection)) 
-                analyses))
+        (push (sppp-process-analysis element) analyses)
       finally (return (pairlis '(:form :from :to :analyses)
                                (list form from to (nreverse analyses))))))
+
+(defun sppp-process-analysis (analysis)
+  (let* ((base (first analysis))
+         (stem (sppp-xml-get base '|stem|))
+         (inflection (sppp-xml-get base '|inflection|))
+         rules)
+    (loop
+        for element in (rest analysis)
+        when (consp element) do
+          (let* ((base (first element))
+                 (id (let ((foo (sppp-xml-get base '|id|)))
+                       (when (stringp foo)
+                         (intern (string-upcase foo) :lkb)))) 
+                 (form (sppp-xml-get base '|form|)))
+            (push (pairlis '(:id :form) (list id form)) rules)))
+    (when (and inflection rules)
+      (format
+       t
+       "sppp-process-analysis(): ignoring superfluous `inflection' value.~%"))
+    (pairlis '(:stem :inflection :rules)
+             (list stem (unless rules inflection) (nreverse rules)))))
 
 (defun sppp-xml-get (element attribute &key type)
   (loop
@@ -216,53 +246,49 @@
              (second attributes))))))
 
 (defun xml-escape-string (string)
-  (xml-escape string)) ;; (bmw) xml-escape is faster (+simpler)
-
-#+:null
-(defun xml-escape-string (string)
   (if (and string (stringp string))
     (loop
-        with padding = 128
-        with length = (+ (length string) padding)
-        with result = (make-array length
-                                  :element-type 'character
-                                  :adjustable nil :fill-pointer 0)
-        for c across string
-        when (member c '(#\& #\< #\> #\' #\") :test #'char=) do
-          (vector-push #\& result)
-          (case c
-            (#\&
-             (vector-push #\a result)
-             (vector-push #\m result)
-             (vector-push #\p result)
-             (decf padding 4))
-            (#\<
-             (vector-push #\l result)
-             (vector-push #\t result)
-             (decf padding 3))
-            (#\>
-             (vector-push #\g result)
-             (vector-push #\t result)
-             (decf padding 3))
-            (#\'
-             (vector-push #\a result)
-             (vector-push #\p result)
-             (vector-push #\o result)
-             (vector-push #\s result)
-             (decf padding 5))
-            (#\"
-             (vector-push #\q result)
-             (vector-push #\u result)
-             (vector-push #\o result)
-             (vector-push #\t result)
-             (decf padding 5)))
-          (vector-push #\; result)
-          (when (<= padding 0)
-            (setf padding 128)
-            (incf length padding)
-            (setf result (adjust-array result length)))
+        with padding
+        = (loop
+              for c across string
+              when (char= c #\&) sum 4
+              else when (or (char= c #\<) (char= c #\>)) sum 3
+              else when (or (char= c #\') (char= c #\")) sum 5)
+        with result = (make-string (+ (length string) padding))
+        with i = -1
+        for c of-type character across (the string string)
+        when (char= c #\&) do
+          (setf (schar result (incf i)) #\&)
+          (setf (schar result (incf i)) #\a)
+          (setf (schar result (incf i)) #\m)
+          (setf (schar result (incf i)) #\p)
+          (setf (schar result (incf i)) #\;)
+        else when (char= c #\<) do
+          (setf (schar result (incf i)) #\&)
+          (setf (schar result (incf i)) #\l)
+          (setf (schar result (incf i)) #\t)
+          (setf (schar result (incf i)) #\;)
+        else when (char= c #\>) do
+          (setf (schar result (incf i)) #\&)
+          (setf (schar result (incf i)) #\g)
+          (setf (schar result (incf i)) #\t)
+          (setf (schar result (incf i)) #\;)
+        else when (char= c #\') do
+          (setf (schar result (incf i)) #\&)
+          (setf (schar result (incf i)) #\a)
+          (setf (schar result (incf i)) #\p)
+          (setf (schar result (incf i)) #\o)
+          (setf (schar result (incf i)) #\s)
+          (setf (schar result (incf i)) #\;)
+        else when (char= c #\") do
+          (setf (schar result (incf i)) #\&)
+          (setf (schar result (incf i)) #\q)
+          (setf (schar result (incf i)) #\u)
+          (setf (schar result (incf i)) #\o)
+          (setf (schar result (incf i)) #\t)
+          (setf (schar result (incf i)) #\;)
         else do
-          (vector-push c result)
+          (setf (schar result (incf i)) c)
         finally
           (return result))
     string))

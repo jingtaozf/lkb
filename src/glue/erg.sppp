@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<segment>
+  <token form="kim" from="0" to="3">
+    <analysis stem="kim"/>
+  </token>
+  <token form="sleeps." from="4" to="10">
+    <analysis stem="sleep">
+      <rule id="plur_noun_infl_rule" form="sleeps"/>
+      <rule id="punct_period_rule" form="sleeps."/>
+    </analysis>
+    <analysis stem="sleep">
+      <rule id="third_sg_fin_verb_infl_rule" form="sleeps"/>
+      <rule id="punct_period_rule" form="sleeps."/>
+    </analysis>
+  </token>
+</segment>

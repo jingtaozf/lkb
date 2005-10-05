@@ -1,5 +1,6 @@
-;;; Copyright (c) 1998-2003 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron
-;;; see licence.txt for conditions
+;;; Copyright (c) 1998--2005
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, 
+;;;   and Benjamin Waldron; see `licence.txt' for conditions.
 
 (in-package :lkb)
 
@@ -29,13 +30,14 @@
 
 (defun index-for-generator nil
   (clear-generator-index)
-  (if mrs::*top-semantics-type*
-    (setf mrs::*top-semantics-entry*
-      (get-type-entry mrs::*top-semantics-type*))
-    (progn
-      (cerror "~A will be used (indexing may be inefficient)" 
-               "~%No *top-semantics-type* defined" *toptype*)
-      (setf mrs::*top-semantics-entry* (get-type-entry *toptype*)))) 
+  (cond
+   (mrs::*top-semantics-type*
+    (setf mrs::*top-semantics-entry* 
+      (get-type-entry mrs::*top-semantics-type*)))
+   (t
+    (cerror "~A will be used (indexing may be inefficient)" 
+            "~%No *top-semantics-type* defined" *toptype*)
+    (setf mrs::*top-semantics-entry* (get-type-entry *toptype*))))
   (unless (eq (check-generator-environment) :error)
     (index-lexicon)
     (index-lexical-rules)
@@ -52,7 +54,7 @@
     (format t "~%(caching all lexical records)")
     (cache-all-lex-records-orth *lexicon*))
   
-  (unless #+:logon (mrs::restore-semantic-indices) #-:logon nil
+  (unless (mrs::restore-semantic-indices)
     (format t "~% (recompiling semantic indices)")
     (mrs::clear-semantic-indices)
     (let ((*batch-mode* t))
@@ -81,7 +83,6 @@
         (mrs::check-for-redundant-filter-rules)))
     (when (typep *lexicon* 'psql-lex-database)
       (mrs::dump-semi-to-psql mrs::*semi*))
-    #+:logon
     (when (typep lkb::*lexicon* 'lkb::cdb-lex-database)
       (mrs::serialize-semantics-indices))))
 
