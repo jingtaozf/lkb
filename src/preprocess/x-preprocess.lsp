@@ -7,7 +7,7 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;        file: preprocess.lsp
+;;;        file: x-preprocess.lsp
 ;;;      module: input preprocessing mimicry (collection of rough utilities)
 ;;;     version: 0.0 (30-jan-03)
 ;;;  written by: oe, csli stanford
@@ -57,38 +57,38 @@
 
 (in-package :lkb)
 
-(defvar *preprocessor-debug-p* t)
+(defvar *x-preprocessor-debug-p* t)
 
-(defvar *preprocessor* nil)
+(defvar *x-preprocessor* nil)
 
-(defstruct fspp
+(defstruct x-fspp
   version
   (tokenizer (ppcre:create-scanner "[ \\t]+"))
   global
   local)
 
-(defmethod print-object ((object fspp) stream)
+(defmethod print-object ((object x-fspp) stream)
   (format 
    stream 
-   "#[FSPP (~d global, ~d token-level rules @ `~a')]"
-   (length (fspp-global object)) (length (fspp-local object)) 
-   (fspp-tokenizer object)))
+   "#[X-FSPP (~d global, ~d token-level rules @ `~a')]"
+   (length (x-fspp-global object)) (length (x-fspp-local object)) 
+   (x-fspp-tokenizer object)))
 
-(defstruct fsr
+(defstruct x-fsr
   type
   source
   scanner
   target)
 
-(defmethod print-object ((object fsr) stream)
+(defmethod print-object ((object x-fsr) stream)
   (with-slots (type source target) object
       (format 
        stream 
-       "#[FSR (~a |~a| -> |~a|)]"
+       "#[X-FSR (~a |~a| -> |~a|)]"
        type source target
        )))
 
-(defun read-preprocessor (file &key (fspp (make-fspp) fsppp))
+(defun x-read-preprocessor (file &key (x-fspp (make-x-fspp) x-fsppp))
   (when (probe-file file)
     (with-open-file (stream file :direction :input)
       (let* ((path (pathname file))
@@ -112,7 +112,7 @@
                          (version (if (string= version "$Date: " :end1 7)
                                     (subseq version 7 (- (length version) 2))
                                     version)))
-                    (setf (fspp-version fspp) 
+                    (setf (x-fspp-version x-fspp) 
                       (string-trim '(#\Space) version))))
 		 ;; < import
                  ((char= c #\<)
@@ -120,15 +120,15 @@
                          (file (or (probe-file name)
                                    (probe-file (merge-pathnames name path)))))
                     (if file
-                      (read-preprocessor file :fspp fspp)
+                      (x-read-preprocessor file :fspp x-fspp)
                         (format
                          t
-                         "read-preprocessor(): [~d] unable to include `~a'~%"
+                         "x-read-preprocessor(): [~d] unable to include `~a'~%"
                          n name))))
 		 ;; : tokenizer
                  ((char= c #\:)
                   (let ((tokenizer (subseq line 1 end)))
-                    (setf (fspp-tokenizer fspp) tokenizer)))
+                    (setf (x-fspp-tokenizer x-fspp) tokenizer)))
 		 ;; ! replace
 		 ;; - substitute
 		 ;; + augment
@@ -148,66 +148,66 @@
                               (if (eq type :replace)
                                 source
                                 (format nil "^~a$" source)))))
-                           (match (make-fsr :type type :source source
+                           (match (make-x-fsr :type type :source source
                                             :scanner scanner :target target)))
                       (if scanner
                         (if (eq type :replace)
-                          (push match (fspp-global fspp))
-                          (push match (fspp-local fspp)))
+                          (push match (x-fspp-global x-fspp))
+                          (push match (x-fspp-local x-fspp)))
                         (format
                          t
-                         "read-preprocessor(): [~d] invalid pattern `~a'~%"
-                         n source(preprocess "The dog--barked." :format :list))))
+                         "x-read-preprocessor(): [~d] invalid pattern `~a'~%"
+                         n source(x-preprocess "The dog--barked." :format :list))))
                     (format
                      t
-                     "read-preprocessor(): [~d] invalid `~a'~%"
+                     "x-read-preprocessor(): [~d] invalid `~a'~%"
                      n line)))
                  (t
                   (format
                    t
-                   "read-preprocessor(): [~d] ~
+                   "x-read-preprocessor(): [~d] ~
                     ignoring unknown rule type `~a'~%"
                    n c))))
             when (null line) do
-              (unless fsppp
-                (setf (fspp-global fspp)
-                  (nreverse (fspp-global fspp)))
-                (setf (fspp-local fspp)
-                  (nreverse (fspp-local fspp))))
-              (unless fsppp (format t "~a~%" fspp))
-              (return (if fsppp fspp (setf *preprocessor* fspp))))))))
+              (unless x-fsppp
+                (setf (x-fspp-global x-fspp)
+                  (nreverse (x-fspp-global x-fspp)))
+                (setf (x-fspp-local x-fspp)
+                  (nreverse (x-fspp-local x-fspp))))
+              (unless x-fsppp (format t "~a~%" x-fspp))
+              (return (if x-fsppp x-fspp (setf *x-preprocessor* x-fspp))))))))
 
-(defun preprocess (string &key (preprocessor *preprocessor*) 
+(defun x-preprocess (string &key (preprocessor *x-preprocessor*) 
                                (globalp t) (tokenp t)
-                               (verbose *preprocessor-debug-p*)
+                               (verbose *x-preprocessor-debug-p*)
                                (format :list))
   (let ((x (make-preprocessed-x string)))
     ;; if no preprocessor defined...
     (when (null preprocessor)
-      (return-from preprocess (and (eq format :lkb) x)))
+      (return-from x-preprocess (and (eq format :lkb) x)))
     ;; process text globally
     (when globalp
-      (preprocess-global-x x (fspp-global preprocessor)
+      (x-preprocess-global x (x-fspp-global preprocessor)
 			   :verbose verbose))
     ;; process tokens
     (multiple-value-bind (result length)
-	(preprocess-tokens (x-split (fspp-tokenizer preprocessor) x) 
-			   (fspp-local preprocessor)
+	(x-preprocess-tokens (x-split (x-fspp-tokenizer preprocessor) x) 
+			   (x-fspp-local preprocessor)
 			   :tokenp tokenp
 			   :verbose verbose)
       ;; get output in desired format
-      (format-preprocessed-output
-       (nreverse (tokens-to-result (nreverse result) :format format))
+      (x-format-preprocessed-output
+       (nreverse (x-tokens-to-result (nreverse result) :format format))
        length format))
 ;    x
     ))
 
-(defun preprocess-global-x (x &optional (global (slot-value *preprocessor* 'global)) &key verbose)
+(defun x-preprocess-global (x &optional (global (slot-value *x-preprocessor* 'global)) &key verbose)
   (with-slots (text char-map) x
     (loop
 	for rule in global
-	for scanner = (fsr-scanner rule)
-	for target = (fsr-target rule)
+	for scanner = (x-fsr-scanner rule)
+	for target = (x-fsr-target rule)
 	for old-text = text
 	do
 	  (setf x (x-regex-replace-all scanner x target))
@@ -215,11 +215,11 @@
 	  (format
 	   t
 	   "~&|~a|~%  |~a|~%  |~a|~%~%"
-	   (fsr-source rule) old-text text)
+	   (x-fsr-source rule) old-text text)
 	finally
 	  (return x))))
 
-(defun preprocess-tokens (x-l &optional (local (slot-value *preprocessor* 'local)) &key tokenp verbose)
+(defun x-preprocess-tokens (x-l &optional (local (slot-value *x-preprocessor* 'local)) &key tokenp verbose)
   (loop
       with result
       with token
@@ -231,9 +231,9 @@
 	(loop
 	    with extra = nil
 	    for rule in (when tokenp local)
-	    for type = (fsr-type rule)
-	    for scanner = (fsr-scanner rule)
-	    for target = (fsr-target rule)
+	    for type = (x-fsr-type rule)
+	    for scanner = (x-fsr-scanner rule)
+	    for target = (x-fsr-target rule)
 	    for x-match = (make-instance 'preprocessed-x 
 			    :text (text x)
 			    :char-map (char-map x))
@@ -250,7 +250,7 @@
 	      (format
 	       t
 	       "~&|~a|~%  |~a|~%  |~a|~%~%"
-	       (fsr-source rule) (text x) (text x-match))
+	       (x-fsr-source rule) (text x) (text x-match))
 	    do
 	      (case type
 		(:ersatz
@@ -276,7 +276,7 @@
       finally
 	(return (values result length))))
 
-(defun tokens-to-result (tokens &key verbose 
+(defun x-tokens-to-result (tokens &key verbose 
 				     format) ;;get rid of this
   (loop
       with result = nil
@@ -307,7 +307,7 @@
       finally 
 	(return result)))
 
-(defun format-preprocessed-output (result length &optional (format :list))
+(defun x-format-preprocessed-output (result length &optional (format :list))
   (cond
    ((eq format :lkb)
     (loop
@@ -358,6 +358,7 @@
 	  (fourth p-token)
 	  ))
 
+#+:null
 (defun escape-string (string &key (syntax :c))
   (declare (ignore syntax))
            
@@ -382,109 +383,8 @@
           (return result))
     ""))
 
-(defun clear-preprocessor ()
-  (setf *preprocessor* nil))
-
-(defun preprocess-for-pet (string &optional tagger)
-  (if (and tagger (consp tagger) (keywordp (first tagger)))
-    (multiple-value-bind (tokens length)
-        (case (first tagger)
-          (:tnt
-           (apply 
-            #'tag-tnt
-            (preprocess string :format :list :verbose nil)
-            (rest tagger))))
-      (loop
-          for (id start end form surface . tags) in tokens
-          for token = (format 
-                       nil 
-                       "(~d, ~d, ~d, 1, \"~a\" \"~a\", 0, \"null\",~
-                       ~{ ~s ~,4f~})" 
-                       id start end 
-                       (escape-string form) (escape-string surface) tags)
-          collect token into tokens
-          finally 
-            (return (values (format nil "~{~a~^ ~}" tokens) length))))
-    (preprocess string :format :yy :verbose nil)))
-
-(defparameter *tagger-application*
-  '((:tnt "tnt -z100 /user/oe/src/tnt/models/wsj -")))
-
-(defun tag-tnt (tokens &optional run &key (n 1))
-  (labels ((commentp (string)
-             (and (>= (length string) 2)
-                  (characterp (char string 0)) (char= (char string 0) #\%)
-                  (characterp (char string 1)) (char= (char string 1) #\%))))
-
-    (let* ((run (or run 
-		    (loop
-			for run in *tagger-application*
-		       when (eq (first run) :tnt)
-			return (first (rest run)))
-		    "tnt -z100 /user/oe/src/tnt/models/wsj -"))
-	   (command (format nil "exec ~a" run *tagger-application*))
-	   (input (format nil "/tmp/.tnt.in.~a" (current-user)))
-	   (output (format nil "/tmp/.tnt.out.~a" (current-user)))
-	   (length 0) analyses)
-      (with-open-file (stream input :direction :output :if-exists :supersede)
-        (loop
-            with i = -1
-            for token in tokens
-            for start = (second token)
-            unless (= i start) do
-              (setf i start)
-              (incf length)
-              (format stream "~a~%" (fifth token))
-            finally (format stream "~%~%")))
-      (run-process
-       command :wait t 
-       :input input :output output :if-output-exists :supersede
-       :error-output "/dev/null" :if-error-output-exists :append)
-      (with-open-file (stream output :direction :input)
-        (loop
-            with buffer = (make-array 512 
-                                      :element-type 'character
-                                      :adjustable t :fill-pointer 0)
-            with i = 0
-            for string = (read-line stream nil nil)
-            while (and string (not (zerop (length string))))
-            unless (commentp string) do 
-              (incf i)
-              (loop
-                  with foo = nil
-                  with n = 0
-                  initially (setf (fill-pointer buffer) 0)
-                  for c across string
-                  when (char= c #\tab) do
-                    (when (not (zerop (fill-pointer buffer)))
-                      (push (if (and (evenp n) (not (zerop n)))
-                              (read-from-string (copy-seq buffer))
-                              (copy-seq buffer))
-                            foo)
-                      (setf (fill-pointer buffer) 0)
-                      (incf n))
-                  else do
-                       (vector-push c buffer)
-                  finally
-                    (when (not (zerop (fill-pointer buffer)))
-                      (push (read-from-string (copy-seq buffer)) foo))
-                    (when foo
-                      (push (nreverse foo) analyses)))))
-      (loop
-          with tags = (make-array (length analyses))
-          for analysis in (nreverse analyses)
-          for i from 0
-          do (setf (aref tags i) (rest analysis))
-          finally
-            (loop
-                for token in tokens
-                for analysis = (aref tags (second token))
-                do (nconc token (loop
-                                    with n = (* 2 n)
-                                    for foo in analysis
-                                    while (< 0 n) 
-                                    collect foo do (decf n)))))
-      (values tokens length))))
+(defun x-clear-preprocessor ()
+  (setf *x-preprocessor* nil))
 
 ;;
 ;; (bmw - oct 05)
@@ -538,6 +438,7 @@
        with reg-start
        with reg-end
        for c across replace-string
+		    ;; to_do: \& \` \' \{N}
        if (and esc (member c '(#\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9)))
        do (setf reg (1- (read-from-string (string c))))
 	  (setf reg-start (my-aref reg-starts reg))

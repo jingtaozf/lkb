@@ -194,6 +194,8 @@
       :components
       (#+:preprocessor       
        (:file "preprocess")
+      #+:preprocessor       
+       (:file "x-preprocess")
        #+(and :xml)
        (:file "lxml")
        #+:maf
