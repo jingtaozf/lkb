@@ -57,6 +57,8 @@
 
 (in-package :lkb)
 
+(defvar *x-preprocess-p* nil)
+
 (defvar *x-preprocessor-debug-p* t)
 
 (defvar *x-preprocessor* nil)
@@ -120,7 +122,7 @@
                          (file (or (probe-file name)
                                    (probe-file (merge-pathnames name path)))))
                     (if file
-                      (x-read-preprocessor file :fspp x-fspp)
+                      (x-read-preprocessor file :x-fspp x-fspp)
                         (format
                          t
                          "x-read-preprocessor(): [~d] unable to include `~a'~%"
@@ -409,8 +411,10 @@
     x))
 
 (defun make-char-map (l)
-  (loop for i from 0 to (1- l)
-      collect i))
+  (loop
+      with i = 0
+      while (< i l)
+      collect (cons i (incf i))))
 
 (defun char-map-lookup (n char-map)
   (nth n char-map))
@@ -430,6 +434,16 @@
 (defstruct repl-list
   list)
 
+(defun char-map-match-start (char-map match-start)
+  (car (nth match-start char-map)))
+
+(defun char-map-match-end (char-map match-end)
+  (cond
+   ((= 0 match-end)
+    0)
+   (t
+    (cdr (nth (1- match-end) char-map)))))
+
 (defun catch-repl (target-string start end match-start match-end reg-starts reg-ends &key replace-string repl-l char-map)
   (coerce
    (loop
@@ -441,20 +455,23 @@
 		    ;; to_do: \& \` \' \{N}
        if (and esc (member c '(#\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9)))
        do (setf reg (1- (read-from-string (string c))))
-	  (setf reg-start (my-aref reg-starts reg))
-	  (setf reg-end (my-aref reg-ends reg))
+	  (setf reg-start (aref reg-starts reg))
+	  (setf reg-end (aref reg-ends reg))
        and append (coerce (subseq target-string reg-start reg-end) 'list)
        and append (subseq char-map reg-start reg-end) into new-char-map 
        and do (setf esc nil)
        else if esc 
        collect c
-       and collect nil into new-char-map
+       and collect (cons nil nil) into new-char-map
        and do (setf esc nil)
        else if (char= c #\\)
        do (setf esc t)
        else collect c
-       and collect nil into new-char-map
+       and collect (cons nil nil) into new-char-map
        finally
+	 (fill-char-map new-char-map
+			(char-map-match-start char-map match-start)
+			(char-map-match-end char-map match-end))
 	 (push
 	  (make-repl :target-string target-string
 		     :target-char-map char-map
@@ -469,9 +486,21 @@
 	  (repl-list-list repl-l)))
    'string))
 
-(defun my-aref (x y)
-  (aref x y))
-
+(defun fill-char-map (char-map start end)
+  (loop
+      with last-s = start
+      for r in char-map
+      for s = (car r)
+      if s do (setf last-s s)
+      else do (setf (car r) last-s))
+  (loop
+      with last-e = end
+      for r in (reverse char-map)
+      for e = (cdr r)
+      if e do (setf last-e e)
+      else do (setf (cdr r) last-e))
+  char-map)
+	 
 (defun update-char-map (replacements x)
   (setf (char-map x)
     (loop
