@@ -227,6 +227,9 @@
       with token
       with length = 0
       for x in x-l
+      for x-match = (make-instance 'preprocessed-x 
+		      :text (text x)
+		      :char-map (char-map x))
       unless (string= (text x) "") do
 	(incf length)
 	(setf token x)
@@ -236,10 +239,7 @@
 	    for type = (x-fsr-type rule)
 	    for scanner = (x-fsr-scanner rule)
 	    for target = (x-fsr-target rule)
-	    for x-match = (make-instance 'preprocessed-x 
-			    :text (text x)
-			    :char-map (char-map x))
-	    do (x-regex-replace scanner x-match target)
+	    do (setf x-match (x-regex-replace scanner x-match target))
 			;;
 			;; _fix_me_
 			;; regex-replace() always returns a fresh string, even if the
@@ -353,37 +353,14 @@
 ;;(42 0 1 "the" "the")
 ;;(42 0 1 "EmailErsatz" "bmw20@cam.ac.uk")
 (defun p-token-to-maf-token (p-token)
-  (format nil "<token id='~a' from='~a' to='~a' value='~a'/>"
-	  (first p-token)
-	  "?"
-	  "?"
-	  (fourth p-token)
-	  ))
-
-#+:null
-(defun escape-string (string &key (syntax :c))
-  (declare (ignore syntax))
-           
-  (if string
-    (loop
-        with padding = 128
-        with length = (+ (length string) padding)
-        with result = (make-array length
-                                  :element-type 'character
-                                  :adjustable nil :fill-pointer 0)
-        for c across string
-        when (or (char= c #\") (char= c #\\)) do
-          (vector-push #\\ result)
-          (vector-push c result)
-          (when (zerop (decf padding))
-            (setf padding 42)
-            (incf length padding)
-            (setf result (adjust-array result length)))
-        else do
-          (vector-push c result)
-        finally
-          (return result))
-    ""))
+  (let* ((x (fourth p-token))
+	 (r (char-map-simple-range (char-map x))))
+    (format nil "<token id='~a' from='~a' to='~a' value='~a'/>"
+	    (first p-token)
+	    (car r)
+	    (cdr r)
+	    (text x)
+	    )))
 
 (defun x-clear-preprocessor ()
   (setf *x-preprocessor* nil))
@@ -396,13 +373,21 @@
   ((text :initform nil :accessor text :initarg :text)
    (char-map :initform nil :accessor char-map :initarg :char-map)))
 
+(defvar *print-char-map-simple-range* t)
 (defmethod print-object ((object preprocessed-x) stream)
   (with-slots (text char-map) object
       (format 
        stream 
        "|~a|:~a"
-       text char-map
+       text (if *print-char-map-simple-range*
+		(char-map-simple-range char-map)
+	      char-map)
        )))
+
+(defun char-map-simple-range (char-map)
+  (cons
+   (car (first char-map))
+   (cdr (car (last char-map)))))
 
 (defun make-preprocessed-x (str)
   (let ((x (make-instance 'preprocessed-x :text str)))
