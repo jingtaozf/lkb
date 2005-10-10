@@ -68,3 +68,21 @@
     (if pure-source
 	(string-trim '(#\Space) pure-source)
       source)))
+
+(defun pprint-dag (x &key (depth 0) root)
+  (setf x (mrs::path-value x root))
+  (cond
+   ((dag-arcs x) 
+    (format nil "[~(~a~) ~a]"
+	    (dag-type x)
+	    (concatenate-strings
+	     (loop
+		 for (node . val) in (dag-arcs x)
+		 collect (format nil "~%~a~a ~a" 
+				 (make-string depth :initial-element #\space)
+				 node (pprint-dag val :depth (+ 2 depth)))))))
+   ((stringp (dag-type x))
+    (format nil "\"~a\"" (dag-type x)))
+   (t
+    (format nil "~a" (dag-type x)))
+   ))

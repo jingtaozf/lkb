@@ -58,10 +58,9 @@
 (in-package :lkb)
 
 (defvar *x-preprocess-p* nil)
-
 (defvar *x-preprocessor-debug-p* t)
-
 (defvar *x-preprocessor* nil)
+(defvar *x-addressing* nil)
 
 (defstruct x-fspp
   version
@@ -337,8 +336,9 @@
    ((eq format :pic)
     (error "not implemented"))
    ((eq format :maf)
+    (setf *x-addressing* :xchar)
     (let ((strm (make-string-output-stream)))
-      (format strm "~a" (maf-header))
+      (format strm "~a" (maf-header :addressing *x-addressing*))
       (mapcar #'(lambda (x) 
 		  (format strm "~a"
 			  (p-token-to-maf-token x)))
@@ -357,8 +357,8 @@
 	 (r (char-map-simple-range (char-map x))))
     (format nil "<token id='~a' from='~a' to='~a' value='~a'/>"
 	    (first p-token)
-	    (car r)
-	    (cdr r)
+	    (format nil ".~a" (car r))
+	    (format nil ".~a" (cdr r))
 	    (text x)
 	    )))
 
@@ -552,3 +552,6 @@
 	  (make-instance 'preprocessed-x
 	    :text (subseq text start end)
 	    :char-map (subseq char-map start end)))))
+
+(defun x-parse (str)
+  (parse-from-maf (x-preprocess str :format :maf)))

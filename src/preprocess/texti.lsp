@@ -13,7 +13,8 @@
 ;;;
 
 ;; map text string into well-formed XML
-;; NOTE: preprocess-sentence-string is embedded here until we can fix it to handle character positions
+;; NOTE: preprocess-sentence-string is embedded here until we can fix it to 
+;; handle character positions
 (defun basic-text-to-basic-xml (text-str)
   ;; todo: fix preprocess-sentence-string to preserve char offsets
   ;;        and move this to basic-xml-to-maf-tokens
@@ -59,9 +60,10 @@
 	    date
 	    year)))
 
-(defun maf-header nil
+(defun maf-header (&key (addressing :xpoint))
   (format nil
-	  "<?xml version='1.0' encoding='UTF8'?><!DOCTYPE maf SYSTEM 'maf.dtd' [<!ENTITY text SYSTEM 'text.xml'>]><maf addressing='Xpoint' creator='lkb-maf-tokens' date='~a' language='en.US'>" 
+	  "<?xml version='1.0' encoding='UTF8'?><!DOCTYPE maf SYSTEM 'maf.dtd' [<!ENTITY text SYSTEM 'text.xml'>]><maf addressing='~a' creator='lkb-maf-tokens' date='~a' language='en.US'>" 
+	  (xml-escape (2-str addressing))
 	  (xml-escape (get-timestamp)) 
 	  (xml-escape (format nil "~a" *maf-lang*))))
 
@@ -188,13 +190,14 @@
    (maf-lxml-to-tchart lxml-e))
   *tchart*)
 
+(defvar *x-addressing*)
 (defun maf-lxml-to-tchart (lxml)
   (unless (eq (intern "maf")
 	      (lxml-elt-name lxml))
     (error "expected lxml root element maf: got ~a" lxml))
-  (unless (string= "Xpoint"
-		   (lxml-elt-attr lxml "addressing"))
-    (error "Unhandled addressing attribute in ~a" lxml))
+  (setf *x-addressing* (str-2-keyword (lxml-elt-attr lxml "addressing")))
+  (unless (member *x-addressing* '(:xpoint :xchar) :test #'string=)
+    (error "Unhandled addressing attribute (~a) in ~a" *x-addressing* lxml))
   ;; date ignored
   ;; language ignored
   (let* ((contents (cdr lxml))
@@ -242,7 +245,6 @@
 	 (from (lxml-elt-attr lxml "from"))
 	 (to (lxml-elt-attr lxml "to"))
 	 (value (lxml-elt-attr lxml "value"))
-	 
 	 (e-id (token-lxml-id-to-token-edge-id id))
 	 (e-to (incf *token-vertex*))
 	 (e-from (1- e-to)))
@@ -252,10 +254,18 @@
      :from e-from
      :to e-to
      :string value
+     :cfrom (x-to-char from :x-addressing *x-addressing*)
+     :cto (x-to-char to :x-addressing *x-addressing*)
      :xfrom from
      :xto to
      :word (string-upcase value)
      :leaves (list value))))
+
+(defun x-to-char (x-point &key x-addressing)
+  (case x-addressing
+    (:xchar (str-2-num (subseq x-point 1)))
+    (:xpoint (error "x-to-char :x-addressing :xchar not yet implemented"))
+    (t (error "unknown x-addressing scheme: ~a" x-addressing))))
 
 (defun token-lxml-id-to-token-edge-id (lxml-id)
   (let ((val (read-from-string (subseq lxml-id 1))))
