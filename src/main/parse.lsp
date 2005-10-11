@@ -468,8 +468,42 @@
 	      *morph-option*)
       (setf *foreign-morph-fn* nil))))  
 
-;; eg. (parse ("the" "dog" "barks"))
-(defun parse (bracketed-input &optional 
+;; example input: 
+;; - basic: "the" "dog" "barks"
+;; - bracketed: "Kim" "(" "(" "likes" ")" "Sandy" ")"
+;; - chared: #S(CHARED-WORD :WORD "The" :CFROM 0 :CTO 2) 
+;;           #S(CHARED-WORD :WORD "cat" :CFROM 4 :CTO 6)
+;;           #S(CHARED-WORD :WORD "barks" :CFROM 8 :CTO 12))
+;; - sppp: ((:END . 1) 
+;;          (:START . 0) 
+;;          (:ANALYSES 
+;;            ((:RULES) 
+;;             (:INFLECTION) 
+;;             (:STEM . "kim"))) 
+;;          (:TO . 3)
+;;          (:FROM . 0)
+;;          (:FORM . "kim"))
+;;         ((:END . 2) 
+;;          (:START . 1)
+;;          (:ANALYSES
+;;            ((:RULES 
+;;              ((:FORM . "sleeps") 
+;;               (:ID . PLUR_NOUN_INFL_RULE))
+;;              ((:FORM . "sleeps.") 
+;;               (:ID . PUNCT_PERIOD_RULE))) 
+;;             (:INFLECTION) 
+;;             (:STEM . "sleep"))
+;;            ((:RULES 
+;;              ((:FORM . "sleeps") 
+;;               (:ID . THIRD_SG_FIN_VERB_INFL_RULE))
+;;              ((:FORM . "sleeps.") 
+;;               (:ID . PUNCT_PERIOD_RULE)))
+;;             (:INFLECTION) 
+;;             (:STEM . "sleep"))) 
+;;          (:TO . 10) 
+;;          (:FROM . 4) 
+;;          (:FORM . "sleeps."))
+(defun parse (input &optional 
                               (show-parse-p *show-parse-p*) 
                               (first-only-p *first-only-p*))
   ;;
@@ -477,7 +511,7 @@
   ;;   - input bracketing is only available in passive mode;
   ;;   - passive best-first restricted to unary and binary rules.
   ;;
-  (check-morph-options bracketed-input)
+  (check-morph-options input)
   (let* ((*active-parsing-p* (if *bracketing-p* nil *active-parsing-p*))
          (first-only-p (if (and first-only-p 
                                 (null *active-parsing-p*)
@@ -492,8 +526,8 @@
     ;; eg. user-input -> ("the" "dog" "barks")
     (multiple-value-bind (user-input brackets-list)
         (if *bracketing-p*
-          (initialise-bracket-list bracketed-input)
-          (values bracketed-input nil))
+          (initialise-bracket-list input)
+          (values input nil))
       
       (when (> (length user-input) *chart-limit*)
         (error "~%Sentence `~a' too long - ~A words maximum ~
