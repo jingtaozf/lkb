@@ -142,12 +142,13 @@
 (defstruct (morpho-stem-edge (:include edge))
   word stem current) 
 
-(defvar *characterize-p* nil)
+(defparameter *characterize-p* nil)
 
 (defun make-edge (&rest rest)
   (let ((new-edge
 	 (apply #'make-edge-x rest)))
     (when *characterize-p*
+      ;; [set characterization does nothing]
       (set-characterization (edge-dag new-edge)
 			    (edge-cfrom new-edge)
 			    (edge-cto new-edge)))
@@ -571,37 +572,13 @@
   cfrom
   cto)
 
-;; currently sets only cfrom/cto for lex preds
 (defun set-characterization (dag cfrom cto)
-  (unless (tdfs-p dag)
-    (return-from set-characterization))
-  (let* ((cfrom-str (2-str cfrom))
-	 (cto-str (2-str cto))
-	 (indef-dag (tdfs-indef dag))
-	 (rels (mrs::get-rels-list indef-dag))
-	 (msg-dag (mrs::path-value indef-dag 
-				   (append mrs::*initial-semantics-path* '(msg))))
-	 (msg-cfrom-dag (mrs::path-value msg-dag '(cfrom)))
-	 (msg-cto-dag (mrs::path-value msg-dag '(cto))))
-    (when (and msg-cfrom-dag msg-cto-dag
-	       (or (eq *toptype* (dag-type msg-cfrom-dag))
-		   (eq *toptype* (dag-type msg-cto-dag))))
-      (setf (dag-type msg-cfrom-dag) cfrom-str)
-      (setf (dag-type msg-cto-dag) cto-str))
-    (loop
-	for rel in rels
-	for rel-cfrom-dag = (mrs::path-value rel '(cfrom))
-	for rel-cto-dag = (mrs::path-value rel '(cto))
-	when (or (eq *toptype* (dag-type rel-cfrom-dag)) 
-		 (eq *toptype* (dag-type rel-cto-dag)))
-	do 
-	  (setf (dag-type rel-cfrom-dag) cfrom-str)
-	  (setf (dag-type rel-cto-dag) cto-str))))
+  (declare (ignore dag cfrom cto)))
 
 ;;eg. (instantiate-chart-with-tokens ("The" "dog" "barks"))
 ;; calls: (add-token-edge "The" "THE" 0 1 nil nil)
 ;;        (add-token-edge "dog" "DOG" 0 1 nil nil)
-;;        (add-token-edge "barks" "BARKS" 0 1 nil nil)
+;;        (add-token-edge "the" "BARKS" 0 1 nil nil)
 ;; returns: *tchart*
 (defun instantiate-chart-with-tokens (preprocessed-input)
   ;;; this is for the trivial case where the

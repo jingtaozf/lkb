@@ -69,7 +69,11 @@
 	(string-trim '(#\Space) pure-source)
       source)))
 
-(defun pprint-dag (x &key (depth 0) root)
+(defun pprint-dag (&rest rest)
+  (format t "~&~a"
+	  (apply #'pprint-dag-aux rest)))
+
+(defun pprint-dag-aux (x &key (depth 0) root)
   (setf x (mrs::path-value x root))
   (cond
    ((dag-arcs x) 
@@ -80,7 +84,7 @@
 		 for (node . val) in (dag-arcs x)
 		 collect (format nil "~%~a~a ~a" 
 				 (make-string depth :initial-element #\space)
-				 node (pprint-dag val :depth (+ 2 depth)))))))
+				 node (pprint-dag-aux val :depth (+ 2 depth)))))))
    ((stringp (dag-type x))
     (format nil "\"~a\"" (dag-type x)))
    (t
