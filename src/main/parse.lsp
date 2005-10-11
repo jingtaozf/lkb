@@ -148,7 +148,6 @@
   (let ((new-edge
 	 (apply #'make-edge-x rest)))
     (when *characterize-p*
-      ;; [set characterization does nothing]
       (set-characterization (edge-dag new-edge)
 			    (edge-cfrom new-edge)
 			    (edge-cto new-edge)))
