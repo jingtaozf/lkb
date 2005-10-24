@@ -72,7 +72,7 @@
 (defparameter *psoa-top-h-path* 
   `(,(vsym "HOOK") ,(vsym "LTOP"))
   "path to get the hook's ltop from an mrs fs (psoa - parameterised state of affairs -
-   old terminology)")
+   old terminology) - this should be NIL if messages are not used")
 
 (defparameter *psoa-index-path* 
   `(,(vsym "HOOK") ,(vsym "INDEX"))

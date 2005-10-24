@@ -407,11 +407,14 @@
   (setf  *slot-selection* (cons name sement)))
 
 (defun select-sement-dtr-interactive (sement)
-  ;;; only active if *slot-selection* 
-  (let ((res (binary-combine-sements-interactive 
-	      (cdr *slot-selection*) (car *slot-selection*) sement)))
-    (when res
-      (lkb::show-mrs-sement-result-window res))))
+  ;;; only active if *slot-selection*
+  (if *slot-selection*
+    (let ((res (binary-combine-sements-interactive 
+		(cdr *slot-selection*) (car *slot-selection*) sement)))
+      (when res
+	(lkb::show-mrs-sement-result-window res)))
+    (lkb::show-message-window "No slot selected: 
+(use pop up menu on slot in another sement)")))
 
 (defun binary-combine-sements-interactive (head-dtr slot-name non-head-dtr)
   (let* ((slots (sement-slots head-dtr))
