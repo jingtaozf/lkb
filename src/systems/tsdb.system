@@ -42,8 +42,6 @@
   ;;
   #+:logon
   (pushnew :acache *features*)
-  #+:(and :logon :allegro (or :linux (and :sparc :svr4) :alpha))
-  (pushnew :bdb *features*)
   
   ;;
   ;; the Alvey Tools package, unfortunately, comes without a unique feature to
@@ -207,7 +205,6 @@
        (:file "balloons" :source-extension ""))))
     
     :depends-on (#+(and :allegro (or :linux (and :sparc :svr4) :alpha)) "pvm"
-                 #+:bdb "bdb"
 		 #+(and :mrs (not :lkb)) "mrs"
 		 #+:lkb "lkb"
                  #-:lkb "ppcre"

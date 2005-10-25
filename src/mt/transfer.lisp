@@ -16,14 +16,14 @@
 
 (defparameter *transfer-edge-limit* 800)
 
+(defparameter *transfer-debug-p* nil)
+
 (defparameter *transfer-debug-stream* 
   (or #+:allegro excl:*initial-terminal-io* t))
 
 (defparameter *transfer-filter-p* t)
 
 (defparameter *transfer-interlingua-predicates* nil)
-
-(defparameter *transfer-debug-p* t)
 
 (defparameter *transfer-preemptive-filter-p* nil)
 
@@ -60,6 +60,9 @@
 (defparameter %transfer-original-variables% nil)
 
 (defparameter %transfer-input-defaults% nil)
+
+(defparameter %transfer-solutions% nil)
+
 
 ;;;
 ;;; _fix_me_
@@ -154,7 +157,8 @@
     (cond
      ((and (numberp *transfer-edge-limit*)
            (> (edge-id edge) *transfer-edge-limit*))
-      (when *transfer-debug-p* (print-edges))
+      (when (member :chart *transfer-debug-p* :test #'eq)
+        (print-edges))
       (error 
        "make-edge(): transfer edge limit exhausted (~a)"
        *transfer-edge-limit*))
@@ -190,14 +194,32 @@
 (defstruct (solution (:copier x-copy-solution))
   variables eps hconss)
 
-(defun copy-solution (solution)
-  (when solution
+(defun copy-solution (&optional solution)
+  (if solution
     (let ((result (x-copy-solution solution)))
       (setf (solution-variables result)
         (copy-list (solution-variables solution)))
       (setf (solution-eps result)
         (copy-list (solution-eps solution)))
-      result)))
+      (when (member :solutions *transfer-debug-p* :test #'eq)
+        (push result %transfer-solutions%))
+      result)
+    (let ((new (make-solution)))
+      (when (member :solutions *transfer-debug-p* :test #'eq)
+        (push new %transfer-solutions%))
+      new)))
+
+(defun solution<= (solution1 solution2)
+  (let ((eps1 (length (solution-eps solution1)))
+        (eps2 (length (solution-eps solution2))))
+    (or (< eps1 eps2)
+        (when (= eps1 eps2)
+          (let ((variables1 (length (solution-variables solution1)))
+                (variables2 (length (solution-variables solution2))))
+            (or (< variables1 variables2)
+                (when (= variables1 variables2)
+                  (< (length (solution-hconss solution1))
+                     (length (solution-hconss solution2))))))))))
 
 (defmacro scratch (scratch)
   `(let ((generation (first ,scratch)))
@@ -721,7 +743,7 @@
 
 (defun transfer-mrs (mrs &key (filter *transfer-filter-p*) 
                               (preemptive *transfer-preemptive-filter-p*)
-                              (debug t)
+                              (debug '(:chart))
                               task)
   #+:debug
   (setf %mrs% mrs)
@@ -729,7 +751,7 @@
   (setf %transfer-chart% nil)
   (let* ((*transfer-filter-p* filter)
          (*transfer-preemptive-filter-p* preemptive)
-         (*transfer-debug-p* debug)
+         (*transfer-debug-p* (when (consp debug) debug))
          (%transfer-edge-id% 0)
          (%transfer-clones% nil)
          (%transfer-original-variables% nil)
@@ -780,11 +802,7 @@
          (mrs2 (edge-mrs edge2)))
     (and (= (edge-depth edge1) (edge-depth edge2))
          (= (logior vector2 vector1) vector2)
-         #+:logon
-         (mrs= mrs1 mrs2 :properties (list *mtr-skolem-property*))
-         #-:logon
-         (ignore-errors
-           (mrs::mrs-equalp mrs1 mrs2 t nil (list *mtr-skolem-property*))))))
+         (mrs= mrs1 mrs2 :properties (list *mtr-skolem-property*)))))
 
 (defun packed-edge-p (edge)
   (loop
@@ -1035,7 +1053,7 @@
                             &key (disjointp t) subsumesp)
   (if (null mrs2)
     (list solution)
-    (let* ((solution (if solution (copy-solution solution) (make-solution)))
+    (let* ((solution (copy-solution solution))
            (top1 (mrs:psoa-top-h mrs1))
            (top2 (mrs:psoa-top-h mrs2)))
       (transfer-trace :part :top)

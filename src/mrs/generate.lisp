@@ -7,7 +7,7 @@
 
 ;;; Control parameters
 
-(defparameter *gen-packing-p* t)
+(defparameter *gen-packing-p* nil)
 (defparameter *gen-filtering-p* t)
 (defparameter *bypass-equality-check* nil)
 (defparameter *gen-equate-qeqs-p* nil)

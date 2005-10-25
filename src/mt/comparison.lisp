@@ -12,7 +12,8 @@
 (defun compare-mrss (mrs1 mrs2
                      &key (type :subsumption)
                           (roles *mrs-comparison-ignore-roles*)
-                          (properties *mrs-comparison-ignore-properties*))
+                          (properties *mrs-comparison-ignore-properties*)
+                          debug)
   ;;
   ;; in (default) :subsumption mode, e.g. when testing post-generation, .mrs2.
   ;; is expected to be more general than .mrs1.
@@ -21,27 +22,32 @@
   (setf %mrs1 mrs1 %mrs2 mrs2)
   (let ((*mrs-comparison-ignore-roles* roles)
         (*mrs-comparison-ignore-properties* properties)
-        (solution (make-solution)))
-    (unless (compare-variables
-             (mrs:psoa-top-h mrs1) (mrs:psoa-top-h mrs2) solution :type type)
-      (return-from compare-mrss))
-    (let ((solutions (compare-epss
-                      (mrs:psoa-liszt mrs1) (mrs:psoa-liszt mrs2)
-                      solution :type type)))
-      (unless solutions
-        (return-from compare-mrss))
-      (loop
-          with hcons1 = (mrs:psoa-h-cons mrs1)
-          with hcons2 = (mrs:psoa-h-cons mrs2)
-          for solution in solutions
-          append (compare-hconss hcons1 hcons2 solution :type type)))))
+        (*transfer-debug-p* (cons (and debug :solutions) *transfer-debug-p*))
+        (%transfer-solutions% nil)
+        (solution (copy-solution))
+        solutions)
+    (when (compare-variables
+           (mrs:psoa-top-h mrs1) (mrs:psoa-top-h mrs2) solution :type type)
+      (setf solutions
+        (compare-epss
+         (mrs:psoa-liszt mrs1) (mrs:psoa-liszt mrs2)
+         solution :type type))
+      (setf solutions
+        (loop
+            with hcons1 = (mrs:psoa-h-cons mrs1)
+            with hcons2 = (mrs:psoa-h-cons mrs2)
+            for solution in solutions
+            append (compare-hconss hcons1 hcons2 solution :type type)))
+      (when (and (null solutions) debug)
+        (setf %transfer-solutions%
+          (stable-sort %transfer-solutions% #'solution<=))
+        (pprint (first (last %transfer-solutions%))))
+      solutions)))
 
 (defun compare-epss (eps1 eps2 solution &key type)
   ;;
   ;; we must not destructively modify .solution. --- assume that compare-eps()
-  ;; will always copy its input parameter first.  require that all elements of
-  ;; .eps2. get bound successfully, i.e. only return solutions that account for
-  ;; all of the CONTEXT or INPUT elements from an MTR.
+  ;; will always copy its input parameter first.
   ;;
   (when eps1
     (if (null eps2)
@@ -158,19 +164,20 @@
 
   #+:debug
   (setf %variable1 variable1 %variable2 variable2)
-  (let ((foo (lookup-variable variable2 solution)))
-    (cond
-     ((eq variable1 foo)
-      variable1)
-     ((null foo)
-      (when (and (compare-types 
-                  (mrs::var-type variable1) (mrs::var-type variable2) 
-                  :internp t :type type)
-                 (compare-extras
-                  (mrs:var-extra variable1) (mrs:var-extra variable2)
-                  :type type))
-        (align-variables variable2 variable1 solution)
-        variable1)))))
+  (or (and (null variable1) (null variable2))
+      (let ((foo (lookup-variable variable2 solution)))
+        (cond
+         ((eq variable1 foo)
+          variable1)
+         ((null foo)
+          (when (and (compare-types 
+                      (mrs::var-type variable1) (mrs::var-type variable2) 
+                      :internp t :type type)
+                     (compare-extras
+                      (mrs:var-extra variable1) (mrs:var-extra variable2)
+                      :type type))
+            (align-variables variable2 variable1 solution)
+            variable1))))))
 
 (defun compare-extras (extras1 extras2
                        &key type
