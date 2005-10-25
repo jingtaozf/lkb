@@ -18,64 +18,65 @@
 (defun serialize-semantics-indices
     (&optional (forward lkb::*predicates-temp-file*)
                (backward lkb::*semantics-temp-file*))
-  (handler-case 
-      (let ((tenurep
-             #+:allegro (sys:gsgc-parameter :auto-step) #-:allegro nil))
-        #+:allegro
-        (when tenurep (setf (sys:gsgc-parameter :auto-step) nil))
-        (loop
-            with *package* = (find-package :lkb)
-            with cdb = (cdb::open-write forward)
-            for pred being each hash-key
-            using (hash-value entry) in *relation-index*
-            for key = (with-standard-io-syntax (write-to-string pred))
-            for value
-            = (with-standard-io-syntax
-                (write-to-string
-                 (if (hash-table-p entry) 
-                   (cons
-                    0
-                    (loop
-                        for id being each hash-key in entry
-                        collect id))
-                   (cons
-                    1
-                    (loop
-                        for (role . values) in entry
-                        collect
-                          (cons
-                           role
-                           (loop
-                               for string being each hash-key
-                               using (hash-value ids) in values
-                               collect (cons string ids))))))))
-            do (cdb:write-record cdb key value)
-            finally (cdb::close-cdb cdb))
-        (loop
-            with *package* = (find-package :lkb)
-            with *mrs-raw-output-p* = t
-            with cdb = (cdb::open-write backward)
-            for id being each hash-key
-            using (hash-value record) in *semantic-table*
-            for key = (with-standard-io-syntax (write-to-string id))
-            for value = (with-standard-io-syntax
-                          (write-to-string record))
-            do (cdb:write-record cdb key value)
-            finally (cdb::close-cdb cdb))
-        (when tenurep
-          #+:allegro
-          (setf (sys:gsgc-parameter :auto-step) tenurep))
-        (cons
-         (hash-table-count *relation-index*)
-         (hash-table-count *semantic-table*)))
-    (error (condition)
-      (format
-       t
-       "serialize-semantics-indices(): error: `~a'~%"
-       condition)
-      (when (and forward (probe-file forward)) (delete-file forward))
-      (when (and backward (probe-file backward)) (delete-file backward))
-      nil)))
+  (when (and (pathnamep forward) (pathnamep backward))
+    (handler-case 
+	(let ((tenurep
+	       #+:allegro (sys:gsgc-parameter :auto-step) #-:allegro nil))
+	  #+:allegro
+	  (when tenurep (setf (sys:gsgc-parameter :auto-step) nil))
+	  (loop
+	      with *package* = (find-package :lkb)
+	      with cdb = (cdb::open-write forward)
+	      for pred being each hash-key
+	      using (hash-value entry) in *relation-index*
+	      for key = (with-standard-io-syntax (write-to-string pred))
+	      for value
+	      = (with-standard-io-syntax
+		  (write-to-string
+		   (if (hash-table-p entry) 
+		       (cons
+			0
+			(loop
+			    for id being each hash-key in entry
+			    collect id))
+		     (cons
+		      1
+		      (loop
+			  for (role . values) in entry
+			  collect
+			    (cons
+			     role
+			     (loop
+				 for string being each hash-key
+				 using (hash-value ids) in values
+				 collect (cons string ids))))))))
+	      do (cdb:write-record cdb key value)
+	      finally (cdb::close-cdb cdb))
+	  (loop
+	      with *package* = (find-package :lkb)
+	      with *mrs-raw-output-p* = t
+	      with cdb = (cdb::open-write backward)
+	      for id being each hash-key
+	      using (hash-value record) in *semantic-table*
+	      for key = (with-standard-io-syntax (write-to-string id))
+	      for value = (with-standard-io-syntax
+			    (write-to-string record))
+	      do (cdb:write-record cdb key value)
+	      finally (cdb::close-cdb cdb))
+	  (when tenurep
+	    #+:allegro
+	    (setf (sys:gsgc-parameter :auto-step) tenurep))
+	  (cons
+	   (hash-table-count *relation-index*)
+	   (hash-table-count *semantic-table*)))
+      (error (condition)
+	(format
+	 t
+	 "serialize-semantics-indices(): error: `~a'~%"
+	 condition)
+	(when (and forward (probe-file forward)) (delete-file forward))
+	(when (and backward (probe-file backward)) (delete-file backward))
+	nil))))
 
 (defun unserialize-semantics-indices
     (&optional (forward lkb::*predicates-temp-file*)
