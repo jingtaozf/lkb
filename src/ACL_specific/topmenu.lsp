@@ -72,11 +72,11 @@
 		:value value
 		:available-p available-p)))
     (unless (or (eql available-p :always) 
-                (and (eql available-p :grammar-file)
+                (and (eql available-p :grammar)
                      lkb::*current-grammar-load-file*))
       (push (intern (concatenate 'string "COM-" name))
             *lkb-menu-disabled-list*))
-    (when (eql available-p :grammar-file)
+    (when (eql available-p :grammar)
       (push (intern (concatenate 'string "COM-" name))
             *lkb-menu-grammar-file-list*))
     (when (eql available-p :mrs) 
