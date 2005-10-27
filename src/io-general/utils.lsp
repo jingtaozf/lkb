@@ -587,5 +587,17 @@
 	  (apply #'encode-universal-time 
 		 (list second minute hour date month year))))))
 	  
-	  
-	  
+;; call from globals.lsp to set character encoding to that used by grammar
+;; (currently supports Allegro CL only)
+;; (aim to support Emacs encoding names as canonical form)
+(defun grammar-encoding (encoding)
+  #+:allegro
+  (let ((locale (excl::find-locale (format nil ".~a" encoding))))
+    (cond
+     (locale 
+      (setf excl:*locale* locale)
+      (format t "~&; Grammar encoding: ~a" encoding))
+     (t
+      (format t "~&; Warning: unhandled argument (~a) to grammar-encoding" encoding))))
+  #-:allegro
+  (format t "~&; Warning: ignoring call to function grammar-encoding~&;            (not yet written for this Lisp implementation)"))
