@@ -200,7 +200,7 @@
        (:file "lxml")
        #+:maf
        (:file "texti")			; text interface
-       #+(and :maf :clim) 
+       #+(and :maf :clim (not :tty)) 
        (:file "disp-clim")
        ))  
 
