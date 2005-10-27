@@ -4,7 +4,7 @@
 
 ## script usage
 if [ -z "$3" ]; then 
-    echo usage: $0 DBNAME FLD-FILE DFN-FILE [CREATEDB-OPTIONS]
+    echo "usage: $0 DBNAME FLD-FILE DFN-FILE [CREATEDB-OPTIONS]"
     exit
 fi
 
