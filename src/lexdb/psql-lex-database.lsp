@@ -917,7 +917,7 @@
     (run-command lex "DROP INDEX tmp_name_userid_modstamp")
     (setf count-new (sql-get-num lex "SELECT count(*) FROM tmp"))
 
-    (format t "~&(LexDB) ~a new rev entries" count-new)
+    ;(format t "~&(LexDB) ~a new rev entries" count-new)
     (unless (= 0 count-new)
       (sql-get-bool lex "SELECT public.deindex_public_rev()")
       (run-command lex "INSERT INTO public.rev SELECT * FROM tmp")
@@ -1023,7 +1023,7 @@
       ;;;
       ;; update main tables
       ;;;
-      (lexdb-time ("copying into 'rev' table" "done copying into 'rev' table")
+      (lexdb-time ("updating 'rev' table" "done updating 'rev' table")
 					;(sql-fn-get-val lex :merge_public_rev_from_tmp)    
 		  (merge-public-rev-from-tmp lex)    
 		  (setf count-new (sql-get-val lex2 "SELECT count(*) from public.tmp")))
@@ -1341,6 +1341,7 @@
       (format skip-stream "~a" (to-tdl x))
       ""))))
 
+;; keys must be updated after set of calls to this fn
 (defmethod to-db ((x lex-entry) (lex psql-lex-database))
   "insert lex-entry into lex db (user scratch space)"
   (let* (;;ordered a-list of field values
@@ -1372,6 +1373,7 @@
        (to-db (read-psort lex x :recurse nil :new-instance t) 
 	      lexdb))
    (collect-psort-ids lex :recurse nil))
+  (generate-missing-orthkeys lexdb)
   (update-lex-aux lexdb))
 
 (defmethod record-id (raw-record cols (lex psql-lex-database))
@@ -1432,7 +1434,8 @@
       (format t "~%(LexDB) updating 'public.rev' with ~a new entries from private 'rev'"
 	      (sql-get-num lex (format nil "SELECT count(*) FROM rev")))
       (sync-rev lex)
-      (run-command lex-public (format nil "INSERT INTO public.rev SELECT * FROM ~a.rev" qi-user)))
+      (run-command lex-public (format nil "INSERT INTO public.rev SELECT * FROM ~a.rev" qi-user))
+      (run-command lex "DELETE FROM rev"))
     (empty-cache lex))) ;;??
 
 (defmethod lex-up-to-date-p ((lex psql-lex-database)) 
@@ -1443,6 +1446,7 @@
   (unless (lex-up-to-date-p lex)
     (update-lex-aux lex))
   
+  (run-command lex "UPDATE rev SET userid=user")
   (run-command lex "UPDATE rev SET modstamp='NOW'")
   (run-command lex "DELETE FROM lex WHERE name IN (SELECT name FROM rev)")
   (run-command lex "INSERT INTO lex SELECT * FROM head WHERE name IN (SELECT name FROM rev)")
