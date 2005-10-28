@@ -6,23 +6,6 @@
 ;;;   see `licence.txt' for conditions.
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;        file: x-preprocess.lsp
-;;;      module: input preprocessing mimicry (collection of rough utilities)
-;;;     version: 0.0 (30-jan-03)
-;;;  written by: oe, csli stanford
-;;;              bmw, cambridge
-;;; last update: 
-;;;  updated by: 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; author            | date        | modification
-;;; ------------------|-------------|------------------------------------------
-;;;                   |             |
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
 ;;;
 ;;; ToDo
 ;;;
@@ -335,7 +318,11 @@
 	    (values (format nil "~{~a~^ ~}" tokens) length))))
    ((eq format :pic)
     (error "not implemented"))
+   ((eq format :chared)
+    ;; eg. (#S(CHARED-WORD :WORD "The" :CFROM 0 :CTO 2) #S(CHARED-WORD :WORD "cat" :CFROM 4 :CTO 6) #S(CHARED-WORD :WORD "barks" :CFROM 8 :CTO 12))
+    (mapcar #'p-token-to-chared-word result))
    ((eq format :maf)
+    ;; eg. <?xml version='1.0' encoding='UTF8'?><!DOCTYPE maf SYSTEM 'maf.dtd' [<!ENTITY text SYSTEM 'text.xml'>]><maf addressing='xchar' creator='lkb-maf-tokens' date='21:59:53 10/11/2005 (UTC)' language='en.US'><token id='42' from='.0' to='.3' value='The'/><token id='43' from='.4' to='.7' value='cat'/><token id='44' from='.8' to='.14' value='barks.'/></maf>
     (setf *x-addressing* :xchar)
     (let ((strm (make-string-output-stream)))
       (format strm "~a" (maf-header :addressing *x-addressing*))
@@ -350,8 +337,7 @@
    (t
     (error "unhandled format argument: ~a" format))))
 
-;;(42 0 1 "the" "the")
-;;(42 0 1 "EmailErsatz" "bmw20@cam.ac.uk")
+;;(42 0 1 |The|:(0 . 3) |The|:(0 . 3))
 (defun p-token-to-maf-token (p-token)
   (let* ((x (fourth p-token))
 	 (r (char-map-simple-range (char-map x))))
@@ -359,8 +345,17 @@
 	    (first p-token)
 	    (format nil ".~a" (car r))
 	    (format nil ".~a" (cdr r))
-	    (text x)
-	    )))
+	    (text x))))
+
+;;(42 0 1 |The|:(0 . 3) |The|:(0 . 3))
+;;-> #S(CHARED-WORD :WORD "The" :CFROM 0 :CTO 3)
+(defun p-token-to-chared-word (p-token)
+  (let* ((x (fourth p-token))
+	 (r (char-map-simple-range (char-map x))))
+    (make-chared-word 
+     :word (text x)
+     :cfrom (car r)
+     :cto (cdr r))))
 
 (defun x-clear-preprocessor ()
   (setf *x-preprocessor* nil))
@@ -555,3 +550,11 @@
 
 (defun x-parse (str)
   (parse-from-maf (x-preprocess str :format :maf)))
+
+;;
+;;
+;;
+
+#+:null
+(defun preprocess-sentence-string (str)
+  (x-preprocess str :format :chared))

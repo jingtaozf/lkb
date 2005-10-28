@@ -264,7 +264,8 @@
 (defun x-to-char (x-point &key x-addressing)
   (case x-addressing
     (:xchar (str-2-num (subseq x-point 1)))
-    (:xpoint (error "x-to-char :x-addressing :xchar not yet implemented"))
+    (:xpoint 0) ;; temporary
+    (:xpoint (error "x-to-char :x-addressing :xpoint not yet implemented"))
     (t (error "unknown x-addressing scheme: ~a" x-addressing))))
 
 (defun token-lxml-id-to-token-edge-id (lxml-id)
@@ -618,6 +619,7 @@
 (defun parse-from-maf (maf &optional (maf-mode :tokens)
 				     (show-parse-p *show-parse-p*) 
 				     (first-only-p *first-only-p*))
+  (print maf-mode)
   (let* ((*active-parsing-p* (if *bracketing-p* nil *active-parsing-p*))
          (first-only-p (if (and first-only-p 
                                 (null *active-parsing-p*)
