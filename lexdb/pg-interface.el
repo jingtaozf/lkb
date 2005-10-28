@@ -12,7 +12,7 @@
 
 ;;; Add a PG menu to the emacs menu bar
 
-(defvar *lexdb-pg-interface-version* "2.12")
+(defvar *lexdb-pg-interface-version* "2.13")
 
 (require 'cl)      ; we use some common-lisp idioms
 (require 'widget)
@@ -165,7 +165,7 @@
 (setf *lexdb-active-ium-ring* nil)
 (setf *lexdb-new-entries-buffer* "*lexdb-merged*")
 (setf *lexdb-scratch-buffer* "*lexdb-scratch*")
-(setf *lexdb-slot-len* 13)
+(setf *lexdb-slot-len* 20)
 
 ;;;
 ;;; buffer local vbles
