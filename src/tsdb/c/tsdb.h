@@ -25,11 +25,13 @@
 #  elif defined(_OSF_SOURCE)
 #    define OSF
 #  endif
+#elif defined(__APPLE__)
+#  define MACOS
 #endif
 
 #if defined(DEBUG) && defined(MALLOC) && defined(LINUX)
 #  include <dbmalloc.h>
-#else
+#elif !defined(MACOS)
 #  include <malloc.h>
 #endif
 

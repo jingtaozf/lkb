@@ -28,6 +28,7 @@ HPUX_LIBS = -L7lib -lreadline -ltermcap -lregex -liberty
 SOLARIS_LIBS = -L5lib $(GENERIC_LIBS) -liberty -lsocket -lnsl 
 OSF_LIBS = -Lolib -lreadline -ltermcap -lregex -liberty
 CYGWIN_LIBS = -Lwlib -lreadline -ltermcap -lregex -liberty
+MACOS_LIBS = -Lmlib -lreadline
 
 #
 # compiler flags
@@ -80,6 +81,9 @@ osf : main.$(OBJ)$(DOT) libtsdb.a
 #
 cygwin : main.$(OBJ)$(DOT) libtsdb.a
 	$(CC) -o tsdb main.$(OBJ)$(DOT) libtsdb.a $(LIBS) $(CYGWIN_LIBS)
+
+macos : main.$(OBJ)$(DOT) libtsdb.a
+	$(CC) -o tsdb main.$(OBJ)$(DOT) libtsdb.a $(LIBS) $(MACOS_LIBS)
 #
 #
 libtsdb.a : tsdb.$(OBJ)$(DOT) \

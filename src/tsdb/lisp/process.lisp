@@ -377,6 +377,7 @@
               (status :text (format nil "~a done" pmessage) :duration 5))
             (meter :value (get-field :end meter))))))))
 
+#+:pvm
 (defun tsdb-do-listen (data
                         &key comment overwrite
                              (verbose *tsdb-verbose-processing-p*)

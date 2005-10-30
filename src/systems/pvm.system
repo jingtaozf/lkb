@@ -25,7 +25,7 @@
     :components
     ((:module "c"
       :source-pathname %system-binaries%
-      :source-extension "so"
+      :source-extension #-:macosx "so" #+:macosx "dylib"
       :load-only t
       :components
       ((:file "pvm")))
@@ -35,5 +35,5 @@
       :source-extension "lisp"
       :components
       ((:file "pvm-package")
-       #+(and :allegro (or :linux (and :sparc :svr4) :alpha))
+       #+(and :allegro (or :linux (and :sparc :svr4) :alpha :macosx))
        (:file "pvm.lisp")))))

@@ -94,10 +94,10 @@
       ((:file "Registration")
        (:file "ToDo")))
 
-     #+(and :allegro (or :linux (and :sparc :svr4) :alpha))
+     #+(and :allegro (or :linux (and :sparc :svr4) :alpha :macosx))
      (:module "c"
       :source-pathname %system-binaries%
-      :source-extension "so"
+      :source-extension #-:macosx "so" #+:macosx "dylib"
       :load-only t
       :components
       ((:file "capi")
@@ -124,9 +124,9 @@
        (:file "dummy-interface")
        (:file "globals")
        (:file "utilities")
-       #+(and :allegro (or :linux (and :sparc :svr4) :alpha)) 
+       #+(and :allegro (or :linux (and :sparc :svr4) :alpha :macosx)) 
        (:file "pvm")
-       #+(and :allegro (or :linux (and :sparc :svr4) :alpha)) 
+       #+(and :allegro (or :linux (and :sparc :svr4) :alpha :macosx)) 
        (:file "capi")
        (:file "tsql")
        (:file "tsdb")
@@ -204,7 +204,9 @@
        (:file "balloon")
        (:file "balloons" :source-extension ""))))
     
-    :depends-on (#+(and :allegro (or :linux (and :sparc :svr4) :alpha)) "pvm"
+    :depends-on (#+(and :allegro
+			(or :linux (and :sparc :svr4) :alpha :macosx))
+		 "pvm"
 		 #+(and :mrs (not :lkb)) "mrs"
 		 #+:lkb "lkb"
                  #-:lkb "ppcre"

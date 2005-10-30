@@ -311,7 +311,7 @@ int tsdb_server_initialize() {
 
 #if defined(SUNOS) || defined(LINUX)
   signal(SIGCLD, _sigcld);
-#else
+#elif defined(SIGCLD)
   signal(SIGCLD, SIG_IGN);
 #endif
 

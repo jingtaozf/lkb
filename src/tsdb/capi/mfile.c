@@ -19,7 +19,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#include <assert.h>
+//#include <assert.h>
 
 #include "mfile.h"
 
@@ -28,12 +28,12 @@ struct MFILE *mopen()
   struct MFILE *f;
 
   f = malloc( sizeof( struct MFILE ) );
-  assert( f != NULL );
+  //assert( f != NULL );
   
   f->size = MFILE_BUFF_SIZE;
   f->ptr = f->buff = malloc( f->size );
 
-  assert( f->buff != NULL );
+  //assert( f->buff != NULL );
 
   return f;
 }
@@ -69,7 +69,7 @@ int vmprintf( struct MFILE *f, char *format, va_list ap )
       f->size += MFILE_BUFF_SIZE;
       
       f->buff = realloc( f->buff, f->size );
-      assert( f->buff != NULL );
+      //assert( f->buff != NULL );
       
       f->ptr = f->buff + n;
     }

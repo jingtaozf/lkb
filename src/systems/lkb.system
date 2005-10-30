@@ -57,15 +57,16 @@
   ;;
   ;; activate the LUI support code for supported environments
   ;;
-  #+(or (and :allegro :linux86) 
+  #+(or (and :allegro (or :linux86 :linux86-64 :powerpc))
         (and :openmcl :powerpc)
         (and :sbcl :x86 :linux))
   (pushnew :lui *features*)
 
   ;;
-  ;; activate PSQL (used in the lexical database) support when running on ACL
+  ;; activate PSQL (used in the lexical database) support when running on ACL,
+  ;; on supported platforms, i.e. Linux (x86), Solaris, and Windoze
   ;;
-  #+:allegro
+  #+(and :allegro (or :linux86 (and :sun :svr4) :mswindows))
   (pushnew :psql *features*)
 
   ;;

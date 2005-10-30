@@ -12,8 +12,16 @@ LINUX_X86_64_LIBS = \
 OSF_LIBS = \
     olib/getloadavg.o -L../../../lib/osf -lpvm3 -lc
 
+MACOS_CFLAGS = -dynamic
+
+MACOS_LIBS = \
+  ../../../lib/macos.ppc.32/libpvm3.a -lSystemStubs -lc
+
+MACOS_LD = ld -bundle /usr/lib/bundle1.o -flat_namespace \
+  -undefined warning
+
 CP = cp
-CC = gcc -Wall -fpic -O6 -I../../../include
+CC = gcc -Wall -O6 -I../../../include
 LD = ld -G -z defs 
 AR = ar -cr
 RANLIB = ranlib
@@ -77,6 +85,24 @@ osf:
 	  client.o acl.o $(OSF_LIBS)
 	$(AR) ../../../olib/libitsdb.a \
           client.o acl.o olib/getloadavg.o olib/libpvm3.a
+
+macos: 
+	make clean;
+	$(CC) $(MACOS_CFLAGS) -c acl.c
+	$(CC) $(MACOS_CFLAGS) -c mfile.c
+	$(MACOS_LD) -o ../../pvm/macos.ppc.32/pvm.dylib acl.o \
+	  $(MACOS_LIBS)
+	$(CC) $(MACOS_CFLAGS) -c gc.c
+	$(MACOS_LD) -o ../macos.ppc.32/gc.dylib gc.o -lc
+	$(CC) $(MACOS_CFLAGS) -c capi.c
+	$(MACOS_LD) -o ../macos.ppc.32/capi.dylib capi.o acl.o \
+	  $(MACOS_LIBS)
+	$(CC) $(MACOS_CFLAGS) -c client.c
+	$(MACOS_LD) -o ../../../lib/macos.ppc.32/libitsdb.dylib \
+	  client.o acl.o mfile.o $(MACOS_LIBS)
+	$(AR) ../../../lib/macos.ppc.32/libitsdb.a \
+	  client.o acl.o mfile.o
+	$(RANLIB) ../../../lib/macos.ppc.32/libitsdb.a
 
 client: client.c ../../../include/itsdb.h
 	$(CC) -DMAIN -c client.c

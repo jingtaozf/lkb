@@ -61,6 +61,8 @@
      #+(and (version>= 7 0) :mswindows (not :clim)) "w7sl"
      #+(and (version>= 6 0) :mswindows :clim) "w6cl" 
      #+(and (version>= 6 0) :mswindows (not :clim)) "w6sl"
+     #+(and (version>= 7 0) :macosx :clim) ".m7cl" 
+     #+(and (version>= 7 0) :macosx (not :clim)) ".m7sl"
      #+(and :sparc :clim) ".sacl" #+(and :sparc (not :clim)) ".sasl"
      #+(and :linux86 :clim) ".lacl" #+(and :linux86 (not :clim)) ".lasl"
      #+(and :alpha :clim) ".aacl" #+(and :alpha (not :clim)) ".aasl"
@@ -89,6 +91,7 @@
   #+(and :sun :svr4) "solaris"
   #+:alpha "osf"
   #+:mswindows "windows"
+  #+(and :macosx :powerpc) "macos.ppc.32"
   #-(or :prism :linux86 :sunos4 (and :sun :svr4) :alpha :mswindows)
   (error "~&loadup: unable to determine system type; see file ~
           `allegro-patches.lisp'.~%"))

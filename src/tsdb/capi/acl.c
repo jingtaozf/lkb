@@ -45,13 +45,13 @@ int pvm_collect(char *, int);
 int pvm_vm_info(char *);
 int pvm_task_info(int, char *);
 
-int self = 0;
-FILE *trace = (FILE *)NULL;
+static int self = 0;
+static FILE *trace = (FILE *)NULL;
 static int pending = -1;
 static int psize = -1;
 static char *buffer = (char *)NULL;
 static int bsize = 0;
-int debugp = 0;
+static int debugp = 0;
 
 double load_average(void) {
 

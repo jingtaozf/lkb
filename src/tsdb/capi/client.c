@@ -26,14 +26,14 @@ struct MFILE *client_process_item(void);
 struct MFILE *client_reconstruct_item(void);
 struct MFILE *client_complete_run(void);
 
-int redirect_stdout(FILE *);
-char *make_tmp_file(char *);
-char *current_user(void);
-char *current_time(void);
-char *current_host(void);
-char *current_os(void);
-void copy_file(char *, FILE *);
-void monitor(void);
+static int redirect_stdout(FILE *);
+static char *make_tmp_file(char *);
+static char *current_user(void);
+static char *current_time(void);
+static char *current_host(void);
+static char *current_os(void);
+static void copy_file(char *, FILE *);
+static void monitor(void);
 
 static int (*callbacks[4])() = { 
   (int (*)())NULL,
@@ -97,7 +97,7 @@ int slave(void) {
   // and send it over to the PVM controller; we hope control messages will be
   // seen as coming from the same PVM tid.                      (5-oct-04; oe)
   //
-  if(!fork()) monitor();
+  if(0 && !fork()) monitor();
 
   while(1) {
     if((id = pvm_trecv(-1, -1, &timeout)) < 0) {
@@ -601,12 +601,11 @@ char *make_tmp_file(char *prefix) {
 char *current_user(void) {
 
   static char *user = (char *)NULL;
-  extern char *cuserid(char *);
 
   if(user != NULL) {
     return(user);
   } /* if */
-  if((user = cuserid((char *)NULL)) != NULL) {
+  if((user = getlogin()) != NULL) {
     user = strdup(user);
     return(user);
   } /* if */
