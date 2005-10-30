@@ -25,10 +25,10 @@
   (format
    nil 
    "exec ~a -p"
-   #-:darwin
+   #-(or :darwin :macosx)
    (namestring (make-pathname :directory (pathname-directory make::bin-dir)
                               :name "yzlui"))
-   #+:darwin
+   #+(or :darwin :macosx)
    (namestring
     (make-pathname 
      :directory (pathname-directory
@@ -60,9 +60,17 @@
     (format
      nil 
      "exec ~a -p"
-     (namestring 
+     #-(or :darwin :macosx)
+     (namestring (make-pathname :directory (pathname-directory make::bin-dir)
+				:name "yzlui"))
+     #+(or :darwin :macosx)
+     (namestring
       (make-pathname 
-       :directory (pathname-directory make::bin-dir) :name "yzlui"))))
+       :directory (pathname-directory
+		   (dir-append
+		    make::bin-dir '(:relative "yzlui.app" "Contents" "MacOS")))
+       :name "yzlui"))))
+
   (if port
     (let* ((socket (socket:make-socket :connect :passive :local-port port))
            (stream (socket:accept-connection socket :wait t))

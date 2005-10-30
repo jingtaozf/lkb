@@ -62,7 +62,7 @@
     #+:acache :initially-do #+:acache (require :acache)
 
     :finally-do
-    #+(and :allegro (or :linux (and :sparc :svr4) :alpha) (not :slave))
+    #+(and :allegro (or :linux (and :sparc :svr4) :alpha :macosx) (not :slave))
     (let ((display (system:getenv "DISPLAY")))
       (when (and display (not (equal display "")))
         (funcall (symbol-function (read-from-string "tsdb::tsdb")) :podium)))

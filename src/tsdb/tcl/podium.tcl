@@ -25,7 +25,7 @@ if {![info exists itsdb_root]} {
   set itsdb_root [expr {[info exists env(HOSTNAME)] 
                         && ![string first "mt" $env(HOSTNAME)]
                         ? "/logon/oe/src/test/lingo/lkb" 
-                        : "/home/oe/src/lkb"}];
+                        : "/Users/oe/src/delphin/lkb"}];
 }; # if
 #
 # import BLT library (for `table' and `graph' widgets)
@@ -33,6 +33,19 @@ if {![info exists itsdb_root]} {
 namespace import -force blt::*
 namespace import -force blt::tile::*
 
+#
+# as of Tk 8.4 (at least), some of the commands used in `utitilities.tcl' have
+# been hidden away in a private namespace; while we need to run against both 8.0
+# and 8.4 (for a short while only, i hope), patch things up here.
+#                                                               (30-oct-05; oe)
+if {[info command tkMenuButtonDown] == ""} {
+  namespace eval :: {interp alias {} tkMenuButtonDown {}} ::tk::MenuButtonDown
+}; # if
+if {[info command tkMenuInvoke] == ""} {
+  namespace eval :: {interp alias {} tkMenuInvoke {}} ::tk::MenuInvoke
+}; # if
+
+#
 #
 # all state is encoded in a global (associative) array `globals'
 #

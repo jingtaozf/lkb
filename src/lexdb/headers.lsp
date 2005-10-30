@@ -124,5 +124,6 @@
     (format t "~%;            (Is the PostgreSQL library file installed on your machine? If so, please load it manually.)"))))
 
 ;; see if calling pq:connectdb returns an error
+#+:psql
 (defun libpq-p nil
   (handler-case (and (pq:connectdb "") t) (t () nil)))
