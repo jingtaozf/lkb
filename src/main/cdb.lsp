@@ -59,7 +59,7 @@
   (export '(open-write close-write open-read close-read write-record 
 	    read-record all-keys num-entries close-cdb)))
 
-(defparameter *cdb-ascii-p* t)
+(defparameter *cdb-ascii-p* nil)
 
 (defstruct (cdb)
   (stream nil)
