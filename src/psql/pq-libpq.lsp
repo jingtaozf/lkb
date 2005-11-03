@@ -1,18 +1,20 @@
-;;; Copyright (c) 2004
+;;; Copyright (c) 2004-2005
 ;;;   Ben Waldron;
 ;;;   see `licence.txt' for conditions.
 
-;; interface to libpq (PostgreSQL version 7.4)
+;; interface to libpq (PostgreSQL version 8.0)
 ;;  for libpq documentation see the chapter "libpq - C Library"
 ;;  in the PostgreSQL manual
 
 
 (in-package :pq)
 
+;
 (def-foreign-type PGconn (:struct))
 (def-foreign-type PGresult (:struct))
 (def-foreign-type ExecStatusType :int)
 
+;
 (defconstant exec-status-kw-map
     '((0 . :PGRES_EMPTY_QUERY)		; empty query string was executed
       (1 . :PGRES_COMMAND_OK)		; a query command that doesn't return
@@ -28,9 +30,11 @@
       (6 . :PGRES_NONFATAL_ERROR)	; notice or warning message
       (7 . :PGRES_FATAL_ERROR)))	; query failed
 
+;
 (def-foreign-type Oid :unsigned-int)
 (defconstant InvalidOid 0) ;; SEE include/postgres_ext.h
 
+;
 ;; SEE include/catalog/pg_type.h
 (defconstant BOOLOID 16)
 (defconstant BYTEAOID 17)
@@ -49,10 +53,13 @@
 (defconstant OIDVECTOROID 30)
 ;;... (SEE include/catalog/pg_type.h)
 
+;
 (def-foreign-type size_t :int)
 
+;
 (def-foreign-type ConnStatusType :int)
 
+;
 (defconstant conn-status-kw-map
     '((0 . :CONNECTION_OK)
       (1 . :CONNECTION_BAD)
@@ -70,32 +77,37 @@
 
 ;; DATABASE CONNECTION CONTROL FUNCTIONS
 
-;; keywords:
-;;  host
+;; conninfo parameter settings separated by whitespace
+;; single quotes and backslashes must be escaped
+;; parameters:
+;;  host (default /tmp [Unix] or localhost [other])
 ;;  hostaddr
-;;  port
-;;  dbame
-;;  user
+;;  port (port number/socket filename extension)
+;;  dbame (defaults to username)
+;;  user (defaults to OS login name)
 ;;  password
-;;  connect_timeout
-;;  options
-;;  sslmode
-;;  service
+;;  connect_timeout (max wait in seconds)
+;;  options (command-line options)
+;;  sslmode (disable, allow, prefer, require)
+;;  requiressl (DEPRECATED)
+;;  service (service name in pg_service.conf for additional params)
+;; parameters default to corresponding environment variable if set
+;; call status after invoking this function
 (def-foreign-call (connectdb "PQconnectdb")
     ((conninfo (* :char)))
   :returning PGconn
   :strings-convert t)
 
-;; PQsetdbLogin obsolete
-;; PQsetdb obsolete
+;; PQsetdbLogin OBSOLETE
+;; PQsetdb OBSOLETE
 
 ;(def-foreign-call (connect-start "PQconnectStart")
 ;    ((conninfo (* :char)))
 ;  :returning PGconn)
 
-;; PQconnectStart unused
-;; PQconnectPoll unused
-;; PQconndefaults unused
+;; PQconnectStart UNUSED
+;; PQconnectPoll UNUSED
+;; PQconndefaults UNUSED
 
 (def-foreign-call (finish "PQfinish")
     ((conn (* PGconn)))
@@ -105,8 +117,8 @@
     ((conn (* PGconn)))
   :returning :void)
 
-;; PQresetStart unused
-;; PQresetPoll unused
+;; PQresetStart UNUSED
+;; PQresetPoll UNUSED
 
 ;; CONNECTION STATUS FUNCTIONS
 
@@ -130,7 +142,7 @@
     ((conn (* PGconn)))
   :returning ((* :char)))
 
-;; PQtty obsolete
+;; PQtty OBSOLETE
 
 (def-foreign-call (options "PQoptions")
     ((conn (* PGconn)))
@@ -140,14 +152,17 @@
     ((conn (* PGconn)))
   :returning ConnStatusType)
 
-;; PQtransactionStatus unused
+;; PQtransactionStatus UNUSED
 
-;; eg:
+;; parameters reported include:
 ;;  server_version
+;;  server_encoding (see also PQserverVersion)
 ;;  client_encoding
 ;;  is_superuser
 ;;  session_authorization
 ;;  DateStyle
+;;  TimeZone
+;;  integer_datetimes
 ;; -7.3
 (def-foreign-call (parameter-status "PQparameterStatus")
     ((conn (* PGconn)) (param-name (* :char)))
@@ -155,11 +170,16 @@
   :strings-convert t)
 
 ;;-7.3
+;; 3 for 7.4+
+;; 2 for pre-7.4
+;; 0  for bad connection
 (def-foreign-call (protocol-version "PQprotocolVersion")
     ((conn (* PGconn)))
   :returning :int)
 
 ;;-7.4
+;; >= 0 valid
+;; -1 no server connection
 (def-foreign-call (server-version "PQserverVersion")
     ((conn (* PGconn)))
   :returning :int)
@@ -176,7 +196,7 @@
     ((conn (* PGconn)))
   :returning :int)
 
-;;PQgetSSL unused
+;;PQgetSSL UNUSED
 
 ;; COMMAND EXECUTION FUNCTIONS
 
@@ -190,32 +210,45 @@
   :strings-convert t)
 
 ;;-7.3
-;; PQexecParams unused
+;; PQexecParams UNUSED
 ;;-7.3
-;; PQprepare
+;; PQprepare UNUSED
 ;;-7.3
-;; PQexecPrepared unused
+;; PQexecPrepared UNUSED
 
+;; returns:
+;;  PGRES_EMPTY_QUERY
+;;  PGRES_COMMAND_OK (command that never returns rows)
+;;  PGRES_TUPLES_OK (can retrieve rows returned)
+;;  PGRES_COPY_OUT
+;;  PGRES_COPY_IN
+;;  PGRES_BAD_RESPONSE
+;;  PGRES_NONFATAL_ERROR (never returned directly)
+;;  PGRES_FATAL_ERROR
 (def-foreign-call (result-status "PQresultStatus")
     ((res (* PGresult)))
   :returning ExecStatusType)
 
-;; PQresStatus unused
+(def-foreign-call (res-status "PQresStatus")
+    ((status ExecStatusType))
+  :returning ((* :char)))
 
 (def-foreign-call (result-error-message "PQresultErrorMessage")
     ((res (* PGresult)))
   :returning ((* :char)))
 
 ;;-7.3
-;; PQresultErrorField unused
+;; PQresultErrorField UNUSED
 
+;; every PGresult should be cleared when no onger needed
 (def-foreign-call (clear "PQclear")
     ((res (* PGresult)))
   :returning :void)
 
-;; PQmakeEmptyPGResult unused
+;; PQmakeEmptyPGResult UNUSED
 
 ;; RETRIEVING QUERY RESULT INFORMATION
+;; extract info from PGresult with status PGRES_TUPLES_OK
 
 (def-foreign-call (ntuples "PQntuples")
     ((res (* PGresult)))
@@ -225,6 +258,7 @@
     ((res (* PGresult)))
   :returning :int)
 
+;; column numbers start at 0
 (def-foreign-call (fname "PQfname")
     ((res (* PGresult)) (column-number :int))
   :returning ((* :char)))
@@ -235,6 +269,10 @@
   :returning :int
   :strings-convert t)
 
+;; InvalidOid returned if 
+;;  - column number out of range
+;;  - or column not simple reference to table column
+;;  - or pre-3.0 protocol
 ;;-7.3
 (def-foreign-call (ftable "PQftable")
     ((res (* PGresult)) (column-number :int))
@@ -262,7 +300,7 @@
     ((res (* PGresult)) (column-number :int))
   :returning :int)
 
-;; PQfsize unused
+;; PQfsize UNUSED
 
 ;; 0=text
 ;; 1=binary
@@ -284,20 +322,22 @@
     ((res (* PGresult)) (row-number :int) (column-number :int))
   :returning :int)
 
-;; PQprint unused
+;; PQprint UNUSED
 
 ;; RETRIEVING RESULT INFORMATION FOR OTHER COMMANDS
+;; eg.for non-SELECT results
 
 (def-foreign-call (cmd-status "PQcmdStatus")
     ((res (* PGresult)))
   :returning ((* :char)))
 
+;; after INSERT, UPDATE, DELETE, MOVE, FETCH
 (def-foreign-call (cmd-tuples "PQcmdTuples")
     ((res (* PGresult)))
   :returning ((* :char)))
 
-;; PQoidValue unused
-;; PQoidStatus deprecated
+;; PQoidValue UNUSED
+;; PQoidStatus DEPRECATED
 
 ;; ESCAPING STRINGS FOR INCLUSION IN SQL COMMANDS
 
@@ -317,53 +357,55 @@
 ;  :returning (* :unsigned-char))
 
 ;;-7.3
-;; PQfreemem unused
-;; necessary only for MS Windows after use of 
+;; PQfreemem UNUSED
+;; needed by MS Windows after use of 
 ;;  PQunescapeBytea, PQescapeBytea, PQnotifies
 
 ;; ASYNCHRONOUS COMMAND PROCESSING
 
-;;PQsendQuery not used
+;;PQsendQuery UNUSED
 ;;-7.3
-;;PQsendQueryParams not used
+;;PQsendQueryParams UNUSED
+;;-7.4
+;;PGsendPrepare UNUSED
 ;;-7.3
-;;PQsendQueryPrepared not used
-;;PQgetResult not used
-;;PQconsumeInput not used
-;;PQisBusy not used
-;;PQrequestCancel not used
-;;PQsetnonblocking not used
-;;PQisnonblocking not used
+;;PQsendQueryPrepared UNUSED
+;;PQgetResult UNUSED
+;;PQconsumeInput UNUSED
+;;PQisBusy UNUSED
+;;PQsetnonblocking UNUSED
+;;PQisnonblocking UNUSED
 ;;PQflush not used
 
 ;; CANCELLING QUERIES IN PROGRESS
 
 ;;-7.4
-;;PQgetCancel
+;;PQgetCancel UNUSED
 ;;-7.4
-;;PQfreeCancel
+;;PQfreeCancel UNUSED
 ;;-7.4
-;;PQcancel
+;;PQcancel UNUSED
 ;;-7.4
-;;PQrequestCancel
+;;PQrequestCancel UNUSED
 
 ;; THE FAST-PATH INTERFACE
 
-;; PQfn obsolete
+;; PQfn OBSOLETE
 
 ;; ASYNCHRONOUS NOTIFICATION
 
-;; PQnotify unused
+;; PQnotify UNUSED
 
 ;; FUNCTIONS ASSOCIATED WITH THE COPY COMMAND
 
 ;; (already defined)
-;; PQnfields
-;; PQbinarytuples
+;; PQnfields (# columnds to be copied)
+;; PQbinarytuples (0=text, 1=binary)
 ;;-7.4
 ;;PGfformat
 
 ;; FUNCTIONS FOR SENDING COPY DATA
+;; after COPY FROM STDIN
 
 ;; 1=ok
 ;; 0=blocked

@@ -165,7 +165,7 @@
 (setf *lexdb-active-ium-ring* nil)
 (setf *lexdb-new-entries-buffer* "*lexdb-merged*")
 (setf *lexdb-scratch-buffer* "*lexdb-scratch*")
-(setf *lexdb-slot-len* 20)
+(setf *lexdb-slot-len* 30)
 
 ;;;
 ;;; buffer local vbles
@@ -281,6 +281,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (set-syntax-table text-mode-syntax-table)
   (setq mode-name "LexDB")
   (setq major-mode 'lexdb-mode)
+  (setq truncate-lines t)
   (run-hooks 'lexdb-mode-hook))    
 
 ;;;
