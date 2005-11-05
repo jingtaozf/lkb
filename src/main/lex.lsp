@@ -473,6 +473,7 @@
 ;;;  General lexicon methods
 ;;;
 
+(defvar *warn-lookup-word* nil)
 (defmethod lookup-word :around ((lexicon lex-database) orth &key (cache *lexicon-lexical-entries-cache-p*))
   (let* ((value (if (next-method-p) (call-next-method)))
 	   (mode (extra-mode lexicon))
@@ -495,7 +496,9 @@
 		      (append result value))
 		  finally 
 		    (return result))))
-	   (value (append value extra)))
+	 (value (append value extra)))
+    (when (and *warn-lookup-word* (null value))
+      (format t "~&Warning: no lexical entry for \"~a\"" orth))
      value))
 
 (defmethod lex-words :around ((lexicon lex-database))
