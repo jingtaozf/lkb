@@ -222,6 +222,8 @@
         (dag-type val)
       nil)))
 
+(defvar *warn-dag-diff-list-2-list* nil)
+(defvar *current-lex-id* nil)
 (defun dag-diff-list-2-list (dag)
   (let* ((last-dag (dag-path-val (list *diff-list-last*) dag))
 	 (list-dag (dag-path-val (list *diff-list-list*) dag)))
@@ -232,7 +234,8 @@
 	do
 	  (setf rest-dag (dag-path-val '(rest) list-dag))
 	  (when (null rest-dag)
-	    (format t "~%WARNING: invalid difference list ~a in ~a" out-list *current-lex-id*)
+	    (when *warn-dag-diff-list-2-list*
+	      (format t "~%WARNING: invalid difference list ~a in ~a" out-list *current-lex-id*))
 	    (loop-finish))
 	collect (dag-path-val '(first) list-dag)
 	into out-list
