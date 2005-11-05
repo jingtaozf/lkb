@@ -1169,7 +1169,8 @@
 (defun replace-dag-types (dag-instance path replace-alist)
   (if *within-unification-context-p*
       (let
-	  ((dag (unify-paths-dag-at-end-of1 dag-instance path)))
+	  ((dag (unify-paths-dag-at-end-of1 dag-instance path))) 
+	;; better to complain if path doesn't exist?
 	(replace-dag-types-aux dag replace-alist)
 	dag-instance)
     (with-unification-context (dag-instance)
