@@ -70,8 +70,9 @@
       source)))
 
 (defun pprint-dag (&rest rest)
-  (format t "~&~a"
-	  (apply #'pprint-dag-aux rest)))
+  (format t "~&~%~a"
+	  (apply #'pprint-dag-aux rest))
+  rest)
 
 (defun pprint-dag-aux (x &key (depth 0) root)
   (setf x (mrs::path-value x root))
