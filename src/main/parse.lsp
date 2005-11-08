@@ -50,6 +50,25 @@
   "a counter used by the user interface to make sure parse tree windows 
    etc have the current chart")
 
+;;;
+;;; recently added variant: use active key-driven parsing strategy; this seems
+;;; to 
+;;;
+;;;   - perform better than the default unidirectional passive breadth-first
+;;;     search (up to 40 % time reduction on longer VerbMobil sentences);
+;;;   - simplify best-first search and generalize to more than just binary
+;;;     branching rules;
+;;;   - outperform passive best-first mode modestly.
+;;;
+;;; until tested somewhat better, the active parser is in experimental state,
+;;; disabled by default, and hidden in `active.lsp'.
+;;;                                                        (20-jun-99  -  oe)
+;;;
+;;; now that we have tested the active parser a bit (and people had the time
+;;; to get used to the idea of active parsing :-), turn it on by default.
+;;;                                                        (20-jan-00  -  oe)
+(defvar *active-parsing-p* t)
+
 (defvar *chart* (make-array (list *chart-limit* 2))) 
 
 (defvar *tchart* (make-array (list *chart-limit* 2))) 
@@ -142,16 +161,17 @@
 (defstruct (morpho-stem-edge (:include edge))
   word stem current) 
 
-(defparameter *characterize-p* nil)
+(defvar *characterize-p* nil)
 
 (defun make-edge (&rest rest)
-  (let ((new-edge
-	 (apply #'make-edge-x rest)))
-    (when *characterize-p*
-      (set-characterization (edge-dag new-edge)
-			    (edge-cfrom new-edge)
-			    (edge-cto new-edge)))
-    new-edge))
+  (apply #'make-edge-x rest))
+;<   (let ((new-edge
+;<        (apply #'make-edge-x rest)))
+;<     (when *characterize-p*
+;<       (set-characterization (edge-dag new-edge)
+;<                           (edge-cfrom new-edge)
+;<                           (edge-cto new-edge)))
+;<     new-edge))
 
 (defmethod print-object ((instance chart-configuration) stream)
   (format stream "[~S ~S]" (chart-configuration-edge instance)
@@ -160,7 +180,7 @@
 (defmethod print-object ((instance edge) stream)
   (format 
    stream 
-   "#[Edge # ~d: `~(~a~)' <~{~a~^ ~}>]"
+   "#[Edge # ~d: `~(~a~)' <~{~a~^ ~}>"
    (edge-id instance)
    (let ((rule (edge-rule instance)))
      (if rule 
@@ -170,28 +190,42 @@
        (edge-category instance)))
    (loop 
        for child in (edge-children instance)
-       collect (if (edge-p child) (edge-id child) "_"))))
+       collect (if (edge-p child) (edge-id child) "_")))
+  ;; print cfrom/cto
+  (with-slots (cfrom cto) instance
+    (format stream "~:[~2*~; (~A c ~A) ~]"
+	    (and cfrom cto) cfrom cto))
+  (format stream "]"))
 
 (defmethod print-object ((instance token-edge) stream)
   (format 
    stream 
-   "#[Token edge # ~d: ~S ~S ~S]"
+   "#[Token edge # ~d: ~S ~S ~S"
    (token-edge-id instance)
    (token-edge-word instance)
    (token-edge-from instance)
-   (token-edge-to instance)))
+   (token-edge-to instance))  
+  ;; print cfrom/cto
+  (with-slots (cfrom cto) instance
+    (format stream "~:[~2*~; (~A c ~A) ~]"
+	    (and cfrom cto) cfrom cto))
+  (format stream "]"))
 
 (defmethod print-object ((instance morpho-stem-edge) stream)
   (format 
    stream 
-   "#[Morph edge # ~d: ~S ~S ~S ~S ~A]"
+   "#[Morph edge # ~d: ~S ~S ~S ~S ~A"
    (morpho-stem-edge-id instance)
    (morpho-stem-edge-word instance)
    (morpho-stem-edge-current instance)
    (morpho-stem-edge-from instance)
    (morpho-stem-edge-to instance)
-   (morpho-stem-edge-partial-tree instance)))
-
+   (morpho-stem-edge-partial-tree instance))
+  ;; print cfrom/cto
+  (with-slots (cfrom cto) instance
+    (format stream "~:[~2*~; (~A c ~A) ~]"
+	    (and cfrom cto) cfrom cto))
+  (format stream "]"))
 
 (defvar *edge-id* 0)
 
@@ -322,25 +356,6 @@
        (heap-insert *agenda* ,priority #'(lambda () ,@body))
      (progn
        ,@body)))
-
-;;;
-;;; recently added variant: use active key-driven parsing strategy; this seems
-;;; to 
-;;;
-;;;   - perform better than the default unidirectional passive breadth-first
-;;;     search (up to 40 % time reduction on longer VerbMobil sentences);
-;;;   - simplify best-first search and generalize to more than just binary
-;;;     branching rules;
-;;;   - outperform passive best-first mode modestly.
-;;;
-;;; until tested somewhat better, the active parser is in experimental state,
-;;; disabled by default, and hidden in `active.lsp'.
-;;;                                                        (20-jun-99  -  oe)
-;;;
-;;; now that we have tested the active parser a bit (and people had the time
-;;; to get used to the idea of active parsing :-), turn it on by default.
-;;;                                                        (20-jan-00  -  oe)
-(defparameter *active-parsing-p* t)
 
 (defun clear-chart nil
    (incf *chart-generation-counter*)
@@ -605,8 +620,83 @@
   cfrom
   cto)
 
-(defun set-characterization (dag cfrom cto)
-  (declare (ignore dag cfrom cto)))
+(defvar mrs::*psoa-liszt-path*)
+
+(defun set-characterization-tdfs (tdfs cfrom cto)
+  (cond
+   ((or cfrom cto)
+    (let ((indef (set-characterization-indef (tdfs-indef tdfs) cfrom cto)))
+      (when indef ;; is this necessary ???
+	(make-tdfs :indef indef
+		   :tail (copy-tdfs-tails tdfs)))))
+   (t
+    tdfs)))
+
+(defun set-characterization-tdfs-within-unification-context (tdfs cfrom cto)
+  (cond
+   ((or cfrom cto)
+    (set-characterization-indef-within-unification-context (tdfs-indef tdfs) cfrom cto))
+   (t
+    nil)))
+  
+(defun set-characterization-indef (indef-dag cfrom cto)
+  (with-unification-context (dummy)
+    (let* ((cfrom-str (2-str cfrom))
+	   (cto-str (2-str cto))
+	   (rels (mrs::get-rels-list indef-dag)))
+      (loop
+	  for rel in rels
+	  for rel-cfrom-dag = (mrs::path-value rel '(CFROM))
+	  for rel-cto-dag = (mrs::path-value rel '(CTO))
+	  when (or (eq *toptype* (dag-type rel-cfrom-dag)) 
+		   (eq *toptype* (dag-type rel-cto-dag)))
+	  do 
+	    (setf (dag-new-type rel-cfrom-dag) cfrom-str)
+	    (setf (dag-new-type rel-cto-dag) cto-str))
+      (copy-dag indef-dag)
+      )))
+
+;; must call copy-dag to get result
+(defun set-characterization-indef-within-unification-context (indef-dag cfrom cto)
+    (let* ((cfrom-str (2-str cfrom))
+	   (cto-str (2-str cto))
+	   (rels (mrs::get-rels-list indef-dag)))
+      (loop
+	  for rel in rels
+	  for rel-cfrom-dag = (mrs::path-value rel '(CFROM))
+	  for rel-cto-dag = (mrs::path-value rel '(CTO))
+	  when (or (eq *toptype* (dag-type rel-cfrom-dag)) 
+		   (eq *toptype* (dag-type rel-cto-dag)))
+	  do 
+	    (setf (dag-new-type rel-cfrom-dag) cfrom-str)
+	    (setf (dag-new-type rel-cto-dag) cto-str))
+      ))
+
+;; imported from erg/lkb/xmlify.lsp
+;; cfrom/cto replacement could be made more precise
+;; note that instantiated CFROM/CTO show up in parse tree FS
+;;  only for the lexically grounded preds 
+#+:null
+(defun set-characterization (tdfs cfrom cto)
+  (let ((*safe-not-to-copy* nil))
+    (setf *safe-not-to-copy* *safe-not-to-copy*) ;; to avoid compiler warning
+    (when (and (tdfs-p tdfs) (integerp cfrom)
+	       (> cfrom -1) (integerp cto)
+	       (> cto -1)) 
+      (let* ((replace-alist (list (cons 'cfrom  
+					(format nil "~A" cfrom))
+				  (cons 'cto  
+					(format nil "~A" cto))))
+	     (new-dag (tdfs-indef tdfs))
+	     ;;; need to restrict replacement to the RELS list
+	     ;;; otherwise get MSG clashes
+	     (retyped-dag
+	      (replace-dag-types new-dag 
+				 (append mrs::*initial-semantics-path*
+				       mrs::*psoa-liszt-path*) 
+				 replace-alist)))
+	(when retyped-dag
+	  (setf (tdfs-indef tdfs) retyped-dag))))))
 
 ;;eg. (instantiate-chart-with-tokens ("The" "dog" "barks"))
 ;; calls: (add-token-edge "The" "THE" 0 1 nil nil)
@@ -1285,8 +1375,9 @@ relatively limited.
 		 (or *mal-active-p* 
 		     (not (mal-lex-entry-p expanded-entry))))
 	(let* ((new-fs
-	       (copy-lex-fs-as-needed
-		(lex-entry-full-fs entry)))
+		(copy-lex-fs-as-needed
+		 (lex-entry-full-fs entry)
+		 :cfrom cfrom :cto cto))
 	       (new-edge
 		(make-edge :id (next-edge) 
 			   :category (indef-type-of-tdfs new-fs)
@@ -1313,10 +1404,12 @@ relatively limited.
             (push cc (aref *chart* from 1))
             (push cc (aref *chart* to 0))))))))
 
-(defun copy-lex-fs-as-needed (tdfs)
+;; fix_me (too much potential copying)
+(defun copy-lex-fs-as-needed (tdfs &key cfrom cto)
+  (when *characterize-p*
+    (setf tdfs (set-characterization-tdfs tdfs cfrom cto)))
   (cond
-   ((or *characterize-p*
-        *recording-word*
+   ((or *recording-word*
         (smember tdfs *lexical-entries-used*))
     (copy-tdfs-completely tdfs))
    (t 
@@ -1514,7 +1607,7 @@ an unknown word, treat the gap as filled and go on from there.
    t
    "~&apply-immediate-spelling-rule(): `~(~a~) <-- ~d~^ [~d -- ~d]"
    (rule-id rule) (edge-id child-edge) left-vertex right-vertex)
-  (if 
+  (when 
       (and (check-rule-filter rule (edge-rule child-edge) 0)
 	   (restrictors-compatible-p 
 	    (car (rule-daughters-restricted-reversed rule))
@@ -1522,7 +1615,8 @@ an unknown word, treat the gap as filled and go on from there.
 				      child-edge)))
       (multiple-value-bind (unification-result first-failed-p)
 	  (evaluate-unifications rule (list (edge-dag child-edge))
-				 orth-tdfs)
+				 orth-tdfs
+				 nil nil (edge-cfrom child-edge) (edge-cto child-edge))
         (if unification-result
             (let* ((new-edge 
                     (make-edge :id (next-edge)
@@ -1754,9 +1848,13 @@ an unknown word, treat the gap as filled and go on from there.
      left-vertex right-vertex)
     (let ((child-edge-list-reversed (reverse child-edge-list)))
       (multiple-value-bind (unification-result first-failed-p)
-          (evaluate-unifications rule (mapcar #'edge-dag 
-                                              child-edge-list-reversed)
-                                 nil child-edge-list-reversed backwardp)
+	  (evaluate-unifications rule (mapcar #'edge-dag 
+					      child-edge-list-reversed)
+				 nil child-edge-list-reversed backwardp
+			      (loop for edge in child-edge-list
+				  minimize (edge-cfrom edge))
+			      (loop for edge in child-edge-list
+				  maximize (edge-cto edge)))
         (if unification-result
             (let* ((edge-list
                     (if backwardp child-edge-list child-edge-list-reversed))
@@ -1789,7 +1887,7 @@ an unknown word, treat the gap as filled and go on from there.
 
 
 (defun evaluate-unifications (rule child-fs-list 
-			      &optional nu-orth child-edge-list backwardp)
+			      &optional nu-orth child-edge-list backwardp cfrom cto)
   ;; An additional optional argument is given. This is the new orthography if
   ;; the unification relates to a morphological process. If it is present, it
   ;; is inserted in the resulting fs
@@ -1837,6 +1935,10 @@ an unknown word, treat the gap as filled and go on from there.
       ;; if (car (rule-order rule)) is NIL - tdfs-at-end-of will return the
       ;; entire structure
       (let ((result (tdfs-at-end-of (car (rule-order rule)) current-tdfs)))
+	(if *characterize-p*
+	    (set-characterization-tdfs-within-unification-context
+	     result
+	     cfrom cto))
 	(when new-orth-fs
 	  (setq result (yadu result new-orth-fs))) 
 	(when result
@@ -2091,9 +2193,15 @@ an unknown word, treat the gap as filled and go on from there.
 		   for child in (edge-children edge) 
 		   collect (edge-id child))))
 	(format stream "]"))
+      ;; print cfrom/cto
+      (when (token-edge-p edge)
+	(with-slots (cfrom cto) edge
+	  (format t "~:[~2*~; <~A c ~A> ~]"
+		  (and cfrom cto) cfrom cto)))
+      ;; print xfrom/xto
       (when (token-edge-p edge)
 	(with-slots (xfrom xto) edge
-	  (format t "~:[~2*~; [~A x ~A] ~]"
+	  (format t "~:[~2*~; <~A x ~A> ~]"
 		  (and xfrom xto) xfrom xto)))
       (format stream "~%"))))
 

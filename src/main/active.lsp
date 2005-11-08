@@ -114,7 +114,7 @@
 ;;; entry must supply the appropriate value.  the `rely on' lexical entry will
 ;;; only survive if an `_on_rel_s' is provided somewhere in the chart.
 ;;;
-(defparameter *chart-dependencies* nil)
+(defvar *chart-dependencies* nil)
 
 (defun chart-dependencies-provided (tasks)
   (loop
@@ -625,6 +625,10 @@
       (incf *executed-tasks*)
       (let* ((tdfs (yadu! rtdfs ptdfs path)))
         (when tdfs
+	(if *characterize-p*
+	    (set-characterization-tdfs-within-unification-context
+	     tdfs
+	     (edge-cfrom edge) (edge-cto edge)))
           (let* ((root (tdfs-at-end-of (first (rule-order rule)) tdfs))
                  (root (if otdfs (yadu root otdfs) root))
                  (vector (if open
@@ -634,8 +638,8 @@
                  (copy (if open
                          (if *hyper-activity-p*
                            t
-                           (copy-tdfs-elements tdfs))
-                         (restrict-and-copy-tdfs root))))
+                           (copy-tdfs-elements tdfs)) ;; performs copy-dag
+                         (restrict-and-copy-tdfs root)))) ;; performs clone-dag
             (when copy
               (setf nedge
                 (make-edge :id (if open (next-active-edge) (next-edge))
@@ -698,7 +702,10 @@
          (daughters (rest (rule-order arule))) (path (nth key daughters))
          (passive (rest task))
          (pedge (chart-configuration-edge passive)) (ptdfs (edge-dag pedge))
-         (nedge
+	 (children (if forwardp
+		       (append achildren (list pedge))
+		     (cons pedge achildren)))
+        (nedge
           (with-unification-context (ignore)
             (incf *executed-tasks*)
             (when (eq atdfs t)
@@ -718,7 +725,14 @@
             #+:adebug
             (incf (active-chart-configuration-executions active))
             (let* ((tdfs (yadu! atdfs ptdfs path)))
-              (when tdfs
+	(when tdfs
+	(if *characterize-p*
+	    (set-characterization-tdfs-within-unification-context
+	     tdfs
+	     (loop for edge in children
+		 minimize (edge-cfrom edge)) 
+	     (loop for edge in children
+		 maximize (edge-cto edge))))
                 (let* ((root (tdfs-at-end-of (first (rule-order arule)) tdfs))
                        (vector (if open
                                  (tdfs-qc-vector 
@@ -732,9 +746,9 @@
                   (when copy
                     (let* ((category (indef-type-of-tdfs 
                                       (if (eq copy t) tdfs copy)))
-                           (children (if forwardp
-                                       (append achildren (list pedge))
-                                       (cons pedge achildren)))
+;                           (children (if forwardp
+;                                       (append achildren (list pedge))
+;                                       (cons pedge achildren)))
                            (ids (loop 
                                     for child in children 
                                     append (edge-lex-ids child)))

@@ -571,7 +571,6 @@
          #+:mclprofile (incf bb (ccl::%heap-bytes-allocated))))
     (with-unification-context (dag1) 
       (when (unify-dags dag1 dag2) (copy-dag dag1)))))
-  
 
 (defun unifiable-dags-p (dag1 dag2)
   (if *within-unification-context-p*
