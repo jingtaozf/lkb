@@ -14,22 +14,22 @@
 
 (in-package :mrs)
 
-(ffi:defentry pet_type_to_code (:object) (:int pet_type_to_code))
-(ffi:defentry pet_code_to_type (:int) (:object pet_code_to_type))
-(ffi:defentry pet_feature_to_code (:object) (:int pet_feature_to_code))
-(ffi:defentry pet_code_to_feature (:int) (:object pet_code_to_feature))
+(ffi:defentry pet_type_to_code (:object) (:int "pet_type_to_code"))
+(ffi:defentry pet_code_to_type (:int) (:object "pet_code_to_type"))
+(ffi:defentry pet_feature_to_code (:object) (:int "pet_feature_to_code"))
+(ffi:defentry pet_code_to_feature (:int) (:object "pet_code_to_feature"))
 
-(ffi:defentry pet_fs_deref (:int) (:int pet_fs_deref))
-(ffi:defentry pet_fs_cyclic_p (:int) (:int pet_fs_cyclic_p))
-(ffi:defentry pet_fs_valid_p (:int) (:int pet_fs_valid_p))
-(ffi:defentry pet_fs_type (:int) (:int pet_fs_type))
+(ffi:defentry pet_fs_deref (:int) (:int "pet_fs_deref"))
+(ffi:defentry pet_fs_cyclic_p (:int) (:int "pet_fs_cyclic_p"))
+(ffi:defentry pet_fs_valid_p (:int) (:int "pet_fs_valid_p"))
+(ffi:defentry pet_fs_type (:int) (:int "pet_fs_type"))
 
-(ffi:defentry pet_fs_path_value (:int :object) (:int pet_fs_path_value))
-(ffi:defentry pet_fs_arcs (:int) (:object pet_fs_arcs))
+(ffi:defentry pet_fs_path_value (:int :object) (:int "pet_fs_path_value"))
+(ffi:defentry pet_fs_arcs (:int) (:object "pet_fs_arcs"))
 
-(ffi:defentry pet_type_valid_p (:int) (:int pet_type_valid_p))
-(ffi:defentry pet_subtype_p (:int :int) (:int pet_subtype_p))
-(ffi:defentry pet_glb (:int :int) (:int pet_glb))
+(ffi:defentry pet_type_valid_p (:int) (:int "pet_type_valid_p"))
+(ffi:defentry pet_subtype_p (:int :int) (:int "pet_subtype_p"))
+(ffi:defentry pet_glb (:int :int) (:int "pet_glb"))
 
 (defun pet-type-to-code (key)
   (or (loop

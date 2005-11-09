@@ -38,15 +38,25 @@
 (defparameter %object-stubs% nil)
 
 (defun ecl-compile-file (source &key output-file)
+  ;;
+  ;; this is all slightly involved (and feels brittle across ECL releases :-{):
+  ;; we need to both compile into `.fas' files that we can load incrementally
+  ;; into the running Lisp (so as to get through the entire system, i presume),
+  ;; plus object files that can be combined into a C-style library.
+  ;;
   (compile-file source :output-file output-file :system-p nil :c-file t)
-  (compile-file source :output-file output-file :system-p t :c-file t)
   (let ((file (make-pathname :device (pathname-device output-file)
                              :directory (pathname-directory output-file)
                              :name (pathname-name output-file)
                              :type "o")))
+    (compile-file source :output-file file :system-p t :c-file t)
     (setf %object-files% (cons (namestring file) %object-files%)))
   (let ((name (string-upcase (pathname-name output-file))))
     (setf %object-stubs% (cons (substitute #\_ #\- name) %object-stubs%))))
+
+;(setf c::*debug-compiler* t)
+;(pop si::*exit-hooks*)
+
 
 (define-language :lisp
   :compiler #'ecl-compile-file
@@ -113,7 +123,7 @@
 ;;;
 (defvar %system-binaries%
   #+(and (or :i386 :i686 :pentium3 :pentium4 :athlon) :unix) "linux.x86.32"
-  #+(and (not (or :i386 :i686 :pentium3 :pentium4 :athlon)) :unix) "ppc.x86.32"
+  #+(and :x86_64 :unix) "linux.x86.64"
   #+(and (or :i386 :i686 :pentium3 :pentium4 :athlon) (not :unix)) "windows"
   #-(or (or :i386 :i686 :pentium3 :pentium4 :athlon) 
         (and (not (or :i386 :i686 :pentium3 :pentium4 :athlon)) :unix))
