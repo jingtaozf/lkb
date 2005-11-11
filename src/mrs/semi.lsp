@@ -881,7 +881,7 @@
   (let* ((message-path 
 	  (append *initial-semantics-path* 
 		  *semantics-to-message-path*))
-	 (message-dag (lkb::unify-paths-dag-at-end-of1 dag message-path)) )
+	 (message-dag (lkb::unify-paths-dag-at-end-of1 dag message-path)))
     message-dag))
 
 (defun extract-comps-info (dag)

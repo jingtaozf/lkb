@@ -641,22 +641,11 @@
   
 (defun set-characterization-indef (indef-dag cfrom cto)
   (with-unification-context (dummy)
-    (let* ((cfrom-str (2-str cfrom))
-	   (cto-str (2-str cto))
-	   (rels (mrs::get-rels-list indef-dag)))
-      (loop
-	  for rel in rels
-	  for rel-cfrom-dag = (mrs::path-value rel '(CFROM))
-	  for rel-cto-dag = (mrs::path-value rel '(CTO))
-	  when (or (eq *toptype* (dag-type rel-cfrom-dag)) 
-		   (eq *toptype* (dag-type rel-cto-dag)))
-	  do 
-	    (setf (dag-new-type rel-cfrom-dag) cfrom-str)
-	    (setf (dag-new-type rel-cto-dag) cto-str))
-      (copy-dag indef-dag)
-      )))
+    (set-characterization-indef-within-unification-context indef-dag cfrom cto)
+    (copy-dag indef-dag)))
 
 ;; must call copy-dag to get result
+#+:null
 (defun set-characterization-indef-within-unification-context (indef-dag cfrom cto)
     (let* ((cfrom-str (2-str cfrom))
 	   (cto-str (2-str cto))
@@ -678,8 +667,21 @@
 		   (eq *toptype* (dag-type rel-cto-dag)))
 	  do 
 	    (setf (dag-new-type rel-cfrom-dag) cfrom-str)
-	    (setf (dag-new-type rel-cto-dag) cto-str))
-      ))
+	    (setf (dag-new-type rel-cto-dag) cto-str))))
+
+(defun set-characterization-indef-within-unification-context (indef-dag cfrom cto)
+  (let ((*safe-not-to-copy* nil))
+    (setf *safe-not-to-copy* *safe-not-to-copy*) ;; to avoid compiler warning
+    (let* ((replace-alist (list (cons 'cfrom  
+				      (format nil "~A" cfrom))
+				(cons 'cto  
+				      (format nil "~A" cto)))))
+	     ;;; need to restrict replacement to the RELS list
+	     ;;; otherwise get MSG clashes
+      (replace-dag-types indef-dag 
+			 (append mrs::*initial-semantics-path*
+				 mrs::*psoa-liszt-path*) 
+			 replace-alist))))
 
 ;; imported from erg/lkb/xmlify.lsp
 ;; cfrom/cto replacement could be made more precise
