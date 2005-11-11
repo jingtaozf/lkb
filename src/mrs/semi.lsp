@@ -868,9 +868,15 @@
   (let* ((rels-path 
 	  (append *initial-semantics-path* 
 		  *semantics-to-rels-path*))
-	 (rels-dag (path-value dag 
-			       rels-path)))
-    (lkb::dag-diff-list-2-list rels-dag)))
+	 (rels-dag (lkb::unify-paths-dag-at-end-of1 dag rels-path)) 
+;	 (rels-dag (path-value dag 
+;			       rels-path))
+	 )
+    (if rels-dag 
+	(lkb::dag-diff-list-2-list rels-dag)
+      (format t "~%; WARNING: diff-list not found at path ~a in ~a" rels-path dag))))
+
+;(unify-paths-dag-at-end-of1 dag-instance path)
 
 (defun extract-comps-info (dag)
   (let* ((comps-list (get-comps-list dag))
