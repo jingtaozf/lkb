@@ -660,7 +660,16 @@
 (defun set-characterization-indef-within-unification-context (indef-dag cfrom cto)
     (let* ((cfrom-str (2-str cfrom))
 	   (cto-str (2-str cto))
-	   (rels (mrs::get-rels-list indef-dag)))
+	   (rels (mrs::get-rels-list indef-dag))
+	   (message (mrs::get-message indef-dag)))
+      (when message
+	(let* ((message-cfrom-dag (mrs::path-value message '(CFROM)))
+	       (message-cto-dag (mrs::path-value message '(CTO))))
+	  (when (and message-cfrom-dag message-cto-dag
+		     (or (eq *toptype* (dag-type message-cfrom-dag)) 
+			 (eq *toptype* (dag-type message-cto-dag))))
+	    (setf (dag-new-type message-cfrom-dag) cfrom-str)
+	    (setf (dag-new-type message-cto-dag) cto-str))))
       (loop
 	  for rel in rels
 	  for rel-cfrom-dag = (mrs::path-value rel '(CFROM))

@@ -845,6 +845,10 @@
   `(,(vsym "RELS"))
   "Following this path from the start of the MRS structure gets you to the RELS list")
 
+(defparameter *semantics-to-message-path* 
+  `(,(vsym "MESSAGE"))
+  "Following this path from the start of the MRS structure gets you to the MESSAGE list")
+
 (defun get-dag-by-id (lex-id)
   (let* ((entry (lkb::get-lex-entry-from-id lex-id))
 	 (dag (and
@@ -868,15 +872,17 @@
   (let* ((rels-path 
 	  (append *initial-semantics-path* 
 		  *semantics-to-rels-path*))
-	 (rels-dag (lkb::unify-paths-dag-at-end-of1 dag rels-path)) 
-;	 (rels-dag (path-value dag 
-;			       rels-path))
-	 )
+	 (rels-dag (lkb::unify-paths-dag-at-end-of1 dag rels-path)))
     (if rels-dag 
 	(lkb::dag-diff-list-2-list rels-dag)
       (format t "~%; WARNING: diff-list not found at path ~a in ~a" rels-path dag))))
 
-;(unify-paths-dag-at-end-of1 dag-instance path)
+(defun get-message (dag)
+  (let* ((message-path 
+	  (append *initial-semantics-path* 
+		  *semantics-to-message-path*))
+	 (message-dag (lkb::unify-paths-dag-at-end-of1 dag message-path)) )
+    message-dag))
 
 (defun extract-comps-info (dag)
   (let* ((comps-list (get-comps-list dag))
