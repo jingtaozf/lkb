@@ -342,9 +342,9 @@
 ;; ESCAPING STRINGS FOR INCLUSION IN SQL COMMANDS
 
 (def-foreign-call (escape-string "PQescapeString")
-    ((to (* :char)) (from (* :char)) (length size_t))
+    ((to (* :void)) (from (* :char)) (length size_t))
   :returning size_t
-  :strings-convert t)
+  :strings-convert nil)
 
 ;; ESCAPING BINARY STRINGS FOR INCLUSION IN SQL COMMANDS
 

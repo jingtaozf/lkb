@@ -68,8 +68,8 @@
       (let* ((table 
 	      (get-records lex
 			   (format nil "SELECT ~a FROM (SELECT lex.* FROM lex JOIN lex_key USING (name,userid,modstamp) WHERE lex_key.key LIKE ~a) AS foo"
-				   (fields-str (grammar-fields lex))
-				   (quote-literal lex (sql-like-text (normalize-orthkey orth))))))
+				   (fields-str lex (grammar-fields lex))
+				   (psql-quote-literal (sql-like-text (normalize-orthkey orth))))))
 	     (ids (lookup-word-aux2 lex table)))
 	ids)))
 
@@ -306,8 +306,8 @@
   (get-records lex
 	       (format nil
 		       "SELECT ~a FROM lex WHERE name LIKE ~a"
-		       (fields-str reqd-fields)
-		       (quote-literal lex name))))
+		       (fields-str lex reqd-fields)
+		       (psql-quote-literal name))))
 
 (defmethod retrieve-raw-record-no-cache ((lex psql-lex-database) id &optional (reqd-fields '("*")))
   (cond 
@@ -344,10 +344,10 @@
 	    (get-records lex
 			 (format nil
 				 "SELECT ~a FROM rev_all WHERE (name,userid,modstamp) = (~a,~a,~a)"
-				 (fields-str reqd-fields)
-				 (quote-literal lex id)
-				 (quote-literal lex name)
-				 (quote-literal lex modstamp)))))
+				 (fields-str lex reqd-fields)
+				 (psql-quote-literal id)
+				 (psql-quote-literal name)
+				 (psql-quote-literal modstamp)))))
       
       (if (> (length (recs table)) 1)
 	  (error (format nil "too many records returned"))
@@ -576,7 +576,7 @@
 		     (format nil "SELECT ~a FROM ~a WHERE ~a ILIKE ~a"
 			     ret-flds from
 			     (quote-ident lex field-kw)
-			      (quote-literal lex val-str))))
+			      (psql-quote-literal val-str))))
    (t
     (get-raw-records lex 
 		     (format nil "SELECT ~a FROM ~a WHERE ~a IS NULL"
@@ -595,7 +595,7 @@
 
 (defmethod complete ((lex psql-lex-database) field-kw val-str)
   (let ((qi-field (quote-ident lex (symb-2-str field-kw)))
-	(ql-val (quote-literal lex (format nil "~a%" val-str))))
+	(ql-val (psql-quote-literal (format nil "~a%" val-str))))
     (mapcar #'car
 	    (get-raw-records lex
 			     (format nil
@@ -794,7 +794,7 @@
 		   (format nil "CREATE OR REPLACE VIEW filt AS SELECT * FROM rev_all WHERE ~a" new-filter))
       (run-command lex 
 		   (format nil "UPDATE meta SET val=~a WHERE var='filter'" 
-			   (quote-literal lex new-filter)))
+			   (psql-quote-literal new-filter)))
       (build-lex lex)
       t)
      ((string> mod-time-public build-time)
@@ -838,7 +838,7 @@
   (with-lexdb-user-lexdb (lex-o lex)
    (run-command lex-o 
 		(format nil "INSERT INTO public.meta VALUES ('user',~a)"
-			(quote-literal lex user)))))
+			(psql-quote-literal user)))))
 
 (defmethod initialize-user-schema ((lex psql-lex-database))
   (cond
@@ -937,7 +937,7 @@
   (run-command lex "INSERT INTO tmp SELECT * FROM public.rev ORDER BY name,userid,modstamp"))
 
 (defmethod update-entry ((lex psql-lex-database) symb-list psql-le)
-  (let ((ql-name (quote-literal lex (retr-val psql-le :name))))
+  (let ((ql-name (psql-quote-literal (retr-val psql-le :name))))
     (run-command lex 
 		 (format nil "DELETE FROM rev WHERE name=~a" ql-name))
     (run-command lex 
@@ -945,7 +945,7 @@
 			 (sql-list symb-list 
 				   #'(lambda (x) (quote-ident lex x)))
 			 (sql-list (ordered-val-list symb-list psql-le) 
-				   #'(lambda (x) (quote-literal lex x)))))
+				   #'(lambda (x) (psql-quote-literal x)))))
 		 
     (run-command lex 
 		 (format nil "DELETE FROM lex WHERE name=~a" ql-name))
@@ -961,7 +961,7 @@
 	   (sql-list '(:name :userid :modstamp) 
 		     #'(lambda (x) (quote-ident lex x)))
 	   (sql-list (ordered-val-list '(:name :userid :modstamp) psql-le) 
-		     #'(lambda (x) (quote-literal lex x))))))
+		     #'(lambda (x) (psql-quote-literal x))))))
 
 ;;;
 ;; semi
@@ -1064,7 +1064,7 @@
 	    (get-records lex 
 			 (format nil
 				 "SELECT ~a FROM (SELECT g.* FROM lex as g NATURAL LEFT JOIN semi_mod as s WHERE g.modstamp > COALESCE(s.modstamp0,\'-infinity\')) AS foo"
-				 (fields-str cols))))
+				 (fields-str lex cols))))
 	   (recs (recs table)))
       ;; cache records
       (mapcar
@@ -1085,31 +1085,16 @@
 			     (format nil "SELECT DISTINCT ~a::text AS foo FROM rev_all WHERE ~a IS NOT NULL"
 				     qi-field qi-field)))))
 
-(defun fields-str (fields)
+(defmethod fields-str ((lex psql-lex-database) fields)
   (concat-str
-   (mapcar #'string fields)
+   (mapcar #'(lambda (x) (quote-ident lex x))
+	   fields)
    :sep-c #\,))
 
-;; return sql code to call db function and return
-;; appropriate fields
-#+:null
-(defmethod sql-fn-string ((lex psql-lex-database) fn &key args fields)
-  (with-slots (lexdb-version pub-fns) lex
-    (when (not (member fn pub-fns))
-      (error "~a not `LexDB external function'" fn))
-    (unless fields
-      (setf fields '(:*)))
-    (let ((fields-str (concat-str
-		       (mapcar #'string fields)
-		       :sep-c #\,))
-	  (fn-str (string fn))
-	  (args-str 
-	   (concat-str
-	    (mapcar #'sql-fn-arg args)
-	    :sep-c #\,
-	    ;:esc nil
-	    )))
-      (format nil "SELECT ~a FROM ~a(~a)" fields-str fn-str args-str))))
+;(defun fields-str (fields)
+;  (concat-str
+;   (mapcar #'string fields)
+;   :sep-c #\,))
 
 (defun concat-str (str-list &key (sep-c #\Space))
   (unless (listp str-list)
@@ -1135,56 +1120,6 @@
      (mapcar quote-fn l)
      :sep-c #\,)))
 
-#+:null
-(defun sql-fn-arg (x)
-  (cond
-   ((stringp x)
-    (sql-embedded-text x))
-   ((listp x)
-    (sql-embedded-text
-     (concat-str
-      (mapcar
-       #'sql-fn-arg
-       x)
-      :sep-c #\,)))
-   (t
-    (2-str x))))
-
-#+:null
-(defmethod sql-fn-get-records ((lex psql-lex-database) fn &key args fields)
-  (get-records lex
-	       (sql-fn-string lex fn :args args :fields fields)))
-
-#+:null
-(defmethod sql-fn-get-records-union ((lex psql-lex-database) fn &key list-args fields)
-  (when list-args
-    (let* ((first-arg (pop list-args))
-	   (sql-str
-	    (apply #'concatenate 'string
-		   (cons (sql-fn-string lex fn 
-					:args first-arg
-					:fields (cons (sql-fn-arg first-arg) fields))
-			 (mapcan #'(lambda (x) (list " UNION " 
-						     (sql-fn-string lex fn
-								    :args x
-								    :fields (cons (sql-fn-arg x) fields))))
-				 list-args)))))
-      (get-records lex sql-str))))
-
-#+:null
-(defmethod sql-fn-get-raw-records ((lex psql-lex-database) fn &key args fields)
-  (get-raw-records lex
-		   (sql-fn-string lex fn :args args :fields fields)))
-
-#+:null
-(defmethod sql-fn-get-val ((lex psql-lex-database) fn &key args fields)
-  (caar (sql-fn-get-raw-records lex fn :args args :fields fields)))
-
-#+:null
-(defmethod sql-fn-get-vals ((lex psql-lex-database) fn &key args fields)
-  (mapcar #'car
-	  (sql-fn-get-raw-records lex fn :args args :fields fields)))
-  
 ;;
 ;;
 ;;
@@ -1232,7 +1167,7 @@
   (let* ((uid (sql-get-val lex "SELECT datdba FROM pg_catalog.pg_database WHERE datname=current_database()"))
 	 (uname (sql-get-val lex 
 			     (concatenate 'string
-			       "SELECT usename FROM pg_catalog.pg_user WHERE usesysid=" (quote-literal lex uid)))))
+			       "SELECT usename FROM pg_catalog.pg_user WHERE usesysid=" (psql-quote-literal uid)))))
     uname))
 
 (defmethod merge-into-lexicon-dfn ((lex psql-lex-database) filename)

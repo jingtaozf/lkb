@@ -54,15 +54,15 @@
 	(connect-db 
 	 (concatenate 'string 
 	   (and connect-timeout 
-		(format nil "connect_timeout=~a " (sql-embedded-text (2-str connect-timeout))))
+		(format nil "connect_timeout=~a " (psql-quote-literal (2-str connect-timeout))))
 	   (and port 
-		(format nil "port=~a " (sql-embedded-text (2-str port))))
+		(format nil "port=~a " (psql-quote-literal (2-str port))))
 	   (and host
-		(format nil "host=~a " (sql-embedded-text host)))
-	   (format nil "dbname=~a " (sql-embedded-text dbname))
-	   (format nil "user=~a " (sql-embedded-text user))
+		(format nil "host=~a " (psql-quote-literal host)))
+	   (format nil "dbname=~a " (psql-quote-literal dbname))
+	   (format nil "user=~a " (psql-quote-literal user))
 	   (and password 
-		(format nil "password=~a" (sql-embedded-text password))))))
+		(format nil "password=~a" (psql-quote-literal password))))))
       (when (connection-ok lexicon)
 	(unless (check-libpq-protocol-version connection)
 	  (disconnect lexicon))
@@ -158,28 +158,30 @@
       (error "psql-database ~s has no active connection." database))
     (execute connection command :com t)))
 
-(defmethod quote-ident ((db psql-database) x)
+(defmethod quote-ident ((lex psql-lex-database) field)
+  (let* ((quote-ident-cache (quote-ident-cache lex))
+	 (cached (cdr (assoc field quote-ident-cache))))
+    (or cached
+	(let ((query-quote-ident (query-quote-ident lex field)))
+	  (setf (quote-ident-cache lex)
+	    (push (cons field query-quote-ident)
+		  quote-ident-cache))
+	  query-quote-ident))))
+
+(defmethod query-quote-ident ((db psql-database) x)
   (unless (stringp x)
     (setf x (string-downcase (2-str x))))
   (caar 
    (get-raw-records db
     (format nil "SELECT quote_ident(~a)" 
-	    (sql-embedded-text x)))))
-
-(defmethod quote-literal ((db psql-database) x)
-  (unless (stringp x)
-    (setf x (string-downcase (2-str x))))
-  (caar 
-   (get-raw-records db
-    (format nil "SELECT quote_literal(~a)" 
-	    (sql-embedded-text x)))))
+	    (psql-quote-literal x)))))
 
 (defmethod get-field-info ((db psql-database) schema table)
   (get-records db
 	       (format nil
 		       "SELECT attname, typname, atttypmod FROM (SELECT attname, atttypmod, atttypid FROM pg_catalog.pg_attribute WHERE attrelid=return_oid(~a,~a)) AS a JOIN pg_catalog.pg_type AS t ON (typelem=atttypid)"
-		       (quote-literal db schema)
-			   (quote-literal db table)
+		       (psql-quote-literal schema)
+			   (psql-quote-literal table)
 			   )))
 
 (defmethod get-field-info2 ((db psql-database) schema table)
@@ -189,8 +191,8 @@
 	FROM pg_catalog.pg_attribute a
 	WHERE a.attrelid = return_oid(~a,~a) AND a.attnum > 0 AND NOT a.attisdropped
 	ORDER BY a.attnum"
-		       (quote-literal db schema)
-			   (quote-literal db table)
+		       (psql-quote-literal schema)
+			   (psql-quote-literal table)
 			   )))
 
 ;;;
@@ -264,22 +266,14 @@
 ;;; defuns
 ;;;
 
-;; fix_me: use pq:escape-string
-(defun sql-embedded-text (str)
-  (format nil "'~a'" (sql-embedded-text-aux str)))
-
-;; ' -> \'
-;; \ -> \\
-(defun sql-embedded-text-aux (str)
-  (cond
-   ((equal str "")
-    "")
-   ((eq (char str 0) #\')
-    (format nil "\\'~a" (sql-embedded-text-aux (subseq str 1))))
-   ((eq (char str 0) #\\)
-    (format nil "\\\\~a" (sql-embedded-text-aux (subseq str 1))))
-   (t
-    (format nil "~a~a" (char str 0) (sql-embedded-text-aux (subseq str 1))))))
+(defun psql-quote-literal (str)
+  (concatenate 'string "'"
+	       (let* ((len (length str))
+		      (x (make-array (1+ (* 2 len)) :element-type '(unsigned-byte 8))))
+		 (excl:with-native-string (native-str str)
+		   (pq:escape-string x native-str len))
+		 (excl:octets-to-string x))
+	       "'"))
 
 (defun sql-like-text (id)
   (format nil "~a" (sql-like-text-aux (2-str id))))
