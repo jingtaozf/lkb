@@ -12,7 +12,7 @@
 
 ;;; Add a PG menu to the emacs menu bar
 
-(defvar *lexdb-pg-interface-version* "2.13")
+(defvar *lexdb-pg-interface-version* "2.14")
 
 (require 'cl)      ; we use some common-lisp idioms
 (require 'widget)
@@ -158,7 +158,7 @@
 (defvar *lexdb-scratch-buffer*)
 (defvar *lexdb-slot-len*)
 
-(setf *lexdb-read-only* '(:version :userid :modstamp))
+(setf *lexdb-read-only* '(:|version| :|userid| :|modstamp|))
 (setf *lexdb-hidden* nil)
 (setf *lexdb-minibuffer-max* 80)
 (setf *lexdb-active-ium-size* 0)
@@ -439,7 +439,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (lexdb-normalize-buffer buffer)
   (when (y-or-n-p "Confirm commit record: ")
     (lexdb-store-record (car lexdb-record))
-    (lexdb-load-record-aux (cdr (assoc :name (car lexdb-record)))))
+    (lexdb-load-record-aux (cdr (assoc :|name| (car lexdb-record)))))
   (with-current-buffer buffer
     t))
 
@@ -491,7 +491,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 
 (defun lexdb-load-record-aux (id)
   (let* ((record (lexdb-retrieve-record id))
-	 (name (cdr (assoc :name (car record))))
+	 (name (cdr (assoc :|name| (car record))))
 	 (tdl lexdb-tdl))
     (setf buffer (or name "?unknown record?"))
     (if (get-buffer buffer)
@@ -557,7 +557,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
     (unless fields
       (princ (format "%s not found! " id))
       (setf fields (l:make-empty-record id)))
-    (setf lexdb-tdl (or (cle-retrieve-tdl (cdr (assoc :name fields)))
+    (setf lexdb-tdl (or (cle-retrieve-tdl (cdr (assoc :|name| fields)))
 			""))
     (setf lexdb-record (cons fields sizes))))
 
@@ -569,14 +569,14 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
     (unless fields
       (princ (format "%s not found! " ium))
       (setf fields (l:make-empty-record id)))
-    (setf lexdb-tdl (or (cle-retrieve-tdl (cdr (assoc :name fields)))
+    (setf lexdb-tdl (or (cle-retrieve-tdl (cdr (assoc :|name| fields)))
 			""))
     (setf lexdb-record (cons fields sizes))))
 
 (defun lexdb-store-record (record-in)
-  (if (equal (cdr (assoc :name record-in)) "")
+  (if (equal (cdr (assoc :|name| record-in)) "")
       (error "cannot commit record with no NAME field"))
-  (if (equal (cdr (assoc :dead record-in)) "")
+  (if (equal (cdr (assoc :|dead| record-in)) "")
       (error "cannot commit record with no DEAD field"))
   (princ "please wait... ")
   ;;(terpri)
@@ -598,7 +598,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (let* ((record
 	  (mapcar #'(lambda (x) (cons x (make-string 0 ?x)))
 		  *lexdb-record-features*))
-	 (name-elt (assoc :name record)))
+	 (name-elt (assoc :|name| record)))
     (when name-elt
       (setf (cdr name-elt)
 	    (l:val-str id)))
@@ -619,7 +619,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 				(1+ (length (buffer-string)))))
 	 (minibuffer-completion-table
 	  (mapcar #'list
-		  (cle-complete :name val))))
+		  (cle-complete :|name| val))))
     (apply 'minibuffer-complete rest)))
 
 (defun l:completing-read-dyn (prompt)
@@ -703,7 +703,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
      (progn 
        (widget-insert "\n"
 		      (make-string (max 0 (- 15 (length feat-str))) ? ) 
-		      (upcase feat-str) 
+		      feat-str 
 		      ": ")
        (cond
 	((member feat *lexdb-read-only*)
@@ -734,7 +734,12 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (field-display-str kw))
 
 (defun field-display-str (field-kw)
-  (substring (symbol-name field-kw) 1))
+  (let ((str (symbol-name field-kw)))
+    (cond
+     ((string= ":|" (substring str 0 2))
+      (substring str 2 -1))
+     (t
+      (substring str 1)))))
 
 (defun truncate-list (l n)
   (let ((out)

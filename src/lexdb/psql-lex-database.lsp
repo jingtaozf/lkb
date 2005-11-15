@@ -127,7 +127,7 @@
 				      from)))
 	 (recs (recs numo-t))
 	 (len-recs (length recs)))
-    (format t "~&(LexDB) [~a keyless entries]" len-recs)
+;    (format t "~&(LexDB) [~a keyless entries]" len-recs)
     (when (> len-recs 0)
       (join-str-lines
        (mapcar #'to-psql-COPY-rec
@@ -689,13 +689,6 @@
       ;(get-pub-fns lex)
     t))	
 
-#+:null
-(defmethod get-pub-fns ((lex psql-lex-database)) 
-  (setf (pub-fns lex)
-    (mapcar #'(lambda (x)
-		(str-2-keyword (car x)))
-	    (get-raw-records lex "SELECT val FROM public.meta WHERE var='pub-fn'"))))
-
 ;;;
 ;;;
 ;;;
@@ -732,11 +725,17 @@
   (lexdb-time 
    ("ensuring 'lex' table is up-to-date" "done ensuring 'lex' table is up-to-date")
    (update-filter lex nil))
+  (let ((size (sql-get-num lex "SELECT count(*) FROM lex"))
+	(rev-size (sql-get-num lex "SELECT count(*) FROM rev_all")))
+    (format t "~&(LexDB) total 'rev' entries available: ~a" rev-size)
+    (when (= 0 rev-size)
+      (format t " !!! PLEASE LOAD REV ENTRIES !!!"))
+    (format t "~&(LexDB) active entries in 'lex' table: ~a" size)
+    (when (= 0 size)
+      (format t " !!! PLEASE SET FILTER !!!"))
   (format t "~&(LexDB) filter: ~a " (get-filter lex))
-  (let ((size (sql-get-num lex "SELECT count(*) FROM lex")))
-    (if (= 0 size)
-	(format t "~&(LexDB) WARNING:  0 entries passed the LexDB filter" size)
-      (format t "~&(LexDB) active entries in 'lex' table: ~a" size)))
+  (when (string= "NULL" (string-upcase (get-filter lex)))
+    (format t "!!! PLEASE SET FILTER !!!")))
   (empty-cache lex))
 
 (defmethod filter ((lex psql-lex-database))
