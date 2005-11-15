@@ -201,12 +201,13 @@
 
 (defmethod close-lex ((lexicon psql-database) &key in-isolation delete)
   (declare (ignore in-isolation delete))
-  (with-slots (dbname host user password port) lexicon
+  (with-slots (dbname host user password port quote-ident-cache) lexicon
     ;(setf dbname nil)
     ;(setf host nil)
     ;(setf user nil)
     ;(setf password nil)
     ;(setf port nil)
+    ;(setf quote-ident-cache nil)
     )
   (disconnect lexicon)
   (if (next-method-p) (call-next-method)))
@@ -298,9 +299,10 @@
 	 (cols (and col 
 		    (loop
 			for c below nfields
-			collect (2-kw 
+			collect (str-2-keyword 
 				 (with-lexdb-locale (pq:fname result c))
-				 ))))
+				 )
+				)))
 	 (ntuples (pq:ntuples result))
 	 (recs (loop
 		   for r below ntuples
@@ -312,8 +314,9 @@
 			   ))))
     (list recs cols)))
 
-(defun 2-kw (str)
-  (intern (string-upcase str) :keyword))
+;(defun 2-kw (str)
+;  (intern str :keyword))
+;  (intern (string-upcase str) :keyword))
 
 (defun execute (conn sql-str &key com tup out in)
   (let* ((result (with-lexdb-locale (pq:exec conn sql-str)))

@@ -15,7 +15,10 @@
   (string-downcase x))
 
 (defun get-val (field raw-record cols)
-  (nth (position field cols) raw-record))
+  (let ((position (position field cols)))
+    (unless position
+      (error "internal error: ~a not found in ~a" field cols))
+    (nth position raw-record)))
 
 (defun string-2-mxd-list-on-spc (&rest rest)
   (mapcar #'str-to-mixed

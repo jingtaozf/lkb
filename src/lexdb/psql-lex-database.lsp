@@ -73,49 +73,9 @@
 	     (ids (lookup-word-aux2 lex table)))
 	ids)))
 
-#+:null
-(defmethod uncached-orthkeys ((lex psql-lex-database) list-orth)
-  (with-slots (lexical-entries) lex
-    (loop
-	for orth in list-orth
-	unless (gethash orth lexical-entries)
-	collect orth)))
-
-#+:null
-(defun prune-quotes (str)
-  (let ((len (length str)))
-    (subseq str 1 (1- len))))
-
-#+:null
-(defmethod lookup-words-cache ((lex psql-lex-database) table uc-list-orth)
-  (with-slots (psorts lexical-entries record-cache dfn) lex
-    (let ((name-field (second (assoc :id dfn))))
-      (mapc #'(lambda (x)
-		(unless (gethash x lexical-entries)
-		  (setf (gethash x lexical-entries) :empty)))
-	    uc-list-orth)
-      (loop
-	  with cols = (cols table)
-	  for rec in (recs table)
-	  for orthkey = (prune-quotes (car rec))
-	  for record = (cdr rec)
-	  for columns = (cdr cols)
-	  for id = (str-2-symb (get-val name-field record columns))
-	  do
-	    (unless (gethash id record-cache)
-	      (setf (gethash id record-cache) 
-		record))
-	    ;; is this necessary?
-	    (unless (gethash id psorts)
-	      (setf (gethash id psorts) 
-		(make-psort-struct lex record columns)))
-	    ;; cache orthkey id
-	    (setf (gethash orthkey lexical-entries)
-	      (add-w-empty id (gethash orthkey lexical-entries)))))))
-
 (defmethod lookup-word-aux2 ((lex psql-lex-database) table)
   (with-slots (psorts record-cache dfn) lex
-    (let ((name-field (second (assoc :id dfn))))
+    (let ((name-field (second (assoc :ID dfn))))
       (loop
 	  with cols = (cols table)
 	  for rec in (recs table)
@@ -158,7 +118,7 @@
     (error "no :from string specified"))
   (unless (dfn lex)
     (error "no dfn definitions available"))
-  (let* ((orth-raw-mapping (assoc :orth (dfn lex)))
+  (let* ((orth-raw-mapping (assoc :ORTH (dfn lex)))
 	 (raw-orth-field-str (2-str (second orth-raw-mapping)))
        
 	 (numo-t (get-records lex
@@ -174,7 +134,7 @@
 	       (rev-to-rev-key lex recs))))))
 
 (defmethod rev-to-rev-key ((lex psql-lex-database) recs)
-  (let* ((orth-raw-mapping (assoc :orth (dfn lex)))
+  (let* ((orth-raw-mapping (assoc :ORTH (dfn lex)))
 	 (orth-raw-value-mapping (fourth orth-raw-mapping)))
     (loop
 	for rec in recs
@@ -362,8 +322,8 @@
   (let ((g-fields
 	 (remove-duplicates 
 	  (mapcar #'second (dfn lex)))))
-    (when (member :_tdl (fields lex))
-      (pushnew :_tdl g-fields))
+    (when (member :|_tdl| (fields lex))
+      (pushnew :|_tdl| g-fields))
     g-fields))
 
 ;
@@ -416,18 +376,18 @@
 		    (mapcar #'(lambda (x) (make-strucargs-aux x slot-path)) 
 			    slot-value-list))))
     ;; messy
-    (let ((unifs (cdr (assoc :unifs strucargs)))
-	  (id (cadr (assoc :id strucargs)))
-	  (orth (cadr (assoc :orth strucargs))))
-      ;; if using :_tdl field (undecomposed TDL) the raw tdl contributes to lex entry
-      (when (member :_tdl (fields lex))
+    (let ((unifs (cdr (assoc :UNIFS strucargs)))
+	  (id (cadr (assoc :ID strucargs)))
+	  (orth (cadr (assoc :ORTH strucargs))))
+      ;; if using :|_tdl| field (undecomposed TDL) the raw tdl contributes to lex entry
+      (when (member :|_tdl| (fields lex))
 	(setf unifs 
-	  (append unifs (tdl-to-unifs (get-val :_tdl raw-record cols)))))
+	  (append unifs (tdl-to-unifs (get-val :|_tdl| raw-record cols)))))
       ;; finally, build the list of arguments
-      (list :unifs unifs
-	    :id id
-	    :orth orth
-	    :infl-pos (and (> (length orth) 1)
+      (list :UNIFS unifs
+	    :ID id
+	    :ORTH orth
+	    :INFL-POS (and (> (length orth) 1)
 			   (find-infl-pos nil orth nil))))))
 
 (defmethod record-to-tdl ((lex psql-lex-database) record)
@@ -539,7 +499,7 @@
     (setf dfn
       (sort
        (mapcar #'(lambda (x) 
-		   (let* ((slot (str-2-keyword (first x)))
+		   (let* ((slot (str-2-keyword (string-upcase (first x))))
 			  (field (str-2-keyword (second x)))
 			  (path (third x))
 			  (type2 (2-symb-or-list (fourth x)))
@@ -550,7 +510,7 @@
 			   (car type)))
 		     (list slot field path type)))
 	       (get-raw-records lex (format nil "SELECT slot,field,path,type FROM dfn WHERE mode='~a' OR mode IS NULL" (fields-tb lex))))
-       #'(lambda (x y) (declare (ignore y)) (eq (car x) :unifs))))
+       #'(lambda (x y) (declare (ignore y)) (eq (car x) :UNIFS))))
     (if (null dfn)
 	(complain-no-dfn lex))
     dfn))
@@ -620,14 +580,13 @@
 
 ;;; insert lex entry into db
 (defmethod set-lex-entry ((lex psql-lex-database) (psql-le psql-lex-entry) &key (gen-key t) )
-  (set-val psql-le :orthkey (lexicon-le-orthkey lex psql-le))
-  (set-val psql-le :modstamp "NOW")
-  (set-val psql-le :userid (user lex))
+  (set-val psql-le :|orthkey| (lexicon-le-orthkey lex psql-le))
+  (set-val psql-le :|modstamp| "NOW")
+  (set-val psql-le :|userid| (user lex))
   (set-lex-entry-aux lex psql-le :gen-key gen-key))
   
 (defmethod set-lex-entry-aux ((lex psql-lex-database) (psql-le psql-lex-entry) &key (gen-key t) )
   (let* ((symb-list (copy-list (fields lex)))
-	 ;(symb-list (remove :name symb-list))
 	 (symb-list (remove-duplicates symb-list))
 	 (symb-list (remove-if 
 		     #'(lambda (x) (or (null x) 
@@ -635,7 +594,7 @@
 					    (string= x ""))))
 		     symb-list
 		     :key #'(lambda (x) (retr-val psql-le x))))
-	 (name (retr-val psql-le :name)))
+	 (name (retr-val psql-le :|name|)))
     (unless (string= name (symb-2-str (str-2-symb name)))
       (format t "(LexDB) WARNING: lex id ~a should be written ~a" 
 	      name (symb-2-str (str-2-symb name)))
@@ -648,7 +607,7 @@
     (unless
 	(check-lex-entry (str-2-symb name)
 			 lex)
-      (error "Invalid lexical entry ~a -- see Lisp buffer output" (retr-val psql-le :name)))))
+      (error "Invalid lexical entry ~a -- see Lisp buffer output" (retr-val psql-le :|name|)))))
 
 ;;;
 ;;; postgres interface
@@ -937,7 +896,7 @@
   (run-command lex "INSERT INTO tmp SELECT * FROM public.rev ORDER BY name,userid,modstamp"))
 
 (defmethod update-entry ((lex psql-lex-database) symb-list psql-le)
-  (let ((ql-name (psql-quote-literal (retr-val psql-le :name))))
+  (let ((ql-name (psql-quote-literal (retr-val psql-le :|name|))))
     (run-command lex 
 		 (format nil "DELETE FROM rev WHERE name=~a" ql-name))
     (run-command lex 
@@ -958,9 +917,9 @@
   (sql-get-val 
    lex 
    (format nil "SELECT modstamp FROM semi_mod WHERE ~a=~a" 
-	   (sql-list '(:name :userid :modstamp) 
+	   (sql-list '(:|name| :|userid| :|modstamp|) 
 		     #'(lambda (x) (quote-ident lex x)))
-	   (sql-list (ordered-val-list '(:name :userid :modstamp) psql-le) 
+	   (sql-list (ordered-val-list '(:|name| :|userid| :|modstamp|) psql-le) 
 		     #'(lambda (x) (psql-quote-literal x))))))
 
 ;;;
@@ -998,7 +957,8 @@
 
 (defmethod get-fields ((lex psql-lex-database))
   (mapcar 
-   #'(lambda (x) (intern (string-upcase x) :keyword))
+;   #'(lambda (x) (intern (string-upcase x) :keyword))
+   #'(lambda (x) (intern x :keyword))
    (list-fld lex)))
 
 (defmethod show-scratch ((lex psql-lex-database))
@@ -1206,9 +1166,9 @@
 	   (s (copy-slots x dfn))
 	   ;; perhaps should warn about duplicates?
 	   (extraction-fields 
-	    (remove :_tdl
+	    (remove :|_tdl|
 		    (remove-duplicates
-		     (cons :name (grammar-fields lex)))))
+		     (cons :|name| (grammar-fields lex)))))
 	   ;; extract field values from tdl structure 
 	   ;; and remove unifs as they are found
 	   (extraction-field-vals (mapcar 
@@ -1217,21 +1177,21 @@
 				   (extract-field s x dfn)))
 			 extraction-fields))
 	   ;; convert any remaining unifs into raw tdl fragment
-	   (skip (unifs-to-tdl-body (cdr (assoc :unifs s))))
+	   (skip (unifs-to-tdl-body (cdr (assoc :UNIFS s))))
 	   (skip (if (string= skip "") nil skip))
 	   ;; necessary fields
 	   (hard-coded-field-vals (list
-				   (cons :userid *lexdb-dump-user*)
-				   (cons :modstamp *lexdb-dump-timestamp*)
-				   (cons :dead "f")
-				   (cons :_tdl skip)))
+				   (cons :|userid| *lexdb-dump-user*)
+				   (cons :|modstamp| *lexdb-dump-timestamp*)
+				   (cons :|dead| "f")
+				   (cons :|_tdl| skip)))
 	   ;; additional (useful) fields
 	   ;; if not all fields occur in LexDB they will be silently ignored
 	   (other-field-vals (list
-			      (cons :lang *lexdb-dump-lang*)
-			      (cons :country *lexdb-dump-country*)
-			      (cons :confidence 1)
-			      (cons :source *lexdb-dump-source*)))
+			      (cons :|lang| *lexdb-dump-lang*)
+			      (cons :|country| *lexdb-dump-country*)
+			      (cons :|confidence| 1)
+			      (cons :|source| *lexdb-dump-source*)))
 	   ;; combine all field values
 	   (field-vals (append extraction-field-vals
 			       hard-coded-field-vals
@@ -1245,8 +1205,8 @@
   "provide line entry for lex db import file"
   (let* (;;ordered a-list of field values
 	 (field-vals (get-field-vals x lex))
-	 (skip (cdr (assoc :_tdl field-vals)))
-	 (name (cdr (assoc :name field-vals)))
+	 (skip (cdr (assoc :|_tdl| field-vals)))
+	 (name (cdr (assoc :|name| field-vals)))
 	 (ordered-field-vals (ordered-symb-val-list (fields lex) field-vals))
 	 ;; construct CVS copy line
 	 (line 
@@ -1266,7 +1226,7 @@
      ((null skip)
       line)
      ;; component(s) skipped, but :skip field available in db
-     ((member :_tdl (fields lex))
+     ((member :|_tdl| (fields lex))
       (format t "~&(LexDB) Unhandled TDL fragment in lexical entry ~a: ~%~t~a~%~%" name skip)
       (format t "~&;; (LexDB) Unhandled TDL fragment in ~a placed in _tdl field as unstructured text" name)
 	line)
@@ -1281,8 +1241,8 @@
   "insert lex-entry into lex db (user scratch space)"
   (let* (;;ordered a-list of field values
 	 (field-vals (get-field-vals x lex))
-	 (skip (cdr (assoc :_tdl field-vals)))
-	 (name (cdr (assoc :name field-vals)))
+	 (skip (cdr (assoc :|_tdl| field-vals)))
+	 (name (cdr (assoc :|name| field-vals)))
 	 (ordered-field-vals (ordered-symb-val-list (fields lex) field-vals))
 	 (psql-le (make-instance 'psql-lex-entry :fv-pairs ordered-field-vals)))	 
     (cond
@@ -1291,7 +1251,7 @@
       (set-lex-entry lex psql-le :gen-key nil)
       (empty-cache lex))
      ;; component(s) skipped, but :skip field available in db
-     ((member :_tdl (fields lex))
+     ((member :|_tdl| (fields lex))
       (format t "~&;; (LexDB) Unhandled TDL fragment in ~a placed in _tdl field as unstructured text" name)
       (set-lex-entry lex psql-le :gen-key nil)
       (empty-cache lex))
@@ -1312,10 +1272,10 @@
   (update-lex-aux lexdb))
 
 (defmethod record-id (raw-record cols (lex psql-lex-database))
-  (str-2-symb (get-val :name raw-record cols)))  
+  (str-2-symb (get-val :|name| raw-record cols)))  
 
 (defmethod record-orth (raw-record cols (lex psql-lex-database))
-  (get-val (second (assoc :orth (dfn lex))) raw-record cols))
+  (get-val (second (assoc :ORTH (dfn lex))) raw-record cols))
 
 ;;
 ;;

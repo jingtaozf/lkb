@@ -645,7 +645,12 @@
 (defun str-2-keyword (str)
   (unless (stringp str)
     (error "string exected"))
-  (intern (string-upcase str) :keyword))
+  (intern str :keyword))
+
+;(defun str-2-keyword (str)
+;  (unless (stringp str)
+;    (error "string exected"))
+;  (intern (string-upcase str) :keyword))
 
 ;; currently 'str-2-lisp-object' ...
 (defun str-2-list (str)
