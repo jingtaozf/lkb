@@ -7,7 +7,9 @@ http://wiki.delph-in.net/moin/LkbLexDb
 
 FILES:
 
-install-lexdb.sh - setup script
+install-lexdb.sh / 
+install-lexdb-cygwin.sh / 
+install-lexdb-mswindows.bat - setup script
 
 pg-interface.el  - LexDB-Emacs interface (Emacs Lisp)
 
