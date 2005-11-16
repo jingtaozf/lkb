@@ -12,7 +12,7 @@
 
 ;;; Add a PG menu to the emacs menu bar
 
-(defvar *lexdb-pg-interface-version* "2.14")
+(defvar *lexdb-pg-interface-version* "2.15")
 
 (require 'cl)      ; we use some common-lisp idioms
 (require 'widget)
@@ -157,6 +157,7 @@
 (defvar *lexdb-new-entries-buffer*)
 (defvar *lexdb-scratch-buffer*)
 (defvar *lexdb-slot-len*)
+(defvar *completable-fields*)
 
 (setf *lexdb-read-only* '(:|version| :|userid| :|modstamp|))
 (setf *lexdb-hidden* nil)
@@ -166,6 +167,7 @@
 (setf *lexdb-new-entries-buffer* "*lexdb-merged*")
 (setf *lexdb-scratch-buffer* "*lexdb-scratch*")
 (setf *lexdb-slot-len* 30)
+(setf *completable-fields* '("_text"))
 
 ;;;
 ;;; buffer local vbles
@@ -451,6 +453,8 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
       (error "not in an editable field"))))
 
 (defun lexdb-complete-field-aux2 (field-kw)
+  (unless (member (l:field-type field-kw) *completable-fields*)
+    (error "field %s has non-completable type %s" field-kw (l:field-type field-kw)))
   (let* ((widget (cdr (assoc field-kw lexdb-fw-map)))
 	 (value-str (cut-white-spc (widget-value widget)))
 	 (alternatives (cle-complete field-kw value-str))
@@ -725,6 +729,9 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 
 (defun l:field-size (kw)
   (third (assoc kw lexdb-fsize-map)))
+
+(defun l:field-type (kw)
+  (second (assoc kw lexdb-fsize-map)))
 
 ;;;
 ;;; util fns

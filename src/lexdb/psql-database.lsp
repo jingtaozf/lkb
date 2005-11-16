@@ -152,11 +152,11 @@
       (error "psql-database ~s has no active connection." db))
     (execute connection command :out (list ostrm))))
 
-(defmethod run-command ((database psql-database) command)
+(defmethod run-command ((database psql-database) command &key ignore-errors)
   (with-slots (connection) database
     (unless connection
       (error "psql-database ~s has no active connection." database))
-    (execute connection command :com t)))
+    (execute connection command :com t :ignore-errors ignore-errors)))
 
 (defmethod quote-ident ((lex psql-lex-database) field)
   (let* ((quote-ident-cache (quote-ident-cache lex))
@@ -268,6 +268,8 @@
 ;;;
 
 (defun psql-quote-literal (str)
+  (unless (stringp str)
+    (setf str (2-str str)))
   (concatenate 'string "'"
 	       (let* ((len (length str))
 		      (x (make-array (1+ (* 2 len)) :element-type '(unsigned-byte 8))))
@@ -318,7 +320,7 @@
 ;  (intern str :keyword))
 ;  (intern (string-upcase str) :keyword))
 
-(defun execute (conn sql-str &key com tup out in)
+(defun execute (conn sql-str &key com tup out in ignore-errors)
   (let* ((result (with-lexdb-locale (pq:exec conn sql-str)))
 	 (status-kw (result-status-kw result)))
     (unwind-protect
@@ -347,19 +349,32 @@
 	       do (copy-in-stream conn istrm))
 	   t)
 	  (:PGRES_NON_FATAL_ERROR
-	   (let ((error-message (with-lexdb-locale (pq:result-error-message result))))
-	     (format t "~%(LexBD) WARNING:  (postgres error) ~a" error-message))
-	   nil)
+	   (let* ((error-message (with-lexdb-locale (pq:result-error-message result)))
+		  (sql-error (make-instance 'sql-error 
+			       :type status-kw
+			       :message error-message)))
+	     (unless ignore-errors
+	       (format t "~%(LexBD) WARNING:  (postgres) ~a" error-message))
+	     sql-error))
 	  (:PGRES_FATAL_ERROR
-	   (let ((error-message (with-lexdb-locale (pq:result-error-message result))))
-	     (format t "~%(LexDB) (postgres ERROR) ~a" error-message)
-	     (throw :sql-error (cons status-kw error-message))))
+	   (let* ((error-message (with-lexdb-locale (pq:result-error-message result)))
+		 (sql-error (make-instance 'sql-error 
+		   :type :PGRES_FATAL_ERROR
+		   :message error-message)))
+	     (unless ignore-errors
+	       (format t "~%(LexDB) (postgres) ~a" error-message)
+	       (throw :sql-error sql-error))
+	     sql-error))
 	  (t
 	   (error "unhandled result status")
 	   nil))
       (pq:clear result)
       nil)))
 
+(defclass sql-error ()
+  ((type :initform nil :accessor type :initarg :type)
+   (message :initform nil :accessor message :initarg :message)))
+ 
 (defun copy-in-stream (conn istream)
   (do* ((line (read-line istream nil) (read-line istream nil)))
       ((null line))

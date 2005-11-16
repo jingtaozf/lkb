@@ -44,7 +44,6 @@
 (defun field-size-elt (raw-rec cols)
   (let ((attname (get-val :|attname| raw-rec cols))
 	(typname (get-val :|typname| raw-rec cols))
-;	(typname (get-val :TYPENAME raw-rec cols))
 	(atttypmod (str-2-num (get-val :|atttypmod| raw-rec cols)
 			      0)))
     (list (str-2-keyword attname) typname (field-len typname atttypmod))))

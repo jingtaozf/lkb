@@ -88,10 +88,12 @@
      (port (or (extract-param :port *lexdb-params*)
 	       (or (getenv "PGPORT") *psql-database-port*)))
      (user (or (extract-param :user *lexdb-params*)
+	       (and *lexdb* (user *lexdb*))
 	       (user-name)))
      (semi (extract-param :semi *lexdb-params*))
      (quick-load (extract-param :quick-load *lexdb-params*))
-     )
+     (password (or (extract-param :password *lexdb-params*)
+		   (and *lexdb* (password *lexdb*)))))
   (psql-initialize)
   ;; ensure backwards compat
   (setf dbname
@@ -115,6 +117,7 @@
     (setf (dbname *lexdb*) dbname)
     (setf (host *lexdb*) host)
     (setf (user *lexdb*) user)
+    (setf (password *lexdb*) password)
     (setf (port *lexdb*) port)
     (setf (semi *lexdb*) semi)
     (setf (quick-load *lexdb*) quick-load)
