@@ -29,5 +29,4 @@ CREATE TABLE public.tmp AS SELECT * FROM public.rev WHERE NULL;
 -- remaining function definitions
 --
 
-\i fns_post.sql
 \i permissions.sql

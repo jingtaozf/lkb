@@ -1,3 +1,0 @@
---- Copyright (c) 2003 - 2005 
---- Benjamin Waldron, Fabre Lambeau, Stephan Oepen;
---- see `licence.txt' for conditions.
