@@ -159,20 +159,104 @@
 ;;; (used to index for generator)
 (defmethod lex-words ((lex psql-lex-database))
   (mapcar #'(lambda (x) (string-upcase (car x)))
-	  (get-raw-records *lexdb* "select distinct key from lex_key")))
-  
-(defmethod regenerate-orthkeys ((lex psql-lex-database))
-  (run-command lex "DROP INDEX lex_key_key")
-  (run-command lex "DELETE FROM lex_key")
-  ;;  (get-raw-records lex "SELECT * FROM public.deindex_lex_key()")
-  (generate-missing-orthkeys lex :from :lex :to :lex_key)
-  (run-command lex "CREATE INDEX lex_key_key ON lex_key (key)")
-  ;;  (get-raw-records lex "SELECT * FROM public.index_lex_key()")
-  )
+	  (get-raw-records lex "select distinct key from lex_key")))
 
+;(defmethod put-normalized-lex-keys2 ((lex psql-lex-database) recs)
+;  (let ((str
+;	 (loop
+;	     with s = (make-string-output-stream)
+;	     for rec in recs
+;	     do (princ (to-psql-copy-rec rec) s)
+;		(terpri s)
+;	     finally
+;	       (return (get-output-stream-string s)))))
+;    (run-command lex "DELETE FROM lex_key")
+;    (run-command-stdin lex "COPY lex_key FROM stdin"
+;		       (make-string-input-stream str))))
+    
+(defmethod put-normalized-lex-keys ((lex psql-lex-database) recs)
+  (when recs
+    (let ((conn (connection lex)))
+					;    (run-command lex "DELETE FROM lex_key")
+      (with-lexdb-client-min-messages (lex "error")
+	(run-command lex "DROP INDEX lex_key_key" :ignore-errors t))
+      (pq:exec conn "COPY lex_key FROM stdin")
+      (loop
+	  for rec in recs
+	  do 
+	    (with-lexdb-locale (pq:putline conn (to-psql-copy-rec2 rec))))
+      (with-lexdb-locale (putline conn "\\."))
+      (endcopy conn)
+      (run-command lex "CREATE INDEX lex_key_key ON lex_key (key)")
+      )))
+
+(defparameter *newline-str* (string (code-char 10)))
+(defun to-psql-COPY-rec2 (lst &key (delim-char #\tab) (null "\\N"))
+  (cond
+   ((null lst)
+    "")
+   (t
+    (apply #'concatenate 'string 
+	   (append (list (psql-COPY-val (car lst) :delim-char delim-char :null null))
+		   (loop
+		       with delim = (string delim-char)
+		       for x in (cdr lst)
+		       collect delim
+		       collect (psql-COPY-val x :delim-char delim-char :null null))
+		   (list *newline-str*)
+		 )))))
+     
+(defun normalize-orthkeys (recs)
+  (loop
+      for rec in recs
+      do (setf (fourth rec) (normalize-orthkey! (fourth rec))))
+  recs)
+
+(defmethod get-unnormalized-lex-keys ((lex psql-lex-database))
+  (recs
+   (get-records lex "SELECT name,userid,modstamp,key FROM lex_key")))
+
+(defmethod create-unnormalized-lex-keys ((lex psql-lex-database))
+  (with-lexdb-client-min-messages (lex "error")
+    (run-command lex "DROP INDEX lex_key_key" :ignore-errors t))
+  (run-command lex "DELETE FROM lex_key") 
+  (loop
+      with i = 1
+      while (> (run-command lex (format nil "insert into lex_key select * from (select name,userid,modstamp,split_part(~a,' ',~a) as key from lex_cache) as foo where key!=''" (orth-field lex) i)) 0)
+      do (incf i)))
+
+(defmethod regenerate-orthkeys ((lex psql-lex-database))
+  (with-lexdb-client-min-messages (lex "error")
+    (run-command lex "DROP INDEX lex_key_key" :ignore-errors t))
+  (run-command lex "DELETE FROM lex_key")
+  (generate-missing-orthkeys lex)
+  (with-lexdb-client-min-messages (lex "error")
+    (run-command lex "CREATE INDEX lex_key_key ON lex_key (key)" :ignore-errors t)))
+
+;(defmethod create-unnormalized-missing-lex-keys2 ((lex psql-lex-database))
+;;  (with-lexdb-client-min-messages (lex "error")
+;;    (run-command lex "DROP INDEX lex_key_key" :ignore-errors t))
+;;  (run-command lex "DELETE FROM lex_key") 
+;  (loop
+;      with i = 1
+;      with recs
+;      while (setf recs (recs (get-records lex (format nil "select * from (select name,userid,modstamp,split_part(~a,' ',~a) as key from lex_cache left join lex_key using (name,userid,modstamp) where lex_key.key is null) as foo where key!=''" (orth-field lex) i))))
+;      append recs
+;      do (incf i)))
+
+(defmethod create-unnormalized-missing-lex-keys3 ((lex psql-lex-database))
+  (recs 
+   (get-records lex 
+		(format nil "select name,userid,modstamp,~a from lex_cache left join lex_key using (name,userid,modstamp) where lex_key.key is null" 
+			(orth-field lex)))))
+  
+(defmethod generate-missing-orthkeys ((lex psql-lex-database))
+  (put-normalized-lex-keys lex
+			   (normalize-orthkeys (create-unnormalized-missing-lex-keys3 lex))))
+  
+#+:null
 (defmethod generate-missing-orthkeys ((lex psql-lex-database) 
 				      &key 
-;				      (from "lex natural left join lex_key where lex_key.key is null")
 				      (from "lex_cache left join lex_key using (name,userid,modstamp) where lex_key.key is null")
 				      (to :lex_key))
   (lexdb-time ("ensuring 'lex_key' table is up-to-date" "done ensuring 'lex_key' table is up-to-date")
@@ -185,6 +269,7 @@
   (let ((orth-raw-mapping (assoc :ORTH (dfn lex))))
     (quote-ident lex (second orth-raw-mapping))))
 
+#+:null
 (defmethod generate-orthkeys-COPY-str ((lex psql-lex-database) &key from)
   (unless from
     (error "no :from string specified"))
@@ -192,7 +277,7 @@
     (error "no dfn definitions available"))
   (let* ((numo-t (get-records lex
 			      (format nil "SELECT name,userid,modstamp,~a FROM ~a"
-				      (orth-field *lexdb*)
+				      (orth-field lex)
 				      from)))
 	 (recs (recs numo-t))
 	 (len-recs (length recs)))
@@ -202,6 +287,7 @@
        (mapcar #'to-psql-COPY-rec
 	       (rev-to-rev-key lex recs))))))
 
+#+:null
 (defmethod rev-to-rev-key ((lex psql-lex-database) recs)
   (let* ((orth-raw-mapping (assoc :ORTH (dfn lex)))
 	 (orth-raw-value-mapping (fourth orth-raw-mapping)))
@@ -214,7 +300,7 @@
 	      collect
 		(list (first rec) (second rec) (third rec) key)))))
 
-(defparameter *newline-str* (string (code-char 10)))
+#+:null
 (defun join-str-lines (lines)
   (if (null lines) ""
     (loop
@@ -226,6 +312,7 @@
 	finally
 	  (return (get-output-stream-string strm)))))
       
+#+:null
 (defun to-psql-COPY-rec (lst &key (delim-char #\tab) (null "\\N"))
   (cond
    ((null lst)
@@ -443,7 +530,7 @@
   ;; make a-list with empty values
   (let* ((strucargs 
 	 (mapcar #'(lambda (x) (list x)) 
-		 (remove-duplicates (mapcar #'first (dfn *lexdb*))))))
+		 (remove-duplicates (mapcar #'first (dfn lex))))))
     ;; instantiate values in a messy way
     ;; fix_me
     (loop 
@@ -857,17 +944,21 @@
       (build-lex lex)
       t)
      ;((string> mod-time-public build-time)
-     ((new-public-rev lex) 
-      (build-lex lex) ;; (fix_me) can just update lex_cache for new entries found above
+     ((< 0 (run-command lex (format nil "INSERT INTO lex_cache select name, userid, modstamp, ~a from public.rev where modstamp>(select val from meta where var='build_time') and userid != user" (orth-field lex))))
+      (generate-missing-orthkeys lex)
+      (register-build-time lex)
       t)
+;     ((new-public-rev lex) 
+;      (build-lex lex) ;; (fix_me) can just update lex_cache for new entries found above
+;      t)
      (t
       nil))))
 
 (defmethod build-lex ((lex psql-lex-database))
   (let* (
 	 (built-in-fields '(:|name| :|userid| :|modstamp| :|dead|))
-	 (lex-fields (append built-in-fields (set-difference (grammar-fields *lexdb*) built-in-fields)))
-	 (lex-fields-str (fields-str *lexdb* lex-fields))
+	 (lex-fields (append built-in-fields (set-difference (grammar-fields lex) built-in-fields)))
+	 (lex-fields-str (fields-str lex lex-fields))
 	 )
     (with-lexdb-client-min-messages (lex "error")
       (run-command lex "DROP TABLE tmp_filt_cache CASCADE" :ignore-errors t))
@@ -1334,7 +1425,7 @@ CREATE INDEX rev_name
       (cond
        ((probe-file rev-filename)
 	(merge-rev lex2 rev-filename)
-	(setf count-new (read-from-string (caar (get-raw-records *lexdb* "SELECT count(*) from public.tmp")))))
+	(setf count-new (read-from-string (caar (get-raw-records lex "SELECT count(*) from public.tmp")))))
        (t
 	(format t "~&(LexDB) WARNING:  cannot find file ~a" rev-filename)))
       (if (or (null count-new) (equal count-new 0))
@@ -1586,11 +1677,11 @@ CREATE INDEX rev_name
      ((string= (string-downcase table-str) "lex")
       (count-lex lex))
      (t
-      (sql-get-num *lexdb* 
+      (sql-get-num lex 
 		   (format nil "SELECT count(*) FROM ~a" table))))))
 
 (defmethod table-head-count ((lex psql-lex-database) table)
-  (sql-get-num *lexdb* 
+  (sql-get-num lex 
 	       (format nil "SELECT count(*) FROM ~a WHERE (name,modstamp) IN (SELECT name, max(modstamp) AS modstamp FROM ~a GROUP BY name)" table table)))
 
 

@@ -316,9 +316,11 @@
 			   ))))
     (list recs cols)))
 
-;(defun 2-kw (str)
-;  (intern str :keyword))
-;  (intern (string-upcase str) :keyword))
+(defun command-result (res)
+  (let ((str-res (pq:cmd-tuples res)))
+    (if (string= "" str-res)
+	-1
+      (str-2-num str-res))))
 
 (defun execute (conn sql-str &key com tup out in ignore-errors)
   (let* ((result (with-lexdb-locale (pq:exec conn sql-str)))
@@ -328,7 +330,8 @@
 	  (:PGRES_EMPTY_QUERY 
 	   (format t  "~%(LexBD) WARNING:  empty query sent to PSQL DB ~a" (pq:db conn)))
 	  (:PGRES_COMMAND_OK
-	   (if com t
+	   (if com
+	       (command-result result)
 	     (error "unexpected `command returning no data' sent to PSQL DB ~a" (pq:db conn))))
 	  (:PGRES_TUPLES_OK
 	   (if tup

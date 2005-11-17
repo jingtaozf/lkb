@@ -14,6 +14,9 @@
 (defun normalize-orthkey (x)
   (string-downcase x))
 
+(defun normalize-orthkey! (x)
+  (nstring-downcase x))
+
 (defun get-val (field raw-record cols)
   (let ((position (position field cols)))
     (unless position
