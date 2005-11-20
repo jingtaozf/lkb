@@ -520,7 +520,7 @@
 ;;TO_DO: move to PQputCopyData
 ;; coz getline etc. are 'Obsolete Functions for COPY'
 
-(defparameter *psql-c-str-len* 1000) ;;must be >150 (WHY???)
+(defparameter *psql-c-str-len* 1000) ;;must be >150
 (defun copy-out-stream (conn ostream)
   (let* ((c-str (ff::string-to-native 
 		 (make-string *psql-c-str-len*))))

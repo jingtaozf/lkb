@@ -820,9 +820,6 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 (defun cle-record-to-tdl (record-in)
   (cle-eval-lexdb 'record-to-tdl (cle-lisp-list record-in)))
 
-;(defun cle-empty-psql-cache nil
-;  (cle-eval-lexdb 'empty-cache))
-
 (defun cle-dbname nil
   (cle-eval-lexdb 'dbname))
 
