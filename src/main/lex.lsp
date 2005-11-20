@@ -561,9 +561,11 @@
       (mapcar #'(lambda (lex) (unlink lexicon lex)) part-of))
     lexicon))
 
+(defvar *empty-cache-clears-generator-lexicon* t) ;;fix_me (hack)
 (defmethod empty-cache :around ((lexicon lex-database) &key (recurse))
   (with-slots (lexical-entries psorts cache-lex-list) lexicon
-    (when (fboundp 'clear-generator-lexicon)
+    (when (and (fboundp 'clear-generator-lexicon)
+	       *empty-cache-clears-generator-lexicon*)
       (funcall 'clear-generator-lexicon))
     (if (typep lexicon 'external-lex-database)
 	(call-next-method))

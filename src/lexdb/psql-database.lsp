@@ -8,10 +8,28 @@
 ;;; --- psql-database methods
 ;;;
 
+(defmacro with-lexdb-client-min-messages ((lexdb min-messages) &body body)
+  `(let ((current-min-messages (caar (recs (get-records ,lexdb "show client_min_messages")))))
+     (run-command ,lexdb (format nil "set client_min_messages to ~a" ,min-messages))
+     ,@body
+    (run-command ,lexdb (format nil "set client_min_messages to ~a" current-min-messages))))
+  
 (defmacro with-lexdb-locale (&body body)
   `(let ((excl::*locale* *lexdb-locale*))
      ,@body))
   
+(defmethod copy-column-to-psql ((db psql-database) table list)
+  (let ((conn (connection db))
+	(table-str (quote-ident db table)))
+    (run-command db (format nil "CREATE TABLE ~a (x text)" table-str))
+    (pq:exec conn (format nil "COPY ~a FROM stdin" table-str))
+    (loop
+	for l in list
+	do 
+	  (with-lexdb-locale (putline conn (lkb::psql-copy-val l))))
+    (with-lexdb-locale (putline conn "\\."))
+    (endcopy conn)))
+
 (defmethod connect ((lexicon psql-database)) 
   (disconnect lexicon)
   (do ((conn (connect-aux lexicon)
@@ -139,6 +157,85 @@
       (error "psql-database ~s has no active connection." db))
     (execute connection command :in (list istrm))))
 
+(defmethod run-command-stdin-from-list ((db psql-database) table list)
+  (with-slots (connection) db
+    (unless connection
+      (error "psql-database ~s has no active connection." db))
+    (pq:exec connection (format nil "COPY ~a FROM stdin" (quote-ident db table)))
+    (loop
+	for row in list
+	do 
+	  (with-lexdb-locale (pq:putline connection (to-psql-copy-rec2 row))))
+    (with-lexdb-locale (putline connection "\\."))
+    (endcopy connection)))
+    
+(defmethod run-command-stdin-from-hash-vals ((db psql-database) table hash)
+  (with-slots (connection) db
+    (unless connection
+      (error "psql-database ~s has no active connection." db))
+    (pq:exec connection (format nil "COPY ~a FROM stdin" (quote-ident db table)))
+    (loop
+	for row being each hash-value in hash
+	do 
+	  (with-lexdb-locale (pq:putline connection (to-psql-copy-rec2 row))))
+    (with-lexdb-locale (putline connection "\\."))
+    (endcopy connection)))
+    
+(defmethod run-command-stdin-from-hash-val-rows ((db psql-database) table hash)
+  (with-slots (connection) db
+    (unless connection
+      (error "psql-database ~s has no active connection." db))
+    (pq:exec connection (format nil "COPY ~a FROM stdin" (quote-ident db table)))
+    (loop
+	for rows being each hash-value in hash
+	do
+	  (loop for row in rows
+	      do 
+		(with-lexdb-locale (pq:putline connection (to-psql-copy-rec2 row)))))
+    (with-lexdb-locale (putline connection "\\."))
+    (endcopy connection)))
+
+(defvar *nrows* 2)
+(defmethod run-command-stdin-from-hash-val-rows2 ((db psql-database) table hash)
+  (with-slots (connection) db
+    (unless connection
+      (error "psql-database ~s has no active connection." db))
+    (pq:exec connection (format nil "COPY ~a FROM stdin" (quote-ident db table)))
+    (loop
+	with s = (make-string-output-stream)
+	with i = 1
+	for rows being each hash-value in hash
+	do
+	  (loop for row in rows
+	      do 
+		(princ (to-psql-copy-rec2 row) s)
+		(incf i)
+	      unless (< i 2) 
+	      do 
+		(with-lexdb-locale (pq:putline connection (get-output-stream-string s)))
+		(setf i 1)
+		))
+    (with-lexdb-locale (putline connection "\\."))
+    (endcopy connection)))
+    
+
+#+:null
+(defmethod put-normalized-lex-keys ((lex psql-lex-database) recs)
+  (when recs
+    (let ((conn (connection lex)))
+					;    (run-command lex "DELETE FROM lex_key")
+      (with-lexdb-client-min-messages (lex "error")
+	(run-command lex "DROP INDEX lex_key_key" :ignore-errors t))
+      (pq:exec conn "COPY lex_key FROM stdin")
+      (loop
+	  for rec in recs
+	  do 
+	    (with-lexdb-locale (pq:putline conn (to-psql-copy-rec2 rec))))
+      (with-lexdb-locale (putline conn "\\."))
+      (endcopy conn)
+      (run-command lex "CREATE INDEX lex_key_key ON lex_key (key)")
+      )))
+
 ;; run command with stdout = filename
 (defmethod run-command-stdout-to-file ((db psql-database) command filename)
   (with-open-file (ostrm filename
@@ -152,10 +249,20 @@
       (error "psql-database ~s has no active connection." db))
     (execute connection command :out (list ostrm))))
 
-(defmethod run-command ((database psql-database) command &key ignore-errors)
-  (with-slots (connection) database
+(defmethod run-command-ignore-errors ((db psql-database) command)
+  (with-lexdb-client-min-messages (db "error")
+    (run-command db command :ignore-errors t)))
+
+(defmethod run-command-coe ((db psql-database) command)
+  (let ((res (run-command db command :ignore-errors t)))
+    (when (typep res 'sql-error)
+      (format t "~%(LexDB) (postgres) ~a ... continuing" (slot-value res 'message)))
+    res))
+  
+(defmethod run-command ((db psql-database) command &key ignore-errors)
+  (with-slots (connection) db
     (unless connection
-      (error "psql-database ~s has no active connection." database))
+      (error "psql-database ~s has no active connection." db))
     (execute connection command :com t :ignore-errors ignore-errors)))
 
 (defmethod quote-ident ((lex psql-lex-database) field)
@@ -267,16 +374,28 @@
 ;;; defuns
 ;;;
 
+#+:null
+(defun length-as-native-string (str)
+  (multiple-value-bind (dummy len)
+      (excl:string-to-native str)
+    (setf dummy dummy) ;;avoid compiler warning
+    (1- len))) ;; len includes null byte
+
 (defun psql-quote-literal (str)
   (unless (stringp str)
     (setf str (2-str str)))
-  (concatenate 'string "'"
-	       (let* ((len (length str))
-		      (x (make-array (1+ (* 2 len)) :element-type '(unsigned-byte 8))))
-		 (excl:with-native-string (native-str str)
-		   (pq:escape-string x native-str len))
-		 (excl:octets-to-string x))
-	       "'"))
+  (multiple-value-bind (native-str native-len)
+      (excl:string-to-native str)
+    
+    (concatenate 'string "'"
+		 (let* ((len (length str))
+			(x (make-array (+ len
+					  native-len
+					  1) ;;safe for UTF-8 coz ascii byte means ascii char
+				       :element-type '(unsigned-byte 8))))
+		   (pq:escape-string x native-str native-len)
+		   (excl:octets-to-string x))
+		 "'")))
 
 (defun sql-like-text (id)
   (format nil "~a" (sql-like-text-aux (2-str id))))

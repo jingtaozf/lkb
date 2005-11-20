@@ -47,63 +47,203 @@
     (format nil "~a/semi.obj." 
 	    (make-pathname :directory (namestring (lkb::lkb-tmp-dir)))))
 
-(defun dump-*semi*-to-psql nil
-  (dump-semi-to-psql *semi*))
+;(defmethod dump-semi-to-psql ((semi semi) &key (lexicon lkb::*lexdb*))
+;  (populate-semi semi)
+;  (print-semi-db semi)
+;  (with-slots (lkb::host lkb::port lkb::user lkb::dbname) lexicon
+;  (let* ((base (format nil "~asemi.obj" 
+;	    (make-pathname :directory (namestring (lkb::lkb-tmp-dir))))))
+;    (lkb::semi-setup-pre lexicon)
+;    (load-db-table-from-file "semi_pred"
+;			     (format nil "~a.~a" base "pred")
+;			     lexicon)
+;    (load-db-table-from-file "semi_frame"
+;			     (format nil "~a.~a" base "frame")
+;			     lexicon)
+;    (load-db-table-from-file "semi_var"
+;			     (format nil "~a.~a" base "var")
+;			     lexicon)
+;    (load-db-table-from-file "semi_extra"
+;			     (format nil "~a.~a" base "extra")
+;			     lexicon)
+;    (lkb::semi-setup-post lexicon)
+;    semi
+;    )))
 
+#+:null
 (defmethod dump-semi-to-psql ((semi semi) &key (lexicon lkb::*lexdb*))
   (populate-semi semi)
   (print-semi-db semi)
-  (with-slots (lkb::host lkb::port lkb::user lkb::dbname) lexicon
+  (lkb::semi-setup-pre lexicon)
+  (update-psql-semi-from-files :lex lexicon)
+  (lkb::semi-setup-post lexicon))
+
+#+:null
+(defmethod semi-create-indices ((lex psql-lex-database))
+  (run-command lex "
+;
+CREATE INDEX semi_pred_pred_id ON semi_pred (pred_id);
+CREATE INDEX semi_frame_frame_id ON semi_frame (frame_id);
+CREATE INDEX semi_frame_var_id ON semi_frame (var_id);
+CREATE INDEX semi_var_var_id ON semi_var (var_id);
+CREATE INDEX semi_extra_extra_id ON semi_extra (extra_id);
+CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modstamp);
+"))
+
+#+:null
+(defmethod semi-drop-indices ((lex psql-lex-database))
+  (run-command-coe lex "DROP INDEX semi_pred_lex_id CASCADE")
+  (run-command-coe lex "DROP INDEX semi_pred_pred_id CASCADE")
+  (run-command-coe lex "DROP INDEX semi_frame_frame_id CASCADE")
+  (run-command-coe lex "DROP INDEX semi_frame_var_id CASCADE")
+  (run-command-coe lex "DROP INDEX semi_var_var_id CASCADE")
+  (run-command-coe lex "DROP INDEX semi_extra_extra_id CASCADE")
+  (run-command-coe lex "DROP INDEX semi_mod_name_userid_modstamp CASCADE"))
+
+(defun sdb-to-psql (lex sdb)
+  (lkb::clear-psql-semi lex)
+  
+  (lkb::run-command-stdin-from-hash-val-rows lex "semi_pred"
+					(sdbt-rows (find 'PRED (sdb-tables sdb) 
+					      :key #'mrs::sdbt-name)))
+  (lkb::run-command-stdin-from-hash-val-rows lex "semi_frame"
+					(sdbt-rows (find 'frame (sdb-tables sdb) 
+					      :key #'mrs::sdbt-name)))
+  (lkb::run-command-stdin-from-hash-val-rows lex "semi_var"
+					(sdbt-rows (find 'var (sdb-tables sdb) 
+					      :key #'mrs::sdbt-name)))
+  (lkb::run-command-stdin-from-hash-val-rows lex "semi_extra"
+					(sdbt-rows (find 'extra (sdb-tables sdb) 
+					      :key #'mrs::sdbt-name)))
+  
+  (lkb::semi-create-indices lex)
+  )
+
+(defun dump-generator-indices-to-psql (&key (lex lkb::*lexdb*))
+  (sdb-to-psql lex
+	       (populate-sdb :semantic-table *semantic-table*))
+
+  (lkb::run-command lex "INSERT INTO semi_mod (SELECT DISTINCT name,userid,modstamp,CURRENT_TIMESTAMP FROM lex_cache JOIN semi_pred ON name=lex_id)")
+  (let ((not-indexed mrs::*empty-semantics-lexical-entries*))
+    (when not-indexed
+      (lkb::run-command lex
+			(format nil "INSERT INTO semi_mod SELECT DISTINCT name,userid,modstamp,CURRENT_TIMESTAMP FROM lex_cache WHERE name IN ~a" 
+				(format nil " (~a~{, ~a~})" 
+					(lkb::psql-quote-literal (car not-indexed))
+					(loop for lexid in (cdr not-indexed)
+					    collect (lkb::psql-quote-literal lexid)))))))
+  ;; semi_mod indexes should be created after this call
+  (lkb::run-command lex "SET ENABLE_HASHJOIN TO false")
+  )
+
+;(defun dump-generator-indices-to-psql (&key (lex lkb::*lexdb*))
+;  ;(populate-semi semi)
+;
+;  (lkb::reconnect lex)
+;  (lkb::semi-drop-indices lex)
+;  (lkb::run-command lex "DELETE FROM semi_pred")
+;  (lkb::run-command lex "DELETE FROM semi_frame")
+;  (lkb::run-command lex "DELETE FROM semi_var")
+;  (lkb::run-command lex "DELETE FROM semi_extra")
+;  (lkb::run-command lex "DELETE FROM semi_mod")
+;
+;  (update-psql-semi-from-files :lex lex)
+;  
+;  (sdb-to-psql lex
+;	       (populate-sdb :semantic-table *semantic-table*))
+;  
+;  (lkb::reconnect lex)
+;  (lkb::semi-create-indices lex)
+;  (lkb::run-command lex "INSERT INTO semi_mod (SELECT DISTINCT name,userid,modstamp,CURRENT_TIMESTAMP FROM lex_cache JOIN semi_pred ON name=lex_id)")
+;  (let ((not-indexed (append mrs::*non-indexed-lexids* mrs::*empty-semantics-lexical-entries*)))
+;    (when not-indexed
+;      (lkb::run-command lex
+;			(format nil "INSERT INTO semi_mod SELECT DISTINCT name,userid,modstamp,CURRENT_TIMESTAMP FROM lex_cache WHERE name IN ~a" 
+;				(format nil " (~a~{, ~a~})" 
+;					(lkb::psql-quote-literal (car not-indexed))
+;					(loop for lexid in (cdr not-indexed)
+;					    collect (lkb::psql-quote-literal lexid)))))))
+;  ;; semi_mod indexes should be created after this call
+;  (lkb::run-command lex "SET ENABLE_HASHJOIN TO false")
+;  )
+
+#+:null
+(defmethod put-normalized-lex-keys ((lex psql-lex-database) recs)
+  (when recs
+    (let ((conn (connection lex)))
+					;    (run-command lex "DELETE FROM lex_key")
+      (with-lexdb-client-min-messages (lex "error")
+	(run-command lex "DROP INDEX lex_key_key" :ignore-errors t))
+      (pq:exec conn "COPY lex_key FROM stdin")
+      (loop
+	  for rec in recs
+	  do 
+	    (with-lexdb-locale (pq:putline conn (to-psql-copy-rec2 rec))))
+      (with-lexdb-locale (putline conn "\\."))
+      (endcopy conn)
+      (run-command lex "CREATE INDEX lex_key_key ON lex_key (key)")
+      )))
+
+(defun update-psql-semi (lexids &key (lex lkb::*lexdb*)
+				     (semantic-table *semantic-table*))
+  (when (null lexids)
+    (return-from update-psql-semi))
+  (print-semi-db-partial lexids :semantic-table semantic-table)
+  (let* ((use-temp-table (> (length lexids) 1000))
+	 (where 
+	  (cond
+	   (use-temp-table
+	    (lkb::run-command-ignore-errors lex "DROP TABLE scratch_update_psql_semi")
+	    (lkb::copy-column-to-psql lex "scratch_update_psql_semi" lexids)
+	    "(SELECT * FROM scratch_update_psql_semi)"
+	    )
+	   (t
+	    (format nil " (~a~{, ~a~})" 
+		    (lkb::psql-quote-literal (car lexids))
+		    (loop for lexid in (cdr lexids)
+			collect (lkb::psql-quote-literal lexid)))
+	    ))))
+    (lkb::run-command lex 
+		      (format nil "DELETE FROM semi_pred WHERE lex_id IN ~a" where))
+    ;; semi_mod info belongs in semi_pred?
+    (lkb::run-command lex
+		      (format nil "DELETE FROM semi_mod WHERE name IN ~a" where))
+    ;; to_do: ensure duplicates are not added to semi tables!
+    (update-psql-semi-from-files :lex lex)
+    (lkb::run-command lex
+		      (format nil "INSERT INTO semi_mod SELECT DISTINCT name,userid,modstamp,CURRENT_TIMESTAMP FROM lex_cache WHERE name IN ~a" where))
+    (when use-temp-table
+      (lkb::run-command-coe lex "DROP TABLE scratch_update_psql_semi"))
+    ))
+  
+(defun update-psql-semi-from-files (&key (lex lkb::*lexdb*))
   (let* ((base (format nil "~asemi.obj" 
-	    (make-pathname :directory (namestring (lkb::lkb-tmp-dir))))))
-    (lkb::semi-setup-pre lexicon)
-    (load-db-table-from-file "semi_pred"
-			     (format nil "~a.~a" base "pred")
-			     lexicon)
-    (load-db-table-from-file "semi_frame"
-			     (format nil "~a.~a" base "frame")
-			     lexicon)
-    (load-db-table-from-file "semi_var"
-			     (format nil "~a.~a" base "var")
-			     lexicon)
-    (load-db-table-from-file "semi_extra"
-			     (format nil "~a.~a" base "extra")
-			     lexicon)
-    (lkb::semi-setup-post lexicon)
-    semi
-    )))
+		       (make-pathname :directory (namestring (lkb::lkb-tmp-dir))))))
+    (update-db-table-from-file "semi_pred" (format nil "~a.~a" base "pred") lex)
+    (update-db-table-from-file "semi_frame" (format nil "~a.~a" base "frame") lex)
+    (update-db-table-from-file "semi_var" (format nil "~a.~a" base "var") lex)
+    (update-db-table-from-file "semi_extra" (format nil "~a.~a" base "extra") lex)))
 
-(defmethod semi-files-to-psql ((semi semi) &key (lexicon lkb::*lexdb*))
-  (with-slots (lkb::host lkb::port lkb::user lkb::dbname) lexicon
-  (let* ((base (format nil "~asemi.obj" 
-	    (make-pathname :directory (namestring (lkb::lkb-tmp-dir))))))
-    (lkb::semi-setup-pre lexicon)
-    (load-db-table-from-file "semi_pred"
-			     (format nil "~a.~a" base "pred")
-			     lexicon)
-    (load-db-table-from-file "semi_frame"
-			     (format nil "~a.~a" base "frame")
-			     lexicon)
-    (load-db-table-from-file "semi_var"
-			     (format nil "~a.~a" base "var")
-			     lexicon)
-    (load-db-table-from-file "semi_extra"
-			     (format nil "~a.~a" base "extra")
-			     lexicon)
-    (lkb::semi-setup-post lexicon)
-    semi
-    )))
+;(defun populate-*semi*-from-psql nil
+;  (populate-semi-from-psql *semi*))
 
-(defun populate-*semi*-from-psql nil
-  (populate-semi-from-psql *semi*))
-
-(defmethod populate-semi-from-psql ((semi semi) &key (lexdb lkb::*lexdb*))
-  (close-semi semi)
+(defun load-generator-indices-from-psql (&key (lexdb lkb::*lexdb*))
   (let ((sdb (make-sdb)))
     (load-sdb sdb lexdb)
     (populate-semantic-table sdb)
-    (populate-semi semi))
-  semi)
+    (setf *empty-semantics-lexical-entries*
+      (loop for x in (lkb::get-raw-records lkb::*lexdb* "select name from semi_mod left join semi_pred on name=lex_id where semi_pred.lex_id is null")
+	  collect (lkb::str-2-symb (car x)))))
+  t)
+
+;(defmethod populate-semi-from-psql ((semi semi) &key (lexdb lkb::*lexdb*))
+;  (close-semi semi)
+;  (let ((sdb (make-sdb)))
+;    (load-sdb sdb lexdb)
+;    (populate-semantic-table sdb)
+;    ;;(populate-semi semi) !!!
+;    )
+;  semi)
 
 (defmethod populate-semantic-table ((sdb sdb))
   (let* ((pred-t (sdb-table sdb 'pred))
@@ -171,7 +311,11 @@
   (loop
       with leaf-hash = (sdb-leaf-hash sdb)
       for row in rows
-      for pred = (let* ((pred-raw (second row))
+      for string-p = (eq (fifth row) t) ;!
+      for pred = (let* ((pred-raw 
+			 (if string-p
+			     (lkb::2-str (second row))
+			   (second row)))
                       (pred-hash (gethash pred-raw leaf-hash)))
                  (or
                   pred-hash
@@ -263,7 +407,11 @@
   (loop
       with leaf-hash = (sdb-leaf-hash *sdb*)
       for row in rows
-      for pred = (let* ((pred-raw (second row))
+      for string-p = (print (fifth row)) ;!
+      for pred = (let* ((pred-raw 
+			 (if string-p 
+			     (lkb::2-str (second row)) ;!
+			     (second row)))
 			(pred-hash (gethash pred-raw leaf-hash)))
 		   (or
 		    pred-hash
@@ -383,11 +531,82 @@
 	    (error "unhandled table name")))))
     raw-rows))
 
-(defun load-db-table-from-file (table-name file-name lexicon)
-  (lkb::run-command-stdin-from-file lexicon 
-				    (format nil "DELETE FROM ~a; ~% COPY ~a FROM stdin;"
+;(defun load-db-table-from-file (table-name file-name lexicon)
+;  (lkb::run-command-stdin-from-file lexicon 
+;				    (format nil "DELETE FROM ~a; COPY ~a FROM stdin;"
+;					    table-name
+;					    table-name) 
+;				    file-name))
+
+;(defun load-db-table-from-file (table-name file-name lex)
+;  (lkb::run-command lex (format nil "DELETE FROM ~a" table-name))
+;  (update-db-table-from-file table-name file-name lex))
+
+(defun update-db-table-from-file (table-name file-name lex)
+  (lkb::run-command-stdin-from-file lex
+				    (format nil "COPY ~a FROM stdin;"
 					    table-name
 					    table-name) 
 				    file-name))
 
+(defun find-relpreds-from-lexid (lexid &key (semantic-table *semantic-table*))  
+  (let ((sem-rec (gethash lexid semantic-table)))
+    (unless sem-rec
+      (return-from find-relpreds-from-lexid))
+    (loop
+	for rel in (semantics-record-relations sem-rec)
+	collect (rel-pred rel))))
+
+(defun delete-lexid-from-relation-index (lexid &key (relation-index *relation-index*) 
+						     (semantic-table *semantic-table*))
+  (loop
+      for relpred in (find-relpreds-from-lexid lexid 
+					       :semantic-table semantic-table)
+      for val = (gethash relpred relation-index)
+      do
+	(cond
+	 ((hash-table-p val)
+	  (remhash lexid val)
+	  (when (= 0 (hash-table-count val))
+	    (remhash relpred relation-index)))
+	 ((listp val)
+	  (loop
+	      for complex2 in val ; (FEAT . val3->(id1) val4->(id2 id3) ...)
+	      for hash2 = (cdr complex2) ; val3->(id1) val4->(id2 id3)
+	      with new-val
+	      do
+		(loop
+		    for key2 being each hash-key in hash2 ; val4
+		    for val2 being each hash-value in hash2 ; (id2 id3)
+		    with new-val2
+		    when (member lexid val2)
+		    do 
+		      (setf new-val2 (delete lexid val2)) ; 
+		      (if new-val2
+			  (setf (gethash key2 hash2) new-val2) ; (id3)
+			(remhash key2 hash2))) ; val3->(id1)
+		(when (= 0 (hash-table-count hash2))
+		  (setf new-val (delete complex2 val))
+		  (if new-val
+		      (setf (gethash relpred relation-index) new-val)
+		    (remhash relpred relation-index)))))
+	 (t
+	  (error "unexpected value in relation-index hash ~a : ~a"
+		 relation-index val)))))
+
+(defun delete-lexid-from-semantic-table (lexid &key (semantic-table *semantic-table*))
+  (remhash lexid semantic-table))
+
+(defun delete-lexid-from-generator-indices (lexid &key (relation-index *relation-index*) 
+						       (semantic-table *semantic-table*))
+  (cond
+   ((gethash lexid semantic-table)
+    (delete-lexid-from-relation-index lexid 
+				      :relation-index relation-index
+				      :semantic-table semantic-table)
+    (delete-lexid-from-semantic-table lexid 
+				      :semantic-table semantic-table)
+    t)
+   (t
+    nil)))
   

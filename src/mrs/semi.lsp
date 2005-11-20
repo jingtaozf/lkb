@@ -68,25 +68,42 @@
   (with-slots (signature) semi
     (if signature t)))
   
+;(defmethod populate-semi ((semi semi))
+;  (with-slots (lexicon signature) semi
+;    (close-semi semi)
+;    (setf lexicon *semantic-table*)
+;    (maphash 
+;     #'(lambda (key val)
+;	 (declare (ignore key))
+;	 (extend-semi semi val :mode :batch))
+;     lexicon)
+;    (populate-semi-roles semi)
+;    (setf signature (get-universal-time))
+;    semi))
+
 (defmethod populate-semi ((semi semi))
   (with-slots (lexicon signature) semi
     (close-semi semi)
     (setf lexicon *semantic-table*)
-    (maphash 
-     #'(lambda (key val)
-	 (declare (ignore key))
-	 (extend-semi semi val :mode :batch))
-     lexicon)
+    (loop
+	for val being each hash-value in lexicon
+	do (extend-semi semi val :mode :batch))
     (populate-semi-roles semi)
     (setf signature (get-universal-time))
     semi))
 
-(defmethod extend-semi ((semi semi) (record semantics-record) &key (mode :dynamic))
-  (mapcar
-   #'(lambda (rel)
-       (record-ep rel semi :mode mode))
-   (semantics-record-relations record)))
+;(defmethod extend-semi ((semi semi) (record semantics-record) &key (mode :dynamic))
+;  (mapcar
+;   #'(lambda (rel)
+;       (record-ep rel semi :mode mode))
+;   (semantics-record-relations record)))
 
+(defmethod extend-semi ((semi semi) (record semantics-record) &key (mode :dynamic))
+  (loop for rel in (semantics-record-relations record)
+      do (record-ep rel semi :mode mode)))
+
+;; unused???
+#+:null
 (defun record-mrs (mrs semi &key (mode :dynamic))
   (when (mrs::psoa-p mrs)
     (loop
@@ -105,19 +122,20 @@
       with pred = (mrs::rel-pred ep)
       for role in roles
       for feature = (mrs:fvpair-feature role)
-      for value = (let ((value (fvpair-value role)))
-                    (if (var-p value)
-                      (loop
-                          with type = (let ((type (var-type value)))
-                                        (vsym 
-                                         (or type *semi-u-type*)))
-			  with extra-list = (var-extra value)
-                          for extra in extra-list
-                          do 
-                            (record-property type extra semi)
-                          finally 
-			    (return (make-var-base :type type :extra extra-list)))
-		      value))
+      for value = 
+	(let ((value (fvpair-value role)))
+	  (if (var-p value)
+	      (loop
+		  with type = (let ((type (var-type value)))
+				(vsym 
+				 (or type *semi-u-type*)))
+		  with extra-list = (var-extra value)
+		  for extra in extra-list
+		  do 
+		    (record-property type extra semi)
+		  finally 
+		    (return (make-var-base :type type :extra extra-list)))
+	    value))
       do
 	(when (eq mode :dynamic)
 	  (record-role feature value semi))
@@ -167,6 +185,9 @@
      :test #'equal)))
 
 (defun print-semi (semi &key (generalizep t) (stream t) (format :plain))
+  (unless (or (eq format :db)
+	      (populated-p *semi*))
+    (populate-semi *semi*))
   (case format
     (:plain
      (print-semi-plain semi 
@@ -508,16 +529,34 @@
     
 (defvar *sdb* nil)
 
-(defun print-semi-db (semi)
+(defun print-semi-db-partial (lexids &key (semantic-table *semantic-table*))
   (loop
       with sdb = (setf *sdb* (make-sdb))
       initially (format t "~%preparing semi-db tables...~%")
-      for record being each hash-value in (semi-lexicon semi)
-      do (process-record-db record sdb)
+      for lexid in lexids
+      for record = (gethash lexid semantic-table)
+      do 
+	(if record
+	    (process-record-db record sdb)
+	  (format t "~%Warning: ~a has no semantic record" lexid))
       finally
 	(setf *sdb* sdb)
 	(print-sdb sdb)))
 
+(defun populate-sdb (&key (semantic-table *semantic-table*))
+  (loop
+      with sdb = (setf *sdb* (make-sdb))
+      initially (format t "~%preparing semi-db tables...~%")
+      for record being each hash-value in semantic-table
+      do (process-record-db record sdb)
+      finally
+	(setf *sdb* sdb)
+	(return sdb)))
+
+(defun print-semi-db (semi)
+  (print-sdb
+   (populate-sdb :semantic-table (semi-lexicon semi))))
+  
 (defun process-record-db (record sdb)
   (let* ((pred-t (sdb-table sdb 'pred))
 	 (frame-t (sdb-table sdb 'frame))

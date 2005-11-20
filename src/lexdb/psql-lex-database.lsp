@@ -9,12 +9,6 @@
 ;;;
 
 
-(defmacro with-lexdb-client-min-messages ((lexdb min-messages) &body body)
-  `(let ((current-min-messages (caar (recs (get-records ,lexdb "show client_min_messages")))))
-     (run-command ,lexdb (format nil "set client_min_messages to ~a" ,min-messages))
-     ,@body
-    (run-command ,lexdb (format nil "set client_min_messages to ~a" current-min-messages))))
-  
 (defmacro with-lexdb-user-lexdb ((lexdb-lexdb lexdb) &body body)
   `(with-slots (dbname host port fields-tb) ,lexdb
      (let ((,lexdb-lexdb
@@ -684,7 +678,8 @@
     dfn))
 
 (defmethod complain-no-dfn ((lex psql-lex-database))
-  (format t "~&(LexDB) no dfn entries found in ~a" (dbname lex)))
+  (error "~&(LexDB) no dfn entries found in ~a !!!" (dbname lex)))
+;  (format t "~&(LexDB) no dfn entries found in ~a !!!" (dbname lex)))
 
 (defmethod get-internal-table-dfn ((lex psql-lex-database))
   (get-field-info lex "public" "rev"))  
@@ -744,7 +739,8 @@
 ;;;
 
 (defmethod set-lex-entry-from-record ((lex psql-lex-database) fv-pairs)
-  (set-lex-entry lex (make-instance 'psql-lex-entry :fv-pairs fv-pairs)))
+  (set-lex-entry lex (make-instance 'psql-lex-entry :fv-pairs fv-pairs))
+  )
 
 ;;; insert lex entry into db
 (defmethod set-lex-entry ((lex psql-lex-database) (psql-le psql-lex-entry) &key (gen-key t) )
@@ -769,12 +765,17 @@
       (lkb-beep)
       (setf name (symb-2-str (str-2-symb name))))
     (update-entry lex symb-list psql-le)
+  (let ((*empty-cache-clears-generator-lexicon* nil))
+    (empty-cache lex))
     (when gen-key 
       (generate-missing-orthkeys lex))
-    (unless
-	(check-lex-entry (str-2-symb name)
-			 lex)
-      (error "Invalid lexical entry ~a -- see Lisp buffer output" (retr-val psql-le :|name|)))))
+    (cond
+     ((check-lex-entry (str-2-symb name) lex)
+      (update-lisp-semi-entry lex (str-2-symb (retr-val psql-le :|name|)))
+      t)
+     (t
+      (error "Invalid lexical entry ~a -- see Lisp buffer output" (retr-val psql-le :|name|))
+      nil))))
 
 ;;;
 ;;; postgres interface
@@ -879,23 +880,20 @@
 (defmethod get-filter ((lex psql-lex-database))
   (sql-get-val lex "SELECT val FROM meta WHERE var='filter'"))  
 
+(defmethod clear-psql-semi ((lex psql-lex-database))
+  (semi-drop-indices lex)
+  (run-command lex "DELETE FROM semi_pred")
+  (run-command lex "DELETE FROM semi_frame")
+  (run-command lex "DELETE FROM semi_var")
+  (run-command lex "DELETE FROM semi_extra")
+  (run-command lex "DELETE FROM semi_mod"))
+
 (defmethod update-lex ((lex psql-lex-database))
   (unless (quick-load lex)
     (update-lex-aux lex))
-  (cond
-   ((null (semi lex))
-    nil)
-   ((semi-up-to-date-p lex)
-    (unless 
-	    (lexdb-time ("loading SEM-I into memory" "done loading SEM-I into memory")
-			(mrs::semi-p 
-			 (catch :sql-error
-			   (mrs::populate-*semi*-from-psql))))
-      (format t "~&(LexDB) unable to retrieve database SEM-I"))
-    (index-lexical-rules)
-    (index-grammar-rules))
-   (t
-    (format t "~&(LexDB) WARNING:  no lexical entries indexed for generator")))
+  (when (semi lex)
+    (format t "~%(LexDB) WARNING: :SEMI argument to *lexdb-params* is now obsolete")
+    (format t "~%(LexDB)          (please call index-for-generator instead)"))
   lex)
 
 (defmethod count-rev-all ((lex psql-lex-database))
@@ -1112,21 +1110,30 @@ CREATE INDEX semi_frame_frame_id ON semi_frame (frame_id);
 CREATE INDEX semi_frame_var_id ON semi_frame (var_id);
 CREATE INDEX semi_var_var_id ON semi_var (var_id);
 CREATE INDEX semi_extra_extra_id ON semi_extra (extra_id);
-CREATE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modstamp);
+CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modstamp);
 "))
   
 (defmethod semi-drop-indices ((lex psql-lex-database))
-  (run-command lex "
-DROP INDEX semi_pred_lex_id CASCADE;
-DROP INDEX semi_pred_pred_id CASCADE;
-DROP INDEX semi_frame_frame_id CASCADE;
-DROP INDEX semi_frame_var_id CASCADE;
-DROP INDEX semi_var_var_id CASCADE;
-DROP INDEX semi_extra_extra_id CASCADE;
-DROP INDEX semi_mod_name_userid_modstamp CASCADE;
-"))
-  
+  (run-command-coe lex "DROP INDEX semi_pred_lex_id CASCADE")
+  (run-command-coe lex "DROP INDEX semi_pred_pred_id CASCADE")
+  (run-command-coe lex "DROP INDEX semi_frame_frame_id CASCADE")
+  (run-command-coe lex "DROP INDEX semi_frame_var_id CASCADE")
+  (run-command-coe lex "DROP INDEX semi_var_var_id CASCADE")
+  (run-command-coe lex "DROP INDEX semi_extra_extra_id CASCADE")
+  (run-command-coe lex "DROP INDEX semi_mod_name_userid_modstamp CASCADE"))
 
+#+:null
+(defun rehash (hash &key (test))
+  (loop
+      with h = 
+	(if test (make-hash-table :test test)
+	  (make-hash-table))
+      for key being each hash-key in hash
+      for val being each hash-value in hash
+      do
+	(setf (gethash key h) val)
+      finally
+	(return h)))
 
 (defmethod index-public-rev ((lex psql-lex-database))
   (run-command lex "
@@ -1251,27 +1258,38 @@ CREATE INDEX rev_name
 ;; semi
 ;;;
 
+#+:null
+(defun truncate-list! (l n)
+  (cond
+   ((< n 1)
+    nil)
+   ((> n (length l))
+    l)
+   (t
+    (setf (cdr (nthcdr (1- n) l)) nil)
+    l)))
+
+(defvar mrs::*semantic-table*)
 (defmethod index-new-lex-entries ((lex psql-lex-database))
   (let ((semi-out-of-date (semi-out-of-date lex)))
     (format t "~&(LexDB) indexing ~a entries" (length semi-out-of-date))
     (when semi-out-of-date
-      (mrs::populate-*semi*-from-psql)
-      (index-lexical-rules)
-      (index-grammar-rules)
-      (mapc 
-       #'(lambda (x)
-	   (update-semi-entry lex x))
-       semi-out-of-date)
-      (mrs::dump-*semi*-to-psql))))
+      (loop for x in semi-out-of-date
+	  do (update-lisp-semi-entry lex x))
+      #+:null ;; fix_me (avoid duplicate sdb rows)
+      (mrs::update-psql-semi semi-out-of-date 
+			     :lex lex
+			     :semantic-table mrs::*semantic-table*))))
   
-(defmethod update-semi-entry ((lex psql-lex-database) lexid)
+(defmethod update-lisp-semi-entry ((lex psql-lex-database) lexid)
+  (mrs::delete-lexid-from-generator-indices lexid) ;!!
   (let* ((entry (read-psort lex lexid :cache nil))
 	 (new-fs (and
 		  (expand-psort-entry entry)
 		  (lex-entry-full-fs entry))))
     (if (and new-fs 
 	     (not (eq new-fs :fail)))
-	(mrs::extract-lexical-relations entry)
+	(mrs::extract-lexical-relations entry) ; <-- efficiency problem originates in here
       (format t "~&No feature structure for ~A~%" 
 	      (lex-entry-id entry))))
     (forget-psort lex lexid))
@@ -1321,6 +1339,7 @@ CREATE INDEX rev_name
   (run-command-stdin-from-file lex "COPY tmp_dfn FROM stdin" dfn-filename)
   (merge-dfn-from-tmp-dfn lex))
 
+#+:null
 (defmethod semi-setup-pre ((lex psql-lex-database))  
   (reconnect lex)
   (semi-drop-indices lex)
@@ -1328,24 +1347,46 @@ CREATE INDEX rev_name
   (run-command lex "DELETE FROM semi_frame")
   (run-command lex "DELETE FROM semi_var")
   (run-command lex "DELETE FROM semi_extra")
-  (run-command lex "DELETE FROM semi_mod"))
+  (run-command lex "DELETE FROM semi_mod")
+  )
   
+#+:null
 (defmethod semi-setup-post ((lex psql-lex-database))  
   (reconnect lex)
   (semi-create-indices lex)
-  (run-command lex "INSERT INTO semi_mod (SELECT DISTINCT name,userid,lex.modstamp,CURRENT_TIMESTAMP FROM lex JOIN semi_pred ON name=lex_id)")
-  (run-command lex "SET ENABLE_HASHJOIN TO false"))
+  (run-command lex "INSERT INTO semi_mod (SELECT DISTINCT name,userid,modstamp,CURRENT_TIMESTAMP FROM lex_cache JOIN semi_pred ON name=lex_id)")
+  (let ((not-indexed mrs::*empty-semantics-lexical-entries*))
+    (when not-indexed
+      (lkb::run-command lex
+			(format nil "INSERT INTO semi_mod SELECT DISTINCT name,userid,modstamp,CURRENT_TIMESTAMP FROM lex_cache WHERE name IN ~a" 
+				(format nil " (~a~{, ~a~})" 
+					(lkb::psql-quote-literal (car not-indexed))
+					(loop for lexid in (cdr not-indexed)
+					    collect (lkb::psql-quote-literal lexid)))))))
+  ;; semi_mod indexes should be created after this call
+  (run-command lex "SET ENABLE_HASHJOIN TO false")
+  )
  
 (defmethod semi-up-to-date-p ((lex psql-lex-database))
-  (and
-   (string< 
-    (mod-time-public lex)
-    (sql-get-val lex "SELECT min(modstamp0) FROM semi_mod"))
-   (string< 
-    (mod-time-private lex)
-    (sql-get-val lex "SELECT min(modstamp0) FROM semi_mod"))))
-  
-;; returns record-ids
+ (not (semi-out-of-date lex)))
+;  (and
+;   (string< 
+;    (mod-time-public lex)
+;    (sql-get-val lex "SELECT min(modstamp0) FROM semi_mod"))
+;   (string< 
+;    (mod-time-private lex)
+;    (sql-get-val lex "SELECT min(modstamp0) FROM semi_mod"))))
+
+(defvar mrs::*empty-semantics-lexical-entries*)
+(defmethod semi-out-of-date ((lex psql-lex-database))
+;  (set-difference
+   (mapcar #'(lambda (x) (str-2-symb (first x))) 
+	   (get-raw-records
+	    lex "SELECT name FROM lex_cache LEFT JOIN semi_mod USING (name,userid,modstamp) WHERE lex_cache.modstamp > COALESCE(semi_mod.modstamp0,'-infinity')"))
+;   mrs::*empty-semantics-lexical-entries*)
+  )
+
+#+:null
 (defmethod semi-out-of-date ((lex psql-lex-database))
   (with-slots (record-cache) lex
     (let* ((cols (grammar-fields lex))

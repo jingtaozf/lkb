@@ -12,7 +12,7 @@
 
 ;;; Add a PG menu to the emacs menu bar
 
-(defvar *lexdb-pg-interface-version* "2.15")
+(defvar *lexdb-pg-interface-version* "2.16")
 
 (require 'cl)      ; we use some common-lisp idioms
 (require 'widget)
@@ -585,7 +585,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (princ "please wait... ")
   ;;(terpri)
   (cle-store-record record-in)
-  (cle-empty-psql-cache)
+;  (cle-empty-psql-cache)
   (princ (format " rev saved to LexDB %s " (cle-dbname))))
 
 (defun lexdb-lookup-aux2 (field-kw val-str from)
@@ -820,8 +820,8 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 (defun cle-record-to-tdl (record-in)
   (cle-eval-lexdb 'record-to-tdl (cle-lisp-list record-in)))
 
-(defun cle-empty-psql-cache nil
-  (cle-eval-lexdb 'empty-cache))
+;(defun cle-empty-psql-cache nil
+;  (cle-eval-lexdb 'empty-cache))
 
 (defun cle-dbname nil
   (cle-eval-lexdb 'dbname))

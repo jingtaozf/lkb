@@ -94,6 +94,8 @@
      (quick-load (extract-param :quick-load *lexdb-params*))
      (password (or (extract-param :password *lexdb-params*)
 		   (and *lexdb* (password *lexdb*)))))
+;  #+:allegro
+;  (excl:gc t)
   (psql-initialize)
   ;; ensure backwards compat
   (setf dbname

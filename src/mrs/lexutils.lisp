@@ -47,10 +47,21 @@
     nil))
 
 (defun index-lexicon nil
-  ;;
-  ;; recompile semantic indices as per normal; dump to lexdb if exists
-  ;;
   (when (typep *lexicon* 'psql-lex-database)
+    (unless (= 0 (sql-get-num *lexdb* "select count(*) from semi_pred"))
+      (let ((unindexed-lexids (semi-out-of-date *lexicon*)))
+	(cond
+	 ((null unindexed-lexids)
+	  (format t "~%(retrieving generator indices for lexicon from LexDB)")
+	  (mrs::load-generator-indices-from-psql :lexdb *lexicon*)
+	  (return-from index-lexicon t))
+	 ((< (length unindexed-lexids) 1000)
+	  (format t "~%(retrieving generator indices for lexicon from LexDB)")
+	  (mrs::load-generator-indices-from-psql :lexdb *lexicon*)
+	  (index-new-lex-entries *lexicon*)
+	  (format t "~%(dumping generator indices to LexDB)")
+	  (mrs::dump-generator-indices-to-psql :lex *lexicon*)
+	  (return-from index-lexicon t)))))
     (format t "~%(caching all lexical records)")
     (cache-all-lex-records-orth *lexicon*))
   
@@ -82,9 +93,38 @@
         
         (mrs::check-for-redundant-filter-rules)))
     (when (typep *lexicon* 'psql-lex-database)
-      (mrs::dump-semi-to-psql mrs::*semi*))
+      (mrs::dump-generator-indices-to-psql :lex *lexicon*))
     (when (typep lkb::*lexicon* 'lkb::cdb-lex-database)
       (mrs::serialize-semantics-indices))))
+
+(defun reindex-lexicon nil ; <-- efficiency problem
+  (format t "~% (recompiling semantic indices)")
+  (mrs::clear-semantic-indices)
+  (let ((*batch-mode* t))
+    (unless mrs::*top-semantics-entry*
+      (error "~%No entry found for top semantics type ~A" 
+	     mrs::*top-semantics-type*))
+    
+    (let ((ids (collect-psort-ids *lexicon*)))
+      
+      (process-queue
+       #'(lambda ()
+	   (let ((id (pop ids)))
+	     (if id
+		 (read-psort *lexicon* id :cache nil)
+	       :eof)))
+       #'(lambda (entry)
+	   (expand-psort-entry entry)
+	   (let ((new-fs (lex-entry-full-fs entry)))
+	     (cond
+	      ((and new-fs 
+		    (not (eq new-fs :fail)))
+	       (mrs::extract-lexical-relations entry))
+	      (t
+	       (format t "~%No feature structure for ~A~%" 
+		       (lex-entry-id entry)))))
+	   (forget-psort *lexicon* (lex-entry-id entry))))      
+      (mrs::check-for-redundant-filter-rules))))
 
 (defun get-compatible-rels (reltype)
   (or (gethash reltype *get-compatible-rels-memo*)
