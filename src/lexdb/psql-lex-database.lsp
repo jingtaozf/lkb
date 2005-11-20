@@ -1550,3 +1550,7 @@ CREATE INDEX rev_name
     (run-command lex "DROP TABLE tmp_filt_cache")
    (reconnect lex) ;; work around server bug
    (generate-missing-orthkeys lex))
+
+ (defmethod orth-field ((lex psql-lex-database))
+   (let ((orth-raw-mapping (assoc :ORTH (dfn lex))))
+     (quote-ident lex (second orth-raw-mapping))))
