@@ -19,25 +19,6 @@
 	  records)
     (setf (sdbt-last sdbt) nil)))
 
-;(defun load-sdbt (sdbt dbname)
-;  (clear sdbt)
-;  (let* (
-;	 (sql-fn (case (sdbt-name sdbt)
-;		   ('pred :semi_pred)
-;		   ('frame :semi_frame)
-;		   ('var :semi_var)
-;		   ('extra :semi_extra)))
-;	 (records
-;	  (lkb::sql-fn-get-raw-records dbname
-;				       sql-fn)
-;	  ))
-;    (mapc #'(lambda (row) (sdbt-rows-hash 
-;			   (mapcar #'str-to-mixed2 row)
-;			   (sdbt-rows sdbt)))
-;	  records)
-;    (setf (sdbt-last sdbt) nil)))
-
-
 (defun load-sdb (sdb dbname)
   (mapcar #'(lambda (x)
 	      (load-sdbt x dbname))
@@ -46,29 +27,6 @@
 (defconstant *psql-semi-dump-base*
     (format nil "~a/semi.obj." 
 	    (make-pathname :directory (namestring (lkb::lkb-tmp-dir)))))
-
-;(defmethod dump-semi-to-psql ((semi semi) &key (lexicon lkb::*lexdb*))
-;  (populate-semi semi)
-;  (print-semi-db semi)
-;  (with-slots (lkb::host lkb::port lkb::user lkb::dbname) lexicon
-;  (let* ((base (format nil "~asemi.obj" 
-;	    (make-pathname :directory (namestring (lkb::lkb-tmp-dir))))))
-;    (lkb::semi-setup-pre lexicon)
-;    (load-db-table-from-file "semi_pred"
-;			     (format nil "~a.~a" base "pred")
-;			     lexicon)
-;    (load-db-table-from-file "semi_frame"
-;			     (format nil "~a.~a" base "frame")
-;			     lexicon)
-;    (load-db-table-from-file "semi_var"
-;			     (format nil "~a.~a" base "var")
-;			     lexicon)
-;    (load-db-table-from-file "semi_extra"
-;			     (format nil "~a.~a" base "extra")
-;			     lexicon)
-;    (lkb::semi-setup-post lexicon)
-;    semi
-;    )))
 
 #+:null
 (defmethod dump-semi-to-psql ((semi semi) &key (lexicon lkb::*lexdb*))
@@ -136,42 +94,10 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
   (lkb::run-command lex "SET ENABLE_HASHJOIN TO false")
   )
 
-;(defun dump-generator-indices-to-psql (&key (lex lkb::*lexdb*))
-;  ;(populate-semi semi)
-;
-;  (lkb::reconnect lex)
-;  (lkb::semi-drop-indices lex)
-;  (lkb::run-command lex "DELETE FROM semi_pred")
-;  (lkb::run-command lex "DELETE FROM semi_frame")
-;  (lkb::run-command lex "DELETE FROM semi_var")
-;  (lkb::run-command lex "DELETE FROM semi_extra")
-;  (lkb::run-command lex "DELETE FROM semi_mod")
-;
-;  (update-psql-semi-from-files :lex lex)
-;  
-;  (sdb-to-psql lex
-;	       (populate-sdb :semantic-table *semantic-table*))
-;  
-;  (lkb::reconnect lex)
-;  (lkb::semi-create-indices lex)
-;  (lkb::run-command lex "INSERT INTO semi_mod (SELECT DISTINCT name,userid,modstamp,CURRENT_TIMESTAMP FROM lex_cache JOIN semi_pred ON name=lex_id)")
-;  (let ((not-indexed (append mrs::*non-indexed-lexids* mrs::*empty-semantics-lexical-entries*)))
-;    (when not-indexed
-;      (lkb::run-command lex
-;			(format nil "INSERT INTO semi_mod SELECT DISTINCT name,userid,modstamp,CURRENT_TIMESTAMP FROM lex_cache WHERE name IN ~a" 
-;				(format nil " (~a~{, ~a~})" 
-;					(lkb::psql-quote-literal (car not-indexed))
-;					(loop for lexid in (cdr not-indexed)
-;					    collect (lkb::psql-quote-literal lexid)))))))
-;  ;; semi_mod indexes should be created after this call
-;  (lkb::run-command lex "SET ENABLE_HASHJOIN TO false")
-;  )
-
 #+:null
 (defmethod put-normalized-lex-keys ((lex psql-lex-database) recs)
   (when recs
     (let ((conn (connection lex)))
-					;    (run-command lex "DELETE FROM lex_key")
       (with-lexdb-client-min-messages (lex "error")
 	(run-command lex "DROP INDEX lex_key_key" :ignore-errors t))
       (pq:exec conn "COPY lex_key FROM stdin")
@@ -224,26 +150,22 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
     (update-db-table-from-file "semi_var" (format nil "~a.~a" base "var") lex)
     (update-db-table-from-file "semi_extra" (format nil "~a.~a" base "extra") lex)))
 
-;(defun populate-*semi*-from-psql nil
-;  (populate-semi-from-psql *semi*))
+(defun prune-semi (&key (lex lkb::*lexdb*))
+  (loop 
+      for x in (lkb::get-raw-records lex "select name from lex_cache right join semi_mod using (name) where lex_cache is null")
+      do
+	(lkb::run-command lex (format nil "DELETE FROM semi_mod WHERE name=~a" 
+				      (lkb::psql-quote-literal (car x))))))
 
 (defun load-generator-indices-from-psql (&key (lexdb lkb::*lexdb*))
   (let ((sdb (make-sdb)))
+    (prune-semi)
     (load-sdb sdb lexdb)
     (populate-semantic-table sdb)
     (setf *empty-semantics-lexical-entries*
       (loop for x in (lkb::get-raw-records lkb::*lexdb* "select name from semi_mod left join semi_pred on name=lex_id where semi_pred.lex_id is null")
 	  collect (lkb::str-2-symb (car x)))))
   t)
-
-;(defmethod populate-semi-from-psql ((semi semi) &key (lexdb lkb::*lexdb*))
-;  (close-semi semi)
-;  (let ((sdb (make-sdb)))
-;    (load-sdb sdb lexdb)
-;    (populate-semantic-table sdb)
-;    ;;(populate-semi semi) !!!
-;    )
-;  semi)
 
 (defmethod populate-semantic-table ((sdb sdb))
   (let* ((pred-t (sdb-table sdb 'pred))
@@ -503,13 +425,6 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
 				       (lkb::quote-ident db table)
 				       (lkb::quote-ident db key)
 				       (lkb::quote-ident db (2-db-str val))))))
-;	 (lkb::sql-fn-get-raw-records 
-;	       db
-;	       :get_semi_general
-;	       :args (list table 
-;			   key
-;			   (2-db-str val)))
-;	      ))
     (loop 
 	for row in rows
 	collect
@@ -530,17 +445,6 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
 	   (t
 	    (error "unhandled table name")))))
     raw-rows))
-
-;(defun load-db-table-from-file (table-name file-name lexicon)
-;  (lkb::run-command-stdin-from-file lexicon 
-;				    (format nil "DELETE FROM ~a; COPY ~a FROM stdin;"
-;					    table-name
-;					    table-name) 
-;				    file-name))
-
-;(defun load-db-table-from-file (table-name file-name lex)
-;  (lkb::run-command lex (format nil "DELETE FROM ~a" table-name))
-;  (update-db-table-from-file table-name file-name lex))
 
 (defun update-db-table-from-file (table-name file-name lex)
   (lkb::run-command-stdin-from-file lex

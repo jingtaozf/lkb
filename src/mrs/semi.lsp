@@ -68,19 +68,6 @@
   (with-slots (signature) semi
     (if signature t)))
   
-;(defmethod populate-semi ((semi semi))
-;  (with-slots (lexicon signature) semi
-;    (close-semi semi)
-;    (setf lexicon *semantic-table*)
-;    (maphash 
-;     #'(lambda (key val)
-;	 (declare (ignore key))
-;	 (extend-semi semi val :mode :batch))
-;     lexicon)
-;    (populate-semi-roles semi)
-;    (setf signature (get-universal-time))
-;    semi))
-
 (defmethod populate-semi ((semi semi))
   (with-slots (lexicon signature) semi
     (close-semi semi)
@@ -91,12 +78,6 @@
     (populate-semi-roles semi)
     (setf signature (get-universal-time))
     semi))
-
-;(defmethod extend-semi ((semi semi) (record semantics-record) &key (mode :dynamic))
-;  (mapcar
-;   #'(lambda (rel)
-;       (record-ep rel semi :mode mode))
-;   (semantics-record-relations record)))
 
 (defmethod extend-semi ((semi semi) (record semantics-record) &key (mode :dynamic))
   (loop for rel in (semantics-record-relations record)
