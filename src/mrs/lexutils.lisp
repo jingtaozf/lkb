@@ -55,7 +55,7 @@
 	  (format t "~%(retrieving generator indices for lexicon from LexDB)")
 	  (mrs::load-generator-indices-from-psql :lexdb *lexicon*)
 	  (return-from index-lexicon t))
-	 ((< (length unindexed-lexids) 1000)
+	 ((< (length unindexed-lexids) 3000)
 	  (format t "~%(retrieving generator indices for lexicon from LexDB)")
 	  (mrs::load-generator-indices-from-psql :lexdb *lexicon*)
 	  (index-new-lex-entries *lexicon*)
