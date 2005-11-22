@@ -624,7 +624,7 @@
   (set-lex-entry lex (make-instance 'psql-lex-entry :fv-pairs fv-pairs)))
 
 ;;; insert lex entry into db
-(defmethod set-lex-entry ((lex psql-lex-database) (psql-le psql-lex-entry) &key (gen-key t) )
+(defmethod set-lex-entry ((lex psql-lex-database) (psql-le psql-lex-entry) &key (gen-key t))
   (set-val psql-le :|orthkey| (lexicon-le-orthkey lex psql-le))
   (set-val psql-le :|modstamp| "NOW")
   (set-val psql-le :|userid| (user lex))
@@ -650,13 +650,17 @@
     (empty-cache lex))
     (when gen-key 
       (generate-missing-orthkeys lex))
-    (cond
-     ((check-lex-entry (str-2-symb name) lex)
-      (update-lisp-semi-entry lex (str-2-symb (retr-val psql-le :|name|)))
-      t)
-     (t
-      (error "Invalid lexical entry ~a -- see Lisp buffer output" (retr-val psql-le :|name|))
-      nil))))
+    
+    (let ((x (check-lex-entry (str-2-symb name) lex)))
+      (cond
+       ((eq :unknown x)
+	t)
+       (x
+	(update-lisp-semi-entry lex (str-2-symb (retr-val psql-le :|name|)))
+	t)
+       (t
+	(error "Invalid lexical entry ~a -- see Lisp buffer output" (retr-val psql-le :|name|))
+      nil)))))
 
 ;;;
 ;;; postgres interface

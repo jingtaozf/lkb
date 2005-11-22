@@ -155,7 +155,10 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
       for x in (lkb::get-raw-records lex "select name from lex_cache right join semi_mod using (name) where lex_cache is null")
       do
 	(lkb::run-command lex (format nil "DELETE FROM semi_mod WHERE name=~a" 
-				      (lkb::psql-quote-literal (car x))))))
+				      (lkb::psql-quote-literal (car x))))
+	(lkb::run-command lex (format nil "DELETE FROM semi_pred WHERE lex_id=~a" 
+				      (lkb::psql-quote-literal (car x))))	
+	))
 
 (defun load-generator-indices-from-psql (&key (lexdb lkb::*lexdb*))
   (let ((sdb (make-sdb)))

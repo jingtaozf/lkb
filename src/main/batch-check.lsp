@@ -74,7 +74,6 @@
 (defun check-lex-entry (id lexicon &key unexpandp
 					start-path)
   (let* ((entry (read-psort lexicon id :cache (not unexpandp)))
-	 ;;(lex-id (lex-entry-id entry)) ;;huh?
 	 (lex-id id))
     (cond 
      ((null entry)
