@@ -624,7 +624,7 @@
 
 (defun set-characterization-tdfs (tdfs cfrom cto)
   (cond
-   ((or cfrom cto)
+   ((and cfrom cto)
     (let ((indef (set-characterization-indef (tdfs-indef tdfs) cfrom cto)))
       (when indef ;; is this necessary ???
 	(make-tdfs :indef indef
@@ -632,12 +632,24 @@
    (t
     tdfs)))
 
+#+:null
 (defun set-characterization-tdfs-within-unification-context (tdfs cfrom cto)
   (cond
-   ((or cfrom cto)
+   ((and cfrom cto)
+    (let ((indef (set-characterization-indef-within-unification-context (tdfs-indef tdfs) cfrom cto)))
+      (when indef ;; is this necessary ???
+	(make-tdfs :indef indef
+		   :tail (copy-tdfs-tails tdfs)))))
+   (t
+    tdfs)))
+
+#+:null  
+(defun set-characterization-tdfs-within-unification-context (tdfs cfrom cto)
+  (cond
+   ((and cfrom cto)
     (set-characterization-indef-within-unification-context (tdfs-indef tdfs) cfrom cto))
    (t
-    nil)))
+    tdfs)))
   
 (defun set-characterization-indef (indef-dag cfrom cto)
   (with-unification-context (dummy)
@@ -1946,10 +1958,6 @@ an unknown word, treat the gap as filled and go on from there.
       ;; if (car (rule-order rule)) is NIL - tdfs-at-end-of will return the
       ;; entire structure
       (let ((result (tdfs-at-end-of (car (rule-order rule)) current-tdfs)))
-	(if *characterize-p*
-	    (set-characterization-tdfs-within-unification-context
-	     result
-	     cfrom cto))
 	(when new-orth-fs
 	  (setq result (yadu result new-orth-fs))) 
 	(when result
@@ -1978,7 +1986,12 @@ an unknown word, treat the gap as filled and go on from there.
 			    (make-dag :type *toptype* 
 				      :arcs arcs-to-check)))
 		      (setf (dag-forward real-dag) new)
-		      (copy-tdfs-elements result))))
+;		      (copy-tdfs-elements result)
+		      (progn
+			(if *characterize-p*
+			    (set-characterization-indef-within-unification-context 
+			     (tdfs-indef result) cfrom cto))
+			(copy-tdfs-elements result)))))
 		(or res
 		    ;; charge copy failure to last successful unification
 		    (progn (decf *successful-tasks*) nil))))))))))

@@ -1167,17 +1167,52 @@
 
 (defun replace-dag-types (dag-instance path replace-alist)
   (if *within-unification-context-p*
-      (let
-	  ((dag (unify-paths-dag-at-end-of1 dag-instance path))) 
+      (let ((dag (unify-paths-dag-at-end-of1 dag-instance path))) 
 	;; better to complain if path doesn't exist?
 	(replace-dag-types-aux dag replace-alist)
 	dag-instance)
     (with-unification-context (dag-instance)
-      (let
-	  ((dag (unify-paths-dag-at-end-of1 dag-instance path)))
+      (let ((dag (unify-paths-dag-at-end-of1 dag-instance path)))
 	(replace-dag-types-aux dag replace-alist)
 	(copy-dag dag-instance)))))
 
+(defun replace-dag-types-aux (dag-instance replace-alist)
+  (let* ((dag (deref-dag dag-instance)))
+    ;; process permanent arcs
+    (loop
+	with repl
+	for arc in (dag-arcs dag)
+	for dag2 = (deref-dag (dag-arc-value arc))
+	if (eq (or (dag-new-type dag2) (dag-type dag2))
+	       *toptype*)
+	do ;; if *toptype* give new type
+	  (setf repl (cdr (assoc (dag-arc-attribute arc) replace-alist)))
+	  (when repl
+	    (setf (dag-new-type dag2) repl)
+	    ;(format t "~%set ~a -> ~a" (dag-arc-attribute arc) repl)
+	    )
+	else
+	do ;; recurse on arc values 
+	(replace-dag-types-aux dag2 replace-alist))
+    ;; process temporary arcs
+    (loop
+	with repl
+	for arc in (dag-comp-arcs dag)
+	for dag2 = (deref-dag (dag-arc-value arc))
+	if (eq (or (dag-new-type dag2) (dag-type dag2))
+	       *toptype*)
+	do ;; if *toptype* give new type
+	  (setf repl (cdr (assoc (dag-arc-attribute arc) replace-alist)))
+	  (when repl
+	    (setf (dag-new-type dag2) repl)
+	    ;(format t "~%Tset ~a -> ~a" (dag-arc-attribute arc) repl)
+	    )
+	else
+	do ;; recurse on arc values 
+	(replace-dag-types-aux dag2 replace-alist))
+    dag))
+    
+#+:null
 (defun replace-dag-types-aux (dag-instance replace-alist)
   ;;; as revised by Bernd
   ;;; walks over a dag, looking for types which are equal to *toptype*

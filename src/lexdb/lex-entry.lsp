@@ -74,20 +74,24 @@
 	  (apply #'pprint-dag-aux rest))
   rest)
 
-(defun pprint-dag-aux (x &key (depth 0) root)
-  (setf x (mrs::path-value x root))
+(defun pprint-dag-aux (x &key (depth 0) root (max-depth 100))
+  (when (and max-depth (> depth max-depth))
+    (return-from pprint-dag-aux "..."))
+;  (setf x (mrs::path-value x root))
+  (setf x (unify-paths-dag-at-end-of1 x root))
+  (setf x (deref-dag x))
   (cond
    ((dag-arcs x) 
-    (format nil "[~(~a~) ~a]"
-	    (dag-type x)
+    (format nil "[~(~s%~s~) ~a]"
+	    (dag-type x) (dag-new-type x)
 	    (concatenate-strings
 	     (loop
 		 for (node . val) in (dag-arcs x)
 		 collect (format nil "~%~a~a ~a" 
 				 (make-string depth :initial-element #\space)
 				 node (pprint-dag-aux val :depth (+ 2 depth)))))))
-   ((stringp (dag-type x))
-    (format nil "\"~a\"" (dag-type x)))
+;   ((stringp (dag-type x))
+;    (format nil "\"~a\"" (dag-type x)))
    (t
-    (format nil "~a" (dag-type x)))
+    (format nil "~s%~s" (dag-type x) (dag-new-type x)))
    ))

@@ -625,10 +625,6 @@
       (incf *executed-tasks*)
       (let* ((tdfs (yadu! rtdfs ptdfs path)))
         (when tdfs
-	(if *characterize-p*
-	    (set-characterization-tdfs-within-unification-context
-	     tdfs
-	     (edge-cfrom edge) (edge-cto edge)))
           (let* ((root (tdfs-at-end-of (first (rule-order rule)) tdfs))
                  (root (if otdfs (yadu root otdfs) root))
                  (vector (if open
@@ -637,9 +633,14 @@
                            (tdfs-qc-vector root)))
                  (copy (if open
                          (if *hyper-activity-p*
-                           t
-                           (copy-tdfs-elements tdfs)) ;; performs copy-dag
-                         (restrict-and-copy-tdfs root)))) ;; performs clone-dag
+			     t
+			   (progn
+			     (if *characterize-p*
+				 (set-characterization-indef-within-unification-context 
+				  (tdfs-indef tdfs) (edge-cfrom edge) (edge-cto edge)))
+			     (copy-tdfs-elements tdfs))) ;; performs copy-dag
+			 (restrict-and-copy-tdfs  ;; performs clone-dag
+			  root :cfrom (edge-cfrom edge) :cto (edge-cto edge)))))
             (when copy
               (setf nedge
                 (make-edge :id (if open (next-active-edge) (next-edge))
@@ -725,24 +726,26 @@
             #+:adebug
             (incf (active-chart-configuration-executions active))
             (let* ((tdfs (yadu! atdfs ptdfs path)))
-	(when tdfs
-	(if *characterize-p*
-	    (set-characterization-tdfs-within-unification-context
-	     tdfs
-	     (loop for edge in children
-		 minimize (edge-cfrom edge)) 
-	     (loop for edge in children
-		 maximize (edge-cto edge))))
+	      (when tdfs
                 (let* ((root (tdfs-at-end-of (first (rule-order arule)) tdfs))
                        (vector (if open
                                  (tdfs-qc-vector 
                                   tdfs (nth (first open) daughters))
                                  (tdfs-qc-vector root)))
+		       (cfrom (loop for edge in children
+				  minimize (edge-cfrom edge)))
+		       (cto (loop for edge in children
+					 maximize (edge-cto edge)))
                        (copy (if open
                                (if *hyper-activity-p*
                                  t
-                                 (copy-tdfs-elements tdfs))
-                               (restrict-and-copy-tdfs root))))
+                                 (progn
+				   (if *characterize-p*
+				       (set-characterization-indef-within-unification-context
+					(tdfs-indef tdfs) cfrom cto))
+				   (copy-tdfs-elements tdfs)))
+			       (restrict-and-copy-tdfs 
+				root :cfrom cfrom :cto cto))))
                   (when copy
                     (let* ((category (indef-type-of-tdfs 
                                       (if (eq copy t) tdfs copy)))
@@ -786,7 +789,7 @@
           (fundamental4passive
            (make-chart-configuration :begin begin :end end :edge nedge))))))))
 
-(defun restrict-and-copy-tdfs (tdfs)
+(defun restrict-and-copy-tdfs (tdfs &key cfrom cto)
   (let* ((dag (deref-dag (tdfs-indef tdfs)))
          (new (clone-dag dag))
          restricted)
@@ -803,6 +806,8 @@
         (remove-restricted-arcs (dag-comp-arcs new)))
       (let ((result
              (unless (cyclic-dag-p (make-dag :type *toptype* :arcs restricted))
+	       (if *characterize-p*
+		   (set-characterization-indef-within-unification-context new cfrom cto))
                (let ((copy (copy-dag new)))
                  (and copy 
                       (make-tdfs :indef copy 
