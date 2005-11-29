@@ -284,7 +284,8 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (setq mode-name "LexDB")
   (setq major-mode 'lexdb-mode)
   (setq truncate-lines t)
-  (run-hooks 'lexdb-mode-hook))    
+  (run-hooks 'lexdb-mode-hook)
+  (cle-check-pg-interface-version))  
 
 ;;;
 ;;; interactives
@@ -853,6 +854,9 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 
 (defun cle-connection nil
   (cle-eval-lexdb 'connection))
+
+(defun cle-check-pg-interface-version nil
+  (cle-eval-lexdb 'check-pg-interface-version *lexdb-pg-interface-version*))
 
 (defun cle-initialize-psql nil
   (cle-eval "(initialize-psql-lexicon)"))

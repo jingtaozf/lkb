@@ -8,12 +8,15 @@
 
 (in-package :lkb)
 
+(defvar *check-pg-interface-version* 2.16)
+
 (defconstant *lexdb-emacs-other-fns*
     '(initialize-lexdb
       lexdb-fn))
 
 (defparameter *lexdb-emacs-lexdb-fns*
     '(complete
+      check-pg-interface-version
       connection
       dbname
       empty-cache
@@ -54,3 +57,7 @@
     (- atttypmod 4))
    (t
     50)))
+
+(defmethod check-pg-interface-version ((lex psql-lex-database) version)
+  (unless (= version *check-pg-interface-version*)
+    (error "Emacs/LexDB interface version ~a is incompatible with running LKB/LexDB. Please install pg-interface.el version ~a" version *check-pg-interface-version*)))
