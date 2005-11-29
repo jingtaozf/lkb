@@ -53,11 +53,11 @@
 	(cond
 	 ((null unindexed-lexids)
 	  (format t "~%(retrieving generator indices for lexicon from LexDB)")
-	  (mrs::load-generator-indices-from-psql :lexdb *lexicon*)
+	  (mrs::load-generator-indices-from-psql :lex *lexicon*)
 	  (return-from index-lexicon t))
 	 ((< (length unindexed-lexids) 3000)
 	  (format t "~%(retrieving generator indices for lexicon from LexDB)")
-	  (mrs::load-generator-indices-from-psql :lexdb *lexicon*)
+	  (mrs::load-generator-indices-from-psql :lex *lexicon*)
 	  (index-new-lex-entries *lexicon*)
 	  (format t "~%(dumping generator indices to LexDB)")
 	  (mrs::dump-generator-indices-to-psql :lex *lexicon*)

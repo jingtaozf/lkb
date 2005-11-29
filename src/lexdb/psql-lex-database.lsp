@@ -287,14 +287,23 @@
   (cond
    ((connection lex)
     (let* ((reqd-fields (fields-str lex reqd-fields))
-	  (public (get-records lex (format nil "SELECT ~a FROM public.rev" reqd-fields)))
-	  (private (get-records lex (format nil "SELECT ~a FROM rev" reqd-fields))))
-      (make-instance 'psql-database-table 
-	:recs (append (recs public)
-		      (recs private))
-	:cols (cols public))))
+	  (recs (get-records lex (format nil "SELECT ~a FROM lex" reqd-fields))))
+      recs))
    (t
-    (format t "~&(LexDB) WARNING:  no connection to psql-lex-database"))))
+    (format t "~&(LexDB) WARNING: no connection to psql-lex-database"))))
+
+;(defmethod retrieve-all-records ((lex psql-lex-database) &optional (reqd-fields '("*")))
+;  (cond
+;   ((connection lex)
+;    (let* ((reqd-fields (fields-str lex reqd-fields))
+;	  (public (get-records lex (format nil "SELECT ~a FROM public.rev" reqd-fields)))
+;	  (private (get-records lex (format nil "SELECT ~a FROM rev" reqd-fields))))
+;      (make-instance 'psql-database-table 
+;	:recs (append (recs public)
+;		      (recs private))
+;	:cols (cols public))))
+;   (t
+;    (format t "~&(LexDB) WARNING:  no connection to psql-lex-database"))))
 
 (defmethod retrieve-raw-record ((lex psql-lex-database) id &key (cache t) (reqd-fields '("*")))
   (with-slots (record-cache) lex

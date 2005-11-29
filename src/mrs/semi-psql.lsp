@@ -160,13 +160,14 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
 				      (lkb::psql-quote-literal (car x))))	
 	))
 
-(defun load-generator-indices-from-psql (&key (lexdb lkb::*lexdb*))
+(defun load-generator-indices-from-psql (&key (lex lkb::*lexdb*))
   (let ((sdb (make-sdb)))
-    (prune-semi)
-    (load-sdb sdb lexdb)
+    (setf *sdb* sdb)
+    (prune-semi :lex lex)
+    (load-sdb sdb lex)
     (populate-semantic-table sdb)
     (setf *empty-semantics-lexical-entries*
-      (loop for x in (lkb::get-raw-records lkb::*lexdb* "select name from semi_mod left join semi_pred on name=lex_id where semi_pred.lex_id is null")
+      (loop for x in (lkb::get-raw-records lex "select name from semi_mod left join semi_pred on name=lex_id where semi_pred.lex_id is null")
 	  collect (lkb::str-2-symb (car x)))))
   t)
 
@@ -179,7 +180,7 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
 	do
 	  (add-semantics-record lex-id record)
 	  ))
-  (setf *sdb* nil)
+;  (setf *sdb* nil)
   *semantic-table*)
 
 #+:null
@@ -267,6 +268,7 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
       for row in rows
       for slot = (second row)
       for str = (let* ((str-raw (third row))
+		       (str-raw (if str-raw (lkb::2-str str-raw) str-raw))
                      (str-hash (gethash str-raw leaf-hash)))
                  (or
                   str-hash
@@ -288,7 +290,7 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
                                :extra (load-extra-list-db var-id sdb)
                                :id :dummy))
                     (t
-                     (error "(str,symb,var-id)=(~a,~a,~a)"
+                     (error "(str,symb,var-id)=(~s,~s,~s)"
                             str symb var-id)))
       collect
       (make-fvpair :feature slot
