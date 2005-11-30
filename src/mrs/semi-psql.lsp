@@ -60,7 +60,7 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
   (run-command-coe lex "DROP INDEX semi_mod_name_userid_modstamp CASCADE"))
 
 (defun sdb-to-psql (lex sdb)
-  (lkb::clear-psql-semi lex)
+  (lkb::clear-psql-semi :lex lex)
   
   (lkb::run-command-stdin-from-hash-val-rows lex "semi_pred"
 					(sdbt-rows (find 'PRED (sdb-tables sdb) 
