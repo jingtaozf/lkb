@@ -423,7 +423,7 @@
 
 (defstruct sdbt
   name
-  (rows (make-hash-table))
+  (rows (make-hash-table :test #'equal))
   last
   (id-struc (make-hash-table :test #'equalp))
   )
@@ -752,6 +752,7 @@
     (error "string exected"))
   (intern (string-upcase str)))
 
+#+:null
 (defun 2-symb (x)
   (typecase x
     (string

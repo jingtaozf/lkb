@@ -14,7 +14,8 @@
 					(sdbt-name sdbt)))
 	  ))
     (mapc #'(lambda (row) (sdbt-rows-hash 
-			   (mapcar #'str-to-mixed2 row)
+			   row
+			   ;(mapcar #'intern row)
 			   (sdbt-rows sdbt)))
 	  records)
     (setf (sdbt-last sdbt) nil)))
@@ -175,10 +176,11 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
   (let* ((pred-t (sdb-table sdb 'pred))
 	 (pred-r (sdbt-rows pred-t)))
     (loop
-	for lex-id being each hash-key in pred-r
-	for record = (load-lex-id-db lex-id sdb)
+	for lexid0 being each hash-key in pred-r
+	;for lexid = (2-symb lexid0)
+	for record = (load-lexid-db lexid0 sdb)
 	do
-	  (add-semantics-record lex-id record)
+	  (add-semantics-record (semantics-record-id record) record)
 	  ))
 ;  (setf *sdb* nil)
   *semantic-table*)
@@ -212,16 +214,17 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
 ;;; -> lex-id
 ;;; semantics_record.id = lex-id
 ;;;                 .relations = frame-list
-(defun load-lex-id-db (lex-id sdb)
+(defun load-lexid-db (lexid0 sdb)
   (let* ((pred-t (sdb-table sdb 'pred))
-       (pred-r (sdbt-rows pred-t))
-       (rows (gethash lex-id pred-r)))
-    (make-semantics-record :id lex-id
-                         :relations (load-relations-db rows sdb))))
+	 (pred-r (sdbt-rows pred-t))
+	 (rows (gethash lexid0 pred-r)))
+    (make-semantics-record :id (2-symb lexid0)
+			   :relations (load-relations-db rows sdb))))
 
 ;;; -> lex-id
 ;;; semantics_record.id = lex-id
 ;;;                 .relations = frame-list
+#+:null
 (defun load-lex-id-psql (lex-id db)
   (let* (
 	 ;(pred-t (sdb-table sdb 'pred))
@@ -237,17 +240,14 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
   (loop
       with leaf-hash = (sdb-leaf-hash sdb)
       for row in rows
-      for string-p = (eq (fifth row) t) ;!
-      for pred = (let* ((pred-raw 
-			 (if string-p
-			     (lkb::2-str (second row))
-			   (second row)))
-                      (pred-hash (gethash pred-raw leaf-hash)))
-                 (or
-                  pred-hash
-                  (setf (gethash pred-raw leaf-hash) pred-raw)))
-      for frame-id = (third row)
-      for flist = (load-fvpairs-db frame-id sdb)
+      for string-p = (string= (fifth row) "t") ;!
+      for pred = (let* ((pred0 (second row))
+			(pred2 (if string-p pred0 (2-symb pred0)))
+			(pred-hash (gethash pred2 leaf-hash)))
+		   (or pred-hash
+		       (setf (gethash pred2 leaf-hash) pred2)))
+      for frame-id0 = (third row)
+      for flist = (load-fvpairs-db frame-id0 sdb)
       for parameter-strings = (get-fvps-parameter-strings flist)
       collect
       (make-rel :pred pred
@@ -255,43 +255,45 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
 		:parameter-strings parameter-strings
 		)))
 
+(defun 2-symb (x)
+  (if (and (stringp x) (string= x ""))
+      nil
+    (lkb::2-symb x)))
+
 ;;; -> frame-id
 ;;; (frame-id slot str symb var-id)
 ;;; fvpair*.feature = slot
 ;;;        .value   = slot-val
-(defun load-fvpairs-db (frame-id sdb)
+(defun load-fvpairs-db (frame-id0 sdb)
   (loop
       with frame-t = (sdb-table sdb 'frame)
       with frame-r = (sdbt-rows frame-t)
-      with rows = (gethash frame-id frame-r)
+      with rows = (gethash frame-id0 frame-r)
       with leaf-hash = (sdb-leaf-hash sdb)
       for row in rows
-      for slot = (second row)
-      for str = (let* ((str-raw (third row))
-		       (str-raw (if str-raw (lkb::2-str str-raw) str-raw))
-                     (str-hash (gethash str-raw leaf-hash)))
-                 (or
-                  str-hash
-                  (setf (gethash  str-raw leaf-hash) str-raw)))
-      for symb = (fourth row)
-      for var-id = (fifth row)
-      for type = (let* ((type-raw (sixth row))
-                     (type-hash (gethash type-raw leaf-hash)))
-                 (or
-                  type-hash
-                  (setf (gethash type-raw leaf-hash) type-raw)))
+      for slot = (2-symb (second row))
+      for str = (let* ((str0 (third row))
+		       (str-hash (gethash str0 leaf-hash)))
+		  (or str-hash
+		      (setf (gethash str0 leaf-hash) str0)))
+      for symb = (2-symb (fourth row))
+      for var-id0 = (fifth row)
+      for type = (let* ((type0 (2-symb (sixth row)))
+			(type-hash (gethash type0 leaf-hash)))
+		   (or type-hash
+		       (setf (gethash type0 leaf-hash) type0)))
       for slot-val = (cond
-                    ((and str (null symb) (null var-id))
+                    ((and (not (string= "" str)) (null symb) (string= "" var-id0))
                      str)
-                    ((and (null str) symb (null var-id))
+                    ((and (string= "" str) symb (string= "" var-id0))
                      symb)
-                    ((and (null str) (null symb) var-id)
+                    ((and (string= "" str) (null symb) (not (string= "" var-id0)))
                      (make-var :type type
-                               :extra (load-extra-list-db var-id sdb)
+                               :extra (load-extra-list-db var-id0 sdb)
                                :id :dummy))
                     (t
                      (error "(str,symb,var-id)=(~s,~s,~s)"
-                            str symb var-id)))
+                            str symb var-id0)))
       collect
       (make-fvpair :feature slot
                    :value slot-val)))
@@ -304,9 +306,9 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
   (loop
       with var-t = (sdb-table sdb 'var)
       with var-r = (sdbt-rows var-t)
-      with rows = (gethash var-id var-r)
+      with rows = (gethash (string var-id) var-r)
       for row in rows
-      for extra-id = (second row)
+      for extra-id = (2-symb (second row))
       collect
       (load-extra-db extra-id sdb)))
 
@@ -316,20 +318,21 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
 ;;;          .value
 (defun load-extra-db (extra-id sdb)
   (let* ((extra-t (sdb-table sdb 'extra))
-       (extra-r (sdbt-rows extra-t))
-       (rows (gethash extra-id extra-r))
-       (row (car rows))
-       (feature (second row))
-       (value (third row)))
+	 (extra-r (sdbt-rows extra-t))
+	 (rows (gethash (string extra-id) extra-r))
+	 (row (car rows))
+	 (feature (2-symb (second row)))
+	 (value (2-symb (third row))))
     (unless (= 1 (length rows))
       (error "~a rows for extra-id=~a"
-           (length rows) extra-id))
+	     (length rows) extra-id))
     (make-extrapair :feature feature
 		    :value value)))
 
 ;;; -> (lex-id pred frame-id)*
 ;;; rel-base*.pred = pred
 ;;;          .flist = role-list
+#+:null
 (defun load-relations-psql (rows db)
   (loop
       with leaf-hash = (sdb-leaf-hash *sdb*)
@@ -355,6 +358,7 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
 ;;; (frame-id slot str symb var-id)
 ;;; fvpair*.feature = slot
 ;;;        .value   = slot-val
+#+:null
 (defun load-fvpairs-psql (frame-id db)
   (loop
       ;with frame-t = (sdb-table sdb 'frame)
@@ -395,6 +399,7 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
 ;;; (var-id extra-id)
 ;;; extrapair*.feature = feature
 ;;;           .value = value  
+#+:null
 (defun load-extra-list-psql (var-id db)
   (loop 
       ;with var-t = (sdb-table sdb 'var)
@@ -409,6 +414,7 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
 ;;; (extra-id feature value)
 ;;; extrapair.feature
 ;;;          .value
+#+:null
 (defun load-extra-psql (extra-id db)
   (let* (
 	 ;(extra-t (sdb-table sdb 'extra))
@@ -433,7 +439,7 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
     (loop 
 	for row in rows
 	collect
-	  (mapcar #'str-to-mixed2 row))))
+	  (mapcar #'intern row))))
   
 (defun getrows (val table db)
   (let (

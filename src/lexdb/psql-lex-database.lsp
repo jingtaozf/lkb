@@ -648,8 +648,9 @@
 					    (string= x ""))))
 		     symb-list
 		     :key #'(lambda (x) (retr-val psql-le x))))
-	 (name (retr-val psql-le :|name|)))
-    (unless (string= name (symb-2-str (str-2-symb name)))
+	 (name (retr-val psql-le :|name|))
+	 (lexid (str-2-symb name)))
+    (unless (string= name (symb-2-str lexid))
       (format t "(LexDB) WARNING: lex id ~a should be written ~a" 
 	      name (symb-2-str (str-2-symb name)))
       (lkb-beep)
@@ -660,16 +661,14 @@
     (when gen-key 
       (generate-missing-orthkeys lex))
     
-    (let ((x (check-lex-entry (str-2-symb name) lex)))
-      (cond
-       ((eq :unknown x)
-	t)
-       (x
-	(update-lisp-semi-entry lex (str-2-symb (retr-val psql-le :|name|)))
-	t)
-       (t
-	(error "Invalid lexical entry ~a -- see Lisp buffer output" (retr-val psql-le :|name|))
-      nil)))))
+    (mrs::delete-lexid-from-generator-indices lexid)
+    (if (read-psort lex lexid) 
+	(if (check-lex-entry lexid lex)
+	    (progn
+	      (add-lexid-to-generator-indices lex lexid)
+	      t)
+	  (error "Invalid lexical entry ~a -- see Lisp buffer output" lexid))
+      t)))
 
 ;;;
 ;;; postgres interface
@@ -774,7 +773,9 @@
 (defmethod get-filter ((lex psql-lex-database))
   (sql-get-val lex "SELECT val FROM meta WHERE var='filter'"))  
 
-(defmethod clear-psql-semi ((lex psql-lex-database))
+(defun clear-psql-semi (&key (lex *lexdb*))
+  (unless (typep lex 'psql-lex-database)
+    (error "psql-lex-database expected"))
   (semi-drop-indices lex)
   (run-command lex "DELETE FROM semi_pred")
   (run-command lex "DELETE FROM semi_frame")
@@ -1157,6 +1158,9 @@ CREATE INDEX rev_name
   
 (defmethod update-lisp-semi-entry ((lex psql-lex-database) lexid)
   (mrs::delete-lexid-from-generator-indices lexid) ;!!
+  (add-lexid-to-generator-indices lex lexid))
+
+(defmethod add-lexid-to-generator-indices ((lex psql-lex-database) lexid)
   (let* ((entry (read-psort lex lexid :cache nil))
 	 (new-fs (and
 		  (expand-psort-entry entry)
