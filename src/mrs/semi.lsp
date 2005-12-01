@@ -425,8 +425,7 @@
   name
   (rows (make-hash-table :test #'equal))
   last
-  (id-struc (make-hash-table :test #'equalp))
-  )
+  (id-struc (make-hash-table :test #'equalp)))
 
 (defmethod clear ((sdbt sdbt))
   (with-slots (rows last id-struc) sdbt
@@ -436,17 +435,14 @@
   sdbt)
 
 (defmethod print-object ((object sdbt) stream)
-  (let (
-	(keys-c (hash-table-count (sdbt-rows object)))
-	(hashed-c (hash-table-count (sdbt-id-struc object)))
-	)
+  (let ((keys-c (hash-table-count (sdbt-rows object)))
+	(hashed-c (hash-table-count (sdbt-id-struc object))))
       (format
        stream
        "#[SDBT ~a: ~a key~p ~a hashed]"
        (sdbt-name object) 
        keys-c keys-c
-       hashed-c
-       )))
+       hashed-c)))
 
 (defun next-counter (sdbt)
   (with-slots (last) sdbt
@@ -461,7 +457,8 @@
   (maphash #'(lambda (key rows)
 	       (declare (ignore key))
 	       (mapc #'(lambda (row)
-			 (format stream "~a~%" (tsv-line row)))
+			 (princ (lkb::str-list-2-str row :sep-c #\tab) stream)
+			 (terpri stream))
 		     rows))
 	   (sdbt-rows sdbt)))
 
@@ -495,19 +492,24 @@
 	(setf (car foo) sdbt)
       (error "no table ~a in ~a" name sdb)))))
 
-(defun print-sdb (sdb)
-  (let ((temp-dir (make-pathname :directory (namestring (lkb::lkb-tmp-dir)))))
-    (mapc
-     #'(lambda (x)
-	 (with-open-file 
-	     (stream
-	      (format nil "~asemi.obj.~(~a~)" temp-dir (sdbt-name x))
-	      :direction :output 
-	      :if-exists :supersede)
-	   ;;(format t "~%writing table ~a..." (sdbt-name x))
-	   (print-sdbt x :stream stream)))
-     (sdb-tables sdb))))
-    
+(defun print-sdb (sdb &key (base lkb::*psorts-temp-file*))
+  (setf base (pathname base))
+  (unless base
+    (error "please set lkb::*psorts-temp-file*"))
+  (mapc
+   #'(lambda (x)
+       (with-open-file 
+	   (stream
+	    (make-pathname :name (format nil "~a.sem.~(~a~)" (pathname-name base) (sdbt-name x))
+			   :host (pathname-host base)
+			   :device (pathname-device base)
+			   :directory (pathname-directory base))
+	    :direction :output 
+	    :if-exists :supersede)
+	 (format t "~%writing table ~a..." (sdbt-name x))
+	 (print-sdbt x :stream stream)))
+   (sdb-tables sdb)))
+
 (defvar *sdb* nil)
 
 (defun print-semi-db-partial (lexids &key (semantic-table *semantic-table*))
@@ -562,14 +564,11 @@
 	for frame = (rel-base-flist rel)
 	for frame-hashed = (gethash frame frame-h)
 	for frame-id = (or frame-hashed (next-counter frame-t))
-		       ;bmw
-	for pred-row = (list lex-id 
-			     pred 
-			     frame-id 
-			     (2-symb pred) 
-			     (if (stringp pred) 'T 'F)
-;;			     "NOW"
-			     )
+	for pred-row = (list (lkb::2-str lex-id)
+			     (lkb::2-str pred)
+			     (format nil "~a" frame-id)
+			     (lkb::2-str pred)
+			     (if (stringp pred) "t" "f"))
 	do
 	  (sdbt-rows-hash pred-row pred-r)
 	unless frame-hashed
@@ -583,17 +582,17 @@
 	      do
 		(typecase slot-val
 		  (string
-		   (setf frame-row (list frame-id slot slot-val nil nil nil))
+		   (setf frame-row (list (format nil "~a" frame-id) (lkb::2-str slot) (lkb::2-str slot-val) "" "" ""))
 		   (sdbt-rows-hash frame-row frame-r))
 		  (symbol
-		   (setf frame-row (list frame-id slot nil slot-val nil nil))
+		   (setf frame-row (list (format nil "~a" frame-id) (lkb::2-str slot) "" (lkb::2-str slot-val) "" ""))
 		   (sdbt-rows-hash frame-row frame-r))
 		  (var-base
 		   (let* ((var slot-val)
 			  (var-hashed (gethash var var-h))
 			  (var-id (or var-hashed (next-counter var-t)))
 			  (type (var-base-type var)))
-		     (setf frame-row (list frame-id slot nil nil var-id type))
+		     (setf frame-row (list (format nil "~a" frame-id) (lkb::2-str slot) "" "" (format nil "~a" var-id) (lkb::2-str type)))
 		     (sdbt-rows-hash  frame-row frame-r)
 		     (unless var-hashed
 		       (setf (gethash var var-h) var-id)
@@ -602,10 +601,10 @@
 			   for extra in extra-list
 			   for extra-hashed = (gethash extra extra-h)
 			   for extra-id = (or extra-hashed (next-counter extra-t))
-			   for var-row = (list var-id extra-id)
+			   for var-row = (list (lkb::num-2-str var-id) (lkb::num-2-str extra-id))
 			   for extra-feature = (extrapair-feature extra)
 			   for extra-value = (extrapair-value extra)
-			   for extra-row = (list extra-id extra-feature extra-value)
+			   for extra-row = (list (lkb::num-2-str extra-id) (lkb::2-str extra-feature) (lkb::2-str extra-value))
 			   do
 			     (sdbt-rows-hash  var-row var-r)
 			   unless extra-hashed
@@ -631,6 +630,7 @@
        (t (error "unhandled type"))))
     (t (error "unhandled type"))))
 
+#+:null
 (defun encode-as-str (val)
   (cond
    ((null val)
@@ -667,7 +667,7 @@
 	(t :constant))
     value))
 
-
+#+:null
 (defun print-semantic-table ()
   (let ((disp (make-instance 'simple :stream t)))
     (maphash 
@@ -685,11 +685,13 @@
 ;;; tsv text format
 ;;;
 
+#+:null
 (defun tsv-line (row)
   (str-list-2-str
    (mapcar #'2-tsv-str row)
    (format nil "~a" #\tab)))
 
+#+:null
 (defun tsv-escape (str &optional (sep-char #\tab))
   (let ((l))
     (do ((i (1- (length str)) (1- i)))
@@ -699,10 +701,12 @@
 	  (push #\\ l)))
     (concatenate 'string l)))
 
+#+:null
 (defun 2-tsv-str (val)
   (tsv-escape
    (2-db-str val)))
    
+#+:null
 (defun 2-db-str (val)
   (typecase val
     (null
@@ -720,6 +724,7 @@
     (t
      (error "unhandled type: ~a" val))))
 
+#+:null
 (defun str-list-2-str (str-list &optional (separator " "))
   (unless (listp str-list)
     (error "list expected"))
@@ -732,6 +737,7 @@
 	       (pop str-list)
 	       (mapcan #'(lambda (x) (list separator x)) str-list)))))))
   
+#+:null
 (defun str-to-mixed2 (val-str)
   (let ((len (length val-str)))
     (cond 
@@ -747,6 +753,7 @@
      (t
       (lkb::str-2-symb val-str)))))
 
+#+:null
 (defun str-2-symb (str)
   (unless (stringp str)
     (error "string exected"))
@@ -871,6 +878,8 @@
   "Following this path from the start of the MRS structure gets you to the MESSAGE list")
 
 (defun get-dag-by-id (lex-id)
+  (if lkb::*within-unification-context-p*
+      (error "this code is not safe inside a unification context"))
   (let* ((entry (lkb::get-lex-entry-from-id lex-id))
 	 (dag (and
 	       entry
@@ -878,18 +887,26 @@
     dag))
 
 (defun get-comps-list-by-id (lex-id)
+  (if lkb::*within-unification-context-p*
+      (error "this code is not safe inside a unification context"))
   (get-comps-list (get-dag-by-id lex-id)))
 
 (defun get-comps-list (dag)
+  (if lkb::*within-unification-context-p*
+      (error "this code is not safe inside a unification context"))
   (let* ((comps-path *comps-path*)
 	 (comps-dag (path-value dag 
 				comps-path)))
     (lkb::dag-list-2-list comps-dag)))
 
 (defun get-rels-list-by-id (lex-id)
+  (if lkb::*within-unification-context-p*
+      (error "this code is not safe inside a unification context"))
   (get-rels-list (get-dag-by-id lex-id)))
 
 (defun get-rels-list (dag)
+  (if lkb::*within-unification-context-p*
+      (error "this code is not safe inside a unification context"))
   (let* ((rels-path 
 	  (append *initial-semantics-path* 
 		  *semantics-to-rels-path*))
@@ -899,6 +916,8 @@
       (format t "~%; WARNING: diff-list not found at path ~a in ~a" rels-path dag))))
 
 (defun get-message (dag)
+  (if lkb::*within-unification-context-p*
+      (error "this code is not safe inside a unification context"))
   (let* ((message-path 
 	  (append *initial-semantics-path* 
 		  *semantics-to-message-path*))
@@ -906,6 +925,8 @@
     message-dag))
 
 (defun extract-comps-info (dag)
+  (if lkb::*within-unification-context-p*
+      (error "this code is not safe inside a unification context"))
   (let* ((comps-list (get-comps-list dag))
 	 (rels-list (get-rels-list dag)))
     (mapcar
@@ -913,9 +934,13 @@
      comps-list)))
 
 (defun extract-comps-info-by-id (lex-id)
+  (if lkb::*within-unification-context-p*
+      (error "this code is not safe inside a unification context"))
   (extract-comps-info (get-dag-by-id lex-id)))
 
 (defun extract-comps-elt-info (comps-elt rels-list)
+  (if lkb::*within-unification-context-p*
+      (error "this code is not safe inside a unification context"))
   (let* ((comp-rel (lkb::dag-type 
 	       (path-value comps-elt
 			   *comps-elt-key-path*)))
@@ -944,14 +969,6 @@
      (cons :opt opt))))
     
 (defun ignored-sem-arc (feature)
-    (or (member feature *ignored-sem-features*)
-     (eql feature (car *rel-handel-path*))
-     (eql feature (car *rel-name-path*))))
-
-;;
-;; 
-;;
-
-(defun rc (&optional (file "mrs/semi"))
-	   (lkb::recomp file))
-
+  (or (member feature *ignored-sem-features*)
+      (eql feature (car *rel-handel-path*))
+      (eql feature (car *rel-name-path*))))

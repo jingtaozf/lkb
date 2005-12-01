@@ -278,7 +278,7 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
 		      (setf (gethash str0 leaf-hash) str0)))
       for symb = (2-symb (fourth row))
       for var-id0 = (fifth row)
-      for type = (let* ((type0 (2-symb (sixth row)))
+      for type = (let* ((type0 (sixth row))
 			(type-hash (gethash type0 leaf-hash)))
 		   (or type-hash
 		       (setf (gethash type0 leaf-hash) type0)))
@@ -429,6 +429,7 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
     (make-extrapair :feature feature
 		    :value value)))
 
+#+:null
 (defun get-raw-rows (db table key val)
   (let ((rows 
 	 (lkb::get-raw-records db
@@ -441,6 +442,7 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
 	collect
 	  (mapcar #'intern row))))
   
+#+:null
 (defun getrows (val table db)
   (let (
 	(raw-rows
