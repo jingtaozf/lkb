@@ -164,7 +164,9 @@
 (defun x-preprocess (string &key (preprocessor *x-preprocessor*) 
                                (globalp t) (tokenp t)
                                (verbose *x-preprocessor-debug-p*)
-                               (format :list))
+				 (format :list))
+  (unless *x-preprocessor*
+    (error "*x-preprocessor* not loaded"))
   (let ((x (make-preprocessed-x string)))
     ;; if no preprocessor defined...
     (when (null preprocessor)
