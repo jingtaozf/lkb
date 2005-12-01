@@ -29,7 +29,7 @@
                (unless (eql open-paren current-vertex)
                  (pushnew (cons open-paren current-vertex)
                           bracket-list :test #'equal))))
-            ((stringp item) 
+            ((or (chared-word-p item) (stringp item)) 
              (push item string-list)
              (incf current-vertex))
             (t (error "Unexpected element in tokens ~A" item))))

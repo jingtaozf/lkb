@@ -42,7 +42,7 @@
 
 (defvar *x-preprocess-p* nil)
 (defvar *x-preprocessor-debug-p* t)
-(defvar *x-preprocessor* nil)
+(defparameter *x-preprocessor* nil)
 (defvar *x-addressing* nil)
 
 (defstruct x-fspp
@@ -554,7 +554,3 @@
 ;;
 ;;
 ;;
-
-#+:null
-(defun preprocess-sentence-string (str)
-  (x-preprocess str :format :chared))

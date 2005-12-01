@@ -161,17 +161,8 @@
 (defstruct (morpho-stem-edge (:include edge))
   word stem current) 
 
-(defvar *characterize-p* nil)
-
 (defun make-edge (&rest rest)
   (apply #'make-edge-x rest))
-;<   (let ((new-edge
-;<        (apply #'make-edge-x rest)))
-;<     (when *characterize-p*
-;<       (set-characterization (edge-dag new-edge)
-;<                           (edge-cfrom new-edge)
-;<                           (edge-cto new-edge)))
-;<     new-edge))
 
 (defmethod print-object ((instance chart-configuration) stream)
   (format stream "[~S ~S]" (chart-configuration-edge instance)

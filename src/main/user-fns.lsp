@@ -8,56 +8,77 @@
 (in-package :lkb)
 
 (defun preprocess-sentence-string (str)
-  ;; replace all punctuation by spaces
-  ;; except
-  ;; for PAGE compatability, replace #\' by #\space
-  ;; except at end of word, when replace by #\space #\s
+  ;; default, and very basic, embedded preprocessor
+  ;; treat all punctuation as spaces, except:
+  ;; - in *bracketing-p* mode in which case ( and ) are special
+  ;; - for PAGE compatability treat #\' as #\space
+  ;;     except at end of word treat as if #\space #\s
+  ;; split into words on spaces
+  ;; in *characterize-p* mode keep track of character position pointers
   #+(or :preprocessor :xml)
-  (declare (special *preprocessor* *sppp-stream*))
+  (declare (special *x-preprocessor* *preprocessor* *sppp-stream*))
 
   #+:xml
   (when *sppp-stream*
     (return-from preprocess-sentence-string (sppp str)))
 
   #+:preprocessor
+  (when *x-preprocessor*
+    (return-from preprocess-sentence-string 
+      (x-preprocess str :format :chared)))
+
+  #+:preprocessor
   (when *preprocessor*
     (return-from preprocess-sentence-string 
       (preprocess str :format :lkb :verbose nil)))
-
+  
   (let ((in-word nil)
         (chars (coerce str 'list))
-        (result-chars nil))
-    (do* ((next-char (car chars) (car remainder))
-          (remainder (cdr chars) (cdr remainder)))
-         ((null next-char) nil)
-         (cond ((eql next-char #\')
-                (cond 
-                 ((not in-word) 
-                  (if (or (null remainder) (eql (car remainder) #\space))
-                      nil
-                    (progn
-                      (push next-char result-chars)
-                      (setf in-word t))))
-                 ((or (null remainder) (eql (car remainder) #\space))
-                  (setf in-word nil)
-                  (push #\space result-chars)
-                  (push #\s result-chars))
-                 (t
-                  (setf in-word nil)
-                  (push #\space result-chars))))
-               ((and *bracketing-p*
-                     (or (eql next-char #\() 
-                         (eql next-char #\))))
-                (setf in-word nil)
-                (push #\space result-chars)
-                (push next-char result-chars)
-                (push #\space result-chars))
-               ((not (alphanumeric-or-extended-p next-char)) 
-                (setf in-word nil)
-                (push #\space result-chars))
-               (t (setf in-word t) 
-                (push next-char result-chars))))
-    (string-trim '(#\space) (coerce (nreverse result-chars) 'string))))
+        (result-chars nil)
+	(cwords nil) (from 0) (i 0))
+    (flet ((push-word ()
+	     (if result-chars
+		 (push (if *characterize-p*
+			   (make-chared-word :word (coerce (reverse result-chars) 'string)
+					     :cfrom from :cto i)
+			 (coerce (reverse result-chars) 'string))
+		       cwords))
+	     (setf result-chars nil)
+	     (setf in-word nil)))
+      (do* ((next-char (car chars) (car remainder))
+	    (remainder (cdr chars) (cdr remainder)))
+	  ((null next-char) nil)
+	(cond ((eql next-char #\')
+	       (cond 
+		((not in-word) 
+		 (if (or (null remainder) (eql (car remainder) #\space))
+		     nil
+		   (progn
+		     (push next-char result-chars)
+		     (unless in-word (setf from i))
+		     (setf in-word t))))
+		((or (null remainder) (eql (car remainder) #\space))
+		 (push-word)
+		 (push #\s result-chars) (incf i)
+		 (push-word))
+		(t
+		 (push-word))))
+	      ((and *bracketing-p*
+		    (or (eql next-char #\() 
+			(eql next-char #\))))
+	       (push-word)
+	       (push (string next-char) cwords) (decf i))
+	      ((or (char= next-char #\Space)
+		   (not (alphanumeric-or-extended-p next-char)) )
+	       (push-word))
+	      (t 
+	       (unless in-word (setf from i))
+	       (setf in-word t)
+	       (push next-char result-chars)))
+	(incf i))
+      (when result-chars
+	(push-word)))
+    (reverse cwords)))
 
 (defun make-sense-unifications (sense-string id language)
    ;; < orth : hd > = sense
