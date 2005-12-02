@@ -207,10 +207,24 @@
     (run-command lex "CREATE INDEX lex_key_key ON lex_key (key)" :ignore-errors t)))
 
 (defmethod create-unnormalized-missing-lex-keys3 ((lex psql-lex-database))
-  (recs 
-   (get-records lex 
-		(format nil "select name,userid,modstamp,~a from lex_cache left join lex_key using (name,userid,modstamp) where lex_key.key is null" 
-			(orth-field lex)))))
+  (loop
+      for rec in
+	(get-raw-records lex 
+			 (format nil "select name,userid,modstamp,~a from lex_cache left join lex_key using (name,userid,modstamp) where lex_key.key is null" 
+				 (orth-field lex)))
+      for orth-list = (string-2-str-list (fourth rec))
+      if (= 1 (length orth-list))
+      collect rec
+      else
+      append 
+      (loop for word in orth-list
+	  collect (list (first rec) (second rec) (third rec) word))))
+  
+;(defmethod create-unnormalized-missing-lex-keys3 ((lex psql-lex-database))
+;  (recs 
+;   (get-records lex 
+;		(format nil "select name,userid,modstamp,~a from lex_cache left join lex_key using (name,userid,modstamp) where lex_key.key is null" 
+;			(orth-field lex)))))
   
 (defmethod generate-missing-orthkeys ((lex psql-lex-database))
   (put-normalized-lex-keys lex
