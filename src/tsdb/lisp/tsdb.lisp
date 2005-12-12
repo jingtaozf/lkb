@@ -179,6 +179,8 @@
 (defun call-tsdb (query language
                   &key (format :string)
                        cache absolute unique quiet ro)
+
+  (declare (ignore quiet))
   (if *tsdb-server-mode-p*
     #+:server (call-tsdbd query language) #-:server nil
     (if cache
@@ -193,9 +195,9 @@
              (command (format
                        nil 
                        "~a -home=~a -uniquely-project=~:[off~;on~]~
-                       ~:[~; -quiet~]~:[~; -read-only~] -eof=\":eof\" ~
+                       ~:[~; -read-only~] -eof=\":eof\" ~
                         -string-escape=lisp -pager=null -max-results=0"
-                       *tsdb-application* data unique quiet ro))
+                       *tsdb-application* data unique ro))
              (command (format
                        nil "~a -query='do \"~a\"'"
                        command file))
@@ -229,6 +231,20 @@
                    (stream (connection-stream connection)))
               (format stream command)
               (force-output stream)
+	      ;;
+	      ;; _fix_me_
+	      ;; after a fair amount of tinkering, it seems reading over this
+	      ;; line is required on Linux at least to skip the echo of what we
+	      ;; just wrote to the stream; although we are running in --quiet
+	      ;; mode, the termios magic apparently fails to have the desired
+	      ;; effect.  but it does on MacOS X, as it should.  i should take
+	      ;; the time to look into the Linux behavior one day soon.
+              ;;                                                 (4-nov-05; oe)
+              ;; hmm, after recompiling the tsdb(1) binary on `mt' (RHEL3), i
+              ;; now get the same effect on Linux hosts (as i should); disable
+              ;; the mysterious read-line() globally then.      (12-dec-05; oe)
+              ;; 
+              #+:null
               (read-line stream)
               (values stream nil nil))
             (run-process
@@ -1098,8 +1114,10 @@
          (t-version (get-field :t-version record))
          (d-state (get-field :d-state record))
          (d-type (get-field :d-type record))
-         (d-key (string-trim '(#\Space) (or (get-field :d-key record) "")))
-         (d-value (string-trim '(#\Space) (or (get-field :d-value record) "")))
+         (d-key
+          (normalize-string (or (get-field :d-key record) "") :escape rawp))
+         (d-value
+          (normalize-string (or (get-field :d-value record) "") :escape rawp))
          (d-start (get-field :d-start record))
          (d-end (get-field :d-end record))
          (d-date (get-field :d-date record)))
@@ -1197,6 +1215,65 @@
                      ~d ~d ~d ~d ~d ~d ~d ~d ~d ~d ~d"
                     parse-id t-version u-matches u-mismatches u-new
                     u-gin u-gout u-pin u-pout u-in u-out)))
+        (call-tsdb query data :cache cache)))))
+
+(defun write-fold (data record &key cache)
+
+  (when (and cache (eq (get-field :protocol cache) :ro))
+    (error "write-fold(): write attempt on read-only cache; see `tsdb.lisp'"))
+
+  (let* ((*print-circle* nil)
+         (*print-level* nil)
+         (*print-length* nil)
+         (rawp (and cache (eq (get-field :protocol cache) :raw)))
+         (f-id (get-field+ :f-id record -1))
+         (f-train (get-field+ :f-train record -1))
+         (f-trains (get-field+ :f-trains record ""))
+         (f-test (get-field+ :f-test record -1))
+         (f-tests (get-field+ :f-tests record ""))
+         (f-events (get-field+ :f-events record -1))
+         (f-features (get-field+ :f-features record -1))
+         (f-environment (normalize-string
+                         (get-field+ :f-environment record "") :escape rawp))
+         (f-iterations (get-field+ :f-iterations record -1))
+         (f-etime (get-field+ :f-etime record -1))
+         (f-estimation (normalize-string
+                        (get-field+ :f-estimation record "") :escape rawp))
+         (f-accuracy (let ((foo (get-field+ :f-accuracy record "")))
+                       (if (stringp foo) foo (format nil "~f" foo))))
+         (f-user (get-field+ :f-user record ""))
+         (f-host (get-field+ :f-host record ""))
+         (f-start (get-field+ :f-start record ""))
+         (f-end (get-field+ :f-end record "")))
+    (if rawp
+      (let ((stream (get-field :fold cache))
+            (ofs *tsdb-ofs*))
+        (write f-id :stream stream) (write-char ofs stream)
+        (write f-train :stream stream) (write-char ofs stream)
+        (write-string f-trains stream) (write-char ofs stream)
+        (write f-test :stream stream) (write-char ofs stream)
+        (write-string f-tests stream) (write-char ofs stream)
+        (write f-events :stream stream) (write-char ofs stream)
+        (write f-features :stream stream) (write-char ofs stream)
+        (write-string f-environment stream) (write-char ofs stream)
+        (write f-iterations :stream stream) (write-char ofs stream)
+        (write f-etime :stream stream) (write-char ofs stream)
+        (write-string f-estimation stream) (write-char ofs stream)
+        (write-string f-accuracy stream) (write-char ofs stream)
+        (write-string f-user stream) (write-char ofs stream)
+        (write-string f-host stream) (write-char ofs stream)
+        (write-string f-start stream) (write-char ofs stream)
+        (write-string f-end stream)
+        (terpri stream)
+        (force-output stream)
+        (incf (get-field :count cache)))
+      (let ((query (format
+                    nil
+                    "insert into score values ~
+                     ~d ~d ~s ~d ~s ~d ~d ~s ~d ~d ~s ~s ~s ~s ~s ~s"
+                    f-id f-train f-trains f-test f-tests f-events f-features
+                    f-environment f-iterations f-etime f-estimation f-accuracy
+                    f-user f-host f-start f-end)))
         (call-tsdb query data :cache cache)))))
 
 (defun write-score (data record &key cache)
