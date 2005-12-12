@@ -180,7 +180,6 @@
                   &key (format :string)
                        cache absolute unique quiet ro)
 
-  (declare (ignore quiet))
   (if *tsdb-server-mode-p*
     #+:server (call-tsdbd query language) #-:server nil
     (if cache
@@ -195,9 +194,9 @@
              (command (format
                        nil 
                        "~a -home=~a -uniquely-project=~:[off~;on~]~
-                       ~:[~; -read-only~] -eof=\":eof\" ~
+                       ~:[~; -quiet~]~:[~; -read-only~] -eof=\":eof\" ~
                         -string-escape=lisp -pager=null -max-results=0"
-                       *tsdb-application* data unique ro))
+                       *tsdb-application* data unique quiet ro))
              (command (format
                        nil "~a -query='do \"~a\"'"
                        command file))
