@@ -1436,6 +1436,7 @@ Tsdb_selection* tsdb_create_selection(int n_relations, int n_key_lists) {
   Tsdb_selection *foo;
 
   foo = (Tsdb_selection*)malloc(sizeof(Tsdb_selection));
+  foo->length = 0;
   foo->n_relations = n_relations;
   foo->n_key_lists = n_key_lists;
   foo->relations = (Tsdb_relation **)malloc(sizeof(Tsdb_relation *)
@@ -1459,7 +1460,7 @@ Tsdb_selection* tsdb_create_selection(int n_relations, int n_key_lists) {
 |*  updated by: 
 |*****************************************************************************|
 |* this one is a bit harder than it might look: the tuples-field in each
-|* keylist is sharef, ie. it exists in any keylist. As we want to copy
+|* keylist is shared, i.e. it exists in any keylist. As we want to copy
 |* them, we first patch the copy in them. They are copied by taking
 |* the duplicate from the original!!
 \*****************************************************************************/

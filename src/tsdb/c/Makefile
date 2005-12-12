@@ -28,7 +28,7 @@ HPUX_LIBS = -L7lib -lreadline -ltermcap -lregex -liberty
 SOLARIS_LIBS = -L5lib $(GENERIC_LIBS) -liberty -lsocket -lnsl 
 OSF_LIBS = -Lolib -lreadline -ltermcap -lregex -liberty
 CYGWIN_LIBS = -Lwlib -lreadline -ltermcap -lregex -liberty
-MACOS_LIBS = -Lmlib -lreadline
+MACOS_LIBS = mlib/libreadline.a -ltermcap
 
 #
 # compiler flags
@@ -48,7 +48,7 @@ XCFLAGS = -DDEBUG \
           -DSERVER \
 	  -DNOFREE \
           -DCOMPRESSED_DATA \
-          -g -Iinclude
+          -g -O6 -Iinclude
 
 #
 # dependendies

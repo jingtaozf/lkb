@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <signal.h>
+#include <stdlib.h>
 #include "globals.h"
 #include "tsdb.h"
 #include "errors.h"

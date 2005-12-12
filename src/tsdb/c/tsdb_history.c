@@ -153,12 +153,11 @@ void tsdb_add_to_history(Tsdb_selection *s, int n) {
 
 #ifdef HACK
   /* _hack_
-   * because the fucking free_selection() calls messes some of the
-   * original structures in `tsdb.data' (which took me a full day to
-   * debug; tom should pay me back for this |:-{); the attempt to find
-   * the source of the problem is another nightmare: tsdb_select() is
-   * barely readable for me.  --- this means trouble, eventually ...
-   *                                        (9-aug-96  -  oe@coling)
+   * because the bloody free_selection() calls mess up some of the original
+   * structures in `tsdb.data' (which took me a full day to debug; tom should
+   * pay me back for this |:-{); the attempt to find the source of the problem
+   * is another nightmare: tsdb_select() is barely readable for me.  --- this
+   * means trouble, eventually ...                   (9-aug-96  -  oe@coling)
    */
   if(tsdb.history[pos]->result) {
     tsdb_free_selection(tsdb.history[pos]->result);
