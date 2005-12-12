@@ -27,6 +27,7 @@
  ((:path . "vei") (:content . "LOGON Jotunheimen Corpus (1 to 10 Words)"))
  ((:path . "sti") (:content . "LOGON Jotunheimen Corpus (11 to 15 Words)"))
  ((:path . "topp") (:content . "LOGON Jotunheimen Corpus (16 to 20 Words)"))
+ ((:path . "jh") (:content . "LOGON Jotunheimen Corpus (All Sections)"))
  ((:path . "jh0") (:content . "LOGON Jotunheimen Corpus (Section 0)"))
  ((:path . "jh1") (:content . "LOGON Jotunheimen Corpus (Section 1)"))
  ((:path . "jh2") (:content . "LOGON Jotunheimen Corpus (Section 2)"))
