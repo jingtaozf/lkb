@@ -733,9 +733,9 @@
                                   tdfs (nth (first open) daughters))
                                  (tdfs-qc-vector root)))
 		       (cfrom (loop for edge in children
-				  minimize (edge-cfrom edge)))
+				  minimize (or (edge-cfrom edge) -1)))
 		       (cto (loop for edge in children
-					 maximize (edge-cto edge)))
+				maximize (or (edge-cto edge) -1)))
                        (copy (if open
                                (if *hyper-activity-p*
                                  t

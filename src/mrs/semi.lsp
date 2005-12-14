@@ -582,17 +582,17 @@
 	      do
 		(typecase slot-val
 		  (string
-		   (setf frame-row (list (format nil "~a" frame-id) (lkb::2-str slot) (lkb::2-str slot-val) "" "" ""))
+		   (setf frame-row (list (format nil "~a" frame-id) (lkb::2-str slot) (lkb::2-str slot-val) nil nil nil))
 		   (sdbt-rows-hash frame-row frame-r))
 		  (symbol
-		   (setf frame-row (list (format nil "~a" frame-id) (lkb::2-str slot) "" (lkb::2-str slot-val) "" ""))
+		   (setf frame-row (list (format nil "~a" frame-id) (lkb::2-str slot) nil (lkb::2-str slot-val) nil nil))
 		   (sdbt-rows-hash frame-row frame-r))
 		  (var-base
 		   (let* ((var slot-val)
 			  (var-hashed (gethash var var-h))
 			  (var-id (or var-hashed (next-counter var-t)))
 			  (type (var-base-type var)))
-		     (setf frame-row (list (format nil "~a" frame-id) (lkb::2-str slot) "" "" (format nil "~a" var-id) (lkb::2-str type)))
+		     (setf frame-row (list (format nil "~a" frame-id) (lkb::2-str slot) nil nil (format nil "~a" var-id) (lkb::2-str type)))
 		     (sdbt-rows-hash  frame-row frame-r)
 		     (unless var-hashed
 		       (setf (gethash var var-h) var-id)

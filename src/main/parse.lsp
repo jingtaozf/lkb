@@ -1865,10 +1865,10 @@ an unknown word, treat the gap as filled and go on from there.
 	  (evaluate-unifications rule (mapcar #'edge-dag 
 					      child-edge-list-reversed)
 				 nil child-edge-list-reversed backwardp
-			      (loop for edge in child-edge-list
-				  minimize (edge-cfrom edge))
-			      (loop for edge in child-edge-list
-				  maximize (edge-cto edge)))
+				 (loop for edge in child-edge-list
+				     minimize (edge-cfrom edge))
+				 (loop for edge in child-edge-list
+				     maximize (edge-cto edge)))
         (if unification-result
             (let* ((edge-list
                     (if backwardp child-edge-list child-edge-list-reversed))

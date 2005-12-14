@@ -60,7 +60,8 @@
 	    date
 	    year)))
 
-(defun maf-header (&key (addressing :xpoint))
+;(defun maf-header (&key (addressing :xpoint))
+(defun maf-header (&key (addressing :xchar))
   (format nil
 	  "<?xml version='1.0' encoding='UTF8'?><!DOCTYPE maf SYSTEM 'maf.dtd' [<!ENTITY text SYSTEM 'text.xml'>]><maf addressing='~a' creator='lkb-maf-tokens' date='~a' language='en.US'>" 
 	  (xml-escape (2-str addressing))
@@ -195,7 +196,7 @@
   (unless (eq (intern "maf")
 	      (lxml-elt-name lxml))
     (error "expected lxml root element maf: got ~a" lxml))
-  (setf *x-addressing* (str-2-keyword (lxml-elt-attr lxml "addressing")))
+  (setf *x-addressing* (str-2-keyword (string-upcase (lxml-elt-attr lxml "addressing"))))
   (unless (member *x-addressing* '(:xpoint :xchar) :test #'string=)
     (error "Unhandled addressing attribute (~a) in ~a" *x-addressing* lxml))
   ;; date ignored
@@ -256,8 +257,8 @@
      :string value
      :cfrom (x-to-char from :x-addressing *x-addressing*)
      :cto (x-to-char to :x-addressing *x-addressing*)
-     :xfrom from
-     :xto to
+;     :xfrom from
+;     :xto to
      :word (string-upcase value)
      :leaves (list value))))
 
@@ -573,12 +574,15 @@
 	    "error unexpected non-token-edge leaf edge ~a" child)
 	  (list child)))))
 
+;; using cfrom/cto in place of xfrom/xto
 (defun tedge-to-token-xml (tedge)
-  (with-slots (id xfrom xto string) tedge
+  (with-slots (id xfrom xto string cfrom cto) tedge
   (format nil "<token id='~a' from='~a' to='~a' value='~a'/>"
 	  (xml-escape (format nil "t~a" id))
-	  (xml-escape (or xfrom "?")) 
-	  (xml-escape (or xto "?"))
+	  (xml-escape (format nil ".~a" (or cfrom "?")))
+	  (xml-escape (format nil ".~a" (or cto "?")))
+;	  (xml-escape (or xfrom "?")) 
+;	  (xml-escape (or xto "?"))
 	  (xml-escape string))))
 
 (defun get-edges (&optional (tchart *tchart*))
@@ -633,6 +637,7 @@
                          first-only-p)))
     (clear-chart)
     (maf-to-tchart maf) ;; instantiate chart with tokens (+ wordforms if available)
+    ;(break)
     (let* ((len-tokens (apply #'max (mapcar #'token-edge-to (get-tedges *tchart*))))
 	   (*executed-tasks* 0) (*successful-tasks* 0)
 	   (*contemplated-tasks* 0) (*filtered-tasks* 0)

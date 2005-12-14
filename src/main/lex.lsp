@@ -835,6 +835,14 @@
    ((numberp x) (num-2-str x))
    (t (error "unhandled type"))))
 
+(defun null-or-2-str (x)
+  (cond
+   ((null x) nil)
+   ((stringp x) x)
+   ((symbolp x) (symb-2-str x))
+   ((numberp x) (num-2-str x))
+   (t (error "unhandled type"))))
+
 ;;;
 ;;; misc
 ;;;

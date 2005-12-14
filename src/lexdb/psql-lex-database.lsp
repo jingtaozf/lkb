@@ -1177,13 +1177,17 @@ CREATE INDEX rev_name
 (defmethod add-lexid-to-generator-indices ((lex psql-lex-database) lexid)
   (let* ((entry (read-psort lex lexid :cache nil))
 	 (new-fs (and
+		  entry
 		  (expand-psort-entry entry)
 		  (lex-entry-full-fs entry))))
-    (if (and new-fs 
-	     (not (eq new-fs :fail)))
-	(mrs::extract-lexical-relations entry) ; <-- efficiency problem originates in here
-      (format t "~&No feature structure for ~A~%" 
-	      (lex-entry-id entry))))
+    (cond
+     ((null entry)
+      (format t "~&WARNING: No lexical entry named ~a" lexid))
+     ((and new-fs 
+	   (not (eq new-fs :fail)))
+      (mrs::extract-lexical-relations entry)) ; <-- efficiency problem originates in here
+     (t
+      (format t "~&WARNING: No feature structure for ~a~%" lexid))))
     (forget-psort lex lexid))
 
 ;;;
