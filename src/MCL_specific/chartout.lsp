@@ -51,11 +51,11 @@
 
 ;;; close charts after a parse
 
-
 (defun close-existing-chart-windows nil
    (dolist (w (windows :class 'active-chart-window))
       (window-close w)))
   
+
 ;;;
 
 (defun draw-chart-lattice (node title &optional (horizontalp t))
@@ -163,6 +163,10 @@
 (defun pop-up-chart-menu-items (edge-record)
   (list
    (make-instance 'menu-item
+     :menu-item-title "Highlight nodes"
+     :menu-item-action
+     #'(lambda () (display-edge-in-chart edge-record)))
+   (make-instance 'menu-item
      :menu-item-title "Feature structure"
      :menu-item-action
      #'(lambda ()
@@ -170,10 +174,12 @@
             (format nil "Edge ~A ~A - FS" (edge-id edge-record)
                (if (g-edge-p edge-record) "G" "P")))))
    (make-instance 'menu-item
-     :menu-item-title (format nil "Tree" (edge-id edge-record))
+     :menu-item-title "Unfilled feature structure"
      :menu-item-action
      #'(lambda ()
-         (display-parse-tree edge-record nil)))
+         (display-fs (unfilled-tdfs (copy-tdfs-completely (edge-dag edge-record)))
+            (format nil "Edge ~A ~A - Unfilled FS" (edge-id edge-record)
+               (if (g-edge-p edge-record) "G" "P")))))
    (make-instance 'menu-item
      :menu-item-title 
      (format nil "Rule ~A" 
@@ -190,13 +196,14 @@
                            (rule-id rule)
                            )))))
    (make-instance 'menu-item
-     :menu-item-title "Highlight nodes"
-     :menu-item-action
-     #'(lambda () (display-edge-in-chart edge-record)))
-   (make-instance 'menu-item
      :menu-item-title "New chart"
      :menu-item-action
      #'(lambda () (display-edge-in-new-window edge-record)))
+   (make-instance 'menu-item
+     :menu-item-title (format nil "Tree ~A" (edge-id edge-record))
+     :menu-item-action
+     #'(lambda ()
+         (display-parse-tree edge-record nil)))
    (make-instance 'dynamic-enable-menu-item
      :menu-item-title (format nil "Unify")
      :menu-item-action
@@ -238,9 +245,7 @@
 
 
 (defun highlight-chart-edge-subs (edge pane)
-   (dolist (subsumed-edge
-              (if (edge-morph-history edge) (list (edge-morph-history edge))
-                 (edge-children edge)))
+   (dolist (subsumed-edge (edge-children edge))
       (when subsumed-edge
          (let ((record (display-chart-edge-record subsumed-edge pane)))
             (when record ; check that not an active edge suppressed in display
@@ -253,9 +258,7 @@
           ;; path from e recursively through children to edge?
           (and e
              (or (eq e edge)
-                (some #'highlight-chart-edge-path-p (edge-children e))
-                (and (edge-morph-history e)
-                     (highlight-chart-edge-path-p (edge-morph-history e)))))))
+                (some #'highlight-chart-edge-path-p (edge-children e))))))
       (dolist (record (chart-records pane))
          (when (highlight-chart-edge-path-p (chart-record-edge record))
             (highlight-chart-edge record pane)))))

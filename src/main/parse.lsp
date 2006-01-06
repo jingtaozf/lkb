@@ -2425,7 +2425,6 @@ an unknown word, treat the gap as filled and go on from there.
    lexemes ; non-ordered set of found-lex structures
    mod-index ; 0-based index to modifier under an intersective rule instantiation
    accessible ; indices accessible in this edge
-   inaccessible ; indices accessible in edges used to derive this edge but which no longer are
    )
 
 ;;; This is now only used by the generator

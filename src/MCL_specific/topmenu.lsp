@@ -107,6 +107,7 @@
       (unexpand-leaf-types)
       (pushnew 'lkb-exit-function *lisp-cleanup-functions*)
       ;;
+      (setq ccl::*inhibit-greeting* t)
       (save-application pathname
          :excise-compiler (not (y-or-n-p-general "Include lisp compiler in image?"))
          :size (* 384 1024 1024)) ; 384 MB so as not to fill up a 512MB machine
@@ -156,5 +157,9 @@
 
 (defun parse-sentences-batch nil
   (parse-sentences))
+
+(defun do-parse-batch nil
+  (do-parse))
+
 
 

@@ -146,7 +146,8 @@
                  :item-string display
                  :view-font (lkb-dialog-font))))
      (apply #'add-menu-items menu
-        (create-parse-tree-menu-items node edge-record menu))
+        (create-parse-tree-menu-items
+           node edge-record (parse-tree-record-top-node-p record)))
      menu))
 
 
@@ -166,13 +167,27 @@
           (display-fs (get edge-symbol 'edge-fs)
                       (format nil "Edge ~A ~A - Tree FS" 
                               (edge-id edge-record)
-                              (if (g-edge-p edge-record) "G" "P")))
-          (display-edge-in-chart edge-record)))
+                              (if (g-edge-p edge-record) "G" "P")))))
     (make-instance 'menu-item
+      :menu-item-title
+      (format nil "Unfilled feature structure - Edge ~A" (edge-id edge-record))
+      :menu-item-action
+      #'(lambda ()
+          (display-fs (unfilled-tdfs
+                         (copy-tdfs-completely (get edge-symbol 'edge-fs))) 
+                      (format nil "Edge ~A ~A - Tree Unfilled FS" 
+                              (edge-id edge-record)
+                              (if (g-edge-p edge-record) "G" "P")))))
+    (make-instance 'dynamic-enable-menu-item
       :menu-item-title 
       "Show edge in chart"
       :menu-item-action
-      #'(lambda () (display-edge-in-chart edge-record)))
+      #'(lambda () (display-edge-in-chart edge-record)) ; !!! in generator chart only works for lexical edges
+      :enable-function
+      ;; all chart windows are closed before parsing a new sentence, but this
+      ;; parse window might have been hanging around so would not correspond to
+      ;; a new chart window
+      #'(lambda nil (front-chart-window)))
     (make-instance 'menu-item
       :menu-item-title 
       (format nil "Rule ~A" 
@@ -184,21 +199,13 @@
                 (rule (and (rule-p item) item)))
                (if rule
                    (display-fs (rule-full-fs rule)
-                      (format nil "~A" (rule-id rule)))
+                      (format nil "~A" (rule-id rule))
+                      (rule-id rule))
                    (let ((alternative (get-tdfs-given-id item)))
                       (when alternative
                          (display-fs alternative
-                            (format nil "~A" item)))))))
+                            (format nil "~A" item) item))))))
       :disabled (not (rule-p (edge-rule edge-record))))
-    (make-instance 'menu-item
-      :menu-item-title "Generate from edge"
-      :menu-item-action
-      #'(lambda ()
-          (eval-enqueue
-             `(really-generate-from-edge ',edge-record)))
-      :disabled
-      ;; would get error if select this with a generator edge
-      (or (not top-edge-p) (not *mrs-loaded*) (g-edge-p edge-record)))
     (make-instance 'menu-item
       :menu-item-title 
       (let ((str (format nil "Lex ids~{~^  ~A~}" (edge-lex-ids edge-record))))
@@ -209,6 +216,15 @@
       :disabled t)
     (if top-edge-p
       (list
+       (make-instance 'menu-item
+         :menu-item-title "Generate from edge"
+         :menu-item-action
+         #'(lambda ()
+             (eval-enqueue
+                `(really-generate-from-edge ',edge-record)))
+         :disabled
+         ;; would get error if select this with a generator edge
+         (or (not top-edge-p) (not *mrs-loaded*) (g-edge-p edge-record)))
         (make-instance 'menu-item
           :menu-item-title "MRS"
           :menu-item-action

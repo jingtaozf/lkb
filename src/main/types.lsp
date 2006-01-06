@@ -253,6 +253,8 @@
 
 
 (defmacro sxhash-one-symbol (x)
+   ;; Hash values may change after a GC in MCL, but this is safe -- just
+   ;; results in cache misses
    `(#+mcl ccl::%%eqhash #-mcl sxhash (the symbol ,x)))
 
 (defmacro type-cache-index (x)
@@ -291,54 +293,12 @@
 
 
 #|
-(defparameter *type-cache* nil)
-
-(defun clear-type-cache nil
-   ;; it's probably best to clear this out occasionally - definitely after
-   ;; loading a grammar and before parsing since different pairs of types will
-   ;; be exercised
-   (maphash
-      #'(lambda (type defn)
-          (declare (ignore defn))
-          (remprop type :type-cache))
-      *types*))
-
-(defmacro cached-greatest-common-subtype (type1 type2 type1-atomic-p)
-  `(let ((t1 ,(if type1-atomic-p `(car ,type1) `,type1))
-	 (t2 ,type2))
-      (if (eq t1 *toptype*)
-         ;; avoid caching on top type - result will always be other type
-          t2
-        (if (eq t2 *toptype*)
-            t1
-        (let* ((entry (get t1 :type-cache))
-               (found (cdr (dolist (foo entry)
-                             (when (eq (first foo) t2) (return foo))))))
-          (if found
-              (values (car found) (cdr found))
-            (multiple-value-bind (subtype constraintp)
-                (full-greatest-common-subtype t1 t2)
-              ,@(when type1-atomic-p
-	          `((when subtype (setq subtype (list subtype)))))
-              (setf (get t1 :type-cache) 
-                ;; put new result at end of cache - very slightly faster than failures
-                ;; at start and successes at end. Other 2 alternatives are appreciably
-                ;; slower
-                (nconc entry
-                       (list (cons t2 (cons subtype constraintp)))))
-              (values subtype constraintp))))))))
-|#
-
-#|
-;;; investigate effectiveness of subtype cache
+;;; investigate effectiveness of greatest common subtype cache
 (let ((max 0) (longest nil))
-   (maphash
-      #'(lambda (type defn)
-          (declare (ignore defn))
-          (let ((entry (get type :type-cache)))
-             (when (> (length entry) max)
-                (setq max (length entry) longest (cons type entry)))))
-      *types*)
+   (dotimes (x (* 1024 1024))
+      (let ((entry (svref *type-cache* x)))
+         (when (> (length entry) max)
+            (setq max (length entry) longest entry))))
    (values max longest))
 |#
 

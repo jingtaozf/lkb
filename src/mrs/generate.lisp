@@ -200,14 +200,9 @@
 |#
 
 
-(defun merge-new-inaccessible (new-accessible old-accessible old-inaccessible)
-   ;; compute new inaccessible list to include variables that used to be
-   ;; accessible but are no longer in the accessible set
-   (if *gen-filtering-p*
-      (union
-         (set-difference old-accessible new-accessible)
-         old-inaccessible)
-      nil))
+(defun accessible-list-subset-p (l1 l2)
+   ;; is l1 a subset of l2, or equal? -- using eql element comparison
+   (every #'(lambda (x) (member x l2)) l1))
 
 
 ;;;
@@ -462,7 +457,7 @@
              (unless *gen-first-only-p*
                (multiple-value-setq (consistent partial)
                  (gen-chart-find-covering-edges
-                  (gen-chart-retrieve-with-index *toptype* 'inactive)
+                  (apply #'append (gen-chart-retrieve-with-index *toptype* 'inactive))
                   input-rels)))))
        #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
            (declare (ignore tr ignore))
@@ -569,8 +564,8 @@
        (extract-strings-from-gen-record) ; also spelling e.g. "a" -> "an"
        *filtered-tasks* *executed-tasks* *successful-tasks*
        *unifications* *copies*
-       (length (gen-chart-retrieve-with-index *toptype* 'active))
-       (length (gen-chart-retrieve-with-index *toptype* 'inactive))))))
+       (reduce #'+ (gen-chart-retrieve-with-index *toptype* 'active) :key #'length)
+       (reduce #'+ (gen-chart-retrieve-with-index *toptype* 'inactive) :key #'length)))))
 
 
 (defun extract-strings-from-gen-record nil
@@ -671,11 +666,7 @@
                                           :leaves (g-edge-leaves edge)
                                           :lex-ids (g-edge-lex-ids edge)
                                           :lexemes (g-edge-lexemes edge)
-                                          :accessible accessible
-                                          :inaccessible
-                                          (merge-new-inaccessible accessible
-                                             (g-edge-accessible edge)
-                                             (g-edge-inaccessible edge)))))
+                                          :accessible accessible)))
                         (gen-chart-add-with-index new-edge)
                         (list new-edge)))))))))
 
@@ -704,9 +695,8 @@
 ;;; create-gen-chart-pointers are the only functions that need to know the
 ;;; internal representation of chart
 
-#+:gen-index
 (defun gen-chart-dag-index (index-dag edge-id)
-  (declare (ignore edge-id))
+   (declare (ignore edge-id))
    (if index-dag
       (unify-get-type index-dag) ; may be called inside unif context
       (progn
@@ -714,27 +704,18 @@
          ;;   "unexpectedly missing index for edge ~A: ~S" edge-id dag)
          ;; (warn "unexpectedly missing index for edge ~A - using ~A" edge-id *toptype*)
          *toptype*)))
-#-:gen-index
-(defun gen-chart-dag-index (index-dag edge-id)
-   (declare (ignore index-dag edge-id))
-   *toptype*)
 
 
 (defun gen-chart-add-with-index (edge &optional chart-index)
-  #-:gen-index (declare (ignore chart-index))
   (let ((index
-           #+:gen-index
            (or chart-index
               (gen-chart-dag-index
-               (or 
-                (existing-dag-at-end-of
-                  (tdfs-indef (g-edge-dag edge)) *semantics-index-path*)
-                (if *alt-semantics-index-path*
-                    (existing-dag-at-end-of
-                     (tdfs-indef (g-edge-dag edge)) 
-                     *alt-semantics-index-path*)))
-                 (g-edge-id edge)))
-           #-:gen-index *toptype*))
+                 (or (existing-dag-at-end-of
+                        (tdfs-indef (g-edge-dag edge)) *semantics-index-path*)
+                     (if *alt-semantics-index-path*
+                         (existing-dag-at-end-of
+                            (tdfs-indef (g-edge-dag edge)) *alt-semantics-index-path*)))
+                 (g-edge-id edge)))))
       (setf (g-edge-index edge) index)
       (let ((entry (assoc index *gen-chart* :test #'equal))) ; may be a cons
          (unless entry
@@ -749,8 +730,14 @@
                (and *gen-packing-p*
                   (dolist (inact (cddr entry) nil)
                      (when 
-                        (gen-chart-set-equal-p
-                           (g-edge-rels-covered edge) (g-edge-rels-covered inact))
+                        (and
+                           (gen-chart-set-equal-p
+                              (g-edge-rels-covered edge) (g-edge-rels-covered inact))
+                           (accessible-list-subset-p
+                              (g-edge-accessible inact) (g-edge-accessible edge)))
+                        ;; can only pack this edge into existing inact if latter has equal
+                        ;; or subset of accessible indices, i.e. is equally or less liable
+                        ;; to be filtered
                         (multiple-value-bind (forwardp backwardp)
                                (dag-subsumes-p (tdfs-indef (g-edge-dag inact)) (tdfs-indef (g-edge-dag edge)))
                            (when *debugging*
@@ -774,14 +761,11 @@
 
 (defun gen-chart-retrieve-with-index (index mode)
   ;; return all active/inactive edges in chart keyed by a type compatible with index
-  #-:gen-index (declare (ignore index))
   (let ((res nil))
     (dolist (entry *gen-chart* res)
-      (when #+:gen-index (greatest-common-subtype (car entry) index)
-            #-:gen-index t
+      (when (greatest-common-subtype (car entry) index)
          (let ((edges (if (eq mode 'active) (cadr entry) (cddr entry))))
-            (setq res
-               (if res (append edges res) edges)))))))
+            (when edges (push edges res)))))))
 
 
 ;;; Daughter paths in a rule, in the order that they should be instantiated. Second
@@ -801,7 +785,7 @@
   ;; it won't contain any relations that aren't in input-sem
   (unless edge (return-from gen-chart-add-inactive nil))
   (let ((index (gen-chart-add-with-index edge)))
-    ;; no index, so not entered into the chart
+    ;; no index, so not entered into the chart as a first class citizen
     (unless index (return-from gen-chart-add-inactive nil))
     ;; did we just find a result?
     (when *gen-first-only-p*
@@ -816,16 +800,16 @@
            (setq *gen-record* sentential)
            (throw 'first t))))
     ;; see if this new inactive edge can extend any existing active edges
-    (mapc
-       #'(lambda (act)
-           (with-agenda (when *gen-first-only-p* 
-                          (if *gen-scoring-hook*
-                            (funcall 
-                             *gen-scoring-hook*
-                             (list :active act edge))
-                            (gen-rule-priority (edge-rule act))))
-             (gen-chart-test-active edge act input-sem input-rels)))
-       (gen-chart-retrieve-with-index index 'active))
+    (dolist (actlist (gen-chart-retrieve-with-index index 'active))
+        (dolist (a actlist)
+          (let ((act a)) ; new binding for act vital for agenda
+             (with-agenda (when *gen-first-only-p* 
+                             (if *gen-scoring-hook*
+                               (funcall 
+                                *gen-scoring-hook*
+                                (list :active act edge))
+                               (gen-rule-priority (g-edge-rule act))))
+                (gen-chart-test-active edge act input-sem input-rels)))))
     ;; see if we can create new active edges by instantiating the head
     ;; daughter of a rule
     (mapc #'(lambda (rule) 
@@ -883,8 +867,7 @@
                   (gen-make-list-and-insert
                      ndaughters (g-edge-leaves edge) (1+ head-index))
                   :lexemes (g-edge-lexemes edge)
-                  :accessible (g-edge-accessible edge)
-                  :inaccessible (g-edge-inaccessible edge))
+                  :accessible (g-edge-accessible edge))
                chart-index)))))
 
 
@@ -942,8 +925,7 @@
                      :lexemes
                      (append (g-edge-lexemes act) (g-edge-lexemes inact))
                      :mod-index (g-edge-mod-index act)
-                     :accessible (union (g-edge-accessible act) (g-edge-accessible inact))
-                     :inaccessible (union (g-edge-inaccessible act) (g-edge-inaccessible inact)))))
+                     :accessible (union (g-edge-accessible act) (g-edge-accessible inact)))))
                (if one-off-p new-act
                  ;; (ERB 2003-10-22) There originally wasn't any reference to
                  ;; the agenda here, but I'm not getting my hands on all of the
@@ -963,8 +945,9 @@
       ;; add newly extended active edge to chart, then look for any existing
       ;; inactive edges which can extend it
       (let ((index (gen-chart-add-with-index act act-chart-index)))
-         (dolist (e (gen-chart-retrieve-with-index index 'inactive))
-            (gen-chart-test-active e act input-sem input-rels)))
+         (dolist (elist (gen-chart-retrieve-with-index index 'inactive))
+            (dolist (e elist)
+               (gen-chart-test-active e act input-sem input-rels))))
       ;; have ended up completing an active edge - forming a complete constituent
       (gen-chart-add-inactive
          (gen-chart-finish-active act input-sem) input-sem input-rels)))
@@ -978,37 +961,36 @@
       (apply #'append (g-edge-lex-ids e)))
    (setf (g-edge-leaves e)
       (apply #'append (g-edge-leaves e)))
-   (let ((old-accessible (g-edge-accessible e)))
+   (let ((old-accessible (g-edge-accessible e))
+         newly-inaccessible)
       (setf (g-edge-accessible e)
          (collect-semantic-variables-in-fs (g-edge-dag e)))
-      (setf (g-edge-inaccessible e)
-         (merge-new-inaccessible
-            (g-edge-accessible e) old-accessible (g-edge-inaccessible e))))
-   (when *gen-filtering-p*
-      (dolist (rel (mrs::psoa-liszt input-sem))
-         (unless (logbitp (getf *gen-rel-indexes* rel) (g-edge-rels-covered e))
-            ;; rel in input semantics not covered by this edge - now check the
-            ;; rel's handle and its other non-ignorable variables against the edge's
-            ;; inaccessible set
-           (when (and mrs::*rel-handel-path*
-                      (member (mrs::var-id (mrs::rel-handel rel))
-                              (g-edge-inaccessible e)))
-               (when *gen-filtering-debug*
-                  (format t
-"~&Filtering edge ~A on non-covered rel ~A needing inaccessible variable ~A~%"
-                     (g-edge-id e) (mrs::rel-pred rel) (mrs::var-id (mrs::rel-handel rel)))
-                  (print-gen-chart-edge e t nil))
-               (return-from gen-chart-finish-active nil))
-            (dolist (fp (mrs::rel-flist rel))
-               (when (and (mrs::var-p (mrs::fvpair-value fp))
-                          (not (member (mrs::fvpair-feature fp) mrs::*scoping-ignored-roles*))
-                          (member (mrs::var-id (mrs::fvpair-value fp)) (g-edge-inaccessible e)))
+      (setq newly-inaccessible
+         (set-difference old-accessible (g-edge-accessible e)))
+      (when (and *gen-filtering-p* newly-inaccessible)
+         (dolist (rel (mrs::psoa-liszt input-sem))
+            (unless (logbitp (getf *gen-rel-indexes* rel) (g-edge-rels-covered e))
+               ;; rel in input semantics not covered by this edge - now check the
+               ;; rel's handle and its other non-ignorable variables against the set
+               ;; of vars that have just become inaccessible
+               (when (and mrs::*rel-handel-path*
+                          (member (mrs::var-id (mrs::rel-handel rel)) newly-inaccessible))
                   (when *gen-filtering-debug*
                      (format t
 "~&Filtering edge ~A on non-covered rel ~A needing inaccessible variable ~A~%"
-                        (g-edge-id e) (mrs::rel-pred rel) (mrs::var-id (mrs::fvpair-value fp)))
+                        (g-edge-id e) (mrs::rel-pred rel) (mrs::var-id (mrs::rel-handel rel)))
                      (print-gen-chart-edge e t nil))
-                  (return-from gen-chart-finish-active nil))))))
+                  (return-from gen-chart-finish-active nil))
+               (dolist (fp (mrs::rel-flist rel))
+                  (when (and (mrs::var-p (mrs::fvpair-value fp))
+                             (not (member (mrs::fvpair-feature fp) mrs::*scoping-ignored-roles*))
+                             (member (mrs::var-id (mrs::fvpair-value fp)) newly-inaccessible))
+                     (when *gen-filtering-debug*
+                        (format t
+"~&Filtering edge ~A on non-covered rel ~A needing inaccessible variable ~A~%"
+                           (g-edge-id e) (mrs::rel-pred rel) (mrs::var-id (mrs::fvpair-value fp)))
+                        (print-gen-chart-edge e t nil))
+                     (return-from gen-chart-finish-active nil)))))))
    e)
 
 
@@ -1064,12 +1046,10 @@
               (values dag
                  (restrict-fs
                     (existing-dag-at-end-of (tdfs-indef dag) (first needed)))
-                 #+:gen-index
                  (gen-chart-dag-index
                     (existing-dag-at-end-of
                        (tdfs-indef dag) (append (first needed) *semantics-index-path*))
-                    nil)
-                 #-:gen-index *toptype*)))
+                    nil))))
         #-:gen-immediate-copy
         (values
            ;; return a closure which when funcalled will replay the unification and
@@ -1081,12 +1061,10 @@
                         (create-temp-parsing-tdfs fs daughter-path)))))
            (x-restrict-fs
               (x-existing-dag-at-end-of (tdfs-indef rule-tdfs) (first needed)))
-           #+:gen-index
            (gen-chart-dag-index
               (x-existing-dag-at-end-of (tdfs-indef rule-tdfs)
                  (append (first needed) *semantics-index-path*))
-              nil)
-           #-:gen-index *toptype*)
+              nil))
         (let ((dag (gen-chart-restrict-and-copy
                       (tdfs-at-end-of mother-path rule-tdfs))))
            (when dag (values dag (restrict-fs (tdfs-indef dag))))))))
@@ -1355,9 +1333,7 @@
          "")
       (g-edge-leaves e)
       (if (and *gen-filtering-p* *gen-filtering-debug*)
-         (format nil " a~:A-i~:A "
-            (sort (copy-list (g-edge-accessible e)) #'<)
-            (sort (copy-list (g-edge-inaccessible e)) #'<))
+         (format nil " a~:A " (sort (copy-list (g-edge-accessible e)) #'<))
          "")
       (mapcan
          #'(lambda (x) (if x (list (g-edge-id x))))
@@ -1372,12 +1348,10 @@
   (dolist (lex lex-items)
     (format t "~%Id ~A, Index ~A, Lexical rules ~:A, Main rel sorts ~:A"
             (mrs::found-lex-lex-id lex)
-            #+:gen-index
             (gen-chart-dag-index
              (existing-dag-at-end-of
               (tdfs-indef (mrs::found-lex-inst-fs lex)) *semantics-index-path*)
              nil)
-            #-:gen-index *toptype*
             (mrs::found-lex-rule-list lex)
             (mapcar #'mrs::rel-pred (mrs::found-lex-main-rels lex))))
   (print
@@ -1388,14 +1362,12 @@
     (when (mrs::found-rule-p grule)
       (format t "~%Id ~A, Index ~A, Main rel sorts ~:A"
               (mrs::found-rule-id grule)
-              #+:gen-index
               (gen-chart-dag-index
                (existing-dag-at-end-of
                 (tdfs-indef (mrs::found-rule-full-fs grule)) 
                 *semantics-index-path*)
                nil)
-              #-:gen-index *toptype*
-              (mapcar #'mrs::rel-pred (mrs::found-rule-main-rels grule))))))
+               (mapcar #'mrs::rel-pred (mrs::found-rule-main-rels grule))))))
 
 
 ;;; End of file
