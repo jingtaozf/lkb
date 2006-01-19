@@ -576,6 +576,8 @@
 	    :char-map (subseq char-map start end)))))
 
 (defun x-parse (str &key (char-map #'identity))
+  (unless *x-preprocessor*
+    (error "please load x-preprocessor"))
   (let ((*local-to-global-point-mapping* char-map))
     (setf (x-fspp-global *x-preprocessor*) ;;hack: fix_me
       (push (make-fsr 
@@ -591,5 +593,5 @@
 
 (defvar *xchar-map-add-offset* 0)
 (defun xchar-map-add-x (point)
-  (format nil ".~a" (+ *xchar-map-add-offset* (point-to-char-point point))))
+  (format nil ".~a" (+ *xchar-map-add-offset* (point-to-char-point point "xchar"))))
 

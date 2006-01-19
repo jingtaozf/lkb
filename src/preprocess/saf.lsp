@@ -68,7 +68,7 @@
    ((string= "xchar" addressing)
     (subseq text 
 	    (point-to-char-point from addressing)
-	    (point-to-char-point to)))
+	    (point-to-char-point to addressing)))
    ((string= "xpoint" addressing)
     (error "addressing scheme 'xpoint' not implemented"))
    (t

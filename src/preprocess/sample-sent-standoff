@@ -1,4 +1,4 @@
-<sentences document='~/lkb/src/preprocess/sample-xml-doc'>
+<sentences document='preprocess/sample-xml-doc'>
 <sentence id='s100' from='.3' to='.22'/>
 <sentence id='s200' from='.22' to='.68'/>
 </sentences>
