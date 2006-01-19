@@ -4,6 +4,10 @@
 
 (in-package :lkb)
 
+;;
+;; XML
+;;
+
 ;; input xml must have NO superfluous space
 (defun pretty-print-xml (xml)
   (coerce
@@ -62,17 +66,31 @@
 	   collect (discard-whitespace x))
     lxml))
 
+(defun whitespace-p (str)
+  (and (stringp str)
+       (every #'whitespace-char-p
+	      (coerce str 'list))))
+
+(defun whitespace-char-p (c)
+  (or (char= #\Space c)
+      (char= #\Newline c)))
+
+;;
+;; LXML
 ;;
 
 (defun lxml-elt-p (x)
   (listp x))
 
-(defun lxml-elt-val (lxml-elt)
+(defun lxml-elt-contents (lxml-elt)
   (unless (lxml-elt-p lxml-elt)
     (error "lxml element expected: got ~a" lxml-elt))
-  (unless (= (length (cdr lxml-elt)) 1)
-    (error "we handle only simple string values"))
-  (second lxml-elt))
+  (cdr lxml-elt))
+
+(defun lxml-elt-attributes (lxml-elt)
+  (unless (lxml-elt-p lxml-elt)
+    (error "lxml element expected: got ~a" lxml-elt))
+  (cdar lxml-elt))
 
 (defun lxml-elt-name (lxml-elt)
   (unless (lxml-elt-p lxml-elt)
@@ -97,6 +115,18 @@
      (list (second (member attrib (cdr car))))
      (t (error "expected symbol or list as car of lxml element: got ~a" car)))))
        
+(defun lxml-elt-elts (lxml-elt elt-str &key keyword)
+  (unless (lxml-elt-p lxml-elt)
+    (error "lxml element expected: got ~a" lxml-elt))
+  (unless (stringp elt-str)
+    (error "string name of lxml element expected"))
+  (let ((elt-name (if keyword
+		      (intern elt-str :keyword)
+		    (intern elt-str))))
+    (loop for e in (cdr lxml-elt)
+	when (eq elt-name (lxml-elt-name e))
+	collect e)))
+       
 (defun lxml-pi-name (lxml-pi)
   (unless (lxml-pi-p lxml-pi)
     (error "lxml element expected: got ~a" lxml-pi))
@@ -120,12 +150,9 @@
 		  (intern attrib-str))))
     (second (member attrib (cdr lxml-pi)))))
 
-(defun whitespace-p (str)
-  (and (stringp str)
-       (every #'whitespace-char-p
-	      (coerce str 'list))))
+;;
 
-(defun whitespace-char-p (c)
-  (or (char= #\Space c)
-      (char= #\Newline c)))
+(defun concatenate-strings (x)
+  (apply #'concatenate
+	 (cons 'string x)))
 

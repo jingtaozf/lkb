@@ -323,6 +323,7 @@
    ((eq format :chared)
     ;; eg. (#S(CHARED-WORD :WORD "The" :CFROM 0 :CTO 2) #S(CHARED-WORD :WORD "cat" :CFROM 4 :CTO 6) #S(CHARED-WORD :WORD "barks" :CFROM 8 :CTO 12))
     (mapcar #'p-token-to-chared-word result))
+   #+:maf
    ((eq format :maf)
     ;; eg. <?xml version='1.0' encoding='UTF8'?><!DOCTYPE maf SYSTEM 'maf.dtd' [<!ENTITY text SYSTEM 'text.xml'>]><maf addressing='xchar' creator='lkb-maf-tokens' date='21:59:53 10/11/2005 (UTC)' language='en.US'><token id='42' from='.0' to='.3' value='The'/><token id='43' from='.4' to='.7' value='cat'/><token id='44' from='.8' to='.14' value='barks.'/></maf>
     (setf *x-addressing* :xchar)
@@ -551,7 +552,7 @@
 	    :char-map (subseq char-map start end)))))
 
 (defun x-parse (str)
-  (parse-from-maf (x-preprocess str :format :maf)))
+  (parse (x-preprocess str :format :maf)))
 
 ;;
 ;;

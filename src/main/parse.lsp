@@ -459,7 +459,7 @@
     (format t "~%Unrecognised *morph-option* switch ~A: resetting to default"
 	    *morph-option*)
     (setf *morph-option* :default))
-  (when (consp (first input))
+  (when (and (listp input) (consp (first input)))
     ;;; current test for sppp
     (setf *morph-option* :with-tokeniser-partial-tree))
   (if (or (eql *morph-option* :external-rule-by-rule)
@@ -480,6 +480,7 @@
 ;; - chared: #S(CHARED-WORD :WORD "The" :CFROM 0 :CTO 2) 
 ;;           #S(CHARED-WORD :WORD "cat" :CFROM 4 :CTO 6)
 ;;           #S(CHARED-WORD :WORD "barks" :CFROM 8 :CTO 12))
+;; - maf xml: "<?xml version='1.0' encoding='UTF8'?><!DOCTYPE maf SYSTEM 'maf.dtd'><maf document='text.xml' addressing='xchar'><olac:olac xmlns:olac='http://www.language-archives.org/OLAC/1.0/' xmlns='http://purl.org/dc/elements/1.1/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://www.language-archives.org/OLAC/1.0/ http://www.language-archives.org/OLAC/1.0/olac.xsd'><creator>LKB</creator><created>20:46:50 1/18/2006 (UTC)</created></olac:olac><fsm init='v0' final='v3'><state id='v0'/><state id='v1'/><state id='v2'/><state id='v3'/><token id='t1' from='.0' to='.3' value='the' source='v0' target='v1'/><token id='t2' from='.4' to='.7' value='dog' source='v1' target='v2'/><token id='t3' from='.8' to='.13' value='barks' source='v2' target='v3'/><wordForm form='the' tag='' daughters='t1' source='v0' target='v1'><fs><f name='stem'>THE</f></fs></wordForm><wordForm form='dog' tag='' daughters='t2' source='v1' target='v2'><fs><f name='stem'>DOG</f></fs></wordForm><wordForm form='barks' tag='PLUR_NOUN_ORULE' daughters='t3' source='v2' target='v3'><fs><f name='stem'>BARK</f><f name='partial-tree'>((PLUR_NOUN_ORULE &quot;BARKS&quot;))</f></fs></wordForm><wordForm form='barks' tag='THIRD_SG_FIN_VERB_ORULE' daughters='t3' source='v2' target='v3'><fs><f name='stem'>BARK</f><f name='partial-tree'>((THIRD_SG_FIN_VERB_ORULE &quot;BARKS&quot;))</f></fs></wordForm></fsm></maf>"
 ;; - sppp: ((:END . 1) 
 ;;          (:START . 0) 
 ;;          (:ANALYSES 
@@ -528,14 +529,24 @@
                            unary and binary rules.~%~
                            Disabling best-first mode: setting ~
                            *first-only-p* to `nil'.~%")
-                         first-only-p)))
+                         first-only-p))
+	 (maf-p #+:maf (xml-p input) #-:maf nil)
+	 length-user-input)
     ;; eg. user-input -> ("the" "dog" "barks")
     (multiple-value-bind (user-input brackets-list)
-        (if *bracketing-p*
+        (if (and *bracketing-p* (not maf-p))
           (initialise-bracket-list input)
-          (values input nil))
+          (values (if maf-p
+		      #+:maf (xml-to-saf-object input) #-:maf nil 
+		      ;; extract object from maf xml
+		    input)
+		  nil))
+      (setf length-user-input
+	(if maf-p 
+	    #+:maf (1- (saf-num-lattice-nodes user-input)) #-:maf nil
+	  (length user-input)))
       
-      (when (> (length user-input) *chart-limit*)
+      (when (> length-user-input *chart-limit*)
         (error "~%Sentence `~a' too long - ~A words maximum ~
                 (see documentation for *chart-limit*)" 
                user-input *chart-limit*))
@@ -548,7 +559,7 @@
             (*parser-lexical-rules* (get-matching-lex-rules nil))
             (*lexical-entries-used* nil)
             (*minimal-vertex* 0)
-            (*maximal-vertex* (length user-input))
+            (*maximal-vertex* length-user-input)
             ;;
             ;; shadow global variable to allow best-first mode to decrement for
             ;; each result found; eliminates need for additional result count.
@@ -581,7 +592,7 @@
 	    (instantiate-chart-with-stems-and-multiwords)
             (catch :best-first
               (add-words-to-chart (and first-only-p (null *active-parsing-p*)
-                                       (cons 0 (length user-input))))
+                                       (cons 0 length-user-input)))
               (if *active-parsing-p*
                 (complete-chart)
                 (loop 
@@ -593,12 +604,16 @@
               ;; incrementally in the parse loop
               ;;
               (setf *parse-record* 
-                (find-spanning-edges 0 (length user-input)))))
+                (find-spanning-edges 0 length-user-input))))
           (push (get-internal-run-time) *parse-times*))
         (when show-parse-p (show-parse))
         (values *executed-tasks* *successful-tasks* 
                 *contemplated-tasks* *filtered-tasks* 
 		*morph-agenda-tasks*)))))
+
+(defun xml-p (input)
+  (and (stringp input)
+       (string= "<?xml " (subseq input 0 6))))
 
 ;;; *****************************************************
 ;;;
@@ -712,30 +727,35 @@
 	(when retyped-dag
 	  (setf (tdfs-indef tdfs) retyped-dag))))))
 
-;;eg. (instantiate-chart-with-tokens ("The" "dog" "barks"))
-;; calls: (add-token-edge "The" "THE" 0 1 nil nil)
-;;        (add-token-edge "dog" "DOG" 0 1 nil nil)
-;;        (add-token-edge "the" "BARKS" 0 1 nil nil)
-;; returns: *tchart*
 (defun instantiate-chart-with-tokens (preprocessed-input)
   ;;; this is for the trivial case where the
   ;;; input is a list with no ambiguity about token boundaries
+  ;;; (bmw) the above is no longer the case
   ;;; FIX - we need a better method of switching here
+  #+:maf
+  (if (saf-p preprocessed-input)
+      (return-from instantiate-chart-with-tokens
+	(saf-setup-morphs preprocessed-input)))
   (if (consp (first preprocessed-input))
       (sppp-setup-morphs preprocessed-input)
-    ;; default case
+    ;; _default case_
+    ;;eg. (instantiate-chart-with-tokens ("The" "dog" "barks"))
+    ;; calls: (add-token-edge "The" "THE" 0 1 nil nil)
+    ;;        (add-token-edge "dog" "DOG" 0 1 nil nil)
+    ;;        (add-token-edge "the" "BARKS" 0 1 nil nil)
+    ;; returns: *tchart*
     (let ((current 0)
-	  (xml-p (chared-word-p (first preprocessed-input))))
+	  (chared-words-p (chared-word-p (first preprocessed-input))))
       (dolist (token preprocessed-input)
         (let* ((base-word 
-		(if xml-p 
+		(if chared-words-p 
 		    (chared-word-word token)
 		  token))
 	       (word (string-upcase base-word))
-	       (cfrom (if xml-p
+	       (cfrom (if chared-words-p
 			  (chared-word-cfrom token)
 			-1))
-	       (cto (if xml-p
+	       (cto (if chared-words-p
 			  (chared-word-cto token)
 			-1))
                (new (+ current 1)))
