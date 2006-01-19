@@ -40,9 +40,11 @@
 
 (in-package :lkb)
 
+(defvar *local-to-global-point-mapping* #'identity)
+
 (defvar *x-preprocess-p* nil)
 (defvar *x-preprocessor-debug-p* t)
-(defparameter *x-preprocessor* nil)
+(defvar *x-preprocessor* nil)
 (defvar *x-addressing* nil)
 
 (defstruct x-fspp
@@ -325,14 +327,20 @@
     (mapcar #'p-token-to-chared-word result))
    #+:maf
    ((eq format :maf)
-    ;; eg. <?xml version='1.0' encoding='UTF8'?><!DOCTYPE maf SYSTEM 'maf.dtd' [<!ENTITY text SYSTEM 'text.xml'>]><maf addressing='xchar' creator='lkb-maf-tokens' date='21:59:53 10/11/2005 (UTC)' language='en.US'><token id='42' from='.0' to='.3' value='The'/><token id='43' from='.4' to='.7' value='cat'/><token id='44' from='.8' to='.14' value='barks.'/></maf>
     (setf *x-addressing* :xchar)
     (let ((strm (make-string-output-stream)))
       (format strm "~a" (maf-header :addressing *x-addressing*))
+      (format strm "<fsm init='v~a' final='v~a'>"
+	      (loop for tok in result
+		  minimize (second tok))
+	      (loop for tok in result
+		  maximize (third tok)))
+      (p-tokens-to-xml-states result strm)
       (mapcar #'(lambda (x) 
 		  (format strm "~a"
 			  (p-token-to-maf-token x)))
 	      result)
+      (format strm "</fsm>")
       (format strm "</maf>")
       (get-output-stream-string strm)))
    ((eq format :list)
@@ -340,15 +348,31 @@
    (t
     (error "unhandled format argument: ~a" format))))
 
+(defun p-tokens-to-xml-states (p-tokens strm)
+  (loop
+      with state-ints
+      for p-token in p-tokens
+      do 
+	(pushnew (second p-token) state-ints)
+	(pushnew (third p-token) state-ints)
+      finally
+	(loop 
+	    for i in (sort state-ints #'<)
+	    do
+	      (format strm "<state id='v~a'/>" i))))
+
 ;;(42 0 1 |The|:(0 . 3) |The|:(0 . 3))
 (defun p-token-to-maf-token (p-token)
   (let* ((x (fourth p-token))
 	 (r (char-map-simple-range (char-map x))))
-    (format nil "<token id='~a' from='~a' to='~a' value='~a'/>"
+    (format nil "<token id='t~a' from='~a' to='~a' value='~a' source='v~a' target='v~a'/>"
 	    (first p-token)
-	    (format nil ".~a" (car r))
-	    (format nil ".~a" (cdr r))
-	    (text x))))
+	    (funcall *local-to-global-point-mapping* (format nil ".~a" (car r)))
+	    (funcall *local-to-global-point-mapping* (format nil ".~a" (cdr r)))
+	    (xml-escape (text x))
+	    (second p-token)
+	    (third p-token)
+	    )))
 
 ;;(42 0 1 |The|:(0 . 3) |The|:(0 . 3))
 ;;-> #S(CHARED-WORD :WORD "The" :CFROM 0 :CTO 3)
@@ -551,9 +575,21 @@
 	    :text (subseq text start end)
 	    :char-map (subseq char-map start end)))))
 
-(defun x-parse (str)
-  (parse (x-preprocess str :format :maf)))
+(defun x-parse (str &key (char-map #'identity))
+  (let ((*local-to-global-point-mapping* char-map))
+    (setf (x-fspp-global *x-preprocessor*) ;;hack: fix_me
+      (push (make-fsr 
+	     :type :replace
+	     :source "<[^>]*>"
+	     :scanner (ppcre:create-scanner "<[^>]*>")
+	     :target "")
+	    (x-fspp-global *x-preprocessor*)))
+    (parse (x-preprocess str :format :maf))
+    (setf (x-fspp-global *x-preprocessor*)
+      (cdr (x-fspp-global *x-preprocessor*)))
+    ))
 
-;;
-;;
-;;
+(defvar *xchar-map-add-offset* 0)
+(defun xchar-map-add-x (point)
+  (format nil ".~a" (+ *xchar-map-add-offset* (point-to-char-point point))))
+

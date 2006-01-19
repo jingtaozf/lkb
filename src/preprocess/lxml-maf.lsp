@@ -47,15 +47,18 @@
 (defun remove-xml-header (lxml)
   (let ((lxml-xml (and (eq :xml (lxml-pi-name (car lxml)))
 			      (pop lxml))))
-    (unless (string= "1.0" 
-		     (lxml-pi-attr lxml-xml "version" :keyword t))
+    (if (and lxml-xml
+	     (not
+	      (string= "1.0" 
+		       (lxml-pi-attr lxml-xml "version" :keyword t))))
       (error "expected XML version 1.0: got ~a" lxml-xml)))
   lxml)
 
 (defun check-doctype (lxml doctype)
   (let ((lxml-doctype (and (eq :doctype (lxml-pi-name (car lxml)))
 			   (pop lxml))))
-    (unless (eq (intern doctype :keyword) (second lxml-doctype))
+    (if (and lxml-doctype
+	     (not (eq (intern doctype :keyword) (second lxml-doctype))))
       (error "expected DOCTYPE ~a got ~a" doctype lxml-doctype)))
   lxml)
   
