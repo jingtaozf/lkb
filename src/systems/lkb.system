@@ -202,6 +202,8 @@
        #+(and :xml :maf)
        (:file "lxml-maf")
        #+(and :maf)
+       (:file "saf")
+       #+(and :maf)
        (:file "saf-tchart")
        #+:maf
        (:file "texti")			; text interface
