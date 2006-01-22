@@ -90,7 +90,8 @@
 (defun lxml-elt-attributes (lxml-elt)
   (unless (lxml-elt-p lxml-elt)
     (error "lxml element expected: got ~a" lxml-elt))
-  (cdar lxml-elt))
+  (if (listp (car lxml-elt))
+    (cdar lxml-elt)))
 
 (defun lxml-elt-name (lxml-elt)
   (unless (lxml-elt-p lxml-elt)

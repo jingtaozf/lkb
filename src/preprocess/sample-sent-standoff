@@ -1,4 +1,7 @@
-<sentences document='preprocess/sample-xml-doc'>
-<sentence id='s100' from='.3' to='.22'/>
-<sentence id='s200' from='.22' to='.68'/>
-</sentences>
+<?xml version='1.0' encoding='UTF8'?>
+<!DOCTYPE maf SYSTEM 'saf.dtd'>
+<saf document='sample-xml-doc' addressing='char'>
+<olac:olac xmlns:olac='http://www.language-archives.org/OLAC/1.0/' xmlns='http://purl.org/dc/elements/1.1/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://www.language-archives.org/OLAC/1.0/ http://www.language-archives.org/OLAC/1.0/olac.xsd'><creator>bmw20</creator></olac:olac>
+<sentence id='s100' from='3' to='22'/>
+<sentence id='s200' from='22' to='68'/>
+</saf>

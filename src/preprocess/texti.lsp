@@ -54,13 +54,18 @@
 	    date
 	    year)))
 
-(defun maf-header (&key (addressing :xchar))
+(defun maf-header (&key (addressing :xchar) document)
+  (saf-header :maf t :addressing addressing :document document))
+
+(defun saf-header (&key (addressing :xchar) document (maf nil))
   (format nil
-	  "<?xml version='1.0' encoding='UTF8'?><!DOCTYPE maf SYSTEM 'maf.dtd'><maf document='text.xml' addressing='~a'><olac:olac xmlns:olac='http://www.language-archives.org/OLAC/1.0/' xmlns='http://purl.org/dc/elements/1.1/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://www.language-archives.org/OLAC/1.0/ http://www.language-archives.org/OLAC/1.0/olac.xsd'><creator>LKB</creator><created>~a</created></olac:olac>" 
-	  ;;"<?xml version='1.0' encoding='UTF8'?><!DOCTYPE maf SYSTEM 'maf.dtd'><maf document='text.xml' addressing='~a'>" 
+	  "<?xml version='1.0' encoding='UTF8'?><!DOCTYPE ~a SYSTEM '~a.dtd'><~a document='~a' addressing='~a'><olac:olac xmlns:olac='http://www.language-archives.org/OLAC/1.0/' xmlns='http://purl.org/dc/elements/1.1/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://www.language-archives.org/OLAC/1.0/ http://www.language-archives.org/OLAC/1.0/olac.xsd'><creator>LKB</creator><created>~a</created></olac:olac>"
+	  (if maf "maf" "saf")
+	  (if maf "maf" "saf")
+	  (if maf "maf" "saf")
+	  (xml-escape (2-str (or document "?")))
 	  (xml-escape (2-str addressing))
-	  (xml-escape (get-timestamp)) 
-	  ))
+	  (xml-escape (get-timestamp))))
 
 ;; preprocess-sentence-string cannot be used here until we fix it to return xpoints
 (defun basic-xml-to-maf-tokens (xml)

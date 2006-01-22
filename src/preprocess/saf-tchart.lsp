@@ -26,7 +26,7 @@
     (setf *tchart* (make-tchart))
     (setf *tchart-max* 0))
   (setf *saf* saf)
-  (unless (member (saf-meta-addressing (saf-meta saf)) '("xpoint" "xchar")
+  (unless (member (saf-meta-addressing (saf-meta saf)) '("xpoint" "char")
 		  :test #'string=)
     (error "Unhandled addressing attribute (~a)" (saf-meta-addressing (saf-meta saf))))
   (saf-lattice-to-edges (saf-lattice saf)
@@ -140,12 +140,11 @@
 (defun id-to-token-edge (id tedges)
   (find (id-to-int id) tedges :key #'token-edge-id :test #'=))
 
-;; xchar: first char ignored, rest give integer
 (defun point-to-char-point (point &optional addressing)
   (unless addressing
     (setf addressing (saf-meta-addressing (saf-meta *saf*))))
   (cond
-    ((string= addressing "xchar") (parse-integer (subseq point 1)))
+    ((string= addressing "char") (parse-integer point))
     ((string= addressing "xpoint") -1)))
 
 ;; id: first char ignored, rest gives integer

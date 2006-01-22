@@ -47,6 +47,8 @@
 (defvar *x-preprocessor* nil)
 (defvar *x-addressing* nil)
 
+(defvar *saf-document*)
+
 (defstruct x-fspp
   version
   (tokenizer (ppcre:create-scanner "[ \\t]+"))
@@ -327,9 +329,10 @@
     (mapcar #'p-token-to-chared-word result))
    #+:maf
    ((eq format :maf)
-    (setf *x-addressing* :xchar)
+    (setf *x-addressing* :char)
     (let ((strm (make-string-output-stream)))
-      (format strm "~a" (maf-header :addressing *x-addressing*))
+      (format strm "~a" (maf-header :addressing *x-addressing*
+				    :document *saf-document*))
       (format strm "<fsm init='v~a' final='v~a'>"
 	      (loop for tok in result
 		  minimize (second tok))
@@ -367,8 +370,8 @@
 	 (r (char-map-simple-range (char-map x))))
     (format nil "<token id='t~a' from='~a' to='~a' value='~a' source='v~a' target='v~a'/>"
 	    (first p-token)
-	    (funcall *local-to-global-point-mapping* (format nil ".~a" (car r)))
-	    (funcall *local-to-global-point-mapping* (format nil ".~a" (cdr r)))
+	    (funcall *local-to-global-point-mapping* (format nil "~a" (car r)))
+	    (funcall *local-to-global-point-mapping* (format nil "~a" (cdr r)))
 	    (xml-escape (text x))
 	    (second p-token)
 	    (third p-token)
@@ -575,10 +578,14 @@
 	    :text (subseq text start end)
 	    :char-map (subseq char-map start end)))))
 
-(defun x-parse (str &key (char-map #'identity))
+(defun x-parse (text from to addressing &key document 
+					     (char-map #'identity) 
+					     (show-parse t))
   (unless *x-preprocessor*
     (error "please load x-preprocessor"))
-  (let ((*local-to-global-point-mapping* char-map))
+  (setf *saf-document* document)
+  (let ((str (x-span text from to addressing))
+	(*local-to-global-point-mapping* char-map))
     (setf (x-fspp-global *x-preprocessor*) ;;hack: fix_me
       (push (make-fsr 
 	     :type :replace
@@ -586,12 +593,12 @@
 	     :scanner (ppcre:create-scanner "<[^>]*>")
 	     :target "")
 	    (x-fspp-global *x-preprocessor*)))
-    (parse (x-preprocess str :format :maf))
+    (parse (x-preprocess str :format :maf) show-parse)
     (setf (x-fspp-global *x-preprocessor*)
       (cdr (x-fspp-global *x-preprocessor*)))
     ))
 
-(defvar *xchar-map-add-offset* 0)
-(defun xchar-map-add-x (point)
-  (format nil ".~a" (+ *xchar-map-add-offset* (point-to-char-point point "xchar"))))
+(defvar *char-map-add-offset* 0)
+(defun char-map-add-x (point)
+  (format nil "~a" (+ *char-map-add-offset* (point-to-char-point point "char"))))
 

@@ -833,6 +833,7 @@
    ((stringp x) x)
    ((symbolp x) (symb-2-str x))
    ((numberp x) (num-2-str x))
+   ((pathnamep x) (namestring x))
    (t (error "unhandled type"))))
 
 (defun null-or-2-str (x)
