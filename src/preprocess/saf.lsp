@@ -7,7 +7,7 @@
 (defun process-standoff-sentence-file (filename)
   (with-open-file (ofile 
 		   (merge-pathnames 
-		    (make-pathname :name (format nil "~a.sent" 
+		    (make-pathname :name (format nil "~a.out" 
 						 (pathname-name (pathname filename))))
 		    (pathname filename))
 		   :direction :output
