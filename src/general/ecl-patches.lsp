@@ -54,9 +54,6 @@
   (let ((name (string-upcase (pathname-name output-file))))
     (setf %object-stubs% (cons (substitute #\_ #\- name) %object-stubs%))))
 
-;(setf c::*debug-compiler* t)
-;(pop si::*exit-hooks*)
-
 
 (define-language :lisp
   :compiler #'ecl-compile-file

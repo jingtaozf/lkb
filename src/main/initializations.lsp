@@ -49,8 +49,8 @@
 
 (import '(enable-type-interactions disable-type-interactions))
 
-#+(and :allegro :clim (not :mswindows)) 
-(setq tk-silica::*use-clim-gc-cursor* t)
+#+(and :allegro :clim (not :mswindows) (not :64bit))
+(setq tk-silica::*use-clim-gc-cursor* nil)
 
 (defmacro with-package ((package) &body body)
   `(let ((*package* (find-package ,package))
@@ -191,4 +191,12 @@
           #+:clim
           (clim-user::set-up-lkb-interaction)
           #-:clim
-          (lkb::set-up-lkb-interaction))))))
+          (lkb::set-up-lkb-interaction))
+        ;;
+        ;; _fix_me_
+        ;; attempt to work around [spr31047], i.e. what appears to be an 
+        ;; invalid function pointer added by the top-level CLIM pane.
+        ;;                                                    (23-jan-06; oe) 
+        ;;
+        #+(and :allegro :64bit :null)
+        (setf (excl:gc-before-c-hooks) nil (excl:gc-after-c-hooks) nil)))))

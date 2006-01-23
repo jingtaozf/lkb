@@ -47,6 +47,16 @@
 
 (defvar %binary-dir-name% 
     (or
+     #+(and (version>= 8 0) :linux86-64 :clim) ".l8c4"
+     #+(and (version>= 8 0) :linux86-64 (not :clim)) ".l8s4"
+     #+(and (version>= 8 0) :linux86 :clim) ".l8cl"
+     #+(and (version>= 8 0) :linux86 (not :clim)) ".l8sl"
+     #+(and (version>= 8 0) :sparc :clim) ".s8cl" 
+     #+(and (version>= 8 0) :sparc (not :clim)) ".s8sl"
+     #+(and (version>= 8 0) :mswindows :clim) "w8cl" 
+     #+(and (version>= 8 0) :mswindows (not :clim)) "w8sl"
+     #+(and (version>= 8 0) :macosx :clim) ".m8cl" 
+     #+(and (version>= 8 0) :macosx (not :clim)) ".m8sl"
      #+(and (version>= 7 0) :linux86-64 :clim) ".l7c4"
      #+(and (version>= 7 0) :linux86-64 (not :clim)) ".l7s4"
      #+(and (version>= 7 0) :linux86 :clim) ".l7cl"
