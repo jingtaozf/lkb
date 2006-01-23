@@ -47,6 +47,7 @@
 (defvar *x-preprocessor* nil)
 (defvar *x-addressing* nil)
 
+(defvar *char-map-add-offset* 0)
 (defvar *saf-document*)
 
 (defstruct x-fspp
@@ -584,7 +585,14 @@
   (unless *x-preprocessor*
     (error "please load x-preprocessor"))
   (setf *saf-document* document)
-  (let ((str (x-span text from to addressing))
+  (let ((str 
+	 (cond
+	  ((and from to addressing)
+	   (x-span text from to addressing))
+	  ((and (null from) (null to) (null addressing))
+	   text)
+	  (t
+	   (error "from/to/addressing=~a/~a/~a" from to addressing))))
 	(*local-to-global-point-mapping* char-map))
     (setf (x-fspp-global *x-preprocessor*) ;;hack: fix_me
       (push (make-fsr 
@@ -596,9 +604,9 @@
     (parse (x-preprocess str :format :maf) show-parse)
     (setf (x-fspp-global *x-preprocessor*)
       (cdr (x-fspp-global *x-preprocessor*)))
+    t
     ))
 
-(defvar *char-map-add-offset* 0)
 (defun char-map-add-x (point)
   (format nil "~a" (+ *char-map-add-offset* (point-to-char-point point "char"))))
 

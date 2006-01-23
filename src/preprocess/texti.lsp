@@ -13,6 +13,7 @@
 ;; map text string into well-formed XML
 ;; NOTE: preprocess-sentence-string is embedded here until we can fix it to 
 ;; handle character positions
+#+:null
 (defun basic-text-to-basic-xml (text-str)
   ;; todo: fix preprocess-sentence-string to preserve char offsets
   ;;        and move this to basic-xml-to-maf-tokens
@@ -26,6 +27,7 @@
     (format strm "</text>")
     (get-output-stream-string strm)))
 
+#+:null
 (defun basic-xml-to-basic-text (xml)
   (let* ((p-xml (net.xml.parser:parse-xml xml))
 	 (text (second (car (member '|text| p-xml :key #'car))))
@@ -41,33 +43,8 @@
 (defun tchart-to-maf-tokens (&optional (tchart *tchart*))
   (tchart-to-maf tchart :wordforms nil))
 
-(defun get-timestamp nil
-  (multiple-value-bind
-      (second minute hour date month year dummy1 dummy2 dummy3)
-      (decode-universal-time (get-universal-time) 0)
-    (+ dummy1 dummy2 dummy3)
-    (format nil "~2,'0d:~2,'0d:~2,'0d ~d/~2,'0d/~d (UTC)"
-	    hour
-	    minute
-	    second
-	    month
-	    date
-	    year)))
-
-(defun maf-header (&key (addressing :xchar) document)
-  (saf-header :maf t :addressing addressing :document document))
-
-(defun saf-header (&key (addressing :xchar) document (maf nil))
-  (format nil
-	  "<?xml version='1.0' encoding='UTF8'?><!DOCTYPE ~a SYSTEM '~a.dtd'><~a document='~a' addressing='~a'><olac:olac xmlns:olac='http://www.language-archives.org/OLAC/1.0/' xmlns='http://purl.org/dc/elements/1.1/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://www.language-archives.org/OLAC/1.0/ http://www.language-archives.org/OLAC/1.0/olac.xsd'><creator>LKB</creator><created>~a</created></olac:olac>"
-	  (if maf "maf" "saf")
-	  (if maf "maf" "saf")
-	  (if maf "maf" "saf")
-	  (xml-escape (2-str (or document "?")))
-	  (xml-escape (2-str addressing))
-	  (xml-escape (get-timestamp))))
-
 ;; preprocess-sentence-string cannot be used here until we fix it to return xpoints
+#+:null
 (defun basic-xml-to-maf-tokens (xml)
   (setf *maf-token-id-counter* 0)
   (let* ((p-xml (net.xml.parser:parse-xml xml))
@@ -91,6 +68,7 @@
     (format strm "</maf>")
     (get-output-stream-string strm)))
 
+#+:null
 (defun xrange-to-token (xml xrange)
   ;; todo: escape attribute val strings
   (format nil "<token id='~a' from='~a' to='~a' value='~a' source='...' target='...'/>"
@@ -99,60 +77,10 @@
 	  (cdr xrange)
 	  (Xpoint-range xml xrange)))
 
+#+:null
 (defun next-maf-token-id nil
   (format nil "t~a" (incf *maf-token-id-counter*)))
  
-(defun char-offset-to-xpoint (i)
-  (unless (integerp i)
-    (error "char offset must be integer"))
-  (format nil "/1/1.~a" i))
-
-(defun xpoint-to-char-offset (xp)
-  (unless (stringp xp)
-    (error "expected Xpoint as string"))
-  (unless (and (>= (length xp) 5)
-	       (string= (subseq xp 0 5) "/1/1."))
-    ;;temporary hack
-    (return-from xpoint-to-char-offset -1)
-    (error "unhandled Xpoint ~a (work in progress)" xp))
-  (read-from-string (subseq xp 5)))
-
-;; assume for now XML root element contains only CDATA
-(defun Xpoint-range (xml xrange)
-  (let ((x-from (car xrange))
-	(x-to (cdr xrange)))
-    (let* ((p-xml (net.xml.parser:parse-xml xml))
-	   (text (second (car (member '|text| p-xml :key #'car))))
-	   (c-from (xpoint-to-char-offset x-from))
-	   (c-to (xpoint-to-char-offset x-to))
-	   )
-      (unless (and (>= c-from 0)
-		   (<= c-to (length text)))
-	(error "Xpoint out of range"))
-      (subseq text c-from c-to))))
-
-;; return list of (WORD-STRING FROM TO)
-;; where FROM, TO are char offsets
-(defun split-on-spc (preprocessed-string)
-  (remove 
-   ""
-   (loop 
-       with c-list = (coerce preprocessed-string 'list)
-       with c-list-word
-       with from = 0
-       for c in c-list
-       for i from 1 to (length c-list) 
-       if (char= c #\Space) collect (list (coerce (nreverse c-list-word) 'string) from (1- i)) into words
-       and do (setf from i)
-       and do (setf c-list-word nil)
-       else do (push c c-list-word)
-       finally 
-	 (return (append words
-			 (list (list (coerce (nreverse c-list-word) 'string)
-				     from i)))))
-   :key #'car
-   :test #'string=))
-
 ;;;
 ;;; MAF TOKENS TO MAF WORDFORMS
 ;;;
@@ -178,6 +106,7 @@
     (error "leaf-edges is null"))
   (apply #'max (mapcar #'edge-to leaf-edges)))
 
+#+:null
 (defun leaf-edges-xfrom (leaf-edges)
   (unless leaf-edges
     (error "leaf-edges is null"))
@@ -189,6 +118,7 @@
       do (setf xmin xfrom)
       finally (return xmin)))
 
+#+:null
 (defun leaf-edges-xto (leaf-edges)
   (unless leaf-edges
     (error "leaf-edges is null"))
@@ -201,21 +131,7 @@
       do (setf xmax xto)
       finally (return xmax)))
 
-;; assume xpoint order is string order for now
-(defun x< (x y)
-  (string< x y))
-
-(defun x> (x y)
-  (string> x y))
-
-(defun x= (x y)
-  (string= x y))
-
-
-
-(defun split-str-on-spc (str)
-  (mapcar #'car (split-on-spc str)))
-
+#+:null
 (defun check-state-declared (id states)
     (unless
 	(member id states 
@@ -232,48 +148,35 @@
 (defun tchart-to-maf (&optional (tchart *tchart*) &key (wordforms t))
   (let* ((strm (make-string-output-stream))
 	 (tedges (get-tedges tchart))
-	 (medges (get-medges tchart))
-	 )
-    ;(format strm "<?xml version='1.0' encoding='UTF8'?>")
-    ;(format strm "<!DOCTYPE maf SYSTEM 'maf.dtd' [<!ENTITY text SYSTEM 'text.xml'>]>")
+	 (medges (get-medges tchart)))
     (format strm "~a" (maf-header))
-
-;    ;; xml token elements
-;    (mapcar #'(lambda (x)
-;		(format strm "~a"
-;			(tedge-to-token-xml x)))
-;	    tedges)
     (if wordforms (format strm "~a" (fsm-xml tedges medges)))
-    
     (format strm "</maf>")
     (get-output-stream-string strm)))
 
 (defun fsm-xml (tedges medges)
   (let* ((strm (make-string-output-stream))
 	 (v-min (loop for x in tedges minimize (edge-from x)))
-	 (v-max (1+ (loop for x in tedges maximize (edge-from x))))
-	 )
+	 (v-max (1+ (loop for x in tedges maximize (edge-from x)))))
     (format strm "<fsm init='v~a' final='v~a'>" v-min v-max)
-    
+    ;; states
     (loop
 	for i from v-min to v-max
 	do (format strm "<state id='v~a'/>" i))
-    
+    ;; token edges
     (loop
 	for tedge in tedges
 	do (format strm "~a" (tedge-to-token-xml tedge)))
-    
+    ;; wordform edges
     (loop
 	for medge in medges
 	do (format strm "~a" (medge-to-wordform-xml medge)))
-    
     (format strm "</fsm>")
     (get-output-stream-string strm)))
 
 (defun medge-to-wordform-xml (medge)
   (with-slots (from to string stem partial-tree) medge
     (concatenate 'string
-      ;(format nil "<transition source='v~a' target='v~a'>" from to)
       (format nil "<wordForm form='~a' tag='~a' daughters='~a' source='v~a' target='v~a'>" 
 	      string 
 	      (if (caar partial-tree)
@@ -286,9 +189,7 @@
       (if partial-tree
 	  (format nil "~a" (partial-tree-to-fs partial-tree)))
       (format nil "</fs>")
-      (format nil "</wordForm>")
-      ;(format nil "</transition>")
-      )))
+      (format nil "</wordForm>"))))
 
 ;; store as lisp list text
 (defun partial-tree-to-fs (p-tree)
@@ -345,8 +246,6 @@
 	  (xml-escape (format nil "t~a" id))
 	  (xml-escape (format nil ".~a" (or cfrom "?")))
 	  (xml-escape (format nil ".~a" (or cto "?")))
-;	  (xml-escape (or xfrom "?")) 
-;	  (xml-escape (or xto "?"))
 	  (xml-escape string)
 	  (xml-escape (or (2-str from) "?")) 
 	  (xml-escape (or (2-str to) "?"))	  
@@ -384,4 +283,60 @@
 	    for edge = (chart-configuration-edge cc)
 	    when (morpho-stem-edge-p edge)
 	    collect edge)))
+
+;;
+;; point schemes:
+;; - char
+;; - xpoint
+;; - line
+;;
+
+(defun x-span (text from to addressing)
+  (cond
+   ((string= "char" addressing)
+    (subseq text 
+	    (point-to-char-point from addressing)
+	    (point-to-char-point to addressing)))
+   ((string= "xpoint" addressing)
+    (error "addressing scheme 'xpoint' not implemented"))
+   (t
+    (error "unknown addressing scheme '~a'" addressing))))
+
+;; assume xpoint order is string order for now
+(defun x< (x y)
+  (string< x y))
+
+(defun x> (x y)
+  (string> x y))
+
+(defun x= (x y)
+  (string= x y))
+
+(defun char-offset-to-xpoint (i)
+  (unless (integerp i)
+    (error "char offset must be integer"))
+  (format nil "/1/1.~a" i))
+
+(defun xpoint-to-char-offset (xp)
+  (unless (stringp xp)
+    (error "expected Xpoint as string"))
+  (unless (and (>= (length xp) 5)
+	       (string= (subseq xp 0 5) "/1/1."))
+    ;;temporary hack
+    (return-from xpoint-to-char-offset -1)
+    (error "unhandled Xpoint ~a (work in progress)" xp))
+  (read-from-string (subseq xp 5)))
+
+;; assume for now XML root element contains only CDATA
+(defun xpoint-range (xml xrange)
+  (let ((x-from (car xrange))
+	(x-to (cdr xrange)))
+    (let* ((p-xml (net.xml.parser:parse-xml xml))
+	   (text (second (car (member '|text| p-xml :key #'car))))
+	   (c-from (xpoint-to-char-offset x-from))
+	   (c-to (xpoint-to-char-offset x-to)))
+      (unless (and (>= c-from 0)
+		   (<= c-to (length text)))
+	(error "Xpoint out of range"))
+      (subseq text c-from c-to))))
 
