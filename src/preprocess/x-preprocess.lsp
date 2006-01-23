@@ -210,38 +210,49 @@
 	finally
 	  (return x))))
 
-(defun x-preprocess-tokens (x-l &optional (local (slot-value *x-preprocessor* 'local)) &key tokenp verbose)
+(defun copy-preprocessed-x (x)
+  (make-instance 'preprocessed-x 
+    :text (text x)
+    :char-map (char-map x)))
+
+(defun x-preprocess-tokens (x-l 
+			    &optional (local (slot-value *x-preprocessor* 'local)) 
+			    &key tokenp verbose)
   (loop
       with result
-      with token
+      with x-token
       with length = 0
       for x in x-l
-      for x-match = (make-instance 'preprocessed-x 
-		      :text (text x)
-		      :char-map (char-map x))
       unless (string= (text x) "") do
 	(incf length)
-	(setf token x)
+	(setf x-token x)
 	(loop
 	    with extra = nil
 	    for rule in (when tokenp local)
 	    for type = (x-fsr-type rule)
 	    for scanner = (x-fsr-scanner rule)
 	    for target = (x-fsr-target rule)
-	    do (setf x-match (x-regex-replace scanner x-match target))
-			;;
-			;; _fix_me_
-			;; regex-replace() always returns a fresh string, even if the
-			;; pattern did _not_ match; to make this more efficient, it
-			;; seems, we would have to use scan() and then glue together
-			;; the result from parsing .target. and filling in register
-			;; matches as needed :-{.                     (31-jan-03; oe)
-			;;
-	    when (and (eq verbose :trace) (not (equalp x x-match))) do
+	    for text-old = (text x-token)
+	    for x-new = (if (eq :augment type)
+			    (x-regex-replace scanner 
+					     (copy-preprocessed-x x-token) 
+					     target)
+			  (x-regex-replace scanner x-token target))
+	       ;;
+	       ;; _fix_me_
+	       ;; regex-replace() always returns a fresh string, even if the
+	       ;; pattern did _not_ match; to make this more efficient, it
+	       ;; seems, we would have to use scan() and then glue together
+	       ;; the result from parsing .target. and filling in register
+	       ;; matches as needed :-{.                     (31-jan-03; oe)
+	       ;;
+	       ;; or hack ppcre code? (bmw)
+	    when (and (eq verbose :trace) (not (string= (text x-new) text-old))) do
 	      (format
 	       t
 	       "~&|~a|~%  |~a|~%  |~a|~%~%"
-	       (x-fsr-source rule) (text x) (text x-match))
+	       (x-fsr-source rule) text-old (text x-new))
+	    unless (string= text-old (text x-new))
 	    do
 	      (case type
 		(:ersatz
@@ -252,18 +263,16 @@
 		 ;; an ersatzing table and use non-string tokens (indices into
 		 ;; the table) instead.                         (1-feb-03; oe)
 		 ;;
-		 (unless (string= (text x) (text x-match))
-		   (push (list :ersatz x) extra)
-		   (setf token x-match)))
+		 (push (list :ersatz x-new) extra)
+		 (setf x-token x-new))
 		(:augment
-		 (unless (string= (text x) (text x-match))
-		   (push (list :augment x-match) extra)))
+		 (push (list :augment x-new) extra)) ;; fix_me: regex new token ogso
 		(:substitute
-		 (setf token x-match))
+		 (setf x-token x-new))
 		(t
 		 (error "unhandled type: ~a" type)))
 	    finally
-	      (push (cons token extra) result))
+	      (push (cons x-token extra) result))
       finally
 	(return (values result length))))
 
@@ -547,19 +556,20 @@
 
 (defun x-regex-replace (scanner x target)
   (with-slots (text char-map) x
-    (let ((repl-l (make-repl-list)))
-      (setf (text x)
-	(cl-ppcre:regex-replace 
-	 scanner text 
-	 #'(lambda (a b c d e f g) 
-	     (catch-repl a b c d e f g 
-			 :replace-string target 
-			 :repl-l repl-l
-			 :char-map char-map))))
+    (let* ((repl-l (make-repl-list))
+	   (x2
+	    (cl-ppcre:regex-replace 
+	     scanner text 
+	     #'(lambda (a b c d e f g) 
+		 (catch-repl a b c d e f g 
+			     :replace-string target 
+			     :repl-l repl-l
+			     :char-map char-map)))))
       (with-slots (list) repl-l
-	     (when list
-	       (setf list (reverse list))
-	       (update-char-map list x)))))
+	(when list
+	  (setf (text x) x2)
+	  (setf list (reverse list))
+	  (update-char-map list x)))))
   x)
 
 (defun x-split (scanner x)
@@ -593,7 +603,10 @@
 	   text)
 	  (t
 	   (error "from/to/addressing=~a/~a/~a" from to addressing))))
-	(*local-to-global-point-mapping* char-map))
+	(*local-to-global-point-mapping* char-map)
+	(*text* text)
+	(old-x-fspp-global (x-fspp-global *x-preprocessor*))
+	)
     (setf (x-fspp-global *x-preprocessor*) ;;hack: fix_me
       (push (make-fsr 
 	     :type :replace
@@ -601,9 +614,30 @@
 	     :scanner (ppcre:create-scanner "<[^>]*>")
 	     :target "")
 	    (x-fspp-global *x-preprocessor*)))
+    (setf (x-fspp-global *x-preprocessor*) ;;hack: fix_me
+      (push (make-fsr 
+	     :type :replace
+	     :source "^[^>]*>"
+	     :scanner (ppcre:create-scanner "^[^>]*>")
+	     :target "")
+	    (x-fspp-global *x-preprocessor*)))
+    (setf (x-fspp-global *x-preprocessor*) ;;hack: fix_me
+      (push (make-fsr 
+	     :type :replace
+	     :source "<[^>]$"
+	     :scanner (ppcre:create-scanner "<[^>]$")
+	     :target "")
+	    (x-fspp-global *x-preprocessor*)))
+    (setf (x-fspp-global *x-preprocessor*) ;;hack: fix_me
+      (push (make-fsr 
+	     :type :replace
+	     :source "\\n"
+	     :scanner (ppcre:create-scanner "\\n")
+	     :target " ")
+	    (x-fspp-global *x-preprocessor*)))
     (parse (x-preprocess str :format :maf) show-parse)
     (setf (x-fspp-global *x-preprocessor*)
-      (cdr (x-fspp-global *x-preprocessor*)))
+      old-x-fspp-global)
     t
     ))
 

@@ -38,6 +38,9 @@
 
 ;;; *chart-limit* is defined in globals.lsp
 
+(defvar *text* nil)
+(defvar *sentence* nil)
+
 (defparameter *tchart-max* 0
   "set by the tokeniser to the maximum vertex in the tchart")
 
@@ -590,6 +593,7 @@
 	      (:with-tokeniser-partial-tree nil)
 	      (:with-tokeniser-retokenise nil))
 	    (instantiate-chart-with-stems-and-multiwords)
+	    (report-unknown-words)
             (catch :best-first
               (add-words-to-chart (and first-only-p (null *active-parsing-p*)
                                        (cons 0 length-user-input)))
@@ -614,6 +618,35 @@
 (defun xml-p (input)
   (and (stringp input)
        (string= "<?xml " (subseq input 0 6))))
+
+(defun report-unknown-words (&key (tchart *tchart*)
+				  (text (or *text* *sentence*)))
+  (when (and *characterize-p* text)
+    (loop
+	for span in
+	  (loop
+	      with spans
+	      for e in
+		(set-difference 
+		 (get-tedges tchart)
+		 (loop for e in (get-medges tchart)
+		     append (edge-children e)))
+	      for cfrom = (edge-cfrom e)
+	      for cto = (edge-cto e)
+	      when (and cfrom cto)
+	      do
+		(pushnew (cons cfrom cto) spans
+			 :test #'(lambda (x y)
+				   (and (= (car x) (car y))
+					(= (cdr x) (cdr y)))))
+	      finally
+		(return spans))
+	do
+	  (format t "~&No lexical analysis for '~a'"
+		  (x-span text 
+			  (2-str (car span)) 
+			  (2-str (cdr span)) 
+			  "char")))))
 
 ;;; *****************************************************
 ;;;
@@ -2286,8 +2319,6 @@ an unknown word, treat the gap as filled and go on from there.
 (defparameter *do-something-with-parse* nil)
 
 (defparameter *lex-ids-used* nil)
-
-(defparameter *sentence* nil)
 
 (defparameter *parse-input* nil)
 

@@ -256,7 +256,7 @@
 (defun process-standoff-sentence-file (filename)
   (process-saf-file-sentences filename))
   
-(defun process-saf-file-sentences (filename)
+(defun process-saf-file-sentences (filename &key show-parse)
   (with-open-file 
       (ofile 
        (merge-pathnames 
@@ -271,9 +271,10 @@
      (xml-to-saf-object 
       (read-file-to-string filename)
       :saf-dir (pathname-directory (pathname filename)))
-     :ostream ofile)))
+     :ostream ofile
+     :show-parse show-parse)))
 
-(defun process-saf-sentences (saf &key (ostream t))
+(defun process-saf-sentences (saf &key (ostream t) show-parse)
   (let* ((textfilename (saf-meta-document (saf-meta saf)))
 	 (text
 	  (if textfilename
@@ -296,14 +297,14 @@
 			 (saf-meta-addressing (saf-meta saf))
 			 :document (saf-meta-document (saf-meta saf))
 			 :char-map #'char-map-add-x
-			 :show-parse nil)))
+			 :show-parse show-parse)))
 	     (t
 	      (x-parse (saf-edge-content s) 
 		       nil
 		       nil
 		       nil
 		       :document nil
-		       :show-parse t)))
+		       :show-parse show-parse)))
 	      
 	    (dump-sentence-analyses s ostream))
     (format ostream "~&</saf>")))
