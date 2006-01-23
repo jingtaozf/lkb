@@ -253,8 +253,8 @@
 ;; SENTENCE -> PARSE
 ;;
 
-(defun process-standoff-sentence-file (filename)
-  (process-saf-file-sentences filename))
+(defun process-standoff-sentence-file (filename &key show-parse)
+  (process-saf-file-sentences filename :show-parse show-parse))
   
 (defun process-saf-file-sentences (filename &key show-parse)
   (with-open-file 
@@ -284,7 +284,7 @@
 			:document (saf-meta-document (saf-meta saf))))
     (loop for s in 
 	  (sort (copy-list (saf-lattice-edges (saf-lattice saf)))
-		#'string> :key #'saf-edge-from)
+		#'string< :key #'saf-edge-from)
 	do
 	    (cond
 	     ((saf-meta-document (saf-meta saf))
