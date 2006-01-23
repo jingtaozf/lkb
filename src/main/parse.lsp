@@ -642,11 +642,13 @@
 	      finally
 		(return spans))
 	do
-	  (format t "~&No lexical analysis for '~a'"
+	  (format t "~&No lexical analysis for span '~a' <~a c ~a>"
 		  (x-span text 
 			  (2-str (car span)) 
 			  (2-str (cdr span)) 
-			  "char")))))
+			  "char")
+		  (car span)
+		  (cdr span)))))
 
 ;;; *****************************************************
 ;;;
