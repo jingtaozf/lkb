@@ -50,7 +50,7 @@
 (import '(enable-type-interactions disable-type-interactions))
 
 #+(and :allegro :clim (not :mswindows) (not :64bit))
-(setq tk-silica::*use-clim-gc-cursor* nil)
+(setq tk-silica::*use-clim-gc-cursor* t)
 
 (defmacro with-package ((package) &body body)
   `(let ((*package* (find-package ,package))
