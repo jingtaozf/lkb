@@ -300,7 +300,8 @@
 				   extra))
       for end = (+ 1 i intermediate-nodes)
       do
-	(unless (eq format :lkb) ;; lkb can't handle extra??
+	(unless (or (eq format :chared)
+		    (eq format :lkb)) ;; lkb can't handle extra??
 	  (loop
 	      for (type form) in extra ;; (:AUGMENT |mann s|:(0 . 5))
 	      when (eq type :augment) do 
