@@ -607,6 +607,7 @@
 	(*text* text)
 	(old-x-fspp-global (x-fspp-global *x-preprocessor*))
 	)
+    ;(format t "~&STR: ~a" str)
     (setf (x-fspp-global *x-preprocessor*) ;;hack: fix_me
       (push (make-fsr 
 	     :type :replace
@@ -635,6 +636,7 @@
 	     :scanner (ppcre:create-scanner "\\n")
 	     :target " ")
 	    (x-fspp-global *x-preprocessor*)))
+    (setf *sentence* str)
     (parse (x-preprocess str :format :maf) show-parse)
     (setf (x-fspp-global *x-preprocessor*)
       old-x-fspp-global)

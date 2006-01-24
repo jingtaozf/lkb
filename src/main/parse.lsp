@@ -546,7 +546,7 @@
 		  nil))
       (setf length-user-input
 	(if maf-p 
-	    #+:maf (1- (saf-num-lattice-nodes user-input)) #-:maf nil
+	    #+:maf (max 0 (1- (saf-num-lattice-nodes user-input))) #-:maf nil
 	  (length user-input)))
       
       (when (> length-user-input *chart-limit*)

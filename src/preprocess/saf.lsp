@@ -284,8 +284,12 @@
 			:document (saf-meta-document (saf-meta saf))))
     (loop for s in 
 	  (sort (copy-list (saf-lattice-edges (saf-lattice saf)))
-		#'string< :key #'saf-edge-from)
+		#'< 
+		:key #'(lambda (x)
+			 (point-to-char-point 
+			  (saf-edge-from x) "char")))
 	do
+	  ;(format t "~&SENT: ~a" s) ;!bmw
 	    (cond
 	     ((saf-meta-document (saf-meta saf))
 	      (let ((*char-map-add-offset* 
