@@ -283,7 +283,7 @@
 				       format) ;;get rid of this
   ;; tokens: 
   ;;(
-  ;; (|manns|:(0 . 5) (:AUGMENT |mann s|:(0 . 5))) 
+  ;; (|manns|:(0 . 5) (:AUGMENT (|mann s|:(0 . 5)))) 
   ;; (|smiler|:(6 . 12))
   ;;)
   (loop
@@ -294,16 +294,20 @@
       for surface = (or (second (find :ersatz extra :key #'first))
 			form)
       for start = i
-      for intermediate-nodes = (apply #'+ (mapcar 
-				   #'(lambda (x)
-				       (1- (length (second x))))
-				   extra))
+      for intermediate-nodes = 
+	(apply #'+ 
+	       (mapcar 
+		#'(lambda (x)
+		    (1- (length (second x))))
+		(loop for x in extra
+		    when (eq (first x) :augment)
+		    collect x)))
       for end = (+ 1 i intermediate-nodes)
       do
 	(unless (or (eq format :chared)
-		    (eq format :lkb)) ;; lkb can't handle extra??
+		    (eq format :lkb)) ;; can't handle lattice
 	  (loop
-	      for (type form) in extra ;; (:AUGMENT |mann s|:(0 . 5))
+	      for (type form) in extra ;; (:AUGMENT (|mann s|:(0 . 5)))
 	      when (eq type :augment) do 
 		;; create edge from extra elt
 		(loop 
