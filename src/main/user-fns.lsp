@@ -25,7 +25,7 @@
   #+:preprocessor
   (when *x-preprocessor*
     (return-from preprocess-sentence-string 
-      (x-preprocess str :format :chared)))
+      (x-preprocess str :format :maf)))
 
   #+:preprocessor
   (when *preprocessor*

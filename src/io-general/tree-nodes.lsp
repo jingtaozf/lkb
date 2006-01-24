@@ -370,6 +370,7 @@
 	      (push (setq pair (cons lex (make-symbol lex))) lex-pairs))
 	    (push (create-morph-edges e edge-symbol)
 		  (get (cdr pair) 'chart-edge-descendents))
+	    (setf (get (cdr pair) 'chart-lex-edge) e)
 	    (pushnew (cdr pair)
 		     (aref (get root 'chart-edge-descendents) 
 			   left-vertex))))))))

@@ -125,7 +125,15 @@
 						((g-edge-p edge) rule)
 						(t (edge-category edge)))))
 	   nil))
-      (values (tree-node-text-string node) t))))
+      (if (get node 'root)
+	  ""
+	(values (format nil "~a~a"
+			(if *characterize-p*
+			    (with-slots (from to)
+				(get node 'chart-lex-edge)
+			      (format nil "~a-~a " from to))
+			  "")
+			(tree-node-text-string node)) t)))))
 
 ;; Update the yield window when we are over an edge
 

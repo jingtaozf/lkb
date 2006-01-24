@@ -48,7 +48,7 @@
 (defvar *x-addressing* nil)
 
 (defvar *char-map-add-offset* 0)
-(defvar *saf-document*)
+(defvar *saf-document* nil)
 
 (defstruct x-fspp
   version
@@ -266,7 +266,10 @@
 		 (push (list :ersatz x-new) extra)
 		 (setf x-token x-new))
 		(:augment
-		 (push (list :augment x-new) extra)) ;; fix_me: regex new token ogso
+		 (push (list 
+			:augment 
+			(x-split (x-fspp-tokenizer *x-preprocessor*) x-new)) 
+		       extra)) ;; fix_me: regex new token ogso
 		(:substitute
 		 (setf x-token x-new))
 		(t
@@ -277,22 +280,48 @@
 	(return (values result length))))
 
 (defun x-tokens-to-result (tokens &key verbose 
-				     format) ;;get rid of this
+				       format) ;;get rid of this
+  ;; tokens: 
+  ;;(
+  ;; (|manns|:(0 . 5) (:AUGMENT |mann s|:(0 . 5))) 
+  ;; (|smiler|:(6 . 12))
+  ;;)
   (loop
       with result = nil
       with i = 0
-      with id = 41
+      with id = 0
       for (form . extra) in tokens
-      for surface = (or (second (find :ersatz extra :key #'first)) form)
+      for surface = (or (second (find :ersatz extra :key #'first))
+			form)
       for start = i
-      for end = (incf i)
+      for intermediate-nodes = (apply #'+ (mapcar 
+				   #'(lambda (x)
+				       (1- (length (second x))))
+				   extra))
+      for end = (+ 1 i intermediate-nodes)
       do
-	(push (list (incf id) start end form surface) result)
-	(unless (eq format :lkb)
+	(unless (eq format :lkb) ;; lkb can't handle extra??
 	  (loop
-	      for (type form) in extra
-	      unless (eq type :ersatz) do 
-		(push (list (incf id) start end form form) result)))
+	      for (type form) in extra ;; (:AUGMENT |mann s|:(0 . 5))
+	      when (eq type :augment) do 
+		;; create edge from extra elt
+		(loop 
+		    with toks = (copy-list form)
+		    with tok
+		    with start2 = start
+		    with end2
+		    while (setf tok (pop toks))
+		    do
+		      (if toks
+			  (setf end2 (incf i))
+			(setf end2 end))
+		      (push (list (incf id) start2 end2 tok tok) 
+			    result)
+		      (setf start2 end2)))
+	  (setf i end))
+	;; create edge from form
+	(push (list (incf id) start end form surface) 
+	      result)
       when verbose do
 	(format t "  (~a) [~a:~a] |~a|" id start end form)
 	(loop

@@ -616,7 +616,8 @@
 		*morph-agenda-tasks*)))))
 
 (defun xml-p (input)
-  (and (stringp input)
+  (and (stringp input) 
+       (> (length input) 5)
        (string= "<?xml " (subseq input 0 6))))
 
 (defun report-unknown-words (&key (tchart *tchart*)
