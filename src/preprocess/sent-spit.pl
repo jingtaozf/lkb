@@ -16,7 +16,7 @@
 #<sentence id='s2' from='73' to='86'/>
 #</saf>
 
-@boundary_chars = (".", "!", "?");
+@boundary_chars = (".", "!", "?", ";");
 
 $file = $ARGV[0];
 
@@ -30,15 +30,21 @@ if ($file !~ m/^\//)
     $file="${pwd}/${file}";
 }
  
-open(INFO, $file);
+# open file in UTF-8 mode
+open(INFO, "<:utf8", $file);
 
 print "<!DOCTYPE maf SYSTEM 'saf.dtd'>\n";
 print "<saf document='$file' addressing='char'>\n";
 
 $id=0; $i=0; $from=$i; $i++; $sent="";
-while ($c = getc INFO )
+$c = getc INFO;
+while ($c ne undef )
 {
-    $sent="$sent$c"; $flag=0;
+    # no sentence breaks inside markup
+    if ($c eq "<") {$markup=1}
+    if ($c eq ">") {$markup=0}
+    $sent="$sent$c";
+    $flag=0;
     foreach $bchar (@boundary_chars)
     {
 	if ($c eq $bchar) 
@@ -47,17 +53,25 @@ while ($c = getc INFO )
 	}
     }
     if (($last eq "\n") and ($c eq "\n")) {$flag=1}
-    if ($flag)
+    if ($flag and not $markup)
     {
 	if ($from > -1)
 	{
 	    $to=$i;
-	    print "<sentence id='s$id' from='$from' to='$to'/>\n";
+	    print "<sentence id='s$id' from='$from' to='$to'";
+	    # include sentence text in value attribute
+	    $sent =~ s/\&/&amp;/g;
+	    $sent =~ s/\>/&gt;/g;
+	    $sent =~ s/\</&lt;/g;
+	    $sent =~ s/\"/&quot;/g;
+	    $sent =~ s/\'/&apos;/g;
+	    print " value='$sent'";
+	    print "/>\n";
 	    $from=$i; $to=-1; $id++; $sent="";
 	}
-	
     } 
     $last=$c; $i++;
+    $c = getc INFO;
 }
 
 $to=$i-1;
