@@ -1,20 +1,28 @@
 #!/usr/bin/perl
 
-# (Ben Waldron 23-01-2006)
-# Usage: sent-split.pl INPUT_FILENAME
+# (Ben Waldron 24-01-2006)
+# Usage: sent-split.pl INPUT_FILENAME > OUTPUT_FILENAME
+#
+# Notes:
+# - this is a TOY proof-of-concept script
+# - assumes UTF-8 I/O
 #
 # Sample INPUT_FILENAME:
+#
 #<a>Here is a semtence. And <i>here</i><nothing id='n3'/> is another</a>
 #
 # And another?
 #
 # Sample output:
+#
 #<!DOCTYPE maf SYSTEM 'saf.dtd'>
 #<saf document='sample-xml-doc' addressing='char'>
 #<sentence id='s0' from='0' to='22'/>
 #<sentence id='s1' from='22' to='73'/>
 #<sentence id='s2' from='73' to='86'/>
 #</saf>
+
+binmode(STDOUT, ":utf8");
 
 @boundary_chars = (".", "!", "?", ";");
 
@@ -34,7 +42,7 @@ if ($file !~ m/^\//)
 open(INFO, "<:utf8", $file);
 
 print "<!DOCTYPE maf SYSTEM 'saf.dtd'>\n";
-print "<saf document='$file' addressing='char'>\n";
+print "<saf document='".xml_escape($file)."' addressing='char'>\n";
 
 $id=0; $i=0; $from=$i; $i++; $sent="";
 $c = getc INFO;
@@ -60,12 +68,7 @@ while ($c ne undef )
 	    $to=$i;
 	    print "<sentence id='s$id' from='$from' to='$to'";
 	    # include sentence text in value attribute
-	    $sent =~ s/\&/&amp;/g;
-	    $sent =~ s/\>/&gt;/g;
-	    $sent =~ s/\</&lt;/g;
-	    $sent =~ s/\"/&quot;/g;
-	    $sent =~ s/\'/&apos;/g;
-	    print " value='$sent'";
+	    print " value='".xml_escape($sent)."'";
 	    print "/>\n";
 	    $from=$i; $to=-1; $id++; $sent="";
 	}
@@ -85,3 +88,12 @@ print "</saf>\n";
 
 close(INFO);
 
+sub xml_escape {
+    my $str = shift(@_);
+    $str =~ s/\&/&amp;/g;
+    $str =~ s/\>/&gt;/g;
+    $str =~ s/\</&lt;/g;
+    $str =~ s/\"/&quot;/g;
+    $str =~ s/\'/&apos;/g;
+    return $str;
+}
