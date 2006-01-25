@@ -266,7 +266,8 @@
        :direction :output
        :if-exists :overwrite
        :if-does-not-exist :create)
-    (format t "~%OUTPUT FILE: ~a" (namestring ofile))
+    (format t "~&INPUT FILE: ~a" filename)
+    (format t "~&OUTPUT FILE: ~a" (namestring ofile))
     (process-saf-sentences
      (xml-to-saf-object 
       (read-file-to-string filename)
@@ -279,6 +280,7 @@
 	 (text
 	  (if textfilename
 	      (read-file-to-string textfilename))))
+    (format t "~&DATA FILE: ~a" (saf-meta-document (saf-meta saf)))
     (format ostream "~a"
 	    (saf-header :addressing "char"
 			:document (saf-meta-document (saf-meta saf))))
@@ -289,28 +291,34 @@
 			 (point-to-char-point 
 			  (saf-edge-from x) "char")))
 	do
-	  ;(format t "~&SENT: ~a" s) ;!bmw
-	    (cond
-	     ((saf-meta-document (saf-meta saf))
-	      (let ((*char-map-add-offset* 
-		     (point-to-char-point (saf-edge-from s) "char")))
-		(setf *char-map-add-offset* *char-map-add-offset*)
-		(x-parse text 
-			 (saf-edge-from s) 
-			 (saf-edge-to s)
-			 (saf-meta-addressing (saf-meta saf))
-			 :document (saf-meta-document (saf-meta saf))
-			 :char-map #'char-map-add-x
-			 :show-parse show-parse)))
-	     (t
-	      (x-parse (saf-edge-content s) 
-		       nil
-		       nil
-		       nil
-		       :document nil
-		       :show-parse show-parse)))
-	      
-	    (dump-sentence-analyses s ostream))
+	  (format t "~&~%PROCESSING SENTENCE ~a: ~& ~a" 
+		  (saf-edge-id s)
+		  (saf-edge-content s))
+	  (time
+	   (handler-case 
+	       (cond
+		((saf-meta-document (saf-meta saf))
+		 (let ((*char-map-add-offset* 
+			(point-to-char-point (saf-edge-from s) "char")))
+		   (setf *char-map-add-offset* *char-map-add-offset*)
+		   (x-parse text 
+			    (saf-edge-from s) 
+			    (saf-edge-to s)
+			    (saf-meta-addressing (saf-meta saf))
+			    :document (saf-meta-document (saf-meta saf))
+			    :char-map #'char-map-add-x
+			    :show-parse show-parse)))
+		(t
+		 (x-parse (saf-edge-content s) 
+			  nil
+			  nil
+			  nil
+			  :document nil
+			  :show-parse show-parse)))
+	     (EXCL:INTERRUPT-SIGNAL () (error "interrupt-signal"))
+	     (error () (format t "~& ERROR!"))
+	     ))
+	  (dump-sentence-analyses s ostream))
     (format ostream "~&</saf>")))
 
 ;;based on mrs::output-mrs-after-parse

@@ -647,21 +647,21 @@
 	     :type :replace
 	     :source "<[^>]*>"
 	     :scanner (ppcre:create-scanner "<[^>]*>")
-	     :target "")
+	     :target " ")
 	    (x-fspp-global *x-preprocessor*)))
     (setf (x-fspp-global *x-preprocessor*) ;;hack: fix_me
       (push (make-fsr 
 	     :type :replace
-	     :source "^[^>]*>"
-	     :scanner (ppcre:create-scanner "^[^>]*>")
-	     :target "")
+	     :source "^[^<]*>"
+	     :scanner (ppcre:create-scanner "^[^<]*>")
+	     :target " ")
 	    (x-fspp-global *x-preprocessor*)))
     (setf (x-fspp-global *x-preprocessor*) ;;hack: fix_me
       (push (make-fsr 
 	     :type :replace
-	     :source "<[^>]$"
-	     :scanner (ppcre:create-scanner "<[^>]$")
-	     :target "")
+	     :source "<[^>]*$"
+	     :scanner (ppcre:create-scanner "<[^>]*$")
+	     :target " ")
 	    (x-fspp-global *x-preprocessor*)))
     (setf (x-fspp-global *x-preprocessor*) ;;hack: fix_me
       (push (make-fsr 
