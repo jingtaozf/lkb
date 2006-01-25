@@ -128,7 +128,7 @@
       (if (get node 'root)
 	  ""
 	(values (format nil "~a~a"
-			(if *characterize-p*
+			(if (and *characterize-p* (get node 'chart-lex-edge))
 			    (with-slots (from to)
 				(get node 'chart-lex-edge)
 			      (format nil "~a-~a " from to))
