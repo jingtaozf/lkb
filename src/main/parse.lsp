@@ -593,7 +593,6 @@
 	      (:with-tokeniser-partial-tree nil)
 	      (:with-tokeniser-retokenise nil))
 	    (instantiate-chart-with-stems-and-multiwords)
-	    (report-unknown-words)
             (catch :best-first
               (add-words-to-chart (and first-only-p (null *active-parsing-p*)
                                        (cons 0 length-user-input)))
@@ -623,38 +622,6 @@
   (and (stringp input) 
        (> (length input) 4)
        (string= "<?xml" (subseq input 0 5))))
-
-(defvar *report-token-failures* nil)
-(defun report-unknown-words (&key (tchart *tchart*)
-				  (text (or *text* *sentence*)))
-  (when (and *report-token-failures* *characterize-p* text)
-    (loop
-	for span in
-	  (loop
-	      with spans
-	      for e in
-		(set-difference 
-		 (get-tedges tchart)
-		 (loop for e in (get-medges tchart)
-		     append (edge-children e)))
-	      for cfrom = (edge-cfrom e)
-	      for cto = (edge-cto e)
-	      when (and cfrom cto)
-	      do
-		(pushnew (cons cfrom cto) spans
-			 :test #'(lambda (x y)
-				   (and (= (car x) (car y))
-					(= (cdr x) (cdr y)))))
-	      finally
-		(return spans))
-	do
-	  (format t "~&No lexical analysis for span '~a' <~a c ~a>"
-		  (x-span text 
-			  (2-str (car span)) 
-			  (2-str (cdr span)) 
-			  "char")
-		  (car span)
-		  (cdr span)))))
 
 ;;; *****************************************************
 ;;;
@@ -1610,7 +1577,9 @@ an unknown word, treat the gap as filled and go on from there.
 	(let ((token-ccs (aref *tchart* current 0)))
 	  (dolist (cc token-ccs)
 	    (let ((token-entry (chart-configuration-edge cc)))
-	      (format t "~%No analysis found corresponding to token ~A" 
+	      (format t "~%No analysis found corresponding to token ~a-~a ~A" 
+		      (token-edge-from token-entry)
+		      (token-edge-to token-entry)
 		      (token-edge-word token-entry)))))
 	      ;;;    FIX    (generate-unknown-word-entries stem-string)
 	(setf (aref res-array current) t)
