@@ -620,9 +620,10 @@
        (> (length input) 5)
        (string= "<?xml " (subseq input 0 6))))
 
+(defvar *report-token-failures* nil)
 (defun report-unknown-words (&key (tchart *tchart*)
 				  (text (or *text* *sentence*)))
-  (when (and *characterize-p* text)
+  (when (and *report-token-failures* *characterize-p* text)
     (loop
 	for span in
 	  (loop
@@ -2388,10 +2389,12 @@ an unknown word, treat the gap as filled and go on from there.
                            (funcall *do-something-with-parse*)))
                        #-:gdebug
                        (storage-condition (condition)
-                       (format t "Memory allocation problem: ~A caused by ~A~%" condition user-input)) 
+					  (format t "Memory allocation problem: ~A caused by ~A~%" condition raw-sentence))
+                       #+:(and (not :gdebug) :allegro)
+		       (EXCL:INTERRUPT-SIGNAL () (error "interrupt-signal"))
                        #-:gdebug
                        (error (condition)
-                              (format t  "Error: ~A caused by ~A~%" condition user-input)))
+                              (format t  "Error: ~A caused by ~A~%" condition raw-sentence)))
                    (unless (fboundp *do-something-with-parse*)
                      ;; if we're doing something else, 
                      ;; let that function control the output
