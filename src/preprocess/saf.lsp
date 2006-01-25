@@ -266,8 +266,8 @@
        :direction :output
        :if-exists :overwrite
        :if-does-not-exist :create)
-    (format t "~&INPUT FILE: ~a" filename)
-    (format t "~&OUTPUT FILE: ~a" (namestring ofile))
+    (format t "~&;;; Input sentence file: ~a" filename)
+    (format t "~&;;; Output file: ~a" (namestring ofile))
     (process-saf-sentences
      (xml-to-saf-object 
       (read-file-to-string filename)
@@ -280,7 +280,7 @@
 	 (text
 	  (if textfilename
 	      (read-file-to-string textfilename))))
-    (format t "~&DATA FILE: ~a" (saf-meta-document (saf-meta saf)))
+    (format t "~&;;; Data file: ~a" (saf-meta-document (saf-meta saf)))
     (format ostream "~a"
 	    (saf-header :addressing "char"
 			:document (saf-meta-document (saf-meta saf))))
@@ -315,8 +315,12 @@
 			  nil
 			  :document nil
 			  :show-parse show-parse)))
-	     (EXCL:INTERRUPT-SIGNAL () (error "interrupt-signal"))
-	     (error () (format t "~& ERROR!"))
+                       (storage-condition (condition)
+					  (format t "~&Memory allocation problem: ~A" condition))
+                       #+:allegro
+		       (EXCL:INTERRUPT-SIGNAL () (error "Interrupt-Signal"))
+                       (error (condition)
+			 (format t  "~&Error: ~A" condition))
 	     ))
 	  (dump-sentence-analyses s ostream))
     (format ostream "~&</saf>")))

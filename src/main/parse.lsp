@@ -615,10 +615,14 @@
                 *contemplated-tasks* *filtered-tasks* 
 		*morph-agenda-tasks*)))))
 
+(defun file-xml-p (filename)
+  (xml-p
+   (read-file-to-string filename :numchars 5)))
+
 (defun xml-p (input)
   (and (stringp input) 
-       (> (length input) 5)
-       (string= "<?xml " (subseq input 0 6))))
+       (> (length input) 4)
+       (string= "<?xml" (subseq input 0 5))))
 
 (defvar *report-token-failures* nil)
 (defun report-unknown-words (&key (tchart *tchart*)
@@ -2289,9 +2293,12 @@ an unknown word, treat the gap as filled and go on from there.
 ;;;
 ;;; **************************************************************
 
-(defun parse-sentences (&optional input-file (output-file 'unspec))
+(defun parse-sentences (&optional input-file (output-file 'unspec) &key rest)
    (unless input-file 
       (setq input-file (ask-user-for-existing-pathname "Sentence file?")))
+   ;; if xml input assume SAF XML
+   (when (file-xml-p input-file)
+    (apply #'process-saf-file-sentences (cons input-file rest)))
    (when
       (and input-file
            (or (probe-file input-file)

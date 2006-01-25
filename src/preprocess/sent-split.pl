@@ -41,6 +41,7 @@ if ($file !~ m/^\//)
 # open file in UTF-8 mode
 open(INFO, "<:utf8", $file);
 
+print "<?xml version='1.0' encoding='UTF8'?>";
 print "<!DOCTYPE maf SYSTEM 'saf.dtd'>\n";
 print "<saf document='".xml_escape($file)."' addressing='char'>\n";
 

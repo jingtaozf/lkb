@@ -181,14 +181,17 @@
   (apply #'concatenate
 	 (cons 'string x)))
 
-(defun read-file-to-string (filename)
+(defun read-file-to-string (filename &key (numchars -1))
   (coerce 
    (with-open-file (ifile filename
 		    :direction :input)
      (loop
+	 with i = 0
 	 for c = (read-char ifile nil)
-	 while c
-	 collect c))
+	 while (and c (not (= i numchars)))
+	 collect c
+	 do 
+	   (incf i)))
    'string))
 
 (defun split-str-on-spc (str)
