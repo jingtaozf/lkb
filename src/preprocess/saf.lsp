@@ -256,7 +256,7 @@
 (defun process-standoff-sentence-file (filename &key show-parse)
   (process-saf-file-sentences filename :show-parse show-parse))
   
-(defun process-saf-file-sentences (filename &key show-parse)
+(defun process-saf-file-sentences (filename &key (show-parse t))
   (with-open-file 
       (ofile 
        (merge-pathnames 
@@ -284,6 +284,7 @@
     (format ostream "~a"
 	    (saf-header :addressing "char"
 			:document (saf-meta-document (saf-meta saf))))
+    (setf *unanalysed-tokens* nil)
     (loop for s in 
 	  (sort (copy-list (saf-lattice-edges (saf-lattice saf)))
 		#'< 
@@ -298,7 +299,8 @@
 	   (handler-case 
 	       (cond
 		((saf-meta-document (saf-meta saf))
-		 (let ((*char-map-add-offset* 
+		 (let ((*generate-messages-for-all-unanalysed-tokens* t)
+		       (*char-map-add-offset* 
 			(point-to-char-point (saf-edge-from s) "char")))
 		   (setf *char-map-add-offset* *char-map-add-offset*)
 		   (x-parse text 

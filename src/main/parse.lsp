@@ -53,6 +53,9 @@
   "a counter used by the user interface to make sure parse tree windows 
    etc have the current chart")
 
+(defvar *generate-messages-for-all-unanalysed-tokens* nil)
+(defvar *unanalysed-tokens* nil)
+
 ;;;
 ;;; recently added variant: use active key-driven parsing strategy; this seems
 ;;; to 
@@ -593,6 +596,8 @@
 	      (:with-tokeniser-partial-tree nil)
 	      (:with-tokeniser-retokenise nil))
 	    (instantiate-chart-with-stems-and-multiwords)
+	    (when *generate-messages-for-all-unanalysed-tokens*
+	      (generate-messages-for-all-unanalysed-tokens *tchart*))
             (catch :best-first
               (add-words-to-chart (and first-only-p (null *active-parsing-p*)
                                        (cons 0 length-user-input)))
@@ -1577,16 +1582,30 @@ an unknown word, treat the gap as filled and go on from there.
 	(let ((token-ccs (aref *tchart* current 0)))
 	  (dolist (cc token-ccs)
 	    (let ((token-entry (chart-configuration-edge cc)))
-	      (format t "~%No analysis found corresponding to token ~a-~a ~A" 
-		      (token-edge-from token-entry)
-		      (token-edge-to token-entry)
-		      (token-edge-word token-entry)))))
+	      (unless *generate-messages-for-all-unanalysed-tokens*
+		(format t "~%No analysis found corresponding to token ~a-~a ~A" 
+			(token-edge-from token-entry)
+			(token-edge-to token-entry)
+			(token-edge-word token-entry)))
+	      )))
 	      ;;;    FIX    (generate-unknown-word-entries stem-string)
 	(setf (aref res-array current) t)
 	(check-stem-coverage-aux current res-array)
 	(generate-messages-and-unknown-words res-array max-dim)
 	(return)))))
-      
+
+(defun generate-messages-for-all-unanalysed-tokens (tchart)
+  (let ((medges (get-medges tchart))
+	(tedges (get-tedges tchart)))
+    (loop for tok in tedges
+	unless (member tok medges 
+		       :test #'(lambda (x y)
+				 (member x (edge-children y))))
+	do
+	  (with-slots (from to word) tok
+	    (push word *unanalysed-tokens*)
+	    (format t "~&No lexical analysis found corresponding to token ~a-~a ~A"
+		    from to word)))))
 
 (defun check-stem-coverage-aux (start res-array)
   ;;; (format t "~%check-stem-coverage-aux ~A ~A" start res-array)
