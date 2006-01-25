@@ -1,11 +1,12 @@
-;;; Copyright (c) 2005
+;;; Copyright (c) 2006
 ;;;   Ben Waldron;
 ;;; see `licence.txt' for conditions.
 
 (in-package :lkb)
 
 (defun xml-to-lxml (xml)
-  (discard-whitespace (net.xml.parser:parse-xml xml)))
+  (with-package (:lkb)
+    (discard-whitespace (net.xml.parser:parse-xml xml))))
 
 ;; if xml header, remove and check correct
 (defun remove-xml-header (lxml)
@@ -62,7 +63,7 @@
     (error "string name of lxml attribute expected: got ~a" attrib-str))
   (let ((attrib (if keyword
 		    (intern attrib-str :keyword)
-		  (intern attrib-str)))
+		  (intern attrib-str :lkb)))
 	(car (car lxml-elt)))
     (typecase car
      (symbol nil)
@@ -76,7 +77,7 @@
     (error "string name of lxml element expected"))
   (let ((elt-name (if keyword
 		      (intern elt-str :keyword)
-		    (intern elt-str))))
+		    (intern elt-str :lkb))))
     (loop for e in (cdr lxml-elt)
 	when (eq elt-name (lxml-elt-name e))
 	collect e)))
@@ -100,7 +101,7 @@
     (error "string name of lxml attribute expected: got ~a" attrib-str))
   (let ((attrib (if keyword
 		    (intern attrib-str :keyword)
-		  (intern attrib-str))))
+		  (intern attrib-str :lkb))))
     (second (member attrib (cdr lxml-pi)))))
 
 ;;

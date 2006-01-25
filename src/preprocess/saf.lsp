@@ -66,7 +66,7 @@
 	  (lxml-elt-attributes lxml))
 	 (lxml (cdr lxml))
 	 (olac 
-	  (if (eq (intern "olac:olac") (lxml-elt-name (car lxml)))
+	  (if (eq '|olac:olac| (lxml-elt-name (car lxml)))
 	      (pop lxml))))
     (make-saf
      :meta (get-saf-meta saf-attributes olac)
@@ -111,7 +111,7 @@
 	     (|sentence|
 	      (lxml-sentence-to-edge e :source source :target target))
 	     (t
-	      (error "unhandled saf edge type")))
+	      (error "unhandled saf edge type: ~a" (lxml-elt-name e))))
 	   edges)
 	  (setf source target))
     (loop 
