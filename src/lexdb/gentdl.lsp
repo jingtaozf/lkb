@@ -291,5 +291,5 @@
     out))
 
 (defun join-tdl (x &key (stream nil))
-  (format stream "~a := ~a~%" (car x) (cdr x)))
+  (format stream "~&~a := ~a" (car x) (cdr x)))
 

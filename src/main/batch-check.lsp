@@ -20,32 +20,36 @@
     (error "please set *batch-check-diff-list*"))))
    
 (defun batch-check-lexicon (&optional (unexpandp t) &key (check-duplicates t) (lexicon *lexicon*))
+  (format t "~&;;; Running batch check over lexicon ~a"
+	  (or (name lexicon) ""))
   (let ((*batch-mode* t)
 	(start-path (get-diff-list-start-path)))
     #+:psql
     (when (typep lexicon 'psql-lex-database)
-      (format t "~%(caching all lexical records)")
+      (format t "~&;;; (caching all lexical records)")
       (cache-all-lex-records lexicon))
-    (format t "~%Checking lexicon")
 ;    (format t "~%  - difference-list check starts at path ~a" start-path)
-    (dolist (id (collect-psort-ids lexicon))
-      ;; alternatively - for lexicon only
-      ;; (collect-psort-ids *lexicon*) 
-      (check-lex-entry id lexicon
-		       :unexpandp unexpandp
-		       :start-path start-path)))
+    (let ((ids (collect-psort-ids lexicon)))
+      (format t "~&;;; (~a entries)" (length ids))
+      (loop for id in ids
+		      ;; alternatively - for lexicon only
+		      ;; (collect-psort-ids *lexicon*)
+	  do
+	    (check-lex-entry id lexicon
+			     :unexpandp unexpandp
+			     :start-path start-path))))
   (when check-duplicates
     (display-tdl-duplicates lexicon))
 ;  (format t "~%(emptying cache)")
   (empty-cache lexicon)
-  (format t "~%Lexicon checked"))
+  (format t "~&;;; lexicon checked"))
 
 (defun display-tdl-duplicates (lexicon)
   (let* ((tdl-lex
           (mapcar #'(lambda (x) 
 		      (let* ((x (read-psort lexicon x :cache nil))
 			     (val-dot-body
-			      (cons (tdl-val-str (lex-entry-id x))
+			      (cons (lex-and-id-str lexicon (lex-entry-id x))
 				    (to-tdl-body x))))
 			(forget-psort lexicon x)
 			val-dot-body))
@@ -58,18 +62,23 @@
            :key #'cdr 
            :test #'string=)))
     (when tdl-lex-dup
-      (format t "~%CHECKING FOR DUPLICATE ENTRIES:~%")
+      (format t "~&;;; CHECKING FOR DUPLICATE ENTRIES:~%")
       (loop
           for dup-set in tdl-lex-dup
           do
-            (format t "~%")
+            (format t "~%~%")
             (loop
                 for x in dup-set
                 do
-                  (join-tdl x :stream t)
-                  ))
-      (format t "~%END OF DUPLICATE ENTRIES~%"))))
+                  (join-tdl x :stream t)))
+      (format t "~&;;; END OF DUPLICATE ENTRIES~%"))))
       
+(defun lex-and-id-str (lexicon id)
+  (let* ((in-lex (lexicon-for-id lexicon id))
+	 (in-lex-name (and in-lex (name in-lex))))
+    (if in-lex-name
+	(format nil "[~a] ~a" in-lex-name (tdl-val-str id))
+      (tdl-val-str id))))
 
 (defun check-lex-entry (id lexicon &key unexpandp
 					start-path)
