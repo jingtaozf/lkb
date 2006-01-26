@@ -2286,7 +2286,8 @@ an unknown word, treat the gap as filled and go on from there.
       (setq input-file (ask-user-for-existing-pathname "Sentence file?")))
    ;; if xml input assume SAF XML
    (when (file-xml-p input-file)
-    (apply #'process-saf-file-sentences (cons input-file rest)))
+     (return-from parse-sentences
+       (apply #'process-saf-file-sentences (cons input-file rest))))
    (when
       (and input-file
            (or (probe-file input-file)
