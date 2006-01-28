@@ -1460,14 +1460,16 @@
           (format stream "~%"))
         (when (or (eq *redwoods-export-values* :all)
                   (smember :rmrs *redwoods-export-values*))
-          (mrs::output-rmrs1 (mrs::mrs-to-rmrs mrs) 'mrs::compact stream)
-          (format stream "~%"))
+	  (ignore-errors
+	   (mrs::output-rmrs1 (mrs::mrs-to-rmrs mrs) 'mrs::compact stream)
+	   (format stream "~%")))
         (when (or (eq *redwoods-export-values* :all)
                   (smember :xml *redwoods-export-values*))
-          (mrs::output-rmrs1
-           (mrs::mrs-to-rmrs mrs)
-           'mrs::xml stream nil nil i-input ident)
-          (format stream "~%"))
+	  (ignore-errors
+	   (mrs::output-rmrs1
+	    (mrs::mrs-to-rmrs mrs)
+	    'mrs::xml stream nil nil i-input ident)
+	   (format stream "~%")))
         (when (or (eq *redwoods-export-values* :all)
                   (smember :dependencies *redwoods-export-values*))
           (ignore-errors (mrs::ed-output-psoa mrs :stream stream)))
