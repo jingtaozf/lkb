@@ -604,16 +604,18 @@ to something unexpected, so don't give people the temptation!
   ;;; When we are generating, we accept the first matching subrule only.
   (let* ((input-chars (coerce string 'list))
 	 (rule (find rule-name *morph-rule-set* :key #'morph-rule-name))
-	 (rule-class (morph-rule-class rule))
+	 (rule-class (and rule (morph-rule-class rule)))
 	 (suffix-p (eql rule-class 'suffix)))
-    (dolist (subrule (morph-rule-subrules rule))
-      (multiple-value-bind (matchp unmatched bindings)
-	  (match-rule-letters (if suffix-p (reverse input-chars) input-chars)
-			      (morph-subrule-under subrule)
-			      nil)
-	(when matchp
-	  (let ((new-form 
-		 (create-other-morph-form unmatched 
-					 (morph-subrule-surface subrule)
-					 bindings suffix-p)))
-	    (return new-form)))))))
+    (if rule
+      (dolist (subrule (morph-rule-subrules rule))
+        (multiple-value-bind (matchp unmatched bindings)
+            (match-rule-letters (if suffix-p (reverse input-chars) input-chars)
+                                (morph-subrule-under subrule)
+                                nil)
+          (when matchp
+            (let ((new-form 
+                   (create-other-morph-form unmatched 
+                                           (morph-subrule-surface subrule)
+                                           bindings suffix-p)))
+              (return new-form)))))
+      string)))

@@ -52,7 +52,7 @@
   (make-array 2048 :element-type 'character :adjustable nil :fill-pointer 0))
 
 (defparameter *sppp-input-chart*
-  (make-array '(2048 2)))
+  (make-array 2048))
 
 (defvar *sppp-debug-p* nil)
 
@@ -97,7 +97,9 @@
       for end = (or (rest (assoc :end token)) -1)
       for from = (or (rest (assoc :from token)) -1)
       for to = (or (rest (assoc :to token)) -1)
-      do (add-token-edge form (string-upcase form) start end from to)
+      for edge
+      = (add-token-edge form (string-upcase form) start end from to)
+      for leaves = (edge-leaves edge)
       do
         (loop
             for analysis in (rest (assoc :analyses token))
@@ -111,7 +113,7 @@
                    for rule in rules
                    collect (list (rest (assoc :id rule))
                                  (rest (assoc :form rule))))
-               i (+ 1 i) form form start end from to)
+               start end form form from to leaves edge)
             else do
               (let ((irule (unless (or (null inflection)
                                        (string= inflection "zero"))
@@ -122,7 +124,7 @@
                                      :lkb))))
                 (add-morpho-stem-edge
                  stem (when irule (list (list irule form)))
-                 i (+ 1 i) form form start end from to)))))
+                 start end form form start end leaves edge)))))
 
 (defun sppp (text &key (stream *sppp-stream*))
 
@@ -137,7 +139,7 @@
     (let ((n (array-dimension *sppp-input-chart* 0)))
       (when (>= (length text) n)
         (setf *sppp-input-chart* 
-          (adjust-array *sppp-input-chart* (list n 2)))))
+          (adjust-array *sppp-input-chart* (* n 2)))))
     (setf (stream-external-format stream) (excl:find-external-format :utf-8))
     (let ((*package* (find-package :lkb))
           (n (loop
@@ -173,9 +175,7 @@
 (defun sppp-process-segment (segment)
   (loop
       for i from 0 to (- (array-dimension *sppp-input-chart* 0) 1)
-      do
-        (setf (aref *sppp-input-chart* i 0) nil)
-        (setf (aref *sppp-input-chart* i 1) nil))
+      do (setf (aref *sppp-input-chart* i) nil))
   (let (tokens)
     (loop
         for element in segment
@@ -183,21 +183,34 @@
         for form = (rest (assoc :form token))
         for from = (rest (assoc :from token))
         for to = (rest (assoc :to token))
-        when (and from to (not (punctuationp form))) do 
-          (push token (aref *sppp-input-chart* from 0))
-          (push token (aref *sppp-input-chart* to 1)))
+        when (and from to (not (punctuationp form)))
+        do 
+          (setf (aref *sppp-input-chart* from) t)
+          (push token tokens))
     (loop
-        with n = 0
+        with vertex = 0
         for i from 0 to (- (array-dimension *sppp-input-chart* 0) 1)
-        for foo = (aref *sppp-input-chart* i 0)
-        when foo do
-          (loop
-              for token in foo
-              do
-                (push (nconc (pairlis '(:start :end) (list n (+ n 1))) token)
-                      tokens))
-          (incf n))
-    (nreverse tokens)))
+        when (aref *sppp-input-chart* i)
+        do
+          (setf (aref *sppp-input-chart* i) vertex)
+          (incf vertex))
+    (loop
+        with last = 0
+        for token in (nreverse tokens)
+        for from = (rest (assoc :from token))
+        for start = (aref *sppp-input-chart* from)
+        for to = (rest (assoc :to token))
+        for end = (loop
+                      for i from to
+                      to (- (array-dimension *sppp-input-chart* 0) 1)
+                      thereis (aref *sppp-input-chart* i)
+                      finally (return (+ last 1)))
+        when (or (null start) (null end))
+        do (error "sppp-process-segment(): internal error; see `sppp.lsp'.")
+        else do (setf last end)
+        and collect (nconc
+                     token
+                     (pairlis '(:start :end) (list start end))))))
 
 (defun sppp-process-token (token)
   (loop

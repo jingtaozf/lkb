@@ -809,7 +809,8 @@
 					  :edge edge
 					  :end to)))
 	  (push cc (aref *tchart* to 0))
-	  (push cc (aref *tchart* from 1))))))
+	  (push cc (aref *tchart* from 1)))
+      edge)))
 
 
 (defun token-edge-match (edge cclist)
