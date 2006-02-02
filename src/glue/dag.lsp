@@ -12,6 +12,13 @@
 
 (defparameter %failures% nil)
 
+;;;
+;;; _fix_me_
+;;; moving to ACL 8.0, the following generates a compiler warning (`undeclared
+;;; variable N') in the constructor; apparently lexical closure policies have
+;;; changed.  i wonder what ANSI CL has to say about this.     (31-jan-06; oe)
+;;;
+#+:null
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
            #-:ansi-eval-when (load eval compile)
   (let ((n -1))
@@ -22,6 +29,15 @@
       (id (incf n))
       nature type1 type2 glb path suffix context)))
 
+(defparameter %failures-counter% -1)
+
+(defun reset-failure-count () 
+  (setf %failures-counter% -1))
+
+(defstruct failure
+  (id (incf %failures-counter%))
+  nature type1 type2 glb path suffix context)
+
 (defmethod print-object ((object failure) stream)
   (if *failure-raw-output-p*
     (call-next-method)
