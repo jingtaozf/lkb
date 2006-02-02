@@ -1353,13 +1353,10 @@ relatively limited.
     (check-rule-filter-morph-aux rule-entries)))
 	
 (defun check-rule-filter-morph-aux (rule-list)
-  (if (cdr rule-list)
-      (let ((first-rule (car rule-list)))
-	(dolist (other (cdr rule-list))
-	  (unless (check-nosp-feeding other first-rule)
-	    (return-from check-rule-filter-morph-aux nil)))
-	t)
-    t))
+  (loop
+      for (first . rest) on rule-list
+      while rest
+      always (check-nosp-feeding (first rest) first)))
 
 ;;; end of Phase 2 code
 
