@@ -209,16 +209,16 @@ fi
 # ERG; by default, only get the latest growth (currently the fifth).
 #
 if [ -n "${TSDBHOME}" ]; then
-  echo -n "install: \`erg.jun-04.tgz' ...";
-  ( cd Archives; ${WGET} http://redwoods.stanford.edu/ftp/5th/erg.jun-04.tgz; )
-  ${GUNZIP} ${DELPHINHOME}/Archives/erg.jun-04.tgz | ${TAR};
+  echo -n "install: \`erg.jan-06.tgz' ...";
+  ( cd Archives; ${WGET} http://redwoods.stanford.edu/ftp/6th/erg.jan-06.tgz; )
+  ${GUNZIP} ${DELPHINHOME}/Archives/erg.jan-06.tgz | ${TAR};
   echo " done.";
-  for i in vm6 vm13 vm31 vm32 ecoc ecos ecpa ecpr; do
+  for i in vm ec jh; do
     file="itsdb_${i}.tgz"
     echo -n "install: \`${file}' ...";
     ( \
       cd Archives; \
-      ${WGET} http://redwoods.stanford.edu/ftp/5th/${file}; \
+      ${WGET} http://redwoods.stanford.edu/ftp/6th/${file}; \
       if [ -f ${file} ]; then \
         cd ${TSDBHOME}; \
         ${GUNZIP} ${DELPHINHOME}/Archives/${file} | ${TAR}; \
