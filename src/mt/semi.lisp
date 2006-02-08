@@ -58,7 +58,8 @@
                         (lookup-predicate pred semi)))))))))))
     (setf %semi% semi)))
 
-(let ((arg1 (mrs::vsym "ARG1")))
+(let (#+:logon 
+      (arg1 (mrs::vsym "ARG1")))
   (defun test-semi-compliance (mrs
                                &optional (semi %semi%)
                                &key tags)

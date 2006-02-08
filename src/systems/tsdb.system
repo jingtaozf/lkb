@@ -40,7 +40,7 @@
   ;;
   ;; for LOGON use, at least, assume AllegroCache is available
   ;;
-  #+:logon
+  #+(or :logon (and :allegro-version>= (version>= 8 0)))
   (pushnew :acache *features*)
   
   ;;

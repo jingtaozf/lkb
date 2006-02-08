@@ -144,7 +144,7 @@
             (decf (fill-pointer result)))
           (return result))
     ""))
-
+     
 
 (defun start-lkb (&optional runtimep)
 
@@ -157,6 +157,12 @@
                      (symbol-value building-image-p))
                 (find :slave *features*))
 
+      (let* ((home (getenv "DELPHINHOME"))
+             (home (when home (namestring (parse-namestring home))))
+             (lkbrc (when home (dir-and-name home "dot.lkbrc"))))
+        (when (and lkbrc (probe-file lkbrc))
+          (with-package (:lkb) (load lkbrc))))
+          
       (let* ((lkbrc (dir-and-name (user-homedir-pathname) ".lkbrc")))
         (with-package (:lkb) (when (probe-file lkbrc) (load lkbrc))))
       

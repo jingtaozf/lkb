@@ -589,18 +589,52 @@
 	      (year (parse-integer (subseq time-str 0 slash1))))
 	  (apply #'encode-universal-time 
 		 (list second minute hour date month year))))))
-	  
-;; call from globals.lsp to set character encoding to that used by grammar
-;; (currently supports Allegro CL only)
-;; (aim to support Emacs encoding names as canonical form)
-(defun grammar-encoding (encoding)
+
+;;;
+;;; add LKB-side support for coding systems, intended for use at the very top
+;;; of the `script' file in each grammar; use a macro at the top-level, so as
+;;; to normalize, say, 'utf-8, utf-8, and :utf-8.
+;;;
+(defmacro set-coding-system (coding)
+  `(do-set-coding-system
+       ,(typecase coding
+          (symbol (intern coding :keyword))
+          (cons (when (eq (first coding) 'quote)
+                  (intern (second coding) :keyword)))
+          (string (intern (string-upcase coding) :keyword)))
+     ',coding))
+
+(defun do-set-coding-system (coding &optional raw)
+
+  (case coding
+    (utf8 (setf coding :utf-8))
+    (eucjp (setf coding :euc-jp))
+    ((latin1 iso88591) (setf coding :iso-8859-1)))
+  
+  (unless (smember coding '(:utf-8 :euc-jp :iso-8859-1))
+    (error "set-coding-system(): invalid coding system `~a'.~%" raw))
+
   #+:allegro
-  (let ((locale (excl::find-locale (format nil ".~a" encoding))))
+  (let ((locale (excl::find-locale (format nil ".~a" coding))))
     (cond
      (locale 
       (setf excl:*locale* locale)
-      (format t "~&; Grammar encoding: ~a" encoding))
+      (format
+       t
+       "~&set-coding-system(): activating `~a'."
+       locale))
      (t
-      (format t "~&; Warning: unhandled argument (~a) to grammar-encoding" encoding))))
+      (format
+       t
+       "~&set-coding-system(): mysterious problem activating ~a."
+       coding))))
   #-:allegro
-  (format t "~&; Warning: ignoring call to function grammar-encoding~&;            (not yet written for this Lisp implementation)"))
+  (format
+   t
+   "~&set-coding-system(): ~
+    ignoring request for ~a on this Lisp implementation."
+   coding))
+
+(defun grammar-encoding (coding)
+  (do-set-coding-system (intern (string coding) :keyword)))
+
