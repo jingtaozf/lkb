@@ -11,6 +11,7 @@
 ? include/mrs.h
 M log/build
 ? src/.l7cl
+? src/.l8cl
 ? src/.lecl
 ? src/tsdb/home/log
 ? src/tsdb/home/redwoods
@@ -23,7 +24,7 @@ M log/build
 **********
 Checking in ./src/version.lsp;
 /lingo/CVS/lkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.471; previous revision: 1.470
+new revision: 1.472; previous revision: 1.471
 done
 make[1]: Entering directory `/lingo/build/lkb'
 ( \
@@ -1113,7 +1114,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-8.0 [Linux (x86)] (Feb 8, 2006 8:00)
+8.0 [Linux (x86)] (Feb 8, 2006 13:44)
 Copyright (C) 1985-2005, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -1326,6 +1327,14 @@ T
 ;   Fast loading from bundle code/uri.fasl.
 ;   Fast loading /lingo/local/acl/code/euc.fasl
 ;   Fast loading from bundle code/ffcompat.fasl.
+;   Fast loading /lingo/local/acl/code/acache.001
+;;; Installing acache patch, version 1
+AllegroCache version 1.0.0
+;     Fast loading /lingo/local/acl/code/sax.fasl
+;     Fast loading /lingo/local/acl/code/regexp2.fasl
+;       Fast loading /lingo/local/acl/code/yacc.fasl
+;   Autoloading for package "CROSS-REFERENCE":
+;     Fast loading from bundle code/xref-s.fasl.
 ;   Fast loading from bundle code/ef-1250.fasl.
 ;   Fast loading from bundle code/efft-1250-base.fasl.
 ;; Note: Switching the following external-formats to runtime mode
@@ -1736,9 +1745,6 @@ T
 ; Autoloading for package "EXCL.OSI":
 ;   Fast loading /lingo/local/acl/code/osi.fasl
 ;     Fast loading from bundle code/fileutil.fasl.
-;   Autoloading for package "REGEXP":
-;     Fast loading /lingo/local/acl/code/regexp2.fasl
-;       Fast loading /lingo/local/acl/code/yacc.fasl
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psql-database.fasl
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-database.fasl
@@ -2137,7 +2143,7 @@ NIL
  |#
 ; Fast loading from bundle code/nocompiler.fasl.
 ;   Fast loading from bundle sys/defdecl.fasl.
-122078696 bytes have been tenured, next gc will be global.
+131106792 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 
 T 
@@ -2325,7 +2331,7 @@ CL-USER(10): ; Loading /lingo/build/lkb/src/systems/tsdb.system
 ; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/api.fasl
 ; Loading /lingo/build/lkb/src/systems/pxml.system
 ;;; Compiling file /lingo/build/lkb/src/xml/pxml0.cl
-8444464 bytes have been tenured, next gc will be global.
+8443904 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/xml/pxml0.fasl
 ;;; Fasl write complete
@@ -2335,7 +2341,7 @@ See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/xml/pxml1.fasl
 ;;; Compiling file /lingo/build/lkb/src/xml/pxml3.cl
-13513712 bytes have been tenured, next gc will be global.
+9252344 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/xml/pxml3.fasl
 ;;; Fasl write complete
@@ -2389,6 +2395,8 @@ See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/dag.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/main/dag.fasl
+10073208 bytes have been tenured, next gc will be global.
+See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Compiling file /lingo/build/lkb/src/main/yadu.lsp
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/yadu.fasl
 ;;; Fasl write complete
@@ -2398,8 +2406,6 @@ See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/main/gen.fasl
 ;;; Compiling file /lingo/build/lkb/src/main/structs.lsp
-16542136 bytes have been tenured, next gc will be global.
-See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/structs.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/main/structs.fasl
@@ -2669,6 +2675,8 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/main/batch-check.fasl
 ;;; Compiling file /lingo/build/lkb/src/main/debug.lsp
+8936504 bytes have been tenured, next gc will be global.
+See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/debug.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/main/debug.fasl
@@ -2879,17 +2887,6 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ; Fast loading /lingo/build/lkb/src/.l8cl/mt/lm.fasl
 ; Fast loading /lingo/local/acl/code/acache.001
 ;;; Installing acache patch, version 1
-Warning: You have loaded AllegroCache version 1.0.0 and newer versions have
-         already been downloaded.  (If you would like to disable this warning,
-         then create a file named
-         /lingo/local/acl/code/acache_inhibit_version_warning.txt.  The
-         contents of this file do not matter, so it can be of zero length.)
-         To use one of the newer versions of AllegroCache, change the (require
-         :acache) to one of the following, or, if you used `LOAD' the specific
-         the appropriate version directly:
-
- (REQUIRE :ACACHE "acache-1.0.3.fasl")
-
 AllegroCache version 1.0.0
 ;   Fast loading /lingo/local/acl/code/sax.fasl
 ; Foreign loading /lingo/build/lkb/src/tsdb/linux.x86.32/capi.so.
@@ -2931,8 +2928,6 @@ AllegroCache version 1.0.0
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/tsdb.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/process.lisp
-8484920 bytes have been tenured, next gc will be global.
-See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/process.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/process.fasl
@@ -2977,10 +2972,10 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/yy.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/mt.lisp
+gc-after-hook(): local; new: 3621160; old: 28168; pending: 0; efficiency: 86.
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/mt.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/mt.fasl
-gc-after-hook(): local; new: 1378344; old: 406320; pending: 12016; efficiency: 94.
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/derivations.lisp
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/derivations.fasl
 ;;; Fasl write complete
@@ -2990,11 +2985,12 @@ gc-after-hook(): local; new: 1378344; old: 406320; pending: 12016; efficiency: 9
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/tnt-interface.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/redwoods.lisp
-gc-after-hook(): local; new: 1564344; old: 14744; pending: 40; efficiency: 94.
-gc-after-hook(): local; new: 2458560; old: 24344; pending: 0; efficiency: 94.
+gc-after-hook(): local; new: 5154264; old: 12856; pending: 0; efficiency: 84.
+gc-after-hook(): local; new: 4044736; old: 24344; pending: 0; efficiency: 87.
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/redwoods.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/redwoods.fasl
+gc-after-hook(): local; new: 1351264; old: 311280; pending: 1128; efficiency: 90.
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/lsp.lisp
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/lsp.fasl
 ;;; Fasl write complete
@@ -3015,16 +3011,16 @@ gc-after-hook(): local; new: 2458560; old: 24344; pending: 0; efficiency: 94.
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/acache.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/acache.fasl
-gc-after-hook(): local; new: 1658696; old: 310624; pending: 5320; efficiency: 93.
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/features.lisp
+gc-after-hook(): local; new: 2245000; old: 112240; pending: 0; efficiency: 89.
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/features.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/features.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/learner.lisp
-gc-after-hook(): local; new: 2936192; old: 762024; pending: 0; efficiency: 91.
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/learner.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/learner.fasl
+gc-after-hook(): local; new: 1007936; old: 699856; pending: 9056; efficiency: 90.
 (#<MODULE: tsdb>)
 CL-USER(11): ; Exiting
 make[2]: Leaving directory `/lingo/build/lkb'
@@ -3463,14 +3459,14 @@ spanish/semantics.tdl
 spanish/types.tdl
 ( \
   cd /lingo/build//lkb; \
-  find src/.l7cl -type f -exec touch {} \; ; \
+  find src/.l8cl -type f -exec touch {} \; ; \
   tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/itsdb_linux.x86.32.tgz \
       --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" \
       bin/linux.x86.32/tsdb bin/linux.x86.32/swish++ \
       bin/linux.x86.32/pvmd3 bin/linux.x86.32/pvm \
       src/pvm/linux.x86.32/*.so src/tsdb/linux.x86.32/*.so \
-      src/.l7cl/pvm src/.l7cl/tsdb; \
+      src/.l8cl/pvm src/.l8cl/tsdb src/.l8cl/fad; \
 )
 bin/linux.x86.32/tsdb
 bin/linux.x86.32/swish++
@@ -3479,42 +3475,44 @@ bin/linux.x86.32/pvm
 src/pvm/linux.x86.32/pvm.so
 src/tsdb/linux.x86.32/capi.so
 src/tsdb/linux.x86.32/gc.so
-src/.l7cl/pvm/
-src/.l7cl/pvm/pvm-package.fasl
-src/.l7cl/pvm/pvm.fasl
-src/.l7cl/tsdb/
-src/.l7cl/tsdb/tsdb-package.fasl
-src/.l7cl/tsdb/macros.fasl
-src/.l7cl/tsdb/lkb-interface.fasl
-src/.l7cl/tsdb/globals.fasl
-src/.l7cl/tsdb/utilities.fasl
-src/.l7cl/tsdb/pvm.fasl
-src/.l7cl/tsdb/capi.fasl
-src/.l7cl/tsdb/tsql.fasl
-src/.l7cl/tsdb/tsdb.fasl
-src/.l7cl/tsdb/process.fasl
-src/.l7cl/tsdb/commands.fasl
-src/.l7cl/tsdb/import.fasl
-src/.l7cl/tsdb/filter.fasl
-src/.l7cl/tsdb/statistics.fasl
-src/.l7cl/tsdb/evolution.fasl
-src/.l7cl/tsdb/html.fasl
-src/.l7cl/tsdb/podium.fasl
-src/.l7cl/tsdb/allegro.fasl
-src/.l7cl/tsdb/gc.fasl
-src/.l7cl/tsdb/yy.fasl
-src/.l7cl/tsdb/mt.fasl
-src/.l7cl/tsdb/derivations.fasl
-src/.l7cl/tsdb/tnt-interface.fasl
-src/.l7cl/tsdb/redwoods.fasl
-src/.l7cl/tsdb/lsp.fasl
-src/.l7cl/tsdb/ptb.fasl
-src/.l7cl/tsdb/rasp.fasl
-src/.l7cl/tsdb/pcfg.fasl
-src/.l7cl/tsdb/maxent.fasl
-src/.l7cl/tsdb/tagger.fasl
-src/.l7cl/tsdb/features.fasl
-src/.l7cl/tsdb/learner.fasl
+src/.l8cl/pvm/
+src/.l8cl/pvm/pvm-package.fasl
+src/.l8cl/pvm/pvm.fasl
+src/.l8cl/tsdb/
+src/.l8cl/tsdb/tsdb-package.fasl
+src/.l8cl/tsdb/macros.fasl
+src/.l8cl/tsdb/lkb-interface.fasl
+src/.l8cl/tsdb/globals.fasl
+src/.l8cl/tsdb/utilities.fasl
+src/.l8cl/tsdb/pvm.fasl
+src/.l8cl/tsdb/capi.fasl
+src/.l8cl/tsdb/tsql.fasl
+src/.l8cl/tsdb/tsdb.fasl
+src/.l8cl/tsdb/process.fasl
+src/.l8cl/tsdb/commands.fasl
+src/.l8cl/tsdb/import.fasl
+src/.l8cl/tsdb/filter.fasl
+src/.l8cl/tsdb/statistics.fasl
+src/.l8cl/tsdb/evolution.fasl
+src/.l8cl/tsdb/html.fasl
+src/.l8cl/tsdb/podium.fasl
+src/.l8cl/tsdb/allegro.fasl
+src/.l8cl/tsdb/gc.fasl
+src/.l8cl/tsdb/yy.fasl
+src/.l8cl/tsdb/mt.fasl
+src/.l8cl/tsdb/derivations.fasl
+src/.l8cl/tsdb/tnt-interface.fasl
+src/.l8cl/tsdb/redwoods.fasl
+src/.l8cl/tsdb/lsp.fasl
+src/.l8cl/tsdb/ptb.fasl
+src/.l8cl/tsdb/rasp.fasl
+src/.l8cl/tsdb/pcfg.fasl
+src/.l8cl/tsdb/acache.fasl
+src/.l8cl/tsdb/features.fasl
+src/.l8cl/tsdb/learner.fasl
+src/.l8cl/fad/
+src/.l8cl/fad/packages.fasl
+src/.l8cl/fad/fad.fasl
 ( \
   cd /lingo/build//lkb; \
   tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/itsdb_libraries.tgz \
@@ -5149,13 +5147,26 @@ src/general/itsdb.lisp
       --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" --exclude=".#*" \
       src/systems/tsdb.system src/systems/pvm.system \
-      src/pvm/*.lisp \
+      src/systems/fad.system  \
+      src/fad src/pvm/*.lisp \
       src/tsdb/lisp src/tsdb/tcl \
               src/tsdb/ToDo src/tsdb/Registration \
       src/tsdb/TeX; \
 )
 src/systems/tsdb.system
 src/systems/pvm.system
+src/systems/fad.system
+src/fad/
+src/fad/CHANGELOG
+src/fad/README
+src/fad/corman.lisp
+src/fad/fad.lisp
+src/fad/load.lisp
+src/fad/openmcl.lisp
+src/fad/packages.lisp
+src/fad/test.lisp
+src/fad/doc/
+src/fad/doc/index.html
 src/pvm/pvm.lisp
 src/pvm/pvm-package.lisp
 src/tsdb/lisp/
