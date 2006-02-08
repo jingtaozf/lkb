@@ -148,8 +148,8 @@ lkb_linux@cypriot:
 
 lkb_linux@ar:
 	${RM} -f ${LROOT}/.yes;
+	( cd ${LROOT}/lkb && ${MAKE} latest; )
 	( \
-	  ${MAKE} latest; \
 	  echo "(load \"${LROOT}/lkb/src/general/loadup.lisp\")"; \
 	  echo "(load \"${LROOT}/lkb/src/ACL_specific/deliver.lsp\")"; \
 	  echo "(pushnew :lkb *features*)"; \
@@ -162,7 +162,7 @@ lkb_linux@ar:
 	  echo "(compile-system \"tsdb\" :force t)"; \
 	  echo "(excl:exit)"; \
 	) | ( cd /logon/oe/src/logon/franz/linux.x86.64; \
-              ACL_LOCALE=C ./alisp -I clim.dxl -qq && touch ${LROOT}/.yes; )
+              ACL_LOCALE=C ./alisp -I clim -qq && touch ${LROOT}/.yes; )
 	( \
 	  if [ ! -f ${LROOT}/.yes ]; then exit 1; fi; \
 	  cd ${LROOT}/lkb; \
@@ -199,6 +199,7 @@ lkb_solaris:
 
 lkb_windows:
 	${RM} -f ${WROOT}/.yes;
+	( cd ${WROOT}/lkb && ${MAKE} latest; )
 	( \
 	  echo "(load \"${WROOT}/lkb/src/general/loadup.lisp\")"; \
 	  echo "(setf *default-pathname-defaults* "; \
