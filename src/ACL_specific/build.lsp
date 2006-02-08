@@ -45,6 +45,7 @@
 #+(version>= 6 0) (require :uri)
 #+(version>= 6 2) (require :euc)
 #+(version>= 6 2) (require :ffcompat)
+#+(version>= 8 0) (require :acache)
 
 ;;;
 ;;; [spr27650] apparently the runtime bundle does not include (all) external
