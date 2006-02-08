@@ -1382,6 +1382,16 @@
       (dolist (arc (with-verified-dag (dag) (dag-arcs dag)))
         (compress-dag (dag-arc-value arc))))))
 
+(defun find-substructures-subsumed-by (dag type &optional path)
+  (let* ((dag (deref-dag dag)))
+    (append
+     (when (subtype-or-equal (type-of-fs dag) type)
+       (list (cons path dag)))
+     (loop
+         for arc in (dag-arcs dag)
+         for next = (cons (dag-arc-attribute arc) path)
+         nconc (find-substructures-subsumed-by
+                (dag-arc-value arc) type next)))))
 
 (defun list-to-dag (dags)
   (if (null dags)
