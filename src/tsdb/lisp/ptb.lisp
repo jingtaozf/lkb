@@ -148,7 +148,8 @@
           (incf length))
     (values (and result (format nil "~{~a~^ ~}" (nreverse result))) length)))
 
-(defun ptb-preprocess-for-pet (string)
+(defun ptb-preprocess-for-pet (string &optional tagger)
+  (declare (ignore tagger))
   (ptb-preprocess string :rawp nil :plainp nil :posp t))
 
 #+:null         

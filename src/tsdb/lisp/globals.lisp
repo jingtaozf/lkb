@@ -34,7 +34,7 @@
 
 (defparameter *tsdb-name* "[incr tsdb()]")
 
-(defparameter *tsdb-version* "2.0 (4-oct-05; beta)")
+(defparameter *tsdb-version* "2.0 (8-feb-06; beta)")
 
 (defparameter
   *tsdb-application*
@@ -159,7 +159,7 @@
 (defparameter *tsdb-efs* #\@)
 
 (defparameter *tsdb-redwoods-files*
-  '("tree" "decision" "preference" "update" "score"))
+  '("tree" "decision" "preference" "update" "fold" "score"))
 
 (defparameter *tsdb-profile-files*
   (append '("daughter" "edge" "parse" "result" "rule" "run")
@@ -182,6 +182,26 @@
 
 (defparameter *pvm-clients* nil)
 
+(defparameter *process-default-task* :parse)
+
+(defparameter *process-suppress-duplicates* '(:mrs))
+
+(defparameter *process-exhaustive-inputs-p* nil)
+
+(defparameter *process-client-retries* 0)
+
+(defparameter *process-scope-generator-input-p* nil)
+
+(defparameter *process-pretty-print-trace-p* t)
+
+(defparameter *process-raw-print-trace-p* nil)
+
+(defparameter *process-sort-profile-p* t)
+
+(defparameter *process-fan-out-log* nil)
+
+(defparameter *process-fan-out-xml* nil)
+
 (defparameter *statistics-select-condition* nil)
 
 (defparameter *redwoods-export-values* 
@@ -193,7 +213,7 @@
 
 (defparameter *redwoods-agreement-exact-p* t)
 
-(defparameter *redwoods-score-similarity-p* nil)
+(defparameter *redwoods-score-similarity-hooks* nil)
 
 (defparameter *redwoods-use-item-sets-p* t)
 

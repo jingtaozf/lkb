@@ -92,6 +92,7 @@ proc update_ts_list {{action update} {name all} {arg_one yes} {arg_two yes}} {
         set status "$status[expr {[lindex $item 5] ? "r" : "-"}]";
         set status "$status[expr {[lindex $item 6] ? "t" : "-"}]";
         set status "$status[expr {[lindex $item 7] ? "s" : "-"}]";
+        set status "$status[expr {[lindex $item 8] ? "f" : "-"}]";
         $list item create $i 5  -text $status -style $center;
         .menu.compare.menu.compare add radiobutton -label "$name" \
           -selectcolor gold \

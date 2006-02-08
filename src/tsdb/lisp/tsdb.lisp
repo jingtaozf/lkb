@@ -49,9 +49,15 @@
 (defun cache-connection (data &key absolute unique ro verbose)
 
   (declare (ignore verbose))
+  #+:debug
+  (when absolute (break))
   (loop
+      with path = (if absolute (namestring data) (find-tsdb-directory data))
       for connection in (copy-list %tsdb-connection-cache%)
-      when (and (equal (connection-data connection) data)
+      when (and (equal (connection-path connection) path)
+                #+:null
+                (equal (connection-data connection) data)
+                #+:null
                 (equal (connection-absolute connection) absolute)
                 (equal (connection-unique connection) unique)
                 (equal (connection-ro connection) ro))
@@ -62,14 +68,12 @@
           (close-connection connection :verbose t)
           (return connection))
       finally
-        (let* ((path
-                (if absolute (namestring data) (find-tsdb-directory data)))
-               (command (format
-                         nil 
-                         "~a -home=~a -uniquely-project=~:[off~;on~] ~
-                          -quiet~:[~; -read-only~] -eof=\":eof\" ~
-                          -string-escape=lisp -pager=null -max-results=0"
-                         *tsdb-application* path unique ro)))
+        (let ((command (format
+                        nil 
+                        "~a -home=~a -uniquely-project=~:[off~;on~] ~
+                         -quiet~:[~; -read-only~] -eof=\":eof\" ~
+                         -string-escape=lisp -pager=null -max-results=0"
+                        *tsdb-application* path unique ro)))
           (multiple-value-bind (stream foo pid)
             (run-process
              command :wait nil
@@ -82,10 +86,12 @@
                   %tsdb-connection-cache%)))
         (return (first %tsdb-connection-cache%))))
 
-(defun close-connections (&key data (verbose t))
+(defun close-connections (&key data absolute (verbose t))
   (loop
+      with path = (when data
+                    (if absolute (namestring data) (find-tsdb-directory data)))
       for connection in %tsdb-connection-cache%
-      when (or (null data) (equal data (connection-data connection))) do
+      when (or (null path) (equal path (connection-path connection))) do
         (close-connection connection :deletep nil :verbose verbose)
       else collect connection into result
       finally (setf %tsdb-connection-cache% result)))
@@ -402,7 +408,7 @@
        data database))))
 
 (defun flush-cache (cache
-                    &key sort (verbose t))
+                    &key sort (verbose t) relations exceptions)
   (let ((database (get-field :database cache))
         (protocol (get-field :protocol cache)))
     (when verbose
@@ -417,7 +423,10 @@
            for file in *tsdb-profile-files*
            for key = (intern (string-upcase file) :keyword)
            for stream = (get-field key cache)
-           when stream do
+           when (and stream
+                     (or (null relations) (member key relations))
+                     (or (null exceptions) (not (member key exceptions))))
+           do
              (force-output stream)
              (close stream)))
       (:cooked
@@ -436,7 +445,7 @@
       ;;
       (loop
           with path = (find-tsdb-directory database)
-          for file in '("parse" "result")
+          for file in '("parse" "result" "score")
           for source = (namestring (make-pathname :directory path :name file))
           for target = (format nil "~a-" source)
           when (probe-file source) do
@@ -570,6 +579,22 @@
          (t
           (push tuple result)))
       finally (return (nreverse result))))
+(defun select-item-sets (data)
+  (let ((sets (select '("i-id" "s-id") '(:integer :integer)
+                      "item-set" nil data :sort :s-id)))
+    (when sets
+      (loop
+          with current
+          with group
+          for set in sets
+          for i-id = (get-field :i-id set)
+          for s-id = (get-field :s-id set)
+          when (or (null i-id) (null s-id)) return nil
+          unless (or (null current) (= current s-id))
+          collect (sort group #'<) into groups
+          and do (setf group nil)
+          do (push i-id group) (setf current s-id)
+          finally (return (nconc groups (list (sort group #'<))))))))
 
 (defun read-database-schema (data &key absolute)
   
@@ -1240,10 +1265,14 @@
                         (get-field+ :f-estimation record "") :escape rawp))
          (f-accuracy (let ((foo (get-field+ :f-accuracy record "")))
                        (if (stringp foo) foo (format nil "~f" foo))))
+         (f-extras (normalize-string
+                    (get-field+ :f-extras record "")))
          (f-user (get-field+ :f-user record ""))
          (f-host (get-field+ :f-host record ""))
          (f-start (get-field+ :f-start record ""))
-         (f-end (get-field+ :f-end record "")))
+         (f-end (get-field+ :f-end record ""))
+         (f-comment (normalize-string
+                     (get-field+ :f-comment record ""))))
     (if rawp
       (let ((stream (get-field :fold cache))
             (ofs *tsdb-ofs*))
@@ -1259,20 +1288,22 @@
         (write f-etime :stream stream) (write-char ofs stream)
         (write-string f-estimation stream) (write-char ofs stream)
         (write-string f-accuracy stream) (write-char ofs stream)
+        (write-string f-extras stream) (write-char ofs stream)
         (write-string f-user stream) (write-char ofs stream)
         (write-string f-host stream) (write-char ofs stream)
         (write-string f-start stream) (write-char ofs stream)
-        (write-string f-end stream)
+        (write-string f-end stream) (write-char ofs stream)
+        (write-string f-comment stream)
         (terpri stream)
         (force-output stream)
         (incf (get-field :count cache)))
       (let ((query (format
                     nil
                     "insert into score values ~
-                     ~d ~d ~s ~d ~s ~d ~d ~s ~d ~d ~s ~s ~s ~s ~s ~s"
+                     ~d ~d ~s ~d ~s ~d ~d ~s ~d ~d ~s ~s ~s ~s ~s ~s ~s ~s"
                     f-id f-train f-trains f-test f-tests f-events f-features
                     f-environment f-iterations f-etime f-estimation f-accuracy
-                    f-user f-host f-start f-end)))
+                    f-extras f-user f-host f-start f-end f-comment)))
         (call-tsdb query data :cache cache)))))
 
 (defun write-score (data record &key cache)

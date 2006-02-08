@@ -22,7 +22,7 @@
   ;; return a string identifying the grammar that is currently in use, ideally
   ;; including relevant grammar-internal parameters of variation and a version.
   ;;
-  (or (tsdb::clients-grammar) "norgram (knut)"))
+  (or (tsdb::clients-grammar) "norgram (jul)"))
 
 (defun tsdb::initialize-run (&key interactive 
                             exhaustive nanalyses
@@ -50,6 +50,7 @@
   ;; a field :context can be included in the run structure and will be passed
   ;; as the first parameter to finalize-run() upon completion.
   ;;
+  #+:null
   (parse "Sov!" nil)
   nil)
   
@@ -72,7 +73,7 @@
 (defun tsdb::parse-item (string 
                    &key id exhaustive nanalyses trace
                         edges derivations semantix-hook trees-hook
-                        burst (nresults 0))
+                        filter burst (nresults 0))
   (declare (ignore id exhaustive nanalyses edges derivations 
                    semantix-hook trees-hook burst)
            (special tsdb::*process-suppress-duplicates*))
@@ -97,51 +98,56 @@
   ;; note that all values in [incr tsdb()] item and result structures have to
   ;; be of type integer or string.
   ;;
-  (multiple-value-bind (return condition)
-      (#-:debug ignore-errors #+:debug progn
-       (let ((filterp (member :mrs tsdb::*process-suppress-duplicates*))
-             (semi (when (mt::semi-p mt::%semi%) mt::%semi%))
-             tgc tcpu utcpu treal graph solutions)
-         (tsdb::time-a-funcall
-          #'(lambda () (setf graph (parse string trace)))
-          #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
-              (declare (ignore scons ssym sother ignore))
-              (setf tgc (+ tgcu tgcs) tcpu (+ tu ts) treal tr)))
+  (let ((start (get-internal-run-time)) stop
+        (filterp (member :mrs filter))
+        (semi (when (mt::semi-p mt::%semi%) mt::%semi%))
+        tgc tcpu utgc utcpu treal graph solutions)
+    (nconc
+     (handler-case
          (let* ((*print-pretty* nil) (*print-level* nil) (*print-length* nil)
-                (readings 
-                 (tsdb::time-a-funcall
-                  #'(lambda () 
-                      (loop
-                          ;;
-                          ;; _fix_me_
-                          ;; find a better way of not having to keep all the
-                          ;; memory around: probably allow de-allocation of the
-                          ;; solutions here and then rebuild them in the loop
-                          ;; below extracting results.         (29-oct-03; oe)
-                          ;;
-                          for solution = (solution 
-                                          (get-next-solution graph nil))
-                          while (not (zerop solution)) 
-                          do (push solution solutions)
-                          count 1))
-                  #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
-                      (declare (ignore scons ssym sother ignore))
-                      (setf utcpu (- (+ tu ts) (+ tgcu tgcs)))
-                      (incf treal tr))))
                 (nfragments 0)
-                mrss unknown)
-           (pairlis '(:treal :total :tcpu :tgc :readings
+                readings mrss unknown)
+           (tsdb::time-a-funcall
+            #'(lambda () (setf graph (parse string trace :ranking t)))
+            #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
+                (declare (ignore scons ssym sother ignore))
+                (setf tgc (+ tgcu tgcs) tcpu (+ tu ts) treal tr)))
+           (setf readings 
+             (tsdb::time-a-funcall
+              #'(lambda () 
+                  (loop
+                      ;;
+                      ;; _fix_me_
+                      ;; find a better way of not having to keep all the memory
+                      ;; around: probably allow de-allocation of the solutions
+                      ;; here and then rebuild them in the loop below
+                      ;; extracting results.                   (29-oct-03; oe)
+                      ;;
+                      for solution = (solution 
+                                      (get-next-solution graph))
+                      while (not (zerop solution)) 
+                      do (push solution solutions)
+                      count 1))
+              #'(lambda (tgcu tgcs tu ts tr scons ssym sother
+                         &rest ignore)
+                  (declare (ignore scons ssym sother ignore))
+                  (setf utgc (+ tgcu tgcs) utcpu (+ tu ts))
+                  (incf treal tr))))
+           (pairlis '(:treal :tcpu :tgc :readings
                       :results :nresults :fragments :comment :error)
-                    (list treal (+ tcpu utcpu) tcpu tgc
+                    (list treal (+ tcpu utcpu) (+ tgc utgc)
                           readings
                           (loop
                               with n 
                               = (if (fragment-analysis-p graph)
                                   tsdb::*tsdb-maximal-number-of-fragments*
                                   (if (<= nresults 0)
-                                     readings
+                                    readings
                                     (min readings nresults)))
-                              for i from 0
+                              for i from 0 
+                              to (if (fragment-analysis-p graph)
+                                   1000
+                                   n)
                               for solution in (nreverse solutions)
                               for derivation =
                                 (extract-c-structure graph solution)
@@ -160,8 +166,7 @@
                                       (let ((errors
                                              (when semi
                                                (mt::test-semi-compliance
-                                                mrs semi
-                                                :tags '("q" "n" "a")))))
+                                                mrs semi))))
                                         (cond
                                          ((null errors)
                                           (push mrs mrss)
@@ -177,8 +182,8 @@
                                                   :test #'equal))))))))
                               when mrs do (decf n)
                               and collect
-                                (pairlis '(:result-id :derivation :mrs) 
-                                         (list i derivation mrs))
+                                  (pairlis '(:result-id :derivation :mrs) 
+                                           (list i derivation mrs))
                               while (and solution (> n 0))
                               finally
                                 #+:debug
@@ -187,14 +192,32 @@
                                   (free-graph-solution 
                                    (graph-address graph))))
                           (length mrss) nfragments
-                          (format nil "(:nfragments . ~d)" nfragments)
+                          (format
+                           nil
+                           "(:nresults . ~d) (:nfragments . ~d)"
+                           (length mrss) nfragments)
                           (format
                            nil
                            "~@[unknown SEM-I predicates: ~{|~(~a~)|~^, ~}~]"
-                           unknown))))))
+                           unknown))))
 
-    (append
-     (when condition
-       (let* ((error (tsdb::normalize-string (format nil "~a" condition))))
-         (pairlis '(:readings :error) (list -1 error))))
-     return)))
+       (storage-condition (condition)
+         (declare (ignore condition))
+         #+:allegro
+         (excl:exit 0 :no-unwind t)
+         #+:lispworks
+         (lw:quit :ignore-errors-p t)
+         #-(or :allegro :lispworks)
+         (error 
+          "no known mechanism to shutdown Lisp (see `xle-interface.lisp'"))
+
+       (condition (condition)
+         (let* ((error (tsdb::normalize-string 
+                        (format nil "~a" condition))))
+           (pairlis '(:readings :error)
+                    (list -1  error)))))
+     
+     (let* ((stop (or (when (numberp stop) stop) (get-internal-run-time)))
+            (total
+             (round (* (- stop start) 1000) internal-time-units-per-second)))
+       (acons :total total nil)))))

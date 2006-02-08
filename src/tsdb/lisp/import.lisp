@@ -130,6 +130,8 @@
                     (namestring target)
                     (find-tsdb-directory target))))
          (tifile (and tpath (make-pathname :directory tpath :name "item")))
+         (tisfile
+          (and tpath (make-pathname :directory tpath :name "item-set")))
          (tstatus (and tpath (verify-tsdb-directory tpath :absolute t))))
 
     (cond
@@ -198,6 +200,10 @@
         (when tifile
           (with-open-file (foo tifile :direction :output
                            :if-does-not-exists :create 
+                           :if-exists :supersede)))
+        (when tisfile
+          (with-open-file (foo tisfile :direction :output
+                           :if-does-not-exists :create 
                            :if-exists :supersede))))
       (let* ((ids (select "i-id" :integer "item" nil path :absolute t))
              (ids (map 'list #'(lambda (foo) (get-field :i-id foo)) ids))
@@ -205,7 +211,7 @@
              (base (if ids (+ 1 (apply #'max ids)) 1)))
         (multiple-value-bind (item phenomenon item-phenomenon output
                               parse result
-                              titem)
+                              titem foo bar tis)
             (case format
               (:ascii
                (read-items-from-ascii-file file
@@ -234,7 +240,7 @@
                                           :category category
                                           :comment comment
                                           :meter rmeter)))
-          
+          (declare (ignore foo bar))
           (cond
            (item
             (insert path "item" item 
@@ -254,6 +260,8 @@
             (when result (insert path "result" result :absolute t))
             (when (and titem tpath)
               (insert tpath "item" titem :absolute t))
+            (when (and tis tpath)
+              (insert tpath "item-set" tis :absolute t))
             item)
            (t 4))))))))
 
@@ -381,7 +389,7 @@
                                               (pseparator ";;;")
                                               (p-id 1)
                                               meter)
-  
+
   (when meter (meter :value (get-field :start meter)))
   (let* ((lines (and meter (get-field :lines (wc file))))
          (increment (when (and lines (> lines 0))
@@ -392,12 +400,13 @@
          (date (current-time))
          (index 0)
          (delta 0)
-         item phenomenon item-phenomenon output titem)
+         item phenomenon item-phenomenon output titem tis)
     (when stream
       (decf p-id)
       (loop
           with context = :newline
           with rid with rinput
+          with sid with last
           for i from 1
           for line = (read-line stream nil nil)
           while line
@@ -428,7 +437,12 @@
                 (setf id (if (eq context :item)
                            (+ (* index 10) (incf delta))
                            (* (incf index) 10))))
-              (when (eq context :newline) (setf rid id))
+              (when (and (numberp last) (<= id last))
+                (setf id (+ last 1)))
+              (setf last id)
+              (when (eq context :newline) 
+                (setf sid id)
+                (setf rid id))
               (multiple-value-bind (offset extras)
                   (classify-item string)
                 (when (get-field :paragraph extras) (setf rid nil))
@@ -476,6 +490,10 @@
                                                  length (or rinput comment)
                                                  author date))
                                   titem)
+                            ;;the polarity field is hard-coded for now.
+                            (push (pairlis '(:i-id :s-id :polarity)
+                                           (list id sid -1))
+                                  tis)
                             (push (pairlis '(:i-id :o-surface)
                                            (list rid
                                                  (if oinput input ninput)))
@@ -512,7 +530,7 @@
        ;; returning the partial truth.                           (5-jun-05; oe)
        ;;
        (nreverse item) nil nil (nreverse output) nil nil
-       (nreverse titem) nil nil))))
+       (nreverse titem) nil nil (nreverse tis)))))
 
 (defun normalize-item (string)
   (flet ((punctuationp (char)

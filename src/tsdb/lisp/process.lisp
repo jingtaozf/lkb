@@ -33,26 +33,6 @@
 
 (in-package "TSDB")
 
-(defparameter *process-default-task* :parse)
-
-(defparameter *process-suppress-duplicates* '(:mrs))
-
-(defparameter *process-exhaustive-inputs-p* nil)
-
-(defparameter *process-client-retries* 0)
-
-(defparameter *process-scope-generator-input-p* nil)
-
-(defparameter *process-pretty-print-trace-p* t)
-
-(defparameter *process-raw-print-trace-p* nil)
-
-(defparameter *process-sort-profile-p* t)
-
-(defparameter *process-fan-out-log* nil)
-
-(defparameter *process-fan-out-xml* nil)
-
 (defparameter %process-run-id% -1)
 
 (defparameter %accumulated-mt-statistics% nil)
@@ -882,6 +862,7 @@
                                 (if *tsdb-write-passive-edges-p*
                                   -1
                                   *tsdb-maximal-number-of-results*))
+                               (filter *process-suppress-duplicates*)
                                result-id
                                interactive burst)
 
@@ -953,7 +934,7 @@
                         :trees-hook ,trees-hook 
                         :semantix-hook ,semantix-hook
                         :exhaustive ,exhaustive :nanalyses ,nanalyses
-                        :nresults ,nresults
+                        :nresults ,nresults :filter (quote ,filter)
                         :verbose nil :interactive nil :burst t)
                       nil
                       :key :process-item
@@ -964,7 +945,9 @@
       #+(and :null :allegro-version>= (version>= 6 0))
       (when ef (setf (excl:locale-external-format excl:*locale*) ef))
       (case status
-        (:ok (setf (client-status client) item) :ok)
+        (:ok 
+         (setf (client-status client) (cons (get-universal-time) item))
+         :ok)
         (:error (setf (client-status client) :error) :error))))
   
    ((null client)
@@ -1049,7 +1032,7 @@
                                   :nanalyses nanalyses
                                   :trees-hook trees-hook
                                   :semantix-hook semantix-hook
-                                  :nresults nresults
+                                  :nresults nresults :filter filter
                                   :burst burst))
                   (:generate
                    (generate-item mrs 
@@ -1060,7 +1043,7 @@
                                   :nanalyses nanalyses
                                   :trees-hook trees-hook
                                   :semantix-hook semantix-hook
-                                  :nresults nresults
+                                  :nresults nresults :filter filter
                                   :burst burst)))
               when (let ((readings (get-field :readings result)))
                      (and (numberp readings) (> readings 0)))
@@ -1076,7 +1059,7 @@
                          :nanalyses nanalyses
                          :trees-hook trees-hook
                          :semantix-hook semantix-hook
-                         :nresults nresults
+                         :nresults nresults :filter filter
                          :burst burst))
             (:transfer
              (transfer-item mrs 
@@ -1087,7 +1070,7 @@
                             :nanalyses nanalyses
                             :trees-hook trees-hook
                             :semantix-hook semantix-hook
-                            :nresults nresults
+                            :nresults nresults :filter filter
                             :burst burst))
             (:generate
              (generate-item mrs 
@@ -1098,17 +1081,18 @@
                             :nanalyses nanalyses
                             :trees-hook trees-hook
                             :semantix-hook semantix-hook
-                            :nresults nresults
+                            :nresults nresults :filter filter
                             :burst burst))
             (:translate
              (translate-item i-input
+                             :id i-id
                              :edges edges
                              :trace interactive
                              :exhaustive exhaustive
                              :nanalyses nanalyses
                              :trees-hook trees-hook
                              :semantix-hook semantix-hook
-                             :nresults nresults
+                             :nresults nresults :filter filter
                              :burst burst
                              :targets targets)))))
       ;;
@@ -1140,7 +1124,7 @@
                          :nanalyses nanalyses
                          :trees-hook trees-hook
                          :semantix-hook semantix-hook
-                         :nresults nresults
+                         :nresults nresults :filter filter
                          :burst burst))
             (:transfer
              (transfer-item mrs
@@ -1151,7 +1135,7 @@
                             :nanalyses nanalyses
                             :trees-hook trees-hook
                             :semantix-hook semantix-hook
-                            :nresults nresults
+                            :nresults nresults :filter filter
                             :burst burst))
             (:generate
              (generate-item mrs
@@ -1162,7 +1146,7 @@
                             :nanalyses nanalyses
                             :trees-hook trees-hook
                             :semantix-hook semantix-hook
-                            :nresults nresults
+                            :nresults nresults :filter filter
                             :burst burst))
             (:translate
              (translate-item i-input
@@ -1172,7 +1156,7 @@
                              :nanalyses nanalyses
                              :trees-hook trees-hook
                              :semantix-hook semantix-hook
-                             :nresults nresults
+                             :nresults nresults :filter filter
                              :burst burst
                              :targets targets)))))
 
@@ -1240,6 +1224,7 @@
       finally
         (return (pairlis '(:pending :ready) 
                          (list pending (find :ready runs :key #'run-status))))
+      do (expire-clients (if client (list client) *pvm-clients*))
       when (message-p message)
       do
         (when *pvm-debug-p*
@@ -1257,7 +1242,7 @@
                (content (message-content message))
                (run (find remote runs :key #'run-tid))
                (client (or client (get-field :client run)))
-               (item (and client (client-status client)))
+               (item (and client (rest (client-status client))))
                (host (and (client-p client) (client-host client))))
 
         (cond
@@ -1472,7 +1457,7 @@
         <~@[~d~]:~@[~d~]>~
         ~:[ {~d:~d}~;~2*~] ~
         (~a)~
-        ~:[~*~*~; [~:[~;=~]~d]~]~@[<`/a>~].~%" 
+        ~:[~*~*~; [~:[~;=~]~d]~]~@[</a>~].~%" 
        timeup index
        tcpu (>= tgc 0.1) tgc total
        words edges 
@@ -1581,8 +1566,6 @@
 
 (defun post-process (&key burstp)
   (declare (ignore burstp))
-  #+:allegro
-  (sys:gsgc-step-generation)
   #+:gcdebug
   (let ((*terminal-io* excl:*initial-terminal-io*)
         (*standard-output* excl:*initial-terminal-io*))

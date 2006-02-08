@@ -30,7 +30,7 @@
               (loop
                   for result in results
                   for mrs = (get-field :mrs result)
-                  when mrs do (mt::record-mrs mrs semi)))
+                  when mrs do (mt::record-mrs semi mrs)))
       finally 
         (when meter (status :text (format nil "~a done" message) :duration 5))
         (let ((stream (create-output-stream file nil)))
@@ -145,7 +145,7 @@
 (defun translate-string (input &key id targets nhypotheses
                                     (stream *tsdb-io*)
                                     (format :ascii)
-                                    index)
+                                    filter index)
 
   ;;
   ;; in HTML mode, use extra cell (instead of a container and margins) to get
@@ -168,7 +168,7 @@
   (force-output stream)
   
   (let ((start (get-internal-real-time))
-        (parse (pvm-process input :parse :wait 30)))
+        (parse (pvm-process input :parse :wait 30 :filter filter)))
     (print-result parse :stream stream :format format :index index)
     (case format
       (:html
@@ -190,7 +190,8 @@
         for i from 1 to n
         for result in analyses
         for pid = (get-field :result-id result)
-        for transfer = (pvm-process parse :transfer :result-id pid)
+        for transfer = (pvm-process
+                        parse :transfer :result-id pid :filter filter)
         for realizations = nil
         do
           (incf ntransfers (length (get-field :results transfer)))
@@ -225,7 +226,7 @@
               for result in (get-field :results transfer)
               for tid = (get-field :result-id result)
               for realization = 
-                (pvm-process transfer :generate :result-id tid)
+                (pvm-process transfer :generate :result-id tid :filter filter)
               do
                 (incf nrealizations (length (get-field :results realization)))
                 (case format
@@ -260,10 +261,10 @@
                     for tree = (tsdb::get-field :tree result)
                     for score = (tsdb::get-field :score result)
                     for bleu = (first
-                                (bleu-score-strings 
+                                (score-strings 
                                  (list tree)
                                  (when (eq result (first results)) targets)
-                                 :source input))
+                                 :source input :type :bleu))
                     when (numberp bleu) do (setf best (max best bleu))
                     do
                       (nconc result (pairlis '(:bleu :grade) (list bleu bleu)))
@@ -534,8 +535,9 @@
 (defun translate-item (string
                        &key id exhaustive nanalyses trace
                             edges derivations semantix-hook trees-hook
+                            (filter *process-suppress-duplicates*)
                             burst (nresults 0) targets)
-  (declare (ignore exhaustive derivations id edges
+  (declare (ignore exhaustive derivations edges
                    semantix-hook trees-hook nresults))
   
   (let* ((stream (make-string-output-stream))
@@ -560,8 +562,8 @@
                  (error "no ~(~a~) PVM client" task)))
          
          (let* ((item (translate-string
-                       string :nhypotheses nanalyses :stream log
-                       :targets targets))
+                       string :id id :nhypotheses nanalyses :stream log
+                       :filter filter :targets targets))
                 (tgc 0) (tcpu 0) (treal 0) (conses 0) (symbols 0) (others 0)
                 (total 0) (readings 0) outputs (errors "") 
                 (nparses 0) (ntransfers 0) (nrealizations 0)
@@ -686,10 +688,6 @@
 
 (defparameter *bleu-punctuation-characters* '(#\. #\! #\? #\, #\: #\|))
 
-(defparameter *bleu-stream* nil)
-
-(defparameter *bleu-pid* nil)
-
 (defun bleu-normalize-string (string)
   (when string
     (loop
@@ -701,61 +699,97 @@
         do (vector-push (char-downcase c) result)
         finally (return result))))
 
-(let ((lock (mp:make-process-lock)))
-
-  (defun bleu-shutdown ()
+(defparameter *string-similarity-locks*
+  (list
+   (cons :bleu (mp:make-process-lock))
+   (cons :wa (mp:make-process-lock))
+   (cons :waft (mp:make-process-lock))))
+
+(defparameter *string-similarity-binaries*
+    (let* ((root (system:getenv "LOGONROOT"))
+           (root (and root (namestring (parse-namestring root)))))
+      (when root
+      (list
+       (cons :bleu (format nil "~a/ntnu/bleu/bleu.pl" root))
+       (cons :wa (format nil "~a/ntnu/bleu/wa.pl" root))
+       (cons :waft (format nil "~a/ntnu/bleu/wa.pl -t" root))))))
+
+(defparameter *string-similarity-streams*
+  (loop
+      for measure in *string-similarity-binaries*
+      collect (cons (first measure) nil)))
+
+(defparameter *string-similarity-pids*
+  (loop
+      for measure in *string-similarity-binaries*
+      collect (cons (first measure) nil)))
+
+(defun string-similarity-shutdown (&optional (type :bleu))
+  (let ((lock (get-field type *string-similarity-locks*))
+        (stream (get-field type *string-similarity-streams*))
+        (pid (get-field type *string-similarity-pids*)))
     (mp:with-process-lock (lock)
-      (when *bleu-stream*
+      (when stream
         (ignore-errors
-         (close *bleu-stream*)
-         (setf *bleu-stream* nil)))
-      (when *bleu-pid*
+         (close stream)
+         (setf (get-field type *string-similarity-streams*) nil)))
+      (when pid
         (ignore-errors
-         (run-process "kill -HUP ~d" *bleu-pid* 
+         (run-process "kill -HUP ~d" pid
                       :wait t :output "/dev/null" :error-output "/dev/null")
-         (run-process "kill -TERM ~d" *bleu-pid* 
+         (run-process "kill -TERM ~d" pid
                       :wait t :output "/dev/null" :error-output "/dev/null")
-         (run-process "(when kill -QUIT ~d" *bleu-pid* 
+         (run-process "(when kill -QUIT ~d" pid
                       :wait t :output "/dev/null" :error-output "/dev/null"))
-        (sys:os-wait nil *bleu-pid*)
-        (setf *bleu-pid* nil))))
-  
-  (defun bleu-initialize ()
+        (sys:os-wait nil pid)
+        (setf (get-field type *string-similarity-pids*) nil)))))
+
+(defun string-similarity-initialize (&optional (type :bleu))
+  (let ((lock (get-field type *string-similarity-locks*))
+        (binary (get-field type *string-similarity-binaries*)))
+    
     (mp:with-process-lock (lock)
-  
-      (when *bleu-stream* (bleu-shutdown))
       
-      (let (foo)
-        (multiple-value-setq (*bleu-stream* foo *bleu-pid*)
-          (run-process 
-           (format nil "~a" *bleu-binary*)
-           :wait nil
-           :output :stream :input :stream
-           :error-output "/dev/null" :if-error-output-exists :append))
-        (setf foo foo))))
-
-  (defun bleu-score-strings (translations &optional references &key source)
+      (when (get-field type *string-similarity-streams*) 
+        (string-similarity-shutdown type))
+      
+      (multiple-value-bind (stream foo pid)
+        (run-process 
+         (format nil "~a" binary)
+         :wait nil
+         :output :stream :input :stream
+         :error-output "/dev/null" :if-error-output-exists :append)
+        (declare (ignore foo))
+        (setf (get-field type *string-similarity-streams*) stream)
+        (setf (get-field type *string-similarity-pids*) pid)))))
+
+(defun score-strings (translations
+                      &optional references
+                      &key (type :bleu) source)
+  (let ((lock (get-field type *string-similarity-locks*)))
     (mp:with-process-lock (lock)
-      (when (null *bleu-stream*) (bleu-initialize))
-      (let (scores)
+      (when (null (get-field type *string-similarity-streams*))
+        (string-similarity-initialize type))
+      (let ((scores)
+            (stream (get-field type *string-similarity-streams*)))
         (when references
-          (format *bleu-stream* "SOURCE~@[ ~a~]~%" source)
+          (format stream "SOURCE~@[ ~a~]~%" source)
           (loop
               for reference in references 
               do (format
-                  *bleu-stream*
+                  stream
                   "REF ~a~%"
                   (bleu-normalize-string reference))))
         (loop
             for translation in translations
             do 
               (format
-               *bleu-stream*
+               stream
                "TRANS ~a~%"
                (bleu-normalize-string translation))
-              (force-output *bleu-stream*)
-              (let ((score (read *bleu-stream* nil nil)))
+              (force-output stream)
+              (let ((score (read stream nil nil)))
                 (if (numberp score)
-                  (push score scores)
+                    (push score scores)
                   (return))))
         (nreverse scores)))))

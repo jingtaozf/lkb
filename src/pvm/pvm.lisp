@@ -57,7 +57,7 @@
 (defstruct cpu 
   host spawn options encoding
   architecture class task threshold name grammar template
-  edges results 
+  edges analyses results wait quantum
   preprocessor tagger reader
   create complete)
 

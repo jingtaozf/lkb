@@ -101,7 +101,8 @@
 	     (and *rasp-loose-preprocessing-p* (not (eq format :pos)) string))
             length)))
 
-(defun rasp-preprocess-for-pet (string)
+(defun rasp-preprocess-for-pet (string &optional tagger)
+  (declare (ignore tagger))
   (rasp-preprocess string :format :pet :posp t))
 
 (defun rasp-tag (string)

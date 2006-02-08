@@ -169,8 +169,8 @@
 (defun tsdb::parse-item (string 
                    &key id exhaustive nanalyses trace
                         edges derivations semantix-hook trees-hook
-                        burst (nresults 0))
-  (declare (ignore id derivations))
+                        filter burst (nresults 0))
+  (declare (ignore id derivations filter))
   
   (let* ((*package* *lkb-package*)
          (*chasen-debug-p* nil)
@@ -193,16 +193,12 @@
                (if trace
                  (make-broadcast-stream *standard-output* str)
                  str))
-              (*unifications* 0)
-              (*copies* 0)
-              (*subsumptions* 0)
               tgc tcpu treal conses symbols others)
-         (declare (special *subsumptions*))
          ;;
          ;; this really ought to be done in the parser ...  (30-aug-99  -  oe)
          ;;
          (setf *sentence* string)
-         (reset-packings)
+         (reset-statistics)
          (multiple-value-bind (e-tasks s-tasks c-tasks f-tasks m-tasks)
              (tsdb::time-a-funcall
               #'(lambda () (parse-tsdb-sentence sent trace))
@@ -213,8 +209,8 @@
 	  (declare (ignore m-tasks))
           (let* ((*print-pretty* nil) (*print-level* nil) (*print-length* nil)
                  (output (get-output-stream-string str))
-                 (unifications *unifications*)
-                 (copies *copies*)
+                 (unifications (statistics-unifications *statistics*))
+                 (copies (statistics-copies *statistics*))
                  (packingp *chart-packing-p*)
                  utcpu
                  utgc
@@ -274,12 +270,13 @@
                       (:proactive . ~d) (:retroactive . ~d)  ~
                       (:trees . ~d) (:frozen . ~d) (:failures . ~d) ~a"
                      utcpu utgc uspace 
-                     *subsumptions* (packings-equivalent *packings*)
-                     (packings-proactive *packings*) 
-                     (packings-retroactive *packings*)
+                     (statistics-subsumptions *statistics*)
+                     (statistics-equivalent *statistics*)
+                     (statistics-proactive *statistics*) 
+                     (statistics-retroactive *statistics*)
                      (length *parse-record*)
-                     (packings-frozen *packings*) 
-                     (packings-failures *packings*)
+                     (statistics-frozen *statistics*) 
+                     (statistics-failures *statistics*)
                      comment)
                     comment))
                  (summary (summarize-chart :derivationp (< nresults 0))))
@@ -366,13 +363,12 @@
 (defun tsdb::generate-item (mrs
                       &key id string exhaustive nanalyses trace
                            edges derivations semantix-hook trees-hook
-                           burst (nresults 0))
+                           filter burst (nresults 0))
   (declare (ignore exhaustive derivations string id trees-hook)
-           (special tsdb::*process-scope-generator-input-p*
-                    tsdb::*process-suppress-duplicates*))
+           (special tsdb::*process-scope-generator-input-p* tsdb::%model%))
 
   (let* ((*package* *lkb-package*)
-         (filterp (member :tree tsdb::*process-suppress-duplicates*))
+         (filterp (member :surface filter))
          (*maximum-number-of-edges* (if (or (null edges) (zerop edges))
                                       *maximum-number-of-edges*
                                       edges))
@@ -381,23 +377,19 @@
          (stream (make-string-output-stream))
          (*standard-output* 
           (if trace (make-broadcast-stream *standard-output* stream) stream))
-         (*unifications* 0)
-         (*copies* 0)
-         (*subsumptions* 0)
          (start (get-internal-run-time)) stop
          tgc tcpu treal conses symbols others)
-
-    (multiple-value-bind (return condition)
-        (ignore-errors
-         (when (or (null mrs) (not (mrs::psoa-p mrs)))
-           (error "null or malformed input MRS"))
-         (unless (or (null tsdb::*process-scope-generator-input-p*)
-                     (mrs::make-scoped-mrs mrs))
-           (error "input MRS does not scope"))
+    (nconc
+     (handler-case
          (multiple-value-bind (strings f-tasks e-tasks s-tasks
                                unifications copies aedges pedges)
              (tsdb::time-a-funcall
               #'(lambda ()
+                  (when (or (null mrs) (not (mrs::psoa-p mrs)))
+                    (error "null or malformed input MRS"))
+                  (unless (or (null tsdb::*process-scope-generator-input-p*)
+                              (mrs::make-scoped-mrs mrs))
+                    (error "input MRS does not scope"))
                   (let (#+:pooling (*dag-recycling-p* (null trace)))
                     (generate-from-mrs mrs :signal t :nanalyses nanalyses)))
               #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
@@ -412,19 +404,20 @@
            ;; global *gen-record*; really, the generator should do this itself.
            ;;
            #+:logon
-           (when (tsdb::mem-p tsdb::%model%)
-             (let* ((lms (when mt::*lm-model*
-                           (mt::lm-score-strings strings)))
-                    (scores
-                     (loop
-                         for edge in *gen-record*
-                         collect (tsdb::mem-score-edge edge :lm (pop lms)))))
-               (loop
-                   for edge in *gen-record*
-                   for score in scores
-                   do (setf (edge-score edge) score)))
+           (let* ((lms #+:lm
+                       (when mt::*lm-model* (mt::lm-score-strings strings))
+                       #-:lm
+                       nil)
+                  (scores
+                   (loop
+                       for edge in *gen-record*
+                       collect (tsdb::mem-score-edge edge :lm (pop lms)))))
+             (loop
+                 for edge in *gen-record*
+                 for score in scores
+                 do (setf (edge-score edge) score))
              (setf *gen-record* (sort *gen-record* #'> :key #'edge-score)))
-           
+
            (let* ((*print-pretty* nil) (*print-level* nil) (*print-length* nil)
                   (output (get-output-stream-string stream))
                   (words (length %generator-lexical-items%))
@@ -454,9 +447,10 @@
                      "~a (:subsumptions . ~d) (:equivalence . ~d) ~
                       (:proactive . ~d) (:retroactive . ~d)"
                      comment 
-                     *subsumptions* (packings-equivalent *packings*)
-                     (packings-proactive *packings*) 
-                     (packings-retroactive *packings*))
+                     (statistics-subsumptions *statistics*)
+                     (statistics-equivalent *statistics*)
+                     (statistics-proactive *statistics*) 
+                     (statistics-retroactive *statistics*))
                     comment))
                   #+:pooling
                   (comment
@@ -503,24 +497,20 @@
                                         :derivation :score :size)
                                       (list i mrs surface surface
                                             derivation score size))
-                     and do (push surface surfaces)))))))
+                     and do (push surface surfaces)))))) 
 
-      (unless stop (setf stop (get-internal-run-time)))
-
-      (unless trace 
-        (release-temporary-storage :task :generate))
-    
-      (append
-       (when condition
+       (condition (condition)
+         (unless stop (setf stop (get-internal-run-time)))
+         (unless trace (release-temporary-storage :task :generate))
+         
          (let* ((error (tsdb::normalize-string 
                         (format nil "~a" condition)))
                 (error (pprint-error error)))
            (pairlis '(:readings :condition :error)
-                    (list -1 (unless burst condition) error))))
-       (let ((total
-              (round (* (- stop start) 1000) internal-time-units-per-second)))
-         (acons :total total nil))
-       return))))
+                    (list -1 (unless burst condition) error)))))
+     (let ((total
+            (round (* (- stop start) 1000) internal-time-units-per-second)))
+       (acons :total total nil)))))
 
 
 (defun pprint-error (string)
@@ -535,23 +525,13 @@
       "unknown input relation(s): generator may be uninitialized")
      (t string))))
 
-#-:mt
+
 (defun tsdb::transfer-item (mrs
                       &key id string exhaustive nanalyses trace
                            edges derivations semantix-hook trees-hook
-                           burst (nresults 0))
-  (declare (ignore mrs 
-                   id string exhaustive nanalyses trace
-                   edges derivations semantix-hook trees-hook
-                   burst nresults)))
-  
-#+:mt
-(defun tsdb::transfer-item (mrs
-                      &key id string exhaustive nanalyses trace
-                           edges derivations semantix-hook trees-hook
-                           burst (nresults 0) (fragmentp t))
+                           filter burst (nresults 0) (fragmentp t))
   (declare (ignore edges derivations string id exhaustive nanalyses
-                   semantix-hook trees-hook))
+                   filter semantix-hook trees-hook))
 
   (let* ((*package* *lkb-package*)
          (stream (make-string-output-stream))
@@ -609,7 +589,7 @@
            `((:others . ,others) (:symbols . ,symbols) (:conses . ,conses)
              (:treal . ,treal) (:tcpu . ,tcpu) (:tgc . ,tgc)
              (:readings . ,readings)
-	     (:pedges . ,pedges)
+             (:pedges . ,pedges)
              (:error . ,(pprint-error output))
              (:unknown . ,unknown)
              (:results .
@@ -742,12 +722,12 @@
          (setq distinct-parse-edges (parse-tsdb-distinct-edges p distinct-parse-edges)))
       (dotimes (vertex (- *chart-limit* 1))
          (when (aref *chart* (+ 1 vertex) 0)
-	   (dolist (config (aref *chart* (+ 1 vertex) 0))
+           (dolist (config (aref *chart* (+ 1 vertex) 0))
              (when (lexical-rule-p (edge-rule (chart-configuration-edge config)))
                 (incf successful-lrule-applications)))))
       (values successful-lrule-applications (length distinct-parse-edges)
-	      0
-	 )))
+              0
+         )))
 
 (defun summarize-chart (&key derivationp)
   (loop
@@ -854,9 +834,9 @@
 
 (defun uncache-lexicon ()
   (cond 
-   ((and (find-symbol "CLEAR-EXPANDED-LEX")
-         (fboundp (find-symbol "CLEAR-EXPANDED-LEX")))
-    (funcall (symbol-function (find-symbol "CLEAR-EXPANDED-LEX"))))
+   ((and (find-symbol "CLEAR-EXPANDED-LEX" :lkb)
+         (fboundp (find-symbol "CLEAR-EXPANDED-LEX" :lkb)))
+    (funcall (symbol-function (find-symbol "CLEAR-EXPANDED-LEX" :lkb))))
    ((and (find-symbol "*PSORTS*") (boundp (find-symbol "*PSORTS*")))
     (maphash
      #'(lambda (id value)
@@ -914,12 +894,12 @@
      (clear-gen-chart)))
   (loop
       for rule in (get-matching-lex-rules nil)
-      for tdfs = #+:restrict
-                 (if *chart-packing-p* (rule-rtdfs rule) (rule-full-fs rule))
-                 #-:restrict
-                 (rule-full-fs rule)
-      for dag = (tdfs-indef tdfs) do
-        (compress-dag dag))
+      for tdfs = (if (or (and (eq task :parse) *chart-packing-p*)
+                         (and (eq task :generate) *gen-packing-p*))
+                   (rule-rtdfs rule)
+                   (rule-full-fs rule))
+      for dag = (tdfs-indef tdfs)
+      do (compress-dag dag))
   (loop
       for rule in (get-matching-rules nil nil)
       for dag = (tdfs-indef (rule-full-fs rule)) do
@@ -934,8 +914,17 @@
       (let* ((tdfs (get-tdfs-given-id *start-symbol*))
              (dag (and tdfs (tdfs-indef tdfs))))
         (when (dag-p dag) (compress-dag dag)))))
-  (excl:gc))
-                  
+  (let* ((*terminal-io* excl:*initial-terminal-io*)
+         (*standard-output* *terminal-io*))
+    (when (eq task :generate)
+      #+:debug
+      (sys:gsgc-parameters)
+      (excl:gc)
+      #+:debug
+      (sys:gsgc-parameters)
+      #+:debug
+      (room t))))
+
 ;;;
 ;;; interface functions for reconstruction of derivations (in UDF --- unified
 ;;; derivation format |:-).
@@ -950,9 +939,6 @@
   #+:tty
   nil)
 
-;;;
-;;;
-;;;
 
 ;;;
 ;;; _fix_me_
@@ -969,12 +955,13 @@
                (integerp from) (> from -1) (integerp to) (> to -1))
       (let* ((replacements (list (cons 'cfrom (format nil "~a" from))
                                  (cons 'cto (format nil "~a" to))))
-	     (dag (tdfs-indef tdfs))
-	     (new (replace-dag-types
+             (dag (tdfs-indef tdfs))
+             (new (replace-dag-types
                    dag (append
                         mrs::*initial-semantics-path* mrs::*psoa-liszt-path*) 
                    replacements)))
-	(when new (setf (tdfs-indef tdfs) new))))))
+        (when new (setf (tdfs-indef tdfs) new))))))
+
 
 (defun tsdb::find-lexical-entry (form instance &optional id start end (dagp t))
 
@@ -997,7 +984,9 @@
                      (if surface
                        (instantiate-generic-lexical-entry instance surface)
                        (copy-tdfs-completely (lex-entry-full-fs instance)))))
-             (tdfs (if *recording-word* (unify-in-word tdfs form) tdfs))
+             (tdfs (if *recording-word*
+                     (unify-in-word tdfs form)
+                     tdfs))
              (ids (list (lex-entry-id instance))))
         (make-edge :id id :category (and tdfs (indef-type-of-tdfs tdfs))
                    :rule form :leaves (list form) :lex-ids ids
@@ -1065,7 +1054,7 @@
       (values status %failure%))))
 
 (defun tsdb::instantiate-preterminal (preterminal mrule 
-                                      &optional id start end (dagp t))
+                                &optional id start end (dagp t))
   ;;
   ;; _fix_me_
   ;; this hardwires some assumptions about how affixation is carried out. 

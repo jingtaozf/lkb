@@ -135,6 +135,7 @@
               do
                 (mp:with-process-lock (lock) 
                   (when (eq (client-status client) :ready)
-                    (setf (client-status client) item)
+                    (setf (client-status client)
+                      (cons (get-universal-time) item))
                     (return-from allocate-client client))))
           (sleep 1))))

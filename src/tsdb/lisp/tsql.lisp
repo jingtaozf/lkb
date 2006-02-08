@@ -45,10 +45,20 @@
                &optional (language *tsdb-data*) 
                &key absolute unique
                     quiet ro meter status file (format :lisp) (readerp t) sort
-                    efs *tsdb-efs*)
-  (declare (special *statistics-tcl-formats*)
-           (ignore efs))
+                    (efs *tsdb-efs*) sourcep)
+  (declare (special *statistics-tcl-formats*))
 
+  (let ((virtual (virtual-profile-p language)))
+    (when virtual
+      (return-from select
+        (select-virtual
+         virtual
+         attributes types relations condition
+         :absolute absolute :unique unique
+         :quiet quiet :ro ro :meter meter :status status :file file
+         :format format :readerp readerp :sort sort
+         :efs efs :sourcep sourcep))))
+  
   (when meter 
     (meter :value (get-field :start meter)))
   (when status
@@ -123,7 +133,11 @@
         (when rmeter (meter :value (get-field :end rmeter)))
         (loop
             for line in result
-            do (push (pairlis keys line) data))
+            for item = (pairlis keys line)
+            when sourcep do
+              (nconc item (acons :source language nil))
+            do
+              (push item data))
 
         (when (and readerp (find-attribute-reader :i-input))
           (loop
@@ -139,19 +153,15 @@
           (status :text (format nil "retrieving `~a' data ... done" language)
                   :duration 10))
 
+        (when sort
+          (setf data 
+            (sort data (if (eq stype :integer) #'< #'string<) 
+                  :key #'(lambda (foo) (get-field sattribute foo)))))
         (case format
           (:lisp
-           (if sort 
-             (sort data (if (eq stype :integer) #'< #'string<) 
-                   :key #'(lambda (foo) (get-field sattribute foo)))
-             data))
+           data)
           ((:ntcl :ascii)
-           (let* ((data 
-                   (if sort
-                     (sort data (if (eq stype :integer) #'< #'string<) 
-                           :key #'(lambda (foo) (get-field sattribute foo)))
-                     data))
-                  (stream (if file
+           (let* ((stream (if file
                             (create-output-stream file nil)
                             *tsdb-io*))
                   (width (length attributes))
@@ -203,12 +213,7 @@
              (when file (close stream))
              length))
           (:tcl
-           (let* ((data 
-                   (if sort
-                     (sort data (if (eq stype :integer) #'< #'string<) 
-                           :key #'(lambda (foo) (get-field sattribute foo)))
-                     data))
-                  (stream (if file
+           (let* ((stream (if file
                             (create-output-stream file nil)
                             *tsdb-io*))
                   (width (length attributes))
@@ -319,6 +324,53 @@
              (force-output stream)
              (when file (close stream))
              length)))))))
+
+(defun select-virtual (data attributes types relations condition
+                       &key absolute unique
+                            quiet ro meter status file (format :lisp)
+                            (readerp t) sort (efs *tsdb-efs*) sourcep)
+  
+  (declare (ignore meter status))
+  
+  ;;
+  ;; _fix_me_
+  ;; in order to correctly get :tcl (or other formatted output) and enforce
+  ;; sorting of tuples, we will have to separate tuple assembly and generation
+  ;; of output one day.                                  (6-dec-05; erik & oe)
+  ;;
+  (when (or file (not (eq format :lisp)))
+    (error "select-virtual(): functionality temporarily unavailable; ~
+            see `tsql.lisp'."))
+  
+  (when (probe-file data)
+    (with-open-file (stream data :direction :input)
+      (let* ((sattribute 
+              (when sort
+                (if (eq sort t)
+                  (intern (string-upcase (first attributes)) :keyword)
+                  (typecase sort
+                    (string (intern (string-upcase sort :keyword)))
+                    (keyword sort)
+                    (symbol (intern sort :keyword))
+                    (t (intern
+                        (string-upcase (first attributes)) :keyword))))))
+             (stype (when sattribute
+                      (position sattribute attributes :test #'string-equal)))
+             (stype (when stype (nth stype types)))
+             (result
+              (loop
+                  for name = (read stream nil nil)
+                  while name
+                  append 
+                    (select
+                     attributes types relations condition name
+                     :absolute absolute :unique unique
+                     :quiet quiet :ro ro :format :lisp :readerp readerp
+                     :sort nil :efs efs :sourcep sourcep))))
+        (if sort
+          (sort result (if (eq stype :integer) #'< #'string<) 
+                :key #'(lambda (foo) (get-field sattribute foo)))
+          result)))))
 
 (defun tcount (data relation &key absolute quiet)
   

@@ -296,12 +296,23 @@
 
 (defun analyze (data 
                 &key condition meter message thorough trees extras 
-                     (readerp t) filter
+                     (readerp t) siftp filter
                      score gold taggingp
 		     commentp sloppyp scorep)
 
-  (declare (optimize (speed 3) (safety 0) (space 0)))
+  (declare (ignore siftp)
+           (optimize (speed 3) (safety 0) (space 0)))
 
+  (let ((virtual (virtual-profile-p data)))
+    (when virtual
+      (return-from analyze
+        (analyze-virtual
+         virtual
+         :condition condition :meter meter :message message :thorough thorough
+         :trees trees :extras extras :readerp readerp :filter filter
+         :score score :gold gold :taggingp taggingp :commentp commentp
+         :sloppyp sloppyp :scorep scorep))))
+  
   (let* ((message (when message
                     (format nil "retrieving `~a' data ..." data)))
          (extras (and extras t))
@@ -318,7 +329,7 @@
                "~a~@[ @ ~a~]~@[ # ~a~]~@[~* : trees~]~
                 ~@[ for ~a~]~@[~* : extras~]~@[ on ~a~@[ (scores)~]~]" 
                data condition 
-               (if (consp thorough) (format nil "~{~(~a~)~^#~}" thorough) "t")
+               (if (listp thorough) (format nil "~{~(~a~)~^#~}" thorough) "t")
                trees filter extras
                (cond
                 ((stringp score) score)
@@ -386,7 +397,7 @@
                               '(:integer :string :integer :integer)
                               (when commentp '(:string)))
                              "item" condition data 
-                             :meter imeter :sort :i-id))
+                             :meter imeter :sort :i-id :sourcep t))
 	       (item (if taggingp
                        (loop
                            for foo in item
@@ -510,6 +521,32 @@
     (when message (status :text (format nil "~a done" message) :duration 2))
     (when meter (meter :value (get-field :end meter)))
     result))
+
+(defun analyze-virtual (data 
+                        &key condition meter message thorough trees extras 
+                             (readerp t) filter
+                             score gold taggingp
+                             commentp sloppyp scorep)
+  (when (probe-file data)
+    (with-open-file (stream data :direction :input)
+      ;;
+      ;; _fix_me_
+      ;; analyze() is supposed to return items in sorted order; this 
+      ;; implementation assumes that the components in the `virtual' file are
+      ;; listed in appropriate order.                    (6-dec-05; erik & oe)
+      ;;
+      (loop
+          for name = (read stream nil nil)
+          while name
+          append 
+            (analyze
+             name
+             :condition condition :meter meter :message message
+             :thorough thorough
+             :trees trees :extras extras :readerp readerp :filter filter
+             :score score :gold gold  
+             :taggingp taggingp :commentp commentp
+             :sloppyp sloppyp :scorep scorep)))))
 
 (defun rank-items (items &key gold score condition sloppyp scorep)
   
@@ -731,6 +768,11 @@
           (analyze-aggregates name))))))
 
 (defun purge-profile-cache (data &key (expiryp t))
+  (when (virtual-profile-p data)
+    (loop
+        for component in (virtual-profile-components data)
+        do (purge-profile-cache component :expiryp expiryp))
+    (return-from purge-profile-cache))
   (when expiryp
     (close-connections :data (when (stringp data) data)))
   (loop

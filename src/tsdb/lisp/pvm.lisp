@@ -104,10 +104,11 @@
       for cpu in (or cpus *pvm-cpus*)
       for class = (let ((class (cpu-class cpu)))
                     (if (listp class) class (list class)))
+      for node = (if (stringp host) host (cpu-host cpu))
+      for delay = (if (numberp wait) wait (cpu-wait cpu))
       do
         (loop
             for i from 1 to (or count 1)
-            for node = (if (stringp host) host (cpu-host cpu))
             for tid = (when (or allp (intersection class classes))
                         (pvm_create
                          (cpu-spawn cpu) (cpu-options cpu)
@@ -128,12 +129,12 @@
               (push client result)
               (when block
                 (wait-for-clients
-                 :block tid :wait wait :prefix prefix :stream stream))))
+                 :block tid :wait delay :prefix prefix :stream stream))))
       finally
         ;;
         ;; ... then, wait for them to register (start talking) with us.
         ;;
-        (wait-for-clients :wait wait :prefix prefix :stream stream)
+        (wait-for-clients :wait delay :prefix prefix :stream stream)
         ;;
         ;; attempt to shut down clients that we attempted to start but somehow
         ;; failed to bring (fully) on-line.
@@ -222,6 +223,16 @@
                stream remote message)
               (force-output)))))))
 
+(defun expire-clients (clients)
+  (loop
+      with now = (get-universal-time)
+      for client in clients
+      for status = (client-status client)
+      for cpu = (client-cpu client)
+      when (and (consp status) cpu (numberp (cpu-quantum cpu))
+                (> (- now (first status)) (cpu-quantum cpu)))
+      do (kill-client client)))
+
 (defun evaluate (form)
   (eval form))
 
@@ -300,6 +311,7 @@
                           (if *tsdb-write-passive-edges-p*
                             -1
                             *tsdb-maximal-number-of-results*)) 
+                         (filter *process-suppress-duplicates*)
                          (i-id 0) (parse-id 0)
                          result-id
                          (wait 5))
@@ -344,7 +356,7 @@
                          :result-id ,result-id
                          :exhaustive ,exhaustive
                          :nanalyses ,nanalyses
-                         :nresults ,nresults
+                         :nresults ,nresults :filter (quote ,filter)
                          :trees-hook :local :semantix-hook :local
                          :verbose nil :interactive nil :burst t)
                        nil
@@ -398,3 +410,20 @@
           for cpu = (client-cpu client)
           when (smember task (cpu-task cpu))
           return (cpu-grammar cpu)))))
+
+(defun client-evaluate (tid form 
+                        &optional (block t) 
+                        &key (verbose t) (key 0) interrupt)
+  (if (keywordp tid)
+    (loop
+        for client in *pvm-clients*
+        for cpu = (client-cpu client)
+        when (or (eq tid :all)
+                 (null (cpu-task cpu))
+                 (smember tid (cpu-task cpu)))
+        collect (revaluate
+                 (client-tid client) form block
+                 :verbose verbose :key key :interrupt interrupt))
+    (revaluate
+     tid form block
+     :verbose verbose :key key :interrupt interrupt)))

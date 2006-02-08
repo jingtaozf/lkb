@@ -44,12 +44,14 @@
 (defmacro get-field+ (field alist &optional default)
   `(or (rest (assoc ,field ,alist)) ,default))
 
-(defmacro find-tsdb-directory (language)
+(defmacro find-tsdb-directory (language &key test)
   `(let* ((home (make-pathname :directory *tsdb-home*))
           (suffix (pathname-directory (make-pathname :directory ,language)))
           (path (append (pathname-directory home) (rest suffix)))
           (data (make-pathname :directory path)))
-     (namestring data)))
+     (if ,test
+       (when (probe-file data) (namestring data))
+       (namestring data))))
 ;;;
 ;;; _fix_me_
 ;;; for some weird reason, this was creating garbage strings when called from
@@ -151,3 +153,25 @@
                       internal-time-units-per-second)
                0 0
                #+:mcl others #-:mcl -1)))))
+
+(defmacro make-counts (&key (absolute 0) (contexts 0)
+                            (events 0) (relevant 0))
+  `(list ,absolute ,contexts ,events ,relevant))
+
+(defmacro counts-absolute (counts)
+  `(first ,counts))
+
+(defmacro counts-contexts (counts)
+  `(second ,counts))
+
+(defmacro counts-events (counts)
+  `(third ,counts))
+
+(defmacro counts-relevant (counts)
+  `(fourth ,counts))
+
+(defmacro counts>= (counts1 counts2)
+  `(and (>= (counts-absolute ,counts1) (counts-absolute ,counts2))
+        (>= (counts-contexts ,counts1) (counts-contexts ,counts2))
+        (>= (counts-events ,counts1) (counts-events ,counts2))
+        (>= (counts-relevant ,counts1) (counts-relevant ,counts2))))

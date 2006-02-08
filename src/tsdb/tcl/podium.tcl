@@ -23,8 +23,8 @@ exec $HOME/delphin/lkb/bin/linux.x86.32/swish++ "$0" "$@"
 #
 if {![info exists itsdb_root]} {
   set itsdb_root [expr {[info exists env(HOSTNAME)] 
-                        && ![string first "mt" $env(HOSTNAME)]
-                        ? "/logon/oe/src/test/lingo/lkb" 
+                        && ![string first "ld" $env(HOSTNAME)]
+                        ? "/logon/oe/src/logon/lingo/lkb" 
                         : "/Users/oe/src/delphin/lkb"}];
 }; # if
 #
@@ -889,6 +889,8 @@ proc main {} {
   .menu.trees.menu add cascade \
     -label "Summarize" -menu .menu.trees.menu.summarize;
   .menu.trees.menu add separator;
+  .menu.trees.menu add cascade \
+    -label "Cache" -menu .menu.trees.menu.cache;
   .menu.trees.menu add command \
     -label "Train" -command {tsdb_trees train};
   .menu.trees.menu add command \
@@ -920,6 +922,15 @@ proc main {} {
   .menu.trees.menu.summarize add command \
     -label "Update" -command {analyze_trees "update"};
 
+  menu .menu.trees.menu.cache -tearoff 0;
+  .menu.trees.menu.cache add command \
+    -label "Create Feature Cache" -command {tsdb_trees features cache};
+  .menu.trees.menu.cache add command \
+    -label "Clear Feature Cache" -command {tsdb_trees features clear};
+  .menu.trees.menu.cache add separator
+  .menu.trees.menu.cache add command \
+    -label "Clear Context Cache(s)" -command {tsdb_trees contexts clear};
+
   menu .menu.trees.menu.switches -tearoff 0;
   .menu.trees.menu.switches add checkbutton \
     -label "Automatic Update" \
@@ -946,9 +957,6 @@ proc main {} {
   .menu.trees.menu.switches add radiobutton \
     -label "String N-Grams" \
     -variable globals(tree,model) -value :ngram;
-  .menu.trees.menu.switches add radiobutton \
-    -label "MEM Tagger" \
-    -variable globals(tree,model) -value :tag;
   .menu.trees.menu.switches add radiobutton \
     -label "Random Chance" \
     -variable globals(tree,model) -value :chance;

@@ -210,6 +210,7 @@
           (return result))
     string))
 
+#+:null
 (defun ith-nth (list ith nth)
   (loop
       with i = 1
@@ -223,6 +224,18 @@
                 (not (and (= ith nth) (= i ith))))
       do (incf i)
       finally (return (values result complement))))
+
+(defun ith-nth (list ith nth)
+  (if (zerop ith)
+    (values nil (copy-list list))
+    (loop
+        for i from 1
+        for foo in list
+        for mod = (mod i nth)
+        when (or (and (= ith nth) (zerop mod)) (= mod ith))
+        collect foo into result
+        else collect foo into complement
+        finally (return (values result complement)))))
 
 (defun ith-n (list ith n)
   (when (> ith 0)
@@ -485,14 +498,50 @@
                       (file-size 
                        (make-pathname :directory data :name "score.gz"))))
                  (scorep (and (not skeletonp) (numberp score) (> score 0)))
+                 (fcp (and (not skeletonp)
+                           (let ((size (file-size 
+                                        (make-pathname
+                                         :directory data :name "fc.abt"))))
+                             (and (numberp size) (> size 0)))))
                  (items (tcount data "item" :absolute t :quiet skeletonp))
                  (parses (unless skeletonp (tcount data "parse" :absolute t))))
             (pairlis (list :database 
                            :path :status :items :parses 
-                           :resultp :rulep :treep :scorep)
+                           :resultp :rulep :treep :scorep :fcp)
                      (list (namestring language) 
                            data status items parses 
-                           resultp rulep treep scorep))))))))
+                           resultp rulep treep scorep fcp))))))))
+
+(defun virtual-profile-p (data &key absolute)
+  (let ((data 
+         (if absolute (namestring data) (find-tsdb-directory data))))
+    (probe-file (make-pathname :directory data :name "virtual"))))
+
+(defun virtual-profile-components (data &key absolute test (verbose t))
+  (let ((virtual (virtual-profile-p data :absolute absolute)))
+    (when virtual
+      (with-open-file (stream virtual :direction :input) 
+        (loop
+            for source = (read stream nil nil)
+            while source
+            when (or (null test) (find-tsdb-directory source :test t))
+            collect source
+            else when verbose do
+              (format 
+               *tsdb-io*
+               "virtual-profile-components(): invalid `~a'.~%"
+               source))))))
+
+(defun read-file (name)
+  (when (probe-file name)
+    (with-open-file (stream name :direction :input)
+      (loop
+          with result = (make-array
+                         (file-length stream)
+                         :element-type 'character :fill-pointer 0)
+          for c = (read-char stream nil nil)
+          while c do (vector-push c result)
+          finally (return result)))))
 
 (defun file-size (path)
   (let* ((path (if (stringp path) path (namestring path)))
@@ -609,7 +658,7 @@
         ((:purge :tree :score)
          (loop
              for file in (case action
-                           (:score '("score"))
+                           (:score '("score" "fold"))
                            (:tree *tsdb-redwoods-files*)
                            (:purge *tsdb-profile-files*))
              for name = (concatenate 'string directory file)

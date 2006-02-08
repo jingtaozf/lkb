@@ -51,10 +51,23 @@ function messenger() {
 } // messenger()
 
 
-function setTarget(context, string) {
+function submitter() {
+
+  if(__pageInitializedP_) return true;
+  __pageInitializedP__ = false;
+  return false;
+
+} // submitter()
+
+function setTarget(context, string, flag) {
 
   var foo = document.getElementById(context);
   if(foo && foo.target) foo.target = string;
+
+  if(flag != undefined && flag) {
+    disableElement('analyze');
+    disableElement('translate');
+  } // if
 
 } // formTarget()
 
