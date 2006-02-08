@@ -24,13 +24,17 @@ update:
 	( \
 	  cd ${ROOT}/erg; \
 	  ${CVS} update -P -d -R; \
+	  ${CVS} rtag -F latest erg; \
 	  cd ${ROOT}/matrix; \
 	  ${CVS} update -P -d -R; \
+	  ${CVS} rtag -F latest matrix; \
 	  cd ${ROOT}/spanish; \
 	  ${CVS} update -P -d -R; \
+	  ${CVS} rtag -F latest spanish; \
 	  cd ${ROOT}/lkb; \
 	  ${CVS} update -P -d -R; \
 	  ${CVS} commit -f -m "auto-update for build" ./src/version.lsp; \
+	  ${CVS} rtag -F latest lkb; \
 	  $(MAKE) all; \
 	) 2>&1 | ${TEE} ${ROOT}/lkb/log/build
 	${CP} ${ROOT}/lkb/src/lkb.el ${TARGET}/etc
@@ -44,6 +48,9 @@ update:
             < build; \
 	  cvs commit -m "" build; \
 	)
+
+latest:
+	${CVS} update -P -d -R -r latest;
 
 all: lkb erg spanish itsdb # matrix
 
@@ -114,7 +121,7 @@ lkb_linux: lkb_linux_x86_32
 
 lkb_linux_x86_32:
 	${RM} -f ${ROOT}/.yes;
-	( cd ${ROOT}/lkb && make lkb_linux@cypriot; )
+	( cd ${ROOT}/lkb && ${MAKE} lkb_linux@cypriot; )
 	( \
 	  if [ ! -f ${ROOT}/.yes ]; then exit 1; fi; \
 	  cd ${ROOT}/lkb; \
@@ -142,6 +149,7 @@ lkb_linux@cypriot:
 lkb_linux@ar:
 	${RM} -f ${LROOT}/.yes;
 	( \
+	  ${MAKE} latest; \
 	  echo "(load \"${LROOT}/lkb/src/general/loadup.lisp\")"; \
 	  echo "(load \"${LROOT}/lkb/src/ACL_specific/deliver.lsp\")"; \
 	  echo "(pushnew :lkb *features*)"; \
