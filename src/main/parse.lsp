@@ -24,15 +24,6 @@
 ;;; 
 ;;; This is slightly inelegant in that the size of the array is set.
 
-(defvar *executed-tasks* 0)
-(defvar *successful-tasks* 0)
-(defvar *contemplated-tasks* 0)
-(defvar *filtered-tasks* 0)
-(defvar *morph-agenda-tasks* 0)
-(declaim (type fixnum *executed-tasks* *successful-tasks* 
-	       *contemplated-tasks* *filtered-tasks* *morph-agenda-tasks*
-	       ))
-
 (defvar *parser-rules* nil)
 (defvar *parser-lexical-rules* nil)
 
@@ -240,6 +231,9 @@
 (defparameter %edge-allowance% 0)
 
 (defun next-edge (&optional type)
+  (if (eq type :unpack)
+    (incf (statistics-uedges *statistics*))
+    (incf (statistics-pedges *statistics*)))
   (when (eq type :unpack)
     ;;
     ;; _fix_me_
@@ -525,6 +519,7 @@
   ;;   - passive best-first restricted to unary and binary rules.
   ;;
   (check-morph-options input)
+  (reset-statistics)
   (let* ((*active-parsing-p* (if *bracketing-p* nil *active-parsing-p*))
          (first-only-p (if (and first-only-p 
                                 (null *active-parsing-p*)
@@ -558,9 +553,6 @@
                user-input *chart-limit*))
 
       (let ((*brackets-list* brackets-list)
-            (*executed-tasks* 0) (*successful-tasks* 0)
-            (*contemplated-tasks* 0) (*filtered-tasks* 0)
-	    (*morph-agenda-tasks* 0)
             (*parser-rules* (get-matching-rules nil nil))
             (*parser-lexical-rules* (get-matching-lex-rules nil))
             (*lexical-entries-used* nil)
@@ -615,9 +607,12 @@
                 (find-spanning-edges 0 length-user-input))))
           (push (get-internal-run-time) *parse-times*))
         (when show-parse-p (show-parse))
-        (values *executed-tasks* *successful-tasks* 
-                *contemplated-tasks* *filtered-tasks* 
-		*morph-agenda-tasks*)))))
+        (values
+         (statistics-etasks *statistics*)
+         (statistics-stasks *statistics*)
+         -1
+         (statistics-ftasks *statistics*)
+         (statistics-mtasks *statistics*))))))
 
 (defun file-xml-p (filename)
   (xml-p
@@ -1017,7 +1012,7 @@ relatively limited.
   ;;; if the string matches an existing item, then add the
   ;;; partial trees into that record.  Otherwise, insert
   ;;; in string length order, longest first
-  (incf *morph-agenda-tasks*)
+  (incf (statistics-mtasks *statistics*))
     (if *morph-agenda* 
 	(let* ((strlength (length str))
 	       (checked nil)
@@ -1271,7 +1266,6 @@ relatively limited.
 					   :end to)))
 	(push cc (aref *tchart* from 1))
 	(push cc (aref *tchart* to 0))
-        (setf *tchart-max* (max *tchart-max* to))
 	new-edge)
     nil))
 
@@ -1807,7 +1801,6 @@ an unknown word, treat the gap as filled and go on from there.
    (rule-id rule) (length rule-restricted-list)
    (loop for e in  child-edge-list collect (edge-id e))
    left-vertex right-vertex)
-  (incf *contemplated-tasks*)
   (if (and (check-rule-filter rule (edge-rule (car child-edge-list)) n)
 	   (restrictors-compatible-p (car rule-restricted-list) 
 				     (edge-dag-restricted 
@@ -1850,12 +1843,11 @@ an unknown word, treat the gap as filled and go on from there.
 	(with-agenda (when f (rule-priority rule))
 	  (apply-immediate-grammar-rule rule left-vertex right-vertex
 					child-edge-list f t)))
-    (progn (incf *filtered-tasks*) t)))
+    (progn (incf (statistics-ftasks *statistics*)) t)))
 
 (defun try-grammar-rule-right (rule rule-restricted-list left-vertex 
 			       right-vertex child-edge-list f n)
   (declare (type fixnum n))
-  (incf *contemplated-tasks*)
   (if (and (check-rule-filter
               rule (edge-rule (car child-edge-list)) n)
 	   (restrictors-compatible-p (car rule-restricted-list)
@@ -1884,7 +1876,7 @@ an unknown word, treat the gap as filled and go on from there.
 	(with-agenda (when f (rule-priority rule))
 	  (apply-immediate-grammar-rule rule left-vertex right-vertex 
 					child-edge-list f nil)))
-    (progn (incf *filtered-tasks*) t)))
+    (progn (incf (statistics-ftasks *statistics*)) t)))
 
 
 (defparameter *debugging* nil)
@@ -1978,9 +1970,9 @@ an unknown word, treat the gap as filled and go on from there.
 	       (x-get-dag-value 
                 (deref-dag (tdfs-indef current-tdfs)) rule-feat))
 	     (edge-dag-restricted child-edge)))
-	   (t (incf *filtered-tasks*)
+	   (t (incf (statistics-ftasks *statistics*))
 	      (return-from evaluate-unifications nil))))
-	(incf *executed-tasks*)
+	(incf (statistics-etasks *statistics*))
 	(let ((child (pop child-fs-list)))
 	  ;; If two daughters are eq, the unifier's subgraph sharing code may
 	  ;; cause spurious coreferences in the result
@@ -1989,7 +1981,7 @@ an unknown word, treat the gap as filled and go on from there.
 	  (if (setq current-tdfs
 		(yadu current-tdfs
 		      (create-temp-parsing-tdfs child rule-feat)))
-	      (incf *successful-tasks*)
+	      (incf (statistics-stasks *statistics*))
 	    (return-from
 		evaluate-unifications 
 	      (values nil (eql n 0))))))	; first attempt failed?
@@ -2032,7 +2024,7 @@ an unknown word, treat the gap as filled and go on from there.
 			(copy-tdfs-elements result)))))
 		(or res
 		    ;; charge copy failure to last successful unification
-		    (progn (decf *successful-tasks*) nil))))))))))
+		    (progn (incf (statistics-stasks *statistics*)) nil))))))))))
 
 
 (defun create-temp-parsing-tdfs (tdfs flist)

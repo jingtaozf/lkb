@@ -48,6 +48,8 @@
 
 (defparameter *semi-u-type* "u")
 
+(defparameter *semi-p-type* "p")
+
 (defparameter *semi-h-type* "h")
 
 (defparameter *semi-i-type* "i")
@@ -61,9 +63,10 @@
 (defparameter *semi-fragment-right* (mrs::vsym "R-HNDL"))
 
 (defparameter *semi-punctuation-relations*
-  (list "comma_rel" "period_rel" "exclamation_point_rel" "question_mark_rel"
-        (mrs::vsym "comma_rel") (mrs::vsym "hyphen_rel")
-        (mrs::vsym "period_rel")
+  (list "colon_rel" "comma_rel" "period_rel" 
+        "exclamation_point_rel" "question_mark_rel"
+        (mrs::vsym "colon_rel") (mrs::vsym "comma_rel")
+        (mrs::vsym "hyphen_rel") (mrs::vsym "period_rel")
         (mrs::vsym "exclamation_point_rel") (mrs::vsym "question_mark_rel")))
 
 (defparameter *semi-token-relations*

@@ -10,15 +10,6 @@
 
 (defparameter *yadu-debug* nil)
 
-;;;
-;;; [incr tsdb()] support: global counters for calls to unify-dags() and
-;;; copy-dag().
-;;;
-
-(defparameter *unifications* 0)
-(defparameter *copies* 0)
-(declaim (type fixnum *unifications* *copies*))
-
 
 ;;; YADU
 
@@ -74,7 +65,7 @@
 
 
 (defun copy-tdfs-elements (old-tdfs)
-  (incf *copies*)
+  (incf (statistics-copies *statistics*))
   (let ((indef (copy-dag (tdfs-indef old-tdfs))))
     (when indef
       (make-tdfs :indef indef
@@ -83,7 +74,7 @@
 
 (defun copy-tdfs-completely (old-tdfs)
   ;; nothing destructive now happens to tail-elements
-  (incf *copies*)
+  (incf (statistics-copies *statistics*))
   (let ((indef (copy-dag-completely (tdfs-indef old-tdfs))))
     (when indef
       (make-tdfs :indef indef
@@ -161,7 +152,7 @@
 ; (defparameter *unif-count* 0)
 
 (defun yadu (tdfs1 tdfs2)
-  (incf *unifications*)
+  (incf (statistics-unifications *statistics*))
   (yadu1 (tdfs-indef tdfs1) (tdfs-indef tdfs2) (tdfs-tail tdfs1)
          (tdfs-tail tdfs2)))
 

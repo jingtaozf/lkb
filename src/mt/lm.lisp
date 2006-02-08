@@ -137,7 +137,7 @@
                (format 
                 nil
                 "find /tmp -name \".lm.io.~a.~a.*.oovs\" -maxdepth 1 ~
-                  -exec cat '{}' \\; | sort -ud -o ~a\; ~ 
+                  -exec cat '{}' \\; | sort -ud -o ~a\; ~
                   sort -um ~a ~@[~a~] -o ~a\; mv ~a ~a" 
                 (lkb::current-user) (lkb::current-pid) 
                 tmp1 tmp1 (cl-fad:file-exists-p *lm-oovs*) 

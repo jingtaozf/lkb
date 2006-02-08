@@ -314,6 +314,7 @@
   ;;
   (let* ((mrs::*variable-generator* mrs::*variable-generator*)
          (mrs::%mrs-roles-filter% nil)
+         (mrs::*mrs-record-all-nodes-p* t)
          (files (if (listp files) files (list files)))
          (id (if (stringp name) 
                name 
@@ -719,8 +720,23 @@
         with source = (first *transfer-lexicon*)
         for ep in (mrs:psoa-liszt (mtr-input mtr))
         for pred = (mrs:rel-pred ep)
-        when (and pred (not (lkb::subtype-or-equal top pred)))
-        do (push mtr (gethash pred source)))))
+        when (and (or (stringp pred) (symbolp pred))
+                  (not (lkb::subtype-or-equal top pred)))
+        do (push mtr (gethash pred source)))
+    (loop
+        with top = (lkb::minimal-type-for (first (last mrs::*rel-name-path*)))
+        with target = (rest *transfer-lexicon*)
+        for oep in (and (mtr-output mtr) (mrs:psoa-liszt (mtr-output mtr)))
+        for dep in (and (mtr-defaults mtr) (mrs:psoa-liszt (mtr-defaults mtr)))
+        for pred 
+        = (or (let ((pred (and dep (mrs:rel-pred dep))))
+                (and (or (stringp pred) (symbolp pred))
+                     (not (lkb::subtype-or-equal top pred))
+                     pred))
+              (mrs:rel-pred oep))
+        when (and (or (stringp pred) (symbolp pred))
+                  (not (lkb::subtype-or-equal top pred)))
+        do (push mtr (gethash pred target)))))
 
 ;;;
 ;;; top-level drivers for application of transfer rules; use `edge' structure

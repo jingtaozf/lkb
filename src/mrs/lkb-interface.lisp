@@ -293,7 +293,7 @@
       (format stream "] \" }\" newline~% \"{ \" #X[")
       (loop
           for hcons in (psoa-h-cons mrs)
-          for type = (hcons-relation hcons)
+          for type = (string (hcons-relation hcons))
           for hi = (hcons-scarg hcons)
           for lo = (hcons-outscpd hcons)
           do

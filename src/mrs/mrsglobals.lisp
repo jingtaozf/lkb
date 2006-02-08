@@ -169,6 +169,7 @@ an MRS from a FS representation of an MRS")
 (defparameter *handle-type* (vsym "handle"))
 (defparameter *ref-ind-type* (vsym "ref-ind"))
 (defparameter *deg-ind-type* (vsym "deg-ind"))
+(defparameter *non_event-type* (vsym "non_event"))
 
 ;;; used in mrsresolve (code for scoping MRSs)
 

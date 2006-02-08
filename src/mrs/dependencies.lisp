@@ -197,7 +197,9 @@
                       (from (and (char-rel-p relation)
                                  (char-rel-cfrom relation)))
                       (to (and from (char-rel-cto relation))))
-                 (or link (and from to (format nil "~a:~a" from to))))))
+                 (or link
+                     (and (numberp from) (numberp to) (>= from 0) (>= to 0)
+                          (format nil "~a:~a" from to))))))
     (make-ed :handle handle :id id :link link
              :predicate predicate :carg carg :raw relation)))
 

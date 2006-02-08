@@ -10,12 +10,6 @@
 ;;; Jan 1995 - made equal-wffs-p and subsumes-wffs-p work 
 ;;; on non well typed fs
 
-;;;
-;;; establish global counter for calls to subsumption test.  (14-jul-99  -  oe)
-;;;
-(defparameter *subsumptions* 0)
-(declaim (type fixnum *subsumptions*))
-
 (defun mark-dag-with-backwards-paths (dag firstp backwards-path) 
    ;; mark nodes with lists of paths - generalisation will be reentrant
    ;; in those paths that both the originals were reentrant in
@@ -181,7 +175,7 @@
 
 (defun dag-subsumes-p (dag1 dag2)
   ;; assume not circular, and not called within a unification context
-  (incf *subsumptions*)
+  (incf (statistics-subsumptions *statistics*))
   (with-unification-context (dag1)
     (catch '*fail* (subsume-wffs-p dag1 dag2 t t))))
 

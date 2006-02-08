@@ -25,7 +25,6 @@
 (defvar *debug-stream* t)
 
 (defparameter *unpacking-scoring-hook* nil)
-
 
 (defun cross-product (lists)
   (if (null (rest lists))
@@ -156,7 +155,7 @@
                                 :children children 
                                 :leaves leaves :lex-ids lex-ids)))
                             (t
-                             (incf (packings-failures *packings*))
+                             (incf (statistics-failures *statistics*))
                              nil)))))))))
 
     #+:udebug
@@ -277,7 +276,7 @@
       (*first-only-p* nil)
       (*chart-packing-p* t)
       contemplated filtered executed successful)
-  (reset-packings)
+  (reset-statistics)
   (time (multiple-value-setq (contemplated filtered
                               executed successful)
           (do-parse-tty 
@@ -286,9 +285,9 @@
    t
    "~&~d trees; (=~d, >~d, <~d) packings; ~d readings; ~d [~d] edges~%"
    (length *parse-record*)
-   (packings-equivalent *packings*)
-   (packings-proactive *packings*)
-   (packings-retroactive *packings*)
+   (statistics-equivalent *statistics*)
+   (statistics-proactive *statistics*)
+   (statistics-retroactive *statistics*)
    (if *chart-packing-p*
      (time
       (loop
@@ -373,13 +372,27 @@
       always (<= index1 index2)))
 
 (defstruct hypothesis
-  score decomposition indices daughters edge)
+  (id (let ((n (statistics-hypotheses *statistics*)))
+        (incf (statistics-hypotheses *statistics*))
+        n))
+  score decomposition indices parents daughters edge)
 
 (defmethod print-object ((object hypothesis) stream)
   (format 
    stream 
-   "#[H ~a~@[ ~a~]]"
+   "#[H [~a] ~a~@[ ~a~]]"
+   (hypothesis-id object)
    (hypothesis-indices object) (hypothesis-edge object)))
+
+(defun new-hypothesis (decomposition indices daughters)
+  (let ((new (make-hypothesis
+              :decomposition decomposition
+              :indices indices
+              :daughters daughters)))
+    (loop
+        for daughter in daughters
+        do (push new (hypothesis-parents daughter)))
+    new))
 
 (defun selectively-unpack-edges (edges &optional n &key test robustp)
 
@@ -470,10 +483,7 @@
                 do (incf n) collect (hypothesize-edge edge 0))
           for indices = (make-list n :initial-element 0)
           for hypothesis
-          = (make-hypothesis
-             :decomposition decomposition
-             :indices indices
-             :daughters daughters)
+          = (new-hypothesis decomposition indices daughters)
           for score = (score-hypothesis hypothesis)
           do 
             #+:hdebug
@@ -550,12 +560,8 @@
                       for daughter = (hypothesize-edge edge i)
                       when (null daughter) return nil          
                       collect daughter))
-              for new 
-              = (when daughters
-                  (make-hypothesis
-                   :decomposition decomposition
-                   :indices indices
-                   :daughters daughters))
+              for new = (when daughters
+                          (new-hypothesis decomposition indices daughters))
               when new
               do        
                 #+:hdebug
@@ -692,7 +698,11 @@
                         :fail))))
             :fail)))
       (let ((result (hypothesis-edge hypothesis)))
-        (unless (eq result :fail) result))))))
+        (cond
+         ((eq result :fail)
+          (incf (statistics-failures *statistics*))
+          nil)
+         (t result)))))))
 
 (defun hypothesis-derivation (hypothesis)
   (let* ((decomposition (hypothesis-decomposition hypothesis))
@@ -719,8 +729,8 @@
   (do-parse-tty "kim saw the cat in the hotel near the lake ~
                  when sandy arrived with abrams ")
   (let ((estart *edge-id*)
-        (ustart *unifications*)
-        (cstart *copies*))
+        (ustart (statistics-unifications *statistics*))
+        (cstart (statistics-copies *statistics*)))
     (setf all (time (unpack-edges *parse-record*)))
     (loop
         for edge in all
@@ -731,16 +741,20 @@
      t
      "~%~a result~p: ~a edges; ~a unifications; ~a copies.~%"
      (length all) (length all)
-     (- *edge-id* estart) (- *unifications* ustart) (- *copies* cstart))
+     (- *edge-id* estart)
+     (- (statistics-unifications *statistics*) ustart)
+     (- (statistics-copies *statistics*) cstart))
     (let ((estart *edge-id*)
-          (ustart *unifications*)
-          (cstart *copies*))
+          (ustart (statistics-unifications *statistics*))
+          (cstart (statistics-copies *statistics*)))
       (setf best (time (selectively-unpack-edges *parse-record* 5)))
       (format
        t
        "~%~a result~p: ~a edges; ~a unifications; ~a copies.~%"
        (length best) (length best)
-       (- *edge-id* estart) (- *unifications* ustart) (- *copies* cstart)))
+       (- *edge-id* estart)
+       (- (statistics-unifications *statistics*) ustart)
+       (- (statistics-copies *statistics*) cstart)))
     (loop
         for i from 0
         for edge in best

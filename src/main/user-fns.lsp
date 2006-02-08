@@ -355,6 +355,19 @@ redefine the function spelling-change-rule-p as appropriate"))
        (let ((fs-type (type-of-fs fs)))
          (eql fs-type 'false))))
 
+;;;
+;;; the following two functions allow customizing SEM-I creation: given a set
+;;; of FSs corresponding to semantic variables plus the FS of a lexical entry,
+;;; return a list of boolean flags indicating optionality of each argument.
+;;; furthermore, given a lexical entry, compute an a-list containing derived
+;;; (surface) forms.
+;;;
+(defun determine-argument-optionality (sign arguments)
+  (declare (ignore sign))
+  (loop repeat (length arguments) collect nil))
+
+(defun determine-derived-forms (le)
+  (declare (ignore le)))
 
 ;;;
 ;;; the following two functions allow customization of how edges are displayed

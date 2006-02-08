@@ -66,10 +66,12 @@
               (add tftasks ftasks) (add tetasks etasks) (add tstasks stasks)
               (add tunifications unifications) (add tcopies copies)
               (add taedges aedges) (add tpedges pedges)
-              (add tsubsumptions lkb::*subsumptions*)
-              (add tequivalent (lkb::packings-equivalent lkb::*packings*))
-              (add tproactive (lkb::packings-proactive lkb::*packings*))
-              (add tretroactive (lkb::packings-retroactive lkb::*packings*))
+              (add
+               tsubsumptions (lkb::statistics-subsumptions lkb::*statistics*))
+              (add tequivalent (lkb::statistics-equivalent lkb::*statistics*))
+              (add tproactive (lkb::statistics-proactive lkb::*statistics*))
+              (add
+               tretroactive (lkb::statistics-retroactive lkb::*statistics*))
               ;;
               ;; _fix_me_
               ;; do accumulation of %generator-statistics%, maybe think of a
@@ -78,10 +80,10 @@
               (push lkb::%generator-statistics% statistics)))
       (setf lkb::*gen-record* nil)
       (setf lkb::%generator-statistics% nil)
-      (setf lkb::*subsumptions* tsubsumptions)
-      (setf (lkb::packings-equivalent lkb::*packings*) tequivalent)
-      (setf (lkb::packings-proactive lkb::*packings*) tproactive)
-      (setf (lkb::packings-retroactive lkb::*packings*) tretroactive)
+      (setf (lkb::statistics-subsumptions lkb::*statistics*) tsubsumptions)
+      (setf (lkb::statistics-equivalent lkb::*statistics*) tequivalent)
+      (setf (lkb::statistics-proactive lkb::*statistics*) tproactive)
+      (setf (lkb::statistics-retroactive lkb::*statistics*) tretroactive)
       (let ((strings (cross-product (nreverse outputs))))
         (setf lkb::*gen-record*
           (loop

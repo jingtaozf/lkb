@@ -56,22 +56,6 @@
 
 (defparameter *chart-packing-p* nil)
 
-(defstruct packings
-  (equivalent 0 :type fixnum)
-  (proactive 0 :type fixnum)
-  (retroactive 0 :type fixnum)
-  (frozen 0 :type fixnum)
-  (failures 0 :type fixnum))
-
-(defparameter *packings* (make-packings))
-
-(defun reset-packings (&optional (packings *packings*))
-  (setf (packings-equivalent packings) 0)
-  (setf (packings-proactive packings) 0)
-  (setf (packings-retroactive packings) 0)
-  (setf (packings-frozen packings) 0)
-  (setf (packings-failures packings) 0))
-
 (defstruct (active-chart-configuration (:include chart-configuration))
   open
   forwardp
@@ -86,6 +70,7 @@
 (declaim (type fixnum *active-edge-id*))
 
 (defun next-active-edge ()
+  (incf (statistics-aedges *statistics*))
   (when (> (abs *active-edge-id*) 
            (or *maximum-number-of-active-edges* *maximum-number-of-edges*))
      (error "next-active-edge(): ~
@@ -224,11 +209,11 @@
 
 (defmacro inapplicablep (rule arule position)
   `(unless (check-rule-filter ,rule ,arule ,position)
-     (incf *filtered-tasks*)))
+     (incf (statistics-ftasks *statistics*))))
 
 (defmacro incompatiblep (vector avector)
   `(unless (restrictors-compatible-p ,vector ,avector)
-     (incf *filtered-tasks*)))
+     (incf (statistics-ftasks *statistics*))))
 
 (defun lexical-task (priority passive)
   
@@ -376,7 +361,7 @@
                   (nth key (rule-daughters-restricted rule))
                   (edge-dag-restricted edge)))
           (rule-and-passive-task rule passive)
-          (incf *filtered-tasks*))))
+          (incf (statistics-ftasks *statistics*)))))
 
 (defun fundamental4active (active)
   (declare (special *maximal-vertex*))
@@ -412,7 +397,7 @@
                     avector
                     (edge-dag-restricted pedge)))
             (active-and-passive-task active passive arule)
-            (incf *filtered-tasks*)))))
+            (incf (statistics-ftasks *statistics*))))))
 
 (defun fundamental4passive (passive)
   (declare (special *minimal-vertex* *maximal-vertex*))
@@ -474,7 +459,7 @@
                       (edge-dag-restricted aedge)
                       pvector))
               (active-and-passive-task active passive (edge-rule aedge))
-              (incf *filtered-tasks*))))
+              (incf (statistics-ftasks *statistics*)))))
     (loop
         for active in following
         unless (active-chart-configuration-forwardp active) do
@@ -487,7 +472,7 @@
                       (edge-dag-restricted aedge)
                       pvector))
               (active-and-passive-task active passive (edge-rule aedge))
-              (incf *filtered-tasks*))))))
+              (incf (statistics-ftasks *statistics*)))))))
 
 ;;;
 ;;; packing is substantially more complex in retroactive mode: when a new edge
@@ -549,7 +534,7 @@
                ;; there is reason to suspect we may end up counting duplicate
                ;; freezings here.                           (29-jan-03; oe)
                ;;
-               (when (minusp id) (incf (packings-frozen *packings*))))
+               (when (minusp id) (incf (statistics-frozen *statistics*))))
              (loop 
                  with id = (if recursivep id (- id))
                  for parent in (edge-parents edge) do
@@ -572,10 +557,10 @@
                 (cond 
                  (backwardp
                   (push edge (edge-equivalent oedge))
-                  (incf (packings-equivalent *packings*)))
+                  (incf (statistics-equivalent *statistics*)))
                  (t
                   (push edge (edge-packed oedge))
-                  (incf (packings-proactive *packings*))))
+                  (incf (statistics-proactive *statistics*))))
                 (return configuration))
               #+:retroactivity
               (when backwardp
@@ -599,7 +584,7 @@
                 (passives-delete configuration)
                 (unless (edge-frozen oedge)
                   (push oedge (edge-packed edge))
-                  (incf (packings-retroactive *packings*)))
+                  (incf (statistics-retroactive *statistics*)))
                 (freeze oedge (edge-id edge)))))
         finally (return nil))))
 
@@ -622,7 +607,7 @@
                   (make-orth-tdfs (second (first orthographemics)))))
          nedge)
     (with-unification-context (ignore)
-      (incf *executed-tasks*)
+      (incf (statistics-etasks *statistics*))
       (let* ((tdfs (yadu! rtdfs ptdfs path)))
         (when tdfs
           (let* ((root (tdfs-at-end-of (first (rule-order rule)) tdfs))
@@ -654,7 +639,7 @@
                                            (rest orthographemics)
                                            orthographemics))))))))
     (when nedge
-      (incf *successful-tasks*)
+      (incf (statistics-stasks *statistics*))
       (let ((begin (chart-configuration-begin passive))
             (end (chart-configuration-end passive)))
         (cond
@@ -708,7 +693,7 @@
 		     (cons pedge achildren)))
         (nedge
           (with-unification-context (ignore)
-            (incf *executed-tasks*)
+            (incf (statistics-etasks *statistics*))
             (when (eq atdfs t)
               #+:adebug
               (print-trace :reconstruct active)
@@ -764,7 +749,7 @@
                                  :dag copy :dag-restricted vector
                                  :lex-ids ids :leaves leaves)))))))))
     (when nedge
-      (incf *successful-tasks*)
+      (incf (statistics-stasks *statistics*))
       #+:adebug
       (incf (active-chart-configuration-successes active))
       (let* ((begin (if forwardp
@@ -793,7 +778,7 @@
   (let* ((dag (deref-dag (tdfs-indef tdfs)))
          (new (clone-dag dag))
          restricted)
-    (incf *copies*)
+    (incf (statistics-copies *statistics*))
     (flet ((remove-restricted-arcs (arcs &aux rest)
              (dolist (arc arcs (nreverse rest))
                (if (smember (dag-arc-attribute arc) 
@@ -812,7 +797,7 @@
                  (and copy 
                       (make-tdfs :indef copy 
                                  :tail (copy-list (tdfs-tail tdfs))))))))
-        (unless result (decf *successful-tasks*))
+        (unless result (incf (statistics-stasks *statistics*)))
         result))))
 
 (defun tdfs-qc-vector (tdfs &optional path)

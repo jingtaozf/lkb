@@ -70,6 +70,15 @@
   (pushnew :psql *features*)
 
   ;;
+  ;; on select platforms, the binaries and scripts for language model support
+  ;; (used as a component in ranking generator outputs) are available in CVS.
+  ;; _fix_me_
+  ;; compile and distribute evallm(1) for more platforms.        (1-oct-05; oe)
+  ;;
+  #+(and :multiprocessing (or :linux86 :linux86-64))
+  (pushnew :lm *features*)
+
+  ;;
   ;; as of may-04, we assume the LKB _always_ includes the MRS and MT code.
   ;;
   (pushnew :mrs *features*)
@@ -89,8 +98,7 @@
   (pushnew :lsp *features*)
   #+(and :xml :preprocessor)
   (pushnew :maf *features*)
-  (pushnew :maftest *features*)
-  )
+  (pushnew :maftest *features*))
 
 
 (defparameter *lisp-specific-directory*
@@ -140,6 +148,7 @@
       :components
 	      ((:file "initializations" :load-only t)
                (:file "globals")
+               (:file "statistics")
                (:file "ssp")))   
   ;; variables for grammar parameterization
   ;; mostly user-settable, usually reset by a globals file associated
@@ -535,5 +544,5 @@
        (:file "clim")
        (:file "semi")
        (:file "fragments")
-       #+(and :multiprocessing :linux)
+       #+:lm
        (:file "lm")))))

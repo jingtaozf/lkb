@@ -26,6 +26,7 @@
 (defvar *generator-input* nil)
 (defvar *non-intersective-rules* nil)
 
+(defparameter %generator-input% nil)
 (defparameter %generator-lexical-items% nil)
 (defparameter %generator-unknown-eps% nil)
 (defparameter %generator-statistics% nil)
@@ -150,8 +151,7 @@
                  ;;                                             (20-mar-05; oe)
                  (when (or *gen-packing-p*
                            (not (smember 
-                                 (dag-arc-attribute arc)
-                                 *packing-restrictor*)))
+                                (dag-arc-attribute arc) *packing-restrictor*)))
                    (setq vars (sem-vars-in-dag (dag-arc-value arc) vars)))))
              vars)))
       (if *gen-filtering-p*
@@ -248,7 +248,7 @@
 ;;; an entry point
 (defun generate-from-mrs (mrs &key signal nanalyses)
   (setf %generator-condition% nil)
-  #+:logon
+  #+:null
   (let ((compliance (mt::transfer-mrs mrs :filter nil :task :comply)))
     (when (rest compliance)
       (error 'generation/compliance-ambiguity :mrss compliance))
@@ -275,6 +275,7 @@
   (setf *generator-input* input-sem)
   (when *gen-equate-qeqs-p*
     (setf input-sem (mrs::equate-all-qeqs input-sem)))
+  (setf %generator-input% input-sem)
   (with-package (:lkb)
     (clear-gen-chart)
     (setf *cached-category-abbs* nil)
@@ -342,8 +343,7 @@
            (error 'unknown-predicates :eps %generator-unknown-eps%))
 
         #+:debug
-        (setf %input-sem input-sem
-              %rel-indexes rel-indexes %input-rels input-rels)
+        (setf %rel-indexes rel-indexes %input-rels input-rels)
         
         (chart-generate
          input-sem input-rels lex-items grules lex-orderings rel-indexes
@@ -386,15 +386,14 @@
                        &key nanalyses)
 
   (setq %generator-lexical-items% found-lex-items)
- 
+
+  (reset-statistics)
   (let ((*intersective-rule-names* 
          ;;
          ;; disable two-phase set-up when index accessibility filtering is on
          ;;
          (unless *gen-filtering-p* *intersective-rule-names*))
         (*safe-not-to-copy-p* t)
-        (*filtered-tasks* 0) (*executed-tasks* 0) (*successful-tasks* 0) 
-        (*unifications* 0) (*copies* 0) 
         (*non-intersective-rules*
          ;; this is all rules for best-first mode
          (remove-if
@@ -412,7 +411,6 @@
    (with-parser-lock ()
       (clear-gen-chart)
       (setf *cached-category-abbs* nil)
-      (when *gen-packing-p* (reset-packings))
       (flush-heap *agenda*)
 
       (time-a-funcall
@@ -441,7 +439,7 @@
                    (restrict-fs (tdfs-indef (g-edge-dag edge))))
                  (setf (g-edge-accessible edge)
                    (collect-semantic-variables-in-fs (g-edge-dag edge)))
-                 (incf *copies*)        ; each lex entry will be a copy
+                 (incf (statistics-copies *statistics*)) ; each lex entry will be a copy
                  (with-agenda (when *gen-first-only-p* 
                                 (if *gen-scoring-hook*
                                   (funcall 
@@ -562,10 +560,11 @@
       ;;
       (values
        (extract-strings-from-gen-record) ; also spelling e.g. "a" -> "an"
-       *filtered-tasks* *executed-tasks* *successful-tasks*
-       *unifications* *copies*
-       (reduce #'+ (gen-chart-retrieve-with-index *toptype* 'active) :key #'length)
-       (reduce #'+ (gen-chart-retrieve-with-index *toptype* 'inactive) :key #'length)))))
+       (statistics-ftasks *statistics*) (statistics-etasks *statistics*)
+       (statistics-stasks *statistics*) 
+       (statistics-unifications *statistics*) (statistics-copies *statistics*)
+       (statistics-aedges *statistics*)
+       (statistics-pedges *statistics*)))))
 
 
 (defun extract-strings-from-gen-record nil
@@ -583,6 +582,7 @@
 
 (defun clear-gen-chart nil
    (setq *edge-id* 0)
+   (setq *active-edge-id* 0)
    (setq %edge-allowance% 0)
    (setq *gen-chart* nil)
    (setq *gen-record* nil))
@@ -747,10 +747,10 @@
                               ;; (print (list forwardp backwardp (g-edge-id inact) (g-edge-id edge)))
                               (if backwardp
                                  (progn
-                                    (incf (packings-equivalent *packings*))
+                                    (incf (statistics-equivalent *statistics*))
                                     (push edge (g-edge-equivalent inact)))
                                  (progn
-                                    (incf (packings-proactive *packings*))
+                                    (incf (statistics-proactive *statistics*))
                                     (push edge (g-edge-packed inact))))
                               (return t))))))
                nil
@@ -844,14 +844,16 @@
              (rest gen-daughter-order)
              (first (rule-order rule)))
       (when unified-dag
-         (let ((ndaughters (length gen-daughter-order)))
+         (let* ((needed (rest gen-daughter-order))
+                (ndaughters (length gen-daughter-order)))
             (values
                (make-g-edge
-                  :id (next-edge) :rule rule
+                  :id (if needed (next-active-edge) (next-edge))
+                  :rule rule
                   ;; category slot not filled in since not a complete constituent
                   :dag unified-dag
                   :res rule
-                  :needed (rest gen-daughter-order)
+                  :needed needed
                   :dag-restricted restricted
                   :rels-covered
                   (gen-chart-set-union
@@ -901,31 +903,32 @@
            (when unified-dag
              ;; remaining non-head daughters in active edge are filled in
              ;; left-to-right order
-             (let ((new-act
-                    (make-g-edge
-                     :id (next-edge) 
-                     ;; category slot not filled in since not (yet) a complete constituent
-                     :rule (g-edge-rule act)
-                     :dag unified-dag
-                     :res (g-edge-res act)
-                     :needed (rest (g-edge-needed act))
-                     :dag-restricted restricted
-                     :rels-covered
-                     (gen-chart-set-union
-                        (g-edge-rels-covered act) (g-edge-rels-covered inact))
-                     :children
-                     (gen-copy-list-and-insert
-                       (g-edge-children act) inact next-index)
-                     :lex-ids 
-                     (gen-copy-list-and-insert
-                       (g-edge-lex-ids act) (g-edge-lex-ids inact) next-index)
-                     :leaves
-                     (gen-copy-list-and-insert
-                       (g-edge-leaves act) (g-edge-leaves inact) next-index)
-                     :lexemes
-                     (append (g-edge-lexemes act) (g-edge-lexemes inact))
-                     :mod-index (g-edge-mod-index act)
-                     :accessible (union (g-edge-accessible act) (g-edge-accessible inact)))))
+             (let* ((needed (rest (g-edge-needed act)))
+                    (new-act
+                     (make-g-edge
+                      :id (if needed (next-active-edge) (next-edge))
+                      ;; category slot not filled in since not (yet) a complete constituent
+                      :rule (g-edge-rule act)
+                      :dag unified-dag
+                      :res (g-edge-res act)
+                      :needed needed
+                      :dag-restricted restricted
+                      :rels-covered
+                      (gen-chart-set-union
+                         (g-edge-rels-covered act) (g-edge-rels-covered inact))
+                      :children
+                      (gen-copy-list-and-insert
+                        (g-edge-children act) inact next-index)
+                      :lex-ids 
+                      (gen-copy-list-and-insert
+                        (g-edge-lex-ids act) (g-edge-lex-ids inact) next-index)
+                      :leaves
+                      (gen-copy-list-and-insert
+                        (g-edge-leaves act) (g-edge-leaves inact) next-index)
+                      :lexemes
+                      (append (g-edge-lexemes act) (g-edge-lexemes inact))
+                      :mod-index (g-edge-mod-index act)
+                      :accessible (union (g-edge-accessible act) (g-edge-accessible inact)))))
                (if one-off-p new-act
                  ;; (ERB 2003-10-22) There originally wasn't any reference to
                  ;; the agenda here, but I'm not getting my hands on all of the
@@ -1006,7 +1009,7 @@
                                       (g-edge-dag-restricted edge)))
       (gen-chart-evaluate-unification
          rule-tdfs daughter-path (g-edge-dag edge) needed mother-path act)
-      (progn (incf *filtered-tasks*) nil)))
+      (progn (incf (statistics-ftasks *statistics*)) nil)))
 
 
 (defun gen-chart-evaluate-unification (rule-tdfs daughter-path fs needed
@@ -1028,17 +1031,17 @@
       ;; the active edge. Copy might fail due to circularity
       (setf (g-edge-dag act) (setq rule-tdfs (funcall rule-tdfs)))
       (unless rule-tdfs
-         (decf *successful-tasks*)
+         (decf (statistics-stasks *statistics*))
          (return-from gen-chart-evaluate-unification nil)))
    (with-unification-context (ignore)
-     (incf *executed-tasks*)
+     (incf (statistics-etasks *statistics*))
      (unless
         (setq rule-tdfs
            (yadu rule-tdfs
               (create-temp-parsing-tdfs fs daughter-path)))
         ;(print (list (dag-type (tdfs-indef rule-tdfs)) daughter-path (dag-type (tdfs-indef fs))))
         (return-from gen-chart-evaluate-unification nil))
-     (incf *successful-tasks*)
+     (incf (statistics-stasks *statistics*))
      (if needed
         #+:gen-immediate-copy
         (let ((dag (copy-tdfs-elements rule-tdfs))) ; immediately copy active edge
@@ -1056,7 +1059,7 @@
            ;; perform copy - don't do copy yet since no guarantee we'll ever use it
            #'(lambda ()
                (with-unification-context (ignore)
-                  (copy-tdfs-elements ; does (incf *copies*) itself
+                  (copy-tdfs-elements
                      (yadu rule-tdfs
                         (create-temp-parsing-tdfs fs daughter-path)))))
            (x-restrict-fs
@@ -1096,10 +1099,10 @@
                         (make-dag :type *toptype* 
                                   :arcs arcs-to-check)))
                  (setf (dag-forward real-dag) new)
-                 (copy-tdfs-elements dag)))) ; does (incf *copies*) itself
+                 (copy-tdfs-elements dag))))
          (or res
            ;; charge copy failure to last successful unification
-           (progn (decf *successful-tasks*) nil))))))
+           (progn (decf (statistics-stasks *statistics*)) nil))))))
 
 
 ;;; Second phase, where intersective modifiers are introduced
@@ -1266,12 +1269,12 @@
                (restrictors-compatible-p
                   daughter-restricted (g-edge-dag-restricted edge)))
          (with-unification-context (ignore)
-            (incf *executed-tasks*)
+            (incf (statistics-etasks *statistics*))
             (if
                (yadu rule-tdfs
                   (create-temp-parsing-tdfs fs daughter-path))
                (progn
-                  (incf *successful-tasks*)
+                  (incf (statistics-stasks *statistics*))
                   (when *gen-adjunction-debug*
                      (format t
 "~&Adjoining active edge ~A covering ~A~%   into inactive edge ~A covering ~A" 
@@ -1279,7 +1282,7 @@
                         (g-edge-leaves edge)))
                   t)
                nil))
-         (progn (incf *filtered-tasks*) nil))))
+         (progn (incf (statistics-ftasks *statistics*)) nil))))
 
 
 ;;; Print out summary of strings in generator chart - (print-gen-summary)
@@ -1308,19 +1311,20 @@
 
 ;;; Print out contents of generator chart (tty output) - (print-gen-chart)
 
-(defun print-gen-chart (&key concise (stream t))
+(defun print-gen-chart (&key concise (stream t) activep)
    (format stream "~&------~%")
    (dolist (entry (reverse *gen-chart*)) ; order in which originally created
       (format stream "~%Vertex ~(~A~):~%" (car entry))
       (dolist (e (sort (append (cadr entry) (copy-list (cddr entry))) #'<
                        :key #'edge-id))
-         (print-gen-chart-edge e stream concise)
-         (dolist (p (g-edge-equivalent e))
+        (when (or activep (> (edge-id e) ))
+          (print-gen-chart-edge e stream concise)
+          (dolist (p (g-edge-equivalent e))
             (format stream " = packed ")
             (print-gen-chart-edge p stream concise)
-         (dolist (p (g-edge-packed e))
-            (format stream " > packed ")
-            (print-gen-chart-edge p stream concise)))))
+            (dolist (p (g-edge-packed e))
+              (format stream " > packed ")
+              (print-gen-chart-edge p stream concise))))))
    (format stream "~%"))
 
 (defun print-gen-chart-edge (e stream concise)

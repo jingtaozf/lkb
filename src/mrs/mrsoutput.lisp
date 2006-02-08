@@ -112,6 +112,8 @@
 ;; rules, where the conversion code will have created variables before going
 ;; into construct-mrs(); `standard' calls are not affected.    (27-jan-04; oe)
 ;;
+(defparameter *mrs-record-all-nodes-p* nil)
+
 (defparameter *all-nodes* nil)
 
 (defun lookup-mtr-node (dag)
@@ -166,7 +168,7 @@ duplicate variables")
                                h-cons-fs nil *variable-generator*))
 	    :a-cons (nreverse (construct-a-cons
 			       a-cons-fs nil *variable-generator*))))))
-    (push (cons fs psoa) *all-nodes*)
+    (when *mrs-record-all-nodes-p* (push (cons fs psoa) *all-nodes*))
     psoa))
 
 
@@ -206,7 +208,8 @@ duplicate variables")
                                               :extra extra 
                                               :id idnumber)))
           (push (cons fs variable-identifier) *named-nodes*)
-          (push (cons fs variable-identifier) *all-nodes*)
+          (when *mrs-record-all-nodes-p*
+            (push (cons fs variable-identifier) *all-nodes*))
           variable-identifier)))))
 
 (defun create-indexing-variable (fs)
@@ -297,8 +300,9 @@ duplicate variables")
            (handle-var (when handel-pair
                          (create-variable 
                           (cdr handel-pair) variable-generator)))
-           (pred (or (lookup-mtr-node 
-                      (extract-pred-from-rel-fs fs :rawp t))
+           (pred (or (when *mrs-record-all-nodes-p*
+                       (lookup-mtr-node 
+                        (extract-pred-from-rel-fs fs :rawp t)))
                      (create-type (extract-pred-from-rel-fs fs))))
            (original-string (extract-original-string-from-rel-fs fs))
            (fvps (extract-fvps-from-rel-fs fs variable-generator 
@@ -315,7 +319,7 @@ duplicate variables")
                    :str original-string
                    :cfrom cfrom
                    :cto cto)))
-          (push (cons fs ep) *all-nodes*)
+          (when *mrs-record-all-nodes-p* (push (cons fs ep) *all-nodes*))
           ep)))))
 ;;; FIX?? flist may be wrong way round
 
@@ -405,7 +409,8 @@ duplicate variables")
               collect 
                 (make-fvpair :feature feature
                              :value 
-                             (or (lookup-mtr-node value)
+                             (or (when *mrs-record-all-nodes-p*
+                                   (lookup-mtr-node value))
                                  (if (member feature *value-feats*)
                                      (create-type (fs-type value))
                                    ;; (substitute-ersatz 
@@ -621,6 +626,7 @@ the mod-anc is an index-lbl-pair - the target-ancs are a diff list of these
     (cond ((equal-or-subtype type *event-type*) "e")
           ((equal-or-subtype type *ref-ind-type*) "x")
           ((equal-or-subtype type *deg-ind-type*) "d")
+          ((equal-or-subtype type *non_event-type*) "p")
           ((equal-or-subtype type *non_expl-ind-type*) "i")
           ((equal-or-subtype type *event_or_index-type*) "i")
           ((equal-or-subtype type *handle-type*) "h")  

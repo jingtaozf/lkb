@@ -12,6 +12,7 @@
       (cond 
        ((equal-or-subtype type *event-type*) "e")
        ((equal-or-subtype type *ref-ind-type*) "x")
+       ((equal-or-subtype type *non_event-type*) "p")
        ((equal-or-subtype type *non_expl-ind-type*) "i")
        ((equal-or-subtype type *event_or_index-type*) "i")
        ((equal-or-subtype type *handle-type*) "h")
