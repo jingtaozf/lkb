@@ -919,6 +919,7 @@
     (when (eq task :generate)
       #+:debug
       (sys:gsgc-parameters)
+      #+:debug
       (excl:gc)
       #+:debug
       (sys:gsgc-parameters)

@@ -532,6 +532,10 @@
                            *first-only-p* to `nil'.~%")
                          first-only-p))
 	 (maf-p #+:maf (xml-p input) #-:maf nil)
+         ;;
+         ;; input originating from SPPP is a set of SPPP tokens
+         ;;
+         (spppp (and (listp input) (consp (first input))))
 	 length-user-input)
     ;; eg. user-input -> ("the" "dog" "barks")
     (multiple-value-bind (user-input brackets-list)
@@ -543,9 +547,11 @@
 		    input)
 		  nil))
       (setf length-user-input
-	(if maf-p 
-	    #+:maf (max 0 (1- (saf-num-lattice-nodes user-input))) #-:maf nil
-	  (length user-input)))
+        (cond
+         (maf-p 
+          #+:maf (max 0 (1- (saf-num-lattice-nodes user-input))) #-:maf nil)
+         (spppp *chart-max*)
+         (t (length user-input))))
       
       (when (> length-user-input *chart-limit*)
         (error "~%Sentence `~a' too long - ~A words maximum ~
