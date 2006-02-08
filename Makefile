@@ -208,7 +208,7 @@ lkb_windows:
 	  echo "(load \"${WROOT}/lkb/src/ACL_specific/deliver.lsp\")"; \
           echo "(excl:exit)"; \
 	) > c:/tmp/build.lisp
-	( cd c:/program\ files/acl70; ./clim.exe -qq -L c:/tmp/build.lisp \
+	( cd d:/program\ files/acl70; ./clim.exe -qq -L c:/tmp/build.lisp \
           && touch ${WROOT}/.yes; )
 	( \
 	  if [ ! -f ${WROOT}/.yes ]; then exit 1; fi; \
