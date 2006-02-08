@@ -175,7 +175,7 @@ lkb_linux@ar:
 
 lkb_solaris:
 	${RM} -f ${HOME}/tmp/.yes;
-	( cd ${SROOT}/lkb && ${CVS} -q update; )
+	( cd ${SROOT}/lkb && ${MAKE} latest; )
 	( \
 	  echo "(load \"${SROOT}/lkb/src/general/loadup.lisp\")"; \
 	  echo "(load \"${SROOT}/lkb/src/ACL_specific/deliver.lsp\")"; \
