@@ -211,7 +211,7 @@
     :depends-on (#+(and :allegro
 			(or :linux (and :sparc :svr4) :alpha :macosx))
 		 "pvm"
-                 #+:logon "fad"
+                 "fad"
 		 #+:lkb "lkb"
                  #-:lkb "ppcre"
 		 #+:page "page"))
