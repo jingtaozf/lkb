@@ -2,28 +2,38 @@
 
 proc LoadBLT { version dir } {
 
+    set prefix "lib"
     set suffix [info sharedlibextension]
     regsub {\.} $version {} version_no_dots
 
-    # Determine whether to load the normal BLT library or 
+    # Determine whether to load the full BLT library or
     # the "lite" tcl-only version.
     
     if { [info commands tk] == "tk" } {
-        set library BLT${version_no_dots}${suffix}
+        set name ${prefix}BLT${version_no_dots}${suffix}
     } else {
-        set library BLTlite${version_no_dots}${suffix}
+        set name ${prefix}BLTlite${version_no_dots}${suffix}
     }
     
     global tcl_platform
     if { $tcl_platform(platform) == "unix" } {
-	set library [file join $dir lib${library}]
-    } 
+	set library [file join $dir $name]
+	if { ![file exists $library] } {
+	    # Try the parent directory.
+	    set library [file join [file dirname $dir] $name]
+	}
+	if { ![file exists $library] } {
+	    # Default to the path generated at compilation.
+	    set library [file join "/opt/local/lib" $name]
+	}
+    } else {
+	set library $name
+    }
     load $library BLT
 }
 
 set version "2.4"
-set libdir  "/usr/tcltk/lib"
 
-package ifneeded BLT $version [list LoadBLT $version $libdir]
+package ifneeded BLT $version [list LoadBLT $version $dir]
 
 # End of package index file

@@ -60,7 +60,7 @@ bind Tabnotebook <ButtonPress-2> {
 bind Tabnotebook <ButtonRelease-2> {
     %W configure -cursor $bltTabnotebook(cursor)
     set bltTabnotebook(activate) yes
-    %W highlight @%x,%y
+    %W activate @%x,%y
 }
 
 # ----------------------------------------------------------------------
@@ -289,11 +289,11 @@ proc blt::ToggleTearoff { widget x y index } {
 proc blt::TabnotebookInit { widget } {
     $widget bind all <Enter> { 
 	if { $bltTabnotebook(activate) } {
-	    %W highlight current
+	    %W activate current
         }
     }
     $widget bind all <Leave> { 
-        %W highlight "" 
+        %W activate "" 
     }
     $widget bind all <ButtonPress-1> { 
 	blt::SelectTab %W "current"
@@ -305,10 +305,10 @@ proc blt::TabnotebookInit { widget } {
 	blt::ToggleTearoff %W $bltTabnotebook(x) $bltTabnotebook(y) select
     }
     $widget bind Perforation <Enter> { 
-	%W perforation highlight on
+	%W perforation activate on
     }
     $widget bind Perforation <Leave> { 
-	%W perforation highlight off
+	%W perforation activate off
     }
     $widget bind Perforation <ButtonPress-1> { 
 	set bltTabnotebook(x) %X

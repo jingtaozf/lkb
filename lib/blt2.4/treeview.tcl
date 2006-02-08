@@ -1,3 +1,4 @@
+
 # ======================================================================
 #
 # treeview.tcl
@@ -240,6 +241,11 @@ proc blt::tv::Initialize { w } {
     $w bind Entry <Control-Shift-B1-Motion> { 
 	# do nothing
     }
+
+    $w bind Entry <Shift-ButtonPress-3> { 
+	blt::tv::EditColumn %W %X %Y
+    }
+
     $w column bind all <Enter> {
 	%W column highlight [%W column current]
     }
@@ -263,10 +269,65 @@ proc blt::tv::Initialize { w } {
     $w column bind Rule <ButtonRelease-1> {
 	%W column configure [%W column current] -width [%W column resize set]
     }
+    $w column bind all <ButtonPress-1> {
+	set blt::tv::column [%W column current]
+	%W column configure $blt::tv::column -titlerelief sunken
+    }
     $w column bind all <ButtonRelease-1> {
-	set column [%W column nearest %x %y]
+	set column [%W column current]
 	if { $column != "" } {
 	    %W column invoke $column
+	}
+	%W column configure $blt::tv::column -titlerelief raised
+    }
+    $w bind TextBoxStyle <ButtonPress-3> { 
+	if { [%W edit -root -test %X %Y] } {
+	    break
+	}
+    }
+    $w bind TextBoxStyle <ButtonRelease-3> { 
+	if { [%W edit -root -test %X %Y] } {
+	    blt::tv::EditColumn %W %X %Y
+	    break
+	}
+    }
+    $w bind CheckBoxStyle <Enter> { 
+	set column [%W column current]
+	if { [%W column cget $column -edit] } {
+	    %W style activate current $column
+	} 
+    }
+    $w bind CheckBoxStyle <Leave> { 
+	%W style activate ""
+    }
+    $w bind CheckBoxStyle <ButtonPress-1> { 
+	set column [%W column current]
+	if { [%W column cget $column -edit] } {
+	    break
+	}
+    }
+    $w bind CheckBoxStyle <B1-Motion> { 
+	set column [%W column current]
+	if { [%W column cget $column -edit] } {
+	    break
+	}
+    }
+    $w bind CheckBoxStyle <ButtonRelease-1> { 
+	if { [%W edit -root -test %X %Y] } {
+	    %W edit -root %X %Y
+	    break
+	}
+    }
+    $w bind ComboBoxStyle <ButtonPress-1> { 
+	set column [%W column current]
+	if { [%W column cget $column -edit] } {
+	    break
+	}
+    }
+    $w bind ComboBoxStyle <ButtonRelease-1> { 
+	if { [%W edit -root -test %X %Y] } {
+	    %W edit -root %X %Y
+	    break
 	}
     }
 }
@@ -418,12 +479,12 @@ proc blt::tv::NextMatch { w key } {
 #------------------------------------------------------------------------
 proc blt::tv::InsertText { w text } {
     if { [string length $text] > 0 } {
-	set index [$w text index insert]
-	if { ($index >= [$w text index sel.first]) && 
-	     ($index <= [$w text index sel.last]) } {
-	    $w text delete sel.first sel.last
+	set index [$w index insert]
+	if { ($index >= [$w index sel.first]) && 
+	     ($index <= [$w index sel.last]) } {
+	    $w delete sel.first sel.last
 	}
-	$w text insert $index $text
+	$w insert $index $text
     }
 }
 
@@ -443,8 +504,8 @@ proc blt::tv::InsertText { w text } {
 #
 #------------------------------------------------------------------------
 proc blt::tv::Transpose { w } {
-    set i [$w text index insert]
-    if {$i < [$w text index end]} {
+    set i [$w index insert]
+    if {$i < [$w index end]} {
 	incr i
     }
     set first [expr {$i-2}]
@@ -475,6 +536,23 @@ proc blt::tv::GetSelection { w } {
 	regsub -all . $text [string index [$w cget -show] 0] text
     }
     return $text
+}
+
+proc blt::tv::EditColumn { w x y } {
+    $w see current
+    if { [winfo exists $w.edit] } {
+	destroy $w.edit
+    }
+    if { ![$w edit -root -test $x $y] } {
+	return
+    }
+    $w edit -root $x $y
+    update
+    focus $w.edit
+    $w.edit selection range 0 end
+    grab set $w.edit
+    tkwait window $w.edit
+    grab release $w.edit
 }
 
 # 
@@ -622,7 +700,7 @@ bind ${className} <KeyPress-F2> {
 }
 
 #
-# Differences between "current" and nearest.
+# Differences between id "current" and operation nearest.
 #
 #	set index [$w index current]
 #	set index [$w nearest $x $y]
@@ -671,126 +749,116 @@ bind ${className} <KeyPress-F2> {
 #	
 #
 
-bind ${className} <ButtonPress-3> { 
-    %W see current
-    set id [%W text get %x %y]
-    if { $id != -1 } {
-	focus %W.edit 
-	grab set %W.edit
-	%W text selection range 0 end
-    }
-}
-
 
 # Standard Motif bindings:
 
 bind ${className}Editor <ButtonPress-1> {
-    %W text icursor @%x,%y
-    %W text selection clear
+    %W icursor @%x,%y
+    %W selection clear
 }
 
 bind ${className}Editor <Left> {
-    %W text icursor last
-    %W text selection clear
+    %W icursor last
+    %W selection clear
 }
 
 bind ${className}Editor <Right> {
-    %W text icursor next
-    %W text selection clear
+    %W icursor next
+    %W selection clear
 }
 
 bind ${className}Editor <Shift-Left> {
-    set new [expr {[%W text index insert] - 1}]
-    if {![%W text selection present]} {
-	%W text selection from insert
-	%W text selection to $new
+    set new [expr {[%W index insert] - 1}]
+    if {![%W selection present]} {
+	%W selection from insert
+	%W selection to $new
     } else {
-	%W text selection adjust $new
+	%W selection adjust $new
     }
-    %W text icursor $new
+    %W icursor $new
 }
 
 bind ${className}Editor <Shift-Right> {
-    set new [expr {[%W text index insert] + 1}]
-    if {![%W text selection present]} {
-	%W text selection from insert
-	%W text selection to $new
+    set new [expr {[%W index insert] + 1}]
+    if {![%W selection present]} {
+	%W selection from insert
+	%W selection to $new
     } else {
-	%W text selection adjust $new
+	%W selection adjust $new
     }
-    %W text icursor $new
+    %W icursor $new
 }
 
 bind ${className}Editor <Home> {
-    %W text icursor 0
+    %W icursor 0
     %W selection clear
 }
 bind ${className}Editor <Shift-Home> {
     set new 0
-    if {![%W text selection present]} {
-	%W text selection from insert
-	%W text selection to $new
+    if {![%W selection present]} {
+	%W selection from insert
+	%W selection to $new
     } else {
-	%W text selection adjust $new
+	%W selection adjust $new
     }
-    %W text icursor $new
+    %W icursor $new
 }
 bind ${className}Editor <End> {
-    %W text icursor end
+    %W icursor end
     %W selection clear
 }
 bind ${className}Editor <Shift-End> {
     set new end
-    if {![%W text selection present]} {
-	%W text selection from insert
-	%W text selection to $new
+    if {![%W selection present]} {
+	%W selection from insert
+	%W selection to $new
     } else {
-	%W text selection adjust $new
+	%W selection adjust $new
     }
-    %W text icursor $new
+    %W icursor $new
 }
 
 bind ${className}Editor <Delete> {
-    if { [%W text selection present]} {
-	%W text delete sel.first sel.last
+    if { [%W selection present]} {
+	%W delete sel.first sel.last
     } else {
-	%W text delete insert
+	%W delete insert
     }
 }
 
 bind ${className}Editor <BackSpace> {
-    if { [%W text selection present] } {
-	%W text delete sel.first sel.last
+    if { [%W selection present] } {
+	%W delete sel.first sel.last
     } else {
-	set index [expr [%W text index insert] - 1]
+	set index [expr [%W index insert] - 1]
 	if { $index >= 0 } {
-	    %W text delete $index $index
+	    %W delete $index $index
 	}
     }
 }
 
 bind ${className}Editor <Control-space> {
-    %W text selection from insert
+    %W selection from insert
 }
 
 bind ${className}Editor <Select> {
-    %W text selection from insert
+    %W selection from insert
 }
 
 bind ${className}Editor <Control-Shift-space> {
-    %W text selection adjust insert
+    %W selection adjust insert
 }
 
 bind ${className}Editor <Shift-Select> {
-    %W text selection adjust insert
+    %W selection adjust insert
 }
 
 bind ${className}Editor <Control-slash> {
-    %W text selection range 0 end
+    %W selection range 0 end
 }
 
 bind ${className}Editor <Control-backslash> {
-    %W text selection clear
+    %W selection clear
 }
 
 bind ${className}Editor <KeyPress> {
@@ -815,13 +883,11 @@ bind ${className}Editor <Control-KeyPress> {
 }
 
 bind ${className}Editor <Escape> { 
-    %W text cancel 
-    grab release %W
+    %W cancel 
 }
 
 bind ${className}Editor <Return> { 
-    %W text apply 
-    grab release %W
+    %W apply 
 }
 
 bind ${className}Editor <Shift-Return> {
@@ -852,54 +918,50 @@ if { [string compare $tcl_platform(platform) "windows"] != 0 } {
 
 # Additional emacs-like bindings:
 bind ${className}Editor <ButtonPress-3> {
-    grab release %W
-    %W text cancel
-    update
-    set id [%W text get -root %X %Y]
-    if { $id != -1 } {
-	focus %W 
-	grab set %W
-	%W text selection range 0 end
+    set parent [winfo parent %W]
+    %W cancel
+    after idle {
+	blt::tv::EditColumn $parent %X %Y
     }
 }
 
 bind ${className}Editor <Control-a> {
-    %W text icursor 0
-    %W text selection clear
+    %W icursor 0
+    %W selection clear
 }
 
 bind ${className}Editor <Control-b> {
-    %W text icursor [expr {[%W index insert] - 1}]
-    %W text selection clear
+    %W icursor [expr {[%W index insert] - 1}]
+    %W selection clear
 }
 
 bind ${className}Editor <Control-d> {
-    %W text delete insert
+    %W delete insert
 }
 
 bind ${className}Editor <Control-e> {
-    %W text icursor end
-    %W text selection clear
+    %W icursor end
+    %W selection clear
 }
 
 bind ${className}Editor <Control-f> {
-    %W text icursor [expr {[%W index insert] + 1}]
-    %W text selection clear
+    %W icursor [expr {[%W index insert] + 1}]
+    %W selection clear
 }
 
 bind ${className}Editor <Control-h> {
-    if {[%W text selection present]} {
-	%W text delete sel.first sel.last
+    if {[%W selection present]} {
+	%W delete sel.first sel.last
     } else {
-	set index [expr [%W text index insert] - 1]
+	set index [expr [%W index insert] - 1]
 	if { $index >= 0 } {
-	    %W text delete $index $index
+	    %W delete $index $index
 	}
     }
 }
 
 bind ${className}Editor <Control-k> {
-    %W text delete insert end
+    %W delete insert end
 }
 
 if 0 {
@@ -907,15 +969,15 @@ if 0 {
 	blt::tv::Transpose %W
     }
     bind ${className}Editor <Meta-b> {
-	%W text icursor [blt::tv::PreviousWord %W insert]
-	%W text selection clear
+	%W icursor [blt::tv::PreviousWord %W insert]
+	%W selection clear
     }
     bind ${className}Editor <Meta-d> {
 	%W delete insert [blt::tv::NextWord %W insert]
     }
     bind ${className}Editor <Meta-f> {
-	%W text icursor [blt::tv::NextWord %W insert]
-	%W text selection clear
+	%W icursor [blt::tv::NextWord %W insert]
+	%W selection clear
     }
     bind ${className}Editor <Meta-BackSpace> {
 	%W delete [blt::tv::PreviousWord %W insert] insert
@@ -970,3 +1032,4 @@ if 0 {
 	return $pos
     }
 }
+

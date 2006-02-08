@@ -35,6 +35,12 @@
  *	Libpvm3 includes.
  *
  * $Log$
+ * Revision 1.6  2005/05/21 01:13:57  oe
+ * undo earlier delete confusion :-{
+ *
+ * Revision 1.3  2004/12/22 23:51:03  oe
+ * introduce 32- vs. 64-bit distinction in Linux binary dircectories
+ *
  * Revision 1.52  2004/09/08 19:52:43  pvmsrc
  * Upped to PVM version 3.4.5 (how sequential... :)
  * (Spanker=kohl)

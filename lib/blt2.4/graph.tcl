@@ -9,6 +9,10 @@ proc Blt_Crosshairs { graph } {
     blt::Crosshairs $graph 
 }
 
+proc Blt_ResetCrosshairs { graph state } {
+    blt::Crosshairs $graph "Any-Motion" $state
+}
+
 proc Blt_ZoomStack { graph } {
     blt::ZoomStack $graph
 }
@@ -47,8 +51,8 @@ proc blt::HighlightLegend { graph } {
     }
 }
 
-proc blt::Crosshairs { graph { event "Any-Motion" } } {
-    $graph crosshairs on
+proc blt::Crosshairs { graph {event "Any-Motion"} {state "on"}} {
+    $graph crosshairs $state
     bind crosshairs-$graph <$event>   {
 	%W crosshairs configure -position @%x,%y 
     }
@@ -59,7 +63,11 @@ proc blt::Crosshairs { graph { event "Any-Motion" } } {
 	%W crosshairs on
     }
     $graph crosshairs configure -color red
-    blt::AddBindTag $graph crosshairs-$graph
+    if { $state == "on" } {
+	blt::AddBindTag $graph crosshairs-$graph
+    } elseif { $state == "off" } {
+	blt::RemoveBindTag $graph crosshairs-$graph
+    }
 }
 
 proc blt::InitStack { graph } {
@@ -213,8 +221,8 @@ proc blt::PopZoom { graph } {
 	blt::ZoomTitleLast $graph
 	busy hold $graph
 	update
-	after 2000 "blt::DestroyZoomTitle $graph"
 	busy release $graph
+	after 2000 "blt::DestroyZoomTitle $graph"
     } else {
 	catch { $graph marker delete "zoomTitle" }
     }
@@ -248,9 +256,6 @@ proc blt::PushZoom { graph } {
     }
     set zoomInfo($graph,stack) [linsert $zoomInfo($graph,stack) 0 $cmd]
 
-    busy hold $graph 
-    # This update lets the busy cursor take effect.
-    update
 
     foreach margin { xaxis x2axis } {
 	foreach axis [$graph $margin use] {
@@ -274,9 +279,8 @@ proc blt::PushZoom { graph } {
 	    }
 	}
     }
-    # This "update" forces the graph to be redrawn
-    update
-    
+    busy hold $graph 
+    update;				# This "update" redraws the graph
     busy release $graph
 }
 

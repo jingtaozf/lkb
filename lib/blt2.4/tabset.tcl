@@ -60,7 +60,7 @@ bind Tabset <ButtonPress-2> {
 bind Tabset <ButtonRelease-2> {
     %W configure -cursor $bltTabset(cursor)
     set bltTabset(activate) yes
-    %W highlight @%x,%y
+    %W activate @%x,%y
 }
 
 # ----------------------------------------------------------------------
@@ -294,11 +294,11 @@ proc blt::Tearoff { widget x y index } {
 proc blt::TabsetInit { widget } {
     $widget bind all <Enter> { 
 	if { $bltTabset(activate) } {
-	    %W highlight current
+	    %W activate current
         }
     }
     $widget bind all <Leave> { 
-        %W highlight "" 
+        %W activate "" 
     }
     $widget bind all <ButtonPress-1> { 
 	blt::SelectTab %W "current"
@@ -312,10 +312,10 @@ proc blt::TabsetInit { widget } {
 	blt::Tearoff %W $bltTabset(x) $bltTabset(y) select
     }
     $widget bind Perforation <Enter> { 
-	%W perforation highlight on
+	%W perforation activate on
     }
     $widget bind Perforation <Leave> { 
-	%W perforation highlight off
+	%W perforation activate off
     }
     $widget bind Perforation <ButtonPress-1> { 
 	set bltTabset(x) %X
