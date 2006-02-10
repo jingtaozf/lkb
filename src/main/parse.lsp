@@ -539,7 +539,7 @@
 	 length-user-input)
     ;; eg. user-input -> ("the" "dog" "barks")
     (multiple-value-bind (user-input brackets-list)
-        (if (and *bracketing-p* (not maf-p))
+        (if (and *bracketing-p* (not maf-p) (not spppp))
           (initialise-bracket-list input)
           (values (if maf-p
 		      #+:maf (xml-to-saf-object input) #-:maf nil 
@@ -550,7 +550,9 @@
         (cond
          (maf-p 
           #+:maf (max 0 (1- (saf-num-lattice-nodes user-input))) #-:maf nil)
-         (spppp *chart-max*)
+         (spppp (loop
+                    for token in input
+                    maximize (rest (assoc :end token))))
          (t (length user-input))))
       
       (when (> length-user-input *chart-limit*)
