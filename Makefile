@@ -219,7 +219,7 @@ lkb_windows:
 	  ${RM} -f /c/tmp/lkb_windows.zip; \
           zip -r /c/tmp/lkb_windows.zip windows; )
 	scp /c/tmp/lkb_windows.tgz /c/tmp/lkb_windows.zip \
-          oe@lingo.stanford.edu:/lingo/www/lingo/ftp/test;
+          bmw@lingo.stanford.edu:/lingo/www/lingo/ftp/test;
 
 lkb_documentation:
 	( \

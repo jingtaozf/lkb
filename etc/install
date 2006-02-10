@@ -62,6 +62,11 @@ while [ $# -gt 0 ]; do
       WGET="wget --quiet";
       shift 1;
     ;;
+    -t|--test)
+      build="test";
+      WGET="wget --quiet";
+      shift 1;
+    ;;
     -r|--redwoods)
       TSDBHOME=${DELPHINHOME}/lkb/src/tsdb/home;
       shift 1;
