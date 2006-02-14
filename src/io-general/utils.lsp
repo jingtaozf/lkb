@@ -596,8 +596,7 @@
 ;;; to normalize, say, 'utf-8, utf-8, and :utf-8.
 ;;;
 
-;; mapping from allowable names (all elements in a list)
-;;  to canonical names (forst element in each list)
+;; mapping from recognised names to canonical names (first element in each list)
 ;; TO DO: add Emacs coding names
 (defconstant *coding-system-names*
     '(
@@ -662,7 +661,7 @@
       :iso8859-15
       :koi8-r
       :emacs-mule
-      :utf8 :utf-8
+      :utf8
       :big5
       :gb2312
       :euc
@@ -717,7 +716,7 @@
 
   #+:allegro
   (let* ((allegro-coding-name (internal-coding-system-name coding))
-	(locale (excl::find-locale (format nil ".~a" allegro-coding-name))))
+	 (locale (excl::find-locale (format nil ".~a" allegro-coding-name))))
     (cond
      (locale 
       (setf excl:*locale* locale)
