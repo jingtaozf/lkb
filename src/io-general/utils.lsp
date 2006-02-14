@@ -595,6 +595,102 @@
 ;;; of the `script' file in each grammar; use a macro at the top-level, so as
 ;;; to normalize, say, 'utf-8, utf-8, and :utf-8.
 ;;;
+
+;; mapping from allowable names (all elements in a list)
+;;  to canonical names (forst element in each list)
+;; TO DO: add Emacs coding names
+(defparameter *coding-system-names*
+    '(
+      (:iso8859-1 :latin1 :ascii :8-bit :1250 :iso88591)
+      (:1251) ;; For MS Windows
+      (:1252) ;; For MS Windows
+      (:1253) ;; For MS Windows
+      (:1254) ;; For MS Windows
+      (:1255) ;; For MS Windows
+      (:1256) ;; For MS Windows
+      (:1257) ;; For MS Windows
+      (:1258) ;; For MS Windows
+      (:iso8859-2 :latin-2 :latin2)
+      (:iso8859-3 :latin-3 :latin3)
+      (:iso8859-4 :latin-4 :latin4)
+      (:iso8859-5 :latin-5 :latin5)
+      (:iso8859-6 :latin-6 :latin6)
+      (:iso8859-7 :latin-7 :latin7)
+      (:iso8859-8 :latin-8 :latin8)
+      (:iso8859-9 :latin-9 :latin9)
+      (:iso8859-14 :latin-14 :latin14)
+      (:iso8859-15 :latin-15 :latin15)
+      (:koi8-r)
+      (:emacs-mule)
+      (:utf8 :utf-8)
+      (:big5)
+      (:gb2312)
+      (:euc :ujis :euc-jp)
+      (:874) ;; For MS Windows
+      (:932) ;; For MS Windows
+      (:936) ;; For MS Windows
+      (:949) ;; For MS Windows
+      (:950) ;; For MS Windows
+      (:jis)
+      (:shiftjis)))
+
+;; mapping from canonical names
+;; specified as:
+;;  - :XXX when canonical name same as internal name
+;;  - (:CANONICAL . :INTERNAL) otherwise
+(defparameter *canonical-to-internal-coding-name-mapping*
+    #+:allegro
+    '(
+      :iso8859-1
+      :1251
+      :1252
+      :1253
+      :1254
+      :1255
+      :1256
+      :1257
+      :1258
+      :iso8859-2
+      :iso8859-3
+      :iso8859-4
+      :iso8859-5
+      :iso8859-6
+      :iso8859-7
+      :iso8859-8
+      :iso8859-9
+      :iso8859-14
+      :iso8859-15
+      :koi8-r
+      :emacs-mule
+      :utf8 :utf-8
+      :big5
+      :gb2312
+      :euc
+      :874
+      :932
+      :936
+      :949
+      :950
+      :jis
+      :shiftjis)
+    #-:allegro
+    NIL
+    )
+
+(defun internal-coding-system-name (name)
+  (or
+   (find name *canonical-to-internal-coding-name-mapping*)
+   (cdr
+    (find name *canonical-to-internal-coding-name-mapping*
+	  :test #'(lambda (x y)
+		    (and (listp y)
+			 (eq x (car y))))))))
+
+(defun canonical-coding-system-name (name)
+  (car (find name *coding-system-names* 
+	     :test #'(lambda (x y)
+		       (member x y)))))
+
 (defmacro set-coding-system (coding)
   `(do-set-coding-system
        ,(typecase coding
@@ -606,16 +702,22 @@
 
 (defun do-set-coding-system (coding &optional raw)
 
-  (case coding
-    (:utf8 (setf coding :utf-8))
-    (:eucjp (setf coding :euc-jp))
-    ((:latin1 :iso88591 :iso8859-1) (setf coding :iso-8859-1)))
-  
-  (unless (smember coding '(:utf-8 :euc-jp :iso-8859-1))
+  (unless
+      (setf coding
+	(canonical-coding-system-name coding))
     (error "set-coding-system(): invalid coding system `~a'.~%" raw))
+    
+;  (case coding
+;    (:utf8 (setf coding :utf-8))
+;    (:eucjp (setf coding :euc-jp))
+;    ((:latin1 :iso88591 :iso8859-1) (setf coding :iso-8859-1)))
+;  
+;  (unless (smember coding '(:utf-8 :euc-jp :iso-8859-1))
+;    (error "set-coding-system(): invalid coding system `~a'.~%" raw))
 
   #+:allegro
-  (let ((locale (excl::find-locale (format nil ".~a" coding))))
+  (let* ((allegro-coding-name (internal-coding-system-name coding))
+	(locale (excl::find-locale (format nil ".~a" allegro-coding-name))))
     (cond
      (locale 
       (setf excl:*locale* locale)
