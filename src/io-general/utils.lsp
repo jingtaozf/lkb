@@ -599,7 +599,7 @@
 ;; mapping from allowable names (all elements in a list)
 ;;  to canonical names (forst element in each list)
 ;; TO DO: add Emacs coding names
-(defparameter *coding-system-names*
+(defconstant *coding-system-names*
     '(
       (:iso8859-1 :latin1 :ascii :8-bit :1250 :iso88591)
       (:1251) ;; For MS Windows
@@ -625,7 +625,7 @@
       (:utf8 :utf-8)
       (:big5)
       (:gb2312)
-      (:euc :ujis :euc-jp)
+      (:euc :ujis :euc-jp :eucjp)
       (:874) ;; For MS Windows
       (:932) ;; For MS Windows
       (:936) ;; For MS Windows
@@ -638,7 +638,7 @@
 ;; specified as:
 ;;  - :XXX when canonical name same as internal name
 ;;  - (:CANONICAL . :INTERNAL) otherwise
-(defparameter *canonical-to-internal-coding-name-mapping*
+(defconstant *canonical-to-internal-coding-name-mapping*
     #+:allegro
     '(
       :iso8859-1
