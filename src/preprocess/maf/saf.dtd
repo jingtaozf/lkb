@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- DTD for SAF (benjamin.waldron@cl.cam.ac.uk)  -->
+        
+<!ELEMENT saf   (olac? , fsm ) >
+<!ATTLIST saf   addressing CDATA #REQUIRED
+                document CDATA #REQUIRED >
+
+<!ELEMENT fsm   (state* , annot*)>
+<!ATTLIST fsm   initial IDREF #IMPLIED
+                final IDREF #IMPLIED>
+
+<!ELEMENT annot (fs?) >
+<!ATTLIST annot id ID #REQUIRED
+                from CDATA #IMPLIED
+                to CDATA #IMPLIED
+                source CDATA #IMPLIED
+                target CDATA #IMPLIED
+                value CDATA #IMPLIED
+                type CDATA #REQUIRED
+                deps IDREFS #IMPLIED >
+
+
+<!ELEMENT fs (f*) > <!-- ... incomplete ... -->
+<!ELEMENT f (CDATA | fs) >
+<!ATTLIST f name CDATA #REQUIRED>
+
+<!ELEMENT olac ANY > <!-- TO DO -->
