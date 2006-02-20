@@ -372,11 +372,13 @@
     ;; eg. (#S(CHARED-WORD :WORD "The" :CFROM 0 :CTO 2) #S(CHARED-WORD :WORD "cat" :CFROM 4 :CTO 6) #S(CHARED-WORD :WORD "barks" :CFROM 8 :CTO 12))
     (mapcar #'p-token-to-chared-word result))
    #+:maf
-   ((eq format :maf)
+   ((or (eq format :maf) (eq format :saf))
     (setf *x-addressing* :char)
     (let ((strm (make-string-output-stream)))
-      (format strm "~a" (maf-header :addressing *x-addressing*
-				    :document *saf-document*))
+      (format strm "~a" 
+	      (if (eq format :saf)
+		  (saf-header :addressing *x-addressing* :document *saf-document*)		  
+		(maf-header :addressing *x-addressing* :document *saf-document*)))
       (format strm "<fsm init='v~a' final='v~a'>"
 	      (loop for tok in result
 		  minimize (second tok))
@@ -385,10 +387,12 @@
       (p-tokens-to-xml-states result strm)
       (mapcar #'(lambda (x) 
 		  (format strm "~a"
-			  (p-token-to-maf-token x)))
+			  (p-token-to-maf-token x :saf (eq format :saf))))
 	      result)
       (format strm "</fsm>")
-      (format strm "</maf>")
+      (if (eq format :saf)
+	  (format strm "</saf>")
+	(format strm "</maf>"))
       (get-output-stream-string strm)))
    ((eq format :list)
     (values result length))
@@ -409,17 +413,29 @@
 	      (format strm "<state id='v~a'/>" i))))
 
 ;;(42 0 1 |The|:(0 . 3) |The|:(0 . 3))
-(defun p-token-to-maf-token (p-token)
+(defun p-token-to-maf-token (p-token &key saf)
   (let* ((x (fourth p-token))
 	 (r (char-map-simple-range (char-map x))))
-    (format nil "<token id='t~a' from='~a' to='~a' value='~a' source='v~a' target='v~a'/>"
-	    (first p-token)
-	    (funcall *local-to-global-point-mapping* (format nil "~a" (car r)))
-	    (funcall *local-to-global-point-mapping* (format nil "~a" (cdr r)))
-	    (xml-escape (text x))
-	    (second p-token)
-	    (third p-token)
-	    )))
+    (cond
+     (saf
+      (format nil "<annot type='token' id='t~a' from='~a' to='~a' value='~a' source='v~a' target='v~a'/>"
+	      (first p-token)
+	      (funcall *local-to-global-point-mapping* (format nil "~a" (car r)))
+	      (funcall *local-to-global-point-mapping* (format nil "~a" (cdr r)))
+	      (xml-escape (text x))
+	      (second p-token)
+	      (third p-token)
+	      ))
+     (t
+      (format nil "<token id='t~a' from='~a' to='~a' value='~a' source='v~a' target='v~a'/>"
+	      (first p-token)
+	      (funcall *local-to-global-point-mapping* (format nil "~a" (car r)))
+	      (funcall *local-to-global-point-mapping* (format nil "~a" (cdr r)))
+	      (xml-escape (text x))
+	      (second p-token)
+	      (third p-token)
+	      )
+      ))))
 
 ;;(42 0 1 |The|:(0 . 3) |The|:(0 . 3))
 ;;-> #S(CHARED-WORD :WORD "The" :CFROM 0 :CTO 3)

@@ -474,6 +474,8 @@
 	      *morph-option*)
       (setf *foreign-morph-fn* nil))))  
 
+(defvar *maf-p* nil)
+
 ;; example input: 
 ;; - basic: "the" "dog" "barks"
 ;; - bracketed: "Kim" "(" "(" "likes" ")" "Sandy" ")"
@@ -531,7 +533,7 @@
                            Disabling best-first mode: setting ~
                            *first-only-p* to `nil'.~%")
                          first-only-p))
-	 (maf-p #+:maf (xml-p input) #-:maf nil)
+	 (*maf-p* #+:maf (xml-p input) #-:maf nil)
          ;;
          ;; input originating from SPPP is a set of SPPP tokens
          ;;
@@ -539,16 +541,16 @@
 	 length-user-input)
     ;; eg. user-input -> ("the" "dog" "barks")
     (multiple-value-bind (user-input brackets-list)
-        (if (and *bracketing-p* (not maf-p) (not spppp))
+        (if (and *bracketing-p* (not *maf-p*) (not spppp))
           (initialise-bracket-list input)
-          (values (if maf-p
+          (values (if *maf-p*
 		      #+:maf (xml-to-saf-object input) #-:maf nil 
 		      ;; extract object from maf xml
 		    input)
 		  nil))
       (setf length-user-input
         (cond
-         (maf-p 
+         (*maf-p* 
           #+:maf (max 0 (1- (saf-num-lattice-nodes user-input))) #-:maf nil)
          (spppp (loop
                     for token in input
@@ -884,6 +886,9 @@
 (defparameter *morphophon-cache* nil)
 
 (defun instantiate-chart-with-morphop nil
+  #+:maf
+  (if (and *maf-p* (get-medges *tchart*))
+      (return-from instantiate-chart-with-morphop *tchart*))
   (dotimes (current *tchart-max*)
     ;; for each left vertex in chart
     (let ((token-ccs (aref *tchart* current 1)))

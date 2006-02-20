@@ -25,7 +25,7 @@
   target
   from
   to
-  daughters
+  deps
   content
   form ; fix me
   )
@@ -129,7 +129,7 @@
   (cond
    ((eq '|fsm| (lxml-elt-name (car lxml)))
     (when (cdr lxml)
-      (error "no elementes expected after fsm"))
+      (error "no elements expected after fsm"))
     (get-saf-lattice-from-fsm (car lxml)))
    (t
     (make-saf-lattice-from-sequence lxml))))
@@ -161,10 +161,14 @@
 (defun lxml-state-to-node (lxml-state)
   (lxml-elt-attr lxml-state "id"))
 
+(defun saf-type (str)
+  (intern str :keyword))
+
 (defun lxml-token-to-edge (lxml-token &key type source target)
   (make-saf-edge
    :id (lxml-elt-attr lxml-token "id")
-   :type (or type :leaf)
+   :type (saf-type (or type :|token|))
+;   :type (or type :leaf)
    :source (or source (lxml-elt-attr lxml-token "source"))
    :target (or target (lxml-elt-attr lxml-token "target"))
    :from (lxml-elt-attr lxml-token "from")
@@ -178,16 +182,20 @@
 	       (car fs-list))))
     (make-saf-edge
      :id (lxml-elt-attr lxml-annot "id")
-     :type (or type (lxml-elt-attr lxml-annot "type"))
+     :type (saf-type (or type (lxml-elt-attr lxml-annot "type")))
      :source (or source (lxml-elt-attr lxml-annot "source"))
      :target (or target (lxml-elt-attr lxml-annot "target"))
-     :daughters (split-str-on-spc (lxml-elt-attr lxml-annot "daughters"))
-     :content (lxml-fs-content-to-fs fs)
-     :form (lxml-elt-attr lxml-annot "form") ;; should go in content
+     :deps (split-str-on-spc (lxml-elt-attr lxml-annot "deps"))
+     :content (or (lxml-elt-attr lxml-annot "value") (lxml-fs-content-to-fs fs))
+     :from (lxml-elt-attr lxml-annot "from")
+     :to (lxml-elt-attr lxml-annot "to")
+;     :content (lxml-elt-attr lxml-annot "value") ;; should go in content
+;     :form (lxml-elt-attr lxml-annot "form") ;; should go in content
      )))
 
 (defun lxml-wordform-to-edge (lxml-wordform &key source target)
-  (lxml-annot-to-edge lxml-wordform :type :non-leaf
+;  (lxml-annot-to-edge lxml-wordform :type :non-leaf
+  (lxml-annot-to-edge lxml-wordform :type :|wordForm|
 		      :source source :target target))
   
 (defun lxml-sentence-to-edge (lxml-sentence &key source target)
@@ -234,12 +242,12 @@
 	    date
 	    year)))
 
-(defun maf-header (&key (addressing :xchar) document)
+(defun maf-header (&key (addressing :char) document)
   (saf-header :maf t :addressing addressing :document document))
 
-(defun saf-header (&key (addressing :xchar) document (maf nil))
+(defun saf-header (&key (addressing :char) document (maf nil))
   (format nil
-	  "<?xml version='1.0' encoding='UTF8'?><!DOCTYPE ~a SYSTEM '~a.dtd'><~a~a addressing='~a'><olac:olac xmlns:olac='http://www.language-archives.org/OLAC/1.0/' xmlns='http://purl.org/dc/elements/1.1/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://www.language-archives.org/OLAC/1.0/ http://www.language-archives.org/OLAC/1.0/olac.xsd'><creator>LKB</creator><created>~a</created></olac:olac>"
+	  "<?xml version='1.0' encoding='UTF-8'?><!DOCTYPE ~a SYSTEM '~a.dtd'><~a~a addressing='~a'><olac:olac xmlns:olac='http://www.language-archives.org/OLAC/1.0/' xmlns='http://purl.org/dc/elements/1.1/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://www.language-archives.org/OLAC/1.0/ http://www.language-archives.org/OLAC/1.0/olac.xsd'><creator>~a</creator><created>~a</created></olac:olac>"
 	  (if maf "maf" "saf")
 	  (if maf "maf" "saf")
 	  (if maf "maf" "saf")
@@ -247,6 +255,7 @@
 	      (format nil " document='~a'" (xml-escape (2-str document)))
 	    "")
 	  (xml-escape (2-str addressing))
+	  "x-preprocessor 1.00"
 	  (xml-escape (get-timestamp))))
 ;;
 ;; batch processing
@@ -333,7 +342,7 @@
     (loop for edge in *parse-record* 
 	do
 	  (let ((mrs (mrs::extract-mrs edge)))
-	    (format stream "~&<annot type='parse' daughters='~a' edge='~a'>" ;;move edge into content
+	    (format stream "~&<annot type='parse' deps='~a' edge='~a'>" ;;move edge into content
 		    (saf-edge-id s)
 		    (lkb::edge-id edge))
 	    ;;(format stream "~&~A~&" 
@@ -381,13 +390,17 @@
 (defun saf-num-lattice-nodes (saf)
   (length (saf-lattice-nodes (saf-lattice saf))))
 
+(defvar *saf-setup-morphs* '(:|token|))
+
 (defun saf-setup-morphs (saf)
   (case *morph-option*
     (:with-tokeniser-partial-tree
 	(saf-to-tchart saf))
     (t 
      (saf-to-tchart saf
-		    :filter #'(lambda (x) (eq (saf-edge-type x) :leaf))))))
+		    :filter #'(lambda (x) (member (saf-edge-type x) *saf-setup-morphs*))))))
+;		    :filter #'(lambda (x) (string= (saf-edge-type x) :|token|))))))
+;		    :filter #'(lambda (x) (eq (saf-edge-type x) :leaf))))))
 
 ;;
 
@@ -414,12 +427,14 @@
 	(loop for f in (saf-lattice-edges saf-lattice)
 	    when (funcall filter f)
 	    collect f)
-      when (eq (saf-edge-type e) :leaf)
-      collect e into leafs
-      when (eq (saf-edge-type e) :non-leaf)
-      collect e into non-leafs
+;      when (eq (saf-edge-type e) :leaf)
+      when (eq (saf-edge-type e) :|token|)
+      collect e into tokens
+      when (eq (saf-edge-type e) :|wordForm|)
+;      when (eq (saf-edge-type e) :non-leaf)
+      collect e into wordForms
       finally     
-	(loop for e in (append leafs non-leafs)
+	(loop for e in (append tokens wordForms)
 	    do (augment-tchart-from-saf-edge e :addressing addressing))))
 
 (defun next-tchart-edge-id (&optional (tchart *tchart*))
@@ -445,12 +460,16 @@
 
 (defun saf-edge-to-edge (saf-edge &key addressing)
   (case (saf-edge-type saf-edge)
-    (:leaf (saf-edge-to-tedge saf-edge :addressing addressing))
-    (:non-leaf (saf-edge-to-medge saf-edge))))
+;  (case (saf-edge-type saf-edge)
+;    (:leaf (saf-edge-to-tedge saf-edge :addressing addressing))
+    (:|token| (saf-edge-to-tedge saf-edge :addressing addressing))
+    (:|wordForm| (saf-edge-to-medge saf-edge))))
+;    (:non-leaf (saf-edge-to-medge saf-edge))))
 
 (defun saf-edge-to-tedge (saf-edge &key addressing)
-  (unless (eq :leaf (saf-edge-type saf-edge))
-    (error "leaf edge expected"))
+;  (unless (eq :leaf (saf-edge-type saf-edge))
+  (unless (eq :|token| (saf-edge-type saf-edge))
+    (error ":|token| edge expected"))
   (with-slots (id source target from to content) saf-edge
       (make-token-edge 
        :id (id-to-int id)
@@ -463,14 +482,20 @@
        :leaves (list content))))
 
 (defun saf-edge-to-medge (saf-edge)
-  (unless (eq :non-leaf (saf-edge-type saf-edge))
-    (error "non-leaf edge expected"))
+;  (unless (eq :non-leaf (saf-edge-type saf-edge))
+  (unless (eq :|wordForm| (saf-edge-type saf-edge))
+    (error ":|wordForm| edge expected"))
   ;; assume tedges already in chart
-  (with-slots (id source target daughters content form) saf-edge
+;  (with-slots (id source target deps content form) saf-edge
+  (with-slots (id source target deps content) saf-edge
     (let* ((children 
-	    (loop for d in daughters
+	    (loop for d in deps
 		collect (id-to-token-edge d (get-tedges *tchart*)))) 
 	   (leaf-edges children) ;;fix me
+	   (children-words
+	    (loop for l in leaf-edges
+		collect (token-edge-string l)))
+	   (form (str-list-2-str children-words))
 	   )
       (unless (= (id-to-int source) (leaf-edges-from leaf-edges))
 	(error "source must match that of leaf edges"))
@@ -521,7 +546,12 @@
     (setf addressing (saf-meta-addressing (saf-meta *saf*))))
   (cond
     ((string= addressing "char") (parse-integer point))
-    ((string= addressing "xpoint") -1)))
+    ((string= addressing "xpoint") -1)
+    (t (error "unknown addressing scheme '~a'" addressing))))
+
+#+:null
+(defun str-2-int (str)
+  (if str (parse-integer str)))
 
 ;; id: first char ignored, rest gives integer
 (defun id-to-int (id)
@@ -530,3 +560,7 @@
 	(and (setf *edge-id* (max i *edge-id*))
 	     i)
       (- (incf *edge-id*)))))
+
+;;
+;;					;
+

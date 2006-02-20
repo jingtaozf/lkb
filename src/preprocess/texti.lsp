@@ -145,16 +145,23 @@
 ;;; tchart to MAF mapping
 ;;;
 
-(defun tchart-to-maf (&optional (tchart *tchart*) &key (wordforms t))
+(defun tchart-to-saf (&optional (tchart *tchart*) &key (wordforms t))
+  (tchart-to-maf tchart :wordforms wordforms :saf t))
+
+(defun tchart-to-maf (&optional (tchart *tchart*) &key (wordforms t) saf)
   (let* ((strm (make-string-output-stream))
 	 (tedges (get-tedges tchart))
 	 (medges (get-medges tchart)))
-    (format strm "~a" (maf-header))
-    (if wordforms (format strm "~a" (fsm-xml tedges medges)))
-    (format strm "</maf>")
+    (if saf
+	(format strm "~a" (saf-header))
+      (format strm "~a" (maf-header)))
+    (if wordforms (format strm "~a" (fsm-xml tedges medges :saf saf)))
+    (if saf
+	(format strm "</saf>")
+      (format strm "</maf>"))
     (get-output-stream-string strm)))
 
-(defun fsm-xml (tedges medges)
+(defun fsm-xml (tedges medges &key saf)
   (let* ((strm (make-string-output-stream))
 	 (v-min (loop for x in tedges minimize (edge-from x)))
 	 (v-max (1+ (loop for x in tedges maximize (edge-from x)))))
@@ -166,30 +173,48 @@
     ;; token edges
     (loop
 	for tedge in tedges
-	do (format strm "~a" (tedge-to-token-xml tedge)))
+	do (format strm "~a" (tedge-to-token-xml tedge :saf saf)))
     ;; wordform edges
     (loop
 	for medge in medges
-	do (format strm "~a" (medge-to-wordform-xml medge)))
+	do (format strm "~a" (medge-to-wordform-xml medge :saf saf)))
     (format strm "</fsm>")
     (get-output-stream-string strm)))
 
-(defun medge-to-wordform-xml (medge)
+(defun medge-to-wordform-xml (medge &key saf)
   (with-slots (from to string stem partial-tree) medge
-    (concatenate 'string
-      (format nil "<wordForm form='~a' tag='~a' daughters='~a' source='v~a' target='v~a'>" 
-	      string 
-	      (if (caar partial-tree)
-		  (cl-ppcre:regex-replace "_INFL_RULE$" (string (caar partial-tree)) "")
-		"")
-	      (edge-to-tokens-id-str medge)
+    (cond
+     (saf
+      (concatenate 'string
+	(format nil "<annot type='wordForm' deps='~a' source='v~a' target='v~a'>" 
+		;(if (caar partial-tree)
+		 ;   (cl-ppcre:regex-replace "_INFL_RULE$" (string (caar partial-tree)) "")
+		  ;"")
+		(edge-to-tokens-id-str medge)
 	       from to)
-      (format nil "<fs>")
-      (format nil "~a" (stem-to-fs stem))
-      (if partial-tree
-	  (format nil "~a" (partial-tree-to-fs partial-tree)))
-      (format nil "</fs>")
-      (format nil "</wordForm>"))))
+	(format nil "<fs>")
+	(format nil "~a" (stem-to-fs stem))
+	(if partial-tree
+	    (format nil "~a" (partial-tree-to-fs partial-tree)))
+	(format nil "</fs>")
+	(format nil "</annot>")))
+     (t
+      (concatenate 'string
+;	(format nil "<wordForm form='~a' tag='~a' tokens='~a' source='v~a' target='v~a'>" 
+	(format nil "<wordForm tokens='~a' source='v~a' target='v~a'>" 
+		;string 
+		;(if (caar partial-tree)
+		;    (cl-ppcre:regex-replace "_INFL_RULE$" (string (caar partial-tree)) "")
+		;  "")
+		(edge-to-tokens-id-str medge)
+	       from to)
+	(format nil "<fs>")
+	(format nil "~a" (stem-to-fs stem))
+	(if partial-tree
+	    (format nil "~a" (partial-tree-to-fs partial-tree)))
+	(format nil "</fs>")
+	(format nil "</wordForm>"))
+      ))))
 
 ;; store as lisp list text
 (defun partial-tree-to-fs (p-tree)
@@ -240,16 +265,27 @@
 	  (list child)))))
 
 ;; using cfrom/cto in place of xfrom/xto
-(defun tedge-to-token-xml (tedge)
+(defun tedge-to-token-xml (tedge &key saf)
   (with-slots (id from to string cfrom cto) tedge
-  (format nil "<token id='~a' from='~a' to='~a' value='~a' source='v~a' target='v~a'/>"
-	  (xml-escape (format nil "t~a" id))
-	  (xml-escape (format nil ".~a" (or cfrom "?")))
-	  (xml-escape (format nil ".~a" (or cto "?")))
-	  (xml-escape string)
-	  (xml-escape (or (2-str from) "?")) 
-	  (xml-escape (or (2-str to) "?"))	  
-	  )))
+    (cond
+     (saf
+      (format nil "<annot type='token' id='~a' from='~a' to='~a' value='~a' source='v~a' target='v~a'/>"
+	      (xml-escape (format nil "t~a" id))
+	      (xml-escape (2-str (or cfrom "?")))
+	      (xml-escape (2-str (or cto "?")))
+	      (xml-escape string)
+	      (xml-escape (or (2-str from) "?")) 
+	      (xml-escape (or (2-str to) "?")))      
+      )
+     (t
+      (format nil "<token id='~a' from='~a' to='~a' value='~a' source='v~a' target='v~a'/>"
+	      (xml-escape (format nil "t~a" id))
+	      (xml-escape (2-str (or cfrom "?")))
+	      (xml-escape (2-str (or cto "?")))
+	      (xml-escape string)
+	      (xml-escape (or (2-str from) "?")) 
+	      (xml-escape (or (2-str to) "?")))
+      ))))
 
 (defun get-edges (&optional (tchart *tchart*))
   (loop

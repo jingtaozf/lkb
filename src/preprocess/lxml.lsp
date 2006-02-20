@@ -108,6 +108,9 @@
 ;; XML
 ;;
 
+(defun pprint-xml (x)
+  (pretty-print-xml x))
+
 ;; input xml must have NO superfluous space
 (defun pretty-print-xml (xml)
   (coerce

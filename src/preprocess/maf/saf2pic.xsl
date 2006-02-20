@@ -30,6 +30,7 @@
   <xsl:template match="/">
     <xsl:for-each select="//annot[@type='sentence']">
       <pet-input-chart>
+        <xsl:comment>SAF sentence: <xsl:value-of select="@id"/></xsl:comment>
         <xsl:apply-templates select="key('token',@id)"/>
       </pet-input-chart>
     </xsl:for-each>
