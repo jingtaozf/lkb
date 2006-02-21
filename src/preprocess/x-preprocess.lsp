@@ -199,16 +199,25 @@
 	for rule in global
 	for scanner = (x-fsr-scanner rule)
 	for target = (x-fsr-target rule)
-	for old-text = text
+	for old-x = (clone-preprocessed-x x) ;;effic?
 	do
 	  (setf x (x-regex-replace-all scanner x target))
-	when (and (eq verbose :trace) (not (string= old-text text))) do
+	when (and (eq verbose :trace) 
+		  (not (preprocessed-x= old-x x)))
+;		  (not (string= old-text text)))
+	do
 	  (format
 	   t
-	   "~&|~a|~%  |~a|~%  |~a|~%~%"
-	   (x-fsr-source rule) old-text text)
+	   "~&G|~a|~%  ~a~%  ~a~%~%"
+	   (x-fsr-source rule) old-x x)
+;	   (x-fsr-source rule) old-text text)
 	finally
 	  (return x))))
+
+(defun clone-preprocessed-x (x)
+  (make-instance 'preprocessed-x 
+    :text (copy-seq (text x))
+    :char-map (copy-tree (char-map x))))
 
 (defun copy-preprocessed-x (x)
   (make-instance 'preprocessed-x 
@@ -250,8 +259,9 @@
 	    when (and (eq verbose :trace) (not (string= (text x-new) text-old))) do
 	      (format
 	       t
-	       "~&|~a|~%  |~a|~%  |~a|~%~%"
-	       (x-fsr-source rule) text-old (text x-new))
+	       "~&L|~a|~%  ~a~%  ~a~%~%"
+	       (x-fsr-source rule) x-token x-new)
+;	       (x-fsr-source rule) text-old (text x-new))
 	    unless (string= text-old (text x-new))
 	    do
 	      (case type
@@ -479,6 +489,11 @@
     (setf (char-map x)
       (make-char-map (length (text x))))
     x))
+
+(defun preprocessed-x= (x y)
+  (and
+   (string= (text x) (text y))
+   (equal (char-map x) (char-map y))))
 
 (defun make-char-map (l)
   (loop
