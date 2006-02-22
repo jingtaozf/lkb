@@ -189,9 +189,7 @@
       ;; get output in desired format
       (x-format-preprocessed-output
        (nreverse (x-tokens-to-result (nreverse result) :format format))
-       length format))
-;    x
-    ))
+       length format))))
 
 (defun x-preprocess-global (x &optional (global (slot-value *x-preprocessor* 'global)) &key verbose)
   (with-slots (text char-map) x
@@ -204,13 +202,11 @@
 	  (setf x (x-regex-replace-all scanner x target))
 	when (and (eq verbose :trace) 
 		  (not (preprocessed-x= old-x x)))
-;		  (not (string= old-text text)))
 	do
 	  (format
 	   t
 	   "~&G|~a|~%  ~a~%  ~a~%~%"
 	   (x-fsr-source rule) old-x x)
-;	   (x-fsr-source rule) old-text text)
 	finally
 	  (return x))))
 
@@ -261,7 +257,6 @@
 	       t
 	       "~&L|~a|~%  ~a~%  ~a~%~%"
 	       (x-fsr-source rule) x-token x-new)
-;	       (x-fsr-source rule) text-old (text x-new))
 	    unless (string= text-old (text x-new))
 	    do
 	      (case type
@@ -430,8 +425,8 @@
      (saf
       (format nil "<annot type='token' id='t~a' from='~a' to='~a' value='~a' source='v~a' target='v~a'/>"
 	      (first p-token)
-	      (funcall *local-to-global-point-mapping* (format nil "~a" (car r)))
-	      (funcall *local-to-global-point-mapping* (format nil "~a" (cdr r)))
+	      (funcall *local-to-global-point-mapping* (2-str (car r)))
+	      (funcall *local-to-global-point-mapping* (2-str (cdr r)))
 	      (xml-escape (text x))
 	      (second p-token)
 	      (third p-token)
@@ -439,8 +434,8 @@
      (t
       (format nil "<token id='t~a' from='~a' to='~a' value='~a' source='v~a' target='v~a'/>"
 	      (first p-token)
-	      (funcall *local-to-global-point-mapping* (format nil "~a" (car r)))
-	      (funcall *local-to-global-point-mapping* (format nil "~a" (cdr r)))
+	      (funcall *local-to-global-point-mapping* (2-str (car r)))
+	      (funcall *local-to-global-point-mapping* (2-str (cdr r)))
 	      (xml-escape (text x))
 	      (second p-token)
 	      (third p-token)
@@ -476,13 +471,18 @@
        "|~a|:~a"
        text (if *print-char-map-simple-range*
 		(char-map-simple-range char-map)
-	      char-map)
-       )))
+	      char-map))))
 
+;; fix_me: enforce ordering constraint?
 (defun char-map-simple-range (char-map)
-  (cons
-   (car (first char-map))
-   (cdr (car (last char-map)))))
+  (loop 
+      for r in char-map
+      if (numberp (car r)) collect (car r) into from
+      if (numberp (cdr r)) collect (cdr r) into to
+      finally
+	(return
+	  (cons (if from (apply #'min from))
+		(if to (apply #'max to))))))
 
 (defun make-preprocessed-x (str)
   (let ((x (make-instance 'preprocessed-x :text str)))
@@ -533,30 +533,41 @@
   (coerce
    (loop
        with esc
-       with reg
+       with reg ;; register
        with reg-start
        with reg-end
        for c across replace-string
-		    ;; to_do: \& \` \' \{N}
-       if (and esc (member c '(#\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9)))
+		    ;; 
+		    ;; register matches
+		    ;;
+       if (and esc (member c '(#\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9))) ;; to_do: \& \` \' \{N}
        do (setf reg (1- (read-from-string (string c))))
 	  (setf reg-start (aref reg-starts reg))
 	  (setf reg-end (aref reg-ends reg))
-       and append (coerce (subseq target-string reg-start reg-end) 'list)
-       and append (subseq char-map reg-start reg-end) into new-char-map 
+       and append (coerce (subseq target-string reg-start reg-end) 'list) ;; replacement text
+       and append (subseq char-map reg-start reg-end) into new-char-map  ;; replacement spans
        and do (setf esc nil)
        else if esc 
+	    ;;
+	    ;; escaped character
+	    ;;
        collect c
-       and collect (cons nil nil) into new-char-map
+       and collect nil into new-char-map ;; null replacement span
        and do (setf esc nil)
        else if (char= c #\\)
+	    ;;
+	    ;; backslash (escape) character
+	    ;;
        do (setf esc t)
        else collect c
-       and collect (cons nil nil) into new-char-map
+	    ;;
+	    ;; none of the above
+	    ;;
+       and collect nil into new-char-map ;; null replacement span 
        finally
-	 (fill-char-map new-char-map
-			(char-map-match-start char-map match-start)
-			(char-map-match-end char-map match-end))
+;	 (fill-char-map new-char-map
+;			(char-map-match-start char-map match-start)
+;			(char-map-match-end char-map match-end))
 	 (push
 	  (make-repl :target-string target-string
 		     :target-char-map char-map
@@ -571,6 +582,8 @@
 	  (repl-list-list repl-l)))
    'string))
 
+;; instantiate null spans to match surrounding spans
+;; (is this sensible???)
 (defun fill-char-map (char-map start end)
   (loop
       with last-s = start
@@ -705,8 +718,7 @@
     (parse (x-preprocess str :format :maf) show-parse)
     (setf (x-fspp-global *x-preprocessor*)
       old-x-fspp-global)
-    t
-    ))
+    t))
 
 (defun char-map-add-x (point)
   (format nil "~a" (+ *char-map-add-offset* (point-to-char-point point "char"))))

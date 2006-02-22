@@ -545,7 +545,7 @@
   (unless addressing
     (setf addressing (saf-meta-addressing (saf-meta *saf*))))
   (cond
-    ((string= addressing "char") (parse-integer point))
+    ((string= addressing "char") (ignore-errors (parse-integer point)))
     ((string= addressing "xpoint") -1)
     (t (error "unknown addressing scheme '~a'" addressing))))
 
