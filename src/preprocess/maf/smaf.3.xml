@@ -1,0 +1,160 @@
+<?xml version='1.0' encoding='UTF-8'?>
+ <!DOCTYPE smaf SYSTEM 'smaf.dtd'>
+ <!-- SMAF BRAINSTORMING -->
+ <smaf document='URL'>
+  <text>OPTIONAL INLINE TEXT</text>
+  <olac:olac xmlns:olac='http://www.language-archives.org/OLAC/1.0/' xmlns='http://purl.org/dc/elements/1.1/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://www.language-archives.org/OLAC/1.0/ http://www.language-archives.org/OLAC/1.0/olac.xsd'>
+   <creator>CREATOR</creator>
+   <created>TIMESTAMP</created>
+   <id>HOGLIKE ID</id>
+   <!-- ... -->
+  </olac:olac>
+  <lattice init='v0' final='v89'>
+
+   <!-- some simple tokens-->
+   <edge type='token' id='t1' cfrom='0' cto='6' source='v0' target='v1'>Andrew</token>
+   <edge type='token' id='t2' cfrom='7' cto='13' source='v0' target='v1'>smiles</token>
+   <!-- or... -->
+   <token id='t1' cfrom='0' cto='6' source='v1' target='v2'>
+    <meta>
+     <f name='token-type'>simple</f>
+     <f name='token'>Andrew</f>
+    </meta>
+   </token>
+   <token id='t2' cfrom='7' cto='13' source='v1' target='v2'>
+    <meta>
+     <f name='token-type'>simple</f>
+     <f name='token'>smiles</f>
+    </meta>
+   </token>
+
+   <!-- one possible part-of-speech -->
+   <edge type='pos' id='p1' deps='t1' source='v0' target='v1'>
+    <meta>
+     <f name='weight'>0.5</f>
+     <f name='tagset'>CLAWS</f>
+     <f name='tag'>NNP</f>
+    </meta>
+   </edge>
+   <!-- another possible part-of-speech (incl. token) -->
+   <token id='p0'  cfrom='0' cto='6' source='v0' target='v1'>
+    <meta>
+     <f name='token-type'>pos</f>
+     <f name='weight'>0.5</f>
+     <f name='tagset'>CLAWS</f>
+     <f name='tag'>NNP</f>
+     <f name='token'>Andrew</f>
+    </meta>
+   </edge>
+
+   <!-- sample named entity -->
+   <token id='n1' cfrom='10' cto='20' source='v0' target='v1'>
+    <meta>
+     <f name='token-type'>named entity</f>
+     <f name='weight'>0.567</f>
+<!-- perhaps...  <f name='type'>generic_timespan</f> -->
+     <f name='token'>1987 to 1997</f>
+    </meta>
+    <fs type='timespan'>
+       <f name='from'>
+          <fs type='point'>
+            <f name='year'>
+              <fs type='1987'/>
+            </f>
+          </fs>
+       </f>
+       <f name='to'>
+          <fs type='point'>
+            <f name='year'>
+              <fs type='1997'/>
+            </f>
+          </fs>
+       </f>
+     </fs>
+     <!-- OR: can we use RMRS in place of above FS? -->
+   </edge>
+
+   <!-- sample external morphology -->
+   <edge type='morph' deps='t1' source='v0' target='v1'>
+    <meta>
+     <f name='weight'>0.5</f>
+     <f name='tagset'>morph</f>
+     <f name='reduced'>SMILE</f>
+     <f name='type'>lex_type</f>
+    </meta>
+    <!-- or... FS along lines of MAF? -->
+    <!-- or... RMRS encoding morpho info? -->
+   </edge>
+
+   <!-- sample RMRS (blob) -->
+   <edge id='r1' type='rmrs' cfrom='10' cto='30' deps='s0' source='v1' target='v2'>
+   <rmrs>
+    <label vid='1'/>
+     <ep cfrom='0' cto='13'> <!-- perhaps add... tokens='t1 t2' -->
+      <gpred>prop-or-ques_m_rel</gpred>
+      <label vid='1'/>
+      <var sort='e' vid='2' tense='present'/>
+     </ep>
+     <ep cfrom='0' cto='6'> <!-- perhaps add... tokens='t1' -->
+      <gpred>proper_q_rel</gpred>
+      <label vid='6'/>
+      <var sort='x' vid='7' pers='3' num='sg'/>
+     </ep>
+     <ep cfrom='0' cto='6'> <!-- perhaps add... tokens='t1' -->
+      <gpred>named_rel</gpred>
+      <label vid='10'/>
+      <var sort='x' vid='7' pers='3' num='sg'/>
+     </ep>
+     <ep cfrom='7' cto='13'> <!-- perhaps add... tokens='t2' -->
+      <realpred lemma='smile' pos='v' sense='1'/>
+      <label vid='11'/>
+      <var sort='e' vid='2' tense='present'/>
+     </ep>
+     <!-- perhaps... make EPs into first-class lattice entities... packing??? -->
+     <rarg>
+      <rargname>MARG</rargname>
+      <label vid='1'/>
+      <var sort='h' vid='3'/>
+     </rarg>
+     <rarg>
+      <rargname>RSTR</rargname>
+      <label vid='6'/>
+      <var sort='h' vid='8'/>
+     </rarg>
+     <rarg>
+      <rargname>BODY</rargname>
+      <label vid='6'/>
+      <var sort='h' vid='9'/>
+     </rarg>
+     <rarg>
+      <rargname>CARG</rargname>
+      <label vid='10'/>
+      <constant>andrew</constant>
+     </rarg>
+     <rarg>
+      <rargname>ARG1</rargname>
+      <label vid='11'/>
+      <var sort='x' vid='7' pers='3' num='sg'/>
+     </rarg>
+     <hcons hreln='qeq'>
+      <hi>
+       <var sort='h' vid='3'/>
+      </hi>
+      <lo>
+       <label vid='11'/>
+      </lo>
+     </hcons>
+     <hcons hreln='qeq'>
+      <hi>
+       <var sort='h' vid='8'/>
+      </hi>
+      <lo>
+       <label vid='10'/>
+      </lo>
+     </hcons>
+    </rmrs>
+   </edge>
+
+   <!-- ... -->
+  </lattice>
+ </smaf>
