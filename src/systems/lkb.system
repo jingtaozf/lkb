@@ -118,6 +118,7 @@
     :source-extension "lsp"
     :depends-on (#+:psql "psql"
                  #+:preprocessor "ppcre"
+                 #+:preprocessor "preprocessor"
                  #+:xml "pxml")
 
     :finally-do 
@@ -204,8 +205,8 @@
       :components
       (#+:preprocessor       
        (:file "preprocess")
-      #+:preprocessor       
-       (:file "x-preprocess")
+;      #+:preprocessor       ;; (bmw) moved to it's own system
+;       (:file "x-preprocess")
        #+(and :xml)
        (:file "lxml")
        #+(and :maf)

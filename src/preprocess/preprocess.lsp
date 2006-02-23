@@ -56,6 +56,14 @@
 
 (in-package :lkb)
 
+;;
+;; (bmw) some wrappers for x-preprocessor
+
+(defun x-read-preprocessor (&rest rest) (apply #'preprocessor:x-read-preprocessor rest))
+(defun x-preprocess (&rest rest) (apply #'preprocessor:x-preprocess rest))
+
+;; (bmw) end of wrappers
+
 (defparameter *preprocessor-debug-p* t)
 
 (defparameter *preprocessor* nil)

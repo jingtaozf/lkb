@@ -38,7 +38,7 @@
 ;;;   |				's
 ;;;
 
-(in-package :lkb)
+(in-package :preprocessor)
 
 (defvar *local-to-global-point-mapping* #'identity)
 
@@ -46,9 +46,6 @@
 (defvar *x-preprocessor-debug-p* t)
 (defvar *x-preprocessor* nil)
 (defvar *x-addressing* nil)
-
-(defvar *char-map-add-offset* 0)
-(defvar *saf-document* nil)
 
 (defstruct x-fspp
   version
@@ -348,6 +345,7 @@
 
 (defun x-format-preprocessed-output (result length &optional (format :list))
   (cond
+   #+:lkb
    ((eq format :lkb)
     (loop
 	for i = -1
@@ -358,6 +356,7 @@
 	finally 
 	  (return (values (format nil "~{~a~^ ~}" forms)
 			  (length forms)))))
+   #+:lkb
    ((or (eq format :yy)
 	(eq format :pet)) ;; deprecate this...?
     (loop
@@ -366,24 +365,28 @@
 		     nil 
 		     "(~d, ~d, ~d, 1, \"~a\" \"~a\", 0, \"null\")" 
 		     id start end 
-		     (escape-string form) (escape-string surface))
+		     (funcall (intern "ESCAPE-STRING" :lkb) form) (funcall (intern "ESCAPE-STRING" :lkb) surface))
 	collect token into tokens
 	finally 
 	  (return
 	    (values (format nil "~{~a~^ ~}" tokens) length))))
+   #+:lkb
    ((eq format :pic)
     (error "not implemented"))
+   #+:lkb
    ((eq format :chared)
     ;; eg. (#S(CHARED-WORD :WORD "The" :CFROM 0 :CTO 2) #S(CHARED-WORD :WORD "cat" :CFROM 4 :CTO 6) #S(CHARED-WORD :WORD "barks" :CFROM 8 :CTO 12))
     (mapcar #'p-token-to-chared-word result))
-   #+:maf
    ((or (eq format :maf) (eq format :saf))
-    (setf *x-addressing* :char)
+    (setf *x-addressing* :|char|)
     (let ((strm (make-string-output-stream)))
       (format strm "~a" 
 	      (if (eq format :saf)
-		  (saf-header :addressing *x-addressing* :document *saf-document*)		  
-		(maf-header :addressing *x-addressing* :document *saf-document*)))
+		  (saf-header :addressing *x-addressing* 
+			      :document #+:lkb (eval (intern "*SAF-DOCUMENT*" :lkb)) #-:lkb nil
+			      )		  
+		(maf-header :addressing *x-addressing* 
+			    :document #+:lkb (eval (intern "*SAF-DOCUMENT*" :lkb)) #-:lkb nil)))
       (format strm "<fsm init='v~a' final='v~a'>"
 	      (loop for tok in result
 		  minimize (second tok))
@@ -417,6 +420,9 @@
 	    do
 	      (format strm "<state id='v~a'/>" i))))
 
+(defun point2str (x)
+  (if x (format nil "~a" x)))
+
 ;;(42 0 1 |The|:(0 . 3) |The|:(0 . 3))
 (defun p-token-to-maf-token (p-token &key saf)
   (let* ((x (fourth p-token))
@@ -425,8 +431,8 @@
      (saf
       (format nil "<annot type='token' id='t~a' from='~a' to='~a' value='~a' source='v~a' target='v~a'/>"
 	      (first p-token)
-	      (funcall *local-to-global-point-mapping* (2-str (car r)))
-	      (funcall *local-to-global-point-mapping* (2-str (cdr r)))
+	      (funcall *local-to-global-point-mapping* (point2str (car r)))
+	      (funcall *local-to-global-point-mapping* (point2str (cdr r)))
 	      (xml-escape (text x))
 	      (second p-token)
 	      (third p-token)
@@ -434,8 +440,8 @@
      (t
       (format nil "<token id='t~a' from='~a' to='~a' value='~a' source='v~a' target='v~a'/>"
 	      (first p-token)
-	      (funcall *local-to-global-point-mapping* (2-str (car r)))
-	      (funcall *local-to-global-point-mapping* (2-str (cdr r)))
+	      (funcall *local-to-global-point-mapping* (point2str (car r)))
+	      (funcall *local-to-global-point-mapping* (point2str (cdr r)))
 	      (xml-escape (text x))
 	      (second p-token)
 	      (third p-token)
@@ -444,10 +450,11 @@
 
 ;;(42 0 1 |The|:(0 . 3) |The|:(0 . 3))
 ;;-> #S(CHARED-WORD :WORD "The" :CFROM 0 :CTO 3)
+#+:lkb
 (defun p-token-to-chared-word (p-token)
   (let* ((x (fourth p-token))
 	 (r (char-map-simple-range (char-map x))))
-    (make-chared-word 
+    (funcall (intern "MAKE-CHARED-WORD" :lkb) 
      :word (text x)
      :cfrom (car r)
      :cto (cdr r))))
@@ -667,59 +674,48 @@
 	    :text (subseq text start end)
 	    :char-map (subseq char-map start end)))))
 
-(defun x-parse (text from to addressing &key document 
-					     (char-map #'identity) 
-					     (show-parse t))
-  (unless *x-preprocessor*
-    (error "please load x-preprocessor"))
-  (setf *saf-document* document)
-  (let ((str 
-	 (cond
-	  ((and from to addressing)
-	   (x-span text from to addressing))
-	  ((and (null from) (null to) (null addressing))
-	   text)
-	  (t
-	   (error "from/to/addressing=~a/~a/~a" from to addressing))))
-	(*local-to-global-point-mapping* char-map)
-	(*text* text)
-	(old-x-fspp-global (x-fspp-global *x-preprocessor*))
-	)
-    ;(format t "~&STR: ~a" str)
-    (setf (x-fspp-global *x-preprocessor*) ;;hack: fix_me
-      (push (make-fsr 
-	     :type :replace
-	     :source "<[^>]*>"
-	     :scanner (ppcre:create-scanner "<[^>]*>")
-	     :target " ")
-	    (x-fspp-global *x-preprocessor*)))
-    (setf (x-fspp-global *x-preprocessor*) ;;hack: fix_me
-      (push (make-fsr 
-	     :type :replace
-	     :source "^[^<]*>"
-	     :scanner (ppcre:create-scanner "^[^<]*>")
-	     :target " ")
-	    (x-fspp-global *x-preprocessor*)))
-    (setf (x-fspp-global *x-preprocessor*) ;;hack: fix_me
-      (push (make-fsr 
-	     :type :replace
-	     :source "<[^>]*$"
-	     :scanner (ppcre:create-scanner "<[^>]*$")
-	     :target " ")
-	    (x-fspp-global *x-preprocessor*)))
-    (setf (x-fspp-global *x-preprocessor*) ;;hack: fix_me
-      (push (make-fsr 
-	     :type :replace
-	     :source "\\n"
-	     :scanner (ppcre:create-scanner "\\n")
-	     :target " ")
-	    (x-fspp-global *x-preprocessor*)))
-    (setf *sentence* str)
-    (parse (x-preprocess str :format :maf) show-parse)
-    (setf (x-fspp-global *x-preprocessor*)
-      old-x-fspp-global)
-    t))
+;; escape string for use as XML text
+(defun xml-escape (str)
+  (coerce 
+   (loop
+       for c across str
+       if (char= #\" c) append '(#\& #\q #\u #\o #\t #\;)
+       else if (char= #\' c) append '(#\& #\a #\p #\o #\s #\;)
+       else if (char= #\& c) append '(#\& #\a #\m #\p #\;)
+       else if (char= #\< c) append '(#\& #\l #\t #\;)
+       else if (char= #\> c) append '(#\& #\g #\t #\;)
+       else append (list c))
+   'string))
 
-(defun char-map-add-x (point)
-  (format nil "~a" (+ *char-map-add-offset* (point-to-char-point point "char"))))
+;;
+;; XML serialization
+;;
 
+(defun get-timestamp nil
+  (multiple-value-bind
+      (second minute hour date month year dummy1 dummy2 dummy3)
+      (decode-universal-time (get-universal-time) 0)
+    (+ dummy1 dummy2 dummy3)
+    (format nil "~2,'0d:~2,'0d:~2,'0d ~d/~2,'0d/~d (UTC)"
+	    hour
+	    minute
+	    second
+	    month
+	    date
+	    year)))
+
+(defun maf-header (&key (addressing :char) document)
+  (saf-header :maf t :addressing addressing :document document))
+
+(defun saf-header (&key (addressing :char) document (maf nil))
+  (format nil
+	  "<?xml version='1.0' encoding='UTF-8'?><!DOCTYPE ~a SYSTEM '~a.dtd'><~a~a addressing='~a'><olac:olac xmlns:olac='http://www.language-archives.org/OLAC/1.0/' xmlns='http://purl.org/dc/elements/1.1/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://www.language-archives.org/OLAC/1.0/ http://www.language-archives.org/OLAC/1.0/olac.xsd'><creator>~a</creator><created>~a</created></olac:olac>"
+	  (if maf "maf" "saf")
+	  (if maf "maf" "saf")
+	  (if maf "maf" "saf")
+	  (if document
+	      (format nil " document='~a'" (xml-escape (string document)))
+	    "")
+	  (xml-escape (string addressing))
+	  "x-preprocessor 1.00"
+	  (xml-escape (get-timestamp))))

@@ -189,12 +189,9 @@
      :content (or (lxml-elt-attr lxml-annot "value") (lxml-fs-content-to-fs fs))
      :from (lxml-elt-attr lxml-annot "from")
      :to (lxml-elt-attr lxml-annot "to")
-;     :content (lxml-elt-attr lxml-annot "value") ;; should go in content
-;     :form (lxml-elt-attr lxml-annot "form") ;; should go in content
      )))
 
 (defun lxml-wordform-to-edge (lxml-wordform &key source target)
-;  (lxml-annot-to-edge lxml-wordform :type :non-leaf
   (lxml-annot-to-edge lxml-wordform :type :|wordForm|
 		      :source source :target target))
   
@@ -225,38 +222,7 @@
 	(error "string expected"))
       str))))
 
-;;
-;; XML serialization
-;;
 
-(defun get-timestamp nil
-  (multiple-value-bind
-      (second minute hour date month year dummy1 dummy2 dummy3)
-      (decode-universal-time (get-universal-time) 0)
-    (+ dummy1 dummy2 dummy3)
-    (format nil "~2,'0d:~2,'0d:~2,'0d ~d/~2,'0d/~d (UTC)"
-	    hour
-	    minute
-	    second
-	    month
-	    date
-	    year)))
-
-(defun maf-header (&key (addressing :char) document)
-  (saf-header :maf t :addressing addressing :document document))
-
-(defun saf-header (&key (addressing :char) document (maf nil))
-  (format nil
-	  "<?xml version='1.0' encoding='UTF-8'?><!DOCTYPE ~a SYSTEM '~a.dtd'><~a~a addressing='~a'><olac:olac xmlns:olac='http://www.language-archives.org/OLAC/1.0/' xmlns='http://purl.org/dc/elements/1.1/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://www.language-archives.org/OLAC/1.0/ http://www.language-archives.org/OLAC/1.0/olac.xsd'><creator>~a</creator><created>~a</created></olac:olac>"
-	  (if maf "maf" "saf")
-	  (if maf "maf" "saf")
-	  (if maf "maf" "saf")
-	  (if document
-	      (format nil " document='~a'" (xml-escape (2-str document)))
-	    "")
-	  (xml-escape (2-str addressing))
-	  "x-preprocessor 1.00"
-	  (xml-escape (get-timestamp))))
 ;;
 ;; batch processing
 ;; SENTENCE -> PARSE
@@ -291,7 +257,7 @@
 	      (read-file-to-string textfilename))))
     (format t "~&;;; Data file: ~a" (saf-meta-document (saf-meta saf)))
     (format ostream "~a"
-	    (saf-header :addressing "char"
+	    (preprocessor::saf-header :addressing :|char|
 			:document (saf-meta-document (saf-meta saf))))
     (setf *unanalysed-tokens* nil)
     (loop for s in 
@@ -299,7 +265,7 @@
 		#'< 
 		:key #'(lambda (x)
 			 (point-to-char-point 
-			  (saf-edge-from x) "char")))
+			  (saf-edge-from x) :|char|)))
 	do
 	  (format t "~&~%PROCESSING SENTENCE ~a: ~& ~a" 
 		  (saf-edge-id s)
@@ -310,7 +276,7 @@
 		((saf-meta-document (saf-meta saf))
 		 (let ((*generate-messages-for-all-unanalysed-tokens* t)
 		       (*char-map-add-offset* 
-			(point-to-char-point (saf-edge-from s) "char")))
+			(point-to-char-point (saf-edge-from s) :|char|)))
 		   (setf *char-map-add-offset* *char-map-add-offset*)
 		   (x-parse text 
 			    (saf-edge-from s) 
@@ -336,6 +302,7 @@
 	  (dump-sentence-analyses s ostream))
     (format ostream "~&</saf>")))
 
+#+:mrs
 ;;based on mrs::output-mrs-after-parse
 (defun dump-sentence-analyses (s &optional (stream t))
   (let ((*print-circle* nil))
@@ -349,39 +316,6 @@
 	    ;;(lkb::parse-tree-structure edge))
 	    (mrs::output-rmrs1 (mrs::mrs-to-rmrs mrs) 'mrs::xml stream)
 	    (format stream "~&</annot>")))))
-
-;(defun xml-sentences-to-saf-object (xml)
-;  (lxml-to-saf-object (xml-to-lxml xml)))
-
-;(defun lxml-sentences-to-saf-object (lxml)
-;  (setf lxml 
-;    (first (check-doctype (remove-xml-header lxml) "sentences")))
-;  (make-saf 
-;   :meta (make-saf-meta 
-;	  :document (lxml-elt-attr lxml "document")
-;	  :addressing (lxml-elt-attr lxml "addressing"))
-;   :lattice (lxml-sentences-to-lattice lxml)))
-
-;(defun lxml-sentences-to-lattice (lxml)
-;  (unless (eq '|sentences| (lxml-elt-name lxml))
-;    (error "<sentences> expected"))
-;  (let ((contents (lxml-elt-contents lxml)))
-;    (make-saf-lattice
-;     :start-node 0
-;     :end-node (length contents)
-;     :nodes (loop for s in contents
-;		collect (lxml-elt-attr s "id"))
-;     :edges (loop for s in contents
-;		collect (lxml-sentence2-to-edge s)))))
-
-;(defun lxml-sentence2-to-edge (lxml)
-;  (unless (eq '|sentence| (lxml-elt-name lxml))
-;    (error "<sentence> expected"))
-;  (make-saf-edge
-;   :type :sentence
-;   :id (lxml-elt-attr lxml "id")
-;   :from (lxml-elt-attr lxml "from")
-;   :to (lxml-elt-attr lxml "to")))
 
 ;;
 ;; SAF -> tchart
@@ -413,9 +347,6 @@
     (setf *tchart* (make-tchart))
     (setf *tchart-max* 0))
   (setf *saf* saf)
-;  (unless (member (saf-meta-addressing (saf-meta saf)) '("xpoint" "char")
-;		  :test #'string=)
-;    (error "Unhandled addressing attribute (~a)" (saf-meta-addressing (saf-meta saf))))
   (saf-lattice-to-edges (saf-lattice saf)
 			:filter filter
 			:addressing (saf-meta-addressing (saf-meta saf)))
@@ -427,11 +358,9 @@
 	(loop for f in (saf-lattice-edges saf-lattice)
 	    when (funcall filter f)
 	    collect f)
-;      when (eq (saf-edge-type e) :leaf)
       when (eq (saf-edge-type e) :|token|)
       collect e into tokens
       when (eq (saf-edge-type e) :|wordForm|)
-;      when (eq (saf-edge-type e) :non-leaf)
       collect e into wordForms
       finally     
 	(loop for e in (append tokens wordForms)
@@ -460,14 +389,10 @@
 
 (defun saf-edge-to-edge (saf-edge &key addressing)
   (case (saf-edge-type saf-edge)
-;  (case (saf-edge-type saf-edge)
-;    (:leaf (saf-edge-to-tedge saf-edge :addressing addressing))
     (:|token| (saf-edge-to-tedge saf-edge :addressing addressing))
     (:|wordForm| (saf-edge-to-medge saf-edge))))
-;    (:non-leaf (saf-edge-to-medge saf-edge))))
 
 (defun saf-edge-to-tedge (saf-edge &key addressing)
-;  (unless (eq :leaf (saf-edge-type saf-edge))
   (unless (eq :|token| (saf-edge-type saf-edge))
     (error ":|token| edge expected"))
   (with-slots (id source target from to content) saf-edge
@@ -482,11 +407,9 @@
        :leaves (list content))))
 
 (defun saf-edge-to-medge (saf-edge)
-;  (unless (eq :non-leaf (saf-edge-type saf-edge))
   (unless (eq :|wordForm| (saf-edge-type saf-edge))
     (error ":|wordForm| edge expected"))
   ;; assume tedges already in chart
-;  (with-slots (id source target deps content form) saf-edge
   (with-slots (id source target deps content) saf-edge
     (let* ((children 
 	    (loop for d in deps
@@ -545,8 +468,8 @@
   (unless addressing
     (setf addressing (saf-meta-addressing (saf-meta *saf*))))
   (cond
-    ((string= addressing "char") (ignore-errors (parse-integer point)))
-    ((string= addressing "xpoint") -1)
+    ((string= addressing :|char|) (ignore-errors (parse-integer point)))
+    ((string= addressing :|xpoint|) -1)
     (t (error "unknown addressing scheme '~a'" addressing))))
 
 #+:null
@@ -564,3 +487,61 @@
 ;;
 ;;					;
 
+(defvar *saf-document* nil)
+
+(defun x-parse (text from to addressing &key document 
+					     (char-map #'identity) 
+					     (show-parse t))
+  (unless preprocessor:*x-preprocessor*
+    (error "please load x-preprocessor"))
+  (setf *saf-document* document)
+  (let ((str 
+	 (cond
+	  ((and from to addressing)
+	   (x-span text from to addressing))
+	  ((and (null from) (null to) (null addressing))
+	   text)
+	  (t
+	   (error "from/to/addressing=~a/~a/~a" from to addressing))))
+	(preprocessor:*local-to-global-point-mapping* char-map)
+	(*text* text)
+	(old-x-fspp-global (preprocessor::x-fspp-global preprocessor:*x-preprocessor*))
+	)
+    (setf (preprocessor::x-fspp-global preprocessor:*x-preprocessor*) ;;hack: fix_me
+      (push (make-fsr 
+	     :type :replace
+	     :source "<[^>]*>"
+	     :scanner (ppcre:create-scanner "<[^>]*>")
+	     :target " ")
+	    (preprocessor::x-fspp-global preprocessor:*x-preprocessor*)))
+    (setf (preprocessor::x-fspp-global preprocessor:*x-preprocessor*) ;;hack: fix_me
+      (push (make-fsr 
+	     :type :replace
+	     :source "^[^<]*>"
+	     :scanner (ppcre:create-scanner "^[^<]*>")
+	     :target " ")
+	    (preprocessor::x-fspp-global preprocessor:*x-preprocessor*)))
+    (setf (preprocessor::x-fspp-global preprocessor:*x-preprocessor*) ;;hack: fix_me
+      (push (make-fsr 
+	     :type :replace
+	     :source "<[^>]*$"
+	     :scanner (ppcre:create-scanner "<[^>]*$")
+	     :target " ")
+	    (preprocessor::x-fspp-global preprocessor:*x-preprocessor*)))
+    (setf (preprocessor::x-fspp-global preprocessor:*x-preprocessor*) ;;hack: fix_me
+      (push (make-fsr 
+	     :type :replace
+	     :source "\\n"
+	     :scanner (ppcre:create-scanner "\\n")
+	     :target " ")
+	    (preprocessor::x-fspp-global preprocessor:*x-preprocessor*)))
+    (setf *sentence* str)
+    (parse (preprocessor:x-preprocess str :format :maf) show-parse)
+    (setf (preprocessor::x-fspp-global preprocessor:*x-preprocessor*)
+      old-x-fspp-global)
+    t))
+
+(defvar *char-map-add-offset*)
+
+(defun char-map-add-x (point)
+  (format nil "~a" (+ *char-map-add-offset* (point-to-char-point point :|char|))))

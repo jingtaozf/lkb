@@ -58,7 +58,7 @@
 				  ; )
 				  )))
 	 (strm (make-string-output-stream)))
-    (format strm "~a" (maf-header))
+    (format strm "~a" (preprocessor::maf-header)) ;; fix_me
     (mapcar #'(lambda (x) 
 		(format strm "~a"
 			(xrange-to-token xml 
@@ -153,8 +153,8 @@
 	 (tedges (get-tedges tchart))
 	 (medges (get-medges tchart)))
     (if saf
-	(format strm "~a" (saf-header))
-      (format strm "~a" (maf-header)))
+	(format strm "~a" (preprocessor::saf-header))
+      (format strm "~a" (preprocessor::maf-header)))
     (if wordforms (format strm "~a" (fsm-xml tedges medges :saf saf)))
     (if saf
 	(format strm "</saf>")
@@ -200,12 +200,7 @@
 	(format nil "</annot>")))
      (t
       (concatenate 'string
-;	(format nil "<wordForm form='~a' tag='~a' tokens='~a' source='v~a' target='v~a'>" 
 	(format nil "<wordForm tokens='~a' source='v~a' target='v~a'>" 
-		;string 
-		;(if (caar partial-tree)
-		;    (cl-ppcre:regex-replace "_INFL_RULE$" (string (caar partial-tree)) "")
-		;  "")
 		(edge-to-tokens-id-str medge)
 	       from to)
 	(format nil "<fs>")
