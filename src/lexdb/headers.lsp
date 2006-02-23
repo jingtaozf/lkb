@@ -20,7 +20,7 @@
 (defvar *lexdb-dump-timestamp* nil)
 (defvar *lexdb-dump-user* nil)
 (defvar *lexdb-dump-lang* nil)
-(defvar *lexdb-dump-country* nil)
+(defvar *lexdb-dump-country* nil);; ->globals, def-lkb-param
 
 (defvar *lexdb-dump-tdl* nil) ;; set this to t to force tdl dump to accompany lexdb dump
 (defvar *lexdb-message-old-server* "(LexDB) PostgreSQL server version is ~a. Please upgrade to version ~a or above.")
