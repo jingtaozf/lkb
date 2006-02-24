@@ -1,0 +1,53 @@
+;;; Copyright (c) 1991--2004
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, 
+;;;   Benjamin Waldron; see `licence.txt' for conditions.
+
+(in-package :make)
+
+(eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
+           #-:ansi-eval-when (load eval compile)
+  (pushnew :preprocessor *features*))
+
+(eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
+           #-:ansi-eval-when (load eval compile)
+  #+(and :allegro (version>= 6 0))
+  (pushnew :xml *features*)
+  #+(and :xml :preprocessor)
+  (pushnew :maf *features*)
+  
+  (defpackage :preprocessor
+    (:export read-preprocessor preprocess *x-preprocessor* x-read-preprocessor x-preprocess *local-to-global-point-mapping*)))
+
+
+(defsystem "preprocessor"
+    :source-pathname (get-sources-dir "lkb")
+    :binary-pathname (get-binaries-dir "lkb")
+    :source-extension "lsp"
+    :depends-on (#+:preprocessor "ppcre"
+                 ;#+:xml "pxml"
+		 )
+
+    #+:ecl :initially-do #+:ecl (ecl-initialize)
+
+    :finally-do
+    (let* ((package (find-package :preprocessor))
+           ;(symbol (find-symbol "*PREPROCESSOR-LOADED*" package))
+	   )
+;      (when symbol (set symbol t))
+      #+:ecl (ecl-finalize :module "preprocessor")
+      )
+
+;    :finally-do 
+;    (let* ((package (find-package :preprocessor))
+;           (symbol (find-symbol "*PREPROCESSOR-LOADED*" package)))
+;      (when symbol (set symbol t))
+;      (funcall (symbol-function (find-symbol "START-LKB" :lkb))) ;???
+;      )
+
+    :components
+    ((:module "preprocess"
+      :source-pathname "preprocess"
+      :binary-pathname "preprocess"
+      :components
+      (#+:preprocessor       
+       (:file "x-preprocess")))))
