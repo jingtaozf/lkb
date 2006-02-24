@@ -54,7 +54,8 @@
 (defvar *x-preprocessor* nil)
 (defvar *x-addressing* nil)
 
-(defvar *span*)
+(defvar *span* nil)
+(defvar *text* nil)
 
 (defstruct x-fspp
   version
@@ -152,7 +153,7 @@
                         (format
                          t
                          "x-read-preprocessor(): [~d] invalid pattern `~a'~%"
-                         n source(x-preprocess "The dog--barked." :format :list))))
+                         n source)))
                     (format
                      t
                      "x-read-preprocessor(): [~d] invalid `~a'~%"
@@ -179,6 +180,7 @@
   (unless *x-preprocessor*
     (error "*x-preprocessor* not loaded"))
   (let* ((x (make-preprocessed-x string))
+	 (*text* string)
 	 (*span* (char-map-simple-range (char-map x))) 
 	)
     ;; if no preprocessor defined...
@@ -773,7 +775,7 @@
 (defun saf-header (&key (addressing :char) document (doctype :saf))
   (let ((doctype-str (string-downcase (string doctype))))
     (format nil
-	    "<?xml version='1.0' encoding='UTF-8'?><!DOCTYPE ~a SYSTEM '~a.dtd'><~a~a~a><olac:olac xmlns:olac='http://www.language-archives.org/OLAC/1.0/' xmlns='http://purl.org/dc/elements/1.1/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://www.language-archives.org/OLAC/1.0/ http://www.language-archives.org/OLAC/1.0/olac.xsd'><creator>~a</creator><created>~a</created></olac:olac>"
+	    "<?xml version='1.0' encoding='UTF-8'?><!DOCTYPE ~a SYSTEM '~a.dtd'><~a~a~a>~a<olac:olac xmlns:olac='http://www.language-archives.org/OLAC/1.0/' xmlns='http://purl.org/dc/elements/1.1/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://www.language-archives.org/OLAC/1.0/ http://www.language-archives.org/OLAC/1.0/olac.xsd'><creator>~a</creator><created>~a</created></olac:olac>"
 	    doctype-str
 	    doctype-str
 	    doctype-str
@@ -783,6 +785,9 @@
 	    (if (or (eq :maf doctype)
 		    (eq :saf doctype))
 		(format nil " addressing='~a'" (xml-escape (string addressing)))
+	      "")
+	    (if (eq :smaf doctype)
+		(format nil "<text>~a</text>" (xml-escape *text*))
 	      "")
 	    "x-preprocessor 1.00"
 	    (xml-escape (get-timestamp)))))
