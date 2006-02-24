@@ -252,7 +252,8 @@
 	    when (and (eq verbose :trace) (not (string= (text x-new) text-old))) do
 	      (format
 	       t
-	       "~&L|~a|~%  ~a~%  ~a~%~%"
+	       "~&~a |~a|~%  ~a~%  ~a~%~%"
+	       type
 	       (x-fsr-source rule) x-token x-new)
 	    unless (string= text-old (text x-new))
 	    do
@@ -377,16 +378,20 @@
    ((eq format :chared)
     ;; eg. (#S(CHARED-WORD :WORD "The" :CFROM 0 :CTO 2) #S(CHARED-WORD :WORD "cat" :CFROM 4 :CTO 6) #S(CHARED-WORD :WORD "barks" :CFROM 8 :CTO 12))
     (mapcar #'p-token-to-chared-word result))
-   ((or (eq format :maf) (eq format :saf))
+   ((or (eq format :maf) (eq format :saf) (eq format :smaf))
     (setf *x-addressing* :|char|)
     (let ((strm (make-string-output-stream)))
       (format strm "~a" 
-	      (if (eq format :saf)
-		  (saf-header :addressing *x-addressing* 
-			      :document #+:lkb (eval (intern "*SAF-DOCUMENT*" :lkb)) #-:lkb nil
-			      )		  
-		(maf-header :addressing *x-addressing* 
-			    :document #+:lkb (eval (intern "*SAF-DOCUMENT*" :lkb)) #-:lkb nil)))
+	      (saf-header :doctype format :addressing *x-addressing* 
+			  :document #+:lkb (eval (intern "*SAF-DOCUMENT*" :lkb)) #-:lkb nil
+			  )
+;	      (if (eq format :saf)
+;		  (saf-header :addressing *x-addressing* 
+;			      :document #+:lkb (eval (intern "*SAF-DOCUMENT*" :lkb)) #-:lkb nil
+;			      )		  
+;		(maf-header :addressing *x-addressing* 
+;			    :document #+:lkb (eval (intern "*SAF-DOCUMENT*" :lkb)) #-:lkb nil))
+	      )
       (format strm "<fsm init='v~a' final='v~a'>"
 	      (loop for tok in result
 		  minimize (second tok))
@@ -395,12 +400,13 @@
       (p-tokens-to-xml-states result strm)
       (mapcar #'(lambda (x) 
 		  (format strm "~a"
-			  (p-token-to-maf-token x :saf (eq format :saf))))
+			  (p-token-to-maf-token x :doctype format)))
 	      result)
       (format strm "</fsm>")
-      (if (eq format :saf)
-	  (format strm "</saf>")
-	(format strm "</maf>"))
+      (format strm "</~a>" (string-downcase (string format)))
+;      (if (eq format :saf)
+;	  (format strm "</saf>")
+;	(format strm "</maf>"))
       (get-output-stream-string strm)))
    ((eq format :list)
     (values result length))
@@ -424,11 +430,20 @@
   (if x (format nil "~a" x)))
 
 ;;(42 0 1 |The|:(0 . 3) |The|:(0 . 3))
-(defun p-token-to-maf-token (p-token &key saf)
+(defun p-token-to-maf-token (p-token &key doctype)
   (let* ((x (fourth p-token))
 	 (r (char-map-simple-range (char-map x))))
-    (cond
-     (saf
+    (case doctype
+     (:smaf
+      (format nil "<edge type='token' id='t~a' cfrom='~a' cto='~a' source='v~a' target='v~a'>~a</edge>"
+	      (first p-token)
+	      (funcall *local-to-global-point-mapping* (point2str (car r)))
+	      (funcall *local-to-global-point-mapping* (point2str (cdr r)))
+	      (second p-token)
+	      (third p-token)
+	      (xml-escape (text x))
+	      ))
+     (:saf
       (format nil "<annot type='token' id='t~a' from='~a' to='~a' value='~a' source='v~a' target='v~a'/>"
 	      (first p-token)
 	      (funcall *local-to-global-point-mapping* (point2str (car r)))
@@ -437,16 +452,17 @@
 	      (second p-token)
 	      (third p-token)
 	      ))
-     (t
+     (:maf
       (format nil "<token id='t~a' from='~a' to='~a' value='~a' source='v~a' target='v~a'/>"
 	      (first p-token)
 	      (funcall *local-to-global-point-mapping* (point2str (car r)))
 	      (funcall *local-to-global-point-mapping* (point2str (cdr r)))
 	      (xml-escape (text x))
 	      (second p-token)
-	      (third p-token)
-	      )
-      ))))
+	      (third p-token)))
+     (t
+      (error "unhanded doctype: ~a" doctype))
+     )))
 
 ;;(42 0 1 |The|:(0 . 3) |The|:(0 . 3))
 ;;-> #S(CHARED-WORD :WORD "The" :CFROM 0 :CTO 3)
@@ -705,17 +721,18 @@
 	    year)))
 
 (defun maf-header (&key (addressing :char) document)
-  (saf-header :maf t :addressing addressing :document document))
+  (saf-header :doctype :maf :addressing addressing :document document))
 
-(defun saf-header (&key (addressing :char) document (maf nil))
-  (format nil
-	  "<?xml version='1.0' encoding='UTF-8'?><!DOCTYPE ~a SYSTEM '~a.dtd'><~a~a addressing='~a'><olac:olac xmlns:olac='http://www.language-archives.org/OLAC/1.0/' xmlns='http://purl.org/dc/elements/1.1/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://www.language-archives.org/OLAC/1.0/ http://www.language-archives.org/OLAC/1.0/olac.xsd'><creator>~a</creator><created>~a</created></olac:olac>"
-	  (if maf "maf" "saf")
-	  (if maf "maf" "saf")
-	  (if maf "maf" "saf")
-	  (if document
-	      (format nil " document='~a'" (xml-escape (string document)))
+(defun saf-header (&key (addressing :char) document (doctype :saf))
+  (let ((doctype-str (string-downcase (string doctype))))
+    (format nil
+	    "<?xml version='1.0' encoding='UTF-8'?><!DOCTYPE ~a SYSTEM '~a.dtd'><~a~a addressing='~a'><olac:olac xmlns:olac='http://www.language-archives.org/OLAC/1.0/' xmlns='http://purl.org/dc/elements/1.1/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://www.language-archives.org/OLAC/1.0/ http://www.language-archives.org/OLAC/1.0/olac.xsd'><creator>~a</creator><created>~a</created></olac:olac>"
+	    doctype-str
+	    doctype-str
+	    doctype-str
+	    (if document
+		(format nil " document='~a'" (xml-escape (string document)))
 	    "")
-	  (xml-escape (string addressing))
-	  "x-preprocessor 1.00"
-	  (xml-escape (get-timestamp))))
+	    (xml-escape (string addressing))
+	    "x-preprocessor 1.00"
+	    (xml-escape (get-timestamp)))))
