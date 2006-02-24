@@ -446,9 +446,10 @@
 		  (format strm "~a"
 			  (p-token-to-maf-token x :doctype format)))
 	      result)
-      (if (member format '(:maf :saf))
+      (format strm "~a" 
+	      (if (member format '(:maf :saf))
 		  "</fsm>"
-		"</lattice>")
+		"</lattice>"))
       (format strm "</~a>" (string-downcase (string format)))
 ;      (if (eq format :saf)
 ;	  (format strm "</saf>")
