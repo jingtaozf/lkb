@@ -40,12 +40,21 @@
 
 (in-package :preprocessor)
 
+;; some wrappers
+
+(defun read-preprocessor (&rest rest) (apply #'x-read-preprocessor rest))
+(defun preprocess (&rest rest) (apply #'x-preprocess rest))
+
+;; end of wrappers
+
 (defvar *local-to-global-point-mapping* #'identity)
 
 (defvar *x-preprocess-p* nil)
 (defvar *x-preprocessor-debug-p* t)
 (defvar *x-preprocessor* nil)
 (defvar *x-addressing* nil)
+
+(defvar *span*)
 
 (defstruct x-fspp
   version
@@ -169,7 +178,9 @@
 				 (format :list))
   (unless *x-preprocessor*
     (error "*x-preprocessor* not loaded"))
-  (let ((x (make-preprocessed-x string)))
+  (let* ((x (make-preprocessed-x string))
+	 (*span* (char-map-simple-range (char-map x))) 
+	)
     ;; if no preprocessor defined...
     (when (null preprocessor)
       (return-from x-preprocess (and (eq format :lkb) x)))
@@ -415,17 +426,29 @@
 ;		(maf-header :addressing *x-addressing* 
 ;			    :document #+:lkb (eval (intern "*SAF-DOCUMENT*" :lkb)) #-:lkb nil))
 	      )
-      (format strm "<fsm init='v~a' final='v~a'>"
+      (format strm "<~a init='v~a' final='v~a'~a>"
+	      (if (member format '(:maf :saf))
+		  "fsm"
+		"lattice")
 	      (loop for tok in result
 		  minimize (second tok))
 	      (loop for tok in result
-		  maximize (third tok)))
-      (p-tokens-to-xml-states result strm)
+		  maximize (third tok))
+	      (if (eq :smaf format)
+		  (format nil " cfrom='~a' cto='~a'"
+			  (funcall *local-to-global-point-mapping* (point2str (car *span*)))
+			  (funcall *local-to-global-point-mapping* (point2str (cdr *span*))))
+		"")
+	      )
+      (if (or (eq :maf format) (eq :saf format))
+	  (p-tokens-to-xml-states result strm))
       (mapcar #'(lambda (x) 
 		  (format strm "~a"
 			  (p-token-to-maf-token x :doctype format)))
 	      result)
-      (format strm "</fsm>")
+      (if (member format '(:maf :saf))
+		  "</fsm>"
+		"</lattice>")
       (format strm "</~a>" (string-downcase (string format)))
 ;      (if (eq format :saf)
 ;	  (format strm "</saf>")
@@ -749,13 +772,16 @@
 (defun saf-header (&key (addressing :char) document (doctype :saf))
   (let ((doctype-str (string-downcase (string doctype))))
     (format nil
-	    "<?xml version='1.0' encoding='UTF-8'?><!DOCTYPE ~a SYSTEM '~a.dtd'><~a~a addressing='~a'><olac:olac xmlns:olac='http://www.language-archives.org/OLAC/1.0/' xmlns='http://purl.org/dc/elements/1.1/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://www.language-archives.org/OLAC/1.0/ http://www.language-archives.org/OLAC/1.0/olac.xsd'><creator>~a</creator><created>~a</created></olac:olac>"
+	    "<?xml version='1.0' encoding='UTF-8'?><!DOCTYPE ~a SYSTEM '~a.dtd'><~a~a~a><olac:olac xmlns:olac='http://www.language-archives.org/OLAC/1.0/' xmlns='http://purl.org/dc/elements/1.1/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://www.language-archives.org/OLAC/1.0/ http://www.language-archives.org/OLAC/1.0/olac.xsd'><creator>~a</creator><created>~a</created></olac:olac>"
 	    doctype-str
 	    doctype-str
 	    doctype-str
 	    (if document
 		(format nil " document='~a'" (xml-escape (string document)))
 	    "")
-	    (xml-escape (string addressing))
+	    (if (or (eq :maf doctype)
+		    (eq :saf doctype))
+		(format nil " addressing='~a'" (xml-escape (string addressing)))
+	      "")
 	    "x-preprocessor 1.00"
 	    (xml-escape (get-timestamp)))))

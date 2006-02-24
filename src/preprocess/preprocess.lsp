@@ -59,6 +59,9 @@
 ;;
 ;; (bmw) some wrappers for x-preprocessor
 
+(defun read-preprocessor (&rest rest) (apply #'preprocessor:x-read-preprocessor rest))
+(defun preprocess (&rest rest) (apply #'preprocessor:x-preprocess rest))
+
 (defun x-read-preprocessor (&rest rest) (apply #'preprocessor:x-read-preprocessor rest))
 (defun x-preprocess (&rest rest) (apply #'preprocessor:x-preprocess rest))
 
@@ -87,6 +90,7 @@
   scanner
   target)
 
+#+:null
 (defun read-preprocessor (file &key (fspp (make-fspp) fsppp) (prefix ""))
   (when (probe-file file)
     (with-open-file (stream file :direction :input)
@@ -170,6 +174,7 @@
               (unless fsppp (format t "~a~%" fspp))
               (return (if fsppp fspp (setf *preprocessor* fspp))))))))
 
+#+:null
 (defun preprocess (string &key (preprocessor *preprocessor*) 
                                (globalp t) (tokenp t)
                                (verbose *preprocessor-debug-p*)
