@@ -344,6 +344,30 @@
       finally 
 	(return result)))
 
+(defun x-escape-string (string &key (syntax :c))
+  (declare (ignore syntax))
+           
+  (if string
+    (loop
+        with padding = 128
+        with length = (+ (length string) padding)
+        with result = (make-array length
+                                  :element-type 'character
+                                  :adjustable nil :fill-pointer 0)
+        for c across string
+        when (or (char= c #\") (char= c #\\)) do
+          (vector-push #\\ result)
+          (vector-push c result)
+          (when (zerop (decf padding))
+            (setf padding 42)
+            (incf length padding)
+            (setf result (adjust-array result length)))
+        else do
+          (vector-push c result)
+        finally
+          (return result))
+    ""))
+
 (defun x-format-preprocessed-output (result length &optional (format :list))
   (cond
    #+:lkb
@@ -357,7 +381,6 @@
 	finally 
 	  (return (values (format nil "~{~a~^ ~}" forms)
 			  (length forms)))))
-   #+:lkb
    ((or (eq format :yy)
 	(eq format :pet)) ;; deprecate this...?
     (loop
@@ -366,7 +389,7 @@
 		     nil 
 		     "(~d, ~d, ~d, 1, \"~a\" \"~a\", 0, \"null\")" 
 		     id start end 
-		     (funcall (intern "ESCAPE-STRING" :lkb) form) (funcall (intern "ESCAPE-STRING" :lkb) surface))
+		     (x-escape-string (text form)) (x-escape-string (text surface)))
 	collect token into tokens
 	finally 
 	  (return
