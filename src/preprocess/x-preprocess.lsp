@@ -255,6 +255,7 @@
 	    for scanner = (x-fsr-scanner rule)
 	    for target = (x-fsr-target rule)
 	    for text-old = (text x-token)
+	    ;for x-old = (copy-preprocessed-x x-token)
 	    for x-new = (if (eq :augment type)
 			    (x-regex-replace scanner 
 					     (copy-preprocessed-x x-token) 
@@ -286,6 +287,8 @@
 		 ;; an ersatzing table and use non-string tokens (indices into
 		 ;; the table) instead.                         (1-feb-03; oe)
 		 ;;
+		 ;(setf (char-map x-new)
+		 ;  (hack-ersatz-char-map x-new x-old))
 		 (push (list :ersatz x-new) extra)
 		 (setf x-token x-new))
 		(:augment
@@ -301,6 +304,12 @@
 	      (push (cons x-token extra) result))
       finally
 	(return (values result length))))
+
+;(defun hack-ersatz-char-map (x-ersatz x-in)
+;  (let ((e-map (char-map x-ersatz))
+;	(i-map (char-map x-in)))
+;    (print e-map)
+;    (print i-map)))
 
 (defun x-tokens-to-result (tokens &key verbose 
 				       format) ;;get rid of this
@@ -571,11 +580,14 @@
    (string= (text x) (text y))
    (equal (char-map x) (char-map y))))
 
-(defun make-char-map (l)
+(defun make-char-map (l &key val)
   (loop
       with i = 0
       while (< i l)
-      collect (cons i (incf i))))
+      collect 
+	(if val
+	    (progn (incf i) val)
+	  (cons i (incf i)))))
 
 (defun char-map-lookup (n char-map)
   (nth n char-map))

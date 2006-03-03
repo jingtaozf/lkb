@@ -275,9 +275,10 @@
 	       (cond
 		((saf-meta-document (saf-meta saf))
 		 (let ((*generate-messages-for-all-unanalysed-tokens* t)
-		       (*char-map-add-offset* 
-			(point-to-char-point (saf-edge-from s) :|char|)))
-		   (setf *char-map-add-offset* *char-map-add-offset*)
+		       ;(*char-map-add-offset* 
+			;(point-to-char-point (saf-edge-from s) :|char|))
+		       )
+		   (setf *char-map-add-offset* (point-to-char-point (saf-edge-from s) :|char|))
 		   (x-parse text 
 			    (saf-edge-from s) 
 			    (saf-edge-to s)
@@ -542,6 +543,9 @@
 	     :target " ")
 	    (preprocessor::x-fspp-global preprocessor::*preprocessor*)))
     (setf *sentence* str)
+;    
+;    (format t "~%~%=.~a.~%~%" preprocessor:*local-to-global-point-mapping*)
+;    
     (parse (preprocessor:x-preprocess str :format :maf) show-parse)
     (setf (preprocessor::x-fspp-global preprocessor::*preprocessor*)
       old-x-fspp-global)
