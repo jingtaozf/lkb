@@ -269,7 +269,12 @@
 	do
 	  (format t "~&~%PROCESSING SENTENCE ~a: ~& ~a" 
 		  (saf-edge-id s)
-		  (saf-edge-content s))
+		  ;(saf-edge-content s)
+		  (x-span text
+			  (saf-edge-from s) 
+			  (saf-edge-to s)
+			  (saf-meta-addressing (saf-meta saf)))
+		  )
 	  (time
 	   (handler-case 
 	       (cond
