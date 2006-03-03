@@ -16,7 +16,9 @@
   (pushnew :maf *features*)
   
   (defpackage :preprocessor
-    (:export read-preprocessor preprocess *x-preprocessor* x-read-preprocessor x-preprocess *local-to-global-point-mapping*)))
+    (:export read-preprocessor preprocess clear-preprocessor preprocessor-initialized-p
+	     x-read-preprocessor x-preprocess x-clear-preprocessor
+	     *local-to-global-point-mapping*)))
 
 
 (defsystem "preprocessor"
@@ -31,18 +33,9 @@
 
     :finally-do
     (let* ((package (find-package :preprocessor))
-           ;(symbol (find-symbol "*PREPROCESSOR-LOADED*" package))
 	   )
-;      (when symbol (set symbol t))
       #+:ecl (ecl-finalize :module "preprocessor")
       )
-
-;    :finally-do 
-;    (let* ((package (find-package :preprocessor))
-;           (symbol (find-symbol "*PREPROCESSOR-LOADED*" package)))
-;      (when symbol (set symbol t))
-;      (funcall (symbol-function (find-symbol "START-LKB" :lkb))) ;???
-;      )
 
     :components
     ((:module "preprocess"

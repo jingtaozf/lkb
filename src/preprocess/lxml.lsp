@@ -67,7 +67,11 @@
 	(car (car lxml-elt)))
     (typecase car
      (symbol nil)
-     (list (second (member attrib (cdr car))))
+     (list 
+      (let ((x (second (member attrib (cdr car)))))
+	(if (stringp x) x)
+	)
+      )
      (t (error "expected symbol or list as car of lxml element: got ~a" car)))))
        
 (defun lxml-elt-elts (lxml-elt elt-str &key keyword)

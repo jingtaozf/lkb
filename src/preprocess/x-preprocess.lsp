@@ -42,16 +42,17 @@
 
 ;; some wrappers
 
-(defun read-preprocessor (&rest rest) (apply #'x-read-preprocessor rest))
-(defun preprocess (&rest rest) (apply #'x-preprocess rest))
+(defun x-read-preprocessor (&rest rest) (apply #'read-preprocessor rest))
+(defun x-preprocess (&rest rest) (apply #'preprocess rest))
+(defun x-clear-preprocessor (&rest rest) (apply #'clear-preprocessor rest))
 
 ;; end of wrappers
 
 (defvar *local-to-global-point-mapping* #'identity)
 
-(defvar *x-preprocess-p* nil)
-(defvar *x-preprocessor-debug-p* t)
-(defvar *x-preprocessor* nil)
+(defvar *preprocess-p* nil)
+(defvar *preprocessor-debug-p* t)
+(defvar *preprocessor* nil)
 (defvar *x-addressing* nil)
 
 (defvar *span* nil)
@@ -84,7 +85,13 @@
        type source target
        )))
 
-(defun x-read-preprocessor (file &key (x-fspp (make-x-fspp) x-fsppp))
+(defun preprocessor-initialized-p ()
+  (if *preprocessor* t))
+
+(defun clear-preprocessor ()
+  (setf *preprocessor* nil))
+
+(defun read-preprocessor (file &key (x-fspp (make-x-fspp) x-fsppp))
   (when (probe-file file)
     (with-open-file (stream file :direction :input)
       (let* ((path (pathname file))
@@ -116,10 +123,10 @@
                          (file (or (probe-file name)
                                    (probe-file (merge-pathnames name path)))))
                     (if file
-                      (x-read-preprocessor file :x-fspp x-fspp)
+                      (read-preprocessor file :x-fspp x-fspp)
                         (format
                          t
-                         "x-read-preprocessor(): [~d] unable to include `~a'~%"
+                         "read-preprocessor(): [~d] unable to include `~a'~%"
                          n name))))
 		 ;; : tokenizer
                  ((char= c #\:)
@@ -152,16 +159,16 @@
                           (push match (x-fspp-local x-fspp)))
                         (format
                          t
-                         "x-read-preprocessor(): [~d] invalid pattern `~a'~%"
+                         "read-preprocessor(): [~d] invalid pattern `~a'~%"
                          n source)))
                     (format
                      t
-                     "x-read-preprocessor(): [~d] invalid `~a'~%"
+                     "read-preprocessor(): [~d] invalid `~a'~%"
                      n line)))
                  (t
                   (format
                    t
-                   "x-read-preprocessor(): [~d] ~
+                   "read-preprocessor(): [~d] ~
                     ignoring unknown rule type `~a'~%"
                    n c))))
             when (null line) do
@@ -171,28 +178,28 @@
                 (setf (x-fspp-local x-fspp)
                   (nreverse (x-fspp-local x-fspp))))
               (unless x-fsppp (format t "~a~%" x-fspp))
-              (return (if x-fsppp x-fspp (setf *x-preprocessor* x-fspp))))))))
+              (return (if x-fsppp x-fspp (setf *preprocessor* x-fspp))))))))
 
-(defun x-preprocess (string &key (preprocessor *x-preprocessor*) 
+(defun preprocess (string &key (preprocessor *preprocessor*) 
                                (globalp t) (tokenp t)
-                               (verbose *x-preprocessor-debug-p*)
+                               (verbose *preprocessor-debug-p*)
 				 (format :list))
-  (unless *x-preprocessor*
-    (error "*x-preprocessor* not loaded"))
+  (unless *preprocessor*
+    (error "*preprocessor* not loaded"))
   (let* ((x (make-preprocessed-x string))
 	 (*text* string)
 	 (*span* (char-map-simple-range (char-map x))) 
 	)
     ;; if no preprocessor defined...
     (when (null preprocessor)
-      (return-from x-preprocess (and (eq format :lkb) x)))
+      (return-from preprocess (and (eq format :lkb) x)))
     ;; process text globally
     (when globalp
-      (x-preprocess-global x (x-fspp-global preprocessor)
+      (preprocess-global x (x-fspp-global preprocessor)
 			   :verbose verbose))
     ;; process tokens
     (multiple-value-bind (result length)
-	(x-preprocess-tokens (x-split (x-fspp-tokenizer preprocessor) x) 
+	(preprocess-tokens (x-split (x-fspp-tokenizer preprocessor) x) 
 			   (x-fspp-local preprocessor)
 			   :tokenp tokenp
 			   :verbose verbose)
@@ -201,7 +208,7 @@
        (nreverse (x-tokens-to-result (nreverse result) :format format))
        length format))))
 
-(defun x-preprocess-global (x &optional (global (slot-value *x-preprocessor* 'global)) &key verbose)
+(defun preprocess-global (x &optional (global (slot-value *preprocessor* 'global)) &key verbose)
   (with-slots (text char-map) x
     (loop
 	for rule in global
@@ -230,8 +237,8 @@
     :text (text x)
     :char-map (char-map x)))
 
-(defun x-preprocess-tokens (x-l 
-			    &optional (local (slot-value *x-preprocessor* 'local)) 
+(defun preprocess-tokens (x-l 
+			    &optional (local (slot-value *preprocessor* 'local)) 
 			    &key tokenp verbose)
   (loop
       with result
@@ -284,7 +291,7 @@
 		(:augment
 		 (push (list 
 			:augment 
-			(x-split (x-fspp-tokenizer *x-preprocessor*) x-new)) 
+			(x-split (x-fspp-tokenizer *preprocessor*) x-new)) 
 		       extra)) ;; fix_me: regex new token ogso
 		(:substitute
 		 (setf x-token x-new))
@@ -438,8 +445,8 @@
 		  maximize (third tok))
 	      (if (eq :smaf format)
 		  (format nil " cfrom='~a' cto='~a'"
-			  (funcall *local-to-global-point-mapping* (point2str (car *span*)))
-			  (funcall *local-to-global-point-mapping* (point2str (cdr *span*))))
+			  (or (funcall *local-to-global-point-mapping* (point2str (car *span*))) "")
+			  (or (funcall *local-to-global-point-mapping* (point2str (cdr *span*))) ""))
 		"")
 	      )
       (if (or (eq :maf format) (eq :saf format))
@@ -486,8 +493,8 @@
      (:smaf
       (format nil "<edge type='token' id='t~a' cfrom='~a' cto='~a' source='v~a' target='v~a'>~a</edge>"
 	      (first p-token)
-	      (funcall *local-to-global-point-mapping* (point2str (car r)))
-	      (funcall *local-to-global-point-mapping* (point2str (cdr r)))
+	      (or (funcall *local-to-global-point-mapping* (point2str (car r))) "")
+	      (or (funcall *local-to-global-point-mapping* (point2str (cdr r))) "")
 	      (second p-token)
 	      (third p-token)
 	      (xml-escape (text x))
@@ -495,8 +502,8 @@
      (:saf
       (format nil "<annot type='token' id='t~a' from='~a' to='~a' value='~a' source='v~a' target='v~a'/>"
 	      (first p-token)
-	      (funcall *local-to-global-point-mapping* (point2str (car r)))
-	      (funcall *local-to-global-point-mapping* (point2str (cdr r)))
+	      (or (funcall *local-to-global-point-mapping* (point2str (car r))) "")
+	      (or (funcall *local-to-global-point-mapping* (point2str (cdr r))) "")
 	      (xml-escape (text x))
 	      (second p-token)
 	      (third p-token)
@@ -504,8 +511,8 @@
      (:maf
       (format nil "<token id='t~a' from='~a' to='~a' value='~a' source='v~a' target='v~a'/>"
 	      (first p-token)
-	      (funcall *local-to-global-point-mapping* (point2str (car r)))
-	      (funcall *local-to-global-point-mapping* (point2str (cdr r)))
+	      (or (funcall *local-to-global-point-mapping* (point2str (car r))) "")
+	      (or (funcall *local-to-global-point-mapping* (point2str (cdr r))) "")
 	      (xml-escape (text x))
 	      (second p-token)
 	      (third p-token)))
@@ -523,9 +530,6 @@
      :word (text x)
      :cfrom (car r)
      :cto (cdr r))))
-
-(defun x-clear-preprocessor ()
-  (setf *x-preprocessor* nil))
 
 ;;
 ;; (bmw - oct 05)

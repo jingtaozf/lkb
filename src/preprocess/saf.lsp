@@ -465,10 +465,16 @@
 
 ;; fix_me: addressing should be passed down
 (defun point-to-char-point (point addressing)
+  (if (null point)
+      (return-from point-to-char-point))
   (unless addressing
     (setf addressing (saf-meta-addressing (saf-meta *saf*))))
   (cond
-    ((string= addressing :|char|) (ignore-errors (parse-integer point)))
+   ((string= addressing :|char|) 
+    ;(ignore-errors 
+     (parse-integer point)
+    ; )
+    )
     ((string= addressing :|xpoint|) -1)
     (t (error "unknown addressing scheme '~a'" addressing))))
 
@@ -492,8 +498,8 @@
 (defun x-parse (text from to addressing &key document 
 					     (char-map #'identity) 
 					     (show-parse t))
-  (unless preprocessor:*x-preprocessor*
-    (error "please load x-preprocessor"))
+  (unless (preprocessor:preprocessor-initialized-p)
+    (error "please load preprocessor"))
   (setf *saf-document* document)
   (let ((str 
 	 (cond
@@ -505,43 +511,44 @@
 	   (error "from/to/addressing=~a/~a/~a" from to addressing))))
 	(preprocessor:*local-to-global-point-mapping* char-map)
 	(*text* text)
-	(old-x-fspp-global (preprocessor::x-fspp-global preprocessor:*x-preprocessor*))
+	(old-x-fspp-global (preprocessor::x-fspp-global preprocessor::*preprocessor*))
 	)
-    (setf (preprocessor::x-fspp-global preprocessor:*x-preprocessor*) ;;hack: fix_me
-      (push (make-fsr 
+    (setf (preprocessor::x-fspp-global preprocessor::*preprocessor*) ;;hack: fix_me
+      (push (preprocessor::make-x-fsr 
 	     :type :replace
 	     :source "<[^>]*>"
 	     :scanner (ppcre:create-scanner "<[^>]*>")
 	     :target " ")
-	    (preprocessor::x-fspp-global preprocessor:*x-preprocessor*)))
-    (setf (preprocessor::x-fspp-global preprocessor:*x-preprocessor*) ;;hack: fix_me
-      (push (make-fsr 
+	    (preprocessor::x-fspp-global preprocessor::*preprocessor*)))
+    (setf (preprocessor::x-fspp-global preprocessor::*preprocessor*) ;;hack: fix_me
+      (push (preprocessor::make-x-fsr 
 	     :type :replace
 	     :source "^[^<]*>"
 	     :scanner (ppcre:create-scanner "^[^<]*>")
 	     :target " ")
-	    (preprocessor::x-fspp-global preprocessor:*x-preprocessor*)))
-    (setf (preprocessor::x-fspp-global preprocessor:*x-preprocessor*) ;;hack: fix_me
-      (push (make-fsr 
+	    (preprocessor::x-fspp-global preprocessor::*preprocessor*)))
+    (setf (preprocessor::x-fspp-global preprocessor::*preprocessor*) ;;hack: fix_me
+      (push (preprocessor::make-x-fsr 
 	     :type :replace
 	     :source "<[^>]*$"
 	     :scanner (ppcre:create-scanner "<[^>]*$")
 	     :target " ")
-	    (preprocessor::x-fspp-global preprocessor:*x-preprocessor*)))
-    (setf (preprocessor::x-fspp-global preprocessor:*x-preprocessor*) ;;hack: fix_me
-      (push (make-fsr 
+	    (preprocessor::x-fspp-global preprocessor::*preprocessor*)))
+    (setf (preprocessor::x-fspp-global preprocessor::*preprocessor*) ;;hack: fix_me
+      (push (preprocessor::make-x-fsr 
 	     :type :replace
 	     :source "\\n"
 	     :scanner (ppcre:create-scanner "\\n")
 	     :target " ")
-	    (preprocessor::x-fspp-global preprocessor:*x-preprocessor*)))
+	    (preprocessor::x-fspp-global preprocessor::*preprocessor*)))
     (setf *sentence* str)
     (parse (preprocessor:x-preprocess str :format :maf) show-parse)
-    (setf (preprocessor::x-fspp-global preprocessor:*x-preprocessor*)
+    (setf (preprocessor::x-fspp-global preprocessor::*preprocessor*)
       old-x-fspp-global)
     t))
 
 (defvar *char-map-add-offset*)
 
 (defun char-map-add-x (point)
-  (format nil "~a" (+ *char-map-add-offset* (point-to-char-point point :|char|))))
+  (if point
+      (format nil "~a" (+ *char-map-add-offset* (point-to-char-point point :|char|)))))

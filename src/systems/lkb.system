@@ -205,14 +205,12 @@
       :components
       (#+:preprocessor       
        (:file "preprocess")
-;      #+:preprocessor       ;; (bmw) moved to it's own system
-;       (:file "x-preprocess")
        #+(and :xml)
        (:file "lxml")
        #+(and :maf)
        (:file "saf")
        #+:maf
-       (:file "texti")			; text interface
+       (:file "texti")
        ))  
 
      (:module "lexdb"

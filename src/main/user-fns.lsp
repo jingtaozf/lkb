@@ -16,21 +16,21 @@
   ;; split into words on spaces
   ;; in *characterize-p* mode keep track of character position pointers
   #+(or :preprocessor :xml)
-  (declare (special preprocessor:*x-preprocessor* *preprocessor* *sppp-stream*))
+  (declare (special *sppp-stream*))
 
   #+:xml
   (when *sppp-stream*
     (return-from preprocess-sentence-string (sppp str)))
 
   #+:preprocessor
-  (when preprocessor:*x-preprocessor*
+  (when (preprocessor:preprocessor-initialized-p)
     (return-from preprocess-sentence-string 
-      (preprocessor:x-preprocess str :format :saf)))
+      (preprocessor:preprocess str :format :saf)))
 
-  #+:preprocessor
-  (when *preprocessor*
-    (return-from preprocess-sentence-string 
-      (preprocess str :format :lkb :verbose nil)))
+;  #+:preprocessor
+;  (when *preprocessor*
+;    (return-from preprocess-sentence-string 
+;      (preprocess str :format :lkb :verbose nil)))
   
   (let ((in-word nil)
         (chars (coerce str 'list))
