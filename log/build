@@ -1,10 +1,12 @@
 ? Version.lisp.fasl
+U lkb/script
 ? lkb/checkpaths.lsp.fasl
 ? lkb/globals.lsp.fasl
 ? lkb/mrs-initialization.lsp.fasl
 ? lkb/mt.lsp.fasl
 ? lkb/patches.lsp.fasl
 ? lkb/user-fns.lsp.fasl
+M Makefile
 ? doc
 ? linux.x86.32
 ? man
@@ -13,6 +15,21 @@ M log/build
 ? src/.l7cl
 ? src/.l8cl
 ? src/.lecl
+U src/io-general/utils.lsp
+U src/lexdb/headers.lsp
+U src/main/parse.lsp
+U src/main/user-fns.lsp
+U src/preprocess/lxml.lsp
+U src/preprocess/preprocess.lsp
+U src/preprocess/saf.lsp
+U src/preprocess/texti.lsp
+U src/preprocess/x-preprocess.lsp
+U src/preprocess/maf/saf.dtd
+U src/preprocess/maf/saf2maf.xsl
+U src/preprocess/maf/saf2pic.xsl
+U src/preprocess/maf/smaf.3.xml
+U src/systems/lkb.system
+U src/systems/preprocessor.system
 ? src/tsdb/home/log
 ? src/tsdb/home/redwoods
 **********
@@ -24,7 +41,7 @@ M log/build
 **********
 Checking in ./src/version.lsp;
 /lingo/CVS/lkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.474; previous revision: 1.473
+new revision: 1.475; previous revision: 1.474
 done
 make[1]: Entering directory `/lingo/build/lkb'
 ( \
@@ -294,6 +311,7 @@ make[1]: Entering directory `/lingo/build/lkb'
 ./src/systems/rmrs.system
 ./src/systems/psql.system
 ./src/systems/fad.system
+./src/systems/preprocessor.system
 ./src/tproving/
 ./src/tproving/dtp-interface.lisp
 ./src/tproving/fol-to-mrs.lisp
@@ -350,6 +368,10 @@ make[1]: Entering directory `/lingo/build/lkb'
 ./src/preprocess/maf/pic.xml
 ./src/preprocess/maf/pic2maf.xsl
 ./src/preprocess/maf/maf.dtd
+./src/preprocess/maf/saf.dtd
+./src/preprocess/maf/saf2maf.xsl
+./src/preprocess/maf/saf2pic.xsl
+./src/preprocess/maf/smaf.3.xml
 ./src/preprocess/x-preprocess.lsp
 ./src/preprocess/saf.lsp
 ./src/preprocess/sample-sent-standoff
@@ -1114,7 +1136,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-8.0 [Linux (x86)] (Feb 10, 2006 9:01)
+8.0 [Linux (x86)] (Mar 5, 2006 2:27)
 Copyright (C) 1985-2005, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -1567,6 +1589,63 @@ AllegroCache version 1.0.0
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/api.fasl
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/api.fasl
+;   Loading /lingo/build/lkb/src/systems/preprocessor.system
+;;; Compiling file /lingo/build/lkb/src/ppcre/packages.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/packages.fasl
+;;; Fasl write complete
+;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/packages.fasl
+;;; Compiling file /lingo/build/lkb/src/ppcre/specials.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/specials.fasl
+;;; Fasl write complete
+;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/specials.fasl
+;;; Compiling file /lingo/build/lkb/src/ppcre/util.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/util.fasl
+;;; Fasl write complete
+;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/util.fasl
+;;; Compiling file /lingo/build/lkb/src/ppcre/errors.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/errors.fasl
+;;; Fasl write complete
+;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/errors.fasl
+;;; Compiling file /lingo/build/lkb/src/ppcre/lexer.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/lexer.fasl
+;;; Fasl write complete
+;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/lexer.fasl
+;;; Compiling file /lingo/build/lkb/src/ppcre/parser.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/parser.fasl
+;;; Fasl write complete
+;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/parser.fasl
+;;; Compiling file /lingo/build/lkb/src/ppcre/regex-class.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/regex-class.fasl
+;;; Fasl write complete
+;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/regex-class.fasl
+;;; Compiling file /lingo/build/lkb/src/ppcre/convert.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/convert.fasl
+;;; Fasl write complete
+;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/convert.fasl
+;;; Compiling file /lingo/build/lkb/src/ppcre/optimize.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/optimize.fasl
+;;; Fasl write complete
+;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/optimize.fasl
+;;; Compiling file /lingo/build/lkb/src/ppcre/closures.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/closures.fasl
+;;; Fasl write complete
+;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/closures.fasl
+;;; Compiling file /lingo/build/lkb/src/ppcre/repetition-closures.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/repetition-closures.fasl
+;;; Fasl write complete
+;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/repetition-closures.fasl
+;;; Compiling file /lingo/build/lkb/src/ppcre/scanner.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/scanner.fasl
+;;; Fasl write complete
+;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/scanner.fasl
+;;; Compiling file /lingo/build/lkb/src/ppcre/api.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/api.fasl
+;;; Fasl write complete
+;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/api.fasl
+;;; Compiling file /lingo/build/lkb/src/preprocess/x-preprocess.lsp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/x-preprocess.fasl
+;;; Fasl write complete
+;   Fast loading /lingo/build/lkb/src/.l8cl/preprocess/x-preprocess.fasl
 ;   Loading /lingo/build/lkb/src/systems/pxml.system
 ;;; Compiling file /lingo/build/lkb/src/xml/pxml0.cl
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/xml/pxml0.fasl
@@ -1713,15 +1792,14 @@ AllegroCache version 1.0.0
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/preprocess.fasl
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/preprocess/preprocess.fasl
-;;; Compiling file /lingo/build/lkb/src/preprocess/x-preprocess.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/x-preprocess.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/preprocess/x-preprocess.fasl
 ;;; Compiling file /lingo/build/lkb/src/preprocess/lxml.lsp
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/lxml.fasl
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/preprocess/lxml.fasl
 ;;; Compiling file /lingo/build/lkb/src/preprocess/saf.lsp
+; While compiling (:INTERNAL PROCESS-SAF-SENTENCES 1):
+Warning: Free reference to undeclared variable *CHAR-MAP-ADD-OFFSET* assumed
+         special.
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/saf.fasl
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/preprocess/saf.fasl
@@ -2131,7 +2209,7 @@ NIL
  (DISCARD-ALL-SOURCE-FILE-INFO)
  |#
 
-#<EQUAL hash-table with 0 entries @ #x44731712> 
+#<EQUAL hash-table with 0 entries @ #x4473170a> 
  #|
 ; Fast loading from bundle code/who.fasl.
  (DISCARD-LOCAL-NAME-INFO)
@@ -2143,7 +2221,7 @@ NIL
  |#
 ; Fast loading from bundle code/nocompiler.fasl.
 ;   Fast loading from bundle sys/defdecl.fasl.
-132035768 bytes have been tenured, next gc will be global.
+153050280 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 
 T 
@@ -2329,10 +2407,67 @@ CL-USER(10): ; Loading /lingo/build/lkb/src/systems/tsdb.system
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/api.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/api.fasl
+; Loading /lingo/build/lkb/src/systems/preprocessor.system
+;;; Compiling file /lingo/build/lkb/src/ppcre/packages.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/packages.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/packages.fasl
+;;; Compiling file /lingo/build/lkb/src/ppcre/specials.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/specials.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/specials.fasl
+;;; Compiling file /lingo/build/lkb/src/ppcre/util.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/util.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/util.fasl
+;;; Compiling file /lingo/build/lkb/src/ppcre/errors.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/errors.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/errors.fasl
+;;; Compiling file /lingo/build/lkb/src/ppcre/lexer.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/lexer.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/lexer.fasl
+;;; Compiling file /lingo/build/lkb/src/ppcre/parser.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/parser.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/parser.fasl
+;;; Compiling file /lingo/build/lkb/src/ppcre/regex-class.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/regex-class.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/regex-class.fasl
+;;; Compiling file /lingo/build/lkb/src/ppcre/convert.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/convert.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/convert.fasl
+;;; Compiling file /lingo/build/lkb/src/ppcre/optimize.lisp
+8513512 bytes have been tenured, next gc will be global.
+See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/optimize.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/optimize.fasl
+;;; Compiling file /lingo/build/lkb/src/ppcre/closures.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/closures.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/closures.fasl
+;;; Compiling file /lingo/build/lkb/src/ppcre/repetition-closures.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/repetition-closures.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/repetition-closures.fasl
+;;; Compiling file /lingo/build/lkb/src/ppcre/scanner.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/scanner.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/scanner.fasl
+;;; Compiling file /lingo/build/lkb/src/ppcre/api.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/api.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/api.fasl
+;;; Compiling file /lingo/build/lkb/src/preprocess/x-preprocess.lsp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/x-preprocess.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/preprocess/x-preprocess.fasl
 ; Loading /lingo/build/lkb/src/systems/pxml.system
 ;;; Compiling file /lingo/build/lkb/src/xml/pxml0.cl
-8443904 bytes have been tenured, next gc will be global.
-See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/xml/pxml0.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/xml/pxml0.fasl
@@ -2341,7 +2476,7 @@ See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/xml/pxml1.fasl
 ;;; Compiling file /lingo/build/lkb/src/xml/pxml3.cl
-9252344 bytes have been tenured, next gc will be global.
+10854792 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/xml/pxml3.fasl
 ;;; Fasl write complete
@@ -2395,8 +2530,6 @@ See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/dag.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/main/dag.fasl
-10073208 bytes have been tenured, next gc will be global.
-See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Compiling file /lingo/build/lkb/src/main/yadu.lsp
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/yadu.fasl
 ;;; Fasl write complete
@@ -2413,6 +2546,8 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/user-fns.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/main/user-fns.fasl
+18550264 bytes have been tenured, next gc will be global.
+See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Compiling file /lingo/build/lkb/src/main/marks.lsp
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/marks.fasl
 ;;; Fasl write complete
@@ -2481,15 +2616,14 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/preprocess.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/preprocess/preprocess.fasl
-;;; Compiling file /lingo/build/lkb/src/preprocess/x-preprocess.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/x-preprocess.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/preprocess/x-preprocess.fasl
 ;;; Compiling file /lingo/build/lkb/src/preprocess/lxml.lsp
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/lxml.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/preprocess/lxml.fasl
 ;;; Compiling file /lingo/build/lkb/src/preprocess/saf.lsp
+; While compiling (:INTERNAL PROCESS-SAF-SENTENCES 1):
+Warning: Free reference to undeclared variable *CHAR-MAP-ADD-OFFSET* assumed
+         special.
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/saf.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/preprocess/saf.fasl
@@ -2675,8 +2809,6 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/main/batch-check.fasl
 ;;; Compiling file /lingo/build/lkb/src/main/debug.lsp
-8936200 bytes have been tenured, next gc will be global.
-See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/debug.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/main/debug.fasl
@@ -2928,6 +3060,8 @@ AllegroCache version 1.0.0
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/tsdb.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/process.lisp
+8756360 bytes have been tenured, next gc will be global.
+See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/process.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/process.fasl
@@ -2972,7 +3106,7 @@ AllegroCache version 1.0.0
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/yy.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/mt.lisp
-gc-after-hook(): local; new: 3618728; old: 28168; pending: 0; efficiency: 86.
+gc-after-hook(): local; new: 1906896; old: 5504; pending: 72; efficiency: 92.
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/mt.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/mt.fasl
@@ -2985,21 +3119,29 @@ gc-after-hook(): local; new: 3618728; old: 28168; pending: 0; efficiency: 86.
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/tnt-interface.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/redwoods.lisp
-gc-after-hook(): local; new: 5155320; old: 12856; pending: 0; efficiency: 84.
-gc-after-hook(): local; new: 4047368; old: 24344; pending: 0; efficiency: 88.
+gc-after-hook(): local; new: 2945528; old: 10560; pending: 0; efficiency: 91.
+gc-after-hook(): local; new: 2301560; old: 24344; pending: 0; efficiency: 92.
+gc-after-hook(): local; new: 1478480; old: 319664; pending: 0; efficiency: 93.
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/redwoods.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/redwoods.fasl
-gc-after-hook(): local; new: 1351304; old: 311280; pending: 6600; efficiency: 90.
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/lsp.lisp
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/lsp.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/lsp.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/ptb.lisp
+; While compiling REWRITE-PTB-TOKEN:
+Warning: Free reference to undeclared variable LKB::*PREPROCESSOR* assumed
+         special.  This symbol may have been intended:
+         PREPROCESSOR::*PREPROCESSOR*.
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/ptb.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/ptb.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/rasp.lisp
+; While compiling REWRITE-RASP-TOKEN:
+Warning: Free reference to undeclared variable LKB::*PREPROCESSOR* assumed
+         special.  This symbol may have been intended:
+         PREPROCESSOR::*PREPROCESSOR*.
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/rasp.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/rasp.fasl
@@ -3012,15 +3154,15 @@ gc-after-hook(): local; new: 1351304; old: 311280; pending: 6600; efficiency: 90
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/acache.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/features.lisp
-gc-after-hook(): local; new: 2245048; old: 112256; pending: 0; efficiency: 89.
+gc-after-hook(): local; new: 1614472; old: 112280; pending: 72; efficiency: 93.
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/features.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/features.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/learner.lisp
+gc-after-hook(): local; new: 2182664; old: 699848; pending: 72; efficiency: 91.
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/learner.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/learner.fasl
-gc-after-hook(): local; new: 1007976; old: 699840; pending: 9056; efficiency: 90.
 (#<MODULE: tsdb>)
 CL-USER(11): ; Exiting
 make[2]: Leaving directory `/lingo/build/lkb'
@@ -3042,6 +3184,73 @@ linux.x86.32/libacli8010.so
 bin/linux.x86.32/yzlui
 rm /lingo/www/lingo/ftp/test;
 ln -s /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"` /lingo/www/lingo/ftp/test;
+( \
+  cd /lingo/build/; \
+  tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/yzlui.tgz \
+      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
+              --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
+      yzlui; \
+)
+yzlui/
+yzlui/DONE
+yzlui/Make.config
+yzlui/Make.osx
+yzlui/Makefile
+yzlui/TODO
+yzlui/aged-items-command
+yzlui/avm-command
+yzlui/avm-error
+yzlui/avm.lui
+yzlui/chart-astronomer
+yzlui/chart-cat-hotel
+yzlui/chart-command
+yzlui/configure
+yzlui/group-command
+yzlui/mrs.lui
+yzlui/text-command
+yzlui/tree-command
+yzlui/yzluirc.sample
+yzlui/file-dialog/
+yzlui/file-dialog/Makefile
+yzlui/file-dialog/choose.c
+yzlui/file-dialog/directory.c
+yzlui/file-dialog/directory.h
+yzlui/file-dialog/gtkfilesel.c
+yzlui/file-dialog/main.c
+yzlui/file-dialog/options.c
+yzlui/file-dialog/pickfile.h
+yzlui/file-dialog/save.c
+yzlui/src/
+yzlui/src/Makefile
+yzlui/src/avm-print.c
+yzlui/src/avm-view.c
+yzlui/src/chart-view.c
+yzlui/src/console-view.c
+yzlui/src/embedded-view.c
+yzlui/src/embedded-view.h
+yzlui/src/file-dialogs.c
+yzlui/src/file-dialogs.h
+yzlui/src/font-info.h
+yzlui/src/gc-list.c
+yzlui/src/gc-list.h
+yzlui/src/get-string.c
+yzlui/src/lkb-avm-list.c
+yzlui/src/lkb-avm.c
+yzlui/src/lkb-avm.h
+yzlui/src/lkb-chart.c
+yzlui/src/lkb-chart.h
+yzlui/src/lkb-protocol.c
+yzlui/src/lkb-protocol.h
+yzlui/src/lkb-tree.c
+yzlui/src/lkb-tree.h
+yzlui/src/lui-xtext.c
+yzlui/src/main.c
+yzlui/src/net.c
+yzlui/src/prefs.c
+yzlui/src/render-avm.c
+yzlui/src/test-avm.c
+yzlui/src/tree-view.c
+yzlui/src/xtext-view.c
 ( \
   cd /lingo/build/; \
   tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/erg.tgz \
