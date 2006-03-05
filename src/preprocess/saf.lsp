@@ -8,6 +8,8 @@
 (defvar *saf-dir* nil)
 (defvar *saf-v* -1)
 
+(defvar *char-map-add-offset*)
+
 (defstruct saf
   meta
   lattice)
@@ -555,8 +557,6 @@
     (setf (preprocessor::x-fspp-global preprocessor::*preprocessor*)
       old-x-fspp-global)
     t))
-
-(defvar *char-map-add-offset*)
 
 (defun char-map-add-x (point)
   (if point
