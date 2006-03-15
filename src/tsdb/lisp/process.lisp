@@ -142,7 +142,7 @@
                     %process-run-id% data :verbose verbose) 1)))
              (clients (when (find-symbol "*PVM-CLIENTS*" :tsdb)
                         (symbol-value (find-symbol "*PVM-CLIENTS*" :tsdb))))
-             (runs (create-runs 
+             (runs (create-runs
                     data
                     :type type
                     :comment comment :gc gc :clients clients
@@ -157,9 +157,8 @@
              ;; for right now, hard-wire exhaustive input processing when doing
              ;; transfer.                                        (4-mar-04; oe)
              ;;
-             (*process-exhaustive-inputs-p* (if (eq type :transfer)
-                                              200
-                                              *process-exhaustive-inputs-p*))
+             (*process-exhaustive-inputs-p*
+              (if (eq type :transfer) 200 *process-exhaustive-inputs-p*))
              (*tsdb-trees-hook*
               (unless interactive
                 (if burst
@@ -209,7 +208,6 @@
            data (current-user) (current-host) (current-time :long :pretty)))
         
         (when xstream (xmlify-run :stream xstream))
-        
         (unwind-protect
             (#-:debug ignore-errors #+:debug progn
              (catch :break
@@ -1214,6 +1212,7 @@
 
   #+:debug
   (setf %runs runs)
+  
   (loop
       with tid = (if client (client-tid client) -1)
       while (or (find-if #'consp runs :key #'run-status) 
@@ -1242,7 +1241,9 @@
                (content (message-content message))
                (run (find remote runs :key #'run-tid))
                (client (or client (get-field :client run)))
-               (item (and client (rest (client-status client))))
+               (item (and client
+                          (consp (client-status client))
+                          (rest (client-status client))))
                (host (and (client-p client) (client-host client))))
 
         (cond
