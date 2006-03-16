@@ -323,15 +323,16 @@
 ;;
 
 (defun x-span (text from to addressing)
-  (cond
-   ((string= "char" addressing)
-    (subseq text 
-	    (point-to-char-point from addressing)
-	    (point-to-char-point to addressing)))
-   ((string= "xpoint" addressing)
-    (error "addressing scheme 'xpoint' not implemented"))
-   (t
-    (error "unknown addressing scheme '~a'" addressing))))
+  (let ((cfrom (point-to-char-point from addressing))
+	(cto (point-to-char-point to addressing)))
+    (cond
+     ((string= "char" addressing)
+      (and cfrom cto
+	   (subseq text cfrom cto)))
+     ((string= "xpoint" addressing)
+      (error "addressing scheme 'xpoint' not implemented"))
+     (t
+      (error "unknown addressing scheme '~a'" addressing)))))
 
 ;; assume xpoint order is string order for now
 (defun x< (x y)

@@ -41,6 +41,13 @@
   addressing
   olac)
 
+(defmethod print-object ((object saf) stream)
+  (format 
+   stream 
+   "#[SAF]"
+   ;(length (saf-lattice (saf-lattice-edges object)))
+   ))
+
 ;; code to convert SAF (or MAF) XML into SAF object
 
 (defun xml-to-saf-object (xml &key (saf-dir "~"))
@@ -263,11 +270,15 @@
 			:document (saf-meta-document (saf-meta saf))))
     (setf *unanalysed-tokens* nil)
     (loop for s in 
-	  (sort (copy-list (saf-lattice-edges (saf-lattice saf)))
+	  (sort (loop for e in (saf-lattice-edges (saf-lattice saf))
+		    when (eq :|sentence| (saf-edge-type e))
+		    collect e)
 		#'< 
 		:key #'(lambda (x)
-			 (point-to-char-point 
-			  (saf-edge-from x) :|char|)))
+			 (or
+			  (point-to-char-point 
+			   (saf-edge-from x) :|char|)
+			  -1)))
 	do
 	  (format t "~&~%PROCESSING SENTENCE ~a: ~& ~a" 
 		  (saf-edge-id s)
@@ -560,4 +571,4 @@
 
 (defun char-map-add-x (point)
   (if point
-      (format nil "~a" (+ *char-map-add-offset* (point-to-char-point point :|char|)))))
+      (format nil "~a" (+ (or *char-map-add-offset* 0) (point-to-char-point point :|char|)))))
