@@ -26,8 +26,16 @@
     (if (and lxml-doctype
 	     (not (member (string (second lxml-doctype)) doctype
 			  :test #'string=)))
-	(error "problem with DOCTYPE declaration")
+	(error "problem with DOCTYPE declaration: expected one of ~a but got ~a"
+	       doctype (second lxml-doctype))
       lxml)))
+
+(defun elements-only (lxml)
+  (loop for x in lxml
+      when (and (listp x) (not (keywordp (car x))))
+      collect x
+      when (and (symbolp x) (not (keywordp x)))
+      collect x))
 
 ;;
 ;; LXML

@@ -55,9 +55,10 @@
     (lxml-to-saf-object (xml-to-lxml xml))))
 
 (defun lxml-to-saf-object (lxml)
-  (let* ((lxml-body (check-doctype 
-		     (remove-xml-header lxml)
-		     '("saf" "maf")))
+  (let* ((lxml-body (elements-only
+		     (check-doctype 
+		      (remove-xml-header lxml)
+		      '("saf" "maf"))))
 	 (lxml-body-1 (first lxml-body)))
     (cond
      ((null lxml-body)
@@ -205,7 +206,7 @@
 		      :source source :target target))
   
 (defun lxml-sentence-to-edge (lxml-sentence &key source target)
-  (lxml-token-to-edge lxml-sentence :type :sentence
+  (lxml-token-to-edge lxml-sentence :type :|sentence|
 		      :source source :target target))
 
 (defun lxml-fs-content-to-fs (lxml)
@@ -269,7 +270,8 @@
 	    (preprocessor::saf-header :addressing :|char|
 			:document (saf-meta-document (saf-meta saf))))
     (setf *unanalysed-tokens* nil)
-    (loop for s in 
+    (loop 
+	for s in 
 	  (sort (loop for e in (saf-lattice-edges (saf-lattice saf))
 		    when (eq :|sentence| (saf-edge-type e))
 		    collect e)
@@ -279,13 +281,16 @@
 			  (point-to-char-point 
 			   (saf-edge-from x) :|char|)
 			  -1)))
-	do
+	for from = (saf-edge-from s)
+	for to = (saf-edge-to s)
+	unless (and from to) do
+	  (format t "~&~%CANNOT PROCESS SENTENCE ~a due to null pointer: from=~a to=~a" 
+		  (saf-edge-id s) from to)
+	       
+	when (and from to) do
 	  (format t "~&~%PROCESSING SENTENCE ~a: ~& ~a" 
 		  (saf-edge-id s)
-		  ;(saf-edge-content s)
-		  (x-span text
-			  (saf-edge-from s) 
-			  (saf-edge-to s)
+		  (x-span text from to
 			  (saf-meta-addressing (saf-meta saf)))
 		  )
 	  (time
