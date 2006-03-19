@@ -160,13 +160,36 @@
 	      collect (lxml-wordform-to-edge e)))
 	 (sentence-edges 
 	  (loop for e in (lxml-elt-elts lxml-fsm "sentence") ;;shorthand
-	      collect (lxml-sentence-to-edge e))))
+	      collect (lxml-sentence-to-edge e)))
+	 (all-edges (append token-edges annot-edges 
+			    wordform-edges sentence-edges))
+	 (start-node (second (member '|init| fsm-attributes)))
+	 (end-node (second (member '|final| fsm-attributes)))
+	 )
+    ;; fix missing details
+    (loop for e in all-edges
+	do
+	  (pushnew (saf-edge-source e) nodes :test #'string=)
+	  (pushnew (saf-edge-target e) nodes :test #'string=))
+    (unless (and start-node end-node)
+      (loop 
+	  with max and max-id
+	  with min and min-id
+	  for n in nodes
+	  for id = (id-to-int n)
+	  do
+	    (when (or (null min) (< id min-id)) 
+	      (setf min n) (setf min-id id))
+	    (when (or (null max) (> id max-id)) 
+	      (setf max n) (setf max-id id))
+	  finally
+	    (unless start-node (setf start-node min))
+	    (unless end-node (setf end-node max))))
     (make-saf-lattice 
-     :start-node (second (member '|init| fsm-attributes))
-     :end-node (second (member '|final| fsm-attributes))
+     :start-node start-node
+     :end-node end-node
      :nodes nodes
-     :edges (append token-edges annot-edges 
-		    wordform-edges sentence-edges))))
+     :edges all-edges)))
 
 (defun lxml-state-to-node (lxml-state)
   (lxml-elt-attr lxml-state "id"))
@@ -316,12 +339,12 @@
 			  nil
 			  :document nil
 			  :show-parse show-parse)))
-                       (storage-condition (condition)
-					  (format t "~&Memory allocation problem: ~A" condition))
-                       #+:allegro
-		       (EXCL:INTERRUPT-SIGNAL () (error "Interrupt-Signal"))
-                       (error (condition)
-			 (format t  "~&Error: ~A" condition))
+	     (storage-condition (condition)
+	       (format t "~&Memory allocation problem: ~A" condition))
+	     #+:allegro
+	     (EXCL:INTERRUPT-SIGNAL () (error "Interrupt-Signal"))
+	     (error (condition)
+	       (format t  "~&Error: ~A" condition))
 	     ))
 	  (dump-sentence-analyses s ostream))
     (format ostream "~&</saf>")))
@@ -508,11 +531,14 @@
 
 ;; id: first char ignored, rest gives integer
 (defun id-to-int (id)
-  (let ((i (if id (parse-integer (subseq id 1)))))
-    (if i
-	(and (setf *edge-id* (max i *edge-id*))
-	     i)
-      (- (incf *edge-id*)))))
+  (handler-case 
+      (let ((i (if id (parse-integer (subseq id 1)))))
+	(if i
+	    (and (setf *edge-id* (max i *edge-id*))
+		 i)
+	  (- (incf *edge-id*))))
+    (error (condition)
+      (error "unable to convert malformed id `~a': ~a" id condition))))
 
 ;;
 ;;					;

@@ -551,7 +551,7 @@
       (setf length-user-input
         (cond
          (*maf-p* 
-          #+:maf (max 0 (1- (saf-num-lattice-nodes user-input))) #-:maf nil)
+          #+:maf (id-to-int (saf-lattice-start-node (saf-lattice user-input))) #-:maf nil)
          (spppp (loop
                     for token in input
                     maximize (rest (assoc :end token))))
@@ -566,8 +566,16 @@
             (*parser-rules* (get-matching-rules nil nil))
             (*parser-lexical-rules* (get-matching-lex-rules nil))
             (*lexical-entries-used* nil)
-            (*minimal-vertex* 0)
-            (*maximal-vertex* length-user-input)
+            (*minimal-vertex* 
+	     (if *maf-p*
+		 #+:maf (id-to-int (saf-lattice-start-node (saf-lattice user-input))) 
+		 #-:maf 0
+		 0))
+            (*maximal-vertex* 
+	     (if *maf-p*
+		 #+:maf (id-to-int (saf-lattice-end-node (saf-lattice user-input))) 
+		 #-:maf 0
+		 length-user-input))
             ;;
             ;; shadow global variable to allow best-first mode to decrement for
             ;; each result found; eliminates need for additional result count.
@@ -602,7 +610,7 @@
 	      (generate-messages-for-all-unanalysed-tokens *tchart*))
             (catch :best-first
               (add-words-to-chart (and first-only-p (null *active-parsing-p*)
-                                       (cons 0 length-user-input)))
+                                       (cons *minimal-vertex* *maximal-vertex*)))
               (if *active-parsing-p*
                 (complete-chart)
                 (loop 
@@ -614,7 +622,7 @@
               ;; incrementally in the parse loop
               ;;
               (setf *parse-record* 
-                (find-spanning-edges 0 length-user-input))))
+                (find-spanning-edges *minimal-vertex* *maximal-vertex*))))
           (push (get-internal-run-time) *parse-times*))
         (when show-parse-p (show-parse))
         (values
