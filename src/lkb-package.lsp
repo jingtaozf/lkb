@@ -5,7 +5,7 @@
 (in-package :common-lisp-user)
 
 (defpackage :lkb 
-  (:use :common-lisp #-:ecl :make #+mcl :ccl) 
+  (:use :common-lisp #-:ecl :make #+mcl :ccl #+:preprocessor :fspp) 
   (:export
   "READ-SCRIPT-FILE-AUX" "RELOAD-SCRIPT-FILE"
   "RELOAD-LEAF-FILES" "RELOAD-LEX-FILES" "RELOAD-GRAMMAR-RULES"

@@ -56,17 +56,6 @@
 
 (in-package :lkb)
 
-;; some wrappers
-
-(defun x-read-preprocessor (&rest rest) (apply #'preprocessor:read-preprocessor rest))
-(defun x-preprocess (&rest rest) (apply #'preprocessor:preprocess rest))
-(defun x-clear-preprocessor (&rest rest) (apply #'preprocessor:clear-preprocessor rest))
-
-(defun read-preprocessor (&rest rest) (apply #'preprocessor:read-preprocessor rest))
-(defun preprocess (&rest rest) (apply #'preprocessor:preprocess rest))
-(defun clear-preprocessor (&rest rest) (apply #'preprocessor:clear-preprocessor rest))
-
-;; end of wrappers
 ;;
 ;; (bmw) where is this code called from?
 ;;
