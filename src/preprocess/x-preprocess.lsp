@@ -38,6 +38,12 @@
 ;;;   |				's
 ;;;
 
+(defpackage :preprocessor
+  (:export read-preprocessor preprocess clear-preprocessor preprocessor-initialized-p
+	   x-read-preprocessor x-preprocess x-clear-preprocessor
+	   *local-to-global-point-mapping* *preprocessor*)
+  (:nicknames :fspp))
+
 (in-package :preprocessor)
 
 ;; some wrappers

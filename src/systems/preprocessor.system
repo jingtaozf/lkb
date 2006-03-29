@@ -6,43 +6,28 @@
 
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
            #-:ansi-eval-when (load eval compile)
-  (pushnew :preprocessor *features*))
+	   (pushnew :preprocessor *features*))
 
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
            #-:ansi-eval-when (load eval compile)
-  #+(and :allegro (version>= 6 0))
-  (pushnew :xml *features*)
-  #+(and :xml :preprocessor)
-  (pushnew :maf *features*)
-  
-  (defpackage :preprocessor
-    (:export read-preprocessor preprocess clear-preprocessor preprocessor-initialized-p
-	     x-read-preprocessor x-preprocess x-clear-preprocessor
-	     *local-to-global-point-mapping* *preprocessor*)
-    (:nicknames :fspp))
-)
+	   #+(and :allegro (version>= 6 0))
+	   (pushnew :xml *features*)
+	   #+(and :xml :preprocessor)
+	   (pushnew :maf *features*)
+	   )
 
 
 (defsystem "preprocessor"
     :source-pathname (get-sources-dir "lkb")
     :binary-pathname (get-binaries-dir "lkb")
     :source-extension "lsp"
-    :depends-on (#+:preprocessor "ppcre"
-                 ;#+:xml "pxml"
-		 )
-
+    :depends-on (#+:preprocessor "ppcre")
     #+:ecl :initially-do #+:ecl (ecl-initialize)
-
-    :finally-do
-    (let* ((package (find-package :preprocessor))
-	   )
-      #+:ecl (ecl-finalize :module "preprocessor")
-      )
-
+    #+:ecl :finally-do #+:ecl (ecl-finalize :module "preprocessor")
     :components
     ((:module "preprocess"
-      :source-pathname "preprocess"
-      :binary-pathname "preprocess"
+	      :source-pathname "preprocess"
+	      :binary-pathname "preprocess"
       :components
       (#+:preprocessor       
        (:file "x-preprocess")))))
