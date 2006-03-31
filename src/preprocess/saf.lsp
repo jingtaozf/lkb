@@ -264,7 +264,7 @@
 (defun process-standoff-sentence-file (filename &key show-parse)
   (process-saf-file-sentences filename :show-parse show-parse))
   
-(defun process-saf-file-sentences (filename &key (show-parse t))
+(defun process-saf-file-sentences (filename &key (show-parse t) reset-unanalysed-tokens)
   (with-open-file 
       (ofile 
        (merge-pathnames 
@@ -283,7 +283,7 @@
      :ostream ofile
      :show-parse show-parse)))
 
-(defun process-saf-sentences (saf &key (ostream t) show-parse)
+(defun process-saf-sentences (saf &key (ostream t) show-parse reset-unanalysed-tokens)
   (let* ((textfilename (saf-meta-document (saf-meta saf)))
 	 (text
 	  (if textfilename
@@ -292,7 +292,8 @@
     (format ostream "~a"
 	    (preprocessor::saf-header :addressing :|char|
 			:document (saf-meta-document (saf-meta saf))))
-    (setf *unanalysed-tokens* nil)
+    (when reset-unanalysed-tokens
+      (setf *unanalysed-tokens* nil))
     (loop 
 	for s in 
 	  (sort (loop for e in (saf-lattice-edges (saf-lattice saf))
