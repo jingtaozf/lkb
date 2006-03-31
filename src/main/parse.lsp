@@ -475,6 +475,7 @@
       (setf *foreign-morph-fn* nil))))  
 
 (defvar *maf-p* nil)
+(defvar *abort-parse-after-morphosyntax* nil)
 
 ;; example input: 
 ;; - basic: "the" "dog" "barks"
@@ -608,6 +609,8 @@
 	    (instantiate-chart-with-stems-and-multiwords)
 	    (when *generate-messages-for-all-unanalysed-tokens*
 	      (generate-messages-for-all-unanalysed-tokens *tchart*))
+	    (when *abort-parse-after-morphosyntax*
+	      (return-from parse))
             (catch :best-first
               (add-words-to-chart (and first-only-p (null *active-parsing-p*)
                                        (cons *minimal-vertex* *maximal-vertex*)))
