@@ -281,7 +281,8 @@
       (read-file-to-string filename)
       :saf-dir (pathname-directory (pathname filename)))
      :ostream ofile
-     :show-parse show-parse)))
+     :show-parse show-parse
+     :reset-unanalysed-tokens reset-unanalysed-tokens)))
 
 (defun process-saf-sentences (saf &key (ostream t) show-parse reset-unanalysed-tokens)
   (let* ((textfilename (saf-meta-document (saf-meta saf)))
