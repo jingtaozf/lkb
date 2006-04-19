@@ -23,7 +23,8 @@
     :source-extension "lsp"
     :depends-on (#+:preprocessor "ppcre")
     #+:ecl :initially-do #+:ecl (ecl-initialize)
-    #+:ecl :finally-do #+:ecl (ecl-finalize :module "preprocessor")
+    #+:ecl :finally-do #+:ecl (ecl-finalize :module "fspp")
+;;    #+:ecl :finally-do #+:ecl (ecl-finalize :module "preprocessor")
     :components
     ((:module "preprocess"
 	      :source-pathname "preprocess"

@@ -207,12 +207,29 @@
 	(format nil "~a" (stem-to-fs stem))
 	(if partial-tree
 	    (format nil "~a" (partial-tree-to-fs partial-tree)))
+	    ;(format nil "~a" (partial-tree-to-fs-lazy partial-tree)))
 	(format nil "</fs>")
 	(format nil "</wordForm>"))
       ))))
 
 ;; store as lisp list text
 (defun partial-tree-to-fs (p-tree)
+  (format nil "<f name='partial-tree'>~a</f>"
+	  (partial-tree-to-fs2 p-tree)))
+
+(defun partial-tree-to-fs2 (p-tree)
+  (if (null p-tree)
+      ""
+    (format nil "<fs><f name='first'>~a</f><f name='rest'>~a</f></fs>"
+	    (partial-tree-elt-to-fs (car p-tree))
+	    (partial-tree-to-fs2 (cdr p-tree)))))
+
+(defun partial-tree-elt-to-fs (p-tree-elt)
+  (format nil "<f name='rule'>~a</f><f name='str'>~a</f>"
+	  (xml-escape (format nil "~a" (first p-tree-elt)))
+	  (xml-escape (format nil "~a" (second p-tree-elt)))))
+
+(defun partial-tree-to-fs-lazy (p-tree)
   (concatenate 'string
     (format nil "<f name='partial-tree'>")
     (xml-escape (format nil "~S" p-tree))
