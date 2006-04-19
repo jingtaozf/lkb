@@ -1,6 +1,10 @@
-// stand-alone DELPH-IN preprocessor (fspp)
+// stand-alone DELPH-IN preprocessor (fspp 0.00)
 // (C) Bernd Kiefer, Ben Waldron
 //
+
+#define FSPP_VERSION 0.00
+
+#include <iomanip>   // format manipulation
 
 #include <ecl.h>
 #include <string>
@@ -59,18 +63,24 @@ preprocess(const char *inputstring, const char *format) {
 
 int
 help(void) {
-    cout << "Usage: fspp FSR_FILENAME OUTPUT_FORMAT" << endl;
-    cout << " where OUTPUT_FORMAT may be one of ";
-    cout << " :smaf";
-    cout << " :saf";
-    cout << " :maf";
+    cout << "Usage:\tfspp FSR_FILENAME (OUTPUT_FORMAT)" << endl;
+    cout << "\twhere\t- OUTPUT_FORMAT may be one of :smaf :saf :maf";
+    cout << endl;
+    cout << "\t\t- each sentence input to stdin must be terminated by CONTROL-Q NEWLINE";
+    cout << endl;
+    cout << "\t\t- output sent to stdout";
     cout << endl;
     return 0;
 }
 
 int main(int argc, char **argv) {
+    cout << "(FSPP version " << fixed << setprecision(2) << FSPP_VERSION << ")" << endl;
+    cout << "(For support please see: http://wiki.delph-in.net)" << endl;
+
     if (argc < 2)  { help(); return 1; }
     const char *format = (argc < 3) ? ":smaf" : argv[2];
+
+
     ecl_initialize(1, argv);
     
     preprocessor_initialize(argv[1]);
@@ -89,7 +99,6 @@ int main(int argc, char **argv) {
 	cin.ignore( INT_MAX, '\n' );
 	if (input.empty()) break;
 	cout << preprocess(input.c_str(), format) << endl;
-	//cout << "preprocess: " << input << " :" << format<< endl;
     }
     return 0;
 }
