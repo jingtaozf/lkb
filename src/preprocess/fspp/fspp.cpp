@@ -66,9 +66,9 @@ help(void) {
     cout << "Usage:\tfspp FSR_FILENAME (OUTPUT_FORMAT)" << endl;
     cout << "\twhere\t- OUTPUT_FORMAT may be one of :smaf :saf :maf";
     cout << endl;
-    cout << "\t\t- each sentence input to stdin must be terminated by CONTROL-Q NEWLINE";
+    cout << "\t\t- (stdin input) each sentence must be terminated by CONTROL-Q NEWLINE";
     cout << endl;
-    cout << "\t\t- output sent to stdout";
+    cout << "\t\t- (stdout output) determined by OUTPUT_FORMAT";
     cout << endl;
     return 0;
 }
