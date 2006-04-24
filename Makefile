@@ -14,6 +14,8 @@ LINKS = lkb_data.tgz lkb_linux.x86.32.tgz lkb_solaris.tgz \
 CP=cp
 RM=rm
 MKDIR=mkdir
+CHGRP=chgrp
+CHMOD=chmod
 LN=ln -s
 CVS=cvs -q
 TAR=tar
@@ -85,6 +87,8 @@ lkb_source:
 	  cd ${ROOT}/lkb; \
 	  if [ ! -d ${TARGET}/builds/${DATE} ]; then \
             ${MKDIR} ${TARGET}/builds/${DATE}; \
+	    ${CHGRP} build ${TARGET}/builds/${DATE}; \
+	    ${CHMOD} 3775 ${TARGET}/builds/${DATE}; \
           fi; \
 	  ${TAR} Svczf ${TARGET}/builds/${DATE}/lkb_source.tgz \
 	      --exclude=Makefile \
