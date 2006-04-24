@@ -6,7 +6,7 @@
 (defun punctuation-ep-p (ep)
   (member (mrs:rel-pred ep) *semi-punctuation-relations* :test #'equal))
 
-(defun token-ep-ep (ep)
+(defun token-ep-p (ep)
   (member (mrs:rel-pred ep) *semi-token-relations* :test #'equal))
 
 (defmacro add (n i)
@@ -14,6 +14,7 @@
 
 (defun generate-from-fragmented-mrs (mrs &key signal)
   (declare (ignore signal))
+
   (labels ((cross-product (sets &key (separator "||"))
              (if (null (rest sets))
                (loop
@@ -45,7 +46,7 @@
           for fragment in fragments
           for surface = (when (and (mrs:psoa-liszt fragment)
                                    (null (rest (mrs:psoa-liszt fragment)))
-                                   (token-ep-ep 
+                                   (token-ep-p 
                                     (first (mrs:psoa-liszt fragment))))
                           (loop
                               with carg = (mrs::vsym "CARG")
@@ -98,24 +99,25 @@
       with mrss
       for fragments = (find-eps mrs (mrs:psoa-top-h mrs))
       then (find-eps 
-            mrs (find-role-value (first fragments) *semi-fragment-right*))
+            mrs (find-role-value top *semi-fragment-right*))
+      for top = (loop for ep in fragments when (fragment-ep-p ep) return ep)
       while fragments
-      when (rest fragments) do
+      when (and nil (rest fragments)) do
         (error
          "discriminate-fragments(): multiple matches (~{|~a|~^, ~}).~%"
          (loop
              for ep in fragments
              collect (mrs::ep-shorthand ep)))
         (return-from discriminate-fragments)
-      when (fragment-ep-p (first fragments)) do
+      when (and top (fragment-ep-p top)) do
         (let ((mrs (extract-connected-mrs 
                     mrs 
-                    (find-role-value (first fragments) *semi-fragment-left*))))
+                    (find-role-value top *semi-fragment-left*))))
           (if mrs
             (push mrs mrss)
             (error
              "discriminate-fragments(): null left daughter (|~a|).~%"
-             (first fragments))))
+             top)))
       else do
         (push 
          (mrs::make-psoa
@@ -130,7 +132,7 @@
 ;;; _fix_me_
 ;;; it appears that in transfer outputs, there can be equivalent but non-eq()
 ;;; instances of variables, possibly distributed between RELS and HCONS.  in
-;;; many context, we would not notice, specifically when reading back an MRS
+;;; many contexts, we would not notice, specifically when reading back an MRS
 ;;; from the string representation (e.g. across processes).     (17-jul-04; oe)
 ;;;
 (defun variable-equal (variable1 variable2)

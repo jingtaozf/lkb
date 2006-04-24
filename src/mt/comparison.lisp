@@ -4,6 +4,10 @@
 
 (defparameter *mrs-comparison-ignore-properties* nil)
 
+(defparameter *mrs-comparison-equivalent-types* nil)
+
+(defparameter *mrs-comparison-equivalent-predicates* nil)
+
 (defun mrs= (mrs1 mrs2
              &key (roles *mrs-comparison-ignore-roles*)
                   (properties *mrs-comparison-ignore-properties*))
@@ -13,6 +17,9 @@
                      &key (type :subsumption)
                           (roles *mrs-comparison-ignore-roles*)
                           (properties *mrs-comparison-ignore-properties*)
+                          (types *mrs-comparison-equivalent-types*)
+                          (predicates *mrs-comparison-equivalent-predicates*)
+                          hcons
                           debug)
   ;;
   ;; in (default) :subsumption mode, e.g. when testing post-generation, .mrs2.
@@ -22,6 +29,8 @@
   (setf %mrs1 mrs1 %mrs2 mrs2)
   (let ((*mrs-comparison-ignore-roles* roles)
         (*mrs-comparison-ignore-properties* properties)
+        (*mrs-comparison-equivalent-types* types)
+        (*mrs-comparison-equivalent-predicates* predicates)
         (*transfer-debug-p* (cons (and debug :solutions) *transfer-debug-p*))
         (%transfer-solutions% nil)
         (solution (copy-solution))
@@ -32,12 +41,13 @@
         (compare-epss
          (mrs:psoa-liszt mrs1) (mrs:psoa-liszt mrs2)
          solution :type type))
-      (setf solutions
-        (loop
-            with hcons1 = (mrs:psoa-h-cons mrs1)
-            with hcons2 = (mrs:psoa-h-cons mrs2)
-            for solution in solutions
-            append (compare-hconss hcons1 hcons2 solution :type type)))
+      (unless hcons
+        (setf solutions
+          (loop
+              with hcons1 = (mrs:psoa-h-cons mrs1)
+              with hcons2 = (mrs:psoa-h-cons mrs2)
+              for solution in solutions
+              append (compare-hconss hcons1 hcons2 solution :type type))))
       (when (and (null solutions) debug)
         (setf %transfer-solutions%
           (stable-sort %transfer-solutions% #'solution<=))
@@ -151,7 +161,16 @@
       solution)))
 
 (defun compare-preds (pred1 pred2 &key type)
-  (compare-types pred1 pred2 :type type))
+  (or
+   (compare-types pred1 pred2 :type type)
+   #+:logon
+   (loop
+       for (new . old) in *mrs-comparison-equivalent-predicates*
+       when (and (loop
+                     for foo in old
+                     thereis (compare-types pred1 foo :type type))
+                 (compare-preds new pred2 :type type))
+       return t)))
 
 (defun compare-values (value1 value2 solution &key type)
   (if (mrs::var-p value1)
@@ -170,9 +189,22 @@
          ((eq variable1 foo)
           variable1)
          ((null foo)
-          (when (and (compare-types 
-                      (mrs::var-type variable1) (mrs::var-type variable2) 
-                      :internp t :type type)
+          (when (and (or
+                      (compare-types 
+                       (mrs::var-type variable1) (mrs::var-type variable2) 
+                       :internp t :type type)
+                      #+:logon
+                      (loop
+                          with type = (mrs::var-type variable1)
+                          for (new . old) in *mrs-comparison-equivalent-types*
+                          when (and (loop
+                                        for foo in old
+                                        thereis (compare-types
+                                                 type foo :type type))
+                                    (compare-types
+                                     new (mrs::var-type variable2)
+                                     :internp t :type type))
+                          return t))
                      (compare-extras
                       (mrs:var-extra variable1) (mrs:var-extra variable2)
                       :type type))
@@ -226,6 +258,12 @@
       (= constant1 constant2))
      (t (compare-types constant1 constant2 :type type))))
 
+;;;
+;;; _fix_me_
+;;; tonight, this looks as if in non-subsumption mode we test unifiability, 
+;;; where i think we should be testing equality (and presumably add a third
+;;; mode).  re-view this question during the day.             (24-feb-06; oe)
+;;; 
 (defun compare-types (type1 type2 &key internp type)
 
   (or (eq type1 type2)

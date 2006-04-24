@@ -1,6 +1,6 @@
 (in-package :mt)
 
-(defparameter *lm-binary* 
+(defparameter *lm-binary*
   (format
    nil 
    "exec ~a"
@@ -34,7 +34,28 @@
 (defparameter *lm-punctuation-characters* nil)
 
 (defparameter *lm-measure* :logprob)
-
+
+(defun initialize-mt ()
+  (declare (special *utool-binary*))
+  (setf *lm-binary*
+    (format
+     nil 
+     "exec ~a"
+     (namestring
+      (make-pathname
+       :directory (pathname-directory make::bin-dir) :name "evallm"))))
+  #+:logon
+  (let* ((root (system:getenv "LOGONROOT"))
+         (root (and root (namestring (parse-namestring root)))))
+    (setf *lm-model*
+      (namestring
+       (make-pathname 
+        :directory (namestring
+                    (dir-append (get-sources-dir "mt") '(:relative "mt")))
+        :name "bnc.blm")))
+    (when root
+      (setf *utool-binary* (format nil "exec ~a/bin/utool" root)))))
+
 (defun lm-normalize-string (string)
   (when string
     (loop
@@ -45,7 +66,7 @@
         unless (member c *lm-punctuation-characters* :test #'char=)
         do (vector-push (char-downcase c) result)
         finally (return result))))
-
+      
 (let ((lock (mp:make-process-lock)))
 
   (defun lm-initialize (&optional (model *lm-model*))

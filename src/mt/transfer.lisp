@@ -31,6 +31,8 @@
 
 (defparameter *transfer-skolemize-p* nil)
 
+(defparameter *transfer-maximum-rank* nil)
+
 (defparameter %transfer-generation% 0)
 
 (defparameter %transfer-edge-id% 100)
@@ -86,7 +88,7 @@
   id
   context filter
   input output defaults
-  variables vector flags special)
+  variables vector flags special rank)
 
 (defmethod print-object ((object mtr) stream)
   (if %transfer-raw-output-p%
@@ -549,10 +551,11 @@
            (flags (if (and optional (not (member :obligatory flags)))
                     (adjoin :optional flags)
                     (remove :obligatory flags)))
+           (rank (convert-dag-to-rank dag))
            (special (and dag 
                          (not (vacuous-constraint-p *mtr-flags-path* dag))
                          (convert-dag-to-special dag :id id))))
-      
+
       ;;
       ;; for later postprocessing, look up relations that were requested for
       ;; OUTPUT copy, and record them in their MTR.
@@ -592,7 +595,8 @@
                (mtr (make-mtr :id id :filter filter :context context
                               :input input :output output :defaults defaults
                               :variables (nreverse mrs::*named-nodes*)
-                              :flags flags :special special :vector vector)))
+                              :flags flags :special special :rank rank
+                              :vector vector)))
           (incf %transfer-rule-id%)
           (when (member :optional (mtr-flags mtr))
             (setf vector (logior vector %transfer-optional-rules%)))
@@ -618,6 +622,14 @@
     (when (lkb::bool-value-true fail)
       (pushnew :fail flags))
     flags))
+
+(defun convert-dag-to-rank (dag)
+  #+:debug
+  (setf %dag dag)
+  (when dag
+    (let ((rank (mrs::path-value dag *mtr-rank-path*)))
+      (when rank
+        (ignore-errors (mrs::extract-integer-from-fs-type rank))))))
 
 (defun convert-dag-to-special (dag &key id)
   (let ((equal (lkb::existing-dag-at-end-of dag *mtr-equal-path*))
@@ -837,7 +849,14 @@
       with recurse = (mtrs-recurse-p mtrs)
       with subsume = (mtrs-subsume-p mtrs)
       with agenda = (list edge)
-      with all = (mtrs-mtrs mtrs)
+      with all = (loop
+                     for mtr in (mtrs-mtrs mtrs)
+                     for rank = (mtr-rank mtr)
+                     when (or (null *transfer-maximum-rank*)
+                              (null rank)
+                              (not (member :optional (mtr-flags mtr)))
+                              (<= rank *transfer-maximum-rank*))
+                     collect mtr)
       initially
         (when (and filter *transfer-preemptive-filter-p*)
           (loop

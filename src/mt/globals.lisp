@@ -28,6 +28,8 @@
 
 (defparameter *mtr-trigger-path* (list (mrs::vsym "TRIGGER")))
 
+(defparameter *mtr-rank-path* (list (mrs::vsym "RANK")))
+
 (defconstant *mtr-skolem-property* (mrs::vsym "SKOLEM"))
 
 (defconstant *mtr-scratch-property* (mrs::vsym "SCRATCH"))
