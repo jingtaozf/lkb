@@ -315,15 +315,30 @@
   (let ((file (merge-pathnames (make-pathname :name name) 
                                directory)))
     (if (probe-file file)
-      #+:allegro 
+      ;;
+      ;; in order to protect concurrent processes compiling a file in parallel,
+      ;; attempt puttting a mandatory lock on the source file while we compile
+      ;; and load it.
+      ;;
+      #+(and :allegro :logon)
+      (with-open-file (foo file
+                       :direction :output :if-exists :append)
+        (excl.osi:with-stream-lock (foo)
+          (load
+           (handler-bind ((excl:compiler-no-in-package-warning
+                           #'(lambda (c)
+                               (declare (ignore c))
+                               (muffle-warning))))
+             (if (and compile (member :compiler *features*))
+               (compile-file file :verbose nil :print nil)
+               file)))))
+      #+(and :allegro (not :logon))
       (load
        (handler-bind ((excl:compiler-no-in-package-warning
-                       #'(lambda (c)
-                           (declare (ignore c))
-                           (muffle-warning))))
-                     (if (and compile (member :compiler *features*))
-                       (compile-file file :verbose nil :print nil)
-                       file)))
+                       #'(lambda (c) (declare (ignore c)) (muffle-warning))))
+         (if (and compile (member :compiler *features*))
+           (compile-file file :verbose nil :print nil)
+           file)))
       #+:lispworks
       (load 
        (if compile (compile-file file :load t :print nil :verbose nil) file))
@@ -722,7 +737,7 @@
       (setf excl:*locale* locale)
       (format
        t
-       "~&set-coding-system(): activating `~a'."
+       "~&set-coding-system(): activating ~a."
        locale))
      (t
       (format

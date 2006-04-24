@@ -282,8 +282,10 @@
 
 (defun show-mrs-dependencies-window (edge &optional mrs title)
   (let ((mrs (or mrs (edge-mrs edge) (mrs::extract-mrs edge))))
-    (mp:run-function "Elementary Dependencies"
-     #'show-mrs-dependencies-window-really edge mrs title)))
+    (if #+:lui (lui-status-p :mrs :dependencies) #-:lui nil
+      (lui-display-mrs mrs title :dependencies)
+      (mp:run-function "Elementary Dependencies"
+       #'show-mrs-dependencies-window-really edge mrs title))))
   
 (defun show-mrs-dependencies-window-really (edge &optional mrs title)
   (let ((mframe (clim:make-application-frame 'mrs-dependencies))

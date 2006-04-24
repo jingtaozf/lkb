@@ -379,8 +379,12 @@
     (gethash variable %eds-equivalences%)))
 
 (defun ed-quantifier-p (ed)
-  (let ((flist (rel-flist (ed-raw ed))))
-    (find *scope-feat* flist :key #'fvpair-feature)))
+  (or
+   (let ((flist (rel-flist (ed-raw ed))))
+     (find *scope-feat* flist :key #'fvpair-feature))
+   #+:logon
+   (let ((pred (ed-predicate ed)))
+     (and (stringp pred) (search "_q_rel" pred)))))
 
 (defun ed-message-p (thing)
   (when *eds-message-relation*
@@ -388,10 +392,14 @@
       (ed
        (let ((type (ed-predicate thing)))
          (or (eq type *eds-message-relation*)
+             #+:logon
+             (when (stringp type) (search "_m_rel" type))
              (ignore-errors (equal-or-subtype type *eds-message-relation*)))))
       (rel
        (let ((type (rel-pred thing)))
          (or (eq type *eds-message-relation*)
+             #+:logon
+             (when (stringp type) (search "_m_rel" type))
              (ignore-errors
               (equal-or-subtype type *eds-message-relation*))))))))
 
@@ -537,7 +545,8 @@
     (nconc
      (loop
          for ed in (eds-relations eds)
-         for functor = (ed-linked-predicate ed)
+         for functor
+         = (format nil "~a~@[(~a)~]" (ed-linked-predicate ed) (ed-carg ed))
          unless (and (null (ed-status ed)) 
                      (or (ed-bleached-p ed) (ed-vacuous-p ed)))
          nconc
@@ -553,6 +562,7 @@
                                 with id = (ed-id ed)
                                 for ed in (eds-relations eds)
                                 when (and (ed-variable ed)
+                                          (not (ed-quantifier-p ed))
                                           (equal
                                            (var-string (ed-variable ed)) id))
                                 return ed)))
@@ -574,10 +584,15 @@
          for ed in (eds-relations eds)
          unless (or (and (null (ed-status ed)) 
                          (or (ed-bleached-p ed) (ed-vacuous-p ed)))
+                    (ed-quantifier-p ed)
+                    (ed-message-p ed)
                     (not (var-p (ed-variable ed))))
          nconc
            (loop
-               with id = (ed-linked-predicate ed)
+               with id = (format
+                          nil
+                          "~a~@[(~a)~]"
+                          (ed-linked-predicate ed) (ed-carg ed))
                for extra in (var-extra (ed-variable ed))
                for value = (format nil "~(~a~)" (extrapair-value extra))
                collect 

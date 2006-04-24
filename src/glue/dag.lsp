@@ -37,6 +37,7 @@
 (defstruct failure
   (id (incf %failures-counter%))
   nature type1 type2 glb path suffix context)
+
 
 (defmethod print-object ((object failure) stream)
   (if *failure-raw-output-p*
