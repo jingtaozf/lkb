@@ -35,6 +35,12 @@
  *	Libpvm3 includes.
  *
  * $Log$
+ * Revision 1.7  2006/02/08 21:16:09  oe
+ * more updates from LinGO CVS
+ *
+ * Revision 1.4  2006/02/08 14:00:27  oe
+ * new binaries; new BLT library
+ *
  * Revision 1.6  2005/05/21 01:13:57  oe
  * undo earlier delete confusion :-{
  *
