@@ -255,7 +255,7 @@ duplicate variables")
       (intern (apply #'concatenate 'string
                      (string (car flist))
                      (mapcan #'(lambda (f) (list "." (string f))) (cdr flist)))
-              :lkb)
+              *mrs-package*)
     (car flist)))
 
 
