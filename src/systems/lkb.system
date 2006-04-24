@@ -544,4 +544,6 @@
        (:file "semi")
        (:file "fragments")
        #+:lm
-       (:file "lm")))))
+       (:file "lm")
+       #+:logon
+       (:file "utool")))))
