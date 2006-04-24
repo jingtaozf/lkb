@@ -1,0 +1,46 @@
+#!/bin/bash
+
+tsdb="$LOGONROOT/bin/tsdb"
+
+action="";
+
+while [ $# -gt 0 -a "${1#-}" != "$1" ]; do
+  case ${1} in
+    -c|--compress)
+    action="compress";
+    shift 1;
+    ;;
+    *)
+    echo "usage: itsdb { -c | -r } directory; exit.";
+    exit 1;
+  esac
+done
+
+if [ -z "${action}" ]; then
+  echo "usage: itsdb { -c | -r } directory; exit.";
+  exit 1;
+fi
+
+
+if [ ! -d ${1} ]; then
+  echo "itsdb: invalid or missing directory \`${1}'; exit.";
+  exit 1;
+fi
+
+directory="${1}";
+
+tmp="/tmp/.itsdb.tmp.${USER}.$$"
+
+find ${directory} -name relations | sed 's@/relations@@g' > ${tmp}
+for i in $(cat ${tmp}); do
+  ${tsdb} -home "${i}" -query "info relations" \
+  | egrep '^[a-zA-Z0-9_-]+:$' | sed 's@:$@@g' > ${tmp}
+  for j in $(cat ${tmp}); do
+    file="${i}/${j}";
+    if [ -s "${file}" ]; then
+      echo -n "compressing \`${file}' ... ";
+      gzip -9 "${file}";
+      echo "done";
+    fi
+  done
+done
