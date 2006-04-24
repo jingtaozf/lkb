@@ -394,34 +394,35 @@
         do (push new (hypothesis-parents daughter)))
     new))
 
-(defun selectively-unpack-edges (edges &optional n &key test robustp)
+(defun selectively-unpack-edges (edges &optional n &key test robust)
 
   #+:debug
   (setf %edges edges)
 
   (unless edges (return-from selectively-unpack-edges))
-  ;;
-  ;; _fix_me_
-  ;; it turns out that, for generation with the sep-05 version of the ERG, we
-  ;; often cannot selectively unpack in finite time :-{.  presumably, part of
-  ;; the problem is a very large number of failures in unpacking, and possibly
-  ;; too large a number of hypotheses that we generate.  i remember woodley
-  ;; running into similar problems during his visit to oslo, so make this a
-  ;; priority to sort out once LOGON 0.5 has been released.  the corresponding
-  ;; PR is LOGON generation/290.                               (21-sep-05; oe)
-  ;;
+  (unless (numberp robust) (setf robust 42))
   (if (or (null n) (not (numberp n)) (<= n 0) (null *unpacking-scoring-hook*))
     (let ((edges (unpack-edges edges)))
-      (if test
-        (or
-         (loop
-             for edge in edges
-             when (funcall test edge) collect edge)
-         (when robustp
-           (loop
-               for edge in edges
-               when (or (eq robustp t) (funcall robustp edge)) collect edge)))
-        edges))
+      (if (null test)
+        edges
+        (loop
+            with result with candidates
+            for edge in edges
+            do
+              (multiple-value-bind (flag distance) (funcall test edge)
+                (setf (edge-baz edge) distance)
+                (if flag
+                  (push edge result)
+                  (when (and robust (numberp distance))
+                    (push (cons distance edge) candidates)
+                    (setf robust (min robust distance)))))
+            finally
+              (return
+                (or result
+                    (loop
+                        for (distance . edge) in candidates
+                        when (or (eq robust t) (<= distance robust))
+                        collect edge))))))
     ;;
     ;; ignore genuinely frozen edges; now that we are into the unpacking
     ;; phase, frosted edges represent valid alternatives again.  since we are
@@ -445,17 +446,23 @@
            for new = (when hypothesis 
                        (let ((edge (instantiate-hypothesis hypothesis)))
                          (when edge
-                           (if (or (null test) (funcall test edge))
+                           (if (null test)
                              edge
-                             (when robustp
-                               (push edge candidates)
-                               nil)))))
+                             (multiple-value-bind (flag distance)
+                                 (funcall test edge)
+                               (setf (edge-baz edge) distance)
+                               (when (and robust (numberp distance))
+                                 (push (cons distance edge) candidates)
+                                 (setf robust (min robust distance)))
+                               (when flag edge))))))
            while (and hypothesis (>= n 1))
            when new do (decf n) and collect new)
-       (when robustp
-         (loop
-             for edge in candidates
-             when (or (eq robustp t) (funcall robustp edge)) collect edge))))))
+       (when robust
+         (nreverse
+          (loop
+              for (distance . edge) in candidates
+              when (or (eq robust t) (<= distance robust))
+              collect edge)))))))
 
 (defun hypothesize-edge (edge i &key top agenda)
   ;;

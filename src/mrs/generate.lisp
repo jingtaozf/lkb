@@ -503,13 +503,12 @@
                          ;;
                          ;; see whether we can have some cake and eat some: add
                          ;; robust flag to selectively-unpack-edges(), so as to
-                         ;; return all candidate edges (that failed the test),
-                         ;; in case none were found to satisfy it.  allow us to
-                         ;; pass in another predicate as the value of :robustp,
-                         ;; in order to further select among those candidates.
-                         ;; the net result will be exhaustive unpacking, in all
-                         ;; cases where no candidates pass the test.
-                         ;;                                     (21-sep-05; oe)
+                         ;; return all candidate edges (that failed the test)
+                         ;; whose distance is less than or equal to the robust
+                         ;; threshold (a value of `t' means all candidates).
+                         ;; the distance is determined as the second values()
+                         ;; returned from the test predicate.   (13-feb-06; oe)
+                         ;;
                          (selectively-unpack-edges
                           (loop
                               for edge in candidates
@@ -521,10 +520,7 @@
                                        (gen-filter-root-edges (list edge))
                                        (gen-chart-check-compatible 
                                         edge input-sem)))
-                          :robustp (when (eq *bypass-equality-check* :filter)
-                                     #'(lambda (edge)
-                                         (gen-filter-root-edges
-                                          (list edge))))))
+                          :robust 42))
                         (t
                          (loop
                              for edge in candidates
@@ -620,25 +616,79 @@
       (g-edge-rels-covered edge)))
 
 
-(defun gen-chart-check-compatible (edge input-sem)
+(defun gen-chart-check-compatible (edge input)
+  
    ;; construct the MRS for edge
    ;; We test for 'compatibility' rather than equality - in
    ;; particular, semantics of generated string might be more specific than
-   ;; input MRS wrt things like scope - so we pass 3nd arg of nil to mrs-equalp
-   ;; Semantics are already guaranteed to be compatible wrt relation arguments since
-   ;; these were skolemised in the input MRS
+   ;; input MRS wrt things like scope.
    (or (and *bypass-equality-check* (not (eq *bypass-equality-check* :filter)))
       (let* ((mrs (mrs::extract-mrs edge))
              (mrs (mrs::fill-mrs (mrs::unfill-mrs mrs))))
         (setf (edge-mrs edge) mrs)
-;;            (when *sem-debugging*
-;;              (mrs::output-mrs input-sem 'mrs::simple)
-;;              (mrs::output-mrs mrs 'mrs::simple))  
-        (mt::compare-mrss
-         (if *gen-equate-qeqs-p* (mrs::equate-all-qeqs mrs) mrs)
-         input-sem
-         :type :subsumption))))
-
+        (let* ((mrs (if *gen-equate-qeqs-p* (mrs::equate-all-qeqs mrs) mrs))
+               (roles (list (mrs::vsym "TPC") (mrs::vsym "PSV")))
+               ;;
+               ;; in a few cases, the input is over-specified, e.g. using an
+               ;; `i' variable for an unbound subject in infinitivals.
+               ;;
+               (types '(("i" "u")))
+               (predicates '((mrs:vsym "prpstn_m_rel")
+                             (mrs:vsym "prop-or-ques_m_rel")
+                             (mrs:vsym "prop_imp_m_rel")
+                             (mrs:vsym "prpstn_or_like_m_rel")))
+               (distance
+                (or (when (mt::compare-mrss mrs input :type :subsumption) 0)
+                    #+:logon
+                    (when (eq *bypass-equality-check* :filter)
+                      (or
+                       (when (mt::compare-mrss
+                              mrs input :type :subsumption
+                              :roles roles)
+                         1)
+                       (when (mt::compare-mrss
+                              mrs input :type :subsumption
+                              :types types)
+                         2)
+                       (when (mt::compare-mrss
+                              mrs input :type :subsumption
+                              :properties t)
+                         3)
+                       (when (mt::compare-mrss
+                              mrs input :type :subsumption
+                              :roles roles :types types)
+                         4)
+                       (when (mt::compare-mrss
+                              mrs input :type :subsumption
+                              :roles roles :properties t)
+                         5)
+                       (when (mt::compare-mrss
+                              mrs input :type :subsumption
+                              :roles roles :properties t :types types)
+                         6)
+                       (when (mt::compare-mrss
+                              mrs input :type :subsumption
+                              :hcons t)
+                         7)
+                       (when (mt::compare-mrss
+                              mrs input :type :subsumption
+                              :roles roles :hcons t)
+                         8)
+                       (when (mt::compare-mrss
+                              mrs input :type :subsumption
+                              :roles roles :properties t :hcons t)
+                         9)
+                       (when (mt::compare-mrss
+                              mrs input :type :subsumption
+                              :predicates predicates)
+                         10)
+                       (when (mt::compare-mrss
+                              mrs input :type :subsumption
+                              :roles roles :properties t
+                              :hcons t :predicates predicates)
+                         11)
+                       42)))))
+          (values (and (numberp distance) (= distance 0)) distance)))))
 
 (defun gen-chart-root-edges (edges start-symbols)
    ;; c.f. create-new-root-edges in parse.lsp
