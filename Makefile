@@ -24,6 +24,9 @@ TEE=tee
 
 update:
 	( \
+	  cd ${ROOT}/yzlui; \
+	  ${CVS} update -P -d -R; \
+	  ${CVS} rtag -F latest yzlui; \
 	  cd ${ROOT}/erg; \
 	  ${CVS} update -P -d -R; \
 	  ${CVS} rtag -F latest erg; \
@@ -54,7 +57,7 @@ update:
 latest:
 	${CVS} update -P -d -R -r latest;
 
-all: lkb erg spanish itsdb # matrix
+all: lkb yzlui erg spanish itsdb # matrix
 
 windows: lkb_windows
 
@@ -87,9 +90,9 @@ lkb_source:
 	  cd ${ROOT}/lkb; \
 	  if [ ! -d ${TARGET}/builds/${DATE} ]; then \
             ${MKDIR} ${TARGET}/builds/${DATE}; \
-	    ${CHGRP} build ${TARGET}/builds/${DATE}; \
-	    ${CHMOD} 3775 ${TARGET}/builds/${DATE}; \
           fi; \
+	  ${CHGRP} build ${TARGET}/builds/${DATE}; \
+	  ${CHMOD} 3775 ${TARGET}/builds/${DATE}; \
 	  ${TAR} Svczf ${TARGET}/builds/${DATE}/lkb_source.tgz \
 	      --exclude=Makefile \
 	      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
@@ -232,6 +235,19 @@ lkb_documentation:
 	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" \
 	      doc/lkb.pdf; \
+	)
+
+#
+# YZ implementation of Linguistic User Interface (Woodley Packard)
+#
+
+yzlui:
+	( \
+	  cd ${ROOT}; \
+	  ${TAR} Svczf ${TARGET}/builds/${DATE}/yzlui.tgz \
+	      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
+              --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
+	      yzlui; \
 	)
 
 #
