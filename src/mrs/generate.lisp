@@ -627,12 +627,15 @@
              (mrs (mrs::fill-mrs (mrs::unfill-mrs mrs))))
         (setf (edge-mrs edge) mrs)
         (let* ((mrs (if *gen-equate-qeqs-p* (mrs::equate-all-qeqs mrs) mrs))
+               #+:logon
                (roles (list (mrs::vsym "TPC") (mrs::vsym "PSV")))
                ;;
                ;; in a few cases, the input is over-specified, e.g. using an
                ;; `i' variable for an unbound subject in infinitivals.
                ;;
+               #+:logon
                (types '(("i" "u")))
+               #+:logon
                (predicates '((mrs:vsym "prpstn_m_rel")
                              (mrs:vsym "prop-or-ques_m_rel")
                              (mrs:vsym "prop_imp_m_rel")
