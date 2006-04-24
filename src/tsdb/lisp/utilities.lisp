@@ -246,16 +246,17 @@
   (if (= ith jth)
       (ith-nth list ith nth)
     (loop
-     with result
-     with list = (copy-list list)
-     with i = 1
-     for mod = (mod i nth)
-     when (or (and (= ith nth) (zerop mod)) (= mod ith))
-     do (setq result 
-              (nconc result (loop repeat (1+ (- jth ith))
-                                  do (incf i) collect (pop list))))
-     else do (incf i) and collect (pop list) into complement 
-     when (null list) do (return (values result complement)))))
+        with result
+        with list = (copy-list list)
+        with i = 1
+        for mod = (mod i nth)
+        when (or (and (= ith nth) (zerop mod)) (= mod ith))
+        do (setq result 
+             (nconc result (loop repeat (1+ (- jth ith))
+                               when (car list)
+                               do (incf i) and collect (pop list))))
+        else do (incf i) and collect (pop list) into complement 
+        when (null list) do (return (values result complement)))))
 
 (defun ith-n (list ith n)
   (when (> ith 0)
