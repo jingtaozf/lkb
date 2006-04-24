@@ -3,6 +3,8 @@ SHELL = /bin/sh
 SOLARIS_LIBS = \
    5lib/getloadavg.o -L../../../lib/solaris -lpvm3 -lsocket -lnsl -lkstat -lc
 
+LINUX_CFLAGS = -fPIC
+
 LINUX_X86_32_LIBS = \
    -L../../../lib/linux.x86.32 -lpvm3
 

@@ -38,10 +38,10 @@
   (pushnew :itsdb *features*)
 
   ;;
-  ;; for LOGON use, at least, assume AllegroCache is available
+  ;; for supported platforms, assume Berkeley DB support is available
   ;;
-  #+(or :logon (and :allegro-version>= (version>= 8 0)))
-  (pushnew :acache *features*)
+  #+(and (not :acache) :linux (and :allegro-version>= (version>= 8 0)))
+  (pushnew :bdb *features*)
   
   ;;
   ;; the Alvey Tools package, unfortunately, comes without a unique feature to
@@ -59,7 +59,8 @@
     :binary-pathname (dir-append (get-binaries-dir "tsdb")
 				 '(:relative "tsdb"))
 
-    #+:acache :initially-do #+:acache (require :acache)
+    #+:acache :initially-do 
+    #+:acache (require :acache #+:logon "acache-1.1.0.fasl")
 
     :finally-do
     #+(and :allegro (or :linux (and :sparc :svr4) :alpha :macosx) (not :slave))
@@ -101,7 +102,9 @@
       :load-only t
       :components
       ((:file "capi")
-       (:file "gc")))
+       (:file "gc")
+       #+:bdb
+       (:file "bdb")))
 
      (:module "tsdb"
       :source-pathname "lisp"
@@ -164,10 +167,14 @@
        (:file "pcfg")
        #+:acache
        (:file "acache")
+       #+:bdb
+       (:file "bdb")
        #+:lkb
        (:file "features")
        #+:lkb
        (:file "learner")
+       #+:lkb
+       (:file "experiment")
        #+:null
        (:file "tagger")))
      

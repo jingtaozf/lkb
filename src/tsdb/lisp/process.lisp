@@ -587,7 +587,8 @@
                                  (or (null type) (null (cpu-task cpu))
                                      (eq (cpu-task cpu) type)
                                      (smember type (cpu-task cpu))))
-                       collect client))))
+                       collect client)))
+        tids)
     (if clients
       (let (runs)
         (loop
@@ -612,6 +613,7 @@
             do
               (setf (client-status client) :create)
               (push (enrich-run (list (cons :client client))) runs)
+              (push tid tids)
               (incf %process-run-id%)
             else 
             do
@@ -628,7 +630,9 @@
             while (and clients
                        (not (find :ready clients :key #'client-status)))
             finally (return runs)
-            for message = (pvm_poll -1 -1 1)
+            for message = (loop
+                              for tid in tids
+                              thereis (pvm_poll tid -1 1))
             when (message-p message)
             do
               (when *pvm-debug-p*
@@ -1248,6 +1252,7 @@
 
         (cond
          ((eql tag %pvm_task_fail%)
+          
           (when (consp item)
             (let* ((fail (pairlis '(:host :corpse) (list host remote))))
               (when (get-field :strikes item)
@@ -1259,6 +1264,11 @@
           (when run
             (nconc run `((:end . ,(current-time :long :tsdb)))))
           (when (client-p client)
+            (when (cpu-p (client-cpu client))
+              (format
+               stream
+               "~&process-queue(): client exit on `~a' <~x>~%"
+               (client-host client) remote))
             (setf (client-status client) :exit)
             (when (and *process-client-retries* client)
               (let* ((cpu (client-cpu client))

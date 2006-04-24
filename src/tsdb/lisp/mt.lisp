@@ -260,6 +260,12 @@
                     for rid = (get-field :result-id result)
                     for tree = (tsdb::get-field :tree result)
                     for score = (tsdb::get-field :score result)
+                    for flags = (tsdb::get-field :flags result)
+                    for distance = (let ((foo (when (consp flags)
+                                                (tsdb::get-field
+                                                 :distance flags))))
+                                     (when (and (numberp foo) (> foo 0))
+                                       foo))
                     for bleu = (first
                                 (score-strings 
                                  (list tree)
@@ -267,13 +273,17 @@
                                  :source input :type :bleu))
                     when (numberp bleu) do (setf best (max best bleu))
                     do
-                      (nconc result (pairlis '(:bleu :grade) (list bleu bleu)))
+                      (let ((flags (acons :bleu bleu flags)))
+                        (if (tsdb::get-field :flags result)
+                          (setf (tsdb::get-field :flags result) flags)
+                          (nconc result (acons :flags flags nil))))
+                      (nconc result (pairlis '(:bleu) (list bleu)))
                       (case format
                         (:ascii
                          (format
                           stream
-                          "| |   |~a| [~@[~,2f~]] <~@[~,2f~]>~%"
-                          tree score bleu))
+                          "| |   |~a|~@[ {~a}~] [~@[~,2f~]] <~@[~,2f~]>~%"
+                          tree distance score bleu))
                         (:html
                          (format
                           stream
@@ -281,14 +291,16 @@
                                <td class=\"flowLeft\"></td>~
                                <td class=\"flowLeft\"></td>~
                                <td class=\"flow\">    ~
-                                 |~a| [~@[~,2f~]] <~@[~,2f~]></td>~
+                                 |~a|~@[ {~a}~] [~@[~,2f~]] <~@[~,2f~]></td>~
                                <td class=\"flowRightBorder\"></td>~%"
-                          tree score bleu)))
+                          tree distance score bleu)))
                       (force-output stream)
                     when (and (stringp tree) (numberp score))
                     do
-                      (push (pairlis '(:pid :tid :rid :string :score :bleu)
-                                     (list pid tid rid tree score bleu))
+                      (push (pairlis '(:pid :tid :rid :string
+                                       :score :bleu :distance)
+                                     (list pid tid rid tree
+                                           score bleu distance))
                             translations)
                       (incf ntranslations))
                 (force-output stream)
@@ -328,7 +340,10 @@
                        ~:[~*~a~;~a [~a]~]~%"
                       input id 
                       (length analyses) ntransfers nrealizations
-                      (not (= ntranslations n)) n ntranslations))
+                      (not (= ntranslations n)) n ntranslations)
+                     (loop
+                         for target in targets
+                         do (format stream "|@ |~a|~%" target)))
                     (:html
                      (format
                       stream
@@ -349,8 +364,10 @@
                   (:ascii
                    (format
                     stream
-                    "|> |~@[~a~]| [~@[~,2f~]] <~@[~,2f~]> (~a:~a:~a).~%"
+                    "|> |~@[~a~]|~@[ {~a}~] ~
+                     [~@[~,2f~]] <~@[~,2f~]> (~a:~a:~a).~%"
                     (get-field :string translation) 
+                    (get-field :distance translation) 
                     (get-field :score translation) 
                     (get-field :bleu translation)
                     (get-field :pid translation)
@@ -361,10 +378,11 @@
                     stream
                     "<tr><td class=\"flowLeftBorder\"></td>~
                          <td class=\"flow\" colspan=3>~
-                           |> |~@[~a~]| [~@[~,2f~]] ~
+                           |> |~@[~a~]|~@[ {~a}~] [~@[~,2f~]] ~
                            <~@[~,2f~]> (~a:~a:~a).</td>~
                          <td class=\"flowRightBorder\"></td>~%"
                     (get-field :string translation) 
+                    (get-field :distance translation) 
                     (get-field :score translation) 
                     (get-field :bleu translation)
                     (get-field :pid translation)
@@ -585,6 +603,7 @@
                (setf errors (format nil "[]:|~a|" error))))
            
            (loop
+               with flags = (get-field :flags item)
                for transfer in (get-field :transfers item)
                for result in (get-field :results item)
                for pid = (get-field :result-id result)
@@ -625,6 +644,9 @@
                            for result in (get-field :results realization)
                            do
                              (incf nrealizations)
+                             (if (get-field :flags result)
+                               (nconc (get-field :flags result) flags)
+                               (nconc result (acons :flags flags nil)))
                              (push (acons :result-id readings result) outputs)
                              (incf readings))))
            
@@ -680,22 +702,19 @@
                     mrss 
                     (format nil "`~a' Parse Results" string)))))))
 
-(defparameter *bleu-binary* 
-  (let* ((root (system:getenv "LOGONROOT"))
-         (root (and root (namestring (parse-namestring root)))))
-    (when root
-      (format nil "~a/ntnu/bleu/bleu.pl" root))))
+(defparameter *string-similarity-punctuation-characters*
+  '(#\. #\! #\? #\, #\: #\|))
 
-(defparameter *bleu-punctuation-characters* '(#\. #\! #\? #\, #\: #\|))
-
-(defun bleu-normalize-string (string)
+(defun string-similarity-normalize (string)
   (when string
     (loop
         with result = (make-array (length string)
                                   :element-type 'character
                                   :adjustable nil :fill-pointer 0)
         for c across string
-        unless (member c *bleu-punctuation-characters* :test #'char=) 
+        unless (member
+                c *string-similarity-punctuation-characters*
+                :test #'char=) 
         do (vector-push (char-downcase c) result)
         finally (return result))))
 
@@ -709,10 +728,10 @@
     (let* ((root (system:getenv "LOGONROOT"))
            (root (and root (namestring (parse-namestring root)))))
       (when root
-      (list
-       (cons :bleu (format nil "~a/ntnu/bleu/bleu.pl" root))
-       (cons :wa (format nil "~a/ntnu/bleu/wa.pl" root))
-       (cons :waft (format nil "~a/ntnu/bleu/wa.pl -t" root))))))
+        (list
+         (cons :bleu (format nil "~a/ntnu/bleu/bleu.pl" root))
+         (cons :wa (format nil "~a/ntnu/bleu/wa.pl" root))
+         (cons :waft (format nil "~a/ntnu/bleu/wa.pl -t" root))))))
 
 (defparameter *string-similarity-streams*
   (loop
@@ -766,6 +785,10 @@
 (defun score-strings (translations
                       &optional references
                       &key (type :bleu) source)
+
+  (when (null references)
+    (return-from score-strings
+      (loop repeat (length translations) collect 1)))
   (let ((lock (get-field type *string-similarity-locks*)))
     (mp:with-process-lock (lock)
       (when (null (get-field type *string-similarity-streams*))
@@ -779,14 +802,14 @@
               do (format
                   stream
                   "REF ~a~%"
-                  (bleu-normalize-string reference))))
+                  (string-similarity-normalize reference))))
         (loop
             for translation in translations
             do 
               (format
                stream
                "TRANS ~a~%"
-               (bleu-normalize-string translation))
+               (string-similarity-normalize translation))
               (force-output stream)
               (let ((score (read stream nil nil)))
                 (if (numberp score)

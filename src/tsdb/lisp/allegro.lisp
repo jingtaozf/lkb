@@ -56,10 +56,10 @@
           (when (and *tsdb-gc-message-p* (output-stream-p stream))
             (format
              stream
-             "~&gc-after-hook(): ~:[local~;global~]~@[ (r)~*~]; ~
-              new: ~a; old: ~a; pending: ~a~@[~*; efficiency: ~d~].~%" 
-             global global-gc-p new old pending 
-             (integerp efficiency) efficiency)
+             "~&[~a] gc-after-hook(): ~:[local~;global~]~@[ (r)~*~]; ~
+              new: ~a; old: ~a~@[; efficiency: ~d~].~%" 
+             (current-time :long :short) global global-gc-p new old
+             (and (integerp efficiency) efficiency))
             #+:gcdebug
             (let ((*print-readably* nil)
                   (*print-miser-width* 40)
@@ -111,9 +111,9 @@
                   (when (and *tsdb-gc-message-p* (output-stream-p stream))
                     (format 
                      stream
-                     "~&gc-after-hook(): ~d bytes were tenured; ~
-                      triggering immediate global gc().~%"
-                     *tsdb-tenured-bytes*))
+                     "~&[~a] gc-after-hook(): ~d bytes tenured; ~
+                      forcing global gc().~%"
+                     (current-time :long :short) *tsdb-tenured-bytes*))
                   (excl:gc t)
                   (setf global-gc-p nil)
                   (setf *tsdb-tenured-bytes* 0)

@@ -411,7 +411,12 @@
                   (scores
                    (loop
                        for edge in *gen-record*
-                       collect (tsdb::mem-score-edge edge :lm (pop lms)))))
+                       for lm = (rest (pop lms))
+                       collect
+                         (if (edge-dag edge)
+                           (tsdb::mem-score-result
+                            (pairlis '(:edge :lm) (list edge lm)))
+                           lm))))
              (loop
                  for edge in *gen-record*
                  for score in scores
@@ -479,6 +484,8 @@
                      for edge in edges
                      for surface = (edge-string edge)
                      for score = (edge-score edge)
+                     for distance = (let ((distance (edge-baz edge)))
+                                      (and (numberp distance) distance))
                      for derivation = (if edge
                                         (with-standard-io-syntax
                                           (let ((*package* *lkb-package*))
@@ -490,13 +497,14 @@
                      for mrs = (if edge
                                  (tsdb::call-hook semantix-hook edge)
                                  "")
+                     for flags = (acons :distance distance nil)
                      while (>= (decf nresults) 0)
                      unless (when filterp
                               (member surface surfaces :test #'equal))
                      collect (pairlis '(:result-id :mrs :tree :surface
-                                        :derivation :score :size)
+                                        :derivation :score :size :flags)
                                       (list i mrs surface surface
-                                            derivation score size))
+                                            derivation score size flags))
                      and do (push surface surfaces)))))) 
 
        (condition (condition)

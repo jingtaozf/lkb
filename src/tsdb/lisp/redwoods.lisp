@@ -1,8 +1,8 @@
-(In-package :tsdb)
+(in-package :tsdb)
 
 ;;;
 ;;; [incr tsdb()] --- Competence and Performance Profiling Environment
-;;; Copyright (c) 1996 -- 2005 Stephan Oepen (oe@csli.stanford.edu)
+;;; Copyright (c) 1996 -- 2006 Stephan Oepen (oe@csli.stanford.edu)
 ;;; Copyright (c) 2005 -- 2006 Erik Velldal (erikve@ifi.uio.no)
 ;;;
 ;;; This program is free software; you can redistribute it and/or modify it
@@ -44,7 +44,9 @@
 
 (defparameter *redwoods-reconstruct-mode* :word)
 
-(defparameter %redwoods-items-increment% 500)
+(defparameter *redwoods-train-percentage* 100)
+
+(defparameter %redwoods-items-increment% #-:64bit 500 #+:64bit 2000)
 
 (defparameter %redwoods-items-percentile% 20)
 
@@ -1537,7 +1539,7 @@
          ;; (now averaged already).  until we adapt the output generation code,
          ;; effectively disable all of it.               (25-jan-06; oe & erik)
          ;;
-         (*redwoods-score-similarity-hooks* nil)
+         (*redwoods-score-similarities* nil)
          (stream (create-output-stream file append))
          (aggregates (summarize-scores
                       data gold :condition condition 
@@ -1554,7 +1556,7 @@
          (n (if (and n (> n 1)) (- n 1) 0))
          (ncolumns (+ n 
                       (if loosep 8 7) 
-                      (if *redwoods-score-similarity-hooks* 1 0)))
+                      (if *redwoods-score-similarities* 1 0)))
          (i 2))
 
     ;;
@@ -1591,12 +1593,12 @@
             & $\\sharp$ & $\\sharp$~:[~; & $\\sharp$~] & $\\%$\\\\~%  ~
           \\hline~%  ~
           \\hline~%"
-         loosep *redwoods-score-similarity-hooks*
+         loosep *redwoods-score-similarities*
          ncolumns
          (if (stringp data) data "Some") "Parse Selection"
          loosep 
-         alabel loosep *redwoods-score-similarity-hooks*
-         loosep *redwoods-score-similarity-hooks*))
+         alabel loosep *redwoods-score-similarities*
+         loosep *redwoods-score-similarities*))
       (:tcl
        (format stream *statistics-tcl-formats*)
        (format
@@ -1624,7 +1626,7 @@
          cell 1 ~d -contents \"overall\\naccuracy\\n%\" -format title~%"
         alabel 
         loosep (+ 7 n) 
-        *redwoods-score-similarity-hooks* (+ 8 n) ncolumns)
+        *redwoods-score-similarities* (+ 8 n) ncolumns)
        (unless (zerop n)
          (loop
              for j from 0 to (- n 2)
@@ -1686,7 +1688,7 @@
               i analyses
               i exact
               loosep i (+ 7 n) loose
-              *redwoods-score-similarity-hooks* i (+ 8 n) similarity 
+              *redwoods-score-similarities* i (+ 8 n) similarity 
               i ncolumns accuracy)
              (unless (zerop n)
                (loop
@@ -1751,7 +1753,7 @@
           i analyses
           i exact
           loosep i (+ 7 n) loose
-          *redwoods-score-similarity-hooks* i (+ 8 n) similarity
+          *redwoods-score-similarities* i (+ 8 n) similarity
           i ncolumns accuracy)
          (unless (zerop n)
            (loop
@@ -1786,10 +1788,10 @@
          ;; _fix_me_
          ;; ideally, score-item() should not have to look at anything from the
          ;; `result' relation but the result identifier; the following for now
-         ;; includes the `tree' field, so we can perform a string similarity
+         ;; includes the `surface' field, so we can perform a string similarity
          ;; comparison on generator outputs.                   (28-oct-04; oe)
          ;;
-         (thorough (if (or trace *redwoods-score-similarity-hooks*)
+         (thorough (if (or trace *redwoods-score-similarities*)
                      (cons :surface thorough)
                      thorough))
          (items (if (stringp data)
@@ -1816,7 +1818,7 @@
           %gitems gitems %gaggregates gaggregates)
 
     (loop
-        with nsimilarities = (length *redwoods-score-similarity-hooks*)
+        with nsimilarities = (length *redwoods-score-similarities*)
         with tnitems = 0
         with tnscores = 0
         with tlength = 0
@@ -1824,7 +1826,8 @@
         with texact = 0
         with tnear = 0
         with tloose = 0
-        with tsimilarities = (make-array nsimilarities :initial-element 0)
+        with ttsimilarities = (make-array nsimilarities :initial-element 0)
+        with tnsimilarities = (make-array nsimilarities :initial-element 0)
         with tsuccesses = (and n (make-array n :initial-element 0))
         with trandom = 0
         for (id name . data) in aggregates
@@ -1840,7 +1843,9 @@
               with aexact = 0
               with anear = 0
               with aloose = 0
-              with asimilarities = (make-array
+              with atsimilarities = (make-array
+                                    nsimilarities :initial-element 0)
+              with ansimilarities = (make-array
                                     nsimilarities :initial-element 0)
               with asuccesses = (and n (make-array n :initial-element 0))
               with arandom = 0
@@ -1867,15 +1872,13 @@
                   (when (and trace (open-stream-p trace) i)
                     (format
                      trace
-                     "[~a] <~,1f~@[:~,2f~]~@[ @ ~a~]> |~a|~%"
+                     "[~a] <~,1f~@[ : ~{~,2f~^ ~}~]~@[ @ ~a~]> {~a} |~a|~%"
                      i-id score 
-                     (when (zerop i)
-                       ;;
-                       ;; _fix_me_
-                       ;; now a list and averaged.      (25-jan-06; oe & erik)
-                       ;;
-                       (rest (first similarities)))
-                     (and (> i 0) i) (get-field :i-input gitem))
+                     (loop
+                         for similarity in similarities
+                         collect (second similarity))
+                     (and (> i 0) i) (length (get-field :ranks gitem))
+                     (get-field :i-input gitem))
                     (loop
                         with granks = (get-field :ranks gitem)
                         for i from 1 to n
@@ -1888,7 +1891,7 @@
                                  trace
                                  "  < [~a] {~a} |~a|~%"
                                  (get-field :result-id grank)
-                                 i (get-field :tree grank))))
+                                 i (get-field :surface grank))))
                     (loop
                         for rank in (get-field :ranks item)
                         for score = (let ((foo (get-field :score rank)))
@@ -1902,11 +1905,16 @@
                            (get-field :result-id rank)
                            (get-field :rank rank)
                            score
-                           (get-field :tree rank)))
+                           (get-field :surface rank)))
                     (format trace "~%")
                     (force-output trace))
                   
                   (incf anitems)
+                  ;;
+                  ;; _fix_me_
+                  ;; rewrite the cond() below; it would seem most if not all of
+                  ;; its body can go into the when() below.    (18-apr-06; oe)
+                  ;;
                   (when i (incf arandom (divide 1 areadings)))
                   (cond
                    ((null i))
@@ -1915,10 +1923,11 @@
                     (incf alength length) (incf areadings readings)
                     (loop
                         for i from 0
-                        for (tag . similarity) in similarities
+                        for (tag top nbest) in similarities
                         do
                           (setf tag tag)
-                          (incf (aref asimilarities i) similarity)))
+                          (incf (aref atsimilarities i) top)
+                          (incf (aref ansimilarities i) nbest)))
                    (t
                     (incf anscores) 
                     (incf alength length) (incf areadings readings)
@@ -1927,10 +1936,11 @@
                     (when loosep (incf aloose))
                     (loop
                         for i from 0
-                        for (tag . similarity) in similarities
+                        for (tag top nbest) in similarities
                         do
                           (setf tag tag)
-                          (incf (aref asimilarities i) similarity))
+                          (incf (aref atsimilarities i) top)
+                          (incf (aref ansimilarities i) nbest))
                     (when asuccesses 
                       (incf (aref asuccesses (- i 1)) score)))))
               finally
@@ -1939,8 +1949,12 @@
                 (incf texact aexact) (incf tnear anear) (incf tloose aloose)
                 (loop
                     for i from 0
-                    for asimilarity across asimilarities
-                    do (incf (aref tsimilarities i) asimilarity))
+                    for atsimilarity across atsimilarities
+                    do (incf (aref ttsimilarities i) atsimilarity))
+                (loop
+                    for i from 0
+                    for ansimilarity across ansimilarities
+                    do (incf (aref tnsimilarities i) ansimilarity))
                 (loop
                     for i from 0
                     for j across asuccesses
@@ -1953,17 +1967,25 @@
                                 :i-length 
                                 :analyses
                                 :exact :near :loose 
-                                :successes :similarities :random)
+                                :successes
+                                :tsimilarities :nsimilarities
+                                :random)
                               (list anitems anscores 
                                     (divide alength anscores)
                                     (divide areadings anscores)
                                     aexact anear aloose 
                                     asuccesses
                                     (loop
-                                        for (tag . hook)
-                                        in *redwoods-score-similarity-hooks*
-                                        for similarity across asimilarities
-                                        do (setf hook hook)
+                                        for tag
+                                        in *redwoods-score-similarities*
+                                        for similarity across atsimilarities
+                                        collect (cons
+                                                 tag
+                                                 (divide similarity anscores)))
+                                    (loop
+                                        for tag
+                                        in *redwoods-score-similarities*
+                                        for similarity across ansimilarities
                                         collect (cons
                                                  tag
                                                  (divide similarity anscores)))
@@ -1976,17 +1998,24 @@
                           :i-length
                           :analyses
                           :exact :near :loose 
-                          :successes :similarities :random)
+                          :successes
+                          :tsimilarities :nsimilarities :random)
                         (list tnitems tnscores 
                               (divide tlength tnscores)
                               (divide treadings tnscores)
                               texact tnear tloose 
                               tsuccesses
                               (loop
-                                  for (tag . hook)
-                                  in *redwoods-score-similarity-hooks*
-                                  for similarity across tsimilarities
-                                  do (setf hook hook)
+                                  for tag
+                                  in *redwoods-score-similarities*
+                                  for similarity across ttsimilarities
+                                  collect (cons
+                                           tag
+                                           (divide similarity tnscores)))
+                              (loop
+                                  for tag
+                                  in *redwoods-score-similarities*
+                                  for similarity across tnsimilarities
                                   collect (cons
                                            tag
                                            (divide similarity tnscores)))
@@ -2017,7 +2046,6 @@
                     (let ((foo (get-field :derivation old))
                           (bar (get-field :derivation new)))
                       (and foo bar (derivation-equal foo bar))))))))
-
     ;;
     ;; check calling context: both the test item and ground truth needs to come
     ;; with ranks; all ranks in the ground truth are 1 (since they came from
@@ -2077,67 +2105,58 @@
           do
             (setf best match)
             (setf result matches)
-          finally 
+          finally
             (let ((similarity
-                   (when *redwoods-score-similarity-hooks*
+                   (when *redwoods-score-similarities*
                      (loop
-                         with hooks
-                         = (if (listp *redwoods-score-similarity-hooks*)
-                             *redwoods-score-similarity-hooks*
-                             (acons
-                              :unknown
-                              *redwoods-score-similarity-hooks*
-                              nil))
-                         with results = (get-field :results item)
-                         with tags
-                         with nscores = (length hooks)
-                         with sums = (make-array nscores :initial-element 0)
-                         with ns = (make-array nscores :initial-element 0)
-                         with ranks = (loop
-                                          for rank in ranks
-                                          for result in results
-                                          while (= (get-field :rank rank) 1)
-                                          collect result)
+                         with hooks = *redwoods-score-similarities*
+                         with size = (length hooks)
+                         with tscores = (make-array size :initial-element 0)
+                         with nscores = (make-array size :initial-element 0)
+                         with ranks
+                         ;;
+                         ;; _fix_me_
+                         ;; we would like to assume that :ranks entries are
+                         ;; actually full results, but somehow that appears to
+                         ;; not always be true?         (17-feb-06; oe & erik)
+                         ;; --- what we used to do here was plain wrong, in the
+                         ;; sense that we ended up aligning arbitrary ranks and
+                         ;; results.  go back to the original code, and when we
+                         ;; re-discover the problem of missing fields in :ranks
+                         ;; tuples, work out what goes wrong.  (18-apr-06; oe)
+                         ;;
+                         = (loop
+                               for rank in ranks
+                               for i = (get-field :rank rank)
+                               while (<= i n) collect rank)
                          with granks = (loop
                                            for rank in granks
                                            while (= (get-field :rank rank) 1)
                                            collect rank)
                          for rank in ranks
                          do
-                           ;;
-                           ;; _fix_me_
-                           ;; this is not quite what is common in MT usages of
-                           ;; BLEU and related measures: a more charitable way
-                           ;; of computing the overall score here would be to
-                           ;; maximize over all references.    (10-may-05; oe)
-                           ;;
                            (loop
                                for grank in granks
                                do
                                  (loop
                                      for i from 0
-                                     for (tag . hook) in hooks
-                                     for score = (call-raw-hook 
-                                                  hook
-                                                  rank grank)
-                                     do (setf tag tag)
-                                     when (numberp score) do 
-                                       (incf (aref sums i) score)
-                                       (incf (aref ns i))))
-                         finally
-                           (loop
-                               for i from 0
-                               for (tag . hook) in hooks
-                               do
-                                 (setf hook hook)
-                                 (setf (aref sums i)
-                                   (divide (aref sums i) (aref ns i)))
-                                 (push tag tags))
+                                     for tag in hooks
+                                     for score
+                                     = (string-similarity
+                                        rank grank :type tag)
+                                     when (numberp score) do
+                                       (setf (aref nscores i)
+                                         (max (aref nscores i) score))
+                                       (when (= (get-field :rank rank) 1)
+                                         (setf (aref tscores i)
+                                           (max (aref tscores i) score)))))
+                         finally 
                            (return
                              (loop
-                                 for tag in tags
-                                 for sum across sums
-                                 collect (cons tag sum)))))))
+                                 for tag in hooks
+                                 for top across tscores
+                                 for nbest across nscores
+                                 collect (list tag top nbest)))))))
               (return (values (if best (get-field :rank best) 0)
                               (if best (divide 1 (+ (length result) 1)) 0)
                               (rest granks) similarity
@@ -2146,16 +2165,7 @@
 (defun string-similarity (rank grank &key (type :bleu))
   (let ((string (get-field :surface rank))
         (gstring (get-field :surface grank)))
-    (score-strings (list string) (list gstring) type))) 
-;;; _fix_me_
-;;; *redwoods-score-similarity-hooks* should possibly only contain the tags,
-;;; and then score-item() calls string-similarity(), or even score-strings()
-;;;                                                        (06-feb-06; erik)
-
-(defun bleu-similarity (rank grank)
-  (let ((tree (get-field :surface rank))
-        (gtree (get-field :surface grank)))
-    (first (score-strings (list tree) (list gtree) :bleu))))
+    (first (score-strings (list string) (list gstring) :type type))))
 
 (defun analyze-errors (data 
                        &optional (gold data)
@@ -2744,8 +2754,11 @@
      &key (condition *statistics-select-condition*)
           (model (make-model)) (purgep t)
           (recursep t) internalp (stream *tsdb-io*) (verbose t) (task :fc)
-          initialp finalp firstp lastp
-          (increment %redwoods-items-increment%))
+          target initialp finalp firstp lastp
+          (increment %redwoods-items-increment%) cache interrupt meter)
+
+  (declare (ignore interrupt meter)
+           (special *feature-item-enhancers*))
 
   ;;
   ;; invoke various memory-intensive operations successively on sub-sets of
@@ -2762,7 +2775,7 @@
   ;;
   (unless (or internalp (consp profiles))
     (error "operate-on-profiles(): non-list argument `~a'." profiles))
-  
+
   (cond
    ((consp profiles)
     (loop
@@ -2770,7 +2783,7 @@
         with gc = (install-gc-strategy nil :tenure nil :verbose verbose)
         with condition
         = (case task
-            (:fc
+            ((:fc :rank)
              (if (and condition (not (equal condition "")))
                (format nil "t-active >= 1 && readings > 1 && (~a)" condition)
                "t-active >= 1 && readings > 1"))
@@ -2784,24 +2797,26 @@
           (operate-on-profiles
            active :condition condition :model model :task task :stream stream
            :initialp (eq remaining profiles) :finalp (null (rest remaining))
-           :internalp t)
+           :target target :internalp t)
           (when (and purgep (not virtualp)) (purge-profile-cache active))
         else do
           (format 
            stream
            "operate-on-profiles(): invalid `~a'.~%"
            active)  
-        finally
+          finally
           (restore-gc-strategy gc))
     ;;
     ;; _fix_me_
     ;; when operating on a group of profiles, there is no clear notion of which
     ;; should be home to the `model' file (including the symbol table, counts,
-    ;; and maybe other relevant information).  rethink.   (1-feb-06; erik & oe)
+    ;; and maybe other relevant information).  rethink?   (1-feb-06; erik & oe)
     ;;
-    (let ((embassador (first profiles)))
-      (print-model
-       model :file (profile-find-model embassador) :format :export)))
+    (when (eq task :fc)
+      (let ((embassador (first profiles)))
+        (print-model
+         model :file (profile-find-model embassador) :format :freeze))
+      model))
 
    ((virtual-profile-p profiles)
     (loop
@@ -2813,9 +2828,14 @@
            active :condition condition :model model :task task :stream stream
            :initialp (and initialp (eq remaining profiles))
            :finalp (and finalp (null (rest remaining)))
-           :internalp t)))
+           :target target :internalp t)))
    
    (recursep
+    (when (eq task :unfc)
+      (let ((fc (profile-find-feature-cache profiles)))
+        (ignore-errors (delete-file fc)))
+      (return-from operate-on-profiles))
+    
     (when verbose
       (format 
        stream
@@ -2838,6 +2858,12 @@
                         increment)
                        increment)
         with n = (max (ceiling (- last first) delta) 1)
+        with cache 
+        = (when (eq task :rank)
+            (when initialp
+              (purge-test-run target :action :score))
+            (let ((target (or target profiles)))
+              (create-cache target :verbose verbose :protocol :raw)))
         for i from 1 to n
         for low = (+ first (* (- i 1) delta))
         for high = (+ first (* i delta))
@@ -2849,12 +2875,14 @@
           (when verbose
             (format
              stream
-             "operate-on-profiles(): caching `~a' [~a - ~a|.~%"
+             "operate-on-profiles(): running `~a' [~a - ~a|.~%"
              profiles low high))
           (operate-on-profiles
            profiles :condition foo :model model :task task :stream stream
-           :internalp t :recursep nil :firstp (= i 1) :lastp (= i n))
-          (purge-profile-cache profiles :expiryp nil)))
+           :internalp t :recursep nil :firstp (= i 1) :lastp (= i n)
+           :target target :cache cache)
+          (purge-profile-cache profiles :expiryp nil)
+        finally (when cache (flush-cache cache :verbose verbose))))
    
    (t
     (let ((data (analyze profiles :thorough '(:derivation :surface)
@@ -2870,133 +2898,135 @@
                unless (= readings ranks) collect i))
          (cache-features
           data model :createp firstp
-          :stream stream :verbose verbose)))))))
-#+:null
-(defun train (sources file &key (condition *statistics-select-condition*)
-                                (type :mem) model
-                                (estimatep t) (fcp t) (ccp t)
-                                (recursep t) createp 
-                                (verbose t) (stream t)
-                                interrupt meter)
-  (declare (ignore interrupt) 
-           (special *feature-item-enhancers*))
+          :stream stream :verbose verbose))
+        ;;
+        ;; _fix_me_
+        ;; this bit is hacky and MEM-specific for now.  (4-apr-06; erik & oe)
+        ;;
+        (:rank
+         (loop
+             with target = (or target profiles)
+             for item in data
+             for readings = (get-field :readings item)
+             for parse-id = (get-field :parse-id item)
+             for results = (get-field :results item)
+             for nresults = (length results)
+             for nranks = (length (get-field :ranks item))
+             unless (= readings nranks)
+             do
+               (format
+                stream
+                "~&[~a] operate-on-profiles(): ~
+                 scored item # ~d (~d @ ~d).~%"
+                (current-time :long :short)
+                (get-field :i-id item) nresults nranks)
+               
+               (loop
+                   for enhancer in *feature-item-enhancers*
+                   do (call-raw-hook enhancer item))
+               (let* ((ranks
+                       (loop
+                           for result in results
+                           for rid = (get-field :result-id result)
+                           for score
+                           = (mem-score-result result (or model %model%))
+                           collect (pairlis '(:parse-id :result-id :score)
+                                            (list parse-id rid score))))
+                      (ranks (sort
+                              ranks #'>
+                              :key #'(lambda (foo) (get-field :score foo))))
+                      (ranks (loop
+                                 with last = (get-field :score (first ranks))
+                                 with i = 1
+                                 with j = 2
+                                 for rank in ranks
+                                 for score = (get-field :score rank)
+                                 unless (= score last) do
+                                   (setf i j) (setf last score) (incf j)
+                                 collect (acons :rank i rank))))
+                 
+                 (loop
+                     for score in ranks
+                     do (write-score target score :cache cache))))))))))
+
+(defun train (source file
+              &key (condition *statistics-select-condition*)
+                   (type :mem) (fcp t) (ccp t) target
+                   (verbose t) (stream t)
+                   interrupt meter)
 
-  (cond
-   ((consp sources)
-    (loop
-        with *tsdb-connection-expiry* = 50
-        with model = (or model 
-                         (case type
-                           ((:mem :svm :tag)
-                            (make-model))))
-        with gc = (install-gc-strategy nil :tenure nil :verbose verbose)
-        with condition = (if (and condition (not (equal condition "")))
-                             (format nil "t-active >= 1 && (~a)" condition)
-                             "t-active >= 1")
-        with meter = (when meter (madjust / meter (length sources)))
-        with duration = (when meter (mduration meter))
-        for createp = t then nil
-        for i from 0
-        for sources on sources
-        for rmeter = (when duration (madjust + meter (* duration i)))
-        do
-          (train (first sources) nil :condition condition :type type
-                 :model model :fcp fcp :ccp ccp
-                 :estimatep (and estimatep (null (rest sources)))
-                 :createp createp
-                 :verbose verbose :stream stream :meter rmeter)
-          (purge-profile-cache (first sources))
-        finally
-          (when verbose
-            (format stream "train(): exporting ~a~%" model))
-          (print-model model :file file :format :export)
-          (restore-gc-strategy gc)
-          (setf %model% model)
-          (return model)))
-   (recursep
-    (format 
-     t 
-     "[~a] train(): reading `~a'~%" 
-     (current-time :long :short) sources)
-    (loop
-        with items = (select "i-id" :integer "item" nil sources :sort :i-id)
-        with first = (get-field :i-id (first items))
-        with last = (get-field :i-id (first (last items)))
-        with delta = (if (numberp %redwoods-items-percentile%)
-                       (or
-                        (loop
-                            with i = (ceiling
-                                      (length items)
-                                      %redwoods-items-percentile%)
-                            for item in items
-                            when (<= (decf i) 0)
-                            return (max %redwoods-items-increment%
-                                        (- (get-field :i-id item) first)))
-                        %redwoods-items-increment%)
-                       %redwoods-items-increment%)
-        with n = (max (ceiling (- last first) delta) 1)
-        with increment = (when meter (/ (mduration meter) n))
-        for i from 1 to n
-        for low = (+ first (* (- i 1) delta))
-        for high = (+ first (* i delta))
-        for message = (format
-                       nil
-                       "training `~a' [~a - ~a| ..."
-                       sources low high)
-        for foo = (format 
-                   nil 
-                   "i-id >= ~d && i-id < ~d~@[ && (~a)~]"
-                   low high condition)
-        initially (when meter (meter :value (get-field :start meter)))
-        do
-          (when meter 
-            (meter-advance increment)
-            (status :text message))
-          (train sources nil :condition foo :type type
-                 :model model :estimatep (and estimatep (= i n))
-                 :recursep nil :createp (and createp (= i 1))
-                 :verbose verbose :stream stream)
-        finally (when meter 
-                  (status :text (format nil "~a done" message) :duration 3)
-                  (meter :value (get-field :end meter)))))
-   (t
-    (let ((items (analyze sources :gold sources :condition condition
-                          :thorough '(:derivation :surface) :readerp nil)))
-      (purge-profile-cache sources :expiryp nil)
+  (declare (ignore meter))
 
-      (loop
-          for enhancer in *feature-item-enhancers*
-          do
-            (loop
-                for item in items 
-                do (call-raw-hook enhancer item)))
-      
-      (when (and items (or (eq type :mem)
-                           (eq type :svm)))
-        (cache-features items model :createp createp))
+  (format 
+   t 
+   "[~a] train(): reading `~a'~%" 
+   (current-time :long :short) source)
+  
+  ;;
+  ;; _fix_me_
+  ;; it looks like we cannot call train() with :fcp nil and expect to have our
+  ;; `model' (feature table with counts) read from .source.  do we need to
+  ;; make-mode() here, actually?                         (5-apr-06; oe & erik)
+  ;;
+  (let ((*maxent-debug-p* t)
+        (model (if fcp
+                   (make-model)
+                 (read-model (profile-find-model source)))))
+    (declare (special *maxent-debug-p*))
+    (when fcp
+      (operate-on-profiles
+       (list source) :condition condition
+       :task :fc :model model
+       :verbose verbose :stream stream
+       :interrupt interrupt))
+    (rank-profile
+     source target
+     :nfold 1 :recache ccp :model model :type type
+     :verbose verbose :stream stream
+     :interrupt interrupt
+     :condition condition)
 
-      #+:null
-      (when (or items estimatep)
-        (case type
-          ((:mem :svm)
-           (estimate-model 
-            items :model model :estimatep estimatep :stream stream))))))))
+    (let ((params 
+           (case type
+             (:mem (model-parameters model))
+             (:svm (let* ((output (format nil "/tmp/.model.~a.~a.svm_weights"
+                                          (current-user) (current-pid)))
+                          (command (format nil "~a/uio/svm2weights.pl ~a"
+                                           (system:getenv "LOGONROOT")
+                                           (model-parameters model))))
+                     (or (and (zerop 
+                               (run-process command 
+                                            :wait t :output output 
+                                            :if-output-exists :supersede))
+                              (probe-file output))
+                         (progn 
+                           (format t "train(): unable to compute weights from SVM model.")
+                           (return-from train))))))))
+    
+      (unless (probe-file params)
+        (format t "train(): unable to read MLM parameters.")
+        (return-from train))
+      (read-weights  model params))
+    (when file (print-model model :file file :format :export))
+    model))
 
 (defun rank-profile (source 
-                     &optional (target source)
+                     &optional target
                      &key (condition *statistics-select-condition*) data
                           (nfold 10) (niterations nfold) (type :mem) model
+                          (percentage *redwoods-train-percentage*)
                           (identity (current-pid))
                           (stream *tsdb-io*) (cache :raw) (verbose t)
                           (overwrite t)
                           interrupt meter
-                          recache)
+                          recache normalize-p)
+  
   (format
    stream
-   "~&[~a] rank-profile():~%  `~a'~%   --> `~a'~%"
+   "~&[~a] rank-profile():~%  `~a'~%~@[   --> `~a'~%~]"
    (current-time :long :short) source target)
 
-  (when overwrite (purge-test-run target :action :score))
+  (when (and overwrite target) (purge-test-run target :action :score))
   
   (let* ((gc (install-gc-strategy 
               nil :tenure *tsdb-tenure-p* :burst nil :verbose t))
@@ -3028,24 +3058,32 @@
        "~&[~a] rank-profile(): using ~d items (ignoring ~d).~%"
        (current-time :long :short) (length data) nsifted))
 
-    (when (and (or (eq type :mem) (eq type :svm)) recache)
+    (when (smember type '(:mem :perf :svm))
+      
       ;;
-      ;; _fix_me_
-      ;; to turn frequency cut-offs on, patch things up here.  globally, we
-      ;; (still) need to decide on the status and role of `models' in various
-      ;; phases of experimentation.                       (1-feb-06; erik & oe)
+      ;; as of february 2006, whenever there is a feature cache there also has
+      ;; to be a serialized partial model, recording the symbol table and
+      ;; frequency counts (later used in restricting the context cache).
       ;;
-      (let ((model (ignore-errors (read-model (profile-find-model source)))))
-        (unless model
-          (format
-           t
-           "~&[~a] rank-profile(): no model file for `~a'.~%"
-           (current-time :long :short) source))
-        (cache-contexts data model identity :format type)))
+      (unless (model-p model)
+        (setf model (read-model (profile-find-model source))))
+      (unless (model-p model)
+        (format
+         t
+         "~&[~a] rank-profile(): no MLM for `~a'.~%"
+         (current-time :long :short) source)
+        (return-from rank-profile))
+
+      ;;
+      ;; when requested, re-build the context cache
+      ;;
+      (when recache (cache-contexts data model identity :format type 
+                                    :normalize-p normalize-p)))
     
     (loop
         with folds
-        with cache = (create-cache target :verbose verbose :protocol cache)
+        with cache = (when target
+                       (create-cache target :verbose verbose :protocol cache))
         with sets = (let ((sets (when *redwoods-use-item-sets-p*
                                   (select-item-sets source))))
                       ;;
@@ -3070,13 +3108,13 @@
                             collect (list item))))
         with increment = (when meter (/ (mduration meter) nfold))
         ;;
-        ;; for some externally acquired models, never do more than one 
-        ;; iteration; also, if there are fewer item sets than folds, we can 
-        ;; maximally do one fold per set.                 
+        ;; for some model types, never do more than one iteration; also, if
+        ;; there are fewer item sets than folds, we can maximally do one fold
+        ;; per set.
         ;;
-        with nfold = (if (or model (smember type '(:ngram :chance)))
-                       1
-                       (min (length sets) nfold))
+        with nfold
+        = (if (smember type '(:ngram :chance :oracle)) 
+              1 (min (length sets) nfold))
 
         initially 
           #+:debug (setf %data% data)
@@ -3099,11 +3137,19 @@
             
             (let ((test (apply #'append stest))
                   (train (apply #'append strain)))
+              
               ;;
               ;; for .nfold. == 1, train and test on the same data set
               ;;
-              (when (and (null train) (not (smember type '(:ngram :chance))))
+              (when (and (null train) 
+                         (not (smember type '(:ngram :chance :oracle))))
                 (setf train test))
+              
+              (when (and (numberp percentage)
+                         (> percentage 0) (< percentage 100))
+                (setf train
+                   (i-jth-nth train 1 percentage 100)))
+              
               (when (and test (or train (= nfold 1)))
                 (format
                  stream
@@ -3118,9 +3164,8 @@
                            nfold i (length test) (length train))))
                 (multiple-value-bind (items fold)
                     (train-and-rank 
-                     train test
+                     train (when target test)
                      :type type
-                     :target target :cache cache
                      :identity identity :model model :id i)
                   (loop
                       for item in items
@@ -3140,27 +3185,42 @@
                                stream
                                "  parse: ~a; result: ~d; rank: ~d; score: ~a~%"
                                parse-id result-id rank score)
-                              (write-score target
-                                           (pairlis '(:parse-id :result-id
-                                                      :rank :score)
-                                                    (list parse-id result-id
-                                                          rank score))
-                                           :cache cache))
+                              (when target
+                                (write-score target
+                                             (pairlis '(:parse-id :result-id
+                                                        :rank :score)
+                                                      (list parse-id result-id
+                                                            rank score))
+                                             :cache cache)))
                       finally
                         (let* ((scores
                                 (summarize-scores
                                  items gold :condition nil
-                                 :n 1 :test :id :spartanp t :loosep t))
+                                 :n 5 :test :id :spartanp t :loosep t))
                                (total (rest (rest (assoc :total scores))))
                                (nscores (get-field :scores total))
                                (exact (get-field :exact total))
-                               (similarities (get-field :similarities total))
+                               (near (get-field :near total))
+                               (similarities
+                                (let ((top (get-field :tsimilarities total))
+                                      (nbest (get-field :nsimilarities total)))
+                                  (append
+                                   (and top (acons :tsimilarities top nil))
+                                   (and nbest
+                                        (acons :nsimilarities nbest nil)))))
                                (accuracy (if exact
-                                           (* 100 (divide exact nscores))
-                                           0.0)))
+                                             (* 100 (divide exact nscores))
+                                           0.0))
+                               (naccuracy (if (and exact near)
+                                              (float
+                                               (* 100 (divide (+ exact near) 
+                                                              nscores)))
+                                            0.0)))
                           (if (get-field :f-extras fold)
-                            (nconc (get-field :f-extras fold) similarities)
+                              (nconc (get-field :f-extras fold) similarities)
                             (nconc fold (acons :f-extras similarities nil)))
+                          (nconc (get-field :f-extras fold)
+                                 (acons :naccuracy naccuracy nil))
                           (nconc fold (acons :f-accuracy  accuracy nil)))
                         (push (acons :test test fold) folds))))))
 
@@ -3170,20 +3230,20 @@
           (when meter
             (meter :value (get-field :end meter))
             (status :text ""))
-
-          (loop
-              for fold in folds
-              do
-                (write-fold target fold :cache cache))
-          (flush-cache cache :sort t :verbose verbose)
+          (when target
+            (loop
+                for fold in folds
+                do
+                  (write-fold target fold :cache cache))
+            (flush-cache cache :sort t :verbose verbose))
           
           (restore-gc-strategy gc))))
 
 (defun train-and-rank (train test
                        &key (type :mem) (identity -1)
-                            target model cache id (stream *tsdb-io*))
+                            model id (stream *tsdb-io*))
 
-  (declare (ignore stream target cache))
+  (declare (ignore stream))
   #+:debug
   (setf %train train %test test)
   (let* ((trains (let ((stream (make-string-output-stream)))
@@ -3197,9 +3257,9 @@
                       do (format stream " ~a" (get-field :i-id item)))
                   (get-output-stream-string stream)))
          (f-environment (case type
-                          ((:svm :mem) (feature-environment))))
+                          ((:svm :perf :mem) (feature-environment))))
          (l-environment (case type
-                          ((:svm) (svm-environment))
+                          ((:svm :perf) (svm-environment))
                           ((:mem) (mem-environment))))
          (environment (format nil "~a ~a" 
                               f-environment l-environment))
@@ -3211,22 +3271,26 @@
                               environment
                               (current-user) (current-host)
                               (current-time :long :tsdb))))
-         (model (or model
-                    (case type
-                      (:pcfg (estimate-cfg train))
-                      ((:mem :svm) 
-                       (estimate-model
-                        train :identity identity :fold fold :type type))
-                      (:ngram "string n-grams")
-                      (:chance "chance"))))
+         (model (case type
+                  (:pcfg (estimate-cfg train))
+                  ((:mem :svm :perf) 
+                   (estimate-model
+                    train :identity identity :fold fold
+                    :type type :model model))
+                  (:ngram "string n-grams")
+                  (:chance "chance")
+                  (:oracle "oracle")))
          (ranks
-          (case type
-            ((:svm :mem)
-             (learner-rank-items 
-              test model :identity identity :fold fold :type type))
-            (:chance
-             (chance-rank-items test :fold fold))
-            (:ngram (ngram-rank-items test :fold fold)))))
+          (when test
+            (case type
+              ((:svm :perf :mem)
+               (learner-rank-items 
+                test model :identity identity :fold fold :type type))
+              (:chance
+               (chance-rank-items test :fold fold))
+              (:oracle
+               (oracle-rank-items test :fold fold))
+              (:ngram (ngram-rank-items test :fold fold))))))
     (nconc fold (pairlis '(:f-end) (list (current-time :long :tsdb))))
     (values ranks fold)))
 
@@ -3281,6 +3345,24 @@
              collect (pairlis '(:result-id :rank :score) (list rid 1 0.0)))
          item)))
 
+(defun oracle-rank-items (test &key fold)
+  (declare (ignore fold))
+  (loop
+      for item in test
+      collect
+        (acons
+         :ranks
+         (loop
+             for result in (get-field :results item)
+             for rid = (get-field :result-id result)
+             with active = (loop for r in (get-field :ranks item)
+                               collect (get-field :result-id  r))
+             for active-p = (if (member rid active :test #'=)
+                                1 0)
+             collect (pairlis '(:result-id :rank :score) 
+                              (list rid active-p active-p)))
+         item)))
+
 (defun kappa (actual expected)
   (/ (- actual expected) (- 100 expected)))
 
@@ -3295,7 +3377,7 @@
   scores
   data)
 
-(defun run-experiment (experiment &key recache summarize niterations)
+(defun run-experiment (experiment &key recache summarize niterations normalize-p)
 
   #+:debug
   (progn
@@ -3323,7 +3405,9 @@
            :nfold (experiment-nfold experiment)
            :niterations (or niterations (experiment-nfold experiment))
            :type  (experiment-type experiment)
-           :recache recache
+           :recache recache 
+           :normalize-p normalize-p
+;;;        :normalize-p (when (eq (experiment-type experiment) :svm) :minmax)
            :identity (experiment-identity experiment)
            :data (experiment-data experiment))
           (when summarize

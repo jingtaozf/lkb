@@ -590,7 +590,7 @@
                         (send-to-podium 
                          (format 
                           nil 
-                          "showtable ~s \".~(~a~)\" ~s {~a}" 
+                          "showtable ~s \".~(~a~)\" {~a} {~a}" 
                           file (gensym "") data title)
                          :wait t)))
                   (cond
@@ -675,7 +675,7 @@
                       (send-to-podium 
                        (format 
                         nil 
-                        "showtable ~s \".~(~a~)\" ~s {~a}" 
+                        "showtable ~s \".~(~a~)\" {~a} {~a}" 
                         file (gensym "") data title)
                        :wait t)))
                 (cond
@@ -756,7 +756,7 @@
                           (send-to-podium
                            (format 
                             nil 
-                            "showtable ~a \".~(~a~)\" ~s {~a}" 
+                            "showtable ~a \".~(~a~)\" {~a} {~a}" 
                             file (gensym "") data title)
                            :wait t)))
                     (when (and (equal (first return) :ok) 
@@ -822,7 +822,7 @@
                         (send-to-podium 
                          (format 
                           nil 
-                          "showtable ~s \".~(~a~)\" ~s {~a}" 
+                          "showtable ~s \".~(~a~)\" {~a} {~a}" 
                           file (gensym "") data title)
                          :wait t)))
                   (cond
@@ -885,7 +885,7 @@
                          (send-to-podium 
                           (format 
                            nil 
-                           "showtable ~s \".~(~a~)\" ~s ~s" 
+                           "showtable ~s \".~(~a~)\" {~a} {~a}" 
                            file (gensym "") name title)
                           :wait t)))
                    (cond
@@ -923,7 +923,7 @@
                       (send-to-podium 
                        (format 
                         nil 
-                        "showtable ~s \".~(~a~)\" ~s ~s" 
+                        "showtable ~s \".~(~a~)\" {~a} {~a}" 
                         file (gensym "") name title)
                        :wait t)))
                 (cond
@@ -1078,7 +1078,7 @@
                         (send-to-podium 
                          (format 
                           nil 
-                          "showtable ~s \".~(~a~)\" ~s {~a}" 
+                          "showtable ~s \".~(~a~)\" {~a} {~a}" 
                           file (gensym "") data title)
                          :wait t)))
                   (cond
@@ -1108,6 +1108,13 @@
             (let* ((interrupt (install-interrupt-handler))
                    (meter (make-meter 0 1)))
               (apply #'train
+                     (append arguments 
+                             (list :interrupt interrupt :meter meter)))))
+
+           (operate-on-profiles
+            (let* ((interrupt (install-interrupt-handler))
+                   (meter (make-meter 0 1)))
+              (apply #'operate-on-profiles
                      (append arguments 
                              (list :interrupt interrupt :meter meter)))))
 

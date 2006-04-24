@@ -237,6 +237,26 @@
         else collect foo into complement
         finally (return (values result complement)))))
 
+(defun i-jth-nth (list ith jth nth)
+  (when (or (= ith 0) (= jth 0) (= 0 nth)
+            (> ith jth) (> jth nth))
+    (error "i-jth-nth(): ~
+            indicies are out of scope: ~a ~a ~a "
+           ith jth nth))
+  (if (= ith jth)
+      (ith-nth list ith nth)
+    (loop
+     with result
+     with list = (copy-list list)
+     with i = 1
+     for mod = (mod i nth)
+     when (or (and (= ith nth) (zerop mod)) (= mod ith))
+     do (setq result 
+              (nconc result (loop repeat (1+ (- jth ith))
+                                  do (incf i) collect (pop list))))
+     else do (incf i) and collect (pop list) into complement 
+     when (null list) do (return (values result complement)))))
+
 (defun ith-n (list ith n)
   (when (> ith 0)
     (loop
@@ -246,6 +266,16 @@
                         finally (return foo))
         for foo in list
         while (> n 0) collect foo do (decf n))))
+
+(defun percentage (list n)
+  ;;
+  ;; _fix_me_
+  ;; find the right name for this function and see whether there is an even
+  ;; more efficient way of computing it :-).             (31-mar-06; oe & erik)
+  ;;
+  (loop
+      for i from 1 to n
+      nconc (ith-nth list i 100)))
 
 (defun complement! (fn)
   #'(lambda (&rest args) (not (apply fn args))))
@@ -463,7 +493,7 @@
                (probe-file (make-pathname :directory data :name "relations")))
       (let* ((command (format
                        nil 
-                       "~a -home=~a -verify -quiet -pager=null"
+                       "~a -home='~a' -verify -quiet -pager=null"
                        *tsdb-application* data))
              (status (if skeletonp 0 (run-process command :wait t))))
         (when (zerop status)
@@ -501,7 +531,9 @@
                  (fcp (and (not skeletonp)
                            (let ((size (file-size 
                                         (make-pathname
-                                         :directory data :name "fc.abt"))))
+                                         :directory data
+                                         :name (or #+:acache "fc.abt"
+                                                   "fc.bdb")))))
                              (and (numberp size) (> size 0)))))
                  (items (tcount data "item" :absolute t :quiet skeletonp))
                  (parses (unless skeletonp (tcount data "parse" :absolute t))))

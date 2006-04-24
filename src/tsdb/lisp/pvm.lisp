@@ -134,7 +134,8 @@
         ;;
         ;; ... then, wait for them to register (start talking) with us.
         ;;
-        (wait-for-clients :wait delay :prefix prefix :stream stream)
+        (unless block
+          (wait-for-clients :wait delay :prefix prefix :stream stream))
         ;;
         ;; attempt to shut down clients that we attempted to start but somehow
         ;; failed to bring (fully) on-line.
@@ -160,7 +161,7 @@
                              (eq (first status) :start)
                              (or (null wait)
                                  (< (- now (third status)) wait))))
-      for message = (pvm_poll -1 -1 1)
+      for message = (pvm_poll (or block -1) -1 1)
       when (message-p message)
       do
         (let* ((tag (message-tag message))
@@ -174,7 +175,7 @@
               (when (and (client-p client) (cpu-p (client-cpu client)))
                 (format
                  stream
-                 "~&~await-for-clients(): client exit for `~a' <~x>~%"
+                 "~&~await-for-clients(): client exit on `~a' <~x>~%"
                  prefix (client-host client) remote))
               (setf *pvm-clients* (delete client *pvm-clients*))))
            

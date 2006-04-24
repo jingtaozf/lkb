@@ -44,23 +44,36 @@
 
 (defparameter *pcfg-symbol-table* (make-symbol-table))
 
-(defun symbol-to-code (symbol &optional (table *pcfg-symbol-table*))
+(defun symbol-to-code (symbol
+                       &optional (table *pcfg-symbol-table*)
+                       &key rop)
   (or
    (gethash symbol (symbol-table-forward table))
-   (let* ((i (symbol-table-count table)))
-     (setf (gethash symbol (symbol-table-forward table)) i)
-     (when (>= i (symbol-table-size table))
-       (setf (symbol-table-size table) (* 2 (symbol-table-size table)))
-       (setf (symbol-table-backward table)
-         (adjust-array 
-          (symbol-table-backward table) (symbol-table-size table))))
-     (setf (aref (symbol-table-backward table) i) symbol)
-     (incf (symbol-table-count table))
-     i)))
+   (unless rop
+     (let* ((i (symbol-table-count table)))
+       (setf (gethash symbol (symbol-table-forward table)) i)
+       (when (>= i (symbol-table-size table))
+         (setf (symbol-table-size table) (* 2 (symbol-table-size table)))
+         (setf (symbol-table-backward table)
+           (adjust-array 
+            (symbol-table-backward table) (symbol-table-size table))))
+       (setf (aref (symbol-table-backward table) i) symbol)
+       (incf (symbol-table-count table))
+       i))))
+
 
 (defun code-to-symbol (code &optional (table *pcfg-symbol-table*))
   (when (< code (symbol-table-count table))
     (aref (symbol-table-backward table) code)))
+
+(defun set-symbol-and-code (symbol code &optional (table *pcfg-symbol-table*))
+  (setf (gethash symbol (symbol-table-forward table)) code)
+  (when (>= code (symbol-table-size table))
+    (setf (symbol-table-size table) (* 2 (symbol-table-size table)))
+    (setf (symbol-table-backward table)
+      (adjust-array (symbol-table-backward table) (symbol-table-size table))))
+  (setf (aref (symbol-table-backward table) code) symbol)
+  (incf (symbol-table-count table)))
 
 (defstruct (cfr)
   type

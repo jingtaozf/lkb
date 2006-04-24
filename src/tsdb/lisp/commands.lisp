@@ -238,7 +238,11 @@
              &key condition run skeleton load gold host wait
                   (file nil filep) (reset nil resetp) count target error)
   
-  (initialize-tsdb)
+  (unless (and action (keywordp action)
+               (let ((action (string action)))
+                 (string-equal
+                  "ini" (subseq action 0 (min (length action) 3)))))
+    (initialize-tsdb))
   (if (stringp action)
     (let* ((result (call-tsdb action (or argument *tsdb-data*))))
       (when (and result (not (zerop (length result))))
@@ -884,9 +888,9 @@
   (when (member command (list :all :initialize :ini))
     (format
      *tsdb-io*
-     "    - :initialize [ :cache _string_ ] [ :run _bool_ ]
+     "    - :initialize [ _file_ ] [ :load _string_ ] [ :run _bool_ ]
 
-        reload `.tsdbrc' file (if available) from user home directory and 
+        reload _file_ argument or `.tsdbrc' (from user home directory) and 
         rescan the test suite skeleton directory; optional :cache argument,
         loads tsdb(1) profile cache for databases matching _string_; :run t
         background the cache load; finally, display resulting status;~

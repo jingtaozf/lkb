@@ -153,25 +153,3 @@
                       internal-time-units-per-second)
                0 0
                #+:mcl others #-:mcl -1)))))
-
-(defmacro make-counts (&key (absolute 0) (contexts 0)
-                            (events 0) (relevant 0))
-  `(list ,absolute ,contexts ,events ,relevant))
-
-(defmacro counts-absolute (counts)
-  `(first ,counts))
-
-(defmacro counts-contexts (counts)
-  `(second ,counts))
-
-(defmacro counts-events (counts)
-  `(third ,counts))
-
-(defmacro counts-relevant (counts)
-  `(fourth ,counts))
-
-(defmacro counts>= (counts1 counts2)
-  `(and (>= (counts-absolute ,counts1) (counts-absolute ,counts2))
-        (>= (counts-contexts ,counts1) (counts-contexts ,counts2))
-        (>= (counts-events ,counts1) (counts-events ,counts2))
-        (>= (counts-relevant ,counts1) (counts-relevant ,counts2))))

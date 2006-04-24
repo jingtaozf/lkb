@@ -151,6 +151,7 @@
                               for solution in (nreverse solutions)
                               for derivation =
                                 (extract-c-structure graph solution)
+                              for score = (extract-score graph solution)
                               for mrs =
                                 (let ((mrs (extract-mrs graph solution))
                                       (mt::*mrs-comparison-ignore-roles*
@@ -182,8 +183,10 @@
                                                   :test #'equal))))))))
                               when mrs do (decf n)
                               and collect
-                                  (pairlis '(:result-id :derivation :mrs) 
-                                           (list i derivation mrs))
+                                  (pairlis '(:result-id :derivation :mrs
+                                             :flags) 
+                                           (list i derivation mrs
+                                                 (acons :ascore score nil)))
                               while (and solution (> n 0))
                               finally
                                 #+:debug

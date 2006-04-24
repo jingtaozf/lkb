@@ -2,7 +2,7 @@
 
 ;;;
 ;;; [incr tsdb()] --- Competence and Performance Profiling Environment
-;;; Copyright (c) 1996 -- 2005 Stephan Oepen (oe@csli.stanford.edu)
+;;; Copyright (c) 1996 -- 2006 Stephan Oepen (oe@csli.stanford.edu)
 ;;; Copyright (c) 2005 -- 2006 Erik Velldal (erikve@ifi.uio.no)
 ;;;
 ;;; This program is free software; you can redistribute it and/or modify it
@@ -150,7 +150,7 @@
   (multiple-value-bind (code offset) (byte-decode-integer vector offset)
     (make-feature
      :code code :count (if (member tid *feature-float-valued-tids* :test #'=) 
-                           (byte-decode-float vector offset)
+                         (byte-decode-float vector offset)
                          (byte-decode-integer vector offset))
      :tid tid :parameters parameters)))
 
@@ -173,6 +173,10 @@
                 &key createp (verbose t)
                      (cache *acache-cache-size*))
   (declare (ignore mode))
+
+  (when (and (pathnamep file) (null (pathname-type file)))
+    (setf file (merge-pathnames file (make-pathname :type "abt"))))
+
   (let* ((cache (if (numberp cache) (* cache 1024 1024) (* 128 1024 1024)))
          (fc (make-fc :file file :cache cache)))
     (setf (fc-db fc)
@@ -186,7 +190,7 @@
                         (pathname-name file) (pathname-type file))))
             (format
              t
-             "~&[~a] open-db(): new BTree `~a'.~%"
+             "~&[~a] open-fc(): new BTree `~a'.~%"
              (current-time :long :short) name)))
         (db.btree:create-btree
          file :if-exists :supersede :if-does-not-exist

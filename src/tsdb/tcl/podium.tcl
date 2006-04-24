@@ -23,8 +23,8 @@ exec $HOME/delphin/lkb/bin/linux.x86.32/swish++ "$0" "$@"
 #
 if {![info exists itsdb_root]} {
   set itsdb_root [expr {[info exists env(HOSTNAME)] 
-                        && ![string first "ld" $env(HOSTNAME)]
-                        ? "/logon/oe/src/logon/lingo/lkb" 
+                        && ![string first "mv" $env(HOSTNAME)]
+                        ? "/home/oe/src/logon/lingo/lkb" 
                         : "/Users/oe/src/delphin/lkb"}];
 }; # if
 #
@@ -207,7 +207,7 @@ set compare_in_detail(source) "";
 set compare_in_detail(show,i-input) 1;
 set compare_in_detail(compare,all) {
   words readings first total aedges pedges rpedges gcs error 
-  derivation mrs tree
+  derivation mrs tree surface
 }; # compare_in_detail(compare,all)
 foreach attribute $compare_in_detail(compare,all) {
   set compare_in_detail(compare,$attribute) 0;
@@ -927,9 +927,6 @@ proc main {} {
     -label "Create Feature Cache" -command {tsdb_trees features cache};
   .menu.trees.menu.cache add command \
     -label "Clear Feature Cache" -command {tsdb_trees features clear};
-  .menu.trees.menu.cache add separator
-  .menu.trees.menu.cache add command \
-    -label "Clear Context Cache(s)" -command {tsdb_trees contexts clear};
 
   menu .menu.trees.menu.switches -tearoff 0;
   .menu.trees.menu.switches add checkbutton \

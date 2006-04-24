@@ -1170,11 +1170,11 @@ proc tsdb_evolution {code} {
 
 }; # tsdb_evolution()
 
-proc tsdb_trees {action} {
+proc tsdb_trees {action {modifier ""}} {
 
   global globals test_suites compare_in_detail;
 
-  if {$action != "train" && [verify_ts_selection]} {return 1};
+  if {$action != "features" && [verify_ts_selection]} {return 1};
 
   set target $globals(data);
   if {![info exists compare_in_detail(source)] \
@@ -1200,7 +1200,7 @@ proc tsdb_trees {action} {
   }; # if
 
   set command "";
-  if {$action == "train"} {
+  if {$action == "features"} {
     set list [.list subwidget hlist];
 
     set selection "";
@@ -1218,6 +1218,12 @@ proc tsdb_trees {action} {
       if {[verify_ts_selection]} {return 1};
       set selection "\"$globals(data)\"";
     }; # if
+    set command \
+      [format \
+       "(operate-on-profiles (%s) :task :%s)" \
+       $selection [expr {$modifier == "clear" ? "unfc" : "fc"}]];
+  } elseif {$action == "train"} {
+    set selection "\"$globals(data)\"";
 
     if {![input "output file:" "/tmp/" "" train]} {
       set file $globals(input);
@@ -1235,7 +1241,7 @@ proc tsdb_trees {action} {
 
       set command \
         [format \
-         "(train (%s) \"%s\" :type %s)" \
+         "(train %s \"%s\" :type %s)" \
          $selection $file $globals(tree,model)];
 
     }; # if

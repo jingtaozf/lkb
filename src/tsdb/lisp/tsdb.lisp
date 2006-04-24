@@ -2,7 +2,7 @@
 
 ;;;
 ;;; [incr tsdb()] --- Competence and Performance Profiling Environment
-;;; Copyright (c) 1996 -- 2005 Stephan Oepen (oe@csli.stanford.edu)
+;;; Copyright (c) 1996 -- 2006 Stephan Oepen (oe@csli.stanford.edu)
 ;;;
 ;;; This program is free software; you can redistribute it and/or modify it
 ;;; under the terms of the GNU Lesser General Public License as published by
@@ -70,7 +70,7 @@
       finally
         (let ((command (format
                         nil 
-                        "~a -home=~a -uniquely-project=~:[off~;on~] ~
+                        "~a -home='~a' -uniquely-project=~:[off~;on~] ~
                          -quiet~:[~; -read-only~] -eof=\":eof\" ~
                          -string-escape=lisp -pager=null -max-results=0"
                         *tsdb-application* path unique ro)))
@@ -120,14 +120,13 @@
                         &key rc action background name pattern)
   
   (declare (special *tsdb-podium-home* *tsdb-podium* *tsdb-wish-application*
+                    *string-similarity-binaries*
                     *statistics-readers* *statistics-browsers* 
                     *statistics-predicates*))
   
   (unless (and *tsdb-initialized-p* (null action) (null rc))
     (let* ((*tsdb-initialized-p* t)
-           (tsdbrc (or rc (dir-and-name (user-homedir-pathname) ".tsdbrc")))
-           (index (make-pathname :directory  *tsdb-skeleton-directory*
-                                 :name *tsdb-skeleton-index*)))
+           (tsdbrc (or rc (dir-and-name (user-homedir-pathname) ".tsdbrc"))))
       (when (and (or (null action) (member action '(:paths :all))))
         (setf *tsdb-application*
           (format
@@ -155,19 +154,31 @@
            "exec ~a"
            (namestring (make-pathname 
                         :directory (pathname-directory make::bin-dir)
-                        :name "swish++")))))
+                        :name "swish++"))))
+        #+:logon
+        (let* ((root (system:getenv "LOGONROOT"))
+               (root (and root (namestring (parse-namestring root)))))
+          (when root
+            (setf *string-similarity-binaries*
+              (list
+               (cons :bleu (format nil "~a/ntnu/bleu/bleu.pl" root))
+               (cons :wa (format nil "~a/ntnu/bleu/wa.pl" root))
+               (cons :waft (format nil "~a/ntnu/bleu/wa.pl -t" root)))))))
       (when (and (or (null action) (member action '(:tsdbrc :all)))
                  (probe-file tsdbrc))
         (load tsdbrc))
       (let* ((home (if (stringp *tsdb-home*)
                      (make-pathname :directory *tsdb-home*)
-                     *tsdb-home*)))
-        (setf *tsdb-home* (when home (namestring home))))
-      (when (and (or (null action) (member action '(:skeletons :all)))
-                 (probe-file index))
-        (setf *tsdb-skeletons* (with-open-file (stream index 
-                                                :direction :input)
-                                 (read stream nil nil))))
+                     *tsdb-home*))
+             (index (make-pathname
+                     :directory  *tsdb-skeleton-directory*
+                     :name *tsdb-skeleton-index*)))
+        (setf *tsdb-home* (when home (namestring home)))
+        (when (and (or (null action) (member action '(:skeletons :all)))
+                   (probe-file index))
+          (setf *tsdb-skeletons*
+            (with-open-file (stream index :direction :input)
+              (read stream nil nil)))))
       (when (find-package :mrs)
         (when (null (gethash :mrs *statistics-readers*))
           (setf (gethash :mrs *statistics-readers*) 
@@ -199,7 +210,7 @@
                      (find-tsdb-directory language)))
              (command (format
                        nil 
-                       "~a -home=~a -uniquely-project=~:[off~;on~]~
+                       "~a -home='~a' -uniquely-project=~:[off~;on~]~
                        ~:[~; -quiet~]~:[~; -read-only~] -eof=\":eof\" ~
                         -string-escape=lisp -pager=null -max-results=0"
                        *tsdb-application* data unique quiet ro))
@@ -933,7 +944,7 @@
                        (get-field :surface result) :escape rawp)
         for tree = (normalize-string (get-field :tree result) :escape rawp)
         for mrs = (normalize-string (get-field :mrs result) :escape rawp)
-        for grade = (normalize-string (get-field :grade result) :escape rawp)
+        for flags = (normalize-string (get-field :flags result) :escape rawp)
         do
           (if rawp
             (let ((stream (get-field :result cache))
@@ -952,7 +963,7 @@
               (write-string surface stream) (write-char ofs stream)
               (write-string tree stream) (write-char ofs stream)
               (write-string mrs stream)  (write-char ofs stream)
-              (write-string grade stream) 
+              (write-string flags stream) 
               (terpri stream)
               (force-output stream)
               (incf (get-field :count cache)))
@@ -964,7 +975,7 @@
                            time
                            r-ctasks r-ftasks r-etasks r-stasks
                            size r-aedges r-pedges
-                           derivation surface tree mrs grade)))
+                           derivation surface tree mrs flags)))
               (call-tsdb query language :cache cache))))))
 
 (defun write-edges (parse-id edges
@@ -1318,7 +1329,8 @@
          (parse-id (get-field :parse-id record))
          (result-id (get-field :result-id record))
          (rank (get-field :rank record))
-         (score (get-field+ :score record "")))
+         (score (get-field+ :score record ""))
+         (score (if (stringp score) score (format nil "~a" score))))
     (if rawp
       (let ((stream (get-field :score cache))
             (ofs *tsdb-ofs*))

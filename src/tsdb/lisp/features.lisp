@@ -1,8 +1,8 @@
-;;; -*- Mode: COMMON-LISP; Syntax: Common-Lisp; Package: TSDB -*-
+;; -*- Mode: COMMON-LISP; Syntax: Common-Lisp; Package: TSDB -*-
 
 ;;;
 ;;; [incr tsdb()] --- Competence and Performance Profiling Environment
-;;; Copyright (c) 1996 -- 2005 Stephan Oepen (oe@csli.stanford.edu)
+;;; Copyright (c) 1996 -- 2006 Stephan Oepen (oe@csli.stanford.edu)
 ;;; Copyright (c) 2005 -- 2006 Erik Velldal (erikve@ifi.uio.no)
 ;;;
 ;;; This program is free software; you can redistribute it and/or modify it
@@ -22,27 +22,28 @@
 ;;; an integer identifying the feature type (aka template), viz.
 ;;;
 ;;;   1: local derivational configuration; a subtree of depth one taken from 
-;;;      the derivation; e.g. [1 0 hspec det_poss_my_le noptcomp]; the second
+;;;      the derivation; e.g. [1 (0) hspec det_poss_my_le noptcomp]; the second
 ;;;      integer indicates the amount of grandparenting used, where parent 
 ;;;      labels will precede the root of the local configuration.
 ;;;   2: `active' local derivational configuration; similar to type 1, but for
 ;;;      sub-sets of the daughters (corresponding to active edges), determined
 ;;;      by rule instantiation order (the .rhs. slot in LKB rule structures),
-;;;      e.g. [2 0 hspec noptcomp].
+;;;      e.g. [2 (0) hspec noptcomp].
 ;;;   3: lexicalized local derivational configuration; much like type 1, but
 ;;;      the first symbol is the lexical head of the root of the configuration;
 ;;;      if we decided to lexicalize _all_ nodes in the feature, that would be
 ;;;      either a different template or additional parameter then.
 ;;;   4: lexicalized `active' local derivational configuration; one parameter,
 ;;;      viz. degree of grand-parenting.
-;;;  10: n-gram features; e.g. [10 3 1 "saw" ^ n_proper_le v_np_trans_le]; the
-;;;      first parameter is the n-gram size, the second an integer coding as to
-;;;      what is used in the n-grams: 0 -- lexical identifier, 1 -- le type.
+;;;  10: n-gram features; e.g. [10 (3 1) "saw" ^ n_proper_le v_np_trans_le]; 
+;;;      the first parameter is the n-gram size, the second an integer coding 
+;;;      as to what is used in the n-grams: 0 -- lexical identifier, 1 -- le 
+;;;      type.
 ;;;  11: preterminal-only n-gram features; like type 10, but without a surface
-;;;      form; e.g. [11 3 1 ^ n_proper_le v_np_trans_le].
+;;;      form; e.g. [11 (3 1) ^ n_proper_le v_np_trans_le].
 ;;;  42: language model score; the second integer is the number of bins used 
 ;;;      (if any), and the third the divisor used in scaling (*maxent-lm-p*), 
-;;;      e.g. [42 0 100]
+;;;      e.g. [42 (0) 100]
 ;;;
 ;;; also, we are using some pseudo-features to record additional information in
 ;;; the feature cache, viz.
@@ -51,45 +52,60 @@
 ;;;      assignment function: 0 -- binary, i.e. 0 or 1 according to what comes
 ;;;      out of the annotations in the treebank; 1 and upwards -- various
 ;;;      weighted frequency functions, according to the global value of
-;;;      *maxent-preference-weigthings* .
+;;;      *maxent-preference-weightings*.
 ;;;
 
 (in-package :tsdb)
 
-(defparameter *feature-grandparenting* 2)
+(defparameter *feature-grandparenting* 4)
 
 (defparameter *feature-use-preterminal-types-p* t)
 
 (defparameter *feature-lexicalization-p* t)
 
+(defparameter *feature-constituent-weight* 2)
+
 (defparameter *feature-active-edges-p* t)
 
-(defparameter *feature-ngram-size* 2)
+(defparameter *feature-ngram-size* 4)
 
 (defparameter *feature-ngram-tag* :type)
 
 (defparameter *feature-ngram-back-off-p* t)
 
-(defparameter *feature-lm-p* 10)
+(defparameter *feature-lm-p* #-:logon nil #+:logon 10)
 
-(defparameter *feature-preference-weigthings* '((0 :binary)))
+;;;;(defparameter *feature-lm-normalize* '(:minmax 0 2)) ;;; _fix_me_
 
-(defparameter *feature-frequency-threshold*
-  (make-counts :absolute 0 :contexts 0 :events 0 :relevant 0))
+(defparameter *feature-preference-weightings*
+  '((0 :binary) (1 :bleu) (2 :wa) (3 :waft)))
+
+(defparameter *feature-frequency-threshold* nil)
 
 (defparameter *feature-random-sample-size* nil)
 
 (defparameter *feature-item-enhancers* (list 'lm-item-enhancer))
+
+(defstruct counts
+  (absolute 0) (contexts 0) (events 0) (relevant 0))
 
-;;;
-;;; _fix_me_
-;;; once we have all the globals together, synchronize these and functions like
-;;; mem-environment(), print-mem(), et al.               (11-jul-05; erik & oe)
-;;;
+(defmacro counts>= (counts1 counts2)
+  `(and (>= (counts-absolute ,counts1) (counts-absolute ,counts2))
+        (>= (counts-contexts ,counts1) (counts-contexts ,counts2))
+        (>= (counts-events ,counts1) (counts-events ,counts2))
+        (>= (counts-relevant ,counts1) (counts-relevant ,counts2))))
+
+(defmacro counts= (counts1 counts2)
+  `(and (= (counts-absolute ,counts1) (counts-absolute ,counts2))
+        (= (counts-contexts ,counts1) (counts-contexts ,counts2))
+        (= (counts-events ,counts1) (counts-events ,counts2))
+        (= (counts-relevant ,counts1) (counts-relevant ,counts2))))
+
 (defparameter *feature-options*
   '(*feature-grandparenting*
     *feature-use-preterminal-types-p*
     *feature-lexicalization-p*
+    *feature-constituent-weight*
     *feature-active-edges-p*
     *feature-ngram-size*
     *feature-ngram-tag*
@@ -104,14 +120,15 @@
 
 (defstruct (model)
   (table (make-symbol-table :test #'equal))
-  (map (cons 0 (make-hash-table :test #'eql)))
+  (map (make-symbol-table :test #'eql))
   contexts (ncontexts 0)
   (counts (make-array 512))
-  (weights (make-array 512 :initial-element 0.0))
+  (weights (make-array 512))
   (count 0)
   (size 512)
   parameters
-  stream)
+  stream
+  (minmax (make-array 512)))
 
 (defmethod print-object ((object model) stream)
   (format 
@@ -160,7 +177,7 @@
       "~d~%"
       (if sample (length sample) (context-size context)))))
   (case format
-    ((:mem :svm :rpm)
+    ((:mem :svm :perf :rpm)
      (loop
          with iid = (context-id context)
          for event in (context-events context)
@@ -187,17 +204,26 @@
        (fwrite (event-size event) stream)
        (loop
            for feature in (event-features event)
-           for code = (or (feature-mapped feature) (feature-code feature))
+           for code = (or (feature-mapped feature) 
+                          (feature-code feature))
            do
              (write-char #\Space stream)
              (fwrite code stream)
              (write-char #\Space stream)
              (fwrite (feature-count feature) stream)))
-      (:svm
-       (format stream "~a qid:~a" (- (event-frequency event)) iid)
+      ((:svm :perf)
+       (format stream "~,1f qid:~a" 
+               (cond ((eq format :svm) 
+                      (event-frequency event))
+                     ((and (eq format :perf)
+                           (zerop (event-frequency event))) -1)
+                     (t 1))
+               iid)
        (loop
            for feature in (event-features event)
-           for code = (or (feature-mapped feature) (feature-code feature))
+           ;;;feature numbers run from 1 in svm_light (from 0 in tadm)
+           for code = (+ 1 (or (feature-mapped feature) 
+                               (feature-code feature)))
            do
              (write-char #\Space stream)
              (fwrite code stream)
@@ -205,7 +231,7 @@
              (fwrite (feature-count feature) stream)
            finally 
              (format stream " # ~a" (event-id event)))))
-    (terpri stream))) ;todo, simplify this function.
+    (terpri stream)))
 
 (defun print-feature (feature &key (stream t) (format :compact))
   (case format
@@ -242,83 +268,95 @@
 
 (declaim (inline record-feature))
 
-(defun record-feature (feature event &optional model)
+(defun record-feature (feature event &optional model &key rop)
   (declare (optimize (speed 3) (safety 0) (space 0) (debug 0)))
 
+  ;;
+  ;; there are two distinct contexts in which record-feature() gets called:
+  ;; (a) when building the feature cache, features have not yet been assigned
+  ;; a unique code, and we want to determine their usage counts.  conversely,
+  ;; (b) when filling the context cache, features have been encoded (i.e. have
+  ;; their unique code) but for increased efficiency, we want to map the codes
+  ;; of features that actually get used (i.e. the active sub-set of features
+  ;; from the complete feature cache) into a consecutive integer range.  for
+  ;; the latter, the model provides a `map'ping symbol table.
+  ;;
+  
+  ;;
+  ;; for features that are encoded already and have a frequency count below the
+  ;; current cut-off threshhold, return immediately, i.e. ignore this .feature.
+  ;;
   (let ((code (feature-code feature)))
     (unless (or (null model) (null code) (null *feature-frequency-threshold*)
                 (counts>= (aref (model-counts model) code)
                           *feature-frequency-threshold*))
       (return-from record-feature)))
   
-  (let* ((map (model-map model))
-         (mapped (gethash (feature-code feature) (rest map))))
-    
-    (when (and model (hash-table-p (rest (model-map model)))
-               (feature-code feature)) 
-      (if (null mapped)
-        (setf (feature-mapped feature)
-          (setf (gethash (feature-code feature) (rest map))
-            (incf (first map)))) 
-        (setf (feature-mapped feature) mapped))
-      (setf mapped (feature-mapped feature)))
+  ;;
+  ;; for features that are encoded already, map their code into a new range
+  ;;
+  (when (and model (not rop)
+             (symbol-table-p (model-map model)) (feature-code feature)) 
+    (setf (feature-mapped feature)
+      (symbol-to-code (feature-code feature) (model-map model))))
+
+  ;;
+  ;; encode this feature, unless it has been assigned a unique identifier (with
+  ;; respect to .model. already).
+  ;;
+  (unless (or (null model) (feature-code feature))
+    (setf (feature-code feature)
+      (symbol-to-code
+       (list* (feature-tid feature) (feature-parameters feature)
+              (feature-symbol feature))
+       (model-table model)))
+
     ;;
-    ;; encode this feature, unless it has been assigned a unique identifier 
-    ;; (with  respect to .model. already).
+    ;; at this point, ditch the symbolic representation of .feature. (which is
+    ;; now recoverable from the symbol table in the .model.)
     ;;
-    (unless (or (null model) (feature-code feature))
-      (setf (feature-code feature)
-        (symbol-to-code
-         (list* (feature-tid feature) (feature-parameters feature)
-                (feature-symbol feature))
-         (model-table model)))
-      (setf (feature-symbol feature) nil))
+    (setf (feature-symbol feature) nil)
+
     ;;
-    ;; globally, i.e. in the model itself, keep track of feature frequencies. 
-    ;; we expect to add to this and also keep track of how often a feature
-    ;; appeared  `contrastively', that is either only occur in the preferred or
-    ;; only the dis-preferred events (ultimately, pseudo-maximal or -minimal 
-    ;; ones).
+    ;; also, make sure the vectors in .model. indexed by codes grow in size as
+    ;; we add features.
     ;;
-    (let* ((identifier (if mapped #'feature-mapped #'feature-code))
-           (code (funcall identifier feature)))
-      ;;
-      ;; _fix_me_
-      ;; probably, we actually don't want to do this when mapping features, 
-      ;; i.e. during context cache creation
-      ;;
-      (when model
-        (when (>= code (model-size model))
-          (let ((n (setf (model-size model)
-                     (max (+ code 1) (* (model-size model) 2)))))
-            (setf (model-counts model)
-              (adjust-array (model-counts model) n))
-            (setf (model-weights model)
-              (adjust-array (model-weights model) n)))))
-      ;;
-      ;; the .features. storage in events, naturally, is organized as a simple,
-      ;; ordered list, sorted by feature codes.  thus, the code below searches 
-      ;; linearly through the list and either increments the counter for 
-      ;; features that are present already, or inserts appropriately.
-      ;;
-      (cond
-       ((or (zerop (event-size event)) 
-            (< code (funcall identifier 
-                             (first (event-features event)))))
-        (push feature (event-features event))
-        (incf (event-size event)))
-       (t
-        (loop
-            for features on (event-features event)
-            for this = (first features)
-            for next = (first (rest features))
-            when (= (funcall identifier this) code) do
-              (incf (feature-count this) (feature-count feature))
-              (return)
-            else when (or (null next) (< code (funcall identifier next))) do
-              (setf (rest features) (cons feature (rest features)))
-              (incf (event-size event))
-              (return)))))))
+    (when (and (not rop) (>= (feature-code feature) (model-size model)))
+      (let ((n (setf (model-size model)
+                 (max (+ (feature-code feature) 1) (* (model-size model) 2)))))
+        (setf (model-minmax model) (adjust-array (model-minmax model) n))
+        (setf (model-counts model) (adjust-array (model-counts model) n))
+        (setf (model-weights model) (adjust-array (model-weights model) n)))))
+  
+  ;;
+  ;; from here on, use either the original .code. or the .mapped. value as the
+  ;; identifier for inserting .feature. into .event.
+  ;;
+  (let* ((id (if (feature-mapped feature) #'feature-mapped #'feature-code))
+         (code (funcall id feature)))    
+    ;;
+    ;; the .features. storage in events, naturally, is organized as a simple,
+    ;; ordered list, sorted by feature codes.  thus, the code below searches 
+    ;; linearly through the list and either increments the counter for 
+    ;; features that are present already, or inserts appropriately.
+    ;;
+    (cond
+     ((or (zerop (event-size event)) 
+          (< code (funcall id (first (event-features event)))))
+      (push feature (event-features event))
+      (incf (event-size event)))
+     (t
+      (loop
+          for features on (event-features event)
+          for this = (first features)
+          for next = (first (rest features))
+          when (= (funcall id this) code) do
+            (incf (feature-count this) (feature-count feature))
+            (return)
+          else when (or (null next) (< code (funcall id next))) do
+            (setf (rest features) (cons feature (rest features)))
+            (incf (event-size event))
+            (return))))))  
 
 (defun record-features (features event &optional model)
   (loop
@@ -332,7 +370,41 @@
      context :stream (model-stream model) :model model :format format)
     (push context (model-contexts model))))
 
-(defun record-event (event context)
+(defun normalize-features-n (event &key model (type :minmax))
+  (case type
+    ((:euclidean :length)
+     (loop 
+      with sqr-sum = (loop for feature in (event-features event)
+                           sum (expt (feature-count feature) 2))
+      for feature in (event-features event)
+      do (setf (feature-count feature) 
+               (sqrt (/ (expt (feature-count feature) 2) 
+                        sqr-sum)))))
+    (:minmax
+     (loop 
+         with minmaxes = (model-minmax model)
+         for feature in (event-features event)
+                        ;;, (or (feature-mapped feature) 
+         for code = (feature-code feature)
+         for min = (first (aref minmaxes code))
+         for max = (second (aref minmaxes code))
+         for normalized = (/ (- (feature-count feature) min)
+                             (- max min))
+         do (setf (feature-count feature) 
+              (if (typep normalized 'ratio)  
+                  (float normalized) normalized)))))
+  event)
+
+(defun euclidean-length-features (event)
+  (sqrt 
+   (loop 
+       with features = (event-features event)
+       for feature in features
+       sum (expt (feature-count feature) 2))))
+
+(defun record-event (event context &key model normalize-p)
+  (when normalize-p
+    (normalize-features-n event :type normalize-p :model model))
   (let ((cons (cons event nil)))
     (if (null (context-events context))
       (setf (context-events context) cons)
@@ -370,6 +442,7 @@
                       ((string= source foo) cache)
                       (t
                        (setf source foo)
+                       (close-fc cache)
                        (setf cache
                          (profile-find-feature-cache
                           source :write :createp createp)))))
@@ -378,16 +451,10 @@
       when (and (integerp readings) (> readings 0)) do
 	(loop
 	    with i = 0
-	    with active = (loop
-                              for rank in (get-field :ranks item)
-                              for i = (get-field :rank rank)
-                              for id = (get-field :result-id rank)
-                              when (= i 1) collect id)
             with *reconstruct-cache* = (make-hash-table :test #'eql)
 	    for result in (get-field :results item)
 	    for rid = (get-field :result-id result)
-            for goldp = (if (member rid active :test #'=) :gold :lead)
-	    for event = (result-to-event result model :goldp goldp)
+	    for event = (result-to-event result model)
             unless event do
               (format
                stream
@@ -405,20 +472,36 @@
                     (incf (first count) (feature-count feature))
                     (incf (second count))
                     (pushnew (feature-count feature) (rest (rest count))))
-
+                 
               (loop
-                  for (i . type) in *feature-preference-weigthings*
+                  for (i . type) in *feature-preference-weightings*
                   for count = (float (weigh-result item result type))
                   for feature = (make-feature
                                  :tid %feature-frequency-tid%
                                  :parameters (list i)
-                                 :symbol (list %feature-frequency-tid% i)
+                                 :symbol type
                                  :count count)
                   do (record-feature feature event model))
               (loop
                   for feature in (event-features event)
                   do (store-feature db iid rid feature))
               (incf i)
+              ;;
+              ;; keep track of max/min feature values for normalization.
+              ;;
+              (loop
+                  with minmaxes = (model-minmax model)
+                  for feature in (event-features event)
+                  for code = (feature-code feature)
+                  for count = (feature-count feature)
+                  for minmax = (aref minmaxes code)
+                  when (null minmax)
+                  do (setf minmax (list 0 0)  
+                           (aref minmaxes code) minmax)
+                  when (< count (first minmax))
+                  do (setf (first (aref minmaxes code)) count)
+                  when (> count (second minmax))
+                  do (setf (second (aref minmaxes code)) count))
 	    finally
               (loop
                   for code being each hash-key
@@ -430,7 +513,14 @@
                     (incf (counts-absolute match) (first count))
                     (incf (counts-contexts match))
                     (incf (counts-events match) (second count))
-                    (when (rest (rest (rest count)))
+                    ;;
+                    ;; we call a feature `relevant' in this context, when there
+                    ;; are at least two events for which either (a) the feature
+                    ;; has different values or (b) only one of the two events
+                    ;; actually has the feature.
+                    ;;
+                    (when (or (rest (rest (rest count)))
+                              (< (second count) i))
                       (incf (counts-relevant match))))
               (incf (model-ncontexts model))
               (when verbose
@@ -443,7 +533,7 @@
 
 (defun cache-contexts (items model
                        &optional (identity -1)
-                       &key (format :rpm) (stream *tsdb-io*))
+                       &key (format :rpm) (stream *tsdb-io*) normalize-p)
 
   ;;
   ;; _fix_me_
@@ -452,7 +542,7 @@
   ;;                                             (5-jul-05; erik & oe)
   (loop
       with source = (get-field :source (first items))
-      with creation = (list source)
+      with fcs = (list source)
       with fc = (profile-find-feature-cache source :write)
       with cc = (profile-find-context-cache source identity :createp t)
       for item in items
@@ -463,11 +553,13 @@
         (let ((foo (get-field :source item)))
           (unless (string= source foo)
             (setf source foo)
-            (setf fc (profile-find-feature-cache source :write))
-            (let ((createp (not (member source creation :test #'string=))))
+            (close-fc fc)
+            (let ((createp (not (member source fcs :test #'string=))))
+              (setf fc (profile-find-feature-cache source :write))
+              (pushnew source fcs :test #'string=)
               (setf cc
-                (profile-find-context-cache source identity :createp createp))
-              (when createp (push source creation)))))
+                (profile-find-context-cache
+                 source identity :createp createp)))))
         (loop
             with results = (get-field :results item)
             with n = (length results)
@@ -494,7 +586,7 @@
                                 when (and feature
                                           (= (feature-count feature) 1))
                                 collect rid))
-            for sample = (when (and *feature-random-sample-size*
+            with sample = (when (and *feature-random-sample-size*
                                     (< *feature-random-sample-size* 
                                        (- n (length active))))
                            ;;
@@ -512,7 +604,8 @@
             for result in results
             for rid = (get-field :result-id result)
             for event = (result-to-event-from-cache iid rid model fc)
-            when event do (record-event event context)
+            when event do (record-event event context 
+                                        :normalize-p normalize-p :model model)
             finally
               (let ((n (context-size context)))
                 (when (> n 0)
@@ -552,12 +645,11 @@
                      (when sample (length sample)) n iid)))))
       finally (close-fc fc)))
 
-(defun result-to-event (result model &key goldp)
-  (declare (ignore goldp))
+(defun result-to-event (result model &key rop)
 
   (let* ((derivation (get-field :derivation result))
-         (edge (when derivation
-                 (or (get-field :edge result)
+         (edge (or (get-field :edge result)
+                   (when derivation
                      (reconstruct derivation nil))))
          (event (make-event)))
 
@@ -568,32 +660,29 @@
     ;;
     (loop
         for feature in (edge-to-configurations edge)
-        do (record-feature feature event model))
+        do (record-feature feature event model :rop rop))
     ;;
     ;; then the n-gram features over leaves of this edge.
     ;;
     (loop
         for feature in (edge-to-ngrams edge)
-        do (record-feature feature event model))
+        do (record-feature feature event model :rop rop))
     ;;
     ;; finally, the features corresponding to LM score(s)
     ;;
     ;; _fix_me_
     ;; we want to further generalize this, e.g. include multiple LM features,
     ;; maybe include the scaling factor as a parameter.
-    ;;                                             (27-jun-05; erik & oe)
+    ;;                                                 (27-jun-05; erik & oe)
     (let ((lm (get-field :lm result)))
       (when (numberp lm)
         (record-feature
          (make-feature :tid 42 
                        :symbol (list 42) 
                        :parameters 
-                       (list 0 ;; 0 = no binning
-                             (if (numberp *feature-lm-p*)
-                               *feature-lm-p*
-                               0))
+                       (list 0 (if (numberp *feature-lm-p*) *feature-lm-p* 0))
                        :count lm)
-         event model)))
+         event model :rop rop)))
     event))
 
 (defun edge-to-configurations (edge &key (parents '(lkb::^)))
@@ -647,11 +736,6 @@
         (when *feature-lexicalization-p* (setf (lkb::edge-head edge) root))
         features))
      (t
-      ;;
-      ;; _fix_me_
-      ;; lexicalized features, presumably, should use a separate identifier;
-      ;; the complete lexicalization set-up needs testing.      (3-apr-05; oe)
-      ;;
       (when *feature-lexicalization-p*
         ;;
         ;; decorate local edge with head lexicalization information: find the
@@ -666,11 +750,39 @@
       (let* ((roots (loop
                         for edge in daughters
                         collect (edge-root edge)))
+             (weights (loop
+                          for edge in daughters
+                          for from = (lkb::edge-from edge)
+                          for to = (lkb::edge-to edge)
+                          when (and (numberp from) (numberp to))
+                          collect (- to from)
+                          else return nil))
+             (skew (when (rest weights)
+                     (loop
+                         with n = (length weights)
+                         with average = (/ (sum weights) n)
+                         for foo in weights
+                         sum (expt (- foo average) 2) into bar
+                         finally
+                           (return
+                             (let ((bar (sqrt bar)))
+                               (cond
+                                ((= bar 0) 0) ((< bar 2) 1) ((>= 2) 2)))))))
+             (weights (loop
+                          for weight in weights
+                          collect (cond
+                                   ((= weight 1) 1)
+                                   ((and (> weight 1) (<= weight 4)) 2)
+                                   ((and (> weight 4) (<= weight 8)) 3)
+                                   ((> weight 8) 4))))
              (head (lkb::edge-head edge))
              (symbol (cons root roots))
              (lsymbol (cons head symbol))
              (features
               (loop
+                  with weightp = (and (numberp *feature-constituent-weight*)
+                                      (> *feature-constituent-weight* 0)
+                                      *feature-constituent-weight*)
                   for i from 0
                   to (min (length parents) *feature-grandparenting*)
                   for iparents = (last parents i)
@@ -680,7 +792,15 @@
                   when *feature-lexicalization-p*
                   collect (make-feature
                            :tid 3 :parameters (list i)
-                           :symbol (append iparents lsymbol)))))
+                           :symbol (append iparents lsymbol))
+                  when (and skew weightp)
+                  collect (make-feature
+                           :tid 5 :parameters (list 1 i)
+                           :symbol (append iparents symbol (list skew)))
+                  when (and weights weightp (> weightp 1))
+                  collect (make-feature
+                           :tid 5 :parameters (list 2 i)
+                           :symbol (append iparents symbol weights)))))
  
         ;;
         ;; include (back-off, in a sense) features for partially instantiated
@@ -688,10 +808,6 @@
         ;; the rule instantiation order .rhs., for each prefix, extract the
         ;; (sub-)sets of corresponding daughters, perform head lexicalization
         ;; if necessary, and add the resulting features to .codes.
-        ;;
-        ;; _fix_me_
-        ;; not quite sure what to do about grandparenting; would it make sense
-        ;; on these `active edges' too?                          (3-apr-05; oe)
         ;;
         (when (and *feature-active-edges-p* (rest daughters))
           (loop
@@ -757,7 +873,7 @@
 
 (defun result-to-event-from-cache (iid rid model fc)
 
-  (let* ((type (first *feature-preference-weigthings*))
+  (let* ((type (first *feature-preference-weightings*))
          (features (retrieve-features
                     fc iid rid %feature-frequency-tid% (list (first type))))
          (frequency (and features (feature-count (first features))))
@@ -778,6 +894,15 @@
           for i from 0 to *feature-grandparenting*
           for features = (retrieve-features fc iid rid 2 (list i))
           do (record-features features event model)))
+    (when (and (numberp *feature-constituent-weight*)
+               (> *feature-constituent-weight* 0))
+      (loop
+          for i from 0 to *feature-grandparenting*
+          do
+            (loop
+                for j from 1 to *feature-constituent-weight*
+                for features = (retrieve-features fc iid rid 5 (list j i))
+                do (record-features features event model))))
     (when *feature-lexicalization-p*
       (loop
           for i from 0 to *feature-grandparenting*
@@ -798,17 +923,24 @@
           (record-features lfeatures event model)
           (record-features features event model))
     (when *feature-lm-p*
-      (let ((features (retrieve-features fc iid rid 42 
-                                         (list 0 ;; 0 = no binning
-                                               (if (numberp *feature-lm-p*) 
-                                                   *feature-lm-p*
-                                                 0)))))
+      (let ((features
+             (retrieve-features
+              fc iid rid 42 
+              (list 0 (if (numberp *feature-lm-p*) *feature-lm-p* 0)))))
         ;; 
         ;; _fix_me_
         ;; if we were to retain the LM scaling set-up, here would be a good
         ;; place to apply the scaling; for the time being, it gets applied in
-        ;; mem-item-enhancer() already.                  (5-jul-05; erik & oe)
+        ;; lm-item-enhancer() already.                  (5-jul-05; erik & oe)
         ;;
+        
+;;;        (when *feature-lm-normalize*    _fix_me_
+;;;          (loop                             
+;;;              for feature in features
+;;;              with minmax = (aref (model-minmax model)
+;;;                                  (feature-code feature))
+                            
+                             
         (record-features features event model)))
     event))
 
@@ -841,13 +973,20 @@
 (defun weigh-result (item result type)
   (let* ((active (loop
                      for rank in (get-field :ranks item)
-                     for i = (get-field :rank rank)
+                     for n = (get-field :rank rank)
                      for id = (get-field :result-id rank)
-                     when (= i 1) collect id))
+                     when (= n 1) collect id))
          (rid (get-field :result-id result))
          (frequency (if (member rid active :test #'=) 1 0)))
     (case (first type)
       (:binary frequency)
+      ((:bleu :wa :waft)
+       (let ((gold (get-field :i-input item))
+             (surface (get-field :surface result)))
+         (if surface
+           (first
+            (score-strings (list surface) (list gold) :type (first type)))
+           0)))
       (t 0))))
 
 (defun random-sample (low high size &optional sample)
@@ -866,8 +1005,7 @@
 
 (defun profile-find-feature-cache (profile &optional mode &key createp)
   (let ((file (make-pathname
-               :directory (find-tsdb-directory profile)
-               :name "fc" :type "abt")))
+               :directory (find-tsdb-directory profile) :name "fc")))
     (if mode (open-fc file mode :createp createp) file)))
 
 (defun profile-find-model (profile &key testp)
@@ -889,179 +1027,50 @@
        (fad:delete-directory-and-files path :if-does-not-exist :ignore)
        (mkdir path)))
     path))
-;;;
-;;; _fix_me_
-;;; the following two functions are legacy code, in order to run an old model
-;;; for the LOGON 0.5 integration.  purge this soon :-}.       (21-sep-05; oe)
-;;;
-(defun edge-to-codes (edge parents model)
-  (let* ((table (model-table model))
-         (root (edge-root edge))
-         (parents (loop
-                      for parent in parents
-                      collect (if (lkb::edge-p parent)
-                                (edge-root parent)
-                                parent)))
-         (daughters (lkb::edge-children edge)))
-    (cond
-     ;;
-     ;; see whether we have extracted features from this edge before; if so,
-     ;; re-use cache of earlier results (safe-guarded by .model. identity).
-     ;;
-     ((and (eq (lkb::edge-foo edge) model) (consp (lkb::edge-bar edge)))
-      (lkb::edge-bar edge))
-     ;;
-     ;; at the terminal yield of a derivation, things are relatively simple:
-     ;; create one feature for the local configuration at the yield, plus as
-     ;; many as are possible to derive from grandparenting, i.e. prefixing the
-     ;; tuple corresponding to the local feature with all suffixes of .parents.
-     ;;
-     ((null daughters)
-      (let* ((feature (cons root (lkb::edge-leaves edge)))
-             (codes (list (symbol-to-code (list* 1 0 feature) table))))
-        (loop
-            for i from 1 to (min (length parents) *feature-grandparenting*)
-            for iparents = (last parents i)
-            for code = (symbol-to-code
-                        (append (list 1 i) iparents feature)
-                        table)
-            do (push code codes))
-        (when *feature-lexicalization-p* (setf (lkb::edge-head edge) root))
-        (setf (lkb::edge-foo edge) model)
-        (setf (lkb::edge-bar edge) codes)))
-     (t
-      ;;
-      ;; _fix_me_
-      ;; lexicalized features, presumably, should use a separate identifier;
-      ;; the complete lexicalization set-up needs testing.      (3-apr-05; oe)
-      ;;
-      (when *feature-lexicalization-p*
-        ;;
-        ;; decorate local edge with head lexicalization information: find the
-        ;; head (or key) daughter in the local rule and project its head up
-        ;; to the current edge.
-        ;;
-        (let* ((rule (lkb::edge-rule edge))
-               (key (if (eq *feature-lexicalization-p* :head)
-                      (lkb::rule-head rule)
-                      (first (lkb::rule-rhs rule)))))
-          (setf (lkb::edge-head edge) (lkb::edge-head (nth key daughters)))))
-      (let* ((roots (loop
-                        for edge in daughters
-                        collect (edge-root edge)))
-             (head (lkb::edge-head edge))
-             (feature (cons root roots))
-             (codes (nconc
-                     (when *feature-lexicalization-p*
-                       (list (symbol-to-code (list* 1 0 head feature) table)))
-                     (list (symbol-to-code (list* 1 0 feature) table)))))
-        
-        (loop
-            for i from 1 to (min (length parents) *feature-grandparenting*)
-            for iparents = (last parents i)
-            for code = (symbol-to-code
-                        (append (list 1 i) iparents feature)
-                        table)
-            do (push code codes))
-
-        ;;
-        ;; include (back-off, in a sense) features for partially instantiated
-        ;; constituents (corresponding to active edges in the parser): for
-        ;; the rule instantiation order .rhs., for each prefix, extract the
-        ;; (sub-)sets of corresponding daughters, perform head lexicalization
-        ;; if necessary, and add the resulting features to .codes.
-        ;;
-        ;; _fix_me_
-        ;; not quite sure what to do about grandparenting; would it make sense
-        ;; on these `active edges' too?                          (3-apr-05; oe)
-        ;;
-        (when *feature-active-edges-p*
-          (loop
-              with rhs = (lkb::rule-rhs (lkb::edge-rule edge))
-              for i from 1 to (- (length rhs) 1)
-              for foo = (ith-n rhs 1 i)
-              for roots = (loop
-                              for j in foo
-                              collect (edge-root (nth j daughters)))
-              for feature = (cons root roots)
-              when *feature-lexicalization-p* do
-                (push
-                 (symbol-to-code (list* 2 0 head feature) table)
-                 codes)
-              do
-                (push (symbol-to-code (list* 2 0 feature) table) codes)))
-        (setf (lkb::edge-foo edge) model)
-        (setf (lkb::edge-bar edge) codes))))))
-
-(defun mem-score-edge (edge 
-                       &key (model %model%) (parents '(lkb::^)) recursivep lm)
-
-  (if model
-    (if (and (not recursivep) 
-             (eq (lkb::edge-foo edge) model) (numberp (lkb::edge-score edge)))
-      (lkb::edge-score edge)
-      (let* ((codes (when (lkb::edge-rule edge)
-                      (edge-to-codes edge parents model)))
-             (score (if (numberp lm)
-                      (let* ((table (model-table model))
-                             (code
-                              (symbol-to-code
-                               (list 42 0 *feature-lm-p*) table)))
-                        (* (score-feature code model) lm))
-                      0)))
-        (setf (lkb::edge-score edge)
-          (+ (loop
-                 for code in codes
-                 sum (score-feature code model))
-             score
-             (loop
-                 with parents 
-                 = (when (> *feature-grandparenting* 0)
-                     (append
-                      (last parents (- *feature-grandparenting* 1))
-                      (list edge)))
-                 for edge in (lkb::edge-children edge)
-                 sum (mem-score-edge
-                      edge :model model :recursivep t :parents parents))))))
-    0.0))
 
-(defun mem-score-task (task model)
+;;;
+;;; from here on, functions to score various types of structures (full results
+;;; or intermediate constituents) according to a model.
+;;;
+
+(defmacro score-feature (code model)
   ;;
   ;; _fix_me_
-  ;; the following seem to not have an integer first() in their features.
-  ;;                                                           (27-oct-04; oe)
-  (cond
-   ((lkb::chart-configuration-p task)
-    (mem-score-edge (lkb::chart-configuration-edge task) :model model))
-   ((lkb::edge-p task)
-    (mem-score-edge task :model model))
-   ((lkb::rule-p (first task))
-    (let* ((rule (first task))
-           (root (lkb::rule-id rule))
-           (passive (lkb::chart-configuration-edge (rest task)))
-           (daughter (edge-root passive))
-           (feature (list root daughter))
-           (code (symbol-to-code feature (model-table model))))
-      #+:debug
-      (format t "r&p: `~a'" feature)
-      (+ (score-feature code model)
-         (mem-score-edge passive :model model))))
-   ((lkb::chart-configuration-p (first task))
-    (let* ((active (lkb::chart-configuration-edge (first task)))
-           (rule (lkb::edge-rule active))
-           (root (lkb::rule-id rule))
-           (daughters (loop
-                          for daughter in (lkb::edge-children active)
-                          collect (edge-root daughter)))
-           (passive (lkb::chart-configuration-edge (rest task)))
-           (daughter (edge-root passive))
-           (feature (cons root (nconc daughters (list daughter))))
-           (code (symbol-to-code feature (model-table model))))
-      #+:debug
-      (format t "a&p: `~a'" feature)
-      (+ (score-feature code model)
-         (loop
-             for edge in (lkb::edge-children active)
-             sum (mem-score-edge edge :model model))
-         (mem-score-edge passive :model model))))
-   (t -10)))
+  ;; unless exported and read back in once, it is quite possible for models to
+  ;; have meaningful feature codes beyond the `count' value (which appears to 
+  ;; be the number of actual weights read after training); possibly we could
+  ;; simply use the model `size' as the boundary instead, but then we would 
+  ;; have had to make sure that unpopulated indices are initialized to zeros.
+  ;;                                                     (7-apr-06; oe & erik)
+  `(or (when (< ,code (model-count ,model))
+         (aref (model-weights ,model) ,code))
+       0.0))
+
+(defun score-event (event model)
+  (loop
+      for feature in (event-features event)
+      for count = (or (feature-count feature) 0)
+      for score = (score-feature (feature-code feature) model)
+      sum (* count score)))
+
+(defun mem-score-result (result &optional (model %model%))
+
+  (if model
+    (let ((event (result-to-event result model :rop t)))
+      (score-event event model))
+      0.0))
+
+(defun mem-score-configuration (edge daughters &optional (model %model%))
+  (if (model-p model)
+    (let* ((event (make-event))
+           (roots (if daughters
+                    (loop
+                        for edge in daughters
+                        collect (edge-root edge))
+                    (lkb::edge-leaves edge)))
+           (feature (make-feature
+                     :tid 1 :parameters (list 0)
+                     :symbol (cons (edge-root edge) roots))))
+      (record-feature feature event model :rop t)
+      (score-event event model))
+    0.0))

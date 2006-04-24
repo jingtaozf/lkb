@@ -1760,7 +1760,8 @@
          (show (delete :i-id (if (atom show) (list show) show)))
          (shows (+ (length show) (if sloppyp 2 1)))
          (compare (if (atom compare) (list compare) compare))
-         (thorough (nreverse (intersection '(:derivation :mrs :tree) compare)))
+         (thorough
+          (nreverse (intersection '(:derivation :mrs :tree :surface) compare)))
          (compare (set-difference compare thorough :test #'equal))
          (predicates 
           (loop for field in compare collect (find-attribute-predicate field)))
@@ -2234,7 +2235,7 @@
   ;; with large numbers of results, retrieval of all trees or MRSs can take
   ;; a long time, so maybe get user confirm first          (28-oct-03; oe)
   ;;
-  (let* ((thorough '(:derivation :mrs :tree))
+  (let* ((thorough '(:derivation :mrs :tree :surface))
          (condition (if condition
                       (concatenate 'string "(readings >= 1) && " condition)
                       "readings >= 1"))
@@ -2282,8 +2283,9 @@
          cell 1 2 -contents {i-input} -format title~%~
          cell 1 3 -contents {readings} -format title~%~
          cell 1 4 -contents {derivation} -format title~%~
-         cell 1 5 -contents {mrs} -format title~%
-         cell 1 6 -contents {tree} -format title~%"
+         cell 1 5 -contents {mrs} -format title~%~
+         cell 1 6 -contents {tree} -format title~%~
+         cell 1 7 -contents {surface} -format title~%"
         (+ (length items) 1))))
     (loop
         with increment = (and meter (/ 1 (if items (length items) 1)))
@@ -2325,10 +2327,16 @@
                         for result in results
                         for tree = (get-field :tree result)
                         when (and tree (not (equal tree ""))) collect tree)
+        for surfaces = (loop
+                           for result in results
+                           for surface = (get-field :surface result)
+                           when (and surface (not (equal surface "")))
+                           collect surface)
         for otag = (intern (gensym "") :keyword)
         for dtag = (intern (gensym "") :keyword)
         for mtag = (intern (gensym "") :keyword)
         for ttag = (intern (gensym "") :keyword)
+        for stag = (intern (gensym "") :keyword)
         when (= (- row 1) (* separator 10))
         do 
           (case format
@@ -2367,6 +2375,11 @@
           (setf (get :i-input ttag) (or o-input i-input))
           (setf (get :field ttag) :tree)
           (setf (get :value ttag) trees)
+          (setf (get :source stag) data)
+          (setf (get :i-id stag) i-id)
+          (setf (get :i-input stag) (or o-input i-input))
+          (setf (get :field stag) :surface)
+          (setf (get :value stag) surfaces)
           (case format
             (:tcl
              (format stream "cell ~d 1 -contents {~a} -format data~%" row i-id)
@@ -2386,11 +2399,13 @@
               "cell ~d 3 -contents {~a}~:[~; -color blue~] -format data~%~
                cell ~d 4 -contents {~a} -format data -action browse -tag ~a~%~
                cell ~d 5 -contents {~a} -format data -action browse -tag ~a~%~
-               cell ~d 6 -contents {~a} -format data -action browse -tag ~a~%"
+               cell ~d 6 -contents {~a} -format data -action browse -tag ~a~%~
+               cell ~d 7 -contents {~a} -format data -action browse -tag ~a~%"
               row readings (and (numberp nfragments) (> nfragments 0))
               row (length derivations) dtag
               row (length mrss) mtag
-              row (length trees) ttag)))
+              row (length trees) ttag
+              row (length surfaces) stag)))
         finally
           (case format
             (:tcl
@@ -2406,8 +2421,9 @@
                cell ~d 3 -contents {-} -format total~%~
                cell ~d 4 -contents {-} -format total~%~
                cell ~d 5 -contents {-} -format total~%~
-               cell ~d 6 -contents {-} -format total~%"
-              row (- row 2) row row row row row))))
+               cell ~d 6 -contents {-} -format total~%~
+               cell ~d 7 -contents {-} -format total~%"
+              row (- row 2) row row row row row row))))
              
     (when meter
       (status :text (format nil "~a done" message) :duration 10)
