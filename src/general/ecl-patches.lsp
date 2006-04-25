@@ -84,9 +84,9 @@
 
 (defvar %binary-dir-name% 
   (or
-   #+(and (or :i386 :i686 :pentium3 :pentium4 :athlon) :linux)
+   #+(and (or :i386 :i486 :i686 :pentium3 :pentium4 :athlon) :linux)
    ".lecl"
-   #+(and (or :i386 :i686 :pentium3 :pentium4 :athlon) (not :unix))
+   #+(and (or :i386 :i486 :i686 :pentium3 :pentium4 :athlon) (not :unix))
    ".wecl"
    ".ecl"))
 
@@ -96,11 +96,13 @@
 ;;; accordingly (6-feb-96 -- oe@csli)
 ;;;
 (defvar %system-binaries%
-  #+(and (or :i386 :i686 :pentium3 :pentium4 :athlon) :unix) "linux.x86.32"
-  #+(and :x86_64 :unix) "linux.x86.64"
-  #+(and (or :i386 :i686 :pentium3 :pentium4 :athlon) (not :unix)) "windows"
-  #-(or (or :i386 :i686 :pentium3 :pentium4 :athlon) 
-        (and (not (or :i386 :i686 :pentium3 :pentium4 :athlon)) :unix))
-  (error "~&loadup: unable to determine system type; see file ~
-          `ecl-patches.lisp'.~%"))
+  (or
+   #+(and (or :i386 :i486 :i686 :pentium3 :pentium4 :athlon)
+         :unix) "linux.x86.32"
+   #+(and :x86_64 :unix) "linux.x86.64"
+   #+(and (or :i386 :i486 :i686 :pentium3 :pentium4 :athlon)
+          (not :unix)) "windows"
+   (error "~&loadup: unable to determine system type; see file ~
+          `ecl-patches.lisp'.~%~
+          This is your *features* list: ~s~%" *features*)))
 
