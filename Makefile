@@ -1,7 +1,8 @@
 ROOT = /lingo/build/
 SROOT = ${HOME}/class/src
 LROOT = ${HOME}/src/delphin
-WROOT = c:/src
+WROOT = e:/src
+WACLROOT = c:/program\ files/acl70
 DATE = `date "+%Y-%m-%d"`
 TARGET = /lingo/www/lingo/ftp
  
@@ -215,17 +216,17 @@ lkb_windows:
 	  echo "(load \"${WROOT}/lkb/src/ACL_specific/deliver.lsp\")"; \
           echo "(excl:exit)"; \
 	) > c:/tmp/build.lisp
-	( cd d:/program\ files/acl70; ./clim.exe -qq -L c:/tmp/build.lisp \
+	( cd ${WACLROOT}; ./clim.exe -qq -L c:/tmp/build.lisp \
           && touch ${WROOT}/.yes; )
 	( \
 	  if [ ! -f ${WROOT}/.yes ]; then exit 1; fi; \
 	  cd ${WROOT}/lkb; \
-	  ${TAR} Svczf /c/tmp/lkb_windows.tgz \
+	  ${TAR} Svczf /cygdrive/c/tmp/lkb_windows.tgz \
               --exclude=".nfs*" \
 	      windows; \
-	  ${RM} -f /c/tmp/lkb_windows.zip; \
-          zip -r /c/tmp/lkb_windows.zip windows; )
-	scp /c/tmp/lkb_windows.tgz /c/tmp/lkb_windows.zip \
+	  ${RM} -f /cygdrive/c/tmp/lkb_windows.zip; \
+          zip -r /cygdrive/c/tmp/lkb_windows.zip windows; )
+	scp /cygdrive/c/tmp/lkb_windows.tgz /cygdrive/c/tmp/lkb_windows.zip \
           bmw@lingo.stanford.edu:/lingo/www/lingo/ftp/test;
 
 lkb_documentation:
