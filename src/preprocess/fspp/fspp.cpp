@@ -11,15 +11,10 @@
 #include <iostream>
 
 extern "C" {
-    
-#include "fspp.h"
-#include "ppcre.h"
-    
     char *
     ecl_decode_string(cl_object x) {
 	return (type_of(x) == t_string) ? (char *) x->string.self : 0;
     }
-    
 }
 
 using namespace std;
@@ -33,9 +28,6 @@ ecl_initialize(int argc, char **argv) {
 
 int
 preprocessor_initialize(const char *preproc_pathname) {
-    initialize_ppcre();
-    initialize_fspp();
-    
     cl_object result;
     result = funcall(2
 		     , c_string_to_object("fspp::x-read-preprocessor")

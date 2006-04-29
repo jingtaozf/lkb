@@ -10,20 +10,17 @@ CFLAGS=-g -Wall
 CXXFLAGS=-g -Wall
 
 fspp: fspp.o libfspp.a 
-	gcc -o $@ $(LDFLAGS) fspp.o libfspp.a libppcre.a
-
-fspp.o: fspp.h
-
-# Add build definition for "fspp.h" 
-fspp.h: libfspp.a
+	gcc -o $@ $(LDFLAGS) fspp.o libfspp.a
 
 libfspp.a:
 	( \
 	echo "(load \"$(MRSDIR)/src/general/loadup\")"; \
 	echo "(setq lib-dir (make-pathname :directory '(:relative)))"; \
-	echo "(setq include-dir (make-pathname :directory '(:relative)))"; \
+	echo "(mk::ecl-initialize-libbuild :module \"fspp\")"; \
 	echo "(compile-system \"preprocessor\" :force t)"; \
+	echo "(mk::ecl-finalize-libbuild :module \"fspp\")"; \
 	) | $(ECL)
+
 
 clean:
 	rm *.o

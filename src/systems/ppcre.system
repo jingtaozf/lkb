@@ -42,8 +42,6 @@
                       (get-binaries-dir "pppcre") '(:relative "ppcre"))
     :source-extension "lisp"
     :source-extension "lisp"
-    #+:ecl :initially-do #+:ecl (ecl-initialize)
-    #+:ecl :finally-do #+:ecl (ecl-finalize :module "ppcre")
     :components ((:file "packages")
                  (:file "specials" :depends-on ("packages"))
                  (:file "util" :depends-on ("packages"))
