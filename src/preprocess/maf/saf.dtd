@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- DTD for SAF (benjamin.waldron@cl.cam.ac.uk)  -->
+<!-- DTD for SAF (benjamin.waldron cl.cam.ac.uk)  -->
         
 <!ELEMENT saf   (olac? , fsm ) >
 <!ATTLIST saf   addressing CDATA #REQUIRED
@@ -20,6 +20,9 @@
                 type CDATA #REQUIRED
                 deps IDREFS #IMPLIED >
 
+
+<!ELEMENT slot (#PCDATA) >
+<!ATTLIST slot name CDATA #REQUIRED >
 
 <!ELEMENT fs (f*) >
 <!ATTLIST fs type CDATA #IMPLIED>
