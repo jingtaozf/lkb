@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <segment>
-  <token form="kim" from="0" to="3">
+  <token form="kim" from="0" to="2">
     <analysis stem="kim"/>
   </token>
   <token form="sleeps." from="4" to="10">

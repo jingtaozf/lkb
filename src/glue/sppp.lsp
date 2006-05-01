@@ -51,9 +51,6 @@
 (defparameter *sppp-input-buffer* 
   (make-array 2048 :element-type 'character :adjustable nil :fill-pointer 0))
 
-(defparameter *sppp-input-chart*
-  (make-array 2048))
-
 (defvar *sppp-debug-p* nil)
 
 (defun initialize-sppp ()
@@ -136,10 +133,6 @@
        "<?xml version='1.0' encoding='utf-8'?><text>~a</text>~%~a~%"
        (xml-escape-string text) #\page)
       (force-output stream))
-    (let ((n (array-dimension *sppp-input-chart* 0)))
-      (when (>= (length text) n)
-        (setf *sppp-input-chart* 
-          (adjust-array *sppp-input-chart* (* n 2)))))
     (setf (stream-external-format stream) (excl:find-external-format :utf-8))
     (let ((*package* (find-package :lkb))
           (n (loop
@@ -173,9 +166,6 @@
               (sppp-process-segment (rest (second xml))))))))))
 
 (defun sppp-process-segment (segment)
-  (loop
-      for i from 0 to (- (array-dimension *sppp-input-chart* 0) 1)
-      do (setf (aref *sppp-input-chart* i) nil))
   (let (tokens)
     (loop
         for element in segment
@@ -184,33 +174,8 @@
         for from = (rest (assoc :from token))
         for to = (rest (assoc :to token))
         when (and from to (not (punctuationp form)))
-        do 
-          (setf (aref *sppp-input-chart* from) t)
-          (push token tokens))
-    (loop
-        with vertex = 0
-        for i from 0 to (- (array-dimension *sppp-input-chart* 0) 1)
-        when (aref *sppp-input-chart* i)
-        do
-          (setf (aref *sppp-input-chart* i) vertex)
-          (incf vertex))
-    (loop
-        with last = 0
-        for token in (nreverse tokens)
-        for from = (rest (assoc :from token))
-        for start = (aref *sppp-input-chart* from)
-        for to = (rest (assoc :to token))
-        for end = (loop
-                      for i from to
-                      to (- (array-dimension *sppp-input-chart* 0) 1)
-                      thereis (aref *sppp-input-chart* i)
-                      finally (return (+ last 1)))
-        when (or (null start) (null end))
-        do (error "sppp-process-segment(): internal error; see `sppp.lsp'.")
-        else do (setf last end)
-        and collect (nconc
-                     token
-                     (pairlis '(:start :end) (list start end))))))
+        do (push token tokens))
+    (sppp-serialize-tokens (nreverse tokens))))
 
 (defun sppp-process-token (token)
   (loop
@@ -245,6 +210,43 @@
        "sppp-process-analysis(): ignoring superfluous `inflection' value.~%"))
     (pairlis '(:stem :inflection :rules)
              (list stem (unless rules inflection) (nreverse rules)))))
+
+(defun sppp-serialize-tokens (tokens)
+  #+:debug
+  (setf %tokens tokens)
+  (let* ((n (loop
+                for token in tokens
+                maximize (rest (assoc :to token))))
+         (map (make-array (+ n 1))))
+    (loop
+        for i from 0 to n
+        do (setf (aref map i) (cons nil nil)))
+    (loop
+        for token in tokens
+        for from = (rest (assoc :from token))
+        for to = (rest (assoc :to token))
+        do
+          (setf (first (aref map from)) t)
+          (setf (rest (aref map to)) t))
+    (loop
+        with last = 0 with endp = t
+        for i from 0 to n
+        when (first (aref map i)) do
+          (unless endp (incf last))
+          (setf (first (aref map i)) last)
+          (setf endp nil)
+        when (rest (aref map i)) do
+          (incf last)
+          (setf (rest (aref map i)) last)
+          (setf endp t))
+    (loop
+        for token in tokens
+        for from = (rest (assoc :from token))
+        for to = (rest (assoc :to token))
+        for start = (first (aref map from))
+        for end = (rest (aref map to))
+        do (nconc token (pairlis '(:start :end) (list start end))))
+    tokens))
 
 (defun sppp-xml-get (element attribute &key type)
   (loop
