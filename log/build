@@ -5,13 +5,12 @@
 ? lkb/mt.lsp.fasl
 ? lkb/patches.lsp.fasl
 ? lkb/user-fns.lsp.fasl
-M Makefile
+U modules/customizematrix.cgi
+U modules/modules_bugs
 ? doc
 ? linux.x86.32
 ? man
 ? include/mrs.h
-U lib/linux.x86.32/libdb-4.2.so
-U lib/linux.x86.64/libdb-4.2.so
 M log/build
 ? src/.l7cl
 ? src/.l8cl
@@ -27,16 +26,16 @@ M log/build
 **********
 Checking in ./src/version.lsp;
 /lingo/CVS/lkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.480; previous revision: 1.479
+new revision: 1.482; previous revision: 1.481
 done
 make[1]: Entering directory `/lingo/build/lkb'
 ( \
   cd /lingo/build//lkb; \
   if [ ! -d /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"` ]; then \
             mkdir /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`; \
-    chgrp build /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`; \
-    chmod 3775 /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`; \
           fi; \
+  chgrp build /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`; \
+  chmod 3775 /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`; \
   tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/lkb_source.tgz \
       --exclude=Makefile \
       --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
@@ -53,6 +52,7 @@ make[1]: Entering directory `/lingo/build/lkb'
       --exclude=src/systems/pvm.system \
       .; \
 )
+chgrp: changing group of `/lingo/www/lingo/ftp/builds/2006-05-01': Operation not permitted
 ./
 ./src/
 ./src/ACL-CG_specific/
@@ -1126,7 +1126,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-8.0 [Linux (x86)] (Apr 24, 2006 5:38)
+8.0 [Linux (x86)] (May 1, 2006 7:18)
 Copyright (C) 1985-2005, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -2208,7 +2208,7 @@ NIL
  |#
 ; Fast loading from bundle code/nocompiler.fasl.
 ;   Fast loading from bundle sys/defdecl.fasl.
-153704160 bytes have been tenured, next gc will be global.
+145366784 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 
 T 
@@ -2463,7 +2463,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/xml/pxml1.fasl
 ;;; Compiling file /lingo/build/lkb/src/xml/pxml3.cl
-10669384 bytes have been tenured, next gc will be global.
+10669392 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/xml/pxml3.fasl
 ;;; Fasl write complete
