@@ -346,5 +346,5 @@
 
 ;;; 'ORIGSTR
 
-(defparameter *characterize-p* nil
+(defparameter *characterize-p* t
   "if set CFROM/CTO character pointers are enabled")
