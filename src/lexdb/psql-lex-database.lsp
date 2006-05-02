@@ -566,18 +566,19 @@
     (setf fields (get-fields lex))
     (setf dfn
       (sort
-       (mapcar #'(lambda (x) 
-		   (let* ((slot (str-2-keyword (string-upcase (first x))))
-			  (field (str-2-keyword (second x)))
-			  (path (third x))
-			  (type2 (2-symb-or-list (fourth x)))
-			  (type (if (listp type2) type2 (list type2))))
-		     ;; correct any obsolete types
-		     (setf (car type)
-		       (or (cdr (assoc (car type) *lexdb-fmtype-alt*))
-			   (car type)))
-		     (list slot field path type)))
-	       (get-raw-records lex (format nil "SELECT slot,field,path,type FROM dfn WHERE mode='~a' OR mode IS NULL" (fields-tb lex))))
+       (mapcar 
+	#'(lambda (x) 
+	    (let* ((slot (str-2-keyword (string-upcase (first x))))
+		   (field (str-2-keyword (second x)))
+		   (path (third x))
+		   (type2 (2-symb-or-list (fourth x)))
+		   (type (if (listp type2) type2 (list type2))))
+	      ;; correct any obsolete types
+	      (setf (car type)
+		(or (cdr (assoc (car type) *lexdb-fmtype-alt*))
+		    (car type)))
+	      (list slot field path type)))
+	(get-raw-records lex (format nil "SELECT slot,field,path,type FROM dfn WHERE mode='~a' OR mode = ''" (fields-tb lex))))
        #'(lambda (x y) (declare (ignore y)) (eq (car x) :UNIFS))))
     (if (null dfn)
 	(complain-no-dfn lex))
