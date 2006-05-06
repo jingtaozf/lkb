@@ -32,7 +32,7 @@
 <!ELEMENT var (extrapair*)>
 <!ATTLIST var
           vid  CDATA #REQUIRED 
-          sort (x|e|h|u|l) #IMPLIED >
+          sort (x|e|h|u|l|i) #IMPLIED >
 
 <!ELEMENT extrapair (path,value)>
 
