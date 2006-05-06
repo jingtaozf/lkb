@@ -1,0 +1,21 @@
+As far as possible, the mrs DTD is compatible with the rmrs DTD.
+
+There is a slot for an index
+
+cfrom and cto are optional (and not yet supported in the LKB code)
+
+the pred/spred distinction is to allow an MRS to be read in exactly as 
+it was.  spred is for predicates which are strings.  this dtd
+supports realpred, as in rmrs, but the LKB code doesn't do that yet.
+
+Since we don't have a fixed inventory of sortal values for MRS, this dtd
+supports writing the values out much as they are in the `simple' format
+via:
+<!ELEMENT extrapair (path,value)>
+<!ELEMENT path (#PCDATA)>
+<!ELEMENT value (#PCDATA)>
+
+
+ 
+
+
