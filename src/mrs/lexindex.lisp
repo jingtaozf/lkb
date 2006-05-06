@@ -74,6 +74,12 @@ we assume that there will generally only be one feature
 
 (defvar *empty-semantics-lexical-entries* nil)
 
+(defun empty-semantics-lexical-entries nil
+  (unless (and (hash-table-p mrs::*relation-index*)
+                 (> (hash-table-count mrs::*relation-index*) 0))
+      (error 'generator-uninitialized))
+  *empty-semantics-lexical-entries*)
+
 (defun clear-semantic-indices nil
   (clrhash *rel-semdb*)
   (clrhash *semantic-table*)

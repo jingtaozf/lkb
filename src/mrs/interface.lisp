@@ -221,7 +221,7 @@
 		 (lex-ids (lkb::edge-lex-ids parse))
 		 (null-sem-lex-ids 
 		  (intersection lex-ids 
-				*empty-semantics-lexical-entries*)))
+				(empty-semantics-lexical-entries))))
 	    (when mrs-struct
 		(progn
 		  (format ostream
