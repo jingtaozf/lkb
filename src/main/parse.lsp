@@ -2176,19 +2176,20 @@ an unknown word, treat the gap as filled and go on from there.
       for i from 1 to *chart-max*
       do (print-chart-entry i (aref *chart* i 0) 
 			    :frozen frozen :concise concise :stream stream))
-  (terpri))
+  (terpri stream))
 
 (defun print-tchart (&key frozen concise (stream t) (tchart *tchart*))
+;;;  called by print-token-chart-toplevel
   (format stream "~% > token/spelling chart dump:~%")
   (loop
       for i from 1 to *tchart-max*
       do (print-chart-entry i (aref tchart i 0) 
 			    :frozen frozen :concise concise :stream stream))
-  (terpri))
+  (terpri stream))
 
 (defun print-chart-entry (vertex item &key frozen concise (stream t))
   (when item 
-    (terpri)
+    (terpri stream)
     (dolist
 	(configuration
             (sort (copy-list item)
@@ -2274,12 +2275,12 @@ an unknown word, treat the gap as filled and go on from there.
       ;; print cfrom/cto
       (when (token-edge-p edge)
 	(with-slots (cfrom cto) edge
-	  (format t "~:[~2*~; <~A c ~A> ~]"
+	  (format stream "~:[~2*~; <~A c ~A> ~]"
 		  (and cfrom cto) cfrom cto)))
       ;; print xfrom/xto
       (when (token-edge-p edge)
 	(with-slots (xfrom xto) edge
-	  (format t "~:[~2*~; <~A x ~A> ~]"
+	  (format stream "~:[~2*~; <~A x ~A> ~]"
 		  (and xfrom xto) xfrom xto)))
       (format stream "~%"))))
 
