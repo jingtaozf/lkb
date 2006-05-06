@@ -38,7 +38,10 @@
 ;;; <!ELEMENT rmrs (label, (ep|rarg|ing|hcons)*)>
 ;;; <!ATTLIST rmrs
 ;;;          cfrom CDATA #REQUIRED
-;;;          cto   CDATA #REQUIRED >
+;;;          cto   CDATA #REQUIRED 
+;;;          surface   CDATA #IMPLIED 
+;;;          ident     CDATA #IMPLIED >
+ 
 
 (defmethod rmrs-output-start-fn ((rmrsout xml) cfrom cto
                                  &optional surface ident)
@@ -58,6 +61,7 @@
           cfrom CDATA #REQUIRED
           cto   CDATA #REQUIRED
           surface CDATA #IMPLIED
+          base    CDATA #IMPLIED
 >
 |#
 
@@ -67,7 +71,7 @@
 	    (or cto -1))
     (when str
       (format stream " surface='~A'" (remove #\' str)))
-    ;;; FIX - XML doesn't like ' - simply strip them?
+    ;;; FIX - XML doesn't like ' within attribute values - simply strip them?
     (format stream ">")))
 
 
@@ -77,7 +81,7 @@
 
 <!ATTLIST realpred
           lemma CDATA #REQUIRED
-          pos (V|N|J|R|P) #IMPLIED
+          pos (v|n|j|r|p|q|c|x|u|a|s) #REQUIRED
           sense CDATA #IMPLIED >
 
 |#
@@ -101,12 +105,10 @@
 <!ELEMENT var EMPTY>
 <!ATTLIST var
           sort (x|e|h|u|l) #REQUIRED
-          vid  CDATA #REQUIRED 
-          num  CDATA #IMPLIED
-          pers CDATA #IMPLIED
-          gender CDATA #IMPLIED
-          tense CDATA #IMPLIED
-          aspect CDATA #IMPLIED >
+	  vid  CDATA #REQUIRED
+	  num  (sg|pl|u) #IMPLIED
+plus other slots - see DTD
+	  
 |#
           
 (defmethod rmrs-output-var-fn ((rmrsout xml) var-id var-type)
@@ -123,6 +125,8 @@
 (defmethod rmrs-output-extra-feat-val  ((rmrsout xml) feat val)
   (with-slots (stream) rmrsout
     (format stream " ~A='~A'" feat val)))
+
+;;; <!ELEMENT constant (#PCDATA)>
 
 (defmethod rmrs-output-constant-fn ((rmrsout xml) constant)
   (with-slots (stream) rmrsout
@@ -153,7 +157,8 @@
 
 ;;; Parsonian arguments
 
-;;; <!ELEMENT rarg (rargname, label, var)>
+;;; <!ELEMENT rarg (rargname, label, (var|constant))>
+;;; <!ELEMENT rargname (#PCDATA)>
 
 (defmethod rmrs-output-start-rmrs-arg ((rmrsout xml) predname with-ep-p)
   (declare (ignore with-ep-p))
@@ -169,7 +174,7 @@
 #|
 <!ELEMENT hcons (hi, lo)>
 <!ATTLIST hcons 
-          hreln (qeq|lheq|outscopes) "qeq" >
+          hreln (qeq|lheq|outscopes) #REQUIRED >
 
 <!ELEMENT hi (var)>
 <!ELEMENT lo (label|var)>
@@ -320,7 +325,6 @@ for gram.dtd and tag.dtd
   (declare (ignore feat))
   (with-slots (stream) rmrsout
     (format stream "~A:" val)))
-
 
 (defmethod rmrs-output-constant-fn ((rmrsout compact) constant)
   (with-slots (stream) rmrsout

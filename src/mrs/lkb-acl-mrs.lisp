@@ -6,6 +6,13 @@
 
 ;;; MRS windows
 
+(define-lkb-frame mrs-ordinary
+    ((mrs :initform nil
+	   :accessor mrs-ordinary-mrs))
+  :display-function 'show-mrs-ordinary  
+  :width *parse-window-width* 
+  :height *parse-window-height*)
+
 (define-lkb-frame mrs-simple
     ((mrsstruct :initform nil
                 :accessor mrs-simple-mrsstruct))
@@ -92,6 +99,11 @@
        'mrs::mrs-xml file-name))))
 
 ;;; generate
+
+(define-mrs-ordinary-command (com-generate-mrs-ordinary-xml :menu "Generate") 
+    ()
+  (generate-from-mrs-window (mrs-ordinary-mrs clim:*application-frame*)))
+
 
 (define-mrs-simple-command (com-generate-mrs-xml :menu "Generate") 
     ()
@@ -424,3 +436,30 @@
       (format 
        stream 
        "~%::: Dependencies structure could not be extracted~%"))))
+
+;;; calling function (called from emacs)
+
+(defun display-mrs-from-string (str)
+  (with-package (:mrs)
+    (let ((mrs (mrs::read-single-mrs-xml-from-string str)))
+      (when (and mrs (mrs::psoa-p mrs))
+	(show-mrs-ordinary-window mrs "MRS")))))
+
+;;; Window from emacs
+
+(defun show-mrs-ordinary-window (mrs title)
+  (mp:run-function "MRS ORDINARY"
+   #'show-mrs-ordinary-window-really :mrs mrs :title title))
+  
+(defun show-mrs-ordinary-window-really (&key mrs title)
+  (let ((mframe (clim:make-application-frame 'mrs-ordinary)))
+    (setf (mrs-ordinary-mrs mframe) 
+      mrs)
+    (setf (clim:frame-pretty-name mframe) (or title "MRS"))
+    (clim:run-frame-top-level mframe)))
+
+(defun show-mrs-ordinary (mframe stream &key max-width max-height)
+  (declare (ignore max-width max-height))
+  (let ((mrs (mrs-ordinary-mrs mframe)))
+      (clim:with-text-style (stream (lkb-parse-tree-font))
+        (mrs::output-mrs1 mrs 'mrs::simple stream t))))

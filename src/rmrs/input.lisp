@@ -30,8 +30,10 @@
 	      (read-rmrs rmrs origin))))))
 
 (defun read-single-rmrs-from-string (str)
-  ;;; currently called from emacs interface - takes
-  ;;; a string containing an rmrs (we hope) and
+  ;;; currently called from emacs interface - 
+  ;;; lkb::display-rmrs-from-string in lkb-acl-rmrs.lisp
+  ;;; and also generate etc
+  ;;; this takes a string containing an rmrs (we hope) and
   ;;; reads it in
   (let ((*package* (find-package :mrs)))
     (with-input-from-string (istream str)
@@ -42,9 +44,12 @@
 
 (defun read-rmrs (content origin)
 ;;; <!ELEMENT rmrs (label, (ep|rarg|ing|hcons)*)>
+;;; FIX - attributes not dealt with
 ;;; <!ATTLIST rmrs
 ;;;          cfrom CDATA #REQUIRED
-;;;          cto   CDATA #REQUIRED >
+;;;          cto   CDATA #REQUIRED 
+;;;          surface   CDATA #IMPLIED 
+;;;          ident     CDATA #IMPLIED >
   (let ((top-h nil) (eps nil) (rargs nil) (ings nil)
         (h-cons nil)
 	(tag (car content)))
@@ -91,7 +96,8 @@
 ;;; <!ATTLIST ep
 ;;;          cfrom CDATA #REQUIRED
 ;;;          cto   CDATA #REQUIRED 
-;;;          surface   CDATA #IMPLIED > 
+;;;          surface   CDATA #IMPLIED 
+;;;          base      CDATA #IMPLIED > 
   (let ((tag (car content))
         (body (cdr content)))
     (unless (and 
@@ -133,7 +139,7 @@
 ;;;
 ;;; <!ATTLIST realpred
 ;;;          lemma CDATA #REQUIRED
-;;;          pos (V|N|J|R|P) #IMPLIED
+;;;          pos (v|n|j|r|p|q|c|x|u|a|s) #REQUIRED
 ;;;          sense CDATA #IMPLIED >
     (unless (and 
              (eql (first tag) '|realpred|)
@@ -171,11 +177,7 @@
 ;;; <!ATTLIST var
 ;;;          sort (x|e|h|u|l) #REQUIRED
 ;;;          vid  CDATA #REQUIRED 
-;;;          num  CDATA #IMPLIED
-;;;          pers CDATA #IMPLIED
-;;;          gender CDATA #IMPLIED
-;;;          tense CDATA #IMPLIED
-;;;          aspect CDATA #IMPLIED >
+;;;          see DTD for current attributes
   (let ((tag (car content))
         (body (cdr content)))
     (unless (and 

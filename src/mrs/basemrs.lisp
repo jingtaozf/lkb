@@ -69,10 +69,6 @@
                                         ; needed for the munging rules 
   link)                                 ; link to surface element(s)
 
-;;; currently the cfrom and cto are just used in RMRS (plus in some
-;;; experimental MRS code that was never checked in) but defined here
-;;; since they will be needed
-
 (defstruct (char-rel (:include rel))
   cfrom
   cto)
@@ -335,8 +331,9 @@
   (with-slots (stream) mrsout
     (format stream "~S" atomic-value)))
 
-(defmethod mrs-output-start-rel ((mrsout simple) pred first-p class)
-  (declare (ignore first-p class))
+(defmethod mrs-output-start-rel ((mrsout simple) pred first-p class
+				 &optional cfrom cto str)
+  (declare (ignore first-p class cfrom cto str))
   (with-slots (stream indentation) mrsout
     (format stream "~%")
     (if (stringp pred)
@@ -449,8 +446,9 @@ ACONS: <x1,h4> in <<x2,h3>,<x5,h6>>, <x11,h41> in <<x21,h31>,<x51,h61>>
 (defclass active-t (simple)
   ())
 
-(defmethod mrs-output-start-rel ((mrsout active-t) pred first-p class)
-  (declare (ignore first-p class))
+(defmethod mrs-output-start-rel ((mrsout active-t) pred first-p class
+				 &optional cfrom cto str)
+  (declare (ignore first-p class cfrom cto str))
   (with-slots (stream indentation) mrsout
     (format stream "~%")
     (format stream "~VT[ " indentation)
@@ -515,8 +513,9 @@ ACONS: <x1,h4> in <<x2,h3>,<x5,h6>>, <x11,h41> in <<x21,h31>,<x51,h61>>
   (with-slots (stream) mrsout
     (format stream "~S" atomic-value)))
 
-(defmethod mrs-output-start-rel ((mrsout indexed) pred first-p class)
-  (declare (ignore class))
+(defmethod mrs-output-start-rel ((mrsout indexed) pred first-p class 
+				 &optional cfrom cto str)
+  (declare (ignore class cfrom cto str))
   (with-slots (stream temp-pred) mrsout
     (setf temp-pred pred)
     (unless first-p (format stream ",~%"))))
@@ -679,8 +678,9 @@ higher and lower are handle-variables
         (format stream "'~A')" atomic-value)
       (format stream "~A)" atomic-value))))
 
-(defmethod mrs-output-start-rel ((mrsout prolog) pred first-p class)
-  (declare (ignore class))
+(defmethod mrs-output-start-rel ((mrsout prolog) pred first-p class
+				 &optional cfrom cto str)
+  (declare (ignore class cfrom cto str))
   (with-slots (stream) mrsout
     (unless first-p (format stream ","))
     (format stream "rel('~A'," 
@@ -843,8 +843,9 @@ higher and lower are handle-variables
   (with-slots (stream) mrs
     (format stream "<td class=mrsValue>~(~a~)</td>~%" value)))
 
-(defmethod mrs-output-start-rel ((mrs html) pred firstp class)
-  (declare (ignore firstp))
+(defmethod mrs-output-start-rel ((mrs html) pred firstp class 
+				 &optional cfrom cto str)
+  (declare (ignore firstp cfrom cto str))
   (with-slots (stream i nrows) mrs
     (when (and (not (zerop i)) (zerop (mod i *mrs-relations-per-row*)))
       (format 
@@ -996,8 +997,9 @@ higher and lower are handle-variables
     (format stream "~:[ ~;~]~a" memory value)
     (setf memory nil)))
 
-(defmethod mrs-output-start-rel ((mrs debug) pred firstp class)
-  (declare (ignore firstp class))
+(defmethod mrs-output-start-rel ((mrs debug) pred firstp class
+				 &optional cfrom cto str)
+  (declare (ignore firstp class cfrom cto str))
   (with-slots (stream memory) mrs
     (setf memory (if pred
                    (if (stringp pred) 
@@ -1055,7 +1057,6 @@ higher and lower are handle-variables
 
 ;;; <!ELEMENT mrs (label, (ep|hcons)*)>
 
-;;; FIX
 ;;;
 ;;; <!ATTLIST mrs
 ;;;          cfrom CDATA #IMPLIED
@@ -1137,7 +1138,6 @@ higher and lower are handle-variables
 
 <!ELEMENT spred (#PCDATA)>
 
-;;; FIX - cfrom etc and 
 ;;; realpred for later ease of compatibility - not yet supported
 <!ELEMENT realpred EMPTY>
 
@@ -1147,10 +1147,18 @@ higher and lower are handle-variables
           sense CDATA #IMPLIED >
 |#
 
-(defmethod mrs-output-start-rel ((mrsout mrs-xml) pred first-p class)
+(defmethod mrs-output-start-rel ((mrsout mrs-xml) pred first-p class
+				 &optional cfrom cto str)
   (declare (ignore first-p class))
   (with-slots (stream) mrsout
-    (format stream "~%<ep>")
+    (format stream "~%<ep")
+    (when cfrom 
+      (format stream " cfrom='~A'" cfrom))
+    (when cto 
+      (format stream " cto='~A'" cto))
+    (when str 
+      (format stream " surface='~A'" (remove #\' str)))
+    (format stream ">")
     (if (stringp pred)
 	(format stream "<spred>~a</spred>" pred)
       (format stream "<pred>~a</pred>" pred))))
@@ -1326,7 +1334,10 @@ higher and lower are handle-variables
   (mrs-output-start-rel 
    display
    (rel-pred rel) first-rel
-   (determine-ep-class rel))
+   (determine-ep-class rel)
+   (if (char-rel-p rel) (char-rel-cfrom rel))
+   (if (char-rel-p rel) (char-rel-cto rel))
+   (rel-str rel))
   (mrs-output-rel-handel
    display
    (find-var-name (rel-handel rel) connected-p)
@@ -2065,27 +2076,45 @@ to test
 
 (defun read-mrs-xml-ep (content)
 ;;; <!ELEMENT ep ((pred|realpred), label, fvpair*)>
-;;; FIX - deal with
 ;;; <!ATTLIST ep
 ;;;          cfrom CDATA #IMPLIED
 ;;;          cto   CDATA #IMPLIED 
 ;;;          surface   CDATA #IMPLIED
-;;;	  base      CDATA #IMPLIED >
+;;;	     base      CDATA #IMPLIED >
   (let ((tag (car content))
         (body (cdr content)))
-    (unless (eql tag '|ep|)
-      ;;; base is allowed but ignored
+    (unless (or (eql tag '|ep|)
+		(and 
+		 (listp tag)
+		 (eql (first tag) '|ep|)))
       (error "Malformed ep ~A" content))
     (setf body (loop for x in body
 		   unless (xml-whitespace-string-p x)
 		   collect x))
     (let* ((pred (read-mrs-xml-pred (first body)))
 	   (label (read-mrs-xml-label (second body)))
-	   (flist (read-mrs-xml-rargs (cddr body))))
+	   (flist (read-mrs-xml-rargs (cddr body)))
+	   (cfrom (robust-c-extract (extract-from-xml-tag tag '|cfrom|)))
+	   (cto (robust-c-extract (extract-from-xml-tag tag '|cto|)))
+	   (str (extract-from-xml-tag tag '|str|)))
+      ;;; base is allowed but ignored
       (make-char-rel 
        :pred pred
        :handel label
-       :flist flist))))
+       :flist flist
+       :cfrom cfrom
+       :cto cto
+       :str str))))
+
+(defun robust-c-extract (res)
+  (or 
+   (if (stringp res)
+       (parse-integer res :junk-allowed t))
+   -1))
+
+(defun extract-from-xml-tag (tag attribute)
+  (if (listp tag)
+      (second (member attribute tag))))
 
 (defun read-mrs-xml-pred (content)
   (let ((tag (car content))
