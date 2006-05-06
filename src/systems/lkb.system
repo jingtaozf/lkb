@@ -197,6 +197,7 @@
                (:file "discriminants")
                (:file "unfill-dag")   ; unfilled feature structures
                (:file "generics")
+               (:file "xml")          ; misc. XML-related functions
 	       ))
 
      (:module "preprocess"
