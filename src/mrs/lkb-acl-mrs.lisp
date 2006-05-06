@@ -91,6 +91,29 @@
        mrsstruct
        'mrs::mrs-xml file-name))))
 
+;;; generate
+
+(define-mrs-simple-command (com-generate-mrs-xml :menu "Generate") 
+    ()
+  (generate-from-mrs-window (mrs-simple-mrsstruct clim:*application-frame*)))
+
+(define-mrs-indexed-command (com-generate-mrs-indexed-xml :menu "Generate") 
+    ()
+  (generate-from-mrs-window (mrs-indexed-mrsstruct clim:*application-frame*)))
+
+(defun generate-from-mrs-window (input-sem)
+  (with-output-to-top ()
+    (if (and input-sem (mrs::psoa-p input-sem)
+	     (mrs::psoa-liszt input-sem))
+	(progn
+	  (close-existing-chart-windows)
+	  (generate-from-mrs input-sem)
+	  (show-gen-result))
+      (show-message-window
+       (format nil "Not valid MRS")))))
+
+
+
 ;;; for menus associated with types
 
 (defstruct mrs-type-thing value)
