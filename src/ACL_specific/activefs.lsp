@@ -356,8 +356,8 @@
       (pop-up-menu
        `(("Hierarchy" :value hier
 		      :active ,(ltype-constraint type-entry))
-;	 ("Help" :value help
-;		 :active ,(ltype-comment type-entry))
+	 ("Help" :value help
+		 :active ,(ltype-comment type-entry))
 	 ("Shrink/expand" :value shrink)
          #+:allegro
 	 ("Show source" :value source

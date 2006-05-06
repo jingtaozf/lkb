@@ -208,8 +208,8 @@
     (unhighlight-objects frame)
     (let ((type-entry (get-type-entry node)))
       (pop-up-menu 
-       `(;; ("Help" :value help 
-	 ;;  :active ,(ltype-comment type-entry))
+       `(("Help" :value help 
+	   :active ,(ltype-comment type-entry))
 	 ("Shrink/expand" :value shrink
 			  :active ,(ltype-daughters type-entry))
 	 ("Type definition" :value def)
