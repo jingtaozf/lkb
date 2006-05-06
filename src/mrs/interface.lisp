@@ -193,6 +193,8 @@
 	    (finish-output ostream)))))
 
 #|
+For attempting to learn null semantics
+
 (defparameter lkb::*do-something-with-parse* 'mrs::batch-null-semantics)
 |#
 
@@ -220,8 +222,9 @@
 	  (let* ((mrs-struct (extract-mrs parse))
 		 (lex-ids (lkb::edge-lex-ids parse))
 		 (null-sem-lex-ids 
-		  (intersection lex-ids 
-				(empty-semantics-lexical-entries))))
+		  (loop for id in lex-ids
+			when (null-semantics-entry-p id)
+			collect id)))
 	    (when mrs-struct
 		(progn
 		  (format ostream
@@ -234,6 +237,23 @@
 		  (finish-output ostream)))))
     (format ostream
 	    "~%</null-sem>")))
+
+
+#|
+(defparameter lkb::*do-something-with-parse* 'mrs::batch-trigger-check)
+|#
+
+#+:lkb
+(defun batch-trigger-check nil
+  ;;; to be called from LKB batch processing
+  ;;; test-gen-predict-on-parse is in genpredict.lisp
+  (let ((sentence lkb::*sentence*)
+        (ostream (if (and lkb::*ostream* 
+                          (streamp lkb::*ostream*) 
+                          (output-stream-p lkb::*ostream*)) 
+                     lkb::*ostream*  t)))
+    (test-gen-predict-on-parse *parse-record* sentence ostream)))
+
 
 ;;; The following are primarily for the TSDB machinery
 ;;; - they all take an edge and return a string related

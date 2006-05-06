@@ -71,14 +71,17 @@ we assume that there will generally only be one feature
 ;;; If a lexical entry has no detectable semantics, a
 ;;; warning message is issued and the id is stored on
 ;;; *empty-semantics-lexical-entries*
+;;;
+;;; WARNING: this is not restored when reading in the
+;;; cached generator indices!
 
 (defvar *empty-semantics-lexical-entries* nil)
 
-(defun empty-semantics-lexical-entries nil
+(defun null-semantics-entry-p (id)
   (unless (and (hash-table-p mrs::*relation-index*)
                  (> (hash-table-count mrs::*relation-index*) 0))
       (error 'generator-uninitialized))
-  *empty-semantics-lexical-entries*)
+  (not (gethash id *semantic-table*)))
 
 (defun clear-semantic-indices nil
   (clrhash *rel-semdb*)

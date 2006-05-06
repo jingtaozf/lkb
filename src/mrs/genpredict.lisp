@@ -24,6 +24,51 @@
                                        lkb::*gen-rule-list*))))))
 
 
+(defun test-gen-predict-on-parse (&optional parses sentence (ostream t))
+   #+:mt
+  (declare (special mt::*transfer-triggers*))
+  (dolist (parse (or parses *parse-record*))
+    (let* ((mrs-struct (extract-mrs parse))
+	   (lex-ids (lkb::edge-lex-ids parse))
+	   (null-sem-lex-ids 
+	    (loop for id in lex-ids
+		when (null-semantics-entry-p id)
+		collect id)))
+      (when mrs-struct
+	(let ((predicted-ids 
+	       (cond
+		#+:mt
+		((and (hash-table-p mt::*transfer-triggers*)
+                          (> (hash-table-count mt::*transfer-triggers*) 0))
+		 (oe-genpredict-mrs-struct mrs-struct))
+		(lkb::*gen-rule-list*
+		 (genpredict-mrs-struct mrs-struct lkb::*gen-rule-list*))
+		(t (format ostream "~%Warning: no trigger rules defined")
+		   nil))))
+	  (unless (subsetp null-sem-lex-ids predicted-ids)
+	    (format ostream "~%Missing predictions:")
+	    (when sentence
+	      (format ostream "~%~A" sentence))
+	    (dolist (null-id null-sem-lex-ids)
+	      (when (not (member null-id predicted-ids))
+		(format ostream " ~A" null-id)))))))))
+
+#+:mt
+(defun oe-genpredict-mrs-struct (input-sem)
+  ;;; copied from lexlookup.lisp
+  (let ((triggers (mt::transfer-mrs
+		   input-sem :filter nil :task :trigger)))
+    (remove-duplicates
+     (loop
+	 for edge in triggers
+	 for mtr = (mt::edge-rule edge)
+	 for id = (mt::mtr-trigger mtr)
+	 when (and id
+		   (not (lkb::smember
+			 id lkb::*duplicate-lex-ids*)))
+	 collect id))))
+
+
 (defun genpredict-mrs-struct (mrsstruct rules)
   ;;; takes an mrs structure and a set of generation rules
   ;;; using the output of the rules to predict null semantic
