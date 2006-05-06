@@ -124,6 +124,117 @@
     (finish-output ostream)))
 
 
+#|
+(defparameter lkb::*do-something-with-parse* 'mrs::batch-output-scoped-mrs)
+|#
+
+#+:lkb
+(defun batch-output-scoped-mrs nil
+  ;;; to be called from LKB batch processing
+  (let ((sentence lkb::*sentence*)
+        (ostream (if (and lkb::*ostream* 
+                          (streamp lkb::*ostream*) 
+                          (output-stream-p lkb::*ostream*)) 
+                     lkb::*ostream*  t)))
+    (format ostream "~%;;; Sentence: ~A " sentence)
+    (if *parse-record*
+	(loop for parse in *parse-record*
+	    do
+	      (let* ((mrs-struct (extract-mrs parse)))
+		(if mrs-struct
+		    (progn
+		      (setf *canonical-bindings* nil)
+		      (let ((disj-structs (disj-test-mrs mrs-struct)))
+			(loop for disj-struct in disj-structs
+			    do
+			      (let ((binding-sets 
+				     (make-scoped-mrs disj-struct)))
+				(if binding-sets
+				    (show-some-scoped-structures 
+				     disj-struct binding-sets
+				     ostream (length binding-sets))
+				  (format ostream 
+					  "~%;;; Failure to scope"))))))	  
+		  (format ostream "~%;;; Failure to extract mrs"))))  
+      (format ostream "~%;;; Parse failure"))
+    (finish-output ostream)))
+
+#|
+(defparameter lkb::*do-something-with-parse* 'mrs::batch-test-mrs-io)
+|#
+
+#+:lkb
+(defun batch-test-mrs-io nil
+  ;;; to be called from LKB batch processing
+  (let ((sentence lkb::*sentence*)
+	(analysis-no 0)
+        (ostream (if (and lkb::*ostream* 
+                          (streamp lkb::*ostream*) 
+                          (output-stream-p lkb::*ostream*)) 
+                     lkb::*ostream*  t)))
+    (loop for parse in *parse-record*
+	do
+	  (let* ((mrs-struct (extract-mrs parse)))
+	    (incf analysis-no)
+	    (if mrs-struct
+		(progn 
+		  (with-open-file (ostream1 "/tmp/foo5mrstest"
+				   :direction :output
+				   :if-exists :supersede)
+		    (output-mrs1 mrs-struct 'mrs-xml ostream1)
+		    (finish-output ostream1))
+		  (let ((read-mrs 
+			 (read-single-mrs-xml-file "/tmp/foo5mrstest")))
+		    (unless (mrs-equalp read-mrs mrs-struct t)
+		      (format ostream 
+			      "~%MRS difference for ~A structure ~A"
+			      sentence analysis-no))))
+	      (format ostream "~%;;; Failure to extract mrs"))  
+	    (finish-output ostream)))))
+
+#|
+(defparameter lkb::*do-something-with-parse* 'mrs::batch-null-semantics)
+|#
+
+#|
+<!ELEMENT null-sem (sentence, parse-record*)>
+<!ELEMENT parse-record (mrs, id*)>
+<!ELEMENT sentence (#PCDATA)>
+<!ELEMENT id (#PCDATA)>
+|#
+
+#+:lkb
+(defun batch-null-semantics nil
+  ;;; to be called from LKB batch processing
+  (let ((sentence lkb::*sentence*)
+        (ostream (if (and lkb::*ostream* 
+                          (streamp lkb::*ostream*) 
+                          (output-stream-p lkb::*ostream*)) 
+                     lkb::*ostream*  t)))
+    (format ostream
+	    "~%<null-sem>")
+    (format ostream
+	    "~%<sentence>~A</sentence>" sentence)
+    (loop for parse in *parse-record*
+	do
+	  (let* ((mrs-struct (extract-mrs parse))
+		 (lex-ids (lkb::edge-lex-ids parse))
+		 (null-sem-lex-ids 
+		  (intersection lex-ids 
+				*empty-semantics-lexical-entries*)))
+	    (when mrs-struct
+		(progn
+		  (format ostream
+			  "~%<parse-record>")
+		  (output-mrs1 mrs-struct 'mrs-xml ostream)
+		  (dolist (id null-sem-lex-ids)
+		    (format ostream "~%<id>~A</id>" id))
+		  (format ostream
+			  "</parse-record>")
+		  (finish-output ostream)))))
+    (format ostream
+	    "~%</null-sem>")))
+
 ;;; The following are primarily for the TSDB machinery
 ;;; - they all take an edge and return a string related
 ;;; to the MRS in some way

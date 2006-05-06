@@ -306,13 +306,16 @@
   (with-slots (stream indentation) mrsout
     (format stream "~VT[" indentation)))
 
-(defmethod mrs-output-top-h ((mrsout simple) handel-val)
+(defmethod mrs-output-top-h ((mrsout simple) handel-val
+			     &optional properties type id)
+  (declare (ignore properties type id))
   (when (and handel-val *rel-handel-path*)
     (with-slots (stream) mrsout
       (format stream " LTOP: ~(~a~)" handel-val))))
 
-(defmethod mrs-output-index ((mrsout simple) index-val &optional properties)
-  (declare (ignore properties))
+(defmethod mrs-output-index ((mrsout simple) index-val 
+			     &optional properties type id)
+  (declare (ignore properties type id))
   (with-slots (stream indentation) mrsout
     (when index-val
       (format stream "~%~VT  INDEX: ~(~a~)" indentation index-val))))
@@ -322,8 +325,9 @@
     (format stream "~%~VT  RELS: <" indentation)
     (setf indentation (+ indentation 10))))
 
-(defmethod mrs-output-var-fn ((mrsout simple) var-string &optional properties)
-  (declare (ignore properties))
+(defmethod mrs-output-var-fn ((mrsout simple) var-string 
+			      &optional properties type id)
+  (declare (ignore properties type id))
   (with-slots (stream) mrsout
     (format stream "~(~a~)" var-string)))
 
@@ -339,7 +343,9 @@
       (format stream "~VT[ ~s" indentation pred)
       (format stream "~VT[ ~(~a~)" indentation pred))))
 
-(defmethod mrs-output-rel-handel ((mrsout simple) handel)
+(defmethod mrs-output-rel-handel ((mrsout simple) handel 
+				  &optional properties sort id)
+  (declare (ignore properties sort id))
   (if handel
       (with-slots (stream indentation) mrsout
         (format stream "~%~VT~A: ~(~a~)" (+ indentation 2) 'lbl handel))))
@@ -384,8 +390,9 @@
   (with-slots (stream indentation) mrsout
     (format stream "~%~VT  HCONS: <" indentation)))
 
-(defmethod mrs-output-outscopes ((mrsout simple) reln higher lower first-p)
-  (declare (ignore first-p))
+(defmethod mrs-output-outscopes ((mrsout simple) reln higher lower first-p
+				 higher-id higher-sort lower-id lower-sort)
+  (declare (ignore first-p higher-id higher-sort lower-id lower-sort))
   (with-slots (stream indentation) mrsout
     (format stream " ~(~a~) ~A ~(~a~)" higher reln lower)))
 
@@ -481,13 +488,16 @@ ACONS: <x1,h4> in <<x2,h3>,<x5,h6>>, <x11,h41> in <<x21,h31>,<x51,h61>>
   (with-slots (stream) mrsout
     (format stream "<")))
   
-(defmethod mrs-output-top-h ((mrsout indexed) handel-val)
+(defmethod mrs-output-top-h ((mrsout indexed) handel-val
+			     &optional properties type id)
+  (declare (ignore properties type id))
   (if handel-val
       (with-slots (stream) mrsout
         (format stream "~(~a~)," handel-val))))
 
-(defmethod mrs-output-index ((mrsout indexed) index-val &optional properties)
-  (declare (ignore properties))
+(defmethod mrs-output-index ((mrsout indexed) index-val 
+			     &optional properties type id)
+  (declare (ignore properties type id))
   (with-slots (stream) mrsout
     (format stream "~(~a~)" index-val)))
 
@@ -495,8 +505,9 @@ ACONS: <x1,h4> in <<x2,h3>,<x5,h6>>, <x11,h41> in <<x21,h31>,<x51,h61>>
   (with-slots (stream) mrsout
     (format stream ",~%{")))
 
-(defmethod mrs-output-var-fn ((mrsout indexed) var-string &optional properties)
-  (declare (ignore properties))
+(defmethod mrs-output-var-fn ((mrsout indexed) var-string 
+			      &optional properties type id)
+  (declare (ignore properties type id))
   (with-slots (stream) mrsout
     (format stream "~(~a~)" (remove-variable-junk var-string))))
 
@@ -510,7 +521,9 @@ ACONS: <x1,h4> in <<x2,h3>,<x5,h6>>, <x11,h41> in <<x21,h31>,<x51,h61>>
     (setf temp-pred pred)
     (unless first-p (format stream ",~%"))))
 
-(defmethod mrs-output-rel-handel ((mrsout indexed) handel)
+(defmethod mrs-output-rel-handel ((mrsout indexed) handel
+				  &optional properties sort id)
+  (declare (ignore properties sort id))
   (if handel
       (with-slots (stream temp-pred) mrsout  
         (format stream "~(~a~):~A(" 
@@ -563,7 +576,9 @@ ACONS: <x1,h4> in <<x2,h3>,<x5,h6>>, <x11,h41> in <<x21,h31>,<x51,h61>>
     (format stream "~%{")))
 
 ;;; ???
-(defmethod mrs-output-outscopes ((mrsout indexed) reln higher lower first-p)
+(defmethod mrs-output-outscopes ((mrsout indexed) reln higher lower first-p
+				 higher-id higher-sort lower-id lower-sort)
+  (declare (ignore  higher-id higher-sort lower-id lower-sort))
   (with-slots (stream) mrsout
     (unless first-p
       (format stream ",~%"))
@@ -636,12 +651,15 @@ higher and lower are handle-variables
   (with-slots (stream) mrsout
     (format stream "psoa(")))
 
-(defmethod mrs-output-top-h ((mrsout prolog) handel-val)
+(defmethod mrs-output-top-h ((mrsout prolog) handel-val
+			     &optional properties type id)
+  (declare (ignore properties type id))
   (with-slots (stream) mrsout
     (format stream "~(~a~)" handel-val)))
 
-(defmethod mrs-output-index ((mrsout prolog) index-val &optional properties)
-  (declare (ignore properties))
+(defmethod mrs-output-index ((mrsout prolog) index-val 
+			     &optional properties type id)
+  (declare (ignore properties type id))
   (with-slots (stream) mrsout
     (format stream ",~(~a~)" index-val)))
 
@@ -649,8 +667,9 @@ higher and lower are handle-variables
   (with-slots (stream) mrsout
     (format stream ",[")))
 
-(defmethod mrs-output-var-fn ((mrsout prolog) var-string &optional properties)
-  (declare (ignore properties))
+(defmethod mrs-output-var-fn ((mrsout prolog) var-string 
+			      &optional properties type id)
+  (declare (ignore properties type id))
   (with-slots (stream) mrsout
     (format stream "~(~a~))" (remove-variable-junk var-string))))
 
@@ -669,7 +688,9 @@ higher and lower are handle-variables
 	     *sem-relation-suffix*
 	     (string-downcase pred)))))
 
-(defmethod mrs-output-rel-handel ((mrsout prolog) handel)
+(defmethod mrs-output-rel-handel ((mrsout prolog) handel
+				  &optional properties sort id)
+  (declare (ignore properties sort id))
   (with-slots (stream temp-pred) mrsout  
     (format stream "~(~a~),[" handel)))
 
@@ -710,7 +731,9 @@ higher and lower are handle-variables
   (with-slots (stream) mrsout
     (format stream ",hcons([")))
 
-(defmethod mrs-output-outscopes ((mrsout prolog) reln higher lower first-p)
+(defmethod mrs-output-outscopes ((mrsout prolog) reln higher lower first-p
+				 higher-id higher-sort lower-id lower-sort)
+  (declare (ignore higher-id higher-sort lower-id lower-sort))
   (with-slots (stream) mrsout  
     (unless first-p (format stream ","))
     (format stream "~A(~(~a~),~(~a~))" (string-downcase reln) higher lower)))
@@ -782,13 +805,17 @@ higher and lower are handle-variables
   (with-slots (stream class) mrs
     (format stream "<table class=mrs~:[~*~;~:(~a~)~]Mrs>~%" class class)))
 
-(defmethod mrs-output-top-h ((mrs html) handle)
+(defmethod mrs-output-top-h ((mrs html) handle
+			     &optional properties type var-id)
+  (declare (ignore properties type var-id))
   (when (and handle *rel-handel-path*)
     (with-slots (id stream) mrs
       (format stream "<tr><td class=mrsFeatureTop>TOP</td>~%")
       (mrs-variable-html handle nil id "mrsValueTop" stream))))
 
-(defmethod mrs-output-index ((mrs html) index &optional properties)
+(defmethod mrs-output-index ((mrs html) index 
+			     &optional properties type var-id)
+  (declare (ignore type var-id))
   (when index
     (with-slots (id stream) mrs
       (format stream "<tr>~%<td class=mrsFeatureIndex>INDEX</td>~%")
@@ -806,7 +833,9 @@ higher and lower are handle-variables
       <td><table class=mrsRelsContainer><tr>~%"
      nrows)))
 
-(defmethod mrs-output-var-fn ((mrs html) variable &optional properties)
+(defmethod mrs-output-var-fn ((mrs html) variable 
+			      &optional properties type var-id)
+  (declare (ignore type var-id))
   (with-slots (id stream) mrs
     (mrs-variable-html variable properties id "mrsValue" stream)))
 
@@ -829,7 +858,9 @@ higher and lower are handle-variables
      class class pred)
     (incf i)))
 
-(defmethod mrs-output-rel-handel ((mrs html) handle)
+(defmethod mrs-output-rel-handel ((mrs html) handle 
+				  &optional properties sort id)
+  (declare (ignore properties sort id))
   (when handle
     (with-slots (id stream) mrs
       (format stream "      <tr><td class=mrsLabel>LBL</td>")
@@ -875,7 +906,9 @@ higher and lower are handle-variables
      "<tr><td class=mrsFeatureHcons>HCONS</td>~
       <td class=mrsValueHcons>{ ")))
 
-(defmethod mrs-output-outscopes ((mrs html) relation higher lower firstp)
+(defmethod mrs-output-outscopes ((mrs html) relation higher lower firstp
+				 higher-id higher-sort lower-id lower-sort)
+  (declare (ignore higher-id higher-sort lower-id lower-sort))
   (with-slots (id hconss stream) mrs
     (unless firstp (format stream ", "))
     (format 
@@ -932,13 +965,16 @@ higher and lower are handle-variables
 
 (defmethod mrs-output-start-psoa ((mrs debug)))
 
-(defmethod mrs-output-top-h ((mrs debug) handle)
+(defmethod mrs-output-top-h ((mrs debug) handle
+			     &optional properties type id)
+  (declare (ignore properties type id))
   (when (and handle *rel-handel-path*)
     (with-slots (id stream) mrs
       (format stream "~a:" handle))))
 
-(defmethod mrs-output-index ((mrs debug) index &optional properties)
-  (declare (ignore properties))
+(defmethod mrs-output-index ((mrs debug) index 
+			     &optional properties type id)
+  (declare (ignore properties type id))
   (when index
     (with-slots (id stream) mrs
       (format stream "~a:" index))))
@@ -947,8 +983,9 @@ higher and lower are handle-variables
   (with-slots (stream) mrs
     (format stream "{")))
 
-(defmethod mrs-output-var-fn ((mrs debug) variable &optional properties)
-  (declare (ignore properties))
+(defmethod mrs-output-var-fn ((mrs debug) variable 
+			      &optional properties type id)
+  (declare (ignore properties type id))
   (with-slots (stream memory) mrs
     (format stream "~:[ ~;~]~a" memory variable)
     (setf memory nil)))
@@ -969,7 +1006,9 @@ higher and lower are handle-variables
                    "_"))
     (format stream " ")))
 
-(defmethod mrs-output-rel-handel ((mrs debug) handle)
+(defmethod mrs-output-rel-handel ((mrs debug) handle 
+				  &optional properties sort id)
+  (declare (ignore properties sort id))
   (when handle
     (with-slots (stream memory) mrs
       (format stream "~a:~a(" handle memory memory))))
@@ -1001,8 +1040,10 @@ higher and lower are handle-variables
 
 (defmethod mrs-output-start-h-cons ((mrs debug)))
 
-(defmethod mrs-output-outscopes ((mrs debug) relation higher lower firstp)
-  (declare (ignore relation higher lower firstp)))
+(defmethod mrs-output-outscopes ((mrs debug) relation higher lower firstp
+				 higher-id higher-sort lower-id lower-sort)
+  (declare (ignore relation higher lower firstp
+		   higher-id higher-sort lower-id lower-sort)))
 
 (defmethod mrs-output-end-h-cons ((mrs debug)))
 
@@ -1012,7 +1053,15 @@ higher and lower are handle-variables
 
 (defclass mrs-xml (output-type) ())
 
-;;; <!ELEMENT mrs (var, (ep|hcons)*)>
+;;; <!ELEMENT mrs (label, (ep|hcons)*)>
+
+;;; FIX
+;;;
+;;; <!ATTLIST mrs
+;;;          cfrom CDATA #IMPLIED
+;;;          cto   CDATA #IMPLIED 
+;;;          surface   CDATA #IMPLIED 
+;;;          ident     CDATA #IMPLIED >
 
 (defmethod mrs-output-start-fn ((mrsout mrs-xml))
   (with-slots (stream) mrsout
@@ -1025,50 +1074,92 @@ higher and lower are handle-variables
 (defmethod mrs-output-start-psoa ((mrsout mrs-xml))
   nil)
 
-(defmethod mrs-output-top-h ((mrsout mrs-xml) handel-val)
+(defmethod mrs-output-top-h ((mrsout mrs-xml) handel-val
+			     &optional properties type id)
+  (declare (ignore properties type handel-val))
   (with-slots (stream) mrsout
-    (format stream "<var vid='~A'/>" handel-val)))
+    (format stream "<label vid='~A'/>" id)))
 
 
-(defmethod mrs-output-index ((mrsout mrs-xml) index-val &optional properties)
-  (declare (ignore index-val properties))
-  nil)
+(defmethod mrs-output-index ((mrsout mrs-xml) index-val 
+			     &optional properties type id)
+  (declare (ignore properties type index-val))
+  (with-slots (stream) mrsout
+    (format stream "<var vid='~A'/>" id)))
 
 (defmethod mrs-output-start-liszt ((mrsout mrs-xml))
   nil)
 
 #|
-<!ELEMENT var EMPTY>
+<!ELEMENT var (extrapair*)>
 <!ATTLIST var
-          vid  CDATA #REQUIRED >
+          vid  CDATA #REQUIRED 
+	  sort (x|e|h|u|l) #IMPLIED >
 
-extras have to be sorted out later          
+<!ELEMENT extrapair (path,value)>
+
+<!ELEMENT path (#PCDATA)>
+
+<!ELEMENT value (#PCDATA)>
+
+;;; AAC added sortal values May 2 2006
+         
 |#
 
-(defmethod mrs-output-var-fn ((mrsout mrs-xml) var-string &optional properties)
-  (declare (ignore properties))
+(defmethod mrs-output-var-fn ((mrsout mrs-xml) var-string 
+			      &optional properties type id)
+  (declare (ignore var-string))
   (with-slots (stream) mrsout
-    (format stream "<var vid='~A'/>" var-string)))
+    (format stream "<var vid='~A'" id)
+    (when type
+	(format stream " sort='~A'" type))
+    (format stream ">")    
+    (dolist (evp properties)
+      (format stream 
+	      "~%<extrapair><path>~A</path><value>~A</value></extrapair>" 
+	      (extrapair-feature evp) (extrapair-value evp)))
+    (format stream "</var>")))
+
 
 (defmethod mrs-output-atomic-fn ((mrsout mrs-xml) atomic-value)
   (with-slots (stream) mrsout
     (format stream "<constant>~A</constant>" atomic-value)))
 
 #|
-<!ELEMENT ep (pred, var, fvpair*)>
-;;; var is the label
+<!ELEMENT ep ((pred|realpred), label, fvpair*)>
+<!ATTLIST ep
+          cfrom CDATA #IMPLIED
+          cto   CDATA #IMPLIED 
+          surface   CDATA #IMPLIED
+	  base      CDATA #IMPLIED >
+
 <!ELEMENT pred (#PCDATA)>
+
+<!ELEMENT spred (#PCDATA)>
+
+;;; FIX - cfrom etc and 
+;;; realpred for later ease of compatibility - not yet supported
+<!ELEMENT realpred EMPTY>
+
+<!ATTLIST realpred
+          lemma CDATA #REQUIRED
+          pos (v|n|j|r|p|q|c|x|u|a|s) #REQUIRED
+          sense CDATA #IMPLIED >
 |#
 
 (defmethod mrs-output-start-rel ((mrsout mrs-xml) pred first-p class)
   (declare (ignore first-p class))
   (with-slots (stream) mrsout
     (format stream "~%<ep>")
-    (format stream "<pred>~(~a~)</pred>" pred)))
+    (if (stringp pred)
+	(format stream "<spred>~a</spred>" pred)
+      (format stream "<pred>~a</pred>" pred))))
 
-(defmethod mrs-output-rel-handel ((mrsout mrs-xml) handel)
+(defmethod mrs-output-rel-handel ((mrsout mrs-xml) handel
+				  &optional properties sort id)
+  (declare (ignore handel properties sort))
   (with-slots (stream) mrsout
-    (format stream "<var vid='~A'/>" handel)))
+    (format stream "<label vid='~A'/>" id)))
 
 #|
 <!ELEMENT fvpair (rargname, (var|constant))>
@@ -1119,22 +1210,25 @@ extras have to be sorted out later
           hreln (qeq|lheq|outscopes) #REQUIRED >
 
 <!ELEMENT hi (var)>
-<!ELEMENT lo (var)>
+<!ELEMENT lo (label|var)>
 |#
 
 (defmethod mrs-output-start-h-cons ((mrsout mrs-xml))
   nil)
 
-(defmethod mrs-output-outscopes ((mrsout mrs-xml) reln higher lower first-p)
+(defmethod mrs-output-outscopes ((mrsout mrs-xml) reln 
+				 higher lower first-p 
+				 higher-id higher-sort lower-id lower-sort)
   (declare (ignore first-p))
   (with-slots (stream) mrsout
     (format stream "~%<hcons hreln='~A'><hi>"
             (string-downcase reln))
-    ;;; same as var
-    (format stream "<var vid='~A'/>" higher)
+    ;;;
+    (mrs-output-var-fn mrsout higher nil higher-sort higher-id)
     (format stream "</hi><lo>")
-    ;;; same as var
-    (format stream "<var vid='~A'/>" lower)
+    ;;;
+    (mrs-output-var-fn mrsout lower nil lower-sort lower-id)
+    ;;;
     (format stream "</lo></hcons>")))
 
 (defmethod mrs-output-end-h-cons ((mrsout mrs-xml))
@@ -1202,11 +1296,16 @@ extras have to be sorted out later
   (setf *already-seen-vars* nil)
   (mrs-output-start-psoa *mrs-display-structure*)
   (mrs-output-top-h *mrs-display-structure* 
-                    (find-var-name (psoa-top-h psoa) connected-p))
+                    (find-var-name (psoa-top-h psoa) connected-p)
+		    (and (psoa-top-h psoa)(var-extra (psoa-top-h psoa)))
+		    (and (psoa-top-h psoa)(var-base-type (psoa-top-h psoa)))
+		    (and (psoa-top-h psoa)(var-id (psoa-top-h psoa))))
   (print-mrs-extra (psoa-top-h psoa))
   (mrs-output-index *mrs-display-structure* 
                     (find-var-name (psoa-index psoa) connected-p)
-                    (and (psoa-index psoa) (var-extra (psoa-index psoa))))
+                    (and (psoa-index psoa) (var-extra (psoa-index psoa)))
+		    (and (psoa-index psoa) (var-base-type (psoa-index psoa)))
+		    (and (psoa-index psoa) (var-id (psoa-index psoa))))
   (print-mrs-extra (psoa-index psoa))
   (mrs-output-start-liszt *mrs-display-structure*)
   (let ((first-rel t))
@@ -1230,7 +1329,10 @@ extras have to be sorted out later
    (determine-ep-class rel))
   (mrs-output-rel-handel
    display
-   (find-var-name (rel-handel rel) connected-p))
+   (find-var-name (rel-handel rel) connected-p)
+   (var-extra (rel-handel rel))
+   (var-base-type (rel-handel rel))
+   (var-id (rel-handel rel)))
   (mrs-output-rel-link display (rel-link rel))
   (print-mrs-extra (rel-handel rel))
   (loop for feat-val in (rel-flist rel)
@@ -1243,7 +1345,9 @@ extras have to be sorted out later
 		(mrs-output-var-fn 
 		 display
 		 (find-var-name value connected-p)
-		 (var-extra value))
+		 (var-extra value)
+		 (var-base-type value)
+		 (var-id value))
 		(print-mrs-extra value))
 	    (mrs-output-atomic-fn display value)))
 	(mrs-output-end-fvpair-fn display))
@@ -1298,7 +1402,11 @@ extras have to be sorted out later
               (hcons-scarg hcons) connected-p) 
              (find-var-name 
               (hcons-outscpd hcons) connected-p)
-             first-hcons)
+             first-hcons
+	     (var-id (hcons-scarg hcons))
+	     (var-type (hcons-scarg hcons))
+	     (var-id (hcons-outscpd hcons))
+	     (var-type (hcons-outscpd hcons)))
             (setf first-hcons nil)))
     ;; extra info can be ignored here because all handels
     ;; will have appeared elsewhere
@@ -1873,7 +1981,217 @@ VAR -> VARNAME[:CONSTNAME]*
   (declare (ignore val))
   'DUMMY)
 
-;;; reading in XML version - to be added
+;;; reading in XML MRS
+;;; see mrs.dtd
+
+
+(defun read-mrs-xml-file (file-name)
+  ;;; <!ELEMENT mrs-list (mrs)*>
+  (let ((*package* (find-package :mrs)))
+    (with-open-file (istream file-name :direction :input)
+      (let ((mrss (parse-xml-removing-junk istream)))
+	(unless (equal (car mrss) '|mrs-list|)
+	  (error "~A is not a valid mrs file" file-name))
+	(loop for mrs in (cdr mrss)
+	    unless (xml-whitespace-string-p mrs)
+	    collect
+	      (progn 
+		(setf *already-read-vars* nil)
+		(read-mrs-xml mrs)))))))
+
+(defun read-single-mrs-xml-file (file-name)
+  (let ((*package* (find-package :mrs)))
+    (with-open-file (istream file-name :direction :input)
+      (setf *already-read-vars* nil)
+      (let ((mrs (parse-xml-removing-junk istream)))
+	(xml-whitespace-string-p mrs)
+	(read-mrs-xml mrs)))))
+
+#|
+to test
+(output-mrs (read-single-mrs-xml-file "~aac10/foo5") 'simple)
+|#
+
+(defun read-single-mrs-xml-from-string (str)
+  ;;; currently called from emacs interface - takes
+  ;;; a string containing an mrs (we hope) and
+  ;;; reads it in
+  (let ((*package* (find-package :mrs)))
+    (with-input-from-string (istream str)
+      (setf *already-read-vars* nil)
+      (let ((mrs (parse-xml-removing-junk istream)))
+	(unless (xml-whitespace-string-p mrs)
+	  (read-mrs-xml mrs))))))
+  
+
+(defun read-mrs-xml (content)
+;;; <!ELEMENT mrs (label, var, (ep|hcons)*)>
+  (let ((top-h nil) (index nil) (eps nil) 
+        (h-cons nil)
+	(tag (car content)))
+    (unless (eql tag '|mrs|)
+      (error "~A is not an mrs" content))
+    (setf content (cdr content))
+    (loop (let ((next-el (car content)))
+	    (if (xml-whitespace-string-p next-el)
+		(pop content)
+	      (return))))
+    (when content
+      (setf top-h (read-mrs-xml-label (first content)))
+      (setf index (read-mrs-xml-var (second content)))
+      (loop for next-el in (cddr content)
+	  do
+	    (unless (xml-whitespace-string-p next-el)
+	      (let
+		  ((next-tag (car next-el)))
+		(cond 
+		 ((atom next-tag)
+		  (cond ((eql next-tag '|ep|)
+			 (push (read-mrs-xml-ep next-el)
+			       eps))
+			(t (error "Unexpected element ~A" next-el))))
+		 ((eql (car next-tag) '|ep|)
+		  (push (read-mrs-xml-ep next-el)
+			eps))
+		 ((eql (car next-tag) '|hcons|)
+		  (push (read-mrs-xml-hcons next-el)
+			h-cons))
+		 (t (error "Unexpected element ~A" next-el))))))
+      (make-psoa :top-h top-h
+		 :index index
+		 :liszt (nreverse eps)
+		 :h-cons (nreverse h-cons)))))
+
+
+(defun read-mrs-xml-ep (content)
+;;; <!ELEMENT ep ((pred|realpred), label, fvpair*)>
+;;; FIX - deal with
+;;; <!ATTLIST ep
+;;;          cfrom CDATA #IMPLIED
+;;;          cto   CDATA #IMPLIED 
+;;;          surface   CDATA #IMPLIED
+;;;	  base      CDATA #IMPLIED >
+  (let ((tag (car content))
+        (body (cdr content)))
+    (unless (eql tag '|ep|)
+      ;;; base is allowed but ignored
+      (error "Malformed ep ~A" content))
+    (setf body (loop for x in body
+		   unless (xml-whitespace-string-p x)
+		   collect x))
+    (let* ((pred (read-mrs-xml-pred (first body)))
+	   (label (read-mrs-xml-label (second body)))
+	   (flist (read-mrs-xml-rargs (cddr body))))
+      (make-char-rel 
+       :pred pred
+       :handel label
+       :flist flist))))
+
+(defun read-mrs-xml-pred (content)
+  (let ((tag (car content))
+        (body (cdr content)))
+    (cond 
+     ((eql tag '|pred|) (make-mrs-atom (car body)))
+         ;;; <!ELEMENT pred (#PCDATA)>
+     ((eql tag '|spred|) (car body))
+     (t (error "Unexpected element ~A" content)))))
+
+(defun read-mrs-xml-var (content)
+  (read-mrs-xml-var-or-label content nil))
+
+(defun read-mrs-xml-label (content)
+  (read-mrs-xml-var-or-label content t))
+
+
+(defun read-mrs-xml-var-or-label (content label-p)
+;;; <!ELEMENT var (extrapair*)>
+;;; <!ATTLIST var
+;;;          vid  CDATA #REQUIRED 
+;;;          sort (x|e|h|u|l) #IMPLIED >
+  (let ((tag (car content))
+        (body (cdr content)))
+    (if label-p
+	(unless (and (eql (first tag) '|label|)
+		     (eql (second tag) '|vid|))
+	  (error "Malformed label ~A" content))
+      (unless (and (eql (first tag) '|var|)
+		   (eql (second tag) '|vid|))
+	(error "Malformed variable ~A" content)))
+    (let* ((extras (read-mrs-xml-extras body))
+	   (id (parse-integer (third tag)))
+	   (sort (or (fifth tag) (if label-p "h")))
+	   (existing (assoc id *already-read-vars*))
+	   (var (if (cdr existing)
+		    (progn
+		      (when (and extras (not (var-extra (cdr existing))))
+			(setf (var-extra (cdr existing)) extras))
+		      (when (and sort (not (var-type (cdr existing))))
+			(setf (var-type (cdr existing)) sort))
+		      (cdr existing))
+		    (make-var :id id :extra extras :type sort))))
+      (unless existing 
+	(push (cons id var) *already-read-vars*))
+     var)))
+
+(defun read-mrs-xml-extras (extras)
+  (loop for content in extras
+      unless (xml-whitespace-string-p content)
+      collect
+;;; <!ELEMENT extrapair (path,value)>
+;;; <!ELEMENT path (#PCDATA)>
+;;; <!ELEMENT value (#PCDATA)>
+	(let ((path nil) (value nil))
+	  (setf path (make-mrs-atom 
+		      (read-rmrs-simple '|path| (second content))))
+	  (setf value (make-mrs-atom
+		       (read-rmrs-simple '|value| (third content))))
+	  (make-extrapair :feature path :value value)))) 
+
+(defun make-mrs-atom (str)
+  (let ((*package* (find-package *mrs-package*)))
+      (intern str *mrs-package*)))
+
+(defun read-mrs-xml-constant (content)
+;;;  <!ELEMENT constant (#PCDATA)>
+  (read-rmrs-simple '|constant| content))
+  
+(defun read-mrs-xml-rargs (rargs)
+  (loop for content in rargs
+        unless (xml-whitespace-string-p content)
+	collect
+  ;;; <!ELEMENT fvpair (rargname, (var|constant))>
+	(let ((name nil) (arg nil))
+	  (setf name (make-mrs-atom
+		      (read-rmrs-simple 
+		       '|rargname| (second content))))
+    ;;; <!ELEMENT rargname (#PCDATA)>
+	  (let* ((argval (third content))
+		 (argvaltag (car argval)))
+	    (setf arg
+	      (if (eql argvaltag '|constant|)
+		  (read-mrs-xml-constant argval)
+		(read-mrs-xml-var argval))))
+	  (make-fvpair :feature name :value arg))))
+  
+(defun read-mrs-xml-hcons (content)
+;;; <!ELEMENT hcons (hi, lo)>
+;;; <!ATTLIST hcons 
+;;;          hreln (qeq|lheq|outscopes) #REQUIRED >
+;;;
+;;; <!ELEMENT hi (var)>
+;;; <!ELEMENT lo (label|var)>
+  (let ((tag (car content))
+        (body (cdr content)))
+    (unless (and (eql (first tag) '|hcons|)
+                 (eql (second tag) '|hreln|)
+                 (eql (first (first body)) '|hi|)
+                 (eql (first (second body)) '|lo|))
+      (error "Malformed hcons ~A" content))
+    (make-hcons :relation (third tag)
+                :scarg (read-mrs-xml-var (second (first body)))
+                :outscpd (read-mrs-xml-var (second (second body))))))
+                
+;;; end MRS XML
 
 ;;;
 ;;; interim solution for MRS `unfilling' until we construct a proper SEMI; note
