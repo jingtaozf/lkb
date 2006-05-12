@@ -80,7 +80,7 @@ we assume that there will generally only be one feature
 (defun null-semantics-entry-p (id)
   (unless (and (hash-table-p mrs::*relation-index*)
                  (> (hash-table-count mrs::*relation-index*) 0))
-      (error 'generator-uninitialized))
+      (error 'lkb::generator-uninitialized))
   (not (gethash id *semantic-table*)))
 
 (defun clear-semantic-indices nil
