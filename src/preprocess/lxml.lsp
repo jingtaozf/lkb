@@ -138,7 +138,7 @@
   (if (listp lxml)
        (loop
 	   for x in lxml 
-	   unless (whitespace-p x)
+	   unless (xml-whitespace-p x)
 	   collect (discard-whitespace x))
     lxml))
 
