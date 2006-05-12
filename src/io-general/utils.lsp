@@ -798,5 +798,6 @@
        else append (list c))
    'string))
 
+#+:xml
 (defun xml-whitespace-p (str)
   (net.xml.parser::all-xml-whitespace-p str))
