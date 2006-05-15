@@ -40,7 +40,7 @@
   ;;
   ;; for supported platforms, assume Berkeley DB support is available
   ;;
-  #+(and (not :acache) :linux (and :allegro-version>= (version>= 8 0)))
+  #+(and :linux (and :allegro-version>= (version>= 8 0)))
   (pushnew :bdb *features*)
   
   ;;
@@ -58,9 +58,6 @@
 				 '(:relative "tsdb"))
     :binary-pathname (dir-append (get-binaries-dir "tsdb")
 				 '(:relative "tsdb"))
-
-    #+:acache :initially-do 
-    #+:acache (require :acache #+:logon "acache-1.1.0.fasl")
 
     :finally-do
     #+(and :allegro (or :linux (and :sparc :svr4) :alpha :macosx) (not :slave))
@@ -165,7 +162,7 @@
        (:file "rasp")
        #+:lkb
        (:file "pcfg")
-       #+:acache
+       #+(and :null :acache)
        (:file "acache")
        #+:bdb
        (:file "bdb")
