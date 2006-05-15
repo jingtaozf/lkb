@@ -14,8 +14,6 @@ M log/build
 ? src/.l7cl
 ? src/.l8cl
 ? src/.lecl
-U src/ACL_specific/misc.lsp
-U src/ACL_specific/topmenu.lsp
 M src/systems/tsdb.system
 ? src/tsdb/home/log
 ? src/tsdb/home/redwoods
@@ -28,7 +26,7 @@ M src/systems/tsdb.system
 **********
 Checking in ./src/version.lsp;
 /lingo/CVS/lkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.487; previous revision: 1.486
+new revision: 1.488; previous revision: 1.487
 done
 make[1]: Entering directory `/lingo/build/lkb'
 ( \
@@ -1130,7 +1128,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-8.0 [Linux (x86)] (May 15, 2006 13:43)
+8.0 [Linux (x86)] (May 15, 2006 13:50)
 Copyright (C) 1985-2005, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -3000,20 +2998,149 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ; Foreign loading /lingo/build/lkb/src/tsdb/linux.x86.32/capi.so.
 ; Foreign loading /lingo/build/lkb/src/tsdb/linux.x86.32/gc.so.
 ; Foreign loading /lingo/build/lkb/src/tsdb/linux.x86.32/bdb.so.
-Error: Loading /lingo/build/lkb/src/tsdb/linux.x86.32/bdb.so failed with
-       error:
-       libdb-4.2.so: cannot open shared object file: No such file or directory.
-  [condition type: FILE-ERROR]
-
-Restart actions (select using :continue):
- 0: retry the load of /lingo/build/lkb/src/tsdb/linux.x86.32/bdb.so
- 1: skip loading /lingo/build/lkb/src/tsdb/linux.x86.32/bdb.so
- 2: Return to Top Level (an "abort" restart).
- 3: Abort entirely from this (lisp) process.
-[1] CL-USER(11): :pop
-CL-USER(11): EOF
-Really exit lisp [n]? 
-; Exiting
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/tsdb-package.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/tsdb-package.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/tsdb-package.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/macros.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/macros.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/macros.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/lkb-interface.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/lkb-interface.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/lkb-interface.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/globals.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/globals.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/globals.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/utilities.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/utilities.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/utilities.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/pvm.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/pvm.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/pvm.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/capi.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/capi.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/capi.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/tsql.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/tsql.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/tsql.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/tsdb.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/tsdb.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/tsdb.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/process.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/process.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/process.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/commands.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/commands.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/commands.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/import.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/import.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/import.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/filter.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/filter.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/filter.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/statistics.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/statistics.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/statistics.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/evolution.lisp
+8416744 bytes have been tenured, next gc will be global.
+See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/evolution.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/evolution.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/html.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/html.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/html.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/podium.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/podium.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/podium.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/allegro.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/allegro.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/allegro.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/gc.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/gc.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/gc.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/yy.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/yy.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/yy.fasl
+[13:53:05] gc-after-hook(): global; new: 717920; old: 0; efficiency: 44.
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/mt.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/mt.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/mt.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/derivations.lisp
+[13:53:06] gc-after-hook(): local; new: 1612624; old: 0; efficiency: 92.
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/derivations.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/derivations.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/tnt-interface.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/tnt-interface.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/tnt-interface.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/redwoods.lisp
+[13:53:07] gc-after-hook(): local; new: 2375944; old: 13040; efficiency: 92.
+[13:53:08] gc-after-hook(): local; new: 2536160; old: 5352; efficiency: 92.
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/redwoods.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/redwoods.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/lsp.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/lsp.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/lsp.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/ptb.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/ptb.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/ptb.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/rasp.lisp
+[13:53:08] gc-after-hook(): local; new: 1491216; old: 330688; efficiency: 91.
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/rasp.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/rasp.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/pcfg.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/pcfg.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/pcfg.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/bdb.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/bdb.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/bdb.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/features.lisp
+[13:53:09] gc-after-hook(): local; new: 955208; old: 804464; efficiency: 92.
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/features.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/features.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/learner.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/learner.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/learner.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/experiment.lisp
+[13:53:10] gc-after-hook(): local; new: 1192064; old: 42504; efficiency: 92.
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tsdb/experiment.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/tsdb/experiment.fasl
+Warning: While compiling these undefined functions were referenced:
+         MT::LM-SCORE-STRINGS from position 146017 in
+           /lingo/build/lkb/src/tsdb/lisp/redwoods.lisp, 39111 in
+           /lingo/build/lkb/src/tsdb/lisp/features.lisp
+(#<MODULE: tsdb>)
+CL-USER(11): ; Exiting
 make[2]: Leaving directory `/lingo/build/lkb'
 ( \
   if [ ! -f /lingo/build//.yes ]; then exit 1; fi; \
@@ -3570,6 +3697,8 @@ src/.l8cl/tsdb/pcfg.fasl
 src/.l8cl/tsdb/acache.fasl
 src/.l8cl/tsdb/features.fasl
 src/.l8cl/tsdb/learner.fasl
+src/.l8cl/tsdb/bdb.fasl
+src/.l8cl/tsdb/experiment.fasl
 src/.l8cl/fad/
 src/.l8cl/fad/packages.fasl
 src/.l8cl/fad/fad.fasl
