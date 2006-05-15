@@ -1,13 +1,11 @@
 ? Version.lisp.fasl
-cvs update: lkb/char-script is no longer in the repository
-cvs update: lkb/xmlify.lsp is no longer in the repository
 ? lkb/checkpaths.lsp.fasl
 ? lkb/globals.lsp.fasl
 ? lkb/mrs-initialization.lsp.fasl
 ? lkb/mt.lsp.fasl
 ? lkb/patches.lsp.fasl
 ? lkb/user-fns.lsp.fasl
-U pet/common.set
+M Makefile
 ? doc
 ? linux.x86.32
 ? man
@@ -27,7 +25,7 @@ M log/build
 **********
 Checking in ./src/version.lsp;
 /lingo/CVS/lkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.484; previous revision: 1.483
+new revision: 1.485; previous revision: 1.484
 done
 make[1]: Entering directory `/lingo/build/lkb'
 ( \
@@ -35,8 +33,8 @@ make[1]: Entering directory `/lingo/build/lkb'
   if [ ! -d /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"` ]; then \
             mkdir /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`; \
           fi; \
-  chgrp build /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`; \
   chmod 3775 /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`; \
+  chgrp build /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`; \
   tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/lkb_source.tgz \
       --exclude=Makefile \
       --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
@@ -1129,7 +1127,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-8.0 [Linux (x86)] (May 15, 2006 2:46)
+8.0 [Linux (x86)] (May 15, 2006 2:51)
 Copyright (C) 1985-2005, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
