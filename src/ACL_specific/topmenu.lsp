@@ -186,7 +186,8 @@
   (:full (create-lkb-system-menu)) 
   (:yadu (create-yadu-system-menu)))
   |#
-  (set-up-clim-interaction))
+  (unless (system:getenv "LKB_GUI_EXTERNAL")
+    (set-up-clim-interaction)))
 
 (defun set-up-clim-interaction ()
   ;; Flush old commands
@@ -356,11 +357,12 @@
         (setf (command-enabled command *lkb-top-frame*) t))))
 
 (defun disable-type-interactions nil
-  ;; this is called when a type file is being redefined it may only
-  ;; work from within the application frame
-  (dolist (command *lkb-menu-disabled-list*)
-    (unless (member command *lkb-menu-grammar-file-list*)
-      (setf (command-enabled command *lkb-top-frame*) nil))))
+  (when clim-user::*lkb-top-frame*
+    ;; this is called when a type file is being redefined it may only
+    ;; work from within the application frame
+    (dolist (command *lkb-menu-disabled-list*)
+      (unless (member command *lkb-menu-grammar-file-list*)
+	(setf (command-enabled command *lkb-top-frame*) nil)))))
 
 (defun enable-grammar-reload-interactions nil
   (dolist (command *lkb-menu-grammar-file-list*)

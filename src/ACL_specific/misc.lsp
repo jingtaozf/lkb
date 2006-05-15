@@ -15,13 +15,16 @@
 ;;; in type code files
 
 (defun enable-type-interactions nil
-   (clim-user::enable-type-interactions))
+  (when clim-user::*lkb-top-frame*
+    (clim-user::enable-type-interactions)))
 
 (defun disable-type-interactions nil
-  (clim-user::disable-type-interactions))
+  (when clim-user::*lkb-top-frame*
+    (clim-user::disable-type-interactions)))
 
 (defun enable-grammar-reload-interactions nil
-  (clim-user::enable-grammar-reload-interactions))
+  (when clim-user::*lkb-top-frame*
+    (clim-user::enable-grammar-reload-interactions)))
 
 ;; macro to bind *locale*
 (defmacro with-locale (locale &body body)
