@@ -8,9 +8,10 @@
 ;;;
 ;;; _fix_me_
 ;;; right now, we only dump *relation-index* and *semantic-table*, omitting
-;;; *rel-semdb* (which only needed when reading indexed MRSs, which, for all i
+;;; *rel-semdb* (which is only needed when reading indexed MRSs, which, for all
 ;;; i know, is never done).                                     (2-oct-05; oe)
 ;;;
+
 (defparameter lkb::*predicates-temp-file* nil)
 
 (defparameter lkb::*semantics-temp-file* nil)

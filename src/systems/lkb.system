@@ -75,7 +75,7 @@
   ;; _fix_me_
   ;; compile and distribute evallm(1) for more platforms.        (1-oct-05; oe)
   ;;
-  #+(and :multiprocessing (or :linux86 :linux86-64))
+  #+(and :logon :multiprocessing (or :linux86 :linux86-64))
   (pushnew :lm *features*)
 
   ;;
