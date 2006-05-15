@@ -800,4 +800,5 @@
 
 #+:xml
 (defun xml-whitespace-p (str)
-  (net.xml.parser::all-xml-whitespace-p str))
+  (and (stringp str)
+       (net.xml.parser::all-xml-whitespace-p str)))
