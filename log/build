@@ -14,8 +14,9 @@ M log/build
 ? src/.l7cl
 ? src/.l8cl
 ? src/.lecl
-U src/mrs/serialize.lisp
-U src/systems/lkb.system
+U src/ACL_specific/misc.lsp
+U src/ACL_specific/topmenu.lsp
+M src/systems/tsdb.system
 ? src/tsdb/home/log
 ? src/tsdb/home/redwoods
 **********
@@ -27,7 +28,7 @@ U src/systems/lkb.system
 **********
 Checking in ./src/version.lsp;
 /lingo/CVS/lkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.486; previous revision: 1.485
+new revision: 1.487; previous revision: 1.486
 done
 make[1]: Entering directory `/lingo/build/lkb'
 ( \
@@ -53,7 +54,7 @@ make[1]: Entering directory `/lingo/build/lkb'
       --exclude=src/systems/pvm.system \
       .; \
 )
-chgrp: changing group of `/lingo/www/lingo/ftp/builds/2006-05-15': Operation not permitted
+chmod: changing permissions of `/lingo/www/lingo/ftp/builds/2006-05-15' (requested: 3775, actual: 1775): Operation not permitted
 ./
 ./src/
 ./src/ACL-CG_specific/
@@ -1129,7 +1130,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-8.0 [Linux (x86)] (May 15, 2006 2:56)
+8.0 [Linux (x86)] (May 15, 2006 13:43)
 Copyright (C) 1985-2005, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -2207,7 +2208,7 @@ NIL
  |#
 ; Fast loading from bundle code/nocompiler.fasl.
 ;   Fast loading from bundle sys/defdecl.fasl.
-144686352 bytes have been tenured, next gc will be global.
+144812496 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 
 T 
@@ -2435,7 +2436,7 @@ CL-USER(10): ; Loading /lingo/build/lkb/src/systems/tsdb.system
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/closures.fasl
 ;;; Compiling file /lingo/build/lkb/src/ppcre/repetition-closures.lisp
-8587432 bytes have been tenured, next gc will be global.
+8587632 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/repetition-closures.fasl
 ;;; Fasl write complete
@@ -2529,7 +2530,7 @@ See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/main/structs.fasl
 ;;; Compiling file /lingo/build/lkb/src/main/user-fns.lsp
-18612808 bytes have been tenured, next gc will be global.
+18613088 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/user-fns.fasl
 ;;; Fasl write complete
