@@ -2365,9 +2365,16 @@ an unknown word, treat the gap as filled and go on from there.
                        (/ parse-total nsent))))
            (lkb-beep)
            (return))
+#|
          (when (eql (rem nsent 50) 49)
             (clear-expanded-lex))      ; try and avoid image increasing
-                                       ; at some speed cost
+					; at some speed cost
+					;
+					; duh - this now also clears
+					; generator indices - could fix
+					; but not important enough to
+					; worry about
+					|#
          (let ((interim-sentence (if access-fn (apply access-fn (list raw-sentence))
                                      raw-sentence)))
             (let ((sentence (string-trim '(#\Space #\Tab) interim-sentence)))
