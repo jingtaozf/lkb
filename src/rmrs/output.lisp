@@ -46,14 +46,36 @@
 (defmethod rmrs-output-start-fn ((rmrsout xml) cfrom cto
                                  &optional surface ident)
   (with-slots (stream) rmrsout
+    (terpri stream)
+    (write-string "<rmrs cfrom='" stream)
+    (princ (or cfrom -1) stream)
+    (write-string "' cto='" stream)
+    (princ (or cto -1) stream)
+    (write-char #\' stream)
+    (when surface
+      (write-string " surface='")
+      (xml-escaped-output surface stream)
+      (write-char #\' stream))
+    (when ident
+      (write-string " ident='")
+      (xml-escaped-output ident stream)
+      (write-char #\' stream))
+    (write-char #\> stream)
+    (terpri stream)))
+
+#|
     (format
      stream
      "~%<rmrs cfrom='~A' cto='~A'~@[ surface=~s~]~@[ ident=~s~]>~%"
      (or cfrom -1) (or cto -1) surface ident)))
+     |#
 
 (defmethod rmrs-output-end-fn ((rmrsout xml))
   (with-slots (stream) rmrsout
-    (format stream "~%</rmrs>~%")))
+    (terpri stream)
+    (write-string "</rmrs>" stream)
+    (terpri stream)))
+
 
 #|
 <!ELEMENT ep ((realpred|gpred), label, var)>
@@ -67,14 +89,28 @@
 
 (defmethod rmrs-output-start-ep ((rmrsout xml) cfrom cto str)
   (with-slots (stream) rmrsout
-    (format stream "~%<ep cfrom='~A' cto='~A'" (or cfrom -1)
-	    (or cto -1))
+    ;;(format stream "~%<ep cfrom='~A' cto='~A'" (or cfrom -1) (or cto -1))
+    (terpri stream)
+    (write-string "<ep cfrom='" stream)
+    (princ (or cfrom -1) stream)
+    (write-string "' cto='" stream)
+    (princ (or cto -1) stream)
+    (write-char #\' stream)
     (when str
-      (format stream " surface='~A'" (remove #\' str)))
-    ;;; FIX - XML doesn't like ' within attribute values - simply strip them?
-    (format stream ">")))
+      (write-string " surface='" stream)
+      (xml-escaped-output str stream)
+      (write-char #\' stream))
+    (write-char #\> stream)))
 
 
+(defun xml-escaped-output (string stream)
+  (dolist (c (coerce string 'list))
+    (cond ((char= #\" c) (write-string "&quot;" stream))
+	  ((char= #\' c) (write-string "&apos;" stream))
+	  ((char= #\& c) (write-string "&amp;" stream))
+	  ((char= #\< c) (write-string "&lt;" stream))
+	  ((char= #\> c) (write-string "&gt;" stream))
+	  (t (write-char c stream)))))
 
 #|
 <!ELEMENT realpred EMPTY>
@@ -88,17 +124,19 @@
 
 (defmethod rmrs-output-realpred ((rmrsout xml) lemma pos sense)
   (with-slots (stream) rmrsout
-    (format stream "<realpred lemma='~A'" lemma)
+    (write-string "<realpred lemma='" stream)
+    (xml-escaped-output lemma stream)
+    (write-char #\' stream)
     (when pos (format stream " pos='~A'" pos))
     (when sense (format stream " sense='~A'" sense))      
-    (format stream "/>")))
+    (write-string "/>" stream)))
 
 ;;; <!ELEMENT gpred (#PCDATA)>
 
 (defmethod rmrs-output-gpred ((rmrsout xml) pred)
   (with-slots (stream) rmrsout
     (if (dummy-pred-p pred)
-        (format stream "<pred/>")
+        (write-string "<pred/>" stream)
       (format stream "<gpred>~(~a~)</gpred>" pred))))
 
 #|
@@ -117,7 +155,7 @@ plus other slots - see DTD
 
 (defmethod rmrs-output-end-var ((rmrsout xml))
   (with-slots (stream) rmrsout
-    (format stream "/>")))
+    (write-string "/>" stream)))
 
 (defmethod rmrs-output-start-extra ((rmrsout xml))
    nil)
@@ -130,11 +168,13 @@ plus other slots - see DTD
 
 (defmethod rmrs-output-constant-fn ((rmrsout xml) constant)
   (with-slots (stream) rmrsout
-    (format stream "<constant>~A</constant>" constant)))
+    (write-string "<constant>" stream)
+    (xml-escaped-output constant stream)
+    (write-string "</constant>" stream)))
 
 (defmethod rmrs-output-end-ep ((rmrsout xml))
   (with-slots (stream) rmrsout
-    (format stream "</ep>")))
+    (write-string "</ep>" stream)))
 
 #|
 <!ELEMENT label EMPTY>
@@ -167,7 +207,7 @@ plus other slots - see DTD
 
 (defmethod rmrs-output-end-rmrs-arg ((rmrsout xml))
   (with-slots (stream) rmrsout
-    (format stream "</rarg>")))
+    (write-string "</rarg>" stream)))
 
 ;;; hcons
 
@@ -188,11 +228,11 @@ plus other slots - see DTD
 
 (defmethod rmrs-output-hcons-next ((rmrsout xml))
   (with-slots (stream) rmrsout
-    (format stream "</hi><lo>")))
+    (write-string "</hi><lo>" stream)))
 
 (defmethod rmrs-output-hcons-end ((rmrsout xml))
   (with-slots (stream) rmrsout
-    (format stream "</lo></hcons>")))
+    (write-string "</lo></hcons>" stream)))
 
 ;;; in-group
 
@@ -205,15 +245,16 @@ plus other slots - see DTD
 (defmethod rmrs-output-ingroup-start ((rmrsout xml) with-ep-p)
   (declare (ignore with-ep-p))
   (with-slots (stream) rmrsout
-    (format stream "~%<ing><ing-a>")))
+    (terpri stream)
+    (write-string "<ing><ing-a>" stream)))
 
 (defmethod rmrs-output-ingroup-next ((rmrsout xml))
   (with-slots (stream) rmrsout
-    (format stream "</ing-a><ing-b>")))
+    (write-string "</ing-a><ing-b>" stream)))
 
 (defmethod rmrs-output-end-ingroup ((rmrsout xml))
   (with-slots (stream) rmrsout
-    (format stream "</ing-b></ing>")))
+    (write-string "</ing-b></ing>" stream)))
 
 ;;; methods for semstructs actually relevant for
 ;;; gram.dtd and tag.dtd only
@@ -241,7 +282,7 @@ plus other slots - see DTD
 
 (defmethod semstruct-output-end-hook ((rmrsout xml))
   (with-slots (stream) rmrsout
-    (format stream "</hook>")))
+    (write-string "</hook>" stream)))
 
 ;;; variants for gram and tag dtds
 

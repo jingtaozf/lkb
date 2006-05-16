@@ -1157,10 +1157,15 @@ higher and lower are handle-variables
     (when cto 
       (format stream " cto='~A'" cto))
     (when str 
-      (format stream " surface='~A'" (remove #\' str)))
-    (format stream ">")
+      (write-string " surface='" stream)
+      (xml-escaped-output str stream)
+      (write-char #\' stream))
+    (write-char #\> stream)
     (if (stringp pred)
-	(format stream "<spred>~a</spred>" pred)
+	(progn
+	  (write-string "<spred>" stream)
+	  (xml-escaped-output pred stream)
+	  (write-string "</spred>" stream)) 
       (format stream "<pred>~a</pred>" pred))))
 
 (defmethod mrs-output-rel-handel ((mrsout mrs-xml) handel
@@ -1187,7 +1192,7 @@ higher and lower are handle-variables
 
 (defmethod mrs-output-end-fvpair-fn ((mrsout mrs-xml))
   (with-slots (stream) mrsout
-    (format stream "</fvpair>")))
+    (write-string "</fvpair>" stream)))
 
   
 (defmethod mrs-output-start-extra ((mrsout mrs-xml) var-type)
@@ -1207,7 +1212,7 @@ higher and lower are handle-variables
 
 (defmethod mrs-output-end-rel ((mrsout mrs-xml))
   (with-slots (stream) mrsout
-    (format stream "</ep>")))
+    (write-string "</ep>" stream)))
 
 (defmethod mrs-output-end-liszt ((mrsout mrs-xml))
   nil)
