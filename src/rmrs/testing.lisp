@@ -324,3 +324,31 @@ off, perhaps)
 
 |#
 
+;;; tsg15 testing
+
+#|
+
+(defun rasp3-out nil
+  (let ((*rasp-rmrs-gram-file*
+	(make-pathname 
+	:directory "/homes/aac10/rasp-rmrs/"
+	:name "gram15.rmrs")
+	)
+	(*rasp-rmrs-tag-file*
+	(make-pathname :directory "/homes/aac10/rasp-rmrs/"
+	:name "lex15.rmrs")
+	)
+	(*rasp-xml-word-p* t)
+	(*rasp-xml-type* :none))
+    (clear-rule-record)
+    (read-rmrs-grammar *rasp-rmrs-gram-file*)
+    (read-rmrs-tag-templates *rasp-rmrs-tag-file*)
+    (construct-sem-for-tree '(|T/txt-sc1/-+|
+ (|S/np_vp|
+  (|NP/n1-name| (|N1/n-name| |<w s='2' e='7'>Abrams_NP1</w>|))
+  (|V1/v| |<w s='9' e='14'>bark+ed_VVD</w>|))
+ (|End-punct3/-| |<w s='15' e='15'>._.</w>|)) :rasp t "test")))
+
+
+|#
+

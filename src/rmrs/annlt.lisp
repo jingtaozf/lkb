@@ -529,6 +529,14 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
 ;;;
 ;;;
 ;;; need to treat NG opt specially eventually
+;;;
+;;; AAC - 2006
+;;;
+;;; modifications for tsg15 - remove everything after : (semantics)
+;;; try and hack round daughter mismatches
+;;; not tried again on tsg14 (hope this is unnecessary)
+
+
 
 ;;; a couple of utility functions
 
@@ -606,11 +614,14 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
       (unless (listp dtr)
 	(setf dtr-count (+ 1 dtr-count))))
     (unless (eql (length dtr-strs) dtr-count)
-      (format t "~%Warning ~A doesn't match ~A" dtr-strs dtrs))
+      (format t "~%Warning ~A doesn't match ~A" dtr-strs dtrs)
+      (setf dtr-strs dtrs))
     (let ((types nil))
       (loop for dtr-str in dtr-strs
 	  collect
-	    (let* ((type (string-upcase  dtr-str))
+	    (let* ((type (if (listp dtr-str)
+			     "OPT"
+			     (string-upcase  dtr-str)))
 		   (type-count (assoc type types :test #'equal)))
 	      (if type-count
 		  (let ((count (cdr type-count)))
@@ -626,7 +637,8 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
   (declare (ignore mother)) ;;; FIX later
   (if (cdr real-dtr-names)
       (let ((syn-head (find-tsg-syn-head dtrs)))
-	(if syn-head (elt real-dtr-names syn-head)
+	(if (and syn-head (> (length real-dtr-names) syn-head))
+	    (elt real-dtr-names syn-head)
 	  nil))
     (car real-dtr-names)))
 
@@ -649,12 +661,14 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
       (parse-tsg-non-opt istream)
       (rmrs-check-for-string "-->" istream)
       (setf dtrs (parse-tsg-dtrs istream))
+      (peek-char #\. istream nil nil)
       (rmrs-check-for-string "." istream)
       (values name mother dtr-strs dtrs))))
 
 (defun parse-tsg-name (istream)
   ;;; given N1/n_n1 
   ;;; outputs "N1/n_n1" "N1" ("n" "n1")
+  ;;; strip the -r
   (let ((mlist nil)
 	(mother nil)
 	(dtrs nil)
@@ -690,7 +704,13 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
 		     (read-char istream)))))
     (values (coerce (nreverse full) 'string)
 	    mother
-	    (nreverse dtrs))))
+	    (loop for dtr in (nreverse dtrs)
+		collect
+		  (let ((count (length dtr)))
+		    (if (and (char-equal (elt dtr (- count 1)) #\r)
+			     (char-equal (elt dtr (- count 2)) #\-))
+			(subseq dtr 0 (- count 2))
+		      dtr))))))
 
 (defun parse-tsg-non-opt (istream)
   (let* ((name (read istream nil nil))
@@ -710,6 +730,8 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
       (let ((next-char (peek-char t istream nil nil)))
 	(cond ((null next-char) (return))
 	      ((eql next-char #\.) (return))
+	      ((eql next-char #\:) (return))
+	      ;;; ignore all semantics stuff
 	      ((char= next-char #\()
 	       (read-char istream)
 	       (let ((name (parse-tsg-non-opt istream)))
