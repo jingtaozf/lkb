@@ -1,0 +1,1396 @@
+<?xml version='1.0'?> <!DOCTYPE lex SYSTEM "/homes/aac10/lingo/newlkb/src/rmrs/tag.dtd" >
+
+<!--
+Copyright Ann Copestake 2003-2004.  Distributed under same licence
+conditions as the LKB and RMRS code - see licence.txt
+
+Mar 2006 AAC - creating tsg 15 version for 3/06 ERG (without msgs)
+1. General tidy up - removed commented out stuff
+
+Dec 2003 AAC
+Some sort of entry added for the most common tags.  Started
+systematically going through semtestsuite adding grammar preds etc
+-->
+
+<lex>
+<le>
+<tag>APP$</tag>
+<comment>possessive pronouns (his,her,its...)
+see sem ex 13
+</comment>
+<semstruct>
+<hook><index>X7</index><label>H4</label></hook>
+<ep><gpred>DEF_EXPLICIT_Q_REL</gpred><label>H4</label><var>X7</var></ep>
+<!--rarg><rargname>RSTR</rargname><label>H4</label><var>H15</var></rarg-->
+<ep><gpred>POSS_REL</gpred><label>H8</label><var>U</var></ep>
+<rarg><rargname>ARG1</rargname><label>H8</label><var>X9</var></rarg>
+<rarg><rargname>ARG2</rargname><label>H8</label><var>X7</var></rarg>
+<ep><gpred>PRONOUN_Q_REL</gpred><label>H11</label><var>X9</var></ep>
+<rarg><rargname>RSTR</rargname><label>H11</label><var>H12</var></rarg>
+<rarg><rargname>BODY</rargname><label>H11</label><var>H13</var></rarg>
+<ep><gpred>PRON_REL</gpred><label>H14</label><var>X9</var></ep>
+<hcons hreln='qeq'><hi><var>H12</var></hi><lo><var>H14</var></lo></hcons>
+<!--hcons hreln='qeq'><hi><var>H15</var></hi><lo><var>H8</var></lo></hcons-->
+</semstruct>
+</le>
+
+<le>
+<tag>AT</tag>
+<comment>article e.g. the, no (gap ex.3)</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>AT1</tag>
+<comment>a,an,every</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+
+<le>
+<tag>CC</tag>
+<comment>coordinating conjunctions
+and, or, nor, plus
+(sem.ex.73,74,75,76)</comment>
+<semstruct>
+<hook><index>U</index><label>H</label></hook>
+<!-- ANNA - have to leave ARG0 as U since we want Xs for NPs but Es fpr VPs and Ss (sem.ex.75,76)-->
+<ep><pred/><label>H</label><var>U</var></ep>
+</semstruct>
+</le>
+
+<!--
+; CCB ; but
+-->
+
+<le>
+<tag>CS</tag>
+<comment>subordinating conjunctions
+if, although, because, even, now
+(sem.ex.72)</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<!-- ANNA - want H1 to be the label of the topmost prpstn_m_rel but no access -->
+<ep><pred/><label>H</label><var>H1</var></ep>
+<!-- ANNA - want H2 to be the label of the subordinated construction but no access -->
+<!-- ANNA - removed and added in P1/p_s instead -->
+<!--rarg><rargname>SUBORD</rargname><label>H</label><var>H2</var></rarg-->
+</semstruct>
+</le>
+
+<!--
+; CSA ;  as (as a conjunction)
+; CSN  ; than
+-->
+
+<le>
+<tag>CST</tag>
+<comment>that - although this supplies the prpstn rel in the ERG,
+the prpstn is coming from the construction in RASP, hence semantically
+empty (and hope ths works ...)</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+</semstruct>
+</le>
+
+<le>
+<tag>CSW</tag>
+<comment>whether
+trying to sort out subordinating conjunctions (sem.ex.30)</comment>
+<semstruct>
+<hook><index>E</index><label>H1</label></hook>
+<!-- ANNA - use the anchor to link the int_m_rel appropriately later -->
+<slots><anchor>H2</anchor></slots>
+<!-- ANNA - ERG treats "whether" as an interrogative so introduce int_m_rel -->
+<ep><gpred>INT_M_REL</gpred><label>H1</label><var>H2</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>DA</tag>
+<comment> same, former, latter, such, own
+after-determiner, capable of pronominal function e.g.same, former, latter, such, own (gen.ex.14-17, det.ex.1,2)</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>DA1</tag>
+<comment> singular after-determiner, capable of pronominal function e.g.little, much (det.ex.3)</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+
+<le>
+<tag>DA2</tag>
+<comment> plural after-determiner, capable of pronominal function e.g. few, several, many (det.ex.4)</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+
+<le>
+<tag>DA2R</tag>
+<comment> fewer
+comparative plural after-determiner, capable of pronominal function e.g. fewer (det.ex.5)</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+<ep><gpred>COMP_REL</gpred><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+
+<le>
+<tag>DAR</tag>
+<comment>ANNA - comparative after-determiner, capable of pronominal function e.g. more, less (det.ex.6)</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+<ep><gpred>COMP_REL</gpred><label>H1</label><var>U</var></ep>
+<rarg><rargname>ARG1</rargname><label>H1</label><var>X</var></rarg>
+</semstruct>
+</le>
+
+
+<le>
+<tag>DAT</tag>
+<comment> superlative after-determiner, capable of pronominal function e.g. most, least (det.ex.7)</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>DB</tag>
+<comment>all,half (sem.ex.127)</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+
+<le>
+<tag>DB2</tag>
+<comment>plural before-determiner, capable of pronominal function e.g. both (det.ex.9), all</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>DD</tag>
+<comment> determiner, capable of pronominal function e.g. any, some (det.ex.10)
+any,enough,some,lot,rest
+</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>DD1</tag>
+<comment>each,another,neither,either,this,that</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<!--
+; DD2 ; these,those
+-->
+
+<le>
+<tag>DDQ</tag>
+<comment>what,which</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>DDQ$</tag>
+<comment>whose (sem.ex.27)</comment>
+<semstruct>
+<hook><index>X</index><label>H6</label></hook>
+<ep><gpred>DEF_Q_REL</gpred><label>H1</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H1</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H1</label><var>H3</var></rarg>
+<ep><gpred>PRO_POSS_REL</gpred><label>H4</label><var>U</var></ep>
+<rarg><rargname>ARG1</rargname><label>H4</label><var>X1</var></rarg>
+<rarg><rargname>ARG2</rargname><label>H4</label><var>X</var></rarg>
+<ep><gpred>PERSON_REL</gpred><label>H5</label><var>X1</var></ep>
+<ep><gpred>WHICH_Q_REL</gpred><label>H6</label><var>X1</var></ep>
+<!--rarg><rargname>RSTR</rargname><label>H6</label><var>H7</var></rarg-->
+<!--ing><ing-a><var>H4</var></ing-a><ing-b><var>H9</var></ing-b></ing-->
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H4</var></lo></hcons>
+<!--hcons hreln='qeq'><hi><var>H7</var></hi><lo><var>H5</var></lo></hcons-->
+</semstruct>
+</le>
+
+<le>
+<tag>DDQV</tag>
+<comment>(sem.ex.56)
+whatever,whichever</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><gpred>FREE_RELATIVE_EVER_Q_REL</gpred><label>H</label><var>X</var></ep>
+<!--ep><gpred>THING_REL</gpred><label>H1</label><var>X</var></ep-->
+<!--rarg><rargname>RSTR</rargname><label>H</label><var>H2</var></rarg-->
+<!--rarg><rargname>BODY</rargname><label>H</label><var>H3</var></rarg-->
+<!--hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons-->
+</semstruct>
+</le>
+
+
+<le>
+<tag>EX</tag>
+<comment>don't want _there_x for existential "there" (sem.ex.99)
+there
+</comment>
+<semstruct>
+</semstruct>
+</le>
+
+<!--
+; ICS ; before,after,like,save,except,...
+; IF ; for
+-->
+
+<le>
+<tag>II</tag>
+<comment>154 preps</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>IO</tag>
+<comment>of</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<!--
+; IW  ; with, without
+; JA ; ablaze, asleep,...
+; JB ; NUM-yard, car-hire,...
+; JBR ; upper,inner,...
+; JBT ; utmost
+-->
+
+<le>
+<tag>JJ</tag>
+<comment>8k+ adjs - adjectives have event variables in ERG</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<!--
+; JJR ; 154 adj+er
+-->
+
+<le>
+<tag>JJR</tag>
+<comment>general comparative adjectives (sem.ex.98)</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<!-- ANNA - will it be okay for these preds to share a label...?-->
+<ep><pred/><label>H</label><var>E</var></ep>
+<ep><gpred>COMP_REL</gpred><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+
+<le>
+<tag>JJT</tag>
+<comment>general superlative adjective e.g. oldest, best, biggest (gap ex.3)</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<!-- ANNA - will it be okay for these preds to share a label...?-->
+<ep><pred/><label>H</label><var>E</var></ep>
+<ep><gpred>SUPERL_REL</gpred><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<!--
+; JK ; orient(at)ed
+; LE ; both, (n)either, not only
+-->
+
+<le>
+<tag>MC</tag>
+<comment>208 numbers (sem.ex.59)</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><gpred>CARD_REL</gpred><label>H</label><var>U</var></ep>
+<rarg><rargname>ARG1</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>CARG</rargname><label>H</label><lemma/></rarg>
+</semstruct>
+</le>
+
+<!--
+; MC-MC ; number ranges, 1-2
+; MC1 ; one
+; MC2 ; num+s,zeros,eighties
+-->
+
+<le>
+<tag>MD</tag>
+<comment>ordinals e.g first, next, thirtieth</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<!--
+; ND1 ; north, southeast,...
+-->
+
+<le>
+<tag>NN</tag>
+<comment>sheep, media,...</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NN1</tag>
+<comment>14k sg nouns</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NN2</tag>
+<comment>7k pl nouns</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<!--
+; FW ; 1.4k foreign wds
+; FO ; 300+ formulas
+-->
+
+<le>
+<tag>NNJ</tag>
+<comment>co,corp,Revenue</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNJ1</tag>
+<comment>School,committee,...</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNJ2</tag>
+<comment>associates</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNL</tag>
+<comment>Ave,Dr,Rd,St</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNL1</tag>
+<comment>Street, river,...</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNL2</tag>
+<comment>gardens,...</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNO</tag>
+<comment>thousand,billion,...
+ANNA - introduce times_rel as in ERG (sem.ex.64)</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><gpred>CARD_REL</gpred><label>H</label><var>U</var></ep>
+<ep><gpred>TIMES_REL</gpred><label>H1</label><var>U1</var></ep>
+<rarg><rargname>ARG1</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>CARG</rargname><label>H</label><lemma/></rarg>
+<rarg><rargname>ARG1</rargname><label>H1</label><var>X</var></rarg>
+<rarg><rargname>FACTOR2</rargname><label>H1</label><var>H</var></rarg>
+<!-- ANNA - can't add the times_rel's FACTOR rargs here cos we don't have access to the other numbers -->
+</semstruct>
+</le>
+
+<le>
+<tag>NNO2</tag>
+<comment>hundreds, dozens,...</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNS</tag>
+<comment>Gen,Gov,Sir,...</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNS1</tag>
+<comment>Mayor,Major,...</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNS2</tag>
+<comment>Masters,generals,...</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNSA1</tag>
+<comment>esq, jr,...</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNSB1</tag>
+<comment>Baron, Brig,...</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNSB2</tag>
+<comment>Ministers,...</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNT1</tag>
+<comment>autumn, day,...</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNT2</tag>
+<comment>weeks, hours,...</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNU</tag>
+<comment>cent,bhp,...</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNU1</tag>
+<comment>gram,yard,...</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NNU2</tag>
+<comment>mins,miles,...</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>NP1</tag>
+<comment>9k+ sg names</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<!-- ANNA - added H1 as anchor to reach named_rel from outside (sem.ex.120)-->
+<slots><anchor>H1</anchor></slots>
+<ep><gpred>PROPER_Q_REL</gpred><label>H</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H</label><var>H3</var></rarg>
+<ep><gpred>NAMED_REL</gpred><label>H1</label><var>X</var></ep>
+<rarg><rargname>CARG</rargname><label>H1</label><lemma/></rarg>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<le>
+<tag>NP2</tag>
+<comment>252 pl names: not distinguished from NP1 in ERG</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><gpred>PROPER_Q_REL</gpred><label>H</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H</label><var>H3</var></rarg>
+<ep><gpred>NAMED_REL</gpred><label>H1</label><var>X</var></ep>
+<rarg><rargname>CARG</rargname><label>H1</label><lemma/></rarg>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+
+<le>
+<tag>NPD1</tag>
+<comment>Monday,...
+ANNA - adding underspecified ARG1 for days of week (sem.ex 96,109)</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><gpred>PROPER_Q_REL</gpred><label>H</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H</label><var>H3</var></rarg>
+<ep><gpred>DOFW_REL</gpred><label>H1</label><var>X</var></ep>
+<rarg><rargname>ARG1</rargname><label>H1</label><var>U</var></rarg>
+<rarg><rargname>CARG</rargname><label>H1</label><lemma/></rarg>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<le>
+<tag>NPD2</tag>
+<comment>Fridays,...</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><gpred>UDEF_Q_REL</gpred><label>H</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H</label><var>H3</var></rarg>
+<ep><gpred>DOFW_REL</gpred><label>H1</label><var>X</var></ep>
+<rarg><rargname>CARG</rargname><label>H1</label><lemma/></rarg>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<le>
+<tag>NPM1</tag>
+<comment>April,...
+ANNA - replaced the proper_q_rel with non_freerel_q_rel since the ERG sometimes has a def_q_rel instead for months and added missing ARG1 (sem.ex.94,109,115)</comment>
+<semstruct>
+<hook><index>X</index><label>H1</label></hook>
+<ep><gpred>NON_FREEREL_Q_REL</gpred><label>H</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H</label><var>H3</var></rarg>
+<ep><gpred>MOFY_REL</gpred><label>H1</label><var>X</var></ep>
+<rarg><rargname>ARG1</rargname><label>H1</label><var>U</var></rarg>
+<rarg><rargname>CARG</rargname><label>H1</label><lemma/></rarg>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<le>
+<tag>PN</tag>
+<comment>none</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><gpred>NO_Q_REL</gpred><label>H</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H</label><var>H3</var></rarg>
+<ep><gpred>GENERIC_NONPRO_REL</gpred><label>H1</label><var>X</var></ep>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<le>
+<tag>PN1</tag>
+<comment>everybody, ... - so very underspecified</comment>
+<semstruct>
+<!--ANNA - made H1 the label so can attach ING to non_temp_nom_rel (sem.ex.17,117)-->
+<hook><index>X</index><label>H1</label></hook>
+<ep><gpred>NON_TEMP_NOM_REL</gpred><label>H1</label><var>X</var></ep>
+<ep><gpred>QUANT_REL</gpred><label>H</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H</label><var>H3</var></rarg>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<!--
+; PNQ0 - whom
+; PNQS - who
+; PNQV$ - whosever
+; PNQVO - whomsoever
+; PNQVS - whoever
+-->
+
+<le>
+<tag>PP$</tag>
+<comment>hers, theirs ...
+ANNA - think there were a couple of bugs in this (sem.ex.18)</comment>
+<semstruct>
+<hook><index>X1</index><label>H10</label></hook>
+<ep><gpred>DEF_Q_REL</gpred><label>H4</label><var>X1</var></ep>
+<rarg><rargname>RSTR</rargname><label>H4</label><var>H6</var></rarg>
+<rarg><rargname>BODY</rargname><label>H4</label><var>H7</var></rarg>
+<ep><gpred>GENERIC_ENTITY_REL</gpred><label>H5</label><var>X1</var></ep>
+<ep><gpred>POSS_REL</gpred><label>H9</label><var>E</var></ep>
+<rarg><rargname>ARG1</rargname><label>H9</label><var>X</var></rarg>
+<rarg><rargname>ARG2</rargname><label>H9</label><var>X1</var></rarg>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
+<!-- ANNA changed this ING to conjoin POSS_REL above GENERIC_ENTITY_REL as in ERG -->
+<ing><ing-a><var>H5</var></ing-a><ing-b><var>H9</var></ing-b></ing>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+<!-- ANNA added this qeq to connect DEF_Q_REL above GENERIC_ENTITY_REL as in ERG -->
+<hcons hreln='qeq'><hi><var>H6</var></hi><lo><var>H5</var></lo></hcons>
+</semstruct>
+</le>
+
+<le>
+<tag>PPH1</tag>
+<comment>it</comment>
+<semstruct>
+<hook><index>X</index><label>H0</label></hook>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<le>
+<tag>PPHO1</tag>
+<comment>him, her</comment>
+<semstruct>
+<hook><index>X</index><label>H0</label></hook>
+<ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<le>
+<tag>PPHO2</tag>
+<comment>them</comment>
+<semstruct>
+<hook><index>X</index><label>H0</label></hook>
+<ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<le>
+<tag>PPHS1</tag>
+<comment>he, she
+ANNA - swapped round pronoun_q_rel and pron_rel again</comment>
+<semstruct>
+<hook><index>X</index><label>H0</label></hook>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<le>
+<tag>PPHS2</tag>
+<comment>they</comment>
+<semstruct>
+<hook><index>X</index><label>H0</label></hook>
+<ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<le>
+<tag>PPIO1</tag>
+<comment>me</comment>
+<semstruct>
+<hook><index>X</index><label>H0</label></hook>
+<ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<le>
+<tag>PPIO2</tag>
+<comment>us</comment>
+<semstruct>
+<hook><index>X</index><label>H0</label></hook>
+<ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<le>
+<tag>PPIS1</tag>
+<comment>I</comment>
+<semstruct>
+<hook><index>X</index><label>H0</label></hook>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<le>
+<tag>PPIS2</tag>
+<comment>we</comment>
+<semstruct>
+<hook><index>X</index><label>H0</label></hook>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+
+<le>
+<tag>PPX1</tag>
+<comment>himself ...</comment>
+<semstruct>
+<hook><index>X</index><label>H0</label></hook>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<le>
+<tag>PPX2</tag>
+<comment>eachother, one another, themselves</comment>
+<semstruct>
+<hook><index>X</index><label>H0</label></hook>
+<ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<le>
+<tag>PPY</tag>
+<comment>you</comment>
+<semstruct>
+<hook><index>X</index><label>H0</label></hook>
+<ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<!--
+
+;;; end pronouns
+
+; RA ; ago, p.m.,after, before
+; REX ; i.e.,e.g.
+-->
+
+<le>
+<tag>RG</tag>
+<comment>very, as, over,too,about
+degree adverbs (sem.ex.89)</comment>
+<semstruct>
+<hook><index>U</index><label>H0</label></hook>
+<!-- ANNA - how do I change _ver_r to _very_x_deg? -->
+<ep><pred/><label>H0</label><var>U</var></ep>
+<!-- ANNA - want to add DARG and ING to join degree adverb to adjective but no access here -->
+</semstruct>
+</le>
+
+<!--
+; RGA ; indeed, enough
+-->
+
+<le>
+<tag>RGQ</tag>
+<comment>how
+wh- degree adverbs (sem.ex.102, meth.ex.19)</comment>
+<semstruct>
+<hook><index>U</index><label>H0</label></hook>
+<ep><gpred>ABSTR_DEG_REL</gpred><label>H0</label><var>X</var></ep>
+<ep><gpred>WHICH_Q_REL</gpred><label>H1</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H1</label><var>H0</var></rarg>
+<rarg><rargname>BODY</rargname><label>H1</label><var>H3</var></rarg>
+</semstruct>
+</le>
+
+<!--
+; RGQV ; however
+-->
+
+<le>
+<tag>RL</tag>
+<comment> locative adverbs e.g. alongside, forward, upstairs, inside (text.ex.16) </comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>RP</tag>
+<comment> prepositional adverbs, particles e.g. in, about, up, out </comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>RR</tag>
+<comment> 2k advbs
+giving adverbs event variable ARG0s as in ERG (sem.ex.44)</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<!--
+; RRQ ; where, why, when
+; RRQV ; wherever, whenever
+-->
+
+<le>
+<tag>RRR</tag>
+<comment>comparative general adverbs e.g. better, longer, earlier (us.ex.8)</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+<ep><gpred>COMP_REL</gpred><label>H</label><var>U</var></ep>
+</semstruct>
+</le>
+
+<!--
+; RRT ; adv+est
+-->
+
+<le>
+<tag>RT</tag>
+<comment> nominal adverb of time e.g. now, tomorrow, today, again, then (sem.ex.47, text.ex.1,2, here ex.7-9,11)</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<slots><anchor>H5</anchor></slots>
+<!-- ANNA - can't add unspec_loc_rel here cos e.g. "again" doesn't want it -->
+<!--ep><gpred>UNSPEC_LOC_REL</gpred><label>H</label><var>E</var></ep-->
+<ep><gpred>_TIME_N</gpred><label>H1</label><var>X</var></ep>
+<ep><gpred>DEF_Q_REL</gpred><label>H2</label><var>X</var></ep>
+<ep><pred/><label>H5</label><var>U</var></ep>
+<!-- ANNA - ARG1's event should coindex with the event of the verb the adverb modifies but how can this be done? -->
+<!--rarg><rargname>ARG1</rargname><label>H</label><var>E1</var></rarg-->
+<!--rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg-->
+<rarg><rargname>RSTR</rargname><label>H2</label><var>H3</var></rarg>
+<rarg><rargname>BODY</rargname><label>H2</label><var>H4</var></rarg>
+<rarg><rargname>ARG1</rargname><label>H5</label><var>X</var></rarg>
+<ing><ing-a><var>H1</var></ing-a><ing-b><var>H5</var></ing-b></ing>
+<hcons hreln='qeq'><hi><var>H3</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<le>
+<tag>TO</tag>
+<comment>to inf</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+</semstruct>
+</le>
+
+<!--
+; UH ; dammit,yes,eh,...
+-->
+
+
+<le>
+<tag>VBO</tag>
+<comment>be</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VBDR</tag>
+<comment>were</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+
+<le>
+<tag>VBDZ</tag>
+<comment>was</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VBG</tag>
+<comment>being</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VBM</tag>
+<comment>am</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VBN</tag>
+<comment>been</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VBR</tag>
+<comment>are</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VBZ</tag>
+<comment>is</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VDO</tag>
+<comment>do</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VDD</tag>
+<comment>did</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VDG</tag>
+<comment>doing</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VDN</tag>
+<comment>done</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VDZ</tag>
+<comment>does</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VHO</tag>
+<comment>have</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VHD</tag>
+<comment>had</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VHG</tag>
+<comment>having</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VHN</tag>
+<comment>had</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VHZ</tag>
+<comment>has</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VM</tag>
+<comment>can,...
+ANNA - latest ERG does have modal predicates except for "will" (sem.ex.72)</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VMK</tag>
+<comment>ought,used</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VVD</tag>
+<comment>2k+ verb+ed</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var tense='past'>E</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VVG</tag>
+<comment>2k+ verb+ing ANNA - added gerund_rel with ARG1 as in ERG (sem.ex.54)</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<!--ep><gpred>GERUND_REL</gpred><label>H1</label><var>X</var></ep-->
+<ep><pred/><label>H</label><var>E</var></ep>
+<!--rarg><rargname>ARG1</rargname><label>H1</label><var>E</var></rarg-->
+<!-- ANNA - Could add unknown ARG1 for the verb predicate too but would interfere with other rules and have to be merged somewhere -->
+<!--rarg><rargname>ARG1</rargname><label>H</label><var>U</var></rarg-->
+<!--ing><ing-a><var>H1</var></ing-a><ing-b><var>H</var></ing-b></ing-->
+</semstruct>
+</le>
+
+<le>
+<tag>VVN</tag>
+<comment>3k verb+en</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VVZ</tag>
+<comment>1k+ verb+s</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>VV0</tag>
+<comment>2.5k verb - NOTE VV0! not VVO</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>XX</tag>
+<comment>not</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><gpred>NEG_REL</gpred><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+
+<!--
+; ZZ1
+; ZZ2 ; letters, A,Alpha
+-->
+
+
+<le>
+<tag>$</tag>
+<comment>'s, 'S, '
+ANNA - removed possessive semantics to be added in later rules (sem.ex.61)</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<!--slots><anchor>H1</anchor></slots-->
+<!--ep><gpred>DEF_EXPLICIT_Q_REL</gpred><label>H</label><var>X</var></ep-->
+<!--rarg><rargname>RSTR</rargname><label>H</label><var>H2</var></rarg-->
+<!--rarg><rargname>BODY</rargname><label>H</label><var>H3</var></rarg-->
+<!--ep><gpred>POSS_REL</gpred><label>H1</label><var>U</var></ep-->
+<!--hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons-->
+</semstruct>
+</le>
+
+<!--
+; punctuation - we want this all to be semantically empty
+-->
+
+<le>
+<tag>,</tag>
+<comment>!</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+</semstruct>
+</le>
+
+<le>
+<tag>;</tag>
+<comment>!</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+</semstruct>
+</le>
+
+<le>
+<tag>:</tag>
+<comment>!</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+</semstruct>
+</le>
+
+<le>
+<tag>!</tag>
+<comment>!</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+</semstruct>
+</le>
+
+<le>
+<tag>?</tag>
+<comment>!</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+</semstruct>
+</le>
+
+
+<le>
+<tag>-</tag>
+<comment>!</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+</semstruct>
+</le>
+
+<le>
+<tag>(</tag>
+<comment>!</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+</semstruct>
+</le>
+
+<le>
+<tag>)</tag>
+<comment>!</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+</semstruct>
+</le>
+
+<le>
+<tag>.</tag>
+<comment>!</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+</semstruct>
+</le>
+
+<le>
+<tag>...</tag>
+<comment>!</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+</semstruct>
+</le>
+
+<le>
+<tag>/</tag>
+<comment>!</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+</semstruct>
+</le>
+
+<le>
+<tag>"</tag>
+<comment>!</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+</semstruct>
+</le>
+
+<!--
+
+; 20 tags only needed for training on pretagged data. not in
+; seclarge.lex so not assigned to untagged data
+
+AAC - I'm assuming I don't need these?
+
+; BCS
+; BTO
+; CF
+; MC$
+; MF
+; NC2
+; FA
+; FB
+; \&FW
+; \&FO
+; NNO1
+; NNT
+; NO
+; NPM2
+; PNX1
+; RGR
+; RGT
+; RPK
+; VVGK
+; VVNK
+-->
+</lex>
