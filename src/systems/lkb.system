@@ -209,6 +209,7 @@
        (:file "lxml")
        #+(and :maf)
        (:file "saf")
+       (:file "saf-conf")
        #+:maf
        (:file "texti")
        ))  

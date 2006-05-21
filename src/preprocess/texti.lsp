@@ -151,11 +151,12 @@
 (defun tchart-to-maf (&optional (tchart *tchart*) &key (wordforms t) saf)
   (let* ((strm (make-string-output-stream))
 	 (tedges (get-tedges tchart))
-	 (medges (get-medges tchart)))
+	 (medges (if wordforms
+		     (get-medges tchart))))
     (if saf
 	(format strm "~a" (preprocessor::saf-header))
       (format strm "~a" (preprocessor::maf-header)))
-    (if wordforms (format strm "~a" (fsm-xml tedges medges :saf saf)))
+    (format strm "~a" (fsm-xml tedges medges :saf saf))
     (if saf
 	(format strm "</saf>")
       (format strm "</maf>"))
@@ -195,6 +196,7 @@
 	(format nil "<fs>")
 	(format nil "~a" (stem-to-fs stem))
 	(if partial-tree
+	    ;(format nil "~a" (partial-tree-to-fs-lazy partial-tree)))
 	    (format nil "~a" (partial-tree-to-fs partial-tree)))
 	(format nil "</fs>")
 	(format nil "</annot>")))
@@ -225,7 +227,7 @@
 	    (partial-tree-to-fs2 (cdr p-tree)))))
 
 (defun partial-tree-elt-to-fs (p-tree-elt)
-  (format nil "<f name='rule'>~a</f><f name='str'>~a</f>"
+  (format nil "<fs><f name='rule'>~a</f><f name='str'>~a</f></fs>"
 	  (xml-escape (format nil "~a" (first p-tree-elt)))
 	  (xml-escape (format nil "~a" (second p-tree-elt)))))
 

@@ -1433,6 +1433,8 @@ relatively limited.
 		      edge-string from to cfrom cto partial-tree entry dtr)
     #+:arboretum (declare (special *mal-active-p*))
     (let* ((expanded-entry (get-lex-entry-from-id (lex-entry-id entry))))
+      ;; side effect of calling get-lex-entry-from-id is
+      ;;  instantiation of :full-fs slot
       (when (and expanded-entry
 		 #+:arboretum
 		 (or *mal-active-p* 

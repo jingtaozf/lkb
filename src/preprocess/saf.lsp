@@ -2,11 +2,16 @@
 ;;;   Ben Waldron;
 ;;; see `licence.txt' for conditions.
 
+(defpackage :saf
+  (:use :common-lisp) 
+  (:export))
+
 (in-package :lkb)
 
 (defvar *saf*)
 (defvar *saf-dir* nil)
 (defvar *saf-v* -1)
+(defvar *saf-l-map* nil)
 
 (defvar *char-map-add-offset*)
 
@@ -29,6 +34,7 @@
   to
   deps
   content
+  l-content
   form ; fix me
   )
 
@@ -50,9 +56,14 @@
 
 ;; code to convert SAF (or MAF) XML into SAF object
 
-(defun xml-to-saf-object (xml &key (saf-dir "~"))
+(defun xml-to-saf-object (xml &key (saf-dir "~") (l-map *saf-l-map*))
   (let ((*saf-dir* saf-dir))
-    (lxml-to-saf-object (xml-to-lxml xml))))
+    (unless *saf-l-map*
+      (setf l-map (saf::get-default-saf-l-map)))
+    (saf::instantiate-l-content
+     (lxml-to-saf-object (xml-to-lxml xml))
+     l-map) 
+    ))
 
 (defun lxml-to-saf-object (lxml)
   (let* ((lxml-body (elements-only
@@ -92,7 +103,7 @@
 	    (merge-pathnames doc (make-pathname :directory *saf-dir*)))))
     (make-saf-meta
      :document doc
-     :addressing (second (member '|addressing| saf-attributes))
+     :addressing (intern (string-downcase (second (member '|addressing| saf-attributes))))
      :olac :ignored)))
 
 (defun make-saf-lattice-from-sequence (lxml &key init final)
@@ -373,17 +384,28 @@
 (defun saf-num-lattice-nodes (saf)
   (length (saf-lattice-nodes (saf-lattice saf))))
 
-(defvar *saf-setup-morphs* '(:|token|))
+;(defvar *saf-setup-morphs* '(:|token|))
+;
+;(defun saf-setup-morphs (saf)
+;  (case *morph-option*
+;    (:with-tokeniser-partial-tree ;; take both tok and morph edges
+;	(saf-to-tchart saf))
+;    (t ;; take only tok edges
+;     (saf-to-tchart saf
+;		    :filter #'(lambda (x) (member (saf-edge-type x) *saf-setup-morphs*))))))
 
 (defun saf-setup-morphs (saf)
   (case *morph-option*
-    (:with-tokeniser-partial-tree
+    (:with-tokeniser-partial-tree ;; take both tok and morph edges
 	(saf-to-tchart saf))
-    (t 
+    (t ;; take only tok edges
      (saf-to-tchart saf
-		    :filter #'(lambda (x) (member (saf-edge-type x) *saf-setup-morphs*))))))
-;		    :filter #'(lambda (x) (string= (saf-edge-type x) :|token|))))))
-;		    :filter #'(lambda (x) (eq (saf-edge-type x) :leaf))))))
+		    :filter #'(lambda (x) 
+				(equal "tok" 
+				       (saf-fs-feature-value 
+					(saf-edge-l-content x) 
+					"edgeType")))))))
+
 
 ;;
 
@@ -444,22 +466,25 @@
 (defun saf-edge-to-tedge (saf-edge &key addressing)
   (unless (eq :|token| (saf-edge-type saf-edge))
     (error ":|token| edge expected"))
-  (with-slots (id source target from to content) saf-edge
+  (with-slots (id source target from to l-content) saf-edge
+    (let ((tokenStr (saf-fs-feature-value 
+		     l-content 
+		     "tokenStr")))
       (make-token-edge 
        :id (id-to-int id)
        :from (id-to-int source)
        :to (id-to-int target)
-       :string content
+       :string tokenStr
        :cfrom (point-to-char-point from addressing)
        :cto (point-to-char-point to addressing)
-       :word (string-upcase content)
-       :leaves (list content))))
+       :word (string-upcase tokenStr)
+       :leaves (list tokenStr)))))
 
 (defun saf-edge-to-medge (saf-edge)
   (unless (eq :|wordForm| (saf-edge-type saf-edge))
     (error ":|wordForm| edge expected"))
   ;; assume tedges already in chart
-  (with-slots (id source target deps content) saf-edge
+  (with-slots (id source target deps l-content) saf-edge
     (let* ((children 
 	    (loop for d in deps
 		collect (id-to-token-edge d (get-tedges *tchart*)))) 
@@ -468,6 +493,8 @@
 	    (loop for l in leaf-edges
 		collect (token-edge-string l)))
 	   (form (str-list-2-str children-words))
+	   (stem (saf-fs-feature-value l-content "stem"))
+	   (partialTree (saf-fs-feature-value l-content "partialTree"))
 	   )
       (unless (= (id-to-int source) (leaf-edges-from leaf-edges))
 	(error "source must match that of leaf edges"))
@@ -482,15 +509,60 @@
        :string form
        :word (string-upcase form)
        :current (string-upcase form)
-       :stem (saf-fs-path-value '("stem") (saf-edge-content saf-edge))
-       :partial-tree (partial-tree-from-content (saf-edge-content saf-edge))
+       :stem stem
+       :partial-tree (saf-fs-partial-tree-2-list-partial-tree partialTree)
        ))))
 
-(defun partial-tree-from-content (content)
-  (let ((x (saf-fs-path-value '("partial-tree") content)))
-    (if (stringp x)
-	(read-from-string x))))
+;(defun saf-edge-to-medge (saf-edge)
+;  (unless (eq :|wordForm| (saf-edge-type saf-edge))
+;    (error ":|wordForm| edge expected"))
+;  ;; assume tedges already in chart
+;  (with-slots (id source target deps content) saf-edge
+;    (let* ((children 
+;	    (loop for d in deps
+;		collect (id-to-token-edge d (get-tedges *tchart*)))) 
+;	   (leaf-edges children) ;;fix me
+;	   (children-words
+;	    (loop for l in leaf-edges
+;		collect (token-edge-string l)))
+;	   (form (str-list-2-str children-words))
+;	   )
+;      (unless (= (id-to-int source) (leaf-edges-from leaf-edges))
+;	(error "source must match that of leaf edges"))
+;      (unless (= (id-to-int target) (leaf-edges-to leaf-edges))
+;	(error "target must match that of leaf edges"))
+;      (make-morpho-stem-edge 
+;       :id (id-to-int id)
+;       :children children
+;       :leaves (loop for x in leaf-edges collect (edge-string x))
+;       :from (id-to-int source)
+;       :to (id-to-int target)
+;       :string form
+;       :word (string-upcase form)
+;       :current (string-upcase form)
+;       :stem (saf-fs-path-value '("stem") (saf-edge-content saf-edge))
+;       :partial-tree (partial-tree-from-content (saf-edge-content saf-edge))
+;       ))))
 
+;(defun partial-tree-from-content (content)
+;  (saf-fs-partial-tree-2-list-partial-tree
+;   (saf-fs-path-value '("partial-tree") content)))
+
+(defun saf-fs-partial-tree-2-list-partial-tree (fs)
+  (if (null fs)
+      nil
+    (let* ((first (saf-fs-path-value '("first") fs))
+	   (rule2 (saf-fs-path-value '("rule") first)) 
+	   (str2 (saf-fs-path-value '("str") first))
+	   (rule (if (stringp rule2)
+		     (intern rule2)
+		   (error "string expected for saf-fs 'rule': ~a" rule2)))
+	   (str (if (stringp str2)
+		     (intern str2)
+		   (error "string expected for saf-fs 'str': ~a" str2)))
+	   (rest (saf-fs-path-value '("rest") fs)))
+      (cons (list rule str) (saf-fs-partial-tree-2-list-partial-tree rest)))))
+  
 (defun saf-fs-path-value (path fs)
   (cond
    ((null fs)
@@ -605,3 +677,11 @@
 (defun char-map-add-x (point)
   (if point
       (format nil "~a" (+ (or *char-map-add-offset* 0) (point-to-char-point point :|char|)))))
+
+;;
+
+(defun saf-fv-value! (x)
+  (saf-fv-value x))
+
+(defun saf-edge-l-content! (x)
+  (saf-edge-l-content x))
