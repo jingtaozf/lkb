@@ -33,32 +33,38 @@
 (defstruct (basemrs)
   top-h
   liszt
-  h-cons)
+  h-cons
+  a-cons
+  vcs)
 
-(defstruct (rel)
-  handel                               
+(defstruct (rel-base)
   pred					; relation name
-  flist
-  parameter-strings                     ; copy of the relations with constant
-					; values, used in the generator
-                                        ; candidate for removal!
-  extra)                                ; extra is a junk slot
+  flist)
+
+(defstruct (rel (:include rel-base))
+  str 
+  handel                               
+  parameter-strings			; the constant values
+					; a junk slot used by the
+                                        ; generator and comparison code
+  extra                                 ; extra is a junk slot
                                         ; needed for the munging rules 
+  link)					; link to surface element(s)
 
 (defstruct (char-rel (:include rel))
   cfrom
   cto)
 
-(defstruct (var)
+(defstruct (var-base)
   type
-  extra ; useful for e.g. agreement values
+  extra) ; e.g. agreement values
+
+(defstruct (var (:include var-base))
   id)
 
 (defstruct (extrapair)
   feature
   value)
-
-(defstruct (handle-var (:include var)))
 
 (defstruct (grammar-var (:include var)))
 ;;; a sort of placeholder variable
