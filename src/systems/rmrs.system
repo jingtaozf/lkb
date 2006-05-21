@@ -2,6 +2,11 @@
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `licence.txt' for conditions.
 
+;;; (load "general/loadup")
+;;; (compile-system "rmrs" :force t)
+;;; :pa :mrs
+;;; if you don't want to use the system mechanism, see the
+;;; load.lsp file in the RASP/mrs directory
 
 (in-package :make)
 
@@ -64,6 +69,47 @@ produced by robust parsers of various types.
 ;;; in package MRS in all cases
 
 #|
+
+
+(defun rasp3-out nil
+;;; see testing.lisp
+  (let ((*rasp-rmrs-gram-file*
+	 "rmrs/rasp3/gram15.rmrs")
+	(*rasp-rmrs-tag-file*
+	 "rmrs/rasp3/lex15.rmrs")
+	(test-file 
+	 #+:mswindows (make-pathname 
+		       :device "c"
+	               :directory "/d/rasp-rmrs/test-sets/"
+	               :name "annlt.trees") 
+	#-:mswindows (make-pathname :directory "/homes/aac10/rasp-rmrs/test-sets/"
+				    :name "annlt.trees"))
+	(*rasp-xml-word-p* t) ; we have <w > things
+	(*renumber-hack* t) ; for problems with RASP cfrom/cto
+	(*rasp-xml-type* :none)) ; no XML wrappers
+    (clear-rule-record)
+    (read-rmrs-grammar *rasp-rmrs-gram-file*)
+    (read-rmrs-tag-templates *rasp-rmrs-tag-file*)
+    (with-open-file  (istream test-file
+		      :direction :input)
+    (with-open-file  (ostream "rasp.rmrs1"
+		      :direction :output :if-exists :supersede)
+      (format ostream "<rmrs-list>~%")
+      (loop 
+	(let* ((tagged (read istream nil nil))
+	       (number (read istream nil nil))
+	       (tree (read istream nil nil)))
+	  (declare (ignore number))
+	  (unless tree
+	    (return))
+	  (when tree
+	    (construct-sem-for-tree 
+	     tree
+	     :rasp ostream tagged))))
+      (format ostream "</rmrs-list>~%")))))
+
+
+;;; packaged reading and conversion (if input is in right format)
 
 ;;; take a rasp file with the `XML' style word tags
 ;;; and convert it to rmrs (see annlt.lisp)
