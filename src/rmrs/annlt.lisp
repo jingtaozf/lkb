@@ -70,6 +70,9 @@
 
 (defparameter *initial-rasp-num* nil)
 
+(defparameter *renumber-hack* nil
+  "Hope this is a temporary measure while RASP trees and ERG are numbering differently")
+
 (defparameter *predicted-pos* 1)
 
 (defun rmrs-from-file (filename output xml-type)
@@ -361,9 +364,14 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
 		   (parse-integer (subseq str (+ 3 first-s)) :junk-allowed t)))
 	      (if (and spec-num 
 		       (integerp spec-num))
-		  (if *initial-rasp-num*
-		      (- spec-num *initial-rasp-num*)
-		    spec-num)
+		  (cond ((and *initial-rasp-num* *renumber-hack* )
+			 (- spec-num (+ 2 *initial-rasp-num*)))
+		        (*initial-rasp-num*
+			 (- spec-num *initial-rasp-num*))
+			(*renumber-hack* 
+			 (- spec-num 2))
+			(t
+			 spec-num))
 		nil))
 	  nil))))
 
@@ -378,9 +386,14 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
 		   (parse-integer (subseq str (+ 3 first-e)) :junk-allowed t)))
 	      (if (and spec-num 
 		       (integerp spec-num))
-		  (if *initial-rasp-num*
-		      (- spec-num *initial-rasp-num*)
-		    spec-num)
+		  (cond ((and *initial-rasp-num* *renumber-hack*)
+			 (- spec-num (+ 1 *initial-rasp-num*)))
+		        (*initial-rasp-num*
+			 (- spec-num *initial-rasp-num*))
+			(*renumber-hack* 
+			 (- spec-num 1))
+			(t
+			 spec-num))
 		nil))
 	  nil))))
 
