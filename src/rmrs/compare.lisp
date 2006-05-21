@@ -940,6 +940,16 @@ Unattached arguments are ignored
    ((string-equal arg-type1 arg-type2) :equal)
    ((string-equal arg-type1 "argn") :sub2)
    ((string-equal arg-type2 "argn") :sub1)
+   ((and (string-equal arg-type1 "arg2-4")
+	 (or (string-equal arg-type2 "arg2")
+	     (string-equal arg-type2 "arg3")
+	     (string-equal arg-type2 "arg4")))
+	 :sub1)
+   ((and (string-equal arg-type2 "arg2-4")
+	 (or (string-equal arg-type1 "arg2")
+	     (string-equal arg-type1 "arg3")
+	     (string-equal arg-type1 "arg4")))
+	 :sub1)
    (t nil)))
 
 
