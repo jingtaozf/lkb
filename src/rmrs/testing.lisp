@@ -330,22 +330,9 @@ off, perhaps)
 
 (defun rasp3-out nil
   (let ((*rasp-rmrs-gram-file*
-	 #+:mswindows (make-pathname 
-		       :device "c"
-	               :directory "/d/rasp-rmrs/"
-	               :name "gram15.rmrs")
-	#-:mswindows (make-pathname 
-		      :directory "/homes/aac10/rasp-rmrs/"
-		      :name "gram15.rmrs")
-	)
+	 "rmrs/rasp3/gram15.rmrs")
 	(*rasp-rmrs-tag-file*
-	#+:mswindows (make-pathname 
-		       :device "c"
-	               :directory "/d/rasp-rmrs/"
-	               :name "lex15.rmrs") 
-	#-:mswindows (make-pathname :directory "/homes/aac10/rasp-rmrs/"
-				    :name "lex15.rmrs")
-	)
+	 "rmrs/rasp3/lex15.rmrs")
 	(test-file 
 	 #+:mswindows (make-pathname 
 		       :device "c"
@@ -361,7 +348,7 @@ off, perhaps)
     (read-rmrs-tag-templates *rasp-rmrs-tag-file*)
     (with-open-file  (istream test-file
 		      :direction :input)
-    (with-open-file  (ostream "rasp.rmrs"
+    (with-open-file  (ostream "rasp.rmrs1"
 		      :direction :output :if-exists :supersede)
       (format ostream "<rmrs-list>~%")
       (loop 
