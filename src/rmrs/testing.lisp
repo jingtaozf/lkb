@@ -76,7 +76,7 @@
 ("Twenty three dogs bark." . 1)
 ("Two hundred twenty dogs bark." . 1)
 ("Abrams arrived by car." . 1)
-("Abrams kept barking." . 1) ; 66
+("Abrams kept barking." . 2) ; 66
 ("Browne squeezed the cat in." . 1)
 ("Browne squeezed in the cat." . 1)
 ("The picture of Abrams arrived." . 1)
@@ -117,7 +117,11 @@
 ("Abrams could." . 1)
 ("Browne tried to." . 1)
 ("Don't bark." . 1) ; 106
-("The dog arrived barking." . 1)))
+("The dog arrived barking." . 1)
+;;; new test suite items after here
+("The dog liked barking." . 2) ; contrast with `kept barking'
+
+))
 
 
 #|
@@ -348,7 +352,7 @@ off, perhaps)
     (read-rmrs-tag-templates *rasp-rmrs-tag-file*)
     (with-open-file  (istream test-file
 		      :direction :input)
-    (with-open-file  (ostream "rasp.rmrs1"
+    (with-open-file  (ostream "rasp.rmrs"
 		      :direction :output :if-exists :supersede)
       (format ostream "<rmrs-list>~%")
       (loop 
