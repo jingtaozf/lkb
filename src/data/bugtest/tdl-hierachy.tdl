@@ -1,0 +1,61 @@
+;;; Deliberately buggy file for testing error checking
+;;; of the type hierarchy
+;;; different cases are intended to be read in separately
+;;;
+;;; error messages should match those shown (as documentation)
+#|
+
+; 1 - undefined type
+
+feat-struc := *toptype*.
+
+;;; FEAT-STRUC specified to have non-existent parent *TOPTYPE*
+
+
+; 2 - redefinition
+
+feat-struc := *top*.
+agr-cat := *top*.
+feat-struc := agr-cat.
+
+;;; Type FEAT-STRUC redefined
+
+; 3 - connectedness
+
+agr-cat :=  
+ [ PER *top* ].
+
+;;; Error: Two top types *TOP* and AGR-CAT have been defined
+
+; 3b - connectedness / cyclicity
+
+feat-struc := agr-cat.
+agr-cat := feat-struc.
+
+;;; Error: AGR-CAT not connected to top
+
+|#
+
+; 4 - cycles
+
+
+feat-struc := *top*.
+agr-cat := feat-struc & tv_pred.
+tv_pred := agr-cat.
+
+;;; Cycle involving AGR-CAT
+
+#|
+
+; 5 - redundancy
+
+feat-struc := *top*.
+agr-cat := feat-struc.
+tv_pred := feat-struc & agr-cat.
+int1 := agr-cat.
+int2 := int1 & tv_pred.
+int3 := int2 & agr-cat.
+
+;;; Redundancy involving TV_PRED
+
+|#

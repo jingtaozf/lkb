@@ -1,0 +1,38 @@
+;;; Deliberately buggy file for
+;;; testing documentation of syntax errors
+;;; (don't worry about positions matching documentation)
+
+feat-struc : *top*.
+
+#|
+Syntax error at position 273: \\
+Syntax error following type name FEAT-STRUC\\
+Ignoring (part of) entry for FEAT-STRUC
+|#
+
+agr-cat := feat-struc &
+ [ PER per,
+   NUM num,
+   GEND gend . 
+
+#|
+Syntax error: ] expected and not found in AGR-CAT at position 343\\
+Inserting ]
+|#
+
+foo-cat := feat-struc &
+ [ PER per,
+   NUM num,
+   GEND gend ] 
+
+pos : feat-struc &
+ [ FORM form-cat ].
+
+bar-cat := feat-struc &
+ [ PER per,
+   NUM num
+   GEND gend ].
+
+head-feature-principle := hd-grule & 
+ [ SYN [ HEAD #head ],
+   H [ SYN [ HEAD #headd ] ] ].

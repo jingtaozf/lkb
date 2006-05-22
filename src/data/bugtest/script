@@ -1,0 +1,4 @@
+(lkb-load-lisp (this-directory) "globals.lsp")
+(lkb-load-lisp (this-directory) "user-fns.lsp")
+(read-tdl-type-files-aux
+     (list (lkb-pathname (this-directory) "constraints.tdl")))

@@ -1,0 +1,211 @@
+;;; Deliberately buggy file for
+;;; testing detection of constraint errors
+
+;;; Utility types
+
+*value* := *top*. 
+per := *value*.
+num := *value*.
+gend := *value*.
+form-cat := *value*.
+
+feat-struc := *top*.
+
+*list* := *top*.
+
+ne-list := *list* &
+ [ FIRST *top*,
+   REST *list* ].
+
+*null* := *list*.
+
+hthing := *top* &
+[ H *top* ].
+
+
+gram-cat := *top* &
+ [ HEAD *top* ].
+
+foo-cat := gram-cat &
+ [ HEAD *null*,
+   FOO *top* ].
+
+noun := *top*.
+
+sem-struc := *top* &
+ [ INDEX *top*,
+   MODE *top* ].
+
+mode-cat := *top*.
+
+ref-index := *top*.
+
+
+;;; Bugs
+
+#|
+
+;;; 1 - missing type
+
+agr-cat := feat-struc &
+ [ PER foobar,
+   NUM num,
+   GEND gend ]. 
+
+|#
+
+#|
+Invalid types (FOOBAR)
+Unifications specified are invalid or do not unify
+Type AGR-CAT has an invalid constraint specification
+|#
+
+#|
+
+;;; 2 - impossible reentrancy
+
+agr-cat := feat-struc &
+ [ PER #1 & per,
+   NUM #1 & num,
+   GEND gend ].
+
+|#
+
+#|
+Unifications specified are invalid or do not unify
+|#
+
+#|
+
+;;; 3 - cycle
+
+birule-headfirst := hthing &
+ [ H #1,
+   NH1 #2,
+   ARGS < #1 & [ H #1 ], #2 > ] .
+
+|#
+
+#|
+Cyclic check found cycle at \verb+< H >+\\
+Unification failed - cyclic result\\
+Unification failed: unifier found cycle at \verb+< >+\\
+Type BIRULE-HEADFIRST has an invalid constraint specification
+|#
+
+;;; 4 - inconsistent inheritance
+
+#|
+
+foo-list := ne-list &
+ [ REST hthing ].
+
+|#
+
+#|
+Type X's constraint specification clashes with its parents
+|#
+
+;;; 5 - Maximal introduction of features
+
+#|
+
+agr-cat := feat-struc &
+ [ PER per,
+   NUM num,
+   GEND gend ].
+
+pos := feat-struc &
+ [ PER per,
+   FORM form-cat ].
+
+|#
+
+#|
+Feature PER is introduced at multiple types (POS AGR-CAT)
+|#
+
+;;; 6 - infinite structures
+
+#|
+
+foolist := *list* &
+ [ FI *top*,
+   RE foolist ].
+
+|#
+
+#|
+Error in FOOLIST: 
+  Type FOOLIST occurs in constraint for type FOOLIST at (RE)
+
+|#
+
+#|
+;;; 6b - mutual recursion
+
+foo := *top* &
+[ F bar ].
+
+bar := *top* &
+[ G foo ].
+
+|#
+
+#|
+FOO is used in expanding its own constraint 
+                    expansion sequence: (BAR FOO)
+|#
+
+;;; 7a - Type inference --- features
+
+#|
+
+lexeme := *top* &
+ [ SYN gram-cat,
+   SEM sem-struc ].
+
+
+noun-lxm := lexeme &
+ [ SYN [ HEAD noun,
+         INDEX *top* ],
+   SEM [ INDEX ref-index ] ].
+
+|#
+
+#|
+Error in NOUN-LXM:
+   No possible type for features (INDEX HEAD) at 
+   path (SYN)
+|#
+
+
+;;; 7b - Type inference --- features and type
+
+#|
+
+synsem-struc := feat-struc &
+ [ SYN gram-cat & 
+       [ MODE mode-cat ],
+   SEM sem-struc ].
+
+|#
+
+#|
+Error in SYNSEM-STRUC:
+  Type of fs GRAM-CAT at path (SYN) is incompatible with features (MODE) 
+  which have maximal type SEM-STRUC
+|#
+
+
+;;; 7c - Type inference --- feature leads to type which clashes with existing value
+
+synsem-struc := feat-struc &
+ [ SYN gram-cat & 
+       [ HEAD noun,
+         FOO *top* ]].
+
+#|
+Unification with constraint of GRAM-CAT failed at path (SYN)
+
+|#
