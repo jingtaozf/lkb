@@ -156,7 +156,9 @@
   word maf-id xfrom xto)
 
 (defstruct (morpho-stem-edge (:include edge))
-  word stem current) 
+  word stem current
+  l-content ;; temporary hack (bmw)
+  ) 
 
 (defun make-edge (&rest rest)
   (apply #'make-edge-x rest))
@@ -1410,11 +1412,11 @@ relatively limited.
   (let* ((to (edge-to morpho-stem-edge))
 	 (edge-stem (morpho-stem-edge-stem morpho-stem-edge))
 	 (from (edge-from morpho-stem-edge))
-	(cfrom (edge-cfrom morpho-stem-edge))
+	 (cfrom (edge-cfrom morpho-stem-edge))
 	 (cto (edge-cto morpho-stem-edge))
 	 (partial-tree (edge-partial-tree morpho-stem-edge))
 	 (edge-string (edge-string morpho-stem-edge))
-	 (edge-entries (get-unexpanded-lex-entry edge-stem)))
+	 (edge-entries (get-edge-entries morpho-stem-edge)))
     ;;; FIX when the precheck code is written the entries
     ;;; will be on the edges
     (dolist (entry edge-entries)
@@ -1429,10 +1431,18 @@ relatively limited.
 	 edge-string from to cfrom cto partial-tree entry morpho-stem-edge))))))
 	     ;;; FIX - put back unify-in
 
+(defun get-edge-entries (morpho-stem-edge)
+  (with-slots (l-content stem) morpho-stem-edge
+    (if l-content 
+	(list l-content) 
+      (get-unexpanded-lex-entry stem))))     
+
 (defun add-stem-edge (edge-stem
 		      edge-string from to cfrom cto partial-tree entry dtr)
     #+:arboretum (declare (special *mal-active-p*))
-    (let* ((expanded-entry (get-lex-entry-from-id (lex-entry-id entry))))
+;;    (let* ((expanded-entry (get-lex-entry-from-id (lex-entry-id entry))))
+;; (bmw) above code seems unnnecessary
+    (let* ((expanded-entry (get-expanded-lex-entry entry)))
       ;; side effect of calling get-lex-entry-from-id is
       ;;  instantiation of :full-fs slot
       (when (and expanded-entry

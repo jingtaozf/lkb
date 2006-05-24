@@ -123,12 +123,15 @@
 	    (setf final target))
 	  (push
 	   (case (lxml-elt-name e)
-	     (|token|
-	      (lxml-token-to-edge e :source source :target target))
 	     (|annot|
 	      (lxml-annot-to-edge e :source source :target target))
+	     ;; special case
+	     (|token|
+	      (lxml-token-to-edge e :source source :target target))
+	     ;; special case
 	     (|wordForm|
 	      (lxml-wordform-to-edge e :source source :target target))
+	     ;; special case
 	     (|sentence|
 	      (lxml-sentence-to-edge e :source source :target target))
 	     (t
@@ -235,10 +238,12 @@
      :to (lxml-elt-attr lxml-annot "to")
      )))
 
+;; special case
 (defun lxml-wordform-to-edge (lxml-wordform &key source target)
   (lxml-annot-to-edge lxml-wordform :type :|wordForm|
 		      :source source :target target))
-  
+
+;; special case
 (defun lxml-sentence-to-edge (lxml-sentence &key source target)
   (lxml-token-to-edge lxml-sentence :type :|sentence|
 		      :source source :target target))
@@ -384,16 +389,6 @@
 (defun saf-num-lattice-nodes (saf)
   (length (saf-lattice-nodes (saf-lattice saf))))
 
-;(defvar *saf-setup-morphs* '(:|token|))
-;
-;(defun saf-setup-morphs (saf)
-;  (case *morph-option*
-;    (:with-tokeniser-partial-tree ;; take both tok and morph edges
-;	(saf-to-tchart saf))
-;    (t ;; take only tok edges
-;     (saf-to-tchart saf
-;		    :filter #'(lambda (x) (member (saf-edge-type x) *saf-setup-morphs*))))))
-
 (defun saf-setup-morphs (saf)
   (case *morph-option*
     (:with-tokeniser-partial-tree ;; take both tok and morph edges
@@ -402,11 +397,8 @@
      (saf-to-tchart saf
 		    :filter #'(lambda (x) 
 				(equal "tok" 
-				       (saf-fs-feature-value 
-					(saf-edge-l-content x) 
-					"edgeType")))))))
-
-
+				       (saf::l-edgeType x)))))))
+				       
 ;;
 
 (defun xml-maf-to-tchart (xml)
@@ -429,13 +421,33 @@
 	(loop for f in (saf-lattice-edges saf-lattice)
 	    when (funcall filter f)
 	    collect f)
-      when (eq (saf-edge-type e) :|token|)
-      collect e into tokens
-      when (eq (saf-edge-type e) :|wordForm|)
-      collect e into wordForms
+      if (string= (saf::l-edgeType e) "tok")
+      collect e into toks
+      else if (string= (saf::l-edgeType e) "tok+morph")
+      collect e into tokMorphs
+      else if (string= (saf::l-edgeType e) "morph")
+      collect e into morphs
+      else do (error "unknown l-edgeType: '~a'" (saf::l-edgeType e))
       finally     
-	(loop for e in (append tokens wordForms)
-	    do (augment-tchart-from-saf-edge e :addressing addressing))))
+	(loop for e in toks
+	    do 
+	      (augment-tchart-from-saf-edge e 
+					    :fn #'saf-edge-to-tedge
+					    :addressing addressing))
+	(loop for e in tokMorphs
+	    do 
+	      (augment-tchart-from-saf-edge e 
+					    :fn #'saf-edge-to-tedge
+					    :addressing addressing)
+	      (augment-tchart-from-saf-edge e 
+					    :fn #'saf-edge-to-medge
+					    :addressing addressing))
+	(loop for e in morphs
+	    do 
+	      (augment-tchart-from-saf-edge e 
+					    :fn #'saf-edge-to-medge
+					    :addressing addressing))
+	))
 
 (defun next-tchart-edge-id (&optional (tchart *tchart*))
   (let ((edges (get-edges tchart)))
@@ -444,28 +456,24 @@
       0)))
 
 ;; to do: replace global *tchart* + *tchart-max* + ??? with objects
-(defun augment-tchart-from-saf-edge (saf-edge &key addressing)
-  (let* ((edge  (saf-edge-to-edge saf-edge :addressing addressing))
-	 (from (edge-from edge))
-	 (to (edge-to edge))
-	 (cc (make-chart-configuration :begin from
-				       :end to
-				       :edge edge)))
+(defun augment-tchart-from-saf-edge (saf-edge &key addressing fn)
+  (let*
+      (( edge (funcall fn saf-edge :addressing addressing))
+       (from (edge-from edge))
+       (to (edge-to edge))
+       (cc (make-chart-configuration :begin from :end to :edge edge)))
     (setf (aref *tchart* to 0) (push cc (aref *tchart* to 0)))
     (setf (aref *tchart* from 1) (push cc (aref *tchart* from 1)))
     (when (> to *tchart-max*)
-      ;(format t "~%WARNING: increasing *tchart-max* to ~a" to)
-      (setf *tchart-max* to))
-    *tchart*))
+      ;;(format t "~%WARNING: increasing *tchart-max* to ~a" to)
+      (setf *tchart-max* to)))
+  *tchart*)
 
-(defun saf-edge-to-edge (saf-edge &key addressing)
-  (case (saf-edge-type saf-edge)
-    (:|token| (saf-edge-to-tedge saf-edge :addressing addressing))
-    (:|wordForm| (saf-edge-to-medge saf-edge))))
 
 (defun saf-edge-to-tedge (saf-edge &key addressing)
-  (unless (eq :|token| (saf-edge-type saf-edge))
-    (error ":|token| edge expected"))
+  (unless (or (string= "tok" (saf::l-edgeType saf-edge))
+	      (string= "tok+morph" (saf::l-edgeType saf-edge)))
+    (error "edgeType='tok' expected (got '~a')" (saf::l-edgeType saf-edge)))
   (with-slots (id source target from to l-content) saf-edge
     (let ((tokenStr (saf-fs-feature-value 
 		     l-content 
@@ -480,14 +488,20 @@
        :word (string-upcase tokenStr)
        :leaves (list tokenStr)))))
 
-(defun saf-edge-to-medge (saf-edge)
-  (unless (eq :|wordForm| (saf-edge-type saf-edge))
-    (error ":|wordForm| edge expected"))
+(defun saf-edge-to-medge (saf-edge &key addressing)
+  (declare (ignore addressing))
+  (unless (or (string= "morph" (saf::l-edgeType saf-edge))
+	       (string= "tok+morph" (saf::l-edgeType saf-edge)))
+    (error "'morph' edge expected (got '~a')" (saf::l-edgeType saf-edge)))
   ;; assume tedges already in chart
   (with-slots (id source target deps l-content) saf-edge
-    (let* ((children 
-	    (loop for d in deps
-		collect (id-to-token-edge d (get-tedges *tchart*)))) 
+    (let* (
+	   (deps2 (if (string= "tok+morph" (saf::l-edgeType saf-edge))
+		      (list id)
+		    deps))
+	   (children 
+	    (loop for d in deps2
+		collect (id-to-token-edge d (get-tedges *tchart*))))
 	   (leaf-edges children) ;;fix me
 	   (children-words
 	    (loop for l in leaf-edges
@@ -495,6 +509,8 @@
 	   (form (str-list-2-str children-words))
 	   (stem (saf-fs-feature-value l-content "stem"))
 	   (partialTree (saf-fs-feature-value l-content "partialTree"))
+	   (gType (saf-fs-feature-value l-content "gType"))
+	   (dummy-entry (if gType (get-dummy-unexpanded-lex-entry 'dummy0000 gType form)))
 	   )
       (unless (= (id-to-int source) (leaf-edges-from leaf-edges))
 	(error "source must match that of leaf edges"))
@@ -511,42 +527,8 @@
        :current (string-upcase form)
        :stem stem
        :partial-tree (saf-fs-partial-tree-2-list-partial-tree partialTree)
+       :l-content dummy-entry
        ))))
-
-;(defun saf-edge-to-medge (saf-edge)
-;  (unless (eq :|wordForm| (saf-edge-type saf-edge))
-;    (error ":|wordForm| edge expected"))
-;  ;; assume tedges already in chart
-;  (with-slots (id source target deps content) saf-edge
-;    (let* ((children 
-;	    (loop for d in deps
-;		collect (id-to-token-edge d (get-tedges *tchart*)))) 
-;	   (leaf-edges children) ;;fix me
-;	   (children-words
-;	    (loop for l in leaf-edges
-;		collect (token-edge-string l)))
-;	   (form (str-list-2-str children-words))
-;	   )
-;      (unless (= (id-to-int source) (leaf-edges-from leaf-edges))
-;	(error "source must match that of leaf edges"))
-;      (unless (= (id-to-int target) (leaf-edges-to leaf-edges))
-;	(error "target must match that of leaf edges"))
-;      (make-morpho-stem-edge 
-;       :id (id-to-int id)
-;       :children children
-;       :leaves (loop for x in leaf-edges collect (edge-string x))
-;       :from (id-to-int source)
-;       :to (id-to-int target)
-;       :string form
-;       :word (string-upcase form)
-;       :current (string-upcase form)
-;       :stem (saf-fs-path-value '("stem") (saf-edge-content saf-edge))
-;       :partial-tree (partial-tree-from-content (saf-edge-content saf-edge))
-;       ))))
-
-;(defun partial-tree-from-content (content)
-;  (saf-fs-partial-tree-2-list-partial-tree
-;   (saf-fs-path-value '("partial-tree") content)))
 
 (defun saf-fs-partial-tree-2-list-partial-tree (fs)
   (if (null fs)
@@ -685,3 +667,24 @@
 
 (defun saf-edge-l-content! (x)
   (saf-edge-l-content x))
+
+#+:null
+(defun parse-x nil
+  (let ((*morph-option* :with-tokeniser-partial-tree))
+    (parse *x)))
+
+#+:null
+(defun parse-y nil
+  (let ((*morph-option* :with-tokeniser-partial-tree))
+    (parse *y)))
+
+(defvar *dfn-dummy1* '((:UNIFS :|type| "nil" (SYM))
+		       (:UNIFS :|orthography| "(stem)" (STR-LST))
+		       (:ID :|name| "" (SYM)) 
+		       (:ORTH :|orthography| "" (STR-RAWLST))))
+
+(defun get-dummy-unexpanded-lex-entry (id type orth)
+  (MAKE-PSORT-STRUCT2
+   (list (string type) (string id) orth)
+   '(:|type| :|name| :|orthography|)
+   :dfn *dfn-dummy1*))

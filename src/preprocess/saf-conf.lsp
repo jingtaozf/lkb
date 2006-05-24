@@ -46,12 +46,15 @@
 ;	   (resolve val edge)))
 ;  )
 
+;; incomplete: work-in-progress
 (defun resolve (var edge)
   (cond
     ((eq var 'lkb::|content|)
      (lkb::saf-edge-content edge))
     ((eq var 'lkb::|content.stem|)
      (lkb::saf-fs-path-value '("stem") (lkb::saf-edge-content edge)))
+    ((eq var 'lkb::|content.token|)
+     (lkb::saf-fs-path-value '("token") (lkb::saf-edge-content edge)))
     ((eq var 'lkb::|content.partial-tree|)
      (lkb::saf-fs-path-value '("partial-tree") (lkb::saf-edge-content edge)))
     (t
@@ -66,6 +69,7 @@
   (match (funcall f edge) 
 	 (funcall f action)))
 
+;; rename to: y-in-x
 (defun match (x y)
   (if (symbolp x) (setf x (string x))) ;;; fix_me
   (cond
@@ -76,9 +80,10 @@
 	for fv in y
 	for val = (lkb::saf-fv-value fv)
 	for feat = (lkb::saf-fv-feature fv)
-	unless (match 
-		val
-		(lkb::saf-fs-path-value feat x))
+	for m = (match 
+		 (lkb::saf-fs-path-value (list feat) x)
+		 val)
+	unless m
 	do (return nil)
 	finally (return t)))))
 		  
@@ -105,13 +110,28 @@
 	  (push (lkb::make-saf-fv :feature feat :value val)
 		l-content)))
   l-content)
-  
+
+;;
+
+(defun l-edgeType (s-edge)
+  (lkb::saf-fs-feature-value 
+   (lkb::saf-edge-l-content s-edge) 
+   "edgeType"))
+
+(defun l-gType (s-edge)
+  (lkb::saf-fs-feature-value 
+   (lkb::saf-edge-l-content s-edge) 
+   "gType"))
 
 ;;
 ;; very simple reader for textual conf file
 ;; - one setting per line
 ;; - of form "type.[f1='v1' f2='v2'] -> edgeType='tok'"
 ;; where type, fN and vN consist only of (Perl regex) word characters
+
+(defun get-saf-l-map (filename)
+  (setf lkb::*saf-l-map*
+    (conf-read-file filename)))
 
 (defun get-default-saf-l-map nil
   ;;(format t ";; (no saf-l-map settings loaded... using defaults)")
@@ -152,7 +172,7 @@
   (or
    (ppcre:register-groups-bind 
     (feat val)
-    ("(\\w*)='(\\w*)'.*" spec)
+    ("(\\w*)='([^']*)'.*" spec)
     (lkb::make-saf-fv :feature feat
 		      :value val))
    (ppcre:register-groups-bind 
@@ -160,4 +180,3 @@
     ("(\\w*)=(.*).*" spec)
     (lkb::make-saf-fv :feature feat
 		      :value (intern val)))))
-  

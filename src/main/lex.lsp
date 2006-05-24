@@ -150,6 +150,15 @@
 	    ((expand-psort-entry entry) entry)
 	    (t (setf (lex-entry-full-fs entry) :fail)
 	       nil)))))
+
+;; (bmw) copied from above
+(defun get-expanded-lex-entry (entry)
+  (when entry
+    (cond ((eql (lex-entry-full-fs entry) :fail) nil)
+	  ((lex-entry-full-fs entry) entry)
+	  ((expand-psort-entry entry) entry)
+	  (t (setf (lex-entry-full-fs entry) :fail)
+	     nil))))
                    
 (defun get-unexpanded-psort-entry (id &key (cache t))
   ;; for multi words, where we don't want the full-fs to be created
@@ -191,7 +200,8 @@
 
 (defun get-unexpanded-lex-entry (orth)
   (loop 
-      for psort in (remove-duplicates (lookup-word *lexicon* orth))
+      for psort in (remove-duplicates ;; is remove-duplicates necessary???
+		    (lookup-word *lexicon* orth))
       for entry = (get-unexpanded-psort-entry psort)
       when entry collect entry))
 
