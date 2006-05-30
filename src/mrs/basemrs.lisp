@@ -1250,6 +1250,53 @@ higher and lower are handle-variables
 (defmethod mrs-output-end-psoa ((mrsout mrs-xml))
   nil)
 
+;;; variant of above for the case where the output has eqs specified
+;;; mrs.dtd is varied so that:
+;;; <!ELEMENT mrs (label, var, (ep|hcons-set)*)>
+;;; <!ELEMENT hcons-set (hcons)*>
+;;; <!ATTLIST hcons hreln (eq) #REQUIRED >
+
+;;; slight hackiness - we output a set of hcons based on the value of
+;;; a global variable which needs to be set by the calling function.
+#|
+(let ((mrs (mrs::extract-mrs edge)))
+  (setf mrs::*canonical-bindings* nil)
+  (setf mrs::*binding-sets* 
+    (mrs::make-scoped-mrs mrs))
+  (mrs::output-mrs1 mrs 'mrs::mrs-xml-scoped ostream))
+|#
+
+(defparameter *binding-sets* nil)
+
+(defclass mrs-xml-scoped (mrs-xml)
+  ())
+
+(defmethod mrs-output-start-h-cons ((mrsout mrs-xml-scoped))
+  (with-slots (stream) mrsout
+    (dolist (binding *binding-sets*)
+      (setf *canonical-bindings* (canonical-bindings binding))
+      (format stream "~%<hcons-set>")
+      (dolist (pair *canonical-bindings*)
+	(let ((first (car pair)) 
+	      (second (cdr pair)))
+	  (unless (eql first second)
+	    (format stream "~%<hcons hreln='eq'><hi>")
+    ;;;
+	    (mrs-output-var-fn mrsout nil nil "h" first)
+	    (format stream "</hi><lo>")
+    ;;;
+	    (mrs-output-var-fn mrsout nil nil "h" second)
+    ;;;
+	    (format stream "</lo></hcons>"))))
+      (format stream "~%</hcons-set>"))))
+
+(defmethod mrs-output-outscopes ((mrsout mrs-xml-scoped) reln 
+				 higher lower first-p 
+				 higher-id higher-sort lower-id lower-sort)
+  (declare (ignore reln higher lower first-p 
+		   higher-id higher-sort lower-id lower-sort))
+  nil)
+
 ;;; end of classes
 
 ;;; Utility fns
