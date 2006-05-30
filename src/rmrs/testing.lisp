@@ -343,7 +343,7 @@ off, perhaps)
 	               :directory "/d/rasp-rmrs/test-sets/"
 	               :name "annlt.trees") 
 	#-:mswindows (make-pathname :directory "/homes/aac10/rasp-rmrs/test-sets/"
-				    :name "annlt.trees"))
+				    :name "robust.trees"))
 	(*rasp-xml-word-p* t)
 	(*renumber-hack* t)
 	(*rasp-xml-type* :none))
@@ -352,7 +352,7 @@ off, perhaps)
     (read-rmrs-tag-templates *rasp-rmrs-tag-file*)
     (with-open-file  (istream test-file
 		      :direction :input)
-    (with-open-file  (ostream "rasp.rmrs"
+    (with-open-file  (ostream "robust.rmrs"
 		      :direction :output :if-exists :supersede)
       (format ostream "<rmrs-list>~%")
       (loop 
@@ -363,6 +363,7 @@ off, perhaps)
 	  (unless tree
 	    (return))
 	  (when tree
+;;;	    (pprint tree)
 	    (construct-sem-for-tree 
 	     tree
 	     :rasp ostream tagged))))

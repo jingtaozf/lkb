@@ -279,7 +279,8 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
 		  (de-xml-str (string node))
 		(string node)))	      
          (uscore-pos (position #\_ str)))
-    (subseq str (+ 1 uscore-pos))))    
+    (if uscore-pos
+	(subseq str (+ 1 uscore-pos)))))
 
 ;;; Note that ' is removed from the lexeme to avoid XML errors
 ;;; - also will match better with ERG output
@@ -290,8 +291,8 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
 		  (de-xml-str xml-str)
 		xml-str))
          (uscore-pos (position #\_ str))
-         (notag (subseq str 0 uscore-pos))
-         (tag (subseq str uscore-pos))
+         (notag (if uscore-pos (subseq str 0 uscore-pos) str))
+         (tag (if uscore-pos (subseq str uscore-pos)))
          (colon-pos (position #\: notag :from-end t))
          (suffix-pos (position #\+ notag))
          (count (if original (get-word-count str colon-pos uscore-pos))))
@@ -308,8 +309,9 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
         (if (and colon-pos (> uscore-pos (+ 1 colon-pos)))
             (subseq notag 0 colon-pos)
           notag)))
-      :pos
-      (tag-letters tag)
+      :pos (if tag
+	       (tag-letters tag)
+	     "x")
       :original (if (and count (<= count (length original)))
                     (remove #\' (elt original (- count 1))))
       :from (get-cfrom xml-str)
