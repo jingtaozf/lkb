@@ -97,13 +97,13 @@
 ;;;
 
 (defun leaf-edges-from (leaf-edges)
-  (unless leaf-edges
-    (error "leaf-edges is null"))
+;  (unless leaf-edges
+;    (error "leaf-edges is null"))
   (apply #'min (mapcar #'edge-from leaf-edges)))
 
 (defun leaf-edges-to (leaf-edges)
-  (unless leaf-edges
-    (error "leaf-edges is null"))
+;  (unless leaf-edges
+;    (error "leaf-edges is null"))
   (apply #'max (mapcar #'edge-to leaf-edges)))
 
 #+:null

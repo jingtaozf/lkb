@@ -223,17 +223,31 @@
    :content (lxml-elt-attr lxml-token "value")))
 
 (defun lxml-annot-to-edge (lxml-annot &key type source target)
-  (let* ((fs-list (lxml-elt-elts lxml-annot "fs"))
+  (let* ((id (lxml-elt-attr lxml-annot "id"))
+	 (fs-list (lxml-elt-elts lxml-annot "fs"))
+	 (slots (lxml-elt-elts lxml-annot "slot"))
 	 (fs (if (cdr fs-list)
 		 (error "max 1 fs element allowed in wordform")
-	       (car fs-list))))
+	       (car fs-list)))
+	 (content (or (lxml-elt-attr lxml-annot "value") 
+		  (lxml-fs-content-to-fs fs) 
+		  (lxml-slots-to-fs slots)))
+	 (source (or source (lxml-elt-attr lxml-annot "source")))
+	 (target (or target (lxml-elt-attr lxml-annot "target")))
+	 )
+    (unless content
+      (format t "~&WARNING: no/unknown content for SMAF edge '~a'" id))
+    (unless source
+      (format t "~&WARNING: missing source for SMAF edge '~a'" id))
+    (unless target
+      (format t "~&WARNING: missing target for SMAF edge '~a'" id))
     (make-saf-edge
-     :id (lxml-elt-attr lxml-annot "id")
+     :id id
      :type (saf-type (or type (lxml-elt-attr lxml-annot "type")))
-     :source (or source (lxml-elt-attr lxml-annot "source"))
-     :target (or target (lxml-elt-attr lxml-annot "target"))
+     :source source
+     :target target
      :deps (split-str-on-spc (lxml-elt-attr lxml-annot "deps"))
-     :content (or (lxml-elt-attr lxml-annot "value") (lxml-fs-content-to-fs fs))
+     :content content
      :from (lxml-elt-attr lxml-annot "from")
      :to (lxml-elt-attr lxml-annot "to")
      )))
@@ -270,6 +284,19 @@
       (unless (stringp str)
 	(error "string expected"))
       str))))
+
+(defun lxml-slots-to-fs (lxml-slots)
+  (loop
+      for s in lxml-slots
+      for feat = (lxml-elt-attr s "name")
+      for val = (first (lxml-elt-contents s))
+      for val-str = (if (stringp val)
+			val
+		      (error "string expected"))
+      collect 
+	(make-saf-fv :feature feat
+		     :value val-str)))
+
 
 
 ;;
@@ -430,7 +457,7 @@
       collect e into tokMorphs
       else if (string= (saf::l-edgeType e) "morph")
       collect e into morphs
-      else do (format t "~&WARNING: SAF edge ~a has unknown edgeType '~a' (allowed values: 'tok' 'tok+morph' 'morph')" (saf-edge-id e) (saf::l-edgeType e))
+      else do (format t "~&WARNING: SMAF edge ~a has unknown edgeType '~a' (allowed values: 'tok' 'tok+morph' 'morph')" (saf-edge-id e) (saf::l-edgeType e))
       finally     
 	(loop for e in toks
 	    do 
@@ -467,6 +494,10 @@
 	     (from (edge-from edge))
 	     (to (edge-to edge))
 	     (cc (make-chart-configuration :begin from :end to :edge edge)))
+	(unless (and (integerp from) (integerp to))
+	  (format t "~&WARNING: ignoring malformed chart edge '~a' (from='~a', to='~a')"
+		  (edge-id edge) from to)
+	  (return-from augment-tchart-from-saf-edge))
 	(setf (aref *tchart* to 0) (push cc (aref *tchart* to 0)))
 	(setf (aref *tchart* from 1) (push cc (aref *tchart* from 1)))
 	(when (> to *tchart-max*)
@@ -485,8 +516,8 @@
 		     "tokenStr")))
       (make-token-edge 
        :id (id-to-int id)
-       :from (id-to-int source)
-       :to (id-to-int target)
+       :from (id-to-int source :generate nil)
+       :to (id-to-int target :generate nil)
        :string tokenStr
        :cfrom (point-to-char-point from addressing)
        :cto (point-to-char-point to addressing)
@@ -506,7 +537,11 @@
 		    deps))
 	   (children 
 	    (loop for d in deps2
-		collect (id-to-token-edge d (get-tedges *tchart*))))
+		for tedge = (id-to-token-edge d (get-tedges *tchart*))
+		if tedge
+		collect tedge
+		else 
+		  do (format t "~&WARNING: missing SMAF edge '~a' (child of '~a')" d id)))
 	   (leaf-edges children) ;;fix me
 	   (children-words
 	    (loop for l in leaf-edges
@@ -518,19 +553,36 @@
 	   (partialTree (saf-fs-feature-value l-content "partialTree"))
 	   (gType (saf-fs-feature-value l-content "gType"))
 	   (dummy-entry (if gType (get-dummy-unexpanded-lex-entry nil gType form)))
+	   (from (id-to-int source :generate nil))
+	   (to (id-to-int target :generate nil))
+	   err-flag
 	   )
-      (when (or stem dummy-entry)
-	;; create medge
-	(unless (= (id-to-int source) (leaf-edges-from leaf-edges))
-	  (error "source must match that of leaf edges"))
-	(unless (= (id-to-int target) (leaf-edges-to leaf-edges))
-	  (error "target must match that of leaf edges"))
+      (unless (or stem dummy-entry)
+	(format t "~&WARNING: no stem/gType for SMAF edge '~a'" id)
+	(setf err-flag t))
+      (unless (integerp from)
+	(format t "~&WARNING: missing source for SMAF edge '~a'" id)
+	(setf err-flag t))
+      (unless (integerp to)
+	(format t "~&WARNING: missing target for SMAF edge '~a'" id)
+	(setf err-flag t))
+      (when (and (integerp from)
+		 (integerp to)
+		 (not (= from (leaf-edges-from leaf-edges))))
+	(format t "~&WARNING: source mismatch between SMAF edge '~a' and it's daughters")
+	(setf err-flag t))
+      (when (and (integerp from)
+		 (integerp to)
+		 (not (= to (leaf-edges-to leaf-edges))))
+	(format t "~&WARNING: target mismatch between SMAF edge '~a' and it's daughters")
+	(setf err-flag t))
+      (unless err-flag
 	(make-morpho-stem-edge 
 	 :id (id-to-int id)
 	 :children children
 	 :leaves (loop for x in leaf-edges collect (edge-string x))
-	 :from (id-to-int source)
-	 :to (id-to-int target)
+	 :from from
+	 :to to
 	 :string form
 	 :word (string-upcase form)
 	 :current (string-upcase form)
@@ -595,13 +647,14 @@
   (if str (parse-integer str)))
 
 ;; id: first char ignored, rest gives integer
-(defun id-to-int (id)
+(defun id-to-int (id &key (generate t))
   (handler-case 
       (let ((i (if id (parse-integer (subseq id 1)))))
 	(if i
 	    (and (setf *edge-id* (max i *edge-id*))
 		 i)
-	  (- (incf *edge-id*))))
+	  (if generate
+	      (- (incf *edge-id*)))))
     (error (condition)
       (error "unable to convert malformed id `~a': ~a" id condition))))
 
@@ -697,3 +750,8 @@
    (list (string type) (string id) orth)
    '(:|type| :|name| :|orthography|)
    :dfn *dfn-dummy1*))
+
+(defun read-smaf-conf (x)
+  (format t "~&;;; reading SMAF config file '~a'" x)
+  (saf::get-saf-l-map x)
+  t)
