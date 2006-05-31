@@ -390,14 +390,17 @@
   (length (saf-lattice-nodes (saf-lattice saf))))
 
 (defun saf-setup-morphs (saf)
-  (case *morph-option*
-    (:with-tokeniser-partial-tree ;; take both tok and morph edges
-	(saf-to-tchart saf))
-    (t ;; take only tok edges
-     (saf-to-tchart saf
-		    :filter #'(lambda (x) 
-				(equal "tok" 
-				       (saf::l-edgeType x)))))))
+  (saf-to-tchart saf))
+
+;(defun saf-setup-morphs (saf)
+;  (case *morph-option*
+;    (:with-tokeniser-partial-tree ;; take both tok and morph edges
+;	(saf-to-tchart saf))
+;    (t ;; take only tok edges
+;     (saf-to-tchart saf
+;		    :filter #'(lambda (x) 
+;				(equal "tok" 
+;				       (saf::l-edgeType x)))))))
 				       
 ;;
 
@@ -427,7 +430,7 @@
       collect e into tokMorphs
       else if (string= (saf::l-edgeType e) "morph")
       collect e into morphs
-      else do (error "unknown l-edgeType: '~a'" (saf::l-edgeType e))
+      else do (format t "~&WARNING: SAF edge ~a has unknown edgeType '~a' (allowed values: 'tok' 'tok+morph' 'morph')" (saf-edge-id e) (saf::l-edgeType e))
       finally     
 	(loop for e in toks
 	    do 
@@ -457,16 +460,18 @@
 
 ;; to do: replace global *tchart* + *tchart-max* + ??? with objects
 (defun augment-tchart-from-saf-edge (saf-edge &key addressing fn)
-  (let*
-      (( edge (funcall fn saf-edge :addressing addressing))
-       (from (edge-from edge))
-       (to (edge-to edge))
-       (cc (make-chart-configuration :begin from :end to :edge edge)))
-    (setf (aref *tchart* to 0) (push cc (aref *tchart* to 0)))
-    (setf (aref *tchart* from 1) (push cc (aref *tchart* from 1)))
-    (when (> to *tchart-max*)
-      ;;(format t "~%WARNING: increasing *tchart-max* to ~a" to)
-      (setf *tchart-max* to)))
+  (let
+      ((edge (funcall fn saf-edge :addressing addressing)))
+    (when edge
+      (let* (
+	     (from (edge-from edge))
+	     (to (edge-to edge))
+	     (cc (make-chart-configuration :begin from :end to :edge edge)))
+	(setf (aref *tchart* to 0) (push cc (aref *tchart* to 0)))
+	(setf (aref *tchart* from 1) (push cc (aref *tchart* from 1)))
+	(when (> to *tchart-max*)
+	  ;;(format t "~%WARNING: increasing *tchart-max* to ~a" to)
+	  (setf *tchart-max* to)))))
   *tchart*)
 
 
@@ -507,28 +512,32 @@
 	    (loop for l in leaf-edges
 		collect (token-edge-string l)))
 	   (form (str-list-2-str children-words))
-	   (stem (saf-fs-feature-value l-content "stem"))
+	   (stem (or 
+		  (saf-fs-feature-value l-content "stem")
+		  form))
 	   (partialTree (saf-fs-feature-value l-content "partialTree"))
 	   (gType (saf-fs-feature-value l-content "gType"))
-	   (dummy-entry (if gType (get-dummy-unexpanded-lex-entry 'dummy0000 gType form)))
+	   (dummy-entry (if gType (get-dummy-unexpanded-lex-entry nil gType form)))
 	   )
-      (unless (= (id-to-int source) (leaf-edges-from leaf-edges))
-	(error "source must match that of leaf edges"))
-      (unless (= (id-to-int target) (leaf-edges-to leaf-edges))
-	(error "target must match that of leaf edges"))
-      (make-morpho-stem-edge 
-       :id (id-to-int id)
-       :children children
-       :leaves (loop for x in leaf-edges collect (edge-string x))
-       :from (id-to-int source)
-       :to (id-to-int target)
-       :string form
-       :word (string-upcase form)
-       :current (string-upcase form)
-       :stem stem
-       :partial-tree (saf-fs-partial-tree-2-list-partial-tree partialTree)
-       :l-content dummy-entry
-       ))))
+      (when (or stem dummy-entry)
+	;; create medge
+	(unless (= (id-to-int source) (leaf-edges-from leaf-edges))
+	  (error "source must match that of leaf edges"))
+	(unless (= (id-to-int target) (leaf-edges-to leaf-edges))
+	  (error "target must match that of leaf edges"))
+	(make-morpho-stem-edge 
+	 :id (id-to-int id)
+	 :children children
+	 :leaves (loop for x in leaf-edges collect (edge-string x))
+	 :from (id-to-int source)
+	 :to (id-to-int target)
+	 :string form
+	 :word (string-upcase form)
+	 :current (string-upcase form)
+	 :stem stem
+	 :partial-tree (saf-fs-partial-tree-2-list-partial-tree partialTree)
+	 :l-content dummy-entry
+	 )))))
 
 (defun saf-fs-partial-tree-2-list-partial-tree (fs)
   (if (null fs)

@@ -55,6 +55,8 @@
      (lkb::saf-fs-path-value '("stem") (lkb::saf-edge-content edge)))
     ((eq var 'lkb::|content.token|)
      (lkb::saf-fs-path-value '("token") (lkb::saf-edge-content edge)))
+    ((eq var 'lkb::|content.surface|)
+     (lkb::saf-fs-path-value '("surface") (lkb::saf-edge-content edge)))
     ((eq var 'lkb::|content.partial-tree|)
      (lkb::saf-fs-path-value '("partial-tree") (lkb::saf-edge-content edge)))
     (t
