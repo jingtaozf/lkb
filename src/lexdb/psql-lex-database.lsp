@@ -429,45 +429,7 @@
 			  :fields (fields lex))
 			  ))
 
-(defun make-psort-struct2 (raw-record cols &key dfn)
-  (apply #'make-lex-entry 
-	 (make-strucargs2 raw-record cols 
-			  :dfn dfn
-			  )))
 
-;; provide args to make-lex-entry
-(defun make-strucargs2 (raw-record cols &key dfn fields)
-  ;; make a-list with empty values
-  (let* ((strucargs 
-	 (mapcar #'(lambda (x) (list x)) 
-		 (remove-duplicates (mapcar #'first dfn)))))
-    ;; instantiate values in a messy way
-    ;; fix_me
-    (loop 
-	for (slot-key slot-field slot-path slot-type) in dfn
-	for slot-value-list = (work-out-value slot-type 
-					      (get-val slot-field raw-record cols)
-					      :path (work-out-rawlst slot-path))
-	when slot-value-list
-	do 
-	  (setf (cdr (assoc slot-key strucargs))
-	    (append (cdr (assoc slot-key strucargs))
-		    (mapcar #'(lambda (x) (make-strucargs-aux x slot-path)) 
-			    slot-value-list))))
-    ;; messy
-    (let ((unifs (cdr (assoc :UNIFS strucargs)))
-	  (id (cadr (assoc :ID strucargs)))
-	  (orth (cadr (assoc :ORTH strucargs))))
-      ;; if using :|_tdl| field (undecomposed TDL) the raw tdl contributes to lex entry
-      (when (member :|_tdl| fields)
-	(setf unifs 
-	  (append unifs (tdl-to-unifs (get-val :|_tdl| raw-record cols)))))
-      ;; finally, build the list of arguments
-      (list :UNIFS unifs
-	    :ID id
-	    :ORTH orth
-	    :INFL-POS (and (> (length orth) 1)
-			   (find-infl-pos nil orth nil))))))
 
 (defmethod record-to-tdl ((lex psql-lex-database) record)
   (let ((cols (mapcar #'car record))
