@@ -194,6 +194,8 @@
   (format t "~&;;; starting LKB server~&;;; waiting for connection on port ~a ..." port)
   (setf *lkb-server-socket* (socket::make-socket :connect :passive :local-port port))
   (setf *lkb-server-stream* (socket::accept-connection *lkb-server-socket*))
+  (setf (stream-external-format *lkb-server-stream*) (excl::find-external-format "utf-8"))
+  *lkb-server-stream*
   )
 
 (defun shutdown-server nil
@@ -204,13 +206,50 @@
   t
   )
 
+(defvar *xml-bad-chars*
+    '(
+      #\^a 
+      #\^b 
+      #\^c 
+      #\^d 
+      #\^e 
+      #\^f 
+      #\bel 
+      #\Backspace 
+      ;#\Tab 
+      ;#\Newline 
+      #\vt 
+      #\Page 
+      ;#\Return 
+      #\^n 
+      #\^o 
+      #\^p 
+      #\^q 
+      #\^r 
+      #\^s 
+      #\^t 
+      #\^u 
+      #\^v 
+      #\^w 
+      #\^x 
+      #\^y 
+      #\^z 
+      #\esc 
+      #\fs 
+      #\^] 
+      #\^^ 
+      #\^_ 
+      ))
+
 (defun read-input (stream &key (mode :xml) (term-char (code-char 17)))
   (declare (ignore mode))
   (loop
       with strm = (make-string-output-stream)
       for c = (read-char stream nil nil)
       while (and c (not (char= c term-char)))
-      unless (char= c #\Return)
+      unless (or
+	      (char= c #\Return)
+	      (member c *xml-bad-chars* :test 'char=))
       do 
 	(write-char c strm)
       finally 
@@ -237,28 +276,34 @@
 	      for input = (read-input s :mode mode)
 	      while (not (eq :eof input))
 	      do 
-		(case mode
-		  (:string 
-		   (format t "~&;;; parsing input: ~a" input)
-		   (setf id (format nil "s~a" (lkb::id-to-int nil)))
-		   (lkb::parse (lkb::split-into-words 
-				(lkb::preprocess-sentence-string input))
-			       nil
-			       ))
-		  (:xml
-		   (format t "~&;;; parsing XML input")
-		   (setf saf (lkb::xml-to-saf-object input))
-		   (setf id (lkb::saf-fs-feature-value 
-			     (lkb::saf-meta-olac 
-			      (lkb::saf-meta saf)) 
-			     "dc:identifier"))
-		   (lkb::parse saf nil))
+		(handler-case
+		    (progn
+		      (case mode
+			(:string 
+			 (format t "~&;;; parsing input: ~a" input)
+			 (setf id (format nil "s~a" (lkb::id-to-int nil)))
+			 (lkb::parse (lkb::split-into-words 
+				      (lkb::preprocess-sentence-string input))
+				     nil
+				     ))
+			(:xml
+			 (format t "~&;;; parsing XML input")
+			 (setf saf (lkb::xml-to-saf-object input))
+			 (setf id (lkb::saf-fs-feature-value 
+				   (lkb::saf-meta-olac 
+				    (lkb::saf-meta saf)) 
+				   "dc:identifier"))
+			 (lkb::parse saf nil))
+			)
+		      (lkb::dump-sentence-analyses2 :s-id id :stream s)
+		      (terpri s)
+		      (force-output s))
+		  #+:allegro
+		  (EXCL:INTERRUPT-SIGNAL () (error "Interrupt-Signal"))
+		  (error (condition)
+		    (format t  "~&Error: ~A" condition))
+		  
 		  )
-		(lkb::dump-sentence-analyses2 :s-id id :stream s)
-		(terpri s)
-		(force-output s)
-		
-		)
-	  ))
+		)))
     (format t "~&;;; [exiting LKB server mode]")
     (shutdown-server)))
