@@ -182,3 +182,83 @@
     ("(\\w*)=(.*).*" spec)
     (lkb::make-saf-fv :feature feat
 		      :value (intern val)))))
+
+;;;
+;;; SERVER code
+;;; (move to separate file later)
+
+(defvar *lkb-server-socket*)
+(defvar *lkb-server-stream*)
+
+(defun start-server (&key (port 9876))
+  (format t "~&;;; starting LKB server~&;;; waiting for connection on port ~a ..." port)
+  (setf *lkb-server-socket* (socket::make-socket :connect :passive :local-port port))
+  (setf *lkb-server-stream* (socket::accept-connection *lkb-server-socket*))
+  )
+
+(defun shutdown-server nil
+  (when (boundp '*lkb-server-stream*)
+    (close *lkb-server-stream*))
+  (when (boundp '*lkb-server-socket*)
+    (close *lkb-server-socket*))
+  t
+  )
+
+(defun read-input (stream &key (mode :xml) (term-char (code-char 17)))
+  (declare (ignore mode))
+  (loop
+      with strm = (make-string-output-stream)
+      for c = (read-char stream nil nil)
+      while (and c (not (char= c term-char)))
+      unless (char= c #\Return)
+      do 
+	(write-char c strm)
+      finally 
+	(if (not c) (return-from read-input :eof))
+	(read-line stream nil nil)
+	(return
+	  (get-output-stream-string strm))))
+
+(defun clean-line (line)
+  (when (stringp line)
+    (let ((len (length line)))
+      (when (string= (subseq line (- len 1)) "
+")
+	(subseq line 0 (- len 1))))))
+
+(defun run-server (&key (port 9876) (mode :xml))
+  (unwind-protect 
+      (progn
+	(format t "~&;;; [entering LKB server mode]")
+	(let ((s (start-server :port port))
+	      saf id)
+	  (format t "~&;;; connection established")
+	  (loop
+	      for input = (read-input s :mode mode)
+	      while (not (eq :eof input))
+	      do 
+		(case mode
+		  (:string 
+		   (format t "~&;;; parsing input: ~a" input)
+		   (setf id (format nil "s~a" (lkb::id-to-int nil)))
+		   (lkb::parse (lkb::split-into-words 
+				(lkb::preprocess-sentence-string input))
+			       nil
+			       ))
+		  (:xml
+		   (format t "~&;;; parsing XML input")
+		   (setf saf (lkb::xml-to-saf-object input))
+		   (setf id (lkb::saf-fs-feature-value 
+			     (lkb::saf-meta-olac 
+			      (lkb::saf-meta saf)) 
+			     "dc:identifier"))
+		   (lkb::parse saf nil))
+		  )
+		(lkb::dump-sentence-analyses2 :s-id id :stream s)
+		(terpri s)
+		(force-output s)
+		
+		)
+	  ))
+    (format t "~&;;; [exiting LKB server mode]")
+    (shutdown-server)))

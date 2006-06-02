@@ -45,7 +45,8 @@
 (defstruct saf-meta
   document
   addressing
-  olac)
+  olac
+  text)
 
 (defmethod print-object ((object saf) stream)
   (format 
@@ -69,7 +70,7 @@
   (let* ((lxml-body (elements-only
 		     (check-doctype 
 		      (remove-xml-header lxml)
-		      '("saf" "maf"))))
+		      '("smaf" "saf" "maf"))))
 	 (lxml-body-1 (first lxml-body)))
     (cond
      ((null lxml-body)
@@ -80,21 +81,23 @@
       (saf-lxml-to-saf-object lxml-body-1)))))
 
 (defun saf-lxml-to-saf-object (lxml)
-  (unless (member (string (lxml-elt-name lxml)) '("maf" "saf")
+  (unless (member (string (lxml-elt-name lxml)) '("maf" "saf" "smaf")
 		  :test #'string=)
-    (error "saf or maf element expected as body"))
+    (error "smaf, saf or maf element expected as body"))
   (let* ((saf-attributes
 	  (lxml-elt-attributes lxml))
 	 (lxml (cdr lxml))
+	 (text
+	  (if (eq '|text| (lxml-elt-name (car lxml)))
+	      (pop lxml)))
 	 (olac 
 	  (if (eq '|olac:olac| (lxml-elt-name (car lxml)))
 	      (pop lxml))))
     (make-saf
-     :meta (get-saf-meta saf-attributes olac)
+     :meta (get-saf-meta saf-attributes :olac olac :text text)
      :lattice (get-saf-lattice lxml))))
 
-(defun get-saf-meta (saf-attributes lxml-olac)
-  (declare (ignore lxml-olac))
+(defun get-saf-meta (saf-attributes &key olac text)
   (let ((doc
 	 (second (member '|document| saf-attributes))))
     (if doc
@@ -104,7 +107,15 @@
     (make-saf-meta
      :document doc
      :addressing (intern (string-downcase (second (member '|addressing| saf-attributes))))
-     :olac :ignored)))
+     :olac (get-olac-meta olac)
+     :text text)))
+
+(defun get-olac-meta (lxml-olac)
+  (loop
+      for e in (lxml-elts lxml-olac)
+      collect
+	(make-saf-fv :feature (string (lxml-elt-name e))
+		     :value (lxml-elt-text-content e))))
 
 (defun make-saf-lattice-from-sequence (lxml &key init final)
   (let ((*saf-v* -1)
@@ -151,9 +162,10 @@
 
 (defun get-saf-lattice (lxml)
   (cond
-   ((eq '|fsm| (lxml-elt-name (car lxml)))
+;   ((eq '|fsm| (lxml-elt-name (car lxml)))
+   ((member (lxml-elt-name (car lxml)) '(|fsm| |lattice|))
     (when (cdr lxml)
-      (error "no elements expected after fsm"))
+      (error "no elements expected after fsm/lattice"))
     (get-saf-lattice-from-fsm (car lxml)))
    (t
     (make-saf-lattice-from-sequence lxml))))
@@ -167,8 +179,11 @@
 	  (loop for e in (lxml-elt-elts lxml-fsm "token")
 	      collect (lxml-token-to-edge e)))
 	 (annot-edges 
-	  (loop for e in (lxml-elt-elts lxml-fsm "annot")
-	      collect (lxml-annot-to-edge e)))
+	  (append
+	   (loop for e in (lxml-elt-elts lxml-fsm "annot")
+	       collect (lxml-annot-to-edge e))
+	   (loop for e in (lxml-elt-elts lxml-fsm "edge")
+	       collect (lxml-annot-to-edge e))))
 	 (wordform-edges 
 	  (loop for e in (lxml-elt-elts lxml-fsm "wordForm") ;;shorthand
 	      collect (lxml-wordform-to-edge e)))
@@ -248,8 +263,11 @@
      :target target
      :deps (split-str-on-spc (lxml-elt-attr lxml-annot "deps"))
      :content content
-     :from (lxml-elt-attr lxml-annot "from")
-     :to (lxml-elt-attr lxml-annot "to")
+     :from (or (lxml-elt-attr lxml-annot "from") 
+	       (lxml-elt-attr lxml-annot "cfrom"))
+     :to (or
+	  (lxml-elt-attr lxml-annot "to")
+	  (lxml-elt-attr lxml-annot "cto"))
      )))
 
 ;; special case
@@ -395,14 +413,19 @@
     (format ostream "~&</saf>")))
 
 #+:mrs
-;;based on mrs::output-mrs-after-parse
 (defun dump-sentence-analyses (s &optional (stream t))
+  (dump-sentence-analyses2 :s-id(saf-edge-id s) :stream stream))
+  
+#+:mrs
+;;based on mrs::output-mrs-after-parse
+(defun dump-sentence-analyses2 (&key (s-id (format nil "s~a"(id-to-int nil))) 
+				     (stream t))
   (let ((*print-circle* nil))
     (loop for edge in *parse-record* 
 	do
 	  (let ((mrs (mrs::extract-mrs edge)))
 	    (format stream "~&<annot type='parse' deps='~a' edge='~a'>" ;;move edge into content
-		    (saf-edge-id s)
+		    s-id
 		    (lkb::edge-id edge))
 	    ;;(format stream "~&~A~&" 
 	    ;;(lkb::parse-tree-structure edge))
@@ -525,12 +548,11 @@
        :leaves (list tokenStr)))))
 
 (defun saf-edge-to-medge (saf-edge &key addressing)
-  (declare (ignore addressing))
   (unless (or (string= "morph" (saf::l-edgeType saf-edge))
 	       (string= "tok+morph" (saf::l-edgeType saf-edge)))
     (error "'morph' edge expected (got '~a')" (saf::l-edgeType saf-edge)))
   ;; assume tedges already in chart
-  (with-slots (id source target deps l-content) saf-edge
+  (with-slots (id source target deps l-content from to) saf-edge
     (let* (
 	   (deps2 (if (string= "tok+morph" (saf::l-edgeType saf-edge))
 		      (list id)
@@ -553,27 +575,31 @@
 	   (partialTree (saf-fs-feature-value l-content "partialTree"))
 	   (gType (saf-fs-feature-value l-content "gType"))
 	   (dummy-entry (if gType (get-dummy-unexpanded-lex-entry nil gType form)))
-	   (from (id-to-int source :generate nil))
-	   (to (id-to-int target :generate nil))
+	   (e-from (id-to-int source :generate nil))
+	   (e-to (id-to-int target :generate nil))
+    	   (cfrom (or (point-to-char-point from addressing)
+		      (get-min-edge-cfrom children)))
+	   (cto (or (point-to-char-point to addressing)
+		    (get-max-edge-cto children)))
 	   err-flag
 	   )
       (unless (or stem dummy-entry)
 	(format t "~&WARNING: no stem/gType for SMAF edge '~a'" id)
 	(setf err-flag t))
-      (unless (integerp from)
+      (unless (integerp e-from)
 	(format t "~&WARNING: missing source for SMAF edge '~a'" id)
 	(setf err-flag t))
-      (unless (integerp to)
+      (unless (integerp e-to)
 	(format t "~&WARNING: missing target for SMAF edge '~a'" id)
 	(setf err-flag t))
-      (when (and (integerp from)
-		 (integerp to)
-		 (not (= from (leaf-edges-from leaf-edges))))
+      (when (and (integerp e-from)
+		 (integerp e-to)
+		 (not (= e-from (leaf-edges-from leaf-edges))))
 	(format t "~&WARNING: source mismatch between SMAF edge '~a' and it's daughters")
 	(setf err-flag t))
-      (when (and (integerp from)
-		 (integerp to)
-		 (not (= to (leaf-edges-to leaf-edges))))
+      (when (and (integerp e-from)
+		 (integerp e-to)
+		 (not (= e-to (leaf-edges-to leaf-edges))))
 	(format t "~&WARNING: target mismatch between SMAF edge '~a' and it's daughters")
 	(setf err-flag t))
       (unless err-flag
@@ -581,8 +607,10 @@
 	 :id (id-to-int id)
 	 :children children
 	 :leaves (loop for x in leaf-edges collect (edge-string x))
-	 :from from
-	 :to to
+	 :from e-from
+	 :to e-to
+	 :cfrom cfrom
+	 :cto cto
 	 :string form
 	 :word (string-upcase form)
 	 :current (string-upcase form)
@@ -590,6 +618,18 @@
 	 :partial-tree (saf-fs-partial-tree-2-list-partial-tree partialTree)
 	 :l-content dummy-entry
 	 )))))
+
+(defun get-min-edge-cfrom (edges)
+  (when edges
+    (loop
+	for e in edges
+	minimize (edge-cfrom e))))
+
+(defun get-max-edge-cto (edges)
+  (when edges
+    (loop
+	for e in edges
+	maximize (edge-cto e))))
 
 (defun saf-fs-partial-tree-2-list-partial-tree (fs)
   (if (null fs)
@@ -755,3 +795,8 @@
   (format t "~&;;; reading SMAF config file '~a'" x)
   (saf::get-saf-l-map x)
   t)
+
+;;
+
+(defun run-server (&rest rest)
+  (apply 'saf::run-server rest))

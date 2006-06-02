@@ -485,7 +485,8 @@
 ;; - chared: #S(CHARED-WORD :WORD "The" :CFROM 0 :CTO 2) 
 ;;           #S(CHARED-WORD :WORD "cat" :CFROM 4 :CTO 6)
 ;;           #S(CHARED-WORD :WORD "barks" :CFROM 8 :CTO 12))
-;; - maf xml: "<?xml version='1.0' encoding='UTF8'?><!DOCTYPE maf SYSTEM 'maf.dtd'><maf document='text.xml' addressing='char'><olac:olac xmlns:olac='http://www.language-archives.org/OLAC/1.0/' xmlns='http://purl.org/dc/elements/1.1/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://www.language-archives.org/OLAC/1.0/ http://www.language-archives.org/OLAC/1.0/olac.xsd'><creator>LKB</creator><created>20:46:50 1/18/2006 (UTC)</created></olac:olac><fsm init='v0' final='v3'><state id='v0'/><state id='v1'/><state id='v2'/><state id='v3'/><token id='t1' from='0' to='3' value='the' source='v0' target='v1'/><token id='t2' from='4' to='7' value='dog' source='v1' target='v2'/><token id='t3' from='8' to='13' value='barks' source='v2' target='v3'/><wordForm form='the' tag='' daughters='t1' source='v0' target='v1'><fs><f name='stem'>THE</f></fs></wordForm><wordForm form='dog' tag='' daughters='t2' source='v1' target='v2'><fs><f name='stem'>DOG</f></fs></wordForm><wordForm form='barks' tag='PLUR_NOUN_ORULE' daughters='t3' source='v2' target='v3'><fs><f name='stem'>BARK</f><f name='partial-tree'>((PLUR_NOUN_ORULE &quot;BARKS&quot;))</f></fs></wordForm><wordForm form='barks' tag='THIRD_SG_FIN_VERB_ORULE' daughters='t3' source='v2' target='v3'><fs><f name='stem'>BARK</f><f name='partial-tree'>((THIRD_SG_FIN_VERB_ORULE &quot;BARKS&quot;))</f></fs></wordForm></fsm></maf>"
+;; - (s)(m)af xml: "<?xml version='1.0' encoding='UTF8'?><!DOCTYPE maf SYSTEM 'maf.dtd'><maf document='text.xml' addressing='char'><olac:olac xmlns:olac='http://www.language-archives.org/OLAC/1.0/' xmlns='http://purl.org/dc/elements/1.1/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://www.language-archives.org/OLAC/1.0/ http://www.language-archives.org/OLAC/1.0/olac.xsd'><creator>LKB</creator><created>20:46:50 1/18/2006 (UTC)</created></olac:olac><fsm init='v0' final='v3'><state id='v0'/><state id='v1'/><state id='v2'/><state id='v3'/><token id='t1' from='0' to='3' value='the' source='v0' target='v1'/><token id='t2' from='4' to='7' value='dog' source='v1' target='v2'/><token id='t3' from='8' to='13' value='barks' source='v2' target='v3'/><wordForm form='the' tag='' daughters='t1' source='v0' target='v1'><fs><f name='stem'>THE</f></fs></wordForm><wordForm form='dog' tag='' daughters='t2' source='v1' target='v2'><fs><f name='stem'>DOG</f></fs></wordForm><wordForm form='barks' tag='PLUR_NOUN_ORULE' daughters='t3' source='v2' target='v3'><fs><f name='stem'>BARK</f><f name='partial-tree'>((PLUR_NOUN_ORULE &quot;BARKS&quot;))</f></fs></wordForm><wordForm form='barks' tag='THIRD_SG_FIN_VERB_ORULE' daughters='t3' source='v2' target='v3'><fs><f name='stem'>BARK</f><f name='partial-tree'>((THIRD_SG_FIN_VERB_ORULE &quot;BARKS&quot;))</f></fs></wordForm></fsm></maf>"
+;; - SAF object: #[SAF]
 ;; - sppp: ((:END . 1) 
 ;;          (:START . 0) 
 ;;          (:ANALYSES 
@@ -536,24 +537,29 @@
                            Disabling best-first mode: setting ~
                            *first-only-p* to `nil'.~%")
                          first-only-p))
-	 (*maf-p* #+:maf (xml-p input) #-:maf nil)
+	 (input (if #+:maf (xml-p input) #-:maf nil
+		    #+:maf (xml-to-saf-object input) #-:maf nil;; extract object from maf xml
+		    input))
+	 (maf-p #+:maf (saf-p input) #-:maf nil)
+	 (*maf-p* maf-p)
          ;;
          ;; input originating from SPPP is a set of SPPP tokens
          ;;
          (spppp (and (listp input) (consp (first input))))
+	 (string-p (stringp input))
 	 length-user-input)
+    (when string-p
+	(format t "~&WARNING: [parse] invalid input: '~a'" input)
+	(return-from parse))
     ;; eg. user-input -> ("the" "dog" "barks")
     (multiple-value-bind (user-input brackets-list)
-        (if (and *bracketing-p* (not *maf-p*) (not spppp))
+        (if (and *bracketing-p* (not maf-p) (not spppp))
           (initialise-bracket-list input)
-          (values (if *maf-p*
-		      #+:maf (xml-to-saf-object input) #-:maf nil 
-		      ;; extract object from maf xml
-		    input)
+          (values input
 		  nil))
       (setf length-user-input
         (cond
-         (*maf-p* 
+         (maf-p
           #+:maf (id-to-int (saf-lattice-start-node (saf-lattice user-input))) #-:maf nil)
          (spppp (loop
                     for token in input
@@ -570,12 +576,12 @@
             (*parser-lexical-rules* (get-matching-lex-rules nil))
             (*lexical-entries-used* nil)
             (*minimal-vertex* 
-	     (if *maf-p*
+	     (if maf-p
 		 #+:maf (id-to-int (saf-lattice-start-node (saf-lattice user-input))) 
 		 #-:maf 0
 		 0))
             (*maximal-vertex* 
-	     (if *maf-p*
+	     (if maf-p
 		 #+:maf (id-to-int (saf-lattice-end-node (saf-lattice user-input))) 
 		 #-:maf 0
 		 length-user-input))
@@ -899,9 +905,6 @@
 (defparameter *morphophon-cache* nil)
 
 (defun instantiate-chart-with-morphop nil
-  #+:maf
-  (if (and *maf-p* (get-medges *tchart*))
-      (return-from instantiate-chart-with-morphop *tchart*))
   (dotimes (current *tchart-max*)
     ;; for each left vertex in chart
     (let ((token-ccs (aref *tchart* current 1)))

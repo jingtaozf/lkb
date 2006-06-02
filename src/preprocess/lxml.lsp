@@ -49,6 +49,13 @@
     (error "lxml element expected: got ~a" lxml-elt))
   (cdr lxml-elt))
 
+(defun lxml-elt-text-content (lxml-elt)
+  (let ((contents (lxml-elt-contents lxml-elt)))
+    (if (and (null (cdr contents))
+	     (stringp (car contents)))
+	(car contents)
+      (error "~&Text content expected. Got: ~a" contents))))
+  
 (defun lxml-elt-attributes (lxml-elt)
   (unless (lxml-elt-p lxml-elt)
     (error "lxml element expected: got ~a" lxml-elt))
@@ -93,6 +100,10 @@
     (loop for e in (cdr lxml-elt)
 	when (eq elt-name (lxml-elt-name e))
 	collect e)))
+
+(defun lxml-elts (lxml)
+  (elements-only 
+   (cdr lxml)))
        
 (defun lxml-pi-name (lxml-pi)
   (unless (lxml-pi-p lxml-pi)
