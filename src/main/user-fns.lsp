@@ -25,13 +25,8 @@
   #+:preprocessor
   (when (preprocessor:preprocessor-initialized-p)
     (return-from preprocess-sentence-string 
-      (preprocessor:preprocess str :format :saf)))
+      (preprocessor:preprocess str :format :smaf)))
 
-;  #+:preprocessor
-;  (when *preprocessor*
-;    (return-from preprocess-sentence-string 
-;      (preprocess str :format :lkb :verbose nil)))
-  
   (let ((in-word nil)
         (chars (coerce str 'list))
         (result-chars nil)

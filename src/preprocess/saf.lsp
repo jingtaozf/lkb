@@ -106,7 +106,10 @@
 	    (merge-pathnames doc (make-pathname :directory *saf-dir*)))))
     (make-saf-meta
      :document doc
-     :addressing (intern (string-downcase (second (member '|addressing| saf-attributes))))
+     :addressing (intern (string-downcase 
+			  (or
+			   (second (member '|addressing| saf-attributes))
+			   '|char|)))
      :olac (get-olac-meta olac)
      :text text)))
 
@@ -244,9 +247,12 @@
 	 (fs (if (cdr fs-list)
 		 (error "max 1 fs element allowed in wordform")
 	       (car fs-list)))
-	 (content (or (lxml-elt-attr lxml-annot "value") 
-		  (lxml-fs-content-to-fs fs) 
-		  (lxml-slots-to-fs slots)))
+	 (content 
+	  (or 
+	   (lxml-elt-text-content2 lxml-annot)
+	   (lxml-elt-attr lxml-annot "value") 
+	   (lxml-fs-content-to-fs fs) 
+	   (lxml-slots-to-fs slots)))
 	 (source (or source (lxml-elt-attr lxml-annot "source")))
 	 (target (or target (lxml-elt-attr lxml-annot "target")))
 	 )
@@ -721,34 +727,6 @@
 	(*text* text)
 	(old-x-fspp-global (preprocessor::x-fspp-global preprocessor::*preprocessor*))
 	)
-    (setf (preprocessor::x-fspp-global preprocessor::*preprocessor*) ;;hack: fix_me
-      (push (preprocessor::make-x-fsr 
-	     :type :replace
-	     :source "<[^>]*>"
-	     :scanner (ppcre:create-scanner "<[^>]*>")
-	     :target " ")
-	    (preprocessor::x-fspp-global preprocessor::*preprocessor*)))
-    (setf (preprocessor::x-fspp-global preprocessor::*preprocessor*) ;;hack: fix_me
-      (push (preprocessor::make-x-fsr 
-	     :type :replace
-	     :source "^[^<]*>"
-	     :scanner (ppcre:create-scanner "^[^<]*>")
-	     :target " ")
-	    (preprocessor::x-fspp-global preprocessor::*preprocessor*)))
-    (setf (preprocessor::x-fspp-global preprocessor::*preprocessor*) ;;hack: fix_me
-      (push (preprocessor::make-x-fsr 
-	     :type :replace
-	     :source "<[^>]*$"
-	     :scanner (ppcre:create-scanner "<[^>]*$")
-	     :target " ")
-	    (preprocessor::x-fspp-global preprocessor::*preprocessor*)))
-    (setf (preprocessor::x-fspp-global preprocessor::*preprocessor*) ;;hack: fix_me
-      (push (preprocessor::make-x-fsr 
-	     :type :replace
-	     :source "\\n"
-	     :scanner (ppcre:create-scanner "\\n")
-	     :target " ")
-	    (preprocessor::x-fspp-global preprocessor::*preprocessor*)))
     (setf *sentence* str)
 ;    
 ;    (format t "~%~%=.~a.~%~%" preprocessor:*local-to-global-point-mapping*)
