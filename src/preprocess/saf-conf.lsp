@@ -4,11 +4,13 @@
 
 (in-package :common-lisp-user)
 
-(defvar LKB::*SAF-L-MAP*)
-
 (defpackage :saf
   (:use :common-lisp) 
   (:export))
+
+(in-package :lkb)
+
+(defvar *SAF-L-MAP*)
 
 (in-package :saf)
 
@@ -16,8 +18,9 @@
   e-edge
   l-content)
 
+;; instantiate :l-content for all annotations in SAF object
 (defun instantiate-l-content (saf l-map)
-  (unless l-map (error "Please load saf.conf via (setf *saf-l-map* (saf::conf-read-file \"path/to/saf.conf\"))"))
+  (unless l-map (error "No SAF config rules loaded ~%   (please load saf.conf via '(setf *saf-l-map* (saf::conf-read-file \"path/to/saf.conf\"))')"))
   (loop
       for edge in (lkb::saf-lattice-edges 
 		   (lkb::saf-lattice saf))
@@ -25,6 +28,7 @@
       do (setf (lkb::saf-edge-l-content edge) l-content)
       finally (return saf)))
 
+;; instantiate :l-content for annotation
 (defun edge-l-content (edge l-map)
   (loop
       with l-content
@@ -36,15 +40,21 @@
 		   :edge edge))
       finally (return l-content)))
 
-;;!
-;(defun resolve-variables (edge l-content)
-;  (loop
-;      for x in l-content
-;      for val = (lkb::saf-fv-value x)
-;      when (symbolp val)
-;      do (setf (lkb::saf-fv-value x)
-;	   (resolve val edge)))
-;  )
+;;; incomplete: work-in-progress
+;(defun resolve (var edge)
+;  (cond
+;    ((eq var 'lkb::|content|)
+;     (lkb::saf-edge-content edge))
+;    ((eq var 'lkb::|content.stem|)
+;     (lkb::saf-fs-path-value '("stem") (lkb::saf-edge-content edge)))
+;    ((eq var 'lkb::|content.token|)
+;     (lkb::saf-fs-path-value '("token") (lkb::saf-edge-content edge)))
+;    ((eq var 'lkb::|content.surface|)
+;     (lkb::saf-fs-path-value '("surface") (lkb::saf-edge-content edge)))
+;    ((eq var 'lkb::|content.partial-tree|)
+;     (lkb::saf-fs-path-value '("partial-tree") (lkb::saf-edge-content edge)))
+;    (t
+;     (error "unknown variable name '~a' found in l-content" var))))
 
 ;; incomplete: work-in-progress
 (defun resolve (var edge)
@@ -281,6 +291,8 @@
   (let ((s (socket::accept-connection socket)))
     (unwind-protect
 	(progn
+	   ;; use UTF-8 when communicating with socket
+	  (setf (stream-external-format s) :utf-8)
 	  (format t "~&;;; connection established")
 	  (r-server-process-input s processor))
       (close s)
