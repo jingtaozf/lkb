@@ -776,5 +776,5 @@
 
 ;;
 
-(defun run-server (&rest rest)
-  (apply 'saf::run-server rest))
+(defun run-parse-server (&rest rest)
+  (apply 'saf::run-parse-server rest))

@@ -163,7 +163,10 @@
 						 :content (conf-read-specs specs-str))
 			     :l-content (conf-read-specs out-str)
 			     ))
-	(format t "; WARNING: ignoring malformed config line \"~a\"" line))))
+	(unless (or 
+		 (string= "" line)
+		 (string= ";" (subseq line 0 1)))
+	  (format t "; WARNING: ignoring malformed config line \"~a\"" line)))))
 
 (defun conf-read-specs (specs-str)
   (loop
@@ -184,28 +187,10 @@
 		      :value (intern val)))))
 
 ;;;
-;;; SERVER code
+;;; socket SERVER code
 ;;; (move to separate file later)
 
-(defvar *lkb-server-socket*)
-(defvar *lkb-server-stream*)
-
-(defun start-server (&key (port 9876))
-  (format t "~&;;; starting LKB server~&;;; waiting for connection on port ~a ..." port)
-  (setf *lkb-server-socket* (socket::make-socket :connect :passive :local-port port))
-  (setf *lkb-server-stream* (socket::accept-connection *lkb-server-socket*))
-  (setf (stream-external-format *lkb-server-stream*) (excl::find-external-format "utf-8"))
-  *lkb-server-stream*
-  )
-
-(defun shutdown-server nil
-  (when (boundp '*lkb-server-stream*)
-    (close *lkb-server-stream*))
-  (when (boundp '*lkb-server-socket*)
-    (close *lkb-server-socket*))
-  t
-  )
-
+;; characters not allowed in XML
 (defvar *xml-bad-chars*
     '(
       #\^a 
@@ -241,8 +226,9 @@
       #\^_ 
       ))
 
-(defun read-input (stream &key (mode :xml) (term-char (code-char 17)))
-  (declare (ignore mode))
+;; read input chunk delimited by term-char followed by newline
+;; ignore non-xml chars while constructing chunk
+(defun read-input (stream &key (term-char (code-char 17)))
   (loop
       with strm = (make-string-output-stream)
       for c = (read-char stream nil nil)
@@ -251,6 +237,7 @@
 	      (char= c #\Return)
 	      (member c *xml-bad-chars* :test 'char=))
       do 
+	;;(print c)
 	(write-char c strm)
       finally 
 	(if (not c) (return-from read-input :eof))
@@ -258,52 +245,112 @@
 	(return
 	  (get-output-stream-string strm))))
 
+;; remove 
+ from end of line
+;; (for use with telnet client)
 (defun clean-line (line)
   (when (stringp line)
     (let ((len (length line)))
       (when (string= (subseq line (- len 1)) "
 ")
 	(subseq line 0 (- len 1))))))
+;;
 
-(defun run-server (&key (port 9876) (mode :xml))
-  (unwind-protect 
-      (progn
-	(format t "~&;;; [entering LKB server mode]")
-	(let ((s (start-server :port port))
-	      saf id)
+;; generic socket server
+;; caller supplys processor function (and name)
+(defun r-server (processor name &key (port 9876))
+  (format t "~&;;; [entering ~a server mode]" name)
+  (format t "~&;;; starting server on port ~a" port)
+  (let ((socket (socket::make-socket :connect :passive :local-port port)))
+    (unwind-protect
+	(handler-case
+	    (r-server-accept-connections socket processor)
+	  (error (condition)
+	    (format t  "~&Error: ~A" condition)))
+      (close socket)
+      (format t "~&;;; [exiting server mode]"))))
+
+;; process connections forever
+(defun r-server-accept-connections (socket processor)
+  (loop
+    (r-server-process-connection socket processor)))
+
+;; process single connection
+(defun r-server-process-connection (socket processor)
+  (format t "~&;;; waiting for connection")
+  (let ((s (socket::accept-connection socket)))
+    (unwind-protect
+	(progn
 	  (format t "~&;;; connection established")
-	  (loop
-	      for input = (read-input s :mode mode)
-	      while (not (eq :eof input))
-	      do 
-		(handler-case
-		    (progn
-		      (case mode
-			(:string 
-			 (format t "~&;;; parsing input: ~a" input)
-			 (setf id (format nil "s~a" (lkb::id-to-int nil)))
-			 (lkb::parse (lkb::split-into-words 
-				      (lkb::preprocess-sentence-string input))
-				     nil
-				     ))
-			(:xml
-			 (format t "~&;;; parsing XML input")
-			 (setf saf (lkb::xml-to-saf-object input))
-			 (setf id (lkb::saf-fs-feature-value 
-				   (lkb::saf-meta-olac 
-				    (lkb::saf-meta saf)) 
-				   "dc:identifier"))
-			 (lkb::parse saf nil))
-			)
-		      (lkb::dump-sentence-analyses2 :s-id id :stream s)
-		      (terpri s)
-		      (force-output s))
-		  #+:allegro
-		  (EXCL:INTERRUPT-SIGNAL () (error "Interrupt-Signal"))
-		  (error (condition)
-		    (format t  "~&Error: ~A" condition))
-		  
-		  )
-		)))
-    (format t "~&;;; [exiting LKB server mode]")
-    (shutdown-server)))
+	  (r-server-process-input s processor))
+      (close s)
+      (format t "~&;;; connection closed"))))
+
+;; process single input chunk
+(defun r-server-process-input (s processor)
+  (loop
+      for input = (read-input s)
+      for empty-input = (lkb::xml-whitespace-p input)
+      ;;do (format t "~&I: ~a" input)
+      while (not (eq :eof input))
+      if empty-input
+      do (format t "~&;;; empty input!")
+      when (not empty-input)
+      do 
+	(handler-case
+	    (funcall processor s input)
+	  (error (condition)
+	    (format t  "~&Error: ~A" condition)))
+      do
+	 (format s "~a" #\^q)
+	 (terpri s)
+	 (force-output s)))
+
+;;
+
+;; PARSE socket server
+(defun run-parse-server (&key (port 9876) (mode :xml))
+  (r-server (lambda (x y)
+	      (r-server-parse-input x y :mode mode))
+	    "PARSE"
+	    :port port))
+
+;; parse input chunk
+(defun r-server-parse-input (s input &key (mode :string))
+  (let (id saf)
+    (case mode
+      (:string 
+       (format t "~&;;; parsing input: ~a" input)
+       (setf id (format nil "s~a" (lkb::id-to-int nil)))
+       (lkb::parse (lkb::split-into-words 
+		    (lkb::preprocess-sentence-string input))
+		   nil))
+      (:xml
+       (format t "~&;;; parsing XML input")
+       (setf saf (lkb::xml-to-saf-object input))
+       (setf id (lkb::saf-fs-feature-value 
+		 (lkb::saf-meta-olac 
+		  (lkb::saf-meta saf)) 
+		 "dc:identifier"))
+       (lkb::parse saf nil))
+      (t
+       (error "unknown PARSE server mode '~a'" mode)))
+    (lkb::dump-sentence-analyses2 :s-id id :stream s)))
+  
+;; FSPP socket server
+(defun run-fspp-server (&key (port 8876) (mode :string))
+  (r-server (lambda (x y)
+	      (r-server-fspp-input x y :mode mode))
+	    "FSPP"
+	    :port port))
+
+;; preprocess input chunk
+(defun r-server-fspp-input (s input &key (mode :string) (o-mode :saf))
+  (case mode
+    (:string 
+     (format t "~&;;; preprocessing input: ~a" input)
+     (format s "~&~a" (preprocessor:preprocess input :format o-mode)))
+    (t
+     (error "unknown FSPP server mode '~a'" mode))
+    ))
+
