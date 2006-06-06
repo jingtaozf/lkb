@@ -580,7 +580,10 @@
 		  form))
 	   (partialTree (saf-fs-feature-value l-content "partialTree"))
 	   (gType (saf-fs-feature-value l-content "gType"))
-	   (dummy-entry (if gType (get-dummy-unexpanded-lex-entry nil gType form)))
+	   (gRel (saf-fs-feature-value l-content "gRel"))
+	   (gPred (saf-fs-feature-value l-content "gPred"))
+	   (gCarg (saf-fs-feature-value l-content "gCarg"))
+	   (dummy-entry (if gType (get-dummy-unexpanded-lex-entry nil gType form gPred gCarg gRel)))
 	   (e-from (id-to-int source :generate nil))
 	   (e-to (id-to-int target :generate nil))
     	   (cfrom (or (point-to-char-point from addressing)
@@ -758,15 +761,26 @@
   (let ((*morph-option* :with-tokeniser-partial-tree))
     (parse *y)))
 
-(defvar *dfn-dummy1* '((:UNIFS :|type| "nil" (SYM))
+(defparameter *dfn-dummy1* '((:UNIFS :|type| "nil" (SYM))
 		       (:UNIFS :|orthography| "(stem)" (STR-LST))
 		       (:ID :|name| "" (SYM)) 
-		       (:ORTH :|orthography| "" (STR-RAWLST))))
+		       (:ORTH :|orthography| "" (STR-RAWLST))
+		       (:UNIFS :|pred| "(synsem lkeys keyrel pred)" (MIXED))		       
+		       (:UNIFS :|carg| "(synsem lkeys keyrel carg)" (STR))		       
+		       (:UNIFS :|rel| "(synsem lkeys keyrel)" (SYM))		       
+		       ))
 
-(defun get-dummy-unexpanded-lex-entry (id type orth)
+(defun get-dummy-unexpanded-lex-entry (id type orth pred carg rel)
   (MAKE-PSORT-STRUCT2
-   (list (string type) (string id) orth)
-   '(:|type| :|name| :|orthography|)
+   (list (string type) (string id) orth 
+	 (or pred "") ;; fix_me!!! 
+	 (or (encode-string-as-str carg) "") ;;fix_me!!!
+	 (or rel "") ;; fix_me!!! 
+	 ;(encode-string-as-str carg)
+	 )
+   '(:|type| :|name| :|orthography| :|pred| 
+     :|carg| :|rel|
+     )
    :dfn *dfn-dummy1*))
 
 (defun read-smaf-conf (x)

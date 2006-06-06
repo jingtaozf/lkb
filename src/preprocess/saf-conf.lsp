@@ -40,38 +40,20 @@
 		   :edge edge))
       finally (return l-content)))
 
-;;; incomplete: work-in-progress
-;(defun resolve (var edge)
-;  (cond
-;    ((eq var 'lkb::|content|)
-;     (lkb::saf-edge-content edge))
-;    ((eq var 'lkb::|content.stem|)
-;     (lkb::saf-fs-path-value '("stem") (lkb::saf-edge-content edge)))
-;    ((eq var 'lkb::|content.token|)
-;     (lkb::saf-fs-path-value '("token") (lkb::saf-edge-content edge)))
-;    ((eq var 'lkb::|content.surface|)
-;     (lkb::saf-fs-path-value '("surface") (lkb::saf-edge-content edge)))
-;    ((eq var 'lkb::|content.partial-tree|)
-;     (lkb::saf-fs-path-value '("partial-tree") (lkb::saf-edge-content edge)))
-;    (t
-;     (error "unknown variable name '~a' found in l-content" var))))
-
-;; incomplete: work-in-progress
+;; resolve var wrt an edge
+;; currently only allow extraction from 'content'
 (defun resolve (var edge)
-  (cond
-    ((eq var 'lkb::|content|)
-     (lkb::saf-edge-content edge))
-    ((eq var 'lkb::|content.stem|)
-     (lkb::saf-fs-path-value '("stem") (lkb::saf-edge-content edge)))
-    ((eq var 'lkb::|content.token|)
-     (lkb::saf-fs-path-value '("token") (lkb::saf-edge-content edge)))
-    ((eq var 'lkb::|content.surface|)
-     (lkb::saf-fs-path-value '("surface") (lkb::saf-edge-content edge)))
-    ((eq var 'lkb::|content.partial-tree|)
-     (lkb::saf-fs-path-value '("partial-tree") (lkb::saf-edge-content edge)))
-    (t
-     (error "unknown variable name '~a' found in l-content" var))))
+  (let* ((l (lkb::string-2-str-list (string var) :sep #\.))
+	 (feat (car l))
+	 (x (cdr l)))
+    (cond
+      ((string= feat "content")
+       (lkb::saf-fs-path-value x (lkb::saf-edge-content edge)))
+      (t
+       (error "unhandled variable name '~a' found in l-content" var)))))
 
+;; = "action does not conflict with edge"
+;; match on 'type' and 'content'
 (defun edge-match (edge action)
   (and
    (f-match 'lkb::saf-edge-type edge action)
@@ -99,12 +81,8 @@
 	do (return nil)
 	finally (return t)))))
 		  
-;;!
-;(defun inject (x l-content)
-;  (declare (ignore l-content))
-;  (copy-tree x))
-
-;!
+;; inject (overwrite) x into l-content
+;; resolve any var's wrt edge
 (defun inject (x l-content &key edge)
   (loop 
       for fv in x
@@ -114,8 +92,8 @@
 		    (resolve val- edge)
 		  val-)
       for fv2 = (find feat l-content 
-			:key #'lkb::saf-fv-feature
-			:test #'string=)
+		      :key #'lkb::saf-fv-feature
+		      :test #'string=)
       do
 	(if fv2
 	    (setf (lkb::saf-fv-value fv2) val)
@@ -125,15 +103,16 @@
 
 ;;
 
+;; fix_me: generalise???
 (defun l-edgeType (s-edge)
   (lkb::saf-fs-feature-value 
    (lkb::saf-edge-l-content s-edge) 
    "edgeType"))
 
-(defun l-gType (s-edge)
-  (lkb::saf-fs-feature-value 
-   (lkb::saf-edge-l-content s-edge) 
-   "gType"))
+;(defun l-gType (s-edge)
+;  (lkb::saf-fs-feature-value 
+;   (lkb::saf-edge-l-content s-edge) 
+;   "gType"))
 
 ;;
 ;; very simple reader for textual conf file
@@ -145,12 +124,16 @@
   (setf lkb::*saf-l-map*
     (conf-read-file filename)))
 
+;; fallback case handles smaf as mapped from tchart
 (defun get-default-saf-l-map nil
-  ;;(format t ";; (no saf-l-map settings loaded... using defaults)")
   (setf lkb::*saf-l-map*
     (list (conf-read-line "token.[] -> edgeType='tok' tokenStr=content")
 	  (conf-read-line "wordForm.[] -> edgeType='morph' stem=content.stem partialTree=content.partial-tree"))))
 
+;;
+
+
+;; process each line in SAF config file
 (defun conf-read-file (filename)
   (with-open-file (file filename 
 		   :direction :input)
@@ -160,6 +143,9 @@
 	for a = (conf-read-line line)
 	if a collect a)))
 
+;; ignore empty lines, and those composed of whitespace
+;; otherwise expect lines of form:
+;;  type.[x='y' a='b'] -> foo='bar' foo2=bar2
 (defun conf-read-line (line)
   (multiple-value-bind
       (m regs)
@@ -171,18 +157,19 @@
 	    (make-map-action :e-edge 
 			     (lkb::make-saf-edge :type type 
 						 :content (conf-read-specs specs-str))
-			     :l-content (conf-read-specs out-str)
-			     ))
+			     :l-content (conf-read-specs out-str)))
 	(unless (or 
-		 (string= "" line)
+		 (xml-whitespace-p line)
 		 (string= ";" (subseq line 0 1)))
 	  (format t "; WARNING: ignoring malformed config line \"~a\"" line)))))
 
+;; eg. "a='b' c='d'" -> "a='b'" "c='d'"
 (defun conf-read-specs (specs-str)
   (loop
       for spec in (ppcre:split "\\s+" specs-str)
       collect (conf-read-spec spec)))
 
+;; form: feat='val' or feat=var 
 (defun conf-read-spec (spec)
   (or
    (ppcre:register-groups-bind 
