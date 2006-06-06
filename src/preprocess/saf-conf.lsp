@@ -309,14 +309,14 @@
 ;;
 
 ;; PARSE socket server
-(defun run-parse-server (&key (port 9876) (mode :xml))
+(defun run-parse-server (&key (port 9876) (mode :xml) debug)
   (r-server (lambda (x y)
-	      (r-server-parse-input x y :mode mode))
+	      (r-server-parse-input x y :mode mode :debug debug))
 	    "PARSE"
 	    :port port))
 
 ;; parse input chunk
-(defun r-server-parse-input (s input &key (mode :string))
+(defun r-server-parse-input (s input &key (mode :string) debug)
   (let (id saf)
     (case mode
       (:string 
@@ -327,6 +327,7 @@
 		   nil))
       (:xml
        (format t "~&;;; parsing XML input")
+       (when debug (format t "~&INPUT: ~%~a~%~%" input))
        (setf saf (lkb::xml-to-saf-object input))
        (setf id (lkb::saf-fs-feature-value 
 		 (lkb::saf-meta-olac 
@@ -335,6 +336,10 @@
        (lkb::parse saf nil))
       (t
        (error "unknown PARSE server mode '~a'" mode)))
+    (when debug
+      (format t "~&OUTPUT: ~%")
+      (lkb::dump-sentence-analyses2 :s-id id :stream t)
+      (format t "~%~%"))
     (lkb::dump-sentence-analyses2 :s-id id :stream s)))
   
 ;; FSPP socket server
