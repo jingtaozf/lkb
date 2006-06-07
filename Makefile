@@ -1,8 +1,9 @@
 ROOT = /lingo/build/
 SROOT = ${HOME}/class/src
 LROOT = ${HOME}/src/delphin
-WROOT = e:/src
+WROOT = e:
 WACLROOT = c:/program\ files/acl70
+WLOGIN = ${LINGO_LOGIN}
 DATE = `date "+%Y-%m-%d"`
 TARGET = /lingo/www/lingo/ftp
  
@@ -18,7 +19,7 @@ MKDIR=mkdir
 CHGRP=chgrp
 CHMOD=chmod
 LN=ln -s
-CVS=cvs -q
+CVS=cvs -q -z9
 TAR=tar
 MAKE=make
 TEE=tee
@@ -205,8 +206,13 @@ lkb_solaris:
             oe@lingo:${TARGET}/test; \
 	)
 
-lkb_windows:
+lkb_windows_clean:
 	${RM} -f ${WROOT}/.yes;
+	${RM} -f c:/tmp/build.lisp
+	${RM} -f /cygdrive/c/tmp/lkb_windows.tgz
+	${RM} -f /cygdrive/c/tmp/lkb_windows.zip
+
+lkb_windows: lkb_windows_clean
 	( cd ${WROOT}/lkb && ${MAKE} latest; )
 	( \
 	  echo "(load \"${WROOT}/lkb/src/general/loadup.lisp\")"; \
@@ -227,7 +233,7 @@ lkb_windows:
 	  ${RM} -f /cygdrive/c/tmp/lkb_windows.zip; \
           zip -r /cygdrive/c/tmp/lkb_windows.zip windows; )
 	scp /cygdrive/c/tmp/lkb_windows.tgz /cygdrive/c/tmp/lkb_windows.zip \
-          bmw@lingo.stanford.edu:/lingo/www/lingo/ftp/test;
+          ${WLOGIN}@lingo.stanford.edu:/lingo/www/lingo/ftp/test;
 
 lkb_documentation:
 	( \
