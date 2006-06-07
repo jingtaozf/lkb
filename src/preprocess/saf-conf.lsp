@@ -159,7 +159,7 @@
 						 :content (conf-read-specs specs-str))
 			     :l-content (conf-read-specs out-str)))
 	(unless (or 
-		 (xml-whitespace-p line)
+		 (lkb::xml-whitespace-p line)
 		 (string= ";" (subseq line 0 1)))
 	  (format t "; WARNING: ignoring malformed config line \"~a\"" line)))))
 
