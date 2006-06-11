@@ -15,6 +15,9 @@
 
 (defvar *char-map-add-offset*)
 
+(defvar *HIDDEN-smaf-id-to-edge-id* nil) ;; MUST reset when initializing tchart
+(defvar *smaf-id-to-edge-id* nil) ;; MUST reset when initializing tchart
+
 (defstruct saf
   meta
   lattice)
@@ -35,7 +38,7 @@
   deps
   content
   l-content
-  form ; fix me
+;;  form ; fix me
   )
 
 (defstruct saf-fv
@@ -55,8 +58,11 @@
    ;(length (saf-lattice (saf-lattice-edges object)))
    ))
 
+;;
 ;; code to convert SAF (or MAF) XML into SAF object
+;;
 
+;; fix_me: get rid of global *saf-l-map*
 (defun xml-to-saf-object (xml &key (saf-dir "~") (l-map *saf-l-map*))
   (let ((*saf-dir* saf-dir))
     (unless *saf-l-map*
@@ -120,6 +126,7 @@
 	(make-saf-fv :feature (string (lxml-elt-name e))
 		     :value (lxml-elt-text-content e))))
 
+;; is this code broken???
 (defun make-saf-lattice-from-sequence (lxml &key init final)
   (let ((*saf-v* -1)
 	nodes edges)
@@ -166,7 +173,7 @@
 (defun get-saf-lattice (lxml)
   (cond
 ;   ((eq '|fsm| (lxml-elt-name (car lxml)))
-   ((member (lxml-elt-name (car lxml)) '(|fsm| |lattice|))
+   ((member (lxml-elt-name (car lxml)) '(|fsm| |lattice|));; SAF / SMAF
     (when (cdr lxml)
       (error "no elements expected after fsm/lattice"))
     (get-saf-lattice-from-fsm (car lxml)))
@@ -183,9 +190,9 @@
 	      collect (lxml-token-to-edge e)))
 	 (annot-edges 
 	  (append
-	   (loop for e in (lxml-elt-elts lxml-fsm "annot")
+	   (loop for e in (lxml-elt-elts lxml-fsm "annot");; SAF
 	       collect (lxml-annot-to-edge e))
-	   (loop for e in (lxml-elt-elts lxml-fsm "edge")
+	   (loop for e in (lxml-elt-elts lxml-fsm "edge");; SMAF
 	       collect (lxml-annot-to-edge e))))
 	 (wordform-edges 
 	  (loop for e in (lxml-elt-elts lxml-fsm "wordForm") ;;shorthand
@@ -217,11 +224,44 @@
 	  finally
 	    (unless start-node (setf start-node min))
 	    (unless end-node (setf end-node max))))
-    (make-saf-lattice 
-     :start-node start-node
-     :end-node end-node
-     :nodes nodes
-     :edges all-edges)))
+    (when
+	(check-saf-lattice-consistency start-node end-node nodes all-edges)
+      (make-saf-lattice 
+       :start-node start-node
+       :end-node end-node
+       :nodes nodes
+       :edges all-edges))))
+
+(defun get-smaf-lattice-size (saf)
+  ;; number of unique nodes, minus 1
+  (loop
+      with nodes
+      with lattice = (saf-lattice saf)
+      with edges = (and lattice (saf-lattice-edges lattice))
+      for e in edges
+      for source = (saf-edge-source e)
+      for target = (saf-edge-target e)
+      do
+	(pushnew source nodes :test 'string=)
+	(pushnew target nodes :test 'string=)
+      finally
+	(return (if nodes 
+		    (- (length nodes) 1)
+		  0))))
+
+(defun check-saf-lattice-consistency (start-node end-node nodes edges)
+  (declare (ignore start-node end-node nodes))
+  (let ((consistent t))
+    ;; check for duplicate edge ids
+    (loop
+	for e in edges
+	for id = (edge-id e)
+	if (member id ids :test 'string=)
+	do (format t "~%;;; WARNING: invalid lattice input (duplicate id: ~S)" id)
+	   (setf consistent nil)
+	else
+	collect id into ids)
+    consistent))
 
 (defun lxml-state-to-node (lxml-state)
   (lxml-elt-attr lxml-state "id"))
@@ -229,11 +269,11 @@
 (defun saf-type (str)
   (intern str :keyword))
 
+;; call lxml-annot-to-edge instead?
 (defun lxml-token-to-edge (lxml-token &key type source target)
   (make-saf-edge
    :id (lxml-elt-attr lxml-token "id")
    :type (saf-type (or type :|token|))
-;   :type (or type :leaf)
    :source (or source (lxml-elt-attr lxml-token "source"))
    :target (or target (lxml-elt-attr lxml-token "target"))
    :from (lxml-elt-attr lxml-token "from")
@@ -448,16 +488,6 @@
 (defun saf-setup-morphs (saf)
   (saf-to-tchart saf))
 
-;(defun saf-setup-morphs (saf)
-;  (case *morph-option*
-;    (:with-tokeniser-partial-tree ;; take both tok and morph edges
-;	(saf-to-tchart saf))
-;    (t ;; take only tok edges
-;     (saf-to-tchart saf
-;		    :filter #'(lambda (x) 
-;				(equal "tok" 
-;				       (saf::l-edgeType x)))))))
-				       
 ;;
 
 (defun xml-maf-to-tchart (xml)
@@ -467,7 +497,10 @@
 			       tchart)
   (unless tchart
     (setf *tchart* (make-tchart))
-    (setf *tchart-max* 0))
+    (setf *tchart-max* 0)
+    (setf *smaf-id-to-edge-id* nil)
+    (setf *HIDDEN-smaf-id-to-edge-id* nil)
+    )
   (setf *saf* saf)
   (saf-lattice-to-edges (saf-lattice saf)
 			:filter filter
@@ -477,7 +510,7 @@
 (defun saf-lattice-to-edges (saf-lattice &key (filter #'identity) addressing)
   (loop 
       for e in 
-	(loop for f in (saf-lattice-edges saf-lattice)
+	(loop for f in (and saf-lattice (saf-lattice-edges saf-lattice))
 	    when (funcall filter f)
 	    collect f)
       if (string= (saf::l-edgeType e) "tok")
@@ -508,6 +541,7 @@
 					    :addressing addressing))
 	))
 
+#+:null
 (defun next-tchart-edge-id (&optional (tchart *tchart*))
   (let ((edges (get-edges tchart)))
     (if edges
@@ -542,9 +576,12 @@
   (with-slots (id source target from to l-content) saf-edge
     (let ((tokenStr (saf-fs-feature-value 
 		     l-content 
-		     "tokenStr")))
+		     "tokenStr"))
+	  (e-id (if (string= "tok" (saf::l-edgeType saf-edge))
+		    (smaf-id-to-edge-id id)
+		  (HIDDEN-smaf-id-to-edge-id id :token))))
       (make-token-edge 
-       :id (id-to-int id)
+       :id e-id
        :from (id-to-int source :generate nil)
        :to (id-to-int target :generate nil)
        :string tokenStr
@@ -553,23 +590,58 @@
        :word (string-upcase tokenStr)
        :leaves (list tokenStr)))))
 
+(defun HIDDEN-smaf-id-to-edge-id (smaf-id hidden)
+  (let* ((h-str
+	  (case hidden
+	    (:token "T")
+	    (t (error "expected :token, got ~S" hidden)))) 
+	 (id (concatenate 'string h-str smaf-id))
+	 (match (cdr (assoc id *HIDDEN-smaf-id-to-edge-id* :test #'string=))))
+    (if match
+	(return-from HIDDEN-smaf-id-to-edge-id match))
+    ;; new edge id
+    (push (cons id (incf *edge-id*)) *HIDDEN-smaf-id-to-edge-id*)
+    *edge-id*))
+
+(defun smaf-id-to-edge-id (smaf-id)
+  (let ((match (cdr (assoc smaf-id *smaf-id-to-edge-id* :test #'string=))))
+    (if match
+	(return-from smaf-id-to-edge-id match))
+    ;; new edge id
+    (push (cons smaf-id (incf *edge-id*)) *smaf-id-to-edge-id*)
+    *edge-id*))
+    
+;; should not be being called directly!
+;; id: first char ignored, rest gives integer
+(defun id-to-int (id &key (generate t))
+  (handler-case 
+      (let ((i (if id (parse-integer (subseq id 1)))))
+	(if i
+	    (and (setf *edge-id* (max i *edge-id*))
+		 i)
+	  (if generate
+	      (- (incf *edge-id*)))))
+    (error (condition)
+      (error "unable to convert malformed id `~a': ~a" id condition))))
+     
 (defun saf-edge-to-medge (saf-edge &key addressing)
   (unless (or (string= "morph" (saf::l-edgeType saf-edge))
 	       (string= "tok+morph" (saf::l-edgeType saf-edge)))
     (error "'morph' edge expected (got '~a')" (saf::l-edgeType saf-edge)))
-  ;; assume tedges already in chart
+  ;; assumes tedges already in chart
   (with-slots (id source target deps l-content from to) saf-edge
-    (let* (
-	   (deps2 (if (string= "tok+morph" (saf::l-edgeType saf-edge))
-		      (list id)
-		    deps))
-	   (children 
-	    (loop for d in deps2
-		for tedge = (id-to-token-edge d (get-tedges *tchart*))
-		if tedge
-		collect tedge
-		else 
-		  do (format t "~&WARNING: missing SMAF edge '~a' (child of '~a')" d id)))
+    (let* ((children 
+	    (cond
+	     ((string= "tok+morph" (saf::l-edgeType saf-edge))
+	      ;; find hidden edge
+	      (list (smaf-id-to-token-edge id (get-tedges *tchart*) :hidden :token)))
+	     (t
+	      (loop for d in deps
+		  for tedge = (smaf-id-to-token-edge d (get-tedges *tchart*))
+		  if tedge
+		  collect tedge
+		  else 
+		  do (format t "~&WARNING: missing SMAF edge '~a' (child of '~a')" d id)))))
 	   (leaf-edges children) ;;fix me
 	   (children-words
 	    (loop for l in leaf-edges
@@ -604,16 +676,16 @@
       (when (and (integerp e-from)
 		 (integerp e-to)
 		 (not (= e-from (leaf-edges-from leaf-edges))))
-	(format t "~&WARNING: source mismatch between SMAF edge '~a' and it's daughters")
+	(format t "~&WARNING: source mismatch between SMAF edge '~a' and it's daughters" id)
 	(setf err-flag t))
       (when (and (integerp e-from)
 		 (integerp e-to)
 		 (not (= e-to (leaf-edges-to leaf-edges))))
-	(format t "~&WARNING: target mismatch between SMAF edge '~a' and it's daughters")
+	(format t "~&WARNING: target mismatch between SMAF edge '~a' and it's daughters" id)
 	(setf err-flag t))
       (unless err-flag
 	(make-morpho-stem-edge 
-	 :id (id-to-int id)
+	 :id (smaf-id-to-edge-id id)
 	 :children children
 	 :leaves (loop for x in leaf-edges collect (edge-string x))
 	 :from e-from
@@ -673,8 +745,10 @@
     (if x
 	(saf-fv-value x))))
 
-(defun id-to-token-edge (id tedges)
-  (find (id-to-int id) tedges :key #'token-edge-id :test #'=))
+(defun smaf-id-to-token-edge (id tedges &key hidden)
+  (if hidden
+      (find (HIDDEN-smaf-id-to-edge-id id hidden) tedges :key #'token-edge-id :test #'=)
+    (find (smaf-id-to-edge-id id) tedges :key #'token-edge-id :test #'=)))
 
 ;; fix_me: addressing should be passed down
 (defun point-to-char-point (point addressing)
@@ -694,18 +768,6 @@
 #+:null
 (defun str-2-int (str)
   (if str (parse-integer str)))
-
-;; id: first char ignored, rest gives integer
-(defun id-to-int (id &key (generate t))
-  (handler-case 
-      (let ((i (if id (parse-integer (subseq id 1)))))
-	(if i
-	    (and (setf *edge-id* (max i *edge-id*))
-		 i)
-	  (if generate
-	      (- (incf *edge-id*)))))
-    (error (condition)
-      (error "unable to convert malformed id `~a': ~a" id condition))))
 
 ;;
 ;;					;

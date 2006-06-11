@@ -22,8 +22,8 @@
 (defun instantiate-l-content (saf l-map)
   (unless l-map (error "No SAF config rules loaded ~%   (please load saf.conf via '(setf *saf-l-map* (saf::conf-read-file \"path/to/saf.conf\"))')"))
   (loop
-      for edge in (lkb::saf-lattice-edges 
-		   (lkb::saf-lattice saf))
+      with lattice = (lkb::saf-lattice saf)
+      for edge in (and lattice (lkb::saf-lattice-edges lattice))
       for l-content = (edge-l-content edge l-map)
       do (setf (lkb::saf-edge-l-content edge) l-content)
       finally (return saf)))

@@ -55,7 +55,10 @@
 ;;;
 
 (defun extract-param (param param-list)
-  (second (assoc param param-list)))
+  (let ((match (assoc param param-list)))
+    (if (> (length match) 2)
+	(format t "~%;;; WARNING: malformed param entry '~S' in '~S'" param param-list)
+  (second match))))
 
 (defun un-keyword (keyword-symb)
   (str-2-symb (symb-2-str keyword-symb)))

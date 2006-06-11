@@ -560,7 +560,7 @@
       (setf length-user-input
         (cond
          (maf-p
-          #+:maf (id-to-int (saf-lattice-start-node (saf-lattice user-input))) #-:maf nil)
+          #+:maf (get-smaf-lattice-size user-input) #-:maf nil)
          (spppp (loop
                     for token in input
                     maximize (rest (assoc :end token))))
@@ -575,16 +575,8 @@
             (*parser-rules* (get-matching-rules nil nil))
             (*parser-lexical-rules* (get-matching-lex-rules nil))
             (*lexical-entries-used* nil)
-            (*minimal-vertex* 
-	     (if maf-p
-		 #+:maf (id-to-int (saf-lattice-start-node (saf-lattice user-input))) 
-		 #-:maf 0
-		 0))
-            (*maximal-vertex* 
-	     (if maf-p
-		 #+:maf (id-to-int (saf-lattice-end-node (saf-lattice user-input))) 
-		 #-:maf 0
-		 length-user-input))
+            (*minimal-vertex* 0)
+            (*maximal-vertex* length-user-input)
             ;;
             ;; shadow global variable to allow best-first mode to decrement for
             ;; each result found; eliminates need for additional result count.
