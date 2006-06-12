@@ -17,6 +17,8 @@
 
 (defvar *HIDDEN-smaf-id-to-edge-id* nil) ;; MUST reset when initializing tchart
 (defvar *smaf-id-to-edge-id* nil) ;; MUST reset when initializing tchart
+(defvar *chart-node* -1) ;; MUST reset when initializing tchart
+(defvar *smaf-node-to-chart-node* nil) ;; MUST reset when initializing tchart
 
 (defstruct saf
   meta
@@ -206,24 +208,30 @@
 	 (end-node (second (member '|final| fsm-attributes)))
 	 )
     ;; fix missing details
+    ;; ensure nodes is complete
     (loop for e in all-edges
 	do
 	  (pushnew (saf-edge-source e) nodes :test #'string=)
 	  (pushnew (saf-edge-target e) nodes :test #'string=))
     (unless (and start-node end-node)
+      ;; attempt to guess, based on string< order
+      (format t "~%;;; WARNING: final/init nodes should both be specified (will guess based on string< order)")
       (loop 
-	  with max and max-id
-	  with min and min-id
+	  with max ;;and max-id
+	  with min ;;and min-id
 	  for n in nodes
-	  for id = (id-to-int n)
 	  do
-	    (when (or (null min) (< id min-id)) 
-	      (setf min n) (setf min-id id))
-	    (when (or (null max) (> id max-id)) 
-	      (setf max n) (setf max-id id))
+	    (when (or (null min) (string< n min)) 
+	      (setf min n))
+	    (when (or (null max) (string> n max)) 
+	      (setf max n))
 	  finally
-	    (unless start-node (setf start-node min))
-	    (unless end-node (setf end-node max))))
+	    (unless start-node 
+	      (format t "~%;;; using init node = '~a'" min)
+	      (setf start-node min))
+	    (unless end-node 
+	      (format t "~%;;; using final node = '~a'" max)	      
+	      (setf end-node max))))
     (when
 	(check-saf-lattice-consistency start-node end-node nodes all-edges)
       (make-saf-lattice 
@@ -233,7 +241,14 @@
        :edges all-edges))))
 
 (defun get-smaf-lattice-size (saf)
-  ;; number of unique nodes, minus 1
+  ;; num nodes minus 1, or zero
+  (let ((n (get-smaf-lattice-node-count saf)))
+    (if (zerop n)
+	0 ;; ??
+      (- n 1))))
+
+(defun get-smaf-lattice-node-count (saf)
+  ;; number of unique nodes
   (loop
       with nodes
       with lattice = (saf-lattice saf)
@@ -245,9 +260,7 @@
 	(pushnew source nodes :test 'string=)
 	(pushnew target nodes :test 'string=)
       finally
-	(return (if nodes 
-		    (- (length nodes) 1)
-		  0))))
+	(return (length nodes))))
 
 (defun check-saf-lattice-consistency (start-node end-node nodes edges)
   (declare (ignore start-node end-node nodes))
@@ -500,12 +513,49 @@
     (setf *tchart-max* 0)
     (setf *smaf-id-to-edge-id* nil)
     (setf *HIDDEN-smaf-id-to-edge-id* nil)
+    (initialize-smaf-node-to-chart-node saf)
     )
   (setf *saf* saf)
   (saf-lattice-to-edges (saf-lattice saf)
 			:filter filter
 			:addressing (saf-meta-addressing (saf-meta saf)))
   *tchart*)
+
+(defun initialize-smaf-node-to-chart-node (saf)
+  (let* ((lattice (saf-lattice saf))
+	 (init (and lattice (saf-lattice-start-node lattice)))
+	 (final (and lattice (saf-lattice-end-node lattice)))
+	 (edges (and lattice (saf-lattice-edges lattice)))
+	 (meta (saf-meta saf))
+	 (addressing (saf-meta-addressing meta))
+	 )
+    (setf *chart-node* -1)
+    (setf *smaf-node-to-chart-node* nil)
+    (when lattice
+      (if init
+	  (and (push (cons init 0) *smaf-node-to-chart-node*)
+	       (setf *chart-node* 0))
+	(format t "~%WARNING: no init node in SMAF lattice"))
+      (if final
+	  (push (cons final (get-smaf-lattice-size saf)) *smaf-node-to-chart-node*)
+	(format t "~%WARNING: no final node in SMAF lattice"))
+      ;; create nicely ordered mapping into chart nodes
+      (loop
+	  for e in (sort-edges-by-from edges :addressing addressing)
+	  for source = (saf-edge-source e)
+	  for target = (saf-edge-target e)
+	  do
+	    (smaf-node-to-chart-node source)
+	    (smaf-node-to-chart-node target))
+      ;(print *smaf-node-to-chart-node*)
+      )))
+
+(defun sort-edges-by-from (edges &key addressing)
+  (sort (copy-list edges)
+	'<
+	:key (lambda (x)
+	       (point-to-char-point (saf-edge-from x) addressing))
+	))
 
 (defun saf-lattice-to-edges (saf-lattice &key (filter #'identity) addressing)
   (loop 
@@ -582,8 +632,8 @@
 		  (HIDDEN-smaf-id-to-edge-id id :token))))
       (make-token-edge 
        :id e-id
-       :from (id-to-int source :generate nil)
-       :to (id-to-int target :generate nil)
+       :from (smaf-node-to-chart-node source)
+       :to (smaf-node-to-chart-node target)
        :string tokenStr
        :cfrom (point-to-char-point from addressing)
        :cto (point-to-char-point to addressing)
@@ -610,6 +660,15 @@
     ;; new edge id
     (push (cons smaf-id (incf *edge-id*)) *smaf-id-to-edge-id*)
     *edge-id*))
+
+;; init/final dealt with via correct initialization of mapping
+(defun smaf-node-to-chart-node (smaf-node)
+  (let ((match (cdr (assoc smaf-node *smaf-node-to-chart-node* :test #'string=))))
+    (if match
+	(return-from smaf-node-to-chart-node match))
+    ;; new chart node
+    (push (cons smaf-node (incf *chart-node*)) *smaf-node-to-chart-node*)
+    *chart-node*))
     
 ;; should not be being called directly!
 ;; id: first char ignored, rest gives integer
@@ -656,8 +715,8 @@
 	   (gPred (saf-fs-feature-value l-content "gPred"))
 	   (gCarg (saf-fs-feature-value l-content "gCarg"))
 	   (dummy-entry (if gType (get-dummy-unexpanded-lex-entry nil gType form gPred gCarg gRel)))
-	   (e-from (id-to-int source :generate nil))
-	   (e-to (id-to-int target :generate nil))
+	   (e-from (smaf-node-to-chart-node source))
+	   (e-to (smaf-node-to-chart-node target))
     	   (cfrom (or (point-to-char-point from addressing)
 		      (get-min-edge-cfrom children)))
 	   (cto (or (point-to-char-point to addressing)
