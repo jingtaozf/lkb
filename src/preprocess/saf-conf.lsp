@@ -14,9 +14,15 @@
 
 (in-package :saf)
 
+(defvar *smaf-gmap* nil) ;; reset when necessary!
+
 (defstruct map-action
   e-edge
   l-content)
+
+;;
+;; L-CONTENT
+;;
 
 ;; instantiate :l-content for all annotations in SAF object
 (defun instantiate-l-content (saf l-map)
@@ -109,10 +115,9 @@
    (lkb::saf-edge-l-content s-edge) 
    "edgeType"))
 
-;(defun l-gType (s-edge)
-;  (lkb::saf-fs-feature-value 
-;   (lkb::saf-edge-l-content s-edge) 
-;   "gType"))
+;;
+;; READ SAF CONFIG FILE
+;;
 
 ;;
 ;; very simple reader for textual conf file
@@ -126,6 +131,7 @@
 
 ;; fallback case handles smaf as mapped from tchart
 (defun get-default-saf-l-map nil
+  (setf *smaf-gmap* nil)
   (setf lkb::*saf-l-map*
     (list (conf-read-line "token.[] -> edgeType='tok' tokenStr=content")
 	  (conf-read-line "wordForm.[] -> edgeType='morph' stem=content.stem partialTree=content.partial-tree"))))
@@ -135,33 +141,82 @@
 
 ;; process each line in SAF config file
 (defun conf-read-file (filename)
+  (setf *smaf-gmap* nil)
   (with-open-file (file filename 
 		   :direction :input)
     (loop
 	for line = (read-line file nil nil)
 	while line
 	for a = (conf-read-line line)
-	if a collect a)))
+	if (map-action-p a) collect a)))
 
 ;; ignore empty lines, and those composed of whitespace
 ;; otherwise expect lines of form:
 ;;  type.[x='y' a='b'] -> foo='bar' foo2=bar2
+;;  define gMap.pred (synsem lkeys keyrel pred)
 (defun conf-read-line (line)
+  (or
+   (conf-read-line-RULE line)
+   (conf-read-line-DEFINE line)
+   (conf-read-line-COMMENT line)
+   (conf-read-line-EMPTY line)
+   (format t "~%;;; WARNING: ignoring malformed config line \"~a\"" line)))
+
+;;eg.  type.[x='y' a='b'] -> foo='bar' foo2=bar2
+(defun conf-read-line-RULE (line)
   (multiple-value-bind
       (m regs)
       (cl-ppcre:scan-to-strings "^(\\w*).\\[(.*)\\]\\s*->\\s*(.*)$" line)
-      (if m
-	  (let ((type (aref regs 0))
-		(specs-str (aref regs 1))
-		(out-str (aref regs 2)))
-	    (make-map-action :e-edge 
-			     (lkb::make-saf-edge :type type 
-						 :content (conf-read-specs specs-str))
-			     :l-content (conf-read-specs out-str)))
-	(unless (or 
-		 (lkb::xml-whitespace-p line)
-		 (string= ";" (subseq line 0 1)))
-	  (format t "; WARNING: ignoring malformed config line \"~a\"" line)))))
+    (when m
+	(let ((type (aref regs 0))
+	      (specs-str (aref regs 1))
+	      (out-str (aref regs 2)))
+	  (make-map-action :e-edge 
+			   (lkb::make-saf-edge :type type 
+					       :content (conf-read-specs specs-str))
+			   :l-content (conf-read-specs out-str))))))
+
+;; eg. define gMap.pred (synsem lkeys keyrel pred)
+(defun conf-read-line-DEFINE (line)
+  (multiple-value-bind
+      (m regs)
+      (cl-ppcre:scan-to-strings "^define\\s*gMap\\.(\\w+)\\s+\\((.*)\\)\\s*(\\w+)?\\s*$" line)
+    (when m
+	(let* ((name-str (aref regs 0))
+	       (path-str (aref regs 1))
+	       (type-str (aref regs 2))
+	       (name (intern name-str :keyword))
+	       (path (conf-read-path path-str))
+	       (type (conf-read-type type-str))
+	       )
+	  (push (list name path type) *smaf-gmap*)))))
+
+;; eg. "synsem lkeys keyrel pred" 
+;;     -> (:|synsem| :|lkeys| :|keyrel| :|pred|)
+(defun conf-read-path (path-str)
+  (loop
+      for f in (lkb::string-2-str-list path-str)
+      unless (string= "" f)
+      collect (intern (string-upcase f) :lkb)))
+
+;; "STRING" -> :str
+;; nil -> :sym
+(defun conf-read-type (type-str)
+  (cond
+   ((or (string= "STRING" type-str) (string= "STR" type-str))
+    :str)
+   ((null type-str)
+    :sym)
+   (t
+    (error "[internal] unknown type-str: '~S'" type-str)))) 
+
+;; eg. ; comment
+(defun conf-read-line-COMMENT (line)
+  (and (not (string= "" line))
+       (string= ";" (subseq line 0 1))))
+
+(defun conf-read-line-EMPTY (line)
+  (lkb::xml-whitespace-p line))
 
 ;; eg. "a='b' c='d'" -> "a='b'" "c='d'"
 (defun conf-read-specs (specs-str)
@@ -174,12 +229,12 @@
   (or
    (ppcre:register-groups-bind 
     (feat val)
-    ("(\\w*)='([^']*)'.*" spec)
+    ("^([\\w.]*)='([^']*)'.*$" spec)
     (lkb::make-saf-fv :feature feat
 		      :value val))
    (ppcre:register-groups-bind 
     (feat val)
-    ("(\\w*)=(.*).*" spec)
+    ("^([\\w.]*)=(.*).*$" spec)
     (lkb::make-saf-fv :feature feat
 		      :value (intern val)))))
 

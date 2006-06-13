@@ -6,6 +6,8 @@
   (:use :common-lisp) 
   (:export))
 
+(defvar saf::*smaf-gmap*)
+
 (in-package :lkb)
 
 (defvar *saf*)
@@ -40,7 +42,6 @@
   deps
   content
   l-content
-;;  form ; fix me
   )
 
 (defstruct saf-fv
@@ -174,7 +175,6 @@
 
 (defun get-saf-lattice (lxml)
   (cond
-;   ((eq '|fsm| (lxml-elt-name (car lxml)))
    ((member (lxml-elt-name (car lxml)) '(|fsm| |lattice|));; SAF / SMAF
     (when (cdr lxml)
       (error "no elements expected after fsm/lattice"))
@@ -217,8 +217,8 @@
       ;; attempt to guess, based on string< order
       (format t "~%;;; WARNING: final/init nodes should both be specified (will guess based on string< order)")
       (loop 
-	  with max ;;and max-id
-	  with min ;;and min-id
+	  with max
+	  with min
 	  for n in nodes
 	  do
 	    (when (or (null min) (string< n min)) 
@@ -618,15 +618,13 @@
 	  (setf *tchart-max* to)))))
   *tchart*)
 
-
+;; input: edge of type 'tok' or 'tok+morph'
 (defun saf-edge-to-tedge (saf-edge &key addressing)
   (unless (or (string= "tok" (saf::l-edgeType saf-edge))
 	      (string= "tok+morph" (saf::l-edgeType saf-edge)))
     (error "edgeType='tok' expected (got '~a')" (saf::l-edgeType saf-edge)))
   (with-slots (id source target from to l-content) saf-edge
-    (let ((tokenStr (saf-fs-feature-value 
-		     l-content 
-		     "tokenStr"))
+    (let ((tokenStr (saf-fs-feature-value l-content "tokenStr"))
 	  (e-id (if (string= "tok" (saf::l-edgeType saf-edge))
 		    (smaf-id-to-edge-id id)
 		  (HIDDEN-smaf-id-to-edge-id id :token))))
@@ -682,7 +680,8 @@
 	      (- (incf *edge-id*)))))
     (error (condition)
       (error "unable to convert malformed id `~a': ~a" id condition))))
-     
+
+;; input: saf edge of type 'tok' or 'tok+morph'
 (defun saf-edge-to-medge (saf-edge &key addressing)
   (unless (or (string= "morph" (saf::l-edgeType saf-edge))
 	       (string= "tok+morph" (saf::l-edgeType saf-edge)))
@@ -692,9 +691,11 @@
     (let* ((children 
 	    (cond
 	     ((string= "tok+morph" (saf::l-edgeType saf-edge))
-	      ;; find hidden edge
-	      (list (smaf-id-to-token-edge id (get-tedges *tchart*) :hidden :token)))
+	      ;; find hidden 'tok' edge
+	      (list (smaf-id-to-token-edge id (get-tedges *tchart*) 
+					   :hidden :token)))
 	     (t
+	      ;; derive child edges from saf deps
 	      (loop for d in deps
 		  for tedge = (smaf-id-to-token-edge d (get-tedges *tchart*))
 		  if tedge
@@ -706,15 +707,12 @@
 	    (loop for l in leaf-edges
 		collect (token-edge-string l)))
 	   (form (str-list-2-str children-words))
-	   (stem (or 
-		  (saf-fs-feature-value l-content "stem")
-		  form))
+	   (stem (or (saf-fs-feature-value l-content "stem")
+		     form))
 	   (partialTree (saf-fs-feature-value l-content "partialTree"))
-	   (gType (saf-fs-feature-value l-content "gType"))
-	   (gRel (saf-fs-feature-value l-content "gRel"))
-	   (gPred (saf-fs-feature-value l-content "gPred"))
-	   (gCarg (saf-fs-feature-value l-content "gCarg"))
-	   (dummy-entry (if gType (get-dummy-unexpanded-lex-entry nil gType form gPred gCarg gRel)))
+	   (gmap-unifs (get-gmap-unifs l-content))
+	   (dummy-entry 
+	    (get-dummy-unexpanded-lex-entry form :unifs gmap-unifs))
 	   (e-from (smaf-node-to-chart-node source))
 	   (e-to (smaf-node-to-chart-node target))
     	   (cfrom (or (point-to-char-point from addressing)
@@ -759,6 +757,20 @@
 	 :l-content dummy-entry
 	 )))))
 
+;; extract gMap.* features
+;; OUT: (:feat . "val")*
+(defun get-gmap-unifs (l-content)
+  (loop 
+      for fv in l-content
+      for feat = (saf-fv-feature fv)
+      for val = (saf-fv-value fv)
+      when (string= (subseq feat 0 5)
+		    "gMap.")
+      collect
+	(cons
+	 (intern (subseq feat 5) :keyword)
+	 val)))
+	 
 (defun get-min-edge-cfrom (edges)
   (when edges
     (loop
@@ -882,27 +894,41 @@
   (let ((*morph-option* :with-tokeniser-partial-tree))
     (parse *y)))
 
-(defparameter *dfn-dummy1* '((:UNIFS :|type| "nil" (SYM))
-		       (:UNIFS :|orthography| "(stem)" (STR-LST))
-		       (:ID :|name| "" (SYM)) 
-		       (:ORTH :|orthography| "" (STR-RAWLST))
-		       (:UNIFS :|pred| "(synsem lkeys keyrel pred)" (MIXED))		       
-		       (:UNIFS :|carg| "(synsem lkeys keyrel carg)" (STR))		       
-		       (:UNIFS :|rel| "(synsem lkeys keyrel)" (SYM))		       
-		       ))
+(defun mps-str (x)
+  (or (encode-mixed-as-str x) ""))
 
-(defun get-dummy-unexpanded-lex-entry (id type orth pred carg rel)
-  (MAKE-PSORT-STRUCT2
-   (list (string type) (string id) orth 
-	 (or pred "") ;; fix_me!!! 
-	 (or (encode-string-as-str carg) "") ;;fix_me!!!
-	 (or rel "") ;; fix_me!!! 
-	 ;(encode-string-as-str carg)
-	 )
-   '(:|type| :|name| :|orthography| :|pred| 
-     :|carg| :|rel|
-     )
-   :dfn *dfn-dummy1*))
+(defun get-dummy-unexpanded-lex-entry (orth &key unifs)
+  (loop
+      for (key . val) in unifs
+      for (c-dummy c-path c-type) = (find key saf::*smaf-gmap* :key #'car)
+      for val2 = (mps-str (if (eq c-type :sym) 
+			      (intern val) 
+			    val))
+      collect (list val2 c-path '(MIXED)) into unifs
+      do 
+	(setf c-dummy c-dummy)
+      finally 
+	(return 
+	  (get-dummy-unexpanded-lex-entry2 orth :unifs unifs))))
+
+;; (val path type)*
+(defun get-dummy-unexpanded-lex-entry2 (orth &key unifs)
+  (when unifs
+    (loop
+	with dfn = 
+	  '((:ID :|name| "" (SYM)) 
+	    (:ORTH :|orthography| "" (STR-RAWLST))
+	    (:UNIFS :|orthography| "(stem)" (STR-LST)))
+	with vals = (list "" orth)
+	with keys = '(:|name| :|orthography|);;!
+	for (val path type) in unifs
+	for key from 0
+	do 
+	  (push (list :unifs key (format nil "~S" path) type) dfn)
+	  (push val vals)
+	  (push key keys)
+	finally       
+	  (return (make-psort-struct2 vals keys :dfn dfn)))))
 
 (defun read-smaf-conf (x)
   (format t "~&;;; reading SMAF config file '~a'" x)
