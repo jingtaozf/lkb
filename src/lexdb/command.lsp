@@ -1,4 +1,4 @@
-;;; Copyright (c) 2001 -- 2005
+;;; Copyright (c) 2001 -- 2006
 ;;;   Ben Waldron, John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `licence.txt' for conditions.
 
@@ -8,10 +8,7 @@
 ;;;
 
 (defun command-merge-into-lexdb (&rest rest)
-  (unless (and
-	   (typep *lexdb* 'psql-lex-database)
-	   (connection *lexdb*))
-    (error "please initialize-LexDB"))
+  (assert-mu-psql-lex-database *lexdb*)
   (let ((filename (get-filename rest :ending ".rev" :existing t)))
     (when filename
       (format t "~&(LexDB) merging files ~a.* into lexical database ~a ..." 
@@ -21,10 +18,7 @@
       (lkb-beep))))
 
 (defun command-dump-lexdb (&rest rest)
-  (unless (and
-	   (typep *lexdb* 'psql-lex-database)
-	   (connection *lexdb*))
-    (error "please initialize-LexDB"))
+  (assert-mu-psql-lex-database *lexdb*)
   (let ((filename (get-filename rest :ending ".rev" :existing nil)))
     (when filename
       (format t "~&(LexDB) dumping lexical database ~a to files ~a.* ..." 
@@ -44,21 +38,15 @@
       (lkb-beep))))
   
 (defun command-set-filter-lexdb (&rest rest)
-  (unless (and
-	   (typep *lexdb* 'psql-lex-database)
-	   (connection *lexdb*))
-    (error "please initialize-LexDB"))
+  (assert-mu-psql-lex-database *lexdb*)
   (time
    (apply 'set-filter *lexdb* rest))
   (lkb-beep))
 
 (defun command-clear-private-rev nil
+  (assert-mu-psql-lex-database *lexdb*)
   (let* ((lex *lexdb*)
 	 (rev-size (table-size lex :rev)))
-    (unless (and
-	     (typep lex 'psql-lex-database)
-	     (connection lex))
-      (error "please initialize-LexDB"))
     (cond 
      ((= rev-size 0)
       (format t "~&(LexDB) contents of scratch (0 entries): NIL")
@@ -71,13 +59,10 @@
 	(lkb-beep))))))
 
 (defun command-commit-private-rev nil
+  (assert-mu-psql-lex-database *lexdb*)
   (let* ((lex *lexdb*)
 	 (rev-size (table-size lex :rev)))
-  (unless (and
-	   (typep lex 'psql-lex-database)
-	   (connection lex))
-    (error "please initialize-LexDB"))
-  (cond
+    (cond
      ((= rev-size 0)
       (format t "~&(LexDB) contents of scratch (0 entries): NIL")
       (lkb-beep))
@@ -91,10 +76,7 @@
       (lkb-beep))))))
 
 (defun command-show-private-rev nil
-  (unless (and
-	   (typep *lexdb* 'psql-lex-database)
-	   (connection *lexdb*))
-    (error "please initialize-LexDB"))
+  (assert-mu-psql-lex-database *lexdb*)
   (let ((scratch
 	 (mapcar #'(lambda (x) (car x)) 
 		 (show-scratch *lexdb*))))
@@ -112,15 +94,6 @@
   (time
    (index-new-lex-entries *lexicon*))
   (lkb-beep))
-
-;(defun command-vacuum nil
-;  (unless (and
-;	   (typep *lexdb* 'psql-lex-database)
-;	   (connection *lexdb*))
-;    (error "please initialize-LexDB"))
-;  (time
-;   (vacuum *lexdb*))
-;  (lkb-beep))
 
 (defun command-load-tdl-to-scratch (&rest rest)
   (unless (and
@@ -175,3 +148,11 @@
 		       :type "tdl")))))
   (format t "~&(LexDB) dumping small tdl lexicon [~a entries] to file: ~a" (length *lex-ids-used*) file)
   (export-to-tdl-to-file *lexicon* file :lex-ids *lex-ids-used*))
+
+(defun assert-mu-psql-lex-database (lex)
+  (cond
+   ((typep lex 'su-psql-lex-database)
+    (error "Action not available in SINGLE USER mode"))
+   ((typep lex 'mu-psql-lex-database))
+   (t
+    (error "LexDB is not open"))))

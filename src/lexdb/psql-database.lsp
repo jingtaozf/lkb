@@ -30,6 +30,8 @@
     (with-lexdb-locale (putline conn "\\."))
     (endcopy conn)))
 
+;; CONNECT
+
 (defmethod connect ((lexicon psql-database)) 
   (disconnect lexicon)
   (do ((conn (connect-aux lexicon)
@@ -87,6 +89,7 @@
 	(pq:set-client-encoding connection "UNICODE")
 	t))))
 
+;; move code here from header file???
 (defparameter *lexdb-libpq-protocol-supported* 3)
 (defun check-libpq-protocol-version (connection)
   (let ((version (pq:protocol-version connection)))
@@ -331,7 +334,7 @@
 	5432
       port)))
 
-;; unused?
+#+:null
 (defmethod update-pgpass-file ((lexicon psql-database))
   (let ((entry
 	 (format nil "~a:~a:~a:~a:~a"
@@ -358,6 +361,7 @@
 	    do
 	      (format fstream "~a~%" line))))))
 
+#+:null
 (defun read-pgpass nil
   (with-open-file 
       (fstream

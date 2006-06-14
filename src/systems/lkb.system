@@ -221,17 +221,19 @@
 	      ((:file "headers")
 	       (:file "lex-database")
 	       (:file "lex-entry")
-	       #+:psql (:file "psql-database")
-	       #+:psql (:file "external-lex-database")
-	       #+:psql (:file "psql-lex-database")
-	       #+:psql (:file "psql-lex-entry")
-	       #+:psql (:file "command")
-	       #+:psql (:file "psqllex")      ; Postgres lexical source
                (:file "psql-msc")     ; misc lexdb functions
-               #+:psql (:file "psql-emacs")   ; Postgres-Emacs interface
-               #+:psql (:file "lexport")      ; export lexicon in various formats
                (:file "extract")      ; extract fields for export 
                (:file "gentdl")       ; extract tdl for export
+	       #+:psql (:file "psqllex")
+	       #+:psql (:file "psql-database")
+	       #+:psql (:file "external-lex-database")
+	       #+:psql (:file "psql-lex-database0")
+	       #+:psql (:file "psql-lex-database")
+	       #+:psql (:file "psql-lex-database2")
+	       #+:psql (:file "psql-lex-entry")
+	       #+:psql (:file "command")
+               #+:psql (:file "psql-emacs")   ; Postgres-Emacs interface
+               #+:psql (:file "lexport")      ; export lexicon in various formats
 	))  
 
      (:module "various io"

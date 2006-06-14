@@ -17,11 +17,15 @@
 (defun normalize-orthkey! (x)
   (nstring-downcase x))
 
+;; RECORD
+
 (defun get-val (field raw-record cols)
   (let ((position (position field cols)))
     (unless position
       (error "internal error: ~a not found in ~a" field cols))
     (nth position raw-record)))
+
+;; STRING TO LIST
 
 (defun string-2-mxd-list-on-spc (&rest rest)
   (mapcar #'str-to-mixed
@@ -50,24 +54,12 @@
 	      (push c word-chars)))
       finally (return (reverse (push (implode-from-chars (reverse word-chars)) res)))))
 
-;;;
-;;; misc
-;;;
+(defun 2-symb-or-list (x)
+  (if (and (stringp x) (eq (aref x 0) #\())
+      (work-out-rawlst x)
+    (2-symb x)))
 
-(defun extract-param (param param-list)
-  (let ((match (assoc param param-list)))
-    (if (> (length match) 2)
-	(format t "~%;;; WARNING: malformed param entry '~S' in '~S'" param param-list)
-  (second match))))
-
-(defun un-keyword (keyword-symb)
-  (str-2-symb (symb-2-str keyword-symb)))
-
-(defun split-on-char (string &optional (char #\Space))
-  (loop for i = 0 then (1+ j)
-      as j = (position char string :start i)
-      collect (subseq string i j)
-      while j))
+;; LIST TO STRING
 
 (defun mixed-list-2-str (str-list &optional (separator " "))
   (unless (listp str-list)
@@ -85,9 +77,25 @@
 		       str-list)))))))
 
 ;;;
+;;; misc
+;;;
+
+;;?
+(defun un-keyword (keyword-symb)
+  (str-2-symb (symb-2-str keyword-symb)))
+
+#+:null
+(defun split-on-char (string &optional (char #\Space))
+  (loop for i = 0 then (1+ j)
+      as j = (position char string :start i)
+      collect (subseq string i j)
+      while j))
+
+;;;
 ;;; lexport
 ;;;
 
+#+:null
 (defun subseq-from-end (seq rev-end &optional (rev-start 0))
   (let* ((len (length seq))
 	 (start (- len rev-end))
@@ -117,15 +125,11 @@
       (setf *rc-file* file))
   (lkb::recomp *rc-file*))
 
-(defun 2-symb-or-list (x)
-  (if (and (stringp x) (eq (aref x 0) #\())
-      (work-out-rawlst x)
-    (2-symb x)))
-
 ;;;
 ;;; misc
 ;;;
 
+#+:null
 (defun get-assoc-val (x assoc-list)
   (cdr (assoc x assoc-list)))
 
@@ -134,6 +138,7 @@
 ;;; generate TDL code for MWE entries
 ;;;
 
+#+:null
 (defun mwe-build-P-list (type keyrel-list)
   (append
    (list (list type))
@@ -141,11 +146,13 @@
 	       (list (cons 'IDRELS
 			   (build-PD-list keyrel-list 1)))))))
 
+#+:null
 (defun build-PD-list (d-list coindex)
   (append
    (list (cons 'LAST (build-PD-list-aux-LIST nil coindex)))
    (list (cons 'LIST (build-PD-list-aux-LIST d-list coindex)))))
 
+#+:null
 (defun build-PD-list-aux-LIST (d-list coindex)
   (cond
    ((null d-list)
@@ -155,6 +162,7 @@
      (list (cons 'FIRST (list (car d-list))))
      (list (cons 'REST (build-PD-list-aux-LIST (cdr d-list) coindex)))))))
 
+#+:null
 (defun get-coindex-symb (i)
   (format nil "#~a" i))
 
@@ -168,6 +176,7 @@
       while ordered-symb-list
       collect (assoc (pop ordered-symb-list) symb-val-list)))
 
+;; pairwuse cons of lists
 (defun dot (a b)
   (unless (or (null b) (= (length a) (length b)))
     (error "unequal input list lengths"))
@@ -175,6 +184,7 @@
       while a
       collect (cons (pop a) (pop b))))
 
+#+:null
 (defun myremdup (list pred< pred=)
   (when list
     (loop
@@ -186,6 +196,7 @@
 	do
 	  (setf last x))))
 
+#+:null
 (defun add-w-empty (val list-w-empty)
   (if (or (null list-w-empty) 
 	  (equal :empty list-w-empty))

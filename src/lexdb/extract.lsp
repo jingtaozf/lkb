@@ -3,13 +3,13 @@
 ;;;   see `licence.txt' for conditions.
 
 ;;;
-;;; extract field values from lexical entries
+;;; SERIALIZE LISP OBJECTS TO STRINGS FOR DB STORAGE
 ;;;
 
 (in-package :lkb)
 
 ;;;
-;;; encode atoms
+;;; ATOMS
 ;;;
 
 (defun encode-mixed-as-str (val)
@@ -40,7 +40,7 @@
    (t
     (error "~a is not of type string" val))))
 ;;;
-;;; extract grammatical fields
+;;; PATH / VALUE FROM UNIFS
 ;;;
 
 (defun extract-key-from-unification (unification)
@@ -70,7 +70,7 @@
 (defun extract-field2 (x key path type)
   (extract-value-by-path x key (get-path path) type))
 
-;;;
+;;; EXTRACT PATH VAL FROM UNIFS
 
 (defun extract-rawlst-by-path (x key path)
   (mixed-list-2-str (extract-raw-list x key path)))
@@ -362,7 +362,7 @@
       (format t "WARNING: cannot generate base name for vpc ~a~%" name-full)
       (format nil "UNKNOWN_BASE_~a" name)))))
 
-;;;
+;;; REVERSE ABOVE MAPPINGS
 
 (defun work-out-mixed (val)
   (unless (equal val "")

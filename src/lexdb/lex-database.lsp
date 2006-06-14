@@ -4,6 +4,10 @@
 
 (in-package :lkb)
 
+;;
+;; EXPORT
+;;
+
 ;; dump non-LexDB lexicon to file (DB format)
 (defmethod export-to-db-dump-rev ((lexicon lex-database) stream &key (skip-stream t))
   (unless (connection *lexdb*)
@@ -18,12 +22,6 @@
 			   *lexdb*
 			   :skip-stream skip-stream)))
    (collect-psort-ids lexicon :recurse nil)))
-
-;(defmethod export-to-db-dump-to-file ((lexicon lex-database) filename)
-;  (setf filename (namestring (pathname filename)))
-;  (with-open-file 
-;      (ostream filename :direction :output :if-exists :supersede)
-;    (export-to-db-dump lexicon ostream)))
 
 ;; dump lexicon to file (TDL format)
 (defmethod export-to-tdl-to-file ((lexicon lex-database) filename &key lex-ids)
@@ -53,3 +51,7 @@
 
 (defmethod id-to-tdl ((lexicon lex-database) id)
   (to-tdl (read-psort lexicon id)))
+
+;;
+;;
+

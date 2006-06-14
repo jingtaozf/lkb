@@ -1,4 +1,4 @@
-;;; Copyright (c) 2002 - 2005
+;;; Copyright (c) 2002 - 2006
 ;;;   Ben Waldron, Ann Copestake, Fabre Lambeau, Stephan Oepen;
 ;;;   see `licence.txt' for conditions.
 
