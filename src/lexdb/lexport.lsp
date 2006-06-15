@@ -118,21 +118,6 @@
     (load-lex-from-files lexicon (list filename) :tdl)
     lexicon))
 
-;; todo: this is very inefficient
-(defun load-tdl-to-private-rev (filename)
-  (let ((lexdb *lexdb*))
-    (catch 'abort 
-      (unless lexdb
-	(error "~%lexdb is NULL"))
-      (let ((lexicon (load-scratch-lex :filename filename)))
-	(query-for-meta-fields)
-	(reconnect lexdb);; work around server bug
-	(time 
-         (export-to-db lexicon lexdb))
-	(close-lex lexicon)
-	(format t "~&(LexDB) private space: ~a entries" 
-		(length (show-scratch lexdb)))))))
-
 ;;;
 ;;; get meta-level fields
 ;;;

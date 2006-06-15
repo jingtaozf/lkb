@@ -7,9 +7,10 @@ http://wiki.delph-in.net/moin/LkbLexDb
 
 FILES:
 
-install-lexdb.sh / 
-install-lexdb-cygwin.sh / 
+install-lexdb.sh 
+install-lexdb-cygwin.sh 
 install-lexdb-mswindows.bat - setup script
+su-install-lexdb.sh - setup script for SINGLE USER
 
 pg-interface.el  - LexDB-Emacs interface (Emacs Lisp)
 
@@ -19,6 +20,8 @@ permissions.sql  - SQL script called by install-lexdb.sh
 tables.sql       - SQL script called by install-lexdb.sh
 util.sql         - misc PostgreSQL function definitions
 meta.tsv         - initial contents of meta field
+
+su-init.sql         - SQL script called by su-install-lexdb.sh
 
 example.dfn      - sample .dfn definitions
 example.fld      - sample .fld definitions

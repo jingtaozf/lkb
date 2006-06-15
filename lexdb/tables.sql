@@ -47,6 +47,8 @@ END;
 --   rev_name_userid_modstamp
 --
 
+-- move these fns into Lisp code ???
+
 CREATE OR REPLACE FUNCTION public.index_rev() RETURNS boolean AS '
 BEGIN
 	RAISE DEBUG \'indexing rev\';

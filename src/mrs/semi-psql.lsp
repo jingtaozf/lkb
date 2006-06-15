@@ -1,4 +1,4 @@
-;;; Copyright (c) 2003 - 2005
+;;; Copyright (c) 2003 - 2006
 ;;;   Benjamin Waldron;
 ;;;   see `licence.txt' for conditions.
 
@@ -78,23 +78,6 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
   (lkb::semi-create-indices lex)
   )
 
-(defun dump-generator-indices-to-psql (&key (lex lkb::*lexdb*))
-  (sdb-to-psql lex
-	       (populate-sdb :semantic-table *semantic-table*))
-
-  (lkb::run-command lex "INSERT INTO semi_mod (SELECT DISTINCT name,userid,modstamp,CURRENT_TIMESTAMP FROM lex_cache JOIN semi_pred ON name=lex_id)")
-  (let ((not-indexed mrs::*empty-semantics-lexical-entries*))
-    (when not-indexed
-      (lkb::run-command lex
-			(format nil "INSERT INTO semi_mod SELECT DISTINCT name,userid,modstamp,CURRENT_TIMESTAMP FROM lex_cache WHERE name IN ~a" 
-				(format nil " (~a~{, ~a~})" 
-					(lkb::psql-quote-literal (car not-indexed))
-					(loop for lexid in (cdr not-indexed)
-					    collect (lkb::psql-quote-literal lexid)))))))
-  ;; semi_mod indexes should be created after this call
-  (lkb::run-command lex "SET ENABLE_HASHJOIN TO false")
-  )
-
 #+:null
 (defmethod put-normalized-lex-keys ((lex psql-lex-database) recs)
   (when recs
@@ -153,7 +136,7 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
 
 (defun prune-semi (&key (lex lkb::*lexdb*))
   (loop 
-      for x in (lkb::get-raw-records lex "select name from lex_cache right join semi_mod using (name) where lex_cache is null")
+      for x in (lkb::semi-mod-unused lex)
       do
 	(lkb::run-command lex (format nil "DELETE FROM semi_mod WHERE name=~a" 
 				      (lkb::psql-quote-literal (car x))))

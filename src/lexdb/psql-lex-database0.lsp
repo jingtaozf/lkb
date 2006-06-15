@@ -6,8 +6,10 @@
 
 (defmethod close-lex ((lex psql-lex-database) &key in-isolation delete)
   (declare (ignore in-isolation delete))
-  (with-slots (lexdb-version semi dbname host user connection) lex
-    (setf lexdb-version nil)
+  (with-slots (
+	       ;lexdb-version 
+	       semi dbname host user connection) lex
+    ;(setf lexdb-version nil)
     (if (next-method-p) (call-next-method))))
 
 (defmethod open-lex ((lex psql-lex-database) &key name parameters)
@@ -21,63 +23,6 @@
 		dbname user host (true-port lex)
 		(error-msg connection)))))
 
-;;
-;;
-(defmethod check-lexdb-version ((lex psql-lex-database))
-  (with-slots (lexdb-version) 
-      lex
-    (when (and
-	   (string= *lexdb-major-version* "4.9")
-	   (string= (compat-version lexdb-version) "4.8"))
-      (return-from check-lexdb-version)) ;; we ensure compatibility via "lex_cache" hack
-    (cond
-     ((not (stringp lexdb-version))
-      (error "Unable to determine LexDB version"))
-     ((string> (compat-version lexdb-version)
-	       *lexdb-major-version*)
-      (error *lexdb-message-old-lkb* lexdb-version *lexdb-major-version*))
-     ((string< (compat-version lexdb-version)
-	       *lexdb-major-version*)
-      (error *lexdb-message-old-lexdb* lexdb-version *lexdb-major-version*)))))
-
-(defmethod check-psql-server-version ((lex psql-lex-database))
-  (let* ((supported
-	  (mapcar #'car
-		  (get-raw-records lex "SELECT val FROM public.meta WHERE var='supported-psql-server'")))
-	 (actual-full (caar (get-raw-records lex "SELECT split_part((SELECT version()),' ',2)")))
-	 (actual-full-l (string-2-str-list actual-full :sep #\.))
-	 (actual (concatenate 'string 
-		   (nth 0 actual-full-l)
-		   "."
-		   (nth 1 actual-full-l))))
-    (unless (member actual supported :test #'string=)
-      (format t "~&(LexDB) WARNING: Unsupported PSQL server version ~a.~% Supported versions are: ~a)" actual supported))))
-
-;;
-
-(defmethod initialize-lex ((lex psql-lex-database))
-  (when (open-lex lex)
-    (with-slots (dbname user host) lex
-        (format t "~&(LexDB) connected to LexDB ~a@~a:~a as database user ~a" 
-		dbname host (true-port lex) user))
-    (update-lex lex)))
-  
-(defmethod connect ((lex psql-lex-database)) 
-  (if (next-method-p) (call-next-method))
-  (when (connection-ok lex)
-    (setf (lexdb-version lex) 
-      (get-db-version lex))
-    t))	
-
-;;;
-;;;
-;;;
-
-(defmethod get-db-version ((lex psql-lex-database))
-  (caar 
-   (get-raw-records lex 
-		    "SELECT val FROM public.meta WHERE var='lexdb-version' LIMIT 1")))
-    
 ;;
 ;;
 
@@ -448,6 +393,11 @@
 ;; DATABASE SEMI
 ;;
 
+
+(defmethod create-skeletal-db-semi ((lex psql-lex-database))
+  (create-tables-semi lex)
+  (semi-create-indices lex))
+
 (defmethod create-tables-semi ((lex psql-lex-database))
   (run-command lex "
 CREATE TABLE semi_pred (
@@ -547,20 +497,7 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
 (defmethod semi-up-to-date-p ((lex psql-lex-database))
  (not (semi-out-of-date lex)))
 
-(defmethod semi-out-of-date ((lex psql-lex-database))
-   (mapcar #'(lambda (x) (str-2-symb (first x))) 
-	   (get-raw-records
-	    lex "SELECT name FROM lex_cache LEFT JOIN semi_mod USING (name,userid,modstamp) WHERE lex_cache.modstamp > COALESCE(semi_mod.modstamp0,'-infinity')")))
-
 ;; LEX KEY TABLE
-
-(defmethod create-table-lex-key ((lex psql-lex-database))
-  (run-command lex "CREATE TABLE lex_key (
-		name TEXT NOT NULL,
-		userid TEXT DEFAULT user NOT NULL,
-		modstamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-		key text NOT NULL
-		)"))
 
 (defmethod index-lex-key ((lex psql-lex-database))
   (run-command lex "CREATE INDEX lex_key_key ON lex_key (key)"))
@@ -692,3 +629,86 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
  (defmethod orth-field ((lex psql-lex-database))
    (let ((orth-raw-mapping (assoc :ORTH (dfn lex))))
      (quote-ident lex (second orth-raw-mapping))))
+
+(defmethod update-lex ((lex psql-lex-database))
+;  (unless (quick-load lex)
+    (update-lex-aux lex)
+;    )
+  (when (semi lex)
+    (format t "~%(LexDB) WARNING: :SEMI argument to *lexdb-params* is now obsolete")
+    (format t "~%(LexDB)          (please call index-for-generator instead)"))
+  lex)
+
+(defmethod initialize-lex ((lex psql-lex-database))
+  (when (open-lex lex)
+    (with-slots (dbname user host) lex
+      (format t "~&(LexDB) connected to LexDB ~a@~a:~a as database user ~a" 
+	      dbname host (true-port lex) user)
+;      (error) ;;test
+      (update-lex lex))
+    ))
+
+;(defmethod initialize-lex ((lex psql-lex-database))
+;  (when (open-lex lex)
+;    (handler-case
+;	(with-slots (dbname user host) lex
+;	  (format t "~&(LexDB) connected to LexDB ~a@~a:~a as database user ~a" 
+;		  dbname host (true-port lex) user)
+;	  (error) ;;test
+;	  (update-lex lex))
+;      (error (condition)
+;	(error  condition)
+;	(format t ";;; WARNING: closing LexDB ~a" lex)
+;	(close-lex lex)
+;	))))
+
+(defmethod to-db-dump-rev ((x lex-entry) (lex psql-lex-database) &key (skip-stream t))
+  "provide line entry for lex db import file"
+  (let* (;;ordered a-list of field values
+	 (field-vals (get-field-vals x lex))
+	 (skip (cdr (assoc :|_tdl| field-vals)))
+	 (name (cdr (assoc :|name| field-vals)))
+	 (ordered-field-vals (ordered-symb-val-list (fields lex) field-vals))
+	 ;; construct CVS copy line
+	 (line 
+	  (format nil "~a~%" 
+		  (str-list-2-line
+		   (mapcar
+		    #'(lambda (x)
+			(let ((val (cdr x)))
+			  (if val
+			      (2-str val)
+			    nil)))
+		    ordered-field-vals)
+		   :sep-c #\tab
+		   :null-str "\\N"))))
+    (cond
+     ;; no components of lex entry skipped
+     ((null skip)
+      line)
+     ;; component(s) skipped, but :skip field available in db
+     ((member :|_tdl| (fields lex))
+      (format t "~&(LexDB) Unhandled TDL fragment in lexical entry ~a: ~%~t~a~%~%" name skip)
+      (format t "~&;; (LexDB) Unhandled TDL fragment in ~a placed in _tdl field as unstructured text" name)
+	line)
+     ;; component(s) skipped and no :skip field in db
+     (t
+      (format t "~&~%(LexDB) Lex entry ~a skipped due to unhandled TDL fragment: ~%~t~a~%" name skip)
+      (format skip-stream "~a" (to-tdl x))
+      ""))))
+
+
+;; todo: this is very inefficient
+(defmethod import-tdl-file ((lex psql-lex-database) filename)
+  (catch 'abort 
+    (unless lex
+      (error "~%lex is NULL"))
+    (let ((lexicon (load-scratch-lex :filename filename)))
+      (query-for-meta-fields)
+      (reconnect lex);; work around server bug
+      (time 
+       (export-to-db lexicon lex))
+      (close-lex lexicon)
+      ))
+  ;(if (next-method-p) (call-next-method))
+  )

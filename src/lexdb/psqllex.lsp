@@ -97,7 +97,7 @@
 	       (and *lexdb* (user *lexdb*))
 	       (user-name)))
      (semi (extract-param :semi *lexdb-params*))
-     (quick-load (extract-param :quick-load *lexdb-params*))
+     ;(quick-load (extract-param :quick-load *lexdb-params*))
      (password (or (extract-param :password *lexdb-params*)
 		   (and *lexdb* (password *lexdb*)))))
   (psql-initialize)
@@ -122,7 +122,7 @@
     (setf (password *lexdb*) password)
     (setf (port *lexdb*) port)
     (setf (semi *lexdb*) semi)
-    (setf (quick-load *lexdb*) quick-load)
+;    (setf (quick-load *lexdb*) quick-load)
     ;; use of table is obsolete
     (cond 
      (table
@@ -224,8 +224,8 @@
      'string))))
 
 (defun clear-psql-semi (&key (lex *lexdb*))
-  (unless (typep lex 'su-psql-lex-database)
-    (error "su-psql-lex-database expected"))
+  (unless (typep lex 'psql-lex-database)
+    (error "psql-lex-database expected"))
   (semi-drop-indices lex)
   (run-command lex "DELETE FROM semi_pred")
   (run-command lex "DELETE FROM semi_frame")

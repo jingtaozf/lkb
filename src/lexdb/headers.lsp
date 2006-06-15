@@ -65,16 +65,18 @@
    ))
 
 (defclass psql-lex-database (psql-database external-lex-database)
-  ((lexdb-version :initform nil :accessor lexdb-version)
-   (semi :initform nil :accessor semi)
+  ((semi :initform nil :accessor semi)
    ))
 
 ;; multi-user database
-(defclass mu-psql-lex-database (psql-lex-database external-lex-database)
-  ((quick-load :initform nil :accessor quick-load)))
+(defclass mu-psql-lex-database (psql-lex-database)
+  (
+   (lexdb-version :initform nil :accessor lexdb-version)
+   ;(quick-load :initform nil :accessor quick-load)
+   ))
 
 ;; single-user database
-(defclass su-psql-lex-database (psql-lex-database external-lex-database)
+(defclass su-psql-lex-database (psql-lex-database)
   ())
 
 (defclass psql-database-table ()

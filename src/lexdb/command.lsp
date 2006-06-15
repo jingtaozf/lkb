@@ -104,7 +104,7 @@
     (when filename
       (setf filename (format nil "~a.tdl" filename))
       (format t "~&(LexDB) importing TDL entries...")
-      (load-tdl-to-private-rev filename)
+      (import-tdl-file *lexdb* filename)
       (lkb-beep))))
 
 (defun get-filename (rest &key (ending "") existing)

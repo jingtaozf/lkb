@@ -39,31 +39,32 @@
             "~%No *top-semantics-type* defined" *toptype*)
     (setf mrs::*top-semantics-entry* (get-type-entry *toptype*))))
   (unless (eq (check-generator-environment) :error)
-    (index-lexicon)
+    (index-lexicon *lexicon*)
     (index-lexical-rules)
     (index-grammar-rules)
     (index-generics)
     (format t "~%Indexing complete")
     nil))
 
-(defun index-lexicon nil
-  (when (typep *lexicon* 'psql-lex-database)
-    (unless (= 0 (sql-get-num *lexdb* "select count(*) from semi_pred"))
-      (let ((unindexed-lexids (semi-out-of-date *lexicon*)))
+;; move to: lex-database method in lex.lsp ???
+(defun index-lexicon (&optional (lex *lexicon*)) 
+  (when (typep lex 'psql-lex-database)
+    (unless (= 0 (sql-get-num lex "select count(*) from semi_pred"))
+      (let ((unindexed-lexids (semi-out-of-date lex)))
 	(cond
 	 ((null unindexed-lexids)
 	  (format t "~%(retrieving generator indices for lexicon from LexDB)")
-	  (mrs::load-generator-indices-from-psql :lex *lexicon*)
+	  (mrs::load-generator-indices-from-psql :lex lex)
 	  (return-from index-lexicon t))
 	 ((< (length unindexed-lexids) 3000)
 	  (format t "~%(retrieving generator indices for lexicon from LexDB)")
-	  (mrs::load-generator-indices-from-psql :lex *lexicon*)
-	  (index-new-lex-entries *lexicon*)
+	  (mrs::load-generator-indices-from-psql :lex lex)
+	  (index-new-lex-entries lex)
 	  (format t "~%(dumping generator indices to LexDB)")
-	  (mrs::dump-generator-indices-to-psql :lex *lexicon*)
+	  (dump-generator-indices-to-psql lex)
 	  (return-from index-lexicon t)))))
     (format t "~%(caching all lexical records)")
-    (cache-all-lex-records-orth *lexicon*))
+    (cache-all-lex-records-orth lex))
   
   (unless (mrs::restore-semantic-indices)
     (format t "~% (recompiling semantic indices)")
@@ -73,15 +74,16 @@
         (error "~%No entry found for top semantics type ~A" 
                mrs::*top-semantics-type*))
 
-      (let ((ids (collect-psort-ids *lexicon*)))
+      (let ((ids (collect-psort-ids lex)))
 
         (process-queue
          #'(lambda ()
              (let ((id (pop ids)))
                (if id
-                   (read-psort *lexicon* id :cache nil)
+                   (read-psort lex id :cache nil)
                  :eof)))
          #'(lambda (entry)
+	     ;(print 'q1)
              (expand-psort-entry entry)
              (let ((new-fs (lex-entry-full-fs entry)))
                (if (and new-fs 
@@ -89,12 +91,13 @@
                    (mrs::extract-lexical-relations entry)
                  (format t "~%No feature structure for ~A~%" 
                          (lex-entry-id entry))))
-             (forget-psort *lexicon* (lex-entry-id entry))))
+	     ;(print 'q2)
+             (forget-psort lex (lex-entry-id entry))))
         
         (mrs::check-for-redundant-filter-rules)))
-    (when (typep *lexicon* 'psql-lex-database)
-      (mrs::dump-generator-indices-to-psql :lex *lexicon*))
-    (when (typep lkb::*lexicon* 'lkb::cdb-lex-database)
+    (when (typep lex 'psql-lex-database)
+      (dump-generator-indices-to-psql lex))
+    (when (typep lkb::lex 'lkb::cdb-lex-database)
       (mrs::serialize-semantics-indices))))
 
 (defun reindex-lexicon nil ; <-- efficiency problem

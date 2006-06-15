@@ -233,14 +233,6 @@
 (defmethod get-filter ((lex mu-psql-lex-database))
   (sql-get-val lex "SELECT val FROM meta WHERE var='filter'"))  
 
-(defmethod update-lex ((lex mu-psql-lex-database))
-  (unless (quick-load lex)
-    (update-lex-aux lex))
-  (when (semi lex)
-    (format t "~%(LexDB) WARNING: :SEMI argument to *lexdb-params* is now obsolete")
-    (format t "~%(LexDB)          (please call index-for-generator instead)"))
-  lex)
-
 (defmethod count-rev-all ((lex mu-psql-lex-database))
   (sql-get-num lex "SELECT (SELECT count(*) FROM public.rev) + (SELECT count(*) FROM rev)"))
 
@@ -385,8 +377,10 @@
     (create-view-head lex)
     
     ;;
-    (create-tables-semi lex)
-    (semi-create-indices lex))
+    (create-skeletal-db-semi lex)
+;    (create-tables-semi lex)
+;    (semi-create-indices lex)
+    )
   t)))
 
 
@@ -591,41 +585,6 @@ CREATE INDEX rev_name
       (empty-cache lex)
       (disconnect conn-db-owner))))
 
-(defmethod to-db-dump-rev ((x lex-entry) (lex mu-psql-lex-database) &key (skip-stream t))
-  "provide line entry for lex db import file"
-  (let* (;;ordered a-list of field values
-	 (field-vals (get-field-vals x lex))
-	 (skip (cdr (assoc :|_tdl| field-vals)))
-	 (name (cdr (assoc :|name| field-vals)))
-	 (ordered-field-vals (ordered-symb-val-list (fields lex) field-vals))
-	 ;; construct CVS copy line
-	 (line 
-	  (format nil "~a~%" 
-		  (str-list-2-line
-		   (mapcar
-		    #'(lambda (x)
-			(let ((val (cdr x)))
-			  (if val
-			      (2-str val)
-			    nil)))
-		    ordered-field-vals)
-		   :sep-c #\tab
-		   :null-str "\\N"))))
-    (cond
-     ;; no components of lex entry skipped
-     ((null skip)
-      line)
-     ;; component(s) skipped, but :skip field available in db
-     ((member :|_tdl| (fields lex))
-      (format t "~&(LexDB) Unhandled TDL fragment in lexical entry ~a: ~%~t~a~%~%" name skip)
-      (format t "~&;; (LexDB) Unhandled TDL fragment in ~a placed in _tdl field as unstructured text" name)
-	line)
-     ;; component(s) skipped and no :skip field in db
-     (t
-      (format t "~&~%(LexDB) Lex entry ~a skipped due to unhandled TDL fragment: ~%~t~a~%" name skip)
-      (format skip-stream "~a" (to-tdl x))
-      ""))))
-
 ;;
 ;;
 ;;
@@ -725,3 +684,100 @@ CREATE INDEX rev_name
    (reconnect lex) ;; work around server bug
    (generate-missing-orthkeys lex))
 
+
+(defmethod create-table-lex-key ((lex mu-psql-lex-database))
+  (run-command lex "CREATE TABLE lex_key (
+		name TEXT NOT NULL,
+		userid TEXT DEFAULT user NOT NULL,
+		modstamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+		key text NOT NULL
+		)"))
+
+(defmethod connect ((lex mu-psql-lex-database)) 
+  (if (next-method-p) (call-next-method))
+  (when (connection-ok lex)
+    (setf (lexdb-version lex) 
+      (get-db-version lex))
+    t))	
+
+(defmethod close-lex ((lex mu-psql-lex-database) &key in-isolation delete)
+  (declare (ignore in-isolation delete))
+  (with-slots (lexdb-version) lex
+    (setf lexdb-version nil)
+    (if (next-method-p) (call-next-method))))
+
+
+(defmethod check-lexdb-version ((lex mu-psql-lex-database))
+  (with-slots (lexdb-version) 
+      lex
+    (when (and
+	   (string= *lexdb-major-version* "4.9")
+	   (string= (compat-version lexdb-version) "4.8"))
+      (return-from check-lexdb-version)) ;; we ensure compatibility via "lex_cache" hack
+    (cond
+     ((not (stringp lexdb-version))
+      (error "Unable to determine LexDB version"))
+     ((string> (compat-version lexdb-version)
+	       *lexdb-major-version*)
+      (error *lexdb-message-old-lkb* lexdb-version *lexdb-major-version*))
+     ((string< (compat-version lexdb-version)
+	       *lexdb-major-version*)
+      (error *lexdb-message-old-lexdb* lexdb-version *lexdb-major-version*)))))
+
+(defmethod check-psql-server-version ((lex mu-psql-lex-database))
+  (let* ((supported
+	  (mapcar #'car
+		  (get-raw-records lex "SELECT val FROM public.meta WHERE var='supported-psql-server'")))
+	 (actual-full (caar (get-raw-records lex "SELECT split_part((SELECT version()),' ',2)")))
+	 (actual-full-l (string-2-str-list actual-full :sep #\.))
+	 (actual (concatenate 'string 
+		   (nth 0 actual-full-l)
+		   "."
+		   (nth 1 actual-full-l))))
+    (unless (member actual supported :test #'string=)
+      (format t "~&(LexDB) WARNING: Unsupported PSQL server version ~a.~% Supported versions are: ~a)" actual supported))))
+
+;;
+
+;;;
+;;;
+;;;
+
+(defmethod get-db-version ((lex mu-psql-lex-database))
+  (caar 
+   (get-raw-records lex 
+		    "SELECT val FROM public.meta WHERE var='lexdb-version' LIMIT 1")))
+
+(defmethod dump-generator-indices-to-psql ((lex mu-psql-lex-database))
+  (mrs::sdb-to-psql 
+   lex (mrs::populate-sdb :semantic-table mrs::*semantic-table*))
+  (run-command lex "INSERT INTO semi_mod (SELECT DISTINCT name,userid,modstamp,CURRENT_TIMESTAMP FROM lex_cache JOIN semi_pred ON name=lex_id)")
+  (let ((not-indexed mrs::*empty-semantics-lexical-entries*))
+    (when not-indexed
+      (run-command lex
+		   (format nil "INSERT INTO semi_mod SELECT DISTINCT name,userid,modstamp,CURRENT_TIMESTAMP FROM lex_cache WHERE name IN ~a" 
+			   (format nil " (~a~{, ~a~})" 
+				   (psql-quote-literal (car not-indexed))
+				   (loop for lexid in (cdr not-indexed)
+				       collect (psql-quote-literal lexid)))))))
+  ;; semi_mod indexes should be created after this call
+  (run-command lex "SET ENABLE_HASHJOIN TO false")
+  )
+
+(defmethod semi-out-of-date ((lex mu-psql-lex-database))
+   (mapcar #'(lambda (x) (str-2-symb (first x))) 
+	   (get-raw-records
+	    lex "SELECT name FROM lex_cache LEFT JOIN semi_mod USING (name,userid,modstamp) WHERE lex_cache.modstamp > COALESCE(semi_mod.modstamp0,'-infinity')")))
+
+
+(defmethod import-tdl-file ((lex mu-psql-lex-database) filename)
+  (declare (ignore filename))
+  (if (next-method-p) (call-next-method))
+  (format t "~&(LexDB) private space: ~a entries" 
+	  (length (show-scratch lex)))
+  )
+
+(defmethod semi-mod-unused ((lex mu-psql-lex-database))
+  (get-raw-records 
+   lex 
+   "select name from lex_cache right join semi_mod using (name) where lex_cache is null"))
