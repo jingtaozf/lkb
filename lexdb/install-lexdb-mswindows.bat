@@ -2,7 +2,7 @@
 :: Benjamin Waldron;
 :: see `licence.txt' for conditions.
 
-::@ECHO OFF
+@ECHO OFF
 
 ::# script usage
 IF "%3" == "" echo usage: install-lexdb-mswindows DBNAME FLD-FILE DFN-FILE [PG-OPTIONS CREATEDB-OPTIONS] & GOTO end
@@ -29,6 +29,7 @@ createdb %PG_OPTIONS% %CREATEDB_OPTIONS% -U lexdb %LEXDB%
 
 ::# ensure plpgsql DB language is available
 createlang %PG_OPTIONS%  -U postgres plpgsql %LEXDB%
+IF errorlevel=1 ECHO Warning: createlang command failed. Continuing...
 
 ::# load 'lexdb' DB user setup script (part 1)
 psql %PG_OPTIONS% -f load.sql -U lexdb %LEXDB%
