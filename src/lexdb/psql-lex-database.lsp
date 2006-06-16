@@ -95,11 +95,8 @@
 	    (count-lex lex)
 	    )))
 
-;;; ??? should be: "SELECT count(*) FROM lex_cache"
 (defmethod count-lex ((lex mu-psql-lex-database))
-  (let ((size-lex-pub (sql-get-num lex "SELECT count(*) FROM public.rev JOIN lex_cache USING (name,userid,modstamp)"))
-	(size-lex-priv (sql-get-num lex "SELECT count(*) FROM rev JOIN lex_cache USING (name,userid,modstamp)")))
-    (+ size-lex-pub size-lex-priv)))
+  (sql-get-num lex "SELECT count(*) FROM lex_cache"))
 
 ;;;
 ;;; cache
@@ -288,8 +285,6 @@
     (run-command lex 
 		 (format nil "CREATE TABLE lex_cache AS SELECT name,userid,modstamp,~a FROM public.rev WHERE NULL" (orth-field lex)))
     (run-command lex "CREATE OR REPLACE VIEW lex AS SELECT rev_all.* FROM lex_cache JOIN rev_all USING (name,userid,modstamp)")
-    ;(create-table-lex-key lex)
-    ;(index-lex-key lex)
     
     ;;
     (register-mod-time lex)
@@ -301,9 +296,7 @@
     
     ;;
     (create-skeletal-db-semi lex)
-    (new-semi lex)
-;    (semi-create-indices lex)
-    )
+    (new-semi lex))
   t)))
 
 
@@ -312,7 +305,7 @@
 ALTER TABLE public.rev ADD PRIMARY KEY (name,userid,modstamp);
 CREATE UNIQUE INDEX name_modstamp ON public.rev (name,modstamp); 
 CREATE INDEX rev_name_modstamp ON public.rev (name, modstamp);
-SELECT if_psql_server_version(\'7.4\', \'CREATE INDEX rev_name_pattern ON public.rev (name varchar_pattern_ops)\', \'CREATE INDEX rev_name_pattern ON public.rev (name)\');
+CREATE INDEX rev_name_pattern ON public.rev (name));
 CREATE INDEX rev_name
 	ON public.rev (name varchar_ops); 
 "))
@@ -367,8 +360,6 @@ CREATE INDEX rev_name
 
 (defmethod merge-dfn-from-tmp-dfn ((lex mu-psql-lex-database))
   (sql-get-bool lex "SELECT assert_db_owner()")
-  
-  ;;
   (run-command lex "DELETE FROM dfn WHERE mode IN (SELECT DISTINCT mode FROM tmp_dfn)")
   (run-command lex "INSERT INTO dfn SELECT * FROM tmp_dfn"))
   
@@ -684,8 +675,7 @@ CREATE INDEX rev_name
   (declare (ignore filename))
   (if (next-method-p) (call-next-method))
   (format t "~&(LexDB) private space: ~a entries" 
-	  (length (show-scratch lex)))
-  )
+	  (length (show-scratch lex))))
 
 (defmethod semi-mod-unused ((lex mu-psql-lex-database))
   (get-raw-records 

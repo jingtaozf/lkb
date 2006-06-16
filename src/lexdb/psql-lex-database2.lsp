@@ -49,28 +49,6 @@
       (lkb-beep)))
   (empty-cache lex))
 
-#+:null
-(defmethod build-lex ((lex su-psql-lex-database))
-  (generate-missing-orthkeys lex)
-  (vacuum lex)
-  (empty-cache lex))
-
-#+:null
-(defmethod index-lex ((lex su-psql-lex-database))
-  (run-command lex "
-ALTER TABLE lex ADD PRIMARY KEY (name,userid,modstamp);
-CREATE UNIQUE INDEX name_modstamp ON lex (name,modstamp); 
-CREATE INDEX rev_name_modstamp ON lex (name, modstamp);
-CREATE INDEX rev_name ON public.rev (name varchar_ops); 
-"))
-
-#+:null
-(defmethod deindex-lex ((lex su-psql-lex-database))
-  (run-command lex "DROP INDEX name_modstamp" :ignore-errors t)
-  (run-command lex "DROP INDEX rev_name_modstamp" :ignore-errors t)
-  (run-command lex "DROP INDEX rev_name" :ignore-errors t)
-  (run-command lex "ALTER TABLE lex DROP CONSTRAINT rev_pkey" :ignore-errors t))
-  
 (defmethod get-value-set ((lex su-psql-lex-database) field)
   (let ((qi-field (quote-ident lex (2-str field))))
     (mapcar 
@@ -81,47 +59,6 @@ CREATE INDEX rev_name ON public.rev (name varchar_ops);
        nil 
        "SELECT DISTINCT ~a::text AS foo FROM lex WHERE ~a IS NOT NULL"
        qi-field qi-field)))))
-
-;;
-;;
-;;
-
-;; common?
-#+:null
-(defmethod to-db-dump-rev ((x lex-entry) (lex su-psql-lex-database) &key (skip-stream t))
-  "provide line entry for lex db import file"
-  (let* (;;ordered a-list of field values
-	 (field-vals (get-field-vals x lex))
-	 (skip (cdr (assoc :|_tdl| field-vals)))
-	 (name (cdr (assoc :|name| field-vals)))
-	 (ordered-field-vals (ordered-symb-val-list (fields lex) field-vals))
-	 ;; construct CVS copy line
-	 (line 
-	  (format nil "~a~%" 
-		  (str-list-2-line
-		   (mapcar
-		    #'(lambda (x)
-			(let ((val (cdr x)))
-			  (if val
-			      (2-str val)
-			    nil)))
-		    ordered-field-vals)
-		   :sep-c #\tab
-		   :null-str "\\N"))))
-    (cond
-     ;; no components of lex entry skipped
-     ((null skip)
-      line)
-     ;; component(s) skipped, but :skip field available in db
-     ((member :|_tdl| (fields lex))
-      (format t "~&(LexDB) Unhandled TDL fragment in lexical entry ~a: ~%~t~a~%~%" name skip)
-      (format t "~&;; (LexDB) Unhandled TDL fragment in ~a placed in _tdl field as unstructured text" name)
-	line)
-     ;; component(s) skipped and no :skip field in db
-     (t
-      (format t "~&~%(LexDB) Lex entry ~a skipped due to unhandled TDL fragment: ~%~t~a~%" name skip)
-      (format skip-stream "~a" (to-tdl x))
-      ""))))
 
 ;;
 ;;
@@ -165,10 +102,6 @@ CREATE INDEX rev_name ON public.rev (name varchar_ops);
 				   #'(lambda (x) (quote-ident lex x)))
 			 (sql-list (ordered-val-list symb-list psql-le) 
 				   #'(lambda (x) (psql-quote-literal x)))))
-;    (run-command lex 
-;		 (format nil "DELETE FROM lex_cache WHERE name=~a" ql-name))
-;    (run-command lex 
-;		 (format nil "INSERT INTO lex_cache SELECT name,userid,modstamp,~a FROM head WHERE name = ~a" (orth-field lex) ql-name))
     (run-command lex 
 		 (format nil "DELETE FROM lex_key WHERE name = ~a" ql-name))))
   

@@ -6,10 +6,7 @@
 
 (defmethod close-lex ((lex psql-lex-database) &key in-isolation delete)
   (declare (ignore in-isolation delete))
-  (with-slots (
-	       ;lexdb-version 
-	       semi dbname host user connection) lex
-    ;(setf lexdb-version nil)
+  (with-slots (semi dbname host user connection) lex
     (if (next-method-p) (call-next-method))))
 
 (defmethod open-lex ((lex psql-lex-database) &key name parameters)
@@ -137,14 +134,6 @@
 	      (with-lexdb-client-min-messages (lex "error")
 		(run-command lex "CREATE INDEX lex_key_key ON lex_key (key)" :ignore-errors t))))
   
-;(defmethod regenerate-orthkeys ((lex psql-lex-database))
-;  (with-lexdb-client-min-messages (lex "error")
-;    (run-command lex "DROP INDEX lex_key_key" :ignore-errors t))
-;  (run-command lex "DELETE FROM lex_key")
-;  (generate-missing-orthkeys lex)
-;  (with-lexdb-client-min-messages (lex "error")
-;    (run-command lex "CREATE INDEX lex_key_key ON lex_key (key)" :ignore-errors t)))
-
 (defmethod generate-missing-orthkeys ((lex psql-lex-database))
   (put-normalized-lex-keys lex
 			   (normalize-orthkeys2
@@ -342,7 +331,8 @@
     dfn))
 
 (defmethod complain-no-dfn ((lex psql-lex-database))
-  (error "~&(LexDB) no dfn entries found in ~a !!!" (dbname lex)))
+  (error "~&(LexDB) no DFN entries (mode='~a')" 
+	 (dbname lex) (fields-tb lex)))
 
 (defmethod get-internal-table-dfn ((lex psql-lex-database))
   (get-field-info lex "public" "rev"))  
@@ -692,9 +682,7 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
      (quote-ident lex (second orth-raw-mapping))))
 
 (defmethod update-lex ((lex psql-lex-database))
-;  (unless (quick-load lex)
     (update-lex-aux lex)
-;    )
   (when (semi lex)
     (format t "~%(LexDB) WARNING: :SEMI argument to *lexdb-params* is now obsolete")
     (format t "~%(LexDB)          (please call index-for-generator instead)"))
@@ -705,23 +693,8 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
     (with-slots (dbname user host) lex
       (format t "~&(LexDB) connected to LexDB ~a@~a:~a as database user ~a" 
 	      dbname host (true-port lex) user)
-;      (error) ;;test
       (update-lex lex))
     ))
-
-;(defmethod initialize-lex ((lex psql-lex-database))
-;  (when (open-lex lex)
-;    (handler-case
-;	(with-slots (dbname user host) lex
-;	  (format t "~&(LexDB) connected to LexDB ~a@~a:~a as database user ~a" 
-;		  dbname host (true-port lex) user)
-;	  (error) ;;test
-;	  (update-lex lex))
-;      (error (condition)
-;	(error  condition)
-;	(format t ";;; WARNING: closing LexDB ~a" lex)
-;	(close-lex lex)
-;	))))
 
 (defmethod to-db-dump-rev ((x lex-entry) (lex psql-lex-database) &key (skip-stream t))
   "provide line entry for lex db import file"

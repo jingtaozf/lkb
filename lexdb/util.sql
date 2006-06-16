@@ -1,7 +1,8 @@
---- Copyright (c) 2003 - 2005 
+--- Copyright (c) 2003 - 2006
 --- Benjamin Waldron, Fabre Lambeau, Stephan Oepen;
 --- see `licence.txt' for conditions.
 
+--x
 CREATE OR REPLACE FUNCTION fn_exists(text,text) RETURNS boolean AS '
 BEGIN
 RETURN
@@ -16,6 +17,7 @@ RETURN
 END;
 ' LANGUAGE plpgsql;
 
+--x
 CREATE OR REPLACE FUNCTION reln_exists(text,text) RETURNS boolean AS '
 BEGIN
 RETURN
@@ -32,6 +34,7 @@ END;
 --
 --
 
+--x
 CREATE OR REPLACE FUNCTION public.define_type_text_2() RETURNS boolean AS '
 BEGIN
 	IF reln_exists(\'public\',\'text_2\') THEN
@@ -42,6 +45,7 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
+--x
 CREATE OR REPLACE FUNCTION public.define_type_text_3() RETURNS boolean AS '
 BEGIN
 	IF reln_exists(\'public\',\'text_3\') THEN
@@ -52,6 +56,7 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
+--x
 CREATE OR REPLACE FUNCTION public.define_type_attname_typename_atttypmod() RETURNS boolean AS '
 BEGIN
 	IF reln_exists(\'public\',\'attname_typename_atttypmod\') THEN
@@ -74,6 +79,7 @@ SELECT public.define_type_attname_typename_atttypmod();
 --
 --
 
+--x
 CREATE OR REPLACE FUNCTION public.return_oid(text,text) RETURNS integer AS '
 BEGIN
 	RETURN
@@ -87,6 +93,7 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
+--x
 CREATE OR REPLACE FUNCTION public.return_type(text,text,text) RETURNS text AS '
 DECLARE
 	table_oid integer;
@@ -101,6 +108,7 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
+--mu
 CREATE OR REPLACE FUNCTION psql_server_version(text) RETURNS boolean AS '
 DECLARE
 	x text;
@@ -111,6 +119,7 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
+--mu
 -- if server version then ...
 CREATE OR REPLACE FUNCTION if_psql_server_version(text,text,text) RETURNS text AS '
 BEGIN
@@ -124,6 +133,7 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
+--mu
 CREATE OR REPLACE FUNCTION public.assert_db_owner() RETURNS boolean AS 
 '
 BEGIN
@@ -134,6 +144,7 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
+--mu
 CREATE OR REPLACE FUNCTION public.user_is_db_owner_p() RETURNS boolean AS 
 '
 DECLARE

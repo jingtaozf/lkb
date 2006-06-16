@@ -2,13 +2,9 @@
 --- Benjamin Waldron, Fabre Lambeau, Stephan Oepen;
 --- see `licence.txt' for conditions.
 
--- as superuser, run: CREATE LANGUAGE plpgsql;
-
 SET client_min_messages TO warning;
 
-\i util.sql
-
--- DFN --
+-- DFN -- don't change this!
 CREATE TABLE dfn (
 		mode TEXT,
 		slot TEXT,
@@ -17,14 +13,13 @@ CREATE TABLE dfn (
 		type TEXT,
 	PRIMARY KEY (mode,slot,field));
 
--- LEX --
+-- LEX -- customize this...
 CREATE TABLE lex (
--- BUILT-IN FIELDS (do not change!!!)
+-- BUILT-IN FIELD (do not change!!!)
 name TEXT NOT NULL,
+-- USER-DEFINED FIELDS
 userid TEXT DEFAULT user NOT NULL,
 modstamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-dead BOOLEAN DEFAULT '0' NOT NULL,
--- USER-DEFINED FIELDS (you can change these)
 type TEXT,
 orthography TEXT,
 keyrel TEXT,
@@ -53,13 +48,3 @@ register TEXT,
 confidence real DEFAULT 1,
 source TEXT,
 	PRIMARY KEY (name));
-CREATE INDEX lex_name_userid_modstamp ON lex (name, userid, modstamp);
-
--- LEX_KEY --
-CREATE TABLE lex_key (
-name TEXT NOT NULL,
-userid TEXT DEFAULT user NOT NULL,
-modstamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-key text NOT NULL
-);
-CREATE INDEX lex_key_key ON lex_key (key)

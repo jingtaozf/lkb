@@ -83,13 +83,30 @@
 	(format t "~%;;; WARNING: malformed param entry '~S' in '~S'" param param-list)
   (second match))))
 
+(defun type-2-psql-lex-database-type (type)
+  (case type
+    (:single-user 'su-psql-lex-database)
+    (:multi-user 'mu-psql-lex-database)
+    (t
+     (error "unknown :type ('~a') in LexDB params" type))))
+
+(defun psql-lex-database-type2 (lex)
+  (cond
+   ((typep lex 'su-psql-lex-database) :single-user)
+   ((typep lex 'mu-psql-lex-database) :multi-user)))
+
+(defun initialize-lexdb-default-type ()
+  (let ((type :multi-user))
+    (format t "~%Warning: using LexDB param :type = '~S'" type)
+    (format t "~%         (please set this explicitly in *lexdb-params*)" type)
+    type))
+
 (defun initialize-lexdb 
     (&key
      (type (or (extract-param :type *lexdb-params*)
-	       (if (typep *lexdb* 'mu-psql-lex-database)
-		   'mu-psql-lex-database
-		 'su-psql-lex-database)
-	       'mu-psql-lex-database))
+	       (psql-lex-database-type2 *lexdb*)
+	       (initialize-lexdb-default-type)
+	       ))
      (dbname (or (extract-param :dbname *lexdb-params*)
 		 (and *lexdb* (dbname *lexdb*))))
      (host (or (extract-param :host *lexdb-params*) 
@@ -108,30 +125,30 @@
   (unless dbname
     (error "please set :dbname in *lexdb-params*"))
   (if (and (string= user "lexdb")
-	   (eq type 'mu-psql-lex-database))
+	   (eq type :multi-user))
       (error "User 'lexdb' cannot connect as LexDB client. Please pick a different username..."))
 	   
   (let (part-of extra-lexicons)
     ;; we will create a new lexicon then insert it into the lexicon hierarchy as
     ;; a replacement for *lexdb*
     (cond
-     ((typep *lexdb* type)
+     ((eq type (psql-lex-database-type2 *lexdb*))
       (setf part-of (part-of *lexdb*))
       (setf (part-of *lexdb*) nil) ;; to avoid unlinking
       (setf extra-lexicons (extra-lexicons *lexdb*))
       (setf (extra-lexicons *lexdb*) nil) ;; to avoid unlinking
       )
      (t 
-      (setf *lexdb* (make-instance type))))
-    
+      (setf 
+	  *lexdb* 
+	(make-instance (type-2-psql-lex-database-type type)))))
     (setf (dbname *lexdb*) dbname)
     (setf (host *lexdb*) host)
     (setf (user *lexdb*) user)
     (setf (password *lexdb*) password)
     (setf (port *lexdb*) port)
     (setf (semi *lexdb*) semi)
-;    (setf (quick-load *lexdb*) quick-load)
-    ;; use of table is obsolete
+    ;; use of table is obsolete ???
     (cond 
      (table
       (setf (fields-tb *lexdb*) table))
