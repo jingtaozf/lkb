@@ -60,8 +60,8 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
   (run-command-coe lex "DROP INDEX semi_mod_name_userid_modstamp CASCADE"))
 
 (defun sdb-to-psql (lex sdb)
-  (lkb::clear-psql-semi :lex lex)
-  
+  (lkb::new-semi lex)
+  (lkb::drop-semi-indices lex)
   (lkb::run-command-stdin-from-hash-val-rows lex "semi_pred"
 					(sdbt-rows (find 'PRED (sdb-tables sdb) 
 					      :key #'mrs::sdbt-name)))
@@ -75,7 +75,7 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
 					(sdbt-rows (find 'extra (sdb-tables sdb) 
 					      :key #'mrs::sdbt-name)))
   
-  (lkb::semi-create-indices lex)
+  (lkb::create-semi-indices lex)
   )
 
 #+:null
@@ -145,15 +145,17 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
 	))
 
 (defun load-generator-indices-from-psql (&key (lex lkb::*lexdb*))
-  (let ((sdb (make-sdb)))
-    (setf *sdb* sdb)
-    (prune-semi :lex lex)
-    (load-sdb sdb lex)
-    (populate-semantic-table sdb)
-    (setf *empty-semantics-lexical-entries*
+  (lkb::lexdb-time
+   ("loading SEMI from LexDB" "done loading SEMI from LexDB")
+   (let ((sdb (make-sdb)))
+     (setf *sdb* sdb)
+     (prune-semi :lex lex)
+     (load-sdb sdb lex)
+     (populate-semantic-table sdb)
+     (setf *empty-semantics-lexical-entries*
       (loop for x in (lkb::get-raw-records lex "select name from semi_mod left join semi_pred on name=lex_id where semi_pred.lex_id is null")
 	  collect (lkb::str-2-symb (car x)))))
-  t)
+   t))
 
 (defmethod populate-semantic-table ((sdb sdb))
   (let* ((pred-t (sdb-table sdb 'pred))

@@ -116,13 +116,15 @@
 ;;; execute db queries/commands
 ;;;
 
-(defmethod get-records ((database psql-database) sql-string)
+(defmethod get-records ((database psql-database) sql-string &key (ignore-errors nil))
   (with-slots (connection) database
     (unless connection
       (error "psql-database ~s has no active connection." database))
       (multiple-value-bind (recs cols)
-	  (execute connection sql-string :tup :col)
-	(make-instance 'psql-database-table :recs recs :cols cols))))
+	  (execute connection sql-string :tup :col :ignore-errors ignore-errors)
+	(if (typep recs 'sql-error)
+	    recs
+	  (make-instance 'psql-database-table :recs recs :cols cols)))))
 
 (defmethod get-raw-records ((database psql-database) sql-string)
   (with-slots (connection) database
@@ -286,10 +288,20 @@
     (format nil "SELECT quote_ident(~a)" 
 	    (psql-quote-literal x)))))
 
+;(SELECT c.oid FROM pg_catalog.pg_class c LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = $1 AND c.relname = $2)
+
+;(defmethod get-field-info ((db psql-database) schema table)
+;  (get-records db
+;	       (format nil
+;		       "SELECT attname, typname, atttypmod FROM (SELECT attname, atttypmod, atttypid FROM pg_catalog.pg_attribute WHERE attrelid=return_oid(~a,~a)) AS a JOIN pg_catalog.pg_type AS t ON (typelem=atttypid)"
+;		       (psql-quote-literal schema)
+;			   (psql-quote-literal table)
+;			   )))
+
 (defmethod get-field-info ((db psql-database) schema table)
   (get-records db
 	       (format nil
-		       "SELECT attname, typname, atttypmod FROM (SELECT attname, atttypmod, atttypid FROM pg_catalog.pg_attribute WHERE attrelid=return_oid(~a,~a)) AS a JOIN pg_catalog.pg_type AS t ON (typelem=atttypid)"
+		       "SELECT attname, typname, atttypmod FROM (SELECT attname, atttypmod, atttypid FROM pg_catalog.pg_attribute WHERE attrelid=(SELECT c.oid FROM pg_catalog.pg_class c LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = ~a AND c.relname = ~a)) AS a JOIN pg_catalog.pg_type AS t ON (typelem=atttypid)"
 		       (psql-quote-literal schema)
 			   (psql-quote-literal table)
 			   )))
@@ -299,7 +311,7 @@
 	       (format nil
 		       "SELECT a.attname::text as field, pg_catalog.format_type(a.atttypid, a.atttypmod) as type
 	FROM pg_catalog.pg_attribute a
-	WHERE a.attrelid = return_oid(~a,~a) AND a.attnum > 0 AND NOT a.attisdropped
+	WHERE a.attrelid = (SELECT c.oid FROM pg_catalog.pg_class c LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = ~a AND c.relname = ~a) AND a.attnum > 0 AND NOT a.attisdropped
 	ORDER BY a.attnum"
 		       (psql-quote-literal schema)
 			   (psql-quote-literal table)

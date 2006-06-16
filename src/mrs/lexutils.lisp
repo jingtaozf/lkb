@@ -53,7 +53,7 @@
       (let ((unindexed-lexids (semi-out-of-date lex)))
 	(cond
 	 ((null unindexed-lexids)
-	  (format t "~%(retrieving generator indices for lexicon from LexDB)")
+	  ;(format t "~%(retrieving generator indices for lexicon from LexDB)")
 	  (mrs::load-generator-indices-from-psql :lex lex)
 	  (return-from index-lexicon t))
 	 ((< (length unindexed-lexids) 3000)

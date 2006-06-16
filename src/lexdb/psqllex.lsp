@@ -85,7 +85,11 @@
 
 (defun initialize-lexdb 
     (&key
-     (type 'mu-psql-lex-database)
+     (type (or (extract-param :type *lexdb-params*)
+	       (if (typep *lexdb* 'mu-psql-lex-database)
+		   'mu-psql-lex-database
+		 'su-psql-lex-database)
+	       'mu-psql-lex-database))
      (dbname (or (extract-param :dbname *lexdb-params*)
 		 (and *lexdb* (dbname *lexdb*))))
      (host (or (extract-param :host *lexdb-params*) 
@@ -103,6 +107,10 @@
   (psql-initialize)
   (unless dbname
     (error "please set :dbname in *lexdb-params*"))
+  (if (and (string= user "lexdb")
+	   (eq type 'mu-psql-lex-database))
+      (error "User 'lexdb' cannot connect as LexDB client. Please pick a different username..."))
+	   
   (let (part-of extra-lexicons)
     ;; we will create a new lexicon then insert it into the lexicon hierarchy as
     ;; a replacement for *lexdb*
@@ -179,10 +187,16 @@
 			  (code-char 10))) ;; newline
 		   )))))
      
-(defun normalize-orthkeys (recs)
+(defmethod normalize-orthkeys2 ((lex mu-psql-lex-database) recs)
+  (normalize-orthkeys-aux recs 3))
+
+(defmethod normalize-orthkeys2 ((lex su-psql-lex-database) recs)
+  (normalize-orthkeys-aux recs 1))
+
+(defun normalize-orthkeys-aux (recs i)
   (loop
       for rec in recs
-      do (setf (fourth rec) (normalize-orthkey! (fourth rec))))
+      do (setf (nth i rec) (normalize-orthkey! (nth i rec))))
   recs)
 
 (defun psql-COPY-val (val &key (delim-char #\tab) (null "\\N"))
@@ -223,6 +237,7 @@
 	 collect char)
      'string))))
 
+#+:null
 (defun clear-psql-semi (&key (lex *lexdb*))
   (unless (typep lex 'psql-lex-database)
     (error "psql-lex-database expected"))

@@ -52,9 +52,10 @@
 		     (pathname
 		      (format nil "~a/~a" dir *lexdb-dump-source*))))
 	 rev-file)
-    (dump-dfn *lexdb* file-base)
-    (dump-fld *lexdb* file-base)
-    (dump-meta *lexdb* file-base)
+    (when (typep *lexdb* 'mu-psql-lex-database)
+      (dump-dfn *lexdb* file-base)
+      (dump-fld *lexdb* file-base)
+      (dump-meta *lexdb* file-base))
     (setf rev-file (namestring (pathname (format nil "~a.rev" file-base))))
     (format t "~&(LexDB) exporting lexical entries to dump file ~a" rev-file)
     (with-open-file (rev-stream 

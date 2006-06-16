@@ -99,17 +99,57 @@
   (recs
    (get-records lex "SELECT name,userid,modstamp,key FROM lex_key")))
 
-(defmethod regenerate-orthkeys ((lex psql-lex-database))
-  (with-lexdb-client-min-messages (lex "error")
-    (run-command lex "DROP INDEX lex_key_key" :ignore-errors t))
-  (run-command lex "DELETE FROM lex_key")
-  (generate-missing-orthkeys lex)
+(defmethod new-lex-key-table ((lex psql-lex-database))
+  (empty-cache lex)
+  (kill-lex-key-table lex)
+  (create-lex-key-table lex)
+  (create-lex-key-indices lex)
+  (regenerate-orthkeys lex))
+
+(defmethod create-lex-key-indices ((lex psql-lex-database))
   (with-lexdb-client-min-messages (lex "error")
     (run-command lex "CREATE INDEX lex_key_key ON lex_key (key)" :ignore-errors t)))
 
+(defmethod kill-lex-key-table ((lex su-psql-lex-database))
+  (with-lexdb-client-min-messages (lex "error")
+    (run-command lex "DROP TABLE lex_key CASCADE" :ignore-errors t)))
+
+(defmethod create-lex-key-table ((lex su-psql-lex-database))
+  (run-command lex "CREATE TABLE lex_key (
+		name TEXT NOT NULL,
+		key text NOT NULL
+		)"))
+
+(defmethod create-lex-key-table ((lex mu-psql-lex-database))
+  (with-lexdb-client-min-messages (lex "error")
+    (run-command lex "CREATE TABLE lex_key (
+		name TEXT NOT NULL,
+		userid TEXT DEFAULT user NOT NULL,
+		modstamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+		key text NOT NULL
+		)")))
+
+(defmethod regenerate-orthkeys ((lex psql-lex-database))
+  (lexdb-time ("regenerating lex_key entries" "done regenerating lex_key entries")
+	      (run-command lex "DROP INDEX lex_key_key")
+	      (run-command lex "DELETE FROM lex_key")
+	      (generate-missing-orthkeys lex)
+	      (with-lexdb-client-min-messages (lex "error")
+		(run-command lex "CREATE INDEX lex_key_key ON lex_key (key)" :ignore-errors t))))
+  
+;(defmethod regenerate-orthkeys ((lex psql-lex-database))
+;  (with-lexdb-client-min-messages (lex "error")
+;    (run-command lex "DROP INDEX lex_key_key" :ignore-errors t))
+;  (run-command lex "DELETE FROM lex_key")
+;  (generate-missing-orthkeys lex)
+;  (with-lexdb-client-min-messages (lex "error")
+;    (run-command lex "CREATE INDEX lex_key_key ON lex_key (key)" :ignore-errors t)))
+
 (defmethod generate-missing-orthkeys ((lex psql-lex-database))
   (put-normalized-lex-keys lex
-			   (normalize-orthkeys (create-unnormalized-missing-lex-keys3 lex))))
+			   (normalize-orthkeys2
+			    lex
+			    (create-unnormalized-missing-lex-keys3 lex))))
 
 ;;; ALL IDS
 
@@ -393,12 +433,33 @@
 ;; DATABASE SEMI
 ;;
 
+(defmethod new-semi ((lex psql-lex-database))
+  (kill-semi lex)
+  (create-semi-tables lex)
+  (create-semi-indices lex))
+
+(defmethod kill-semi ((lex psql-lex-database))
+  (with-lexdb-client-min-messages (lex "error")
+    (run-command lex "DROP TABLE semi_pred CASCADE" :ignore-errors t))
+  (with-lexdb-client-min-messages (lex "error")
+    (run-command lex "DROP TABLE semi_frame CASCADE" :ignore-errors t))
+  (with-lexdb-client-min-messages (lex "error")
+    (run-command lex "DROP TABLE semi_var CASCADE" :ignore-errors t))
+  (with-lexdb-client-min-messages (lex "error")
+    (run-command lex "DROP TABLE semi_extra CASCADE" :ignore-errors t))
+  (with-lexdb-client-min-messages (lex "error")
+    (run-command lex "DROP TABLE semi_mod CASCADE" :ignore-errors t))
+  (with-lexdb-client-min-messages (lex "error")
+    (run-command lex "DROP TABLE semi_obj CASCADE" :ignore-errors t)))
+
+(defmethod semi-p ((lex psql-lex-database))
+  (not (typep (get-records lex "select count(*) from semi_pred where null" :ignore-errors t) 'sql-error)))
 
 (defmethod create-skeletal-db-semi ((lex psql-lex-database))
-  (create-tables-semi lex)
-  (semi-create-indices lex))
+  (create-semi-tables lex)
+  (create-semi-indices lex))
 
-(defmethod create-tables-semi ((lex psql-lex-database))
+(defmethod create-semi-tables ((lex psql-lex-database))
   (run-command lex "
 CREATE TABLE semi_pred (
 lex_id text NOT NULL,
@@ -443,7 +504,7 @@ semi_var NATURAL LEFT JOIN
 semi_extra;
 "))
   
-(defmethod semi-create-indices ((lex psql-lex-database))
+(defmethod create-semi-indices ((lex psql-lex-database))
   (run-command lex "
 CREATE INDEX semi_pred_lex_id ON semi_pred (lex_id);
 CREATE INDEX semi_pred_pred_id ON semi_pred (pred_id);
@@ -454,7 +515,7 @@ CREATE INDEX semi_extra_extra_id ON semi_extra (extra_id);
 CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modstamp);
 "))
   
-(defmethod semi-drop-indices ((lex psql-lex-database))
+(defmethod drop-semi-indices ((lex psql-lex-database))
   (run-command-coe lex "DROP INDEX semi_pred_lex_id CASCADE")
   (run-command-coe lex "DROP INDEX semi_pred_pred_id CASCADE")
   (run-command-coe lex "DROP INDEX semi_frame_frame_id CASCADE")
@@ -712,3 +773,55 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
       ))
   ;(if (next-method-p) (call-next-method))
   )
+
+(defmethod dump-generator-indices-to-psql ((lex psql-lex-database))
+  (lexdb-time 
+   ("dumping object SEMI to LexDB" "done dumping object SEMI to LexDB")
+   (mrs::sdb-to-psql 
+    lex (mrs::populate-sdb :semantic-table mrs::*semantic-table*))
+   (populate-semi-mod lex)
+   
+   (let ((not-indexed mrs::*empty-semantics-lexical-entries*))
+     (when not-indexed
+       (populate-semi-mod-EMPTY-SEM lex not-indexed)
+       ))
+   ;; semi_mod indexes should be created after this call
+   (run-command lex "SET ENABLE_HASHJOIN TO false")
+   ))
+
+;; orthkey must be mapped to normalized form before entering PSQL universe
+(defmethod lookup-word-no-cache ((lex psql-lex-database) orth)
+  (declare (ignore cache))
+  (if (connection lex)
+      (let* ((quoted-literal (psql-quote-literal (sql-like-text (normalize-orthkey orth))))
+	     (fields (fields-str lex (grammar-fields lex)))
+	     (table 
+	      (get-records 
+	       lex
+	       (lookup-word-no-cache-SQL lex quoted-literal fields) 
+	       ))
+	     (ids (lookup-word-aux2 lex table)))
+	ids)))
+
+(defmethod create-unnormalized-missing-lex-keys3 ((lex psql-lex-database))
+  (loop
+      for rec in
+	(get-raw-records lex 
+			 (format nil (create-unnormalized-missing-lex-keys3-FSQL lex)
+				 (orth-field lex)))
+      for orth-list = (string-2-str-list (fourth rec))
+      if (= 1 (length orth-list))
+      collect rec
+      else
+      append 
+      (loop for word in orth-list
+	  collect (list (first rec) (second rec) (third rec) word))))
+ 
+(defmethod collect-psort-ids-aux ((lex psql-lex-database))
+  (let ((query-res 
+	 (get-raw-records lex (collect-psort-ids-SQL lex))))
+    (mapcar 
+     #'(lambda (x) 
+	 (str-2-symb (car x)))
+     query-res)))
+
