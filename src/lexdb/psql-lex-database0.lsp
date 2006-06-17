@@ -306,6 +306,14 @@
 ;;
 ;;
 
+(defun convert-obsolete-dfn-type-if-nec (l-type)
+  (let* ((type (car l-type))
+	 (x (cdr (assoc type *lexdb-fmtype-alt*))))
+    (when x
+      (format t "~%;;; Warning: (LexDB) DFN type '~S' is obsolete" type)
+      (format t "~%;;;                  (please use '~S' instead)" x)
+      (setf (car l-type) x))))
+      
 (defmethod make-field-map-slot ((lex psql-lex-database))
   "stores the mapping of fields to lex-entry structure slots"
   (with-slots (dfn fields) lex
@@ -320,9 +328,7 @@
 		   (type2 (2-symb-or-list (fourth x)))
 		   (type (if (listp type2) type2 (list type2))))
 	      ;; correct any obsolete types
-	      (setf (car type)
-		(or (cdr (assoc (car type) *lexdb-fmtype-alt*))
-		    (car type)))
+	      (convert-obsolete-dfn-type-if-nec type)
 	      (list slot field path type)))
 	(get-raw-records lex (format nil "SELECT slot,field,path,type FROM dfn WHERE mode='~a' OR mode = ''" (fields-tb lex))))
        #'(lambda (x y) (declare (ignore y)) (eq (car x) :UNIFS))))
