@@ -52,11 +52,14 @@
   ;; set up .load-path., load and configure emacs -- lisp interface
   ;;
   (let ((eli (format "%s/eli" delphin-home))
-        (lkb (format "%s/lkb/src" delphin-home)))
+        (lkb (format "%s/lkb/src" delphin-home))
+	(lexdb (format "%s/lkb/lexdb" delphin-home)))
     (unless (member eli load-path)
       (setq load-path (cons eli load-path)))
     (unless (member lkb load-path)
-      (setq load-path (cons lkb load-path))))
+      (setq load-path (cons lkb load-path)))
+    (unless (member lexdb load-path)
+      (setq load-path (cons lexdb load-path))))
   (load "fi-site-init" nil t)
   (fset 'lisp-mode (symbol-function 'common-lisp-mode))
   (setq fi:common-lisp-directory delphin-home)
@@ -74,6 +77,7 @@
   ;;
   (load "lkb" nil t)
   (load "tdl-mode" nil t)
+  (load "pg-interface" nil t)
   (setq auto-mode-alist
     (append 
       '(("\\.cl$" . common-lisp-mode)
