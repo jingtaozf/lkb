@@ -284,12 +284,13 @@
   (loop
       with strm = (make-string-output-stream)
       for c = (read-char stream nil nil)
+      ;do (print c)
       while (and c (not (char= c term-char)))
       unless (or
 	      (char= c #\Return)
 	      (member c *xml-bad-chars* :test 'char=))
       do 
-	;;(print c)
+	;(print c)
 	(write-char c strm)
       finally 
 	(if (not c) (return-from read-input :eof))
@@ -307,6 +308,14 @@
 ")
 	(subseq line 0 (- len 1))))))
 ;;
+
+;; PROTOCOL:
+;; - Lisp's r-server opens socket on given port
+;;   and accepts connection from client
+;; - client sends (XML, UTF-8) input, terminated by CONTROL-Q
+;; - server sends (XML, UTF-8) result, terminated by CONTROL-Q
+;; - by sending input consisting solely of whitespace, client signals intention to exit
+;; - client closes socket, server closes socket
 
 ;; generic socket server
 ;; caller supplys processor function (and name)
@@ -355,10 +364,11 @@
 	    (funcall processor s input)
 	  (error (condition)
 	    (format t  "~&Error: ~A" condition)))
-      do
+      ;;do
 	 (format s "~a" #\^q)
 	 (terpri s)
-	 (force-output s)))
+	 (force-output s)
+	 ))
 
 ;;
 
