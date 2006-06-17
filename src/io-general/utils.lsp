@@ -721,14 +721,6 @@
 	(canonical-coding-system-name coding))
     (error "set-coding-system(): invalid coding system `~a'.~%" raw))
     
-;  (case coding
-;    (:utf8 (setf coding :utf-8))
-;    (:eucjp (setf coding :euc-jp))
-;    ((:latin1 :iso88591 :iso8859-1) (setf coding :iso-8859-1)))
-;  
-;  (unless (smember coding '(:utf-8 :euc-jp :iso-8859-1))
-;    (error "set-coding-system(): invalid coding system `~a'.~%" raw))
-
   #+:allegro
   (let* ((allegro-coding-name (internal-coding-system-name coding))
 	 (locale (excl::find-locale (format nil ".~a" allegro-coding-name))))
