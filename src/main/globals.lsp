@@ -79,12 +79,30 @@
 ;;; Morphology
 
 (def-lkb-parameter *morph-option* :default
-    "possible values are :default, :external-rule-by-rule 
+    "possible values are :default, :distinct-mphon, :external-rule-by-rule 
    :external-partial-tree, :with-tokeniser-partial-tree,  
    :with-tokeniser-retokenise")
 
 (def-lkb-parameter *foreign-morph-fn* nil
   "alternative to built in LKB morphology")
+
+;;; Revised morphology
+
+;;; affix type
+
+(def-lkb-parameter *affix-type* 'affix)
+
+(def-lkb-parameter *rule-affix-feature* 'affixation)
+
+(def-lkb-parameter *affix-pattern-feature* 'pattern)
+
+(def-lkb-parameter *affix-class-feature* 'affix-class)
+
+(def-lkb-parameter *letter-set-feature* 'letters)
+
+(def-lkb-parameter *letter-set-char-feature* 'char)
+
+(def-lkb-parameter *letter-set-match-feature* 'match)
 
 (defparameter *known-cyclic-rules* nil
   "to allow disabling of warning messages about possible cycles -
@@ -92,7 +110,7 @@
 
 ;;; Parsing
 
-(defparameter *maximum-number-of-tasks* 200000
+(def-lkb-parameter *maximum-number-of-tasks* 200000
   "limits the number of pending tasks on the agenda")
 
 (def-lkb-parameter *maximum-number-of-edges* 500 
@@ -346,5 +364,5 @@
 
 ;;; 'ORIGSTR
 
-(defparameter *characterize-p* t
+(def-lkb-parameter *characterize-p* t
   "if set CFROM/CTO character pointers are enabled")

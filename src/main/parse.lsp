@@ -455,7 +455,7 @@
   ;;; try and deal with all ickinesses until interface is 
   ;;; clarified here
   (unless (member *morph-option*
-		  '(:default :external-rule-by-rule 
+		  '(:default :distinct-mphon :external-rule-by-rule 
 		    :external-partial-tree :with-tokeniser-partial-tree  
 		    :with-tokeniser-retokenise))
     (format t "~%Unrecognised *morph-option* switch ~A: resetting to default"
@@ -599,6 +599,7 @@
 	    (instantiate-chart-with-tokens user-input)
 	    (ecase *morph-option*
 	      (:default (instantiate-chart-with-morphop))
+	      (:distinct-mphon (instantiate-chart-with-morphop))
 	      (:external-rule-by-rule 
 	       (instantiate-chart-with-morphop))
 	      ;;; *foreign-morph-fn* is set and will be called
@@ -889,7 +890,8 @@
 
 ;;; end partial tree handling
     
-;;; start of code specific to default *morph-option* (i.e., :default)
+;;; start of code specific to default *morph-option* (i.e., :default
+;;; or :distinct-mphon)
 ;;; or :external-rule-by-rule 
 
 (defparameter *morph-agenda* nil)
@@ -1231,7 +1233,8 @@ relatively limited.
 
   
 
-;;; end stuff specific to the :default and :external-rule-by-rule case
+;;; end stuff specific to the :default, :distinct-mphon 
+;;; and :external-rule-by-rule case
 
 (defun add-morpho-stem-edge-from-token-edge (stem partial-tree token-edge)  
   ;;; This is called from the version with the rule-by-rule morphology
@@ -1260,7 +1263,8 @@ relatively limited.
   ;;; Put into chart at same places
   (if
       (and 
-       (or (member *morph-option* '(:default :external-rule-by-rule))
+       (or (member *morph-option* '(:default :distinct-mphon 
+				    :external-rule-by-rule))
 	   ;;; if we're proceeding rule by rule we've already
 	   ;;; done this checking
 	   (and (lookup-word *lexicon* stem)
@@ -1435,8 +1439,6 @@ relatively limited.
 (defun add-stem-edge (edge-stem
 		      edge-string from to cfrom cto partial-tree entry dtr)
     #+:arboretum (declare (special *mal-active-p*))
-;;    (let* ((expanded-entry (get-lex-entry-from-id (lex-entry-id entry))))
-;; (bmw) above code seems unnnecessary
     (let* ((expanded-entry (get-expanded-lex-entry entry)))
       ;; side effect of calling get-lex-entry-from-id is
       ;;  instantiation of :full-fs slot

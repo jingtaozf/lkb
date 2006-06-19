@@ -102,6 +102,8 @@
               (when settings-file
                 (set-up-display-settings settings-file))
               (set-up-type-interactions)
+	      (when (eql *morph-option* :distinct-mphon)
+		(extract-affixation-specifications))
               t)))
        (unless ok (cerror "Continue loading script anyway" 
         "Problems in type file")))))

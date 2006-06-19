@@ -257,6 +257,30 @@
     (evaluate-unifications lex-rule
                            (list lex-entry-fs))))
 
+
+#|
+see the wish list on the wiki
+
+given a comment in a type of the form
+
+grammar-type := parent &
+"composite: base + rule ; human readable blah"
+etc
+
+we want to extract the comments and then check the grammar-type constraint
+to make sure it's equivalent to what we'd have generated from the 
+base fs plus rule (except the type itself, of course)
+
+(defun check-composite-type (base rule grammar-type)
+  (let* ((base-fs (make-wellformed (make-dag :type base)))
+	 (result (evaluate-unifications rule (list base-fs))))
+    (if result
+	(or 
+	 (equal-feature-structures result (ltype-constraint gramar-type))
+	 (complain))
+      (complain))))
+ |#
+  
 ;;; *************************************************************
 ;;;
 ;;; adding rules - function called from tdlruleinput and ruleinput
@@ -281,8 +305,17 @@
       (setf (rule-rtdfs rule) (copy-tdfs-partially fs))
       (if lexical-p 
 	  (progn
+	    (when (eql *morph-option* :distinct-mphon)
+	      (extract-rule-affixation-type fs id))
+	    ;;; in morph.lsp
+	    ;;; looks for path (by default AFFIXATION)
+	    ;;; that has as its value a morphophon type
+	    ;;; and adds it to the appropriate morphonphon rule
 	    (pushnew id *ordered-lrule-list*)
 	    (when (spelling-change-rule-p rule)
+	      ;;; if this has the default definition
+	      ;;; it relies on the morphophon stuff having already
+	      ;;; been processed at this point
 	      (pushnew id *ordered-sprule-list*)))
         (pushnew id *ordered-rule-list*))
       (let ((f-list

@@ -162,7 +162,9 @@
 	    (draw-active-title stream fs title parents paths)
 	    (when (and
 		   *show-spelling-rules*
-		   (member id *morph-rule-set* :key #'morph-rule-name))
+		   (member id *morph-rule-set* 
+			   :key #'morph-rule-rules 
+			   :test #'member))
 	      (draw-morph-rule stream id))
 	    (when parents 
 	      (setf max-width (+ fudge 
@@ -423,9 +425,12 @@
                               :active ,(and id
                                             (get-lex-entry-from-id id)
                                             *ordered-lrule-list*))
-;       ("Show spelling change rule" :value spelling-rule
-;				    :active ,(member id *morph-rule-set* 
-;						     :key #'morph-rule-name))
+       #|
+       ("Show spelling change rule" :value spelling-rule
+				    :active ,(member id *morph-rule-set* 
+				    :key #'morph-rule-rules
+				    :test #'member))
+				    |#
        #+:allegro
        ("Show source" :value source 
 		      :active ,(and id (source-available-p id))))

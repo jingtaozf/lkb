@@ -184,9 +184,9 @@
 ;;; trying to apply a rule which affects spelling and
 ;;; which should therefore only be applied by the morphology
 ;;; system.  
-  (unless (eql *morph-option* :default)
+  (unless (member *morph-option* '(:default :distinct-mphon))
     (error "~%This code assumes that the LKB morphophonology analyser is in use,so will only work if *morph-option* is set to :default - please 
-redefine the function spelling-change-rule-p as appropriate"))
+redefine the function spelling-change-rule-p in user-fs.lsp as appropriate"))
   (in-morph-rule-set-p rule))
 
 (defun redundancy-rule-p (rule)

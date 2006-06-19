@@ -49,16 +49,24 @@ to something unexpected, so don't give people the temptation!
 ;;; e.g., %(wild-card (?c bdf))
 
 (defstruct morph-rule 
-  class name subrules)
+  class rules subrules letter-sets id)
 ;;; class is prefix or suffix
-;;; name is the id of the rule
-;;; e.g., 3sg-v_irule
+;;; rules are the ids of the rules that use these patterns
+;;; e.g., (3sg-v_irule)
 ;;;
 ;;; 3sg-v_irule :=
 ;;; %suffix (!s !ss) (!ss !ssses) (ss sses)
 ;;; sing-verb.
 ;;;
 ;;; each pattern like (!s !ss) is a separate subrule
+;;;
+;;; new style
+;;; +ed := suffix & 
+;;; [ PATTERN "(* ed) (!ty !tied) (e ed) (!t!v!c !t!v!c!ced)" ].
+;;;
+;;; letter-sets may be treated as global (old style) or
+;;; local (new style)
+
 
 (defstruct morph-subrule
   under surface)
@@ -77,7 +85,8 @@ to something unexpected, so don't give people the temptation!
 ;;; 
 
 (defun in-morph-rule-set-p (rule)
-  (member (rule-id rule) *morph-rule-set* :key #'morph-rule-name))
+  (member (rule-id rule) *morph-rule-set* :key #'morph-rule-rules 
+	  :test #'member))
 
 ;;; printing functions: mostly for debugging purposes
 
@@ -99,7 +108,8 @@ to something unexpected, so don't give people the temptation!
 
 (defun pprint-morph-rule (morph-rule-name &key (stream t))
   (with-slots (name class subrules) 
-      (find morph-rule-name *morph-rule-set* :key #'morph-rule-name)
+      (find morph-rule-name *morph-rule-set* 
+	    :key #'morph-rule-rules :test #'member)
     (let ((s (make-string-output-stream)))
       (format s "~% %~a (UNDERLYING / SURFACE)" class)
       (loop
@@ -228,39 +238,47 @@ to something unexpected, so don't give people the temptation!
   ;;; called with id which is the rule name (e.g., 3sg-v_irule)
   (let* ((*readtable* (make-morphology-notation-table))
 	 (string-thing (read-line istream))
-	 (method-list nil)
 	 (class (read-affix-class string-thing))
 	 (pattern-start (position #\( string-thing :start 1))
 	 (toanalyse 
 	  (if pattern-start (string-upcase 
 			     (subseq string-thing (+ 1 pattern-start))))))
     (cond ((and pattern-start class)
-	   (loop 
-	     (unless toanalyse (return nil))
-	     (multiple-value-bind (pattern end-pos)
-		 (read-morphology-pattern toanalyse id)
-	       ;; errors checked inside read-morph-pattern
-	       (unless end-pos (return nil))
-	       (push pattern method-list)
-	       (setf pattern-start (position #\( toanalyse :start end-pos))
-	       (unless pattern-start (return nil))
-	       (setf toanalyse (subseq  toanalyse (+ 1 pattern-start)))))
+	   (read-morphology-pattern id class toanalyse *letter-set-list* nil))
+	  ((null pattern-start)
+	   (morph-read-cerror 
+	    (format nil "~%Problem in ~A: no patterns" id)))
+	  (t (morph-read-cerror 
+	     (format nil "~%Problem in ~A: not specified as suffix or prefix" id))))))
+
+
+(defun read-morphology-pattern (rule-id class toanalyse letter-sets pattern-id)
+  (let ((method-list nil)
+	(pattern-start 0)
+	(id (or rule-id pattern-id)))
+    (loop 
+      (unless toanalyse (return nil))
+      (multiple-value-bind (pattern end-pos)
+	  (read-morphology-subpattern toanalyse id letter-sets)
+	;; errors checked inside read-morph-subpattern
+	(unless end-pos (return nil))
+	(push pattern method-list)
+	(setf pattern-start (position #\( toanalyse :start end-pos))
+	(unless pattern-start (return nil))
+	(setf toanalyse (subseq  toanalyse (+ 1 pattern-start)))))
     ;;; note that the subrule list ends up reversed: this is what is wanted
     ;;; because the most specific subrules will occur first in the rule
     ;;; structure.  subrules are checked in order and only the most
     ;;; specific applicable rule that matches the stem is used 
     ;;; (obviously when we're parsing we don't know the stem, so this
     ;;; requires returning all subrules that match)
-	   (morph-input 
-	    class 
-	    id 
-	    method-list))
-	  ((null pattern-start)
-	   (morph-read-cerror 
-	    (format nil "~%Problem in ~A: no patterns" id)))
-	  (t (morph-read-cerror 
-	     (format nil "~%Problem in ~A: not specified as suffix or prefix" id)))))) 
+    (morph-input 
+     class 
+     (if rule-id (list rule-id))
+     method-list
+     id)))
 
+  
 (defun read-affix-class (str)
   ;;; takes a string beginning %suffix or %prefix
   (cond ((string-equal str "suffix" :start1 1 :end1 7) 'suffix)
@@ -270,7 +288,7 @@ to something unexpected, so don't give people the temptation!
 	  (format nil "~%Incorrect morphology specification ~A: suffix or prefix expected"
 		 str)))))
 
-(defun read-morphology-pattern (str id)
+(defun read-morphology-subpattern (str id local-letter-sets)
   ;;; takes something like "(* a) (* \!) (* \*;)"
   ;;; and returns a pattern corresponding to the first element
   ;;; plus the position of the ) closing the pattern 
@@ -334,7 +352,7 @@ to something unexpected, so don't give people the temptation!
 			  (setf escape-p nil))
 		 (return)))
 	      (letter-set-p 
-	       (let ((ls (letter-set-for-char char id)))
+	       (let ((ls (letter-set-for-char char id local-letter-sets)))
 		 (when ls
 		   (if part1-p (push ls part1) (push ls part2))
 		   (setf letter-set-p nil))))
@@ -354,9 +372,9 @@ to something unexpected, so don't give people the temptation!
 	     (t (values (cons (nreverse part1) (nreverse part2))
 			count)))))
 
-(defun letter-set-for-char (char id)
-  (let ((char-set (find char
-			*letter-set-list*
+(defun letter-set-for-char (char id local-letter-sets)
+  (let ((char-set (find char (or local-letter-sets
+				 *letter-set-list*)
 			:key #'letter-set-char)))
     (or char-set
 	(morph-read-cerror
@@ -372,7 +390,116 @@ to something unexpected, so don't give people the temptation!
 	  (format nil "~%Undefined wild card `~a~A' in ~a" 
 		  #\? char str)))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Alternative morphological specification
+;;; letter set and affixation patterns in types
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+(defun extract-affixation-specifications nil
+  ;;; this code sets up the morph-rule data structures but
+  ;;; does not instantiate the associated rules
+  (let ((affix-types 
+	 (loop for type in (retrieve-descendants *affix-type*)
+	     unless (ltype-daughters type)
+	     collect type)))
+    (dolist (affix-type affix-types)
+      (let* ((affix-name (ltype-name affix-type))
+	     (letter-sets (extract-letter-sets affix-type affix-name))
+	     (affix-class (extract-affix-class affix-type affix-name))
+	     (pattern-string (extract-affix-pattern affix-type)))
+	(cond ((and affix-class pattern-string)
+	       ;;; adjust pattern for peculiarities of existing fn
+	       (read-morphology-pattern 
+		nil affix-class 
+		(string-upcase (subseq pattern-string 1)) 
+		letter-sets affix-name))
+	      ;; affix-name if for identification
+	      (affix-class
+	       (format t 
+		       "~%Warning: no pattern specified for affix ~A, ignored"))
+	      (pattern-string
+	       (format t 
+		       "~%Warning: suffix/prefix not specified for affix ~A, ignored"))
+	      (t nil))))))
+
+(defun extract-rule-affixation-type (rule-fs rule-id)
+  ;;; this is called as rules are expanded: the rule is added
+  ;;; to the appropriate set of morph patterns
+  (let ((affixation-fs
+	 (get-dag-value (tdfs-indef rule-fs) *rule-affix-feature*)))
+    (if affixation-fs
+	(let ((affixation (type-of-fs affixation-fs)))
+	  (when affixation
+	    (let ((morph-rule-entry 
+		   (find affixation *morph-rule-set* 
+			 :key #'morph-rule-id)))
+	      (when morph-rule-entry
+		(push rule-id (morph-rule-rules morph-rule-entry)))))))))
+	  
+(defun extract-affix-class (type-record type)
+  (let ((type-constraint (ltype-constraint type-record)))
+    (if type-constraint
+	(let ((affix-class-fs 
+	       (get-dag-value type-constraint *affix-class-feature*)))
+	  (if affix-class-fs
+	      (let ((affix-class (type-of-fs affix-class-fs)))
+		(cond ((member affix-class '(suffix prefix))
+		       affix-class)
+		      ((string-equal affix-class "suffix") 
+		       'suffix)
+		      ((string-equal affix-class "prefix") 
+		       'prefix)
+		      ((stringp affix-class) 
+		       (error "~%Unknown class ~A on affix type ~A" 
+			      affix-class type))
+		      (t nil))))))))
+
+(defun extract-affix-pattern (type-record)
+  (let ((type-constraint (ltype-constraint type-record)))
+    (if type-constraint
+	(let ((affix-pattern-fs 
+	       (get-dag-value type-constraint *affix-pattern-feature*)))
+	  (if affix-pattern-fs
+	      (let ((affix-pattern (type-of-fs affix-pattern-fs)))
+		(if (stringp affix-pattern)
+		    affix-pattern
+		  nil)))))))
+
+(defun extract-letter-sets (type-record type)
+  (let ((type-constraint (ltype-constraint type-record)))
+    (unless type-constraint
+      (error "~%No constraint on affix type ~A" type))
+    (let ((letter-sets-fs (get-dag-value 
+			   type-constraint *letter-set-feature*)))
+      (when letter-sets-fs
+	(extract-letter-sets-from-list letter-sets-fs nil type)))))
+
+(defun extract-letter-sets-from-list (letter-set-fs sets-so-far type)
+  (if (eql (type-of-fs letter-set-fs) *empty-list-type*)
+      sets-so-far
+    (let ((letter-set-pair (get-dag-value letter-set-fs (car *list-head*))))
+      (unless letter-set-pair
+	(error "~%Malformed letter-set specification on ~A" type))
+      (let ((letter-set-char (type-of-fs (get-dag-value letter-set-pair 
+					    *letter-set-char-feature*)))
+	    (letter-set-match (type-of-fs (get-dag-value letter-set-pair 
+					     *letter-set-match-feature*)))
+	    (remainder (get-dag-value letter-set-fs (car *list-tail*))))
+	(unless (and letter-set-char 
+		     (stringp letter-set-char)
+		     (char= (elt letter-set-char 0) #\!)
+		     letter-set-match
+		     (stringp letter-set-match)
+		     remainder)
+	  (error "~%Malformed letter-set specification on ~A" type))
+	(extract-letter-sets-from-list 
+	 remainder 
+	 (cons (create-letter-set (string-upcase letter-set-char) 
+				  (coerce (string-upcase 
+					   letter-set-match) 'list)) 
+				  sets-so-far)
+	 type)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Morphological rule compilation functions
@@ -394,7 +521,7 @@ to something unexpected, so don't give people the temptation!
 
 ;;; Turn rules into a rule-structure
 
-(defun morph-input (class name subrules)
+(defun morph-input (class lexrules subrules name)
   (let ((subrule-structs 
 	 (loop for pair in subrules
 	     nconc
@@ -420,8 +547,9 @@ to something unexpected, so don't give people the temptation!
 	(push
 	 (make-morph-rule
 	  :class class
-	  :name name
-	  :subrules subrule-structs) 
+	  :rules lexrules
+	  :subrules subrule-structs
+	  :id name) 
 	 *morph-rule-set*)
       (morph-read-cerror
 	(format nil "~%Error: no valid morphological patterns in ~A: rule-ignored" name)))))
@@ -505,7 +633,7 @@ to something unexpected, so don't give people the temptation!
     ;;; use reversed input if we're checking a suffix
     (dolist (rule *morph-rule-set*)
       (let ((suffix-p (eql (morph-rule-class rule) 'suffix))
-	    (rule-name (morph-rule-name rule)))
+	    (rule-names (morph-rule-rules rule)))
 	(dolist (subrule (morph-rule-subrules rule))
 	  (multiple-value-bind (matchp unmatched bindings)
 	      (match-rule-letters (if suffix-p suffix-set input-chars)
@@ -521,8 +649,9 @@ to something unexpected, so don't give people the temptation!
 		     (create-other-morph-form unmatched 
 					     (morph-subrule-under subrule)
 					     bindings suffix-p)))
+		(dolist (rule-name rule-names)
 		  (push (cons new-form rule-name)
-			analysis-results)))))))
+			analysis-results))))))))
     (remove-duplicates 
      analysis-results :test #'equalp)))
 
@@ -603,7 +732,9 @@ to something unexpected, so don't give people the temptation!
   ;;; the generation side often will.
   ;;; When we are generating, we accept the first matching subrule only.
   (let* ((input-chars (coerce string 'list))
-	 (rule (find rule-name *morph-rule-set* :key #'morph-rule-name))
+	 (rule (find rule-name *morph-rule-set* 
+		     :key #'morph-rule-rules
+		     :test #'member))
 	 (rule-class (and rule (morph-rule-class rule)))
 	 (suffix-p (eql rule-class 'suffix)))
     (if rule
