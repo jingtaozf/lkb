@@ -1,0 +1,84 @@
+;;; pparse-nodes.tdl
+;;; control display of nodes 
+;;; like parse-nodes.tdl, except distinguishes Nmod, Aux and some V subtypes
+;;; (incomplete)
+
+s-label := label & 
+[ HEAD verb, SPR <>, COMPS <>,
+  LABEL-NAME "S" ].
+
+vp-label := label & 
+[ HEAD verb, SPR < [] >, COMPS <>,
+  LABEL-NAME "VP" ].
+
+vi-label := label &
+[ HEAD verb,
+  HEAD.AUX -,
+  COMPS <>,
+  LABEL-NAME "Vi" ].
+
+vt-label := label &
+[ HEAD verb,
+  HEAD.AUX -,
+  COMPS < phrase >,
+  LABEL-NAME "Vt" ].
+
+vd-label := label &
+[ HEAD verb,
+  HEAD.AUX -,
+  COMPS < phrase, phrase >,
+  LABEL-NAME "Vd" ].
+
+aux-label := label &
+[ HEAD verb,
+  HEAD.AUX +,
+  LABEL-NAME "AUX" ].
+
+np-label := label & 
+[ HEAD noun, SPR <>, COMPS <>,
+  LABEL-NAME "NP" ].
+
+n-label := label & 
+[ HEAD noun, SPR < [] >,
+  LABEL-NAME "N" ].
+
+nm-label := label & 
+[ HEAD noun-mod, 
+  LABEL-NAME "Nmod" ].
+
+det-label := label & 
+[ HEAD det,
+  LABEL-NAME "Det" ].
+
+pp-label := label & 
+[ HEAD prep, SPR <>, COMPS <>,
+  LABEL-NAME "PP" ].
+
+p-label := label & 
+[ HEAD prep,
+  LABEL-NAME "P" ].
+
+adv-label := label &
+[ HEAD adv, 
+  LABEL-NAME "Adv"].
+
+adj-label := label &
+[ HEAD adj, 
+  LABEL-NAME "Adj"].
+
+deg-label := label &
+[ HEAD deg, 
+  LABEL-NAME "Deg"].
+
+conj-label := label &
+[ HEAD conj, 
+  LABEL-NAME "Conj"].
+
+comp-label := label &
+[ HEAD comp, COMPS <[]>,
+  LABEL-NAME "Comp"].
+
+cp-label := label &
+[ HEAD comp, COMPS <>,
+  LABEL-NAME "CP"].
+

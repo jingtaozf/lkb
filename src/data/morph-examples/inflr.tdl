@@ -1,0 +1,37 @@
+;;; the requirement is that each rule has an associated feature
+;;; `AFFIXATION' which specifies either a pattern (like +ed) or null-affix
+;;;
+;;; verb infl rules
+
+past-v_irule := past-verb &
+[ AFFIXATION +ed ].
+
+non3sg-v_irule := plur-verb &
+[ AFFIXATION null-affix ].
+
+3sg-v_irule := sing-verb &
+[ AFFIXATION +s ].
+
+pres-part-v_irule := pres-part-verb &
+[ AFFIXATION +ing ].
+
+past-part-v_irule := past-part-verb &
+[ AFFIXATION +ed ].
+
+infl-v_irule := verb-form &
+[ AFFIXATION null-affix ].
+
+;;; noun infl rules
+
+pl-noun_irule := plur-noun &
+[ AFFIXATION +s ].
+
+sg-noun_irule := sing-noun &
+[ AFFIXATION null-affix ].
+
+;;; constant lexeme -> word
+
+const-pump := word &
+[ AFFIXATION null-affix,
+  ARGS < all-const-lxm > ].
+

@@ -1,0 +1,84 @@
+head-complement-rule-0 := unary-head-initial & 
+[ SPR #spr,
+  ARGS < word & 
+         [ SPR #spr, 
+           COMPS < > ] >  ].
+
+head-complement-rule-1 := binary-head-initial &
+[ SPR #spr,
+  ARGS < word & 
+         [ SPR #spr, 
+           COMPS < #1 > ],
+         #1 >  ].
+
+
+head-complement-rule-2 := ternary-head-initial &
+[ SPR #spr, 
+  ARGS < word & 
+         [ SPR #spr, 
+           COMPS < #1, #2> ],  
+         #1, #2 > ].
+
+head-specifier-rule := binary-head-final-passgap &
+[ SPR < >,
+  COMPS #comps,
+  ARGS < phrase & #1,
+         phrase & 
+         [ SPR < #1 >,
+           COMPS #comps ] > ]. 
+
+head-modifier-rule := binary-head-initial &
+[ SPR #spr,
+  COMPS #comps,
+  ARGS < phrase & #hdtr &
+         [ SPR #spr,
+           COMPS #comps ],
+         phrase & 
+         [HEAD [MOD [CAT < #hdtr >, DIR post]],
+	  GAP <! !> ] > ].
+
+modifier-head-rule := binary-head-final-passgap &
+[ SPR #spr,
+  COMPS #comps,
+  ARGS <phrase &  
+         [ HEAD [MOD [CAT < #hdtr >, DIR pre]],
+	   GAP <! !> ], 
+	phrase & #hdtr &
+         [ SPR #spr,
+           COMPS #comps ] > ].
+
+
+;;; the restriction to things with empty HCONS is a hack
+;;; to prevent extraction of the N out of DPs!
+
+head-gap-rule-1 := unary-head-initial-startgap &
+[ GAP <! #1 !>,
+  SPR #spr,
+  SEM.HCONS <! !>,
+  ARGS < word & 
+         [ SPR #spr,
+           COMPS < #1 > ] >  ].
+
+head-gap-rule-2 := binary-head-initial-startgap &
+[ GAP <! #1 !>,
+  SPR #spr,
+  ARGS < word & 
+         [ SPR #spr,
+           COMPS < #1, #2 > ], #2 & [ GAP <! !> ] > ].
+
+head-gap-rule-3 := binary-head-initial-startgap &
+[ GAP <! #2 !>,
+  SPR #spr,
+  ARGS < word & 
+         [ SPR #spr, 
+           COMPS < #1, #2 > ], #1 & [ GAP <! !> ] > ].
+
+head-filler-rule := binary-head-final &
+[ HEAD verb,
+  SPR < >,
+  GAP <! !>,
+  ARGS < phrase & #1 & [ GAP <! !> ],
+         phrase & 
+         [ SPR < >,
+           GAP <! #1 !> ] > ]. 
+

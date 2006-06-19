@@ -1,0 +1,14 @@
+;;; File containing the morpho-phonology rules.  Defined as TDL types
+;;; The letter sets are specified globally on the type affix, from which these
+;;; types inherit.  Letter sets are treated as being local to a specification.
+
++ed := suffix & 
+[ PATTERN "(* ed) (!ty !tied) (e ed) (!t!v!c !t!v!c!ced)" ].
+
++s := suffix &
+[ PATTERN "(!s !ss) (!ss !ssses) (ss sses)"].
+
++ing := suffix &
+[ PATTERN "(!t!v!c !t!v!c!cing) (* ing) (e ing) (ee eeing) (ie ying)"].
+
+
