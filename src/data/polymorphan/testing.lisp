@@ -21,7 +21,8 @@
 
 (defun test-morph nil
   ;;;
-  (let ((*show-parse-p* nil))
+  (let ((*show-parse-p* nil)
+	(*active-parsing-p* nil))
   ;;;
   ;;; basic
   ;;;
@@ -53,10 +54,12 @@
   ;;; should get warnings on load
   ;;; Warning: SMALLER can feed itself
   ;;; Warning: BIGGER can feed itself
+    (handler-case 
     (dolist (word '(vark))
       (multiple-value-bind (et st ct ft mt)
 	  (do-parse-tty (string word))
 	(format ostream "~%~A ~A ~A ~A ~A ~A" word et st ct ft mt)))
+    (error (condition) (format ostream "~%~A" condition)))
     ;;; vark matches longer stem: varkvark
     (handler-case 
 	(do-parse-tty "aard")
@@ -91,7 +94,7 @@
   ;;; should get 48 warnings on load
     (dolist (rule1 *lrstruct-list*)
       (dolist (rule2 *lrstruct-list*)
-	(unless (check-lrfsm rule2 rule1)
+	(unless (check-nospfsm rule2 rule1)
 	  (format ostream "~%Error ~A and ~A not found as feeding" 
 		  (rule-id rule1) (rule-id rule2))))))
   ;;;
