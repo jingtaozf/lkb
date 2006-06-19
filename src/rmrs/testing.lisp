@@ -35,10 +35,10 @@
 ("Some bark." . 1)
 ("Some of the cats bark." . 1)
 ("No cat barked." . 1)
-("Did the dog bark." . 1)
-("Which dog barked." . 1) ; 26
-("Whose dog barked." . 1)
-("Chase Browne." . 1)
+("Did the dog bark?" . 1)
+("Which dog barked?" . 1) ; 26
+("Whose dog barked?" . 1)
+("Chase Browne!" . 1)
 ("Abrams wondered which dog barked." . 1)
 ("Abrams wondered whether Browne barked." . 1)
 ("The dog that Browne chased barked." . 2) ; 31
@@ -68,7 +68,7 @@
 ("That the cat chases Browne is old." . 1)
 ("Dogs chase whatever barks." . 1) ; 56
 ("The dog barked every day." . 1)
-("When did the dog bark." . 3)
+("When did the dog bark?" . 2)
 ("Three of the dogs bark." . 1)
 ("Three bark." . 1)
 ("Browne's dog barks." . 1) ; 61
@@ -87,7 +87,7 @@
 ("Abrams, Browne and the dog arrived." . 1)
 ("The dog arrived and barked." . 1)
 ("The dog arrived and Browne barked." . 1) ; 76
-("The dog barked didn't it." . 1)
+("The dog barked didn't it?" . 1)
 ("It is obvious that the dog barked." . 1)
 ("Abrams promised Browne to bark." . 1)
 ("Abrams seems to bark." . 1)
@@ -112,11 +112,11 @@
 ("There were cats in the garden." . 1)
 ("That dog chased Browne." . 1)
 ("Somebody chased Abrams." . 1) ; 101
-("How happy was Abrams." . 1)
+("How happy was Abrams?" . 1)
 ("The number five bothers Browne." . 1)
 ("Abrams could." . 1)
 ("Browne tried to." . 1)
-("Don't bark." . 1) ; 106
+("Don't bark!" . 1) ; 106
 ("The dog arrived barking." . 1)
 ;;; new test suite items after here
 ("The dog liked barking." . 2) ; contrast with `kept barking'

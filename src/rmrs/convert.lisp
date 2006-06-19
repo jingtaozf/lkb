@@ -80,17 +80,20 @@
         (let ((lzt (psoa-liszt mrs))
               (new-lzt nil)
               (new-args nil)
-              (label-recs nil))
+              (label-recs nil)
+	      (ings nil))
           (dolist (rel lzt)
             (multiple-value-bind (ep rmrs-args new-label-recs)
                 (parsonify-rel rel label-recs)
               (push ep new-lzt)
               (setf new-args (append new-args rmrs-args))
               (setf label-recs new-label-recs)))
+	      (setf ings (construct-converted-in-groups label-recs))
           (make-rmrs   :top-h (psoa-top-h mrs)
-                       :h-cons (psoa-h-cons mrs)
+                       :h-cons (construct-converted-hcons 
+				(psoa-h-cons mrs) ings)
                        :liszt (nreverse new-lzt)
-                       :in-groups (construct-converted-in-groups label-recs) 
+                       :in-groups ings
                        :rmrs-args new-args
                        :origin :erg)))))
 
@@ -192,6 +195,23 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
      ings))
 
 
+(defun construct-converted-hcons (hcons ings)
+  (if (null ings)
+      hcons
+    (loop for hcons-el in hcons
+	collect
+	  (let* ((hcons1 (hcons-scarg hcons-el))
+		 (hcons2 (hcons-outscpd hcons-el))
+		 (hcons-rel (hcons-relation hcons-el))
+		 (ing-match
+		  (loop for ing-el in ings
+		      thereis 
+			(if (eq (in-group-label-b ing-el) hcons2)
+			    (in-group-label-a ing-el)))))
+	    (if ing-match
+		(make-hcons :relation hcons-rel :scarg hcons1
+			    :outscpd ing-match)
+	      hcons-el)))))
 
   
 (defun rmrs-convert-pred (pred)
@@ -433,7 +453,7 @@ Errors won't be devastating anyway ...
 ;;; probably by reference to type hierarchy
 
 (defparameter *ing-ranking*
-    '(("n" "v" "j" "p" "prpstn_m_rel" "poss_rel")
+    '(("n" "v" "a" "r" "j" "p" "prpstn_m_rel" "poss_rel")
       ("v" "p" "r")))
       
 

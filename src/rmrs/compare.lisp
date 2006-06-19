@@ -574,8 +574,14 @@ the canonical order is fully defined.
   ;;; specified/unspecified distinction for pos or sense
   (if (equal (realpred-lemma pred1)
 	     (realpred-lemma pred2))
-	   (cond ((equal (realpred-pos pred1)
-		      (realpred-pos pred2))
+	   (cond ((or (equal (realpred-pos pred1)
+			     (realpred-pos pred2))
+		      (and
+		       (equal (realpred-pos pred1) "j")
+		       (equal (realpred-pos pred2) "a"))
+		      (and
+		       (equal (realpred-pos pred1) "a")
+		       (equal (realpred-pos pred2) "j")))
 		  (cond ((equal (realpred-sense pred1)
 				(realpred-sense pred2)) 
 			 :equal)

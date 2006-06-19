@@ -5206,10 +5206,6 @@ ANNA - passed up N's anchor (meth.ex. 5, all gen.ex., here ex.1)</comment>
 <rarg><rargname>ARG1</rargname><label>H1</label><var>X</var></rarg>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
-<!-- ANNA - added this equality to make the ARG2 of _use_v the N's index in APs like "commonly used" (gen.ex.3)-->
-<!--equalities><dh><dtr>N</dtr><he>INDEX</he></dh><dh><dtr>ADJ</dtr><he>ANCHOR</he></dh></equalities-->
-<!--equalities><rv>X</rv><dh><dtr>ADJ</dtr><he>ANCHOR</he></dh></equalities-->
-<equalities><rv>H0</rv><dh><dtr>ADJ</dtr><he>ANCHOR</he></dh></equalities>
 <equalities><rv>H1</rv><dh><dtr>ADJ</dtr><he>LABEL</he></dh></equalities>
 <equalities><rv>H2</rv><dh><dtr>N</dtr><he>LABEL</he></dh></equalities>
 <equalities><rv>H3</rv><dh><dtr>N</dtr><he>ANCHOR</he></dh></equalities>
@@ -5600,12 +5596,30 @@ FIXed head to RULE
 <head>N-PL</head>
 </rule>
 
+
 <rule>
 <name>N/n-pl_n</name>
-<comment>AUTO</comment>
-<dtrs><dtr>N-PL</dtr><dtr>N</dtr></dtrs>
-<head>N</head>
+<comment>FIX - I think this rule is being wrongly applied to `garden dog' so this may not be the correct semantics for the desired use</comment>
+<dtrs><dtr>N</dtr><dtr>N1</dtr></dtrs>
+<head>RULE</head>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<slots><anchor>H2</anchor></slots>
+<ep><gpred>COMPOUND_REL</gpred><label>H</label><var>E</var></ep>
+<ep><gpred>UDEF_Q_REL</gpred><label>H1</label><var>X1</var></ep>
+<rarg><rargname>ARG1</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X1</var></rarg>
+<rarg><rargname>RSTR</rargname><label>H1</label><var>H5</var></rarg>
+<rarg><rargname>BODY</rargname><label>H1</label><var>H3</var></rarg>
+<ing><ing-a><var>H</var></ing-a><ing-b><var>H2</var></ing-b></ing>
+<hcons hreln='qeq'><hi><var>H5</var></hi><lo><var>H4</var></lo></hcons>
+</semstruct>
+<equalities><rv>X</rv><dh><dtr>N1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>X1</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H2</rv><dh><dtr>N1</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H4</rv><dh><dtr>N</dtr><he>LABEL</he></dh></equalities>
 </rule>
+
 
 <rule>
 <name>N/n-pl_n-dir</name>
@@ -6233,19 +6247,38 @@ There's no way currently of underspecifying the attachment</comment>
 <head>P</head>
 </rule>
 
+
 <rule>
 <name>P1/p_np-pl</name>
-<comment>AUTO</comment>
-<dtrs><dtr>P</dtr><dtr>NP-PL</dtr></dtrs>
+<comment>FIX - do something about selected for things ANNA - can't add ARG1 for preposition since e.g. _of_p_sel doesn't want this (sem.ex.23,jab.ex.1,all gen.ex., gap ex.3)</comment>
+<dtrs><dtr>P</dtr><dtr>NP</dtr></dtrs>
 <head>P</head>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<!-- ANNA - make the NP's INDEX the P1's ANCHOR (sem.ex.23) -->
+<slots><anchor>X</anchor></slots>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+</semstruct>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>P</dtr><he>LABEL</he></dh></equalities>
 </rule>
+
 
 <rule>
 <name>P1/p_np-org</name>
-<comment>AUTO</comment>
-<dtrs><dtr>P</dtr><dtr>NP-ORG</dtr></dtrs>
+<comment>FIX - do something about selected for things ANNA - can't add ARG1 for preposition since e.g. _of_p_sel doesn't want this (sem.ex.23,jab.ex.1,all gen.ex., gap ex.3)</comment>
+<dtrs><dtr>P</dtr><dtr>NP</dtr></dtrs>
 <head>P</head>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<!-- ANNA - make the NP's INDEX the P1's ANCHOR (sem.ex.23) -->
+<slots><anchor>X</anchor></slots>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+</semstruct>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>P</dtr><he>LABEL</he></dh></equalities>
 </rule>
+
 
 
 <rule>
