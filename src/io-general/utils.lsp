@@ -184,6 +184,12 @@
               (display-unexpanded-lex-entry word-string word-entry
                                             (lex-entry-id word-entry)))))))
 
+(defun display-unexpanded-lex-entry (word-string word-entry id)
+  (declare (ignore word-entry))
+  (format t "~%~A ~A" word-string id)) 
+	  ;;; (lex-entry-unifs word-entry)))
+
+
 ;;; following is defined in MCL
 #-:mcl
 (defun whitespacep (char) 
