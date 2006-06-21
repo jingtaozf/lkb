@@ -105,7 +105,8 @@ produced by robust parsers of various types.
 	  (when tree
 	    (construct-sem-for-tree 
 	     tree
-	     :rasp ostream tagged))))
+	     :rasp ostream tagged))
+	  (finish-output ostream)))
       (format ostream "</rmrs-list>~%")))))
 
 
