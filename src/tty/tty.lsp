@@ -19,8 +19,8 @@
   (eval-possible-leaf-type *leaf-types* type)
   (let* ((type-entry (if type (get-type-entry type))))
     (if type-entry
-      (display-fs-and-parents-tty (type-local-constraint type-entry)
-                                  (type-parents type-entry))
+      (display-fs-and-parents-tty (ltype-local-constraint type-entry)
+                                  (ltype-parents type-entry))
       (format t "~%Type ~A not found" type))))
 
 
@@ -31,8 +31,8 @@
   (eval-possible-leaf-type *leaf-types* type)
   (let* ((type-entry (if type (get-type-entry type))))
     (if type-entry
-      (display-fs-and-parents-tty (type-tdfs type-entry)
-                                  (type-parents type-entry))
+      (display-fs-and-parents-tty (ltype-tdfs type-entry)
+                                  (ltype-parents type-entry))
       (format t "~%Type ~A not found" type))))
 
 ;;;                     (make-menu-item :name "Lex entry"
