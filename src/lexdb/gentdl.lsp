@@ -265,6 +265,7 @@
    (symbolp x)
    (eq (char (symb-2-str x) 0) #\#)))
 
+;; general function to return sets of duplicates
 (defun duplicates (l &key (test #'equal) (key #'identity))
   (let ((out))
     (loop

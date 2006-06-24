@@ -6,6 +6,7 @@
 
 (defmethod close-lex ((lex psql-lex-database) &key in-isolation delete)
   (declare (ignore in-isolation delete))
+   
   (with-slots (semi dbname host user connection) lex
     (if (next-method-p) (call-next-method))))
 
@@ -15,14 +16,66 @@
     (close-lex lex)    
     (force-output)
     (setf (name lex) name)
-    (or (open-lex-aux lex)
-	(format t "~&unable to open connection to lexical database ~a(~a)@~a:~a (~a)" 
-		dbname user host (true-port lex)
-		(error-msg connection)))))
+    (cond
+     ((connect lex)
+      (setf (name lex) (format nil "LexDB:~a" (dbname lex))))
+     (t
+      (format t "~&unable to open connection to lexical database ~a(~a)@~a:~a (~a)" 
+	      dbname user host (true-port lex)
+	      (error-msg connection))))))
+  
+(defmethod open-lex :after ((lex mu-psql-lex-database) &key name parameters)
+  (declare (ignore name parameters))
+  (when (connection lex)
+    (check-psql-server-version lex)
+    (check-lexdb-version lex)
+    ;; if not db owner, check user schema is up-to-date
+    (unless
+	(sql-get-bool lex "SELECT user_is_db_owner_p()")
+      (with-slots (dbname user host) lex
+	(format t "~&(LexDB) connection opened to ~a LexDB ~a@~a:~a (database user ~a)" 
+		(string-downcase (string (psql-lex-database-type lex)))
+		dbname host (true-port lex) user))
+      (get-fields lex)
+      (get-dfn lex)
+      (new-user-schema-if-nec lex)
+      (build-lex-if-nec lex)
+      (let ((size (count-lex lex))
+	    (rev-size (count-rev-all lex)))
+	(format t "~&(LexDB) total revision entries available: ~a" rev-size)
+	(when (= 0 rev-size)
+	  (format t " !!! PLEASE LOAD REV ENTRIES !!!")
+	  (lkb-beep))
+	(format t "~&(LexDB) active entries in lexicon: ~a" size)
+	(when (= 0 size)
+	  (format t " !!! PLEASE SET FILTER !!!")
+	  (lkb-beep))
+	(format t "~&(LexDB) filter: ~a " (filter lex))
+	(when (string= "NULL" (string-upcase (filter lex)))
+	  (format t "!!! PLEASE SET FILTER !!!")
+	  (lkb-beep))))
+    (empty-cache lex)))
+
+(defmethod open-lex :after ((lex su-psql-lex-database) &key name parameters)
+  (declare (ignore name parameters))
+  (when (connection lex)
+    (with-slots (dbname user host) lex
+      (format t "~&(LexDB) connected to ~a LexDB ~a@~a:~a (database user ~a)" 
+	      (string-downcase (string (psql-lex-database-type lex)))
+	      dbname host (true-port lex) user))
+    (get-fields lex)
+    (get-dfn lex)
+    (let ((size (count-lex lex)))
+      (format t "~&(LexDB) total 'lex' entries available: ~a" size)
+      (when (= 0 size)
+	(format t " !!! PLEASE LOAD LEX ENTRIES !!!")
+	(lkb-beep)))
+    (empty-cache lex)))
 
 ;;
 ;;
 
+;; field names in dfn table
 (defmethod grammar-fields ((lex psql-lex-database))
   (unless (dfn lex)
     (complain-no-dfn lex)
@@ -80,8 +133,9 @@
 (defmethod put-normalized-lex-keys ((lex psql-lex-database) recs)
   (when recs
     (let ((conn (connection lex)))
-      (with-lexdb-client-min-messages (lex "error")
-	(run-command lex "DROP INDEX lex_key_key" :ignore-errors t))
+      (drop-lex-key-indices lex)
+      ;(with-lexdb-client-min-messages (lex "error")
+	;(run-command lex "DROP INDEX lex_key_key" :ignore-errors t))
       (pq:exec conn "COPY lex_key FROM stdin")
       (loop
 	  for rec in recs
@@ -89,7 +143,8 @@
 	    (with-lexdb-locale (pq:putline conn (to-psql-copy-rec2 rec))))
       (with-lexdb-locale (putline conn "\\."))
       (endcopy conn)
-      (run-command lex "CREATE INDEX lex_key_key ON lex_key (key)")
+      (create-lex-key-indices lex)
+      ;(run-command lex "CREATE INDEX lex_key_key ON lex_key (key)")
       )))
 
 (defmethod get-unnormalized-lex-keys ((lex psql-lex-database))
@@ -103,36 +158,17 @@
   (create-lex-key-indices lex)
   (regenerate-orthkeys lex))
 
-(defmethod create-lex-key-indices ((lex psql-lex-database))
-  (with-lexdb-client-min-messages (lex "error")
-    (run-command lex "CREATE INDEX lex_key_key ON lex_key (key)" :ignore-errors t)))
-
-(defmethod kill-lex-key-table ((lex su-psql-lex-database))
+(defmethod kill-lex-key-table ((lex psql-lex-database))
   (with-lexdb-client-min-messages (lex "error")
     (run-command lex "DROP TABLE lex_key CASCADE" :ignore-errors t)))
 
-(defmethod create-lex-key-table ((lex su-psql-lex-database))
-  (run-command lex "CREATE TABLE lex_key (
-		name TEXT NOT NULL,
-		key text NOT NULL
-		)"))
-
-(defmethod create-lex-key-table ((lex mu-psql-lex-database))
-  (with-lexdb-client-min-messages (lex "error")
-    (run-command lex "CREATE TABLE lex_key (
-		name TEXT NOT NULL,
-		userid TEXT DEFAULT user NOT NULL,
-		modstamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-		key text NOT NULL
-		)")))
-
 (defmethod regenerate-orthkeys ((lex psql-lex-database))
   (lexdb-time ("regenerating lex_key entries" "done regenerating lex_key entries")
-	      (run-command lex "DROP INDEX lex_key_key")
+	      (drop-lex-key-indices lex)
 	      (run-command lex "DELETE FROM lex_key")
+	      (create-lex-key-indices lex)
 	      (generate-missing-orthkeys lex)
-	      (with-lexdb-client-min-messages (lex "error")
-		(run-command lex "CREATE INDEX lex_key_key ON lex_key (key)" :ignore-errors t))))
+	      ))
   
 (defmethod generate-missing-orthkeys ((lex psql-lex-database))
   (put-normalized-lex-keys lex
@@ -178,30 +214,17 @@
 	     (unless (eq hashed :EMPTY)
 	       hashed))
 	    (t
-	     (let* ((record (retrieve-raw-record-no-cache lex id reqd-fields)))
+	     (let* ((record (car (recs (retrieve-raw-record-no-cache lex id reqd-fields)))))
 	       (when cache
 		 (setf (gethash id record-cache)
 		   (or record :EMPTY)))
 	       record))))))
 
-(defmethod retrieve-entry ((lex psql-lex-database) name &key (reqd-fields '("*")))
-  (get-records lex
-	       (format nil
-		       "SELECT ~a FROM lex WHERE name LIKE ~a"
-		       (fields-str lex reqd-fields)
-		       (psql-quote-literal name))))
-
 (defmethod retrieve-raw-record-no-cache ((lex psql-lex-database) id &optional (reqd-fields '("*")))
-  (cond 
-   ((connection lex)
-    (let* ((id-str (symb-2-str id))
-	   (column-records 
-	    (recs (retrieve-entry lex (sql-like-text id-str) :reqd-fields reqd-fields))))
-      (if (> (length column-records) 1)
-	  (error (format nil " too many records returned"))
-	(first column-records))))
-   (t
-    (format t "~&(LexDB) WARNING:  no connection to psql-lex-database"))))
+  (unless (connection lex)
+    (format t "~&(LexDB) WARNING:  no connection to psql-lex-database")
+    (return-from retrieve-raw-record-no-cache))
+  (retrieve-entry2 lex (2-str id) :reqd-fields reqd-fields))
 
 ;; ID -> ENTRY
 
@@ -313,11 +336,14 @@
       (format t "~%;;; Warning: (LexDB) DFN type '~S' is obsolete" type)
       (format t "~%;;;                  (please use '~S' instead)" x)
       (setf (car l-type) x))))
-      
+
+#+:null
 (defmethod make-field-map-slot ((lex psql-lex-database))
-  "stores the mapping of fields to lex-entry structure slots"
-  (with-slots (dfn fields) lex
-    (setf fields (get-fields lex))
+  (get-fields lex)
+  (get-dfn lex))
+
+(defmethod get-dfn ((lex psql-lex-database))
+  (with-slots (dfn) lex
     (setf dfn
       (sort
        (mapcar 
@@ -335,6 +361,8 @@
     (if (null dfn)
 	(complain-no-dfn lex))
     dfn))
+
+
 
 (defmethod complain-no-dfn ((lex psql-lex-database))
   (error "~&(LexDB) no DFN entries (mode='~a')" 
@@ -554,13 +582,13 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
 (defmethod semi-up-to-date-p ((lex psql-lex-database))
  (not (semi-out-of-date lex)))
 
-;; LEX KEY TABLE
-
-(defmethod index-lex-key ((lex psql-lex-database))
-  (run-command lex "CREATE INDEX lex_key_key ON lex_key (key)"))
-
-(defmethod deindex-lex-key ((lex psql-lex-database))
-  (run-command lex "DROP INDEX lex_key_key"))  
+;;; LEX KEY TABLE
+;
+;(defmethod index-lex-key ((lex psql-lex-database))
+;  (run-command lex "CREATE INDEX lex_key_key ON lex_key (key)"))
+;
+;(defmethod deindex-lex-key ((lex psql-lex-database))
+;  (run-command lex "DROP INDEX lex_key_key" :ignore-errors t))
 
 ;;
 
@@ -569,9 +597,10 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
 ;;;
 
 (defmethod get-fields ((lex psql-lex-database))
-  (mapcar 
-   #'(lambda (x) (intern x :keyword))
-   (list-fld lex)))
+  (setf (fields lex)
+    (mapcar 
+     #'(lambda (x) (intern x :keyword))
+     (list-fld lex))))
 
 (defmethod vacuum ((lex psql-lex-database))
   (let (time)
@@ -664,7 +693,7 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
 	      lexdb))
    (collect-psort-ids lex :recurse nil))
   (generate-missing-orthkeys lexdb)
-  (update-lex-aux lexdb))
+  (build-lex-if-nec lexdb))
 
 (defmethod record-id (raw-record cols (lex psql-lex-database))
   (str-2-symb (get-val :|name| raw-record cols)))  
@@ -687,20 +716,9 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
    (let ((orth-raw-mapping (assoc :ORTH (dfn lex))))
      (quote-ident lex (second orth-raw-mapping))))
 
-(defmethod update-lex ((lex psql-lex-database))
-    (update-lex-aux lex)
-  (when (semi lex)
-    (format t "~%(LexDB) WARNING: :SEMI argument to *lexdb-params* is now obsolete")
-    (format t "~%(LexDB)          (please call index-for-generator instead)"))
-  lex)
-
-(defmethod initialize-lex ((lex psql-lex-database))
-  (when (open-lex lex)
-    (with-slots (dbname user host) lex
-      (format t "~&(LexDB) connected to LexDB ~a@~a:~a as database user ~a" 
-	      dbname host (true-port lex) user)
-      (update-lex lex))
-    ))
+;(defmethod update-lex ((lex psql-lex-database))
+;  (update-lex-aux lex)
+;  lex)
 
 (defmethod to-db-dump-rev ((x lex-entry) (lex psql-lex-database) &key (skip-stream t))
   "provide line entry for lex db import file"
@@ -772,13 +790,10 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
 (defmethod lookup-word-no-cache ((lex psql-lex-database) orth)
   (declare (ignore cache))
   (if (connection lex)
-      (let* ((quoted-literal (psql-quote-literal (sql-like-text (normalize-orthkey orth))))
+      (let* ((key (normalize-orthkey orth))
 	     (fields (fields-str lex (grammar-fields lex)))
-	     (table 
-	      (get-records 
-	       lex
-	       (lookup-word-no-cache-SQL lex quoted-literal fields) 
-	       ))
+	     (table (get-records lex
+				 (lookup-word-no-cache-SQL lex key fields)))
 	     (ids (lookup-word-aux2 lex table)))
 	ids)))
 

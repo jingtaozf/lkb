@@ -7,59 +7,9 @@
 ;;;  PSQL lexical source
 ;;;
 
-;;; bmw (nov-03)
-;;; - move lexdb code to lexdb directory and split large files
-;;; - support for generator indexing;
-;;; - SEMI
-;;; - RH9 default-locale bug workaround
-
-;;; bmw (oct-03)
-;;; - MWE support
-;;; - public and private database schemas
-;;; - 'mixed' type to handle mix of string/symbol values in field mapping
-
-;;; modifications by bmw (sep-03)
-;;; - integration w/ Emacs-Postgres interface
-;;; - LexDB menu
-
-;;; modifications by bmw (aug-03)
-;;; - lexicon loading code
-;;; - db scratch space
-;;; - fixed code broken by *lexicon*-related changes
-;;; - default types of embedded sql fn args may be overridden
-
 ;;; aac (aug-12-03)
 ;;; initialisation now sets to *lexicon* regardless 
 
-;;; modifications by bmw (jul-03)
-;;; - db dump and merge
-;;; - default port mechanism
-;;; - db queries now execute on fixed table 'current grammar'
-;;; - postgres login no longer restricted to 'guest'
-;;; - timestamp user and id fields set in db
-
-;;; modifications by bmw (jun-03)
-;;; - SQL code moved into db and optimized
-;;; - script loading
-;;; - basic caching (includes nil values)
-;;; - basic versioning (based on a view)
-;;; - (set-lexical-entry) implemented in conjunction with (export-lexicon) 
-;;; - for compliance with other lexical sources, (lex-words) is expected to
-;;;     return "ad" and "hoc" separately, rather than just "ad hoc"; (done)
-;;; - (lookup-word) fixed: now returns all entries containing given word.
-;;; - loading of multi-word lex entries implemented correctly
-;;; - minor bug fixes
-;;; - (clear-lex) methods implemented fully, and integrated with (link)/(unlink)
-;;;
-;;; minor modifications by oe (27-mar-02):
-;;;
-;;;  - provide initialize and de-initialize procedures;
-;;;  - rework DB access layer to cache connection in `psql-database' object.
-;;;
-;;; ToDo
-;;;  - rework connection handling to re-open on demand (rather than error());
-;;;  - integrate irregular spellings into lexical DB;
-;;;
 
 (in-package :lkb)
 
@@ -84,13 +34,14 @@
   (second match))))
 
 (defun type-2-psql-lex-database-type (type)
-  (case type
-    (:single-user 'su-psql-lex-database)
-    (:multi-user 'mu-psql-lex-database)
-    (t
-     (error "unknown :type ('~a') in LexDB params" type))))
+  (and type
+       (case type
+	 (:single-user 'su-psql-lex-database)
+	 (:multi-user 'mu-psql-lex-database)
+	 (t
+	  (error "unknown :type ('~a') in LexDB params" type)))))
 
-(defun psql-lex-database-type2 (lex)
+(defun psql-lex-database-type (lex)
   (cond
    ((typep lex 'su-psql-lex-database) :single-user)
    ((typep lex 'mu-psql-lex-database) :multi-user)))
@@ -101,68 +52,93 @@
     (format t "~%         (please set this explicitly in *lexdb-params*)" type)
     type))
 
-(defun initialize-lexdb 
-    (&key
-     (type (or (extract-param :type *lexdb-params*)
-	       (psql-lex-database-type2 *lexdb*)
-	       (initialize-lexdb-default-type)
-	       ))
-     (dbname (or (extract-param :dbname *lexdb-params*)
-		 (and *lexdb* (dbname *lexdb*))))
-     (host (or (extract-param :host *lexdb-params*) 
-	       "localhost"))
-     (table (extract-param :table *lexdb-params*))
-     (port (or (extract-param :port *lexdb-params*)
-	       (or (getenv "PGPORT") *psql-database-port*)))
-     (user (or (extract-param :user *lexdb-params*)
-	       (and *lexdb* (user *lexdb*))
-	       (user-name)))
-     (semi (extract-param :semi *lexdb-params*))
-     ;(quick-load (extract-param :quick-load *lexdb-params*))
-     (password (or (extract-param :password *lexdb-params*)
-		   (and *lexdb* (password *lexdb*)))))
-  (psql-initialize)
-  (unless dbname
-    (error "please set :dbname in *lexdb-params*"))
-  (if (and (string= user "lexdb")
-	   (eq type :multi-user))
-      (error "User 'lexdb' cannot connect as LexDB client. Please pick a different username..."))
-	   
+(defun initialize-lexdb-type (x)
+  (or x
+      (extract-param :type *lexdb-params*)
+      (psql-lex-database-type *lexdb*)
+      (initialize-lexdb-default-type)))
+
+(defun initialize-lexdb-dbname (x)
+  (or x
+      (extract-param :dbname *lexdb-params*)
+      (and *lexdb* (dbname *lexdb*))
+      (error "please set :dbname in *lexdb-params*")))
+
+
+(defun initialize-lexdb-host (x)
+  (or x 
+      (extract-param :host *lexdb-params*)
+      (and *lexdb* (host *lexdb*))
+      "localhost"))
+
+(defun initialize-lexdb-table (x)
+  (or x 
+      (extract-param :host *lexdb-params*)
+      (and *lexdb* (fields-tb *lexdb*))
+      (and *lexdb* (dbname *lexdb*))))
+      
+(defun initialize-lexdb-port (x)
+  (or x 
+      (extract-param :port *lexdb-params*)
+      (and *lexdb* (port *lexdb*))
+      (or (getenv "PGPORT") *psql-database-port*)))
+
+(defun initialize-lexdb-user (x)
+  (or x 
+      (extract-param :user *lexdb-params*)
+      (and *lexdb* (user *lexdb*))
+      (user-name)))
+
+(defun initialize-lexdb-password (x)
+  (or x 
+      (extract-param :password *lexdb-params*)
+      (and *lexdb* (password *lexdb*))
+      (and *lexdb* (user *lexdb*))))
+      
+(defun initialize-lexdb (&key type dbname host table port user semi password)
+  ;; warn on use of obsolete semi argument 
+  (when semi 
+    (format t "~%(LexDB) WARNING: :SEMI argument to *lexdb-params* is now obsolete")
+    (format t "~%(LexDB)          (please call index-for-generator instead)"))
+  
   (let (part-of extra-lexicons)
-    ;; we will create a new lexicon then insert it into the lexicon hierarchy as
-    ;; a replacement for *lexdb*
+    (psql-initialize)
+    
+    ;; username 'lexdb' is illegal in multi-user mode
+    (if (and (string= user "lexdb")
+	     (eq type :multi-user))
+	(error "User 'lexdb' cannot connect as LexDB client. Please pick a different username..."))
+    
+    ;; obtain unlinked *lexdb*
+    (setf type (initialize-lexdb-type type))
     (cond
-     ((eq type (psql-lex-database-type2 *lexdb*))
+     ((and *lexdb* (eq type (psql-lex-database-type *lexdb*)))
       (setf part-of (part-of *lexdb*))
       (setf (part-of *lexdb*) nil) ;; to avoid unlinking
       (setf extra-lexicons (extra-lexicons *lexdb*))
       (setf (extra-lexicons *lexdb*) nil) ;; to avoid unlinking
       )
      (t 
-      (setf 
-	  *lexdb* 
+      (setf *lexdb* 
 	(make-instance (type-2-psql-lex-database-type type)))))
-    (setf (dbname *lexdb*) dbname)
-    (setf (host *lexdb*) host)
-    (setf (user *lexdb*) user)
-    (setf (password *lexdb*) password)
-    (setf (port *lexdb*) port)
-    (setf (semi *lexdb*) semi)
-    ;; use of table is obsolete ???
-    (cond 
-     (table
-      (setf (fields-tb *lexdb*) table))
-     (t
-      (setf (fields-tb *lexdb*) (dbname *lexdb*))))
-    ;; insert into lexicon hierarchy
-    (when (initialize-lex *lexdb*)
+    
+    ;; set properties of *lexdb*
+    (setf (dbname *lexdb*) (initialize-lexdb-dbname dbname))
+    (setf (host *lexdb*) (initialize-lexdb-host host))
+    (setf (user *lexdb*) (initialize-lexdb-user user))
+    (setf (password *lexdb*) (initialize-lexdb-password password))
+    (setf (port *lexdb*) (initialize-lexdb-port port))
+    (setf (fields-tb *lexdb*) (initialize-lexdb-table table))
+
+    ;; open lexdb and insert into lexicon hierarchy
+    (when (open-lex *lexdb*)
       (mapcar #'(lambda (x) (link *lexdb* x)) part-of)
       (mapcar #'(lambda (x) (link x *lexdb*)) extra-lexicons)      
       *lexdb*)))
 
 (defun open-psql-lex (&rest rest)
   "obsolete (keep for script file compatibility)"
-  (apply 'open-lexdb rest))
+  (apply 'open-lex rest))
 
 
 #+:bmw20
@@ -281,20 +257,20 @@
      (mapcar quote-fn l)
      :sep-c #\,)))
 
-(defmethod psql-lex-database-type ((lex psql-lex-database))
-  (cond
-   ((typep lex 'mu-psql-lex-database)
-    'mu-psql-lex-database)
-   ((typep lex 'su-psql-lex-database)
-    'su-psql-lex-database)
-   (t
-    (error "unexpected psql-lex-database type: ~S" lex))))
+;(defmethod psql-lex-database-type ((lex psql-lex-database))
+;  (cond
+;   ((typep lex 'mu-psql-lex-database)
+;    'mu-psql-lex-database)
+;   ((typep lex 'su-psql-lex-database)
+;    'su-psql-lex-database)
+;   (t
+;    (error "unexpected psql-lex-database type: ~S" lex))))
    
 
 (defmacro with-lexdb-user-lexdb ((lexdb-lexdb lexdb) &body body)
   `(with-slots (dbname host port fields-tb) ,lexdb
      (let ((,lexdb-lexdb
-	    (make-instance (psql-lex-database-type ,lexdb)
+	    (make-instance (type-2-psql-lex-database-type (psql-lex-database-type ,lexdb))
 	      :dbname dbname
 	      :fields-tb fields-tb
 	      :host host
@@ -308,7 +284,7 @@
 (defmacro with-lexdb-user-x ((user lexdb-lexdb lexdb) &body body)
   `(with-slots (dbname host port fields-tb) ,lexdb
      (let ((,lexdb-lexdb
-	    (make-instance (psql-lex-database-type ,lexdb)
+	    (make-instance (type-2-psql-lex-database-type (psql-lex-database-type ,lexdb))
 	      :dbname dbname
 	      :fields-tb fields-tb
 	      :host host

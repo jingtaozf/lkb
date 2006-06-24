@@ -13,7 +13,10 @@ SET client_min_messages TO warning;
 CREATE TABLE public.meta (
 	var text,
 	val text);
+\copy public.meta from 'meta.tsv'
+
 SELECT public.create_public_rev_table();
+
 CREATE TABLE public.dfn (
 		mode TEXT,
 		slot TEXT,
@@ -21,12 +24,12 @@ CREATE TABLE public.dfn (
 		path TEXT,
 		type TEXT,
 	PRIMARY KEY (mode,slot,field));
-CREATE TABLE public.tmp_dfn AS SELECT * FROM public.dfn WHERE NULL;
-CREATE TABLE public.tmp AS SELECT * FROM public.rev WHERE NULL;
-\copy public.meta from 'meta.tsv'
 
 --
 -- remaining function definitions
 --
 
-\i permissions.sql
+GRANT SELECT ON public.fld TO PUBLIC;
+GRANT SELECT ON public.meta TO PUBLIC;
+GRANT SELECT ON public.dfn TO PUBLIC;
+GRANT SELECT ON public.rev TO PUBLIC;

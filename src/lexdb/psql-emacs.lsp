@@ -61,3 +61,12 @@
 (defmethod check-pg-interface-version ((lex psql-lex-database) version)
   (unless (= version *check-pg-interface-version*)
     (error "Emacs/LexDB interface version ~a is incompatible with running LKB/LexDB. Please install pg-interface.el version ~a" version *check-pg-interface-version*)))
+
+;; backwards compat
+
+(defun retrieve-head-record-str (&rest rest)
+  (apply #'get-dot-lex-record rest))
+
+(defun retrieve-record-ium (&rest rest)
+  (apply #'get-dot-rev-record rest))
+    

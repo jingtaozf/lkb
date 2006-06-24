@@ -40,34 +40,38 @@ if [ ! -f init.sql ]; then
 fi
 
 ## create PSQL DB to hold LexDB
-echo "createdb $CREATEDB_OPTIONS -U lexdb $LEXDB"
-createdb $CREATEDB_OPTIONS -U lexdb $LEXDB
+CMD="createdb $CREATEDB_OPTIONS -U lexdb $LEXDB"
+echo $CMD; $CMD
 if [ $? != 0 ] ; then abort; fi
 
 ## ensure plpgsql DB language is available
-echo "createlang -U postgres plpgsql $LEXDB"
-createlang -U postgres plpgsql $LEXDB
+CMD="createlang -U postgres plpgsql $LEXDB"
+echo $CMD; $CMD
 #if [ $? != 0 ] ; then abort; fi
 
 ## load 'lexdb' DB user setup script (part 1)
-echo "psql -f load.sql -U lexdb $LEXDB"
-psql -f load.sql -U lexdb $LEXDB
+CMD="psql -f load.sql -U lexdb $LEXDB"
+echo $CMD; $CMD
 if [ $? != 0 ] ; then abort; fi
 
 ## load field definitions
 echo "taking field defns from file $FLD_FILE";
 
-echo "psql -c \"copy public.fld from $FLD_FILE\" -U lexdb $LEXDB"
-psql -c "\copy public.fld from $FLD_FILE" -U lexdb $LEXDB; 
+CMD="psql -c '\\copy public.fld from $FLD_FILE' -U lexdb $LEXDB"
+echo $CMD; psql -c "\copy public.fld from $FLD_FILE" -U lexdb $LEXDB
 if [ $? != 0 ] ; then abort; fi
 
 ## load 'lexdb' DB user setup script (part 2)
-echo "psql -f init.sql -U lexdb $LEXDB"
-psql -f init.sql -U lexdb $LEXDB
+CMD="psql -f init.sql -U lexdb $LEXDB"
+echo $CMD; $CMD
 if [ $? != 0 ] ; then abort; fi
 
-echo "psql -c \"copy public.dfn from $DFN_FILE\" -U lexdb $LEXDB"
-psql -c "\copy public.dfn from $DFN_FILE" -U lexdb $LEXDB; 
+CMD="psql -c 'GRANT CREATE ON DATABASE $LEXDB TO PUBLIC' -U lexdb $LEXDB"
+echo $CMD; psql -c "GRANT CREATE ON DATABASE $LEXDB TO PUBLIC" -U lexdb $LEXDB
+if [ $? != 0 ] ; then abort; fi
+
+CMD="psql -c '\\copy public.dfn from $DFN_FILE' -U lexdb $LEXDB"
+echo $CMD; psql -c "\copy public.dfn from $DFN_FILE" -U lexdb $LEXDB
 if [ $? != 0 ] ; then abort; fi
 
 

@@ -12,7 +12,7 @@
 
 ;;; Add a PG menu to the emacs menu bar
 
-(defvar *lexdb-pg-interface-version* "2.16")
+(defvar *lexdb-pg-interface-version* "2.17")
 
 (require 'cl)      ; we use some common-lisp idioms
 (require 'widget)
@@ -797,10 +797,10 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (format "'%S" list))
 
 (defun cle-retrieve-record-fields (id)
-  (cle-eval-lexdb 'retrieve-head-record-str (cle-lisp-str id)))
+  (cle-eval-lexdb 'get-dot-lex-record (cle-lisp-str id)))
 
 (defun cle-retrieve-record-fields3 (ium)
-  (cle-eval-lexdb 'retrieve-record-ium 
+  (cle-eval-lexdb 'get-rev-lex-record
 		  (cle-lisp-str (first ium))
 		  (cle-lisp-str (second ium))
 		  (cle-lisp-str (third ium))

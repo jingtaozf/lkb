@@ -358,3 +358,12 @@
     (cdb:write-record psort-db (string id) 
 		      (with-standard-io-syntax (write-to-string entry)))
     id))
+
+;; Check to see if compiled files match originals
+
+(defun up-to-date-p (in-files out-files)
+  (when (every #'probe-file out-files)
+    (let ((in-date (apply #'max (mapcar #'file-write-date in-files)))
+	  (out-date (apply #'min (mapcar #'file-write-date out-files))))
+      (> out-date in-date))))
+

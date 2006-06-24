@@ -607,11 +607,11 @@
 	       (instantiate-chart-with-morpho-stem-edges))
 	      (:with-tokeniser-partial-tree nil)
 	      (:with-tokeniser-retokenise nil))
-	    (instantiate-chart-with-stems-and-multiwords)
 	    (when *generate-messages-for-all-unanalysed-tokens*
 	      (generate-messages-for-all-unanalysed-tokens *tchart*))
 	    (when *abort-parse-after-morphosyntax*
 	      (return-from parse))
+	    (instantiate-chart-with-stems-and-multiwords)
             (catch :best-first
               (add-words-to-chart (and first-only-p (null *active-parsing-p*)
                                        (cons *minimal-vertex* *maximal-vertex*)))
@@ -2349,7 +2349,8 @@ an unknown word, treat the gap as filled and go on from there.
 (defparameter *ostream* nil)
 
 (defun batch-parse-sentences (istream ostream raw-sentence &optional access-fn)
-   (setf *lex-ids-used* nil)
+  (setf *lex-ids-used* nil)
+  (setf *unanalysed-tokens* nil)
    (clear-type-cache)
    (format t "~%;;; Parsing test file~%") (finish-output t)
    (let ((nsent 0)

@@ -134,7 +134,7 @@
    (lib-names
     (handler-case (load (car lib-names))
       (file-error ()
-	(format t "; ... [file not found]")
+	(format t ";     [file not found]")
 	(load-libpq (cdr lib-names)))))
    (t
     (format t ";   Warning: (LexDB) cannot load PostgreSQL client library")

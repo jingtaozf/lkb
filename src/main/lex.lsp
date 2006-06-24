@@ -430,15 +430,6 @@
 	    (format t "~%Structure for ~A could not be created~%" lex-id))
 	  nil)))))
 
-;; Check to see if compiled files match originals
-
-(defun up-to-date-p (in-files out-files) ;; move to clex.lsp
-  (when (every #'probe-file out-files)
-    (let ((in-date (apply #'max (mapcar #'file-write-date in-files)))
-	  (out-date (apply #'min (mapcar #'file-write-date out-files))))
-      (> out-date in-date))))
-
-
 ;;; Code for `other' entries
 
 ;;; utility function
@@ -482,6 +473,8 @@
 ;;;
 ;;;  General lexicon methods
 ;;;
+
+(defparameter *lookup-word-remove-duplicates* nil)
 
 (defmethod lookup-word :around ((lexicon lex-database) orth &key (cache *lexicon-lexical-entries-cache-p*))
   (let* ((value (if (next-method-p) (call-next-method)))
@@ -604,22 +597,10 @@
 	     (slot-value lexicon 'psorts))
     ids))
 
-;(defmethod unexpand-psort ((lexicon lex-database) id)
-;  "remove cached entry from lexicon providing a value only (eg. first lexicon with non-:empty in cache)"
-;  (let* ((id-lexicon (lexicon-for-id lexicon id))
-;	 (psorts 
-;	  (cond
-;	   (id-lexicon
-;	    (slot-value id-lexicon 'psorts))
-;	   (t 
-;	    (return-from unexpand-psort)))))
-;    (remhash id psorts)
-;    psorts))
-
-(defmethod lexicon-for-id ((lexicon lex-database) id)
-  (if (read-psort lexicon id :recurse nil) 
-      lexicon
-    (some #'(lambda (x) (lexicon-for-id x id)) (extra-lexicons lexicon))))
+(defmethod lexicon-for-id ((lex lex-database) id)
+  (if (read-psort lex id :recurse nil) 
+      lex
+    (some #'(lambda (x) (lexicon-for-id x id)) (extra-lexicons lex))))
 
 (defmethod forget-psort ((lexicon lex-database) id)
   "remove cached entry (can be :empty) from all lexicons"
@@ -634,6 +615,7 @@
   (second (member keyword list)))
 
 ;; this can't go in psqllex
+#+:null
 (defun lexdb-enabled-p nil
   (when *lexdb-params*
     (cond
@@ -643,6 +625,7 @@
       nil))))
 
 ;; this can't go in psqllex
+#+:null
 (defun mwe-lexicon-enabled-p nil
   (and
    (lexdb-enabled-p)
@@ -881,6 +864,7 @@
 
 (defun lex (str) (car (member str (extra-lexicons *lexicon*) :key #'name :test #'string=)))
 
+#+:null
 (defun recomp (x)
   (compile-file x)
   (load x))
@@ -1004,4 +988,3 @@
       (or (eq le1 le2)
           (member le1 (gethash le2 *orthographic-variants*) :test #'eq)
           (member le2 (gethash le1 *orthographic-variants*) :test #'eq)))))
-

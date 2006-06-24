@@ -15,6 +15,7 @@
 	      filename (dbname *lexdb*))
       (force-output)
       (time (merge-into-lexdb *lexdb* filename))
+      (initialize-lexdb)
       (lkb-beep))))
 
 (defun command-dump-lexdb (&rest rest)
@@ -40,7 +41,7 @@
 (defun command-set-filter-lexdb (&rest rest)
   (assert-mu-psql-lex-database *lexdb*)
   (time
-   (apply 'set-filter *lexdb* rest))
+   (apply 'apply-filter *lexdb* rest))
   (lkb-beep))
 
 (defun command-clear-private-rev nil

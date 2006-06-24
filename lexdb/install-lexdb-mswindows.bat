@@ -40,6 +40,9 @@ psql %PG_OPTIONS% -c "\copy public.fld from %FLD_FILE%" -U lexdb %LEXDB%
 ::# load 'lexdb' DB user setup script (part 2)
 psql %PG_OPTIONS% -f init.sql -U lexdb %LEXDB%
 
+::# set up permissions
+psql -c "GRANT CREATE ON DATABASE $LEXDB TO PUBLIC" -U lexdb %LEXDB%
+
 ::# load dfn
 psql %PG_OPTIONS% -c "\copy public.dfn from %DFN_FILE%" -U lexdb %LEXDB%
 

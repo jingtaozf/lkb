@@ -8,8 +8,10 @@
 ;; --- su-psql-lex-database methods
 ;;;
 
-(defmethod lookup-word-no-cache-SQL ((lex su-psql-lex-database) quoted-literal fields)
-  (format nil "SELECT ~a FROM (SELECT lex.* FROM lex JOIN lex_key USING (name) WHERE lex_key.key LIKE ~a) as foo" fields quoted-literal))
+(defmethod lookup-word-no-cache-SQL ((lex su-psql-lex-database) key fields)
+  (format nil "SELECT ~a FROM (SELECT lex.* FROM lex JOIN lex_key USING (name) WHERE lex_key.key = ~a) as foo" 
+	  fields 
+	  (psql-quote-literal key)))
 
 (defmethod create-unnormalized-missing-lex-keys3-FSQL ((lex su-psql-lex-database))
   "select name,~a from lex left join lex_key using (name) where lex_key.key is null")
@@ -33,22 +35,6 @@
 ;;; script file fn
 ;;;
 
-(defmethod open-lex-aux ((lex su-psql-lex-database)) 
-  (with-slots (dbname host user) 
-      lex
-    (when (connect lex)
-      (make-field-map-slot lex)
-      lex)))
-
-(defmethod update-lex-aux ((lex su-psql-lex-database))
-  (reconnect lex) ;; work around server bug
-  (let ((size (count-lex lex)))
-    (format t "~&(LexDB) total 'lex' entries available: ~a" size)
-    (when (= 0 size)
-      (format t " !!! PLEASE LOAD LEX ENTRIES !!!")
-      (lkb-beep)))
-  (empty-cache lex))
-
 (defmethod get-value-set ((lex su-psql-lex-database) field)
   (let ((qi-field (quote-ident lex (2-str field))))
     (mapcar 
@@ -65,7 +51,7 @@
 ;;
 
 (defmethod dump-tdl ((lexdb su-psql-lex-database) filebase)
-  (let ((tdl-file (namestring (pathname (format nil "~a.~a.tdl" filebase (get-filter lexdb))))))
+  (let ((tdl-file (namestring (pathname (format nil "~a.~a.tdl" filebase (filter lexdb))))))
     (format t "~&(LexDB) exporting filtered ~a LexDB to TDL file ~a" (dbname lexdb) tdl-file)
     (force-output)
     (export-to-tdl-to-file lexdb tdl-file)))
@@ -114,3 +100,30 @@
   (get-raw-records 
    lex 
    "select name from lex right join semi_mod using (name) where lex is null"))
+
+(defmethod create-lex-key-indices ((lex su-psql-lex-database))
+  ;(with-lexdb-client-min-messages (lex "error")
+    (run-command lex "CREATE INDEX lex_key_key ON lex_key (key)" :ignore-errors t)
+  ;  )
+  )
+
+(defmethod drop-lex-key-indices ((lex su-psql-lex-database))
+  ;(with-lexdb-client-min-messages (lex "error")
+    (run-command lex "DROP INDEX lex_key_key" :ignore-errors t)
+  ;  )
+  )
+
+(defmethod create-lex-key-table ((lex su-psql-lex-database))
+  (run-command lex "CREATE TABLE lex_key (
+		name TEXT NOT NULL,
+		key text NOT NULL
+		)"))
+
+
+(defmethod retrieve-entry2 ((lex su-psql-lex-database) name &key (reqd-fields '("*")))
+  (get-records lex
+	       (format nil
+		       "SELECT ~a FROM lex WHERE name LIKE ~a"
+		       (fields-str lex reqd-fields)
+		       (psql-quote-literal name))))
+

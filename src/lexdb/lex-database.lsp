@@ -24,24 +24,27 @@
    (collect-psort-ids lexicon :recurse nil)))
 
 ;; dump lexicon to file (TDL format)
-(defmethod export-to-tdl-to-file ((lexicon lex-database) filename &key lex-ids)
+(defmethod export-to-tdl-to-file ((lexicon lex-database) filename &key lex-ids recurse)
   (setf filename (namestring (pathname filename)))
   (with-open-file 
       (ostream filename :direction :output :if-exists :supersede)
-    (export-to-tdl lexicon ostream :lex-ids lex-ids)))
+    (export-to-tdl lexicon ostream :lex-ids lex-ids :recurse recurse)))
 
-(defmethod export-to-tdl ((lexicon lex-database) stream &key lex-ids)
+(defmethod export-to-tdl ((lexicon lex-database) stream &key lex-ids recurse)
   (when (typep lexicon 'psql-lex-database)
     (format t "~&(LexDB) caching all lexical records")
     (cache-all-lex-records lexicon)
     (format t "~&(LexDB) caching complete"))
-  (unless lex-ids (setf lex-ids (collect-psort-ids lexicon)))
-  (mapc
-   #'(lambda (id)
-       (format stream "~a" (to-tdl (read-psort lexicon id :new-instance t)))
-       (forget-psort lexicon id))
-   (sort (copy-list lex-ids)
-	 #'(lambda (x y) (string< (2-str x) (2-str y)))))
+  (unless lex-ids (setf lex-ids (collect-psort-ids lexicon :recurse recurse)))
+  (format t "~&[~a entries]" (length lex-ids))
+
+  (loop
+      for id in (sort (copy-list lex-ids)
+		      #'(lambda (x y) (string< (2-str x) (2-str y))))
+      do
+	(format stream "~a" (to-tdl (read-psort lexicon id :new-instance t)))
+	(forget-psort lexicon id))
+  
   (when (typep lexicon 'psql-lex-database)
     (format t "~&(LexDB) emptying cache")
     (empty-cache lexicon)))

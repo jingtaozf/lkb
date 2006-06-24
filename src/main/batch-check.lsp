@@ -32,8 +32,6 @@
     (let ((ids (collect-psort-ids lexicon)))
       (format t "~&;;; (~a entries)" (length ids))
       (loop for id in ids
-		      ;; alternatively - for lexicon only
-		      ;; (collect-psort-ids *lexicon*)
 	  do
 	    (check-lex-entry id lexicon
 			     :unexpandp unexpandp
@@ -44,35 +42,46 @@
   (empty-cache lexicon)
   (format t "~&;;; lexicon checked"))
 
-(defun display-tdl-duplicates (lexicon)
-  (let* ((tdl-lex
+(defvar *x-recs-dup*)
+(defun display-tdl-duplicates (lex)
+  (format t "~&;;; CHECKING FOR DUPLICATE ENTRIES:~%")
+  (let* (;; collect triples <lex,id,unifs>
+	 (x-recs
           (mapcar #'(lambda (x) 
-		      (let* ((x (read-psort lexicon x :cache nil))
-			     (val-dot-body
-			      (cons (lex-and-id-str lexicon (lex-entry-id x))
-				    (to-tdl-body x))))
-			(forget-psort lexicon x)
-			val-dot-body))
-                  (collect-psort-ids lexicon)))
-         (tdl-lex-sort 
-          (sort tdl-lex #'string< :key #'cdr))
-         (tdl-lex-dup
+		      (let* ((x (read-psort lex x :cache nil))
+			     (id (lex-entry-id x))
+			     (x-lex (lexicon-for-id lex id))
+			     (x-id (string id))
+			     (x-unifs (lex-entry-unifs x)))
+			(forget-psort lex x)
+			(list x-lex x-id x-unifs)))
+                  (collect-psort-ids lex)))
+	 ;; sort on ID (string<)
+         (x-recs-sorted 
+          (sort x-recs #'string< :key #'second))
+	 ;; check for duplicate UNIFS (equalp)
+         (x-recs-dup
           (duplicates  
-           tdl-lex-sort 
-           :key #'cdr 
-           :test #'string=)))
-    (when tdl-lex-dup
-      (format t "~&;;; CHECKING FOR DUPLICATE ENTRIES:~%")
+           x-recs-sorted 
+           :key #'third
+           :test #'equalp)))
+    (setf *x-recs-dup* x-recs-dup) ;!!!
+    (when x-recs-dup
       (loop
-          for dup-set in tdl-lex-dup
+          for dup-set in x-recs-dup
           do
             (format t "~%~%")
             (loop
                 for x in dup-set
+		for x-lex = (first x)
+		for x-id = (second x)
+		for x-unifs = (third x)
                 do
-                  (join-tdl x :stream t)))
-      (format t "~&;;; END OF DUPLICATE ENTRIES~%"))))
-      
+                  (format t "~&[~a] ~a := ~a"
+			  (name x-lex) x-id (unifs-to-tdl-body x-unifs))))
+      ))
+  (format t "~&;;; END OF DUPLICATE ENTRIES~%"))
+
 (defun lex-and-id-str (lexicon id)
   (let* ((in-lex (lexicon-for-id lexicon id))
 	 (in-lex-name (and in-lex (name in-lex))))
