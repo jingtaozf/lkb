@@ -27,5 +27,3 @@ example.dfn      - sample .dfn definitions
 example.fld      - sample .fld definitions
 
 lexdb-local.sql  - sample file for local lexdb function redefinitions
-
-mwe.sql          - multi-word entry functions (BROKEN)
