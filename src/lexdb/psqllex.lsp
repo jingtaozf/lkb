@@ -71,11 +71,11 @@
       (and *lexdb* (host *lexdb*))
       "localhost"))
 
-(defun initialize-lexdb-table (x)
-  (or x 
-      (extract-param :host *lexdb-params*)
-      (and *lexdb* (fields-tb *lexdb*))
-      (and *lexdb* (dbname *lexdb*))))
+;(defun initialize-lexdb-table (x)
+;  (or x 
+;      (extract-param :host *lexdb-params*)
+;      (and *lexdb* (fields-tb *lexdb*))
+;      (and *lexdb* (dbname *lexdb*))))
       
 (defun initialize-lexdb-port (x)
   (or x 
@@ -95,11 +95,15 @@
       (and *lexdb* (password *lexdb*))
       (and *lexdb* (user *lexdb*))))
       
-(defun initialize-lexdb (&key type dbname host table port user semi password)
+(defun initialize-lexdb (&key type dbname host port user semi password)
   ;; warn on use of obsolete semi argument 
   (when semi 
-    (format t "~%(LexDB) WARNING: :SEMI argument to *lexdb-params* is now obsolete")
+    (format t "~%(LexDB) WARNING: :SEMI argument to *lexdb-params* is obsolete")
     (format t "~%(LexDB)          (please call index-for-generator instead)"))
+  
+  ;; warn on use of obsolete table argument 
+  (when semi 
+    (format t "~%(LexDB) WARNING: :TABLE argument to *lexdb-params* is obsolete"))
   
   (let (part-of extra-lexicons)
     (psql-initialize)
@@ -128,7 +132,7 @@
     (setf (user *lexdb*) (initialize-lexdb-user user))
     (setf (password *lexdb*) (initialize-lexdb-password password))
     (setf (port *lexdb*) (initialize-lexdb-port port))
-    (setf (fields-tb *lexdb*) (initialize-lexdb-table table))
+;    (setf (fields-tb *lexdb*) (initialize-lexdb-table table))
 
     ;; open lexdb and insert into lexicon hierarchy
     (when (open-lex *lexdb*)
@@ -272,7 +276,7 @@
      (let ((,lexdb-lexdb
 	    (make-instance (type-2-psql-lex-database-type (psql-lex-database-type ,lexdb))
 	      :dbname dbname
-	      :fields-tb fields-tb
+	      ;:fields-tb fields-tb
 	      :host host
 	      :port port
 	      :user (db-owner ,lexdb))))

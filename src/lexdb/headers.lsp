@@ -49,7 +49,7 @@
 
 (defclass external-lex-database (lex-database)
   ((record-cache :initform (make-hash-table :test #'eq))
-   (fields-tb :initform nil :accessor fields-tb :initarg :fields-tb)
+   ;(fields-tb :initform nil :accessor fields-tb :initarg :fields-tb)
    ;; a-list for mapping the lexicon-table fields to the psort-or-lex structure
    (dfn :initform nil :accessor dfn)
    (fields :initform nil :accessor fields)))

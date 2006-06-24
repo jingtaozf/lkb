@@ -72,6 +72,6 @@ if [ $? != 0 ] ; then abort; fi
 
 CMD="psql -c '\\copy public.dfn from $DFN_FILE' -U lexdb $LEXDB"
 echo $CMD; psql -c "\copy public.dfn from $DFN_FILE" -U lexdb $LEXDB
-if [ $? != 0 ] ; then abort; fi
+if [ $? != 0 ] ; then echo "!!!"; echo "* YOU MAY HAVE AN OBSOLETE DFN FILE ($DFN_FILE)"; echo "* Try removing the first field (eg. \"ergTAB\") from each entry in the file $DFN_FILE"; echo "!!!"; echo; abort; fi
 
 

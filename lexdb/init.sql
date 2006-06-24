@@ -18,12 +18,11 @@ CREATE TABLE public.meta (
 SELECT public.create_public_rev_table();
 
 CREATE TABLE public.dfn (
-		mode TEXT,
 		slot TEXT,
 		field TEXT,
 		path TEXT,
 		type TEXT,
-	PRIMARY KEY (mode,slot,field));
+	PRIMARY KEY (slot,field));
 
 --
 -- remaining function definitions

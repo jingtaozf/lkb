@@ -356,7 +356,8 @@
 	      ;; correct any obsolete types
 	      (convert-obsolete-dfn-type-if-nec type)
 	      (list slot field path type)))
-	(get-raw-records lex (format nil "SELECT slot,field,path,type FROM dfn WHERE mode='~a' OR mode = ''" (fields-tb lex))))
+	(get-raw-records lex (format nil "SELECT slot,field,path,type FROM dfn")))
+;	(get-raw-records lex (format nil "SELECT slot,field,path,type FROM dfn WHERE mode='~a' OR mode = ''" (fields-tb lex))))
        #'(lambda (x y) (declare (ignore y)) (eq (car x) :UNIFS))))
     (if (null dfn)
 	(complain-no-dfn lex))
@@ -365,8 +366,7 @@
 
 
 (defmethod complain-no-dfn ((lex psql-lex-database))
-  (error "~&(LexDB) no DFN entries (mode='~a')" 
-	 (dbname lex) (fields-tb lex)))
+  (error "~&(LexDB) no DFN entries" (dbname lex)))
 
 (defmethod get-internal-table-dfn ((lex psql-lex-database))
   (get-field-info lex "public" "rev"))  

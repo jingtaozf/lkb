@@ -184,6 +184,7 @@
               (display-unexpanded-lex-entry word-string word-entry
                                             (lex-entry-id word-entry)))))))
 
+#+:null
 (defun display-unexpanded-lex-entry (word-string word-entry id)
   (declare (ignore word-entry))
   (format t "~%~A ~A" word-string id)) 

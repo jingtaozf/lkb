@@ -6,12 +6,11 @@ SET client_min_messages TO warning;
 
 -- DFN -- don't change this!
 CREATE TABLE dfn (
-		mode TEXT,
 		slot TEXT,
 		field TEXT,
 		path TEXT,
 		type TEXT,
-	PRIMARY KEY (mode,slot,field));
+	PRIMARY KEY (slot,field));
 
 -- LEX -- customize this...
 CREATE TABLE lex (
