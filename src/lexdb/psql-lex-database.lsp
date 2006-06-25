@@ -23,11 +23,6 @@
 ;  "SELECT DISTINCT name FROM lex_cache")
 
 ;;!
-;; DOT: select FIELDS for lexicon entry ID
-(defmethod get-dot-lex-record ((lex mu-psql-lex-database) id &optional (fields '("*")))
-  (let ((table (retrieve-raw-record-no-cache lex id fields)))
-    (dot (cols table) (car (recs table)))))
-;;!
 ;; DOT: select FIELDS for revision entry ID NAME MODSTAMP
 (defmethod get-dot-rev-record ((lex mu-psql-lex-database) id name modstamp &optional (fields '("*")))
   (unless (connection lex)
@@ -750,4 +745,21 @@
 			 "SELECT ~a FROM (SELECT rev.* FROM public.rev as rev JOIN lex_cache USING (name,userid,modstamp) WHERE lex_cache.name = ~a UNION SELECT rev.* FROM rev JOIN lex_cache USING (name,userid,modstamp) WHERE lex_cache.name = ~a) as foo"
 			 (fields-str lex reqd-fields)
 			 qname qname))))
+
+(defmethod get-internal-table-dfn ((lex mu-psql-lex-database))
+  (get-field-info lex "public" "rev"))  
+
+(defmethod lookup ((lex mu-psql-lex-database) field-kw val-str &key (ret-flds "*") (from "lex"))
+  (cond
+   (val-str
+    (get-raw-records lex 
+		     (format nil "SELECT ~a FROM ~a WHERE ~a ILIKE ~a"
+			     ret-flds from
+			     (quote-ident lex field-kw)
+			      (psql-quote-literal val-str))))
+   (t
+    (get-raw-records lex 
+		     (format nil "SELECT ~a FROM ~a WHERE ~a IS NULL"
+			     ret-flds from
+			     (quote-ident lex field-kw))))))
 

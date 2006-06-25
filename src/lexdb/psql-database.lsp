@@ -82,7 +82,8 @@
 	   (format nil "dbname=~a " (psql-quote-literal dbname))
 	   (format nil "user=~a " (psql-quote-literal user))
 	   (and password 
-		(format nil "password=~a" (psql-quote-literal password))))))
+		(format nil "password=~a" (psql-quote-literal password)))
+	   )))
       (when (connection-ok lexicon)
 	(unless (check-libpq-protocol-version connection)
 	  (disconnect lexicon))
@@ -398,20 +399,21 @@
     (1- len))) ;; len includes null byte
 
 (defun psql-quote-literal (str)
-  (unless (stringp str)
-    (setf str (2-str str)))
-  (multiple-value-bind (native-str native-len)
-      (excl:string-to-native str)
-    
-    (concatenate 'string "'"
-		 (let* ((len (length str))
-			(x (make-array (+ len
-					  native-len
-					  1) ;;safe for UTF-8 coz ascii byte means ascii char
-				       :element-type '(unsigned-byte 8))))
-		   (pq:escape-string x native-str native-len)
-		   (excl:octets-to-string x))
-		 "'")))
+  (with-lexdb-locale
+      (unless (stringp str)
+	(setf str (2-str str)))
+    (multiple-value-bind (native-str native-len)
+	(excl:string-to-native str)
+      
+      (concatenate 'string "'"
+		   (let* ((len (length str))
+			  (x (make-array (+ len
+					    native-len
+					    1) ;;safe for UTF-8 coz ascii byte means ascii char
+					 :element-type '(unsigned-byte 8))))
+		     (pq:escape-string x native-str native-len)
+		     (excl:octets-to-string x))
+		   "'"))))
 
 (defun sql-like-text (id)
   (format nil "~a" (sql-like-text-aux (2-str id))))

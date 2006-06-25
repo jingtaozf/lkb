@@ -61,7 +61,10 @@
     (with-open-file (rev-stream 
 		     rev-file
 		     :direction :output 
-		     :if-exists :supersede :if-does-not-exist :create)
+		     :if-exists :supersede 
+		     :if-does-not-exist :create
+		     :external-format :utf-8
+		     )
       (export-lexicon-to-file-aux lexicon rev-stream file-base)
       (when recurse
 	(mapcar #'(lambda (x) 
@@ -79,7 +82,9 @@
     (with-open-file (skip-stream 
 		     skip-file
 		     :direction :output 
-		     :if-exists :supersede :if-does-not-exist :create)
+		     :if-exists :supersede 
+		     :if-does-not-exist :create
+		     :external-format :utf-8)
       (export-to-db-dump-rev lexicon rev-stream :skip-stream skip-stream))))
 
 ;;;

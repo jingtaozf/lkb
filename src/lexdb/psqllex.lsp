@@ -184,12 +184,6 @@
 			  (code-char 10))) ;; newline
 		   )))))
      
-(defmethod normalize-orthkeys2 ((lex mu-psql-lex-database) recs)
-  (normalize-orthkeys-aux recs 3))
-
-(defmethod normalize-orthkeys2 ((lex su-psql-lex-database) recs)
-  (normalize-orthkeys-aux recs 1))
-
 (defun normalize-orthkeys-aux (recs i)
   (loop
       for rec in recs

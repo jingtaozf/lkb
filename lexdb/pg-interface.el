@@ -1,6 +1,5 @@
 ;;; Copyright (c) 2003 - 2005 Ben Waldron
 ;;; see licence.txt for conditions
-
 ;; Portions copyright (c) 1996, 1997, 1999, 2000, 2001 Free Software Foundation, Inc.
 
 ;; Free software; you can redistribute it and/or modify
@@ -159,7 +158,8 @@
 (defvar *lexdb-slot-len*)
 (defvar *completable-fields*)
 
-(setf *lexdb-read-only* '(:|version| :|userid| :|modstamp|))
+;(setf *lexdb-read-only* '(:|version| :|userid| :|modstamp|))
+(setf *lexdb-read-only* '(:|userid| :|modstamp|))
 (setf *lexdb-hidden* nil)
 (setf *lexdb-minibuffer-max* 80)
 (setf *lexdb-active-ium-size* 0)
@@ -409,15 +409,16 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 (defun lexdb-view-private-rev-aux nil
   (let ((buffer *lexdb-scratch-buffer*)
 	(priv-recs (cle-get-private-revs)))
-    (if (get-buffer buffer)
-	(kill-buffer buffer))
-    (with-current-buffer (get-buffer-create buffer)
-      (lexdb-mode)
-      (insert (mapconcat 'identity
-			 (lexdb-collect-field-lines priv-recs *lexdb-record-features*)
-			 "\n")))
-    
-    (switch-to-buffer buffer)))
+    (when priv-recs
+      (if (get-buffer buffer)
+	  (kill-buffer buffer))
+      (with-current-buffer (get-buffer-create buffer)
+	(lexdb-mode)
+	(insert (mapconcat 'identity
+			   (lexdb-collect-field-lines priv-recs *lexdb-record-features*)
+			   "\n")))
+      
+      (switch-to-buffer buffer))))
 
 (defun lexdb-view-merge-add-aux nil
   (let ((buffer *lexdb-new-entries-buffer*))
@@ -555,6 +556,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 	  (error "feature not found in record"))
       (setf (cdr record-elt) val))))
 
+;; sets lexdb-tdl and lexdb-record
 (defun lexdb-retrieve-record (id)
   (let ((fields (cle-retrieve-record-fields id))
 	(sizes (cle-retrieve-record-sizes)))
@@ -800,7 +802,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (cle-eval-lexdb 'get-dot-lex-record (cle-lisp-str id)))
 
 (defun cle-retrieve-record-fields3 (ium)
-  (cle-eval-lexdb 'get-rev-lex-record
+  (cle-eval-lexdb 'get-dot-rev-record
 		  (cle-lisp-str (first ium))
 		  (cle-lisp-str (second ium))
 		  (cle-lisp-str (third ium))

@@ -127,3 +127,42 @@
 		       (fields-str lex reqd-fields)
 		       (psql-quote-literal name))))
 
+(defmethod get-internal-table-dfn ((lex su-psql-lex-database))
+  (let ((res (get-field-info lex "public" "lex")))
+    (or
+     res
+     (error "cannot find fields for table 'lex'"))))
+
+;;!
+;; DOT: select FIELDS for revision entry ID NAME MODSTAMP
+(defmethod get-dot-rev-record ((lex su-psql-lex-database) id name modstamp &optional (fields '("*")))
+  (declare (ignore name modstamp))
+  (unless (connection lex)
+    (format t "~&(LexDB) WARNING:  no connection to mu-psql-lex-database")
+    (return-from get-dot-rev-record))
+  (let* ((fstr (fields-str lex fields))
+	 (qid (psql-quote-literal id))
+	 (table
+	  (get-records 
+	   lex (format nil
+		       "SELECT ~a FROM lex WHERE name = ~a"
+		       fstr qid))))
+    (dot (cols table) (car (recs table)))))
+
+(defmethod lookup ((lex su-psql-lex-database) field-kw val-str &key (ret-flds "*") (from "lex"))
+  (declare (ignore from))
+  (cond
+   (val-str
+    (get-raw-records lex 
+		     (format nil "SELECT ~a FROM lex WHERE ~a ILIKE ~a"
+			     ret-flds ;from
+			     (quote-ident lex field-kw)
+			      (psql-quote-literal val-str))))
+   (t
+    (get-raw-records lex 
+		     (format nil "SELECT ~a FROM lex WHERE ~a IS NULL"
+			     ret-flds ;from
+			     (quote-ident lex field-kw))))))
+
+(defmethod scratch-records ((lex su-psql-lex-database))
+  (error "functionality not available for SINGLE-USER LexDB "))

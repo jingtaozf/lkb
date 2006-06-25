@@ -8,7 +8,7 @@
 
 (in-package :lkb)
 
-(defvar *check-pg-interface-version* 2.16)
+(defparameter *check-pg-interface-version* 2.17)
 
 (defconstant *lexdb-emacs-other-fns*
     '(initialize-lexdb
@@ -28,14 +28,15 @@
       lookup-rev-all
       new-entries
       record-to-tdl
-      retrieve-head-record-str
-      retrieve-record-ium
       set-lex-entry
       set-lex-entry-from-record
       scratch-records
       get-records
       sql-fn-get-records
       sql-fn-get-raw-records
+      
+      get-dot-lex-record
+      get-dot-rev-record
 ))
  
 (defun lexdb-fn (fn-name &rest rest)
@@ -61,12 +62,3 @@
 (defmethod check-pg-interface-version ((lex psql-lex-database) version)
   (unless (= version *check-pg-interface-version*)
     (error "Emacs/LexDB interface version ~a is incompatible with running LKB/LexDB. Please install pg-interface.el version ~a" version *check-pg-interface-version*)))
-
-;; backwards compat
-
-(defun retrieve-head-record-str (&rest rest)
-  (apply #'get-dot-lex-record rest))
-
-(defun retrieve-record-ium (&rest rest)
-  (apply #'get-dot-rev-record rest))
-    
