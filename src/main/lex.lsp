@@ -29,7 +29,7 @@
 (defvar *verbose-lex-lookup-word* nil)
 (defvar *lexdb*)
 (defvar *postgres-mwe-enable*)
-(defvar *lexicon-lexical-entries-cache-p* t)
+(defvar *lexicon-lexical-entries-cache-p* t) ;; remove this?
 
 (defclass lex-database () 
   ((lexical-entries :initform (make-hash-table :test #'equal))
@@ -561,18 +561,8 @@
       (mapcar #'(lambda (lex) (unlink lexicon lex)) part-of))
     lexicon))
 
-(defvar *empty-cache-clears-generator-lexicon* t) ;;fix_me (hack)
 (defmethod empty-cache :around ((lexicon lex-database) &key (recurse))
   (with-slots (lexical-entries psorts cache-lex-list) lexicon
-    ;;
-    ;; _fix_me_
-    ;; this gets invoked from clear-expanded-lex(): ditching precious generator
-    ;; indices seems hardly in the scope of the caller.         (3-nov-05; oe)
-    ;;
-    #-:logon
-    (when (and (fboundp 'clear-generator-lexicon)
-	       *empty-cache-clears-generator-lexicon*)
-      (funcall 'clear-generator-lexicon))
     (if (typep lexicon 'external-lex-database)
 	(call-next-method))
     (clrhash lexical-entries)
