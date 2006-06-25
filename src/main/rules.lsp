@@ -39,8 +39,6 @@
   (setf *ordered-rule-list* nil)
   (when (fboundp 'clear-generator-grules)
     (funcall 'clear-generator-grules))
-  (when (fboundp 'clear-generator-grules)
-    (funcall 'clear-generator-grules))
   (clrhash *rules*))
 
 (defun clear-lex-rules nil
