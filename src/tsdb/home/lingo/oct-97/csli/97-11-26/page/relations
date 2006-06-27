@@ -1,0 +1,127 @@
+item:
+  i-id :integer :key
+  i-origin :string
+  i-register :string
+  i-format :string
+  i-difficulty :integer
+  i-category :string
+  i-input :string
+  i-wf :integer
+  i-length :integer
+  i-comment :string
+  i-author :string
+  i-date :date
+
+analysis:
+  i-id :integer :key
+  a-position :string
+  a-instance :string
+  a-category :string
+  a-function :string
+  a-domain :string
+  a-tag :string
+  a-comment :string
+
+phenomenon:
+  p-id :integer :key
+  p-name :string
+  p-supertypes :string
+  p-presupposition :string
+  p-interaction :string
+  p-purpose :string
+  p-restrictions :string
+  p-comment :string
+  p-author :string
+  p-date :date
+
+parameter:
+  ip-id :integer :key
+  position :string
+  attribute :string
+  value :string
+  instance :string
+  comment :string
+
+set:
+  s-id :integer :key
+  p-id :integer :key :partial
+  s-author :string
+  s-date :date
+
+item-phenomenon:
+  ip-id :integer :key
+  i-id :integer :key
+  p-id :integer :key
+  ip-author :string
+  ip-date :date
+
+item-set:
+  i-id :integer :key :partial
+  s-id :integer :key
+  polarity :integer
+
+run:
+  run-id :integer :key
+  run-comment :string
+  application :string
+  grammar :string
+  avms :integer
+  sorts :integer
+  templates :integer
+  user :string
+  host :string
+  start :date
+
+parse:
+  parse-id :integer :key 
+  run-id :integer :key
+  i-id :integer :key
+  readings :integer
+  first :integer
+  total :integer
+  tcpu :integer
+  tgc :integer
+  treal :integer
+  p-etasks :integer 
+  p-stasks :integer 
+  p-ftasks :integer
+  words :integer
+  edges :integer
+  unifications :integer
+  copies :integer
+  conses :integer
+  symbols :integer
+  others :integer
+  gcs :integer
+  i-load :integer
+  a-load :integer
+  date :date
+  error :string
+
+result:
+  parse-id :integer :key 
+  result-id :integer
+  time :integer  
+  r-etasks :integer 
+  r-stasks :integer 
+  r-ftasks :integer
+  size :integer
+  r-edges :integer
+  derivation :string
+  tree :string
+  mrs :string
+
+output:
+  i-id :integer :key
+  o-application :string
+  o-grammar :string
+  o-ignore :string
+  o-wf :integer
+  o-gc :integer
+  o-derivation :string
+  o-tree :string
+  o-mrs :string
+  o-tasks :integer
+  o-user :string
+  o-date :date
+
