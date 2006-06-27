@@ -24,6 +24,9 @@
  ((:path . "vm") (:content . "VerbMobil Reference Dialogue"))
  ((:path . "diet") (:content . "DiET version of TSNLP Test Suite"))
  ((:path . "vmd") (:content . "VerbMobil Development Data"))
- ((:path . "babel") (:content . "Babel Test Suite")))
+ ((:path . "babel") (:content . "Babel Test Suite"))
+ ((:path . "mrs") (:content . "DELPH-IN MRS Test Suite")))
+
+ 
 
 

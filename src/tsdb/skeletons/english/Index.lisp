@@ -21,7 +21,7 @@
 
 (((:path . "english") (:content . "TSNLP Test Suite"))
  ((:path . "csli") (:content . "CSLI (LinGO) Test Suite"))
- ((:path . "mrs") (:content . "LinGO MRS Test Suite"))
+ ((:path . "mrs") (:content . "DELPH-IN MRS Test Suite"))
  ((:path . "vm97") (:content . "VerbMobil 97"))
  ((:path . "vm97p") (:content . "VerbMobil 97 (Partials)"))
  ((:path . "vm98") (:content . "VerbMobil 98"))
@@ -41,6 +41,7 @@
  ((:path . "ecoc") (:content . "Ecommerce Email (Order Cancellation)"))
  ((:path . "ecpr") (:content . "Ecommerce Email (Product Return)"))
  ((:path . "trec9") (:content . "TREC QA Questions (Ninth Conference)"))
+ ((:path . "harmony") (:content . "LOGON Harmonization Test Suite"))
  ((:path . "hike") (:content . "LOGON First Development Corpus"))
  ((:path . "rondane") (:content . "LOGON Hiking Treebank (Rondane)"))
  ((:path . "jh") (:content . "LOGON Jotunheimen Corpus (All Sections)"))
@@ -50,4 +51,6 @@
  ((:path . "jh3") (:content . "LOGON Jotunheimen Corpus (Section 3)"))
  ((:path . "jh4") (:content . "LOGON Jotunheimen Corpus (Section 4)"))
  ((:path . "jh5") (:content . "LOGON Jotunheimen Corpus (Section 5)"))
+ ((:path . "ps") (:content . "LOGON Preikestolen Corpus"))
+ ((:path . "tg") (:content . "LOGON Turglede Corpus"))
  ((:path . "shiken") (:content . "Embryonic JaEn MT Test Suite")))
