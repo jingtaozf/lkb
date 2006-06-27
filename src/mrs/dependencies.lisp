@@ -109,7 +109,7 @@
       (:ascii
        (format stream "~a~%" (ed-convert-psoa psoa)))
       (:triples
-       (let* ((eds (ed-convert-psoa mrs))
+       (let* ((eds (ed-convert-psoa psoa))
               (triples (ed-explode eds)))
          (loop
              with *package* = (find-package :lkb)
