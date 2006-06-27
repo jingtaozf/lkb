@@ -1477,9 +1477,13 @@
         (when (or (eq *redwoods-export-values* :all)
                   (smember :dependencies *redwoods-export-values*))
           (ignore-errors (mrs::ed-output-psoa mrs :stream stream)))
+        (when (or (eq *redwoods-export-values* :all)
+                  (smember :triples *redwoods-export-values*))
+          (ignore-errors
+           (mrs::ed-output-psoa mrs :format :triples :stream stream)))
         #+:cambridge
         (when (smember :qa *redwoods-export-values*)
-          (mrs::output-rmrs-from-fine-system
+          (mrs::output-rmrs-from-itsdb
            (+ parse-id offset) 
            (or (get-field :o-input item) (get-field :i-input item))
            mrs))
@@ -1913,7 +1917,7 @@
                   ;;
                   ;; _fix_me_
                   ;; rewrite the cond() below; it would seem most if not all of
-                  ;; its body can go into the when() below.    (18-apr-06; oe)
+                  ;; its body can go into the when() below.     (18-apr-06; oe)
                   ;;
                   (when i (incf arandom (divide 1 areadings)))
                   (cond

@@ -34,7 +34,7 @@
 
 (defparameter *tsdb-name* "[incr tsdb()]")
 
-(defparameter *tsdb-version* "2.0 (24-apr-06; beta)")
+(defparameter *tsdb-version* "2.0 (23-jun-06; beta)")
 
 (defparameter
   *tsdb-application*
@@ -71,6 +71,10 @@
 (defparameter *tsdb-write-parse-p* t)
 
 (defparameter *tsdb-write-result-p* t)
+
+(defparameter *tsdb-write-tree-p* nil)
+
+(defparameter *tsdb-write-mrs-p* nil)
 
 (defparameter *tsdb-write-edge-p* t)
 

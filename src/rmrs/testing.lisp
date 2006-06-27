@@ -267,12 +267,12 @@ off, perhaps)
 
 3) Set the LKB to *recording-word* mode
 
-4) define output-rmrs-from-fine-system as below
+4) define output-rmrs-from-itsdb as below
 
 5) add the following to redwoods.lisp export-tree
 
 (when (smember :qa *redwoods-export-values*)
-          (mrs::output-rmrs-from-fine-system
+          (mrs::output-rmrs-from-itsdb
            (+ parse-id offset) 
            (or (get-field :o-input item) (get-field :i-input item))
            mrs))
@@ -286,7 +286,7 @@ off, perhaps)
 |#
 
 #|
-(defun output-rmrs-from-fine-system (i-id sentence mrs)
+(defun output-rmrs-from-itsdb (i-id sentence mrs)
   (let* ((rmrs (mrs::mrs-to-rmrs mrs))
          (filename (format nil "q~A.rmrs" i-id)))
   (with-open-file (ostream filename :direction :output

@@ -303,6 +303,12 @@
    :device (pathname-device *load-truename*)
    :directory (butlast (pathname-directory *load-truename*))))
 
+(defun grandparent-directory nil
+  (make-pathname 
+   :host (pathname-host *load-truename*)
+   :device (pathname-device *load-truename*)
+   :directory (butlast (pathname-directory *load-truename*) 2)))
+
 (defun lkb-pathname (directory name)
   (merge-pathnames
    (make-pathname :name name)

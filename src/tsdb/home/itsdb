@@ -31,11 +31,12 @@ directory="${1}";
 
 tmp="/tmp/.itsdb.tmp.${USER}.$$"
 
-find ${directory} -name relations | sed 's@/relations@@g' > ${tmp}
-for i in $(cat ${tmp}); do
+
+find ${directory} -name relations | sed 's@/relations@@g' > ${tmp}.dbs
+while read i; do
   ${tsdb} -home "${i}" -query "info relations" \
-  | egrep '^[a-zA-Z0-9_-]+:$' | sed 's@:$@@g' > ${tmp}
-  for j in $(cat ${tmp}); do
+  | egrep '^[a-zA-Z0-9_-]+:$' | sed 's@:$@@g' > ${tmp}.files
+  for j in $(cat ${tmp}.files); do
     file="${i}/${j}";
     if [ -s "${file}" ]; then
       echo -n "compressing \`${file}' ... ";
@@ -43,4 +44,4 @@ for i in $(cat ${tmp}); do
       echo "done";
     fi
   done
-done
+done < ${tmp}.dbs

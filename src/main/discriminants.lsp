@@ -203,8 +203,7 @@
           for triple in triples
           for key = (format nil "~{~a~^ ~}" triple)
           do
-            (add-discriminant
-             key nil :ed top (edge-from edge) (edge-to edge))))))
+            (add-discriminant key nil :ed top 0 0)))))
 
 (defun add-discriminant (key value type top start end)
 

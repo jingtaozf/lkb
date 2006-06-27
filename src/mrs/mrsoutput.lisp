@@ -167,7 +167,9 @@ duplicate variables")
             :h-cons (nreverse (construct-h-cons 
                                h-cons-fs nil *variable-generator*))
 	    :a-cons (nreverse (construct-a-cons
-			       a-cons-fs nil *variable-generator*))))))
+			       a-cons-fs nil *variable-generator*)))))
+         #+:logon
+         (psoa (mt:map-mrs psoa :semi :forward)))
     (when *mrs-record-all-nodes-p* (push (cons fs psoa) *all-nodes*))
     psoa))
 

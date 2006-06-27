@@ -398,7 +398,6 @@
 
   #+:debug
   (setf %edges edges)
-
   (unless edges (return-from selectively-unpack-edges))
   (unless (numberp robust) (setf robust 42))
   (if (or (null n) (not (numberp n)) (<= n 0) (null *unpacking-scoring-hook*))
@@ -593,6 +592,7 @@
 
     (when (null children)
       (let ((decomposition (make-decomposition :lhs edge)))
+        (incf (statistics-decompositions *statistics*))
         (push decomposition (unpacking-decompositions unpacking))))
     
     ;;
@@ -617,7 +617,9 @@
           (loop
               for rhs in (cross-product foo)
               for decomposition = (make-decomposition :lhs edge :rhs rhs)
-              do (push decomposition (unpacking-decompositions unpacking))))))
+              do
+                (incf (statistics-decompositions *statistics*))
+                (push decomposition (unpacking-decompositions unpacking))))))
 
 (defun score-hypothesis (hypothesis)
   (setf (hypothesis-score hypothesis)

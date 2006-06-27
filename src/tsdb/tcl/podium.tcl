@@ -488,6 +488,12 @@ proc main {} {
     -label "Write `result' Relation" \
     -variable globals(write_result_p) -command {tsdb_set write_result_p};
   .menu.process.menu.switches add checkbutton \
+    -label "Write `tree' Field" \
+    -variable globals(write_tree_p) -command {tsdb_set write_tree_p};
+  .menu.process.menu.switches add checkbutton \
+    -label "Write `mrs' Field" \
+    -variable globals(write_mrs_p) -command {tsdb_set write_mrs_p};
+  .menu.process.menu.switches add checkbutton \
     -label "Write `output' Relation" \
     -variable globals(write_output_p) -command {tsdb_set write_output_p};
   .menu.process.menu.switches add checkbutton \

@@ -580,7 +580,7 @@
       (cl-ppcre:scan "^[0-9]+[a-z]\\. " string)
     (unless start
       (multiple-value-setq (start end)
-        (cl-ppcre:scan "^\\[[0-9]{4}[a-z]\\]( |$)" string))
+        (cl-ppcre:scan "^\\[[0-9]{4,5}[a-z]\\]( |$)" string))
       (when (numberp start) (incf start)))
     (if (numberp end)
       (let ((suffix (subseq string end))

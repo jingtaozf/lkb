@@ -145,7 +145,8 @@
   ;; given two types, return true if .type1. and .type2. are either identical
   ;; or have a greatest lower bound (common descendant).
   ;;
-  (or (eq type1 type2) (lkb::greatest-common-subtype type1 type2)))
+  (and type1 type2
+       (or (eq type1 type2) (lkb::greatest-common-subtype type1 type2))))
 
 ;;;
 ;;; convert PSOA to LKB dag representation; enables use of DAG browsing tools

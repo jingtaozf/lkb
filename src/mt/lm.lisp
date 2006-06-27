@@ -1,5 +1,20 @@
 (in-package :mt)
 
+;;;
+;;; Copyright (c) 2004 -- 2006 Erik Velldal (erikve@ifi.uio.no)
+;;; Copyright (c) 2004 -- 2006 Stephan Oepen (oe@csli.stanford.edu)
+;;;
+;;; This program is free software; you can redistribute it and/or modify it
+;;; under the terms of the GNU Lesser General Public License as published by
+;;; the Free Software Foundation; either version 2.1 of the License, or (at
+;;; your option) any later version.
+;;;
+;;; This program is distributed in the hope that it will be useful, but WITHOUT
+;;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+;;; FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
+;;; License for more details.
+;;; 
+
 (defparameter *lm-binary*
   (format
    nil 
@@ -35,9 +50,46 @@
 
 (defparameter *lm-measure* :logprob)
 
+(defparameter *tm-binary*
+  (format
+   nil 
+   "exec ~a"
+   (namestring
+    (make-pathname
+     :directory (pathname-directory make::bin-dir) :name "evallm"))))
+
+(defparameter *tm-options* 
+  "-include_unks -backoff_from_unk_inc -backoff_from_ccs_inc")
+
+(defparameter *tm-model*
+  #+:logon
+  (namestring (make-pathname 
+               :directory (namestring
+                           (dir-append 
+                            (get-sources-dir "mt") '(:relative "mt")))
+               :name "mrs.blm"))
+  #-:logon
+  nil)
+
+(defparameter *tm-input* nil)
+
+(defparameter *tm-pid* nil)
+
+(defparameter *tm-output* 
+  (format nil "/tmp/.tm.io.~a.~a.out" (lkb::current-user) (lkb::current-pid)))
+
+(defparameter *tm-measure* :perplexity)
+
 (defun initialize-mt ()
   (declare (special *utool-binary*))
   (setf *lm-binary*
+    (format
+     nil 
+     "exec ~a"
+     (namestring
+      (make-pathname
+       :directory (pathname-directory make::bin-dir) :name "evallm"))))
+  (setf *tm-binary*
     (format
      nil 
      "exec ~a"
@@ -230,5 +282,88 @@
               (force-output *scrub-stream*)
               collect (read-line *scrub-stream* nil nil)))
       strings)))
+
+(let ((lock (mp:make-process-lock)))
 
-;;;pick up. check/diff the oovs from the 2,3 and 4..
+  (defun tm-initialize (&optional (model *tm-model*))
+    (mp:with-process-lock (lock)
+      (with-open-file (stream *tm-output*
+                       :direction :output :if-exists :supersede))
+    
+      (let ((command (format 
+                      nil 
+                      "~a -binary '~a'"
+                      *tm-binary* model))
+            foo)
+        
+        (multiple-value-setq (*tm-input* foo *tm-pid*)
+          (run-process 
+           command
+           :wait nil
+           :output *tm-output* :if-output-exists :supersede
+           :input :stream
+           :error-output "/dev/null" :if-error-output-exists :append
+           :if-error-output-does-not-exist :create))
+        (setf foo foo))))
+  
+  (defun tm-score-mrss (mrss &key (model *tm-model*) (measure *tm-measure*))
+    (mp:with-process-lock (lock)
+      (when (null *tm-input*) (tm-initialize model))
+      (let (files lengths)
+        
+        (loop
+            for mrs in mrss
+            for i from 0
+            for file = (format 
+                        nil 
+                        "/tmp/.tm.io.~a.~a.~a" 
+                        (lkb::current-user) (lkb::current-pid) i)
+            do
+              (with-open-file (stream file
+                               :direction :output :if-exists :supersede)
+                (push
+                 (mrs::ed-output-psoa
+                  mrs :format :triples :markp t :stream stream)
+                 lengths))
+              (format 
+               *tm-input*
+               "perplexity ~a -text ~a~%"
+               *tm-options* file)
+              (force-output *tm-input*)
+              (push file files)
+            finally
+              (close *tm-input*)
+              (setf *tm-input* nil)
+	      #+:allegro
+              (sys:os-wait nil *tm-pid*))
+        (setf lengths (nreverse lengths))
+        (let ((results
+               (with-open-file (stream *tm-output* :direction :input)
+                 (loop
+                     for line = (read-line stream nil nil)
+                     for perplexity 
+                     = (multiple-value-bind (foo bar)
+                           (ppcre::scan-to-strings 
+                            "^Perplexity = ([0-9.]+)" line)
+                         (setf foo foo)
+                         (when (simple-vector-p bar)
+                           (ignore-errors
+                            (read-from-string (svref bar 0) nil nil))))
+		     for score 
+		     = (when (numberp perplexity)
+                         (case measure
+                           (:perplexity perplexity)
+                           (:entropy (log perplexity 2)) 
+                           (:logprob
+                            (* (log perplexity 2) (* 5 (pop lengths))))
+                           (t 
+                            (error 
+                             "tm-score-strings(): unknown score type ~a~%" 
+                             measure))))
+		     when score
+		     collect (cons (pop mrss) score)
+		     while mrss))))
+          (loop 
+              for file in files when (probe-file file) 
+              do (delete-file file))
+          results)))))

@@ -1,5 +1,19 @@
 (in-package :mt)
 
+;;;
+;;; Copyright (c) 2004 -- 2006 Stephan Oepen (oe@csli.stanford.edu)
+;;;
+;;; This program is free software; you can redistribute it and/or modify it
+;;; under the terms of the GNU Lesser General Public License as published by
+;;; the Free Software Foundation; either version 2.1 of the License, or (at
+;;; your option) any later version.
+;;;
+;;; This program is distributed in the hope that it will be useful, but WITHOUT
+;;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+;;; FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
+;;; License for more details.
+;;; 
+
 (defvar %edges%)
 
 (defvar %mrs%)
@@ -418,6 +432,15 @@
          (*print-right-margin* 80))
     (clim:formatting-table (stream)
       (clim:with-text-style (stream (mrs-transfer-font))
+        (when (edge-rule edge)
+          (clim:formatting-row (stream)
+            (clim:formatting-cell (stream :align-x :left)
+              (let ((mrs::*mrs-raw-output-p* nil)
+                    (%transfer-raw-output-p% nil))
+                (format stream "~a~%" edge))))
+          (clim:formatting-row (stream)
+            (clim:formatting-cell (stream :align-x :left)
+              (format stream "~%~%"))))
         (clim:formatting-row (stream)
           (let ((record 
                  (clim:formatting-cell (stream :align-x :left)
@@ -429,16 +452,7 @@
             (when (and (mrs::fragmentp mrs) (not (edge-source edge)))
               (lkb::recolor-record record clim::+blue+))
             (when (edge-source edge)
-              (lkb::recolor-record record clim:+red+))))
-        (when (edge-rule edge)
-          (clim:formatting-row (stream)
-            (clim:formatting-cell (stream :align-x :left)
-              (format stream "~%~%")))
-          (clim:formatting-row (stream)
-            (clim:formatting-cell (stream :align-x :left)
-              (let ((mrs::*mrs-raw-output-p* nil)
-                    (%transfer-raw-output-p% nil))
-                (format stream "~a~%" edge)))))))))
+              (lkb::recolor-record record clim:+red+))))))))
 
 (defun transfer-title (frame)
   (let* ((edge (nth (mrs-transfer-i frame) (mrs-transfer-stack frame)))
@@ -456,8 +470,7 @@
              (format 
               nil 
               "~a (# ~a of ~:[~a~@[+~a~]~;~a~*~])~@[ [~(~a~)]~]" 
-              (mrs-transfer-title frame)
-              (mrs-transfer-i frame)
+              (mrs-transfer-title frame) (mrs-transfer-i frame)
               edge
               (if edge 
                 (length (mrs-transfer-stack frame))

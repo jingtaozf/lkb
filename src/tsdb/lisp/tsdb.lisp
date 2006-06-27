@@ -179,7 +179,12 @@
           (setf *tsdb-skeletons*
             (with-open-file (stream index :direction :input)
               (read stream nil nil)))))
+      (when (find-package :lkb)
+        (when (null *tsdb-trees-hook*)
+          (setf *tsdb-trees-hook* "lkb::parse-tree-structure")))
       (when (find-package :mrs)
+        (when (null *tsdb-semantix-hook*)
+          (setf *tsdb-semantix-hook* "mrs::get-mrs-string"))
         (when (null (gethash :mrs *statistics-readers*))
           (setf (gethash :mrs *statistics-readers*) 
             "mrs::read-mrs-from-string"))

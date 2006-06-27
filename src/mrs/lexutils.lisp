@@ -74,8 +74,17 @@
         (error "~%No entry found for top semantics type ~A" 
                mrs::*top-semantics-type*))
 
-      (let ((ids (collect-psort-ids lex)))
-
+      (let ((ids (collect-psort-ids lex))
+            #+:allegro
+            (tenurep (sys:gsgc-parameter :auto-step))
+            (n 0))
+        ;;
+        ;; as we expect to generate a fair amount of garbage, disable tenuring
+        ;; temporarily.                                        (13-jun-06; oe)
+        ;;
+        #+:allegro
+        (setf (sys:gsgc-parameter :auto-step) nil)
+        
         (process-queue
          #'(lambda ()
              (let ((id (pop ids)))
@@ -83,7 +92,12 @@
                    (read-psort lex id :cache nil)
                  :eof)))
          #'(lambda (entry)
-	     ;(print 'q1)
+             (when (zerop (mod (incf n) 5000))
+               #+:gcdebug (excl:print-type-counts) 
+               #+:gcdebug (system::gsgc-parameters)
+               (excl:gc)
+               #+:gcdebug (system::gsgc-parameters)
+               #+:gcdebug (excl:print-type-counts))
              (expand-psort-entry entry)
              (let ((new-fs (lex-entry-full-fs entry)))
                (if (and new-fs 
@@ -91,9 +105,10 @@
                    (mrs::extract-lexical-relations entry)
                  (format t "~%No feature structure for ~A~%" 
                          (lex-entry-id entry))))
-	     ;(print 'q2)
              (forget-psort lex (lex-entry-id entry))))
-        
+
+        #+:allegro
+        (setf (sys:gsgc-parameter :auto-step) tenurep)
         (mrs::check-for-redundant-filter-rules)))
     (when (typep lex 'psql-lex-database)
       (dump-generator-indices-to-psql lex))

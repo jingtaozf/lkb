@@ -1,5 +1,19 @@
 (in-package :mt)
 
+;;;
+;;; Copyright (c) 2004 -- 2006 Stephan Oepen (oe@csli.stanford.edu)
+;;;
+;;; This program is free software; you can redistribute it and/or modify it
+;;; under the terms of the GNU Lesser General Public License as published by
+;;; the Free Software Foundation; either version 2.1 of the License, or (at
+;;; your option) any later version.
+;;;
+;;; This program is distributed in the hope that it will be useful, but WITHOUT
+;;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+;;; FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
+;;; License for more details.
+;;; 
+
 (defparameter *transfer-rule-sets* nil)
 
 (defparameter *transfer-lexicon* nil)
@@ -21,6 +35,8 @@
 (defparameter *mtr-optional-path* (list (mrs::vsym "OPTIONAL")))
 
 (defparameter *mtr-fail-path* (list (mrs::vsym "FAIL")))
+
+(defparameter *mtr-exhaustive-path* (list (mrs::vsym "EXHAUSTIVE")))
 
 (defparameter *mtr-equal-path* (list (mrs::vsym "EQUAL")))
 

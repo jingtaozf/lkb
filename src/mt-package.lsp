@@ -5,10 +5,10 @@
 (defpackage :mt
   (:use :common-lisp #-:ecl :make #+mcl :ccl) 
   (:export 
-   %TRANSFER-PROPERTIES-ACCUMULATOR%
+   "%TRANSFER-PROPERTIES-ACCUMULATOR%" "*VPMS*" 
    "INITIALIZE-TRANSFER" 
-   "READ-TRANSFER-RULES" "READ-TRANSFER-TYPES"
-   "TRANSFER-MRS")) 
+   "READ-TRANSFER-RULES" "READ-TRANSFER-TYPES" "READ-VPM" 
+   "TRANSFER-MRS" "MAP-MRS")) 
 
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
            #-:ansi-eval-when (load eval compile)

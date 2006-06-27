@@ -142,7 +142,7 @@
         (format capture "~%</run>~%")
         (when (stringp xml) (close capture))))))
 
-(defun translate-string (input &key id targets nhypotheses
+(defun translate-string (input &key id (wf 1) targets nhypotheses
                                     (stream *tsdb-io*)
                                     (format :ascii)
                                     filter index)
@@ -155,16 +155,16 @@
     (:ascii
      (format
       stream
-      "[~a]~@[ (~a)~] |~a|"
-      (current-time :long :short) id input))
+      "[~a]~@[ (~a)~] ~:[~;*~]|~a|"
+      (current-time :long :short) id (and (numberp wf) (zerop wf)) input))
     (:html
      (format
       stream
       "<table class=\"flow\" border=0>~%~
        <tr><td class=\"flowTopBorder\" colspan=5></td>~%~
        <tr><td class=\"flowLeftBorder\"></td>~
-           <td class=\"flow\" colspan=3>[~a]~@[ (~a)~] |~a|"
-      (current-time :long :short) id input)))
+           <td class=\"flow\" colspan=3>[~a]~@[ (~a)~] ~:[~;*~]|~a|"
+      (current-time :long :short) id (and (numberp wf) (zerop wf)) input)))
   (force-output stream)
   
   (let ((start (get-internal-real-time))
@@ -177,7 +177,9 @@
     (force-output stream)
     
     (loop
+        with amin with amax with tmin with tmax with rmin with rmax
         with analyses = (get-field :results parse)
+        with fragments = (get-field :fragments parse)
         with n = (if (and (numberp nhypotheses) (> nhypotheses 0))
                    nhypotheses
                    (length analyses))
@@ -189,18 +191,23 @@
         with best = 0
         for i from 1 to n
         for result in analyses
-        for pid = (get-field :result-id result)
+        for aid = (get-field :result-id result)
+        for ascore = (get-field :ascore (get-field :flags result))
         for transfer = (pvm-process
-                        parse :transfer :result-id pid :filter filter)
+                        parse :transfer :result-id aid :filter filter)
         for realizations = nil
+        when (numberp ascore) do
+          (when (or (null amin) (< ascore amin)) (setf amin ascore))
+          (when (or (null amax) (> ascore amax)) (setf amax ascore))
         do
+          
           (incf ntransfers (length (get-field :results transfer)))
           (case format
             (:ascii
              (format
               stream
-              "|~%|-[~a] # ~a"
-              (current-time :long :since :treal start) pid))
+              "|~%|-[~a] # ~a~@[ {~,2f}~]"
+              (current-time :long :since :treal start) aid ascore))
             (:html
              (format
               stream
@@ -209,8 +216,8 @@
                    <td class=\"flowRightBorder\"></td>~
                <tr><td class=\"flowLeftBorder\"></td>~
                    <td class=\"flowLeft\"><img src=\"1x20.jpg\"></td>~
-                   <td class=\"flow\" colspan=2>[~a] # ~a"
-               (current-time :long :since :treal start) pid)))
+                   <td class=\"flow\" colspan=2>[~a] # ~a~@[ {~,2f}~]"
+               (current-time :long :since :treal start) aid ascore)))
           (print-result transfer :stream stream :format format :index index)
           (case format
             (:html
@@ -225,16 +232,20 @@
               for i from 1 to n
               for result in (get-field :results transfer)
               for tid = (get-field :result-id result)
+              for tscore = (get-field :tscore (get-field :flags result))
               for realization = 
                 (pvm-process transfer :generate :result-id tid :filter filter)
+              when (numberp tscore) do
+                (when (or (null tmin) (< tscore tmin)) (setf tmin tscore))
+                (when (or (null tmax) (> tscore tmax)) (setf tmax tscore))
               do
                 (incf nrealizations (length (get-field :results realization)))
                 (case format
                   (:ascii
                    (format
                     stream
-                    "| |~%| |-[~a] # ~a"
-                    (current-time :long :since :treal start) tid))
+                    "| |~%| |-[~a] # ~a~@[ {~,2f}~]"
+                    (current-time :long :since :treal start) tid tscore))
                   (:html
                    (format
                     stream
@@ -245,8 +256,8 @@
                      <tr><td class=\"flowLeftBorder\"></td>~
                          <td class=\"flowLeft\"></td>~
                          <td class=\"flowLeft\"><img src=\"1x20.jpg\"></td>~
-                         <td class=\"flow\">[~a] # ~a"
-                    (current-time :long :since :treal start) tid)))
+                         <td class=\"flow\">[~a] # ~a~@[ {~,2f}~]"
+                    (current-time :long :since :treal start) tid tscore)))
                 (print-result realization :stream stream :index index)
                 (case format
                   (:html
@@ -259,7 +270,9 @@
                     for result in results
                     for rid = (get-field :result-id result)
                     for tree = (tsdb::get-field :tree result)
-                    for score = (tsdb::get-field :score result)
+                    for rscore = (or (tsdb::get-field :score result)
+                                     (let ((flags (get-field :flags result)))
+                                       (get-field :tscore flags)))
                     for flags = (tsdb::get-field :flags result)
                     for distance = (let ((foo (when (consp flags)
                                                 (tsdb::get-field
@@ -272,7 +285,13 @@
                                  (when (eq result (first results)) targets)
                                  :source input :type :bleu))
                     when (numberp bleu) do (setf best (max best bleu))
+                    when (numberp rscore) do
+                      (when (or (null rmin) (< rscore rmin))
+                        (setf rmin rscore))
+                      (when (or (null rmax) (> rscore rmax))
+                        (setf rmax rscore))
                     do
+
                       (let ((flags (acons :bleu bleu flags)))
                         (if (tsdb::get-field :flags result)
                           (setf (tsdb::get-field :flags result) flags)
@@ -282,8 +301,8 @@
                         (:ascii
                          (format
                           stream
-                          "| |   |~a|~@[ {~a}~] [~@[~,2f~]] <~@[~,2f~]>~%"
-                          tree distance score bleu))
+                          "| |   |~a|~@[ [~a]~] {~@[~,2f~]} <~@[~,2f~]>~%"
+                          tree distance rscore bleu))
                         (:html
                          (format
                           stream
@@ -291,16 +310,18 @@
                                <td class=\"flowLeft\"></td>~
                                <td class=\"flowLeft\"></td>~
                                <td class=\"flow\">    ~
-                                 |~a|~@[ {~a}~] [~@[~,2f~]] <~@[~,2f~]></td>~
+                                 |~a|~@[ [~a]~] {~@[~,2f~]} <~@[~,2f~]></td>~
                                <td class=\"flowRightBorder\"></td>~%"
-                          tree distance score bleu)))
+                          tree distance rscore bleu)))
                       (force-output stream)
-                    when (and (stringp tree) (numberp score))
+                    when (and (stringp tree) (numberp rscore))
                     do
-                      (push (pairlis '(:pid :tid :rid :string
-                                       :score :bleu :distance)
-                                     (list pid tid rid tree
-                                           score bleu distance))
+                      (push (pairlis '(:aid :tid :rid :string
+                                       :ascore :tscore :rscore
+                                       :bleu :distance)
+                                     (list aid tid rid tree
+                                           ascore tscore rscore
+                                           bleu distance))
                             translations)
                       (incf ntranslations))
                 (force-output stream)
@@ -310,20 +331,39 @@
            transfers)
         finally
           ;;
-          ;; now eliminate duplicates, making sure to keep outputs that were
-          ;; found earlier in the process: since .translations. at this point
-          ;; is in reverse order, discard everything from the front while there
-          ;; is an equivalent output further down the list.
+          ;; now eliminate duplicates, making sure to preserve outputs with the
+          ;; maximum aggregate score (however that was defined :-).  note that
+          ;; .translations. at this point is in reverse chronological order, so
+          ;; throwing away everything but the first output with maxium score is
+          ;; an implicit way of keeping outputs found early on in fan-out.
           ;;
-          (setf translations
+          (let ((map (make-hash-table :test #'equal))
+                (scores (make-hash-table :test #'equal)))
             (loop
-                for translations on translations
-                for translation = (first translations)
-                unless (find 
-                        (get-field :string translation) (rest translations)
-                        :test #'string=
-                        :key #'(lambda (foo) (get-field :string foo)))
-                collect translation))
+                with arange = (and (numberp amin) (numberp amax) (- amax amin))
+                with trange = (and (numberp tmin) (numberp tmax) (- tmax tmin))
+                with rrange = (and (numberp rmin) (numberp rmax) (- rmax rmin))
+                for translation in translations
+                for string = (get-field :string translation)
+                for ascore = (get-field+ :ascore translation 0)
+                for tscore = (get-field+ :tscore translation 0)
+                for rscore = (get-field+ :rscore translation 0)
+                for score
+                = (+ (* 0.2 (or (and ascore arange
+                                     (divide (- ascore amin) arange)) 0))
+                     (* 0.2 (or (and tscore trange
+                                      (divide (- tscore tmin) trange)) 0))
+                     (* 0.6 (or (and rscore rrange
+                                     (divide (- rscore rmin) rrange)) 0)))
+                when (or (null (gethash string scores))
+                         (> score (gethash string scores)))
+                do
+                  (setf (gethash string scores) score)
+                  (setf (gethash string map) (acons :score score translation)))
+            (setf translations
+              (loop
+                  for translation being each hash-value in map
+                  collect translation)))
                         
           (setf translations
             (sort
@@ -336,9 +376,11 @@
                     (:ascii
                      (format
                       stream
-                      "|~%|< |~a|~@[ (~a)~] --- ~a x ~a x ~a = ~
+                      "|~%|< ~:[~;*~]|~a|~@[ (~a)~] --- ~
+                       ~:[~;^~]~a x ~a x ~a = ~
                        ~:[~*~a~;~a [~a]~]~%"
-                      input id 
+                      (and (numberp wf) (zerop wf)) input id
+                      (and (numberp fragments) (> fragments 0))
                       (length analyses) ntransfers nrealizations
                       (not (= ntranslations n)) n ntranslations)
                      (loop
@@ -352,10 +394,12 @@
                            <td class=\"flowRightBorder\"></td>~%~
                        <tr><td class=\"flowLeftBorder\"></td>~
                            <td class=\"flow\" colspan=3>~
-                             |< |~a|~@[ (~a)~] --- ~a x ~a x ~a = ~
+                             |< ~:[~;*~]|~a|~@[ (~a)~] ~
+                             --- ~:[~;^~]~a x ~a x ~a = ~
                              ~:[~*~a~;~a [~a]~]</td>~
                            <td class=\"flowRightBorder\"></td>~%"
-                      input id 
+                      (and (numberp wf) (zerop wf)) input id 
+                      (and (numberp fragments) (> fragments 0))
                       (length analyses) ntransfers nrealizations
                       (not (= ntranslations n)) n ntranslations))))
               for translation in translations
@@ -364,13 +408,13 @@
                   (:ascii
                    (format
                     stream
-                    "|> |~@[~a~]|~@[ {~a}~] ~
-                     [~@[~,2f~]] <~@[~,2f~]> (~a:~a:~a).~%"
+                    "|> |~@[~a~]|~@[ [~a]~] ~
+                     {~@[~,2f~]} <~@[~,2f~]> (~a:~a:~a).~%"
                     (get-field :string translation) 
                     (get-field :distance translation) 
                     (get-field :score translation) 
                     (get-field :bleu translation)
-                    (get-field :pid translation)
+                    (get-field :aid translation)
                     (get-field :tid translation)
                     (get-field :rid translation)))
                   (:html
@@ -378,14 +422,14 @@
                     stream
                     "<tr><td class=\"flowLeftBorder\"></td>~
                          <td class=\"flow\" colspan=3>~
-                           |> |~@[~a~]|~@[ {~a}~] [~@[~,2f~]] ~
+                           |> |~@[~a~]|~@[ [~a]~] {~@[~,2f~]} ~
                            <~@[~,2f~]> (~a:~a:~a).</td>~
                          <td class=\"flowRightBorder\"></td>~%"
                     (get-field :string translation) 
                     (get-field :distance translation) 
                     (get-field :score translation) 
                     (get-field :bleu translation)
-                    (get-field :pid translation)
+                    (get-field :aid translation)
                     (get-field :tid translation)
                     (get-field :rid translation)))))
           (case format
@@ -551,7 +595,7 @@
 
 
 (defun translate-item (string
-                       &key id exhaustive nanalyses trace
+                       &key id (wf 1) exhaustive nanalyses trace
                             edges derivations semantix-hook trees-hook
                             (filter *process-suppress-duplicates*)
                             burst (nresults 0) targets)
@@ -580,7 +624,7 @@
                  (error "no ~(~a~) PVM client" task)))
          
          (let* ((item (translate-string
-                       string :id id :nhypotheses nanalyses :stream log
+                       string :id id :wf wf :nhypotheses nanalyses :stream log
                        :filter filter :targets targets))
                 (tgc 0) (tcpu 0) (treal 0) (conses 0) (symbols 0) (others 0)
                 (total 0) (readings 0) outputs (errors "") 

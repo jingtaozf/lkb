@@ -120,7 +120,7 @@
         :ok))))
 
 (let ((lock (mp:make-process-lock)))
-  (defun allocate-client (item &key protocol (task :parse) (wait 42))
+  (defun allocate-client (item &key protocol (task :parse) class (wait 42))
     (loop
         for i from 1 to wait do
           (loop
@@ -131,7 +131,11 @@
                         (or (null task)
                             (and (eq task :parse) (null (cpu-task cpu)))
                             (eq task (cpu-task cpu))
-                            (smember task (cpu-task cpu))))
+                            (smember task (cpu-task cpu)))
+                        (or (null class)
+                            (eq class (cpu-class cpu))
+                            (when (consp (cpu-class cpu))
+                              (smember class (cpu-class cpu)))))
               do
                 (mp:with-process-lock (lock) 
                   (when (eq (client-status client) :ready)

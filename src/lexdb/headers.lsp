@@ -104,7 +104,7 @@
     (error "Please compile with :psql"))
   (defun LKB::LOAD-LEXDB-FROM-SCRIPT (&rest foo) (declare (ignore foo))
 	 (error "Please set *lexdb-params* to NIL"))
-  (defun MRS::DUMP-GENERATOR-INDICES-TO-PSQL (&rest foo) (declare (ignore foo)))
+  (defun LKB::DUMP-GENERATOR-INDICES-TO-PSQL (&rest foo) (declare (ignore foo)))
   (defun LKB::INDEX-NEW-LEX-ENTRIES (&rest foo) (declare (ignore foo)))
   (defun MRS::LOAD-GENERATOR-INDICES-FROM-PSQL (&rest foo) (declare (ignore foo)))
   (defun LKB::SEMI-OUT-OF-DATE (&rest foo) (declare (ignore foo)))

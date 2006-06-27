@@ -235,7 +235,7 @@
     (length items)))
 
 (defun tsdb (&optional action argument 
-             &key condition run skeleton load gold host wait
+             &key condition run skeleton load gold host task wait
                   (file nil filep) (reset nil resetp) count target error)
   
   (unless (and action (keywordp action)
@@ -265,27 +265,33 @@
          (format *tsdb-io* "~&~%")
          (cond
           ((null argument)
-           (tsdb-do-cpus :action :active :stream *tsdb-io*))
+           (tsdb-do-cpus
+            :action :active :host host :task task :stream *tsdb-io*))
           ((member argument '(:active :list :kill))
-           (tsdb-do-cpus :action argument :stream *tsdb-io*))
+           (tsdb-do-cpus
+            :action argument :host host :task task :stream *tsdb-io*))
           (t
            (let ((clients
                   (cond
                    ((and filep resetp)
                     (initialize-cpus
-                     :classes argument :count count :wait wait :host host
+                     :classes argument :count count :wait wait
+                     :host host :task task
                      :file file :reset reset :stream *tsdb-io* :prefix "  "))
                    (filep 
                     (initialize-cpus
-                     :classes argument :count count :wait wait :host host
+                     :classes argument :count count :wait wait
+                     :host host :task task
                      :file file :stream *tsdb-io* :prefix "  "))
                    (resetp
                     (initialize-cpus
-                     :classes argument :count count :wait wait :host host
+                     :classes argument :count count :wait wait
+                     :host host :task task
                      :reset reset :stream *tsdb-io* :prefix "  "))
                    (t
                     (initialize-cpus
-                     :classes argument :count count :wait wait :host host
+                     :classes argument :count count :wait wait
+                     :host host :task task
                      :stream *tsdb-io* :prefix "  ")))))
              (when (and (eq error :exit) (< (length clients) (or count 1)))
                #+:allegro
@@ -630,9 +636,9 @@
         "set phenomena(~d) ~s;~%"
         i (first phenomena))))))
 
-(defun tsdb-do-cpus (&key (action :list) (format :ascii) host
+(defun tsdb-do-cpus (&key (action :list) (format :ascii) host task
                           (stream *tsdb-io*) (prefix "  "))
-  (declare (ignore host))
+  (declare (ignore host task))
   
   (case action
     (:list

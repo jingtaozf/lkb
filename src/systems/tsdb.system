@@ -147,6 +147,8 @@
        (:file "yy")
        #+:lkb
        (:file "mt")
+       #+:lkb
+       (:file "kf")
        #+:page 
        (:file "page-interface")
        (:file "derivations")
@@ -162,7 +164,7 @@
        (:file "rasp")
        #+:lkb
        (:file "pcfg")
-       #+(and :null :acache)
+       #+:null
        (:file "acache")
        #+:bdb
        (:file "bdb")

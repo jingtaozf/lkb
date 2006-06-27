@@ -1070,7 +1070,13 @@
                    ;; we will never pack two edges unless they were built from
                    ;; the same rule; see the comment in `fs.cpp' in PET too.
                    ;;                                          (21-sep-05; oe)
-                   (if #+:logon (null path) #-:logon nil
+                   ;; --- doing this unconditionally causes termination issues
+                   ;; in grammars that encode the lexeme vs. word distinction
+                   ;; in the top-level types of lexical rules; maybe the (new)
+                   ;; restrictor language should allow inclusion of the null
+                   ;; path then.                               (30-may-06; oe)
+                   ;;
+                   (if #+:null (null path) #-:null nil
                      *toptype*
                      (dag-type old))))
            (arcs (unless restrictp

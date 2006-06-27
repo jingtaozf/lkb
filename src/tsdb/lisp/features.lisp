@@ -43,7 +43,7 @@
 ;;;      form; e.g. [11 (3 1) ^ n_proper_le v_np_trans_le].
 ;;;  42: language model score; the second integer is the number of bins used 
 ;;;      (if any), and the third the divisor used in scaling (*maxent-lm-p*), 
-;;;      e.g. [42 (0) 100]
+;;;      e.g. [42 (0 10) 100]
 ;;;
 ;;; also, we are using some pseudo-features to record additional information in
 ;;; the feature cache, viz.

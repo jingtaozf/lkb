@@ -54,7 +54,13 @@
 ;; operations with CPU intensive processing, e.g., when expanding lots of
 ;; lexical entries.
 
-#+(or :allegro :lispworks)
+;;;
+;;; when loading and indexing JaCY, i get the impression that there is some
+;;; unfortunate effect on gc() effectiveness here: i end up with a 1.7 gbyte
+;;; process with asynchronous processing and around 600 mbyte otherwise.  for
+;;; better testing, disable asynchronous mode in LOGON.         (13-jun-06; oe)
+;;;
+#+(or :allegro :lispworks (not :logon))
 (defun process-queue (source sink)
   (let ((queue (make-queue)))
     (let ((child
@@ -74,7 +80,7 @@
 	      do (funcall sink item))
 	(mp:process-kill child)))))
 
-#-(or :allegro :lispworks)
+#-(or :allegro :lispworks (not :logon))
 (defun process-queue (source sink)
   (loop for item = (funcall source)
       until (eq item :eof)

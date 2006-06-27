@@ -22,7 +22,7 @@
   ;; return a string identifying the grammar that is currently in use, ideally
   ;; including relevant grammar-internal parameters of variation and a version.
   ;;
-  (or (tsdb::clients-grammar) "norgram (jul)"))
+  (or (tsdb::clients-grammar) "norgram (dal)"))
 
 (defun tsdb::initialize-run (&key interactive 
                             exhaustive nanalyses

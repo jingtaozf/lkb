@@ -2468,7 +2468,6 @@
                ;; we need a general way of distinguishing browsers that take a
                ;; set of results rather than one at a time.    (30-oct-03; oe)
                ;;
-               #+:mt
                ((and (eq field :mrs)
                      (string-equal 
                       (gethash :mrs *statistics-browsers*) "mt::browse-mrss"))

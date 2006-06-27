@@ -52,7 +52,7 @@
 (defun initialize-cpus (&key cpus
                              (classes '(:all))
                              (reset t)
-                             host
+                             host task
                              count
                              block
                              wait
@@ -104,27 +104,34 @@
       for cpu in (or cpus *pvm-cpus*)
       for class = (let ((class (cpu-class cpu)))
                     (if (listp class) class (list class)))
+      for tasks = (let ((task (cpu-task cpu)))
+                    (if (listp task) task (list task)))
       for node = (if (stringp host) host (cpu-host cpu))
       for delay = (if (numberp wait) wait (cpu-wait cpu))
       do
         (loop
             for i from 1 to (or count 1)
-            for tid = (when (or allp (intersection class classes))
+            for tid = (when (and (or allp (intersection class classes))
+                                 (or (null task)
+                                     (member task tasks :test #'eq)))
                         (pvm_create
                          (cpu-spawn cpu) (cpu-options cpu)
                          :host node :architecture (cpu-architecture cpu)))
-            for task = (when (and (integerp tid) (> tid 0)) (tid-status tid))
-            when (and tid (null task))
+            for ptask = (when (and (integerp tid) (> tid 0)) (tid-status tid))
+            when (and tid (null ptask))
             do
               (format
                stream
                "~ainitialize-cpus(): `~a' communication error <~x>.~%"
                prefix node tid)
-            when task
+            when ptask
             do
-              (let ((client (make-client
-                             :tid tid :task task :cpu cpu :host node
-                             :status (list :start tag (get-universal-time)))))
+              (let* ((cpu (let ((cpu (copy-cpu cpu)))
+                            (when task (setf (cpu-task cpu) (list task)))
+                            cpu))
+                     (client (make-client
+                              :tid tid :task ptask :cpu cpu :host node
+                              :status (list :start tag (get-universal-time)))))
               (push client *pvm-clients*)
               (push client result)
               (when block
@@ -306,7 +313,10 @@
       (excl:exit 1 :no-unwind t :quiet t))))
 
 (defun pvm-process (item &optional (type :parse)
-                    &key (exhaustive *tsdb-exhaustive-p*)
+                    &key class
+                         (trees-hook :local)
+                         (semantix-hook :local)
+                         (exhaustive *tsdb-exhaustive-p*)
                          (nanalyses *tsdb-maximal-number-of-analyses*)
                          (nresults 
                           (if *tsdb-write-passive-edges-p*
@@ -332,7 +342,7 @@
                  (pairlis '(:i-id :parse-id :i-input) 
                           (list i-id parse-id item))
                  item))
-         (client (allocate-client item :task type :wait wait))
+         (client (allocate-client item :task type :class class :wait wait))
          (cpu (and client (pvm::client-cpu client)))
          (tid (and client (client-tid client)))
          (protocol (and client (client-protocol client)))
@@ -358,7 +368,7 @@
                          :exhaustive ,exhaustive
                          :nanalyses ,nanalyses
                          :nresults ,nresults :filter (quote ,filter)
-                         :trees-hook :local :semantix-hook :local
+                         :trees-hook ,trees-hook :semantix-hook ,semantix-hook
                          :verbose nil :interactive nil :burst t)
                        nil
                        :key :process-item

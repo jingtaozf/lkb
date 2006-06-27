@@ -892,6 +892,8 @@
                         (if (and (integerp nanalyses) (>= nanalyses 1))
                           nanalyses
                           1)))
+           (trees-hook (and *tsdb-write-tree-p* trees-hook))
+           (semantix-hook (and *tsdb-write-mrs-p* semantix-hook))
            (tid (client-tid client))
            #+(and :null :allegro-version>= (version>= 6 0))
            (ef (let ((old (excl:locale-external-format excl:*locale*))
@@ -961,7 +963,8 @@
                             semantix-hook))
            (run-id (get-field :run-id item))
            (parse-id (get-field :parse-id item))
-           (i-id (get-field :i-id item)) 
+           (i-id (get-field :i-id item))
+           (i-wf (get-field :i-wf item))
            (i-input (or (and interactive (get-field :o-input item))
                         (get-field :p-input item)
                         (get-field :i-input item)))
@@ -1087,7 +1090,7 @@
                             :burst burst))
             (:translate
              (translate-item i-input
-                             :id i-id
+                             :id i-id :wf i-wf
                              :edges edges
                              :trace interactive
                              :exhaustive exhaustive
@@ -1152,6 +1155,7 @@
                             :burst burst))
             (:translate
              (translate-item i-input
+                             :id i-id :wf i-wf
                              :edges edges
                              :trace interactive
                              :exhaustive exhaustive

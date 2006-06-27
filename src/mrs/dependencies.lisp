@@ -103,11 +103,25 @@
     (format nil "~a<~a>" (ed-predicate ed) (ed-link ed))
     (format nil "~a~@[<~{~a~^ ~}>~]" (ed-predicate ed) (ed-link ed))))
 
-(defun ed-output-psoa (psoa &key (stream t) (format :ascii))
+(defun ed-output-psoa (psoa &key (stream t) (format :ascii) markp)
   (if (psoa-p psoa)
     (case format
       (:ascii
        (format stream "~a~%" (ed-convert-psoa psoa)))
+      (:triples
+       (let* ((eds (ed-convert-psoa mrs))
+              (triples (ed-explode eds)))
+         (loop
+             with *package* = (find-package :lkb)
+             initially (unless markp (format stream "{~%"))
+             for triple in triples
+             do
+               (format
+                stream
+                "~:[  ~;<s> ~]~{~a~^ ~}~:[  ~; </s>~]~%"
+                markp triple markp)
+             finally (unless markp (format stream "}~%~%")))
+         (length triples)))
       (:lui
        (let ((attic (make-hash-table :test #'equal))
              (id 0))

@@ -109,6 +109,8 @@
       set globals(write_run_p) ~:[0~;1~]~%~
       set globals(write_parse_p) ~:[0~;1~]~%~
       set globals(write_result_p) ~:[0~;1~]~%~
+      set globals(write_tree_p) ~:[0~;1~]~%~
+      set globals(write_mrs_p) ~:[0~;1~]~%~
       set globals(write_output_p) ~:[0~;1~]~%~
       set globals(write_rule_p) ~:[0~;1~]~%~
       set globals(write_syntax_chart_p) ~:[0~;1~]~%~
@@ -150,7 +152,8 @@
      *tsdb-exhaustive-p*
      *process-pretty-print-trace-p*
      *tsdb-write-run-p* *tsdb-write-parse-p* 
-     *tsdb-write-result-p* *tsdb-write-output-p*
+     *tsdb-write-result-p* *tsdb-write-tree-p* *tsdb-write-mrs-p*
+     *tsdb-write-output-p*
      *tsdb-rule-statistics-p*
      *tsdb-write-syntax-chart-p* *tsdb-write-lexicon-chart-p*
      *pvm-protocol*

@@ -497,7 +497,8 @@
                      for mrs = (if edge
                                  (tsdb::call-hook semantix-hook edge)
                                  "")
-                     for flags = (acons :distance distance nil)
+                     for flags = (pairlis '(:distance :rscore)
+                                          (list distance score))
                      while (>= (decf nresults) 0)
                      unless (when filterp
                               (member surface surfaces :test #'equal))
@@ -582,7 +583,7 @@
                 (output (if unknown
                           (format
                            nil
-                           "unknown predicates: ~{~(~s~)~^, ~}"
+                           "unknown transfer predicates: ~{~(~s~)~^, ~}"
                            unknown)
                           (get-output-stream-string stream)))
                 (readings (- (length edges) (length partial)))
@@ -614,9 +615,11 @@
                    for mrs = (let ((mrs (mt::edge-mrs edge)))
                                (with-output-to-string (stream)
                                  (mrs::output-mrs1 mrs 'mrs::simple stream)))
+                   for score = (mt::edge-score edge)
                    while (>= (decf nresults) 0) collect
-                     (pairlis '(:result-id :mrs :tree)
-                              (list i mrs tree)))))))
+                     (pairlis '(:result-id :mrs :tree :flags)
+                              (list i mrs tree 
+                                    (acons :tscore score nil))))))))
       (append
        (when condition
          (let* ((error (tsdb::normalize-string 

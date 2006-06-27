@@ -311,7 +311,7 @@ proc update_condition_cascade {{active ""} {context "condition"}} {
 
   global globals phenomena;
 
-  set fields {wellformed illformed 
+  set fields {wellformed illformed dubious
               analyzed ambiguous unanalyzed unproblematic
               rejected resolved reduced annotated unannotated};
 
@@ -320,9 +320,15 @@ proc update_condition_cascade {{active ""} {context "condition"}} {
   } elseif {$active == "wellformed"} {
     set globals($context,null) 0;
     set globals($context,illformed) 0;
+    set globals($context,dubious) 0;
   } elseif {$active == "illformed"} {
     set globals($context,null) 0;
     set globals($context,wellformed) 0;
+    set globals($context,dubious) 0;
+  } elseif {$active == "dubious"} {
+    set globals($context,null) 0;
+    set globals($context,wellformed) 0;
+    set globals($context,illformed) 0;
   } elseif {$active == "analyzed"} {
     set globals($context,null) 0;
     set globals($context,unanalyzed) 0;
@@ -431,6 +437,10 @@ proc update_condition_cascade {{active ""} {context "condition"}} {
       -variable globals($context,illformed) \
       -command "update_condition_cascade illformed $context";
     $menu add checkbutton \
+      -label "Dubious (`i-wf = 2')" \
+      -variable globals($context,dubious) \
+      -command "update_condition_cascade dubious $context";
+    $menu add checkbutton \
       -label "Analyzed (`readings > 0')" \
       -variable globals($context,analyzed) \
       -command "update_condition_cascade analyzed $context";
@@ -525,6 +535,15 @@ proc update_condition_cascade {{active ""} {context "condition"}} {
       } else {
         set globals($context) \
           "$globals($context) and [lispify_string "(i-wf = 0)"]";
+      }; # else
+    }; # if
+
+    if {$globals($context,dubious)} {
+      if {$globals($context) == ""} {
+        set globals($context) [lispify_string "(i-wf = 2)"];
+      } else {
+        set globals($context) \
+          "$globals($context) and [lispify_string "(i-wf = 2)"]";
       }; # else
     }; # if
 
@@ -854,6 +873,14 @@ proc tsdb_set {variable {value ""}} {
       write_result_p {
         set variable "*tsdb-write-result-p*"; 
         set value [lispify_truth_value $globals(write_result_p)]
+      }
+      write_tree_p {
+        set variable "*tsdb-write-tree-p*"; 
+        set value [lispify_truth_value $globals(write_tree_p)]
+      }
+      write_mrs_p {
+        set variable "*tsdb-write-mrs-p*"; 
+        set value [lispify_truth_value $globals(write_mrs_p)]
       }
       write_output_p {
         set variable "*tsdb-write-output-p*"; 

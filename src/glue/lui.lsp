@@ -316,7 +316,8 @@
 
 (defun lui-display-fs (tdfs title id &optional failures)
   (declare (ignore id))
-  (let* ((id (lsp-store-object nil (make-lspb :dag tdfs)))
+  (let* ((tdfs (if (tdfs-p tdfs) tdfs (make-tdfs :indef tdfs)))
+         (id (lsp-store-object nil (make-lspb :dag tdfs)))
          (dag (tdfs-indef tdfs))
          (*package* (find-package :lkb)))
     

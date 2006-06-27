@@ -526,7 +526,7 @@
 
      ;;
      ;; and now for the add-on MT facilities, assuming both the LKB and MRS
-     ;; code is available (the original `mt.system').
+     ;; code are available (the original `mt.system').
      ;;
      (:module "mt"
       :source-pathname "mt"
@@ -539,6 +539,7 @@
        (:file "globals")
        (:file "patches")
        (:file "mrs")
+       (:file "vpm")
        (:file "transfer")
        (:file "comparison")
        (:file "translate")

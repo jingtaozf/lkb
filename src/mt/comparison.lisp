@@ -1,5 +1,19 @@
 (in-package :mt)
 
+;;;
+;;; Copyright (c) 2004 -- 2006 Stephan Oepen (oe@csli.stanford.edu)
+;;;
+;;; This program is free software; you can redistribute it and/or modify it
+;;; under the terms of the GNU Lesser General Public License as published by
+;;; the Free Software Foundation; either version 2.1 of the License, or (at
+;;; your option) any later version.
+;;;
+;;; This program is distributed in the hope that it will be useful, but WITHOUT
+;;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+;;; FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
+;;; License for more details.
+;;; 
+
 (defparameter *mrs-comparison-ignore-roles* nil)
 
 (defparameter *mrs-comparison-ignore-properties* nil)
@@ -10,8 +24,13 @@
 
 (defun mrs= (mrs1 mrs2
              &key (roles *mrs-comparison-ignore-roles*)
-                  (properties *mrs-comparison-ignore-properties*))
-  (compare-mrss mrs1 mrs2 :type :equal :roles roles :properties properties))
+                  (properties *mrs-comparison-ignore-properties*)
+                  (types *mrs-comparison-equivalent-types*)
+                  (predicates *mrs-comparison-equivalent-predicates*)
+                  hcons debug)
+  (compare-mrss
+   mrs1 mrs2 :type :equal :roles roles :properties properties
+   :types types :predicates predicates :hcons hcons :debug debug))
 
 (defun compare-mrss (mrs1 mrs2
                      &key (type :subsumption)
@@ -19,8 +38,7 @@
                           (properties *mrs-comparison-ignore-properties*)
                           (types *mrs-comparison-equivalent-types*)
                           (predicates *mrs-comparison-equivalent-predicates*)
-                          hcons
-                          debug)
+                          hcons debug)
   ;;
   ;; in (default) :subsumption mode, e.g. when testing post-generation, .mrs2.
   ;; is expected to be more general than .mrs1.
