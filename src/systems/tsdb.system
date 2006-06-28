@@ -40,7 +40,7 @@
   ;;
   ;; for supported platforms, assume Berkeley DB support is available
   ;;
-  #+(and :linux (and :allegro-version>= (version>= 8 0)))
+  #+(and :linux (and :allegro-version>= (version>= 7 0)))
   (pushnew :bdb *features*)
   
   ;;

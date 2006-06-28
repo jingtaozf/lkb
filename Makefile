@@ -93,8 +93,8 @@ lkb_source:
 	  if [ ! -d ${TARGET}/builds/${DATE} ]; then \
             ${MKDIR} ${TARGET}/builds/${DATE}; \
           fi; \
-	  ${CHGRP} build ${TARGET}/builds/${DATE}; \
 	  ${CHMOD} 3775 ${TARGET}/builds/${DATE}; \
+	  ${CHGRP} build ${TARGET}/builds/${DATE}; \
 	  ${TAR} Svczf ${TARGET}/builds/${DATE}/lkb_source.tgz \
 	      --exclude=Makefile \
 	      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \

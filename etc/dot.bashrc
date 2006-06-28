@@ -2,9 +2,9 @@
 # make sure this file is included from your personal `~/.bashrc', e.g. put the
 # following towards the end of `~/.bashrc' (and uncomment these, of course):
 #
-#   LOGONROOT=~/logon
-#   if [ -f ${LOGONROOT}/dot.bashrc ]; then
-#     . ${LOGONROOT}/dot.bashrc
+#   DELPHINHOME=~/delphin
+#   if [ -f ${DELPHINHOME}/dot.bashrc ]; then
+#     . ${DELPHINHOME}/dot.bashrc
 #   fi
 #
 # if you decide to keep your DELPH-IN source tree in a different location, say
@@ -26,7 +26,7 @@
 #
 # make global variable for DELPH-IN tree accessible to other processes.
 #
-export LOGONROOT
+export DELPHINHOME
 
 #
 # first, work out the current operating system, one of `linux' (x86), `solaris'
@@ -67,11 +67,10 @@ fi
 #
 if [ "$OSTYPE" = "linux" -o "$OSTYPE" = "linux-gnu" ]; then
   if [ -z "${LD_LIBRARY_PATH}" ]; then
-    LD_LIBRARY_PATH=${LOGONROOT}/lingo/lkb/lib/${os}
+    LD_LIBRARY_PATH=${DELPHINHOME}/lkb/lib/${os}
   else
-    LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${LOGONROOT}/lingo/lkb/lib/linux
+    LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${DELPHINHOME}/lkb/lib/${os}
   fi
-  LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${LOGONROOT}/parc/xle/lib
   export LD_LIBRARY_PATH
 fi
 
@@ -81,87 +80,8 @@ fi
 # already.
 #
 /bin/mkdir $HOME/tmp > /dev/null 2>&1
-if [ ! -f ${HOME}/.cvsrc ]; then
-  /bin/cp $LOGONROOT/dot.cvsrc ${HOME}/.cvsrc;
-fi
-if [ ! -f ${HOME}/.pvm_hosts ]; then
-  /bin/cp $LOGONROOT/dot.pvm_hosts ${HOME}/.pvm_hosts;
-fi
-if [ ! -f ${HOME}/.tsdbrc ]; then
-  /bin/cp $LOGONROOT/dot.tsdbrc ${HOME}/.tsdbrc;
-fi
-
-#
-# for ChaSen, we need to expand $LOGONROOT when we create a user-specific file;
-# we will have to hope people do not move around their LOGON trees ...
-#
-if [ ! -f ${HOME}/.chasenrc ]; then
-  sed "s@_LOGONROOT_@$LOGONROOT@" $LOGONROOT/dot.chasenrc > ${HOME}/.chasenrc;
-fi
-
-#
-# even though most LOGON users go through :pserver:, set this propertly too.
-#
-export CVS_RSH=ssh
 
 #
 # request emacs(1) as the standard editor, e.g. for CVS comments.
 #
 export EDITOR=emacs
-
-#
-# by default, use standard cvs(1) binary; developers who manipulate more than
-# a single CVS repository (e.g. paul and oe) may set this to `lvs' instead.
-#
-if [ -z "${CVS}" ]; then
-  export CVS=cvs
-fi
-
-#
-# make some of the `gold' profiles visible in the default [incr tsdb()] home
-#
-{
-  mkdir ${LOGONROOT}/lingo/lkb/src/tsdb/home/gold;
-  if [ -a ${LOGONROOT}/lingo/lkb/src/tsdb/home/gold/norgram ]; then
-    if [ -h ${LOGONROOT}/lingo/lkb/src/tsdb/home/gold/norgram ]; then
-      rm ${LOGONROOT}/lingo/lkb/src/tsdb/home/gold/norgram;
-      ln -s ${LOGONROOT}/parc/pargram/norwegian/bokmal/gold \
-        ${LOGONROOT}/lingo/lkb/src/tsdb/home/gold/norgram;
-    fi
-  else
-    ln -s ${LOGONROOT}/parc/pargram/norwegian/bokmal/gold \
-      ${LOGONROOT}/lingo/lkb/src/tsdb/home/gold/norgram;
-  fi
-  if [ -a ${LOGONROOT}/lingo/lkb/src/tsdb/home/gold/erg ]; then
-    :
-  else
-    ln -s ${LOGONROOT}/lingo/erg/gold \
-      ${LOGONROOT}/lingo/lkb/src/tsdb/home/gold/erg;
-  fi
-  if [ -a ${LOGONROOT}/lingo/lkb/src/tsdb/home/gold/logon ]; then
-    :
-  else
-    ln -s ${LOGONROOT}/gold ${LOGONROOT}/lingo/lkb/src/tsdb/home/gold/logon;
-  fi
-  if [ -a ${LOGONROOT}/lingo/lkb/src/tsdb/home/gold/noen ]; then
-    if [ -h ${LOGONROOT}/lingo/lkb/src/tsdb/home/gold/noen ]; then
-      rm ${LOGONROOT}/lingo/lkb/src/tsdb/home/gold/noen;
-      ln -s ${LOGONROOT}/ntnu/noen/gold \
-        ${LOGONROOT}/lingo/lkb/src/tsdb/home/gold/noen;
-    fi
-  else
-    ln -s ${LOGONROOT}/ntnu/noen/gold \
-      ${LOGONROOT}/lingo/lkb/src/tsdb/home/gold/noen;
-  fi
-} > /dev/null 2>&1
-/bin/chmod 755 $HOME
-/bin/mkdir $HOME/tmp > /dev/null 2>&1
-
-export CVSROOT=/home/oe/CVSROOT
-if [ ! -d $CVSROOT ]; then
-  export CVSROOT=glahn.hf.ntnu.no:$CVSROOT
-  export CVS_RSH=ssh
-fi
-
-alias lkbdoc="/usr/local/bin/acroread -geometry 930x600 \
-                /home/lingo/lkb/doc/lkb.pdf &"
