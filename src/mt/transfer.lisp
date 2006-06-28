@@ -1,3 +1,17 @@
+;;;
+;;; Copyright (c) 2004 -- 2006 Stephan Oepen (oe@csli.stanford.edu)
+;;;
+;;; This program is free software; you can redistribute it and/or modify it
+;;; under the terms of the GNU Lesser General Public License as published by
+;;; the Free Software Foundation; either version 2.1 of the License, or (at
+;;; your option) any later version.
+;;;
+;;; This program is distributed in the hope that it will be useful, but WITHOUT
+;;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+;;; FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
+;;; License for more details.
+;;; 
+
 (in-package :mt)
 
 ;;;
@@ -26,6 +40,8 @@
 (defparameter *transfer-interlingua-predicates* nil)
 
 (defparameter *transfer-preemptive-filter-p* nil)
+
+(defparameter *transfer-tm* nil)
 
 (defparameter *transfer-postprocess-p* t)
 
@@ -82,7 +98,7 @@
 (defparameter %transfer-values-filter% nil)
 
 (defstruct mtrs
-  id mtrs flags)
+  id mtrs before after in out flags)
 
 (defstruct mtr
   id
@@ -115,10 +131,13 @@
   `(getf (mtrs-flags ,mtrs) :edges))
 
 (defmacro mtr-optional-p (mtr)
-  `(getf (mtr-flags ,mtr) :optional))
+  `(member :optional (mtr-flags ,mtr) :test #'eq))
 
 (defmacro mtr-fail-p (mtr)
-  `(getf (mtr-flags ,mtr) :fail))
+  `(member :fail (mtr-flags ,mtr) :test #'eq))
+
+(defmacro mtr-exhaustive-p (mtr)
+  `(member :exhaustive (mtr-flags ,mtr) :test #'eq))
 
 (defun mtr-trigger (mtr)
   (loop
@@ -138,7 +157,7 @@
 (defstruct (edge (:constructor make-edge-x))
   (id (let ((n %transfer-edge-id%)) (incf %transfer-edge-id%) n))
   rule mrs daughter solution n (vector 0)
-  source (depth 0))
+  source (depth 0) score)
 
 (defun make-edge (&rest rest)
   (let* ((edge (apply #'make-edge-x rest))
@@ -179,9 +198,10 @@
       (if daughterp
         (format
          stream
-         "~<#D[~;~a~@[ ~(~a~)~]~:[~* ...~; ~_~a~]~;]~:>"
+         "~<#D[~;~a~@[ {~,2f}~]~@[ ~(~a~)~]~:[~* ...~; ~_~a~]~;]~:>"
          (list
-          (edge-id object) 
+          (edge-id object)
+          (when (numberp (edge-score object)) (edge-score object))
           (mtr-id (edge-rule object))
           recursep
           (edge-daughter object)))
@@ -293,6 +313,7 @@
 
 (defun read-transfer-rules (files &optional name 
                             &key (filter nil filterp)
+                                 before after in out
                                  reset task optional (recurse t) subsume edges)
 
   ;;
@@ -405,7 +426,24 @@
                               (record-mtr (compile-mtr rule))
                               (push rule rules))))))))))
         finally 
-          (let ((mtrs (make-mtrs :id id :mtrs (nreverse rules))))
+          (let* ((*package* (find-package :mt))
+                 (before
+                  (ignore-errors
+                   (typecase before
+                     (null nil)
+                     (string (symbol-function (read-from-string before)))
+                     (symbol (symbol-function before))
+                     (function before))))
+                 (after
+                  (ignore-errors
+                   (typecase after
+                     (null nil)
+                     (string (symbol-function (read-from-string after)))
+                     (symbol (symbol-function after))
+                     (function after))))
+                 (mtrs (make-mtrs
+                        :id id :mtrs (nreverse rules)
+                        :before before :after after :in in :out out)))
             (setf (getf (mtrs-flags mtrs) :recurse) recurse)
             (setf (getf (mtrs-flags mtrs) :filter)
               (if filterp filter t))
@@ -522,7 +560,16 @@
     ;; variables.
     ;;
     (when constants (convert-constants-to-variables lhs constants generator))
-    (let* ((filter (mrs::path-value lhs *mtr-filter-path*))
+    ;;
+    ;; _fix_me_
+    ;; for now, construct MRS components in transfer rules _without_ using the
+    ;; SEM-I variable property mapping; however, we surely could, and it would
+    ;; probably make transfer rules look cleaner, but (for example) disconnect 
+    ;; the generator-internal trigger rules further from the type hierarchy.
+    ;; think this over more asap.                              (23-jun-06; oe)
+    ;;
+    (let* ((*vpms* nil)
+           (filter (mrs::path-value lhs *mtr-filter-path*))
            (filter (and filter 
                         (not (vacuous-constraint-p *mtr-filter-path* filter))
                         (mrs::construct-mrs filter generator)))
@@ -578,7 +625,7 @@
         (format
          t
          "~&convert-dag-to-mtr(): ~
-          `~(~a~)' has an empty output specification.~%"
+          `~(~a~)' has empty output specification.~%"
          id))
       ;;
       ;; _fix_me_
@@ -614,6 +661,7 @@
   (setf %dag dag)
   (let* ((optional (mrs::path-value dag *mtr-optional-path*))
          (fail (mrs::path-value dag *mtr-fail-path*))
+         (exhaustive (mrs::path-value dag *mtr-exhaustive-path*))
          flags)
     (when (lkb::bool-value-true optional)
       (pushnew :optional flags))
@@ -621,6 +669,8 @@
       (pushnew :obligatory flags))
     (when (lkb::bool-value-true fail)
       (pushnew :fail flags))
+    (when (lkb::bool-value-true exhaustive)
+      (pushnew :exhaustive flags))
     flags))
 
 (defun convert-dag-to-rank (dag)
@@ -755,6 +805,7 @@
 ;;; to keep track of something reminiscent of a derivation tree.
 ;;;
 (defun initialize-transfer ()
+  (setf *vpms* nil)
   (setf *transfer-rule-sets* nil)
   (setf *transfer-triggers* (make-hash-table))
   ;;
@@ -772,7 +823,9 @@
 (defun transfer-mrs (mrs &key (filter *transfer-filter-p*) 
                               (preemptive *transfer-preemptive-filter-p*)
                               (debug '(:chart))
-                              task)
+                              task before after in out
+                              (tm *transfer-tm*))
+  (declare (ignore before after out))
   #+:debug
   (setf %mrs% mrs)
   (setf %transfer-edges% nil)
@@ -785,6 +838,15 @@
          (%transfer-original-variables% nil)
          (mrs (let ((*transfer-skolemize-p* t))
                 (mrs::fill-mrs (clone-mrs mrs) %transfer-input-defaults%)))
+         (mrs (if in
+                (let* ((id (if (symbolp in) in (first in)))
+                       (direction
+                        (if (symbolp in) :forward (second in)))
+                       (vpm (find id *vpms* :key #'vpm-id)))
+                  (if vpm
+                    (map-mrs mrs vpm direction :skolemizep t)
+                    mrs))
+                mrs))
          (n (loop
                 for variable in %transfer-clones%
                 maximize (or (mrs:var-id (first variable)) 0)
@@ -805,13 +867,35 @@
         (format
          *transfer-debug-stream*
          "~&transfer-mrs(): `~a'~%" condition))
-      (if *transfer-postprocess-p*
-        (loop
-            for edge in result
-            for clone = (copy-edge edge)
-            do (setf (edge-mrs clone) (postprocess-mrs (edge-mrs edge)))
-            collect clone)
-      result))))
+      (when tm
+        (let* ((mrss (loop for edge in result collect (edge-mrs edge)))
+               (scores (ignore-errors (tm-score-mrss mrss :model tm))))
+          (loop
+              for edge in result
+              for score in scores
+              when (numberp (rest score))
+              do (setf (edge-score edge) (- (rest score))))
+          (setf result (sort result #'> :key #'edge-score))))
+
+      (when *transfer-postprocess-p*
+        (setf result
+          (loop
+              for edge in result
+              for clone = (copy-edge edge)
+              do (setf (edge-mrs clone) (postprocess-mrs (edge-mrs edge)))
+              collect clone)))
+
+      (when tm
+        (let* ((mrss (loop for edge in result collect (edge-mrs edge)))
+               (scores (ignore-errors (tm-score-mrss mrss :model tm))))
+          (loop
+              for edge in result
+              for score in scores
+              when (numberp (rest score))
+              do (setf (edge-score edge) (- (rest score))))
+          (setf result (sort result #'> :key #'edge-score))))
+      
+      result)))
 
 (defun transfer-mrs2 (edges mtrss)
   (if (null mtrss)
@@ -842,6 +926,19 @@
   (when (or (null edge) (null mtrs)) (return-from apply-mtrs))
   
   (push edge %transfer-chart%)
+  (when (mtrs-before mtrs)
+    (handler-case
+        (setf (edge-mrs edge) (funcall (mtrs-before mtrs) (edge-mrs edge)))
+      (condition (condition)
+        (format t "~&apply-mtrs(): `~a'.~%" condition)
+        (return-from apply-mtrs))))
+  (when (mtrs-in mtrs)
+    (handler-case
+        (setf (edge-mrs edge) (map-mrs (edge-mrs edge) (mtrs-in mtrs)))
+      (condition (condition)
+        (format t "~&apply-mtrs(): `~a'.~%" condition)
+        (return-from apply-mtrs))))
+  
   (loop
       with result
       with *transfer-edge-limit* = (or (mtrs-edges mtrs) *transfer-edge-limit*)
@@ -870,7 +967,7 @@
               finally
                 (when unknown
                   (error
-                   "unknown predicates: ~{|~a|~^, ~}"
+                   "unknown transfer predicates: ~{|~a|~^, ~}"
                    (loop
                        for ep in unknown
                        collect (mrs::ep-shorthand ep))))))
@@ -955,6 +1052,7 @@
       with %transfer-variable-id% = (edge-n edge)
       for solution in (unify-mtr (edge-mrs edge) mtr :subsumesp subsumesp)
       for mrs = (expand-solution (edge-mrs edge) mtr solution)
+      when mrs
       collect (make-edge 
                :rule mtr :mrs mrs :daughter edge 
                :solution solution :n %transfer-variable-id%)))
@@ -1450,6 +1548,12 @@
   ;; unify in all applicable information from .solution.  eventually, do more
   ;; or less the same for HCONS.
   ;;
+  (when (mtr-exhaustive-p mtr)
+    (loop
+        for ep in (mrs:psoa-liszt mrs)
+        unless (retrieve-ep ep solution)
+        do (return-from expand-solution)))
+  
   (let* ((output (mtr-output mtr))
          ;;
          ;; _fix_me_
