@@ -1,3 +1,4 @@
+U lexdb.dfn
 ? Version.lisp.fasl
 ? lkb/checkpaths.lsp.fasl
 ? lkb/globals.lsp.fasl
@@ -18,6 +19,9 @@ M log/build
 M src/systems/tsdb.system
 ? src/tsdb/home/log
 ? src/tsdb/home/redwoods
+U src/tsdb/skeletons/deutsch/mrs/item
+U src/tsdb/skeletons/deutsch/mrs/output
+U src/tsdb/skeletons/deutsch/mrs/relations
 **********
 
   Remember to update the version number:
@@ -27,7 +31,7 @@ M src/systems/tsdb.system
 **********
 Checking in ./src/version.lsp;
 /lingo/CVS/lkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.489; previous revision: 1.488
+new revision: 1.491; previous revision: 1.490
 done
 make[1]: Entering directory `/lingo/build/lkb'
 ( \
@@ -53,6 +57,7 @@ make[1]: Entering directory `/lingo/build/lkb'
       --exclude=src/systems/pvm.system \
       .; \
 )
+chgrp: changing group of `/lingo/www/lingo/ftp/builds/2006-06-28': Operation not permitted
 ./
 ./src/
 ./src/ACL-CG_specific/
@@ -156,6 +161,8 @@ make[1]: Entering directory `/lingo/build/lkb'
 ./src/lexdb/lex-entry.lsp
 ./src/lexdb/psql-lex-database.lsp
 ./src/lexdb/psql-msc.lsp
+./src/lexdb/psql-lex-database0.lsp
+./src/lexdb/psql-lex-database2.lsp
 ./src/main/
 ./src/main/parse.lsp
 ./src/main/batch-check.lsp
@@ -241,6 +248,7 @@ make[1]: Entering directory `/lingo/build/lkb'
 ./src/mt/globals.lisp
 ./src/mt/comparison.lisp
 ./src/mt/utool.lisp
+./src/mt/vpm.lisp
 ./src/ppcre/
 ./src/ppcre/api.lisp
 ./src/ppcre/closures.lisp
@@ -369,7 +377,6 @@ make[1]: Entering directory `/lingo/build/lkb'
 ./src/preprocess/fspp/
 ./src/preprocess/fspp/fspp.cpp
 ./src/preprocess/saf-conf.lsp
-./src/preprocess/saf.conf
 ( \
   cd /lingo/build//lkb; \
   tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/lkb_data.tgz \
@@ -1056,6 +1063,21 @@ src/data/polymorphan/start.tdl
 src/data/polymorphan/testing.lisp
 src/data/polymorphan/types.tdl
 src/data/polymorphan/user-fns.lsp
+src/data/morph-examples/
+src/data/morph-examples/globals.lsp
+src/data/morph-examples/inflr.tdl
+src/data/morph-examples/irregs.lisp
+src/data/morph-examples/lexicon.tdl
+src/data/morph-examples/lrules.tdl
+src/data/morph-examples/morph-phon.tdl
+src/data/morph-examples/mrsglobals.lsp
+src/data/morph-examples/parse-nodes.tdl
+src/data/morph-examples/pparse-nodes.tdl
+src/data/morph-examples/roots.tdl
+src/data/morph-examples/rules.tdl
+src/data/morph-examples/script
+src/data/morph-examples/types.tdl
+src/data/morph-examples/user-fns.lsp
 src/lkb.el
 src/tdl-mode.el
 lexdb/
@@ -1069,12 +1091,11 @@ lexdb/README
 lexdb/meta.tsv
 lexdb/load.sql
 lexdb/permissions.sql
+lexdb/su-init.sql
 lexdb/example.fld
 lexdb/lexdb-local.sql
-lexdb/mwe.sql
-lexdb/remove-orthkey-field.el
-lexdb/install-lexdb-cygwin.sh
 lexdb/install-lexdb-mswindows.bat
+lexdb/README.single-user
 etc/
 etc/install
 etc/dot.bashrc
@@ -1110,8 +1131,8 @@ This development copy of Allegro CL is licensed to:
    [TC7227] Stanford University
 
 ;; Optimization settings: safety 1, space 1, speed 1, debug 2.
-;; For a complete description of all compiler switches given the
-;; current optimization settings evaluate (EXPLAIN-COMPILER-SETTINGS).
+;; For a complete description of all compiler switches given the current
+;; optimization settings evaluate (EXPLAIN-COMPILER-SETTINGS).
 CL-USER(1): ; Loading /lingo/build/lkb/src/general/loadup.lisp
 ;   Loading /lingo/build/lkb/src/general/allegro-patches.lisp
 ;     Loading /lingo/build/lkb/src/general/defsystem.lisp
@@ -1135,7 +1156,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-8.0 [Linux (x86)] (Jun 6, 2006 13:56)
+8.0 [Linux (x86)] (Jun 28, 2006 0:30)
 Copyright (C) 1985-2005, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -1176,36 +1197,31 @@ T
  (PUSHNEW :ALLEGRO-CL-RUNTIME *FEATURES*)
  |#
 
-(:ALLEGRO-CL-RUNTIME :MULTIPROCESSING :FLAVORS :LITTLE-ENDIAN :GSGC
- :COMPILER :USE-STRUCTS-IN-COMPILER :CLOS :DYNLOAD :DLFCN :UNIX :LINUX
- :REDHAT8 :REDHAT7 :LINUX86 :X86 :VERIFY-CAR-CDR :ENCAPSULATING-EFS
- :RELATIVE-PACKAGE-NAMES :MODULE-VERSIONS :IEEE :IEEE-FLOATING-POINT
- :CONFORMING-IEEE :ICS :COMMON-LISP :ANSI-CL :DRAFT-ANSI-CL-2 :X3J13
- :ALLEGRO :EXCL :FRANZ-INC :ALLEGRO-VERSION>= :ALLEGRO-VERSION=
- :NEW-ENVIRONMENTS :PROCESS7 :SYMBOL-VALUE-VECTOR :DYNLOAD-ACL-LIBRARY
- :ALLEGRO-V8.0 :SSL-SUPPORT) 
+(:ALLEGRO-CL-RUNTIME :MULTIPROCESSING :FLAVORS :LITTLE-ENDIAN :GSGC :COMPILER
+ :USE-STRUCTS-IN-COMPILER :CLOS :DYNLOAD :DLFCN :UNIX :LINUX :REDHAT8 :REDHAT7
+ :LINUX86 :X86 :VERIFY-CAR-CDR :ENCAPSULATING-EFS :RELATIVE-PACKAGE-NAMES
+ :MODULE-VERSIONS :IEEE :IEEE-FLOATING-POINT :CONFORMING-IEEE :ICS
+ :COMMON-LISP :ANSI-CL :DRAFT-ANSI-CL-2 :X3J13 :ALLEGRO :EXCL :FRANZ-INC
+ :ALLEGRO-VERSION>= :ALLEGRO-VERSION= :NEW-ENVIRONMENTS :PROCESS7
+ :SYMBOL-VALUE-VECTOR :DYNLOAD-ACL-LIBRARY :ALLEGRO-V8.0 :SSL-SUPPORT) 
  #|
  (FORCE-OUTPUT)
  |#
 
 NIL 
  #|
- (PROGN (SETQ *LOAD-DOCUMENTATION* NIL)
-        (SETQ *RECORD-SOURCE-FILE-INFO* NIL)
-        (SETQ *LOAD-LOCAL-NAMES-INFO* NIL)
-        (SETQ *LOAD-SOURCE-FILE-INFO* NIL)
+ (PROGN (SETQ *LOAD-DOCUMENTATION* NIL) (SETQ *RECORD-SOURCE-FILE-INFO* NIL)
+        (SETQ *LOAD-LOCAL-NAMES-INFO* NIL) (SETQ *LOAD-SOURCE-FILE-INFO* NIL)
         (SETQ *RECORD-XREF-INFO* NIL) (SETQ *LOAD-XREF-INFO* NIL))
  |#
 
 NIL 
  #|
  (SETQ SYSTEM:*REQUIRE-SEARCH-LIST*
-       '(:FIRST #P"sys:;code;.fasl" #P"sys:;private;.fasl"
-         #P"sys:;clos;.fasl" #P"sys:;sys;.fasl"
-         (:LIB-BUNDLE #P"sys:;code;.fasl")
+       '(:FIRST #P"sys:;code;.fasl" #P"sys:;private;.fasl" #P"sys:;clos;.fasl"
+         #P"sys:;sys;.fasl" (:LIB-BUNDLE #P"sys:;code;.fasl")
          (:LIB-BUNDLE #P"sys:;private;.fasl")
-         (:LIB-BUNDLE #P"sys:;clos;.fasl")
-         (:LIB-BUNDLE #P"sys:;sys;.fasl")))
+         (:LIB-BUNDLE #P"sys:;clos;.fasl") (:LIB-BUNDLE #P"sys:;sys;.fasl")))
  |#
 
 (:FIRST #P"sys:;code;.fasl" #P"sys:;private;.fasl" #P"sys:;clos;.fasl"
@@ -1297,11 +1313,9 @@ NIL
 
 (".clinit.cl" "clinit.cl") 
  #|
- (PROGN (SETQ *LOAD-DOCUMENTATION* T)
-        (SETQ *RECORD-SOURCE-FILE-INFO* T)
-        (SETQ *LOAD-LOCAL-NAMES-INFO* T)
-        (SETQ *LOAD-SOURCE-FILE-INFO* T) (SETQ *RECORD-XREF-INFO* NIL)
-        (SETQ *LOAD-XREF-INFO* NIL))
+ (PROGN (SETQ *LOAD-DOCUMENTATION* T) (SETQ *RECORD-SOURCE-FILE-INFO* T)
+        (SETQ *LOAD-LOCAL-NAMES-INFO* T) (SETQ *LOAD-SOURCE-FILE-INFO* T)
+        (SETQ *RECORD-XREF-INFO* NIL) (SETQ *LOAD-XREF-INFO* NIL))
  |#
 
 NIL 
@@ -1584,11 +1598,9 @@ AllegroCache version 1.0.0
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/closures.fasl
 ;;; Compiling file /lingo/build/lkb/src/ppcre/repetition-closures.lisp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/ppcre/repetition-closures.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/repetition-closures.fasl
 ;;; Fasl write complete
-;   Fast loading
-;      /lingo/build/lkb/src/.l8cl/ppcre/repetition-closures.fasl
+;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/repetition-closures.fasl
 ;;; Compiling file /lingo/build/lkb/src/ppcre/scanner.lisp
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/scanner.fasl
 ;;; Fasl write complete
@@ -1639,11 +1651,9 @@ AllegroCache version 1.0.0
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/closures.fasl
 ;;; Compiling file /lingo/build/lkb/src/ppcre/repetition-closures.lisp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/ppcre/repetition-closures.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/repetition-closures.fasl
 ;;; Fasl write complete
-;   Fast loading
-;      /lingo/build/lkb/src/.l8cl/ppcre/repetition-closures.fasl
+;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/repetition-closures.fasl
 ;;; Compiling file /lingo/build/lkb/src/ppcre/scanner.lisp
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/scanner.fasl
 ;;; Fasl write complete
@@ -1653,8 +1663,7 @@ AllegroCache version 1.0.0
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/api.fasl
 ;;; Compiling file /lingo/build/lkb/src/preprocess/x-preprocess.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/preprocess/x-preprocess.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/x-preprocess.fasl
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/preprocess/x-preprocess.fasl
 ;   Loading /lingo/build/lkb/src/systems/pxml.system
@@ -1696,8 +1705,7 @@ AllegroCache version 1.0.0
 ;   Fast loading /lingo/build/lkb/src/.l8cl/main/ssp.fasl
 ;;; Compiling file /lingo/build/lkb/src/ACL_specific/graphics.lsp
 ;   Fast loading /lingo/local/acl/code/climps.fasl
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/ACL_specific/graphics.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/graphics.fasl
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/graphics.fasl
 ;;; Compiling file /lingo/build/lkb/src/ACL_specific/misc.lsp
@@ -1705,13 +1713,11 @@ AllegroCache version 1.0.0
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/misc.fasl
 ;;; Compiling file /lingo/build/lkb/src/ACL_specific/topmenu.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/ACL_specific/topmenu.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/topmenu.fasl
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/topmenu.fasl
 ;;; Compiling file /lingo/build/lkb/src/ACL_specific/dialog.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/ACL_specific/dialog.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/dialog.fasl
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/dialog.fasl
 ;;; Compiling file /lingo/build/lkb/src/main/types.lsp
@@ -1803,8 +1809,7 @@ AllegroCache version 1.0.0
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/main/generics.fasl
 ;;; Compiling file /lingo/build/lkb/src/preprocess/preprocess.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/preprocess/preprocess.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/preprocess.fasl
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/preprocess/preprocess.fasl
 ;;; Compiling file /lingo/build/lkb/src/preprocess/lxml.lsp
@@ -1816,8 +1821,7 @@ AllegroCache version 1.0.0
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/preprocess/saf.fasl
 ;;; Compiling file /lingo/build/lkb/src/preprocess/saf-conf.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/preprocess/saf-conf.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/saf-conf.fasl
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/preprocess/saf-conf.fasl
 ;;; Compiling file /lingo/build/lkb/src/preprocess/texti.lsp
@@ -1836,50 +1840,10 @@ AllegroCache version 1.0.0
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/lex-entry.fasl
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/lex-entry.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/psql-database.lsp
-; Autoloading for package "EXCL.OSI":
-;   Fast loading /lingo/local/acl/code/osi.fasl
-;     Fast loading from bundle code/fileutil.fasl.
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/lexdb/psql-database.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-database.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/external-lex-database.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/lexdb/external-lex-database.fasl
-;;; Fasl write complete
-;   Fast loading
-;      /lingo/build/lkb/src/.l8cl/lexdb/external-lex-database.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/psql-lex-database.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-database.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-database.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/psql-lex-entry.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-entry.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-entry.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/command.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/command.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/command.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/psqllex.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psqllex.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psqllex.fasl
 ;;; Compiling file /lingo/build/lkb/src/lexdb/psql-msc.lsp
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psql-msc.fasl
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-msc.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/psql-emacs.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psql-emacs.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-emacs.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/lexport.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/lexport.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/lexport.fasl
 ;;; Compiling file /lingo/build/lkb/src/lexdb/extract.lsp
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/extract.fasl
 ;;; Fasl write complete
@@ -1888,6 +1852,50 @@ AllegroCache version 1.0.0
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/gentdl.fasl
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/gentdl.fasl
+;;; Compiling file /lingo/build/lkb/src/lexdb/psqllex.lsp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psqllex.fasl
+;;; Fasl write complete
+;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psqllex.fasl
+;;; Compiling file /lingo/build/lkb/src/lexdb/psql-database.lsp
+; Autoloading for package "EXCL.OSI":
+;   Fast loading /lingo/local/acl/code/osi.fasl
+;     Fast loading from bundle code/fileutil.fasl.
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psql-database.fasl
+;;; Fasl write complete
+;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-database.fasl
+;;; Compiling file /lingo/build/lkb/src/lexdb/external-lex-database.lsp
+;;; Writing fasl file
+;;;   /lingo/build/lkb/src/.l8cl/lexdb/external-lex-database.fasl
+;;; Fasl write complete
+;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/external-lex-database.fasl
+;;; Compiling file /lingo/build/lkb/src/lexdb/psql-lex-database0.lsp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-database0.fasl
+;;; Fasl write complete
+;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-database0.fasl
+;;; Compiling file /lingo/build/lkb/src/lexdb/psql-lex-database.lsp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-database.fasl
+;;; Fasl write complete
+;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-database.fasl
+;;; Compiling file /lingo/build/lkb/src/lexdb/psql-lex-database2.lsp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-database2.fasl
+;;; Fasl write complete
+;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-database2.fasl
+;;; Compiling file /lingo/build/lkb/src/lexdb/psql-lex-entry.lsp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-entry.fasl
+;;; Fasl write complete
+;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-entry.fasl
+;;; Compiling file /lingo/build/lkb/src/lexdb/command.lsp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/command.fasl
+;;; Fasl write complete
+;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/command.fasl
+;;; Compiling file /lingo/build/lkb/src/lexdb/psql-emacs.lsp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psql-emacs.fasl
+;;; Fasl write complete
+;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-emacs.fasl
+;;; Compiling file /lingo/build/lkb/src/lexdb/lexport.lsp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/lexport.fasl
+;;; Fasl write complete
+;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/lexport.fasl
 ;;; Compiling file /lingo/build/lkb/src/io-general/menus.lsp
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-general/menus.fasl
 ;;; Fasl write complete
@@ -1897,23 +1905,19 @@ AllegroCache version 1.0.0
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/io-general/async.fasl
 ;;; Compiling file /lingo/build/lkb/src/io-general/outputfs.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/io-general/outputfs.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-general/outputfs.fasl
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/io-general/outputfs.fasl
 ;;; Compiling file /lingo/build/lkb/src/io-general/outputtdfs.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/io-general/outputtdfs.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-general/outputtdfs.fasl
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/io-general/outputtdfs.fasl
 ;;; Compiling file /lingo/build/lkb/src/io-general/outputsrc.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/io-general/outputsrc.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-general/outputsrc.fasl
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/io-general/outputsrc.fasl
 ;;; Compiling file /lingo/build/lkb/src/io-general/toplevel.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/io-general/toplevel.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-general/toplevel.fasl
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/io-general/toplevel.fasl
 ;;; Compiling file /lingo/build/lkb/src/glue/dag.lsp
@@ -1949,8 +1953,7 @@ AllegroCache version 1.0.0
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/io-paths/pathout.fasl
 ;;; Compiling file /lingo/build/lkb/src/io-tdl/tdltypeinput.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/io-tdl/tdltypeinput.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-tdl/tdltypeinput.fasl
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/io-tdl/tdltypeinput.fasl
 ;;; Compiling file /lingo/build/lkb/src/io-tdl/tdloutput.lsp
@@ -1958,8 +1961,7 @@ AllegroCache version 1.0.0
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/io-tdl/tdloutput.fasl
 ;;; Compiling file /lingo/build/lkb/src/io-tdl/tdlruleinput.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/io-tdl/tdlruleinput.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-tdl/tdlruleinput.fasl
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/io-tdl/tdlruleinput.fasl
 ;;; Compiling file /lingo/build/lkb/src/io-tdl/tdllexinput.lsp
@@ -1975,8 +1977,7 @@ AllegroCache version 1.0.0
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/graph.fasl
 ;;; Compiling file /lingo/build/lkb/src/ACL_specific/activefs.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/ACL_specific/activefs.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/activefs.fasl
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/activefs.fasl
 ;;; Compiling file /lingo/build/lkb/src/ACL_specific/tree.lsp
@@ -1984,23 +1985,19 @@ AllegroCache version 1.0.0
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/tree.fasl
 ;;; Compiling file /lingo/build/lkb/src/ACL_specific/parseout.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/ACL_specific/parseout.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/parseout.fasl
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/parseout.fasl
 ;;; Compiling file /lingo/build/lkb/src/ACL_specific/chartout.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/ACL_specific/chartout.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/chartout.fasl
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/chartout.fasl
 ;;; Compiling file /lingo/build/lkb/src/ACL_specific/listout.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/ACL_specific/listout.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/listout.fasl
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/listout.fasl
 ;;; Compiling file /lingo/build/lkb/src/ACL_specific/compare.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/ACL_specific/compare.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/compare.fasl
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/compare.fasl
 ;;; Compiling file /lingo/build/lkb/src/ACL_specific/emacs.lsp
@@ -2008,8 +2005,7 @@ AllegroCache version 1.0.0
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/emacs.fasl
 ;;; Compiling file /lingo/build/lkb/src/io-general/tree-nodes.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/io-general/tree-nodes.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-general/tree-nodes.fasl
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/io-general/tree-nodes.fasl
 ;;; Compiling file /lingo/build/lkb/src/io-general/utils.lsp
@@ -2201,6 +2197,10 @@ AllegroCache version 1.0.0
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mt/mrs.fasl
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/mt/mrs.fasl
+;;; Compiling file /lingo/build/lkb/src/mt/vpm.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mt/vpm.fasl
+;;; Fasl write complete
+;   Fast loading /lingo/build/lkb/src/.l8cl/mt/vpm.fasl
 ;;; Compiling file /lingo/build/lkb/src/mt/transfer.lisp
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mt/transfer.fasl
 ;;; Fasl write complete
@@ -2225,6 +2225,9 @@ AllegroCache version 1.0.0
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mt/fragments.fasl
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l8cl/mt/fragments.fasl
+Warning: While compiling these undefined functions were referenced:
+         MT::TM-SCORE-MRSS from position 32281 in
+           /lingo/build/lkb/src/mt/transfer.lisp
 
 NIL 
  #|
@@ -2238,7 +2241,7 @@ NIL
  (DISCARD-ALL-SOURCE-FILE-INFO)
  |#
 
-#<EQUAL hash-table with 0 entries @ #x4473168a> 
+#<EQUAL hash-table with 0 entries @ #x44731712> 
  #|
 ; Fast loading from bundle code/who.fasl.
  (DISCARD-LOCAL-NAME-INFO)
@@ -2250,7 +2253,7 @@ NIL
  |#
 ; Fast loading from bundle code/nocompiler.fasl.
 ;   Fast loading from bundle sys/defdecl.fasl.
-142455664 bytes have been tenured, next gc will be global.
+186366448 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 
 T 
@@ -2286,24 +2289,22 @@ NIL
  #|
  (DUMPLISP :NAME #P"/lingo/build/lkb/linux.x86.32/lkb.dxl" :BUNDLE-FILE
            "files.bu" :BATCH-MODE T :DESTINATION-DIRECTORY
-           #P"/lingo/build/lkb/linux.x86.32/" :AUTOLOAD-WARNING T
-           :PLL-FILE "acli8010.pll" :PLL-FROM-SYS T :RUNTIME :STANDARD
-           :SHOW-WINDOW :SHOWNOACTIVATE :SYSTEM-DLLS-PATH
-           "system-dlls/" :TEMPORARY-DIRECTORY #P"/tmp/" :VERBOSE NIL
-           :OPT-SPEED 3 :NEWSPACE 4194304 :OLDSPACE 12582912
-           :LISP-HEAP-SIZE 805306368 :LISP-HEAP-START "1088M" :RUNTIME
-           :STANDARD :INCLUDE-CLIM T :INCLUDE-COMPILER T :PLL-FILE
-           "acli8010.pll" :BUNDLE-FILE "files.bu" :OPT-SPEED 3
-           :OPT-SPACE 1 :OPT-SAFETY 1 :OPT-DEBUG 2 :INCLUDE-TPL T
-           :INCLUDE-DEBUGGER NIL :INCLUDE-DEVEL-ENV NIL :INCLUDE-IDE
-           NIL :INCLUDE-COMPOSER NIL :INCLUDE-XCW NIL :DISCARD-COMPILER
-           T :DISCARD-ARGLISTS T :DISCARD-LOCAL-NAME-INFO T
-           :DISCARD-SOURCE-FILE-INFO T :LOAD-XREF-INFO NIL
-           :RECORD-XREF-INFO NIL :DISCARD-XREF-INFO NIL)
+           #P"/lingo/build/lkb/linux.x86.32/" :AUTOLOAD-WARNING T :PLL-FILE
+           "acli8010.pll" :PLL-FROM-SYS T :RUNTIME :STANDARD :SHOW-WINDOW
+           :SHOWNOACTIVATE :SYSTEM-DLLS-PATH "system-dlls/"
+           :TEMPORARY-DIRECTORY #P"/tmp/" :VERBOSE NIL :OPT-SPEED 3 :NEWSPACE
+           4194304 :OLDSPACE 12582912 :LISP-HEAP-SIZE 805306368
+           :LISP-HEAP-START "1088M" :RUNTIME :STANDARD :INCLUDE-CLIM T
+           :INCLUDE-COMPILER T :PLL-FILE "acli8010.pll" :BUNDLE-FILE
+           "files.bu" :OPT-SPEED 3 :OPT-SPACE 1 :OPT-SAFETY 1 :OPT-DEBUG 2
+           :INCLUDE-TPL T :INCLUDE-DEBUGGER NIL :INCLUDE-DEVEL-ENV NIL
+           :INCLUDE-IDE NIL :INCLUDE-COMPOSER NIL :INCLUDE-XCW NIL
+           :DISCARD-COMPILER T :DISCARD-ARGLISTS T :DISCARD-LOCAL-NAME-INFO T
+           :DISCARD-SOURCE-FILE-INFO T :LOAD-XREF-INFO NIL :RECORD-XREF-INFO
+           NIL :DISCARD-XREF-INFO NIL)
  |#
-Warning: shared object files have been loaded into this image, and so
-         the resulting image will depend on sys:climxm.so for
-         successful operation.
+Warning: shared object files have been loaded into this image, and so the
+         resulting image will depend on sys:climxm.so for successful operation.
 
  #|
  (REQUIRE :GENUTILS)
@@ -2341,9 +2342,8 @@ NIL
 T
 CL-USER(3): (:LKB :DISCO-LOADUP :ANSI-FUNCTIONP :ANSI-EVAL-WHEN :CASE-INSENSITIVE
  :MK-DEFSYSTEM :CLTL2 :ALLEGRO-CL-ENTERPRISE :CLIM-MOTIF :ANSI-90 ...)
-CL-USER(4): (:PSQL :LKB :DISCO-LOADUP :ANSI-FUNCTIONP :ANSI-EVAL-WHEN
- :CASE-INSENSITIVE :MK-DEFSYSTEM :CLTL2 :ALLEGRO-CL-ENTERPRISE
- :CLIM-MOTIF ...)
+CL-USER(4): (:PSQL :LKB :DISCO-LOADUP :ANSI-FUNCTIONP :ANSI-EVAL-WHEN :CASE-INSENSITIVE
+ :MK-DEFSYSTEM :CLTL2 :ALLEGRO-CL-ENTERPRISE :CLIM-MOTIF ...)
 CL-USER(5): (:LUI :PSQL :LKB :DISCO-LOADUP :ANSI-FUNCTIONP :ANSI-EVAL-WHEN
  :CASE-INSENSITIVE :MK-DEFSYSTEM :CLTL2 :ALLEGRO-CL-ENTERPRISE ...)
 CL-USER(6): (:MRS :LUI :PSQL :LKB :DISCO-LOADUP :ANSI-FUNCTIONP :ANSI-EVAL-WHEN
@@ -2428,8 +2428,7 @@ CL-USER(10): ; Loading /lingo/build/lkb/src/systems/tsdb.system
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/closures.fasl
 ;;; Compiling file /lingo/build/lkb/src/ppcre/repetition-closures.lisp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/ppcre/repetition-closures.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/repetition-closures.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/repetition-closures.fasl
 ;;; Compiling file /lingo/build/lkb/src/ppcre/scanner.lisp
@@ -2474,6 +2473,8 @@ CL-USER(10): ; Loading /lingo/build/lkb/src/systems/tsdb.system
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/convert.fasl
 ;;; Compiling file /lingo/build/lkb/src/ppcre/optimize.lisp
+8513832 bytes have been tenured, next gc will be global.
+See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/optimize.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/optimize.fasl
@@ -2482,10 +2483,7 @@ CL-USER(10): ; Loading /lingo/build/lkb/src/systems/tsdb.system
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/closures.fasl
 ;;; Compiling file /lingo/build/lkb/src/ppcre/repetition-closures.lisp
-8587080 bytes have been tenured, next gc will be global.
-See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/ppcre/repetition-closures.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/repetition-closures.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/repetition-closures.fasl
 ;;; Compiling file /lingo/build/lkb/src/ppcre/scanner.lisp
@@ -2497,8 +2495,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/api.fasl
 ;;; Compiling file /lingo/build/lkb/src/preprocess/x-preprocess.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/preprocess/x-preprocess.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/x-preprocess.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/preprocess/x-preprocess.fasl
 ; Loading /lingo/build/lkb/src/systems/pxml.system
@@ -2511,7 +2508,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/xml/pxml1.fasl
 ;;; Compiling file /lingo/build/lkb/src/xml/pxml3.cl
-10662136 bytes have been tenured, next gc will be global.
+10752736 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/xml/pxml3.fasl
 ;;; Fasl write complete
@@ -2542,8 +2539,7 @@ See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ; Fast loading /lingo/build/lkb/src/.l8cl/main/ssp.fasl
 ;;; Compiling file /lingo/build/lkb/src/ACL_specific/graphics.lsp
 ; Fast loading /lingo/local/acl/code/climps.fasl
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/ACL_specific/graphics.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/graphics.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/graphics.fasl
 ;;; Compiling file /lingo/build/lkb/src/ACL_specific/misc.lsp
@@ -2551,13 +2547,11 @@ See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/misc.fasl
 ;;; Compiling file /lingo/build/lkb/src/ACL_specific/topmenu.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/ACL_specific/topmenu.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/topmenu.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/topmenu.fasl
 ;;; Compiling file /lingo/build/lkb/src/ACL_specific/dialog.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/ACL_specific/dialog.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/dialog.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/dialog.fasl
 ;;; Compiling file /lingo/build/lkb/src/main/types.lsp
@@ -2581,7 +2575,7 @@ See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/main/structs.fasl
 ;;; Compiling file /lingo/build/lkb/src/main/user-fns.lsp
-18619680 bytes have been tenured, next gc will be global.
+18684136 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/user-fns.fasl
 ;;; Fasl write complete
@@ -2651,8 +2645,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/main/generics.fasl
 ;;; Compiling file /lingo/build/lkb/src/preprocess/preprocess.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/preprocess/preprocess.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/preprocess.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/preprocess/preprocess.fasl
 ;;; Compiling file /lingo/build/lkb/src/preprocess/lxml.lsp
@@ -2664,8 +2657,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/preprocess/saf.fasl
 ;;; Compiling file /lingo/build/lkb/src/preprocess/saf-conf.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/preprocess/saf-conf.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/saf-conf.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/preprocess/saf-conf.fasl
 ;;; Compiling file /lingo/build/lkb/src/preprocess/texti.lsp
@@ -2684,47 +2676,10 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/lex-entry.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/lex-entry.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/psql-database.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/lexdb/psql-database.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-database.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/external-lex-database.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/lexdb/external-lex-database.fasl
-;;; Fasl write complete
-; Fast loading
-;    /lingo/build/lkb/src/.l8cl/lexdb/external-lex-database.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/psql-lex-database.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-database.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-database.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/psql-lex-entry.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-entry.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-entry.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/command.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/command.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/command.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/psqllex.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psqllex.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psqllex.fasl
 ;;; Compiling file /lingo/build/lkb/src/lexdb/psql-msc.lsp
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psql-msc.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-msc.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/psql-emacs.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psql-emacs.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-emacs.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/lexport.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/lexport.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/lexport.fasl
 ;;; Compiling file /lingo/build/lkb/src/lexdb/extract.lsp
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/extract.fasl
 ;;; Fasl write complete
@@ -2733,6 +2688,47 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/gentdl.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/gentdl.fasl
+;;; Compiling file /lingo/build/lkb/src/lexdb/psqllex.lsp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psqllex.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psqllex.fasl
+;;; Compiling file /lingo/build/lkb/src/lexdb/psql-database.lsp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psql-database.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-database.fasl
+;;; Compiling file /lingo/build/lkb/src/lexdb/external-lex-database.lsp
+;;; Writing fasl file
+;;;   /lingo/build/lkb/src/.l8cl/lexdb/external-lex-database.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/external-lex-database.fasl
+;;; Compiling file /lingo/build/lkb/src/lexdb/psql-lex-database0.lsp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-database0.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-database0.fasl
+;;; Compiling file /lingo/build/lkb/src/lexdb/psql-lex-database.lsp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-database.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-database.fasl
+;;; Compiling file /lingo/build/lkb/src/lexdb/psql-lex-database2.lsp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-database2.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-database2.fasl
+;;; Compiling file /lingo/build/lkb/src/lexdb/psql-lex-entry.lsp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-entry.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-entry.fasl
+;;; Compiling file /lingo/build/lkb/src/lexdb/command.lsp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/command.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/command.fasl
+;;; Compiling file /lingo/build/lkb/src/lexdb/psql-emacs.lsp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psql-emacs.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-emacs.fasl
+;;; Compiling file /lingo/build/lkb/src/lexdb/lexport.lsp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/lexport.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/lexport.fasl
 ;;; Compiling file /lingo/build/lkb/src/io-general/menus.lsp
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-general/menus.fasl
 ;;; Fasl write complete
@@ -2742,23 +2738,19 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/io-general/async.fasl
 ;;; Compiling file /lingo/build/lkb/src/io-general/outputfs.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/io-general/outputfs.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-general/outputfs.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/io-general/outputfs.fasl
 ;;; Compiling file /lingo/build/lkb/src/io-general/outputtdfs.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/io-general/outputtdfs.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-general/outputtdfs.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/io-general/outputtdfs.fasl
 ;;; Compiling file /lingo/build/lkb/src/io-general/outputsrc.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/io-general/outputsrc.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-general/outputsrc.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/io-general/outputsrc.fasl
 ;;; Compiling file /lingo/build/lkb/src/io-general/toplevel.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/io-general/toplevel.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-general/toplevel.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/io-general/toplevel.fasl
 ;;; Compiling file /lingo/build/lkb/src/glue/dag.lsp
@@ -2794,8 +2786,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/io-paths/pathout.fasl
 ;;; Compiling file /lingo/build/lkb/src/io-tdl/tdltypeinput.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/io-tdl/tdltypeinput.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-tdl/tdltypeinput.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/io-tdl/tdltypeinput.fasl
 ;;; Compiling file /lingo/build/lkb/src/io-tdl/tdloutput.lsp
@@ -2803,8 +2794,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/io-tdl/tdloutput.fasl
 ;;; Compiling file /lingo/build/lkb/src/io-tdl/tdlruleinput.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/io-tdl/tdlruleinput.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-tdl/tdlruleinput.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/io-tdl/tdlruleinput.fasl
 ;;; Compiling file /lingo/build/lkb/src/io-tdl/tdllexinput.lsp
@@ -2820,8 +2810,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/graph.fasl
 ;;; Compiling file /lingo/build/lkb/src/ACL_specific/activefs.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/ACL_specific/activefs.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/activefs.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/activefs.fasl
 ;;; Compiling file /lingo/build/lkb/src/ACL_specific/tree.lsp
@@ -2829,23 +2818,19 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/tree.fasl
 ;;; Compiling file /lingo/build/lkb/src/ACL_specific/parseout.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/ACL_specific/parseout.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/parseout.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/parseout.fasl
 ;;; Compiling file /lingo/build/lkb/src/ACL_specific/chartout.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/ACL_specific/chartout.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/chartout.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/chartout.fasl
 ;;; Compiling file /lingo/build/lkb/src/ACL_specific/listout.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/ACL_specific/listout.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/listout.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/listout.fasl
 ;;; Compiling file /lingo/build/lkb/src/ACL_specific/compare.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/ACL_specific/compare.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/compare.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/compare.fasl
 ;;; Compiling file /lingo/build/lkb/src/ACL_specific/emacs.lsp
@@ -2853,8 +2838,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/emacs.fasl
 ;;; Compiling file /lingo/build/lkb/src/io-general/tree-nodes.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/io-general/tree-nodes.fasl
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-general/tree-nodes.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/io-general/tree-nodes.fasl
 ;;; Compiling file /lingo/build/lkb/src/io-general/utils.lsp
@@ -3046,6 +3030,10 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mt/mrs.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/mt/mrs.fasl
+;;; Compiling file /lingo/build/lkb/src/mt/vpm.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mt/vpm.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l8cl/mt/vpm.fasl
 ;;; Compiling file /lingo/build/lkb/src/mt/transfer.lisp
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mt/transfer.fasl
 ;;; Fasl write complete
@@ -3073,8 +3061,8 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ; Foreign loading /lingo/build/lkb/src/tsdb/linux.x86.32/capi.so.
 ; Foreign loading /lingo/build/lkb/src/tsdb/linux.x86.32/gc.so.
 ; Foreign loading /lingo/build/lkb/src/tsdb/linux.x86.32/bdb.so.
-Error: Loading /lingo/build/lkb/src/tsdb/linux.x86.32/bdb.so failed
-       with error:
+Error: Loading /lingo/build/lkb/src/tsdb/linux.x86.32/bdb.so failed with
+       error:
        libdb-4.2.so: cannot open shared object file: No such file or directory.
   [condition type: FILE-ERROR]
 
@@ -5350,6 +5338,7 @@ src/tsdb/lisp/acache.lisp
 src/tsdb/lisp/features.lisp
 src/tsdb/lisp/learner.lisp
 src/tsdb/lisp/experiment.lisp
+src/tsdb/lisp/kf.lisp
 src/tsdb/tcl/
 src/tsdb/tcl/copyleft.tcl
 src/tsdb/tcl/balloon.tcl
@@ -5463,6 +5452,10 @@ src/tsdb/skeletons/deutsch/vmd/item
 src/tsdb/skeletons/deutsch/vmd/relations
 src/tsdb/skeletons/deutsch/Index.lisp
 src/tsdb/skeletons/deutsch/Relations
+src/tsdb/skeletons/deutsch/mrs/
+src/tsdb/skeletons/deutsch/mrs/item
+src/tsdb/skeletons/deutsch/mrs/output
+src/tsdb/skeletons/deutsch/mrs/relations
 src/tsdb/skeletons/english/
 src/tsdb/skeletons/english/aged/
 src/tsdb/skeletons/english/aged/item
