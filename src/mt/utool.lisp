@@ -19,7 +19,9 @@
   (let* ((root (system:getenv "LOGONROOT"))
          (root (and root (namestring (parse-namestring root)))))
     (when root
-      (format nil "exec ~a/bin/utool" root))))
+      (format nil "exec ~a/bin/utool" root)))
+  #-:logon
+  nil)
 
 (defparameter *utool-options*
   '((:solve . "solve -I mrs-prolog -O plugging-lkb")
@@ -28,6 +30,8 @@
 (let ((lock (mp:make-process-lock)))
 
   (defun utool-process (mrs &key (action :classify))
+    (unless *utool-binary* (return-from utool-process))
+    
     (mp:with-process-lock (lock)
       (let* ((in (format 
                   nil 
@@ -68,5 +72,6 @@
 
 (defun utool-net-p (mrs)
   (let ((status (utool-process mrs)))
-    (unless (and (integerp status) (logand status 16))
-      (error "~%MRS is not a UTool net"))))
+    (when (or (not (integerp status)) (zerop (logand status 16)))
+      (error "~%MRS is not hyper-normally connected"))
+    status))

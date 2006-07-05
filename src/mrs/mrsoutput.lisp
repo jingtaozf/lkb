@@ -143,33 +143,23 @@ duplicate variables")
 	 (a-cons-fs (when *psoa-a-cons-path*
                       (path-value fs *psoa-a-cons-path*)))
          (psoa
-          (unfill-mrs
-           (make-psoa
-            :top-h (if top-h-fs
-                     (create-variable top-h-fs *variable-generator*)
-                     ;;
-                     ;; _fix_me_
-                     ;; in handle-free mode, why should we hallucinate a dummy
-                     ;; handle?  it will fail in mrs-equal-p(), at least, when
-                     ;; compared to a structure serialized and read back in.
-		     ;;                                        (23-feb-05; oe)
-		     ;; this isn't really for handle-free mode! 
-		     ;; use hcons path as a test for whether we've 
-		     ;; got handles but don't have a top-h 
-		     ;; this was conspiring to cause mrscomp
-		     ;; grammar to fail to scope - aac - june 05
-                     (if *rel-handel-path*
-			 (create-new-handle-var *variable-generator*)))
-            :index (when (is-valid-fs index-fs)
-                     (create-variable index-fs *variable-generator*))
-            :liszt (nreverse (construct-liszt 
-                              liszt-fs nil *variable-generator*))
-            :h-cons (nreverse (construct-h-cons 
-                               h-cons-fs nil *variable-generator*))
-	    :a-cons (nreverse (construct-a-cons
-			       a-cons-fs nil *variable-generator*)))))
+          (make-psoa
+           :top-h (if top-h-fs
+                    (create-variable top-h-fs *variable-generator*)
+                    (when *rel-handel-path*
+                      (create-new-handle-var *variable-generator*)))
+           :index (when (is-valid-fs index-fs)
+                    (create-variable index-fs *variable-generator*))
+           :liszt (nreverse (construct-liszt 
+                             liszt-fs nil *variable-generator*))
+           :h-cons (nreverse (construct-h-cons 
+                              h-cons-fs nil *variable-generator*))
+           :a-cons (nreverse (construct-a-cons
+                              a-cons-fs nil *variable-generator*))))
          #+:logon
-         (psoa (mt:map-mrs psoa :semi :forward)))
+         (psoa (mt:map-mrs psoa :semi :forward))
+         #-:logon
+         (psoa (unfill-mrs psoa)))
     (when *mrs-record-all-nodes-p* (push (cons fs psoa) *all-nodes*))
     psoa))
 

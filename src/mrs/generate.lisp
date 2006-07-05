@@ -23,10 +23,25 @@
 (defvar *gen-record* nil)
 (defvar *gen-rel-indexes* nil)
 (defvar *lexemes-allowed-orderings* nil)
+;;;
+;;; we distinguish three versions of the input MRS, viz. (a) the original 
+;;; semantics as passed into generate-from-mrs() (b) the effect of equating 
+;;; QEQs (when enabled by *gen-equate-qeqs-p*), and (c) the generator-internal 
+;;; MRS, i.e. the result of applying a grammar-specific VPM or (un-)filling.
+;;; the post-generation MRS compatibility test actually uses the internal MRS,
+;;; so as to take advantage of the type hierarchy in comparing values; yet, for
+;;; `default' values and such to come in, MRSs read off candidate realizations
+;;; go through the SEM-I VPM twice, once by default in extract-mrs(), and once
+;;; again, backwards, in gen-chart-check-compatible().  for similar reasons,
+;;; trigger rules for semantically vacuous lexical entries are tried against
+;;; the internal MRS. 
+;;;
 (defvar *generator-input* nil)
+(defvar *generator-equated-mrs* nil)
+(defvar *generator-internal-mrs* nil)
+
 (defvar *non-intersective-rules* nil)
 
-(defparameter %generator-input% nil)
 (defparameter %generator-lexical-items% nil)
 (defparameter %generator-unknown-eps% nil)
 (defparameter %generator-statistics% nil)
@@ -44,8 +59,9 @@
                   (subtype-p *string-type* type))
         (format
          t
-         "~%Error: the constraint of feature `~a' must be equal to, or be a supertype of, ~
-            type `~(~a~)' (the *string-type* parameter) ."
+         "~%Error: the constraint of feature `~a' must be equal to, ~
+           or be a supertype of, ~
+           type `~(~a~)' (the *string-type* parameter) ."
          feature *string-type*)
         (force-output t)
         (return-from check-generator-environment :error))))
@@ -247,13 +263,13 @@
 ;;; it into generation proper. Do it also in chart-generate since that is also
 ;;; an entry point
 (defun generate-from-mrs (mrs &key signal nanalyses)
+
   (setf %generator-condition% nil)
-  #+:null
-  (let ((compliance (mt::transfer-mrs mrs :filter nil :task :comply)))
-    (when (rest compliance)
-      (error 'generation/compliance-ambiguity :mrss compliance))
-    (when compliance
-      (setf mrs (mt::edge-mrs (first compliance)))))
+  (setf *generator-input* mrs)
+
+  (when *gen-equate-qeqs-p* (setf mrs (mrs::equate-all-qeqs mrs)))
+  (setf *generator-equated-mrs* mrs)
+  
   (if (mrs::fragmentp mrs)
     (mt::generate-from-fragmented-mrs mrs :signal signal)
     (handler-case (generate-from-mrs-internal mrs :nanalyses nanalyses)
@@ -270,12 +286,20 @@
   ;; ag-gen-lex-priority and ag-gen-rule-priority.  Store in *found-configs*.
   #+:arboretum
   (populate-found-configs)
-  
+
+  #+:logon
+  (setf input-sem (mt:map-mrs input-sem :semi :backward))
+  #-:logon
   (setf input-sem (mrs::fill-mrs (mrs::unfill-mrs input-sem)))
-  (setf *generator-input* input-sem)
-  (when *gen-equate-qeqs-p*
-    (setf input-sem (mrs::equate-all-qeqs input-sem)))
-  (setf %generator-input% input-sem)
+  
+  #+:null
+  (let ((compliance (mt::transfer-mrs mrs :filter nil :task :comply)))
+    (when (rest compliance)
+      (error 'generation/compliance-ambiguity :mrss compliance))
+    (when compliance
+      (setf mrs (mt::edge-mrs (first compliance)))))
+  
+  (setf *generator-internal-mrs* input-sem)
   (with-package (:lkb)
     (clear-gen-chart)
     (setf *cached-category-abbs* nil)
@@ -518,8 +542,7 @@
                           :test #'(lambda (edge)
                                     (and
                                        (gen-filter-root-edges (list edge))
-                                       (gen-chart-check-compatible 
-                                        edge input-sem)))
+                                       (gen-chart-check-compatible edge)))
                           :robust 42))
                         (t
                          (loop
@@ -533,8 +556,7 @@
                                     (and *bypass-equality-check*
                                          (not (eq *bypass-equality-check*
                                                   :filter)))
-                                    (gen-chart-check-compatible 
-                                     edge input-sem))
+                                    (gen-chart-check-compatible edge))
                            collect edge)))
                  (if (null *bypass-equality-check*)
                    consistent
@@ -616,82 +638,102 @@
       (g-edge-rels-covered edge)))
 
 
-(defun gen-chart-check-compatible (edge input)
-  
-   ;; construct the MRS for edge
-   ;; We test for 'compatibility' rather than equality - in
-   ;; particular, semantics of generated string might be more specific than
-   ;; input MRS wrt things like scope.
-   (or (and *bypass-equality-check* (not (eq *bypass-equality-check* :filter)))
-      (let* ((mrs (mrs::extract-mrs edge))
+(defun gen-chart-check-compatible (edge)
+  ;; construct the MRS for edge
+  ;; We test for 'compatibility' rather than equality - in
+  ;; particular, semantics of generated string might be more specific than
+  ;; input MRS wrt things like scope.
+  (or (and *bypass-equality-check* (not (eq *bypass-equality-check* :filter)))
+      ;;
+      ;; at this point, we will try do confirm that the candidate realization
+      ;; has a semantics compatible to our input.  in order for the comparison
+      ;; to take advantage of the grammar-internal type hierarchy, we actually
+      ;; compare interal MRSs; however, to get default values (and `purity' and
+      ;; such), go through the SEM-I VPM twice: extract-mrs() does the forward
+      ;; mapping by default, so to return to internal values, run backwards one
+      ;; more time.                                              (4-jul-06; oe)
+      ;;
+      (let* ((input *generator-internal-mrs*)
+             (mrs (mrs::extract-mrs edge))
+             #+:logon
+             (mrs (mt:map-mrs mrs :semi :backward))
+             #-:logon
              (mrs (mrs::fill-mrs (mrs::unfill-mrs mrs))))
-        (setf (edge-mrs edge) mrs)
-        (let* ((mrs (if *gen-equate-qeqs-p* (mrs::equate-all-qeqs mrs) mrs))
-               #+:logon
-               (roles (list (mrs::vsym "TPC") (mrs::vsym "PSV")))
-               ;;
-               ;; in a few cases, the input is over-specified, e.g. using an
-               ;; `i' variable for an unbound subject in infinitivals.
-               ;;
-               #+:logon
-               (types '(("i" "u")))
-               #+:logon
-               (predicates '((mrs:vsym "prpstn_m_rel")
-                             (mrs:vsym "prop-or-ques_m_rel")
-                             (mrs:vsym "prop_imp_m_rel")
-                             (mrs:vsym "prpstn_or_like_m_rel")))
-               (distance
-                (or (when (mt::compare-mrss mrs input :type :subsumption) 0)
-                    #+:logon
-                    (when (eq *bypass-equality-check* :filter)
-                      (or
-                       (when (mt::compare-mrss
-                              mrs input :type :subsumption
-                              :roles roles)
-                         1)
-                       (when (mt::compare-mrss
-                              mrs input :type :subsumption
-                              :types types)
-                         2)
-                       (when (mt::compare-mrss
-                              mrs input :type :subsumption
-                              :properties t)
-                         3)
-                       (when (mt::compare-mrss
-                              mrs input :type :subsumption
-                              :roles roles :types types)
-                         4)
-                       (when (mt::compare-mrss
-                              mrs input :type :subsumption
-                              :roles roles :properties t)
-                         5)
-                       (when (mt::compare-mrss
-                              mrs input :type :subsumption
-                              :roles roles :properties t :types types)
-                         6)
-                       (when (mt::compare-mrss
-                              mrs input :type :subsumption
-                              :hcons t)
-                         7)
-                       (when (mt::compare-mrss
-                              mrs input :type :subsumption
-                              :roles roles :hcons t)
-                         8)
-                       (when (mt::compare-mrss
-                              mrs input :type :subsumption
-                              :roles roles :properties t :hcons t)
-                         9)
-                       (when (mt::compare-mrss
-                              mrs input :type :subsumption
-                              :predicates predicates)
-                         10)
-                       (when (mt::compare-mrss
-                              mrs input :type :subsumption
-                              :roles roles :properties t
-                              :hcons t :predicates predicates)
-                         11)
-                       42)))))
-          (values (and (numberp distance) (= distance 0)) distance)))))
+         (setf (edge-mrs edge) mrs)
+         (let* ((mrs (if *gen-equate-qeqs-p* (mrs::equate-all-qeqs mrs) mrs))
+                #+:logon
+                (roles (list (mrs::vsym "TPC") (mrs::vsym "PSV")))
+                ;;
+                ;; in a few cases, the input is over-specified, e.g. using an
+                ;; `i' variable for an unbound subject in infinitivals.
+                ;;
+                #+:logon
+                (types '(("i" "u")))
+                #+:logon
+                (predicates '((mrs:vsym "prpstn_m_rel")
+                              (mrs:vsym "prop-or-ques_m_rel")
+                              (mrs:vsym "prop_imp_m_rel")
+                              (mrs:vsym "prpstn_or_like_m_rel")))
+                (distance
+                 ;;
+                 ;; _fix_me_
+                 ;; the following is, say, incredibly naive: rather than trying
+                 ;; ten or so times, the comparison should be able to carry on 
+                 ;; when detecting a problem (that can be remedied according to
+                 ;; one of the known ways of relaxation) and return a suitable
+                 ;; code indicating which exceptions had to be made.
+                 ;;                                             (30-may-06; oe)
+                 (or (when (mt::compare-mrss mrs input :type :subsumption) 0)
+                     #+:logon
+                     (when (eq *bypass-equality-check* :filter)
+                       (or
+                        (when (mt::compare-mrss
+                               mrs input :type :subsumption
+                               :roles roles)
+                          1)
+                        (when (mt::compare-mrss
+                               mrs input :type :subsumption
+                               :types types)
+                          2)
+                        (when (mt::compare-mrss
+                               mrs input :type :subsumption
+                               :properties t)
+                          3)
+                        (when (mt::compare-mrss
+                               mrs input :type :subsumption
+                               :roles roles :types types)
+                          4)
+                        (when (mt::compare-mrss
+                               mrs input :type :subsumption
+                               :roles roles :properties t)
+                          5)
+                        (when (mt::compare-mrss
+                               mrs input :type :subsumption
+                               :roles roles :properties t :types types)
+                          6)
+                        (when (mt::compare-mrss
+                               mrs input :type :subsumption
+                               :hcons t)
+                          7)
+                        (when (mt::compare-mrss
+                               mrs input :type :subsumption
+                               :roles roles :hcons t)
+                          8)
+                        (when (mt::compare-mrss
+                               mrs input :type :subsumption
+                               :roles roles :properties t :hcons t)
+                          9)
+                        (when (mt::compare-mrss
+                               mrs input :type :subsumption
+                               :predicates predicates)
+                          10)
+                        (when (mt::compare-mrss
+                               mrs input :type :subsumption
+                               :roles roles :properties t
+                               :hcons t :predicates predicates)
+                          11)
+                        42)))))
+           (values (and (numberp distance) (= distance 0)) distance)))))
 
 (defun gen-chart-root-edges (edges start-symbols)
    ;; c.f. create-new-root-edges in parse.lsp
@@ -846,7 +888,7 @@
               (delete-if-not
                #'(lambda (u)
                    (and (gen-chart-check-covering u input-rels)
-                        (gen-chart-check-compatible u input-sem)))
+                        (gen-chart-check-compatible u)))
                (if *gen-packing-p* (unpack-edge! edge) (list edge))))
              (sentential (gen-filter-root-edges complete)))
         (when sentential

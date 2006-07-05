@@ -147,6 +147,7 @@
     (let ((command (clim:menu-choose
                     '(("Test" :value :test :active t)
                       ("Scope" :value :scope :active t)
+                      ("UTool" :value :utool :active t)
                       ("Simple" :value :mrs :active t)
                       ("Indexed" :value :indexed :active t)
                       ("Dependencies" :value :dependencies :active t)
@@ -188,6 +189,14 @@
                 (title (format nil "~a - Scopes" (transfer-title frame))))
            (lkb::show-mrs-scoped-window nil mrs title)))
         
+        (:utool
+         (let* ((mrs (nth (mrs-transfer-i frame) 
+                          (or (mrs-transfer-stack frame) 
+                              (mrs-transfer-edges frame))))
+                (mrs (if (edge-p mrs) (edge-mrs mrs) mrs))
+                (title (format nil "~a - Scopes" (transfer-title frame))))
+           (lkb::show-mrs-utool-window nil mrs title)))
+
         (:mrs
          (let* ((mrs (nth (mrs-transfer-i frame) 
                           (or (mrs-transfer-stack frame) 

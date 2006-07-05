@@ -315,6 +315,32 @@
       (clim:run-frame-top-level mframe))))
 
 
+(defun show-mrs-utool-window (edge &optional mrs title)
+  (let ((mrs (or mrs (edge-mrs edge) (mrs::extract-mrs edge))))
+    (mp:run-function
+     "UTool MRS"
+     #'show-mrs-utool-window-really mrs title)))
+
+(defun show-mrs-utool-window-really (mrs &optional title)
+  (let ((frame (clim:make-application-frame 'mrs-scoped)))
+    (setf (mrs-scoped-mrsstruct frame) mrs)
+    ;;
+    ;; _fix_me_
+    ;; the error reporting, probably, should move into struggle-on-error() and
+    ;; distinguish an additional mode, where we _do_ report but not cerror().
+    ;;                                                           (5-mar-04; oe)
+    (multiple-value-bind (result condition)
+        (ignore-errors (mt:utool-process mrs :action :solve))
+      (when condition
+        (format
+         #+:allegro excl:*initial-terminal-io* #-:allegro t
+         "utool-process(): `~a'~%" 
+         (normalize-string (format nil "~a" condition)))
+        (return-from show-mrs-utool-window-really))
+      (setf (mrs-scoped-scoped frame) result)
+      (setf (clim:frame-pretty-name frame) (or title "UTool Scoped MRS"))
+      (clim:run-frame-top-level frame))))
+
 (defun show-mrs-dependencies-window (edge &optional mrs title)
   (let ((mrs (or mrs (edge-mrs edge) (mrs::extract-mrs edge))))
     (if #+:lui (lui-status-p :mrs :dependencies) #-:lui nil

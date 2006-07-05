@@ -3,8 +3,8 @@
 ;;;   see `licence.txt' for conditions.
 
 
-#+:clim (in-package :clim-user)
 #-:clim (in-package :lkb)
+#+:clim (in-package :clim-user)
 
 #+:clim
 (eval-when 
@@ -55,6 +55,7 @@
                        ;; generate
                       lkb::show-gen-result
                       lkb::show-generator-input
+                      lkb::show-generator-internal-mrs
 		      lkb::show-gen-chart
                       lkb::index-for-generator
                      lkb::read-gen-rule-file
@@ -266,8 +267,11 @@
                      (make-menu-item :name "Redisplay realisation"
                                      :value 'show-gen-result
                                      :available-p :mrs)
-                     (make-menu-item :name "Redisplay MRS"
+                     (make-menu-item :name "Display Input MRS"
                                      :value 'show-generator-input
+                                     :available-p :mrs)
+                     (make-menu-item :name "Display Internal MRS"
+                                     :value 'show-generator-internal-mrs
                                      :available-p :mrs)
                      (make-menu-item :name "Show gen chart"
                                      :value 'show-gen-chart

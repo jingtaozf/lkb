@@ -504,7 +504,7 @@ or modulo some number of quantifiers
     (show-scope-so-far top-handel bindings rels pending-qeq))
   (incf *scoping-calls*)
   (when (> *scoping-calls* *scoping-call-limit*)
-    (unless (or *giving-demo-p* *scoping-partial-results-p*)
+    (unless *giving-demo-p*
       (format t "~%Maximum scoping calls exceeded"))
     (throw 'up 
       (when *scoping-partial-results-p*
