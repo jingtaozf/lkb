@@ -549,5 +549,4 @@
        (:file "fragments")
        #+:lm
        (:file "lm")
-       #+:logon
        (:file "utool")))))

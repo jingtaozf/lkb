@@ -2969,7 +2969,7 @@
   ;; _fix_me_
   ;; it looks like we cannot call train() with :fcp nil and expect to have our
   ;; `model' (feature table with counts) read from .source.  do we need to
-  ;; make-mode() here, actually?                         (5-apr-06; oe & erik)
+  ;; make-model() here, actually?                        (5-apr-06; oe & erik)
   ;;
   (let ((*maxent-debug-p* t)
         (model (if fcp

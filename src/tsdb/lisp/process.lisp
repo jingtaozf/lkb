@@ -1695,7 +1695,8 @@
       (apply hook arguments))))
 
 (defun result-hook (result)
-
+  (when (and (null *tsdb-write-mrs-p*) (null *tsdb-write-tree-p*))
+    (return-from result-hook))
   (loop
       with *reconstruct-cache* = (make-hash-table :test #'eql)
       for parse in (or (get-field :results result)

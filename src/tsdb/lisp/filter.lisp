@@ -158,6 +158,8 @@
           for bindings = (when cheap 
                            (let* ((stream (make-string-output-stream))
                                   (*standard-output* stream)
+                                  #+:mrs
+                                  (mrs::*scoping-partial-results-p* nil)
                                   result error)
                              (multiple-value-setq (result error)
                                (ignore-errors (mrs::make-scoped-mrs cheap)))
@@ -241,28 +243,26 @@
                 (push
                  (list :cscope "incomplete cheap scope")
                  (gethash id flags))))
+
           unless (or (not (smember :ascope *filter-test*)) (and mrs scopes))
           do (push (list :ascope "no valid scope(s)") (gethash id flags))
+
           unless (or (not (smember :uscope *filter-test*)) (and mrs uscopes))
           do (push (list :uscope "no valid scope(s)") (gethash id flags))
-          do
-            (when (and mrs (smember :uscope *filter-test*))
-              (let* ((stream (make-string-output-stream))
-                     (*standard-output* stream)
-                     result error)
-                (multiple-value-setq (result error)
-                  (ignore-errors (mt:utool-net-p mrs)))
-                (setf result result)
-                (when error 
-                  (push 
-                   (list :uscope (format nil "~a" error))
-                   (gethash id flags)))
-                (when verbose
-                  (let* ((output 
-                          (get-output-stream-string stream))
-                         (output (normalize-string output)))
-                    (unless (string= output "")
-                      (push (list :uscope output) (gethash id flags)))))))))
+
+          when (and (smember :ascope *filter-test*)
+                    (smember :uscope *filter-test*)
+                    (not (assoc :ascope (gethash id flags)))
+                    (not (assoc :uscope (gethash id flags)))
+                    (not (= (length scopes) (length uscopes))))
+          do (push (list
+                    :scope
+                    (format
+                     nil
+                     "~a vs. ~a solutions"
+                     (length scopes) (length uscopes)))
+                   (gethash id flags))))
+    
     #+:mrs
     (when (smember :fragmentation *filter-test*)
       (loop
@@ -319,6 +319,11 @@
                        (format 
                         t 
                         "    UTool: `~a'.~%"
+                        (normalize-string (second foo))))
+                      (:scope
+                       (format 
+                        t 
+                        "    scoping: `~a'.~%"
                         (normalize-string (second foo))))
                       (:fragmentation
                        (format 
