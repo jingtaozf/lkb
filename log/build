@@ -11,63 +11,11 @@ M Makefile
 ? man
 ? include/mrs.h
 M log/build
-U src/mrs-package.lsp
-U src/mt-package.lsp
-U src/version.lsp
 ? src/.l7cl
 ? src/.l8cl
 ? src/.lecl
-U src/ACL_specific/compare.lsp
-U src/io-general/menus.lsp
-U src/main/discriminants.lsp
-U src/mrs/basemrs.lisp
-U src/mrs/generate.lisp
-U src/mrs/lkb-acl-mrs.lisp
-U src/mrs/mrsoutput.lisp
-U src/mrs/mrsresolve.lisp
-U src/mrs/mrstoplevel.lisp
-U src/mt/clim.lisp
-U src/mt/comparison.lisp
-U src/mt/globals.lisp
-U src/mt/mrs.lisp
-U src/mt/transfer.lisp
-U src/mt/utool.lisp
-U src/mt/version.lisp
-U src/mt/vpm.lisp
-U src/systems/lkb.system
-U src/systems/www.system
 ? src/tsdb/home/log
 ? src/tsdb/home/redwoods
-U src/tsdb/lisp/filter.lisp
-U src/tsdb/lisp/globals.lisp
-U src/tsdb/lisp/podium.lisp
-U src/tsdb/lisp/process.lisp
-U src/tsdb/lisp/redwoods.lisp
-U src/tsdb/skeletons/english/harmony/item
-U src/tsdb/skeletons/english/harmony/item-set
-U src/tsdb/skeletons/english/harmony/relations
-U src/tsdb/skeletons/english/ps/item
-U src/tsdb/skeletons/english/ps/item-set
-U src/tsdb/skeletons/english/ps/relations
-U src/tsdb/skeletons/english/tg/item
-U src/tsdb/skeletons/english/tg/item-set
-U src/tsdb/skeletons/english/tg/relations
-U src/tsdb/skeletons/norsk/harmoni/item
-U src/tsdb/skeletons/norsk/harmoni/output
-U src/tsdb/skeletons/norsk/harmoni/relations
-U src/tsdb/skeletons/norsk/ps/item
-U src/tsdb/skeletons/norsk/ps/output
-U src/tsdb/skeletons/norsk/ps/relations
-U src/tsdb/skeletons/norsk/tg/item
-U src/tsdb/skeletons/norsk/tg/output
-U src/tsdb/skeletons/norsk/tg/relations
-U src/tsdb/tcl/commands.tcl
-U src/tsdb/tcl/podium.tcl
-cvs update: src/www/demo.lisp is no longer in the repository
-U src/www/dot.clinit.cl
-U src/www/dot.tsdbrc
-U src/www/grammar.lisp
-U src/www/mt.lisp
 **********
 
   Remember to update the version number:
@@ -77,7 +25,7 @@ U src/www/mt.lisp
 **********
 Checking in ./src/version.lsp;
 /lingo/CVS/lkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.494; previous revision: 1.493
+new revision: 1.495; previous revision: 1.494
 done
 make[1]: Entering directory `/lingo/build/lkb'
 ( \
@@ -103,7 +51,7 @@ make[1]: Entering directory `/lingo/build/lkb'
       --exclude=src/systems/pvm.system \
       .; \
 )
-chgrp: changing group of `/lingo/www/lingo/ftp/builds/2006-07-05': Operation not permitted
+chmod: changing permissions of `/lingo/www/lingo/ftp/builds/2006-07-05' (requested: 3775, actual: 1775): Operation not permitted
 ./
 ./src/
 ./src/ACL-CG_specific/
