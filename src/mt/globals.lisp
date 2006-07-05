@@ -14,6 +14,10 @@
 ;;; License for more details.
 ;;; 
 
+(defparameter %mrs-copy-cache% nil)
+
+(defparameter %mrs-construction-cache% nil)
+
 (defparameter *transfer-rule-sets* nil)
 
 (defparameter *transfer-lexicon* nil)

@@ -73,13 +73,15 @@
   (let ((existing (assoc rel *rel-handel-store* :test #'eq)))
     (if existing (cdr existing)
         (let ((res
-               (loop for fvp in (rel-flist rel)
-                    nconc
-                    (let ((val (fvpair-value fvp))
-                          (feature (fvpair-feature fvp)))
-                      (if (is-handel-var val)
-                          (list (cons feature val))
-                          nil)))))
+               (loop
+                   for fvp in (rel-flist rel)
+                   for feature = (fvpair-feature fvp)
+                   for val = (fvpair-value fvp)
+                   unless (member feature *scoping-ignored-roles* :test #'eq)
+                   nconc
+                     (if (is-handel-var val)
+                         (list (cons feature val))
+                       nil))))
           (push (cons rel res) *rel-handel-store*)
           res))))
 

@@ -39,7 +39,8 @@
                    (lkb::current-user) (lkb::current-pid)))
              (options (rest (assoc action *utool-options*)))
              (command (when options
-                        (format nil "~a ~a" *utool-binary* options))))
+                        (format nil "~a ~a" *utool-binary* options)))
+             (mrs::*output-ignored-roles* mrs::*scoping-ignored-roles*))
         (when command
           (with-open-file (stream in
                            :direction :output :if-exists :supersede)
@@ -59,9 +60,13 @@
                    (setf bindings (ignore-errors (read stream)))))))
             #+:null
             (ignore-errors (delete-file in))
+            #+:null
             (ignore-errors (delete-file out))
             (case action
               (:solve bindings)
               (:classify status))))))))
-  
-
+
+(defun utool-net-p (mrs)
+  (let ((status (utool-process mrs)))
+    (unless (and (integerp status) (logand status 16))
+      (error "~%MRS is not a UTool net"))))

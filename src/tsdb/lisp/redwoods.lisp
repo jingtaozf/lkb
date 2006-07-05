@@ -1341,8 +1341,7 @@
          stream 
          "[~a] export-trees(): [~a] ~a active tree~:[~;s~] (of ~d).~%" 
          (current-time :long :short)
-         (+ parse-id offset)
-         (if version (length active) "all")
+         (+ parse-id offset) (length active)
          (or (null version) (> (length active) 1))
          (length results))
         (clrhash *reconstruct-cache*)
@@ -1363,7 +1362,7 @@
            stream
            "[~d] (~a of ~d) {~d} `~a'~@[ [~a]~]~%~a~%"
            (+ parse-id offset)
-           (if version (length active) "all") (length results) i-wf
+           (length active) (length results) i-wf
            input i-comment #\page)
           
           (export-tree item active :offset offset :stream stream)
@@ -1407,10 +1406,10 @@
       for i from 1
       for result in results
       for result-id = (get-field :result-id result)
-      for derivation = (when (if complementp
-                               (not (member result-id active :test #'eql))
-                               (member result-id active :test #'eql))
-                         (get-field :derivation result))
+      for activep = (if complementp
+                      (not (member result-id active :test #'eql))
+                      (member result-id active :test #'eql))
+      for derivation = (and activep (get-field :derivation result))
       for edge = (and derivation (reconstruct derivation))
       for tree = (when (and edge
                             (or (eq *redwoods-export-values* :all)
@@ -1433,7 +1432,7 @@
                     (and edge (mrs::extract-mrs edge)))
       for ident = (format nil "~a @ ~a~@[ @ ~a~]" i-id result-id i-comment)
       when (zerop (mod i 100)) do (clrhash *reconstruct-cache*)
-      when (or dag mrs) do
+      when (and activep (or dag mrs)) do
         (format 
          stream 
          "[~d:~d] ~:[(active)~;(inactive)~]~%~%" 

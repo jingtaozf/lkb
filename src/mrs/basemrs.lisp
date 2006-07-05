@@ -195,6 +195,13 @@
 ;;;
 (defparameter *mrs-raw-output-p* t)
 
+;;;
+;;; provide a way of suppressing select roles in output; useful when preparing
+;;; the input to UTool, e.g. for classification or solving, so as to omit the
+;;; pesky TPC and PSV pseudo-roles.                              (5-jul-06; oe)
+;;;
+(defparameter *output-ignored-roles* nil)
+
 (defmethod print-object ((object psoa) stream)
   (if *mrs-raw-output-p*
     (call-next-method)
@@ -1398,10 +1405,12 @@ higher and lower are handle-variables
    (var-id (rel-handel rel)))
   (mrs-output-rel-link display (rel-link rel))
   (print-mrs-extra (rel-handel rel))
-  (loop for feat-val in (rel-flist rel)
+  (loop
+      for feat-val in (rel-flist rel)
+      for role = (fvpair-feature feat-val)
+      unless (member role *output-ignored-roles* :test #'eq)
       do
-	(mrs-output-label-fn display
-			     (fvpair-feature feat-val))
+	(mrs-output-label-fn display role)
 	(let ((value (fvpair-value feat-val)))
 	  (if (var-p value)
 	      (progn
@@ -1643,7 +1652,7 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
                        :h-cons hcons
                        :vcs vcs)))
       (mrs-check-for #\] istream)
-      (unfill-mrs psoa))))
+      #-:logon (unfill-mrs psoa) #+:logon psoa)))
 
 (defun read-mrs-ltop (istream)
 ;;;  LTOP -> top: VAR

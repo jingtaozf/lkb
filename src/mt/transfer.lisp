@@ -73,29 +73,9 @@
 
 (defparameter %transfer-chart% nil)
 
-(defparameter %transfer-clones% nil)
-
 (defparameter %transfer-original-variables% nil)
 
-(defparameter %transfer-input-defaults% nil)
-
 (defparameter %transfer-solutions% nil)
-
-
-;;;
-;;; _fix_me_
-;;; the following are stop-gap solutions and, presumably, should be replaced
-;;; with a more general solution, possibly a separate set of transfer rules
-;;; manipulating variable properties destructively and taking advantage of
-;;; match operators like :null and :exact to test for specific values.
-;;;                                                           (9-jan-04; oe)
-(defparameter %transfer-properties-accumulator% nil)
-
-(defparameter %transfer-properties-defaults% nil)
-
-(defparameter %transfer-properties-filter% nil)
-
-(defparameter %transfer-values-filter% nil)
 
 (defstruct mtrs
   id mtrs before after in out flags)
@@ -823,9 +803,7 @@
 (defun transfer-mrs (mrs &key (filter *transfer-filter-p*) 
                               (preemptive *transfer-preemptive-filter-p*)
                               (debug '(:chart))
-                              task before after in out
-                              (tm *transfer-tm*))
-  (declare (ignore before after out))
+                              task (tm *transfer-tm*))
   #+:debug
   (setf %mrs% mrs)
   (setf %transfer-edges% nil)
@@ -834,21 +812,11 @@
          (*transfer-preemptive-filter-p* preemptive)
          (*transfer-debug-p* (when (consp debug) debug))
          (%transfer-edge-id% 0)
-         (%transfer-clones% nil)
+         (%mrs-copy-cache% nil)
          (%transfer-original-variables% nil)
-         (mrs (let ((*transfer-skolemize-p* t))
-                (mrs::fill-mrs (clone-mrs mrs) %transfer-input-defaults%)))
-         (mrs (if in
-                (let* ((id (if (symbolp in) in (first in)))
-                       (direction
-                        (if (symbolp in) :forward (second in)))
-                       (vpm (find id *vpms* :key #'vpm-id)))
-                  (if vpm
-                    (map-mrs mrs vpm direction :skolemizep t)
-                    mrs))
-                mrs))
+         (mrs (clone-mrs mrs :skolemizep t))
          (n (loop
-                for variable in %transfer-clones%
+                for variable in %mrs-copy-cache%
                 maximize (or (mrs:var-id (first variable)) 0)
                 do (push (rest variable) %transfer-original-variables%))))
     (multiple-value-bind (result condition)
@@ -867,6 +835,8 @@
         (format
          *transfer-debug-stream*
          "~&transfer-mrs(): `~a'~%" condition))
+
+      #+:lm
       (when tm
         (let* ((mrss (loop for edge in result collect (edge-mrs edge)))
                (scores (ignore-errors (tm-score-mrss mrss :model tm))))
@@ -901,9 +871,44 @@
   (if (null mtrss)
     edges
     (transfer-mrs2 
-     (loop
-         for edge in edges
-         append (apply-mtrs edge (first mtrss)))
+     (let* ((mtrs (first mtrss))
+            (edges (loop for edge in edges append (apply-mtrs edge mtrs))))
+       ;;
+       ;; as we advance from one MTR set to the next, apply the output VPM and
+       ;; after hook, if any; ditch intermediate solutions for which there are
+       ;; problems in VPM- or post-processing.
+       ;;
+       (when (mtrs-out mtrs)
+         (loop
+             for i from 0
+             for edge in edges
+             do
+               (handler-case
+                   (setf (edge-mrs edge)
+                     (map-mrs
+                      (edge-mrs edge) (mtrs-out mtrs)
+                      :forward :skolemizep t))
+                 (condition (condition)
+                   (format
+                    *transfer-debug-stream*
+                    "~&transfer-mrs2(): [~a] `~a'.~%"
+                    i condition)
+                   (setf (edge-mrs edge) nil)))))
+       (when (mtrs-after mtrs)
+         (loop
+             for i from 0
+             for edge in edges
+             when (edge-mrs edge) do
+               (handler-case
+                   (setf (edge-mrs edge)
+                     (funcall (mtrs-after mtrs) (edge-mrs edge)))
+                 (condition (condition)
+                   (format
+                    *transfer-debug-stream*
+                    "~&transfer-mrs2(): [~a] `~a'.~%"
+                    i condition)
+                   (setf (edge-mrs edge) nil)))))
+       (loop for edge in edges when (edge-mrs edge) collect edge))
      (rest mtrss))))
 
 (defun equivalentp (edge1 edge2)
@@ -930,13 +935,14 @@
     (handler-case
         (setf (edge-mrs edge) (funcall (mtrs-before mtrs) (edge-mrs edge)))
       (condition (condition)
-        (format t "~&apply-mtrs(): `~a'.~%" condition)
+        (format *transfer-debug-stream* "~&apply-mtrs(): `~a'.~%" condition)
         (return-from apply-mtrs))))
   (when (mtrs-in mtrs)
     (handler-case
-        (setf (edge-mrs edge) (map-mrs (edge-mrs edge) (mtrs-in mtrs)))
+        (setf (edge-mrs edge)
+          (map-mrs (edge-mrs edge) (mtrs-in mtrs) :forward :skolemizep t))
       (condition (condition)
-        (format t "~&apply-mtrs(): `~a'.~%" condition)
+        (format *transfer-debug-stream* "~&apply-mtrs(): `~a'.~%" condition)
         (return-from apply-mtrs))))
   
   (loop
@@ -1865,51 +1871,7 @@
 ;;; input MRS, hence postprocess-mrs() is required to create copies at this
 ;;; stage, to avoid frobbing the original.                    (3-nov-03; oe)
 ;;;
-(defun accumulate-properties (type properties 
-                              &optional
-                              (accumulator %transfer-properties-accumulator%))
-  (when properties
-    (loop
-        with type = (if (stringp type) (mrs::vsym (string-upcase type)) type)
-        with output with obsolete
-        for (key match . rules) in accumulator
-        for features = (butlast match)
-        for extras = (loop
-                         for feature in features
-                         collect (find
-                                  feature properties
-                                  :key #'mrs::extrapair-feature))
-        when (and (or (null type) (null key) (eq type key))
-                  (= (length features) (length extras))) do
-          (loop
-              with values = (loop
-                                for extra in extras
-                                collect (when (mrs::extrapair-p extra)
-                                          (mrs::extrapair-value extra)))
-              for rule in rules
-              when (search values rule :test #'eq) do
-                (push 
-                 (mrs::make-extrapair 
-                  :feature (first (last match)) 
-                  :value (first (last rule)))
-                 output)
-                (loop 
-                    for extra in extras 
-                    when (mrs::extrapair-p extra) do (pushnew extra obsolete)))
-        finally
-          (return
-            (nconc
-             output
-             (loop 
-                 for property in properties
-                 unless (member property obsolete) 
-                 collect property))))))
-
-(defun postprocess-mrs (mrs 
-                        &optional 
-                        (variables %transfer-properties-filter%)
-                        (accumulator %transfer-properties-accumulator%) 
-                        (values %transfer-values-filter%))
+(defun postprocess-mrs (mrs)
   (let ((mrs (mrs::copy-psoa mrs))
         copies)
     (labels ((postprocess-variable (variable)
@@ -1917,27 +1879,14 @@
                  (or (rest (assoc variable copies))
                      (let ((copy (mrs::copy-var variable)))
                        (setf (mrs:var-extra copy)
-                         (accumulate-properties 
-                          (mrs:var-type copy)
-                          (mrs:var-extra copy) accumulator))
-                       (setf (mrs:var-extra copy)
                          (loop
-                             for extra in (mrs:var-extra copy)
+                             for extra in (mrs:var-extra variable)
                              for feature = (mrs::extrapair-feature extra)
-                             for value = (mrs::extrapair-value extra)
-                             for fmatch = (find feature variables :key #'first)
-                             for vmatch = (find value values :key #'first)
                              unless (or (eq feature *mtr-skolem-property*)
                                         (eq feature *mtr-mark-property*)
-                                        (eq feature *mtr-ditch-property*)
-                                        (and fmatch (null (rest fmatch)))
-                                        (and vmatch (null (rest vmatch))))
-                             collect
-                               (if (or fmatch vmatch)
-                                 (mrs::make-extrapair 
-                                  :feature (or (rest fmatch) feature)
-                                  :value (or (rest vmatch) value))
-                                 extra)))
+                                        (eq feature *mtr-scratch-property*)
+                                        (eq feature *mtr-ditch-property*))
+                             collect extra))
                        (push (cons variable copy) copies)
                        copy)))))
       (setf (mrs:psoa-top-h mrs) (postprocess-variable (mrs:psoa-top-h mrs)))
@@ -1973,65 +1922,7 @@
               (setf (mrs:hcons-outscpd copy)
                 (postprocess-variable (mrs:hcons-outscpd hcons)))
             collect copy))
-      (mrs::fill-mrs (mrs::unfill-mrs mrs) %transfer-properties-defaults%))))
-
-(defun clone-mrs (mrs)
-  (let ((copy (mrs::make-psoa)))
-    (setf (mrs:psoa-top-h copy) (clone-variable (mrs:psoa-top-h mrs)))
-    (setf (mrs:psoa-index copy) (clone-variable (mrs:psoa-index mrs)))
-    (setf (mrs:psoa-liszt copy)
-      (loop
-          for ep in (mrs:psoa-liszt mrs)
-          collect (clone-ep ep)))
-    (setf (mrs:psoa-h-cons copy)
-      (loop
-          for hcons in (mrs:psoa-h-cons mrs)
-          collect (clone-hcons hcons)))
-    copy))
-
-(defun clone-variable (variable)
-  (when variable
-    (or (rest (assoc variable %transfer-clones%))
-        (let ((copy (mrs::make-var 
-                     :type (mrs:var-type variable) :id (mrs:var-id variable))))
-          (setf (mrs:var-extra copy)
-            (loop
-                for extra in (mrs:var-extra variable)
-                collect (mrs::make-extrapair 
-                         :feature (mrs::extrapair-feature extra)
-                         :value (mrs::extrapair-value extra))))
-          (when *transfer-skolemize-p*
-            (push
-             (mrs::make-extrapair 
-              :feature *mtr-skolem-property*
-              :value (mrs::var-string variable))
-             (mrs:var-extra copy)))
-          (push (cons variable copy) %transfer-clones%)
-          copy))))
-
-(defun clone-ep (ep)
-  (let ((copy (mrs::make-rel 
-               :handel (clone-variable (mrs:rel-handel ep))
-               :pred (mrs:rel-pred ep))))
-    (setf (mrs:rel-flist copy)
-      (loop
-          for role in (mrs:rel-flist ep)
-          for value = (mrs:fvpair-value role)
-          when (mrs::var-p value)
-          collect (mrs::make-fvpair 
-                   :feature (mrs:fvpair-feature role) 
-                   :value (clone-variable value))
-          else
-          collect (mrs::make-fvpair 
-                   :feature (mrs:fvpair-feature role) 
-                   :value value)))
-    copy))
-
-(defun clone-hcons (hcons)
-  (mrs::make-hcons 
-   :relation (mrs:hcons-relation hcons) 
-   :scarg (clone-variable (mrs:hcons-scarg hcons))
-   :outscpd (clone-variable (mrs:hcons-outscpd hcons))))
+      mrs)))
 
 (defun merge-and-copy-mrss (mrs1 mrs2)
   ;;

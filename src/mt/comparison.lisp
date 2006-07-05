@@ -276,23 +276,23 @@
       (= constant1 constant2))
      (t (compare-types constant1 constant2 :type type))))
 
-;;;
-;;; _fix_me_
-;;; tonight, this looks as if in non-subsumption mode we test unifiability, 
-;;; where i think we should be testing equality (and presumably add a third
-;;; mode).  re-view this question during the day.             (24-feb-06; oe)
-;;; 
 (defun compare-types (type1 type2 &key internp type)
 
   (or (eq type1 type2)
       (and (stringp type1) (stringp type2) (string-equal type1 type2))
       (ignore-errors
-       (let ((type1 (if internp (intern (string-upcase type1) :lkb) type1))
-             (type2 (if internp (intern (string-upcase type2) :lkb) type2)))
-         (when (and (lkb::is-valid-type type1) (lkb::is-valid-type type2))
+       (let ((type1 (if internp
+                      (intern (string-upcase type1) mrs:*mrs-package*)
+                      type1))
+             (type2 (if internp
+                      (intern (string-upcase type2) mrs:*mrs-package*)
+                      type2)))
+         (when (and (mrs:is-valid-type type1) (mrs:is-valid-type type2))
            (if (eq type :subsumption)
-             (lkb::subtype-or-equal type1 type2)
-             (lkb::greatest-common-subtype type1 type2)))))))
+             (mrs:equal-or-subtype type1 type2)
+             (eq type1 type2)
+             #+:null
+             (mrs:compatible-var-types type1 type2)))))))
 
 (defun lookup-variable (variable solution)
   (getf (solution-variables solution) variable))

@@ -19,7 +19,10 @@
 (defconstant *vpm-blade* (mrs:vsym "!"))
 
 (defstruct vpm
-  id pms)
+  id tms pms flags)
+
+(defstruct tm
+  lhs rhs)
 
 (defstruct pm
   lhs rhs pmrs)
@@ -41,9 +44,10 @@
         with vpm = (make-vpm :id id) with pm
         for line = (read-line stream nil nil)
         while line
-        unless (or (ppcre::scan "^[ \\t]*;+" line)
-                   (ppcre:scan "^[ \\t]*$" line))
-        do
+        when (or (ppcre::scan "^[ \\t]*;+" line)
+                 (ppcre:scan "^[ \\t]*$" line))
+        do (setf line nil)
+        when line do
           (multiple-value-bind (foo bar starts ends) 
               (ppcre::scan
                "^[ \\t]*([^:]+)[ \\t]*:[ \\t]*([^:]+)[ \\t]*$"
@@ -89,15 +93,25 @@
                 (ppcre:do-scans
                     (foo bar starts ends "([^ ]+)(?: |$)" left)
                   (declare (ignore foo bar))
-                  (push
-                   (mrs:vsym (subseq left (aref starts 0) (aref ends 0)))
-                   (pmr-left pmr)))
+                  (let* ((match (subseq left (aref starts 0) (aref ends 0)))
+                         (n (length match)))
+                    (push
+                     (if (and (char= (char match 0) #\[)
+                              (char= (char match (- n 1)) #\]))
+                       (cons :type (subseq match 1 (- n 1)))
+                       (mrs:vsym match))
+                     (pmr-left pmr))))
                 (ppcre:do-scans
                     (foo bar starts ends "([^ ]+)(?: |$)" right)
                   (declare (ignore foo bar))
-                  (push
-                   (mrs:vsym (subseq right (aref starts 0) (aref ends 0)))
-                   (pmr-right pmr)))
+                  (let* ((match (subseq right (aref starts 0) (aref ends 0)))
+                         (n (length match)))
+                    (push
+                     (if (and (char= (char match 0) #\[)
+                              (char= (char match (- n 1)) #\]))
+                       (cons :type (subseq match 1 (- n 1)))
+                       (mrs:vsym match))
+                     (pmr-right pmr))))
                 (setf (pmr-left pmr) (nreverse (pmr-left pmr)))
                 (setf (pmr-right pmr) (nreverse (pmr-right pmr)))
                 (push pmr (pm-pmrs pm)))))
@@ -109,12 +123,13 @@
 
 (defun map-mrs (mrs vpm
                 &optional (direction :forward)
-                &key skolemizep)
+                &key skolemizep (copyp t))
+  (declare (ignore copyp))
   ;;
   ;; _fix_me_
   ;; given the various contexts to call this function, we would be better off
-  ;; providing a destructive version too, i.e. add a :copyp &key parameter turn
-  ;; the initial copy on or off.                                (23-jun-06; oe)
+  ;; providing a destructive version too, i.e. add a :copyp &key parameter to
+  ;; turn the initial copy on or off.                           (23-jun-06; oe)
   ;;
   (when (consp vpm)
     (setf direction (second vpm))
@@ -133,6 +148,7 @@
                                   :id (mrs:var-id variable))))
                        (setf (mrs:var-extra copy)
                          (map-properties
+                          (mrs:var-type variable)
                           (mrs:var-extra variable)
                           vpm direction))
                        (when skolemizep
@@ -175,7 +191,7 @@
 ;;; make sure properties end up in an order compatible with the VPM itself,
 ;;; i.e. the order in which they were mapped.
 ;;;
-(defun map-properties (properties vpm &optional (direction :forward))
+(defun map-properties (type properties vpm &optional (direction :forward))
   (when (null properties) (return-from map-properties))
   (loop
       with result with mapped
@@ -184,17 +200,16 @@
       for rhs = (if (eq direction :forward) (pm-rhs pm) (pm-lhs pm))
       for values = (loop
                        for property in lhs
-                       when (member property mapped :test #'eq) return nil
-                       for match = (loop
-                                       for foo in properties
-                                       when (eq (mrs::extrapair-feature foo)
-                                                property)
-                                       return (mrs::extrapair-value foo))
-                       when match collect match)
-      when values do
+                       for match 
+                       = (loop
+                             for foo in properties
+                             when (eq (mrs::extrapair-feature foo) property)
+                             return (mrs::extrapair-value foo))
+                       collect match)
+      do
         (loop
             for pmr in (pm-pmrs pm)
-            when (test-pmr values pmr direction) do
+            when (test-pmr type values pmr direction) do
               (loop
                   for property in lhs
                   do (pushnew property mapped :test #'eq))
@@ -217,9 +232,11 @@
                        (mrs::make-extrapair :feature property :value new)
                        result))))
               (loop-finish))
-      finally (return (nreverse result))))
+      finally
+
+        (return (nreverse result))))
 
-(defun test-pmr (values pmr &optional (direction :forward))
+(defun test-pmr (type values pmr &optional (direction :forward))
   (unless (if (eq direction :forward)
             (first (pmr-direction pmr))
             (rest (pmr-direction pmr)))
@@ -230,7 +247,9 @@
         for match in left
         always
           (cond
-           ((eq match *vpm-wildcard*))
+           ((and (consp match) (eq (first match) :type))
+            (compare-types type (rest match) :type :subsumption :internp t))
+           ((eq match *vpm-wildcard*) value)
            ((eq match *vpm-blade*) (null value))
            (t 
             (case (pmr-test pmr)

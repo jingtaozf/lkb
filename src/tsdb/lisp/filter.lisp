@@ -122,7 +122,8 @@
                             "reader failure")))
               (push (list :syntax output) (gethash id flags)))))
     #+:mrs
-    (when (smember :scope *filter-test*)
+    (when (or (smember :ascope *filter-test*) (smember :cscope *filter-test*)
+              (smember :uscope *filter-test*))
       (loop
           for result in (get-field :results item)
           for id = (get-field :result-id result)
@@ -131,7 +132,7 @@
                         (let ((mrs (mrs::read-mrs-from-string mrs)))
                           (setf (get-field :mrs result) mrs))
                         (and (mrs::psoa-p mrs) mrs)))
-          for cheap = (when mrs 
+          for cheap = (when (and mrs (smember :cscope *filter-test*))
                         (let* ((stream (make-string-output-stream))
                                (*standard-output* stream)
                                result error)
@@ -139,7 +140,7 @@
                             (ignore-errors (mrs::produce-one-scope mrs)))
                           (when error 
                             (push 
-                             (list :scope (format nil "~a" error))
+                             (list :cscope (format nil "~a" error))
                              (gethash id flags)))
                           (when verbose
                             (let* ((output 
@@ -147,11 +148,11 @@
                                    (output (normalize-string output)))
                               (unless (string= output "")
                                 (push
-                                 (list :scope output)
+                                 (list :cscope output)
                                  (gethash id flags)))))
                           (unless (mrs::psoa-p result)
                             (push
-                             (list :scope "no cheap scope") 
+                             (list :cscope "no cheap scope") 
                              (gethash id flags)))
                           result))
           for bindings = (when cheap 
@@ -162,10 +163,10 @@
                                (ignore-errors (mrs::make-scoped-mrs cheap)))
                              (when error 
                                (push 
-                                (list :scope (format nil "~a" error))
+                                (list :cscope (format nil "~a" error))
                                 (gethash id flags))
                                (push
-                                (list :scope "no valid cheap scope") 
+                                (list :cscope "no valid cheap scope") 
                                 (gethash id flags)))
                              (when verbose
                                (let* ((output 
@@ -173,10 +174,10 @@
                                       (output (normalize-string output)))
                                  (unless (string= output "")
                                    (push
-                                    (list :scope output)
+                                    (list :cscope output)
                                     (gethash id flags)))))
                              result))
-          for scopes = (when mrs 
+          for scopes = (when (and mrs (smember :ascope *filter-test*))
                          (let* ((stream (make-string-output-stream))
                                 (*standard-output* stream)
                                 result error)
@@ -184,7 +185,7 @@
                              (ignore-errors (mrs::make-scoped-mrs mrs)))
                            (when error 
                              (push 
-                              (list :scope (format nil "~a" error))
+                              (list :ascope (format nil "~a" error))
                               (gethash id flags)))
                            (when verbose
                              (let* ((output 
@@ -192,22 +193,76 @@
                                     (output (normalize-string output)))
                                (unless (string= output "")
                                  (push
-                                  (list :scope output)
+                                  (list :ascope output)
                                   (gethash id flags)))))
                            result))
-          when bindings
-          do
+          for uscopes = (when (and mrs (smember :uscope *filter-test*))
+                          (let* ((stream (make-string-output-stream))
+                                 (*standard-output* stream)
+                                 result error)
+                            (multiple-value-setq (result error)
+                              (ignore-errors (mt:utool-net-p mrs)))
+                            (setf result result)
+                            (when error 
+                              (push 
+                               (list :uscope (format nil "~a" error))
+                               (gethash id flags)))
+                            (when verbose
+                              (let* ((output 
+                                      (get-output-stream-string stream))
+                                     (output (normalize-string output)))
+                                (unless (string= output "")
+                                  (push (list :uscope output)
+                                        (gethash id flags))))))
+                          (let* ((stream (make-string-output-stream))
+                                 (*standard-output* stream)
+                                 result error)
+                            (multiple-value-setq (result error)
+                              (ignore-errors (mt:utool-process
+                                              mrs :action :solve)))
+                            (when error 
+                              (push 
+                               (list :uscope (format nil "~a" error))
+                               (gethash id flags)))
+                            (when verbose
+                              (let* ((output 
+                                      (get-output-stream-string stream))
+                                     (output (normalize-string output)))
+                                (unless (string= output "")
+                                  (push (list :uscope output)
+                                        (gethash id flags)))))
+                            result))
+          when bindings do
             (if (rest bindings)
               (push
-               (list :scope (format nil "~a cheap scopes" (length bindings)))
+               (list :cscope (format nil "~a cheap scopes" (length bindings)))
                (gethash id flags))
               (when (mrs::extra-bindings-p (first bindings))
                 (push
-                 (list :scope "incomplete cheap scope")
+                 (list :cscope "incomplete cheap scope")
                  (gethash id flags))))
-      
-          unless (and mrs scopes)
-          do (push (list :scope "no valid scope(s)") (gethash id flags))))
+          unless (or (not (smember :ascope *filter-test*)) (and mrs scopes))
+          do (push (list :ascope "no valid scope(s)") (gethash id flags))
+          unless (or (not (smember :uscope *filter-test*)) (and mrs uscopes))
+          do (push (list :uscope "no valid scope(s)") (gethash id flags))
+          do
+            (when (and mrs (smember :uscope *filter-test*))
+              (let* ((stream (make-string-output-stream))
+                     (*standard-output* stream)
+                     result error)
+                (multiple-value-setq (result error)
+                  (ignore-errors (mt:utool-net-p mrs)))
+                (setf result result)
+                (when error 
+                  (push 
+                   (list :uscope (format nil "~a" error))
+                   (gethash id flags)))
+                (when verbose
+                  (let* ((output 
+                          (get-output-stream-string stream))
+                         (output (normalize-string output)))
+                    (unless (string= output "")
+                      (push (list :uscope output) (gethash id flags)))))))))
     #+:mrs
     (when (smember :fragmentation *filter-test*)
       (loop
@@ -250,10 +305,20 @@
                         t 
                         "    syntax: ~a.~%"
                         (second foo)))
-                      (:scope
+                      (:ascope
                        (format 
                         t 
-                        "    scoping: `~a'.~%"
+                        "    exhaustive scoping: `~a'.~%"
+                        (normalize-string (second foo))))
+                      (:cscope
+                       (format 
+                        t 
+                        "    cheap scoping: `~a'.~%"
+                        (normalize-string (second foo))))
+                      (:uscope
+                       (format 
+                        t 
+                        "    UTool: `~a'.~%"
                         (normalize-string (second foo))))
                       (:fragmentation
                        (format 

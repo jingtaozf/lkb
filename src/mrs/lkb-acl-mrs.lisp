@@ -205,7 +205,7 @@
 (defun show-mrs-window (edge &optional mrs title)
   (let ((mrs (or mrs (edge-mrs edge) (mrs::extract-mrs edge))))
     (if #+:lui (lui-status-p :mrs :simple) #-:lui nil
-      (lui-display-mrs mrs)
+      (lui-display-mrs mrs title)
       (mp:run-function "Simple MRS" #'show-mrs-window-really edge mrs title))))
 
 (defun show-mrs-window-really (edge &optional mrs title)

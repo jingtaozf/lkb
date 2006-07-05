@@ -8,7 +8,8 @@
    "%TRANSFER-PROPERTIES-ACCUMULATOR%" "*VPMS*" 
    "INITIALIZE-TRANSFER" 
    "READ-TRANSFER-RULES" "READ-TRANSFER-TYPES" "READ-VPM" 
-   "TRANSFER-MRS" "MAP-MRS")) 
+   "TRANSFER-MRS" "MAP-MRS" "PARSE-INTERACTIVELY"
+   "UTOOL-PROCESS" "UTOOL-NET-P")) 
 
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
            #-:ansi-eval-when (load eval compile)

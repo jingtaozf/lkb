@@ -1145,8 +1145,14 @@ proc main {} {
   .menu.options.menu.filters add checkbutton -label "MRS Syntax" \
     -variable globals(filters,syntax) \
     -command tsdb_filters;
-  .menu.options.menu.filters add checkbutton -label "MRS Scoping" \
-    -variable globals(filters,scope) \
+  .menu.options.menu.filters add checkbutton -label "MRS Exhaustive Scope" \
+    -variable globals(filters,ascope) \
+    -command tsdb_filters;
+  .menu.options.menu.filters add checkbutton -label "MRS Cheap Scope" \
+    -variable globals(filters,cscope) \
+    -command tsdb_filters;
+  .menu.options.menu.filters add checkbutton -label "MRS UTool Classify" \
+    -variable globals(filters,uscope) \
     -command tsdb_filters;
   .menu.options.menu.filters add checkbutton -label "MRS Fragmentation" \
     -variable globals(filters,fragmentation) \

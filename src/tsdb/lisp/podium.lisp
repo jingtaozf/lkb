@@ -130,7 +130,9 @@
       set globals(tree,thinning_export_p) ~:[0~;1~]~%~
       ~@[set globals(readers,mrs) {~s}~%~]~
       set globals(filter,sparseness) ~:[0~;1~]~%~
-      set globals(filter,scope) ~:[0~;1~]~%~
+      set globals(filter,ascope) ~:[0~;1~]~%~
+      set globals(filter,cscope) ~:[0~;1~]~%~
+      set globals(filter,uscope) ~:[0~;1~]~%~
       set globals(filter,fragmentation) ~:[0~;1~]~%~
       set globals(filter,connectivity) ~:[0~;1~]~%~
       set globals(cache_connections_p) ~:[0~;1~]~%~
@@ -170,7 +172,9 @@
      *redwoods-thinning-export-p*
      (gethash :mrs *statistics-readers*)
      (smember :sparseness *filter-test*)
-     (smember :scope *filter-test*)
+     (smember :ascope *filter-test*)
+     (smember :dscope *filter-test*)
+     (smember :uscope *filter-test*)
      (smember :fragmentation *filter-test*)
      (smember :connectivity *filter-test*)
      *tsdb-cache-connections-p*

@@ -119,8 +119,67 @@
    ((constant-p value) (copy-constant value))
    (t value)))
 
-(defparameter %mrs-construction-cache% nil)
-
+(defun clone-mrs (mrs &key skolemizep)
+  (let ((copy (mrs::make-psoa)))
+    (setf (mrs:psoa-top-h copy)
+      (clone-variable (mrs:psoa-top-h mrs) :skolemizep skolemizep))
+    (setf (mrs:psoa-index copy)
+      (clone-variable (mrs:psoa-index mrs) :skolemizep skolemizep))
+    (setf (mrs:psoa-liszt copy)
+      (loop
+          for ep in (mrs:psoa-liszt mrs)
+          collect (clone-ep ep :skolemizep skolemizep)))
+    (setf (mrs:psoa-h-cons copy)
+      (loop
+          for hcons in (mrs:psoa-h-cons mrs)
+          collect (clone-hcons hcons :skolemizep skolemizep)))
+    copy))
+
+(defun clone-variable (variable &key skolemizep)
+  (when variable
+    (or (rest (assoc variable %mrs-copy-cache%))
+        (let ((copy (mrs::make-var 
+                     :type (mrs:var-type variable) :id (mrs:var-id variable))))
+          (setf (mrs:var-extra copy)
+            (loop
+                for extra in (mrs:var-extra variable)
+                collect (mrs::make-extrapair 
+                         :feature (mrs::extrapair-feature extra)
+                         :value (mrs::extrapair-value extra))))
+          (when skolemizep
+            (push
+             (mrs::make-extrapair 
+              :feature *mtr-skolem-property*
+              :value (mrs::var-string variable))
+             (mrs:var-extra copy)))
+          (push (cons variable copy) %mrs-copy-cache%)
+          copy))))
+
+(defun clone-ep (ep &key skolemizep)
+  (let ((copy (mrs::make-rel 
+               :handel (clone-variable
+                        (mrs:rel-handel ep) :skolemizep skolemizep)
+               :pred (mrs:rel-pred ep))))
+    (setf (mrs:rel-flist copy)
+      (loop
+          for role in (mrs:rel-flist ep)
+          for value = (mrs:fvpair-value role)
+          when (mrs::var-p value)
+          collect (mrs::make-fvpair 
+                   :feature (mrs:fvpair-feature role) 
+                   :value (clone-variable value :skolemizep skolemizep))
+          else
+          collect (mrs::make-fvpair 
+                   :feature (mrs:fvpair-feature role) 
+                   :value value)))
+    copy))
+
+(defun clone-hcons (hcons &key skolemizep)
+  (mrs::make-hcons 
+   :relation (mrs:hcons-relation hcons) 
+   :scarg (clone-variable (mrs:hcons-scarg hcons) :skolemizep skolemizep)
+   :outscpd (clone-variable (mrs:hcons-outscpd hcons) :skolemizep skolemizep)))
+
 (defun import-mrs (psoa &key externals)
   (let* ((%mrs-construction-cache% nil)
          (new (make-mrs
