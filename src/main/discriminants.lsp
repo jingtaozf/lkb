@@ -254,14 +254,17 @@
                    (equal (discriminant-end discriminant) end)
                    discriminant)))
 
-(defun preset-discriminants (discriminants preset &optional gold skew)
-  
+(defun preset-discriminants (discriminants preset
+                             &optional gold skew (allp t))
+
   (let (lead)
     (loop
         for old in gold
-        for new = (loop 
-                     for new in discriminants
-                     thereis (when (discriminant-equal old new skew) new))
+        for new
+        = (when (or allp (not (eq (discriminant-toggle old) :unknown)))
+            (loop 
+                for new in discriminants
+                thereis (when (discriminant-equal old new skew) new)))
         when new do
           (setf (discriminant-toggle new) (discriminant-toggle old))
           (setf (discriminant-state new) (discriminant-state old))
@@ -269,10 +272,12 @@
         else do (push old lead))
     (loop
         for new in discriminants
-        for old = (unless (discriminant-gold new)
-                    (loop 
-                        for old in preset
-                        thereis (and (discriminant-equal old new) old)))
+        for old 
+        = (unless (discriminant-gold new)
+            (loop 
+                for old in preset
+                thereis (and (not (eq (discriminant-toggle old) :unknown))
+                             (discriminant-equal old new) old)))
         when old do
           (setf (discriminant-toggle new) (discriminant-toggle old))
           (setf (discriminant-state new) (discriminant-state old))

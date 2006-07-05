@@ -172,7 +172,7 @@
   (when (and runp display) (frame-cursor frame :vertical-scroll))
   ;;
   ;; _fix_me_
-  ;; probably, we should move this further down, untial after extraction of
+  ;; probably, we should move this further down, until after extraction of
   ;; discriminants, so that start-up time is not reflected.
   ;;                                                           (6-jun-04; oe)
   ;;
@@ -358,6 +358,50 @@
 
   (setf (compare-frame-gactive frame) nil)
   (when (and runp display) (frame-cursor frame :default)))
+
+(defun reset-compare-frame (frame)
+
+  (setf %frame frame)
+  (setf (compare-frame-trees frame) (compare-frame-otrees frame))
+  (setf (compare-frame-in frame) (compare-frame-edges frame))
+  (setf (compare-frame-out frame) nil)
+  (loop
+      for foo in (compare-frame-discriminants frame)
+      do
+        (setf (discriminant-time foo) (get-universal-time))
+        (setf (discriminant-gold foo) nil)
+        (setf (discriminant-preset foo) nil)
+        (setf (discriminant-state foo) :unknown)
+        (setf (discriminant-toggle foo) :unknown))
+
+  ;;
+  ;; preset discriminants from recorded decisions or gold decisions (during an
+  ;; update); record `gold' discriminants that are no longer pertinent.
+  ;;
+  (unless (compare-frame-exact frame)
+    (setf (compare-frame-lead frame)
+      (preset-discriminants 
+       (compare-frame-discriminants frame) 
+       (compare-frame-preset frame)
+       (compare-frame-gold frame)
+       (compute-discriminant-skew (compare-frame-edges frame))
+       nil)))
+
+  (unless (compare-frame-exact frame)
+    (recompute-in-and-out frame t))
+
+  (when (find :reject (compare-frame-preset frame) :key #'discriminant-type)
+    (setf (compare-frame-in frame) nil)
+    (setf (compare-frame-out frame) (compare-frame-edges frame)))
+
+  ;;
+  ;; always update tree and discriminant state here: this will cause the frame
+  ;; to redraw both lower panes.
+  ;; 
+  (clim::redisplay-frame-pane frame 'top :force-p t)
+  (clim::redisplay-frame-pane frame 'comment :force-p t)
+  (clim::redisplay-frame-pane frame 'status :force-p t)
+  (update-trees frame))
 
 (defstruct decision
   type
@@ -579,6 +623,12 @@
   (clim:with-application-frame (frame)
     (record-decision (make-decision :type :clear) frame)
     (reset-discriminants frame)))
+
+(define-compare-frame-command (com-reset-compare-frame :menu "Reset")
+    ()
+  (clim:with-application-frame (frame)
+    (record-decision (make-decision :type :reset) frame)
+    (reset-compare-frame frame)))
 
 (define-compare-frame-command (com-ordered-compare-frame :menu "Ordered")
     ()
