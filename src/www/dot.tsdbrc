@@ -1,0 +1,21 @@
+;;; Hey, Emacs, this file is -*- Common-Lisp -*- ... got that?
+
+(in-package :tsdb)
+
+(setf *tsdb-cache-database-writes-p* :raw)
+(setf *tsdb-cache-connections-p* t)
+(setf *tsdb-maximal-number-of-edges* 20000)
+(setf *tsdb-maximal-number-of-results* 10)
+(setf *process-raw-print-trace-p* t)
+
+(setf *tsdb-minimize-gcs-p* t)
+(setf *statistics-extra* nil)
+
+(setf *pvm-cpus*
+  (list
+   (make-cpu 
+    :host (short-site-name)
+    :spawn "/logon/www/logon/erg/bin/cheap"
+    :options '("-tsdb" "-yy" "/logon/www/logon/erg/erg/english.grm")
+    :class :www :name "pet" 
+    :preprocessor "lkb::preprocess-for-pet")))
