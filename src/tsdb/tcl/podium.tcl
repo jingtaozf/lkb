@@ -1151,7 +1151,10 @@ proc main {} {
   .menu.options.menu.filters add checkbutton -label "MRS Cheap Scope" \
     -variable globals(filters,cscope) \
     -command tsdb_filters;
-  .menu.options.menu.filters add checkbutton -label "MRS UTool Classify" \
+  .menu.options.menu.filters add checkbutton -label "MRS UTool Net" \
+    -variable globals(filters,unet) \
+    -command tsdb_filters;
+  .menu.options.menu.filters add checkbutton -label "MRS UTool Scope" \
     -variable globals(filters,uscope) \
     -command tsdb_filters;
   .menu.options.menu.filters add checkbutton -label "MRS Fragmentation" \

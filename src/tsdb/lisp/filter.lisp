@@ -203,23 +203,6 @@
                                  (*standard-output* stream)
                                  result error)
                             (multiple-value-setq (result error)
-                              (ignore-errors (mt:utool-net-p mrs)))
-                            (setf result result)
-                            (when error 
-                              (push 
-                               (list :uscope (format nil "~a" error))
-                               (gethash id flags)))
-                            (when verbose
-                              (let* ((output 
-                                      (get-output-stream-string stream))
-                                     (output (normalize-string output)))
-                                (unless (string= output "")
-                                  (push (list :uscope output)
-                                        (gethash id flags))))))
-                          (let* ((stream (make-string-output-stream))
-                                 (*standard-output* stream)
-                                 result error)
-                            (multiple-value-setq (result error)
                               (ignore-errors (mt:utool-process
                                               mrs :action :solve)))
                             (when error 
@@ -234,11 +217,31 @@
                                   (push (list :uscope output)
                                         (gethash id flags)))))
                             result))
+          when (smember :unet *filter-test*)
+          do
+            (let* ((stream (make-string-output-stream))
+                   (*standard-output* stream)
+                   result error)
+              (multiple-value-setq (result error)
+                (ignore-errors (mt:utool-net-p mrs)))
+              (setf result result)
+              (when error 
+                (push 
+                 (list :unet (format nil "~a" error))
+                 (gethash id flags)))
+              (when verbose
+                (let* ((output 
+                        (get-output-stream-string stream))
+                       (output (normalize-string output)))
+                  (unless (string= output "")
+                    (push (list :unet output)
+                          (gethash id flags))))))
           when bindings do
             (if (rest bindings)
               (push
                (list :cscope (format nil "~a cheap scopes" (length bindings)))
                (gethash id flags))
+              #+:null
               (when (mrs::extra-bindings-p (first bindings))
                 (push
                  (list :cscope "incomplete cheap scope")
@@ -315,7 +318,7 @@
                         t 
                         "    cheap scoping: `~a'.~%"
                         (normalize-string (second foo))))
-                      (:uscope
+                      ((:uscope :unet)
                        (format 
                         t 
                         "    UTool: `~a'.~%"

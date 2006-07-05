@@ -287,7 +287,6 @@
   #+:arboretum
   (populate-found-configs)
 
-  #+:logon
   (setf input-sem (mt:map-mrs input-sem :semi :backward))
   #-:logon
   (setf input-sem (mrs::fill-mrs (mrs::unfill-mrs input-sem)))
@@ -655,7 +654,6 @@
       ;;
       (let* ((input *generator-internal-mrs*)
              (mrs (mrs::extract-mrs edge))
-             #+:logon
              (mrs (mt:map-mrs mrs :semi :backward))
              #-:logon
              (mrs (mrs::fill-mrs (mrs::unfill-mrs mrs))))

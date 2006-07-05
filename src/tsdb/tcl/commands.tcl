@@ -1308,6 +1308,7 @@ proc tsdb_filters {} {
   if {$globals(filters,syntax)} { set code "$code :syntax"; }
   if {$globals(filters,ascope)} { set code "$code :ascope"; }
   if {$globals(filters,cscope)} { set code "$code :cscope"; }
+  if {$globals(filters,unet)} { set code "$code :unet"; }
   if {$globals(filters,uscope)} { set code "$code :uscope"; }
   if {$globals(filters,fragmentation)} { set code "$code :fragmentation"; }
   if {$globals(filters,connectivity)} { set code "$code :connectivity"; }

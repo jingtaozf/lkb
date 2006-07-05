@@ -132,6 +132,7 @@
       set globals(filter,sparseness) ~:[0~;1~]~%~
       set globals(filter,ascope) ~:[0~;1~]~%~
       set globals(filter,cscope) ~:[0~;1~]~%~
+      set globals(filter,unet) ~:[0~;1~]~%~
       set globals(filter,uscope) ~:[0~;1~]~%~
       set globals(filter,fragmentation) ~:[0~;1~]~%~
       set globals(filter,connectivity) ~:[0~;1~]~%~
@@ -174,6 +175,7 @@
      (smember :sparseness *filter-test*)
      (smember :ascope *filter-test*)
      (smember :dscope *filter-test*)
+     (smember :unet *filter-test*)
      (smember :uscope *filter-test*)
      (smember :fragmentation *filter-test*)
      (smember :connectivity *filter-test*)

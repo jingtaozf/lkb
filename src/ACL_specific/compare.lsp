@@ -361,6 +361,7 @@
 
 (defun reset-compare-frame (frame)
 
+  #+:debug
   (setf %frame frame)
   (setf (compare-frame-trees frame) (compare-frame-otrees frame))
   (setf (compare-frame-in frame) (compare-frame-edges frame))

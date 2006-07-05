@@ -23,5 +23,8 @@
       :source-pathname ""
       :binary-pathname ""
       :components
-      ((:file "demo")))))
+      (#-:logon
+       (:file "grammar")
+       #+:logon
+       (:file "mt")))))
 
