@@ -11,11 +11,63 @@ M Makefile
 ? man
 ? include/mrs.h
 M log/build
+U src/mrs-package.lsp
+U src/mt-package.lsp
+U src/version.lsp
 ? src/.l7cl
 ? src/.l8cl
 ? src/.lecl
+U src/ACL_specific/compare.lsp
+U src/io-general/menus.lsp
+U src/main/discriminants.lsp
+U src/mrs/basemrs.lisp
+U src/mrs/generate.lisp
+U src/mrs/lkb-acl-mrs.lisp
+U src/mrs/mrsoutput.lisp
+U src/mrs/mrsresolve.lisp
+U src/mrs/mrstoplevel.lisp
+U src/mt/clim.lisp
+U src/mt/comparison.lisp
+U src/mt/globals.lisp
+U src/mt/mrs.lisp
+U src/mt/transfer.lisp
+U src/mt/utool.lisp
+U src/mt/version.lisp
+U src/mt/vpm.lisp
+U src/systems/lkb.system
+U src/systems/www.system
 ? src/tsdb/home/log
 ? src/tsdb/home/redwoods
+U src/tsdb/lisp/filter.lisp
+U src/tsdb/lisp/globals.lisp
+U src/tsdb/lisp/podium.lisp
+U src/tsdb/lisp/process.lisp
+U src/tsdb/lisp/redwoods.lisp
+U src/tsdb/skeletons/english/harmony/item
+U src/tsdb/skeletons/english/harmony/item-set
+U src/tsdb/skeletons/english/harmony/relations
+U src/tsdb/skeletons/english/ps/item
+U src/tsdb/skeletons/english/ps/item-set
+U src/tsdb/skeletons/english/ps/relations
+U src/tsdb/skeletons/english/tg/item
+U src/tsdb/skeletons/english/tg/item-set
+U src/tsdb/skeletons/english/tg/relations
+U src/tsdb/skeletons/norsk/harmoni/item
+U src/tsdb/skeletons/norsk/harmoni/output
+U src/tsdb/skeletons/norsk/harmoni/relations
+U src/tsdb/skeletons/norsk/ps/item
+U src/tsdb/skeletons/norsk/ps/output
+U src/tsdb/skeletons/norsk/ps/relations
+U src/tsdb/skeletons/norsk/tg/item
+U src/tsdb/skeletons/norsk/tg/output
+U src/tsdb/skeletons/norsk/tg/relations
+U src/tsdb/tcl/commands.tcl
+U src/tsdb/tcl/podium.tcl
+cvs update: src/www/demo.lisp is no longer in the repository
+U src/www/dot.clinit.cl
+U src/www/dot.tsdbrc
+U src/www/grammar.lisp
+U src/www/mt.lisp
 **********
 
   Remember to update the version number:
@@ -25,7 +77,7 @@ M log/build
 **********
 Checking in ./src/version.lsp;
 /lingo/CVS/lkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.492; previous revision: 1.491
+new revision: 1.494; previous revision: 1.493
 done
 make[1]: Entering directory `/lingo/build/lkb'
 ( \
@@ -51,7 +103,7 @@ make[1]: Entering directory `/lingo/build/lkb'
       --exclude=src/systems/pvm.system \
       .; \
 )
-chgrp: changing group of `/lingo/www/lingo/ftp/builds/2006-06-28': Operation not permitted
+chgrp: changing group of `/lingo/www/lingo/ftp/builds/2006-07-05': Operation not permitted
 ./
 ./src/
 ./src/ACL-CG_specific/
@@ -313,13 +365,16 @@ chgrp: changing group of `/lingo/www/lingo/ftp/builds/2006-06-28': Operation not
 ./src/tty/
 ./src/tty/tty.lsp
 ./src/www/
-./src/www/demo.lisp
+./src/www/dot.tsdbrc
 ./src/www/run
 ./src/www/lkb.css
 ./src/www/alttxt.js
 ./src/www/build.lsp
 ./src/www/introduction.html
 ./src/www/lkb.js
+./src/www/dot.clinit.cl
+./src/www/grammar.lisp
+./src/www/mt.lisp
 ./src/xml/
 ./src/xml/pxml1.cl
 ./src/xml/phtml.cl
@@ -3633,6 +3688,18 @@ src/tsdb/skeletons/english/jh/
 src/tsdb/skeletons/english/jh/item
 src/tsdb/skeletons/english/jh/item-set
 src/tsdb/skeletons/english/jh/relations
+src/tsdb/skeletons/english/harmony/
+src/tsdb/skeletons/english/harmony/item
+src/tsdb/skeletons/english/harmony/item-set
+src/tsdb/skeletons/english/harmony/relations
+src/tsdb/skeletons/english/ps/
+src/tsdb/skeletons/english/ps/item
+src/tsdb/skeletons/english/ps/item-set
+src/tsdb/skeletons/english/ps/relations
+src/tsdb/skeletons/english/tg/
+src/tsdb/skeletons/english/tg/item
+src/tsdb/skeletons/english/tg/item-set
+src/tsdb/skeletons/english/tg/relations
 src/tsdb/skeletons/espanol/
 src/tsdb/skeletons/espanol/banca/
 src/tsdb/skeletons/espanol/banca/item
@@ -3733,6 +3800,18 @@ src/tsdb/skeletons/norsk/vei/
 src/tsdb/skeletons/norsk/vei/item
 src/tsdb/skeletons/norsk/vei/output
 src/tsdb/skeletons/norsk/vei/relations
+src/tsdb/skeletons/norsk/harmoni/
+src/tsdb/skeletons/norsk/harmoni/item
+src/tsdb/skeletons/norsk/harmoni/output
+src/tsdb/skeletons/norsk/harmoni/relations
+src/tsdb/skeletons/norsk/ps/
+src/tsdb/skeletons/norsk/ps/item
+src/tsdb/skeletons/norsk/ps/output
+src/tsdb/skeletons/norsk/ps/relations
+src/tsdb/skeletons/norsk/tg/
+src/tsdb/skeletons/norsk/tg/item
+src/tsdb/skeletons/norsk/tg/output
+src/tsdb/skeletons/norsk/tg/relations
 src/tsdb/home/
 src/tsdb/home/lingo/
 src/tsdb/home/lingo/nov-98/
