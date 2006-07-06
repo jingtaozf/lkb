@@ -276,12 +276,16 @@
 	       ;; matches as needed :-{.                     (31-jan-03; oe)
 	       ;;
 	       ;; or hack ppcre code? (bmw)
-	    when (and (eq verbose :trace) (not (string= (text x-new) text-old))) do
+	    when (and (eq verbose :trace) 
+		      (not (string= (text x-new) text-old))
+		      ) 
+	    do
 	      (format
 	       t
-	       "~&~a |~a|~%  ~a~%  ~a~%~%"
+	       "~&~a |~a| -> |~a| in ~a gave ~a"
 	       type
-	       (x-fsr-source rule) x-token x-new)
+	       (x-fsr-source rule) (x-fsr-target rule) 
+	       x-token x-new)
 	    unless (string= text-old (text x-new))
 	    do
 	      (case type
@@ -642,7 +646,7 @@
 	    ;; escaped character
 	    ;;
        collect c
-       and collect nil into new-char-map ;; null replacement span
+       and collect (cons nil nil) into new-char-map ;; empty replacement span
        and do (setf esc nil)
        else if (char= c #\\)
 	    ;;
@@ -653,11 +657,11 @@
 	    ;;
 	    ;; none of the above
 	    ;;
-       and collect nil into new-char-map ;; null replacement span 
+       and collect (cons nil nil) into new-char-map ;; empty replacement span 
        finally
-;	 (fill-char-map new-char-map
-;			(char-map-match-start char-map match-start)
-;			(char-map-match-end char-map match-end))
+	 (fill-char-map new-char-map
+			(char-map-match-start char-map match-start)
+			(char-map-match-end char-map match-end))
 	 (push
 	  (make-repl :target-string target-string
 		     :target-char-map char-map
