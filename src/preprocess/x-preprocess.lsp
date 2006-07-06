@@ -228,8 +228,9 @@
 	do
 	  (format
 	   t
-	   "~&G|~a|~%  ~a~%  ~a~%~%"
-	   (x-fsr-source rule) old-x x)
+	   "~&GLOBAL |~a| -> |~a| ~&mapped~&~a~&to~&~a~%~%"
+	   (x-fsr-source rule) (x-fsr-target rule)
+	   old-x x)
 	finally
 	  (return x))))
 
@@ -676,21 +677,26 @@
 	  (repl-list-list repl-l)))
    'string))
 
-;; instantiate null spans to match surrounding spans
-;; (is this sensible???)
+;; instantiate null points to match surrounding spans
 (defun fill-char-map (char-map start end)
+  ;; update start points
   (loop
-      with last-s = start
+      with last-p = start
       for r in char-map
       for s = (car r)
-      if s do (setf last-s s)
-      else do (setf (car r) last-s))
-  (loop
-      with last-e = end
-      for r in (reverse char-map)
       for e = (cdr r)
-      if e do (setf last-e e)
-      else do (setf (cdr r) last-e))
+      if s do (setf last-p (or e last-p)) ;; update last-p if poss
+      else do (setf (car r) last-p) ;; instantiate
+	   )
+  ;; update end points
+  (loop
+      with last-p = end
+      for r in (reverse char-map)
+      for s = (car r)
+      for e = (cdr r)    
+      if e do (setf last-p (or s last-p)) ;; update last-p if poss
+      else do (setf (cdr r) last-p) ;; instantiate
+	      )
   char-map)
 	 
 (defun update-char-map (replacements x)
