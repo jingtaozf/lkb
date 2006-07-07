@@ -732,7 +732,7 @@
   (unless
       (setf coding
 	(canonical-coding-system-name coding))
-    (error "set-coding-system(): invalid coding system `~a'.~%" raw))
+    (error "set-coding-system(): invalid coding system `~a'.~%~%valid coding systems are~%~a" raw *coding-system-names*))
     
   #+:allegro
   (let* ((allegro-coding-name (internal-coding-system-name coding))
