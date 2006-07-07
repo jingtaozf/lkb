@@ -8,7 +8,7 @@
 
 (in-package :lkb)
 
-(defparameter *check-pg-interface-version* 2.17)
+(defparameter *check-pg-interface-version* 2.18)
 
 (defconstant *lexdb-emacs-other-fns*
     '(initialize-lexdb
@@ -37,6 +37,7 @@
       
       get-dot-lex-record
       get-dot-rev-record
+      grammar-fields
 ))
  
 (defun lexdb-fn (fn-name &rest rest)

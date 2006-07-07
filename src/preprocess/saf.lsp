@@ -10,7 +10,6 @@
 
 (in-package :lkb)
 
-(defvar *saf*)
 (defvar *saf-dir* nil)
 (defvar *saf-v* -1)
 (defvar *saf-l-map* nil)
@@ -62,7 +61,7 @@
    ))
 
 ;;
-;; code to convert SAF (or MAF) XML into SAF object
+;; code to convert SAF XML into SAF object
 ;;
 
 ;; fix_me: get rid of global *saf-l-map*
@@ -92,7 +91,7 @@
 (defun saf-lxml-to-saf-object (lxml)
   (unless (member (string (lxml-elt-name lxml)) '("maf" "saf" "smaf")
 		  :test #'string=)
-    (error "smaf, saf or maf element expected as body"))
+    (error "smaf, saf element expected as body"))
   (let* ((saf-attributes
 	  (lxml-elt-attributes lxml))
 	 (lxml (cdr lxml))
@@ -129,7 +128,7 @@
 	(make-saf-fv :feature (string (lxml-elt-name e))
 		     :value (lxml-elt-text-content e))))
 
-;; is this code broken???
+#+:null
 (defun make-saf-lattice-from-sequence (lxml &key init final)
   (let ((*saf-v* -1)
 	nodes edges)
@@ -180,7 +179,8 @@
       (error "no elements expected after fsm/lattice"))
     (get-saf-lattice-from-fsm (car lxml)))
    (t
-    (make-saf-lattice-from-sequence lxml))))
+    (error "malformed lattice: ~a" lxml)
+    )))
 
 (defun get-saf-lattice-from-fsm (lxml-fsm)
   (let* ((fsm-attributes (lxml-elt-attributes lxml-fsm))
@@ -503,22 +503,112 @@
 
 ;;
 
-(defun xml-maf-to-tchart (xml)
+(defun xml-saf-to-tchart (xml)
   (saf-to-tchart (xml-to-saf-object xml)))
-  
-(defun saf-to-tchart (saf &key (filter #'identity)
-			       tchart)
-  (unless tchart
-    (setf *tchart* (make-tchart))
-    (setf *tchart-max* 0)
-    (setf *smaf-id-to-edge-id* nil)
-    (setf *HIDDEN-smaf-id-to-edge-id* nil)
-    (initialize-smaf-node-to-chart-node saf)
-    )
-  (setf *saf* saf)
-  (saf-lattice-to-edges (saf-lattice saf)
+
+(defun new-tchart ()
+  (setf *tchart* (make-tchart))
+  (setf *tchart-max* 0)
+  (setf *smaf-id-to-edge-id* nil)
+  (setf *HIDDEN-smaf-id-to-edge-id* nil)
+  )
+
+(defun get-edge-by-id (id &optional (tchart *tchart*))
+  (find id (get-edges tchart) :key #'edge-id :test #'=))
+
+;;!
+(defun dup-edge= (x y)
+  (cond
+   ;; token edges
+   ((and (typep x 'token-edge)
+	 (typep y 'token-edge)
+	 )
+    (string= (token-edge-word x)
+	     (token-edge-word y)))
+   ;; morph edges
+   ((and (typep x 'morpho-stem-edge) 
+	 (typep y 'morpho-stem-edge))
+    (string= (morpho-stem-edge-word x)
+	     (morpho-stem-edge-word y)))
+   ;; chart edges
+   ((and (typep x 'edge) 
+	 (typep y 'edge))
+    nil)
+   ;; different edge types
+   (t
+    nil)))
+
+(defun clean-tchart (&optional (tchart *tchart*))
+  (let ((dups (get-duplicate-edge-sets tchart)))
+    ;(print-tchart)
+    (replace-dup-children dups)
+    ;(print-tchart)
+    (replace-dup-edges dups tchart)
+    ;(print-tchart)
+    ))
+
+(defun replace-dup-edges (dups &optional (tchart *tchart*))
+  (loop 
+      for i from 0 upto (1- *chart-limit*)
+      do
+	(setf (aref tchart i 0)
+	  (loop 
+	      for cc in (aref tchart i 0)
+	      for e = (chart-configuration-edge cc)
+	      if (member e dups :key #'car)
+	      collect cc))
+	(setf (aref tchart i 1)
+	  (loop 
+	      for cc in (aref tchart i 1)
+	      for e = (chart-configuration-edge cc)
+	      if (member e dups :key #'car)
+	      collect cc))))
+
+
+(defun replace-dup-children (dups)
+  (loop
+      for dup in dups
+      for e = (car dup)
+      for children = (edge-children e)
+      for new-children = 
+	(loop
+	    for child in children
+	    for new-child = (get-dup-edge child dups)
+			    ;;	    do (unless (eq child new-child)
+			    ;;		 (format t "~&; Warning: altering edge ~a (replacing child ~a by duplicate edge ~a)" e child new-child))
+	    collect new-child)
+      do
+	(setf (edge-children e) new-children)))
+
+(defun get-dup-edge (e dups)
+  (car (get-dup-set e dups)))
+
+(defun get-dup-set (e dups)
+  (find e dups :test #'dup-edge= :key #'car))
+
+(defun get-duplicate-edge-sets (&optional (tchart *tchart*))
+  (loop
+      with dups
+      for e in (reverse (get-edges tchart))
+      for dup = (get-dup-set e dups)
+      do
+	(cond
+	 (dup
+	  ;; duplicate
+	  (format t "~&WARNING: pruning duplicate edge ~a" e)
+	  (setf (cdr (last dup)) (list e))
+	  )
+	 (t
+	  (push (list e) dups)))
+      finally (return dups)))
+
+(defun saf-to-tchart (saf &key (filter #'identity))
+  (new-tchart)
+  (initialize-smaf-node-to-chart-node saf)
+  (saf-lattice-to-tchart (saf-lattice saf)
 			:filter filter
 			:addressing (saf-meta-addressing (saf-meta saf)))
+  (clean-tchart *tchart*)
   *tchart*)
 
 (defun initialize-smaf-node-to-chart-node (saf)
@@ -557,7 +647,7 @@
 	       (point-to-char-point (saf-edge-from x) addressing))
 	))
 
-(defun saf-lattice-to-edges (saf-lattice &key (filter #'identity) addressing)
+(defun saf-lattice-to-tchart (saf-lattice &key (filter #'identity) addressing)
   (loop 
       for e in 
 	(loop for f in (and saf-lattice (saf-lattice-edges saf-lattice))
@@ -574,21 +664,21 @@
 	(loop for e in toks
 	    do 
 	      (augment-tchart-from-saf-edge e 
-					    :fn #'saf-edge-to-tedge
-					    :addressing addressing))
+					    #'saf-edge-to-tedge
+					    addressing))
 	(loop for e in tokMorphs
 	    do 
 	      (augment-tchart-from-saf-edge e 
-					    :fn #'saf-edge-to-tedge
-					    :addressing addressing)
+					    #'saf-edge-to-tedge
+					    addressing)
 	      (augment-tchart-from-saf-edge e 
-					    :fn #'saf-edge-to-medge
-					    :addressing addressing))
+					    #'saf-edge-to-medge
+					    addressing))
 	(loop for e in morphs
 	    do 
 	      (augment-tchart-from-saf-edge e 
-					    :fn #'saf-edge-to-medge
-					    :addressing addressing))
+					    #'saf-edge-to-medge
+					    addressing))
 	))
 
 #+:null
@@ -599,9 +689,9 @@
       0)))
 
 ;; to do: replace global *tchart* + *tchart-max* + ??? with objects
-(defun augment-tchart-from-saf-edge (saf-edge &key addressing fn)
+(defun augment-tchart-from-saf-edge (saf-edge fn addressing)
   (let
-      ((edge (funcall fn saf-edge :addressing addressing)))
+      ((edge (funcall fn saf-edge addressing)))
     (when edge
       (let* (
 	     (from (edge-from edge))
@@ -619,7 +709,7 @@
   *tchart*)
 
 ;; input: edge of type 'tok' or 'tok+morph'
-(defun saf-edge-to-tedge (saf-edge &key addressing)
+(defun saf-edge-to-tedge (saf-edge addressing)
   (unless (or (string= "tok" (saf::l-edgeType saf-edge))
 	      (string= "tok+morph" (saf::l-edgeType saf-edge)))
     (error "edgeType='tok' expected (got '~a')" (saf::l-edgeType saf-edge)))
@@ -682,7 +772,7 @@
       (error "unable to convert malformed id `~a': ~a" id condition))))
 
 ;; input: saf edge of type 'tok' or 'tok+morph'
-(defun saf-edge-to-medge (saf-edge &key addressing)
+(defun saf-edge-to-medge (saf-edge addressing)
   (unless (or (string= "morph" (saf::l-edgeType saf-edge))
 	       (string= "tok+morph" (saf::l-edgeType saf-edge)))
     (error "'morph' edge expected (got '~a')" (saf::l-edgeType saf-edge)))
@@ -826,7 +916,7 @@
   (if (null point)
       (return-from point-to-char-point))
   (unless addressing
-    (setf addressing (saf-meta-addressing (saf-meta *saf*))))
+    (error "ADDRESSING cannot be null"))
   (cond
    ((string= addressing :|char|) 
     ;(ignore-errors 

@@ -79,17 +79,29 @@
   
 
 (defmethod update-entry ((lex su-psql-lex-database) symb-list psql-le)
-  (let ((ql-name (psql-quote-literal (retr-val psql-le :|name|))))
+  (new-entry lex symb-list psql-le))
+  
+(defmethod new-entry ((lex su-psql-lex-database) symb-list psql-le)
+  (kill-entry lex (retr-val psql-le :|name|))
+  (insert-entry lex symb-list psql-le))
+
+(defmethod kill-entry ((lex su-psql-lex-database) name)
+  (let ((qname (psql-quote-literal name)))
+    ;; delete from lex
     (run-command lex 
-		 (format nil "DELETE FROM lex WHERE name=~a" ql-name))
+		 (format nil "DELETE FROM lex WHERE name=~a" qname))
+    ;; delete from lex-key
     (run-command lex 
-		 (format nil "INSERT INTO lex ~a VALUES ~a" 
-			 (sql-list symb-list 
-				   #'(lambda (x) (quote-ident lex x)))
-			 (sql-list (ordered-val-list symb-list psql-le) 
-				   #'(lambda (x) (psql-quote-literal x)))))
-    (run-command lex 
-		 (format nil "DELETE FROM lex_key WHERE name = ~a" ql-name))))
+		 (format nil "DELETE FROM lex_key WHERE name = ~a" qname))
+    ))
+    
+(defmethod insert-entry ((lex su-psql-lex-database) symb-list psql-le)
+  (run-command lex 
+	       (format nil "INSERT INTO lex ~a VALUES ~a" 
+		       (sql-list symb-list 
+				 #'(lambda (x) (quote-ident lex x)))
+		       (sql-list (ordered-val-list symb-list psql-le) 
+				 #'(lambda (x) (psql-quote-literal x))))))
   
 (defmethod import-tdl-file ((lex su-psql-lex-database) filename)
   (declare (ignore filename))

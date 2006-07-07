@@ -1,4 +1,4 @@
-;;; Copyright (c) 2003 - 2005 Ben Waldron
+;;; Copyright (c) 2003 - 2006 Ben Waldron
 ;;; see licence.txt for conditions
 ;; Portions copyright (c) 1996, 1997, 1999, 2000, 2001 Free Software Foundation, Inc.
 
@@ -11,7 +11,7 @@
 
 ;;; Add a PG menu to the emacs menu bar
 
-(defvar *lexdb-pg-interface-version* "2.17")
+(defvar *lexdb-pg-interface-version* "2.18")
 
 (require 'cl)      ; we use some common-lisp idioms
 (require 'widget)
@@ -26,7 +26,7 @@
   :convert-widget 'widget-value-convert-widget
   :keymap 'widget-field-keymap
   :format "%v"
-  :help-echo "M-TAB: complete field; RET: enter value"
+  :help-echo "M-TAB: complete field; : C-c C-c commit record"
   :value ""
   :prompt-internal 'widget-field-prompt-internal
   :prompt-history 'widget-field-history
@@ -148,7 +148,7 @@
 ;;;
 
 (defvar *lexdb-record-features*)
-(defvar *lexdb-read-only*)
+(defvar *lexdb-read-only-fields*)
 (defvar *lexdb-hidden*)
 (defvar *lexdb-minibuffer-max*)
 (defvar *lexdb-active-ium-size*)
@@ -157,9 +157,10 @@
 (defvar *lexdb-scratch-buffer*)
 (defvar *lexdb-slot-len*)
 (defvar *completable-fields*)
+(defvar *lexdb-grammar-fields*)
+(defvar *lexdb-grammar-fields-propertize*)
 
-;(setf *lexdb-read-only* '(:|version| :|userid| :|modstamp|))
-(setf *lexdb-read-only* '(:|userid| :|modstamp|))
+(setf *lexdb-read-only-fields* '(:|userid| :|modstamp|))
 (setf *lexdb-hidden* nil)
 (setf *lexdb-minibuffer-max* 80)
 (setf *lexdb-active-ium-size* 0)
@@ -168,6 +169,8 @@
 (setf *lexdb-scratch-buffer* "*lexdb-scratch*")
 (setf *lexdb-slot-len* 30)
 (setf *completable-fields* '("_text"))
+(setf *lexdb-grammar-fields* nil)
+(setf *lexdb-grammar-fields-propertize* (list 'face 'change-log-file-face))
 
 ;;;
 ;;; buffer local vbles
@@ -539,6 +542,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
     (widget-insert "\n"
 		   lexdb-tdl)
     (widget-setup)
+    (goto-char 0)
     lexdb-fw-map))
 
 (defun lexdb-update-record-from-buffer (buffer)
@@ -556,11 +560,12 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 	  (error "feature not found in record"))
       (setf (cdr record-elt) val))))
 
+
 ;; sets lexdb-tdl and lexdb-record
 (defun lexdb-retrieve-record (id)
   (let ((fields (cle-retrieve-record-fields id))
 	(sizes (cle-retrieve-record-sizes)))
-    (setf *lexdb-record-features* (set-difference (cle-retrieve-record-features) *lexdb-hidden*))
+    (setf *lexdb-record-features* (l:order-record-fields))
     (unless fields
       (princ (format "%s not found! " id))
       (setf fields (l:make-empty-record id)))
@@ -568,11 +573,24 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 			""))
     (setf lexdb-record (cons fields sizes))))
 
+(defun l:order-record-fields ()
+  (let ((fields (cle-retrieve-record-features))
+	(ofields (list :|name|)))
+    (setf ofields 
+	  (append ofields
+		  (set-difference (l:grammar-fields) ofields)))
+    (setf ofields 
+	  (append ofields
+		  (set-difference fields ofields)))
+    (setf ofields (reverse (set-difference ofields *lexdb-read-only-fields*)))
+    (setf ofields (append ofields *lexdb-read-only-fields*))
+    (set-difference ofields *lexdb-hidden*)))
+
 (defun lexdb-retrieve-record3 (ium)
   (let ((fields (cle-retrieve-record-fields3 ium))
 	(id (car ium))
 	(sizes (cle-retrieve-record-sizes)))
-    (setf *lexdb-record-features* (set-difference (cle-retrieve-record-features) *lexdb-hidden*))
+    (setf *lexdb-record-features* (l:order-record-fields))
     (unless fields
       (princ (format "%s not found! " ium))
       (setf fields (l:make-empty-record id)))
@@ -595,6 +613,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (let* ((iums (cle-lookup field-kw val-str "name,userid,modstamp" from)))
     (setf *lexdb-active-ium-size* (length iums))
     (setf *lexdb-active-ium-ring* (make-ring iums))
+    (lexdb-advance-ium-aux)
     (l:princ-ring *lexdb-active-ium-ring* *lexdb-active-ium-size* #'car)))
 
 ;;;
@@ -701,19 +720,25 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 		trunc-l
 		" "))))
 
+(defun l:grammar-fields nil
+  (or *lexdb-grammar-fields*
+      (setf *lexdb-grammar-fields* (cle-grammar-fields))))
+
 (defun l:fv-pair-2-fw-pair (x)
   (let* ((feat (car x))
 	 (feat-str (kw2str feat))
 	 (val (cdr x)))
+    (if (member feat (l:grammar-fields))
+	(setf feat-str (apply 'propertize (cons feat-str *lexdb-grammar-fields-propertize*))))
     (cons 
      feat
      (progn 
        (widget-insert "\n"
 		      (make-string (max 0 (- 15 (length feat-str))) ? ) 
-		      feat-str 
+		      feat-str
 		      ": ")
        (cond
-	((member feat *lexdb-read-only*)
+	((member feat *lexdb-read-only-fields*)
 	 (widget-insert val))
 	(t
 	 (widget-create 'editable-field-fixed-size
@@ -862,3 +887,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 
 (defun cle-initialize-psql nil
   (cle-eval "(initialize-psql-lexicon)"))
+
+(defun cle-grammar-fields nil
+  (cle-eval-lexdb 'grammar-fields))
+
