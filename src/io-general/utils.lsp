@@ -802,8 +802,3 @@
        else if (char= #\> c) append '(#\& #\g #\t #\;)
        else append (list c))
    'string))
-
-#+:xml
-(defun xml-whitespace-p (str)
-  (and (stringp str)
-       (net.xml.parser::all-xml-whitespace-p str)))

@@ -2,10 +2,18 @@
 ;;;   Ben Waldron;
 ;;; see `licence.txt' for conditions.
 
-(in-package :lkb)
+(defpackage :lxml
+  (:use :common-lisp) 
+  (:export))
+
+(in-package :lxml)
+
+(defun xml-whitespace-p (str)
+  (and (stringp str)
+       (net.xml.parser::all-xml-whitespace-p str)))
 
 (defun xml-to-lxml (xml)
-  (with-package (:lkb)
+  (lkb::with-package (:lxml)
     (discard-whitespace (net.xml.parser:parse-xml xml))))
 
 ;; if xml header, remove and check correct
@@ -84,7 +92,7 @@
     (error "string name of lxml attribute expected: got ~a" attrib-str))
   (let ((attrib (if keyword
 		    (intern attrib-str :keyword)
-		  (intern attrib-str :lkb)))
+		  (intern attrib-str :lxml)))
 	(car (car lxml-elt)))
     (typecase car
      (symbol nil)
@@ -102,7 +110,7 @@
     (error "string name of lxml element expected"))
   (let ((elt-name (if keyword
 		      (intern elt-str :keyword)
-		    (intern elt-str :lkb))))
+		    (intern elt-str :lxml))))
     (loop for e in (cdr lxml-elt)
 	when (eq elt-name (and (lxml-elt-p e) 
 			       (lxml-elt-name e)))
@@ -131,7 +139,7 @@
     (error "string name of lxml attribute expected: got ~a" attrib-str))
   (let ((attrib (if keyword
 		    (intern attrib-str :keyword)
-		  (intern attrib-str :lkb))))
+		  (intern attrib-str :lxml))))
     (second (member attrib (cdr lxml-pi)))))
 
 ;;
@@ -141,7 +149,7 @@
 ;; return CDATA-wrapped text
 #+:preprocessor
 (defun wrap-cdata (str)
-  (concatenate-strings
+  (lkb::concatenate-strings
    (cdr 
     (loop 
 	with subs = (cons 0 (append (ppcre:all-matches "]]>" str)
@@ -161,6 +169,9 @@
     lxml))
 
 ;; misc fns
+
+;; fix me
+(in-package :lkb)
 
 (defun concatenate-strings (x)
   (apply #'concatenate

@@ -538,9 +538,9 @@
                            *first-only-p* to `nil'.~%")
                          first-only-p))
 	 (input (if #+:maf (xml-p input) #-:maf nil
-		    #+:maf (xml-to-saf-object input) #-:maf nil;; extract object from maf xml
+		    #+:maf (smaf::xml-to-saf-object input) #-:maf nil;; extract object from maf xml
 		    input))
-	 (maf-p #+:maf (saf-p input) #-:maf nil)
+	 (maf-p #+:maf (smaf::saf-p input) #-:maf nil)
 	 (*maf-p* maf-p)
          ;;
          ;; input originating from SPPP is a set of SPPP tokens
@@ -560,7 +560,7 @@
       (setf length-user-input
         (cond
          (maf-p
-          #+:maf (get-smaf-lattice-size user-input) #-:maf nil)
+          #+:maf (smaf::get-smaf-lattice-size user-input) #-:maf nil)
          (spppp (loop
                     for token in input
                     maximize (rest (assoc :end token))))
@@ -763,7 +763,7 @@
   ;;; (bmw) the above is no longer the case
   ;;; FIX - we need a better method of switching here
   #+:maf
-  (if (saf-p preprocessed-input)
+  (if (smaf::saf-p preprocessed-input)
       (return-from instantiate-chart-with-tokens
 	(saf-setup-morphs preprocessed-input)))
   (if (consp (first preprocessed-input))

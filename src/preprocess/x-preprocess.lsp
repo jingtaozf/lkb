@@ -442,7 +442,7 @@
     (let ((strm (make-string-output-stream)))
       (format strm "~a" 
 	      (saf-header :doctype format :addressing *x-addressing* 
-			  :document #+:lkb (eval (intern "*SAF-DOCUMENT*" :lkb)) #-:lkb nil
+			  :document #+:lkb (eval (intern "*SAF-DOCUMENT*" :smaf)) #-:lkb nil
 			  )
 ;	      (if (eq format :saf)
 ;		  (saf-header :addressing *x-addressing* 

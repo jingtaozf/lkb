@@ -334,25 +334,6 @@
 	    when (morpho-stem-edge-p edge)
 	    collect edge)))
 
-;;
-;; point schemes:
-;; - char
-;; - xpoint
-;; - line
-;;
-
-(defun x-span (text from to addressing)
-  (let ((cfrom (point-to-char-point from addressing))
-	(cto (point-to-char-point to addressing)))
-    (cond
-     ((string= "char" addressing)
-      (and cfrom cto
-	   (subseq text cfrom cto)))
-     ((string= "xpoint" addressing)
-      (error "addressing scheme 'xpoint' not implemented"))
-     (t
-      (error "unknown addressing scheme '~a'" addressing)))))
-
 ;; assume xpoint order is string order for now
 (defun x< (x y)
   (string< x y))

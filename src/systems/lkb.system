@@ -135,7 +135,8 @@
       :components
                ((:file "lkb-package")
                 (:file "mrs-package")
-                (:file "mt-package" :load-only t)))
+                (:file "mt-package" :load-only t)
+		(:file "smaf-package")))
 
      (:module "version"
       :source-pathname ""
@@ -208,7 +209,10 @@
        #+(and :xml)
        (:file "lxml")
        #+(and :maf)
+       (:file "saf2")
+       #+(and :maf)
        (:file "saf")
+       #+(and :maf)
        (:file "saf-conf")
        #+:maf
        (:file "texti")

@@ -4,17 +4,11 @@
 
 (in-package :common-lisp-user)
 
-(defpackage :saf
-  (:use :common-lisp) 
-  (:export))
-
-(in-package :lkb)
-
-(defvar *SAF-L-MAP*)
 
 (in-package :saf)
 
-(defvar *smaf-gmap* nil) ;; reset when necessary!
+(defvar *lmap*)
+(defvar *gmap* nil) ;; reset when necessary!
 
 (defstruct map-action
   e-edge
@@ -28,10 +22,10 @@
 (defun instantiate-l-content (saf l-map)
   (unless l-map (error "No SAF config rules loaded ~%   (please load saf.conf via '(setf *saf-l-map* (saf::conf-read-file \"path/to/saf.conf\"))')"))
   (loop
-      with lattice = (lkb::saf-lattice saf)
-      for edge in (and lattice (lkb::saf-lattice-edges lattice))
+      with lattice = (saf-lattice saf)
+      for edge in (and lattice (saf-lattice-edges lattice))
       for l-content = (edge-l-content edge l-map)
-      do (setf (lkb::saf-edge-l-content edge) l-content)
+      do (setf (saf-edge-l-content edge) l-content)
       finally (return saf)))
 
 ;; instantiate :l-content for annotation
@@ -54,7 +48,7 @@
 	 (x (cdr l)))
     (cond
       ((string= feat "content")
-       (lkb::saf-fs-path-value x (lkb::saf-edge-content edge)))
+       (saf-fs-path-value x (saf-edge-content edge)))
       (t
        (error "unhandled variable name '~a' found in l-content" var)))))
 
@@ -62,8 +56,8 @@
 ;; match on 'type' and 'content'
 (defun edge-match (edge action)
   (and
-   (f-match 'lkb::saf-edge-type edge action)
-   (f-match 'lkb::saf-edge-content edge action)))
+   (f-match 'saf-edge-type edge action)
+   (f-match 'saf-edge-content edge action)))
 
 (defun f-match (f edge action)
   (match (funcall f edge) 
@@ -78,10 +72,10 @@
    ((listp y)
     (loop
 	for fv in y
-	for val = (lkb::saf-fv-value fv)
-	for feat = (lkb::saf-fv-feature fv)
+	for val = (saf-fv-value fv)
+	for feat = (saf-fv-feature fv)
 	for m = (match 
-		 (lkb::saf-fs-path-value (list feat) x)
+		 (saf-fs-path-value (list feat) x)
 		 val)
 	unless m
 	do (return nil)
@@ -92,18 +86,18 @@
 (defun inject (x l-content &key edge)
   (loop 
       for fv in x
-      for feat = (lkb::saf-fv-feature fv)
-      for val- = (lkb::saf-fv-value fv)
+      for feat = (saf-fv-feature fv)
+      for val- = (saf-fv-value fv)
       for val = (if (symbolp val-)
 		    (resolve val- edge)
 		  val-)
       for fv2 = (find feat l-content 
-		      :key #'lkb::saf-fv-feature
+		      :key #'saf-fv-feature
 		      :test #'string=)
       do
 	(if fv2
-	    (setf (lkb::saf-fv-value fv2) val)
-	  (push (lkb::make-saf-fv :feature feat :value val)
+	    (setf (saf-fv-value fv2) val)
+	  (push (make-saf-fv :feature feat :value val)
 		l-content)))
   l-content)
 
@@ -111,8 +105,8 @@
 
 ;; fix_me: generalise???
 (defun l-edgeType (s-edge)
-  (lkb::saf-fs-feature-value 
-   (lkb::saf-edge-l-content s-edge) 
+  (saf-fs-feature-value 
+   (saf-edge-l-content s-edge) 
    "edgeType"))
 
 ;;
@@ -126,13 +120,13 @@
 ;; where type, fN and vN consist only of (Perl regex) word characters
 
 (defun get-saf-l-map (filename)
-  (setf lkb::*saf-l-map*
+  (setf *lmap*
     (conf-read-file filename)))
 
 ;; fallback case handles smaf as mapped from tchart
 (defun get-default-saf-l-map nil
-  (setf *smaf-gmap* nil)
-  (setf lkb::*saf-l-map*
+  (setf *gmap* nil)
+  (setf *lmap*
     (list (conf-read-line "token.[] -> edgeType='tok' tokenStr=content")
 	  (conf-read-line "wordForm.[] -> edgeType='morph' stem=content.stem partialTree=content.partial-tree"))))
 
@@ -141,7 +135,7 @@
 
 ;; process each line in SAF config file
 (defun conf-read-file (filename)
-  (setf *smaf-gmap* nil)
+  (setf *gmap* nil)
   (with-open-file (file filename 
 		   :direction :input)
     (loop
@@ -172,7 +166,7 @@
 	      (specs-str (aref regs 1))
 	      (out-str (aref regs 2)))
 	  (make-map-action :e-edge 
-			   (lkb::make-saf-edge :type type 
+			   (make-saf-edge :type type 
 					       :content (conf-read-specs specs-str))
 			   :l-content (conf-read-specs out-str))))))
 
@@ -189,7 +183,7 @@
 	       (path (conf-read-path path-str))
 	       (type (conf-read-type type-str))
 	       )
-	  (push (list name path type) *smaf-gmap*)))))
+	  (push (list name path type) *gmap*)))))
 
 ;; eg. "synsem lkeys keyrel pred" 
 ;;     -> (:|synsem| :|lkeys| :|keyrel| :|pred|)
@@ -216,7 +210,7 @@
        (string= ";" (subseq line 0 1))))
 
 (defun conf-read-line-EMPTY (line)
-  (lkb::xml-whitespace-p line))
+  (lxml::xml-whitespace-p line))
 
 ;; eg. "a='b' c='d'" -> "a='b'" "c='d'"
 (defun conf-read-specs (specs-str)
@@ -230,12 +224,12 @@
    (ppcre:register-groups-bind 
     (feat val)
     ("^([\\w.]*)='([^']*)'.*$" spec)
-    (lkb::make-saf-fv :feature feat
+    (make-saf-fv :feature feat
 		      :value val))
    (ppcre:register-groups-bind 
     (feat val)
     ("^([\\w.]*)=(.*).*$" spec)
-    (lkb::make-saf-fv :feature feat
+    (make-saf-fv :feature feat
 		      :value (intern val)))))
 
 ;;;
@@ -353,7 +347,7 @@
 (defun r-server-process-input (s processor)
   (loop
       for input = (read-input s)
-      for empty-input = (lkb::xml-whitespace-p input)
+      for empty-input = (lxml::xml-whitespace-p input)
       ;;do (format t "~&I: ~a" input)
       while (not (eq :eof input))
       if empty-input
@@ -385,26 +379,26 @@
     (case mode
       (:string 
        (format t "~&;;; parsing input: ~a" input)
-       (setf id (format nil "s~a" (lkb::id-to-int nil)))
+       ;; id unset
        (lkb::parse (lkb::split-into-words 
 		    (lkb::preprocess-sentence-string input))
 		   nil))
       (:xml
        (format t "~&;;; parsing XML input")
        (when debug (format t "~&INPUT: ~%~a~%~%" input))
-       (setf saf (lkb::xml-to-saf-object input))
-       (setf id (lkb::saf-fs-feature-value 
-		 (lkb::saf-meta-olac 
-		  (lkb::saf-meta saf)) 
+       (setf saf (xml-to-saf-object input))
+       (setf id (saf-fs-feature-value 
+		 (saf-meta-olac 
+		  (saf-meta saf)) 
 		 "dc:identifier"))
        (lkb::parse saf nil))
       (t
        (error "unknown PARSE server mode '~a'" mode)))
     (when debug
       (format t "~&OUTPUT: ~%")
-      (lkb::dump-sentence-analyses2 :s-id id :stream t)
+      (dump-sentence-analyses2 :s-id id :stream t)
       (format t "~%~%"))
-    (lkb::dump-sentence-analyses2 :s-id id :stream s)))
+    (dump-sentence-analyses2 :s-id id :stream s)))
   
 ;; FSPP socket server
 (defun run-fspp-server (&key (port 8876) (mode :string))
