@@ -156,6 +156,7 @@ duplicate variables")
                               h-cons-fs nil *variable-generator*))
            :a-cons (nreverse (construct-a-cons
                               a-cons-fs nil *variable-generator*))))
+	 #-:ecl
          (psoa (mt:map-mrs psoa :semi :forward))
          #-:logon
          (psoa (unfill-mrs psoa)))
