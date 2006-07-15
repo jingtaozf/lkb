@@ -14,10 +14,11 @@
   (member char '(#\space #\tab #\newline #\page #\return #\linefeed)))
 
 (defun xml-whitespace-string-p (str)
-  (every 
-   #'(lambda (char) 
-       (whitespacep char))
-   (coerce str 'list)))
+  (and (stringp str)
+       (every 
+	#'(lambda (char) 
+	    (whitespacep char))
+	(coerce str 'list))))
 
 ;;; Minimal error checking because we assume that the
 ;;; XML has been validated syntactically
