@@ -2067,14 +2067,11 @@ VAR -> VARNAME[:CONSTNAME]*
 	(loop for mrs in (cdr mrss)
 	    unless (xml-whitespace-string-p mrs)
 	    collect
-	      (progn 
-		(setf *already-read-vars* nil)
-		(read-mrs-xml mrs)))))))
+	      (read-mrs-xml mrs))))))
 
 (defun read-single-mrs-xml-file (file-name)
   (let ((*package* (find-package :mrs)))
     (with-open-file (istream file-name :direction :input)
-      (setf *already-read-vars* nil)
       (let ((mrs (parse-xml-removing-junk istream)))
 	(xml-whitespace-string-p mrs)
 	(read-mrs-xml mrs)))))
@@ -2090,7 +2087,6 @@ to test
   ;;; reads it in
   (let ((*package* (find-package :mrs)))
     (with-input-from-string (istream str)
-      (setf *already-read-vars* nil)
       (let ((mrs (parse-xml-removing-junk istream)))
 	(unless (xml-whitespace-string-p mrs)
 	  (read-mrs-xml mrs))))))
@@ -2098,6 +2094,7 @@ to test
 
 (defun read-mrs-xml (content)
 ;;; <!ELEMENT mrs (label, var, (ep|hcons)*)>
+  (setf *already-read-vars* nil)
   (let ((top-h nil) (index nil) (eps nil) 
         (h-cons nil)
 	(tag (car content)))
