@@ -52,6 +52,105 @@
 	    (dolist (null-id null-sem-lex-ids)
 	      (when (not (member null-id predicted-ids))
 		(format ostream " ~A" null-id)))))))))
+#|
+test-gen-predict-on-mrs-file
+
+reads in:
+
+<!ELEMENT null-sem (sentence, parse-record*)>
+<!ELEMENT parse-record (mrs, id*)>
+<!ELEMENT sentence (#PCDATA)>
+<!ELEMENT id (#PCDATA)>
+
+outputs:
+
+<!ELEMENT null-sem (sentence, parse-record*)>
+<!ELEMENT parse-record (mrs, predicted*, id*)>
+<!ELEMENT sentence (#PCDATA)>
+<!ELEMENT id (#PCDATA)>
+<!ELEMENT predicted (#PCDATA)>
+|#
+
+
+#|
+(defun test-gen-predict-on-nullsem-file (ifile ofile)
+  (declare (special mt::*transfer-triggers*))
+  (let ((*package* (find-package :mrs)))
+    (with-open-file (istream ifile :direction :input)
+      (with-open-file (ostream ofile :direction :output :if-exists :supersede)
+	(let ((ns (parse-xml-removing-junk istream)))
+	  (unless (equal (car ns) '|ns-list|)
+	    (error "Not a valid ns file"))
+	  (write-line "<ns-list>" ostream)
+	  (loop for null-sem-item in (cdr ns)
+	      unless (xml-whitespace-string-p null-sem-item)
+	      do
+		(test-gen-predict-on-ns null-sem-item ostream))
+  	  (write-line "</ns-list>" ostream))))))
+
+(defun test-gen-predict-on-ns (content ostream)
+  (unless (equal (car content) '|null-sem|)
+    (error "Tough"))
+  (setf content (cdr content))
+  (loop (let ((next-el (car content)))
+	  (if (xml-whitespace-string-p next-el)
+	      (pop content)
+	    (return))))
+  (when content
+    (let ((sentence-rec (car content))
+	  (sentence nil))
+      (unless (equal (car sentence-rec) '|sentence|)
+	(error "Not sentence"))
+      (setf sentence (cadr sentence-rec))
+      (write-line "<null-sem>" ostream)
+      (format ostream "<sentence>~A</sentence>~%" sentence)
+      (loop for pr in (cdr content)
+	  unless (xml-whitespace-string-p pr)
+	  do 
+	    (test-gen-predict-on-ns-pr pr ostream))
+      (write-line "</null-sem>" ostream))))
+
+(defun test-gen-predict-on-ns-pr (content ostream)    
+  (loop (let ((next-el (car content)))
+	  (if (xml-whitespace-string-p next-el)
+	      (pop content)
+	    (return))))
+  (when content
+    (unless (eql (car content) '|parse-record|)
+      (error "Not parse record"))
+    (write-line "<parse-record>" ostream)
+    (setf content (cdr content))
+    (loop (let ((next-el (car content)))
+	  (if (xml-whitespace-string-p next-el)
+	      (pop content)
+	    (return))))
+    (let ((mrs-struct (read-mrs-xml (car content))))
+      (unless mrs-struct
+	(error "No mrs"))
+      (let ((predicted-ids 
+	     (cond
+	      #+:mt
+	      ((and (hash-table-p mt::*transfer-triggers*)
+		    (> (hash-table-count mt::*transfer-triggers*) 0))
+	       (oe-genpredict-mrs-struct mrs-struct))
+	      (lkb::*gen-rule-list*
+	       (genpredict-mrs-struct mrs-struct lkb::*gen-rule-list*))
+	      (t (format t "~%Warning: no trigger rules defined")
+		 nil))))
+	(output-mrs1 mrs-struct 'mrs-xml ostream)
+	(dolist (id predicted-ids)
+	  (format ostream "<predicted>~A</predicted>~%" id)))
+      (loop for id in (cdr content)
+	  unless (xml-whitespace-string-p id)
+	  do 
+	    (unless (eql (car id) '|id|)
+	      (error "id"))
+	    (format ostream "<id>~A</id>~%" (cadr id)))
+      (write-line "</parse-record>" ostream))))
+	
+		   
+		     
+|#
 
 #+:mt
 (defun oe-genpredict-mrs-struct (input-sem)
