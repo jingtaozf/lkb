@@ -73,20 +73,50 @@ outputs:
 
 
 #|
+
+(test-gen-predict-on-nullsem-file "stuart/bnc.short.xml" 
+				  "stuart/bnc.short-pred.xml") 
+
+(test-gen-predict-on-nullsem-file "stuart/bnc_rand_subset.xml" 
+				  "stuart/bnc_rand_subset-pred.xml")
+
 (defun test-gen-predict-on-nullsem-file (ifile ofile)
+  ;;; reads from <null-sem> to </null-sem>, outputs to a tmp file
+  ;;; then reads in the tmp file
   (declare (special mt::*transfer-triggers*))
   (let ((*package* (find-package :mrs)))
     (with-open-file (istream ifile :direction :input)
       (with-open-file (ostream ofile :direction :output :if-exists :supersede)
-	(let ((ns (parse-xml-removing-junk istream)))
-	  (unless (equal (car ns) '|ns-list|)
-	    (error "Not a valid ns file"))
-	  (write-line "<ns-list>" ostream)
-	  (loop for null-sem-item in (cdr ns)
-	      unless (xml-whitespace-string-p null-sem-item)
-	      do
-		(test-gen-predict-on-ns null-sem-item ostream))
-  	  (write-line "</ns-list>" ostream))))))
+	(loop
+	  (let ((first-line nil)
+		(tmp-lines nil)
+		(next-line nil))
+	    (loop
+	      (setf first-line (read-line istream nil nil))
+	      (when (or (equal first-line "<null-sem>")
+	                (null first-line))
+		(return)))
+	    (unless first-line
+	      (return)) ; eof - get out of loop
+	    (push first-line tmp-lines)
+	    (loop
+	      (setf next-line (read-line istream nil nil))
+	      (unless next-line (return))
+	      (push next-line tmp-lines)
+	      (when (equal next-line "</null-sem>")
+		(return)))
+	    (unless next-line (return))	; eof - get out of loop
+	    (setf tmp-lines (nreverse tmp-lines))
+	    (with-open-file 
+		(otmp "tmp-p" :direction :output :if-exists :supersede)
+	      (dolist (line tmp-lines)
+		(write-line line otmp)))
+	    (with-open-file 
+		(itmp "tmp-p" :direction :input)
+	      (let ((ns (parse-xml-removing-junk itmp)))
+		(test-gen-predict-on-ns ns ostream)))
+	    (finish-output ostream)))))))
+
 
 (defun test-gen-predict-on-ns (content ostream)
   (unless (equal (car content) '|null-sem|)
