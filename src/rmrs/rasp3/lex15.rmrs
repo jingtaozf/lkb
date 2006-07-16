@@ -23,8 +23,8 @@ see sem ex 13
 <ep><gpred>DEF_EXPLICIT_Q_REL</gpred><label>H4</label><var>X7</var></ep>
 <!--rarg><rargname>RSTR</rargname><label>H4</label><var>H15</var></rarg-->
 <ep><gpred>POSS_REL</gpred><label>H8</label><var>U</var></ep>
-<rarg><rargname>ARG1</rargname><label>H8</label><var>X9</var></rarg>
-<rarg><rargname>ARG2</rargname><label>H8</label><var>X7</var></rarg>
+<rarg><rargname>ARG1</rargname><label>H8</label><var>X7</var></rarg>
+<rarg><rargname>ARG2</rargname><label>H8</label><var>X9</var></rarg>
 <ep><gpred>PRONOUN_Q_REL</gpred><label>H11</label><var>X9</var></ep>
 <rarg><rargname>RSTR</rargname><label>H11</label><var>H12</var></rarg>
 <rarg><rargname>BODY</rargname><label>H11</label><var>H13</var></rarg>
@@ -76,7 +76,6 @@ if, although, because, even, now
 (sem.ex.72)</comment>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<!-- ANNA - want H1 to be the label of the topmost prpstn_m_rel but no access -->
 <ep><pred/><label>H</label><var>H1</var></ep>
 <!-- ANNA - want H2 to be the label of the subordinated construction but no access -->
 <!-- ANNA - removed and added in P1/p_s instead -->
@@ -91,9 +90,8 @@ if, although, because, even, now
 
 <le>
 <tag>CST</tag>
-<comment>that - although this supplies the prpstn rel in the ERG,
-the prpstn is coming from the construction in RASP, hence semantically
-empty (and hope ths works ...)</comment>
+<comment>that 
+</comment>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 </semstruct>
@@ -105,10 +103,7 @@ empty (and hope ths works ...)</comment>
 trying to sort out subordinating conjunctions (sem.ex.30)</comment>
 <semstruct>
 <hook><index>E</index><label>H1</label></hook>
-<!-- ANNA - use the anchor to link the int_m_rel appropriately later -->
-<slots><anchor>H2</anchor></slots>
-<!-- ANNA - ERG treats "whether" as an interrogative so introduce int_m_rel -->
-<ep><gpred>INT_M_REL</gpred><label>H1</label><var>H2</var></ep>
+<slots><anchor>H1</anchor></slots>
 </semstruct>
 </le>
 
@@ -235,9 +230,9 @@ any,enough,some,lot,rest
 <ep><gpred>DEF_Q_REL</gpred><label>H1</label><var>X</var></ep>
 <rarg><rargname>RSTR</rargname><label>H1</label><var>H2</var></rarg>
 <rarg><rargname>BODY</rargname><label>H1</label><var>H3</var></rarg>
-<ep><gpred>PRO_POSS_REL</gpred><label>H4</label><var>U</var></ep>
-<rarg><rargname>ARG1</rargname><label>H4</label><var>X1</var></rarg>
-<rarg><rargname>ARG2</rargname><label>H4</label><var>X</var></rarg>
+<ep><gpred>POSS_REL</gpred><label>H4</label><var>U</var></ep>
+<rarg><rargname>ARG1</rargname><label>H4</label><var>X</var></rarg>
+<rarg><rargname>ARG2</rargname><label>H4</label><var>X1</var></rarg>
 <ep><gpred>PERSON_REL</gpred><label>H5</label><var>X1</var></ep>
 <ep><gpred>WHICH_Q_REL</gpred><label>H6</label><var>X1</var></ep>
 <!--rarg><rargname>RSTR</rargname><label>H6</label><var>H7</var></rarg-->
@@ -706,8 +701,8 @@ ANNA - think there were a couple of bugs in this (sem.ex.18)</comment>
 <rarg><rargname>BODY</rargname><label>H4</label><var>H7</var></rarg>
 <ep><gpred>GENERIC_ENTITY_REL</gpred><label>H5</label><var>X1</var></ep>
 <ep><gpred>POSS_REL</gpred><label>H9</label><var>E</var></ep>
-<rarg><rargname>ARG1</rargname><label>H9</label><var>X</var></rarg>
-<rarg><rargname>ARG2</rargname><label>H9</label><var>X1</var></rarg>
+<rarg><rargname>ARG1</rargname><label>H9</label><var>X1</var></rarg>
+<rarg><rargname>ARG2</rargname><label>H9</label><var>X</var></rarg>
 <ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
 <ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
 <rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>

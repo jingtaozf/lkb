@@ -742,18 +742,65 @@ goes to
                         rule-name))))))
 
 (defun rule-with-adjusted-dtrs (rule opt-dtrs)
+  ;;; opt-dtrs is a list with t and nil - we go through the
+  ;;; OPT things is order, adjusting the rule so that it
+  ;;; behaves as it would if just the OPTs that are actually present were 
+  ;;; specified.  This involves renumbering the daughter pointers.
+  ;;; e.g. if we have D1 OPT D2 OPT D3 OPT
+  ;;; and - - +
+  ;;; then we end up with D1 D2 D3 OPT (arity 4)
+  ;;; and need to map dtr numbers 0->0, 1->?, 2->1, 3->?, 4->2, 5->3?
+  ;;; though the ? shouldn't actually be used 
+  ;;; OPT OPT D1 with -- should give 2->0
+  ;;; Attempt to make this robust to screwups !
   (let ((new-rule (copy-rmrs-rule rule))
-        (rule-dtrs (rmrs-rule-dtrs rule)))
+        (rule-dtrs (rmrs-rule-dtrs rule))
+	(number-map nil)
+	(real-count 0))
+    (dotimes (n (length rule-dtrs))
+      (push (cons n n) number-map))
+    (setf number-map (nreverse number-map))
     (setf (rmrs-rule-dtrs new-rule)
-      (loop for dtr in rule-dtrs
+      (loop for dtr in rule-dtrs and
+	    mapping in number-map 
           nconc
             (if (not (member dtr '("OPT" "OPT*") :test #'string-equal)) 
-                (list dtr)
-                (let ((next-opt (car opt-dtrs)))
-                   (setf opt-dtrs (cdr opt-dtrs))
-                   (if (null next-opt)
-                       nil
-                     (list dtr))))))
+                (progn 
+		  (setf (cdr mapping) real-count)
+		  (incf real-count) 
+		  (list dtr))
+	      (let ((next-opt (car opt-dtrs)))
+		(setf (cdr mapping) nil)
+		(setf opt-dtrs (cdr opt-dtrs))
+		(if (null next-opt)
+		    nil
+		  (progn
+		      (incf real-count) 		    
+		      (list dtr)))))))
+;;;    (pprint number-map)
+    (setf (rmrs-rule-arity new-rule)
+      (length (rmrs-rule-dtrs new-rule)))
+    (unless (eql (rmrs-rule-head new-rule) -1)
+      (setf (rmrs-rule-head new-rule)
+	(cdr (assoc (rmrs-rule-head new-rule)
+		    number-map))))
+    (unless (rmrs-rule-head new-rule)
+      (error "Head missing"))
+    (setf (rmrs-rule-eqs new-rule)
+      (loop for eq in (rmrs-rule-eqs new-rule)
+	  collect
+	    (make-equality 
+	     :eq-els
+	     (loop for eq-el in (equality-eq-els eq)
+		 collect
+		   (if (pointer-p eq-el)
+		       (let ((new-dtr (cdr (assoc (pointer-dtrnum eq-el)
+						  number-map))))
+			 (unless new-dtr
+			   (error "Optional daughter not optional"))
+			 (make-pointer :dtrnum new-dtr
+				      :hook-el (pointer-hook-el eq-el)))
+		     eq-el)))))
     new-rule))
 
 ;;; ****************************************

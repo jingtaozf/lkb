@@ -36,7 +36,7 @@
   (let ((tag (car rule)))
     (if (eq tag '|rule|)
 	(let ((name nil) (dtrs nil) (head nil) (head-pos nil)
-	      (semstruct nil) (eqs nil))
+	      (semstruct nil) (eqs nil) (inherit nil))
 	  (loop for next-el in (cdr rule)
               do
                 (unless (xml-whitespace-string-p next-el)
@@ -47,6 +47,7 @@
                       (|comment| tag-content)
                       (|name| (setf name (car tag-content)))
                       (|dtrs| (setf dtrs (read-rmrs-rule-dtrs tag-content)))
+		      (|inherit| (setf inherit (car tag-content)))
 		;;; dtrs must appears before equalitiess 
                       (|head| (setf head (car tag-content)))
                       (|semstruct| (setf semstruct (read-rmrs-semstruct tag-content)))
@@ -60,13 +61,78 @@
                             (error 
                              "~%Head ~S is not a member of dtrs ~S in ~A"
                              head dtrs name))))))))
-	  (make-rmrs-rule :name name
-			  :dtrs dtrs
-			  :arity (length dtrs)
-			  :head head-pos
-			  :semstruct semstruct
-			  :eqs (nreverse eqs))))))
+	  (if inherit
+	      (make-inherited-rule name dtrs inherit)
+	    (make-rmrs-rule :name name
+			    :dtrs dtrs
+			    :arity (length dtrs)
+			    :head head-pos
+			    :semstruct semstruct
+			    :eqs (nreverse eqs)))))))
 
+(defun make-inherited-rule (name dtrs inherit)
+  ;;; for now, inheritance is from a previously specified rule
+  ;;; this would be trivial, except that we want to allow for
+  ;;; optional daughters, which may involve remapping the pointers
+  ;;; e.g. 1 a rule with D1 OPT D2 D3 inherits from
+  ;;; a rule with OPT D1 D2 OPT OPT D3
+  ;;; then the desired mapping is 0->? 1->0 2->2 3->? 4->? 5->3 
+  ;;; e.g., 2  a rule with OPT D1 D2 OPT OPT D3 inherits from
+  ;;; a rule with D1 OPT D2 D3 then
+  ;;; 0->1 1->? 2->2 3->5
+  (let ((inherit-struct (find inherit *rule-instructions*
+			      :test #'equal :key #'rmrs-rule-name)))
+    (unless inherit-struct (error "Undefined rule ~A" inherit))
+    (let ((inherited-dtrs (rmrs-rule-dtrs inherit-struct))
+	  (number-map nil)
+	  (next-dtr-pos 0)
+	  (next-dtrs dtrs)
+	  (new-eqs nil))
+      (dotimes (n (length inherited-dtrs))
+	(push (cons n n) number-map))
+      (setf number-map (nreverse number-map))
+      (loop for inherited-dtr in inherited-dtrs and
+		;;; e.g., OPT D1 D2 OPT OPT D3
+	    mapping in number-map
+	  do
+	    (setf (cdr mapping)
+	      (if (string-equal inherited-dtr "OPT")
+		  nil
+		(loop (unless next-dtrs (return nil))
+		      (if (string-equal (car next-dtrs) "OPT")
+			  (progn (incf next-dtr-pos)
+				 (pop next-dtrs))
+			(let ((pos next-dtr-pos))
+			  (progn (incf next-dtr-pos)
+				 (pop next-dtrs)
+				 (return pos))))))))
+      (setf new-eqs
+	(loop for eq in (rmrs-rule-eqs inherit-struct)
+	    collect
+	      (make-equality 
+	       :eq-els
+	       (loop for eq-el in (equality-eq-els eq)
+		   collect
+		     (if (pointer-p eq-el)
+			 (let ((new-dtr (cdr (assoc (pointer-dtrnum eq-el)
+						    number-map))))
+			   (unless new-dtr
+			     (error "Optional daughter not optional"))
+			   (make-pointer :dtrnum new-dtr
+					 :hook-el (pointer-hook-el eq-el)))
+		       eq-el)))))
+      (make-rmrs-rule :name name
+		      :dtrs dtrs
+		      :arity (length dtrs)
+		      :head (if (eql (rmrs-rule-head inherit-struct) -1)
+				-1
+			      (cdr (assoc (rmrs-rule-head inherit-struct)
+					  number-map)))
+		      :semstruct (rmrs-rule-semstruct inherit-struct)
+		      :eqs new-eqs))))
+
+    
+    
 (defun read-rmrs-rule-dtrs (content)
   (loop for dtr in content
       when (eql (car dtr) '|dtr|)

@@ -155,37 +155,6 @@
 
 #|
 
-(defun rasp-semtest-out nil
-  (let ((*rasp-rmrs-gram-file*
-	 ;; (make-pathname 
-	 ;; :device "d"
-	 ;; :directory "/lingo/lkb/src/rmrs/annlt-test/"
-	 ;; :name "gram14.1.rmrs")
-	(make-pathname 
-	:directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
-	:name "gram14.1.rmrs")
-	)
-	(*rasp-rmrs-tag-file*
-	 ;;(make-pathname :device "d" :directory "/lingo/lkb/src/rmrs/annlt-test/"
-	;;		:name "lex14.1.rmrs")
-	(make-pathname :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
-	:name "lex14.1.rmrs")
-	)
-	(*rasp-xml-word-p* t)
-	(*rasp-xml-type* :none)
-	(*rasp-input-file*
-	 ;; (make-pathname :device "d" 
-	;;		:directory "/lingo/lkb/src/rmrs/annlt-test/"
-	;;		:name "semtest.rasp")
-	 (make-pathname :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
-	       :name "semtest.rasp")
-	 )
-	(*rasp-rmrs-output-file*
-	 "semtest-rasp.rmrs"))
-    (simple-process-rasp-file)))
-
-
-
 ;;; Temporary
 ;;; FIX this to read from ERG file?
 
@@ -196,26 +165,16 @@
 	 (parse-number (cdr eg))
          (rasp-rmrs 
           (nth (- egnum 1)
-               (mrs::read-rmrs-file "rasp.rmrs" :rasp)))
+               (mrs::read-rmrs-file (make-pathname 
+	     :device "c"
+	     :directory "/d/rasp-rmrs/test-sets/"
+	     :name "annlt.rmrs") :rasp)))
 	 (erg-rmrs
 	  (rmrs-for-sentence input parse-number)))
     (dolist (comparison-record (mrs::compare-rmrs erg-rmrs rasp-rmrs strpos-p))
       (lkb::show-mrs-rmrs-compare-window erg-rmrs rasp-rmrs 
 				    comparison-record input))))
 
-;;; older than above
-(defun compare-eg (egnum)
-  (let* ((erg-mrs 
-	 (nth (- egnum 1)
-	      (mrs::read-mrss-from-file "rmrs/annlt-test/semtest.erg")))
-	(rasp-rmrs 
-	 (nth (- egnum 1)
-	      (mrs::read-rmrs-file "semtest.rmrs" :rasp)))
-       (erg-rmrs
-	      (mrs::mrs-to-rmrs erg-mrs)))
-    (dolist (comparison-record (mrs::compare-rmrs erg-rmrs rasp-rmrs t))
-      (show-mrs-rmrs-compare-window erg-rmrs rasp-rmrs 
-				    comparison-record (format nil "~A" egnum)))))
 ;;; test cases for making sure the comparison code is doing what it's
 ;;; expected to
 
@@ -332,27 +291,49 @@ off, perhaps)
 
 #|
 
-(defun rasp3-out nil
+(rasp3-out
+	 (make-pathname 
+	     :device "c"
+	     :directory "/d/rasp-rmrs/test-sets/"
+	     :name "annlt.trees")
+	 (make-pathname 
+	     :device "c"
+	     :directory "/d/rasp-rmrs/test-sets/"
+	     :name "annlt.rmrs"))
+
+(rasp3-out
+	 (make-pathname 
+	     :device "c"
+	     :directory "/d/rasp-rmrs/test-sets/"
+	     :name "me0196.trees")
+	 (make-pathname 
+	     :device "c"
+	     :directory "/d/rasp-rmrs/test-sets/"
+	     :name "me0196.rmrs"))
+	 
+	 
+	 
+	 
+;;;	 (make-pathname 
+;;;	  :directory "/homes/aac10/rasp-rmrs/test-sets/"
+;;;	  :name "robust.trees")
+	
+
+
+(defun rasp3-out (ifile ofile)
   (let ((*rasp-rmrs-gram-file*
-	 "rmrs/rasp3/gram15.rmrs")
+	 "rmrs/rasp3/gram15-general.rmrs")
 	(*rasp-rmrs-tag-file*
 	 "rmrs/rasp3/lex15.rmrs")
-	(test-file 
-	 #+:mswindows (make-pathname 
-		       :device "c"
-	               :directory "/d/rasp-rmrs/test-sets/"
-	               :name "annlt.trees") 
-	#-:mswindows (make-pathname :directory "/homes/aac10/rasp-rmrs/test-sets/"
-				    :name "robust.trees"))
 	(*rasp-xml-word-p* t)
 	(*renumber-hack* t)
 	(*rasp-xml-type* :none))
     (clear-rule-record)
     (read-rmrs-grammar *rasp-rmrs-gram-file*)
     (read-rmrs-tag-templates *rasp-rmrs-tag-file*)
-    (with-open-file  (istream test-file
+    (with-open-file  (istream ifile
 		      :direction :input)
-    (with-open-file  (ostream "robust.rmrs"
+    (with-open-file  (ostream ofile
 		      :direction :output :if-exists :supersede)
       (format ostream "<rmrs-list>~%")
       (loop 
