@@ -329,6 +329,8 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
 	      (eql (elt tag 2) #\T)) "q")
 	((and (eql (elt tag 1) #\D)
 	      (eql (elt tag 2) #\D)) "q")
+	((and (eql (elt tag 1) #\C)
+	      (eql (elt tag 2) #\C)) "c")
         (t "x")))
 
 
