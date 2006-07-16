@@ -5810,9 +5810,22 @@ There's no way currently of underspecifying the attachment</comment>
 
 <rule>
 <name>N1/n_ing</name>
-<comment>AUTO</comment>
+<comment>verbal thing has an ARG1 which takes the nominal INDEX
+and there's an ING between the labels.  Anchor of the result is the
+noun's anchor.  FIX - interesting example for algebra!</comment>
 <dtrs><dtr>N</dtr><dtr>ING</dtr></dtrs>
 <head>N</head>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<slots><anchor>H2</anchor></slots>
+<ing><ing-a><var>H</var></ing-a><ing-b><var>H1</var></ing-b></ing>
+<rarg><rargname>ARG1</rargname><label>H3</label><var>X</var></rarg>
+</semstruct>
+<equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H3</rv><dh><dtr>ING</dtr><he>ANCHOR</he></dh></equalities>
+<equalities><rv>H1</rv><dh><dtr>ING</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>N</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H2</rv><dh><dtr>N</dtr><he>ANCHOR</he></dh></equalities>
 </rule>
 
 <rule>
