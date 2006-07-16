@@ -401,7 +401,7 @@
 
 (defun calc-begin-of-mrs-expression ()
   "calculates begin of a mrs expression in XML"
-  (or (re-search-backward "<mrs " nil t)
+  (or (re-search-backward "<mrs>" nil t)
                (point-min)))
 
 (defun calc-end-of-mrs-expression ()
