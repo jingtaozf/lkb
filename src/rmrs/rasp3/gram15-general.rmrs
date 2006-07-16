@@ -9,6 +9,8 @@ This file corresponds to tsg15 plus ERG 03/06 (no msg)
 This version: allow rules to inherit - for now, just let them be the same as
 existing rules.
 
+GENRULE - in comment - systematically mark rules which are used by others
+
 The RASP->RMRS rules have been constructed by a mixture
 of manual, semi-automatic and fully automatic techniques.
 Some incomplete rules have FIX comment, but this isn't systematic.
@@ -1485,7 +1487,7 @@ ANNA - added ANCHOR to find the VP's LABEL inside relative clauses (sem.ex.112, 
 
 <rule>
 <name>S/cj-end_s</name>
-<comment>ANNA - (sem.ex.76,text.ex.4): GENRULE - other cj-end rules
+<comment>ANNA - (sem.ex.76,text.ex.4): GENRULE - other non-nominal cj-end rules
 inherit from this one</comment>
 <dtrs><dtr>OPT</dtr><dtr>CJ</dtr><dtr>OPT</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
@@ -1503,7 +1505,7 @@ inherit from this one</comment>
 
 <rule>
 <name>S/s_s-coord</name>
-<comment>GENRULE - other coord rules inherit from this one</comment>
+<comment>GENRULE - other non-nominal coord rules inherit from this one</comment>
 <dtrs><dtr>S1</dtr><dtr>OPT</dtr><dtr>S2</dtr></dtrs>
 <head>S1</head>
 <semstruct>
@@ -4075,14 +4077,14 @@ AAC - second PP optional</comment>
 
 <rule>
 <name>V/cj-end_aux</name>
-<comment>FIX</comment>
+<comment></comment>
 <dtrs><dtr>CJ-END</dtr><dtr>AUX</dtr></dtrs>
 <inherit>S/cj-end_s</inherit>
 </rule>
 
 <rule>
 <name>V/aux_aux-coord</name>
-<comment>AUTO</comment>
+<comment></comment>
 <dtrs><dtr>AUX</dtr><dtr>OPT</dtr><dtr>AUX-COORD</dtr></dtrs>
 <inherit>S/s_s-coord</inherit>
 </rule>
@@ -5951,7 +5953,7 @@ There's no way currently of underspecifying the attachment</comment>
 
 <rule>
 <name>NP/cj-end_np</name>
-<comment>ANNA - (sem.ex.73) - unlike sentential and verbal conjunction, we don't set the values of the R-HNDL here</comment>
+<comment>ANNA - (sem.ex.73) - unlike sentential and verbal conjunction, we don't set the values of the R-HNDL here.  GENRULE - other nominal cj-end rules inherit from this one</comment>
 <dtrs><dtr>CJ-END</dtr><dtr>OPT</dtr><dtr>OPT</dtr><dtr>OPT</dtr><dtr>NP</dtr></dtrs>
 <head>RULE</head>
 <semstruct>
@@ -5966,7 +5968,7 @@ There's no way currently of underspecifying the attachment</comment>
 
 <rule>
 <name>NP/np_np-coord/-</name>
-<comment>ANNA - this is the "something and/or something" case so no conj_rel needed (sem.ex.73,74)</comment>
+<comment>ANNA - this is the "something and/or something" case so no conj_rel needed (sem.ex.73,74) GENRULE - other nominal coord rules inherit from this one</comment>
 <dtrs><dtr>NP</dtr><dtr>OPT</dtr><dtr>NP-COORD</dtr></dtrs>
 <head>RULE</head>
 <semstruct>
@@ -6068,16 +6070,16 @@ There's no way currently of underspecifying the attachment</comment>
 
 <rule>
 <name>N/n_n-coord</name>
-<comment>AUTO</comment>
+<comment></comment>
 <dtrs><dtr>N</dtr><dtr>OPT</dtr><dtr>N-COORD</dtr></dtrs>
 <inherit>NP/np_np-coord/-</inherit>
 </rule>
 
 <rule>
 <name>N/det_det-coord</name>
-<comment>AUTO</comment>
+<comment>???</comment>
 <dtrs><dtr>DET</dtr><dtr>CJ</dtr><dtr>DET1</dtr></dtrs>
-<head>DET1</head>
+<inherit>S/s_s-coord</inherit>
 </rule>
 
 <rule>
@@ -6505,9 +6507,9 @@ spurious ARG1 and ING for these cases from the real V_PP rule</comment>
 
 <rule>
 <name>PP/pp_pp-coord</name>
-<comment>AUTO</comment>
+<comment></comment>
 <dtrs><dtr>PP</dtr><dtr>OPT</dtr><dtr>PP-COORD</dtr></dtrs>
-<head>PP-COORD</head>
+<inherit>S/s_s-coord</inherit>
 </rule>
 
 <rule>
@@ -6519,7 +6521,7 @@ spurious ARG1 and ING for these cases from the real V_PP rule</comment>
 
 <rule>
 <name>P/cj-end_p</name>
-<comment>AUTO</comment>
+<comment></comment>
 <dtrs><dtr>CJ-END</dtr><dtr>OPT</dtr><dtr>P</dtr></dtrs>
 <inherit>S/cj-end_s</inherit>
 </rule>
@@ -6533,9 +6535,9 @@ spurious ARG1 and ING for these cases from the real V_PP rule</comment>
 
 <rule>
 <name>P/p_p-coord</name>
-<comment>AUTO</comment>
+<comment></comment>
 <dtrs><dtr>P</dtr><dtr>P-COORD</dtr></dtrs>
-<head>P-COORD</head>
+<inherit>S/s_s-coord</inherit>
 </rule>
 
 <rule>
@@ -6864,23 +6866,23 @@ spurious ARG1 and ING for these cases from the real V_PP rule</comment>
 
 <rule>
 <name>AP/cj-end_ap</name>
-<comment>AUTO</comment>
+<comment></comment>
 <dtrs><dtr>CJ-END</dtr><dtr>AP</dtr></dtrs>
 <inherit>S/cj-end_s</inherit>
 </rule>
 
 <rule>
 <name>AP/ap_ap-coord</name>
-<comment>AUTO</comment>
+<comment></comment>
 <dtrs><dtr>AP</dtr><dtr>OPT</dtr><dtr>AP-COORD</dtr></dtrs>
-<head>AP-COORD</head>
+<inherit>S/s_s-coord</inherit>
 </rule>
 
 <rule>
 <name>AP/ap_ap-coord-r</name>
-<comment>AUTO</comment>
+<comment></comment>
 <dtrs><dtr>AP</dtr><dtr>OPT</dtr><dtr>AP-COORD</dtr></dtrs>
-<head>AP-COORD</head>
+<inherit>S/s_s-coord</inherit>
 </rule>
 
 <rule>
@@ -6908,65 +6910,56 @@ spurious ARG1 and ING for these cases from the real V_PP rule</comment>
 <name>A/a_a-coord</name>
 <comment></comment>
 <dtrs><dtr>A</dtr><dtr>OPT</dtr><dtr>A-COORD</dtr></dtrs>
-<head>A</head>
-<semstruct>
-<hook><index>E</index><label>H</label></hook>
-<slots><anchor>H1</anchor></slots>
-<rarg><rargname>L-HNDL</rargname><label>H1</label><var>H2</var></rarg>
-<rarg><rargname>L-INDEX</rargname><label>H1</label><var>E1</var></rarg>
-</semstruct>
-<equalities><rv>H1</rv><dh><dtr>A-COORD</dtr><he>ANCHOR</he></dh></equalities>
-<equalities><rv>H2</rv><dh><dtr>A</dtr><he>LABEL</he></dh></equalities>
-<equalities><rv>E1</rv><dh><dtr>A</dtr><he>INDEX</he></dh></equalities>
+<inherit>S/s_s-coord</inherit>
 </rule>
 
 <rule>
 <name>A/a_ppart-coord</name>
-<comment>AUTO</comment>
+<comment></comment>
 <dtrs><dtr>A</dtr><dtr>OPT</dtr><dtr>PPART-COORD</dtr></dtrs>
-<head>PPART-COORD</head>
+<inherit>S/s_s-coord</inherit>
 </rule>
 
 <rule>
 <name>A/ppart_a-coord</name>
-<comment>AUTO</comment>
+<comment></comment>
 <dtrs><dtr>PPART</dtr><dtr>OPT</dtr><dtr>A-COORD</dtr></dtrs>
-<head>A-COORD</head>
+<inherit>S/s_s-coord</inherit>
 </rule>
 
 <rule>
 <name>A/a_ing-coord</name>
-<comment>AUTO</comment>
+<comment></comment>
 <dtrs><dtr>A</dtr><dtr>OPT</dtr><dtr>ING-COORD</dtr></dtrs>
-<head>ING-COORD</head>
+<inherit>S/s_s-coord</inherit>
 </rule>
 
 <rule>
 <name>A/ing_a-coord</name>
-<comment>AUTO</comment>
+<comment></comment>
 <dtrs><dtr>ING</dtr><dtr>OPT</dtr><dtr>A-COORD</dtr></dtrs>
-<head>A-COORD</head>
+<inherit>S/s_s-coord</inherit>
 </rule>
 
 <rule>
 <name>A/adv_nt-coord</name>
-<comment>AUTO</comment>
+<comment></comment>
 <dtrs><dtr>ADV</dtr><dtr>OPT</dtr><dtr>NT-COORD</dtr></dtrs>
-<head>NT-COORD</head>
+<inherit>S/s_s-coord</inherit>
 </rule>
 
 <rule>
 <name>A/adv_pp-coord</name>
-<comment>AUTO</comment>
+<comment></comment>
 <dtrs><dtr>ADV</dtr><dtr>OPT</dtr><dtr>PP-COORD</dtr></dtrs>
-<head>PP-COORD</head>
+<inherit>S/s_s-coord</inherit>
 </rule>
 
 <rule>
 <name>A/pp_adv-coord</name>
-<comment>AUTO</comment>
+<comment></comment>
 <dtrs><dtr>PP</dtr><dtr>OPT</dtr><dtr>ADV-COORD</dtr></dtrs>
-<head>ADV-COORD</head>
+<inherit>S/s_s-coord</inherit>
 </rule>
 
 <rule>
