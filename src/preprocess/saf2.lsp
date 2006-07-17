@@ -126,7 +126,7 @@
   (saf-lattice-to-tchart (smaf::saf-lattice saf)
 			:filter filter
 			:addressing (smaf::saf-meta-addressing (smaf::saf-meta saf)))
-  (clean-tchart *tchart*)
+  ;;(clean-tchart *tchart*) FIXME! disabled until bug fixed in clean-tchart
   *tchart*)
 
 (defun initialize-smaf-node-to-chart-node (saf)
