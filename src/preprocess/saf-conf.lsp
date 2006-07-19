@@ -49,6 +49,14 @@
     (cond
       ((string= feat "content")
        (saf-fs-path-value x (saf-edge-content edge)))
+      ((string= feat "rmrs")
+       (cond
+	((equal '("ep" "gpred") x) 
+	 (mrs::char-rel-pred (car (mrs::rmrs-liszt (saf-fs-path-value '("RASP") (saf-edge-content edge)))))
+	 )
+	((equal '("rarg" "constant") x) 
+	 (mrs::rmrs-arg-val (car (mrs::rmrs-rmrs-args (saf-fs-path-value '("RASP") (saf-edge-content edge))))))
+	))
       (t
        (error "unhandled variable name '~a' found in l-content" var)))))
 

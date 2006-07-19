@@ -285,19 +285,33 @@
    :to (lxml::lxml-elt-attr lxml-token "to")
    :content (lxml::lxml-elt-attr lxml-token "value")))
 
+(defun lxml-rmrs-to-rmrs (lxml)
+  (if lxml
+      (list
+       (make-saf-fv
+	:feature "RASP"
+	:value (mrs::read-rmrs (car (shift-package lxml :mrs)) :rasp)))))
+  
+;;(mrs::read-rmrs (car (shift-package (lxml::xml-to-lxml *r) :mrs)) :rasp)
+
 (defun lxml-annot-to-edge (lxml-annot &key type source target)
   (let* ((id (lxml::lxml-elt-attr lxml-annot "id"))
 	 (fs-list (lxml::lxml-elt-elts lxml-annot "fs"))
 	 (slots (lxml::lxml-elt-elts lxml-annot "slot"))
+	 (rmrs (lxml::lxml-elt-elts lxml-annot "rmrs"))
 	 (fs (if (cdr fs-list)
 		 (error "max 1 fs element allowed in wordform")
 	       (car fs-list)))
 	 (content 
 	  (or 
-	   (lxml::lxml-elt-text-content2 lxml-annot)
-	   (lxml::lxml-elt-attr lxml-annot "value") 
-	   (lxml-fs-content-to-fs fs) 
-	   (lxml-slots-to-fs slots)))
+	   (lxml::lxml-elt-text-content2 lxml-annot) ;; simple content embedded
+	   (lxml::lxml-elt-attr lxml-annot "value") ;; simple content value attr
+	   (append ;; complex content
+	    (lxml-fs-content-to-fs fs) 
+	    (lxml-slots-to-fs slots)
+	    (lxml-rmrs-to-rmrs rmrs)
+	    )
+	   ))
 	 (source (or source (lxml::lxml-elt-attr lxml-annot "source")))
 	 (target (or target (lxml::lxml-elt-attr lxml-annot "target")))
 	 )
@@ -399,8 +413,10 @@
       for fv in l-content
       for feat = (saf-fv-feature fv)
       for val = (saf-fv-value fv)
-      when (string= (subseq feat 0 5)
-		    "gMap.")
+      when (and
+	    (> (length feat) 4)
+	    (string= (subseq feat 0 5)
+		    "gMap."))
       collect
 	(cons
 	 (intern (subseq feat 5) :keyword)
@@ -562,7 +578,7 @@
   (sort (copy-list edges)
 	'<
 	:key (lambda (x)
-	       (point-to-char-point (saf-edge-from x) addressing))
+	       (or (point-to-char-point (saf-edge-from x) addressing)) 0)
 	))
 
 ;;
@@ -611,3 +627,15 @@
       (error "addressing scheme 'xpoint' not implemented"))
      (t
       (error "unknown addressing scheme '~a'" addressing)))))
+
+(defun shift-package (lxml package)
+  (loop
+      for x in lxml
+      collect 
+	(cond
+	 ((listp x)
+	  (shift-package x package))
+	 ((symbolp x)
+	  (intern (string x) package))
+	 (t
+	  x))))
