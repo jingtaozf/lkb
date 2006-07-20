@@ -1,0 +1,69 @@
+;;; ERB 2006-07-20 Modification of the grammar in tiniest/grammar2 to
+;;; illustrate the type addenda (:+) functionality.
+
+string := *top*.
+
+*list* := *top*.
+
+*ne-list* := *list* &
+ [ FIRST *top* ].
+
+; Add just a constraint.
+
+*ne-list* :+
+ [ REST *list* ].
+
+*null* := *list*.
+
+synsem-struc := *top* &
+[ CATEGORY cat,
+  NUMAGR agr ].
+
+cat := *top*.
+
+s := cat.
+
+np := cat.
+
+vp := cat.
+
+det := cat.
+
+n := cat.
+
+agr := *top*.
+
+sg := agr.
+
+pl := agr.
+
+phrase := synsem-struc &
+[ ARGS *list* ].
+
+lexeme := synsem-struc &
+[ ORTH string ].
+
+sg-sign := synsem-struc &
+[ NUMAGR sg ].
+
+pl-sign := synsem-struc.
+
+sg-lexeme := lexeme.
+
+;; Add a supertype.
+
+sg-lexeme :+ sg-sign.
+
+pl-lexeme := lexeme.
+
+;; Add supertype and constraint:
+
+pl-lexeme :+ pl-sign &
+[ NUMAGR pl ].
+
+;; Add a comment
+
+pl-lexeme :+ "Lexeme type for plurals.".
+
+root := phrase &
+[ CATEGORY s ].

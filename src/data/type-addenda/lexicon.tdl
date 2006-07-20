@@ -1,0 +1,24 @@
+;;; Lexicon
+this := sg-lexeme &
+[ ORTH "this",
+  CATEGORY det ].
+
+these := pl-lexeme &
+[ ORTH "these",
+  CATEGORY det ].
+
+sleep := pl-lexeme &
+[ ORTH "sleep",
+  CATEGORY vp ].
+
+sleeps := sg-lexeme &
+[ ORTH "sleeps",
+  CATEGORY vp ].
+
+dog := sg-lexeme &
+[ ORTH "dog",
+  CATEGORY n ].
+
+dogs := pl-lexeme &
+[ ORTH "dogs",
+  CATEGORY n ].
