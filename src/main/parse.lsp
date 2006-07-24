@@ -48,6 +48,14 @@
 (defvar *unanalysed-tokens* nil)
 
 ;;;
+;;; HOWTO collect into *unanalysed-tokens* tokens for which lexical lookup
+;;; failed:
+;;;  - set *generate-messages-for-all-unanalysed-tokens* to T
+;;;  - ... parse some input ...
+;;;  - look in *unanalysed-tokens* for bag of token instances
+;;;
+
+;;;
 ;;; recently added variant: use active key-driven parsing strategy; this seems
 ;;; to 
 ;;;
