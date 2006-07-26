@@ -73,7 +73,7 @@ we assume that there will generally only be one feature
 ;;; *empty-semantics-lexical-entries*
 ;;;
 ;;; WARNING: this is not restored when reading in the
-;;; cached generator indices!
+;;; cached generator indices! -- [bmw] this is with the LexDB
 
 (defvar *empty-semantics-lexical-entries* nil)
 

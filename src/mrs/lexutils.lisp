@@ -26,7 +26,7 @@
 (defvar mrs::*semi*)
 
 ;;; for the time being, the whole lexicon has to be reindexed whenever
-;;; something is altered ...
+;;; something is altered ... -- [bmw] not the case when using LexDB
 
 (defun index-for-generator nil
   (clear-generator-index)
