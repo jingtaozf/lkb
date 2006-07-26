@@ -459,21 +459,32 @@ at this point).
 (defun create-liszt-fs-from-rels (rels sem-path)
   ;; inverse direction to mrsoutput functions, here we're creating a FS from a
   ;; Lisp structure
-  (let* ((path-list nil)
-         (current-path sem-path))
-    (loop for rel in rels
-        do
-          (let ((first-path (append current-path *first-path*)))
-            (loop for unif in (create-unifs-for-rel rel first-path)
-                do
-                  (push unif path-list))
-            (setf current-path (append current-path *rest-path*))))
-    (let* (; (lkb::*unify-debug* t)
-           (fs (process-unifications path-list))
-           (wffs (when fs (create-wffs fs)))
-           (tdfs (when wffs (construct-tdfs wffs nil nil))))
-      tdfs)))
+  (let* (; (lkb::*unify-debug* t)
+	 (unifs (create-unifs-from-rels rels sem-path))
+	 (fs (process-unifications unifs))
+	 (wffs (when fs (create-wffs fs)))
+	 (tdfs (when wffs (construct-tdfs wffs nil nil))))
+    tdfs))
 
+;; [bmw] factored out of create-liszt-fs-from-rels
+(defun create-unifs-from-rels (rels sem-path)
+  (loop 
+      with current-path = sem-path
+      for rel in rels
+      for first-path = (append current-path *first-path*)
+      append (create-unifs-for-rel rel first-path)
+      do (setf current-path (append current-path *rest-path*))))
+
+;; [bmw] calls create-unifs-for-rel AND create-pred-unif-for-rel
+(defun create-unifs-from-rels2 (rels sem-path)
+  (loop 
+      with current-path = sem-path
+      for rel in rels
+      for first-path = (append current-path *first-path*)
+      append (create-pred-unif-for-rel rel first-path) ;
+      append (create-unifs-for-rel rel first-path)
+      do (setf current-path (append current-path *rest-path*))))
+	      
 (defun create-unifs-for-rel (rel-str path)
   (let ((handel-unif (if (rel-handel rel-str)
                          (make-pv-unif (append (append path *rel-handel-path*)
@@ -494,8 +505,15 @@ at this point).
                   (list (make-pv-unif new-path
                                       value)))))))
   (if handel-unif (cons handel-unif other-unifs)
-      other-unifs)))
+    other-unifs)))
 
+(defun create-pred-unif-for-rel (rel path)
+  (with-slots (pred) rel
+    (when rel
+      (list
+       (make-pv-unif (append path *rel-name-path*) pred)))))
+
+	
 (defun make-instance-type (var-struct)
   (var-string var-struct))
 

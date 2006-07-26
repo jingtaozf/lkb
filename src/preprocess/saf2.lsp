@@ -316,6 +316,7 @@
 	    (get-dummy-unexpanded-lex-entry form 
 					    :unifs gmap-unifs
 					    :gmap saf::*gmap*
+					    :rmrs (smaf::saf-fs-feature-value smaf::l-content "rmrs")
 					    ))
 	   (e-from (smaf-node-to-chart-node smaf::source))
 	   (e-to (smaf-node-to-chart-node smaf::target))
@@ -390,20 +391,39 @@
 (defun mps-str (x)
   (or (encode-mixed-as-str x) ""))
 
-(defun get-dummy-unexpanded-lex-entry (orth &key unifs gmap)
-  (loop
-      for (key . val) in unifs
-      for (c-dummy c-path c-type) = (find key gmap :key #'car)
-      for val2 = (mps-str (if (eq c-type :sym) 
-			      (intern val) 
-			    val))
-      collect (list val2 c-path '(MIXED)) into unifs
-      do 
-	(setf c-dummy c-dummy)
-      finally 
-	(return 
-	  (get-dummy-unexpanded-lex-entry2 orth :unifs unifs))))
+(defvar mrs::*main-semantics-path*)
 
+;(GET-DUMMY-UNEXPANDED-LEX-ENTRY "LDA"
+;         :UNIFS ((:|carg| . "bmw[Li+].CC(C)[N-]C(C)C") (:|pred|)
+;                 (:|type| . "n_proper_nale"))
+;         :GMAP ((:|carg| (SYNSEM LKEYS KEYREL CARG) :STR)
+;                (:|pred| (SYNSEM LKEYS KEYREL PRED) :SYM) (:|type| NIL :SYM)))
+;; mixed up code: unifs shadowing unifs!
+(defun get-dummy-unexpanded-lex-entry (orth &key unifs gmap rmrs)
+  (let* ((unifs2
+	  (loop
+	      for (key . val) in unifs
+	      for (c-dummy c-path c-type) = (find key gmap :key #'car)
+	      for val2 = (mps-str (if (eq c-type :sym) 
+				      (intern val) 
+				    val))
+	      collect (list val2 c-path '(MIXED))
+	      do 
+		(setf c-dummy c-dummy)))
+	 (lex-entry (get-dummy-unexpanded-lex-entry2 orth :unifs unifs2))
+	 ;; need: mrs::*semi* and mrs::*meta-semi*
+	 (mrs (and rmrs (mrs::convert-rmrs-to-mrs rmrs))) 
+	 (rels (and mrs (mrs::psoa-liszt mrs)))
+	 (rels-unifs 
+	  (and rels (mrs::create-unifs-from-rels2 rels mrs::*main-semantics-path*))))
+    (setf (lex-entry-unifs lex-entry)
+      (append rels-unifs (lex-entry-unifs lex-entry)))
+    lex-entry))
+
+;(GET-DUMMY-UNEXPANDED-LEX-ENTRY2 "LDA"
+;           :UNIFS (("\"bmw[Li+].CC(C)[N-]C(C)C\"" (SYNSEM LKEYS KEYREL CARG) (MIXED))
+;                   ("" (SYNSEM LKEYS KEYREL PRED) (MIXED))
+;                   ("n_proper_nale" NIL (MIXED))))
 ;; (val path type)*
 (defun get-dummy-unexpanded-lex-entry2 (orth &key unifs)
   (when unifs
@@ -432,4 +452,7 @@
 
 (defun run-parse-server (&rest rest)
   (apply 'saf::run-parse-server rest))
+
+(defun run-fspp-server (&rest rest)
+  (apply 'saf::run-fspp-server rest))
 

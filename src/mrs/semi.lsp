@@ -972,3 +972,10 @@
   (or (member feature *ignored-sem-features*)
       (eql feature (car *rel-handel-path*))
       (eql feature (car *rel-name-path*))))
+
+;; work around compiler warnings in SMAF code...
+(defun get-semi nil
+  *semi*)
+
+(defun get-meta-semi nil
+  *meta-semi*)

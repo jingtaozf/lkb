@@ -289,11 +289,12 @@
   (if lxml
       (list
        (make-saf-fv
-	:feature "RASP"
-	:value (mrs::read-rmrs (car (shift-package lxml :mrs)) :rasp)))))
+	:feature :rmrs
+	:value (mrs::read-rmrs 
+		(car 
+		 ;; necessary since read-rmrs expects :mrs-interned symbols
+		 (shift-package lxml :mrs)) :rasp)))))
   
-;;(mrs::read-rmrs (car (shift-package (lxml::xml-to-lxml *r) :mrs)) :rasp)
-
 (defun lxml-annot-to-edge (lxml-annot &key type source target)
   (let* ((id (lxml::lxml-elt-attr lxml-annot "id"))
 	 (fs-list (lxml::lxml-elt-elts lxml-annot "fs"))

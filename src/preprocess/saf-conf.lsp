@@ -51,11 +51,19 @@
        (saf-fs-path-value x (saf-edge-content edge)))
       ((string= feat "rmrs")
        (cond
+	((equal nil x)
+	 (unless (and (mrs::get-semi) (mrs::get-meta-semi))
+	   (error "no mrs::*meta-semi*/mrs::*semi*"))
+	 ;(mrs::convert-rmrs-to-mrs
+	  (saf-fs-path-value '(:rmrs) (saf-edge-content edge))
+	  ;)
+	 )
+	;; temporary hack: eg. handles RMRS with single EP
 	((equal '("ep" "gpred") x) 
-	 (mrs::char-rel-pred (car (mrs::rmrs-liszt (saf-fs-path-value '("RASP") (saf-edge-content edge)))))
+	 (mrs::char-rel-pred (car (mrs::rmrs-liszt (saf-fs-path-value '(:rmrs) (saf-edge-content edge)))))
 	 )
 	((equal '("rarg" "constant") x) 
-	 (mrs::rmrs-arg-val (car (mrs::rmrs-rmrs-args (saf-fs-path-value '("RASP") (saf-edge-content edge))))))
+	 (mrs::rmrs-arg-val (car (mrs::rmrs-rmrs-args (saf-fs-path-value '(:rmrs) (saf-edge-content edge))))))
 	))
       (t
        (error "unhandled variable name '~a' found in l-content" var)))))
