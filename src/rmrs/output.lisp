@@ -33,6 +33,11 @@
 ;;; xml rmrs-output-type class for rmrs.dtd
 ;;;
 
+;; [bmw] if set, (superfluous) newlines ommited from RMRS XML output
+;; (one can then use lkb::pprint-xml to produce nicely indented 
+;;  human-readable RMRS XML)
+(defvar *write-compact-xml* nil)
+
 (defclass xml (rmrs-output-type) ())
 
 ;;; <!ELEMENT rmrs (label, (ep|rarg|ing|hcons)*)>
@@ -46,11 +51,11 @@
 (defmethod rmrs-output-start-fn ((rmrsout xml) cfrom cto
                                  &optional surface ident)
   (with-slots (stream) rmrsout
-    (terpri stream)
+    (unless *write-compact-xml* (terpri stream))
     (write-string "<rmrs cfrom='" stream)
-    (princ (or cfrom -1) stream)
+    (princ (or cfrom -1) stream) ;; [bmw] could this be made optional?
     (write-string "' cto='" stream)
-    (princ (or cto -1) stream)
+    (princ (or cto -1) stream) ;; [bmw] could this be made optional?
     (write-char #\' stream)
     (when surface
       (write-string " surface='")
@@ -61,7 +66,7 @@
       (xml-escaped-output ident stream)
       (write-char #\' stream))
     (write-char #\> stream)
-    (terpri stream)))
+    (unless *write-compact-xml* (terpri stream))))
 
 #|
     (format
@@ -72,9 +77,9 @@
 
 (defmethod rmrs-output-end-fn ((rmrsout xml))
   (with-slots (stream) rmrsout
-    (terpri stream)
+    (unless *write-compact-xml* (terpri stream))
     (write-string "</rmrs>" stream)
-    (terpri stream)))
+    (unless *write-compact-xml* (terpri stream))))
 
 
 #|
@@ -90,7 +95,7 @@
 (defmethod rmrs-output-start-ep ((rmrsout xml) cfrom cto str)
   (with-slots (stream) rmrsout
     ;;(format stream "~%<ep cfrom='~A' cto='~A'" (or cfrom -1) (or cto -1))
-    (terpri stream)
+    (unless *write-compact-xml* (terpri stream))
     (write-string "<ep cfrom='" stream)
     (princ (or cfrom -1) stream)
     (write-string "' cto='" stream)
@@ -203,7 +208,8 @@ plus other slots - see DTD
 (defmethod rmrs-output-start-rmrs-arg ((rmrsout xml) predname with-ep-p)
   (declare (ignore with-ep-p))
   (with-slots (stream) rmrsout
-    (format stream "~%<rarg><rargname>~A</rargname>" predname)))
+    (unless *write-compact-xml* (terpri stream))
+    (format stream "<rarg><rargname>~A</rargname>" predname)))
 
 (defmethod rmrs-output-end-rmrs-arg ((rmrsout xml))
   (with-slots (stream) rmrsout
@@ -223,7 +229,8 @@ plus other slots - see DTD
 (defmethod rmrs-output-hcons-start ((rmrsout xml) reln with-ep-p)
   (declare (ignore with-ep-p))
   (with-slots (stream) rmrsout
-    (format stream "~%<hcons hreln='~A'><hi>"
+    (unless *write-compact-xml* (terpri stream))
+    (format stream "<hcons hreln='~A'><hi>"
             (string-downcase reln))))
 
 (defmethod rmrs-output-hcons-next ((rmrsout xml))
@@ -245,7 +252,7 @@ plus other slots - see DTD
 (defmethod rmrs-output-ingroup-start ((rmrsout xml) with-ep-p)
   (declare (ignore with-ep-p))
   (with-slots (stream) rmrsout
-    (terpri stream)
+    (unless *write-compact-xml* (terpri stream))
     (write-string "<ing><ing-a>" stream)))
 
 (defmethod rmrs-output-ingroup-next ((rmrsout xml))
@@ -268,7 +275,8 @@ plus other slots - see DTD
 
 (defmethod semstruct-output-start-hook ((rmrsout xml))
   (with-slots (stream) rmrsout
-    (format stream "~%<hook>")))
+    (unless *write-compact-xml* (terpri stream))
+    (format stream "<hook>")))
 
 (defmethod semstruct-output-hook-label ((rmrsout xml) label)
   (with-slots (stream) rmrsout
@@ -293,7 +301,8 @@ plus other slots - see DTD
 (defmethod rmrs-output-start-ep ((rmrsout gramxml) cfrom cto str)
   (declare (ignore cfrom cto str))
   (with-slots (stream) rmrsout
-    (format stream "~%<ep>")))
+    (unless *write-compact-xml* (terpri stream))
+    (format stream "<ep>")))
 
 #|
 for gram.dtd and tag.dtd

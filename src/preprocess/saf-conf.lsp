@@ -401,7 +401,7 @@
 		   nil))
       (:xml
        (format t "~&;;; parsing XML input")
-       (when debug (format t "~&INPUT: ~%~a~%~%" input))
+       (when debug (format t "~&INPUT: ~%~a~%~%" (lkb::pprint-xml input)))
        (setf saf (xml-to-saf-object input))
        (setf id (saf-fs-feature-value 
 		 (saf-meta-olac 
@@ -411,9 +411,11 @@
       (t
        (error "unknown PARSE server mode '~a'" mode)))
     (when debug
-      (format t "~&OUTPUT: ~%")
-      (dump-sentence-analyses2 :s-id id :stream t)
-      (format t "~%~%"))
+      (format t "~&OUTPUT:~%~a~%~%"
+	      (lkb::pprint-xml 
+	       (with-output-to-string (stream2)
+		 (dump-sentence-analyses2 :s-id id :stream stream2)
+		 ))))
     (dump-sentence-analyses2 :s-id id :stream s)))
   
 ;; FSPP socket server

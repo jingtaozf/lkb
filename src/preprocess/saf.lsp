@@ -423,7 +423,7 @@
 	 (intern (subseq feat 5) :keyword)
 	 val)))
 	 
-(defun process-saf-sentences (saf &key (ostream t) show-parse reset-unanalysed-tokens)
+(defun process-saf-sentences (saf &key (ostream t) show-parse reset-unanalysed-tokens pprint)
   (let* ((textfilename (saf-meta-document (saf-meta saf)))
 	 (text
 	  (if textfilename
@@ -487,7 +487,7 @@
 	     (error (condition)
 	       (format t  "~&Error: ~A" condition))
 	     ))
-	  (dump-sentence-analyses s ostream))
+	  (dump-sentence-analyses s :stream ostream :pprint pprint))
     (format ostream "~&</saf>")))
 
 (defvar *saf-document* nil)
@@ -538,9 +538,9 @@
     (t (error "unknown addressing scheme '~a'" addressing))))
 
 #+:mrs
-(defun dump-sentence-analyses (s &optional (stream t))
-  (dump-sentence-analyses2 :s-id(saf-edge-id s) :stream stream))
-  
+(defun dump-sentence-analyses (s &key (stream t))
+  (dump-sentence-analyses2 :s-id (saf-edge-id s) :stream stream))
+
 #+:mrs
 ;;based on mrs::output-mrs-after-parse
 (defun dump-sentence-analyses2 (&key (s-id) 
@@ -549,12 +549,13 @@
     (loop for edge in lkb::*parse-record* 
 	do
 	  (let ((mrs (mrs::extract-mrs edge)))
-	    (format stream "~&<annot type='parse' deps='~a' edge='~a'>" ;;move edge into content
-		    (or s-id "")
-		    (lkb::edge-id edge))
+	    (format stream "<annot type='parse' deps='~a'>" ;;move edge into content
+		    (or s-id ""))
+	    (format stream "<slot name='edge'>~a</slot>" (lkb::xml-escape (lkb::2-str (lkb::edge-id edge))))
 	    ;;(format stream "~&~A~&" 
 	    ;;(lkb::parse-tree-structure edge))
-	    (mrs::output-rmrs1 (mrs::mrs-to-rmrs mrs) 'mrs::xml stream)
+	    (let ((mrs::*write-compact-xml* t))
+	      (mrs::output-rmrs1 (mrs::mrs-to-rmrs mrs) 'mrs::xml stream))
 	    (format stream "~&</annot>")))))
 
 (defun saf-fs-partial-tree-2-list-partial-tree (fs)
