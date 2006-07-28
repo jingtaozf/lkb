@@ -555,6 +555,7 @@
 	    ;;(format stream "~&~A~&" 
 	    ;;(lkb::parse-tree-structure edge))
 	    (let ((mrs::*write-compact-xml* t))
+	      (setf mrs::*write-compact-xml* mrs::*write-compact-xml*) ;;avoid compiler warning
 	      (mrs::output-rmrs1 (mrs::mrs-to-rmrs mrs) 'mrs::xml stream))
 	    (format stream "~&</annot>")))))
 
