@@ -301,39 +301,6 @@
 	      (xml-escape (or (2-str to) "?")))
       ))))
 
-(defun get-edges (&optional (tchart *tchart*))
-  (loop
-      for i from 1 to (1- *chart-limit*)
-      for ccs-incident = (aref tchart  i 0)
-      append
-	(loop
-	    for cc in ccs-incident
-	    for edge = (chart-configuration-edge cc)
-	    when (edge-p edge)
-	    collect edge)))
-
-(defun get-tedges (&optional (tchart *tchart*))
-  (loop
-      for i from 1 to (1- *chart-limit*)
-      for ccs-incident = (aref tchart  i 0)
-      append
-	(loop
-	    for cc in ccs-incident
-	    for edge = (chart-configuration-edge cc)
-	    when (token-edge-p edge)
-	    collect edge)))
-
-(defun get-medges (&optional (tchart *tchart*))
-  (loop
-      for i from 1 to (1- *chart-limit*)
-      for ccs-incident = (aref tchart  i 0)
-      append
-	(loop
-	    for cc in ccs-incident
-	    for edge = (chart-configuration-edge cc)
-	    when (morpho-stem-edge-p edge)
-	    collect edge)))
-
 ;; assume xpoint order is string order for now
 (defun x< (x y)
   (string< x y))

@@ -308,8 +308,9 @@
 	    (loop for l in leaf-edges
 		collect (token-edge-string l)))
 	   (form (str-list-2-str children-words))
-	   (stem (or (smaf::saf-fs-feature-value smaf::l-content "stem")
-		     form))
+	   (stem (string-upcase 
+		  (or (smaf::saf-fs-feature-value smaf::l-content "stem")
+		      form)))
 	   (partialTree (smaf::saf-fs-feature-value smaf::l-content "partialTree"))
 	   (gmap-unifs (smaf::get-gmap-unifs smaf::l-content))
 	   (dummy-entry 

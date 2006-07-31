@@ -906,20 +906,14 @@
 
 (defparameter *morphophon-cache* nil)
 
+;; [bmw] ensure only token edges are sent to add-morpho-partial-edges
+;; (necessary in case SMAF input contains some morph edges)
 (defun instantiate-chart-with-morphop nil
-  (dotimes (current *tchart-max*)
-    ;; for each left vertex in chart
-    (let ((token-ccs (aref *tchart* current 1)))
-      ;; collect edges incident on vertex
-      (dolist (token-cc token-ccs)
-	;; for each such edge
-	(let* ((token-edge (chart-configuration-edge token-cc))
-	       (word (token-edge-word token-edge)))
-	  (add-morpho-partial-edges 
-	   word
-	   token-edge)))))
+  (loop
+      for token-edge in (get-tedges *tchart*)
+      for word = (token-edge-word token-edge)
+      do (add-morpho-partial-edges word token-edge))
   *tchart*)
-  
 
 #|
 Redoing this from the initial version:
@@ -1255,7 +1249,7 @@ relatively limited.
   ;;; tokeniser and partial tree morphology).
   ;;; The macro with-slots establishes a lexical environment for 
   ;;; referring to the slots in token-edge as though they were variables
-  ;;; with the given slot name.  
+  ;;; with the given slot name.
   (with-slots (from to word string cfrom cto leaves) token-edge
     (add-morpho-stem-edge
      stem partial-tree from to word string cfrom cto 
@@ -1438,6 +1432,8 @@ relatively limited.
 	 edge-string from to cfrom cto partial-tree entry morpho-stem-edge))))))
 	     ;;; FIX - put back unify-in
 
+;; [bmw] l-content takes precedence over morph analysis of stem
+;; FIXME: make precedence configurable
 (defun get-edge-entries (morpho-stem-edge)
   (with-slots (l-content stem) morpho-stem-edge
     (if l-content 
@@ -2542,3 +2538,39 @@ an unknown word, treat the gap as filled and go on from there.
        (if (rule-p daughter) (rule-id daughter) daughter)
        qc result))
     result))
+
+;; [bmw] some useful functions
+
+(defun get-edges (&optional (tchart *tchart*))
+  (loop
+      for i from 1 to (1- *chart-limit*)
+      for ccs-incident = (aref tchart  i 0)
+      append
+	(loop
+	    for cc in ccs-incident
+	    for edge = (chart-configuration-edge cc)
+	    when (edge-p edge)
+	    collect edge)))
+
+(defun get-tedges (&optional (tchart *tchart*))
+  (loop
+      for i from 1 to (1- *chart-limit*)
+      for ccs-incident = (aref tchart  i 0)
+      append
+	(loop
+	    for cc in ccs-incident
+	    for edge = (chart-configuration-edge cc)
+	    when (token-edge-p edge)
+	    collect edge)))
+
+(defun get-medges (&optional (tchart *tchart*))
+  (loop
+      for i from 1 to (1- *chart-limit*)
+      for ccs-incident = (aref tchart  i 0)
+      append
+	(loop
+	    for cc in ccs-incident
+	    for edge = (chart-configuration-edge cc)
+	    when (morpho-stem-edge-p edge)
+	    collect edge)))
+
