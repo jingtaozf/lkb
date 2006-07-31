@@ -416,8 +416,9 @@
 	 (rels (and mrs (mrs::psoa-liszt mrs)))
 	 (rels-unifs 
 	  (and rels (mrs::create-unifs-from-rels2 rels mrs::*main-semantics-path*))))
-    (setf (lex-entry-unifs lex-entry)
-      (append rels-unifs (lex-entry-unifs lex-entry)))
+    (when lex-entry
+      (setf (lex-entry-unifs lex-entry)
+	(append rels-unifs (lex-entry-unifs lex-entry))))
     lex-entry))
 
 ;(GET-DUMMY-UNEXPANDED-LEX-ENTRY2 "LDA"
