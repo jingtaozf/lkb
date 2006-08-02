@@ -51,6 +51,7 @@
 ;;; [bmw] HOWTO collect into *unanalysed-tokens* tokens for which lexical lookup
 ;;; failed:
 ;;;  - set *generate-messages-for-all-unanalysed-tokens* to T
+;;;  - set *clean-tchart-p* to T (ensures no duplicate token edges)
 ;;;  - ... parse some input ...
 ;;;  - look in *unanalysed-tokens* for bag of token instances
 ;;;

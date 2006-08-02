@@ -239,7 +239,8 @@
 (defun postprocess-lattice (lattice)
   ;; apply clobber edges
   (if *clobber-p*
-      (clobber lattice)))
+      (clobber lattice)
+    lattice))
 
 (defun get-smaf-lattice-size (saf)
   ;; num nodes minus 1, or zero
