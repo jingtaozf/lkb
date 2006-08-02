@@ -34,27 +34,25 @@
 (defun get-edge-by-id (id &optional (tchart *tchart*))
   (find id (get-edges tchart) :key #'edge-id :test #'=))
 
-;;!
+;; used in test for duplicate chart/tchart edges
 (defun dup-edge= (x y)
   (cond
    ;; token edges
    ((and (typep x 'token-edge)
-	 (typep y 'token-edge)
-	 )
-    (string= (token-edge-word x)
-	     (token-edge-word y)))
+	 (typep y 'token-edge))
+    (token-edge= x y))
    ;; morph edges
    ((and (typep x 'morpho-stem-edge) 
 	 (typep y 'morpho-stem-edge))
-    (string= (morpho-stem-edge-word x)
-	     (morpho-stem-edge-word y)))
+    nil ;; NOT YET IMPLEMENTED
+    )
    ;; chart edges
    ((and (typep x 'edge) 
 	 (typep y 'edge))
-    nil)
+    nil) ;; NOT YET IMPLEMENTED
    ;; different edge types
    (t
-    nil)))
+    (error "edges expected"))))
 
 (defun clean-tchart (&optional (tchart *tchart*))
   (let ((dups (get-duplicate-edge-sets tchart)))
@@ -120,15 +118,156 @@
 	  (push (list e) dups)))
       finally (return dups)))
 
+;;; add 1-paths from node-z to agenda
+(defun update-paths-x2y-agenda (node-z agenda &key (filter #'identity))
+  (loop
+      for cc in (aref *tchart* node-z 1) ;;out 
+      for edge = (chart-configuration-edge cc)
+      for source = (edge-from edge)
+      for target = (edge-to edge)
+      when (funcall filter edge)
+      do (pushnew (cons source target) agenda
+		  :test #'equalp))
+  agenda)
+
+;; return array defining paths from node-x to node-y
+(defun get-paths-x2y (node-x node-y &key (filter #'identity))
+  (let* (;; create array to store paths from x
+	 (paths-from-x (make-array (list (1+ *tchart-max*))))
+	 ;; initialise agenda
+	 agenda)
+    (unless (= node-x node-y)
+      (setf agenda (update-paths-x2y-agenda node-x nil :filter filter))
+      ;; process agenda items...
+      (loop 
+	  with processed = nil
+	  while agenda
+		;; next item
+	  for item = (pop agenda)
+	  for source = (car item)
+	  for target = (cdr item)
+	  unless (member item processed :test #'equalp)
+	  do
+	    ;(format t "~&item  ~a" item)
+	    ;; update array
+	    (setf (aref paths-from-x target)
+	      (cons
+	       source
+	       ;;(cons (aref paths-from-x source) target)
+	       (aref paths-from-x target)))
+	    (unless (= target node-y)
+	      ;; no loops, so no need to look further
+	      (setf agenda
+		(update-paths-x2y-agenda target agenda :filter filter)))
+	    (push item processed)))
+    ;; pick out result
+    paths-from-x))
+
+;; generate sentence strings for all token paths through tchart
+(defun tchart-to-sentence-strings nil
+  (loop
+      with edge-paths = (get-edge-paths-x2y 0 *tchart-max*)
+      for edge-path in edge-paths
+      collect
+	(with-output-to-string (s)
+	  (princ (edge-string (pop edge-path)) s)
+	  (loop
+	      for edge in edge-path
+	      for string = (edge-string edge)
+	      do
+		(princ #\Space s)
+		(princ string s)))))
+
+;; generate sentence strings for all token paths through S(M)AF XML input
+(defun xml-to-sentence-strings (xml &optional (stream t))
+  (when xml
+    (let* ((saf (saf::xml-to-saf-object xml))
+	   (id (saf::saf-id saf)))
+      (saf-to-tchart saf)
+      (loop
+	  for sent in (tchart-to-sentence-strings)
+	  for str = (format nil "~%;~a~%~a" id sent)
+	  do
+	    (princ str stream)
+	  collect str))))
+
+;; read file containing one S(M)AF XML per line, and generate set sentence test items
+;; (for itsdb)
+(defun file-to-sentence-strings (filename)
+  (with-open-file (s filename :external-format :utf-8)
+    (loop
+	while (xml-to-sentence-strings (read-line s nil nil)))))
+
+;; INEFFICIENT. never mind.
+;; return all edge paths between node-x and node-y
+(defun get-edge-paths-x2y (node-x node-y &key back-array)
+  (unless back-array
+    (setf back-array (get-paths-x2y node-x node-y)))
+  (if (equalp node-x node-y)
+      (list nil)
+    (loop
+	with sources = (aref back-array node-y)
+	for source in sources
+	for edge-paths = (get-edge-paths-x2y node-x source
+					     :back-array back-array)
+	for edges = (get-tedges-source-target source node-y)
+	append
+	  (loop
+	      for edge-path in edge-paths
+	      append
+		(loop
+		    for edge in edges
+		    collect (append edge-path (list edge)))))))
+
+;; return set of edges on paths from node-x to node-y
+(defun get-edges-x2y (node-x node-y)
+  (loop
+      with array = (get-paths-x2y node-x node-y)
+      for target from 0 to (1- (array-dimension array 0))
+      for sources = (aref array target)
+      append
+	(loop for source in sources
+	    append (get-tedges-source-target source target))))
+
+;; return token edges spanning source to target
+(defun get-tedges-source-target (source target)
+  ;; FIXME: inefficient
+  (intersection
+   (get-tedges-source source)
+   (get-tedges-target target)))
+
+;; return token edges outgoing from source node
+(defun get-tedges-source (source)
+  (loop
+      for cc in (aref *tchart* source 1)
+      for edge = (chart-configuration-edge cc)
+      when (token-edge-p edge)
+	   collect edge))
+
+;; return token edges ingoing to target node
+(defun get-tedges-target (target)
+  (loop
+      for cc in (aref *tchart* target 0)
+      for edge = (chart-configuration-edge cc)
+      when (token-edge-p edge)
+	   collect edge))
+
+;; if set, perform cleanup operations after converting
+;; SAF to tchart
+(defvar *clean-tchart-p* nil)
+
+
 (defun saf-to-tchart (saf &key (filter #'identity))
   (new-tchart)
   (initialize-smaf-node-to-chart-node saf)
   (saf-lattice-to-tchart (smaf::saf-lattice saf)
 			:filter filter
 			:addressing (smaf::saf-meta-addressing (smaf::saf-meta saf)))
-  ;;(clean-tchart *tchart*) FIXME! disabled until bug fixed in clean-tchart
+  (if *clean-tchart-p*
+      (clean-tchart *tchart*)) ;; FIXME! disabled until bug fixed in clean-tchart
   *tchart*)
 
+;; init=0 ... final=latticeSize
 (defun initialize-smaf-node-to-chart-node (saf)
   (let* ((lattice (smaf::saf-lattice saf))
 	 (init (and lattice (smaf::saf-lattice-start-node lattice)))
@@ -458,3 +597,29 @@
 (defun run-fspp-server (&rest rest)
   (apply 'saf::run-fspp-server rest))
 
+;;
+
+;; print token counts for all unanalysed tokens
+(defun report-unanalysed-tokens nil
+  (let ((hash (make-hash-table :test #'equalp))
+	count-toks)
+    (loop
+	for tok in *unanalysed-tokens*
+	for count = (or (gethash tok hash) 0)
+	do
+	  (setf (gethash tok hash)
+	    (1+ count)))
+    (setf count-toks
+      (loop
+	  for tok being each hash-key in hash
+	  for count = (gethash tok hash)
+	  collect (cons count tok)))
+    (loop
+	for (count . tok) in (sort count-toks #'> :key #'car)
+	do
+	  (format t "~%~a ~a" count tok))))
+
+;; true if exists path of morph edges spanning tchart
+(defun medge-spanning-path-p nil
+  (aref (get-paths-x2y 0 *tchart-max* 
+		       :filter #'morpho-stem-edge-p) *tchart-max*))

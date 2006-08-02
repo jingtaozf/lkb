@@ -26,7 +26,10 @@
       for edge in (and lattice (saf-lattice-edges lattice))
       for l-content = (edge-l-content edge l-map)
       do (setf (saf-edge-l-content edge) l-content)
-      finally (return saf)))
+      finally 
+	(setf (saf-lattice saf)
+	  (postprocess-lattice lattice)) ;; clobber rules, etc.
+	(return saf)))
 
 ;; instantiate :l-content for annotation
 (defun edge-l-content (edge l-map)
@@ -389,6 +392,12 @@
 	    "PARSE"
 	    :port port))
 
+(defun saf-id (saf)
+  (saf-fs-feature-value 
+   (saf-meta-olac 
+    (saf-meta saf)) 
+   "dc:identifier"))
+
 ;; parse input chunk
 (defun r-server-parse-input (s input &key (mode :string) debug)
   (let (id saf)
@@ -403,10 +412,7 @@
        (format t "~&;;; parsing XML input")
        (when debug (format t "~&INPUT: ~%~a~%~%" (lkb::pprint-xml input)))
        (setf saf (xml-to-saf-object input))
-       (setf id (saf-fs-feature-value 
-		 (saf-meta-olac 
-		  (saf-meta saf)) 
-		 "dc:identifier"))
+       (setf id (saf-id saf))
        (lkb::parse saf nil))
       (t
        (error "unknown PARSE server mode '~a'" mode)))

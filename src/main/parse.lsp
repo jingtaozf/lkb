@@ -48,7 +48,7 @@
 (defvar *unanalysed-tokens* nil)
 
 ;;;
-;;; HOWTO collect into *unanalysed-tokens* tokens for which lexical lookup
+;;; [bmw] HOWTO collect into *unanalysed-tokens* tokens for which lexical lookup
 ;;; failed:
 ;;;  - set *generate-messages-for-all-unanalysed-tokens* to T
 ;;;  - ... parse some input ...
@@ -486,6 +486,7 @@
 
 (defvar *maf-p* nil)
 (defvar *abort-parse-after-morphosyntax* nil)
+(defvar *abort-parse-if-no-spanning-morph-edge-path* nil)
 
 ;; example input: 
 ;; - basic: "the" "dog" "barks"
@@ -618,7 +619,15 @@
 	    (when *generate-messages-for-all-unanalysed-tokens*
 	      (generate-messages-for-all-unanalysed-tokens *tchart*))
 	    (when *abort-parse-after-morphosyntax*
-	      (return-from parse))
+	      (return-from parse (get-parse-return-values)))
+	    ;; [bmw] would it be safe to make this behaviour the default?
+	    ;; that is: if, after adding morpho-stem edges, there is no path
+	    ;; through lattice that consists of morpho-stem edges, we should
+	    ;; be able to assume that any parse attemp will fail...
+	    (when (and *abort-parse-if-no-spanning-morph-edge-path*
+		       (not (medge-spanning-path-p)))
+	      (format t "~&;;; WARNING: No morph edge paths span input. Aborting parse.")
+	      (return-from parse (get-parse-return-values)))
 	    (instantiate-chart-with-stems-and-multiwords)
             (catch :best-first
               (add-words-to-chart (and first-only-p (null *active-parsing-p*)
@@ -643,6 +652,14 @@
          -1
          (statistics-ftasks *statistics*)
          (statistics-mtasks *statistics*))))))
+
+(defun get-parse-return-values nil
+  (values
+   (statistics-etasks *statistics*)
+   (statistics-stasks *statistics*)
+   -1
+   (statistics-ftasks *statistics*)
+   (statistics-mtasks *statistics*)))
 
 (defun file-xml-p (filename)
   (xml-p
@@ -837,19 +854,20 @@
 	  (push cc (aref *tchart* from 1)))
       edge)))
 
-
+;; [bmw] factored into token-edge-match + token-edge=
 (defun token-edge-match (edge cclist)
-  (member-if  #'(lambda (x)
-		       (and (eql (edge-from edge) 
-				 (chart-configuration-begin x))
-			    (eql (edge-to edge) 
-				 (chart-configuration-end x))
-			    (equal (token-edge-word edge)
-				   (token-edge-word
-				    (chart-configuration-edge x)))))
-	      cclist))
-				  
+  (member-if #'(lambda (x)
+		 (token-edge= edge x))
+	     cclist 
+	     :key #'chart-configuration-edge))
 
+(defun token-edge= (edge1 edge2)
+  (and (eql (edge-from edge1) 
+	    (edge-from edge2))
+       (eql (edge-to edge1) 
+	    (edge-to edge2))
+       (equal (token-edge-word edge1)
+	      (token-edge-word edge2))))
 
 
 ;;; *****************************************************

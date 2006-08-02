@@ -80,7 +80,7 @@
       (setf l-map (saf::get-default-saf-l-map)))
     (saf::instantiate-l-content
      (lxml-to-saf-object (lxml::xml-to-lxml xml))
-     l-map) 
+     l-map)
     ))
 
 (defun lxml-to-saf-object (lxml)
@@ -230,7 +230,16 @@
        :start-node start-node
        :end-node end-node
        :nodes nodes
-       :edges all-edges))))
+       :edges all-edges)
+      )))
+
+;; when set, clobber edges will destroy competing non-clobber edges/paths
+(defvar *clobber-p* nil)
+
+(defun postprocess-lattice (lattice)
+  ;; apply clobber edges
+  (if *clobber-p*
+      (clobber lattice)))
 
 (defun get-smaf-lattice-size (saf)
   ;; num nodes minus 1, or zero
@@ -642,3 +651,121 @@
 	  (intern (string x) package))
 	 (t
 	  x))))
+
+;;
+;; clobber code
+;;
+
+;; add 1-paths from node-z to agenda
+(defun update-paths-x2y-agenda (node-z agenda &key lattice)
+  (unless lattice
+    (error "missing LATTICE argument"))
+  (loop
+      for edge in (get-edges-source node-z :lattice lattice)
+      for source = (saf-edge-source edge)
+      for target = (saf-edge-target edge)
+      do (pushnew (cons source target) agenda
+		  :test #'equalp))
+  agenda)
+
+;; returns array of forward pointers for paths node-x to node-y
+(defun get-paths-x2y (node-x node-y &key lattice)
+  (unless lattice
+    (error "missing LATTICE argument"))
+  (let* (;; create hash to store paths from x
+	 (paths-from-x (make-hash-table :test #'equalp))
+	 ;; initialise agenda
+	 agenda)
+    (setf agenda (update-paths-x2y-agenda node-x nil :lattice lattice))
+    (unless (equalp node-x node-y)
+      ;; process agenda items...
+      (loop 
+	  with processed = nil
+	  while agenda
+		;; next item
+	  for item = (pop agenda)
+	  for source = (car item)
+	  for target = (cdr item)
+	  unless (member item processed :test #'equalp)
+	  do
+	    ;(format t "~&item ~a" item)
+	    ;; update array
+	    (setf (gethash target paths-from-x)
+	      (cons source
+		    (gethash target paths-from-x)))
+	    (unless (equalp target node-y)
+	      ;; no loops, so no need to look further
+	      (setf agenda
+		(update-paths-x2y-agenda target agenda :lattice lattice)))
+	    (push item processed)))
+    ;; pick out result
+    paths-from-x))
+
+;; return edge set taken from all paths node-x to node-y
+(defun get-edges-x2y (node-x node-y &key lattice)
+  (unless lattice
+    (error "missing LATTICE argument"))
+  (loop
+      with hash = (get-paths-x2y node-x node-y :lattice lattice)
+      for target being each hash-key in hash
+      for sources = (gethash target hash)
+      append
+	(loop for source in sources
+	    append (get-edges-source-target source target :lattice lattice))))
+
+;; return edges from source node to target node
+(defun get-edges-source-target (source target &key lattice)
+  (unless lattice
+    (error "missing LATTICE argument"))
+  ;; FIXME: inefficient
+  (loop 
+      for edge in (saf-lattice-edges lattice)
+      for source1 = (saf-edge-source edge)
+      for target1 = (saf-edge-target edge)
+      when (and (equalp source1 source)
+		(equalp target1 target))
+      collect edge))
+
+;; return outgoing edges from source node
+(defun get-edges-source (source &key lattice)
+  (unless lattice
+    (error "missing LATTICE argument"))
+  ;; FIXME: inefficient
+  (loop 
+      for edge in (saf-lattice-edges lattice)
+      for source1 = (saf-edge-source edge)
+      when (equalp source1 source)
+      collect edge))
+
+;; when set, clobber rules enabled
+(defvar *warning-clobber* nil)
+
+;; for each clobber edge, remove all non-clobber edges between
+;; source and target nodes
+(defun clobber (lattice)
+  (let* ((edges (saf-lattice-edges lattice))
+	 (clobber-edges
+	  (loop 
+	      for edge in edges
+	      for l-content = (saf-edge-l-content edge)
+	      when (saf-fs-feature-value l-content "clobber")
+	      collect edge)))
+    (loop
+	for clobber-edge in clobber-edges
+	for source = (saf-edge-source clobber-edge)		    
+	for target = (saf-edge-target clobber-edge)
+	for edges = (get-edges-x2y source target :lattice lattice)
+	for clobbered-edges =
+	  ;; FIXME: inefficient
+	  (loop
+	      for edge in edges
+	      unless (member edge clobber-edges)
+	      do
+		(if *warning-clobber*
+		    (format t "~%;;; WARNING: edge ~a clobbered" (saf-edge-id edge)))
+	      and
+	      collect edge)
+	do
+	  (setf (saf-lattice-edges lattice)
+	    (set-difference (saf-lattice-edges lattice) clobbered-edges))))
+    lattice)
