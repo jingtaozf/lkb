@@ -1282,41 +1282,41 @@ relatively limited.
   ;;; Copy most of token-edge
   ;;; Add partial-tree and stem
   ;;; Put into chart at same places
-  (when
-      (or (member *morph-option* '(:default :distinct-mphon 
-				   :external-rule-by-rule))
+  (if
+      (and 
+       (or (member *morph-option* '(:default :distinct-mphon 
+				    :external-rule-by-rule))
 	   ;;; if we're proceeding rule by rule we've already
 	   ;;; done this checking
-	  (and (lookup-word *lexicon* stem)
-	       (or (max-one-deep-p partial-tree)
-		   (check-rule-filter-morph partial-tree string))))
-    (let ((new-edge (make-morpho-stem-edge
-		     :id (next-edge) 
-		     ;; [bmw] does it matter that an edge may be
-		     ;; generated and then discarded?
-		     :word word
-		     :string string
-		     :stem stem
-		     :current stem
-		     :partial-tree partial-tree
-		     :leaves tleaves
-		     :children (if (token-edge-p tedge)
-				   (list tedge))
-		     :from from
-		     :to to
-		     :cfrom cfrom
-		     :cto cto))
-	  (ccs-from (aref *tchart* from 1))
-	  cc)
-      (unless (morpho-stem-edge-match new-edge ccs-from) 
-	(setf cc (make-chart-configuration :begin from
+	   (and (lookup-word *lexicon* stem)
+		(or (max-one-deep-p partial-tree)
+		    (check-rule-filter-morph partial-tree string))))
+       (not (morpho-stem-edge-match2 
+		 from to stem partial-tree nil (aref *tchart* from 1))))
+      (let* ((new-edge (make-morpho-stem-edge
+			:id (next-edge)
+			:word word
+			:string string
+			:stem stem
+			:current stem
+			:partial-tree partial-tree
+			:leaves tleaves
+			:children (if (token-edge-p tedge)
+				      (list tedge))
+			:from from
+			:to to
+			:cfrom cfrom
+			:cto cto))
+	     (cc (make-chart-configuration :begin from
 					   :edge new-edge
-					   :end to))
+					   :end to)))
 	(push cc (aref *tchart* from 1))
 	(push cc (aref *tchart* to 0))
-	new-edge))))
+	new-edge)
+    nil))
 
 ;; [bmw] factored into morpho-stem-edge-match + morpho-stem-edge=
+#+:null
 (defun morpho-stem-edge-match (edge cclist)
   (member-if #'(lambda (x)
 		 (morpho-stem-edge= edge x))
@@ -1334,6 +1334,23 @@ relatively limited.
 			    (edge-partial-tree edge2))
        (equalp (morpho-stem-edge-l-content edge1) ;; l-content
 	       (morpho-stem-edge-l-content edge2))
+       ))
+
+;; [bmw] alternative to above code, where we don't pass the entire first medge
+;; for efficiency reasons
+(defun morpho-stem-edge-match2 (from to stem partial-tree l-content cclist)
+  (member-if #'(lambda (x)
+		 (morpho-stem-edge=2 from to stem partial-tree l-content x))
+	     cclist 
+	     :key #'chart-configuration-edge))
+
+(defun morpho-stem-edge=2 (from to stem partial-tree l-content edge2)
+  (and (morpho-stem-edge-p edge2) ;; medge
+       (= from (edge-from edge2)) ;; from
+       (= to (edge-to edge2)) ;; to
+       (equal stem (morpho-stem-edge-stem edge2)) ;; stem
+       (partial-trees-equal partial-tree (edge-partial-tree edge2)) ;; partial tree
+       (equalp l-content (morpho-stem-edge-l-content edge2)) ;; l-content
        ))
 
 
