@@ -1,5 +1,5 @@
-;;; Copyright (c) 1991-2005
-;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;; Copyright (c) 1991-2006
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen,Ben Waldron
 ;;;   see `licence.txt' for conditions.
 
 ;;; AAC April 2005 - rationalisation of morphology and MWEs 
@@ -925,11 +925,11 @@
 
 (defparameter *morphophon-cache* nil)
 
-;; [bmw] ensure only token edges are sent to add-morpho-partial-edges
+;; [bmw] ensure only unanalysed token edges are sent to add-morpho-partial-edges
 ;; (necessary in case SMAF input contains some morph edges)
 (defun instantiate-chart-with-morphop nil
   (loop
-      for token-edge in (get-tedges *tchart*)
+      for token-edge in (get-unanalysed-tedges *tchart*)
       for word = (token-edge-word token-edge)
       do (add-morpho-partial-edges word token-edge))
   *tchart*)
@@ -1282,55 +1282,59 @@ relatively limited.
   ;;; Copy most of token-edge
   ;;; Add partial-tree and stem
   ;;; Put into chart at same places
-  (if
-      (and 
-       (or (member *morph-option* '(:default :distinct-mphon 
-				    :external-rule-by-rule))
+  (when
+      (or (member *morph-option* '(:default :distinct-mphon 
+				   :external-rule-by-rule))
 	   ;;; if we're proceeding rule by rule we've already
 	   ;;; done this checking
-	   (and (lookup-word *lexicon* stem)
-		(or (max-one-deep-p partial-tree)
-		    (check-rule-filter-morph partial-tree string))))
-       (not (morpho-stem-edge-match 
-		 from to stem partial-tree (aref *tchart* from 1))))
-      (let* ((new-edge (make-morpho-stem-edge
-			:id (next-edge)
-			:word word
-			:string string
-			:stem stem
-			:current stem
-			:partial-tree partial-tree
-			:leaves tleaves
-			:children (if (token-edge-p tedge)
-				      (list tedge))
-			:from from
-			:to to
-			:cfrom cfrom
-			:cto cto))
-	     (cc (make-chart-configuration :begin from
+	  (and (lookup-word *lexicon* stem)
+	       (or (max-one-deep-p partial-tree)
+		   (check-rule-filter-morph partial-tree string))))
+    (let ((new-edge (make-morpho-stem-edge
+		     :id (next-edge) 
+		     ;; [bmw] does it matter that an edge may be
+		     ;; generated and then discarded?
+		     :word word
+		     :string string
+		     :stem stem
+		     :current stem
+		     :partial-tree partial-tree
+		     :leaves tleaves
+		     :children (if (token-edge-p tedge)
+				   (list tedge))
+		     :from from
+		     :to to
+		     :cfrom cfrom
+		     :cto cto))
+	  (ccs-from (aref *tchart* from 1))
+	  cc)
+      (unless (morpho-stem-edge-match new-edge ccs-from) 
+	(setf cc (make-chart-configuration :begin from
 					   :edge new-edge
-					   :end to)))
+					   :end to))
 	(push cc (aref *tchart* from 1))
 	(push cc (aref *tchart* to 0))
-	new-edge)
-    nil))
+	new-edge))))
 
-;; cclist = edges leaving 'from'
-(defun morpho-stem-edge-match (from to stem partial-tree cclist)
-  (dolist (x cclist)
-    ;; for each edge
-    (when
-	(and (eql from (chart-configuration-begin x))
-	     (eql to (chart-configuration-end x))
-	     (morpho-stem-edge-p (chart-configuration-edge x))
-	     (equal stem
-		    (morpho-stem-edge-stem
-		     (chart-configuration-edge x)))
-	     (partial-trees-equal partial-tree
-			 (edge-partial-tree
-			  (chart-configuration-edge x))))
-      (return-from morpho-stem-edge-match x))))
+;; [bmw] factored into morpho-stem-edge-match + morpho-stem-edge=
+(defun morpho-stem-edge-match (edge cclist)
+  (member-if #'(lambda (x)
+		 (morpho-stem-edge= edge x))
+	     cclist 
+	     :key #'chart-configuration-edge))
 
+(defun morpho-stem-edge= (edge1 edge2)
+  (and (morpho-stem-edge-p edge1) ;; both medges
+       (morpho-stem-edge-p edge2)
+       (= (edge-from edge1) (edge-from edge2)) ;; from
+       (= (edge-to edge1) (edge-to edge2)) ;; to
+       (equal (morpho-stem-edge-stem edge1) ;; stem
+	      (morpho-stem-edge-stem edge2))
+       (partial-trees-equal (edge-partial-tree edge1) ;; partial-tree
+			    (edge-partial-tree edge2))
+       (equalp (morpho-stem-edge-l-content edge1) ;; l-content
+	       (morpho-stem-edge-l-content edge2))
+       ))
 
 
 ;;; *************************************************************
@@ -1643,17 +1647,13 @@ an unknown word, treat the gap as filled and go on from there.
 	(return)))))
 
 (defun generate-messages-for-all-unanalysed-tokens (tchart)
-  (let ((medges (get-medges tchart))
-	(tedges (get-tedges tchart)))
-    (loop for tok in tedges
-	unless (member tok medges 
-		       :test #'(lambda (x y)
-				 (member x (edge-children y))))
-	do
-	  (with-slots (from to word) tok
+  (loop
+      for tedge in (get-unanalysed-tedges tchart)
+      do
+	(with-slots (from to word) tedge
 	    (push word *unanalysed-tokens*)
 	    (format t "~&No lexical analysis found corresponding to token ~a-~a ~A"
-		    from to word)))))
+		    from to word))))
 
 (defun check-stem-coverage-aux (start res-array)
   ;;; (format t "~%check-stem-coverage-aux ~A ~A" start res-array)
@@ -2558,7 +2558,9 @@ an unknown word, treat the gap as filled and go on from there.
        qc result))
     result))
 
+;;
 ;; [bmw] some useful functions
+;;
 
 (defun get-edges (&optional (tchart *tchart*))
   (loop
@@ -2593,3 +2595,14 @@ an unknown word, treat the gap as filled and go on from there.
 	    when (morpho-stem-edge-p edge)
 	    collect edge)))
 
+;; return tedges with no medge ancestors
+(defun get-unanalysed-tedges (&optional (tchart *tchart*))
+  (let ((tedges (get-tedges tchart))
+	(medges (get-medges tchart)))
+    (loop
+	for medge in medges
+	for tchildren = (edge-children medge)
+	do
+	  (setf tedges
+	    (set-difference tedges tchildren)))
+    tedges))
