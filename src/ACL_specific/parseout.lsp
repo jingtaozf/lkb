@@ -316,6 +316,8 @@
                     ("Indexed MRS" :value indexed :active ,*mrs-loaded*)
                     ("Scoped MRS" :value scoped :active ,*mrs-loaded*)
                     ("Dependencies" :value dependencies :active ,*mrs-loaded*)
+		    ("FOL approximation" 
+		     :value fol :active ,*mrs-loaded*)
                     ("Rephrase" :value rephrase :active ,*mrs-loaded*)
                     ))))
     (when command
@@ -379,6 +381,8 @@
             (rmrs (funcall 'show-mrs-rmrs-window (prtree-edge tree)))
             (dependencies 
              (funcall 'show-mrs-dependencies-window (prtree-edge tree)))
+	    (fol 
+             (funcall 'show-mrs-fol-window (prtree-edge tree)))
             (rephrase
              (let ((symbol (when (find-package :mt)
                              (find-symbol "REPHRASE" :mt))))

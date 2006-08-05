@@ -444,7 +444,6 @@
       :components
       ((:file "infostr")))
 
-     #+:nil
      (:module "theorem-proving"
       :source-pathname "tproving"
       :binary-pathname "tproving"
@@ -453,7 +452,7 @@
       ((:file "gq")
        (:file "gq-to-fol")                           
        (:file "fol-to-nf")
-       (:file "dtp-interface")
+;;       (:file "dtp-interface")
        (:file "nf-to-fol")
        (:file "fol-to-mrs")))
 

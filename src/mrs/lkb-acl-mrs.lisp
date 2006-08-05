@@ -68,6 +68,13 @@
   :width *parse-window-width* 
   :height (round *parse-window-height* 2))
 
+(define-lkb-frame mrs-fol
+    ((mrsstruct :initform nil
+                :accessor mrs-fol-mrsstruct))
+  :display-function 'show-mrs-fol  
+  :width *parse-window-width* 
+  :height *parse-window-height*)
+
 ;;; XML output - eventually we want to do this generally for all windows
 
 ;;; Assume the output is to a file which is saved between calls
@@ -341,6 +348,7 @@
       (setf (clim:frame-pretty-name frame) (or title "UTool Scoped MRS"))
       (clim:run-frame-top-level frame))))
 
+
 (defun show-mrs-dependencies-window (edge &optional mrs title)
   (let ((mrs (or mrs (edge-mrs edge) (mrs::extract-mrs edge))))
     (if #+:lui (lui-status-p :mrs :dependencies) #-:lui nil
@@ -355,6 +363,20 @@
       mrsstruct)
     (setf (clim:frame-pretty-name mframe) (or title "Elementary Dependencies"))
     (clim:run-frame-top-level mframe)))
+
+(defun show-mrs-fol-window (edge &optional mrs title)
+  (let ((mrs (or mrs (edge-mrs edge) (mrs::extract-mrs edge))))
+      (mp:run-function "FOL (approximation)"
+       #'show-mrs-fol-window-really edge mrs title)))
+  
+(defun show-mrs-fol-window-really (edge &optional mrs title)
+  (let ((mframe (clim:make-application-frame 'mrs-fol))
+        (mrsstruct (or mrs (mrs::extract-mrs edge))))
+    (setf (mrs-fol-mrsstruct mframe) 
+      mrsstruct)
+    (setf (clim:frame-pretty-name mframe) (or title "FOL (approximation)"))
+    (clim:run-frame-top-level mframe)))
+
 
 (defun show-mrs-simple (mframe stream &key max-width max-height)
   (declare (ignore max-width max-height))
@@ -462,6 +484,16 @@
       (format 
        stream 
        "~%::: Dependencies structure could not be extracted~%"))))
+
+(defun show-mrs-fol (mframe stream &key max-width max-height)
+  (declare (ignore max-width max-height))
+  (let ((mrsstruct (mrs-fol-mrsstruct mframe)))
+    (if mrsstruct
+	(clim:with-text-style (stream (lkb-parse-tree-font))
+	  (mrs::output-fol-approximation mrsstruct stream))
+      ;; output-fol-approximation is in mrs/interface.lisp
+      (format stream "~%::: MRS structure could not be extracted~%"))))
+
 
 ;;; calling function (called from emacs)
 

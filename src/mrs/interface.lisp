@@ -25,6 +25,8 @@
 (defvar *mrs-discourse* nil)
 ;; interface control
 
+(defvar *mrs-fol-output-p* nil)
+
 (defvar *mrs-debug* nil)
 ;;; for debugging - set to latest mrs structure
 
@@ -59,7 +61,9 @@
   (when *mrs-base-output-p*
     (output-mrs1 mrs-struct 'simple stream))
   (when *mrs-scoping-output-p*
-         (process-mrs-struct mrs-struct nil 10 simplep stream))
+    (process-mrs-struct mrs-struct nil 10 simplep stream))
+  (when *mrs-fol-output-p*
+    (output-fol-approximation mrs-struct stream))
   (when *rmrs-xml-output-p*
          (output-rmrs1 (mrs-to-rmrs mrs-struct) 'xml stream))
   (when *rmrs-compact-output-p*
@@ -97,6 +101,32 @@
 	      (let ((binding-sets (make-scoped-mrs disj-struct)))
 		(show-some-scoped-structures disj-struct binding-sets
 					     stream maximum)))))))
+
+(defun output-fol-approximation (mrs stream)
+  (let ((fol-exp (make-fol-approximation mrs)))
+    (if fol-exp
+	(dolist (exp fol-exp)
+	  (format stream "~%~A" exp))
+      (format stream "~%Expression cannot be converted"))))
+
+
+(defun make-fol-approximation (mrs)  
+  (if mrs
+      (let ((disj-structs (disj-test-mrs mrs)))
+	(loop for disj-struct in disj-structs
+	    collect
+	      (let ((binding-sets (make-scoped-mrs disj-struct)))
+		(loop for binding in binding-sets
+		    collect
+		      (progn 
+			(setf *canonical-bindings* 
+			  (canonical-bindings binding))
+			(let ((gq-exp 
+			       (output-gq-mrs mrs)))
+			  (convert-gq-to-fol-top gq-exp)))))))))
+		      
+		
+
 
 
 ;;;
