@@ -17,6 +17,8 @@
 ;;; is made that all event variables are unquantified
 ;;; in the GQ rep.  In the FOL rep, they are
 ;;; given widest scope existential quantifiers.
+;;;
+;;; 8/2006 - make `u' things also behave this way
 
 (defun convert-gq-to-fol-top (gq-exp)
   ;;; top level call to these routines
@@ -113,7 +115,8 @@ maps to
 (defun gq-event-var-p (x)
   (and (atom x)
        (and (char= (elt (string x) 0) #\?)
-            (char-equal (elt (string x) 1) #\e))))
+            (or (char-equal (elt (string x) 1) #\e)
+		(char-equal (elt (string x) 1) #\u)))))
 ;;; char-equal matches both upper and lowercase
 
 ;;; quantifiers
