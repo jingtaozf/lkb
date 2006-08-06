@@ -228,6 +228,10 @@ squeaky := adj-lxm &
 [ ORTH.LIST.FIRST "squeaky",
   KEY.PRED "squeak_rel" ].
 
+white := adj-lxm &
+[ ORTH.LIST.FIRST "white",
+  KEY.PRED "white_rel" ].
+
 ;;; degree intensifiers
 
 so := deg-lxm &
