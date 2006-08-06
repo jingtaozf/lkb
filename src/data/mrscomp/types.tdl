@@ -81,6 +81,7 @@ index := *top* & [ INSTLOC string ].
 entity := index.
 event := entity.
 object := entity.
+pro-obj := entity.
 
 relation := feat-struc &
 [ HNDL handle,
@@ -253,7 +254,7 @@ pronm-lxm := const-lxm &
 [ HEAD det & [AGR /l 3sing, FORM /l norm],
   SPR <>,
   COMPS <>,
-  SEM [ HOOK.INDEX object] ].
+  SEM [ HOOK.INDEX pro-obj] ].
 
 noun-form := word &
  [ HEAD.FORM /l norm,

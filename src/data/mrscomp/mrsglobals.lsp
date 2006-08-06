@@ -44,7 +44,7 @@ order in the MRS output routines and also determines the order
 of variables in the indexed representation")
 
 (defparameter *top-level-rel-types* 
-    '("it_rel" "she_rel"))
+    '("it_rel" "she_rel" "he_rel" "they_rel" "her_rel" "kim_rel" "sandy_rel"))
 
 (defparameter *quant-rel-types* nil)
 
