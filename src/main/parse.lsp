@@ -655,6 +655,7 @@
          (statistics-mtasks *statistics*))))))
 
 (defun get-parse-return-values nil
+  (push (get-internal-run-time) *parse-times*)
   (values
    (statistics-etasks *statistics*)
    (statistics-stasks *statistics*)
