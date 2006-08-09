@@ -12,6 +12,10 @@
 (defvar *chart-node* -1) ;; MUST reset when initializing tchart
 (defvar *smaf-node-to-chart-node* nil) ;; MUST reset when initializing tchart
 
+;; hack: passes fallback edges from SAF-tchart construction function 
+;;       to parse function
+(defvar *fallback-medges* nil)
+
 ;;
 ;; SAF -> tchart
 ;;
@@ -27,6 +31,7 @@
 (defun new-tchart ()
   (setf *tchart* (make-tchart))
   (setf *tchart-max* 0)
+  (setf *fallback-medges* nil)
   (setf *smaf-id-to-edge-id* nil)
   (setf *HIDDEN-smaf-id-to-edge-id* nil)
   )
@@ -180,6 +185,13 @@
 
 ;; generate sentence strings for all token paths through S(M)AF XML input
 (defun xml-to-sentence-strings (xml &optional (stream t))
+  (if (lxml::xml-whitespace-p xml)
+      (return-from xml-to-sentence-strings))
+  (if (null xml)
+      (return-from xml-to-sentence-strings))
+  (let ((len (length xml)))
+    (when (string= "" (subseq xml (1- len) len))
+      (setf xml (subseq xml 0 (1- len)))))
   (when xml
     (let* ((saf (saf::xml-to-saf-object xml))
 	   (id (saf::saf-id saf)))
@@ -189,14 +201,40 @@
 	  for str = (format nil "~%;~a~%~a" id sent)
 	  do
 	    (princ str stream)
-	  collect str))))
+	  ;collect str
+		  ))))
 
 ;; read file containing one S(M)AF XML per line, and generate set sentence test items
 ;; (for itsdb)
 (defun file-to-sentence-strings (filename)
   (with-open-file (s filename :external-format :utf-8)
+    (with-open-file (s-out (format nil "~a.items" filename)
+		     :direction :output :if-exists :supersede :external-format :utf-8)
     (loop
-	while (xml-to-sentence-strings (read-line s nil nil)))))
+	for line = (read-line s nil nil)
+	while line
+	;append 
+	do
+	  (handler-case
+	      (xml-to-sentence-strings line s-out)
+	    #+:allegro
+	    (EXCL:INTERRUPT-SIGNAL () (error "Interrupt-Signal"))
+	    (error (condition)
+	      (format t  "~&Error: ~A~%whilst processing ~a~%" condition line))
+	    )
+	  ))))
+
+;; use to process set of files containing SAF XML segments into sentences
+(defun file-pattern-to-sentence-strings (pattern)
+  (require :osi)
+  (loop
+    for filename in
+	(excl.osi:command-output (format nil "ls ~a" pattern))
+      do 
+	(format t "~%; [processing file ~a]" filename)
+	(file-to-sentence-strings filename)
+	))
+
 
 ;; INEFFICIENT. never mind.
 ;; return all edge paths between node-x and node-y
@@ -297,6 +335,24 @@
       ;(print *smaf-node-to-chart-node*)
       )))
 
+;; token edge -> t1 ...
+;; morph edge -> m1 ...
+(defun initialize-smaf-id-to-edge-id-from-tchart nil
+  (setf *smaf-id-to-edge-id* nil)
+  ;; tedges
+  (loop
+      for tedge in (get-tedges)
+      for id = (edge-id tedge)
+      do
+	(push (cons (format nil "t~a" id) id) *smaf-id-to-edge-id*))
+  ;; medges
+  (loop
+      for medge in (get-medges)
+      for id = (edge-id medge)
+      do
+	(push (cons (format nil "m~a" id) id) *smaf-id-to-edge-id*))
+  *smaf-id-to-edge-id*)
+
 (defun saf-lattice-to-tchart (saf-lattice &key (filter #'identity) addressing)
   (loop 
       for e in 
@@ -343,19 +399,55 @@
   (let
       ((edge (funcall fn saf-edge addressing)))
     (when edge
-      (let* (
-	     (from (edge-from edge))
+      (let* ((from (edge-from edge))
 	     (to (edge-to edge))
-	     (cc (make-chart-configuration :begin from :end to :edge edge)))
+	     (cc))
+
 	(unless (and (integerp from) (integerp to))
 	  (format t "~&WARNING: ignoring malformed chart edge '~a' (from='~a', to='~a')"
 		  (edge-id edge) from to)
 	  (return-from augment-tchart-from-saf-edge))
+	
+	(when (smaf::saf-fs-feature-value 
+	       (smaf::saf-edge-l-content saf-edge) "fallback")
+	  ;; fallback edges are stored and resurrected during parsing if
+	  ;; lexical lookup fails
+	  ;(format t "~%ignoring FALLBACK edge")
+	  (push edge *fallback-medges*)
+	  (return-from augment-tchart-from-saf-edge *tchart*))
+	(setf cc (make-chart-configuration :begin from :end to :edge edge))
 	(setf (aref *tchart* to 0) (push cc (aref *tchart* to 0)))
 	(setf (aref *tchart* from 1) (push cc (aref *tchart* from 1)))
 	(when (> to *tchart-max*)
 	  ;;(format t "~%WARNING: increasing *tchart-max* to ~a" to)
 	  (setf *tchart-max* to)))))
+  *tchart*)
+
+;; for all unanalysed tedges, add appropriate medges
+;; from *fallback-medges*
+(defun augment-tchart-with-fallback-morphop nil  
+    (loop
+	with tedges = (get-unanalysed-tedges)
+	for medge in *fallback-medges*
+	for children = (edge-children medge)
+	when (intersection children tedges)
+	     ;; eg. any children are unanalysed
+	do
+	  (format t "~&;;; WARNING: adding fallback edge ~a (~a)"
+		  (edge-id-to-smaf-id (edge-id medge)) (edge-string medge))
+	  (add-edge-to-tchart medge)))
+
+;; make cc from edge
+;; and slot into *tchart* from/to array
+(defun add-edge-to-tchart (edge)
+  (let* ((from (edge-from edge))
+	 (to (edge-to edge))
+	 (cc (make-chart-configuration :begin from :end to :edge edge)))
+    (setf (aref *tchart* to 0) (push cc (aref *tchart* to 0)))
+    (setf (aref *tchart* from 1) (push cc (aref *tchart* from 1)))
+    (when (> to *tchart-max*)
+      ;;(format t "~%WARNING: increasing *tchart-max* to ~a" to)
+      (setf *tchart-max* to)))
   *tchart*)
 
 ;; input: edge of type 'tok' or 'tok+morph'
@@ -398,6 +490,11 @@
     ;; new edge id
     (push (cons smaf-id (incf *edge-id*)) *smaf-id-to-edge-id*)
     *edge-id*))
+
+(defun edge-id-to-smaf-id (edge-id)
+  (let ((match (car (rassoc edge-id *smaf-id-to-edge-id* :test #'equalp))))
+    (if match
+	(return-from edge-id-to-smaf-id match))))
 
 ;; init/final dealt with via correct initialization of mapping
 (defun smaf-node-to-chart-node (smaf-node)
@@ -451,6 +548,7 @@
 		  (or (smaf::saf-fs-feature-value smaf::l-content "stem")
 		      form)))
 	   (partialTree (smaf::saf-fs-feature-value smaf::l-content "partialTree"))
+	   (partialTree2 (smaf::saf-fs-feature-value smaf::l-content "+partialTree"))
 	   (gmap-unifs (smaf::get-gmap-unifs smaf::l-content))
 	   (dummy-entry 
 	    (get-dummy-unexpanded-lex-entry form 
@@ -498,7 +596,8 @@
 	 :word (string-upcase form)
 	 :current (string-upcase form)
 	 :stem stem
-	 :partial-tree (smaf::saf-fs-partial-tree-2-list-partial-tree partialTree)
+	 :partial-tree (or (smaf::saf-fs-partial-tree-2-list-partial-tree partialTree)
+			   (smaf::saf-plus-2-list-partial-tree partialTree2))
 	 :l-content dummy-entry
 	 )))))
 

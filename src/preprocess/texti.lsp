@@ -149,6 +149,7 @@
   (tchart-to-maf tchart :wordforms wordforms :saf t))
 
 (defun tchart-to-maf (&optional (tchart *tchart*) &key (wordforms t) saf)
+  (initialize-smaf-id-to-edge-id-from-tchart)
   (let* ((strm (make-string-output-stream))
 	 (tedges (get-tedges tchart))
 	 (medges (if wordforms
@@ -183,14 +184,15 @@
     (get-output-stream-string strm)))
 
 (defun medge-to-wordform-xml (medge &key saf)
-  (with-slots (from to string stem partial-tree) medge
+  (with-slots (from to string stem partial-tree id) medge
     (cond
      (saf
       (concatenate 'string
-	(format nil "<annot type='wordForm' deps='~a' source='v~a' target='v~a'>" 
+	(format nil "<annot type='wordForm' id='~a' deps='~a' source='v~a' target='v~a'>" 
 		;(if (caar partial-tree)
 		 ;   (cl-ppcre:regex-replace "_INFL_RULE$" (string (caar partial-tree)) "")
 		  ;"")
+		(edge-id-to-smaf-id id)
 		(edge-to-tokens-id-str medge)
 	       from to)
 	(format nil "<fs>")
@@ -261,8 +263,9 @@
    (cdr
     (loop
 	for tedge in (edge-to-leaf-token-edges edge)
+	for id = (edge-id tedge)
 	collect " "
-	collect (format nil "t~a" (edge-id tedge))))))
+	collect (edge-id-to-smaf-id id)))))
 
 (defun extract-descendent-tedges (children)
   (loop

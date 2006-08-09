@@ -109,16 +109,47 @@
       for val- = (saf-fv-value fv)
       for val = (if (symbolp val-)
 		    (resolve val- edge)
-		  val-)
+		  val-) ;; resolve val if nec
       for fv2 = (find feat l-content 
 		      :key #'saf-fv-feature
 		      :test #'string=)
+      if (and (not (string= "" feat))
+	      (char= #\+ (aref feat 0)))
+	 ;; support +variables which collect values in list
+      do
+	(if val
+	    (if fv2
+		(setf (saf-fv-value fv2) (cons val (saf-fv-value fv2)))
+	      (push (make-saf-fv :feature feat :value (list val))
+		    l-content)))
+      else
+	;; standard variables, for which value may be overwritten
       do
 	(if fv2
 	    (setf (saf-fv-value fv2) val)
 	  (push (make-saf-fv :feature feat :value val)
 		l-content)))
   l-content)
+
+;;; inject (overwrite) x into l-content
+;;; resolve any var's wrt edge
+;(defun inject (x l-content &key edge)
+;  (loop 
+;      for fv in x
+;      for feat = (saf-fv-feature fv)
+;      for val- = (saf-fv-value fv)
+;      for val = (if (symbolp val-)
+;		    (resolve val- edge)
+;		  val-) ;; resolve val if nec
+;      for fv2 = (find feat l-content 
+;		      :key #'saf-fv-feature
+;		      :test #'string=)
+;      do
+;	(if fv2
+;	    (setf (saf-fv-value fv2) val)
+;	  (push (make-saf-fv :feature feat :value val)
+;		l-content)))
+;  l-content)
 
 ;;
 
@@ -242,12 +273,12 @@
   (or
    (ppcre:register-groups-bind 
     (feat val)
-    ("^([\\w.]*)='([^']*)'.*$" spec)
+    ("^([+\\w.]*)='([^']*)'.*$" spec)
     (make-saf-fv :feature feat
 		      :value val))
    (ppcre:register-groups-bind 
     (feat val)
-    ("^([\\w.]*)=(.*).*$" spec)
+    ("^([+\\w.]*)=(.*).*$" spec)
     (make-saf-fv :feature feat
 		      :value (intern val)))))
 
@@ -425,14 +456,14 @@
     (dump-sentence-analyses2 :s-id id :stream s)))
   
 ;; FSPP socket server
-(defun run-fspp-server (&key (port 8876) (mode :string))
+(defun run-fspp-server (&key (port 8876) (mode :string) (o-mode :smaf))
   (r-server (lambda (x y)
-	      (r-server-fspp-input x y :mode mode))
+	      (r-server-fspp-input x y :mode mode :o-mode o-mode))
 	    "FSPP"
 	    :port port))
 
 ;; preprocess input chunk
-(defun r-server-fspp-input (s input &key (mode :string) (o-mode :saf))
+(defun r-server-fspp-input (s input &key (mode :string) (o-mode :smaf))
   (case mode
     (:string 
      (format t "~&;;; preprocessing input: ~a" input)

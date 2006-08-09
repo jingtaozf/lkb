@@ -44,8 +44,14 @@
   "a counter used by the user interface to make sure parse tree windows 
    etc have the current chart")
 
+;; [bmw] some globals for customization of the 'parse' function
+
 (defvar *generate-messages-for-all-unanalysed-tokens* nil)
 (defvar *unanalysed-tokens* nil)
+(defvar *maf-p* nil)
+(defvar *abort-parse-after-morphosyntax* nil)
+(defvar *abort-parse-if-no-spanning-morph-edge-path* nil)
+(defvar *fallback-pos-p* nil)
 
 ;;;
 ;;; [bmw] HOWTO collect into *unanalysed-tokens* tokens for which lexical lookup
@@ -485,10 +491,6 @@
 	      *morph-option*)
       (setf *foreign-morph-fn* nil))))  
 
-(defvar *maf-p* nil)
-(defvar *abort-parse-after-morphosyntax* nil)
-(defvar *abort-parse-if-no-spanning-morph-edge-path* nil)
-
 ;; example input: 
 ;; - basic: "the" "dog" "barks"
 ;; - bracketed: "Kim" "(" "(" "likes" ")" "Sandy" ")"
@@ -621,12 +623,15 @@
 	      (generate-messages-for-all-unanalysed-tokens *tchart*))
 	    (when *abort-parse-after-morphosyntax*
 	      (return-from parse (get-parse-return-values)))
-	    ;; [bmw] would it be safe to make this behaviour the default?
-	    ;; that is: if, after adding morpho-stem edges, there is no path
-	    ;; through lattice that consists of morpho-stem edges, we should
-	    ;; be able to assume that any parse attemp will fail...
+	    #+:maf
+	    (when *fallback-pos-p*
+	      (augment-tchart-with-fallback-morphop))
 	    (when (and *abort-parse-if-no-spanning-morph-edge-path*
 		       (not (medge-spanning-path-p)))
+	      ;; [bmw] would it be safe to make this behaviour the default?
+	      ;; that is: if, after adding morpho-stem edges, there is no path
+	      ;; through lattice that consists of morpho-stem edges, we should
+	      ;; be able to assume that any parse attemp will fail...
 	      (format t "~&;;; WARNING: No morph edge paths span input. Aborting parse.")
 	      (return-from parse (get-parse-return-values)))
 	    (instantiate-chart-with-stems-and-multiwords)

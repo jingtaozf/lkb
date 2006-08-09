@@ -583,7 +583,25 @@
 		   (error "string expected for saf-fs 'str': ~a" str2)))
 	   (rest (saf-fs-path-value '("rest") fs)))
       (cons (list rule str) (saf-fs-partial-tree-2-list-partial-tree rest)))))
-  
+
+(defvar *morph-rule-map* nil)
+
+;; [for testing purposes]
+;(defvar smaf::*morph-rule-map*
+;    '(("M1" . "THIRD_SG_FIN_VERB_ORULE")
+;      ("M2" . "PUNCT_PERIOD_ORULE")
+;      ("M0" . "PLUR_NOUN_ORULE")))
+
+;; support for external morphology built up from separate slots
+;; and where external morph names are mapped into grammal rules
+(defun saf-plus-2-list-partial-tree (plus-list)
+  (loop
+      for x2 in plus-list
+      for x = (or (cdr (assoc x2 *morph-rule-map* :test #'string=))
+		  x2)
+      collect (list (intern x :lkb) nil)))
+    
+
 (defun saf-num-lattice-nodes (saf)
   (length (saf-lattice-nodes (saf-lattice saf))))
 
