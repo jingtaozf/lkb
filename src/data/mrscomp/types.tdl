@@ -80,15 +80,17 @@ handle := index.
 index := *top* & [ INSTLOC string ].
 entity := index.
 event := entity.
-object := entity.
+ref-ind := entity.
 pro-obj := entity.
 
-relation := feat-struc &
-[ HNDL handle,
-  PRED string ].
+predsort := *top*.
 
-arg0-relation := relation & [ ARG0 entity ].
-arg1-relation := arg0-relation & [ ARG1 index ].
+relation := feat-struc &
+[ LBL handle,
+  PRED predsort,
+  ARG0 entity ].
+
+arg1-relation := relation & [ ARG1 index ].
 arg1-2-relation := arg1-relation & [ ARG2 index ].
 arg1-2-3-relation := arg1-2-relation & [ ARG3 index ].
 
@@ -97,8 +99,8 @@ arg1-2-3-relation := arg1-2-relation & [ ARG3 index ].
 ;;; ARG2 is the scope
 
 det-relation := relation &
-[ BV object,
-  RESTR handle,
+[ ARG0 ref-ind,
+  RSTR handle,
   BODY handle ].
   
 
@@ -189,19 +191,16 @@ lexeme := lex-item &
         HCONS /l <! !> ],
   KEY #key ].
 
-;;; LTOP is equal to the KEY's HNDL except for quantifiers
-;;; we also have a BV rather than an ARG0 on quantifiers, though
-;;; this is really just for convenience in recognising
-;;; quantifier relations
+;;; LTOP is equal to the KEY's LBL except for quantifiers
 
 quant-lxm := lexeme &
 [ SEM.HOOK [ INDEX #index ],
-  KEY [ BV #index ]].
+  KEY [ ARG0 #index ]].
 
 non-quant-lexeme := lexeme & 
 [ SEM.HOOK [ INDEX #index,
              LTOP #ltop ],
-  KEY [ HNDL #ltop,
+  KEY [ LBL #ltop,
         ARG0 #index ]].
 
 const-lxm := non-quant-lexeme & all-const-lxm.
@@ -230,13 +229,13 @@ det-lxm := quant-lxm & all-const-lxm &
             COMPS <>,
             SEM.HOOK [ INDEX #index, 
                        LTOP  #lh ]]>,
-  SEM [ HOOK [ INDEX #index & object,
+  SEM [ HOOK [ INDEX #index & ref-ind,
                LTOP handle ],
         HCONS <! [ HARG #rh, LARG #lh ] !>],
   KEY det-relation 
-      & [ HNDL handle,
-          BV  #index,
-          RESTR #rh ]]. 
+      & [ LBL handle,
+          ARG0  #index,
+          RSTR #rh ]]. 
 
 sg-det-lxm := det-lxm &
 [ HEAD [ AGR 3sing ]].
@@ -248,7 +247,7 @@ noun-lxm := non-quant-lexeme &
 [ HEAD noun,
   SPR < >,
   COMPS < >,
-  SEM [ HOOK.INDEX object ] ].
+  SEM [ HOOK.INDEX ref-ind ] ].
 
 pronm-lxm := const-lxm &
 [ HEAD det & [AGR /l 3sing, FORM /l norm],
@@ -428,7 +427,7 @@ comp-lxm := const-lxm &
 ;;; some built-in data types
 ;;;
 
-string := *top*.
+string := predsort.
 
 *list* := *top*.
 

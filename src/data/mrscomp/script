@@ -1,4 +1,4 @@
-(defparameter *grammar-version* "Grammar 7")
+(defparameter *grammar-version* "MRSCOMP")
 (lkb-load-lisp (this-directory) "globals.lsp")
 (lkb-load-lisp (this-directory) "user-fns.lsp")
 (lkb-load-lisp (this-directory) "mrsglobals.lsp")
