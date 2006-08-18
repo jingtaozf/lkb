@@ -423,9 +423,58 @@
 	  (setf *tchart-max* to)))))
   *tchart*)
 
+;; [bmw] very basic unknown word mechanism (doesn't require SMAF XML input)
+;; set to grammar type for unknown words
+;; (must also set *fallback-pos-p* to T)
+(defvar smaf::*unknown-word-type* nil)
+
 ;; for all unanalysed tedges, add appropriate medges
 ;; from *fallback-medges*
-(defun augment-tchart-with-fallback-morphop nil  
+(defun augment-tchart-with-fallback-morphop nil
+  (cond
+   (smaf::*unknown-word-type*
+    ;; very basic mechanism, same for all unknown words
+    (loop
+	for tedge in (get-unanalysed-tedges)
+	for children = (list tedge)
+	for leaf-edges = children
+	for children-words =
+	  (loop for l in leaf-edges
+	      collect (token-edge-string l))
+	for e-from = (edge-from tedge)
+	for e-to = (edge-to tedge)
+	for cfrom = (edge-cfrom tedge)
+	for cto = (edge-cto tedge)
+	for form = (str-list-2-str children-words)
+	for stem = (string-upcase form)
+	for dummy-entry = 
+	  (get-dummy-unexpanded-lex-entry
+	   stem
+	   :unifs (list (cons :|type| (2-str smaf::*unknown-word-type*)))
+	   :gmap '((:|type| NIL :sym)))
+	for medge =
+	  (make-morpho-stem-edge 
+	   :id (next-edge)
+	   :children children
+	   :leaves (loop for x in leaf-edges collect (edge-string x))
+	   :from e-from
+	   :to e-to
+	   :cfrom cfrom
+	   :cto cto
+	   :string form
+	   :word (string-upcase form)
+	   :current (string-upcase form)
+	   :stem stem
+	   :partial-tree nil
+	   :l-content dummy-entry
+	   )
+	do
+	  (format t "~&;;; WARNING: adding fallback edge for unknown token ~a (~a)"
+		  stem (edge-id tedge))
+	  (add-edge-to-tchart medge)))
+   (t
+    ;; more sophisticated mechanism
+    ;; (eg. map POS tags into grammar types)
     (loop
 	with tedges = (get-unanalysed-tedges)
 	for medge in *fallback-medges*
@@ -435,7 +484,7 @@
 	do
 	  (format t "~&;;; WARNING: adding fallback edge ~a (~a)"
 		  (edge-id-to-smaf-id (edge-id medge)) (edge-string medge))
-	  (add-edge-to-tchart medge)))
+	  (add-edge-to-tchart medge)))))
 
 ;; make cc from edge
 ;; and slot into *tchart* from/to array
