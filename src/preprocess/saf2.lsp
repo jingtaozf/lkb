@@ -469,8 +469,8 @@
 	   :l-content dummy-entry
 	   )
 	do
-	  (format t "~&;;; WARNING: adding fallback edge for unknown token ~a (~a)"
-		  stem (edge-id tedge))
+	  (format t "~&;;; WARNING: adding fallback edge with grammar type `~a' for unknown token ~a (~a)"
+		  (2-str smaf::*unknown-word-type*) stem (edge-id tedge))
 	  (add-edge-to-tchart medge)))
    (t
     ;; more sophisticated mechanism
