@@ -153,6 +153,29 @@
       (format ostream "~%;;; Parse failure: ~A " sentence))
     (finish-output ostream)))
 
+#|
+(defparameter lkb::*do-something-with-parse* 'mrs::batch-output-mrs-xml)
+|#
+
+#+:lkb
+(defun batch-output-mrs-xml nil
+  ;;; to be called from LKB batch processing
+  (let ((ostream (if (and lkb::*ostream* 
+                          (streamp lkb::*ostream*) 
+                          (output-stream-p lkb::*ostream*)) 
+                     lkb::*ostream*  t)))
+    (loop for parse in *parse-record*
+	do
+	  (let* ((mrs-struct (extract-mrs parse)))
+	    (output-mrs1 mrs-struct 'mrs-xml ostream)))
+    (finish-output ostream)))
+
+
+#|
+(defparameter lkb::*do-something-with-parse* 'mrs::batch-output-rmrs-only)
+;;; see convert.lisp
+|#
+
 
 #|
 (defparameter lkb::*do-something-with-parse* 'mrs::batch-output-scoped-mrs)
