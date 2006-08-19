@@ -142,6 +142,9 @@ duplicate variables")
                       (path-value fs *psoa-rh-cons-path*)))
 	 (a-cons-fs (when *psoa-a-cons-path*
                       (path-value fs *psoa-a-cons-path*)))
+	 (ing-fs (path-value fs (list (vsym 'ING) (vsym 'LIST))))
+	 ;;; FIX - hardwired names
+	 (ing (when ing-fs (construct-ing ing-fs nil *variable-generator*)))
          (psoa
           (make-psoa
            :top-h (if top-h-fs
@@ -156,12 +159,16 @@ duplicate variables")
                               h-cons-fs nil *variable-generator*))
            :a-cons (nreverse (construct-a-cons
                               a-cons-fs nil *variable-generator*))))
+	 (psoa (if ing (convert-ing-to-ing-rels psoa ing nil)
+		 psoa))
 	 #-:ecl
          (psoa (mt:map-mrs psoa :semi :forward))
          #-:logon
          (psoa (unfill-mrs psoa)))
     (when *mrs-record-all-nodes-p* (push (cons fs psoa) *all-nodes*))
     psoa))
+
+
 
 
 ;;; ***************************************************
@@ -497,7 +504,147 @@ duplicate variables")
 
 
 
+;;; *******************************************************
+;;;
+;;; ING (see rmrscomp grammar)
+;;;
+;;; *******************************************************
 
+;;; extracts INGs from FS
+;;; rmrscomp grammar has ING between a label for
+;;; every conjunction and each relation's label
+;;; including vacuous ones 
+
+(defun construct-ing (fs constr-list variable-generator)
+  (if (is-valid-fs fs)
+      (let ((label-list (fs-arcs fs)))
+        (if label-list
+            (let ((first-part (assoc (car *first-path*)
+                                     label-list))
+                  (rest-part (assoc (car *rest-path*)
+                                    label-list)))
+              (if (and first-part rest-part)
+                  (progn
+                    (push (create-ing-struct
+                           (cdr first-part)
+                           variable-generator)
+                          constr-list)
+                    (construct-ing
+                     (cdr rest-part)
+                     constr-list variable-generator))
+                constr-list))
+          constr-list))))
+
+
+(defun create-ing-struct (fs variable-generator)
+  ;;; FIX names should not be hardwired
+  (if (is-valid-fs fs)
+      (let* ((label-list (fs-arcs fs))
+	     (cnj (assoc (vsym 'CNJ) label-list))
+	     (cnjed (assoc (vsym 'CNJED) label-list)))
+	(make-in-group 
+	 :label-a (when cnj
+		    (create-variable (cdr cnj) variable-generator))
+	 :label-b (when cnjed
+		    (create-variable (cdr cnjed) 
+				     variable-generator))))))
+
+;;; this code removes vacuous INGs and converts the rest to
+;;; explicit conjunctions
+
+(defun convert-ing-to-ing-rels (mrs ings copy-p)
+  (if ings
+      (let* ((combined-ings (collect-ings ings))
+	     (new-mrs (if copy-p (copy-psoa-completely mrs)
+			mrs))
+	     (new-relations nil)
+	     (bindings nil))
+	(dolist (ing-set combined-ings)
+	  (if (cddr ing-set)
+	    (push 
+	     (make-ing-relation (car ing-set)
+				(cdr ing-set))
+	     new-relations)
+	    (push (cons (var-id (car ing-set)) (var-id (cadr ing-set)))
+		  bindings)))
+	(setf (psoa-liszt new-mrs)
+	  (append (psoa-liszt new-mrs) new-relations))
+	(when bindings
+	  (canonicalise-basemrs new-mrs
+				bindings))
+	new-mrs)
+  mrs))
+
+(defun collect-ings (ings)
+  (let ((ing-alist nil))
+    (dolist (ing ings)
+      (let* ((label-a (in-group-label-a ing))
+	     (label-b (in-group-label-b ing))
+	     (existing (assoc label-a ing-alist)))
+	(if existing
+	    (push label-b (cdr existing))
+	  (push (cons label-a (list label-b)) ing-alist))))
+    ing-alist))
+
+(defun make-ing-relation (label cnjed-list)
+  (let ((arg-no 0)
+	(flist nil))
+    (dolist (cnjed cnjed-list)
+      (push (make-fvpair :feature (vsym (format nil "ARG~A" arg-no))
+			 :value cnjed)
+	    flist)
+      (incf arg-no))
+    (make-rel :pred "ing_rel"
+	      :handel label
+	      :flist (nreverse flist))))
+
+;;; the following (which should be moved to another file at some point,
+;;; if it's kept) sticks an RMRS style quantifier back together - 
+;;; just to test scoping with RMRSs
+
+(defun remerge-quant-rels (mrs)
+  (let ((qlbls nil)
+	(norm-rels nil)
+	(qrel-alist nil))
+    (dolist (rel (psoa-liszt mrs))
+      (when (eql (rel-pred rel) (vsym 'rstr))
+	(push (rel-handel rel)
+	      qlbls)))
+    (dolist (rel (psoa-liszt mrs))
+      (if (member (rel-handel rel) qlbls)
+	  (let ((existing (assoc (rel-handel rel) qrel-alist)))
+	    (if existing (push rel (cdr existing))
+	      (push (cons (rel-handel rel) (list rel))
+		    qrel-alist)))
+	(push rel norm-rels)))
+    (let ((new-mrs
+	   (copy-psoa-completely mrs)))
+      (setf (psoa-liszt new-mrs)
+	(append norm-rels
+		(loop for qrec in qrel-alist
+		    collect
+		      (make-mrs-style-qrel qrec))))
+      new-mrs)))
+
+(defun make-mrs-style-qrel (qrec)
+  (let* ((qrels (cdr qrec))
+	 (rstr (find (vsym 'rstr) qrels :key #'rel-pred))
+	 (body (find (vsym 'body) qrels :key #'rel-pred))
+	 (remainder (remove body (remove rstr qrels))))
+    (unless (and rstr body remainder (not (cdr remainder)))
+      (error "Unexpected quantifier structures"))
+    (let ((rstr-hole (fvpair-value (car (rel-flist rstr))))
+	  (body-hole (fvpair-value (car (rel-flist body)))))
+	  (make-rel :pred (rel-pred (car remainder))
+		    :handel (car qrec)
+		    :flist (append
+			    (rel-flist (car remainder))
+			    (list 
+			    (make-fvpair :feature (vsym 'rstr)
+					 :value rstr-hole)
+			    (make-fvpair :feature (vsym 'body)
+					 :value body-hole)))))))
+	
 ;;; *******************************************************
 ;;;
 ;;; ACONS (attachment constraints - experimental, for Berthold
