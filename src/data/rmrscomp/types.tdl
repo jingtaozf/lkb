@@ -1,0 +1,484 @@
+feat-struc := *top*.
+
+syn-struc := feat-struc & 
+[ ORTH *dlist*,
+  HEAD pos,
+  SPR *list*,
+  COMPS *list*,
+  SEM semantics,
+  GAP *dlist*,
+  ARGS *list* ].
+
+pernum := feat-struc.
+3sing := pernum.
+non-3sing := pernum.
+
+pos := feat-struc & [ MOD modifier, FORM feat-struc ].
+
+modifier := feat-struc & [DIR dir, CAT *list*].
+dir := feat-struc.
+pre := dir.
+post := dir.
+
+form := feat-struc.
+norm := form.
+there := form.
+it := form.
+fin  := form.
+inf := form.
+pastp := form.
+presp := form.
+
+aux := feat-struc.
++   := aux.
+-   := aux.
+
+nominal := pos & [ AGR pernum ].
+
+noun := nominal & [MOD.CAT <> ].
+noun-mod := nominal & [MOD [CAT < [ HEAD noun ] >, DIR pre]].
+verb := pos & [MOD.CAT <>, AUX /l -].
+det := nominal & [MOD.CAT <>].
+prep := pos & [MOD.CAT < [ SPR *ne-list* ] >].
+adv := pos & [MOD.CAT < [ SPR *list*, HEAD verb ] >].
+adj := pos & [MOD [CAT < [ HEAD noun ] >, DIR pre]].
+deg := pos & [MOD [CAT < [ SPR *list* ] >, DIR pre]].
+conj := pos & [MOD.CAT <>].
+comp := pos & [MOD.CAT <>].
+
+;;; schematically, we are concerned with three types of slot
+;;; for the semantics
+;;; 1. Accumulators: RELS (aka LZT, LISZT) and HCONS (aka QEQS)
+;;;    Implemented as difference lists --- only for accumulating values.  
+;;;    The only operation on accumulators during parsing is difference 
+;;;    list append. 
+;;; 2. Hooks: INDEX and LTOP
+;;;    Pointers into the RELS which are set up lexically: the only
+;;;    way of accessing parts of the semantics of a sign.
+;;; 3. Slots: e.g., the SPR's INDEX.  A pointer into a syntax `slot', 
+;;;    which will be coindexed with a hook in another sign.
+;;; 
+;;; 1 and 2 are represented in the semantics
+
+
+semantics := feat-struc &
+[ HOOK hook,
+  RELS *dlist*,
+  HCONS *dlist*,
+  ING *dlist* ].
+
+hook := feat-struc &
+[ INDEX index,
+  LTOP handle ].
+
+
+qeq := feat-struc &
+[ HARG handle,
+  LARG handle ].
+
+ing := feat-struc &
+[ CNJ handle,
+  CNJED handle ].
+
+handle := index.
+
+index := *top* & [ INSTLOC string ].
+entity := index.
+event := entity.
+ref-ind := entity.
+pro-obj := entity.
+
+predsort := *top*.
+
+ep := feat-struc &
+[ LBL handle,
+  PRED *top* ].
+
+relation := ep &
+[ PRED predsort,
+  ARG0 entity ].
+
+arg-relation := ep &
+[ PRED argsort,
+  VAR index ].
+
+argsort := *top*.
+
+arg1 := argsort.
+arg2 := argsort.
+arg3 := argsort.
+rstr := argsort.
+body := argsort.
+
+
+phrase := syn-struc &
+[ COMPS <> ].
+
+unary-rule := phrase &
+[ ORTH #orth,
+  SEM #cont,
+  ARGS < [ ORTH #orth, SEM #cont ] > ].
+
+unary-rule-passgap := unary-rule &
+[ GAP #gap,
+  ARGS < [ GAP #gap ] > ].
+
+binary-rule := phrase &
+[ ORTH [LIST #ofront, LAST #otail],
+  SEM.RELS [LIST #cfront, LAST #ctail ],
+  SEM.HCONS [LIST #qfront, LAST #qtail ],
+  SEM.ING [LIST #ifront, LAST #itail ],
+  ARGS < [ ORTH [LIST #ofront, LAST #omiddle ],
+           SEM.RELS [LIST #cfront, LAST #cmiddle ],
+           SEM.HCONS [LIST #qfront, LAST #qmiddle ],
+           SEM.ING [LIST #ifront, LAST #imiddle ]],
+         [ ORTH [LIST #omiddle, LAST #otail ],
+           SEM.RELS [LIST #cmiddle, LAST #ctail ],
+	   SEM.HCONS [LIST #qmiddle, LAST #qtail ],
+           SEM.ING [LIST #imiddle, LAST #itail ]] > ].
+
+binary-rule-passgap := binary-rule &
+[ GAP [LIST #gfront, LAST #gtail ],
+  ARGS < [ GAP [LIST #gfront, LAST #gmiddle ] ],
+         [ GAP [LIST #gmiddle, LAST #gtail ] ] > ].
+
+ternary-rule := phrase &
+[ ORTH [LIST #ofront, LAST #otail],
+  SEM.RELS [LIST #cfront, LAST #ctail ],
+  SEM.HCONS [LIST #qfront, LAST #qtail ],
+  SEM.ING [LIST #ifront, LAST #itail ],
+  GAP [ LIST #gfront,
+	LAST #gtail ],
+  ARGS < [ ORTH [LIST #ofront, LAST #omiddle1 ],
+           SEM.RELS [LIST #cfront, LAST #cmiddle1 ],
+           SEM.HCONS [LIST #qfront, LAST #qmiddle1 ],
+           SEM.ING [LIST #ifront, LAST #imiddle1 ],
+           GAP [LIST #gfront, LAST #gmiddle1 ] ],
+         [ ORTH [LIST #omiddle1, LAST #omiddle2 ],
+           SEM.RELS [LIST #cmiddle1, LAST #cmiddle2 ],
+           SEM.HCONS [LIST #qmiddle1, LAST #qmiddle2 ],
+           SEM.ING [LIST #imiddle1, LAST #imiddle2 ],
+           GAP [LIST #gmiddle1, LAST #gmiddle2 ] ],
+         [ ORTH [LIST #omiddle2, LAST #otail ],
+           SEM.RELS [LIST #cmiddle2, LAST #ctail ],
+           SEM.HCONS [LIST #qmiddle2, LAST #qtail ],
+           SEM.ING [LIST #imiddle2, LAST #itail ],
+           GAP [LIST #gmiddle2, LAST #gtail ] ] > ].
+
+head-initial := phrase &
+[ HEAD #head,
+  SEM [ HOOK #hook ],
+  ARGS < [ HEAD #head,
+           SEM [ HOOK #hook ]], ... > ].
+
+unary-head-initial := unary-rule-passgap & head-initial.
+unary-head-initial-startgap := unary-rule & head-initial &
+[ GAP <! syn-struc !>,
+  ARGS < [ GAP <! !> ] > ].
+binary-head-initial := binary-rule-passgap & head-initial.
+binary-head-initial-startgap := binary-rule & head-initial &
+[ GAP <! syn-struc !>,
+  ARGS < [ GAP <! !> ], [ GAP <! !> ] > ].
+ternary-head-initial := ternary-rule & head-initial.
+
+binary-head-final := binary-rule &
+[ HEAD #head,
+  SEM [ HOOK #hook ],
+  ARGS < syn-struc, [ HEAD #head,
+                      SEM [ HOOK #hook ] ] > ].
+
+binary-head-final-passgap := binary-head-final & binary-rule-passgap.
+
+root := binary-head-final &
+[ HEAD verb,
+  SPR < > ].
+
+lex-item := syn-struc &
+[ ORTH [ LIST [ REST #rest ], LAST #rest ],
+  GAP <! !> ].
+
+;;; KEY is only used for convenience in setting up lexemes
+;;; so I've made it an appropriate feature of lexemes only
+
+lexeme := lex-item &
+[ SEM [ RELS.LIST.FIRST #key,
+        HCONS /l <! !> ],
+  KEY #key ].
+
+;;; LTOP is equal to the KEY's ING except for quantifiers
+
+quant-lxm := lexeme &
+[ SEM.HOOK [ INDEX #index ],
+  SEM.ING <! !>,
+  KEY [ ARG0 #index ]].
+
+non-quant-lexeme := lexeme & 
+[ SEM.HOOK [ INDEX #index,
+             LTOP #ltop ],
+  SEM.ING <! [ CNJ #ltop, CNJED #lbl ] !>,
+  KEY [ LBL #lbl, ARG0 #index ]].
+
+const-lxm := non-quant-lexeme & all-const-lxm.
+
+;;; the following is just here for the inflectional
+;;; rule that pumps constant lexemes
+
+all-const-lxm := lexeme.
+
+word := lex-item &
+[ HEAD #head,
+  SPR #spr,
+  COMPS #comps,
+  SEM #cont,
+  ARGS < lexeme &
+         [ HEAD #head,
+           SPR #spr,
+           COMPS #comps,
+           SEM #cont ] > ].
+
+det-lxm := quant-lxm & all-const-lxm &
+[ HEAD det & [AGR #agr],
+  SPR < >,
+  COMPS < phrase &
+          [ HEAD noun & [ AGR #agr ],
+            COMPS <>,
+            SEM.HOOK [ INDEX #index, 
+                       LTOP  #lh ]]>,
+  SEM [ HOOK [ INDEX #index & ref-ind,
+               LTOP handle ],
+        HCONS <! [ HARG #rh, LARG #lh ] !>,
+        RELS <! [ LBL #h, ARG0 #index ], [  LBL #h, PRED rstr, VAR #rh ], 
+                               [  LBL #h, PRED body, VAR handle ] !> ]].
+
+sg-det-lxm := det-lxm &
+[ HEAD [ AGR 3sing ]].
+
+pl-det-lxm := det-lxm &
+[ HEAD [ AGR non-3sing ]].
+
+noun-lxm := non-quant-lexeme &
+[ HEAD noun,
+  SPR < >,
+  COMPS < >,
+  SEM [ HOOK.INDEX ref-ind,
+        RELS <! relation !> ] ].
+
+pronm-lxm := const-lxm &
+[ HEAD det & [AGR /l 3sing, FORM /l norm],
+  SPR <>,
+  COMPS <>,
+  SEM [ HOOK.INDEX pro-obj,
+        RELS <! relation !> ] ].
+
+noun-form := word &
+ [ HEAD.FORM /l norm,
+   ARGS < noun-lxm > ].
+
+sing-noun := noun-form &
+[ HEAD.AGR 3sing ].
+
+plur-noun := noun-form &
+[ HEAD.AGR non-3sing ].
+
+verb-lxm := non-quant-lexeme &
+[ HEAD verb,
+  SPR < phrase & [HEAD det, SPR <>, COMPS <>] >,
+  SEM [ HOOK.INDEX event ] ].
+
+verb-form := word &
+[ HEAD.FORM /l inf,
+  ARGS < verb-lxm > ].
+
+past-verb := verb-form &
+[HEAD.FORM fin].
+
+past-part-verb := verb-form &
+[HEAD.FORM pastp].
+
+pres-part-verb := verb-form &
+[HEAD.FORM presp].
+
+sing-verb := verb-form &
+[ HEAD.FORM fin, SPR < [HEAD.AGR 3sing ] > ].
+
+plur-verb := verb-form &
+[ HEAD.FORM fin, SPR < [HEAD.AGR non-3sing ] > ].
+
+no-arg-verb := verb-lxm &
+[ SPR < [HEAD.FORM it] >,
+  COMPS <>,
+  SEM.RELS <! relation !> ].
+
+;;; the hook/slot combination is done lexically here
+;;; normal verbs are non-scopal - though note that because
+;;; the ltop of the NP is not coindexed, the equating
+;;; of the ltops doesn't actually have much effect
+
+intrans-verb := verb-lxm &
+[ SPR < [HEAD.FORM norm, SEM.HOOK.INDEX #arg1, SEM.HOOK.LTOP #ing] >,
+  COMPS <>,
+  SEM.HOOK.LTOP #ing,
+  SEM.RELS <! relation & [ LBL #h], [ LBL #h, PRED arg1, VAR #arg1 ] !> ].
+
+trans-verb := verb-lxm &
+[ SPR < [HEAD.FORM norm, SEM.HOOK.INDEX #arg1, SEM.HOOK.LTOP #ing] >,
+  COMPS < phrase & [HEAD det, HEAD.FORM norm, SPR <>, COMPS <>, 
+                    SEM.HOOK.INDEX #arg2, SEM.HOOK.LTOP #ing] >,
+  SEM.HOOK.LTOP #ing,
+  SEM.RELS <! relation & [ LBL #h], [ LBL #h, PRED arg1, VAR #arg1 ], 
+                        [ LBL #h, PRED arg2, VAR #arg2 ] !> ].
+
+ditranspp-verb := verb-lxm &
+[ SPR < [HEAD.FORM norm, SEM.HOOK.INDEX #arg1, SEM.HOOK.LTOP #ing] >,
+  COMPS < phrase & [HEAD det, HEAD.FORM norm, SPR <>, COMPS <>, 
+                    SEM.HOOK.INDEX #arg2, SEM.HOOK.LTOP #ing],
+          phrase & [HEAD prep, SPR <>, SEM.HOOK.INDEX #arg3, 
+                    SEM.HOOK.LTOP #ing] >,
+  SEM.HOOK.LTOP #ing,
+  SEM.RELS <! relation & [ LBL #h], [ LBL #h, PRED arg1, VAR #arg1 ], 
+                        [ LBL #h, PRED arg2, VAR #arg2 ],
+                        [ LBL #h, PRED arg3, VAR #arg3 ] !> ].
+
+ditransnp-verb := verb-lxm &
+[ SPR < [HEAD.FORM norm, SEM.HOOK.INDEX #arg1, SEM.HOOK.LTOP #ing] >,
+  COMPS < phrase & [HEAD det, HEAD.FORM norm, SPR <>, COMPS <>,
+                    SEM.HOOK.INDEX #arg2, SEM.HOOK.LTOP #ing],
+          phrase & [HEAD det, HEAD.FORM norm, SPR <>, COMPS <>,
+                    SEM.HOOK.INDEX #arg3, SEM.HOOK.LTOP #ing] >,
+  SEM.HOOK.LTOP #ing,
+  SEM.RELS <! relation & [ LBL #h], [ LBL #h, PRED arg1, VAR #arg1 ], 
+                        [ LBL #h, PRED arg2, VAR #arg2 ],
+                        [ LBL #h, PRED arg3, VAR #arg3 ] !> ].
+
+;;; the following are assumed to all be scopal verbs
+;;; at the moment, we don't have a notion of an external argument
+;;; in the hook, so we have to delve into the SPR
+
+
+srv-lxm := verb-lxm &
+[ SPR < #1  >,
+  COMPS < phrase & [HEAD comp, HEAD.FORM inf, 
+                    SPR < #1 >, SEM.HOOK.LTOP #lh] >,
+  SEM.HCONS <! [ HARG #arg1, LARG #lh ] !>,
+  SEM.RELS <! relation & [ LBL #h], [ LBL #h, PRED arg1, VAR #arg1 ] !> ].
+
+scv-lxm := verb-lxm &
+[ SPR < #1 & [HEAD.FORM norm] >,
+  COMPS < phrase & [HEAD comp, HEAD.FORM inf, 
+                    SPR < #1 & [SEM.HOOK.INDEX #arg1] >, 
+                    SEM.HOOK.LTOP #lh] >,
+  SEM.HCONS <! [ HARG #arg2, LARG #lh ] !>,
+  SEM.RELS <! relation & [ LBL #h], [ LBL #h, PRED arg1, VAR #arg1 ], 
+                        [ LBL #h, PRED arg2, VAR #arg2 ] !> ].
+
+
+scomp-lxm := verb-lxm &
+[ SPR < [HEAD.FORM norm, SEM.HOOK.INDEX #arg1] >,
+  COMPS < phrase & [HEAD.FORM fin, 
+                    SPR <>,
+                    SEM.HOOK.LTOP #lh ] >, 
+  SEM.HCONS <! [ HARG #arg2, LARG #lh ] !>,
+  SEM.RELS <! relation & [ LBL #h], [ LBL #h, PRED arg1, VAR #arg1 ], 
+                        [ LBL #h, PRED arg2, VAR #arg2 ] !> ].
+
+auxv-lxm := verb-lxm &
+[ HEAD.AUX +,
+  SPR < #1 >,
+  COMPS < phrase & [HEAD verb, 
+                    SPR < #1 >, SEM.HOOK.INDEX #arg1] >,
+  SEM.RELS <! relation & [ LBL #h], [ LBL #h, PRED arg1, VAR #arg1 ] !> ].
+
+prep-lxm := const-lxm &
+[ HEAD prep & [MOD.CAT < [SEM.HOOK #hook ]>],
+  SPR <>,
+  COMPS < phrase & [HEAD det, HEAD.FORM norm, 
+                    SPR <>, COMPS <>, 
+                    SEM.HOOK [ INDEX #arg1,
+                               LTOP #ing ]] >,
+  SEM.HOOK #hook & [ LTOP #ing ],
+  SEM.RELS <! relation & [ LBL #h ], 
+              [ LBL #h, PRED arg1, VAR #arg1 ] !> ].
+
+;;; this is for intersective modification
+
+adv-lxm := const-lxm &
+[ HEAD adv & 
+       [ MOD.CAT < [SEM.HOOK #hook ] > ],
+  SPR <>,
+  COMPS <>,
+  SEM.HOOK #hook,
+  SEM.RELS <! relation !> ].
+
+;;; this is for intersective modification
+
+adj-lxm := const-lxm &
+[ HEAD adj & 
+       [MOD.CAT < [SEM.HOOK #hook ] > ],
+  SPR <>,
+  COMPS <>,
+  SEM.HOOK #hook,
+  SEM.RELS <! relation !> ].
+
+
+;;; this doesn't give the right semantics,
+;;; but ignore for now.  Looks to me like these are
+;;; underconstrained anyway
+
+deg-lxm := const-lxm &
+[ HEAD deg & [MOD.CAT < [SEM.HOOK #hook ] > ],
+  SPR <>,
+  COMPS <>,
+  SEM.HOOK #hook,
+  SEM.RELS <! relation !> ].
+
+;;; forget semantics of conjunction for the time being!
+
+conj-lxm := const-lxm &
+[ HEAD conj,
+  SPR <>,
+  COMPS <>,
+  SEM.RELS <! relation !> ].
+
+comp-lxm := const-lxm &
+[HEAD comp, HEAD.FORM #form,
+ SPR #1,
+ COMPS < phrase & [HEAD verb, 
+                   HEAD.FORM #form, 
+                   SPR #1,
+                   SEM.HOOK #hook ] >, 
+ SEM.HOOK #hook,
+ SEM.RELS <! relation !> ].
+
+;;;
+;;; some built-in data types
+;;;
+
+string := predsort.
+
+*list* := *top*.
+
+*ne-list* := *list* &
+ [ FIRST *top*,
+   REST *list* ].
+
+*null* := *list*.
+
+*dlist* := *top* &
+[ LIST *list*,
+  LAST *list* ].
+
+*null-dlist* := *dlist* &
+[ LIST #last,
+  LAST #last ].
+
+*ne-dlist* := *dlist* &
+[LIST *ne-list* ].
+
+;;;
+;;; types for node labels used in tree display
+;;;
+
+label :=  syn-struc &
+[ LABEL-NAME string ].
+
+

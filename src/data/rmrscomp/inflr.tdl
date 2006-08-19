@@ -1,0 +1,53 @@
+%(letter-set (!c bdfglmnprstz))
+%(letter-set (!s abcdefghijklmnopqrtuvwxyz))
+%(letter-set (!a abcdefghijklmnopqrstuvwxyz))
+%(letter-set (!t bcdfghjklmnpqrstvwxz))
+%(letter-set (!v aeiou))
+
+;;; verb infl rules
+
+past-v_irule :=
+%suffix (* ed) (!ty !tied) (e ed) (!t!v!c !t!v!c!ced)
+past-verb. 
+
+non3sg-v_irule :=
+plur-verb &
+[ ORTH #1,
+  ARGS < [ ORTH #1 ] > ].
+
+3sg-v_irule :=
+%suffix (!s !ss) (!ss !ssses) (ss sses)
+ sing-verb.
+
+pres-part-v_irule :=
+%suffix (!t!v!c !t!v!c!cing) (* ing) (e ing) (ee eeing) (ie ying)
+ pres-part-verb.
+
+past-part-v_irule :=
+%suffix (* ed) (!ty !tied) (e ed) (!t!v!c !t!v!c!ced)
+past-part-verb. 
+
+
+infl-v_irule :=
+verb-form &
+[ ORTH #1,
+  ARGS < [ ORTH #1 ] > ].
+
+;;; noun infl rules
+
+pl-noun_irule := 
+%suffix (!s !ss) (!ss !ssses) (ss sses)
+plur-noun.
+
+sg-noun_irule := 
+sing-noun &
+[ ORTH #1,
+  ARGS < [ ORTH #1 ] > ].
+
+;;; constant lexeme -> word
+
+const-pump :=
+word &
+[ ORTH #1,
+  ARGS < all-const-lxm  & [ ORTH #1 ] > ].
+

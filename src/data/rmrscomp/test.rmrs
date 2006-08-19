@@ -1,0 +1,182 @@
+
+<rmrs cfrom='0' cto='14'>
+<label vid='1'/>
+<ep cfrom='-1' cto='-1'><gpred>the_rel</gpred><label vid='3'/><var sort='x' vid='4'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>dog_rel</gpred><label vid='7'/><var sort='x' vid='4'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>bark_rel</gpred><label vid='8'/><var sort='e' vid='2'/></ep>
+<rarg><rargname>RSTR</rargname><label vid='3'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='3'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='8'/><var sort='x' vid='4'/></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='7'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='25'>
+<label vid='1'/>
+<ep cfrom='-1' cto='-1'><gpred>every_rel</gpred><label vid='3'/><var sort='x' vid='4'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>dog_rel</gpred><label vid='7'/><var sort='x' vid='4'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>chase_rel</gpred><label vid='8'/><var sort='e' vid='2'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>some_rel</gpred><label vid='10'/><var sort='x' vid='9'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>cat_rel</gpred><label vid='13'/><var sort='x' vid='9'/></ep>
+<rarg><rargname>RSTR</rargname><label vid='3'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='3'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='8'/><var sort='x' vid='4'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='8'/><var sort='x' vid='9'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='10'/><var sort='h' vid='11'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='10'/><var sort='h' vid='12'/></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='7'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='11'/></hi><lo><label vid='13'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='20'>
+<label vid='1'/>
+<ep cfrom='-1' cto='-1'><gpred>every_rel</gpred><label vid='3'/><var sort='x' vid='4'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>dog_rel</gpred><label vid='7'/><var sort='x' vid='4'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>chase_rel</gpred><label vid='8'/><var sort='e' vid='2'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>her_rel</gpred><label vid='10001'/><var sort='u' vid='9'/></ep>
+<rarg><rargname>RSTR</rargname><label vid='3'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='3'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='8'/><var sort='x' vid='4'/></rarg>
+<ing><ing-a><var sort='h' vid='8'/></ing-a><ing-b><var sort='h' vid='10001'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='7'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='10'>
+<label vid='1'/>
+<ep cfrom='-1' cto='-1'><gpred>kim_rel</gpred><label vid='3'/><var sort='u' vid='4'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>bark_rel</gpred><label vid='10001'/><var sort='e' vid='2'/></ep>
+<ing><ing-a><var sort='h' vid='3'/></ing-a><ing-b><var sort='h' vid='10001'/></ing-b></ing>
+</rmrs>
+
+<rmrs cfrom='0' cto='9'>
+<label vid='1'/>
+<ep cfrom='-1' cto='-1'><gpred>rain_rel</gpred><label vid='5'/><var sort='e' vid='2'/></ep>
+</rmrs>
+
+<rmrs cfrom='0' cto='21'>
+<label vid='1'/>
+<ep cfrom='-1' cto='-1'><gpred>the_rel</gpred><label vid='3'/><var sort='x' vid='4'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>dog_rel</gpred><label vid='7'/><var sort='x' vid='4'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>try_rel</gpred><label vid='8'/><var sort='e' vid='2'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>bark_rel</gpred><label vid='10'/><var sort='e' vid='11'/></ep>
+<rarg><rargname>RSTR</rargname><label vid='3'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='3'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='8'/><var sort='x' vid='4'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='8'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='10'/><var sort='x' vid='4'/></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='7'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='10'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='43'>
+<label vid='1'/>
+<ep cfrom='-1' cto='-1'><gpred>the_rel</gpred><label vid='3'/><var sort='x' vid='4'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>dog_rel</gpred><label vid='7'/><var sort='x' vid='4'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>believe_rel</gpred><label vid='8'/><var sort='e' vid='2'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>the_rel</gpred><label vid='12'/><var sort='x' vid='13'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>cat_rel</gpred><label vid='16'/><var sort='x' vid='13'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>try_rel</gpred><label vid='10'/><var sort='e' vid='11'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>bark_rel</gpred><label vid='18'/><var sort='e' vid='19'/></ep>
+<rarg><rargname>RSTR</rargname><label vid='3'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='3'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='8'/><var sort='x' vid='4'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='8'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='12'/><var sort='h' vid='14'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='12'/><var sort='h' vid='15'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='10'/><var sort='x' vid='13'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='10'/><var sort='h' vid='17'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='18'/><var sort='x' vid='13'/></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='7'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='10'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='14'/></hi><lo><label vid='16'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='17'/></hi><lo><label vid='18'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='18'>
+<label vid='1'/>
+<ep cfrom='-1' cto='-1'><gpred>the_rel</gpred><label vid='3'/><var sort='x' vid='4'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>dog_rel</gpred><label vid='7'/><var sort='x' vid='4'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>have_rel</gpred><label vid='8'/><var sort='e' vid='2'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>bark_rel</gpred><label vid='10'/><var sort='e' vid='9'/></ep>
+<rarg><rargname>RSTR</rargname><label vid='3'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='3'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='8'/><var sort='e' vid='9'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='10'/><var sort='x' vid='4'/></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='7'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='18'>
+<label vid='1'/>
+<ep cfrom='-1' cto='-1'><gpred>the_rel</gpred><label vid='3'/><var sort='x' vid='4'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>dog_rel</gpred><label vid='7'/><var sort='x' vid='4'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>be_rel</gpred><label vid='8'/><var sort='e' vid='2'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>bark_rel</gpred><label vid='10'/><var sort='e' vid='9'/></ep>
+<rarg><rargname>RSTR</rargname><label vid='3'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='3'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='8'/><var sort='e' vid='9'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='10'/><var sort='x' vid='4'/></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='7'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='27'>
+<label vid='1'/>
+<ep cfrom='-1' cto='-1'><gpred>the_rel</gpred><label vid='3'/><var sort='x' vid='4'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>dog_rel</gpred><label vid='7'/><var sort='x' vid='4'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>near_rel</gpred><label vid='8'/><var sort='e' vid='2'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>the_rel</gpred><label vid='10'/><var sort='x' vid='9'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>cat_rel</gpred><label vid='13'/><var sort='x' vid='9'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>bark_rel</gpred><label vid='10001'/><var sort='e' vid='2'/></ep>
+<rarg><rargname>RSTR</rargname><label vid='3'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='3'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='8'/><var sort='x' vid='9'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='10'/><var sort='h' vid='11'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='10'/><var sort='h' vid='12'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='10001'/><var sort='x' vid='4'/></rarg>
+<ing><ing-a><var sort='h' vid='8'/></ing-a><ing-b><var sort='h' vid='10001'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='7'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='11'/></hi><lo><label vid='13'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='27'>
+<label vid='1'/>
+<ep cfrom='-1' cto='-1'><gpred>the_rel</gpred><label vid='3'/><var sort='x' vid='4'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>dog_rel</gpred><label vid='7'/><var sort='x' vid='4'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>bark_rel</gpred><label vid='8'/><var sort='e' vid='2'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>near_rel</gpred><label vid='10001'/><var sort='e' vid='2'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>the_rel</gpred><label vid='10'/><var sort='x' vid='9'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>cat_rel</gpred><label vid='13'/><var sort='x' vid='9'/></ep>
+<rarg><rargname>RSTR</rargname><label vid='3'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='3'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='8'/><var sort='x' vid='4'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='10001'/><var sort='x' vid='9'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='10'/><var sort='h' vid='11'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='10'/><var sort='h' vid='12'/></rarg>
+<ing><ing-a><var sort='h' vid='8'/></ing-a><ing-b><var sort='h' vid='10001'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='7'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='11'/></hi><lo><label vid='13'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='21'>
+<label vid='1'/>
+<ep cfrom='-1' cto='-1'><gpred>loud_rel</gpred><label vid='3'/><var sort='e' vid='2'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>the_rel</gpred><label vid='4'/><var sort='x' vid='5'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>dog_rel</gpred><label vid='8'/><var sort='x' vid='5'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>bark_rel</gpred><label vid='10001'/><var sort='e' vid='2'/></ep>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='7'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='10001'/><var sort='x' vid='5'/></rarg>
+<ing><ing-a><var sort='h' vid='3'/></ing-a><ing-b><var sort='h' vid='10001'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='6'/></hi><lo><label vid='8'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='22'>
+<label vid='1'/>
+<ep cfrom='-1' cto='-1'><gpred>the_rel</gpred><label vid='3'/><var sort='x' vid='4'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>squeak_rel</gpred><label vid='7'/><var sort='x' vid='4'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>dog_rel</gpred><label vid='10001'/><var sort='x' vid='4'/></ep>
+<ep cfrom='-1' cto='-1'><gpred>bark_rel</gpred><label vid='8'/><var sort='e' vid='2'/></ep>
+<rarg><rargname>RSTR</rargname><label vid='3'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='3'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='8'/><var sort='x' vid='4'/></rarg>
+<ing><ing-a><var sort='h' vid='7'/></ing-a><ing-b><var sort='h' vid='10001'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='7'/></lo></hcons>
+</rmrs>
