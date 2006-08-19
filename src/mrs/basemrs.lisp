@@ -2548,7 +2548,7 @@ to test
 ;;; ****************************************************************
 
 ;;; cf rmrs/comp.lisp 
-;;; destrctive
+;;; destructive
 
 (defun canonicalise-sement-hook (hook bindings)
   (canonicalise-basemrs-variable (hook-index hook) bindings)
@@ -2562,7 +2562,23 @@ to test
     (canonicalise-sement-hook (slot-hook slot) bindings))
   slots)
 
-;;; 
+
+(defun canonicalise-basemrs (mrs bindings)
+  ;;; destructive
+  (canonicalise-basemrs-variable (psoa-index mrs)
+				 bindings)
+  (canonicalise-basemrs-variable (psoa-top-h mrs)
+				 bindings)
+  (canonicalise-basemrs-liszt (basemrs-liszt mrs)
+			      bindings)
+  (canonicalise-basemrs-hcons-list (basemrs-h-cons mrs)
+				   bindings)
+  mrs)
+
+  
+;;; individial functions are 
+;;; called from: reset-mrs-for-disj-cons
+;;; make-sement-from-sements
 
 (defun canonicalise-basemrs-liszt (liszt bindings)
   (dolist (ep liszt)
