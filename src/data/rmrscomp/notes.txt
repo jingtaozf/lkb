@@ -1,0 +1,81 @@
+This grammar is derived from the mrscomp grammar and is essentially
+identical to it, except as necessary to produce (a variant of) RMRS directly.
+
+1. decomposed relations
+
+main relations are type relation, argument relations are type arg-relation.
+relation and arg-relation are subtypes of ep.  PRED value of
+an arg-relation is always a subtype of argsort: these are types.
+
+The first element on the RELS list for a lexical entry is taken to be 
+the main relation and is coindexed with KEY, for convenience in setting up
+the lexicon.
+
+Lexical types are defined to have a list of relations, all with the same LBL
+
+trans-verb := verb-lxm &
+[ SPR < [HEAD.FORM norm, SEM.HOOK.INDEX #arg1, SEM.HOOK.LTOP #ing] >,
+  COMPS < phrase & [HEAD det, HEAD.FORM norm, SPR <>, COMPS <>, 
+                    SEM.HOOK.INDEX #arg2, SEM.HOOK.LTOP #ing] >,
+  SEM.HOOK.LTOP #ing,
+  SEM.RELS <! relation & [ LBL #h], [ LBL #h, PRED arg1, VAR #arg1 ], 
+                        [ LBL #h, PRED arg2, VAR #arg2 ] !> ].
+
+
+2. INGs
+
+ING are added for accumulation of ING constraints.
+ING append just like HCONS and RELS.  
+
+The approach to ING adopted in RASP-RMRS is to create INGs between
+modifier and modifiee.  The MRS->RMRS conversion code simulates
+this. It would be possible to do this directly in these grammars too,
+but would mean considerable modification - we would no longer be able
+to unify LTOPs.  Experiment here with an alternative which gives a
+slightly different notion of INGs (should be interconvertable).
+
+ING constraints relate handles - CNJ is the label of the (implicit)
+conjunction, CNJED is the label of the relations being conjoined.
+
+e.g., every big bad dog - l0:big(x), l1:bad(x), l2:dog(x), ing(l3,l0),
+ing(l3,l1), ing(l3,l2), l4:every(x), l4:rstr(h5), l4:body(h6), h5 qeq l3
+
+equivalent to: l0:big(x), l1:bad(x), l2:dog(x), l3:conj(l0,l1,l2),
+l4:every(x), l4:rstr(h5), l4:body(h6), h5 qeq l3
+
+e.g., bark loudly - l1:bark(e), l1:ARG1(x), l2:loud(e), ing(l3,l1), ing(l3,l2)
+
+The LTOP of non-quantifiers is in an ING with the LBL of the main (KEY) 
+relation
+
+non-quant-lexeme := lexeme & 
+[ SEM.HOOK [ INDEX #index,
+             LTOP #ltop ],
+  SEM.ING <! [ CNJ #ltop, CNJED #lbl ] !>,
+  KEY [ LBL #lbl, ARG0 #index ]].
+
+This is the only way that INGs are added in the grammar.
+
+The effect of this is to have vacuous INGs - effectively this is as though
+everything is projecting a conjunction and in many cases it will be 
+unnecessary
+
+e.g., every dog - l2:dog(x), ing(l3,l2), l4:every(x), l4:rstr(h5), l4:body(h6), h5 qeq l3
+
+equivalent to: l2:dog(x), l3:conj(l2), l4:every(x), l4:rstr(h5), l4:body(h6), h5 qeq l3
+
+The experimental code in mrsoutput converts INGs to explicit n-ary
+conjunctions and removes vacuous ones.
+
+This is a more serious manipulation than we usually do in conversion
+to an MRS from the grammar FSs and I am not exactly happy about this.
+
+What are the implications for generation?
+
+The structures with conj explicit will scope, although to test this I
+have converted the quantifiers back to MRS style since otherwise
+considerable modification would be needed to the code that looks for
+free variables etc.
+
+e.g., l0:big(x), l1:bad(x), l2:dog(x), l3:conj(l0,l1,l2),
+l4:every(x, h5, h6), h5 qeq l3

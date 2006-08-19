@@ -51,7 +51,7 @@ comp := pos & [MOD.CAT <>].
 ;;; 1. Accumulators: RELS (aka LZT, LISZT) and HCONS (aka QEQS)
 ;;;    Implemented as difference lists --- only for accumulating values.  
 ;;;    The only operation on accumulators during parsing is difference 
-;;;    list append. 
+;;;    list append.  ING is added for this experimental grammar. 
 ;;; 2. Hooks: INDEX and LTOP
 ;;;    Pointers into the RELS which are set up lexically: the only
 ;;;    way of accessing parts of the semantics of a sign.
