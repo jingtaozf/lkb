@@ -104,6 +104,8 @@ arg-relation := ep &
 
 argsort := *top*.
 
+;;; FIX - add the underspecified argn cases
+
 arg1 := argsort.
 arg2 := argsort.
 arg3 := argsort.
@@ -205,7 +207,7 @@ lexeme := lex-item &
         HCONS /l <! !> ],
   KEY #key ].
 
-;;; LTOP is equal to the KEY's ING except for quantifiers
+;;; LTOP is ING to the KEY's LBL except for quantifiers
 
 quant-lxm := lexeme &
 [ SEM.HOOK [ INDEX #index ],
