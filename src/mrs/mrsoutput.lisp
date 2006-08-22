@@ -161,7 +161,6 @@ duplicate variables")
                               a-cons-fs nil *variable-generator*))))
 	 (psoa (if ing (convert-ing-to-ing-rels psoa ing nil)
 		 psoa))
-	 #-:ecl
          (psoa (mt:map-mrs psoa :semi :forward))
          #-:logon
          (psoa (unfill-mrs psoa)))

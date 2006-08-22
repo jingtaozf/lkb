@@ -17,7 +17,7 @@
     :source-pathname (get-sources-dir "lkb")
     :binary-pathname (get-binaries-dir "lkb")
     :source-extension "lisp"
-    :depends-on (#+:lkb "lkb" #+(and :xml (not :lkb)) "pxml")
+    :depends-on (#+:lkb "lkb" #+(and :xml (not :lkb)) "pxml" "ppcre")
 
     :finally-do
     (let* ((package (find-package :lkb))
@@ -40,7 +40,8 @@
       :source-extension "lsp"
       :components
                ((:file "lkb-package")
-                (:file "mrs-package")))
+                (:file "mrs-package")
+                (:file "mt-package")))
      
      (:module "core"
       :source-pathname "mrs"
@@ -105,5 +106,34 @@
       :source-pathname "mrs"
       :binary-pathname "mrs"
       :components
-      ((:file "dependencies")))))
+      ((:file "dependencies")))
+     
+     (:module "mt"
+      :source-pathname "mt"
+      :binary-pathname "mt"
+      :source-extension "lisp"
+      :components
+      ((:file "version" :load-only t)
+       #+:logon
+       (:file "mrsglobals" :load-only t)
+       (:file "globals")
+       #+:null
+       (:file "patches")
+       (:file "mrs")
+       (:file "vpm")
+       #+:null
+       (:file "transfer")
+       (:file "comparison")
+       #+:null
+       (:file "translate")
+       #+:clim
+       (:file "clim")
+       #+:null
+       (:file "semi")
+       #+:null
+       (:file "fragments")
+       #+:null
+       (:file "lm")
+       #+:null
+       (:file "utool")))))
 
