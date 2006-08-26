@@ -87,7 +87,9 @@
                     (test (subseq line (aref starts 1) (aref ends 1)))
                     (right (subseq line (aref starts 2) (aref ends 2))))
                 (setf (pmr-direction pmr)
-                  (cons (position #\> test) (position #\< test)))
+                  (if (string= test "==")
+                    (cons t t)
+                    (cons (position #\> test) (position #\< test))))
                 (when (position #\= test)
                   (setf (pmr-test pmr) :equality))
                 (ppcre:do-scans

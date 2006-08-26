@@ -1428,8 +1428,9 @@
     (when (and *tsdb-result-hook* (integerp readings) (> readings 0))
       (multiple-value-bind (wealth condition)
           (ignore-errors (funcall *tsdb-result-hook* result))
-        (setf result 
-          (or wealth (acons :error (format nil "~a" condition) result)))))
+        (when (or wealth condition)
+          (setf result 
+            (or wealth (acons :error (format nil "~a" condition) result))))))
     (when (get-field :fan result)
       (accumulate-mt-statistics result))
 

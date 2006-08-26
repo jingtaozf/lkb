@@ -396,7 +396,6 @@
   (or
    (let ((flist (rel-flist (ed-raw ed))))
      (find *scope-feat* flist :key #'fvpair-feature))
-   #+:logon
    (let ((pred (ed-predicate ed)))
      (and (stringp pred) (search "_q_rel" pred)))))
 
@@ -406,13 +405,11 @@
       (ed
        (let ((type (ed-predicate thing)))
          (or (eq type *eds-message-relation*)
-             #+:logon
              (when (stringp type) (search "_m_rel" type))
              (ignore-errors (equal-or-subtype type *eds-message-relation*)))))
       (rel
        (let ((type (rel-pred thing)))
          (or (eq type *eds-message-relation*)
-             #+:logon
              (when (stringp type) (search "_m_rel" type))
              (ignore-errors
               (equal-or-subtype type *eds-message-relation*))))))))

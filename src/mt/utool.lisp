@@ -43,7 +43,10 @@
                    (lkb::current-user) (lkb::current-pid)))
              (options (rest (assoc action *utool-options*)))
              (command (when options
-                        (format nil "~a ~a" *utool-binary* options)))
+                        (format
+                         nil
+                         "~a ~a '~a'"
+                         *utool-binary* options in)))
              (mrs::*output-ignored-roles* mrs::*scoping-ignored-roles*))
         (when command
           (with-open-file (stream in
@@ -54,7 +57,7 @@
                  (run-process 
                   command
                   :wait t
-                  :output out :if-output-exists :supersede :input in 
+                  :output out :if-output-exists :supersede :input "/dev/null" 
                   :error-output "/dev/null" :if-error-output-exists :append))
                 bindings)
             (case action
@@ -62,9 +65,7 @@
                (when (probe-file out)
                  (with-open-file (stream out :direction :input)
                    (setf bindings (ignore-errors (read stream)))))))
-            #+:null
             (ignore-errors (delete-file in))
-            #+:null
             (ignore-errors (delete-file out))
             (case action
               (:solve bindings)

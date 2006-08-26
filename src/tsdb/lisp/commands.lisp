@@ -433,11 +433,10 @@
   (when (member name (list :all))
     (format 
      stream 
-     "~atrees hook: ~:[none~;`~(~a~)()'~]; ~
-      semantix hook: ~:[none~;`~(~a~)()'~];~%"
-     prefix
-     *tsdb-trees-hook* *tsdb-trees-hook* 
-     *tsdb-semantix-hook* *tsdb-semantix-hook*))
+     "~atrees hook: ~:[none~;`~(~a~)()'~];~%~
+      ~asemantix hook: ~:[none~;`~(~a~)()'~];~%"
+     prefix *tsdb-trees-hook* *tsdb-trees-hook* 
+     prefix *tsdb-semantix-hook* *tsdb-semantix-hook*))
   (when (member name (list :all))
     (format 
      stream 

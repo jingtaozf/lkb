@@ -178,10 +178,10 @@
       (if daughterp
         (format
          stream
-         "~<#D[~;~a~@[ {~,2f}~]~@[ ~(~a~)~]~:[~* ...~; ~_~a~]~;]~:>"
+         "~<#D[~;~a {~,2f}~@[ ~(~a~)~]~:[~* ...~; ~_~a~]~;]~:>"
          (list
           (edge-id object)
-          (when (numberp (edge-score object)) (edge-score object))
+          (if (numberp (edge-score object)) (edge-score object) 0)
           (mtr-id (edge-rule object))
           recursep
           (edge-daughter object)))
@@ -1975,6 +1975,7 @@
   (let ((*readtable* (copy-readtable))
         (*package* (find-package :lkb)))
     (set-syntax-from-char #\] #\space *readtable*)
+    (set-syntax-from-char #\} #\space *readtable*)
     (with-input-from-string (stream string)
       (read-derivation stream))))
 
@@ -1989,11 +1990,15 @@
          (id (when (and c (char= c #\[))
                (read-char stream)
                (read stream nil nil)))
+         (score (let ((c (peek-char t stream nil nil)))
+                  (when (and c (char= c #\{))
+                    (read-char stream)
+                    (read stream nil nil))))
          (mtr (when (numberp id)
                 (read stream nil nil)))
          (daughter (when (and mtr (symbolp mtr))
                      (read-derivation stream))))
-    (when id (make-edge :id id :rule mtr :daughter daughter))))
+    (when id (make-edge :id id :score score :rule mtr :daughter daughter))))
 
 (defun browse (object)
   (typecase object
