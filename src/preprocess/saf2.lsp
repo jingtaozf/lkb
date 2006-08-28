@@ -235,61 +235,6 @@
 	(file-to-sentence-strings filename)
 	))
 
-
-;; INEFFICIENT. never mind.
-;; return all edge paths between node-x and node-y
-(defun get-edge-paths-x2y (node-x node-y &key back-array)
-  (unless back-array
-    (setf back-array (get-paths-x2y node-x node-y)))
-  (if (equalp node-x node-y)
-      (list nil)
-    (loop
-	with sources = (aref back-array node-y)
-	for source in sources
-	for edge-paths = (get-edge-paths-x2y node-x source
-					     :back-array back-array)
-	for edges = (get-tedges-source-target source node-y)
-	append
-	  (loop
-	      for edge-path in edge-paths
-	      append
-		(loop
-		    for edge in edges
-		    collect (append edge-path (list edge)))))))
-
-;; return set of edges on paths from node-x to node-y
-(defun get-edges-x2y (node-x node-y)
-  (loop
-      with array = (get-paths-x2y node-x node-y)
-      for target from 0 to (1- (array-dimension array 0))
-      for sources = (aref array target)
-      append
-	(loop for source in sources
-	    append (get-tedges-source-target source target))))
-
-;; return token edges spanning source to target
-(defun get-tedges-source-target (source target)
-  ;; FIXME: inefficient
-  (intersection
-   (get-tedges-source source)
-   (get-tedges-target target)))
-
-;; return token edges outgoing from source node
-(defun get-tedges-source (source)
-  (loop
-      for cc in (aref *tchart* source 1)
-      for edge = (chart-configuration-edge cc)
-      when (token-edge-p edge)
-	   collect edge))
-
-;; return token edges ingoing to target node
-(defun get-tedges-target (target)
-  (loop
-      for cc in (aref *tchart* target 0)
-      for edge = (chart-configuration-edge cc)
-      when (token-edge-p edge)
-	   collect edge))
-
 ;; if set, perform cleanup operations after converting
 ;; SAF to tchart
 (defvar *clean-tchart-p* nil)
@@ -428,21 +373,35 @@
 ;; (must also set *fallback-pos-p* to T)
 (defvar smaf::*unknown-word-type* nil)
 
-;; for all unanalysed tedges, add appropriate medges
-;; from *fallback-medges*
+;; generate fallback edges, then add them to tchart
 (defun augment-tchart-with-fallback-morphop nil
+  (loop
+      for medge in (get-fallback-morphop-edges)
+      for children = (edge-children medge)
+;;      for grammar-type = 
+;;	(dag-type
+;;	 (tdfs-indef
+;;	  (lex-entry-full-fs
+;;	   (slot-value medge 'l-content))))
+      do
+	(format t "~&;;; WARNING: adding fallback edge ~a for unknown token ~a"
+		(edge-id medge) children)
+	(add-edge-to-tchart medge)))
+
+;; generate fallback edges
+(defun get-fallback-morphop-edges nil
   (cond
    (smaf::*unknown-word-type*
     ;; very basic mechanism, same for all unknown words
     (loop
-	for tedge in (get-unanalysed-tedges)
+	for tedge in (get-unanalysed-and-unspanned-tedges)
+	for e-from = (edge-from tedge)
+	for e-to = (edge-to tedge)
 	for children = (list tedge)
 	for leaf-edges = children
 	for children-words =
 	  (loop for l in leaf-edges
 	      collect (token-edge-string l))
-	for e-from = (edge-from tedge)
-	for e-to = (edge-to tedge)
 	for cfrom = (edge-cfrom tedge)
 	for cto = (edge-cto tedge)
 	for form = (str-list-2-str children-words)
@@ -452,7 +411,7 @@
 	   stem
 	   :unifs (list (cons :|type| (2-str smaf::*unknown-word-type*)))
 	   :gmap '((:|type| NIL :sym)))
-	for medge =
+	collect
 	  (make-morpho-stem-edge 
 	   :id (next-edge)
 	   :children children
@@ -467,24 +426,17 @@
 	   :stem stem
 	   :partial-tree nil
 	   :l-content dummy-entry
-	   )
-	do
-	  (format t "~&;;; WARNING: adding fallback edge with grammar type `~a' for unknown token ~a (~a)"
-		  (2-str smaf::*unknown-word-type*) stem (edge-id tedge))
-	  (add-edge-to-tchart medge)))
+	   )))
    (t
     ;; more sophisticated mechanism
     ;; (eg. map POS tags into grammar types)
     (loop
-	with tedges = (get-unanalysed-tedges)
+	with tedges = (get-unanalysed-and-unspanned-tedges)
 	for medge in *fallback-medges*
 	for children = (edge-children medge)
 	when (intersection children tedges)
 	     ;; eg. any children are unanalysed
-	do
-	  (format t "~&;;; WARNING: adding fallback edge ~a (~a)"
-		  (edge-id-to-smaf-id (edge-id medge)) (edge-string medge))
-	  (add-edge-to-tchart medge)))))
+	collect medge))))
 
 ;; make cc from edge
 ;; and slot into *tchart* from/to array
@@ -650,18 +602,6 @@
 	 :l-content dummy-entry
 	 )))))
 
-(defun get-min-edge-cfrom (edges)
-  (when edges
-    (loop
-	for e in edges
-	minimize (edge-cfrom e))))
-
-(defun get-max-edge-cto (edges)
-  (when edges
-    (loop
-	for e in edges
-	maximize (edge-cto e))))
-
 (defun smaf-id-to-token-edge (id tedges &key hidden)
   (if hidden
       (find (HIDDEN-smaf-id-to-edge-id id hidden) tedges :key #'token-edge-id :test #'=)
@@ -766,8 +706,3 @@
 	for (count . tok) in (sort count-toks #'> :key #'car)
 	do
 	  (format t "~%~a ~a" count tok))))
-
-;; true if exists path of morph edges spanning tchart
-(defun medge-spanning-path-p nil
-  (aref (get-paths-x2y 0 *tchart-max* 
-		       :filter #'morpho-stem-edge-p) *tchart-max*))

@@ -97,8 +97,7 @@
   #+(or :lui (and :allegro (version>= 6 0)))
   (pushnew :lsp *features*)
   #+(and :xml :preprocessor)
-  (pushnew :maf *features*)
-  (pushnew :maftest *features*))
+  (pushnew :maf *features*))
 
 
 (defparameter *lisp-specific-directory*
@@ -210,6 +209,7 @@
        (:file "lxml")
        #+(and :maf)
        (:file "saf2")
+       (:file "graph")
        #+(and :maf)
        (:file "saf")
        #+(and :maf)

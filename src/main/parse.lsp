@@ -1670,8 +1670,11 @@ an unknown word, treat the gap as filled and go on from there.
 	(return)))))
 
 (defun generate-messages-for-all-unanalysed-tokens (tchart)
+  (declare (ignore tchart)) 
+  ;; [bmw] need to encapsulate *tchart* and associated variables in an object
+  ;; before we can start passing it around...
   (loop
-      for tedge in (get-unanalysed-tedges tchart)
+      for tedge in (get-unanalysed-and-unspanned-tedges)
       do
 	(with-slots (from to word) tedge
 	    (push word *unanalysed-tokens*)
@@ -2618,7 +2621,7 @@ an unknown word, treat the gap as filled and go on from there.
 	    when (morpho-stem-edge-p edge)
 	    collect edge)))
 
-;; return tedges with no medge ancestors
+;; [bmw] return tedges with no medge ancestors
 (defun get-unanalysed-tedges (&optional (tchart *tchart*))
   (let ((tedges (get-tedges tchart))
 	(medges (get-medges tchart)))
@@ -2629,3 +2632,26 @@ an unknown word, treat the gap as filled and go on from there.
 	  (setf tedges
 	    (set-difference tedges tchildren)))
     tedges))
+
+;; [bmw] returns tedges with no accompanying medge and for which there
+;; exists no alternative lattice path of medges
+(defun get-unanalysed-and-unspanned-tedges nil
+  (loop
+      for tedge in (get-unanalysed-tedges)
+      for source = (edge-from tedge)
+      for target = (edge-to tedge)
+      unless (medge-spanned-p source target)
+      collect tedge))
+
+(defun get-min-edge-cfrom (edges)
+  (when edges
+    (loop
+	for e in edges
+	minimize (edge-cfrom e))))
+
+(defun get-max-edge-cto (edges)
+  (when edges
+    (loop
+	for e in edges
+	maximize (edge-cto e))))
+
