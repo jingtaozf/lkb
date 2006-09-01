@@ -3,3 +3,4 @@
   (:export)
   (:nicknames :saf))
 
+(pushnew :smaf *features*)
