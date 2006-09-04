@@ -100,17 +100,19 @@
      (t
       (expand-psort-entry entry)
       (let ((new-fs (lex-entry-full-fs entry)))
-      (unless new-fs
-	(format lkb::*lkb-background-stream*
-		"~%No feature structure for ~A~%" lex-id))
-      (when (and new-fs
-		 *grammar-specific-batch-check-fn*)
-	(funcall *grammar-specific-batch-check-fn* new-fs id))   
-      (when new-fs
-	(sanitize (existing-dag-at-end-of (tdfs-indef new-fs) start-path)
-		  lex-id
-		  (reverse start-path)))
-      new-fs)))))
+	(if (eq :FAIL new-fs)
+	    (setf new-fs nil))
+	(unless new-fs
+	  (format lkb::*lkb-background-stream*
+		  "~%No feature structure for ~A~%" lex-id))
+	(when (and new-fs
+		   *grammar-specific-batch-check-fn*)
+	  (funcall *grammar-specific-batch-check-fn* new-fs id))   
+	(when new-fs
+	  (sanitize (existing-dag-at-end-of (tdfs-indef new-fs) start-path)
+		    lex-id
+		    (reverse start-path)))
+	new-fs)))))
 
 (defun sanitize (dag-instance id path &optional (ostream t))
   ;;; walks over a fs, looking for things of type
