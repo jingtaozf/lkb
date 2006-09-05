@@ -124,7 +124,7 @@ lkb_data:
 	      src/data src/*.el lexdb etc; \
 	)
 
-lkb_binaries: lkb_linux # lkb_solaris
+lkb_binaries: lkb_linux lkb_macos # lkb_solaris
 
 lkb_linux: lkb_linux_x86_32
 
@@ -152,8 +152,10 @@ lkb_linux@cypriot:
 	  echo "(setf (system:getenv \"DISPLAY\") nil)"; \
 	  echo "(compile-system \"tsdb\" :force t)"; \
 	  echo "(excl:exit)"; \
-	) | ( cd /lingo/local/acl; \
-              ACL_LOCALE=C ./alisp -I clim.dxl -qq && touch ${ROOT}/.yes; )
+	) | ( ACL_LOCALE=C \
+              LD_LIBRARRY_PATH=${ROOT}/lkb/lib/linux.x86.32 \
+                cd /lingo/local/acl; \
+                alisp -I clim -qq && touch ${ROOT}/.yes; )
 
 lkb_linux@ar:
 	${RM} -f ${LROOT}/.yes;
@@ -204,6 +206,16 @@ lkb_solaris:
 	      solaris; \
 	  /usr/pubsw/bin/scp /tmp/lkb_solaris.tgz \
             oe@lingo:${TARGET}/test; \
+	)
+
+lkb_macos: lkb_macos_ppc_32
+
+lkb_macos_ppc_32:
+	( \
+	  cd ${ROOT}/lkb; \
+	  ${TAR} Svczf ${TARGET}/builds/${DATE}/lkb_macos.ppc.32.tgz \
+              --exclude=".nfs*" \
+	      bin/macos.ppc.32/yzlui.app; \
 	)
 
 lkb_windows_clean:
