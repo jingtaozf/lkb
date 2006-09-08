@@ -97,7 +97,7 @@
 ;; return array defining paths from node-x to node-y
 (defun get-paths-x2y (node-x node-y &key (filter #'identity))
   (let* (;; create array to store paths from x
-	 (paths-from-x (make-array (list (1+ *tchart-max*))))
+	 (paths-from-x (make-array (list (1+ *tchart-max*)) :initial-element nil))
 	 ;; initialise agenda
 	 agenda)
     (unless (= node-x node-y)

@@ -669,6 +669,7 @@
    (statistics-mtasks *statistics*)))
 
 (defun file-xml-p (filename)
+  #+:xml ;; [bmw] fail if :xml not compiled in
   (xml-p
    (read-file-to-string filename :numchars 5)))
 
