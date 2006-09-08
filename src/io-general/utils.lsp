@@ -5,6 +5,15 @@
 
 (in-package :lkb)
 
+;; 'define-constant' taken from SBCL manual
+;; Under ANSI spec, application of defconstant multiple times is undefined
+;; unless values are eql. SBCL treats this undefined behaviour as an error.
+;; What's worse, in SBCL defconstant takes effect both at load time and at
+;; compile time...
+(defmacro define-constant (name value &optional doc)
+       `(defconstant ,name (if (boundp ',name) (symbol-value ',name) ,value)
+	  ,@(when doc (list doc))))
+
 (defun check-for (character istream name)
    (let ((next-char (peek-char t istream nil 'eof)))
      (if (char= next-char character)
@@ -626,7 +635,7 @@
 
 ;; mapping from recognised names to canonical names (first element in each list)
 ;; TO DO: add Emacs coding names
-(defparameter *coding-system-names*
+(define-constant %coding-system-names%
     '(
       (:iso8859-1 :latin1 :ascii :8-bit :1250 :iso88591)
       (:1251) ;; For MS Windows
@@ -714,7 +723,7 @@
 			 (eq x (car y))))))))
 
 (defun canonical-coding-system-name (name)
-  (car (find name *coding-system-names* 
+  (car (find name %coding-system-names% 
 	     :test #'(lambda (x y)
 		       (member x y)))))
 
@@ -732,7 +741,7 @@
   (unless
       (setf coding
 	(canonical-coding-system-name coding))
-    (error "set-coding-system(): invalid coding system `~a'.~%~%valid coding systems are~%~a" raw *coding-system-names*))
+    (error "set-coding-system(): invalid coding system `~a'.~%~%valid coding systems are~%~a" raw %coding-system-names%))
     
   #+:allegro
   (let* ((allegro-coding-name (internal-coding-system-name coding))
