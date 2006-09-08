@@ -51,7 +51,16 @@
 ;; enough for now.
 
 (defpackage "CDB" 
-  (:use :common-lisp #-:ecl :make #+mcl :ccl))
+  (:use :common-lisp #-:ecl :make #+:mcl :ccl)
+  (:export #:open-write 
+	   #:close-write 
+	   #:open-read 
+	   #:close-read 
+	   #:write-record 
+	   #:read-record 
+	   #:all-keys 
+	   #:num-entries 
+	   #:close-cdb))
 
 (in-package :cdb)
 

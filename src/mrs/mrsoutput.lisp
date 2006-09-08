@@ -499,7 +499,7 @@ duplicate variables")
 
 (defun create-hcons-relation (type)
   (cond ((eql type *qeq-type*) "qeq")
-        (t (error "Unknown relation type ~A"))))
+        (t (error "Unknown relation type ~A" type))))
 
 
 

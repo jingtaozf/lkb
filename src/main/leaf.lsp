@@ -251,10 +251,10 @@
 
 (defun add-leaf-type (name parents constraint default comment daughters)
   (if daughters
-      (format t "~%Error: leaf type ~A declared with daughters")
+      (format t "~%Error: leaf type ~A declared with daughters" name)
     (let ((existing-type (get-type-entry name)))
       (cond ((null parents)
-	     (format t "~%Error: type ~A has no parents specified"))
+	     (format t "~%Error: type ~A has no parents specified" name))
 	    ((and existing-type
 		  (not (is-leaf-type *leaf-types* name)))
 	     (format t "~%Error: attempt to redefine non-leaf type ~A as leaf type" name))

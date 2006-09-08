@@ -391,7 +391,7 @@ at this point).
   (declare (ignore lex-e))
   (unless main-rels
     (error "~%~A has no main relations - instantiate-semantic-indices
-            should not be called"))
+            should not be called" lex-id))
   (apply-rels-to-base lex-id base-fs main-rels 
                            *main-semantics-path*))
 

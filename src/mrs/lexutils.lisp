@@ -95,7 +95,7 @@
              (when (zerop (mod (incf n) 5000))
                #+:gcdebug (excl:print-type-counts) 
                #+:gcdebug (system::gsgc-parameters)
-               (excl:gc)
+               #+:allegro (excl:gc)
                #+:gcdebug (system::gsgc-parameters)
                #+:gcdebug (excl:print-type-counts))
              (expand-psort-entry entry)

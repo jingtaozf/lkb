@@ -2429,14 +2429,14 @@ to test
   (print-slots (sement-slots sement) *mrs-display-structure*) 
   (mrs-output-start-liszt *mrs-display-structure*)
   (let ((first-rel t))
-    (loop for rel in (psoa-liszt sement)
+    (loop for rel in (sement-liszt sement)
         do 
           (print-rel rel first-rel nil *mrs-display-structure*)
 	  (setf first-rel nil)))
   (mrs-output-end-liszt *mrs-display-structure*)
-  (print-mrs-hcons (psoa-h-cons sement) nil *mrs-display-structure*)
-  (when (psoa-a-cons sement)
-    (print-mrs-acons (psoa-a-cons sement) nil *mrs-display-structure*)))
+  (print-mrs-hcons (sement-h-cons sement) nil *mrs-display-structure*)
+  (when (sement-a-cons sement)
+    (print-mrs-acons (sement-a-cons sement) nil *mrs-display-structure*)))
   
 
 (defun print-hook (hook display)
@@ -2472,7 +2472,7 @@ to test
   ;;; this does not fully copy `extra', parameter strings etc
   ;;; since we assume that those will not be modified
   (unless (psoa-p psoa)
-    (error "~%~A is not a psoa structure"))
+    (error "~%~A is not a psoa structure" psoa))
   (let ((mostly-new (copy-psoa-liszt-completely psoa nil)))
     (setf (psoa-index mostly-new)
       (copy-var (psoa-index mostly-new)))

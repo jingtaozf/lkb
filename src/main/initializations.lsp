@@ -183,7 +183,7 @@
       
       #+:lui
       (let* ((lui (getenv "LUI"))
-             (port (parse-integer lui :junk-allowed t)))
+             (port (and (stringp lui) (parse-integer lui :junk-allowed t))))
         (when lui (lui-initialize :port port :runtimep runtimep)))
 
       ;;

@@ -123,51 +123,6 @@
 	  (push (list e) dups)))
       finally (return dups)))
 
-;;; add 1-paths from node-z to agenda
-(defun update-paths-x2y-agenda (node-z agenda &key (filter #'identity))
-  (loop
-      for cc in (aref *tchart* node-z 1) ;;out 
-      for edge = (chart-configuration-edge cc)
-      for source = (edge-from edge)
-      for target = (edge-to edge)
-      when (funcall filter edge)
-      do (pushnew (cons source target) agenda
-		  :test #'equalp))
-  agenda)
-
-;; return array defining paths from node-x to node-y
-(defun get-paths-x2y (node-x node-y &key (filter #'identity))
-  (let* (;; create array to store paths from x
-	 (paths-from-x (make-array (list (1+ *tchart-max*))))
-	 ;; initialise agenda
-	 agenda)
-    (unless (= node-x node-y)
-      (setf agenda (update-paths-x2y-agenda node-x nil :filter filter))
-      ;; process agenda items...
-      (loop 
-	  with processed = nil
-	  while agenda
-		;; next item
-	  for item = (pop agenda)
-	  for source = (car item)
-	  for target = (cdr item)
-	  unless (member item processed :test #'equalp)
-	  do
-	    ;(format t "~&item  ~a" item)
-	    ;; update array
-	    (setf (aref paths-from-x target)
-	      (cons
-	       source
-	       ;;(cons (aref paths-from-x source) target)
-	       (aref paths-from-x target)))
-	    (unless (= target node-y)
-	      ;; no loops, so no need to look further
-	      (setf agenda
-		(update-paths-x2y-agenda target agenda :filter filter)))
-	    (push item processed)))
-    ;; pick out result
-    paths-from-x))
-
 ;; generate sentence strings for all token paths through tchart
 (defun tchart-to-sentence-strings nil
   (loop

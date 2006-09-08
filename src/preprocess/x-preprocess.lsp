@@ -38,12 +38,6 @@
 ;;;   |				's
 ;;;
 
-(defpackage :preprocessor
-  (:export read-preprocessor preprocess clear-preprocessor preprocessor-initialized-p
-	   x-read-preprocessor x-preprocess x-clear-preprocessor
-	   *local-to-global-point-mapping* *preprocessor*)
-  (:nicknames :fspp))
-
 (in-package :preprocessor)
 
 ;; some wrappers
@@ -788,7 +782,7 @@
   (multiple-value-bind
       (second minute hour date month year dummy1 dummy2 dummy3)
       (decode-universal-time (get-universal-time) 0)
-    (+ dummy1 dummy2 dummy3)
+    (declare (ignore dummy1 dummy2 dummy3))
     (format nil "~2,'0d:~2,'0d:~2,'0d ~d/~2,'0d/~d (UTC)"
 	    hour
 	    minute

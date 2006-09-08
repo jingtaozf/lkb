@@ -60,7 +60,7 @@
 ;;; process with asynchronous processing and around 600 mbyte otherwise.  for
 ;;; better testing, disable asynchronous mode in LOGON.         (13-jun-06; oe)
 ;;;
-#+(or :allegro :lispworks (not :logon))
+#+(and (or :allegro :lispworks) (not :logon))
 (defun process-queue (source sink)
   (let ((queue (make-queue)))
     (let ((child
@@ -80,7 +80,7 @@
 	      do (funcall sink item))
 	(mp:process-kill child)))))
 
-#-(or :allegro :lispworks (not :logon))
+#-(and (or :allegro :lispworks) (not :logon))
 (defun process-queue (source sink)
   (loop for item = (funcall source)
       until (eq item :eof)

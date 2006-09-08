@@ -417,10 +417,10 @@ to something unexpected, so don't give people the temptation!
 	      ;; affix-name if for identification
 	      (affix-class
 	       (format t 
-		       "~%Warning: no pattern specified for affix ~A, ignored"))
+		       "~%Warning: no pattern specified for affix ~A, ignored" affix-class))
 	      (pattern-string
 	       (format t 
-		       "~%Warning: suffix/prefix not specified for affix ~A, ignored"))
+		       "~%Warning: suffix/prefix not specified for affix ~A, ignored" pattern-string))
 	      (t nil))))))
 
 (defun extract-rule-affixation-type (rule-fs rule-id)

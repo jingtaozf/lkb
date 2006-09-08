@@ -2467,7 +2467,7 @@ an unknown word, treat the gap as filled and go on from there.
                        #-:gdebug
                        (storage-condition (condition)
 					  (format t "Memory allocation problem: ~A caused by ~A~%" condition raw-sentence))
-                       #+:(and (not :gdebug) :allegro)
+                       #+(and (not :gdebug) :allegro)
 		       (EXCL:INTERRUPT-SIGNAL () (error "interrupt-signal"))
                        #-:gdebug
                        (error (condition)

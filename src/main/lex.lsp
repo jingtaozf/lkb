@@ -297,7 +297,7 @@
   (or
    (and (typed-path-p unif-path)
         (typed-path-matches 
-         (path-typed-feature-list unif-path) path exactp))
+         (typed-path-typed-feature-list unif-path) path exactp))
    (and (path-p unif-path)
         (path-matches 
          (path-typed-feature-list unif-path) path exactp))))

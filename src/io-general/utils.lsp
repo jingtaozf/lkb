@@ -481,7 +481,7 @@
      (string (string-upcase (edge-rule edge)))
      (symbol (string (edge-rule edge)))
      (rule (string (rule-id (edge-rule edge))))
-     (t :unknown))
+     (t "unknown"))
    :lkb))
 
 (defun deriv-tree-compute-derivation-tree (edge)
@@ -626,7 +626,7 @@
 
 ;; mapping from recognised names to canonical names (first element in each list)
 ;; TO DO: add Emacs coding names
-(defconstant *coding-system-names*
+(defparameter *coding-system-names*
     '(
       (:iso8859-1 :latin1 :ascii :8-bit :1250 :iso88591)
       (:1251) ;; For MS Windows
@@ -721,9 +721,9 @@
 (defmacro set-coding-system (coding)
   `(do-set-coding-system
        ,(typecase coding
-          (symbol (intern coding :keyword))
+          (symbol (intern (string coding) :keyword))
           (cons (when (eq (first coding) 'quote)
-                  (intern (second coding) :keyword)))
+                  (intern (string (second coding)) :keyword)))
           (string (intern (string-upcase coding) :keyword)))
      ',coding))
 

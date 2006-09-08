@@ -112,12 +112,14 @@ output results
                     (mapcar 
                      #'(lambda (str) 
                          (preprocess-sentence-string
-                                (apply #'concatenate 'string 
-                                       (add-spaces str))))
-                            strings))
-                  (errorp (elt res 2))
-                  (edges (and (elt res 3) (+ (elt (elt res 3) 4) (elt (elt res 3) 5))))
-                  (time (elt res 4)))
+			  (apply #'concatenate 'string 
+				 (add-spaces str))))
+		     strings))
+		   (errorp (elt res 2))
+		   (edges (if (numberp (elt res 3)) 
+			      (+ (elt (elt res 3) 4) (elt (elt res 3) 5))
+			    0))
+		   (time (elt res 4)))
               (if errorp
                 (format t 
                         "~%Error when generating from ~A - results ignored" 
@@ -404,7 +406,7 @@ Mean strings/sentence ~,2F Mean edges ~,1F Mean time ~,1F secs"
          (when (and mrs (mrs::psoa-p mrs))
            (reset-pools #+:gdebug :forcep #+:gdebug t)
            (if (not (mrs::make-scoped-mrs mrs))
-               (format ostream "~%#| Scope failure: ~A |#")  
+               (format ostream "~%#| Scope failure: ~A |#" mrs) ;; [bmw] FIXME I added mrs to fix missing format argument, but is this correct ???  
              ;;; check for scoping, because incorrect MRS often
              ;;; causes serious problems for generator
              (multiple-value-bind
