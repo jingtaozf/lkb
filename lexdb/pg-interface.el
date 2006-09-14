@@ -642,7 +642,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
     (princ "Initializing LexDB: please wait... ")
     (cle-initialize-psql))
   (if (cle-connection)
-      (let* ((val (buffer-substring (1+ (length prompt)) 
+      (let* ((val (buffer-substring-no-properties (1+ (length prompt)) 
 				    (1+ (length (buffer-string)))))
 	     (minibuffer-completion-table
 	      (mapcar #'list
