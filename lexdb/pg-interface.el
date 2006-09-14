@@ -641,12 +641,13 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 	(error "Running version of LKB is not :psql enabled"))
     (princ "Initializing LexDB: please wait... ")
     (cle-initialize-psql))
-  (let* ((val (buffer-substring (1+ (length prompt)) 
-				(1+ (length (buffer-string)))))
-	 (minibuffer-completion-table
-	  (mapcar #'list
-		  (cle-complete :|name| val))))
-    (apply 'minibuffer-complete rest)))
+  (if (cle-connection)
+      (let* ((val (buffer-substring (1+ (length prompt)) 
+				    (1+ (length (buffer-string)))))
+	     (minibuffer-completion-table
+	      (mapcar #'list
+		      (cle-complete :|name| val))))
+	(apply 'minibuffer-complete rest))))
 
 (defun l:completing-read-dyn (prompt)
   (make-variable-buffer-local 'prompt)
@@ -886,7 +887,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (cle-eval-lexdb 'check-pg-interface-version *lexdb-pg-interface-version*))
 
 (defun cle-initialize-psql nil
-  (cle-eval "(initialize-psql-lexicon)"))
+  (cle-eval "(initialize-lexdb)"))
 
 (defun cle-grammar-fields nil
   (cle-eval-lexdb 'grammar-fields))
