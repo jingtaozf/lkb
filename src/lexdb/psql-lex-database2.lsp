@@ -178,3 +178,8 @@
 
 (defmethod scratch-records ((lex su-psql-lex-database))
   (error "functionality not available for SINGLE-USER LexDB "))
+
+(defmethod delete-record ((lex su-psql-lex-database) record)
+  (let* ((id (cdr (assoc :|name| record)))
+	 (qid (psql-quote-literal id)))
+    (run-command lex (format nil "DELETE FROM lex WHERE name=~a" qid))))

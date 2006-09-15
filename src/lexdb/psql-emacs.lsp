@@ -8,17 +8,20 @@
 
 (in-package :lkb)
 
-(defparameter *check-pg-interface-version* 2.18)
+(defparameter *check-pg-interface-version* 2.19)
 
 (defconstant *lexdb-emacs-other-fns*
     '(initialize-lexdb
-      lexdb-fn))
+      lexdb-fn
+      ))
 
 (defparameter *lexdb-emacs-lexdb-fns*
     '(complete
       check-pg-interface-version
+      dump-lexdb2
       connection
       dbname
+      delete-record
       empty-cache
       fields
       get-field-size-map
@@ -26,7 +29,9 @@
       id-to-tdl-str
       lookup
       lookup-rev-all
+      merge-lexdb2
       new-entries
+      orth-field-kw
       record-to-tdl
       set-lex-entry
       set-lex-entry-from-record
@@ -63,3 +68,21 @@
 (defmethod check-pg-interface-version ((lex psql-lex-database) version)
   (unless (= version *check-pg-interface-version*)
     (error "Emacs/LexDB interface version ~a is incompatible with running LKB/LexDB. Please install pg-interface.el version ~a" version *check-pg-interface-version*)))
+
+(defvar *cle-handled-types* '(list number string symbol))
+
+(defun eval-for-cle (x)
+  (if (eval 
+       (cons 'or 
+	     (mapcar #'(lambda (y) (typep x y)) *cle-handled-types*)))
+      x '!!!unhandled-type!!!))
+
+(defmethod dump-lexdb2 ((lex psql-lex-database) filename)
+  (unless (eq *lexdb* lex)
+    (error "Lisp is confused: ~a should be eq to *lexdb* ..." lex))
+  (command-dump-lexdb filename))
+
+(defmethod merge-lexdb2 ((lex psql-lex-database) filename)
+  (unless (eq *lexdb* lex)
+    (error "Lisp is confused: ~a should be eq to *lexdb* ..." lex))
+  (command-merge-into-lexdb filename))

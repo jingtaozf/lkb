@@ -763,3 +763,7 @@
 			     ret-flds from
 			     (quote-ident lex field-kw))))))
 
+(defmethod delete-record ((lex mu-psql-lex-database) record)
+  (setf (cdr (assoc :|dead| record)) "t") ;; mark entry as dead
+  (set-lex-entry-from-record lex record)) ;; commit change
+

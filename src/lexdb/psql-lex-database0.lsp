@@ -787,9 +787,11 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
       (sql-get-num lex 
 		   (format nil "SELECT count(*) FROM ~a" table))))))
 
- (defmethod orth-field ((lex psql-lex-database))
-   (let ((orth-raw-mapping (assoc :ORTH (dfn lex))))
-     (quote-ident lex (second orth-raw-mapping))))
+(defmethod orth-field ((lex psql-lex-database))
+  (quote-ident lex (orth-field-kw lex)))
+
+(defmethod orth-field-kw ((lex psql-lex-database))
+  (second (assoc :ORTH (dfn lex))))
 
 ;(defmethod update-lex ((lex psql-lex-database))
 ;  (update-lex-aux lex)
