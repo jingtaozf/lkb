@@ -245,7 +245,7 @@
 		  :keys "M-n"
 		  :enable (cle-connection)))
     (define-key map [menu-bar LexDB lexdb-search-orth-val]
-      '(menu-item "Search orth" lexdb-search-orth-val 
+      '(menu-item "Search orth" lexdb-search-orth
 		  :keys "C-c C-s"
 		  :enable (cle-connection)))
     (define-key map [menu-bar LexDB search]
