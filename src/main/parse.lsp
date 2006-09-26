@@ -1107,8 +1107,23 @@ relatively limited.
   (loop (unless *morph-agenda* (return nil))
     (let* ((agenda-item (pop *morph-agenda*)))
       (analyse-agenda-item agenda-item token-edge))))
-  
-(defun analyse-agenda-item (agenda-item token-edge)
+
+;; [bmw] this function, based on add-morpho-partial-edges, added
+;;       in order to collect morph analyses as required in SMAF code
+(defvar *partial-trees* nil)
+(defun get-morph-analyses (unanalysed)
+  (let ((*partial-trees* nil))
+    (setf *morph-agenda* nil)
+    (setf *morphophon-cache* nil)
+    (insert-morph-agenda-item unanalysed (list nil))
+    (loop (unless *morph-agenda* (return nil))
+      (let* ((agenda-item (pop *morph-agenda*)))
+	(analyse-agenda-item agenda-item nil :bottom-out-fn #'get-valid-morph-analyses)))
+    *partial-trees*))
+
+;; [bmw] customised to allow alternative "bottom-out-fn" at bottom of recursion
+;;       (to allow use by get-morph-analyses fn)
+(defun analyse-agenda-item (agenda-item token-edge &key (bottom-out-fn #'add-as-unanalysed))
   (let* ((unanalysed (morph-agenda-string agenda-item))
 	 (partial-tree-set (morph-agenda-partial-tree-set agenda-item))
 	 (last-rule-ids (morph-agenda-latest-rules agenda-item))
@@ -1157,8 +1172,15 @@ relatively limited.
 				(add-pt-node-to-tree ptnode partial-tree)))))
 	      (when new-partial-tree-set
 		(insert-morph-agenda-item newstr new-partial-tree-set)))))))
-    (add-as-unanalysed unanalysed token-edge partial-trees-plus-nulls)))
-    
+    (funcall bottom-out-fn unanalysed token-edge partial-trees-plus-nulls)))
+
+(defun get-valid-morph-analyses (word token-edge partial-tree-set)
+  (declare (ignore token-edge))
+  (when (lookup-word *lexicon* word)
+    (loop
+	for partial-tree in partial-tree-set
+	do (push (cons word partial-tree) *partial-trees*))))
+
 (defun add-as-unanalysed (unanalysed token-edge partial-tree-set)
   ;;; try and terminate the recursion, recording the analyses via
   ;;; the partial tree mechanism.  Unpack the partial trees and add a 
@@ -1483,9 +1505,49 @@ relatively limited.
 ;; FIXME: make precedence configurable
 (defun get-edge-entries (morpho-stem-edge)
   (with-slots (l-content stem) morpho-stem-edge
-    (if l-content 
-	(list l-content) 
-      (get-unexpanded-lex-entry stem))))     
+    (let ((l-content-type (car l-content))
+	  (l-content-value (cdr l-content))
+	  entries)
+      (case l-content-type
+	(:full
+	 ;; we use l-content in place of lexical lookup
+	 (setf entries (list l-content-value)))
+	(:inject
+	 ;; we inject unifs into result of lexical lookup
+	 (setf entries (get-unexpanded-lex-entry stem))
+	 ;; if we have something to inject, collect copies of entries,
+	 ;; each with adjusted lex-entry-unifs  
+	 (if l-content-value
+	     (setf entries
+	       (loop
+		   for e-orig in (get-unexpanded-lex-entry stem)
+		   for e = (copy-lex-entry e-orig)
+		   do
+		     (setf (lex-entry-full-fs e) nil)
+		     (setf (lex-entry-unifs e)
+		       (inject-unifs
+			l-content-value (lex-entry-unifs e) :entry e-orig))
+		   collect e
+			   ))))
+	(t
+	 ;; default (and non-SMAF) case
+	 (setf entries (get-unexpanded-lex-entry stem))))
+      entries)))
+
+;; [bmw] non-destructively, return result of injecting 'inject-unifs' into 'unifs'
+(defun inject-unifs (inject-unifs unifs &key entry)
+  (loop
+      for unif in unifs
+      for lhs = (unification-lhs unif)
+      for inject-unif = (find lhs inject-unifs 
+			      :key #'unification-lhs
+			      :test #'equalp)
+      if inject-unif
+      collect inject-unif into new-unifs
+      and do (format t "~&; WARNING: redefining ~a in copy of lex entry ~a" (unifs-to-tdl-body (list inject-unif)) (to-tdl entry))
+      else
+      collect unif into new-unifs
+      finally (return (append inject-unifs new-unifs))))
 
 (defun add-stem-edge (edge-stem
 		      edge-string from to cfrom cto partial-tree entry dtr)

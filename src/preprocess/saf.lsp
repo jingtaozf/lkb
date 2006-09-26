@@ -76,8 +76,9 @@
 ;; fix_me: get rid of global *lmap*
 (defun xml-to-saf-object (xml &key (dir "~") (l-map *lmap*))
   (let ((*dir* dir))
-    (unless *lmap*
-      (setf l-map (saf::get-default-saf-l-map)))
+    (unless l-map
+      (reset-conf)
+      (setf l-map *lmap*))
     (saf::instantiate-l-content
      (lxml-to-saf-object (lxml::xml-to-lxml xml))
      l-map)

@@ -20,7 +20,9 @@
 
 ;; instantiate :l-content for all annotations in SAF object
 (defun instantiate-l-content (saf l-map)
-  (unless l-map (error "No SAF config rules loaded ~%   (please load saf.conf via '(setf *saf-l-map* (saf::conf-read-file \"path/to/saf.conf\"))')"))
+  (unless l-map 
+    (reset-conf)
+    (setf l-map *lmap*))
   (loop
       with lattice = (saf-lattice saf)
       for edge in (and lattice (saf-lattice-edges lattice))
@@ -173,12 +175,29 @@
   (setf *lmap*
     (conf-read-file filename)))
 
+(defparameter *ERSATZ-CARG-PATH* nil)
+(defparameter *default-config* "
+;define gMap.carg (synsem lkeys keyrel carg) STRING
+
+token.[] -> edgeType='tok' tokenStr=content
+wordForm.[] -> edgeType='morph' stem=content.stem partialTree=content.partial-tree
+;ersatz.[] -> edgeType='tok+morph' stem=content.name tokenStr=content.name gMap.carg=content.surface inject='t' analyseMorph='t'
+")
+
 ;; fallback case handles smaf as mapped from tchart
-(defun get-default-saf-l-map nil
+(defun reset-conf nil
   (setf *gmap* nil)
   (setf *lmap*
-    (list (conf-read-line "token.[] -> edgeType='tok' tokenStr=content")
-	  (conf-read-line "wordForm.[] -> edgeType='morph' stem=content.stem partialTree=content.partial-tree"))))
+    (with-input-from-string (s *default-config*)
+      (conf-read-stream s)))
+  (cond
+   (*ersatz-carg-path*			; HACK!!!
+    (push (list :|carg| *ersatz-carg-path* :STR) *gmap*)
+    (push (conf-read-line "ersatz.[] -> edgeType='tok+morph' stem=content.name tokenStr=content.name gMap.carg=content.surface inject='t' analyseMorph='t'") *lmap*))
+   (t
+    (push (conf-read-line "ersatz.[] -> edgeType='tok+morph' stem=content.name tokenStr=content.name analyseMorph='t'") *lmap*)))
+  *lmap*
+  )
 
 ;;
 
@@ -186,13 +205,17 @@
 ;; process each line in SAF config file
 (defun conf-read-file (filename)
   (setf *gmap* nil)
-  (with-open-file (file filename 
+  (with-open-file (s filename 
 		   :direction :input)
-    (loop
-	for line = (read-line file nil nil)
-	while line
-	for a = (conf-read-line line)
-	if (map-action-p a) collect a)))
+    (conf-read-stream s)))
+
+;; process each line in SAF config file
+(defun conf-read-stream (s)
+  (loop
+      for line = (read-line s nil nil)
+      while line
+      for a = (conf-read-line line)
+      if (map-action-p a) collect a))
 
 ;; ignore empty lines, and those composed of whitespace
 ;; otherwise expect lines of form:

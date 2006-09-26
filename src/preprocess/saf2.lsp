@@ -296,31 +296,35 @@
 
 ;; to do: replace global *tchart* + *tchart-max* + ??? with objects
 (defun augment-tchart-from-saf-edge (saf-edge fn addressing)
-  (let
-      ((edge (funcall fn saf-edge addressing)))
-    (when edge
-      (let* ((from (edge-from edge))
-	     (to (edge-to edge))
-	     (cc))
+  (loop
+      with edges = (funcall fn saf-edge addressing)
+      for edge in edges
+      if (smaf::saf-fs-feature-value 
+	  (smaf::saf-edge-l-content saf-edge) "fallback")
+      do
+	 ;; fallback edges are stored and resurrected during parsing if
+	;; lexical lookup fails
+	(push edge *fallback-medges*)
+      else
+      do
+      (augment-tchart-from-saf-edge-aux edge)))
 
-	(unless (and (integerp from) (integerp to))
-	  (format t "~&WARNING: ignoring malformed chart edge '~a' (from='~a', to='~a')"
-		  (edge-id edge) from to)
-	  (return-from augment-tchart-from-saf-edge))
-	
-	(when (smaf::saf-fs-feature-value 
-	       (smaf::saf-edge-l-content saf-edge) "fallback")
-	  ;; fallback edges are stored and resurrected during parsing if
-	  ;; lexical lookup fails
-	  ;(format t "~%ignoring FALLBACK edge")
-	  (push edge *fallback-medges*)
-	  (return-from augment-tchart-from-saf-edge *tchart*))
-	(setf cc (make-chart-configuration :begin from :end to :edge edge))
-	(setf (aref *tchart* to 0) (push cc (aref *tchart* to 0)))
-	(setf (aref *tchart* from 1) (push cc (aref *tchart* from 1)))
-	(when (> to *tchart-max*)
-	  ;;(format t "~%WARNING: increasing *tchart-max* to ~a" to)
-	  (setf *tchart-max* to)))))
+(defun augment-tchart-from-saf-edge-aux (edge)
+  (let* ((from (edge-from edge))
+	 (to (edge-to edge))
+	 (cc))
+    
+    (unless (and (integerp from) (integerp to))
+      (format t "~&WARNING: ignoring malformed chart edge '~a' (from='~a', to='~a')"
+	      (edge-id edge) from to)
+      (return-from augment-tchart-from-saf-edge-aux))
+    
+    (setf cc (make-chart-configuration :begin from :end to :edge edge))
+    (setf (aref *tchart* to 0) (push cc (aref *tchart* to 0)))
+    (setf (aref *tchart* from 1) (push cc (aref *tchart* from 1)))
+    (when (> to *tchart-max*)
+      ;;(format t "~%WARNING: increasing *tchart-max* to ~a" to)
+      (setf *tchart-max* to)))
   *tchart*)
 
 ;; [bmw] very basic unknown word mechanism (doesn't require SMAF XML input)
@@ -412,19 +416,21 @@
 	      (string= "tok+morph" (saf::l-edgeType saf-edge)))
     (error "edgeType='tok' expected (got '~a')" (saf::l-edgeType saf-edge)))
   (with-slots (smaf::id smaf::source smaf::target smaf::from smaf::to smaf::l-content) saf-edge
-    (let ((tokenStr (smaf::saf-fs-feature-value smaf::l-content "tokenStr"))
+    (let* ((tokenStr (smaf::saf-fs-feature-value smaf::l-content "tokenStr"))
 	  (e-id (if (string= "tok" (saf::l-edgeType saf-edge))
 		    (smaf-id-to-edge-id smaf::id)
-		  (HIDDEN-smaf-id-to-edge-id smaf::id :token))))
-      (make-token-edge 
-       :id e-id
-       :from (smaf-node-to-chart-node smaf::source)
-       :to (smaf-node-to-chart-node smaf::target)
-       :string tokenStr
-       :cfrom (smaf::point-to-char-point smaf::from addressing)
-       :cto (smaf::point-to-char-point smaf::to addressing)
-       :word (string-upcase tokenStr)
-       :leaves (list tokenStr)))))
+		  (HIDDEN-smaf-id-to-edge-id smaf::id :token)))
+	  (tedge
+	   (make-token-edge 
+	    :id e-id
+	    :from (smaf-node-to-chart-node smaf::source)
+	    :to (smaf-node-to-chart-node smaf::target)
+	    :string tokenStr
+	    :cfrom (smaf::point-to-char-point smaf::from addressing)
+	    :cto (smaf::point-to-char-point smaf::to addressing)
+	    :word (string-upcase tokenStr)
+	    :leaves (list tokenStr))))
+      (list tedge))))
 
 (defun HIDDEN-smaf-id-to-edge-id (smaf-id hidden)
   (let* ((h-str
@@ -512,14 +518,27 @@
 					    :gmap saf::*gmap*
 					    :rmrs (smaf::saf-fs-feature-value smaf::l-content "rmrs")
 					    ))
+	   (inject (get-inject gmap-unifs saf::*gmap*))
+	   (l-content 
+	    (if (smaf::saf-fs-feature-value 
+		 (smaf::saf-edge-l-content saf-edge) "inject")
+		(and inject (cons :inject inject))
+	      (and dummy-entry (cons :full dummy-entry))))
 	   (e-from (smaf-node-to-chart-node smaf::source))
 	   (e-to (smaf-node-to-chart-node smaf::target))
     	   (cfrom (or (smaf::point-to-char-point smaf::from addressing)
 		      (get-min-edge-cfrom children)))
 	   (cto (or (smaf::point-to-char-point smaf::to addressing)
 		    (get-max-edge-cto children)))
-	   err-flag
+	   (partial-tree 
+	    (or (smaf::saf-fs-partial-tree-2-list-partial-tree partialTree)
+		(smaf::saf-plus-2-list-partial-tree partialTree2)
+		))
+	   err-flag medges medge
 	   )
+      
+
+      
       (unless (or stem dummy-entry)
 	(format t "~&WARNING: no stem/gType for SMAF edge '~a'" smaf::id)
 	(setf err-flag t))
@@ -540,22 +559,63 @@
 	(format t "~&WARNING: target mismatch between SMAF edge '~a' and it's daughters" smaf::id)
 	(setf err-flag t))
       (unless err-flag
-	(make-morpho-stem-edge 
-	 :id (smaf-id-to-edge-id smaf::id)
-	 :children children
-	 :leaves (loop for x in leaf-edges collect (edge-string x))
-	 :from e-from
-	 :to e-to
-	 :cfrom cfrom
-	 :cto cto
-	 :string form
-	 :word (string-upcase form)
-	 :current (string-upcase form)
-	 :stem stem
-	 :partial-tree (or (smaf::saf-fs-partial-tree-2-list-partial-tree partialTree)
-			   (smaf::saf-plus-2-list-partial-tree partialTree2))
-	 :l-content dummy-entry
-	 )))))
+	(push
+	 (setf medge 
+	   (make-morpho-stem-edge 
+	    :id (smaf-id-to-edge-id smaf::id)
+	    :children children
+	    :leaves (loop for x in leaf-edges collect (edge-string x))
+	    :from e-from
+	    :to e-to
+	    :cfrom cfrom
+	    :cto cto
+	    :string form
+	    :word (string-upcase form)
+	    :current (string-upcase form)
+	    :stem stem
+	    :partial-tree partial-tree
+	    :l-content l-content
+	    ))
+	 medges)
+	(when (smaf::saf-fs-feature-value 
+	       (smaf::saf-edge-l-content saf-edge) "analyseMorph")
+	  (loop
+	      with morph-analyses = (get-morph-analyses (string-upcase form))
+	      for (stem . partial-tree) in morph-analyses
+	      when partial-tree
+	      do
+		(push
+		 (make-morpho-stem-edge 
+		  :id (next-edge) 
+		  :children (list medge)
+		  :leaves (loop for x in leaf-edges collect (edge-string x))
+		  :from e-from
+		  :to e-to
+		  :cfrom cfrom
+		  :cto cto
+		  :string form
+		  :word (string-upcase form)
+		  :current stem
+		  :stem stem
+		  :partial-tree partial-tree
+		  :l-content l-content
+		  )
+		 medges))))
+      medges)))
+
+(defun get-inject (unifs gmap)
+  (loop
+      for (feat . val) in unifs
+      for (feat2 path type) = (find feat gmap :key #'first)
+      for decoded-val = (if (eq type :sym) 
+			    (intern val) 
+			  val)
+      do
+	(setf feat2 feat2) ;; hack to get rid of compiler warning
+      collect
+	(make-unification
+	   :lhs (make-path :typed-feature-list path)
+	   :rhs (make-u-value :type decoded-val))))
 
 (defun smaf-id-to-token-edge (id tedges &key hidden)
   (if hidden

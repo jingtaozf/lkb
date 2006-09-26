@@ -296,7 +296,7 @@
 		   (substitute (char-map-simple-range (char-map x-old))
 			       nil
 			       (char-map x-new)))
-		 (push (list :ersatz x-new) extra)
+		 (push (list :ersatz x-old) extra)
 		 (setf x-token x-new))
 		(:augment
 		 (push (list 
@@ -324,8 +324,7 @@
       with i = 0
       with id = 0
       for (form . extra) in tokens
-      for surface = (or (second (find :ersatz extra :key #'first))
-			form)
+      for surface = (second (find :ersatz extra :key #'first))
       for start = i
       for intermediate-nodes = 
 	(apply #'+ 
@@ -400,21 +399,11 @@
 
 (defun x-format-preprocessed-output (result length &optional (format :list))
   (cond
-   #+:lkb
-   ((eq format :lkb)
-    (loop
-	for i = -1
-	for token in result
-	for start = (second token)
-	for form = (fourth token)
-	unless (= start i) collect form into forms
-	finally 
-	  (return (values (format nil "~{~a~^ ~}" forms)
-			  (length forms)))))
    ((or (eq format :yy)
 	(eq format :pet)) ;; deprecate this...?
     (loop
-	for (id start end form surface) in result
+	for (id start end form surface2) in result
+	for surface = (or surface2 form)
 	for token = (format 
 		     nil 
 		     "(~d, ~d, ~d, 1, \"~a\" \"~a\", 0, \"null\")" 
@@ -427,31 +416,28 @@
    #+:lkb
    ((eq format :pic)
     (error "not implemented"))
-   #+:lkb
-   ((eq format :chared)
-    ;; eg. (#S(CHARED-WORD :WORD "The" :CFROM 0 :CTO 2) #S(CHARED-WORD :WORD "cat" :CFROM 4 :CTO 6) #S(CHARED-WORD :WORD "barks" :CFROM 8 :CTO 12))
-    (mapcar #'p-token-to-chared-word result))
-   ((or (eq format :maf) (eq format :saf) (eq format :smaf))
+   ((or (eq format :saf) (eq format :smaf))
+    (p-tokens-to-smaf result :format format))
+   ((eq format :list)
+    (values result length))
+   (t
+    (error "unhandled format argument: ~a" format))))
+
+(defun p-tokens-to-smaf (p-tokens &key (format :smaf))
     (setf *x-addressing* :|char|)
     (let ((strm (make-string-output-stream)))
       (format strm "~a" 
 	      (saf-header :doctype format :addressing *x-addressing* 
-			  :document #+:lkb (eval (intern "*SAF-DOCUMENT*" :smaf)) #-:lkb nil
-			  )
-;	      (if (eq format :saf)
-;		  (saf-header :addressing *x-addressing* 
-;			      :document #+:lkb (eval (intern "*SAF-DOCUMENT*" :lkb)) #-:lkb nil
-;			      )		  
-;		(maf-header :addressing *x-addressing* 
-;			    :document #+:lkb (eval (intern "*SAF-DOCUMENT*" :lkb)) #-:lkb nil))
-	      )
+			  :document 
+			  #+:lkb (eval (intern "*SAF-DOCUMENT*" :smaf)) 
+			  #-:lkb nil))
       (format strm "<~a init='v~a' final='v~a'~a>"
-	      (if (member format '(:maf :saf))
+	      (if (member format '(:saf))
 		  "fsm"
 		"lattice")
-	      (loop for tok in result
+	      (loop for tok in p-tokens
 		  minimize (second tok))
-	      (loop for tok in result
+	      (loop for tok in p-tokens
 		  maximize (third tok))
 	      (if (eq :smaf format)
 		  (format nil " cfrom='~a' cto='~a'"
@@ -459,26 +445,19 @@
 			  (or (funcall *local-to-global-point-mapping* (point2str (cdr *span*))) ""))
 		"")
 	      )
-      (if (or (eq :maf format) (eq :saf format))
-	  (p-tokens-to-xml-states result strm))
+      (if (or (eq :saf format))
+	  (p-tokens-to-xml-states p-tokens strm))
       (mapcar #'(lambda (x) 
 		  (format strm "~a"
-			  (p-token-to-maf-token x :doctype format)))
-	      result)
+			  (p-token-to-smaf-token x :doctype format)))
+	      p-tokens)
       (format strm "~a" 
-	      (if (member format '(:maf :saf))
+	      (if (member format '(:saf))
 		  "</fsm>"
 		"</lattice>"))
       (format strm "</~a>" (string-downcase (string format)))
-;      (if (eq format :saf)
-;	  (format strm "</saf>")
-;	(format strm "</maf>"))
       (get-output-stream-string strm)))
-   ((eq format :list)
-    (values result length))
-   (t
-    (error "unhandled format argument: ~a" format))))
-
+    
 (defun p-tokens-to-xml-states (p-tokens strm)
   (loop
       with state-ints
@@ -495,51 +474,91 @@
 (defun point2str (x)
   (if x (format nil "~a" x)))
 
-;;(42 0 1 |The|:(0 . 3) |The|:(0 . 3))
-(defun p-token-to-maf-token (p-token &key doctype)
-  (let* ((x (fourth p-token))
-	 (r (char-map-simple-range (char-map x))))
+;(1 0 1 |EmailErsatz|:(0 . 9) |bmw@c.com|:(0 . 9)) 
+;(2 1 2 |smiles|:(10 . 16) NIL)
+(defun p-token-to-smaf-token (p-token &key doctype)
+  (let* ((id (nth 0 p-token))
+	 (source (nth 1 p-token))
+	 (target (nth 2 p-token))
+	 (form (nth 3 p-token))
+	 (surface (nth 4 p-token))
+	 (range (char-map-simple-range (char-map form)))
+	 (from (or (funcall *local-to-global-point-mapping* (point2str (car range))) 
+		   ""))
+	 (to (or (funcall *local-to-global-point-mapping* (point2str (cdr range))) 
+		 ""))
+	 elt attr-from attr-to)
+;    (declare (ignore surface))
     (case doctype
-     (:smaf
-      (format nil "<edge type='token' id='t~a' cfrom='~a' cto='~a' source='v~a' target='v~a'>~a</edge>"
-	      (first p-token)
-	      (or (funcall *local-to-global-point-mapping* (point2str (car r))) "")
-	      (or (funcall *local-to-global-point-mapping* (point2str (cdr r))) "")
-	      (second p-token)
-	      (third p-token)
-	      (xml-escape (text x))
-	      ))
-     (:saf
-      (format nil "<annot type='token' id='t~a' from='~a' to='~a' value='~a' source='v~a' target='v~a'/>"
-	      (first p-token)
-	      (or (funcall *local-to-global-point-mapping* (point2str (car r))) "")
-	      (or (funcall *local-to-global-point-mapping* (point2str (cdr r))) "")
-	      (xml-escape (text x))
-	      (second p-token)
-	      (third p-token)
-	      ))
-     (:maf
-      (format nil "<token id='t~a' from='~a' to='~a' value='~a' source='v~a' target='v~a'/>"
-	      (first p-token)
-	      (or (funcall *local-to-global-point-mapping* (point2str (car r))) "")
-	      (or (funcall *local-to-global-point-mapping* (point2str (cdr r))) "")
-	      (xml-escape (text x))
-	      (second p-token)
-	      (third p-token)))
-     (t
-      (error "unhanded doctype: ~a" doctype))
-     )))
+      (:smaf
+       (setf elt "edge")
+       (setf attr-from "cfrom")
+       (setf attr-to "cto"))
+      (:saf
+       (setf elt "annot")
+       (setf attr-from "from")
+       (setf attr-to "to"))
+      (t
+       (error "unexected doctype")))
+    (if surface
+	(format nil "<~a type='ersatz' id='t~a' ~a='~a' ~a='~a' source='v~a' target='v~a'><slot name='name'>~a</slot><slot name='surface'>~a</slot></~a>"
+	    elt
+	    (xml-str id)
+	    attr-from (xml-str from)
+	    attr-to (xml-str to)
+	    (xml-str source)
+	    (xml-str target)
+	    (xml-str (text form))
+	    (xml-str (text surface))
+	    elt
+	    )
+      (format nil "<~a type='token' id='t~a' ~a='~a' ~a='~a' source='v~a' target='v~a'>~a</~a>"
+	      elt
+	      (xml-str id)
+	      attr-from (xml-str from)
+	      attr-to (xml-str to)
+	      (xml-str source)
+	      (xml-str target)
+	      (xml-str (text form))
+	      elt
+	      ))))
+  
+(defun xml-str (x)
+  (xml-escape (2-str x)))
 
-;;(42 0 1 |The|:(0 . 3) |The|:(0 . 3))
-;;-> #S(CHARED-WORD :WORD "The" :CFROM 0 :CTO 3)
-#+:lkb
-(defun p-token-to-chared-word (p-token)
-  (let* ((x (fourth p-token))
-	 (r (char-map-simple-range (char-map x))))
-    (funcall (intern "MAKE-CHARED-WORD" :lkb) 
-     :word (text x)
-     :cfrom (car r)
-     :cto (cdr r))))
+(defun 2-str (x)
+  (cond
+   ((stringp x) x)
+   ((symbolp x) (symb-2-str x))
+   ((numberp x) (num-2-str x))
+   ((pathnamep x) (namestring x))
+   (t (error "unhandled type"))))
+
+(defun symb-2-str (symb)
+  (unless (symbolp symb)
+    (error "symbol expected"))
+  (cond
+   ((null symb) "")
+   (t (string-downcase (string symb)))))
+
+(defun num-2-str (num)
+  (if (null num)
+      (return-from num-2-str))
+  (unless (numberp num)
+    (error "number expected"))
+  (format nil "~a" num))
+  
+; obsolete
+;;;(42 0 1 |The|:(0 . 3) |The|:(0 . 3))
+;;;-> #S(CHARED-WORD :WORD "The" :CFROM 0 :CTO 3)
+;#+:lkb
+;(defun p-token-to-chared-word (p-token)
+;  (let* ((x (fourth p-token))
+;	 (r (char-map-simple-range (char-map x))))
+;    (funcall (intern "MAKE-CHARED-WORD" :lkb) 
+;     :word (text x)
+;     :cfrom (car r)
+;     :cto (cdr r))))
 
 ;;
 ;; (bmw - oct 05)
@@ -791,6 +810,7 @@
 	    date
 	    year)))
 
+; get rid of this ???
 (defun maf-header (&key (addressing :char) document)
   (saf-header :doctype :maf :addressing addressing :document document))
 
@@ -804,8 +824,7 @@
 	    (if document
 		(format nil " document='~a'" (xml-escape (string document)))
 	    "")
-	    (if (or (eq :maf doctype)
-		    (eq :saf doctype))
+	    (if (or (eq :saf doctype))
 		(format nil " addressing='~a'" (xml-escape (string addressing)))
 	      "")
 	    (if (eq :smaf doctype)
