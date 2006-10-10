@@ -147,7 +147,7 @@
        (:file "yy")
        #+:lkb
        (:file "mt")
-       #+:lkb
+       #+:logon
        (:file "kf")
        #+:page 
        (:file "page-interface")

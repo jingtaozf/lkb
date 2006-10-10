@@ -36,6 +36,13 @@
 			   :directory '(:absolute)))
 
 ;;;
+;;; it seems, we may now have a path for UniCode issues in CLIM; try including
+;;; that in our images.                                        (10-oct-06; oe)
+;;;
+(load 
+ (make-pathname :directory general-dir :name "clim"))
+
+;;;
 ;;; load the portable defsystem() from CMU
 ;;;
 
