@@ -82,6 +82,10 @@ to something unexpected, so don't give people the temptation!
 
 (defvar *letter-wild-card-list* nil)
 
+;; [bmw] temporary (?) hack to allow morph rules with 
+;;       null spelling change component
+(defparameter *allow-null-morph-rules* nil)
+
 ;;; 
 
 (defun in-morph-rule-set-p (rule)
@@ -522,6 +526,11 @@ to something unexpected, so don't give people the temptation!
 ;;; Turn rules into a rule-structure
 
 (defun morph-input (class lexrules subrules name)
+  ;; [bmw] temporary (?) hack to allow morph rules with 
+  ;;       null spelling change component
+  (if *allow-null-morph-rules*
+      (return-from morph-input
+	(morph-input-allow-null-morph-rules class lexrules subrules name)))
   (let ((subrule-structs 
 	 (loop for pair in subrules
 	     nconc
@@ -553,6 +562,38 @@ to something unexpected, so don't give people the temptation!
 	 *morph-rule-set*)
       (morph-read-cerror
 	(format nil "~%Error: no valid morphological patterns in ~A: rule-ignored" name)))))
+
+
+;; [bmw] temporary (?) hack to allow morph rules with 
+;;       null spelling change component
+(defun morph-input-allow-null-morph-rules (class lexrules subrules name)
+  (let ((subrule-structs 
+	 (loop for pair in subrules
+	     nconc
+	       ;; e.g. (!ty !tied) - surface is second
+	       (let* ((surface (cdr pair))
+		      (underlying (car pair))
+		      (surface-wild
+		       (collect-wildcard-letters surface underlying
+						 name))
+		      (underlying-wild
+		       (collect-wildcard-letters underlying surface
+						 name)))
+		 (if (or surface-wild underlying-wild)
+		     (expand-morph-subrules surface underlying
+					    surface-wild
+					    underlying-wild class)
+		   (list
+		    (create-morph-subrule surface underlying class)))
+		 ))))
+    (push
+     (make-morph-rule
+      :class class
+      :rules lexrules
+      :subrules subrule-structs
+      :id name) 
+     *morph-rule-set*)
+    ))
 
 (defun collect-wildcard-letters (pattern other rulename)
   (loop for thing in pattern
