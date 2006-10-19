@@ -384,7 +384,7 @@
 	   :current (string-upcase form)
 	   :stem stem
 	   :partial-tree nil
-	   :l-content dummy-entry
+	   :l-content (cons :full dummy-entry)
 	   )))
    (t
     ;; more sophisticated mechanism
