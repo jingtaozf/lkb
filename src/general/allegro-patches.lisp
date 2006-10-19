@@ -39,9 +39,13 @@
 ;;; it seems, we may now have a path for UniCode issues in CLIM (using Motif);
 ;;; try including that in our images.                           (10-oct-06; oe)
 ;;;
+;;; comment this out for now, since we don't have a cleanly working version
+;;; (19-oct-06; aac)
+#|
 #+:unix
 (load 
  (make-pathname :directory general-dir :name "clim"))
+|#
 
 ;;;
 ;;; load the portable defsystem() from CMU
