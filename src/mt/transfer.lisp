@@ -855,16 +855,6 @@
               do (setf (edge-mrs clone) (postprocess-mrs (edge-mrs edge)))
               collect clone)))
 
-      (when tm
-        (let* ((mrss (loop for edge in result collect (edge-mrs edge)))
-               (scores (ignore-errors (tm-score-mrss mrss :model tm))))
-          (loop
-              for edge in result
-              for score in scores
-              when (numberp (rest score))
-              do (setf (edge-score edge) (- (rest score))))
-          (setf result (sort result #'> :key #'edge-score))))
-      
       result)))
 
 (defun transfer-mrs2 (edges mtrss)
