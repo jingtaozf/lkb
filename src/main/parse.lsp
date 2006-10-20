@@ -1622,19 +1622,21 @@ relatively limited.
       (return-from check-multi-word nil)) ; too near start of sentence
     ;; because of tokeniser ambiguity this is not a perfect check
     ;; but the more complex cases will be caught below
+    #|
     (when (and partial-tree
 	       (not (eql inflection-position number-of-words)))
       (return-from check-multi-word nil)) ; inflection not allowed here
+      |#
     (check-multi-and-add-edges entry-orth-list (cdr to-be-accounted-for) from
-			 nil to cto inflection-position
-			 unexpanded-entry 
-			 partial-tree edge-string dtr)))
+			       nil to cto inflection-position
+			       unexpanded-entry 
+			       (list partial-tree) edge-string dtr t)))
 			 
 
 (defun check-multi-and-add-edges (entry-orth-list remaining-words 
 			    from cfrom to cto inflection-position 
 				  unexpanded-entry 
-				  partial-tree amalgamated-string dtr)
+				  partial-tree-set amalgamated-string dtr first-p)
   ;; check we have some match on each element
   ;; and find partial tree(s) on inflected position
   ;; this is called initially when we've got a match on the rightmost
@@ -1654,7 +1656,19 @@ relatively limited.
   ;; fact that "less" would be derivational.  This would have to be controlled
   ;; by the grammar (presumably by whatever mechanism was used to block 
   ;; derivation occurring in the wrong place anyway).
-  ;;
+  ;; Revised version allows a nil setting for infl-pos (see ERG
+  ;; user-fns) In this case, multiple elements of the multiword are
+  ;; allowed to have partial-trees - these are amalgamated according
+  ;; to the ordering allowed by the rule-filter.
+  ;; This is needed for punctuation in the current ERG - e.g. for (Palo Alto)
+  ;; Only one
+  ;; possibility is returned - this should really be FIXed so that
+  ;; multiple possibilities are allowed and return multiple edges.
+  ;; Affixation is only allowed for the leftmost or rightmost
+  ;; element of the multiword, but this code currently allows the leftmost
+  ;; element to have a suffix and/or the rightmost a prefix 
+  ;; thus allowing `Palo. Alto' - FIX
+  ;; aac oct 20 2006
   (if remaining-words
       (let ((ccs (aref *tchart* from 0))
 	    (entry-stem (car remaining-words)))
@@ -1664,31 +1678,64 @@ relatively limited.
 		  (and 
 		   (morpho-stem-edge-p edge)
 		   (equal entry-stem (morpho-stem-edge-stem edge))
-		   (if (eql (length remaining-words)
-			    inflection-position)
-		       (progn 
-			 (setf partial-tree 
-			   (morpho-stem-edge-partial-tree edge))
-			 t)
-		     (not (morpho-stem-edge-partial-tree edge))))
+		   (if inflection-position
+		       ;; behaviour should be unchanged from 
+		       ;; pre oct 20 2006 version
+		       (if (eql (length remaining-words)
+				inflection-position)
+			   (progn 
+			     (setf partial-tree-set 
+			       (list (morpho-stem-edge-partial-tree edge)))
+			     t)
+			 (not (morpho-stem-edge-partial-tree edge)))
+		     ;; no infl-pos, post oct 20 2006
+		       (or (not (morpho-stem-edge-partial-tree edge))
+			   (if (or first-p 
+				   (not (cdr remaining-words)))
+			       ;; at beginning/end of multiword
+			       (progn 
+				 (setf partial-tree-set
+				   (cons (morpho-stem-edge-partial-tree edge)
+					 partial-tree-set))
+				 t)
+			     ;; else
+			     nil))))
 		(check-multi-and-add-edges 
 		 entry-orth-list (cdr remaining-words) (edge-from edge)
 		 (edge-cfrom edge)
 		 to cto inflection-position unexpanded-entry 
-		 partial-tree
+		 partial-tree-set
 		 (concatenate 'string (edge-string edge) " "
 			      amalgamated-string)
-		 dtr)))))
-    (add-stem-edge
-     (format nil "~{~A ~}" entry-orth-list)
-     amalgamated-string
-     ;; FIX - when cfrom cto is universal we can replace this
-     ;; by a lookup in the original characters.  Currently
-     ;; this is a bit of a hack since
-     ;; we just guess that the strings of the individual words
-     ;; were split by spaces.
-     from to cfrom cto partial-tree 
-     unexpanded-entry dtr)))
+		 dtr nil)))))
+    (let ((amalgamated-partial-tree (combine-partial-trees partial-tree-set)))
+      (add-stem-edge
+       (format nil "~{~A ~}" entry-orth-list)
+       amalgamated-string
+       ;; FIX - when cfrom cto is universal we can replace this
+       ;; by a lookup in the original characters.  Currently
+       ;; this is a bit of a hack since
+       ;; we just guess that the strings of the individual words
+       ;; were split by spaces.
+       from to cfrom cto amalgamated-partial-tree
+       unexpanded-entry dtr))))
+
+(defun combine-partial-trees (partial-tree-set)
+  ;;; WARNING: assumes partial tree is a list
+  ;;; takes a list of partial trees and returns a single
+  ;;; partial tree
+  (if (cdr partial-tree-set)
+      (stable-sort (apply #'append partial-tree-set)
+	    #'partial-tree-order
+	    :key #'car)
+      (car partial-tree-set)))
+
+(defun partial-tree-order (rule-id1 rule-id2)
+  (let ((re1 (get-lex-rule-entry rule-id1))
+	(re2 (get-lex-rule-entry rule-id2)))
+    (and 
+     (check-nosp-feeding re2 re1)
+     (not (check-nosp-feeding re1 re2)))))
 
 ;;; **************************************************
 ;;;
