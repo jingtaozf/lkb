@@ -1,7 +1,7 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: LKB -*-
 
 
-;;; Copyright (c) 2000--2005
+;;; Copyright (c) 2000--2006
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Ben Waldron;
 ;;;   see `licence.txt' for conditions.
 
@@ -136,13 +136,16 @@
 		 ;; - substitute
 		 ;; + augment
 		 ;; ^ ersatz
-                 ((member c '(#\! #\- #\+ #\^) :test #'char=)
+		 ;; > ersatz
+                 ((member c '(#\! #\- #\+ #\^ #\>) :test #'char=)
                   (if (and start end)
                     (let* ((type (case c
                                    (#\! :replace)
                                    (#\- :substitute)
                                    (#\+ :augment)
-                                   (#\^ :ersatz)))
+                                   (#\^ :ersatz)
+                                   (#\> :ersatz-augment)
+				   ))
                            (source (subseq line 1 start))
                            (target (subseq line end))
                            (scanner
@@ -284,6 +287,10 @@
 	    unless (string= text-old (text x-new))
 	    do
 	      (case type
+		(:ersatz-augment
+		 (push (list :ersatz x-old) extra)
+		 (push (list :augment (list x-old)) extra)
+		 )
 		(:ersatz
 		 ;;
 		 ;; _fix_me_
@@ -817,7 +824,7 @@
 (defun saf-header (&key (addressing :char) document (doctype :saf))
   (let ((doctype-str (string-downcase (string doctype))))
     (format nil
-	    "<?xml version='1.0' encoding='UTF-8'?><!DOCTYPE ~a SYSTEM '~a.dtd'><~a~a~a>~a<olac:olac xmlns:olac='http://www.language-archives.org/OLAC/1.0/' xmlns='http://purl.org/dc/elements/1.1/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://www.language-archives.org/OLAC/1.0/ http://www.language-archives.org/OLAC/1.0/olac.xsd'><dc:identifier>s~a</dc:identifier><creator>~a</creator><created>~a</created></olac:olac>"
+	    "<?xml version='1.0' encoding='UTF-8'?><!DOCTYPE ~a SYSTEM '~a.dtd'><~a~a~a>~a<olac:olac xmlns:olac='http://www.language-archives.org/OLAC/1.0/' xmlns='http://purl.org/dc/elements/1.1/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://www.language-archives.org/OLAC/1.0/ http://www.language-archives.org/OLAC/1.0/olac.xsd'><identifier>s~a</identifier><creator>~a</creator><created>~a</created></olac:olac>"
 	    doctype-str
 	    doctype-str
 	    doctype-str
