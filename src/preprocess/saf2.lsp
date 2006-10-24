@@ -180,6 +180,7 @@
 	  ))))
 
 ;; use to process set of files containing SAF XML segments into sentences
+#+:allegro
 (defun file-pattern-to-sentence-strings (pattern)
   (require :osi)
   (loop

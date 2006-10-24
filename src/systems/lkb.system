@@ -215,6 +215,8 @@
        (:file "saf")
        #+(and :maf)
        (:file "saf-conf")
+       #+(and :maf :allegro)
+       (:file "server")
        #+:maf
        (:file "texti")
        ))  

@@ -333,7 +333,7 @@
 (defun xpoint-range (xml xrange)
   (let ((x-from (car xrange))
 	(x-to (cdr xrange)))
-    (let* ((p-xml (net.xml.parser:parse-xml xml))
+    (let* ((p-xml (xml:parse-xml xml))
 	   (text (second (car (member '|text| p-xml :key #'car))))
 	   (c-from (xpoint-to-char-offset x-from))
 	   (c-to (xpoint-to-char-offset x-to)))
