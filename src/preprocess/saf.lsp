@@ -57,18 +57,21 @@
    ))
 
 (defun saf-lxml-to-saf-object (lxml)
-  (unless (member (string (lxml::lxml-elt-name lxml)) '("maf" "saf" "smaf")
-		  :test #'string=)
-    (error "smaf, saf element expected as body"))
+  (unless (member (lxml::lxml-elt-name lxml) '(:|saf| :|smaf|))
+    (error "smaf/saf element expected as body"))
   (let* ((saf-attributes
 	  (lxml::lxml-elt-attributes lxml))
 	 (lxml (cdr lxml))
 	 (text
-	  (if (eq 'lxml::|text| (lxml::lxml-elt-name (car lxml)))
+	  (if (eq :|text| (lxml::lxml-elt-name (car lxml)))
 	      (pop lxml)))
+	 (olacStr (string (lxml::lxml-elt-name (car lxml)))) 
 	 (olac 
-	  (if (eq 'lxml::|olac:olac| (lxml::lxml-elt-name (car lxml)))
+	  (if (or (string= "olac" olacStr) ;;S-xml
+		  (string= "olac:olac" olacStr)) ;; pxml
 	      (pop lxml))))
+;	  (if (eq :|olac:olac| (lxml::lxml-elt-name (car lxml)))
+;	      (pop lxml))))
     (make-saf
      :meta (get-saf-meta saf-attributes :olac olac :text text)
      :lattice (get-saf-lattice lxml))))
@@ -85,22 +88,15 @@
     ))
 
 (defun lxml-to-saf-object (lxml)
-  (let* ((lxml-body (lxml::elements-only
-		     (lxml::check-doctype 
-		      (lxml::remove-xml-header lxml)
-		      '("smaf" "saf" "maf"))))
-	 (lxml-body-1 (first lxml-body)))
-    (cond
-     ((null lxml-body)
-      (error "empty xml body"))
-     ((cdr lxml-body)
-      (error "xml body expected to contain single element"))
-     (t
-      (saf-lxml-to-saf-object lxml-body-1)))))
+  (cond
+   ((null lxml)
+    (error "empty xml body"))
+   (t
+    (saf-lxml-to-saf-object lxml))))
 
 (defun get-saf-meta (saf-attributes &key olac text)
   (let ((doc
-	 (second (member 'lxml::|document| saf-attributes))))
+	 (second (member :|document| saf-attributes))))
     (if doc
 	(unless (eq :absolute (car (pathname-directory (pathname doc))))
 	  (setf doc
@@ -109,8 +105,8 @@
      :document doc
      :addressing (intern (string-downcase 
 			  (or
-			   (second (member 'lxml::|addressing| saf-attributes))
-			   'lxml::|char|)))
+			   (second (member :|addressing| saf-attributes))
+			   :|char|)))
      :olac (get-olac-meta olac)
      :text text)))
 
@@ -167,7 +163,7 @@
 
 (defun get-saf-lattice (lxml)
   (cond
-   ((member (lxml::lxml-elt-name (car lxml)) '(lxml::|fsm| lxml::|lattice|));; SAF / SMAF
+   ((member (lxml::lxml-elt-name (car lxml)) '(:|fsm| :|lattice|));; SAF / SMAF
     (when (cdr lxml)
       (error "no elements expected after fsm/lattice"))
     (get-saf-lattice-from-fsm (car lxml)))
@@ -178,27 +174,27 @@
 (defun get-saf-lattice-from-fsm (lxml-fsm)
   (let* ((fsm-attributes (lxml::lxml-elt-attributes lxml-fsm))
 	 (nodes 
-	  (loop for x in (lxml::lxml-elt-elts lxml-fsm "state") 
-	      collect (lxml::lxml-elt-attr x "id")))
+	  (loop for x in (lxml::lxml-elt-elts lxml-fsm :|state|) 
+	      collect (lxml::lxml-elt-attr x :|id|)))
 	 (token-edges 
-	  (loop for e in (lxml::lxml-elt-elts lxml-fsm "token")
+	  (loop for e in (lxml::lxml-elt-elts lxml-fsm :|token|)
 	      collect (lxml-token-to-edge e)))
 	 (annot-edges 
 	  (append
-	   (loop for e in (lxml::lxml-elt-elts lxml-fsm "annot");; SAF
+	   (loop for e in (lxml::lxml-elt-elts lxml-fsm :|annot|);; SAF
 	       collect (lxml-annot-to-edge e))
-	   (loop for e in (lxml::lxml-elt-elts lxml-fsm "edge");; SMAF
+	   (loop for e in (lxml::lxml-elt-elts lxml-fsm :|edge|);; SMAF
 	       collect (lxml-annot-to-edge e))))
 	 (wordform-edges 
-	  (loop for e in (lxml::lxml-elt-elts lxml-fsm "wordForm") ;;shorthand
+	  (loop for e in (lxml::lxml-elt-elts lxml-fsm :|wordForm|) ;;shorthand
 	      collect (lxml-wordform-to-edge e)))
 	 (sentence-edges 
-	  (loop for e in (lxml::lxml-elt-elts lxml-fsm "sentence") ;;shorthand
+	  (loop for e in (lxml::lxml-elt-elts lxml-fsm :|sentence|) ;;shorthand
 	      collect (lxml-sentence-to-edge e)))
 	 (all-edges (append token-edges annot-edges 
 			    wordform-edges sentence-edges))
-	 (start-node (second (member 'lxml::|init| fsm-attributes)))
-	 (end-node (second (member 'lxml::|final| fsm-attributes)))
+	 (start-node (second (member :|init| fsm-attributes)))
+	 (end-node (second (member :|final| fsm-attributes)))
 	 )
     ;; fix missing details
     ;; ensure nodes is complete
@@ -280,7 +276,7 @@
     consistent))
 
 (defun lxml-state-to-node (lxml-state)
-  (lxml::lxml-elt-attr lxml-state "id"))
+  (lxml::lxml-elt-attr lxml-state :|id|))
 
 (defun saf-type (str)
   (intern str :keyword))
@@ -288,13 +284,13 @@
 ;; call lxml-annot-to-edge instead?
 (defun lxml-token-to-edge (lxml-token &key type source target)
   (make-saf-edge
-   :id (lxml::lxml-elt-attr lxml-token "id")
-   :type (saf-type (or type 'lxml::|token|))
-   :source (or source (lxml::lxml-elt-attr lxml-token "source"))
-   :target (or target (lxml::lxml-elt-attr lxml-token "target"))
-   :from (lxml::lxml-elt-attr lxml-token "from")
-   :to (lxml::lxml-elt-attr lxml-token "to")
-   :content (lxml::lxml-elt-attr lxml-token "value")))
+   :id (lxml::lxml-elt-attr lxml-token :|id|)
+   :type (saf-type (or type :|token|))
+   :source (or source (lxml::lxml-elt-attr lxml-token :|source|))
+   :target (or target (lxml::lxml-elt-attr lxml-token :|target|))
+   :from (lxml::lxml-elt-attr lxml-token :|from|)
+   :to (lxml::lxml-elt-attr lxml-token :|to|)
+   :content (lxml::lxml-elt-attr lxml-token :|value|)))
 
 (defun lxml-rmrs-to-rmrs (lxml)
   (if lxml
@@ -307,25 +303,25 @@
 		 (shift-package lxml :mrs)) :rasp)))))
   
 (defun lxml-annot-to-edge (lxml-annot &key type source target)
-  (let* ((id (lxml::lxml-elt-attr lxml-annot "id"))
-	 (fs-list (lxml::lxml-elt-elts lxml-annot "fs"))
-	 (slots (lxml::lxml-elt-elts lxml-annot "slot"))
-	 (rmrs (lxml::lxml-elt-elts lxml-annot "rmrs"))
+  (let* ((id (lxml::lxml-elt-attr lxml-annot :|id|))
+	 (fs-list (lxml::lxml-elt-elts lxml-annot :|fs|))
+	 (slots (lxml::lxml-elt-elts lxml-annot :|slot|))
+	 (rmrs (lxml::lxml-elt-elts lxml-annot :|rmrs|))
 	 (fs (if (cdr fs-list)
 		 (error "max 1 fs element allowed in wordform")
 	       (car fs-list)))
 	 (content 
 	  (or 
 	   (lxml::lxml-elt-text-content2 lxml-annot) ;; simple content embedded
-	   (lxml::lxml-elt-attr lxml-annot "value") ;; simple content value attr
+	   (lxml::lxml-elt-attr lxml-annot :|value|) ;; simple content value attr
 	   (append ;; complex content
 	    (lxml-fs-content-to-fs fs) 
 	    (lxml-slots-to-fs slots)
 	    (lxml-rmrs-to-rmrs rmrs)
 	    )
 	   ))
-	 (source (or source (lxml::lxml-elt-attr lxml-annot "source")))
-	 (target (or target (lxml::lxml-elt-attr lxml-annot "target")))
+	 (source (or source (lxml::lxml-elt-attr lxml-annot :|source|)))
+	 (target (or target (lxml::lxml-elt-attr lxml-annot :|target|)))
 	 )
     (unless content
       (format t "~&WARNING: no/unknown content for SMAF edge '~a'" id))
@@ -335,26 +331,26 @@
       (format t "~&WARNING: missing target for SMAF edge '~a'" id))
     (make-saf-edge
      :id id
-     :type (saf-type (or type (lxml::lxml-elt-attr lxml-annot "type")))
+     :type (saf-type (or type (lxml::lxml-elt-attr lxml-annot :|type|)))
      :source source
      :target target
-     :deps (lkb::split-str-on-spc (lxml::lxml-elt-attr lxml-annot "deps"))
+     :deps (lkb::split-str-on-spc (lxml::lxml-elt-attr lxml-annot :|deps|))
      :content content
-     :from (or (lxml::lxml-elt-attr lxml-annot "from") 
-	       (lxml::lxml-elt-attr lxml-annot "cfrom"))
+     :from (or (lxml::lxml-elt-attr lxml-annot :|from|) 
+	       (lxml::lxml-elt-attr lxml-annot :|cfrom|))
      :to (or
-	  (lxml::lxml-elt-attr lxml-annot "to")
-	  (lxml::lxml-elt-attr lxml-annot "cto"))
+	  (lxml::lxml-elt-attr lxml-annot :|to|)
+	  (lxml::lxml-elt-attr lxml-annot :|cto|))
      )))
 
 ;; special case
 (defun lxml-wordform-to-edge (lxml-wordform &key source target)
-  (lxml-annot-to-edge lxml-wordform :type 'lxml::|wordForm|
+  (lxml-annot-to-edge lxml-wordform :type :|wordForm|
 		      :source source :target target))
 
 ;; special case
 (defun lxml-sentence-to-edge (lxml-sentence &key source target)
-  (lxml-token-to-edge lxml-sentence :type 'lxml::|sentence|
+  (lxml-token-to-edge lxml-sentence :type :|sentence|
 		      :source source :target target))
 
 (defun lxml-fs-content-to-fs (lxml)
@@ -363,18 +359,18 @@
     nil)
    ((stringp lxml) ;; shorthand
     lxml)   
-   ((eq (lxml::lxml-elt-name lxml) 'lxml::|fs|)
-    (loop for f in (lxml::lxml-elt-elts lxml "f")
+   ((eq (lxml::lxml-elt-name lxml) :|fs|)
+    (loop for f in (lxml::lxml-elt-elts lxml :|f|)
 	collect (make-saf-fv
-		 :feature (lxml::lxml-elt-attr f "name")
+		 :feature (lxml::lxml-elt-attr f :|name|)
 		 :value (lxml-fs-content-to-fs (first (lxml::lxml-elt-contents f))))))
-   ((eq (lxml::lxml-elt-name lxml) 'lxml::|binary|)
+   ((eq (lxml::lxml-elt-name lxml) :|binary|)
     :binary-ignored)
-   ((eq (lxml::lxml-elt-name lxml) 'lxml::|symbol|)
+   ((eq (lxml::lxml-elt-name lxml) :|symbol|)
     :symbol-ignored)
-   ((eq (lxml::lxml-elt-name lxml) 'lxml::|numeric|)
+   ((eq (lxml::lxml-elt-name lxml) :|numeric|)
     :numeric-ignored)
-   ((eq (lxml::lxml-elt-name lxml) 'lxml::|string|)
+   ((eq (lxml::lxml-elt-name lxml) :|string|)
     (let ((str (first (lxml::lxml-elt-contents lxml))))
       (unless (stringp str)
 	(error "string expected"))
@@ -383,7 +379,7 @@
 (defun lxml-slots-to-fs (lxml-slots)
   (loop
       for s in lxml-slots
-      for feat = (lxml::lxml-elt-attr s "name")
+      for feat = (lxml::lxml-elt-attr s :|name|)
       for val = (first (lxml::lxml-elt-contents s))
       for val-str = (if (stringp val)
 			val
@@ -441,20 +437,20 @@
 	      (lkb::read-file-to-string textfilename))))
     (format t "~&;;; Data file: ~a" (saf-meta-document (saf-meta saf)))
     (format ostream "~a"
-	    (preprocessor::saf-header :addressing 'lxml::|char|
+	    (preprocessor::saf-header :addressing :|char|
 			:document (saf-meta-document (saf-meta saf))))
     (when reset-unanalysed-tokens
       (setf lkb::*unanalysed-tokens* nil))
     (loop 
 	for s in 
 	  (sort (loop for e in (saf-lattice-edges (saf-lattice saf))
-		    when (eq 'lxml::|sentence| (saf-edge-type e))
+		    when (eq :|sentence| (saf-edge-type e))
 		    collect e)
 		#'< 
 		:key #'(lambda (x)
 			 (or
 			  (point-to-char-point 
-			   (saf-edge-from x) 'lxml::|char|)
+			   (saf-edge-from x) :|char|)
 			  -1)))
 	for from = (saf-edge-from s)
 	for to = (saf-edge-to s)
@@ -474,9 +470,9 @@
 		((saf-meta-document (saf-meta saf))
 		 (let ((lkb::*generate-messages-for-all-unanalysed-tokens* t)
 		       ;(*char-map-add-offset* 
-			;(point-to-char-point (saf-edge-from s) 'lxml::|char|))
+			;(point-to-char-point (saf-edge-from s) :|char|))
 		       )
-		   (setf *char-map-add-offset* (point-to-char-point (saf-edge-from s) 'lxml::|char|))
+		   (setf *char-map-add-offset* (point-to-char-point (saf-edge-from s) :|char|))
 		   (x-parse text 
 			    (saf-edge-from s) 
 			    (saf-edge-to s)
@@ -532,7 +528,7 @@
 
 (defun char-map-add-x (point)
   (if point
-      (format nil "~a" (+ (or *char-map-add-offset* 0) (point-to-char-point point 'lxml::|char|)))))
+      (format nil "~a" (+ (or *char-map-add-offset* 0) (point-to-char-point point :|char|)))))
 
 (defun point-to-char-point (point addressing)
   (if (null point)
@@ -540,12 +536,12 @@
   (unless addressing
     (error "ADDRESSING cannot be null"))
   (cond
-   ((string= addressing 'lxml::|char|) 
+   ((string= addressing :|char|) 
     ;(ignore-errors 
      (parse-integer point)
     ; )
     )
-    ((string= addressing 'lxml::|xpoint|) -1)
+    ((string= addressing :|xpoint|) -1)
     (t (error "unknown addressing scheme '~a'" addressing))))
 
 #+:mrs

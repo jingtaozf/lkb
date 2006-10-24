@@ -8,36 +8,36 @@
 
 (in-package :lxml)
 
+(defun xml-whitespace-char (c)
+  (let ((c-code (char-code c)))
+    (or (eq c-code #x20)
+	(eq c-code #x9)
+	(eq c-code #xD)
+	(eq c-code #xA))))
+
 (defun xml-whitespace-p (str)
-  (and (stringp str)
-       (net.xml.parser::all-xml-whitespace-p str)))
+  (and 
+   (stringp str)
+   (loop for c across str
+	 when (not (xml-whitespace-char c))
+	 do (return nil)
+	 finally (return t))))
 
 (defun xml-to-lxml (xml)
-  (lkb::with-package (:lxml)
-    (discard-whitespace (net.xml.parser:parse-xml xml))))
+  (lkb::with-package (:keyword)
+    (remove-xml-header-and-doctype
+     (discard-whitespace ;; (!) not needed with S-XML
+      (with-input-from-string (s xml)
+	(xml:parse-xml s))))))
 
 ;; if xml header, remove and check correct
-(defun remove-xml-header (lxml)
-  (let ((lxml-xml (and (eq :xml (lxml-pi-name (car lxml)))
-		       (pop lxml))))
-    (if (and lxml-xml
-	     (not (string= "1.0" 
-		      (lxml-pi-attr lxml-xml "version" :keyword t))))
-	(error "expected XML version 1.0: got ~a" lxml-xml)
-      LXML)))
-
-(defun check-doctype (lxml doctype)
-  (unless (listp doctype)
-    (setf doctype (list doctype)))
-  (let ((lxml-doctype (and (eq :doctype (lxml-pi-name (car lxml)))
-			   (pop lxml))))  
-    (if (and lxml-doctype
-	     (not (member (string (second lxml-doctype)) doctype
-			  :test #'string=)))
-	(error "problem with DOCTYPE declaration: expected one of ~a but got ~a"
-	       doctype (second lxml-doctype))
-      lxml)))
-
+(defun remove-xml-header-and-doctype (lxml)
+  (if (eq :xml (lxml-pi-name (car lxml)))
+      (pop lxml))
+  (if (eq :doctype (lxml-pi-name (car lxml)))
+      (pop lxml))
+  (car lxml))
+  
 (defun elements-only (lxml)
   (loop for x in lxml
       when (and (listp x) (not (keywordp (car x))))
@@ -85,15 +85,10 @@
       (list (car car))
      (t (error "expected symbol or list as car of lxml element: got ~a" car)))))      
 
-(defun lxml-elt-attr (lxml-elt attrib-str &key keyword)
+(defun lxml-elt-attr (lxml-elt attrib)
   (unless (lxml-elt-p lxml-elt)
     (error "lxml element expected: got ~a" lxml-elt))
-  (unless (stringp attrib-str)
-    (error "string name of lxml attribute expected: got ~a" attrib-str))
-  (let ((attrib (if keyword
-		    (intern attrib-str :keyword)
-		  (intern attrib-str :lxml)))
-	(car (car lxml-elt)))
+  (let ((car (car lxml-elt)))
     (typecase car
      (symbol nil)
      (list 
@@ -103,18 +98,13 @@
       )
      (t (error "expected symbol or list as car of lxml element: got ~a" car)))))
        
-(defun lxml-elt-elts (lxml-elt elt-str &key keyword)
+(defun lxml-elt-elts (lxml-elt elt-name)
   (unless (lxml-elt-p lxml-elt)
     (error "lxml element expected: got ~a" lxml-elt))
-  (unless (stringp elt-str)
-    (error "string name of lxml element expected"))
-  (let ((elt-name (if keyword
-		      (intern elt-str :keyword)
-		    (intern elt-str :lxml))))
     (loop for e in (cdr lxml-elt)
 	when (eq elt-name (and (lxml-elt-p e) 
 			       (lxml-elt-name e)))
-	collect e)))
+	collect e))
 
 (defun lxml-elts (lxml)
   (elements-only 
@@ -132,15 +122,10 @@
 (defun lxml-pi-p (x)
   (listp x))
 
-(defun lxml-pi-attr (lxml-pi attrib-str &key keyword)
+(defun lxml-pi-attr (lxml-pi attrib)
   (unless (lxml-pi-p lxml-pi)
     (error "lxml element expected: got ~a" lxml-pi))
-  (unless (stringp attrib-str)
-    (error "string name of lxml attribute expected: got ~a" attrib-str))
-  (let ((attrib (if keyword
-		    (intern attrib-str :keyword)
-		  (intern attrib-str :lxml))))
-    (second (member attrib (cdr lxml-pi)))))
+    (second (member attrib (cdr lxml-pi))))
 
 ;;
 ;; XML
@@ -215,3 +200,31 @@
    :key #'car
    :test #'string=))
 
+;;
+;; XML test suite
+;;
+
+(defvar *xml-test-neg* nil)
+(defvar *xml-test-pos* nil)
+
+(defun xml-test-initialise nil
+  (setf *xml-test-neg* nil)
+  (setf *xml-test-pos* nil))
+
+(defun xml-test-file (filename)
+  (handler-case
+      (with-open-file (s filename) 
+	(xml:parse-xml s)
+	(push filename *xml-test-pos*))
+    (error (condition)
+      (format t  "~&FILENAME: ~a Error: ~A" filename condition)
+      (push (cons filename condition) *xml-test-neg*))))
+
+(defun xml-test-files (pattern)
+  (xml-test-initialise)
+  (loop
+    for filename in
+	(excl.osi:command-output (format nil "ls ~a" pattern))
+      do 
+	(xml-test-file filename)
+	))
