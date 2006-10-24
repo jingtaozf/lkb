@@ -359,7 +359,7 @@
 		      (if toks
 			  (setf end2 (incf i))
 			(setf end2 end))
-		      (push (list (incf id) start2 end2 tok tok) 
+		      (push (list (incf id) start2 end2 tok nil)
 			    result)
 		      (setf start2 end2)))
 	  (setf i end))
