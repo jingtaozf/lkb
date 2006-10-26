@@ -9,10 +9,11 @@
 ;;(delete-directory-and-files (merge-pathnames #p"bin/lkb/" sys-home))
 
 (let ((*record-source-file-info* t)
-      (*load-source-file-info* t))
+      (*load-source-file-info* t)
+      (target (dir-append sys-home (list :relative (format nil "image/~a" mk::%system-binaries%)))))
   
   (excl:build-lisp-image
-   "/usr/groups/nltools/lingo/images/linux/lkb.dxl"
+   (merge-pathnames "lkb.dxl" target)
 
    :lisp-files (list :srecord
 		     :eli
@@ -54,6 +55,6 @@
    :print-startup-message t
    
    :presto t
-   :presto-lib "/usr/groups/nltools/lingo/images/linux/lkb.lib"
+   :presto-lib (merge-pathnames "lkb.lib")
    ))
 
