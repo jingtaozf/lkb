@@ -91,7 +91,9 @@
 ;;; Keeping the charts distinct also avoids having to filter
 ;;; out the token edges and the morphop edges.
 
-(defun make-tchart nil (make-array (list *chart-limit* 2)))
+;; [bmw] for ANSI compatibility we should make initial element explicit
+(defun make-tchart nil (make-array (list *chart-limit* 2)
+				   :initial-element nil))
 
 (defvar *parse-record* nil)
 

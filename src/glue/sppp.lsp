@@ -156,7 +156,11 @@
       (when (and (numberp n) (> n 1))
         (multiple-value-bind (xml condition) 
             (ignore-errors
-             (xml:parse-xml (string-trim '(#\newline) *sppp-input-buffer*)))
+             #+:pxml
+	     (net.xml.parser:parse-xml (string-trim '(#\newline) *sppp-input-buffer*))
+	     #-:pxml
+	     (list :dummy (lxml::shift-package (xml:parse-xml (string-trim '(#\newline) *sppp-input-buffer*)) *package*))
+	     )
           (if condition
             (format
              t

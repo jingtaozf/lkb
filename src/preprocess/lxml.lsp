@@ -4,7 +4,7 @@
 
 (defpackage :lxml
   (:use :common-lisp) 
-  (:export))
+  (:export #:shift-package))
 
 (in-package :lxml)
 
@@ -23,20 +23,31 @@
 	 do (return nil)
 	 finally (return t))))
 
+;; for use with S-XML
+(defun xml-to-lxml (xml)
+  (with-input-from-string (s xml)
+    (xml:parse-xml s)))
+
+;; for use with pxml
+#+:null
 (defun xml-to-lxml (xml)
   (lkb::with-package (:keyword)
     (remove-xml-header-and-doctype
-     (discard-whitespace ;; (!) not needed with S-XML
+     (discard-whitespace
       (with-input-from-string (s xml)
 	(xml:parse-xml s))))))
 
 ;; if xml header, remove and check correct
 (defun remove-xml-header-and-doctype (lxml)
-  (if (eq :xml (lxml-pi-name (car lxml)))
+  (if (and (listp (car lxml))
+	   (eq :xml (lxml-pi-name (car lxml))))
       (pop lxml))
-  (if (eq :doctype (lxml-pi-name (car lxml)))
+  (if (and (listp (car lxml))
+	   (eq :doctype (lxml-pi-name (car lxml))))
       (pop lxml))
-  (car lxml))
+  (if (listp (car lxml))
+      (car lxml)
+    lxml))
   
 (defun elements-only (lxml)
   (loop for x in lxml
@@ -154,6 +165,18 @@
     lxml))
 
 ;; misc fns
+
+(defun shift-package (lxml package)
+  (loop
+      for x in lxml
+      collect 
+	(cond
+	 ((listp x)
+	  (shift-package x package))
+	 ((symbolp x)
+	  (intern (string x) package))
+	 (t
+	  x))))
 
 ;; fix me
 (in-package :lkb)

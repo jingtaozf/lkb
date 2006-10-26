@@ -23,6 +23,7 @@
 ;;
 ;; Change Log
 ;;
+;; 25/10/06 [bmw20@cam.ac.uk] disable nickname :xml (clash with S-XML package)
 ;; 12/05/00 changes to allow using in ANSI mode lisp
 ;; 12/20/00 namespace example fix; correct whitespace bug when
 ;;          looking for xml? tag in external entity files
@@ -30,7 +31,7 @@
 
 (defpackage net.xml.parser
   (:use :common-lisp :clos :excl :net.uri)
-  (:nicknames :xml)
+;;  (:nicknames :xml) ;; [bmw] nickname clashes with S-XML package
   (:export
    #:parse-xml)
   )

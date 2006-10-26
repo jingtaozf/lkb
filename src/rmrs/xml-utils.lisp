@@ -35,14 +35,18 @@
      '(#\space #\tab #\newline #\page #\return #\linefeed)
      str)))
 
+#+:pxml
 (defun parse-xml-removing-junk (istream)
   ;;; parser insists on tree of `proper' elements
   ;;; so we just need to find this
-  (let ((raw-xml (xml:parse-xml istream)))
+  (let ((raw-xml (net.xml.parser:parse-xml istream)))
     (dolist (xml-el raw-xml)
       (unless (member (car xml-el) '(:XML :DOCTYPE :COMMENT))
         (return xml-el)))))
 
+#-:pxml
+(defun parse-xml-removing-junk (istream)
+  (lxml::shift-package (xml:parse-xml istream) :mrs))
 
 (defun remove-xml-whitespace-elements (content)
   ;;; sl revised version of fn contributed by Fabre

@@ -39,8 +39,13 @@
   #+(or :cl-http (not (or :mcl :clim))) 
   (pushnew :tty *features*)
 
-  #+(and :allegro (version>= 6 0))
+  ;; S-XML should compile under any Common Lisp
   (pushnew :xml *features*)
+  
+  ;; Allegro users still get pxml for (R)MRS and SPPP functionality
+  ;; (but if :pxml is not set, these both use S-XML)
+  #+(and :allegro (version>= 6 0))
+  (pushnew :pxml *features*)
 
   ;;
   ;; always allow `pooling' (aka LKB-internal explicit memory management) for
@@ -93,8 +98,6 @@
 ;;;
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
            #-:ansi-eval-when (load eval compile)
-  #+(and :allegro (version>= 6 0))
-  (pushnew :xml *features*)
   #+(or :lui (and :allegro (version>= 6 0)))
   (pushnew :lsp *features*)
   #+(and :xml :preprocessor)
@@ -119,7 +122,8 @@
     :depends-on (#+:psql "psql"
                  #+:preprocessor "ppcre"
                  #+:preprocessor "preprocessor"
-                 #+:xml "pxml")
+                 #+:xml "s-xml" 
+                 #+:pxml "pxml")
 
     :finally-do 
     (let* ((package (find-package :lkb))

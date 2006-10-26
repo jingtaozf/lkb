@@ -300,7 +300,7 @@
 	:value (mrs::read-rmrs 
 		(car 
 		 ;; necessary since read-rmrs expects :mrs-interned symbols
-		 (shift-package lxml :mrs)) :rasp)))))
+		 (lxml:shift-package lxml :mrs)) :rasp)))))
   
 (defun lxml-annot-to-edge (lxml-annot &key type source target)
   (let* ((id (lxml::lxml-elt-attr lxml-annot :|id|))
@@ -655,18 +655,6 @@
       (error "addressing scheme 'xpoint' not implemented"))
      (t
       (error "unknown addressing scheme '~a'" addressing)))))
-
-(defun shift-package (lxml package)
-  (loop
-      for x in lxml
-      collect 
-	(cond
-	 ((listp x)
-	  (shift-package x package))
-	 ((symbolp x)
-	  (intern (string x) package))
-	 (t
-	  x))))
 
 ;;
 ;; clobber code
