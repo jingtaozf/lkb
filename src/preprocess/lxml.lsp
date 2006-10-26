@@ -243,6 +243,7 @@
       (format t  "~&FILENAME: ~a Error: ~A" filename condition)
       (push (cons filename condition) *xml-test-neg*))))
 
+#+:allegro
 (defun xml-test-files (pattern)
   (xml-test-initialise)
   (loop

@@ -127,12 +127,18 @@
 
   (when (streamp stream)
     (when (output-stream-p stream)
+      ;; [bmw] added to enable compilation under SBCL 
+      ;;       (without more major changes)
+      #+:allegro 
       (setf (stream-external-format stream) (excl:find-external-format :utf-8))
       (format
        stream
        "<?xml version='1.0' encoding='utf-8'?><text>~a</text>~%~a~%"
        (xml-escape-string text) #\page)
       (force-output stream))
+    ;; [bmw] added to enable compilation under SBCL 
+    ;;       (without more major changes)
+    #+:allegro
     (setf (stream-external-format stream) (excl:find-external-format :utf-8))
     (let ((*package* (find-package :lkb))
           (n (loop
