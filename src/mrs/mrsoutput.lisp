@@ -142,7 +142,7 @@ duplicate variables")
                       (path-value fs *psoa-rh-cons-path*)))
 	 (a-cons-fs (when *psoa-a-cons-path*
                       (path-value fs *psoa-a-cons-path*)))
-	 (ing-fs (path-value fs (list (vsym 'ING) (vsym 'LIST))))
+	 (ing-fs (path-value fs (list (vsym "ING") (vsym "LIST"))))
 	 ;;; FIX - hardwired names
 	 (ing (when ing-fs (construct-ing ing-fs nil *variable-generator*)))
          (psoa

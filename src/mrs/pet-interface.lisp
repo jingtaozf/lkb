@@ -4,6 +4,9 @@
 
 (in-package :mrs)
 
+#+:debug
+(defparameter %debug% nil)
+
 (defconstant %pet-top% 0)
 
 (defconstant %pet-bottom% -1)
@@ -20,7 +23,8 @@
 
 (defun vsym (string) 
   #+:debug
-  (format t "vsym(): `~a'.~%" string)
+  (format %debug% "vsym(): ~s.~%" string)
+  (when (symbolp string) (setf string (symbol-name string)))
   ;;
   ;; mediate between PET-internal conventions for atomic types (i.e. |'foo| 
   ;; and |"foo"|) and MRS conventions; a little clumsy ... :-{.
@@ -43,7 +47,7 @@
   ;; all fs-manipulating routines in the interface instead.   (24-aug-03; oe)
   ;;
   #+:debug
-  (format t "deref(): ~a.~%" fs)
+  (format %debug% "deref(): ~a.~%" fs)
   (when (fixnump fs) (pet_fs_deref fs)))
 
 #|
@@ -54,7 +58,7 @@
   ;; that it will never be called on an invalid structure).
   ;;
   #+:debug
-  (format t "cyclic-p(): ~a.~%" fs)
+  (format %debug% "cyclic-p(): ~a.~%" fs)
   (when (fixnump fs) (pet_fs_cyclic_p fs)))
 |#
 
@@ -64,7 +68,7 @@
   ;; the feature structure under the specified path.
   ;;
   #+:debug
-  (format t "path-value(): ~a ~a.~%" fs path)
+  (format %debug% "path-value(): ~a ~a.~%" fs path)
   (when (fixnump fs)
     (loop
         with vector = (make-array (length path))
@@ -80,7 +84,7 @@
   ;; given a feature structure, test its validity.
   ;;
   #+:debug
-  (format t "is-valid-fs(): ~a.~%" fs)
+  (format %debug% "is-valid-fs(): ~a.~%" fs)
   (when (fixnump fs) (not (zerop (pet_fs_valid_p fs)))))
 
 (defun fs-arcs (fs)
@@ -95,7 +99,7 @@
   ;; feature structures in the interface (i.e. integers for PET).
   ;;
   #+:debug
-  (format t "fs-arcs(): ~a.~%" fs)
+  (format %debug% "fs-arcs(): ~a.~%" fs)
   (when (fixnump fs)
     (let ((arcs (pet_fs_arcs fs)))
       (loop
@@ -108,7 +112,7 @@
   ;; given a feature structure, extract its type.
   ;;
   #+:debug
-  (format t "fs-type(): ~a.~%" fs)
+  (format %debug% "fs-type(): ~a.~%" fs)
   (when (fixnump fs)
     (let ((code (pet_fs_type fs)))
       (unless (= code -1) (pet-code-to-type code)))))
@@ -118,7 +122,7 @@
   ;; given a type, test its validity.
   ;;
   #+:debug
-  (format t "is-valid-type(): ~a.~%" type)
+  (format %debug% "is-valid-type(): ~a.~%" type)
   (let ((code (pet-type-to-code type)))
     (when (fixnump code) (not (zerop (pet_type_valid_p code))))))
 
@@ -127,7 +131,7 @@
   ;; given a type, return true if it is the top (i.e. most general) type.
   ;;
   #+:debug
-  (format t "is-top-type(): ~a.~%" type)
+  (format %debug% "is-top-type(): ~a.~%" type)
   (let ((code (pet-type-to-code type)))
     (when (fixnump code) (= code %pet-top%))))
 
@@ -137,7 +141,7 @@
   ;; descendants.
   ;;
   #+:debug
-  (format t "equal-or-subtype(): ~a ~a.~%" type1 type2)
+  (format %debug% "equal-or-subtype(): ~a ~a.~%" type1 type2)
   ;;
   ;; true if .type1. is identical to .type2. or one of its supertypes.
   ;;
@@ -153,7 +157,7 @@
   ;; or have a greatest lower bound (common descendant).
   ;;
   #+:debug
-  (format t "compatible-types(): ~a ~a.~%" type1 type2)
+  (format %debug% "compatible-types(): ~a ~a.~%" type1 type2)
   (or (and (null type1) (null type2))
       (let* ((code1 (pet-type-to-code type1))
              (code2 (pet-type-to-code type2)))
@@ -167,8 +171,12 @@
   ;; parsing result), return a string representing the MRS in the requested
   ;; format.
   ;;
+  #+:debug
+  (unless %debug%
+    (setf %debug% 
+      (open "/tmp/mrs.debug" :direction :output :if-exists :supersede)))
   (when (fixnump fs)
-    (ignore-errors
+    (#-:debug ignore-errors #+:debug progn
      ;;
      ;; _fix_me_
      ;; not sure the shadowing of type and feature tables is necessary: it will
@@ -186,10 +194,14 @@
                    (symbol 
                     (intern (string-upcase (symbol-name mode)) *mrs-package*))
                    (string (intern (string-upcase mode) *mrs-package*))))
+                (mode (case mode
+                        (mrx 'mrs-xml)
+                        (rmrx 'xml)
+                        (t mode)))
                 (result  
                  (with-output-to-string (stream)
                    (case mode
-                     ((simple indexed prolog html)
+                     ((simple indexed prolog html mrs-xml)
                       (output-mrs1 psoa mode stream))
                      (scoped
                       (let ((scopes (make-scoped-mrs psoa)))
