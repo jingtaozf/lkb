@@ -48,6 +48,8 @@
 
 ;; end of wrappers
 
+(defvar *min-regex-char-code-limit* 256)
+
 (defvar *local-to-global-point-mapping* #'identity)
 
 (defvar *preprocess-p* nil)
@@ -60,7 +62,9 @@
 
 (defstruct x-fspp
   version
-  (tokenizer (ppcre:create-scanner "[ \\t]+"))
+  (tokenizer 
+   (let ((ppcre::*regex-char-code-limit* 256))
+     (ppcre:create-scanner "[ \\t]+" :single-line-mode t)))
   global
   local)
 
@@ -91,8 +95,24 @@
 (defun clear-preprocessor ()
   (setf *preprocessor* nil))
 
-(defun read-preprocessor (file &key (x-fspp (make-x-fspp) x-fsppp))
+(defun file-max-char-code (filename)
+  (with-open-file (stream filename :direction :input)
+    (loop
+	with c
+	while (setf c (read-char stream nil nil))
+	maximize (char-code c))))
+
+(defun read-preprocessor (file)
+  ;; ppcre::*regex-char-code-limit* will be set smallest possible value
+  (let ((ppcre::*regex-char-code-limit* *min-regex-char-code-limit*))
+    (read-preprocessor-aux file)))
+
+(defun read-preprocessor-aux (file &key (x-fspp (make-x-fspp) x-fsppp))
   (when (probe-file file)
+    ;; set ppcre::*regex-char-code-limit* to smallest possible value
+    (setf ppcre::*regex-char-code-limit*
+      (max ppcre::*regex-char-code-limit*
+	   (file-max-char-code file)))
     (with-open-file (stream file :direction :input)
       (let* ((path (pathname file))
              (type (pathname-type path)))
@@ -101,7 +121,7 @@
          "~&Reading preprocessor rules `~a~@[.~a~]'~%" 
          (pathname-name path) type)
         (loop
-            with separator = (ppcre:create-scanner "\\t+")
+            with separator = (ppcre:create-scanner "\\t+" :single-line-mode t)
             for n from 1
             for line = (read-line stream nil nil)
             for length = (length line)
@@ -123,7 +143,7 @@
                          (file (or (probe-file name)
                                    (probe-file (merge-pathnames name path)))))
                     (if file
-                      (read-preprocessor file :x-fspp x-fspp)
+                      (read-preprocessor-aux file :x-fspp x-fspp)
                         (format
                          t
                          "read-preprocessor(): [~d] unable to include `~a'~%"
@@ -153,7 +173,8 @@
                              (ppcre:create-scanner 
                               (if (eq type :replace)
                                 source
-                                (format nil "^~a$" source)))))
+                                (format nil "^~a$" source))
+			      :single-line-mode t)))
                            (match (make-x-fsr :type type :source source
                                             :scanner scanner :target target)))
                       (if scanner

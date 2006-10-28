@@ -27,6 +27,8 @@
 ;;; NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 ;;; SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+;; [bmw; 28-10-06] added PATCHES file
+
 (in-package :make)
 
 ;; (bmw) activate later...
@@ -37,10 +39,11 @@
 
 (defsystem "ppcre"
     :source-pathname (dir-append
-                      (get-sources-dir "pppcre") '(:relative "ppcre"))
+;                      (get-sources-dir "cl-ppcre-1.2.18") '(:relative "cl-ppcre-1.2.18"))
+                      (get-sources-dir "ppcre") '(:relative "ppcre"))
     :binary-pathname (dir-append
-                      (get-binaries-dir "pppcre") '(:relative "ppcre"))
-    :source-extension "lisp"
+;                      (get-binaries-dir "cl-ppcre-1.2.18") '(:relative "cl-ppcre-1.2.18"))
+                      (get-binaries-dir "ppcre") '(:relative "ppcre"))
     :source-extension "lisp"
     :components ((:file "packages")
                  (:file "specials" :depends-on ("packages"))
@@ -62,4 +65,8 @@
                  (:file "repetition-closures" :depends-on ("closures"))
                  #-:use-acl-regexp2-engine
                  (:file "scanner" :depends-on ("repetition-closures"))
-                 (:file "api" :depends-on ("scanner"))))
+                 (:file "api" :depends-on ("scanner"))
+		 
+		 (:file "PATCHES") ;; [bmw]
+		 
+		 ))

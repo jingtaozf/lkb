@@ -17,4 +17,5 @@
            #:x-clear-preprocessor
            #:*local-to-global-point-mapping*
            #:*preprocessor*
+	   #:*min-regex-char-code-limit*
 	   ))
