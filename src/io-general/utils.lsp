@@ -637,31 +637,31 @@
 ;; TO DO: add Emacs coding names
 (define-constant %coding-system-names%
     '(
-      (:iso8859-1 :latin1 :ascii :8-bit :1250 :iso88591)
-      (:1251) ;; For MS Windows
-      (:1252) ;; For MS Windows
-      (:1253) ;; For MS Windows
-      (:1254) ;; For MS Windows
-      (:1255) ;; For MS Windows
-      (:1256) ;; For MS Windows
-      (:1257) ;; For MS Windows
-      (:1258) ;; For MS Windows
-      (:iso8859-2 :latin-2 :latin2)
-      (:iso8859-3 :latin-3 :latin3)
-      (:iso8859-4 :latin-4 :latin4)
-      (:iso8859-5 :latin-5 :latin5)
-      (:iso8859-6 :latin-6 :latin6)
-      (:iso8859-7 :latin-7 :latin7)
-      (:iso8859-8 :latin-8 :latin8)
-      (:iso8859-9 :latin-9 :latin9)
-      (:iso8859-14 :latin-14 :latin14)
-      (:iso8859-15 :latin-15 :latin15)
-      (:koi8-r)
+      (:iso8859-1 :latin1 :ascii :8-bit :1250 :iso88591 :latin-1 :iso-8859-1)
+      (:1251 :CP1251 :|cp1251| :WINDOWS-1251 :|windows-1251|)
+      (:1252 :CP1252 :|cp1252| :WINDOWS-1252 :|windows-1252|)
+      (:1253 :CP1253 :|cp1253| :WINDOWS-1253 :|windows-1253|) ;; For MS Windows
+      (:1254 :CP1254 :|cp1254| :WINDOWS-1254 :|windows-1254|) ;; For MS Windows
+      (:1255 :CP1255 :|cp1255| :WINDOWS-1255 :|windows-1255|) ;; For MS Windows
+      (:1256 :CP1256 :|cp1256| :WINDOWS-1256 :|windows-1256|) ;; For MS Windows
+      (:1257 :CP1257 :|cp1257| :WINDOWS-1257 :|windows-1257|) ;; For MS Windows
+      (:1258 :CP1258 :|cp1258| :WINDOWS-1258 :|windows-1258|) ;; For MS Windows
+      (:iso8859-2 :latin-2 :latin2 :ISO-8859-2 :|iso-8859-2| :|latin-2|)
+      (:iso8859-3 :latin-3 :latin3 :ISO-8859-3 :|iso-8859-3| :|latin-3|)
+      (:iso8859-4 :latin-4 :latin4 :ISO-8859-4 :|iso-8859-4| :|latin-4|)
+      (:iso8859-5 :ISO-8859-5 :|iso-8859-5|)
+      (:iso8859-6 :ISO-8859-6 :|iso-8859-6|)
+      (:iso8859-7 :ISO-8859-7 :|iso-8859-7|)
+      (:iso8859-8 :ISO-8859-8 :|iso-8859-8|)
+      (:iso8859-9 :latin-5 :latin5 :ISO-8859-9 :|iso-8859-9| :|latin-5|)
+      (:iso8859-14 :latin-8 :latin8 :ISO-8859-14 :|iso-8859-14| :|latin-8|)
+      (:iso8859-15 :latin-9 :latin9 :LATIN9 :ISO-8859-15 :ISO8859-15)
+      (:koi8-r :|koi8-r|)
       (:emacs-mule)
       (:utf8 :utf-8)
       (:big5)
       (:gb2312)
-      (:euc :ujis :euc-jp :eucjp)
+      (:euc :ujis :euc-jp :eucjp :|eucJP|)
       (:874) ;; For MS Windows
       (:932) ;; For MS Windows
       (:936) ;; For MS Windows
@@ -674,7 +674,7 @@
 ;; specified as:
 ;;  - :XXX when canonical name same as internal name
 ;;  - (:CANONICAL . :INTERNAL) otherwise
-(defconstant *canonical-to-internal-coding-name-mapping*
+(define-constant %canonical-to-internal-coding-name-mapping%
     #+:allegro
     '(
       :iso8859-1
@@ -709,15 +709,50 @@
       :950
       :jis
       :shiftjis)
-    #-:allegro
+    #+:sbcl
+    '(
+      :iso8859-1
+      (:1251 . :cp1251)
+      (:1252 . :cp1252)
+      (:1253 . :cp1253)
+      (:1254 . :cp1254)
+      (:1255 . :cp1255)
+      (:1256 . :cp1256)
+      (:1257 . :cp1257)
+      (:1258 . :cp1258)
+      :iso8859-2
+      :iso8859-3
+      :iso8859-4
+      :iso8859-5
+      :iso8859-6
+      :iso8859-7
+      :iso8859-8
+      :iso8859-9
+      :iso8859-14
+      :iso8859-15
+      :koi8-r
+      ;:emacs-mule
+      :utf8
+      ;:big5
+      ;:gb2312
+      (:euc . :euc-jp)
+      (:874 . :cp874)
+      ;:932
+      ;:936
+      ;:949
+      ;:950
+      ;:jis
+      ;:shiftjis
+      )
+    #-(or :allegro :sbcl)
     NIL
     )
 
 (defun internal-coding-system-name (name)
   (or
-   (find name *canonical-to-internal-coding-name-mapping*)
+   (find name %canonical-to-internal-coding-name-mapping%)
    (cdr
-    (find name *canonical-to-internal-coding-name-mapping*
+    (find name %canonical-to-internal-coding-name-mapping%
 	  :test #'(lambda (x y)
 		    (and (listp y)
 			 (eq x (car y))))))))
@@ -737,33 +772,34 @@
      ',coding))
 
 (defun do-set-coding-system (coding &optional raw)
-
-  (unless
-      (setf coding
-	(canonical-coding-system-name coding))
-    (error "set-coding-system(): invalid coding system `~a'.~%~%valid coding systems are~%~a" raw %coding-system-names%))
-    
-  #+:allegro
-  (let* ((allegro-coding-name (internal-coding-system-name coding))
-	 (locale (excl::find-locale (format nil ".~a" allegro-coding-name))))
-    (cond
-     (locale 
-      (setf excl:*locale* locale)
+  (let (internal-coding-name)
+    (unless
+	(setf coding
+	  (canonical-coding-system-name coding))
+      (error "set-coding-system(): invalid coding system `~a'.~%~%~
+valid coding systems are~%~a" raw %coding-system-names%))
+    (setf internal-coding-name (internal-coding-system-name coding))
+    (if (not internal-coding-name)
+	(format t
+		"~&set-coding-system(): ignoring request for ~a on this Lisp implementation." coding) 
+      #+:allegro
+      (if (setf excl:*locale* 
+	    (excl::find-locale 
+	     (format nil ".~a" internal-coding-name)))
+	  (format t "~&set-coding-system(): activated ~a." coding)
+	(format t "~&set-coding-system(): mysterious problem activating ~a." coding))
+      #+:sbcl
+      (if (and
+	   (sb-impl::get-external-format internal-coding-name)
+	   (setf sb-impl::*default-external-format* 
+	    internal-coding-name))
+	  (format t "~&set-coding-system(): activated ~a." coding)
+	(format t "~&set-coding-system(): mysterious problem activating ~a." coding))
+      #-(or :allegro :sbcl)
       (format
        t
-       "~&set-coding-system(): activating ~a."
-       locale))
-     (t
-      (format
-       t
-       "~&set-coding-system(): mysterious problem activating ~a."
+       "~&set-coding-system(): ignoring request for ~a on this Lisp implementation."
        coding))))
-  #-:allegro
-  (format
-   t
-   "~&set-coding-system(): ~
-    ignoring request for ~a on this Lisp implementation."
-   coding))
 
 (defun grammar-encoding (coding)
   (do-set-coding-system (intern (string coding) :keyword)))
