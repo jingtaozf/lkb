@@ -81,9 +81,9 @@
 ;;;                                                        (20-jan-00  -  oe)
 (defvar *active-parsing-p* t)
 
-(defvar *chart* (make-array (list *chart-limit* 2))) 
+(defvar *chart* (make-array (list *chart-limit* 2) :initial-element nil)) 
 
-(defvar *tchart* (make-array (list *chart-limit* 2))) 
+(defvar *tchart* (make-array (list *chart-limit* 2) :initial-element nil)) 
 ;;; for now it seems best to keep the token and morphophonology
 ;;; chart separate from the `real' one.  It seems possible that
 ;;; the number of vertices in *chart* may end up being
@@ -540,6 +540,11 @@
   ;;
   (check-morph-options input)
   (reset-statistics)
+  
+  #+:maf
+  (when (smaf::saf-p input)
+    (setf input (saf::instantiate-l-content input smaf::*lmap*)))
+
   (let* ((*active-parsing-p* (if *bracketing-p* nil *active-parsing-p*))
          (first-only-p (if (and first-only-p 
                                 (null *active-parsing-p*)

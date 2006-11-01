@@ -25,7 +25,7 @@
   #+:preprocessor
   (when (preprocessor:preprocessor-initialized-p)
     (return-from preprocess-sentence-string 
-      (preprocessor:preprocess str :format :smaf)))
+      (preprocessor:preprocess str)))
 
   (let ((in-word nil)
         (chars (coerce str 'list))

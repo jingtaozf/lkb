@@ -7,13 +7,13 @@
 
 
 ;;;
-;;; ToDo
+;;; oe's wish list:
 ;;;
-;;; rework to implement the following specification:
+;;; implement the following specification:
 ;;;
 ;;; @ version
 ;;;
-;;; : token separator (also marks transition from string- to token-level rules)
+;;; : token separator (also mark transition from string- to token-level rules)
 ;;;
 ;;; - replace
 ;;;
@@ -53,18 +53,20 @@
 (defvar *local-to-global-point-mapping* #'identity)
 
 (defvar *preprocess-p* nil)
-(defvar *preprocessor-debug-p* t)
+;(defvar *preprocessor-debug-p* t)
 (defvar *preprocessor* nil)
 (defvar *x-addressing* nil)
 
 (defvar *span* nil)
 (defvar *text* nil)
 
+(defparameter *default-token-sep* 
+    (let ((ppcre::*regex-char-code-limit* 256))
+      (ppcre:create-scanner "[ \\t]+" :single-line-mode t)))
+
 (defstruct x-fspp
   version
-  (tokenizer 
-   (let ((ppcre::*regex-char-code-limit* 256))
-     (ppcre:create-scanner "[ \\t]+" :single-line-mode t)))
+  (tokenizer *default-token-sep*) 
   global
   local)
 
@@ -95,6 +97,7 @@
 (defun clear-preprocessor ()
   (setf *preprocessor* nil))
 
+;; return max code point of all characters in file
 (defun file-max-char-code (filename)
   (with-open-file (stream filename :direction :input)
     (loop
@@ -102,135 +105,186 @@
 	while (setf c (read-char stream nil nil))
 	maximize (char-code c))))
 
+;; top-level call
 (defun read-preprocessor (file)
   ;; ppcre::*regex-char-code-limit* will be set smallest possible value
-  (let ((ppcre::*regex-char-code-limit* *min-regex-char-code-limit*))
-    (read-preprocessor-aux file)))
+  (let* ((ppcre::*regex-char-code-limit* *min-regex-char-code-limit*)
+	 (x-fspp (read-preprocessor-aux file))) 
+    ;; finalize x-fspp
+    (setf (x-fspp-global x-fspp)
+      (nreverse (x-fspp-global x-fspp)))
+    (setf (x-fspp-local x-fspp)
+      (nreverse (x-fspp-local x-fspp)))
+    (format t "~a~%" x-fspp)
+    (setf *preprocessor* x-fspp)))
 
-(defun read-preprocessor-aux (file &key (x-fspp (make-x-fspp) x-fsppp))
+(defparameter *multiple-rule-internal-separator* 
+    (ppcre:create-scanner "\\t{2,}" :single-line-mode t))
+(defparameter *rule-regex* 
+    (ppcre:create-scanner "^.([^\\t]+)\\t+([^\\t]+)" :single-line-mode t))
+
+;; recursive call
+(defun read-preprocessor-aux (file &key (x-fspp (make-x-fspp)))
   (when (probe-file file)
     ;; set ppcre::*regex-char-code-limit* to smallest possible value
     (setf ppcre::*regex-char-code-limit*
       (max ppcre::*regex-char-code-limit*
 	   (file-max-char-code file)))
+    ;; now walk through file and collect rules
     (with-open-file (stream file :direction :input)
-      (let* ((path (pathname file))
-             (type (pathname-type path)))
-        (format 
-         t 
-         "~&Reading preprocessor rules `~a~@[.~a~]'~%" 
-         (pathname-name path) type)
-        (loop
-            with separator = (ppcre:create-scanner "\\t+" :single-line-mode t)
-            for n from 1
-            for line = (read-line stream nil nil)
-            for length = (length line)
-            for c = (unless (zerop length) (char line 0))
-            when (and c (not (char= c #\;))) do
-              (multiple-value-bind (start end) (ppcre:scan separator line)
-                (cond
-		 ;; @ version
-                 ((char= c #\@)
-                  (let* ((version (subseq line 1 end))
-                         (version (if (string= version "$Date: " :end1 7)
-                                    (subseq version 7 (- (length version) 2))
-                                    version)))
-                    (setf (x-fspp-version x-fspp) 
-                      (string-trim '(#\Space) version))))
-		 ;; < import
-                 ((char= c #\<)
-                  (let* ((name (subseq line 1 end))
-                         (file (or (probe-file name)
-                                   (probe-file (merge-pathnames name path)))))
-                    (if file
-                      (read-preprocessor-aux file :x-fspp x-fspp)
-                        (format
-                         t
-                         "read-preprocessor(): [~d] unable to include `~a'~%"
-                         n name))))
-		 ;; : tokenizer
-                 ((char= c #\:)
-                  (let ((tokenizer (subseq line 1 end)))
-                    (setf (x-fspp-tokenizer x-fspp) tokenizer)))
-		 ;; ! replace
-		 ;; - substitute
-		 ;; + augment
-		 ;; ^ ersatz
-		 ;; > ersatz
-                 ((member c '(#\! #\- #\+ #\^ #\>) :test #'char=)
-                  (if (and start end)
-                    (let* ((type (case c
-                                   (#\! :replace)
-                                   (#\- :substitute)
-                                   (#\+ :augment)
-                                   (#\^ :ersatz)
-                                   (#\> :ersatz-augment)
-				   ))
-                           (source (subseq line 1 start))
-                           (target (subseq line end))
-                           (scanner
-                            (ignore-errors
-                             (ppcre:create-scanner 
-                              (if (eq type :replace)
-                                source
-                                (format nil "^~a$" source))
-			      :single-line-mode t)))
-                           (match (make-x-fsr :type type :source source
-                                            :scanner scanner :target target)))
-                      (if scanner
-                        (if (eq type :replace)
-                          (push match (x-fspp-global x-fspp))
-                          (push match (x-fspp-local x-fspp)))
-                        (format
-                         t
-                         "read-preprocessor(): [~d] invalid pattern `~a'~%"
-                         n source)))
-                    (format
-                     t
-                     "read-preprocessor(): [~d] invalid `~a'~%"
-                     n line)))
-                 (t
-                  (format
-                   t
-                   "read-preprocessor(): [~d] ~
-                    ignoring unknown rule type `~a'~%"
-                   n c))))
-            when (null line) do
-              (unless x-fsppp
-                (setf (x-fspp-global x-fspp)
-                  (nreverse (x-fspp-global x-fspp)))
-                (setf (x-fspp-local x-fspp)
-                  (nreverse (x-fspp-local x-fspp))))
-              (unless x-fsppp (format t "~a~%" x-fspp))
-              (return (if x-fsppp x-fspp (setf *preprocessor* x-fspp))))))))
+      (format t "~&Reading preprocessor rules '~a'~%" file)
+      (loop
+	  with path = (pathname file)
+	  for n from 1
+	  for line = (read-line stream nil nil)
+	  while line
+	  do
+	    (read-preprocessor-line line n x-fspp path)))
+      x-fspp))
 
-(defun preprocess (string &key (preprocessor *preprocessor*) 
-                               (globalp t) (tokenp t)
-                               (verbose *preprocessor-debug-p*)
-				 (format :list))
-  (unless *preprocessor*
-    (error "*preprocessor* not loaded"))
-  (let* ((x (make-preprocessed-x string))
-	 (*text* string)
-	 (*span* (char-map-simple-range (char-map x))) 
+(defparameter *empty-line-regex* 
+    (ppcre:create-scanner "^\\s*$" :single-line-mode t))
+
+(defun read-preprocessor-line (line n x-fspp path)
+  (unless (= (length line) 0)
+    (let ((c (char line 0)))
+      (cond
+       ((char= #\; c)
+	;; comment
+	)
+       ((char= #\@ c)
+	(read-preprocessor-version line x-fspp n))
+       ((char= #\< c)
+	(read-preprocessor-import line x-fspp path n))
+       ((char= #\: c)
+	(read-preprocessor-tokenizer line x-fspp))
+       ((char= #\! c)
+	(read-preprocessor-rule :replace line x-fspp n))
+       ((char= #\- c)
+	(read-preprocessor-rule :substitute line x-fspp n))
+       ((char= #\+ c)
+	(read-preprocessor-rule :augment line x-fspp n))
+       ((char= #\^ c)
+	(read-preprocessor-rule :ersatz line x-fspp n))
+       ((char= #\> c)
+	(read-preprocessor-rule :ersatz-augment line x-fspp n))
+       ((ppcre:scan *empty-line-regex* line)
+	;; empty line
+	)
+       (t
+	(format t
+		"read-preprocessor(): [line ~d] ~
+                    ignoring unknown rule type `~a'~%"
+		n c))))))
+
+(defparameter *date-regex* 
+    (ppcre:create-scanner "^.\\$Date$" :single-line-mode t))
+
+(defun read-preprocessor-version (line x-fspp n)
+  (multiple-value-bind (match registers) 
+      (cl-ppcre:scan-to-strings *date-regex* line :sharedp t)
+    (if match
+	(let ((version (aref registers 0)))
+	  (setf (x-fspp-version x-fspp) version))
+      (format t "read-preprocessor(): [line ~d] invalid `~a'~%" n line))))
+
+(defparameter *import-regex* 
+    (ppcre:create-scanner "^.(.*)" :single-line-mode t))
+
+(defun read-preprocessor-import (line x-fspp path n)
+  (multiple-value-bind (match registers) 
+      (cl-ppcre:scan-to-strings *import-regex* line :sharedp t)
+    (if match
+	(let* ((name (aref registers 0))
+	       (file (or (probe-file name)
+			 (probe-file (merge-pathnames name path)))))
+	  (if file
+	      (read-preprocessor-aux file :x-fspp x-fspp)
+	    (format t "read-preprocessor(): [~d] unable to include `~a'~%" n name)))
+      (format t "read-preprocessor(): [line ~d] invalid `~a'~%" n line))))
+
+(defun read-preprocessor-tokenizer (line x-fspp)
+  (let ((tokenizer (subseq line 1)))
+    (setf (x-fspp-tokenizer x-fspp) tokenizer)))
+
+(defun read-preprocessor-rule (type line x-fspp n)
+  ;; try to get source/target
+  (multiple-value-bind (match registers) 
+      (cl-ppcre:scan-to-strings *rule-regex* line :sharedp t)
+    ;; warn user of this fails
+    (unless match
+      (format t "read-preprocessor(): [~d] invalid `~a'~%" n line)
+      (return-from read-preprocessor-rule))
+    ;; DEPRECATION warning
+;    (if (ppcre:scan *multiple-rule-internal-separator* line)
+;		  (format t "~&;WARNING: /deprecated/ use of multiple tabs to separate target/replacement in FSR rule (line ~a)~%" n))
+    ;; process source/target
+    (let* ((source (aref registers 0))
+	   (target (aref registers 1))
+	   ;; create scanner
+	   (scanner
+	    (ignore-errors
+	     (ppcre:create-scanner 
+	      (if (eq type :replace)
+		  source
+		(format nil "^~a$" source))
+	      :single-line-mode t)))
+	   x-fsr)
+      (cond
+       (scanner
+	;; create x-fsr
+	(setf x-fsr (make-x-fsr :type type :source source
+				:scanner scanner :target target))
+	;; :replace goes to globals
+	;; all others to local
+	(if (eq type :replace)
+	    (push x-fsr (x-fspp-global x-fspp))
+	  (push x-fsr (x-fspp-local x-fspp))))
+       (t
+	;; problem creating scanner
+	(format t
+		"read-preprocessor(): [line ~d] invalid pattern `~a'~%"
+		n source))))))
+
+(defun preprocess (string &key (preprocessor *preprocessor*)
+                               verbose format)
+  (let* ((x (make-preprocessed-x string)) ;; construct x-string
+	 (*text* string) ;; see SMAF::X-PARSE
+	 ;(*span* (char-map-simple-range (char-map x))) ;; not used???
 	)
     ;; if no preprocessor defined...
     (when (null preprocessor)
-      (return-from preprocess (and (eq format :lkb) x)))
+      (error "no preprocessor available"))
     ;; process text globally
-    (when globalp
-      (preprocess-global x (x-fspp-global preprocessor)
-			   :verbose verbose))
+    (preprocess-global x (x-fspp-global preprocessor) :verbose verbose)
     ;; process tokens
-    (multiple-value-bind (result length)
-	(preprocess-tokens (x-split (x-fspp-tokenizer preprocessor) x) 
+    (let* ((x-tokens (x-split (x-fspp-tokenizer preprocessor) x))
+	   (saf-annots (x-tokens-to-saf-annots x-tokens)))
+      (setf saf-annots
+	(preprocess-tokens saf-annots
 			   (x-fspp-local preprocessor)
-			   :tokenp tokenp
-			   :verbose verbose)
-      ;; get output in desired format
-      (x-format-preprocessed-output
-       (nreverse (x-tokens-to-result (nreverse result) :format format))
-       length format))))
+			   :verbose verbose))
+      (x-format-preprocessed-output saf-annots :format format))))
+
+;	;; get output in desired format
+;	(x-format-preprocessed-output
+;	 (x-tokens-to-result result)
+;	 length format)))))
+
+(defparameter *smaf-id* 0)
+
+(defun x-tokens-to-saf-annots (x-tokens)
+  (loop
+      with node = 0
+      for x in x-tokens
+      unless (string= (text x) "")
+      collect 
+	(smaf::make-saf-edge
+	 :id (incf *smaf-id*)
+	 :type :|token|
+	 :source node
+	 :target (incf node)
+	 :content x)))
 
 (defun preprocess-global (x &optional (global (slot-value *preprocessor* 'global)) &key verbose)
   (with-slots (text char-map) x
@@ -238,20 +292,20 @@
 	for rule in global
 	for scanner = (x-fsr-scanner rule)
 	for target = (x-fsr-target rule)
-	for old-x = (clone-preprocessed-x x) ;;effic?
 	do
-	  (setf x (x-regex-replace-all scanner x target))
-	when (and (eq verbose :trace) 
-		  (not (preprocessed-x= old-x x)))
-	do
-	  (format
-	   t
-	   "~&GLOBAL |~a| -> |~a| ~&mapped~&~a~&to~&~a~%~%"
-	   (x-fsr-source rule) (x-fsr-target rule)
-	   old-x x)
-	finally
-	  (return x))))
+	  (multiple-value-bind (res matchp)
+	      (x-regex-replace-all scanner x target)
+	    (when (and matchp verbose)
+	      (format t
+		      "~&GLOBAL |~a| -> |~a| ~&mapped~&~a~&to~&"
+		      (x-fsr-source rule) (x-fsr-target rule)
+		      x)
+	      (setf x res)
+	      (format t "~&~a~%~%" x))
+	    (setf x res))))
+  x)
 
+#+:null
 (defun clone-preprocessed-x (x)
   (make-instance 'preprocessed-x 
     :text (copy-seq (text x))
@@ -262,20 +316,139 @@
     :text (text x)
     :char-map (char-map x)))
 
-(defun preprocess-tokens (x-l 
-			    &optional (local (slot-value *preprocessor* 'local)) 
-			    &key tokenp verbose)
+(defun preprocess-tokens (saf-annots local &key verbose)
+  (loop
+      for fsr in local
+      for type = (x-fsr-type fsr)
+      for scanner = (x-fsr-scanner fsr) ;; confusing
+      for target = (x-fsr-target fsr)
+      do
+	(loop 
+	    for annot in 
+	      (loop for annot in saf-annots
+		  when (eq :|token| (smaf::saf-edge-type annot))
+		  collect annot)
+	    for x-orig = (smaf::saf-edge-content annot)
+;	    for x-orig = (smaf::saf-fs-feature-value2 
+;			  (smaf::saf-edge-content annot)
+;			  :surface)
+	    with x-str
+	    for annot-source = (smaf::saf-edge-source annot)
+	    for annot-target = (smaf::saf-edge-target annot)
+	    when (ppcre::scan scanner (text x-orig))
+	    do
+	      (setf x-str (copy-preprocessed-x x-orig))
+	      (x-regex-replace scanner x-str target)
+	      (when verbose
+		(format t
+			"~&~a |~a| -> |~a| in ~a gave ~a"
+			type
+			(x-fsr-source fsr) target 
+			x-orig x-str))
+	      (setf (char-map x-str) ;; hack! fix_me ???
+		(substitute (char-map-simple-range (char-map x-orig))
+			    nil
+			    (char-map x-str)))
+	      (case type
+		(:ersatz
+		 ;; add new annot
+		 (push (smaf::make-saf-edge
+			:id (incf *smaf-id*)
+			:type :|ersatz|
+			:source annot-source
+			:target annot-target
+			:content (list
+				  (smaf::make-saf-fv
+				   :feature :surface
+				   :value x-orig)
+				  (smaf::make-saf-fv
+				   :feature :name
+				   :value (text x-str))))
+		       saf-annots)
+		 ;; and remove exisiting
+		 (setf saf-annots (remove annot saf-annots)))
+		(:ersatz-augment
+		 ;; add new annot
+		 ;(format t "~%~%~a~%~%" saf-annots)
+		 (push (smaf::make-saf-edge
+			:id (incf *smaf-id*)
+			:type :|ersatz|
+			:source annot-source
+			:target annot-target
+			:content (list
+				  (smaf::make-saf-fv
+				   :feature :surface
+				   :value x-orig)
+				  (smaf::make-saf-fv
+				   :feature :name
+				   :value (text x-str))))
+		       saf-annots)
+		 ;(format t "~%~%~a~%~%" saf-annots)
+		 )
+		(:augment
+		 ;; add new annot
+		 (push (smaf::make-saf-edge
+			:id (incf *smaf-id*)
+			:type :|token|
+			:source annot-source
+			:target annot-target
+			:content x-str)
+		       saf-annots))
+		(:substitute
+		 ;; add new annot
+		 (push (smaf::make-saf-edge
+			:id (incf *smaf-id*)
+			:type :|token|
+			:source annot-source
+			:target annot-target
+			:content x-str)
+		       saf-annots)
+		 ;; and remove exisiting
+		 (setf saf-annots (remove annot saf-annots)))
+		(t
+		 (error "unhandled fsr type: ~s" type)))))
+  
+  ;; contruct saf
+  (loop
+      with nodes
+      for annot in saf-annots
+      for source = (smaf::saf-edge-source annot)
+      for target = (smaf::saf-edge-target annot)
+      minimize source into init-node
+      maximize target into final-node
+      do 
+	(pushnew source nodes :test #'=)
+	(pushnew target nodes :test #'=)
+      finally
+	(return
+	  (smaf::make-saf 
+	   :lattice (smaf::make-saf-lattice 
+		     :start-node (2-str init-node)
+		     :end-node (2-str final-node)
+		     :nodes (loop for node in nodes collect (2-str node))
+		     :edges (loop 
+				for annot in saf-annots
+				collect (clean-saf-annot annot)))
+	   :meta  (smaf::make-saf-meta 
+		   :document nil
+		   :addressing :|char|
+		   :olac nil)
+	   ))))
+
+#+:null
+(defun preprocess-tokens2 (saf-annots local &key verbose)
   (loop
       with result
       with x-token
       with length = 0
-      for x in x-l
+      for saf-annot in saf-annots
+      ;for x = (smaf::saf-edge-content saf-annot)
       unless (string= (text x) "") do
 	(incf length)
 	(setf x-token x)
 	(loop
 	    with extra = nil
-	    for rule in (when tokenp local)
+	    for rule in local
 	    for type = (x-fsr-type rule)
 	    for scanner = (x-fsr-scanner rule)
 	    for target = (x-fsr-target rule)
@@ -295,7 +468,7 @@
 	       ;; matches as needed :-{.                     (31-jan-03; oe)
 	       ;;
 	       ;; or hack ppcre code? (bmw)
-	    when (and (eq verbose :trace) 
+	    when (and verbose 
 		      (not (string= (text x-new) text-old))
 		      ) 
 	    do
@@ -340,8 +513,8 @@
       finally
 	(return (values result length))))
 
-(defun x-tokens-to-result (tokens &key verbose 
-				       format) ;;get rid of this
+#+:null
+(defun x-tokens-to-result (tokens &key verbose)
   ;; tokens: 
   ;;(
   ;; (|manns|:(0 . 5) (:AUGMENT (|mann s|:(0 . 5)))) 
@@ -364,26 +537,24 @@
 		    collect x)))
       for end = (+ 1 i intermediate-nodes)
       do
-	(unless (or (eq format :chared)
-		    (eq format :lkb)) ;; can't handle lattice
-	  (loop
-	      for (type form) in extra ;; (:AUGMENT (|mann s|:(0 . 5)))
-	      when (eq type :augment) do 
-		;; create edge from extra elt
-		(loop 
-		    with toks = (copy-list form)
-		    with tok
-		    with start2 = start
-		    with end2
+	(loop
+	    for (type form) in extra ;; (:AUGMENT (|mann s|:(0 . 5)))
+	    when (eq type :augment) do 
+	      ;; create edge from extra elt
+	      (loop 
+		  with toks = (copy-list form)
+		  with tok
+		  with start2 = start
+		  with end2
 		    while (setf tok (pop toks))
-		    do
-		      (if toks
-			  (setf end2 (incf i))
-			(setf end2 end))
+		  do
+		    (if toks
+			(setf end2 (incf i))
+		      (setf end2 end))
 		      (push (list (incf id) start2 end2 tok nil)
 			    result)
-		      (setf start2 end2)))
-	  (setf i end))
+		    (setf start2 end2)))
+	(setf i end)
 	;; create edge from form
 	(push (list (incf id) start end form surface) 
 	      result)
@@ -425,168 +596,83 @@
           (return result))
     ""))
 
-(defun x-format-preprocessed-output (result length &optional (format :list))
+(defun clean-saf-annot (annot)
+  (let* ((type (smaf::saf-edge-type annot))
+	 (content (smaf::saf-edge-content annot))
+	 surface
+	 range from to
+	 fv)
+
+    ;; replace x-string (surface/content)
+    (when (eq type :|token|)
+      (setf surface content)
+      (setf (smaf::saf-edge-content annot) (text surface)))
+    (when (eq type :|ersatz|)
+      (setf surface (smaf::saf-fs-feature-value2 content :surface))
+      (setf fv (find :surface content 
+		     :key #'smaf::saf-fv-feature))
+      (setf (smaf::saf-fv-value fv) (text surface)))
+
+    (setf range (char-map-simple-range
+		 (char-map surface)))
+    (setf from (car range))
+    (setf to (cdr range))
+    
+    ;; instantiate 'from' and 'to'
+    (setf (smaf::saf-edge-from annot) from)
+    (setf (smaf::saf-edge-to annot) to)
+    ;; convert everything to string (temp!)
+    (setf (smaf::saf-edge-id annot) (2-str (smaf::saf-edge-id annot)))
+    ;(setf (smaf::saf-edge-type annot) (2-str (smaf::saf-edge-type annot)))
+    (setf (smaf::saf-edge-source annot) (2-str (smaf::saf-edge-source annot)))
+    (setf (smaf::saf-edge-target annot) (2-str (smaf::saf-edge-target annot)))
+    (setf (smaf::saf-edge-from annot) (2-str (smaf::saf-edge-from annot)))
+    (setf (smaf::saf-edge-to annot) (2-str (smaf::saf-edge-to annot)))
+    (loop for fv in (and (listp content) content)
+	do
+	  (setf (smaf::saf-fv-feature fv) (2-str (smaf::saf-fv-feature fv)))
+	  (setf (smaf::saf-fv-value fv) (2-str (smaf::saf-fv-value fv))))
+    
+    )
+  annot)
+
+(defun x-format-preprocessed-output (saf &key format)
+  
   (cond
    ((or (eq format :yy)
 	(eq format :pet)) ;; deprecate this...?
     (loop
-	for (id start end form surface2) in result
-	for surface = (or surface2 form)
+	with length = (length (smaf::saf-lattice-nodes (smaf::saf-lattice saf)))
+	with saf-annots = (smaf::saf-lattice-edges (smaf::saf-lattice saf))
+	for annot in saf-annots
+	for content = (smaf::saf-edge-content annot)
+	for type = (smaf::saf-edge-type annot)
+	for id = (smaf::saf-edge-id annot)
+	for start = (smaf::saf-edge-source annot)
+	for end = (smaf::saf-edge-target annot)
+	for surface = (smaf::saf-fs-feature-value2 content :surface)
+	for form = (if (string= type "ersatz")
+		       (smaf::saf-fs-feature-value2 content :name)
+		     surface)
 	for token = (format 
 		     nil 
 		     "(~d, ~d, ~d, 1, \"~a\" \"~a\", 0, \"null\")" 
 		     id start end 
-		     (x-escape-string (text form)) (x-escape-string (text surface)))
+		     (x-escape-string form)
+		     (x-escape-string surface))
 	collect token into tokens
 	finally 
 	  (return
 	    (values (format nil "~{~a~^ ~}" tokens) length))))
-   #+:lkb
-   ((eq format :pic)
-    (error "not implemented"))
+   ((null format)
+    saf)
    ((or (eq format :saf) (eq format :smaf))
-    (p-tokens-to-smaf result :format format))
+    (smaf::to-xml saf :format format))
    ((eq format :list)
-    (values result length))
+    (error ":list format no longer supported"))
    (t
     (error "unhandled format argument: ~a" format))))
 
-(defun p-tokens-to-smaf (p-tokens &key (format :smaf))
-    (setf *x-addressing* :|char|)
-    (let ((strm (make-string-output-stream)))
-      (format strm "~a" 
-	      (saf-header :doctype format :addressing *x-addressing* 
-			  :document 
-			  #+:lkb (eval (intern "*SAF-DOCUMENT*" :smaf)) 
-			  #-:lkb nil))
-      (format strm "<~a init='v~a' final='v~a'~a>"
-	      (if (member format '(:saf))
-		  "fsm"
-		"lattice")
-	      (loop for tok in p-tokens
-		  minimize (second tok))
-	      (loop for tok in p-tokens
-		  maximize (third tok))
-	      (if (eq :smaf format)
-		  (format nil " cfrom='~a' cto='~a'"
-			  (or (funcall *local-to-global-point-mapping* (point2str (car *span*))) "")
-			  (or (funcall *local-to-global-point-mapping* (point2str (cdr *span*))) ""))
-		"")
-	      )
-      (if (or (eq :saf format))
-	  (p-tokens-to-xml-states p-tokens strm))
-      (mapcar #'(lambda (x) 
-		  (format strm "~a"
-			  (p-token-to-smaf-token x :doctype format)))
-	      p-tokens)
-      (format strm "~a" 
-	      (if (member format '(:saf))
-		  "</fsm>"
-		"</lattice>"))
-      (format strm "</~a>" (string-downcase (string format)))
-      (get-output-stream-string strm)))
-    
-(defun p-tokens-to-xml-states (p-tokens strm)
-  (loop
-      with state-ints
-      for p-token in p-tokens
-      do 
-	(pushnew (second p-token) state-ints)
-	(pushnew (third p-token) state-ints)
-      finally
-	(loop 
-	    for i in (sort state-ints #'<)
-	    do
-	      (format strm "<state id='v~a'/>" i))))
-
-(defun point2str (x)
-  (if x (format nil "~a" x)))
-
-;(1 0 1 |EmailErsatz|:(0 . 9) |bmw@c.com|:(0 . 9)) 
-;(2 1 2 |smiles|:(10 . 16) NIL)
-(defun p-token-to-smaf-token (p-token &key doctype)
-  (let* ((id (nth 0 p-token))
-	 (source (nth 1 p-token))
-	 (target (nth 2 p-token))
-	 (form (nth 3 p-token))
-	 (surface (nth 4 p-token))
-	 (range (char-map-simple-range (char-map form)))
-	 (from (or (funcall *local-to-global-point-mapping* (point2str (car range))) 
-		   ""))
-	 (to (or (funcall *local-to-global-point-mapping* (point2str (cdr range))) 
-		 ""))
-	 elt attr-from attr-to)
-;    (declare (ignore surface))
-    (case doctype
-      (:smaf
-       (setf elt "edge")
-       (setf attr-from "cfrom")
-       (setf attr-to "cto"))
-      (:saf
-       (setf elt "annot")
-       (setf attr-from "from")
-       (setf attr-to "to"))
-      (t
-       (error "unexected doctype")))
-    (if surface
-	(format nil "<~a type='ersatz' id='t~a' ~a='~a' ~a='~a' source='v~a' target='v~a'><slot name='name'>~a</slot><slot name='surface'>~a</slot></~a>"
-	    elt
-	    (xml-str id)
-	    attr-from (xml-str from)
-	    attr-to (xml-str to)
-	    (xml-str source)
-	    (xml-str target)
-	    (xml-str (text form))
-	    (xml-str (text surface))
-	    elt
-	    )
-      (format nil "<~a type='token' id='t~a' ~a='~a' ~a='~a' source='v~a' target='v~a'>~a</~a>"
-	      elt
-	      (xml-str id)
-	      attr-from (xml-str from)
-	      attr-to (xml-str to)
-	      (xml-str source)
-	      (xml-str target)
-	      (xml-str (text form))
-	      elt
-	      ))))
-  
-(defun xml-str (x)
-  (xml-escape (2-str x)))
-
-(defun 2-str (x)
-  (cond
-   ((stringp x) x)
-   ((symbolp x) (symb-2-str x))
-   ((numberp x) (num-2-str x))
-   ((pathnamep x) (namestring x))
-   (t (error "unhandled type"))))
-
-(defun symb-2-str (symb)
-  (unless (symbolp symb)
-    (error "symbol expected"))
-  (cond
-   ((null symb) "")
-   (t (string-downcase (string symb)))))
-
-(defun num-2-str (num)
-  (if (null num)
-      (return-from num-2-str))
-  (unless (numberp num)
-    (error "number expected"))
-  (format nil "~a" num))
-  
-; obsolete
-;;;(42 0 1 |The|:(0 . 3) |The|:(0 . 3))
-;;;-> #S(CHARED-WORD :WORD "The" :CFROM 0 :CTO 3)
-;#+:lkb
-;(defun p-token-to-chared-word (p-token)
-;  (let* ((x (fourth p-token))
-;	 (r (char-map-simple-range (char-map x))))
-;    (funcall (intern "MAKE-CHARED-WORD" :lkb) 
-;     :word (text x)
-;     :cfrom (car r)
-;     :cto (cdr r))))
 
 ;;
 ;; (bmw - oct 05)
@@ -756,6 +842,7 @@
 	finally
 	  (return (append new-char-map (subseq char-map last (length char-map)))))))
 
+;; returns: REPLACEMENT + flag indicating whether a match took place
 (defun x-regex-replace-all (scanner x target)
   (with-slots (text char-map) x
     (let ((repl-l (make-repl-list)))
@@ -768,10 +855,11 @@
 			 :repl-l repl-l
 			 :char-map char-map))))
       (with-slots (list) repl-l
-	     (when list
-	       (setf list (reverse list))
-	       (update-char-map list x)))))
-  x)
+	(when list
+	  (setf list (reverse list))
+	  (update-char-map list x))
+	(values x (not (null list))))
+      )))
 
 (defun x-regex-replace (scanner x target)
   (with-slots (text char-map) x
@@ -808,60 +896,26 @@
 	    :text (subseq text start end)
 	    :char-map (subseq char-map start end)))))
 
-;; escape string for use as XML text
-(defun xml-escape (str)
-  (coerce 
-   (loop
-       for c across str
-       if (char= #\" c) append '(#\& #\q #\u #\o #\t #\;)
-       else if (char= #\' c) append '(#\& #\a #\p #\o #\s #\;)
-       else if (char= #\& c) append '(#\& #\a #\m #\p #\;)
-       else if (char= #\< c) append '(#\& #\l #\t #\;)
-       else if (char= #\> c) append '(#\& #\g #\t #\;)
-       else append (list c))
-   'string))
-
-;;
-;; XML serialization
 ;;
 
-(defun get-timestamp nil
-  (multiple-value-bind
-      (second minute hour date month year dummy1 dummy2 dummy3)
-      (decode-universal-time (get-universal-time) 0)
-    (declare (ignore dummy1 dummy2 dummy3))
-    (format nil "~2,'0d:~2,'0d:~2,'0d ~d/~2,'0d/~d (UTC)"
-	    hour
-	    minute
-	    second
-	    month
-	    date
-	    year)))
+(defun 2-str (x)
+  (cond
+   ((stringp x) x)
+   ((symbolp x) (symb-2-str x))
+   ((numberp x) (num-2-str x))
+   ((pathnamep x) (namestring x))
+   (t (error "unhandled type"))))
 
-; get rid of this ???
-(defun maf-header (&key (addressing :char) document)
-  (saf-header :doctype :maf :addressing addressing :document document))
+(defun symb-2-str (symb)
+  (unless (symbolp symb)
+    (error "symbol expected"))
+  (cond
+   ((null symb) "")
+   (t (string-downcase (string symb)))))
 
-(defun saf-header (&key (addressing :char) document (doctype :saf))
-  (let ((doctype-str (string-downcase (string doctype))))
-    (format nil
-	    "<?xml version='1.0' encoding='UTF-8'?><!DOCTYPE ~a SYSTEM '~a.dtd'><~a~a~a>~a<olac:olac xmlns:olac='http://www.language-archives.org/OLAC/1.0/' xmlns='http://purl.org/dc/elements/1.1/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://www.language-archives.org/OLAC/1.0/ http://www.language-archives.org/OLAC/1.0/olac.xsd'><identifier>s~a</identifier><creator>~a</creator><created>~a</created></olac:olac>"
-	    doctype-str
-	    doctype-str
-	    doctype-str
-	    (if document
-		(format nil " document='~a'" (xml-escape (string document)))
-	    "")
-	    (if (or (eq :saf doctype))
-		(format nil " addressing='~a'" (xml-escape (string addressing)))
-	      "")
-	    (if (eq :smaf doctype)
-		(format nil "<text>~a</text>" (xml-escape *text*))
-	      "")
-	    (gen-id)
-	    "x-preprocessor 1.00"
-	    (xml-escape (get-timestamp)))))
-
-(defvar *gen-id* 0)
-(defun gen-id nil
-  (incf *gen-id*))
+(defun num-2-str (num)
+  (if (null num)
+      (return-from num-2-str))
+  (unless (numberp num)
+    (error "number expected"))
+  (format nil "~a" num))

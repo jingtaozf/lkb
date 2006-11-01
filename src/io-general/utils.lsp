@@ -145,6 +145,9 @@
 ;; strings of WORDS separated by 1+ spc chars -> list of WORDS
 ;; list-in -> list-out
 (defun split-into-words (sentence-string)
+  (if (smaf::saf-p sentence-string)
+      ;;return as is
+      (return-from split-into-words sentence-string))
   (if (xml-p sentence-string)
       ;;assume MAF input and return as is
       (return-from split-into-words sentence-string))

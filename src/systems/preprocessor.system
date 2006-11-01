@@ -15,5 +15,8 @@
     :depends-on ("ppcre")
     :source-extension "lsp"
     :components ((:file "package")
-                 (:file "x-preprocess" :depends-on ("package"))
-                 ))
+                 (:file "smaf-package")
+                 (:file "saf0")
+                 (:file "saf2xml")
+		 (:file "x-preprocess" :depends-on ("package"))
+		 ))

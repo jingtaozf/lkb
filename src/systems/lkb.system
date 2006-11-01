@@ -140,7 +140,7 @@
                ((:file "lkb-package")
                 (:file "mrs-package")
                 (:file "mt-package" :load-only t)
-		(:file "smaf-package")))
+		))
 
      (:module "version"
       :source-pathname ""

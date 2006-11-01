@@ -154,9 +154,7 @@
 	 (tedges (get-tedges tchart))
 	 (medges (if wordforms
 		     (get-medges tchart))))
-    (if saf
-	(format strm "~a" (preprocessor::saf-header))
-      (format strm "~a" (preprocessor::maf-header)))
+    (format strm "~a" (smaf::saf-header (smaf::make-saf-meta :document nil :addressing :|char)|)))
     (format strm "~a" (fsm-xml tedges medges :saf saf))
     (if saf
 	(format strm "</saf>")

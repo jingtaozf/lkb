@@ -12,50 +12,6 @@
 
 (in-package :saf)
 
-(defvar *char-map-add-offset*)
-
-(defvar *lmap* nil)
-(defvar *dir* nil)
-
-(defstruct saf
-  meta
-  lattice)
-
-(defstruct saf-lattice
-  start-node
-  end-node
-  nodes
-  edges)
-
-(defstruct saf-edge
-  id
-  type
-  source
-  target
-  from
-  to
-  deps
-  content
-  l-content
-  )
-
-(defstruct saf-fv
-  feature
-  value)
-
-(defstruct saf-meta
-  document
-  addressing
-  olac
-  text)
-
-(defmethod print-object ((object saf) stream)
-  (format 
-   stream 
-   "#[SAF]"
-   ;(length (saf-lattice (saf-lattice-edges object)))
-   ))
-
 (defun saf-lxml-to-saf-object (lxml)
   (unless (member (lxml::lxml-elt-name lxml) '(:|saf| :|smaf|))
     (error "smaf/saf element expected as body"))
@@ -401,6 +357,7 @@
      (cdr path)
      (saf-fs-feature-value fs (car path))))))
 
+#+:null
 (defun saf-fs-feature-value (fs feature)
   (let ((x (find feature fs 
 		 :key #'saf-fv-feature
@@ -437,8 +394,10 @@
 	      (lkb::read-file-to-string textfilename))))
     (format t "~&;;; Data file: ~a" (saf-meta-document (saf-meta saf)))
     (format ostream "~a"
-	    (preprocessor::saf-header :addressing :|char|
-			:document (saf-meta-document (saf-meta saf))))
+	    (smaf::saf-header 
+	     (smaf::make-saf-meta
+	      :addressing :|char|
+	      :document (saf-meta-document (saf-meta saf)))))
     (when reset-unanalysed-tokens
       (setf lkb::*unanalysed-tokens* nil))
     (loop 
