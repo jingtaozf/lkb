@@ -178,7 +178,7 @@
 		n c))))))
 
 (defparameter *date-regex* 
-    (ppcre:create-scanner "^.\\$Date$" :single-line-mode t))
+    (ppcre:create-scanner "^.\\$[D]ate: +(.*) +\\$" :single-line-mode t))
 
 (defun read-preprocessor-version (line x-fspp n)
   (multiple-value-bind (match registers) 
