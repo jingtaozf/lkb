@@ -82,7 +82,7 @@
               (new-args nil)
               (label-recs nil)
 	      (ings nil)
-	      (tchart-edges (lkb::get-edges lkb::*tchart*)) ;; [bmw] see below
+	      ;;(tchart-edges (lkb::get-edges lkb::*tchart*)) ;; [bmw] see below
 	      )
           (dolist (rel lzt)
             (multiple-value-bind (ep rmrs-args new-label-recs)
@@ -99,8 +99,8 @@
                        :rmrs-args new-args
 		       ;; [bmw] hack to obtain standoff points
 		       ;; (which are NOT provided by the input mrs...)
-		       :cfrom (lkb::get-min-edge-cfrom tchart-edges)
-		       :cto (lkb::get-max-edge-cto tchart-edges)
+		       ;;:cfrom (lkb::get-min-edge-cfrom tchart-edges)
+		       ;;:cto (lkb::get-max-edge-cto tchart-edges)
                        :origin :erg)))))
 
 
