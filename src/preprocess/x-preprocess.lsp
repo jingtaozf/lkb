@@ -327,258 +327,167 @@
     :text (text x)
     :char-map (char-map x)))
 
+(defparameter *ersatz-regex* 
+    (ppcre:create-scanner "[^a-zA-Z]*([a-zA-Z]+Ersatz).*" :single-line-mode t))
+
+(defparameter *inter-token-regex* 
+    (ppcre:create-scanner " " :single-line-mode t))
+
 (defun preprocess-tokens (saf local &key verbose)
   (let* ((saf-lattice (smaf::saf-lattice saf))
-	 (saf-annots (smaf::saf-lattice-edges saf-lattice))
-	 (init-node (smaf::saf-lattice-start-node saf-lattice))
-	 (final-node (smaf::saf-lattice-end-node saf-lattice)))
+	 (saf-annots (smaf::saf-lattice-edges saf-lattice)))
+    (loop
+      ;; for each FSR rule...
+	for fsr in local
+	do
+	  (loop
+	    ;; for each (token) ANNOT ...
+	      with token-annots = 
+		(loop for annot in saf-annots
+		    when (eq :|token| (smaf::saf-edge-type annot))
+		    collect annot)
+	      for annot in token-annots
+	      do
+		;; attempt to apply FSR to ANNOT
+		(setf saf-annots 
+		  (preprocess-token annot fsr saf-annots :verbose verbose))))
   
+  ;; contruct SAF output
   (loop
-      for fsr in local
-      for type = (x-fsr-type fsr)
-      for scanner = (x-fsr-scanner fsr) ;; confusing
-      for target = (x-fsr-target fsr)
-      do
-	(loop 
-	    for annot in 
-	      (loop for annot in saf-annots
-		  when (eq :|token| (smaf::saf-edge-type annot))
-		  collect annot)
-	    for x-orig = (smaf::saf-edge-content annot)
-;	    for x-orig = (smaf::saf-fs-feature-value2 
-;			  (smaf::saf-edge-content annot)
-;			  :surface)
-	    with x-str
-	    for annot-source = (smaf::saf-edge-source annot)
-	    for annot-target = (smaf::saf-edge-target annot)
-	    when (ppcre::scan scanner (text x-orig))
-	    do
-	      (setf x-str (copy-preprocessed-x x-orig))
-	      (x-regex-replace scanner x-str target)
-	      (when verbose
-		(format t
-			"~&~a |~a| -> |~a| in ~a gave ~a"
-			type
-			(x-fsr-source fsr) target 
-			x-orig x-str))
-	      (setf (char-map x-str) ;; hack! fix_me ???
-		(substitute (char-map-simple-range (char-map x-orig))
-			    nil
-			    (char-map x-str)))
-	      ;; delete existing annot when nec
-	      (when (member type '(:ersatz :substitute))
-		(setf saf-annots (remove annot saf-annots)))
-	      ;; new (single) ersatz
-	      (when (member type '(:ersatz :ersatz-augment))
-		(push (smaf::make-saf-edge
-		       :id (incf *smaf-id*)
-		       :type :|ersatz|
-		       :source annot-source
-		       :target annot-target
-		       :content (list
-				 (smaf::make-saf-fv
-				   :feature :surface
-				   :value x-orig)
-				 (smaf::make-saf-fv
-				  :feature :name
-				  :value (text x-str))))
-		      saf-annots))
-	      ;; new (perhaps multiple) tokens
-	      (when (member type '(:augment :substitute))
-		(loop
-		    with x-bits = 
-		      (remove "" 
-			      (x-split (x-fspp-tokenizer *preprocessor*) x-str)
-			      :key #'(lambda (x)
-				       (text x))
-			      :test #'string=
-			      )
-		    for i from 0 to (1- (length x-bits))
-		    for x-bit = (nth i x-bits)
-		    with last-node = annot-source
-		    for next-node = (if (= i (1- (length x-bits)))
-					annot-target
-				      (incf *smaf-node*)) 
-		    do
-		      
-		      ;; add new annot
-		      (push (smaf::make-saf-edge
-			     :id (incf *smaf-id*)
-			     :type :|token|
-			     :source last-node
-			     :target next-node
-			     :content x-bit)
-			    saf-annots)
-		      (setf last-node next-node)
-		      ))	
-	      
-	      ))
-  
-  ;(print "OUT!!!")
-  
-  ;; contruct saf
-  (loop
+      with init-node = (smaf::saf-lattice-start-node saf-lattice)
+      with final-node = (smaf::saf-lattice-end-node saf-lattice)
       with nodes
       for annot in saf-annots
       for source = (smaf::saf-edge-source annot)
       for target = (smaf::saf-edge-target annot)
-      ;minimize source into init-node
-      ;maximize target into final-node
       do 
+	;; collect SAF nodes
 	(pushnew source nodes :test #'=)
 	(pushnew target nodes :test #'=)
       finally
 	(return
+	  ;; make it
 	  (smaf::make-saf 
 	   :lattice (smaf::make-saf-lattice 
-		     :start-node (2-str init-node)
-		     :end-node (2-str final-node)
-		     :nodes (loop for node in nodes collect (2-str node))
+		     :start-node (2-str init-node) ;
+		     :end-node (2-str final-node) ;
+		     :nodes (loop for node in nodes collect (2-str node)) ;
 		     :edges (loop 
 				for annot in saf-annots
 				collect (clean-saf-annot annot)))
 	   :meta  (smaf::make-saf-meta 
 		   :document nil
 		   :addressing :|char|
-		   :olac nil)
+		   :olac nil) ;
 	   )))))
 
-#+:null
-(defun preprocess-tokens2 (saf-annots local &key verbose)
-  (loop
-      with result
-      with x-token
-      with length = 0
-      for saf-annot in saf-annots
-      ;for x = (smaf::saf-edge-content saf-annot)
-      unless (string= (text x) "") do
-	(incf length)
-	(setf x-token x)
+;; attempt to apply FSR to ANNOT
+(defun preprocess-token (annot fsr saf-annots &key verbose)
+  (let* (;; FSR slots
+	 (type (x-fsr-type fsr))
+	 (scanner (x-fsr-scanner fsr))
+	 (target (x-fsr-target fsr))
+	 ;; ANNOT slots
+	 (x-orig (smaf::saf-edge-content annot))
+	 (annot-source (smaf::saf-edge-source annot))
+	 (annot-target (smaf::saf-edge-target annot))
+	 x-str)
+    (when (ppcre::scan scanner (text x-orig))
+      ;; found a match...
+      ;; so copy input then apply REPLACE
+      (setf x-str (copy-preprocessed-x x-orig))
+      (x-regex-replace scanner x-str target)
+      ;; debugging output
+      (when verbose
+	(format t
+		"~&~a |~a| -> |~a| in ~a gave ~a"
+		type (x-fsr-source fsr) target 
+		x-orig x-str))
+      ;; fix NILs in CHAR-MAP
+      (setf (char-map x-str)
+	(substitute (char-map-simple-range (char-map x-orig))
+		    nil
+		    (char-map x-str)))
+      ;; DELETE existing annot when nec
+      (when (member type '(:ersatz :substitute))
+	(setf saf-annots (remove annot saf-annots)))
+      ;; new (perhaps multiple) tokens
+      (when t ;
 	(loop
-	    with extra = nil
-	    for rule in local
-	    for type = (x-fsr-type rule)
-	    for scanner = (x-fsr-scanner rule)
-	    for target = (x-fsr-target rule)
-	    for text-old = (text x-token)
-	    for x-old = (copy-preprocessed-x x-token)
-	    for x-new = (if (eq :augment type)
-			    (x-regex-replace scanner 
-					     (copy-preprocessed-x x-token) 
-					     target)
-			  (x-regex-replace scanner x-token target))
-	       ;;
-	       ;; _fix_me_
-	       ;; regex-replace() always returns a fresh string, even if the
-	       ;; pattern did _not_ match; to make this more efficient, it
-	       ;; seems, we would have to use scan() and then glue together
-	       ;; the result from parsing .target. and filling in register
-	       ;; matches as needed :-{.                     (31-jan-03; oe)
-	       ;;
-	       ;; or hack ppcre code? (bmw)
-	    when (and verbose 
-		      (not (string= (text x-new) text-old))
-		      ) 
+	    with xstr0 =
+	      ;; needed for extraction of ersatz'd text
+	      (let ((x (make-preprocessed-x (text x-orig))))
+		(x-regex-replace scanner x target)
+		(setf (char-map x)
+		  (substitute (char-map-simple-range (char-map x-orig))
+			      nil
+			      (char-map x)))
+		x)
+	    with x-bits =
+	      ;; split into bits on *inter-token-regex*
+	      (remove "" 
+		      (x-split *inter-token-regex* x-str)
+		      :key #'(lambda (x)
+			       (text x))
+		      :test #'string=)
+	    with x-bits0 = 
+	      ;; needed for extraction of ersatz'd text
+	      (remove "" 
+		      (x-split *inter-token-regex* xstr0)
+		      :key #'(lambda (x)
+			       (text x))
+		      :test #'string=)
+	    for i from 0 to (1- (length x-bits))
+	    for x-bit = (nth i x-bits)
+	    for x-bit0 = (nth i x-bits0)
+			 ;;for dummy = (progn (print 00) (print (text x-bit0)) (print (char-map x-bit0)))
+	    ;; ensure tie-in to node numbers correctly
+	    with last-node = annot-source
+	    for next-node = (if (= i (1- (length x-bits)))
+				annot-target
+			      (incf *smaf-node*))
+	    ;; check bit contains ersatz
+	    for ersatz-match = 
+	      (multiple-value-bind (x flag)
+		  (x-regex-replace-all *ersatz-regex* x-bit0 "\\1")
+		(if flag x))
+	      ;;	for dummy2 = (if ersatz-match
+	      ;;	     (progn (print 10) (print (text ersatz-match)) (print (char-map ersatz-match))))
+	    with range
 	    do
-	      (format
-	       t
-	       "~&~a |~a| -> |~a| in ~a gave ~a"
-	       type
-	       (x-fsr-source rule) (x-fsr-target rule) 
-	       x-token x-new)
-	    unless (string= text-old (text x-new))
-	    do
-	      (case type
-		(:ersatz-augment
-		 (push (list :ersatz x-old) extra)
-		 (push (list :augment (list x-old)) extra)
-		 )
-		(:ersatz
-		 ;;
-		 ;; _fix_me_
-		 ;; to do ersatzes properly, they should no longer be available
-		 ;; to subsequent rule processing: presumably, we should build
-		 ;; an ersatzing table and use non-string tokens (indices into
-		 ;; the table) instead.                         (1-feb-03; oe)
-		 ;;
-		 (setf (char-map x-new) ;; hack! fix_me
-		   (substitute (char-map-simple-range (char-map x-old))
-			       nil
-			       (char-map x-new)))
-		 (push (list :ersatz x-old) extra)
-		 (setf x-token x-new))
-		(:augment
-		 (push (list 
-			:augment 
-			(x-split (x-fspp-tokenizer *preprocessor*) x-new)) 
-		       extra)) ;; fix_me: regex new token ogso
-		(:substitute
-		 (setf x-token x-new))
-		(t
-		 (error "unhandled type: ~a" type)))
-	    finally
-	      (push (cons x-token extra) result))
-      finally
-	(return (values result length))))
-
-#+:null
-(defun x-tokens-to-result (tokens &key verbose)
-  ;; tokens: 
-  ;;(
-  ;; (|manns|:(0 . 5) (:AUGMENT (|mann s|:(0 . 5)))) 
-  ;; (|smiler|:(6 . 12))
-  ;;)
-  (loop
-      with result = nil
-      with i = 0
-      with id = 0
-      for (form . extra) in tokens
-      for surface = (second (find :ersatz extra :key #'first))
-      for start = i
-      for intermediate-nodes = 
-	(apply #'+ 
-	       (mapcar 
-		#'(lambda (x)
-		    (1- (length (second x))))
-		(loop for x in extra
-		    when (eq (first x) :augment)
-		    collect x)))
-      for end = (+ 1 i intermediate-nodes)
-      do
-	(loop
-	    for (type form) in extra ;; (:AUGMENT (|mann s|:(0 . 5)))
-	    when (eq type :augment) do 
-	      ;; create edge from extra elt
-	      (loop 
-		  with toks = (copy-list form)
-		  with tok
-		  with start2 = start
-		  with end2
-		    while (setf tok (pop toks))
-		  do
-		    (if toks
-			(setf end2 (incf i))
-		      (setf end2 end))
-		      (push (list (incf id) start2 end2 tok nil)
-			    result)
-		    (setf start2 end2)))
-	(setf i end)
-	;; create edge from form
-	(push (list (incf id) start end form surface) 
-	      result)
-      when verbose do
-	(format t "  (~a) [~a:~a] |~a|" id start end form)
-	(loop
-	    for foo in extra
-	    for type = (case (first foo)
-			 (:substitute #\-)
-			 (:augment #\+)
-			 (:ersatz #\^))
-	    for form = (second foo)
-	    do (format t " {~c |~a|}" type form)
-	    finally (format t "~%"))
-      finally 
-	(return result)))
+	      (cond
+	       (ersatz-match
+		;; annot is ERSATZ
+		(setf range (char-map-simple-range (char-map ersatz-match))) ;; get RANGE
+		(push 
+		 (smaf::make-saf-edge
+		  :id (incf *smaf-id*)
+		  :type :|ersatz|
+		  :source last-node
+		  :target next-node
+		  :content (list
+			    (smaf::make-saf-fv
+			     :feature :surface
+			     :value (x-subseq x-orig (car range) (cdr range)))
+			    (smaf::make-saf-fv
+			     :feature :name ;; the ersatz 'token'
+			     :value (text x-bit))
+			    (smaf::make-saf-fv
+			     :feature :type
+			     :value (text ersatz-match)))) ;; the ersatz name
+		 saf-annots))
+	       (t
+		;; annot is normal TOKEN
+		(push (smaf::make-saf-edge
+		       :id (incf *smaf-id*)
+		       :type :|token|
+		       :source last-node
+		       :target next-node
+		       :content x-bit)
+		      saf-annots)))
+	      (setf last-node next-node) ;; keep nodes in sync
+	      ))))
+  saf-annots)
 
 (defun x-escape-string (string &key (syntax :c))
   (declare (ignore syntax))
@@ -718,6 +627,11 @@
     (setf (char-map x)
       (make-char-map (length (text x))))
     x))
+
+(defun x-subseq (x start end)
+  (make-instance 'preprocessed-x
+    :text (subseq (text x) start end)
+    :char-map (subseq (char-map x) start end)))
 
 (defun preprocessed-x= (x y)
   (and
