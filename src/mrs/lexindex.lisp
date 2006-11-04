@@ -418,6 +418,15 @@ we assume that there will generally only be one feature
   #+:mt
   (declare (special mt::*transfer-triggers*))
   
+  ;; if applicable, instantiate DUMMY CARG on ersatz
+  (when (and smaf::*ersatz-carg-path*
+	     (lkb::lex-entry-is-ersatz lex-entry))
+    (setf lex-entry
+      (lkb::get-injected-lex-entry 
+       lex-entry
+       (lkb::get-inject '((:|carg| . "DUMMY")) smaf::*gmap*)))
+    (lkb::expand-psort-entry lex-entry))
+  
   (let* ((fs (tdfs-indef (lex-entry-full-fs lex-entry)))
          (id  (lex-entry-id lex-entry))
          (main-semantics-fs (path-value fs *main-semantics-path*))

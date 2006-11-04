@@ -173,9 +173,7 @@
   word maf-id xfrom xto)
 
 (defstruct (morpho-stem-edge (:include edge))
-  word stem current
-  l-content ;; temporary hack (bmw)
-  ) 
+  word stem current l-content) 
 
 (defun make-edge (&rest rest)
   (apply #'make-edge-x rest))
@@ -493,13 +491,13 @@
 	      *morph-option*)
       (setf *foreign-morph-fn* nil))))  
 
-;; example input: 
+;; supported input: 
 ;; - basic: "the" "dog" "barks"
 ;; - bracketed: "Kim" "(" "(" "likes" ")" "Sandy" ")"
 ;; - chared: #S(CHARED-WORD :WORD "The" :CFROM 0 :CTO 2) 
 ;;           #S(CHARED-WORD :WORD "cat" :CFROM 4 :CTO 6)
 ;;           #S(CHARED-WORD :WORD "barks" :CFROM 8 :CTO 12))
-;; - (s)(m)af xml: "<?xml version='1.0' encoding='UTF8'?><!DOCTYPE maf SYSTEM 'maf.dtd'><maf document='text.xml' addressing='char'><olac:olac xmlns:olac='http://www.language-archives.org/OLAC/1.0/' xmlns='http://purl.org/dc/elements/1.1/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://www.language-archives.org/OLAC/1.0/ http://www.language-archives.org/OLAC/1.0/olac.xsd'><creator>LKB</creator><created>20:46:50 1/18/2006 (UTC)</created></olac:olac><fsm init='v0' final='v3'><state id='v0'/><state id='v1'/><state id='v2'/><state id='v3'/><token id='t1' from='0' to='3' value='the' source='v0' target='v1'/><token id='t2' from='4' to='7' value='dog' source='v1' target='v2'/><token id='t3' from='8' to='13' value='barks' source='v2' target='v3'/><wordForm form='the' tag='' daughters='t1' source='v0' target='v1'><fs><f name='stem'>THE</f></fs></wordForm><wordForm form='dog' tag='' daughters='t2' source='v1' target='v2'><fs><f name='stem'>DOG</f></fs></wordForm><wordForm form='barks' tag='PLUR_NOUN_ORULE' daughters='t3' source='v2' target='v3'><fs><f name='stem'>BARK</f><f name='partial-tree'>((PLUR_NOUN_ORULE &quot;BARKS&quot;))</f></fs></wordForm><wordForm form='barks' tag='THIRD_SG_FIN_VERB_ORULE' daughters='t3' source='v2' target='v3'><fs><f name='stem'>BARK</f><f name='partial-tree'>((THIRD_SG_FIN_VERB_ORULE &quot;BARKS&quot;))</f></fs></wordForm></fsm></maf>"
+;; - s(m)af xml: "<?xml version='1.0' encoding='UTF8'?><!DOCTYPE maf SYSTEM 'maf.dtd'><maf document='text.xml' addressing='char'><olac:olac xmlns:olac='http://www.language-archives.org/OLAC/1.0/' xmlns='http://purl.org/dc/elements/1.1/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://www.language-archives.org/OLAC/1.0/ http://www.language-archives.org/OLAC/1.0/olac.xsd'><creator>LKB</creator><created>20:46:50 1/18/2006 (UTC)</created></olac:olac><fsm init='v0' final='v3'><state id='v0'/><state id='v1'/><state id='v2'/><state id='v3'/><token id='t1' from='0' to='3' value='the' source='v0' target='v1'/><token id='t2' from='4' to='7' value='dog' source='v1' target='v2'/><token id='t3' from='8' to='13' value='barks' source='v2' target='v3'/><wordForm form='the' tag='' daughters='t1' source='v0' target='v1'><fs><f name='stem'>THE</f></fs></wordForm><wordForm form='dog' tag='' daughters='t2' source='v1' target='v2'><fs><f name='stem'>DOG</f></fs></wordForm><wordForm form='barks' tag='PLUR_NOUN_ORULE' daughters='t3' source='v2' target='v3'><fs><f name='stem'>BARK</f><f name='partial-tree'>((PLUR_NOUN_ORULE &quot;BARKS&quot;))</f></fs></wordForm><wordForm form='barks' tag='THIRD_SG_FIN_VERB_ORULE' daughters='t3' source='v2' target='v3'><fs><f name='stem'>BARK</f><f name='partial-tree'>((THIRD_SG_FIN_VERB_ORULE &quot;BARKS&quot;))</f></fs></wordForm></fsm></maf>"
 ;; - SAF object: #[SAF]
 ;; - sppp: ((:END . 1) 
 ;;          (:START . 0) 
@@ -1528,18 +1526,63 @@ relatively limited.
 	     (setf entries
 	       (loop
 		   for e-orig in (get-unexpanded-lex-entry stem)
-		   for e = (copy-lex-entry e-orig)
-		   do
-		     (setf (lex-entry-full-fs e) nil)
-		     (setf (lex-entry-unifs e)
-		       (inject-unifs
-			l-content-value (lex-entry-unifs e) :entry e-orig))
-		   collect e
-			   ))))
+		   collect (get-injected-lex-entry e-orig 
+						   l-content-value))
+	       ))
+	 
+	 )
 	(t
 	 ;; default (and non-SMAF) case
 	 (setf entries (get-unexpanded-lex-entry stem))))
       entries)))
+
+;; takes lex-entry + injection specs
+;; returns COPY of lex-entry with injections applied
+(defun get-injected-lex-entry (e-orig l-content-injects)
+  ;; temporary hack to avoid instantiating carg on 'ersatzes' with no carg slot
+  ;; REMOVE_ME as soon as lex entries in ERG fixed
+  (if (member (lex-entry-id e-orig)
+	      *ersatzes-with-no-carg*)
+      e-orig
+    (inject-lex-entry (copy-lex-entry e-orig) l-content-injects
+		      :e-orig e-orig)))
+
+(defun inject-lex-entry (e l-content-injects &key e-orig)
+  (setf (lex-entry-full-fs e) nil) ;; ensure NO full-fs yet
+  (setf (lex-entry-unifs e)
+    (inject-unifs l-content-injects
+		  (lex-entry-unifs e) 
+		  :entry e-orig))
+  e)
+
+
+
+;; temporary hack to avoid instantiating carg on 'ersatzes' with no carg slot
+;; REMOVE_ME as soon as lex entries in ERG fixed
+(defparameter *ersatzes-with-no-carg* nil)
+
+;; tests whether lex-entry should be treated as an ersatz
+;; (ersatz's undergo CARG-injection)
+(defun lex-entry-is-ersatz (entry)
+  ;; temporary hack to avoid instantiating carg on 'ersatzes' with no carg slot
+  ;; REMOVE_ME as soon as lex entries in ERG fixed
+  (unless (member (lex-entry-id entry)
+		  *ersatzes-with-no-carg*)
+    (loop
+	for word in (lex-entry-orth entry)
+	for len = (length word)
+	when (string= "ersatz" (subseq word (max 0 (- len 6)) len))
+	return t)))
+
+;; version of above that disallows MWE ersatz's
+#+:null
+(defun lex-entry-is-ersatz (entry)
+  (let ((orth (lex-entry-orth entry)))
+    (and
+     (= 1 (length orth))
+     (let* ((car (car orth))
+	    (len (length car)))
+     (string= "ersatz" (subseq car (- len 6) len))))))
 
 ;; [bmw] non-destructively, return result of injecting 'inject-unifs' into 'unifs'
 (defun inject-unifs (inject-unifs unifs &key entry)
@@ -1551,7 +1594,11 @@ relatively limited.
 			      :test #'equalp)
       if inject-unif
       collect inject-unif into new-unifs
-      and do (format t "~&; WARNING: redefining ~a in copy of lex entry ~a" (unifs-to-tdl-body (list inject-unif)) (to-tdl entry))
+      and 
+      do 
+      (if entry
+	  (format t "~&; WARNING: redefining ~a in copy of lex entry ~a" 
+		  (unifs-to-tdl-body (list inject-unif)) (to-tdl entry)))
       else
       collect unif into new-unifs
       finally (return (append inject-unifs new-unifs))))
@@ -1637,13 +1684,14 @@ relatively limited.
     (check-multi-and-add-edges entry-orth-list (cdr to-be-accounted-for) from
 			       nil to cto inflection-position
 			       unexpanded-entry 
-			       (list partial-tree) edge-string dtr t)))
+			       (list partial-tree) edge-string dtr t
+			       :ersatz-p (lex-entry-is-ersatz unexpanded-entry))))
 			 
-
 (defun check-multi-and-add-edges (entry-orth-list remaining-words 
 			    from cfrom to cto inflection-position 
 				  unexpanded-entry 
-				  partial-tree-set amalgamated-string dtr first-p)
+				  partial-tree-set amalgamated-string dtr first-p
+				  &key cargs ersatz-p)
   ;; check we have some match on each element
   ;; and find partial tree(s) on inflected position
   ;; this is called initially when we've got a match on the rightmost
@@ -1680,7 +1728,10 @@ relatively limited.
       (let ((ccs (aref *tchart* from 0))
 	    (entry-stem (car remaining-words)))
 	(dolist (cc ccs)
-	  (let ((edge (chart-configuration-edge cc)))
+	  (let* ((edge (chart-configuration-edge cc))
+		 ;; get carg, if ersatz
+		 (carg-extra (and ersatz-p
+				  (get-carg-from-edge edge))))
 	      (when
 		  (and 
 		   (morpho-stem-edge-p edge)
@@ -1707,6 +1758,7 @@ relatively limited.
 				 t)
 			     ;; else
 			     nil))))
+		(if carg-extra (push carg-extra cargs)) ;; collect cargs, if ersatz
 		(check-multi-and-add-edges 
 		 entry-orth-list (cdr remaining-words) (edge-from edge)
 		 (edge-cfrom edge)
@@ -1714,8 +1766,16 @@ relatively limited.
 		 partial-tree-set
 		 (concatenate 'string (edge-string edge) " "
 			      amalgamated-string)
-		 dtr nil)))))
-    (let ((amalgamated-partial-tree (combine-partial-trees partial-tree-set)))
+		 dtr nil
+		 :cargs cargs :ersatz-p ersatz-p
+		 )))))
+    (let* ((amalgamated-partial-tree (combine-partial-trees partial-tree-set))
+	   ;; take account of initial carg, if ersatz
+	   (carg-final (and ersatz-p (get-carg-from-entry unexpanded-entry)))
+	   (cargs (and carg-final (append cargs (list carg-final)))))
+      ;; inject cargs into CARG, if ersatz
+      (if ersatz-p
+	  (inject-cargs unexpanded-entry cargs))     
       (add-stem-edge
        (format nil "~{~A ~}" entry-orth-list)
        amalgamated-string
@@ -1726,6 +1786,36 @@ relatively limited.
        ;; were split by spaces.
        from to cfrom cto amalgamated-partial-tree
        unexpanded-entry dtr))))
+
+;; extract carg from an edge, via l-content unifs
+(defun get-carg-from-edge (edge)
+  (let* ((l-content (morpho-stem-edge-l-content edge))
+	 (unifs (cdr l-content)))
+    (get-carg-from-unifs unifs)))
+
+;; extract carg from an (unexpanded) entry, via unifs
+(defun get-carg-from-entry (entry)
+  (let ((unifs (lex-entry-unifs entry)))
+    (get-carg-from-unifs unifs)))
+
+;; extract carg from a set of unifs
+(defun get-carg-from-unifs (unifs &key (carg-path (smaf::ersatz-carg-path)))
+  (let* ((carg-unif (find carg-path unifs
+			  :test  #'(lambda (x y)
+				     (equalp
+				      (path-typed-feature-list 
+				       (unification-lhs y))
+				      x))))
+	 (carg (and carg-unif (u-value-type (unification-rhs carg-unif)))))
+    carg))  
+
+;; map cargs to string and inject into entry CARG
+(defun inject-cargs (entry cargs &key (carg-slot-name :|carg|))
+  (inject-lex-entry 
+	   entry
+	   (get-inject (list (cons carg-slot-name
+				   (str-list-2-str cargs)))
+		       (smaf::gmap))))
 
 (defun combine-partial-trees (partial-tree-set)
   ;;; WARNING: assumes partial tree is a list

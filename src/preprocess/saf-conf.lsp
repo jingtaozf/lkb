@@ -184,6 +184,12 @@ wordForm.[] -> edgeType='morph' stem=content.stem partialTree=content.partial-tr
 ;ersatz.[] -> edgeType='tok+morph' stem=content.name tokenStr=content.name gMap.carg=content.surface inject='t' analyseMorph='t'
 ")
 
+(defun ersatz-carg-path nil
+  *ersatz-carg-path*)
+
+(defun gmap nil
+  *gmap*)
+
 ;; fallback case handles smaf as mapped from tchart
 (defun reset-conf nil
   (setf *gmap* nil)
