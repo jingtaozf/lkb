@@ -53,12 +53,17 @@
 (defvar *local-to-global-point-mapping* #'identity)
 
 (defvar *preprocess-p* nil)
-;(defvar *preprocessor-debug-p* t)
 (defvar *preprocessor* nil)
 (defvar *x-addressing* nil)
 
 (defvar *span* nil)
 (defvar *text* nil)
+
+(defparameter *inter-token-str* " ")
+(defparameter *inter-token-regex* 
+    (ppcre::create-scanner 
+     (list :SEQUENCE *inter-token-str*) ;; treat it LITERALLY
+     :single-line-mode t))
 
 (defparameter *default-token-sep* 
     (let ((ppcre::*regex-char-code-limit* 256))
@@ -81,7 +86,9 @@
   type
   source
   scanner
-  target)
+  target
+  max-tokens
+  pre-test)
 
 (defmethod print-object ((object x-fsr) stream)
   (with-slots (type source target) object
@@ -166,7 +173,7 @@
 	(read-preprocessor-rule :augment line x-fspp n))
        ((char= #\^ c)
 	(read-preprocessor-rule :ersatz line x-fspp n))
-       ((char= #\> c)
+       ((or (char= #\> c) (char= (code-char 172) c))
 	(read-preprocessor-rule :ersatz-augment line x-fspp n))
        ((ppcre:scan *empty-line-regex* line)
 	;; empty line
@@ -234,7 +241,11 @@
        (scanner
 	;; create x-fsr
 	(setf x-fsr (make-x-fsr :type type :source source
-				:scanner scanner :target target))
+				:scanner scanner :target target
+				:max-tokens (unless (eq :replace type)
+					      (num-tokens source))
+				))
+	(set-pre-test x-fsr n)
 	;; :replace goes to globals
 	;; all others to local
 	(if (eq type :replace)
@@ -245,6 +256,55 @@
 	(format t
 		"read-preprocessor(): [line ~d] invalid pattern `~a'~%"
 		n source))))))
+
+;; calculate upper bound on number of tokens FSR will match
+(defun num-tokens (str &key (sep *inter-token-str*))
+  (1+ (count-token-separators str :sep sep)))
+
+(defun count-token-separators (str &key (sep *inter-token-str*))
+  (floor
+   (/ (length (ppcre::all-matches sep str))
+      2)))
+
+;; instantiate pre-test on FSR, if nec
+(defun set-pre-test (x-fsr n)
+  (with-slots (max-tokens source pre-test) x-fsr
+    (when
+	(and (numberp max-tokens)
+	     (> max-tokens 1))
+      (handler-case
+	  
+	  (setf pre-test
+
+	    ;(set-pre-test-aux source)
+	    
+	    (ppcre:create-scanner 
+	     (set-pre-test-aux source)
+	     :single-line-mode t)
+	    )
+	
+	(error nil
+	  (format t "~&;WARNING: [line ~a] unable to construct pre-test for multi-token FSR~&" n))))))
+
+;; get pre-test regex string
+(defun set-pre-test-aux (source)
+  (loop 
+      with bits = (ppcre:split *inter-token-regex* source)
+      with pre-test-str
+      for bit in (cdr bits)
+      for c = (and (> (length bit) 0)
+		   (aref bit 0))
+      while (eq #\? c)
+      collect "(" into bits2
+      collect (subseq bit 1) into bits2
+      collect ")?" into bits2-end
+      finally
+	(push (car bits) bits2)
+	;(push 'string bits2)
+	(setf bits2 (append (list 'string "^") bits2 bits2-end (list "$")))
+	;(setf bits2 (append bits2 bits2-end))
+	(setf pre-test-str (apply #'concatenate bits2))
+	(return pre-test-str)))
 
 (defun preprocess (string &key (preprocessor *preprocessor*)
                                verbose format)
@@ -265,11 +325,6 @@
 			   (x-fspp-local preprocessor)
 			   :verbose verbose))
       (x-format-preprocessed-output saf :format format))))
-
-;	;; get output in desired format
-;	(x-format-preprocessed-output
-;	 (x-tokens-to-result result)
-;	 length format)))))
 
 (defparameter *smaf-id* 0)
 (defparameter *smaf-node* 0)
@@ -330,34 +385,37 @@
 (defparameter *ersatz-regex* 
     (ppcre:create-scanner "[^a-zA-Z]*([a-zA-Z]+Ersatz).*" :single-line-mode t))
 
-(defparameter *inter-token-regex* 
-    (ppcre:create-scanner " " :single-line-mode t))
-
 (defun preprocess-tokens (saf local &key verbose)
-  (let* ((saf-lattice (smaf::saf-lattice saf))
-	 (saf-annots (smaf::saf-lattice-edges saf-lattice)))
+  (let* ((saf-lattice (smaf::saf-lattice saf)))
     (loop
       ;; for each FSR rule...
 	for fsr in local
+	for max-tokens = (x-fsr-max-tokens fsr)
 	do
+	  ;(format t "~&FSR (~a) ~a" (x-fsr-type fsr) (x-fsr-source fsr))
 	  (loop
 	    ;; for each (token) ANNOT ...
-	      with token-annots = 
-		(loop for annot in saf-annots
-		    when (eq :|token| (smaf::saf-edge-type annot))
-		    collect annot)
-	      for annot in token-annots
+	      for annot in (smaf::saf-lattice-edges saf-lattice)
+			   
 	      do
-		;; attempt to apply FSR to ANNOT
-		(setf saf-annots 
-		  (preprocess-token annot fsr saf-annots :verbose verbose))))
+		;(format t "~&ANNOT: ~a" (saf::saf-edge-id annot))
+		(loop
+		  for annot-path in (smaf::annot-paths annot saf-lattice :len max-tokens)
+		    do
+		      ;(format t "~&PATH: ")
+		      ;(loop for y in annot-path
+			;  do (format t " ~a" (saf::saf-edge-id y)))
+		      ;(terpri)
+			;; attempt to apply FSR to ANNOT
+		      (setf (smaf::saf-lattice-edges saf-lattice) 
+			(preprocess-token-multi annot-path fsr (smaf::saf-lattice-edges saf-lattice) :verbose verbose)))))
   
   ;; contruct SAF output
   (loop
       with init-node = (smaf::saf-lattice-start-node saf-lattice)
       with final-node = (smaf::saf-lattice-end-node saf-lattice)
       with nodes
-      for annot in saf-annots
+      for annot in (smaf::saf-lattice-edges saf-lattice)
       for source = (smaf::saf-edge-source annot)
       for target = (smaf::saf-edge-target annot)
       do 
@@ -373,7 +431,7 @@
 		     :end-node (2-str final-node) ;
 		     :nodes (loop for node in nodes collect (2-str node)) ;
 		     :edges (loop 
-				for annot in saf-annots
+				for annot in (smaf::saf-lattice-edges saf-lattice)
 				collect (clean-saf-annot annot)))
 	   :meta  (smaf::make-saf-meta 
 		   :document nil
@@ -381,17 +439,67 @@
 		   :olac nil) ;
 	   )))))
 
+(defparameter *max-multi-token* 2)
+	   
+(defun x-concat (annots &key (key #'identity) (sep *inter-token-str*))
+  (cond
+   ((null annots)
+    nil)
+   ((not (cdr annots))
+    (funcall key (car annots)))
+   (t
+    (loop
+	for annot in annots
+	for x-orig = (funcall key annot) ;
+	collect sep into text
+	collect nil into char-map
+	collect (text x-orig) into text
+	append (char-map x-orig) into char-map
+	finally
+	  (setf (car text) 'string)
+	  (setf text (apply #'concatenate text))
+	  (setf char-map (cdr char-map))
+	  (return
+	    (make-instance 'preprocessed-x 
+	      :text text
+	      :char-map char-map))))))
+
+(defun quick-check-fail (fsr annots)
+  (with-slots (pre-test) fsr
+    (let* ((annot1 (first annots))
+	   (x1 (and annot1 (smaf::saf-edge-content annot1))))
+      ;(format t "~&X1: '~a' PRE-TEST: '~a'~&" x1 pre-test)
+      (if pre-test
+	  (not (ppcre::scan pre-test (text x1)))))))
+
 ;; attempt to apply FSR to ANNOT
-(defun preprocess-token (annot fsr saf-annots &key verbose)
+(defun preprocess-token-multi (annots fsr saf-annots &key verbose)
+
+  ;; bail out if path contains any ersatzes
+  (loop for a in annots
+      unless (eq (smaf::saf-edge-type a) :|token|)
+      do (return-from preprocess-token-multi saf-annots))
+		 
+  ;; bail out if quick-check fails
+  (when (quick-check-fail fsr annots)
+      ;(format t "~&PRE-TEST failed: '~a' : '~a'~&" 
+	;      (x-fsr-source fsr) (text (smaf::saf-edge-content (car annots))))
+      (return-from preprocess-token-multi saf-annots))
+  
+  ;(format t "~&PRE-TEST passed: '~a' : '~a'~&"
+	;  (x-fsr-source fsr) (text (smaf::saf-edge-content (car annots))))
+	  
   (let* (;; FSR slots
 	 (type (x-fsr-type fsr))
 	 (scanner (x-fsr-scanner fsr))
 	 (target (x-fsr-target fsr))
 	 ;; ANNOT slots
-	 (x-orig (smaf::saf-edge-content annot))
-	 (annot-source (smaf::saf-edge-source annot))
-	 (annot-target (smaf::saf-edge-target annot))
+	 (x-orig (x-concat annots :key #'smaf::saf-edge-content)) ; FIXME erstaz
+	 (annot-source (smaf::saf-edge-source (first annots)))
+	 (annot-target (smaf::saf-edge-target (car (last annots))))
 	 x-str)
+    ;(format t "~&(~a) ~a:" (x-fsr-type fsr) (x-fsr-source fsr))
+    ;(format t " '~a'" (text x-orig))
     (when (ppcre::scan scanner (text x-orig))
       ;; found a match...
       ;; so copy input then apply REPLACE
@@ -410,7 +518,8 @@
 		    (char-map x-str)))
       ;; DELETE existing annot when nec
       (when (member type '(:ersatz :substitute))
-	(setf saf-annots (remove annot saf-annots)))
+	(setf saf-annots 
+	  (set-difference saf-annots annots)))
       ;; new (perhaps multiple) tokens
       (when t ;
 	(loop
@@ -567,11 +676,11 @@
 	for id = (smaf::saf-edge-id annot)
 	for start = (smaf::saf-edge-source annot)
 	for end = (smaf::saf-edge-target annot)
-	for surface = (if (string= type "ersatz")
-			  (smaf::saf-fs-feature-value2 content :surface)
+	for surface = (if (eq type :|ersatz|)
+			  (smaf::saf-fs-feature-value  content "surface")
 			content)
-	for form = (if (string= type "ersatz")
-		       (smaf::saf-fs-feature-value2 content :name)
+	for form = (if (eq type :|ersatz|)
+		       (smaf::saf-fs-feature-value content "name")
 		     surface)
 	for token = (format 
 		     nil 

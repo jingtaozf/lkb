@@ -1536,6 +1536,7 @@ relatively limited.
 	 (setf entries (get-unexpanded-lex-entry stem))))
       entries)))
 
+(defvar *ersatzes-with-no-carg*)
 ;; takes lex-entry + injection specs
 ;; returns COPY of lex-entry with injections applied
 (defun get-injected-lex-entry (e-orig l-content-injects)
