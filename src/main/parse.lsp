@@ -1519,13 +1519,13 @@ relatively limited.
 	 (setf entries (list l-content-value)))
 	(:inject
 	 ;; we inject unifs into result of lexical lookup
-	 (setf entries (get-unexpanded-lex-entry stem))
+	 (setf entries (get-safe-unexpanded-lex-entry stem))
 	 ;; if we have something to inject, collect copies of entries,
 	 ;; each with adjusted lex-entry-unifs  
 	 (if l-content-value
 	     (setf entries
 	       (loop
-		   for e-orig in (get-unexpanded-lex-entry stem)
+		   for e-orig in (get-safe-unexpanded-lex-entry stem)
 		   collect (get-injected-lex-entry e-orig 
 						   l-content-value))
 	       ))
@@ -1533,19 +1533,31 @@ relatively limited.
 	 )
 	(t
 	 ;; default (and non-SMAF) case
-	 (setf entries (get-unexpanded-lex-entry stem))))
+	 (setf entries (get-safe-unexpanded-lex-entry stem))))
       entries)))
+
+;; ensure all ersatzes are copies
+(defun get-safe-unexpanded-lex-entry (stem)
+  (loop
+      with entries = (get-unexpanded-lex-entry stem)
+      for entry in entries
+      for i from 0
+      when (lex-entry-is-ersatz entry)
+      do
+	(setf (nth i entries)
+	  (copy-lex-entry entry))
+      finally
+	(return entries)))
 
 (defvar *ersatzes-with-no-carg*)
 ;; takes lex-entry + injection specs
-;; returns COPY of lex-entry with injections applied
 (defun get-injected-lex-entry (e-orig l-content-injects)
   ;; temporary hack to avoid instantiating carg on 'ersatzes' with no carg slot
   ;; REMOVE_ME as soon as lex entries in ERG fixed
   (if (member (lex-entry-id e-orig)
 	      *ersatzes-with-no-carg*)
       e-orig
-    (inject-lex-entry (copy-lex-entry e-orig) l-content-injects
+    (inject-lex-entry e-orig l-content-injects
 		      :e-orig e-orig)))
 
 (defun inject-lex-entry (e l-content-injects &key e-orig)
@@ -1562,9 +1574,14 @@ relatively limited.
 ;; REMOVE_ME as soon as lex entries in ERG fixed
 (defparameter *ersatzes-with-no-carg* nil)
 
+(defvar smaf::*ersatz-carg-path*)
 ;; tests whether lex-entry should be treated as an ersatz
 ;; (ersatz's undergo CARG-injection)
+;; an ersatz is an lex entry containing a token that looks like "...ersatz"
 (defun lex-entry-is-ersatz (entry)
+  ;; if parameter is unset ersatzes get no special treatment
+  (unless smaf::*ersatz-carg-path*
+    (return-from lex-entry-is-ersatz nil))
   ;; temporary hack to avoid instantiating carg on 'ersatzes' with no carg slot
   ;; REMOVE_ME as soon as lex entries in ERG fixed
   (unless (member (lex-entry-id entry)
@@ -1572,7 +1589,8 @@ relatively limited.
     (loop
 	for word in (lex-entry-orth entry)
 	for len = (length word)
-	when (string= "ersatz" (subseq word (max 0 (- len 6)) len))
+	when (string= "ersatz" 
+		      (string-downcase (subseq word (max 0 (- len 6)) len)))
 	return t)))
 
 ;; version of above that disallows MWE ersatz's
@@ -1771,12 +1789,12 @@ relatively limited.
 		 :cargs cargs :ersatz-p ersatz-p
 		 )))))
     (let* ((amalgamated-partial-tree (combine-partial-trees partial-tree-set))
-	   ;; take account of initial carg, if ersatz
-	   (carg-final (and ersatz-p (get-carg-from-entry unexpanded-entry)))
-	   (cargs (and carg-final (append cargs (list carg-final)))))
+	   carg-final)
       ;; inject cargs into CARG, if ersatz
-      (if ersatz-p
-	  (inject-cargs unexpanded-entry cargs))     
+      (when ersatz-p
+	(setf carg-final (get-carg-from-entry unexpanded-entry))
+	(if carg-final (setf cargs (append cargs (list carg-final))))
+	(inject-cargs unexpanded-entry cargs))
       (add-stem-edge
        (format nil "~{~A ~}" entry-orth-list)
        amalgamated-string
