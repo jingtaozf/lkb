@@ -692,24 +692,6 @@
 	      for path in (annot-paths next-annot lattice :len (1- len))
 	      collect (push annot path))))))
 
-;; paths of length betw 1 and len
-(defun annot-paths (annot lattice &key len)
-  (cond
-   ((zerop len))
-   ((= 1 len)
-    (list (list annot)))
-   (t
-    (loop
-	with next-node = (saf-edge-target annot)
-	for next-annot in (get-edges-source next-node :lattice lattice)
-	append
-	  (loop 
-	      for path in (annot-paths next-annot lattice :len (1- len))
-	      collect (push annot path))
-	into paths
-	finally
-	  (return (push (list annot) paths))))))
-
 ;; return edges from source node to target node
 (defun get-edges-source-target (source target &key lattice)
   (unless lattice
@@ -721,17 +703,6 @@
       for target1 = (saf-edge-target edge)
       when (and (equalp source1 source)
 		(equalp target1 target))
-      collect edge))
-
-;; return outgoing edges from source node
-(defun get-edges-source (source &key lattice)
-  (unless lattice
-    (error "missing LATTICE argument"))
-  ;; FIXME: inefficient
-  (loop 
-      for edge in (saf-lattice-edges lattice)
-      for source1 = (saf-edge-source edge)
-      when (equalp source1 source)
       collect edge))
 
 ;; when set, clobber rules enabled

@@ -421,6 +421,8 @@ we assume that there will generally only be one feature
   ;; if applicable, instantiate DUMMY CARG on ersatz
   (when (and smaf::*ersatz-carg-path*
 	     (lkb::lex-entry-is-ersatz lex-entry))
+    (unless (find :|carg| smaf::*gmap* :key #'first)
+      (error "please load preprocessor before continuing"))
     (setf lex-entry
       (lkb::get-injected-lex-entry 
        lex-entry

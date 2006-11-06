@@ -123,7 +123,11 @@
     (setf (x-fspp-local x-fspp)
       (nreverse (x-fspp-local x-fspp)))
     (format t "~a~%" x-fspp)
-    (setf *preprocessor* x-fspp)))
+    (setf *preprocessor* x-fspp))
+  #+:lkb
+  (smaf::reset-conf)
+  *preprocessor*
+  )
 
 (defparameter *multiple-rule-internal-separator* 
     (ppcre:create-scanner "\\t{2,}" :single-line-mode t))
@@ -173,7 +177,7 @@
 	(read-preprocessor-rule :augment line x-fspp n))
        ((char= #\^ c)
 	(read-preprocessor-rule :ersatz line x-fspp n))
-       ((or (char= #\> c) (char= (code-char 172) c))
+       ((or (char= #\> c) (char= #\* c))
 	(read-preprocessor-rule :ersatz-augment line x-fspp n))
        ((ppcre:scan *empty-line-regex* line)
 	;; empty line
