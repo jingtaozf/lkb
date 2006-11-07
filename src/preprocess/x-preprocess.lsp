@@ -132,7 +132,7 @@
 (defparameter *multiple-rule-internal-separator* 
     (ppcre:create-scanner "\\t{2,}" :single-line-mode t))
 (defparameter *rule-regex* 
-    (ppcre:create-scanner "^.([^\\t]+)\\t+([^\\t]+)" :single-line-mode t))
+    (ppcre:create-scanner "^.([^\\t]+)\\t+([^\\t]*)" :single-line-mode t))
 
 ;; recursive call
 (defun read-preprocessor-aux (file &key (x-fspp (make-x-fspp)))
