@@ -59,10 +59,11 @@
 	    (merge-pathnames doc (make-pathname :directory *dir*)))))
     (make-saf-meta
      :document doc
-     :addressing (intern (string-downcase 
-			  (or
-			   (second (member :|addressing| saf-attributes))
-			   :|char|)))
+     :addressing (or
+		  (intern (string-downcase 
+			   (second (member :|addressing| saf-attributes))) 
+			  :keyword)
+		  :|char|)
      :olac (get-olac-meta olac)
      :text text)))
 
@@ -489,20 +490,6 @@
   (if point
       (format nil "~a" (+ (or *char-map-add-offset* 0) (point-to-char-point point :|char|)))))
 
-(defun point-to-char-point (point addressing)
-  (if (null point)
-      (return-from point-to-char-point))
-  (unless addressing
-    (error "ADDRESSING cannot be null"))
-  (cond
-   ((string= addressing :|char|) 
-    ;(ignore-errors 
-     (parse-integer point)
-    ; )
-    )
-    ((string= addressing :|xpoint|) -1)
-    (t (error "unknown addressing scheme '~a'" addressing))))
-
 #+:mrs
 (defun dump-sentence-analyses (s &key (stream t))
   (dump-sentence-analyses2 :s-id (saf-edge-id s) :stream stream))
@@ -565,7 +552,7 @@
   (sort (copy-list edges)
 	'<
 	:key (lambda (x)
-	       (or (point-to-char-point (saf-edge-from x) addressing)) 0)
+	       (or (point-to-char-point (saf-edge-from x) addressing) 0))
 	))
 
 ;;
