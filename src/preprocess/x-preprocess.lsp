@@ -502,6 +502,9 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 (defun get-token-str (annot)
   (saf::saf-fs-feature-value2 (saf::saf-edge-l-content annot) :|tokenStr|))
 
+(defun get-gmap-carg (annot)
+  (saf::saf-fs-feature-value2 (saf::saf-edge-l-content annot) :|gMap.carg|))
+
 ;; attempt to apply FSR to ANNOT
 (defun preprocess-token-multi (annots fsr saf-annots &key verbose)
 
@@ -684,7 +687,7 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
     (setf (smaf::saf-edge-from annot) from)
     (setf (smaf::saf-edge-to annot) to)
     ;; clear l-content
-    ;(setf (smaf::saf-edge-l-content annot) nil)
+    (setf (smaf::saf-edge-l-content annot) nil)
     ;; convert values to string
     (setf (smaf::saf-edge-id annot) (2-str (smaf::saf-edge-id annot)))
     ;(setf (smaf::saf-edge-type annot) (2-str (smaf::saf-edge-type annot)))
@@ -710,19 +713,17 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 	with saf-annots = (smaf::saf-lattice-edges (smaf::saf-lattice saf))
 	for annot in saf-annots
 ;	for content = (smaf::saf-edge-content annot)
-;	for type = (smaf::saf-edge-type annot)
+	for type = (smaf::saf-edge-type annot)
 	for id = (smaf::saf-edge-id annot)
 	for start = (smaf::saf-edge-source annot)
 	for end = (smaf::saf-edge-target annot)
 		  
 ;	for l-content = (smaf::instantiate-edge-l-content annot saf::*lmap*)
-	for surface = (and (smaf::instantiate-edge-l-content annot *saf-lmap*)
-			   (get-token-str annot))
-	for form = (or
-		    (get-ersatz-type annot)
-;		    (saf::saf-fs-feature-value l-content "name") ;!
-		    surface)
-		  
+	for form =  (and (smaf::instantiate-edge-l-content annot *saf-lmap*)
+			 (get-token-str annot))
+	for surface = (if (eq type :|ersatz|)
+			  (get-gmap-carg annot)
+			form)
 ;	for surface = (if (eq type :|ersatz|)
 ;			  (smaf::saf-fs-feature-value  content "surface")
 ;			content)

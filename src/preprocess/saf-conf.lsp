@@ -285,8 +285,8 @@ wordForm.[] -> edgeType='morph' stem=content.stem partialTree=content.partial-tr
 (defun conf-read-stream (s)
   (loop
       for line = (read-line s nil nil)
+      for a = (and line (conf-read-line line))
       while line
-      for a = (conf-read-line line)
       if (map-action-p a) collect a))
 
 ;; ignore empty lines, and those composed of whitespace

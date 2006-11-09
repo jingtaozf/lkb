@@ -491,11 +491,11 @@
       ;; process agenda items...
       (loop 
 	  with processed = nil
-	  while agenda
-		;; next item
 	  for item = (pop agenda)
 	  for source = (car item)
 	  for target = (cdr item)
+	  while agenda
+		;; next item
 	  unless (member item processed :test #'equalp)
 	  do
 	    ;(format t "~&item ~a" item)
