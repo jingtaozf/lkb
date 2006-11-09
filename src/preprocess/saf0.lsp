@@ -98,7 +98,7 @@
     ((eq addressing :|xpoint|) -1)
     (t (error "unknown addressing scheme '~a'" addressing))))
 
-#+:null
+
 (defun rename-nodes (saf node-map)
   (with-slots (lattice) saf
     (with-slots
@@ -108,7 +108,7 @@
       (setf end-node (mapped-node end-node node-map))
       (setf edges (rename-nodes-edges edges node-map)))))
 
-#+:null
+
 (defun rename-nodes-nodes (nodes node-map)
   (loop
       for node in nodes
@@ -118,7 +118,7 @@
 	(setf (nth i nodes) mapped-node))
   nodes)
 
-#+:null
+
 (defun rename-nodes-edges (edges node-map)
   (loop
       for annot in edges
@@ -128,9 +128,57 @@
 	  (setf target (mapped-node target node-map))))
   edges)
 
-#+:null
+
 (defun mapped-node (node node-map)
   (cdr (assoc node node-map :test #'equalp)))
+
+(defun push-node-point (node point node-points)
+  (pushnew point (gethash node node-points) :test #'equalp))
+
+(defun get-node-map (saf)
+  (let* ((lattice (saf-lattice saf))
+	 (meta (saf-meta saf))
+	 (addressing (saf-meta-addressing meta))
+	 (annots (saf-lattice-edges lattice))
+	 (start-node (saf-lattice-start-node lattice))
+	 (end-node (saf-lattice-end-node lattice))
+	 (node-points (make-hash-table :test #'equalp)))
+    (loop
+	for annot in annots
+	do
+	  ;(print annot) (terpri)
+	  (with-slots (id source target from to) annot
+	    ;(format t "~&~a ~a ~a ~a ~a" id source target from to)
+	    (if (and from source) (pushnew from (gethash source node-points) :test #'equalp))
+	    (if (and to target) (pushnew to (gethash target node-points) :test #'equalp))
+	    ))
+    
+    (remhash start-node node-points)
+    (remhash end-node node-points)
+    
+    ;(terpri)
+    (loop
+	with node-map = 
+	  (append (list (cons start-node nil))
+		  (sort
+		   (loop
+		       for node being each hash-key in node-points
+		       for points = (gethash node node-points)
+		       for point = (loop for p in points
+				       minimize (point-to-char-point p addressing))
+				   
+		       collect (cons node point))
+		   #'<
+		   :key #'cdr)
+		  (list (cons end-node nil)))
+	for x in node-map
+	for i from 0
+	for new-node = (format nil "~a" i)
+	do
+	  (setf (cdr x) new-node)
+	finally
+	  (return node-map)
+	  )))
 
 #+:null
 (defun get-node-map (saf)
@@ -146,7 +194,8 @@
 	  (with-slots (id source target from to) annot
 	    ;(format t "~&~a ~a ~a ~a ~a" id source target from to)
 	    (if (and from source) (pushnew from (gethash source node-points) :test #'equalp))
-	    (if (and to target) (pushnew to (gethash target node-points) :test #'equalp))))
+	    (if (and to target) (pushnew to (gethash target node-points) :test #'equalp))
+	    ))
     ;(terpri)
     (loop
       with node-map = 
@@ -155,7 +204,8 @@
 	       for node being each hash-key in node-points
 	       for points = (gethash node node-points)
 	       for point = (loop for p in points
-			       minimize (point-to-char-point p addressing))
+			       maximize (point-to-char-point p addressing))
+			       ;minimize (point-to-char-point p addressing))
 			   
 	       collect (cons node point))
 	   #'<
@@ -169,7 +219,7 @@
 	  (return node-map)
 	  )))
 
-#+:null
+
 (defun rename-nodes-by-point-order (saf)
   (let ((node-map (get-node-map saf)))
     (rename-nodes saf node-map)

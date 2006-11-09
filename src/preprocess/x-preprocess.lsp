@@ -317,8 +317,15 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 	(setf pre-test-str (apply #'concatenate bits2))
 	(return pre-test-str)))
 
+;; if this is set, node and ids will start from 0 again on each call of 'preprocess'
+(defparameter *reset-ids-on-each-call* t)
+
 (defun preprocess (string &key (preprocessor *preprocessor*)
                                verbose format)
+  (when *reset-ids-on-each-call*
+    (setf *smaf-id* 0)
+    (setf *smaf-node* 0))
+  
   (let* ((x (make-preprocessed-x string)) ;; construct x-string
 	 (*text* string) ;; see SMAF::X-PARSE
 	 ;(*span* (char-map-simple-range (char-map x))) ;; not used???
@@ -447,7 +454,11 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 		     :nodes (loop for node in nodes collect (2-str node)) ;
 		     :edges (loop 
 				for annot in (smaf::saf-lattice-edges saf-lattice)
-				collect (clean-saf-annot annot)))
+				collect 
+				  (clean-saf-annot 
+				   annot
+				   )
+					))
 	   :meta  (smaf::make-saf-meta 
 		   :document nil
 		   :addressing :|char|
@@ -497,7 +508,7 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 	 :value (smaf::saf-fv-value fv))))
 
 (defun get-ersatz-type (annot)
-  (saf::saf-fs-feature-value2 (saf::saf-edge-l-content annot) :|name|))
+  (saf::saf-fs-feature-value2 (saf::saf-edge-l-content annot) :|name|)) ;!
 
 (defun get-token-str (annot)
   (saf::saf-fs-feature-value2 (saf::saf-edge-l-content annot) :|tokenStr|))
@@ -505,11 +516,36 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 (defun get-gmap-carg (annot)
   (saf::saf-fs-feature-value2 (saf::saf-edge-l-content annot) :|gMap.carg|))
 
+;; returns the ersatz-type
+(defun get-ersatz-name (annot)
+  (and
+   (eq :|ersatz| (annot-type annot))
+   (saf::saf-fs-feature-value2 (saf::saf-edge-content annot) :|type|)))
+
+;; returns the ersatz surface string
+(defun get-ersatz-surface (annot)
+  (and
+   (eq :|ersatz| (annot-type annot))
+   (saf::saf-fs-feature-value2 (saf::saf-edge-content annot) :|surface|)))
+
+;; shorthand
+(defun annot-type (annot)
+  (saf::saf-edge-type annot))
+
+;; find ersatz with ersatz-type + span matching input
+(defun match-ersatz (x annots)
+  (find x annots :test #'x-= :key #'get-ersatz-name))
+
+;; equality of x-string
+(defun x-= (x y)
+  (and (equalp (char-map x) (char-map y))
+       (string= (text x) (text y))))
+
 ;; attempt to apply FSR to ANNOT
 (defun preprocess-token-multi (annots fsr saf-annots &key verbose)
 
   ;; bail out if path contains any ersatzes
-  ;#+:null
+  #+:null
   (loop for a in annots
       unless (eq (smaf::saf-edge-type a) :|token|)
       do (return-from preprocess-token-multi saf-annots))
@@ -559,6 +595,7 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
       ;; new (perhaps multiple) tokens
       (when t ;
 	(loop
+	    with surface
 	    with xstr0 =
 	      ;; needed for extraction of ersatz'd text
 	      (let ((x (make-preprocessed-x (text x-orig))))
@@ -604,6 +641,27 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 	       (ersatz-match
 		;; annot is ERSATZ
 		(setf range (char-map-simple-range (char-map ersatz-match))) ;; get RANGE
+		(setf surface (x-subseq x-orig (car range) (cdr range)))
+		(setf (char-map ersatz-match)
+		  (loop
+		      with surface-range = (char-map-simple-range (char-map surface))
+		      for r in (char-map ersatz-match)
+		      collect surface-range))
+
+		;; now check whether surface contains an ersatz strings, in which case
+		;; we need to retrieve the surface from corresponding ersatz
+		(multiple-value-bind (x0 flag0)
+		    (x-regex-replace-all *ersatz-regex* (make-preprocessed-x (text surface)) "\\1")
+		  (when flag0
+		    (let* ((range0 (char-map-simple-range (char-map x0)))
+			   (surface0 (x-subseq surface (car range0) (cdr range0))))
+		      ;(format t "~&surface: ~a" surface)
+		      ;(format t "~&x0: ~a" x0)
+		      ;(format t "~&surface0: ~a" surface0)
+		      (setf surface
+			(get-ersatz-surface (match-ersatz surface0 annots)))
+		      )))
+		      
 		(setf new-annot 
 		  (smaf::make-saf-edge
 		  :id (incf *smaf-id*)
@@ -613,13 +671,15 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 		  :content (list
 			    (smaf::make-saf-fv
 			     :feature :|surface|
-			     :value (x-subseq x-orig (car range) (cdr range)))
+			     :value surface)
 			    (smaf::make-saf-fv
 			     :feature :|name| ;; the ersatz 'token'
-			     :value (text x-bit))
+			     :value x-bit)
+;			     :value (text x-bit))
 			    (smaf::make-saf-fv
 			     :feature :|type|
-			     :value (text ersatz-match))))) ;; the ersatz name
+			     :value ersatz-match)))) ;; the ersatz name
+;			     :value (text ersatz-match))))) ;; the ersatz name
 		(saf::instantiate-edge-l-content new-annot *saf-lmap*)
 		(push new-annot saf-annots))
 	       (t
@@ -666,17 +726,14 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 	 (content (smaf::saf-edge-content annot))
 	 surface
 	 range from to
-	 fv)
+	 ;fv
+	 )
 
     ;; replace x-string (surface/content)
     (when (eq type :|token|)
-      (setf surface content)
-      (setf (smaf::saf-edge-content annot) (text surface)))
+      (setf surface content))
     (when (eq type :|ersatz|)
-      (setf surface (smaf::saf-fs-feature-value2 content :|surface|))
-      (setf fv (find :|surface| content 
-		     :key #'smaf::saf-fv-feature))
-      (setf (smaf::saf-fv-value fv) (text surface)))
+      (setf surface (smaf::saf-fs-feature-value2 content :|surface|)))
 
     (setf range (char-map-simple-range
 		 (char-map surface)))
@@ -690,26 +747,44 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
     (setf (smaf::saf-edge-l-content annot) nil)
     ;; convert values to string
     (setf (smaf::saf-edge-id annot) (2-str (smaf::saf-edge-id annot)))
-    ;(setf (smaf::saf-edge-type annot) (2-str (smaf::saf-edge-type annot)))
     (setf (smaf::saf-edge-source annot) (2-str (smaf::saf-edge-source annot)))
     (setf (smaf::saf-edge-target annot) (2-str (smaf::saf-edge-target annot)))
     (setf (smaf::saf-edge-from annot) (2-str (smaf::saf-edge-from annot)))
     (setf (smaf::saf-edge-to annot) (2-str (smaf::saf-edge-to annot)))
-;    (loop for fv in (and (listp content) content)
-;	do
-;	  (setf (smaf::saf-fv-feature fv) (2-str (smaf::saf-fv-feature fv)))
-;	  (setf (smaf::saf-fv-value fv) (2-str (smaf::saf-fv-value fv))))
+    (if (typep content 'preprocessed-x)
+	(setf (smaf::saf-edge-content annot)
+	  (text content))
+      (loop 
+	  for fv in (and (listp content) content)
+	  for value = (smaf::saf-fv-value fv)
+	  when (typep value 'preprocessed-x)
+	  do
+	    (setf (smaf::saf-fv-value fv) (text (smaf::saf-fv-value fv)))))
     
     )
   annot)
 
+;;HACK remove when PET can handle unsorted lattice
+(defun node-to-int (node)
+  (parse-integer node))
+
 (defun x-format-preprocessed-output (saf &key format)
   
+  ;; order lattice edges by standoff point
+  ;; (coz therz a bug in PET)
+  (saf::rename-nodes-by-point-order saf)
+  (let ((lattice (saf::saf-lattice-edges (saf::saf-lattice saf))))
+    (setf (saf::saf-lattice-edges (saf::saf-lattice saf))
+      (sort lattice
+	    #'<
+	    :key #'(lambda (x)
+		     (node-to-int
+		      (saf::saf-edge-source x))))))
   (cond
    ((or (eq format :yy)
 	(eq format :pet)) ;; deprecate this...?
     (loop
-	with length = (length (smaf::saf-lattice-nodes (smaf::saf-lattice saf)))
+	with length = (1- (length (smaf::saf-lattice-nodes (smaf::saf-lattice saf))))
 	with saf-annots = (smaf::saf-lattice-edges (smaf::saf-lattice saf))
 	for annot in saf-annots
 ;	for content = (smaf::saf-edge-content annot)
