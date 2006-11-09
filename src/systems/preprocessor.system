@@ -12,11 +12,14 @@
                       (get-sources-dir "lkb") '(:relative "preprocess"))
     :binary-pathname (dir-append
                       (get-binaries-dir "lkb") '(:relative "preprocess"))
-    :depends-on ("ppcre")
+    :depends-on ("ppcre" "s-xml")
     :source-extension "lsp"
     :components ((:file "package")
                  (:file "smaf-package")
+		 (:file "lxml")
                  (:file "saf0")
+		 (:file "saf")
                  (:file "saf2xml")
 		 (:file "x-preprocess" :depends-on ("package"))
+		 (:file "saf-conf")
 		 ))

@@ -76,7 +76,7 @@
       (t
        (error "unexected doctype")))
     (cond
-     ((string= type "ersatz")
+     ((eq type :|ersatz|)
       (format nil "<~a type='ersatz' id='t~a' ~a='~a' ~a='~a' source='v~a' target='v~a'><slot name='name'>~a</slot><slot name='surface'>~a</slot></~a>"
 	      elt
 	      (xml-str id)
@@ -84,11 +84,11 @@
 	      attr-to (xml-str to)
 	      (xml-str source)
 	      (xml-str target)
-	      (xml-str (smaf::saf-fs-feature-value content "name"))
-	      (xml-str (smaf::saf-fs-feature-value content "surface"))
+	      (xml-str (smaf::saf-fs-feature-value2 content :|name|))
+	      (xml-str (smaf::saf-fs-feature-value2 content :|surface|))
 	      elt
 	      ))
-      ((string= type "token")
+      ((eq type :|token|)
        (format nil "<~a type='token' id='t~a' ~a='~a' ~a='~a' source='v~a' target='v~a'>~a</~a>"
 	       elt
 	       (xml-str id)

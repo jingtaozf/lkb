@@ -49,13 +49,6 @@
   olac
   text)
 
-(defun saf-fs-feature-value (fs feature)
-  (let ((x (find feature fs 
-		 :key #'saf-fv-feature
-		 :test #'string=)))
-    (if x
-	(saf-fv-value x))))
-
 (defun saf-fs-feature-value2 (fs feature)
   (let ((x (find feature fs 
 		 :key #'saf-fv-feature)))

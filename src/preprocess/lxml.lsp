@@ -145,7 +145,7 @@
 ;; return CDATA-wrapped text
 #+:preprocessor
 (defun wrap-cdata (str)
-  (lkb::concatenate-strings
+  (concatenate-strings
    (cdr 
     (loop 
 	with subs = (cons 0 (append (ppcre:all-matches "]]>" str)
@@ -178,77 +178,7 @@
 	 (t
 	  x))))
 
-;; fix me
-(in-package :lkb)
-
 (defun concatenate-strings (x)
   (apply #'concatenate
 	 (cons 'string x)))
 
-(defun read-file-to-string (filename &key (numchars -1))
-  (coerce 
-   (with-open-file (ifile filename
-		    :direction :input)
-     (loop
-	 with i = 0
-	 for c = (read-char ifile nil)
-	 while (and c (not (= i numchars)))
-	 collect c
-	 do 
-	   (incf i)))
-   'string))
-
-(defun split-str-on-spc (str)
-  (mapcar #'car (split-on-spc str)))
-
-;; return list of (WORD-STRING FROM TO)
-;; where FROM, TO are char offsets
-(defun split-on-spc (preprocessed-string)
-  (remove 
-   ""
-   (loop 
-       with c-list = (coerce preprocessed-string 'list)
-       with c-list-word
-       with from = 0
-       for c in c-list
-       for i from 1 to (length c-list) 
-       if (char= c #\Space) collect (list (coerce (nreverse c-list-word) 'string) from (1- i)) into words
-       and do (setf from i)
-       and do (setf c-list-word nil)
-       else do (push c c-list-word)
-       finally 
-	 (return (append words
-			 (list (list (coerce (nreverse c-list-word) 'string)
-				     from i)))))
-   :key #'car
-   :test #'string=))
-
-;;
-;; XML test suite
-;;
-
-(defvar *xml-test-neg* nil)
-(defvar *xml-test-pos* nil)
-
-(defun xml-test-initialise nil
-  (setf *xml-test-neg* nil)
-  (setf *xml-test-pos* nil))
-
-(defun xml-test-file (filename)
-  (handler-case
-      (with-open-file (s filename) 
-	(xml:parse-xml s)
-	(push filename *xml-test-pos*))
-    (error (condition)
-      (format t  "~&FILENAME: ~a Error: ~A" filename condition)
-      (push (cons filename condition) *xml-test-neg*))))
-
-#+:allegro
-(defun xml-test-files (pattern)
-  (xml-test-initialise)
-  (loop
-    for filename in
-	(excl.osi:command-output (format nil "ls ~a" pattern))
-      do 
-	(xml-test-file filename)
-	))

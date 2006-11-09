@@ -539,7 +539,6 @@
   (check-morph-options input)
   (reset-statistics)
   
-  #+:maf
   (when (smaf::saf-p input)
     (setf input (saf::instantiate-l-content input smaf::*lmap*)))
 
@@ -554,10 +553,10 @@
                            Disabling best-first mode: setting ~
                            *first-only-p* to `nil'.~%")
                          first-only-p))
-	 (input (if #+:maf (xml-p input) #-:maf nil
-		    #+:maf (smaf::xml-to-saf-object input) #-:maf nil;; extract object from maf xml
+	 (input (if (xml-p input)
+		    (smaf::xml-to-saf-object input);; extract object from maf xml
 		    input))
-	 (maf-p #+:maf (smaf::saf-p input) #-:maf nil)
+	 (maf-p (smaf::saf-p input))
 	 (*maf-p* maf-p)
          ;;
          ;; input originating from SPPP is a set of SPPP tokens
@@ -577,7 +576,7 @@
       (setf length-user-input
         (cond
          (maf-p
-          #+:maf (smaf::get-smaf-lattice-size user-input) #-:maf nil)
+          (smaf::get-smaf-lattice-size user-input))
          (spppp (loop
                     for token in input
                     maximize (rest (assoc :end token))))
@@ -628,7 +627,6 @@
 	      (generate-messages-for-all-unanalysed-tokens *tchart*))
 	    (when *abort-parse-after-morphosyntax*
 	      (return-from parse (get-parse-return-values)))
-	    #+:maf
 	    (when *fallback-pos-p*
 	      (augment-tchart-with-fallback-morphop))
 	    (when (and *abort-parse-if-no-spanning-morph-edge-path*
@@ -800,7 +798,6 @@
   ;;; input is a list with no ambiguity about token boundaries
   ;;; (bmw) the above is no longer the case
   ;;; FIX - we need a better method of switching here
-  #+:maf
   (if (smaf::saf-p preprocessed-input)
       (return-from instantiate-chart-with-tokens
 	(saf-setup-morphs preprocessed-input)))

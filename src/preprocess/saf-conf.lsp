@@ -27,11 +27,16 @@
       with lattice = (saf-lattice saf)
       for edge in (and lattice (saf-lattice-edges lattice))
       for l-content = (edge-l-content edge l-map)
-      do (setf (saf-edge-l-content edge) l-content)
+      do (setf (saf-edge-l-content edge) l-content) ;!
       finally 
 	(setf (saf-lattice saf)
 	  (postprocess-lattice lattice)) ;; clobber rules, etc.
 	(return saf)))
+
+(defun instantiate-edge-l-content (edge l-map)
+  (setf (saf-edge-l-content edge)
+    (edge-l-content edge l-map))
+  edge)
 
 ;; instantiate :l-content for annotation
 (defun edge-l-content (edge l-map)
@@ -45,31 +50,86 @@
 		   :edge edge))
       finally (return l-content)))
 
+(defun explode-to-chars (string)
+  (loop
+      for i from 0 to (1- (length string))
+      collect (aref string i)))
+  
+(defun implode-from-chars (char-list)
+  (loop
+      with res = (make-string (length char-list))
+      for c in char-list
+      for i upfrom 0
+      do
+	(setf (schar res i) c)
+      finally
+	(return res)))
+
+(defun string-2-sym-list (string &key (sep #\Space) (esc t))
+  (loop
+      with res
+      with flag
+      with word-chars
+      for c in (explode-to-chars string)
+      if flag do
+	(push c word-chars)
+	(setf flag nil)
+      else do
+	   (cond
+	     ((eq sep c)
+	      (push 
+	       (intern (implode-from-chars (reverse word-chars)) :keyword)
+	       res)
+	      (setf word-chars nil))
+	     ((and (eq #\\ c) esc)
+	      (setf flag t))
+	     (T
+	      (push c word-chars)))
+      finally (return (reverse (push 
+				(intern (implode-from-chars (reverse word-chars)) :keyword)
+				res)))))
+
+(defun string-2-str-list (string &key (sep #\Space) (esc t))
+  (loop
+      with res
+      with flag
+      with word-chars
+      for c in (explode-to-chars string)
+      if flag do
+	(push c word-chars)
+	(setf flag nil)
+      else do
+	   (cond
+	     ((eq sep c)
+	      (push 
+	       (implode-from-chars (reverse word-chars))
+	       res)
+	      (setf word-chars nil))
+	     ((and (eq #\\ c) esc)
+	      (setf flag t))
+	     (T
+	      (push c word-chars)))
+      finally (return (reverse (push 
+				(implode-from-chars (reverse word-chars))
+				res)))))
+
+(defparameter *resolve-mrs* (lambda (&rest rest) (declare (ignore rest))))
+
+(defun resolve-mrs (x edge)
+  (funcall *resolve-mrs* x edge))
+
 ;; resolve var wrt an edge
 ;; currently only allow extraction from 'content'
 (defun resolve (var edge)
-  (let* ((l (lkb::string-2-str-list (string var) :sep #\.))
-	 (feat (car l))
-	 (x (cdr l)))
+  (let* ((l (string-2-sym-list (string var) :sep #\.))
+	 (feat (car l)) ;!sym
+	 (x (cdr l))) ;!sym list
     (cond
-      ((string= feat "content")
+      ((eq feat :|content|)
        (saf-fs-path-value x (saf-edge-content edge)))
-      ((string= feat "rmrs")
-       (cond
-	((equal nil x)
-	 (unless (and (mrs::get-semi) (mrs::get-meta-semi))
-	   (error "no mrs::*meta-semi*/mrs::*semi*"))
-	 ;(mrs::convert-rmrs-to-mrs
-	  (saf-fs-path-value '(:rmrs) (saf-edge-content edge))
-	  ;)
-	 )
-	;; temporary hack: eg. handles RMRS with single EP
-	((equal '("ep" "gpred") x) 
-	 (mrs::char-rel-pred (car (mrs::rmrs-liszt (saf-fs-path-value '(:rmrs) (saf-edge-content edge)))))
-	 )
-	((equal '("rarg" "constant") x) 
-	 (mrs::rmrs-arg-val (car (mrs::rmrs-rmrs-args (saf-fs-path-value '(:rmrs) (saf-edge-content edge))))))
-	))
+      ((eq feat :|rmrs|)
+       (resolve-mrs x edge)
+       (error "no RMRS support (MRS package unavailable)"))
       (t
        (error "unhandled variable name '~a' found in l-content" var)))))
 
@@ -108,15 +168,17 @@
   (loop 
       for fv in x
       for feat = (saf-fv-feature fv)
+      for feat-str = (string feat)
       for val- = (saf-fv-value fv)
       for val = (if (symbolp val-)
 		    (resolve val- edge)
 		  val-) ;; resolve val if nec
       for fv2 = (find feat l-content 
 		      :key #'saf-fv-feature
-		      :test #'string=)
-      if (and (not (string= "" feat))
-	      (char= #\+ (aref feat 0)))
+		      )
+;		      :test #'string=)
+      if (and (not (eq :|| feat))
+	      (char= #\+ (aref feat-str 0)))
 	 ;; support +variables which collect values in list
       do
 	(if val
@@ -157,9 +219,9 @@
 
 ;; fix_me: generalise???
 (defun l-edgeType (s-edge)
-  (saf-fs-feature-value 
+  (saf-fs-feature-value2 
    (saf-edge-l-content s-edge) 
-   "edgeType"))
+   :|edgeType|))
 
 ;;
 ;; READ SAF CONFIG FILE
@@ -190,18 +252,22 @@ wordForm.[] -> edgeType='morph' stem=content.stem partialTree=content.partial-tr
 (defun gmap nil
   *gmap*)
 
+(defun conf-read-string (str)
+  (with-input-from-string (s str)
+      (conf-read-stream s)))
+
 ;; fallback case handles smaf as mapped from tchart
 (defun reset-conf nil
   (setf *gmap* nil)
-  (setf *lmap*
-    (with-input-from-string (s *default-config*)
-      (conf-read-stream s)))
+  (setf *lmap* (conf-read-string *default-config*))
+;    (with-input-from-string (s *default-config*)
+ ;     (conf-read-stream s)))
   (cond
    (*ersatz-carg-path*			; HACK!!!
     (push (list :|carg| *ersatz-carg-path* :STR) *gmap*)
     (push (conf-read-line "ersatz.[] -> edgeType='tok+morph' stem=content.name tokenStr=content.name gMap.carg=content.surface inject='t' analyseMorph='t'") *lmap*))
    (t
-    (push (conf-read-line "ersatz.[] -> edgeType='tok+morph' stem=content.name tokenStr=content.name analyseMorph='t'") *lmap*)))
+    (push (conf-read-line "ersatz.[] -> edgeType='tok+morph' stem=content.name tokenStr=content.name gMap.carg=content.surface inject='t' analyseMorph='t'") *lmap*)))
   *lmap*
   )
 
@@ -230,6 +296,7 @@ wordForm.[] -> edgeType='morph' stem=content.stem partialTree=content.partial-tr
 (defun conf-read-line (line)
   (or
    (conf-read-line-RULE line)
+   #+:lkb
    (conf-read-line-DEFINE line)
    (conf-read-line-COMMENT line)
    (conf-read-line-EMPTY line)
@@ -250,6 +317,7 @@ wordForm.[] -> edgeType='morph' stem=content.stem partialTree=content.partial-tr
 			   :l-content (conf-read-specs out-str))))))
 
 ;; eg. define gMap.pred (synsem lkeys keyrel pred)
+#+:lkb
 (defun conf-read-line-DEFINE (line)
   (multiple-value-bind
       (m regs)
@@ -266,9 +334,10 @@ wordForm.[] -> edgeType='morph' stem=content.stem partialTree=content.partial-tr
 
 ;; eg. "synsem lkeys keyrel pred" 
 ;;     -> (:|synsem| :|lkeys| :|keyrel| :|pred|)
+#+:lkb
 (defun conf-read-path (path-str)
   (loop
-      for f in (lkb::string-2-str-list path-str)
+      for f in (string-2-str-list path-str)
       unless (string= "" f)
       collect (intern (string-upcase f) :lkb)))
 
@@ -288,8 +357,12 @@ wordForm.[] -> edgeType='morph' stem=content.stem partialTree=content.partial-tr
   (and (not (string= "" line))
        (string= ";" (subseq line 0 1))))
 
+(defparameter *empty-line-regex* 
+    (ppcre:create-scanner "^\\s*$" :single-line-mode t))
+
 (defun conf-read-line-EMPTY (line)
-  (lxml::xml-whitespace-p line))
+  (ppcre:scan *empty-line-regex* line))
+;  (lxml::xml-whitespace-p line))
 
 ;; eg. "a='b' c='d'" -> "a='b'" "c='d'"
 (defun conf-read-specs (specs-str)
@@ -303,11 +376,13 @@ wordForm.[] -> edgeType='morph' stem=content.stem partialTree=content.partial-tr
    (ppcre:register-groups-bind 
     (feat val)
     ("^([+\\w.]*)='([^']*)'.*$" spec)
-    (make-saf-fv :feature feat
+    (make-saf-fv :feature (str2feat feat)
 		      :value val))
    (ppcre:register-groups-bind 
     (feat val)
     ("^([+\\w.]*)=(.*).*$" spec)
-    (make-saf-fv :feature feat
+    (make-saf-fv :feature (str2feat feat)
 		      :value (and (stringp val) (intern val))))))
 
+(defun str2feat (str)
+  (intern str :keyword))

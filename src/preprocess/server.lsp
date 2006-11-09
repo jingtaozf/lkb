@@ -146,7 +146,7 @@
 	    :port port))
 
 (defun saf-id (saf)
-  (saf-fs-feature-value 
+  (saf-fs-feature-value2 
    (saf-meta-olac 
     (saf-meta saf)) 
    "dc:identifier"))

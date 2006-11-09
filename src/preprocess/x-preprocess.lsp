@@ -69,6 +69,10 @@
     (let ((ppcre::*regex-char-code-limit* 256))
       (ppcre:create-scanner "[ \\t]+" :single-line-mode t)))
 
+(defparameter *saf-config* "
+token.[] -> edgeType='tok' tokenStr=content
+ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surface")
+
 (defstruct x-fspp
   version
   (tokenizer *default-token-sep*) 
@@ -112,6 +116,8 @@
 	while (setf c (read-char stream nil nil))
 	maximize (char-code c))))
 
+(defvar *saf-lmap*)
+
 ;; top-level call
 (defun read-preprocessor (file)
   ;; ppcre::*regex-char-code-limit* will be set smallest possible value
@@ -124,8 +130,9 @@
       (nreverse (x-fspp-local x-fspp)))
     (format t "~a~%" x-fspp)
     (setf *preprocessor* x-fspp))
-  #+:lkb
-  (smaf::reset-conf)
+;  #+:lkb
+;  (smaf::reset-conf)
+  (setf *saf-lmap* (saf::conf-read-string *saf-config*))
   *preprocessor*
   )
 
@@ -336,16 +343,20 @@
 (defun x-tokens-to-saf-annots (x-tokens)
   (loop
       with init-node = *smaf-node*
+      with new-annot
       for x in x-tokens
       unless (string= (text x) "")
-      collect 
-	(smaf::make-saf-edge
-	 :id (incf *smaf-id*)
-	 :type :|token|
-	 :source *smaf-node*
-	 :target (incf *smaf-node*)
-	 :content x) into edges
-      collect *smaf-node* into nodes
+      do
+	(setf new-annot
+	  (smaf::make-saf-edge
+	   :id (incf *smaf-id*)
+	   :type :|token|
+	   :source *smaf-node*
+	   :target (incf *smaf-node*)
+	   :content x))
+	(saf::instantiate-edge-l-content new-annot *saf-lmap*)
+      and collect new-annot into edges
+      and collect *smaf-node* into nodes
       finally
 	(return
 	  (smaf::make-saf 
@@ -367,11 +378,11 @@
 	      (x-regex-replace-all scanner x target)
 	    (when (and matchp verbose)
 	      (format t
-		      "~&GLOBAL |~a| -> |~a| ~&mapped~&~a~&to~&"
+		      "~&GLOBAL |~a| -> |~a| ~&mapped~&|~a|~&to~&"
 		      (x-fsr-source rule) (x-fsr-target rule)
-		      x)
+		      (text x))
 	      (setf x res)
-	      (format t "~&~a~%~%" x))
+	      (format t "~&|~a|~%~%" (text x)))
 	    (setf x res))))
   x)
 
@@ -471,15 +482,31 @@
 (defun quick-check-fail (fsr annots)
   (with-slots (pre-test) fsr
     (let* ((annot1 (first annots))
-	   (x1 (and annot1 (smaf::saf-edge-content annot1))))
+	   (x1 (and annot1 (get-token-str annot1))))
+;	   (x1 (and annot1 (smaf::saf-edge-content annot1))))
       ;(format t "~&X1: '~a' PRE-TEST: '~a'~&" x1 pre-test)
       (if pre-test
 	  (not (ppcre::scan pre-test (text x1)))))))
+
+(defun get-stringified (saf-fs)
+  (loop for fv in (and (listp saf-fs) saf-fs)
+      collect
+	(saf::make-saf-fv 
+	 :feature (2-str (smaf::saf-fv-feature fv))
+;	 :value (2-str (smaf::saf-fv-value fv)))))
+	 :value (smaf::saf-fv-value fv))))
+
+(defun get-ersatz-type (annot)
+  (saf::saf-fs-feature-value2 (saf::saf-edge-l-content annot) :|name|))
+
+(defun get-token-str (annot)
+  (saf::saf-fs-feature-value2 (saf::saf-edge-l-content annot) :|tokenStr|))
 
 ;; attempt to apply FSR to ANNOT
 (defun preprocess-token-multi (annots fsr saf-annots &key verbose)
 
   ;; bail out if path contains any ersatzes
+  ;#+:null
   (loop for a in annots
       unless (eq (smaf::saf-edge-type a) :|token|)
       do (return-from preprocess-token-multi saf-annots))
@@ -498,10 +525,12 @@
 	 (scanner (x-fsr-scanner fsr))
 	 (target (x-fsr-target fsr))
 	 ;; ANNOT slots
-	 (x-orig (x-concat annots :key #'smaf::saf-edge-content)) ; FIXME erstaz
+	 (x-orig (x-concat annots :key #'get-token-str)) ; FIXME erstaz
+;	 (x-orig (x-concat annots :key #'smaf::saf-edge-content)) ; FIXME erstaz
 	 (annot-source (smaf::saf-edge-source (first annots)))
 	 (annot-target (smaf::saf-edge-target (car (last annots))))
-	 x-str)
+	 x-str
+	 new-annot)
     ;(format t "~&(~a) ~a:" (x-fsr-type fsr) (x-fsr-source fsr))
     ;(format t " '~a'" (text x-orig))
     (when (ppcre::scan scanner (text x-orig))
@@ -512,9 +541,9 @@
       ;; debugging output
       (when verbose
 	(format t
-		"~&~a |~a| -> |~a| in ~a gave ~a"
+		"~&~a |~a| -> |~a| in |~a| gave |~a|"
 		type (x-fsr-source fsr) target 
-		x-orig x-str))
+		(text x-orig) (text x-str)))
       ;; fix NILs in CHAR-MAP
       (setf (char-map x-str)
 	(substitute (char-map-simple-range (char-map x-orig))
@@ -572,32 +601,35 @@
 	       (ersatz-match
 		;; annot is ERSATZ
 		(setf range (char-map-simple-range (char-map ersatz-match))) ;; get RANGE
-		(push 
-		 (smaf::make-saf-edge
+		(setf new-annot 
+		  (smaf::make-saf-edge
 		  :id (incf *smaf-id*)
 		  :type :|ersatz|
 		  :source last-node
 		  :target next-node
 		  :content (list
 			    (smaf::make-saf-fv
-			     :feature :surface
+			     :feature :|surface|
 			     :value (x-subseq x-orig (car range) (cdr range)))
 			    (smaf::make-saf-fv
-			     :feature :name ;; the ersatz 'token'
+			     :feature :|name| ;; the ersatz 'token'
 			     :value (text x-bit))
 			    (smaf::make-saf-fv
-			     :feature :type
-			     :value (text ersatz-match)))) ;; the ersatz name
-		 saf-annots))
+			     :feature :|type|
+			     :value (text ersatz-match))))) ;; the ersatz name
+		(saf::instantiate-edge-l-content new-annot *saf-lmap*)
+		(push new-annot saf-annots))
 	       (t
 		;; annot is normal TOKEN
-		(push (smaf::make-saf-edge
+		(setf new-annot
+		  (smaf::make-saf-edge
 		       :id (incf *smaf-id*)
 		       :type :|token|
 		       :source last-node
 		       :target next-node
-		       :content x-bit)
-		      saf-annots)))
+		       :content x-bit))
+		(saf::instantiate-edge-l-content new-annot *saf-lmap*)
+		(push new-annot saf-annots)))
 	      (setf last-node next-node) ;; keep nodes in sync
 	      ))))
   saf-annots)
@@ -638,8 +670,8 @@
       (setf surface content)
       (setf (smaf::saf-edge-content annot) (text surface)))
     (when (eq type :|ersatz|)
-      (setf surface (smaf::saf-fs-feature-value2 content :surface))
-      (setf fv (find :surface content 
+      (setf surface (smaf::saf-fs-feature-value2 content :|surface|))
+      (setf fv (find :|surface| content 
 		     :key #'smaf::saf-fv-feature))
       (setf (smaf::saf-fv-value fv) (text surface)))
 
@@ -651,17 +683,19 @@
     ;; instantiate 'from' and 'to'
     (setf (smaf::saf-edge-from annot) from)
     (setf (smaf::saf-edge-to annot) to)
-    ;; convert everything to string (temp!)
+    ;; clear l-content
+    ;(setf (smaf::saf-edge-l-content annot) nil)
+    ;; convert values to string
     (setf (smaf::saf-edge-id annot) (2-str (smaf::saf-edge-id annot)))
     ;(setf (smaf::saf-edge-type annot) (2-str (smaf::saf-edge-type annot)))
     (setf (smaf::saf-edge-source annot) (2-str (smaf::saf-edge-source annot)))
     (setf (smaf::saf-edge-target annot) (2-str (smaf::saf-edge-target annot)))
     (setf (smaf::saf-edge-from annot) (2-str (smaf::saf-edge-from annot)))
     (setf (smaf::saf-edge-to annot) (2-str (smaf::saf-edge-to annot)))
-    (loop for fv in (and (listp content) content)
-	do
-	  (setf (smaf::saf-fv-feature fv) (2-str (smaf::saf-fv-feature fv)))
-	  (setf (smaf::saf-fv-value fv) (2-str (smaf::saf-fv-value fv))))
+;    (loop for fv in (and (listp content) content)
+;	do
+;	  (setf (smaf::saf-fv-feature fv) (2-str (smaf::saf-fv-feature fv)))
+;	  (setf (smaf::saf-fv-value fv) (2-str (smaf::saf-fv-value fv))))
     
     )
   annot)
@@ -675,17 +709,26 @@
 	with length = (length (smaf::saf-lattice-nodes (smaf::saf-lattice saf)))
 	with saf-annots = (smaf::saf-lattice-edges (smaf::saf-lattice saf))
 	for annot in saf-annots
-	for content = (smaf::saf-edge-content annot)
-	for type = (smaf::saf-edge-type annot)
+;	for content = (smaf::saf-edge-content annot)
+;	for type = (smaf::saf-edge-type annot)
 	for id = (smaf::saf-edge-id annot)
 	for start = (smaf::saf-edge-source annot)
 	for end = (smaf::saf-edge-target annot)
-	for surface = (if (eq type :|ersatz|)
-			  (smaf::saf-fs-feature-value  content "surface")
-			content)
-	for form = (if (eq type :|ersatz|)
-		       (smaf::saf-fs-feature-value content "name")
-		     surface)
+		  
+;	for l-content = (smaf::instantiate-edge-l-content annot saf::*lmap*)
+	for surface = (and (smaf::instantiate-edge-l-content annot *saf-lmap*)
+			   (get-token-str annot))
+	for form = (or
+		    (get-ersatz-type annot)
+;		    (saf::saf-fs-feature-value l-content "name") ;!
+		    surface)
+		  
+;	for surface = (if (eq type :|ersatz|)
+;			  (smaf::saf-fs-feature-value  content "surface")
+;			content)
+;	for form = (if (eq type :|ersatz|)
+;		       (smaf::saf-fs-feature-value content "name")
+;		     surface)
 	for token = (format 
 		     nil 
 		     "(~d, ~d, ~d, 1, \"~a\" \"~a\", 0, \"null\")" 

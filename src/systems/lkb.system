@@ -54,8 +54,7 @@
   (pushnew :pooling *features*)
 
   ;;
-  ;; always include finite-state preprocessing support (even though there is
-  ;; more work to be done on this).                           (25-feb-05; oe)
+  ;; always include finite-state preprocessing support
   ;;
   (pushnew :preprocessor *features*)
 
@@ -99,9 +98,7 @@
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
            #-:ansi-eval-when (load eval compile)
   #+(or :lui (and :allegro (version>= 6 0)))
-  (pushnew :lsp *features*)
-  #+(and :xml :preprocessor)
-  (pushnew :maf *features*))
+  (pushnew :lsp *features*))
 
 
 (defparameter *lisp-specific-directory*
@@ -203,26 +200,17 @@
                (:file "unfill-dag")   ; unfilled feature structures
                (:file "generics")
 	       ))
-
+    #+:preprocessor
      (:module "preprocess"
       :source-pathname "preprocess"
       :binary-pathname "preprocess"
       :components
-      (#+:preprocessor       
-       (:file "preprocess")
-       #+(and :xml)
-       (:file "lxml")
-       #+(and :maf)
-       (:file "saf2")
+      ((:file "preprocess")
        (:file "graph")
-       #+(and :maf)
-       (:file "saf")
-       #+(and :maf)
-       (:file "saf-conf")
-       #+(and :maf :allegro)
+       #+:allegro
        (:file "server")
-       #+:maf
-       (:file "texti")
+       #+:mrs
+       (:file "hook-mrs")
        ))  
 
      (:module "lexdb"

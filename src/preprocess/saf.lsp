@@ -67,11 +67,14 @@
      :olac (get-olac-meta olac)
      :text text)))
 
+(defun make-feat (x)
+  (intern (string x) :keyword))
+
 (defun get-olac-meta (lxml-olac)
   (loop
       for e in (lxml::lxml-elts lxml-olac)
       collect
-	(make-saf-fv :feature (string (lxml::lxml-elt-name e))
+	(make-saf-fv :feature (make-feat (lxml::lxml-elt-name e))
 		     :value (lxml::lxml-elt-text-content e))))
 
 #+:null
@@ -249,16 +252,8 @@
    :to (lxml::lxml-elt-attr lxml-token :|to|)
    :content (lxml::lxml-elt-attr lxml-token :|value|)))
 
-(defun lxml-rmrs-to-rmrs (lxml)
-  (if lxml
-      (list
-       (make-saf-fv
-	:feature :rmrs
-	:value (mrs::read-rmrs 
-		(car 
-		 ;; necessary since read-rmrs expects :mrs-interned symbols
-		 (lxml:shift-package lxml :mrs)) :rasp)))))
-  
+(defparameter *HOOK-lxml-rmrs-to-mrs-fn* #'(lambda (x) (declare (ignore x))))
+
 (defun lxml-annot-to-edge (lxml-annot &key type source target)
   (let* ((id (lxml::lxml-elt-attr lxml-annot :|id|))
 	 (fs-list (lxml::lxml-elt-elts lxml-annot :|fs|))
@@ -274,7 +269,8 @@
 	   (append ;; complex content
 	    (lxml-fs-content-to-fs fs) 
 	    (lxml-slots-to-fs slots)
-	    (lxml-rmrs-to-rmrs rmrs)
+	    (funcall *HOOK-lxml-rmrs-to-mrs-fn* rmrs)
+;	    #+:mrs (lxml-rmrs-to-rmrs rmrs)
 	    )
 	   ))
 	 (source (or source (lxml::lxml-elt-attr lxml-annot :|source|)))
@@ -291,7 +287,7 @@
      :type (saf-type (or type (lxml::lxml-elt-attr lxml-annot :|type|)))
      :source source
      :target target
-     :deps (lkb::split-str-on-spc (lxml::lxml-elt-attr lxml-annot :|deps|))
+     :deps (split-str-on-spc (lxml::lxml-elt-attr lxml-annot :|deps|))
      :content content
      :from (or (lxml::lxml-elt-attr lxml-annot :|from|) 
 	       (lxml::lxml-elt-attr lxml-annot :|cfrom|))
@@ -299,6 +295,31 @@
 	  (lxml::lxml-elt-attr lxml-annot :|to|)
 	  (lxml::lxml-elt-attr lxml-annot :|cto|))
      )))
+
+(defun split-str-on-spc (str)
+  (mapcar #'car (split-on-spc str)))
+
+;; return list of (WORD-STRING FROM TO)
+;; where FROM, TO are char offsets
+(defun split-on-spc (preprocessed-string)
+  (remove 
+   ""
+   (loop 
+       with c-list = (coerce preprocessed-string 'list)
+       with c-list-word
+       with from = 0
+       for c in c-list
+       for i from 1 to (length c-list) 
+       if (char= c #\Space) collect (list (coerce (nreverse c-list-word) 'string) from (1- i)) into words
+       and do (setf from i)
+       and do (setf c-list-word nil)
+       else do (push c c-list-word)
+       finally 
+	 (return (append words
+			 (list (list (coerce (nreverse c-list-word) 'string)
+				     from i)))))
+   :key #'car
+   :test #'string=))
 
 ;; special case
 (defun lxml-wordform-to-edge (lxml-wordform &key source target)
@@ -319,7 +340,7 @@
    ((eq (lxml::lxml-elt-name lxml) :|fs|)
     (loop for f in (lxml::lxml-elt-elts lxml :|f|)
 	collect (make-saf-fv
-		 :feature (lxml::lxml-elt-attr f :|name|)
+		 :feature (make-feat (lxml::lxml-elt-attr f :|name|))
 		 :value (lxml-fs-content-to-fs (first (lxml::lxml-elt-contents f))))))
    ((eq (lxml::lxml-elt-name lxml) :|binary|)
     :binary-ignored)
@@ -342,10 +363,8 @@
 			val
 		      (error "string expected"))
       collect 
-	(make-saf-fv :feature feat
+	(make-saf-fv :feature (make-feat feat)
 		     :value val-str)))
-
-
 
 (defun saf-fs-path-value (path fs)
   (cond
@@ -356,15 +375,7 @@
    ((listp fs)
     (saf-fs-path-value 
      (cdr path)
-     (saf-fs-feature-value fs (car path))))))
-
-#+:null
-(defun saf-fs-feature-value (fs feature)
-  (let ((x (find feature fs 
-		 :key #'saf-fv-feature
-		 :test #'string=)))
-    (if x
-	(saf-fv-value x))))
+     (saf-fs-feature-value2 fs (car path))))))
 
 (defun saf-fv-value! (x)
   (saf-fv-value x))
@@ -378,172 +389,49 @@
   (loop 
       for fv in l-content
       for feat = (saf-fv-feature fv)
+      for feat-str = (string feat)
       for val = (saf-fv-value fv)
       when (and
-	    (> (length feat) 4)
-	    (string= (subseq feat 0 5)
+	    (> (length feat-str) 4)
+	    (string= (subseq feat-str 0 5)
 		    "gMap."))
       collect
 	(cons
-	 (intern (subseq feat 5) :keyword)
+	 (intern (subseq feat-str 5) :keyword)
 	 val)))
 	 
-(defun process-saf-sentences (saf &key (ostream t) show-parse reset-unanalysed-tokens pprint)
-  (let* ((textfilename (saf-meta-document (saf-meta saf)))
-	 (text
-	  (if textfilename
-	      (lkb::read-file-to-string textfilename))))
-    (format t "~&;;; Data file: ~a" (saf-meta-document (saf-meta saf)))
-    (format ostream "~a"
-	    (smaf::saf-header 
-	     (smaf::make-saf-meta
-	      :addressing :|char|
-	      :document (saf-meta-document (saf-meta saf)))))
-    (when reset-unanalysed-tokens
-      (setf lkb::*unanalysed-tokens* nil))
-    (loop 
-	for s in 
-	  (sort (loop for e in (saf-lattice-edges (saf-lattice saf))
-		    when (eq :|sentence| (saf-edge-type e))
-		    collect e)
-		#'< 
-		:key #'(lambda (x)
-			 (or
-			  (point-to-char-point 
-			   (saf-edge-from x) :|char|)
-			  -1)))
-	for from = (saf-edge-from s)
-	for to = (saf-edge-to s)
-	unless (and from to) do
-	  (format t "~&~%CANNOT PROCESS SENTENCE ~a due to null pointer: from=~a to=~a" 
-		  (saf-edge-id s) from to)
-	       
-	when (and from to) do
-	  (format t "~&~%PROCESSING SENTENCE ~a: ~& ~a" 
-		  (saf-edge-id s)
-		  (x-span text from to
-			  (saf-meta-addressing (saf-meta saf)))
-		  )
-	  (time
-	   (handler-case 
-	       (cond
-		((saf-meta-document (saf-meta saf))
-		 (let ((lkb::*generate-messages-for-all-unanalysed-tokens* t)
-		       ;(*char-map-add-offset* 
-			;(point-to-char-point (saf-edge-from s) :|char|))
-		       )
-		   (setf *char-map-add-offset* (point-to-char-point (saf-edge-from s) :|char|))
-		   (x-parse text 
-			    (saf-edge-from s) 
-			    (saf-edge-to s)
-			    (saf-meta-addressing (saf-meta saf))
-			    :document (saf-meta-document (saf-meta saf))
-			    :char-map #'char-map-add-x
-			    :show-parse show-parse)))
-		(t
-		 (x-parse (saf-edge-content s) 
-			  nil
-			  nil
-			  nil
-			  :document nil
-			  :show-parse show-parse)))
-	     (storage-condition (condition)
-	       (format t "~&Memory allocation problem: ~A" condition))
-	     #+:allegro
-	     (EXCL:INTERRUPT-SIGNAL () (error "Interrupt-Signal"))
-	     (error (condition)
-	       (format t  "~&Error: ~A" condition))
-	     ))
-	  (dump-sentence-analyses s :stream ostream :pprint pprint))
-    (format ostream "~&</saf>")))
-
-(defvar *saf-document* nil)
-
-(defun x-parse (text from to addressing &key document 
-					     (char-map #'identity) 
-					     (show-parse t))
-  (unless (preprocessor:preprocessor-initialized-p)
-    (error "please load preprocessor"))
-  (setf *saf-document* document)
-  (let ((str 
-	 (cond
-	  ((and from to addressing)
-	   (x-span text from to addressing))
-	  ((and (null from) (null to) (null addressing))
-	   text)
-	  (t
-	   (error "from/to/addressing=~a/~a/~a" from to addressing))))
-	(preprocessor:*local-to-global-point-mapping* char-map)
-	(lkb::*text* text)
-	(old-x-fspp-global (preprocessor::x-fspp-global preprocessor::*preprocessor*))
-	)
-    (setf lkb::*sentence* str)
-;    
-;    (format t "~%~%=.~a.~%~%" preprocessor:*local-to-global-point-mapping*)
-;    
-    (lkb::parse (preprocessor:x-preprocess str :format :maf) show-parse)
-    (setf (preprocessor::x-fspp-global preprocessor::*preprocessor*)
-      old-x-fspp-global)
-    t))
+(defun read-file-to-string (filename &key (numchars -1))
+  (coerce 
+   (with-open-file (ifile filename
+		    :direction :input)
+     (loop
+	 with i = 0
+	 for c = (read-char ifile nil)
+	 while (and c (not (= i numchars)))
+	 collect c
+	 do 
+	   (incf i)))
+   'string))
 
 (defun char-map-add-x (point)
   (if point
       (format nil "~a" (+ (or *char-map-add-offset* 0) (point-to-char-point point :|char|)))))
 
-#+:mrs
-(defun dump-sentence-analyses (s &key (stream t))
-  (dump-sentence-analyses2 :s-id (saf-edge-id s) :stream stream))
-
-#+:mrs
-;;based on mrs::output-mrs-after-parse
-(defun dump-sentence-analyses2 (&key (s-id) 
-				     (stream t))
-  (let ((*print-circle* nil))
-    (loop for edge in lkb::*parse-record* 
-	do
-	  (let ((mrs (mrs::extract-mrs edge)))
-	    (format stream "<annot type='parse' deps='~a'>" ;;move edge into content
-		    (or s-id ""))
-	    (format stream "<slot name='edge'>~a</slot>" (lkb::xml-escape (lkb::2-str (lkb::edge-id edge))))
-	    ;;(format stream "~&~A~&" 
-	    ;;(lkb::parse-tree-structure edge))
-	    (let ((mrs::*write-compact-xml* t))
-	      (setf mrs::*write-compact-xml* mrs::*write-compact-xml*) ;;avoid compiler warning
-	      (mrs::output-rmrs1 (mrs::mrs-to-rmrs mrs) 'mrs::xml stream))
-	    (format stream "~&</annot>")))))
-
 (defun saf-fs-partial-tree-2-list-partial-tree (fs)
   (if (null fs)
       nil
-    (let* ((first (saf-fs-path-value '("first") fs))
-	   (rule2 (saf-fs-path-value '("rule") first)) 
-	   (str2 (saf-fs-path-value '("str") first))
+    (let* ((first (saf-fs-path-value '(:first) fs))
+	   (rule2 (saf-fs-path-value '(:rule) first)) 
+	   (str2 (saf-fs-path-value '(:str) first))
 	   (rule (if (stringp rule2)
 		     (intern rule2)
 		   (error "string expected for saf-fs 'rule': ~a" rule2)))
 	   (str (if (stringp str2)
 		     (intern str2)
 		   (error "string expected for saf-fs 'str': ~a" str2)))
-	   (rest (saf-fs-path-value '("rest") fs)))
+	   (rest (saf-fs-path-value '(:rest) fs)))
       (cons (list rule str) (saf-fs-partial-tree-2-list-partial-tree rest)))))
 
-(defvar *morph-rule-map* nil)
-
-;; [for testing purposes]
-;(defvar smaf::*morph-rule-map*
-;    '(("M1" . "THIRD_SG_FIN_VERB_ORULE")
-;      ("M2" . "PUNCT_PERIOD_ORULE")
-;      ("M0" . "PLUR_NOUN_ORULE")))
-
-;; support for external morphology built up from separate slots
-;; and where external morph names are mapped into grammal rules
-(defun saf-plus-2-list-partial-tree (plus-list)
-  (loop
-      for x2 in plus-list
-      for x = (or (cdr (assoc x2 *morph-rule-map* :test #'string=))
-		  x2)
-      collect (list (intern x :lkb) nil)))
-    
 
 (defun saf-num-lattice-nodes (saf)
   (length (saf-lattice-nodes (saf-lattice saf))))
@@ -556,34 +444,6 @@
 	))
 
 ;;
-;; batch processing
-;; SENTENCE -> PARSE
-;;
-
-(defun process-standoff-sentence-file (filename &key show-parse)
-  (process-saf-file-sentences filename :show-parse show-parse))
-  
-(defun process-saf-file-sentences (filename &key (show-parse t) reset-unanalysed-tokens)
-  (with-open-file 
-      (ofile 
-       (merge-pathnames 
-	(make-pathname 
-	 :name (format nil "~a.out" (pathname-name (pathname filename))))
-	(pathname filename))
-       :direction :output
-       :if-exists :overwrite
-       :if-does-not-exist :create)
-    (format t "~&;;; Input sentence file: ~a" filename)
-    (format t "~&;;; Output file: ~a" (namestring ofile))
-    (process-saf-sentences
-     (smaf::xml-to-saf-object 
-      (lkb::read-file-to-string filename)
-      :dir (pathname-directory (pathname filename)))
-     :ostream ofile
-     :show-parse show-parse
-     :reset-unanalysed-tokens reset-unanalysed-tokens)))
-
-;;
 ;; point schemes:
 ;; - char
 ;; - xpoint
@@ -594,10 +454,10 @@
   (let ((cfrom (point-to-char-point from addressing))
 	(cto (point-to-char-point to addressing)))
     (cond
-     ((string= "char" addressing)
+     ((eq :|char| addressing)
       (and cfrom cto
 	   (subseq text cfrom cto)))
-     ((string= "xpoint" addressing)
+     ((eq :|xpoint| addressing)
       (error "addressing scheme 'xpoint' not implemented"))
      (t
       (error "unknown addressing scheme '~a'" addressing)))))
@@ -703,7 +563,7 @@
 	  (loop 
 	      for edge in edges
 	      for l-content = (saf-edge-l-content edge)
-	      when (saf-fs-feature-value l-content "clobber")
+	      when (saf-fs-feature-value2 l-content :|clobber|)
 	      collect edge)))
     (loop
 	for clobber-edge in clobber-edges
