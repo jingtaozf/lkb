@@ -73,6 +73,9 @@
 token.[] -> edgeType='tok' tokenStr=content
 ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surface")
 
+(defparameter *smaf-id* 0)
+(defparameter *smaf-node* 0)
+
 (defstruct x-fspp
   version
   (tokenizer *default-token-sep*) 
@@ -344,9 +347,6 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 			   :verbose verbose))
       (x-format-preprocessed-output saf :format format))))
 
-(defparameter *smaf-id* 0)
-(defparameter *smaf-node* 0)
-
 (defun x-tokens-to-saf-annots (x-tokens)
   (loop
       with init-node = *smaf-node*
@@ -407,6 +407,14 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 (defparameter *ersatz-regex* 
     (ppcre:create-scanner "[^a-zA-Z]*([a-zA-Z]+Ersatz).*" :single-line-mode t))
 
+(defun get-all-annot-paths (lattice max-tokens)
+  (loop
+      with edges = (smaf::saf-lattice-edges lattice)
+      for annot in edges
+      append
+	 (smaf::annot-paths annot lattice :len max-tokens)
+	))
+
 (defun preprocess-tokens (saf local &key verbose)
   (let* ((saf-lattice (smaf::saf-lattice saf)))
     (loop
@@ -416,21 +424,17 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 	do
 	  ;(format t "~&FSR (~a) ~a" (x-fsr-type fsr) (x-fsr-source fsr))
 	  (loop
-	    ;; for each (token) ANNOT ...
-	      for annot in (smaf::saf-lattice-edges saf-lattice)
-			   
+	      with paths = (get-all-annot-paths saf-lattice max-tokens)
+		  for annot-path in paths
 	      do
-		;(format t "~&ANNOT: ~a" (saf::saf-edge-id annot))
-		(loop
-		  for annot-path in (smaf::annot-paths annot saf-lattice :len max-tokens)
-		    do
-		      ;(format t "~&PATH: ")
-		      ;(loop for y in annot-path
-			;  do (format t " ~a" (saf::saf-edge-id y)))
-		      ;(terpri)
-			;; attempt to apply FSR to ANNOT
-		      (setf (smaf::saf-lattice-edges saf-lattice) 
-			(preprocess-token-multi annot-path fsr (smaf::saf-lattice-edges saf-lattice) :verbose verbose)))))
+		;;(format t "~&PATH: ")
+		;;(loop for y in annot-path
+		;;  do (format t " ~a" (saf::saf-edge-id y)))
+		;;(terpri)
+		;; attempt to apply FSR to ANNOT
+		(setf (smaf::saf-lattice-edges saf-lattice) 
+		  (preprocess-token-multi annot-path fsr (smaf::saf-lattice-edges saf-lattice) :verbose verbose))
+		))
   
   ;; contruct SAF output
   (loop
@@ -911,20 +915,28 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
   (coerce
    (loop
        with esc
-       with reg ;; register
+      ; with reg ;; register
        with reg-start
        with reg-end
        for c across replace-string
 		    ;; 
 		    ;; register matches
 		    ;;
-       if (and esc (member c '(#\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9))) ;; to_do: \& \` \' \{N}
-       do (setf reg (1- (read-from-string (string c))))
+       for flag = (and esc (member c '(#\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9))) ;; to_do: \& \` \' \{N}
+       for reg = (and flag
+		      (1- (read-from-string (string c))))
+       if (and reg (< reg (length  reg-starts)))
+       do 
 	  (setf reg-start (aref reg-starts reg))
 	  (setf reg-end (aref reg-ends reg))
        and append (coerce (subseq target-string reg-start reg-end) 'list) ;; replacement text
        and append (subseq char-map reg-start reg-end) into new-char-map  ;; replacement spans
        and do (setf esc nil)
+       else if reg
+       do
+	 (format t "~&;WARNING: ignore nonexistent register '\\~a' in '~a'" 
+		 c replace-string)
+	    ;; ignore nonexistent register reference
        else if esc 
 	    ;;
 	    ;; escaped character
