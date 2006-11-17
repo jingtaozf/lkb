@@ -286,6 +286,7 @@
     (setf  *check-paths* nil)
     #+:preprocessor
     (preprocessor:clear-preprocessor)
+    (smaf:reset-conf)
     (mt:initialize-transfer))
 
 (defun reload-script-file nil

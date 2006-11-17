@@ -4,7 +4,10 @@
 
 (defpackage :lxml
   (:use :common-lisp) 
-  (:export #:shift-package))
+  (:export 
+   #:shift-package
+   #:xml-whitespace-p
+   ))
 
 (in-package :lxml)
 

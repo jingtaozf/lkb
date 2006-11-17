@@ -48,6 +48,13 @@
 
 ;; end of wrappers
 
+
+;; 'imported' specials
+
+(defvar *saf-lmap*)
+
+;;
+
 (defvar *min-regex-char-code-limit* 256)
 
 (defvar *local-to-global-point-mapping* #'identity)
@@ -59,22 +66,120 @@
 (defvar *span* nil)
 (defvar *text* nil)
 
+;; if this is set, node and ids will start from 0 again on each call of 'preprocess'
+(defparameter *reset-ids-on-each-call* t)
+
+#+:null
+(defparameter *max-multi-token* 2)
+	   
+;;
+;; regex specials
+;;
+
 (defparameter *inter-token-str* " ")
 (defparameter *inter-token-regex* 
-    (ppcre::create-scanner 
+    (ppcre:create-scanner 
      (list :SEQUENCE *inter-token-str*) ;; treat it LITERALLY
      :single-line-mode t))
-
 (defparameter *default-token-sep* 
-    (let ((ppcre::*regex-char-code-limit* 256))
+    (let ((ppcre:*regex-char-code-limit* 256))
       (ppcre:create-scanner "[ \\t]+" :single-line-mode t)))
+(defparameter *multiple-rule-internal-separator* 
+    (ppcre:create-scanner "\\t{2,}" :single-line-mode t))
+(defparameter *rule-regex* 
+    (ppcre:create-scanner "^.([^\\t]+)\\t+([^\\t]*)" :single-line-mode t))
+(defparameter *empty-line-regex* 
+    (ppcre:create-scanner "^\\s*$" :single-line-mode t))
+(defparameter *date-regex* 
+    (ppcre:create-scanner "^.\\$[D]ate: +(.*) +\\$" :single-line-mode t))
+(defparameter *ersatz-regex* 
+    (ppcre:create-scanner "[^a-zA-Z]*([a-zA-Z]+Ersatz).*" :single-line-mode t))
+(defparameter *import-regex* 
+    (ppcre:create-scanner "^.(.*)" :single-line-mode t))
+
+;;
+;; preprocessor saf interpretation
+;;
 
 (defparameter *saf-config* "
 token.[] -> edgeType='tok' tokenStr=content
 ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surface")
 
+;;
+
 (defparameter *smaf-id* 0)
 (defparameter *smaf-node* 0)
+
+;;
+;; x-strings (aka 'preprocessed-x')
+;;
+
+(defclass preprocessed-x ()
+  ((text :initform nil :accessor text :initarg :text)
+   (char-map :initform nil :accessor char-map :initarg :char-map)))
+
+(defvar *print-char-map-simple-range* t)
+(defmethod print-object ((object preprocessed-x) stream)
+  (with-slots (text char-map) object
+      (format 
+       stream 
+       "|~a|:~a"
+       text (if *print-char-map-simple-range*
+		(char-map-simple-range char-map)
+	      char-map))))
+
+;; fix_me: enforce ordering constraint?
+(defun char-map-simple-range (char-map)
+  (loop 
+      for r in char-map
+      if (numberp (car r)) collect (car r) into from
+      if (numberp (cdr r)) collect (cdr r) into to
+      finally
+	(return
+	  (cons (if from (apply #'min from))
+		(if to (apply #'max to))))))
+
+(defun make-preprocessed-x (str)
+  (let ((x (make-instance 'preprocessed-x :text str)))
+    (setf (char-map x)
+      (make-char-map (length (text x))))
+    x))
+
+(defun x-subseq (x start end)
+  (make-instance 'preprocessed-x
+    :text (subseq (text x) start end)
+    :char-map (subseq (char-map x) start end)))
+
+(defun preprocessed-x= (x y)
+  (and
+   (string= (text x) (text y))
+   (equal (char-map x) (char-map y))))
+
+(defun make-char-map (l &key val)
+  (loop
+      with i = 0
+      while (< i l)
+      collect 
+	(if val
+	    (progn (incf i) val)
+	  (cons i (incf i)))))
+
+(defun char-map-lookup (n char-map)
+  (nth n char-map))
+
+;; equality of x-string
+(defun x-= (x y)
+  (and (equalp (char-map x) (char-map y))
+       (string= (text x) (text y))))
+
+(defun copy-preprocessed-x (x)
+  (make-instance 'preprocessed-x 
+    :text (text x)
+    :char-map (char-map x)))
+
+;;
+;;
+;;
 
 (defstruct x-fspp
   version
@@ -119,12 +224,10 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 	while (setf c (read-char stream nil nil))
 	maximize (char-code c))))
 
-(defvar *saf-lmap*)
-
 ;; top-level call
 (defun read-preprocessor (file)
-  ;; ppcre::*regex-char-code-limit* will be set smallest possible value
-  (let* ((ppcre::*regex-char-code-limit* *min-regex-char-code-limit*)
+  ;; ppcre:*regex-char-code-limit* will be set smallest possible value
+  (let* ((ppcre:*regex-char-code-limit* *min-regex-char-code-limit*)
 	 (x-fspp (read-preprocessor-aux file))) 
     ;; finalize x-fspp
     (setf (x-fspp-global x-fspp)
@@ -133,23 +236,16 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
       (nreverse (x-fspp-local x-fspp)))
     (format t "~a~%" x-fspp)
     (setf *preprocessor* x-fspp))
-;  #+:lkb
-;  (smaf::reset-conf)
-  (setf *saf-lmap* (saf::conf-read-string *saf-config*))
+  (setf *saf-lmap* (saf:conf-read-string *saf-config*))
   *preprocessor*
   )
-
-(defparameter *multiple-rule-internal-separator* 
-    (ppcre:create-scanner "\\t{2,}" :single-line-mode t))
-(defparameter *rule-regex* 
-    (ppcre:create-scanner "^.([^\\t]+)\\t+([^\\t]*)" :single-line-mode t))
 
 ;; recursive call
 (defun read-preprocessor-aux (file &key (x-fspp (make-x-fspp)))
   (when (probe-file file)
-    ;; set ppcre::*regex-char-code-limit* to smallest possible value
-    (setf ppcre::*regex-char-code-limit*
-      (max ppcre::*regex-char-code-limit*
+    ;; set ppcre:*regex-char-code-limit* to smallest possible value
+    (setf ppcre:*regex-char-code-limit*
+      (max ppcre:*regex-char-code-limit*
 	   (file-max-char-code file)))
     ;; now walk through file and collect rules
     (with-open-file (stream file :direction :input)
@@ -162,9 +258,6 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 	  do
 	    (read-preprocessor-line line n x-fspp path)))
       x-fspp))
-
-(defparameter *empty-line-regex* 
-    (ppcre:create-scanner "^\\s*$" :single-line-mode t))
 
 (defun read-preprocessor-line (line n x-fspp path)
   (unless (= (length line) 0)
@@ -198,9 +291,6 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
                     ignoring unknown rule type `~a'~%"
 		n c))))))
 
-(defparameter *date-regex* 
-    (ppcre:create-scanner "^.\\$[D]ate: +(.*) +\\$" :single-line-mode t))
-
 (defun read-preprocessor-version (line x-fspp n)
   (multiple-value-bind (match registers) 
       (cl-ppcre:scan-to-strings *date-regex* line :sharedp t)
@@ -208,9 +298,6 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 	(let ((version (aref registers 0)))
 	  (setf (x-fspp-version x-fspp) version))
       (format t "read-preprocessor(): [line ~d] invalid `~a'~%" n line))))
-
-(defparameter *import-regex* 
-    (ppcre:create-scanner "^.(.*)" :single-line-mode t))
 
 (defun read-preprocessor-import (line x-fspp path n)
   (multiple-value-bind (match registers) 
@@ -277,7 +364,7 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 
 (defun count-token-separators (str &key (sep *inter-token-str*))
   (floor
-   (/ (length (ppcre::all-matches sep str))
+   (/ (length (ppcre:all-matches sep str))
       2)))
 
 ;; instantiate pre-test on FSR, if nec
@@ -287,20 +374,16 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 	(and (numberp max-tokens)
 	     (> max-tokens 1))
       (handler-case
-	  
 	  (setf pre-test
-
-	    ;(set-pre-test-aux source)
-	    
 	    (ppcre:create-scanner 
 	     (set-pre-test-aux source)
-	     :single-line-mode t)
-	    )
-	
+	     :single-line-mode t))
 	(error nil
 	  (format t "~&;WARNING: [line ~a] unable to construct pre-test for multi-token FSR~&" n))))))
 
 ;; get pre-test regex string
+;; this will be used to test FIRST token in multi-token sequence
+;; if the test then fails we there is no need to test the full token sequence
 (defun set-pre-test-aux (source)
   (loop 
       with bits = (ppcre:split *inter-token-regex* source)
@@ -320,17 +403,16 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 	(setf pre-test-str (apply #'concatenate bits2))
 	(return pre-test-str)))
 
-;; if this is set, node and ids will start from 0 again on each call of 'preprocess'
-(defparameter *reset-ids-on-each-call* t)
-
+;; this is the main entry point
 (defun preprocess (string &key (preprocessor *preprocessor*)
                                verbose format)
+  ;; optionally, reset counters
   (when *reset-ids-on-each-call*
     (setf *smaf-id* 0)
     (setf *smaf-node* 0))
   
   (let* ((x (make-preprocessed-x string)) ;; construct x-string
-	 (*text* string) ;; see SMAF::X-PARSE
+	 (*text* string) ;; see SAF:X-PARSE todo: should go directly into saf obj
 	 ;(*span* (char-map-simple-range (char-map x))) ;; not used???
 	)
     ;; if no preprocessor defined...
@@ -340,42 +422,19 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
     (preprocess-global x (x-fspp-global preprocessor) :verbose verbose)
     ;; process tokens
     (let* ((x-tokens (x-split (x-fspp-tokenizer preprocessor) x))
-	   (saf (x-tokens-to-saf-annots x-tokens)))
+	   (saf (x-tokens-to-saf-annots x-tokens))) ;; initial saf obj
+      ;; populate saf obj
       (setf saf
 	(preprocess-tokens saf
 			   (x-fspp-local preprocessor)
 			   :verbose verbose))
+      ;; map saf obj to output format
       (x-format-preprocessed-output saf :format format))))
 
-(defun x-tokens-to-saf-annots (x-tokens)
-  (loop
-      with init-node = *smaf-node*
-      with new-annot
-      for x in x-tokens
-      unless (string= (text x) "")
-      do
-	(setf new-annot
-	  (smaf::make-saf-edge
-	   :id (incf *smaf-id*)
-	   :type :|token|
-	   :source *smaf-node*
-	   :target (incf *smaf-node*)
-	   :content x))
-	(saf::instantiate-edge-l-content new-annot *saf-lmap*)
-      and collect new-annot into edges
-      and collect *smaf-node* into nodes
-      finally
-	(return
-	  (smaf::make-saf 
-	   :meta nil			;!
-	   :lattice (smaf::make-saf-lattice
-		     :start-node init-node
-		     :end-node *smaf-node*
-		     :nodes (cons init-node nodes)
-		     :edges edges)))))
-
+;; x-string => x-string
 (defun preprocess-global (x &optional (global (slot-value *preprocessor* 'global)) &key verbose)
   (with-slots (text char-map) x
+    ;; apply each global regex, in turn, to input x-string
     (loop
 	for rule in global
 	for scanner = (x-fsr-scanner rule)
@@ -383,7 +442,7 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 	do
 	  (multiple-value-bind (res matchp)
 	      (x-regex-replace-all scanner x target)
-	    (when (and matchp verbose)
+	    (when (and verbose matchp)
 	      (format t
 		      "~&GLOBAL |~a| -> |~a| ~&mapped~&|~a|~&to~&"
 		      (x-fsr-source rule) (x-fsr-target rule)
@@ -393,57 +452,65 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 	    (setf x res))))
   x)
 
+;; x-tokens (seq) => saf obj
+(defun x-tokens-to-saf-annots (x-tokens)
+  (loop
+      with init-node = *smaf-node*
+      with new-annot
+      for x in x-tokens
+      unless (string= (text x) "")
+      do
+	;; construct saf annot for each x-token
+	(setf new-annot
+	  (saf:make-saf-edge
+	   :id (incf *smaf-id*)
+	   :type :|token|
+	   :source *smaf-node*
+	   :target (incf *smaf-node*)
+	   :content x))
+	;; l-content needed for interpretation
+	(saf:instantiate-edge-l-content new-annot *saf-lmap*)
+      and collect new-annot into edges
+      and collect *smaf-node* into nodes
+      finally
+	(return
+	  (saf:make-saf 
+	   :meta nil			;!
+	   :lattice (saf:make-saf-lattice
+		     :start-node init-node
+		     :end-node *smaf-node*
+		     :nodes (cons init-node nodes)
+		     :edges edges)))))
+
 #+:null
 (defun clone-preprocessed-x (x)
   (make-instance 'preprocessed-x 
     :text (copy-seq (text x))
     :char-map (copy-tree (char-map x))))
 
-(defun copy-preprocessed-x (x)
-  (make-instance 'preprocessed-x 
-    :text (text x)
-    :char-map (char-map x)))
-
-(defparameter *ersatz-regex* 
-    (ppcre:create-scanner "[^a-zA-Z]*([a-zA-Z]+Ersatz).*" :single-line-mode t))
-
-(defun get-all-annot-paths (lattice max-tokens)
-  (loop
-      with edges = (smaf::saf-lattice-edges lattice)
-      for annot in edges
-      append
-	 (smaf::annot-paths annot lattice :len max-tokens)
-	))
-
 (defun preprocess-tokens (saf local &key verbose)
-  (let* ((saf-lattice (smaf::saf-lattice saf)))
+  (let* ((saf-lattice (saf:saf-lattice saf)))
     (loop
       ;; for each FSR rule...
 	for fsr in local
 	for max-tokens = (x-fsr-max-tokens fsr)
 	do
-	  ;(format t "~&FSR (~a) ~a" (x-fsr-type fsr) (x-fsr-source fsr))
 	  (loop
-	      with paths = (get-all-annot-paths saf-lattice max-tokens)
+	      with paths = (saf:get-all-annot-paths saf-lattice max-tokens)
 		  for annot-path in paths
 	      do
-		;;(format t "~&PATH: ")
-		;;(loop for y in annot-path
-		;;  do (format t " ~a" (saf::saf-edge-id y)))
-		;;(terpri)
 		;; attempt to apply FSR to ANNOT
-		(setf (smaf::saf-lattice-edges saf-lattice) 
-		  (preprocess-token-multi annot-path fsr (smaf::saf-lattice-edges saf-lattice) :verbose verbose))
-		))
+		(setf (saf:saf-lattice-edges saf-lattice) 
+		  (preprocess-token-multi annot-path fsr (saf:saf-lattice-edges saf-lattice) :verbose verbose))))
   
   ;; contruct SAF output
   (loop
-      with init-node = (smaf::saf-lattice-start-node saf-lattice)
-      with final-node = (smaf::saf-lattice-end-node saf-lattice)
+      with init-node = (saf:saf-lattice-start-node saf-lattice)
+      with final-node = (saf:saf-lattice-end-node saf-lattice)
       with nodes
-      for annot in (smaf::saf-lattice-edges saf-lattice)
-      for source = (smaf::saf-edge-source annot)
-      for target = (smaf::saf-edge-target annot)
+      for annot in (saf:saf-lattice-edges saf-lattice)
+      for source = (saf:saf-edge-source annot)
+      for target = (saf:saf-edge-target annot)
       do 
 	;; collect SAF nodes
 	(pushnew source nodes :test #'=)
@@ -451,35 +518,34 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
       finally
 	(return
 	  ;; make it
-	  (smaf::make-saf 
-	   :lattice (smaf::make-saf-lattice 
+	  ;; ! better to modify input saf
+	  (saf:make-saf 
+	   :lattice (saf:make-saf-lattice 
 		     :start-node (2-str init-node) ;
 		     :end-node (2-str final-node) ;
 		     :nodes (loop for node in nodes collect (2-str node)) ;
 		     :edges (loop 
-				for annot in (smaf::saf-lattice-edges saf-lattice)
+				for annot in (saf:saf-lattice-edges saf-lattice)
 				collect 
 				  (clean-saf-annot 
 				   annot
-				   )
-					))
-	   :meta  (smaf::make-saf-meta 
+				   )))
+	   :meta  (saf:make-saf-meta 
 		   :document nil
 		   :addressing :|char|
-		   :olac nil) ;
+		   :olac nil) ;!
 	   )))))
 
-(defparameter *max-multi-token* 2)
-	   
-(defun x-concat (annots &key (key #'identity) (sep *inter-token-str*))
+;; concatenate x-strings = list of  key(item)
+(defun x-concat (items &key (key #'identity) (sep *inter-token-str*))
   (cond
-   ((null annots)
+   ((null items)
     nil)
-   ((not (cdr annots))
-    (funcall key (car annots)))
+   ((not (cdr items))
+    (funcall key (car items)))
    (t
     (loop
-	for annot in annots
+	for annot in items
 	for x-orig = (funcall key annot) ;
 	collect sep into text
 	collect nil into char-map
@@ -494,89 +560,82 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 	      :text text
 	      :char-map char-map))))))
 
+;; if pre-test fails on first token, to need to test full fsr
 (defun quick-check-fail (fsr annots)
   (with-slots (pre-test) fsr
     (let* ((annot1 (first annots))
 	   (x1 (and annot1 (get-token-str annot1))))
-;	   (x1 (and annot1 (smaf::saf-edge-content annot1))))
       ;(format t "~&X1: '~a' PRE-TEST: '~a'~&" x1 pre-test)
       (if pre-test
-	  (not (ppcre::scan pre-test (text x1)))))))
+	  (not (ppcre:scan pre-test (text x1)))))))
 
+#+:null
 (defun get-stringified (saf-fs)
   (loop for fv in (and (listp saf-fs) saf-fs)
       collect
 	(saf::make-saf-fv 
-	 :feature (2-str (smaf::saf-fv-feature fv))
-;	 :value (2-str (smaf::saf-fv-value fv)))))
-	 :value (smaf::saf-fv-value fv))))
+	 :feature (2-str (saf:saf-fv-feature fv))
+	 :value (saf:saf-fv-value fv))))
+
+;;
+;; get values from l-content
+;;
 
 (defun get-ersatz-type (annot)
-  (saf::saf-fs-feature-value2 (saf::saf-edge-l-content annot) :|name|)) ;!
+  (saf:saf-fs-feature-value2 (saf:saf-edge-l-content annot) :|name|)) ;!
 
 (defun get-token-str (annot)
-  (saf::saf-fs-feature-value2 (saf::saf-edge-l-content annot) :|tokenStr|))
+  (saf:saf-fs-feature-value2 (saf:saf-edge-l-content annot) :|tokenStr|))
 
 (defun get-gmap-carg (annot)
-  (saf::saf-fs-feature-value2 (saf::saf-edge-l-content annot) :|gMap.carg|))
+  (saf:saf-fs-feature-value2 (saf:saf-edge-l-content annot) :|gMap.carg|))
+
+;;
+;; get values from CONTENT
+;; TODO: use l-content instead
+;;
 
 ;; returns the ersatz-type
 (defun get-ersatz-name (annot)
   (and
    (eq :|ersatz| (annot-type annot))
-   (saf::saf-fs-feature-value2 (saf::saf-edge-content annot) :|type|)))
+   (saf:saf-fs-feature-value2 (saf:saf-edge-content annot) :|type|)))
 
 ;; returns the ersatz surface string
 (defun get-ersatz-surface (annot)
   (and
    (eq :|ersatz| (annot-type annot))
-   (saf::saf-fs-feature-value2 (saf::saf-edge-content annot) :|surface|)))
+   (saf:saf-fs-feature-value2 (saf:saf-edge-content annot) :|surface|)))
+
+;;
+;;
 
 ;; shorthand
 (defun annot-type (annot)
-  (saf::saf-edge-type annot))
+  (saf:saf-edge-type annot))
 
-;; find ersatz with ersatz-type + span matching input
+;; find annot with ersatz-type + span (x-string) matching input
 (defun match-ersatz (x annots)
   (find x annots :test #'x-= :key #'get-ersatz-name))
 
-;; equality of x-string
-(defun x-= (x y)
-  (and (equalp (char-map x) (char-map y))
-       (string= (text x) (text y))))
-
+;; TODO: factor this function
 ;; attempt to apply FSR to ANNOT
 (defun preprocess-token-multi (annots fsr saf-annots &key verbose)
-
-  ;; bail out if path contains any ersatzes
-  #+:null
-  (loop for a in annots
-      unless (eq (smaf::saf-edge-type a) :|token|)
-      do (return-from preprocess-token-multi saf-annots))
-		 
   ;; bail out if quick-check fails
   (when (quick-check-fail fsr annots)
-      ;(format t "~&PRE-TEST failed: '~a' : '~a'~&" 
-	;      (x-fsr-source fsr) (text (smaf::saf-edge-content (car annots))))
       (return-from preprocess-token-multi saf-annots))
-  
-  ;(format t "~&PRE-TEST passed: '~a' : '~a'~&"
-	;  (x-fsr-source fsr) (text (smaf::saf-edge-content (car annots))))
-	  
+
   (let* (;; FSR slots
 	 (type (x-fsr-type fsr))
 	 (scanner (x-fsr-scanner fsr))
 	 (target (x-fsr-target fsr))
 	 ;; ANNOT slots
-	 (x-orig (x-concat annots :key #'get-token-str)) ; FIXME erstaz
-;	 (x-orig (x-concat annots :key #'smaf::saf-edge-content)) ; FIXME erstaz
-	 (annot-source (smaf::saf-edge-source (first annots)))
-	 (annot-target (smaf::saf-edge-target (car (last annots))))
+	 (x-orig (x-concat annots :key #'get-token-str))
+	 (annot-source (saf:saf-edge-source (first annots)))
+	 (annot-target (saf:saf-edge-target (car (last annots))))
 	 x-str
 	 new-annot)
-    ;(format t "~&(~a) ~a:" (x-fsr-type fsr) (x-fsr-source fsr))
-    ;(format t " '~a'" (text x-orig))
-    (when (ppcre::scan scanner (text x-orig))
+    (when (ppcre:scan scanner (text x-orig))
       ;; found a match...
       ;; so copy input then apply REPLACE
       (setf x-str (copy-preprocessed-x x-orig))
@@ -626,7 +685,6 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 	    for i from 0 to (1- (length x-bits))
 	    for x-bit = (nth i x-bits)
 	    for x-bit0 = (nth i x-bits0)
-			 ;;for dummy = (progn (print 00) (print (text x-bit0)) (print (char-map x-bit0)))
 	    ;; ensure tie-in to node numbers correctly
 	    with last-node = annot-source
 	    for next-node = (if (= i (1- (length x-bits)))
@@ -637,8 +695,6 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 	      (multiple-value-bind (x flag)
 		  (x-regex-replace-all *ersatz-regex* x-bit0 "\\1")
 		(if flag x))
-	      ;;	for dummy2 = (if ersatz-match
-	      ;;	     (progn (print 10) (print (text ersatz-match)) (print (char-map ersatz-match))))
 	    with range
 	    do
 	      (cond
@@ -659,48 +715,144 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 		  (when flag0
 		    (let* ((range0 (char-map-simple-range (char-map x0)))
 			   (surface0 (x-subseq surface (car range0) (cdr range0))))
-		      ;(format t "~&surface: ~a" surface)
-		      ;(format t "~&x0: ~a" x0)
-		      ;(format t "~&surface0: ~a" surface0)
 		      (setf surface
 			(get-ersatz-surface (match-ersatz surface0 annots)))
 		      )))
 		      
 		(setf new-annot 
-		  (smaf::make-saf-edge
+		  (saf:make-saf-edge
 		  :id (incf *smaf-id*)
 		  :type :|ersatz|
 		  :source last-node
 		  :target next-node
 		  :content (list
-			    (smaf::make-saf-fv
+			    (saf:make-saf-fv
 			     :feature :|surface|
 			     :value surface)
-			    (smaf::make-saf-fv
+			    (saf:make-saf-fv
 			     :feature :|name| ;; the ersatz 'token'
 			     :value x-bit)
-;			     :value (text x-bit))
-			    (smaf::make-saf-fv
+			    (saf:make-saf-fv
 			     :feature :|type|
 			     :value ersatz-match)))) ;; the ersatz name
-;			     :value (text ersatz-match))))) ;; the ersatz name
-		(saf::instantiate-edge-l-content new-annot *saf-lmap*)
+		(saf:instantiate-edge-l-content new-annot *saf-lmap*)
 		(push new-annot saf-annots))
 	       (t
 		;; annot is normal TOKEN
 		(setf new-annot
-		  (smaf::make-saf-edge
+		  (saf:make-saf-edge
 		       :id (incf *smaf-id*)
 		       :type :|token|
 		       :source last-node
 		       :target next-node
 		       :content x-bit))
-		(saf::instantiate-edge-l-content new-annot *saf-lmap*)
+		(saf:instantiate-edge-l-content new-annot *saf-lmap*)
 		(push new-annot saf-annots)))
 	      (setf last-node next-node) ;; keep nodes in sync
 	      ))))
   saf-annots)
 
+;; annot => annot
+;; convert saf annots to starndard form
+(defun clean-saf-annot (annot)
+  (let* ((type (saf:saf-edge-type annot))
+	 (content (saf:saf-edge-content annot)))
+
+    (let* ((surface
+	    (cond
+	     ((eq type :|token|)
+	      content)
+	     ((eq type :|ersatz|)
+	      (saf:saf-fs-feature-value2 content :|surface|))
+	     (t
+	      (error "internal"))))
+	   (range (char-map-simple-range
+		   (char-map surface))))
+      ;; instantiate FROM/TO
+      (setf (saf:saf-edge-from annot) (car range))
+      (setf (saf:saf-edge-to annot) (cdr range)))
+    
+    ;; clear L-CONTENT
+    (setf (saf:saf-edge-l-content annot) nil)
+
+    ;; convert values to string
+    (setf (saf:saf-edge-id annot) (2-str (saf:saf-edge-id annot))) ;;int=>str
+    (setf (saf:saf-edge-source annot) (2-str (saf:saf-edge-source annot))) ;;int=>str
+    (setf (saf:saf-edge-target annot) (2-str (saf:saf-edge-target annot))) ;;int=>str
+    (setf (saf:saf-edge-from annot) (2-str (saf:saf-edge-from annot))) ;;int=>str
+    (setf (saf:saf-edge-to annot) (2-str (saf:saf-edge-to annot))) ;;int=>str
+    
+    ;; convert x-strings to strings
+    ;; simple content
+    (if (typep content 'preprocessed-x)
+	(setf (saf:saf-edge-content annot)
+	  (text content))
+      ;; FV content
+      (loop 
+	  for fv in (and (listp content) content)
+	  for value = (saf:saf-fv-value fv)
+	  when (typep value 'preprocessed-x)
+	  do
+	    (setf (saf:saf-fv-value fv) (text (saf:saf-fv-value fv)))))
+    )
+  annot)
+
+;;HACK remove when PET can handle unsorted lattice
+(defun node-to-int (node)
+  (parse-integer node))
+
+;; convert saf obj to output format
+;; NIL is raw saf/smaf object
+;; :yy (= :pet) is YY MODE
+;; :saf / :smaf is saf/smaf XML
+(defun x-format-preprocessed-output (saf &key format)
+  
+  ;; order lattice edges by standoff point
+  ;; (coz therz a bug in PET)
+  (saf:rename-nodes-by-point-order saf)
+  (let ((lattice (saf:saf-lattice-edges (saf:saf-lattice saf))))
+    (setf (saf:saf-lattice-edges (saf:saf-lattice saf))
+      (sort lattice
+	    #'<
+	    :key #'(lambda (x)
+		     (node-to-int
+		      (saf:saf-edge-source x))))))
+  (cond
+   ((or (eq format :yy)
+	(eq format :pet)) ;; deprecate this...?
+    (loop
+	with length = (1- (length (saf:saf-lattice-nodes (saf:saf-lattice saf))))
+	with saf-annots = (saf:saf-lattice-edges (saf:saf-lattice saf))
+	for annot in saf-annots
+	for type = (saf:saf-edge-type annot)
+	for id = (saf:saf-edge-id annot)
+	for start = (saf:saf-edge-source annot)
+	for end = (saf:saf-edge-target annot)
+	for form =  (and (saf:instantiate-edge-l-content annot *saf-lmap*)
+			 (get-token-str annot))
+	for surface = (if (eq type :|ersatz|)
+			  (get-gmap-carg annot)
+			form)
+	for token = (format 
+		     nil 
+		     "(~d, ~d, ~d, 1, \"~a\" \"~a\", 0, \"null\")" 
+		     id start end 
+		     (x-escape-string form)
+		     (x-escape-string surface))
+	collect token into tokens
+	finally 
+	  (return
+	    (values (format nil "~{~a~^ ~}" tokens) length))))
+   ((null format)
+    saf)
+   ((or (eq format :saf) (eq format :smaf))
+    (saf:to-xml saf :format format))
+   ((eq format :list)
+    (error ":list format no longer supported"))
+   (t
+    (error "unhandled format argument: ~a" format))))
+
+;; for YY format
 (defun x-escape-string (string &key (syntax :c))
   (declare (ignore syntax))
            
@@ -725,166 +877,9 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
           (return result))
     ""))
 
-(defun clean-saf-annot (annot)
-  (let* ((type (smaf::saf-edge-type annot))
-	 (content (smaf::saf-edge-content annot))
-	 surface
-	 range from to
-	 ;fv
-	 )
-
-    ;; replace x-string (surface/content)
-    (when (eq type :|token|)
-      (setf surface content))
-    (when (eq type :|ersatz|)
-      (setf surface (smaf::saf-fs-feature-value2 content :|surface|)))
-
-    (setf range (char-map-simple-range
-		 (char-map surface)))
-    (setf from (car range))
-    (setf to (cdr range))
-    
-    ;; instantiate 'from' and 'to'
-    (setf (smaf::saf-edge-from annot) from)
-    (setf (smaf::saf-edge-to annot) to)
-    ;; clear l-content
-    (setf (smaf::saf-edge-l-content annot) nil)
-    ;; convert values to string
-    (setf (smaf::saf-edge-id annot) (2-str (smaf::saf-edge-id annot)))
-    (setf (smaf::saf-edge-source annot) (2-str (smaf::saf-edge-source annot)))
-    (setf (smaf::saf-edge-target annot) (2-str (smaf::saf-edge-target annot)))
-    (setf (smaf::saf-edge-from annot) (2-str (smaf::saf-edge-from annot)))
-    (setf (smaf::saf-edge-to annot) (2-str (smaf::saf-edge-to annot)))
-    (if (typep content 'preprocessed-x)
-	(setf (smaf::saf-edge-content annot)
-	  (text content))
-      (loop 
-	  for fv in (and (listp content) content)
-	  for value = (smaf::saf-fv-value fv)
-	  when (typep value 'preprocessed-x)
-	  do
-	    (setf (smaf::saf-fv-value fv) (text (smaf::saf-fv-value fv)))))
-    
-    )
-  annot)
-
-;;HACK remove when PET can handle unsorted lattice
-(defun node-to-int (node)
-  (parse-integer node))
-
-(defun x-format-preprocessed-output (saf &key format)
-  
-  ;; order lattice edges by standoff point
-  ;; (coz therz a bug in PET)
-  (saf::rename-nodes-by-point-order saf)
-  (let ((lattice (saf::saf-lattice-edges (saf::saf-lattice saf))))
-    (setf (saf::saf-lattice-edges (saf::saf-lattice saf))
-      (sort lattice
-	    #'<
-	    :key #'(lambda (x)
-		     (node-to-int
-		      (saf::saf-edge-source x))))))
-  (cond
-   ((or (eq format :yy)
-	(eq format :pet)) ;; deprecate this...?
-    (loop
-	with length = (1- (length (smaf::saf-lattice-nodes (smaf::saf-lattice saf))))
-	with saf-annots = (smaf::saf-lattice-edges (smaf::saf-lattice saf))
-	for annot in saf-annots
-;	for content = (smaf::saf-edge-content annot)
-	for type = (smaf::saf-edge-type annot)
-	for id = (smaf::saf-edge-id annot)
-	for start = (smaf::saf-edge-source annot)
-	for end = (smaf::saf-edge-target annot)
-		  
-;	for l-content = (smaf::instantiate-edge-l-content annot saf::*lmap*)
-	for form =  (and (smaf::instantiate-edge-l-content annot *saf-lmap*)
-			 (get-token-str annot))
-	for surface = (if (eq type :|ersatz|)
-			  (get-gmap-carg annot)
-			form)
-;	for surface = (if (eq type :|ersatz|)
-;			  (smaf::saf-fs-feature-value  content "surface")
-;			content)
-;	for form = (if (eq type :|ersatz|)
-;		       (smaf::saf-fs-feature-value content "name")
-;		     surface)
-	for token = (format 
-		     nil 
-		     "(~d, ~d, ~d, 1, \"~a\" \"~a\", 0, \"null\")" 
-		     id start end 
-		     (x-escape-string form)
-		     (x-escape-string surface))
-	collect token into tokens
-	finally 
-	  (return
-	    (values (format nil "~{~a~^ ~}" tokens) length))))
-   ((null format)
-    saf)
-   ((or (eq format :saf) (eq format :smaf))
-    (smaf::to-xml saf :format format))
-   ((eq format :list)
-    (error ":list format no longer supported"))
-   (t
-    (error "unhandled format argument: ~a" format))))
-
-
 ;;
-;; (bmw - oct 05)
+;; x-regex code (regexes on x-strings)
 ;;
-
-(defclass preprocessed-x ()
-  ((text :initform nil :accessor text :initarg :text)
-   (char-map :initform nil :accessor char-map :initarg :char-map)))
-
-(defvar *print-char-map-simple-range* t)
-(defmethod print-object ((object preprocessed-x) stream)
-  (with-slots (text char-map) object
-      (format 
-       stream 
-       "|~a|:~a"
-       text (if *print-char-map-simple-range*
-		(char-map-simple-range char-map)
-	      char-map))))
-
-;; fix_me: enforce ordering constraint?
-(defun char-map-simple-range (char-map)
-  (loop 
-      for r in char-map
-      if (numberp (car r)) collect (car r) into from
-      if (numberp (cdr r)) collect (cdr r) into to
-      finally
-	(return
-	  (cons (if from (apply #'min from))
-		(if to (apply #'max to))))))
-
-(defun make-preprocessed-x (str)
-  (let ((x (make-instance 'preprocessed-x :text str)))
-    (setf (char-map x)
-      (make-char-map (length (text x))))
-    x))
-
-(defun x-subseq (x start end)
-  (make-instance 'preprocessed-x
-    :text (subseq (text x) start end)
-    :char-map (subseq (char-map x) start end)))
-
-(defun preprocessed-x= (x y)
-  (and
-   (string= (text x) (text y))
-   (equal (char-map x) (char-map y))))
-
-(defun make-char-map (l &key val)
-  (loop
-      with i = 0
-      while (< i l)
-      collect 
-	(if val
-	    (progn (incf i) val)
-	  (cons i (incf i)))))
-
-(defun char-map-lookup (n char-map)
-  (nth n char-map))
 
 (defstruct repl
   target-string
@@ -1063,27 +1058,3 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 	  (make-instance 'preprocessed-x
 	    :text (subseq text start end)
 	    :char-map (subseq char-map start end)))))
-
-;;
-
-(defun 2-str (x)
-  (cond
-   ((stringp x) x)
-   ((symbolp x) (symb-2-str x))
-   ((numberp x) (num-2-str x))
-   ((pathnamep x) (namestring x))
-   (t (error "unhandled type"))))
-
-(defun symb-2-str (symb)
-  (unless (symbolp symb)
-    (error "symbol expected"))
-  (cond
-   ((null symb) "")
-   (t (string-downcase (string symb)))))
-
-(defun num-2-str (num)
-  (if (null num)
-      (return-from num-2-str))
-  (unless (numberp num)
-    (error "number expected"))
-  (format nil "~a" num))

@@ -224,4 +224,12 @@
   (let ((node-map (get-node-map saf)))
     (rename-nodes saf node-map)
     saf))
-    
+
+(defun get-all-annot-paths (lattice max-tokens)
+  (loop
+      with edges = (saf:saf-lattice-edges lattice)
+      for annot in edges
+      append
+	 (saf:annot-paths annot lattice :len max-tokens)
+	))
+

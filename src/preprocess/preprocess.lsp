@@ -28,7 +28,7 @@
                        "(~d, ~d, ~d, 1, \"~a\" \"~a\", 0, \"null\",~
                        ~{ ~s ~,4f~})" 
                        id start end 
-                       (preprocessor::x-escape-string form) (preprocessor::x-escape-string surface) tags)
+                       (preprocessor:x-escape-string form) (preprocessor:x-escape-string surface) tags)
           collect token into tokens
           finally 
             (return (values (format nil "~{~a~^ ~}" tokens) length))))
@@ -113,7 +113,7 @@
                                     collect foo do (decf n)))))
       (values tokens length))))
 
-(defvar saf::*gmap*)
+(defvar saf:*gmap*)
 (defvar *saf-v* -1)
 
 (defvar *HIDDEN-smaf-id-to-edge-id* nil) ;; MUST reset when initializing tchart
@@ -135,7 +135,7 @@
 ;;
 
 (defun xml-saf-to-tchart (xml)
-  (saf-to-tchart (smaf::xml-to-saf-object xml)))
+  (saf-to-tchart (smaf:xml-to-saf-object xml)))
 
 (defun new-tchart ()
   (setf *tchart* (make-tchart))
@@ -249,7 +249,7 @@
 
 ;; generate sentence strings for all token paths through S(M)AF XML input
 (defun xml-to-sentence-strings (xml &optional (stream t))
-  (if (lxml::xml-whitespace-p xml)
+  (if (lxml:xml-whitespace-p xml)
       (return-from xml-to-sentence-strings))
   (if (null xml)
       (return-from xml-to-sentence-strings))
@@ -257,8 +257,8 @@
     (when (string= "" (subseq xml (1- len) len))
       (setf xml (subseq xml 0 (1- len)))))
   (when xml
-    (let* ((saf (saf::xml-to-saf-object xml))
-	   (id (saf::saf-id saf)))
+    (let* ((saf (saf:xml-to-saf-object xml))
+	   (id (saf:saf-id saf)))
       (saf-to-tchart saf)
       (loop
 	  for sent in (tchart-to-sentence-strings)
@@ -308,21 +308,21 @@
 (defun saf-to-tchart (saf &key (filter #'identity))
   (new-tchart)
   (initialize-smaf-node-to-chart-node saf)
-  (saf-lattice-to-tchart (smaf::saf-lattice saf)
+  (saf-lattice-to-tchart (smaf:saf-lattice saf)
 			:filter filter
-			:addressing (smaf::saf-meta-addressing (smaf::saf-meta saf)))
+			:addressing (smaf:saf-meta-addressing (smaf:saf-meta saf)))
   (if *clean-tchart-p*
       (clean-tchart *tchart*)) ;; FIXME! disabled until bug fixed in clean-tchart
   *tchart*)
 
 ;; init=0 ... final=latticeSize
 (defun initialize-smaf-node-to-chart-node (saf)
-  (let* ((lattice (smaf::saf-lattice saf))
-	 (init (and lattice (smaf::saf-lattice-start-node lattice)))
-	 (final (and lattice (smaf::saf-lattice-end-node lattice)))
-	 (edges (and lattice (smaf::saf-lattice-edges lattice)))
-	 (meta (smaf::saf-meta saf))
-	 (addressing (smaf::saf-meta-addressing meta))
+  (let* ((lattice (smaf:saf-lattice saf))
+	 (init (and lattice (smaf:saf-lattice-start-node lattice)))
+	 (final (and lattice (smaf:saf-lattice-end-node lattice)))
+	 (edges (and lattice (smaf:saf-lattice-edges lattice)))
+	 (meta (smaf:saf-meta saf))
+	 (addressing (smaf:saf-meta-addressing meta))
 	 )
     (setf *chart-node* -1)
     (setf *smaf-node-to-chart-node* nil)
@@ -332,13 +332,13 @@
 	       (setf *chart-node* 0))
 	(format t "~%WARNING: no init node in SMAF lattice"))
       (if final
-	  (push (cons final (smaf::get-smaf-lattice-size saf)) *smaf-node-to-chart-node*)
+	  (push (cons final (smaf:get-smaf-lattice-size saf)) *smaf-node-to-chart-node*)
 	(format t "~%WARNING: no final node in SMAF lattice"))
       ;; create nicely ordered mapping into chart nodes
       (loop
-	  for e in (smaf::sort-edges-by-from edges :addressing addressing)
-	  for source = (smaf::saf-edge-source e)
-	  for target = (smaf::saf-edge-target e)
+	  for e in (smaf:sort-edges-by-from edges :addressing addressing)
+	  for source = (smaf:saf-edge-source e)
+	  for target = (smaf:saf-edge-target e)
 	  do
 	    (smaf-node-to-chart-node source)
 	    (smaf-node-to-chart-node target))
@@ -366,16 +366,16 @@
 (defun saf-lattice-to-tchart (saf-lattice &key (filter #'identity) addressing)
   (loop 
       for e in 
-	(loop for f in (and saf-lattice (smaf::saf-lattice-edges saf-lattice))
+	(loop for f in (and saf-lattice (smaf:saf-lattice-edges saf-lattice))
 	    when (funcall filter f)
 	    collect f)
-      if (string= (saf::l-edgeType e) "tok")
+      if (string= (saf:l-edgeType e) "tok")
       collect e into toks
-      else if (string= (saf::l-edgeType e) "tok+morph")
+      else if (string= (saf:l-edgeType e) "tok+morph")
       collect e into tokMorphs
-      else if (string= (saf::l-edgeType e) "morph")
+      else if (string= (saf:l-edgeType e) "morph")
       collect e into morphs
-      else do (format t "~&WARNING: SMAF edge ~a has unknown edgeType '~a' (allowed values: 'tok' 'tok+morph' 'morph')" (smaf::saf-edge-id e) (saf::l-edgeType e))
+      else do (format t "~&WARNING: SMAF edge ~a has unknown edgeType '~a' (allowed values: 'tok' 'tok+morph' 'morph')" (smaf:saf-edge-id e) (saf:l-edgeType e))
       finally     
 	(loop for e in toks
 	    do 
@@ -409,8 +409,8 @@
   (loop
       with edges = (funcall fn saf-edge addressing)
       for edge in edges
-      if (smaf::saf-fs-feature-value2 
-	  (smaf::saf-edge-l-content saf-edge) :|fallback|)
+      if (smaf:saf-fs-feature-value2 
+	  (smaf:saf-edge-l-content saf-edge) :|fallback|)
       do
 	 ;; fallback edges are stored and resurrected during parsing if
 	;; lexical lookup fails
@@ -440,7 +440,7 @@
 ;; [bmw] very basic unknown word mechanism (doesn't require SMAF XML input)
 ;; set to grammar type for unknown words
 ;; (must also set *fallback-pos-p* to T)
-(defvar smaf::*unknown-word-type* nil)
+(defvar smaf:*unknown-word-type* nil)
 
 ;; generate fallback edges, then add them to tchart
 (defun augment-tchart-with-fallback-morphop nil
@@ -460,7 +460,7 @@
 ;; generate fallback edges
 (defun get-fallback-morphop-edges nil
   (cond
-   (smaf::*unknown-word-type*
+   (smaf:*unknown-word-type*
     ;; very basic mechanism, same for all unknown words
     (loop
 	for tedge in (get-unanalysed-and-unspanned-tedges)
@@ -478,7 +478,7 @@
 	for dummy-entry = 
 	  (get-dummy-unexpanded-lex-entry
 	   stem
-	   :unifs (list (cons :|type| (2-str smaf::*unknown-word-type*)))
+	   :unifs (list (cons :|type| (2-str smaf:*unknown-word-type*)))
 	   :gmap '((:|type| NIL :sym)))
 	collect
 	  (make-morpho-stem-edge 
@@ -522,22 +522,22 @@
 
 ;; input: edge of type 'tok' or 'tok+morph'
 (defun saf-edge-to-tedge (saf-edge addressing)
-  (unless (or (string= "tok" (saf::l-edgeType saf-edge))
-	      (string= "tok+morph" (saf::l-edgeType saf-edge)))
-    (error "edgeType='tok' expected (got '~a')" (saf::l-edgeType saf-edge)))
-  (with-slots (smaf::id smaf::source smaf::target smaf::from smaf::to smaf::l-content) saf-edge
-    (let* ((tokenStr (smaf::saf-fs-feature-value2 smaf::l-content :|tokenStr|))
-	  (e-id (if (string= "tok" (saf::l-edgeType saf-edge))
-		    (smaf-id-to-edge-id smaf::id)
-		  (HIDDEN-smaf-id-to-edge-id smaf::id :token)))
+  (unless (or (string= "tok" (saf:l-edgeType saf-edge))
+	      (string= "tok+morph" (saf:l-edgeType saf-edge)))
+    (error "edgeType='tok' expected (got '~a')" (saf:l-edgeType saf-edge)))
+  (with-slots (smaf:id smaf:source smaf:target smaf:from smaf:to smaf:l-content) saf-edge
+    (let* ((tokenStr (smaf:saf-fs-feature-value2 smaf:l-content :|tokenStr|))
+	  (e-id (if (string= "tok" (saf:l-edgeType saf-edge))
+		    (smaf-id-to-edge-id smaf:id)
+		  (HIDDEN-smaf-id-to-edge-id smaf:id :token)))
 	  (tedge
 	   (make-token-edge 
 	    :id e-id
-	    :from (smaf-node-to-chart-node smaf::source)
-	    :to (smaf-node-to-chart-node smaf::target)
+	    :from (smaf-node-to-chart-node smaf:source)
+	    :to (smaf-node-to-chart-node smaf:target)
 	    :string tokenStr
-	    :cfrom (smaf::point-to-char-point smaf::from addressing)
-	    :cto (smaf::point-to-char-point smaf::to addressing)
+	    :cfrom (smaf:point-to-char-point smaf:from addressing)
+	    :cto (smaf:point-to-char-point smaf:to addressing)
 	    :word (string-upcase tokenStr)
 	    :leaves (list tokenStr))))
       (list tedge))))
@@ -592,56 +592,56 @@
 
 ;; input: saf edge of type 'tok' or 'tok+morph'
 (defun saf-edge-to-medge (saf-edge addressing)
-  (unless (or (string= "morph" (saf::l-edgeType saf-edge))
-	       (string= "tok+morph" (saf::l-edgeType saf-edge)))
-    (error "'morph' edge expected (got '~a')" (saf::l-edgeType saf-edge)))
+  (unless (or (string= "morph" (saf:l-edgeType saf-edge))
+	       (string= "tok+morph" (saf:l-edgeType saf-edge)))
+    (error "'morph' edge expected (got '~a')" (saf:l-edgeType saf-edge)))
   ;; assumes tedges already in chart
-  (with-slots (smaf::id smaf::source smaf::target smaf::deps smaf::l-content smaf::from smaf::to) saf-edge
+  (with-slots (smaf:id smaf:source smaf:target smaf:deps smaf:l-content smaf:from smaf:to) saf-edge
     (let* ((children 
 	    (cond
-	     ((string= "tok+morph" (saf::l-edgeType saf-edge))
+	     ((string= "tok+morph" (saf:l-edgeType saf-edge))
 	      ;; find hidden 'tok' edge
-	      (list (smaf-id-to-token-edge smaf::id (get-tedges *tchart*) 
+	      (list (smaf-id-to-token-edge smaf:id (get-tedges *tchart*) 
 					   :hidden :token)))
 	     (t
 	      ;; derive child edges from saf deps
-	      (loop for d in smaf::deps
+	      (loop for d in smaf:deps
 		  for tedge = (smaf-id-to-token-edge d (get-tedges *tchart*))
 		  if tedge
 		  collect tedge
 		  else 
-		  do (format t "~&WARNING: missing SMAF edge '~a' (child of '~a')" d smaf::id)))))
+		  do (format t "~&WARNING: missing SMAF edge '~a' (child of '~a')" d smaf:id)))))
 	   (leaf-edges children) ;;fix me
 	   (children-words
 	    (loop for l in leaf-edges
 		collect (token-edge-string l)))
 	   (form (str-list-2-str children-words))
 	   (stem (string-upcase 
-		  (or (smaf::saf-fs-feature-value2 smaf::l-content :|stem|)
+		  (or (smaf:saf-fs-feature-value2 smaf:l-content :|stem|)
 		      form)))
-	   (partialTree (smaf::saf-fs-feature-value2 smaf::l-content :|partialTree|))
-	   (partialTree2 (smaf::saf-fs-feature-value2 smaf::l-content :|+partialTree|))
-	   (gmap-unifs (smaf::get-gmap-unifs smaf::l-content))
+	   (partialTree (smaf:saf-fs-feature-value2 smaf:l-content :|partialTree|))
+	   (partialTree2 (smaf:saf-fs-feature-value2 smaf:l-content :|+partialTree|))
+	   (gmap-unifs (smaf:get-gmap-unifs smaf:l-content))
 	   (dummy-entry 
 	    (get-dummy-unexpanded-lex-entry form 
 					    :unifs gmap-unifs
-					    :gmap saf::*gmap*
-					    :rmrs (smaf::saf-fs-feature-value2 smaf::l-content :|rmrs|)
+					    :gmap saf:*gmap*
+					    :rmrs (smaf:saf-fs-feature-value2 smaf:l-content :|rmrs|)
 					    ))
-	   (inject (get-inject gmap-unifs saf::*gmap*))
+	   (inject (get-inject gmap-unifs saf:*gmap*))
 	   (l-content 
-	    (if (smaf::saf-fs-feature-value2 
-		 (smaf::saf-edge-l-content saf-edge) :|inject|)
+	    (if (smaf:saf-fs-feature-value2 
+		 (smaf:saf-edge-l-content saf-edge) :|inject|)
 		(and inject (cons :inject inject))
 	      (and dummy-entry (cons :full dummy-entry))))
-	   (e-from (smaf-node-to-chart-node smaf::source))
-	   (e-to (smaf-node-to-chart-node smaf::target))
-    	   (cfrom (or (smaf::point-to-char-point smaf::from addressing)
+	   (e-from (smaf-node-to-chart-node smaf:source))
+	   (e-to (smaf-node-to-chart-node smaf:target))
+    	   (cfrom (or (smaf:point-to-char-point smaf:from addressing)
 		      (get-min-edge-cfrom children)))
-	   (cto (or (smaf::point-to-char-point smaf::to addressing)
+	   (cto (or (smaf:point-to-char-point smaf:to addressing)
 		    (get-max-edge-cto children)))
 	   (partial-tree 
-	    (or (smaf::saf-fs-partial-tree-2-list-partial-tree partialTree)
+	    (or (smaf:saf-fs-partial-tree-2-list-partial-tree partialTree)
 		(saf-plus-2-list-partial-tree partialTree2)
 		))
 	   err-flag medges medge
@@ -650,29 +650,29 @@
 
       
       (unless (or stem dummy-entry)
-	(format t "~&WARNING: no stem/gType for SMAF edge '~a'" smaf::id)
+	(format t "~&WARNING: no stem/gType for SMAF edge '~a'" smaf:id)
 	(setf err-flag t))
       (unless (integerp e-from)
-	(format t "~&WARNING: missing source for SMAF edge '~a'" smaf::id)
+	(format t "~&WARNING: missing source for SMAF edge '~a'" smaf:id)
 	(setf err-flag t))
       (unless (integerp e-to)
-	(format t "~&WARNING: missing target for SMAF edge '~a'" smaf::id)
+	(format t "~&WARNING: missing target for SMAF edge '~a'" smaf:id)
 	(setf err-flag t))
       (when (and (integerp e-from)
 		 (integerp e-to)
 		 (not (= e-from (leaf-edges-from leaf-edges))))
-	(format t "~&WARNING: source mismatch between SMAF edge '~a' and it's daughters" smaf::id)
+	(format t "~&WARNING: source mismatch between SMAF edge '~a' and it's daughters" smaf:id)
 	(setf err-flag t))
       (when (and (integerp e-from)
 		 (integerp e-to)
 		 (not (= e-to (leaf-edges-to leaf-edges))))
-	(format t "~&WARNING: target mismatch between SMAF edge '~a' and it's daughters" smaf::id)
+	(format t "~&WARNING: target mismatch between SMAF edge '~a' and it's daughters" smaf:id)
 	(setf err-flag t))
       (unless err-flag
 	(push
 	 (setf medge 
 	   (make-morpho-stem-edge 
-	    :id (smaf-id-to-edge-id smaf::id)
+	    :id (smaf-id-to-edge-id smaf:id)
 	    :children children
 	    :leaves (loop for x in leaf-edges collect (edge-string x))
 	    :from e-from
@@ -687,8 +687,8 @@
 	    :l-content l-content
 	    ))
 	 medges)
-	(when (smaf::saf-fs-feature-value2 
-	       (smaf::saf-edge-l-content saf-edge) :|analyseMorph|)
+	(when (smaf:saf-fs-feature-value2 
+	       (smaf:saf-edge-l-content saf-edge) :|analyseMorph|)
 	  (loop
 	      with morph-analyses = (get-morph-analyses (string-upcase form))
 	      for (stem . partial-tree) in morph-analyses
@@ -716,12 +716,17 @@
 (defun get-inject (unifs gmap)
   (loop
       for (feat . val) in unifs
-      for (feat2 path type) = (find feat gmap :key #'first)
+      for (feat2 path2 type) = (find feat gmap :key #'first)
+      for path = ;;HACK! *ersatz-carg-path* overrides :|carg| path
+	(or (and (eq feat :|carg|)
+		 saf:*ersatz-carg-path*)
+	    path2)
       for decoded-val = (if (eq type :sym) 
 			    (intern val) 
 			  val)
       do
 	(setf feat2 feat2) ;; hack to get rid of compiler warning
+      unless (and (eq feat :|carg|) (null saf:*ersatz-carg-path*)) ;;HACK! see above
       collect
 	(make-unification
 	   :lhs (make-path :typed-feature-list path)
@@ -764,7 +769,7 @@
 	      do 
 		(setf c-dummy c-dummy)))
 	 (lex-entry (get-dummy-unexpanded-lex-entry2 orth :unifs unifs2))
-	 ;; need: mrs::*semi* and mrs::*meta-semi*
+	 ;; need: mrs:s:*semi* and mrs::*meta-semi*
 	 (mrs (and rmrs (mrs::convert-rmrs-to-mrs rmrs))) 
 	 (rels (and mrs (mrs::psoa-liszt mrs)))
 	 (rels-unifs 
@@ -799,16 +804,16 @@
 
 (defun read-smaf-conf (x)
   (format t "~&;;; reading SMAF config file '~a'" x)
-  (saf::get-saf-l-map x)
+  (saf:get-saf-l-map x)
   t)
 
 ;;
 
 (defun run-parse-server (&rest rest)
-  (apply 'saf::run-parse-server rest))
+  (apply 'saf:run-parse-server rest))
 
 (defun run-fspp-server (&rest rest)
-  (apply 'saf::run-fspp-server rest))
+  (apply 'saf:run-fspp-server rest))
 
 ;;
 
@@ -854,67 +859,67 @@
     (format t "~&;;; Input sentence file: ~a" filename)
     (format t "~&;;; Output file: ~a" (namestring ofile))
     (process-saf-sentences
-     (saf::xml-to-saf-object 
-      (saf::read-file-to-string filename)
+     (saf:xml-to-saf-object 
+      (saf:read-file-to-string filename)
       :dir (pathname-directory (pathname filename)))
      :ostream ofile
      :show-parse show-parse
      :reset-unanalysed-tokens reset-unanalysed-tokens)))
 
 (defun process-saf-sentences (saf &key (ostream t) show-parse reset-unanalysed-tokens pprint)
-  (let* ((textfilename (saf::saf-meta-document (saf::saf-meta saf)))
+  (let* ((textfilename (saf:saf-meta-document (saf:saf-meta saf)))
 	 (text
 	  (if textfilename
-	      (saf::read-file-to-string textfilename))))
-    (format t "~&;;; Data file: ~a" (saf::saf-meta-document (saf::saf-meta saf)))
+	      (saf:read-file-to-string textfilename))))
+    (format t "~&;;; Data file: ~a" (saf:saf-meta-document (saf:saf-meta saf)))
     (format ostream "~a"
-	    (saf::saf-header 
-	     (saf::make-saf-meta
+	    (saf:saf-header 
+	     (saf:make-saf-meta
 	      :addressing :|char|
-	      :document (saf::saf-meta-document (saf::saf-meta saf)))))
+	      :document (saf:saf-meta-document (saf:saf-meta saf)))))
     (when reset-unanalysed-tokens
       (setf *unanalysed-tokens* nil))
     (loop 
 	for s in 
-	  (sort (loop for e in (saf::saf-lattice-edges (saf::saf-lattice saf))
-		    when (eq :|sentence| (saf::saf-edge-type e))
+	  (sort (loop for e in (saf:saf-lattice-edges (saf:saf-lattice saf))
+		    when (eq :|sentence| (saf:saf-edge-type e))
 		    collect e)
 		#'< 
 		:key #'(lambda (x)
 			 (or
-			  (saf::point-to-char-point 
-			   (saf::saf-edge-from x) :|char|)
+			  (saf:point-to-char-point 
+			   (saf:saf-edge-from x) :|char|)
 			  -1)))
-	for from = (saf::saf-edge-from s)
-	for to = (saf::saf-edge-to s)
+	for from = (saf:saf-edge-from s)
+	for to = (saf:saf-edge-to s)
 	unless (and from to) do
 	  (format t "~&~%CANNOT PROCESS SENTENCE ~a due to null pointer: from=~a to=~a" 
-		  (saf::saf-edge-id s) from to)
+		  (saf:saf-edge-id s) from to)
 	       
 	when (and from to) do
 	  (format t "~&~%PROCESSING SENTENCE ~a: ~& ~a" 
-		  (saf::saf-edge-id s)
-		  (saf::x-span text from to
-			  (saf::saf-meta-addressing (saf::saf-meta saf)))
+		  (saf:saf-edge-id s)
+		  (saf:x-span text from to
+			  (saf:saf-meta-addressing (saf:saf-meta saf)))
 		  )
 	  (time
 	   (handler-case 
 	       (cond
-		((saf::saf-meta-document (saf::saf-meta saf))
+		((saf:saf-meta-document (saf:saf-meta saf))
 		 (let ((*generate-messages-for-all-unanalysed-tokens* t)
 		       ;(*char-map-add-offset* 
 			;(point-to-char-point (saf-edge-from s) :|char|))
 		       )
-		   (setf saf::*char-map-add-offset* (saf::point-to-char-point (saf::saf-edge-from s) :|char|))
+		   (setf saf:*char-map-add-offset* (saf:point-to-char-point (saf:saf-edge-from s) :|char|))
 		   (x-parse text 
-			    (saf::saf-edge-from s) 
-			    (saf::saf-edge-to s)
-			    (saf::saf-meta-addressing (saf::saf-meta saf))
-			    :document (saf::saf-meta-document (saf::saf-meta saf))
-			    :char-map #'saf::char-map-add-x
+			    (saf:saf-edge-from s) 
+			    (saf:saf-edge-to s)
+			    (saf:saf-meta-addressing (saf:saf-meta saf))
+			    :document (saf:saf-meta-document (saf:saf-meta saf))
+			    :char-map #'saf:char-map-add-x
 			    :show-parse show-parse)))
 		(t
-		 (x-parse (saf::saf-edge-content s) 
+		 (x-parse (saf:saf-edge-content s) 
 			  nil
 			  nil
 			  nil
@@ -927,42 +932,42 @@
 	     (error (condition)
 	       (format t  "~&Error: ~A" condition))
 	     ))
-	  (saf::dump-sentence-analyses s :stream ostream :pprint pprint))
+	  (saf:dump-sentence-analyses s :stream ostream :pprint pprint))
     (format ostream "~&</saf>")))
 
-(defvar saf::*document* nil)
+(defvar saf:*document* nil)
 
 (defun x-parse (text from to addressing &key document 
 					     (char-map #'identity) 
 					     (show-parse t))
   (unless (preprocessor:preprocessor-initialized-p)
     (error "please load preprocessor"))
-  (setf saf::*document* document)
+  (setf saf:*document* document)
   (let ((str 
 	 (cond
 	  ((and from to addressing)
-	   (saf::x-span text from to addressing))
+	   (saf:x-span text from to addressing))
 	  ((and (null from) (null to) (null addressing))
 	   text)
 	  (t
 	   (error "from/to/addressing=~a/~a/~a" from to addressing))))
 	(preprocessor:*local-to-global-point-mapping* char-map)
 	(*text* text)
-	(old-x-fspp-global (preprocessor::x-fspp-global preprocessor::*preprocessor*))
+	(old-x-fspp-global (preprocessor:x-fspp-global preprocessor:*preprocessor*))
 	)
     (setf *sentence* str)
 ;    
 ;    (format t "~%~%=.~a.~%~%" preprocessor:*local-to-global-point-mapping*)
 ;    
     (parse (preprocessor:x-preprocess str :format :maf) show-parse)
-    (setf (preprocessor::x-fspp-global preprocessor::*preprocessor*)
+    (setf (preprocessor:x-fspp-global preprocessor:*preprocessor*)
       old-x-fspp-global)
     t))
 
-(defvar saf::*morph-rule-map* nil)
+(defvar saf:*morph-rule-map* nil)
 
 ;; [for testing purposes]
-;(defvar smaf::*morph-rule-map*
+;(defvar smaf:*morph-rule-map*
 ;    '(("M1" . "THIRD_SG_FIN_VERB_ORULE")
 ;      ("M2" . "PUNCT_PERIOD_ORULE")
 ;      ("M0" . "PLUR_NOUN_ORULE")))
@@ -972,7 +977,7 @@
 (defun saf-plus-2-list-partial-tree (plus-list)
   (loop
       for x2 in plus-list
-      for x = (or (cdr (assoc x2 saf::*morph-rule-map* :test #'string=))
+      for x = (or (cdr (assoc x2 saf:*morph-rule-map* :test #'string=))
 		  x2)
       collect (list (intern x :lkb) nil)))
     
@@ -1104,7 +1109,7 @@
 	 (tedges (get-tedges tchart))
 	 (medges (if wordforms
 		     (get-medges tchart))))
-    (format strm "~a" (smaf::saf-header (smaf::make-saf-meta :document nil :addressing :|char|)))
+    (format strm "~a" (smaf:saf-header (smaf:make-saf-meta :document nil :addressing :|char|)))
     (format strm "~a" (fsm-xml tedges medges :saf saf))
     (if saf
 	(format strm "</saf>")

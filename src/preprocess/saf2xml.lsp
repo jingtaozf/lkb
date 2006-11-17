@@ -84,8 +84,8 @@
 	      attr-to (xml-str to)
 	      (xml-str source)
 	      (xml-str target)
-	      (xml-str (smaf::saf-fs-feature-value2 content :|name|))
-	      (xml-str (smaf::saf-fs-feature-value2 content :|surface|))
+	      (xml-str (saf:saf-fs-feature-value2 content :|name|))
+	      (xml-str (saf:saf-fs-feature-value2 content :|surface|))
 	      elt
 	      ))
       ((eq type :|token|)

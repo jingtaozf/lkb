@@ -20,9 +20,6 @@
 
 ;; instantiate :l-content for all annotations in SAF object
 (defun instantiate-l-content (saf l-map)
-  (unless l-map 
-    (reset-conf)
-    (setf l-map *lmap*))
   (loop
       with lattice = (saf-lattice saf)
       for edge in (and lattice (saf-lattice-edges lattice))
@@ -260,14 +257,8 @@ wordForm.[] -> edgeType='morph' stem=content.stem partialTree=content.partial-tr
 (defun reset-conf nil
   (setf *gmap* nil)
   (setf *lmap* (conf-read-string *default-config*))
-;    (with-input-from-string (s *default-config*)
- ;     (conf-read-stream s)))
-  (cond
-   (*ersatz-carg-path*			; HACK!!!
-    (push (list :|carg| *ersatz-carg-path* :STR) *gmap*)
-    (push (conf-read-line "ersatz.[] -> edgeType='tok+morph' stem=content.name tokenStr=content.name gMap.carg=content.surface inject='t' analyseMorph='t'") *lmap*))
-   (t
-    (push (conf-read-line "ersatz.[] -> edgeType='tok+morph' stem=content.name tokenStr=content.name gMap.carg=content.surface inject='t' analyseMorph='t'") *lmap*)))
+  (push (conf-read-line "ersatz.[] -> edgeType='tok+morph' stem=content.name tokenStr=content.name gMap.carg=content.surface inject='t' analyseMorph='t'") *lmap*)
+  (push (list :|carg| nil :STR) *gmap*)
   *lmap*
   )
 

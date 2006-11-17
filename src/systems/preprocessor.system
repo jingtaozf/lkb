@@ -22,4 +22,5 @@
                  (:file "saf2xml")
 		 (:file "x-preprocess")
 		 (:file "saf-conf")
+		 (:file "fspp-misc")
 		 ))

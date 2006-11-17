@@ -12,9 +12,11 @@
            #:preprocess
            #:clear-preprocessor
            #:preprocessor-initialized-p
+           #:x-escape-string
            #:x-read-preprocessor
            #:x-preprocess
            #:x-clear-preprocessor
+	   #:x-fspp-global
            #:*local-to-global-point-mapping*
            #:*preprocessor*
 	   #:*min-regex-char-code-limit*
