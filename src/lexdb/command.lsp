@@ -133,20 +133,70 @@
 ;;; dump small (tdl) lexicon of entries collected by tsdb
 ;;;
 
-(defmethod dump-small-lexicon (&key file)
+(defun dump-small-lexicon (&key file items-file-list)
+  ;; using unwind-protect because rebinding globals via let statement 
+  ;; does not work with itsdb
+  (unwind-protect 
+      (progn
+	;; all we need are lexical ids
+	(setf *abort-parse-after-lexical-lookup* t)
+	;; empty *lex-ids-used*
+	(setf *lex-ids-used* nil)
+	;; construct filename if it is not supplied
+	(unless file
+	  (setf file (dump-small-lexicon-get-filename)))
+	(cond
+	 ;; if we have items files, process them and extract lexical ids
+	 (items-file-list
+	  (loop
+	      for items-file0 in items-file-list
+	      for items-file = (pathname items-file0)
+	      for out-file = (merge-pathnames (make-pathname :type "tmp")
+					      items-file)
+	      do
+		(format t "~&; calling (parse-sentences ~S ~S)" items-file out-file)
+		(parse-sentences items-file out-file)))
+	 (t
+	  ;; if user provided no items files,
+	  ;; tell the user to process test suite(s) manually
+	  (format t "; [entering DUMP-SMALL-LEXICON]")
+	  (format t "~%; Please now process test suites from which the")
+	  (format t "~%; small the lexicon should be constructed.")
+	  (format t "~%; Note that full parsing functionality is")
+	  (format t "~%; temporarily disabled. Parsing will abort as soon")
+	  (format t "~%; soon as lexical ids are collected.")
+	  (format t "~%; Finish by entering ':cont' at the prompt below.")
+	  (format t "~%~%")
+	  ;; wait for the user to process some test suites
+	  (lkb-beep)
+	  (break)))
+	;; attempt to dump small lexicon to filename
+	(handler-case
+	    (progn
+	      (dump-small-lexicon-aux file))
+	  (error (e) 
+	    (format t "~%; Error: ~a" e)
+	    (format t "~%; Error: unable to complete dump-small-lexicon")))
+	(setf *abort-parse-after-lexical-lookup* nil))
+    ;; reset to normal parse mode
+    (setf *abort-parse-after-lexical-lookup* nil)
+    (format t "~%; [exiting DUMP-SMALL-LEXICON]")))
+    
+(defun dump-small-lexicon-get-filename nil
+  (cond
+   ((typep *lexicon* 'cdb-lex-database)
+    (let ((template (pathname (namestring (first (slot-value *lexicon* 'source-files))))))
+      (make-pathname :directory (pathname-directory template)
+		     :name (format nil "~a-small" (pathname-name template))
+		     :type "tdl")))
+   (t
+    (make-pathname :directory (pathname-directory (lkb-tmp-dir))
+		   :name "lexicon-small"
+		   :type "tdl"))))
+  
+(defun dump-small-lexicon-aux (&optional file)
   (unless *lex-ids-used* (error "*lex-ids-used* is empty"))
-  (unless file
-    (setf file
-      (cond
-       ((typep *lexicon* 'cdb-lex-database)
-	(let ((template (pathname (namestring (first (slot-value *lexicon* 'source-files))))))
-	  (make-pathname :directory (pathname-directory template)
-			 :name (format nil "~a-small" (pathname-name template))
-			 :type "tdl")))
-       (t
-	(make-pathname :directory (pathname-directory (lkb-tmp-dir))
-		       :name "lexicon-small"
-		       :type "tdl")))))
+
   (format t "~&(LexDB) dumping small tdl lexicon [~a entries] to file: ~a" (length *lex-ids-used*) file)
   (export-to-tdl-to-file *lexicon* file :lex-ids *lex-ids-used*))
 
