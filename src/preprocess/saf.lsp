@@ -32,12 +32,12 @@
      :meta (get-saf-meta saf-attributes :olac olac :text text)
      :lattice (get-saf-lattice lxml))))
 
-;; fix_me: get rid of global *lmap*
-(defun xml-to-saf-object (xml &key (dir "~") (l-map *lmap*))
+;; fix_me: get rid of global *config*
+(defun xml-to-saf-object (xml &key (dir "~") (config (config)))
   (let ((*dir* dir))
     (saf::instantiate-l-content
      (lxml-to-saf-object (lxml::xml-to-lxml xml))
-     l-map)
+     config)
     ))
 
 (defun lxml-to-saf-object (lxml)
@@ -552,18 +552,28 @@
 ;; when set, clobber rules enabled
 (defvar *warning-clobber* nil)
 
-;; for each clobber edge, remove all non-clobber edges between
-;; source and target nodes
+;; attempt to read int from "clobber" field
+;; if fail, 0
+(defun get-clobber-level (edge)
+  (let* ((l-content (saf-edge-l-content edge))
+	 (clobber (saf-fs-feature-value2 l-content :|clobber|)))
+    (or 
+     (parse-integer clobber :junk-allowed t) 
+     0)))
+  
+
+;; for each clobber edge, remove all edge with a lower clobber level between
+;; source and target nodes according to clobebr level (see below)
 (defun clobber (lattice)
   (let* ((edges (saf-lattice-edges lattice))
 	 (clobber-edges
 	  (loop 
 	      for edge in edges
-	      for l-content = (saf-edge-l-content edge)
-	      when (saf-fs-feature-value2 l-content :|clobber|)
+	      unless (zerop (get-clobber-level edge))
 	      collect edge)))
     (loop
 	for clobber-edge in clobber-edges
+	for clobber-level = (get-clobber-level clobber-edge)
 	for source = (saf-edge-source clobber-edge)		    
 	for target = (saf-edge-target clobber-edge)
 	for edges = (get-edges-x2y source target :lattice lattice)
@@ -571,7 +581,14 @@
 	  ;; FIXME: inefficient
 	  (loop
 	      for edge in edges
-	      unless (member edge clobber-edges)
+	      for clobber-level2 = (get-clobber-level edge)
+	      when (or
+		    ;; clobber level positive: clobber if abs STRICTLY greater
+		    (and (> clobber-level 0)
+			 (> (abs clobber-level) (abs clobber-level2)))
+		    ;; clobber level negative: clobber if abs EQUAL OR greater
+		    (and (< clobber-level 0)
+			 (>= (abs clobber-level) (abs clobber-level2))))
 	      do
 		(if *warning-clobber*
 		    (format t "~%;;; WARNING: edge ~a clobbered" (saf-edge-id edge)))

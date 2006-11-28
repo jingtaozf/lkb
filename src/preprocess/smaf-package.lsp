@@ -1,6 +1,9 @@
 (defpackage :smaf
   (:use :common-lisp) 
   (:export
+   #:conf-read-file
+   #:gmap
+   
    #:annot-paths
    #:char-map-add-x
    #:conf-read-string
@@ -51,9 +54,12 @@
    #:*char-map-add-offset*
    #:*document*
    #:*ersatz-carg-path*
-   #:*gmap*
    #:*morph-rule-map*
    #:*unknown-word-type*
+   
+   #:*config*
+   #:config-gmap
+   #:config-lmap
    
    #:id #:source #:target #:from #:to #:l-content #:deps
    )

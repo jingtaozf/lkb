@@ -31,7 +31,3 @@
   (unless (numberp num)
     (error "number expected"))
   (format nil "~a" num))
-
-;;
-;; END OF MISC CODE
-;;

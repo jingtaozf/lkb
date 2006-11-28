@@ -12,11 +12,14 @@
            #:preprocess
            #:clear-preprocessor
            #:preprocessor-initialized-p
+	   
            #:x-escape-string
-           #:x-read-preprocessor
-           #:x-preprocess
-           #:x-clear-preprocessor
 	   #:x-fspp-global
+
+           #:x-read-preprocessor ;; deprecated
+           #:x-preprocess ;; deprecated
+           #:x-clear-preprocessor ;; deprecated
+	   
            #:*local-to-global-point-mapping*
            #:*preprocessor*
 	   #:*min-regex-char-code-limit*

@@ -419,14 +419,14 @@ we assume that there will generally only be one feature
   (declare (special mt::*transfer-triggers*))
   
   ;; if applicable, instantiate DUMMY CARG on ersatz
-  (when (and (find :|carg| smaf::*gmap* :key #'first)
+  (when (and (find :|carg| (smaf:gmap) :key #'first)
 	     (lkb::lex-entry-is-ersatz lex-entry))
 ;    (unless (find :|carg| smaf::*gmap* :key #'first)
 ;      (error "please load preprocessor before continuing"))
     (setf lex-entry
       (lkb::get-injected-lex-entry 
        lex-entry
-       (lkb::get-inject '((:|carg| . "DUMMY")) smaf::*gmap*)))
+       (lkb::get-inject '((:|carg| . "DUMMY")) (smaf:gmap))))
     (lkb::expand-psort-entry lex-entry))
   
   (let* ((fs (tdfs-indef (lex-entry-full-fs lex-entry)))

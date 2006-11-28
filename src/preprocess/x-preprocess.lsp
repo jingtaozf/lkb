@@ -42,16 +42,22 @@
 
 ;; some wrappers
 
-(defun x-read-preprocessor (&rest rest) (apply #'read-preprocessor rest))
-(defun x-preprocess (&rest rest) (apply #'preprocess rest))
-(defun x-clear-preprocessor (&rest rest) (apply #'clear-preprocessor rest))
+(defun x-read-preprocessor (&rest rest) 
+  (format t ";;WARNING: The function 'x-read-preprocessor' is deprecated. Please use 'read-preprocessor' instead.")
+  (apply #'read-preprocessor rest))
+(defun x-preprocess (&rest rest) 
+  (format t ";;WARNING: The function 'x-preprocess' is deprecated. Please use 'preprocess' instead.")
+  (apply #'preprocess rest))
+(defun x-clear-preprocessor (&rest rest)
+  (format t ";;WARNING: The function 'x-clear-preprocessor' is deprecated. Please use 'clear-preprocessor' instead.")
+  (apply #'clear-preprocessor rest))
 
 ;; end of wrappers
 
 
 ;; 'imported' specials
 
-(defvar *saf-lmap*)
+(defvar *saf-config*)
 
 ;;
 
@@ -101,7 +107,7 @@
 ;; preprocessor saf interpretation
 ;;
 
-(defparameter *saf-config* "
+(defparameter *saf-config-str* "
 token.[] -> edgeType='tok' tokenStr=content
 ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surface")
 
@@ -236,7 +242,7 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
       (nreverse (x-fspp-local x-fspp)))
     (format t "~a~%" x-fspp)
     (setf *preprocessor* x-fspp))
-  (setf *saf-lmap* (saf:conf-read-string *saf-config*))
+  (setf *saf-config* (saf:conf-read-string *saf-config-str*))
   *preprocessor*
   )
 
@@ -469,7 +475,7 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 	   :target (incf *smaf-node*)
 	   :content x))
 	;; l-content needed for interpretation
-	(saf:instantiate-edge-l-content new-annot *saf-lmap*)
+	(saf:instantiate-edge-l-content new-annot *saf-config*)
       and collect new-annot into edges
       and collect *smaf-node* into nodes
       finally
@@ -735,7 +741,7 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 			    (saf:make-saf-fv
 			     :feature :|type|
 			     :value ersatz-match)))) ;; the ersatz name
-		(saf:instantiate-edge-l-content new-annot *saf-lmap*)
+		(saf:instantiate-edge-l-content new-annot *saf-config*)
 		(push new-annot saf-annots))
 	       (t
 		;; annot is normal TOKEN
@@ -746,7 +752,7 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 		       :source last-node
 		       :target next-node
 		       :content x-bit))
-		(saf:instantiate-edge-l-content new-annot *saf-lmap*)
+		(saf:instantiate-edge-l-content new-annot *saf-config*)
 		(push new-annot saf-annots)))
 	      (setf last-node next-node) ;; keep nodes in sync
 	      ))))
@@ -828,7 +834,7 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 	for id = (saf:saf-edge-id annot)
 	for start = (saf:saf-edge-source annot)
 	for end = (saf:saf-edge-target annot)
-	for form =  (and (saf:instantiate-edge-l-content annot *saf-lmap*)
+	for form =  (and (saf:instantiate-edge-l-content annot *saf-config*)
 			 (get-token-str annot))
 	for surface = (if (eq type :|ersatz|)
 			  (get-gmap-carg annot)

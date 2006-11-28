@@ -7,8 +7,16 @@
 
 (in-package :saf)
 
-(defvar *lmap*)
-(defvar *gmap* nil) ;; reset when necessary!
+(defstruct config
+  lmap
+  gmap)
+
+(defvar *config* (make-config))
+
+(defun config nil *config*)
+
+;(defvar *lmap*)
+;(defvar *gmap* nil) ;; reset when necessary!
 
 (defstruct map-action
   e-edge
@@ -19,26 +27,30 @@
 ;;
 
 ;; instantiate :l-content for all annotations in SAF object
-(defun instantiate-l-content (saf l-map)
+;(defun instantiate-l-content (saf l-map)
+(defun instantiate-l-content (saf config)
   (loop
       with lattice = (saf-lattice saf)
       for edge in (and lattice (saf-lattice-edges lattice))
-      for l-content = (edge-l-content edge l-map)
+      for l-content = (edge-l-content edge config)
       do (setf (saf-edge-l-content edge) l-content) ;!
       finally 
 	(setf (saf-lattice saf)
 	  (postprocess-lattice lattice)) ;; clobber rules, etc.
 	(return saf)))
 
-(defun instantiate-edge-l-content (edge l-map)
+;(defun instantiate-edge-l-content (edge l-map)
+(defun instantiate-edge-l-content (edge config)
   (setf (saf-edge-l-content edge)
-    (edge-l-content edge l-map))
+    (edge-l-content edge config))
   edge)
 
 ;; instantiate :l-content for annotation
-(defun edge-l-content (edge l-map)
+;(defun edge-l-content (edge l-map)
+(defun edge-l-content (edge config)
   (loop
       with l-content
+      with l-map = (config-lmap config)
       for action in l-map
       if (edge-match edge (map-action-e-edge action))
       do (setf l-content
@@ -230,24 +242,23 @@
 ;; - of form "type.[f1='v1' f2='v2'] -> edgeType='tok'"
 ;; where type, fN and vN consist only of (Perl regex) word characters
 
-(defun get-saf-l-map (filename)
-  (setf *lmap*
-    (conf-read-file filename)))
+;(defun get-saf-l-map (filename)
+;  (setf *lmap*
+;    (conf-read-file filename)))
 
 (defparameter *ERSATZ-CARG-PATH* nil)
 (defparameter *default-config* "
-;define gMap.carg (synsem lkeys keyrel carg) STRING
+define gMap.carg () STRING
 
 token.[] -> edgeType='tok' tokenStr=content
 wordForm.[] -> edgeType='morph' stem=content.stem partialTree=content.partial-tree
-;ersatz.[] -> edgeType='tok+morph' stem=content.name tokenStr=content.name gMap.carg=content.surface inject='t' analyseMorph='t'
-")
+ersatz.[] -> edgeType='tok+morph' stem=content.name tokenStr=content.name gMap.carg=content.surface inject='t' analyseMorph='t'")
 
 (defun ersatz-carg-path nil
   *ersatz-carg-path*)
 
 (defun gmap nil
-  *gmap*)
+  (config-gmap *config*))
 
 (defun conf-read-string (str)
   (with-input-from-string (s str)
@@ -255,61 +266,82 @@ wordForm.[] -> edgeType='morph' stem=content.stem partialTree=content.partial-tr
 
 ;; fallback case handles smaf as mapped from tchart
 (defun reset-conf nil
-  (setf *gmap* nil)
-  (setf *lmap* (conf-read-string *default-config*))
-  (push (conf-read-line "ersatz.[] -> edgeType='tok+morph' stem=content.name tokenStr=content.name gMap.carg=content.surface inject='t' analyseMorph='t'") *lmap*)
-  (push (list :|carg| nil :STR) *gmap*)
-  *lmap*
-  )
+  (setf *config*
+    (conf-read-string *default-config*)))
 
 ;;
 
 
 ;; process each line in SAF config file
 (defun conf-read-file (filename)
-  (setf *gmap* nil)
-  (with-open-file (s filename 
-		   :direction :input)
-    (conf-read-stream s)))
+  (setf *config*
+    (with-open-file (s filename 
+		     :direction :input)
+      (conf-read-stream s))))
 
 ;; process each line in SAF config file
 (defun conf-read-stream (s)
   (loop
+      with config = (make-config)
       for line = (read-line s nil nil)
-      for a = (and line (conf-read-line line))
-      while line
-      if (map-action-p a) collect a))
+      while line 
+      do (conf-read-line line config)
+;      for a = (and line (conf-read-line line config))
+;      while line
+;      if (map-action-p a) collect a
+      finally
+	(return config)))
 
 ;; ignore empty lines, and those composed of whitespace
 ;; otherwise expect lines of form:
 ;;  type.[x='y' a='b'] -> foo='bar' foo2=bar2
 ;;  define gMap.pred (synsem lkeys keyrel pred)
-(defun conf-read-line (line)
+(defun conf-read-line (line config)
   (or
-   (conf-read-line-RULE line)
+   (conf-read-line-RULE line config)
    #+:lkb
-   (conf-read-line-DEFINE line)
+   (conf-read-line-DEFINE line config)
    (conf-read-line-COMMENT line)
    (conf-read-line-EMPTY line)
    (format t "~%;;; WARNING: ignoring malformed config line \"~a\"" line)))
 
+;; simply collect everything
+(defun inject-lmap (map-action config)
+  (with-slots (lmap) config
+    (push map-action lmap)))
+
+(defun inject-gmap (mapping config)
+  (with-slots (gmap) config
+    (let* ((name (first mapping))
+	   (match (find name gmap :key #'first)))
+      (cond
+       (match
+	;; overwrite existing mapping
+	(format t "~&;WARNING: overriding ~a in SMAF config mapping definition" name)
+	(setf (cdr match) (cdr mapping)))
+       (t
+	;; collect mapping for new name
+	(push mapping gmap))))))
+
 ;;eg.  type.[x='y' a='b'] -> foo='bar' foo2=bar2
-(defun conf-read-line-RULE (line)
+(defun conf-read-line-RULE (line config)
   (multiple-value-bind
       (m regs)
       (cl-ppcre:scan-to-strings "^(\\w*).\\[(.*)\\]\\s*->\\s*(.*)$" line)
     (when m
-	(let ((type (aref regs 0))
-	      (specs-str (aref regs 1))
-	      (out-str (aref regs 2)))
-	  (make-map-action :e-edge 
-			   (make-saf-edge :type type 
-					       :content (conf-read-specs specs-str))
-			   :l-content (conf-read-specs out-str))))))
+      (let* ((type (aref regs 0))
+	     (specs-str (aref regs 1))
+	     (out-str (aref regs 2))
+	     (map-action
+	      (make-map-action :e-edge 
+			       (make-saf-edge :type type 
+					      :content (conf-read-specs specs-str))
+			       :l-content (conf-read-specs out-str))))
+	(inject-lmap map-action config)))))
 
 ;; eg. define gMap.pred (synsem lkeys keyrel pred)
 #+:lkb
-(defun conf-read-line-DEFINE (line)
+(defun conf-read-line-DEFINE (line config)
   (multiple-value-bind
       (m regs)
       (cl-ppcre:scan-to-strings "^define\\s*gMap\\.(\\w+)\\s+\\((.*)\\)\\s*(\\w+)?\\s*$" line)
@@ -321,7 +353,8 @@ wordForm.[] -> edgeType='morph' stem=content.stem partialTree=content.partial-tr
 	       (path (conf-read-path path-str))
 	       (type (conf-read-type type-str))
 	       )
-	  (push (list name path type) *gmap*)))))
+	  (inject-gmap (list name path type) config)))))
+;	  (push (list name path type) *gmap*)))))
 
 ;; eg. "synsem lkeys keyrel pred" 
 ;;     -> (:|synsem| :|lkeys| :|keyrel| :|pred|)

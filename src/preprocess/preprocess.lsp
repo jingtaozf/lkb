@@ -113,7 +113,8 @@
                                     collect foo do (decf n)))))
       (values tokens length))))
 
-(defvar saf:*gmap*)
+;;(defvar saf:*gmap*)
+(defvar saf:*config*)
 (defvar *saf-v* -1)
 
 (defvar *HIDDEN-smaf-id-to-edge-id* nil) ;; MUST reset when initializing tchart
@@ -625,10 +626,10 @@
 	   (dummy-entry 
 	    (get-dummy-unexpanded-lex-entry form 
 					    :unifs gmap-unifs
-					    :gmap saf:*gmap*
+					    :gmap (saf:config-gmap saf:*config*)
 					    :rmrs (smaf:saf-fs-feature-value2 smaf:l-content :|rmrs|)
 					    ))
-	   (inject (get-inject gmap-unifs saf:*gmap*))
+	   (inject (get-inject gmap-unifs (saf:config-gmap saf:*config*)))
 	   (l-content 
 	    (if (smaf:saf-fs-feature-value2 
 		 (smaf:saf-edge-l-content saf-edge) :|inject|)
@@ -804,7 +805,8 @@
 
 (defun read-smaf-conf (x)
   (format t "~&;;; reading SMAF config file '~a'" x)
-  (saf:get-saf-l-map x)
+  (setf saf:*config* (saf:conf-read-file x))
+;  (saf:get-saf-l-map x)
   t)
 
 ;;

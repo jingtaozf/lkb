@@ -50,6 +50,7 @@
 (defvar *unanalysed-tokens* nil)
 (defvar *maf-p* nil)
 (defvar *abort-parse-after-morphosyntax* nil)
+(defvar *abort-parse-after-lexical-lookup* nil)
 (defvar *abort-parse-if-no-spanning-morph-edge-path* nil)
 (defvar *fallback-pos-p* nil)
 
@@ -540,7 +541,7 @@
   (reset-statistics)
   
   (when (smaf::saf-p input)
-    (setf input (saf::instantiate-l-content input smaf::*lmap*)))
+    (setf input (saf::instantiate-l-content input smaf::*config*)))
 
   (let* ((*active-parsing-p* (if *bracketing-p* nil *active-parsing-p*))
          (first-only-p (if (and first-only-p 
@@ -638,6 +639,8 @@
 	      (format t "~&;;; WARNING: No morph edge paths span input. Aborting parse.")
 	      (return-from parse (get-parse-return-values)))
 	    (instantiate-chart-with-stems-and-multiwords)
+	    (when *abort-parse-after-lexical-lookup*
+	      (return-from parse (get-parse-return-values)))
             (catch :best-first
               (add-words-to-chart (and first-only-p (null *active-parsing-p*)
                                        (cons *minimal-vertex* *maximal-vertex*)))
@@ -1543,6 +1546,7 @@ relatively limited.
       do
 	(setf (nth i entries)
 	  (copy-lex-entry entry))
+	(get-expanded-lex-entry entry) ;; so we don't break tsdb's *lex-ids-used* hack
       finally
 	(return entries)))
 
