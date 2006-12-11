@@ -832,8 +832,8 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 	for annot in saf-annots
 	for type = (saf:saf-edge-type annot)
 	for id = (saf:saf-edge-id annot)
-	for start = (saf:saf-edge-source annot)
-	for end = (saf:saf-edge-target annot)
+	for start = (saf:saf-edge-from annot)
+	for end = (saf:saf-edge-to annot)
 	for form =  (and (saf:instantiate-edge-l-content annot *saf-config*)
 			 (get-token-str annot))
 	for surface = (if (eq type :|ersatz|)
