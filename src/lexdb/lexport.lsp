@@ -63,7 +63,6 @@
 		     :direction :output 
 		     :if-exists :supersede 
 		     :if-does-not-exist :create
-		     :external-format :utf-8
 		     )
       (export-lexicon-to-file-aux lexicon rev-stream file-base)
       (when recurse
@@ -84,7 +83,7 @@
 		     :direction :output 
 		     :if-exists :supersede 
 		     :if-does-not-exist :create
-		     :external-format :utf-8)
+		     )
       (export-to-db-dump-rev lexicon rev-stream :skip-stream skip-stream))))
 
 ;;;
