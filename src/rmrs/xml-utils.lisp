@@ -44,9 +44,22 @@
       (unless (member (car xml-el) '(:XML :DOCTYPE :COMMENT))
         (return xml-el)))))
 
+;; [bmw] copied from preprocess/lxml.lsp
+(defun shift-package (lxml package)
+  (loop
+      for x in lxml
+      collect 
+	(cond
+	 ((listp x)
+	  (shift-package x package))
+	 ((symbolp x)
+	  (intern (string x) package))
+	 (t
+	  x))))
+
 #-:pxml
 (defun parse-xml-removing-junk (istream)
-  (lxml::shift-package (xml:parse-xml istream) :mrs))
+  (shift-package (xml:parse-xml istream) :mrs))
 
 (defun remove-xml-whitespace-elements (content)
   ;;; sl revised version of fn contributed by Fabre
