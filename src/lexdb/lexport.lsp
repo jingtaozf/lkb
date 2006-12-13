@@ -128,9 +128,13 @@
 ;;; get meta-level fields
 ;;;
 
+;; NOTE: returns NIL if we don't have CLIM
 (defun ask-user-for-x (head promptDcons)
+  #+:clim
   (car (ask-for-strings-movable head 
-			   (list promptDcons))))
+				(list promptDcons)))
+  #-:clim NIL
+  )
 
 (defun extract-date-from-source (source)
   (if (not (stringp source))
