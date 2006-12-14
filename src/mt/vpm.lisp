@@ -168,7 +168,9 @@
         (loop
             for ep in (mrs:psoa-liszt mrs)
             collect
-              (mrs::make-rel
+              (mrs::make-char-rel
+	       :cfrom (mrs:char-rel-cfrom ep)
+	       :cto (mrs:char-rel-cto ep)
                :handel (map-variable (mrs:rel-handel ep))
                :pred (mrs:rel-pred ep)
                :flist
