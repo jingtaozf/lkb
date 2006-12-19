@@ -445,9 +445,10 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 	for rule in global
 	for scanner = (x-fsr-scanner rule)
 	for target = (x-fsr-target rule)
+	for source = (x-fsr-source rule)
 	do
 	  (multiple-value-bind (res matchp)
-	      (x-regex-replace-all scanner x target)
+	      (x-regex-replace-all scanner x target :source source)
 	    (when (and verbose matchp)
 	      (format t
 		      "~&GLOBAL |~a| -> |~a| ~&mapped~&|~a|~&to~&"
@@ -1012,17 +1013,41 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 	  (return (append new-char-map (subseq char-map last (length char-map)))))))
 
 ;; returns: REPLACEMENT + flag indicating whether a match took place
-(defun x-regex-replace-all (scanner x target)
+(defun x-regex-replace-all (scanner x target &key source)
   (with-slots (text char-map) x
     (let ((repl-l (make-repl-list)))
-      (setf (text x)
-	(cl-ppcre:regex-replace-all 
-	 scanner text 
-	 #'(lambda (a b c d e f g) 
-	     (catch-repl a b c d e f g 
-			 :replace-string target 
-			 :repl-l repl-l
-			 :char-map char-map))))
+      ;;
+      ;; Handler-case is necessary due to an apparent bug in the underlying PPCRE regex module.
+      ;; An error is thrown _in_some_cases_ (!) when input string contains a character with code
+      ;; point greater than the value of ppcre:*regex-char-code-limit* with which the scanner
+      ;; was created.
+      ;;
+      (handler-case
+	  (setf (text x)
+	    (cl-ppcre:regex-replace-all 
+	     scanner text 
+	     #'(lambda (a b c d e f g) 
+		 (catch-repl a b c d e f g 
+			     :replace-string target 
+			     :repl-l repl-l
+			     :char-map char-map))))
+	(t () 
+	  (format t "~&;WARNING: unexpected error thrown by function 'cl-ppcre:regex-replace-all'.")
+	  (setf repl-l (make-repl-list))
+	  (cond
+	   (source
+	    (format t " Recovering...")
+	    (setf (text x)
+	      (cl-ppcre:regex-replace-all 
+	       source text 
+	       #'(lambda (a b c d e f g) 
+		   (catch-repl a b c d e f g 
+			       :replace-string target 
+			       :repl-l repl-l
+			       :char-map char-map)))))
+	   (t
+	    (format t " Continuing...")
+	    ))))
       (with-slots (list) repl-l
 	(when list
 	  (setf list (reverse list))
