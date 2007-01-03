@@ -356,26 +356,8 @@
 	(dtr-binding-list 
 	 (loop for dtr in dtrs
 	     append (semstruct-bindings dtr)))
-	(cfrom (let ((current-min most-positive-fixnum))
-		 (dolist (dtr dtrs)
-		   (let ((dtr-cfrom (semstruct-cfrom dtr)))
-		     (when (and dtr-cfrom
-				(< dtr-cfrom
-				   current-min))
-		       (setf current-min dtr-cfrom))))
-		 (if (eql current-min most-positive-fixnum)
-		     NIL
-		   current-min)))
-	(cto (let ((current-max -1))
-	       (dolist (dtr dtrs)
-		 (let ((dtr-cto (semstruct-cto dtr)))
-		   (when (and dtr-cto
-			      (> dtr-cto
-				 current-max))
-		     (setf current-max dtr-cto))))
-	       (if (< current-max 0)
-		   NIL
-		 current-max)))
+	(cfrom (calculate-cfrom-from-daughters dtrs))
+	(cto (calculate-cto-from-daughters dtrs))
 	(semhead nil)
 	(semstruct nil)
 	(equalities nil))      	 
@@ -455,6 +437,32 @@
           (internal-output-rmrs dtr 'vcompact t))
         (internal-output-rmrs semstruct-out 'vcompact t))
       semstruct-out)))
+
+;;; cfrom and cto utility fns
+
+(defun calculate-cfrom-from-daughters (dtrs)
+  (let ((current-min most-positive-fixnum))
+    (dolist (dtr dtrs)
+      (let ((dtr-cfrom (semstruct-cfrom dtr)))
+	(when (and dtr-cfrom
+		   (< dtr-cfrom
+		      current-min))
+	  (setf current-min dtr-cfrom))))
+    (if (eql current-min most-positive-fixnum)
+	NIL
+      current-min)))
+
+(defun calculate-cto-from-daughters (dtrs)
+  (let ((current-max -1))
+    (dolist (dtr dtrs)
+      (let ((dtr-cto (semstruct-cto dtr)))
+	(when (and dtr-cto
+		   (> dtr-cto
+		      current-max))
+	  (setf current-max dtr-cto))))
+    (if (< current-max 0)
+	NIL
+      current-max)))
 
 ;;;
 ;;; Tag lookup
