@@ -6,7 +6,9 @@
 
 ;;;
 ;;; socket SERVER code
-;;; (move to separate file later)
+;;;
+
+(defvar *r-server-debug* nil)
 
 ;; characters not allowed in XML
 (defvar *xml-bad-chars*
@@ -50,7 +52,8 @@
   (loop
       with strm = (make-string-output-stream)
       for c = (read-char stream nil nil)
-      ;do (print c)
+      when (debug :raw-char-in)
+      do (print c)
       while (and c (not (char= c term-char)))
       unless (or
 	      (char= c #\Return)
@@ -85,7 +88,8 @@
 
 ;; generic socket server
 ;; caller supplys processor function (and name)
-(defun r-server (processor name &key (port 9876))
+(defun r-server (processor name &key (port 9876) debug)
+  (setf *r-server-debug* debug)
   (format t "~&;;; [entering ~a server mode]" name)
   (format t "~&;;; starting server on port ~a" port)
   (let ((socket (socket::make-socket :connect :passive :local-port port)))
@@ -120,7 +124,8 @@
   (loop
       for input = (read-input s)
       for empty-input = (lxml::xml-whitespace-p input)
-      ;;do (format t "~&I: ~a" input)
+      when (debug :input-chunk)
+      do (format t "~&I: ~a" input)
       while (not (eq :eof input))
       if empty-input
       do (format t "~&;;; empty input!")
@@ -141,9 +146,10 @@
 ;; PARSE socket server
 (defun run-parse-server (&key (port 9876) (mode :xml) debug)
   (r-server (lambda (x y)
-	      (r-server-parse-input x y :mode mode :debug debug))
+	      (r-server-parse-input x y :mode mode))
 	    "PARSE"
-	    :port port))
+	    :port port
+	    :debug debug))
 
 (defun saf-id (saf)
   (saf-fs-feature-value2 
@@ -151,8 +157,11 @@
     (saf-meta saf)) 
    "dc:identifier"))
 
+(defun debug (type)
+  (member type *r-server-debug*))
+
 ;; parse input chunk
-(defun r-server-parse-input (s input &key (mode :string) debug)
+(defun r-server-parse-input (s input &key (mode :string))
   (let (id saf)
     (case mode
       (:string 
@@ -163,13 +172,14 @@
 		   nil))
       (:xml
        (format t "~&;;; parsing XML input")
-       (when debug (format t "~&INPUT: ~%~a~%~%" (lkb::pprint-xml input)))
+       (when (debug :parse-input-chunk) 
+	 (format t "~&INPUT: ~%~a~%~%" (lkb::pprint-xml input)))
        (setf saf (xml-to-saf-object input))
        (setf id (saf-id saf))
        (lkb::parse saf nil))
       (t
        (error "unknown PARSE server mode '~a'" mode)))
-    (when debug
+    (when (debug :parse-output-chunk) 
       (format t "~&OUTPUT:~%~a~%~%"
 	      (lkb::pprint-xml 
 	       (with-output-to-string (stream2)
@@ -193,4 +203,78 @@
     (t
      (error "unknown FSPP server mode '~a'" mode))
     ))
+
+;;
+;; RASP SERVER
+;; (contributed by CJ Rupp)
+;;
+
+(in-package mrs)
+
+#+:rasp-server
+(defvar *rasp-rmrs-gram-file*)
+#+:rasp-server
+(defvar *rasp-rmrs-tag-file*)
+#+:rasp-server
+(defvar *rasp-xml-word-p*)
+#+:rasp-server
+(defvar *rasp-xml-type*)
+
+#+:rasp-server
+(defun init-rasp-server (&optional (rmrs-gram-file "/home/bmw20/lkb/src/rmrs/rasp3/gram15.rmrs")
+				   (rmrs-tag-file "/home/bmw20/lkb/src/rmrs/rasp3/lex15.rmrs"))
+    
+  (setf *rasp-rmrs-gram-file* rmrs-gram-file )
+  (setf *rasp-rmrs-tag-file* rmrs-tag-file)
+  (setf *rasp-xml-word-p* t)
+  (setf *rasp-xml-type* :none)
+  
+  (clear-rule-record)
+  (read-rmrs-grammar rmrs-gram-file)
+  (read-rmrs-tag-templates rmrs-tag-file))
+  
+#+:rasp-server
+(defun r-server-rasp-input (s input &key (mode :string))
+  (case mode
+    (:string
+     (format t "~&;;; processing input: ~w" (length input))
+;	     (length input))
+;     (format t "~&;;; debugging: ~a" input)
+;     (format s "~&~a" input)
+     (with-input-from-string (istream input)
+       (setf (stream-external-format s) :utf-8)
+       (let* ((tagged (read istream nil nil))
+	      (number (read istream nil nil))
+	      (tree (read istream nil nil)))
+	 (declare (ignore number))
+	 ;(unless tree
+	 ;  (return))
+	 (when tree
+	   (mrs::construct-sem-for-tree 
+	    tree
+	    :rasp s tagged))))
+     )
+    (t
+     (error "unknown test server mode '~a'" mode))
+    ))
+
+#+:rasp-server
+(defun run-rasp-server (&key (port 8891) (mode :string) debug)
+  (saf::r-server (lambda (x y)
+	      (r-server-rasp-input x y :mode mode))
+	    "RASP"
+	    :port port
+	    :debug debug))
+
+; (with-output-to-string (out) (with-open-file  (istream "/tmp/cr351_13692/b204433c.xml.pollard":direction :input)(loop
+; 	(let* ((tagged (read istream nil nil))
+; 	       (number (read istream nil nil))
+; 	       (tree (read istream nil nil)))
+; 	  (declare (ignore number))
+; 	  (unless tree
+; 	    (return))
+; 	  (when tree
+; 	    (mrs::construct-sem-for-tree 
+; 	     tree
+; 	     :rasp out tagged))))))
 
