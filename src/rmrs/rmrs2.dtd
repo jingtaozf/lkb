@@ -1,0 +1,58 @@
+<!ELEMENT rmrs-list (rmrs)*>
+<!-- Version 2: anchor, no IN-G.  Documentation in dtd-notes.txt -->
+<!ELEMENT rmrs (label, (ep|rarg|ing|hcons)*)>
+<!ATTLIST rmrs
+          cfrom CDATA #REQUIRED
+          cto   CDATA #REQUIRED 
+          surface   CDATA #IMPLIED 
+          ident     CDATA #IMPLIED >
+
+<!ELEMENT ep ((realpred|gpred), label, anchor, var)>
+<!ATTLIST ep
+          cfrom CDATA #REQUIRED
+          cto   CDATA #REQUIRED 
+          surface   CDATA #IMPLIED
+	  base      CDATA #IMPLIED >
+
+<!ELEMENT realpred EMPTY>
+
+<!ATTLIST realpred
+          lemma CDATA #REQUIRED
+          pos (v|n|j|r|p|q|c|x|u|a|s) #REQUIRED
+          sense CDATA #IMPLIED >
+
+<!ELEMENT gpred (#PCDATA)>
+
+<!ELEMENT label EMPTY>
+
+<!ATTLIST label 
+          vid CDATA #REQUIRED >
+
+<!ELEMENT anchor EMPTY>
+
+<!ATTLIST anchor 
+          vid CDATA #REQUIRED >
+
+<!ELEMENT var EMPTY>
+<!ATTLIST var
+          sort (x|e|h|u|l) #REQUIRED
+          vid  CDATA #REQUIRED 
+          num  (sg|pl|u) #IMPLIED
+          pers (1|2|3|1-or-3|u) #IMPLIED
+          gender (m|f|n|m-or-f|u) #IMPLIED
+          divisible (plus|minus|u) #IMPLIED
+          tense (past|present|future|non-past|u) #IMPLIED >
+
+
+<!ELEMENT rarg (rargname, label, (var|constant))>
+
+<!ELEMENT rargname (#PCDATA)>
+
+<!ELEMENT constant (#PCDATA)>
+
+<!ELEMENT hcons (hi, lo)>
+<!ATTLIST hcons 
+          hreln (qeq|lheq|outscopes) #REQUIRED >
+
+<!ELEMENT hi (var)>
+<!ELEMENT lo (label|var)>

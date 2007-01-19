@@ -1,8 +1,10 @@
 <!ELEMENT gram (rule)*>
 
-<!ELEMENT rule (name, (comment)*, dtrs, head, (semstruct)*, (equalities)*)>
+<!ELEMENT rule (name, (condition), (comment)*, dtrs, head, (semstruct)*, (equalities)*)>
 
 <!ELEMENT name (#PCDATA) >
+
+<!ELEMENT condition (#PCDATA) >
 
 <!ELEMENT dtrs (dtr)*>
 
@@ -10,9 +12,11 @@
 
 <!ELEMENT head (#PCDATA) >
 
-<!ELEMENT semstruct (hook,(slots),(ep|rarg|ing|hcons)*)>
+<!ELEMENT semstruct (hook,(features),(slots),(ep|rarg|ing|hcons)*)>
 
 <!ELEMENT hook (index,label)>
+
+<!ELEMENT feats (#PCDATA)>
 
 <!ELEMENT index (#PCDATA)>
 

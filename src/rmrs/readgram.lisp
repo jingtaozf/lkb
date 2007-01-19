@@ -12,6 +12,7 @@
 (defun read-rmrs-grammar (file-name)
   ;;; <!ELEMENT gram (rule)*>
   (setf *rule-instructions* nil)
+  (setf *algebra-rule-instructions* nil)
   (clear-rule-record)
   (with-open-file (istream file-name :direction :input)
     (let* ((*package* (find-package :mrs))
@@ -29,13 +30,22 @@
   nil)
 
 (defun add-rmrs-rule (rule)
-  (push rule *rule-instructions*))
+  (let* ((rule-name (rmrs-rule-name rule))
+	 (rule-set (find rule-name *rule-instructions*
+				 :test #'equal :key #'rmrs-rule-set-name)))
+    (if rule-set
+	(setf (rmrs-rule-set-alternatives rule-set)
+	  (append (rmrs-rule-set-alternatives rule-set) (list rule)))
+      (push (make-rmrs-rule-set :name rule-name
+				:alternatives (list rule)) 
+	    *rule-instructions*))))
                       
 (defun read-rmrs-rule (rule)
-;;;  <!ELEMENT rule (name, (comment)*, dtrs, head, (semstruct)*, (equalities)*)>
+;;;  <!ELEMENT rule (name, (condition), (comment)*, dtrs, head, (semstruct)*, (equalities)*)>
   (let ((tag (car rule)))
     (if (eq tag '|rule|)
-	(let ((name nil) (dtrs nil) (head nil) (head-pos nil)
+	(let ((name nil) (condition nil) 
+	      (dtrs nil) (head nil) (head-pos nil)
 	      (semstruct nil) (eqs nil) (inherit nil))
 	  (loop for next-el in (cdr rule)
               do
@@ -44,6 +54,7 @@
                       ((next-tag (car next-el))
                        (tag-content (cdr next-el)))
                     (ecase next-tag
+		      (|condition| (setf condition (car tag-content)))
                       (|comment| tag-content)
                       (|name| (setf name (car tag-content)))
                       (|dtrs| (setf dtrs (read-rmrs-rule-dtrs tag-content)))
@@ -64,6 +75,7 @@
 	  (if inherit
 	      (make-inherited-rule name dtrs inherit)
 	    (make-rmrs-rule :name name
+			    :condition condition
 			    :dtrs dtrs
 			    :arity (length dtrs)
 			    :head head-pos
@@ -80,8 +92,11 @@
   ;;; e.g., 2  a rule with OPT D1 D2 OPT OPT D3 inherits from
   ;;; a rule with D1 OPT D2 D3 then
   ;;; 0->1 1->? 2->2 3->5
-  (let ((inherit-struct (find inherit *rule-instructions*
-			      :test #'equal :key #'rmrs-rule-name)))
+  (let* ((inherit-struct-set (find inherit *rule-instructions*
+				  :test #'equal :key #'rmrs-rule-set-name))
+	(inherit-struct (if inherit-struct-set
+			    (car (rmrs-rule-set-alternatives 
+				  inherit-struct-set)))))
     (unless inherit-struct (error "Undefined rule ~A" inherit))
     (let ((inherited-dtrs (rmrs-rule-dtrs inherit-struct))
 	  (number-map nil)
@@ -140,8 +155,8 @@
       collect (cadr dtr)))
       
 (defun read-rmrs-semstruct (content)
-;;; <!ELEMENT semstruct (hook,(slots),(ep|rarg|ing|hcons)*)> 
-  (let ((hook nil) (slots nil) (eps nil) (rargs nil) (ings nil)
+;;; <!ELEMENT semstruct (hook,(features),(slots),(ep|rarg|ing|hcons)*)> 
+  (let ((hook nil) (features nil) (slots nil) (eps nil) (rargs nil) (ings nil)
         (h-cons nil))
     (loop for next-el in content
           do
@@ -153,17 +168,19 @@
 		       (eql (car next-tag) '|hcons|)
 		       (string-equal (third next-tag) "qeq"))
 	      	  (push (read-rmrs-semstruct-qeq tag-content)
-                            h-cons)
-	      (ecase next-tag
-		(|hook| (setf hook (read-rmrs-semstruct-hook tag-content)))
-		(|slots| (setf slots (read-rmrs-semstruct-slots tag-content)))
-		(|ep| (push (read-rmrs-semstruct-ep tag-content)
-			  eps))
-                (|rarg| (push (read-rmrs-semstruct-rarg tag-content)
-                            rargs))
-                (|ing| (push (read-rmrs-semstruct-in-g tag-content)
-			     ings)))))))
+			h-cons)
+		(ecase next-tag
+		  (|features| (setf features (list (car tag-content))))  
+		  (|hook| (setf hook (read-rmrs-semstruct-hook tag-content)))
+		  (|slots| (setf slots (read-rmrs-semstruct-slots tag-content)))
+		  (|ep| (push (read-rmrs-semstruct-ep tag-content)
+			      eps))
+		  (|rarg| (push (read-rmrs-semstruct-rarg tag-content)
+				rargs))
+		  (|ing| (push (read-rmrs-semstruct-in-g tag-content)
+			       ings)))))))
     (make-semstruct :hook (or hook (make-default-hook))
+		    :features features
 		    :slots slots
                     :liszt (nreverse eps)
 		    ;; binding-list is constructed when the
@@ -301,9 +318,11 @@
   (with-open-file (ostream filename :direction :output
                    :if-exists :supersede)
     (format ostream "~%<gram>")
-    (loop for rule in *rule-instructions*
+    (loop for rule-set in *rule-instructions*
         do
-          (output-rmrs-rule rule ostream))
+	  (loop for rule in (rmrs-rule-set-alternatives rule-set)
+		do
+		(output-rmrs-rule rule ostream)))
     (format ostream "~%</gram>~%")))
 
 (defun output-rmrs-rule (rule ostream)

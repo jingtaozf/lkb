@@ -64,8 +64,8 @@ Nothing done with semantics for the pure punctuation ones
 
 <rule>
 <name>T/txt-sc1</name>
-<comment>AUTO</comment>
-<dtrs><dtr>TXT-SC1</dtr><dtr>OPT</dtr></dtrs>
+<comment>T/txt-sc1/-+ is the usual way this appears, which doesn't seem to fit the version of the grammar I have</comment>
+<dtrs><dtr>TXT-SC1</dtr><dtr>OPT</dtr><dtr>OPT</dtr></dtrs>
 <head>TXT-SC1</head>
 </rule>
 
@@ -630,7 +630,6 @@ ANNA - adding anchor to all main S rules
 <comment>old rule was S/pp_s - new grammar differentiates.
 For now just use this rule for the pp-np case - copy to others (below)
 later perhaps, although maybe these won't have the same semantics?
-Anna had +/- variants for S/pp_s but I don't see any need.
 ANNA - added ING between PP and S's main verb (jab.ex.1, all gen.ex.)
      - also added ARG1 for PP since this wouldn't be e.g. an _of_p_sel here </comment>
 <dtrs><dtr>PP</dtr><dtr>OPT</dtr><dtr>S</dtr></dtrs>
@@ -1107,6 +1106,7 @@ semantics.
 <equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H3</rv><dh><dtr>VP</dtr><he>ANCHOR</he></dh></equalities>
 <equalities><rv>E</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H1</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
@@ -1183,7 +1183,7 @@ semantics.
 <rule>
 <name>S/scomp_vp-r</name>
 <comment>ANNA - treatment of nominalization (sem.ex.55) - FIX?</comment>
-<dtrs><dtr>CP</dtr><dtr>S</dtr><dtr>V</dtr></dtrs>
+<dtrs><dtr>S</dtr><dtr>V</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H4</label></hook>
@@ -1371,9 +1371,11 @@ semantics.
 <dtrs><dtr>CP</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 <semstruct>
-<!-- ANNA - pass up sentential complement's ANCHOR to relative clause mother -->
+<!-- ANNA - pass up sentential complement's ANCHOR to relative clause mother --><hook><index>E</index><label>H</label></hook>
 <slots><anchor>H</anchor></slots>
 </semstruct>
+<equalities><rv>E</rv><dh><dtr>S</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>S</dtr><he>LABEL</he></dh></equalities>
 <equalities><rv>H</rv><dh><dtr>S</dtr><he>ANCHOR</he></dh></equalities>
 </rule>
 
@@ -1583,6 +1585,7 @@ inherit from this one</comment>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
+<slots><anchor>H</anchor></slots>
 <rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
@@ -1595,10 +1598,12 @@ inherit from this one</comment>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<slots><anchor>H3</anchor></slots>
+<rarg><rargname>ARG2</rargname><label>H3</label><var>X</var></rarg>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H3</rv><dh><dtr>V</dtr><he>ANCHOR</he></dh></equalities>
 </rule>
 
 <rule>
@@ -1607,6 +1612,7 @@ inherit from this one</comment>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
+<slots><anchor>H</anchor></slots>
 <rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
@@ -1619,6 +1625,7 @@ inherit from this one</comment>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
+<slots><anchor>H</anchor></slots>
 <rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
@@ -1631,6 +1638,7 @@ inherit from this one</comment>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
+<slots><anchor>H</anchor></slots>
 <rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
@@ -1643,6 +1651,7 @@ inherit from this one</comment>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
+<slots><anchor>H</anchor></slots>
 <rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
@@ -1664,6 +1673,7 @@ inherit from this one</comment>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H10</label></hook>
+<slots><anchor>H10</anchor></slots>
 <ep><gpred>UDEF_Q_REL</gpred><label>H</label><var>X</var></ep>
 <rarg><rargname>RSTR</rargname><label>H</label><var>H1</var></rarg>
 <rarg><rargname>BODY</rargname><label>H</label><var>H2</var></rarg>
@@ -1681,6 +1691,7 @@ inherit from this one</comment>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
+<slots><anchor>H</anchor></slots>
 <rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
@@ -1693,6 +1704,7 @@ inherit from this one</comment>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
+<slots><anchor>H</anchor></slots>
 <rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
@@ -1705,6 +1717,7 @@ inherit from this one</comment>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
+<slots><anchor>H</anchor></slots>
 <rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
@@ -1718,6 +1731,7 @@ inherit from this one</comment>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
+<slots><anchor>H</anchor></slots>
 <rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 <rarg><rargname>ARG1</rargname><label>H1</label><var>E</var></rarg>
 <rarg><rargname>ARG2</rargname><label>H1</label><var>X</var></rarg>
@@ -1736,6 +1750,7 @@ inherit from this one</comment>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
+<slots><anchor>H</anchor></slots>
 <rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
@@ -1749,6 +1764,7 @@ inherit from this one</comment>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
+<slots><anchor>H</anchor></slots>
 <rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
@@ -1762,6 +1778,7 @@ inherit from this one</comment>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
+<slots><anchor>H</anchor></slots>
 <rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
@@ -1775,6 +1792,7 @@ inherit from this one</comment>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
+<slots><anchor>H</anchor></slots>
 <rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
@@ -1787,6 +1805,7 @@ inherit from this one</comment>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
+<slots><anchor>H</anchor></slots>
 <rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
@@ -1799,6 +1818,7 @@ inherit from this one</comment>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
+<slots><anchor>H</anchor></slots>
 <rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
@@ -1812,6 +1832,7 @@ inherit from this one</comment>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
+<slots><anchor>H</anchor></slots>
 <rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
@@ -1824,6 +1845,7 @@ inherit from this one</comment>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
+<slots><anchor>H</anchor></slots>
 <rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
@@ -1836,6 +1858,7 @@ inherit from this one</comment>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
+<slots><anchor>H</anchor></slots>
 <rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
@@ -1848,6 +1871,7 @@ inherit from this one</comment>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
+<slots><anchor>H</anchor></slots>
 <rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
@@ -1856,20 +1880,45 @@ inherit from this one</comment>
 
 <rule>
 <name>V1/v_pp</name>
-<comment>ANNA - added anchor (text.ex.19,20,22)</comment>
+<condition></condition>
+<comment>ANNA - added anchor (text.ex.19,20,22).  ANN - this is the default version of the rule, used for real PPs</comment>
 <dtrs><dtr>V</dtr><dtr>PP</dtr></dtrs>
 <head>V</head>
 <semstruct>
-<hook><index>E</index><label>H</label></hook>
-<slots><anchor>H</anchor></slots>
-<!--rarg><rargname>ARGN</rargname><label>H</label><var>E1</var></rarg-->
-<rarg><rargname>ARG1</rargname><label>H1</label><var>E</var></rarg>
-<ing><ing-a><var>H</var></ing-a><ing-b><var>H1</var></ing-b></ing>
+<hook><index>E0</index><label>H0</label></hook>
+<slots><anchor>H10</anchor></slots>
+<rarg><rargname>ARG1</rargname><label>H11</label><var>E0</var></rarg>
+<ing><ing-a><var>H0</var></ing-a><ing-b><var>H1</var></ing-b></ing>
 </semstruct>
-<equalities><rv>E</rv><dh><dtr>V</dtr><he>INDEX</he></dh></equalities>
-<equalities><rv>E1</rv><dh><dtr>PP</dtr><he>INDEX</he></dh></equalities>
-<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H0</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H10</rv><dh><dtr>V</dtr><he>ANCHOR</he></dh></equalities>
+<equalities><rv>E0</rv><dh><dtr>V</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H1</rv><dh><dtr>PP</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H11</rv><dh><dtr>PP</dtr><he>ANCHOR</he></dh></equalities>
+<equalities><rv>E1</rv><dh><dtr>PP</dtr><he>INDEX</he></dh></equalities>
+</rule>
+
+<rule>
+<name>V1/v_pp</name>
+<condition>subordconj</condition>
+<comment>ANN: this version only applies if the feature subordconj is set, 
+which will happen if the pp is created by the p_s rule.  The semantics 
+output is not perfect for things like `the dog can bark if it rains' 
+because we get can(if(bark,rain)) where we want if(can(bark),rain)
+but there's nowt to do about this given it's attaching at V level rather
+than S</comment>
+<dtrs><dtr>V</dtr><dtr>PP</dtr></dtrs>
+<head>PP</head>
+<semstruct>
+<hook><index>E</index><label>H4</label></hook>
+<slots><anchor>H5</anchor></slots>
+<rarg><rargname>MAIN</rargname><label>H</label><var>H3</var></rarg>
+<hcons hreln='qeq'><hi><var>H3</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+<equalities><rv>H1</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H5</rv><dh><dtr>V</dtr><he>ANCHOR</he></dh></equalities>
+<equalities><rv>H4</rv><dh><dtr>PP</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>PP</dtr><he>ANCHOR</he></dh></equalities>
 </rule>
 
 <rule>
@@ -1878,6 +1927,7 @@ inherit from this one</comment>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
+<slots><anchor>H</anchor></slots>
 <rarg><rargname>ARGN</rargname><label>H</label><var>E1</var></rarg>
 </semstruct>
 <equalities><rv>E1</rv><dh><dtr>PP</dtr><he>INDEX</he></dh></equalities>
@@ -1890,6 +1940,7 @@ inherit from this one</comment>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
+<slots><anchor>H</anchor></slots>
 <rarg><rargname>ARGN</rargname><label>H</label><var>E1</var></rarg>
 </semstruct>
 <equalities><rv>E1</rv><dh><dtr>PP</dtr><he>INDEX</he></dh></equalities>
@@ -1898,7 +1949,8 @@ inherit from this one</comment>
 
 <rule>
 <name>V1/v_inf</name>
-<comment>ANNA - passing up INF's anchor (sem.ex.9,80)</comment>
+<comment>FIX: got to here with anchor addition
+ANNA - passing up INF's anchor (sem.ex.9,80)</comment>
 <dtrs><dtr>V</dtr><dtr>VP</dtr></dtrs>
 <head>V</head>
 <semstruct>
@@ -2243,6 +2295,7 @@ inherit from this one</comment>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
+<slots><anchor>H</anchor></slots>
 <rarg><rargname>ARG2</rargname><label>H</label><var>X2</var></rarg>
 <rarg><rargname>ARG3</rargname><label>H</label><var>X1</var></rarg>
 </semstruct>
@@ -2754,15 +2807,12 @@ inherit from this one</comment>
 <hook><index>E</index><label>H</label></hook>
 <rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 <rarg><rargname>ARG3</rargname><label>H</label><var>H1</var></rarg>
-<!-- ANNA - trying to pick out ARG1 of "bark" in "Abrams intended Browne to bark" (sem.ex.10)-->
-<!-- ANNA - but this is WRONG subject in "Abrams promised Browne to bark" (sem.ex.79)-->
-<!--rarg><rargname>ARG1</rargname><label>H3</label><var>X</var></rarg-->
+<hcons hreln='qeq'><hi><var>H1</var></hi><lo><var>H2</var></lo></hcons>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
-<equalities><rv>H1</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H2</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
 <equalities><rv>E</rv><dh><dtr>V</dtr><he>INDEX</he></dh></equalities>
-<!-- ANNA - trying to pick out ARG1 of "bark" in "Abrams intended Browne to bark" (sem.ex.10)-->
 <equalities><rv>H3</rv><dh><dtr>VP</dtr><he>ANCHOR</he></dh></equalities>
 </rule>
 
@@ -3124,7 +3174,7 @@ no - consider "we showed abrams that browne barked" </comment>
 <ing><ing-a><var>H</var></ing-a><ing-b><var>H1</var></ing-b></ing>
 </semstruct>
 <equalities><rv>E</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
-<equalities><dh><dtr>VP</dtr><he>INDEX</he></dh><dh><dtr>ADV</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>E</rv><dh><dtr>ADV</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
 <equalities><rv>H1</rv><dh><dtr>ADV</dtr><he>LABEL</he></dh></equalities>
 </rule>
@@ -3715,11 +3765,8 @@ The ERG doesn't actually parse "was quickly not machinery" but I've copied the s
 <dtrs><dtr>V</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 <semstruct>
-<hook><index>E</index><label>H1</label></hook>
-<!-- ANNA - pass up VP's anchor to be INF's anchor so e.g. V1/v_np_inf (sem.ex.10) and V1/v_inf (sem.ex.9) can find VP's ARG1-->
+<hook><index>E</index><label>H</label></hook>
 <slots><anchor>H</anchor></slots>
-<!-- ANNA - infinitival verb has unknown subject (sem.ex.32) but this means we get two ARG1s when S/np_vp can link NP's INDEX with VP's anchor -->
-<rarg><rargname>ARG1</rargname><label>H</label><var>U</var></rarg>
 </semstruct>
 <equalities><rv>H</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
 <equalities><rv>E</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
@@ -3732,11 +3779,8 @@ The ERG doesn't actually parse "was quickly not machinery" but I've copied the s
 <dtrs><dtr>V</dtr><dtr>ADV</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 <semstruct>
-<hook><index>E</index><label>H1</label></hook>
-<!-- ANNA - pass up VP's anchor to be INF's anchor so e.g. V1/v_np_inf (sem.ex.10) and V1/v_inf (sem.ex.9) can find VP's ARG1-->
+<hook><index>E</index><label>H</label></hook>
 <slots><anchor>H</anchor></slots>
-<!-- ANNA - infinitival verb has unknown subject (sem.ex.32) but this means we get two ARG1s when S/np_vp can link NP's INDEX with VP's anchor -->
-<rarg><rargname>ARG1</rargname><label>H</label><var>U</var></rarg>
 </semstruct>
 <equalities><rv>H</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
 <equalities><rv>E</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
@@ -3922,10 +3966,11 @@ AAC - second PP optional</comment>
 <semstruct>
 <hook><index>E</index><label>H1</label></hook>
 <slots><anchor>H3</anchor></slots>
-<rarg><rargname>ARG1</rargname><label>H1</label><var>H2</var></rarg>
+<rarg><rargname>ARG1</rargname><label>H4</label><var>H2</var></rarg>
 <hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H</var></lo></hcons>
 </semstruct>
 <equalities><rv>H1</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H4</rv><dh><dtr>V</dtr><he>ANCHOR</he></dh></equalities>
 <equalities><rv>H</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
 <equalities><rv>E</rv><dh><dtr>V</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H3</rv><dh><dtr>VP</dtr><he>ANCHOR</he></dh></equalities>
@@ -4358,7 +4403,7 @@ AAC - second PP optional</comment>
 <equalities><rv>X</rv><dh><dtr>DET</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H</rv><dh><dtr>DET</dtr><he>LABEL</he></dh></equalities>
 <equalities><rv>H3</rv><dh><dtr>N</dtr><he>LABEL</he></dh></equalities>
-<equalities><dh><dtr>N</dtr><he>INDEX</he></dh><dh><dtr>DET</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
 </rule>
 
 <rule>
@@ -4635,7 +4680,7 @@ so modelling on "another such" (DET ADJ) (gen.ex.17)</comment>
 <equalities><rv>X</rv><dh><dtr>NP-PRO</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H</rv><dh><dtr>NP-PRO</dtr><he>LABEL</he></dh></equalities>
 <equalities><rv>H3</rv><dh><dtr>N</dtr><he>LABEL</he></dh></equalities>
-<equalities><dh><dtr>N</dtr><he>INDEX</he></dh><dh><dtr>NP-PRO</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
 </rule>
 
 <rule>
@@ -4724,7 +4769,7 @@ so modelling on "another such" (DET ADJ) (gen.ex.17)</comment>
 <hook><index>X</index><label>H1</label></hook>
 <ing><ing-a><var>H1</var></ing-a><ing-b><var>H2</var></ing-b></ing>
 </semstruct>
-<equalities><dh><dtr>NM</dtr><he>INDEX</he></dh><dh><dtr>N1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>X</rv><dh><dtr>NM</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>X</rv><dh><dtr>N1</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H1</rv><dh><dtr>N1</dtr><he>LABEL</he></dh></equalities>
 <equalities><rv>H2</rv><dh><dtr>NM</dtr><he>LABEL</he></dh></equalities>
@@ -5094,7 +5139,8 @@ ANNA - passed up N's anchor (meth.ex. 5, all gen.ex., here ex.1)</comment>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H1</rv><dh><dtr>ADJ</dtr><he>LABEL</he></dh></equalities>
-<equalities><rv>X</rv><dh><dtr>ADJ</dtr><he>ANCHOR</he></dh></equalities>
+<equalities><rv>X</rv><dh><dtr>ADJ</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H1</rv><dh><dtr>ADJ</dtr><he>ANCHOR</he></dh></equalities>
 <equalities><rv>H2</rv><dh><dtr>N</dtr><he>LABEL</he></dh></equalities>
 <equalities><rv>H3</rv><dh><dtr>N</dtr><he>ANCHOR</he></dh></equalities>
 </rule>
@@ -5248,7 +5294,7 @@ FIXed head to RULE
 <equalities><rv>H1</rv><dh><dtr>N1</dtr><he>LABEL</he></dh></equalities>
 <equalities><rv>H2</rv><dh><dtr>N2</dtr><he>LABEL</he></dh></equalities>
 <equalities><rv>X</rv><dh><dtr>N2</dtr><he>INDEX</he></dh></equalities>
-<equalities><dh><dtr>N1</dtr><he>INDEX</he></dh><dh><dtr>N2</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>X</rv><dh><dtr>N1</dtr><he>INDEX</he></dh></equalities>
 </rule>
 
 
@@ -5260,7 +5306,7 @@ FIXed head to RULE
 <hook><index>X</index><label>H1</label></hook>
 <ing><ing-a><var>H1</var></ing-a><ing-b><var>H2</var></ing-b></ing>
 </semstruct>
-<equalities><dh><dtr>NM</dtr><he>INDEX</he></dh><dh><dtr>N1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>X</rv><dh><dtr>NM</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>X</rv><dh><dtr>N1</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H1</rv><dh><dtr>N1</dtr><he>LABEL</he></dh></equalities>
 <equalities><rv>H2</rv><dh><dtr>NM</dtr><he>LABEL</he></dh></equalities>
@@ -5610,32 +5656,24 @@ FIXed head to RULE
 <head>N-NM</head>
 </rule>
 
-
-<!--rule>
-<name>N1/n_s</name>
-<comment>This is used both for relative clauses starting
-with that and for Ns like belief which subcat for a sentence.
-There's no way currently of underspecifying the attachment</comment>
-<dtrs><dtr>N</dtr><dtr>S</dtr></dtrs>
-<head>N</head>
-</rule-->
-
 <rule>
 <name>N1/n_s</name>
-<comment>ANNA - (sem.ex.31,87,112)</comment>
+<comment>ANNA - (sem.ex.31,87,112)
+ANN - This is used both for relative clauses starting
+with `that' (in the ERG, the relative clause is coordinated with the noun)
+and for Ns like belief which subcat for a sentence
+(an ARG is created between the noun and the ltop of the sentence)
+There's no way currently of underspecifying the attachment.
+This version of the rule does the relative clause case</comment>
 <dtrs><dtr>N</dtr><dtr>S</dtr></dtrs>
 <head>N</head>
 <semstruct>
-<!-- ANNA - assume missing ARG inside relative clause -->
-<rarg><rargname>ARGN</rargname><label>H</label><var>X</var></rarg>
-<ing><ing-a><var>H1</var></ing-a><ing-b><var>H2</var></ing-b></ing>
+<hook><index>X</index><label>H1</label></hook>
+<ing><ing-a><var>H</var></ing-a><ing-b><var>H1</var></ing-b></ing>
 </semstruct>
-<equalities><rv>H1</rv><dh><dtr>N</dtr><he>LABEL</he></dh></equalities>
-<equalities><rv>H2</rv><dh><dtr>S</dtr><he>LABEL</he></dh></equalities>
-<!-- ANNA - missing ARG belongs to sentential complement's ANCHOR -->
-<equalities><rv>H</rv><dh><dtr>S</dtr><he>ANCHOR</he></dh></equalities>
-<!-- ANNA - missing ARG is N's INDEX -->
+<equalities><rv>H</rv><dh><dtr>N</dtr><he>LABEL</he></dh></equalities>
 <equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H1</rv><dh><dtr>S</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 
@@ -5861,9 +5899,10 @@ noun's anchor.  FIX - interesting example for algebra!</comment>
 <comment>ANNA - pp1 == P2[ADJ +, PFORM PREP, WH @x]
 - adding the preposition's ARG1 (sem.ex.99)</comment>
 <dtrs><dtr>N1</dtr><dtr>PP1</dtr></dtrs>
-<head>N1</head>
+<head>PP1</head>
 <semstruct>
-<hook><index>X</index><label>H</label></hook>
+<hook><index>X</index><label>H1</label></hook>
+<slots><anchor>H1</anchor></slots>
 <rarg><rargname>ARG1</rargname><label>H1</label><var>X</var></rarg>
 <ing><ing-a><var>H</var></ing-a><ing-b><var>H1</var></ing-b></ing>
 </semstruct>
@@ -5982,7 +6021,7 @@ noun's anchor.  FIX - interesting example for algebra!</comment>
 <rule>
 <name>NP/np_np-coord/-</name>
 <comment>ANNA - this is the "something and/or something" case so no conj_rel needed (sem.ex.73,74) GENRULE - other nominal coord rules inherit from this one</comment>
-<dtrs><dtr>NP</dtr><dtr>OPT</dtr><dtr>NP-COORD</dtr></dtrs>
+<dtrs><dtr>NP</dtr><dtr>NP-COORD</dtr></dtrs>
 <head>RULE</head>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
@@ -6282,12 +6321,21 @@ noun's anchor.  FIX - interesting example for algebra!</comment>
 <rule>
 <name>P1/p_s</name>
 <comment>FIX subordinating conjunctions (sem.ex.30,72). The RASP
-treatment of these as PPs is a big nuisance.  The only solution seems to be
-to have a separate feature that the V_PP rules can look at to
-see that this isn't really a PP here.  meanwhile, we are left with a
-spurious ARG1 and ING for these cases from the real V_PP rule</comment>
+treatment of these as PPs is a big nuisance.  Try having a feature
+that the V_PP rules can look at to see that this is a subordinating
+conjunction</comment>
 <dtrs><dtr>P</dtr><dtr>S</dtr></dtrs>
-<head>S</head>
+<head>P</head>
+<semstruct>
+<features>subordconj</features>
+<hook><index>E</index><label>H4</label></hook>
+<slots><anchor>H</anchor></slots>
+<rarg><rargname>SUBORD</rargname><label>H</label><var>H3</var></rarg>
+<hcons hreln='qeq'><hi><var>H3</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+<equalities><rv>H</rv><dh><dtr>P</dtr><he>ANCHOR</he></dh></equalities>
+<equalities><rv>H4</rv><dh><dtr>P</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H1</rv><dh><dtr>S</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>

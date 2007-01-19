@@ -154,7 +154,8 @@ plus other slots - see DTD
 	  
 |#
           
-(defmethod rmrs-output-var-fn ((rmrsout xml) var-id var-type)
+(defmethod rmrs-output-var-fn ((rmrsout xml) var-id var-type grammar-var-p)
+  (declare (ignore grammar-var-p))
   (with-slots (stream) rmrsout
     (format stream "<var sort='~A' vid='~A'" var-type var-id)))
 
@@ -191,6 +192,10 @@ plus other slots - see DTD
 (defmethod rmrs-output-label ((rmrsout xml) label-id)
   (with-slots (stream) rmrsout
     (format stream "<label vid='~A'/>" label-id)))
+
+(defmethod rmrs-output-anchor ((rmrsout xml) label-id)
+  (with-slots (stream) rmrsout
+    (format stream "<anchor vid='~A'/>" label-id)))
 
 (defmethod rmrs-output-hcons-label ((rmrsout xml) label-id)
   (with-slots (stream) rmrsout
@@ -263,6 +268,29 @@ plus other slots - see DTD
   (with-slots (stream) rmrsout
     (write-string "</ing-b></ing>" stream)))
 
+;;; semstruct equalities (not generally printed explicitly, 
+;;; but sometimes useful to do so
+
+#|
+<!ELEMENT eq (eq-a, eq-b)>
+<!ELEMENT eq-a (var)>
+<!ELEMENT eq-b (var)>
+|#
+
+(defmethod rmrs-output-binding-start ((rmrsout xml) with-ep-p)
+  (declare (ignore with-ep-p))
+  (with-slots (stream) rmrsout
+    (unless *write-compact-xml* (terpri stream))
+    (write-string "<eq><eq-a>" stream)))
+
+(defmethod rmrs-output-binding-next ((rmrsout xml))
+  (with-slots (stream) rmrsout
+    (write-string "</eq-a><eq-b>" stream)))
+
+(defmethod rmrs-output-end-binding ((rmrsout xml))
+  (with-slots (stream) rmrsout
+    (write-string "</eq-b></eq>" stream)))
+
 ;;; methods for semstructs actually relevant for
 ;;; gram.dtd and tag.dtd only
 
@@ -309,8 +337,8 @@ for gram.dtd and tag.dtd
 <!ELEMENT var (#PCDATA)>
 |#
 
-(defmethod rmrs-output-var-fn ((rmrsout gramxml) var-id var-type)
-  (declare (ignore var-type))
+(defmethod rmrs-output-var-fn ((rmrsout gramxml) var-id var-type grammar-var-p)
+  (declare (ignore var-type grammar-var-p))
   (with-slots (stream) rmrsout
     (format stream "<var>~A</var>" var-id)))
 
@@ -321,6 +349,10 @@ for gram.dtd and tag.dtd
 (defmethod rmrs-output-label ((rmrsout gramxml) label-id)
   (with-slots (stream) rmrsout
     (format stream "<label>~A</label>" label-id)))
+
+(defmethod rmrs-output-anchor ((rmrsout gramxml) label-id)
+  (with-slots (stream) rmrsout
+    (format stream "<anchor>~A</anchor>" label-id)))
 
 (defmethod rmrs-output-hcons-label ((rmrsout gramxml) label-id)
   (with-slots (stream) rmrsout
@@ -359,9 +391,12 @@ for gram.dtd and tag.dtd
   (with-slots (stream indentation) rmrsout
     (format stream "~VT~(~a~)(" indentation predname)))
 
-(defmethod rmrs-output-var-fn ((rmrsout compact) var-id var-type)
+(defmethod rmrs-output-var-fn ((rmrsout compact) var-id var-type 
+			       grammar-var-p)
   (with-slots (stream) rmrsout
-    (format stream "~A~A" var-type var-id)))
+    (if (not grammar-var-p)
+	(format stream "~A~A" var-type var-id)
+      (format stream "~A" var-id))))
 
 
 (defmethod rmrs-output-end-var ((rmrsout compact))
@@ -386,7 +421,21 @@ for gram.dtd and tag.dtd
 
 (defmethod rmrs-output-label ((rmrsout compact) label-id)
   (with-slots (stream) rmrsout
-    (format stream "h~A," label-id)))
+    (format stream "~A~A," (if (and (stringp label-id)
+				    (member 
+				     (elt label-id 0) 
+				     '(#\h #\H #\l #\L #\a #\A)))
+			       "" "h")
+	    label-id)))
+
+(defmethod rmrs-output-anchor ((rmrsout compact) label-id)
+  (with-slots (stream) rmrsout
+    (format stream "~A~A," (if (and (stringp label-id)
+				    (member 
+				     (elt label-id 0) 
+				     '(#\h #\H #\l #\L #\a #\A)))
+			       "" "h")
+			   label-id)))
 
 (defmethod rmrs-output-hcons-label ((rmrsout compact) label-id)
   (with-slots (stream) rmrsout
@@ -443,6 +492,22 @@ for gram.dtd and tag.dtd
   (with-slots (stream) rmrsout
     (format stream ")~%")))
 
+;;; binding
+
+(defmethod rmrs-output-binding-start ((rmrsout compact) with-ep-p)
+  (declare (ignore with-ep-p))
+  (with-slots (stream indentation) rmrsout
+      (format stream "~VTEQ(" indentation)))
+
+(defmethod rmrs-output-binding-next ((rmrsout compact))
+  (with-slots (stream) rmrsout
+    (format stream ",")))
+
+(defmethod rmrs-output-end-binding ((rmrsout compact))
+  (with-slots (stream) rmrsout
+    (format stream ")~%")))
+
+
 ;;; methods for semstructs
 
 (defmethod semstruct-output-start-hook ((rmrsout compact))
@@ -485,6 +550,10 @@ for gram.dtd and tag.dtd
     (format stream "), ")))
 
 (defmethod rmrs-output-end-ingroup ((rmrsout vcompact))
+  (with-slots (stream) rmrsout
+    (format stream "), ")))
+
+(defmethod rmrs-output-end-binding ((rmrsout vcompact))
   (with-slots (stream) rmrsout
     (format stream "), ")))
 
@@ -639,12 +708,12 @@ for gram.dtd and tag.dtd
 	  (t (rmrs-output-error-fn rmrs-display-structure 
 				   rmrs-instance)))))
 
-(defun internal-output-rmrs (rmrs-instance device stream)
+(defun internal-output-rmrs (rmrs-instance device stream &optional grule-p)
   ;;; for rule output
   (let ((rmrs-display-structure
 	 (def-rmrs-print-operations device 0 stream)))
     (cond ((rmrs-p rmrs-instance)         
-	   (print-rmrs rmrs-instance nil nil rmrs-display-structure))
+	   (print-rmrs rmrs-instance nil nil rmrs-display-structure grule-p))
 	  (t (rmrs-output-error-fn rmrs-display-structure 
 				   rmrs-instance)))))
 
@@ -656,24 +725,31 @@ for gram.dtd and tag.dtd
 
 (defparameter *already-seen-rmrs-ings* nil)
 
-(defun print-rmrs (rmrs grouping-p pos-rec-p rmrs-display-structure)
+(defun print-rmrs (rmrs grouping-p pos-rec-p rmrs-display-structure &optional show-eqs-p)
   (setf *already-seen-rmrs-args* nil)
   (setf *already-seen-rmrs-vars* nil)
   (setf *already-seen-rmrs-hcons* nil)
   (setf *already-seen-rmrs-ings* nil)
   (let ((hook (if (semstruct-p rmrs) (semstruct-hook rmrs))) 
+	(slots (if (semstruct-p rmrs) (semstruct-slots rmrs)))
         (top-h (rmrs-top-h rmrs))
         (eps (rmrs-liszt rmrs))
         (rmrs-args (rmrs-rmrs-args rmrs))
         (rmrs-h-cons (rmrs-h-cons rmrs))
         (rmrs-in-groups (rmrs-in-groups rmrs))
-        (bindings (if (semstruct-p rmrs)
-                      (close-bindings (rmrs-bindings rmrs))
-		    (rmrs-bindings rmrs)))
+        (bindings (cond (show-eqs-p nil)
+			;;; mostly this code interprets the bindings
+			;;; but for some types of output, we don't want to
+			;;; do this
+			((semstruct-p rmrs)
+			 (close-bindings (rmrs-bindings rmrs)))
+			(t (rmrs-bindings rmrs))))
 	(pos-rec (if pos-rec-p (make-rmrs-position-record))))
-    (when (and hook (not (indices-default hook)))
-      (print-semstruct-hook hook 
-                            bindings rmrs-display-structure))
+    (if hook 
+	(if (and (indices-p hook) (not (indices-default hook)))
+	    (print-semstruct-hook hook 
+				  bindings rmrs-display-structure)
+	  (print-real-rmrs-hook hook rmrs-display-structure)))
     (unless hook
       (let ((top-pos (rmrs-output-top-label rmrs-display-structure
 			       (if top-h
@@ -683,6 +759,7 @@ for gram.dtd and tag.dtd
 	(when (and pos-rec-p top-h)
 	  (setf (rmrs-position-record-top pos-rec)
 	    (record-rmrs-position top-pos top-h)))))
+    (when slots (print-rmrs-slots slots rmrs-display-structure))
     (print-rmrs-eps eps bindings grouping-p 
 		    rmrs-args rmrs-in-groups
 		    rmrs-h-cons
@@ -702,6 +779,9 @@ for gram.dtd and tag.dtd
 	unless (member hcons *already-seen-rmrs-hcons*)
 	do
 	  (print-rmrs-hcons hcons bindings nil rmrs-display-structure))
+    (when (and show-eqs-p (semstruct-p rmrs))
+      (dolist (eq (semstruct-bindings rmrs))
+	(print-rmrs-eq eq nil rmrs-display-structure)))
     pos-rec))
 
 (defun print-rmrs-eps (eps bindings grouping-p rmrs-args 
@@ -729,6 +809,10 @@ for gram.dtd and tag.dtd
 	    (let ((label (rel-handel ep)))
 	      (rmrs-output-label rmrs-display-structure
 				 (find-rmrs-var-id label bindings)))
+	    (let ((anchor (rel-anchor ep)))
+	      (when anchor
+		(rmrs-output-anchor rmrs-display-structure
+				   (find-rmrs-var-id anchor bindings))))
 	    (let* ((value (car (rel-flist ep)))
 		   ;; checking should happen elsewhere
 		   ;; got to be a variable, not a constant
@@ -745,7 +829,10 @@ for gram.dtd and tag.dtd
 	      (rmrs-output-end-ep rmrs-display-structure))
 	    (when grouping-p
 	      (loop for arg in rmrs-args
-		  when (eql-var-id (rmrs-arg-label arg) (rel-handel ep))
+		  when (eql-var-id (rmrs-arg-label arg)
+				   (if *anchor-rmrs-p*
+				       (rel-anchor ep)
+				     (rel-handel ep)))
 		  do
 		    (let ((pos
 			   (print-rmrs-arg arg bindings t 
@@ -821,7 +908,8 @@ for gram.dtd and tag.dtd
   (rmrs-output-var-fn 
    display
    (find-rmrs-var-id value bindings)
-   (var-type value))
+   (var-type value)
+   (grammar-var-p value))
   (unless (member value *already-seen-rmrs-vars* :test #'eq)
     (push value *already-seen-rmrs-vars*)
     (rmrs-output-start-extra display)
@@ -865,6 +953,22 @@ for gram.dtd and tag.dtd
     (rmrs-output-end-ingroup display)
     pos))
 
+(defun print-rmrs-eq (eq with-ep-p display)
+  ;;; never called in circumstances where we want to look at the 
+  ;;; bindings to display canonical variables
+  (rmrs-output-binding-start display with-ep-p)
+  (print-rmrs-var 
+   (car eq)
+   nil display)
+  (rmrs-output-binding-next
+   display)
+  (let ((pos
+	 (print-rmrs-var 
+	  (cadr eq)
+	  nil display)))
+    (rmrs-output-end-binding display)
+    pos))
+
 (defun print-semstruct-hook (hook bindings display)
   (semstruct-output-start-hook display)
   (semstruct-output-hook-label display
@@ -875,5 +979,25 @@ for gram.dtd and tag.dtd
    bindings display)
   (semstruct-output-end-hook display))
 
+;;; hacking printing till coalesce with MRS code
+
+(defun print-real-rmrs-hook (hook display)
+  (with-slots (stream) display
+      (print-hook  
+       hook 
+       (make-instance 'rmrs-indexed
+	 :stream stream))))
 
 
+(defun print-rmrs-slots (slots display)
+  (with-slots (stream) display
+  (let ((mrs-display (make-instance 'rmrs-indexed :stream stream)))
+    (mrs-output-start-slots mrs-display)
+    (let ((first-slot t))
+      (loop for slot in slots
+          do
+	    (mrs-output-start-slot mrs-display first-slot)
+	    (print-hook  (slot-hook slot) mrs-display)
+	    (mrs-output-slot-name mrs-display (slot-name slot)) 
+            (setf first-slot nil)))
+    (mrs-output-end-slots mrs-display))))

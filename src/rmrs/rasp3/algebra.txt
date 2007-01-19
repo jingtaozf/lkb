@@ -1,0 +1,206 @@
+Example 1 (Construction semantics)
+
+<rule>
+<name>S/np-nt-adv_s</name>
+<dtrs><dtr>N</dtr><dtr>OPT</dtr><dtr>S</dtr></dtrs>
+<head>S</head>
+<semstruct>
+<hook><index>E</index><label>H2</label></hook>
+<slots><anchor>H1</anchor></slots>
+<ep><gpred>UNSPEC_LOC_REL</gpred><label>H3</label><var>E1</var></ep>
+<rarg><rargname>ARG1</rargname><label>H3</label><var>E</var></rarg>
+<rarg><rargname>ARG2</rargname><label>H3</label><var>X</var></rarg>
+<ing><ing-a><var>H3</var></ing-a><ing-b><var>H1</var></ing-b></ing>
+</semstruct>
+<equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H1</rv><dh><dtr>S</dtr><he>ANCHOR</he></dh></equalities>
+<equalities><rv>H2</rv><dh><dtr>S</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>N</dtr><he>ANCHOR</he></dh></equalities>
+<equalities><rv>E</rv><dh><dtr>S</dtr><he>INDEX</he></dh></equalities>
+</rule>
+
+S1 -> N S
+
+HOOK: LABEL, INDEX, ANCHOR
+
+Step 0. Reading off XML
+
+S: [H2, E, H1 ]
+N: [?, X, H ]
+
+RULE: H3:UNSPEC_LOC (E1)
+      H3:ARG1(E)
+      H3:ARG2(X)
+ 
+      ING(H3,H1)
+
+HOOK: [ H2, E, H1 ]
+
+Step 1
+
+Alternative to INGs
+
+a new anchor variable is introduced, so that each label
+associated with an EP also has an anchor 
+
+S: [H2, E, A1 ]
+N: [?, X, A ]
+
+RULE: H3:A3:UNSPEC_LOC (E1)
+      A3:ARG1(E)
+      A3:ARG2(X)
+ 
+      H3=H1
+
+HOOK: [ H2, E, A1 ]
+
+All an anchor should be doing is a) acting as an anchor to some ARG,
+b) being passed up to a hook anchor.  Hence we can systematically
+replace H variables in anchor slots.
+
+Step 2
+
+Conversion to algebra:
+
+Rule slots: [H2, E, A1]S-, [?, X, A ]N-
+Rule hook:  [H2, E, A1]
+Application order: ((rule S-) N-)  (or the opposite, since it doesn't 
+                                    matter here - when does it matter???)
+
+i.e., we simply interpret the specification of the daughters' hooks as slots.
+Here the names of the slots are given as the names of the daughters,
+with - to indicate non-scopal.
+
+If the hook had not been completely specified, we use the hook values
+of the daughter which is interpreted as the semhead.
+
+Example 2
+
+<rule>
+<name>S/np_vp</name>
+<dtrs><dtr>NP</dtr><dtr>VP</dtr></dtrs>
+<head>VP</head>
+<semstruct>
+<hook><index>E</index><label>H1</label></hook>
+<slots><anchor>H3</anchor></slots>
+<rarg><rargname>ARG1</rargname><label>H3</label><var>X</var></rarg>
+</semstruct>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H3</rv><dh><dtr>VP</dtr><he>ANCHOR</he></dh></equalities>
+<equalities><rv>E</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
+</rule>
+
+S-> NP VP
+
+HOOK: LABEL, INDEX, ANCHOR
+
+Step 0. Reading off XML
+
+VP: [?, E, H3 ]
+NP: [?, X, ? ]
+
+RULE: H3:ARG1(X)
+      
+(there should really have been an ING here, but we'll put these in by default
+for the non-scopal cases)
+
+HOOK: [ H1, E, H3 ]
+
+
+Step 1. Replacing anchor variables.
+
+VP: [?, E, A3 ]
+NP: [?, X, ? ]
+
+RULE: A3:ARG1(X)
+
+HOOK: [ H1, E, A3 ]
+
+Step 2.
+
+Conversion to algebra:
+
+Rule slots: [?, E, A3 ]VP-, [?, X, ? ]NP-
+Rule hook:  [ H1, E, A3 ]
+Application order: ((rule VP-) NP-) (again, this doesn't actually matter)
+
+Example 3: scope
+
+<rule>
+<name>V1/v_inf</name>
+<dtrs><dtr>V</dtr><dtr>VP</dtr></dtrs>
+<head>V</head>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<rarg><rargname>ARG2</rargname><label>H</label><var>H1</var></rarg>
+<hcons hreln='qeq'><hi><var>H1</var></hi><lo><var>H3</var></lo></hcons>
+</semstruct>
+<equalities><rv>H3</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>E</rv><dh><dtr>V</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H2</rv><dh><dtr>VP</dtr><he>ANCHOR</he></dh></equalities>
+</rule>
+
+V1 -> V VP
+
+HOOK: LABEL, INDEX, ANCHOR
+
+Step 0. Reading off XML
+
+V: [H, E, ? ]
+VP: [H3, ?, H2 ]
+
+RULE: H:ARG2(H1)
+      H1 qeq H3
+      
+HOOK: [ H, E, ? ]
+
+
+Step 1. Replacing anchor variables.
+
+V: [H, E, ? ]
+VP: [H3, ?, A2 ]
+
+RULE: A:ARG2(H1)
+      H1 qeq H3
+      
+HOOK: [ H, E, ? ]
+
+Bug here in that anchor variable is spurious?  Should be passing up
+V's anchor (maybe happening by virtue of V being semhead anyway)?
+
+Step 2.
+
+Conversion to algebra:
+
+Rule slots: [H, E, A ]V-, [H3, ?, A2 ]VP+
+Rule hook:  [ H, E, A ]
+Application order: ((rule V-) VP+)
+
+RULE  A:ARG2(H1)
+      H1 qeq H3
+
+First application: assuming V is [H8, E8, A8] [ H8:A8:expect(E8) ]
+
+Rule slots: [H3, ?, A2 ]VP+
+Rule hook:  [ H, E, A ]
+
+A:ARG2(H1)
+H1 qeq H3
+A8:expect(E8)
+
+H=H8, E=E8, A=A8
+
+Second application: assuming VP is [H9, E9, A9] [ H9:A9:sleep(E9) ]
+
+Rule hook:  [ H, E, A ]
+
+A:ARG2(H1)
+H1 qeq H3
+A8:expect(E8)
+A9:sleep(E9)
+
+H=H8, E=E8, A=A8, H3=H9, A2=A9
+
+i.e., [ H, E, A ] [ H:A:expect(E), A:ARG2(H1), H1 qeq H3, H3:A9:sleep(E9) ]
+

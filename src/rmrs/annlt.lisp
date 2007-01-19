@@ -286,6 +286,8 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
 ;;; - also will match better with ERG output
 
 (defun get-lexeme (node original)
+  ;;; count is an attempt to keep track of where we are in an original
+  ;;; string
   (let* ((xml-str (string node))
 	 (str (if *rasp-xml-word-p* 
 		  (de-xml-str xml-str)
@@ -300,7 +302,7 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
       (setf count *predicted-pos*))
     (setf *predicted-pos* (+ 1 *predicted-pos*))
     ;;; the count isn't correct - try seeing whether keeping track 
-    ;;; of the leaf nodes works instead
+        ;;; of the leaf nodes works instead
     (make-word-info
      :lemma 
      (remove #\'

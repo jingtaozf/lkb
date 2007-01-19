@@ -43,7 +43,8 @@
 (defstruct (hook)
   index
   ltop
-  xarg)
+  xarg
+  anchor)
 
 (defstruct (slot)
   hook
@@ -62,6 +63,8 @@
 (defstruct (rel (:include rel-base))
   str 
   handel                               
+  anchor				; used by RMRS in version
+					; without INGs
   parameter-strings			; the constant values
 					; a junk slot used by the
                                         ; generator and comparison code
@@ -2372,7 +2375,8 @@ to test
 ;;; sement output: uses MRS indexed routines, plus a few extras,
 ;;; as here
 
-(defmethod mrs-output-hook-fn ((mrsout indexed) ltop index xarg)
+(defmethod mrs-output-hook-fn ((mrsout indexed) ltop index xarg anchor)
+  (declare (ignore anchor))
   (with-slots (stream) mrsout
     (format stream "[~(~a~),~(~a~)" ltop index)
     (when xarg
@@ -2392,6 +2396,8 @@ to test
   (with-slots (stream) mrsout
     (format stream "~a" name)))
 
+;;;
+
 (defclass active-slot (simple-indexed)
   ())
 
@@ -2402,6 +2408,24 @@ to test
 (defmethod mrs-output-end-slots ((mrsout indexed))
   (with-slots (stream) mrsout
     (format stream "}")))
+
+
+
+;;; rmrs case has anchor
+
+(defclass rmrs-indexed (simple-indexed)
+  ())
+
+(defmethod mrs-output-hook-fn ((mrsout rmrs-indexed) ltop index xarg anchor)
+  (declare (ignore xarg))
+  (with-slots (stream) mrsout
+    (format stream "[~(~a~),~(~a~),~(~a~)" (or ltop "?") (or index "?")
+	                                    (or anchor "?"))
+    (format stream "]")))
+
+(defmethod mrs-output-end-slots ((mrsout rmrs-indexed))
+  (with-slots (stream) mrsout
+    (format stream "}~%")))
 
 
 ;;; output code for sements
@@ -2442,13 +2466,14 @@ to test
 (defun print-hook (hook display)
   (let ((index (hook-index hook))
 	(ltop (hook-ltop hook))
-	(xarg (hook-xarg hook)))
+	(xarg (hook-xarg hook))
+	(anchor (hook-anchor hook)))
     (mrs-output-hook-fn 
      display
      (find-var-name ltop nil)
      (find-var-name index nil)
-     (if xarg
-	 (find-var-name xarg nil)))))
+     (find-var-name xarg nil)
+     (find-var-name anchor nil))))
 
 (defun print-slots (slots display)
     (mrs-output-start-slots display)

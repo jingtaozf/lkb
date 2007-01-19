@@ -73,6 +73,8 @@
 		  (push (read-rmrs-rarg body)
 			rargs))
 		 ((eql next-tag '|ing|)
+		  (when *anchor-rmrs-p*
+		    (error "ing should not be present"))
 		  (push (read-rmrs-in-g body)
 			ings))
 		 ((atom next-tag)
@@ -93,6 +95,8 @@
 
 (defun read-rmrs-ep (content)
 ;;; <!ELEMENT ep ((realpred|gpred), label, var)>
+;;; or (in version 2)
+;;; <!ELEMENT ep ((realpred|gpred), label, anchor, var)>
 ;;; <!ATTLIST ep
 ;;;          cfrom CDATA #REQUIRED
 ;;;          cto   CDATA #REQUIRED 
@@ -113,13 +117,22 @@
     (setf body (loop for x in body
 		   unless (xml-whitespace-string-p x)
 		   collect x))
-    (make-char-rel 
-     :pred (read-rmrs-pred (first body))
-              :handel (read-rmrs-label (second body))
-              :flist (list (read-rmrs-var (third body)))
-              :cfrom (parse-integer (third tag))
-              :cto (parse-integer (fifth tag))
-              :str (seventh tag))))
+    (if *anchor-rmrs-p*
+	(make-char-rel 
+	 :pred (read-rmrs-pred (first body))
+	 :handel (read-rmrs-label (second body))
+	 :anchor (read-rmrs-anchor (third body))
+	 :flist (list (read-rmrs-var (fourth body)))
+	 :cfrom (parse-integer (third tag))
+	 :cto (parse-integer (fifth tag))
+	 :str (seventh tag))
+      (make-char-rel 
+	 :pred (read-rmrs-pred (first body))
+	 :handel (read-rmrs-label (second body))
+	 :flist (list (read-rmrs-var (third body)))
+	 :cfrom (parse-integer (third tag))
+	 :cto (parse-integer (fifth tag))
+	 :str (seventh tag)))))
 
 (defun read-rmrs-pred (content)
   (let ((tag (car content))
@@ -171,6 +184,19 @@
    :type "h"
    :id idnumber))
 
+(defun read-rmrs-anchor (content)
+;;; <!ELEMENT anchor EMPTY>
+;;;
+;;; <!ATTLIST anchor
+;;;          vid CDATA #REQUIRED >
+  (let ((tag (car content))
+        (body (cdr content)))
+    (unless (and 
+             (eql (first tag) '|anchor|)
+             (eql (second tag) '|vid|)
+             (null body))
+      (error "Malformed anchor ~A" content))
+    (create-new-label-with-id (parse-integer (third tag)))))
 
 (defun read-rmrs-var (content)
 ;;; <!ELEMENT var EMPTY>

@@ -16,6 +16,7 @@
 ;;; Structures
 
 (defstruct (semstruct (:include rmrs))
+  features
   hook
   slots
   )
@@ -48,8 +49,14 @@
 
 ;;; Rules
 
+(defstruct rmrs-rule-set 
+  name
+  alternatives)
+;;; alternatives are a list of rules (mostly singletons)
+
 (defstruct rmrs-rule 
   name
+  condition
   dtrs
   arity
   head
@@ -131,6 +138,11 @@
 ;;; Main entry point
 
 (defparameter *rmrs-output-type* 'xml)
+
+(defparameter *anchor-rmrs-p* nil)
+;;; if t, uses new style composition
+;;; FIX - to be removed once the new code is working
+;;; and we can delete the old version
 
 (defun construct-sem-for-tree (tree origin ostream &optional original)
   ;;; takes a tree and returns a semstruct - guaranteed
@@ -271,6 +283,9 @@
     (setf (var-id var) id)))
 
 (defun canonicalise-rmrs-ep (ep bindings)
+  (canonicalise-rmrs-variable (rel-handel ep) bindings)
+  (canonicalise-rmrs-variable (rel-anchor ep) bindings)
+  ;;; actually anchors should probably never change
   (let ((value (car (rel-flist ep))))
     (unless (var-p value) (error "Unexpected value ~A" value))
     (canonicalise-rmrs-variable value bindings)))
@@ -314,15 +329,20 @@
 
 (defun construct-sem-for-tree-aux (tree-node original)
   (if (daughter-nodes-p tree-node)
-      (let ((rule-name (get-rule-name tree-node))
-	    (dtr-nodes (get-dtr-nodes tree-node)))
-	(compose rule-name
-		 (loop for dtr in dtr-nodes
+      (let* ((rule-name (get-rule-name tree-node))
+	     (dtr-nodes (get-dtr-nodes tree-node))
+	     (dtr-structures 
+	      (loop for dtr in dtr-nodes
 		     collect
-		       (construct-sem-for-tree-aux dtr original))))
+		    (construct-sem-for-tree-aux dtr original))))
+	(if *anchor-rmrs-p*
+	    (algebra-compose rule-name dtr-structures)
+	  (compose rule-name dtr-structures)))
     (let ((base-tag (get-lexical-tag tree-node))
 	  (lexeme (get-lexeme tree-node original)))
-      (create-base-struct base-tag lexeme))))
+      (if *anchor-rmrs-p*
+	  (algebra-create-base-struct base-tag lexeme)
+	(create-base-struct base-tag lexeme)))))
 
 
 (defvar *local-var-context* nil)
@@ -333,14 +353,17 @@
 
 (defun compose (rule-name dtrs)
   ;;; compose takes a rule name and a list of daughters
-  ;;; the rule name is looked up in *rule-instructions*
+  ;;; the rule name is looked up
   ;;; this may give full instructions, or just mark the
   ;;; head.  If there's no instruction, default composition
   ;;; alone operates.
   (unless dtrs ;;; really there always ought to be dtrs
              ;;; but this prevents errors on trees with just a rule name
     (error "~% defective tree"))
-  (let ((rule-instruction (lookup-instruction rule-name))
+  (let* ((dtr-features (loop for dtr in dtrs
+			   when (semstruct-features dtr)
+			   collect (semstruct-features dtr)))
+	(rule-instruction (lookup-instruction rule-name dtr-features))
 	(dtr-hooks (loop for dtr in dtrs
 		       collect (semstruct-hook dtr)))
 	(dtr-slots (loop for dtr in dtrs
@@ -469,14 +492,17 @@
 ;;; 
 
 (defun create-base-struct (tag lexeme)
-  (let ((tag-template (get-tag-template tag)))
-    (construct-new-semstruct
-     (rmrs-tag-template-semstruct
-       (or tag-template
-	   *default-template*))
-     (word-info-from lexeme)
-     (word-info-to lexeme)
-     lexeme)))
+  (let* ((tag-template (get-tag-template tag))
+	 (tag-semstruct (rmrs-tag-template-semstruct
+			 (or tag-template
+			     *default-template*)))
+	 (from (word-info-from lexeme))
+	 (to (word-info-to lexeme)))
+      (construct-new-semstruct 
+       tag-semstruct
+       from
+       to
+       lexeme)))
 
 ;;; A new semstruct may be created either for a lexical tag or for
 ;;; a semstruct contributed by a grammar rule.  In either case,
@@ -703,29 +729,59 @@ goes to
 ;;; Rule lookup
 
 (defparameter *rule-instructions* nil)
+;;; now a list of rule sets
 
-(defun lookup-instruction (rule-name)
+(defun lookup-instruction (rule-name features)
   ;;; first check for an exact match
   ;;; failing this, check for a match ignoring the optional spec
   ;;; If this is found, dtrs may need adjusting
-  (let ((rule (find rule-name *rule-instructions*
-         :test #'equal :key #'rmrs-rule-name)))
+  (let* ((rule (rule-and-condition-match rule-name features 
+					 *rule-instructions*)))
     (if rule
         (progn 
           (increment-rule-record rule-name nil t)
           rule)
       (let ((base-name (remove-optional-spec rule-name)))
         (if base-name
-            (let ((rule (find base-name *rule-instructions*
-                              :test #'equal :key #'rmrs-rule-name))
+            (let ((mrule (rule-and-condition-match 
+			  base-name features *rule-instructions*))
                   (opt-dtrs (if base-name (find-opt-dtrs rule-name))))
-              (if rule
+              (if mrule
                   (progn (increment-rule-record base-name opt-dtrs t)
-                         (rule-with-adjusted-dtrs rule opt-dtrs))
+                         (rule-with-adjusted-dtrs mrule opt-dtrs))
                 (progn (increment-rule-record base-name opt-dtrs nil)
                        nil)))
           (progn (increment-rule-record rule-name nil nil)
                  nil))))))
+
+(defun rule-and-condition-match (rule-name features rule-list)
+  ;;; a conditional rule comes in two (or more) variants
+  ;;; one may have an empty condition.  If we return
+  ;;; multiple rules on the rule-name match, we check the conditions
+  ;;; If features is empty, we match the unconditional rules
+  ;;; If there are features, then we take the conditional version
+  ;;; if they match the condition specification.  If no, we take
+  ;;; the unconditional version
+  (let ((rule-set (find rule-name rule-list
+				 :test #'equal :key #'rmrs-rule-set-name)))
+    (if rule-set
+	(let ((rule-options 
+	       (rmrs-rule-set-alternatives rule-set)))
+	  (if (or (not (cdr rule-options)) (not features))
+	      (car rule-options)
+	    (or 
+	     (find-if #'(lambda (rule)
+			  (member (rmrs-rule-condition rule) features 
+				  :test #'equal))
+		      rule-options)
+	   ;;; null features - default rule has null condition
+	   ;;; and will match.  If there are
+	   ;;; features then (first) matching rule
+	     (car rule-options))))
+              ;;; no feature that matches -> default
+	      ;;; first thing on the rule options list is the default
+      nil)))
+
 
 (defun remove-optional-spec (rule-name)
   ;;; for rules of form N1/ap_n1/- return N1/ap_n1
@@ -733,8 +789,14 @@ goes to
   (let* ((slash-pos1 (position #\/ rule-name))
          (slash-pos2 (if slash-pos1
                          (position #\/ rule-name :start (+ 1 slash-pos1)))))
-    (if slash-pos2
-        (subseq rule-name 0 slash-pos2))))
+    (if slash-pos1
+	(if slash-pos2
+	    (subseq rule-name 0 slash-pos2)
+	  (let ((postslash (subseq rule-name 0 slash-pos1)))
+	    (if (every #'(lambda (x) 
+			   (member x '(#\+ #\-))) 
+		       (coerce postslash 'list))
+		postslash))))))
 
 (defun find-opt-dtrs (rule-name)
   ;;; given we've got something after the slash, return a list of ts and

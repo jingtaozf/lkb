@@ -328,6 +328,8 @@ off, perhaps)
 	(*rasp-xml-word-p* t)
 	(*renumber-hack* t)
 	(*rasp-xml-type* :none))
+    (setf *algebra-rule-instructions* nil)
+    (setf *algebra-tag-instructions* nil)
     (clear-rule-record)
     (read-rmrs-grammar *rasp-rmrs-gram-file*)
     (read-rmrs-tag-templates *rasp-rmrs-tag-file*)
@@ -353,3 +355,158 @@ off, perhaps)
 
 |#
 
+#| 
+
+algebra testing
+
+1. rule conversion
+
+(progn 
+(let ((*rasp-rmrs-gram-file*
+	 "rmrs/rasp3/gram15-general.rmrs")
+	(*rasp-xml-word-p* t)
+	(*renumber-hack* t)
+	(*rasp-xml-type* :none))
+    (clear-rule-record)
+    (read-rmrs-grammar *rasp-rmrs-gram-file*))
+
+
+
+(dolist (rulename '("S/np_vp" "NP/det_n1" "N1/ap_n1" "AP/a1" "A1/a"))
+  (let ((rule (find rulename 
+		    *rule-instructions* :key #'rmrs-rule-name :test #'equal)))
+    (when rule (convert-rmrs-rule rule))))
+
+(show-algebra-rules)
+)
+
+
+(convert-rmrs-rule (find "S/np-nt-adv_s" *rule-instructions* :key #'rmrs-rule-name :test #'equal))
+
+(convert-rmrs-rule (find "S/np_vp" *rule-instructions* :key #'rmrs-rule-name :test #'equal))
+
+(convert-rmrs-rule (find "V1/v_inf" *rule-instructions* :key #'rmrs-rule-name :test #'equal))
+
+(setf *anchor-rmrs-p* nil)
+
+(rasp3-out "rmrs/rasp3/single.trees" "foo1")
+
+(setf *anchor-rmrs-p* t)
+
+(rasp3-out "rmrs/rasp3/single.trees" "foo2.rmrs")
+
+(rasp3-out
+	 (make-pathname 
+	     :device "c"
+	     :directory "/d/rasp-rmrs/test-sets/"
+	     :name "annlt.trees")
+	 
+	  "annlt.rmrs")
+
+|#
+
+#|
+
+(defun process-citation-files nil
+  ;;; clear and load the grammars
+  (let ((*rasp-xml-word-p* t)
+	(*anchor-rmrs-p* t)
+	(*rasp-rmrs-gram-file*
+	 "rmrs/rasp3/gram15-general.rmrs")
+	(*rasp-rmrs-tag-file*
+	 "rmrs/rasp3/lex15.rmrs")
+	(*renumber-hack* t))
+   (setf *algebra-rule-instructions* nil)
+   (setf *algebra-tag-instructions* nil)
+   (setf *initial-rasp-num* nil)
+ (clear-rule-record)
+ (read-rmrs-grammar *rasp-rmrs-gram-file*)
+ (read-rmrs-tag-templates *rasp-rmrs-tag-file*)
+ (let* ((ifiles
+         (directory "~/citation/xml-parsed/*")))
+    (loop for ifile in ifiles
+        do
+          (let* ((namestring (file-namestring ifile)))
+            (format t "~%Processing file ~A" namestring)
+	    (excl::shell 
+	     (concatenate 
+		 'string "gunzip -c < " 
+		 "~/citation/xml-parsed/"
+                    namestring "> /tmp/pfile"))
+              ; (format t "~%File ~A unpacked" namestring)
+	    (let ((new-file (concatenate 'string 
+			      "~/citation/xml-reparsed/"
+			      (subseq namestring
+				      0 (- (length namestring) 3)
+				      )))
+		  (err-file (concatenate 'string  
+			      "~/citation/xml-errs/"
+			      namestring)))
+	      (declare (ignore err-file))
+	      (with-open-file  (istream "/tmp/pfile"
+				:direction :input)
+		(with-open-file  (ostream new-file
+				  :direction :output :if-exists :supersede)
+		  (let ((in-rmrs-p nil)
+			(in-tree-p nil)
+			(tree-lines nil))
+		  (loop 
+		    (let ((new-line (read-line istream nil nil)))
+		      (unless new-line (return))
+		      (cond ((line-matches new-line "<PARSE>")
+			     (setf in-tree-p t)
+			     (write-line new-line ostream))
+			    ((line-matches new-line "</PARSE>")
+			     (setf in-tree-p nil)
+			     (write-line new-line ostream)
+			     (finish-output ostream)
+			     (handler-case
+                      (progn
+			(construct-sem-for-tree 
+			 (read-from-string 
+			  (apply #'concatenate 'string 
+				 (nreverse tree-lines)))
+			 :rasp ostream)
+                        (finish-output ostream))
+		      (storage-condition (condition)
+			(progn
+			  (format t "~%Memory allocation problem: ~A~%" condition)
+			  (format ostream "~%<rmrs>~%</rmrs>~%" condition)))
+		      (error (condition)
+			(progn
+			  (format t "~%Error: ~A~%" condition)
+			  (format ostream "~%<rmrs>~%</rmrs>~%" condition)))
+		      (serious-condition (condition)
+			(progn
+			  (format t "~%Something nasty: ~A~%" condition)
+			  (format ostream "~%<rmrs>~%</rmrs>~%" condition)   
+			     ))))
+			    ((line-matches new-line "<RMRS>")
+			     (setf in-rmrs-p t))
+			    ((line-matches new-line "</RMRS>")
+			     (setf in-rmrs-p nil))
+			    ((line-matches new-line "</rmrs-list>")
+			     nil)
+			    (t 
+			     (when in-tree-p
+			       (push new-line tree-lines))
+			     (unless in-rmrs-p
+			       (write-line new-line ostream)))))))))
+	      (excl::shell "rm /tmp/pfile")
+	      (when (probe-file new-file)
+		  ;;; validate the XML
+;;;                  (excl::shell 
+;;;                   (concatenate 'string
+;;;                     "xmlnorm -Vs " new-file " 2>| " err-file))
+                  ;;; note we're redirecting std err
+		  ;;; gzip the file
+		(excl::shell (concatenate 'string "gzip " 
+					  new-file)))))))))
+
+(defun line-matches (new-line match)
+  (let ((ml (length match)))
+    (and new-line
+	 (>= (length new-line) ml)
+	 (string-equal (subseq new-line 0 ml) match))))
+
+|#
