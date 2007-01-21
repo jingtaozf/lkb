@@ -284,7 +284,8 @@
 
 (defun canonicalise-rmrs-ep (ep bindings)
   (canonicalise-rmrs-variable (rel-handel ep) bindings)
-  (canonicalise-rmrs-variable (rel-anchor ep) bindings)
+  (when *anchor-rmrs-p*
+    (canonicalise-rmrs-variable (rel-anchor ep) bindings))
   ;;; actually anchors should probably never change
   (let ((value (car (rel-flist ep))))
     (unless (var-p value) (error "Unexpected value ~A" value))
