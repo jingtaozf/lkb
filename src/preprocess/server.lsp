@@ -88,6 +88,8 @@
 
 ;; generic socket server
 ;; caller supplys processor function (and name)
+;; debug takes a list of keywords from the set:
+;; :raw-char-in :input-chunk
 (defun r-server (processor name &key (port 9876) debug)
   (setf *r-server-debug* debug)
   (format t "~&;;; [entering ~a server mode]" name)
@@ -143,7 +145,9 @@
 
 ;;
 
+
 ;; PARSE socket server
+;; additional debug modes = :parse-input-chunk :parse-output-chunk
 (defun run-parse-server (&key (port 9876) (mode :xml) debug)
   (r-server (lambda (x y)
 	      (r-server-parse-input x y :mode mode))
@@ -211,16 +215,16 @@
 
 (in-package mrs)
 
-#+:rasp-server
+;#+:rasp-server
 (defvar *rasp-rmrs-gram-file*)
-#+:rasp-server
+;#+:rasp-server
 (defvar *rasp-rmrs-tag-file*)
-#+:rasp-server
+;#+:rasp-server
 (defvar *rasp-xml-word-p*)
-#+:rasp-server
+;#+:rasp-server
 (defvar *rasp-xml-type*)
 
-#+:rasp-server
+;#+:rasp-server
 (defun init-rasp-server (&optional (rmrs-gram-file "/home/bmw20/lkb/src/rmrs/rasp3/gram15.rmrs")
 				   (rmrs-tag-file "/home/bmw20/lkb/src/rmrs/rasp3/lex15.rmrs"))
     
@@ -233,7 +237,7 @@
   (read-rmrs-grammar rmrs-gram-file)
   (read-rmrs-tag-templates rmrs-tag-file))
   
-#+:rasp-server
+;#+:rasp-server
 (defun r-server-rasp-input (s input &key (mode :string))
   (case mode
     (:string
@@ -258,23 +262,11 @@
      (error "unknown test server mode '~a'" mode))
     ))
 
-#+:rasp-server
+;#+:rasp-server
 (defun run-rasp-server (&key (port 8891) (mode :string) debug)
   (saf::r-server (lambda (x y)
 	      (r-server-rasp-input x y :mode mode))
 	    "RASP"
 	    :port port
 	    :debug debug))
-
-; (with-output-to-string (out) (with-open-file  (istream "/tmp/cr351_13692/b204433c.xml.pollard":direction :input)(loop
-; 	(let* ((tagged (read istream nil nil))
-; 	       (number (read istream nil nil))
-; 	       (tree (read istream nil nil)))
-; 	  (declare (ignore number))
-; 	  (unless tree
-; 	    (return))
-; 	  (when tree
-; 	    (mrs::construct-sem-for-tree 
-; 	     tree
-; 	     :rasp out tagged))))))
 
