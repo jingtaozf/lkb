@@ -407,7 +407,9 @@ algebra testing
 	     :directory "/d/rasp-rmrs/test-sets/"
 	     :name "annlt.trees")
 	 
-	  "annlt.rmrs")
+	 "annlt.rmrs")
+
+(rasp3-out "rmrs/rasp3/selected.trees" "rmrs/rasp3/annlt.rmrs")
 
 |#
 
