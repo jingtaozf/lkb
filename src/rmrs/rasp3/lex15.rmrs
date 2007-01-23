@@ -19,11 +19,10 @@ systematically going through semtestsuite adding grammar preds etc
 see sem ex 13
 </comment>
 <semstruct>
-<hook><index>X7</index><label>H20</label></hook>
+<hook><index>X7</index><label>H8</label></hook>
 <slots><anchor>H4</anchor></slots>
 <ep><gpred>DEF_EXPLICIT_Q_REL</gpred><label>H4</label><var>X7</var></ep>
-<!--rarg><rargname>RSTR</rargname><label>H4</label><var>H15</var></rarg-->
-<ep><gpred>POSS_REL</gpred><label>H8</label><var>U</var></ep>
+<ep><gpred>POSS_REL</gpred><label>H8</label><var>E</var></ep>
 <rarg><rargname>ARG1</rargname><label>H8</label><var>X7</var></rarg>
 <rarg><rargname>ARG2</rargname><label>H8</label><var>X9</var></rarg>
 <ep><gpred>PRONOUN_Q_REL</gpred><label>H11</label><var>X9</var></ep>
@@ -31,7 +30,6 @@ see sem ex 13
 <rarg><rargname>BODY</rargname><label>H11</label><var>H13</var></rarg>
 <ep><gpred>PRON_REL</gpred><label>H14</label><var>X9</var></ep>
 <hcons hreln='qeq'><hi><var>H12</var></hi><lo><var>H14</var></lo></hcons>
-<!--hcons hreln='qeq'><hi><var>H15</var></hi><lo><var>H8</var></lo></hcons-->
 </semstruct>
 </le>
 
@@ -39,7 +37,8 @@ see sem ex 13
 <tag>AT</tag>
 <comment>article e.g. the, no (gap ex.3)</comment>
 <semstruct>
-<hook><index>X</index><label>H</label></hook>
+<hook><index>X</index><label>H1</label></hook>
+<slots><anchor>H</anchor></slots>
 <ep><pred/><label>H</label><var>X</var></ep>
 </semstruct>
 </le>
@@ -48,7 +47,8 @@ see sem ex 13
 <tag>AT1</tag>
 <comment>a,an,every</comment>
 <semstruct>
-<hook><index>X</index><label>H</label></hook>
+<hook><index>X</index><label>H1</label></hook>
+<slots><anchor>H</anchor></slots>
 <ep><pred/><label>H</label><var>X</var></ep>
 </semstruct>
 </le>
@@ -134,7 +134,8 @@ after-determiner, capable of pronominal function e.g.same, former, latter, such,
 <tag>DA1</tag>
 <comment> singular after-determiner, capable of pronominal function e.g.little, much (det.ex.3)</comment>
 <semstruct>
-<hook><index>X</index><label>H</label></hook>
+<hook><index>X</index><label>H1</label></hook>
+<slots><anchor>H</anchor></slots>
 <ep><pred/><label>H</label><var>X</var></ep>
 </semstruct>
 </le>
@@ -144,7 +145,8 @@ after-determiner, capable of pronominal function e.g.same, former, latter, such,
 <tag>DA2</tag>
 <comment> plural after-determiner, capable of pronominal function e.g. few, several, many (det.ex.4)</comment>
 <semstruct>
-<hook><index>X</index><label>H</label></hook>
+<hook><index>X</index><label>H1</label></hook>
+<slots><anchor>H</anchor></slots>
 <ep><pred/><label>H</label><var>X</var></ep>
 </semstruct>
 </le>
@@ -168,7 +170,7 @@ comparative plural after-determiner, capable of pronominal function e.g. fewer (
 <tag>DAR</tag>
 <comment>ANNA - comparative after-determiner, capable of pronominal function e.g. more, less (det.ex.6)</comment>
 <semstruct>
-<hook><index>X</index><label>H</label></hook>
+<hook><index>X</index><label>H1</label></hook>
 <slots><anchor>H</anchor></slots>
 <ep><pred/><label>H</label><var>X</var></ep>
 <ep><gpred>COMP_REL</gpred><label>H1</label><var>U</var></ep>
@@ -181,7 +183,8 @@ comparative plural after-determiner, capable of pronominal function e.g. fewer (
 <tag>DAT</tag>
 <comment> superlative after-determiner, capable of pronominal function e.g. most, least (det.ex.7)</comment>
 <semstruct>
-<hook><index>X</index><label>H</label></hook>
+<hook><index>X</index><label>H1</label></hook>
+<slots><anchor>H</anchor></slots>
 <ep><pred/><label>H</label><var>X</var></ep>
 </semstruct>
 </le>
@@ -190,7 +193,8 @@ comparative plural after-determiner, capable of pronominal function e.g. fewer (
 <tag>DB</tag>
 <comment>all,half (sem.ex.127)</comment>
 <semstruct>
-<hook><index>X</index><label>H</label></hook>
+<hook><index>X</index><label>H1</label></hook>
+<slots><anchor>H</anchor></slots>
 <ep><pred/><label>H</label><var>X</var></ep>
 </semstruct>
 </le>
@@ -200,7 +204,8 @@ comparative plural after-determiner, capable of pronominal function e.g. fewer (
 <tag>DB2</tag>
 <comment>plural before-determiner, capable of pronominal function e.g. both (det.ex.9), all</comment>
 <semstruct>
-<hook><index>X</index><label>H</label></hook>
+<hook><index>X</index><label>H1</label></hook>
+<slots><anchor>H</anchor></slots>
 <ep><pred/><label>H</label><var>X</var></ep>
 </semstruct>
 </le>
@@ -211,7 +216,8 @@ comparative plural after-determiner, capable of pronominal function e.g. fewer (
 any,enough,some,lot,rest
 </comment>
 <semstruct>
-<hook><index>X</index><label>H</label></hook>
+<hook><index>X</index><label>H1</label></hook>
+<slots><anchor>H</anchor></slots>
 <ep><pred/><label>H</label><var>X</var></ep>
 </semstruct>
 </le>
@@ -220,7 +226,8 @@ any,enough,some,lot,rest
 <tag>DD1</tag>
 <comment>each,another,neither,either,this,that</comment>
 <semstruct>
-<hook><index>X</index><label>H</label></hook>
+<hook><index>X</index><label>H1</label></hook>
+<slots><anchor>H</anchor></slots>
 <ep><pred/><label>H</label><var>X</var></ep>
 </semstruct>
 </le>
@@ -233,7 +240,8 @@ any,enough,some,lot,rest
 <tag>DDQ</tag>
 <comment>what,which</comment>
 <semstruct>
-<hook><index>X</index><label>H</label></hook>
+<hook><index>X</index><label>H1</label></hook>
+<slots><anchor>H</anchor></slots>
 <ep><pred/><label>H</label><var>X</var></ep>
 </semstruct>
 </le>
@@ -242,20 +250,17 @@ any,enough,some,lot,rest
 <tag>DDQ$</tag>
 <comment>whose (sem.ex.27)</comment>
 <semstruct>
-<hook><index>X</index><label>H20</label></hook>
-<slots><anchor>H6</anchor></slots>
-<ep><gpred>DEF_Q_REL</gpred><label>H1</label><var>X</var></ep>
-<rarg><rargname>RSTR</rargname><label>H1</label><var>H2</var></rarg>
-<rarg><rargname>BODY</rargname><label>H1</label><var>H3</var></rarg>
-<ep><gpred>POSS_REL</gpred><label>H4</label><var>U</var></ep>
+<hook><index>X</index><label>H4</label></hook>
+<slots><anchor>H1</anchor></slots>
+<ep><gpred>DEF_IMPLICIT_Q_REL</gpred><label>H1</label><var>X</var></ep>
+<ep><gpred>POSS_REL</gpred><label>H4</label><var>E</var></ep>
 <rarg><rargname>ARG1</rargname><label>H4</label><var>X</var></rarg>
 <rarg><rargname>ARG2</rargname><label>H4</label><var>X1</var></rarg>
 <ep><gpred>PERSON_REL</gpred><label>H5</label><var>X1</var></ep>
 <ep><gpred>WHICH_Q_REL</gpred><label>H6</label><var>X1</var></ep>
-<!--rarg><rargname>RSTR</rargname><label>H6</label><var>H7</var></rarg-->
-<!--ing><ing-a><var>H4</var></ing-a><ing-b><var>H9</var></ing-b></ing-->
-<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H4</var></lo></hcons>
-<!--hcons hreln='qeq'><hi><var>H7</var></hi><lo><var>H5</var></lo></hcons-->
+<rarg><rargname>RSTR</rargname><label>H6</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H6</label><var>H3</var></rarg>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H5</var></lo></hcons>
 </semstruct>
 </le>
 
@@ -402,7 +407,7 @@ there.  FIX??? but still want a hook
 <comment>14k sg nouns</comment>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
-<ep><pred/><label>H</label><var>X</var></ep>
+<ep><pred/><label>H</label><var num='sg'>X</var></ep>
 </semstruct>
 </le>
 
@@ -411,7 +416,7 @@ there.  FIX??? but still want a hook
 <comment>7k pl nouns</comment>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
-<ep><pred/><label>H</label><var>X</var></ep>
+<ep><pred/><label>H</label><var num='pl'>X</var></ep>
 </semstruct>
 </le>
 
@@ -609,7 +614,7 @@ ANNA - introduce times_rel as in ERG (sem.ex.64)</comment>
 <ep><gpred>PROPER_Q_REL</gpred><label>H</label><var>X</var></ep>
 <rarg><rargname>RSTR</rargname><label>H</label><var>H2</var></rarg>
 <rarg><rargname>BODY</rargname><label>H</label><var>H3</var></rarg>
-<ep><gpred>NAMED_REL</gpred><label>H1</label><var>X</var></ep>
+<ep><gpred>NAMED_REL</gpred><label>H1</label><var num='sg'>X</var></ep>
 <rarg><rargname>CARG</rargname><label>H1</label><lemma/></rarg>
 <hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
 </semstruct>
@@ -724,7 +729,7 @@ ANNA - think there were a couple of bugs in this (sem.ex.18)</comment>
 <semstruct>
 <hook><index>X1</index><label>H10</label></hook>
 <slots><anchor>H10</anchor></slots>
-<ep><gpred>DEF_Q_REL</gpred><label>H4</label><var>X1</var></ep>
+<ep><gpred>DEF_IMPLICIT_Q_REL</gpred><label>H4</label><var>X1</var></ep>
 <rarg><rargname>RSTR</rargname><label>H4</label><var>H6</var></rarg>
 <rarg><rargname>BODY</rargname><label>H4</label><var>H7</var></rarg>
 <ep><gpred>GENERIC_ENTITY_REL</gpred><label>H5</label><var>X1</var></ep>
@@ -749,7 +754,7 @@ ANNA - think there were a couple of bugs in this (sem.ex.18)</comment>
 <semstruct>
 <hook><index>X</index><label>H20</label></hook>
 <slots><anchor>H0</anchor></slots>
-<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var num='sg' gender='n'>X</var></ep>
 <ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
 <rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
 <rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
@@ -766,7 +771,7 @@ ANNA - think there were a couple of bugs in this (sem.ex.18)</comment>
 <ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
 <rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
 <rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
-<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var num='sg'>X</var></ep>
 <hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
 </semstruct>
 </le>
@@ -780,7 +785,7 @@ ANNA - think there were a couple of bugs in this (sem.ex.18)</comment>
 <ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
 <rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
 <rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
-<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var num='pl'>X</var></ep>
 <hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
 </semstruct>
 </le>
@@ -792,7 +797,7 @@ ANNA - swapped round pronoun_q_rel and pron_rel again</comment>
 <semstruct>
 <hook><index>X</index><label>H20</label></hook>
 <slots><anchor>H0</anchor></slots>
-<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var num='sg'>X</var></ep>
 <ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
 <rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
 <rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
@@ -809,7 +814,7 @@ ANNA - swapped round pronoun_q_rel and pron_rel again</comment>
 <ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
 <rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
 <rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
-<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var num='pl'>X</var></ep>
 <hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
 </semstruct>
 </le>
@@ -823,7 +828,7 @@ ANNA - swapped round pronoun_q_rel and pron_rel again</comment>
 <ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
 <rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
 <rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
-<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var num='sg' pers='1'>X</var></ep>
 <hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
 </semstruct>
 </le>
@@ -837,7 +842,7 @@ ANNA - swapped round pronoun_q_rel and pron_rel again</comment>
 <ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
 <rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
 <rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
-<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var num='pl' pers='1'>X</var></ep>
 <hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
 </semstruct>
 </le>
@@ -848,7 +853,7 @@ ANNA - swapped round pronoun_q_rel and pron_rel again</comment>
 <semstruct>
 <hook><index>X</index><label>H20</label></hook>
 <slots><anchor>H0</anchor></slots>
-<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var num='sg' pers='1'>X</var></ep>
 <ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
 <rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
 <rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
@@ -862,7 +867,7 @@ ANNA - swapped round pronoun_q_rel and pron_rel again</comment>
 <semstruct>
 <hook><index>X</index><label>H20</label></hook>
 <slots><anchor>H0</anchor></slots>
-<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var num='pl' pers='1'>X</var></ep>
 <ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
 <rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
 <rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
@@ -877,7 +882,7 @@ ANNA - swapped round pronoun_q_rel and pron_rel again</comment>
 <semstruct>
 <hook><index>X</index><label>H20</label></hook>
 <slots><anchor>H0</anchor></slots>
-<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var num='sg'>X</var></ep>
 <ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
 <rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
 <rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
@@ -905,7 +910,7 @@ ANNA - swapped round pronoun_q_rel and pron_rel again</comment>
 <semstruct>
 <hook><index>X</index><label>H20</label></hook>
 <slots><anchor>H0</anchor></slots>
-<ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
+<ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var pers='2'>X</var></ep>
 <rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
 <rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
 <ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
@@ -1038,13 +1043,17 @@ giving adverbs event variable ARG0s as in ERG (sem.ex.44)</comment>
 ; UH ; dammit,yes,eh,...
 -->
 
+<!-- taking out the eps for auxiliaries, on the assumption that
+it will be better to put it back in for the cases where they have non-empty
+entries -->
+
+
 
 <le>
 <tag>VBO</tag>
 <comment>be</comment>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<ep><pred/><label>H</label><var>E</var></ep>
 </semstruct>
 </le>
 
@@ -1052,8 +1061,7 @@ giving adverbs event variable ARG0s as in ERG (sem.ex.44)</comment>
 <tag>VBDR</tag>
 <comment>were</comment>
 <semstruct>
-<hook><index>E</index><label>H</label></hook>
-<ep><pred/><label>H</label><var>E</var></ep>
+<hook><index tense='past'>E</index><label>H</label></hook>
 </semstruct>
 </le>
 
@@ -1062,8 +1070,7 @@ giving adverbs event variable ARG0s as in ERG (sem.ex.44)</comment>
 <tag>VBDZ</tag>
 <comment>was</comment>
 <semstruct>
-<hook><index>E</index><label>H</label></hook>
-<ep><pred/><label>H</label><var>E</var></ep>
+<hook><index tense='past'>E</index><label>H</label></hook>
 </semstruct>
 </le>
 
@@ -1071,8 +1078,7 @@ giving adverbs event variable ARG0s as in ERG (sem.ex.44)</comment>
 <tag>VBG</tag>
 <comment>being</comment>
 <semstruct>
-<hook><index>E</index><label>H</label></hook>
-<ep><pred/><label>H</label><var>E</var></ep>
+<hook><index tense='present'>E</index><label>H</label></hook>
 </semstruct>
 </le>
 
@@ -1080,8 +1086,7 @@ giving adverbs event variable ARG0s as in ERG (sem.ex.44)</comment>
 <tag>VBM</tag>
 <comment>am</comment>
 <semstruct>
-<hook><index>E</index><label>H</label></hook>
-<ep><pred/><label>H</label><var>E</var></ep>
+<hook><index tense='present'>E</index><label>H</label></hook>
 </semstruct>
 </le>
 
@@ -1089,8 +1094,7 @@ giving adverbs event variable ARG0s as in ERG (sem.ex.44)</comment>
 <tag>VBN</tag>
 <comment>been</comment>
 <semstruct>
-<hook><index>E</index><label>H</label></hook>
-<ep><pred/><label>H</label><var>E</var></ep>
+<hook><index tense='past'>E</index><label>H</label></hook>
 </semstruct>
 </le>
 
@@ -1098,8 +1102,7 @@ giving adverbs event variable ARG0s as in ERG (sem.ex.44)</comment>
 <tag>VBR</tag>
 <comment>are</comment>
 <semstruct>
-<hook><index>E</index><label>H</label></hook>
-<ep><pred/><label>H</label><var>E</var></ep>
+<hook><index tense='present'>E</index><label>H</label></hook>
 </semstruct>
 </le>
 
@@ -1107,8 +1110,7 @@ giving adverbs event variable ARG0s as in ERG (sem.ex.44)</comment>
 <tag>VBZ</tag>
 <comment>is</comment>
 <semstruct>
-<hook><index>E</index><label>H</label></hook>
-<ep><pred/><label>H</label><var>E</var></ep>
+<hook><index tense='present'>E</index><label>H</label></hook>
 </semstruct>
 </le>
 
@@ -1116,8 +1118,7 @@ giving adverbs event variable ARG0s as in ERG (sem.ex.44)</comment>
 <tag>VDO</tag>
 <comment>do</comment>
 <semstruct>
-<hook><index>E</index><label>H</label></hook>
-<ep><pred/><label>H</label><var>E</var></ep>
+<hook><index tense='present'>E</index><label>H</label></hook>
 </semstruct>
 </le>
 
@@ -1125,8 +1126,7 @@ giving adverbs event variable ARG0s as in ERG (sem.ex.44)</comment>
 <tag>VDD</tag>
 <comment>did</comment>
 <semstruct>
-<hook><index>E</index><label>H</label></hook>
-<ep><pred/><label>H</label><var>E</var></ep>
+<hook><index tense='past'>E</index><label>H</label></hook>
 </semstruct>
 </le>
 
@@ -1135,7 +1135,7 @@ giving adverbs event variable ARG0s as in ERG (sem.ex.44)</comment>
 <comment>doing</comment>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<ep><pred/><label>H</label><var>E</var></ep>
+<ep><pred/><label>H</label><var tense='present'>E</var></ep>
 </semstruct>
 </le>
 
@@ -1152,8 +1152,7 @@ giving adverbs event variable ARG0s as in ERG (sem.ex.44)</comment>
 <tag>VDZ</tag>
 <comment>does</comment>
 <semstruct>
-<hook><index>E</index><label>H</label></hook>
-<ep><pred/><label>H</label><var>E</var></ep>
+<hook><index tense='present'>E</index><label>H</label></hook>
 </semstruct>
 </le>
 
@@ -1162,7 +1161,6 @@ giving adverbs event variable ARG0s as in ERG (sem.ex.44)</comment>
 <comment>have</comment>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<ep><pred/><label>H</label><var>E</var></ep>
 </semstruct>
 </le>
 
@@ -1171,7 +1169,6 @@ giving adverbs event variable ARG0s as in ERG (sem.ex.44)</comment>
 <comment>had</comment>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<ep><pred/><label>H</label><var>E</var></ep>
 </semstruct>
 </le>
 
@@ -1180,7 +1177,6 @@ giving adverbs event variable ARG0s as in ERG (sem.ex.44)</comment>
 <comment>having</comment>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<ep><pred/><label>H</label><var>E</var></ep>
 </semstruct>
 </le>
 
@@ -1189,7 +1185,6 @@ giving adverbs event variable ARG0s as in ERG (sem.ex.44)</comment>
 <comment>had</comment>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<ep><pred/><label>H</label><var>E</var></ep>
 </semstruct>
 </le>
 
@@ -1198,7 +1193,6 @@ giving adverbs event variable ARG0s as in ERG (sem.ex.44)</comment>
 <comment>has</comment>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<ep><pred/><label>H</label><var>E</var></ep>
 </semstruct>
 </le>
 
@@ -1235,12 +1229,7 @@ ANNA - latest ERG does have modal predicates except for "will" (sem.ex.72)</comm
 <comment>2k+ verb+ing ANNA - added gerund_rel with ARG1 as in ERG (sem.ex.54)</comment>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<!--ep><gpred>GERUND_REL</gpred><label>H1</label><var>X</var></ep-->
 <ep><pred/><label>H</label><var>E</var></ep>
-<!--rarg><rargname>ARG1</rargname><label>H1</label><var>E</var></rarg-->
-<!-- ANNA - Could add unknown ARG1 for the verb predicate too but would interfere with other rules and have to be merged somewhere -->
-<!--rarg><rargname>ARG1</rargname><label>H</label><var>U</var></rarg-->
-<!--ing><ing-a><var>H1</var></ing-a><ing-b><var>H</var></ing-b></ing-->
 </semstruct>
 </le>
 
@@ -1258,7 +1247,7 @@ ANNA - latest ERG does have modal predicates except for "will" (sem.ex.72)</comm
 <comment>1k+ verb+s</comment>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<ep><pred/><label>H</label><var>E</var></ep>
+<ep><pred/><label>H</label><var tense='present'>E</var></ep>
 </semstruct>
 </le>
 
@@ -1297,7 +1286,7 @@ ANNA - removed possessive semantics to be added in later rules (sem.ex.61)</comm
 <!--ep><gpred>DEF_EXPLICIT_Q_REL</gpred><label>H</label><var>X</var></ep-->
 <!--rarg><rargname>RSTR</rargname><label>H</label><var>H2</var></rarg-->
 <!--rarg><rargname>BODY</rargname><label>H</label><var>H3</var></rarg-->
-<!--ep><gpred>POSS_REL</gpred><label>H1</label><var>U</var></ep-->
+<!--ep><gpred>POSS_REL</gpred><label>H1</label><var>E</var></ep-->
 <!--hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons-->
 </semstruct>
 </le>
