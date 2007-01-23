@@ -411,11 +411,12 @@
       (check-algebra-rule rule)
       (show-algebra-rule rule))))
 
+#|
 (defun check-algebra-tags nil
   (dolist (tag *algebra-tag-instructions*)
     (check-algebra-tag tag)
     (show-algebra-tag tag)))
-
+|#
 
 (defun check-algebra-rule (rule)
   (let ((rule-name (rmrs-algebra-rule-name rule))
@@ -561,6 +562,7 @@
 			    collect x)))))
     (unless (semstruct-h-cons new-semstruct)
       (add-ltop-conjunction new-semstruct))
+    ;;; (show-algebra-rule new-rule)
     new-rule))
 
 
