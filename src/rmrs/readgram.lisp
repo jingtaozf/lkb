@@ -194,7 +194,7 @@
 ;;; <!ELEMENT hook (index,label)>  
   (let ((index nil) (label nil))
     (setf index (construct-grammar-var 
-                 (read-rmrs-simple '|index| (car content))))
+                 (read-rmrs-grammar-var (car content))))
     (setf label (construct-grammar-var
                  (read-rmrs-simple '|label| (cadr content))))
     (make-indices 
@@ -233,7 +233,9 @@
   (let ((tag (car content))
         (body (cdr content)))
     (unless (or (eql tag '|var|) 
-		(and (listp tag) (eql (first tag) '|var|)))
+		(and (listp tag) (eql (first tag) '|var|))
+		(eql tag '|index|)
+		(and (listp tag) (eql (first tag) '|index|)))
       (error "Malformed variable ~A" content))
     (values (first body)
 	    (if (listp tag)

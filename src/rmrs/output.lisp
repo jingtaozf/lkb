@@ -298,6 +298,12 @@ plus other slots - see DTD
 <!ELEMENT semstruct (hook,(ep|rarg|ing)*)>
 <!ELEMENT hook (index,label)>
 <!ELEMENT index (#PCDATA)>
+<!ATTLIST index
+          num  CDATA #IMPLIED
+          pers CDATA #IMPLIED
+          gender CDATA #IMPLIED
+          tense CDATA #IMPLIED
+          aspect CDATA #IMPLIED >
 <!ELEMENT label (#PCDATA)>
 |#
 
