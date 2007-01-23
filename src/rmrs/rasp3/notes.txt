@@ -1,0 +1,322 @@
+Performance of ERG-RMRS (erg-nomsg, 2006) vs RASP3-RMRS
+
+1
+It rained.
+
+RASP can't recognised `it' as expletive
+
+2
+Abrams barked.
+
+OK
+
+3
+The window opened.
+
+OK
+
+4
+Abrams chased Browne.
+
+OK
+
+5
+Abrams handed Browne the cigarette.
+
+OK
+
+6
+Abrams handed the cigarette to Browne.
+
+The rule here is |V1/v_np_pp| - this is also involved in 71 (`Abrams
+put Browne in the garden.') and 85 (`Abrams strikes Browne as old.')
+plus (potentially) `Abrams ran to the store.'  These all behave
+differently semantically.  The least bad approach seems to be to give
+the PP an adverbial modification analysis (which is OK for the last
+case).  So for this example, to find what should be the ARG3, one has to go
+via the P.
+
+7
+Abrams bet Browne a cigarette that it rained.
+
+OK
+
+8
+Abrams knew that it rained.
+
+OK
+
+9
+Abrams intended to bark.
+
+Missing ARG1 of bark.
+
+10
+Abrams intended Browne to bark.
+
+Semantics here isn't same as ERG because Browne is taken as a separate
+argument.  ARG1 of bark missing.
+
+11
+Every cat barked.
+
+OK
+
+12
+Every cat chased some dog.
+
+OK
+
+13
+My cat barked.
+
+OK
+
+14
+It barked.
+
+OK
+
+15
+The cat chased it.
+
+OK
+
+16
+The cat chased itself.
+
+OK
+
+17
+The cat chased one.
+
+This would be OK if we recognised non_temp_nom_rel a supertype of one_n_1_rel
+(which we currently don't but probably should).
+
+18
+Mine barked.
+
+OK
+
+19
+That opened.
+
+The RASP3-RMRS has a that_q without an associated nominal.
+To get this right would require having a subcase of S/np_vp
+for the case where the np is a bare DD1 - possible, but probably
+too much hassle to be worth it.
+
+20
+Cats bark.
+
+OK
+
+21
+Tobacco arrived.
+
+OK (though character alignment mismatch)
+
+22
+Some bark.
+
+No suitable RASP parse (but cf 19)
+
+23
+Some of the cats bark.
+
+OK, modulo spurious of_p_rel.  However, this example only works if
+the index of the pp is set to be the noun index, rather than the p's event.
+Formally this is wrong, and it's possible it will cause problems with
+modification of Ps (although I don't think these are all that frequent).
+
+24
+No cat barked.
+
+OK
+
+25
+Did the dog bark?
+
+Nothing resembling a sensible parse for this from RASP
+
+26
+Which dog barked?
+
+OK
+
+27
+Whose dog barked?
+
+OK
+
+28
+Chase Browne!
+
+OK
+
+29
+Abrams wondered which dog barked.
+
+OK (Note use of underspecified ARG2-4 for the V1/v_s rule: which may not be 
+necessary)
+
+30
+Abrams wondered whether Browne barked.
+
+I have chosen to give this the subordinating conjunction semantics
+(see examples 72 and 109). This isn't right, but we can't get exactly
+the right semantics, since that involves a null semantics conjunction.
+Giving the V1/v_pp rule (subord) the same semantics as the V1/vp_pp
+subord conj case will make things more robust since the two rules
+apply in the same places.
+
+31
+The dog that Browne chased barked.
+
+OK (Note use of underspecified ARG2-4)
+
+The N1/n_s rule in RASP is used both for relative clauses starting
+with `that' (in the ERG, the relative clause is coordinated with the noun)
+and for Ns like belief which subcat for a sentence
+(in the ERG, an ARG is created between the noun and the ltop of the sentence)
+There's no way currently of underspecifying the attachment.
+As things stand, we get the relative clause case right.
+
+32
+The dog to chase is barking.
+
+OK (Note use of underspecified ARG2-4)
+
+33
+The dog was chased by Browne.
+
+No connected arguments to chase and a spurious `by'.  Getting this
+right (or at least better) would require a special form of S/np_vp
+for passives, maybe plus a special form |V1/v_pp|.  A halfway
+position would be to leave in the `by' and assume that's used to
+find the agent.  This will need to be fixed for Chemistry!
+
+34
+The dog chased by Browne barked.
+
+35
+The dog is barking.
+
+OK (check tense)
+
+36
+The dog has barked.
+
+OK (check tense)
+
+37
+The dog has been barking.
+
+OK (check tense)
+
+38
+The dog had been barking.
+
+OK (check tense)
+
+39
+The dog will bark.
+
+Modal semantics: getting this right would require a special entry for `will'
+
+40
+The dog is going to bark.
+
+41
+The dog could bark.
+
+OK
+
+42
+The dog couldn't bark.
+
+43
+The old dog barked.
+
+OK
+
+44
+The dog barked softly.
+
+OK apart from soft_a vs softly.  
+
+The dog probably barked.
+The dog barked in the garden.
+The dog barks now.
+The garden dog barked.
+The tobacco garden dog barked.
+The cat is old.
+The cat is in the garden.
+The barking dog chased Browne.
+Chased dogs bark.
+Chasing the cat is old.
+That the cat chases Browne is old.
+Dogs chase whatever barks.
+
+The only RASP analysis of this with `bark' as a verb involves the 
+V1/v_s rule
+
+The dog barked every day.
+When did the dog bark?
+Three of the dogs bark.
+Three bark.
+Browne's dog barks.
+Browne's barks.
+Twenty three dogs bark.
+Two hundred twenty dogs bark.
+Abrams arrived by car.
+Abrams kept barking.
+Browne squeezed the cat in.
+Browne squeezed in the cat.
+The picture of Abrams arrived.
+Abrams wiped the table clean.
+Abrams put Browne in the garden.
+The dog will bark if Browne arrives.
+Abrams and Browne arrived.
+Abrams, Browne and the dog arrived.
+The dog arrived and barked.
+The dog arrived and Browne barked.
+The dog barked didn't it?
+It is obvious that the dog barked.
+Abrams promised Browne to bark.
+Abrams seems to bark.
+Abrams believes Browne to be barking.
+It bothered Abrams that Browne barked.
+It took Abrams ten minutes to arrive.
+Abrams left it to Browne to bark.
+
+85
+
+Abrams strikes Browne as old.
+
+The semantics the ERG obtains is strike_v_as(e,B,old(A)), which is completely
+out of reach!
+
+Browne considers Abrams old.
+Abrams liked the idea that Browne could bark.
+Abrams barked from ten to three.
+Abrams was very old.
+Nearly every dog barked.
+Abrams barked very softly.
+Browne's chasing of cats bothered Abrams.
+It bothered Browne that Abrams chased cats.
+June third arrived.
+Abrams arrived at three twenty.
+Browne arrived on Tuesday morning.
+The cats found a way to bark.
+The happier dog chased Browne.
+There were cats in the garden.
+That dog chased Browne.
+Somebody chased Abrams.
+How happy was Abrams?
+The number five bothers Browne.
+Abrams could.
+Browne tried to.
+Don't bark!
+The dog arrived barking.
+The dog liked barking.

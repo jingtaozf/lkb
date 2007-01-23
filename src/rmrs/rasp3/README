@@ -1,0 +1,21 @@
+rasp.sh -m -w -p'-ot -u -n5' < ~/lingo/lkb/src/rmrs/rasp3/test-set.txt > ~/lingo/lkb/src/rmrs/rasp3/alltest.trees
+
+then hand-selected to give selected.trees
+
+in testing.lisp: evaluate rasp3-out defun
+
+then
+
+:pa :mrs
+
+(rasp3-out "rmrs/rasp3/selected.trees" "rmrs/rasp3/annlt.rmrs")
+
+comparison with ERG:
+
+load the no-msg form of the ERG
+
+in testing.lisp: evaluate compare-eg defun
+
+then e.g. 
+
+(compare-eg 2 t)
