@@ -907,6 +907,36 @@ goes to
                *known-rule-record*
              *unknown-rule-record*)))
 
+(defun show-sorted-rule-record (knownp)
+  (let ((rules nil))
+    (maphash #'(lambda (key val)
+		 (let ((max 0))
+		   (loop for rec in val
+		       do
+			 (let ((count (cdr rec)))
+			   (when (> count max) (setf max count))))
+		   (push (list max key val) rules)))
+	     (if knownp
+		 *known-rule-record*
+	       *unknown-rule-record*))
+    (setf rules (sort rules #'> :key #'car))
+    (dolist (rule rules)
+      (let ((key (cadr rule))
+	    (val (caddr rule)))
+	(format t "~%~A " key)
+	(loop for rec in val
+	    do
+	      (let ((opt (car rec))
+		    (count (cdr rec)))
+		(if opt
+		    (progn 
+		      (format t "~{~A~}" 
+			      (loop for el in opt
+				  collect 
+				    (if el "+" "-")))
+		      (format t " ~A; " count))
+		  (format t "/ ~A" count))))))))
+
 (defun increment-rule-record (rule-name opt-spec knownp)
   (let* ((rule-table (if knownp *known-rule-record*
                        *unknown-rule-record*))
