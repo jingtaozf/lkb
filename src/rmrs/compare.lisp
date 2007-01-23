@@ -115,6 +115,7 @@ because snore and sleep don't have matching ARGs.
   var-comp-status
   arg-comp-status
   label-pair ;; rel labels
+  anchor-pair ;; rel anchors (for version without ING) 
   cvar-pair ;; characteristic vars (non-handle)
   hvar-pair ;; non arg vars (handle)
   )
@@ -277,9 +278,14 @@ the canonical order is fully defined.
 	(cfrom2 (comparison-set-cfrom cset2))
 	(cto1 (comparison-set-cto cset1))
 	(cto2 (comparison-set-cto cset2)))
+    (declare (ignore cto1 cto2))
+    (< cfrom1 cfrom2)))
+
+    #|
     (or (< cfrom1 cfrom2)
 	(and (eql cfrom1 cfrom2) 
-	     (< cto1 cto2)))))
+	(< cto1 cto2)))))
+	|#
 
 (defun rmrs-constant-pred-lesser-p (rel1 rel2)
   (let ((pred1 (rel-pred rel1))
@@ -472,6 +478,11 @@ the canonical order is fully defined.
 					:label-pair 
 					(cons (var-id (rel-handel rel1))
 					      (var-id (rel-handel rel2)))
+					:anchor-pair 
+					(if (and (var-p (rel-anchor rel1))
+						 (var-p (rel-anchor rel2)))
+					    (cons (var-id (rel-anchor rel1))
+					      (var-id (rel-anchor rel2))))
 					:cvar-pair cvar-pair
 					:hvar-pair hvar-pair)))
 	  match-record))
@@ -637,8 +648,9 @@ the canonical order is fully defined.
   (let ((pred (rel-pred rel)))
     (or (equal pred "named_rel")
 	(and (realpred-p pred)
-	 (or (equal (realpred-pos pred) "n")
-	     (equal (realpred-pos pred) "v"))))))
+	     (or (equal (realpred-pos pred) "n")
+		 (equal (realpred-pos pred) "a")
+		 (equal (realpred-pos pred) "v"))))))
 
 ;;; Pruning 
 
@@ -658,12 +670,18 @@ the canonical order is fully defined.
 			 (match-rel-record-rel2 mrec)
 		       (match-rel-record-rel1 mrec)))
 		(let ((label-pair (match-rel-record-label-pair mrec))
+		      (anchor-pair (match-rel-record-anchor-pair mrec))
 		      (cvar-pair (match-rel-record-cvar-pair mrec)))
 		  (when firm-p
 		    (push label-pair firm-bindings)
+		    (when anchor-pair 
+		      (push anchor-pair firm-bindings))
 		    (push cvar-pair firm-bindings))
 		  (push (car label-pair) a-set)
 		  (push (cdr label-pair) b-set)
+		  (when anchor-pair 
+		    (push (car anchor-pair) a-set)
+		    (push (cdr anchor-pair) b-set))
 		  (push (car cvar-pair) a-set)
 		  (push (cdr cvar-pair) b-set)))))))
     (let ((new-matches
@@ -800,6 +818,9 @@ the canonical order is fully defined.
   (let ((bindings nil))
     (dolist (mrec mrecs)
       (push (match-rel-record-label-pair mrec) bindings)
+      (let ((anchor-pair (match-rel-record-anchor-pair mrec)))
+	(when anchor-pair
+	  (push anchor-pair bindings)))
       (let ((cvar-pair (match-rel-record-cvar-pair mrec)))
 	(when cvar-pair
 	  (push cvar-pair bindings)))
@@ -864,6 +885,7 @@ Unattached arguments are ignored
   (let ((bindings (rmrs-comparison-record-bindings comp))
 	(qeq-pairs (rmrs-comparison-record-qeq-pairs comp))
 	(arg-matches nil))
+;;;    (pprint bindings)
     (dolist (rmrs-arg1 (rmrs-rmrs-args rmrs1))
       (let* ((label1 (rmrs-arg-label rmrs-arg1)) 
 	     (value1 (rmrs-arg-val rmrs-arg1))
