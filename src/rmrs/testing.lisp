@@ -27,7 +27,7 @@
 ("It barked." . 1)
 ("The cat chased it." . 1)
 ("The cat chased itself." . 1) ; 16
-("The cat chased one." . 1)
+("The cat chased one." . 4)
 ("Mine barked." . 1)
 ("That opened." . 1)
 ("Cats bark." . 1)
@@ -41,16 +41,16 @@
 ("Chase Browne!" . 1)
 ("Abrams wondered which dog barked." . 1)
 ("Abrams wondered whether Browne barked." . 1)
-("The dog that Browne chased barked." . 2) ; 31
+("The dog that Browne chased barked." . 1) ; 31
 ("The dog to chase is barking." . 1)
-("The dog was chased by Browne." . 1)
+("The dog was chased by Browne." . 2)
 ("The dog chased by Browne barked." . 2)
 ("The dog is barking." . 1)
 ("The dog has barked." . 1) ; 36
 ("The dog has been barking." . 1)
 ("The dog had been barking." . 1)
 ("The dog will bark." . 1)
-("The dog is going to bark." . 1)
+("The dog is going to bark." . 2)
 ("The dog could bark." . 1) ; 41
 ("The dog couldn't bark." . 1) ; 
 ("The old dog barked." . 1)
@@ -119,7 +119,15 @@
 ("Don't bark!" . 1) ; 106
 ("The dog arrived barking." . 1)
 ;;; new test suite items after here
-("The dog liked barking." . 2) ; contrast with `kept barking'
+("The dog liked barking." . 2)		; contrast with `kept barking'
+("The dog barks if Browne arrives." . 1) ; variant on 72 without `will'
+
+("Abrams bet Browne a cigarette that it barked." . 1) ; variant on 7 and 8
+("Abrams knew that it barked." . 1)	; because we can't get the expl it 
+("The dog is the cat." . 1)		; identity form of be
+("The dog has the cat." . 1)            ; non aux have
+("The dog does the cat." . 1)           ; non aux do 
+("The dog was chased." . 1)             ; passive without `by'
 
 ))
 
@@ -165,13 +173,11 @@
 	 (parse-number (cdr eg))
          (rasp-rmrs 
           (nth (- egnum 1)
-               (mrs::read-rmrs-file (make-pathname 
-	     :device "c"
-	     :directory "/d/rasp-rmrs/test-sets/"
-	     :name "annlt.rmrs") :rasp)))
+               (mrs::read-rmrs-file "rmrs/rasp3/annlt.rmrs" :rasp)))
 	 (erg-rmrs
 	  (rmrs-for-sentence input parse-number)))
     (dolist (comparison-record (mrs::compare-rmrs erg-rmrs rasp-rmrs strpos-p))
+      ;;; (pprint comparison-record)
       (lkb::show-mrs-rmrs-compare-window erg-rmrs rasp-rmrs 
 				    comparison-record input))))
 
@@ -415,7 +421,7 @@ algebra testing
 	 "rmrs/rasp3/gram15-general.rmrs")
 	(*rasp-rmrs-tag-file*
 	 "rmrs/rasp3/lex15.rmrs")
-	(*renumber-hack* t))
+	(*renumber-hack* nil))
    (setf *algebra-rule-instructions* nil)
    (setf *algebra-tag-instructions* nil)
    (setf *initial-rasp-num* nil)
@@ -435,7 +441,7 @@ algebra testing
                     namestring "> /tmp/pfile"))
               ; (format t "~%File ~A unpacked" namestring)
 	    (let ((new-file (concatenate 'string 
-			      "~/citation/xml-reparsed/"
+			      "~/citation/xml-reparsed3/"
 			      (subseq namestring
 				      0 (- (length namestring) 3)
 				      )))
@@ -456,37 +462,45 @@ algebra testing
 		      (cond ((line-matches new-line "<PARSE>")
 			     (setf in-tree-p t)
 			     (write-line new-line ostream))
+			    ((line-matches new-line "*** Error")
+			     ;;; ignore errors in parse
+			     (write-line new-line ostream))
 			    ((line-matches new-line "</PARSE>")
 			     (setf in-tree-p nil)
 			     (write-line new-line ostream)
 			     (finish-output ostream)
 			     (handler-case
-                      (progn
-			(construct-sem-for-tree 
-			 (read-from-string 
-			  (apply #'concatenate 'string 
-				 (nreverse tree-lines)))
-			 :rasp ostream)
-                        (finish-output ostream))
-		      (storage-condition (condition)
-			(progn
-			  (format t "~%Memory allocation problem: ~A~%" condition)
-			  (format ostream "~%<rmrs>~%</rmrs>~%" condition)))
-		      (error (condition)
-			(progn
-			  (format t "~%Error: ~A~%" condition)
-			  (format ostream "~%<rmrs>~%</rmrs>~%" condition)))
-		      (serious-condition (condition)
-			(progn
-			  (format t "~%Something nasty: ~A~%" condition)
-			  (format ostream "~%<rmrs>~%</rmrs>~%" condition)   
-			     ))))
+				 (progn
+				   (format ostream "<rmrs-list>~%")
+				   (construct-sem-for-tree 
+				    (read-from-string 
+				     (apply #'concatenate 'string 
+					    (nreverse tree-lines)))
+				    :rasp ostream)
+				   (format ostream "</rmrs-list>~%")
+				   (finish-output ostream))
+			       (storage-condition (condition)
+				 (progn
+				   (format ostream "~%<!-- Memory allocation problem: ~A -->" condition)
+				   (format ostream "~%</rmrs-list>~%")))
+			       (error (condition)
+				 (progn
+				   (format ostream "~%<!-- Error: ~A -->" condition)
+				   (format ostream "~%</rmrs-list>~%")))
+			       (serious-condition (condition)
+				 (progn
+				   (format ostream "~%<!-- Something nasty: ~A -->" condition)
+				   (format ostream "~%</rmrs-list>~%")
+				      
+				   ))))
+			    ((line-matches new-line "<RMRS></RMRS>")
+			     (setf in-rmrs-p nil))
 			    ((line-matches new-line "<RMRS>")
 			     (setf in-rmrs-p t))
 			    ((line-matches new-line "</RMRS>")
 			     (setf in-rmrs-p nil))
 			    ((line-matches new-line "</rmrs-list>")
-			     nil)
+			     (setf in-rmrs-p nil))
 			    (t 
 			     (when in-tree-p
 			       (push new-line tree-lines))
