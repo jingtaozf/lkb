@@ -82,25 +82,22 @@
               (new-args nil)
               (label-recs nil)
 	      (ings nil)
-	      ;;(tchart-edges (lkb::get-edges lkb::*tchart*)) ;; [bmw] see below
 	      )
           (dolist (rel lzt)
             (multiple-value-bind (ep rmrs-args new-label-recs)
                 (parsonify-rel rel label-recs)
               (push ep new-lzt)
               (setf new-args (append new-args rmrs-args))
-              (setf label-recs new-label-recs)))
-	      (setf ings (construct-converted-in-groups label-recs))
+	      (unless *anchor-rmrs-p*
+		(setf label-recs new-label-recs))))
+	  (unless *anchor-rmrs-p*
+	    (setf ings (construct-converted-in-groups label-recs)))
           (make-rmrs   :top-h (psoa-top-h mrs)
                        :h-cons (construct-converted-hcons 
 				(psoa-h-cons mrs) ings)
                        :liszt (nreverse new-lzt)
-                       :in-groups ings
+                       :in-groups (unless *anchor-rmrs-p* ings)
                        :rmrs-args new-args
-		       ;; [bmw] hack to obtain standoff points
-		       ;; (which are NOT provided by the input mrs...)
-		       ;;:cfrom (lkb::get-min-edge-cfrom tchart-edges)
-		       ;;:cto (lkb::get-max-edge-cto tchart-edges)
                        :origin :erg)))))
 
 
@@ -120,7 +117,7 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
   ;;; label-recs is a list of ing-info structures
   ;;; so that we can have a canonical notion of in-group
   (let* ((pred (rmrs-convert-pred (rel-pred rel)))
-	 (rel-type (determine-ing-rel-type pred)) 
+	 (rel-type (unless *anchor-rmrs-p* (determine-ing-rel-type pred)))
          (flist (rel-flist rel))
 	 (main-arg (fvpair-value (car flist)))
          (converted-main-arg (if (var-p main-arg)
@@ -130,12 +127,16 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
 				      main-arg)))
          (label (rel-handel rel))
 	 (label-id (var-id label))
-	 (label-match (dolist (label-rec label-recs)
-			(when (eql label-id 
-				   (var-id (ing-info-label label-rec)))
-			  (return label-rec))))
+	 (label-match (unless *anchor-rmrs-p*
+			(dolist (label-rec label-recs)
+			  (when (eql label-id 
+				     (var-id (ing-info-label label-rec)))
+			    (return label-rec)))))
          (new-label (if label-match ;; conjunction
                         (create-new-rmrs-var 
+			 "h" *rmrs-variable-generator* nil)))
+	 (anchor (if *anchor-rmrs-p*
+		     (create-new-rmrs-var 
 			 "h" *rmrs-variable-generator* nil)))
          (rmrs-args
           (if (cdr flist)
@@ -151,13 +152,17 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
                                        :test #'equal))
                         (list (make-rmrs-arg 
                                :arg-type (string feat)
-                               :label (or new-label label)
+                               :label (if  *anchor-rmrs-p*
+					  anchor 
+					(or new-label label))
                                :val (if (var-p val)
 					(rmrs-convert-variable val)
 				      val))))))))
          (ep 
           (make-char-rel
-           :handel (or new-label label)
+           :handel (if *anchor-rmrs-p* label
+		     (or new-label label))
+	   :anchor anchor
            :parameter-strings (rel-parameter-strings rel)
            :extra (rel-extra rel)
            :pred pred 
@@ -168,8 +173,9 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
 	   :cto (if (char-rel-p rel)
 		    (char-rel-cto rel)))))
     (values ep rmrs-args 
+	    (if (not *anchor-rmrs-p*)
 	    (record-ing-info label-recs 
-			     label new-label rel-type label-match))))
+			     label new-label rel-type label-match)))))
 
 (defun record-ing-info (label-recs label new-label rel-type
 			      label-match)

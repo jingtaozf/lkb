@@ -73,6 +73,7 @@
   var-comp-status
   arg-comp-status
   label-pair ;; rel labels
+  anchor-pair ;; rel anchors (for version without ING) 
   cvar-pair ;; characteristic vars (non-handle)
   hvar-pair ;; non arg vars (handle)
   )
