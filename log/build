@@ -14,7 +14,6 @@ M log/build
 ? src/.l7cl
 ? src/.l8cl
 ? src/.lecl
-U src/main/active.lsp
 ? src/tsdb/home/log
 ? src/tsdb/home/redwoods
 **********
@@ -26,7 +25,7 @@ U src/main/active.lsp
 **********
 Checking in ./src/version.lsp;
 /lingo/CVS/lkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.548; previous revision: 1.547
+new revision: 1.549; previous revision: 1.548
 done
 make[1]: Entering directory `/lingo/build/lkb'
 ( \
@@ -1222,7 +1221,7 @@ Allocated 5242880 bytes for new space
 
 ;; Autoloading locale from #P"/lingo/local/acl/locales/en_US"
 International Allegro CL Enterprise Edition
-8.0 [Linux (x86)] (Feb 14, 2007 13:21)
+8.0 [Linux (x86)] (Feb 14, 2007 13:43)
 Copyright (C) 1985-2005, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -2656,7 +2655,7 @@ CL-USER(10): ; Loading /lingo/build/lkb/src/systems/tsdb.system
 ; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/regex-class.fasl
 ;;; Compiling file /lingo/build/lkb/src/ppcre/convert.lisp
 ;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/convert.fasl
-8507624 bytes have been tenured, next gc will be global.
+8507592 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/convert.fasl
