@@ -37,7 +37,7 @@
    ;;
    #+:linux86 :lisp-heap-start 
    #+(and :linux86 (not (version>= 6 2))) "1040M" 
-   #+(and :linux86 (version>= 6 2)) "1088M"
+   #+(and :linux86 (version>= 6 2)) "1152M"
    #+(and :sparc :solaris2) :c-heap-start #+(and :sparc :solaris2) #xe0000000
 
    :runtime :standard 
