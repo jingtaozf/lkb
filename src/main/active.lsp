@@ -635,6 +635,7 @@
                            :dag copy :dag-restricted vector
                            :lex-ids (copy-list (edge-lex-ids edge))
                            :leaves (copy-list (edge-leaves edge))
+                           :orth-tdfs otdfs
                            :partial-tree (if (rule-orthographemicp rule)
                                            (rest orthographemics)
                                            orthographemics))))))))
