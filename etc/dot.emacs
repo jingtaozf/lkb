@@ -83,7 +83,8 @@
       '(("\\.cl$" . common-lisp-mode)
         ("\\.lisp$" . common-lisp-mode)
         ("\\.tdl$" . tdl-mode)
-        ("\\.mrs$" . tdl-mode)
+        ("\\.mrs$" . sgml-mode)
+        ("\\.rmrs$" . sgml-mode)
         ("\\.system$" . common-lisp-mode))
       auto-mode-alist))
 
