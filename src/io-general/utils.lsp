@@ -15,7 +15,7 @@
 	  ,@(when doc (list doc))))
 
 (defun check-for (character istream name)
-   (let ((next-char (peek-char t istream nil 'eof)))
+   (let ((next-char (peek-with-comments istream)))
      (if (char= next-char character)
          (read-char istream)
        (progn 

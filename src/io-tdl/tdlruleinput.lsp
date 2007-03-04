@@ -59,9 +59,6 @@
 		(read-morphology-letter-set
                  istream))
                ; Bernie morphology
-               ((eql next-char #\:) 
-                 (read-tdl-declaration istream))
-               ; declarations like :begin :type
                ((eql next-char #\#) (read-tdl-comment istream))
                (t 
                 (catch 'syntax-error

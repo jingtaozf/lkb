@@ -9,8 +9,7 @@
 ;;; support it here
 
 (defun output-type-as-tdl (name type-struct stream)
-  (let* ((status (assoc name *tdl-status-info*))
-         (def (ltype-local-constraint type-struct))
+  (let* ((def (ltype-local-constraint type-struct))
          (parents (ltype-parents type-struct)))
     (format stream "~%~A :" (string-downcase name))
     (if (null def)
@@ -28,7 +27,6 @@
              (display-dag1 def 'tdl stream nil t)))
     ;;; need fifth argument to block the first type being
     ;;; output
-    (when status (format stream ", ~A" (cdr status)))
     (format stream ".")))
 
 

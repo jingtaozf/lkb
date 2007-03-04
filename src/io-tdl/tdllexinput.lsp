@@ -34,9 +34,6 @@
          (cond ((eql next-char #\;) 
                  (read-line istream))
                ; one line comments
-               ((eql next-char #\:) 
-                 (read-tdl-declaration istream))
-               ; declarations like :begin :type
                ((eql next-char #\#) (read-tdl-comment istream))
                (t (catch 'syntax-error
                 (read-tdl-lex-entry istream)))))))
@@ -74,8 +71,8 @@
 ;	   (setf (cache-lex-list *lexicon-in*)
 ;	     (cons name (collect-psort-ids *lexicon-in*))) ;;fix_me properly
 	   )
-	 (let ((*readtable* (copy-readtable nil))) ;;bmw
-	   (add-lex-from-file nil name constraint default))))))
+;;;	 	 (let ((*readtable* (copy-readtable nil))) ;;bmw - why? AAC
+	 (add-lex-from-file nil name constraint default)))))
 
 
 
@@ -143,9 +140,6 @@
          (cond ((eql next-char #\;) 
                  (read-line istream))
                ; one line comments
-               ((eql next-char #\:) 
-                 (read-tdl-declaration istream))
-               ; declarations like :begin :type
                ((eql next-char #\#) 
                 (read-tdl-comment istream))
                (t 

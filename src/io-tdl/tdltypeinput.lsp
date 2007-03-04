@@ -1,15 +1,13 @@
-;;; Copyright (c) 1996-2004 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron
+;;; Copyright (c) 1996-2007 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron
 ;;; see licence.txt for conditions
 
 (in-package :lkb)
 
-;;; modifications by bmw (dec-03)
-;;; - internal reworking of cdb-lex-database + cdb-leaf-database classes 
-;;;   and associated script functions
-
 ;;; 1997 - added status stuff so that we can read files without
 ;;; modification to get rid of this
-
+;;; AAC 2007 - removed status stuff! and a load of other unused
+;;; bits and pieces.  Allow ; comments within type definitions
+;;; although they have to come after parents.
 
 ;;; Input from type files in (a subset of) TDL format
 ;;; the subset is determined by a) what should be implementable in
@@ -18,12 +16,12 @@
 ;;; Type specifications have the following syntax (in BNF):
 ;;; 
 ;;; Type-def -> Type { Avm-def | Subtype-def} . | 
-;;;                  Type { Avm-def | Subtype-def} Status .
+;;;                  Type { Avm-def | Subtype-def}.
 ;;; Type  -> identifier
 ;;; Subtype-def ->  :< type 
 ;;; Avm-def -> := Conjunction | Comment Conjunction
 ;;; Conjunction -> Term { & Term } *
-;;; Term -> Type | Feature-term | Diff-list | List | Coreference | Templ-call
+;;; Term -> Type | Feature-term | Diff-list | List | Coreference 
 ;;; Feature-term -> [] | [ Attr-val {, Attr-val}* ]
 ;;; Attr-val -> attribute {.attribute}* Conjunction
 ;;;   (I am fairly convinced that the TDL manual BNF form is wrong
@@ -33,10 +31,6 @@
 ;;;                < Conjunction {, Conjunction}* , ...> |
 ;;;                 < Conjunction {, Conjunction}* . Conjunction> 
 ;;; Coreference -> #corefname
-;;; Templ-call -> @templ-name ( ) | @templ-name (Templ-par {, Templ-par}*)
-;;; Templ-par -> $templ-var | $templ-var = conjunction
-;;;
-;;; Status -> status: status-name
 ;;;
 ;;; Type-addendum -> Type Avm-addendum .
 ;;; Avm-addendum -> :+ Parents Conjunction | Parents Comment Conjunction |
@@ -44,7 +38,7 @@
 ;;;                    Comment | Conjunction
 ;;;
 ;;; special characters are
-;;; . : < = & , # [ ] @ $ ( ) > ! ^
+;;; . : < = & , # [ ] $ ( ) > ! ^
 ;;; ^ - added - indicates `expanded syntax'
 ;;; / - added - indicates default
 ;;; + - added - indicates type addendum; not a break character (ERB 2004-08-10)
@@ -60,15 +54,13 @@
 ;;; we can't slash again.  Showing this in BNF is messy, so I won't.
 
 ;;; the type file extra.tdl is necessary for the basic type definitions
-;;; to get the templates, evaluate the file templates.lsp
+
 
 (defparameter *tdl-expanded-syntax-function* nil)
 
-(defparameter *tdl-status-info* nil)
-
 (defun make-tdl-break-table nil 
   (define-break-characters '(#\< #\> #\! #\= #\: #\. #\# #\&
-                             #\, #\[ #\] #\; #\@ #\$ #\( #\) #\^ #\/)))
+                             #\, #\[ #\] #\; #\$ #\( #\) #\^ #\/)))
 
 
 (defun read-tdl-type-file-aux (file-name &optional settings-file)
@@ -81,7 +73,6 @@
     (setf *display-settings-file* settings-file))
    (setf *type-file-list* file-names)
    (clear-types)
-   (setf *tdl-status-info* nil)
    (add-type-from-file *toptype* nil nil nil nil)
    (let ((*readtable* (make-tdl-break-table)))
       (loop for file-name in file-names
@@ -109,32 +100,21 @@
         "Problems in type file")))))
 
 (defun read-tdl-leaf-type-file-aux (filenames)
-  (read-GENERAL-leaf-type-files-aux filenames))
+  (read-general-leaf-type-files-aux filenames))
   
 (defmethod read-tdl-leaf-type-file-aux-internal (filename)
-  (read-GENERAL-leaf-type-file-aux-internal filename))
+  (read-general-leaf-type-file-aux-internal filename))
 
-;(defun read-tdl-patch-files-aux (file-names)
-;    (let ((*readtable* (make-tdl-break-table)))
-;      (loop for file-name in file-names
-;         do
-;         (format t "~%Reading in type file ~A" 
-;                 (pathname-name file-name))
-;         (with-open-file 
-;            (istream file-name :direction :input)
-;            (read-tdl-type-stream istream t)))) 
-;    ;; check-type-table is in checktypes.lsp 
-;    (if *syntax-error*
-;      (progn (setf *syntax-error* nil)
-;             (cerror "Cancel load" "Syntax error(s) in type file")
-;             nil)
-;      (if *amend-error*
-;          (setf *amend-error* nil)
-;        (when (patch-type-table) 
-;          (canonicalise-feature-order)           
-;          (set-up-type-interactions)
-;          t)) ))   
+(defun peek-with-comments (istream)
+  ;;; replaces (peek-char t istream nil 'eof)
+  ;;; in situation where there may be commented out lines
+  (loop
+    (let ((next-char (peek-char t istream nil 'eof)))
+      (if (eql next-char #\;)
+		 (read-line istream)
+	(return next-char)))))
 
+	
 
 ;;; main functions
 
@@ -145,9 +125,6 @@
          (cond ((eql next-char #\;) 
                  (read-line istream))
                ; one line comments
-               ((eql next-char #\:) 
-                 (read-tdl-declaration istream))
-               ; declarations like :begin :type
                ((eql next-char #\#) (read-tdl-comment istream))
                (t (catch 'syntax-error
                     (read-tdl-type-entry istream augment)))))))
@@ -178,31 +155,9 @@
           (return))
         (read-char istream)))))
 
-(defun read-tdl-declaration (istream)
-  (read-char istream)
-  (let* ((begin-or-end (read istream))
-         (break-char (read istream))
-         (decl-type (read istream)))
-    (declare (ignore break-char))
-    (if (and (eql begin-or-end 'begin)
-             (eql decl-type 'lisp))
-      (loop (read-line istream)
-            (let ((next-char (peek-char t istream nil 'eof)))
-              (when (eql next-char #\:)
-                (read-char istream)
-                (let* ((new-begin-or-end (read istream))
-                       (new-break-char (read istream))
-                       (new-decl-type (read istream)))
-                  (declare (ignore new-break-char))
-                  (when (and (eql new-begin-or-end 'end)
-                             (eql new-decl-type 'lisp))
-                    (read-line istream)
-                    (return))))))
-      (read-line istream))))
-
 (defun read-tdl-type-entry (istream &optional augment)
 ;;; Type-def -> Type { Avm-def | Subtype-def} . |
-;;;             Type { Avm-def | Subtype-def} Status .
+;;;             Type { Avm-def | Subtype-def}.
 ;;; Type  -> identifier
 ;;; Subtype-def ->  :< type 
 ;;; Avm-def -> := Conjunction | Comment Conjunction
@@ -251,10 +206,7 @@
          (unless
            (amend-type-from-file name (list parent) nil nil nil)
            (setf *amend-error* t))
-         (add-type-from-file name (list parent) nil nil nil))
-       (let ((next-char (peek-char t istream nil 'eof)))
-         (when (eql next-char #\,)
-           (read-tdl-status-info istream name)))))
+         (add-type-from-file name (list parent) nil nil nil))))
 
 (defparameter *tdl-coreference-table* (make-hash-table))
 (defparameter *tdl-default-coreference-table* (make-hash-table))
@@ -295,10 +247,10 @@
 		       (eql (peek-char t istream nil 'eof) #\")))
 	(setf parents (read-tdl-type-parents istream name)))
       ;;; the above absorbs the final & if it's there
-      (let ((next-char (peek-char t istream nil 'eof)))
+      (let ((next-char (peek-with-comments istream)))
 	    (when (eql next-char #\")
 	      (setf comment (read-tdl-type-comment istream name))))
-      (let ((next-char (peek-char t istream nil 'eof)))
+      (let ((next-char (peek-with-comments istream)))
 	    (unless (or (eql next-char #\.) (eql next-char #\,))
       ;;; read-tdl-conjunction returns a list of path constraints.
       ;;; In some cases the element may be nil.  If there is a
@@ -336,10 +288,8 @@
 	    (augment
 	     (amend-type-from-file name parents constraint def-alist comment)
 	    (setf *amend-error* t))
-	    (t (add-type-from-file name parents constraint def-alist comment)))
-	    
-      (when (eql (peek-char t istream nil 'eof) #\,)
-	(read-tdl-status-info istream name)))))
+	    (t (add-type-from-file name parents constraint def-alist comment))))))
+
 
 (defun read-tdl-type-parents (istream name)
   ;;; Type & | Type (& Type)* & | Type | Type (& Type)*
@@ -393,24 +343,6 @@
 	      (t (push (read-char istream) comment-res)))))
     (coerce (nreverse comment-res) 'string)))
 
-
-
-(defun read-tdl-status-info (istream name)
-  ;;; 
-  ;;; Status -> status: status-name
-  ;;;
-  (read-char istream)
-  (let* ((status-indicator (read istream))
-         (break-char (read istream))
-         (status-type (read istream)))
-    (unless (and (eql status-indicator 'status)
-             (eql  break-char #\:))
-      (lkb-read-cerror istream "Unrecognised symbol ~A when reading ~A" status-indicator name)
-      (ignore-rest-of-entry istream name))
-    (push (cons name
-                (format nil "~A~A ~A" 
-                        status-indicator break-char status-type))
-          *tdl-status-info*)))
 
 (defun make-tdl-coreference-conditions (istream coref-table in-default-p)
   ;;; the coref table is a list of paths, indexed by
@@ -466,7 +398,7 @@
   (let* ((constraint nil))
     (loop
       (let* ((term (read-tdl-defterm istream name path-so-far in-default-p))
-             (next-char (peek-char t istream nil 'eof)))
+             (next-char (peek-with-comments istream)))
         (setf constraint 
               (nconc term constraint))
         (unless (eql next-char #\&) (return))
@@ -475,7 +407,7 @@
 
 (defun read-tdl-defterm (istream name path-so-far in-default-p)
 ;;; DefTerm -> Term | Term / Term | / Term  
-  (let ((next-char (peek-char t istream nil 'eof)))
+  (let ((next-char (peek-with-comments istream)))
     (cond ((eql next-char 'eof) 
            (lkb-read-cerror istream 
                             "Unexpected eof when reading ~A" name)
@@ -497,8 +429,8 @@
                   (read-tdl-term istream name path-so-far persist))
               (read-tdl-term istream name path-so-far persist)))) 
           (t  
-           (let ((res1 (read-tdl-term istream name path-so-far in-default-p))
-                 (next-char2 (peek-char t istream nil 'eof)))
+           (let* ((res1 (read-tdl-term istream name path-so-far in-default-p))
+		  (next-char2 (peek-with-comments istream)))
                (cond ((eql next-char2 'eof) 
                       (lkb-read-cerror istream
                                        "Unexpected eof when reading ~A" name)
@@ -518,17 +450,16 @@
                      (t res1)))))))
 
 (defun read-tdl-term (istream name path-so-far in-default-p)
-  ;;; Term -> Type | Feature-term | Diff-list | List | Coreference | Templ-call
+  ;;; Term -> Type | Feature-term | Diff-list | List | Coreference 
   ;;; We can distinguish between these types of term
   ;;; by their initial characters:
   ;;; Feature-term       - [ - returns a list of path specs
   ;;; Diff-list and list - < - ditto
-  ;;; Templ-call         - @ - ditto
   ;;; Coreference        - # - sets up global coref and returns nil
   ;;; Symbol-value       - ' - returns a list of one path=string unif
   ;;; Expanded-syntax    - ^ - not valid in type files (see below)
   ;;; Type               - anything else - returns a list of one path=type unif
-  (let ((next-char (peek-char t istream nil 'eof)))
+  (let ((next-char (peek-with-comments istream)))
     (cond ((eql next-char 'eof) 
            (lkb-read-cerror istream
                             "Unexpected eof when reading ~A" name)
@@ -543,12 +474,10 @@
            (read-tdl-list istream name path-so-far in-default-p))
           ((eql next-char #\#) 
            (read-tdl-coreference istream name path-so-far in-default-p))
-          ((eql next-char #\@) 
-           (read-tdl-templ-call istream name path-so-far in-default-p))
-          ((eql next-char #\() 
-           (read-tdl-lkb-disj istream name path-so-far in-default-p))
           ((eql next-char #\') 
            (read-tdl-symbol istream name path-so-far in-default-p))
+	  ((eql next-char #\;) 
+           (read-line istream))
           ((eql next-char #\^) 
            (if *tdl-expanded-syntax-function*
                (apply *tdl-expanded-syntax-function*
@@ -577,7 +506,7 @@
 (defun read-tdl-feature-term (istream name path-so-far in-default-p)
 ;;; Feature-term -> [] | [ Attr-val {, Attr-val}* ]
   (check-for #\[ istream name)
-  (let ((next-char (peek-char t istream nil 'eof)))
+  (let ((next-char (peek-with-comments istream)))
     (cond ((eql next-char 'eof) 
            (lkb-read-cerror istream "Unexpected eof when reading ~A" name)
            (ignore-rest-of-entry istream name))
@@ -600,7 +529,7 @@
   (let* ((constraint nil))
     (loop
       (let* ((path-specs (read-tdl-attr-val istream name path-so-far in-default-p))
-             (next-char (peek-char t istream nil 'eof)))
+             (next-char (peek-with-comments istream)))
         (loop for path-spec in path-specs
              do
              (push path-spec constraint))
@@ -611,8 +540,9 @@
 (defun read-tdl-attr-val (istream name path-so-far in-default-p)
   ;;; Attr-val -> attribute{.attribute}* Conjunction
   (loop
+    (peek-with-comments istream)
       (let* ((attribute (lkb-read istream nil))
-             (next-char (peek-char t istream nil 'eof)))
+             (next-char (peek-with-comments istream)))
         (when (char-equal (elt (string attribute) 0)
                           #\#)
           (lkb-read-cerror istream "Misplaced coreference in ~A" name)
@@ -631,7 +561,7 @@
 ;;;                < Conjunction {, Conjunction}* , ...> |
 ;;;                 < Conjunction {, Conjunction}* . Conjunction> 
   (check-for #\< istream name)
-  (let ((next-char (peek-char t istream nil 'eof))
+  (let ((next-char (peek-with-comments istream))
         (constraints nil))
     (cond ((eql next-char 'eof) 
            (lkb-read-cerror istream "Unexpected eof when reading ~A" name)
@@ -675,7 +605,7 @@
 ;;; < REST : FIRST > = b
 ;;; < REST : REST > = #coref
 ;;;
-  (let ((next-char (peek-char t istream nil 'eof))
+  (let ((next-char (peek-with-comments istream))
         (constraints nil)
         (new-path (copy-list path-so-far)))
     (unless (or (eql next-char #\>) 
@@ -686,21 +616,21 @@
                (read-tdl-conjunction 
                 istream name (append *list-head* new-path) in-default-p)
                constraints))
-        (setf next-char (peek-char t istream nil 'eof))
+        (setf next-char (peek-with-comments istream))
         (setf new-path
           (append *list-tail* new-path))
         (unless (eql next-char #\,) (return))
         (read-char istream)
-        (setf next-char (peek-char t istream nil 'eof))
+        (setf next-char (peek-with-comments istream))
         (if (eql next-char #\.)
           (return))))
     (if (eql next-char #\.) 
       (progn (read-char istream)
-             (setf next-char (peek-char t istream nil 'eof))
+             (setf next-char (peek-with-comments istream))
              (cond ((eql next-char #\.)                
                     (check-for #\. istream name)
                     (check-for #\. istream name)
-                    (unless (eql (peek-char t istream nil 'eof) #\>)
+                    (unless (eql (peek-with-comments istream) #\>)
                       (lkb-read-cerror 
                        istream
                        "Invalid syntax following ... in ~A~%" name)
@@ -737,7 +667,7 @@
 ;;; If the diff-list is empty (i.e. <! !>) then the 
 ;;; constraints should be simply
 ;;; < LIST > = < LAST >
-  (let ((next-char (peek-char t istream nil 'eof))
+  (let ((next-char (peek-with-comments istream))
         (constraints nil)
         (new-path (cons *diff-list-list* path-so-far)))
     (unless (eql next-char #\!) 
@@ -748,7 +678,7 @@
                                      (append *list-head* new-path) 
                                      in-default-p)
                constraints))
-        (setf next-char (peek-char t istream nil 'eof))
+        (setf next-char (peek-with-comments istream))
         (setf new-path
           (append *list-tail* new-path))
         (unless (eql next-char #\,) (return))
@@ -782,186 +712,22 @@
               (gethash corefindex *tdl-coreference-table*))))
     nil))
 
-
-
-(defun read-tdl-symbol2 (istream name path-so-far in-default-p)
-  (declare (ignore name))
-  (read-char istream) ; get rid of the '
-  (let* ((symbol (lkb-read istream t)))
-      (list (make-tdl-path-value-unif (reverse path-so-far) 
-                                      (format nil "~A" symbol) in-default-p))))
-
-
 (defun read-tdl-symbol (istream name path-so-far in-default-p)
   (declare (ignore name))
   (read-char istream) ; get rid of the '
-  (let* ((symbol (lkb-read-preserving-case istream t)))
-      (list (make-tdl-path-value-unif (reverse path-so-far) 
-                                      (format nil "~A" symbol) in-default-p))))
-
-
-(defun lkb-read-preserving-case (&rest rest)
-  (let ((case (readtable-case *readtable*))
-	(res))
+  (let ((case (readtable-case *readtable*)))
     (setf (readtable-case *readtable*) :preserve)
-    (setf res (apply 'lkb-read rest))
-    (setf (readtable-case *readtable*) case)
-    res))
-    
+    (let ((symbol (lkb-read istream t)))
+      (setf (readtable-case *readtable*) case)
+      (list (make-tdl-path-value-unif (reverse path-so-far) 
+                                      (format nil "~A" symbol) 
+				      in-default-p)))))
 
-;(defun read-tdl-symbol (istream name path-so-far in-default-p)
-;  (declare (ignore name))
-;  (read-char istream) ; get rid of the '
-;  (let* ((symbol (lkb-read-string-symbol istream)))
-;      (list (make-tdl-path-value-unif (reverse path-so-far) 
-;                                      (format nil "~A" symbol) in-default-p))))
-
-
-;(defun lkb-read-string-symbol (istream)
-;  (loop
-;      with char-list
-;      and ch
-;      while (not (equal (setf ch (read-char istream)) #\Space))
-;      do
-;	(push ch char-list)
-;      finally
-;	(return (apply 'concatenate (cons 'string (mapcar 'string (reverse char-list)))))))
-	
 (defun read-tdl-type (istream name path-so-far in-default-p)
   (declare (ignore name))
   (let ((type (lkb-read istream t)))
     (list (make-tdl-path-value-unif (reverse path-so-far) type in-default-p))))
 
-
-(defun read-tdl-lkb-disj (istream name path-so-far in-default-p)
-  (declare (ignore name))
-  (let ((types nil))
-    (read-char istream)
-    (loop
-      (let ((next-char (peek-char t istream nil 'eof)))
-        (when (char= next-char #\))
-          (read-char istream)
-          (return))
-        (push (lkb-read istream t) types)))
-    (list (make-tdl-path-value-unif (reverse path-so-far) types in-default-p))))
-
-
-;;; Because there are a limited number of templates, instead of 
-;;; creating a new file type etc so that they can be created as
-;;; needed, they are all specified here.  
-;;; A template has three parts:
-;;; 1. name
-;;; 2. constraint
-;;; 3. list of parameter/path pairs
-;;;
-;;; the constraint is stored as a list of path/value pairs
-;;; with the path specified as a simple list and the values being types
-;;;
-;;; the parameter/path pairs allow reference to be made to
-;;; specific parts of the template without having to quote the full path name.
-;;; Thus their effect is simply to add features to the value
-;;; of path-so-far which are then utilised as normal when reading in 
-;;; the conjunction
-
-(defstruct (tdl-templ)
-  name constraint parameters)
-
-(defstruct (tdl-templ-pv)
-  path value)
-
-(defstruct (tdl-templ-parameter)
-  name path)
-
-
-(defparameter *tdl-templates* nil)
-
-(defun clear-tdl-templates nil
-  (setf *tdl-templates* nil))
-
-(defun make-tdl-template (name pars cons)
-  (push (make-tdl-templ :name name
-                       :parameters (loop for par in pars 
-                                  collect
-                                  (make-tdl-templ-parameter :name (car par)
-                                                           :path (cadr par)))
-                       :constraint 
-                       (loop for pv in cons
-                            collect
-                            (make-tdl-templ-pv :path (car pv)
-                                               :value (cadr pv))))
-        *tdl-templates*))
-
-
-(defun read-tdl-templ-call (istream name path-so-far in-default-p)
-;;; Templ-call -> @templ-name ( ) | @templ-name (Templ-par {, Templ-par}*)
-;;; Templ-par -> $templ-var | $templ-var = conjunction
-  (read-char istream) ; get rid of the @
-  (let ((templ-name (read istream nil 'end-of-file)))
-    (when (eql templ-name 'end-of-file)
-      (lkb-read-cerror istream
-       "Unexpected end of file when processing ~A" name)
-      (ignore-rest-of-entry istream name))
-    (unless (symbolp templ-name) 
-      (setf templ-name (convert-to-lkb-symbol templ-name))) 
-    (let ((template-entry (find templ-name *tdl-templates*
-                                :key #'tdl-templ-name)))
-      (unless template-entry 
-        (lkb-read-cerror istream 
-         "Unknown template ~A" templ-name)
-        (ignore-rest-of-entry istream name))        
-      (check-for #\( istream name)
-      (let ((next-char (peek-char t istream nil 'eof))
-            (constraints (get-tdl-template-constraints 
-                          (tdl-templ-constraint template-entry)
-                          path-so-far in-default-p)))
-        (unless (eql next-char #\)) 
-          (loop  
-            (setf constraints 
-                  (nconc 
-                   (read-tdl-templ-par istream name path-so-far
-                                       template-entry in-default-p)
-                   constraints))
-            (setf next-char (peek-char t istream nil 'eof))
-            (unless (eql next-char #\,) (return))
-            (read-char istream)))
-        (check-for #\) istream name) 
-        constraints))))
-
-(defun get-tdl-template-constraints (template-constraint path-so-far in-default-p)
-  (let ((rev-p (reverse path-so-far)))
-    (loop for pv in template-constraint
-         collect
-         (make-tdl-path-value-unif
-          (append rev-p (tdl-templ-pv-path pv))
-          (tdl-templ-pv-value pv)
-          in-default-p))))
-
-(defun read-tdl-templ-par (istream name path-so-far template-entry in-default-p)
-  ;;; Templ-par -> $templ-var | $templ-var = conjunction
-  ;;; (actually I assume we always have
-  ;;; Templ-par -> $templ-var = conjunction 
-  ;;; because I'm not sure what the point of having the parameter
-  ;;; without a value would be)
-  (check-for #\$ istream name)
-  (let* ((par-name (read istream nil 'end-of-file))
-         (par-value 
-          (find (if (symbolp par-name) 
-                    par-name 
-                  (convert-to-lkb-symbol par-name)) 
-                (tdl-templ-parameters template-entry)
-                :key #'tdl-templ-parameter-name)))
-    (unless par-value 
-      (lkb-read-cerror istream 
-       "Unknown parameter ~A" par-name)
-      (ignore-rest-of-entry istream name))
-    (check-for #\= istream name)
-    (read-tdl-conjunction 
-     istream name 
-     (append (reverse (tdl-templ-parameter-path par-value))
-             path-so-far)
-     in-default-p)))
-     
-             
 
 (defun make-tdl-path-path-unif (path1 path2 def-p)
   ;;; def-p indicates the persistance of the default
