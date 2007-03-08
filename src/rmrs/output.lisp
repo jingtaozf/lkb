@@ -109,6 +109,8 @@
 
 
 (defun xml-escaped-output (string stream)
+  (unless (stringp string)
+    (setf string (string string))) 
   (dolist (c (coerce string 'list))
     (cond ((char= #\" c) (write-string "&quot;" stream))
 	  ((char= #\' c) (write-string "&apos;" stream))
