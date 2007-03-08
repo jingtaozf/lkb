@@ -602,8 +602,10 @@
 	    (cond
 	     ((string= "tok+morph" (saf:l-edgeType saf-edge))
 	      ;; find hidden 'tok' edge
-	      (list (smaf-id-to-token-edge smaf:id (get-tedges *tchart*) 
-					   :hidden :token)))
+	      (let ((child (smaf-id-to-token-edge smaf:id (get-tedges *tchart*) 
+						  :hidden :token)))
+		(if child
+		    (list child))))
 	     (t
 	      ;; derive child edges from saf deps
 	      (loop for d in smaf:deps
@@ -648,7 +650,9 @@
 	   err-flag medges medge
 	   )
       
-
+      (unless leaf-edges 
+	(format t "~&ERROR: no leaf-edges for SMAF edge '~a'" smaf:id)
+	(return-from saf-edge-to-medge))
       
       (unless (or stem dummy-entry)
 	(format t "~&WARNING: no stem/gType for SMAF edge '~a'" smaf:id)
@@ -1091,12 +1095,14 @@
 (defun leaf-edges-from (leaf-edges)
 ;  (unless leaf-edges
 ;    (error "leaf-edges is null"))
-  (apply #'min (mapcar #'edge-from leaf-edges)))
+  (and leaf-edges
+       (apply #'min (mapcar #'edge-from leaf-edges))))
 
 (defun leaf-edges-to (leaf-edges)
 ;  (unless leaf-edges
 ;    (error "leaf-edges is null"))
-  (apply #'max (mapcar #'edge-to leaf-edges)))
+  (and leaf-edges
+       (apply #'max (mapcar #'edge-to leaf-edges))))
         
 ;;;
 ;;; tchart to (S)(M)AF mapping

@@ -56,13 +56,15 @@
 	    (merge-pathnames doc (make-pathname :directory *dir*)))))
     (make-saf-meta
      :document doc
-     :addressing (or
-		  (intern (string-downcase 
-			   (second (member :|addressing| saf-attributes))) 
-			  :keyword)
-		  :|char|)
+     :addressing (get-addressing saf-attributes)
      :olac (get-olac-meta olac)
      :text text)))
+
+(defun get-addressing (saf-attribs)
+  (let ((addr (second (member :|addressing| saf-attribs))))
+    (if addr
+	(intern (string-downcase addr) :keyword)
+      :|char|)))
 
 (defun make-feat (x)
   (intern (string x) :keyword))
@@ -139,12 +141,23 @@
 	 (annot-edges 
 	  (append
 	   (loop for e in (lxml::lxml-elt-elts lxml-fsm :|annot|);; SAF
-	       collect (lxml-annot-to-edge e))
+	       for e2 = (lxml-annot-to-edge e)
+	       when e2
+	       collect e2)
 	   (loop for e in (lxml::lxml-elt-elts lxml-fsm :|edge|);; SMAF
-	       collect (lxml-annot-to-edge e))))
+	       for e2 = (lxml-annot-to-edge e)
+	       when e2
+	       collect e2)
+	   ))
 	 (wordform-edges 
 	  (loop for e in (lxml::lxml-elt-elts lxml-fsm :|wordForm|) ;;shorthand
-	      collect (lxml-wordform-to-edge e)))
+	       for e2 = (lxml-wordform-to-edge e)
+	       when e2
+	       collect e2)
+	      
+	      
+	 ; collect (lxml-wordform-to-edge e))
+	 )
 	 (sentence-edges 
 	  (loop for e in (lxml::lxml-elt-elts lxml-fsm :|sentence|) ;;shorthand
 	      collect (lxml-sentence-to-edge e)))
@@ -279,6 +292,9 @@
       (format t "~&WARNING: missing source for SMAF edge '~a'" id))
     (unless target
       (format t "~&WARNING: missing target for SMAF edge '~a'" id))
+    (when (string= source target)
+      (format t "~&ERROR: identical 'source' and 'target' on SMAF edge '~a'" id)
+      (return-from lxml-annot-to-edge nil))
     (make-saf-edge
      :id id
      :type (saf-type (or type (lxml::lxml-elt-attr lxml-annot :|type|)))

@@ -537,6 +537,11 @@
   ;;   - input bracketing is only available in passive mode;
   ;;   - passive best-first restricted to unary and binary rules.
   ;;
+  
+  ;; if input is determined to be XML, read in as SMAF object
+  (when (xml-p input)
+    (setf input (smaf:xml-to-saf-object input)))  
+  
   (check-morph-options input)
   (reset-statistics)
   

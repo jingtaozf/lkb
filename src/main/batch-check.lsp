@@ -82,6 +82,19 @@
       ))
   (format t "~&;;; END OF DUPLICATE ENTRIES~%"))
 
+#+:null
+(defun list-duplicates-to-remove (dups-list &key (stream t))
+  ;; output name of all but first duplicate in each duplicate-set
+  (loop
+      for dups in dups-list
+      do
+	(loop
+	    for dup in (cdr dups)
+	    for id = (second dup)
+	    do
+	      (princ (string-downcase id) stream)
+	      (terpri stream))))
+
 (defun lex-and-id-str (lexicon id)
   (let* ((in-lex (lexicon-for-id lexicon id))
 	 (in-lex-name (and in-lex (name in-lex))))

@@ -93,7 +93,8 @@
 (defparameter *multiple-rule-internal-separator* 
     (ppcre:create-scanner "\\t{2,}" :single-line-mode t))
 (defparameter *rule-regex* 
-    (ppcre:create-scanner "^.([^\\t]+)\\t+([^\\t]*)" :single-line-mode t))
+;    (ppcre:create-scanner "^.([^\\t]+)\\t+([^\\t]*)" :single-line-mode t))
+    (ppcre:create-scanner "^.([^\\t]+)\\t+([^\\t]*)(?:\\t+([^\\t]*))?" :single-line-mode t))
 (defparameter *empty-line-regex* 
     (ppcre:create-scanner "^\\s*$" :single-line-mode t))
 (defparameter *date-regex* 
@@ -115,6 +116,9 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 
 (defparameter *smaf-id* 0)
 (defparameter *smaf-node* 0)
+
+;; todo: convert to local variable
+(defvar *max-spaces-registers* nil)
 
 ;;
 ;; x-strings (aka 'preprocessed-x')
@@ -321,6 +325,8 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
   (let ((tokenizer (subseq line 1)))
     (setf (x-fspp-tokenizer x-fspp) tokenizer)))
 
+(defvar *enable-multi-token* nil)
+
 (defun read-preprocessor-rule (type line x-fspp n)
   ;; try to get source/target
   (multiple-value-bind (match registers) 
@@ -335,6 +341,9 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
     ;; process source/target
     (let* ((source (aref registers 0))
 	   (target (aref registers 1))
+	   (max-tokens (ignore-errors
+			(parse-integer
+			 (aref registers 2))))
 	   ;; create scanner
 	   (scanner
 	    (ignore-errors
@@ -342,17 +351,28 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 	      (if (eq type :replace)
 		  source
 		(format nil "^~a$" source))
-	      :single-line-mode t)))
+	      :single-line-mode t))
+	    )
 	   x-fsr)
       (cond
        (scanner
+	(cond
+	 ((not *enable-multi-token*)
+	  (setf max-tokens 1))
+	 ((eq :replace type)
+	  nil)
+	 (t
+	  (setf max-tokens 
+	    (my-min max-tokens (num-tokens source))))) 
+	;(unless (eq :replace type)
+	;  (format t "~&~A ~A" source max-tokens))
 	;; create x-fsr
 	(setf x-fsr (make-x-fsr :type type :source source
 				:scanner scanner :target target
-				:max-tokens (unless (eq :replace type)
-					      (num-tokens source))
+				:max-tokens max-tokens
 				))
-	(set-pre-test x-fsr n)
+	(unless (eq :replace type)
+	  (set-pre-test x-fsr n))
 	;; :replace goes to globals
 	;; all others to local
 	(if (eq type :replace)
@@ -364,10 +384,31 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 		"read-preprocessor(): [line ~d] invalid pattern `~a'~%"
 		n source))))))
 
+(defun my-min (a b)
+  (cond
+   ((null a) b)
+   ((null b) a)
+   ((and (numberp a)
+	 (numberp b))
+    (min a b))   
+   (t
+    (error "unexpected argument types"))))
+
 ;; calculate upper bound on number of tokens FSR will match
 (defun num-tokens (str &key (sep *inter-token-str*))
-  (1+ (count-token-separators str :sep sep)))
+  (cond
+   ((string= " " sep)
+    (my-+ 1 (max-spaces-in str)))
+   (t
+    ;; todo: generalise *inter-token-str* to any new character used
+    ;;       if we want to contrain num-tokens
+    nil)))
 
+;;; calculate upper bound on number of tokens FSR will match
+;(defun num-tokens (str &key (sep *inter-token-str*))
+;  (1+ (count-token-separators str :sep sep)))
+
+#+:null
 (defun count-token-separators (str &key (sep *inter-token-str*))
   (floor
    (/ (length (ppcre:all-matches sep str))
@@ -378,14 +419,15 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
   (with-slots (max-tokens source pre-test) x-fsr
     (when
 	(and (numberp max-tokens)
-	     (> max-tokens 1))
+	     (not (zerop max-tokens)))
       (handler-case
 	  (setf pre-test
 	    (ppcre:create-scanner 
 	     (set-pre-test-aux source)
-	     :single-line-mode t))
+	     :single-line-mode t)
+	    )
 	(error nil
-	  (format t "~&;WARNING: [line ~a] unable to construct pre-test for multi-token FSR~&" n))))))
+	  (format t "~&;WARNING: [line ~a] unable to construct pre-test for multi-token FSR: ~A ~&" n source))))))
 
 ;; get pre-test regex string
 ;; this will be used to test FIRST token in multi-token sequence
@@ -453,9 +495,11 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 	      (format t
 		      "~&GLOBAL |~a| -> |~a| ~&mapped~&|~a|~&to~&"
 		      (x-fsr-source rule) (x-fsr-target rule)
-		      (text x))
+		      x)
+		      ;(text x))
 	      (setf x res)
-	      (format t "~&|~a|~%~%" (text x)))
+	      (format t "~&|~a|~%~%" x))
+;	      (format t "~&|~a|~%~%" (text x)))
 	    (setf x res))))
   x)
 
@@ -1089,3 +1133,198 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
 	  (make-instance 'preprocessed-x
 	    :text (subseq text start end)
 	    :char-map (subseq char-map start end)))))
+
+(defun max-spaces-in (regex)
+  (setf *max-spaces-registers* nil)
+  (max-spaces (cl-ppcre::parse-string regex)))
+
+;; ignored: parse tree synonyms
+(defun max-spaces (tree)
+  (cond
+   ((stringp tree)
+    (max-spaces-string tree))
+   ((characterp tree)
+    (max-spaces-char tree))
+   ((eq :VOID tree)
+    0)
+   ((eq :EVERYTHING tree)
+    1)
+   ((eq :WORD-BOUNDARY tree)
+    0)
+   ((eq :NON-WORD-BOUNDARY tree)
+    0)
+   ((eq :DIGIT-CLASS tree)
+    0)
+   ((eq :NON-DIGIT-CLASS tree)
+    1)
+   ((eq :WORD-CHAR-CLASS tree)
+    0)
+   ((eq :NON-WORD-CHAR-CLASS tree)
+    1)
+   ((eq :WHITESPACE-CHAR-CLASS tree)
+    1)
+   ((eq :NON-WHITESPACE-CHAR-CLASS tree)
+    0)
+   ((eq :START-ANCHOR tree)
+    0)
+   ((eq :END-ANCHOR tree)
+    0)
+   ((eq :MODELESS-START-ANCHOR tree)
+    0)
+   ((eq :MODELESS-END-ANCHOR tree)
+    0)
+   ((eq :MODELESS-END-ANCHOR-NO-NEWLINE tree)
+    0)
+   ((eq :CASE-SENSITIVE-P tree)
+    0)
+   ((eq :CASE-INSENSITIVE-P tree)
+    0)
+   ((eq :MULTI-LINE-MODE-P tree)
+    0)
+   ((eq :NOT-MULTI-LINE-MODE-P tree)
+    0)
+   ((eq :SINGLE-LINE-MODE-P tree)
+    0)
+   ((eq :NOT-SINGLE-LINE-MODE-P tree)
+    0)
+   ((not (listp tree))
+    (max-spaces-unknown tree))
+   ((eq :FLAGS (car tree))
+    0)
+   ((eq :SEQUENCE (car tree))
+    (max-spaces-sum (cdr tree)))
+   ((eq :GROUP (car tree))
+    (max-spaces-sum (cdr tree)))
+   ((eq :ALTERNATION (car tree))
+    (max-spaces-max (cdr tree)))
+   ((eq :BRANCH (car tree)) ;;checkme
+    (max-spaces (third tree)))
+   ((eq :POSITIVE-LOOKAHEAD (car tree)) ;;checkme
+    0)
+   ((eq :NEGATIVE-LOOKAHEAD (car tree)) ;;checkme
+    0)
+   ((eq :POSITIVE-LOOKBEHIND (car tree)) ;;checkme
+    0)
+   ((eq :NEGATIVE-LOOKBEHIND (car tree)) ;;checkme
+    0)
+   ((eq :GREEDY-REPETITION (car tree))
+    (max-spaces-multiply (third tree) (fourth tree)))
+   ((eq :NON-GREEDY-REPETITION (car tree))
+    (max-spaces-multiply (third tree) (fourth tree)))
+   ((eq :STANDALONE (car tree))
+    (max-spaces (second tree)))
+   ((eq :REGISTER (car tree))
+    (set-max-spaces-register (max-spaces (second tree))))
+   ((eq :BACK-REFERENCE (car tree))
+    (get-max-spaces-register (second tree)))
+   ((eq :REGEX (car tree))
+    (max-spaces (cl-ppcre::parse-string (second tree))))
+   ((eq :CHAR-CLASS (car tree))
+    (max-spaces-char-class (cdr tree)))
+   ((eq :INVERTED-CHAR-CLASS (car tree))
+    (- 1 (max-spaces-char-class (cdr tree))))
+   (t
+    (max-spaces-unknown tree))))
+
+(defun max-spaces-unknown (tree)
+  (format t "~&;; WARNING: unknown PPCRE parse-tree component: ~A" tree)
+  nil)
+
+(defun max-spaces-string (string)
+  (floor
+   (/ (length (ppcre:all-matches #\Space string))
+      2)))
+
+(defun max-spaces-char (char)
+  (if (char= char #\Space)
+      1
+    0))
+
+(defun max-spaces-sum (trees)
+  (loop
+      for tree in trees
+      for num-spaces = (max-spaces tree)
+      if (null num-spaces)
+      do (return-from max-spaces-sum nil)
+      sum num-spaces))
+
+(defun max-spaces-max (trees)
+  (loop
+      for tree in trees
+      for num-spaces = (max-spaces tree)
+      if (null num-spaces)
+      do (return-from max-spaces-max nil)
+      maximize num-spaces))
+
+(defun max-spaces-multiply (max tree)
+  (my-* max (max-spaces tree)))
+
+(defun my-+ (a b)
+  (cond
+   ((or (null a)
+	(null b))
+    nil)
+   ((and (numberp a)
+	 (numberp b))
+    (+ a b))   
+   (t
+    (error "unexpected argument types"))))
+
+(defun my-* (a b)
+  (cond
+   ((or (and (numberp a) (zerop a))
+	(and (numberp b) (zerop b)))
+    0)
+   ((or (null a)
+	(null b))
+    nil)
+   ((and (numberp a)
+	 (numberp b))
+    (* a b))
+   (t
+    (error "unexpected argument types"))))
+     
+(defun set-max-spaces-register (num-spaces)
+  (setf *max-spaces-registers* (append *max-spaces-registers*
+				       (list num-spaces)))
+  num-spaces)
+
+(defun get-max-spaces-register (num-register)
+  (nth (1- num-register) *max-spaces-registers*))
+
+(defun max-spaces-char-class (items)
+  (loop
+      for item in items
+      when (= 1 (max-spaces-char-class-item item))
+      do (return-from max-spaces-char-class 1))
+  0)
+
+(defun max-spaces-char-class-item (item)
+  (cond
+   ((characterp item)
+    (max-spaces-char item))
+   ((and (listp item)
+	 (eq :RANGE (car item)))
+    (let ((space-code (char-code #\Space))
+	  (min-code (char-code (second item)))
+	  (max-code (char-code (third item))))
+      (if (and
+	   (>= space-code min-code)
+	   (<= space-code max-code))
+	  1
+	0)))
+   ((eq :DIGIT-CLASS item)
+    0)
+   ((eq :NON-DIGIT-CLASS item)
+    1)
+   ((eq :WORD-CHAR-CLASS item)
+    0)
+   ((eq :NON-WORD-CHAR-CLASS item)
+    1)
+   ((eq :WHITESPACE-CHAR-CLASS item)
+    1)
+   ((eq :NON-WHITESPACE-CHAR-CLASS item)
+    0)
+   (t
+    (format t "~&;; WARNING: unknown PPCRE char-class item: ~a" item)
+    nil)))

@@ -49,17 +49,27 @@
   olac
   text)
 
+(defmethod print-object ((object saf) stream)
+  (format stream "[SAF]"))
+
+(defmethod print-object ((object saf-lattice) stream)
+  (format stream "[SAF-LATTICE]"))
+
 (defun saf-fs-feature-value2 (fs feature)
   (let ((x (find feature fs 
 		 :key #'saf-fv-feature)))
     (if x
 	(saf-fv-value x))))
 
+;; len can be nil, meaning no limit
 ;; paths of length betw 1 and len
 (defun annot-paths (annot lattice &key len)
   (cond
-   ((zerop len))
-   ((= 1 len)
+   ((and (numberp len)
+	 (zerop len))
+    nil)
+   ((and (numberp len)
+	 (= 1 len))
     (list (list annot)))
    (t
     (loop
@@ -67,11 +77,31 @@
 	for next-annot in (get-edges-source next-node :lattice lattice)
 	append
 	  (loop 
-	      for path in (annot-paths next-annot lattice :len (1- len))
+	      for path in (annot-paths next-annot lattice 
+				       :len (if (numberp len)
+						(1- len)))
 	      collect (push annot path))
 	into paths
 	finally
 	  (return (push (list annot) paths))))))
+
+;;; paths of length betw 1 and len
+;(defun annot-paths (annot lattice &key len)
+;  (cond
+;   ((zerop len))
+;   ((= 1 len)
+;    (list (list annot)))
+;   (t
+;    (loop
+;	with next-node = (saf-edge-target annot)
+;	for next-annot in (get-edges-source next-node :lattice lattice)
+;	append
+;	  (loop 
+;	      for path in (annot-paths next-annot lattice :len (1- len))
+;	      collect (push annot path))
+;	into paths
+;	finally
+;	  (return (push (list annot) paths))))))
 
 ;; return outgoing edges from source node
 (defun get-edges-source (source &key lattice)
