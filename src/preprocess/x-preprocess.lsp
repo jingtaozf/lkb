@@ -61,6 +61,9 @@
 
 ;;
 
+;; set this to enable multi-token preprocessor rules
+(defvar *enable-multi-token* nil)
+
 (defvar *min-regex-char-code-limit* 256)
 
 (defvar *local-to-global-point-mapping* #'identity)
@@ -100,7 +103,7 @@
 (defparameter *date-regex* 
     (ppcre:create-scanner "^.\\$[D]ate: +(.*) +\\$" :single-line-mode t))
 (defparameter *ersatz-regex* 
-    (ppcre:create-scanner "[^a-zA-Z]*([a-zA-Z]+Ersatz).*" :single-line-mode t))
+    (ppcre:create-scanner "(?i)[^a-zA-Z]*([a-zA-Z]+Ersatz).*" :single-line-mode t))
 (defparameter *import-regex* 
     (ppcre:create-scanner "^.(.*)" :single-line-mode t))
 
@@ -325,8 +328,6 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
   (let ((tokenizer (subseq line 1)))
     (setf (x-fspp-tokenizer x-fspp) tokenizer)))
 
-(defvar *enable-multi-token* nil)
-
 (defun read-preprocessor-rule (type line x-fspp n)
   ;; try to get source/target
   (multiple-value-bind (match registers) 
@@ -401,7 +402,7 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
     (my-+ 1 (max-spaces-in str)))
    (t
     ;; todo: generalise *inter-token-str* to any new character used
-    ;;       if we want to contrain num-tokens
+    ;;       if we want to constrain num-tokens
     nil)))
 
 ;;; calculate upper bound on number of tokens FSR will match
