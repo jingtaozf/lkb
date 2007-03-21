@@ -1124,7 +1124,7 @@
 1124@CSLI@formal@none@1@S@He's worked.@1@2@@oe@8-sep-1999
 1125@CSLI@formal@none@1@S@He'd worked.@1@2@@oe@8-sep-1999
 1126@CSLI@formal@none@1@S@Abrams will interview Browne in an hour.@1@7@@oe@8-sep-1999
-1127@CSLI@formal@none@1@S@Abrams has been interviewing Browne for an hour@1@8@@oe@8-sep-1999
+1127@CSLI@formal@none@1@S@Abrams has been interviewing Browne for an hour.@1@8@@oe@8-sep-1999
 1128@CSLI@formal@none@1@S@Abrams will interview for ever.@1@5@@oe@8-sep-1999
 1129@CSLI@formal@none@1@S@Abrams interviews Browne often.@1@4@@oe@8-sep-1999
 1130@CSLI@formal@none@1@S@Abrams interviewed Browne twice.@1@4@@oe@8-sep-1999
@@ -1173,7 +1173,7 @@
 1173@CSLI@formal@none@1@S@The manager would often interview programmers.@1@6@@oe@8-sep-1999
 1174@CSLI@formal@none@1@S@He was working.@1@3@@oe@8-sep-1999
 1175@CSLI@formal@none@1@S@He was evaluating a programmer.@1@5@@oe@8-sep-1999
-1176@CSLI@formal@none@1@S@He hired a programmer for an hour.@0@7@@oe@8-sep-1999
+1176@CSLI@formal@none@1@S@He hired a programmer for an hour.@1@7@@oe@8-sep-1999
 1177@CSLI@formal@none@1@S@He hired a programmer in an hour.@1@7@@oe@8-sep-1999
 1178@CSLI@formal@none@1@S@He worked for an hour.@1@5@@oe@8-sep-1999
 1179@CSLI@formal@none@1@S@He worked in an hour.@1@5@@oe@8-sep-1999
@@ -1187,7 +1187,7 @@
 1187@CSLI@formal@none@1@S@The former manager was Chiang.@1@5@@oe@8-sep-1999
 1188@CSLI@formal@none@1@S@The previously interviewed programmer was Abrams.@1@6@@oe@8-sep-1999
 1189@CSLI@formal@none@1@S@Abrams was interviewed.@1@3@@oe@8-sep-1999
-1190@CSLI@formal@none@1@S@Abrams was interviewed@1@3@@oe@8-sep-1999
+1190@CSLI@formal@none@1@S@Abrams was interviewed by Browne.@1@3@@oe@8-sep-1999
 1191@CSLI@formal@none@1@S@He was hired.@1@3@@oe@8-sep-1999
 1192@CSLI@formal@none@1@S@Both competent and trustworthy, Chiang will interview Devito.@1@8@@oe@8-sep-1999
 1193@CSLI@formal@none@1@S@Both competent and trustworthy, Devito will be hired.@1@8@@oe@8-sep-1999
@@ -1222,7 +1222,7 @@
 1222@CSLI@formal@none@1@S@Chiang, and she is competent, hired Devito.@1@7@@oe@8-sep-1999
 1223@CSLI@formal@none@1@S@Chiang - she's the manager of the department - hired Devito.@1@9@@oe@8-sep-1999
 1224@CSLI@formal@none@1@S@Chiang said,@1@2@@oe@8-sep-1999
-1225@CSLI@formal@none@1@S@Chiang said@1@2@@oe@8-sep-1999
+1225@CSLI@formal@none@1@S@Chiang said.@1@2@@oe@8-sep-1999
 1226@CSLI@formal@none@1@S@Sara slept, didn't she?@1@4@@oe@8-sep-1999
 1227@CSLI@formal@none@1@S@Sara slept, didn't Sara?@0@4@@oe@8-sep-1999
 1228@CSLI@formal@none@1@S@Sara slept, didn't he?@0@4@@oe@8-sep-1999
