@@ -71,7 +71,7 @@
   ;; activate PSQL (used in the lexical database) support when running on ACL,
   ;; on supported platforms, i.e. Linux (x86), Solaris, and Windoze
   ;;
-  #+(and :allegro (or :linux86 (and :sun :svr4) :mswindows))
+  #+(and :allegro (or :linux (and :sun :svr4) :mswindows))
   (pushnew :psql *features*)
 
   ;;
