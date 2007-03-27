@@ -899,8 +899,27 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
     saf)
    ((or (eq format :saf) (eq format :smaf))
     (saf:to-xml saf :format format))
-   ((eq format :list)
-    (error ":list format no longer supported"))
+   ((eq format :list) ;; deprecate this...?
+    (loop
+	with length = (1- (length (saf:saf-lattice-nodes (saf:saf-lattice saf))))
+	with saf-annots = (saf:saf-lattice-edges (saf:saf-lattice saf))
+	for annot in saf-annots
+	for type = (saf:saf-edge-type annot)
+	for id = (saf:saf-edge-id annot)
+	for start = (saf:saf-edge-from annot)
+	for end = (saf:saf-edge-to annot)
+	for form =  (and (saf:instantiate-edge-l-content annot *saf-config*)
+			 (get-token-str annot))
+	for surface = (if (eq type :|ersatz|)
+			  (get-gmap-carg annot)
+			form)
+	for token = (list id start end form surface)
+	collect token into tokens
+	finally 
+	  (return
+	    (values tokens length))))
+;   ((eq format :list)
+;    (error ":list format no longer supported"))
    (t
     (error "unhandled format argument: ~a" format))))
 
