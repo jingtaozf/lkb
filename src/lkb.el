@@ -275,13 +275,15 @@
 			  "\C-cu" 'lkb-tsdb-cpu)
 		      (define-key fi:inferior-common-lisp-mode-map 
 			  "\C-cr" 'lkb-mt-interactive)
+		      (define-key fi:inferior-common-lisp-mode-map 
+			"\C-cg" 'lkb-rsa)
 		      )))
 
 (defun lkb-do-parse ()
   "Prompt for sentence to parse"
   (interactive)
   (goto-char (point-max))
-  (insert-string "(do-parse-tty \"\")")
+  (insert-string "(lkb::do-parse-tty \"\")")
   (backward-char 2))
 
 (defun lkb-show-words ()
@@ -311,6 +313,14 @@
   (goto-char (point-max))
   (insert-string "(mt::parse-interactively \"\")")
   (backward-char 2))
+
+(defun lkb-rsa ()
+    "prompt for grammar"
+  (interactive)
+  (goto-char (point-max))
+  (insert-string "(lkb::read-script-file-aux \"/lkb/script\")")
+  (backward-char 13))
+
 
 ;;; RMRS display utility
 
