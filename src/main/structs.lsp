@@ -147,28 +147,46 @@
                (type-feature-pair-type fvp))))
         (t nil)))
 
-(defun process-unifications (specific-list)
+;;;
+;;; _fix_me_
+;;; i wonder why this function should require a unification context?  it is at
+;;; times inconvenient to not be able to process-unifcations() in the middle of
+;;; an ongoing unification, and given that the function itself creates all new
+;;; dags, provide a way of preventing process-unifcations from creating its own
+;;; unification context (probably macrolet() or so could be used here to reduce
+;;; code dupliation across the two branches.                     (7-dec-06; oe)
+;;;
+(defun process-unifications (specific-list &optional (contextp t))
   (eval-any-leaf-types specific-list)
   (if specific-list
       (let* ((new-dag (create-dag))
-             (res 
-              (with-unification-context (new-dag)
-                (if
-                    (every
-                     #'(lambda (unification)
-                         (unify-paths 
-                          (basic-unification-lhs unification)
-                          new-dag
-                          (basic-unification-rhs unification)
-                          new-dag))
-                     specific-list)
-                    (copy-dag new-dag)
-                  nil))))
-            (or res
-                (progn 
-                  (format t
-                          "~%Unifications specified are invalid or do not unify")
-                  nil)))))
+             (res
+              (if contextp
+                (with-unification-context (new-dag)
+                  (when (every
+                         #'(lambda (unification)
+                             (unify-paths 
+                              (basic-unification-lhs unification)
+                              new-dag
+                              (basic-unification-rhs unification)
+                              new-dag))
+                         specific-list)
+                    (copy-dag new-dag)))
+                (when (every
+                       #'(lambda (unification)
+                           (unify-paths 
+                            (basic-unification-lhs unification)
+                            new-dag
+                            (basic-unification-rhs unification)
+                            new-dag))
+                       specific-list)
+                  (copy-dag new-dag)))))
+        (or res
+            (progn 
+              (format
+               t
+               "~%Unifications specified are invalid or do not unify")
+              nil)))))
 
 (defun unify-paths (lhs-path lhs-dag rhs-path rhs-dag)
    ;; follows paths into dags and unifies the dags at the end
@@ -335,6 +353,18 @@
         (x-existing-dag-at-end-of (deref-dag dag-instance) labels-chain)
         (existing-dag-at-end-of dag-instance labels-chain))
        (error "dag not found at end of path ~:A" labels-chain)))
+
+(defun unify-existing-dag-at-end-of (dag path)
+  (let ((dag (deref-dag dag)))
+    (cond
+     ((null path) dag)
+     ((atomic-type-p (unify-get-type dag)) nil)
+     (t
+      (let ((match (unify-arcs-find-arc
+                    (first path) (dag-arcs dag) (dag-comp-arcs dag))))
+        (when match
+          (unify-existing-dag-at-end-of
+           (dag-arc-value match) (rest path))))))))
 
 ;;; Code that walks over an existing dag looking for subdags
 ;;; introduced by the feature parameter.  Returns an a-list

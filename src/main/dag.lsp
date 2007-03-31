@@ -1247,13 +1247,21 @@
 ;;; 3. Unify with constraint of new type 
 ;;; (given that this is well-formed)
 
-(defun create-wffs (fs)
-   ;; non-destructive!
-   ;; returns nil on failure
-   (with-unification-context (fs)
-      (invalidate-visit-marks)
-      (let ((res (make-well-formed fs nil)))
-         (if res (copy-dag fs)))))
+;;;
+;;; _fix_me_
+;;; see comments on process-unifications() regarding the need for a separate
+;;; unification context here; i should email john and ann about this, i guess.
+;;;                                                              (7-dec-06; oe)
+(defun create-wffs (fs &optional (contextp t))
+  ;; non-destructive!
+  ;; returns nil on failure
+  (cond
+   (contextp
+    (with-unification-context (fs) (create-wffs fs nil)))
+   (t
+    (invalidate-visit-marks)
+    (let ((res (make-well-formed fs nil)))
+      (when res (copy-dag fs))))))
 
 
 (defun make-well-formed (fs features-so-far &optional type-name)
