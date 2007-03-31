@@ -1,0 +1,124 @@
+#!/bin/bash
+
+unset DISPLAY;
+unset LUI;
+
+if [ -z "${LOGONROOT}" ]; then
+  echo "parse: unable to determine \$LOGONROOT directory; exit.";
+  exit 1;
+fi
+
+#
+# include a shared set of shell functions and global parameters, including the
+# architecture identifier .LOGONOS.
+#
+. ${LOGONROOT}/etc/library.bash;
+
+TSDBHOME=${LOGONROOT}/lingo/lkb/src/tsdb/home
+TARGET=${LOGONROOT}/tmp
+TSDB=${LOGONROOT}/bin/tsdb
+GRAMMAR=${LOGONROOT}/lingo/erg
+
+[ -d ${TARGET} ] || mkdir $TARGET;
+[ -d ${TSDBHOME}/log ] || mkdir ${TSDBHOME}/log;
+
+source="--source";
+increment=50000;
+
+while [ $# -gt 0 -a "${1#-}" != "$1" ]; do
+  case ${1} in
+    --binary)
+      source="";
+      shift 1;
+    ;;
+    --source)
+      source="--source";
+      shift 1;
+    ;;
+    --cat)
+      cat="--cat";
+      shift 1;
+    ;;
+  esac
+done
+
+log="$(echo ${1} | sed "s@/@.@g")"
+
+if [ ! -z "${2}" ]; then
+  extra="${2}";
+fi
+
+if echo ${1} | egrep "ecoc|ecos|ecpa|ecpr" > /dev/null; then
+  increment=100000;
+fi
+
+unset DISPLAY
+
+{
+
+  DB=${TSDBHOME}/${1}
+  low=$(${TSDB} -home ${DB} -query 'select i-id from item' \
+        | sort -n | head -1)
+  all=$(${TSDB} -home ${DB} -query 'select i-id from item' \
+        | sort -n | tail -1);
+
+  while [ ${low} -le ${all} ]; do
+    high=$[${low} + ${increment}];
+    echo
+    echo "exporting \`${1}' [$low -- $high]";
+    echo
+    condition="i-id >= ${low} && i-id < ${high}";
+    if [ ! -z "${extra}" ]; then
+      condition="${condition} && (${extra})";
+    fi
+    condition="${condition} && (readings >= 1 && t-active == 1)";
+    low=${high};
+
+    ( 
+      echo "#-:64bit
+            (system:resize-areas :old (* 256 1024 1024) :new (* 384 1024 1024))
+            #+:64bit
+            (system:resize-areas :old (* 640 1024 1024) :new (* 1024 1024 1024))
+            (setf (sys:gsgc-parameter :expansion-free-percent-new) 5)
+            (setf (sys:gsgc-parameter :free-percent-new) 2)
+            (setf (sys:gsgc-parameter :expansion-free-percent-old) 5)";
+
+      #
+      # when running from source, configure and compile the LOGON system
+      #
+      if [ -n "${source}" ]; then
+        echo "(load \"${LOGONROOT}/lingo/lkb/src/general/loadup.lisp\")";
+        echo "(pushnew :lkb *features*)";
+        echo "(pushnew :mrs *features*)";
+        echo "(pushnew :tsdb *features*)";
+        echo "(pushnew :mt *features*)";
+        echo "(pushnew :logon *features*)";
+        echo "(setf (system:getenv \"DISPLAY\") nil)";
+        echo "(compile-system \"tsdb\")";
+      fi
+
+      #
+      # make sure to initialize [incr tsdb()] against our own start-up file
+      #
+      echo "(tsdb::initialize-tsdb nil :rc \"${LOGONROOT}/dot.tsdbrc\")";
+
+      echo "(setf (sys:gsgc-switch :print) t)"; \
+      echo "(setf (sys:gsgc-switch :stats) t)"; \
+      echo "(setf (sys:gsgc-switch :verbose) t)"; \
+      echo "(setf (sys:gsgc-parameter :auto-step) nil)"; \
+ 
+      echo "(setf mrs::*eds-include-quantifiers-p* t)"; \
+      echo "(setf mrs::*eds-include-vacuous-relations-p* nil)"; \
+      echo "(setf tsdb::*redwoods-export-values* '(:triples))"; \
+      echo "(setf tsdb::*redwoods-thinning-export-p* t)"; \
+      echo "(lkb:read-script-file-aux \"${GRAMMAR}/lkb/script\")"; \
+
+      echo "(excl:gc :tenure) (excl:gc t) (excl:gc)"; \
+
+      echo "(tsdb:tsdb :home \"$TSDBHOME\")"; \
+      echo "(tsdb::export-trees \"${1}\" :path \"${TARGET}\""; \
+      echo "  :condition \"${condition}\")"; \
+      echo "(excl:exit)"; \
+    ) | ${LOGONROOT}/bin/logon ${source} ${cat} -I base -locale no_NO.UTF-8 -qq
+  done
+} 2>&1 | tee ${TSDBHOME}/log/${log}.$$.log
