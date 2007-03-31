@@ -1,0 +1,553 @@
+body { 
+  margin-left: 10%; margin-right: 10%;
+  font-weight: normal; font-family: helvetica, arial, sans-serif;
+  color: #1a04a5;
+  background: #f5f5f5;
+}
+
+td { 
+  font-weight: normal; font-family: helvetica, arial, sans-serif;
+}
+
+td.center {
+  text-align: center;
+}
+
+table.mrsMrs {
+  padding: 0.2em;
+  border: solid;
+  border-width: thin;
+  color: #1a04a5;
+  background: #d8d6d6;
+}
+table.mrsFragmentMrs {
+  padding: 0.2em;
+  border: solid;
+  border-width: thin;
+  border-color: red;
+  color: #1a04a5;
+  background: #d8d6d6;
+}
+table.mrsTokenMrs {
+  padding: 0.2em;
+  border: solid;
+  border-width: thin;
+  border-color: yellow;
+  color: #1a04a5;
+  background: #d8d6d6;
+}
+table.mrsRelation {
+  padding-right: 2px;
+  padding-left: 1px;
+  color: #1a04a5;
+  border-left: solid;
+  border-right: solid;
+  border-left-width: thin;
+  border-right-width: thin;
+  border-top: none;
+  border-bottom: none;
+}
+table.mrsFragmentRelation {
+  padding-right: 2px;
+  padding-left: 1px;
+  color: #1a04a5;
+  border-left: solid;
+  border-right: solid;
+  border-left-width: thin;
+  border-right-width: thin;
+  border-top: none;
+  border-bottom: none;
+  border-color: red;
+}
+table.mrsTokenRelation {
+  padding-right: 2px;
+  padding-left: 1px;
+  color: #1a04a5;
+  border-left: solid;
+  border-right: solid;
+  border-left-width: thin;
+  border-right-width: thin;
+  border-top: none;
+  border-bottom: none;
+  border-color: yellow;
+}
+td.mrsFeatureTop, td.mrsFeatureIndex, 
+td.mrsFeatureRels, td.mrsFeatureHcons {
+  font-size: 10pt; 
+}
+td.mrsValueTop, td.mrsValueIndex, 
+td.mrsValueRels, td.mrsValueHcons {
+  font-size: 10pt; 
+}
+td.mrsPredicate { 
+  font-size: 10pt; font-style: italic; 
+}
+.mrsFragmentRelation td.mrsPredicate { 
+  font-size: 10pt; font-style: italic; color: red;
+}
+.mrsTokenRelation td.mrsPredicate { 
+  font-size: 10pt; font-style: italic; color: yellow;
+}
+td.mrsLabel { 
+  font-size: 10pt; font-style: normal; text-align: left; 
+}
+td.mrsValue { 
+  font-size: 10pt; font-style: italic; text-align: right; 
+}
+span.mrsBracket { 
+  color: #1a04a5;
+  font-size: 16pt; 
+}
+
+table.mrsProperties {
+  padding: 0.2em;
+  border: solid;
+  border-left: solid;
+  border-right: solid;
+  border-left-width: thin;
+  border-right-width: thin;
+  border-top: none;
+  border-bottom: none;
+  border-collapse: collapse;
+  background: #1a04a5;
+  color: #d8d6d6;
+}
+td.mrsPropertyFeature {
+  font-size: 8pt; font-style: normal; text-align: left; 
+}
+td.mrsPropertyValue {
+  font-size: 8pt; font-style: italic; text-align: right;
+}
+
+table.tree {
+  padding: 0.2em;
+  color: #1a04a5;
+  background: #d8d6d6;
+}
+td.treeBranch {
+  padding: 0.2ex;
+  border-top: solid;
+  border-top-width: thin;
+  border-left: solid;
+  border-left-width: thin;
+  border-right: solid;
+  border-right-width: thin;
+  text-align: center;
+  vertical-align: top;
+}
+td.treeLeaf {
+  padding: 0.2ex;
+  border-left: solid;
+  border-left-width: thin;
+  border-right: solid;
+  border-right-width: thin;
+  text-align: center;
+  vertical-align: top;
+}
+td.treeMargin {
+  padding: 0em;
+}
+div.treeLabel {
+  font-weight: normal; font-size: 10pt; 
+  font-family: helvetica, arial, sans-serif;
+}
+div.treeForm {
+  font-weight: normal; font-size: 10pt; 
+  font-family: helvetica, Arial, sans-serif;
+  font-style: italic; 
+}
+
+table.generatorOutputs {
+  border-collapse: collapse;
+  margin-top: 1em;
+  margin-bottom: 2em;
+  border: solid; border-width: thin; width: compute;
+}
+
+td.generatorOutput a:link, td.generatorOutput a:visited,
+td.generatorOutput a:active, td.generatorOutput a:hover {
+  text-decoration: none;
+  color: #2d2d2b;
+  background: #d8d6d6;
+}
+
+td.generatorFragmentOutput a:link, td.generatorFragmentOutput a:visited,
+td.generatorFragmentOutput a:active, td.generatorFragmentOutput a:hover {
+  text-decoration: none;
+  color: red;
+  background: #d8d6d6;
+}
+
+td.generatorTokenOutput a:link, td.generatorTokenOutput a:visited,
+td.generatorTokenOutput a:active, td.generatorTokenOutput a:hover {
+  text-decoration: none;
+  color: yellow;
+  background: #d8d6d6;
+}
+
+td.generatorOutputIndex {
+  background: #d8d6d6;
+  color: #2d2d2b;
+  text-align: center; vertical-align: middle;
+  padding: 0.2em;
+  border none;
+  font-weight: normal; font-size: 14pt;
+  font-family: helvetica, arial, sans-serif;
+}
+
+td.generatorOutput {
+  background: #d8d6d6;
+  color: #2d2d2b;
+  text-align: left; vertical-align: middle;
+  padding: 0.2em;
+  border none;
+  font-weight: normal; font-size: 14pt;
+  font-family: helvetica, arial, sans-serif;
+}
+
+td.generatorFragmentOutput {
+  background: #d8d6d6;
+  color: red;
+  text-align: left; vertical-align: middle;
+  padding: 0.2em;
+  border none;
+  font-weight: normal; font-size: 14pt;
+  font-family: helvetica, arial, sans-serif;
+}
+
+td.generatorTokenOutput {
+  background: #d8d6d6;
+  color: yellow;
+  text-align: left; vertical-align: middle;
+  padding: 0.2em;
+  border none;
+  font-weight: normal; font-size: 14pt;
+  font-family: helvetica, arial, sans-serif;
+}
+
+td.generatorOutputScore {
+  background: #d8d6d6;
+  color: #2d2d2b;
+  text-align: right; vertical-align: middle;
+  padding: 0.2em;
+  border none;
+  font-weight: normal; font-size: 14pt;
+  font-family: helvetica, arial, sans-serif;
+}
+
+table.results {
+  border-collapse: collapse;
+}
+
+td.resultsNavigation {
+  background: #d8d6d6;
+  color: #2d2d2b;
+  text-align: center; vertical-align: middle;
+  padding: 0.2em;
+  border-top: solid;
+  border-bottom: solid;
+  border-width: thin;
+  font-weight: normal; font-size: 14pt; 
+  font-family: helvetica, arial, sans-serif;
+}
+table.resultsNavigation {
+  border-collapse: collapse;
+  vertical-align: middle;
+  color: #1a04a5;
+}
+div.resultsNavigation {
+  font-weight: normal; font-size: 12pt; 
+  font-family: helvetica, arial, sans-serif;
+}
+
+td.resultsTree, td.resultsMrs {
+  background: #d8d6d6;
+  color: #2d2d2b;
+  text-align: center; vertical-align: top;
+  padding: 0.2em;
+  border-top: solid;
+  border-bottom: solid;
+  border-width: thin;
+}
+
+td.resultsDerivations {
+  background: #d8d6d6;
+  color: #2d2d2b;
+  text-align: center; vertical-align: center;
+  padding: 0.3em;
+  border-top: solid;
+  border-bottom: solid;
+  border-width: thin;
+} 
+
+table.resultsDerivations {
+  color: #1a04a5;
+  border: solid;
+  border-width: thin;
+}
+
+td.resultsDerivation {
+  color: #1a04a5;
+  text-align: center;
+  font-weight: normal; font-size: 10pt; 
+  font-family: helvetica, arial, sans-serif;
+} 
+
+
+td.buttons { 
+  font-weight: normal; font-size: 12pt; 
+  font-family: helvetica, arial, sans-serif;
+  color: black; vertical-align: middle;
+}
+div#introduction {
+  font-weight: normal; font-size: 12pt; 
+  font-family: helvetica, arial, sans-serif; 
+  text-align: left;
+  background: #d8d6d6;
+  border: solid; border-width: thin;
+  padding-top: 5px;
+  padding-left: 10px;
+  padding-right: 5px;
+  padding-bottom: 5px;
+  width: 80%;
+  margin-bottom: 1em;
+}
+div#summary { 
+  font-weight: normal; font-size: 12pt; 
+  font-family: helvetica, arial, sans-serif; 
+  margin-bottom: 1em;
+}
+div#action { 
+  font-weight: normal; font-size: 12pt; 
+  font-family: helvetica, arial, sans-serif;
+  color: black; vertical-align: middle;
+  margin-bottom: 1em;
+}
+
+div#error { 
+  font-weight: normal; font-size: 12pt; 
+  font-family: helvetica, arial, sans-serif; 
+  background: #d8d6d6;
+  color: red;
+  width: 80%;
+  padding-top: 5px;
+  padding-left: 10px;
+  padding-bottom: 5px;
+  margin-bottom: 1em;
+}
+div#version { 
+  font-weight: normal; font-size: 8pt; 
+  font-family: helvetica, arial, sans-serif; 
+  margin-top: 1ex;
+}
+
+table.compareNavigation {
+  font-weight: normal; font-size: 12pt; 
+  font-family: helvetica, arial, sans-serif;
+  color: black; vertical-align: middle;
+  margin-bottom: 1em;
+}
+table.compare {
+  border-collapse: collapse;
+  background: #d8d6d6;
+  border:solid;
+  border-width: thin;
+}
+td.compareTop {
+  text-align: center; vertical-align: top;
+  padding: 5px;
+  border-bottom: solid;
+  border-width: thin;
+}
+td.compareTrees {
+  text-align: left; vertical-align: top;
+  margin-bottom: auto;
+  padding-top: 2px;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+table.compareTrees {
+  border-collapse: collapse;
+}
+td.compareTreeLabel {
+
+}
+table.compareTreeLabel {
+
+}
+td.compareTreeId, td.compareTreeScore {
+
+}
+td.compareDiscriminants {
+  text-align: right; vertical-align: top;
+  padding: 0;
+  border-left: solid;
+  border-width: thin;
+}
+table.compareDiscriminants {
+  padding-left: 5px;
+  padding-right: 5px;
+}
+table.compareDiscriminantsOnly {
+  border-left: solid;
+  border-width: thin;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin-left: auto;
+}
+td.compareDiscriminantState, td.compareDiscriminantToggle,
+td.compareDiscriminantKey, td.compareDiscriminantValue {
+  font-weight: normal; font-size: 10pt; 
+  font-family: helvetica, arial, sans-serif; 
+  padding: 0;
+}
+td.compareMrs {
+  text-align: right; vertical-align: top;
+  padding-top: 2px;
+  padding-left: 2px;
+  padding-right: 2px;
+  border-width: thin;
+}
+
+div.profiles table {
+  padding: 2px;
+  background: #d8d6d6;
+  border: solid;
+  border-width: thin;
+}
+div.profiles th {
+  font-weight: bold; font-size: 12pt; 
+  font-family: helvetica, arial, sans-serif; 
+  padding-bottom: 2px;
+}
+div.profiles td {
+  font-weight: normal; font-size: 12pt; 
+  font-family: helvetica, arial, sans-serif; 
+}
+
+td.ItsdbHeader, td.ItsdbAggregate, td.ItsdbData, td.ItsdbTotal {
+  font-size: 12pt; 
+  font-family: helvetica, arial, sans-serif; 
+}
+
+td.ItsdbCaption {
+  font-size: 8pt; 
+  font-family: helvetica, arial, sans-serif; 
+}
+
+table.flow { 
+  font-weight: normal; font-size: 12pt; 
+  border-collapse: collapse; 
+  color: #1a04a5;
+  background: #d8d6d6; 
+  margin-top: 0.8em; margin-bottom: 0.8em;
+  margin-left: 0.9em; margin-right: 0.9em;
+  width: compute;
+}
+td.flowTopBorder { 
+  border-top: solid; border-left: solid; border-right: solid; 
+  border-width: thin; padding-top: 1em; border-color: black;
+}
+td.flowBottomBorder { 
+  border-bottom: solid; border-left: solid; border-right: solid; 
+  border-width: thin; padding-bottom: 1em; border-color: black;
+}
+td.flowLeftBorder { 
+  border-left: solid; border-width: thin; padding-left: 1em;
+  border-color: black;
+}
+td.flowRightBorder { 
+  border-right: solid; border-width: thin; padding-left: 1em;
+  border-color: black;
+}
+td.flow { 
+  margin: 0px; padding: 0px; white-space: pre;
+}
+td.flowLeft { 
+  border-left: solid; border-width: 1; border-color: black;
+  margin: 0px; padding: 0px;
+  height: 0.8ex;
+}
+table.flow a:link, table.flow a:visited, table.flow a:active { 
+  color: #1a04a5;
+  background: #d8d6d6; 
+  text-decoration: none; 
+}
+table.flow a:hover { 
+  background: #1a04a5;
+  color: #d8d6d6; 
+  text-decoration: none; 
+} 
+.fanOutSummary td {
+  font-size: 14pt;
+}
+span.flowInput {
+  font-style: italic;
+}
+span.flowOutput {
+  font-weight: bold;
+}
+
+.navtext {
+  width: 100px;
+}
+
+table.mrsProperties {
+  padding: 0.2em;
+  border: solid;
+  border-left: solid;
+  border-right: solid;
+  border-left-width: thin;
+  border-right-width: thin;
+  border-top: none;
+  border-bottom: none;
+  border-collapse: collapse;
+  background: #1a04a5;
+  color: #d8d6d6;
+}
+td.mrsPropertyFeature {
+  font-size: 8pt; font-style: normal; text-align: left; 
+}
+td.mrsPropertyValue {
+  font-size: 8pt; font-style: italic; text-align: right;
+}
+
+table.comparison {
+  padding: 0.5em;
+  font-size: 11pt; 
+  border: solid;
+  border-width: thin;
+  border-color: black;
+  color: #0d5136;
+  background: #c1ddc4;
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+.comparison th {
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 1em;
+}
+.comparison td {
+  text-align: center;
+  font-style: normal;
+}
+.comparison a:link, .comparison a:visited,
+.comparison a:active .comparison a:hover {
+  text-decoration: none; 
+  color: #0d5136;
+  background: #c1ddc4;
+}
+.comparison a:hover {
+  text-decoration: underline;
+}
+div.poster {
+  padding: 0.6em;
+  border: solid;
+  width: 25em;
+  font-size: 12pt; font-style: normal; text-align: center; 
+  color: #c1ddc4;
+  background: #0d5136;
+}
+
+
