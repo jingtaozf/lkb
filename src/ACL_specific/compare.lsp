@@ -189,7 +189,7 @@
     (loop
         with inspect = (compare-frame-inspect frame)
         with gold = (rest (assoc :result-id (second inspect)))
-        for i from 1
+        for i from 0
         for edge in edges
         for id = (if (numberp (edge-foo edge))
                    (edge-foo edge)
@@ -1398,8 +1398,7 @@
                   (string (ignore-errors 
                            (symbol-function 
                             (read-from-string *tree-update-match-hook*)))))))
-      (when hook
-        (ignore-errors (funcall *tree-update-match-hook* frame))))))
+      (when hook (ignore-errors (funcall hook frame))))))
 
 ;;;
 ;;; from here on, HTML output routines; this should probably be reorganized, so
