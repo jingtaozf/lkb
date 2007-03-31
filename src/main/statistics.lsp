@@ -39,7 +39,8 @@
   (frozen 0)
   (failures 0)
   (hypotheses 0)
-  (decompositions 0))
+  (decompositions 0)
+  (comparisons 0))
 
 (defmethod print-object ((object statistics) stream)
   (format 
@@ -47,7 +48,8 @@
    "#[S unifier <~a:~a> ~
       processor <~a:~a:~a @ ~a:~a> ~
       packing <~a: ~a+~a+~a ~a:~a> ~
-      unpacking <~a:~a @ ~a>]"
+      unpacking <~a:~a @ ~a> ~
+      comparisons <~a>]"
    (statistics-unifications object) (statistics-copies object)
    (statistics-ftasks object)
    (statistics-etasks object) (statistics-stasks object)
@@ -60,7 +62,8 @@
    (statistics-failures object)
    (statistics-hypotheses object)
    (statistics-decompositions object)
-   (statistics-uedges object)))
+   (statistics-uedges object)
+   (statistics-comparisons object)))
 
 (defparameter *statistics* (make-statistics))
 
@@ -81,4 +84,5 @@
   (setf (statistics-frozen statistics) 0)
   (setf (statistics-failures statistics) 0)
   (setf (statistics-hypotheses statistics) 0)
-  (setf (statistics-decompositions statistics) 0))
+  (setf (statistics-decompositions statistics) 0)
+  (setf (statistics-comparisons statistics) 0))
