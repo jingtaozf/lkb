@@ -880,7 +880,7 @@
 
 
 (defun copy-dag-arcs (arcs-tail vals path lower-copied-p arcs new-arcs)
-   ;; compiler must not convert recursive function into interative otherwise
+   ;; compiler must not convert recursive function into iterative otherwise
    ;; stack allocation will break. Allegro 4.3 (at least) must be explicitly
    ;; stopped from doing this 
    (declare (notinline copy-dag-arcs))
