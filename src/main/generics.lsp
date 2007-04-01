@@ -47,19 +47,22 @@
                       for role in (mrs:rel-flist ep)
                       when (eq (mrs:fvpair-feature role) *generics-carg*)
                       return (mrs:fvpair-value role))
+      with surface = (substitute #\space #\_ carg :test #'char=)
       for gle in (rest %generics-index%)
       when (equal pred (gle-pred gle))
       do
-        (let ((id (intern (format nil "~@:(~a[~a]~)" (gle-id gle) carg) :lkb)))
+        (let* ((id (format nil "~@:(~a[~a]~)" (gle-id gle) surface))
+               (id (intern id :lkb)))
           (if (get-lex-entry-from-id id)
             (push id ids)
-            (let* ((orth (list carg))
-                   (tdfs (instantiate-generic-lexical-entry gle carg))
-                   (new (when tdfs
-                          (make-lex-entry :orth orth :id id :full-fs tdfs))))
-              (when new
-                (with-slots (psorts) *lexicon*
-                  (setf (gethash id psorts) new))
-                (mrs::extract-lexical-relations new)
-                (push id ids)))))
+            (multiple-value-bind (tdfs orth)
+                (instantiate-generic-lexical-entry gle surface carg)
+              (when tdfs
+                (let ((new
+                       (make-lex-entry
+                        :orth (list orth) :id id :full-fs tdfs)))
+                  (with-slots (psorts) *lexicon*
+                    (setf (gethash id psorts) new))
+                  (mrs::extract-lexical-relations new)
+                  (push id ids))))))
       finally (return ids)))
