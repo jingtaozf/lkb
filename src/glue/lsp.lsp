@@ -531,7 +531,9 @@
                      (tdfs-indef (edge-dag (lspb-edge object))))
                     ((tdfs-p (lspb-dag object)) 
                      (tdfs-indef (lspb-dag object)))))
-              (mrs (and dag (mrs::extract-mrs-from-fs dag))))
+              (mrs (or (when (edge-p (lspb-edge object))
+                         (edge-mrs (lspb-edge object)))
+                       (when dag (mrs::extract-mrs-from-fs dag)))))
          (mrs::display-mrs nil mrs title (or view :dependencies)))))))
 
 (defun lsp-return (id stream edges format)
