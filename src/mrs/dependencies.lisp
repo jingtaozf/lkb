@@ -152,7 +152,7 @@
                     stream
                     "~@[newline~*~] ~a \"~(~a~)\" \":~(~a~)[\" #X["
                     (not firstp)
-                    (record (ed-id ed)) (ed-id ed) (ed-predicate ed))
+                    (record (ed-id ed)) (ed-id ed) (ed-linked-predicate ed))
                    (setf firstp nil)
                    (loop
                        with firstp = t

@@ -306,9 +306,14 @@ duplicate variables")
            (fvps (extract-fvps-from-rel-fs fs variable-generator 
                                            indexing-p original-string))
            (parameter-strings (get-fvps-parameter-strings fvps))
-           (lnk (and *lnkp* (extract-lnk-from-rel-fs fs)))
            (cfrom (extract-cfrom-from-rel-fs fs))
-           (cto (extract-cto-from-rel-fs fs)))
+           (cto (extract-cto-from-rel-fs fs))
+           (lnk (when *lnkp*
+                  (or (extract-lnk-from-rel-fs fs)
+                      (and (eq *lnkp* :characters)
+                           (numberp cfrom) (numberp cto)
+                           (>= cfrom 0) (>= cto 0)
+                           (list :characters cfrom cto))))))
       (unless (member pred *dummy-relations* :test #'equal)
         (let ((ep (make-char-rel 
                    :pred pred

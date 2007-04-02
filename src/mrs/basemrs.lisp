@@ -457,11 +457,13 @@ ACONS: <x1,h4> in <<x2,h3>,<x5,h6>>, <x11,h41> in <<x21,h31>,<x51,h61>>
 
 (defmethod mrs-output-start-rel ((mrsout active-t) pred first-p class
 				 &optional lnk str)
-  (declare (ignore first-p class lnk str))
+  (declare (ignore first-p class str))
   (with-slots (stream indentation) mrsout
     (format stream "~%")
     (format stream "~VT[ " indentation)
-    (lkb::add-mrs-pred-region stream pred)))
+    (lkb::add-mrs-pred-region stream pred)
+    (output-lnk lnk :stream stream)))
+
 
 ;;;
 ;;; column-two output class (for displaying two MRSs side by side)
@@ -524,9 +526,10 @@ ACONS: <x1,h4> in <<x2,h3>,<x5,h6>>, <x11,h41> in <<x21,h31>,<x51,h61>>
 
 (defmethod mrs-output-start-rel ((mrsout indexed) pred first-p class 
 				 &optional lnk str)
-  (declare (ignore class lnk str))
+  (declare (ignore class str))
   (with-slots (stream temp-pred) mrsout
-    (setf temp-pred pred)
+    (let ((lnk (output-lnk lnk :stream nil)))
+      (setf temp-pred (format nil "~a~a" pred lnk)))
     (unless first-p (format stream ",~%"))))
 
 (defmethod mrs-output-rel-handel ((mrsout indexed) handel
@@ -1638,12 +1641,13 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
     (mrs-check-for #\[ istream)
     (let* ((ltop (if *rel-handel-path* (read-mrs-ltop istream)))
            (index (read-mrs-index istream))
+           (xarg (read-mrs-xarg istream))
            (liszt (read-mrs-liszt istream))
            (hcons (if *rel-handel-path* (read-mrs-hcons istream)))
            (vcs (ignore-errors (read-mrs-vcs istream)))
            (psoa
             (make-psoa :top-h ltop
-                       :index index
+                       :index index :xarg xarg
                        :liszt liszt
                        :h-cons hcons
                        :vcs vcs)))
@@ -1668,6 +1672,17 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
   (mrs-check-for #\x istream)
   (mrs-check-for #\: istream)
   (read-mrs-var istream))
+
+(defun read-mrs-xarg (stream)
+  ;; XARG -> XARG: VAR ]
+  (let ((c (peek-char t stream nil 'eof)))
+    (when (and c (char-equal c #\x))
+      (read-char stream)
+      (mrs-check-for #\a stream)
+      (mrs-check-for #\r stream)
+      (mrs-check-for #\g stream)
+      (mrs-check-for #\: stream)
+      (read-mrs-var stream))))
 
 (defun read-mrs-liszt (istream)
   ;;; LISZT -> rels: < REL* >

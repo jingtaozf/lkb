@@ -527,10 +527,10 @@
              (funcall symbol (lspb-edge object))))))
       ((:mrs :dependencies)
        (let* ((dag (cond
-                    ((tdfs-p (lspb-dag object)) 
-                     (tdfs-indef (lspb-dag object)))
                     ((edge-p (lspb-edge object))
-                     (tdfs-indef (edge-dag (lspb-edge object))))))
+                     (tdfs-indef (edge-dag (lspb-edge object))))
+                    ((tdfs-p (lspb-dag object)) 
+                     (tdfs-indef (lspb-dag object)))))
               (mrs (and dag (mrs::extract-mrs-from-fs dag))))
          (mrs::display-mrs nil mrs title (or view :dependencies)))))))
 

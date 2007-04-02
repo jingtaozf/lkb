@@ -194,8 +194,12 @@
             for ep in (psoa-liszt mrs)
             for label = (rel-handel ep)
             for pred = (rel-pred ep)
+            for lnk = (output-lnk (rel-lnk ep) :stream nil)
             do
-              (format stream " #D[~(~s~) ~a: #D[~(~a~)" cons first pred)
+              (format
+               stream
+               " #D[~(~s~) ~a: #D[\"~(~a~)~@[~a~]\""
+               cons first pred lnk)
               (when label 
                 (format stream " LBL: ")
                 (dagify-variable label))
