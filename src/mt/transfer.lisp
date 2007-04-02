@@ -906,6 +906,9 @@
                               (preemptive *transfer-preemptive-filter-p*)
                               (debug '(:chart))
                               task (tm *transfer-tm*))
+  #-:lm
+  (declare (ignore tm))
+  
   #+:debug
   (setf %mrs% mrs)
   (setf %transfer-edges% nil)
