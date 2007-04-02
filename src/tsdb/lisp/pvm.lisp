@@ -208,7 +208,7 @@
                 (format
                  stream
                  "~await-for-clients(): ~
-                  `~a' registered as tid <~x> [~a:~a].~%"
+                  `~a' registered as tid <~x> [~2,'0d:~2,'0d].~%"
                  prefix (client-host client) (client-tid client)
                  minutes seconds))
               (when (and block (eql (client-tid client) block))
@@ -346,13 +346,18 @@
          (cpu (and client (pvm::client-cpu client)))
          (tid (and client (client-tid client)))
          (protocol (and client (client-protocol client)))
+         (tagger (when (cpu-p cpu) (cpu-tagger cpu)))
          (p-input (when (eq type :parse)
                     (let ((input (get-field :i-input item)))
                       (cond
                        ((and (cpu-p cpu) (cpu-preprocessor cpu))
-                        (call-hook (cpu-preprocessor cpu) input))
+                        (call-hook
+                         (cpu-preprocessor cpu) input
+                         (when (consp tagger) tagger)))
                        (*tsdb-preprocessing-hook*
-                        (call-hook *tsdb-preprocessing-hook* input))))))
+                        (call-hook
+                         *tsdb-preprocessing-hook* input
+                         (when (consp tagger) tagger)))))))
          (item (acons :p-input p-input item))
          (status (if tid 
                    (case protocol

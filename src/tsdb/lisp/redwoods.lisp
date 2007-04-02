@@ -90,7 +90,7 @@
          (items
           (if (stringp data) 
             (analyze data 
-                     :condition condition :meter meter :message t)
+                     :condition condition :meter meter :message meter)
             data))
          (message (format 
                    nil 
@@ -566,9 +566,9 @@
                                   (read-from-string gderivation nil nil))
                                  gderivation)
             initially (setf (lkb::compare-frame-exact frame) nil)
-            for edge in lkb::*parse-record*
+            for edge in edges
             for derivation = (lkb::edge-bar edge)
-            when (derivation-equal derivation gderivation) do
+            when (derivation-equal gderivation derivation) do
               (push edge (lkb::compare-frame-exact frame))))
 
       (when (and runp display (null %client%))
@@ -579,6 +579,9 @@
 
       (let ((status (lkb::set-up-compare-frame 
                      frame lkb::*parse-record* :runp runp :display display)))
+        
+        #+:debug 
+        (break)
 
         ;;
         ;; _fix_me_
@@ -2758,6 +2761,7 @@
           (model (make-model)) (purgep t)
           (recursep t) internalp (stream *tsdb-io*) (verbose t) (task :fc)
           target initialp finalp firstp lastp
+          (resolvedp t)
           (increment %redwoods-items-increment%) cache interrupt meter)
 
   (declare (ignore interrupt meter)
@@ -2787,9 +2791,13 @@
         with condition
         = (case task
             ((:fc :rank)
-             (if (and condition (not (equal condition "")))
-               (format nil "t-active >= 1 && readings > 1 && (~a)" condition)
-               "t-active >= 1 && readings > 1"))
+             (if resolvedp
+               (if (and condition (not (equal condition "")))
+                 (format nil "t-active > 0 && readings > 1 && (~a)" condition)
+                 "t-active > 0 && readings > 1")
+               (if (and condition (not (equal condition "")))
+                 (format nil "readings > 1 && (~a)" condition)
+                 "readings > 1")))
             (t condition))
         for i from 0
         for remaining on profiles
@@ -2800,7 +2808,7 @@
           (operate-on-profiles
            active :condition condition :model model :task task :stream stream
            :initialp (eq remaining profiles) :finalp (null (rest remaining))
-           :target target :internalp t)
+           :target target :internalp t :resolvedp resolvedp)
           (when (and purgep (not virtualp)) (purge-profile-cache active))
         else do
           (format 
@@ -2831,12 +2839,12 @@
            active :condition condition :model model :task task :stream stream
            :initialp (and initialp (eq remaining profiles))
            :finalp (and finalp (null (rest remaining)))
-           :target target :internalp t)))
+           :target target :internalp t :resolvedp resolvedp)))
    
    (recursep
     (when (eq task :unfc)
       (let ((fc (profile-find-feature-cache profiles)))
-        (ignore-errors (delete-file fc)))
+        (ignore-errors (delete-file (fc-file fc))))
       (return-from operate-on-profiles))
     
     (when verbose
@@ -2878,17 +2886,17 @@
           (when verbose
             (format
              stream
-             "operate-on-profiles(): running `~a' [~a - ~a|.~%"
-             profiles low high))
+             "[~a] operate-on-profiles(): running `~a' [~a - ~a|.~%"
+             (current-time :long :short) profiles low high))
           (operate-on-profiles
            profiles :condition foo :model model :task task :stream stream
            :internalp t :recursep nil :firstp (= i 1) :lastp (= i n)
-           :target target :cache cache)
+           :target target :cache cache :resolvedp resolvedp)
           (purge-profile-cache profiles :expiryp nil)
         finally (when cache (flush-cache cache :verbose verbose))))
    
    (t
-    (let ((data (analyze profiles :thorough '(:derivation :surface)
+    (let ((data (analyze profiles :thorough '(:derivation :surface :flags)
                          :condition condition :gold profiles)))
       (setf lastp lastp)
       (case task
@@ -2904,7 +2912,7 @@
           :stream stream :verbose verbose))
         ;;
         ;; _fix_me_
-        ;; this bit is hacky and MEM-specific for now.  (4-apr-06; erik & oe)
+        ;; this bit is hacky and MEM-specific for now.    (4-apr-06; erik & oe)
         ;;
         (:rank
          (loop
@@ -2954,7 +2962,7 @@
 
 (defun train (source file
               &key (condition *statistics-select-condition*)
-                   (type :mem) (fcp t) (ccp t) target
+                   (type :mem) (fcp t) (ccp t) (identity (current-pid)) target
                    (verbose t) (stream t)
                    interrupt meter)
 
@@ -2972,9 +2980,7 @@
   ;; make-model() here, actually?                        (5-apr-06; oe & erik)
   ;;
   (let ((*maxent-debug-p* t)
-        (model (if fcp
-                   (make-model)
-                 (read-model (profile-find-model source)))))
+        (model (if fcp (make-model) (read-model (profile-find-model source)))))
     (declare (special *maxent-debug-p*))
     (when fcp
       (operate-on-profiles
@@ -2984,32 +2990,38 @@
        :interrupt interrupt))
     (rank-profile
      source target
-     :nfold 1 :recache ccp :model model :type type
+     :nfold 1 :recache ccp :model model :type type :identity identity
      :verbose verbose :stream stream
      :interrupt interrupt
      :condition condition)
 
-    (let ((params 
+    (let ((parameters 
            (case type
              (:mem (model-parameters model))
+             ;;
+             ;; _fix_me_
+             ;; the script should probably reside in the `bin' sub-directory,
+             ;; side-by-side with the other SVM binaries.       (12-mar-07; oe)
+             ;;
              (:svm (let* ((output (format nil "/tmp/.model.~a.~a.svm_weights"
                                           (current-user) (current-pid)))
                           (command (format nil "~a/uio/svm2weights.pl ~a"
                                            (system:getenv "LOGONROOT")
                                            (model-parameters model))))
-                     (or (and (zerop 
-                               (run-process command 
-                                            :wait t :output output 
-                                            :if-output-exists :supersede))
-                              (probe-file output))
-                         (progn 
-                           (format t "train(): unable to compute weights from SVM model.")
-                           (return-from train))))))))
+                     (unless (and (zerop 
+                                   (run-process command 
+                                                :wait t :output output 
+                                                :if-output-exists :supersede))
+                                  (probe-file output))
+                       (format
+                        t
+                        "train(): unable to compute weights from SVM model.")
+                       (return-from train)))))))
     
-      (unless (probe-file params)
+      (unless (probe-file parameters)
         (format t "train(): unable to read MLM parameters.")
         (return-from train))
-      (read-weights  model params))
+      (read-weights  model parameters))
     (when file (print-model model :file file :format :export))
     model))
 
@@ -3022,7 +3034,7 @@
                           (stream *tsdb-io*) (cache :raw) (verbose t)
                           (overwrite t)
                           interrupt meter
-                          recache normalize-p)
+                          (resolvedp t) recache normalizep)
   
   (format
    stream
@@ -3033,12 +3045,14 @@
   
   (let* ((gc (install-gc-strategy 
               nil :tenure *tsdb-tenure-p* :burst nil :verbose t))
-         (condition (if (and condition (not (equal condition "")))
-                      (format
-                       nil
-                       "t-active >= 1 && readings >= 2 && (~a)" 
-                       condition)
-                      "t-active >= 1 && readings >= 2"))
+         (condition
+          (if resolvedp
+            (if (and condition (not (equal condition "")))
+              (format nil "t-active > 0 && readings > 1 && (~a)" condition)
+              "t-active > 0 && readings > 1")
+            (if (and condition (not (equal condition "")))
+              (format nil "readings > 1 && (~a)" condition)
+              "readings > 1")))
          (gold (or data
                    (analyze 
                     source 
@@ -3065,7 +3079,7 @@
       
       ;;
       ;; as of february 2006, whenever there is a feature cache there also has
-      ;; to be a serialized partial model, recording the symbol table and
+      ;; to be a serialized partial model, recording the full symbol table and
       ;; frequency counts (later used in restricting the context cache).
       ;;
       (unless (model-p model)
@@ -3080,8 +3094,9 @@
       ;;
       ;; when requested, re-build the context cache
       ;;
-      (when recache (cache-contexts data model identity :format type 
-                                    :normalize-p normalize-p)))
+      (when recache 
+        (cache-contexts
+         data model identity :format type :normalizep normalizep)))
     
     (loop
         with folds
@@ -3117,7 +3132,8 @@
         ;;
         with nfold
         = (if (smember type '(:ngram :chance :oracle)) 
-              1 (min (length sets) nfold))
+            1
+            (min (length sets) nfold))
 
         initially 
           #+:debug (setf %data% data)
@@ -3339,13 +3355,26 @@
   (declare (ignore fold))
   (loop
       for item in test
+      for results = (get-field :results item)
+      for nresults = (length results)
+      for random = (make-array nresults)
       collect
         (acons
          :ranks
          (loop
              for result in (get-field :results item)
              for rid = (get-field :result-id result)
-             collect (pairlis '(:result-id :rank :score) (list rid 1 0.0)))
+             for rank
+             = (loop
+                   for i = (random nresults)
+                   unless (aref random i)
+                   do (setf (aref random i) i) and return (+ i 1))
+             collect (pairlis '(:result-id :rank :score) (list rid rank 0.0))
+             into ranks
+             finally
+               (return (sort
+                        ranks #'<
+                        :key #'(lambda (rank) (get-field :rank rank)))))
          item)))
 
 (defun oracle-rank-items (test &key fold)
@@ -3369,68 +3398,6 @@
 (defun kappa (actual expected)
   (/ (- actual expected) (- 100 expected)))
 
-(defstruct experiment
-  (source *tsdb-gold*)
-  (skeleton *tsdb-default-skeleton*)
-  (target *tsdb-data*)
-  (type :mem) 
-  (nfold 10)
-  environment
-  (identity -1)
-  scores
-  data)
-
-(defun run-experiment (experiment &key recache summarize niterations normalize-p)
-
-  #+:debug
-  (progn
-    (excl:print-type-counts) (excl:gc) (excl:print-type-counts) (room))
-    
-  (when (stringp (experiment-target experiment))
-    (tsdb
-     :create (experiment-target experiment)
-     :skeleton (experiment-skeleton experiment)) 
-    (let (save)
-      (loop
-        ;;set experimental parameters and save current state
-          with environment = (experiment-environment experiment)
-          for (symbol . value) in environment 
-          when (and symbol (boundp symbol)) do
-            (push (cons symbol (symbol-value symbol)) save)
-            (set symbol value))
-      
-      (unwind-protect
-        (progn
-          ;;estimate model and evaluate
-          (rank-profile
-           (experiment-source experiment)
-           (experiment-target experiment)
-           :nfold (experiment-nfold experiment)
-           :niterations (or niterations (experiment-nfold experiment))
-           :type  (experiment-type experiment)
-           :recache recache 
-           :normalize-p normalize-p
-;;;        :normalize-p (when (eq (experiment-type experiment) :svm) :minmax)
-           :identity (experiment-identity experiment)
-           :data (experiment-data experiment))
-          (when summarize
-            (setf (experiment-scores experiment)
-              (summarize-scores
-               (experiment-target experiment)
-               (or (experiment-source experiment)
-                   (experiment-target experiment))
-               :n 1 :test :id :spartanp t :loosep t))))
-      (progn
-        ;;recover saved state
-        (loop
-            for (symbol . value) in save
-            do (set symbol value))
-        (purge-profile-cache (experiment-target experiment))))
-      #+:debug
-      (progn
-        (excl:print-type-counts) (excl:gc) (excl:print-type-counts) (room))
-      experiment)))
-
 (defun answer-enrich-mrs (edge &key (format :string))
   #+:lkb
   (let ((mrs (typecase edge
@@ -3450,3 +3417,5 @@
            (mrs::output-mrs1 mrs 'mrs::simple stream)))
         (:raw
          mrs)))))
+
+  

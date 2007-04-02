@@ -75,7 +75,7 @@
                       (get-field :p-input item)
                       (get-field :i-input item)))
          (parse-id (get-field :parse-id item))
-         (edges (or (get-field :edges item) -1))
+         (edges (or (get-field :edges item) 0))
          (interactive (if interactive 1 0))
          (status 
           (_process_item tid i-id i-input parse-id 

@@ -36,7 +36,7 @@
    *ignored-extra-features*))
 
 (setf *mrs-equalp-ignored-roles*
-  (list *rel-link-feature* (vsym "PSV")))
+  (list (vsym "LNK") (vsym "PSV")))
 
 ;;;
 ;;; types for variable naming in output (copy from `.../src/mrs/mrsglobals.lsp'

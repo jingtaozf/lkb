@@ -306,6 +306,7 @@ duplicate variables")
            (fvps (extract-fvps-from-rel-fs fs variable-generator 
                                            indexing-p original-string))
            (parameter-strings (get-fvps-parameter-strings fvps))
+           (lnk (and *lnkp* (extract-lnk-from-rel-fs fs)))
            (cfrom (extract-cfrom-from-rel-fs fs))
            (cto (extract-cto-from-rel-fs fs)))
       (unless (member pred *dummy-relations* :test #'equal)
@@ -314,9 +315,8 @@ duplicate variables")
                    :handel handle-var
                    :flist fvps
                    :parameter-strings parameter-strings
-                   :str original-string
-                   :cfrom cfrom
-                   :cto cto)))
+                   :str original-string :lnk lnk
+                   :cfrom cfrom :cto cto)))
           (when *mrs-record-all-nodes-p* (push (cons fs ep) *all-nodes*))
           ep)))))
 ;;; FIX?? flist may be wrong way round
@@ -336,7 +336,7 @@ duplicate variables")
 ;;;
 ;;; we need a (vanilla) version of this even in non-LKB universes, e.g. for the
 ;;; use of the MRS code stand-alone with ECL (PET) and the XLE.
-;;;                                                            (21-feb-05; oe)
+;;;                                                             (21-feb-05; oe)
 (defun extract-original-string-from-rel-fs (fs)
   #-:lkb
   (declare (ignore fs))
@@ -350,7 +350,25 @@ duplicate variables")
             (let ((fs-type (fs-type origstr-fs)))
               (if (stringp fs-type)
                   fs-type))))))
-  
+
+(defun extract-lnk-from-rel-fs (ep)
+  (loop
+      with lnk
+      for dag = (path-value ep *rel-lnk-path*)
+      then (path-value dag *rest-path*)
+      for first = (and (is-valid-fs dag) (path-value dag *first-path*))
+      while (is-valid-fs first)
+      do
+        (let* ((type (fs-type first))
+               (i (and (stringp type) (ignore-errors (parse-integer type)))))
+          (unless i
+            (error
+             "extract-lnk-from-rel-fs(): ignoring invalid LNK element `~a'"
+             type))
+          (push i lnk))
+      finally (and lnk (return (cons *lnkp* (nreverse lnk))))))
+
+
 (defun extract-cfrom-from-rel-fs (fs)
   (let ((label-list (fs-arcs fs)))
     (if *rel-cfrom-feature*

@@ -33,7 +33,7 @@
 
 (in-package "TSDB")
 
-(defparameter *tsdb-cache-connections-p* nil)
+(defparameter *tsdb-cache-connections-p* t)
 
 (defparameter *tsdb-connection-expiry* 200)
 
@@ -338,11 +338,6 @@
 
 (defun create-cache (data &key (protocol :cooked) (verbose t) schema allp)
 
-  ;;
-  ;; _fix_me_
-  ;; make sure to not create a write cache (and thus no new files) on read-only
-  ;; profiles: add call to verify-tsdb-directory() here and inspect status.
-  ;;                                                           (27-oct-03; oe)
   (let ((status (verify-tsdb-directory data)))
     (when (eq (get-field :status status) :ro)
       (when verbose
@@ -595,6 +590,7 @@
          (t
           (push tuple result)))
       finally (return (nreverse result))))
+
 (defun select-item-sets (data)
   (let ((sets (select '("i-id" "s-id") '(:integer :integer)
                       "item-set" nil data :sort :s-id)))

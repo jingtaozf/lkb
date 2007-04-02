@@ -51,7 +51,8 @@
       for ditems = (when division
                      (analyze-aggregates profile :condition division
                                          :meter dmeter :format format))
-      for wf = #'(lambda (foo) (not (= (get-field :i-wf foo) 1)))
+      for wf = (when *statistics-exclude-illformed-items-p*
+                 #'(lambda (foo) (not (= (get-field :i-wf foo) 1))))
       for if = #'(lambda (foo) (not (= (get-field :i-wf foo) 0)))
       for summary = (get-field
                      :total 

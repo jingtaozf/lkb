@@ -40,7 +40,7 @@ while read i; do
     file="${i}/${j}";
     if [ -s "${file}" ]; then
       echo -n "compressing \`${file}' ... ";
-      gzip -9 "${file}";
+      gzip -f -9 "${file}";
       echo "done";
     fi
   done

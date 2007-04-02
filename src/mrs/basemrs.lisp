@@ -70,7 +70,7 @@
                                         ; generator and comparison code
   extra                                 ; extra is a junk slot
                                         ; needed for the munging rules 
-  link)                                 ; link to surface element(s)
+  lnk)                                  ; link to surface element(s)
 
 (defstruct (char-rel (:include rel))
   cfrom
@@ -143,8 +143,8 @@
     (var-id var))
    ((and (var-p var) (not (eq (var-id var) :dummy)))
     (format nil 
-	    "~@[~(~A~)~]~A" 
-	    (when (var-id var) (or (var-type var) "u")) (var-id var)))
+	    "~(~A~)~@[~A~]" 
+	    (or (var-type var) "u") (var-id var)))
    ((var-base-p var)
     (format nil 
 	    "~@[~(~A~)~]" 
@@ -167,6 +167,7 @@
 (defun is-top-semantics-type (pred)
   (eq pred *top-semantics-type*))
 
+          
 ;;; variable generator - moved from mrsoutput because it could
 ;;; potentially be called without that code having been read in
 
@@ -214,14 +215,16 @@
   (if *mrs-raw-output-p*
     (call-next-method)
     (let ((pred (rel-pred object))
+          (lnk (output-lnk (rel-lnk object) :stream nil))
           (roles (rel-flist object)))
       (format 
        stream
-       "~@[~a:~]~(~a~)("
+       "~@[~a:~]~(~a~)~@[~a~]("
        (and (rel-handel object) (var-string (rel-handel object)))
        (if (stringp pred)
          (format nil "~s" pred)
-         (or pred "_")))
+         (or pred "_"))
+       lnk)
       (loop
           for role in roles
           for value = (fvpair-value role)
@@ -342,13 +345,14 @@
     (format stream "~S" atomic-value)))
 
 (defmethod mrs-output-start-rel ((mrsout simple) pred first-p class
-				 &optional cfrom cto str)
-  (declare (ignore first-p class cfrom cto str))
+				 &optional lnk str)
+  (declare (ignore first-p class str))
   (with-slots (stream indentation) mrsout
     (format stream "~%")
     (if (stringp pred)
       (format stream "~VT[ ~s" indentation pred)
-      (format stream "~VT[ ~(~a~)" indentation pred))))
+      (format stream "~VT[ ~(~a~)" indentation pred))
+    (output-lnk lnk :stream stream)))
 
 (defmethod mrs-output-rel-handel ((mrsout simple) handel 
 				  &optional properties sort id)
@@ -356,11 +360,6 @@
   (if handel
       (with-slots (stream indentation) mrsout
         (format stream "~%~VT~A: ~(~a~)" (+ indentation 2) 'lbl handel))))
-
-(defmethod mrs-output-rel-link ((mrsout simple) link)
-  (when link
-    (with-slots (stream indentation) mrsout
-      (format stream "~%~vtLNK: <~{~a~^ ~}>" (+ indentation 2) link))))
 
 (defmethod mrs-output-label-fn  ((mrsout simple) label)
   (with-slots (stream indentation line-per-rel) mrsout
@@ -457,8 +456,8 @@ ACONS: <x1,h4> in <<x2,h3>,<x5,h6>>, <x11,h41> in <<x21,h31>,<x51,h61>>
   ())
 
 (defmethod mrs-output-start-rel ((mrsout active-t) pred first-p class
-				 &optional cfrom cto str)
-  (declare (ignore first-p class cfrom cto str))
+				 &optional lnk str)
+  (declare (ignore first-p class lnk str))
   (with-slots (stream indentation) mrsout
     (format stream "~%")
     (format stream "~VT[ " indentation)
@@ -524,8 +523,8 @@ ACONS: <x1,h4> in <<x2,h3>,<x5,h6>>, <x11,h41> in <<x21,h31>,<x51,h61>>
     (format stream "~S" atomic-value)))
 
 (defmethod mrs-output-start-rel ((mrsout indexed) pred first-p class 
-				 &optional cfrom cto str)
-  (declare (ignore class cfrom cto str))
+				 &optional lnk str)
+  (declare (ignore class lnk str))
   (with-slots (stream temp-pred) mrsout
     (setf temp-pred pred)
     (unless first-p (format stream ",~%"))))
@@ -545,9 +544,6 @@ ACONS: <x1,h4> in <<x2,h3>,<x5,h6>>, <x11,h41> in <<x21,h31>,<x51,h61>>
                         *sem-relation-suffix* 
                         (string-downcase temp-pred))))))
 
-(defmethod mrs-output-rel-link ((mrsout indexed) link)
-  (declare (ignore link)))
-  
 (defmethod mrs-output-label-fn  ((mrsout indexed) label)
   (declare (ignore label)) 
   (with-slots (stream need-comma) mrsout
@@ -689,8 +685,8 @@ higher and lower are handle-variables
       (format stream "~A)" atomic-value))))
 
 (defmethod mrs-output-start-rel ((mrsout prolog) pred first-p class
-				 &optional cfrom cto str)
-  (declare (ignore class cfrom cto str))
+				 &optional lnk str)
+  (declare (ignore class lnk str))
   (with-slots (stream) mrsout
     (unless first-p (format stream ","))
     (format stream "rel('~A'," 
@@ -704,9 +700,6 @@ higher and lower are handle-variables
   (with-slots (stream temp-pred) mrsout  
     (format stream "~(~a~),[" handel)))
 
-(defmethod mrs-output-rel-link ((mrsout prolog) link)
-  (declare (ignore link)))
-  
 (defmethod mrs-output-label-fn  ((mrsout prolog) label)
   (with-slots (stream need-comma) mrsout
     (when need-comma (format stream ","))
@@ -851,11 +844,11 @@ higher and lower are handle-variables
 
 (defmethod mrs-output-atomic-fn ((mrs html) value)
   (with-slots (stream) mrs
-    (format stream "<td class=mrsValue>~(~a~)</td>~%" value)))
+    (format stream "<td class=mrsValue>~a</td>~%" value)))
 
 (defmethod mrs-output-start-rel ((mrs html) pred firstp class 
-				 &optional cfrom cto str)
-  (declare (ignore firstp cfrom cto str))
+				 &optional lnk str)
+  (declare (ignore firstp str))
   (with-slots (stream i nrows) mrs
     (when (and (not (zerop i)) (zerop (mod i *mrs-relations-per-row*)))
       (format 
@@ -865,8 +858,10 @@ higher and lower are handle-variables
     (format 
      stream 
      "    <td><table class=mrs~:[~*~;~:(~a~)~]Relation>~%      ~
-      <tr><td class=mrsPredicate colspan=2>~(~a~)</td>~%"
+      <tr><td class=mrsPredicate colspan=2>~(~a~)"
      class class pred)
+    (output-lnk lnk :stream stream)
+    (format stream "</td>~%")
     (incf i)))
 
 (defmethod mrs-output-rel-handel ((mrs html) handle 
@@ -877,9 +872,6 @@ higher and lower are handle-variables
       (format stream "      <tr><td class=mrsLabel>LBL</td>")
       (mrs-variable-html handle nil id "mrsValue" stream))))
 
-(defmethod mrs-output-rel-link ((mrsout html) link)
-  (declare (ignore link)))
-  
 (defmethod mrs-output-label-fn  ((mrs html) label)
   (with-slots (stream) mrs
     (format 
@@ -1008,13 +1000,13 @@ higher and lower are handle-variables
     (setf memory nil)))
 
 (defmethod mrs-output-start-rel ((mrs debug) pred firstp class
-				 &optional cfrom cto str)
-  (declare (ignore firstp class cfrom cto str))
+				 &optional lnk str)
+  (declare (ignore firstp class str))
   (with-slots (stream memory) mrs
     (setf memory (if pred
                    (if (stringp pred) 
-                     (format nil "~(~s~)" pred)
-                     (format nil "~(~a~)" pred))
+                     (format nil "~(~s~)~a" pred (output-lnk lnk :stream nil))
+                     (format nil "~(~a~)~a" pred (output-lnk lnk :stream nil)))
                    "_"))
     (format stream " ")))
 
@@ -1025,9 +1017,6 @@ higher and lower are handle-variables
     (with-slots (stream memory) mrs
       (format stream "~a:~a(" handle memory memory))))
 
-(defmethod mrs-output-rel-link ((mrsout debug) link)
-  (declare (ignore link)))
-  
 (defmethod mrs-output-label-fn  ((mrs debug) label)
   (declare (ignore label)))
 
@@ -1158,14 +1147,14 @@ higher and lower are handle-variables
 |#
 
 (defmethod mrs-output-start-rel ((mrsout mrs-xml) pred first-p class
-				 &optional cfrom cto str)
+				 &optional lnk str)
   (declare (ignore first-p class))
   (with-slots (stream) mrsout
     (format stream "~%<ep")
-    (when cfrom 
-      (format stream " cfrom='~A'" cfrom))
-    (when cto 
-      (format stream " cto='~A'" cto))
+    (when (eq (first lnk) :characters)
+      (format stream " cfrom='~A'" (second lnk)))
+    (when (eq (first lnk) :characters)
+      (format stream " cto='~A'" (third lnk)))
     (when str 
       (write-string " surface='" stream)
       (xml-escaped-output str stream)
@@ -1191,10 +1180,6 @@ higher and lower are handle-variables
 
 <!ELEMENT constant (#PCDATA)>
 |#
-
-(defmethod mrs-output-rel-link   ((mrsout mrs-xml) link)
-  (declare (ignore link))
-  nil)
 
 (defmethod mrs-output-label-fn  ((mrsout mrs-xml) label)
   (with-slots (stream) mrsout
@@ -1397,17 +1382,25 @@ higher and lower are handle-variables
    display
    (rel-pred rel) first-rel
    (determine-ep-class rel)
-   (if (char-rel-p rel) (char-rel-cfrom rel))
-   (if (char-rel-p rel) (char-rel-cto rel))
+   ;;
+   ;; _fix_me_
+   ;; for a transition period, at least, either use the actual LNK value (if
+   ;; present) or otherwise manufacture one for `char-rel' structures at least.
+   ;;                                                            (4-dec-06; oe)
+   ;;
+   (if (rel-lnk rel)
+     (rel-lnk rel)
+     (when (char-rel-p rel) 
+       (list :characters (char-rel-cfrom rel) (char-rel-cto rel))))
    (rel-str rel))
-  (mrs-output-rel-handel
-   display
-   (find-var-name (rel-handel rel) connected-p)
-   (var-extra (rel-handel rel))
-   (var-base-type (rel-handel rel))
-   (var-id (rel-handel rel)))
-  (mrs-output-rel-link display (rel-link rel))
-  (print-mrs-extra (rel-handel rel))
+  (when (rel-handel rel)
+    (mrs-output-rel-handel
+     display
+     (find-var-name (rel-handel rel) connected-p)
+     (var-extra (rel-handel rel))
+     (var-base-type (rel-handel rel))
+     (var-id (rel-handel rel)))
+    (print-mrs-extra (rel-handel rel)))
   (loop
       for feat-val in (rel-flist rel)
       for role = (fvpair-feature feat-val)
@@ -1730,14 +1723,15 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
 ;;; or
 ;;; REL -> [ PREDNAME FEATPAIR* ]
   (mrs-check-for #\[ istream)
-  (let* ((relpred (read-mrs-atom istream)))
+  (let* ((relpred (read-mrs-atom istream))
+         (lnk (read-lnk istream)))
     (when *rel-handel-path*
       (mrs-check-for #\l istream)
       (mrs-check-for #\b istream)
       (mrs-check-for #\l istream)
       (mrs-check-for #\: istream))
     (let ((hvar (if *rel-handel-path* (read-mrs-var istream)))
-          featpairs link)
+          featpairs)
       (loop 
         (let ((next-char (peek-char t istream nil 'eof)))
           (when (eql next-char 'eof) (error "Unexpected eof"))
@@ -1745,16 +1739,9 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
             (read-char istream)
             (return))
           (let ((fvp (read-mrs-featpair istream)))
-            ;;
-            ;; _fix_me_
-            ;; this is hacky, presumably these should not have been in the EP
-            ;; in the first place.                              (1-jul-04; oe)
-            ;;
-            (if (eq (fvpair-feature fvp) *rel-link-feature*)
-              (setf link (fvpair-value fvp))
-              (unless (member (fvpair-feature fvp) *ignored-sem-features*)
-                (push fvp featpairs))))))
-      (make-rel :pred relpred :handel hvar :link link
+            (unless (member (fvpair-feature fvp) *ignored-sem-features*)
+              (push fvp featpairs)))))
+      (make-rel :pred relpred :lnk lnk :handel hvar
                 :flist (sort featpairs #'feat-sort-func)))))
           
 (defun read-mrs-featpair (istream)         
@@ -1762,21 +1749,6 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
   (let ((feature (read-mrs-atom istream)))
     (mrs-check-for #\: istream)
     (let ((val (cond
-                ((eq feature *rel-link-feature*)
-                 (if (eql (peek-char t istream nil nil) #\<)
-                   (when (read-char istream nil nil)
-                     (read-delimited-list #\> istream t))
-                   ;;
-                   ;; _fix_me_
-                   ;; for some transition phase, support old-syle XLE syntax,
-                   ;; e.g. `LNK: |12|'; this should go one day. (12-aug-04; oe)
-                   ;;
-                   (let* ((foo (read-mrs-atom istream))
-                          (link (if (numberp foo)
-                                  foo
-                                  (parse-integer
-                                   (string foo) :junk-allowed t))))
-                     (when link (list link)))))
                 ((member feature *value-feats* :test #'eq)
                  (read-mrs-atom istream))
                 (t (read-mrs-var istream)))))

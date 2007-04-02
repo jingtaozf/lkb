@@ -16,12 +16,12 @@
 
 (defparameter *semis* nil)
 
-(defparameter *semi-generalize-ignore-roles*
-    (list (mrs::vsym "CARG")))
+(defparameter *semi-test* '(:predicates :roles :arity :properties))
+
+(defparameter *semi-ignore-roles*
+  (list (mrs::vsym "CARG") (mrs::vsym "LNK")))
 
 (defparameter *semi-generalize-ignore-properties* nil)
-
-(defparameter %semi% nil)
 
 (defstruct semi
   name
@@ -32,6 +32,7 @@
   (ges (make-hash-table)))
 
 (defmethod print-object ((object semi) stream)
+  (declare (special %transfer-raw-output-p%))
   (if %transfer-raw-output-p%
     (call-next-method)
     (let ((roles (hash-table-count (semi-roles object)))
@@ -44,28 +45,76 @@
        ges ges roles roles predicates predicates properties properties))))
 
 (defstruct sps
-  i synopses forms spes active type context)
+  i synopses forms spes active type context parents children)
 
 (defstruct spe
   id stem forms type ep index mrs)
 
 (defstruct ges
   spes mrs)
+
+(defmacro ignored-role-p (role)
+  `(member ,role *semi-ignore-roles* :test #'eq))
 
 (defmacro lookup-predicate (predicate semi)
   `(gethash ,predicate (semi-predicates ,semi)))
-
-(defun read-semi (file &key semi (encoding :utf-8))
+
+(defun read-synopsis (string &optional (offset 0))
+  (let ((stream (make-string-input-stream string offset)))
+    (labels ((read-role ()
+               (let ((c (peek-char t stream nil nil)))
+                 (when (char= c #\.) (return-from read-role))
+                 (when (char= c #\,) (read-char stream nil nil)))
+               (let* ((*package* (find-package mrs:*mrs-package*))
+                      (c (peek-char t stream nil nil))
+                      (optionality (and (char= c #\[) (read-char stream)))
+                      (name (ignore-errors (read stream nil nil)))
+                      (type (ignore-errors (read stream nil nil)))
+                      properties)
+                 (when (char= (peek-char t stream nil nil) #\{)
+                   (read-char stream nil nil)
+                   (loop
+                       for c = (peek-char t stream nil nil)
+                       while (and c (not (char= c #\})))
+                       when (char= c #\,) do (read-char stream nil nil)
+                       else do
+                         (let ((name (read stream nil nil))
+                               (value (read stream nil nil)))
+                           (when (and name value)
+                             (push
+                              (make-property :name name :value value)
+                              properties)))
+                       finally
+                         (loop
+                             for c = (read-char stream nil nil)
+                             while (and c (not (char= c #\}))))))
+                 (unless (or (null optionality)
+                             (let ((c (read-char stream nil nil)))
+                               (and c (char= c #\]))))
+                   (return-from read-synopsis))
+                 (when (and name type)
+                   (let ((variable (make-variable
+                                    :type (string-downcase (string type))
+                                    :properties properties
+                                    :optionality optionality)))
+                     (make-role
+                      :name name :value variable :optionality optionality))))))
+      (make-ep :roles (loop for role = (read-role) while role collect role)))))
+
+(defun read-semi (file &key semi (encoding :utf-8) close)
   (let* ((file (pathname file))
          (name (format
                 nil
                 "~a~@[.~a~]"
                 (pathname-name file) (pathname-type file)))
-         (semi (or semi (make-semi :name name))))
+         (id (subseq name 0 (search ".smi" name)))
+         (id (intern (string-upcase id) :keyword))
+         (semi (or semi (make-semi :name id))))
     (with-open-file (stream file :direction :input)
       #+:allegro
       (setf (stream-external-format stream)
         (excl:find-external-format encoding))
+      (format t "read-semi(): reading file `~a'.~%" name)
       (loop
           with *readtable* = (lkb::make-tdl-break-table)
           with *package* = (find-package :lkb)
@@ -102,47 +151,160 @@
                   (case context
                     (:predicates
                      (let* ((pred (ignore-errors
-                                   (read-from-string line nil nil))))
-                       ;;
-                       ;; _fix_me_
-                       ;; read remainder of line one day.       (27-oct-05; oe)
-                       ;;
-                       (when pred
-                         (setf (lookup-predicate pred semi)
-                           (make-sps)))))))))))))
-      (setf %semi% semi)))
+                                   (read-from-string line nil nil)))
+                            (pred
+                             (if (stringp pred) (string-downcase pred) pred))
+                            (colon (and pred (position #\: line)))
+                            (synopsis 
+                             (and colon (read-synopsis line (+ colon 1))))
+                            (bucket (and pred (lookup-predicate pred semi))))
+                       (cond
+                        (synopsis
+                         (setf (ep-pred synopsis) pred)
+                         (if bucket
+                           (push synopsis (sps-synopses bucket))
+                           (setf (lookup-predicate pred semi)
+                             (make-sps :synopses (list synopsis)))))
+                        (t
+                         (format
+                          t
+                          "read-semi(): ignoring |~a|." line)))))))))))))
+    (when close (close-semi semi))
+    (push semi *semis*)
+    semi))
+
+(defun close-semi (semi)
+  (declare (ignore semi))
+  #+:null
+  (loop
+      for sps being each hash-value
+      using (hash-value pred) in (semi-predicates semi)
+      for descendants
+      = (and (lkb::is-valid-type pred) (lkb::retrieve-descendants pred))
+      for ancestors
+      = (and (lkb::is-valid-type pred) (lkb::retrieve-ancestors pred))
+      do
+        (loop
+            for type in descendants
+            for descendant = (lkb::ltype-name type)
+            for bucket = (lookup-predicate descendant semi))))
 
 (defun test-semi-compliance (mrs
-                             &optional (semi %semi%)
+                             &optional semi
                              &key tags)
 
-  (loop
-      with tags = (loop for tag in tags collect (format nil "_~a_" tag))
-      for ep in (mrs:psoa-liszt mrs)
-      for pred = (mrs::rel-pred ep)
-      unless (or (when tags
-                   (loop
-                       with pred = (string pred)
-                       for tag in (when (char= (char pred 0) #\_) tags)
-                       never (search tag pred :test #'string-equal)))
-                 (lookup-predicate pred semi))
-      collect ep))
+  (if (null semi)
+    (setf semi (first *semis*))
+    (unless (semi-p semi)
+      (setf semi
+        (loop for foo in *semis* when (eq (semi-name foo) semi) return foo))))
+  (unless (semi-p semi) (return-from test-semi-compliance))
+  
+  (labels ((test-ep (ep)
+             (let* ((pred (mrs:rel-pred ep))
+                    (pred (if (stringp pred) (string-downcase pred) pred)))
+               (or
+                (member pred *semi-fragment-relations* :test #'eq)
+                (member
+                 (mrs:rel-pred ep)
+                 *semi-punctuation-relations* :test #'eq)
+                (member pred *semi-token-relations* :test #'eq)
+                (loop
+                    with sps = (lookup-predicate pred semi)
+                    for test = (loop
+                                   for test in *semi-test*
+                                   when (or (eq test :roles)
+                                            (eq test :properties))
+                                   collect test)
+                    for synopsis in (when sps (sps-synopses sps))
+                    thereis (or (null test)
+                                (test-synopsis ep synopsis))))))
+             (test-synopsis (ep synopsis)
+             #+:debug (pprint (list ep synopsis))
+             (loop
+                 with matched
+                 with rolep = (member :roles *semi-test* :test #'eq)
+                 for role in (mrs:rel-flist ep)
+                 for name = (mrs:fvpair-feature role)
+                 for ignorep = (ignored-role-p name)
+                 for match = (unless ignorep
+                               (loop
+                                   for role in (ep-roles synopsis)
+                                   when (eq name (role-name role))
+                                   return role))
+                 always (or ignorep (null rolep) match)
+                 unless (or ignorep (null rolep)
+                            (unify-types
+                             (mrs::var-type (mrs:fvpair-value role))
+                             (variable-type (role-value match))
+                             :internp t))
+                 do (return-from test-synopsis)
+                 else do (push match matched) #+:debug (pprint role)
+                 finally
+                   (return
+                     (or (not (member :arity *semi-test* :test #'eq))
+                         (loop
+                             for role in (and rolep (ep-roles synopsis))
+                             always (or (member role matched :test #'eq)
+                                        (ignored-role-p (role-name role))
+                                        (role-optionality role))))))))
+    (loop
+        with tags = (loop for tag in tags collect (format nil "_~a_" tag))
+        for ep in (mrs:psoa-liszt mrs)
+        unless (or (null *semi-test*)
+                   (when tags
+                     (loop
+                         with pred = (string (mrs::rel-pred ep))
+                         for tag in (when (char= (char pred 0) #\_) tags)
+                         never (search tag pred :test #'string-equal)))
+                   (test-ep ep))
+        collect ep)))
 
-(defun construct-semi (&key ids semi)
+(defun construct-semi (&key ids semi (rules t))
   (let ((semi (or semi (make-semi)))
         (ids (or ids (lkb::collect-psort-ids lkb::*lexicon*))))
     (loop
         for id in ids
         for le = (lkb::get-lex-entry-from-id id :cache nil)
-        for tdfs = (and le (lkb::lex-entry-full-fs le))
-        for dag = (lkb::tdfs-indef tdfs)
-        for type = (lkb::type-of-fs dag)
-        for stem = (format nil "~{~a~^ ~}" (lkb::lex-entry-orth le))
-        for forms = (cons
-                     (list :base stem)
-                     (ignore-errors (lkb::determine-derived-forms le)))
-        for mrs
-        = (when tdfs
+        when le do (record-le semi id le))
+    (when rules
+      (loop
+          with ids
+          = (if (listp rules)
+              rules
+              (loop
+                  for id being each hash-key in lkb::*rules*
+                  collect id))
+          for id in ids
+          for rule = (gethash id lkb::*rules*)
+          when rule do (record-rule semi id rule))
+      (loop
+          with ids
+          = (if (listp rules)
+              rules
+              (loop
+                  for id being each hash-key in lkb::*lexical-rules*
+                  collect id))
+          for id in ids
+          for rule = (gethash id lkb::*lexical-rules*)
+          when rule do (record-rule semi id rule)))
+    ;;
+    ;; finally, construct `generalized synopses' (i.e. folding multiple frames
+    ;; into one, where possible using optionality and type underspecification).
+    ;;
+    (loop
+        for sps being each hash-value in (semi-predicates semi)
+        do (generalize-sps sps))
+    semi))
+
+(defun record-le (semi id le)
+  (let* ((tdfs (lkb::lex-entry-full-fs le))
+         (dag (lkb::tdfs-indef tdfs))
+         (type (lkb::type-of-fs dag))
+         (stem (format nil "~{~a~^ ~}" (lkb::lex-entry-orth le)))
+         (forms (list (list :base stem)))
+         (mrs
+          (when tdfs
             ;;
             ;; the following is slightly round-about: use the LKB construction
             ;; code to read off a PSOA from the lexical entry FS, but then use
@@ -154,80 +316,123 @@
                    (mrs::*named-nodes* nil)
                    (mrs::*ref-ind-type* mrs::*non_expl-ind-type*)
                    (generator (let ((n 0)) #'(lambda () (decf n))))
-                   (cont (mrs::path-value
-                          (lkb::tdfs-indef tdfs)
-                          mrs::*initial-semantics-path*))
+                   (cont
+                    (mrs::path-value dag mrs::*initial-semantics-path*))
                    (psoa
                     (when (mrs::is-valid-fs cont)
-                      (mrs::construct-mrs cont generator))))
-              (import-mrs psoa :externals mrs::*named-nodes*)))
-        when (mrs-p mrs) do
-          (loop
-              with externals
-              = (loop
-                    for variable in (mrs-variables mrs)
-                    collect (variable-external variable))
-              for optionality
-              in (lkb::determine-argument-optionality dag externals)
-              for variable in (mrs-variables mrs)
-              do (setf (variable-optionality variable) optionality))
-          ;;
-          ;; at this point, dis-associate the MRS from the FS universe and add
-          ;; its information into the SEM-I.
-          ;;
-          (loop
-              for variable in (mrs-variables mrs)
-              do (setf (variable-external variable) nil))
-          (record-le semi id type stem forms mrs))
-    ;;
-    ;; finally, construct `generalized synopses' (i.e. folding multiple frames
-    ;; into one, where possible using optionality and type underspecification).
-    ;;
-    (loop
-          for sps being each hash-value in (semi-predicates semi)
-          do (generalize-sps sps))
-    semi))
+                      (mrs::construct-mrs cont generator)))
+                   (psoa (and psoa (map-mrs psoa :abstract))))
+              (import-mrs psoa :externals mrs::*named-nodes*)))))
+    (when (mrs-p mrs)
+      (loop
+          with externals
+          = (loop
+                for variable in (mrs-variables mrs)
+                collect (variable-external variable))
+          for optionality
+          in (lkb::determine-argument-optionality dag externals)
+          for variable in (mrs-variables mrs)
+          do (setf (variable-optionality variable) optionality))
+      ;;
+      ;; at this point, dis-associate the MRS from the FS universe and add its
+      ;; information into the SEM-I.
+      ;;
+      (loop
+          for variable in (mrs-variables mrs)
+          do (setf (variable-external variable) nil))
+      (loop
+          with ges = (make-ges :mrs mrs)
+          for i from 0
+          for ep in (mrs-eps mrs)
+          for pred = (ep-pred ep)
+          for sps = (or (lookup-predicate pred semi)
+                        (setf (lookup-predicate pred semi) (make-sps)))
+          for spe = (make-spe
+                     :id id :stem stem :forms forms
+                     :type type :ep ep :index i :mrs mrs)
+          do
+            ;;
+            ;; _fix_me_
+            ;; for the current ERG, subjects to verbs are [OPT bool].  fix 
+            ;; this up here, so we get a more conventional looking SEM-I, but
+            ;; really this should be adjusted in the grammar proper. 
+            ;;                                                  (27-jan-06; oe)
+            ;;
+            #+:logon
+            (let ((arg1 (mrs::vsym "ARG1"))
+                  (pred (string pred)))
+              (when (search "_v_" pred)
+                (loop
+                    for role in (ep-roles ep)
+                    for value = (role-value role)
+                    when (and (eq (role-name role) arg1)
+                              (variable-p value))
+                    do
+                      (setf (variable-type value) *semi-p-type*)
+                      (setf (variable-optionality value) nil))))
+            (push spe (sps-spes sps))
+            (push spe (ges-spes ges))
+          finally
+            (setf (ges-spes ges) (nreverse (ges-spes ges)))
+            (setf (gethash id (semi-ges semi)) ges)))))
 
-(defun record-le (semi id type stem forms mrs)
-  (loop
-      with ges = (make-ges :mrs mrs)
-      for i from 0
-      for ep in (mrs-eps mrs)
-      for pred = (ep-pred ep)
-      for sps = (or (lookup-predicate pred semi)
-                    (setf (lookup-predicate pred semi) (make-sps)))
-      for spe = (make-spe
-                 :id id :stem stem :forms forms
-                 :type type :ep ep :index i :mrs mrs)
-      do
-        ;;
-        ;; _fix_me_
-        ;; for the current ERG, subjects to verbs are [OPT bool].  fix this up 
-        ;; here, so we get a more conventional looking SEM-I, but really this
-        ;; should be adjusted in the grammar proper.           (27-jan-06; oe)
-        ;;
-        #+:logon
-        (let ((arg1 (mrs::vsym "ARG1"))
-              (pred (string pred)))
-          (when (search "_v_" pred)
-            (loop
-                for role in (ep-roles ep)
-                for value = (role-value role)
-                when (and (eq (role-name role) arg1)
-                          (variable-p value))
-                do
-                  (setf (variable-type value) *semi-p-type*)
-                  (setf (variable-optionality value) nil))))
-        (push spe (sps-spes sps))
-        (push spe (ges-spes ges))
-      finally
-        (setf (ges-spes ges) (nreverse (ges-spes ges)))
-        (setf (gethash id (semi-ges semi)) ges)))
+(defun record-rule (semi id rule)
+  (let* ((tdfs (lkb::rule-full-fs rule))
+         (dag (lkb::tdfs-indef tdfs))
+         (type (lkb::type-of-fs dag))
+         (mrs
+          (when tdfs
+            ;;
+            ;; the following is slightly round-about: use the LKB construction
+            ;; code to read off a PSOA from the lexical entry FS, but then use
+            ;; some of its internal state to construct an enriched MRS.  when
+            ;; building the full ERG SEM-I (in jan-06), one fourth of the time
+            ;; goes in mrs::construct-mrs(): investigate further one day ...
+            ;;
+            (let* ((mrs::*restart-variable-generator* nil)
+                   (mrs::*named-nodes* nil)
+                   (mrs::*ref-ind-type* mrs::*non_expl-ind-type*)
+                   (generator (let ((n 0)) #'(lambda () (decf n))))
+                   (cont
+                    (mrs::path-value dag mrs::*construction-semantics-path*))
+                   (rels
+                    (when (mrs::is-valid-fs cont)
+                      (mrs::extract-relations-from-liszt
+                       cont id mrs::*construction-semantics-path* dag
+                       :indexingp nil :generator generator)))
+                   (psoa (and rels (mrs::make-psoa :liszt rels)))
+                   (psoa (and psoa (map-mrs psoa :semi)))
+                   (psoa (and psoa (map-mrs psoa :abstract))))
+              (when psoa (import-mrs psoa))))))
+
+    (when (mrs-p mrs)
+      ;;
+      ;; at this point, dis-associate the MRS from the FS universe and add its
+      ;; information into the SEM-I.
+      ;;
+      (loop
+          for variable in (mrs-variables mrs)
+          do (setf (variable-external variable) nil))
+      (loop
+          with ges = (make-ges :mrs mrs)
+          for i from 0
+          for ep in (mrs-eps mrs)
+          for pred = (ep-pred ep)
+          for sps = (or (lookup-predicate pred semi)
+                        (setf (lookup-predicate pred semi) (make-sps)))
+          for spe = (make-spe
+                     :id id :type type :ep ep :index i :mrs mrs)
+          do
+            (push spe (sps-spes sps))
+            (push spe (ges-spes ges))
+          finally
+            (setf (ges-spes ges) (nreverse (ges-spes ges)))
+            (setf (gethash id (semi-ges semi)) ges)))))
 
 (defun record-mrs (semi mrs)
   (declare (ignore semi mrs)))
 
-(defun print-semi (&optional (semi %semi%)
+(defun print-semi (&optional (semi (first *semis*))
                    &key (format :concise) (stream t))
   (labels ((print-roles (ep stream)
              (loop
@@ -235,12 +440,28 @@
                  for role in (ep-roles ep)
                  for value = (role-value role)
                  when (variable-p value) do
-                   (let ((optionality (variable-optionality value)))
+                   (let ((properties (variable-properties value))
+                         (optionality (variable-optionality value)))
                      (format
                       stream
-                      "~@[~*[ ~]~:@(~a~) ~(~a~)~@[~* ]~]~:[, ~;.~]"
+                      "~@[~*[ ~]~:@(~a~) ~(~a~)"
                       optionality
                       (role-name role) (variable-type value)
+                      optionality (eq role last))
+                     (when properties (format stream " { "))
+                     (loop
+                         with last = (first (last properties))
+                         for property in properties
+                         do
+                           (format
+                            stream
+                            "~@:(~a~) ~(~a~)~:[, ~; }~]"
+                            (property-name property)
+                            (property-value property)
+                            (eq property last)))
+                     (format
+                      stream
+                      "~@[~* ]~]~:[, ~;.~]"
                       optionality (eq role last)))
                  else do
                    (format
@@ -263,7 +484,7 @@
                 for pred being each hash-key in (semi-predicates semi)
                 collect pred))
            (predicates (sort predicates #'string<)))
-                          
+      (format stream "predicates:~%~%")
       (loop
           for pred in predicates
           for sps = (lookup-predicate pred semi)
@@ -280,8 +501,9 @@
                   (print-roles (spe-ep spe) stream)
                   (format
                    stream
-                   " { #~d in ~(~a~)~@[ [~(~a~)]~] |~a| }"
+                   " { #~d in ~(~a~)~@[ [~(~a~)]~] |~@[~a~]| }"
                    index id type stem)
+                  #+:null
                   (print-forms (spe-forms spe) stream t)
                   (format stream "~%"))
           when (eq format :compact) do
@@ -319,6 +541,23 @@
             (string-equal type1 *semi-x-type*))
         (values *semi-p-type* :backward))))
 
+(defun generalize-properties (properties1 properties2)
+  ;;
+  ;; _fix_me_
+  ;; provide an actual implementation one day; for now, we fail to generalize
+  ;; anything, i.e. end up with more distinct outputs than absolutely needed.
+  ;;                                                            (26-sep-06; oe)
+  (unless (= (length properties1) (length properties2))
+    (return-from generalize-properties :fail))
+  (loop
+      for property1 in properties1
+      for name1 = (property-name property1)
+      for value1 = (property-value property1)
+      for match = (find name1 properties2 :key #'property-name)
+      when (and match (equal value1 (property-value match)))
+      collect (make-property :name name1 :value value1)
+      else return :fail))
+
 (defun generalize-ep (ep)
   (let ((roles
          (loop
@@ -326,14 +565,15 @@
              for name = (role-name role)
              for value = (role-value role)
              unless (member
-                     name *semi-generalize-ignore-roles* :test #'eq)
+                     name *semi-ignore-roles* :test #'eq)
              collect
                (make-role
                 :name name
                 :value (if (variable-p value)
                          (make-variable
                           :type (variable-type value)
-                          :optionality (variable-optionality value))
+                          :optionality (variable-optionality value)
+                          :properties (variable-properties value))
                          (make-constant :value (constant-value value)))))))
     (make-ep :roles roles)))
 
@@ -354,12 +594,12 @@
       with roles1
       = (loop
             for role in (ep-roles ep1) for name = (role-name role)
-            unless (member name *semi-generalize-ignore-roles* :test #'eq)
+            unless (member name *semi-ignore-roles* :test #'eq)
             collect role)
       with roles2
       = (loop
             for role in (ep-roles ep2) for name = (role-name role)
-            unless (member name *semi-generalize-ignore-roles* :test #'eq)
+            unless (member name *semi-ignore-roles* :test #'eq)
             collect role)
       for role1 in roles1
       for name1 = (role-name role1)
@@ -381,11 +621,15 @@
         (cond
          ((and (variable-p value1) (variable-p value2))
           (let ((optionality1 (variable-optionality value1))
-                (optionality2 (variable-optionality value2)))
+                (optionality2 (variable-optionality value2))
+                (properties (generalize-properties
+                             (variable-properties value1)
+                             (variable-properties value2))))
             (unless (or (eq optionality1 optionality2)
                         (and optionality1 (not (eq direction :backward)))
                         (and optionality2 (not (eq direction :forward))))
               (return-from generalize-eps))
+            (when (eq properties :fail) (return-from generalize-eps))
             (when (and optionality1 (not optionality2))
               (setf direction :forward))
             (when (and (not optionality1) optionality2)
@@ -399,7 +643,8 @@
               (when foo (setf direction foo))
               (setf (role-value role)
                 (make-variable
-                 :type type :optionality (or optionality1 optionality2))))))
+                 :type type :optionality (or optionality1 optionality2)
+                 :properties properties)))))
          ((and (constant-p value1) (constant-p value2))
           (unless (constant= value1 value2) (return-from generalize-eps))
           (setf (role-value role)

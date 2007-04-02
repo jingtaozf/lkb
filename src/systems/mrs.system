@@ -59,7 +59,8 @@
        (:file "basemrs")                ; MRS structures and printing 
        (:file "mrsoutput")              ; constructing MRS from parse result  
        (:file "mrscorpus")              ; checking equality etc
-       (:file "interface")))
+       (:file "interface")
+       (:file "lnk")))
 
      ;; following two files needed for scoping - can be excluded
      ;; for generation

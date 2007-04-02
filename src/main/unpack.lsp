@@ -90,6 +90,8 @@
        when new append (explode! new adjuncts))))
 
 (defun unpack-edges (edges)
+  #+:udebug
+  (setf %edges% edges)
   (loop
       for edge in edges
       append (unpack-edge! edge)))
@@ -99,6 +101,7 @@
       (setf (edge-foo edge) (unpack-edge!! edge))))
 
 (defun unpack-edge!! (edge &optional insidep)
+  (declare (special mrs:*lnkp*))
   #+:fdebug
   (clrhash *unpacking-failure-paths*)
   (labels ((instantiate (edge children)
@@ -106,6 +109,7 @@
                    (*unify-debug* :return))
                (with-unification-context (ignore)
                  (loop
+                     with id
                      with rule = (edge-rule edge)
                      with paths = (rest (rule-order rule))
                      with result = (rule-full-fs rule)
@@ -132,15 +136,16 @@
                        (setf rels (logior rels (g-edge-rels-covered child)))
                        (setf lexemes (append lexemes (g-edge-lexemes child)))
                      finally
-                       (when result 
+                       (when result
+                         (setf id (next-edge :unpack))
+                         (when mrs:*lnkp* (lnk-tdfs result (list id)))
                          (setf result (restrict-and-copy-tdfs result))
                          (return
                            (cond
                             (result
                              (if (g-edge-p edge)
                                (make-g-edge
-                                :id (next-edge :unpack)
-                                :rule rule :dag result
+                                :id id :rule rule :dag result
                                 :category (indef-type-of-tdfs result)
                                 :children children 
                                 :leaves leaves :lex-ids lex-ids
@@ -148,8 +153,7 @@
                                 :mod-index (g-edge-mod-index edge)
                                 :rels-covered rels :lexemes lexemes)
                                (make-edge
-                                :id (next-edge :unpack) 
-                                :rule rule :dag result
+                                :id id :rule rule :dag result
                                 :category (indef-type-of-tdfs result)
                                 :from (edge-from edge) :to (edge-to edge)
                                 :children children 
@@ -268,6 +272,9 @@
        ;;
        (t 
         (when (edge-odag edge) (setf (edge-dag edge) (edge-odag edge)))
+        (when mrs:*lnkp*
+          (setf (edge-dag edge)
+            (lnk-tdfs (edge-dag edge) (list (edge-id edge)))))
         (explode! (list edge) adjuncts))))))
 
 #+:null
@@ -394,12 +401,13 @@
         do (push new (hypothesis-parents daughter)))
     new))
 
-(defun selectively-unpack-edges (edges &optional n &key test robust)
+(defun selectively-unpack-edges (edges &optional n &key test robust limit)
 
   #+:debug
   (setf %edges edges)
   (unless edges (return-from selectively-unpack-edges))
   (unless (numberp robust) (setf robust 42))
+  (unless (numberp limit) (setf limit nil))
   (if (or (null n) (not (numberp n)) (<= n 0) (null *unpacking-scoring-hook*))
     (let ((edges (unpack-edges edges)))
       (if (null test)
@@ -409,7 +417,7 @@
             for edge in edges
             do
               (multiple-value-bind (flag distance) (funcall test edge)
-                (setf (edge-baz edge) distance)
+                (push (cons :distance distance) (edge-flags edge))
                 (if flag
                   (push edge result)
                   (when (and robust (numberp distance))
@@ -445,16 +453,19 @@
            for new = (when hypothesis 
                        (let ((edge (instantiate-hypothesis hypothesis)))
                          (when edge
+                           (when (numberp limit) (decf limit))
                            (if (null test)
                              edge
                              (multiple-value-bind (flag distance)
                                  (funcall test edge)
-                               (setf (edge-baz edge) distance)
+                               (let ((flags (cons :distance distance)))
+                                 (push flags (edge-flags edge)))
                                (when (and robust (numberp distance))
                                  (push (cons distance edge) candidates)
                                  (setf robust (min robust distance)))
                                (when flag edge))))))
-           while (and hypothesis (>= n 1))
+           while (and hypothesis (>= n 1)
+                      (or (null limit) (>= limit 0)))
            when new do (decf n) and collect new)
        (when robust
          (nreverse
@@ -638,6 +649,7 @@
          0)))))
 
 (defun instantiate-hypothesis (hypothesis)
+  (declare (special mrs:*lnkp*))
 
   (let ((cache (hypothesis-edge hypothesis)))
     (cond
@@ -646,6 +658,9 @@
       (let* ((decomposition (hypothesis-decomposition hypothesis))
              (edge (decomposition-lhs decomposition)))
         (when (edge-odag edge) (setf (edge-dag edge) (edge-odag edge)))
+        (when mrs:*lnkp*
+          (setf (edge-dag edge)
+            (lnk-tdfs (edge-dag edge) (list (edge-id edge)))))
         (setf (edge-score edge) (hypothesis-score hypothesis))
         (setf (hypothesis-edge hypothesis) edge)))
      (t
@@ -658,6 +673,7 @@
           (if children
             (with-unification-context (ignore)
               (loop
+                  with id
                   with score = (hypothesis-score hypothesis)
                   with decomposition = (hypothesis-decomposition hypothesis)
                   with edge = (decomposition-lhs decomposition)
@@ -684,26 +700,27 @@
                     (setf rels (logior rels (g-edge-rels-covered child)))
                     (setf lexemes (append lexemes (g-edge-lexemes child)))
                   finally
-                    (when result (setf result (restrict-and-copy-tdfs result)))
+                    (when result
+                      (setf id (next-edge :unpack))
+                      (when mrs:*lnkp* (lnk-tdfs result (list id)))
+                      (setf result (restrict-and-copy-tdfs result)))
                     (return
                       (if result
                         (if (g-edge-p edge)
                           (make-g-edge
-                           :id (next-edge :unpack) :score score
-                           :rule rule :dag result
+                           :id id :score score :rule rule :dag result
                            :category (indef-type-of-tdfs result)
                            :children children 
                            :leaves leaves :lex-ids lex-ids
                            :index (g-edge-index edge)
                            :mod-index (g-edge-mod-index edge)
-                           :rels-covered rels :lexemes lexemes :baz edge)
+                           :rels-covered rels :lexemes lexemes)
                           (make-edge
-                           :id (next-edge :unpack) :score score
-                           :rule rule :dag result
+                           :id id :score score :rule rule :dag result
                            :category (indef-type-of-tdfs result)
                            :from (edge-from edge) :to (edge-to edge)
                            :children children 
-                           :leaves leaves :lex-ids lex-ids :baz edge))
+                           :leaves leaves :lex-ids lex-ids))
                         :fail))))
             :fail)))
       (let ((result (hypothesis-edge hypothesis)))

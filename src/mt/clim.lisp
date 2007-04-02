@@ -458,8 +458,10 @@
                      (format 
                       stream 
                       "~%Invalid MRS Object~%")))))
-            (when (and (mrs::fragmentp mrs) (not (edge-source edge)))
+            (when (and (fragmentp mrs) (not (edge-source edge)))
               (lkb::recolor-record record clim::+blue+))
+            (when (and (edge-semi edge) (null (edge-source edge)))
+              (lkb::recolor-record record clim:+magenta+))
             (when (edge-source edge)
               (lkb::recolor-record record clim:+red+))))))))
 

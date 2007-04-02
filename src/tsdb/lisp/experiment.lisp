@@ -2,8 +2,8 @@
 
 ;;;
 ;;; [incr tsdb()] --- Competence and Performance Profiling Environment
-;;; Copyright (c) 1996 -- 2006 Stephan Oepen (oe@csli.stanford.edu)
-;;; Copyright (c) 2005 -- 2006 Erik Velldal (erikve@ifi.uio.no)
+;;; Copyright (c) 1996 -- 2007 Stephan Oepen (oe@csli.stanford.edu)
+;;; Copyright (c) 2005 -- 2007 Erik Velldal (erikve@ifi.uio.no)
 ;;;
 ;;; This program is free software; you can redistribute it and/or modify it
 ;;; under the terms of the GNU Lesser General Public License as published by
@@ -32,9 +32,10 @@
      (type :mem) 
      (supersede nil)
      (prefix "")
+     (compact nil)
      (identity (format nil "~a.~a" (current-user) (current-pid)))
      (recache t)
-     (verbose t) (stream t)
+     (verbose t) (stream t) (debug nil)
      ;;
      ;; global Redwoods parameters
      ;;
@@ -64,13 +65,25 @@
      (method *maxent-method*)
      (variance *maxent-variance*)
      (relative-tolerance *maxent-relative-tolerance*)
-     (iterations *maxent-iterations*))
+     (iterations *maxent-iterations*)
+     ;;
+     ;; estimation parameters: SVM
+     ;;
+     (kernel *svm-kernel*)
+     (rbf-g *svm-rbf-g*) 
+     (poly-d *svm-poly-d*) 
+     (sig-poly-s *svm-sig-poly-s*)
+     (sig-poly-r *svm-sig-poly-r*)
+;;   (iterations *svm-iterations*)
+     (balance *svm-cost-balance*) 
+     (error-to-margin *svm-error-to-margin*)
+     (tolerance *svm-tolerance*))
      
-  (macrolet ((gridify (params &body body)
-               (if (null (cdr params))
-                 `(dolist ,(first params) ,@body)
-                 `(dolist ,(first params)
-                    (gridify ,(cdr params) ,@body)))))
+  (macrolet ((gridify (parameters &body body)
+               (if (null (rest parameters))
+                 `(dolist ,(first parameters) ,@body)
+                 `(dolist ,(first parameters)
+                    (gridify ,(rest parameters) ,@body)))))
     (labels ((listify (foo)
                (if (or (null foo) (atom foo)) (list foo) foo))
              (cross-product (&rest lists)
@@ -84,7 +97,32 @@
                      for foo in (first lists)
                      nconc (loop
                                for bar in rests
-                               collect (cons foo bar))))))
+                               collect (cons foo bar)))))
+             (report (experiment run skipped total recache)
+               (format 
+                stream
+                "~&[~a] batch-experiment(): ~
+                 experiment # ~d; grid # ~d (~d skipped); ~
+                 (~d~@[; cc~]).~%"
+                (current-time :long :short) experiment
+                (+ run skipped -1) skipped total recache))
+             (execute-experiment (&key target recache)
+               (let ((executep (test-experiment target :supersede supersede)))
+                 (when executep  
+                   (tsdb :create target :skeleton skeleton)
+                   (handler-case (rank-profile
+                                  source target :type type
+                                  :nfold nfold :niterations niterations
+                                  :recache recache :identity identity)
+                     (condition (condition)
+                       (format
+                        stream
+                        "~&[~a] batch-experiment(): ~
+                               error: `~a'.~%"
+                        (current-time :long :short) condition)))
+                   (purge-profile-cache target))
+                 executep)))
+             
       (let ((total 0)
             (experiment 0)
             (thresholds
@@ -117,10 +155,11 @@
                   (*feature-lm-p* (listify lm-p))
                   (*feature-random-sample-size* (listify random-sample-size))
                   (*feature-frequency-threshold* thresholds))
-          (case type
-            (:mem
-             (let ((run 0)
-                   (skipped 0))
+                 
+          (let ((run 0)
+                (skipped 0))
+            (case type
+              (:mem
                (gridify ((*redwoods-train-percentage* 
                           (listify train-percentage))
                          (*maxent-method* (listify method))
@@ -128,40 +167,53 @@
                          (*maxent-relative-tolerance*
                           (listify relative-tolerance))
                          (*maxent-iterations* (listify iterations)))
-                 ;;
-                 ;; _fix_me_
-                 ;; to adapt this function for SVMs too, all of the following
-                 ;; could go into a function execute-experiment() or the like.
-                 ;;                                            (31-mar-06; oe)
-                 (let ((target (mem-environment
-                                :format :string :full t :prefix prefix))
-                       (recache (and (zerop run) recache)))
-                   (cond 
-                    ((test-experiment target :supersede supersede)
 
-                     #-:debug
-                     (progn
-                       (excl:print-type-counts) (excl:gc)
-                       (excl:print-type-counts) (room))
-                     (tsdb :create target :skeleton skeleton)
-                     (unwind-protect (rank-profile
-                                      source target :type type
-                                      :nfold nfold :niterations niterations
-                                      :recache recache :identity identity)
+                 (when debug
+                   (excl:print-type-counts) (excl:gc)
+                   (excl:print-type-counts) (room))
+                        
+                 (let ((recache (and (zerop run) recache)))
+                   (if 
+                       (execute-experiment 
+                        :target (mem-environment 
+                                 :full t :prefix prefix
+                                 :format (if compact :compact :string))
+                        :recache recache)
+                       
                        (incf run)
-                       (purge-profile-cache target)))
-                    (t (incf skipped)))
+                     (incf skipped))
                    (incf total)
-                   (when verbose
-                     (format
-                      stream
-                      "~&[~a] batch-experiment(): ~
-                       experiment # ~d; grid # ~d (~d skipped); ~
-                       (~d~@[; cc~]).~%"
-                      (current-time :long :short)
-                      experiment (+ run skipped -1) skipped
-                      total recache)))))))
-          (incf experiment)))
+                   (when verbose 
+                     (report experiment run skipped total recache))
+                   (incf experiment)))))
+            
+            (case type
+              (:svm
+               (gridify ((*redwoods-train-percentage* 
+                          (listify train-percentage))
+                         (*svm-kernel* (listify kernel))
+                         (*svm-rbf-g* (listify rbf-g))
+                         (*svm-poly-d* (listify poly-d)) 
+                         (*svm-sig-poly-s* (listify sig-poly-s))
+                         (*svm-sig-poly-r* (listify sig-poly-r))
+                         (*svm-iterations* (listify iterations))
+                         (*svm-error-to-margin* (listify error-to-margin))
+                         (*svm-cost-balance* (listify balance))
+                         (*svm-tolerance* (listify tolerance)))
+                        
+                 (let ((recache (and (zerop run) recache)))
+                   (if 
+                       (execute-experiment 
+                        :target (svm-environment 
+                                 :full t :prefix prefix
+                                 :format (if compact :compact :string))
+                        :recache recache)
+                       (incf run)
+                     (incf skipped))
+                   (incf total)
+                   (when verbose 
+                     (report experiment run skipped total recache))
+                   (incf experiment))))))))
       (purge-profile-cache source))))
 
 (defun test-experiment (target &key supersede (verbose t) (stream t))

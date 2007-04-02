@@ -1145,6 +1145,9 @@ proc main {} {
   .menu.options.menu.filters add checkbutton -label "MRS Syntax" \
     -variable globals(filters,syntax) \
     -command tsdb_filters;
+  .menu.options.menu.filters add checkbutton -label "MRS SEM-I" \
+    -variable globals(filters,semi) \
+    -command tsdb_filters;
   .menu.options.menu.filters add checkbutton -label "MRS Exhaustive Scope" \
     -variable globals(filters,ascope) \
     -command tsdb_filters;
@@ -1165,6 +1168,10 @@ proc main {} {
     -command tsdb_filters -state disabled;
 
   menu .menu.options.menu.switches -tearoff 0
+  .menu.options.menu.switches add checkbutton \
+    -label "Exclude Ungrammatical Items" \
+    -variable globals(exclude_illformed_items_p) \
+    -command {tsdb_set exclude_illformed_items_p}; 
   .menu.options.menu.switches add checkbutton \
     -label "Cache DB Connections" \
     -variable globals(cache_connections_p) \

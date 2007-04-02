@@ -34,7 +34,7 @@
 
 (defparameter *tsdb-name* "[incr tsdb()]")
 
-(defparameter *tsdb-version* "2.0 (5-jul-06; beta)")
+(defparameter *tsdb-version* "2.0 (31-mar-07; beta)")
 
 (defparameter
   *tsdb-application*
@@ -225,6 +225,6 @@
 
 (defparameter *redwoods-thinning-normalize-p* nil)
 
-(defvar *reconstruct-cache* nil)
+(defparameter *reconstruct-cache* nil)
 
 (defparameter %tsdb-lexical-preterminals% nil)

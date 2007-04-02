@@ -37,6 +37,8 @@
 
 (defparameter *transfer-filter-p* t)
 
+(defparameter *transfer-block-p* t)
+
 (defparameter *transfer-interlingua-predicates* nil)
 
 (defparameter *transfer-preemptive-filter-p* nil)
@@ -75,16 +77,20 @@
 
 (defparameter %transfer-original-variables% nil)
 
+(defparameter %transfer-variable-cache% (make-hash-table :test #'eq))
+
 (defparameter %transfer-solutions% nil)
 
 (defstruct mtrs
-  id mtrs before after in out flags)
+  id mtrs before after in out pre post flags)
 
 (defstruct mtr
   id
   context filter
   input output defaults
-  variables vector flags special rank)
+  variables vector
+  avoids requires consumes provides
+  flags special rank file)
 
 (defmethod print-object ((object mtr) stream)
   (if %transfer-raw-output-p%
@@ -116,16 +122,51 @@
 (defmacro mtr-fail-p (mtr)
   `(member :fail (mtr-flags ,mtr) :test #'eq))
 
+(defmacro mtr-permute-p (mtr)
+  `(member :permute (mtr-flags ,mtr) :test #'eq))
+
 (defmacro mtr-exhaustive-p (mtr)
   `(member :exhaustive (mtr-flags ,mtr) :test #'eq))
 
-(defun mtr-trigger (mtr)
+(defun mtr-warn (mtr &optional special)
   (loop
-      for (value . key) in (mtr-special mtr)
-      when (eq key :trigger) return value))
+      for (value . key) in (or special (and (mtr-p mtr) (mtr-special mtr)))
+      when (eq key :warn) return value))
+
+(defun mtr-block (mtr &optional special)
+  (loop
+      for (value . key) in (or special (and (mtr-p mtr) (mtr-special mtr)))
+      when (eq key :block) return value))
+
+(defun mtr-trigger (mtr)
+  (when (mtr-p mtr)
+    (loop
+        for (value . key) in (mtr-special mtr)
+        when (eq key :trigger) return value)))
+
+(defstruct tl
+  (id 0)
+  (all (make-hash-table :test #'equal))
+  (reverse (make-hash-table :test #'eql))
+  (filter (make-hash-table :test #'equal))
+  (context (make-hash-table :test #'equal))
+  (input (make-hash-table :test #'equal))
+  (output (make-hash-table :test #'equal)))
 
 (defun interlingua-predicate-p (pred)
   (member pred *transfer-interlingua-predicates* :test #'equal))
+
+(defun string-predicate-p (pred)
+  (and (stringp pred)
+       (not (zerop (length pred)))
+       (not (member (char pred 0) '(#\~ #\@) :test #'char=))))
+
+(defun common-predicate-p (pred)
+  (or (string-predicate-p pred)
+      (and pred (symbolp pred)
+           (not (lkb::subtype-or-equal
+                 (lkb::minimal-type-for (first (last mrs::*rel-name-path*)))
+                 pred)))))
 
 (defun transfer-rule-sets (&optional task)
   (loop
@@ -136,8 +177,8 @@
 
 (defstruct (edge (:constructor make-edge-x))
   (id (let ((n %transfer-edge-id%)) (incf %transfer-edge-id%) n))
-  rule mrs daughter solution n (vector 0)
-  source (depth 0) score)
+  rule mrs daughter solution n (vector 0) preds
+  source (depth 0) semi warn score)
 
 (defun make-edge (&rest rest)
   (let* ((edge (apply #'make-edge-x rest))
@@ -154,6 +195,10 @@
         (+ 1 (edge-depth daughter))
         1))
     (when (edge-p daughter) (setf (edge-source edge) (edge-source daughter)))
+    (setf (edge-warn edge)
+      (if (mtr-p (edge-rule edge))
+        (cons (mtr-warn (edge-rule edge)) (and daughter (edge-warn daughter)))
+        (and daughter (edge-warn daughter))))
     (push edge %transfer-edges%)
     (cond
      ((and (numberp *transfer-edge-limit*)
@@ -180,7 +225,15 @@
          stream
          "~<#D[~;~a {~,2f}~@[ ~(~a~)~]~:[~* ...~; ~_~a~]~;]~:>"
          (list
-          (edge-id object)
+          ;;
+          ;; _fix_me_
+          ;; there must be a better way of doing this, but the seven or so that
+          ;; i tried (using ~@[] and such), i could not make to work within the
+          ;; pretty printer environment; strange!               (20-dec-06; oe)
+          ;;
+          (if (mtr-block (edge-rule object))
+            (format nil "~a!" (edge-id object))
+            (edge-id object))
           (if (numberp (edge-score object)) (edge-score object) 0)
           (mtr-id (edge-rule object))
           recursep
@@ -194,7 +247,7 @@
       do (format *transfer-debug-stream* "~a~%" edge)))
 
 (defstruct (solution (:copier x-copy-solution))
-  variables eps hconss)
+  variables eps hconss matches)
 
 (defun copy-solution (&optional solution)
   (if solution
@@ -203,6 +256,8 @@
         (copy-list (solution-variables solution)))
       (setf (solution-eps result)
         (copy-list (solution-eps solution)))
+      (setf (solution-matches result)
+        (copy-list (solution-matches solution)))
       (when (member :solutions *transfer-debug-p* :test #'eq)
         (push result %transfer-solutions%))
       result)
@@ -293,7 +348,7 @@
 
 (defun read-transfer-rules (files &optional name 
                             &key (filter nil filterp)
-                                 before after in out
+                                 before after in out pre post
                                  reset task optional (recurse t) subsume edges)
 
   ;;
@@ -401,7 +456,7 @@
                                        lhs constants copies 
                                        rhs id
                                        :optional optional
-                                       :task task)))
+                                       :task task :file file)))
                             (when rule 
                               (record-mtr (compile-mtr rule))
                               (push rule rules))))))))))
@@ -423,7 +478,8 @@
                      (function after))))
                  (mtrs (make-mtrs
                         :id id :mtrs (nreverse rules)
-                        :before before :after after :in in :out out)))
+                        :before before :after after
+                        :pre pre :post post :in in :out out)))
             (setf (getf (mtrs-flags mtrs) :recurse) recurse)
             (setf (getf (mtrs-flags mtrs) :filter)
               (if filterp filter t))
@@ -499,7 +555,7 @@
           (return (values lhss constants copies rhss)))))
 
 (defun convert-dag-to-mtr (lhs constants copies rhs id 
-                           &key optional task)
+                           &key optional task file)
   ;;
   ;; _fix_me_
   ;; give some thought to variable types: authors of transfer rules might well
@@ -598,7 +654,8 @@
              path)
           else do (push ep %transfer-copy-eps%))
       
-      (unless (or output rhs (eq task :trigger))
+      (unless (or output rhs (eq task :trigger)
+                  (mtr-block nil special) (mtr-warn nil special))
         ;;
         ;; warn: rule with no output specification
         ;;
@@ -623,7 +680,7 @@
                               :input input :output output :defaults defaults
                               :variables (nreverse mrs::*named-nodes*)
                               :flags flags :special special :rank rank
-                              :vector vector)))
+                              :vector vector :file file)))
           (incf %transfer-rule-id%)
           (when (member :optional (mtr-flags mtr))
             (setf vector (logior vector %transfer-optional-rules%)))
@@ -641,6 +698,7 @@
   (setf %dag dag)
   (let* ((optional (mrs::path-value dag *mtr-optional-path*))
          (fail (mrs::path-value dag *mtr-fail-path*))
+         (permute (mrs::path-value dag *mtr-permute-path*))
          (exhaustive (mrs::path-value dag *mtr-exhaustive-path*))
          flags)
     (when (lkb::bool-value-true optional)
@@ -649,6 +707,8 @@
       (pushnew :obligatory flags))
     (when (lkb::bool-value-true fail)
       (pushnew :fail flags))
+    (unless (lkb::bool-value-false permute)
+      (pushnew :permute flags))
     (when (lkb::bool-value-true exhaustive)
       (pushnew :exhaustive flags))
     flags))
@@ -664,6 +724,8 @@
 (defun convert-dag-to-special (dag &key id)
   (let ((equal (lkb::existing-dag-at-end-of dag *mtr-equal-path*))
         (subsume (lkb::existing-dag-at-end-of dag *mtr-subsume-path*))
+        (block (mrs::path-value dag *mtr-block-path*))
+        (warn (mrs::path-value dag *mtr-warn-path*))
         (trigger (mrs::path-value dag *mtr-trigger-path*))
         special)
     (when (lkb::dag-p equal)
@@ -698,6 +760,12 @@
                  "~&convert-dag-to-special(): ~
                   no match for SUBSUME element # ~a.~%"
                  i)))))
+    (when (mrs::is-valid-fs block)
+      (let ((block (mrs::fs-type block)))
+        (when (stringp block) (push (cons block :block) special))))
+    (when (mrs::is-valid-fs warn)
+      (let ((warn (mrs::fs-type warn)))
+        (when (stringp warn) (push (cons warn :warn) special))))
     (when (mrs::is-valid-fs trigger)
       (let ((le (mrs::vsym (mrs::fs-type trigger))))
         (push id (gethash le *transfer-triggers*))
@@ -723,6 +791,16 @@
                    when (and (stringp pred) (eq (char pred 0) #\~)) do 
                      (setf (mrs:rel-pred ep)
                        (ppcre::create-scanner (subseq pred 1)))
+                   when (and (stringp pred) (eq (char pred 0) #\@)) do
+                     (let* ((id (string-upcase (subseq pred 1)))
+                            (id (intern id :keyword))
+                            (semi (find id *semis* :key #'semi-name)))
+                       (if semi
+                         (setf (mrs:rel-pred ep) semi)
+                         (error
+                          "~&compile-mtr(): ~
+                           invalid SEM-I reference `~(~a~)' in MTR `~(~a~)'."
+                          id (mtr-id mtr))))
                    do
                      (loop
                          for role in (mrs:rel-flist ep)
@@ -756,29 +834,54 @@
     mtr))
 
 (defun record-mtr (mtr)
-  (when (and *transfer-lexicon* (mrs::psoa-p (mtr-input mtr)))
+  (labels ((id (pred)
+             (or (gethash pred (tl-all *transfer-lexicon*))
+                 (let ((id (tl-id *transfer-lexicon*)))
+                   (setf (gethash pred (tl-all *transfer-lexicon*)) id)
+                   (setf (gethash id (tl-reverse *transfer-lexicon*)) pred)
+                   (incf (tl-id *transfer-lexicon*))
+                   id))))
     (loop
-        with top = (lkb::minimal-type-for (first (last mrs::*rel-name-path*)))
-        with source = (first *transfer-lexicon*)
-        for ep in (mrs:psoa-liszt (mtr-input mtr))
+        for ep in (and (mtr-filter mtr) (mrs:psoa-liszt (mtr-filter mtr)))
         for pred = (mrs:rel-pred ep)
-        when (and (or (stringp pred) (symbolp pred))
-                  (not (lkb::subtype-or-equal top pred)))
-        do (push mtr (gethash pred source)))
+        when (common-predicate-p pred) do
+          (push mtr (gethash pred (tl-filter *transfer-lexicon*)))
+          (when (string-predicate-p pred)
+            (push (id pred) (mtr-avoids mtr))))
     (loop
-        with top = (lkb::minimal-type-for (first (last mrs::*rel-name-path*)))
-        with target = (rest *transfer-lexicon*)
+        for ep in (and (mtr-context mtr) (mrs:psoa-liszt (mtr-context mtr)))
+        for pred = (mrs:rel-pred ep)
+        when (common-predicate-p pred) do
+          (push mtr (gethash pred (tl-context *transfer-lexicon*)))
+          (when (string-predicate-p pred)
+            (push (id pred) (mtr-requires mtr))))
+    (loop
+        for ep in (and (mtr-input mtr) (mrs:psoa-liszt (mtr-input mtr)))
+        for pred = (mrs:rel-pred ep)
+        when (common-predicate-p pred) do
+          (push mtr (gethash pred (tl-input *transfer-lexicon*)))
+          (when (string-predicate-p pred)
+            (push (id pred) (mtr-consumes mtr))))
+    (loop
+        with deps
+        = (and (mtr-defaults mtr) (mrs:psoa-liszt (mtr-defaults mtr)))
         for oep in (and (mtr-output mtr) (mrs:psoa-liszt (mtr-output mtr)))
-        for dep in (and (mtr-defaults mtr) (mrs:psoa-liszt (mtr-defaults mtr)))
+        for dep = (pop deps)
         for pred 
         = (or (let ((pred (and dep (mrs:rel-pred dep))))
-                (and (or (stringp pred) (symbolp pred))
-                     (not (lkb::subtype-or-equal top pred))
-                     pred))
+                (and (common-predicate-p pred) pred))
               (mrs:rel-pred oep))
-        when (and (or (stringp pred) (symbolp pred))
-                  (not (lkb::subtype-or-equal top pred)))
-        do (push mtr (gethash pred target)))))
+        when (common-predicate-p pred) do
+          (push mtr (gethash pred (tl-output *transfer-lexicon*)))
+          (when (string-predicate-p pred)
+            (push (id pred) (mtr-provides mtr)))
+        else do 
+          ;;
+          ;; some rules compute their output predicates in terms of the input,
+          ;; e.g. using the +copy+ operator or a PRED variable; in such cases,
+          ;; pretend this rule does not consume anything.
+          ;;
+          (setf (mtr-consumes mtr) nil))))
 
 ;;;
 ;;; top-level drivers for application of transfer rules; use `edge' structure
@@ -786,21 +889,20 @@
 ;;;
 (defun initialize-transfer ()
   (setf *vpms* nil)
+  (setf *semis* nil)
   (setf *transfer-rule-sets* nil)
   (setf *transfer-triggers* (make-hash-table))
-  ;;
-  ;; _fix_me_
-  ;; make the transfer lexicon a structure, actually.          (19-jul-04; oe)
-  ;;
-  (setf *transfer-lexicon* 
-    (cons (make-hash-table :test #'equal) (make-hash-table :test #'equal)))
+  (setf *transfer-lexicon* (make-tl))
   (setf %transfer-rule-id% 0)
   (setf %transfer-generation% 0)
   (setf %transfer-copy-eps% nil)
   (setf %transfer-special-elements% nil)
   (setf %transfer-variable-features% nil))
 
-(defun transfer-mrs (mrs &key (filter *transfer-filter-p*) 
+(defun activate-transfer ())
+
+(defun transfer-mrs (mrs &key (filter *transfer-filter-p*)
+                              (block *transfer-block-p*)
                               (preemptive *transfer-preemptive-filter-p*)
                               (debug '(:chart))
                               task (tm *transfer-tm*))
@@ -809,8 +911,10 @@
   (setf %transfer-edges% nil)
   (setf %transfer-chart% nil)
   (let* ((*transfer-filter-p* filter)
+         (*transfer-block-p* block)
          (*transfer-preemptive-filter-p* preemptive)
          (*transfer-debug-p* (when (consp debug) debug))
+         (*transfer-skolemize-p* t)
          (%transfer-edge-id% 0)
          (%mrs-copy-cache% nil)
          (%transfer-original-variables% nil)
@@ -818,11 +922,24 @@
          (n (loop
                 for variable in %mrs-copy-cache%
                 maximize (or (mrs:var-id (first variable)) 0)
-                do (push (rest variable) %transfer-original-variables%))))
+                do (push (rest variable) %transfer-original-variables%)))
+         (edge (make-edge :mrs mrs :n n)))
+    ;;
+    ;; _fix_me_
+    ;; possibly the initial quick-check vector should always be computed afresh
+    ;; in apply-mtrs(); see comments there.                     (31-dec-06; oe)
+    ;;
+    (loop
+        for ep in (mrs:psoa-liszt mrs)
+        for pred = (mrs:rel-pred ep)
+        for id = (when (string-predicate-p pred)
+                   (gethash pred (tl-all *transfer-lexicon*)))
+        when id do (push id (edge-preds edge)))
+    (setf (edge-preds edge) (sort (edge-preds edge) #'<))
     (multiple-value-bind (result condition)
         (#-:debug ignore-errors #+:debug progn
          (transfer-mrs2 
-          (list (make-edge :mrs mrs :n n)) 
+          (list edge) 
           (loop
               for mtrs in *transfer-rule-sets*
               for foo = (mtrs-task mtrs)
@@ -868,6 +985,25 @@
        ;; after hook, if any; ditch intermediate solutions for which there are
        ;; problems in VPM- or post-processing.
        ;;
+       ;;
+       ;; _fix_me_
+       ;; in the same spirit, do something about the `post' SEM-I test.
+       ;;                                                       (17-oct-06; oe)
+       (when (mtrs-post mtrs)
+         (loop
+             with semi = (mtrs-post mtrs)
+             for i from 0
+             for edge in edges
+             do
+               (setf (edge-semi edge)
+                 (test-semi-compliance (edge-mrs edge) semi))
+               #+:debug
+               (when (edge-semi edge)
+                 (format
+                  excl:*initial-terminal-io*
+                  "~&~a~%"
+                  (edge-semi edge)))))
+       
        (when (mtrs-out mtrs)
          (loop
              for i from 0
@@ -877,7 +1013,8 @@
                    (setf (edge-mrs edge)
                      (map-mrs
                       (edge-mrs edge) (mtrs-out mtrs)
-                      :forward :skolemizep t))
+                      :forward :skolemizep t
+                      :preserve (list *mtr-ditch-property*)))
                  (condition (condition)
                    (format
                     *transfer-debug-stream*
@@ -926,11 +1063,27 @@
         (setf (edge-mrs edge) (funcall (mtrs-before mtrs) (edge-mrs edge)))
       (condition (condition)
         (format *transfer-debug-stream* "~&apply-mtrs(): `~a'.~%" condition)
-        (return-from apply-mtrs))))
+        (return-from apply-mtrs)))
+    ;;
+    ;; _fix_me_
+    ;; the `before' hook may change the input MRS destructively, e.g. prefix
+    ;; predicates with a language code (as is used in DeEn at least).  hence we
+    ;; need to re-compute the quick-check vector here, but maybe we should just
+    ;; always compute it afresh as we start a new .mtrs.?       (31-dec-06; oe)
+    ;;
+    (loop
+        for ep in (mrs:psoa-liszt (edge-mrs edge))
+        for pred = (mrs:rel-pred ep)
+        for id = (when (string-predicate-p pred)
+                   (gethash pred (tl-all *transfer-lexicon*)))
+        when id do (push id (edge-preds edge)))
+    (setf (edge-preds edge) (sort (edge-preds edge) #'<)))
   (when (mtrs-in mtrs)
     (handler-case
         (setf (edge-mrs edge)
-          (map-mrs (edge-mrs edge) (mtrs-in mtrs) :forward :skolemizep t))
+          (map-mrs
+           (edge-mrs edge) (mtrs-in mtrs) :forward
+           :skolemizep t :preserve (list *mtr-ditch-property*)))
       (condition (condition)
         (format *transfer-debug-stream* "~&apply-mtrs(): `~a'.~%" condition)
         (return-from apply-mtrs))))
@@ -954,7 +1107,7 @@
         (when (and filter *transfer-preemptive-filter-p*)
           (loop
               with unknown
-              with source = (first *transfer-lexicon*)
+              with source = (tl-input *transfer-lexicon*)
               for ep in (mrs:psoa-liszt (edge-mrs edge))
               for pred = (mrs:rel-pred ep)
               unless (or (gethash pred source)
@@ -976,7 +1129,8 @@
                    ;;
                    all
                    (member rule all))
-      while task do
+      while task
+      when (null (mtr-block (edge-rule task))) do
         #+:debug
         (format *transfer-debug-stream* "apply-mtrs(): << ~a~%" task)
         ;;
@@ -1012,6 +1166,7 @@
                  "apply-mtrs(): == ~a~%"
                  task)
                 (push task result)))
+      else unless *transfer-block-p* do (push task result)
       finally 
         (if filter
           (return
@@ -1044,14 +1199,58 @@
           (return (stable-sort result #'> :key #'edge-depth)))))
 
 (defun apply-mtr (edge mtr &key subsumesp)
+  
+  ;;
+  ;; first, evaluate the pre-unification `quick-check' of predicates
+  ;;
+  #-:null
+  (unless (and ;;
+               ;; _fix_me_
+               ;; the mere presence of a PRED is not enough to demonstrate that
+               ;; the FILTER will actually be true.             (16-oct-06; oe)
+               ;;
+               #+:null
+               (loop
+                   for pred in (mtr-avoids mtr)
+                   never (member pred (edge-preds edge) :test #'=))
+               (loop
+                   for pred in (mtr-requires mtr)
+                   always (member pred (edge-preds edge) :test #'=))
+               (loop
+                   for pred in (mtr-consumes mtr)
+                   always (member pred (edge-preds edge) :test #'=)))
+    (return-from apply-mtr))
+  
   (loop
-      with %transfer-variable-id% = (edge-n edge)
+      with %transfer-variable-id% = (+ (edge-n edge) 1)
       for solution in (unify-mtr (edge-mrs edge) mtr :subsumesp subsumesp)
       for mrs = (expand-solution (edge-mrs edge) mtr solution)
-      when mrs
-      collect (make-edge 
-               :rule mtr :mrs mrs :daughter edge 
-               :solution solution :n %transfer-variable-id%)))
+      for new
+      = (when mrs
+          (make-edge 
+           :rule mtr :mrs mrs :daughter edge 
+           :solution solution :n %transfer-variable-id%))
+      when new do
+        ;;
+        ;; finally, determine the `quick-check' vector of predicates on the
+        ;; new edge, ditching everything that was consumed and adjoining output
+        ;; predicates from the rule we just applied.
+        ;;
+        (setf (edge-preds new)
+          (loop
+              with consumes = (copy-list (mtr-consumes mtr))
+              with preds = (copy-list (edge-preds edge))
+              for pred = (first preds) for consume = (first consumes)
+              while pred
+              when (null consume) collect (pop preds)
+              else when (= pred consume) do (pop preds) (pop consumes)
+              else when (< pred consume) collect (pop preds)
+              else when (> pred consume) do (pop consumes)))
+        (loop
+            for provide in (mtr-provides mtr)
+            do (push provide (edge-preds new)))
+        (setf (edge-preds new) (sort (edge-preds new) #'<))
+      and collect new))
 
 (defparameter %transfer-trace-p% nil)
 
@@ -1095,6 +1294,7 @@
    *transfer-debug-stream*
    "unify-mtr(): `~(~a~)' @ ~a~%" (mtr-id mtr) mrs)
   (transfer-trace :mtr mtr)
+  (clrhash %transfer-variable-cache%)
   (incf %transfer-generation%)
   (let* ((filter (mtr-filter mtr))
          (context (mtr-context mtr))
@@ -1176,7 +1376,11 @@
        t 
        "unify-mtr(): ~a solution~p for FILTER component HCONS.~%"
        (length solutions) (length solutions)))
-    solutions))
+    #+:null
+    solutions
+    (if (mtr-permute-p mtr)
+      solutions
+      (and solutions (list (first solutions))))))
 
 (defun unify-mtr-component (mrs1 mrs2 &optional solution 
                             &key (disjointp t) subsumesp)
@@ -1270,13 +1474,34 @@
   (unless (when disjointp 
             (or (retrieve-ep ep1 solution) (retrieve-ep ep2 solution)))
     (let* ((solution (copy-solution solution))
+           (special (loop
+                        for special in (mtr-special (current-mtr))
+                        when (eq ep2 (first special))
+                        return (rest special)))
+           (subsumesp (or subsumesp (eq special :subsume)))
            (pred (unify-preds 
                   (mrs::rel-pred ep1) (mrs::rel-pred ep2) solution
                   :subsumesp subsumesp))
-           (label (when pred
+           (label (when (and pred (not (sps-p pred)))
                     (unify-values 
                      (mrs:rel-handel ep1) (mrs:rel-handel ep2) solution
-                     :subsumesp subsumesp))))
+                     :subsumesp subsumesp)))
+           matched)
+      (when (sps-p pred)
+        (return-from unify-eps
+          (loop
+              with id
+              = (loop
+                    for variable in (mtr-variables (current-mtr))
+                    for id = (mrs::var-id (rest variable))
+                    when id minimize id)
+              for synopsis in (sps-synopses pred)
+              for generator = (let ((id id)) #'(lambda () (decf id)))
+              for %mrs-construction-cache% = nil
+              for ep2 = (export-ep synopsis :ids generator)
+              thereis (unify-eps
+                       ep1 ep2 solution
+                       :disjointp disjointp :subsumesp subsumesp))))
       (when (and pred (or (null mrs::*rel-handel-path*) label))
         (loop
             with flist1 = (mrs:rel-flist ep1)
@@ -1298,10 +1523,19 @@
             for feature = (mrs:fvpair-feature role)
             for role1 = (find feature flist1 :key #'mrs:fvpair-feature)
             for role2 = (find feature flist2 :key #'mrs:fvpair-feature)
-            unless (unify-values 
-                    (mrs:fvpair-value role1) (mrs:fvpair-value role2) solution
-                    :subsumesp subsumesp)
-            do (return-from unify-eps))
+            for value2 = (mrs:fvpair-value role2)
+            for special = (when (mrs::var-p value2)
+                            (loop
+                                for (value . key)
+                                in (mtr-special (current-mtr))
+                                when (and (eq value2 value)
+                                          (member key '(:equal :subsume)))
+                                return key))
+            when (unify-values 
+                  (mrs:fvpair-value role1) value2 solution
+                  :subsumesp subsumesp)
+            do (when special (push value2 matched))
+            else do (return-from unify-eps))
         
         ;;
         ;; now also check to make sure all MTR variables that require `special'
@@ -1311,18 +1545,17 @@
         (loop
             with special = (mtr-special (current-mtr))
             for role in (mrs:rel-flist ep2)
-            for variable = (mrs:fvpair-value role)
-            when (and (mrs::var-p variable)
-                      (loop
-                          for (value . key) in special
-                          when (and (eq variable value)
-                                    (member key '(:equal :subsume)))
-                          return key)
-                      (eq (retrieve-variable variable solution) variable))
-            return nil
-            finally
-              (align-eps ep1 ep2 solution)
-              (return solution))))))
+            for value = (mrs:fvpair-value role)
+            when (and (mrs::var-p value)
+                      (not (member value matched :test #'eq)))
+            do
+              (loop
+                  for (variable . key) in special
+                  when (and (eq value variable)
+                            (member key '(:equal :subsume) :test #'eq))
+                  do (return-from unify-eps)))
+          (align-eps ep1 ep2 solution)
+          solution))))
 
 (defun unify-hconss (hconss1 hconss2 solution &key subsumesp)
   ;;
@@ -1410,9 +1643,19 @@
       (= value1 value2))
      #+:ppcre
      ((functionp variable2)
-      (ppcre::scan 
-       variable2
-       (if (symbolp value1) (format nil "~(~a~)" value1) value1)))
+      (let ((string (if (symbolp value1) (format nil "~(~a~)" value1) value1)))
+        (multiple-value-bind (start end starts ends)
+            (ppcre::scan variable2 string)
+          (when (and start end)
+            (loop
+                for start across starts
+                for end across ends
+                for match = (and start end (subseq string start end))
+                when match do
+                  (if (solution-matches solution) 
+                    (nconc (solution-matches solution) (list match))
+                    (setf (solution-matches solution) (list match)))
+                finally (return value1))))))
      
      ;;
      ;; _fix_me_
@@ -1431,14 +1674,32 @@
       value1)
      ((and strictp (or forwardp1 forwardp2)) nil)
      (t
-      (let* ((type (unify-types 
-                    (mrs::var-type value1) (mrs::var-type value2) 
-                    :internp t :special special :subsumesp subsumesp))
-             (extras (unify-extras
-                      (mrs:var-extra value1) (mrs:var-extra value2)
-                      :subsumesp subsumesp))
-             (new (when (and type (listp extras)) 
-                    (new-variable type extras))))
+      (let* ((match
+              (loop
+                  for match in (gethash value1 %transfer-variable-cache%)
+                  when (eq (first match) value2)
+                  return (rest match)))
+             #+:null
+             (match nil)
+             (type (unless match
+                     (unify-types 
+                      (mrs::var-type value1) (mrs::var-type value2) 
+                      :internp t :special special :subsumesp subsumesp)))
+             (extras (unless match
+                       (unify-extras
+                        (mrs:var-extra value1) (mrs:var-extra value2)
+                        :subsumesp subsumesp)))
+             (new (if match
+                    (clone-variable match :skolemizep t :cachep nil)
+                    (when (and type (listp extras)) 
+                      (new-variable type extras)))))
+        
+        #+:debug
+        (when match
+          (format 
+           t 
+           "unify-values(): ~a [~a] & ~a [~a] << ~a.~%" 
+           variable1 value1 variable2 value2 new))
         ;;
         ;; _fix_me_
         ;; maybe we could re-use one of the input variables if they contained
@@ -1453,6 +1714,10 @@
            variable1 value1 variable2 value2 new)
           (forward-variable value1 new solution)
           (forward-variable value2 new solution)
+          (when (null match)
+            (push
+             (cons value2 new) 
+             (gethash value1 %transfer-variable-cache%)))
           new))))))
 
 (defun unify-types (type1 type2 &key internp special subsumesp)
@@ -1462,8 +1727,14 @@
          (glb (cond
                 ((eq special :equal) (and (eq type1 type2) type1))
                 ((or (eq special :subsume) subsumesp)
-                 (and (lkb::subtype-or-equal type1 type2) type1))
-                (t               
+                 (when (ignore-errors (lkb::subtype-or-equal type1 type2))
+                   type1))
+                ((and (numberp type1) (eq type2 lkb::*string-type*))
+                 type1)
+                (t   
+                 (ignore-errors
+                  (lkb::greatest-common-subtype type1 type2))
+                 #+:null
                  (and (lkb::is-valid-type type1) (lkb::is-valid-type type2)
                       (lkb::greatest-common-subtype type1 type2))))))
     (when glb (if internp (string-downcase (string glb)) glb))))
@@ -1486,9 +1757,8 @@
               for value1 = (mrs::extrapair-value extra1)
               for extra2 = (find feature extras2 :key #'mrs::extrapair-feature)
               for value2 = (mrs::extrapair-value extra2)
-              for value = (if (and (stringp value1) (stringp value2)
-                                   (string-equal value1 value2))
-                            value1
+              for value = (if (and (stringp value1) (stringp value2))
+                            (when (string-equal value1 value2) value1)
                             (unify-types value1 value2 :subsumesp subsumesp))
               unless value do (return-from unify-extras :fail)
               else collect (mrs::make-extrapair 
@@ -1520,9 +1790,20 @@
     (cond
      #+:ppcre
      ((functionp pred2)
-      (ppcre::scan 
-       pred2
-       (if (symbolp pred1) (format nil "~(~a~)" pred1) pred1)))
+      (let ((string (if (symbolp pred1) (format nil "~(~a~)" pred1) pred1)))
+        (multiple-value-bind (start end starts ends) 
+            (ppcre::scan pred2 string)
+          (when (and start end)
+            (loop
+                for start across starts
+                for end across ends
+                for match = (and start end (subseq string start end))
+                when match do
+                  (if (solution-matches solution)
+                    (nconc (solution-matches solution) (list match))
+                    (setf (solution-matches solution) (list match)))
+                finally (return pred1))))))
+     ((semi-p pred2) (lookup-predicate pred1 pred2))
      ((mrs::var-p pred2)
       (forward-variable pred2 pred1 solution)
       pred1)
@@ -1544,6 +1825,12 @@
   ;; unify in all applicable information from .solution.  eventually, do more
   ;; or less the same for HCONS.
   ;;
+
+  ;;
+  ;; `exhaustive' rules, it would seem, are expected to match the complete set
+  ;; of input EPs, and otherwise fail.  i wonder were such rules get used?  in
+  ;; transfer rule auto-generation, it turns out :-).  see the TRAG grammar.
+  ;;
   (when (mtr-exhaustive-p mtr)
     (loop
         for ep in (mrs:psoa-liszt mrs)
@@ -1554,24 +1841,19 @@
          ;;
          ;; _fix_me_
          ;; LTOP and INDEX we used to take from the input MRS, which seems just
-         ;; wrong; being a tad nervuous about this as a last-minute change for
+         ;; wrong; being a tad nervous about this as a last-minute change for
          ;; the 31-aug integration, keep the original code around for now.
          ;;                                                     (31-aug-04; oe)
          (top (or (and output (mrs:psoa-top-h output)
                        (expand-value (mrs:psoa-top-h output) solution))
                   (when (mrs:psoa-top-h mrs) 
-                    (expand-value (mrs:psoa-top-h mrs) solution)))
-              #+:null
-              (when (mrs:psoa-top-h mrs) 
-                (expand-value (mrs:psoa-top-h mrs) solution)))
+                    (expand-value (mrs:psoa-top-h mrs) solution))))
          (index (or (and output (mrs:psoa-index output) 
                          (expand-value (mrs:psoa-index output) solution))
-                   (when (mrs:psoa-index mrs) 
-                     (expand-value (mrs:psoa-index mrs) solution)) )
-                #+:null
-                (when (mrs:psoa-index mrs) 
-                  (expand-value (mrs:psoa-index mrs) solution)))
-         (result (mrs::make-psoa :top-h top :index index)))
+                    (when (mrs:psoa-index mrs) 
+                      (expand-value (mrs:psoa-index mrs) solution))))
+         (result (mrs::make-psoa :top-h top :index index))
+         lnk)
     (setf (mrs:psoa-liszt result)
       (nconc
        ;;
@@ -1583,7 +1865,8 @@
            for ep1 in (mrs:psoa-liszt mrs)
            for ep2 = (retrieve-ep ep1 solution)
            unless (and ep2 (find ep2 input)) 
-           collect (expand-ep ep1 solution))
+           collect (expand-ep ep1 solution)
+           else do (setf lnk (mrs::combine-lnks lnk (mrs::rel-lnk ep1))))
        (loop
            with input = (and (mtr-input mtr) (mrs:psoa-liszt (mtr-input mtr)))
            with defaults = (when (mrs::psoa-p (mtr-defaults mtr))
@@ -1610,8 +1893,9 @@
              ;; OUTPUT EPs, so that we can assert that all information is in
              ;; the DEFAULTS component.                        (15-feb-04; oe)
              ;;
-             (merge-eps (expand-ep original solution) default)
-           else collect (merge-eps (expand-ep ep solution) default))))
+             (merge-eps (expand-ep original solution lnk) default solution)
+           else
+           collect (merge-eps (expand-ep ep solution lnk) default solution))))
     (setf (mrs:psoa-h-cons result)
       (nconc
        ;;
@@ -1639,7 +1923,7 @@
                         (mrs:hcons-outscpd hcons) solution)))))
     (eliminate-scratch result)))
 
-(defun expand-ep (ep solution)
+(defun expand-ep (ep solution &optional (lnk (mrs::rel-lnk ep)))
   ;;
   ;; at this stage, we expand variable bindings and should make sure to _not_
   ;; share any structure with either the input MRS or MTR used.
@@ -1649,7 +1933,7 @@
                   (if (mrs::var-p pred)
                     (retrieve-variable pred solution)
                     pred)))
-         (result (mrs::make-rel :handel label :pred pred)))
+         (result (mrs::make-rel :handel label :pred pred :lnk lnk)))
     (setf (mrs:rel-flist result)
       (loop
           for role in (mrs:rel-flist ep)
@@ -1672,7 +1956,41 @@
           foo)))
     value))
 
-(defun merge-eps (ep default)
+(defun expand-string (string solution)
+  (with-output-to-string (stream)
+    (loop
+        with n = (length string)
+        with i = 0
+        for c = (when (< i n) (schar string i))
+        while c
+        when (and (char= c #\$) (< i (- n 1))) do
+          (incf i)
+          (let ((bracep (char= (schar string i) #\{)))
+            (when bracep (incf i))
+            (multiple-value-bind (id offset)
+                (parse-integer string :junk-allowed t :start i)
+              (cond
+               ((and (numberp id) (> id 0))
+                (let ((match
+                       (and solution
+                            (>= (length (solution-matches solution)) id)
+                            (first (last (solution-matches solution) id)))))
+                  (unless match
+                    (format
+                     t
+                     "expand-string(): no match for reference # ~a in `~a'.~%"
+                     id string)
+                    (return-from expand-string string))
+                  (format stream "~a" match))
+                (setf i offset)
+                (when bracep (incf i)))
+               (t
+                (format stream "$~:[~;$~]" bracep)))))
+        else do
+          (write-char c stream)
+          (incf i))))
+
+(defun merge-eps (ep default &optional solution)
   ;;
   ;; apparently, we assume we can destructively modify .ep. at this point.  we
   ;; better make sure it not share any variables with the original ...
@@ -1699,10 +2017,11 @@
         (push default used)
         (let ((default (mrs:fvpair-value default)))
           (if (and (mrs::var-p value) (mrs::var-p default))
-            (merge-values value default)
+            (merge-values value default solution)
             (setf (mrs:fvpair-value role) 
-              (if (mtr-operator-p default) 
-                (merge-values value default)
+              (if (or (mtr-operator-p default)
+                      (and (stringp default) (char= (schar default 0) #\~)))
+                (merge-values value default solution)
                 (if (or (eq default lkb:*toptype*)
                         (eq default lkb::*string-type*))
                   value
@@ -1747,7 +2066,7 @@
                        (eq (mrs::extrapair-value property) 
                            *mtr-true-type*))))))
 
-(defun merge-values (variable default)
+(defun merge-values (variable default &optional solution)
   ;;
   ;; _fix_me_
   ;; apparently, we assume we can frob the input .value., presumably we know
@@ -1771,6 +2090,8 @@
        ((and (stringp variable) (eq default *mtr-downcase-operator*))
         (string-downcase variable))
        (t variable))))
+  (when (and (stringp default) (char= (schar default 0) #\~))
+    (return-from merge-values (expand-string (subseq default 1) solution)))
   (when (and (mrs::var-type default)
              (or (null (mrs::var-type variable))
                  (not (member 
@@ -1814,19 +2135,14 @@
   (let* ((extras (remove
                   *mtr-skolem-property* extras
                   :key #'mrs::extrapair-feature))
-         (variable (mrs::make-var 
-                    :id %transfer-variable-id% :type type :extra extras)))
+         (id %transfer-variable-id%)
+         (variable (mrs::make-var :id id :type type :extra extras)))
     (incf %transfer-variable-id%)
-    ;;
-    ;; _fix_me_
-    ;; work out why *transfer-skolemize-p* is not on (by default) during core
-    ;; transfer; preferably move to re-skolemization after each MTR expansion.
-    ;;                                                          (30-jun-04; oe)
-    (when #+:null (null *transfer-skolemize-p*) #-:null t
+    (when *transfer-skolemize-p*
       (push 
-       (mrs::make-extrapair 
+       (mrs::make-extrapair
         :feature *mtr-skolem-property*
-        :value (mrs::var-string variable))
+        :value id)
        (mrs:var-extra variable)))
     variable))
 
@@ -1956,41 +2272,150 @@
   ;; provide an actual implementation one day :-}.             (23-oct-03; oe)
   ;;
   (loop
+      for foo in set1
+      when (member (funcall key foo) set2 :key key :test test)
+      collect foo)
+  #+:null
+  (loop
       with intersection = (intersection set1 set2 :key key :test test)
       for foo in set1
       when (member (funcall key foo) intersection :key key :test test)
       collect foo))
 
 (defun read-derivation-from-string (string)
+  (with-input-from-string (stream string)
+    (read-derivation stream)))
+
+(defun read-derivation (stream)
   (let ((*readtable* (copy-readtable))
         (*package* (find-package :lkb)))
     (set-syntax-from-char #\] #\space *readtable*)
+    (set-syntax-from-char #\! #\space *readtable*)
     (set-syntax-from-char #\} #\space *readtable*)
-    (with-input-from-string (stream string)
-      (read-derivation stream))))
-
-(defun read-derivation (stream)
-  (let* ((c (peek-char t stream nil nil))
-         (c (when (and c (char= c #\#))
-              (read-char stream)
-              (peek-char t stream nil nil)))
-         (c (when (and c (char= c #\D))
-              (read-char stream)
-              (peek-char t stream nil nil)))
-         (id (when (and c (char= c #\[))
-               (read-char stream)
-               (read stream nil nil)))
-         (score (let ((c (peek-char t stream nil nil)))
-                  (when (and c (char= c #\{))
-                    (read-char stream)
-                    (read stream nil nil))))
-         (mtr (when (numberp id)
-                (read stream nil nil)))
-         (daughter (when (and mtr (symbolp mtr))
-                     (read-derivation stream))))
-    (when id (make-edge :id id :score score :rule mtr :daughter daughter))))
+    (let* ((c (peek-char t stream nil nil))
+           (c (when (and c (char= c #\#))
+                (read-char stream)
+                (peek-char t stream nil nil)))
+           (c (when (and c (char= c #\D))
+                (read-char stream)
+                (peek-char t stream nil nil)))
+           (id (when (and c (char= c #\[))
+                 (read-char stream)
+                 (read stream nil nil)))
+           (score (let ((c (peek-char t stream nil nil)))
+                    (when (and c (char= c #\{))
+                      (read-char stream)
+                      (read stream nil nil))))
+           (mtr (when (numberp id)
+                  (read stream nil nil)))
+           (daughter (when (and mtr (symbolp mtr))
+                       (read-derivation stream))))
+      (when id (make-edge :id id :score score :rule mtr :daughter daughter)))))
 
 (defun browse (object)
   (typecase object
     (edge (mrs::browse-mrs (edge-mrs object)))
     (mrs::psoa (mrs::browse-mrs object))))
+
+#+:null
+(labels ((normalize (pred)
+           (let* ((start (if (char= (schar pred 0) #\_) 1 0))
+                  (end (position #\_ pred :start start)))
+             (subseq pred start end))))
+  (let (mass count plural)
+    (loop
+        for key being each hash-key in (tl-output *transfer-lexicon*)
+        for sps
+        = (lookup-predicate key (find :erg *semis* :key #'semi-name))
+        when sps do
+          (when (and (stringp key) (search "_n_" key))
+            (cond
+             ((loop
+                  with akey = (mrs:vsym "ARG0")
+                  with ikey = (mrs:vsym "IND")
+                  for minus = (mrs:vsym "-")
+                  for ep in (sps-synopses sps)
+                  for arg0
+                  = (loop
+                        for role in (ep-roles ep)
+                        when (eq (role-name role) akey)
+                        return (role-value role))
+                  for ind
+                  = (when (and arg0 (variable-p arg0))
+                      (loop
+                          for property 
+                          in (variable-properties arg0)
+                          for name = (property-name property)
+                          when (eq name ikey)
+                          return (property-value property)))
+                  always (eq ind minus))
+              (push key mass))
+             ((loop
+                  with akey = (mrs:vsym "ARG0")
+                  with ikey = (mrs:vsym "IND")
+                  for plus = (mrs:vsym "+")
+                  for ep in (sps-synopses sps)
+                  for arg0
+                  = (loop
+                        for role in (ep-roles ep)
+                        when (eq (role-name role) akey)
+                        return (role-value role))
+                  for ind
+                  = (when (and arg0 (variable-p arg0))
+                      (loop
+                          for property 
+                          in (variable-properties arg0)
+                          for name = (property-name property)
+                          when (eq name ikey)
+                          return (property-value property)))
+                  always (eq ind plus))
+              (push key count)))
+            (when (loop
+                      with akey = (mrs:vsym "ARG0")
+                      with ikey = (mrs:vsym "NUM")
+                      for pl = (mrs:vsym "pl")
+                      for ep in (sps-synopses sps)
+                      for arg0
+                      = (loop
+                            for role in (ep-roles ep)
+                            when (eq (role-name role) akey)
+                            return (role-value role))
+                      for num
+                      = (when (and arg0 (variable-p arg0))
+                          (loop
+                              for property 
+                              in (variable-properties arg0)
+                              for name = (property-name property)
+                              when (eq name ikey)
+                              return (property-value property)))
+                      always (eq num pl))
+              (push key plural))))
+             
+    (setf count (sort count #'string<))
+    (setf mass (sort mass #'string<))
+    (setf plural (sort plural #'string<))
+    (loop
+        for pred in count
+        do
+          (format
+           t
+           "count_mark_~a_ef := count_mark_amtr &~%~
+            [ CONTEXT.RELS < [ PRED ~s ] > ].~%~%"
+           (normalize pred) pred))
+    (loop
+        for pred in mass
+        do
+          (format
+           t
+           "mass_mark_~a_ef := mass_mark_amtr &~%~
+            [ CONTEXT.RELS < [ PRED ~s ] > ].~%~%"
+           (normalize pred) pred))
+    (loop
+        for pred in plural
+        do
+          (format
+           t
+           "pural_mark_~a_ef := plural_mark_amtr &~%~
+            [ CONTEXT.RELS < [ PRED ~s ] > ].~%~%"
+           (normalize pred) pred))))
+

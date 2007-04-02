@@ -102,6 +102,7 @@
       set globals(aggregate_threshold) \"~@[~d~]\"~%~
       set globals(aggregate_lower) \"~@[~d~]\"~%~
       set globals(aggregate_upper) \"~@[~d~]\"~%~
+      set globals(exclude_illformed_items_p) ~:[0~;1~]~%~
       set globals(analogy_aggregation_p) ~:[0~;1~]~%~
       set globals(exclude_tgc_p) ~:[0~;1~]~%~
       set globals(exhaustive_p) ~:[0~;1~]~%~
@@ -150,6 +151,7 @@
      *statistics-aggregate-threshold*
      *statistics-aggregate-lower*
      *statistics-aggregate-upper*
+     *statistics-exclude-illformed-items-p*
      *statistics-analogy-aggregation-p*
      *statistics-exclude-tgc-p*
      *tsdb-exhaustive-p*

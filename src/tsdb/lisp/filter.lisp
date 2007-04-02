@@ -158,7 +158,6 @@
           for bindings = (when cheap 
                            (let* ((stream (make-string-output-stream))
                                   (*standard-output* stream)
-                                  #+:mrs
                                   (mrs::*scoping-partial-results-p* nil)
                                   result error)
                              (multiple-value-setq (result error)
@@ -276,11 +275,35 @@
                         (let ((mrs (mrs::read-mrs-from-string mrs)))
                           (setf (get-field :mrs result) mrs))
                         (and (mrs::psoa-p mrs) mrs)))
-          for fragments = (when mrs (mrs::fragmentp mrs))
+          for fragments = (when mrs (mt:fragmentp mrs))
           when fragments
           do 
             (let ((output (format nil "~a fragment~p" fragments fragments)))
               (push (list :fragmentation output) (gethash id flags)))))
+
+    #+:mt
+    (when (smember :semi *filter-test*)
+      (loop
+          for result in (get-field :results item)
+          for id = (get-field :result-id result)
+          for mrs = (let ((mrs (get-field :mrs result)))
+                      (if (stringp mrs)
+                        (let ((mrs (mrs::read-mrs-from-string mrs)))
+                          (setf (get-field :mrs result) mrs))
+                        (and (mrs::psoa-p mrs) mrs)))
+          for invalid = (when mrs (mt:test-semi-compliance mrs))
+          when invalid
+          do 
+            (let* ((*package* (find-package mrs:*mrs-package*))
+                   (unknown
+                    (loop for foo in invalid collect (mrs::rel-pred foo)))
+                   (output
+                    (format
+                     nil
+                     "~@[invalid SEM-I predicates: ~{|~(~s~)|~^, ~}~]"
+                     unknown)))
+              (push (list :semi output) (gethash id flags)))))
+
     (unless (zerop (hash-table-count flags)) 
       (when verbose
         (format 
@@ -332,8 +355,14 @@
                        (format 
                         t 
                         "    fragmentation: ~a.~%"
+                        (second foo)))
+                      (:semi
+                       (format 
+                        t 
+                        "    SEM-I: ~a.~%"
                         (second foo)))))))
     item)))
 
 (defun safe-mrs-equal-p (mrs1 mrs2)
+  #+:mt
   (ignore-errors (mt::mrs= mrs1 mrs2)))

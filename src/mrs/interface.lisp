@@ -414,12 +414,13 @@ For attempting to learn null semantics
 
 (defparameter *mrs-default-display* :simple)
 
-(defun browse-mrs (mrs &optional title)
+(defun browse-mrs (mrs &optional title &key (display *mrs-default-display*))
   (ignore-errors
    (let ((browser 
           (fboundp 
-           (case *mrs-default-display*
+           (case display
              (:simple (find-symbol "SHOW-MRS-WINDOW" :lkb))
+             (:indexed (find-symbol "SHOW-MRS-INDEXED-WINDOW" :lkb))
              (:scoped (find-symbol "SHOW-MRS-SCOPED-WINDOW" :lkb))
              (:eds (find-symbol "SHOW-MRS-DEPENDENCIES-WINDOW" :lkb))))))
          
@@ -429,17 +430,6 @@ For attempting to learn null semantics
 
 
 ;;;
-;;; (LOGON) fragment detection; see comment in `mrsglobals.lisp'.
-;;;
-(defun fragmentp (mrs)
-  (when (psoa-p mrs)
-    (loop
-        for ep in (psoa-liszt mrs)
-        when (member (rel-pred ep) *semi-fragment-relations* :test #'equal)
-        count 1 into n
-        finally (return (unless (zerop n) n)))))
-
-;;;
 ;;; initially mostly for HTML output, though maybe of general utility?  LOGON
 ;;; with its liberal use of the MRS framework has various `types' of EP, e.g.
 ;;; :fragment relations used to sew together connected pieces of semantics in
@@ -447,17 +437,19 @@ For attempting to learn null semantics
 ;;; source langguage), and punctuation EPs (which maybe could be :token EPs).
 ;;; the following is intended as a user function, i.e. a way of adding colour
 ;;; to the HTML output.                                        (3-nov-04; oe)
+;;; --- function definitions here are no-op placeholders, the actual versions
+;;; used in LOGON are in `lkb/src/mt/patches.lisp'.
 ;;;
 (defun determine-ep-class (ep)
-  (if (member (rel-pred ep) *semi-fragment-relations* :test #'equal)
-    :fragment
-    nil))
+  (declare (ignore ep))
+  nil)
 
 ;;;
 ;;; for similar reasons, do roughly the same thing for the MRS as a whole.
 ;;;
 (defun determine-mrs-class (mrs)
-  (when (fragmentp mrs) :fragment))
+  (declare (ignore mrs))
+  nil)
 
 ;;;
 ;;; a couple of RMRS interface functions (mostly) for [incr tsdb()]; we started

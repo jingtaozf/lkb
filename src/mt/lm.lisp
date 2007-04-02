@@ -185,16 +185,25 @@
                             (read-from-string (svref bar 0) nil nil))))
 		     for score 
 		     = (when (numberp perplexity)
-                         (case measure
-                           (:perplexity perplexity)
-                           (:entropy (log perplexity 2)) 
-                           (:logprob 
-                            (* (log perplexity 2)
-                               (+ 1 (count #\space (first strings)))))
-                           (t 
-                            (error 
-                             "lm-score-strings(): unknown score type ~a~%" 
-                             measure))))
+                         (loop
+                             for key
+                             in (if (consp measure) measure (list measure))
+                             for score
+                             = (case key
+                                 (:perplexity perplexity)
+                                 (:entropy (log perplexity 2)) 
+                                 (:logprob 
+                                  (* (log perplexity 2)
+                                     (+ 1 (count #\space (first strings)))))
+                                 (t 
+                                  (error 
+                                   "lm-score-strings(): ~
+                                    unknown score type ~a~%"
+                                   key)))
+                             collect score into scores
+                             finally
+                               (return
+                                 (if (consp measure) scores (first scores)))))
 		     when score
 		     collect (cons (pop strings) score)
 		     while strings))))

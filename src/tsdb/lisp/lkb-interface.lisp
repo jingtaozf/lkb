@@ -368,10 +368,10 @@
            (special tsdb::*process-scope-generator-input-p* tsdb::%model%))
 
   (let* ((*package* *lkb-package*)
+         (mrs:*lnkp* :characters)
          (filterp (member :surface filter))
-         (*maximum-number-of-edges* (if (or (null edges) (zerop edges))
-                                      *maximum-number-of-edges*
-                                      edges))
+         (*maximum-number-of-edges* 
+          (if (or (null edges) (zerop edges)) *maximum-number-of-edges* edges))
          (*gen-first-only-p* nil)
          (*do-something-with-parse* nil)
          (stream (make-string-output-stream))
@@ -405,18 +405,28 @@
            ;;
            #+:logon
            (let* ((lms #+:lm
-                       (when mt::*lm-model* (mt::lm-score-strings strings))
+                       (when mt::*lm-model*
+                         (mt::lm-score-strings
+                          strings :measure '(:logprob :perplexity)))
                        #-:lm
                        nil)
+                  
                   (scores
                    (loop
                        for edge in *gen-record*
-                       for lm = (rest (pop lms))
+                       for foo = (rest (pop lms))
+                       for lm = (first foo)
+                       for perplexity = (second foo)
+                       for flags
+                       = (pairlis '(:lm :perplexity) (list lm perplexity))
+                       when (edge-flags edge)
+                       do (nconc (edge-flags edge) flags)
+                       else do (setf (edge-flags edge) flags)
                        collect
                          (if (edge-dag edge)
                            (tsdb::mem-score-result
                             (pairlis '(:edge :lm) (list edge lm)))
-                           lm))))
+                           (- perplexity)))))
              (loop
                  for edge in *gen-record*
                  for score in scores
@@ -483,9 +493,6 @@
                      for i from 0
                      for edge in edges
                      for surface = (edge-string edge)
-                     for score = (edge-score edge)
-                     for distance = (let ((distance (edge-baz edge)))
-                                      (and (numberp distance) distance))
                      for derivation = (if edge
                                         (with-standard-io-syntax
                                           (let ((*package* *lkb-package*))
@@ -495,10 +502,14 @@
                                         "")
                      for size = (if edge (parse-tsdb-count-nodes edge) -1)
                      for mrs = (if edge
-                                 (tsdb::call-hook semantix-hook edge)
+                                 (if (edge-mrs edge)
+                                   (with-output-to-string (stream)
+                                     (mrs::output-mrs1
+                                      (edge-mrs edge) 'mrs::simple stream))
+                                   (tsdb::call-hook semantix-hook edge))
                                  "")
-                     for flags = (pairlis '(:distance :rscore)
-                                          (list distance score))
+                     for score = (edge-score edge)
+                     for flags = (acons :rscore score (edge-flags edge))
                      while (>= (decf nresults) 0)
                      unless (when filterp
                               (member surface surfaces :test #'equal))
@@ -552,18 +563,22 @@
         (ignore-errors
          (when (or (null mrs) (not (mrs::psoa-p mrs)))
            (error "null or malformed input MRS"))
-         (when (and (null fragmentp) (mrs::fragmentp mrs))
+         (when (and (null fragmentp) (mt:fragmentp mrs))
            (error "fragmented input MRS"))
-         (let* ((edges
+         (let* ((size (length (mrs:psoa-liszt mrs)))
+                (edges
                  (tsdb::time-a-funcall
                   #'(lambda () 
-                      (mt::transfer-mrs
-                       mrs :filter nil :debug nil :preemptive t))
+                      (mt:transfer-mrs
+                       mrs :filter nil :debug nil :preemptive t :block t))
                   #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
                       (declare (ignore ignore))
                       (setf tgc (+ tgcu tgcs) tcpu (+ tu ts) treal tr
                             conses (* scons 8) symbols (* ssym 24) 
                             others sother))))
+                (pedges (loop
+                            for edge in edges
+                            maximize (mt::edge-id edge)))
                 (partial (loop
                              for edge in edges
                              when (mt::edge-source edge) collect edge))
@@ -573,27 +588,48 @@
                              do
                                (loop
                                    for ep in (mt::edge-source edge)
-                                   for pred = (mrs::rel-pred ep)
+                                   for pred = (mrs:rel-pred ep)
                                    do (pushnew pred result :test #'equal))
                              finally (return (sort result #'string-lessp))))
-                (pedges (loop
-                            for edge in edges
-                            maximize (mt::edge-id edge)))
+                (invalid (loop
+                             with result
+                             for edge in edges
+                             when (and (null (mt::edge-source edge))
+                                       (mt::edge-semi edge))
+                             do
+                               (loop
+                                   for ep in (mt::edge-semi edge)
+                                   for pred = (mrs:rel-pred ep)
+                                   do (pushnew pred result :test #'equal))
+                           finally (return (sort result #'string-lessp))))
                 (*print-pretty* nil) (*print-level* nil) (*print-length* nil)
                 (output (if unknown
                           (format
                            nil
-                           "unknown transfer predicates: ~{~(~s~)~^, ~}"
+                           "invalid transfer predicates: ~{|~(~s~)|~^, ~}"
                            unknown)
                           (get-output-stream-string stream)))
+                (output (if invalid
+                          (format
+                           nil
+                           "~@[~a; ~]~
+                            invalid output predicates: ~{|~(~s~)|~^, ~}"
+                           (and output (not (equal output "")) output) invalid)
+                          output))
                 (readings (- (length edges) (length partial)))
                 (readings (if (or (equal output "") (> readings 0))
-                              readings -1)))
+                              readings -1))
+                (n 0))
            (setf edges 
              (loop 
                  for edge in edges 
-                 unless (mt::edge-source edge)
+                 unless (or (mt::edge-source edge) (mt::edge-semi edge))
                  collect edge))
+           #+:debug
+           (when invalid
+             (format
+              excl:*initial-terminal-io*
+              "~&transfer-item(): ~{~(~s~)~^, ~}.~%" invalid))
            
            `((:others . ,others) (:symbols . ,symbols) (:conses . ,conses)
              (:treal . ,treal) (:tcpu . ,tcpu) (:tgc . ,tgc)
@@ -604,9 +640,7 @@
              (:results .
               ,(loop
                    with *package* = *lkb-package*
-                   with nresults = (if (<= nresults 0)
-                                     (length edges)
-                                     nresults)
+                   with nresults = (if (<= nresults 0) (length edges) nresults)
                    for i from 0
                    for edge in edges
                    for tree = (with-standard-io-syntax
@@ -615,11 +649,23 @@
                    for mrs = (let ((mrs (mt::edge-mrs edge)))
                                (with-output-to-string (stream)
                                  (mrs::output-mrs1 mrs 'mrs::simple stream)))
-                   for score = (mt::edge-score edge)
-                   while (>= (decf nresults) 0) collect
+                   for mtrs
+                   = (loop
+                         for next = edge then (mt::edge-daughter next)
+                         for mtr = (and next (mt::edge-rule next))
+                         while mtr
+                         collect (intern (mt::mtr-id mtr) :tsdb))
+                   for ratio = (tsdb::divide
+                                (length (mrs:psoa-liszt (mt::edge-mrs edge)))
+                                size)
+                   for flags
+                   = (pairlis '(:tscore :tratio :mtrs :nmtrs)
+                              (list (mt::edge-score edge) (float ratio)
+                                    mtrs (length mtrs)))
+                   while (<= (incf n) nresults) collect
                      (pairlis '(:result-id :mrs :tree :flags)
-                              (list i mrs tree 
-                                    (acons :tscore score nil))))))))
+                              (list i mrs tree flags))))
+             (:nresults . ,n))))
       (append
        (when condition
          (let* ((error (tsdb::normalize-string 
@@ -665,14 +711,6 @@
        #+:mrs
        ((and (g-edge-p edge) lexemes
              (not (null (mrs::found-lex-rule-list (first lexemes))))
-             ;;
-             ;; _fix_me_
-             ;; what was i thinking?  in the face of one or more derivational
-             ;; rules plus an inflectional rule, this list can be of arbitrary
-             ;; length, of course.
-             ;;
-             #+:null
-             (null (rest (mrs::found-lex-rule-list (first lexemes))))
              (null (edge-children edge)))
         (let ((rules (mrs::found-lex-rule-list (first lexemes))))
           (unfold-generator-leaf edge id score start end rules)))
@@ -950,31 +988,7 @@
         (display-parse-tree edge nil)))
   #+:tty
   nil)
-
-
-;;;
-;;; _fix_me_
-;;; rewrite from scratch; avoid destructive replacements but use the unifier
-;;; instead, i.e. create suitable LNK values, then walk through a sub-dag, test
-;;; LNK values for some trigger type, and unify as appropriate.  that way, when
-;;; we are within a unification context, things will just be healthy, and when
-;;; not, we should establish one and copy upon completion.       (7-sep-05; oe)
-;;;
-(defun characterize (tdfs from to)
-  (let ((*safe-not-to-copy* nil))
-    (declare (special *safe-not-to-copy*))
-    (when (and (tdfs-p tdfs)
-               (integerp from) (> from -1) (integerp to) (> to -1))
-      (let* ((replacements (list (cons 'cfrom (format nil "~a" from))
-                                 (cons 'cto (format nil "~a" to))))
-             (dag (tdfs-indef tdfs))
-             (new (replace-dag-types
-                   dag (append
-                        mrs::*initial-semantics-path* mrs::*psoa-liszt-path*) 
-                   replacements)))
-        (when new (setf (tdfs-indef tdfs) new))))))
-
-
+
 (defun tsdb::find-lexical-entry (form instance &optional id start end (dagp t))
 
   (let* ((*package* *lkb-package*)
@@ -996,22 +1010,23 @@
                      (if surface
                        (instantiate-generic-lexical-entry instance surface)
                        (copy-tdfs-completely (lex-entry-full-fs instance)))))
-             (tdfs (if *recording-word*
-                     (unify-in-word tdfs form)
-                     tdfs))
+             ;;
+             ;; _fix_me_
+             ;; by calling lnk-tdfs() outside of a unification context, we end
+             ;; up making another copy of .tdfs. :-{.  it should suffice to use
+             ;; lnk-tdfs() directly on the FS of the lexical entry (as it will
+             ;; then end up making a copy after the unifications, but then we
+             ;; would still have to worry about getting the LNK effect into the
+             ;; instantiate-generic-lexical-entry() call.        (7-dec-06; oe)
+             ;;
+             (tdfs (if mrs::*lnkp* (lnk-tdfs tdfs (list id)) tdfs))
+             (tdfs (if *recording-word* (unify-in-word tdfs form) tdfs))
              (ids (list (lex-entry-id instance))))
         (make-edge :id id :category (and tdfs (indef-type-of-tdfs tdfs))
                    :rule form :leaves (list form) :lex-ids ids
                    :dag tdfs :from start :to end
                    #-:logon :cfrom #-:logon (mrs::find-cfrom-hack start)
                    #-:logon :cto #-:logon (mrs::find-cto-hack start))))))
-
-(defun tsdb::find-affix (type)
-  (let* ((*package* *lkb-package*)
-         (name (string-upcase (string type)))
-         (name (intern name *lkb-package*))
-         (rule (tsdb::find-rule name)))
-    (when (rule-p rule) rule)))
 
 (defun tsdb::find-rule (instance)
   (let* ((name (intern (if (stringp instance)
@@ -1045,11 +1060,9 @@
               (setf status i)
               (setf result (yadu! result tdfs path))
             finally
-              (when (and result *characterize-p*)
-                (characterize
-                 result
-                 (edge-from (first edges)) (edge-to (first (last edges)))))
-              (setf result (and result (restrict-and-copy-tdfs result))))))
+              (when result
+                (when mrs::*lnkp* (lnk-tdfs result (list id)))
+                (setf result (restrict-and-copy-tdfs result))))))
     (if (or result (null dagp))
       (make-edge :id id :category (and result (indef-type-of-tdfs result))
                  :rule rule
@@ -1065,46 +1078,12 @@
                  :to (edge-to (first (last edges))))
       (values status %failure%))))
 
-(defun tsdb::instantiate-preterminal (preterminal mrule 
-                                &optional id start end (dagp t))
-  ;;
-  ;; _fix_me_
-  ;; this hardwires some assumptions about how affixation is carried out. 
-  ;;                                                        (22-apr-99  -  oe)
-  ;;
-  (with-unification-context (foo)
-    (let* ((dagp (smember dagp '(:irule :word t)))
-           (*unify-debug* :return)
-           (%failure% nil)
-           (rtdfs (when dagp 
-                    #+:restrict
-                    (if *chart-packing-p* 
-                      (rule-rtdfs mrule) 
-                      (rule-full-fs mrule))
-                    #-:restrict
-                    (rule-full-fs mrule)))
-           (tdfs (when dagp (edge-dag preterminal)))
-           (result (when (and rtdfs tdfs)
-                     (yadu! rtdfs tdfs '(args first))))
-           (copy (when result
-                   (when *characterize-p* (characterize result start end))
-                   (restrict-and-copy-tdfs result))))
-      (if (or copy (null dagp))
-        (make-edge :id id :category (and copy (indef-type-of-tdfs copy))
-                   :rule mrule 
-                   :leaves (copy-list (edge-leaves preterminal))
-                   :lex-ids (copy-list (edge-lex-ids preterminal))
-                   :from start :to end
-                   :dag copy
-                   :children (list preterminal))
-        (values nil %failure%)))))
-
 ;;;
 ;;; RMRS comparison
 ;;; 
 ;;; this stuff can't go in LKB files because the tsdb package isn't available
 ;;; when LKB is loaded
-
+;;;
 
 (defun get-test-suite-sentences (dir)
   ;;; returns assoc list of id and string
@@ -1125,11 +1104,12 @@
     (let* ((edges (or (compare-frame-in frame) (compare-frame-edges frame)))
            (tsdb-rasp-tree (if edges (edge-bar (first edges))))
            (mrs::*rasp-xml-word-p* t)   ; FIX - RASP `script'
-           (mrs::*initial-rasp-num* (if tsdb-rasp-tree
-                                        (mrs::scan-rasp-for-first-num 
-                                         tsdb-rasp-tree most-positive-fixnum))))
-      (if tsdb-rasp-tree
-          (mrs::construct-sem-for-tree tsdb-rasp-tree :rasp :quiet)))))
+           (mrs::*initial-rasp-num*
+            (when tsdb-rasp-tree
+              (mrs::scan-rasp-for-first-num
+               tsdb-rasp-tree most-positive-fixnum))))
+      (when tsdb-rasp-tree
+        (mrs::construct-sem-for-tree tsdb-rasp-tree :rasp :quiet)))))
           
 (defun get-tsdb-selected-erg-rmrs (item dir)
   (let* ((data dir)

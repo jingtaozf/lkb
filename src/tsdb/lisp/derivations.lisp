@@ -38,19 +38,60 @@
 
 (defparameter *derivations-preterminals-equivalent-test* nil)
 
+(defparameter *derivations-equivalences*
+  #-:logon nil
+  #+:logon
+  '((yofc_gle yofc_ersatz yofc_3dig_ersatz year-ersatz)
+    (named_gle numvalcard3digit-4digit ratioersatz_n2 numvalcard4digit4digit
+     numvalcard3digit4digit wrappedweb-ersatz email-ersatz ratioersatz_n5
+     ratioersatz_n6 nameersatz identifierersatz_n1 web-ersatz number-ersatz
+     mailboxidersatz numvalcard3digit-3digit ratioersatz_n8 ratioersatz_n4
+     ratioersatz_n3 numvalcard3digit3digit ratioersatz_n7 mailboxnameersatz
+     numvalcard4digit-4digit phone-ersatz ratioersatz_n1)
+    (decade_gle fourdigit_plur_n1 decade_ersatz_n1 threedigit_plur_n1
+     twodigit_plur_n1)
+    (card_gle numvalcard12digit negdecimaldigit negcarddigit numvalcard2digit
+     numvalcard13plusdigit numvalcard9digit numvalcard10digit numvalcard6digit
+     numvalcard7digit numvalcard8digit fractionersatz numvalcard4digit
+     numvalcard3digit numvalcard5digit numvalcard1digit rangeersatz_2
+     numvalcard11digit decimalersatz decimalersatz_2 cardwithcommas)
+    (ord_gle sixdigitordersatz rangeersatz fourdigitordersatz onedigitordersatz
+     eightdigitordersatz elevendigitordersatz ninedigitordersatz
+     fivedigitordersatz threedigitordersatz twodigitordersatz tendigitordersatz
+     twelvedigitordersatz thirteenplusdigitersatz sevendigitordersatz)
+    (dofw_gle dofw-date)
+    (dofm_gle one_digit_euro_day two_digit_day twodigitdomersatz
+     two_digit_euro_day dofm-date-range onedigitdomersatz
+     dofm-date one_digit_day)
+    (be_c_am be_c_am_cx be_c_am_cx_2)
+    (be_c_are be_c_are_cx be_c_are_cx_2)
+    (be_c_is be_c_is_cx be_c_is_cx_2)
+    (be_id_am be_id_am_cx be_id_am_cx_2)
+    (be_id_are be_id_are_cx be_id_are_cx_2)
+    (be_id_is be_id_is_cx be_id_is_cx_2)
+    (be_it_cop_is be_it_cop_is_cx be_it_cop_is_cx_2)
+    (be_nv_is be_nv_is_cx be_nv_is_cx_2)
+    (be_th_cop_is be_th_cop_is_cx be_th_cop_is_cx_2)
+    (had_aux had_aux_cx had_aux_cx_2)
+    (had_better_aux had_better_cx had_better_cx_2)
+    (has_aux has_aux_cx has_aux_cx_2)
+    (have_bse_aux have_bse_aux_cx_1 have_bse_aux_cx_2)
+    (have_fin_aux have_fin_aux_cx have_fin_aux_cx_2)
+    (will_aux_pos will_aux_pos_cx will_aux_pos_cx_2)
+    (would_aux_pos would_aux_pos_cx would_aux_pos_cx_2)
+    (a_det a_det_2)
+    (email_n1 e_mail_n1 e_mail_n2 e_mail_n3 e_mail_n4)))
+
 (defparameter *derivations-yield-skews* 
   #-:logon nil
   #+:logon
-  '(semicolon_pct bang_pct sq_pct dq_punct dq_punct2 lparen_pct rparen_pct
-    hyphen_punct_left hyphen_punct_right 
-    dbl_hyphen_punct_left dbl_hyphen_punct_right
-    comma_punct_left comma_punct_right comma_punct_coord punct_3dots_l
-    punct_3dots_r s_dash_pct s_dbl_dash_pct colon_pct s_colon_pct
-    leftq_pct))
+  '(dbl_hyphen_punct hyphen_punct_right s_dash_pct s_dbl_dash_pct))
 
 (defparameter *derivations-ignore-leafs-p* t)
 
 (defparameter *derivations-reconstructor* nil)
+
+(defparameter *derivations-reconstruct-lnk-p* nil)
 
 (defmacro derivation-id (derivation)
   `(when (integerp (first ,derivation))
@@ -142,6 +183,25 @@
                          &optional (level *derivations-comparison-level*))
   (labels ((node-equal (gold blue)
              (cond
+              #+:logon
+              ((and *derivations-equivalences*
+                    (or (stringp gold) (symbolp gold))
+                    (or (stringp blue) (symbolp blue)))
+               (let* ((gold (string gold))
+                      (bracket (position #\[ gold))
+                      (gold (if bracket (subseq gold 0 bracket) gold))
+                      (gold (intern gold :tsdb))
+                      (blue (string blue))
+                      (bracket (position #\[ blue))
+                      (blue (if bracket (subseq blue 0 bracket) blue))
+                      (blue (intern blue :tsdb))
+                      (equivalence
+                       (unless (eq gold blue)
+                         (loop
+                             for equivalence in *derivations-equivalences*
+                             when (member gold equivalence :test #'eq)
+                             return equivalence))))
+                 (or (eq gold blue) (member blue equivalence :test #'eq))))
               ((stringp gold)
                (cond 
                 ((stringp blue) (string-equal gold blue))
@@ -178,7 +238,9 @@
                             (member
                              foo *derivations-yield-skews* :test #'string=))
                        byield))))
-        (equal gyield byield)))
+        (loop
+            for gold in gyield for blue in byield
+            always (and gold blue (node-equal gold blue)))))
      ((and (null gold) (null blue)) t)
      ((and (atom gold) (atom blue)) (node-equal gold blue))
      ((or (null (derivation-daughters gold)) 
@@ -199,7 +261,6 @@
             for daughter2 in (derivation-daughters blue)
             always (derivation-equal daughter1 daughter2 level)))))))
 
-;;;
 ;;; functionality to reconstruct derivation trees and report nature of failure
 ;;; when unification clashes.
 ;;;
@@ -262,7 +323,7 @@
            t
            "~&~%(~d) `~a' --- success.~%")))))))
 
-(defun reconstruct (derivation &optional (dagp t))
+(defun reconstruct (derivation &optional (dagp t) &key counter (cachep t))
   (if *derivations-reconstructor*
     (let ((hook (typecase *derivations-reconstructor*
                   (null nil)
@@ -279,23 +340,26 @@
                         ((and (stringp derivation)
                               (not (string= derivation "")))
                          (read-from-string derivation))))
-          (%derivation-offset% 0))
-      (declare (special %derivation-offset%))
+          (%derivation-offset% 0)
+          %edges%)
+      (declare (special %derivation-offset% %edges%))
       (when derivation
         (if (numberp (first derivation))
           (catch :fail
-            (reconstruct-derivation derivation dagp t))
+            (reconstruct-derivation
+             derivation dagp t :counter counter :cachep cachep))
           (reconstruct-cfg-derivation derivation))))))
 
-(defun reconstruct-derivation (derivation &optional (dagp t) topp)
-  (declare (special %derivation-offset%) #-:lkb (ignore topp))
+(defun reconstruct-derivation (derivation
+                               &optional (dagp t) topp
+                               &key counter (cachep t))
+  (declare (special %derivation-offset% %edges%) 
+           #-:lkb (ignore topp))
   #+:debug
   (pprint (list %derivation-offset% derivation))
   (let* ((root (derivation-root derivation))
          (daughters (derivation-daughters derivation))
-         (princes (and (= (length daughters) 1) 
-                       (derivation-daughters (first daughters))))
-         (id (derivation-id derivation))
+         (id (if counter (funcall counter) (derivation-id derivation)))
          (start (derivation-start derivation))
          (start (if (and (integerp start) (>= start 0))
                   start
@@ -305,7 +369,7 @@
                 end
                 (+ start 1)))
          (edge 
-          (or (when *reconstruct-cache*
+          (or (when (and *reconstruct-cache* cachep)
                 (loop
                     for edge in (gethash id *reconstruct-cache*)
                     when (and #+:lkb (eql (lkb::edge-from edge) start)
@@ -314,7 +378,8 @@
                       #+:lkb (setf %derivation-offset% (lkb::edge-to edge))
                       (return edge)))
               (cond
-               ((and (= (length daughters) 1) (null princes))
+               ((and (= (length daughters) 1)
+                     (null (derivation-daughters (first daughters))))
                 (let* ((surface (derivation-root (first daughters)))
                        (entry 
                         (find-lexical-entry surface root id start end)))
@@ -328,48 +393,14 @@
                                   :noentry
                                   (format nil "`~a' (`~a')" root surface))))
                     entry)))
-               ((and (= (length princes) 1)
-                     (null (derivation-daughters (first princes)))
-                     (inflectional-rule-p derivation))
-                (let* ((affix root)
-                       (fs (and affix (find-affix affix)))
-                       (surface (derivation-root (first princes)))
-                       (entry (find-lexical-entry 
-                               surface 
-                               (derivation-root (first daughters))
-                               id start end
-                               dagp)))
-                  (incf %derivation-offset%)
-                  (cond
-                   ((null fs)
-                    (throw :fail
-                           (values
-                            nil
-                            (list derivation
-                                  0
-                                  :noaffix
-                                  (format nil "`~a'"  affix)))))
-                   ((null entry)
-                    (throw :fail
-                           (values
-                            nil
-                            (list derivation
-                                  0
-                                  :noentry
-                                  (format nil "`~a' (`~a')" root surface)))))
-                   (t
-                    (multiple-value-bind (result failure)
-                        (instantiate-preterminal entry fs id start end dagp)
-                      (if failure
-                        (throw :fail 
-                               (values nil (list derivation result failure)))
-                        result))))))
                (t
                 (let* ((items
                         (loop
-                         for daughter in daughters
-                         for item = (reconstruct-derivation daughter dagp)
-                         collect item))
+                            for daughter in daughters
+                            for item = (reconstruct-derivation
+                                        daughter dagp topp
+                                        :counter counter :cachep cachep)
+                            collect item))
                        (rule (find-rule root)))
                   (if (null rule)
                     (throw :fail
@@ -388,7 +419,7 @@
     #+:lkb
     (when (and topp (null (lkb::edge-string edge)))
       (setf (lkb::edge-string edge) 
-        (format nil "~{~a~^ ~}" (lkb::fix-spelling (lkb::edge-leaves edge)))))
+        (format nil "~{~(~a~)~^ ~}" (lkb::edge-leaves edge))))
     edge))
 
 ;;;
@@ -458,3 +489,28 @@
           (unless (equal string "") (read-from-string string)))))
   (setf (gethash :derivation *statistics-predicates*)
     #'(lambda (gold blue) (not (derivation-equal gold blue)))))
+
+;;;
+;;; _fix_me_
+;;; to allow equality of derivations obtained from re-generating MRSs that had
+;;; their CARGs frobbed.
+;;;
+#|
+(setf buckets
+  (loop
+      for pred being each hash-key in mrs::*relation-index*
+      for bucket = (gethash pred mrs::*relation-index*)
+      when (consp bucket)
+      collect (cons pred (rest (first bucket)))))
+(loop
+    for bucket in buckets
+    for hash = (rest bucket)
+    for ids = (remove-duplicates 
+               (loop for ids being each hash-value in hash append ids))
+    for key
+    = (loop
+          for foo in *generic-lexical-entries*
+          when (member (first foo) ids) return (first foo))
+    for match = (and key (gethash "DUMMY" hash))
+    when match collect (cons key match))
+|#

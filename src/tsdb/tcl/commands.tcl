@@ -1306,6 +1306,7 @@ proc tsdb_filters {} {
   if {$globals(filters,sparseness)} { set code "$code :sparseness"; }
   if {$globals(filters,predicate)} { set code "$code :predicate"; }
   if {$globals(filters,syntax)} { set code "$code :syntax"; }
+  if {$globals(filters,semi)} { set code "$code :semi"; }
   if {$globals(filters,ascope)} { set code "$code :ascope"; }
   if {$globals(filters,cscope)} { set code "$code :cscope"; }
   if {$globals(filters,unet)} { set code "$code :unet"; }

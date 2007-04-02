@@ -413,7 +413,7 @@
           for string = (string-trim '(#\Space #\Tab #\Return) line)
           for commentp = (let ((n (position #\; string)))
                            (and (numberp n) (zerop n)))
-          for length = (if commentp 0 (length string))
+          for length = (length string)
           for pseparation = (search pseparator string)
           when increment do (meter-advance increment)
           when (and pseparation (zerop pseparation)) do
@@ -430,7 +430,7 @@
             (setf context :newline)
             (setf rid nil) (setf rinput nil)
             (setf delta 0)
-          else unless (zerop length) do
+          else unless commentp do
             (multiple-value-bind (string id)
                 (strip-identifier string)
               (unless (numberp id)
@@ -490,7 +490,6 @@
                                                  length (or rinput comment)
                                                  author date))
                                   titem)
-                            ;;the polarity field is hard-coded for now.
                             (push (pairlis '(:i-id :s-id :polarity)
                                            (list id sid -1))
                                   tis)

@@ -88,6 +88,8 @@
 
 (defparameter *statistics-exclude-tgc-p* '(:tcpu))
 
+(defparameter *statistics-exclude-illformed-items-p* t)
+
 (defparameter *statistics-aggregate-dimension* :i-length)
 
 (defparameter *statistics-aggregate-size* 5)
@@ -148,7 +150,8 @@
   #+:oe
   '(:trees :utcpu :uspace 
     :subsumptions :equivalence :proactive :retroactive
-    :frozen :failures :ltcpu :ltgc :gtcpu :gtgc :atcpu :atgc)
+    :frozen :failures :hypotheses
+    :ltcpu :ltgc :gtcpu :gtgc :atcpu :atgc)
   #-:oe
   nil)
 
@@ -296,7 +299,7 @@
 
 (defun analyze (data 
                 &key condition meter message thorough trees extras 
-                     (readerp t) siftp filter
+                     (readerp t) siftp filter output
                      score gold taggingp
 		     commentp sloppyp scorep)
 
@@ -327,10 +330,11 @@
          (key (format 
                nil 
                "~a~@[ @ ~a~]~@[ # ~a~]~@[~* : trees~]~
-                ~@[ for ~a~]~@[~* : extras~]~@[ on ~a~@[ (scores)~]~]" 
+                ~@[ for ~a~]~@[~* : extras~]~@[~* : output~]~
+                ~@[ on ~a~@[ (scores)~]~]" 
                data condition 
                (if (listp thorough) (format nil "~{~(~a~)~^#~}" thorough) "t")
-               trees filter extras
+               trees filter extras output
                (cond
                 ((stringp score) score)
                 (score "itself")
@@ -370,8 +374,8 @@
         ;; tsdb(1) breaks when used in conjuction with a `report' format (as is
         ;; the case in our current select() implementation.  hence, sort the
         ;; `error' field to the back where it happens not to break :-{.
-        ;;                                                    (22-nov-99; oe)
-        ;; i believe this has been fixed sometime in 2001?    (20-jan-02; oe)
+        ;;                                                      (22-nov-99; oe)
+        ;; i believe this has been fixed sometime in 2001?      (20-jan-02; oe)
         ;;          
         (let* ((pfields (nreverse pfields))
                (ptypes (nreverse ptypes))
@@ -407,10 +411,22 @@
                            when tags do (nconc foo (acons :tags tags nil))
                            finally (return item))
 		       item))
+               (output (when output
+                         (if (consp output)
+                           (if (member "i-id" output :test #'string-equal)
+                             output
+                             (cons "i-id" output))
+                           '("i-id" "o-ignore" "o-surface"
+                             "o-wf" "o-gc" "o-edges"))))
+               (outputs (when output
+                          (select output nil
+                                  "output" condition data
+                                  :unique nil :sort :i-id)))
                (results (when thorough
                           (select (append '("parse-id" "result-id")
                                           (when (consp thorough)
-                                            (loop for symbol in thorough
+                                            (loop
+                                                for symbol in thorough
                                                 collect (format 
                                                          nil 
                                                          "~(~a~)" 
@@ -424,6 +440,21 @@
                (all (njoin parse item :i-id :meter ameter))
                sorted)
           (setf result all)
+          (when outputs
+            (loop
+                for item in result
+                for iid = (get-field :i-id item)
+                for output
+                = (loop
+                      initially
+                        (loop
+                            for output = (first outputs)
+                            while (and output (< (get-field :i-id output) iid))
+                            do (pop outputs))
+                      for output = (first outputs)
+                      while (and output (= (get-field :i-id output) iid))
+                      collect (pop outputs))
+                do (nconc item (acons :outputs output nil))))
           (when extras
             (loop
                 for tuple in result
@@ -546,7 +577,11 @@
              :trees trees :extras extras :readerp readerp :filter filter
              :score score :gold gold  
              :taggingp taggingp :commentp commentp
-             :sloppyp sloppyp :scorep scorep)))))
+             :sloppyp sloppyp :scorep scorep)
+          into result
+          finally (return (sort
+                           result #'<
+                           :key #'(lambda (item) (get-field :i-id item))))))))
 
 (defun rank-items (items &key gold score condition sloppyp scorep)
   
@@ -1316,11 +1351,15 @@
          (averages 
           (if ditems
             (summarize-competence-parameters-by-division 
-             items ditems :restrictor #'(lambda (foo) 
-                                          (not (= (get-field :i-wf foo) wf))))
+             items ditems
+             :restrictor (when *statistics-exclude-illformed-items-p*
+                           #'(lambda (foo) 
+                               (not (= (get-field :i-wf foo) wf)))))
             (summarize-competence-parameters 
-             items :restrictor #'(lambda (foo) 
-                                   (not (= (get-field :i-wf foo) wf))))))
+             items
+             :restrictor (when *statistics-exclude-illformed-items-p*
+                           #'(lambda (foo) 
+                               (not (= (get-field :i-wf foo) wf)))))))
          (naggregates (- (length averages) 1))
          (ncolumns 8)
          (alabel (if (eq *statistics-aggregate-dimension* :phenomena)
@@ -1504,21 +1543,29 @@
              (naggregates (- (length oaverages) 1))
              (owfaverages 
               (summarize-competence-parameters 
-               oitems :restrictor #'(lambda (foo) 
-                                      (not (= (get-field :i-wf foo) 1)))))
+               oitems
+               :restrictor (when *statistics-exclude-illformed-items-p*
+                             #'(lambda (foo) 
+                                 (not (= (get-field :i-wf foo) 1))))))
              (oifaverages 
               (summarize-competence-parameters 
-               oitems :restrictor #'(lambda (foo) 
-                                      (not (= (get-field :i-wf foo) 0)))))
+               oitems
+               :restrictor (when *statistics-exclude-illformed-items-p*
+                             #'(lambda (foo) 
+                                 (not (= (get-field :i-wf foo) 0))))))
              (naverages (summarize-competence-parameters nitems))
              (nwfaverages 
               (summarize-competence-parameters 
-               nitems :restrictor #'(lambda (foo) 
-                                      (not (= (get-field :i-wf foo) 1)))))
+               nitems
+               :restrictor (when *statistics-exclude-illformed-items-p*
+                             #'(lambda (foo) 
+                                 (not (= (get-field :i-wf foo) 1))))))
              (nifaverages 
               (summarize-competence-parameters 
-               nitems :restrictor #'(lambda (foo) 
-                                      (not (= (get-field :i-wf foo) 0)))))
+               nitems
+               :restrictor (when *statistics-exclude-illformed-items-p*
+                             #'(lambda (foo) 
+                                 (not (= (get-field :i-wf foo) 0))))))
              (*print-circle* nil))
        (case format
          (:latex
@@ -1738,8 +1785,8 @@
                       else do (push ovalue common)
                       do 
                         (setf nvalues
-                          (delete ovalue nvalues 
-                                  :count 1 :test-not predicate)))
+                          (delete
+                           ovalue nvalues :count 1 :test-not predicate)))
 
       collect (list oplus common (unless (and subsetp (null oplus)) nvalues))))
 
@@ -1753,7 +1800,7 @@
                                (nlabel "new")
                                subsetp bestp 
                                (analogyp *statistics-analogy-aggregation-p*)
-                               file append meter)
+                               file append meter (prefix ""))
 
   (let* ((ometer (madjust / meter 2))
          (nmeter (madjust + ometer (mduration ometer)))
@@ -1771,7 +1818,7 @@
             (analyze olanguage 
                      :condition condition :thorough thorough
                      :gold (when bestp olanguage) :sloppyp bestp
-                     :meter ometer :message t)
+                     :meter ometer :message meter)
             olanguage))
          (oitems (sort (copy-seq oitems) 
                        #'< :key #'(lambda (foo) (get-field :i-id foo))))
@@ -1779,7 +1826,7 @@
           (if (stringp nlanguage) 
             (analyze nlanguage 
                      :condition condition :thorough thorough
-                     :meter nmeter :message t)
+                     :meter nmeter :message meter)
             nlanguage))
          (stream (create-output-stream file append))
          (nitems (sort (copy-seq nitems) 
@@ -1918,7 +1965,10 @@
              (format
               stream
               "layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%"
-              (- row 1))))
+              (- row 1)))
+            (:ascii
+             (unless (zerop (- row 3))
+               (format stream "~a== ~a~%" prefix (- row 3)))))
         while (or oitems nitems)
         do 
           (let* ((oitem (first oitems))
@@ -1997,8 +2047,8 @@
               ;; .show. attributes (as they should |:-)
               ;;
               (setf clashes 
-                (intersect-results oitem nitem thorough 
-                                               subsetp bestp))
+                (intersect-results
+                 oitem nitem thorough subsetp bestp))
               (when (or (loop
                             for clash in clashes
                             thereis (or (first clash) (third clash)))
@@ -2094,7 +2144,27 @@
                            -action browse -tag ~a~%"
                           row j (length oclash) otag
                           row (+ j 1) (length common) ctag
-                          row (+ j 2) (length nclash) ntag))))
+                          row (+ j 2) (length nclash) ntag)))
+                  (:ascii
+                   (format
+                    stream
+                    "~a[~a~@[:~a~]]"
+                    prefix oi-id (and sloppyp ni-id))
+                   (loop
+                       for value in oshow
+                       do (format stream " |~a|" value))
+                   (format
+                    stream
+                    " {~{~a~^ ~}} {~{~a~^ ~}}"
+                    ocompare ncompare)
+                   (loop
+                       for (oclash common nclash) in clashes
+                       do
+                         (format
+                          stream
+                          " <~a|~a|~a>"
+                          (length oclash) (length common) (length nclash)))
+                   (format stream "~%")))
                 (incf row))
               (pop oitems)
               (pop nitems))
@@ -2102,7 +2172,7 @@
                 (or (null ni-id) (and noffset (> noffset 0)))
                 (or (null ni-id) (and oi-id (<= oi-id ni-id))))
               ;;
-              ;; if .oi-id. is less or equal (which it should not) to 
+              ;; if .oi-id. is less or equal (which it should not be) to 
               ;; .ni-id. output .compare. values for `old' item and continue
               ;;
               (unless analogyp
@@ -2155,7 +2225,21 @@
                           stream
                           "cell ~d ~d -contents ~d -format data ~
                            -action browse -tag ~a~%"
-                          row j (length oclash) otag))))
+                          row j (length oclash) otag)))
+                  (:ascii
+                   (format stream "~a[~a]" prefix oi-id)
+                   (loop
+                       for value in oshow
+                       do (format stream " |~a|" value))
+                   (format stream " {~{~a~^ ~}} {}" ocompare)
+                   (loop
+                       for (oclash common nclash) in clashes
+                       do
+                         (format
+                          stream
+                          " <~a|~a|~a>"
+                          (length oclash) (length common) (length nclash)))
+                   (format stream "~%")))
                 (incf row))
               (pop oitems)
               (when noffset 
@@ -2216,7 +2300,22 @@
                           stream
                           "cell ~d ~d -contents ~d -format data ~
                            -action browse -tag ~a~%"
-                          row (+ j 2) (length nclash) ntag))))
+                          row (+ j 2) (length nclash) ntag)))
+                  (:ascii
+                   (format stream "~a[~@[~*:~]~a]" prefix sloppyp ni-id)
+                   (loop
+                       for value in nshow
+                       do (format stream " |~a|" value))
+                   (format stream " {} {~{~a~^ ~}}" ncompare)
+                   (loop
+                       for field in thorough
+                       for (oclash common nclash) in clashes
+                       do
+                         (format
+                          stream
+                          " <~a|~a|~a>"
+                          (length oclash) (length common) (length nclash)))
+                   (format stream "~%")))
                 (incf row))
               (pop nitems)
               (when ooffset 

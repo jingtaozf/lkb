@@ -275,10 +275,11 @@
           for ep in eps
           for label = (rel-handel ep)
           for pred = (rel-pred ep)
+          for lnk = (output-lnk (rel-lnk ep) :stream nil)
           do
             (format stream "#X[~a " (record label))
             (output label stream)
-            (format stream " \":~(~a~)(\"" pred)
+            (format stream " \":~(~a~)~@[~a~](\"" pred lnk)
             (loop
                 for role in (rel-flist ep)
                 for value = (fvpair-value role)

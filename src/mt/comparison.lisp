@@ -45,6 +45,7 @@
   ;;
   #+:debug
   (setf %mrs1 mrs1 %mrs2 mrs2)
+  (incf (lkb::statistics-comparisons lkb::*statistics*))
   (let ((*mrs-comparison-ignore-roles* roles)
         (*mrs-comparison-ignore-properties* properties)
         (*mrs-comparison-equivalent-types* types)
@@ -70,7 +71,7 @@
         (setf %transfer-solutions%
           (stable-sort %transfer-solutions% #'solution<=))
         (pprint (first (last %transfer-solutions%))))
-      solutions)))
+      (first solutions))))
 
 (defun compare-epss (eps1 eps2 solution &key type)
   ;;
@@ -181,7 +182,6 @@
 (defun compare-preds (pred1 pred2 &key type)
   (or
    (compare-types pred1 pred2 :type type)
-   #+:logon
    (loop
        for (new . old) in *mrs-comparison-equivalent-predicates*
        when (and (loop
@@ -211,7 +211,6 @@
                       (compare-types 
                        (mrs::var-type variable1) (mrs::var-type variable2) 
                        :internp t :type type)
-                      #+:logon
                       (loop
                           with type = (mrs::var-type variable1)
                           for (new . old) in *mrs-comparison-equivalent-types*

@@ -156,21 +156,19 @@ we assume that there will generally only be one feature
            (let ((new-index-list
                   (loop for fvp in rel-strings
                       collect
-                        (let ((new-table (make-hash-table :test #'equal))
-                              (rel-string (fvpair-value fvp)))
-                          (push id (gethash 
-                                    (string-upcase (string rel-string)) 
-                                    new-table))  
+                        (let* ((new-table (make-hash-table :test #'equal))
+                               (rel-string (string (fvpair-value fvp))))
+                          (push id (gethash rel-string new-table))  
                           (cons (fvpair-feature fvp) new-table)))))
              (setf (gethash rel-name *relation-index*)
                new-index-list)))
           ((listp index-value)
                 (loop for fvp in rel-strings
                       collect
-                      (let* ((rel-string (fvpair-value fvp))
+                      (let* ((rel-string (string (fvpair-value fvp)))
                              (table (cdr (assoc (fvpair-feature fvp) index-value))))
                         (if (hash-table-p table)
-                            (pushnew id (gethash (string-upcase rel-string) table))
+                            (pushnew id (gethash rel-string table))
                             (warn "~%Ignoring ~A - ~A inconsistent in ~A"
                                  id rel-strings rel-name)))))
           (t 
@@ -213,10 +211,10 @@ we assume that there will generally only be one feature
   (let ((id-list nil)
         (first-time t))
     (dolist (fvp parameter-strs)
-        (let* ((feature (fvpair-feature fvp))
-               (value (string-upcase (string (fvpair-value fvp))))
-               (hash-table (cdr (assoc feature matching))))
-          (if hash-table
+      (let* ((feature (fvpair-feature fvp))
+             (value (string (fvpair-value fvp)))
+             (hash-table (cdr (assoc feature matching))))
+        (if hash-table
             (let ((ids (gethash value hash-table)))
               (if first-time 
                   (progn (setf id-list ids)
@@ -463,7 +461,8 @@ we assume that there will generally only be one feature
                        "~%Warning: ~A has no semantics and no filter rule" id))
              (pushnew id *empty-semantics-lexical-entries*)))))
 
-(defun extract-relations-from-liszt (fs id path old-fs)
+(defun extract-relations-from-liszt (fs id path old-fs
+                                     &key (indexingp t) generator)
   ;;; similar to the mrsoutput fn, construct-liszt
   (if (is-valid-fs fs)
       (let ((label-list (fs-arcs fs)))
@@ -473,7 +472,7 @@ we assume that there will generally only be one feature
                    (rel (if first-part
                             (create-rel-struct
                              (cdr first-part) 
-                             nil t)))
+                             generator indexingp)))
                    (rest-part (assoc (car *rest-path*)
                                      label-list)))
               (if rel
@@ -485,7 +484,8 @@ we assume that there will generally only be one feature
                     (cons rel
                           (if rest-part
                               (extract-relations-from-liszt
-                               (cdr rest-part) id path old-fs)
+                               (cdr rest-part) id path old-fs
+                               :indexingp indexingp :generator generator)
                             (format t 
                                     "~%Warning: ~A has a defective ~A" id path))))
                 (if rest-part

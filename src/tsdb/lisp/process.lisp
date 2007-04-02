@@ -115,8 +115,8 @@
       (setf %accumulated-mt-statistics%
         (pairlis '(:total
                    :pcount :pfcount :tcount :tfcount :rcount :rfcount
-                   :tbleu)
-                 (list 0 0 0 0 0 0 0 0))))
+                   :tfbleu :tbbleu)
+                 (list 0 0 0 0 0 0 0 0 0))))
 
     (when meter
       (meter :value (get-field :start imeter))
@@ -342,6 +342,7 @@
           (when cache 
             (flush-cache cache :verbose verbose 
                          :sort *process-sort-profile-p*))
+          (purge-profile-cache data)
           (unless interactive (format stream "~&"))
           (when (and (stringp output) (open-stream-p stream))
             (close stream))
@@ -785,7 +786,7 @@
            (strikes (get-field+ :strikes item 0)))
 
       (loop
-          for output in (get-field :output item)
+          for output in (get-field :outputs item)
           for ignore = (get-field :o-ignore output)
           when (and ignore (tsdb-ignore-p ignore))
           do
@@ -885,7 +886,7 @@
         
   (cond
    ((and client
-         (smember type '(:parse :generate :translate))
+         (smember type '(:parse :transfer :generate :translate))
          (client-p client))
     (let* ((nanalyses (if exhaustive 
                         0 
@@ -994,7 +995,7 @@
                       mrs))))
            (targets (when (smember type '(:translate))
                       (loop
-                          for output in (get-field :output item)
+                          for output in (get-field :outputs item)
                           for surface = (get-field :o-surface output)
                           when (and (stringp surface)
                                     (not (string= surface "")))
@@ -1438,7 +1439,6 @@
 
 (defun print-result (result &key (stream *tsdb-io*) format index log)
 
-  (declare (ignore format))
   (let* ((readings (get-field :readings result))
          (unique (or (get-field :unique result) (get-field :nresults result)))
          (words (get-field :words result))
@@ -1466,15 +1466,15 @@
      ((eql readings 0)
       (format 
        stream 
-       " ---~:[~; time up:~] ~
+       " ~:[---~;&mdash;~]~:[~; time up:~] ~
         ~@[<a href=\"/view?item=~a\" target=\"_blank\" ~
               onclick=\"return __pageInitializedP__\">~]~
         (~,2f~:[~*~;:~,2f~]|~,2f s) ~
         <~@[~d~]:~@[~d~]>~
         ~:[ {~d:~d}~;~2*~] ~
         (~a)~
-        ~:[~*~*~; [~:[~;=~]~d]~]~@[</a>~].~%" 
-       timeup index
+        ~:[~*~*~; [~:[~;=~]~d]~]~@[</a>~].~%"
+       (eq format :html) timeup index
        tcpu (>= tgc 0.1) tgc total
        words edges 
        (or (= unifications copies 0)
@@ -1487,15 +1487,15 @@
           (eql readings -1))
       (format 
        stream 
-       " --- ~@[<a href=\"/view?item=~a\" target=\"_blank\" ~
+       " ~:[---~;&mdash;~] ~@[<a href=\"/view?item=~a\" target=\"_blank\" ~
                    onclick=\"return __pageInitializedP__\">~]~
        error: ~a~@[</a>~].~%" 
-       index 
+       (eq format :html) index 
        (normalize-string (get-field :error result)) index))
      ((and (integerp readings) (> readings 0))
       (format 
        stream 
-       " ---~:[~; time up:~] ~
+       " ~:[---~;&mdash;~]~:[~; time up:~] ~
         ~@[<a href=\"/view?item=~a\" target=\"_blank\" ~
               onclick=\"return __pageInitializedP__\">~]~
         ~:[~;^~]~:[~*~a~;~a [~a]~] ~
@@ -1504,7 +1504,7 @@
         ~:[ {~d:~d}~;~2*~] ~
         (~a)~
         ~:[~*~*~; [~:[~;=~]~d]~]~@[</a>~].~%" 
-       timeup index
+       (eq format :html) timeup index
        (and (integerp fragments) (> fragments 0))
        (and unique (not (eql unique readings))) unique readings 
        tcpu (>= tgc 0.1) tgc first total 
@@ -1517,8 +1517,8 @@
      (corpse
       (format
        stream
-       " --- client exit <~x>.~%"
-       corpse))
+       " ~:[---~;&mdash;~] client exit <~x>.~%"
+       (eq format :html) corpse))
      ((null readings)
       (format stream ".~%"))
      (t
@@ -1536,12 +1536,14 @@
                 (rcount (get-field :rcount %accumulated-mt-statistics%))
                 (rfcount (get-field :rfcount %accumulated-mt-statistics%))
                 (total (get-field :total %accumulated-mt-statistics%))
-                (tbleu (get-field :tbleu %accumulated-mt-statistics%)))
+                (tfbleu (get-field :tfbleu %accumulated-mt-statistics%))
+                (tbbleu (get-field :tbbleu %accumulated-mt-statistics%)))
             (format
              log
              "|= ~a:~a of ~a {~,1f+~,1f}; ~
               ~a:~a of ~a:~a {~,1f ~,1f}; ~
-              ~a:~a of ~a:~a {~,1f ~,1f} @ ~a of ~a {~,1f} <~,2f ~,2f>.~%"
+              ~a:~a of ~a:~a {~,1f ~,1f} @ ~a of ~a {~,1f} ~
+              <~,2f ~,2f|~,2f ~,2f>.~%"
              pcount pfcount total
              (per-cent pcount total) (per-cent pfcount total)
              tcount tfcount pcount pfcount
@@ -1549,7 +1551,8 @@
              rcount rfcount tcount tfcount
              (per-cent rcount tcount) (per-cent rfcount tfcount)
              (+ rcount rfcount) total (per-cent (+ rcount rfcount) total)
-             (divide tbleu total) (divide tbleu (+ rcount rfcount)))))
+             (divide tfbleu total) (divide tfbleu (+ rcount rfcount))
+             (divide tbbleu total) (divide tbbleu (+ rcount rfcount)))))
         (format log "~%"))
       (force-output log))))
 
@@ -1847,9 +1850,12 @@
            (nanalyses (first fan))
            (ntransfers (second fan))
            (nrealizations (third fan))
-           (bleu (get-field :bleu result)))
-      (when (numberp bleu)
-        (incf (get-field :tbleu %accumulated-mt-statistics%) bleu))
+           (fbleu (get-field :fbleu result))
+           (bbleu (get-field :bbleu result)))
+      (when (numberp fbleu)
+        (incf (get-field :tfbleu %accumulated-mt-statistics%) fbleu))
+      (when (numberp bbleu)
+        (incf (get-field :tbbleu %accumulated-mt-statistics%) bbleu))
       (when (and (numberp nanalyses) (numberp ntransfers)
                  (numberp nrealizations))
         (when (> nanalyses 0)

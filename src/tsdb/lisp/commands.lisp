@@ -93,7 +93,7 @@
                   do
                     (nconc
                      item
-                     (pairlis '(:o-gc :o-edges :output)
+                     (pairlis '(:o-gc :o-edges :outputs)
                               (list (and (> ogc -2) ogc)
                                     (and (> oedges 2) oedges)
                                     output)))
@@ -461,7 +461,7 @@
                              (subseq directory prefix))
               when (and suffix
                         (or (null name) (string= name suffix))
-                        (or (null pattern) (cl-ppcre::scan pattern suffix)))
+                        (or (null pattern) (ppcre::scan pattern suffix)))
               collect suffix))
          (increment (when (and directories meter)
                       (/ (mduration meter) (+ (length directories) 1))))
@@ -964,7 +964,7 @@
                   [ :count _n_ ]
 
         list or activate [incr tsdb()] cpus; _keyword_ is a class name (used
-        in the cpu definition) that identifies which cliet(s) to start; write
+        in the cpu definition) that identifies which client(s) to start; write
         client output to file _string_ (defaults to `/tmp/pvm.debug.user' --- 
         where `user' is the active account name; `t' as the :file argument
         means client output goes to standard out); :reset defaults to `t' and

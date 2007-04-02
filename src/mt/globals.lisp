@@ -40,11 +40,17 @@
 
 (defparameter *mtr-fail-path* (list (mrs::vsym "FAIL")))
 
+(defparameter *mtr-permute-path* (list (mrs::vsym "PERMUTE")))
+
 (defparameter *mtr-exhaustive-path* (list (mrs::vsym "EXHAUSTIVE")))
 
 (defparameter *mtr-equal-path* (list (mrs::vsym "EQUAL")))
 
 (defparameter *mtr-subsume-path* (list (mrs::vsym "SUBSUME")))
+
+(defparameter *mtr-warn-path* (list (mrs::vsym "WARN")))
+
+(defparameter *mtr-block-path* (list (mrs::vsym "BLOCK")))
 
 (defparameter *mtr-trigger-path* (list (mrs::vsym "TRIGGER")))
 
@@ -83,6 +89,9 @@
 (defparameter *semi-fragment-left* (mrs::vsym "L-HNDL"))
 
 (defparameter *semi-fragment-right* (mrs::vsym "R-HNDL"))
+
+(defparameter *semi-fragment-relations*
+  (list "fragment_rel" (mrs::vsym "unspec_conj_rel")))
 
 (defparameter *semi-punctuation-relations*
   (list "colon_rel" "comma_rel" "period_rel" 

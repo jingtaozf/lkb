@@ -43,9 +43,15 @@
     (vsym "CFROM")
   "cfrom feature for recording character positions on relations")
 
-(defparameter *rel-link-feature*
-  (vsym "LNK")
-  "LNK feature for recording surface positions on relations")
+
+(defparameter *lnkp* nil
+  "activate recording of surface links (whatever form they take) in EPs")
+
+(defparameter *rel-lnk-path* (list (vsym "LNK"))
+  "list-valued attribute on EPs to record surface links (in whatever form)")
+
+(defparameter *show-lnk-p* t
+  "boolean flag to toggle output of surface links (e.g. character positions)")
 
 (defparameter *hook-type* 
   (vsym "HOOK")
@@ -143,9 +149,10 @@
 order in the MRS output routines and also determines the order
 of variables in the indexed representation")
 
-(defparameter *ignored-sem-features* `( ,(vsym "IDIOMP")
-					,(vsym "CFROM")
-					,(vsym "CTO"))
+(defparameter *ignored-sem-features* `(,(vsym "IDIOMP")
+                                       ,(vsym "LNK")
+                                       ,(vsym "CFROM")
+                                       ,(vsym "CTO"))
   "A list of features which are ignored completely when constructing
 an MRS from a FS representation of an MRS")
 
@@ -277,15 +284,6 @@ set in the code")
 
 (defvar *false-type* (vsym "-"))
 (defvar *true-type* (vsym "+"))
-
-;;;
-;;; in LOGON, we have an addtional notion of `fragmented' MRSs, viz. in cases
-;;; where the parser resolved to `gleaning' (or `starring' in XLE lingo), i.e.
-;;; ended up combining a sequence of chunks from the chart, lacking a global
-;;; solution.  the following is to enable detection of `fragmentary' MRSs.
-;;;
-(defparameter *semi-fragment-relations*
-  (list "fragment_rel" (mrs::vsym "unspec_conj_rel")))
 
 (defparameter *alex-mode* nil
   "if t, allows scope to have specified relations")

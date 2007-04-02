@@ -22,7 +22,7 @@
   ;; return a string identifying the grammar that is currently in use, ideally
   ;; including relevant grammar-internal parameters of variation and a version.
   ;;
-  (or (tsdb::clients-grammar) "norgram (dal)"))
+  (or (tsdb::clients-grammar) "norgram (mo)"))
 
 (defun tsdb::initialize-run (&key interactive 
                             exhaustive nanalyses
@@ -100,13 +100,12 @@
   ;;
   (let ((start (get-internal-run-time)) stop
         (filterp (member :mrs filter))
-        (semi (when (mt::semi-p mt::%semi%) mt::%semi%))
         tgc tcpu utgc utcpu treal graph solutions)
     (nconc
      (handler-case
          (let* ((*print-pretty* nil) (*print-level* nil) (*print-length* nil)
                 (nfragments 0)
-                readings mrss unknown)
+                readings mrss unknown invalid)
            (tsdb::time-a-funcall
             #'(lambda () (setf graph (parse string trace :ranking t)))
             #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
@@ -138,36 +137,71 @@
                     (list treal (+ tcpu utcpu) (+ tgc utgc)
                           readings
                           (loop
+                              with fragmentp = (fragment-analysis-p graph)
                               with n 
-                              = (if (fragment-analysis-p graph)
+                              = (if fragmentp
                                   tsdb::*tsdb-maximal-number-of-fragments*
                                   (if (<= nresults 0)
                                     readings
                                     (min readings nresults)))
+                              with nunwanted = n
                               for i from 0 
-                              to (if (fragment-analysis-p graph)
-                                   1000
-                                   n)
+                              to (if fragmentp 1000 n)
                               for solution in (nreverse solutions)
                               for derivation =
                                 (extract-c-structure graph solution)
                               for score = (extract-score graph solution)
+                              for warnings = nil
                               for mrs =
-                                (let ((mrs (extract-mrs graph solution))
-                                      (mt::*mrs-comparison-ignore-roles*
-                                       (list (mrs::vsym "LNK"))))
-                                  (when (mrs::psoa-p mrs)
+                                (let* ((mrs (extract-mrs graph solution))
+                                       ;;
+                                       ;; _fix_me_
+                                       ;; i hesitate activating this just now,
+                                       ;; as we are finalizing `fjell'.
+                                       ;;                       (7-dec-06; oe)
+                                       #+:null
+                                       (fishy (mt:test-integrity mrs))
+                                       #-:null
+                                       (fishy nil)
+                                       ;;
+                                       ;; _fix_me_
+                                       ;; it seems clear we cannot tolerate
+                                       ;; transfer ambiguity here, but still we
+                                       ;; should probably check and throw an
+                                       ;; error, should the impossible happen.
+                                       ;;                       (28-sep-06; oe)
+                                       ;;
+                                       (edges (unless fishy
+                                                (mt:transfer-mrs
+                                                 mrs :task :semi :block nil)))
+                                       (edge
+                                        (loop
+                                            for edge in edges
+                                            for mtr = (mt::edge-rule edge)
+                                            for block 
+                                            = (and mtr (mt::mtr-block mtr))
+                                            when (or (null mtr) (null block))
+                                            return edge))
+                                       (mrs (and edge (mt::edge-mrs edge))))
+                                  (when mrs
+                                    (let ((edges
+                                           (mt:transfer-mrs
+                                            mrs :task :filter :block nil)))
+                                      (when edges
+                                        (setf warnings
+                                          (mt::edge-warn (first edges))))))
+                                  (setf invalid (union invalid fishy))
+                                  (when (and (mrs::psoa-p mrs)
+                                             (null invalid))
                                     (unless (and filterp
                                                  (member 
                                                   mrs mrss 
                                                   :test 
                                                   #'tsdb::safe-mrs-equal-p))
-                                      (when (mrs::fragmentp mrs)
+                                      (when (mt:fragmentp mrs)
                                         (incf nfragments))
                                       (let ((errors
-                                             (when semi
-                                               (mt::test-semi-compliance
-                                                mrs semi))))
+                                             (mt:test-semi-compliance mrs)))
                                         (cond
                                          ((null errors)
                                           (push mrs mrss)
@@ -181,28 +215,51 @@
                                                   (mrs::rel-pred error)
                                                   unknown
                                                   :test #'equal))))))))
-                              when mrs do (decf n)
-                              and collect
-                                  (pairlis '(:result-id :derivation :mrs
-                                             :flags) 
-                                           (list i derivation mrs
-                                                 (acons :ascore score nil)))
-                              while (and solution (> n 0))
+                              for flags
+                              = (acons
+                                 :ascore score
+                                 (when warnings
+                                   (acons :warnings (length warnings) nil)))
+                              for result
+                              = (pairlis '(:result-id :derivation :mrs :flags) 
+                                         (list i derivation mrs flags))
+                              when (and mrs (null warnings))
+                              do (decf n) and collect result into results
+                              else when mrs 
+                              do (decf nunwanted) 
+                              and collect result into unwanted
+                              while (and solution (> n 0) (> nunwanted 0))
                               finally
                                 #+:debug
                                 (setf %mrss mrss)
                                 (unless (zerop (solution graph))
                                   (free-graph-solution 
-                                   (graph-address graph))))
+                                   (graph-address graph)))
+                                (return
+                                  (loop
+                                      for i from 0
+                                      for result in (nconc results unwanted)
+                                      collect (acons :result-id i result))))
                           (length mrss) nfragments
                           (format
                            nil
                            "(:nresults . ~d) (:nfragments . ~d)"
                            (length mrss) nfragments)
-                          (format
-                           nil
-                           "~@[unknown SEM-I predicates: ~{|~(~a~)|~^, ~}~]"
-                           unknown))))
+                          (let* ((mrs::*mrs-raw-output-p* nil)
+                                 (invalid
+                                  (when invalid
+                                    (format
+                                     nil
+                                     "invalid MRS elements: ~{|~(~s~)|~^, ~}"
+                                     invalid)))
+                                 (unknown
+                                  (when unknown
+                                    (format
+                                     nil
+                                     "invalid SEM-I predicates: ~
+                                      ~{|~(~s~)|~^, ~}"
+                                     unknown))))
+                            (format nil "~@[~a; ~]~@[~a~]" invalid unknown)))))
 
        (storage-condition (condition)
          (declare (ignore condition))
@@ -215,6 +272,7 @@
           "no known mechanism to shutdown Lisp (see `xle-interface.lisp'"))
 
        (condition (condition)
+         #+:debug (error condition)
          (let* ((error (tsdb::normalize-string 
                         (format nil "~a" condition))))
            (pairlis '(:readings :error)

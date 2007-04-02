@@ -30,14 +30,15 @@
           when (member (rel-pred ep) mt::*semi-token-relations* :test #'equal)
           return t)
       :token)
-     ((fragmentp mrs) :fragment)))
+     ((mt:fragmentp mrs) :fragment)))
 
   (defun determine-ep-class (ep)
     (cond
-     ((member (rel-pred ep) *semi-fragment-relations* :test #'equal)
+     ((member (rel-pred ep) mt::*semi-fragment-relations* :test #'equal)
       :fragment)
      ((member (rel-pred ep) mt::*semi-token-relations* :test #'equal)
       :token)
      ((member (rel-pred ep) mt::*semi-punctuation-relations* :test #'equal)
       :token))))
+
 

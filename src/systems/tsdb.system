@@ -44,6 +44,12 @@
   (pushnew :bdb *features*)
   
   ;;
+  ;; for use in LOGON (on supported platforms), enable use of DRAKMA et al.
+  ;;
+  #+(and :allegro :linux :logon)
+  (pushnew :drakma *features*)
+
+  ;;
   ;; the Alvey Tools package, unfortunately, comes without a unique feature to
   ;; identify it; invent one and hope for integration with future releases.
   ;;                                                      (22-nov-99  -  oe)
@@ -59,6 +65,7 @@
     :binary-pathname (dir-append (get-binaries-dir "tsdb")
 				 '(:relative "tsdb"))
 
+    
     :finally-do
     #+(and :allegro (or :linux (and :sparc :svr4) :alpha :macosx) (not :slave))
     (let ((display (system:getenv "DISPLAY")))
@@ -102,7 +109,15 @@
        (:file "gc")
        #+:bdb
        (:file "bdb")))
-
+     
+     #+:drakma
+     (:module "drakma"
+      :source-pathname %system-binaries%
+      :source-extension "fasl"
+      :load-only t
+      :components
+      ((:file "drakma")))
+     
      (:module "tsdb"
       :source-pathname "lisp"
       :binary-pathname ""

@@ -210,6 +210,54 @@
           (return result))
     string))
 
+(defun xml-escape-string (string)
+  (if (and string (stringp string))
+    (loop
+        with padding
+        = (loop
+              for c across string
+              when (char= c #\&) sum 4
+              else when (or (char= c #\<) (char= c #\>)) sum 3
+              else when (or (char= c #\') (char= c #\")) sum 5)
+        with result = (make-string (+ (length string) padding))
+        with i = -1
+        for c of-type character across (the string string)
+        when (char= c #\&) do
+          (setf (schar result (incf i)) #\&)
+          (setf (schar result (incf i)) #\a)
+          (setf (schar result (incf i)) #\m)
+          (setf (schar result (incf i)) #\p)
+          (setf (schar result (incf i)) #\;)
+        else when (char= c #\<) do
+          (setf (schar result (incf i)) #\&)
+          (setf (schar result (incf i)) #\l)
+          (setf (schar result (incf i)) #\t)
+          (setf (schar result (incf i)) #\;)
+        else when (char= c #\>) do
+          (setf (schar result (incf i)) #\&)
+          (setf (schar result (incf i)) #\g)
+          (setf (schar result (incf i)) #\t)
+          (setf (schar result (incf i)) #\;)
+        else when (char= c #\') do
+          (setf (schar result (incf i)) #\&)
+          (setf (schar result (incf i)) #\a)
+          (setf (schar result (incf i)) #\p)
+          (setf (schar result (incf i)) #\o)
+          (setf (schar result (incf i)) #\s)
+          (setf (schar result (incf i)) #\;)
+        else when (char= c #\") do
+          (setf (schar result (incf i)) #\&)
+          (setf (schar result (incf i)) #\q)
+          (setf (schar result (incf i)) #\u)
+          (setf (schar result (incf i)) #\o)
+          (setf (schar result (incf i)) #\t)
+          (setf (schar result (incf i)) #\;)
+        else do
+          (setf (schar result (incf i)) c)
+        finally
+          (return result))
+    string))
+
 #+:null
 (defun ith-nth (list ith nth)
   (loop
@@ -774,3 +822,57 @@
 (defun list2tcl (list &key format)
   (let ((format (format nil "{~~{~a ~~}}" (or format "~s"))))
     (format nil format list)))
+
+(let ((id 0)
+      #+:allegro
+      (lock (make-process-lock))
+      processes)
+  (labels ((expire ()
+             #+:allegro
+             (with-process-lock (lock)
+                 (let ((now (get-internal-real-time))
+                       (pension (* 1800 internal-time-units-per-second)))
+                   (setf processes
+                     (loop
+                         for process in processes
+                         for properties = (process-property-list process)
+                         for start = (getf properties :start)
+                         when (or (not (integerp start))
+                                  (< now start)
+                                  (> (- now start) pension))
+                         do (ignore-errors (process-kill process))
+                         else collect process))))))
+    (defun background (function &rest arguments)
+      (expire)
+      #+:allegro
+      (let* ((name (format nil "background # ~a" id))
+             (start (get-internal-real-time))
+             (closure #'(lambda ()
+                          (multiple-value-bind (result condition)
+                              (ignore-errors (apply function arguments))
+                            (let ((stop (get-internal-real-time))
+                                  (properties
+                                   (process-property-list *current-process*)))
+                              (setf (getf properties :result) result)
+                              (setf (getf properties :condition) condition)
+                              (setf (getf properties :stop) stop)
+                              (setf (process-property-list *current-process*)
+                                properties)))))
+             (process (run-function name closure)))
+        (setf (getf (mp:process-property-list process) :id) id)
+        (incf id)
+        (setf (getf (mp:process-property-list process) :start) start)
+        (with-process-lock (lock) (push process processes))
+        process))
+
+    (defun background-status (process &key kill wait)
+      (expire)
+      #+:allegro
+      (when (process-p process)
+        (let ((properties (process-property-list process)))
+          (when kill
+            (ignore-errors (process-kill process :wait wait))
+            (with-process-lock (lock)
+              (setf processes (delete process processes))))
+          (values (getf properties :result) (getf properties :condition)))))))
+

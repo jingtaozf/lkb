@@ -48,13 +48,15 @@
 (defun show-generator-input ()
   (when *generator-input*
     #+:mrs
-    (mrs::browse-mrs *generator-input* "Generator Input MRS")))
+    (mrs::browse-mrs
+     *generator-input* "Generator Input MRS" :display :indexed)))
 
 #-:tty
 (defun show-generator-internal-mrs ()
   (when *generator-internal-mrs*
     #+:mrs
-    (mrs::browse-mrs *generator-internal-mrs* "Generator Internal MRS")))
+    (mrs::browse-mrs
+     *generator-internal-mrs* "Generator Internal MRS" :display :indexed)))
 
 #-:tty
 (defun show-gen-edge (&optional id)

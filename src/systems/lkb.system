@@ -254,11 +254,13 @@
       :binary-pathname "glue"
       :components
 	      (#+:lui
-               (:file "dag" )          ; instrumented unifier for LUI use
+               (:file "dag" )         ; instrumented unifier for LUI use
                #+:lsp     
                (:file "lsp")          ; socket-based LKB server mode
                #+:lui
                (:file "lui" )         ; Linguistic User Interface
+               #+:logon
+               (:file "repp" )
                #+:xml
                (:file "sppp")))       ; Simple (XML-base) PreProcessor Protocol
 
@@ -373,7 +375,8 @@
        (:file "mrsoutput")              ; constructing MRS from parse result  
        (:file "mrscorpus")              ; checking equality etc
        (:file "algebra")                ; semantic algebra for composition
-       (:file "interface")))
+       (:file "interface")
+       (:file "lnk")))
 
      ;; following two files needed for scoping - can be excluded
      ;; for generation
@@ -525,7 +528,7 @@
                                         ; currently VM specific
 
      ;;
-     ;; and now for the add-on MT facilities, assuming both the LKB and MRS
+     ;; and now for the add-on MT facilities; assuming both the LKB and MRS
      ;; code are available (the original `mt.system').
      ;;
      (:module "mt"
@@ -540,15 +543,17 @@
        (:file "patches")
        (:file "mrs")
        (:file "vpm")
+       (:file "semi")
        (:file "transfer")
        (:file "comparison")
        #+:multiprocessing
        (:file "translate")
        #+:clim
        (:file "clim")
-       (:file "semi")
        (:file "fragments")
        #+:lm
        (:file "lm")
+       #+:logon
+       (:file "smt")
        #-:sbcl
        (:file "utool")))))

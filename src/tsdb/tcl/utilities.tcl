@@ -927,6 +927,10 @@ proc tsdb_set {variable {value ""}} {
           set value "nil";
         }; # else
       }
+      exclude_illformed_items_p {
+        set variable "*statistics-exclude-illformed-items-p*";
+        set value [lispify_truth_value $globals(exclude_illformed_items_p)];
+      }
       analogy_aggregation_p {
         set variable "*statistics-analogy-aggregation-p*";
         set value [lispify_truth_value $globals(analogy_aggregation_p)];

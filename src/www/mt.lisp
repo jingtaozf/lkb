@@ -7,29 +7,33 @@
 
 (in-package :www)
 
-(defparameter *www-port* 8008)
+(defparameter *www-port* 8010)
 
 (defparameter *www-log* (format nil "www.log.~a" (tsdb::current-user)))
 
 (defparameter *www-interrupt* nil)
 
-(defparameter *www-lkb-css*
+(defparameter *www-logon-css*
   (make-pathname
    :directory (pathname-directory 
                (dir-append (get-sources-dir "www") '(:relative "www")))
-   :name "lkb.css"))
+   :name "logon.css"))
 
-(defparameter *www-lkb-js*
+(defparameter *www-logon-js*
   (make-pathname
    :directory (pathname-directory 
                (dir-append (get-sources-dir "www") '(:relative "www")))
-   :name "lkb.js"))
+   :name "logon.js"))
 
 (defparameter *www-alttxt-js*
   (make-pathname
    :directory (pathname-directory 
                (dir-append (get-sources-dir "www") '(:relative "www")))
    :name "alttxt.js"))
+
+(defparameter *www-scriptaculous-js*
+  '("builder" "controls" "dragdrop" "effects" "prototype"
+    "scriptaculous" "slider"))
 
 (defparameter *www-introduction*
   (make-pathname
@@ -55,6 +59,18 @@
                (dir-append (get-sources-dir "www") '(:relative "rmrs")))
    :name "rmrs.dtd"))
 
+(defparameter *www-pharaoh-url*
+  "http://www.isi.edu/publications/licensed-sw/pharaoh/")
+
+(defparameter *www-oa-url*
+  "http://babel.hf.ntnu.no/babelcgi/translate/translate.cgi")
+
+(defparameter *www-visl-url*
+  "http://visl.dk/trs/?pair=nor-en")
+
+(defparameter *www-it-url*
+  "http://www.tranexp.com:2000/Translate/result.shtml")
+
 (defparameter *www-maximal-number-of-edges* 20000)
 
 (defparameter *www-maximal-number-of-results* 5)
@@ -69,9 +85,14 @@
 
 (defparameter *logon-authorizer*
   (make-instance 'password-authorizer
-    :allowed '(("oe" . "1koelsch")
-               ("logon" . "dal"))
-    :realm "LOGON On-Line Demonstrator (Version 0.8)"))
+    :allowed '(("logon" . "fjell"))
+    :realm "LOGON On-Line Demonstrator (Version 1.0)"))
+
+(defvar %request% nil)
+
+(defvar %entity% nil)
+
+(defvar %item% nil)
 
 (defun initialize (&key (port *www-port*) pattern)
   (let ((interrupt (format 
@@ -115,8 +136,8 @@
       (sleep 10)
       (start :port port :external-format (excl:crlf-base-ef :utf-8))))
     
-  (publish-file :path "/lkb.css" :file *www-lkb-css*)
-  (publish-file :path "/lkb.js" :file *www-lkb-js*)
+  (publish-file :path "/logon.css" :file *www-logon-css*)
+  (publish-file :path "/logon.js" :file *www-logon-js*)
   (publish-file :path "/alttxt.js" :file *www-alttxt-js*)
   (publish-file :path "/icon.gif" :file *www-icon*)
   (publish-file :path "/1x20.jpg" :file *www-1x20*)
@@ -126,11 +147,24 @@
    :content-type "text/html"
    :function #'(lambda (request entity) (www-compare request entity)))
 
+  (publish :path "/fetch"
+   :content-type "text/html"
+   :function #'(lambda (request entity) (www-fetch request entity)))
+
+  (loop
+      for name in *www-scriptaculous-js*
+      for file
+      = (make-pathname
+         :directory (pathname-directory 
+                     (dir-append (get-sources-dir "www") '(:relative "www")))
+         :name name :type "js")
+      when (probe-file file)
+      do (publish-file :path (format nil "/~a.js" name) :file file))
+        
   (cond
    ((null pattern)
     (publish :path "/logon"
      :content-type "text/html"
-     :authorizer *logon-authorizer*
      :function #'(lambda (request entity) (www-logon request entity)))
     (publish :path "/browse"
       :content-type "text/html"
@@ -148,7 +182,6 @@
       :function #'(lambda (request entity) (www-itsdb request entity))))))
 
 (defun www-logon (request entity)
-  #+:debug
   (setf %request% request %entity% entity)
   (let* ((method (request-method request))
          (body (when (eq method :post) (get-request-body request)))
@@ -167,9 +200,10 @@
                    (if (stringp output)
                      (equal output "mrs")
                      (member "mrs" output :test #'equal))))
-         (nresults (lookup-form-value "nresults" query))
+         (nresults (or (lookup-form-value "nresults" query) "5"))
          (*www-maximal-number-of-results*
           (cond
+           ((equal nresults "1") 1)
            ((equal nresults "5") 5)
            ((equal nresults "10") 10)
            ((equal nresults "50") 50)
@@ -193,6 +227,7 @@
                  (t
                   "LOGON On-Line Demonstrator")))
                ((:body :onload "messenger()")
+                :newline
                 (:center
                  (unless (eq method :post)
                    (www-output *www-introduction* :stream *html-stream*))
@@ -201,21 +236,25 @@
                    :onsubmit "submitter('main')"
                    :accept-charset "utf-8" :target "_self")
                   :newline
-                  ((:input :type "reset" :value "Reset"))
+                  ((:input :type "button"  :class "bright" :value "Sample"
+                    :onclick "showSample('main', 'input');"))
+                  "&nbsp;"
+                  ((:input :type "button"  :class "bright" :value "Reset"
+                    :onclick "clearElement('main', 'input');"))
                   "&nbsp;"
                   ((:input
-                    :type "text" :name "input"
+                    :type "text" :name "input" :class "bright"
                     :value (or input "") :size "80"))
                   "&nbsp;"
                   ((:input 
-                    :type "submit" :name "task" :id "analyze"
+                    :type "submit" :name "task" :class "bright" :id "analyze"
                     :value "Analyze" :disabled '||'
-                    :onclick "setTarget('main', '_self')"))
+                    :onclick "setTarget('main', '_self');"))
                   "&nbsp;"
                   ((:input 
-                    :type "submit" :name "task" :id "translate"
+                    :type "submit" :name "task" :class "bright" :id "translate"
                     :value "Translate" :disabled '||'
-                    :onclick "setTarget('main', '_self')"))
+                    :onclick "setTarget('main', '_self');"))
                   :br :newline
                   ((:table :border 0 :cellspacing 0)
                    (:tr
@@ -247,9 +286,14 @@
                      "&nbsp;&nbsp;|&nbsp;&nbsp;show&nbsp;")
                     ((:td :class "buttons")
                      ((:select :size 1 :name "nresults")
-                      ((:option :value "5" :selected '||) "5")
-                      ((:option :value "10") "10")
-                      ((:option :value "50") "50")
+                      ((:option :value "1"
+                        :if* (equal nresults "1") :selected '||) "1")
+                      ((:option :value "5"
+                        :if* (equal nresults "5") :selected '||) "5")
+                      ((:option :value "10"
+                        :if* (equal nresults "10") :selected '||) "10")
+                      ((:option :value "50"
+                        :if* (equal nresults "50") :selected '||) "50")
                       ((:option :value "100") "100")
                       ((:option :value "500") "500")
                       ((:option :value "all") "all")))
@@ -267,8 +311,6 @@
                  (t
                   (www-version *html-stream*))))))))))
 
-(defvar %item% nil)
-
 (defun www-parse (input &key exhaustivep treep mrsp request stream)
 
   (let* ((item (pairlis '(:i-id :parse-id :i-input 
@@ -283,15 +325,16 @@
              item :parse 
              :exhaustive exhaustivep
              :nanalyses nanalyses :nresults nresults)))
-         (readings (tsdb::get-field :readings item))
+         (readings (tsdb:get-field :readings item))
          (nresults (or *www-maximal-number-of-results* readings))
-         (time (tsdb::get-field :tcpu item))
+         (time (tsdb:get-field :tcpu item))
          (time (and (numberp time) (/ time 1000)))
-         (pedges (tsdb::get-field :pedges item))
-         (results (tsdb::get-field :results item))
+         (pedges (tsdb:get-field :pedges item))
+         (results (tsdb:get-field :results item))
          (unique (length results))
-         (error (tsdb::get-field :error item))
-         (error (unless (and (numberp readings) (> readings 0))
+         (rawp nil)
+         (error (tsdb:get-field :error item))
+         (error (unless (and (numberp readings) (> readings 0) results)
                   (or
                    (loop
                        with end = 0 
@@ -309,6 +352,9 @@
                             result
                             :test #'equal))
                        finally (return (nreverse result)))
+                   (when (search "invalid SEM-I predicates" error)
+                     (setf rawp t)
+                     error)
                    (when (search "no lexicon entries for" error)
                      (loop
                          with end = 0 with start = end 
@@ -362,6 +408,7 @@
       (loop
           with tsdb::*reconstruct-cache* = (make-hash-table :test #'eql)
           with mrs::*mrs-relations-per-row* = 5
+          with mrs::*lnkp* = :characters
           initially
             (format 
              stream 
@@ -370,16 +417,17 @@
               <input type=hidden name=item value=~a>~%  ~
               <input type=hidden name=results value=~a>~%  ~
               <div id=action>~%  ~
-              <input type=submit name=action value=compare>~%  ~
+              <input type=submit name=action ~
+                class=\"bright\" value=compare>~%  ~
               <select name=set size=1>~%    ~
               <option value=all>all analyses</option>~%    ~
               <option value=active selected>selection</option>~%    ~
               </select>~%  ~
               &nbsp;&nbsp;|&nbsp;&nbsp;~%  ~
               &nbsp;&nbsp;|&nbsp;&nbsp;~%  ~
-              <input type=submit name=action value=transfer ~
+              <input type=submit name=action class=\"bright\" value=transfer ~
                      onclick=\"setTarget('main', 'transfer')\">~%  ~
-              <input type=submit name=action value=generate ~
+              <input type=submit name=action class=\"bright\" value=generate ~
                      onclick=\"setTarget('main', 'generate')\">~%  ~
               <input type=submit name=action value=avm disabled>&nbsp;~%  ~
               <input type=submit name=action value=scope disabled>&nbsp;~%  ~
@@ -388,10 +436,10 @@
           finally (format stream "</table></form>~%")
           for i from 0
           for result in results
-          for derivation = (tsdb::get-field :derivation result)
-          for mrs = (mrs::read-mrs-from-string (tsdb::get-field :mrs result))
+          for derivation = (tsdb:get-field :derivation result)
+          for mrs = (mrs::read-mrs-from-string (tsdb:get-field :mrs result))
           for edge = (when (or treep (and mrsp (null mrs)))
-                       (or (tsdb::get-field :edge result)
+                       (or (tsdb:get-field :edge result)
                            (when derivation 
                              (let ((edge (tsdb::reconstruct derivation)))
                                (setf (lkb::edge-mrs edge) mrs)
@@ -417,7 +465,7 @@
           when (and mrsp (or mrs edge)) do
             (format stream "<td class=resultsMrs>~%")
             (mrs::output-mrs1 
-             (or mrs (mrs::extract-mrs edge))'mrs::html stream i)
+             (or mrs (mrs::extract-mrs edge)) 'mrs::html stream i)
             (format stream "</td>~%")
           do (format stream "</tr>")))
      ((or (null error) (equal error ""))
@@ -443,6 +491,11 @@
         The following input tokens were not found in the lexicon: ~
         ~{&lsquo;~(~a~)&rsquo;~^ ~}.~%</div>~%"
        error))
+     ((and rawp (stringp error))
+      (format
+       stream
+       "<div id=error>~a.~%</div>~%"
+       (string-right-trim '(#\. #\? #\!) error)))
      (t
       (format
        stream 
@@ -457,10 +510,30 @@
 
   (format stream "<center>~%")
   (let* ((n (if exhaustivep *www-maximal-number-of-results* 1))
-         (result (setf %item%
-                   (tsdb::translate-string 
-                    input :stream stream :format :html :nhypotheses n
-                    :index %www-object-counter%))))
+         (smt (tsdb::background #'tsdb::www-translate-item input :engine :smt))
+         (oa (tsdb::background #'tsdb::www-translate-item input :engine :oa))
+         (visl
+          (tsdb::background #'tsdb::www-translate-item input :engine :visl))
+         (it (tsdb::background #'tsdb::www-translate-item input :engine :it))
+         result)
+    ;;
+    ;; to give the background threads the opportunity to send out all requests
+    ;;
+    (sleep 0.1)
+
+    ;;
+    ;; _fix_me_
+    ;; we should possibly use translate-item() instead, if only to have correct
+    ;; statistics available for logging below.  however, then (by default) the
+    ;; individual results would no longer be available, i.e. we might have to
+    ;; require that translate-string() does the object storage already (which
+    ;; would eliminate the potential for id mismatches).        (10-mar-07; oe)
+    ;;                                                      
+    (setf result
+      (setf %item%
+        (tsdb::translate-string 
+         input :stream stream :format :html :nhypotheses n
+         :index %www-object-counter%)))
     ;;
     ;; at this point, we rely on translate-string() to have arranged for items
     ;; to be rendered with anchors using object ids in the order corresponding
@@ -468,48 +541,118 @@
     ;; serves to increase modularity, i.e. spare translate-string() from having
     ;; to do the actual object storage.
     ;;
-    (let* ((www (tsdb::get-field :www result))
-           (id (and (numberp www)(www-store-object nil result))))
+    (let* ((www (tsdb:get-field :www result))
+           (id (and (numberp www) (www-store-object nil result)))
+           (time (tsdb:get-field :total result)))
       (unless (= www id)
         (www-warn 
          request
          (format 
           nil
           "www-translate(): object id mismatch (~a != ~a)"
-          www id))))
-    (loop
-        for transfer in (tsdb::get-field :transfers result)
-        for www = (tsdb::get-field :www transfer)
-        for id = (and (numberp www)(www-store-object nil transfer))
-        for realizations = (tsdb::get-field :realizations transfer)
-        unless (= www id) do
-          (www-warn 
-           request
-           (format 
-            nil
-            "www-translate(): object id mismatch (~a != ~a)"
-            www id))
-        do
-          (loop
-              for realization in realizations
-              for www = (tsdb::get-field :www realization)
-              for id = (and (numberp www) (www-store-object nil realization))
-              unless (= www id) do
-                (www-warn 
-                 request
-                 (format 
-                  nil
-                  "www-translate(): object id mismatch (~a != ~a)"
-                  www id))))
+          www id)))
+      (loop
+          for transfer in (tsdb:get-field :transfers result)
+          for www = (tsdb:get-field :www transfer)
+          for id = (and (numberp www)(www-store-object nil transfer))
+          for realizations = (tsdb:get-field :realizations transfer)
+          unless (= www id) do
+            (www-warn 
+             request
+             (format 
+              nil
+              "www-translate(): object id mismatch (~a != ~a)"
+              www id))
+          do
+            (loop
+                for realization in realizations
+                for www = (tsdb:get-field :www realization)
+                for id = (and (numberp www) (www-store-object nil realization))
+                unless (= www id) do
+                  (www-warn 
+                   request
+                   (format 
+                    nil
+                    "www-translate(): object id mismatch (~a != ~a)"
+                    www id))
+                do
+                  (incf time (tsdb:get-field :total realization)))
+            (incf time (or (tsdb:get-field :total transfer) 0)))
     
-    (when request 
-      #+:null
-      (www-log request input readings time pedges error))
+      (when request
+        (let ((readings (length (tsdb:get-field :translations result)))
+              (error (tsdb:get-field :error result)))
+          (www-log request input readings time -1 error))))
+    
+    (sleep 0.1)
+    (let* ((sresults (tsdb:get-field :results (tsdb::background-status smt)))
+           (soutput (tsdb:get-field :surface (first sresults)))
+           (oresults (tsdb:get-field :results (tsdb::background-status oa)))
+           (ooutput (tsdb:get-field :surface (first oresults)))
+           (vresults (tsdb:get-field :results (tsdb::background-status visl)))
+           (voutput (tsdb:get-field :surface (first vresults)))
+           (iresults (tsdb:get-field :results (tsdb::background-status it)))
+           (ioutput (tsdb:get-field :surface (first iresults))))
+      (format stream "<table class=\"comparison\">~%")
+      (format 
+       stream 
+       "<tr><th>Other Translations (Scraped off the Internet)</th></tr>~%")
+      (format
+       stream
+       "<tr class=\"comparison\">~
+          <td><div id=\"smt\" ~
+                onMouseOver=\"post('smt');\" onMouseOut=\"unpost();\">~
+                <a href=\"~a\" target=\"_blank\">~a</a></div></td></tr>~%"
+       *www-pharaoh-url* (or soutput "&nbsp;"))
+      (format
+       stream
+       "<tr class=\"comparison\">~
+          <td><div id=\"oa\" ~
+                onMouseOver=\"post('oa');\" onMouseOut=\"unpost();\">~
+                <a href=\"~a\" target=\"_blank\">~a</a></div></td></tr>~%"
+       *www-oa-url* (or ooutput "&nbsp;"))
+      (format
+       stream
+       "<tr class=\"comparison\">~
+          <td><div id=\"visl\" ~
+              onMouseOver=\"post('visl');\" onMouseOut=\"unpost();\">~
+              <a href=\"~a\" target=\"_blank\">~a</a></div></td></tr>~%"
+       *www-visl-url* (or voutput "&nbsp;"))
+      (format
+       stream
+       "<tr class=\"comparison\">~
+          <td><div id=\"it\" ~
+                onMouseOver=\"post('it')\" onMouseOut=\"unpost();\">~
+                <a href=\"~a\" target=\"_blank\">~a</a></div></td></tr>~%"
+       *www-it-url* (or ioutput "&nbsp;"))
+      (format stream "<script>~%  var pending = Array();~%")
+      (unless soutput
+        (format
+         stream
+         "  pending['smt'] = ~d;~%"
+         (www-store-object nil smt)))
+      (unless ooutput
+        (format
+         stream
+         "  pending['oa'] = ~d;~%"
+         (www-store-object nil oa)))
+      (unless voutput
+        (format
+         stream
+         "  pending['visl'] = ~d;~%"
+         (www-store-object nil visl)))
+      (unless ioutput
+        (format
+         stream
+         "  pending['it'] = ~d;~%"
+         (www-store-object nil it)))
+      (format stream "</script>~%")
+      (format stream "</table>~%"))
+       
     (format stream "</center>~%")
     (www-version stream)))
 
 (defun www-browse (request entity &key results)
-  #+:debug
   (setf %request% request %entity% entity)
   (let* ((method (request-method request))
          (body (when (eq method :post) (get-request-body request)))
@@ -563,7 +706,6 @@
       (www-process request entity :results results :type :generate)))))
 
 (defun www-process (request entity &key type results (wait 5))
-  #+:debug
   (setf %request% request %entity% entity)
   (let* ((method (request-method request))
          (body (when (eq method :post) (get-request-body request)))
@@ -585,7 +727,7 @@
          (results (www-retrieve-object nil results))
          (results (stable-sort 
                    results #'< 
-                   :key #'(lambda (foo) (tsdb::get-field :result-id foo))))
+                   :key #'(lambda (foo) (tsdb:get-field :result-id foo))))
          (item (acons 
                 :ranks
                 (loop
@@ -596,6 +738,7 @@
          (nresults (lookup-form-value "nresults" query))
          (nresults
           (cond
+           ((equal nresults "1") 1)
            ((equal nresults "5") 5)
            ((equal nresults "10") 10)
            ((equal nresults "50") 50)
@@ -603,15 +746,18 @@
            ((equal nresults "500") 500)
            ((equal nresults "all") nil)
            (t *www-maximal-number-of-results*)))
-         (item (setf %item% (tsdb::pvm-process item type :wait wait)))
-         (readings (tsdb::get-field :readings item))
-         (time (tsdb::get-field :tcpu item))
+         (hook (and (eq type :generate) "mrs::get-mrs-string"))
+         (item 
+          (setf %item% 
+            (tsdb::pvm-process item type :wait wait :semantix-hook hook)))
+         (readings (tsdb:get-field :readings item))
+         (time (tsdb:get-field :tcpu item))
          (time (and (numberp time) (/ time 1000)))
-         (pedges (tsdb::get-field :pedges item))
-         (results (tsdb::get-field :results item))
+         (pedges (tsdb:get-field :pedges item))
+         (results (tsdb:get-field :results item))
          (rawp nil)
-         (error (tsdb::get-field :error item))
-         (error (unless (and (numberp readings) (> readings 0))
+         (error (tsdb:get-field :error item))
+         (error (unless (and (numberp readings) (> readings 0) results)
                   (or
                    (loop
                        with end = 0 
@@ -646,7 +792,9 @@
                               result
                               :test #'equal))
                          finally (return (nreverse result))))
-                   (when (or (search "invalid predicates" error)
+                   (when (or (search "invalid SEM-I predicates" error)
+                             (search "invalid transfer predicates" error)
+                             (search "invalid predicates" error)
                              (search "unknown input relation" error))
                      (setf rawp t)
                      error)
@@ -667,7 +815,7 @@
                    error))))
     (when request 
       (www-log 
-       request (tsdb::get-field :i-input item) readings time pedges error))
+       request (tsdb:get-field :i-input item) readings time pedges error))
 
     (with-http-response (request entity)
       (with-http-body (request entity
@@ -711,13 +859,15 @@
                         with tsdb::*reconstruct-cache* 
                         = (make-hash-table :test #'eql)
                         with mrs::*mrs-relations-per-row* = 5
+                        with mrs::*lnkp* = :characters
                         initially
                           (format 
                            *html-stream* 
                            "<input type=hidden name=item value=~a>~%  ~
                             <input type=hidden name=results value=~a>~%  ~
                             <div id=action>~%  ~
-                            <input type=button name=close value=close ~
+                            <input type=button name=\"close\" ~
+                                   class=\"bright\" value=\"close\"
                                    onClick='window.close()'>&nbsp;&nbsp;~
                             <input type=submit name=action value=compare ~
                                    disabled>~%  ~
@@ -727,19 +877,19 @@
                                       selected>selection</option>~%    ~
                             </select>~%  ~
                             &nbsp;&nbsp;|&nbsp;&nbsp;~%  ~
-                            <input type=submit name=action ~
+                            <input type=submit name=\"action\" ~
                                    onclick=\"setTarget('main', 'transfer')\" ~
-                                   value=transfer>~%   ~
-                            <input type=submit name=action ~
+                                   value=\"transfer\">~%   ~
+                            <input type=submit name=\"action\" ~
                                    onclick=\"setTarget('main', 'generate')\" ~
-                                   value=generate>~%  ~
-                            ~@[~*<input type=submit name=action value=avm ~
-                                        disabled>&nbsp;~%  ~]~
-                            <input type=submit name=action value=scope ~
-                                   disabled>&nbsp;~%  ~
+                                   value=\"generate\">~%  ~
+                            ~@[~*<input type=submit name=\"action\" ~
+                                        value=\"avm\" disabled>&nbsp;~%  ~]~
+                            <input type=submit name=\"action\" ~
+                                   value=\"scope\" disabled>&nbsp;~%  ~
                             &nbsp;&nbsp;|&nbsp;&nbsp;show&nbsp;~%~
                             <select size=1 name=nresults>~
-                              <option value=\"5\" selected>10</option>~
+                              <option value=\"5\" selected>5</option>~
                               <option value=\"10\">10</option>~
                               <option value=\"50\">50</option>~
                               <option value=\"100\">100</option>~
@@ -757,9 +907,9 @@
                             (loop
                                 for i from 0
                                 for result in results
-                                for tree = (tsdb::get-field :tree result)
+                                for tree = (tsdb:get-field :tree result)
                                 for class = (determine-string-class tree)
-                                for score = (tsdb::get-field :score result)
+                                for score = (tsdb:get-field :score result)
                                 when (stringp tree) do
                                   (format
                                    *html-stream*
@@ -778,13 +928,13 @@
                         finally (format *html-stream* "</table></form>~%")
                         for i from 0
                         for result in results
-                        for derivation = (tsdb::get-field :derivation result)
+                        for derivation = (tsdb:get-field :derivation result)
                         for mrs = (mrs::read-mrs-from-string 
-                                   (tsdb::get-field :mrs result))
-                        for edge = (or (tsdb::get-field :edge result)
+                                   (tsdb:get-field :mrs result))
+                        for edge = (or (tsdb:get-field :edge result)
                                        (and derivation 
                                             (tsdb::reconstruct derivation)))
-                        for tree = (tsdb::get-field :tree result)
+                        for tree = (tsdb:get-field :tree result)
                         while (< i nresults) 
                         do (when edge (nconc result (acons :edge edge nil)))
                         when (or mrs edge (and tree (eq type :transfer))) do
@@ -874,7 +1024,6 @@
                   (www-version *html-stream*)))))))))))
 
 (defun www-view (request entity &key type item nresults)
-  #+:debug
   (setf %request% request %entity% entity)
   (let* ((method (request-method request))
          (body (when (eq method :post) (get-request-body request)))
@@ -891,6 +1040,7 @@
          (nresults (or nresults (lookup-form-value "nresults" query)))
          (nresults
           (cond
+           ((equal nresults "1") 1)
            ((equal nresults "5") 5)
            ((equal nresults "10") 10)
            ((equal nresults "50") 50)
@@ -901,16 +1051,16 @@
          (type (or type
                    (cond
                     ((null item) :unknown)
-                    ((tsdb::get-field :transfers item) :parse)
-                    ((tsdb::get-field :realizations item) :transfer)
+                    ((tsdb:get-field :transfers item) :parse)
+                    ((tsdb:get-field :realizations item) :transfer)
                     (t :generate))))
-         (readings (tsdb::get-field :readings item))
-         (time (tsdb::get-field :tcpu item))
+         (readings (tsdb:get-field :readings item))
+         (time (tsdb:get-field :tcpu item))
          (time (and (numberp time) (/ time 1000)))
-         (pedges (tsdb::get-field :pedges item))
-         (results (tsdb::get-field :results item))
+         (pedges (tsdb:get-field :pedges item))
+         (results (tsdb:get-field :results item))
          (rawp nil)
-         (error (tsdb::get-field :error item))
+         (error (tsdb:get-field :error item))
          (error (unless (and (numberp readings) (> readings 0))
                   (or
                    (loop
@@ -946,7 +1096,9 @@
                               result
                               :test #'equal))
                          finally (return (nreverse result))))
-                   (when (or (search "invalid predicates" error)
+                   (when (or (search "invalid SEM-I predicates" error)
+                             (search "invalid transfer predicates" error)
+                             (search "invalid predicates" error)
                              (search "unknown input relation" error))
                      (setf rawp t)
                      error)
@@ -967,7 +1119,7 @@
                    error))))
     (when request 
       (www-log 
-       request (tsdb::get-field :i-input item) readings time pedges error))
+       request (tsdb:get-field :i-input item) readings time pedges error))
 
     (with-http-response (request entity)
       (with-http-body (request entity
@@ -1048,7 +1200,7 @@
                                    disabled>&nbsp;~%  ~
                             &nbsp;&nbsp;|&nbsp;&nbsp;show&nbsp;~%~
                             <select size=1 name=nresults>~
-                              <option value=\"5\" selected>10</option>~
+                              <option value=\"5\" selected>5</option>~
                               <option value=\"10\">10</option>~
                               <option value=\"50\">50</option>~
                               <option value=\"100\">100</option>~
@@ -1066,9 +1218,9 @@
                             (loop
                                 for i from 0
                                 for result in results
-                                for tree = (tsdb::get-field :tree result)
+                                for tree = (tsdb:get-field :tree result)
                                 for class = (determine-string-class tree)
-                                for score = (tsdb::get-field :score result)
+                                for score = (tsdb:get-field :score result)
                                 when (stringp tree) do
                                   (format
                                    *html-stream*
@@ -1087,13 +1239,13 @@
                         finally (format *html-stream* "</table></form>~%")
                         for i from 0
                         for result in results
-                        for derivation = (tsdb::get-field :derivation result)
+                        for derivation = (tsdb:get-field :derivation result)
                         for mrs = (mrs::read-mrs-from-string 
-                                   (tsdb::get-field :mrs result))
-                        for edge = (or (tsdb::get-field :edge result)
+                                   (tsdb:get-field :mrs result))
+                        for edge = (or (tsdb:get-field :edge result)
                                        (and derivation 
                                             (tsdb::reconstruct derivation)))
-                        for tree = (tsdb::get-field :tree result)
+                        for tree = (tsdb:get-field :tree result)
                         while (< i nresults) 
                         do (when edge (nconc result (acons :edge edge nil)))
                         when (or mrs edge (and tree (eq type :transfer))) do
@@ -1188,7 +1340,6 @@
    ((search "|| " string) :fragment)))
 
 (defun www-compare (request entity &key data results)
-  #+:debug
   (setf %request% request %entity% entity)
   (let* ((method (request-method request))
          (body (when (eq method :post) (get-request-body request)))
@@ -1239,10 +1390,10 @@
              (tsdb::*reconstruct-cache* (make-hash-table :test #'eql))
              (edges (loop
                         for result in results
-                        for derivation = (tsdb::get-field :derivation result)
-                        for mrs = (let ((mrs (tsdb::get-field :mrs result)))
+                        for derivation = (tsdb:get-field :derivation result)
+                        for mrs = (let ((mrs (tsdb:get-field :mrs result)))
                                     (mrs::read-mrs-from-string mrs))
-                        for edge = (or (tsdb::get-field :edge result)
+                        for edge = (or (tsdb:get-field :edge result)
                                        (let ((edge
                                               (if derivation
                                                 (tsdb::reconstruct derivation)
@@ -1392,8 +1543,27 @@
                     (lkb::html-compare frame :stream *html-stream*))
                   (www-version *html-stream*))))))))))
 
-(defun www-podium (request entity &key pattern)
+(defun www-fetch (request entity)
   #+:debug
+  (setf %request% request %entity% entity)
+  (let* ((method (request-method request))
+         (body (when (eq method :post) (get-request-body request)))
+         (query (and body (form-urlencoded-to-query body)))
+         (id (if query 
+               (lookup-form-value "id" query)
+               (request-query-value "id" request :post nil)))
+         (id (when (stringp id) (ignore-errors (parse-integer id))))
+         (object (when id (www-retrieve-object nil id)))
+         (value (tsdb::background-status object))
+         (value
+          (tsdb:get-field :surface (first (tsdb:get-field :results value)))))
+
+    (with-http-response (request entity :content-type "text/plain")
+      (with-http-body (request entity
+                       :external-format (excl:crlf-base-ef :utf-8))
+        (html (when value (format *html-stream* value)))))))
+
+(defun www-podium (request entity &key pattern)
   (setf %request% request %entity% entity)
   (let* ((method (request-method request))
          (body (when (eq method :post) (get-request-body request)))
@@ -1440,7 +1610,6 @@
                  (www-version *html-stream*)))))))))
 
 (defun www-itsdb (request entity)
-  #+:debug
   (setf %request% request %entity% entity)
   (let* ((method (request-method request))
          (body (when (eq method :post) (get-request-body request)))
@@ -1482,14 +1651,28 @@
            :newline
            ((:link
              :type "text/css" :rel "stylesheet"
-             :href "/lkb.css"))
+             :href "/logon.css"))
            :newline
            ((:link
              :type "image/gif" :rel "icon"
              :href "/icon.gif"))
            :newline
+           #+:null
+           (format
+            *html-stream*
+            "<!-- W3C standards ompliance patch for MicroSoft browsers -->~%  ~
+               <!--[if lt IE 7]>~
+               <script src=\"ms.js\" type=\"text/javascript\">~
+               <script>~
+             <![endif]-->~%")
            ((:script
-             :src "/lkb.js" :language "javascript" 
+             :src "/logon.js" :language "javascript" 
+             :type "text/javascript"))
+           ((:script
+             :src "/prototype.js" :language "javascript" 
+             :type "text/javascript"))
+           ((:script
+             :src "/scriptaculous.js" :language "javascript" 
              :type "text/javascript"))
            :newline
            ((:script
@@ -1532,15 +1715,18 @@
     (mp:with-process-lock (lock)
       (with-open-file (stream *www-log* :direction :output
                        :if-does-not-exist :create :if-exists :append)
-        (let* ((socket (request-socket request))
-               (address (socket:remote-host socket))
+        (let* ((headers (net.aserve::request-headers request))
+               (forwarded (rest (assoc :x-forwarded-for headers)))
+               (socket (request-socket request))
+               (address (or forwarded (socket:remote-host socket)))
                (host (socket:ipaddr-to-hostname address)))
           (format
            stream
            "[~a] www-log(): [~a] `~a' --- ~a~@[ (~,2f)~]~@[ <~a>~]~
             ~@[ error: `~(~a~)'~].~%"
            (tsdb::current-time :long :pretty) 
-           (or host address) input readings time edges error)))))
+           (or host address) input readings time edges
+           (unless (equal error "") error))))))
   (defun www-warn (request string)
     (mp:with-process-lock (lock)
       (with-open-file (stream *www-log* :direction :output

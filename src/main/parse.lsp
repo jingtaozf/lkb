@@ -105,6 +105,28 @@
 ;;; this is specialised for the active parser (see active.lsp)
 ;;; begin is a vertex - edge is an edge 
 
+
+;;;
+;;; globally keep track of _all_ edges; the registry needs to be reset whenever
+;;; we start a new context of computation, e.g. a top-level call to the parser
+;;; or generator.
+;;; _fix_me_
+;;; it would be tempting to encapsulate more information in the registry, i.e.
+;;; the running counter(s) for edges of various types.           (8-dec-06; oe)
+;;;
+(defparameter *edge-registry* (make-hash-table))
+
+(defun purge-edge-registry ()
+  (clrhash *edge-registry*))
+
+(defun register-edge (edge)
+  (setf (gethash (edge-id edge) *edge-registry*) edge))
+
+(defun retrieve-edge (&key id)
+  (when (numberp id)
+    (gethash id *edge-registry*)))
+
+
 ;;; an edge is a structure
 ;;; it has the following properties:
 ;;; id - unique
@@ -132,16 +154,23 @@
 ;;;          because it could be recovered from cfrom and cto
 ;;;          but useful to keep it locally
 ;;; mrs - generation etc
+;;; 
+;;; `flags', `foo,' `bar', and `baz' are junk slots for various pieces of code
+;;; (e.g. the Redwoods annotation tool and PCFG estimation) to use at their
+;;; discretion.                                                (28-oct-02; oe)
 ;;;
-;;; `foo,' `bar', and `baz' are junk slots for various pieces of code (e.g. the
-;;; Redwoods annotation tool and PCFG estimation) to use at their discretion.
-;;;                                                           (28-oct-02; oe)
 ;;; packed 
 ;;; equivalent 
 ;;; frozen 
 ;;; adjuncts 
 ;;; unpacking
-
+;;;
+;;; _note_
+;;; as of december 2006, some of the derived structures (viz. `dotted-edge' and
+;;; `g-edge' further down in this file) have custom constructors too, hence it
+;;; is important to propagate any changes to `edge' slots and arguments to its
+;;; constructor into those structure definitions too.          (22-dec-06; oe)
+;;;
 (defstruct
    (edge
       (:constructor make-edge-x
@@ -156,6 +185,11 @@
                           (to (when (edge-p (first (last children)))
                                 (edge-to (first (last children)))))
                           label head
+                          (lnk (let ((first (first children))
+                                     (last (first (last children))))
+                                 (when (and (edge-p first) (edge-p last))
+                                   (mrs::combine-lnks
+                                    (edge-lnk first) (edge-lnk last)))))
 			  (cfrom (if (edge-p (first children))
 				     (edge-cfrom (first children))
 				   -1))
@@ -163,11 +197,11 @@
 				   (edge-cto (first (last children)))
 				 -1))
                           string mrs
-                          foo bar baz
+                          flags foo bar baz
                           packed equivalent frozen adjuncts unpacking)))
    id score category rule dag odag dag-restricted leaves lex-ids
    parents children tchildren orth-tdfs partial-tree from to label head
-   cfrom cto string mrs foo bar baz
+   lnk cfrom cto string mrs flags foo bar baz
    packed equivalent frozen adjuncts unpacking)
 
 (defstruct (token-edge (:include edge))
@@ -177,7 +211,7 @@
   word stem current l-content) 
 
 (defun make-edge (&rest rest)
-  (apply #'make-edge-x rest))
+  (register-edge (apply #'make-edge-x rest)))
 
 (defmethod print-object ((instance chart-configuration) stream)
   (format stream "[~S ~S]" (chart-configuration-edge instance)
@@ -197,6 +231,16 @@
    (loop 
        for child in (edge-children instance)
        collect (if (edge-p child) (edge-id child) "_")))
+  (when (or (edge-packed instance) (edge-equivalent instance))
+    (format
+     stream
+     " {~{~a~^ ~}}"
+     (loop
+         for edge in (append (edge-packed instance) (edge-equivalent instance))
+         collect (edge-id edge))))
+  (when (edge-lnk instance)
+    (format stream " ")
+    (mrs:output-lnk (edge-lnk instance) :stream stream))
   ;; print cfrom/cto
   (with-slots (cfrom cto) instance
     (format stream "~:[~2*~; (~A c ~A) ~]"
@@ -367,18 +411,19 @@
        ,@body)))
 
 (defun clear-chart nil
-   (incf *chart-generation-counter*)
-   (setf *parse-record* nil) 
-   (loop for i from 0 upto (1- *chart-limit*)
-       do (setf (aref *chart* i 0) nil)
-	  (setf (aref *tchart* i 0) nil)
-	  (setf (aref *chart* i 1) nil)
-	  (setf (aref *tchart* i 1) nil))
-   (setf *tchart-max* 0)
-   (setf *chart-max* 0)
-   (setf *edge-id* 0)
-   (setf %edge-allowance% 0)
-   (when *active-parsing-p* (clear-achart)))
+  (purge-edge-registry)
+  (incf *chart-generation-counter*)
+  (setf *parse-record* nil) 
+  (loop for i from 0 upto (1- *chart-limit*)
+      do (setf (aref *chart* i 0) nil)
+         (setf (aref *tchart* i 0) nil)
+         (setf (aref *chart* i 1) nil)
+         (setf (aref *tchart* i 1) nil))
+  (setf *tchart-max* 0)
+  (setf *chart-max* 0)
+  (setf *edge-id* 0)
+  (setf %edge-allowance% 0)
+  (when *active-parsing-p* (clear-achart)))
 
 (defvar *cached-category-abbs* nil
   "variable used in output to avoid recomputation of tree nodes")
@@ -2777,21 +2822,75 @@ an unknown word, treat the gap as filled and go on from there.
           (collect-unary-rule-names (car (edge-children edge-rec))))))
 
 
-(defstruct (dotted-edge (:include edge))
+(defstruct (dotted-edge (:include edge)
+            (:constructor
+             make-dotted-edge-x
+             (&key id score category rule dag odag 
+                   (dag-restricted (when dag (restrict-fs (tdfs-indef dag))))
+                   leaves lex-ids parents children tchildren
+                   orth-tdfs partial-tree
+                   (from (when (edge-p (first children))
+                           (edge-from (first children))))
+                   (to (when (edge-p (first (last children)))
+                         (edge-to (first (last children)))))
+                   label head
+                   (lnk (let ((first (first children))
+                                     (last (first (last children))))
+                                 (when (and (edge-p first) (edge-p last))
+                                   (mrs::combine-lnks
+                                    (edge-lnk first) (edge-lnk last)))))
+                   (cfrom (when (edge-p (first children))
+                            (edge-cfrom (first children))))
+                   (cto (when (edge-p (first (last children)))
+                          (edge-cto (first (last children)))))
+                   string mrs
+                   flags foo bar baz
+                   packed equivalent frozen adjuncts unpacking
+                   res needed)))
    res ; feature name of mother in rule dag in active edges
    needed ; ordered list of names of daughter features still to be found
    )
 
+(defun make-dotted-edge (&rest rest)
+  (register-edge (apply #'make-dotted-edge-x rest)))
 
-(defstruct (g-edge (:include dotted-edge))
+(defstruct (g-edge (:include dotted-edge)
+            (:constructor
+             make-g-edge-x
+             (&key id score category rule dag odag 
+                   (dag-restricted (when dag (restrict-fs (tdfs-indef dag))))
+                   leaves lex-ids parents children tchildren
+                   orth-tdfs partial-tree
+                   (from (when (edge-p (first children))
+                           (edge-from (first children))))
+                   (to (when (edge-p (first (last children)))
+                         (edge-to (first (last children)))))
+                   label head
+                   (lnk (let ((first (first children))
+                                     (last (first (last children))))
+                                 (when (and (edge-p first) (edge-p last))
+                                   (mrs::combine-lnks
+                                    (edge-lnk first) (edge-lnk last)))))
+                   (cfrom (when (edge-p (first children))
+                            (edge-cfrom (first children))))
+                   (cto (when (edge-p (first (last children)))
+                          (edge-cto (first (last children)))))
+                   string mrs
+                   flags foo bar baz
+                   packed equivalent frozen adjuncts unpacking
+                   res needed
+                   rels-covered index lexemes mod-index accessible)))
    ;; category, id, rule, leaves: filled in, not used in generation algorithm
    ;; itself, but needed for debug output, chart display etc
    rels-covered ; set of relations generated so far
    index
    lexemes ; non-ordered set of found-lex structures
-   mod-index ; 0-based index to modifier under an intersective rule instantiation
+   mod-index ; 0-based index to modifier under intersective rule instantiation
    accessible ; indices accessible in this edge
    )
+
+(defun make-g-edge (&rest rest)
+  (register-edge (apply #'make-g-edge-x rest)))
 
 ;;; This is now only used by the generator
 ;;; but - FIX - is oe calling this somewhere unknown?  What is the

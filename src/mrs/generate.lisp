@@ -11,6 +11,7 @@
 (defparameter *gen-filtering-p* t)
 (defparameter *bypass-equality-check* nil)
 (defparameter *gen-equate-qeqs-p* nil)
+(defparameter *gen-maximal-number-of-realizations* nil)
 
 (defparameter *gen-scoring-hook* nil)
 (defparameter *gen-extract-surface-hook* nil)
@@ -23,6 +24,7 @@
 (defvar *gen-record* nil)
 (defvar *gen-rel-indexes* nil)
 (defvar *lexemes-allowed-orderings* nil)
+
 ;;;
 ;;; we distinguish three versions of the input MRS, viz. (a) the original 
 ;;; semantics as passed into generate-from-mrs() (b) the effect of equating 
@@ -239,7 +241,7 @@
              (with-slots (eps) condition
                (format
                 stream
-                "invalid predicates: ~{|~(~a~)|~^, ~}"
+                "invalid predicates: ~{|~a|~^, ~}"
                 (loop
                     with result
                     for ep in eps
@@ -262,7 +264,12 @@
 ;;; proper. Clear chart and analyses record before entry in case we don't make
 ;;; it into generation proper. Do it also in chart-generate since that is also
 ;;; an entry point
-(defun generate-from-mrs (mrs &key signal nanalyses)
+
+
+(defun generate-from-mrs
+    (mrs 
+     &key signal 
+          (nanalyses *gen-maximal-number-of-realizations*))
 
   (setf %generator-condition% nil)
   (setf *generator-input* mrs)
@@ -270,8 +277,8 @@
   (when *gen-equate-qeqs-p* (setf mrs (mrs::equate-all-qeqs mrs)))
   (setf *generator-equated-mrs* mrs)
   
-  (if (mrs::fragmentp mrs)
-    (mt::generate-from-fragmented-mrs mrs :signal signal)
+  (if (mt:fragmentp mrs)
+    (mt:generate-from-fragmented-mrs mrs :signal signal)
     (handler-case (generate-from-mrs-internal mrs :nanalyses nanalyses)
       (condition (condition)
         (setf %generator-condition% condition)
@@ -291,6 +298,46 @@
   #-:logon
   (setf input-sem (mrs::fill-mrs (mrs::unfill-mrs input-sem)))
   
+  ;;
+  ;; as of late in 2006, progress on the SMAF front required dan to change all
+  ;; `ersatz' entries (as they are currently identified by sub-string match on
+  ;; their orthography :-{) to be [ CARG *top* ].  while recorded derivations
+  ;; in [incr tsdb()] do not preserve the actual surface form, reconstructing
+  ;; derivations and reading off MRSs results in ill-formed EPs, viz. ones with
+  ;; an underdetermined CARG.  to at least allow re-generation from such MRSs,
+  ;; attempt to frob our input MRS as needed.                   (23-dec-06; oe)
+  ;;
+  #+:logon
+  (loop
+      with carg = (mrs:vsym "CARG")
+      for ep in (mrs:psoa-liszt input-sem)
+      for pred = (mrs:rel-pred ep)
+      for constant
+      = (cond
+         ((string-equal pred "yofc_rel") "DecimalErsatz")
+         ((string-equal pred "card_rel") "DecimalErsatz")
+         ((string-equal pred "ord_rel") "DecimalErsatz")
+         ((string-equal pred "dofw_rel") "DateErsatz")
+         ((string-equal pred "dofm_rel") "DateErsatz")
+         ((string-equal pred "gen_numval_rel") "DecadeErsatz")
+         ((string-equal pred "numbered_hour_rel") "HourErsatz")
+         ((string-equal pred "named_rel") "NameErsatz")
+         (t "CARG"))
+      for parameterizedp = (consp (gethash pred mrs::*relation-index*))
+      do
+        (loop
+            for role in (mrs:rel-flist ep)
+            for value = (mrs:fvpair-value role)
+            when (eq (mrs:fvpair-feature role) carg) do
+              (when (or (eq value *toptype*) (eq value *string-type*))
+                (setf (mrs:fvpair-value role) constant))
+              (setf parameterizedp nil)
+            finally
+              (when parameterizedp
+                (push
+                 (mrs::make-fvpair :feature carg :value constant)
+                 (mrs:rel-flist ep)))))
+                          
   #+:null
   (let ((compliance (mt::transfer-mrs mrs :filter nil :task :comply)))
     (when (rest compliance)
@@ -458,8 +505,6 @@
                  (when *gen-packing-p*
                    (setf (g-edge-odag edge) lex-entry-fs)
                    (setf (g-edge-dag edge) (copy-tdfs-partially lex-entry-fs)))
-                 (setf (g-edge-dag-restricted edge)
-                   (restrict-fs (tdfs-indef (g-edge-dag edge))))
                  (setf (g-edge-accessible edge)
                    (collect-semantic-variables-in-fs (g-edge-dag edge)))
                  (incf (statistics-copies *statistics*)) ; each lex entry will be a copy
@@ -542,7 +587,8 @@
                                     (and
                                        (gen-filter-root-edges (list edge))
                                        (gen-chart-check-compatible edge)))
-                          :robust 42))
+                          :robust 42
+                          :limit (and (numberp nanalyses) (* 2 nanalyses))))
                         (t
                          (loop
                              for edge in candidates
@@ -587,22 +633,49 @@
 (defun extract-strings-from-gen-record nil
   (loop 
       for edge in *gen-record*
-      for string = (cond
-                    ((fboundp *gen-extract-surface-hook*)
-                     (funcall *gen-extract-surface-hook* edge))
-                    ((fboundp mrs::*fix-spelling-fn*)
-                     (funcall mrs::*fix-spelling-fn* (g-edge-leaves edge)))
-                    (t (g-edge-leaves edge)))
-      do (setf (edge-string edge) string)
-      collect string))
+      collect (extract-string-from-g-edge edge)))
+
+
+(defun extract-string-from-g-edge (edge)
+  (or (edge-string edge)
+      (let ((string
+             (cond
+              ((fboundp *gen-extract-surface-hook*)
+               (funcall *gen-extract-surface-hook* edge))
+              ((fboundp mrs::*fix-spelling-fn*)
+               (funcall mrs::*fix-spelling-fn* (g-edge-leaves edge)))
+              (t (g-edge-leaves edge)))))
+        ;;
+        ;; setting LNK values on MRSs associated with generation results is a
+        ;; tad involved: while creating the generator forest, surface positions
+        ;; are not yet determined, and in fact the same edge may appear in more
+        ;; than one tree, quite possibly at distinct surface positions.  hence
+        ;; (in LOGON at least, right now) during the post-generation MRS test, 
+        ;; LNK values on EPs are set as edge identifiers.  furthermore, the ERG
+        ;; gen-extract-surface() puts character position information into the
+        ;; `lnk' slot of edges.  at this point, right after complete extraction
+        ;; of the surface representation of one edge, we can adjust LNK values
+        ;; in the MRS of that edge appropriately.
+        ;;
+        (when (and mrs:*lnkp* (mrs::psoa-p (edge-mrs edge))
+                   (eq mrs:*lnkp* (first (edge-lnk edge))))
+          (loop
+              for ep in (mrs:psoa-liszt (edge-mrs edge))
+              for id = (when (eq (first (mrs::rel-lnk ep)) :id)
+                         (second (mrs::rel-lnk ep)))
+              for edge = (and (numberp id) (retrieve-edge :id id))
+              for lnk = (and edge (edge-lnk edge))
+              do (setf (mrs::rel-lnk ep) lnk)))
+        (setf (edge-string edge) string))))
 
 
 (defun clear-gen-chart nil
-   (setq *edge-id* 0)
-   (setq *active-edge-id* 0)
-   (setq %edge-allowance% 0)
-   (setq *gen-chart* nil)
-   (setq *gen-record* nil))
+  (purge-edge-registry)
+  (setq *edge-id* 0)
+  (setq *active-edge-id* 0)
+  (setq %edge-allowance% 0)
+  (setq *gen-chart* nil)
+  (setq *gen-record* nil))
 
 
 ;;; Find edges that are potential results that cover all or part of input
@@ -653,85 +726,96 @@
       ;; more time.                                              (4-jul-06; oe)
       ;;
       (let* ((input *generator-internal-mrs*)
-             (mrs (mrs::extract-mrs edge))
+             (mrs (let ((mrs:*lnkp* :id)) (mrs::extract-mrs edge)))
              (mrs (mt:map-mrs mrs :semi :backward))
              #-:logon
              (mrs (mrs::fill-mrs (mrs::unfill-mrs mrs))))
-         (setf (edge-mrs edge) mrs)
-         (let* ((mrs (if *gen-equate-qeqs-p* (mrs::equate-all-qeqs mrs) mrs))
-                #+:logon
-                (roles (list (mrs::vsym "TPC") (mrs::vsym "PSV")))
+        (setf (edge-mrs edge) mrs)
+        ;;
+        ;; see the comment on extract-string-from-g-edge() for our rationale in
+        ;; determining the surface string for this .edge. just here.  the side
+        ;; effect on the `lnk' value in EPs is destructive, but unfortunately
+        ;; EPs get copied in equate-all-qeqs(), and those copies end up in the
+        ;; solution returned by compare-mrss().  hence, it could be (even more)
+        ;; difficult to move from :id to :characters LNK values in those EPs
+        ;; later on.
+        ;;
+        (extract-string-from-g-edge edge)
+        (let* ((mrs (if *gen-equate-qeqs-p* (mrs::equate-all-qeqs mrs) mrs))
+               #+:logon
+               (roles (list (mrs::vsym "TPC") (mrs::vsym "PSV")))
+               ;;
+               ;; in a few cases, the input is over-specified, e.g. using an
+               ;; `i' variable for an unbound subject in infinitivals.
+               ;;
+               #+:logon
+               (types '(("i" "u")))
+               (solution (mt::compare-mrss mrs input :type :subsumption))
+               (distance
                 ;;
-                ;; in a few cases, the input is over-specified, e.g. using an
-                ;; `i' variable for an unbound subject in infinitivals.
-                ;;
-                #+:logon
-                (types '(("i" "u")))
-                #+:logon
-                (predicates '((mrs:vsym "prpstn_m_rel")
-                              (mrs:vsym "prop-or-ques_m_rel")
-                              (mrs:vsym "prop_imp_m_rel")
-                              (mrs:vsym "prpstn_or_like_m_rel")))
-                (distance
-                 ;;
-                 ;; _fix_me_
-                 ;; the following is, say, incredibly naive: rather than trying
-                 ;; ten or so times, the comparison should be able to carry on 
-                 ;; when detecting a problem (that can be remedied according to
-                 ;; one of the known ways of relaxation) and return a suitable
-                 ;; code indicating which exceptions had to be made.
-                 ;;                                             (30-may-06; oe)
-                 (or (when (mt::compare-mrss mrs input :type :subsumption) 0)
-                     #+:logon
-                     (when (eq *bypass-equality-check* :filter)
-                       (or
-                        (when (mt::compare-mrss
-                               mrs input :type :subsumption
-                               :roles roles)
-                          1)
-                        (when (mt::compare-mrss
-                               mrs input :type :subsumption
-                               :types types)
-                          2)
-                        (when (mt::compare-mrss
-                               mrs input :type :subsumption
-                               :properties t)
-                          3)
-                        (when (mt::compare-mrss
-                               mrs input :type :subsumption
-                               :roles roles :types types)
-                          4)
-                        (when (mt::compare-mrss
-                               mrs input :type :subsumption
-                               :roles roles :properties t)
-                          5)
-                        (when (mt::compare-mrss
-                               mrs input :type :subsumption
-                               :roles roles :properties t :types types)
-                          6)
-                        (when (mt::compare-mrss
-                               mrs input :type :subsumption
-                               :hcons t)
-                          7)
-                        (when (mt::compare-mrss
-                               mrs input :type :subsumption
-                               :roles roles :hcons t)
-                          8)
-                        (when (mt::compare-mrss
-                               mrs input :type :subsumption
-                               :roles roles :properties t :hcons t)
-                          9)
-                        (when (mt::compare-mrss
-                               mrs input :type :subsumption
-                               :predicates predicates)
-                          10)
-                        (when (mt::compare-mrss
-                               mrs input :type :subsumption
-                               :roles roles :properties t
-                               :hcons t :predicates predicates)
-                          11)
-                        42)))))
-           (values (and (numberp distance) (= distance 0)) distance)))))
+                ;; _fix_me_
+                ;; the following is, say, incredibly naive: rather than trying
+                ;; ten or so times, the comparison should be able to carry on 
+                ;; when detecting a problem (that can be remedied according to
+                ;; one of the known ways of relaxation) and return a suitable
+                ;; code indicating which exceptions had to be made.
+                ;;                                             (30-may-06; oe)
+                (or (when solution 0)
+                    #+:logon
+                    (when (eq *bypass-equality-check* :filter)
+                      (or
+                       (when (setf solution
+                               (mt::compare-mrss
+                                mrs input :type :subsumption
+                                :roles roles))
+                         1)
+                       (when (setf solution
+                               (mt::compare-mrss
+                                mrs input :type :subsumption
+                                :types types))
+                         2)
+                       (when (setf solution
+                               (mt::compare-mrss
+                                mrs input :type :subsumption
+                                :properties t))
+                         3)
+                       (when (setf solution
+                               (mt::compare-mrss
+                                mrs input :type :subsumption
+                                :roles roles :types types))
+                         4)
+                       (when (setf solution
+                               (mt::compare-mrss
+                                mrs input :type :subsumption
+                                :roles roles :properties t))
+                         5)
+                       (when (setf solution
+                               (mt::compare-mrss
+                                mrs input :type :subsumption
+                                :roles roles :properties t :types types))
+                         6)
+                       (when (setf solution
+                               (mt::compare-mrss
+                                mrs input :type :subsumption
+                                :hcons t))
+                         7)
+                       (when (setf solution
+                               (mt::compare-mrss
+                                mrs input :type :subsumption
+                                :roles roles :hcons t))
+                         8)
+                       (when (setf solution
+                               (mt::compare-mrss
+                                mrs input :type :subsumption
+                                :roles roles :properties t :hcons t))
+                         9)
+                       42)))))
+          (when solution
+            (let* ((eps (mt::solution-eps solution))
+                   (distortion
+                    (ignore-errors (mrs::compute-lnk-distortion eps))))
+              (push (cons :distortion distortion) (edge-flags edge))))
+          (values (and (numberp distance) (= distance 0)) distance)))))
 
 (defun gen-chart-root-edges (edges start-symbols)
    ;; c.f. create-new-root-edges in parse.lsp

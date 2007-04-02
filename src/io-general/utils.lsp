@@ -262,6 +262,7 @@
       (build-lrfsm)
       #+:lui
       (when (lui-status-p) (lui-parameters))
+      (mt:activate-transfer)
       (lkb-beep)
       (if *syntax-error*
         (format t "~%WARNING: error(s) - check messages")
@@ -310,17 +311,29 @@
    :device (pathname-device *load-truename*)
    :directory (pathname-directory *load-truename*)))
 
-(defun parent-directory nil
+(defun parent-directory (&optional path)
   (make-pathname 
    :host (pathname-host *load-truename*)
    :device (pathname-device *load-truename*)
-   :directory (butlast (pathname-directory *load-truename*))))
+   :directory (append
+               (butlast (pathname-directory *load-truename*))
+               (rest (pathname-directory (make-pathname :directory path))))))
 
-(defun grandparent-directory nil
+(defun grandparent-directory (&optional path)
   (make-pathname 
    :host (pathname-host *load-truename*)
    :device (pathname-device *load-truename*)
-   :directory (butlast (pathname-directory *load-truename*) 2)))
+   :directory (append
+               (butlast (pathname-directory *load-truename*) 2)
+               (rest (pathname-directory (make-pathname :directory path))))))
+
+(defun great-grandparent-directory (&optional path)
+  (make-pathname 
+   :host (pathname-host *load-truename*)
+   :device (pathname-device *load-truename*)
+   :directory (append
+               (butlast (pathname-directory *load-truename*) 3)
+               (rest (pathname-directory (make-pathname :directory path))))))
 
 (defun lkb-pathname (directory name)
   (merge-pathnames

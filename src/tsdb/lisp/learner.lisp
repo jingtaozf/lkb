@@ -57,13 +57,15 @@
 
 (defparameter *maxent-debug-p* t)
 
-(defparameter *svm-kernel* 2)
+(defparameter *svm-kernel* 0)
+;;fix_me - convert to keyword format,
+;;eg 0 --> :linear
 
 (defparameter *svm-error-to-margin* nil)
 
-(defparameter *svm-cost-factor* 1.0)
+(defparameter *svm-cost-balance* 1.0)
 
-(defparameter *svm-iterations* 100000)
+(defparameter *svm-iterations* 1e+5)
 
 (defparameter *svm-tolerance* 0.001)
 
@@ -84,44 +86,60 @@
     *svm-sig-poly-s*
     *svm-sig-poly-r*
     *svm-iterations*
-    *svm-cost-factor*
+    *svm-cost-balance*
     *svm-error-to-margin*
     *svm-tolerance*))
 
 (defun feature-environment (&key (format :string))
   (labels ((count (bar) (and (numberp bar) (> bar 0) bar)))
-    (case format
-      (:string
-       (let ((counts
-              (when (counts-p *feature-frequency-threshold*)
-                (list
-                 (count (counts-absolute *feature-frequency-threshold*))
-                 (count (counts-contexts *feature-frequency-threshold*))
-                 (count (counts-events *feature-frequency-threshold*))
-                 (count (counts-relevant *feature-frequency-threshold*)))))
-             (ngramp (> *feature-ngram-size* 0))
-             (weightp (and (numberp *feature-constituent-weight*)
-                           (> *feature-constituent-weight* 0))))
-                           
-         (format 
-          nil
-          "GP[~a] ~:[-~;+~]PT ~:[-~;+~]LEX CW[~@[~a~]] ~
-           ~:[-~;+~]AE NS[~a] ~
-           NT[~@[~(~a~)~]] ~:[-~;+~]NB LM[~:[0~*~;~a~]] ~
-           FT[~{~@[~a~]~^:~}] RS[~@[~a~]]"
-          *feature-grandparenting* *feature-use-preterminal-types-p*
-          *feature-lexicalization-p*
-          (and weightp *feature-constituent-weight*)
-          *feature-active-edges-p* *feature-ngram-size*
-          (and ngramp *feature-ngram-tag*)
-          (and ngramp *feature-ngram-back-off-p*)
-          *feature-lm-p* *feature-lm-p* counts
-          *feature-random-sample-size*)))
-      (:list
-       (loop
-           for key in *feature-options*
-           collect (cons key (symbol-value key)))))))
+      (case format
+        (:string
+         (let ((counts
+                (when (counts-p *feature-frequency-threshold*)
+                  (list
+                   (count (counts-absolute *feature-frequency-threshold*))
+                   (count (counts-contexts *feature-frequency-threshold*))
+                   (count (counts-events *feature-frequency-threshold*))
+                   (count (counts-relevant *feature-frequency-threshold*)))))
+               (ngramp (> *feature-ngram-size* 0))
+               (weightp (and (numberp *feature-constituent-weight*)
+                             (> *feature-constituent-weight* 0))))
+           (format 
+            nil
+            "GP[~a] ~:[-~;+~]PT ~:[-~;+~]LEX CW[~@[~a~]] ~
+             ~:[-~;+~]AE NS[~a] ~
+             NT[~@[~(~a~)~]] ~:[-~;+~]NB LM[~:[0~*~;~a~]] ~
+             FT[~{~@[~a~]~^:~}] RS[~@[~a~]]"
+            *feature-grandparenting* *feature-use-preterminal-types-p*
+            *feature-lexicalization-p*
+            (and weightp *feature-constituent-weight*)
+            *feature-active-edges-p* *feature-ngram-size*
+            (and ngramp *feature-ngram-tag*)
+            (and ngramp *feature-ngram-back-off-p*)
+            *feature-lm-p* *feature-lm-p* counts
+            *feature-random-sample-size*)))
+        (:compact
+         (let ((ngramp (> *feature-ngram-size* 0)))
+           (format  
+            nil "~(g~d_p~:[0~;1~]_l~:[0~;1~]_cw~d_a~:[0~;1~]_~
+                 n~d_nt~:[0~;1~]_nb~:[0~;1~]_lm~a_c~:[0~;~:*~a~]_~
+                 r~:[0~;~:*~a~]_rs~:[0~;~:*~d~]~)"         
+            *feature-grandparenting* *feature-use-preterminal-types-p*
+            *feature-lexicalization-p* (or *feature-constituent-weight* 0)
+            *feature-active-edges-p* *feature-ngram-size*            
+            (and ngramp (eq *feature-ngram-tag* :type))
+            (and ngramp *feature-ngram-back-off-p*) *feature-lm-p*
+            (and (counts-p *feature-frequency-threshold*)
+                 (counts-contexts *feature-frequency-threshold*))
+            (and (counts-p *feature-frequency-threshold*)
+                 (counts-relevant *feature-frequency-threshold*))
+            *feature-random-sample-size*)))
+        (:list
+         (loop
+             for key in *feature-options*
+             collect (cons key (symbol-value key)))))))
 
+;;fix_me add experiment type to names
 (defun mem-environment (&key (format :string) full prefix)
   (let ((features (and full (feature-environment :format format))))
     (case format
@@ -133,6 +151,12 @@
         prefix features *maxent-method* *maxent-iterations*
         *maxent-relative-tolerance* *maxent-variance*
         full (or *redwoods-train-percentage* 100)))
+      (:compact
+       (format 
+        nil
+        "~(~@[~a~]mem_~@[~a_~]t~e_v~e~@[_pc~d~]~)"
+        prefix features *maxent-relative-tolerance* *maxent-variance*
+        *redwoods-train-percentage*))
       (:list
        (nconc
         features
@@ -140,16 +164,28 @@
             for key in *maxent-options*
             collect (cons key (symbol-value key))))))))
 
-(defun svm-environment ()
-  (format 
-   nil
-   "K[~[lin~;pol~;rbf~;sig~;usr~]]~@[ G[~a]~]~
-    ~@[ D[~a]~]~@[ S[~a]~]~@[ R[~a]~]~@[ IT[~a]~]~
-    ~@[ C[~a]~]~@[ EM[~a]~]~@[ T[~a]~]"
-   *svm-kernel* *svm-rbf-g* *svm-poly-d*
-   *svm-sig-poly-s* *svm-sig-poly-r*
-   *svm-iterations* *svm-cost-factor*
-   *svm-error-to-margin* *svm-tolerance*))
+(defun svm-environment  (&key (format :string) full prefix)
+  (let ((features (and full (feature-environment :format format))))
+    (case format
+      (:string
+       (format 
+        nil
+        "~@[[~a] ~]~@[~a ~] K[~[lin~;pol~;rbf~;sig~;usr~]]~
+         ~@[ G[~a]~]~@[ D[~a]~]~@[ S[~a]~]~@[ R[~a]~]~
+         ~@[ IT[~a]~]~@[ B[~a]~]~@[ EM[~a]~]~@[ T[~a]~]"
+        prefix features *svm-kernel* *svm-rbf-g* *svm-poly-d*
+        *svm-sig-poly-s* *svm-sig-poly-r* *svm-iterations* 
+        *svm-cost-balance* *svm-error-to-margin* *svm-tolerance*))
+      (:compact
+       (format 
+        nil
+        "~(~@[~a~]svm_~@[~a_~]~[lin~;pol~;rbf~;sig~;usr~]~
+         ~@[_g~a~]~@[_d~a~]~@[_s~a~]~@[_r~a~]~@[_it~e~]~
+         ~@[_b~a~]~@[_em~a~]~@[_t~a~]~@[_pc~d~]~)"
+        prefix features *svm-kernel* *svm-rbf-g* *svm-poly-d*
+        *svm-sig-poly-s* *svm-sig-poly-r* *svm-iterations* 
+        *svm-cost-balance* *svm-error-to-margin* *svm-tolerance*
+        *redwoods-train-percentage*)))))
 
 (defun print-model (model &key (file "/dev/null") stream (format :rpm))
   (case format
@@ -173,9 +209,19 @@
          (when (> (model-count model) 0)
            (loop
                with *print-case* = :downcase
+               for key in *feature-options*
+               for value = (let ((foo (symbol-value key)))
+                             (cond
+                              ((null foo) "no")
+                              ((eq foo t) "yes")
+                              (t foo)))
+               when (boundp key)
+               do (format stream "~a := ~a.~%~%" key value))
+           (loop
+               with *print-case* = :downcase
                for key in *maxent-options*
-               when (boundp key) do
-                 (format stream "~a := ~s.~%~%" key (symbol-value key))))
+               when (boundp key)
+               do (format stream "~a := ~a.~%~%" key (symbol-value key))))
          (format stream ":begin :features ~d.~%~%" (symbol-table-count table))
          (loop
              with *print-case* = :downcase
@@ -199,11 +245,7 @@
                 stream
                 "[~{~s~^ ~}] ~:[null~*~;~f~] "
                 symbol weight weight)
-               (format
-                stream
-                "{~d ~d ~d ~d}"
-                (counts-absolute counts) (counts-contexts counts)
-                (counts-events counts) (counts-relevant counts))
+               (print-object counts stream)
                (when minmax
                  (format
                   stream
@@ -412,12 +454,13 @@
                       (:svm
                        (format 
                         nil 
-                        "svm_learn -v 2 -n 10 -q 40 -m ~a -z p -t ~a ~@[-g ~a~]~
+                        "svm_learn -v 2 -n 10 -q 40 -m ~a -z p -t ~a~
+                         ~@[ -g ~a~]~
                          ~@[ -d ~a~]~@[ -s ~a~]~@[ -r ~a~]~@[ -# ~a~]~
                          ~@[ -j ~a~]~@[ -e ~a~]~@[ -c ~a~] ~a ~a"
                         *svm-cache-size* *svm-kernel* *svm-rbf-g* *svm-poly-d* 
                         *svm-sig-poly-s* *svm-sig-poly-r* *svm-iterations*
-                        *svm-cost-factor* *svm-tolerance*
+                        *svm-cost-balance* *svm-tolerance*
                         *svm-error-to-margin* events parameters))))
            (output (if *maxent-debug-p* nil "/dev/null")))
       (when (and (zerop (run-process 
@@ -466,7 +509,7 @@
       (loop
           for i from 0
           for code = (if (model-map model)
-                         (code-to-symbol i (model-map model))
+                       (code-to-symbol i (model-map model))
                        i)
           for weight = (read stream nil nil)
           while weight do
@@ -497,7 +540,7 @@
       (return-from learner-rank-items))
     (format
      stream
-     "~&[~a] learner-rank-items:() evaluating ~d item~p ~%"
+     "~&[~a] learner-rank-items(): evaluating ~d item~p ~%"
      (current-time :long :short) (length items) (length items))
     ;;
     ;; in order to keep using this stream across multiple calls to cp(), its
@@ -522,10 +565,13 @@
           for file = (merge-pathnames
                       cc 
                       (make-pathname :name (format nil "~a" iid)))
-          when (> readings 1) do
-          (when (probe-file file)
-              (cp file out)
-              (push item active))))
+          when (and (> readings 1) (probe-file file))
+          do (cp file out) (push item active)
+          else 
+          do (format
+              t
+              "~&[~a] learner-rank-items(): mysteriously skipping item # ~d.~%"
+              (current-time :long :short) (get-field :i-id item))))
     (setf active (nreverse active))
     (let* ((scores (format 
                     nil
@@ -557,8 +603,8 @@
                  (probe-file scores) (probe-file output))
         (format
          t
-         "~&[~a] learner-rank-items:() ranking ~d item~p ~%"
-         (current-time :long :short) (length items) (length items))
+         "~&[~a] learner-rank-items(): ranking ~d item~p ~%"
+         (current-time :long :short) (length active) (length active))
         (with-open-file (stream scores :direction :input)
           (loop
               for item in active
@@ -567,8 +613,10 @@
               = (loop
                     for result in results
                     for rid = (get-field :result-id result)
-                    collect (pairlis '(:result-id :score)
-                                     (list rid (read stream nil nil))))
+                    for score = (read stream nil nil)
+                    unless score do
+                      (error "learner-rank-items(): mysterious score deficit")
+                    collect (pairlis '(:result-id :score) (list rid score)))
               do
                 (let* ((ranks (sort
                                ranks 
@@ -629,7 +677,7 @@
       do (incf h (* p (log p 2d0)))
       finally (return (- h))))
 
-(defun baseline (profile &key condition)
+(defun baseline (profile &key condition (n 1))
   (loop
       with nitems = 0
       for item
@@ -650,7 +698,7 @@
              unless (= readings ranks)
              collect item and do (incf nitems))
       for readings = (length (get-field :results item))
-      for gold = (length (get-field :ranks item))
+      for gold = (max n (length (get-field :ranks item)))
       sum gold into gsum
       sum readings into rsum
       sum (/ gold readings) into sum
@@ -667,266 +715,6 @@
     `(dolist ,(first params)
        (do-grid ,(cdr params) ,@body))))
 
-(defun mem-batch-experiment (&key
-                             (ae-p *feature-active-edges-p*)
-                             (ngram-scale *feature-lm-p*)
-                             (ngrams *feature-ngram-size*)
-                             (lexicalize *feature-lexicalization-p*)
-                             (preterm-types *feature-use-preterminal-types-p*)
-                             (ngram-tag *feature-ngram-tag*)
-                             (grandparenting *feature-grandparenting*)
-                             (back-off-p *feature-ngram-back-off-p*)
-                             (source *tsdb-gold*)
-                             (random-sample-size *feature-random-sample-size*)
-                             (skeleton *tsdb-default-skeleton*) 
-                             (nfold 10) 
-                             (type :mem) 
-                             (supersede-p nil)
-                             (item-sets-p *redwoods-use-item-sets-p*)
-                             target-prefix
-                             identity
-                             niterations
-                             data 
-                             (recache-p t)
-                             (similarities '(:bleu :wa :waft))
-                             (variance *maxent-variance*)
-                             (tolerance *maxent-relative-tolerance*)
-                             (iterations *maxent-iterations*)
-                             (method *maxent-method*)
-                             (context 0)
-                             (relevant 0))
-
-;;  (mt::lm-restore-defaults lm-toolkit)
-  (labels ((ennl (x);;ensure-non-nil-list
-             (if (or (null x) 
-                     (not (listp x)))
-                 (list x) 
-               x))
-           (changed-triggers-p (env1 env2)
-             (dolist (trigger *feature-options*)
-               (case trigger
-                 ('*feature-frequency-threshold*
-                  (if (not (counts= (get-field trigger env1)
-                                    (get-field trigger env2)))
-                      (return t)))
-                 (t
-                  (if (not (equal (get-field trigger env1)
-                                  (get-field trigger env2)))
-                      (return t)))))))
-    (let* ((counter-tot 0)
-           (counter-cur 0)
-           (old-env nil)
-           (*redwoods-score-similarities* similarities)
-           (*redwoods-use-item-sets-p* item-sets-p) 
-           (identity (or identity 
-                         (format 
-                          nil "~a.~a" (current-user) (current-pid)))))
-      (format t "~&[~a] mem-batch-experiment() identity: ~a~%" 
-              (current-time :long :short) identity)
-      (do-grid ((lex (ennl lexicalize))
-                (preterm (ennl preterm-types))
-                (tag (ennl ngram-tag))
-                (gp (ennl grandparenting))
-                (bo-p (ennl back-off-p))
-                (lm (ennl ngram-scale))
-                (ae-p (ennl ae-p))
-                (ngrams (ennl ngrams))
-                (rel (ennl relevant))
-                (con (ennl context))
-                ;; estimation params:
-                (var (ennl variance))
-                (tol (ennl tolerance))
-                (met (ennl method)))
-        (let* ((threshold (make-counts 
-                           :absolute 0 :contexts con :events 0 :relevant rel))
-               (target (format  
-                        nil "~(~@[~a~]~a_lm~a_n~d_l~:[0~;1~]_p~:[0~;1~]_a~:[0~;1~]~
-                            _g~d_b~:[0~;1~]_nt~:[0~;1~]_r~a_c~a~@[_rs~a~]_t~e_v~e~)"
-                        target-prefix type lm ngrams lex preterm ae-p gp bo-p  
-                        (eq tag :type) rel con random-sample-size tol var))
-               (new-env (pairlis 
-                         (append *feature-options* *maxent-options*)
-                         (list 
-                          gp preterm lex ae-p
-                          ngrams tag bo-p lm
-                          threshold
-                          random-sample-size
-                          met iterations tol 
-                          *maxent-absolute-tolerance* 
-                          var)))
-               (recache-p (if (zerop counter-cur)
-                              recache-p
-                            (changed-triggers-p new-env old-env)))
-               (experiment (unless (and (not supersede-p)
-                                        (cl-fad:file-exists-p 
-                                         (find-tsdb-directory target))) 
-                             (make-experiment :source source
-                                              :skeleton skeleton
-                                              :target target
-                                              :nfold nfold
-                                              :environment new-env
-                                              :identity identity
-                                              :type type
-                                              :data data))))
-          (incf counter-tot)
-          #+:debug
-          (setq %experiment% experiment)
-          (when experiment
-            (setq old-env new-env)
-            (run-experiment experiment :recache recache-p 
-                            :niterations niterations)
-            (incf counter-cur)
-            (format t "~&Completed experiment no. ~a (~a).~%" 
-                    counter-tot counter-cur))))))
-  (purge-profile-cache source))
-
-(defun svm-batch-experiment (&key
-                             (ae-p *feature-active-edges-p*)
-                             (ngram-scale *feature-lm-p*)
-                             (ngrams *feature-ngram-size*)
-                             (lexicalize *feature-lexicalization-p*)
-                             (preterm-types *feature-use-preterminal-types-p*)
-                             (ngram-tag *feature-ngram-tag*)
-                             (grandparenting *feature-grandparenting*)
-                             (back-off-p *feature-ngram-back-off-p*)
-                             (source *tsdb-gold*)
-                             (random-sample-size *feature-random-sample-size*)
-                             (skeleton *tsdb-default-skeleton*) 
-                             (nfold 10) 
-                             (type :svm) 
-                             (supersede-p nil)
-                             (item-sets-p *redwoods-use-item-sets-p*)
-                             target-prefix
-                             identity
-                             niterations
-                             data 
-                             (recache-p t)
-                             (kernel *svm-kernel*)
-                             (rbf-g *svm-rbf-g*) 
-                             (poly-d *svm-poly-d*) 
-                             (sig-poly-s *svm-sig-poly-s*)
-                             (sig-poly-r *svm-sig-poly-r*)
-                             (iterations *svm-iterations*)
-                             (cost *svm-cost-factor*) 
-                             (error-to-margin *svm-error-to-margin*)
-                             (tolerance *svm-tolerance*)
-                             (similarities '(:bleu :wa :waft))
-                             (context 0)
-                             (relevant 0)
-                             (normalize-p t))
-                                             
-;;  (mt::lm-restore-defaults lm-toolkit)
-  (labels ((ennl (x);;ensure-non-nil-list
-             (if (or (null x) 
-                     (not (listp x)))
-                 (list x) 
-               x))
-           (changed-triggers-p (env1 env2)
-             (dolist (trigger *feature-options*)
-               (case trigger
-                 ('*feature-frequency-threshold*
-                  (if (not (counts= (get-field trigger env1)
-                                    (get-field trigger env2)))
-                      (return t)))
-                 (t
-                  (if (not (equal (get-field trigger env1)
-                                  (get-field trigger env2)))
-                      (return t)))))))
-    (let ((counter-tot 0)
-          (counter-cur 0)
-	  (old-env nil)
-          (*redwoods-score-similarities* similarities)
-          (*redwoods-use-item-sets-p* item-sets-p)
-          (identity (or identity 
-                       (format 
-                        nil "~a.~a" (current-user) (current-pid)))))
-      (format t "~&[~a] svm-batch-experiment() identity: ~a~%" 
-              (current-time :long :short) identity)
-      (do-grid ((lex (ennl lexicalize))
-                (preterm (ennl preterm-types))
-                (tag (ennl ngram-tag)) 
-                (gp (ennl grandparenting))
-                (bo-p (ennl back-off-p))
-                (lm (ennl ngram-scale))
-                (ae-p (ennl ae-p))
-                (ngrams (ennl ngrams))
-                (rel (ennl relevant))
-                (con (ennl context))
-                ;; estimation params:
-                (k (ennl kernel))
-                (g (ennl rbf-g))
-                (d (ennl poly-d)) 
-                (s (ennl sig-poly-s))
-                (r (ennl sig-poly-r))
-                (it (ennl iterations))
-                (em-ratio (ennl error-to-margin))
-                (c (ennl cost))
-                (tol (ennl tolerance)))
-        (let* ((threshold (make-counts 
-                           :absolute 0 :contexts con :events 0 :relevant rel))
-               (target (format 
-                        nil "~(~@[~a~]~a_lm~a_n~d_l~:[0~;1~]_p~:[0~;1~]~
-                            _a~:[0~;1~]_g~d_b~:[0~;1~]_nt~:[0~;1~]_r~a_c~a~
-                            ~@[_rs~a~]_~[lin~;pol~;rbf~;sig~;usr~]~
-                            ~@[_g~a~]~@[_d~a~]~@[_s~a~]~@[_r~a~]~
-                            ~@[_it~a~]~@[_c~a~]~@[_em~a~]~@[_t~a~]~)"
-                        target-prefix type lm ngrams lex preterm 
-                        ae-p gp bo-p (eq tag :type) rel con 
-                        random-sample-size k g d s r it c em-ratio tol))
-               (new-env (pairlis 
-                         (append *feature-options* *svm-options*)
-                         (list 
-                          gp preterm lex ae-p
-                          ngrams tag bo-p lm
-                          threshold
-                          random-sample-size
-                          k g d s r it c em-ratio tol)))
-               (recache-p (if (zerop counter-cur)
-                              recache-p
-                            (changed-triggers-p new-env old-env)))
-               (experiment (unless (and (not supersede-p)
-                                        (cl-fad:file-exists-p 
-                                         (find-tsdb-directory target))) 
-                             (make-experiment :source source
-                                              :skeleton skeleton
-                                              :target target
-                                              :nfold nfold
-                                              :environment new-env
-                                              :identity identity
-                                              :type type
-                                              :data data))))
-          (incf counter-tot)
-          #+:debug
-          (setq %experiment% experiment)
-          (when experiment
-            (setq old-env new-env)
-            (run-experiment experiment :recache recache-p 
-                            :niterations niterations :normalize-p normalize-p)
-            #+:null
-            (purge-profile-cache target)
-            (incf counter-cur)
-            (format t "~&Completed experiment no. ~a (~a).~%" 
-                    counter-tot counter-cur))))
-      (print counter-tot)))
-  (purge-profile-cache source))
-
-#+:null
-(mem-batch-experiment :ngram-scale '(nil 10)
-                      :ngrams '(0 2)
-                      :variance '(1.0e+1 1.0e+2 1.0e+3 1.0e+4)
-                      :tolerance '(1.0e-6 1.0e-7 1.0e-8)
-                      :source "lingo/15-nov-05/jh0/05-11-28/lkb.g"
-                      :skeleton "jh0"
-                      :target-prefix "jh0-"
-                      :random-sample-size nil
-                      :ae-p nil
-                      :grandparenting '(0 2)
-                      :back-off-p t
-                      :supersede-p nil 
-                      :item-sets-p t
-                      :lexicalize '(nil t)
-                      :preterm-types '(nil t))
-
 (defun print-score-file (&key (output "/tmp/scores")
                               gold name pattern condition
                               (similarities '(:bleu)))

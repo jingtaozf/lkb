@@ -15,7 +15,7 @@
 ;;; 
 
 (defun fragment-ep-p (ep)
-  (member (mrs:rel-pred ep) mrs::*semi-fragment-relations* :test #'equal))
+  (member (mrs:rel-pred ep) *semi-fragment-relations* :test #'equal))
 
 (defun punctuation-ep-p (ep)
   (member (mrs:rel-pred ep) *semi-punctuation-relations* :test #'equal))
@@ -25,6 +25,17 @@
 
 (defmacro add (n i)
   `(when (numberp ,i) (setf ,n (+ ,n ,i))))
+
+;;;
+;;; (LOGON) fragment detection; see comment in `mrsglobals.lisp'.
+;;;
+(defun fragmentp (mrs)
+  (when (mrs::psoa-p mrs)
+    (loop
+        for ep in (mrs:psoa-liszt mrs)
+        when (member (mrs:rel-pred ep) *semi-fragment-relations* :test #'equal)
+        count 1 into n
+        finally (return (unless (zerop n) n)))))
 
 (defun generate-from-fragmented-mrs (mrs &key signal)
   (declare (ignore signal))
@@ -99,7 +110,10 @@
       (setf (lkb::statistics-equivalent lkb::*statistics*) tequivalent)
       (setf (lkb::statistics-proactive lkb::*statistics*) tproactive)
       (setf (lkb::statistics-retroactive lkb::*statistics*) tretroactive)
-      (let ((strings (cross-product (nreverse outputs))))
+      (let* ((strings (cross-product (nreverse outputs)))
+             (strings (remove-if
+                       #'(lambda (string) (ppcre:scan "^[.|/ ]*$" string))
+                       strings)))
         (setf lkb::*gen-record*
           (loop
               for string in strings

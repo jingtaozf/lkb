@@ -22,7 +22,7 @@
 ;;; most general mode, and we should aim to establish it over time: first, the
 ;;; underlying input may not have been string-shaped (but come from the lattice
 ;;; of a speech recognizer), and second even with one underlying string there
-;;; could be token-level ambiguity, sp identifying the actual token used in an
+;;; could be token-level ambiguity, so identifying the actual token used in an
 ;;; analysis preserves more information.  properties like the sub-string range,
 ;;; prosodic information (VerbMobil), or pointers to KB nodes (YY) can all be
 ;;; associated with the individual tokens sent into the parser.  finally, the
@@ -165,7 +165,8 @@
     (return-from lnk-tdfs tdfs))
   
   (if *within-unification-context-p*
-    (let* ((unifications
+    (let* ((lnks (if (consp lnks) lnks (list lnks)))
+           (unifications
             (loop
                 for lnk in lnks
                 for value = (if (stringp lnk) lnk (write-to-string lnk))

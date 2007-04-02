@@ -75,7 +75,7 @@
 (defstruct ed
   handle id type variable
   predicate arguments carg
-  link raw status mark)
+  lnk raw status mark)
 
 (defmethod print-object ((object ed) stream)
   (if *eds-pretty-print-p*
@@ -98,10 +98,18 @@
           (format stream "]"))
     (call-next-method)))
 
-(defun ed-linked-predicate (ed)
-  (if (stringp (ed-link ed))
-    (format nil "~a<~a>" (ed-predicate ed) (ed-link ed))
-    (format nil "~a~@[<~{~a~^ ~}>~]" (ed-predicate ed) (ed-link ed))))
+(defun ed-linked-predicate (ed &key (lnkp t))
+  (let ((predicate (ed-predicate ed))
+        (lnk (ed-lnk ed)))
+    (case (and lnkp (first (ed-lnk ed)))
+      (:characters
+       (format nil "~a<~a:~a>" predicate (second lnk) (third lnk)))
+      (:vertices
+       (format nil "~a<~a-~a>" predicate (second lnk) (third lnk)))
+      (:tokens
+       (format nil "~a<~{~a~^,~}>" predicate (rest lnk)))
+      (t 
+       (format nil "~a" (ed-predicate ed))))))
 
 (defun ed-output-psoa (psoa &key (stream t) (format :ascii) markp)
   (if (psoa-p psoa)
@@ -110,7 +118,7 @@
        (format stream "~a~%" (ed-convert-psoa psoa)))
       (:triples
        (let* ((eds (ed-convert-psoa psoa))
-              (triples (ed-explode eds)))
+              (triples (ed-explode eds :lnkp nil :cargp nil :collocationp t)))
          (loop
              with *package* = (find-package :lkb)
              initially (unless markp (format stream "{~%"))
@@ -207,14 +215,14 @@
                    for fvpair in flist
                    when (member (fvpair-feature fvpair) carg :test #'eq)
                    return (fvpair-value fvpair)))
-         (link (let* ((link (rel-link relation))
-                      (from (and (char-rel-p relation)
-                                 (char-rel-cfrom relation)))
-                      (to (and from (char-rel-cto relation))))
-                 (or link
-                     (and (numberp from) (numberp to) (>= from 0) (>= to 0)
-                          (format nil "~a:~a" from to))))))
-    (make-ed :handle handle :id id :link link
+         (lnk (let* ((lnk (rel-lnk relation))
+                     (from (and (char-rel-p relation)
+                                (char-rel-cfrom relation)))
+                     (to (and from (char-rel-cto relation))))
+                (or lnk
+                    (and (numberp from) (numberp to) (>= from 0) (>= to 0)
+                         (list :characters from to))))))
+    (make-ed :handle handle :id id :lnk lnk
              :predicate predicate :carg carg :raw relation)))
 
 (defun ed-bleach-eds (eds)
@@ -526,7 +534,7 @@
           (when return (pushnew :fragmented (eds-status eds)))
           (return return))))
 
-(defun ed-explode (eds)
+(defun ed-explode (eds &key (lnkp t) (cargp t) (propertyp t) collocationp)
   ;;
   ;; _fix_me_
   ;; to be more informative, particularly when predicates occur more than once
@@ -556,8 +564,11 @@
     (nconc
      (loop
          for ed in (eds-relations eds)
-         for functor
-         = (format nil "~a~@[(~a)~]" (ed-linked-predicate ed) (ed-carg ed))
+         for functor = (format
+                        nil
+                        "~a~@[(~a)~]"
+                        (ed-linked-predicate ed :lnkp lnkp)
+                        (and cargp (ed-carg ed)))
          unless (and (null (ed-status ed)) 
                      (or (ed-bleached-p ed) (ed-vacuous-p ed)))
          nconc
@@ -579,35 +590,58 @@
                                 return ed)))
                 (when target
                   (list (list functor (vsym "ARG0")
-                              (ed-linked-predicate target))))))
-                          
+                              (ed-linked-predicate target :lnkp lnkp))))))
             (loop
                 for (role . value) in (ed-arguments ed)
                 when (ed-p value) collect
                   (let ((argument (format
                                    nil
                                    "~a~@[(~a)~]"
-                                   (ed-linked-predicate value)
-                                   (ed-carg value))))
+                                   (ed-linked-predicate value :lnkp lnkp)
+                                   (and cargp (ed-carg value)))))
                     (list functor role argument)))))
+
      #-:null
-     (loop
-         for ed in (eds-relations eds)
-         unless (or (and (null (ed-status ed)) 
-                         (or (ed-bleached-p ed) (ed-vacuous-p ed)))
-                    (ed-quantifier-p ed)
-                    (ed-message-p ed)
-                    (not (var-p (ed-variable ed))))
-         nconc
-           (loop
-               with id = (format
-                          nil
-                          "~a~@[(~a)~]"
-                          (ed-linked-predicate ed) (ed-carg ed))
-               for extra in (var-extra (ed-variable ed))
-               for value = (format nil "~(~a~)" (extrapair-value extra))
-               collect 
-                 (list id (extrapair-feature extra) value))))))
+     (when propertyp
+       (loop
+           for ed in (eds-relations eds)
+           unless (or (and (null (ed-status ed)) 
+                           (or (ed-bleached-p ed) (ed-vacuous-p ed)))
+                      (ed-quantifier-p ed)
+                      (ed-message-p ed)
+                      (not (var-p (ed-variable ed))))
+           nconc
+             (loop
+                 with id = (format
+                            nil
+                            "~a~@[(~a)~]"
+                            (ed-linked-predicate ed :lnkp lnkp)
+                            (and cargp (ed-carg ed)))
+                 for extra in (var-extra (ed-variable ed))
+                 for value = (format nil "~(~a~)" (extrapair-value extra))
+                 collect 
+                   (list id (extrapair-feature extra) value))))
+     (when collocationp
+       (loop
+           with functors
+           = (loop
+                 for ed in (eds-relations eds)
+                 for functor = (format
+                                nil
+                                "~a~@[(~a)~]"
+                                (ed-linked-predicate ed :lnkp lnkp)
+                                (and cargp (ed-carg ed)))
+                 unless (or (and (null (ed-status ed)) 
+                                 (or (ed-bleached-p ed) (ed-vacuous-p ed)))
+                            (member functor functors :test #'string=))
+                 collect functor into functors
+                 finally (return (sort functors #'string<)))
+           for functor in functors
+           for i from 1
+           nconc
+             (loop
+                 for match in (nthcdr i functors)
+                 collect (list functor match)))))))
 
 (defun ed-reset ()
   (setf %eds-variable-counter% 0)

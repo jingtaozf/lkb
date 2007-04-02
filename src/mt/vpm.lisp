@@ -37,7 +37,7 @@
     (error "read-vpm(): unable to open `~a'" (namestring file)))
   (format 
    t 
-   "~&read-vpm(): reading variable property mapping `~a~@[.~a~]'.~%"
+   "~&read-vpm(): reading file `~a~@[.~a~]'.~%"
    (pathname-name file) (pathname-type file))
   (with-open-file (stream file :direction :input)
     (loop
@@ -125,7 +125,7 @@
 
 (defun map-mrs (mrs vpm
                 &optional (direction :forward)
-                &key skolemizep (copyp t))
+                &key skolemizep preserve (copyp t))
   (declare (ignore copyp))
   ;;
   ;; _fix_me_
@@ -153,6 +153,17 @@
                           (mrs:var-type variable)
                           (mrs:var-extra variable)
                           vpm direction))
+                       (when preserve
+                         (loop
+                             for extra in (mrs:var-extra variable)
+                             for name = (mrs::extrapair-feature extra)
+                             when (member name preserve :test #'eq)
+                             do
+                               (push
+                                (mrs::make-extrapair
+                                 :feature name
+                                 :value (mrs::extrapair-value extra))
+                                (mrs:var-extra copy))))
                        (when skolemizep
                          (push
                           (mrs::make-extrapair 
@@ -168,18 +179,21 @@
         (loop
             for ep in (mrs:psoa-liszt mrs)
             collect
-              (mrs::make-char-rel
-	       :cfrom (mrs:char-rel-cfrom ep)
-	       :cto (mrs:char-rel-cto ep)
-               :handel (map-variable (mrs:rel-handel ep))
-               :pred (mrs:rel-pred ep)
-               :flist
-               (loop
-                   for role in (mrs:rel-flist ep)
-                   for value = (mrs:fvpair-value role)
-                   collect (mrs::make-fvpair 
-                            :feature (mrs:fvpair-feature role) 
-                            :value (map-variable value))))))
+              (let ((handel (map-variable (mrs:rel-handel ep)))
+                    (flist (loop
+                               for role in (mrs:rel-flist ep)
+                               for value = (mrs:fvpair-value role)
+                               collect (mrs::make-fvpair 
+                                        :feature (mrs:fvpair-feature role) 
+                                        :value (map-variable value)))))
+                (if (mrs::char-rel-p ep)
+                  (mrs::make-char-rel
+                   :handel handel :pred (mrs:rel-pred ep) :flist flist
+                   :lnk (mrs::rel-lnk ep)
+                   :cfrom (mrs::char-rel-cfrom ep) :cto (mrs::char-rel-cto ep))
+                  (mrs::make-rel
+                   :pred (mrs:rel-pred ep) :lnk (mrs::rel-lnk ep)
+                   :handel handel :flist flist)))))
       (setf (mrs:psoa-h-cons copy)
         (loop
             for hcons in (mrs:psoa-h-cons mrs)
@@ -236,9 +250,7 @@
                        (mrs::make-extrapair :feature property :value new)
                        result))))
               (loop-finish))
-      finally
-
-        (return (nreverse result))))
+      finally (return (nreverse result))))
 
 (defun test-pmr (type values pmr &optional (direction :forward))
   (unless (if (eq direction :forward)
