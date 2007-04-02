@@ -44,7 +44,7 @@
   "cfrom feature for recording character positions on relations")
 
 
-(defparameter *lnkp* nil
+(defparameter *lnkp* :characters
   "activate recording of surface links (whatever form they take) in EPs")
 
 (defparameter *rel-lnk-path* (list (vsym "LNK"))
