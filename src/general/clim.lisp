@@ -1,3 +1,7 @@
+                                                                     
+                                                                     
+                                                                     
+                                             
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (require :climxm))
 
@@ -106,14 +110,28 @@
                                                     (< (text-style-size (first e1))
                                                        (text-style-size (first e2))))))
                         (setf (gethash (copy-list key) mapping-table)
-                              fonts))
-                       (print fonts *debug-io*))
+                              fonts)))
                  mapping)))
            (setf (gethash style mapping-table) mapping)))))
 
 
 
-(in-package :tk)
+(in-package :xt)
+
+(x11::def-exported-constant lc-ctype 0)
+(x11::def-exported-constant lc-all 6)
+
+(def-foreign-call (x-supports-locale "XSupportsLocale")
+    ()
+  :returning (:int fixnum)
+  :arg-checking nil
+  :strings-convert t)
+
+(def-foreign-call (x-set-locale-modifiers "XSetLocaleModifiers")
+    ((x :foreign-address))
+  :call-direct t
+  :returning :foreign-address
+  :arg-checking nil)
 
 (defparameter *external-formats-to-locale-charset-alist*
               `((,(excl:find-external-format "UTF-8") . "UTF-8")
@@ -129,12 +147,10 @@
                      (ef-name (excl:ef-composee-ef ef)))
                  (cdr (assoc ef *external-formats-to-locale-charset-alist*))))
            (try-locale (locale)
-             (format *debug-io* "Trying locale ~A~%" locale)
              (setlocale lc-all locale)
              (let ((supported (x-supports-locale)))
                (unless (zerop supported)
                  (x-set-locale-modifiers "")
-                 (format *debug-io* "X supports locale!~%")
                  locale))))
     (let ((locale (excl:locale-name excl:*locale*))
           (encoding (ef-name (excl:locale-external-format excl:*locale*))))
@@ -238,22 +254,6 @@
                 (xm_string_create_l_to_r (clim-utils:string-to-foreign "")
                                          (clim-utils:string-to-foreign 
                                           xm-font-list-default-tag)))))))
-
-(x11::def-exported-constant lc-ctype 0)
-(x11::def-exported-constant lc-all 6)
-
-(in-package :xt)
-
-(def-foreign-call (x-supports-locale "XSupportsLocale")
-    ()
-  :returning (:int fixnum)
-  :arg-checking nil)
-
-(def-foreign-call (x-set-locale-modifiers "XSetLocaleModifiers")
-    ((x :foreign-address))
-  :call-direct t
-  :returning :foreign-address
-  :arg-checking nil)
 
 (in-package :xm-silica)
 
@@ -376,7 +376,6 @@ setup."
             (dolist (family families)
               (pushnew (last (disassemble-x-font-name (second family)) 2) done-registries
                        :test #'equal))))
-        (format *debug-io* "done registries: ~A, last charset: ~A~%" done-registries charset-number)
         ;; Now setup font mappings of fonts that the user has
         ;; installed, but we don't know anything about (especially no
         ;; convenient font aliases).
@@ -390,7 +389,6 @@ setup."
                 for encoding being the hash-keys of (list-fonts-by-registry display) using (hash-value fonts)
                 for fallback-font = (find-font-with-properties fonts weight slant)
                 for default-font-match-string = (format nil "-*-*-*-*-*-*-*-*-*-*-*-*-~A-~A" (first encoding) (second encoding))
-                do (format *debug-io* "~&registering installed font ~A for enc:~A~%" character-set encoding)
                 do (unless (member encoding done-registries :test #'equal)
                      (vector-push-extend (excl:string-to-native
                                           (format nil "~A-~A" (first encoding) (second encoding)))
@@ -428,8 +426,7 @@ setup."
        (list :name (format nil "CLIM Event Dispatcher for ~A"
 			   (port-server-path port))
 	     :priority 1000
-             :initial-bindings `((excl:*locale* . ',excl:*locale*)
-                                 ,@excl:*cl-default-special-bindings*))
+             :initial-bindings `((excl:*locale* . ',excl:*locale*)))
        #'port-event-loop port))
     (setf (getf (mp:process-property-list process) :no-interrupts) t)
     (setf (port-process port) process)))
