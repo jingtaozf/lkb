@@ -1641,13 +1641,12 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
     (mrs-check-for #\[ istream)
     (let* ((ltop (if *rel-handel-path* (read-mrs-ltop istream)))
            (index (read-mrs-index istream))
-           (xarg (read-mrs-xarg istream))
            (liszt (read-mrs-liszt istream))
            (hcons (if *rel-handel-path* (read-mrs-hcons istream)))
            (vcs (ignore-errors (read-mrs-vcs istream)))
            (psoa
             (make-psoa :top-h ltop
-                       :index index :xarg xarg
+                       :index index
                        :liszt liszt
                        :h-cons hcons
                        :vcs vcs)))

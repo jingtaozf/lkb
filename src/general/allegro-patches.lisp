@@ -39,7 +39,7 @@
 ;;; it seems, we may now have a path for UniCode issues in CLIM (using Motif);
 ;;; try including that in our images.                           (10-oct-06; oe)
 ;;;
-#+:unix
+#+(and :unix :clim :null)
 (load 
  (compile-file (make-pathname :directory general-dir :name "clim")))
 
