@@ -1,6 +1,4 @@
-;;; Copyright (c) 1998--2006
-;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
-;;;   see `licence.txt' for conditions.
+;;; Copyright (c) 2006--2007 Stephan Oepen; see `licence.txt' for conditions.
 
 (in-package :mrs)
 
