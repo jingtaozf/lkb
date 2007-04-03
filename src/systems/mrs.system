@@ -27,8 +27,8 @@
     ;;
     ;; for backwards compatibility with people pushing an :lkb feature and then
     ;; loading the MRS system to obtain both, effectively make this system a 
-    ;; no-op, when LKB is requested; the :depends-on above will now take make
-    ;; sure the LKB (now including MRS) will get loaded.
+    ;; no-op, when LKB is requested; the :depends-on above will then make sure
+    ;; the LKB (now including MRS) will get loaded.
     ;;
     :components
     #+:lkb ()
