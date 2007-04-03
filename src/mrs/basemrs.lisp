@@ -1975,7 +1975,8 @@ VAR -> VARNAME[:CONSTNAME]*
                   (read-mrs-simple-var istream))))
     (when *rel-handel-path*
       (mrs-check-for #\: istream))
-    (let ((predname (read-mrs-atom istream)))
+    (let ((predname (read-mrs-atom istream))
+          (lnk (read-lnk istream)))
       (mrs-check-for #\( istream)
       (let ((featpairs nil)
             (first-p t)
@@ -1992,7 +1993,7 @@ VAR -> VARNAME[:CONSTNAME]*
             (push (read-mrs-indexed-featpair istream predname pos)
                   featpairs)
             (incf pos)))
-        (make-rel :pred predname
+        (make-rel :pred predname :lnk lnk
                   :handel hvar
                   :flist (sort featpairs #'feat-sort-func))))))
           
