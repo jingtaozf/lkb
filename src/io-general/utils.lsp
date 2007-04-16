@@ -654,15 +654,15 @@
 ;; TO DO: add Emacs coding names
 (define-constant %coding-system-names%
     '(
-      (:iso8859-1 :latin1 :ascii :8-bit :1250 :iso88591 :latin-1 :iso-8859-1)
-      (:1251 :CP1251 :|cp1251| :WINDOWS-1251 :|windows-1251|)
-      (:1252 :CP1252 :|cp1252| :WINDOWS-1252 :|windows-1252|)
-      (:1253 :CP1253 :|cp1253| :WINDOWS-1253 :|windows-1253|) ;; For MS Windows
-      (:1254 :CP1254 :|cp1254| :WINDOWS-1254 :|windows-1254|) ;; For MS Windows
-      (:1255 :CP1255 :|cp1255| :WINDOWS-1255 :|windows-1255|) ;; For MS Windows
-      (:1256 :CP1256 :|cp1256| :WINDOWS-1256 :|windows-1256|) ;; For MS Windows
-      (:1257 :CP1257 :|cp1257| :WINDOWS-1257 :|windows-1257|) ;; For MS Windows
-      (:1258 :CP1258 :|cp1258| :WINDOWS-1258 :|windows-1258|) ;; For MS Windows
+      (:iso8859-1 :latin1 :ascii :8-bit :|1250| :iso88591 :latin-1 :iso-8859-1)
+      (:|1251| :CP1251 :|cp1251| :WINDOWS-1251 :|windows-1251|)
+      (:|1252| :CP1252 :|cp1252| :WINDOWS-1252 :|windows-1252|)
+      (:|1253| :CP1253 :|cp1253| :WINDOWS-1253 :|windows-1253|) ;; For MS Windows
+      (:|1254| :CP1254 :|cp1254| :WINDOWS-1254 :|windows-1254|) ;; For MS Windows
+      (:|1255| :CP1255 :|cp1255| :WINDOWS-1255 :|windows-1255|) ;; For MS Windows
+      (:|1256| :CP1256 :|cp1256| :WINDOWS-1256 :|windows-1256|) ;; For MS Windows
+      (:|1257| :CP1257 :|cp1257| :WINDOWS-1257 :|windows-1257|) ;; For MS Windows
+      (:|1258| :CP1258 :|cp1258| :WINDOWS-1258 :|windows-1258|) ;; For MS Windows
       (:iso8859-2 :latin-2 :latin2 :ISO-8859-2 :|iso-8859-2| :|latin-2|)
       (:iso8859-3 :latin-3 :latin3 :ISO-8859-3 :|iso-8859-3| :|latin-3|)
       (:iso8859-4 :latin-4 :latin4 :ISO-8859-4 :|iso-8859-4| :|latin-4|)
@@ -679,11 +679,11 @@
       (:big5)
       (:gb2312)
       (:euc :ujis :euc-jp :eucjp :|eucJP|)
-      (:874) ;; For MS Windows
-      (:932) ;; For MS Windows
-      (:936) ;; For MS Windows
-      (:949) ;; For MS Windows
-      (:950) ;; For MS Windows
+      (:|874|) ;; For MS Windows
+      (:|932|) ;; For MS Windows
+      (:|936|) ;; For MS Windows
+      (:|949|) ;; For MS Windows
+      (:|950|) ;; For MS Windows
       (:jis)
       (:shiftjis)))
 
@@ -695,14 +695,14 @@
     #+:allegro
     '(
       :iso8859-1
-      :1251
-      :1252
-      :1253
-      :1254
-      :1255
-      :1256
-      :1257
-      :1258
+      :|1251|
+      :|1252|
+      :|1253|
+      :|1254|
+      :|1255|
+      :|1256|
+      :|1257|
+      :|1258|
       :iso8859-2
       :iso8859-3
       :iso8859-4
@@ -719,24 +719,24 @@
       :big5
       :gb2312
       :euc
-      :874
-      :932
-      :936
-      :949
-      :950
+      :|874|
+      :|932|
+      :|936|
+      :|949|
+      :|950|
       :jis
       :shiftjis)
     #+:sbcl
     '(
       :iso8859-1
-      (:1251 . :cp1251)
-      (:1252 . :cp1252)
-      (:1253 . :cp1253)
-      (:1254 . :cp1254)
-      (:1255 . :cp1255)
-      (:1256 . :cp1256)
-      (:1257 . :cp1257)
-      (:1258 . :cp1258)
+      (:|1251| . :cp1251)
+      (:|1252| . :cp1252)
+      (:|1253| . :cp1253)
+      (:|1254| . :cp1254)
+      (:|1255| . :cp1255)
+      (:|1256| . :cp1256)
+      (:|1257| . :cp1257)
+      (:|1258| . :cp1258)
       :iso8859-2
       :iso8859-3
       :iso8859-4
@@ -753,11 +753,11 @@
       ;:big5
       ;:gb2312
       (:euc . :euc-jp)
-      (:874 . :cp874)
-      ;:932
-      ;:936
-      ;:949
-      ;:950
+      (:|874| . :cp874)
+      ;:|932|
+      ;:|936|
+      ;:|949|
+      ;:|950|
       ;:jis
       ;:shiftjis
       )
