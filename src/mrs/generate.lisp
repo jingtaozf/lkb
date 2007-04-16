@@ -1361,14 +1361,16 @@
 (defun gen-chart-intersective-inactive-edges nil
   ;; return a list of all inactive edges in chart which are able to function
   ;; as intersective modifiers
-  (remove-if-not
-     #'(lambda (e)
-          (and
-             ;; words like 'had' on their own with no semantics cannot be
-             ;; intersective modifiers
-             (gen-chart-set-non-empty-p (g-edge-rels-covered e))
-             (intersective-modifier-dag-p (tdfs-indef (g-edge-dag e)))))
-     (gen-chart-retrieve-with-index *toptype* 'inactive)))
+  (let ((res nil))
+     (dolist (elist (gen-chart-retrieve-with-index *toptype* 'inactive) res)
+        (dolist (e elist)
+           (when
+             (and
+                ;; words like 'had' on their own with no semantics cannot be
+                ;; intersective modifiers
+                (gen-chart-set-non-empty-p (g-edge-rels-covered e))
+                (intersective-modifier-dag-p (tdfs-indef (g-edge-dag e))))
+             (push e res))))))
 
 
 ;;; Make active edges from inactive intersective modifier edges
