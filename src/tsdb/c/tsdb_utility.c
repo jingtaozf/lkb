@@ -1752,9 +1752,9 @@ BYTE tsdb_initialize() {
 #ifdef ALEP
   if(!(tsdb.status & TSDB_CLIENT_MODE)) {
 #endif
-    foo = (char *)malloc(MAXNAMLEN + 1);
+    foo = (char *)malloc(strlen(tsdb.data_path) + MAXNAMLEN + 1);
 #ifdef COMPRESSED_DATA
-    baz = (char *)malloc(MAXNAMLEN + 1);
+    baz = (char *)malloc(strlen(tsdb.data_path) + MAXNAMLEN + 1);
 #endif
     for(i = 0; tsdb.relations[i] != NULL; i++) {
       foo = strcpy(foo, tsdb.data_path);
@@ -1782,7 +1782,7 @@ BYTE tsdb_initialize() {
           } /* if */
           else {
             if((j = creat(foo, 0666)) == -1) {
-              free(foo);
+              free(foo); foo = NULL;
               fprintf(tsdb_error_stream,
                       "initialize(): unable to create data file for `%s'.\n",
                       tsdb.relations[i]->name);
@@ -1802,7 +1802,7 @@ BYTE tsdb_initialize() {
 #endif
       } /* if */
     } /* for */
-    free(foo);
+    if(foo != NULL) free(foo);
 #ifdef COMPRESSED_DATA
     free(baz);
 #endif
