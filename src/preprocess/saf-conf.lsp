@@ -136,6 +136,8 @@
     (cond
       ((eq feat :|content|)
        (saf-fs-path-value x (saf-edge-content edge)))
+      ((eq feat :|deps|)
+       nil) ;; not implemented: PET only
       ((eq feat :|rmrs|)
        (resolve-mrs x edge)
        (error "no RMRS support (MRS package unavailable)"))
