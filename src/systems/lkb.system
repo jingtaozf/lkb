@@ -207,6 +207,8 @@
       ((:file "preprocess")
        (:file "graph")
        #+:allegro
+       (:file "external-smaf")
+       #+:allegro
        (:file "server")
        #+:mrs
        (:file "hook-mrs")

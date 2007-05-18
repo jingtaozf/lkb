@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE smaf SYSTEM 'smaf.dtd'>
+<smaf>
+ <text>The dog barks.</text>
+ <lattice init='v0' final='v3' cfrom='0' cto='14'>
+  <edge type='token' id='t1' cfrom='0' cto='3' source='v0' target='v1'>den</edge>
+  <edge type='token' id='t2' cfrom='4' cto='7' source='v1' target='v2'>dog</edge>
+  <edge type='token' id='t3' cfrom='8' cto='14' source='v2' target='v3'>smiler</edge>
+  <edge type='pos' id='p1' source='v0' target='v1' deps='t1'><slot name='tag'>DET</slot></edge>
+  <edge type='pos' id='p2' source='v1' target='v2' deps='t2'><slot name='tag'>NN</slot></edge>
+  <edge type='pos' id='p3' source='v2' target='v3' deps='t3'><slot name='tag'>VBZ</slot></edge>
+ </lattice>
+</smaf>

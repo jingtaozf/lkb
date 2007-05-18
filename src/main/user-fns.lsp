@@ -22,6 +22,10 @@
   (when *sppp-stream*
     (return-from preprocess-sentence-string (sppp str)))
 
+  #+:xml
+  (when smaf:*e-stream*
+    (return-from preprocess-sentence-string (smaf:e str)))
+
   #+:preprocessor
   (when (preprocessor:preprocessor-initialized-p)
     (return-from preprocess-sentence-string 
