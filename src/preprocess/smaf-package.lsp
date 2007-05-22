@@ -62,6 +62,9 @@
    #:config-lmap
    
    #:id #:source #:target #:from #:to #:l-content #:deps
+   
+   #:*e-stream*
+   #:e
    )
   (:nicknames :saf))
 
