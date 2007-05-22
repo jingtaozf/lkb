@@ -16,7 +16,7 @@
   ;; split into words on spaces
   ;; in *characterize-p* mode keep track of character position pointers
   #+(or :preprocessor :xml)
-  (declare (special *sppp-stream*))
+  (declare (special *sppp-stream* smaf:*e-stream*))
 
   #+:xml
   (when *sppp-stream*
