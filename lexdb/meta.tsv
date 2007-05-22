@@ -1,4 +1,5 @@
 lexdb-version	4.90
 supported-psql-server	8.0
 supported-psql-server	8.1
+supported-psql-server	8.2
 mod_time	-infinity
