@@ -257,20 +257,6 @@
       do (setf (nth i rec) (normalize-orthkey! (nth i rec))))
   recs)
 
-(defmethod create-unnormalized-missing-lex-keys ((lex psql-lex-database))
-  (loop
-      for rec in
-	(get-raw-records lex 
-			 (format nil (create-unnormalized-missing-lex-keys3-FSQL lex)
-				 (orth-field lex)))
-      for orth-list = (string-2-str-list (fourth rec))
-      if (= 1 (length orth-list))
-      collect rec
-      else
-      append 
-      (loop for word in orth-list
-	  collect (list (first rec) (second rec) (third rec) word))))
- 
 ;;; ALL IDS
 
 (defmethod collect-psort-ids ((lex psql-lex-database) &key (cache t) (recurse t))

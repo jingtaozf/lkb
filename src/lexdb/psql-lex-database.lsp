@@ -767,3 +767,18 @@
   (setf (cdr (assoc :|dead| record)) "t") ;; mark entry as dead
   (set-lex-entry-from-record lex record)) ;; commit change
 
+;; this belongs here due to use of low-level get-raw-records
+(defmethod create-unnormalized-missing-lex-keys ((lex mu-psql-lex-database))
+  (loop
+      for rec in
+	(get-raw-records lex
+			 (format nil (create-unnormalized-missing-lex-keys3-FSQL lex)
+				 (orth-field lex)))
+      for orth-list = (string-2-str-list (fourth rec))
+      if (= 1 (length orth-list))
+      collect rec
+      else
+      append
+      (loop for word in orth-list
+	  collect (list (first rec) (second rec) (third rec) word))))
+

@@ -183,3 +183,18 @@
   (let* ((id (cdr (assoc :|name| record)))
 	 (qid (psql-quote-literal id)))
     (run-command lex (format nil "DELETE FROM lex WHERE name=~a" qid))))
+
+;; this belongs here due to use of low-level get-raw-records
+(defmethod create-unnormalized-missing-lex-keys ((lex su-psql-lex-database))
+  (loop
+      for rec in
+	(get-raw-records lex
+			 (format nil (create-unnormalized-missing-lex-keys3-FSQL lex)
+				 (orth-field lex)))
+      for orth-list = (string-2-str-list (second rec)) ;!
+      if (= 1 (length orth-list))
+      collect rec
+      else
+      append
+      (loop for word in orth-list
+	  collect (list (first rec) word))))
