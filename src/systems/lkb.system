@@ -65,9 +65,9 @@
   ;;
   ;; activate the LUI support code for select environments
   ;;
-  #+(or (and (or :allegro :acl-compat) (or :linux86 :linux86-64 :powerpc))
+  #+(or (and :allegro (or :linux86 :linux86-64 :powerpc))
         (and :openmcl :powerpc)
-        (and :null :sbcl :x86 :linux))
+        (and :sbcl :x86 :linux))
   (pushnew :lui *features*)
 
   ;;
