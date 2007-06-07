@@ -87,7 +87,7 @@
   (or x 
       (extract-param :user *lexdb-params*)
       (and *lexdb* (user *lexdb*))
-      (user-name)))
+      (sys-user-name)))
 
 (defun initialize-lexdb-password (x)
   (or x 

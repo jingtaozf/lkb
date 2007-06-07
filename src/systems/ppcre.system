@@ -35,8 +35,6 @@
 ;#+(and :allegro (version>= 7 0))
 ;(push :use-acl-regexp2-engine *features*)
 
-(pushnew :ppcre *features*)
-
 (defsystem "ppcre"
     :source-pathname (dir-append
 ;                      (get-sources-dir "cl-ppcre-1.2.18") '(:relative "cl-ppcre-1.2.18"))

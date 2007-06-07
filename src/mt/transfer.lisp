@@ -780,9 +780,10 @@
     (lkb::dag-subsumes-p dag constraint)))
 
 (defun compile-mtr (mtr)
-  #-:ppcre
-  mrs
-  #+:ppcre
+  #-:cl-ppcre
+  ;;mrs
+  mtr
+  #+:cl-ppcre
   (labels ((compile (mrs)
              (when mrs
                (loop
@@ -790,7 +791,7 @@
                    for pred = (mrs:rel-pred ep)
                    when (and (stringp pred) (eq (char pred 0) #\~)) do 
                      (setf (mrs:rel-pred ep)
-                       (ppcre::create-scanner (subseq pred 1)))
+                        (ppcre::create-scanner (subseq pred 1)))
                    when (and (stringp pred) (eq (char pred 0) #\@)) do
                      (let* ((id (string-upcase (subseq pred 1)))
                             (id (intern id :keyword))
@@ -808,7 +809,7 @@
                          when (and (stringp value) (eq (char value 0) #\~)) do
                            (setf (mrs:fvpair-value role)
                              (ppcre::create-scanner (subseq value 1)))
-                         when (mrs::var-p value) do
+                          when (mrs::var-p value) do
                            (loop
                                for extra in (mrs:var-extra value)
                                for value = (mrs::extrapair-value extra)
@@ -816,7 +817,7 @@
                                          (eq (char value 0) #\~))
                                do
                                  (setf (mrs::extrapair-value extra)
-                                   (ppcre::create-scanner
+                                    (ppcre::create-scanner
                                     (subseq value 1)))))))
              mrs)
            (unfill (mrs)
@@ -1644,7 +1645,7 @@
       value1)
      ((and (numberp value1) (numberp value2))
       (= value1 value2))
-     #+:ppcre
+     #+:cl-ppcre
      ((functionp variable2)
       (let ((string (if (symbolp value1) (format nil "~(~a~)" value1) value1)))
         (multiple-value-bind (start end starts ends)
@@ -1791,7 +1792,7 @@
                  pred2)))
 
     (cond
-     #+:ppcre
+     #+:cl-ppcre
      ((functionp pred2)
       (let ((string (if (symbolp pred1) (format nil "~(~a~)" pred1) pred1)))
         (multiple-value-bind (start end starts ends) 

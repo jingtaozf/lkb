@@ -99,7 +99,10 @@
 	(handler-case
 	    (r-server-accept-connections socket processor)
 	  (error (condition)
-	    (format t  "~&Error: ~A" condition)))
+	    (print condition)
+	    #-:sbcl (format t  "~&Error: ~A" condition)
+	    #+:sbcl (format t  "~&Error: ~S" condition)
+	    ))
       (close socket)
       (format t "~&;;; [exiting server mode]"))))
 
@@ -114,8 +117,10 @@
   (let ((s (socket::accept-connection socket)))
     (unwind-protect
 	(progn
-	   ;; use UTF-8 when communicating with socket
-	  (setf (stream-external-format s) :utf-8)
+	  ;; use UTF-8 when communicating with socket
+	  ;; FIXME: works by default under sbcl, but interface
+	  ;;        is incomplete 
+	  #-:sbcl (setf (stream-external-format s) :utf-8)
 	  (format t "~&;;; connection established")
 	  (r-server-process-input s processor))
       (close s)
@@ -124,7 +129,11 @@
 ;; process single input chunk
 (defun r-server-process-input (s processor)
   (loop
-      for input = (read-input s)
+      for input = (handler-case
+		      (read-input s)
+		    (error (condition)
+		      (format t  "~&Error: ~A" condition)
+		      :eof))
       for empty-input = (lxml::xml-whitespace-p input)
       when (debug :input-chunk)
       do (format t "~&I: ~a" input)

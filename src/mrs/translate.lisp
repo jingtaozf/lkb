@@ -44,7 +44,10 @@
                        :direction :output 
                        :if-exists :append :if-does-not-exist :create)
         (let* ((log (make-broadcast-stream 
-                     log (or #+:allegro excl:*initial-terminal-io* t)))
+                     log
+		     #+:sbcl excl:*initial-terminal-io*
+		     #-:sbcl (or #+:allegro excl:*initial-terminal-io* t)
+		     ))
                (mrss (mrs::read-mrss-from-file file)))
           (format
            log
@@ -181,6 +184,8 @@
       (ccl:process-name ccl:*current-process*)
       #+:lucid 
       (lcl:environment-variable "USER")
+      #+:sbcl
+      (sb-ext:posix-getenv "USER")
       "nobody"))
 
 #+(and :allegro-version>= (version>= 5 0))

@@ -24,6 +24,26 @@
 #-:mk-defsystem
 (load (make-pathname :directory general-dir :name "defsystem"))
 
+;; also load "another system definition facility"
+(require :asdf)
+
+;; tell asdf where to find its system definitions
+(setf asdf:*central-registry*
+  (list
+   (merge-pathnames (pathname "asdf/systems/") *default-pathname-defaults*)))
+
+(require :cl-ppcre)
+(require :puri)
+(require :acl-compat)
+
+;; this hack ensures sbcl automatically recompiles any out-of-date
+;; fasl files (rather than choking, which is the default behaviour)
+(defmethod asdf:perform :around ((o asdf:load-op) (c asdf:cl-source-file))
+  (handler-case (call-next-method o c)
+    (sb-ext:invalid-fasl ()
+      (asdf:perform (make-instance 'asdf:compile-op) c)
+      (call-next-method))))
+
 (in-package "MAKE")
 
 (defvar %binary-dir-name% 
@@ -68,3 +88,90 @@
 (defun getenv (name) 
   (sb-ext:posix-getenv name))
 
+;;
+;; set up :multiprocessing package
+;;
+
+(defpackage :multiprocesing
+  (:use #:common-lisp #:acl-compat.mp)
+  (:nicknames #:mp)
+  (:export 
+   #:*current-process*         ;*
+   #:process-kill              ;*
+   #:process-preset            ;*
+   #:process-name              ;*
+
+   #:process-wait-function
+   #:process-run-reasons 
+   #:process-arrest-reasons
+   #:process-whostate
+   #:without-interrupts
+   #:process-wait
+   #:process-enable
+   #:process-disable
+   #:process-reset
+   #:process-interrupt
+
+   #:process-run-function      ;*
+   #:process-property-list     ;*
+   #:without-scheduling        ;*
+   #:process-allow-schedule    ;*
+   #:make-process              ;*
+   #:process-add-run-reason    ;*
+   #:process-revoke-run-reason ;*
+   #:process-add-arrest-reason    ;*
+   #:process-revoke-arrest-reason ;*
+   #:process-allow-schedule    ;*
+   #:with-timeout              ;*
+   #:make-process-lock         ;*
+   #:with-process-lock         ;*
+   #:process-lock
+   #:process-unlock
+
+   #:current-process
+   #:process-name-to-process
+   #:process-wait-with-timeout
+   #:wait-for-input-available
+   #:process-active-p
+   ))
+
+(in-package :mp)
+
+(eval-when (:execute :load-toplevel :compile-toplevel)
+  (export 'run-function)
+  (setf (symbol-function 'run-function) 
+        (symbol-function 'process-run-function)))
+
+;;
+;; set up :excl package
+;;
+
+(defpackage :excl
+  (:use #:common-lisp #:acl-compat.excl)
+  (:export
+   #:if*
+   #:*initial-terminal-io*
+   #:*cl-default-special-bindings*
+   #:filesys-size
+   #:filesys-write-date
+   #:stream-input-fn
+   #:match-regexp
+   #:compile-regexp
+   #:*current-case-mode*
+   #:intern*
+   #:filesys-type
+   #:errorset
+   #:atomically
+   #:fast
+   #:without-package-locks
+   #:fixnump
+   ))
+
+;; PPCRE sets ppcre:*regex-char-code-limit* to the constant CHAR-CODE-LIMIT
+;; under SBCL, CHAR-CODE-LIMIT is 1114112
+;;  - this is way too high for almost any application
+;;    (results in massive regex scanners)
+;; under Allegro, CHAR-CODE-LIMIT is 65536
+;;  - still excessively high, but usable
+;; SO we set ppcre:*regex-char-code-limit* to 65536 for now...
+(setf ppcre:*regex-char-code-limit* 65536)

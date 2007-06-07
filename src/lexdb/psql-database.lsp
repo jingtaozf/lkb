@@ -13,9 +13,15 @@
      (run-command ,lexdb (format nil "set client_min_messages to ~a" ,min-messages))
      ,@body
     (run-command ,lexdb (format nil "set client_min_messages to ~a" current-min-messages))))
-  
+
+#+:allegro
 (defmacro with-lexdb-locale (&body body)
   `(let ((excl::*locale* *lexdb-locale*))
+     ,@body))
+
+#+:sbcl
+(defmacro with-lexdb-locale (&body body)
+  `(progn
      ,@body))
   
 (defmethod copy-column-to-psql ((db psql-database) table list)
@@ -342,7 +348,8 @@
 (defmethod true-port ((lexicon psql-database))
   (let* ((port (or
 		(port lexicon)
-		(car (excl.osi::command-output "echo $PGPORT")))))
+		#+:allegro (car (excl.osi::command-output "echo $PGPORT"))
+		)))
     (if (equal port "")
 	5432
       port)))
@@ -398,6 +405,7 @@
     (setf dummy dummy) ;;avoid compiler warning
     (1- len))) ;; len includes null byte
 
+#+:allegro
 (defun psql-quote-literal (str)
   (with-lexdb-locale
       (unless (stringp str)
@@ -415,6 +423,75 @@
 		     (excl:octets-to-string x))
 		   "'"))))
 
+#+:sbcl
+(defparameter *psql-quote-literal-cstr0* 
+    (sb-alien:make-alien (sb-alien:c-string :external-format :utf8)))
+
+#+:sbcl
+(defparameter *psql-quote-literal-cstr* 
+    (sb-alien:make-alien 
+     (sb-alien:array sb-alien:char 0)))
+
+#+:sbcl
+(defun alien-array-dimensions (alien-array)
+  (SB-ALIEN-INTERNALS:ALIEN-ARRAY-TYPE-dimensions 
+   (SB-ALIEN-INTERNALS:ALIEN-POINTER-TYPE-to 
+    (SB-ALIEN-INTERNALS:ALIEN-VALUE-type alien-array))))
+
+#+:sbcl
+(defun psql-quote-literal (str)
+  (concatenate 
+      'string 
+    "'"
+    (psql-quote-literal-aux str)
+    "'"))
+
+#+:sbcl
+(defun psql-quote-literal-aux (str)
+  (unless (stringp str)
+    (setf str (2-str str)))
+  (let* ((len0 (nlength str))
+	 (maxlen (max 1
+		      (+ (length str)
+			 len0
+			 1))))
+    (when (> maxlen (car (alien-array-dimensions *psql-quote-literal-cstr*)))
+      ;;we need to reserve more memory
+      (format t "~%expanding *psql-quote-literal-cstr* to ~a elements" maxlen)
+      (sb-alien:free-alien *psql-quote-literal-cstr*)
+      (setf *psql-quote-literal-cstr* (eval
+		  `(sb-alien:make-alien 
+		    (sb-alien:array sb-alien:char
+			   ,maxlen
+			   )))))
+    ;; call the foreign fn
+    (pq:escape-string (sb-alien:cast *psql-quote-literal-cstr* (* sb-alien:char)) str len0)
+    ;; extract the string value we want
+    (setf (sb-alien:deref *psql-quote-literal-cstr0*) 
+      (sb-alien:cast *psql-quote-literal-cstr* (* sb-alien:char)))
+    ))
+
+(defun nlength (str)
+  (loop
+      for c across str
+      sum (nlength-char c)))
+
+(defun nlength-char (char)
+  (let ((code (char-code char)))
+    (cond
+     ((< code #x00000080)
+      1)
+     ((< code #x00000800)
+      2)
+     ((< code #x00010000)
+      3)
+     ((< code #x00200000)
+      4)
+     ((< code #x04000000)
+      5)
+     (t 
+      (error "char code out of range for Unicode!")))))
+     
 (defun sql-like-text (id)
   (format nil "~a" (sql-like-text-aux (2-str id))))
 
@@ -539,6 +616,7 @@
 ;; coz getline etc. are 'Obsolete Functions for COPY'
 
 (defparameter *psql-c-str-len* 1000) ;;must be >150
+#+:allegro
 (defun copy-out-stream (conn ostream)
   (let* ((c-str (ff::string-to-native 
 		 (make-string *psql-c-str-len*))))
@@ -551,10 +629,46 @@
     (excl::aclfree c-str)
     (endcopy conn)))
 
+#+:sbcl
+(defparameter *copy-out-stream-buffer*
+    (eval
+     `(sb-alien:make-alien
+       (sb-alien:array sb-alien:char ,*psql-c-str-len*))))
+
+#+:sbcl
+(defparameter *copy-out-stream-c-string*
+    (sb-alien:make-alien (sb-alien:c-string :external-format :utf8)))
+
+#+:sbcl
+(defun copy-out-stream (conn ostream)
+  (let* ((c-str *copy-out-stream-buffer*))
+    (unwind-protect
+	(do* ((line 
+	       (getline conn c-str *psql-c-str-len*) 
+	       (getline conn c-str *psql-c-str-len*)))
+	    ((string= line "\\."))
+	  (write-line line ostream)))
+    (endcopy conn)))
+
+#+:sbcl
+(defun getline (conn c-str len)
+  (loop
+      for i = (pq:getline conn (sb-alien:cast c-str (* sb-alien:char)) len)
+      for new-text = (setf (sb-alien:deref *copy-out-stream-c-string*)
+		(sb-alien:cast c-str (* sb-alien:char)))
+      for line = (concatenate 'string line new-text)
+      while (= i 1)
+      finally (return line)))
+
+#+:allegro
 (defun getline (conn c-str len)
   (loop
       for i = (pq:getline conn c-str len)
-      for line = (concatenate 'string line (with-lexdb-locale (ff::native-to-string c-str)))
+      for line = (concatenate 
+		     'string 
+		   line 
+		   (with-lexdb-locale (ff::native-to-string c-str))
+		   )
       while (= i 1)
       finally (return line)))
 
@@ -579,7 +693,9 @@
   (with-lexdb-locale (pq:error-message conn)))
 
 (defun connect-db (conninfo)
-  (with-lexdb-locale (connect-db2 conninfo)))
+  (with-lexdb-locale 
+      (connect-db2 conninfo)
+    ))
 
 (defun connect-db2 (conninfo)
   (handler-case

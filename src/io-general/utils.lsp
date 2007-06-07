@@ -5,15 +5,6 @@
 
 (in-package :lkb)
 
-;; 'define-constant' taken from SBCL manual
-;; Under ANSI spec, application of defconstant multiple times is undefined
-;; unless values are eql. SBCL treats this undefined behaviour as an error.
-;; What's worse, in SBCL defconstant takes effect both at load time and at
-;; compile time...
-(defmacro define-constant (name value &optional doc)
-       `(defconstant ,name (if (boundp ',name) (symbol-value ',name) ,value)
-	  ,@(when doc (list doc))))
-
 (defun check-for (character istream name)
    (let ((next-char (peek-with-comments istream)))
      (if (char= next-char character)
@@ -337,7 +328,7 @@
 
 (defun lkb-pathname (directory name)
   (merge-pathnames
-   (make-pathname :name name)
+   (pathname name) ;; [bmw] was (make-pathname :name name)
    directory))
 
 ;;;

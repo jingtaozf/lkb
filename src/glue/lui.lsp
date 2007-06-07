@@ -124,8 +124,9 @@
     (ignore-errors (close %lui-stream%))
     (setf %lui-stream% nil))
   (when %lui-socket%
-    (ignore-errors (socket:shutdown %lui-socket% :output))
-    (ignore-errors (socket:shutdown %lui-socket% :input))
+    ;; [bmw] -- socket:shutdown is not available in :acl-compat
+    #-:acl-compat (ignore-errors (socket:shutdown %lui-socket% :output))
+    #-:acl-compat (ignore-errors (socket:shutdown %lui-socket% :input))
     (ignore-errors (close %lui-socket%))
     (setf %lui-socket% nil))
   #-:clisp

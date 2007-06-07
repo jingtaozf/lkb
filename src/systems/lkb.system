@@ -47,6 +47,10 @@
   #+(and :allegro (version>= 6 0))
   (pushnew :pxml *features*)
 
+  ;; [bmw] basic multiprocessing support in sbcl
+  #+:sbcl
+  (pushnew :multiprocessing *features*)
+  
   ;;
   ;; always allow `pooling' (aka LKB-internal explicit memory management) for
   ;; heavily used object types (primarily dags during unification).
@@ -61,7 +65,7 @@
   ;;
   ;; activate the LUI support code for select environments
   ;;
-  #+(or (and :allegro (or :linux86 :linux86-64 :powerpc))
+  #+(or (and (or :allegro :acl-compat) (or :linux86 :linux86-64 :powerpc))
         (and :openmcl :powerpc)
         (and :null :sbcl :x86 :linux))
   (pushnew :lui *features*)
@@ -70,7 +74,7 @@
   ;; activate PSQL (used in the lexical database) support when running on ACL,
   ;; on supported platforms, i.e. Linux (x86), Solaris, and Windoze
   ;;
-  #+(and :allegro (or :linux (and :sun :svr4) :mswindows))
+  #+(or :allegro :sbcl)
   (pushnew :psql *features*)
 
   ;;
@@ -116,7 +120,7 @@
     :binary-pathname (get-binaries-dir "lkb")
     :source-extension "lsp"
     :depends-on (#+:psql "psql"
-                 #+:preprocessor "ppcre"
+                 #+(and :preprocessor (not :sbcl)) "ppcre"
                  #+:preprocessor "preprocessor"
                  #+:xml "s-xml" 
                  #+:pxml "pxml")
@@ -207,7 +211,7 @@
       ((:file "preprocess")
        (:file "graph")
        (:file "external-smaf")
-       #+:allegro
+       #+(or :allegro :acl-compat)
        (:file "server")
        #+:mrs
        (:file "hook-mrs")

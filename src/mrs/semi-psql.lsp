@@ -25,7 +25,16 @@
 	      (load-sdbt x dbname))
 	  (sdb-tables sdb)))
 
-(defconstant *psql-semi-dump-base*
+;; 'define-constant' taken from SBCL manual
+;; Under ANSI spec, application of defconstant multiple times is undefined
+;; unless values are eql. SBCL treats this undefined behaviour as an error.
+;; What's worse, in SBCL defconstant takes effect both at load time and at
+;; compile time...
+(defmacro define-constant (name value &optional doc)
+       `(defconstant ,name (if (boundp ',name) (symbol-value ',name) ,value)
+	  ,@(when doc (list doc))))
+
+(define-constant *psql-semi-dump-base*
     (format nil "~a/semi.obj." 
 	    (make-pathname :directory (namestring (lkb::lkb-tmp-dir)))))
 

@@ -222,11 +222,15 @@
                (format t "~&No parser edge ~A" possible-edge-name))))))
 
 (defun show-gen-result-tty nil
-   (if *gen-record*
+  (if *gen-record*
       (loop for edge in *gen-record*
-         do
-         (format t "~&Edge ~A G:" (edge-id edge))
-         (pprint (parse-tree-structure edge)))
-      (format t "~&No strings generated")))
+	  do
+	    (format t "~&Edge ~A G:" (edge-id edge))
+	    (pprint (edge-string edge));;bmw -- display generated STRING
+	    (pprint (parse-tree-structure edge))
+	  finally
+	    (force-output) ;;bmw -- ensure we see the output
+	    (terpri)) ;; bmw -- ensure we end on a new line
+    (format t "~&No strings generated")))
 
 

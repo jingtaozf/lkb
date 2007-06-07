@@ -8,16 +8,14 @@
                                 '(:relative "psql"))
    :binary-pathname (dir-append (get-binaries-dir "psql")
                                 '(:relative "psql"))
-
    :components
-   (#+(and :allegro-version>= (version>= 6 0))
-    (:module "interface"
+   ((:module "interface"
      :source-pathname ""
      :source-extension "lsp"
      :components
      ((:file "pq-package")
-      (:file "pq-libpq")
-      ;(:file "pq")
+      #+:allegro (:file "pq-libpq")
+      #+:sbcl (:file "pq-libpq-sbcl")
       ))))
 
 

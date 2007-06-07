@@ -567,6 +567,7 @@
 		(format nil "CREATE TABLE tmp_filt_cache AS SELECT name,userid,modstamp,dead,~a FROM public.rev WHERE name IN (SELECT name FROM rev) AND ~a" (orth-field lex) (filter lex))) ;; public.rev not rev_all
     (run-command lex "CREATE INDEX tmp_filt_cache_name_modstamp ON tmp_filt_cache (name,modstamp)")
    (run-command lex "DELETE FROM lex_key WHERE name IN (SELECT name FROM rev)")
+   (run-command lex "DELETE FROM lex_cache WHERE name IN (SELECT name FROM rev)")
    (run-command lex "DELETE FROM rev") ;; now safe to delete
    (lexdb-time 
     ("updating 'lex'" "done updating 'lex'")

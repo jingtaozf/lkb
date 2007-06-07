@@ -12,7 +12,7 @@
                       (get-sources-dir "lkb") '(:relative "preprocess"))
     :binary-pathname (dir-append
                       (get-binaries-dir "lkb") '(:relative "preprocess"))
-    :depends-on ("ppcre" "s-xml")
+    :depends-on (#-:acl-compat "ppcre" "s-xml")
     :source-extension "lsp"
     :components ((:file "fspp-package")
                  (:file "smaf-package")

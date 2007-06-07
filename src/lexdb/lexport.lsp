@@ -45,6 +45,9 @@
   (unless (typep *lexdb* 'psql-lex-database)
     (error "Please open a connection to the LexDB. Eg. (initialize-lexdb :dbname \"MY_LEXDB\")"))
   (setf *lexdb-dump-source* (extract-pure-source-from-source (get-current-source)))
+  (unless *lexdb-dump-user*
+    (setf *lexdb-dump-user* (sys-user-name)))
+  #-:sbcl
   (unless use-defaults
     (query-for-username)
     (query-for-meta-fields))
@@ -153,7 +156,13 @@
     (if (and version (boundp version))
 	(symbol-value version)
       (format t "WARNING: no *GRAMMAR-VERSION* defined!"))))
+
+#-:clim
+(defun query-for-meta-fields nil
+  (format t "~&Please set the following manually: *lexdb-dump-source* *lexdb-dump-lang* *lexdb-dump-country*"))
   
+
+#+:clim
 (defun query-for-meta-fields nil
   (setf *lexdb-dump-source* 
     (ask-user-for-x 
@@ -175,5 +184,18 @@
   (setf *lexdb-dump-user* 
     (ask-user-for-x 
      "Export Lexicon" 
-     (cons "Username?" (or *lexdb-dump-user* (sys:user-name)))))
+     (cons "Username?" (or *lexdb-dump-user* (sys-user-name)))))
   (unless *lexdb-dump-user* (throw 'abort 'user)))
+
+(defun sys-user-name ()
+  (or #+(and :allegro-version>= (version>= 5 0)) 
+      (sys:user-name)
+      #+(and :allegro (not (and :allegro-version>= (version>= 5 0))))
+      (system:getenv "USER")
+      #+(and :mcl :powerpc) 
+      (ccl:process-name ccl:*current-process*)
+      #+:lucid 
+      (lcl:environment-variable "USER")
+      #+:sbcl
+      (sb-ext:posix-getenv "USER")
+      "nobody"))

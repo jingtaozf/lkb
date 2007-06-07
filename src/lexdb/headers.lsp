@@ -57,7 +57,7 @@
 (defclass psql-database ()
   ((dbname :initform nil :accessor dbname :initarg :dbname)
    (host :initform "localhost" :accessor host :initarg :host)
-   (user :initform (user-name) :accessor user :initarg :user)
+   (user :initform (sys-user-name) :accessor user :initarg :user)
    (password :initform "" :accessor password :initarg :password)
    (port :initform (or (getenv "PGPORT") *psql-database-port*) :accessor port :initarg :port)
    (connection :initform nil :accessor connection :initarg connection)
@@ -123,7 +123,7 @@
 	  (excl::*load-foreign-types* 
 	   (append '("3" "4") excl::*load-foreign-types*))
 	  )
-      (load-libpq '("libpq.so" "libpq.so.4" "libpq.so.3")))
+      (load-libpq '("libpq.so.5" "libpq.so" "libpq.so.4" "libpq.so.3")))
     #+:mswindows
     (load-libpq '("libpq.dll"))
     #-(or :linux :mswindows)
@@ -132,7 +132,11 @@
 (defun load-libpq (lib-names)
   (cond
    (lib-names
-    (handler-case (load (car lib-names))
+    (handler-case 
+	#+:allegro (load (car lib-names))
+	#+:sbcl (sb-alien:load-shared-object (car lib-names))
+	#-(or :allegro :sbcl)
+	(error "the function load-libpq is currently defined only for #+:allegro and #+:sbcl lisp implementations")
       (file-error ()
 	(format t ";     [file not found]")
 	(load-libpq (cdr lib-names)))))

@@ -7,7 +7,10 @@
 ;;(require :foreign)
 
 (defpackage :pq
-  (:use :common-lisp :foreign-functions) 
+  (:use :common-lisp 
+	#+:allegro :foreign-functions
+	#+:sbcl :sb-alien
+	) 
   (:export 
    exec-status-kw-map
    conn-status-kw-map

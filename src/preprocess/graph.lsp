@@ -126,3 +126,78 @@
 	    (push item processed)))
     ;; pick out result
     paths-from-x))
+
+
+(defun analyse-compound (word &key (lexdb *lexdb*))
+  (let* ((matrix (analyse-compound2 word 
+				   :lexdb lexdb))
+	 (paths (analyse-compound-getpaths matrix))
+	 (strings (analyse-compound-getstrings paths word)))
+    ;(print matrix)
+    strings))
+
+(defun analyse-compound2 (word &key (lexdb *lexdb*) matrix (offset 0))
+  (unless matrix
+    (setf matrix (make-array (list (1+ (length word))))))
+  (loop
+      for i from 1 to (length word)
+      when (analyse-compound-substr (subseq word 0 i) lexdb)
+      do
+	(pushnew offset (aref matrix (+ offset i)))
+	(analyse-compound2 (subseq word i) 
+			  :lexdb lexdb
+			  :matrix matrix 
+			  :offset (+ offset i)))
+  matrix)
+
+(defun analyse-compound-substr (word lexdb)
+  (or
+   (string= word "s")
+   (string= word "e")
+   (and
+    (get-raw-records 
+     lexdb 
+     (format nil "select key from lex_key where key = ~a"
+	     (psql-quote-literal word)))
+    t)))
+
+(defun analyse-compound-getpaths (matrix &key i)
+  (unless i
+    (setf i (1- (length matrix))))
+  (loop
+      with paths
+      for j in (aref matrix i)
+      do
+	;(print j)
+	(cond 
+	 ((zerop j)
+	  (push (list j) paths))
+	 (t
+	  (loop
+	      for path2 in (analyse-compound-getpaths matrix :i j)
+	      do
+		(push (cons j path2) paths))))
+      finally
+	(return paths)))
+
+
+(defun analyse-compound-getstrings (paths word)
+  (loop
+      for path in paths
+      collect
+	(reverse
+	 (loop
+	     with prev = (length word)
+	     for node in path
+	     collect (subseq word node prev)
+	     do (setf prev node)))))
+
+(defun analyse-compound-batch (filename)
+  (with-open-file (s filename :direction :input)
+    (loop
+	with item0
+	while (setf item0 (read s nil nil))
+	for item = (string-downcase item0)
+	for analyses = (analyse-compound item)
+	do
+	  (format t "~&~a : ~a" item analyses))))
