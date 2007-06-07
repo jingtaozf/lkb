@@ -30,7 +30,10 @@
 ;; tell asdf where to find its system definitions
 (setf asdf:*central-registry*
   (list
-   (merge-pathnames (pathname "asdf/systems/") *default-pathname-defaults*)))
+   (merge-pathnames (pathname "asdf/source/puri/") *default-pathname-defaults*)
+   (merge-pathnames (pathname "asdf/source/cl-ppcre/") *default-pathname-defaults*)
+   (merge-pathnames (pathname "asdf/source/acl-compat/") *default-pathname-defaults*)
+   ))
 
 (require :cl-ppcre)
 (require :puri)
