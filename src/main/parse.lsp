@@ -1859,9 +1859,10 @@ relatively limited.
 
 ;; extract carg from an edge, via l-content unifs
 (defun get-carg-from-edge (edge)
-  (let* ((l-content (morpho-stem-edge-l-content edge))
-	 (unifs (cdr l-content)))
-    (get-carg-from-unifs unifs)))
+  (and (typep edge 'morpho-stem-edge)
+       (let* ((l-content (morpho-stem-edge-l-content edge))
+	      (unifs (cdr l-content)))
+	 (get-carg-from-unifs unifs))))
 
 ;; extract carg from an (unexpanded) entry, via unifs
 (defun get-carg-from-entry (entry)
