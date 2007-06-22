@@ -669,7 +669,7 @@
       (:utf8 :utf-8)
       (:big5)
       (:gb2312)
-      (:euc :ujis :euc-jp :eucjp :|eucJP|)
+      (:euc :ujis :euc-jp :eucjp :|eucJP| :JAPAN.EUC :EUC_JP)
       (:|874|) ;; For MS Windows
       (:|932|) ;; For MS Windows
       (:|936|) ;; For MS Windows
