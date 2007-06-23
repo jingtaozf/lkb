@@ -1057,7 +1057,12 @@ ersatz.[] -> edgeType='tok+morph' tokenStr=content.name gMap.carg=content.surfac
       for e = (cdr r)    
       if e do (setf last-p (or s last-p)) ;; update last-p if poss
       else do (setf (cdr r) last-p) ;; instantiate
-	      )
+	   ;; sanity check (start <= end)
+      if (> (or (car r) 0) (or (cdr r) 0))
+      do (let ((x (car r)))
+	   (setf (car r) (cdr r))
+	   (setf (cdr r) x))
+	   )
   char-map)
 	 
 (defun update-char-map (replacements x)
