@@ -27,12 +27,14 @@
 ;; also load "another system definition facility"
 (require :asdf)
 
+(setf src-home (merge-pathnames "src/" sys-home))
+
 ;; tell asdf where to find its system definitions
 (setf asdf:*central-registry*
   (list
-   (merge-pathnames (pathname "asdf/source/puri/") *default-pathname-defaults*)
-   (merge-pathnames (pathname "asdf/source/cl-ppcre/") *default-pathname-defaults*)
-   (merge-pathnames (pathname "asdf/source/acl-compat/") *default-pathname-defaults*)
+   (merge-pathnames (pathname "asdf/source/puri/") src-home)
+   (merge-pathnames (pathname "asdf/source/cl-ppcre/") src-home)
+   (merge-pathnames (pathname "asdf/source/acl-compat/") src-home)
    ))
 
 (require :cl-ppcre)
@@ -71,19 +73,25 @@
 ;;;
 ;;; the Allegro CL style run-shell-command() (since acl is home sweet home):
 ;;;
+;; [bmw] broken: &rest swallows up ALL ARGUMENTS
 (defun run-process (command &rest args 
-                    &key (wait t) (error-output :output)
-                    &allow-other-keys)
-  (let* ((shell "/bin/sh")
+                    ;;&key (wait t) (error-output :output)
+                    ;;&allow-other-keys
+		    )
+  (let* ((wait (second (member :wait args)))
+	 (shell "/bin/sh")
          (process (apply #'sb-ext:run-program
                          shell (list "-c" command) 
-                         :wait wait args)))
+                         args)))
     (when (sb-ext:process-p process)
       (if wait 
         (sb-ext:process-exit-code process)
-        (let ((stdout (make-two-way-stream 
-                       (sb-ext:process-output process)
-                       (sb-ext:process-input process)))
+        (let ((stdout 
+	       (if (sb-ext:process-input process)
+		   (make-two-way-stream 
+		    (sb-ext:process-output process)
+		    (sb-ext:process-input process))
+		 (sb-ext:process-output process)))
               (stderr (sb-ext:process-error process))
               (pid (sb-ext:process-pid process)))
           (values stdout stderr pid))))))
