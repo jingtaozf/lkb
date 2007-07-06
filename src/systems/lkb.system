@@ -67,7 +67,7 @@
   ;;
   #+(or (and :allegro (or :linux86 :linux86-64 :powerpc))
         (and :openmcl :powerpc)
-        (and :sbcl :x86 :linux))
+        (and :sbcl (or :x86 :x86-64) :linux))
   (pushnew :lui *features*)
 
   ;;
@@ -263,8 +263,8 @@
                (:file "lsp")          ; socket-based LKB server mode
                #+:lui
                (:file "lui" )         ; Linguistic User Interface
-               #+:logon
-               (:file "repp" )
+               ;#+:logon
+               ;(:file "repp" )
                #+:xml
                (:file "sppp")))       ; Simple (XML-base) PreProcessor Protocol
 
