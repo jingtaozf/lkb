@@ -66,3 +66,12 @@
                   (mrs::extract-lexical-relations new)
                   (push id ids))))))
       finally (return ids)))
+
+
+(defun glep (le)
+  (typecase le
+    (lex-entry
+     (let* ((id (string (lex-entry-id le)))
+            (bracket (position #\[ id))
+            (id (intern (subseq id 0 bracket) *lkb-package*)))
+       (assoc id *generic-lexical-entries* :test #'eq)))))
