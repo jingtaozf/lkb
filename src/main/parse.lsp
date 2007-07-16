@@ -1639,9 +1639,10 @@ relatively limited.
 		  *ersatzes-with-no-carg*)
     (loop
 	for word in (lex-entry-orth entry)
-	for len = (length word)
-	when (string= "ersatz" 
-		      (string-downcase (subseq word (max 0 (- len 6)) len)))
+	for len = (if (stringp word) (length word) 0)
+	when (and (> len 6)
+                  (string= "ersatz" 
+		      (string-downcase (subseq word (max 0 (- len 6)) len))))
 	return t)))
 
 ;; version of above that disallows MWE ersatz's
