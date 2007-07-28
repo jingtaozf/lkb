@@ -321,9 +321,12 @@
                                        for score in scores
                                        collect (first score)))
                     for bleu = (first scores)
-                    for smt = (first
+                    for smt = #+:logon
+                              (first
                                (mt::smt-score-strings
                                 input (list surface)))
+                              #-:logon
+                              0
                     for lfn = (first smt) for lnf = (rest smt)
                     when (numberp bleu) do (setf best (max best bleu))
                     when (numberp rscore) do
@@ -729,6 +732,7 @@
   (declare (ignore exhaustive derivations edges
                    semantix-hook trees-hook nresults))
   
+  #+:logon
   (when *mt-engine*
     (return-from translate-item
       (www-translate-item
@@ -990,6 +994,10 @@
   (when (null references)
     (return-from score-strings
       (loop repeat (length translations) collect 0)))
+  #-:logon
+  (return-from score-strings
+    (loop repeat (length translations) collect 0))
+  #+:logon
   (case type
     ((:torbjoern :wa :waft)
      (let ((lock (get-field type *string-similarity-locks*)))
@@ -1387,6 +1395,7 @@
                     (when verbose (format t "> |~a|~%" output)))))))))
   oracle)
 
+#+:logon
 (let ((vurl "http://visl.dk/trs")
       (vscanner (ppcre:create-scanner
                  "Translated Output</[hH]2><[bB][rR] */>([^<]+)"))

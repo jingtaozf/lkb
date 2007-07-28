@@ -3340,10 +3340,12 @@
                (chance-rank-items test :fold fold))
               (:oracle
                (oracle-rank-items test :fold fold))
+              #+:logon
               (:ngram (ngram-rank-items test :fold fold))))))
     (nconc fold (pairlis '(:f-end) (list (current-time :long :tsdb))))
     (values ranks fold)))
 
+#+:logon
 (defun ngram-rank-items (items &key fold)
   (declare (ignore fold))
   (loop

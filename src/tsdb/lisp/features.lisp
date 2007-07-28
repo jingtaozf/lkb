@@ -1033,6 +1033,7 @@
     (t (error "edge-root(): unknown rule in edge ~a~%" edge))))
 
 (defun lm-item-enhancer (item)
+  #+:logon
   (when (and (numberp *feature-lm-p*) (not (= *feature-lm-p* 0)))
     (loop
         with foo
