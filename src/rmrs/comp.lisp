@@ -614,7 +614,7 @@ goes to
      :liszt
      (loop for old-ep in (semstruct-liszt semstruct)
          collect
-           (make-char-rel :handel 
+           (make-rel :handel 
                      (if (rel-handel old-ep)
                          (generate-new-var (rel-handel old-ep))
                        (create-new-rmrs-var 

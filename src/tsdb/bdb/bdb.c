@@ -14,7 +14,7 @@ struct db_key {
   int iid;
   int rid;
   int tid;
-  int parameters[2];
+  int parameters[MAX_PARAMETERS];
 };
 
 struct db_data_int {

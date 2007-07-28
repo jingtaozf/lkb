@@ -77,7 +77,9 @@
      (namestring path)))
 
 (defmacro divide (numerator denominator)
-  `(if (zerop ,denominator) 0 (/ ,numerator ,denominator)))
+  `(if (and (numberp ,numerator) (numberp ,denominator))
+     (if (zerop ,denominator) 0 (/ ,numerator ,denominator))
+     0))
 
 (defmacro average (values)
   `(loop

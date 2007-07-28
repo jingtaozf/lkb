@@ -163,6 +163,8 @@
        #+:lkb
        (:file "mt")
        #+:logon
+       (:file "mmt")
+       #+:logon
        (:file "kf")
        #+:page 
        (:file "page-interface")
@@ -177,6 +179,7 @@
        (:file "ptb")
        #+:lkb
        (:file "rasp")
+       (:file "hunter")
        #+:lkb
        (:file "pcfg")
        #+:null

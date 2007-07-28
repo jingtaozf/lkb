@@ -371,7 +371,6 @@
   ;; construct-mrs() makes a global assignment :-(.            (27-jan-04; oe)
   ;;
   (let* ((mrs::*variable-generator* mrs::*variable-generator*)
-         (mrs::%mrs-roles-filter% nil)
          (mrs::*mrs-record-all-nodes-p* t)
          (files (if (listp files) files (list files)))
          (id (if (stringp name) 
@@ -781,7 +780,6 @@
 
 (defun compile-mtr (mtr)
   #-:cl-ppcre
-  ;;mrs
   mtr
   #+:cl-ppcre
   (labels ((compile (mrs)

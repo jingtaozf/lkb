@@ -358,11 +358,15 @@ For attempting to learn null semantics
     (when (and (psoa-p mrs) (ignore-errors (make-scoped-mrs mrs)))
       mrs)))
 
-(defun read-mrs-from-file (file)
+(defun read-mrs-from-file (file
+                           &key #+:allegro
+                                (external-format
+                                 (excl:locale-external-format excl:*locale*)))
   ;;; called by oe
   (when (probe-file file)
     (#+:debug progn #-:debug ignore-errors 
-     (with-open-file (istream file :direction :input)
+     (with-open-file (istream file :direction :input
+                      #+:allegro :external-format #+:allegro external-format)
        (let ((*package* (find-package :lkb)))
          (read-mrs istream))))))
 

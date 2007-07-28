@@ -11,6 +11,9 @@
 #+:mswindows
 (pushnew :lkb *features*)
 
+(defparameter *lkb-package* 
+  (or (find-package :lkb) (find-package :common-lisp-user)))
+
 ;;; if for some reason, the tty mode is desirable, use the following
 ;;; (pushnew :tty *features*)
 

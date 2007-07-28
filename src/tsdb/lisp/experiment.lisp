@@ -36,12 +36,14 @@
      (identity (format nil "~a.~a" (current-user) (current-pid)))
      (recache t)
      (verbose t) (stream t) (debug nil)
+     (evalp t) ;;create eval.gz files with scores in the target profiles
      ;;
      ;; global Redwoods parameters
      ;;
      (use-preterminal-types-p *feature-use-preterminal-types-p*)
      (ngram-tag *feature-ngram-tag*)
-     (score-similarities '(:bleu :wa))
+     (score-similarities '(:neva :wa))
+     enhancers (resolvedp t) normalizep
      ;;
      ;; feature selection parameters
      ;;
@@ -52,6 +54,7 @@
      (ngram-size *feature-ngram-size*)
      (ngram-back-off-p *feature-ngram-back-off-p*)
      (lm-p *feature-lm-p*)
+     (flags *feature-flags*)
      (random-sample-size *feature-random-sample-size*)
      (counts-absolute 0) (counts-contexts 0)
      (counts-events 0) (counts-relevant 0)
@@ -65,6 +68,7 @@
      (method *maxent-method*)
      (variance *maxent-variance*)
      (relative-tolerance *maxent-relative-tolerance*)
+     (absolute-tolerance *maxent-absolute-tolerance*)
      (iterations *maxent-iterations*)
      ;;
      ;; estimation parameters: SVM
@@ -74,7 +78,8 @@
      (poly-d *svm-poly-d*) 
      (sig-poly-s *svm-sig-poly-s*)
      (sig-poly-r *svm-sig-poly-r*)
-;;   (iterations *svm-iterations*)
+     #+:null
+     (iterations *svm-iterations*)
      (balance *svm-cost-balance*) 
      (error-to-margin *svm-error-to-margin*)
      (tolerance *svm-tolerance*))
@@ -113,13 +118,19 @@
                    (handler-case (rank-profile
                                   source target :type type
                                   :nfold nfold :niterations niterations
-                                  :recache recache :identity identity)
+                                  :recache recache :identity identity
+                                  :enhancers enhancers
+                                  :resolvedp resolvedp
+                                  :normalizep normalizep)
                      (condition (condition)
                        (format
                         stream
                         "~&[~a] batch-experiment(): ~
-                               error: `~a'.~%"
+                         error: `~a'.~%"
                         (current-time :long :short) condition)))
+                   (when evalp
+                     (create-evaluation-file 
+                      target source :similarities score-similarities))
                    (purge-profile-cache target))
                  executep)))
              
@@ -138,6 +149,24 @@
             (*feature-ngram-tag* ngram-tag)
             (*redwoods-score-similarities* score-similarities))
         
+;;         (if (eq :ngram type)
+;;             (progn
+;;               (gridify ((*lm-options*
+;;                          (listify lm-options))
+;;                         (*lm-model*
+;;                          (listify lm-model)))
+;;                        (if 
+;;                            (execute-experiment 
+;;                             :target (format nil "~@[~a~]~a-~a.ngram" prefix)
+;;                             :recache nil)
+;;                            (incf run)
+;;                     (incf skipped))
+;;                        (incf total)
+;;                        (when verbose 
+;;                          (report experiment run skipped total recache))
+;;                        (incf experiment)))
+;;;;;;;;;;;; fix_me pick_up: ngrams        
+        
         ;;
         ;; from here on, essentially do two nested groups of loops (constructed
         ;; by virtue of an ingenious macro provided by erik :-): the outermost
@@ -153,6 +182,7 @@
                   (*feature-ngram-size* (listify ngram-size))
                   (*feature-ngram-back-off-p* (listify ngram-back-off-p))
                   (*feature-lm-p* (listify lm-p))
+                  (*feature-flags* (listify flags))
                   (*feature-random-sample-size* (listify random-sample-size))
                   (*feature-frequency-threshold* thresholds))
                  
@@ -166,6 +196,8 @@
                          (*maxent-variance* (listify variance))
                          (*maxent-relative-tolerance*
                           (listify relative-tolerance))
+                         (*maxent-absolute-tolerance*
+                          (listify absolute-tolerance))
                          (*maxent-iterations* (listify iterations)))
 
                  (when debug
@@ -173,21 +205,18 @@
                    (excl:print-type-counts) (room))
                         
                  (let ((recache (and (zerop run) recache)))
-                   (if 
-                       (execute-experiment 
+                   (if (execute-experiment 
                         :target (mem-environment 
                                  :full t :prefix prefix
                                  :format (if compact :compact :string))
                         :recache recache)
-                       
-                       (incf run)
+                     (incf run)
                      (incf skipped))
                    (incf total)
                    (when verbose 
                      (report experiment run skipped total recache))
-                   (incf experiment)))))
-            
-            (case type
+                   (incf experiment))))
+              
               (:svm
                (gridify ((*redwoods-train-percentage* 
                           (listify train-percentage))
@@ -202,13 +231,12 @@
                          (*svm-tolerance* (listify tolerance)))
                         
                  (let ((recache (and (zerop run) recache)))
-                   (if 
-                       (execute-experiment 
+                   (if (execute-experiment 
                         :target (svm-environment 
                                  :full t :prefix prefix
                                  :format (if compact :compact :string))
                         :recache recache)
-                       (incf run)
+                      (incf run)
                      (incf skipped))
                    (incf total)
                    (when verbose 

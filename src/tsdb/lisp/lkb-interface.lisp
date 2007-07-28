@@ -23,10 +23,6 @@
 
 (in-package :lkb)
 
-
-(defparameter *lkb-package* 
-  (or (find-package :lkb) (find-package :common-lisp-user)))
-  
 ;;;
 ;;; _fix_me_
 ;;; even more: in the (current) MT set-up, the `mt' system tends to be loaded
@@ -177,7 +173,7 @@
          (*maximum-number-of-edges* (if (or (null edges) (zerop edges))
                                       *maximum-number-of-edges*
                                       edges))
-         (*first-only-p* (if exhaustive
+         (*first-only-p* (if (or exhaustive *chart-packing-p*)
                            nil
                            (if (integerp nanalyses)
                              (or (zerop nanalyses) nanalyses)
@@ -208,19 +204,26 @@
                        conses (* scons 8) symbols (* ssym 24) others sother)))
 	  (declare (ignore m-tasks))
           (let* ((*print-pretty* nil) (*print-level* nil) (*print-length* nil)
+                 (packingp *chart-packing-p*)
                  (output (get-output-stream-string str))
                  (unifications (statistics-unifications *statistics*))
                  (copies (statistics-copies *statistics*))
-                 (packingp *chart-packing-p*)
                  utcpu
                  utgc
                  uspace
                  (readings (if packingp
                              (tsdb::time-a-funcall
                               #'(lambda () 
-                                  (loop
-                                      for edge in *parse-record*
-                                      sum (length (unpack-edge! edge))))
+                                  ;;
+                                  ;; _fix_me_
+                                  ;; this should really go into the parser, but
+                                  ;; just now patch things up for francis, so
+                                  ;; he can submit something to TMI.
+                                  ;;                            (11-may-07; oe)
+                                  (setf *parse-record*
+                                    (selectively-unpack-edges
+                                     *parse-record* nanalyses))
+                                  (length *parse-record*))
                               #'(lambda (tgcu tgcs tu ts tr scons ssym sother
                                          &rest ignore)
                                   (declare (ignore tr ignore))
@@ -301,7 +304,7 @@
                 (:comment . ,comment)
                 (:results .
                  ,(append
-                   (unless packingp
+                   (unless (and packingp nil)
                      (loop
                          with *package* = *lkb-package*
                          with nresults = (if (<= nresults 0)
@@ -365,7 +368,7 @@
                            edges derivations semantix-hook trees-hook
                            filter burst (nresults 0))
   (declare (ignore exhaustive derivations string id trees-hook)
-           (special tsdb::*process-scope-generator-input-p* tsdb::%model%))
+           (special tsdb::*process-scope-generator-input-p*))
 
   (let* ((*package* *lkb-package*)
          (mrs:*lnkp* :characters)
@@ -423,6 +426,10 @@
                        do (nconc (edge-flags edge) flags)
                        else do (setf (edge-flags edge) flags)
                        collect
+                         ;;
+                         ;; _fix_me_
+                         ;; treat fragments properly.           (18-may-07; oe)
+                         ;;
                          (if (edge-dag edge)
                            (tsdb::mem-score-result
                             (pairlis '(:edge :lm) (list edge lm)))
@@ -492,7 +499,10 @@
                                        nresults)
                      for i from 0
                      for edge in edges
-                     for surface = (edge-string edge)
+                     for surface = (let ((surface (edge-string edge)))
+                                     (if (consp surface)
+                                       (format nil "~{~(~a~)~^ ~}" surface)
+                                       surface))
                      for derivation = (if edge
                                         (with-standard-io-syntax
                                           (let ((*package* *lkb-package*))
@@ -545,11 +555,27 @@
       "unknown input relation(s): generator may be uninitialized")
      (t string))))
 
+;;;
+;;; _fix_me_
+;;; this is part of the solution for functionality that francis and eric require
+;;; in their efforts: for them to try and learn things from partial transfer
+;;; results, they want `fragment' transfers in the profile, much like a regular
+;;; result.  this would likely not make sense within the MT pipeline, as there
+;;; is little reason to expect the generator to gracefully handle such fragment
+;;; transfers, but for off-line experimentation there may be utility in this.
+;;; presumably, though, [incr tsdb()] should have a general notion of fragments
+;;; and abstract from specific tasks, i.e. this parameter will eventually morph
+;;; into something more like *tsdb-fragments-p* (or thereabout), hence we will
+;;; not document it (not even on the wiki, francis), and there is no commitment,
+;;; express or implied, to supporting this specific parameter.  (12-jul-07; oe)
+;;;
+(defparameter tsdb::*tsdb-transfer-include-fragments-p* nil)
 
 (defun tsdb::transfer-item (mrs
                       &key id string exhaustive nanalyses trace
                            edges derivations semantix-hook trees-hook
-                           filter burst (nresults 0) (fragmentp t))
+                           filter burst (nresults 0) (fragmentp t)
+                           (partialp tsdb::*tsdb-transfer-include-fragments-p*))
   (declare (ignore edges derivations string id exhaustive nanalyses
                    filter semantix-hook trees-hook))
 
@@ -570,7 +596,8 @@
                  (tsdb::time-a-funcall
                   #'(lambda () 
                       (mt:transfer-mrs
-                       mrs :filter nil :debug nil :preemptive t :block t))
+                       mrs :filter nil :debug nil
+                       :preemptive (not partialp) :block t))
                   #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
                       (declare (ignore ignore))
                       (setf tgc (+ tgcu tgcs) tcpu (+ tu ts) treal tr
@@ -616,15 +643,16 @@
                             invalid output predicates: ~{|~(~s~)|~^, ~}"
                            (and output (not (equal output "")) output) invalid)
                           output))
-                (readings (- (length edges) (length partial)))
+                (readings (- (length edges) (if partialp 0 (length partial))))
                 (readings (if (or (equal output "") (> readings 0))
                               readings -1))
                 (n 0))
-           (setf edges 
-             (loop 
-                 for edge in edges 
-                 unless (or (mt::edge-source edge) (mt::edge-semi edge))
-                 collect edge))
+           (unless partialp
+             (setf edges 
+               (loop 
+                   for edge in edges 
+                   unless (or (mt::edge-source edge) (mt::edge-semi edge))
+                   collect edge)))
            #+:debug
            (when invalid
              (format
@@ -659,9 +687,10 @@
                                 (length (mrs:psoa-liszt (mt::edge-mrs edge)))
                                 size)
                    for flags
-                   = (pairlis '(:tscore :tratio :mtrs :nmtrs)
+                   = (pairlis '(:tscore :tratio :mtrs :nmtrs :unknown)
                               (list (mt::edge-score edge) (float ratio)
-                                    mtrs (length mtrs)))
+                                    mtrs (length mtrs)
+                                    (length (mt::edge-source edge))))
                    while (<= (incf n) nresults) collect
                      (pairlis '(:result-id :mrs :tree :flags)
                               (list i mrs tree flags))))

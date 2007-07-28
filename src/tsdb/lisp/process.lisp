@@ -966,6 +966,7 @@
            (parse-id (get-field :parse-id item))
            (i-id (get-field :i-id item))
            (i-wf (get-field :i-wf item))
+           (i-length (get-field :i-length item))
            (i-input (or (and interactive (get-field :o-input item))
                         (get-field :p-input item)
                         (get-field :i-input item)))
@@ -1091,7 +1092,7 @@
                             :burst burst))
             (:translate
              (translate-item i-input
-                             :id i-id :wf i-wf
+                             :id i-id :wf i-wf :length i-length
                              :edges edges
                              :trace interactive
                              :exhaustive exhaustive

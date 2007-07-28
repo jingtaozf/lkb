@@ -515,15 +515,24 @@ at this point).
 ;;; null semantics lexical entries - including the
 ;;; result of all the lexical rule applications.
 
+;;;
+;;;
+;;; this global is for debugging purposes only, allowing grammarians to inspect
+;;; the outcome of generator trigger rules.                     (10-jul-07; oe)
+;;;
+(defparameter %gen-triggers% nil)
+
 (defun instantiate-null-semantic-items (input-sem lrules)
   #+:mt
   (declare (special mt::*transfer-triggers*))
+  (setf %gen-triggers% nil)
   (let* ((real-ids (cond
                     #+:mt
                     ((and (hash-table-p mt::*transfer-triggers*)
                           (> (hash-table-count mt::*transfer-triggers*) 0))
                      (let ((triggers (mt::transfer-mrs
                                       input-sem :filter nil :task :trigger)))
+                       (setf %gen-triggers% triggers)
                        ;;
                        ;; _fix_me_
                        ;; while we are not _yet_ Skolemizing generator edges

@@ -312,7 +312,8 @@
         (analyze-virtual
          virtual
          :condition condition :meter meter :message message :thorough thorough
-         :trees trees :extras extras :readerp readerp :filter filter
+         :trees trees :extras extras :readerp readerp
+         :filter filter :output output
          :score score :gold gold :taggingp taggingp :commentp commentp
          :sloppyp sloppyp :scorep scorep))))
   
@@ -555,7 +556,7 @@
 
 (defun analyze-virtual (data 
                         &key condition meter message thorough trees extras 
-                             (readerp t) filter
+                             (readerp t) filter output
                              score gold taggingp
                              commentp sloppyp scorep)
   (when (probe-file data)
@@ -575,7 +576,7 @@
              :condition condition :meter meter :message message
              :thorough thorough
              :trees trees :extras extras :readerp readerp :filter filter
-             :score score :gold gold  
+             :output output :score score :gold gold  
              :taggingp taggingp :commentp commentp
              :sloppyp sloppyp :scorep scorep)
           into result

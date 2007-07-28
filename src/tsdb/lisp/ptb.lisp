@@ -16,6 +16,23 @@
 ;;; 
 
 (defvar *ptb-use-pos-tags-p* t)
+
+(defun read-items-from-ptb-directory (path &key (base 1))
+  (loop
+      with id = base
+      for set in (read-ptb-directory path)
+      append
+        (loop
+            for (file . item) in set
+            for ptb = (first (read-ptb-from-string item))
+            for length = (length (extract-ptb-leaves ptb))
+            for category = (first ptb)
+            for origin = (format nil "~(~a~)" file)
+            collect (pairlis '(:i-id :i-origin :i-category
+                               :i-wf :i-length :i-input)
+                             (list id origin category
+                                   1 length (write-to-string ptb)))
+            do (incf id))))
 
 (defun read-token (stream &optional breaks)
   (loop

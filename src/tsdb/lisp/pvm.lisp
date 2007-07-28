@@ -310,6 +310,7 @@
                  "slave(): unexpected message: `~a'~%" message)
                 (force-output)))))
       (pvm_quit)
+      (sleep 1)
       (excl:exit 1 :no-unwind t :quiet t))))
 
 (defun pvm-process (item &optional (type :parse)

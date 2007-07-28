@@ -26,8 +26,7 @@
 (defparameter *lm-options* 
   "-include_unks -backoff_from_unk_inc -backoff_from_ccs_inc")
 
-(defparameter *lm-oovs* nil 
-  "File to report out-of-vocabulary items.")
+(defparameter *lm-oovs* nil)
 
 (defparameter *lm-model*
   #+:logon
@@ -49,6 +48,19 @@
 (defparameter *lm-punctuation-characters* nil)
 
 (defparameter *lm-measure* :logprob)
+
+(defparameter *scrub-binary* 
+  #+:logon
+  (namestring
+   (merge-pathnames
+    (dir-append (get-sources-dir "tsdb") '(:relative "mt"))
+    (make-pathname :name "scrub" :type "pl")))
+  #-:logon
+  nil)
+
+(defparameter *scrub-stream* nil)
+
+(defparameter *scrub-pid* nil)
 
 (defparameter *tm-binary*
   (format
@@ -96,17 +108,42 @@
      (namestring
       (make-pathname
        :directory (pathname-directory make::bin-dir) :name "evallm"))))
+  (setf *lm-output*
+    (format
+     nil
+     "/tmp/.lm.io.~a.~a.out"
+     (lkb::current-user) (lkb::current-pid)))
+  (setf *tm-output* 
+    (format
+     nil
+     "/tmp/.tm.io.~a.~a.out"
+     (lkb::current-user) (lkb::current-pid)))
+  (setf *lm-input* nil)
+  (setf *lm-pid* nil)
+  (setf *tm-input* nil)
+  (setf *tm-pid* nil)
   #+:logon
   (let* ((root (system:getenv "LOGONROOT"))
          (root (and root (namestring (parse-namestring root)))))
+    (unless root
+      (error "initialize-mt(): unable to determine $LOGONROOT."))
     (setf *lm-model*
+      (merge-pathnames
+       (dir-append (get-sources-dir "tsdb") '(:relative "mt"))
+       (make-pathname :name "bnc" :type "blm")))
+    (setf *scrub-binary*
       (namestring
-       (make-pathname 
-        :directory (namestring
-                    (dir-append (get-sources-dir "mt") '(:relative "mt")))
-        :name "bnc.blm")))
-    (when root
-      (setf *utool-binary* (format nil "exec ~a/bin/utool" root)))))
+       (merge-pathnames
+        (dir-append (get-sources-dir "tsdb") '(:relative "mt"))
+        (make-pathname :name "scrub" :type "pl"))))
+    (setf *tm-model*
+      (merge-pathnames
+       (dir-append (get-sources-dir "tsdb") '(:relative "mt"))
+       (make-pathname :name "mrs" :type "blm")))
+    (setf *utool-binary* (format nil "exec ~a/bin/utool" root)))
+  (setf *scrub-stream* nil)
+  (setf *scrub-pid* nil))
+    
 
 (defun lm-normalize-string (string)
   (when string
@@ -233,19 +270,6 @@
               do (delete-file file))
           (lm-initialize)
           results)))))
-
-(defparameter *scrub-binary* 
-  #+:logon
-  (namestring
-   (merge-pathnames
-    (dir-append (get-sources-dir "tsdb") '(:relative "mt"))
-    (make-pathname :name "scrub" :type "pl")))
-  #-:logon
-  nil)
-
-(defparameter *scrub-stream* nil)
-
-(defparameter *scrub-pid* nil)
 
 (let ((lock (mp:make-process-lock)))
 

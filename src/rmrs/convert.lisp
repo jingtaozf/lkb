@@ -159,7 +159,7 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
 					(rmrs-convert-variable val)
 				      val))))))))
          (ep 
-          (make-char-rel
+          (make-rel
            :handel (if *anchor-rmrs-p* label
 		     (or new-label label))
 	   :anchor anchor
@@ -168,10 +168,8 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
            :pred pred 
            :flist (list converted-main-arg)
            :str (rel-str rel)
-	   :cfrom (if (char-rel-p rel)
-		      (char-rel-cfrom rel))
-	   :cto (if (char-rel-p rel)
-		    (char-rel-cto rel)))))
+	   :cfrom (and (integerp (rel-cfrom rel)) (rel-cfrom rel))
+	   :cto (and (integerp (rel-cto rel)) (rel-cto rel)))))
     (values ep rmrs-args 
 	    (if (not *anchor-rmrs-p*)
 	    (record-ing-info label-recs 
@@ -550,7 +548,7 @@ Errors won't be devastating anyway ...
 				 problems)
 				nil)))
 	     (new-ep
-	      (make-char-rel
+	      (make-rel
 	       :handel (rel-handel ep)
 	       :parameter-strings (rel-parameter-strings ep)
      ;;;   :extra (rel-extra ep)  FIX
@@ -560,9 +558,9 @@ Errors won't be devastating anyway ...
 			    (loop for rarg in rargs
 				collect
 				  (deparsonify rarg semi-entries)))
-               :str (char-rel-str ep)
-	       :cfrom (char-rel-cfrom ep)
-	       :cto (char-rel-cto ep))))
+               :str (rel-str ep)
+	       :cfrom (rel-cfrom ep)
+	       :cto (rel-cto ep))))
 	  (values new-ep problems))
       (values nil
 	      (list (format nil "No entry found in SEM-I for ~A" 
@@ -666,8 +664,7 @@ Errors won't be devastating anyway ...
     (when mrs
       ;;; (mrs-quick-check-lex-retrieval mrs)
       ;;; FIX
-      (let ((mrs::%mrs-extras-defaults% nil)
-	    (lkb::*bypass-equality-check* t))
+      (let ((lkb::*bypass-equality-check* t))
 	(lkb::generate-from-mrs mrs)
 	)
       (lkb::show-gen-result))))

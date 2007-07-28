@@ -166,6 +166,7 @@
 (defun translate-string (input &key id (wf 1) targets nhypotheses
                                     (stream *tsdb-io*)
                                     (format :ascii)
+                                    (types '(:neva :bleu :torbjoern :wa))
                                     filter index)
 
   ;;
@@ -299,7 +300,7 @@
                     with results = (get-field :results realization)
                     for result in results
                     for rid = (get-field :result-id result)
-                    for tree = (get-field :tree result)
+                    for surface = (get-field :surface result)
                     for flags = (get-field :flags result)
                     for rscore = (or (get-field :score result)
                                      (when (consp flags)
@@ -312,13 +313,17 @@
                                                  :distance flags))))
                                      (when (and (numberp foo) (> foo 0))
                                        foo))
-                    for bleu = (first
-                                (score-strings 
-                                 (list tree) targets
-                                 :source input :type :bleu))
+                    for scores = (let ((scores
+                                        (score-strings 
+                                         (list surface) targets
+                                         :source input :type types)))
+                                   (loop
+                                       for score in scores
+                                       collect (first score)))
+                    for bleu = (first scores)
                     for smt = (first
                                (mt::smt-score-strings
-                                input (list tree)))
+                                input (list surface)))
                     for lfn = (first smt) for lnf = (rest smt)
                     when (numberp bleu) do (setf best (max best bleu))
                     when (numberp rscore) do
@@ -343,7 +348,9 @@
                     do
                       (let ((flags
                              (nconc
-                              (pairlis '(:bleu :lfn :lnf) (list bleu lfn lnf))
+                              (pairlis types scores)
+                              (pairlis '(:aid :tid :rid) (list aid tid rid))
+                              (pairlis '(:lfn :lnf) (list lfn lnf))
                               flags)))
                         (if (get-field :flags result)
                           (setf (get-field :flags result) flags)
@@ -357,7 +364,7 @@
                            {~@[~,2f~]|~@[~,2f~]~
                             |~@[~,2f~]|~@[~,2f~]|~@[~,2f~]} ~
                            <~@[~,2f~]>~%"
-                          tree distance
+                          surface distance
                           lm rscore
                           distortion lfn lnf
                           bleu))
@@ -372,16 +379,16 @@
                                  {~@[~,2f~]|~@[~,2f~]~
                                   |~@[~,2f~]|~@[~,2f~]|~@[~,2f~]}</td>~
                                <td class=\"flowRightBorder\"></td>~%"
-                          tree 
+                          surface 
                           distance lm rscore
                           distortion lfn lnf)))
                       (force-output stream)
-                    when (and (stringp tree) (numberp rscore))
+                    when (and (stringp surface) (numberp rscore))
                     do
-                      (push (pairlis '(:aid :tid :rid :string
+                      (push (pairlis '(:aid :tid :rid :string :flags
                                        :ascore :tscore :rscore :lm
                                        :distortion :lfn :lnf :bleu :distance)
-                                     (list aid tid rid tree
+                                     (list aid tid rid surface flags
                                            ascore tscore rscore lm
                                            distortion lfn lnf bleu distance))
                             translations)
@@ -459,11 +466,26 @@
                           (divide (- lnf nfmin) nfrange)
                           0))
                      (- distance))
+                do (nconc translation (acons :score score nil))
                 when (or (null (gethash string scores))
                          (> score (gethash string scores)))
                 do
                   (setf (gethash string scores) score)
                   (setf (gethash string map) (acons :score score translation)))
+            
+            (setf translations
+              (sort
+               translations
+               #'> :key #'(lambda (foo) (get-field :score foo))))
+            (loop
+                with last = (get-field :score (first translations))
+                with i = 1 with j = 2
+                for translation in translations
+                for score = (get-field :score translation)
+                for flags = (get-field :flags translation)
+                unless (= score last) do
+                  (setf i j) (setf last score) (incf j)
+                do (nconc flags (pairlis '(:score :rank) (list score i))))
             (setf translations
               (loop
                   for translation being each hash-value in map
@@ -656,7 +678,7 @@
         for result in (get-field :results item)
         for id = (get-field :result-id result)
         for edges = (get-field :pedges item)
-        for string = (when (eq type :realization) (get-field :tree result))
+        for string = (when (eq type :realization) (get-field :surface result))
         for score = (get-field :score result)
         for bleu = (get-field :bleu result)
         for transfer = (pop transfers)
@@ -700,7 +722,7 @@
 
 
 (defun translate-item (string
-                       &key id (wf 1) exhaustive nanalyses trace
+                       &key id (wf 1) length exhaustive nanalyses trace
                             edges derivations semantix-hook trees-hook
                             (filter *process-suppress-duplicates*)
                             burst (nresults 0) targets)
@@ -713,7 +735,8 @@
        string :engine *mt-engine* :id id :wf wf :targets targets
        :burst burst)))
   
-  (let* ((stream (make-string-output-stream))
+  (let* ((length (or length (+ 1 (count #\space string))))
+         (stream (make-string-output-stream))
          (log (make-string-output-stream))
          (*standard-output* 
           (if trace (make-broadcast-stream *standard-output* stream) stream))
@@ -798,7 +821,11 @@
                               errors pid tid error))))
                        (loop
                            for result in (get-field :results realization)
-                           for flags = (append aflags tflags)
+                           for rflags = (get-field :flags result)
+                           for olength = (get-field :length rflags)
+                           for ratio = (float (divide olength length))
+                           for flags
+                           = (acons :ratio ratio (append aflags tflags))
                            do
                              (incf nrealizations)
                              (if (get-field :flags result)
@@ -876,18 +903,24 @@
         do (vector-push (char-downcase c) result)
         finally (return result))))
 
+(defparameter *string-similarity-default* :bleu)
+
 (defparameter *string-similarity-locks*
   (list
-   (cons :bleu (mp:make-process-lock))
+   (cons :torbjoern (mp:make-process-lock))
    (cons :wa (mp:make-process-lock))
    (cons :waft (mp:make-process-lock))))
 
+;;;
+;;; _fix_me_
+;;; the actual values are reset in initialize-tsdb().            (8-may-07; oe)
+;;;
 (defparameter *string-similarity-binaries*
     (let* ((root (system:getenv "LOGONROOT"))
            (root (and root (namestring (parse-namestring root)))))
       (when root
         (list
-         (cons :bleu (format nil "~a/ntnu/bleu/bleu.pl" root))
+         (cons :torbjoern (format nil "~a/ntnu/bleu/bleu.pl" root))
          (cons :wa (format nil "~a/ntnu/bleu/wa.pl" root))
          (cons :waft (format nil "~a/ntnu/bleu/wa.pl -t" root))))))
 
@@ -901,7 +934,8 @@
       for measure in *string-similarity-binaries*
       collect (cons (first measure) nil)))
 
-(defun string-similarity-shutdown (&optional (type :bleu))
+(defun string-similarity-shutdown
+    (&optional (type *string-similarity-default*))
   (let ((lock (get-field type *string-similarity-locks*))
         (stream (get-field type *string-similarity-streams*))
         (pid (get-field type *string-similarity-pids*)))
@@ -921,86 +955,308 @@
         (sys:os-wait nil pid)
         (setf (get-field type *string-similarity-pids*) nil)))))
 
-(defun string-similarity-initialize (&optional (type :bleu))
+(defun string-similarity-initialize
+    (&optional (type *string-similarity-default*))
   (let ((lock (get-field type *string-similarity-locks*))
         (binary (get-field type *string-similarity-binaries*)))
-    
-    (mp:with-process-lock (lock)
+    (when lock
+      (mp:with-process-lock (lock)
       
-      (when (get-field type *string-similarity-streams*) 
-        (string-similarity-shutdown type))
-      
-      (multiple-value-bind (stream foo pid)
-        (run-process 
-         (format nil "~a" binary)
-         :wait nil
-         :output :stream :input :stream
-         :error-output "/dev/null" :if-error-output-exists :append)
-        (declare (ignore foo))
-        (setf (get-field type *string-similarity-streams*) stream)
-        (setf (get-field type *string-similarity-pids*) pid)))))
+        (when (get-field type *string-similarity-streams*) 
+          (string-similarity-shutdown type))
+        
+        (multiple-value-bind (stream foo pid)
+            (run-process 
+             (format nil "~a" binary)
+             :wait nil
+             :output :stream :input :stream
+             :error-output "/dev/null" :if-error-output-exists :append)
+          (declare (ignore foo))
+          (setf (get-field type *string-similarity-streams*) stream)
+          (setf (get-field type *string-similarity-pids*) pid))))))
 
 (defun score-strings (translations
                       &optional references
-                      &key (type :bleu) source)
-
+                      &key (type *string-similarity-default*) source scrub)
+  (unless (consp translations) (setf translations (list translations)))
+  (when (consp type)
+    (return-from score-strings
+      (loop
+          for foo in type
+          for scores = (score-strings
+                        translations references :type foo
+                        :source source :scrub scrub)
+          collect scores)))
   (when (null references)
     (return-from score-strings
-      (loop repeat (length translations) collect 1)))
-  (let ((lock (get-field type *string-similarity-locks*)))
-    (mp:with-process-lock (lock)
-      (when (null (get-field type *string-similarity-streams*))
-        (string-similarity-initialize type))
-      (let ((scores)
-            (stream (get-field type *string-similarity-streams*)))
-        (when references
-          (format stream "SOURCE~@[ ~a~]~%" source)
-          (loop
-              for reference in references 
-              do (format
+      (loop repeat (length translations) collect 0)))
+  (case type
+    ((:torbjoern :wa :waft)
+     (let ((lock (get-field type *string-similarity-locks*)))
+       (mp:with-process-lock (lock)
+         (when (null (get-field type *string-similarity-streams*))
+           (string-similarity-initialize type))
+         (let ((scores)
+               (stream (get-field type *string-similarity-streams*)))
+           (when references
+             (format stream "SOURCE~@[ ~a~]~%" source)
+             (loop
+                 for reference
+                 in (if scrub (mt::scrub-strings references) references)
+                 do
+                   (format
+                    stream
+                    "REF ~a~%"
+                    (string-similarity-normalize reference))))
+           (loop
+               for translation
+               in (if scrub (mt::scrub-strings translations) translations)
+               do 
+                 (format
                   stream
-                  "REF ~a~%"
-                  (string-similarity-normalize reference))))
-        (loop
-            for translation in translations
-            do 
-              (format
-               stream
-               "TRANS ~a~%"
-               (string-similarity-normalize translation))
-              (force-output stream)
-              (let ((score (read stream nil nil)))
-                (if (numberp score)
-                    (push score scores)
-                  (return))))
-        (nreverse scores)))))
-
-(defun mteval (items
-               &key data condition
-                    (sl "NO") (tl "EN") (sid "LOGON") (did "D0")
-                    (output t))
-  (let* ((items (if data
+                  "TRANS ~a~%"
+                  (string-similarity-normalize translation))
+                 (force-output stream)
+                 (let ((score (read stream nil nil)))
+                   (if (numberp score) (push score scores) (return))))
+           (nreverse scores)))))
+    ((:bleu :nist :neva)
+     (loop 
+         for translation 
+         in (if scrub (mt::scrub-strings translations) translations)
+         collect (score-string 
+                  (string-similarity-normalize translation)
                   (loop
-                      for item in (analyze
-                                   data :condition condition
-                                   :output t :thorough '(:surface))
+                      for reference in references
+                      collect (string-similarity-normalize reference))
+                  :type type)))
+    (t (error "score-strings(): unrecognized measure type: ~a" type))))
+
+(defun score-string (test references
+                      &key (type :bleu)
+                           (sl "NO") (tl "EN") (did "D0"))
+
+  (labels ((make-file (strings &key (type :ref) name)
+             (let* ((strings (if (consp strings) strings (list strings)))
+                    (tag (case type 
+                           (:ref "refset")
+                           (:tst "tstset")
+                           (:src "srcset")
+                           (t (error
+                               "mteval-string(): unrecognized type `~a'"
+                               type))))
+                    (name (or name
+                              (format
+                               nil "/tmp/.mteval.~(~a~).~a.~a.sgm"
+                               type (current-user) (current-pid)))))
+               (with-open-file (stream name :direction :output 
+                                :if-exists :supersede :if-not-exists :create)
+                 (format
+                  stream
+                  "<~a setid=\"FOO\" srclang=\"~a\" trglang=\"~a\">~%"
+                  tag sl tl)
+                 (loop
+                     for string in strings
+                     for i from 0
+                     do
+                       (format
+                        stream
+                        "  <doc docid=\"~a\" sysid=\"~a~a\">~%    ~
+                             <seg>~a</seg>~%  ~
+                           </doc>~%"
+                        did type i (xml-escape-string string)))
+                 (format stream "</~a>~%" tag))
+               name)))
+
+    (let* ((ofile
+            (format 
+             nil 
+             "/tmp/.mteval.out.~a.~a" 
+             (current-user) (current-pid)))
+           (sfile (make-file "dummy" :type :src))
+           (rfile (make-file references :type :ref))
+           (tfile (make-file test :type :tst))
+           (command
+            (let ((root (namestring 
+                         (parse-namestring 
+                          (system:getenv "LOGONROOT")))))
+              (unless root
+                (error
+                 "mteval-string(): LOGONROOT env variable not specified"))
+              (case type 
+                ((:bleu :nist)
+                 (format
+                  nil
+                  "perl ~a/nist/mteval-v11b.pl ~:[~;-b~]"
+                  root (eq type :bleu)))
+                ((:neva)
+                 (format nil "perl ~a/nist/neva.pl -b" root))
+                (t
+                 (error "mteval-string(): unrecognized measure `~a'" type)))))
+           (command (format
+                     nil
+                     "~a -r '~a' -s '~a' -t '~a'"
+                     command rfile sfile tfile)))
+      (when command
+        (run-process
+         command :wait t :output ofile :if-output-exists :supersede))
+      (with-open-file (stream ofile :direction :input)
+        (loop
+            for line = (read-line stream nil nil)
+            for score
+            = (multiple-value-bind (match capture)
+                  (ppcre::scan-to-strings "score = ([0-9.]+)" line)
+                (declare (ignore match))
+                (when capture (read-from-string (aref capture 0))))
+            when (or score (null line)) return score)))))
+
+(defun mteval (data
+               &key items condition (type :first) enhancers
+                    oracle filter h r
+                    (sl "NO") (tl "EN") (sid "LOGON") (did "D0")
+                    (output t) (verbose t))
+  (declare (special %model%))
+  (let* ((uscanner (ppcre:create-scanner "/([^/]*)/"))
+         (fscanner (ppcre:create-scanner " \\|\\|"))
+         (total (if items (length items) 0))
+         (items (if items
+                  items
+                  (loop
+                      with items
+                      = (let ((items (analyze
+                                      data :condition condition
+                                      :output t :thorough '(:surface :flags))))
+                          (loop
+                              for enhancer in enhancers
+                              do
+                                (loop
+                                    for item in items
+                                    do (call-raw-hook enhancer item)))
+                          items)
+                      for item in items
+                      for results
+                      = (loop
+                            for result in (get-field :results item)
+                            for surface = (get-field :surface result)
+                            for output
+                            = (ppcre:regex-replace-all
+                               uscanner
+                               (ppcre:regex-replace-all fscanner surface "")
+                               "\\1")
+                            for flags = (get-field :flags result)
+                            when (and flags (not (consp flags)))
+                            do 
+                              (setf (get-field :flags result)
+                                (ignore-errors (read-from-string flags)))
+                            collect (acons :surface output result))
                       for source = (get-field :i-input item)
                       for references
                       = (loop
                             for output in (get-field :outputs item)
                             collect (get-field :o-surface output))
                       for test
-                      = (loop
-                            for result in (get-field :results item)
-                            collect (cons (get-field :result-id result)
-                                          (get-field :surface result))
-                            into candidates
-                            finally
-                              (setf candidates 
-                                (sort candidates #'< :key #'first))
-                              (return (rest (first candidates))))
-                      collect (list* source (or test "") references))
-                  items))
+                      = (cond
+                         ((null results) nil)
+                         ((eq type :random)
+                          (let* ((n (random (length results)))
+                                 (current (nth n results)))
+                            (get-field :surface current)))
+                         ((eq type :first)
+                          (loop
+                              with current = (first results)
+                              with id = (get-field :result-id current)
+                              for result in results
+                              when (< (get-field :result-id result) id)
+                              do
+                                (setf current result)
+                                (setf id (get-field :result-id result))
+                              finally (return (get-field :surface current))))
+                         ((eq type :top)
+                          (loop
+                              with current = (first results)
+                              with rank
+                              = (get-field :rank (get-field :flags current))
+                              for result in results
+                              for match
+                              = (get-field :rank (get-field :flags result))
+                              when (and rank match (< match rank))
+                              do (setf current result) (setf rank match)
+                              finally
+                                (when rank
+                                  (return (get-field :surface current)))))
+                         ((smember type '(:neva :wa :bleu :torbjoern))
+                          (loop
+                              with current = (first results)
+                              with value
+                              = (get-field type (get-field :flags current))
+                              for result in results
+                              for match
+                              = (get-field type (get-field :flags result))
+                              when (and value match (> match value))
+                              do (setf current result) (setf value match)
+                              finally
+                                (when value
+                                  (return (get-field :surface current)))))
+                         ((and (eq type :oracle) (hash-table-p oracle))
+                          (let* ((input (get-field :i-input item))
+                                 (match (and oracle (gethash input oracle)))
+                                 (output
+                                  (loop
+                                      for result in results
+                                      for output = (get-field :surface result)
+                                      when (equal match output)
+                                      return output)))
+                            (if output
+                              output
+                              (format
+                               t
+                               "mteval(): oracle miss |~a|.~%" input))))
+                         ((eq type :mem)
+                          (loop
+                              with current with best
+                              for result in results
+                              for score = (mem-score-result
+                                           result %model%
+                                           :normalizep :minmax)
+                              collect score into scores
+                              when (or (null best) (< best score))
+                              do
+                                (setf current result)
+                                (setf best score)
+                              finally
+                                (return
+                                  (if (or h r)
+                                    (let* ((output
+                                            (get-field :surface current))
+                                           (scores (sort scores #'>))
+                                           (n (length scores))
+                                           (probabilities
+                                            (scores-to-probabilities scores))
+                                           (entropy
+                                            (divide (entropy probabilities)
+                                                    (sqrt n)))
+                                           (ratio
+                                            (divide
+                                             (first probabilities)
+                                             (second probabilities)))
+                                           (neva (first
+                                                  (score-strings 
+                                                   output
+                                                   references :type :neva))))
+                                      (when (eq verbose :entropy)
+                                        (format
+                                         t
+                                         "[~a] H = ~,4f R = ~,2f <~,4f>~%"
+                                         (get-field :i-id item)
+                                         entropy ratio neva))
+                                      (when (or (null (rest scores))
+                                                (and h (< entropy h))
+                                                (and r (> ratio r)))
+                                        output))
+                                    (get-field :surface current))))))
+                      do (incf total)
+                      when (or test (null filter))
+                      collect (list* source (or test "") references))))
          (sfile (format
                  nil
                  "/tmp/.mteval.~a.~a.source"
@@ -1079,7 +1335,7 @@
             with scanner
             = (ppcre::create-scanner
                "NIST score = ([0-9.]+) +BLEU score = ([0-9.]+) for system")
-            with bleu with nist
+            with bleu = 0 with nist = 0
             for i from 0
             for line = (read-line stream nil nil)
             while line
@@ -1091,15 +1347,52 @@
                         (bar (subseq line (aref starts 1) (aref ends 1))))
                     (setf nist (ignore-errors (read-from-string foo)))
                     (setf bleu (ignore-errors (read-from-string bar))))))
-            when (and (> i 1) (< i 25))
+            when (and verbose (> i 1) (< i 25))
             do (format output "~a~%" line)
-            finally (return (pairlis '(:bleu :nist) (list bleu nist))))))))
+            finally (return (pairlis
+                             '(:total :active :bleu :nist)
+                             (list total (length items) bleu nist))))))))
+
+(defun read-oracle (file &key (oracle (make-hash-table :test #'equal))
+                              verbose)
+  (with-open-file (stream file)
+    (loop
+        with iscanner = (ppcre:create-scanner
+                         "^\\|<[ \\*]+\\|(.*)\\| \\(([0-9]+)\\) --- ")
+        with oscanner = (ppcre:create-scanner
+                         "^x\\|> \\|(.*)\\|.+\\{([0-9.-]+)\\} <[0-9.]+>")
+        with current
+        for line = (read-line stream nil nil)
+        while line
+        do
+          (multiple-value-bind (start end starts ends)
+              (ppcre:scan iscanner line)
+            (if (and start end)
+              (let ((input (subseq line (aref starts 0) (aref ends 0)))
+                    (id (subseq line (aref starts 1) (aref ends 1))))
+                (setf current input)
+                (when verbose (format t "< |~a| (~a)~%" input id)))
+              (multiple-value-bind (start end starts ends)
+                  (ppcre:scan oscanner line)
+                (when (and start end)
+                  (let ((output (subseq line (aref starts 0) (aref ends 0)))
+                        (match (gethash current oracle)))
+                    (when (and match (not (equal match output)))
+                      (format
+                       t
+                       "read-oracle(): unexpected collision:~%  ~
+                        |~a|~%   |~a|~%   |~a|~%~%"
+                       current match output))
+                    (setf (gethash current oracle) output)
+                    (when verbose (format t "> |~a|~%" output)))))))))
+  oracle)
 
 (let ((vurl "http://visl.dk/trs")
       (vscanner (ppcre:create-scanner
                  "Translated Output</[hH]2><[bB][rR] */>([^<]+)"))
       (nurl "http://babel.hf.ntnu.no/babelcgi/translate/translate.cgi/right")
-      (nscanner (ppcre:create-scanner "Translation</[hH]1><[bB]>([^<]+)"))
+      (nscanner (ppcre:create-scanner
+                 "translation</[hH]1><[bB]>([^<]+)" :case-insensitive-mode t))
       (iurl "http://www.tranexp.com:2000/Translate/result.shtml")
       (iscanner "\"translation\" *>([^<]+)"))
   (defun www-translate-item (input
@@ -1121,7 +1414,9 @@
            (engine (if (consp engine) (get-field :engine engine) engine))
            start stop)
 
-      (when (consp delay) (sleep (max (first delay) (random (rest delay)))))
+      (when (consp delay) 
+        (sleep (+ (max (first delay) (random (rest delay)))
+                  (if (eq engine :oa) 30 0))))
       
       (setf start (get-internal-real-time))
       (case format
@@ -1166,7 +1461,6 @@
                                 (aref starts 0) (aref ends 0))))))))
                     #+:drakma
                     (:oa
-                     (sleep 30)
                      (let ((drakma::*drakma-default-external-format*
                             :iso-8859-1))
                        (multiple-value-bind (body status headers uri stream)

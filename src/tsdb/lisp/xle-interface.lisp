@@ -22,7 +22,7 @@
   ;; return a string identifying the grammar that is currently in use, ideally
   ;; including relevant grammar-internal parameters of variation and a version.
   ;;
-  (or (tsdb::clients-grammar) "norgram (mo)"))
+  (or (tsdb::clients-grammar) "norgram (fjell)"))
 
 (defun tsdb::initialize-run (&key interactive 
                             exhaustive nanalyses
@@ -152,6 +152,7 @@
                                 (extract-c-structure graph solution)
                               for score = (extract-score graph solution)
                               for warnings = nil
+                              for fragments = 0
                               for mrs =
                                 (let* ((mrs (extract-mrs graph solution))
                                        ;;
@@ -198,8 +199,10 @@
                                                   mrs mrss 
                                                   :test 
                                                   #'tsdb::safe-mrs-equal-p))
-                                      (when (mt:fragmentp mrs)
-                                        (incf nfragments))
+                                      (let ((n (mt:fragmentp mrs)))
+                                        (when (numberp n)
+                                          (setf fragments n)
+                                          (incf nfragments)))
                                       (let ((errors
                                              (mt:test-semi-compliance mrs)))
                                         (cond
@@ -216,8 +219,9 @@
                                                   unknown
                                                   :test #'equal))))))))
                               for flags
-                              = (acons
-                                 :ascore score
+                              = (nconc
+                                 (pairlis '(:ascore :fragments)
+                                          (list score fragments))
                                  (when warnings
                                    (acons :warnings (length warnings) nil)))
                               for result

@@ -49,11 +49,8 @@
                                         ; generator and comparison code
   extra                                 ; extra is a junk slot
                                         ; needed for the munging rules 
+  cfrom cto
   link)					; link to surface element(s)
-
-(defstruct (char-rel (:include rel))
-  cfrom
-  cto)
 
 (defstruct (var-base)
   type

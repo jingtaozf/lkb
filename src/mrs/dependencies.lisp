@@ -216,9 +216,8 @@
                    when (member (fvpair-feature fvpair) carg :test #'eq)
                    return (fvpair-value fvpair)))
          (lnk (let* ((lnk (rel-lnk relation))
-                     (from (and (char-rel-p relation)
-                                (char-rel-cfrom relation)))
-                     (to (and from (char-rel-cto relation))))
+                     (from (rel-cfrom relation))
+                     (to (rel-cto relation)))
                 (or lnk
                     (and (numberp from) (numberp to) (>= from 0) (>= to 0)
                          (list :characters from to))))))

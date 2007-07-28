@@ -161,9 +161,7 @@ duplicate variables")
                               a-cons-fs nil *variable-generator*))))
 	 (psoa (if ing (convert-ing-to-ing-rels psoa ing nil)
 		 psoa))
-         (psoa (mt:map-mrs psoa :semi :forward))
-         #-:logon
-         (psoa (unfill-mrs psoa)))
+         (psoa (mt:map-mrs psoa :semi :forward)))
     (when *mrs-record-all-nodes-p* (push (cons fs psoa) *all-nodes*))
     psoa))
 
@@ -315,7 +313,7 @@ duplicate variables")
                            (>= cfrom 0) (>= cto 0)
                            (list :characters cfrom cto))))))
       (unless (member pred *dummy-relations* :test #'equal)
-        (let ((ep (make-char-rel 
+        (let ((ep (make-rel 
                    :pred pred
                    :handel handle-var
                    :flist fvps

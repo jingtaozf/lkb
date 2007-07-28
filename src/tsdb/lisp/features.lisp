@@ -79,7 +79,16 @@
 #+:null
 (defparameter *feature-lm-normalize* '(:minmax 0 2))
 
-(defparameter *feature-flags* nil)
+(defparameter *feature-flags*
+  (nconc
+   #+:null
+   '((0 :ascore) (1 :tscore) (2 :rscore))
+   #+:null
+   '((3 :lm) (4 :perplexity) (5 :lfn) (6 :lnf))
+   #+:null
+   '((10 :distortion) (11 :distance))
+   #+:null
+   '((12 :nmtrs) (13 :tratio) (14 :ratio))))
 
 (defparameter *feature-preference-weightings*
   '((0 :binary) (1 :bleu) (2 :wa) (3 :waft)))
@@ -394,13 +403,15 @@
              (sqrt (/ (expt (feature-count feature) 2) sum)))))
     (:minmax
      (loop 
-         with minmaxes = (model-minmax model)
          for feature in (event-features event)
          for code = (feature-code feature)
-         for min = (first (aref minmaxes code))
-         for max = (second (aref minmaxes code))
-         for normalized = (/ (- (feature-count feature) min) (- max min))
-         do
+         for minmax
+         = (and (< code (model-size model)) (aref (model-minmax model) code))
+         for min = (first minmax)
+         for max = (second minmax)
+         for normalized
+         = (and minmax (/ (- (feature-count feature) min) (- max min)))
+         when normalized do
            (setf (feature-count feature) 
              (if (typep normalized 'ratio) (float normalized) normalized)))))
   event)
@@ -433,13 +444,6 @@
   (setf %items items %model model)
 
   (unless items (return-from cache-features))
-  
-  (loop
-      for enhancer in *feature-item-enhancers*
-      do
-        (loop
-            for item in items
-            do (call-raw-hook enhancer item)))
   
   (loop
       with *feature-frequency-threshold* = nil
@@ -506,8 +510,7 @@
                   for count = (feature-count feature)
                   for minmax = (aref minmaxes code)
                   when (null minmax)
-                  do (setf minmax (list 0 0)  
-                           (aref minmaxes code) minmax)
+                  do (setf minmax (setf (aref minmaxes code) (list 0 0)))
                   when (< count (first minmax))
                   do (setf (first (aref minmaxes code)) count)
                   when (> count (second minmax))
@@ -520,7 +523,7 @@
                                   (setf (aref (model-counts model) code)
                                     (make-counts)))
                   do
-                    (incf (counts-absolute match) (first count))
+                    (incf (counts-absolute match) (abs (first count)))
                     (incf (counts-contexts match))
                     (incf (counts-events match) (second count))
                     ;;
@@ -665,6 +668,11 @@
                      (reconstruct derivation nil))))
          (event (make-event)))
 
+    ;;
+    ;; _fix_me_
+    ;; why abort here?  we could still score the LM feature, say for fragmented
+    ;; realizations in the LOGON pipeline.                     (13-may-07; oe)
+    ;;
     (when (and derivationp (null edge)) (return-from result-to-event))
 
     (when edge
@@ -680,6 +688,7 @@
       (loop
           for feature in (edge-to-ngrams edge)
           do (record-feature feature event model :rop rop)))
+
     ;;
     ;; often in a different universe, use whatever :flags properties off each
     ;; result.
@@ -738,6 +747,12 @@
                                 (edge-root parent)
                                 parent)))
          (daughters (lkb::edge-children edge)))
+    ;;
+    ;; _fix_me_
+    ;; generator edges, sadly, do not show their morphological history in the
+    ;; `children' slot, hence (much like compute-derivation-tree()), we would
+    ;; have to interpret the idiosyncratic `found-lex-rule-list' here too :-{.
+    ;;                                                         (13-may-07; oe)
     (cond
      ;;
      ;; at the terminal yield of a derivation, things are relatively simple:
@@ -903,9 +918,28 @@
       for (i key) in *feature-flags*
       for value = (get-field key flags)
       for count = (and (numberp value) (coerce value 'single-float))
-      for feature = (when count
-                      (make-feature :tid 43 :parameters (list i) :count count))
-      when feature collect feature))
+      for features
+      = (cond
+         (count
+          (list
+           (make-feature
+            :tid 43 :symbol (list key) :parameters (list i) :count count)))
+         ((eq key :mtrs)
+          (loop
+              with map = (make-hash-table)
+              for key in value
+              when (gethash key map) do (incf (gethash key map))
+              else do (setf (gethash key map) 1)
+              finally
+                (return
+                  (loop
+                      for key being each hash-key
+                      using (hash-value count) in map
+                      collect
+                        (make-feature
+                         :tid 43 :symbol (list key)
+                         :parameters (list i) :count count))))))
+      nconc features))
 
 (defun result-to-event-from-cache (iid rid model fc)
 
@@ -985,7 +1019,7 @@
     (when *feature-flags*
       (loop
           for foo in *feature-flags*
-          for features =(retrieve-features fc iid rid 43 (list (first foo)))
+          for features = (retrieve-features fc iid rid 43 (list (first foo)))
           do (record-features features event model)))
     event))
 
@@ -1015,36 +1049,70 @@
         do (nconc result (acons :lm score nil))))
   item)
 
-(defun flags-item-enhancer (item)
+(defparameter %flags-ignore-fragments-p% nil)
+
+(defun flags-item-enhancer (item &key (key :neva))
   (nconc
+   item
    (loop
+       with *package* = (find-package :lkb)
        with ranks
+       with fragmentp = nil
        for result in (get-field :results item)
        for flags = (let ((flags (get-field :flags result)))
                      (if (stringp flags)
                        (setf (get-field :flags result)
                          (ignore-errors (read-from-string flags)))
                        flags))
-       for bleu = (get-field :bleu flags)
-       unless (numberp bleu) do
+       for value = (get-field key flags)
+       unless (numberp value) do
          (format
           t
-          "flags-item-enhancer(): no BLEU score on item # ~a (result # ~a).~%"
-          (get-field :i-id item) (get-field :result-id result))
+          "flags-item-enhancer(): no ~a score on item # ~a (result # ~a).~%"
+          key (get-field :i-id item) (get-field :result-id result))
        and return nil
-       else do (push (acons :bleu bleu result) ranks)
+       else do (push (acons key value result) ranks)
+       unless (get-field :nfragments flags) do
+         ;;
+         ;; _fix_me_
+         ;; while finalizing the TMI submission, it emerges that realization
+         ;; scores are wrong in two respects: (a) generator edges fail to show
+         ;; morphological rules in the usual way and (b) the LM score was not
+         ;; scaled prior to summing ME weights.  the latter we can still fix.
+         ;; also, for fragmented translations, the RSCORE equals -PERPLEXITY, 
+         ;; (because there was no derivation for the full item), which is not
+         ;; really helpful; put a flag on these, so we can ignore them during
+         ;; training (or maybe even train separate models one fine day).
+         ;;                                                    (13-may-07; oe)
+         (let ((rscore (get-field :rscore flags))
+               (lm (get-field :lm flags))
+               (nfragments
+                (count (mrs:vsym "fragment") (get-field :mtrs flags))))
+           (setf (get-field :rscore flags)
+             (if (zerop nfragments)
+               (- rscore (- (* lm -1.04306) (* (/ lm 10) -1.04306)))
+               (* (/ lm 10) -1.04306)))
+           (nconc flags (acons :nfragments nfragments nil))
+           (unless (zerop nfragments) (setf fragmentp t)))
        finally
-         (let ((ranks (sort ranks #'> :key #'(lambda (result)
-                                               (get-field :bleu result)))))
-           (return
-             (acons
-              :ranks
-              (loop
-                  for rank in ranks
-                  for i from 1
-                  collect (acons :rank i rank))
-              nil))))
-   item))
+         (return
+          (if (and fragmentp %flags-ignore-fragments-p%)
+            (acons
+             :ranks
+             (loop
+                 for rank in ranks
+                 collect (acons :rank 1 rank))
+             nil)
+            (let ((ranks (sort ranks #'> :key #'(lambda (result)
+                                                  (get-field key result)))))
+              (acons
+               :ranks
+               (loop
+                   with top = (get-field key (first ranks))
+                   for rank in ranks
+                   while (= (get-field key rank) top)
+                   collect (acons :rank 1 rank))
+               nil)))))))
 
 (defun weigh-result (item result type)
   (let* ((active (loop
@@ -1136,12 +1204,13 @@
       for score = (score-feature (feature-code feature) model)
       sum (* count score)))
 
-(defun mem-score-result (result &optional (model %model%))
-
+(defun mem-score-result (result &optional (model %model%) &key normalizep)
   (if model
     (let ((event (result-to-event result model :rop t)))
+      (when normalizep
+        (normalize-features-n event :type normalizep :model model))
       (score-event event model))
-      0.0))
+    0.0))
 
 (defun mem-score-configuration (edge daughters &optional (model %model%))
   (if (model-p model)

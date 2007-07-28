@@ -295,8 +295,6 @@
   (populate-found-configs)
 
   (setf input-sem (mt:map-mrs input-sem :semi :backward))
-  #-:logon
-  (setf input-sem (mrs::fill-mrs (mrs::unfill-mrs input-sem)))
   
   ;;
   ;; as of late in 2006, progress on the SMAF front required dan to change all
@@ -727,9 +725,7 @@
       ;;
       (let* ((input *generator-internal-mrs*)
              (mrs (let ((mrs:*lnkp* :id)) (mrs::extract-mrs edge)))
-             (mrs (mt:map-mrs mrs :semi :backward))
-             #-:logon
-             (mrs (mrs::fill-mrs (mrs::unfill-mrs mrs))))
+             (mrs (mt:map-mrs mrs :semi :backward)))
         (setf (edge-mrs edge) mrs)
         ;;
         ;; see the comment on extract-string-from-g-edge() for our rationale in

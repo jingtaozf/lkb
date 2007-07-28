@@ -70,11 +70,8 @@
                                         ; generator and comparison code
   extra                                 ; extra is a junk slot
                                         ; needed for the munging rules 
+  cfrom cto
   lnk)                                  ; link to surface element(s)
-
-(defstruct (char-rel (:include rel))
-  cfrom
-  cto)
 
 (defstruct (fvpair)
   feature
@@ -1388,13 +1385,13 @@ higher and lower are handle-variables
    ;;
    ;; _fix_me_
    ;; for a transition period, at least, either use the actual LNK value (if
-   ;; present) or otherwise manufacture one for `char-rel' structures at least.
+   ;; present) or otherwise manufacture one if .cfrom. and .cto. are available.
    ;;                                                            (4-dec-06; oe)
    ;;
    (if (rel-lnk rel)
      (rel-lnk rel)
-     (when (char-rel-p rel) 
-       (list :characters (char-rel-cfrom rel) (char-rel-cto rel))))
+     (when (and (numberp (rel-cfrom rel)) (numberp (rel-cto rel)))
+       (list :characters (rel-cfrom rel) (rel-cto rel))))
    (rel-str rel))
   (when (rel-handel rel)
     (mrs-output-rel-handel
@@ -1651,7 +1648,7 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
                        :h-cons hcons
                        :vcs vcs)))
       (mrs-check-for #\] istream)
-      #-:logon (unfill-mrs psoa) #+:logon psoa)))
+      psoa)))
 
 (defun read-mrs-ltop (istream)
 ;;;  LTOP -> top: VAR
@@ -2146,7 +2143,7 @@ to test
 	   (cto (robust-c-extract (extract-from-xml-tag tag '|cto|)))
 	   (str (extract-from-xml-tag tag '|str|)))
       ;;; base is allowed but ignored
-      (make-char-rel 
+      (make-rel 
        :pred pred
        :handel label
        :flist flist
@@ -2269,86 +2266,6 @@ to test
                 :outscpd (read-mrs-xml-var (second (second body))))))
                 
 ;;; end MRS XML
-
-;;;
-;;; interim solution for MRS `unfilling' until we construct a proper SEMI; note
-;;; that unfill-mrs() _destructively_ modifies its input.
-;;;
-(defparameter %mrs-extras-filter% nil)
-
-(defparameter %mrs-roles-filter% nil)
-
-(defun unfill-mrs (mrs &optional (filter %mrs-extras-filter%)
-                                 (roles %mrs-roles-filter%))
-  (when (or filter roles)
-    (labels ((unfill-variable (variable)
-               (when (var-p variable)
-                 (setf (var-extra variable)
-                   (loop
-                       for extra in (var-extra variable)
-                       for feature = (extrapair-feature extra)
-                       for value = (extrapair-value extra)
-                       unless (loop
-                                  for (key . match) in filter
-                                  thereis (and (eq feature key) 
-                                               (eq value match)))
-                       collect extra)))))
-      (unfill-variable (psoa-index mrs))
-      (loop
-          for ep in (psoa-liszt mrs)
-          do
-            (setf (rel-flist ep)
-              (loop
-                  for role in (rel-flist ep)
-                  for value = (fvpair-value role)
-                  do (unfill-variable value)
-                  unless (member (fvpair-feature role) roles)
-                  collect role)))))
-  mrs)
-
-;;;
-;;; another interim solution: fill in `default' values for a range of index
-;;; features that are not specified in an input MRS to generation, e.g. assume
-;;; that the lack of information about progessive does mean something.
-;;;
-;;; _fix_me_
-;;; i believe one should probably use (generator input) munging rules for this
-;;; purpose, but then i would rather build them on the new MRS transfer code,
-;;; and for now i hesitate to deploy that in the generator.    (12-dec-03; oe)
-;;;
-
-(defparameter %mrs-extras-defaults% nil)
-
-(defun fill-mrs (mrs &optional (defaults %mrs-extras-defaults%))
-  (when defaults
-    (labels ((fill-variable (variable)
-               (when (var-p variable)
-                 (loop
-                     with result = nil
-                     with extras = (var-extra variable)
-                     with type = (var-type variable)
-                     with defaults = (loop
-                                         for (key . defaults) in defaults
-                                         when (string-equal type key) 
-                                         return defaults)
-                     for (feature . value) in defaults
-                     unless (find feature extras :key #'extrapair-feature) do
-                       (push 
-                        (make-extrapair :feature feature :value value)
-                        result)
-                     finally
-                       (when result
-                         (setf (var-extra variable)
-                           (append (var-extra variable) result)))))))
-      (loop
-          for ep in (psoa-liszt mrs)
-          do
-            (loop
-                for role in (rel-flist ep)
-                for value = (fvpair-value role)
-                do (fill-variable value)))))
-  mrs)
-
 
 (defun sort-mrs (mrs)
   (when (psoa-p mrs)

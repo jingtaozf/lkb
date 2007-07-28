@@ -244,7 +244,7 @@
                   "&nbsp;"
                   ((:input
                     :type "text" :name "input" :class "bright"
-                    :value (or input "") :size "80"))
+                    :value (or input "") :size "70"))
                   "&nbsp;"
                   ((:input 
                     :type "submit" :name "task" :class "bright" :id "analyze"

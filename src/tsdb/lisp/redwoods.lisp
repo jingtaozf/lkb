@@ -326,7 +326,6 @@
                         ;; this seems overly robust: issue a warning message
                         ;; whenever we fail to reconstruct an edge.
                         ;;                                      7-jun-04; oe)
-                        ;;
                         when edge do 
                           (setf (lkb::edge-foo edge) id)
                           (setf (lkb::edge-bar edge) derivation)
@@ -365,22 +364,21 @@
                              (current-time :long :short)
                              (length decisions) (length decisions))
                             (reconstruct-discriminants decisions)))
-           (greadings (when (and gold parse-id (null strip))
+           (greadings (when (and gold (null strip))
                         (let ((items (select 
                                       '("readings") '(:integer) "parse" 
                                       (format nil "i-id == ~a" i-id)
                                       gold)))
                           (when (= (length items) 1)
                             (get-field :readings (first items))))))
-           (gtrees (when (and gold parse-id (null strip))
+           (gtrees (when (and gold (null strip))
                      (select '("parse-id" "t-version" 
                                "t-active" "t-author" "t-end")
                              '(:integer :integer 
                                :integer :string :date)
                              "tree" 
-                             (format nil "parse-id == ~a" parse-id) 
-                             gold
-                             :sort :parse-id)))
+                             (format nil "i-id == ~a" i-id) 
+                             gold :sort :parse-id)))
            (gversion (loop
                          for tree in gtrees
                          maximize (get-field :t-version tree)))
@@ -401,8 +399,8 @@
                                    "preference" 
                                    (format 
                                     nil 
-                                    "parse-id == ~a && t-version == ~a" 
-                                    parse-id gversion) 
+                                    "i-id == ~a && t-version == ~a" 
+                                    i-id gversion) 
                                    gold)))
            (gderivation (when (= (length gpreferences) 1)
                           (loop
@@ -437,8 +435,8 @@
                                    "decision" 
                                    (format 
                                     nil 
-                                    "parse-id == ~a && t-version == ~a" 
-                                    parse-id gversion) 
+                                    "i-id == ~a && t-version == ~a" 
+                                    i-id gversion) 
                                    gold))))
            (gdiscriminants (when gdecisions
                              #+:allegro
@@ -793,7 +791,7 @@
                            file append (format :latex)
                            meter)
   (let* ((stream (create-output-stream file append))
-         (items (if (stringp data) 
+         (items (if (stringp data)
                   (analyze-aggregates data :condition condition :trees t
                                       :meter meter :format format) 
                   data))
@@ -1874,7 +1872,6 @@
                 (multiple-value-bind (i score loosep similarities)
                     (score-item item gitem 
                                 :test test :n n :loosep loosep)
-                  
                   (when (and trace (open-stream-p trace) i)
                     (format
                      trace
@@ -2168,10 +2165,12 @@
                               (rest granks) similarity
                               errors match (delete match result)))))))))
 
-(defun string-similarity (rank grank &key (type :bleu))
-  (let ((string (get-field :surface rank))
+(defun string-similarity (rank grank &key (type :bleu) scrub)
+  (let ((*string-similarity-punctuation-characters* nil)
+        (string (get-field :surface rank))
         (gstring (get-field :surface grank)))
-    (first (score-strings (list string) (list gstring) :type type))))
+    (first (score-strings
+            (list string) (list gstring) :type type :scrub scrub))))
 
 (defun analyze-errors (data 
                        &optional (gold data)
@@ -2765,7 +2764,8 @@
           (increment %redwoods-items-increment%) cache interrupt meter)
 
   (declare (ignore interrupt meter)
-           (special *feature-item-enhancers*))
+           (special *feature-item-enhancers* *feature-flags*
+                    *feature-grandparenting* *feature-ngram-size*))
 
   ;;
   ;; invoke various memory-intensive operations successively on sub-sets of
@@ -2896,17 +2896,31 @@
         finally (when cache (flush-cache cache :verbose verbose))))
    
    (t
-    (let ((data (analyze profiles :thorough '(:derivation :surface :flags)
-                         :condition condition :gold profiles)))
+    (let* ((thorough
+            (nconc
+             (when (or (> *feature-grandparenting* 0)
+                       (> *feature-ngram-size* 0))
+               '(:derivation))
+             (when *feature-flags*
+               '(:flags))))
+            (data (analyze
+                   profiles :thorough (cons :surface thorough)
+                   :condition condition :gold profiles)))
       (setf lastp lastp)
       (case task
         (:fc
+         (loop
+             for enhancer in *feature-item-enhancers*
+             do
+               (loop
+                   for item in data
+                   do (call-raw-hook enhancer item)))
          (setf data
            (loop  
-               for i in data
-               for readings = (get-field :readings i)
-               for ranks = (length (get-field :ranks i))
-               unless (= readings ranks) collect i))
+               for item in data
+               for readings = (get-field :readings item)
+               for ranks = (length (get-field :ranks item))
+               unless (or (= readings ranks) (null ranks)) collect item))
          (cache-features
           data model :createp firstp
           :stream stream :verbose verbose))
@@ -2915,6 +2929,12 @@
         ;; this bit is hacky and MEM-specific for now.    (4-apr-06; erik & oe)
         ;;
         (:rank
+         (loop
+             for enhancer in *feature-item-enhancers*
+             do
+               (loop
+                   for item in data
+                   do (call-raw-hook enhancer item)))
          (loop
              with target = (or target profiles)
              for item in data
@@ -2932,9 +2952,6 @@
                 (current-time :long :short)
                 (get-field :i-id item) nresults nranks)
                
-               (loop
-                   for enhancer in *feature-item-enhancers*
-                   do (call-raw-hook enhancer item))
                (let* ((ranks
                        (loop
                            for result in results
@@ -2963,10 +2980,12 @@
 (defun train (source file
               &key (condition *statistics-select-condition*)
                    (type :mem) (fcp t) (ccp t) (identity (current-pid)) target
+                   (resolvedp t) normalizep
                    (verbose t) (stream t)
                    interrupt meter)
 
-  (declare (ignore meter))
+  (declare (ignore meter)
+           (special *feature-item-enhancers*))
 
   (format 
    t 
@@ -2985,12 +3004,14 @@
     (when fcp
       (operate-on-profiles
        (list source) :condition condition
-       :task :fc :model model
+       :task :fc :model model :resolvedp resolvedp
        :verbose verbose :stream stream
        :interrupt interrupt))
     (rank-profile
      source target
      :nfold 1 :recache ccp :model model :type type :identity identity
+     :resolvedp resolvedp :normalizep normalizep
+     :enhancers (unless resolvedp *feature-item-enhancers*)
      :verbose verbose :stream stream
      :interrupt interrupt
      :condition condition)
@@ -3005,6 +3026,7 @@
              ;;
              (:svm (let* ((output (format nil "/tmp/.model.~a.~a.svm_weights"
                                           (current-user) (current-pid)))
+             ;; _fix_me_, svm2weights.pl will only work for linear kernels (15-feb-07 erik)
                           (command (format nil "~a/uio/svm2weights.pl ~a"
                                            (system:getenv "LOGONROOT")
                                            (model-parameters model))))
@@ -3034,7 +3056,9 @@
                           (stream *tsdb-io*) (cache :raw) (verbose t)
                           (overwrite t)
                           interrupt meter
-                          (resolvedp t) recache normalizep)
+                          (resolvedp t) recache enhancers normalizep)
+
+  (declare (special *feature-flags*))
   
   (format
    stream
@@ -3056,12 +3080,19 @@
          (gold (or data
                    (analyze 
                     source 
-                    :thorough '(:surface)
+                    :thorough (cons :surface (and *feature-flags* '(:flags)))
                     :condition condition :gold source
                     :readerp nil :message meter)))
          ;; sift out items where readings = t-active
          (nsifted 0)
-         (data (loop  
+         (data (loop
+                   initially
+                     (loop
+                         for enhancer in enhancers
+                         do
+                           (loop
+                               for item in gold
+                               do (call-raw-hook enhancer item)))
                    for item in gold
                    for readings = (get-field :readings item)
                    for ranks = (length (get-field :ranks item))
@@ -3418,4 +3449,3 @@
         (:raw
          mrs)))))
 
-  

@@ -186,14 +186,10 @@
                                collect (mrs::make-fvpair 
                                         :feature (mrs:fvpair-feature role) 
                                         :value (map-variable value)))))
-                (if (mrs::char-rel-p ep)
-                  (mrs::make-char-rel
-                   :handel handel :pred (mrs:rel-pred ep) :flist flist
-                   :lnk (mrs::rel-lnk ep)
-                   :cfrom (mrs::char-rel-cfrom ep) :cto (mrs::char-rel-cto ep))
-                  (mrs::make-rel
-                   :pred (mrs:rel-pred ep) :lnk (mrs::rel-lnk ep)
-                   :handel handel :flist flist)))))
+                (mrs::make-rel
+                 :handel handel :pred (mrs:rel-pred ep) :flist flist
+                 :lnk (mrs::rel-lnk ep)
+                 :cfrom (mrs::rel-cfrom ep) :cto (mrs::rel-cto ep)))))
       (setf (mrs:psoa-h-cons copy)
         (loop
             for hcons in (mrs:psoa-h-cons mrs)

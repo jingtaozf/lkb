@@ -93,44 +93,62 @@
 
 (defparameter *derivations-reconstruct-lnk-p* nil)
 
-(defmacro derivation-id (derivation)
-  `(when (integerp (first ,derivation))
+(defmacro derivation-sponsor (derivation)
+  `(when (consp (second ,derivation))
      (first ,derivation)))
+
+(defmacro derivation-id (derivation)
+  `(if (consp (second ,derivation))
+     (first (second ,derivation))
+     (when (integerp (first ,derivation))
+       (first ,derivation))))
 
 (defmacro derivation-root (derivation)
-  `(if (integerp (first ,derivation)) 
-     (second ,derivation)
-     (first ,derivation)))
+  `(if (consp (second ,derivation))
+     (second (second ,derivation))
+     (if (integerp (first ,derivation)) 
+       (second ,derivation)
+       (first ,derivation))))
 
 (defmacro derivation-score (derivation)
-  `(when (integerp (first ,derivation))
-     (third ,derivation)))
-
-(defmacro derivation-start (derivation)
-  `(if (integerp (first ,derivation)) 
-     (fourth ,derivation)
-     (when (integerp (second ,derivation))
-       (second ,derivation))))
-
-(defmacro derivation-end (derivation)
-  `(if (integerp (first ,derivation)) 
-     (fifth ,derivation)
-     (when (integerp (second ,derivation))
+  `(if (consp (second ,derivation))
+     (third (second ,derivation)) 
+     (when (integerp (first ,derivation))
        (third ,derivation))))
 
+(defmacro derivation-start (derivation)
+  `(if (consp (second ,derivation))
+     (fourth (second ,derivation))
+     (if (integerp (first ,derivation)) 
+       (fourth ,derivation)
+       (when (integerp (second ,derivation))
+         (second ,derivation)))))
+
+(defmacro derivation-end (derivation)
+  `(if (consp (second ,derivation))
+     (fifth (second ,derivation))
+     (if (integerp (first ,derivation)) 
+       (fifth ,derivation)
+       (when (integerp (second ,derivation))
+         (third ,derivation)))))
+
 (defmacro derivation-daughters (derivation)
-  `(if (integerp (first ,derivation))
-     (rest (rest (rest (rest (rest ,derivation)))))
-     (if (integerp (second ,derivation))
-       (rest (rest (rest ,derivation)))
-       (rest ,derivation))))
+  `(if (consp (second ,derivation))
+     (rest (rest (rest (rest (rest (second ,derivation))))))
+     (if (integerp (first ,derivation))
+       (rest (rest (rest (rest (rest ,derivation)))))
+       (if (integerp (second ,derivation))
+         (rest (rest (rest ,derivation)))
+         (rest ,derivation)))))
 
 (defun derivation-depth (derivation)
-  (if (null derivation)
-    0
-    (+ 1 (loop 
-             for son in (derivation-daughters derivation)
-             maximize (derivation-depth son)))))
+  (if (consp (second derivation))
+    (derivation-depth (second derivation))
+    (if (null derivation)
+      0
+      (+ 1 (loop 
+               for son in (derivation-daughters derivation)
+               maximize (derivation-depth son))))))
 
 (defun derivation-yield (derivation)
   (unless (null derivation)
@@ -344,7 +362,9 @@
           %edges%)
       (declare (special %derivation-offset% %edges%))
       (when derivation
-        (if (numberp (first derivation))
+        (if (or (numberp (first derivation))
+                (and (consp (second derivation))
+                     (numberp (first (second derivation)))))
           (catch :fail
             (reconstruct-derivation
              derivation dagp t :counter counter :cachep cachep))

@@ -240,7 +240,7 @@
 		(make-realpred 
 		 :lemma (string-downcase (word-info-lemma lex))
 		 :pos (word-info-pos lex))))
-	    (setf (char-rel-str ep)
+	    (setf (rel-str ep)
 		(if (word-info-p lex)
 		    (word-info-original lex)))))
     (loop for rarg in (semstruct-rmrs-args new-semstruct)
@@ -278,7 +278,7 @@
          collect
 	   (let ((label (rel-handel old-ep))
 		 (anchor (rel-anchor old-ep)))
-	     (make-char-rel 
+	     (make-rel 
 	      :handel 
 	      (renumbered-or-created-handel label)
 	      :anchor 

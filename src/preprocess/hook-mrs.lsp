@@ -47,7 +47,7 @@
     )
    ;; temporary hack: eg. handles RMRS with single EP
    ((equal '(:|ep| :|gpred|) x) 
-    (mrs::char-rel-pred (car (mrs::rmrs-liszt (saf-fs-path-value '(:|rmrs|) (saf-edge-content edge)))))
+    (mrs::rel-pred (car (mrs::rmrs-liszt (saf-fs-path-value '(:|rmrs|) (saf-edge-content edge)))))
     )
    ((equal '(:|rarg| :|constant|) x) 
     (mrs::rmrs-arg-val (car (mrs::rmrs-rmrs-args (saf-fs-path-value '(:|rmrs|) (saf-edge-content edge))))))

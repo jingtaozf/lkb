@@ -122,7 +122,7 @@
   (declare (special *tsdb-podium-home* *tsdb-podium* *tsdb-wish-application*
                     *string-similarity-binaries*
                     *statistics-readers* *statistics-browsers* 
-                    *statistics-predicates*))
+                    *statistics-predicates* *mmt-root*))
   
   (unless (and *tsdb-initialized-p* (null action) (null rc))
     (let* ((*tsdb-initialized-p* t)
@@ -158,10 +158,11 @@
         #+:logon
         (let* ((root (system:getenv "LOGONROOT"))
                (root (and root (namestring (parse-namestring root)))))
+          (setf *mmt-root* root)
           (when root
             (setf *string-similarity-binaries*
               (list
-               (cons :bleu (format nil "~a/ntnu/bleu/bleu.pl" root))
+               (cons :torbjoern (format nil "~a/ntnu/bleu/bleu.pl" root))
                (cons :wa (format nil "~a/ntnu/bleu/wa.pl" root))
                (cons :waft (format nil "~a/ntnu/bleu/wa.pl -t" root)))))))
       (when (and (or (null action) (member action '(:tsdbrc :all)))

@@ -263,8 +263,8 @@
                (:file "lsp")          ; socket-based LKB server mode
                #+:lui
                (:file "lui" )         ; Linguistic User Interface
-               ;#+:logon
-               ;(:file "repp" )
+               #+:logon
+               (:file "repp" )
                #+:xml
                (:file "sppp")))       ; Simple (XML-base) PreProcessor Protocol
 

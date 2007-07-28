@@ -231,6 +231,8 @@
                 :difficulty difficulty :category category
                 :comment comment :separator separator :pseparator pseparator
                 :meter rmeter))
+              (:ptb
+               (read-items-from-ptb-directory file :base base)) 
               (:rasp
                (read-items-from-rasp-file file
                                           :base base

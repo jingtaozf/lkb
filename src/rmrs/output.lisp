@@ -801,12 +801,8 @@ for gram.dtd and tag.dtd
 	  (let ((pred (rel-pred ep))
 		(handel-args nil))
 	    (rmrs-output-start-ep rmrs-display-structure
-				  (if (char-rel-p ep)
-				      (char-rel-cfrom ep)
-				    -1)
-				  (if (char-rel-p ep)
-				      (char-rel-cto ep)
-				    -1)
+                                  (or (rel-cfrom ep) -1)
+				  (or (rel-cto ep) -1)
                                   (rel-str ep))
             (if (realpred-p pred)
                 (rmrs-output-realpred rmrs-display-structure

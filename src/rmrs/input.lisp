@@ -118,7 +118,7 @@
 		   unless (xml-whitespace-string-p x)
 		   collect x))
     (if *anchor-rmrs-p*
-	(make-char-rel 
+	(make-rel 
 	 :pred (read-rmrs-pred (first body))
 	 :handel (read-rmrs-label (second body))
 	 :anchor (read-rmrs-anchor (third body))
@@ -126,7 +126,7 @@
 	 :cfrom (parse-integer (third tag))
 	 :cto (parse-integer (fifth tag))
 	 :str (seventh tag))
-      (make-char-rel 
+      (make-rel 
 	 :pred (read-rmrs-pred (first body))
 	 :handel (read-rmrs-label (second body))
 	 :flist (list (read-rmrs-var (third body)))

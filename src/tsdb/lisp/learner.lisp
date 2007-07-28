@@ -38,9 +38,9 @@
 
 (defparameter *maxent-iterations* 5000)
 
-(defparameter *maxent-relative-tolerance* 1e-7)
+(defparameter *maxent-relative-tolerance* 1e-10)
 
-(defparameter *maxent-absolute-tolerance* 1e-20)
+(defparameter *maxent-absolute-tolerance* 1e-10)
 
 (defparameter *maxent-variance* 1e-2)
 
@@ -104,20 +104,29 @@
                (ngramp (> *feature-ngram-size* 0))
                (weightp (and (numberp *feature-constituent-weight*)
                              (> *feature-constituent-weight* 0))))
-           (format 
-            nil
-            "GP[~a] ~:[-~;+~]PT ~:[-~;+~]LEX CW[~@[~a~]] ~
-             ~:[-~;+~]AE NS[~a] ~
-             NT[~@[~(~a~)~]] ~:[-~;+~]NB LM[~:[0~*~;~a~]] ~
-             FT[~{~@[~a~]~^:~}] RS[~@[~a~]]"
-            *feature-grandparenting* *feature-use-preterminal-types-p*
-            *feature-lexicalization-p*
-            (and weightp *feature-constituent-weight*)
-            *feature-active-edges-p* *feature-ngram-size*
-            (and ngramp *feature-ngram-tag*)
-            (and ngramp *feature-ngram-back-off-p*)
-            *feature-lm-p* *feature-lm-p* counts
-            *feature-random-sample-size*)))
+           (if *feature-flags*
+             (format
+              nil
+              "~{~a[~a] ~}~
+               FT[~{~@[~a~]~^:~}] RS[~@[~a~]]"
+              (loop
+                  for flag in *feature-flags*
+                  collect (second flag) collect (first flag))
+              counts *feature-random-sample-size*)
+             (format 
+              nil
+              "GP[~a] ~:[-~;+~]PT ~:[-~;+~]LEX CW[~@[~a~]] ~
+               ~:[-~;+~]AE NS[~a] ~
+               NT[~@[~(~a~)~]] ~:[-~;+~]NB LM[~:[0~*~;~a~]] ~
+               FT[~{~@[~a~]~^:~}] RS[~@[~a~]]"
+              *feature-grandparenting* *feature-use-preterminal-types-p*
+              *feature-lexicalization-p*
+              (and weightp *feature-constituent-weight*)
+              *feature-active-edges-p* *feature-ngram-size*
+              (and ngramp *feature-ngram-tag*)
+              (and ngramp *feature-ngram-back-off-p*)
+              *feature-lm-p* *feature-lm-p* counts
+              *feature-random-sample-size*))))
         (:compact
          (let ((ngramp (> *feature-ngram-size* 0)))
            (format  
@@ -146,16 +155,18 @@
       (:string
        (format 
         nil
-        "~@[[~a] ~]~@[~a ~]MM[~(~a~)] MI[~@[~a~]] RT[~@[~e~]] VA[~@[~e~]]~
+        "~@[[~a] ~]~@[~a ~]MM[~(~a~)] MI[~@[~a~]] ~
+         RT[~@[~e~]] AT[~@[~e~]] VA[~@[~e~]]~
          ~@[~* PC[~a]~]"
         prefix features *maxent-method* *maxent-iterations*
-        *maxent-relative-tolerance* *maxent-variance*
-        full (or *redwoods-train-percentage* 100)))
+        *maxent-relative-tolerance* *maxent-absolute-tolerance*
+        *maxent-variance* full (or *redwoods-train-percentage* 100)))
       (:compact
        (format 
         nil
-        "~(~@[~a~]mem_~@[~a_~]t~e_v~e~@[_pc~d~]~)"
-        prefix features *maxent-relative-tolerance* *maxent-variance*
+        "~(~@[~a~]mem_~@[~a_~]rt~e_at~e_v~e~@[_pc~d~]~)"
+        prefix features *maxent-relative-tolerance* 
+        *maxent-absolute-tolerance* *maxent-variance*
         *redwoods-train-percentage*))
       (:list
        (nconc
@@ -207,16 +218,22 @@
           model (current-user) (current-host) (current-time :long :pretty))
          (format stream "~%:begin :model ~d.~%~%" (model-ncontexts model))
          (when (> (model-count model) 0)
-           (loop
-               with *print-case* = :downcase
-               for key in *feature-options*
-               for value = (let ((foo (symbol-value key)))
-                             (cond
-                              ((null foo) "no")
-                              ((eq foo t) "yes")
-                              (t foo)))
-               when (boundp key)
-               do (format stream "~a := ~a.~%~%" key value))
+           (if *feature-flags*
+             (let ((*print-case* :downcase))
+               (format
+                stream
+                "*feature-flags := [~{~a~^ ~}].~%~%"
+                (loop for flag in *feature-flags* collect (first flag))))
+             (loop
+                 with *print-case* = :downcase
+                 for key in *feature-options*
+                 for value = (let ((foo (symbol-value key)))
+                               (cond
+                                ((null foo) "no")
+                                ((eq foo t) "yes")
+                                (t foo)))
+                 when (boundp key)
+                 do (format stream "~a := ~a.~%~%" key value)))
            (loop
                with *print-case* = :downcase
                for key in *maxent-options*
@@ -677,22 +694,34 @@
       do (incf h (* p (log p 2d0)))
       finally (return (- h))))
 
-(defun baseline (profile &key condition (n 1))
+(defun baseline (profile &key condition (n 1) (resolvedp t) enhancers)
   (loop
       with nitems = 0
       for item
       in (loop
              for item
-             in (analyze
-                 profile
-                 :thorough t
-                 :condition (if condition 
-                                (format
-                                 nil
-                                 "readings > 1 && t-active >= 1 && (~a)"
-                                 condition)
-                              "readings > 1 && t-active >= 1")
-                 :gold profile)
+             in (let* ((condition
+                        (if resolvedp
+                          (if condition 
+                            (format
+                             nil
+                             "readings > 1 && t-active >= 1 && (~a)"
+                             condition)
+                            "readings > 1 && t-active >= 1")
+                          (if condition
+                            (format nil "readings > 1 && (~a)" condition)
+                            "readings > 1")))
+                       (items
+                        (analyze
+                         profile :thorough '(:flags)
+                         :condition condition :gold profile)))
+                  (loop
+                      for enhancer in enhancers
+                      do
+                        (loop
+                            for item in items
+                            do (call-raw-hook enhancer item)))
+                  items)
              for readings = (length (get-field :results item))
              for ranks = (length (get-field :ranks item))
              unless (= readings ranks)
@@ -701,12 +730,12 @@
       for gold = (max n (length (get-field :ranks item)))
       sum gold into gsum
       sum readings into rsum
-      sum (/ gold readings) into sum
+      sum (/ gold readings) into sum 
       finally
-        (return (list (float (/ sum nitems))
-                      (float (/ gsum nitems))
-                      (float (/ rsum nitems))
-                      nitems))))
+        (return (list (float (/ sum nitems))  ;;average random chance
+                      (float (/ gsum nitems)) ;;average # gold
+                      (float (/ rsum nitems)) ;;average # results
+                      nitems))))              ;;# items
 
 (defmacro do-grid (params &body body)
   (if (null (cdr params))
@@ -746,7 +775,7 @@
              name)
             (force-output stream))))
   (purge-profile-cache gold))
-
+
 (defun summarize-folds 
     (&key (output "/tmp/folds") name pattern (score :accuracy) (type :total))
   (with-open-file (stream output :direction :output :if-exists :supersede
@@ -808,7 +837,7 @@
          (format stream "~,6f ~,6f ~,6f `~a'~%" 
                  mean std-dev range profile)
          (force-output stream))))))
-
+
 (defun wilcoxon (list1 list2)
   (unless (= (length list1)
              (length list2))
@@ -854,7 +883,7 @@
                          when (< r 0) sum r))))
     (values (min w-pos (abs w-neg))
             (length signed-ranks))))
-
+
 (defun t-test (list1 list2)
   (let* ((n1 (length list1))
          (n2 (length list2))
@@ -877,8 +906,15 @@
             (- n 1))))
          (result (/ (* mean (sqrt n))
                     std-dev)))
-    (values (abs result) (- n 1))))
-
+    (values 
+     ;;; t ratio:
+     ;;; (Use this when consulting a table of Student's t-distribution
+     ;;; confidence intervals to determine the significance level at which two
+     ;;; distributions differ)
+     (abs result) 
+     ;;; degrees of freedom:
+     (- n 1))))
+
 (defun mw-t-test (list1 list2)
   (let* ((n1 (length list1))
          (n2 (length list2))
@@ -909,7 +945,7 @@
                    (/ (* n (- n 1))
                       sum-squared-diffs)))))    
     (values (abs result) (- n 1))))
-
+
 (defparameter *t-dist* 
     '((0.10     (3.078  1.886  1.638 1.533 1.476 1.44  1.415 1.397 1.383 1.372 
                  1.363  1.356  1.35  1.345 1.341 1.337 1.333 1.33  1.328 1.325))
@@ -924,14 +960,14 @@
       (0.001) (318.313 22.327 10.215 7.173 5.893 5.208 4.782 4.499 4.296 4.143  
                  4.024  3.929  3.852 3.787 3.733 3.686 3.646 3.61  3.579 3.552))
   "t-test upper critical values")
-
+
 (defparameter *wilcoxon-dist*
   '((0.05  (NIL NIL NIL NIL 1   2   4   6 8 11 14 17 21 26 30 36 41 47 54 60))
     (0.025 (NIL NIL NIL NIL NIL 1   2   4 6  8 11 14 17 21 25 30 35 40 46 52))
     (0.01  (NIL NIL NIL NIL NIL NIL 0   2 3  5  7 10 13 16 20 24 28 33 38 43))
     (0.005 (NIL NIL NIL NIL NIL NIL NIL 0 2  3  5  7 10 13 16 19 23 28 32 37)))
   "wilcoxon upper critical values")
-
+
 (defun get-critical-value (&key (level 0.05) (df 9) (sides 2) (test :ttest))
   (unless (or (= sides 1)
               (= sides 2))
@@ -940,7 +976,7 @@
                              (case test 
                                ((:t :tee :ttest) *t-dist*)
                                ((:w :wilcoxon) *wilcoxon-dist*))))))
- 
+
 (defun compare-folds (name1 name2 &key (test :t) (stream *tsdb-io*)
                                        (level 0.05) (sides 2))
   (let* ((acc1 (select '("f-accuracy") '(:string) 
@@ -969,7 +1005,231 @@
         (purge-profile-cache name2)
         (format stream "~&~,6f ~a ~a~%`~a'~%`~a'~%" 
                 stat cv df name1 name2)))))
-#+null
-(compare-folds "dbg-hike-mem_lm10_n0_l0_p0_a0_g0_b0_nt1_t1.0e-8_v1.0e+1" 
-               "dbg-hike-svm_lm10_n0_l0_p0_a0_g0_b0_nt1_rs10_rbf_g0.01_it500_c0.1_em0.1_t0.1" 
-               :test :ttest :sides 2 :level 0.05)
+
+(defun create-evaluation-file (data &optional (gold data) 
+                              &key (condition "readings > 1 && t-active > 0")
+                                   (n 5) (test :id) supersede
+                                   (loosep t) (stream *tsdb-io*)
+                                   (similarities '(:neva :wa)))
+
+  (let* ((compress-command "gzip -c -9")
+         (tsdb-dir (find-tsdb-directory data))
+         (eval (make-pathname :directory tsdb-dir 
+                              :name "eval"))
+         (eval-gz (make-pathname :directory tsdb-dir 
+                                 :name "eval" :type "gz")))
+    
+    ;;; clean up:
+    (when (or (cl-fad:file-exists-p eval-gz)
+              (cl-fad:file-exists-p eval))
+      (if (not supersede) 
+          (return-from create-evaluation-file)
+        (progn 
+          (when (cl-fad:file-exists-p eval-gz)
+            (delete-file eval-gz))
+          (when (cl-fad:file-exists-p eval)
+            (delete-file eval)))))
+    
+        (format 
+         stream 
+         "~&[~a] create-evaluation-file(): creating `eval.gz' for ~a~%"
+         (current-time :long :short) data)
+    
+    (multiple-value-bind (eval-stream foo pid)
+        (run-process
+         compress-command :wait nil :input :stream
+         :output eval-gz :if-output-exists :supersede
+         :error-output nil)
+      (declare (ignore foo))
+                      
+      (let* ((*redwoods-score-similarities* similarities) 
+             (thorough (when (eq test :derivation) '(:derivation)))
+             (thorough (if *redwoods-score-similarities*
+                           (cons :surface thorough)
+                         thorough))
+             (gitems-unsifted (analyze gold
+                                       :thorough thorough
+                                       :condition condition :gold gold 
+                                       :readerp (eq test :derivation)))
+             (items (loop 
+                        for item in 
+                          (analyze gold
+                                   :thorough thorough 
+                                   :condition condition 
+                                   :score data :scorep t
+                                   :readerp (eq test :derivation))
+                        for gitem in gitems-unsifted
+                        for readings = (length (get-field :results gitem))
+                        for ranks = (length (get-field :ranks gitem))
+                        unless (or (= readings ranks)
+                                   (not (= (get-field :i-id gitem) 
+                                           (get-field :i-id item))))
+                        collect (copy-tree item)))
+             (gitems (loop  
+                         for item in gitems-unsifted
+                         for readings = (length (get-field :results item))
+                         for ranks = (length (get-field :ranks item))
+                         unless (= readings ranks)
+                         collect (copy-tree item)))
+             (nkeys (loop for sim in similarities
+                        collect ;;; eg., (:nwa :nbleu :nneva) 
+                          (read-from-string 
+                           (format nil ":n~a" sim))))
+             (nkey-alist (pairlis similarities nkeys))
+             (keys (append 
+                    (list :i-id :accuracy :naccuracy);; :r-id
+                    similarities nkeys))
+             (data (make-list (length keys)))
+             (scores (pairlis keys data)))
+        (loop
+            for item in items
+            for gitem in gitems
+            for i-id = (get-field :i-id item)
+            do 
+              (multiple-value-bind (i score loosep similarities)
+                  (score-item item gitem 
+                              :test test :n n :loosep loosep)
+;;;                     (= i 0)  means no match
+;;;                     (<= i n) means we have a hit
+;;;                     (= i 1)  means exact match              
+                (declare (ignore loosep))
+                (push (if (= i 1) (float score) 0) 
+                      (get-field :accuracy scores))
+                (push (if (<= i n) (float score) 0) 
+                      (get-field :naccuracy scores))
+                (push i-id (get-field :i-id scores))
+                (loop
+                    for (key score nscore) in similarities
+                    do (push (float score) 
+                             (get-field key scores))
+                       (push (float nscore) 
+                             (get-field 
+                              (get-field key nkey-alist) scores)))))
+        (loop 
+            for (key . list) in scores
+            do (setf (get-field key scores)
+                 (nreverse list)))
+        (loop 
+            for list in scores
+            do (prin1 list eval-stream)
+               (terpri eval-stream)))
+    
+    (force-output eval-stream)
+    (close eval-stream)
+    (sys:os-wait nil pid))))
+
+(defun batch-create-evaluation-files (&key pattern supersede gold n
+                                (condition "readings > 1 && t-active > 0")
+                                (similarities *redwoods-score-similarities*))
+  (loop
+      for db in 
+        (find-tsdb-directories *tsdb-home* :pattern pattern)
+      for name = (let ((name (get-field :database db)))
+                   (unless (string= name gold) name))
+      when name do
+        (create-evaluation-file name gold 
+                               :condition condition
+                               :n n :supersede supersede
+                               :similarities similarities)
+        (purge-profile-cache name))
+  (purge-profile-cache gold))
+
+(defun read-evaluation-file (profile &key (score :accuracy))
+  (let* ((tsdb-dir (find-tsdb-directory profile))
+         (eval (make-pathname :directory tsdb-dir 
+                              :name "eval"))
+         (eval-gz (make-pathname :directory tsdb-dir 
+                                 :name "eval" :type "gz"))
+         (did-unzip-p nil))
+
+    (when (and (not (cl-fad:file-exists-p eval-gz))
+               (not (cl-fad:file-exists-p eval)))
+      (error "read-evaluation-file(): `eval(.gz)' does not exists for `~a'." 
+             profile))
+    
+    (when (cl-fad:file-exists-p eval-gz)
+   ;;;allegro specific..
+      (excl:run-shell-command 
+       (format nil "gunzip ~a" eval-gz) :wait t)
+      (setq did-unzip-p t))
+    
+    (if (not (cl-fad:file-exists-p eval))
+        (error "read-evaluation-file(): cannot find `eval' file for `~a'." 
+               profile)
+      (with-open-file (in eval :direction :input)
+        (loop 
+            for list = (read in nil nil)
+            until (or (null list)
+                      (eq (first list) score))
+            finally (progn 
+                      (when did-unzip-p 
+                        (excl:run-shell-command 
+                         (format nil "gzip -9 ~a" eval) :wait t))
+                      (return (rest list))))))))
+
+(defun summarize-evaluation-file (profile &optional (stream *tsdb-io*))
+  (let* ((tsdb-dir (find-tsdb-directory profile))
+         (eval (make-pathname :directory tsdb-dir 
+                              :name "eval"))
+         (eval-gz (make-pathname :directory tsdb-dir 
+                                 :name "eval" :type "gz"))
+         (did-unzip-p nil))
+    
+    (when (and (not (cl-fad:file-exists-p eval-gz))
+               (not (cl-fad:file-exists-p eval)))
+      (error "summarize-evaluation-file(): `eval(.gz)' does not exists for `~a'." 
+             profile))
+    
+    (when (cl-fad:file-exists-p eval-gz)
+   ;;;allegro specific
+      (excl:run-shell-command 
+       (format nil "gunzip ~a" eval) :wait t)
+      (setq did-unzip-p t))
+    
+    (if (not (cl-fad:file-exists-p eval))
+        (error "summarize-evaluation-file(): cannot find `eval' file for `~a'." 
+               profile)
+      (with-open-file (in eval :direction :input)
+        (loop 
+            with total-items 
+            for list = (read in nil nil)
+            until (null list)
+            do (case (car list)
+                 ((:accuracy :naccuracy )
+                  (format stream "~&~a: ~,2f~%" 
+                          (car list)
+                          (* (/ (sum (cdr list))
+                                (length (cdr list)))
+                             100)))
+                 (:i-id
+                  (setq total-items (length (cdr list))))
+                 (t
+                  (format stream "~&~a: ~,3f~%" 
+                          (car list)
+                          (/ (sum (cdr list))
+                             (length (cdr list))))))
+            finally (format stream "~&# Items: ~a~%" 
+                            total-items))))
+    (when did-unzip-p 
+      (excl:run-shell-command 
+       (format nil "gzip -9 ~a" eval) :wait t)))
+  nil)
+
+(defun test-evaluation-scores (profile1 profile2 
+                               &key (score :accuracy) (test :signtest)
+                                    (tails :both))
+  (let ((scores1 (read-evaluation-file profile1 :score score))
+        (scores2 (read-evaluation-file profile2 :score score)))
+    
+    (case test
+      ((:signtest :binomial)
+       (stats:sign-test-on-sequences 
+        scores1 scores2 :tails tails))
+      ((:wilcoxon :signed-rank :wilcoxon-signed-rank)
+       (stats:wilcoxon-signed-rank-test-on-sequences 
+        scores1 scores2 :tails tails))
+      ((:ttest :paired-ttest)
+       (stats:t-test-paired-on-sequences 
+        scores1 scores2 :tails tails))
+      (t
+       (error  "test-evaluation-scores(): unknown test `~a'." test)))))

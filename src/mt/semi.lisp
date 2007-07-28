@@ -357,7 +357,6 @@
             ;; this up here, so we get a more conventional looking SEM-I, but
             ;; really this should be adjusted in the grammar proper. 
             ;;                                                  (27-jan-06; oe)
-            ;;
             #+:logon
             (let ((arg1 (mrs::vsym "ARG1"))
                   (pred (string pred)))
