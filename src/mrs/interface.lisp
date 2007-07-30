@@ -106,8 +106,9 @@
   (let ((fol-exp (make-fol-approximation mrs)))
     (if fol-exp
 	(dolist (exp fol-exp)
-	  (format stream "~%~A" exp))
-      (format stream "~%Expression cannot be converted"))))
+	  (if exp
+	      (format stream "~%~A" exp)
+	    (format stream "~%Expression cannot be converted"))))))
 
 
 (defun make-fol-approximation (mrs)  

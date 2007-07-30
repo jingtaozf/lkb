@@ -22,6 +22,7 @@
 
 (defun convert-gq-to-fol-top (gq-exp)
   ;;; top level call to these routines
+  ;;; called by make-fol-approximation
   (setf *gq-event-vars* nil)
   (let ((main-exp (convert-gq-to-fol gq-exp)))
     (if main-exp
@@ -99,7 +100,7 @@ maps to
 	((binary-exp-p gq-exp) (convert-gq-binary gq-exp))
 	((unary-exp-p gq-exp) (convert-gq-unary gq-exp))
 	((fol-pred-exp-p gq-exp) (convert-fol-pred gq-exp))
-	(t (error "~%~A cannot be converted" gq-exp))))
+	(t nil)))
     
 
 ;;; general tests
@@ -121,28 +122,35 @@ maps to
 
 ;;; quantifiers
 
+(defun str-mem (el listy) 
+  ;;; avoid package mess ups
+  (member el listy 
+	  :test #'(lambda (x y) (string-equal (string x) (string y)))))
+
 (defun gq-quantifier-exp-p (exp) 
-   (member (first exp) '(every all some a an the)))
+  (str-mem (first exp) 
+	   '(every all some a an the _every_q _all_q _some_q 
+	     _some_q_indiv _a_q _an_q _the_q)))
 
 (defun convert-gq-quantifier (exp)
   (let ((gq (first exp))
 	(bv (second exp))
 	(restr (third exp))
         (body (fourth exp)))
-  (cond ((member gq '(every all))
+  (cond ((str-mem gq '(every all _every_q _all_q))
 	 (list 'forall
 	       bv
 	       (list 'or
 		     (list 'not
 			   (convert-gq-to-fol restr))
 		     (convert-gq-to-fol body))))
-	((member gq '(some a an))
+	((str-mem gq '(some a an _some_q _some_q_indiv _a_q _an_q))
 	 (list 'exists 
 	       bv
 	       (list 'and
 		     (convert-gq-to-fol restr)
 		     (convert-gq-to-fol body))))
-	((member gq '(the))
+	((str-mem gq '(the _the_q))
 	 (let ((new-const (intern (concatenate 'string "CONST" (string bv)))))
 	   (list 'and (convert-gq-to-fol 
 		       (subst new-const bv restr))
