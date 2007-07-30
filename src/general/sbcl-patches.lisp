@@ -66,7 +66,8 @@
 (defvar %system-binaries%
   #+(and :x86 :linux) "linux.x86.32"
   #+(and :x86-64 :linux) "linux.x86.64"
-  #-(or (and (or :x86 :x86-64) :linux))
+  #+:win32 "windows"
+  #-(or (and :x86 :linux) (and :x86-64 :linux) :win32)
   (error "~&loadup: unable to determine system type; see file ~
           `sbcl-patches.lisp'.~%"))
 
