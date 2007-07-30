@@ -110,7 +110,8 @@
   #+:alpha "osf"
   #+:mswindows "windows"
   #+(and :macosx :powerpc) "macos.ppc.32"
-  #-(or :prism :linux86 :sunos4 (and :sun :svr4) :alpha :mswindows)
+  #-(or :prism :linux86 :linux86-64 :sunos4 (and :sun :svr4) :alpha :mswindows
+	(and :macosx :powerpc))
   (error "~&loadup: unable to determine system type; see file ~
           `allegro-patches.lisp'.~%"))
 
