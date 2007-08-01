@@ -1,3 +1,7 @@
+:: OBSOLETE
+:: coz I have no windoze machine to test it
+:: - bmw
+
 :: Copyright (c) 2004 - 2005 
 :: Benjamin Waldron;
 :: see `licence.txt' for conditions.

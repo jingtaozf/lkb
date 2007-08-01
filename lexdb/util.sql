@@ -1,4 +1,4 @@
---- Copyright (c) 2003 - 2006
+--- Copyright (c) 2003 - 2007
 --- Benjamin Waldron, Fabre Lambeau, Stephan Oepen;
 --- see `licence.txt' for conditions.
 
@@ -9,8 +9,8 @@ RETURN
 	(SELECT (SELECT count(*)
 		FROM pg_catalog.pg_proc p
      		LEFT JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
-		WHERE p.prorettype <> \'pg_catalog.cstring\'::pg_catalog.regtype
-      		AND p.proargtypes[0] <> \'pg_catalog.cstring\'::pg_catalog.regtype
+		WHERE p.prorettype <> ''pg_catalog.cstring''::pg_catalog.regtype
+      		AND p.proargtypes[0] <> ''pg_catalog.cstring''::pg_catalog.regtype
       		AND NOT p.proisagg
       		AND n.nspname = $1
       		AND p.proname = $2) > 0);
@@ -37,7 +37,7 @@ END;
 --x
 CREATE OR REPLACE FUNCTION public.define_type_text_2() RETURNS boolean AS '
 BEGIN
-	IF reln_exists(\'public\',\'text_2\') THEN
+	IF reln_exists(''public'',''text_2'') THEN
 		DROP TYPE public.text_2 CASCADE;
 	END IF;
 	CREATE TYPE text_2 AS (t1 text, t2 text);
@@ -48,7 +48,7 @@ END;
 --x
 CREATE OR REPLACE FUNCTION public.define_type_text_3() RETURNS boolean AS '
 BEGIN
-	IF reln_exists(\'public\',\'text_3\') THEN
+	IF reln_exists(''public'',''text_3'') THEN
 		DROP TYPE public.text_3 CASCADE;
 	END IF;
 	CREATE TYPE text_3 AS (t1 text, t2 text, t3 text);
@@ -59,7 +59,7 @@ END;
 --x
 CREATE OR REPLACE FUNCTION public.define_type_attname_typename_atttypmod() RETURNS boolean AS '
 BEGIN
-	IF reln_exists(\'public\',\'attname_typename_atttypmod\') THEN
+	IF reln_exists(''public'',''attname_typename_atttypmod'') THEN
 		DROP TYPE public.attname_typename_atttypmod CASCADE;
 	END IF;
 	CREATE TYPE attname_typename_atttypmod AS (attname name, typename name, atttypmod int);
@@ -138,7 +138,7 @@ CREATE OR REPLACE FUNCTION public.assert_db_owner() RETURNS boolean AS
 '
 BEGIN
  	IF NOT(public.user_is_db_owner_p()) THEN
-   		RAISE EXCEPTION \'You are not the DB owner.\';
+   		RAISE EXCEPTION ''You are not the DB owner.'';
  	END IF;
  	RETURN true;
 END;

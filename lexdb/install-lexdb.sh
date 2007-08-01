@@ -1,17 +1,20 @@
-# Copyright (c) 2004 - 2005 
-# Benjamin Waldron;
+# Copyright (c) 2004 - 2007
+# Ben Waldron;
 # see `licence.txt' for conditions.
 
 ## script usage
 if [ -z "$3" ]; then 
-    echo "usage: $0 DBNAME FLD-FILE DFN-FILE [CREATEDB-OPTIONS]"
+    echo "usage: $0 DBNAME DIRECTORY BASE-FILENAME [CREATEDB-OPTIONS]"
     exit
 fi
 
 ## grab script parameters
 export LEXDB=$1
-export FLD_FILE=$2
-export DFN_FILE=$3
+export DIR=$2
+export BASE=$3
+export DFN_FILE=$DIR/$BASE.dfn
+export FLD_FILE=$DIR/$BASE.fld
+export REV_FILE=$DIR/$BASE.rev
 export CREATEDB_OPTIONS=$4
 
 function abort {
@@ -73,5 +76,13 @@ if [ $? != 0 ] ; then abort; fi
 CMD="psql -c '\\copy public.dfn from $DFN_FILE' -U lexdb $LEXDB"
 echo $CMD; psql -c "\copy public.dfn from $DFN_FILE" -U lexdb $LEXDB
 if [ $? != 0 ] ; then echo "!!!"; echo "* YOU MAY HAVE AN OBSOLETE DFN FILE ($DFN_FILE)"; echo "* Try removing the first field (eg. \"ergTAB\") from each entry in the file $DFN_FILE"; echo "!!!"; echo; abort; fi
+
+## populate rev field
+echo "populating database from file $REV_FILE";
+
+CMD="psql -c '\\copy public.rev from $REV_FILE' -U lexdb $LEXDB"
+echo $CMD; psql -c "\copy public.rev from $REV_FILE" -U lexdb $LEXDB
+if [ $? != 0 ] ; then abort; fi
+
 
 

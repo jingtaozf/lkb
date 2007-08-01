@@ -10,12 +10,12 @@ CREATE OR REPLACE FUNCTION public.create_public_rev_table() RETURNS boolean AS '
 DECLARE
 	sql_qry text;
 BEGIN
-	sql_qry := \'CREATE TABLE public.rev (
+	sql_qry := ''CREATE TABLE public.rev (
 		name TEXT NOT NULL,
 		userid TEXT DEFAULT user NOT NULL,
 		modstamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-		dead BOOLEAN DEFAULT \\\'0\\\' NOT NULL
-		\' || soft_rev_field_definitions() || \' ) \';
+		dead BOOLEAN DEFAULT ''''0'''' NOT NULL
+		'' || soft_rev_field_definitions() || '' ) '';
 	EXECUTE sql_qry;
 	--PERFORM public.index_public_rev();
 	RETURN TRUE;
@@ -27,16 +27,22 @@ DECLARE
 	x RECORD;
 	t text;
 BEGIN
-	IF (reln_exists(\'public\',\'fld\') 
+	IF (reln_exists(''public'',''fld'') 
 			AND 
 			(SELECT count(*) FROM public.fld)>0) THEN
-		RAISE DEBUG \'Using field defns found in public.fld\';
+		RAISE DEBUG ''Using field defns found in public.fld'';
 		FOR x IN SELECT dfn FROM fld LOOP
-			t := COALESCE(t,\'\');
-			t:= t || \',\n \' || x.dfn;
+			t := COALESCE(t,'''');
+			t:= t || '',
+ '' || x.dfn;
 		END LOOP;
 	ELSE
-		RAISE EXCEPTION \'\n*\n*\n* no field definitions provided! (TABLE public.fld IS EMPTY)\n*\n*\';
+		RAISE EXCEPTION ''
+*
+*
+* no field definitions provided! (TABLE public.fld IS EMPTY)
+*
+*'';
 	END IF;
 	RETURN t;
 END;
@@ -51,15 +57,15 @@ END;
 
 CREATE OR REPLACE FUNCTION public.index_rev() RETURNS boolean AS '
 BEGIN
-	RAISE DEBUG \'indexing rev\';
-	EXECUTE \'CREATE UNIQUE INDEX rev_name ON rev (name)\';
+	RAISE DEBUG ''indexing rev'';
+	EXECUTE ''CREATE UNIQUE INDEX rev_name ON rev (name)'';
 	RETURN true;
 END;
 ' LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION public.deindex_rev() RETURNS boolean AS '
 BEGIN
-	RAISE DEBUG \'deindexing rev\';
+	RAISE DEBUG ''deindexing rev'';
 	DROP INDEX rev_name;
 	RETURN true;
 END;
