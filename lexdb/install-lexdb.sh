@@ -82,7 +82,7 @@ echo "populating database from file $REV_FILE";
 
 CMD="psql -c '\\copy public.rev from $REV_FILE' -U lexdb $LEXDB"
 echo $CMD; psql -c "\copy public.rev from $REV_FILE" -U lexdb $LEXDB
-if [ $? != 0 ] ; then abort; fi
+if [ $? != 0 ] ; then echo 'WARNING: unable to populate lexical database'; fi
 
 
 
