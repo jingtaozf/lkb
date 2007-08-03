@@ -99,7 +99,8 @@ the phrase to be checked minus the LISZT (leave this for now)
   (let* ((relpred (mrs::rel-pred rel))
          (relname (when relpred (string relpred))))
     (and relname
-         (equal "_i_rel" (subseq relname (- (length relname) 6))))))
+         (equal "_i_rel" (subseq relname (max 0
+					      (- (length relname) 6)))))))
 
 #|
 old definition was leading i_
