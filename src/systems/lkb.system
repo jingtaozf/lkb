@@ -202,6 +202,7 @@
                (:file "discriminants")
                (:file "unfill-dag")   ; unfilled feature structures
                (:file "generics")
+               (:file "compound-lex") ; lexicon-wrapper for compounds
 	       ))
     #+:preprocessor
      (:module "preprocess"

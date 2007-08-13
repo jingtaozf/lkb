@@ -460,53 +460,54 @@
 
 ;; generate fallback edges
 (defun get-fallback-morphop-edges nil
-  (cond
-   (smaf:*unknown-word-type*
-    ;; very basic mechanism, same for all unknown words
-    (loop
-	for tedge in (get-unanalysed-and-unspanned-tedges)
-	for e-from = (edge-from tedge)
-	for e-to = (edge-to tedge)
-	for children = (list tedge)
-	for leaf-edges = children
-	for children-words =
-	  (loop for l in leaf-edges
-	      collect (token-edge-string l))
-	for cfrom = (edge-cfrom tedge)
-	for cto = (edge-cto tedge)
-	for form = (str-list-2-str children-words)
-	for stem = (string-upcase form)
-	for dummy-entry = 
-	  (get-dummy-unexpanded-lex-entry
-	   stem
-	   :unifs (list (cons :|type| (2-str smaf:*unknown-word-type*)))
-	   :gmap '((:|type| NIL :sym)))
-	collect
-	  (make-morpho-stem-edge 
-	   :id (next-edge)
-	   :children children
-	   :leaves (loop for x in leaf-edges collect (edge-string x))
-	   :from e-from
-	   :to e-to
-	   :cfrom cfrom
-	   :cto cto
-	   :string form
-	   :word (string-upcase form)
-	   :current (string-upcase form)
-	   :stem stem
-	   :partial-tree nil
-	   :l-content (cons :full dummy-entry)
-	   )))
-   (t
-    ;; more sophisticated mechanism
-    ;; (eg. map POS tags into grammar types)
-    (loop
-	with tedges = (get-unanalysed-and-unspanned-tedges)
-	for medge in *fallback-medges*
-	for children = (edge-children medge)
-	when (intersection children tedges)
-	     ;; eg. any children are unanalysed
-	collect medge))))
+  (or
+   (and smaf:*unknown-word-type*
+	;; very basic mechanism, same for all unknown words
+	(loop
+	    for tedge in (get-unanalysed-and-unspanned-tedges)
+	    for e-from = (edge-from tedge)
+	    for e-to = (edge-to tedge)
+	    for children = (list tedge)
+	    for leaf-edges = children
+	    for children-words =
+	      (loop for l in leaf-edges
+		  collect (token-edge-string l))
+	    for cfrom = (edge-cfrom tedge)
+	    for cto = (edge-cto tedge)
+	    for form = (str-list-2-str children-words)
+	    for stem = (string-upcase form)
+	    for dummy-entry = 
+	      (get-dummy-unexpanded-lex-entry
+	       stem
+	       :unifs (list (cons :|type| (2-str smaf:*unknown-word-type*)))
+	       :gmap '((:|type| NIL :sym)))
+	    collect
+	      (make-morpho-stem-edge 
+	       :id (next-edge)
+	       :children children
+	       :leaves (loop for x in leaf-edges collect (edge-string x))
+	       :from e-from
+	       :to e-to
+	       :cfrom cfrom
+	       :cto cto
+	       :string form
+	       :word (string-upcase form)
+	       :current (string-upcase form)
+	       :stem stem
+	       :partial-tree nil
+	       :l-content (cons :full dummy-entry)
+	       ))
+	)
+   (and t
+	;; more sophisticated mechanism
+	;; (eg. map POS tags into grammar types)
+	(loop
+	    with tedges = (get-unanalysed-and-unspanned-tedges)
+	    for medge in *fallback-medges*
+	    for children = (edge-children medge)
+	    when (intersection children tedges)
+		 ;; eg. any children are unanalysed
+	    collect medge))))
 
 ;; make cc from edge
 ;; and slot into *tchart* from/to array

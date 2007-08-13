@@ -574,6 +574,7 @@
   (let* ((l-content (saf-edge-l-content edge))
 	 (clobber (saf-fs-feature-value2 l-content :|clobber|)))
     (or 
+     (and (null clobber) 0) ;; in case we have null val
      (parse-integer clobber :junk-allowed t) 
      0)))
   

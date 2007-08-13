@@ -82,7 +82,6 @@
       ))
   (format t "~&;;; END OF DUPLICATE ENTRIES~%"))
 
-#+:null
 (defun list-duplicates-to-remove (dups-list &key (stream t))
   ;; output name of all but first duplicate in each duplicate-set
   (loop
@@ -295,3 +294,14 @@
 	finally
 	  (return out-list)
 	  )))
+
+;; list redundant entries obtained from list of duplicates
+#+:null
+(defun redundant-entries (dups &key (s t))
+  (loop
+      for x in dups
+      do
+	(loop
+	    for y in (cdr x)
+	    do 
+	      (format s "~&~a" (normalize-orthkey (second y))))))

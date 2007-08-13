@@ -93,16 +93,58 @@
 ;;; export to .tdl file
 ;;;
 
+;;
+;; dump lexdb to a number of source files
+;; each named LEXDB_NAME.(SOURCE.)tdl
+;; recursive behaviour is default
+;; dump by source is disabled by default
+;;
 (defun export-lexicon-to-tdl (&key (dir (postgres-user-temp-dir))
 				   file 
-				   (lexicon *lexicon*))
-  (when (null file)
-    (setf file (namestring 
-                (pathname 
-                 (format nil "~a/~a.tdl" dir 
-                         (or (name lexicon) "unknown"))))))
-  (format t "~&(LexDB) export filename: ~a" file)
-  (export-to-tdl-to-file lexicon file))
+				   (lexicon *lexicon*)
+				   (recurse t)
+				   (by-source nil))
+  ;; dumps of form LEXDB_NAME.SOURCE.tdl
+  (when (and (typep lexicon 'psql-lex-database) by-source)
+    (loop
+	with filter = (filter lexicon)
+	for r in 
+	  (get-raw-records *lexdb* 
+			   "select source from public.rev group by source")
+	for source = (car r) ;; all sources in lexdb
+	for file = (namestring ;; filename
+			(pathname 
+			 (format nil "~a/~a.~a.tdl" dir 
+				 (or (name lexicon) "unknown")
+				 source
+				 )))
+	do
+	  (format t "~&(LexDB) export filename: ~a" file) ;; user feedback
+	  (command-set-filter-lexdb ;; filter by source
+	   (format nil 
+		   "~a and source=~a"
+		   filter
+		   (psql-quote-literal source)))
+	  (export-to-tdl-to-file lexicon file) ;; create dump file
+	finally 
+	  (command-set-filter-lexdb filter) ;; return filter to original value
+	  ))
+  ;; dumps of form LEXDB_NAME.tdl
+  (when (not (and (typep lexicon 'psql-lex-database) by-source))
+    (when (null file) ;; ie. no filename supplied
+      (setf file (namestring 
+		  (pathname 
+		   (format nil "~a/~a.tdl" dir 
+			   (or (name lexicon) "unknown"))))))
+    (format t "~&(LexDB) export filename: ~a" file) ;; user feedback
+    (export-to-tdl-to-file lexicon file)) ;; create dump file
+  ;; recursive behaviour (when enabled)
+  (when recurse
+    (loop for sublex in (extra-lexicons lexicon) ;; for each sublexicon
+	do
+	  (export-lexicon-to-tdl ;; recurse 
+	   :dir dir :lexicon sublex :recurse recurse
+	   :by-source by-source))))
 
 ;;;
 ;;; DB standard io

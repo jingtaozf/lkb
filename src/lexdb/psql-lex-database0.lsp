@@ -133,7 +133,7 @@
   ;(if (connection lex)
   (let* ((key (normalize-orthkey orth))
 	 (fields (fields-str lex (grammar-fields lex))) ;;-> cached property?
-	 ;; retrieve all grammar fields formmatching entries!
+	 ;; retrieve all grammar fields for matching entries!
 	 (table (get-records lex (lookup-word-no-cache-SQL lex key fields)))
 	 ;; return simply the ids (but cache the rest)
 	 (ids (cache-records-and-return-ids lex table)))
@@ -862,3 +862,4 @@ CREATE UNIQUE INDEX semi_mod_name_userid_modstamp ON semi_mod (name,userid,modst
 (defmethod get-dot-lex-record ((lex psql-lex-database) id &optional (fields '("*")))
   (let ((table (retrieve-raw-record-no-cache lex id fields)))
     (dot (cols table) (car (recs table)))))
+
