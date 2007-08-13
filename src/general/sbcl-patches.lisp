@@ -18,6 +18,10 @@
 ;;;
 (sb-ext:unlock-package :common-lisp)
 
+;;
+;; we don't want gc to fire too frequently
+(setf (sb-ext:BYTES-CONSED-BETWEEN-GCS) 200000000)
+
 ;;;
 ;;; load the portable defsystem() from CMU
 ;;;
@@ -27,7 +31,7 @@
 ;; also load "another system definition facility"
 (require :asdf)
 
-(setf src-home (merge-pathnames "src/" sys-home))
+(defparameter src-home (merge-pathnames "src/" sys-home))
 
 ;; tell asdf where to find its system definitions
 (setf asdf:*central-registry*
