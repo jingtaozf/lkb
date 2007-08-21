@@ -39,7 +39,7 @@
 ;;; it seems, we may now have a path for UniCode issues in CLIM (using Motif);
 ;;; try including that in our images.                           (10-oct-06; oe)
 ;;;
-#+(and :unix :clim :null)
+#+(and :unix :clim (version>= 8 1))
 (load 
  (compile-file (make-pathname :directory general-dir :name "clim")))
 
@@ -55,6 +55,16 @@
 
 (defvar %binary-dir-name% 
     (or
+     #+(and (version>= 8 1) :linux86-64 :clim) ".l1c4"
+     #+(and (version>= 8 1) :linux86-64 (not :clim)) ".l1s4"
+     #+(and (version>= 8 1) :linux86 :clim) ".l1cl"
+     #+(and (version>= 8 1) :linux86 (not :clim)) ".l1sl"
+     #+(and (version>= 8 1) :sparc :clim) ".s1cl" 
+     #+(and (version>= 8 1) :sparc (not :clim)) ".s1sl"
+     #+(and (version>= 8 1) :mswindows :clim) "w1cl" 
+     #+(and (version>= 8 1) :mswindows (not :clim)) "w1sl"
+     #+(and (version>= 8 1) :macosx :clim) ".m1cl" 
+     #+(and (version>= 8 1) :macosx (not :clim)) ".m1sl"
      #+(and (version>= 8 0) :linux86-64 :clim) ".l8c4"
      #+(and (version>= 8 0) :linux86-64 (not :clim)) ".l8s4"
      #+(and (version>= 8 0) :linux86 :clim) ".l8cl"
